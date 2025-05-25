@@ -1,0 +1,110 @@
+{{define "markdown"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown预览工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">description</i> Markdown预览工具</h1>
+            <p>实时预览Markdown文档的渲染效果</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="markdown-container">
+                <div class="editor-section">
+                    <div class="editor-header">
+                        <h3>编辑器</h3>
+                        <div class="editor-actions">
+                            <button type="button" class="btn btn-secondary" id="uploadBtn">
+                                <i class="material-icons">upload_file</i> 上传文件
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearBtn">
+                                <i class="material-icons">clear</i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="markdownInput" class="markdown-editor" placeholder="在此输入Markdown文本..."></textarea>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-header">
+                        <h3>预览</h3>
+                        <div class="preview-actions">
+                            <button type="button" class="btn btn-secondary" id="copyHtmlBtn">
+                                <i class="material-icons">content_copy</i> 复制HTML
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="downloadBtn">
+                                <i class="material-icons">download</i> 下载HTML
+                            </button>
+                        </div>
+                    </div>
+                    <div id="markdownPreview" class="markdown-preview markdown-body"></div>
+                </div>
+            </div>
+
+            <div class="tool-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="autoPreview" checked>
+                        实时预览
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="syncScroll" checked>
+                        同步滚动
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>主题：</label>
+                    <select id="previewTheme">
+                        <option value="github">GitHub</option>
+                        <option value="light">明亮</option>
+                        <option value="dark">暗黑</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tool-info">
+                <h3>快捷键</h3>
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>B</kbd>
+                        <span>加粗</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>I</kbd>
+                        <span>斜体</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                        <span>链接</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>L</kbd>
+                        <span>无序列表</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>1-6</kbd>
+                        <span>标题</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>Z</kbd>
+                        <span>撤销</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
+{{end}} 

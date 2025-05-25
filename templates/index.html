@@ -1,0 +1,154 @@
+{{define "index"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>程序员工具箱 - 提升开发效率的在线工具</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="/" class="navbar-brand">程序员工具箱</a>
+            
+            <!-- 工具分类下拉菜单 -->
+            <div class="tools-dropdown">
+                <button class="tools-dropdown-btn">
+                    <i class="material-icons">apps</i>
+                    所有工具
+                    <i class="material-icons">expand_more</i>
+                </button>
+                <div class="tools-dropdown-content">
+                    {{range .Categories}}
+                    <div class="category-group">
+                        <div class="category-header">
+                            <i class="material-icons">{{.Icon}}</i>
+                            <span>{{.Name}}</span>
+                        </div>
+                        <div class="category-tools">
+                            {{range .Tools}}
+                            <a href="{{.Path}}" class="tool-item">
+                                <i class="material-icons">{{.Icon}}</i>
+                                <div class="tool-info">
+                                    <span class="tool-name">{{.Name}}</span>
+                                    <span class="tool-desc">{{.Description}}</span>
+                                </div>
+                                {{if .New}}
+                                <span class="badge badge-new">新</span>
+                                {{end}}
+                            </a>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <div class="search-box">
+                <i class="material-icons">search</i>
+                <input type="text" id="toolSearch" placeholder="搜索工具...">
+            </div>
+            <div class="navbar-menu">
+                <a href="/">首页</a>
+                <a href="#popular">热门工具</a>
+                <a href="#new">新工具</a>
+                <a href="#all">所有工具</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>程序员工具箱</h1>
+            <p>提升开发效率的在线工具集合</p>
+            <div class="search-box-large">
+                <i class="material-icons">search</i>
+                <input type="text" id="toolSearchLarge" placeholder="搜索工具，例如：JSON 解析、Base64 编码...">
+            </div>
+        </div>
+    </section>
+
+    <main class="container">
+        <!-- 热门工具 -->
+        <section id="popular" class="tool-section">
+            <div class="section-header">
+                <h2><i class="material-icons">star</i> 热门工具</h2>
+            </div>
+            <div class="tools-grid">
+                {{range .PopularTools}}
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <i class="material-icons">{{.Icon}}</i>
+                    </div>
+                    <h3>{{.Name}}</h3>
+                    <p>{{.Description}}</p>
+                    <a href="{{.Path}}" class="btn btn-primary">使用工具</a>
+                </div>
+                {{end}}
+            </div>
+        </section>
+
+        <!-- 新工具 -->
+        <section id="new" class="tool-section">
+            <div class="section-header">
+                <h2><i class="material-icons">new_releases</i> 新工具</h2>
+            </div>
+            <div class="tools-grid">
+                {{range .NewTools}}
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <i class="material-icons">{{.Icon}}</i>
+                        <span class="badge badge-new">新</span>
+                    </div>
+                    <h3>{{.Name}}</h3>
+                    <p>{{.Description}}</p>
+                    <a href="{{.Path}}" class="btn btn-primary">使用工具</a>
+                </div>
+                {{end}}
+            </div>
+        </section>
+
+        <!-- 所有工具分类 -->
+        <section id="all" class="tool-section">
+            <div class="section-header">
+                <h2><i class="material-icons">category</i> 所有工具</h2>
+            </div>
+            <div class="categories">
+                {{range .Categories}}
+                <div class="category">
+                    <div class="category-header">
+                        <i class="material-icons">{{.Icon}}</i>
+                        <h3>{{.Name}}</h3>
+                        <p>{{.Description}}</p>
+                    </div>
+                    <div class="tools-grid">
+                        {{range .Tools}}
+                        <div class="tool-card">
+                            <div class="tool-icon">
+                                <i class="material-icons">{{.Icon}}</i>
+                                {{if .New}}<span class="badge badge-new">新</span>{{end}}
+                            </div>
+                            <h3>{{.Name}}</h3>
+                            <p>{{.Description}}</p>
+                            <a href="{{.Path}}" class="btn btn-primary">使用工具</a>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/search.js"></script>
+</body>
+</html>
+{{end}} 

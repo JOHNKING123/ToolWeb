@@ -1,0 +1,601 @@
+{{define "xml_formatter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML 格式化 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .xml-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .xml-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .xml-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .xml-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .xml-header h3 i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .xml-content {
+            position: relative;
+            flex: 1;
+            min-height: 400px;
+        }
+
+        .xml-textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .xml-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .xml-textarea:read-only {
+            background-color: var(--bg-secondary);
+            cursor: default;
+        }
+
+        .xml-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-group label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .option-group select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .xml-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .xml-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .xml-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .xml-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .xml-info li i {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-top: 0.1rem;
+        }
+
+        .copy-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        .xml-stats {
+            display: flex;
+            gap: 2rem;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .stat-item i {
+            color: var(--primary-color);
+        }
+
+        .shortcut-tip {
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .xml-container {
+                grid-template-columns: 1fr;
+            }
+
+            .xml-options {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .xml-textarea {
+                min-height: 300px;
+            }
+
+            .xml-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> XML 格式化</h1>
+            <p>格式化和美化 XML 文档，支持语法高亮和验证</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="xml-options">
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">format_indent_increase</i>
+                        缩进：
+                    </label>
+                    <select id="indent">
+                        <option value="2">2空格</option>
+                        <option value="4">4空格</option>
+                        <option value="tab">Tab</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="lineNumbers" checked>
+                        <i class="material-icons">format_list_numbered</i>
+                        显示行号
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="validate" checked>
+                        <i class="material-icons">check_circle</i>
+                        验证XML
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="autoFormat" checked>
+                        <i class="material-icons">autorenew</i>
+                        自动格式化
+                    </label>
+                </div>
+            </div>
+
+            <div class="xml-container">
+                <div class="xml-panel">
+                    <div class="xml-header">
+                        <h3><i class="material-icons">edit</i> 输入</h3>
+                        <div class="xml-header-buttons">
+                            <button type="button" class="btn btn-secondary" id="uploadBtn">
+                                <i class="material-icons">upload_file</i> 上传
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearBtn">
+                                <i class="material-icons">clear</i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <div class="xml-content">
+                        <textarea id="xmlInput" class="xml-textarea" placeholder="在此粘贴您的XML文档..."></textarea>
+                    </div>
+                </div>
+
+                <div class="xml-panel">
+                    <div class="xml-header">
+                        <h3><i class="material-icons">code</i> 格式化结果</h3>
+                        <div class="xml-header-buttons">
+                            <button type="button" class="btn btn-primary" id="formatBtn">
+                                <i class="material-icons">format_align_left</i> 格式化
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="minifyBtn">
+                                <i class="material-icons">compress</i> 压缩
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="copyBtn">
+                                <i class="material-icons">content_copy</i> 复制
+                            </button>
+                        </div>
+                    </div>
+                    <div class="xml-content">
+                        <textarea id="xmlOutput" class="xml-textarea" readonly></textarea>
+                        <div class="copy-tooltip">已复制到剪贴板</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="xml-stats">
+                <div class="stat-item">
+                    <i class="material-icons">format_size</i>
+                    <span>原始大小：</span>
+                    <span id="originalSize">0 B</span>
+                </div>
+                <div class="stat-item">
+                    <i class="material-icons">compress</i>
+                    <span>压缩后：</span>
+                    <span id="compressedSize">0 B</span>
+                </div>
+                <div class="stat-item">
+                    <i class="material-icons">format_list_numbered</i>
+                    <span>行数：</span>
+                    <span id="lineCount">0</span>
+                </div>
+            </div>
+
+            <div class="shortcut-tip">
+                <i class="material-icons">keyboard</i>
+                快捷键：Ctrl+Enter 格式化，Ctrl+M 压缩
+            </div>
+
+            <div class="xml-info">
+                <h3><i class="material-icons">info</i> 功能说明</h3>
+                <ul>
+                    <li><i class="material-icons">check_circle</i> 支持XML格式化和压缩</li>
+                    <li><i class="material-icons">check_circle</i> XML语法验证</li>
+                    <li><i class="material-icons">check_circle</i> 自定义缩进设置</li>
+                    <li><i class="material-icons">check_circle</i> 显示行号</li>
+                    <li><i class="material-icons">check_circle</i> 支持文件上传</li>
+                    <li><i class="material-icons">check_circle</i> 一键复制结果</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const xmlInput = document.getElementById('xmlInput');
+            const xmlOutput = document.getElementById('xmlOutput');
+            const formatBtn = document.getElementById('formatBtn');
+            const minifyBtn = document.getElementById('minifyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const copyTooltip = document.querySelector('.copy-tooltip');
+            const originalSize = document.getElementById('originalSize');
+            const compressedSize = document.getElementById('compressedSize');
+            const lineCount = document.getElementById('lineCount');
+            let formatTimeout;
+
+            // 更新统计信息
+            function updateStats(input, output) {
+                const inputSize = new Blob([input]).size;
+                const outputSize = new Blob([output]).size;
+                const lines = output.split('\n').length;
+
+                originalSize.textContent = formatSize(inputSize);
+                compressedSize.textContent = formatSize(outputSize);
+                lineCount.textContent = lines;
+            }
+
+            // 格式化文件大小
+            function formatSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            // 格式化XML
+            async function formatXML() {
+                if (!xmlInput.value.trim()) return;
+
+                try {
+                    const response = await fetch('/api/xml/format', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            xml: xmlInput.value,
+                            indent: document.getElementById('indent').value,
+                            lineNumbers: document.getElementById('lineNumbers').checked,
+                            validate: document.getElementById('validate').checked
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        xmlOutput.value = data.result;
+                        updateStats(xmlInput.value, data.result);
+                    } else {
+                        xmlOutput.value = '格式化出错：' + data.error;
+                    }
+                } catch (error) {
+                    xmlOutput.value = '服务器错误，请稍后重试';
+                }
+            }
+
+            // 压缩XML
+            async function minifyXML() {
+                if (!xmlInput.value.trim()) return;
+
+                try {
+                    const response = await fetch('/api/xml/minify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            xml: xmlInput.value,
+                            validate: document.getElementById('validate').checked
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        xmlOutput.value = data.result;
+                        updateStats(xmlInput.value, data.result);
+                    } else {
+                        xmlOutput.value = '压缩出错：' + data.error;
+                    }
+                } catch (error) {
+                    xmlOutput.value = '服务器错误，请稍后重试';
+                }
+            }
+
+            // 自动格式化
+            xmlInput.addEventListener('input', function() {
+                if (!document.getElementById('autoFormat').checked) return;
+                
+                clearTimeout(formatTimeout);
+                formatTimeout = setTimeout(() => {
+                    if (this.value.trim()) {
+                        formatXML();
+                    }
+                }, 1000);
+            });
+
+            // 格式化按钮
+            formatBtn.addEventListener('click', () => {
+                clearTimeout(formatTimeout);
+                formatXML();
+            });
+
+            // 压缩按钮
+            minifyBtn.addEventListener('click', minifyXML);
+
+            // 清空按钮
+            clearBtn.addEventListener('click', () => {
+                xmlInput.value = '';
+                xmlOutput.value = '';
+                updateStats('', '');
+                xmlInput.focus();
+            });
+
+            // 复制按钮
+            copyBtn.addEventListener('click', () => {
+                if (!xmlOutput.value.trim()) return;
+                
+                navigator.clipboard.writeText(xmlOutput.value).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+
+            // 文件上传
+            uploadBtn.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.xml,text/xml,application/xml';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        xmlInput.value = e.target.result;
+                        if (document.getElementById('autoFormat').checked) {
+                            formatXML();
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            });
+
+            // 选项变更时自动格式化
+            document.getElementById('indent').addEventListener('change', () => {
+                if (xmlInput.value.trim() && document.getElementById('autoFormat').checked) {
+                    formatXML();
+                }
+            });
+
+            document.getElementById('lineNumbers').addEventListener('change', () => {
+                if (xmlInput.value.trim() && document.getElementById('autoFormat').checked) {
+                    formatXML();
+                }
+            });
+
+            // 快捷键支持
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'Enter') {
+                        // Ctrl+Enter 触发格式化
+                        formatBtn.click();
+                        e.preventDefault();
+                    } else if (e.key === 'm') {
+                        // Ctrl+M 触发压缩
+                        minifyBtn.click();
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            // 双击复制
+            xmlOutput.addEventListener('dblclick', () => {
+                if (!xmlOutput.value.trim()) return;
+                
+                navigator.clipboard.writeText(xmlOutput.value).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 

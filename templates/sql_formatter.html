@@ -1,0 +1,452 @@
+{{define "sql_formatter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL格式化工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .sql-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sql-panel {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .sql-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .sql-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sql-header h3 i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .sql-content {
+            position: relative;
+        }
+
+        .sql-textarea {
+            width: 100%;
+            height: 400px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .sql-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .sql-textarea:read-only {
+            background-color: var(--bg-secondary);
+            cursor: default;
+        }
+
+        .sql-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-group label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .option-group select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .sql-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .sql-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sql-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .sql-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .sql-info li i {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-top: 0.1rem;
+        }
+
+        .copy-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .sql-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sql-options {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .sql-textarea {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">storage</i> SQL格式化工具</h1>
+            <p>格式化SQL查询语句，使其更易于阅读和维护</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="sql-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="uppercase" checked>
+                        <i class="material-icons">text_fields</i>
+                        将关键字转为大写
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">database</i>
+                        SQL方言：
+                    </label>
+                    <select id="dialect">
+                        <option value="standard">标准SQL</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="postgresql">PostgreSQL</option>
+                        <option value="oracle">Oracle</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">format_indent_increase</i>
+                        缩进：
+                    </label>
+                    <select id="indent">
+                        <option value="2">2空格</option>
+                        <option value="4">4空格</option>
+                        <option value="tab">Tab</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sql-container">
+                <div class="sql-panel">
+                    <div class="sql-header">
+                        <h3><i class="material-icons">code</i> 输入SQL</h3>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">
+                            <i class="material-icons">clear</i> 清空
+                        </button>
+                    </div>
+                    <div class="sql-content">
+                        <textarea id="sqlInput" class="sql-textarea" placeholder="在此粘贴您的SQL语句..."></textarea>
+                    </div>
+                </div>
+
+                <div class="sql-panel">
+                    <div class="sql-header">
+                        <h3><i class="material-icons">format_align_left</i> 格式化结果</h3>
+                        <button type="button" class="btn btn-secondary" id="copyBtn">
+                            <i class="material-icons">content_copy</i> 复制
+                        </button>
+                    </div>
+                    <div class="sql-content">
+                        <textarea id="sqlResult" class="sql-textarea" readonly></textarea>
+                        <div class="spinner"></div>
+                        <div class="copy-tooltip">已复制到剪贴板</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="formatBtn">
+                    <i class="material-icons">auto_fix_high</i> 格式化SQL
+                </button>
+                <button type="button" class="btn btn-secondary" id="minifyBtn">
+                    <i class="material-icons">compress</i> 压缩SQL
+                </button>
+            </div>
+
+            <div class="sql-info">
+                <h3><i class="material-icons">info</i> 功能说明</h3>
+                <ul>
+                    <li><i class="material-icons">check_circle</i> 支持多种SQL方言的语法高亮和格式化</li>
+                    <li><i class="material-icons">check_circle</i> 自动识别和格式化常见的SQL语句结构</li>
+                    <li><i class="material-icons">check_circle</i> 可选择是否将SQL关键字转换为大写</li>
+                    <li><i class="material-icons">check_circle</i> 支持自定义缩进和格式化选项</li>
+                    <li><i class="material-icons">check_circle</i> 提供SQL压缩功能，减少空白字符</li>
+                    <li><i class="material-icons">check_circle</i> 复制格式化结果到剪贴板</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sqlInput = document.getElementById('sqlInput');
+            const sqlResult = document.getElementById('sqlResult');
+            const formatBtn = document.getElementById('formatBtn');
+            const minifyBtn = document.getElementById('minifyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const spinner = document.querySelector('.spinner');
+            const copyTooltip = document.querySelector('.copy-tooltip');
+
+            // 格式化SQL
+            formatBtn.addEventListener('click', async () => {
+                if (!sqlInput.value.trim()) return;
+                
+                spinner.style.display = 'block';
+                sqlResult.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/api/sql/format', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sql: sqlInput.value,
+                            uppercase: document.getElementById('uppercase').checked,
+                            dialect: document.getElementById('dialect').value,
+                            indent: document.getElementById('indent').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        sqlResult.value = data.result;
+                    } else {
+                        sqlResult.value = '格式化出错：' + data.error;
+                    }
+                } catch (error) {
+                    sqlResult.value = '服务器错误，请稍后重试';
+                } finally {
+                    spinner.style.display = 'none';
+                    sqlResult.style.opacity = '1';
+                }
+            });
+
+            // 压缩SQL
+            minifyBtn.addEventListener('click', async () => {
+                if (!sqlInput.value.trim()) return;
+                
+                spinner.style.display = 'block';
+                sqlResult.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/api/sql/minify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sql: sqlInput.value,
+                            dialect: document.getElementById('dialect').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        sqlResult.value = data.result;
+                    } else {
+                        sqlResult.value = '压缩出错：' + data.error;
+                    }
+                } catch (error) {
+                    sqlResult.value = '服务器错误，请稍后重试';
+                } finally {
+                    spinner.style.display = 'none';
+                    sqlResult.style.opacity = '1';
+                }
+            });
+
+            // 清空输入
+            clearBtn.addEventListener('click', () => {
+                sqlInput.value = '';
+                sqlResult.value = '';
+                sqlInput.focus();
+            });
+
+            // 复制结果
+            copyBtn.addEventListener('click', () => {
+                if (!sqlResult.value.trim()) return;
+                
+                navigator.clipboard.writeText(sqlResult.value).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+
+            // 快捷键支持
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Enter 触发格式化
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    formatBtn.click();
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 

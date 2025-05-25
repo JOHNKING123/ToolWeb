@@ -1,0 +1,173 @@
+{{define "cron_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cron表达式解析工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .cron-help {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .cron-help table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .cron-help th, .cron-help td {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .cron-help th {
+            background: #e9ecef;
+        }
+        .next-runs {
+            list-style: none;
+            padding: 0;
+        }
+        .next-runs li {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .next-runs li:last-child {
+            border-bottom: none;
+        }
+        .error-message {
+            color: #dc3545;
+            padding: 1rem;
+            background: #f8d7da;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .description {
+            white-space: pre-line;
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">schedule</i> Cron表达式解析工具</h1>
+            <p>解析Cron表达式并显示最近的执行时间</p>
+        </div>
+
+        <div class="tool-content">
+            <form id="cronForm" class="tool-form">
+                <div class="form-group">
+                    <label for="cronExpression">Cron表达式：</label>
+                    <input type="text" id="cronExpression" name="expression" placeholder="输入Cron表达式，例如：0 0 12 * * ?">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-icons">search</i> 解析
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearBtn">
+                        <i class="material-icons">clear</i> 清空
+                    </button>
+                </div>
+            </form>
+
+            <div class="results">
+                <div class="spinner"></div>
+                <div id="cronError" class="error-message" style="display: none;"></div>
+                <div id="cronDescription" class="description" style="display: none;"></div>
+                
+                <div id="nextRunsContainer" class="next-runs" style="display: none;">
+                    <h3>未来执行时间</h3>
+                    <ul id="nextRuns"></ul>
+                </div>
+            </div>
+
+            <div class="tool-info">
+                <h3>Cron表达式格式</h3>
+                <div class="cron-format">
+                    <table>
+                        <tr>
+                            <th>字段</th>
+                            <th>允许值</th>
+                            <th>允许的特殊字符</th>
+                        </tr>
+                        <tr>
+                            <td>秒</td>
+                            <td>0-59</td>
+                            <td>, - * /</td>
+                        </tr>
+                        <tr>
+                            <td>分钟</td>
+                            <td>0-59</td>
+                            <td>, - * /</td>
+                        </tr>
+                        <tr>
+                            <td>小时</td>
+                            <td>0-23</td>
+                            <td>, - * /</td>
+                        </tr>
+                        <tr>
+                            <td>日期</td>
+                            <td>1-31</td>
+                            <td>, - * ? / L W</td>
+                        </tr>
+                        <tr>
+                            <td>月份</td>
+                            <td>1-12</td>
+                            <td>, - * /</td>
+                        </tr>
+                        <tr>
+                            <td>星期</td>
+                            <td>0-6 或 SUN-SAT</td>
+                            <td>, - * ? / L #</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h3>常用示例</h3>
+                <div class="cron-examples">
+                    <button type="button" class="btn btn-text" data-expression="0 0 12 * * ?">
+                        每天中午12点
+                    </button>
+                    <button type="button" class="btn btn-text" data-expression="0 0 0/1 * * ?">
+                        每小时整点
+                    </button>
+                    <button type="button" class="btn btn-text" data-expression="0 0 9-18 * * ?">
+                        工作时间每小时
+                    </button>
+                    <button type="button" class="btn btn-text" data-expression="0 0 0 ? * MON-FRI">
+                        每个工作日凌晨
+                    </button>
+                    <button type="button" class="btn btn-text" data-expression="0 0 0 1 * ?">
+                        每月1号凌晨
+                    </button>
+                </div>
+
+                <h3>特殊字符说明</h3>
+                <ul class="special-chars">
+                    <li><code>*</code> - 表示所有值</li>
+                    <li><code>?</code> - 表示不指定值，用于日期和星期</li>
+                    <li><code>-</code> - 表示区间范围</li>
+                    <li><code>,</code> - 表示列举多个值</li>
+                    <li><code>/</code> - 表示起始时间开始触发，每隔固定时间触发一次</li>
+                    <li><code>L</code> - 表示最后，用于日期和星期</li>
+                    <li><code>W</code> - 表示最近的工作日</li>
+                    <li><code>#</code> - 表示第几个星期几</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
+{{end}} 

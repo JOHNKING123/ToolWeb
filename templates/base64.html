@@ -1,0 +1,490 @@
+{{define "base64"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 编码/解码 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .base64-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .base64-panel {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .base64-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .base64-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .base64-header h3 i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .base64-content {
+            position: relative;
+        }
+
+        .base64-textarea {
+            width: 100%;
+            height: 400px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .base64-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .base64-textarea:read-only {
+            background-color: var(--bg-secondary);
+            cursor: default;
+        }
+
+        .base64-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-group label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .option-group select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .base64-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .base64-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .base64-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .base64-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .base64-info li i {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-top: 0.1rem;
+        }
+
+        .copy-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .base64-container {
+                grid-template-columns: 1fr;
+            }
+
+            .base64-options {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .base64-textarea {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> Base64 编码/解码</h1>
+            <p>在文本和 Base64 编码之间进行转换，支持文件上传和拖放</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="base64-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="urlSafe" checked>
+                        <i class="material-icons">link</i>
+                        URL 安全模式
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">text_format</i>
+                        编码：
+                    </label>
+                    <select id="encoding">
+                        <option value="utf8">UTF-8</option>
+                        <option value="ascii">ASCII</option>
+                        <option value="binary">Binary</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="base64-container">
+                <div class="base64-panel">
+                    <div class="base64-header">
+                        <h3><i class="material-icons">text_fields</i> 输入文本</h3>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">
+                            <i class="material-icons">clear</i> 清空
+                        </button>
+                    </div>
+                    <div class="base64-content">
+                        <textarea id="textInput" class="base64-textarea" placeholder="在此输入要编码或解码的文本..."></textarea>
+                    </div>
+                </div>
+
+                <div class="base64-panel">
+                    <div class="base64-header">
+                        <h3><i class="material-icons">code</i> Base64 结果</h3>
+                        <button type="button" class="btn btn-secondary" id="copyBtn">
+                            <i class="material-icons">content_copy</i> 复制
+                        </button>
+                    </div>
+                    <div class="base64-content">
+                        <textarea id="base64Result" class="base64-textarea" readonly></textarea>
+                        <div class="spinner"></div>
+                        <div class="copy-tooltip">已复制到剪贴板</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="encodeBtn">
+                    <i class="material-icons">arrow_forward</i> 编码
+                </button>
+                <button type="button" class="btn btn-primary" id="decodeBtn">
+                    <i class="material-icons">arrow_back</i> 解码
+                </button>
+                <button type="button" class="btn btn-secondary" id="uploadBtn">
+                    <i class="material-icons">upload_file</i> 上传文件
+                </button>
+            </div>
+
+            <div class="base64-info">
+                <h3><i class="material-icons">info</i> 功能说明</h3>
+                <ul>
+                    <li><i class="material-icons">check_circle</i> 支持文本和文件的 Base64 编码/解码</li>
+                    <li><i class="material-icons">check_circle</i> 提供 URL 安全模式选项</li>
+                    <li><i class="material-icons">check_circle</i> 支持多种字符编码</li>
+                    <li><i class="material-icons">check_circle</i> 支持文件拖放上传</li>
+                    <li><i class="material-icons">check_circle</i> 一键复制编码结果</li>
+                    <li><i class="material-icons">check_circle</i> 支持大文件处理</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('textInput');
+            const base64Result = document.getElementById('base64Result');
+            const encodeBtn = document.getElementById('encodeBtn');
+            const decodeBtn = document.getElementById('decodeBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const spinner = document.querySelector('.spinner');
+            const copyTooltip = document.querySelector('.copy-tooltip');
+
+            // Base64 编码
+            encodeBtn.addEventListener('click', async () => {
+                if (!textInput.value.trim()) return;
+                
+                spinner.style.display = 'block';
+                base64Result.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/api/base64/encode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text: textInput.value,
+                            urlSafe: document.getElementById('urlSafe').checked,
+                            encoding: document.getElementById('encoding').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        base64Result.value = data.result;
+                    } else {
+                        base64Result.value = '编码出错：' + data.error;
+                    }
+                } catch (error) {
+                    base64Result.value = '服务器错误，请稍后重试';
+                } finally {
+                    spinner.style.display = 'none';
+                    base64Result.style.opacity = '1';
+                }
+            });
+
+            // Base64 解码
+            decodeBtn.addEventListener('click', async () => {
+                if (!textInput.value.trim()) return;
+                
+                spinner.style.display = 'block';
+                base64Result.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/api/base64/decode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            base64: textInput.value,
+                            urlSafe: document.getElementById('urlSafe').checked,
+                            encoding: document.getElementById('encoding').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        base64Result.value = data.result;
+                    } else {
+                        base64Result.value = '解码出错：' + data.error;
+                    }
+                } catch (error) {
+                    base64Result.value = '服务器错误，请稍后重试';
+                } finally {
+                    spinner.style.display = 'none';
+                    base64Result.style.opacity = '1';
+                }
+            });
+
+            // 清空输入
+            clearBtn.addEventListener('click', () => {
+                textInput.value = '';
+                base64Result.value = '';
+                textInput.focus();
+            });
+
+            // 复制结果
+            copyBtn.addEventListener('click', () => {
+                if (!base64Result.value.trim()) return;
+                
+                navigator.clipboard.writeText(base64Result.value).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+
+            // 文件上传
+            uploadBtn.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '*/*';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        textInput.value = e.target.result;
+                        encodeBtn.click();
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            });
+
+            // 文件拖放支持
+            const dropZone = document.querySelector('.base64-panel');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--primary-color)';
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.style.borderColor = 'var(--border-color)';
+            });
+
+            dropZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--border-color)';
+                
+                const file = e.dataTransfer.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    textInput.value = e.target.result;
+                    encodeBtn.click();
+                };
+                reader.readAsText(file);
+            });
+
+            // 快捷键支持
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'e') {
+                        // Ctrl+E 触发编码
+                        encodeBtn.click();
+                        e.preventDefault();
+                    } else if (e.key === 'd') {
+                        // Ctrl+D 触发解码
+                        decodeBtn.click();
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 

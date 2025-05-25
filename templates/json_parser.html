@@ -1,0 +1,432 @@
+{{define "json_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 解析器 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .json-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .json-panel {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .json-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .json-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .json-header h3 i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .json-content {
+            position: relative;
+        }
+
+        .json-textarea {
+            width: 100%;
+            height: 400px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .json-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .json-textarea:read-only {
+            background-color: var(--bg-secondary);
+            cursor: default;
+        }
+
+        .json-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-group label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .option-group select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .json-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .json-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .json-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .json-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .json-info li i {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-top: 0.1rem;
+        }
+
+        .copy-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .json-container {
+                grid-template-columns: 1fr;
+            }
+
+            .json-options {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .json-textarea {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">data_object</i> JSON 解析器</h1>
+            <p>格式化和验证 JSON 数据，支持压缩和美化功能</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="json-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="sortKeys" checked>
+                        <i class="material-icons">sort_by_alpha</i>
+                        按键名排序
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">format_indent_increase</i>
+                        缩进：
+                    </label>
+                    <select id="indent">
+                        <option value="2">2空格</option>
+                        <option value="4">4空格</option>
+                        <option value="tab">Tab</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="json-container">
+                <div class="json-panel">
+                    <div class="json-header">
+                        <h3><i class="material-icons">code</i> 输入JSON</h3>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">
+                            <i class="material-icons">clear</i> 清空
+                        </button>
+                    </div>
+                    <div class="json-content">
+                        <textarea id="jsonInput" class="json-textarea" placeholder="在此粘贴您的JSON数据..."></textarea>
+                    </div>
+                </div>
+
+                <div class="json-panel">
+                    <div class="json-header">
+                        <h3><i class="material-icons">format_align_left</i> 格式化结果</h3>
+                        <button type="button" class="btn btn-secondary" id="copyBtn">
+                            <i class="material-icons">content_copy</i> 复制
+                        </button>
+                    </div>
+                    <div class="json-content">
+                        <textarea id="jsonResult" class="json-textarea" readonly></textarea>
+                        <div class="spinner"></div>
+                        <div class="copy-tooltip">已复制到剪贴板</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="formatBtn">
+                    <i class="material-icons">auto_fix_high</i> 格式化JSON
+                </button>
+                <button type="button" class="btn btn-secondary" id="minifyBtn">
+                    <i class="material-icons">compress</i> 压缩JSON
+                </button>
+            </div>
+
+            <div class="json-info">
+                <h3><i class="material-icons">info</i> 功能说明</h3>
+                <ul>
+                    <li><i class="material-icons">check_circle</i> 支持JSON格式化和压缩</li>
+                    <li><i class="material-icons">check_circle</i> 自动检测和修复常见错误</li>
+                    <li><i class="material-icons">check_circle</i> 可选择是否对键名进行排序</li>
+                    <li><i class="material-icons">check_circle</i> 支持自定义缩进选项</li>
+                    <li><i class="material-icons">check_circle</i> 一键复制格式化结果</li>
+                    <li><i class="material-icons">check_circle</i> 支持大文件处理</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsonInput = document.getElementById('jsonInput');
+            const jsonResult = document.getElementById('jsonResult');
+            const formatBtn = document.getElementById('formatBtn');
+            const minifyBtn = document.getElementById('minifyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const spinner = document.querySelector('.spinner');
+            const copyTooltip = document.querySelector('.copy-tooltip');
+
+            // 格式化JSON
+            formatBtn.addEventListener('click', async () => {
+                if (!jsonInput.value.trim()) return;
+                
+                spinner.style.display = 'block';
+                jsonResult.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/api/json/format', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            json: jsonInput.value,
+                            sortKeys: document.getElementById('sortKeys').checked,
+                            indent: document.getElementById('indent').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        jsonResult.value = data.result;
+                    } else {
+                        jsonResult.value = '格式化出错：' + data.error;
+                    }
+                } catch (error) {
+                    jsonResult.value = '服务器错误，请稍后重试';
+                } finally {
+                    spinner.style.display = 'none';
+                    jsonResult.style.opacity = '1';
+                }
+            });
+
+            // 压缩JSON
+            minifyBtn.addEventListener('click', async () => {
+                if (!jsonInput.value.trim()) return;
+                
+                spinner.style.display = 'block';
+                jsonResult.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/api/json/minify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            json: jsonInput.value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        jsonResult.value = data.result;
+                    } else {
+                        jsonResult.value = '压缩出错：' + data.error;
+                    }
+                } catch (error) {
+                    jsonResult.value = '服务器错误，请稍后重试';
+                } finally {
+                    spinner.style.display = 'none';
+                    jsonResult.style.opacity = '1';
+                }
+            });
+
+            // 清空输入
+            clearBtn.addEventListener('click', () => {
+                jsonInput.value = '';
+                jsonResult.value = '';
+                jsonInput.focus();
+            });
+
+            // 复制结果
+            copyBtn.addEventListener('click', () => {
+                if (!jsonResult.value.trim()) return;
+                
+                navigator.clipboard.writeText(jsonResult.value).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+
+            // 快捷键支持
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Enter 触发格式化
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    formatBtn.click();
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 

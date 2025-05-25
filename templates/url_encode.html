@@ -1,0 +1,66 @@
+{{define "url_encode"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL编解码工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">link</i> URL编解码工具</h1>
+            <p>快速进行URL编码和解码转换</p>
+        </div>
+
+        <div class="tool-content">
+            <form id="urlForm" class="tool-form">
+                <div class="form-group">
+                    <label for="urlInput">输入文本：</label>
+                    <textarea id="urlInput" name="input" rows="8" placeholder="在此输入需要编码或解码的文本..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" id="encodeBtn">
+                        <i class="material-icons">lock</i> URL编码
+                    </button>
+                    <button type="button" class="btn btn-primary" id="decodeBtn">
+                        <i class="material-icons">lock_open</i> URL解码
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearBtn">
+                        <i class="material-icons">clear</i> 清空
+                    </button>
+                </div>
+            </form>
+
+            <div class="results">
+                <div class="spinner"></div>
+                <div class="form-group">
+                    <label for="urlResult">转换结果：</label>
+                    <textarea id="urlResult" readonly rows="8"></textarea>
+                </div>
+                <div class="result-actions">
+                    <button id="copyBtn" class="btn btn-secondary">
+                        <i class="material-icons">content_copy</i> 复制结果
+                    </button>
+                </div>
+            </div>
+
+            <div class="tool-info">
+                <h3>使用说明</h3>
+                <ul>
+                    <li>URL编码：将特殊字符转换为%XX格式</li>
+                    <li>URL解码：将%XX格式转换回原始字符</li>
+                    <li>支持批量处理多行文本</li>
+                    <li>自动处理中文字符编码</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
+{{end}} 

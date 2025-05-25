@@ -1,0 +1,469 @@
+{{define "jwt_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT 解析器 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .jwt-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .jwt-panel {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .jwt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .jwt-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .jwt-header h3 i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .jwt-content {
+            position: relative;
+        }
+
+        .jwt-textarea {
+            width: 100%;
+            height: 100px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .jwt-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .jwt-textarea:read-only {
+            background-color: var(--bg-secondary);
+            cursor: default;
+        }
+
+        .jwt-sections {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .jwt-section {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .jwt-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .jwt-section pre {
+            margin: 0;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            color: var(--text-color);
+        }
+
+        .jwt-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-group label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .option-group input[type="text"] {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .option-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .jwt-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .jwt-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .jwt-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .jwt-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .jwt-info li i {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-top: 0.1rem;
+        }
+
+        .copy-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .jwt-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .jwt-options {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">vpn_key</i> JWT 解析器</h1>
+            <p>解析和验证 JSON Web Token，支持多种签名算法</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="jwt-options">
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">security</i>
+                        密钥：
+                    </label>
+                    <input type="text" id="secretKey" placeholder="输入密钥（可选）">
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="verifySignature" checked>
+                        <i class="material-icons">verified</i>
+                        验证签名
+                    </label>
+                </div>
+            </div>
+
+            <div class="jwt-container">
+                <div class="jwt-panel">
+                    <div class="jwt-header">
+                        <h3><i class="material-icons">token</i> JWT Token</h3>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">
+                            <i class="material-icons">clear</i> 清空
+                        </button>
+                    </div>
+                    <div class="jwt-content">
+                        <textarea id="jwtInput" class="jwt-textarea" placeholder="在此粘贴您的JWT Token..."></textarea>
+                    </div>
+                </div>
+
+                <div class="jwt-sections">
+                    <div class="jwt-section">
+                        <h4><i class="material-icons">description</i> Header</h4>
+                        <pre id="headerResult"></pre>
+                    </div>
+                    <div class="jwt-section">
+                        <h4><i class="material-icons">data_object</i> Payload</h4>
+                        <pre id="payloadResult"></pre>
+                    </div>
+                    <div class="jwt-section">
+                        <h4><i class="material-icons">verified_user</i> Signature</h4>
+                        <pre id="signatureResult"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="decodeBtn">
+                    <i class="material-icons">code</i> 解析Token
+                </button>
+                <button type="button" class="btn btn-secondary" id="verifyBtn">
+                    <i class="material-icons">verified</i> 验证签名
+                </button>
+                <button type="button" class="btn btn-secondary" id="copyBtn">
+                    <i class="material-icons">content_copy</i> 复制解析结果
+                </button>
+            </div>
+
+            <div class="jwt-info">
+                <h3><i class="material-icons">info</i> 功能说明</h3>
+                <ul>
+                    <li><i class="material-icons">check_circle</i> 支持解析JWT Token结构</li>
+                    <li><i class="material-icons">check_circle</i> 验证Token签名</li>
+                    <li><i class="material-icons">check_circle</i> 支持多种签名算法</li>
+                    <li><i class="material-icons">check_circle</i> 显示Token详细信息</li>
+                    <li><i class="material-icons">check_circle</i> 一键复制解析结果</li>
+                    <li><i class="material-icons">check_circle</i> 支持自定义密钥</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const jwtInput = document.getElementById('jwtInput');
+            const headerResult = document.getElementById('headerResult');
+            const payloadResult = document.getElementById('payloadResult');
+            const signatureResult = document.getElementById('signatureResult');
+            const decodeBtn = document.getElementById('decodeBtn');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyTooltip = document.querySelector('.copy-tooltip');
+
+            // 解析JWT
+            decodeBtn.addEventListener('click', async () => {
+                if (!jwtInput.value.trim()) return;
+
+                try {
+                    const response = await fetch('/api/jwt/decode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token: jwtInput.value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        headerResult.textContent = JSON.stringify(data.header, null, 2);
+                        payloadResult.textContent = JSON.stringify(data.payload, null, 2);
+                        signatureResult.textContent = data.signature;
+                    } else {
+                        headerResult.textContent = '';
+                        payloadResult.textContent = '解析出错：' + data.error;
+                        signatureResult.textContent = '';
+                    }
+                } catch (error) {
+                    headerResult.textContent = '';
+                    payloadResult.textContent = '服务器错误，请稍后重试';
+                    signatureResult.textContent = '';
+                }
+            });
+
+            // 验证签名
+            verifyBtn.addEventListener('click', async () => {
+                if (!jwtInput.value.trim()) return;
+
+                try {
+                    const response = await fetch('/api/jwt/verify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token: jwtInput.value,
+                            secret: document.getElementById('secretKey').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        signatureResult.textContent = '签名验证通过！\n\n算法：' + data.algorithm;
+                    } else {
+                        signatureResult.textContent = '签名验证失败：' + data.error;
+                    }
+                } catch (error) {
+                    signatureResult.textContent = '服务器错误，请稍后重试';
+                }
+            });
+
+            // 清空输入
+            clearBtn.addEventListener('click', () => {
+                jwtInput.value = '';
+                headerResult.textContent = '';
+                payloadResult.textContent = '';
+                signatureResult.textContent = '';
+                jwtInput.focus();
+            });
+
+            // 复制结果
+            copyBtn.addEventListener('click', () => {
+                const result = {
+                    header: headerResult.textContent,
+                    payload: payloadResult.textContent,
+                    signature: signatureResult.textContent
+                };
+                
+                navigator.clipboard.writeText(JSON.stringify(result, null, 2)).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+
+            // 自动解析
+            jwtInput.addEventListener('input', function() {
+                if (this.value.trim() && this.value.split('.').length === 3) {
+                    decodeBtn.click();
+                }
+            });
+
+            // 快捷键支持
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    decodeBtn.click();
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 

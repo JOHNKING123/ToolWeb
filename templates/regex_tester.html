@@ -1,0 +1,99 @@
+{{define "regex_tester"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正则表达式测试工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">find_in_page</i> 正则表达式测试工具</h1>
+            <p>测试和验证正则表达式，实时查看匹配结果</p>
+        </div>
+
+        <div class="tool-content">
+            <form id="regexForm" class="tool-form">
+                <div class="form-group">
+                    <label for="regexPattern">正则表达式：</label>
+                    <input type="text" id="regexPattern" name="pattern" placeholder="输入正则表达式...">
+                </div>
+
+                <div class="form-group">
+                    <label for="regexText">测试文本：</label>
+                    <textarea id="regexText" name="text" rows="8" placeholder="输入要测试的文本..."></textarea>
+                </div>
+
+                <div class="form-options">
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" name="ignoreCase" id="ignoreCase">
+                            忽略大小写 (i)
+                        </label>
+                    </div>
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" name="multiline" id="multiline">
+                            多行模式 (m)
+                        </label>
+                    </div>
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" name="global" id="global" checked>
+                            全局匹配 (g)
+                        </label>
+                    </div>
+                </div>
+            </form>
+
+            <div class="results">
+                <div class="spinner"></div>
+                <div id="regexResult">
+                    <div class="result-section">
+                        <h3>匹配结果</h3>
+                        <div id="matches"></div>
+                    </div>
+                    <div class="result-section">
+                        <h3>匹配统计</h3>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <span class="stat-label">匹配总数：</span>
+                                <span id="matchCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">捕获组数：</span>
+                                <span id="groupCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-info">
+                <h3>常用正则表达式</h3>
+                <div class="regex-examples">
+                    <button type="button" class="btn btn-text" data-pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$">
+                        邮箱地址
+                    </button>
+                    <button type="button" class="btn btn-text" data-pattern="^(13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}$">
+                        手机号码
+                    </button>
+                    <button type="button" class="btn btn-text" data-pattern="^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$">
+                        URL地址
+                    </button>
+                    <button type="button" class="btn btn-text" data-pattern="^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$">
+                        日期格式
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
+{{end}} 

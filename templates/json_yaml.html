@@ -1,0 +1,112 @@
+{{define "json_yaml"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON/YAML转换工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">swap_horiz</i> JSON/YAML转换工具</h1>
+            <p>在JSON和YAML格式之间进行转换</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="converter-container">
+                <div class="input-section">
+                    <div class="section-header">
+                        <div class="format-selector">
+                            <label>输入格式：</label>
+                            <select id="inputFormat">
+                                <option value="json">JSON</option>
+                                <option value="yaml">YAML</option>
+                            </select>
+                        </div>
+                        <div class="section-actions">
+                            <button type="button" class="btn btn-secondary" id="formatInput">
+                                <i class="material-icons">format_align_left</i> 格式化
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearInput">
+                                <i class="material-icons">clear</i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="inputText" class="converter-textarea" placeholder="在此输入JSON或YAML文本..."></textarea>
+                </div>
+
+                <div class="converter-controls">
+                    <button type="button" class="btn btn-primary" id="convertBtn">
+                        <i class="material-icons">arrow_forward</i>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="swapBtn">
+                        <i class="material-icons">swap_vert</i>
+                    </button>
+                </div>
+
+                <div class="output-section">
+                    <div class="section-header">
+                        <div class="format-selector">
+                            <label>输出格式：</label>
+                            <select id="outputFormat">
+                                <option value="yaml">YAML</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                        <div class="section-actions">
+                            <button type="button" class="btn btn-secondary" id="copyOutput">
+                                <i class="material-icons">content_copy</i> 复制
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="downloadOutput">
+                                <i class="material-icons">download</i> 下载
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="outputText" class="converter-textarea" readonly></textarea>
+                </div>
+            </div>
+
+            <div class="tool-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="autoConvert" checked>
+                        自动转换
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>JSON格式化选项：</label>
+                    <select id="jsonIndent">
+                        <option value="2">2空格缩进</option>
+                        <option value="4">4空格缩进</option>
+                        <option value="tab">Tab缩进</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="sortKeys">
+                        按键名排序
+                    </label>
+                </div>
+            </div>
+
+            <div class="tool-info">
+                <h3>功能说明</h3>
+                <ul>
+                    <li>支持JSON和YAML双向转换</li>
+                    <li>自动检测输入格式</li>
+                    <li>支持格式化和自定义缩进</li>
+                    <li>可选择是否对对象键名排序</li>
+                    <li>支持文件导入导出</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
+{{end}} 

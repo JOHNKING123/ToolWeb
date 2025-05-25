@@ -1,0 +1,53 @@
+{{define "xml_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML格式化工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> XML格式化工具</h1>
+            <p>格式化和验证XML文档，使其更易于阅读和编辑</p>
+        </div>
+
+        <div class="tool-content">
+            <form id="xmlForm" class="tool-form">
+                <div class="form-group">
+                    <label for="xmlInput">输入XML文本：</label>
+                    <textarea id="xmlInput" name="input" rows="10" placeholder="在此粘贴您的XML代码..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-icons">format_align_left</i> 格式化
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearBtn">
+                        <i class="material-icons">clear</i> 清空
+                    </button>
+                </div>
+            </form>
+
+            <div class="results">
+                <div class="spinner"></div>
+                <div class="form-group">
+                    <label for="xmlResult">格式化结果：</label>
+                    <textarea id="xmlResult" readonly rows="10"></textarea>
+                </div>
+                <div class="result-actions">
+                    <button id="copyBtn" class="btn btn-secondary">
+                        <i class="material-icons">content_copy</i> 复制结果
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
+{{end}} 

@@ -1,0 +1,471 @@
+{{define "url_codec"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 编码/解码 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .url-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .url-panel {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .url-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .url-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .url-header h3 i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .url-content {
+            position: relative;
+        }
+
+        .url-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .url-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .url-textarea:read-only {
+            background-color: var(--bg-secondary);
+            cursor: default;
+        }
+
+        .url-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-group label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .option-group select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: white;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .url-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .url-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .url-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .url-info li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .url-info li i {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-top: 0.1rem;
+        }
+
+        .copy-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .url-container {
+                grid-template-columns: 1fr;
+            }
+
+            .url-options {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .url-textarea {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">link</i> URL 编码/解码</h1>
+            <p>URL 编码和解码工具，支持批量处理和多种编码方式</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="url-options">
+                <div class="option-group">
+                    <label>
+                        <i class="material-icons">translate</i>
+                        编码方式：
+                    </label>
+                    <select id="encoding">
+                        <option value="utf8">UTF-8</option>
+                        <option value="gbk">GBK</option>
+                        <option value="gb2312">GB2312</option>
+                        <option value="iso-8859-1">ISO-8859-1</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="encodeAll">
+                        <i class="material-icons">all_inclusive</i>
+                        编码所有字符
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="autoConvert" checked>
+                        <i class="material-icons">autorenew</i>
+                        自动转换
+                    </label>
+                </div>
+            </div>
+
+            <div class="url-container">
+                <div class="url-panel">
+                    <div class="url-header">
+                        <h3><i class="material-icons">edit</i> 输入</h3>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">
+                            <i class="material-icons">clear</i> 清空
+                        </button>
+                    </div>
+                    <div class="url-content">
+                        <textarea id="urlInput" class="url-textarea" placeholder="在此输入需要编码或解码的文本..."></textarea>
+                    </div>
+                </div>
+
+                <div class="url-panel">
+                    <div class="url-header">
+                        <h3><i class="material-icons">code</i> 结果</h3>
+                        <button type="button" class="btn btn-secondary" id="copyBtn">
+                            <i class="material-icons">content_copy</i> 复制
+                        </button>
+                    </div>
+                    <div class="url-content">
+                        <textarea id="urlOutput" class="url-textarea" readonly></textarea>
+                        <div class="copy-tooltip">已复制到剪贴板</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="encodeBtn">
+                    <i class="material-icons">arrow_forward</i> 编码
+                </button>
+                <button type="button" class="btn btn-primary" id="decodeBtn">
+                    <i class="material-icons">arrow_back</i> 解码
+                </button>
+                <button type="button" class="btn btn-secondary" id="swapBtn">
+                    <i class="material-icons">swap_horiz</i> 交换
+                </button>
+            </div>
+
+            <div class="url-info">
+                <h3><i class="material-icons">info</i> 功能说明</h3>
+                <ul>
+                    <li><i class="material-icons">check_circle</i> 支持URL编码和解码</li>
+                    <li><i class="material-icons">check_circle</i> 多种字符编码选择</li>
+                    <li><i class="material-icons">check_circle</i> 批量处理支持</li>
+                    <li><i class="material-icons">check_circle</i> 自动转换功能</li>
+                    <li><i class="material-icons">check_circle</i> 编码所有字符选项</li>
+                    <li><i class="material-icons">check_circle</i> 一键复制结果</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('urlInput');
+            const urlOutput = document.getElementById('urlOutput');
+            const encodeBtn = document.getElementById('encodeBtn');
+            const decodeBtn = document.getElementById('decodeBtn');
+            const swapBtn = document.getElementById('swapBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyTooltip = document.querySelector('.copy-tooltip');
+            let encodeTimeout;
+
+            // URL编码
+            encodeBtn.addEventListener('click', async () => {
+                if (!urlInput.value.trim()) return;
+
+                try {
+                    const response = await fetch('/api/url/encode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text: urlInput.value,
+                            encoding: document.getElementById('encoding').value,
+                            encodeAll: document.getElementById('encodeAll').checked
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        urlOutput.value = data.result;
+                    } else {
+                        urlOutput.value = '编码出错：' + data.error;
+                    }
+                } catch (error) {
+                    urlOutput.value = '服务器错误，请稍后重试';
+                }
+            });
+
+            // URL解码
+            decodeBtn.addEventListener('click', async () => {
+                if (!urlInput.value.trim()) return;
+
+                try {
+                    const response = await fetch('/api/url/decode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text: urlInput.value,
+                            encoding: document.getElementById('encoding').value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        urlOutput.value = data.result;
+                    } else {
+                        urlOutput.value = '解码出错：' + data.error;
+                    }
+                } catch (error) {
+                    urlOutput.value = '服务器错误，请稍后重试';
+                }
+            });
+
+            // 交换输入输出
+            swapBtn.addEventListener('click', () => {
+                const temp = urlInput.value;
+                urlInput.value = urlOutput.value;
+                urlOutput.value = temp;
+            });
+
+            // 清空输入
+            clearBtn.addEventListener('click', () => {
+                urlInput.value = '';
+                urlOutput.value = '';
+                urlInput.focus();
+            });
+
+            // 复制结果
+            copyBtn.addEventListener('click', () => {
+                if (!urlOutput.value.trim()) return;
+                
+                navigator.clipboard.writeText(urlOutput.value).then(() => {
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                });
+            });
+
+            // 自动转换
+            urlInput.addEventListener('input', function() {
+                if (!document.getElementById('autoConvert').checked) return;
+                
+                clearTimeout(encodeTimeout);
+                encodeTimeout = setTimeout(() => {
+                    if (this.value.trim()) {
+                        encodeBtn.click();
+                    }
+                }, 500);
+            });
+
+            // 编码方式切换
+            document.getElementById('encoding').addEventListener('change', function() {
+                if (document.getElementById('autoConvert').checked && urlInput.value.trim()) {
+                    encodeBtn.click();
+                }
+            });
+
+            // 编码所有字符选项切换
+            document.getElementById('encodeAll').addEventListener('change', function() {
+                if (document.getElementById('autoConvert').checked && urlInput.value.trim()) {
+                    encodeBtn.click();
+                }
+            });
+
+            // 快捷键支持
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'e') {
+                        // Ctrl+E 触发编码
+                        encodeBtn.click();
+                        e.preventDefault();
+                    } else if (e.key === 'd') {
+                        // Ctrl+D 触发解码
+                        decodeBtn.click();
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 
