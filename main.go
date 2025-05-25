@@ -47,7 +47,7 @@ func main() {
 		c.HTML(http.StatusOK, templateName, nil)
 	})
 
-	// API 路由
+	// API 路由 测试
 	api := router.Group("/api")
 	{
 		// JSON 解析器
