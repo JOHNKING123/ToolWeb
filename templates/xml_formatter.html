@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XML 格式化 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .container {
@@ -440,7 +440,7 @@
                 if (!xmlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/xml/format', {
+                    const response = await fetch('/tools/api/xml/format', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -470,7 +470,7 @@
                 if (!xmlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/xml/minify', {
+                    const response = await fetch('/tools/api/xml/minify', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JWT 解析器 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .jwt-container {
@@ -369,7 +369,7 @@
                 if (!jwtInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/jwt/decode', {
+                    const response = await fetch('/tools/api/jwt/decode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -401,7 +401,7 @@
                 if (!jwtInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/jwt/verify', {
+                    const response = await fetch('/tools/api/jwt/verify', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

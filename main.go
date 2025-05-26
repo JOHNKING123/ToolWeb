@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"toolweb/tools"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -15,11 +16,25 @@ func main() {
 	// 加载HTML模板
 	router.LoadHTMLGlob("templates/*")
 
-	// 静态文件服务
-	router.Static("/static", "./static")
+	// 静态文件服务 - 修改为 /tools/static/
+	router.Static("/tools/static", "./static")
 
-	// 页面路由
+	// 页面路由 - 保持根路径不变
 	router.GET("/", func(c *gin.Context) {
+		// 获取分类和工具数据
+		categories := tools.GetCategories()
+		popularTools := tools.GetPopularTools()
+		newTools := tools.GetNewTools()
+
+		c.HTML(http.StatusOK, "index", gin.H{
+			"Categories":   categories,
+			"PopularTools": popularTools,
+			"NewTools":     newTools,
+		})
+	})
+
+	// 工具首页路由
+	router.GET("/tools/index", func(c *gin.Context) {
 		// 获取分类和工具数据
 		categories := tools.GetCategories()
 		popularTools := tools.GetPopularTools()
@@ -37,18 +52,18 @@ func main() {
 		tool := c.Param("tool")
 		// 将连字符转换为下划线
 		templateName := strings.ReplaceAll(tool, "-", "_")
-		
+
 		// 检查模板是否存在
 		if tmpl := router.HTMLRender.Instance(templateName, nil); tmpl == nil {
 			c.String(http.StatusNotFound, "工具不存在")
 			return
 		}
-		
+
 		c.HTML(http.StatusOK, templateName, nil)
 	})
 
-	// API 路由 测试
-	api := router.Group("/api")
+	// API 路由 - 修改为 /tools/api/
+	api := router.Group("/tools/api")
 	{
 		// JSON 解析器
 		api.POST("/json-parser", func(c *gin.Context) {
@@ -362,4 +377,4 @@ func main() {
 	if err := router.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
-} 
+}

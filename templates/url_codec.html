@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL 编码/解码 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .url-container {
@@ -348,7 +348,7 @@
                 if (!urlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/url/encode', {
+                    const response = await fetch('/tools/api/url/encode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -376,7 +376,7 @@
                 if (!urlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/url/decode', {
+                    const response = await fetch('/tools/api/url/decode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

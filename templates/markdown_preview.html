@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown 预览 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/tools.css">
-    <link rel="stylesheet" href="/static/css/markdown-themes.css">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/markdown-themes.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         /* Reset some basic elements */
@@ -542,7 +542,7 @@
                 }
 
                 try {
-                    const response = await fetch('/api/markdown/render', {
+                    const response = await fetch('/tools/api/markdown/render', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -616,7 +616,7 @@
             // 导出按钮
             exportBtn.addEventListener('click', async () => {
                 try {
-                    const response = await fetch('/api/markdown/export', {
+                    const response = await fetch('/tools/api/markdown/export', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

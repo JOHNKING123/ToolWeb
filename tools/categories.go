@@ -178,4 +178,4 @@ func GetNewTools() []Tool {
 		}
 	}
 	return newTools
-} 
+}

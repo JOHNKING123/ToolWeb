@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Base64 编码/解码 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .base64-container {
@@ -344,7 +344,7 @@
                 base64Result.style.opacity = '0.5';
 
                 try {
-                    const response = await fetch('/api/base64/encode', {
+                    const response = await fetch('/tools/api/base64/encode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -378,7 +378,7 @@
                 base64Result.style.opacity = '0.5';
 
                 try {
-                    const response = await fetch('/api/base64/decode', {
+                    const response = await fetch('/tools/api/base64/decode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

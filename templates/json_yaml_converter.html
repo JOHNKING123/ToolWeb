@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON/YAML 转换 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .converter-container {
@@ -350,7 +350,7 @@
                 if (!jsonInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/convert/json2yaml', {
+                    const response = await fetch('/tools/api/convert/json2yaml', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -379,7 +379,7 @@
                 if (!yamlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/convert/yaml2json', {
+                    const response = await fetch('/tools/api/convert/yaml2json', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -407,7 +407,7 @@
                 if (!jsonInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/json/format', {
+                    const response = await fetch('/tools/api/json/format', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -435,7 +435,7 @@
                 if (!yamlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/api/yaml/format', {
+                    const response = await fetch('/tools/api/yaml/format', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
