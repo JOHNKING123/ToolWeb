@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"bytes"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
@@ -43,18 +42,14 @@ func RenderMarkdown(req *MarkdownRequest) *MarkdownResponse {
 		Flags: htmlFlags,
 		CSS:   getThemeCSS(req.Theme),
 	}
+	renderer := html.NewRenderer(opts)
+
 	// 渲染 HTML
-	var buf bytes.Buffer
-	if err := html.Render(doc, &buf, opts); err != nil {
-		return &MarkdownResponse{
-			Success: false,
-			Error:   err.Error(),
-		}
-	}
+	rs := markdown.Render(doc, renderer)
 
 	return &MarkdownResponse{
 		Success: true,
-		HTML:    buf.String(),
+		HTML:    string(rs),
 	}
 }
 
@@ -99,4 +94,4 @@ func ExportMarkdown(req *MarkdownRequest) ([]byte, error) {
 
 	// 渲染完整的 HTML 文档
 	return markdown.Render(doc, renderer), nil
-} 
+}
