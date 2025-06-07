@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base64 编码/解码 - 程序员工具箱</title>
+    <title>Base64 编解码工具 - 程序员工具箱</title>
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -239,250 +239,250 @@
                 height: 300px;
             }
         }
+
+        .example-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .example-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .example-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .example-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+
+        .example-btn:active {
+            background: #dee2e6;
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+        }
+
+        .mode-switch label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="tool-header">
-            <h1><i class="material-icons">code</i> Base64 编码/解码</h1>
-            <p>在文本和 Base64 编码之间进行转换，支持文件上传和拖放</p>
+            <h1><i class="material-icons">code</i> Base64 编解码工具</h1>
+            <p>在线进行 Base64 编码和解码转换</p>
         </div>
 
         <div class="tool-content">
-            <div class="base64-options">
-                <div class="option-group">
-                    <label>
-                        <input type="checkbox" id="urlSafe" checked>
-                        <i class="material-icons">link</i>
-                        URL 安全模式
-                    </label>
-                </div>
-                <div class="option-group">
-                    <label>
-                        <i class="material-icons">text_format</i>
-                        编码：
-                    </label>
-                    <select id="encoding">
-                        <option value="utf8">UTF-8</option>
-                        <option value="ascii">ASCII</option>
-                        <option value="binary">Binary</option>
-                    </select>
-                </div>
+            <div class="mode-switch">
+                <label>
+                    <input type="radio" name="mode" value="encode" checked>
+                    <i class="material-icons">lock</i>
+                    编码
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="decode">
+                    <i class="material-icons">lock_open</i>
+                    解码
+                </label>
             </div>
 
             <div class="base64-container">
                 <div class="base64-panel">
                     <div class="base64-header">
-                        <h3><i class="material-icons">text_fields</i> 输入文本</h3>
+                        <h3><i class="material-icons">input</i> 输入</h3>
                         <button type="button" class="btn btn-secondary" id="clearBtn">
                             <i class="material-icons">clear</i> 清空
                         </button>
                     </div>
                     <div class="base64-content">
-                        <textarea id="textInput" class="base64-textarea" placeholder="在此输入要编码或解码的文本..."></textarea>
+                        <textarea id="inputText" class="base64-textarea" placeholder="在此输入要处理的文本..."></textarea>
                     </div>
                 </div>
 
                 <div class="base64-panel">
                     <div class="base64-header">
-                        <h3><i class="material-icons">code</i> Base64 结果</h3>
+                        <h3><i class="material-icons">output</i> 输出</h3>
                         <button type="button" class="btn btn-secondary" id="copyBtn">
                             <i class="material-icons">content_copy</i> 复制
                         </button>
                     </div>
                     <div class="base64-content">
-                        <textarea id="base64Result" class="base64-textarea" readonly></textarea>
-                        <div class="spinner"></div>
+                        <textarea id="outputText" class="base64-textarea" readonly></textarea>
                         <div class="copy-tooltip">已复制到剪贴板</div>
                     </div>
                 </div>
             </div>
 
-            <div class="form-actions">
-                <button type="button" class="btn btn-primary" id="encodeBtn">
-                    <i class="material-icons">arrow_forward</i> 编码
-                </button>
-                <button type="button" class="btn btn-primary" id="decodeBtn">
-                    <i class="material-icons">arrow_back</i> 解码
-                </button>
-                <button type="button" class="btn btn-secondary" id="uploadBtn">
-                    <i class="material-icons">upload_file</i> 上传文件
-                </button>
-            </div>
+            <div class="example-section">
+                <h3>编码示例</h3>
+                <div class="example-buttons" id="encodeExamples">
+                    <button type="button" class="example-btn" data-text="Hello, World!">
+                        普通文本：Hello, World!
+                        <br>
+                        <small>编码结果：SGVsbG8sIFdvcmxkIQ==</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="https://example.com/path?param=value">
+                        URL：https://example.com/path?param=value
+                        <br>
+                        <small>编码结果：aHR0cHM6Ly9leGFtcGxlLmNvbS9wYXRoP3BhcmFtPXZhbHVl</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="用户名:密码">
+                        用户名密码：用户名:密码
+                        <br>
+                        <small>编码结果：55So5oi35ZCN5a2X77ya5a+G56CB</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="{'name': 'John', 'age': 30}">
+                        JSON 数据：{'name': 'John', 'age': 30}
+                        <br>
+                        <small>编码结果：eydubWFtZSc6ICdKb2huJywgJ2FnZSc6IDMwfQ==</small>
+                    </button>
+                </div>
 
-            <div class="base64-info">
-                <h3><i class="material-icons">info</i> 功能说明</h3>
-                <ul>
-                    <li><i class="material-icons">check_circle</i> 支持文本和文件的 Base64 编码/解码</li>
-                    <li><i class="material-icons">check_circle</i> 提供 URL 安全模式选项</li>
-                    <li><i class="material-icons">check_circle</i> 支持多种字符编码</li>
-                    <li><i class="material-icons">check_circle</i> 支持文件拖放上传</li>
-                    <li><i class="material-icons">check_circle</i> 一键复制编码结果</li>
-                    <li><i class="material-icons">check_circle</i> 支持大文件处理</li>
-                </ul>
+                <h3>解码示例</h3>
+                <div class="example-buttons" id="decodeExamples">
+                    <button type="button" class="example-btn" data-text="SGVsbG8sIFdvcmxkIQ==">
+                        编码文本：SGVsbG8sIFdvcmxkIQ==
+                        <br>
+                        <small>解码结果：Hello, World!</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="aHR0cHM6Ly9leGFtcGxlLmNvbS9wYXRoP3BhcmFtPXZhbHVl">
+                        编码URL：aHR0cHM6Ly9leGFtcGxlLmNvbS9wYXRoP3BhcmFtPXZhbHVl
+                        <br>
+                        <small>解码结果：https://example.com/path?param=value</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="55So5oi35ZCN5a2X77ya5a+G56CB">
+                        编码中文：55So5oi35ZCN5a2X77ya5a+G56CB
+                        <br>
+                        <small>解码结果：用户名:密码</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="eydubWFtZSc6ICdKb2huJywgJ2FnZSc6IDMwfQ==">
+                        编码JSON：eydubWFtZSc6ICdKb2huJywgJ2FnZSc6IDMwfQ==
+                        <br>
+                        <small>解码结果：{'name': 'John', 'age': 30}</small>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const textInput = document.getElementById('textInput');
-            const base64Result = document.getElementById('base64Result');
-            const encodeBtn = document.getElementById('encodeBtn');
-            const decodeBtn = document.getElementById('decodeBtn');
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
             const clearBtn = document.getElementById('clearBtn');
             const copyBtn = document.getElementById('copyBtn');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const spinner = document.querySelector('.spinner');
-            const copyTooltip = document.querySelector('.copy-tooltip');
+            const modeInputs = document.getElementsByName('mode');
+            const encodeExamples = document.getElementById('encodeExamples');
+            const decodeExamples = document.getElementById('decodeExamples');
 
-            // Base64 编码
-            encodeBtn.addEventListener('click', async () => {
-                if (!textInput.value.trim()) return;
-                
-                spinner.style.display = 'block';
-                base64Result.style.opacity = '0.5';
+            let currentMode = 'encode';
 
-                try {
-                    const response = await fetch('/tools/api/base64/encode', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            text: textInput.value,
-                            urlSafe: document.getElementById('urlSafe').checked,
-                            encoding: document.getElementById('encoding').value
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        base64Result.value = data.result;
+            // 处理模式切换
+            modeInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    currentMode = this.value;
+                    // 清空输入输出
+                    inputText.value = '';
+                    outputText.value = '';
+                    // 切换示例显示
+                    if (currentMode === 'encode') {
+                        encodeExamples.style.display = 'block';
+                        decodeExamples.style.display = 'none';
                     } else {
-                        base64Result.value = '编码出错：' + data.error;
+                        encodeExamples.style.display = 'none';
+                        decodeExamples.style.display = 'block';
                     }
-                } catch (error) {
-                    base64Result.value = '服务器错误，请稍后重试';
-                } finally {
-                    spinner.style.display = 'none';
-                    base64Result.style.opacity = '1';
-                }
-            });
-
-            // Base64 解码
-            decodeBtn.addEventListener('click', async () => {
-                if (!textInput.value.trim()) return;
-                
-                spinner.style.display = 'block';
-                base64Result.style.opacity = '0.5';
-
-                try {
-                    const response = await fetch('/tools/api/base64/decode', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            base64: textInput.value,
-                            urlSafe: document.getElementById('urlSafe').checked,
-                            encoding: document.getElementById('encoding').value
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        base64Result.value = data.result;
-                    } else {
-                        base64Result.value = '解码出错：' + data.error;
-                    }
-                } catch (error) {
-                    base64Result.value = '服务器错误，请稍后重试';
-                } finally {
-                    spinner.style.display = 'none';
-                    base64Result.style.opacity = '1';
-                }
-            });
-
-            // 清空输入
-            clearBtn.addEventListener('click', () => {
-                textInput.value = '';
-                base64Result.value = '';
-                textInput.focus();
-            });
-
-            // 复制结果
-            copyBtn.addEventListener('click', () => {
-                if (!base64Result.value.trim()) return;
-                
-                navigator.clipboard.writeText(base64Result.value).then(() => {
-                    copyTooltip.classList.add('show');
-                    setTimeout(() => {
-                        copyTooltip.classList.remove('show');
-                    }, 2000);
                 });
             });
 
-            // 文件上传
-            uploadBtn.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '*/*';
-                input.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
+            // 输入文本变化时自动处理
+            inputText.addEventListener('input', processText);
 
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        textInput.value = e.target.result;
-                        encodeBtn.click();
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
+            // 清空按钮
+            clearBtn.addEventListener('click', function() {
+                inputText.value = '';
+                outputText.value = '';
+                inputText.focus();
             });
 
-            // 文件拖放支持
-            const dropZone = document.querySelector('.base64-panel');
-            
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = 'var(--primary-color)';
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.style.borderColor = 'var(--border-color)';
-            });
-
-            dropZone.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = 'var(--border-color)';
+            // 复制按钮
+            copyBtn.addEventListener('click', function() {
+                if (!outputText.value) return;
                 
-                const file = e.dataTransfer.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    textInput.value = e.target.result;
-                    encodeBtn.click();
-                };
-                reader.readAsText(file);
+                navigator.clipboard.writeText(outputText.value).then(() => {
+                    const tooltip = document.querySelector('.copy-tooltip');
+                    tooltip.classList.add('show');
+                    setTimeout(() => tooltip.classList.remove('show'), 2000);
+                });
             });
 
-            // 快捷键支持
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    if (e.key === 'e') {
-                        // Ctrl+E 触发编码
-                        encodeBtn.click();
-                        e.preventDefault();
-                    } else if (e.key === 'd') {
-                        // Ctrl+D 触发解码
-                        decodeBtn.click();
-                        e.preventDefault();
-                    }
+            // 示例按钮
+            document.querySelectorAll('.example-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    inputText.value = this.dataset.text;
+                    processText();
+                });
+            });
+
+            // 初始显示/隐藏示例
+            encodeExamples.style.display = 'block';
+            decodeExamples.style.display = 'none';
+
+            async function processText() {
+                if (!inputText.value.trim()) {
+                    outputText.value = '';
+                    return;
                 }
-            });
+
+                try {
+                    const response = await fetch(`/tools/api/base64/${currentMode}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            input: inputText.value
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        outputText.value = data.output;
+                    } else {
+                        outputText.value = 'Error: ' + (data.error || '未知错误');
+                    }
+                } catch (error) {
+                    outputText.value = 'Error: ' + error.message;
+                }
+            }
         });
     </script>
 </body>

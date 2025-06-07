@@ -23,7 +23,7 @@ if (document.getElementById('jsonForm')) {
         showSpinner();
 
         try {
-            const response = await fetch('/api/json-parser', {
+            const response = await fetch('/tools/api/json-parser', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ if (document.getElementById('base64Form')) {
         showSpinner();
 
         try {
-            const response = await fetch(`/api/base64/${action}`, {
+            const response = await fetch(`/tools/api/base64/${action}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ if (document.getElementById('regexForm')) {
         showSpinner();
 
         try {
-            const response = await fetch('/api/regex-tester', {
+            const response = await fetch('/tools/api/regex-tester', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ if (document.getElementById('cronForm')) {
         showSpinner();
 
         try {
-            const response = await fetch('/api/cron-parser', {
+            const response = await fetch('/tools/api/cron-parser', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

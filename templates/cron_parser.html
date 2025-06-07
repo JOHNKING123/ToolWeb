@@ -54,6 +54,30 @@
             border-radius: 4px;
             margin-bottom: 1rem;
         }
+        .example-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .example-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .example-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+        .example-btn:active {
+            background: #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -135,21 +159,23 @@
 
                 <h3>常用示例</h3>
                 <div class="cron-examples">
-                    <button type="button" class="btn btn-text" data-expression="0 0 12 * * ?">
-                        每天中午12点
-                    </button>
-                    <button type="button" class="btn btn-text" data-expression="0 0 0/1 * * ?">
-                        每小时整点
-                    </button>
-                    <button type="button" class="btn btn-text" data-expression="0 0 9-18 * * ?">
-                        工作时间每小时
-                    </button>
-                    <button type="button" class="btn btn-text" data-expression="0 0 0 ? * MON-FRI">
-                        每个工作日凌晨
-                    </button>
-                    <button type="button" class="btn btn-text" data-expression="0 0 0 1 * ?">
-                        每月1号凌晨
-                    </button>
+                    <div class="example-buttons">
+                        <button type="button" class="example-btn" data-expression="0 0 12 * * ?">
+                            每天中午12点 (0 0 12 * * ?)
+                        </button>
+                        <button type="button" class="example-btn" data-expression="0 0 0/1 * * ?">
+                            每小时整点 (0 0 0/1 * * ?)
+                        </button>
+                        <button type="button" class="example-btn" data-expression="0 0 9-18 * * ?">
+                            工作时间每小时 (0 0 9-18 * * ?)
+                        </button>
+                        <button type="button" class="example-btn" data-expression="0 0 0 ? * MON-FRI">
+                            每个工作日凌晨 (0 0 0 ? * MON-FRI)
+                        </button>
+                        <button type="button" class="example-btn" data-expression="0 0 0 1 * ?">
+                            每月1号凌晨 (0 0 0 1 * ?)
+                        </button>
+                    </div>
                 </div>
 
                 <h3>特殊字符说明</h3>
@@ -168,6 +194,82 @@
     </div>
 
     <script src="/tools/static/js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cronForm = document.getElementById('cronForm');
+            const cronExpression = document.getElementById('cronExpression');
+            const cronError = document.getElementById('cronError');
+            const cronDescription = document.getElementById('cronDescription');
+            const nextRunsContainer = document.getElementById('nextRunsContainer');
+            const nextRuns = document.getElementById('nextRuns');
+            const spinner = document.querySelector('.spinner');
+            const clearBtn = document.getElementById('clearBtn');
+
+            // 清空按钮点击事件
+            clearBtn.addEventListener('click', function() {
+                cronExpression.value = '';
+                cronError.style.display = 'none';
+                cronDescription.style.display = 'none';
+                nextRunsContainer.style.display = 'none';
+                cronExpression.focus();
+            });
+
+            // 示例按钮点击事件
+            document.querySelectorAll('.example-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    cronExpression.value = this.dataset.expression;
+                    // 自动触发表单提交
+                    cronForm.dispatchEvent(new Event('submit'));
+                });
+            });
+
+            cronForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!cronExpression.value.trim()) return;
+
+                spinner.style.display = 'block';
+                cronError.style.display = 'none';
+                cronDescription.style.display = 'none';
+                nextRunsContainer.style.display = 'none';
+
+                try {
+                    const response = await fetch('/tools/api/cron-parser', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            expression: cronExpression.value.trim()
+                        }),
+                    });
+
+                    const data = await response.json();
+                    
+                    if (!data.isValid) {
+                        cronError.textContent = data.error;
+                        cronError.style.display = 'block';
+                    } else {
+                        cronDescription.textContent = data.description;
+                        cronDescription.style.display = 'block';
+
+                        nextRuns.innerHTML = '';
+                        data.nextRuns.forEach(run => {
+                            const li = document.createElement('li');
+                            li.textContent = run.readable;
+                            nextRuns.appendChild(li);
+                        });
+                        nextRunsContainer.style.display = 'block';
+                    }
+                } catch (error) {
+                    cronError.textContent = '解析 Cron 表达式时发生错误';
+                    cronError.style.display = 'block';
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 {{end}} 
