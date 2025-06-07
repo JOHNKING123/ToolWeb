@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"toolweb/middleware"
 	"toolweb/tools"
 
 	"github.com/gin-gonic/gin"
@@ -21,9 +22,8 @@ func main() {
 	// 静态文件服务 - 修改为 /tools/static/
 	router.Static("/tools/static", "./static")
 
-	// 页面路由 - 保持根路径不变
+	// 页面路由
 	router.GET("/", func(c *gin.Context) {
-		// 获取分类和工具数据
 		categories := tools.GetCategories()
 		popularTools := tools.GetPopularTools()
 		newTools := tools.GetNewTools()
@@ -35,123 +35,133 @@ func main() {
 		})
 	})
 
-	// 电子书网站路由
-	ebook := router.Group("/ebook")
+	// 电子书路由组
+	ebookGroup := router.Group("/ebook")
 	{
-		// 电子书首页
-		ebook.GET("/index", func(c *gin.Context) {
-			bm := tools.GetBookManager()
-			categories := bm.GetAllCategories()
-			recentBooks := bm.GetRecentBooks(8) // 获取最近8本书
-
-			c.HTML(http.StatusOK, "ebook_index", gin.H{
-				"Categories":  categories,
-				"RecentBooks": recentBooks,
-			})
+		// 登录相关路由 - 不需要权限验证
+		ebookGroup.GET("/login", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "login", gin.H{})
 		})
 
-		// 电子书搜索
-		ebook.GET("/search", func(c *gin.Context) {
-			keyword := c.Query("keyword")
-			bm := tools.GetBookManager()
-			results := bm.SearchBooks(keyword)
-			categories := bm.GetAllCategories()
+		ebookGroup.POST("/login", func(c *gin.Context) {
+			username := c.PostForm("username")
+			password := c.PostForm("password")
 
-			c.HTML(http.StatusOK, "ebook_index", gin.H{
-				"Categories":  categories,
-				"RecentBooks": results,
-				"SearchTerm":  keyword,
-			})
-		})
-
-		// 电子书分类页
-		ebook.GET("/category/:id", func(c *gin.Context) {
-			category := c.Param("id")
-			bm := tools.GetBookManager()
-			books := bm.GetBooksByCategory(category)
-			categories := bm.GetAllCategories()
-
-			c.HTML(http.StatusOK, "ebook_index", gin.H{
-				"Categories":      categories,
-				"RecentBooks":     books,
-				"CurrentCategory": category,
-			})
-		})
-
-		// 电子书详情页
-		ebook.GET("/detail/:id", func(c *gin.Context) {
-			bookID := c.Param("id")
-			bm := tools.GetBookManager()
-			book := bm.GetBookByID(bookID)
-
-			if book == nil {
-				c.JSON(http.StatusNotFound, gin.H{
-					"status":  "error",
-					"message": "书籍不存在",
-				})
+			// TODO: 这里应该添加实际的用户验证逻辑
+			if username == "admin" && password == "admin123" {
+				// 设置 session cookie
+				c.SetCookie("session", "user-session-id", 3600, "/", "", false, true)
+				c.Redirect(http.StatusFound, "/ebook/index")
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{
-				"status": "success",
-				"data":   book,
+			c.HTML(http.StatusOK, "login", gin.H{
+				"error": "用户名或密码错误",
 			})
 		})
 
-		// 电子书下载
-		ebook.GET("/download/:id", func(c *gin.Context) {
-			bookID := c.Param("id")
-			bm := tools.GetBookManager()
-			book := bm.GetBookByID(bookID)
-
-			if book == nil {
-				c.JSON(http.StatusNotFound, gin.H{
-					"status":  "error",
-					"message": "书籍不存在",
-				})
-				return
-			}
-
-			// 检查文件是否存在
-			if _, err := os.Stat(book.FilePath); os.IsNotExist(err) {
-				c.JSON(http.StatusNotFound, gin.H{
-					"status":  "error",
-					"message": "文件不存在",
-				})
-				return
-			}
-
-			// 设置下载文件名
-			filename := url.QueryEscape(book.Title + book.FileType)
-			c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+filename)
-			c.Header("Content-Description", "File Transfer")
-			c.Header("Content-Type", "application/octet-stream")
-			c.Header("Content-Transfer-Encoding", "binary")
-			c.Header("Expires", "0")
-			c.Header("Cache-Control", "must-revalidate")
-			c.Header("Pragma", "public")
-
-			// 发送文件
-			c.File(book.FilePath)
+		ebookGroup.GET("/logout", func(c *gin.Context) {
+			c.SetCookie("session", "", -1, "/", "", false, true)
+			c.Redirect(http.StatusFound, "/ebook/login")
 		})
 
-		// 刷新电子书列表
-		ebook.POST("/refresh", func(c *gin.Context) {
-			bm := tools.GetBookManager()
-			err := bm.LoadBooks()
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"status":  "error",
-					"message": "刷新失败: " + err.Error(),
-				})
-				return
-			}
+		// 需要权限验证的路由
+		auth := ebookGroup.Group("/", middleware.AuthRequired())
+		{
+			// 电子书首页
+			auth.GET("index", func(c *gin.Context) {
+				bm := tools.GetBookManager()
+				categories := bm.GetAllCategories()
+				recentBooks := bm.GetRecentBooks(8)
 
-			c.JSON(http.StatusOK, gin.H{
-				"status":  "success",
-				"message": "刷新成功",
+				c.HTML(http.StatusOK, "ebook_index", gin.H{
+					"Categories":  categories,
+					"RecentBooks": recentBooks,
+				})
 			})
-		})
+
+			// 电子书搜索
+			auth.GET("search", func(c *gin.Context) {
+				keyword := c.Query("keyword")
+				bm := tools.GetBookManager()
+				results := bm.SearchBooks(keyword)
+				categories := bm.GetAllCategories()
+
+				c.HTML(http.StatusOK, "ebook_index", gin.H{
+					"Categories":  categories,
+					"RecentBooks": results,
+					"SearchTerm":  keyword,
+				})
+			})
+
+			// 电子书分类页
+			auth.GET("category/:id", func(c *gin.Context) {
+				category := c.Param("id")
+				bm := tools.GetBookManager()
+				books := bm.GetBooksByCategory(category)
+				categories := bm.GetAllCategories()
+
+				c.HTML(http.StatusOK, "ebook_index", gin.H{
+					"Categories":      categories,
+					"RecentBooks":     books,
+					"CurrentCategory": category,
+				})
+			})
+
+			// 电子书下载
+			auth.GET("download/:id", func(c *gin.Context) {
+				bookID := c.Param("id")
+				bm := tools.GetBookManager()
+				book := bm.GetBookByID(bookID)
+
+				if book == nil {
+					c.JSON(http.StatusNotFound, gin.H{
+						"status":  "error",
+						"message": "书籍不存在",
+					})
+					return
+				}
+
+				// 检查文件是否存在
+				if _, err := os.Stat(book.FilePath); os.IsNotExist(err) {
+					c.JSON(http.StatusNotFound, gin.H{
+						"status":  "error",
+						"message": "文件不存在",
+					})
+					return
+				}
+
+				// 设置下载文件名
+				filename := url.QueryEscape(book.Title + book.FileType)
+				c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+filename)
+				c.Header("Content-Description", "File Transfer")
+				c.Header("Content-Type", "application/octet-stream")
+				c.Header("Content-Transfer-Encoding", "binary")
+				c.Header("Expires", "0")
+				c.Header("Cache-Control", "must-revalidate")
+				c.Header("Pragma", "public")
+
+				c.File(book.FilePath)
+			})
+
+			// 刷新电子书列表 - 需要管理员权限
+			auth.POST("refresh", middleware.AdminRequired(), func(c *gin.Context) {
+				bm := tools.GetBookManager()
+				err := bm.LoadBooks()
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"status":  "error",
+						"message": "刷新失败: " + err.Error(),
+					})
+					return
+				}
+
+				c.JSON(http.StatusOK, gin.H{
+					"status":  "success",
+					"message": "刷新成功",
+				})
+			})
+		}
 	}
 
 	// 工具首页路由
