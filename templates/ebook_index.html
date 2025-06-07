@@ -1,0 +1,386 @@
+{{define "ebook_index"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子书下载 - 免费电子书资源分享</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --accent-color: #f59e0b;
+            --background-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .header {
+            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .search-bar {
+            max-width: 600px;
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: none;
+            border-radius: 9999px;
+            font-size: 1rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .categories {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .category-tag {
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border-radius: 9999px;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .category-tag:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s;
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+        }
+
+        .book-info {
+            padding: 1rem;
+        }
+
+        .book-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .book-author {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .book-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .featured-books {
+            margin-bottom: 4rem;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .featured-card {
+            display: flex;
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .featured-cover {
+            width: 120px;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .featured-info {
+            padding: 1rem;
+            flex: 1;
+        }
+
+        .featured-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .featured-desc {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .download-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .stats {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat i {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .featured-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .book-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        .search-result-info {
+            margin: 1rem 0;
+            padding: 0.5rem 1rem;
+            background-color: var(--background-light);
+            border-radius: 0.5rem;
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        .category-tag.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>免费电子书下载</h1>
+            <p>海量电子书资源，免费下载</p>
+            
+            <div class="search-bar">
+                <i class="material-icons search-icon">search</i>
+                <input type="text" class="search-input" placeholder="搜索书名、作者或关键词..." value="{{.SearchTerm}}">
+            </div>
+
+            <div class="categories">
+                {{range .Categories}}
+                <span class="category-tag {{if eq . $.CurrentCategory}}active{{end}}">{{.}}</span>
+                {{end}}
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {{if .SearchTerm}}
+        <div class="search-result-info">
+            搜索 "{{.SearchTerm}}" 的结果
+        </div>
+        {{else if .CurrentCategory}}
+        <div class="search-result-info">
+            分类：{{.CurrentCategory}}
+        </div>
+        {{end}}
+
+        <section class="featured-books">
+            <h2 class="section-title">
+                <i class="material-icons">star</i>
+                精选推荐
+            </h2>
+            <div class="featured-grid">
+                <article class="featured-card">
+                    <img src="https://ui-avatars.com/api/?name=深入理解计算机系统&size=180&background=2563eb&color=fff" alt="深入理解计算机系统" class="featured-cover">
+                    <div class="featured-info">
+                        <h3 class="featured-title">深入理解计算机系统</h3>
+                        <p class="featured-desc">本书从程序员的视角详细阐述计算机系统的本质概念，并展示这些概念如何实实在在地影响应用程序的正确性、性能和实用性。</p>
+                        <div class="stats">
+                            <span class="stat"><i class="material-icons">download</i>2.5k</span>
+                            <span class="stat"><i class="material-icons">visibility</i>12k</span>
+                        </div>
+                        <a href="#" class="download-btn">
+                            <i class="material-icons">download</i>
+                            下载
+                        </a>
+                    </div>
+                </article>
+
+                <article class="featured-card">
+                    <img src="https://ui-avatars.com/api/?name=算法导论&size=180&background=2563eb&color=fff" alt="算法导论" class="featured-cover">
+                    <div class="featured-info">
+                        <h3 class="featured-title">算法导论</h3>
+                        <p class="featured-desc">全面介绍算法领域的知识，涵盖了计算机算法从初级到高级的内容。本书被誉为算法领域的"圣经"。</p>
+                        <div class="stats">
+                            <span class="stat"><i class="material-icons">download</i>3.1k</span>
+                            <span class="stat"><i class="material-icons">visibility</i>15k</span>
+                        </div>
+                        <a href="#" class="download-btn">
+                            <i class="material-icons">download</i>
+                            下载
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">
+                <i class="material-icons">new_releases</i>
+                最新上传
+            </h2>
+            <div class="book-grid">
+                {{range .RecentBooks}}
+                <article class="book-card">
+                    <img src="https://ui-avatars.com/api/?name={{.Title}}&size=280&background=2563eb&color=fff" alt="{{.Title}}" class="book-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{.Title}}&size=280&background=2563eb&color=fff';">
+                    <div class="book-info">
+                        <h3 class="book-title">{{.Title}}</h3>
+                        <p class="book-author">{{.GetAuthor}}</p>
+                        <div class="book-meta">
+                            <span>{{.GetFormat}} | {{.GetSize}}</span>
+                            <span>下载: {{.GetDownloads}}</span>
+                        </div>
+                        <a href="/ebook/download/{{.ID}}" class="download-btn">
+                            <i class="material-icons">download</i>
+                            下载
+                        </a>
+                    </div>
+                </article>
+                {{end}}
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 搜索功能
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchTerm = this.value.trim();
+                    if (searchTerm) {
+                        window.location.href = `/ebook/search?keyword=${encodeURIComponent(searchTerm)}`;
+                    }
+                }
+            });
+
+            // 分类标签点击
+            const categoryTags = document.querySelectorAll('.category-tag');
+            categoryTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const category = this.textContent;
+                    window.location.href = `/ebook/category/${encodeURIComponent(category)}`;
+                });
+            });
+
+            // 下载按钮点击 - 移除默认事件处理，因为我们使用了直接的href链接
+            const downloadButtons = document.querySelectorAll('.download-btn');
+            downloadButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    // 不需要阻止默认行为，让浏览器处理下载
+                    const bookTitle = this.closest('.book-card').querySelector('.book-title').textContent;
+                    console.log('开始下载:', bookTitle);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+{{end}} 

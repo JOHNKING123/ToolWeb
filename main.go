@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 
 	"toolweb/tools"
@@ -32,6 +34,125 @@ func main() {
 			"NewTools":     newTools,
 		})
 	})
+
+	// 电子书网站路由
+	ebook := router.Group("/ebook")
+	{
+		// 电子书首页
+		ebook.GET("/index", func(c *gin.Context) {
+			bm := tools.GetBookManager()
+			categories := bm.GetAllCategories()
+			recentBooks := bm.GetRecentBooks(8) // 获取最近8本书
+
+			c.HTML(http.StatusOK, "ebook_index", gin.H{
+				"Categories":  categories,
+				"RecentBooks": recentBooks,
+			})
+		})
+
+		// 电子书搜索
+		ebook.GET("/search", func(c *gin.Context) {
+			keyword := c.Query("keyword")
+			bm := tools.GetBookManager()
+			results := bm.SearchBooks(keyword)
+			categories := bm.GetAllCategories()
+
+			c.HTML(http.StatusOK, "ebook_index", gin.H{
+				"Categories":  categories,
+				"RecentBooks": results,
+				"SearchTerm":  keyword,
+			})
+		})
+
+		// 电子书分类页
+		ebook.GET("/category/:id", func(c *gin.Context) {
+			category := c.Param("id")
+			bm := tools.GetBookManager()
+			books := bm.GetBooksByCategory(category)
+			categories := bm.GetAllCategories()
+
+			c.HTML(http.StatusOK, "ebook_index", gin.H{
+				"Categories":      categories,
+				"RecentBooks":     books,
+				"CurrentCategory": category,
+			})
+		})
+
+		// 电子书详情页
+		ebook.GET("/detail/:id", func(c *gin.Context) {
+			bookID := c.Param("id")
+			bm := tools.GetBookManager()
+			book := bm.GetBookByID(bookID)
+
+			if book == nil {
+				c.JSON(http.StatusNotFound, gin.H{
+					"status":  "error",
+					"message": "书籍不存在",
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status": "success",
+				"data":   book,
+			})
+		})
+
+		// 电子书下载
+		ebook.GET("/download/:id", func(c *gin.Context) {
+			bookID := c.Param("id")
+			bm := tools.GetBookManager()
+			book := bm.GetBookByID(bookID)
+
+			if book == nil {
+				c.JSON(http.StatusNotFound, gin.H{
+					"status":  "error",
+					"message": "书籍不存在",
+				})
+				return
+			}
+
+			// 检查文件是否存在
+			if _, err := os.Stat(book.FilePath); os.IsNotExist(err) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"status":  "error",
+					"message": "文件不存在",
+				})
+				return
+			}
+
+			// 设置下载文件名
+			filename := url.QueryEscape(book.Title + book.FileType)
+			c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+filename)
+			c.Header("Content-Description", "File Transfer")
+			c.Header("Content-Type", "application/octet-stream")
+			c.Header("Content-Transfer-Encoding", "binary")
+			c.Header("Expires", "0")
+			c.Header("Cache-Control", "must-revalidate")
+			c.Header("Pragma", "public")
+
+			// 发送文件
+			c.File(book.FilePath)
+		})
+
+		// 刷新电子书列表
+		ebook.POST("/refresh", func(c *gin.Context) {
+			bm := tools.GetBookManager()
+			err := bm.LoadBooks()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"status":  "error",
+					"message": "刷新失败: " + err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "success",
+				"message": "刷新成功",
+			})
+		})
+	}
 
 	// 工具首页路由
 	router.GET("/tools/index", func(c *gin.Context) {
