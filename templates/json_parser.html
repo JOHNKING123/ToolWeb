@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="/tools/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.2/jsoneditor.min.css" rel="stylesheet" type="text/css">
     <style>
         .json-container {
             display: grid;
@@ -239,6 +241,17 @@
                 height: 300px;
             }
         }
+
+        #editor {
+            height: 500px;
+        }
+        .jsoneditor {
+            border: 1px solid #dee2e6;
+        }
+        .jsoneditor-menu {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -286,12 +299,18 @@
                 <div class="json-panel">
                     <div class="json-header">
                         <h3><i class="material-icons">format_align_left</i> 格式化结果</h3>
-                        <button type="button" class="btn btn-secondary" id="copyBtn">
-                            <i class="material-icons">content_copy</i> 复制
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary" id="toggleViewBtn">
+                                <i class="material-icons">switch_left</i> 切换视图
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="copyBtn">
+                                <i class="material-icons">content_copy</i> 复制
+                            </button>
+                        </div>
                     </div>
                     <div class="json-content">
-                        <textarea id="jsonResult" class="json-textarea" readonly></textarea>
+                        <div id="editor"></div>
+                        <textarea id="jsonResult" class="json-textarea" style="display: none;" readonly></textarea>
                         <div class="spinner"></div>
                         <div class="copy-tooltip">已复制到剪贴板</div>
                     </div>
@@ -321,110 +340,142 @@
         </div>
     </div>
 
+    <script src="/tools/static/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.2/jsoneditor.min.js"></script>
     <script>
+        let editor = null;
+        let isTreeView = true;
+
+        // 初始化 JSON 编辑器
         document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('editor');
+            const options = {
+                mode: 'view',
+                modes: ['view', 'form', 'code'],
+                onError: function(err) {
+                    console.error(err);
+                }
+            };
+            editor = new JSONEditor(container, options);
+
+            // 添加按钮点击事件监听器
+            document.getElementById('formatBtn').addEventListener('click', formatJSON);
+            document.getElementById('minifyBtn').addEventListener('click', minifyJSON);
+            document.getElementById('clearBtn').addEventListener('click', clearJSON);
+            document.getElementById('toggleViewBtn').addEventListener('click', toggleView);
+        });
+
+        function toggleView() {
+            const editorElement = document.getElementById('editor');
+            const resultElement = document.getElementById('jsonResult');
+            const toggleBtn = document.getElementById('toggleViewBtn');
+            
+            isTreeView = !isTreeView;
+            
+            if (isTreeView) {
+                editorElement.style.display = 'block';
+                resultElement.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="material-icons">switch_left</i> 切换视图';
+            } else {
+                editorElement.style.display = 'none';
+                resultElement.style.display = 'block';
+                // 将树形视图的内容转换为格式化文本
+                resultElement.value = editor.getText();
+                toggleBtn.innerHTML = '<i class="material-icons">switch_right</i> 切换视图';
+            }
+        }
+
+        async function formatJSON() {
             const jsonInput = document.getElementById('jsonInput');
             const jsonResult = document.getElementById('jsonResult');
-            const formatBtn = document.getElementById('formatBtn');
-            const minifyBtn = document.getElementById('minifyBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const copyBtn = document.getElementById('copyBtn');
-            const spinner = document.querySelector('.spinner');
-            const copyTooltip = document.querySelector('.copy-tooltip');
-
-            // 格式化JSON
-            formatBtn.addEventListener('click', async () => {
-                if (!jsonInput.value.trim()) return;
-                
-                spinner.style.display = 'block';
-                jsonResult.style.opacity = '0.5';
-
-                try {
-                    const response = await fetch('/tools/api/json/format', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            json: jsonInput.value,
-                            sortKeys: document.getElementById('sortKeys').checked,
-                            indent: document.getElementById('indent').value
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        jsonResult.value = data.result;
-                    } else {
-                        jsonResult.value = '格式化出错：' + data.error;
-                    }
-                } catch (error) {
-                    jsonResult.value = '服务器错误，请稍后重试';
-                } finally {
-                    spinner.style.display = 'none';
-                    jsonResult.style.opacity = '1';
-                }
-            });
-
-            // 压缩JSON
-            minifyBtn.addEventListener('click', async () => {
-                if (!jsonInput.value.trim()) return;
-                
-                spinner.style.display = 'block';
-                jsonResult.style.opacity = '0.5';
-
-                try {
-                    const response = await fetch('/tools/api/json/minify', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            json: jsonInput.value
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        jsonResult.value = data.result;
-                    } else {
-                        jsonResult.value = '压缩出错：' + data.error;
-                    }
-                } catch (error) {
-                    jsonResult.value = '服务器错误，请稍后重试';
-                } finally {
-                    spinner.style.display = 'none';
-                    jsonResult.style.opacity = '1';
-                }
-            });
-
-            // 清空输入
-            clearBtn.addEventListener('click', () => {
-                jsonInput.value = '';
-                jsonResult.value = '';
-                jsonInput.focus();
-            });
-
-            // 复制结果
-            copyBtn.addEventListener('click', () => {
-                if (!jsonResult.value.trim()) return;
-                
-                navigator.clipboard.writeText(jsonResult.value).then(() => {
-                    copyTooltip.classList.add('show');
-                    setTimeout(() => {
-                        copyTooltip.classList.remove('show');
-                    }, 2000);
+            try {
+                const response = await fetch('/tools/api/json/format', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        json: jsonInput.value,
+                        sortKeys: document.getElementById('sortKeys').checked,
+                        indent: document.getElementById('indent').value
+                    })
                 });
-            });
 
-            // 快捷键支持
-            document.addEventListener('keydown', function(e) {
-                // Ctrl+Enter 触发格式化
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    formatBtn.click();
-                    e.preventDefault();
+                const data = await response.json();
+                if (data.success) {
+                    // 更新两种视图
+                    const jsonObj = JSON.parse(data.result);
+                    editor.set(jsonObj);
+                    editor.expandAll();
+                    jsonResult.value = data.result;
+                } else {
+                    editor.set({ error: data.error });
+                    jsonResult.value = '格式化出错：' + data.error;
                 }
+            } catch (error) {
+                editor.set({ error: '格式化出错：' + error.message });
+                jsonResult.value = '格式化出错：' + error.message;
+            }
+        }
+
+        async function minifyJSON() {
+            const jsonInput = document.getElementById('jsonInput');
+            const jsonResult = document.getElementById('jsonResult');
+            try {
+                const response = await fetch('/tools/api/json/minify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        json: jsonInput.value,
+                        sortKeys: document.getElementById('sortKeys').checked
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // 更新两种视图
+                    const jsonObj = JSON.parse(data.result);
+                    editor.set(jsonObj);
+                    editor.collapseAll();
+                    jsonResult.value = data.result;
+                } else {
+                    editor.set({ error: data.error });
+                    jsonResult.value = '压缩出错：' + data.error;
+                }
+            } catch (error) {
+                editor.set({ error: '压缩出错：' + error.message });
+                jsonResult.value = '压缩出错：' + error.message;
+            }
+        }
+
+        function clearJSON() {
+            document.getElementById('jsonInput').value = '';
+            editor.set({});
+            document.getElementById('jsonResult').value = '';
+        }
+
+        // 复制结果
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const textToCopy = isTreeView ? editor.getText() : document.getElementById('jsonResult').value;
+            if (!textToCopy) return;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                document.querySelector('.copy-tooltip').classList.add('show');
+                setTimeout(() => {
+                    document.querySelector('.copy-tooltip').classList.remove('show');
+                }, 2000);
             });
+        });
+
+        // 快捷键支持
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Enter 触发格式化
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                formatJSON();
+                e.preventDefault();
+            }
         });
     </script>
 </body>

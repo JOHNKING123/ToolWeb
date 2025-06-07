@@ -66,28 +66,77 @@ func main() {
 	api := router.Group("/tools/api")
 	{
 		// JSON 解析器
-		api.POST("/json-parser", func(c *gin.Context) {
-			var req tools.JSONParserRequest
+		api.POST("/json/format", func(c *gin.Context) {
+			var req struct {
+				JSON     string `json:"json"`
+				SortKeys bool   `json:"sortKeys"`
+				Indent   string `json:"indent"`
+			}
 			if err := c.BindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"status":  "error",
-					"message": "无效的请求数据",
+					"message": "无效的请求数据: " + err.Error(),
 				})
 				return
 			}
 
-			result, err := tools.ParseJSON(req.Input)
-			if err != nil {
+			if req.JSON == "" {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"status":  "error",
-					"message": "JSON 解析错误: " + err.Error(),
+					"message": "JSON 输入不能为空",
+				})
+				return
+			}
+
+			result, err := tools.ParseJSON(req.JSON)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "JSON 解析错误: " + err.Error(),
 				})
 				return
 			}
 
 			c.JSON(http.StatusOK, gin.H{
-				"status":    "success",
-				"formatted": result.Formatted,
+				"success": true,
+				"result":  result.Formatted,
+			})
+		})
+
+		// JSON 解析器 - 压缩
+		api.POST("/json/minify", func(c *gin.Context) {
+			var req struct {
+				JSON     string `json:"json"`
+				SortKeys bool   `json:"sortKeys"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			if req.JSON == "" {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "JSON 输入不能为空",
+				})
+				return
+			}
+
+			result, err := tools.CompressJSON(req.JSON)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "JSON 压缩错误: " + err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"result":  result.Compressed,
 			})
 		})
 

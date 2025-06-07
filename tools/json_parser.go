@@ -14,6 +14,11 @@ type JSONParserResponse struct {
 	Formatted string `json:"formatted"`
 }
 
+// JSONCompressResponse represents the response structure for JSON compression
+type JSONCompressResponse struct {
+	Compressed string `json:"compressed"`
+}
+
 // ParseJSON validates and formats JSON input
 func ParseJSON(input string) (*JSONParserResponse, error) {
 	// Parse JSON to validate it
@@ -31,4 +36,23 @@ func ParseJSON(input string) (*JSONParserResponse, error) {
 	return &JSONParserResponse{
 		Formatted: string(formatted),
 	}, nil
-} 
+}
+
+// CompressJSON validates and compresses JSON input by removing all whitespace
+func CompressJSON(input string) (*JSONCompressResponse, error) {
+	// Parse JSON to validate it
+	var parsed interface{}
+	if err := json.Unmarshal([]byte(input), &parsed); err != nil {
+		return nil, err
+	}
+
+	// Marshal JSON without indentation
+	compressed, err := json.Marshal(parsed)
+	if err != nil {
+		return nil, err
+	}
+
+	return &JSONCompressResponse{
+		Compressed: string(compressed),
+	}, nil
+}
