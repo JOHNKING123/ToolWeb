@@ -14,15 +14,15 @@
         body {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: auto;
         }
 
         .container {
             max-width: none;
             margin: 0;
             padding: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             background-color: var(--bg-color);
@@ -137,6 +137,7 @@
             overflow-y: auto;
             background-color: var(--bg-color);
             color: var(--text-color);
+            position: relative;
         }
 
         .markdown-preview :first-child {
@@ -399,6 +400,138 @@
                 align-items: flex-start;
                 gap: 1rem;
             }
+
+            .scroll-button {
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+
+        .scroll-button {
+            position: fixed;
+            right: 2rem;
+            bottom: 2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .scroll-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .scroll-button i {
+            font-size: 24px;
+        }
+
+        .scroll-button.show {
+            display: flex;
+            opacity: 1;
+            visibility: visible;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Markdown 语法参考样式 */
+        .markdown-syntax {
+            padding: 1rem 2rem;
+            background: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .markdown-syntax details {
+            margin-bottom: 1rem;
+        }
+
+        .markdown-syntax summary {
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: 600;
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .markdown-syntax summary i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .markdown-syntax summary:hover {
+            color: var(--primary-color);
+        }
+
+        .markdown-syntax .syntax-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem 0;
+        }
+
+        .markdown-syntax .syntax-section {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-syntax .syntax-section h4 {
+            margin: 0 0 1rem 0;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .markdown-syntax .syntax-section h4 i {
+            font-size: 1.2rem;
+        }
+
+        .markdown-syntax code {
+            background: var(--bg-color);
+            padding: 0.2em 0.4em;
+            border-radius: 0.3em;
+            font-family: var(--font-mono);
+            font-size: 0.9em;
+        }
+
+        .markdown-syntax .example {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border-color);
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .markdown-syntax {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -508,6 +641,85 @@
                 <i class="material-icons">keyboard</i>
                 快捷键：Ctrl+Enter 刷新预览，Ctrl+S 导出HTML
             </div>
+
+            <div class="markdown-syntax">
+                <details>
+                    <summary>
+                        <i class="material-icons">menu_book</i>
+                        Markdown 语法参考
+                    </summary>
+                    <div class="syntax-content">
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">title</i>标题</h4>
+                            <div># 一级标题</div>
+                            <div>## 二级标题</div>
+                            <div>### 三级标题</div>
+                            <div class="example">最多支持六级标题 (######)</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">format_bold</i>文本格式化</h4>
+                            <div>**粗体文本**</div>
+                            <div>*斜体文本*</div>
+                            <div>~~删除线~~</div>
+                            <div>`代码`</div>
+                            <div class="example">可以组合使用，如 ***粗斜体***</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">format_list_bulleted</i>列表</h4>
+                            <div>- 无序列表</div>
+                            <div>1. 有序列表</div>
+                            <div>- [ ] 任务列表</div>
+                            <div>- [x] 已完成任务</div>
+                            <div class="example">支持嵌套，使用缩进即可</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">link</i>链接和图片</h4>
+                            <div>[链接文本](URL)</div>
+                            <div>![图片描述](图片URL)</div>
+                            <div class="example">支持相对路径和绝对路径</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">code</i>代码块</h4>
+                            <div>```语言名</div>
+                            <div>代码内容</div>
+                            <div>```</div>
+                            <div class="example">支持语法高亮，如 ```python</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">format_quote</i>引用和分割线</h4>
+                            <div>> 引用文本</div>
+                            <div>---</div>
+                            <div class="example">分割线也可以用 *** 或 ___</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">table_chart</i>表格</h4>
+                            <div>| 表头 | 表头 |</div>
+                            <div>|------|------|</div>
+                            <div>| 内容 | 内容 |</div>
+                            <div class="example">支持对齐：:--- 左对齐，:---: 居中，---: 右对齐</div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h4><i class="material-icons">emoji_emotions</i>其他语法</h4>
+                            <div>脚注[^1]</div>
+                            <div>==高亮文本==</div>
+                            <div>上标^2^</div>
+                            <div>下标~2~</div>
+                            <div class="example">部分语法可能需要特定渲染器支持</div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <button id="scrollButton" class="scroll-button" title="回到顶部">
+                <i class="material-icons">arrow_upward</i>
+            </button>
         </div>
     </div>
 
@@ -533,11 +745,25 @@
                 paragraphCount.textContent = text.split(/\n\s*\n/).filter(p => p.trim()).length;
             }
 
+            // 检查是否需要显示滚动按钮
+            function checkScrollButton() {
+                const scrolled = window.scrollY || document.documentElement.scrollTop;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+
+                if (documentHeight > windowHeight + 100 && scrolled > 200) {
+                    scrollButton.classList.add('show');
+                } else {
+                    scrollButton.classList.remove('show');
+                }
+            }
+
             // 实时预览
             async function renderPreview() {
                 if (!markdownInput.value.trim()) {
                     markdownPreview.innerHTML = '';
                     updateStats('');
+                    scrollButton.classList.remove('show');
                     return;
                 }
 
@@ -558,6 +784,10 @@
                     if (data.success) {
                         markdownPreview.innerHTML = data.html;
                         updateStats(markdownInput.value);
+                        // 在渲染完成后检查滚动按钮
+                        setTimeout(checkScrollButton, 100);
+                        // 再次检查以确保内容完全加载
+                        setTimeout(checkScrollButton, 500);
                     } else {
                         markdownPreview.innerHTML = '<div class="error">渲染出错：' + data.error + '</div>';
                     }
@@ -571,7 +801,23 @@
                 if (!document.getElementById('autoPreview').checked) return;
                 
                 clearTimeout(renderTimeout);
-                renderTimeout = setTimeout(renderPreview, 300);
+                renderTimeout = setTimeout(() => {
+                    renderPreview();
+                }, 300);
+            });
+
+            // 处理粘贴事件
+            markdownInput.addEventListener('paste', function() {
+                if (!document.getElementById('autoPreview').checked) return;
+                
+                clearTimeout(renderTimeout);
+                renderTimeout = setTimeout(() => {
+                    renderPreview();
+                    // 多次检查以确保内容完全加载
+                    setTimeout(checkScrollButton, 100);
+                    setTimeout(checkScrollButton, 300);
+                    setTimeout(checkScrollButton, 500);
+                }, 300);
             });
 
             // 同步滚动
@@ -582,10 +828,18 @@
                 const target = source === markdownInput ? markdownPreview : markdownInput;
                 const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
                 target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
+                
+                // 检查滚动按钮状态
+                if (source === markdownPreview) {
+                    checkScrollButton();
+                }
             }
 
             markdownInput.addEventListener('scroll', syncScroll);
-            markdownPreview.addEventListener('scroll', syncScroll);
+            markdownPreview.addEventListener('scroll', function(e) {
+                syncScroll(e);
+                checkScrollButton();
+            });
 
             // 预览按钮
             previewBtn.addEventListener('click', () => {
@@ -702,6 +956,37 @@
                     }, 2000);
                 });
             });
+
+            // 点击按钮滚动到顶部
+            scrollButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // 监听窗口滚动
+            window.addEventListener('scroll', checkScrollButton);
+
+            // 监听窗口大小变化
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(checkScrollButton, 100);
+            });
+
+            // 在内容变化时检查
+            const observer = new MutationObserver(function(mutations) {
+                checkScrollButton();
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            // 初始检查
+            setTimeout(checkScrollButton, 100);
         });
     </script>
 </body>

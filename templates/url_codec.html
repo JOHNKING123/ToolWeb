@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL 编码/解码 - 程序员工具箱</title>
+    <title>URL 编解码工具 - 程序员工具箱</title>
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -51,7 +51,7 @@
 
         .url-textarea {
             width: 100%;
-            height: 200px;
+            height: 400px;
             padding: 1rem;
             border: 1px solid var(--border-color);
             border-radius: 0.5rem;
@@ -225,6 +225,52 @@
             opacity: 1;
         }
 
+        .example-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .example-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 1rem 0;
+        }
+
+        .example-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .example-btn {
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .example-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+        }
+
+        .example-btn small {
+            display: block;
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
         @media (max-width: 768px) {
             .url-container {
                 grid-template-columns: 1fr;
@@ -236,7 +282,7 @@
             }
 
             .url-textarea {
-                height: 150px;
+                height: 300px;
             }
         }
     </style>
@@ -244,8 +290,8 @@
 <body>
     <div class="container">
         <div class="tool-header">
-            <h1><i class="material-icons">link</i> URL 编码/解码</h1>
-            <p>URL 编码和解码工具，支持批量处理和多种编码方式</p>
+            <h1><i class="material-icons">link</i> URL 编码/解码工具</h1>
+            <p>快速进行 URL 编码和解码转换，支持多种字符编码</p>
         </div>
 
         <div class="tool-content">
@@ -317,16 +363,54 @@
                 </button>
             </div>
 
-            <div class="url-info">
-                <h3><i class="material-icons">info</i> 功能说明</h3>
-                <ul>
-                    <li><i class="material-icons">check_circle</i> 支持URL编码和解码</li>
-                    <li><i class="material-icons">check_circle</i> 多种字符编码选择</li>
-                    <li><i class="material-icons">check_circle</i> 批量处理支持</li>
-                    <li><i class="material-icons">check_circle</i> 自动转换功能</li>
-                    <li><i class="material-icons">check_circle</i> 编码所有字符选项</li>
-                    <li><i class="material-icons">check_circle</i> 一键复制结果</li>
-                </ul>
+            <div class="example-section">
+                <h3>编码示例</h3>
+                <div class="example-buttons" id="encodeExamples">
+                    <button type="button" class="example-btn" data-text="Hello, World!">
+                        普通文本：Hello, World!
+                        <br>
+                        <small>编码结果：Hello%2C%20World%21</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="https://example.com/path?param=value">
+                        URL：https://example.com/path?param=value
+                        <br>
+                        <small>编码结果：https%3A%2F%2Fexample.com%2Fpath%3Fparam%3Dvalue</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="用户名:密码">
+                        用户名密码：用户名:密码
+                        <br>
+                        <small>编码结果：%E7%94%A8%E6%88%B7%E5%90%8D%3A%E5%AF%86%E7%A0%81</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="{'name': '张三', 'age': 30}">
+                        JSON 数据：{'name': '张三', 'age': 30}
+                        <br>
+                        <small>编码结果：%7B%27name%27%3A%20%27%E5%BC%A0%E4%B8%89%27%2C%20%27age%27%3A%2030%7D</small>
+                    </button>
+                </div>
+
+                <h3>解码示例</h3>
+                <div class="example-buttons" id="decodeExamples">
+                    <button type="button" class="example-btn" data-text="Hello%2C%20World%21">
+                        编码文本：Hello%2C%20World%21
+                        <br>
+                        <small>解码结果：Hello, World!</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="https%3A%2F%2Fexample.com%2Fpath%3Fparam%3Dvalue">
+                        编码URL：https%3A%2F%2Fexample.com%2Fpath%3Fparam%3Dvalue
+                        <br>
+                        <small>解码结果：https://example.com/path?param=value</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="%E7%94%A8%E6%88%B7%E5%90%8D%3A%E5%AF%86%E7%A0%81">
+                        编码中文：%E7%94%A8%E6%88%B7%E5%90%8D%3A%E5%AF%86%E7%A0%81
+                        <br>
+                        <small>解码结果：用户名:密码</small>
+                    </button>
+                    <button type="button" class="example-btn" data-text="%7B%27name%27%3A%20%27%E5%BC%A0%E4%B8%89%27%2C%20%27age%27%3A%2030%7D">
+                        编码JSON：%7B%27name%27%3A%20%27%E5%BC%A0%E4%B8%89%27%2C%20%27age%27%3A%2030%7D
+                        <br>
+                        <small>解码结果：{'name': '张三', 'age': 30}</small>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -343,55 +427,65 @@
             const copyTooltip = document.querySelector('.copy-tooltip');
             let encodeTimeout;
 
-            // URL编码
+            // 示例按钮点击事件
+            document.querySelectorAll('.example-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    urlInput.value = btn.dataset.text;
+                    if (document.getElementById('autoConvert').checked) {
+                        encodeBtn.click();
+                    }
+                });
+            });
+
+            // URL 编码
             encodeBtn.addEventListener('click', async () => {
                 if (!urlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/tools/api/url/encode', {
+                    const response = await fetch('/tools/api/url-encode/encode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            text: urlInput.value,
+                            input: urlInput.value,
                             encoding: document.getElementById('encoding').value,
                             encodeAll: document.getElementById('encodeAll').checked
                         }),
                     });
 
                     const data = await response.json();
-                    if (data.success) {
-                        urlOutput.value = data.result;
+                    if (data.status === 'success') {
+                        urlOutput.value = data.output;
                     } else {
-                        urlOutput.value = '编码出错：' + data.error;
+                        urlOutput.value = '编码出错：' + data.message;
                     }
                 } catch (error) {
                     urlOutput.value = '服务器错误，请稍后重试';
                 }
             });
 
-            // URL解码
+            // URL 解码
             decodeBtn.addEventListener('click', async () => {
                 if (!urlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/tools/api/url/decode', {
+                    const response = await fetch('/tools/api/url-encode/decode', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            text: urlInput.value,
+                            input: urlInput.value,
                             encoding: document.getElementById('encoding').value
                         }),
                     });
 
                     const data = await response.json();
-                    if (data.success) {
-                        urlOutput.value = data.result;
+                    if (data.status === 'success') {
+                        urlOutput.value = data.output;
                     } else {
-                        urlOutput.value = '解码出错：' + data.error;
+                        urlOutput.value = '解码出错：' + data.message;
                     }
                 } catch (error) {
                     urlOutput.value = '服务器错误，请稍后重试';
@@ -455,12 +549,12 @@
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === 'e') {
                         // Ctrl+E 触发编码
-                        encodeBtn.click();
                         e.preventDefault();
+                        encodeBtn.click();
                     } else if (e.key === 'd') {
                         // Ctrl+D 触发解码
-                        decodeBtn.click();
                         e.preventDefault();
+                        decodeBtn.click();
                     }
                 }
             });

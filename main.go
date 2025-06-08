@@ -193,6 +193,16 @@ func main() {
 		c.HTML(http.StatusOK, templateName, nil)
 	})
 
+	// 工具页面路由
+	router.GET("/tools/url-codec", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "url_codec", nil)
+	})
+
+	// 工具页面路由
+	router.GET("/tools/xml-parser", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "xml_formatter", nil)
+	})
+
 	// API 路由 - 修改为 /tools/api/
 	api := router.Group("/tools/api")
 	{
@@ -272,28 +282,54 @@ func main() {
 		})
 
 		// XML 格式化
-		api.POST("/xml-parser", func(c *gin.Context) {
-			var req tools.XMLParserRequest
+		api.POST("/xml/format", func(c *gin.Context) {
+			var req tools.XMLRequest
 			if err := c.BindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"status":  "error",
-					"message": "无效的请求数据",
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
 				})
 				return
 			}
 
-			result, err := tools.ParseXML(req.Input)
+			result, err := tools.ParseXML(&req)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"status":  "error",
-					"message": err.Error(),
+					"success": false,
+					"error":   err.Error(),
 				})
 				return
 			}
 
 			c.JSON(http.StatusOK, gin.H{
-				"status":    "success",
-				"formatted": result.Formatted,
+				"success": true,
+				"result":  result.Formatted,
+			})
+		})
+
+		// XML 压缩
+		api.POST("/xml/minify", func(c *gin.Context) {
+			var req tools.XMLRequest
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			result, err := tools.MinifyXML(&req)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"result":  result.Minified,
 			})
 		})
 
