@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"image"
 	"log"
 	"net/http"
 	"net/url"
@@ -201,6 +203,11 @@ func main() {
 	// 工具页面路由
 	router.GET("/tools/xml-parser", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "xml_formatter", nil)
+	})
+
+	// 二维码工具页面
+	router.GET("/tools/qrcode", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "qrcode", nil)
 	})
 
 	// API 路由 - 修改为 /tools/api/
@@ -636,6 +643,74 @@ func main() {
 				"status": "success",
 				"output": result.Output,
 			})
+		})
+
+		// 二维码API
+		api.POST("/qrcode/generate", func(c *gin.Context) {
+			// 支持表单和json两种方式
+			text := c.PostForm("text")
+			if text == "" {
+				var req struct {
+					Text    string `json:"text"`
+					Size    int    `json:"size"`
+					FgColor string `json:"fgColor"`
+					BgColor string `json:"bgColor"`
+				}
+				if err := c.BindJSON(&req); err == nil {
+					text = req.Text
+					if text == "" {
+						c.String(http.StatusBadRequest, "内容不能为空")
+						return
+					}
+					size := req.Size
+					fgColor := req.FgColor
+					bgColor := req.BgColor
+					// logo 仅支持表单上传
+					img, err := tools.GenerateQRCodeAdvanced(text, size, fgColor, bgColor, nil)
+					if err != nil {
+						c.String(http.StatusInternalServerError, err.Error())
+						return
+					}
+					c.Header("Content-Type", "image/png")
+					c.Writer.Write(img)
+					return
+				}
+			}
+			// 表单方式，支持logo上传
+			size := 256
+			if s := c.PostForm("size"); s != "" {
+				fmt.Sscanf(s, "%d", &size)
+			}
+			fgColor := c.PostForm("fgColor")
+			bgColor := c.PostForm("bgColor")
+			var logo image.Image = nil
+			file, _, err := c.Request.FormFile("logo")
+			if err == nil && file != nil {
+				defer file.Close()
+				logo, _, _ = image.Decode(file)
+			}
+			img, err := tools.GenerateQRCodeAdvanced(text, size, fgColor, bgColor, logo)
+			if err != nil {
+				c.String(http.StatusInternalServerError, err.Error())
+				return
+			}
+			c.Header("Content-Type", "image/png")
+			c.Writer.Write(img)
+		})
+
+		api.POST("/qrcode/decode", func(c *gin.Context) {
+			file, _, err := c.Request.FormFile("file")
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "文件上传失败"})
+				return
+			}
+			defer file.Close()
+			content, err := tools.DecodeQRCode(file)
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"success": true, "content": content})
 		})
 	}
 

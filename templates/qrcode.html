@@ -1,0 +1,85 @@
+{{define "qrcode"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .container { max-width: 600px; margin: 0 auto; padding: 2rem; }
+        .qrcode-img { display: block; margin: 1rem auto; max-width: 256px; border: 1px solid #eee; background: #fff; }
+        .result-box { margin-top: 1.5rem; padding: 1rem; background: #f8f8f8; border-radius: 0.5rem; }
+        .section-title { margin-top: 2rem; margin-bottom: 1rem; font-size: 1.2rem; font-weight: bold; }
+        .row { margin-bottom: 1rem; }
+        label { margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="material-icons">qr_code</i> 二维码工具</h1>
+    <div>
+        <div class="section-title">生成二维码</div>
+        <div class="row"><label>内容</label><input type="text" id="qrText" placeholder="输入文本或链接..." style="width:70%;padding:0.5rem;"></div>
+        <div class="row"><label>大小</label><input type="number" id="qrSize" value="256" min="128" max="1024" step="8" style="width:80px;"> px</div>
+        <div class="row"><label>前景色</label><input type="color" id="qrFgColor" value="#000000"> <label>背景色</label><input type="color" id="qrBgColor" value="#ffffff"></div>
+        <div class="row"><label>Logo</label><input type="file" id="qrLogo" accept="image/*"></div>
+        <button id="genBtn" class="btn btn-primary"><i class="material-icons">auto_fix_high</i> 生成</button>
+        <div id="qrResult"></div>
+    </div>
+    <div>
+        <div class="section-title">识别二维码</div>
+        <input type="file" id="qrFile" accept="image/*">
+        <button id="decodeBtn" class="btn btn-primary"><i class="material-icons">search</i> 识别</button>
+        <div id="decodeResult" class="result-box"></div>
+    </div>
+</div>
+<script>
+// 生成二维码
+const genBtn = document.getElementById('genBtn');
+genBtn.onclick = async function() {
+    const text = document.getElementById('qrText').value.trim();
+    const size = parseInt(document.getElementById('qrSize').value) || 256;
+    const fgColor = document.getElementById('qrFgColor').value;
+    const bgColor = document.getElementById('qrBgColor').value;
+    const logoFile = document.getElementById('qrLogo').files[0];
+    if (!text) return alert('请输入内容');
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('size', size);
+    formData.append('fgColor', fgColor);
+    formData.append('bgColor', bgColor);
+    if (logoFile) formData.append('logo', logoFile);
+    const res = await fetch('/tools/api/qrcode/generate', {
+        method: 'POST',
+        body: formData
+    });
+    if (!res.ok) return alert('生成失败');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    document.getElementById('qrResult').innerHTML = `<img src="${url}" class="qrcode-img">`;
+};
+// 识别二维码
+const decodeBtn = document.getElementById('decodeBtn');
+decodeBtn.onclick = async function() {
+    const file = document.getElementById('qrFile').files[0];
+    if (!file) return alert('请上传二维码图片');
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/tools/api/qrcode/decode', {
+        method: 'POST',
+        body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById('decodeResult').innerHTML = `<b>识别内容：</b><br>${data.content}`;
+    } else {
+        document.getElementById('decodeResult').innerHTML = `<span style='color:red'>${data.error}</span>`;
+    }
+};
+</script>
+</body>
+</html>
+{{end}} 

@@ -1,11 +1,3 @@
-# github.com/Neetless/sqlfmt v0.0.0-20170223071510-7525bdb88090
-## explicit
-github.com/Neetless/sqlfmt
-github.com/Neetless/sqlfmt/ast
-github.com/Neetless/sqlfmt/parser
-github.com/Neetless/sqlfmt/printer
-github.com/Neetless/sqlfmt/scanner
-github.com/Neetless/sqlfmt/token
 # github.com/bytedance/sonic v1.10.2
 ## explicit; go 1.16
 github.com/bytedance/sonic
@@ -79,6 +71,9 @@ github.com/gomarkdown/markdown
 github.com/gomarkdown/markdown/ast
 github.com/gomarkdown/markdown/html
 github.com/gomarkdown/markdown/parser
+# github.com/google/uuid v1.3.0
+## explicit
+github.com/google/uuid
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
@@ -89,6 +84,9 @@ github.com/klauspost/cpuid/v2
 ## explicit; go 1.18
 github.com/leodido/go-urn
 github.com/leodido/go-urn/scim/schema
+# github.com/maruel/rs v1.1.0
+## explicit; go 1.11
+github.com/maruel/rs
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
@@ -111,6 +109,14 @@ github.com/robfig/cron/v3
 # github.com/sergi/go-diff v1.3.1
 ## explicit; go 1.12
 github.com/sergi/go-diff/diffmatchpatch
+# github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+## explicit; go 1.13
+github.com/skip2/go-qrcode
+github.com/skip2/go-qrcode/bitset
+github.com/skip2/go-qrcode/reedsolomon
+# github.com/tuotoo/qrcode v0.0.0-20220425170535-52ccc2bebf5d
+## explicit; go 1.17
+github.com/tuotoo/qrcode
 # github.com/twitchyliquid64/golang-asm v0.15.1
 ## explicit; go 1.13
 github.com/twitchyliquid64/golang-asm/asm/arch
@@ -180,3 +186,6 @@ google.golang.org/protobuf/runtime/protoiface
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
+# rsc.io/qr v0.2.0
+## explicit
+rsc.io/qr/gf256

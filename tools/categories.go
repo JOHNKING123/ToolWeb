@@ -77,6 +77,14 @@ func GetCategories() []Category {
 					Icon:        "link",
 					New:         true,
 				},
+				{
+					ID:          "qrcode",
+					Name:        "二维码工具",
+					Description: "生成和识别二维码",
+					Path:        "/tools/qrcode",
+					Icon:        "qr_code",
+					New:         true,
+				},
 			},
 		},
 		{
