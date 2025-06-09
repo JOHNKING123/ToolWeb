@@ -1,3 +1,11 @@
+# github.com/Neetless/sqlfmt v0.0.0-20170223071510-7525bdb88090
+## explicit
+github.com/Neetless/sqlfmt
+github.com/Neetless/sqlfmt/ast
+github.com/Neetless/sqlfmt/parser
+github.com/Neetless/sqlfmt/printer
+github.com/Neetless/sqlfmt/scanner
+github.com/Neetless/sqlfmt/token
 # github.com/bytedance/sonic v1.10.2
 ## explicit; go 1.16
 github.com/bytedance/sonic

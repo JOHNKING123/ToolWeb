@@ -334,28 +334,79 @@ func main() {
 		})
 
 		// SQL 格式化
-		api.POST("/sql-formatter", func(c *gin.Context) {
-			var req tools.SQLFormatterRequest
+		api.POST("/sql/format", func(c *gin.Context) {
+			var req struct {
+				SQL       string `json:"sql"`
+				Input     string `json:"input"`
+				Uppercase bool   `json:"uppercase"`
+				Dialect   string `json:"dialect"`
+				Indent    string `json:"indent"`
+			}
 			if err := c.BindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"status":  "error",
-					"message": "无效的请求数据",
+					"success": false,
+					"error":   "无效的请求数据",
 				})
 				return
 			}
 
-			result, err := tools.FormatSQL(req.Input)
+			// 兼容 sql 或 input 字段
+			input := req.SQL
+			if input == "" {
+				input = req.Input
+			}
+			if strings.TrimSpace(input) == "" {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "SQL 语句不能为空",
+				})
+				return
+			}
+
+			// TODO: 可根据 req.Uppercase, req.Dialect, req.Indent 做进一步格式化
+			result, err := tools.FormatSQL(input)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"status":  "error",
-					"message": err.Error(),
+					"success": false,
+					"error":   err.Error(),
 				})
 				return
 			}
 
 			c.JSON(http.StatusOK, gin.H{
-				"status":    "success",
-				"formatted": result.Formatted,
+				"success": true,
+				"result":  result.Formatted,
+			})
+		})
+
+		// SQL 压缩
+		api.POST("/sql/minify", func(c *gin.Context) {
+			var req struct {
+				SQL   string `json:"sql"`
+				Input string `json:"input"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据",
+				})
+				return
+			}
+			input := req.SQL
+			if input == "" {
+				input = req.Input
+			}
+			if strings.TrimSpace(input) == "" {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "SQL 语句不能为空",
+				})
+				return
+			}
+			result := tools.MinifySQL(input)
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"result":  result,
 			})
 		})
 

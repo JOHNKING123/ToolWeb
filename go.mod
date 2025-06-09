@@ -3,6 +3,7 @@ module toolweb
 go 1.21
 
 require (
+	github.com/Neetless/sqlfmt v0.0.0-20170223071510-7525bdb88090
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gomarkdown/markdown v0.0.0-20231222211730-1d6d20845b47
 	github.com/robfig/cron/v3 v3.0.1

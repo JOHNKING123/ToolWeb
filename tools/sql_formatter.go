@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -15,52 +16,65 @@ type SQLFormatterResponse struct {
 	Formatted string `json:"formatted"`
 }
 
-// FormatSQL 格式化 SQL 查询语句
+// FormatSQL 格式化 SQL 查询语句（临时方案，简单分行和大写关键字）
 func FormatSQL(input string) (*SQLFormatterResponse, error) {
 	if strings.TrimSpace(input) == "" {
 		return nil, fmt.Errorf("SQL 语句不能为空")
 	}
 
-	
-
-	// 定义 SQL 关键字
+	// 关键字列表
 	keywords := []string{
-		"select", "from", "where", "join", "left", "right", "inner", "outer",
-		"group by", "having", "order by", "limit", "offset", "insert into",
-		"values", "update", "set", "delete from", "create table", "alter table",
-		"drop table", "and", "or", "like", "in", "between", "is null", "is not null",
+		"SELECT", "FROM", "WHERE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER",
+		"GROUP BY", "HAVING", "ORDER BY", "LIMIT", "OFFSET", "INSERT INTO",
+		"VALUES", "UPDATE", "SET", "DELETE FROM", "CREATE TABLE", "ALTER TABLE",
+		"DROP TABLE", "AND", "OR", "LIKE", "IN", "BETWEEN", "IS NULL", "IS NOT NULL",
 	}
 
-	// 格式化后的 SQL 片段
 	formatted := input
 
-	// 在关键字前添加换行和缩进
-	for _, keyword := range keywords {
-		// 创建正则表达式模式
-		pattern := "(?i)\\s+" + keyword + "\\s+"
-		replacement := "\n    " + strings.ToUpper(keyword) + " "
-		
-		// 替换关键字
-		formatted = strings.ReplaceAll(formatted, pattern, replacement)
+	// 先处理多词关键字
+	for _, kw := range keywords {
+		if strings.Contains(kw, " ") {
+			re := regexp.MustCompile(`(?i)\b` + strings.ReplaceAll(kw, " ", `\\s+`) + `\b`)
+			formatted = re.ReplaceAllStringFunc(formatted, func(m string) string {
+				return "\n" + kw
+			})
+		}
 	}
-
-	// 处理括号
-	formatted = strings.ReplaceAll(formatted, "(", "\n    (")
-	formatted = strings.ReplaceAll(formatted, ")", ")\n")
-
-	// 删除多余的空行
-	lines := strings.Split(formatted, "\n")
-	var result []string
-	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
-			result = append(result, line)
+	// 再处理单词关键字
+	for _, kw := range keywords {
+		if !strings.Contains(kw, " ") {
+			re := regexp.MustCompile(`(?i)\b` + kw + `\b`)
+			formatted = re.ReplaceAllStringFunc(formatted, func(m string) string {
+				return "\n" + kw
+			})
 		}
 	}
 
-	// 添加适当的缩进
-	formatted = strings.Join(result, "\n")
+	// 去除多余空行
+	lines := strings.Split(formatted, "\n")
+	var result []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	formatted = strings.Join(result, "\n    ")
 
 	return &SQLFormatterResponse{
 		Formatted: formatted,
 	}, nil
-} 
+}
+
+// MinifySQL 压缩 SQL 语句，去除多余空白和换行
+func MinifySQL(input string) string {
+	// 替换所有换行和制表符为空格
+	minified := strings.ReplaceAll(input, "\n", " ")
+	minified = strings.ReplaceAll(minified, "\r", " ")
+	minified = strings.ReplaceAll(minified, "\t", " ")
+	// 多个空格合并为一个
+	re := regexp.MustCompile(`\s+`)
+	minified = re.ReplaceAllString(minified, " ")
+	return strings.TrimSpace(minified)
+}
