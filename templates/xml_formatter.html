@@ -330,6 +330,9 @@
                     <div class="xml-header">
                         <h3><i class="material-icons">edit</i> 输入</h3>
                         <div class="xml-header-buttons">
+                            <button type="button" class="btn btn-secondary" id="demoBtn">
+                                <i class="material-icons">play_arrow</i> Demo
+                            </button>
                             <button type="button" class="btn btn-secondary" id="uploadBtn">
                                 <i class="material-icons">upload_file</i> 上传
                             </button>
@@ -339,7 +342,13 @@
                         </div>
                     </div>
                     <div class="xml-content">
-                        <textarea id="xmlInput" class="xml-textarea" placeholder="在此粘贴您的XML文档..."></textarea>
+                        <textarea id="xmlInput" class="xml-textarea" placeholder="在此粘贴您的XML文档...
+
+Demo 1/3: 用户信息XML
+Demo 2/3: 产品目录XML  
+Demo 3/3: 配置文件XML
+
+点击上方 Demo 按钮查看示例"></textarea>
                     </div>
                 </div>
 
@@ -411,11 +420,148 @@
             const clearBtn = document.getElementById('clearBtn');
             const copyBtn = document.getElementById('copyBtn');
             const uploadBtn = document.getElementById('uploadBtn');
+            const demoBtn = document.getElementById('demoBtn');
             const copyTooltip = document.querySelector('.copy-tooltip');
             const originalSize = document.getElementById('originalSize');
             const compressedSize = document.getElementById('compressedSize');
             const lineCount = document.getElementById('lineCount');
             let formatTimeout;
+            
+            // Demo数据
+            let demoIndex = 0;
+            const demoData = [
+                {
+                    name: "用户信息XML",
+                    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user id="1">
+        <name>张三</name>
+        <email>zhangsan@example.com</email>
+        <age>28</age>
+        <profile>
+            <gender>男</gender>
+            <city>北京</city>
+            <occupation>软件工程师</occupation>
+        </profile>
+        <preferences>
+            <theme>dark</theme>
+            <language>zh-CN</language>
+            <notifications enabled="true">
+                <email>true</email>
+                <sms>false</sms>
+            </notifications>
+        </preferences>
+    </user>
+    <user id="2">
+        <name>李四</name>
+        <email>lisi@example.com</email>
+        <age>32</age>
+        <profile>
+            <gender>女</gender>
+            <city>上海</city>
+            <occupation>产品经理</occupation>
+        </profile>
+        <preferences>
+            <theme>light</theme>
+            <language>zh-CN</language>
+            <notifications enabled="false">
+                <email>false</email>
+                <sms>false</sms>
+            </notifications>
+        </preferences>
+    </user>
+</users>`
+                },
+                {
+                    name: "产品目录XML",
+                    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+    <product id="P001" category="electronics">
+        <name>智能手机</name>
+        <brand>TechBrand</brand>
+        <price currency="CNY">2999.00</price>
+        <specifications>
+            <screen size="6.1" resolution="1080x2340"/>
+            <storage>128GB</storage>
+            <ram>8GB</ram>
+            <camera>
+                <main>48MP</main>
+                <front>12MP</front>
+            </camera>
+            <battery capacity="4000mAh" removable="false"/>
+        </specifications>
+        <availability>
+            <inStock>true</inStock>
+            <quantity>150</quantity>
+            <warehouses>
+                <warehouse location="北京" stock="75"/>
+                <warehouse location="上海" stock="45"/>
+                <warehouse location="广州" stock="30"/>
+            </warehouses>
+        </availability>
+    </product>
+    <product id="P002" category="accessories">
+        <name>无线耳机</name>
+        <brand>AudioTech</brand>
+        <price currency="CNY">399.00</price>
+        <specifications>
+            <connectivity>Bluetooth 5.0</connectivity>
+            <battery life="24h"/>
+            <noise-cancellation>true</noise-cancellation>
+        </specifications>
+        <availability>
+            <inStock>true</inStock>
+            <quantity>200</quantity>
+        </availability>
+    </product>
+</catalog>`
+                },
+                {
+                    name: "配置文件XML",
+                    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <application name="WebApp" version="2.1.0">
+        <server>
+            <host>localhost</host>
+            <port>8080</port>
+            <ssl enabled="true">
+                <keystore>server.jks</keystore>
+                <password>changeit</password>
+            </ssl>
+        </server>
+        <database>
+            <connection>
+                <url>jdbc:mysql://localhost:3306/webapp</url>
+                <username>webapp_user</username>
+                <password>secure_password</password>
+                <driver>com.mysql.cj.jdbc.Driver</driver>
+            </connection>
+            <pool>
+                <minSize>5</minSize>
+                <maxSize>20</maxSize>
+                <timeout>30000</timeout>
+            </pool>
+        </database>
+        <logging level="INFO">
+            <appenders>
+                <console enabled="true" pattern="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"/>
+                <file enabled="true" path="logs/app.log" maxSize="10MB" maxHistory="30"/>
+            </appenders>
+            <loggers>
+                <logger name="com.example" level="DEBUG"/>
+                <logger name="org.springframework" level="WARN"/>
+                <logger name="root" level="INFO"/>
+            </loggers>
+        </logging>
+        <features>
+            <feature name="user-registration" enabled="true"/>
+            <feature name="email-notifications" enabled="true"/>
+            <feature name="analytics" enabled="false"/>
+        </features>
+    </application>
+</configuration>`
+                }
+            ];
 
             // 更新统计信息
             function updateStats(input, output) {
@@ -553,6 +699,20 @@
                     reader.readAsText(file);
                 };
                 input.click();
+            });
+
+            // Demo按钮
+            demoBtn.addEventListener('click', () => {
+                const demo = demoData[demoIndex];
+                xmlInput.value = demo.xml;
+                
+                // 更新按钮文字显示当前demo
+                const nextIndex = (demoIndex + 1) % demoData.length;
+                demoBtn.innerHTML = `<i class="material-icons">play_arrow</i> Demo (${nextIndex + 1}/${demoData.length})`;
+                demoIndex = nextIndex;
+                
+                // 自动格式化
+                formatXML();
             });
 
             // 选项变更时自动格式化

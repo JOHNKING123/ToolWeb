@@ -301,12 +301,17 @@
                 <div class="jwt-panel">
                     <div class="jwt-header">
                         <h3><i class="material-icons">token</i> JWT Token</h3>
-                        <button type="button" class="btn btn-secondary" id="clearBtn">
-                            <i class="material-icons">clear</i> 清空
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary" id="demoBtn">
+                                <i class="material-icons">play_arrow</i> Demo
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearBtn">
+                                <i class="material-icons">clear</i> 清空
+                            </button>
+                        </div>
                     </div>
                     <div class="jwt-content">
-                        <textarea id="jwtInput" class="jwt-textarea" placeholder="在此粘贴您的JWT Token..."></textarea>
+                        <textarea id="jwtInput" class="jwt-textarea" placeholder="在此粘贴您的JWT Token，或点击 Demo 按钮查看示例..."></textarea>
                     </div>
                 </div>
 
@@ -341,12 +346,14 @@
             <div class="jwt-info">
                 <h3><i class="material-icons">info</i> 功能说明</h3>
                 <ul>
-                    <li><i class="material-icons">check_circle</i> 支持解析JWT Token结构</li>
-                    <li><i class="material-icons">check_circle</i> 验证Token签名</li>
-                    <li><i class="material-icons">check_circle</i> 支持多种签名算法</li>
-                    <li><i class="material-icons">check_circle</i> 显示Token详细信息</li>
-                    <li><i class="material-icons">check_circle</i> 一键复制解析结果</li>
-                    <li><i class="material-icons">check_circle</i> 支持自定义密钥</li>
+                    <li><i class="material-icons">check_circle</i> 支持解析JWT Token结构（Header、Payload、Signature）</li>
+                    <li><i class="material-icons">play_arrow</i> <strong>点击Demo按钮</strong>可快速体验4种不同类型的示例Token</li>
+                    <li><i class="material-icons">schedule</i> 自动解析时间戳为可读格式（exp、iat、nbf）</li>
+                    <li><i class="material-icons">content_copy</i> 一键复制解析结果</li>
+                    <li><i class="material-icons">input</i> 支持粘贴完整JWT后自动解析</li>
+                    <li><i class="material-icons">keyboard</i> 快捷键：Ctrl+Enter 触发解析</li>
+                    <li><i class="material-icons">security</i> 数据安全：所有处理在本地完成</li>
+                    <li><i class="material-icons">build</i> 签名验证功能开发中...</li>
                 </ul>
             </div>
         </div>
@@ -362,14 +369,37 @@
             const verifyBtn = document.getElementById('verifyBtn');
             const clearBtn = document.getElementById('clearBtn');
             const copyBtn = document.getElementById('copyBtn');
+            const demoBtn = document.getElementById('demoBtn');
             const copyTooltip = document.querySelector('.copy-tooltip');
+
+            // Demo JWT Token 数据
+            const demoTokens = [
+                {
+                    name: "标准用户认证Token",
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                },
+                {
+                    name: "完整用户信息Token",
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsIm5hbWUiOiLlvKDkuInmmbsiLCJlbWFpbCI6InpoYW5nc2FuQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzA2NzAyNDAwLCJleHAiOjE3MDY3ODg4MDAsImlzcyI6InByb2dyYW1tZXItdG9vbHMiLCJhdWQiOiJ3ZWItYXBwIn0.KjwCG8Q7ZZQX2mC6gYf8bB9RoqE1LkJhMnV3W4s5cN8"
+                },
+                {
+                    name: "API访问Token",
+                    token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InJzYTEifQ.eyJpc3MiOiJhcGktc2VydmVyIiwic3ViIjoiYXBpLWNsaWVudC0xMjMiLCJhdWQiOlsiYXBpLnNlcnZpY2UuY29tIiwiYWRtaW4ucGFuZWwiXSwic2NvcGUiOlsicmVhZCIsIndyaXRlIiwiZGVsZXRlIl0sImlhdCI6MTcwNjcwMjQwMCwiZXhwIjoxNzA2NzA2MDAwLCJqdGkiOiJhYmMxMjMtZGVmNDU2LWdoaTc4OSJ9.sample_signature_for_demo"
+                },
+                {
+                    name: "包含权限信息Token",
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzQ1NiIsInVzZXJuYW1lIjoicHJvZ3JhbW1lciIsImVtYWlsIjoicHJvZ3JhbW1lckBkZXYuY29tIiwicm9sZXMiOlsiZGV2ZWxvcGVyIiwidGVzdGVyIl0sInBlcm1pc3Npb25zIjp7InByb2plY3RzIjpbInByb2plY3QtYSIsInByb2plY3QtYiJdLCJhY3Rpb25zIjpbInJlYWQiLCJ3cml0ZSJdfSwiaWF0IjoxNzA2NzAyNDAwLCJleHAiOjE3MDY3ODg4MDAsImlzcyI6InRvb2wtd2Vic2l0ZSIsImF1ZCI6InRvb2wtdXNlcnMifQ.custom_signature_here"
+                }
+            ];
+
+            let currentDemoIndex = 0;
 
             // 解析JWT
             decodeBtn.addEventListener('click', async () => {
                 if (!jwtInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/tools/api/jwt/decode', {
+                    const response = await fetch('/tools/api/jwt-parser', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -380,13 +410,13 @@
                     });
 
                     const data = await response.json();
-                    if (data.success) {
+                    if (data.status === 'success') {
                         headerResult.textContent = JSON.stringify(data.header, null, 2);
                         payloadResult.textContent = JSON.stringify(data.payload, null, 2);
-                        signatureResult.textContent = data.signature;
+                        signatureResult.textContent = data.signature || 'Not verified';
                     } else {
                         headerResult.textContent = '';
-                        payloadResult.textContent = '解析出错：' + data.error;
+                        payloadResult.textContent = '解析出错：' + (data.error || '未知错误');
                         signatureResult.textContent = '';
                     }
                 } catch (error) {
@@ -396,31 +426,35 @@
                 }
             });
 
-            // 验证签名
+            // 验证签名（暂未实现后端支持）
             verifyBtn.addEventListener('click', async () => {
                 if (!jwtInput.value.trim()) return;
+                
+                // 简单的前端验证显示
+                signatureResult.textContent = '签名验证功能开发中...\n\n提示：当前只支持JWT解析功能，签名验证将在后续版本中添加。';
+            });
 
-                try {
-                    const response = await fetch('/tools/api/jwt/verify', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            token: jwtInput.value,
-                            secret: document.getElementById('secretKey').value
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        signatureResult.textContent = '签名验证通过！\n\n算法：' + data.algorithm;
-                    } else {
-                        signatureResult.textContent = '签名验证失败：' + data.error;
-                    }
-                } catch (error) {
-                    signatureResult.textContent = '服务器错误，请稍后重试';
-                }
+            // Demo 按钮
+            demoBtn.addEventListener('click', () => {
+                const demo = demoTokens[currentDemoIndex];
+                jwtInput.value = demo.token;
+                
+                // 显示Demo信息
+                headerResult.textContent = `加载Demo: ${demo.name}`;
+                payloadResult.textContent = '点击"解析Token"按钮查看详细内容...';
+                signatureResult.textContent = '';
+                
+                // 自动解析
+                setTimeout(() => {
+                    decodeBtn.click();
+                }, 500);
+                
+                // 切换到下一个Demo
+                currentDemoIndex = (currentDemoIndex + 1) % demoTokens.length;
+                
+                // 更新按钮文本显示下一个Demo
+                const nextDemo = demoTokens[currentDemoIndex];
+                demoBtn.innerHTML = `<i class="material-icons">play_arrow</i> Demo (${currentDemoIndex + 1}/${demoTokens.length})`;
             });
 
             // 清空输入
@@ -430,6 +464,10 @@
                 payloadResult.textContent = '';
                 signatureResult.textContent = '';
                 jwtInput.focus();
+                
+                // 重置Demo按钮
+                currentDemoIndex = 0;
+                demoBtn.innerHTML = '<i class="material-icons">play_arrow</i> Demo';
             });
 
             // 复制结果

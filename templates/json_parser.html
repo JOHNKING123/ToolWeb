@@ -318,9 +318,14 @@
                 <div class="json-panel">
                     <div class="json-header">
                         <h3><i class="material-icons">code</i> 输入JSON</h3>
-                        <button type="button" class="btn btn-secondary" id="clearBtn">
-                            <i class="material-icons">clear</i> 清空
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary" id="demoBtn">
+                                <i class="material-icons">play_arrow</i> Demo
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearBtn">
+                                <i class="material-icons">clear</i> 清空
+                            </button>
+                        </div>
                     </div>
                     <div class="json-content">
                         <textarea id="jsonInput" class="json-textarea" placeholder="在此粘贴您的JSON数据..."></textarea>
@@ -389,11 +394,74 @@
             };
             editor = new JSONEditor(container, options);
 
+            // Demo JSON数据
+            const demoJSONs = [
+                {
+                    name: "用户信息",
+                    data: `{
+  "id": 1001,
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "age": 28,
+  "address": {
+    "city": "北京",
+    "district": "朝阳区",
+    "street": "三里屯街道",
+    "zipcode": "100027"
+  },
+  "hobbies": ["编程", "阅读", "旅行"],
+  "isActive": true,
+  "lastLogin": "2025-01-01T08:30:00Z"
+}`
+                },
+                {
+                    name: "API响应数据",
+                    data: `{"status":"success","code":200,"message":"操作成功","data":{"list":[{"id":1,"title":"Vue3入门教程","author":"李四","tags":["Vue","JavaScript","前端"],"publishDate":"2024-12-25","views":1580},{"id":2,"title":"React Hook详解","author":"王五","tags":["React","Hook","前端"],"publishDate":"2024-12-20","views":2340}],"pagination":{"page":1,"size":10,"total":25,"pages":3}},"timestamp":1735689600}`
+                },
+                {
+                    name: "商品数据",
+                    data: `{
+  "product": {
+    "id": "SKU2024001",
+    "name": "MacBook Pro 14英寸",
+    "brand": "Apple",
+    "category": "电脑/笔记本",
+    "price": {
+      "original": 15999,
+      "current": 14999,
+      "currency": "CNY"
+    },
+    "specifications": {
+      "processor": "Apple M3芯片",
+      "memory": "16GB",
+      "storage": "512GB SSD",
+      "display": "14.2英寸 Liquid Retina XDR显示屏",
+      "color": "深空灰色"
+    },
+    "inventory": {
+      "stock": 25,
+      "warehouse": "北京仓库",
+      "reserved": 3
+    },
+    "images": [
+      "https://example.com/images/macbook-1.jpg",
+      "https://example.com/images/macbook-2.jpg"
+    ],
+    "createdAt": "2024-12-01T10:00:00Z",
+    "updatedAt": "2024-12-28T15:30:00Z"
+  }
+}`
+                }
+            ];
+
+            let currentJSONIndex = 0;
+
             // 添加按钮点击事件监听器
             document.getElementById('formatBtn').addEventListener('click', formatJSON);
             document.getElementById('minifyBtn').addEventListener('click', minifyJSON);
             document.getElementById('clearBtn').addEventListener('click', clearJSON);
             document.getElementById('toggleViewBtn').addEventListener('click', toggleView);
+            document.getElementById('demoBtn').addEventListener('click', loadDemo);
         });
 
         function toggleView() {
@@ -481,10 +549,33 @@
             }
         }
 
+        function loadDemo() {
+            const demo = demoJSONs[currentJSONIndex];
+            const jsonInput = document.getElementById('jsonInput');
+            const demoBtn = document.getElementById('demoBtn');
+            
+            jsonInput.value = demo.data;
+            
+            // 自动格式化
+            setTimeout(() => {
+                formatJSON();
+            }, 200);
+            
+            // 切换到下一个Demo
+            currentJSONIndex = (currentJSONIndex + 1) % demoJSONs.length;
+            
+            // 更新按钮文本
+            demoBtn.innerHTML = `<i class="material-icons">play_arrow</i> Demo (${currentJSONIndex + 1}/${demoJSONs.length})`;
+        }
+
         function clearJSON() {
             document.getElementById('jsonInput').value = '';
             editor.set({});
             document.getElementById('jsonResult').value = '';
+            
+            // 重置Demo按钮
+            currentJSONIndex = 0;
+            document.getElementById('demoBtn').innerHTML = '<i class="material-icons">play_arrow</i> Demo';
         }
 
         // 复制结果

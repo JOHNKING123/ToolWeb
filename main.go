@@ -651,7 +651,20 @@ func main() {
 			}
 
 			result := tools.ParseJWT(req.Token)
-			c.JSON(http.StatusOK, result)
+
+			if result.IsValid {
+				c.JSON(http.StatusOK, gin.H{
+					"status":    "success",
+					"header":    result.Header,
+					"payload":   result.Payload,
+					"signature": result.Signature,
+				})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"status": "error",
+					"error":  result.Error,
+				})
+			}
 		})
 
 		// 文本比较
