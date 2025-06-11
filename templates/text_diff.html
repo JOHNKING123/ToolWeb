@@ -135,6 +135,51 @@
             border-left: 1px solid #e5e7eb;
         }
 
+        /* Accept按钮样式 */
+        .accept-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .accept-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .diff-line:hover .accept-btn {
+            opacity: 1;
+        }
+
+        /* 左边窗口的accept按钮（采纳左边，箭头向右） */
+        #display1 .accept-btn {
+            right: -12px;
+        }
+
+        /* 右边窗口的accept按钮（采纳右边，箭头向左） */
+        #display2 .accept-btn {
+            left: -12px;
+        }
+
+        .diff-line {
+            position: relative;
+        }
+
         .diff-line-content {
             flex: 1;
             padding: 0.25rem 1rem;
@@ -647,14 +692,17 @@
                         // 处理跳过的行（删除的行）
                         for (let j = lastMatchedIdx + 1; j < match.line1Index; j++) {
                             if (!usedLines1.has(j)) {
-                                diffHtml1.push(`<div class="diff-line diff-line-removed" data-line-index="${lineIndex}">
-                                    <div class="diff-line-number">${leftLineNum}</div>
-                                    <div class="diff-line-content">${escapeHtml(originalLines1[j])}</div>
-                                </div>`);
-                                diffHtml2.push(`<div class="diff-line" data-line-index="${lineIndex}">
-                                    <div class="diff-line-number">-</div>
-                                    <div class="diff-line-content"></div>
-                                </div>`);
+                                                            diffHtml1.push(`<div class="diff-line diff-line-removed" data-line-index="${lineIndex}">
+                                <div class="diff-line-number">${leftLineNum}</div>
+                                <div class="diff-line-content">${escapeHtml(originalLines1[j])}</div>
+                                <button class="accept-btn" onclick="acceptChange(${lineIndex}, 'left')" title="采纳左侧变更">
+                                    <i class="material-icons">arrow_forward</i>
+                                </button>
+                            </div>`);
+                            diffHtml2.push(`<div class="diff-line" data-line-index="${lineIndex}">
+                                <div class="diff-line-number">-</div>
+                                <div class="diff-line-content"></div>
+                            </div>`);
                                 diffLines.push(lineIndex);  // 记录差异行
                                 lineIndex++;
                                 leftLineNum++;
@@ -675,10 +723,16 @@
                             diffHtml1.push(`<div class="diff-line diff-line-changed" data-line-index="${lineIndex}">
                                 <div class="diff-line-number">${leftLineNum}</div>
                                 <div class="diff-line-content">${escapeHtml(originalLines1[match.line1Index])}</div>
+                                <button class="accept-btn" onclick="acceptChange(${lineIndex}, 'left')" title="采纳左侧变更">
+                                    <i class="material-icons">arrow_forward</i>
+                                </button>
                             </div>`);
                             diffHtml2.push(`<div class="diff-line diff-line-changed" data-line-index="${lineIndex}">
                                 <div class="diff-line-number">${rightLineNum}</div>
                                 <div class="diff-line-content">${escapeHtml(originalLines2[i])}</div>
+                                <button class="accept-btn" onclick="acceptChange(${lineIndex}, 'right')" title="采纳右侧变更">
+                                    <i class="material-icons">arrow_back</i>
+                                </button>
                             </div>`);
                             diffLines.push(lineIndex);  // 记录差异行
                             changed++;
@@ -696,6 +750,9 @@
                         diffHtml2.push(`<div class="diff-line diff-line-added" data-line-index="${lineIndex}">
                             <div class="diff-line-number">${rightLineNum}</div>
                             <div class="diff-line-content">${escapeHtml(originalLines2[i])}</div>
+                            <button class="accept-btn" onclick="acceptChange(${lineIndex}, 'right')" title="采纳右侧变更">
+                                <i class="material-icons">arrow_back</i>
+                            </button>
                         </div>`);
                         diffLines.push(lineIndex);  // 记录差异行
                         lineIndex++;
@@ -710,6 +767,9 @@
                         diffHtml1.push(`<div class="diff-line diff-line-removed" data-line-index="${lineIndex}">
                             <div class="diff-line-number">${leftLineNum}</div>
                             <div class="diff-line-content">${escapeHtml(originalLines1[i])}</div>
+                            <button class="accept-btn" onclick="acceptChange(${lineIndex}, 'left')" title="采纳左侧变更">
+                                <i class="material-icons">arrow_forward</i>
+                            </button>
                         </div>`);
                         diffHtml2.push(`<div class="diff-line" data-line-index="${lineIndex}">
                             <div class="diff-line-number">-</div>
@@ -1162,6 +1222,121 @@
             controlsDiv.appendChild(createSyncScrollToggle());
             
             document.querySelector('.diff-stats').after(controlsDiv);
+            
+            // Accept变更处理函数
+            window.acceptChange = function(lineIndex, side) {
+                console.log('Accept change:', lineIndex, side);
+                
+                const line1 = display1.querySelector(`[data-line-index="${lineIndex}"]`);
+                const line2 = display2.querySelector(`[data-line-index="${lineIndex}"]`);
+                
+                if (!line1 || !line2) {
+                    console.log('无法找到对应的行元素');
+                    return;
+                }
+                
+                const content1 = line1.querySelector('.diff-line-content');
+                const content2 = line2.querySelector('.diff-line-content');
+                
+                if (side === 'left') {
+                    // 采纳左侧变更：将左侧内容复制到右侧
+                    const leftContent = content1.textContent;
+                    if (leftContent) {
+                        content2.textContent = leftContent;
+                        // 更新右侧的样式，移除差异标识
+                        line2.className = line2.className.replace(/diff-line-(added|removed|changed)/, '');
+                        // 移除accept按钮
+                        const btn2 = line2.querySelector('.accept-btn');
+                        if (btn2) btn2.remove();
+                    } else {
+                        // 如果左侧为空（删除行），则删除右侧行
+                        line2.style.display = 'none';
+                    }
+                    
+                    // 更新左侧样式
+                    line1.className = line1.className.replace(/diff-line-(added|removed|changed)/, '');
+                    const btn1 = line1.querySelector('.accept-btn');
+                    if (btn1) btn1.remove();
+                    
+                } else if (side === 'right') {
+                    // 采纳右侧变更：将右侧内容复制到左侧
+                    const rightContent = content2.textContent;
+                    if (rightContent) {
+                        content1.textContent = rightContent;
+                        // 更新左侧的样式，移除差异标识
+                        line1.className = line1.className.replace(/diff-line-(added|removed|changed)/, '');
+                        // 移除accept按钮
+                        const btn1 = line1.querySelector('.accept-btn');
+                        if (btn1) btn1.remove();
+                    } else {
+                        // 如果右侧为空（删除行），则删除左侧行
+                        line1.style.display = 'none';
+                    }
+                    
+                    // 更新右侧样式
+                    line2.className = line2.className.replace(/diff-line-(added|removed|changed)/, '');
+                    const btn2 = line2.querySelector('.accept-btn');
+                    if (btn2) btn2.remove();
+                }
+                
+                // 更新文本区域内容
+                updateTextFromDisplay();
+                
+                // 显示确认消息
+                showAcceptMessage(side);
+            };
+            
+            // 从显示区域更新文本区域的内容
+            function updateTextFromDisplay() {
+                const lines1 = [];
+                const lines2 = [];
+                
+                display1.querySelectorAll('.diff-line').forEach(line => {
+                    if (line.style.display !== 'none') {
+                        const content = line.querySelector('.diff-line-content').textContent;
+                        if (content.trim() || line.querySelector('.diff-line-number').textContent !== '-') {
+                            lines1.push(content);
+                        }
+                    }
+                });
+                
+                display2.querySelectorAll('.diff-line').forEach(line => {
+                    if (line.style.display !== 'none') {
+                        const content = line.querySelector('.diff-line-content').textContent;
+                        if (content.trim() || line.querySelector('.diff-line-number').textContent !== '-') {
+                            lines2.push(content);
+                        }
+                    }
+                });
+                
+                text1.value = lines1.join('\n');
+                text2.value = lines2.join('\n');
+            }
+            
+            // 显示采纳确认消息
+            function showAcceptMessage(side) {
+                const message = document.createElement('div');
+                message.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--primary-color);
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 0.5rem;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    font-size: 14px;
+                `;
+                message.textContent = side === 'left' ? '已采纳左侧变更' : '已采纳右侧变更';
+                
+                document.body.appendChild(message);
+                
+                setTimeout(() => {
+                    message.remove();
+                }, 2000);
+            }
         });
     </script>
 </body>
