@@ -145,7 +145,21 @@
 
     <footer class="footer">
         <div class="container footer-content">
-            <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+            <div class="footer-main">
+                <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+            </div>
+            <div class="visitor-stats">
+                <div class="stat-item">
+                    <i class="material-icons">people</i>
+                    <span class="stat-label">总访客</span>
+                    <span class="stat-number">{{.TotalVisitors}}</span>
+                </div>
+                <div class="stat-item">
+                    <i class="material-icons">today</i>
+                    <span class="stat-label">今日访客</span>
+                    <span class="stat-number">{{.TodayVisitors}}</span>
+                </div>
+            </div>
         </div>
     </footer>
 

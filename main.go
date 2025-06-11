@@ -16,6 +16,9 @@ import (
 )
 
 func main() {
+	// 初始化访客统计
+	tools.InitVisitorStats()
+
 	router := gin.Default()
 
 	// 加载HTML模板
@@ -24,16 +27,31 @@ func main() {
 	// 静态文件服务 - 修改为 /tools/static/
 	router.Static("/tools/static", "./static")
 
+	// 添加访客统计中间件（只对首页进行统计）
+	router.Use(func(c *gin.Context) {
+		// 只对首页路由进行统计
+		if c.Request.URL.Path == "/" || c.Request.URL.Path == "/tools/index" {
+			middleware.VisitorStats(tools.GetVisitorStats())(c)
+		} else {
+			c.Next()
+		}
+	})
+
 	// 页面路由
 	router.GET("/", func(c *gin.Context) {
 		categories := tools.GetCategories()
 		popularTools := tools.GetPopularTools()
 		newTools := tools.GetNewTools()
 
+		// 获取访客统计信息
+		stats := tools.GetVisitorStats().GetStats()
+
 		c.HTML(http.StatusOK, "index", gin.H{
-			"Categories":   categories,
-			"PopularTools": popularTools,
-			"NewTools":     newTools,
+			"Categories":    categories,
+			"PopularTools":  popularTools,
+			"NewTools":      newTools,
+			"TotalVisitors": stats["total_visitors"],
+			"TodayVisitors": stats["today_visitors"],
 		})
 	})
 
@@ -173,10 +191,15 @@ func main() {
 		popularTools := tools.GetPopularTools()
 		newTools := tools.GetNewTools()
 
+		// 获取访客统计信息
+		stats := tools.GetVisitorStats().GetStats()
+
 		c.HTML(http.StatusOK, "index", gin.H{
-			"Categories":   categories,
-			"PopularTools": popularTools,
-			"NewTools":     newTools,
+			"Categories":    categories,
+			"PopularTools":  popularTools,
+			"NewTools":      newTools,
+			"TotalVisitors": stats["total_visitors"],
+			"TodayVisitors": stats["today_visitors"],
 		})
 	})
 

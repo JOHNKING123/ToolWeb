@@ -285,8 +285,49 @@ body {
 }
 
 .footer-content {
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
     color: #6b7280;
+}
+
+.footer-main {
+    text-align: center;
+    flex: 1;
+}
+
+.visitor-stats {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.visitor-stats .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 0.5rem;
+    min-width: 120px;
+}
+
+.visitor-stats .stat-item i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.visitor-stats .stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.visitor-stats .stat-number {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-left: auto;
 }
 
 /* Responsive design */
@@ -317,6 +358,21 @@ body {
 
     .hero h1 {
         font-size: 2rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .visitor-stats {
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .visitor-stats .stat-item {
+        min-width: 100px;
+        font-size: 0.875rem;
     }
 }
 
