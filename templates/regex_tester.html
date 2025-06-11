@@ -16,6 +16,141 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
     <meta name="theme-color" content="#2563eb">
+    
+    <style>
+        .regex-container {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .regex-left {
+            flex: 1;
+        }
+
+        .regex-right {
+            flex: 1;
+        }
+
+        .replace-section {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .replace-section h3 {
+            color: #2563eb;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .replace-section h4 {
+            color: #374151;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .replace-help {
+            margin-top: 0.5rem;
+        }
+
+        .replace-help small {
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .replace-output {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .textarea-with-lines {
+            position: relative;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            background: white;
+            display: flex;
+        }
+
+        .line-numbers {
+            flex-shrink: 0;
+            width: 50px;
+            background: #f8f9fa;
+            border-right: 1px solid #e5e7eb;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #6b7280;
+            text-align: right;
+            overflow-y: auto;
+            overflow-x: hidden;
+            user-select: none;
+            border-radius: 0.375rem 0 0 0.375rem;
+            white-space: pre;
+            font-family: 'Consolas', 'Monaco', monospace;
+            box-sizing: border-box;
+            max-height: 400px;
+        }
+
+        .textarea-with-lines textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: vertical;
+            padding: 0.75rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            line-height: 1.5;
+            font-size: 0.875rem;
+            background: transparent;
+            min-height: 150px;
+            max-height: 400px;
+            box-sizing: border-box;
+        }
+
+        .replace-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .copy-success {
+            background: #10b981;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .regex-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -28,53 +163,100 @@
             <form id="regexForm" class="tool-form">
                 <div class="form-group">
                     <label for="regexPattern">正则表达式：</label>
-                    <input type="text" id="regexPattern" name="pattern" placeholder="输入正则表达式...">
+                    <input type="text" id="regexPattern" name="pattern" placeholder="输入正则表达式，例如：\d+" required>
                 </div>
 
                 <div class="form-group">
                     <label for="regexText">测试文本：</label>
-                    <textarea id="regexText" name="text" rows="8" placeholder="输入要测试的文本..."></textarea>
+                    <div class="textarea-with-lines">
+                        <div class="line-numbers" id="lineNumbers"></div>
+                        <textarea id="regexText" name="text" rows="6" placeholder="输入要测试的文本"></textarea>
+                    </div>
                 </div>
 
-                <div class="form-options">
-                    <div class="option-group">
-                        <label>
-                            <input type="checkbox" name="ignoreCase" id="ignoreCase">
-                            忽略大小写 (i)
-                        </label>
-                    </div>
-                    <div class="option-group">
-                        <label>
-                            <input type="checkbox" name="multiline" id="multiline">
-                            多行模式 (m)
-                        </label>
-                    </div>
-                    <div class="option-group">
-                        <label>
-                            <input type="checkbox" name="global" id="global" checked>
-                            全局匹配 (g)
-                        </label>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <div class="option-group">
+                            <label>
+                                <input type="checkbox" name="ignoreCase" id="ignoreCase">
+                                忽略大小写 (i)
+                            </label>
+                        </div>
+                        <div class="option-group">
+                            <label>
+                                <input type="checkbox" name="multiline" id="multiline" checked>
+                                多行模式 (m)
+                            </label>
+                        </div>
+                        <div class="option-group">
+                            <label>
+                                <input type="checkbox" name="global" id="global" checked>
+                                全局匹配 (g)
+                            </label>
+                        </div>
                     </div>
                 </div>
             </form>
 
-            <div class="results">
-                <div class="spinner"></div>
-                <div id="regexResult">
-                    <div class="result-section">
-                        <h3>匹配结果</h3>
-                        <div id="matches"></div>
-                    </div>
-                    <div class="result-section">
-                        <h3>匹配统计</h3>
-                        <div class="stats">
-                            <div class="stat-item">
-                                <span class="stat-label">匹配总数：</span>
-                                <span id="matchCount">0</span>
+            <div class="regex-container">
+                <!-- 左侧：匹配结果 -->
+                <div class="regex-left">
+                    <div class="results">
+                        <div class="spinner"></div>
+                        <div id="regexResult">
+                            <div class="result-section">
+                                <h3>匹配结果</h3>
+                                <div id="matches"></div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">捕获组数：</span>
-                                <span id="groupCount">0</span>
+                            <div class="result-section">
+                                <h3>匹配统计</h3>
+                                <div class="stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">匹配总数：</span>
+                                        <span id="matchCount">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">捕获组数：</span>
+                                        <span id="groupCount">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：文本替换 -->
+                <div class="regex-right">
+                    <div class="replace-section">
+                        <h3>文本替换</h3>
+                        <div class="form-group">
+                            <label for="replaceTemplate">替换模板：</label>
+                            <input type="text" id="replaceTemplate" placeholder="使用 $1, $2 等引用捕获组，例如：[$1] - $2">
+                            <div class="replace-help">
+                                <small>
+                                    使用 $1, $2, $3... 引用捕获组<br>
+                                    使用 $& 引用整个匹配<br>
+                                    使用 $` 引用匹配前的文本，$' 引用匹配后的文本
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ignoreUnmatched" checked>
+                                忽略没有匹配到的行
+                            </label>
+                        </div>
+                        
+                        <div class="replace-controls">
+                            <button type="button" id="replaceBtn" class="btn btn-primary">执行替换</button>
+                            <button type="button" id="copyBtn" class="btn btn-secondary" style="display:none;">复制结果</button>
+                        </div>
+                        
+                        <div class="result-section">
+                            <h4>替换结果</h4>
+                            <div id="replaceResult" class="replace-output">
+                                <p style="color: #666; padding: 1rem;">请输入正则表达式和替换模板</p>
                             </div>
                         </div>
                     </div>
@@ -112,11 +294,74 @@
             const ignoreCase = document.getElementById('ignoreCase');
             const multiline = document.getElementById('multiline');
             const global = document.getElementById('global');
+            const lineNumbers = document.getElementById('lineNumbers');
 
             if (!matches) {
                 console.error('matches element not found!');
                 return;
             }
+
+            // 更新行号显示
+            function updateLineNumbers() {
+                const text = regexText.value || '';
+                const lines = text.split('\n');
+                const lineCount = Math.max(lines.length, 1);
+                
+                let lineNumbersText = '';
+                for (let i = 1; i <= lineCount; i++) {
+                    lineNumbersText += i;
+                    if (i < lineCount) {
+                        lineNumbersText += '\n';
+                    }
+                }
+                
+                lineNumbers.textContent = lineNumbersText;
+            }
+
+            // 计算字符位置对应的行号
+            function getLineNumber(text, charIndex) {
+                const beforeText = text.substring(0, charIndex);
+                return beforeText.split('\n').length;
+            }
+
+            // 同步滚动 - 让行号跟随文本滚动
+            function syncScroll() {
+                lineNumbers.scrollTop = regexText.scrollTop;
+            }
+
+            // 绑定滚动事件
+            regexText.addEventListener('scroll', syncScroll);
+            
+            // 绑定各种事件来更新行号
+            regexText.addEventListener('input', updateLineNumbers);
+            regexText.addEventListener('keyup', updateLineNumbers);
+            regexText.addEventListener('keydown', updateLineNumbers);
+            regexText.addEventListener('paste', () => setTimeout(updateLineNumbers, 10));
+            regexText.addEventListener('cut', () => setTimeout(updateLineNumbers, 10));
+            
+            // 初始化行号
+            updateLineNumbers();
+
+            // 确保滚动高度一致
+            function adjustLineNumbersHeight() {
+                lineNumbers.style.height = regexText.scrollHeight + 'px';
+            }
+
+            // 监听textarea高度变化
+            regexText.addEventListener('input', adjustLineNumbersHeight);
+            regexText.addEventListener('scroll', syncScroll);
+            
+            // 使用ResizeObserver监听textarea大小变化
+            if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(() => {
+                    adjustLineNumbersHeight();
+                    syncScroll();
+                });
+                resizeObserver.observe(regexText);
+            }
+            
+            // 初始化高度
+            setTimeout(adjustLineNumbersHeight, 100);
 
             // 处理样例按钮点击
             const exampleButtons = document.querySelectorAll('.regex-examples button[data-pattern]');
@@ -131,20 +376,27 @@
                         case '邮箱地址':
                             regexText.value = 'test@example.com\ninvalid-email\nuser.name+tag@domain.co.uk\n123@456.789\nadmin@test.org';
                             multiline.checked = true;
+                            replaceTemplate.value = '邮箱: $&';
                             break;
                         case '手机号码':
                             regexText.value = '13812345678\n15987654321\n12345678901\n139123456789\n18612345678';
                             multiline.checked = true;
+                            replaceTemplate.value = '手机号: $&';
                             break;
                         case 'URL地址':
                             regexText.value = 'https://www.example.com\nhttp://test.com/path\nwww.github.com\ninvalid-url\nhttps://sub.domain.co.uk/path?q=1';
                             multiline.checked = true;
+                            replaceTemplate.value = '<a href="$&">$2</a>';
                             break;
                         case '日期格式':
                             regexText.value = '2023-12-25\n2023-02-29\n2023-13-01\n2024-01-15\n23-12-25';
                             multiline.checked = true;
+                            replaceTemplate.value = '$1年$2月$3日';
                             break;
                     }
+                    
+                    // 更新行号显示
+                    updateLineNumbers();
                     
                     // 自动执行测试
                     testRegex();
@@ -217,10 +469,13 @@
                         allMatches.forEach((match, index) => {
                             maxGroups = Math.max(maxGroups, match.length - 1);
                             
+                            // 计算匹配项所在的行号
+                            const lineNumber = getLineNumber(text, match.index);
+                            
                             html += `<div class="match-item" style="margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 0.5rem; border-left: 4px solid #2563eb;">`;
                             html += `<div style="font-weight: 600; color: #2563eb; margin-bottom: 0.5rem;">匹配 ${index + 1}:</div>`;
                             html += `<div style="font-family: 'Consolas', 'Monaco', monospace; background: white; padding: 0.75rem; border-radius: 0.25rem; margin: 0.5rem 0; border: 1px solid #e5e7eb; word-break: break-all;">"${match[0]}"</div>`;
-                            html += `<div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">位置: ${match.index} - ${match.index + match[0].length}</div>`;
+                            html += `<div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">第 ${lineNumber} 行</div>`;
                             
                             if (match.length > 1) {
                                 html += '<div style="margin-top: 0.75rem;"><strong style="color: #374151;">捕获组:</strong></div>';
@@ -253,6 +508,192 @@
 
             // 初始化显示
             matches.innerHTML = '<p style="color: #666; padding: 1rem;">请输入正则表达式和测试文本</p>';
+
+            // 文本替换功能
+            const replaceTemplate = document.getElementById('replaceTemplate');
+            const replaceBtn = document.getElementById('replaceBtn');
+            const replaceResult = document.getElementById('replaceResult');
+            const copyBtn = document.getElementById('copyBtn');
+            const ignoreUnmatched = document.getElementById('ignoreUnmatched');
+            
+            let lastReplaceResult = '';
+
+            // 执行替换
+            function performReplace() {
+                const pattern = regexPattern.value.trim();
+                const text = regexText.value;
+                const template = replaceTemplate.value;
+
+                if (!pattern) {
+                    replaceResult.innerHTML = '<p style="color: #dc2626; padding: 1rem;">请输入正则表达式</p>';
+                    copyBtn.style.display = 'none';
+                    return;
+                }
+
+                if (!text) {
+                    replaceResult.innerHTML = '<p style="color: #dc2626; padding: 1rem;">请输入测试文本</p>';
+                    copyBtn.style.display = 'none';
+                    return;
+                }
+
+                if (!template) {
+                    replaceResult.innerHTML = '<p style="color: #dc2626; padding: 1rem;">请输入替换模板</p>';
+                    copyBtn.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    // 构建正则表达式标志
+                    let flags = '';
+                    if (ignoreCase.checked) flags += 'i';
+                    if (multiline.checked) flags += 'm';
+                    if (global.checked) flags += 'g';
+
+                    const regex = new RegExp(pattern, flags);
+                    
+                    let result;
+                    let matchCount = 0;
+                    
+                    // 先获取所有匹配项（与左侧显示逻辑一致）
+                    let allTextMatches = [];
+                    if (global.checked) {
+                        try {
+                            allTextMatches = Array.from(text.matchAll(regex));
+                        } catch (e) {
+                            let match;
+                            const execRegex = new RegExp(pattern, flags);
+                            while ((match = execRegex.exec(text)) !== null) {
+                                allTextMatches.push(match);
+                                if (match.index === execRegex.lastIndex) {
+                                    execRegex.lastIndex++;
+                                }
+                            }
+                        }
+                    } else {
+                        const singleMatch = regex.exec(text);
+                        if (singleMatch) {
+                            allTextMatches.push(singleMatch);
+                        }
+                    }
+                    
+                    if (ignoreUnmatched.checked) {
+                        // 忽略未匹配的行，只处理匹配的行
+                        const lines = text.split('\n');
+                        const processedLines = [];
+                        
+                        lines.forEach(line => {
+                            const lineRegex = new RegExp(pattern, flags);
+                            if (lineRegex.test(line)) {
+                                const freshRegex = new RegExp(pattern, flags);
+                                const replacedLine = line.replace(freshRegex, template);
+                                processedLines.push(replacedLine);
+                            }
+                        });
+                        
+                        result = processedLines.join('\n');
+                        // 使用总匹配数
+                        matchCount = allTextMatches.length;
+                    } else {
+                        // 处理所有行
+                        result = text.replace(regex, template);
+                        matchCount = allTextMatches.length;
+                    }
+                    
+                    // 保存结果用于复制
+                    lastReplaceResult = result;
+                    
+                    // 显示结果
+                    replaceResult.innerHTML = `<div style="color: #374151;">${escapeHtml(result)}</div>`;
+                    
+                    // 显示替换统计和复制按钮
+                    if (matchCount > 0) {
+                        const statsDiv = document.createElement('div');
+                        statsDiv.style.cssText = 'margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; font-size: 0.9rem; color: #6b7280;';
+                        statsDiv.textContent = `共处理了 ${matchCount} 处匹配项`;
+                        replaceResult.appendChild(statsDiv);
+                        
+                        copyBtn.style.display = 'inline-block';
+                    } else {
+                        copyBtn.style.display = 'none';
+                    }
+                    
+                } catch (error) {
+                    replaceResult.innerHTML = `<p style="color: #dc2626; padding: 1rem; background: #fef2f2; border-radius: 0.5rem; border: 1px solid #fecaca;"><strong>替换错误:</strong><br>${error.message}</p>`;
+                    copyBtn.style.display = 'none';
+                }
+            }
+
+            // 复制到剪贴板
+            async function copyToClipboard() {
+                try {
+                    await navigator.clipboard.writeText(lastReplaceResult);
+                    
+                    // 显示复制成功反馈
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '已复制!';
+                    copyBtn.classList.add('copy-success');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.classList.remove('copy-success');
+                    }, 2000);
+                    
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    
+                    // 降级方案：选择文本
+                    const range = document.createRange();
+                    const selection = window.getSelection();
+                    range.selectNodeContents(replaceResult);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    
+                    copyBtn.textContent = '请手动复制';
+                    setTimeout(() => {
+                        copyBtn.textContent = '复制结果';
+                    }, 2000);
+                }
+            }
+
+            // HTML转义函数
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // 绑定替换按钮
+            replaceBtn.addEventListener('click', performReplace);
+
+            // 绑定复制按钮
+            copyBtn.addEventListener('click', copyToClipboard);
+
+            // 模板输入时实时预览
+            replaceTemplate.addEventListener('input', () => {
+                if (regexPattern.value.trim() && regexText.value && replaceTemplate.value) {
+                    performReplace();
+                }
+            });
+
+            // 当忽略未匹配行选项改变时，重新执行替换
+            ignoreUnmatched.addEventListener('change', () => {
+                if (regexPattern.value.trim() && regexText.value && replaceTemplate.value) {
+                    performReplace();
+                }
+            });
+
+            // 当正则表达式或文本改变时，清空替换结果（除非有模板）
+            function clearReplaceIfNeeded() {
+                if (!replaceTemplate.value) {
+                    replaceResult.innerHTML = '<p style="color: #666; padding: 1rem;">请输入正则表达式和替换模板</p>';
+                    copyBtn.style.display = 'none';
+                } else {
+                    performReplace();
+                }
+            }
+
+            regexPattern.addEventListener('input', clearReplaceIfNeeded);
+            regexText.addEventListener('input', clearReplaceIfNeeded);
         });
     </script>
 </body>
