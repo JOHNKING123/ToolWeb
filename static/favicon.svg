@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="16" cy="16" r="16" fill="#2563eb"/>
+  
+  <!-- 代码符号 </> -->
+  <g fill="white">
+    <!-- 左尖括号 < -->
+    <path d="M12 10L6 16L12 22L13.5 20.5L9 16L13.5 11.5L12 10Z"/>
+    <!-- 右尖括号 > -->
+    <path d="M20 10L18.5 11.5L23 16L18.5 20.5L20 22L26 16L20 10Z"/>
+    <!-- 中间斜杠 / -->
+    <path d="M17 8L11 24H13L19 8H17Z"/>
+  </g>
+</svg> 

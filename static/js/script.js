@@ -73,6 +73,7 @@ if (document.getElementById('base64Form')) {
 }
 
 // Regex Tester
+/*
 if (document.getElementById('regexForm')) {
     const updateRegexResults = async () => {
         const pattern = document.getElementById('regexPattern').value;
@@ -131,6 +132,7 @@ if (document.getElementById('regexForm')) {
     document.getElementById('regexPattern').addEventListener('input', debouncedUpdate);
     document.getElementById('regexText').addEventListener('input', debouncedUpdate);
 }
+*/
 
 // Cron Parser
 if (document.getElementById('cronForm')) {
