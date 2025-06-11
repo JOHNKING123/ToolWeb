@@ -27,6 +27,7 @@ log/
 *.swp
 *.swo
 main
+visitor_stats.json
 
 # OS specific files
 .DS_Store

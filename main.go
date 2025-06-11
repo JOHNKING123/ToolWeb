@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"image"
 	"log"
 	"net/http"
@@ -20,6 +21,21 @@ func main() {
 	tools.InitVisitorStats()
 
 	router := gin.Default()
+
+	// 自定义模板函数
+	router.SetFuncMap(template.FuncMap{
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"isLast": func(index int, slice interface{}) bool {
+			switch s := slice.(type) {
+			case []tools.Tool:
+				return index == len(s)-1
+			default:
+				return true
+			}
+		},
+	})
 
 	// 加载HTML模板
 	router.LoadHTMLGlob("templates/*")
@@ -198,6 +214,60 @@ func main() {
 			"Categories":    categories,
 			"PopularTools":  popularTools,
 			"NewTools":      newTools,
+			"TotalVisitors": stats["total_visitors"],
+			"TodayVisitors": stats["today_visitors"],
+		})
+	})
+
+	// SEO相关路由
+	router.GET("/sitemap.xml", func(c *gin.Context) {
+		domain := "https://www.johnkingzcq123.xyz" // 替换为你的实际域名
+		sitemap, err := tools.GenerateSitemap(domain)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "生成sitemap失败")
+			return
+		}
+		c.Header("Content-Type", "application/xml")
+		c.Data(http.StatusOK, "application/xml", sitemap)
+	})
+
+	router.GET("/robots.txt", func(c *gin.Context) {
+		domain := "https://www.johnkingzcq123.xyz" // 替换为你的实际域名
+		robots := tools.GenerateRobotsTxt(domain)
+		c.Header("Content-Type", "text/plain")
+		c.String(http.StatusOK, robots)
+	})
+
+	// 搜索功能路由
+	router.GET("/search", func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
+			c.Redirect(http.StatusFound, "/")
+			return
+		}
+
+		// 搜索工具
+		categories := tools.GetCategories()
+		var results []tools.Tool
+
+		for _, category := range categories {
+			for _, tool := range category.Tools {
+				if strings.Contains(strings.ToLower(tool.Name), strings.ToLower(query)) ||
+					strings.Contains(strings.ToLower(tool.Description), strings.ToLower(query)) {
+					results = append(results, tool)
+				}
+			}
+		}
+
+		// 获取访客统计信息
+		stats := tools.GetVisitorStats().GetStats()
+
+		c.HTML(http.StatusOK, "index", gin.H{
+			"Categories":    categories,
+			"PopularTools":  results,
+			"NewTools":      []tools.Tool{},
+			"SearchQuery":   query,
+			"SearchResults": len(results),
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})

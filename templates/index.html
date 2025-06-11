@@ -4,9 +4,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>程序员工具箱 - 提升开发效率的在线工具</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- 基础SEO -->
+    <title>程序员工具箱 - 免费在线开发工具集合 | JSON格式化、Base64编码、正则测试</title>
+    <meta name="description" content="程序员工具箱提供JSON格式化、Base64编码解码、正则表达式测试、URL编码、二维码生成等免费在线开发工具，提升编程效率，简化开发流程。">
+    <meta name="keywords" content="程序员工具,在线工具,JSON格式化,Base64编码,正则表达式,URL编码,二维码生成,开发工具,编程工具,前端工具,后端工具">
+    <meta name="author" content="程序员工具箱">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/">
+    <meta property="og:title" content="程序员工具箱 - 免费在线开发工具集合">
+    <meta property="og:description" content="提供JSON格式化、Base64编码解码、正则表达式测试等免费在线开发工具，提升编程效率。">
+    <meta property="og:image" content="https://www.johnkingzcq123.xyz/tools/static/images/og-image.png">
+    <meta property="og:site_name" content="程序员工具箱">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.johnkingzcq123.xyz/">
+    <meta property="twitter:title" content="程序员工具箱 - 免费在线开发工具集合">
+    <meta property="twitter:description" content="提供JSON格式化、Base64编码解码、正则表达式测试等免费在线开发工具，提升编程效率。">
+    <meta property="twitter:image" content="https://www.johnkingzcq123.xyz/tools/static/images/og-image.png">
+    
+    <!-- 技术SEO -->
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta name="language" content="zh-CN">
+    <meta name="revisit-after" content="1 days">
+    
+    <!-- 结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "程序员工具箱",
+      "description": "免费在线开发工具集合，提供JSON格式化、Base64编码、正则测试等程序员常用工具",
+             "url": "https://www.johnkingzcq123.xyz",
+       "potentialAction": {
+         "@type": "SearchAction",
+         "target": "https://www.johnkingzcq123.xyz/search?q={search_term_string}",
+         "query-input": "required name=search_term_string"
+       },
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": [
+          {{range $index, $tool := .PopularTools}}
+          {
+            "@type": "SoftwareApplication",
+            "position": {{add $index 1}},
+            "name": "{{$tool.Name}}",
+            "description": "{{$tool.Description}}",
+                         "url": "https://www.johnkingzcq123.xyz{{$tool.Path}}",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web Browser",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "CNY"
+            }
+          }{{if not (isLast $index $.PopularTools)}},{{end}}
+          {{end}}
+        ]
+      }
+    }
+    </script>
+    
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"></noscript>
+    
     <link rel="stylesheet" href="/tools/static/css/style.css">
+    
+    <!-- 内联关键CSS -->
+    <style>
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;margin:0;padding:0;line-height:1.6;color:#333}
+        .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .navbar{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:100}
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -60,13 +139,14 @@
         </div>
     </nav>
 
-    <section class="hero">
+    <section class="hero" itemscope itemtype="https://schema.org/WebSite">
         <div class="container">
-            <h1>程序员工具箱</h1>
-            <p>提升开发效率的在线工具集合</p>
-            <div class="search-box-large">
+            <h1 itemprop="name">程序员工具箱</h1>
+            <p itemprop="description">提升开发效率的在线工具集合</p>
+            <div class="search-box-large" itemprop="potentialAction" itemscope itemtype="https://schema.org/SearchAction">
                 <i class="material-icons">search</i>
-                <input type="text" id="toolSearchLarge" placeholder="搜索工具，例如：JSON 解析、Base64 编码...">
+                <input type="text" id="toolSearchLarge" placeholder="搜索工具，例如：JSON 解析、Base64 编码..." itemprop="query-input">
+                <meta itemprop="target" content="https://yourwebsite.com/search?q={query-input}">
             </div>
         </div>
     </section>
@@ -143,10 +223,43 @@
         </section>
     </main>
 
+    <!-- SEO内容区域 -->
+    <section class="seo-content" style="background:#f8fafc;padding:3rem 0;margin-top:2rem;">
+        <div class="container">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;">
+                <div>
+                    <h2>为什么选择程序员工具箱？</h2>
+                    <ul style="list-style:none;padding:0;">
+                        <li style="margin-bottom:0.5rem;">✅ 完全免费，无需注册</li>
+                        <li style="margin-bottom:0.5rem;">✅ 响应式设计，支持移动端</li>
+                        <li style="margin-bottom:0.5rem;">✅ 数据安全，本地处理</li>
+                        <li style="margin-bottom:0.5rem;">✅ 持续更新，新工具不断添加</li>
+                    </ul>
+                </div>
+                <div>
+                    <h2>热门工具推荐</h2>
+                    <p>我们的<strong>JSON格式化工具</strong>帮助开发者快速美化和验证JSON数据。<strong>Base64编码工具</strong>支持文本与图片的Base64转换。<strong>正则表达式测试器</strong>让正则调试变得简单高效。</p>
+                </div>
+                <div>
+                    <h2>开发者必备</h2>
+                    <p>无论你是前端开发者、后端工程师还是全栈开发者，这里都有你需要的工具。从<strong>文本处理</strong>到<strong>代码格式化</strong>，从<strong>数据转换</strong>到<strong>调试辅助</strong>，一站式解决你的开发需求。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer class="footer">
         <div class="container footer-content">
             <div class="footer-main">
-                <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                        <a href="/sitemap.xml" style="color:#666;text-decoration:none;">网站地图</a>
+                        <a href="/robots.txt" style="color:#666;text-decoration:none;">Robots</a>
+                        <a href="#" style="color:#666;text-decoration:none;">意见反馈</a>
+                        <a href="#" style="color:#666;text-decoration:none;">联系我们</a>
+                    </div>
+                </div>
             </div>
             <div class="visitor-stats">
                 <div class="stat-item">
@@ -164,6 +277,27 @@
     </footer>
 
     <script src="/tools/static/js/search.js"></script>
+    
+    <!-- 网站统计 -->
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+
+    <!-- 百度统计 -->
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?YOUR_BAIDU_ANALYTICS_ID";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
 </body>
 </html>
 {{end}} 
