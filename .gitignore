@@ -26,6 +26,7 @@ log/
 .vscode/
 *.swp
 *.swo
+main
 
 # OS specific files
 .DS_Store
