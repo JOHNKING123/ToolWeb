@@ -20,16 +20,133 @@
     <style>
         .regex-container {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             margin-top: 2rem;
         }
 
-        .regex-left {
+        .regex-middle {
             flex: 1;
         }
 
         .regex-right {
             flex: 1;
+        }
+
+        /* 输入框下拉菜单样式 */
+        .input-with-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-dropdown input {
+            flex: 1;
+            padding-right: 3rem;
+        }
+
+        .dropdown-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            background: #f3f4f6;
+            color: #2563eb;
+        }
+
+        .dropdown-btn .material-icons {
+            font-size: 1.25rem;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            margin-top: 0.25rem;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .dropdown-header span {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        .dropdown-content {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .history-item:hover {
+            background: #f3f4f6;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item-text {
+            flex: 1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            color: #374151;
+            word-break: break-all;
+        }
+
+        .history-item-time {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .history-empty {
+            color: #6b7280;
+            text-align: center;
+            font-size: 0.875rem;
+            padding: 2rem 1rem;
         }
 
         .replace-section {
@@ -144,6 +261,21 @@
             color: white;
         }
 
+        .btn-clear-history {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-clear-history:hover {
+            background: #dc2626;
+        }
+
         @media (max-width: 768px) {
             .regex-container {
                 flex-direction: column;
@@ -163,7 +295,21 @@
             <form id="regexForm" class="tool-form">
                 <div class="form-group">
                     <label for="regexPattern">正则表达式：</label>
-                    <input type="text" id="regexPattern" name="pattern" placeholder="输入正则表达式，例如：\d+" required>
+                    <div class="input-with-dropdown">
+                        <input type="text" id="regexPattern" name="pattern" placeholder="输入正则表达式，例如：\d+" required>
+                        <button type="button" id="historyDropdownBtn" class="dropdown-btn" title="选择历史记录">
+                            <i class="material-icons">history</i>
+                        </button>
+                        <div id="historyDropdown" class="dropdown-menu">
+                            <div class="dropdown-header">
+                                <span>历史记录</span>
+                                <button type="button" id="clearHistoryBtn" class="btn-clear-history">清空</button>
+                            </div>
+                            <div id="regexHistory" class="dropdown-content">
+                                <div class="history-empty">暂无历史记录</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -199,8 +345,8 @@
             </form>
 
             <div class="regex-container">
-                <!-- 左侧：匹配结果 -->
-                <div class="regex-left">
+                <!-- 中间：匹配结果 -->
+                <div class="regex-middle">
                     <div class="results">
                         <div class="spinner"></div>
                         <div id="regexResult">
@@ -301,6 +447,145 @@
                 return;
             }
 
+            // 历史记录功能
+            const regexHistory = document.getElementById('regexHistory');
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            const HISTORY_KEY = 'regex_history';
+            const MAX_HISTORY = 20; // 最多保存20条历史记录
+            
+            // 防抖动保存历史记录
+            let saveHistoryTimer = null;
+            const SAVE_DELAY = 3000; // 3秒延迟
+
+            // 获取历史记录
+            function getHistory() {
+                try {
+                    const history = localStorage.getItem(HISTORY_KEY);
+                    return history ? JSON.parse(history) : [];
+                } catch (e) {
+                    console.error('获取历史记录失败:', e);
+                    return [];
+                }
+            }
+
+            // 保存历史记录（立即保存）
+            function saveHistoryImmediate(pattern) {
+                if (!pattern || pattern.trim() === '') return;
+                
+                try {
+                    let history = getHistory();
+                    
+                    // 移除重复的记录
+                    history = history.filter(item => item.pattern !== pattern);
+                    
+                    // 添加新记录到开头
+                    history.unshift({
+                        pattern: pattern,
+                        timestamp: Date.now(),
+                        date: new Date().toLocaleString('zh-CN', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })
+                    });
+                    
+                    // 限制历史记录数量
+                    if (history.length > MAX_HISTORY) {
+                        history = history.slice(0, MAX_HISTORY);
+                    }
+                    
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+                    displayHistory();
+                } catch (e) {
+                    console.error('保存历史记录失败:', e);
+                }
+            }
+
+            // 延迟保存历史记录（防抖动）
+            function saveHistoryDebounced(pattern) {
+                // 清除之前的计时器
+                if (saveHistoryTimer) {
+                    clearTimeout(saveHistoryTimer);
+                }
+                
+                // 只有在有匹配项的情况下才设置计时器
+                if (!pattern || pattern.trim() === '') return;
+                
+                // 检查是否有匹配项
+                try {
+                    const text = regexText.value;
+                    if (!text) return;
+                    
+                    let flags = '';
+                    if (ignoreCase.checked) flags += 'i';
+                    if (multiline.checked) flags += 'm';
+                    if (global.checked) flags += 'g';
+                    
+                    const regex = new RegExp(pattern, flags);
+                    const hasMatch = global.checked ? 
+                        Array.from(text.matchAll(regex)).length > 0 : 
+                        regex.test(text);
+                    
+                    if (hasMatch) {
+                        // 设置新的计时器
+                        saveHistoryTimer = setTimeout(() => {
+                            saveHistoryImmediate(pattern);
+                            saveHistoryTimer = null;
+                        }, SAVE_DELAY);
+                    }
+                } catch (e) {
+                    // 正则表达式错误时不保存
+                    return;
+                }
+            }
+
+            // 显示历史记录
+            function displayHistory() {
+                const history = getHistory();
+                
+                if (history.length === 0) {
+                    regexHistory.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+                    return;
+                }
+                
+                const historyHtml = history.map(item => `
+                    <div class="history-item" data-pattern="${escapeHtml(item.pattern)}">
+                        <div class="history-item-text">${escapeHtml(item.pattern)}</div>
+                        <div class="history-item-time">${item.date}</div>
+                    </div>
+                `).join('');
+                
+                regexHistory.innerHTML = historyHtml;
+                
+                // 绑定点击事件
+                regexHistory.querySelectorAll('.history-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const pattern = item.getAttribute('data-pattern');
+                        regexPattern.value = pattern;
+                        regexPattern.focus();
+                        // 执行测试
+                        testRegex();
+                        // 关闭下拉菜单
+                        document.getElementById('historyDropdown').classList.remove('show');
+                    });
+                });
+            }
+
+            // 清空历史记录
+            function clearHistory() {
+                if (confirm('确定要清空所有历史记录吗？')) {
+                    localStorage.removeItem(HISTORY_KEY);
+                    displayHistory();
+                }
+            }
+
+            // 绑定清空按钮
+            clearHistoryBtn.addEventListener('click', clearHistory);
+
+            // 初始化显示历史记录
+            displayHistory();
+
             // 更新行号显示
             function updateLineNumbers() {
                 const text = regexText.value || '';
@@ -400,6 +685,9 @@
                     
                     // 自动执行测试
                     testRegex();
+                    
+                    // 保存示例到历史记录（立即保存）
+                    saveHistoryImmediate(pattern);
                 });
             });
 
@@ -498,8 +786,50 @@
             }
 
             // 绑定输入事件 - 使用更敏感的事件
-            regexPattern.addEventListener('input', testRegex);
-            regexPattern.addEventListener('keyup', testRegex);
+            regexPattern.addEventListener('input', function() {
+                testRegex();
+                // 触发防抖动保存
+                saveHistoryDebounced(regexPattern.value.trim());
+            });
+            regexPattern.addEventListener('keyup', function() {
+                testRegex();
+                // 触发防抖动保存
+                saveHistoryDebounced(regexPattern.value.trim());
+            });
+            
+            // 输入框失去焦点时也触发保存
+            regexPattern.addEventListener('blur', function() {
+                // 清除计时器并立即保存
+                if (saveHistoryTimer) {
+                    clearTimeout(saveHistoryTimer);
+                    saveHistoryTimer = null;
+                }
+                // 检查是否有匹配项，如果有就立即保存
+                const pattern = regexPattern.value.trim();
+                if (pattern) {
+                    try {
+                        const text = regexText.value;
+                        if (text) {
+                            let flags = '';
+                            if (ignoreCase.checked) flags += 'i';
+                            if (multiline.checked) flags += 'm';
+                            if (global.checked) flags += 'g';
+                            
+                            const regex = new RegExp(pattern, flags);
+                            const hasMatch = global.checked ? 
+                                Array.from(text.matchAll(regex)).length > 0 : 
+                                regex.test(text);
+                            
+                            if (hasMatch) {
+                                saveHistoryImmediate(pattern);
+                            }
+                        }
+                    } catch (e) {
+                        // 正则表达式错误时不保存
+                    }
+                }
+            });
+            
             regexText.addEventListener('input', testRegex);
             regexText.addEventListener('keyup', testRegex);
             ignoreCase.addEventListener('change', testRegex);
@@ -694,6 +1024,30 @@
 
             regexPattern.addEventListener('input', clearReplaceIfNeeded);
             regexText.addEventListener('input', clearReplaceIfNeeded);
+
+            // 下拉菜单控制
+            const historyDropdownBtn = document.getElementById('historyDropdownBtn');
+            const historyDropdown = document.getElementById('historyDropdown');
+            
+            historyDropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                historyDropdown.classList.toggle('show');
+            });
+            
+            // 点击外部关闭下拉菜单
+            document.addEventListener('click', function(e) {
+                if (!historyDropdown.contains(e.target) && !historyDropdownBtn.contains(e.target)) {
+                    historyDropdown.classList.remove('show');
+                }
+            });
+            
+            // 清空历史记录
+            document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+                if (confirm('确定要清空所有历史记录吗？')) {
+                    localStorage.removeItem('regexHistory');
+                    loadRegexHistory();
+                }
+            });
         });
     </script>
 </body>
