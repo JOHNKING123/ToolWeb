@@ -25,11 +25,11 @@ type RateLimitConfig struct {
 func GetDefaultRateLimitConfig() *RateLimitConfig {
 	return &RateLimitConfig{
 		// 普通访问：每分钟100次请求
-		GeneralLimit:  100,
+		GeneralLimit:  300,
 		GeneralWindow: time.Minute,
 
 		// API访问：每分钟30次请求
-		APILimit:  30,
+		APILimit:  150,
 		APIWindow: time.Minute,
 
 		// 严格限流路径
@@ -37,7 +37,7 @@ func GetDefaultRateLimitConfig() *RateLimitConfig {
 			"/tools/api/",      // API接口
 			"/ebook/download/", // 下载接口
 		},
-		StrictLimit:  10, // 每分钟10次
+		StrictLimit:  50, // 每分钟10次
 		StrictWindow: time.Minute,
 
 		// 白名单IP（本地和内网地址）
