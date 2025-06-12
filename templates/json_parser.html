@@ -390,23 +390,11 @@
         let editor = null;
         let isTreeView = true;
 
-        // 初始化 JSON 编辑器
-        document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('editor');
-            const options = {
-                mode: 'view',
-                modes: ['view', 'form', 'code'],
-                onError: function(err) {
-                    console.error(err);
-                }
-            };
-            editor = new JSONEditor(container, options);
-
-            // Demo JSON数据
-            const demoJSONs = [
-                {
-                    name: "用户信息",
-                    data: `{
+        // Demo JSON数据 - 移动到全局作用域
+        const demoJSONs = [
+            {
+                name: "用户信息",
+                data: `{
   "id": 1001,
   "name": "张三",
   "email": "zhangsan@example.com",
@@ -421,14 +409,14 @@
   "isActive": true,
   "lastLogin": "2025-01-01T08:30:00Z"
 }`
-                },
-                {
-                    name: "API响应数据",
-                    data: `{"status":"success","code":200,"message":"操作成功","data":{"list":[{"id":1,"title":"Vue3入门教程","author":"李四","tags":["Vue","JavaScript","前端"],"publishDate":"2024-12-25","views":1580},{"id":2,"title":"React Hook详解","author":"王五","tags":["React","Hook","前端"],"publishDate":"2024-12-20","views":2340}],"pagination":{"page":1,"size":10,"total":25,"pages":3}},"timestamp":1735689600}`
-                },
-                {
-                    name: "商品数据",
-                    data: `{
+            },
+            {
+                name: "API响应数据",
+                data: `{"status":"success","code":200,"message":"操作成功","data":{"list":[{"id":1,"title":"Vue3入门教程","author":"李四","tags":["Vue","JavaScript","前端"],"publishDate":"2024-12-25","views":1580},{"id":2,"title":"React Hook详解","author":"王五","tags":["React","Hook","前端"],"publishDate":"2024-12-20","views":2340}],"pagination":{"page":1,"size":10,"total":25,"pages":3}},"timestamp":1735689600}`
+            },
+            {
+                name: "商品数据",
+                data: `{
   "product": {
     "id": "SKU2024001",
     "name": "MacBook Pro 14英寸",
@@ -459,10 +447,22 @@
     "updatedAt": "2024-12-28T15:30:00Z"
   }
 }`
-                }
-            ];
+            }
+        ];
 
-            let currentJSONIndex = 0;
+        let currentJSONIndex = 0;
+
+        // 初始化 JSON 编辑器
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('editor');
+            const options = {
+                mode: 'view',
+                modes: ['view', 'form', 'code'],
+                onError: function(err) {
+                    console.error(err);
+                }
+            };
+            editor = new JSONEditor(container, options);
 
             // 添加按钮点击事件监听器
             document.getElementById('formatBtn').addEventListener('click', formatJSON);

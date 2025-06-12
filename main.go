@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"toolweb/config"
 	"toolweb/middleware"
 	"toolweb/tools"
 
@@ -115,10 +116,21 @@ func main() {
 	// 初始化访客统计
 	tools.InitVisitorStats()
 
+	// 创建智能限流器 - 使用默认配置
+	rateLimitConfig := config.GetDefaultRateLimitConfig()
+	smartRateLimiter := middleware.NewSmartRateLimiter(rateLimitConfig)
+
+	// 输出限流配置信息
+	log.Printf("限流配置: 普通=%d次/分钟, API=%d次/分钟, 严格=%d次/分钟",
+		rateLimitConfig.GeneralLimit, rateLimitConfig.APILimit, rateLimitConfig.StrictLimit)
+
 	router := gin.Default()
 
 	// 添加自定义恢复中间件
 	router.Use(customRecovery())
+
+	// 添加智能限流中间件
+	router.Use(middleware.SmartRateLimitMiddleware(smartRateLimiter))
 
 	// 自定义模板函数
 	router.SetFuncMap(template.FuncMap{
@@ -358,6 +370,22 @@ func main() {
 			"Stats":        stats,
 			"PopularTools": popularTools,
 			"ToolCounts":   toolStats.ToolCounts, // 直接使用，避免手动锁操作
+		})
+	})
+
+	// 限流统计管理页面
+	router.GET("/tools/rate-limit-stats", func(c *gin.Context) {
+		// 获取限流统计信息
+		limiterStats := smartRateLimiter.GetLimiterStats()
+
+		// 获取访客统计信息
+		visitorStats := tools.GetVisitorStats().GetStats()
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":       true,
+			"rate_limit":    limiterStats,
+			"visitor_stats": visitorStats,
+			"timestamp":     time.Now().Unix(),
 		})
 	})
 
