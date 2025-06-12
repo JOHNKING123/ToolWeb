@@ -90,9 +90,10 @@ func (ts *ToolStats) RecordToolAccess(ip string, toolName string) {
 	normalizedIP := normalizeIP(ip)
 	LogInfo("工具统计", "记录工具访问，原始IP: %s，标准化IP: %s，工具: %s", ip, normalizedIP, toolName)
 
-	ts.Lock()
-	defer ts.Unlock()
+	// 检查是否需要保存
+	var needSave bool
 
+	ts.Lock()
 	// 初始化IP的访问记录
 	if ts.Stats[normalizedIP] == nil {
 		ts.Stats[normalizedIP] = make(map[string]int)
@@ -104,6 +105,12 @@ func (ts *ToolStats) RecordToolAccess(ip string, toolName string) {
 
 	// 每100次访问保存一次，或者距离上次保存超过1小时
 	if ts.ToolCounts[toolName]%100 == 0 || time.Since(ts.LastSaveTime) > time.Hour {
+		needSave = true
+	}
+	ts.Unlock()
+
+	// 在释放锁后再保存，避免死锁
+	if needSave {
 		if err := ts.SaveStats(); err != nil {
 			LogError("工具统计", err, "保存工具统计数据失败")
 		}
@@ -120,30 +127,35 @@ func (ts *ToolStats) GetPopularToolsForIP(ip string, limit int) []Tool {
 	normalizedIP := normalizeIP(ip)
 	LogInfo("工具统计", "获取IP常用工具，原始IP: %s，标准化IP: %s，限制数量: %d", ip, normalizedIP, limit)
 
+	// 先复制数据，避免长时间持有锁
 	ts.RLock()
-	defer ts.RUnlock()
-
-	// 获取IP的访问记录
 	ipStats := ts.Stats[normalizedIP]
 	if ipStats == nil {
+		ts.RUnlock()
 		LogInfo("工具统计", "IP %s 没有访问记录", normalizedIP)
 		return nil
 	}
+	// 复制IP统计数据
+	ipStatsCopy := make(map[string]int)
+	for name, count := range ipStats {
+		ipStatsCopy[name] = count
+	}
+	ts.RUnlock()
 
 	// 转换为切片并排序
 	type toolCount struct {
 		name  string
 		count int
 	}
-	counts := make([]toolCount, 0, len(ipStats))
-	for name, count := range ipStats {
+	counts := make([]toolCount, 0, len(ipStatsCopy))
+	for name, count := range ipStatsCopy {
 		counts = append(counts, toolCount{name, count})
 	}
 	sort.Slice(counts, func(i, j int) bool {
 		return counts[i].count > counts[j].count
 	})
 
-	// 获取工具详情
+	// 获取工具详情（此时已经释放了锁）
 	var result []Tool
 	for _, tc := range counts {
 		if tool := findToolByName(tc.name); tool != nil {
@@ -165,23 +177,28 @@ func (ts *ToolStats) GetMostPopularTools(limit int) []Tool {
 	start := time.Now()
 	LogInfo("工具统计", "获取全局热门工具，限制数量: %d", limit)
 
+	// 先复制数据，避免长时间持有锁
 	ts.RLock()
-	defer ts.RUnlock()
+	toolCounts := make(map[string]int)
+	for name, count := range ts.ToolCounts {
+		toolCounts[name] = count
+	}
+	ts.RUnlock()
 
 	// 转换为切片并排序
 	type toolCount struct {
 		name  string
 		count int
 	}
-	counts := make([]toolCount, 0, len(ts.ToolCounts))
-	for name, count := range ts.ToolCounts {
+	counts := make([]toolCount, 0, len(toolCounts))
+	for name, count := range toolCounts {
 		counts = append(counts, toolCount{name, count})
 	}
 	sort.Slice(counts, func(i, j int) bool {
 		return counts[i].count > counts[j].count
 	})
 
-	// 获取工具详情
+	// 获取工具详情（此时已经释放了锁）
 	var result []Tool
 	for _, tc := range counts {
 		if tool := findToolByName(tc.name); tool != nil {
@@ -210,8 +227,22 @@ func (ts *ToolStats) SaveStats() error {
 		return fmt.Errorf("创建统计目录失败: %v", err)
 	}
 
+	// 快速复制数据
 	ts.RLock()
-	defer ts.RUnlock()
+	// 深度复制Stats
+	statsCopy := make(map[string]map[string]int)
+	for ip, ipStats := range ts.Stats {
+		statsCopy[ip] = make(map[string]int)
+		for toolName, count := range ipStats {
+			statsCopy[ip][toolName] = count
+		}
+	}
+	// 复制ToolCounts
+	toolCountsCopy := make(map[string]int)
+	for toolName, count := range ts.ToolCounts {
+		toolCountsCopy[toolName] = count
+	}
+	ts.RUnlock()
 
 	// 保存数据
 	data := struct {
@@ -219,8 +250,8 @@ func (ts *ToolStats) SaveStats() error {
 		ToolCounts map[string]int            `json:"tool_counts"` // 工具总访问次数
 		UpdateTime time.Time                 `json:"last_update"` // 最后更新时间
 	}{
-		Stats:      ts.Stats,
-		ToolCounts: ts.ToolCounts,
+		Stats:      statsCopy,
+		ToolCounts: toolCountsCopy,
 		UpdateTime: time.Now(),
 	}
 
@@ -236,7 +267,11 @@ func (ts *ToolStats) SaveStats() error {
 		return fmt.Errorf("写入统计数据失败: %v", err)
 	}
 
+	// 更新最后保存时间（需要锁保护）
+	ts.Lock()
 	ts.LastSaveTime = time.Now()
+	ts.Unlock()
+
 	LogOperation("工具统计", "保存统计数据", time.Since(start), nil)
 	LogInfo("工具统计", "统计数据保存成功，文件大小: %d bytes", len(jsonData))
 
@@ -294,23 +329,22 @@ func (ts *ToolStats) LoadStats() error {
 // GetStats 获取统计信息概览
 func (ts *ToolStats) GetStats() map[string]interface{} {
 	ts.RLock()
-	defer ts.RUnlock()
+	// 快速复制需要的数据
+	totalIPs := len(ts.Stats)
+	totalTools := len(ts.ToolCounts)
+	totalAccesses := 0
+	for _, count := range ts.ToolCounts {
+		totalAccesses += count
+	}
+	lastUpdate := ts.LastSaveTime
+	ts.RUnlock()
 
 	return map[string]interface{}{
-		"total_ips":      len(ts.Stats),
-		"total_tools":    len(ts.ToolCounts),
-		"total_accesses": ts.getTotalAccesses(),
-		"last_update":    ts.LastSaveTime,
+		"total_ips":      totalIPs,
+		"total_tools":    totalTools,
+		"total_accesses": totalAccesses,
+		"last_update":    lastUpdate,
 	}
-}
-
-// getTotalAccesses 获取总访问次数
-func (ts *ToolStats) getTotalAccesses() int {
-	total := 0
-	for _, count := range ts.ToolCounts {
-		total += count
-	}
-	return total
 }
 
 // findToolByName 根据工具名称查找工具

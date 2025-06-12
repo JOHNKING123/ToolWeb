@@ -90,6 +90,25 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;margin:0;padding:0;line-height:1.6;color:#333}
         .container{max-width:1200px;margin:0 auto;padding:0 1rem}
         .navbar{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:100}
+        
+        .stats-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-left: 1rem;
+        }
+
+        .stats-link:hover {
+            background: #2563eb;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -134,11 +153,12 @@
                 <i class="material-icons">search</i>
                 <input type="text" id="toolSearch" placeholder="搜索工具...">
             </div>
+            
+           
             <div class="navbar-menu">
                 <a href="/">首页</a>
                 <a href="/tools/index">工具首页</a>
                 <a href="#popular">热门工具</a>
-                <a href="#new">新工具</a>
                 <a href="#all">所有工具</a>
             </div>
         </div>
@@ -177,25 +197,7 @@
             </div>
         </section>
 
-        <!-- 新工具 -->
-        <section id="new" class="tool-section">
-            <div class="section-header">
-                <h2><i class="material-icons">new_releases</i> 新工具</h2>
-            </div>
-            <div class="tools-grid">
-                {{range .NewTools}}
-                <div class="tool-card">
-                    <div class="tool-icon">
-                        <i class="material-icons">{{.Icon}}</i>
-                        <span class="badge badge-new">新</span>
-                    </div>
-                    <h3>{{.Name}}</h3>
-                    <p>{{.Description}}</p>
-                    <a href="{{.Path}}" class="btn btn-primary">使用工具</a>
-                </div>
-                {{end}}
-            </div>
-        </section>
+
 
         <!-- 所有工具分类 -->
         <section id="all" class="tool-section">

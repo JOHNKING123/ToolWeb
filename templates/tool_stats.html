@@ -1,0 +1,229 @@
+{{define "tool_stats"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具访问统计 - 程序员工具箱</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <style>
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .stats-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .stats-header h1 {
+            color: #2563eb;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        
+        .stat-card .icon {
+            font-size: 2.5rem;
+            color: #2563eb;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .popular-tools {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .popular-tools h2 {
+            color: #2563eb;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tool-list {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .tool-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .tool-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .tool-info .icon {
+            color: #2563eb;
+            font-size: 1.5rem;
+        }
+        
+        .tool-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .tool-count {
+            background: #2563eb;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #2563eb;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        
+        .back-link:hover {
+            color: #1d4ed8;
+        }
+        
+        .refresh-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 auto 2rem;
+            transition: background-color 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #059669;
+        }
+        
+        .last-update {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <a href="/tools/index" class="back-link">
+            <i class="material-icons">arrow_back</i>
+            返回首页
+        </a>
+        
+        <div class="stats-header">
+            <h1><i class="material-icons">analytics</i> 工具访问统计</h1>
+            <p>实时监控工具使用情况和用户访问数据</p>
+        </div>
+        
+        <button class="refresh-btn" onclick="location.reload()">
+            <i class="material-icons">refresh</i>
+            刷新数据
+        </button>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon">
+                    <i class="material-icons">people</i>
+                </div>
+                <div class="value">{{.Stats.total_ips}}</div>
+                <div class="label">访问用户数</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="icon">
+                    <i class="material-icons">build</i>
+                </div>
+                <div class="value">{{.Stats.total_tools}}</div>
+                <div class="label">使用工具数</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="icon">
+                    <i class="material-icons">trending_up</i>
+                </div>
+                <div class="value">{{.Stats.total_accesses}}</div>
+                <div class="label">总访问次数</div>
+            </div>
+        </div>
+        
+        <div class="popular-tools">
+            <h2>
+                <i class="material-icons">star</i>
+                热门工具排行
+            </h2>
+            
+            <div class="tool-list">
+                {{range $index, $tool := .PopularTools}}
+                <div class="tool-item">
+                    <div class="tool-info">
+                        <i class="material-icons icon">{{$tool.Icon}}</i>
+                        <div>
+                            <div class="tool-name">{{$tool.Name}}</div>
+                            <div style="color: #6b7280; font-size: 0.875rem;">{{$tool.Description}}</div>
+                        </div>
+                    </div>
+                    <div class="tool-count">{{index $.ToolCounts $tool.Name}} 次访问</div>
+                </div>
+                {{end}}
+            </div>
+            
+            <div class="last-update">
+                最后更新时间：{{.Stats.last_update}}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{{end}} 

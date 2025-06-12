@@ -187,3 +187,33 @@ func GetNewTools() []Tool {
 	}
 	return newTools
 }
+
+// GetDefaultPopularTools 返回默认热门工具列表（JSON、正则、Cron、Base64）
+func GetDefaultPopularTools() []Tool {
+	defaultTools := []string{"JSON 解析器", "正则表达式测试", "Cron 表达式解析", "Base64 编码/解码"}
+	var result []Tool
+
+	for _, category := range GetCategories() {
+		for _, tool := range category.Tools {
+			for _, defaultTool := range defaultTools {
+				if tool.Name == defaultTool {
+					result = append(result, tool)
+					break
+				}
+			}
+		}
+	}
+	return result
+}
+
+// GetToolNameByPath 根据路径查找工具名称
+func GetToolNameByPath(path string) string {
+	for _, category := range GetCategories() {
+		for _, tool := range category.Tools {
+			if tool.Path == path {
+				return tool.Name
+			}
+		}
+	}
+	return ""
+}

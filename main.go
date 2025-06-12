@@ -74,6 +74,31 @@ func customRecovery() gin.HandlerFunc {
 	}
 }
 
+// 工具访问记录中间件
+func toolAccessMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 只对工具页面进行统计
+		if strings.HasPrefix(c.Request.URL.Path, "/tools/") &&
+			!strings.HasPrefix(c.Request.URL.Path, "/tools/api/") &&
+			!strings.HasPrefix(c.Request.URL.Path, "/tools/static/") &&
+			c.Request.URL.Path != "/tools/index" &&
+			c.Request.URL.Path != "/tools/tool-stats" {
+
+			// 根据路径查找对应的工具名称
+			toolName := tools.GetToolNameByPath(c.Request.URL.Path)
+
+			if toolName != "" {
+				// 记录工具访问
+				ip := c.ClientIP()
+				toolStats := tools.GetToolStats()
+				toolStats.RecordToolAccess(ip, toolName)
+			}
+		}
+
+		c.Next()
+	}
+}
+
 func main() {
 	// 初始化日志
 	if err := initLoggers(); err != nil {
@@ -126,11 +151,19 @@ func main() {
 		}
 	})
 
+	// 添加工具访问记录中间件
+	router.Use(toolAccessMiddleware())
+
 	// 页面路由
 	router.GET("/", func(c *gin.Context) {
 		categories := tools.GetCategories()
-		popularTools := tools.GetPopularTools()
-		newTools := tools.GetNewTools()
+
+		// 获取基于统计的热门工具，如果没有统计数据则使用默认热门工具
+		popularTools := tools.GetToolStats().GetMostPopularTools(6)
+		if len(popularTools) == 0 {
+			// 默认显示 JSON解析器、正则表达式测试、Cron表达式解析
+			popularTools = tools.GetDefaultPopularTools()
+		}
 
 		// 获取访客统计信息
 		stats := tools.GetVisitorStats().GetStats()
@@ -138,7 +171,6 @@ func main() {
 		c.HTML(http.StatusOK, "index", gin.H{
 			"Categories":    categories,
 			"PopularTools":  popularTools,
-			"NewTools":      newTools,
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})
@@ -275,21 +307,23 @@ func main() {
 
 	// 工具首页路由
 	router.GET("/tools/index", func(c *gin.Context) {
-		// 获取分类和工具数据
 		categories := tools.GetCategories()
-		ip := c.ClientIP()
-		popularTools := tools.GetToolStats().GetPopularToolsForIP(ip, 5)
-		globalPopular := tools.GetToolStats().GetMostPopularTools(5)
+
+		// 获取基于统计的热门工具，如果没有统计数据则使用默认热门工具
+		popularTools := tools.GetToolStats().GetMostPopularTools(6)
+		if len(popularTools) == 0 {
+			// 默认显示 JSON解析器、正则表达式测试、Cron表达式解析、Base64
+			popularTools = tools.GetDefaultPopularTools()
+		}
 
 		// 获取访客统计信息
 		stats := tools.GetVisitorStats().GetStats()
 
 		c.HTML(http.StatusOK, "index", gin.H{
-			"Categories":       categories,
-			"RecommendedTools": popularTools,
-			"PopularTools":     globalPopular,
-			"TotalVisitors":    stats["total_visitors"],
-			"TodayVisitors":    stats["today_visitors"],
+			"Categories":    categories,
+			"PopularTools":  popularTools,
+			"TotalVisitors": stats["total_visitors"],
+			"TodayVisitors": stats["today_visitors"],
 		})
 	})
 
@@ -310,6 +344,21 @@ func main() {
 		robots := tools.GenerateRobotsTxt(domain)
 		c.Header("Content-Type", "text/plain")
 		c.String(http.StatusOK, robots)
+	})
+
+	// 工具统计管理页面
+	router.GET("/tools/tool-stats", func(c *gin.Context) {
+		toolStats := tools.GetToolStats()
+		stats := toolStats.GetStats()
+
+		// 获取热门工具和访问次数
+		popularTools := toolStats.GetMostPopularTools(10)
+
+		c.HTML(http.StatusOK, "tool_stats", gin.H{
+			"Stats":        stats,
+			"PopularTools": popularTools,
+			"ToolCounts":   toolStats.ToolCounts, // 直接使用，避免手动锁操作
+		})
 	})
 
 	// 搜索功能路由
@@ -380,6 +429,18 @@ func main() {
 	// API 路由 - 修改为 /tools/api/
 	api := router.Group("/tools/api")
 	{
+		// 获取工具统计数据
+		api.GET("/stats", func(c *gin.Context) {
+			toolStats := tools.GetToolStats()
+			stats := toolStats.GetStats()
+			popularTools := toolStats.GetMostPopularTools(10)
+
+			c.JSON(http.StatusOK, gin.H{
+				"success":      true,
+				"stats":        stats,
+				"popularTools": popularTools,
+			})
+		})
 		// JSON 解析器
 		api.POST("/json/format", func(c *gin.Context) {
 			var req struct {
