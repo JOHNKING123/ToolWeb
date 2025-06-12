@@ -797,10 +797,12 @@
                         // 再次检查以确保内容完全加载
                         setTimeout(checkScrollButton, 500);
                     } else {
-                        markdownPreview.innerHTML = '<div class="error">渲染出错：' + data.error + '</div>';
+                        // 弹窗显示错误信息，不在预览窗口显示
+                        alert('渲染出错：' + data.error);
                     }
                 } catch (error) {
-                    markdownPreview.innerHTML = '<div class="error">服务器错误，请稍后重试</div>';
+                    // 弹窗显示服务器错误，不在预览窗口显示
+                    alert('服务器错误，请稍后重试');
                 }
             }
 

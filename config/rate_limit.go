@@ -34,19 +34,18 @@ func GetDefaultRateLimitConfig() *RateLimitConfig {
 
 		// 严格限流路径
 		StrictPaths: []string{
-			"/tools/api/",      // API接口
 			"/ebook/download/", // 下载接口
 		},
-		StrictLimit:  50, // 每分钟10次
+		StrictLimit:  100, // 每分钟100次
 		StrictWindow: time.Minute,
 
 		// 白名单IP（本地和内网地址）
 		WhitelistIPs: []string{
-			"127.0.0.1",
-			"::1",
-			"10.0.0.0/8",
-			"172.16.0.0/12",
-			"192.168.0.0/16",
+			// "127.0.0.1",
+			// "::1",
+			// "10.0.0.0/8",
+			// "172.16.0.0/12",
+			// "192.168.0.0/16",
 		},
 	}
 }
