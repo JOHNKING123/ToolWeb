@@ -35,3 +35,5 @@ Thumbs.db
 data/stats
 data/*
 data/stats/*
+toolweb.pid
+toolWeb
