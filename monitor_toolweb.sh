@@ -2,6 +2,8 @@
 
 LOG_FILE="/opt/ToolWeb/web.log"
 MONITOR_LOG="/opt/ToolWeb/monitor.log"
+PROGRAM_DIR="/opt/ToolWeb"
+PROGRAM_PATH="$PROGRAM_DIR/toolWeb"
 
 # Function to log system resources
 log_system_resources() {
@@ -25,9 +27,21 @@ check_process_status() {
     fi
 }
 
+# Check if program directory exists
+if [ ! -d "$PROGRAM_DIR" ]; then
+    echo "$(date): Error - Program directory $PROGRAM_DIR does not exist" >> "$LOG_FILE"
+    exit 1
+fi
+
+# Check if program executable exists
+if [ ! -f "$PROGRAM_PATH" ]; then
+    echo "$(date): Error - Program $PROGRAM_PATH does not exist" >> "$LOG_FILE"
+    exit 1
+fi
+
 # Get previous PID if exists
-if [ -f "/opt/ToolWeb/toolweb.pid" ]; then
-    OLD_PID=$(cat /opt/ToolWeb/toolweb.pid)
+if [ -f "$PROGRAM_DIR/toolweb.pid" ]; then
+    OLD_PID=$(cat $PROGRAM_DIR/toolweb.pid)
     if [ ! -z "$OLD_PID" ]; then
         check_process_status "$OLD_PID"
     fi
@@ -40,14 +54,17 @@ then
     # Log system resources before starting
     log_system_resources
     
-    # Start the program
-    /opt/ToolWeb/toolWeb >> "$LOG_FILE" 2>&1 &
+    # Change to program directory before starting
+    cd "$PROGRAM_DIR"
+    
+    # Start the program in the correct directory
+    ./toolWeb >> "$LOG_FILE" 2>&1 &
     NEW_PID=$!
     
     # Save PID to file
-    echo $NEW_PID > /opt/ToolWeb/toolweb.pid
+    echo $NEW_PID > "$PROGRAM_DIR/toolweb.pid"
     
-    echo "$(date): toolWeb started with PID: $NEW_PID" >> "$LOG_FILE"
+    echo "$(date): toolWeb started with PID: $NEW_PID in directory: $(pwd)" >> "$LOG_FILE"
     echo "$(date): Process started. Monitoring system resources..." >> "$MONITOR_LOG"
     
     # Log system resources after starting
@@ -58,7 +75,7 @@ else
     echo "$(date): toolWeb is running with PID: $CURRENT_PID" >> "$LOG_FILE"
     
     # Update PID file
-    echo $CURRENT_PID > /opt/ToolWeb/toolweb.pid
+    echo $CURRENT_PID > "$PROGRAM_DIR/toolweb.pid"
     
     # Log current resource usage
     log_system_resources
@@ -68,6 +85,9 @@ fi
 if [ -f "/var/log/syslog" ]; then
     echo "=== Checking for OOM kills ===" >> "$MONITOR_LOG"
     grep -i "out of memory" /var/log/syslog | tail -n 5 >> "$MONITOR_LOG"
+elif [ -f "/var/log/messages" ]; then
+    echo "=== Checking for OOM kills ===" >> "$MONITOR_LOG"
+    grep -i "out of memory" /var/log/messages | tail -n 5 >> "$MONITOR_LOG"
 fi
 
 # Add dmesg output for additional system messages
