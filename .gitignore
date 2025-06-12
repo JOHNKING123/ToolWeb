@@ -32,3 +32,6 @@ visitor_stats.json
 # OS specific files
 .DS_Store
 Thumbs.db 
+data/stats
+data/*
+data/stats/*

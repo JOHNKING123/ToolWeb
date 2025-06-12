@@ -1,22 +1,24 @@
 package tools
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // XMLRequest 表示 XML 请求
 type XMLRequest struct {
-	XML         string `json:"xml"`
-	Indent      string `json:"indent"`
-	LineNumbers bool   `json:"lineNumbers"`
-	Validate    bool   `json:"validate"`
+	XML    string `json:"xml"`
+	Indent string `json:"indent"`
+	Minify bool   `json:"minify"`
 }
 
 // XMLResponse 表示 XML 响应
 type XMLResponse struct {
 	Formatted string `json:"formatted"`
+	Minified  string `json:"minified"`
 }
 
 // XMLMinifyResponse 表示 XML 压缩响应
@@ -26,50 +28,118 @@ type XMLMinifyResponse struct {
 
 // ParseXML 格式化 XML 字符串
 func ParseXML(req *XMLRequest) (*XMLResponse, error) {
-	// 验证 XML 格式
-	if req.Validate {
-		decoder := xml.NewDecoder(strings.NewReader(req.XML))
-		for {
-			_, err := decoder.Token()
-			if err != nil {
-				if err.Error() == "EOF" {
-					break
-				}
-				return nil, fmt.Errorf("无效的 XML: %v", err)
-			}
+	start := time.Now()
+	defer func() {
+		LogOperation("XML解析器", "格式化XML", time.Since(start), nil)
+	}()
+
+	LogInfo("XML解析器", "开始解析XML，输入长度: %d", len(req.XML))
+
+	// 移除XML声明
+	input := strings.TrimSpace(req.XML)
+	hasDeclaration := false
+	if strings.HasPrefix(input, "<?xml") {
+		if idx := strings.Index(input, "?>"); idx != -1 {
+			input = strings.TrimSpace(input[idx+2:])
+			hasDeclaration = true
 		}
 	}
 
-	// 根据选项设置缩进
-	var indent string
-	switch req.Indent {
-	case "2":
-		indent = "  "
-	case "4":
-		indent = "    "
-	case "tab":
-		indent = "\t"
-	default:
-		indent = "    "
-	}
+	// 解析XML
+	decoder := xml.NewDecoder(strings.NewReader(input))
+	var buf bytes.Buffer
+	encoder := xml.NewEncoder(&buf)
+	encoder.Indent("", strings.Repeat(" ", 4))
 
-	// 使用更好的格式化逻辑
-	formatted := formatXMLString(req.XML, indent)
-
-	// 如果需要添加行号
-	if req.LineNumbers {
-		lines := strings.Split(formatted, "\n")
-		var numberedLines []string
-		for i, line := range lines {
-			if strings.TrimSpace(line) != "" {
-				numberedLines = append(numberedLines, fmt.Sprintf("%3d: %s", i+1, line))
-			}
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			LogError("XML解析器", err, "XML解析失败")
+			return nil, fmt.Errorf("XML解析失败: %v", err)
 		}
-		formatted = strings.Join(numberedLines, "\n")
+		if token == nil {
+			break
+		}
+		err = encoder.EncodeToken(token)
+		if err != nil {
+			LogError("XML解析器", err, "XML编码失败")
+			return nil, fmt.Errorf("XML编码失败: %v", err)
+		}
 	}
+
+	err := encoder.Flush()
+	if err != nil {
+		LogError("XML解析器", err, "XML刷新缓冲区失败")
+		return nil, fmt.Errorf("XML刷新缓冲区失败: %v", err)
+	}
+
+	formatted := buf.String()
+	if hasDeclaration {
+		formatted = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + formatted
+	}
+
+	LogInfo("XML解析器", "XML格式化成功，输出长度: %d", len(formatted))
 
 	return &XMLResponse{
 		Formatted: formatted,
+	}, nil
+}
+
+// MinifyXML 压缩 XML 字符串
+func MinifyXML(req *XMLRequest) (*XMLResponse, error) {
+	start := time.Now()
+	defer func() {
+		LogOperation("XML解析器", "压缩XML", time.Since(start), nil)
+	}()
+
+	LogInfo("XML解析器", "开始压缩XML，输入长度: %d", len(req.XML))
+
+	// 移除XML声明
+	input := strings.TrimSpace(req.XML)
+	hasDeclaration := false
+	if strings.HasPrefix(input, "<?xml") {
+		if idx := strings.Index(input, "?>"); idx != -1 {
+			input = strings.TrimSpace(input[idx+2:])
+			hasDeclaration = true
+		}
+	}
+
+	// 解析XML
+	decoder := xml.NewDecoder(strings.NewReader(input))
+	var buf bytes.Buffer
+	encoder := xml.NewEncoder(&buf)
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			LogError("XML解析器", err, "XML解析失败")
+			return nil, fmt.Errorf("XML解析失败: %v", err)
+		}
+		if token == nil {
+			break
+		}
+		err = encoder.EncodeToken(token)
+		if err != nil {
+			LogError("XML解析器", err, "XML编码失败")
+			return nil, fmt.Errorf("XML编码失败: %v", err)
+		}
+	}
+
+	err := encoder.Flush()
+	if err != nil {
+		LogError("XML解析器", err, "XML刷新缓冲区失败")
+		return nil, fmt.Errorf("XML刷新缓冲区失败: %v", err)
+	}
+
+	minified := buf.String()
+	if hasDeclaration {
+		minified = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + minified
+	}
+
+	LogInfo("XML解析器", "XML压缩成功，输出长度: %d", len(minified))
+
+	return &XMLResponse{
+		Minified: minified,
 	}, nil
 }
 
@@ -167,30 +237,6 @@ func formatXMLString(xmlStr, indent string) string {
 	}
 
 	return strings.TrimSpace(result.String())
-}
-
-// MinifyXML 压缩 XML 字符串
-func MinifyXML(req *XMLRequest) (*XMLMinifyResponse, error) {
-	// 验证 XML 格式
-	if req.Validate {
-		decoder := xml.NewDecoder(strings.NewReader(req.XML))
-		for {
-			_, err := decoder.Token()
-			if err != nil {
-				if err.Error() == "EOF" {
-					break
-				}
-				return nil, fmt.Errorf("无效的 XML: %v", err)
-			}
-		}
-	}
-
-	// 使用更简单的压缩方法
-	minified := minifyXMLString(req.XML)
-
-	return &XMLMinifyResponse{
-		Minified: minified,
-	}, nil
 }
 
 // minifyXMLString 压缩XML字符串

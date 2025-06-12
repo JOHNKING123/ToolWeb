@@ -12,26 +12,27 @@ import (
 	"time"
 )
 
-// Book 结构体表示一本电子书
+// Book 表示一本电子书
 type Book struct {
-	ID          string    `json:"id"`          // 使用文件路径的hash作为ID
-	Title       string    `json:"title"`       // 书名（文件名）
-	Category    string    `json:"category"`    // 分类（目录名）
-	FilePath    string    `json:"filePath"`    // 文件路径
-	FileSize    int64     `json:"fileSize"`    // 文件大小
-	FileType    string    `json:"fileType"`    // 文件类型
-	UpdateTime  time.Time `json:"updateTime"`  // 更新时间
-	Description string    `json:"description"` // 描述
-	Author      string    `json:"author"`      // 作者
-	Downloads   int       `json:"downloads"`   // 下载次数
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Author      string    `json:"author"`
+	Category    string    `json:"category"`
+	Description string    `json:"description"`
+	FilePath    string    `json:"filePath"`
+	FileType    string    `json:"fileType"`
+	FileSize    int64     `json:"fileSize"`
+	AddTime     time.Time `json:"addTime"`
+	Downloads   int       `json:"downloads"`
 }
 
-// BookManager 管理电子书的结构体
+// BookManager 电子书管理器
 type BookManager struct {
-	Books      map[string]*Book   // 所有书籍，key是书籍ID
-	Categories map[string][]*Book // 按分类组织的书籍
-	mutex      sync.RWMutex       // 读写锁
-	RootPath   string             // 电子书根目录
+	sync.RWMutex
+	books         map[string]*Book
+	categories    map[string]bool
+	lastLoadTime  time.Time
+	booksBasePath string
 }
 
 var (
@@ -39,17 +40,17 @@ var (
 	once        sync.Once
 )
 
-// GetBookManager 获取BookManager单例
+// GetBookManager 获取电子书管理器单例
 func GetBookManager() *BookManager {
 	once.Do(func() {
 		bookManager = &BookManager{
-			Books:      make(map[string]*Book),
-			Categories: make(map[string][]*Book),
-			// RootPath:   "F:\\学习资料\\电子书\\Kindle_Chinese_books_Public\\Kindle_Chinese_books_Public",
-			RootPath: "/opt/ebook",
+			books:         make(map[string]*Book),
+			categories:    make(map[string]bool),
+			booksBasePath: "./books", // 默认路径
 		}
-		// 初始化时加载所有电子书
-		bookManager.LoadBooks()
+		if err := bookManager.LoadBooks(); err != nil {
+			LogError("电子书管理器", err, "初始化加载书籍失败")
+		}
 	})
 	return bookManager
 }
@@ -62,103 +63,185 @@ func generateBookID(relPath string) string {
 
 // LoadBooks 加载所有电子书
 func (bm *BookManager) LoadBooks() error {
-	bm.mutex.Lock()
-	defer bm.mutex.Unlock()
+	start := time.Now()
+	LogInfo("电子书管理器", "开始加载电子书")
+
+	// 确保目录存在
+	if err := os.MkdirAll(bm.booksBasePath, 0755); err != nil {
+		LogError("电子书管理器", err, "创建电子书目录失败")
+		return fmt.Errorf("创建电子书目录失败: %v", err)
+	}
+
+	bm.Lock()
+	defer bm.Unlock()
 
 	// 清空现有数据
-	bm.Books = make(map[string]*Book)
-	bm.Categories = make(map[string][]*Book)
+	bm.books = make(map[string]*Book)
+	bm.categories = make(map[string]bool)
 
 	// 遍历目录
-	err := filepath.Walk(bm.RootPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(bm.booksBasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			LogError("电子书管理器", err, fmt.Sprintf("访问路径失败: %s", path))
 			return err
 		}
 
-		// 跳过目录
 		if info.IsDir() {
 			return nil
 		}
 
-		// 检查是否是电子书文件
+		// 只处理支持的文件类型
 		ext := strings.ToLower(filepath.Ext(path))
-		if !isEbookFile(ext) {
+		if ext != ".pdf" && ext != ".epub" && ext != ".mobi" {
 			return nil
 		}
 
-		// 获取相对路径作为ID
-		relPath, err := filepath.Rel(bm.RootPath, path)
+		relPath, err := filepath.Rel(bm.booksBasePath, path)
 		if err != nil {
+			LogError("电子书管理器", err, fmt.Sprintf("获取相对路径失败: %s", path))
 			return err
 		}
 
-		// 获取分类（父目录名）
-		category := filepath.Base(filepath.Dir(path))
-		if category == filepath.Base(bm.RootPath) {
-			category = "未分类"
+		// 解析目录结构
+		parts := strings.Split(relPath, string(os.PathSeparator))
+		if len(parts) < 2 {
+			LogWarning("电子书管理器", "跳过不符合目录结构的文件: %s", relPath)
+			return nil
 		}
 
-		// 创建书籍对象
+		category := parts[0]
+		title := strings.TrimSuffix(parts[len(parts)-1], ext)
+
 		book := &Book{
-			ID:         generateBookID(relPath), // 使用哈希后的ID
-			Title:      strings.TrimSuffix(info.Name(), ext),
-			Category:   category,
-			FilePath:   path,
-			FileSize:   info.Size(),
-			FileType:   ext,
-			UpdateTime: info.ModTime(),
+			ID:        fmt.Sprintf("%x", time.Now().UnixNano()),
+			Title:     title,
+			Category:  category,
+			FilePath:  path,
+			FileType:  ext,
+			FileSize:  info.Size(),
+			AddTime:   info.ModTime(),
+			Downloads: 0,
 		}
 
-		// 添加到映射
-		bm.Books[book.ID] = book
-		bm.Categories[category] = append(bm.Categories[category], book)
+		bm.books[book.ID] = book
+		bm.categories[category] = true
 
+		LogDebug("电子书管理器", "添加书籍: [%s] %s", category, title)
 		return nil
 	})
 
-	return err
-}
+	if err != nil {
+		LogError("电子书管理器", err, "遍历电子书目录失败")
+		return fmt.Errorf("遍历电子书目录失败: %v", err)
+	}
 
-// GetBookByID 根据ID获取书籍
-func (bm *BookManager) GetBookByID(id string) *Book {
-	bm.mutex.RLock()
-	defer bm.mutex.RUnlock()
-	return bm.Books[id]
-}
+	bm.lastLoadTime = time.Now()
+	duration := time.Since(start)
+	LogOperation("电子书管理器", "加载电子书完成", duration, nil)
+	LogInfo("电子书管理器", "共加载 %d 本书籍, %d 个分类", len(bm.books), len(bm.categories))
 
-// GetBooksByCategory 获取指定分类的书籍
-func (bm *BookManager) GetBooksByCategory(category string) []*Book {
-	bm.mutex.RLock()
-	defer bm.mutex.RUnlock()
-	return bm.Categories[category]
+	return nil
 }
 
 // GetAllCategories 获取所有分类
 func (bm *BookManager) GetAllCategories() []string {
-	bm.mutex.RLock()
-	defer bm.mutex.RUnlock()
+	bm.RLock()
+	defer bm.RUnlock()
 
-	categories := make([]string, 0, len(bm.Categories))
-	for category := range bm.Categories {
+	categories := make([]string, 0, len(bm.categories))
+	for category := range bm.categories {
 		categories = append(categories, category)
 	}
 	return categories
 }
 
+// GetBooksByCategory 获取指定分类的书籍
+func (bm *BookManager) GetBooksByCategory(category string) []*Book {
+	start := time.Now()
+	LogInfo("电子书管理器", "获取分类 [%s] 的书籍", category)
+
+	bm.RLock()
+	defer bm.RUnlock()
+
+	var books []*Book
+	for _, book := range bm.books {
+		if book.Category == category {
+			books = append(books, book)
+		}
+	}
+
+	LogOperation("电子书管理器", fmt.Sprintf("获取分类 [%s] 的书籍", category), time.Since(start), nil)
+	LogInfo("电子书管理器", "分类 [%s] 共有 %d 本书籍", category, len(books))
+
+	return books
+}
+
+// GetRecentBooks 获取最近添加的书籍
+func (bm *BookManager) GetRecentBooks(limit int) []*Book {
+	start := time.Now()
+	LogInfo("电子书管理器", "获取最近添加的书籍，限制数量: %d", limit)
+
+	bm.RLock()
+	defer bm.RUnlock()
+
+	books := make([]*Book, 0, len(bm.books))
+	for _, book := range bm.books {
+		books = append(books, book)
+	}
+
+	// 按添加时间排序
+	sort.Slice(books, func(i, j int) bool {
+		return books[i].AddTime.After(books[j].AddTime)
+	})
+
+	if len(books) > limit {
+		books = books[:limit]
+	}
+
+	LogOperation("电子书管理器", "获取最近添加的书籍", time.Since(start), nil)
+	return books
+}
+
+// GetBookByID 根据ID获取书籍
+func (bm *BookManager) GetBookByID(id string) *Book {
+	start := time.Now()
+	LogInfo("电子书管理器", "查找书籍，ID: %s", id)
+
+	bm.RLock()
+	defer bm.RUnlock()
+
+	book := bm.books[id]
+
+	if book == nil {
+		LogWarning("电子书管理器", "未找到书籍，ID: %s", id)
+	} else {
+		LogInfo("电子书管理器", "找到书籍: [%s] %s", book.Category, book.Title)
+	}
+
+	LogOperation("电子书管理器", fmt.Sprintf("查找书籍 ID: %s", id), time.Since(start), nil)
+	return book
+}
+
 // SearchBooks 搜索书籍
 func (bm *BookManager) SearchBooks(keyword string) []*Book {
-	bm.mutex.RLock()
-	defer bm.mutex.RUnlock()
+	start := time.Now()
+	LogInfo("电子书管理器", "搜索书籍，关键词: %s", keyword)
+
+	bm.RLock()
+	defer bm.RUnlock()
 
 	keyword = strings.ToLower(keyword)
-	results := make([]*Book, 0)
+	var results []*Book
 
-	for _, book := range bm.Books {
+	for _, book := range bm.books {
 		if strings.Contains(strings.ToLower(book.Title), keyword) ||
 			strings.Contains(strings.ToLower(book.Category), keyword) {
 			results = append(results, book)
 		}
 	}
+
+	LogOperation("电子书管理器", fmt.Sprintf("搜索书籍，关键词: %s", keyword), time.Since(start), nil)
+	LogInfo("电子书管理器", "搜索结果: %d 本书籍", len(results))
 
 	return results
 }
@@ -174,29 +257,6 @@ func isEbookFile(ext string) bool {
 		".docx": true,
 	}
 	return ebookExts[ext]
-}
-
-// GetRecentBooks 获取最近更新的书籍
-func (bm *BookManager) GetRecentBooks(limit int) []*Book {
-	bm.mutex.RLock()
-	defer bm.mutex.RUnlock()
-
-	// 将所有书籍放入切片
-	books := make([]*Book, 0, len(bm.Books))
-	for _, book := range bm.Books {
-		books = append(books, book)
-	}
-
-	// 按更新时间排序
-	sort.Slice(books, func(i, j int) bool {
-		return books[i].UpdateTime.After(books[j].UpdateTime)
-	})
-
-	// 返回指定数量的书籍
-	if len(books) > limit {
-		books = books[:limit]
-	}
-	return books
 }
 
 // FormatFileSize 格式化文件大小

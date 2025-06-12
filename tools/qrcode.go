@@ -8,51 +8,131 @@ import (
 	"image/draw"
 	"image/png"
 	"io"
-	"strings"
+	"time"
 
 	qrcode "github.com/skip2/go-qrcode"
-	tuotooqrcode "github.com/tuotoo/qrcode"
 )
 
-// 生成二维码，支持自定义颜色、背景色、logo
-func GenerateQRCodeAdvanced(text string, size int, fgColor, bgColor string, logo image.Image) ([]byte, error) {
-	if text == "" {
-		return nil, fmt.Errorf("内容不能为空")
-	}
-	if size <= 0 {
-		size = 256
-	}
+// GenerateQRCode 生成简单的二维码
+func GenerateQRCode(text string) ([]byte, error) {
+	start := time.Now()
+	LogInfo("二维码生成器", "开始生成二维码，文本长度: %d", len(text))
+
 	qr, err := qrcode.New(text, qrcode.Medium)
 	if err != nil {
-		return nil, err
+		LogError("二维码生成器", err, "创建二维码失败")
+		return nil, fmt.Errorf("创建二维码失败: %v", err)
 	}
-	// 设置颜色
-	if fgColor != "" {
-		qr.ForegroundColor = parseHexColor(fgColor)
+
+	var buf bytes.Buffer
+	err = png.Encode(&buf, qr.Image(256))
+	if err != nil {
+		LogError("二维码生成器", err, "编码二维码图片失败")
+		return nil, fmt.Errorf("编码二维码图片失败: %v", err)
 	}
-	if bgColor != "" {
-		qr.BackgroundColor = parseHexColor(bgColor)
-	}
-	img := qr.Image(size)
-	// 合成logo
-	if logo != nil {
-		img = drawLogo(img, logo)
-	}
-	buf := new(bytes.Buffer)
-	if err := png.Encode(buf, img); err != nil {
-		return nil, err
-	}
+
+	LogOperation("二维码生成器", "生成二维码", time.Since(start), nil)
+	LogInfo("二维码生成器", "二维码生成成功，图片大小: %d bytes", buf.Len())
+
 	return buf.Bytes(), nil
 }
 
-// 解析16进制颜色字符串为color.Color
-func parseHexColor(s string) color.Color {
-	s = strings.TrimPrefix(s, "#")
-	var r, g, b uint8 = 0, 0, 0
-	if len(s) == 6 {
-		fmt.Sscanf(s, "%02x%02x%02x", &r, &g, &b)
+// GenerateQRCodeAdvanced 生成高级二维码（支持自定义大小、颜色和Logo）
+func GenerateQRCodeAdvanced(text string, size int, fgColor, bgColor string, logo image.Image) ([]byte, error) {
+	start := time.Now()
+	LogInfo("二维码生成器", "开始生成高级二维码，文本长度: %d, 大小: %d", len(text), size)
+
+	// 创建二维码
+	qr, err := qrcode.New(text, qrcode.Medium)
+	if err != nil {
+		LogError("二维码生成器", err, "创建二维码失败")
+		return nil, fmt.Errorf("创建二维码失败: %v", err)
 	}
-	return color.RGBA{r, g, b, 255}
+
+	// 设置颜色
+	if fgColor != "" {
+		c, err := parseHexColor(fgColor)
+		if err != nil {
+			LogWarning("二维码生成器", "前景色解析失败: %v，使用默认黑色", err)
+		} else {
+			qr.ForegroundColor = c
+		}
+	}
+
+	if bgColor != "" {
+		c, err := parseHexColor(bgColor)
+		if err != nil {
+			LogWarning("二维码生成器", "背景色解析失败: %v，使用默认白色", err)
+		} else {
+			qr.BackgroundColor = c
+		}
+	}
+
+	// 生成二维码图片
+	qrImage := qr.Image(size)
+
+	// 如果有Logo，添加到二维码中心
+	if logo != nil {
+		LogInfo("二维码生成器", "开始添加Logo")
+		qrImage = drawLogo(qrImage, logo)
+	}
+
+	// 编码为PNG
+	var buf bytes.Buffer
+	err = png.Encode(&buf, qrImage)
+	if err != nil {
+		LogError("二维码生成器", err, "编码二维码图片失败")
+		return nil, fmt.Errorf("编码二维码图片失败: %v", err)
+	}
+
+	LogOperation("二维码生成器", "生成高级二维码", time.Since(start), nil)
+	LogInfo("二维码生成器", "高级二维码生成成功，图片大小: %d bytes", buf.Len())
+
+	return buf.Bytes(), nil
+}
+
+// DecodeQRCode 解码二维码图片
+func DecodeQRCode(file io.Reader) (string, error) {
+	start := time.Now()
+	LogInfo("二维码生成器", "开始解码二维码")
+
+	// 解码PNG图片
+	_, err := png.Decode(file)
+	if err != nil {
+		LogError("二维码生成器", err, "解码PNG图片失败")
+		return "", fmt.Errorf("解码PNG图片失败: %v", err)
+	}
+
+	// TODO: 实现二维码解码逻辑
+	// 这里需要添加实际的二维码解码实现
+	// 可以使用第三方库如 github.com/tuotoo/qrcode 或其他库
+
+	LogOperation("二维码生成器", "解码二维码", time.Since(start), nil)
+	LogWarning("二维码生成器", "二维码解码功能尚未实现")
+	return "二维码解码功能尚未实现", nil
+}
+
+// 辅助函数：解析十六进制颜色
+func parseHexColor(s string) (color.Color, error) {
+	if len(s) == 0 {
+		return color.Black, nil
+	}
+
+	if s[0] == '#' {
+		s = s[1:]
+	}
+
+	if len(s) != 6 {
+		return nil, fmt.Errorf("无效的颜色格式: %s", s)
+	}
+
+	var r, g, b uint8
+	_, err := fmt.Sscanf(s, "%02x%02x%02x", &r, &g, &b)
+	if err != nil {
+		return nil, err
+	}
+
+	return color.RGBA{r, g, b, 255}, nil
 }
 
 // 在二维码中心绘制logo
@@ -83,13 +163,4 @@ func resizeImage(img image.Image, w, h int) image.Image {
 		}
 	}
 	return result
-}
-
-// 识别二维码，返回内容
-func DecodeQRCode(reader io.Reader) (string, error) {
-	qrMatrix, err := tuotooqrcode.Decode(reader)
-	if err != nil {
-		return "", fmt.Errorf("二维码识别失败: %v", err)
-	}
-	return qrMatrix.Content, nil
 }

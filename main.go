@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"image"
@@ -8,7 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
+	"time"
 
 	"toolweb/middleware"
 	"toolweb/tools"
@@ -16,11 +22,78 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	// 全局logger实例
+	errorLogger  *log.Logger
+	accessLogger *log.Logger
+)
+
+// 初始化日志
+func initLoggers() error {
+	// 创建logs目录（如果不存在）
+	if err := os.MkdirAll("logs", 0755); err != nil {
+		return fmt.Errorf("创建日志目录失败: %v", err)
+	}
+
+	// 打开错误日志文件
+	errorFile, err := os.OpenFile(filepath.Join("logs", "error.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return fmt.Errorf("打开错误日志文件失败: %v", err)
+	}
+
+	// 打开访问日志文件
+	accessFile, err := os.OpenFile(filepath.Join("logs", "access.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return fmt.Errorf("打开访问日志文件失败: %v", err)
+	}
+
+	// 初始化loggers
+	errorLogger = log.New(errorFile, "[ERROR] ", log.LstdFlags|log.Lshortfile)
+	accessLogger = log.New(accessFile, "[ACCESS] ", log.LstdFlags)
+
+	return nil
+}
+
+// 自定义恢复中间件
+func customRecovery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				// 获取堆栈信息
+				stack := make([]byte, 4096)
+				stack = stack[:runtime.Stack(stack, false)]
+
+				// 记录错误和堆栈信息
+				errorLogger.Printf("发生Panic: %v\n堆栈信息:\n%s", err, stack)
+
+				// 返回500错误
+				c.AbortWithStatus(http.StatusInternalServerError)
+			}
+		}()
+		c.Next()
+	}
+}
+
 func main() {
+	// 初始化日志
+	if err := initLoggers(); err != nil {
+		log.Fatalf("初始化日志失败: %v", err)
+	}
+
+	// 设置gin的日志输出
+	gin.DefaultWriter = accessLogger.Writer()
+	gin.DefaultErrorWriter = errorLogger.Writer()
+
+	// 记录启动信息
+	accessLogger.Printf("服务启动于 %s", time.Now().Format("2006-01-02 15:04:05"))
+
 	// 初始化访客统计
 	tools.InitVisitorStats()
 
 	router := gin.Default()
+
+	// 添加自定义恢复中间件
+	router.Use(customRecovery())
 
 	// 自定义模板函数
 	router.SetFuncMap(template.FuncMap{
@@ -204,18 +277,19 @@ func main() {
 	router.GET("/tools/index", func(c *gin.Context) {
 		// 获取分类和工具数据
 		categories := tools.GetCategories()
-		popularTools := tools.GetPopularTools()
-		newTools := tools.GetNewTools()
+		ip := c.ClientIP()
+		popularTools := tools.GetToolStats().GetPopularToolsForIP(ip, 5)
+		globalPopular := tools.GetToolStats().GetMostPopularTools(5)
 
 		// 获取访客统计信息
 		stats := tools.GetVisitorStats().GetStats()
 
 		c.HTML(http.StatusOK, "index", gin.H{
-			"Categories":    categories,
-			"PopularTools":  popularTools,
-			"NewTools":      newTools,
-			"TotalVisitors": stats["total_visitors"],
-			"TodayVisitors": stats["today_visitors"],
+			"Categories":       categories,
+			"RecommendedTools": popularTools,
+			"PopularTools":     globalPopular,
+			"TotalVisitors":    stats["total_visitors"],
+			"TodayVisitors":    stats["today_visitors"],
 		})
 	})
 
@@ -820,9 +894,36 @@ func main() {
 		})
 	}
 
-	// 启动服务器
-	log.Println("服务器启动在 http://localhost:8080")
-	if err := router.Run(":8080"); err != nil {
-		log.Fatal(err)
+	// 创建HTTP服务器
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
 	}
+
+	// 创建一个通道来接收操作系统的信号
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// 在一个新的goroutine中启动服务器
+	go func() {
+		accessLogger.Println("HTTP服务器启动在 http://localhost:8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errorLogger.Printf("HTTP服务器错误: %v", err)
+			quit <- syscall.SIGTERM
+		}
+	}()
+
+	// 等待中断信号
+	<-quit
+	accessLogger.Println("正在关闭服务器...")
+
+	// 设置5秒的超时时间来优雅地关闭服务器
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		errorLogger.Printf("服务器强制关闭: %v", err)
+	}
+
+	accessLogger.Println("服务器已关闭")
 }
