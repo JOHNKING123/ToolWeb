@@ -26,8 +26,8 @@ check_process_status() {
 }
 
 # Get previous PID if exists
-if [ -f "toolweb.pid" ]; then
-    OLD_PID=$(cat toolweb.pid)
+if [ -f "/opt/ToolWeb/toolweb.pid" ]; then
+    OLD_PID=$(cat /opt/ToolWeb/toolweb.pid)
     if [ ! -z "$OLD_PID" ]; then
         check_process_status "$OLD_PID"
     fi
