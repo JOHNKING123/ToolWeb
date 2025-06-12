@@ -1,6 +1,9 @@
 package tools
 
 import (
+	"regexp"
+	"strings"
+
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
@@ -20,6 +23,41 @@ type MarkdownResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
+// preprocessMarkdown 预处理 Markdown 文本，修复常见的格式问题
+func preprocessMarkdown(markdown string) string {
+	lines := strings.Split(markdown, "\n")
+	var result []string
+
+	for i, line := range lines {
+		result = append(result, line)
+
+		if i < len(lines)-1 {
+			currentLine := strings.TrimSpace(line)
+			nextLine := strings.TrimSpace(lines[i+1])
+
+			// 检查当前行是否是列表项（数字列表或无序列表）
+			isCurrentList := regexp.MustCompile(`^\s*(\d+\.|\*|\+|\-)\s+`).MatchString(line)
+			// 检查下一行是否是标题
+			isNextHeading := regexp.MustCompile(`^\s*#{1,6}\s+`).MatchString(nextLine)
+
+			// 如果当前行是列表项，下一行是标题，但中间没有空行，则插入空行
+			if isCurrentList && isNextHeading && nextLine != "" {
+				result = append(result, "")
+			}
+
+			// 也处理代码块、引用等结束后直接跟标题的情况
+			isCurrentCode := strings.HasPrefix(currentLine, "```")
+			isCurrentQuote := strings.HasPrefix(currentLine, ">")
+
+			if (isCurrentCode || isCurrentQuote) && isNextHeading && nextLine != "" {
+				result = append(result, "")
+			}
+		}
+	}
+
+	return strings.Join(result, "\n")
+}
+
 // RenderMarkdown 将 Markdown 转换为 HTML
 func RenderMarkdown(req *MarkdownRequest) *MarkdownResponse {
 	if req.Markdown == "" {
@@ -29,12 +67,15 @@ func RenderMarkdown(req *MarkdownRequest) *MarkdownResponse {
 		}
 	}
 
+	// 预处理 Markdown 文本
+	processedMarkdown := preprocessMarkdown(req.Markdown)
+
 	// 创建 Markdown 解析器
-	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	p := parser.NewWithExtensions(extensions)
 
 	// 解析 Markdown
-	doc := p.Parse([]byte(req.Markdown))
+	doc := p.Parse([]byte(processedMarkdown))
 
 	// 创建 HTML 渲染器
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank
@@ -75,12 +116,15 @@ func ExportMarkdown(req *MarkdownRequest) ([]byte, error) {
 		return nil, nil
 	}
 
+	// 预处理 Markdown 文本
+	processedMarkdown := preprocessMarkdown(req.Markdown)
+
 	// 创建 Markdown 解析器
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	p := parser.NewWithExtensions(extensions)
 
 	// 解析 Markdown
-	doc := p.Parse([]byte(req.Markdown))
+	doc := p.Parse([]byte(processedMarkdown))
 
 	// 创建 HTML 渲染器，启用完整页面模式
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank | html.CompletePage
