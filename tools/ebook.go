@@ -46,7 +46,7 @@ func GetBookManager() *BookManager {
 		bookManager = &BookManager{
 			books:         make(map[string]*Book),
 			categories:    make(map[string]bool),
-			booksBasePath: "./books", // 默认路径
+			booksBasePath: "/opt/ebook", // 默认路径
 		}
 		if err := bookManager.LoadBooks(); err != nil {
 			LogError("电子书管理器", err, "初始化加载书籍失败")
