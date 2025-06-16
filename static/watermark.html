@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图片打水印工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+        h2 { text-align: center; }
+        label { display: block; margin-top: 18px; font-weight: bold; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin-top: 6px; border-radius: 4px; border: 1px solid #ccc; }
+        input[type="file"] { margin-top: 6px; }
+        button { margin-top: 24px; width: 100%; padding: 12px; background: #007bff; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:disabled { background: #aaa; }
+        .preview { margin-top: 24px; text-align: center; }
+        img { max-width: 100%; border-radius: 4px; }
+        .download-link { display: block; margin-top: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>图片打水印工具</h2>
+    <form id="watermarkForm">
+        <label>选择图片
+            <input type="file" name="file" id="fileInput" accept="image/*" required>
+        </label>
+        <label>水印文字
+            <input type="text" name="text" id="textInput" value="© 2025 MyCompany" required>
+        </label>
+        <label>透明度 (0~1)
+            <input type="number" name="opacity" id="opacityInput" min="0" max="1" step="0.01" value="0.25">
+        </label>
+        <label>边距 (像素)
+            <input type="number" name="margin" id="marginInput" min="0" max="100" value="10">
+        </label>
+        <label>字体
+            <select name="font" id="fontSelect">
+                <option value="DejaVuSans.ttf">DejaVuSans.ttf</option>
+            </select>
+        </label>
+        <button type="submit" id="submitBtn">生成水印图片</button>
+    </form>
+    <div class="preview" id="preview"></div>
+    <div class="download-link" id="download"></div>
+</div>
+<script>
+// 可选：动态获取字体列表
+// fetch('/static/ttf/').then(...)
+
+document.getElementById('watermarkForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '生成中...';
+    document.getElementById('preview').innerHTML = '';
+    document.getElementById('download').innerHTML = '';
+
+    try {
+        const resp = await fetch('/api/watermark', {
+            method: 'POST',
+            body: formData
+        });
+        if (!resp.ok) throw new Error('生成失败');
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById('preview').innerHTML = `<img src="${url}" alt="预览">`;
+        document.getElementById('download').innerHTML = `<a href="${url}" download="watermarked.jpg">下载图片</a>`;
+    } catch (err) {
+        alert('生成失败: ' + err.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成水印图片';
+    }
+});
+</script>
+</body>
+</html> 

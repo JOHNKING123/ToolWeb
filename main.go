@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"image"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -452,6 +454,11 @@ func main() {
 	// 二维码工具页面
 	router.GET("/tools/qrcode", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "qrcode", nil)
+	})
+
+	// 水印工具页面
+	router.GET("/tools/watermark", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "watermark", nil)
 	})
 
 	// API 路由 - 修改为 /tools/api/
@@ -980,6 +987,74 @@ func main() {
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{"success": true, "content": content})
+		})
+
+		// 注册图片打水印 API
+		api.POST("/watermark", func(c *gin.Context) {
+			file, err := c.FormFile("file")
+			if err != nil {
+				c.String(400, "图片文件获取失败")
+				return
+			}
+			src, err := file.Open()
+			if err != nil {
+				c.String(500, "文件打开失败")
+				return
+			}
+			defer src.Close()
+
+			tmpInput := filepath.Join(os.TempDir(), fmt.Sprintf("input_%d%s", time.Now().UnixNano(), filepath.Ext(file.Filename)))
+			out, err := os.Create(tmpInput)
+			if err != nil {
+				c.String(500, "临时文件创建失败")
+				return
+			}
+			io.Copy(out, src)
+			out.Close()
+
+			text := c.PostForm("text")
+			font := c.PostForm("font")
+			if font == "" {
+				font = "DejaVuSans.ttf"
+			}
+			fontPath := filepath.Join("static", "ttf", font)
+			opacity, _ := strconv.ParseFloat(c.PostForm("opacity"), 32)
+			if opacity == 0 {
+				opacity = 0.25
+			}
+			margin, _ := strconv.Atoi(c.PostForm("margin"))
+			if margin == 0 {
+				margin = 10
+			}
+
+			tmpOutput := filepath.Join(os.TempDir(), fmt.Sprintf("output_%d.jpg", time.Now().UnixNano()))
+			defer os.Remove(tmpInput)
+			defer os.Remove(tmpOutput)
+
+			err = tools.AddTextWatermark(tmpInput, tmpOutput, text, fontPath, opacity, margin)
+			if err != nil {
+				c.String(500, "水印处理失败: "+err.Error())
+				return
+			}
+
+			c.File(tmpOutput)
+		})
+
+		// 注册字体列表 API
+		api.GET("/fonts", func(c *gin.Context) {
+			fontDir := "static/ttf"
+			files, err := os.ReadDir(fontDir)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "字体目录读取失败"})
+				return
+			}
+			var fonts []string
+			for _, f := range files {
+				if !f.IsDir() && (strings.HasSuffix(f.Name(), ".ttf") || strings.HasSuffix(f.Name(), ".otf")) {
+					fonts = append(fonts, f.Name())
+				}
+			}
+			c.JSON(200, fonts)
 		})
 	}
 

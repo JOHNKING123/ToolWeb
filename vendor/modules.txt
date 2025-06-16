@@ -65,15 +65,20 @@ github.com/goccy/go-json/internal/encoder/vm_color_indent
 github.com/goccy/go-json/internal/encoder/vm_indent
 github.com/goccy/go-json/internal/errors
 github.com/goccy/go-json/internal/runtime
+# github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+## explicit
+github.com/golang/freetype
+github.com/golang/freetype/raster
+github.com/golang/freetype/truetype
 # github.com/gomarkdown/markdown v0.0.0-20231222211730-1d6d20845b47
 ## explicit; go 1.12
 github.com/gomarkdown/markdown
 github.com/gomarkdown/markdown/ast
 github.com/gomarkdown/markdown/html
 github.com/gomarkdown/markdown/parser
-# github.com/google/uuid v1.3.0
+# github.com/h2non/bimg v1.1.9
 ## explicit
-github.com/google/uuid
+github.com/h2non/bimg
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
@@ -84,9 +89,6 @@ github.com/klauspost/cpuid/v2
 ## explicit; go 1.18
 github.com/leodido/go-urn
 github.com/leodido/go-urn/scim/schema
-# github.com/maruel/rs v1.1.0
-## explicit; go 1.11
-github.com/maruel/rs
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
@@ -114,9 +116,6 @@ github.com/sergi/go-diff/diffmatchpatch
 github.com/skip2/go-qrcode
 github.com/skip2/go-qrcode/bitset
 github.com/skip2/go-qrcode/reedsolomon
-# github.com/tuotoo/qrcode v0.0.0-20220425170535-52ccc2bebf5d
-## explicit; go 1.17
-github.com/tuotoo/qrcode
 # github.com/twitchyliquid64/golang-asm v0.15.1
 ## explicit; go 1.13
 github.com/twitchyliquid64/golang-asm/asm/arch
@@ -145,6 +144,10 @@ golang.org/x/arch/x86/x86asm
 # golang.org/x/crypto v0.18.0
 ## explicit; go 1.18
 golang.org/x/crypto/sha3
+# golang.org/x/image v0.28.0
+## explicit; go 1.23.0
+golang.org/x/image/font
+golang.org/x/image/math/fixed
 # golang.org/x/net v0.20.0
 ## explicit; go 1.18
 golang.org/x/net/html
@@ -158,8 +161,8 @@ golang.org/x/net/idna
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
-# golang.org/x/text v0.14.0
-## explicit; go 1.18
+# golang.org/x/text v0.26.0
+## explicit; go 1.23.0
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
@@ -186,6 +189,3 @@ google.golang.org/protobuf/runtime/protoiface
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# rsc.io/qr v0.2.0
-## explicit
-rsc.io/qr/gf256

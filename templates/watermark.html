@@ -1,0 +1,123 @@
+{{define "watermark"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片打水印工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        .watermark-container { display: flex; gap: 1.5rem; margin-top: 2rem; }
+        .watermark-main { flex: 2; }
+        .watermark-side { flex: 1; }
+        .preview-img { max-width: 100%; border-radius: 6px; margin-top: 1rem; }
+        .download-link { display: block; margin-top: 1rem; text-align: center; }
+        @media (max-width: 900px) { .watermark-container { flex-direction: column; gap: 1rem; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="tool-header">
+        <h1><i class="material-icons">image</i> 图片打水印工具</h1>
+        <p>为图片快速添加自定义水印，支持文字、透明度、边距、字体等参数</p>
+    </div>
+    <div class="tool-content">
+        <div class="watermark-container">
+            <div class="watermark-main">
+                <form id="watermarkForm" class="tool-form">
+                    <div class="form-group">
+                        <label for="fileInput">选择图片：</label>
+                        <input type="file" name="file" id="fileInput" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="textInput">水印文字：</label>
+                        <input type="text" name="text" id="textInput" value="© 2025 MyCompany" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="opacityInput">透明度 (0~1)：</label>
+                        <input type="number" name="opacity" id="opacityInput" min="0" max="1" step="0.01" value="0.25">
+                    </div>
+                    <div class="form-group">
+                        <label for="marginInput">边距 (像素)：</label>
+                        <input type="number" name="margin" id="marginInput" min="0" max="100" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="fontSelect">字体：</label>
+                        <select name="font" id="fontSelect">
+                            <option value="DejaVuSans.ttf">DejaVuSans.ttf</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">生成水印图片</button>
+                </form>
+                <div class="preview" id="preview"></div>
+                <div class="download-link" id="download"></div>
+            </div>
+            <div class="watermark-side">
+                <div class="replace-section">
+                    <h3>使用说明</h3>
+                    <ul style="color:#374151;line-height:1.8;font-size:15px;">
+                        <li>支持 JPG、PNG 等常见图片格式</li>
+                        <li>水印文字可自定义，支持中文、英文、符号</li>
+                        <li>透明度越小，水印越淡，建议 0.1~0.5</li>
+                        <li>边距为水印距离图片右下角的像素距离</li>
+                        <li>如需更多字体，将字体文件放入 static/ttf 目录</li>
+                    </ul>
+                    <h4>常见问题</h4>
+                    <ul style="color:#6b7280;font-size:14px;">
+                        <li>如遇生成失败，请检查图片和字体格式</li>
+                        <li>如需批量处理或自定义功能，请联系开发者</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// 动态加载字体选项
+fetch('/tools/api/fonts').then(resp => resp.json()).then(fonts => {
+    const fontSelect = document.getElementById('fontSelect');
+    fontSelect.innerHTML = '';
+    fonts.forEach(font => {
+        const opt = document.createElement('option');
+        opt.value = font;
+        opt.textContent = font;
+        if (font === 'DejaVuSans.ttf') opt.selected = true;
+        fontSelect.appendChild(opt);
+    });
+});
+
+document.getElementById('watermarkForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '生成中...';
+    document.getElementById('preview').innerHTML = '';
+    document.getElementById('download').innerHTML = '';
+    try {
+        const resp = await fetch('/tools/api/watermark', {
+            method: 'POST',
+            body: formData
+        });
+        if (!resp.ok) throw new Error('生成失败');
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById('preview').innerHTML = `<img src="${url}" class="preview-img" alt="预览">`;
+        document.getElementById('download').innerHTML = `<a href="${url}" download="watermarked.jpg" class="btn btn-secondary">下载图片</a>`;
+    } catch (err) {
+        alert('生成失败: ' + err.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成水印图片';
+    }
+});
+</script>
+</body>
+</html>
+{{end}} 
