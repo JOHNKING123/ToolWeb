@@ -197,7 +197,24 @@
             </div>
         </section>
 
-
+        <!-- 新工具 -->
+        <section id="new-tools" class="tool-section">
+            <div class="section-header">
+                <h2><i class="material-icons">fiber_new</i> 新工具</h2>
+            </div>
+            <div class="tools-grid">
+                {{range .NewTools}}
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <i class="material-icons">{{.Icon}}</i>
+                    </div>
+                    <h3>{{.Name}}</h3>
+                    <p>{{.Description}}</p>
+                    <a href="{{.Path}}" class="btn btn-primary">使用工具</a>
+                </div>
+                {{end}}
+            </div>
+        </section>
 
         <!-- 所有工具分类 -->
         <section id="all" class="tool-section">

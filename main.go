@@ -185,6 +185,7 @@ func main() {
 		c.HTML(http.StatusOK, "index", gin.H{
 			"Categories":    categories,
 			"PopularTools":  popularTools,
+			"NewTools":      tools.GetNewTools(),
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})
@@ -336,6 +337,7 @@ func main() {
 		c.HTML(http.StatusOK, "index", gin.H{
 			"Categories":    categories,
 			"PopularTools":  popularTools,
+			"NewTools":      tools.GetNewTools(),
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})
