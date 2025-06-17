@@ -9,6 +9,7 @@ type Tool struct {
 	Icon        string `json:"icon"` // Material Icons 名称
 	Popular     bool   `json:"popular"`
 	New         bool   `json:"new"`
+	Category    string `json:"category"`
 }
 
 // Category 表示工具分类
@@ -36,6 +37,7 @@ func GetCategories() []Category {
 					Path:        "/tools/json-parser",
 					Icon:        "data_object",
 					Popular:     false,
+					Category:    "格式化工具",
 				},
 				{
 					ID:          "xml",
@@ -44,6 +46,7 @@ func GetCategories() []Category {
 					Path:        "/tools/xml-parser",
 					Icon:        "code_blocks",
 					New:         false,
+					Category:    "格式化工具",
 				},
 				{
 					ID:          "sql",
@@ -52,6 +55,7 @@ func GetCategories() []Category {
 					Path:        "/tools/sql-formatter",
 					Icon:        "database",
 					New:         false,
+					Category:    "格式化工具",
 				},
 			},
 		},
@@ -68,6 +72,7 @@ func GetCategories() []Category {
 					Path:        "/tools/base64",
 					Icon:        "swap_horiz",
 					Popular:     true,
+					Category:    "编码转换",
 				},
 				{
 					ID:          "url",
@@ -76,6 +81,7 @@ func GetCategories() []Category {
 					Path:        "/tools/url-codec",
 					Icon:        "link",
 					New:         false,
+					Category:    "编码转换",
 				},
 				{
 					ID:          "qrcode",
@@ -84,6 +90,7 @@ func GetCategories() []Category {
 					Path:        "/tools/qrcode",
 					Icon:        "qr_code",
 					New:         false,
+					Category:    "编码转换",
 				},
 			},
 		},
@@ -100,6 +107,7 @@ func GetCategories() []Category {
 					Path:        "/tools/regex-tester",
 					Icon:        "regex",
 					Popular:     true,
+					Category:    "开发工具",
 				},
 				{
 					ID:          "cron",
@@ -108,6 +116,7 @@ func GetCategories() []Category {
 					Path:        "/tools/cron-parser",
 					Icon:        "schedule",
 					Popular:     true,
+					Category:    "开发工具",
 				},
 				{
 					ID:          "jwt",
@@ -116,6 +125,7 @@ func GetCategories() []Category {
 					Path:        "/tools/jwt-parser",
 					Icon:        "key",
 					New:         false,
+					Category:    "开发工具",
 				},
 			},
 		},
@@ -132,6 +142,7 @@ func GetCategories() []Category {
 					Path:        "/tools/text-diff",
 					Icon:        "compare",
 					New:         false,
+					Category:    "文本工具",
 				},
 				{
 					ID:          "markdown",
@@ -140,6 +151,7 @@ func GetCategories() []Category {
 					Path:        "/tools/markdown-preview",
 					Icon:        "article",
 					New:         false,
+					Category:    "文本工具",
 				},
 			},
 		},
@@ -156,6 +168,7 @@ func GetCategories() []Category {
 					Path:        "/tools/json-yaml",
 					Icon:        "compare_arrows",
 					New:         false,
+					Category:    "格式转换",
 				},
 			},
 		},
@@ -173,6 +186,24 @@ func GetCategories() []Category {
 					Icon:        "watermark",
 					Popular:     true,
 					New:         true,
+					Category:    "图片处理",
+				},
+			},
+		},
+		{
+			ID:          "doc",
+			Name:        "文档转换",
+			Description: "各种文档格式之间的转换工具",
+			Icon:        "file_copy",
+			Tools: []Tool{
+				{
+					ID:          "doc2pdf",
+					Name:        "DOC 转 PDF",
+					Description: "将 DOC/DOCX 文件转换为 PDF 格式",
+					Path:        "/tools/doc-to-pdf",
+					Icon:        "picture_as_pdf",
+					New:         true,
+					Category:    "文档转换",
 				},
 			},
 		},

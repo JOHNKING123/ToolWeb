@@ -1,0 +1,142 @@
+{{define "doc_to_pdf"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOC 转 PDF 工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        .doc-pdf-container { display: flex; gap: 1.5rem; margin-top: 2rem; }
+        .doc-pdf-main { flex: 2; }
+        .doc-pdf-side { flex: 1; }
+        @media (max-width: 900px) { .doc-pdf-container { flex-direction: column; gap: 1rem; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="tool-header">
+        <h1><i class="material-icons">picture_as_pdf</i> DOC 转 PDF 工具</h1>
+        <p>将 DOC/DOCX 文件快速转换为 PDF 格式，保持原文档的格式和样式</p>
+    </div>
+    <div class="tool-content">
+        <div class="doc-pdf-container">
+            <div class="doc-pdf-main">
+                <form id="docToPdfForm" class="tool-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="docFile">选择 DOC/DOCX 文件：</label>
+                        <input type="file" class="form-control-file" id="docFile" name="file" accept=".doc,.docx" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">转换为 PDF</button>
+                </form>
+                <div id="docToPdfStatus" class="mt-3"></div>
+            </div>
+            <div class="doc-pdf-side">
+                <div class="replace-section">
+                    <h3>使用说明</h3>
+                    <ul style="color:#374151;line-height:1.8;font-size:15px;">
+                        <li>支持 DOC、DOCX 格式的文档</li>
+                        <li>转换后的 PDF 文件将保持原文档的格式和样式</li>
+                        <li>转换完成后会自动下载 PDF 文件</li>
+                        <li>转换过程可能需要几秒钟时间，请耐心等待</li>
+                    </ul>
+                    <h4>常见问题</h4>
+                    <ul style="color:#6b7280;font-size:14px;">
+                        <li>如遇转换失败，请检查文档格式是否正确</li>
+                        <li>如果文档较大，转换时间可能会较长</li>
+                        <li>转换后的 PDF 文件会自动下载到您的电脑</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const docToPdfForm = document.getElementById('docToPdfForm');
+    const docToPdfStatus = document.getElementById('docToPdfStatus');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // 从 Content-Disposition 头中提取文件名
+    function getFilenameFromHeader(header) {
+        if (!header) return null;
+        
+        // 尝试从 filename*=UTF-8'' 格式中获取
+        const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(header);
+        if (utf8Match && utf8Match[1]) {
+            return decodeURIComponent(utf8Match[1]);
+        }
+        
+        // 尝试从 filename= 格式中获取
+        const match = /filename=([^;]+)/i.exec(header);
+        if (match && match[1]) {
+            return decodeURIComponent(match[1].replace(/["']/g, ''));
+        }
+        
+        return null;
+    }
+
+    docToPdfForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '转换中...';
+            docToPdfStatus.innerHTML = '<div class="alert alert-info">正在转换，请稍候...</div>';
+            
+            const response = await fetch('/tools/doc-to-pdf', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // 从响应头中获取文件名
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = getFilenameFromHeader(contentDisposition);
+                
+                // 如果没有从响应头获取到文件名，则使用原始文件名
+                if (!filename) {
+                    const originalFile = document.getElementById('docFile').files[0];
+                    if (originalFile) {
+                        const originalName = originalFile.name;
+                        const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+                        filename = nameWithoutExt + '.pdf';
+                    } else {
+                        filename = 'converted.pdf';
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                docToPdfStatus.innerHTML = '<div class="alert alert-success">转换成功！文件已开始下载。</div>';
+            } else {
+                const error = await response.json();
+                docToPdfStatus.innerHTML = `<div class="alert alert-danger">转换失败：${error.error}</div>`;
+            }
+        } catch (error) {
+            docToPdfStatus.innerHTML = `<div class="alert alert-danger">发生错误：${error.message}</div>`;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '转换为 PDF';
+        }
+    });
+});
+</script>
+</body>
+</html>
+{{end}} 

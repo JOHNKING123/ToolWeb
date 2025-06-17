@@ -463,6 +463,11 @@ func main() {
 		c.HTML(http.StatusOK, "watermark", nil)
 	})
 
+	// 水印工具页面
+	router.GET("/tools/doc-to-pdf", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "doc_to_pdf", nil)
+	})
+
 	// API 路由 - 修改为 /tools/api/
 	api := router.Group("/tools/api")
 	{
@@ -1074,6 +1079,13 @@ func main() {
 			}
 			c.JSON(200, fonts)
 		})
+	}
+
+	// 工具路由
+	toolsGroup := router.Group("/tools")
+	{
+		docToPDFConverter := &tools.DocToPDFConverter{}
+		toolsGroup.POST("/doc-to-pdf", docToPDFConverter.HandleDocToPDF)
 	}
 
 	// 创建HTTP服务器
