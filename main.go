@@ -1020,6 +1020,19 @@ func main() {
 				font = "DejaVuSans.ttf"
 			}
 			fontPath := filepath.Join("static", "ttf", font)
+
+			// 获取字体大小
+			fontSize, _ := strconv.ParseFloat(c.PostForm("fontSize"), 64)
+			if fontSize == 0 {
+				fontSize = 12
+			}
+
+			// 获取字体颜色
+			fontColor := c.PostForm("fontColor")
+			if fontColor == "" {
+				fontColor = "#ffffff"
+			}
+
 			opacity, _ := strconv.ParseFloat(c.PostForm("opacity"), 32)
 			if opacity == 0 {
 				opacity = 0.25
@@ -1029,11 +1042,14 @@ func main() {
 				margin = 10
 			}
 
+			// 获取水印重复选项
+			repeat := c.PostForm("repeat") == "true"
+
 			tmpOutput := filepath.Join(os.TempDir(), fmt.Sprintf("output_%d.jpg", time.Now().UnixNano()))
 			defer os.Remove(tmpInput)
 			defer os.Remove(tmpOutput)
 
-			err = tools.AddTextWatermark(tmpInput, tmpOutput, text, fontPath, opacity, margin)
+			err = tools.AddTextWatermark(tmpInput, tmpOutput, text, fontPath, fontSize, fontColor, opacity, margin, repeat)
 			if err != nil {
 				c.String(500, "水印处理失败: "+err.Error())
 				return
