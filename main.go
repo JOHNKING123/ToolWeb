@@ -468,6 +468,10 @@ func main() {
 		c.HTML(http.StatusOK, "doc_to_pdf", nil)
 	})
 
+	router.GET("/tools/shorturl", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "shorturl", nil)
+	})
+
 	// API 路由 - 修改为 /tools/api/
 	api := router.Group("/tools/api")
 	{
@@ -1086,6 +1090,10 @@ func main() {
 	{
 		docToPDFConverter := &tools.DocToPDFConverter{}
 		toolsGroup.POST("/doc-to-pdf", docToPDFConverter.HandleDocToPDF)
+
+		// 短链接生成器
+		toolsGroup.POST("/shorturl", tools.ShortURLHandler)
+		toolsGroup.GET("/shorturl/:shorturl", tools.RedirectHandler)
 	}
 
 	// 创建HTTP服务器

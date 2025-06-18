@@ -1,0 +1,204 @@
+{{define "shorturl"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短链接生成器 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <style>
+        .url-input {
+            font-size: 1.1rem;
+            padding: 0.75rem 1rem;
+            height: auto;
+        }
+        .url-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        .input-group { display: flex; flex-wrap: nowrap; align-items: stretch; }
+        .input-group .form-control { flex: 1 1 auto; min-width: 0; }
+        .input-group-append { display: flex; align-items: stretch; }
+        .result-section {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+        .result-section h5 {
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .copy-btn {
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #e2e8f0;
+        }
+        .copy-btn .material-icons {
+            font-size: 1.25rem;
+        }
+        .usage-card {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+        }
+        .usage-card .card-header {
+            background-color: #0ea5e9;
+        }
+        .usage-list li {
+            margin-bottom: 0.75rem;
+            color: #0f172a;
+        }
+        .usage-list li:last-child {
+            margin-bottom: 0;
+        }
+        .usage-list li i {
+            color: #0ea5e9;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="material-icons mr-2">link</i>
+                            短链接生成器
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="shorturlForm" class="mb-4">
+                            <div class="form-group">
+                                <label for="url" class="h5 mb-3">输入长URL</label>
+                                <div class="input-group">
+                                    <input type="url" class="form-control url-input" id="url" name="url" 
+                                           placeholder="请输入需要转换的长URL，例如：https://example.com/very/long/url" required>
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="material-icons mr-2">link</i>
+                                            生成短链接
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div id="result" class="d-none result-section">
+                            <h5>
+                                <i class="material-icons mr-2">check_circle</i>
+                                生成结果
+                            </h5>
+                            <div class="form-group">
+                                <label class="font-weight-bold">短链接</label>
+                                <div class="input-group">
+                                    <input type="text" id="shortUrl" class="form-control url-input" readonly>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button" onclick="copyToClipboard('shortUrl')">
+                                            <i class="material-icons">content_copy</i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">原始URL</label>
+                                <input type="text" id="longUrl" class="form-control url-input" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4 usage-card shadow-sm">
+                    <div class="card-header text-white">
+                        <h5 class="mb-0">
+                            <i class="material-icons mr-2">info</i>
+                            使用说明
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <ul class="usage-list mb-0">
+                            <li>
+                                <i class="material-icons">arrow_right</i>
+                                输入需要转换的长URL，点击"生成短链接"按钮
+                            </li>
+                            <li>
+                                <i class="material-icons">arrow_right</i>
+                                系统会自动生成一个6位的短链接
+                            </li>
+                            <li>
+                                <i class="material-icons">arrow_right</i>
+                                点击复制按钮可以复制生成的短链接
+                            </li>
+                            <li>
+                                <i class="material-icons">arrow_right</i>
+                                生成的短链接永久有效
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('shorturlForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const url = document.getElementById('url').value;
+        try {
+            const response = await fetch('/tools/shorturl', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('shortUrl').value = data.short_url;
+                document.getElementById('longUrl').value = data.long_url;
+                document.getElementById('result').classList.remove('d-none');
+                // 滚动到结果区域
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert(data.error || '生成短链接失败');
+            }
+        } catch (error) {
+            alert('请求失败，请稍后重试');
+        }
+    });
+
+    function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        element.select();
+        document.execCommand('copy');
+        
+        // 显示复制成功提示
+        const button = element.nextElementSibling.querySelector('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="material-icons">check</i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    }
+    </script>
+</body>
+</html>
+{{end}} 

@@ -92,6 +92,15 @@ func GetCategories() []Category {
 					New:         false,
 					Category:    "编码转换",
 				},
+				{
+					ID:          "shorturl",
+					Name:        "短链接生成器",
+					Description: "将长URL转换为短链接，方便分享和使用",
+					Path:        "/tools/shorturl",
+					Icon:        "link_off",
+					New:         true,
+					Category:    "编码转换",
+				},
 			},
 		},
 		{
