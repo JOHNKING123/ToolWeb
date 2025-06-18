@@ -1,32 +1,5 @@
 {{define "qrcode"}}
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">\
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>二维码工具 - 程序员工具箱</title>
-    <link rel="stylesheet" href="/tools/static/css/style.css">
-    <link rel="stylesheet" href="/tools/static/css/tools.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    
-    <!-- 网站图标 -->
-    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
-    <meta name="theme-color" content="#2563eb">
-    <style>
-        .container { max-width: 600px; margin: 0 auto; padding: 2rem; }
-        .qrcode-img { display: block; margin: 1rem auto; max-width: 256px; border: 1px solid #eee; background: #fff; }
-        .result-box { margin-top: 1.5rem; padding: 1rem; background: #f8f8f8; border-radius: 0.5rem; }
-        .section-title { margin-top: 2rem; margin-bottom: 1rem; font-size: 1.2rem; font-weight: bold; }
-        .row { margin-bottom: 1rem; }
-        label { margin-right: 0.5rem; }
-    </style>
-</head>
-<body>
-<div class="container">
+<div class="tool-container">
     <h1><i class="material-icons">qr_code</i> 二维码工具</h1>
     <div>
         <div class="section-title">生成二维码</div>
@@ -88,6 +61,7 @@ decodeBtn.onclick = async function() {
     }
 };
 </script>
+</div>
 </body>
 </html>
 {{end}} 

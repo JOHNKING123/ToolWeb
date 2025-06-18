@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XML 格式化 - 程序员工具箱</title>
+    <title>XML 格式化工具 - 程序员工具箱</title>
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -24,118 +24,95 @@
         }
 
         .xml-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .xml-panel {
             display: flex;
-            flex-direction: column;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
+            gap: 1.5rem;
+            margin-top: 2rem;
         }
 
-        .xml-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
+        .xml-main {
+            flex: 2;
         }
 
-        .xml-header h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .xml-header h3 i {
-            font-size: 1.2rem;
-            color: var(--primary-color);
-        }
-
-        .xml-content {
-            position: relative;
+        .xml-side {
             flex: 1;
-            min-height: 400px;
         }
 
-        .xml-textarea {
-            width: 100%;
-            height: 100%;
-            min-height: 400px;
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
+        .textarea-with-lines {
+            position: relative;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            background: white;
+            display: flex;
+        }
+
+        .line-numbers {
+            flex-shrink: 0;
+            width: 50px;
+            background: #f8f9fa;
+            border-right: 1px solid #e5e7eb;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
             line-height: 1.5;
-            resize: vertical;
-            background-color: var(--bg-secondary);
-            color: var(--text-color);
-            transition: all 0.2s;
+            color: #6b7280;
+            text-align: right;
+            overflow-y: auto;
+            overflow-x: hidden;
+            user-select: none;
+            border-radius: 0.375rem 0 0 0.375rem;
+            white-space: pre;
+            font-family: 'Consolas', 'Monaco', monospace;
+            box-sizing: border-box;
+            max-height: 400px;
         }
 
-        .xml-textarea:focus {
+        .textarea-with-lines textarea {
+            flex: 1;
+            border: none;
             outline: none;
-            border-color: var(--primary-color);
-            background-color: white;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-        }
-
-        .xml-textarea:read-only {
-            background-color: var(--bg-secondary);
-            cursor: default;
+            resize: vertical;
+            padding: 0.75rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            line-height: 1.5;
+            font-size: 0.875rem;
+            background: transparent;
+            min-height: 150px;
+            max-height: 400px;
+            box-sizing: border-box;
         }
 
         .xml-options {
             display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
             flex-wrap: wrap;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            background-color: var(--bg-secondary);
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
         }
 
         .option-group {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-        }
-
-        .option-group label {
-            font-size: 0.9rem;
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
             gap: 0.5rem;
-            cursor: pointer;
         }
 
         .option-group select {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
             background-color: white;
-            font-size: 0.9rem;
-            color: var(--text-color);
-            cursor: pointer;
-            transition: all 0.2s;
+            font-size: 0.875rem;
         }
 
-        .option-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        .option-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .option-group .material-icons {
+            font-size: 1.25rem;
+            color: #6b7280;
         }
 
         .btn {
@@ -271,19 +248,6 @@
 
         @media (max-width: 768px) {
             .xml-container {
-                grid-template-columns: 1fr;
-            }
-
-            .xml-options {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .xml-textarea {
-                min-height: 300px;
-            }
-
-            .xml-stats {
                 flex-direction: column;
                 gap: 1rem;
             }
@@ -291,10 +255,11 @@
     </style>
 </head>
 <body>
+    {{template "nav" .}}
     <div class="container">
         <div class="tool-header">
-            <h1><i class="material-icons">code</i> XML 格式化</h1>
-            <p>格式化和美化 XML 文档，支持语法高亮和验证</p>
+            <h1><i class="material-icons">code</i> XML 格式化工具</h1>
+            <p>格式化和验证 XML 文档，使其更易于阅读和编辑</p>
         </div>
 
         <div class="tool-content">
@@ -334,50 +299,60 @@
             </div>
 
             <div class="xml-container">
-                <div class="xml-panel">
-                    <div class="xml-header">
-                        <h3><i class="material-icons">edit</i> 输入</h3>
-                        <div class="xml-header-buttons">
-                            <button type="button" class="btn btn-secondary" id="demoBtn">
-                                <i class="material-icons">play_arrow</i> Demo
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="uploadBtn">
-                                <i class="material-icons">upload_file</i> 上传
+                <div class="xml-main">
+                    <form id="xmlForm" class="tool-form">
+                        <div class="form-group">
+                            <label for="xmlInput">输入 XML：</label>
+                            <div class="textarea-with-lines">
+                                <div class="line-numbers" id="inputLineNumbers"></div>
+                                <textarea id="xmlInput" name="input" placeholder="在此粘贴您的 XML 代码..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="material-icons">format_align_left</i> 格式化
                             </button>
                             <button type="button" class="btn btn-secondary" id="clearBtn">
                                 <i class="material-icons">clear</i> 清空
                             </button>
                         </div>
-                    </div>
-                    <div class="xml-content">
-                        <textarea id="xmlInput" class="xml-textarea" placeholder="在此粘贴您的XML文档...
+                    </form>
 
-Demo 1/3: 用户信息XML
-Demo 2/3: 产品目录XML  
-Demo 3/3: 配置文件XML
-
-点击上方 Demo 按钮查看示例"></textarea>
-                    </div>
-                </div>
-
-                <div class="xml-panel">
-                    <div class="xml-header">
-                        <h3><i class="material-icons">code</i> 格式化结果</h3>
-                        <div class="xml-header-buttons">
-                            <button type="button" class="btn btn-primary" id="formatBtn">
-                                <i class="material-icons">format_align_left</i> 格式化
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="minifyBtn">
-                                <i class="material-icons">compress</i> 压缩
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="copyBtn">
-                                <i class="material-icons">content_copy</i> 复制
+                    <div class="results">
+                        <div class="spinner"></div>
+                        <div id="xmlError" class="error-message" style="display: none;"></div>
+                        <div class="form-group">
+                            <label for="xmlResult">格式化结果：</label>
+                            <div class="textarea-with-lines">
+                                <div class="line-numbers" id="resultLineNumbers"></div>
+                                <textarea id="xmlResult" readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button id="copyBtn" class="btn btn-secondary">
+                                <i class="material-icons">content_copy</i> 复制结果
                             </button>
                         </div>
                     </div>
-                    <div class="xml-content">
-                        <textarea id="xmlOutput" class="xml-textarea" readonly></textarea>
-                        <div class="copy-tooltip">已复制到剪贴板</div>
+                </div>
+
+                <div class="xml-side">
+                    <div class="replace-section">
+                        <h3>使用说明</h3>
+                        <ul style="color:#374151;line-height:1.8;font-size:15px;">
+                            <li>支持格式化任意有效的 XML 文档</li>
+                            <li>可选择不同的缩进方式（2空格、4空格、Tab）</li>
+                            <li>自动验证 XML 语法，显示错误信息</li>
+                            <li>支持显示/隐藏行号</li>
+                            <li>可一键复制格式化结果</li>
+                        </ul>
+                        <h4>常见问题</h4>
+                        <ul style="color:#6b7280;font-size:14px;">
+                            <li>如遇格式化失败，请检查 XML 语法是否正确</li>
+                            <li>大型 XML 文件可能需要较长时间处理</li>
+                            <li>建议使用 UTF-8 编码的 XML 文件</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -422,155 +397,16 @@ Demo 3/3: 配置文件XML
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const xmlInput = document.getElementById('xmlInput');
-            const xmlOutput = document.getElementById('xmlOutput');
-            const formatBtn = document.getElementById('formatBtn');
-            const minifyBtn = document.getElementById('minifyBtn');
+            const xmlOutput = document.getElementById('xmlResult');
+            const formatBtn = document.querySelector('.btn-primary');
+            const minifyBtn = document.querySelector('.btn-secondary');
             const clearBtn = document.getElementById('clearBtn');
             const copyBtn = document.getElementById('copyBtn');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const demoBtn = document.getElementById('demoBtn');
-            const copyTooltip = document.querySelector('.copy-tooltip');
             const originalSize = document.getElementById('originalSize');
             const compressedSize = document.getElementById('compressedSize');
             const lineCount = document.getElementById('lineCount');
             let formatTimeout;
             
-            // Demo数据
-            let demoIndex = 0;
-            const demoData = [
-                {
-                    name: "用户信息XML",
-                    xml: `<?xml version="1.0" encoding="UTF-8"?>
-<users>
-    <user id="1">
-        <name>张三</name>
-        <email>zhangsan@example.com</email>
-        <age>28</age>
-        <profile>
-            <gender>男</gender>
-            <city>北京</city>
-            <occupation>软件工程师</occupation>
-        </profile>
-        <preferences>
-            <theme>dark</theme>
-            <language>zh-CN</language>
-            <notifications enabled="true">
-                <email>true</email>
-                <sms>false</sms>
-            </notifications>
-        </preferences>
-    </user>
-    <user id="2">
-        <name>李四</name>
-        <email>lisi@example.com</email>
-        <age>32</age>
-        <profile>
-            <gender>女</gender>
-            <city>上海</city>
-            <occupation>产品经理</occupation>
-        </profile>
-        <preferences>
-            <theme>light</theme>
-            <language>zh-CN</language>
-            <notifications enabled="false">
-                <email>false</email>
-                <sms>false</sms>
-            </notifications>
-        </preferences>
-    </user>
-</users>`
-                },
-                {
-                    name: "产品目录XML",
-                    xml: `<?xml version="1.0" encoding="UTF-8"?>
-<catalog>
-    <product id="P001" category="electronics">
-        <name>智能手机</name>
-        <brand>TechBrand</brand>
-        <price currency="CNY">2999.00</price>
-        <specifications>
-            <screen size="6.1" resolution="1080x2340"/>
-            <storage>128GB</storage>
-            <ram>8GB</ram>
-            <camera>
-                <main>48MP</main>
-                <front>12MP</front>
-            </camera>
-            <battery capacity="4000mAh" removable="false"/>
-        </specifications>
-        <availability>
-            <inStock>true</inStock>
-            <quantity>150</quantity>
-            <warehouses>
-                <warehouse location="北京" stock="75"/>
-                <warehouse location="上海" stock="45"/>
-                <warehouse location="广州" stock="30"/>
-            </warehouses>
-        </availability>
-    </product>
-    <product id="P002" category="accessories">
-        <name>无线耳机</name>
-        <brand>AudioTech</brand>
-        <price currency="CNY">399.00</price>
-        <specifications>
-            <connectivity>Bluetooth 5.0</connectivity>
-            <battery life="24h"/>
-            <noise-cancellation>true</noise-cancellation>
-        </specifications>
-        <availability>
-            <inStock>true</inStock>
-            <quantity>200</quantity>
-        </availability>
-    </product>
-</catalog>`
-                },
-                {
-                    name: "配置文件XML",
-                    xml: `<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <application name="WebApp" version="2.1.0">
-        <server>
-            <host>localhost</host>
-            <port>8080</port>
-            <ssl enabled="true">
-                <keystore>server.jks</keystore>
-                <password>changeit</password>
-            </ssl>
-        </server>
-        <database>
-            <connection>
-                <url>jdbc:mysql://localhost:3306/webapp</url>
-                <username>webapp_user</username>
-                <password>secure_password</password>
-                <driver>com.mysql.cj.jdbc.Driver</driver>
-            </connection>
-            <pool>
-                <minSize>5</minSize>
-                <maxSize>20</maxSize>
-                <timeout>30000</timeout>
-            </pool>
-        </database>
-        <logging level="INFO">
-            <appenders>
-                <console enabled="true" pattern="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"/>
-                <file enabled="true" path="logs/app.log" maxSize="10MB" maxHistory="30"/>
-            </appenders>
-            <loggers>
-                <logger name="com.example" level="DEBUG"/>
-                <logger name="org.springframework" level="WARN"/>
-                <logger name="root" level="INFO"/>
-            </loggers>
-        </logging>
-        <features>
-            <feature name="user-registration" enabled="true"/>
-            <feature name="email-notifications" enabled="true"/>
-            <feature name="analytics" enabled="false"/>
-        </features>
-    </application>
-</configuration>`
-                }
-            ];
-
             // 更新统计信息
             function updateStats(input, output) {
                 const inputSize = new Blob([input]).size;
@@ -686,41 +522,6 @@ Demo 3/3: 配置文件XML
                         copyTooltip.classList.remove('show');
                     }, 2000);
                 });
-            });
-
-            // 文件上传
-            uploadBtn.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.xml,text/xml,application/xml';
-                input.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        xmlInput.value = e.target.result;
-                        if (document.getElementById('autoFormat').checked) {
-                            formatXML();
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            });
-
-            // Demo按钮
-            demoBtn.addEventListener('click', () => {
-                const demo = demoData[demoIndex];
-                xmlInput.value = demo.xml;
-                
-                // 更新按钮文字显示当前demo
-                const nextIndex = (demoIndex + 1) % demoData.length;
-                demoBtn.innerHTML = `<i class="material-icons">play_arrow</i> Demo (${nextIndex + 1}/${demoData.length})`;
-                demoIndex = nextIndex;
-                
-                // 自动格式化
-                formatXML();
             });
 
             // 选项变更时自动格式化

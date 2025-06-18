@@ -250,6 +250,7 @@
     </style>
 </head>
 <body>
+    {{template "nav" .}}
     <div class="container">
         <div class="tool-header">
             <h1><i class="material-icons">swap_horiz</i> JSON/YAML 转换</h1>
@@ -358,24 +359,22 @@
                 if (!jsonInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/tools/api/convert/json2yaml', {
+                    const response = await fetch('/tools/api/json-yaml', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            json: jsonInput.value,
-                            indent: document.getElementById('indent').value,
-                            sortKeys: document.getElementById('sortKeys').checked,
-                            flowStyle: document.getElementById('flowStyle').checked
+                            input: jsonInput.value,
+                            type: 'json2yaml'
                         }),
                     });
 
                     const data = await response.json();
-                    if (data.success) {
-                        yamlInput.value = data.result;
+                    if (data.status === 'success') {
+                        yamlInput.value = data.output;
                     } else {
-                        yamlInput.value = '转换出错：' + data.error;
+                        yamlInput.value = '转换出错：' + data.message;
                     }
                 } catch (error) {
                     yamlInput.value = '服务器错误，请稍后重试';
@@ -387,23 +386,22 @@
                 if (!yamlInput.value.trim()) return;
 
                 try {
-                    const response = await fetch('/tools/api/convert/yaml2json', {
+                    const response = await fetch('/tools/api/json-yaml', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            yaml: yamlInput.value,
-                            indent: document.getElementById('indent').value,
-                            sortKeys: document.getElementById('sortKeys').checked
+                            input: yamlInput.value,
+                            type: 'yaml2json'
                         }),
                     });
 
                     const data = await response.json();
-                    if (data.success) {
-                        jsonInput.value = data.result;
+                    if (data.status === 'success') {
+                        jsonInput.value = data.output;
                     } else {
-                        jsonInput.value = '转换出错：' + data.error;
+                        jsonInput.value = '转换出错：' + data.message;
                     }
                 } catch (error) {
                     jsonInput.value = '服务器错误，请稍后重试';

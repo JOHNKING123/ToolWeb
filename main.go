@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"html/template"
-	"image"
 	"io"
 	"log"
 	"net/http"
@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -23,6 +24,7 @@ import (
 	"toolweb/tools"
 
 	"github.com/gin-gonic/gin"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -440,36 +442,9 @@ func main() {
 			return
 		}
 
-		c.HTML(http.StatusOK, templateName, nil)
-	})
-
-	// 工具页面路由
-	router.GET("/tools/url-codec", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "url_codec", nil)
-	})
-
-	// 工具页面路由
-	router.GET("/tools/xml-parser", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "xml_formatter", nil)
-	})
-
-	// 二维码工具页面
-	router.GET("/tools/qrcode", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "qrcode", nil)
-	})
-
-	// 水印工具页面
-	router.GET("/tools/watermark", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "watermark", nil)
-	})
-
-	// 水印工具页面
-	router.GET("/tools/doc-to-pdf", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "doc_to_pdf", nil)
-	})
-
-	router.GET("/tools/shorturl", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "shorturl", nil)
+		c.HTML(http.StatusOK, templateName, gin.H{
+			"Categories": tools.GetCategories(),
+		})
 	})
 
 	// API 路由 - 修改为 /tools/api/
@@ -932,55 +907,97 @@ func main() {
 			})
 		})
 
-		// 二维码API
-		api.POST("/qrcode/generate", func(c *gin.Context) {
-			// 支持表单和json两种方式
-			text := c.PostForm("text")
-			if text == "" {
-				var req struct {
-					Text    string `json:"text"`
-					Size    int    `json:"size"`
-					FgColor string `json:"fgColor"`
-					BgColor string `json:"bgColor"`
-				}
-				if err := c.BindJSON(&req); err == nil {
-					text = req.Text
-					if text == "" {
-						c.String(http.StatusBadRequest, "内容不能为空")
-						return
-					}
-					size := req.Size
-					fgColor := req.FgColor
-					bgColor := req.BgColor
-					// logo 仅支持表单上传
-					img, err := tools.GenerateQRCodeAdvanced(text, size, fgColor, bgColor, nil)
-					if err != nil {
-						c.String(http.StatusInternalServerError, err.Error())
-						return
-					}
-					c.Header("Content-Type", "image/png")
-					c.Writer.Write(img)
-					return
-				}
+		// YAML 格式化
+		api.POST("/yaml/format", func(c *gin.Context) {
+			var req struct {
+				Yaml      string `json:"yaml"`
+				Indent    string `json:"indent"`
+				SortKeys  bool   `json:"sortKeys"`
+				FlowStyle bool   `json:"flowStyle"`
 			}
-			// 表单方式，支持logo上传
-			size := 256
-			if s := c.PostForm("size"); s != "" {
-				fmt.Sscanf(s, "%d", &size)
-			}
-			fgColor := c.PostForm("fgColor")
-			bgColor := c.PostForm("bgColor")
-			var logo image.Image = nil
-			file, _, err := c.Request.FormFile("logo")
-			if err == nil && file != nil {
-				defer file.Close()
-				logo, _, _ = image.Decode(file)
-			}
-			img, err := tools.GenerateQRCodeAdvanced(text, size, fgColor, bgColor, logo)
-			if err != nil {
-				c.String(http.StatusInternalServerError, err.Error())
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据",
+				})
 				return
 			}
+
+			if req.Yaml == "" {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "YAML 内容不能为空",
+				})
+				return
+			}
+
+			// 设置默认缩进
+			indent := 2
+			if req.Indent != "" {
+				if i, err := strconv.Atoi(req.Indent); err == nil {
+					indent = i
+				}
+			}
+
+			// 解析 YAML
+			var data interface{}
+			if err := yaml.Unmarshal([]byte(req.Yaml), &data); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   fmt.Sprintf("YAML 解析失败: %v", err),
+				})
+				return
+			}
+
+			// 如果启用了键排序，对 map 进行排序
+			if req.SortKeys {
+				data = sortMapKeys(data)
+			}
+
+			// 编码 YAML
+			var buf bytes.Buffer
+			encoder := yaml.NewEncoder(&buf)
+			encoder.SetIndent(indent)
+
+			if err := encoder.Encode(data); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"error":   fmt.Sprintf("YAML 编码失败: %v", err),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"result":  buf.String(),
+			})
+		})
+
+		// 二维码API
+		api.POST("/qrcode", func(c *gin.Context) {
+			var req struct {
+				Text    string `json:"text"`
+				Size    int    `json:"size"`
+				FgColor string `json:"fgColor"`
+				BgColor string `json:"bgColor"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据",
+				})
+				return
+			}
+
+			img, err := tools.GenerateQRCodeAdvanced(req.Text, req.Size, req.FgColor, req.BgColor, nil)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   err.Error(),
+				})
+				return
+			}
+
 			c.Header("Content-Type", "image/png")
 			c.Writer.Write(img)
 		})
@@ -1128,4 +1145,42 @@ func main() {
 	}
 
 	accessLogger.Println("服务器已关闭")
+}
+
+// sortMapKeys 递归地对 map 的键进行排序
+func sortMapKeys(data interface{}) interface{} {
+	switch v := data.(type) {
+	case map[interface{}]interface{}:
+		// 创建有序的 map
+		sortedMap := make(map[interface{}]interface{})
+		keys := make([]string, 0, len(v))
+		keyMap := make(map[string]interface{})
+
+		// 收集所有键
+		for k := range v {
+			keyStr := fmt.Sprintf("%v", k)
+			keys = append(keys, keyStr)
+			keyMap[keyStr] = k
+		}
+
+		// 对键进行排序
+		sort.Strings(keys)
+
+		// 按排序后的顺序重新构建 map
+		for _, keyStr := range keys {
+			key := keyMap[keyStr]
+			sortedMap[key] = sortMapKeys(v[key])
+		}
+		return sortedMap
+
+	case []interface{}:
+		// 递归处理数组中的每个元素
+		for i := range v {
+			v[i] = sortMapKeys(v[i])
+		}
+		return v
+
+	default:
+		return v
+	}
 }

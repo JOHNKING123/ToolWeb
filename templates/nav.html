@@ -1,0 +1,52 @@
+{{define "nav"}}
+<nav class="navbar">
+    <div class="container navbar-container">
+        <a href="/tools/index" class="navbar-brand">程序员工具箱</a>
+        
+        <!-- 工具分类下拉菜单 -->
+        <div class="tools-dropdown">
+            <button class="tools-dropdown-btn">
+                <i class="material-icons">apps</i>
+                所有工具
+                <i class="material-icons">expand_more</i>
+            </button>
+            <div class="tools-dropdown-content">
+                {{range .Categories}}
+                <div class="category-group">
+                    <div class="category-header">
+                        <i class="material-icons">{{.Icon}}</i>
+                        <span>{{.Name}}</span>
+                    </div>
+                    <div class="category-tools">
+                        {{range .Tools}}
+                        <a href="{{.Path}}" class="tool-item">
+                            <i class="material-icons">{{.Icon}}</i>
+                            <div class="tool-info">
+                                <span class="tool-name">{{.Name}}</span>
+                                <span class="tool-desc">{{.Description}}</span>
+                            </div>
+                            {{if .New}}
+                            <span class="badge badge-new">新</span>
+                            {{end}}
+                        </a>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="search-box">
+            <i class="material-icons">search</i>
+            <input type="text" id="toolSearch" placeholder="搜索工具...">
+        </div>
+        
+        <div class="navbar-menu">
+            <a href="/">博客首页</a>
+            <a href="/tools/index">工具首页</a>
+            <a href="#popular">热门工具</a>
+            <a href="#all">所有工具</a>
+        </div>
+    </div>
+</nav>
+{{end}} 
