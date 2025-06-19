@@ -93,6 +93,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "barcode",
+					Name:        "条形码生成器",
+					Description: "生成各种类型的条形码和二维码，支持自定义尺寸",
+					Path:        "/tools/barcode-generator",
+					Icon:        "qr_code_scanner",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "shorturl",
 					Name:        "短链接生成器",
 					Description: "将长URL转换为短链接，方便分享和使用",

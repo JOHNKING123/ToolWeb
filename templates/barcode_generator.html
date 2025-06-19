@@ -1,0 +1,621 @@
+{{define "barcode_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>条形码生成器 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+    
+    <style>
+        .barcode-container {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .barcode-left {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .barcode-right {
+            flex: 1;
+        }
+
+        .barcode-preview {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .barcode-preview img {
+            max-width: 100%;
+            max-height: 350px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.25rem;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .barcode-preview .placeholder {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .barcode-preview .error {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .barcode-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .barcode-info h4 {
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .barcode-info p {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin: 0.25rem 0;
+        }
+
+        .barcode-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-download {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-download:hover {
+            background: #059669;
+        }
+
+        .btn-copy {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #2563eb;
+        }
+
+        .btn-copy.success {
+            background: #10b981;
+        }
+
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .type-option {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .type-option:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .type-option.selected {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .type-option h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .type-option p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .type-option .example {
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: #3b82f6;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .size-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .size-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .size-control label {
+            font-size: 0.875rem;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .size-control input {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .size-control input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .checkbox-group {
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #374151;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .barcode-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .barcode-left {
+                max-width: none;
+            }
+
+            .type-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .size-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">qr_code_scanner</i> 条形码生成器</h1>
+            <p>生成各种类型的条形码和二维码，支持自定义尺寸和格式</p>
+        </div>
+
+        <div class="tool-content">
+            <form id="barcodeForm" class="tool-form">
+                <div class="form-group">
+                    <label for="barcodeText">条形码内容：</label>
+                    <input type="text" id="barcodeText" name="text" placeholder="输入要生成条形码的文本" required>
+                </div>
+
+                <div class="form-group">
+                    <label>条形码类型：</label>
+                    <div class="type-selector" id="typeSelector">
+                        <!-- 动态生成类型选项 -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>尺寸设置：</label>
+                    <div class="size-controls">
+                        <div class="size-control">
+                            <label for="barcodeWidth">宽度 (像素)</label>
+                            <input type="number" id="barcodeWidth" name="width" value="600" min="200" max="1200">
+                        </div>
+                        <div class="size-control">
+                            <label for="barcodeHeight">高度 (像素)</label>
+                            <input type="number" id="barcodeHeight" name="height" value="300" min="100" max="800">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="showText" name="showText">
+                            在条形码下方显示文本
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-icons">qr_code</i>
+                        生成条形码
+                    </button>
+                </div>
+            </form>
+
+            <div class="barcode-container">
+                <!-- 左侧：预览区域 -->
+                <div class="barcode-left">
+                    <div class="barcode-preview" id="barcodePreview">
+                        <div class="placeholder">
+                            <i class="material-icons" style="font-size: 3rem; color: #d1d5db;">qr_code</i>
+                            <p>输入内容并选择类型后点击生成</p>
+                        </div>
+                    </div>
+
+                    <div class="barcode-actions" id="barcodeActions" style="display: none;">
+                        <button type="button" id="downloadBtn" class="btn-download">
+                            <i class="material-icons">download</i>
+                            下载图片
+                        </button>
+                        <button type="button" id="copyBtn" class="btn-copy">
+                            <i class="material-icons">content_copy</i>
+                            复制图片
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右侧：信息区域 -->
+                <div class="barcode-right">
+                    <div class="barcode-info" id="barcodeInfo">
+                        <h4>使用说明</h4>
+                        <p>• 选择适合的条形码类型</p>
+                        <p>• 输入符合格式要求的内容</p>
+                        <p>• 调整尺寸以获得最佳效果</p>
+                        <p>• 点击生成按钮创建条形码</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 条形码类型数据
+        const barcodeTypes = [
+            {
+                id: 'code128',
+                name: 'Code 128',
+                description: '通用条形码，支持ASCII字符',
+                example: '123456789',
+                maxLength: 50,
+                minLength: 1
+            },
+            {
+                id: 'code39',
+                name: 'Code 39',
+                description: '工业标准条形码，支持数字和大写字母',
+                example: 'ABC123',
+                maxLength: 50,
+                minLength: 1
+            },
+            {
+                id: 'qr',
+                name: 'QR Code',
+                description: '二维码，支持文本、URL等',
+                example: 'https://example.com',
+                maxLength: 1000,
+                minLength: 1
+            }
+        ];
+
+        let selectedType = 'code128';
+        let currentBarcodeImage = null;
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTypeSelector();
+            setupEventListeners();
+            updateInfo();
+        });
+
+        // 初始化类型选择器
+        function initializeTypeSelector() {
+            const selector = document.getElementById('typeSelector');
+            barcodeTypes.forEach(type => {
+                const option = document.createElement('div');
+                option.className = 'type-option';
+                option.dataset.type = type.id;
+                if (type.id === selectedType) {
+                    option.classList.add('selected');
+                }
+                
+                option.innerHTML = `
+                    <h4>${type.name}</h4>
+                    <p>${type.description}</p>
+                    <div class="example">示例: ${type.example}</div>
+                `;
+                
+                option.addEventListener('click', () => selectType(type.id));
+                selector.appendChild(option);
+            });
+        }
+
+        // 选择类型
+        function selectType(typeId) {
+            selectedType = typeId;
+            
+            // 更新UI
+            document.querySelectorAll('.type-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-type="${typeId}"]`).classList.add('selected');
+            
+            // 自动调整尺寸
+            autoAdjustSize(typeId);
+            
+            // 更新信息
+            updateInfo();
+            
+            // 清空预览
+            clearPreview();
+        }
+
+        // 自动调整尺寸
+        function autoAdjustSize(typeId) {
+            const widthInput = document.getElementById('barcodeWidth');
+            const heightInput = document.getElementById('barcodeHeight');
+            
+            switch(typeId) {
+                case 'qr':
+                    widthInput.value = 400;
+                    heightInput.value = 400;
+                    break;
+                case 'code128':
+                case 'code39':
+                    widthInput.value = 600;
+                    heightInput.value = 200;
+                    break;
+            }
+        }
+
+        // 更新信息显示
+        function updateInfo() {
+            const type = barcodeTypes.find(t => t.id === selectedType);
+            const info = document.getElementById('barcodeInfo');
+            
+            let tips = '';
+            if (type.id === 'qr') {
+                tips = '<p><strong>提示:</strong> 建议尺寸至少 300x300 像素以确保清晰度</p>';
+            } else {
+                tips = '<p><strong>提示:</strong> 建议宽度至少 400 像素，高度至少 150 像素</p>';
+            }
+            
+            info.innerHTML = `
+                <h4>${type.name}</h4>
+                <p>${type.description}</p>
+                <p>字符长度: ${type.minLength} - ${type.maxLength}</p>
+                <p>示例: ${type.example}</p>
+                ${tips}
+            `;
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const form = document.getElementById('barcodeForm');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const copyBtn = document.getElementById('copyBtn');
+
+            form.addEventListener('submit', handleSubmit);
+            downloadBtn.addEventListener('click', downloadImage);
+            copyBtn.addEventListener('click', copyImage);
+        }
+
+        // 处理表单提交
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const text = formData.get('text').trim();
+            const width = parseInt(formData.get('width')) || 600;
+            const height = parseInt(formData.get('height')) || 300;
+            const showText = formData.get('showText') === 'on';
+
+            if (!text) {
+                showError('请输入条形码内容');
+                return;
+            }
+
+            // 验证文本长度
+            const type = barcodeTypes.find(t => t.id === selectedType);
+            if (text.length < type.minLength || text.length > type.maxLength) {
+                showError(`${type.name} 需要 ${type.minLength} - ${type.maxLength} 个字符`);
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/tools/api/barcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        type: selectedType,
+                        width: width,
+                        height: height,
+                        showText: showText
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showBarcode(result.image);
+                } else {
+                    showError(result.error || '生成失败');
+                }
+            } catch (error) {
+                showError('网络错误，请重试');
+                console.error('Error:', error);
+            }
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            const preview = document.getElementById('barcodePreview');
+            preview.innerHTML = '<div class="spinner"></div>';
+            document.getElementById('barcodeActions').style.display = 'none';
+        }
+
+        // 显示条形码
+        function showBarcode(imageData) {
+            const preview = document.getElementById('barcodePreview');
+            currentBarcodeImage = imageData;
+            
+            preview.innerHTML = `<img src="${imageData}" alt="生成的条形码">`;
+            document.getElementById('barcodeActions').style.display = 'flex';
+        }
+
+        // 显示错误
+        function showError(message) {
+            const preview = document.getElementById('barcodePreview');
+            preview.innerHTML = `
+                <div class="error">
+                    <i class="material-icons" style="font-size: 2rem; color: #ef4444;">error</i>
+                    <p>${message}</p>
+                </div>
+            `;
+            document.getElementById('barcodeActions').style.display = 'none';
+        }
+
+        // 清空预览
+        function clearPreview() {
+            const preview = document.getElementById('barcodePreview');
+            preview.innerHTML = `
+                <div class="placeholder">
+                    <i class="material-icons" style="font-size: 3rem; color: #d1d5db;">qr_code</i>
+                    <p>输入内容并选择类型后点击生成</p>
+                </div>
+            `;
+            document.getElementById('barcodeActions').style.display = 'none';
+            currentBarcodeImage = null;
+        }
+
+        // 下载图片
+        function downloadImage() {
+            if (!currentBarcodeImage) return;
+            
+            const link = document.createElement('a');
+            link.href = currentBarcodeImage;
+            link.download = `barcode_${selectedType}_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 复制图片
+        async function copyImage() {
+            if (!currentBarcodeImage) return;
+            
+            try {
+                const response = await fetch(currentBarcodeImage);
+                const blob = await response.blob();
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': blob
+                    })
+                ]);
+                
+                const btn = document.getElementById('copyBtn');
+                btn.classList.add('success');
+                btn.innerHTML = '<i class="material-icons">check</i>已复制';
+                
+                setTimeout(() => {
+                    btn.classList.remove('success');
+                    btn.innerHTML = '<i class="material-icons">content_copy</i>复制图片';
+                }, 2000);
+            } catch (error) {
+                console.error('复制失败:', error);
+                alert('复制失败，请手动下载图片');
+            }
+        }
+    </script>
+</body>
+</html>
+{{end}} 

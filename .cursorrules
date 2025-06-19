@@ -1,0 +1,186 @@
+# ToolWeb 项目 Cursor Rules
+
+## 项目概述
+这是一个基于 Go + Gin 框架的在线工具集合网站，提供各种程序员常用工具，如 JSON 格式化、Base64 编码、正则测试等。
+
+## 技术栈
+- **后端**: Go 1.23+ + Gin 框架
+- **前端**: HTML + CSS + JavaScript (使用 Material Icons)
+- **样式**: 自定义 CSS (基于 Tailwind 设计理念)
+- **模板引擎**: Go HTML Template
+- **依赖管理**: Go Modules
+
+## 项目结构
+```
+ToolWeb/
+├── main.go              # 主程序入口
+├── go.mod               # Go 模块文件
+├── templates/           # HTML 模板文件
+├── static/              # 静态资源 (CSS, JS, 图片)
+├── tools/               # 工具相关 Go 代码
+├── middleware/          # 中间件
+├── config/              # 配置文件
+├── logs/                # 日志文件
+└── data/                # 数据文件
+```
+
+## 代码风格规范
+
+### Go 代码规范
+1. **包命名**: 使用小写字母，简短且有意义的名称
+2. **函数命名**: 使用驼峰命名法，动词开头
+3. **变量命名**: 使用驼峰命名法，有意义的名称
+4. **常量命名**: 使用大写字母和下划线
+5. **错误处理**: 始终检查错误并适当处理
+6. **注释**: 为导出的函数和类型添加注释
+
+### 路由规范
+- 工具页面路由: `/tools/{tool-name}`
+- API 路由: `/tools/api/{endpoint}`
+- 静态资源: `/tools/static/{resource}`
+- 电子书相关: `/ebook/{page}`
+
+### HTML 模板规范
+1. **模板继承**: 使用 `{{define "templateName"}}` 和 `{{template "content" .}}`
+2. **SEO 优化**: 包含完整的 meta 标签和结构化数据
+3. **响应式设计**: 使用 CSS Grid 和 Flexbox
+4. **Material Icons**: 使用 Material Design 图标系统
+
+### CSS 规范
+1. **CSS 变量**: 使用 `:root` 定义全局变量
+2. **命名约定**: 使用 BEM 或类似的方法
+3. **响应式**: 移动优先的设计方法
+4. **颜色系统**: 使用 CSS 变量定义颜色主题
+
+## 开发最佳实践
+
+### 添加新工具
+1. 在 `tools/categories.go` 中添加工具定义
+2. 在 `tools/` 目录下创建对应的 Go 文件
+3. 在 `templates/` 目录下创建 HTML 模板
+4. 在 `main.go` 中添加路由处理
+5. 更新工具统计和访问记录
+
+### 工具结构示例
+```go
+// tools/example.go
+package tools
+
+import (
+    "net/http"
+    "github.com/gin-gonic/gin"
+)
+
+func HandleExampleTool(c *gin.Context) {
+    c.HTML(http.StatusOK, "example_tool", gin.H{
+        "Title": "工具名称",
+        // 其他数据
+    })
+}
+
+func HandleExampleAPI(c *gin.Context) {
+    // API 处理逻辑
+    c.JSON(http.StatusOK, gin.H{
+        "success": true,
+        "data": result,
+    })
+}
+```
+
+### 模板结构示例
+```html
+{{define "example_tool"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <!-- SEO meta tags -->
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <!-- 工具内容 -->
+    </main>
+    {{template "footer" .}}
+</body>
+</html>
+{{end}}
+```
+
+## 功能特性
+
+### 核心功能
+- 工具访问统计和热门工具推荐
+- 访客统计和访问记录
+- 智能限流和防护
+- SEO 优化和结构化数据
+- 响应式设计和移动端适配
+
+### 中间件
+- 自定义恢复中间件 (panic 处理)
+- 智能限流中间件
+- 访问统计中间件
+- 工具访问记录中间件
+
+### 工具分类
+- 格式化工具 (JSON, XML, SQL)
+- 编码转换 (Base64, URL, 二维码)
+- 开发工具 (正则测试, Cron 解析, JWT)
+- 文本工具 (文本比较, Markdown)
+- 格式转换 (JSON/YAML)
+
+## 性能优化
+1. **静态资源**: 使用 CDN 或本地缓存
+2. **模板缓存**: Gin 自动缓存编译后的模板
+3. **数据库**: 使用内存存储统计数据
+4. **限流**: 智能限流保护服务器资源
+
+## 安全考虑
+1. **输入验证**: 所有用户输入都要验证
+2. **XSS 防护**: 使用 HTML 模板自动转义
+3. **CSRF 防护**: 在需要时添加 CSRF 令牌
+4. **限流**: 防止恶意请求和 DDoS 攻击
+
+## 部署和维护
+1. **日志**: 分离访问日志和错误日志
+2. **监控**: 使用 `monitor_toolweb.sh` 脚本
+3. **重启**: 使用 `restart.sh` 脚本
+4. **备份**: 定期备份配置和数据文件
+
+## 代码质量
+1. **错误处理**: 完善的错误处理和日志记录
+2. **代码注释**: 关键逻辑添加注释
+3. **测试**: 为关键功能编写测试
+4. **文档**: 保持 README 和文档更新
+
+## 响应式设计原则
+1. **移动优先**: 优先考虑移动端体验
+2. **断点设计**: 768px 为主要断点
+3. **弹性布局**: 使用 CSS Grid 和 Flexbox
+4. **触摸友好**: 按钮和交互元素适合触摸操作
+
+## SEO 优化
+1. **Meta 标签**: 完整的 title, description, keywords
+2. **结构化数据**: 使用 JSON-LD 格式
+3. **语义化 HTML**: 使用合适的 HTML 标签
+4. **内部链接**: 合理的内部链接结构
+5. **Sitemap**: 自动生成网站地图
+
+## 开发工作流
+1. **功能开发**: 在 `tools/` 目录下添加新工具
+2. **模板开发**: 在 `templates/` 目录下创建页面
+3. **样式调整**: 在 `static/css/style.css` 中添加样式
+4. **路由配置**: 在 `main.go` 中添加路由
+5. **测试验证**: 本地测试功能完整性
+6. **部署上线**: 使用部署脚本更新服务
+
+## 注意事项
+1. 保持代码风格一致性
+2. 遵循 Go 语言最佳实践
+3. 确保所有工具都有适当的错误处理
+4. 维护良好的用户体验和界面设计
+5. 定期更新依赖和修复安全漏洞
+6. 监控网站性能和用户反馈 

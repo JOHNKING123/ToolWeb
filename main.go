@@ -1019,6 +1019,31 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"success": true, "content": content})
 		})
 
+		// 条形码生成器API
+		api.POST("/barcode", func(c *gin.Context) {
+			var req tools.BarcodeRequest
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据",
+				})
+				return
+			}
+
+			result := tools.GenerateBarcode(&req)
+			if result.Success {
+				c.JSON(http.StatusOK, gin.H{
+					"success": true,
+					"image":   result.Image,
+				})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   result.Error,
+				})
+			}
+		})
+
 		// 注册图片打水印 API
 		api.POST("/watermark", func(c *gin.Context) {
 			file, err := c.FormFile("file")
