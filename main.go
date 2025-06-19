@@ -192,7 +192,6 @@ func main() {
 			"TodayVisitors": stats["today_visitors"],
 		})
 	})
-
 	// 电子书路由组
 	ebookGroup := router.Group("/ebook")
 	{
@@ -442,8 +441,11 @@ func main() {
 			return
 		}
 
+		cats := tools.GetCategories()
+		// fmt.Printf("[debug] tools.GetCategories() 返回 %d 个分类，内容示例: %+v\n", len(cats), cats)
+
 		c.HTML(http.StatusOK, templateName, gin.H{
-			"Categories": tools.GetCategories(),
+			"Categories": cats,
 		})
 	})
 

@@ -54,6 +54,33 @@ body {
     text-decoration: none;
 }
 
+/* 返回按钮样式 */
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    border-radius: 0.5rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    height: 40px;
+    line-height: 1;
+}
+
+.back-btn:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+.back-btn i {
+    font-size: 1.25rem;
+    color: inherit;
+}
+
 .navbar-menu {
     display: flex;
     gap: 1rem;
@@ -336,6 +363,17 @@ body {
         flex-wrap: wrap;
         height: auto;
         padding: 1rem;
+    }
+
+    .back-btn {
+        order: 1;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .navbar-brand {
+        order: 2;
+        font-size: 1.1rem;
     }
 
     .search-box {

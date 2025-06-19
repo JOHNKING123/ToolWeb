@@ -1,6 +1,13 @@
 {{define "nav"}}
+<script src="/tools/static/js/tools-dropdown.js"></script>
 <nav class="navbar">
     <div class="container navbar-container">
+        <!-- 返回按钮 -->
+        <button class="back-btn" onclick="history.back()">
+            <i class="material-icons">arrow_back</i>
+            返回
+        </button>
+        
         <a href="/tools/index" class="navbar-brand">程序员工具箱</a>
         
         <!-- 工具分类下拉菜单 -->
@@ -36,16 +43,10 @@
             </div>
         </div>
 
-        <div class="search-box">
-            <i class="material-icons">search</i>
-            <input type="text" id="toolSearch" placeholder="搜索工具...">
-        </div>
-        
         <div class="navbar-menu">
             <a href="/">博客首页</a>
             <a href="/tools/index">工具首页</a>
-            <a href="#popular">热门工具</a>
-            <a href="#all">所有工具</a>
+           
         </div>
     </div>
 </nav>

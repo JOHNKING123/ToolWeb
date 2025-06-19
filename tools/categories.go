@@ -136,6 +136,15 @@ func GetCategories() []Category {
 					New:         false,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "calendar",
+					Name:        "在线日历",
+					Description: "查看日历、农历和节假日信息",
+					Path:        "/tools/calendar",
+					Icon:        "calendar_today",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
