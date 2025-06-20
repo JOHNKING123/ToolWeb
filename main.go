@@ -1127,6 +1127,203 @@ func main() {
 			}
 			c.JSON(200, fonts)
 		})
+
+		// Postman 相关 API
+		// 保存请求历史
+		api.POST("/postman/history", func(c *gin.Context) {
+			var historyItem tools.RequestHistory
+			if err := c.BindJSON(&historyItem); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			// 使用 IP 地址作为用户ID（简单方案）
+			userID := c.ClientIP()
+
+			pm := tools.GetPostmanManager()
+			pm.AddHistoryItem(userID, historyItem)
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "历史记录保存成功",
+			})
+		})
+
+		// 获取环境列表
+		api.GET("/postman/environments", func(c *gin.Context) {
+			pm := tools.GetPostmanManager()
+			environments := pm.GetEnvironments()
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    environments,
+			})
+		})
+
+		// 创建环境
+		api.POST("/postman/environments", func(c *gin.Context) {
+			var req struct {
+				Name string `json:"name"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			pm := tools.GetPostmanManager()
+			env := pm.CreateEnvironment(req.Name)
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    env,
+			})
+		})
+
+		// 更新环境
+		api.PUT("/postman/environments/:id", func(c *gin.Context) {
+			envID := c.Param("id")
+			var req struct {
+				Name      string                      `json:"name"`
+				Variables []tools.EnvironmentVariable `json:"variables"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			pm := tools.GetPostmanManager()
+			err := pm.UpdateEnvironment(envID, req.Name, req.Variables)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "环境更新成功",
+			})
+		})
+
+		// 删除环境
+		api.DELETE("/postman/environments/:id", func(c *gin.Context) {
+			envID := c.Param("id")
+
+			pm := tools.GetPostmanManager()
+			err := pm.DeleteEnvironment(envID)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "环境删除成功",
+			})
+		})
+
+		// 获取请求历史
+		api.GET("/postman/history", func(c *gin.Context) {
+			// 使用 IP 地址作为用户ID
+			userID := c.ClientIP()
+
+			pm := tools.GetPostmanManager()
+			history := pm.GetHistory(userID)
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    history,
+			})
+		})
+
+		// 清空请求历史
+		api.DELETE("/postman/history", func(c *gin.Context) {
+			// 使用 IP 地址作为用户ID
+			userID := c.ClientIP()
+
+			pm := tools.GetPostmanManager()
+			pm.ClearHistory(userID)
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "历史记录已清空",
+			})
+		})
+
+		// 导入 curl 命令
+		api.POST("/postman/import-curl", func(c *gin.Context) {
+			var req struct {
+				CurlCommand string `json:"curlCommand"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			// 解析 curl 命令
+			parser := &tools.CurlParser{}
+			httpRequest, err := parser.ParseCurl(req.CurlCommand)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "解析 curl 命令失败: " + err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    httpRequest,
+				"message": "curl 命令解析成功",
+			})
+		})
+
+		// 验证 curl 命令
+		api.POST("/postman/validate-curl", func(c *gin.Context) {
+			var req struct {
+				CurlCommand string `json:"curlCommand"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+
+			// 验证 curl 命令
+			parser := &tools.CurlParser{}
+			err := parser.ValidateCurl(req.CurlCommand)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的 curl 命令: " + err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "curl 命令格式正确",
+			})
+		})
 	}
 
 	// 工具路由

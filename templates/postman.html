@@ -1,0 +1,2150 @@
+{{define "postman"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线 Postman - 在线工具集</title>
+    <meta name="description" content="功能完整的在线 Postman 工具，支持 HTTP 请求发送、环境变量管理、请求历史等功能">
+    <meta name="keywords" content="postman, http, api, 测试, 在线工具">
+    
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .postman-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            grid-template-rows: 60px 1fr;
+            height: calc(100vh - 120px);
+            gap: 1px;
+            background: var(--border-color);
+        }
+
+        .postman-header {
+            grid-column: 1 / -1;
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            gap: 1rem;
+        }
+
+        .postman-sidebar {
+            background: var(--bg-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .postman-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .request-response-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .request-section {
+            flex: 1;
+            min-height: 200px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            resize: vertical;
+            position: relative;
+        }
+
+        .response-section {
+            flex: 1;
+            min-height: 200px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            resize: vertical;
+            position: relative;
+        }
+
+        .resize-handle {
+            height: 6px;
+            background: var(--bg-secondary);
+            cursor: row-resize;
+            position: relative;
+            user-select: none;
+        }
+
+        .resize-handle::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 2px;
+            background: var(--border-color);
+            border-radius: 1px;
+        }
+
+        .resize-handle:hover::after {
+            background: var(--primary-color);
+        }
+
+        .resize-handle.dragging::after {
+            background: var(--primary-color);
+        }
+
+        .request-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .request-tab {
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .request-tab.active {
+            background: var(--bg-color);
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .request-tab:hover {
+            background: var(--bg-hover);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .method-select {
+            width: 120px;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .url-input {
+            flex: 1;
+            margin-left: 0.5rem;
+        }
+
+        .send-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .send-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .headers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        .headers-table th,
+        .headers-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .headers-table th {
+            background: var(--bg-secondary);
+            font-weight: 500;
+        }
+
+        .add-header-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .remove-header-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .response-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .response-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .response-tab {
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .response-tab.active {
+            background: var(--bg-color);
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .response-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .response-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .status-success {
+            color: var(--success-color);
+        }
+
+        .status-error {
+            color: var(--danger-color);
+        }
+
+        .history-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: move;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .history-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .history-item.selected {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .history-item.dragging {
+            opacity: 0.5;
+            background: var(--bg-secondary);
+        }
+
+        .history-item.drag-over {
+            border-top: 2px solid var(--primary-color);
+        }
+
+        .history-method {
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .history-url {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .environment-panel {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .environment-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .variables-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .variables-table th,
+        .variables-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .variables-table th {
+            background: var(--bg-secondary);
+            font-weight: 500;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .sidebar-tab.active {
+            background: var(--bg-color);
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            color: var(--success-color);
+            background: rgba(34, 197, 94, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .code-editor {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .preview-html {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            background: white;
+            min-height: 200px;
+        }
+
+        .preview-html iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text-color);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        /* 模态框样式 */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .close {
+            color: var(--text-secondary);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: var(--text-color);
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        @media (max-width: 768px) {
+            .postman-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr;
+            }
+
+            .postman-sidebar {
+                display: none;
+            }
+
+            .request-tabs {
+                flex-wrap: wrap;
+            }
+
+            .request-tab {
+                flex: 1;
+                min-width: 80px;
+            }
+        }
+
+        /* 可拖拽分隔线样式 */
+        .resizable-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .resizing {
+            cursor: row-resize !important;
+        }
+
+        .resizing * {
+            cursor: row-resize !important;
+            user-select: none;
+        }
+
+        /* 确保内容区域可以滚动 */
+        .request-section .tab-content,
+        .response-section .tab-content {
+            height: calc(100% - 50px); /* 减去标签页高度 */
+            overflow-y: auto;
+        }
+
+        /* 响应内容区域样式 */
+        .response-content {
+            height: calc(100% - 50px); /* 减去标签页高度 */
+            overflow: hidden;
+        }
+
+        .response-content .tab-content {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* 确保文本区域可以正确调整大小 */
+        .code-editor {
+            height: calc(100% - 60px); /* 减去工具栏高度 */
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    
+    <main class="container">
+      
+        <!-- 使用说明 -->
+        <div class="alert alert-info" style="margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 4px;">
+            <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">💡 使用说明</h4>
+            <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-color);">
+                <li><strong>本地测试</strong>: 可以直接测试 localhost 服务，如 <code>http://localhost:3000/api/users</code></li>
+                <li><strong>环境变量</strong>: 使用 <code>&#123;&#123;变量名&#125;&#125;</code> 格式，如 <code>&#123;&#123;baseUrl&#125;&#125;/posts</code></li>
+                <li><strong>请求历史</strong>: 所有请求都会自动保存到历史记录中</li>
+                <li><strong>响应预览</strong>: 支持 JSON、HTML 等格式的响应预览</li>
+            </ul>
+        </div>
+
+        <div class="postman-container">
+            <!-- 头部 -->
+            <div class="postman-header">
+                <select id="methodSelect" class="method-select">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="HEAD">HEAD</option>
+                    <option value="OPTIONS">OPTIONS</option>
+                </select>
+                <input type="text" id="urlInput" class="form-control url-input" placeholder="输入请求 URL...">
+                <button id="sendBtn" class="send-btn">
+                    <span id="sendText">发送</span>
+                    <span id="sendLoading" class="loading" style="display: none;"></span>
+                </button>
+                <button id="importCurlBtn" class="toolbar-btn" style="margin-left: 0.5rem;" onclick="showImportCurlModal()">
+                    <span class="material-icons" style="font-size: 16px; margin-right: 4px;">file_upload</span>
+                    导入 curl
+                </button>
+            </div>
+
+            <!-- curl 导入模态框 -->
+            <div id="importCurlModal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3>导入 curl 命令</h3>
+                        <span class="close" onclick="hideImportCurlModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="curlCommandTextarea">粘贴 curl 命令:</label>
+                            <textarea id="curlCommandTextarea" class="form-control code-editor" rows="8" 
+                                placeholder="例如: curl -X POST https://api.example.com/users -H 'Content-Type: application/json' -d '{&quot;name&quot;:&quot;John&quot;}'"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>支持的 curl 选项:</label>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                <code>-X, --request</code> (HTTP 方法) | 
+                                <code>-H, --header</code> (请求头) | 
+                                <code>-d, --data</code> (请求体) | 
+                                <code>-u, --user</code> (基本认证) | 
+                                <code>--connect-timeout</code> (超时时间)
+                            </div>
+                        </div>
+                        <div id="curlError" class="error-message" style="display: none;"></div>
+                        <div id="curlSuccess" class="success-message" style="display: none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="hideImportCurlModal()">取消</button>
+                        <button class="btn btn-primary" onclick="importCurl()">导入</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="postman-sidebar">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="history">历史</button>
+                    <button class="sidebar-tab" data-tab="environment">环境</button>
+                </div>
+                
+                <div class="sidebar-content">
+                    <!-- 历史记录 -->
+                    <div id="historyTab" class="tab-content active">
+                        <div class="toolbar">
+                            <button class="toolbar-btn" onclick="clearHistory()">清空历史</button>
+                        </div>
+                        <div id="historyList"></div>
+                    </div>
+
+                    <!-- 环境变量 -->
+                    <div id="environmentTab" class="tab-content">
+                        <div class="environment-panel">
+                            <select id="environmentSelect" class="environment-select">
+                                <option value="default">默认环境</option>
+                            </select>
+                            <button class="toolbar-btn" onclick="createEnvironment()">新建环境</button>
+                            <button class="toolbar-btn" onclick="editEnvironment()">编辑环境</button>
+                            <button class="toolbar-btn" onclick="addVariable()">添加变量</button>
+                        </div>
+                        <div id="variablesList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="postman-main">
+                <!-- 可拖拽容器 -->
+                <div class="resizable-container">
+                    <!-- 请求区域 -->
+                    <div class="request-section">
+                        <!-- 请求标签页 -->
+                        <div class="request-tabs">
+                            <button class="request-tab active" data-tab="headers">请求头</button>
+                            <button class="request-tab" data-tab="body">请求体</button>
+                            <button class="request-tab" data-tab="params">参数</button>
+                        </div>
+
+                        <!-- 请求内容 -->
+                        <div class="tab-content active" id="headersTab">
+                            <table class="headers-table">
+                                <thead>
+                                    <tr>
+                                        <th>键</th>
+                                        <th>值</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="headersTableBody">
+                                    <tr>
+                                        <td><input type="text" class="form-control" placeholder="键名"></td>
+                                        <td><input type="text" class="form-control" placeholder="值"></td>
+                                        <td><button class="remove-header-btn" onclick="removeHeader(this)">删除</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="add-header-btn" onclick="addHeader()">添加请求头</button>
+                        </div>
+
+                        <div class="tab-content" id="bodyTab">
+                            <div class="form-group">
+                                <label>Content-Type:</label>
+                                <select id="contentTypeSelect" class="form-control">
+                                    <option value="application/json">application/json</option>
+                                    <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                                    <option value="text/plain">text/plain</option>
+                                    <option value="text/xml">text/xml</option>
+                                    <option value="multipart/form-data">multipart/form-data</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>请求体:</label>
+                                <textarea id="bodyTextarea" class="form-control code-editor" placeholder="输入请求体内容..."></textarea>
+                            </div>
+                            <div class="toolbar">
+                                <button class="toolbar-btn" onclick="formatBody()">格式化</button>
+                                <button class="toolbar-btn" onclick="clearBody()">清空</button>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="paramsTab">
+                            <table class="headers-table">
+                                <thead>
+                                    <tr>
+                                        <th>参数名</th>
+                                        <th>值</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paramsTableBody">
+                                    <tr>
+                                        <td><input type="text" class="form-control" placeholder="参数名"></td>
+                                        <td><input type="text" class="form-control" placeholder="值"></td>
+                                        <td><button class="remove-header-btn" onclick="removeParam(this)">删除</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="add-header-btn" onclick="addParam()">添加参数</button>
+                        </div>
+                    </div>
+
+                    <!-- 可拖拽分隔线 -->
+                    <div class="resize-handle" id="resizeHandle"></div>
+
+                    <!-- 响应区域 -->
+                    <div class="response-section">
+                        <div class="response-container">
+                            <div class="response-tabs">
+                                <button class="response-tab active" data-tab="response">响应</button>
+                                <button class="response-tab" data-tab="responseHeaders">响应头</button>
+                                <button class="response-tab" data-tab="preview">预览</button>
+                            </div>
+
+                            <div class="response-content">
+                              
+                                
+                                <div id="responseTab" class="tab-content active">
+                                    <div id="responseInfo" class="response-info" style="display: none;"></div>
+                                    <textarea id="responseTextarea" class="form-control code-editor" readonly></textarea>
+                                </div>
+
+                                <div id="responseHeadersTab" class="tab-content">
+                                    <div id="responseHeaders"></div>
+                                </div>
+
+                                <div id="previewTab" class="tab-content">
+                                    <div id="previewContent" class="preview-html"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+   
+    <script>
+        let currentEnvironment = 'default';
+        let environments = {};
+        let history = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEnvironments();
+            loadHistory();
+            setupEventListeners();
+            
+            // 添加一些测试用的环境变量
+            addTestVariables();
+        });
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 请求标签页切换
+            document.querySelectorAll('.request-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchRequestTab(tabName);
+                });
+            });
+
+            // 响应标签页切换
+            document.querySelectorAll('.response-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchResponseTab(tabName);
+                });
+            });
+
+            // 侧边栏标签页切换
+            document.querySelectorAll('.sidebar-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    switchSidebarTab(tabName);
+                });
+            });
+
+            // 发送按钮
+            document.getElementById('sendBtn').addEventListener('click', sendRequest);
+
+            // URL 输入框回车
+            document.getElementById('urlInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendRequest();
+                }
+            });
+
+            // 环境选择
+            document.getElementById('environmentSelect').addEventListener('change', function() {
+                currentEnvironment = this.value;
+                loadVariables();
+            });
+
+            // 拖拽分隔线
+            setupResizeHandle();
+        }
+
+        // 切换请求标签页
+        function switchRequestTab(tabName) {
+            document.querySelectorAll('.request-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+        }
+
+        // 切换响应标签页
+        function switchResponseTab(tabName) {
+            document.querySelectorAll('.response-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.response-content .tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.response-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+        }
+
+        // 切换侧边栏标签页
+        function switchSidebarTab(tabName) {
+            document.querySelectorAll('.sidebar-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.sidebar-content .tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.sidebar-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+        }
+
+        // 发送请求
+        async function sendRequest() {
+            const method = document.getElementById('methodSelect').value;
+            const url = document.getElementById('urlInput').value.trim();
+            
+            if (!url) {
+                showError('请输入请求 URL');
+                return;
+            }
+
+            // 显示加载状态
+            const sendBtn = document.getElementById('sendBtn');
+            const sendText = document.getElementById('sendText');
+            const sendLoading = document.getElementById('sendLoading');
+            
+            sendBtn.disabled = true;
+            sendText.style.display = 'none';
+            sendLoading.style.display = 'inline-block';
+
+            try {
+                // 收集请求头
+                const headers = {};
+                document.querySelectorAll('#headersTableBody tr').forEach(row => {
+                    const key = row.querySelector('td:first-child input').value.trim();
+                    const value = row.querySelector('td:nth-child(2) input').value.trim();
+                    if (key && value) {
+                        headers[key] = value;
+                    }
+                });
+
+                // 收集请求体
+                const body = document.getElementById('bodyTextarea').value;
+                const contentType = document.getElementById('contentTypeSelect').value;
+
+                // 处理环境变量
+                const processedUrl = processEnvironmentVariables(url);
+                const processedHeaders = {};
+                for (const [key, value] of Object.entries(headers)) {
+                    processedHeaders[key] = processEnvironmentVariables(value);
+                }
+                const processedBody = processEnvironmentVariables(body);
+
+                // 构建请求数据
+                const requestData = {
+                    method: method,
+                    url: processedUrl,
+                    headers: processedHeaders,
+                    body: processedBody,
+                    contentType: contentType,
+                    timeout: 30
+                };
+
+                // 在浏览器端直接发送请求
+                const startTime = Date.now();
+                const response = await sendHttpRequest(requestData);
+                const responseTime = Date.now() - startTime;
+
+                // 构建响应数据
+                const responseData = {
+                    request: requestData,
+                    response: {
+                        statusCode: response.status,
+                        statusText: response.statusText,
+                        headers: response.headers,
+                        body: response.body,
+                        contentType: response.contentType,
+                        contentLength: response.body.length,
+                        time: responseTime,
+                        size: response.body.length
+                    }
+                };
+
+                displayResponse(responseData);
+                showSuccess('请求发送成功');
+
+                // 保存到历史记录
+                saveToHistory(responseData);
+
+            } catch (error) {
+                showError('请求发送失败: ' + error.message);
+                
+                // 保存错误到历史记录
+                const requestData = {
+                    method: method,
+                    url: url,
+                    headers: headers,
+                    body: body,
+                    contentType: contentType,
+                    timeout: 30
+                };
+                saveToHistory({
+                    request: requestData,
+                    error: error.message
+                });
+            } finally {
+                // 恢复按钮状态
+                sendBtn.disabled = false;
+                sendText.style.display = 'inline';
+                sendLoading.style.display = 'none';
+            }
+        }
+
+        // 在浏览器端发送 HTTP 请求
+        async function sendHttpRequest(requestData) {
+            const { method, url, headers, body, timeout } = requestData;
+            
+            // 创建 AbortController 用于超时控制
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
+
+            try {
+                // 准备请求选项
+                const options = {
+                    method: method,
+                    headers: headers,
+                    signal: controller.signal
+                };
+
+                // 添加请求体（如果有）
+                if (body && method !== 'GET' && method !== 'HEAD') {
+                    options.body = body;
+                }
+
+                // 发送请求
+                const response = await fetch(url, options);
+                clearTimeout(timeoutId);
+
+                // 读取响应体
+                let responseBody = '';
+                let contentType = '';
+                
+                try {
+                    responseBody = await response.text();
+                    contentType = response.headers.get('content-type') || 'text/plain';
+                } catch (e) {
+                    responseBody = '无法读取响应体: ' + e.message;
+                    contentType = 'text/plain';
+                }
+
+                // 构建响应头对象
+                const responseHeaders = {};
+                response.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+
+                return {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: responseHeaders,
+                    body: responseBody,
+                    contentType: contentType
+                };
+
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('请求超时');
+                }
+                throw error;
+            }
+        }
+
+        // 处理环境变量
+        function processEnvironmentVariables(input) {
+            if (!input) return input;
+            
+            const env = environments[currentEnvironment];
+            if (!env) return input;
+
+            let result = input;
+            for (const variable of env.variables) {
+                // 避免 Go 模板解析，使用字符串拼接
+                const placeholder = '{' + '{' + variable.key + '}' + '}';
+                result = result.replace(new RegExp(placeholder, 'g'), variable.value);
+            }
+            return result;
+        }
+
+        // 保存到历史记录
+        async function saveToHistory(data) {
+            try {
+                const historyItem = {
+                    id: Date.now().toString(),
+                    name: `${data.request.method} ${new URL(data.request.url).hostname}`,
+                    request: data.request,
+                    response: data.response,
+                    timestamp: new Date().toISOString(),
+                    status: data.error ? 'error' : 'success',
+                    error: data.error
+                };
+
+                // 发送到后端保存
+                await fetch('/tools/api/postman/history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(historyItem)
+                });
+
+                // 更新本地历史记录
+                history.unshift(historyItem);
+                if (history.length > 100) {
+                    history = history.slice(0, 100);
+                }
+                displayHistory();
+
+            } catch (error) {
+                console.error('保存历史记录失败:', error);
+            }
+        }
+
+        // 显示响应
+        function displayResponse(data) {
+            const response = data.response;
+            
+            // 显示响应信息
+            const responseInfo = document.getElementById('responseInfo');
+            responseInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">状态码</div>
+                    <div class="info-value status-${response.statusCode >= 200 && response.statusCode < 300 ? 'success' : 'error'}">${response.statusCode} ${response.statusText}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">响应时间</div>
+                    <div class="info-value">${response.time}ms</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">响应大小</div>
+                    <div class="info-value">${formatBytes(response.size)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Content-Type</div>
+                    <div class="info-value">${response.contentType || 'text/plain'}</div>
+                </div>
+            `;
+            responseInfo.style.display = 'grid';
+
+            // 显示响应体
+            document.getElementById('responseTextarea').value = response.body;
+
+            // 显示响应头
+            const responseHeaders = document.getElementById('responseHeadersTab');
+            let headersHtml = '<table class="headers-table"><thead><tr><th>键</th><th>值</th></tr></thead><tbody>';
+            
+            // 使用 Headers.entries() 来正确遍历
+            if (response.headers && typeof response.headers.entries === 'function') {
+                 for (const [key, value] of response.headers.entries()) {
+                    headersHtml += `<tr><td>${escapeHtml(key)}</td><td>${escapeHtml(value)}</td></tr>`;
+                }
+            } else if (response.headers) { // 兼容普通对象
+                 for (const [key, value] of Object.entries(response.headers)) {
+                    headersHtml += `<tr><td>${escapeHtml(key)}</td><td>${escapeHtml(value)}</td></tr>`;
+                }
+            }
+           
+            headersHtml += '</tbody></table>';
+            responseHeaders.innerHTML = headersHtml;
+
+            // 显示预览
+            const previewContent = document.getElementById('previewContent');
+            if (response.contentType && response.contentType.includes('text/html')) {
+                previewContent.innerHTML = `<iframe srcdoc="${escapeHtml(response.body)}"></iframe>`;
+            } else if (response.contentType && response.contentType.includes('application/json')) {
+                try {
+                    const formatted = JSON.stringify(JSON.parse(response.body), null, 2);
+                    previewContent.innerHTML = `<pre>${escapeHtml(formatted)}</pre>`;
+                } catch (e) {
+                    previewContent.innerHTML = `<pre>${escapeHtml(response.body)}</pre>`;
+                }
+            } else {
+                previewContent.innerHTML = `<pre>${escapeHtml(response.body)}</pre>`;
+            }
+        }
+
+        // 加载环境
+        async function loadEnvironments() {
+            try {
+                console.log('开始加载环境...');
+                const response = await fetch('/tools/api/postman/environments');
+                const result = await response.json();
+                
+                console.log('环境加载结果:', result);
+                
+                if (result.success) {
+                    environments = {};
+                    const select = document.getElementById('environmentSelect');
+                    select.innerHTML = '';
+                    
+                    result.data.forEach(env => {
+                        environments[env.id] = env;
+                        const option = document.createElement('option');
+                        option.value = env.id;
+                        option.textContent = env.name;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log('加载的环境:', environments);
+                    loadVariables();
+                } else {
+                    console.error('环境加载失败:', result.error);
+                }
+            } catch (error) {
+                console.error('加载环境失败:', error);
+            }
+        }
+
+        // 加载变量
+        function loadVariables() {
+            const env = environments[currentEnvironment];
+            if (!env) {
+                console.warn('当前环境不存在:', currentEnvironment);
+                return;
+            }
+
+            const variablesList = document.getElementById('variablesList');
+            if (!variablesList) {
+                console.error('找不到 variablesList 元素');
+                return;
+            }
+
+            let html = '<table class="variables-table"><thead><tr><th>键</th><th>值</th><th>类型</th><th>操作</th></tr></thead><tbody>';
+            
+            if (env.variables && env.variables.length > 0) {
+                env.variables.forEach(variable => {
+                    html += `
+                        <tr>
+                            <td>${escapeHtml(variable.key)}</td>
+                            <td>${escapeHtml(variable.value)}</td>
+                            <td>${escapeHtml(variable.type || 'string')}</td>
+                            <td>
+                                <button class="toolbar-btn" onclick="editVariable('${escapeHtml(variable.key)}')" title="编辑变量">编辑</button>
+                                <button class="toolbar-btn" onclick="deleteVariable('${escapeHtml(variable.key)}')" title="删除变量">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">暂无变量</td></tr>';
+            }
+            
+            html += '</tbody></table>';
+            html += '<div style="margin-top: 1rem;"><button class="add-header-btn" onclick="addVariable()" style="width: 100%;">添加变量</button></div>';
+            variablesList.innerHTML = html;
+        }
+
+        // 加载历史
+        async function loadHistory() {
+            try {
+                const response = await fetch('/tools/api/postman/history');
+                const result = await response.json();
+                
+                if (result.success) {
+                    history = result.data;
+                    displayHistory();
+                }
+            } catch (error) {
+                console.error('加载历史失败:', error);
+            }
+        }
+
+        // 显示历史
+        function displayHistory() {
+            const historyList = document.getElementById('historyList');
+            let html = '';
+            
+            history.forEach(item => {
+                const time = new Date(item.timestamp).toLocaleString();
+                html += `
+                    <div class="history-item" onclick="loadHistoryItem('${item.id}')">
+                        <div>
+                            <span class="history-method">${item.request.method}</span>
+                            <span class="history-url">${item.request.url}</span>
+                        </div>
+                        <div class="history-time">${time}</div>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = html;
+        }
+
+        // 加载历史项
+        function loadHistoryItem(id) {
+            const item = history.find(h => h.id === id);
+            if (!item) return;
+
+            document.getElementById('methodSelect').value = item.request.method;
+            document.getElementById('urlInput').value = item.request.url;
+            document.getElementById('bodyTextarea').value = item.request.body || '';
+            document.getElementById('contentTypeSelect').value = item.request.contentType || 'application/json';
+
+            // 加载请求头
+            const headersTableBody = document.getElementById('headersTableBody');
+            headersTableBody.innerHTML = '';
+            for (const [key, value] of Object.entries(item.request.headers)) {
+                addHeaderRow(key, value);
+            }
+            addHeaderRow('', ''); // 添加空行
+        }
+
+        // 清空历史
+        async function clearHistory() {
+            if (!confirm('确定要清空所有历史记录吗？')) return;
+
+            try {
+                const response = await fetch('/tools/api/postman/history', {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    history = [];
+                    displayHistory();
+                    showSuccess('历史记录已清空');
+                }
+            } catch (error) {
+                showError('清空历史失败: ' + error.message);
+            }
+        }
+
+        // 添加请求头
+        function addHeader() {
+            addHeaderRow('', '');
+        }
+
+        // 添加请求头行
+        function addHeaderRow(key = '', value = '') {
+            const tbody = document.getElementById('headersTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" class="form-control" value="${key}" placeholder="键名"></td>
+                <td><input type="text" class="form-control" value="${value}" placeholder="值"></td>
+                <td><button class="remove-header-btn" onclick="removeHeader(this)">删除</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // 删除请求头
+        function removeHeader(btn) {
+            const row = btn.closest('tr');
+            const tbody = row.parentNode;
+            if (tbody.children.length > 1) {
+                row.remove();
+            }
+        }
+
+        // 添加参数
+        function addParam() {
+            addParamRow('', '');
+        }
+
+        // 添加参数行
+        function addParamRow(key = '', value = '') {
+            const tbody = document.getElementById('paramsTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" class="form-control" value="${key}" placeholder="参数名"></td>
+                <td><input type="text" class="form-control" value="${value}" placeholder="值"></td>
+                <td><button class="remove-header-btn" onclick="removeParam(this)">删除</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // 删除参数
+        function removeParam(btn) {
+            const row = btn.closest('tr');
+            const tbody = row.parentNode;
+            if (tbody.children.length > 1) {
+                row.remove();
+            }
+        }
+
+        // 格式化请求体
+        function formatBody() {
+            const textarea = document.getElementById('bodyTextarea');
+            const contentType = document.getElementById('contentTypeSelect').value;
+            
+            if (contentType === 'application/json') {
+                try {
+                    const formatted = JSON.stringify(JSON.parse(textarea.value), null, 2);
+                    textarea.value = formatted;
+                } catch (e) {
+                    showError('JSON 格式错误');
+                }
+            }
+        }
+
+        // 清空请求体
+        function clearBody() {
+            document.getElementById('bodyTextarea').value = '';
+        }
+
+        // 格式化响应
+        function formatResponse() {
+            const textarea = document.getElementById('responseTextarea');
+            const contentType = document.querySelector('.response-info .info-value:last-child').textContent;
+            
+            if (contentType.includes('application/json')) {
+                try {
+                    const formatted = JSON.stringify(JSON.parse(textarea.value), null, 2);
+                    textarea.value = formatted;
+                } catch (e) {
+                    showError('JSON 格式错误');
+                }
+            }
+        }
+
+        // 复制响应
+        function copyResponse() {
+            const textarea = document.getElementById('responseTextarea');
+            textarea.select();
+            document.execCommand('copy');
+            showSuccess('响应内容已复制到剪贴板');
+        }
+
+        // 创建环境
+        async function createEnvironment() {
+            const name = prompt('请输入环境名称:');
+            if (!name) return;
+
+            try {
+                const response = await fetch('/tools/api/postman/environments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: name })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadEnvironments();
+                    showSuccess('环境创建成功');
+                } else {
+                    showError(result.error || '环境创建失败');
+                }
+            } catch (error) {
+                showError('环境创建失败: ' + error.message);
+            }
+        }
+
+        // 编辑环境
+        async function editEnvironment() {
+            const env = environments[currentEnvironment];
+            if (!env) return;
+
+            const name = prompt('请输入环境名称:', env.name);
+            if (name === null) return;
+
+            try {
+                const response = await fetch(`/tools/api/postman/environments/${env.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        variables: env.variables
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadEnvironments();
+                    showSuccess('环境更新成功');
+                } else {
+                    showError(result.error || '环境更新失败');
+                }
+            } catch (error) {
+                showError('环境更新失败: ' + error.message);
+            }
+        }
+
+        // 添加变量
+        async function addVariable() {
+            const key = prompt('请输入变量名:');
+            if (!key || key.trim() === '') {
+                showError('变量名不能为空');
+                return;
+            }
+            
+            const value = prompt('请输入变量值:');
+            if (value === null) return; // 用户取消
+
+            const env = environments[currentEnvironment];
+            if (!env) {
+                showError('当前环境不存在');
+                return;
+            }
+
+            // 检查变量名是否已存在
+            if (env.variables && env.variables.find(v => v.key === key.trim())) {
+                showError('变量名已存在');
+                return;
+            }
+
+            const newVariable = {
+                key: key.trim(),
+                value: value,
+                type: 'string'
+            };
+
+            // 确保 variables 数组存在
+            if (!env.variables) {
+                env.variables = [];
+            }
+
+            env.variables.push(newVariable);
+
+            try {
+                const response = await fetch(`/tools/api/postman/environments/${env.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: env.name,
+                        variables: env.variables
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadVariables();
+                    showSuccess('变量添加成功');
+                } else {
+                    showError(result.error || '变量添加失败');
+                    // 回滚本地更改
+                    env.variables.pop();
+                }
+            } catch (error) {
+                showError('变量添加失败: ' + error.message);
+                // 回滚本地更改
+                env.variables.pop();
+            }
+        }
+
+        // 编辑变量
+        async function editVariable(key) {
+            const env = environments[currentEnvironment];
+            if (!env) {
+                showError('当前环境不存在');
+                return;
+            }
+
+            const variable = env.variables.find(v => v.key === key);
+            if (!variable) {
+                showError('变量不存在');
+                return;
+            }
+
+            const value = prompt(`编辑变量 ${key}:`, variable.value);
+            if (value === null) return; // 用户取消
+
+            // 保存原始值用于回滚
+            const originalValue = variable.value;
+            variable.value = value;
+
+            try {
+                const response = await fetch(`/tools/api/postman/environments/${env.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: env.name,
+                        variables: env.variables
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadVariables();
+                    showSuccess('变量更新成功');
+                } else {
+                    showError(result.error || '变量更新失败');
+                    // 回滚本地更改
+                    variable.value = originalValue;
+                }
+            } catch (error) {
+                showError('变量更新失败: ' + error.message);
+                // 回滚本地更改
+                variable.value = originalValue;
+            }
+        }
+
+        // 删除变量
+        async function deleteVariable(key) {
+            if (!confirm(`确定要删除变量 ${key} 吗？`)) return;
+
+            const env = environments[currentEnvironment];
+            if (!env) {
+                showError('当前环境不存在');
+                return;
+            }
+
+            const variable = env.variables.find(v => v.key === key);
+            if (!variable) {
+                showError('变量不存在');
+                return;
+            }
+
+            // 保存原始变量数组用于回滚
+            const originalVariables = [...env.variables];
+            env.variables = env.variables.filter(v => v.key !== key);
+
+            try {
+                const response = await fetch(`/tools/api/postman/environments/${env.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: env.name,
+                        variables: env.variables
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadVariables();
+                    showSuccess('变量删除成功');
+                } else {
+                    showError(result.error || '变量删除失败');
+                    // 回滚本地更改
+                    env.variables = originalVariables;
+                }
+            } catch (error) {
+                showError('变量删除失败: ' + error.message);
+                // 回滚本地更改
+                env.variables = originalVariables;
+            }
+        }
+
+        // 添加测试用的环境变量
+        async function addTestVariables() {
+            const env = environments['default'];
+            if (!env || env.variables.length > 0) return;
+
+            const testVariables = [
+                { key: 'baseUrl', value: 'https://jsonplaceholder.typicode.com', type: 'string' },
+                { key: 'apiKey', value: 'your-api-key-here', type: 'string' },
+                { key: 'userId', value: '1', type: 'number' }
+            ];
+
+            env.variables = testVariables;
+
+            try {
+                const response = await fetch(`/tools/api/postman/environments/${env.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: env.name,
+                        variables: env.variables
+                    })
+                });
+
+                if (response.ok) {
+                    loadVariables();
+                }
+            } catch (error) {
+                console.error('添加测试变量失败:', error);
+            }
+        }
+
+        // 工具函数
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            successDiv.style.position = 'fixed';
+            successDiv.style.top = '20px';
+            successDiv.style.right = '20px';
+            successDiv.style.zIndex = '1001';
+            successDiv.style.minWidth = '300px';
+            
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.right = '20px';
+            errorDiv.style.zIndex = '1001';
+            errorDiv.style.minWidth = '300px';
+            
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // curl 导入相关函数
+        function showImportCurlModal() {
+            document.getElementById('importCurlModal').style.display = 'flex';
+            document.getElementById('curlCommandTextarea').focus();
+        }
+
+        function hideImportCurlModal() {
+            document.getElementById('importCurlModal').style.display = 'none';
+            document.getElementById('curlCommandTextarea').value = '';
+            document.getElementById('curlError').style.display = 'none';
+            document.getElementById('curlSuccess').style.display = 'none';
+        }
+
+        async function importCurl() {
+            const curlCommand = document.getElementById('curlCommandTextarea').value.trim();
+            if (!curlCommand) {
+                showCurlError('请输入 curl 命令');
+                return;
+            }
+
+            // 处理 curl 命令格式
+            const processedCommand = curlCommand
+                .replace(/\\\n/g, ' ')  // 替换续行符为空格
+                .replace(/\s+/g, ' ')   // 多个空格替换为单个空格
+                .trim();                // 去除首尾空格
+
+            try {
+                const response = await fetch('/tools/api/postman/import-curl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        curlCommand: processedCommand
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 填充表单
+                    fillRequestFromCurl(result.data);
+                    showCurlSuccess('curl 命令导入成功');
+                    hideImportCurlModal();
+                } else {
+                    showCurlError(result.error || '导入失败');
+                }
+            } catch (error) {
+                showCurlError('导入失败: ' + error.message);
+            }
+        }
+
+        function fillRequestFromCurl(httpRequest) {
+            console.log('填充请求表单:', httpRequest);
+            
+            // 设置 HTTP 方法
+            document.getElementById('methodSelect').value = httpRequest.method;
+            console.log('设置方法:', httpRequest.method);
+            
+            // 设置 URL
+            document.getElementById('urlInput').value = httpRequest.url;
+            console.log('设置 URL:', httpRequest.url);
+            
+            // 设置请求头
+            const headersTableBody = document.getElementById('headersTableBody');
+            headersTableBody.innerHTML = '';
+            
+            console.log('设置请求头:', httpRequest.headers);
+            for (const [key, value] of Object.entries(httpRequest.headers)) {
+                addHeaderRow(key, value);
+            }
+            
+            // 如果没有请求头，添加一个空行
+            if (Object.keys(httpRequest.headers).length === 0) {
+                addHeaderRow();
+            }
+            
+            // 设置请求体
+            if (httpRequest.body) {
+                document.getElementById('bodyTextarea').value = httpRequest.body;
+                console.log('设置请求体:', httpRequest.body);
+                
+                // 设置 Content-Type
+                if (httpRequest.contentType) {
+                    document.getElementById('contentTypeSelect').value = httpRequest.contentType;
+                    console.log('设置 Content-Type:', httpRequest.contentType);
+                }
+                
+                // 切换到请求体标签页
+                switchRequestTab('body');
+            }
+            
+            // 设置超时
+            if (httpRequest.timeout) {
+                console.log('超时设置:', httpRequest.timeout);
+            }
+        }
+
+        function showCurlError(message) {
+            const errorDiv = document.getElementById('curlError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('curlSuccess').style.display = 'none';
+        }
+
+        function showCurlSuccess(message) {
+            const successDiv = document.getElementById('curlSuccess');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('curlError').style.display = 'none';
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('importCurlModal');
+            if (event.target === modal) {
+                hideImportCurlModal();
+            }
+        }
+
+        // 设置拖拽分隔线
+        function setupResizeHandle() {
+            console.log('开始设置拖拽分隔线...');
+            
+            const resizeHandle = document.getElementById('resizeHandle');
+            const container = document.querySelector('.resizable-container');
+            const requestSection = document.querySelector('.request-section');
+            const responseSection = document.querySelector('.response-section');
+            
+            console.log('拖拽元素检查:', {
+                resizeHandle: !!resizeHandle,
+                container: !!container,
+                requestSection: !!requestSection,
+                responseSection: !!responseSection
+            });
+            
+            if (!resizeHandle || !container || !requestSection || !responseSection) {
+                console.error('拖拽元素未找到');
+                return;
+            }
+
+            console.log('所有拖拽元素已找到，开始绑定事件...');
+
+            let isResizing = false;
+            let startY = 0;
+            let startRequestHeight = 0;
+            let startResponseHeight = 0;
+
+            // 鼠标按下事件
+            resizeHandle.addEventListener('mousedown', function(e) {
+                console.log('鼠标按下事件触发:', {
+                    clientY: e.clientY,
+                    target: e.target,
+                    isResizing: isResizing
+                });
+                
+                isResizing = true;
+                startY = e.clientY;
+                startRequestHeight = requestSection.offsetHeight;
+                startResponseHeight = responseSection.offsetHeight;
+                
+                console.log('拖拽开始，初始状态:', {
+                    startY: startY,
+                    startRequestHeight: startRequestHeight,
+                    startResponseHeight: startResponseHeight
+                });
+                
+                document.body.classList.add('resizing');
+                e.preventDefault();
+            });
+
+            // 鼠标移动事件
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+
+                const deltaY = e.clientY - startY;
+                const containerHeight = container.offsetHeight;
+                const handleHeight = resizeHandle.offsetHeight;
+                const minHeight = 150; // 最小高度
+
+                console.log('鼠标移动，计算新尺寸:', {
+                    currentY: e.clientY,
+                    deltaY: deltaY,
+                    containerHeight: containerHeight,
+                    handleHeight: handleHeight
+                });
+
+                // 计算新的高度
+                let newRequestHeight = startRequestHeight + deltaY;
+                let newResponseHeight = startResponseHeight - deltaY;
+
+                console.log('计算的高度:', {
+                    newRequestHeight: newRequestHeight,
+                    newResponseHeight: newResponseHeight
+                });
+
+                // 确保最小高度
+                if (newRequestHeight < minHeight) {
+                    newRequestHeight = minHeight;
+                    newResponseHeight = containerHeight - minHeight - handleHeight;
+                    console.log('请求区域达到最小高度，调整响应区域:', newResponseHeight);
+                }
+                if (newResponseHeight < minHeight) {
+                    newResponseHeight = minHeight;
+                    newRequestHeight = containerHeight - minHeight - handleHeight;
+                    console.log('响应区域达到最小高度，调整请求区域:', newRequestHeight);
+                }
+
+                // 应用新高度
+                requestSection.style.height = newRequestHeight + 'px';
+                responseSection.style.height = newResponseHeight + 'px';
+                
+                console.log('应用新高度:', {
+                    requestHeight: newRequestHeight + 'px',
+                    responseHeight: newResponseHeight + 'px'
+                });
+                
+                // 保存到本地存储
+                saveResizeState(newRequestHeight, newResponseHeight);
+            });
+
+            // 鼠标释放事件
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    console.log('鼠标释放，结束拖拽');
+                    isResizing = false;
+                    document.body.classList.remove('resizing');
+                }
+            });
+
+            // 加载保存的尺寸
+            loadResizeState();
+            
+            console.log('拖拽分隔线设置完成');
+        }
+
+        // 保存拖拽状态到本地存储
+        function saveResizeState(requestHeight, responseHeight) {
+            console.log('保存拖拽状态:', { requestHeight, responseHeight });
+            try {
+                const state = {
+                    requestHeight: requestHeight,
+                    responseHeight: responseHeight,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('postman-resize-state', JSON.stringify(state));
+                console.log('拖拽状态保存成功:', state);
+            } catch (error) {
+                console.warn('保存拖拽状态失败:', error);
+            }
+        }
+
+        // 从本地存储加载拖拽状态
+        function loadResizeState() {
+            console.log('开始加载拖拽状态...');
+            try {
+                const saved = localStorage.getItem('postman-resize-state');
+                console.log('从本地存储读取的数据:', saved);
+                
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    console.log('解析的状态数据:', state);
+                    
+                    const container = document.querySelector('.resizable-container');
+                    const requestSection = document.querySelector('.request-section');
+                    const responseSection = document.querySelector('.response-section');
+                    const resizeHandle = document.getElementById('resizeHandle');
+                    
+                    console.log('加载状态时的元素检查:', {
+                        container: !!container,
+                        requestSection: !!requestSection,
+                        responseSection: !!responseSection,
+                        resizeHandle: !!resizeHandle
+                    });
+                    
+                    if (container && requestSection && responseSection && resizeHandle) {
+                        const containerHeight = container.offsetHeight;
+                        const handleHeight = resizeHandle.offsetHeight;
+                        const minHeight = 150;
+                        
+                        console.log('容器尺寸:', {
+                            containerHeight: containerHeight,
+                            handleHeight: handleHeight,
+                            minHeight: minHeight
+                        });
+                        
+                        // 验证保存的高度是否合理
+                        let requestHeight = state.requestHeight || containerHeight / 2;
+                        let responseHeight = state.responseHeight || containerHeight / 2;
+                        
+                        console.log('初始计算的高度:', {
+                            requestHeight: requestHeight,
+                            responseHeight: responseHeight
+                        });
+                        
+                        // 确保最小高度
+                        if (requestHeight < minHeight) requestHeight = minHeight;
+                        if (responseHeight < minHeight) responseHeight = minHeight;
+                        
+                        // 确保总高度不超过容器
+                        const totalHeight = requestHeight + responseHeight + handleHeight;
+                        if (totalHeight > containerHeight) {
+                            const ratio = containerHeight / totalHeight;
+                            requestHeight *= ratio;
+                            responseHeight *= ratio;
+                            console.log('调整后的高度:', { requestHeight, responseHeight, ratio });
+                        }
+                        
+                        requestSection.style.height = requestHeight + 'px';
+                        responseSection.style.height = responseHeight + 'px';
+                        
+                        console.log('应用加载的高度:', {
+                            requestHeight: requestHeight + 'px',
+                            responseHeight: responseHeight + 'px'
+                        });
+                    } else {
+                        console.warn('加载状态时部分元素未找到');
+                    }
+                } else {
+                    console.log('没有找到保存的拖拽状态');
+                }
+            } catch (error) {
+                console.warn('加载拖拽状态失败:', error);
+            }
+        }
+
+        // 重置拖拽状态
+        function resetResizeState() {
+            const requestSection = document.querySelector('.request-section');
+            const responseSection = document.querySelector('.response-section');
+            
+            if (requestSection && responseSection) {
+                requestSection.style.height = '';
+                responseSection.style.height = '';
+                localStorage.removeItem('postman-resize-state');
+            }
+        }
+
+        // 测试拖拽功能
+        function testResize() {
+            console.log('=== 开始测试拖拽功能 ===');
+            
+            const resizeHandle = document.getElementById('resizeHandle');
+            const container = document.querySelector('.resizable-container');
+            const requestSection = document.querySelector('.request-section');
+            const responseSection = document.querySelector('.response-section');
+            
+            console.log('元素状态:', {
+                resizeHandle: {
+                    exists: !!resizeHandle,
+                    id: resizeHandle?.id,
+                    className: resizeHandle?.className,
+                    style: resizeHandle?.style.cssText,
+                    offsetHeight: resizeHandle?.offsetHeight
+                },
+                container: {
+                    exists: !!container,
+                    className: container?.className,
+                    offsetHeight: container?.offsetHeight
+                },
+                requestSection: {
+                    exists: !!requestSection,
+                    className: requestSection?.className,
+                    offsetHeight: requestSection?.offsetHeight,
+                    style: requestSection?.style.cssText
+                },
+                responseSection: {
+                    exists: !!responseSection,
+                    className: responseSection?.className,
+                    offsetHeight: responseSection?.offsetHeight,
+                    style: responseSection?.style.cssText
+                }
+            });
+            
+            // 检查事件监听器
+            if (resizeHandle) {
+                console.log('分隔线元素的事件监听器数量:', resizeHandle.onmousedown ? '有 mousedown 事件' : '无 mousedown 事件');
+            }
+            
+            // 测试手动设置高度
+            if (requestSection && responseSection) {
+                console.log('测试手动设置高度...');
+                requestSection.style.height = '300px';
+                responseSection.style.height = '400px';
+                console.log('手动设置完成');
+            }
+            
+            console.log('=== 拖拽功能测试完成 ===');
+        }
+    </script>
+</body>
+</html>
+{{end}} 

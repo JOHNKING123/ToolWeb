@@ -118,6 +118,17 @@ func GetCategories() []Category {
 			Description: "常用开发辅助工具",
 			Icon:        "terminal",
 			Tools: []Tool{
+				暂时屏蔽了
+				// {
+				// 	ID:          "postman",
+				// 	Name:        "在线 Postman",
+				// 	Description: "功能完整的在线 Postman 工具，支持 HTTP 请求发送、环境变量管理、请求历史等功能",
+				// 	Path:        "/tools/postman",
+				// 	Icon:        "api",
+				// 	Popular:     true,
+				// 	New:         true,
+				// 	Category:    "开发工具",
+				// },
 				{
 					ID:          "regex",
 					Name:        "正则表达式测试",
