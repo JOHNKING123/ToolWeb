@@ -1,0 +1,493 @@
+{{define "my_test_app"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <meta name="description" content="个人测试应用下载页面，提供各种自开发的应用程序下载">
+    <meta name="keywords" content="测试应用,应用下载,Android应用,iOS应用,个人开发">
+    
+    <!-- SEO 结构化数据 -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "{{ .Title }}",
+        "description": "个人测试应用下载页面，提供各种自开发的应用程序下载",
+        "url": "{{ .CurrentURL }}",
+        "mainEntity": {
+            "@type": "ItemList",
+            "numberOfItems": {{ .TotalApps }},
+            "itemListElement": [
+                {{range $index, $app := .Apps}}
+                {
+                    "@type": "SoftwareApplication",
+                    "position": {{add $index 1}},
+                    "name": "{{ $app.Name }}",
+                    "description": "{{ $app.Description }}",
+                    "version": "{{ $app.Version }}",
+                    "applicationCategory": "{{ $app.Category }}",
+                    "operatingSystem": "{{ $app.Platform }}"
+                }{{if not (isLast $index $.Apps)}},{{end}}
+                {{end}}
+            ]
+        }
+    }
+    </script>
+    
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .app-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .app-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .app-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .app-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+        }
+        
+        .app-info h3 {
+            margin: 0 0 0.25rem 0;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .app-version {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .app-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .app-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .app-meta span {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        .app-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .app-tag {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.8rem;
+        }
+        
+        .app-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .btn-download {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-download:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-info {
+            background: var(--secondary-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-info:hover {
+            background: var(--secondary-hover);
+        }
+        
+        .category-section {
+            margin-bottom: 3rem;
+        }
+        
+        .category-title {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stats-bar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .filter-bar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+        
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            min-width: 200px;
+        }
+        
+        .app-screenshots-count {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--primary-color);
+        }
+        
+        .app-screenshots-count .material-icons {
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 768px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    
+    <main class="container">
+        <div class="page-header">
+            <h1>{{ .Title }}</h1>
+            <p>这里是我个人开发的一些测试应用，欢迎下载试用</p>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="stats-bar">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">{{ .TotalApps }}</div>
+                    <div class="stat-label">总应用数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ len .AppCategories }}</div>
+                    <div class="stat-label">分类数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="android-count">-</div>
+                    <div class="stat-label">Android应用</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="ios-count">-</div>
+                    <div class="stat-label">iOS应用</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="filter-controls">
+                <input type="text" class="search-input" id="search-input" placeholder="搜索应用...">
+                <select class="filter-select" id="category-filter">
+                    <option value="">所有分类</option>
+                    {{range $category, $apps := .AppCategories}}
+                    <option value="{{ $category }}">{{ $category }}</option>
+                    {{end}}
+                </select>
+                <select class="filter-select" id="platform-filter">
+                    <option value="">所有平台</option>
+                    <option value="android">Android</option>
+                    <option value="ios">iOS</option>
+                    <option value="windows">Windows</option>
+                    <option value="mac">macOS</option>
+                    <option value="linux">Linux</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 应用列表 -->
+        <div id="apps-container">
+            {{range $category, $apps := .AppCategories}}
+            <div class="category-section" data-category="{{ $category }}">
+                <h2 class="category-title">
+                    <span class="material-icons">category</span>
+                    {{ $category }}
+                </h2>
+                <div class="app-grid">
+                    {{range $apps}}
+                    <div class="app-card" data-name="{{ .Name }}" data-category="{{ .Category }}" data-platform="{{ .Platform }}">
+                        <div class="app-header">
+                            <div class="app-icon">
+                                <span class="material-icons">{{ .Icon }}</span>
+                            </div>
+                            <div class="app-info">
+                                <h3>{{ .Name }}</h3>
+                                <div class="app-version">v{{ .Version }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="app-description">{{ .Description }}</div>
+                        
+                        <div class="app-meta">
+                            <span>{{ .Platform }}</span>
+                            <span>{{ if gt .FileSize 0 }}{{ formatFileSize .FileSize }}{{ else }}未知大小{{ end }}</span>
+                            {{if .Screenshots}}
+                            <span class="app-screenshots-count">
+                                <span class="material-icons">photo_library</span>
+                                {{ len .Screenshots }}
+                            </span>
+                            {{end}}
+                        </div>
+                        
+                        {{if .Tags}}
+                        <div class="app-tags">
+                            {{range .Tags}}
+                            <span class="app-tag">{{ . }}</span>
+                            {{end}}
+                        </div>
+                        {{end}}
+                        
+                        <div class="app-actions">
+                            <a href="/tools/my-test-app/download/{{ .ID }}" class="btn-download">
+                                <span class="material-icons">download</span>
+                                下载
+                            </a>
+                            <button class="btn-info" onclick="showAppInfo('{{ .ID }}', '{{ .Name }}')">
+                                <span class="material-icons">info</span>
+                                详情
+                            </button>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-main">
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                        <a href="/sitemap.xml" style="color:#666;text-decoration:none;">网站地图</a>
+                        <a href="/robots.txt" style="color:#666;text-decoration:none;">Robots</a>
+                        <a href="#" style="color:#666;text-decoration:none;">意见反馈</a>
+                        <a href="#" style="color:#666;text-decoration:none;">联系我们</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 搜索和筛选功能
+        function filterApps() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const categoryFilter = document.getElementById('category-filter').value;
+            const platformFilter = document.getElementById('platform-filter').value;
+            
+            const appCards = document.querySelectorAll('.app-card');
+            const categorySections = document.querySelectorAll('.category-section');
+            
+            appCards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const category = card.dataset.category;
+                const platform = card.dataset.platform;
+                
+                const matchesSearch = name.includes(searchTerm);
+                const matchesCategory = !categoryFilter || category === categoryFilter;
+                const matchesPlatform = !platformFilter || platform === platformFilter;
+                
+                if (matchesSearch && matchesCategory && matchesPlatform) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // 隐藏空分类
+            categorySections.forEach(section => {
+                const visibleCards = section.querySelectorAll('.app-card[style="display: block"]').length;
+                if (visibleCards === 0) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                }
+            });
+        }
+        
+        // 事件监听器
+        document.getElementById('search-input').addEventListener('input', filterApps);
+        document.getElementById('category-filter').addEventListener('change', filterApps);
+        document.getElementById('platform-filter').addEventListener('change', filterApps);
+        
+        // 显示应用详情
+        async function showAppInfo(appId, appName) {
+            try {
+                const response = await fetch(`/tools/api/my-test-app?action=detail&id=${appId}`);
+                const data = await response.json();
+                
+                if (data.success && data.hasDetail) {
+                    // 有详情文件，跳转到详情页面
+                    window.open(`/tools/my-test-app/detail/${appId}`, '_blank');
+                } else {
+                    // 没有详情文件，显示弹窗
+                    alert(`${appName} 暂无详细信息`);
+                }
+            } catch (error) {
+                console.error('获取应用详情失败:', error);
+                alert('获取应用详情失败，请稍后重试');
+            }
+        }
+        
+        // 加载平台统计
+        async function loadPlatformStats() {
+            try {
+                const response = await fetch('/tools/api/my-test-app?action=platforms');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('android-count').textContent = data.data.android || 0;
+                    document.getElementById('ios-count').textContent = data.data.ios || 0;
+                }
+            } catch (error) {
+                console.error('加载平台统计失败:', error);
+            }
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlatformStats();
+        });
+    </script>
+</body>
+</html>
+{{end}} 

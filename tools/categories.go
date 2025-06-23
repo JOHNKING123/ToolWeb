@@ -118,7 +118,7 @@ func GetCategories() []Category {
 			Description: "常用开发辅助工具",
 			Icon:        "terminal",
 			Tools: []Tool{
-				暂时屏蔽了
+				// 暂时屏蔽了
 				// {
 				// 	ID:          "postman",
 				// 	Name:        "在线 Postman",

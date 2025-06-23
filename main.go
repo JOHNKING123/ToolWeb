@@ -120,6 +120,11 @@ func main() {
 	// 初始化访客统计
 	tools.InitVisitorStats()
 
+	// 初始化测试应用配置
+	if err := tools.InitTestApps(); err != nil {
+		log.Printf("初始化测试应用配置失败: %v", err)
+	}
+
 	// 创建智能限流器 - 使用默认配置
 	rateLimitConfig := config.GetDefaultRateLimitConfig()
 	smartRateLimiter := middleware.NewSmartRateLimiter(rateLimitConfig)
@@ -149,6 +154,21 @@ func main() {
 				return true
 			}
 		},
+		"formatFileSize": func(bytes int64) string {
+			if bytes == 0 {
+				return "0 B"
+			}
+			const unit = 1024
+			if bytes < unit {
+				return fmt.Sprintf("%d B", bytes)
+			}
+			div, exp := int64(unit), 0
+			for n := bytes / unit; n >= unit; n /= unit {
+				div *= unit
+				exp++
+			}
+			return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+		},
 	})
 
 	// 加载HTML模板
@@ -169,6 +189,12 @@ func main() {
 
 	// 添加工具访问记录中间件
 	router.Use(toolAccessMiddleware())
+
+	// 测试应用下载页面路由
+	router.GET("/tools/my-test-app", tools.HandleMyTestApp)
+	router.GET("/tools/my-test-app/download/:id", tools.HandleTestAppDownload)
+	router.GET("/tools/my-test-app/detail/:id", tools.HandleTestAppDetail)
+	router.GET("/tools/my-test-app/screenshots/*filepath", tools.HandleTestAppScreenshots)
 
 	// 页面路由
 	router.GET("/", func(c *gin.Context) {
@@ -1325,6 +1351,9 @@ func main() {
 			})
 		})
 	}
+
+	// 测试应用API路由
+	api.GET("/my-test-app", tools.HandleTestAppAPI)
 
 	// 工具路由
 	toolsGroup := router.Group("/tools")

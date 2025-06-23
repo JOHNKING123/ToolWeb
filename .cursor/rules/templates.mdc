@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+在templates下创建页面模版的时候，不再引用 {{template "footer" .}}，容易导致报错。

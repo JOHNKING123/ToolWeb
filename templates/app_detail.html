@@ -1,0 +1,678 @@
+{{define "app_detail"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <meta name="description" content="{{ .App.Description }}">
+    <meta name="keywords" content="{{ .App.Name }},应用详情,{{ .App.Platform }},{{ .App.Category }}">
+    
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .app-detail-header {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .app-detail-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .app-detail-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--primary-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .app-detail-meta {
+            flex: 1;
+        }
+        
+        .app-detail-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .app-detail-version {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .app-detail-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .app-detail-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .app-detail-stat {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .app-detail-stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .app-detail-stat-value {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .app-detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .app-detail-tag {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .app-detail-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-download-large {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-download-large:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-back {
+            background: var(--secondary-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-back:hover {
+            background: var(--secondary-hover);
+        }
+        
+        .app-detail-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .app-detail-content h1,
+        .app-detail-content h2,
+        .app-detail-content h3,
+        .app-detail-content h4,
+        .app-detail-content h5,
+        .app-detail-content h6 {
+            color: var(--text-primary);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .app-detail-content h1:first-child,
+        .app-detail-content h2:first-child,
+        .app-detail-content h3:first-child {
+            margin-top: 0;
+        }
+        
+        .app-detail-content p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        .app-detail-content ul,
+        .app-detail-content ol {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        
+        .app-detail-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .app-detail-content code {
+            background: var(--bg-color);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--text-primary);
+        }
+        
+        .app-detail-content pre {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .app-detail-content pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .app-detail-content blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .app-detail-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        
+        .app-detail-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .app-detail-content th,
+        .app-detail-content td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        .app-detail-content th {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .app-detail-content td {
+            color: var(--text-secondary);
+        }
+        
+        /* 截图展示样式 */
+        .app-screenshots-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .screenshots-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .screenshot-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            aspect-ratio: 16/9;
+            background: var(--bg-color);
+        }
+        
+        .screenshot-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .screenshot-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .screenshot-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            border-radius: 8px;
+        }
+        
+        .screenshot-item:hover .screenshot-overlay {
+            opacity: 1;
+        }
+        
+        .screenshot-overlay .material-icons {
+            color: white;
+            font-size: 2rem;
+        }
+        
+        /* 图片模态框样式 */
+        .screenshot-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            backdrop-filter: blur(5px);
+        }
+        
+        .screenshot-modal-content {
+            position: relative;
+            margin: auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .screenshot-modal img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .screenshot-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        .screenshot-modal-close:hover,
+        .screenshot-modal-close:focus {
+            color: #bbb;
+            text-decoration: none;
+        }
+        
+        .screenshot-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        
+        .screenshot-nav:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .screenshot-nav.prev {
+            left: 20px;
+        }
+        
+        .screenshot-nav.next {
+            right: 20px;
+        }
+        
+        .screenshot-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .app-detail-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .app-detail-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .app-detail-actions {
+                flex-direction: column;
+            }
+            
+            .app-detail-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .screenshots-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .screenshot-nav {
+                padding: 0.5rem;
+            }
+            
+            .screenshot-nav.prev {
+                left: 10px;
+            }
+            
+            .screenshot-nav.next {
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    
+    <main class="container">
+        <!-- 应用详情头部 -->
+        <div class="app-detail-header">
+            <div class="app-detail-info">
+                <div class="app-detail-icon">
+                    <span class="material-icons">{{ .App.Icon }}</span>
+                </div>
+                <div class="app-detail-meta">
+                    <h1 class="app-detail-title">{{ .App.Name }}</h1>
+                    <div class="app-detail-version">v{{ .App.Version }}</div>
+                    <div class="app-detail-description">{{ .App.Description }}</div>
+                </div>
+            </div>
+            
+            <div class="app-detail-stats">
+                <div class="app-detail-stat">
+                    <div class="app-detail-stat-label">平台</div>
+                    <div class="app-detail-stat-value">{{ .App.Platform }}</div>
+                </div>
+                <div class="app-detail-stat">
+                    <div class="app-detail-stat-label">分类</div>
+                    <div class="app-detail-stat-value">{{ .App.Category }}</div>
+                </div>
+                <div class="app-detail-stat">
+                    <div class="app-detail-stat-label">文件大小</div>
+                    <div class="app-detail-stat-value">{{ if gt .App.FileSize 0 }}{{ formatFileSize .App.FileSize }}{{ else }}未知{{ end }}</div>
+                </div>
+                <div class="app-detail-stat">
+                    <div class="app-detail-stat-label">更新时间</div>
+                    <div class="app-detail-stat-value">{{ .App.UpdateTime.Format "2006-01-02" }}</div>
+                </div>
+            </div>
+            
+            {{if .App.Tags}}
+            <div class="app-detail-tags">
+                {{range .App.Tags}}
+                <span class="app-detail-tag">{{ . }}</span>
+                {{end}}
+            </div>
+            {{end}}
+            
+            <div class="app-detail-actions">
+                <a href="/tools/my-test-app/download/{{ .App.ID }}" class="btn-download-large">
+                    <span class="material-icons">download</span>
+                    下载应用
+                </a>
+                <a href="/tools/my-test-app" class="btn-back">
+                    <span class="material-icons">arrow_back</span>
+                    返回列表
+                </a>
+            </div>
+        </div>
+        
+        <!-- 应用截图展示 -->
+        {{if .App.Screenshots}}
+        <div class="app-screenshots-section">
+            <h2 class="section-title">
+                <span class="material-icons">photo_library</span>
+                应用截图
+            </h2>
+            <div class="screenshots-gallery">
+                {{range $index, $screenshot := .App.Screenshots}}
+                <div class="screenshot-item" onclick="openScreenshotModal('{{ $screenshot }}', {{ $index }})">
+                    <img src="/tools/my-test-app/screenshots/{{ $screenshot }}" 
+                         alt="截图 {{ add $index 1 }}" 
+                         loading="lazy"
+                         onerror="this.style.display='none'">
+                    <div class="screenshot-overlay">
+                        <span class="material-icons">zoom_in</span>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        
+        <!-- 应用详情内容 -->
+        <div class="app-detail-content">
+            <div id="markdown-content">
+                {{ .MarkdownContent }}
+            </div>
+        </div>
+    </main>
+    
+    <!-- 图片模态框 -->
+    <div id="screenshotModal" class="screenshot-modal">
+        <span class="screenshot-modal-close" onclick="closeScreenshotModal()">&times;</span>
+        <div class="screenshot-modal-content">
+            <button class="screenshot-nav prev" onclick="changeScreenshot(-1)">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <img id="modalImage" src="" alt="应用截图">
+            <button class="screenshot-nav next" onclick="changeScreenshot(1)">
+                <span class="material-icons">chevron_right</span>
+            </button>
+            <div class="screenshot-counter" id="screenshotCounter"></div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-main">
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                        <a href="/sitemap.xml" style="color:#666;text-decoration:none;">网站地图</a>
+                        <a href="/robots.txt" style="color:#666;text-decoration:none;">Robots</a>
+                        <a href="#" style="color:#666;text-decoration:none;">意见反馈</a>
+                        <a href="#" style="color:#666;text-decoration:none;">联系我们</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 简单的Markdown渲染（可以后续集成更强大的Markdown解析器）
+        function renderMarkdown() {
+            const content = document.getElementById('markdown-content');
+            if (!content) return;
+            
+            let html = content.innerHTML;
+            
+            // 简单的Markdown转HTML
+            html = html
+                // 标题
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                // 粗体和斜体
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // 代码块
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                // 行内代码
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                // 链接
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                // 列表
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                // 段落
+                .replace(/\n\n/g, '</p><p>');
+            
+            // 包装段落
+            if (!html.startsWith('<')) {
+                html = '<p>' + html + '</p>';
+            }
+            
+            content.innerHTML = html;
+        }
+        
+        // 页面加载完成后渲染Markdown
+        document.addEventListener('DOMContentLoaded', function() {
+            renderMarkdown();
+        });
+        
+        // 图片模态框功能
+        let currentScreenshotIndex = 0;
+        let screenshots = [];
+        
+        function openScreenshotModal(screenshotPath, index) {
+            currentScreenshotIndex = index;
+            screenshots = Array.from(document.querySelectorAll('.screenshot-item img')).map(img => img.src);
+            
+            const modal = document.getElementById('screenshotModal');
+            const modalImage = document.getElementById('modalImage');
+            const counter = document.getElementById('screenshotCounter');
+            
+            modalImage.src = screenshots[currentScreenshotIndex];
+            counter.textContent = `${currentScreenshotIndex + 1} / ${screenshots.length}`;
+            modal.style.display = 'block';
+            
+            // 阻止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeScreenshotModal() {
+            const modal = document.getElementById('screenshotModal');
+            modal.style.display = 'none';
+            
+            // 恢复背景滚动
+            document.body.style.overflow = 'auto';
+        }
+        
+        function changeScreenshot(direction) {
+            currentScreenshotIndex += direction;
+            
+            if (currentScreenshotIndex < 0) {
+                currentScreenshotIndex = screenshots.length - 1;
+            } else if (currentScreenshotIndex >= screenshots.length) {
+                currentScreenshotIndex = 0;
+            }
+            
+            const modalImage = document.getElementById('modalImage');
+            const counter = document.getElementById('screenshotCounter');
+            
+            modalImage.src = screenshots[currentScreenshotIndex];
+            counter.textContent = `${currentScreenshotIndex + 1} / ${screenshots.length}`;
+        }
+        
+        // 点击模态框背景关闭
+        document.getElementById('screenshotModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeScreenshotModal();
+            }
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('screenshotModal');
+            if (modal.style.display === 'block') {
+                switch(e.key) {
+                    case 'Escape':
+                        closeScreenshotModal();
+                        break;
+                    case 'ArrowLeft':
+                        changeScreenshot(-1);
+                        break;
+                    case 'ArrowRight':
+                        changeScreenshot(1);
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+{{end}} 
