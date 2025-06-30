@@ -1,0 +1,152 @@
+{{define "aes"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES加解密工具 - 在线AES加密解密 | 程序员工具箱</title>
+    <meta name="description" content="免费在线AES加解密工具，支持AES对称加密和解密，支持16/24/32字节密钥。">
+    <meta name="keywords" content="AES,AES加密,AES解密,对称加密,在线AES,AES工具,程序员工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/aes">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AES加解密工具",
+      "description": "免费在线AES加解密工具，支持AES对称加密和解密，支持16/24/32字节密钥。",
+      "url": "https://www.johnkingzcq123.xyz/tools/aes",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .result-copy-btn {
+            margin-left: 1rem;
+            vertical-align: middle;
+        }
+        .copy-success {
+            background: #10b981;
+            color: white;
+        }
+        .genkey-btn {
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">vpn_key</i> AES加解密</h1>
+            <p>支持AES-ECB模式，PKCS7填充。密钥长度必须为16/24/32字节。</p>
+        </div>
+        <div class="tool-content" style="max-width:650px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group">
+                    <label class="input-label" for="aes-input">输入内容：</label>
+                    <textarea id="aes-input" rows="4" class="input-area" placeholder="请输入要加密或解密的内容..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="input-label" for="aes-key">密钥（16/24/32字节）：</label>
+                    <input id="aes-key" class="input-area" type="text" maxlength="32" placeholder="请输入密钥..." style="width:70%;display:inline-block;" />
+                    <button type="button" class="btn btn-secondary genkey-btn" onclick="genAESKey()"><i class="material-icons">autorenew</i> 生成随机密钥</button>
+                </div>
+                <div class="form-group" style="margin:1rem 0;">
+                    <label><input type="radio" name="aes-mode" value="encrypt" checked> 加密</label>
+                    <label><input type="radio" name="aes-mode" value="decrypt"> 解密</label>
+                </div>
+                <div class="form-actions">
+                    <button onclick="doAES()" class="btn btn-primary"><i class="material-icons">play_arrow</i> 执行</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearAES()"><i class="material-icons">clear</i> 清空</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>处理结果</h3>
+                    <div id="aes-result" class="result-area" style="min-height:2.5em;color:#2563eb;"></div>
+                    <button id="aes-copy-btn" class="btn btn-secondary result-copy-btn" style="display:none;"><i class="material-icons">content_copy</i> 复制结果</button>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>AES算法介绍</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    <b>AES</b>（Advanced Encryption Standard，高级加密标准）是一种对称加密算法，支持128/192/256位密钥（即16/24/32字节）。<br>
+                    <b>常见用途：</b> 数据加密、文件加密、通信加密等。<br>
+                    <b>安全性：</b> AES目前被认为是安全的，广泛应用于金融、政企、区块链等高安全场景。<br>
+                    <b>注意事项：</b> 密钥长度越长安全性越高，密钥需妥善保管，ECB模式不推荐用于高安全需求。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    let lastAES = '';
+    function doAES() {
+        const input = document.getElementById('aes-input').value;
+        const key = document.getElementById('aes-key').value;
+        const mode = document.querySelector('input[name=\"aes-mode\"]:checked').value;
+        fetch('/tools/api/aes', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({input, key, mode})
+        })
+        .then(r => r.json())
+        .then(res => {
+            const resultDiv = document.getElementById('aes-result');
+            const copyBtn = document.getElementById('aes-copy-btn');
+            if(res.success) {
+                lastAES = res.result;
+                resultDiv.innerHTML = '<b>结果：</b><span style="word-break:break-all;">' + res.result + '</span>';
+                copyBtn.style.display = 'inline-block';
+            } else {
+                resultDiv.innerHTML = '<span style="color:#dc2626;">' + res.msg + '</span>';
+                copyBtn.style.display = 'none';
+            }
+        });
+    }
+    function clearAES() {
+        document.getElementById('aes-input').value = '';
+        document.getElementById('aes-key').value = '';
+        document.getElementById('aes-result').innerText = '';
+        document.getElementById('aes-copy-btn').style.display = 'none';
+    }
+    function genAESKey() {
+        // 随机生成16/24/32字节密钥
+        const lens = [16,24,32];
+        let len = 16;
+        const cur = document.getElementById('aes-key').value.length;
+        if(cur === 24) len = 24;
+        else if(cur === 32) len = 32;
+        else if(cur > 16 && cur < 24) len = 24;
+        else if(cur > 24) len = 32;
+        let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let pwd = '';
+        for(let i=0;i<len;i++){
+            pwd += chars.charAt(Math.floor(Math.random()*chars.length));
+        }
+        document.getElementById('aes-key').value = pwd;
+    }
+    document.getElementById('aes-copy-btn').onclick = async function() {
+        try {
+            await navigator.clipboard.writeText(lastAES);
+            this.textContent = '已复制!';
+            this.classList.add('copy-success');
+            setTimeout(() => {
+                this.innerHTML = '<i class="material-icons">content_copy</i> 复制结果';
+                this.classList.remove('copy-success');
+            }, 2000);
+        } catch (e) {
+            this.textContent = '请手动复制';
+        }
+    }
+    </script>
+</body>
+</html>
+{{end}} 

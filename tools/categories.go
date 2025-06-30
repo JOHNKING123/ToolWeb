@@ -302,6 +302,62 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "crypto",
+			Name:        "加密解密",
+			Description: "常用加密、解密、哈希、摘要等工具",
+			Icon:        "lock",
+			Tools: []Tool{
+				{
+					ID:          "md5",
+					Name:        "MD5 加密/摘要",
+					Description: "计算字符串的MD5值，常用于摘要校验",
+					Path:        "/tools/md5",
+					Icon:        "fingerprint",
+					Category:    "加密解密",
+				},
+				{
+					ID:          "sha1",
+					Name:        "SHA1 摘要",
+					Description: "计算字符串的SHA1值，常用于数据完整性校验",
+					Path:        "/tools/sha1",
+					Icon:        "fingerprint",
+					Category:    "加密解密",
+				},
+				{
+					ID:          "sha256",
+					Name:        "SHA256 摘要",
+					Description: "计算字符串的SHA256值，常用于更高安全需求的摘要校验",
+					Path:        "/tools/sha256",
+					Icon:        "fingerprint",
+					Category:    "加密解密",
+				},
+				{
+					ID:          "aes",
+					Name:        "AES 加解密",
+					Description: "对称加密算法AES的加密与解密工具",
+					Path:        "/tools/aes",
+					Icon:        "vpn_key",
+					Category:    "加密解密",
+				},
+				{
+					ID:          "des",
+					Name:        "DES 加解密",
+					Description: "对称加密算法DES的加密与解密工具",
+					Path:        "/tools/des",
+					Icon:        "vpn_key",
+					Category:    "加密解密",
+				},
+				{
+					ID:          "rsa",
+					Name:        "RSA 加解密",
+					Description: "非对称加密算法RSA的加密、解密、签名与验签工具",
+					Path:        "/tools/rsa",
+					Icon:        "vpn_key",
+					Category:    "加密解密",
+				},
+			},
+		},
 	}
 }
 

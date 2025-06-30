@@ -1,0 +1,159 @@
+{{define "sha256"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHA256摘要工具 - 在线SHA256生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线SHA256摘要工具，支持字符串SHA256计算，常用于高安全需求的数据校验。">
+    <meta name="keywords" content="SHA256,SHA256摘要,SHA256加密,在线SHA256,SHA256工具,程序员工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/sha256">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SHA256摘要工具",
+      "description": "免费在线SHA256摘要工具，支持字符串SHA256计算，常用于高安全需求的数据校验。",
+      "url": "https://www.johnkingzcq123.xyz/tools/sha256",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .result-copy-btn {
+            margin-left: 1rem;
+            vertical-align: middle;
+        }
+        .copy-success {
+            background: #10b981;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">fingerprint</i> SHA256摘要</h1>
+            <p>输入任意字符串或选择文件，快速生成SHA256摘要值</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group" style="margin-bottom:1em;">
+                  <label style="margin-left:2em;"><input type="radio" name="sha256-mode" value="text" checked> 内容模式</label>
+                  <label style="margin-left:2em;"><input type="radio" name="sha256-mode" value="file"> 文件模式</label>
+                </div>
+                <div id="sha256-text-area" class="form-group">
+                  <label for="sha256-input">输入内容：</label>
+                  <textarea id="sha256-input" rows="5" class="input-area" placeholder="请输入要计算的内容..."></textarea>
+                </div>
+                <div id="sha256-file-area" class="form-group" style="display:none;">
+                  <label for="sha256-file">选择文件：</label>
+                  <input type="file" id="sha256-file" />
+                </div>
+                <div class="form-actions" style="margin-top:1.5rem;">
+                    <button onclick="doSHA256()" class="btn btn-primary"><i class="material-icons">lock</i> 计算SHA256</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearSHA256()"><i class="material-icons">clear</i> 清空</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>计算结果</h3>
+                    <div id="sha256-result" class="result-area" style="min-height:2.5em;color:#2563eb;"></div>
+                    <button id="sha256-copy-btn" class="btn btn-secondary result-copy-btn" style="display:none;"><i class="material-icons">content_copy</i> 复制结果</button>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>SHA256算法介绍</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    <b>SHA256</b>（Secure Hash Algorithm 256）是SHA-2家族中最常用的哈希函数，可将任意长度的数据映射为256位（64位十六进制）哈希值。<br>
+                    <b>常见用途：</b> 文件校验、数据完整性验证、数字签名、密码存储等。<br>
+                    <b>安全性：</b> SHA256目前被认为是安全的，广泛应用于区块链、加密货币、SSL证书等高安全场景。<br>
+                    <b>特点：</b> 安全性高，速度适中，适合大多数安全需求。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    let lastSHA256 = '';
+    function doSHA256() {
+        const input = document.getElementById('sha256-input').value;
+        const fileInput = document.getElementById('sha256-file');
+        if(fileInput.files && fileInput.files.length > 0) {
+            // 文件摘要
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fetch('/tools/api/sha256', {
+                    method: 'POST',
+                    body: e.target.result,
+                    headers: {'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name)}
+                })
+                .then(r => r.json())
+                .then(res => showSHA256Result(res));
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            fetch('/tools/api/sha256', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({input})
+            })
+            .then(r => r.json())
+            .then(res => showSHA256Result(res));
+        }
+    }
+    function showSHA256Result(res) {
+        const resultDiv = document.getElementById('sha256-result');
+        const copyBtn = document.getElementById('sha256-copy-btn');
+        if(res.success) {
+            lastSHA256 = res.sha256;
+            resultDiv.innerHTML = '<b>SHA256：</b><span style="word-break:break-all;">' + res.sha256 + '</span>';
+            copyBtn.style.display = 'inline-block';
+        } else {
+            resultDiv.innerHTML = '<span style="color:#dc2626;">' + res.msg + '</span>';
+            copyBtn.style.display = 'none';
+        }
+    }
+    function clearSHA256() {
+        document.getElementById('sha256-input').value = '';
+        document.getElementById('sha256-file').value = '';
+        document.getElementById('sha256-result').innerText = '';
+        document.getElementById('sha256-copy-btn').style.display = 'none';
+    }
+    document.getElementById('sha256-copy-btn').onclick = async function() {
+        try {
+            await navigator.clipboard.writeText(lastSHA256);
+            this.textContent = '已复制!';
+            this.classList.add('copy-success');
+            setTimeout(() => {
+                this.innerHTML = '<i class="material-icons">content_copy</i> 复制结果';
+                this.classList.remove('copy-success');
+            }, 2000);
+        } catch (e) {
+            this.textContent = '请手动复制';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      // 模式切换
+      document.querySelectorAll('input[name="sha256-mode"]').forEach(el => {
+        el.addEventListener('change', function() {
+          if(this.value === 'text') {
+            document.getElementById('sha256-text-area').style.display = '';
+            document.getElementById('sha256-file-area').style.display = 'none';
+          } else {
+            document.getElementById('sha256-text-area').style.display = 'none';
+            document.getElementById('sha256-file-area').style.display = '';
+          }
+        });
+      });
+    });
+    </script>
+</body>
+</html>
+{{end}} 

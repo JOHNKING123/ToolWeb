@@ -1359,6 +1359,14 @@ func main() {
 		api.GET("/ping", tools.HandlePingAPI)
 		api.GET("/dns-lookup", tools.HandleDNSLookupAPI)
 		api.GET("/ssl-check", tools.HandleSSLCheckAPI)
+
+		// 加密解密类API
+		api.POST("/md5", tools.HandleMD5API)
+		api.POST("/sha1", tools.HandleSHA1API)
+		api.POST("/sha256", tools.HandleSHA256API)
+		api.POST("/aes", tools.HandleAESAPI)
+		api.POST("/des", tools.HandleDESAPI)
+		api.POST("/rsa", tools.HandleRSAAPI)
 	}
 
 	// 测试应用API路由

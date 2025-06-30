@@ -1,0 +1,256 @@
+{{define "rsa"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA加解密/签名/验签工具 - 在线RSA加密解密 | 程序员工具箱</title>
+    <meta name="description" content="免费在线RSA加解密、签名、验签工具，支持公钥加密、私钥解密、签名与验签。">
+    <meta name="keywords" content="RSA,RSA加密,RSA解密,RSA签名,RSA验签,非对称加密,在线RSA,RSA工具,程序员工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/rsa">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "RSA加解密/签名/验签工具",
+      "description": "免费在线RSA加解密、签名、验签工具，支持公钥加密、私钥解密、签名与验签。",
+      "url": "https://www.johnkingzcq123.xyz/tools/rsa",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .result-copy-btn {
+            margin-left: 1rem;
+            vertical-align: middle;
+        }
+        .copy-success {
+            background: #10b981;
+            color: white;
+        }
+        .genkey-btn {
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">vpn_key</i> RSA加解密/签名/验签</h1>
+            <p>支持PKCS1格式密钥。公钥加密/验签，私钥解密/签名。</p>
+        </div>
+        <div class="tool-content" style="max-width:700px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group">
+                    <label class="input-label" id="rsa-input-label" for="rsa-input">输入内容：</label>
+                    <textarea id="rsa-input" rows="4" class="input-area" placeholder="请输入要加密/解密/签名/验签的内容..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="input-label" for="rsa-key">密钥：</label>
+                    <textarea id="rsa-key" rows="4" class="input-area" placeholder="请输入PEM格式公钥或私钥..." style="width:70%;display:inline-block;"></textarea>
+                </div>
+                <div class="form-group" style="margin:1rem 0;">
+                    <label style="margin-left:1.5em;"><input type="radio" name="rsa-mode" value="encrypt" checked> 公钥加密</label>
+                    <label style="margin-left:1.5em;"><input type="radio" name="rsa-mode" value="decrypt"> 私钥解密</label>
+                    <label style="margin-left:1.5em;"><input type="radio" name="rsa-mode" value="sign"> 私钥签名</label>
+                    <label style="margin-left:1.5em;"><input type="radio" name="rsa-mode" value="verify"> 公钥验签</label>
+                </div>
+                <div id="rsa-verify-signature-area" style="display:none;">
+                    <div class="form-group">
+                        <label class="input-label" for="rsa-signature">签名：</label>
+                        <textarea id="rsa-signature" rows="4" class="input-area" placeholder="请输入Base64签名..."></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button onclick="doRSA()" class="btn btn-primary"><i class="material-icons">play_arrow</i> 执行</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearRSA()"><i class="material-icons">clear</i> 清空</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>处理结果</h3>
+                    <div id="rsa-result" class="result-area" style="min-height:2.5em;color:#2563eb;"></div>
+                    <button id="rsa-copy-btn" class="btn btn-secondary result-copy-btn" style="display:none;"><i class="material-icons">content_copy</i> 复制结果</button>
+                </div>
+            </div>
+            <div class="tool-card" style="display:flex;align-items:flex-start;gap:2em;margin-bottom:1.5em;">
+                <button type="button" class="btn btn-secondary genkey-btn"><i class="material-icons">autorenew</i> 生成RSA密钥对</button>
+                <div id="rsa-keypair-card" style="display:none; min-width:320px; max-width:520px; background:#f8fafc; border-radius:8px; box-shadow:0 1px 4px #e5e7eb; padding:0.7em 1em;">
+                    <div style="font-weight:600;font-size:1em;margin-bottom:0.3em;">密钥对生成区</div>
+                    <div style="margin-bottom:0.7em;">
+                        <label class="input-label" for="rsa-gen-public" style="font-size:1em;">公钥：</label>
+                        <textarea id="rsa-gen-public" rows="6" class="input-area" readonly style="font-size:1em;min-height:7em;width:100%;resize:vertical;"></textarea>
+                        <button type="button" class="btn btn-secondary result-copy-btn" onclick="copyKey('rsa-gen-public', this)" style="margin-top:0.3em;"><i class="material-icons">content_copy</i> 复制公钥</button>
+                    </div>
+                    <div style="margin-bottom:0.7em;">
+                        <label class="input-label" for="rsa-gen-private" style="font-size:1em;">私钥：</label>
+                        <textarea id="rsa-gen-private" rows="6" class="input-area" readonly style="font-size:1em;min-height:7em;width:100%;resize:vertical;"></textarea>
+                        <button type="button" class="btn btn-secondary result-copy-btn" onclick="copyKey('rsa-gen-private', this)" style="margin-top:0.3em;"><i class="material-icons">content_copy</i> 复制私钥</button>
+                    </div>
+                    <div style="color:#64748b;font-size:0.98em;">密钥对仅在本地浏览器生成，安全可靠。请妥善保存，页面刷新后将丢失。</div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>RSA算法介绍</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    <b>RSA</b>（Rivest–Shamir–Adleman）是一种非对称加密算法，密钥分为公钥和私钥，广泛用于数据加密、数字签名、密钥交换等。<br>
+                    <b>常见用途：</b> SSL/TLS证书、数字签名、加密通信等。<br>
+                    <b>安全性：</b> 2048位及以上密钥目前被认为是安全的。<br>
+                    <b>注意事项：</b> 公钥可公开，私钥需妥善保管，密钥对生成后请及时备份。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function showArea() {
+            const mode = document.querySelector('input[name="rsa-mode"]:checked').value;
+            const inputLabel = document.getElementById('rsa-input-label');
+            const inputArea = document.getElementById('rsa-input');
+            const verifySignatureArea = document.getElementById('rsa-verify-signature-area');
+            if (mode === 'sign') {
+                inputLabel.textContent = '待签名内容：';
+                inputArea.placeholder = '请输入要签名的内容...';
+                verifySignatureArea.style.display = 'none';
+            } else if (mode === 'verify') {
+                inputLabel.textContent = '原文：';
+                inputArea.placeholder = '请输入原文...';
+                verifySignatureArea.style.display = '';
+            } else {
+                inputLabel.textContent = '输入内容：';
+                inputArea.placeholder = '请输入要加密/解密的内容...';
+                verifySignatureArea.style.display = 'none';
+            }
+        }
+        document.querySelectorAll('input[name="rsa-mode"]').forEach(el => {
+            el.addEventListener('change', showArea);
+        });
+        let lastRSA = '';
+        window.doRSA = function() {
+            const input = document.getElementById('rsa-input').value;
+            const key = document.getElementById('rsa-key').value;
+            const mode = document.querySelector('input[name="rsa-mode"]:checked').value;
+            let keyType = '';
+            if (mode === 'encrypt' || mode === 'verify') {
+                keyType = 'public';
+            } else if (mode === 'decrypt' || mode === 'sign') {
+                keyType = 'private';
+            }
+            let data = {input, key, mode, keyType};
+            if(mode === 'verify') {
+                data.signature = document.getElementById('rsa-signature').value;
+            }
+            fetch('/tools/api/rsa', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                const resultDiv = document.getElementById('rsa-result');
+                const copyBtn = document.getElementById('rsa-copy-btn');
+                if(res.success) {
+                    lastRSA = res.result || res.signature || res.verified;
+                    resultDiv.innerHTML = '<b>结果：</b><span style="word-break:break-all;">' + (res.result || res.signature || res.verified) + '</span>';
+                    copyBtn.style.display = 'inline-block';
+                } else {
+                    const errText = res.msg || res.result || '操作失败';
+                    resultDiv.innerHTML = '<span style="color:#dc2626;">' + errText + '</span>';
+                    copyBtn.style.display = 'none';
+                }
+            });
+        }
+        window.clearRSA = function() {
+            document.getElementById('rsa-input').value = '';
+            document.getElementById('rsa-key').value = '';
+            document.getElementById('rsa-signature') && (document.getElementById('rsa-signature').value = '');
+            document.getElementById('rsa-result').innerText = '';
+            document.getElementById('rsa-copy-btn').style.display = 'none';
+        }
+        window.genRSAKeyPair = async function() {
+            console.log("genRSAKeyPair start")
+            if(!window.crypto || !window.crypto.subtle) {
+                alert('当前浏览器不支持Web Crypto API，无法生成RSA密钥对');
+                return;
+            }
+            try {
+                const keyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: "RSASSA-PKCS1-v1_5",
+                        modulusLength: 2048,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["sign", "verify"]
+                );
+                const exportKey = async (key, type) => {
+                    try {
+                        const spki = type === 'public' ?
+                            await window.crypto.subtle.exportKey('spki', key) :
+                            await window.crypto.subtle.exportKey('pkcs8', key);
+                        const b64 = btoa(String.fromCharCode(...new Uint8Array(spki)));
+                        const pem = type === 'public' ?
+                            '-----BEGIN PUBLIC KEY-----\n' + b64.match(/.{1,64}/g).join('\n') + '\n-----END PUBLIC KEY-----' :
+                            '-----BEGIN PRIVATE KEY-----\n' + b64.match(/.{1,64}/g).join('\n') + '\n-----END PRIVATE KEY-----';
+                        return pem;
+                    } catch(e) {
+                        alert('密钥导出失败: ' + e);
+                        throw e;
+                    }
+                };
+                console.log("exportKey start")
+                const pub = await exportKey(keyPair.publicKey, 'public');
+                const pri = await exportKey(keyPair.privateKey, 'private');
+                console.log("exportKey end")
+                document.getElementById('rsa-keypair-card').style.display = '';
+                document.getElementById('rsa-gen-public').value = pub;
+                document.getElementById('rsa-gen-private').value = pri;
+            } catch(e) {
+                alert('密钥对生成失败: ' + e);
+                console.error(e);
+            }
+        }
+        window.copyKey = function(id, btn) {
+            const val = document.getElementById(id).value;
+            if(!val) return;
+            navigator.clipboard.writeText(val).then(() => {
+                btn.textContent = '已复制!';
+                btn.classList.add('copy-success');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="material-icons">content_copy</i> ' + (id.includes('public') ? '复制公钥' : '复制私钥');
+                    btn.classList.remove('copy-success');
+                }, 2000);
+            }, () => {
+                btn.textContent = '请手动复制';
+            });
+        }
+        document.getElementById('rsa-copy-btn').onclick = async function() {
+            try {
+                await navigator.clipboard.writeText(lastRSA);
+                this.textContent = '已复制!';
+                this.classList.add('copy-success');
+                setTimeout(() => {
+                    this.innerHTML = '<i class="material-icons">content_copy</i> 复制结果';
+                    this.classList.remove('copy-success');
+                }, 2000);
+            } catch (e) {
+                this.textContent = '请手动复制';
+            }
+        }
+        console.log("genkey-btn add event listener")
+        document.querySelector('.genkey-btn').addEventListener('click', genRSAKeyPair);
+        showArea();
+    });
+    </script>
+</body>
+</html>
+{{end}} 

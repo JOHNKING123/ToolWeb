@@ -1,0 +1,161 @@
+{{define "md5"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD5加密/摘要工具 - 在线MD5生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线MD5加密/摘要工具，支持字符串MD5计算，常用于数据校验。">
+    <meta name="keywords" content="MD5,MD5加密,MD5摘要,在线MD5,MD5工具,程序员工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/md5">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "MD5加密/摘要工具",
+      "description": "免费在线MD5加密/摘要工具，支持字符串MD5计算，常用于数据校验。",
+      "url": "https://www.johnkingzcq123.xyz/tools/md5",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .result-copy-btn {
+            margin-left: 1rem;
+            vertical-align: middle;
+        }
+        .copy-success {
+            background: #10b981;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">fingerprint</i> MD5加密/摘要</h1>
+            <p>输入任意字符串或选择文件，快速生成MD5摘要值</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group" style="margin-bottom:1em;">
+                  <label style="margin-left:2em;"><input type="radio" name="md5-mode" value="text" checked> 内容模式</label>
+                  <label style="margin-left:2em;"><input type="radio" name="md5-mode" value="file"> 文件模式</label>
+                </div>
+                <div id="md5-text-area" class="form-group">
+                  <label for="md5-input">输入内容：</label>
+                  <textarea id="md5-input" rows="5" class="input-area" placeholder="请输入要计算的内容..."></textarea>
+                </div>
+                <div id="md5-file-area" class="form-group" style="display:none;">
+                  <label for="md5-file">选择文件：</label>
+                  <input type="file" id="md5-file" />
+                </div>
+                <div class="form-actions" style="margin-top:1.5rem;">
+                    <button onclick="doMD5()" class="btn btn-primary"><i class="material-icons">lock</i> 计算MD5</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearMD5()"><i class="material-icons">clear</i> 清空</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>计算结果</h3>
+                    <div id="md5-result" class="result-area" style="min-height:2.5em;color:#2563eb;"></div>
+                    <button id="md5-copy-btn" class="btn btn-secondary result-copy-btn" style="display:none;"><i class="material-icons">content_copy</i> 复制结果</button>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>MD5算法介绍</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    <b>MD5</b>（Message-Digest Algorithm 5）是一种广泛使用的哈希函数，可将任意长度的数据映射为128位（32位十六进制）哈希值。<br>
+                    <b>常见用途：</b> 文件校验、数据完整性验证、数字签名等。<br>
+                    <b>注意事项：</b> MD5已被证明存在碰撞风险，不建议用于高安全场景（如密码存储、数字签名等），推荐使用SHA256等更安全算法。<br>
+                    <b>特点：</b> 速度快、实现简单，但安全性较低。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    let lastMD5 = '';
+    function doMD5() {
+        const input = document.getElementById('md5-input').value;
+        const fileInput = document.getElementById('md5-file');
+        if(fileInput.files && fileInput.files.length > 0) {
+            // 文件摘要
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 发送二进制到API
+                fetch('/tools/api/md5', {
+                    method: 'POST',
+                    body: e.target.result,
+                    headers: {'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name)}
+                })
+                .then(r => r.json())
+                .then(res => showMD5Result(res));
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            // 文本摘要
+            fetch('/tools/api/md5', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({input})
+            })
+            .then(r => r.json())
+            .then(res => showMD5Result(res));
+        }
+    }
+    function showMD5Result(res) {
+        const resultDiv = document.getElementById('md5-result');
+        const copyBtn = document.getElementById('md5-copy-btn');
+        if(res.success) {
+            lastMD5 = res.md5;
+            resultDiv.innerHTML = '<b>MD5：</b><span style="word-break:break-all;">' + res.md5 + '</span>';
+            copyBtn.style.display = 'inline-block';
+        } else {
+            resultDiv.innerHTML = '<span style="color:#dc2626;">' + res.msg + '</span>';
+            copyBtn.style.display = 'none';
+        }
+    }
+    function clearMD5() {
+        document.getElementById('md5-input').value = '';
+        document.getElementById('md5-file').value = '';
+        document.getElementById('md5-result').innerText = '';
+        document.getElementById('md5-copy-btn').style.display = 'none';
+    }
+    document.getElementById('md5-copy-btn').onclick = async function() {
+        try {
+            await navigator.clipboard.writeText(lastMD5);
+            this.textContent = '已复制!';
+            this.classList.add('copy-success');
+            setTimeout(() => {
+                this.innerHTML = '<i class="material-icons">content_copy</i> 复制结果';
+                this.classList.remove('copy-success');
+            }, 2000);
+        } catch (e) {
+            this.textContent = '请手动复制';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      // 模式切换
+      document.querySelectorAll('input[name="md5-mode"]').forEach(el => {
+        el.addEventListener('change', function() {
+          if(this.value === 'text') {
+            document.getElementById('md5-text-area').style.display = '';
+            document.getElementById('md5-file-area').style.display = 'none';
+          } else {
+            document.getElementById('md5-text-area').style.display = 'none';
+            document.getElementById('md5-file-area').style.display = '';
+          }
+        });
+      });
+    });
+    </script>
+</body>
+</html>
+{{end}} 
