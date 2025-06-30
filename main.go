@@ -1367,6 +1367,15 @@ func main() {
 		api.POST("/aes", tools.HandleAESAPI)
 		api.POST("/des", tools.HandleDESAPI)
 		api.POST("/rsa", tools.HandleRSAAPI)
+
+		// 图片格式转换API
+		api.POST("/img-convert", tools.HandleImgConvertAPI)
+		api.POST("/img-compress", tools.HandleImgCompressAPI)
+
+		// 图片相关API
+		api.POST("/img-resize", tools.HandleImgResizeAPI)
+		api.POST("/img2base64", tools.HandleImg2Base64API)
+		api.POST("/base642img", tools.HandleBase642ImgAPI)
 	}
 
 	// 测试应用API路由

@@ -1,0 +1,96 @@
+{{define "base64toimg"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <meta name="description" content="在线Base64转图片工具，支持带data:image头或纯Base64，自动识别图片类型，支持预览和下载。">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+    <div class="tool-header">
+        <h1><span class="material-icons">image</span> Base64转图片</h1>
+        <p>支持带data:image头或纯Base64，自动识别图片类型，粘贴Base64即可预览和下载图片。</p>
+    </div>
+    <div class="tool-content" style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start;">
+        <!-- 左侧输入区 -->
+        <form id="b64imgForm" class="tool-form" style="flex:1;min-width:320px;max-width:420px;">
+            <div class="form-group">
+                <label for="b64">Base64字符串</label>
+                <textarea id="b64" name="b64" class="result-textarea" rows="6" placeholder="粘贴Base64字符串，可带data:image头" required></textarea>
+            </div>
+            <div class="form-row" style="display:flex;gap:1rem;">
+                <button type="button" class="btn btn-secondary" id="clearBtn"><span class="material-icons">clear</span> 清空</button>
+                <button type="submit" class="btn btn-primary" style="flex:1;"><span class="material-icons">image</span> 生成图片</button>
+            </div>
+        </form>
+        <!-- 右侧结果区 -->
+        <div id="resultCard" class="result-card" style="flex:1;min-width:320px;max-width:480px;display:none;">
+            <h2>图片预览</h2>
+            <div id="previewArea"></div>
+            <a id="downloadBtn" class="btn btn-success" href="#" download style="display:none;margin-top:1rem;"><span class="material-icons">download</span> 下载图片</a>
+        </div>
+    </div>
+    <div class="tool-info" style="margin-top:2.5rem;">
+        <h3>使用说明</h3>
+        <ul style="color:#555;font-size:0.98em;line-height:1.8;">
+            <li>支持带data:image头或纯Base64字符串。</li>
+            <li>自动识别图片类型，支持PNG、JPG、GIF、WebP等格式。</li>
+            <li>结果区可预览图片并一键下载。</li>
+            <li>请确保Base64内容为图片数据，否则可能解码失败。</li>
+        </ul>
+    </div>
+</div>
+<script>
+const form = document.getElementById('b64imgForm');
+const b64Input = document.getElementById('b64');
+const clearBtn = document.getElementById('clearBtn');
+const resultCard = document.getElementById('resultCard');
+const previewArea = document.getElementById('previewArea');
+const downloadBtn = document.getElementById('downloadBtn');
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    resultCard.style.display = 'none';
+    previewArea.innerHTML = '';
+    downloadBtn.style.display = 'none';
+    const b64 = b64Input.value.trim();
+    if (!b64) return alert('请输入Base64字符串');
+    const fd = new FormData();
+    fd.append('b64', b64);
+    fetch('/tools/api/base642img', {
+        method: 'POST',
+        body: fd
+    }).then(resp => {
+        if (!resp.ok) throw new Error('Base64解码失败');
+        return resp.blob();
+    }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        previewArea.innerHTML = `<img src="${url}" class="img-preview" style="max-width:100%;max-height:320px;">`;
+        downloadBtn.href = url;
+        // 自动推断扩展名
+        let ext = 'png';
+        if (b64.startsWith('data:image/')) {
+            const m = b64.match(/^data:image\/(\w+);base64,/);
+            if (m && m[1]) ext = m[1];
+        }
+        downloadBtn.download = 'output.' + ext;
+        downloadBtn.style.display = '';
+        resultCard.style.display = '';
+    }).catch(err => {
+        previewArea.innerHTML = `<div class='error'>${err.message}</div>`;
+        resultCard.style.display = '';
+    });
+});
+clearBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    b64Input.value = '';
+    resultCard.style.display = 'none';
+});
+</script>
+</body>
+</html>
+{{end}} 

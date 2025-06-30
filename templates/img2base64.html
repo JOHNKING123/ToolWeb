@@ -1,0 +1,123 @@
+{{define "img2base64"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线图片转Base64 | 程序员工具箱</title>
+    <meta name="description" content="在线图片转Base64工具，支持PNG/JPG/GIF等格式，支持纯Base64和data:image头，安全高效。">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> 图片转Base64</h1>
+            <p>支持PNG、JPG、GIF等格式，自动转为Base64字符串，可选带data:image头，支持一键复制。</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <form id="img2b64Form" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label for="file">选择图片：</label>
+                        <input type="file" id="file" name="file" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label>输出格式</label>
+                        <select id="mode" name="mode" class="input-area" style="width:160px;">
+                            <option value="dataurl">带data:image头（推荐）</option>
+                            <option value="base64">纯Base64</option>
+                        </select>
+                    </div>
+                    <div class="form-actions" style="margin-top:1.5rem;">
+                        <button type="submit" class="btn btn-primary"><i class="material-icons">code</i> 转换</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearImg2Base64()"><i class="material-icons">clear</i> 清空</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>转换结果</h3>
+                    <div id="img2b64-result"></div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>工具说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    本工具支持主流图片格式转Base64，结果可直接用于HTML、CSS、JSON等。<br>
+                    <b>支持格式：</b> PNG、JPG、GIF、WebP、BMP。<br>
+                    <b>输出选项：</b> 纯Base64或带data:image头。<br>
+                    <b>使用场景：</b> 图片嵌入网页、接口传输、前端开发等。<br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function clearImg2Base64() {
+        document.getElementById('file').value = '';
+        document.getElementById('img2b64-result').innerHTML = '';
+    }
+    document.getElementById('img2b64Form').onsubmit = function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file');
+        const mode = document.getElementById('mode').value;
+        if(!fileInput.files || fileInput.files.length === 0) {
+            alert('请先选择图片文件');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('mode', mode);
+        const resultDiv = document.getElementById('img2b64-result');
+        resultDiv.innerHTML = '正在转换，请稍候...';
+        fetch('/tools/api/img2base64', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async resp => {
+            const res = await resp.json();
+            if(res.success) {
+                let preview = '';
+                if(mode === 'dataurl') {
+                    preview = `<img src='${res.result}' class='result-img-preview' alt='Base64预览' />`;
+                } else {
+                    // 纯base64，尝试推断图片类型
+                    const ext = fileInput.files[0].name.split('.').pop().toLowerCase();
+                    let mime = 'image/png';
+                    if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
+                    else if (ext === 'gif') mime = 'image/gif';
+                    else if (ext === 'webp') mime = 'image/webp';
+                    else if (ext === 'bmp') mime = 'image/bmp';
+                    preview = `<img src='data:${mime};base64,${res.result}' class='result-img-preview' alt='Base64预览' />`;
+                }
+                resultDiv.innerHTML = preview + `<textarea id='b64Result' class='result-textarea' rows='6' readonly style='margin-top:1em;'>${res.result}</textarea><button id='copyBtn' class='btn btn-success' style='margin-top:8px;'><i class='material-icons'>content_copy</i> 复制Base64</button>`;
+                setTimeout(()=>{
+                    const copyBtn = document.getElementById('copyBtn');
+                    const b64Result = document.getElementById('b64Result');
+                    if(copyBtn && b64Result) {
+                        copyBtn.onclick = function(e) {
+                            e.preventDefault();
+                            b64Result.select();
+                            document.execCommand('copy');
+                            copyBtn.innerHTML = '<i class="material-icons">check</i> 已复制';
+                            setTimeout(()=>{copyBtn.innerHTML='<i class="material-icons">content_copy</i> 复制Base64';}, 1200);
+                        }
+                    }
+                }, 100);
+            } else {
+                resultDiv.innerHTML = `<span style='color:#dc2626;'>${res.msg||'转换失败'}</span>`;
+            }
+        })
+        .catch(err => {
+            resultDiv.innerHTML = `<span style='color:#dc2626;'>转换失败：${err}</span>`;
+        });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

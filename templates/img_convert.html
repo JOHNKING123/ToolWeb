@@ -1,0 +1,109 @@
+{{define "img_convert"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片格式转换 - 在线图片格式互转 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片格式转换工具，支持PNG、JPG、WebP、GIF、BMP等格式互转，安全高效。">
+    <meta name="keywords" content="图片格式转换,PNG转JPG,JPG转PNG,WebP,GIF,BMP,在线工具">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">compare_arrows</i> 图片格式转换</h1>
+            <p>支持PNG、JPG、WebP、GIF、BMP等格式互转，安全高效</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <form id="img-convert-form" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label for="img-file">选择图片：</label>
+                        <input type="file" id="img-file" name="file" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="img-format">目标格式：</label>
+                        <select id="img-format" name="format" class="input-area" style="width:160px;">
+                            <option value="png">PNG</option>
+                            <option value="jpg">JPG</option>
+                            <option value="gif">GIF</option>
+                            <option value="webp">WebP</option>
+                            <option value="bmp">BMP</option>
+                        </select>
+                    </div>
+                    <div class="form-actions" style="margin-top:1.5rem;">
+                        <button type="submit" class="btn btn-primary"><i class="material-icons">swap_horiz</i> 开始转换</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearImgConvert()"><i class="material-icons">clear</i> 清空</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>转换结果</h3>
+                    <div id="img-convert-result"></div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>工具说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    本工具支持主流图片格式互转，转换过程在浏览器与服务器间安全传输，图片不做存储。<br>
+                    <b>支持格式：</b> PNG、JPG、GIF、WebP、BMP。<br>
+                    <b>使用场景：</b> 图片格式兼容、压缩优化、Web开发、设计等。<br>
+                    <b>注意事项：</b> WebP/BMP部分环境可能不支持预览或下载。<br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function clearImgConvert() {
+        document.getElementById('img-file').value = '';
+        document.getElementById('img-convert-result').innerHTML = '';
+    }
+    document.getElementById('img-convert-form').onsubmit = function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('img-file');
+        const format = document.getElementById('img-format').value;
+        if(!fileInput.files || fileInput.files.length === 0) {
+            alert('请先选择图片文件');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('format', format);
+        const resultDiv = document.getElementById('img-convert-result');
+        resultDiv.innerHTML = '正在转换，请稍候...';
+        fetch('/tools/api/img-convert', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async resp => {
+            if(resp.ok) {
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                let ext = format;
+                if(ext === 'jpg') ext = 'jpeg';
+                let preview = '';
+                if(["png","jpeg","gif","webp","bmp"].includes(ext)) {
+                    preview = `<img src="${url}" class="result-img-preview" alt="转换结果预览" />`;
+                }
+                resultDiv.innerHTML = preview + `<div style='margin-top:1em;'><a href='${url}' download='converted.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
+            } else {
+                const res = await resp.json().catch(()=>({msg:'转换失败'}));
+                resultDiv.innerHTML = `<span style='color:#dc2626;'>${res.msg||'转换失败'}</span>`;
+            }
+        })
+        .catch(err => {
+            resultDiv.innerHTML = `<span style='color:#dc2626;'>转换失败：${err}</span>`;
+        });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

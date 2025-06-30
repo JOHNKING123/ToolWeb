@@ -1,0 +1,129 @@
+{{define "img_resize"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线图片尺寸调整 | 程序员工具箱</title>
+    <meta name="description" content="在线图片尺寸调整工具，支持PNG/JPG/GIF等格式，支持等比缩放和强制裁剪，安全高效。">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">photo_size_select_large</i> 图片尺寸调整</h1>
+            <p>支持PNG、JPG、GIF等格式，输入目标宽度/高度，选择等比缩放或强制裁剪，快速调整图片尺寸。</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <form id="resizeForm" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label for="file">选择图片：</label>
+                        <input type="file" id="file" name="file" accept="image/*" required>
+                    </div>
+                    <div class="form-row" style="display:flex;gap:1rem;">
+                        <div class="form-group" style="flex:1;">
+                            <label for="width">宽度(px)</label>
+                            <input type="number" id="width" name="width" min="1" placeholder="可选">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label for="height">高度(px)</label>
+                            <input type="number" id="height" name="height" min="1" placeholder="可选">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>调整模式</label>
+                        <select id="mode" name="mode">
+                            <option value="scale">等比缩放（推荐）</option>
+                            <option value="crop">强制裁剪</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>输出格式</label>
+                        <select id="format" name="format" class="input-area" style="width:160px;">
+                            <option value="jpg">JPG</option>
+                            <option value="png">PNG</option>
+                            <option value="gif">GIF</option>
+                        </select>
+                    </div>
+                    <div class="form-actions" style="margin-top:1.5rem;">
+                        <button type="submit" class="btn btn-primary"><i class="material-icons">photo_size_select_large</i> 开始调整</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearImgResize()"><i class="material-icons">clear</i> 清空</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>调整结果</h3>
+                    <div id="resize-result"></div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>工具说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    本工具支持主流图片尺寸调整，宽高可只填一项，另一项自动等比计算。<br>
+                    <b>支持格式：</b> PNG、JPG、GIF。<br>
+                    <b>调整模式：</b> 等比缩放（保持比例）、强制裁剪（可能变形）。<br>
+                    <b>使用场景：</b> 图片压缩、尺寸适配、Web开发、设计等。<br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function clearImgResize() {
+        document.getElementById('file').value = '';
+        document.getElementById('resize-result').innerHTML = '';
+    }
+    document.getElementById('resizeForm').onsubmit = function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file');
+        const width = document.getElementById('width').value;
+        const height = document.getElementById('height').value;
+        const mode = document.getElementById('mode').value;
+        const format = document.getElementById('format').value;
+        if(!fileInput.files || fileInput.files.length === 0) {
+            alert('请先选择图片文件');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        if(width) formData.append('width', width);
+        if(height) formData.append('height', height);
+        formData.append('mode', mode);
+        formData.append('format', format);
+        const resultDiv = document.getElementById('resize-result');
+        resultDiv.innerHTML = '正在处理，请稍候...';
+        fetch('/tools/api/img-resize', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async resp => {
+            if(resp.ok) {
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                let ext = format;
+                if(ext === 'jpg') ext = 'jpeg';
+                let preview = '';
+                if(["png","jpeg","gif"].includes(ext)) {
+                    preview = `<img src="${url}" class="result-img-preview" alt="调整结果预览" />`;
+                }
+                resultDiv.innerHTML = preview + `<div style='margin-top:1em;'><a href='${url}' download='resized.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
+            } else {
+                const res = await resp.json().catch(()=>({msg:'调整失败'}));
+                resultDiv.innerHTML = `<span style='color:#dc2626;'>${res.msg||'调整失败'}</span>`;
+            }
+        })
+        .catch(err => {
+            resultDiv.innerHTML = `<span style='color:#dc2626;'>调整失败：${err}</span>`;
+        });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

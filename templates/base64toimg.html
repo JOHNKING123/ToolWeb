@@ -1,0 +1,96 @@
+{{define "base64toimg"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - Base64转图片 | 程序员工具箱</title>
+    <meta name="description" content="在线Base64转图片工具，支持带data:image头或纯Base64，自动识别图片类型，支持预览和下载。">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">image</i> Base64转图片</h1>
+            <p>支持带data:image头或纯Base64，自动识别图片类型，粘贴Base64即可预览和下载图片。</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <form id="b64imgForm" autocomplete="off">
+                    <div class="form-group">
+                        <label for="b64">Base64字符串</label>
+                        <textarea id="b64" name="b64" class="result-textarea" rows="6" placeholder="粘贴Base64字符串，可带data:image头" required></textarea>
+                    </div>
+                    <div class="form-actions" style="margin-top:1.5rem;display:flex;gap:1rem;">
+                        <button type="submit" class="btn btn-primary"><i class="material-icons">image</i> 生成图片</button>
+                        <button type="button" class="btn btn-secondary" id="clearBtn"><i class="material-icons">clear</i> 清空</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>图片预览</h3>
+                    <div id="b64img-result"></div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>工具说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    本工具支持Base64图片解码，自动识别图片类型，支持主流格式。<br>
+                    <b>支持格式：</b> PNG、JPG、GIF、WebP、BMP。<br>
+                    <b>输入格式：</b> 可带data:image头或纯Base64字符串。<br>
+                    <b>使用场景：</b> 图片还原、接口调试、前端开发等。<br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.getElementById('clearBtn').onclick = function() {
+        document.getElementById('b64').value = '';
+        document.getElementById('b64img-result').innerHTML = '';
+    };
+    document.getElementById('b64imgForm').onsubmit = function(e) {
+        e.preventDefault();
+        const b64 = document.getElementById('b64').value.trim();
+        if(!b64) {
+            alert('请输入Base64字符串');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('b64', b64);
+        const resultDiv = document.getElementById('b64img-result');
+        resultDiv.innerHTML = '正在解码，请稍候...';
+        fetch('/tools/api/base642img', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async resp => {
+            if(resp.ok) {
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                let ext = 'png';
+                if (b64.startsWith('data:image/')) {
+                    const m = b64.match(/^data:image\/(\w+);base64,/);
+                    if (m && m[1]) ext = m[1];
+                }
+                let preview = `<img src='${url}' class='result-img-preview' alt='图片预览' />`;
+                preview += `<div style='margin-top:1em;'><a href='${url}' download='output.${ext}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
+                resultDiv.innerHTML = preview;
+            } else {
+                resultDiv.innerHTML = `<span style='color:#dc2626;'>Base64解码失败</span>`;
+            }
+        })
+        .catch(err => {
+            resultDiv.innerHTML = `<span style='color:#dc2626;'>解码失败：${err}</span>`;
+        });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

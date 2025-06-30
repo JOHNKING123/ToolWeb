@@ -1,0 +1,113 @@
+{{define "img_compress"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片压缩 - 在线图片压缩工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片压缩工具，支持JPG、PNG、GIF等格式压缩，支持自定义压缩质量，安全高效。">
+    <meta name="keywords" content="图片压缩,JPG压缩,PNG压缩,GIF压缩,在线工具">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">compress</i> 图片压缩</h1>
+            <p>支持JPG、PNG、GIF等格式压缩，JPG可自定义压缩质量</p>
+        </div>
+        <div class="tool-content" style="max-width:600px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <form id="img-compress-form" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label for="img-file">选择图片：</label>
+                        <input type="file" id="img-file" name="file" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="img-format">目标格式：</label>
+                        <select id="img-format" name="format" class="input-area" style="width:160px;">
+                            <option value="jpg">JPG</option>
+                            <option value="png">PNG</option>
+                            <option value="gif">GIF</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="img-quality">压缩质量（1-100，JPG有效）：</label>
+                        <input type="number" id="img-quality" name="quality" min="1" max="100" value="80" class="input-area" style="width:100px;">
+                    </div>
+                    <div class="form-actions" style="margin-top:1.5rem;">
+                        <button type="submit" class="btn btn-primary"><i class="material-icons">compress</i> 开始压缩</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearImgCompress()"><i class="material-icons">clear</i> 清空</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>压缩结果</h3>
+                    <div id="img-compress-result"></div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>工具说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    本工具支持主流图片格式压缩，JPG可自定义压缩质量，PNG为无损压缩。<br>
+                    <b>支持格式：</b> JPG、PNG、GIF。<br>
+                    <b>使用场景：</b> 图片体积优化、Web加速、图片分享等。<br>
+                    <b>注意事项：</b> PNG压缩为无损，JPG压缩可调节质量，GIF压缩为标准编码。<br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function clearImgCompress() {
+        document.getElementById('img-file').value = '';
+        document.getElementById('img-compress-result').innerHTML = '';
+    }
+    document.getElementById('img-compress-form').onsubmit = function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('img-file');
+        const format = document.getElementById('img-format').value;
+        const quality = document.getElementById('img-quality').value;
+        if(!fileInput.files || fileInput.files.length === 0) {
+            alert('请先选择图片文件');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('format', format);
+        formData.append('quality', quality);
+        const resultDiv = document.getElementById('img-compress-result');
+        resultDiv.innerHTML = '正在压缩，请稍候...';
+        fetch('/tools/api/img-compress', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async resp => {
+            if(resp.ok) {
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                let ext = format;
+                if(ext === 'jpg') ext = 'jpeg';
+                let preview = '';
+                if(["png","jpeg","gif"].includes(ext)) {
+                    preview = `<img src="${url}" class="result-img-preview" alt="压缩结果预览" />`;
+                }
+                resultDiv.innerHTML = preview + `<div style='margin-top:1em;'><a href='${url}' download='compressed.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
+            } else {
+                const res = await resp.json().catch(()=>({msg:'压缩失败'}));
+                resultDiv.innerHTML = `<span style='color:#dc2626;'>${res.msg||'压缩失败'}</span>`;
+            }
+        })
+        .catch(err => {
+            resultDiv.innerHTML = `<span style='color:#dc2626;'>压缩失败：${err}</span>`;
+        });
+    };
+    </script>
+</body>
+</html>
+{{end}} 
