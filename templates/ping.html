@@ -1,0 +1,79 @@
+{{define "ping"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .ping-container { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 1.2rem; padding: 2.5rem 2rem; box-shadow:0 4px 24px #e0e0e0; }
+        .ping-title { text-align:center; font-size:2.2rem; font-weight:700; margin-bottom:2rem; letter-spacing:1px; }
+        .ping-form { display:flex; gap:1rem; justify-content:center; margin-bottom:2rem; }
+        .ping-form input { flex:1; padding:0.7rem 1rem; border-radius:0.7rem; border:1.5px solid #d0d7de; font-size:1.1rem; transition:box-shadow .2s; }
+        .ping-form input:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px #90caf9; }
+        .ping-form button { padding:0.7rem 2.2rem; border-radius:0.7rem; background:#1976d2; color:#fff; font-size:1.1rem; border:none; font-weight:600; cursor:pointer; transition:background .2s; }
+        .ping-form button:hover { background:#1565c0; }
+        .result-box { background:#f8fafc; border-radius:1rem; box-shadow:0 2px 8px #eee; padding:1.5rem; margin-top:2rem; }
+        #ping-output { font-family: 'Fira Mono', 'Consolas', monospace; font-size:15px; white-space:pre-wrap; }
+        .ping-stats { color:#1976d2; font-weight:bold; }
+        .ping-error { color:#e53935; font-weight:bold; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .ping-loading { text-align:center; margin-bottom:1rem; }
+        .ping-loading .material-icons { font-size:2.2rem; animation:spin 1s linear infinite; vertical-align:middle; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <div class="ping-container">
+            <div class="ping-title">Ping测试工具</div>
+            <div class="ping-form">
+                <input id="host-input" type="text" placeholder="主机/IP，如 www.baidu.com">
+                <button id="ping-btn">Ping</button>
+            </div>
+            <div id="result" class="result-box" style="display:none;">
+                <div id="ping-loading" class="ping-loading" style="display:none;">
+                    <span class="material-icons">autorenew</span>
+                    <span>正在测试...</span>
+                </div>
+                <div id="ping-output"></div>
+            </div>
+        </div>
+    </main>
+    <script>
+    document.getElementById('ping-btn').onclick = function() {
+        var host = document.getElementById('host-input').value.trim();
+        if(!host) { alert('请输入主机'); return; }
+        var resultBox = document.getElementById('result');
+        var loading = document.getElementById('ping-loading');
+        var output = document.getElementById('ping-output');
+        resultBox.style.display = 'block';
+        loading.style.display = 'block';
+        output.innerHTML = '';
+        fetch('/tools/api/ping?host='+encodeURIComponent(host)).then(r=>r.json()).then(res=>{
+            loading.style.display = 'none';
+            if(res.success) {
+                let lines = res.output.split('\n');
+                let html = '';
+                for(let line of lines) {
+                    if(/packet loss|round-trip|min\/avg|statistics/.test(line)) {
+                        html += `<div class='ping-stats'>${line}</div>`;
+                    } else {
+                        html += line + '<br>';
+                    }
+                }
+                output.innerHTML = `<b>Ping结果：</b><br>` + html;
+            } else {
+                output.innerHTML = `<span class='ping-error'>Ping失败：${res.msg||''}${res.error?('<br>'+res.error):''}</span>`;
+            }
+        }).catch(e=>{
+            loading.style.display = 'none';
+            output.innerHTML = `<span class='ping-error'>Ping异常：${e}</span>`;
+        });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

@@ -1,0 +1,102 @@
+{{define "port_scan"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .scan-container { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 1rem; padding: 2rem; box-shadow:0 2px 12px #e0e0e0; }
+        .result-box { background:#f5f5f5; border-radius:0.5rem; padding:1rem; margin-top:1.5rem; font-size:15px; }
+        .scan-table { width:100%; border-collapse:collapse; margin:1rem 0; }
+        .scan-table th, .scan-table td { border-bottom:1px solid #eee; padding:0.5rem 0.7rem; text-align:left; }
+        .scan-table th { color:#888; font-weight:normal; width:120px; }
+        .scan-table tr:last-child td { border-bottom:none; }
+        .scan-open { color:#43a047; font-weight:bold; }
+        .scan-tip { color:#888; font-size:13px; margin-top:0.2rem; margin-bottom:1.2rem; }
+        .scan-loading { color:#1976d2; font-size:15px; margin-bottom:0.5rem; }
+        .scan-current { color:#1976d2; font-size:15px; margin-bottom:0.5rem; font-weight:bold; }
+        .scan-none { color:#888; font-size:15px; text-align:center; margin:1.5rem 0; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <div class="scan-container">
+            <h1 style="text-align:center;">端口扫描工具</h1>
+            <div style="margin:1.5rem 0;">
+                <input id="host-input" type="text" placeholder="主机/IP，如 8.8.8.8" style="width:60%;padding:0.5rem;">
+                <input id="ports-input" type="text" placeholder="端口列表，如 80,443,1000-1010" style="width:35%;padding:0.5rem;">
+                <button id="scan-btn" class="btn-primary" style="padding:0.5rem 1.2rem;">扫描</button>
+            </div>
+            <div class="scan-tip">端口支持逗号分隔和范围格式，如 <b>22,80-85,443</b></div>
+            <div id="result" class="result-box" style="display:none;">
+                <div id="scan-current" class="scan-current" style="display:none;"></div>
+                <table class="scan-table" style="width:100%;"><thead><tr><th>端口</th><th>状态</th></tr></thead><tbody id="scan-table-body"></tbody></table>
+                <div id="scan-none" class="scan-none" style="display:none;">未发现开放端口</div>
+            </div>
+        </div>
+    </main>
+    <script>
+    function parsePorts(str) {
+        let result = [];
+        str.split(',').forEach(part => {
+            part = part.trim();
+            if(/^\d+-\d+$/.test(part)) {
+                let [start, end] = part.split('-').map(Number);
+                for(let p=start; p<=end; p++) result.push(p);
+            } else if(/^\d+$/.test(part)) {
+                result.push(Number(part));
+            }
+        });
+        return result;
+    }
+    document.getElementById('scan-btn').onclick = async function() {
+        var host = document.getElementById('host-input').value.trim();
+        var ports = document.getElementById('ports-input').value.trim();
+        if(!host || !ports) { alert('请输入主机和端口'); return; }
+        var resultBox = document.getElementById('result');
+        var current = document.getElementById('scan-current');
+        var tableBody = document.getElementById('scan-table-body');
+        var noneTip = document.getElementById('scan-none');
+        resultBox.style.display = 'block';
+        current.style.display = 'block';
+        tableBody.innerHTML = '';
+        noneTip.style.display = 'none';
+        let portArr = parsePorts(ports);
+        if(portArr.length === 0) {
+            current.style.display = 'none';
+            tableBody.innerHTML = '';
+            noneTip.style.display = 'block';
+            noneTip.innerText = '端口格式错误';
+            return;
+        }
+        let openCount = 0;
+        for(let i=0; i<portArr.length; i++) {
+            let port = portArr[i];
+            current.innerText = `正在扫描端口 ${port}...`;
+            let res = await fetch(`/tools/api/port-scan?host=${encodeURIComponent(host)}&ports=${port}`).then(r=>r.json()).catch(e=>({success:false,error:e+''}));
+            if(res.success && res.results && res.results.length>0) {
+                let r = res.results[0];
+                if(r.open) {
+                    let row = document.createElement('tr');
+                    row.innerHTML = `<td>${r.port}</td><td><span class='scan-open'>开放</span></td>`;
+                    tableBody.appendChild(row);
+                    openCount++;
+                }
+            }
+            // 可加延时，防止过快
+            await new Promise(r=>setTimeout(r, 60));
+        }
+        current.style.display = 'none';
+        if(openCount === 0) {
+            noneTip.style.display = 'block';
+            noneTip.innerText = '未发现开放端口';
+        }
+    };
+    </script>
+</body>
+</html>
+{{end}} 

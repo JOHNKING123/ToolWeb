@@ -1,0 +1,60 @@
+{{define "ssl_check"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .ssl-container { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 1rem; padding: 2rem; box-shadow:0 2px 12px #e0e0e0; }
+        .result-box { background:#f5f5f5; border-radius:0.5rem; padding:1rem; margin-top:1.5rem; font-size:15px; }
+        .ssl-table { width:100%; border-collapse:collapse; margin:1rem 0; }
+        .ssl-table th, .ssl-table td { border-bottom:1px solid #eee; padding:0.5rem 0.7rem; text-align:left; }
+        .ssl-table th { color:#888; font-weight:normal; width:120px; }
+        .ssl-table tr:last-child td { border-bottom:none; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <div class="ssl-container">
+            <h1 style="text-align:center;">SSL证书检测工具</h1>
+            <div style="margin:1.5rem 0;">
+                <input id="domain-input" type="text" placeholder="请输入域名，如 baidu.com" style="width:70%;padding:0.5rem;">
+                <button id="ssl-btn" class="btn-primary" style="padding:0.5rem 1.2rem;">检测</button>
+            </div>
+            <div id="result" class="result-box" style="display:none;"></div>
+        </div>
+    </main>
+    <script>
+    document.getElementById('ssl-btn').onclick = function() {
+        var domain = document.getElementById('domain-input').value.trim();
+        if(!domain) { alert('请输入域名'); return; }
+        var resultBox = document.getElementById('result');
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = '检测中...';
+        fetch('/tools/api/ssl-check?domain='+encodeURIComponent(domain)).then(r=>r.json()).then(res=>{
+            if(res.success && res.cert) {
+                let c = res.cert;
+                let html = '<table class="ssl-table">';
+                html += `<tr><th>证书主题</th><td>${c.subject||'-'}</td></tr>`;
+                html += `<tr><th>颁发机构</th><td>${c.issuer||'-'}</td></tr>`;
+                html += `<tr><th>有效期起</th><td>${c.not_before||'-'}</td></tr>`;
+                html += `<tr><th>有效期止</th><td>${c.not_after||'-'}</td></tr>`;
+                html += `<tr><th>DNS名称</th><td>${(c.dns_names||[]).join('<br>')||'-'}</td></tr>`;
+                html += `<tr><th>序列号</th><td>${c.serial_number||'-'}</td></tr>`;
+                html += `<tr><th>签名算法</th><td>${c.sig_algo||'-'}</td></tr>`;
+                html += `<tr><th>公钥算法</th><td>${c.public_key_algo||'-'}</td></tr>`;
+                html += '</table>';
+                resultBox.innerHTML = html;
+            } else {
+                resultBox.innerHTML = '检测失败：'+(res.msg||'')+(res.error?('<br>'+res.error):'');
+            }
+        }).catch(e=>{ resultBox.innerHTML = '检测异常：'+e; });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

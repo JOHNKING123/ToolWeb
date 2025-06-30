@@ -245,6 +245,63 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "nettools",
+			Name:        "网络工具",
+			Description: "常用网络查询工具",
+			Icon:        "public",
+			Tools: []Tool{
+				{
+					ID:          "domain-check",
+					Name:        "域名查询",
+					Description: "查询域名是否注册及Whois信息",
+					Path:        "/tools/domain-check",
+					Icon:        "language",
+				},
+				{
+					ID:          "ip-lookup",
+					Name:        "IP查询",
+					Description: "查询任意IP归属地信息",
+					Path:        "/tools/ip-lookup",
+					Icon:        "location_on",
+				},
+				{
+					ID:          "my-ip",
+					Name:        "我的IP",
+					Description: "显示你的公网IP及归属地",
+					Path:        "/tools/my-ip",
+					Icon:        "person_pin_circle",
+				},
+				{
+					ID:          "port-scan",
+					Name:        "端口扫描",
+					Description: "检测主机端口开放状态",
+					Path:        "/tools/port-scan",
+					Icon:        "settings_ethernet",
+				},
+				{
+					ID:          "ping",
+					Name:        "Ping测试",
+					Description: "网络连通性与延迟测试",
+					Path:        "/tools/ping",
+					Icon:        "network_ping",
+				},
+				{
+					ID:          "dns-lookup",
+					Name:        "DNS解析查询",
+					Description: "查询域名DNS记录信息",
+					Path:        "/tools/dns-lookup",
+					Icon:        "dns",
+				},
+				{
+					ID:          "ssl-check",
+					Name:        "SSL证书检测",
+					Description: "检测网站SSL证书有效期等信息",
+					Path:        "/tools/ssl-check",
+					Icon:        "verified_user",
+				},
+			},
+		},
 	}
 }
 

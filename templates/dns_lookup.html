@@ -1,0 +1,57 @@
+{{define "dns_lookup"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .dns-container { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 1rem; padding: 2rem; box-shadow:0 2px 12px #e0e0e0; }
+        .result-box { background:#f5f5f5; border-radius:0.5rem; padding:1rem; margin-top:1.5rem; font-size:15px; }
+        .dns-table { width:100%; border-collapse:collapse; margin:1rem 0; }
+        .dns-table th, .dns-table td { border-bottom:1px solid #eee; padding:0.5rem 0.7rem; text-align:left; }
+        .dns-table th { color:#888; font-weight:normal; width:120px; }
+        .dns-table tr:last-child td { border-bottom:none; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <div class="dns-container">
+            <h1 style="text-align:center;">DNS解析查询工具</h1>
+            <div style="margin:1.5rem 0;">
+                <input id="domain-input" type="text" placeholder="请输入域名，如 baidu.com" style="width:70%;padding:0.5rem;">
+                <button id="dns-btn" class="btn-primary" style="padding:0.5rem 1.2rem;">查询</button>
+            </div>
+            <div id="result" class="result-box" style="display:none;"></div>
+        </div>
+    </main>
+    <script>
+    document.getElementById('dns-btn').onclick = function() {
+        var domain = document.getElementById('domain-input').value.trim();
+        if(!domain) { alert('请输入域名'); return; }
+        var resultBox = document.getElementById('result');
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = '查询中...';
+        fetch('/tools/api/dns-lookup?domain='+encodeURIComponent(domain)).then(r=>r.json()).then(res=>{
+            if(res.success && res.result) {
+                let d = res.result;
+                let html = '<table class="dns-table">';
+                html += `<tr><th>A记录</th><td>${(d.A||[]).join('<br>')||'-'}</td></tr>`;
+                html += `<tr><th>AAAA记录</th><td>${(d.AAAA||[]).join('<br>')||'-'}</td></tr>`;
+                html += `<tr><th>CNAME</th><td>${d.CNAME||'-'}</td></tr>`;
+                html += `<tr><th>MX</th><td>${(d.MX||[]).join('<br>')||'-'}</td></tr>`;
+                html += `<tr><th>NS</th><td>${(d.NS||[]).join('<br>')||'-'}</td></tr>`;
+                html += '</table>';
+                resultBox.innerHTML = html;
+            } else {
+                resultBox.innerHTML = '查询失败：'+(res.msg||'')+(res.error?('<br>'+res.error):'');
+            }
+        }).catch(e=>{ resultBox.innerHTML = '查询异常：'+e; });
+    };
+    </script>
+</body>
+</html>
+{{end}} 

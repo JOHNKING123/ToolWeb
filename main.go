@@ -1350,6 +1350,15 @@ func main() {
 				"message": "curl 命令格式正确",
 			})
 		})
+
+		// 新增网络工具API
+		api.GET("/domain-check", tools.HandleDomainCheckAPI)
+		api.GET("/ip-lookup", tools.HandleIPLookupAPI)
+		api.GET("/my-ip", tools.HandleMyIPAPI)
+		api.GET("/port-scan", tools.HandlePortScanAPI)
+		api.GET("/ping", tools.HandlePingAPI)
+		api.GET("/dns-lookup", tools.HandleDNSLookupAPI)
+		api.GET("/ssl-check", tools.HandleSSLCheckAPI)
 	}
 
 	// 测试应用API路由

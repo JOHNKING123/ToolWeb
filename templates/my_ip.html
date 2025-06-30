@@ -1,0 +1,40 @@
+{{define "my_ip"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .my-ip-container { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 1rem; padding: 2rem; box-shadow:0 2px 8px #eee; }
+        .result-box { background:#f5f5f5; border-radius:0.5rem; padding:1rem; margin-top:1.5rem; font-size:14px; white-space:pre-wrap; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <div class="my-ip-container">
+            <h1 style="text-align:center;">我的IP</h1>
+            <div id="result" class="result-box">加载中...</div>
+        </div>
+    </main>
+    <script>
+    function showMyIP() {
+        var resultBox = document.getElementById('result');
+        fetch('/tools/api/my-ip').then(r=>r.json()).then(res=>{
+            if(res.success && res.data) {
+                let d = res.data;
+                let html = `<b>你的IP：</b>${res.ip||''}<br><b>国家：</b>${d.country||''} ${d.regionName||''} ${d.city||''}<br><b>运营商：</b>${d.isp||''}<br><b>经纬度：</b>${d.lat||''}, ${d.lon||''}<br><b>时区：</b>${d.timezone||''}`;
+                resultBox.innerHTML = html;
+            } else {
+                resultBox.innerHTML = '查询失败：'+(res.msg||'')+(res.error?('<br>'+res.error):'');
+            }
+        }).catch(e=>{ resultBox.innerHTML = '查询异常：'+e; });
+    }
+    showMyIP();
+    </script>
+</body>
+</html>
+{{end}} 

@@ -183,4 +183,10 @@ func HandleExampleAPI(c *gin.Context) {
 3. 确保所有工具都有适当的错误处理
 4. 维护良好的用户体验和界面设计
 5. 定期更新依赖和修复安全漏洞
-6. 监控网站性能和用户反馈 
+6. 监控网站性能和用户反馈
+
+# Cursor Rules for ToolWeb
+
+- Go模板 define 名称不要带 .html 后缀，只用逻辑名，如 define "port_scan"，避免模板无法访问。
+- 后续不需要为每个工具单独增加页面路由，所有工具页面路由统一由工具路由处理。
+// ... existing or future规则 ... 

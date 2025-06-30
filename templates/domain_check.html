@@ -1,0 +1,89 @@
+{{define "domain_check"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .domain-check-container { max-width: 540px; margin: 2rem auto; background: #fff; border-radius: 1rem; padding: 2rem; box-shadow:0 2px 12px #e0e0e0; }
+        .result-box { background:#f5f5f5; border-radius:0.5rem; padding:1rem; margin-top:1.5rem; font-size:15px; }
+        .whois-table { width:100%; border-collapse:collapse; margin:1rem 0; }
+        .whois-table th, .whois-table td { border-bottom:1px solid #eee; padding:0.5rem 0.7rem; text-align:left; }
+        .whois-table th { color:#888; font-weight:normal; width:120px; }
+        .whois-table tr:last-child td { border-bottom:none; }
+        .whois-status { font-weight:bold; font-size:1.1em; }
+        .whois-status.available { color:#43a047; }
+        .whois-status.registered { color:#e53935; }
+        .whois-raw-toggle { color:#2196f3; cursor:pointer; font-size:14px; margin-top:1rem; display:inline-block; }
+        .whois-raw { background:#222; color:#fff; border-radius:0.5rem; padding:1rem; margin-top:0.5rem; font-size:13px; max-height:260px; overflow:auto; display:none; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <div class="domain-check-container">
+            <h1 style="text-align:center;">域名查询工具</h1>
+            <div style="margin:1.5rem 0;">
+                <input id="domain-input" type="text" placeholder="请输入域名，如 example.com" style="width:70%;padding:0.5rem;">
+                <button id="check-btn" class="btn-primary" style="padding:0.5rem 1.2rem;">查询</button>
+            </div>
+            <div id="result" class="result-box" style="display:none;"></div>
+        </div>
+    </main>
+    <script>
+    function parseWhois(whois) {
+        // 常见字段正则
+        const fields = [
+            {key:'注册商', re:/Registrar:\s*(.+)/i},
+            {key:'注册时间', re:/Creation Date:\s*([\d\-T:Z ]+)/i},
+            {key:'到期时间', re:/Expiry Date:\s*([\d\-T:Z ]+)/i},
+            {key:'更新时间', re:/Updated Date:\s*([\d\-T:Z ]+)/i},
+            {key:'注册人邮箱', re:/Registrant Email:\s*(.+)/i},
+            {key:'DNS服务器', re:/Name Server:\s*(.+)/ig},
+            {key:'状态', re:/Status:\s*(.+)/i},
+        ];
+        let info = {};
+        fields.forEach(f => {
+            if(f.key==='DNS服务器') {
+                let arr = [];
+                let m;
+                while((m=f.re.exec(whois))) arr.push(m[1]);
+                if(arr.length) info[f.key]=arr.join('<br>');
+            } else {
+                let m = f.re.exec(whois);
+                if(m) info[f.key]=m[1];
+            }
+        });
+        return info;
+    }
+    document.getElementById('check-btn').onclick = function() {
+        var domain = document.getElementById('domain-input').value.trim();
+        if(!domain) { alert('请输入域名'); return; }
+        var resultBox = document.getElementById('result');
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = '查询中...';
+        fetch('/tools/api/domain-check?domain='+encodeURIComponent(domain)).then(r=>r.json()).then(res=>{
+            if(res.success) {
+                let status = res.registered ? '<span class="whois-status registered">已注册</span>' : '<span class="whois-status available">未注册</span>';
+                let info = res.whois ? parseWhois(res.whois) : {};
+                let table = '<table class="whois-table">';
+                table += `<tr><th>注册状态</th><td>${status}</td></tr>`;
+                for(let k of ['注册商','注册时间','到期时间','更新时间','注册人邮箱','DNS服务器','状态']) {
+                    if(info[k]) table += `<tr><th>${k}</th><td>${info[k]}</td></tr>`;
+                }
+                table += '</table>';
+                let rawToggle = '<span class="whois-raw-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==\'block\'?\'none\':\'block\'">显示/隐藏原始Whois信息</span>';
+                let raw = `<div class="whois-raw">${res.whois?res.whois.replace(/</g,'&lt;').replace(/\n/g,'<br>'):''}</div>`;
+                resultBox.innerHTML = table + rawToggle + raw;
+            } else {
+                resultBox.innerHTML = '查询失败：'+(res.msg||'')+(res.error?('<br>'+res.error):'');
+            }
+        }).catch(e=>{ resultBox.innerHTML = '查询异常：'+e; });
+    };
+    </script>
+</body>
+</html>
+{{end}} 
