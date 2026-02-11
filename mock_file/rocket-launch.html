@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>猎鹰9号发射与回收模拟</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #000; overflow: hidden;
+  font-family: 'SF Pro Display', 'Segoe UI', Arial, sans-serif;
+  color: #fff; user-select: none;
+}
+canvas { display: block; }
+
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: radial-gradient(ellipse at center, #0a0a2a 0%, #020210 70%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 1s;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+#loading-title { color: #dde; font-size: 26px; font-weight: 300; letter-spacing: 6px; margin-bottom: 8px; }
+#loading-sub { color: #667; font-size: 14px; letter-spacing: 2px; margin-bottom: 30px; }
+#loading-bar-bg { width: 300px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+#loading-bar { height: 100%; width: 0%; border-radius: 2px; background: linear-gradient(90deg, #f97316, #ef4444); transition: width 0.3s; }
+#loading-status { color: #556; font-size: 12px; margin-top: 14px; letter-spacing: 1px; }
+
+#hud {
+  position: fixed; top: 16px; left: 16px; z-index: 10;
+  background: rgba(0,0,0,0.75); padding: 16px 20px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);
+  min-width: 240px; font-size: 12px; line-height: 1.9;
+  font-variant-numeric: tabular-nums;
+}
+#hud h2 { font-size: 11px; font-weight: 600; color: #f97316; margin-bottom: 8px; letter-spacing: 3px; text-transform: uppercase; }
+.hud-row { display: flex; justify-content: space-between; }
+.hud-label { color: #667; }
+.hud-val { color: #ccd; font-weight: 500; }
+.hud-val.accent { color: #f97316; }
+
+#phase-panel {
+  position: fixed; top: 16px; right: 16px; z-index: 10;
+  background: rgba(0,0,0,0.75); padding: 16px 20px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);
+  min-width: 210px; font-size: 12px;
+}
+#phase-panel h3 { font-size: 11px; font-weight: 600; color: #556; margin-bottom: 10px; letter-spacing: 3px; text-transform: uppercase; }
+.pi { display: flex; align-items: center; gap: 8px; padding: 3px 0; color: #334; transition: color 0.3s; }
+.pi.on { color: #f97316; }
+.pi.ok { color: #22c55e; }
+.pd { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; flex-shrink: 0; }
+.pi.on .pd { background: #f97316; box-shadow: 0 0 6px #f97316; }
+.pi.ok .pd { background: #22c55e; }
+
+#countdown-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+#cd-num { font-size: 160px; font-weight: 100; color: #fff; opacity: 0; transition: all 0.25s;
+  text-shadow: 0 0 80px rgba(255,150,50,0.4); }
+#cd-label { font-size: 14px; color: #667; letter-spacing: 8px; text-transform: uppercase; margin-top: 16px; }
+
+#event-bar {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 30;
+  font-size: 18px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase;
+  color: #fff; text-shadow: 0 0 20px rgba(249,115,22,0.5);
+  opacity: 0; transition: opacity 0.5s; white-space: nowrap;
+}
+#event-bar.show { opacity: 1; }
+
+#controls {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+  display: flex; gap: 10px; align-items: center;
+}
+#controls button {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: #aab; padding: 8px 22px; border-radius: 6px; font-size: 13px;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 1px;
+}
+#controls button:hover { background: rgba(255,255,255,0.12); color: #fff; }
+#controls button.primary { border-color: rgba(249,115,22,0.4); color: #f97316; }
+#controls button.primary:hover { background: rgba(249,115,22,0.15); }
+
+#mission-success {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.7); opacity: 0; pointer-events: none; transition: opacity 1s;
+}
+#mission-success.show { opacity: 1; pointer-events: auto; }
+#mission-success h1 { font-size: 52px; font-weight: 200; color: #22c55e; letter-spacing: 10px; text-shadow: 0 0 40px rgba(34,197,94,0.3); margin-bottom: 16px; }
+#mission-success p { font-size: 16px; color: #778; letter-spacing: 2px; }
+#mission-success button { margin-top: 36px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 10px 32px; border-radius: 6px; font-size: 15px; cursor: pointer; letter-spacing: 1px; }
+
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div id="loading-title">FALCON 9</div>
+  <div id="loading-sub">Launch &amp; Landing Simulation</div>
+  <div id="loading-bar-bg"><div id="loading-bar"></div></div>
+  <div id="loading-status">初始化...</div>
+</div>
+
+<div id="countdown-overlay"><div id="cd-num"></div><div id="cd-label"></div></div>
+<div id="event-bar"></div>
+
+<div id="hud">
+  <h2>Telemetry</h2>
+  <div class="hud-row"><span class="hud-label">T</span><span class="hud-val accent" id="h-time">-00:10</span></div>
+  <div class="hud-row"><span class="hud-label">PHASE</span><span class="hud-val accent" id="h-phase">PRE-LAUNCH</span></div>
+  <div class="hud-row"><span class="hud-label">ALT</span><span class="hud-val" id="h-alt">0 km</span></div>
+  <div class="hud-row"><span class="hud-label">SPEED</span><span class="hud-val" id="h-spd">0 m/s</span></div>
+  <div class="hud-row"><span class="hud-label">ACCEL</span><span class="hud-val" id="h-acc">0 G</span></div>
+  <div class="hud-row"><span class="hud-label">FUEL S1</span><span class="hud-val" id="h-f1">100%</span></div>
+  <div class="hud-row"><span class="hud-label">DOWNRANGE</span><span class="hud-val" id="h-dr">0 km</span></div>
+</div>
+
+<div id="phase-panel">
+  <h3>Mission Timeline</h3>
+  <div class="pi on" data-p="0"><div class="pd"></div>T-10 倒计时</div>
+  <div class="pi" data-p="1"><div class="pd"></div>T+0 点火升空</div>
+  <div class="pi" data-p="2"><div class="pd"></div>T+1:12 Max-Q</div>
+  <div class="pi" data-p="3"><div class="pd"></div>T+2:33 MECO 一级关机</div>
+  <div class="pi" data-p="4"><div class="pd"></div>T+2:36 级间分离</div>
+  <div class="pi" data-p="5"><div class="pd"></div>T+2:44 SES-1 二级点火</div>
+  <div class="pi" data-p="6"><div class="pd"></div>T+2:50 一级翻转</div>
+  <div class="pi" data-p="7"><div class="pd"></div>T+3:30 整流罩分离</div>
+  <div class="pi" data-p="8"><div class="pd"></div>T+3:50 回推点火 ×3</div>
+  <div class="pi" data-p="9"><div class="pd"></div>T+6:30 再入点火 ×3</div>
+  <div class="pi" data-p="10"><div class="pd"></div>T+7:40 着陆点火 ×1</div>
+  <div class="pi" data-p="11"><div class="pd"></div>T+8:10 着陆成功!</div>
+  <div class="pi" data-p="12"><div class="pd"></div>T+8:50 SECO 载荷入轨</div>
+</div>
+
+<div id="controls">
+  <button class="primary" id="btn-start">开始发射 [SPACE]</button>
+  <button id="btn-speed">1×</button>
+</div>
+
+<div id="mission-success">
+  <h1>MISSION SUCCESS</h1>
+  <p>一级助推器成功着陆于无人回收船 · 载荷顺利入轨</p>
+  <button onclick="location.reload()">重新体验</button>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+// ============================================================
+//  FALCON 9 LAUNCH & LANDING — ACCURATE SIMULATION
+//  Based on real SpaceX flight data:
+//    MECO ~T+2:33, SEP ~T+2:36, SES ~T+2:44
+//    Fairing ~T+3:30, Boostback ~T+3:50, Entry ~T+6:30
+//    Landing ~T+7:40, Touchdown ~T+8:10, SECO ~T+8:50
+// ============================================================
+const C = document.getElementById('c');
+const X = C.getContext('2d');
+let W, H;
+function resize() { W = C.width = innerWidth; H = C.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const lerp = (a,b,t) => a+(b-a)*t;
+const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+const rand = (a,b) => Math.random()*(b-a)+a;
+const easeOut = t => 1-Math.pow(1-t,3);
+const easeInOut = t => t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const smoothstep = (lo,hi,t) => { const x=clamp((t-lo)/(hi-lo),0,1); return x*x*(3-2*x); };
+function lerpColor(a,b,t){ return [Math.round(lerp(a[0],b[0],t)),Math.round(lerp(a[1],b[1],t)),Math.round(lerp(a[2],b[2],t))]; }
+
+// ===== STARS =====
+const stars = Array.from({length:600}, () => ({
+  x: rand(-3000,3000), y: rand(-12000,4000),
+  r: rand(0.3,1.8), b: rand(0.3,1), tw: rand(0,6.28),
+  color: ['#fff','#cdf','#fec','#fcc','#cff'][Math.random()*5|0]
+}));
+
+// ===== PARTICLES =====
+let particles = [];
+class P {
+  constructor(x,y,vx,vy,life,color,size,type='fire'){
+    Object.assign(this,{x,y,vx,vy,life,ml:life,color,size,type,rot:rand(0,6.28)});
+  }
+  update(dt){
+    this.x+=this.vx*dt; this.y+=this.vy*dt; this.life-=dt;
+    if(this.type==='smoke'){this.size+=dt*20; this.vx*=.97; this.vy*=.97;}
+    if(this.type==='fire'){this.size*=.96;}
+    if(this.type==='spark'){this.vy+=40*dt; this.size*=.97;}
+    if(this.type==='heat'){this.size+=dt*8; this.vx*=.99;}
+    if(this.type==='steam'){this.size+=dt*30; this.vy-=20*dt;}
+  }
+  get a(){ return clamp(this.life/this.ml,0,1); }
+  get dead(){ return this.life<=0; }
+}
+
+function emitFlame(x,y,angle,power,count=4,spread=0.3){
+  for(let i=0;i<count;i++){
+    const a=angle+(Math.random()-.5)*spread;
+    const spd=rand(100,280)*power;
+    particles.push(new P(x+rand(-2,2),y,Math.sin(a)*spd,Math.cos(a)*spd,
+      rand(0.2,0.6),`hsl(${rand(15,50)},100%,${rand(50,95)}%)`,rand(3,7),'fire'));
+  }
+  if(Math.random()<0.5*power){
+    particles.push(new P(x+rand(-6,6),y+rand(-4,4),rand(-30,30),rand(20,80),
+      rand(1,2.5),`rgba(180,180,190,${rand(0.15,0.3)})`,rand(10,20),'smoke'));
+  }
+}
+function emitLaunchBlast(x,y,count=40){
+  for(let i=0;i<count;i++){
+    const a=rand(-Math.PI,Math.PI), spd=rand(60,200);
+    particles.push(new P(x+rand(-20,20),y,Math.cos(a)*spd,Math.sin(a)*spd*0.5-Math.abs(Math.sin(a)*spd*0.3),
+      rand(1.5,4),`rgba(220,200,180,${rand(0.2,0.5)})`,rand(15,35),'smoke'));
+  }
+  for(let i=0;i<20;i++){
+    const a=rand(-Math.PI,Math.PI), spd=rand(80,200);
+    particles.push(new P(x,y,Math.cos(a)*spd,Math.sin(a)*spd,rand(0.3,1),
+      `hsl(${rand(20,50)},100%,${rand(60,95)}%)`,rand(3,6),'spark'));
+  }
+}
+function emitSteam(x,y){
+  for(let i=0;i<6;i++){
+    particles.push(new P(x+rand(-30,30),y+rand(-5,5),rand(-40,40),rand(-60,-20),
+      rand(2,5),`rgba(200,210,220,${rand(0.1,0.25)})`,rand(15,30),'steam'));
+  }
+}
+function emitReentryHeat(x,y){
+  for(let i=0;i<3;i++){
+    particles.push(new P(x+rand(-10,10),y-35,rand(-30,30),rand(-80,-30),
+      rand(0.2,0.5),`hsl(${rand(0,35)},100%,${rand(50,85)}%)`,rand(2,6),'fire'));
+  }
+  if(Math.random()<0.5){
+    particles.push(new P(x+rand(-6,6),y-30,rand(-10,10),rand(-40,-15),
+      rand(0.3,0.7),`rgba(255,100,30,${rand(0.2,0.4)})`,rand(4,8),'heat'));
+  }
+}
+function emitLandingDust(x,y,count=15){
+  for(let i=0;i<count;i++){
+    const dir=Math.random()<0.5?-1:1, spd=rand(40,160);
+    particles.push(new P(x+rand(-15,15),y,dir*spd+rand(-20,20),rand(-30,-5),
+      rand(1.5,4),`rgba(160,150,140,${rand(0.2,0.4)})`,rand(12,30),'smoke'));
+  }
+}
+function emitSonicBoom(x,y){
+  for(let i=0;i<8;i++){
+    const a=rand(-Math.PI,Math.PI), spd=rand(100,300);
+    particles.push(new P(x,y,Math.cos(a)*spd,Math.sin(a)*spd*0.3,
+      rand(0.3,0.8),`rgba(255,255,255,${rand(0.05,0.15)})`,rand(20,50),'smoke'));
+  }
+}
+
+// ===== MISSION STATE =====
+// Phases match real Falcon 9 sequence (both stages tracked in parallel)
+const PH = {
+  COUNTDOWN:0, LIFTOFF:1, MAXQ:2, MECO:3, SEP:4, SES:5,
+  FLIP:6,        // S1 flips via N2 thrusters; S2 flying
+  FAIRING:7,     // Fairing sep from S2; S1 coasting
+  BOOSTBACK:8,   // S1 boostback 3-engine burn ~50s
+  REENTRY:9,     // S1 entry burn 3-engine ~20s; S1 atmospheric coast
+  LANDING_BURN:10, // S1 single-engine landing burn ~30s
+  TOUCHDOWN:11,  // S1 landed!
+  SECO:12,       // S2 engine cutoff, payload in orbit
+  DONE:13
+};
+
+const PH_NAME = ['COUNTDOWN','LIFTOFF','MAX-Q','MECO','SEPARATION','SES-1',
+  'FLIP','FAIRING SEP','BOOSTBACK','ENTRY BURN','LANDING BURN','LANDED!','SECO','COMPLETE'];
+
+// ---- Accurate timeline (real seconds, compressed 1:1) ----
+// Real: MECO ~T+153, Sep ~T+156, SES ~T+164, Fairing ~T+210
+//       Boostback ~T+230, Entry ~T+390, Landing ~T+460, TD ~T+490, SECO ~T+530
+const TL = {
+  MAXQ: 72,       // T+1:12  Max aerodynamic pressure
+  MECO: 153,      // T+2:33  Main engine cutoff, ~85km, ~1.7km/s
+  SEP: 156,       // T+2:36  Stage separation
+  SES: 164,       // T+2:44  Second engine start
+  FLIP_DONE: 172, // T+2:52  Booster flip complete (~8s flip via N2)
+  FAIRING: 210,   // T+3:30  Fairing jettison (S2 event)
+  BOOSTBACK: 230, // T+3:50  Boostback burn start, 3 engines, ~50s
+  BB_END: 280,    // T+4:40  Boostback burn end
+  ENTRY: 390,     // T+6:30  Entry burn, 3 engines, ~20s
+  ENTRY_END: 410, // T+6:50  Entry burn end
+  LANDING: 460,   // T+7:40  Landing burn, 1 engine
+  LEGS: 483,      // T+8:03  Legs deploy (7s before TD)
+  TOUCHDOWN: 490, // T+8:10  Touchdown
+  SECO: 530,      // T+8:50  Second engine cutoff
+};
+
+let M = {
+  phase: PH.COUNTDOWN, time: -10, started: false, speed: 1, phaseT: 0,
+  s1: { x:0,y:0, alt:0, vel:0, angle:0, fuel:100, vis:true, eng:false, landed:false,
+        gridFins:false, legs:false, nEng:9 },
+  s2: { x:0,y:0, alt:0, vel:0, angle:0, fuel:100, vis:false, eng:false },
+  fl: {x:0,y:0,vx:0,vy:0,a:0,vis:false},
+  fr: {x:0,y:0,vx:0,vy:0,a:0,vis:false},
+  pay: {x:0,y:0,a:0,vis:false},
+  cam: {x:0,y:0,zoom:1,shake:0},
+  alt:0, vel:0, acc:0, dr:0, atmo:1,
+  sonicBoomDone:false,
+};
+
+let evtTimer=0;
+function setPhase(p){
+  M.phase=p; M.phaseT=0;
+  document.querySelectorAll('.pi').forEach(el=>{
+    const i=+el.dataset.p;
+    el.className=i<p?'pi ok':i===p?'pi on':'pi';
+  });
+}
+function showEvt(text,dur=3500){
+  const el=document.getElementById('event-bar');
+  el.textContent=text; el.classList.add('show');
+  clearTimeout(evtTimer);
+  evtTimer=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// ===== FALCON 9 DRAWING =====
+function drawStage1(cx,x,y,angle,engineOn,gridFins,legs,landed,nEng){
+  cx.save(); cx.translate(x,y); cx.rotate(angle);
+  const bw=16, bh=70, hw=bw/2, hh=bh/2;
+
+  // Landing legs (deploy late, just before touchdown)
+  if(legs){
+    cx.strokeStyle='#555'; cx.lineWidth=2.5;
+    const spread=landed?18:14, len=landed?22:18;
+    [-1,1].forEach(s=>{
+      cx.beginPath(); cx.moveTo(s*hw*0.6,hh-3); cx.lineTo(s*spread,hh+len); cx.stroke();
+      cx.lineWidth=3;
+      cx.beginPath(); cx.moveTo(s*spread-2,hh+len); cx.lineTo(s*spread+2,hh+len); cx.stroke();
+      cx.lineWidth=2.5;
+    });
+  }
+
+  // Grid fins (top of S1 near interstage)
+  if(gridFins){
+    [-1,1].forEach(s=>{
+      cx.save(); cx.translate(s*(hw+1),-hh+8);
+      cx.fillStyle='#444'; cx.fillRect(0,-5,s*8,10);
+      cx.strokeStyle='#555'; cx.lineWidth=0.5;
+      for(let i=-4;i<=4;i+=2){cx.beginPath();cx.moveTo(0,i);cx.lineTo(s*8,i);cx.stroke();}
+      for(let i=1;i<=7;i+=2){cx.beginPath();cx.moveTo(s*i,-5);cx.lineTo(s*i,5);cx.stroke();}
+      cx.restore();
+    });
+  }
+
+  // Interstage (black top)
+  cx.fillStyle='#1a1a2e';
+  cx.beginPath(); cx.roundRect(-hw,-hh,bw,10,[3,3,0,0]); cx.fill();
+
+  // Main body (white)
+  const tg=cx.createLinearGradient(-hw,0,hw,0);
+  tg.addColorStop(0,'#d8d8d8'); tg.addColorStop(0.2,'#f4f4f4');
+  tg.addColorStop(0.5,'#fff'); tg.addColorStop(0.8,'#f0f0f0'); tg.addColorStop(1,'#c8c8c8');
+  cx.fillStyle=tg; cx.fillRect(-hw,-hh+10,bw,bh-10);
+
+  // LOX/RP-1 line
+  cx.fillStyle='rgba(0,0,0,0.05)'; cx.fillRect(-hw,-hh+30,bw,2);
+
+  // SpaceX logo
+  cx.fillStyle='#1a6bc4'; cx.font='bold 4px Arial'; cx.textAlign='center'; cx.fillText('SpaceX',0,5);
+
+  // Octaweb engine section
+  const engH=8;
+  cx.fillStyle='#2a2a35';
+  cx.beginPath(); cx.moveTo(-hw,hh); cx.lineTo(-hw-2,hh+engH); cx.lineTo(hw+2,hh+engH); cx.lineTo(hw,hh); cx.fill();
+
+  // Engine nozzles
+  cx.fillStyle='#3a3a45'; cx.strokeStyle='#555'; cx.lineWidth=0.5;
+  cx.beginPath(); cx.arc(0,hh+engH-2,2.5,0,Math.PI*2); cx.fill(); cx.stroke();
+  for(let i=0;i<8;i++){
+    const ea=(i/8)*Math.PI*2, ex=Math.cos(ea)*5, ey=Math.sin(ea)*5*0.3+hh+engH-2;
+    if(Math.abs(ex)<=hw+1){cx.beginPath();cx.arc(ex,ey,1.8,0,Math.PI*2);cx.fill();cx.stroke();}
+  }
+
+  // Engine flame
+  if(engineOn){
+    const baseY=hh+engH;
+    const visEngines = nEng >= 9 ? 3 : (nEng >= 3 ? 3 : 1);
+    for(let e=0;e<visEngines;e++){
+      const ex=e===0?0:(e===1?-4:4);
+      const fLen=(e===0?40:30)+Math.random()*15;
+      const fw=e===0?5:3.5;
+      if(nEng===1 && e>0) continue; // single engine landing
+      const fg=cx.createLinearGradient(0,baseY,0,baseY+fLen);
+      fg.addColorStop(0,'rgba(255,255,255,0.95)'); fg.addColorStop(0.1,'rgba(255,230,150,0.9)');
+      fg.addColorStop(0.3,'rgba(255,160,50,0.7)'); fg.addColorStop(0.6,'rgba(255,80,20,0.4)');
+      fg.addColorStop(1,'rgba(255,40,0,0)');
+      cx.fillStyle=fg;
+      cx.beginPath();
+      cx.moveTo(ex-fw,baseY);
+      cx.quadraticCurveTo(ex-fw*0.3,baseY+fLen*0.7,ex,baseY+fLen);
+      cx.quadraticCurveTo(ex+fw*0.3,baseY+fLen*0.7,ex+fw,baseY);
+      cx.fill();
+      if(e===0){
+        for(let d=0;d<4;d++){
+          cx.strokeStyle=`rgba(255,200,100,${0.3-d*0.06})`; cx.lineWidth=0.8;
+          cx.beginPath(); cx.ellipse(ex,baseY+8+d*8,fw-d*0.5,1.2,0,0,Math.PI*2); cx.stroke();
+        }
+      }
+    }
+    const glowR=nEng>1?25:12;
+    const glow=cx.createRadialGradient(0,baseY,0,0,baseY,glowR);
+    glow.addColorStop(0,'rgba(255,200,100,0.3)'); glow.addColorStop(1,'rgba(255,100,0,0)');
+    cx.fillStyle=glow; cx.beginPath(); cx.arc(0,baseY,glowR,0,Math.PI*2); cx.fill();
+  }
+  cx.restore();
+}
+
+function drawStage2(cx,x,y,angle,engineOn,hasFairing){
+  cx.save(); cx.translate(x,y); cx.rotate(angle);
+  const bw=14, bh=30, hw=bw/2, hh=bh/2;
+
+  if(hasFairing){
+    const fh=22;
+    const fg=cx.createLinearGradient(-hw-1,0,hw+1,0);
+    fg.addColorStop(0,'#ccc'); fg.addColorStop(0.5,'#f5f5f5'); fg.addColorStop(1,'#bbb');
+    cx.fillStyle=fg;
+    cx.beginPath();
+    cx.moveTo(0,-hh-fh);
+    cx.quadraticCurveTo(-hw-2,-hh-fh*0.3,-hw-1,-hh+2);
+    cx.lineTo(hw+1,-hh+2);
+    cx.quadraticCurveTo(hw+2,-hh-fh*0.3,0,-hh-fh);
+    cx.fill();
+    cx.strokeStyle='rgba(0,0,0,0.1)'; cx.lineWidth=0.5;
+    cx.beginPath(); cx.moveTo(0,-hh-fh); cx.lineTo(0,-hh+2); cx.stroke();
+  }
+
+  const tg=cx.createLinearGradient(-hw,0,hw,0);
+  tg.addColorStop(0,'#d0d0d0'); tg.addColorStop(0.5,'#f8f8f8'); tg.addColorStop(1,'#c0c0c0');
+  cx.fillStyle=tg; cx.beginPath(); cx.roundRect(-hw,-hh,bw,bh,2); cx.fill();
+  cx.fillStyle='#1a1a2e'; cx.fillRect(-hw+1,-hh+1,bw-2,8);
+
+  // MVac nozzle
+  cx.fillStyle='#333';
+  cx.beginPath(); cx.moveTo(-5,hh); cx.lineTo(-7,hh+7); cx.lineTo(7,hh+7); cx.lineTo(5,hh); cx.fill();
+
+  if(engineOn){
+    const baseY=hh+7, fLen=30+Math.random()*10;
+    const fg=cx.createLinearGradient(0,baseY,0,baseY+fLen);
+    fg.addColorStop(0,'rgba(200,220,255,0.9)'); fg.addColorStop(0.2,'rgba(130,170,255,0.7)');
+    fg.addColorStop(0.5,'rgba(80,120,255,0.4)'); fg.addColorStop(1,'rgba(50,80,255,0)');
+    cx.fillStyle=fg;
+    cx.beginPath();
+    cx.moveTo(-6,baseY); cx.quadraticCurveTo(-10,baseY+fLen*0.5,0,baseY+fLen);
+    cx.quadraticCurveTo(10,baseY+fLen*0.5,6,baseY); cx.fill();
+    // Vacuum plume
+    const pg=cx.createRadialGradient(0,baseY+10,0,0,baseY+10,20);
+    pg.addColorStop(0,'rgba(150,180,255,0.2)'); pg.addColorStop(1,'rgba(100,130,255,0)');
+    cx.fillStyle=pg; cx.beginPath(); cx.arc(0,baseY+10,20,0,Math.PI*2); cx.fill();
+  }
+  cx.restore();
+}
+
+function drawFairingHalf(cx,f,side){
+  if(!f.vis) return;
+  cx.save(); cx.translate(f.x,f.y); cx.rotate(f.a);
+  const fg=cx.createLinearGradient(-8,0,8,0);
+  fg.addColorStop(0,'#ccc'); fg.addColorStop(1,'#eee');
+  cx.fillStyle=fg;
+  cx.beginPath(); cx.moveTo(0,-18); cx.quadraticCurveTo(side*9,-5,side*8,12); cx.lineTo(0,12); cx.closePath(); cx.fill();
+  cx.restore();
+}
+
+function drawSatellite(cx,p){
+  if(!p.vis) return;
+  cx.save(); cx.translate(p.x,p.y); cx.rotate(p.a);
+  cx.fillStyle='#bbb'; cx.fillRect(-5,-3,10,6);
+  cx.fillStyle='#1e40af'; cx.fillRect(-24,-2,17,4); cx.fillRect(7,-2,17,4);
+  cx.strokeStyle='#1e3a8a'; cx.lineWidth=0.4;
+  for(let i=0;i<6;i++){const lx=-24+i*3;cx.beginPath();cx.moveTo(lx,-2);cx.lineTo(lx,2);cx.stroke();cx.beginPath();cx.moveTo(lx+31,-2);cx.lineTo(lx+31,2);cx.stroke();}
+  cx.strokeStyle='#999'; cx.lineWidth=0.8;
+  cx.beginPath(); cx.moveTo(0,-3); cx.lineTo(0,-8); cx.stroke();
+  cx.beginPath(); cx.arc(0,-9,2.5,Math.PI,0); cx.stroke();
+  cx.restore();
+}
+
+// ===== ENVIRONMENT =====
+function drawEnvironment(cx,camY,camX,zoom){
+  const viewAlt=M.alt;
+  const atmoFade=smoothstep(0,80,viewAlt); // atmosphere thins by 80km (more accurate)
+  const spaceFade=smoothstep(30,150,viewAlt);
+  M.atmo=1-atmoFade;
+
+  // Sky gradient
+  const skyTop=lerpColor([10,10,30],[10,10,20],spaceFade);
+  const skyMid=lerpColor([80,140,220],[15,15,40],atmoFade);
+  const skyBot=lerpColor([160,200,240],[20,25,60],atmoFade);
+  const sg=cx.createLinearGradient(0,0,0,H);
+  sg.addColorStop(0,`rgb(${skyTop})`); sg.addColorStop(0.4,`rgb(${skyMid})`); sg.addColorStop(1,`rgb(${skyBot})`);
+  cx.fillStyle=sg; cx.fillRect(0,0,W,H);
+
+  // Sun
+  if(atmoFade<0.8){
+    const sa=(1-atmoFade)*0.4, sx=W*0.8, sy=H*0.12;
+    const sunG=cx.createRadialGradient(sx,sy,0,sx,sy,120);
+    sunG.addColorStop(0,`rgba(255,250,220,${sa})`);
+    sunG.addColorStop(0.3,`rgba(255,220,150,${sa*0.4})`);
+    sunG.addColorStop(1,'rgba(255,200,100,0)');
+    cx.fillStyle=sunG; cx.fillRect(sx-120,sy-120,240,240);
+  }
+
+  // Stars
+  if(spaceFade>0.05){
+    const now=performance.now()*0.001;
+    stars.forEach(s=>{
+      const sx=(s.x-camX)*0.08+W/2, sy=(s.y-camY)*0.08+H/2;
+      if(sx<-5||sx>W+5||sy<-5||sy>H+5) return;
+      const tw=(Math.sin(s.tw+now*1.5)+1)*0.5;
+      cx.fillStyle=s.color; cx.globalAlpha=spaceFade*s.b*(0.5+tw*0.5);
+      cx.beginPath(); cx.arc(sx,sy,s.r,0,Math.PI*2); cx.fill();
+    });
+    cx.globalAlpha=1;
+  }
+
+  // Earth curvature (high altitude)
+  if(viewAlt>80){
+    const ca=smoothstep(80,200,viewAlt), cY=H*0.85+viewAlt*0.3, cR=W*3;
+    cx.save(); cx.globalAlpha=ca*0.6;
+    const eg=cx.createRadialGradient(W/2,cY+cR,cR-30,W/2,cY+cR,cR+50);
+    eg.addColorStop(0,'rgba(80,160,255,0.3)'); eg.addColorStop(1,'rgba(80,160,255,0)');
+    cx.fillStyle=eg; cx.beginPath(); cx.arc(W/2,cY+cR,cR+50,0,Math.PI*2); cx.fill();
+    cx.globalAlpha=ca;
+    const eGrad=cx.createLinearGradient(0,cY,0,cY+100);
+    eGrad.addColorStop(0,'#1a5276'); eGrad.addColorStop(0.5,'#154360'); eGrad.addColorStop(1,'#0e2f44');
+    cx.fillStyle=eGrad;
+    cx.beginPath(); cx.arc(W/2,cY+cR,cR,-Math.PI,0); cx.lineTo(W+100,H+100); cx.lineTo(-100,H+100); cx.fill();
+    cx.strokeStyle=`rgba(100,180,255,${ca*0.5})`; cx.lineWidth=3;
+    cx.beginPath(); cx.arc(W/2,cY+cR,cR,-Math.PI*0.8,-Math.PI*0.2); cx.stroke();
+    cx.restore();
+  }
+
+  // Clouds (1-15km)
+  if(viewAlt<15 && viewAlt>1){
+    const ca=smoothstep(1,5,viewAlt)*(1-smoothstep(10,15,viewAlt));
+    cx.globalAlpha=ca*0.25;
+    const cloudY=H*0.3-(viewAlt-5)*20;
+    for(let i=0;i<5;i++){
+      const cx2=(i*W/4+50-camX*0.05)%(W+200)-100;
+      cx.fillStyle='#fff';
+      cx.beginPath(); cx.ellipse(cx2,cloudY+i*15,80+i*20,15,0,0,Math.PI*2); cx.fill();
+    }
+    cx.globalAlpha=1;
+  }
+
+  // Ground & structures (below 60km)
+  if(viewAlt<60){
+    const gY=H/2+(-camY)/zoom;
+    const ga=1-smoothstep(30,60,viewAlt);
+    if(gY<H+100){
+      cx.save(); cx.globalAlpha=ga;
+      const og=cx.createLinearGradient(0,gY,0,H);
+      og.addColorStop(0,'#1a5276'); og.addColorStop(0.3,'#154360'); og.addColorStop(1,'#0e2f44');
+      cx.fillStyle=og; cx.fillRect(0,gY-2,W,H-gY+20);
+      // Waves
+      cx.strokeStyle='rgba(100,180,220,0.15)'; cx.lineWidth=1;
+      for(let i=0;i<8;i++){
+        const wy=gY+10+i*8;
+        cx.beginPath(); cx.moveTo(0,wy);
+        for(let wx=0;wx<W;wx+=30) cx.lineTo(wx,wy+Math.sin(wx*0.02+i+performance.now()*0.001)*2);
+        cx.stroke();
+      }
+      const padX=W/2+(-camX)/zoom;
+      // Show launch pad only during launch phase
+      if(M.phase<=PH.SEP){
+        const pw=50/zoom, ph=12/zoom;
+        cx.fillStyle='#4a4a50'; cx.fillRect(padX-pw/2,gY-ph,pw,ph+4);
+        cx.fillStyle='#2a2a2e'; cx.fillRect(padX-8/zoom,gY-ph+2,16/zoom,ph);
+        const tx=padX-28/zoom, th=80/zoom;
+        cx.fillStyle='#5a5a60'; cx.fillRect(tx,gY-ph-th,6/zoom,th);
+        cx.strokeStyle='#6a6a70'; cx.lineWidth=0.5;
+        for(let i=0;i<th;i+=8/zoom){cx.beginPath();cx.moveTo(tx,gY-ph-i);cx.lineTo(tx+6/zoom,gY-ph-i);cx.stroke();}
+        cx.fillStyle='#5a5a60'; cx.fillRect(tx+6/zoom,gY-ph-th*0.65,20/zoom,3/zoom);
+        cx.fillStyle='#4a4a55'; cx.fillRect(padX-4/zoom,gY-ph-65/zoom,3/zoom,65/zoom);
+      }
+      // Show drone ship only during recovery phase
+      if(M.phase>=PH.BOOSTBACK){
+        const sw=70/zoom, sh=8/zoom;
+        cx.fillStyle='#3a3a42'; cx.fillRect(padX-sw/2,gY-sh,sw,sh+2);
+        cx.fillStyle='#555'; cx.fillRect(padX-sw/2+4/zoom,gY-sh+1,sw-8/zoom,1.5/zoom);
+        cx.strokeStyle='#f97316'; cx.lineWidth=1.5/zoom;
+        const ts=12/zoom;
+        cx.beginPath(); cx.moveTo(padX-ts,gY-sh/2-ts); cx.lineTo(padX+ts,gY-sh/2+ts); cx.stroke();
+        cx.beginPath(); cx.moveTo(padX+ts,gY-sh/2-ts); cx.lineTo(padX-ts,gY-sh/2+ts); cx.stroke();
+        cx.beginPath(); cx.arc(padX,gY-sh/2,ts*0.8,0,Math.PI*2); cx.stroke();
+        if(zoom<1.5){
+          cx.fillStyle='#778'; cx.font=`${8/zoom}px Arial`; cx.textAlign='center';
+          cx.fillText('OCISLY',padX,gY+12/zoom);
+        }
+      }
+      cx.restore();
+    }
+  }
+
+  // Atmosphere edge glow
+  if(viewAlt>20 && viewAlt<150){
+    const ga=smoothstep(20,60,viewAlt)*(1-smoothstep(100,150,viewAlt));
+    const ag=cx.createLinearGradient(0,H*0.7,0,H);
+    ag.addColorStop(0,'rgba(100,160,255,0)');
+    ag.addColorStop(0.5,`rgba(80,140,240,${ga*0.1})`);
+    ag.addColorStop(1,`rgba(60,120,220,${ga*0.15})`);
+    cx.fillStyle=ag; cx.fillRect(0,H*0.7,W,H*0.3);
+  }
+}
+
+// ===== MISSION UPDATE (ACCURATE TIMELINE) =====
+function updateMission(dt){
+  if(!M.started) return;
+  const rdt=dt*M.speed;
+  M.time+=rdt; M.phaseT+=rdt;
+  const t=M.time, s1=M.s1, s2=M.s2;
+
+  // ---- S2 background update (always runs after SES) ----
+  if(s2.eng){
+    s2.vel+=3*rdt; s2.alt+=s2.vel*rdt*0.0005; s2.y=-s2.alt*80;
+    s2.angle=lerp(s2.angle,-0.5,0.003);
+    s2.fuel=clamp(s2.fuel-0.03*rdt,0,100);
+  }
+
+  switch(M.phase){
+    // ====== COUNTDOWN ======
+    case PH.COUNTDOWN:{
+      const cn=Math.ceil(-t);
+      const cEl=document.getElementById('cd-num'), cLab=document.getElementById('cd-label');
+      if(t<0){
+        cEl.style.opacity='1'; cEl.textContent=cn; cLab.textContent='T - MINUS';
+        if(t>-3){cEl.style.color='#f97316'; cEl.style.textShadow='0 0 80px rgba(249,115,22,0.6)';}
+        if(t>-5 && Math.random()<0.3) emitSteam(s1.x,40);
+      }
+      if(t>=0){
+        cEl.textContent='LIFTOFF'; cEl.style.fontSize='72px';
+        setTimeout(()=>{cEl.style.opacity='0';cLab.textContent='';},2500);
+        setPhase(PH.LIFTOFF); s1.eng=true; s1.nEng=9;
+        M.cam.shake=10; showEvt('IGNITION · LIFTOFF');
+        emitLaunchBlast(s1.x,40,60);
+      }
+      break;
+    }
+
+    // ====== LIFTOFF → MAX-Q (T+0 ~ T+72) ======
+    case PH.LIFTOFF:{
+      // Velocity: 0 → ~340m/s at Mach 1 (T+70s), altitude ~10-15km
+      const lt=clamp(t/12,0,1);
+      s1.vel=lerp(0,200,easeOut(lt));
+      if(t>12) s1.vel=200+(t-12)*5;
+      s1.alt+=s1.vel*rdt*0.001;
+      s1.y=-s1.alt*80;
+      s1.fuel=clamp(100-t*0.47,0,100); // ~28% fuel at MECO (T+153)
+      if(t>20) s1.angle=lerp(0,-0.1,clamp((t-20)/50,0,1));
+      if(t>20) M.dr+=s1.vel*rdt*0.0002;
+      M.cam.shake=clamp(8-t*0.3,0,8);
+      M.cam.zoom=clamp(1+t*0.005,1,1.5);
+      M.alt=s1.alt; M.vel=s1.vel; M.acc=t<12?lerp(0,1.7,t/12):1.7+t*0.01;
+
+      if(t>=TL.MAXQ){setPhase(PH.MAXQ); showEvt('MAX-Q · MAXIMUM DYNAMIC PRESSURE');}
+      break;
+    }
+
+    // ====== MAX-Q → MECO (T+72 ~ T+153) ======
+    case PH.MAXQ:{
+      s1.vel=200+(t-12)*5; // continues accelerating
+      s1.alt+=s1.vel*rdt*0.001;
+      s1.y=-s1.alt*80;
+      s1.fuel=clamp(100-t*0.47,0,100); // ~28% fuel at MECO
+      s1.angle=lerp(-0.1,-0.25,clamp((t-TL.MAXQ)/(TL.MECO-TL.MAXQ),0,1));
+      M.dr+=s1.vel*rdt*0.0003;
+      M.cam.zoom=clamp(1.5+(t-TL.MAXQ)*0.004,1.5,2.2);
+      M.alt=s1.alt; M.vel=s1.vel; M.acc=1.7+t*0.01;
+
+      if(t>=TL.MECO){setPhase(PH.MECO); s1.eng=false; showEvt('MECO · MAIN ENGINE CUTOFF');}
+      break;
+    }
+
+    // ====== MECO → SEP (T+153 ~ T+156) ======
+    case PH.MECO:{
+      s1.alt+=s1.vel*rdt*0.0006; s1.y=-s1.alt*80;
+      M.dr+=s1.vel*rdt*0.0003;
+      M.alt=s1.alt; M.vel=s1.vel; M.acc=0;
+
+      if(t>=TL.SEP){
+        setPhase(PH.SEP);
+        s2.x=s1.x; s2.y=s1.y; s2.alt=s1.alt; s2.vel=s1.vel; s2.angle=s1.angle;
+        s2.vis=true;
+        showEvt('STAGE SEPARATION');
+        for(let i=0;i<15;i++){
+          const a=rand(0,Math.PI*2), sp=rand(20,60);
+          particles.push(new P(s1.x+rand(-5,5),s1.y,Math.cos(a)*sp,Math.sin(a)*sp,
+            rand(0.3,0.8),`hsl(40,80%,${rand(60,90)}%)`,rand(1,3),'spark'));
+        }
+      }
+      break;
+    }
+
+    // ====== SEP → SES (T+156 ~ T+164) ======
+    case PH.SEP:{
+      s2.alt+=s2.vel*rdt*0.0005; s2.y=-s2.alt*80;
+      // S1 drifts — still tracking S1
+      const sepT=clamp((t-TL.SEP)/(TL.SES-TL.SEP),0,1);
+      s1.alt=lerp(s1.alt, s1.alt-0.1, 0.01); // slight coast up
+      s1.y=-s1.alt*80;
+      M.alt=s1.alt; M.vel=clamp(s1.vel*(1-sepT*0.3),0,s1.vel); M.dr+=s1.vel*rdt*0.0001;
+
+      if(t>=TL.SES){
+        setPhase(PH.SES); s2.eng=true;
+        showEvt('SES-1 · SECOND ENGINE START');
+      }
+      break;
+    }
+
+    // ====== SES + S1 FLIP (T+164 ~ T+172) ======
+    case PH.SES:{
+      M.alt=s1.alt; M.vel=clamp(M.vel-5*rdt,0,800); M.acc=0;
+
+      // S1 flip via nitrogen cold-gas thrusters (~8 seconds)
+      const flipDur=TL.FLIP_DONE-TL.SES; // 8 seconds
+      const flipT=clamp(M.phaseT/flipDur,0,1);
+      s1.angle=-0.25+Math.PI*2*easeInOut(flipT); // full visual 360° spin
+      s1.gridFins=true; // deploy grid fins in space
+
+      if(t>=TL.FLIP_DONE){
+        setPhase(PH.FLIP);
+        s1.angle=0; // flip complete, engines-down orientation
+        showEvt('BOOSTER FLIP · N₂ THRUSTERS');
+      }
+      break;
+    }
+
+    // ====== POST-FLIP COAST → FAIRING (T+172 ~ T+210) ======
+    case PH.FLIP:{
+      M.alt=s1.alt; M.vel=clamp(M.vel-2*rdt,0,800); M.acc=0;
+      s1.angle=lerp(s1.angle,0,0.1*rdt);
+      // S1 coasts at apogee region: ~120km → ~110km (near peak)
+      const flipCoastT=clamp((t-TL.FLIP_DONE)/(TL.FAIRING-TL.FLIP_DONE),0,1);
+      s1.alt=lerp(120, 110, easeInOut(flipCoastT));
+      s1.y=-s1.alt*80;
+
+      if(t>=TL.FAIRING){
+        setPhase(PH.FAIRING);
+        showEvt('FAIRING SEPARATION');
+        M.fl.vis=true; M.fr.vis=true;
+        M.fl.x=s2.x-8; M.fl.y=s2.y-20; M.fl.vx=-15; M.fl.vy=3;
+        M.fr.x=s2.x+8; M.fr.y=s2.y-20; M.fr.vx=15; M.fr.vy=3;
+        for(let i=0;i<10;i++){
+          const a=rand(0,Math.PI*2), sp=rand(15,40);
+          particles.push(new P(s2.x+rand(-5,5),s2.y-20,Math.cos(a)*sp,Math.sin(a)*sp,
+            rand(0.3,0.6),`hsl(40,60%,${rand(70,95)}%)`,rand(1,2),'spark'));
+        }
+      }
+      break;
+    }
+
+    // ====== FAIRING SEP → BOOSTBACK (T+210 ~ T+230) ======
+    case PH.FAIRING:{
+      M.fl.x+=M.fl.vx*rdt; M.fl.y+=M.fl.vy*rdt; M.fl.a-=0.3*rdt;
+      M.fr.x+=M.fr.vx*rdt; M.fr.y+=M.fr.vy*rdt; M.fr.a+=0.3*rdt;
+      if(M.phaseT>4){M.fl.vis=false; M.fr.vis=false;}
+
+      // S1 descending from apogee: 110km → 100km
+      const fairCoastT=clamp((t-TL.FAIRING)/(TL.BOOSTBACK-TL.FAIRING),0,1);
+      s1.alt=lerp(110, 100, easeInOut(fairCoastT));
+      s1.y=-s1.alt*80;
+      M.alt=s1.alt; M.vel=clamp(M.vel-1*rdt,0,800); M.acc=0;
+
+      if(t>=TL.BOOSTBACK){
+        setPhase(PH.BOOSTBACK);
+        s1.eng=true; s1.nEng=3;
+        showEvt('BOOSTBACK BURN · 3 ENGINES');
+        s1.angle=0;
+      }
+      break;
+    }
+
+    // ====== BOOSTBACK BURN ~50s (T+230 ~ T+280) + COAST → ENTRY ======
+    case PH.BOOSTBACK:{
+      s1.angle=lerp(s1.angle, 0.01*Math.sin(M.phaseT*0.3), 0.1*rdt); // slight sway
+
+      if(t<TL.BB_END){
+        // Active boostback burn: altitude ~100km → ~90km over 50s
+        const bbT=clamp((t-TL.BOOSTBACK)/(TL.BB_END-TL.BOOSTBACK),0,1);
+        s1.alt=lerp(100, 90, easeInOut(bbT));
+        s1.y=-s1.alt*80;
+        s1.fuel=clamp(s1.fuel-0.35*rdt,0,100);
+        M.alt=s1.alt; M.vel=clamp(800-bbT*600,200,800); M.acc=-3;
+        M.cam.zoom=lerp(2.2,1.8,bbT);
+      } else if(t<TL.ENTRY){
+        // Coast phase: altitude 90km → 50km over ~110s, grid fin control
+        if(s1.eng){s1.eng=false; s1.nEng=0; showEvt('BOOSTBACK COMPLETE · COAST PHASE');}
+        const coastT=clamp((t-TL.BB_END)/(TL.ENTRY-TL.BB_END),0,1);
+        s1.alt=lerp(90, 50, easeInOut(coastT));
+        s1.y=-s1.alt*80;
+        M.alt=s1.alt; M.vel=lerp(200, 500, easeInOut(coastT)); M.acc=0;
+        M.cam.zoom=lerp(1.8,1.4,coastT);
+      } else {
+        // Transition to entry burn
+        setPhase(PH.REENTRY);
+        s1.eng=true; s1.nEng=3;
+        s1.angle=0;
+        showEvt('ENTRY BURN · 3 ENGINES');
+        M.cam.shake=4;
+      }
+      break;
+    }
+
+    // ====== ENTRY BURN ~20s (T+390 ~ T+410) ======
+    case PH.REENTRY:{
+      if(t<TL.ENTRY_END){
+        // Active entry burn (3 engines, ~20s)
+        const eT=clamp(M.phaseT/(TL.ENTRY_END-TL.ENTRY),0,1);
+        s1.alt=lerp(50,10,easeInOut(eT));
+        s1.y=-s1.alt*80;
+        s1.angle=lerp(s1.angle,0,0.08*rdt);
+        s1.fuel=clamp(s1.fuel-0.25*rdt,0,100); // ~5% fuel for 20s
+        M.cam.shake=clamp(4-M.phaseT*0.15,0,4);
+        M.cam.zoom=lerp(1.4,1.3,eT);
+        M.alt=s1.alt; M.vel=clamp(600-M.phaseT*20,80,600); M.acc=-4;
+
+        // Reentry heat + plasma effects
+        if(M.phaseT<12) emitReentryHeat(s1.x,s1.y);
+      } else if(t<TL.LANDING){
+        // Coast after entry burn — grid fin guidance, no fuel use
+        if(s1.eng){s1.eng=false; s1.nEng=0; showEvt('ENTRY BURN COMPLETE · GRID FIN GUIDANCE');}
+        const coastT=clamp((t-TL.ENTRY_END)/(TL.LANDING-TL.ENTRY_END),0,1);
+        s1.alt=lerp(10,2.5,easeInOut(coastT));
+        s1.y=-s1.alt*80;
+        M.alt=s1.alt; M.vel=clamp(200-coastT*150,50,200); M.acc=0;
+        M.cam.zoom=lerp(1.3,1.1,coastT);
+        // Sonic boom (transonic)
+        if(!M.sonicBoomDone && s1.alt<5){ M.sonicBoomDone=true; emitSonicBoom(s1.x,s1.y); }
+      } else {
+        // Transition to landing burn
+        setPhase(PH.LANDING_BURN);
+        s1.eng=true; s1.nEng=1;
+        s1.angle=0;
+        showEvt('LANDING BURN · SINGLE ENGINE');
+        M.cam.shake=2;
+      }
+      break;
+    }
+
+    // ====== LANDING BURN ~30s (T+460 ~ T+490) ======
+    case PH.LANDING_BURN:{
+      const lDur=TL.TOUCHDOWN-TL.LANDING; // 30s
+      const lT=clamp(M.phaseT/lDur,0,1);
+      // Suicide burn: 2.5km → 0km
+      s1.alt=lerp(2.5,0,easeInOut(lT));
+      s1.y=-s1.alt*80;
+      s1.angle=lerp(s1.angle,0,0.2*rdt);
+      s1.fuel=clamp(s1.fuel-0.15*rdt,0,100); // ~4.5% fuel for 30s
+      M.cam.zoom=lerp(1.1,1,lT);
+      M.cam.shake=clamp(2-M.phaseT*0.06,0,2);
+      M.alt=s1.alt; M.vel=clamp(50-lT*50,0,50); M.acc=-3;
+
+      // Deploy legs 7 seconds before touchdown (real F9 timing)
+      if(t>=TL.LEGS && !s1.legs){
+        s1.legs=true;
+      }
+
+      // Dust near ground
+      if(s1.alt<0.5 && Math.random()<0.5) emitLandingDust(s1.x,0,3);
+
+      if(t>=TL.TOUCHDOWN){
+        setPhase(PH.TOUCHDOWN);
+        s1.eng=false; s1.alt=0; s1.y=0; s1.landed=true; s1.angle=0;
+        M.alt=0; M.vel=0; M.acc=0; M.cam.shake=6;
+        showEvt('TOUCHDOWN · THE FALCON HAS LANDED');
+        emitLandingDust(s1.x,0,50);
+        for(let i=0;i<30;i++){
+          const a=rand(0,Math.PI*2), sp=rand(30,120);
+          particles.push(new P(s1.x,0,Math.cos(a)*sp,Math.sin(a)*sp,
+            rand(0.3,1),`hsl(${rand(20,50)},100%,${rand(60,90)}%)`,rand(2,5),'spark'));
+        }
+      }
+      break;
+    }
+
+    // ====== TOUCHDOWN → SECO (T+490 ~ T+530) ======
+    case PH.TOUCHDOWN:{
+      M.cam.shake=clamp(M.cam.shake-rdt*2,0,6);
+      // Wait for SECO
+      if(t>=TL.SECO){
+        setPhase(PH.SECO);
+        s2.eng=false;
+        showEvt('SECO · PAYLOAD IN ORBIT');
+        M.pay.vis=true; M.pay.x=s2.x; M.pay.y=s2.y-25;
+      }
+      break;
+    }
+
+    // ====== SECO → DONE ======
+    case PH.SECO:{
+      M.pay.y-=0.3*rdt; M.pay.a+=0.02*rdt;
+      if(M.phaseT>=5){
+        setPhase(PH.DONE);
+        document.getElementById('mission-success').classList.add('show');
+        document.querySelectorAll('.pi').forEach(el=>el.className='pi ok');
+      }
+      break;
+    }
+    case PH.DONE: break;
+  }
+
+  // Particles
+  particles.forEach(p=>p.update(rdt));
+  particles=particles.filter(p=>!p.dead);
+
+  // Engine exhaust particles
+  if(s1.eng && s1.vis){
+    const ex=s1.x+Math.sin(s1.angle)*43, ey=s1.y+Math.cos(s1.angle)*43;
+    emitFlame(ex,ey,s1.angle,s1.nEng===1?0.4:0.8, s1.nEng===1?3:5, 0.35);
+  }
+  // S2 particles only before separation
+  if(s2.eng && M.phase<PH.SEP){
+    const ex=s2.x+Math.sin(s2.angle)*24, ey=s2.y+Math.cos(s2.angle)*24;
+    emitFlame(ex,ey,s2.angle,0.6,3,0.25);
+  }
+}
+
+// ===== RENDER =====
+function render(){
+  X.clearRect(0,0,W,H);
+  const cam=M.cam;
+  let camX=M.s1.x, camY=M.s1.y; // always track S1
+  if(cam.shake>0){
+    camX+=(Math.random()-0.5)*cam.shake*2;
+    camY+=(Math.random()-0.5)*cam.shake*2;
+    cam.shake=clamp(cam.shake-0.03,0,20); // gradual decay
+  }
+  const zoom=cam.zoom;
+
+  drawEnvironment(X,camY,camX,zoom);
+
+  // Particles
+  particles.forEach(p=>{
+    const sx=(p.x-camX)/zoom+W/2, sy=(p.y-camY)/zoom+H/2;
+    if(sx<-60||sx>W+60||sy<-60||sy>H+60) return;
+    X.save(); X.globalAlpha=p.a;
+    const r=p.size/zoom;
+    if(p.type==='fire'||p.type==='heat'){
+      const g=X.createRadialGradient(sx,sy,0,sx,sy,r);
+      g.addColorStop(0,p.color); g.addColorStop(1,'rgba(255,100,0,0)');
+      X.fillStyle=g; X.beginPath(); X.arc(sx,sy,r,0,Math.PI*2); X.fill();
+    }else if(p.type==='smoke'||p.type==='steam'){
+      X.fillStyle=p.color; X.beginPath(); X.arc(sx,sy,r,0,Math.PI*2); X.fill();
+    }else if(p.type==='spark'){
+      X.fillStyle=p.color; X.translate(sx,sy); X.rotate(p.rot); X.fillRect(-r/2,-r/2,r,r);
+    }
+    X.restore();
+  });
+
+  // Rockets in world space
+  X.save();
+  X.translate(W/2,H/2); X.scale(1/zoom,1/zoom); X.translate(-camX,-camY);
+  // Only render S1 (camera always tracks S1)
+  // S2 shown only before separation (still attached)
+  if(M.phase<PH.SEP && M.s2.vis){
+    drawStage2(X,M.s2.x,M.s2.y,M.s2.angle,M.s2.eng,true);
+  }
+  if(M.s1.vis) drawStage1(X,M.s1.x,M.s1.y,M.s1.angle,M.s1.eng,M.s1.gridFins,M.s1.legs,M.s1.landed,M.s1.nEng);
+  X.restore();
+
+  updateHUD();
+}
+
+function updateHUD(){
+  const t=M.time, sign=t<0?'-':'+', at=Math.abs(t);
+  document.getElementById('h-time').textContent=`T${sign}${String(at/60|0).padStart(2,'0')}:${String(at%60|0).padStart(2,'0')}`;
+  document.getElementById('h-phase').textContent=PH_NAME[M.phase]||'—';
+  document.getElementById('h-alt').textContent=`${M.alt.toFixed(1)} km`;
+  document.getElementById('h-spd').textContent=M.vel>1000?`${(M.vel/1000).toFixed(2)} km/s`:`${M.vel.toFixed(0)} m/s`;
+  document.getElementById('h-acc').textContent=`${M.acc.toFixed(1)} G`;
+  document.getElementById('h-f1').textContent=`${M.s1.fuel.toFixed(0)}%`;
+  document.getElementById('h-dr').textContent=`${M.dr.toFixed(1)} km`;
+}
+
+// ===== LOOP =====
+let lastT=0;
+function loop(ts){
+  const dt=Math.min((ts-lastT)/1000,0.05);
+  lastT=ts;
+  updateMission(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ===== INIT =====
+function init(){
+  const bar=document.getElementById('loading-bar'), stat=document.getElementById('loading-status');
+  const steps=[
+    {p:20,t:'加载 9×Merlin 1D 推进系统...'}, {p:40,t:'初始化制导导航计算机...'},
+    {p:60,t:'加载遥测数据链路...'}, {p:80,t:'校准栅格翼 & N₂姿控系统...'},
+    {p:100,t:'FLIGHT COMPUTER READY'},
+  ];
+  let i=0;
+  const li=setInterval(()=>{
+    if(i>=steps.length){clearInterval(li);setTimeout(()=>document.getElementById('loading-overlay').classList.add('hidden'),600);return;}
+    bar.style.width=steps[i].p+'%'; stat.textContent=steps[i].t; i++;
+  },350);
+  M.s1.x=0; M.s1.y=0; M.s1.vis=true;
+  lastT=performance.now();
+  requestAnimationFrame(loop);
+}
+
+// Controls
+document.getElementById('btn-start').addEventListener('click',function(){
+  if(!M.started){M.started=true;M.time=-10;this.textContent='进行中...';this.disabled=true;}
+});
+const speeds=[1,2,4,8,16];
+let si=0;
+document.getElementById('btn-speed').addEventListener('click',function(){
+  si=(si+1)%speeds.length; M.speed=speeds[si]; this.textContent=speeds[si]+'×';
+});
+addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();document.getElementById('btn-start').click();}
+});
+init();
+</script>
+</body>
+</html>
