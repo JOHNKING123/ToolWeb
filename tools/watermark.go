@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
+	"image/jpeg"
 	"image/png"
+	"math"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
-	"github.com/h2non/bimg"
 )
 
-// AddTextWatermark 在图片右下角添加文本水印
+// AddTextWatermark 在图片添加文本水印
 // inputPath: 输入图片路径
 // outputPath: 输出图片路径
 // text: 水印文本
@@ -24,89 +28,123 @@ import (
 // margin: 边距（像素）
 // repeat: 是否重复水印
 func AddTextWatermark(inputPath, outputPath, text, fontPath string, fontSize float64, fontColor string, opacity float64, margin int, repeat bool) error {
-	// 读取主图像
-	mainImage, err := bimg.Read(inputPath)
+	// 读取并解码主图像
+	mainImg, format, err := decodeImageFile(inputPath)
 	if err != nil {
 		return fmt.Errorf("读取主图像失败: %v", err)
 	}
 
-	// 确保主图像是 RGBA 格式
-	img := bimg.NewImage(mainImage)
-	mainImage, err = img.Convert(bimg.PNG)
+	// 将主图像转换为 RGBA 格式以便绘制
+	bounds := mainImg.Bounds()
+	rgbaImg := image.NewRGBA(bounds)
+	draw.Draw(rgbaImg, bounds, mainImg, bounds.Min, draw.Src)
+
+	// 生成水印图像
+	watermarkImg, err := createTextWatermarkImage(text, fontPath, fontSize, fontColor)
 	if err != nil {
-		return fmt.Errorf("转换主图像格式失败: %v", err)
+		return fmt.Errorf("生成水印图像失败: %v", err)
 	}
 
-	// 获取主图像尺寸
-	mainImageSize, err := bimg.NewImage(mainImage).Size()
+	// 解码水印图像
+	wmImg, err := png.Decode(bytes.NewReader(watermarkImg))
 	if err != nil {
-		return fmt.Errorf("获取主图像尺寸失败: %v", err)
+		return fmt.Errorf("解码水印图像失败: %v", err)
 	}
+
+	// 应用透明度
+	wmRGBA := applyOpacity(wmImg, opacity)
 
 	if repeat {
-		// 如果选择重复水印，使用 Watermark 选项
-		watermarkOptions := bimg.Watermark{
-			Text:        text,
-			Font:        fontPath,
-			Width:       200,
-			DPI:         100,
-			Margin:      150,
-			Opacity:     float32(opacity),
-			NoReplicate: false,
-			Background:  bimg.Color{0, 0, 0},
-		}
-
-		// 应用水印
-		outputImage, err := bimg.NewImage(mainImage).Watermark(watermarkOptions)
-		if err != nil {
-			return fmt.Errorf("添加水印失败: %v", err)
-		}
-
-		// 保存输出图像
-		err = bimg.Write(outputPath, outputImage)
-		if err != nil {
-			return fmt.Errorf("保存图像失败: %v", err)
-		}
+		// 重复水印：在整个图像上平铺水印
+		drawRepeatedWatermark(rgbaImg, wmRGBA, margin)
 	} else {
-		// 生成水印图像
-		watermarkImage, err := createTextWatermarkImage(text, fontPath, fontSize, fontColor)
-		if err != nil {
-			return fmt.Errorf("生成水印图像失败: %v", err)
-		}
+		// 单个水印：放在右下角
+		wmBounds := wmRGBA.Bounds()
+		offsetX := bounds.Max.X - wmBounds.Dx() - margin
+		offsetY := bounds.Max.Y - wmBounds.Dy() - margin
+		drawPoint := image.Pt(offsetX, offsetY)
+		draw.Draw(rgbaImg, image.Rectangle{Min: drawPoint, Max: drawPoint.Add(wmBounds.Size())}, wmRGBA, wmBounds.Min, draw.Over)
+	}
 
-		// 获取水印图像尺寸
-		watermarkImg := bimg.NewImage(watermarkImage)
-		watermarkSize, err := watermarkImg.Size()
-		if err != nil {
-			return fmt.Errorf("获取水印图像尺寸失败: %v", err)
-		}
-		// 如果选择不重复水印，使用 WatermarkImage 选项
-		// 计算右下角位置
-		top := mainImageSize.Height - watermarkSize.Height - margin
-		left := mainImageSize.Width - watermarkSize.Width - margin
-
-		// 配置 WatermarkImage 参数
-		watermarkOptions := bimg.WatermarkImage{
-			Left:    left,
-			Top:     top,
-			Buf:     watermarkImage,
-			Opacity: float32(opacity),
-		}
-
-		// 应用水印
-		outputImage, err := bimg.NewImage(mainImage).WatermarkImage(watermarkOptions)
-		if err != nil {
-			return fmt.Errorf("添加水印失败: %v", err)
-		}
-
-		// 保存输出图像
-		err = bimg.Write(outputPath, outputImage)
-		if err != nil {
-			return fmt.Errorf("保存图像失败: %v", err)
-		}
+	// 保存输出图像
+	err = encodeImageFile(outputPath, rgbaImg, format)
+	if err != nil {
+		return fmt.Errorf("保存图像失败: %v", err)
 	}
 
 	return nil
+}
+
+// decodeImageFile 读取并解码图片文件
+func decodeImageFile(path string) (image.Image, string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, "", err
+	}
+	defer f.Close()
+
+	img, format, err := image.Decode(f)
+	if err != nil {
+		return nil, "", err
+	}
+	return img, format, nil
+}
+
+// encodeImageFile 将图像编码并写入文件
+func encodeImageFile(path string, img image.Image, format string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	ext := strings.ToLower(filepath.Ext(path))
+	switch {
+	case ext == ".png":
+		return png.Encode(f, img)
+	case ext == ".jpg" || ext == ".jpeg" || format == "jpeg":
+		return jpeg.Encode(f, img, &jpeg.Options{Quality: 90})
+	default:
+		// 默认使用 JPEG 格式
+		return jpeg.Encode(f, img, &jpeg.Options{Quality: 90})
+	}
+}
+
+// applyOpacity 对图像应用透明度
+func applyOpacity(img image.Image, opacity float64) *image.RGBA {
+	bounds := img.Bounds()
+	result := image.NewRGBA(bounds)
+
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r, g, b, a := img.At(x, y).RGBA()
+			newA := uint8(math.Min(float64(a>>8)*opacity, 255))
+			result.Set(x, y, color.RGBA{
+				R: uint8(r >> 8),
+				G: uint8(g >> 8),
+				B: uint8(b >> 8),
+				A: newA,
+			})
+		}
+	}
+	return result
+}
+
+// drawRepeatedWatermark 在整个图像上平铺水印
+func drawRepeatedWatermark(dst *image.RGBA, watermark *image.RGBA, spacing int) {
+	dstBounds := dst.Bounds()
+	wmBounds := watermark.Bounds()
+	wmW := wmBounds.Dx()
+	wmH := wmBounds.Dy()
+
+	// 在整个图像上按间距平铺
+	for y := spacing; y < dstBounds.Max.Y; y += wmH + spacing {
+		for x := spacing; x < dstBounds.Max.X; x += wmW + spacing {
+			drawPoint := image.Pt(x, y)
+			drawRect := image.Rectangle{Min: drawPoint, Max: drawPoint.Add(wmBounds.Size())}
+			draw.Draw(dst, drawRect, watermark, wmBounds.Min, draw.Over)
+		}
+	}
 }
 
 // createTextWatermarkImage 生成包含文本的透明背景水印图像

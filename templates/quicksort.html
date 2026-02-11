@@ -1,0 +1,237 @@
+{{define "quicksort"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快排算法演示 - 在线工具集</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 220px;
+            margin: 30px 0 10px 0;
+            gap: 8px;
+        }
+        .bar {
+            width: 28px;
+            background: #60a5fa;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: transform 0.4s, height 0.3s, background 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .bar-label {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            color: #374151;
+        }
+        .bar.pivot {
+            background: #f59e42;
+            box-shadow: 0 0 0 2px #f59e42;
+        }
+        .bar.i {
+            background: #10b981;
+            box-shadow: 0 0 0 2px #10b981;
+        }
+        .bar.j {
+            background: #6366f1;
+            box-shadow: 0 0 0 2px #6366f1;
+        }
+        .bar.swap {
+            background: #ef4444;
+            box-shadow: 0 0 0 2px #ef4444;
+            z-index: 2;
+        }
+        .bar.in-range {
+            border-bottom: 3px solid #2563eb;
+        }
+        .bar-chart-legend {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .bar-legend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .bar-legend-color {
+            width: 18px; height: 12px; border-radius: 2px;
+            display: inline-block;
+        }
+        .pivot-color { background: #f59e42; }
+        .i-color { background: #10b981; }
+        .j-color { background: #6366f1; }
+        .swap-color { background: #ef4444; }
+        .inrange-color { background: #2563eb; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <main class="container">
+        <h2>快速排序算法可视化演示</h2>
+        <div class="card">
+            <label for="inputArray">请输入要排序的整数数组（用逗号分隔）：</label>
+            <input id="inputArray" type="text" value="5,2,9,1,5,6" style="width: 300px;">
+            <button id="startSort" class="btn-primary">开始演示</button>
+        </div>
+        <div class="bar-chart-legend">
+            <span class="bar-legend"><span class="bar-legend-color pivot-color"></span>基准(pivot)</span>
+            <span class="bar-legend"><span class="bar-legend-color i-color"></span>i指针</span>
+            <span class="bar-legend"><span class="bar-legend-color j-color"></span>j指针</span>
+            <span class="bar-legend"><span class="bar-legend-color swap-color"></span>发生交换</span>
+            <span class="bar-legend"><span class="bar-legend-color inrange-color"></span>当前分区</span>
+        </div>
+        <div id="sort-visual"></div>
+        <div style="margin: 1rem 0; display: flex; gap: 12px; align-items: center;">
+            <button id="prevStep" class="btn-secondary" disabled>上一步</button>
+            <button id="nextStep" class="btn-secondary" disabled>下一步</button>
+            <button id="autoPlay" class="btn-primary">自动播放</button>
+            <span id="step-indicator" style="font-size:14px;color:#666;"></span>
+        </div>
+        <div id="sort-result" style="margin-top:1rem;"></div>
+        <section style="margin-top:2.5rem;max-width:700px;">
+            <h3 style="color:#2563eb;">算法简介：快速排序（Quick Sort）</h3>
+            <p style="font-size:15px;line-height:1.8;margin:10px 0 0 0;">
+                快速排序是一种分治法（Divide and Conquer）思想的排序算法。其基本思想是：<br>
+                1. 从数组中选择一个"基准"（pivot）元素。<br>
+                2. 将数组分为两部分：所有小于基准的元素放在左边，大于等于基准的放在右边。<br>
+                3. 对左右两部分递归地进行快速排序。<br>
+                4. 递归结束后，整个数组有序。
+            </p>
+            <ul style="font-size:15px;line-height:1.8;margin:10px 0 0 18px;">
+                <li><b>平均时间复杂度：</b> O(n log n)</li>
+                <li><b>最坏时间复杂度：</b> O(n²)（当每次分区极不均匀时）</li>
+                <li><b>空间复杂度：</b> O(log n)（递归栈空间）</li>
+                <li><b>是否原地排序：</b> 是</li>
+                <li><b>是否稳定排序：</b> 否</li>
+            </ul>
+            <p style="font-size:15px;line-height:1.8;margin:10px 0 0 0;">
+                快速排序通常是实际工程中最快的通用排序算法之一，适用于大多数无特殊要求的排序场景。
+            </p>
+        </section>
+    </main>
+    <script>
+    // 快排+步骤记录
+    function quickSortWithSteps(arr) {
+        let steps = [];
+        function swap(a, i, j) {
+            let tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+        }
+        function sort(a, left, right) {
+            if (left >= right) return;
+            let pivot = right;
+            let i = left;
+            for (let j = left; j < right; j++) {
+                steps.push({ array: a.slice(), left, right, pivot, i, j, swap: false });
+                if (a[j] < a[pivot]) {
+                    swap(a, i, j);
+                    steps.push({ array: a.slice(), left, right, pivot, i, j, swap: true, swapPair: [i, j] });
+                    i++;
+                }
+            }
+            swap(a, i, right);
+            steps.push({ array: a.slice(), left, right, pivot, i, j: right, swap: true, swapPair: [i, right] });
+            sort(a, left, i - 1);
+            sort(a, i + 1, right);
+        }
+        let a = arr.slice();
+        sort(a, 0, a.length - 1);
+        return steps;
+    }
+    function renderStep(step, container) {
+        const arr = step.array;
+        const max = Math.max(...arr, 10);
+        let html = '<div class="bar-chart">';
+        for(let idx=0; idx<arr.length; idx++) {
+            let classes = ["bar"];
+            if(idx >= step.left && idx <= step.right) classes.push("in-range");
+            if(idx === step.pivot) classes.push("pivot");
+            if(idx === step.i) classes.push("i");
+            if(idx === step.j) classes.push("j");
+            // 交换时高亮被交换的柱子
+            if(step.swap && step.swapPair && (idx === step.swapPair[0] || idx === step.swapPair[1])) classes.push("swap");
+            html += `<div class="${classes.join(' ')}" style="height:${Math.round(arr[idx]/max*180+30)}px;" data-key="${idx}-${arr[idx]}">
+                        <span class="bar-label">${arr[idx]}</span>
+                    </div>`;
+        }
+        html += '</div>';
+        html += `<div style="font-size:15px;">区间: [${step.left}, ${step.right}]，基准: ${step.pivot} (值=${arr[step.pivot]})，i=${step.i}，j=${step.j}`;
+        if(step.swap) html += ' <span style="color:#ef4444;">发生交换</span>';
+        html += '</div>';
+        container.innerHTML = html;
+    }
+    document.getElementById('startSort').onclick = function() {
+        const arrStr = document.getElementById('inputArray').value;
+        const arr = arrStr.split(',').map(s=>parseInt(s.trim())).filter(x=>!isNaN(x));
+        if(arr.length === 0) { alert('请输入有效的整数数组'); return; }
+        const steps = quickSortWithSteps(arr);
+        let idx = 0;
+        const visual = document.getElementById('sort-visual');
+        const result = document.getElementById('sort-result');
+        const prevBtn = document.getElementById('prevStep');
+        const nextBtn = document.getElementById('nextStep');
+        const autoBtn = document.getElementById('autoPlay');
+        const stepIndicator = document.getElementById('step-indicator');
+        let autoTimer = null;
+        function updateButtons() {
+            prevBtn.disabled = idx <= 0;
+            nextBtn.disabled = idx >= steps.length-1;
+            stepIndicator.textContent = `步骤 ${idx+1} / ${steps.length}`;
+        }
+        function renderCurrent() {
+            renderStep(steps[idx], visual);
+            updateButtons();
+            if(idx >= steps.length-1) {
+                result.innerHTML = '<b>排序完成：</b> [' + steps[steps.length-1].array.join(', ') + ']';
+            } else {
+                result.innerHTML = '';
+            }
+        }
+        prevBtn.onclick = function() {
+            if(idx > 0) { idx--; renderCurrent(); }
+        };
+        nextBtn.onclick = function() {
+            if(idx < steps.length-1) { idx++; renderCurrent(); }
+        };
+        autoBtn.onclick = function() {
+            if(autoTimer) return;
+            autoBtn.disabled = true;
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            function autoStep() {
+                if(idx < steps.length-1) {
+                    idx++;
+                    renderCurrent();
+                    autoTimer = setTimeout(autoStep, 700);
+                } else {
+                    autoBtn.disabled = false;
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                    autoTimer = null;
+                }
+            }
+            autoStep();
+        };
+        // 初始化
+        idx = 0;
+        renderCurrent();
+        prevBtn.disabled = true;
+        nextBtn.disabled = false;
+        autoBtn.disabled = false;
+        if(autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+    };
+    </script>
+</body>
+</html>
+{{end}} 

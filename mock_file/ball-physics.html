@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物理碰撞模拟</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+  }
+  h1 {
+    margin-bottom: 16px;
+    font-size: 24px;
+    color: #00d2ff;
+    text-shadow: 0 0 10px rgba(0,210,255,0.3);
+  }
+  .container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  canvas {
+    border: 2px solid #00d2ff;
+    border-radius: 4px;
+    background: #0f0f23;
+    box-shadow: 0 0 20px rgba(0,210,255,0.15);
+  }
+  .panel {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 20px;
+    width: 220px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .panel label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: #aaa;
+  }
+  .panel input[type="range"] {
+    width: 100%;
+    margin-bottom: 12px;
+    accent-color: #00d2ff;
+  }
+  .panel .value {
+    font-size: 14px;
+    color: #00d2ff;
+    margin-bottom: 12px;
+    font-weight: bold;
+  }
+  .panel button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #00d2ff;
+    color: #0f0f23;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .panel button:hover { background: #00b4d8; }
+  .panel button.secondary {
+    background: transparent;
+    color: #00d2ff;
+    border: 1px solid #00d2ff;
+  }
+  .panel button.secondary:hover { background: rgba(0,210,255,0.1); }
+  .stats {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #2a2a4a;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.8;
+  }
+  .stats span { color: #00d2ff; }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .checkbox-row input { accent-color: #00d2ff; }
+</style>
+</head>
+<body>
+
+<h1>二维弹性碰撞物理模拟</h1>
+<div class="container">
+  <canvas id="canvas" width="600" height="600"></canvas>
+  <div class="panel">
+    <label>球的数量: <span id="ballCountVal" class="value">8</span></label>
+    <input type="range" id="ballCount" min="3" max="30" value="8">
+
+    <label>球的半径: <span id="radiusVal" class="value">20</span></label>
+    <input type="range" id="radius" min="8" max="40" value="20">
+
+    <label>初始速度: <span id="speedVal" class="value">200</span></label>
+    <input type="range" id="speed" min="50" max="500" value="200">
+
+    <label>恢复系数: <span id="restitutionVal" class="value">1.00</span></label>
+    <input type="range" id="restitution" min="50" max="100" value="100">
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="gravityToggle">
+      <label for="gravityToggle" style="margin:0">启用重力</label>
+    </div>
+
+    <label>重力加速度: <span id="gravityVal" class="value">400</span></label>
+    <input type="range" id="gravity" min="50" max="1000" value="400">
+
+    <button id="resetBtn">重新生成</button>
+    <button id="pauseBtn" class="secondary">暂停</button>
+
+    <div class="stats">
+      总动能: <span id="ke">0</span><br>
+      <span id="peRow">总势能: <span id="pe">0</span><br></span>
+      <span id="meRow">总机械能: <span id="me">0</span><br></span>
+      动量 Px: <span id="px">0</span><br>
+      动量 Py: <span id="py">0</span><br>
+      碰撞次数: <span id="collisions">0</span><br>
+      FPS: <span id="fps">0</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+
+// 控制面板
+const ui = {
+  ballCount: document.getElementById('ballCount'),
+  radius: document.getElementById('radius'),
+  speed: document.getElementById('speed'),
+  restitution: document.getElementById('restitution'),
+  gravityToggle: document.getElementById('gravityToggle'),
+  gravity: document.getElementById('gravity'),
+  ballCountVal: document.getElementById('ballCountVal'),
+  radiusVal: document.getElementById('radiusVal'),
+  speedVal: document.getElementById('speedVal'),
+  restitutionVal: document.getElementById('restitutionVal'),
+  gravityVal: document.getElementById('gravityVal'),
+  ke: document.getElementById('ke'),
+  pe: document.getElementById('pe'),
+  me: document.getElementById('me'),
+  peRow: document.getElementById('peRow'),
+  meRow: document.getElementById('meRow'),
+  px: document.getElementById('px'),
+  py: document.getElementById('py'),
+  collisions: document.getElementById('collisions'),
+  fps: document.getElementById('fps'),
+};
+
+let balls = [];
+let paused = false;
+let collisionCount = 0;
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let currentFps = 0;
+
+// 颜色列表
+const colors = [
+  '#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff',
+  '#5f27cd','#01a3a4','#f368e0','#ff6348','#7bed9f',
+  '#70a1ff','#ffa502','#2ed573','#1e90ff','#ff4757',
+  '#eccc68','#a4b0be','#dfe6e9','#fd79a8','#00cec9',
+  '#e17055','#0984e3','#6c5ce7','#fdcb6e','#e84393',
+  '#00b894','#636e72','#d63031','#74b9ff','#55efc4',
+];
+
+// 工具函数：颜色变暗
+function darkenColor(hex, factor) {
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+  r = Math.floor(r * (1 - factor));
+  g = Math.floor(g * (1 - factor));
+  b = Math.floor(b * (1 - factor));
+  return `rgb(${r},${g},${b})`;
+}
+
+class Ball {
+  constructor(x, y, vx, vy, r, mass, color) {
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+    this.r = r;
+    this.mass = mass;
+    this.color = color;
+    // 轨迹
+    this.trail = [];
+  }
+
+  kineticEnergy() {
+    return 0.5 * this.mass * (this.vx * this.vx + this.vy * this.vy);
+  }
+
+  momentumX() { return this.mass * this.vx; }
+  momentumY() { return this.mass * this.vy; }
+
+  draw(ctx) {
+    // 绘制轨迹
+    if (this.trail.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(this.trail[0].x, this.trail[0].y);
+      for (let i = 1; i < this.trail.length; i++) {
+        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+      }
+      ctx.strokeStyle = this.color + '30';
+      ctx.lineWidth = this.r * 0.5;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // 绘制球体 - 径向渐变产生3D效果
+    const grad = ctx.createRadialGradient(
+      this.x - this.r * 0.3, this.y - this.r * 0.3, this.r * 0.1,
+      this.x, this.y, this.r
+    );
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, this.color);
+    grad.addColorStop(1, darkenColor(this.color, 0.4));
+
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 球体边缘
+    ctx.strokeStyle = this.color + '80';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 在球内显示质量标识（球足够大时）
+    if (this.r >= 15) {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = `${Math.max(9, this.r * 0.5)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.mass.toFixed(0), this.x, this.y);
+    }
+  }
+}
+
+/**
+ * 二维弹性/非完全弹性碰撞
+ * 严格基于动量守恒与能量关系
+ * 使用法线-切线分解法:
+ *   1. 计算碰撞法线方向 (两球心连线方向)
+ *   2. 将速度分解为法线分量和切线分量
+ *   3. 切线分量不变
+ *   4. 法线分量按一维碰撞公式计算，乘以恢复系数 e
+ *      v1n' = (m1*v1n + m2*v2n + m2*e*(v2n - v1n)) / (m1 + m2)
+ *      v2n' = (m1*v1n + m2*v2n + m1*e*(v1n - v2n)) / (m1 + m2)
+ *   当 e=1 时为完全弹性碰撞，动能守恒
+ */
+function resolveCollision(a, b, restitution) {
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+  let dist = Math.sqrt(dx * dx + dy * dy);
+
+  // 两球完全重合时，给一个随机微小偏移避免除零
+  if (dist < 0.001) {
+    const angle = Math.random() * Math.PI * 2;
+    dx = Math.cos(angle) * 0.01;
+    dy = Math.sin(angle) * 0.01;
+    dist = 0.01;
+  }
+
+  // 法线单位向量
+  const nx = dx / dist;
+  const ny = dy / dist;
+
+  // 切线单位向量
+  const tx = -ny;
+  const ty = nx;
+
+  // 分解速度到法线和切线方向
+  const v1n = a.vx * nx + a.vy * ny;
+  const v1t = a.vx * tx + a.vy * ty;
+  const v2n = b.vx * nx + b.vy * ny;
+  const v2t = b.vx * tx + b.vy * ty;
+
+  // 只有当两球在相互接近时才处理碰撞（避免重复处理）
+  if (v1n - v2n < 0) return;
+
+  const m1 = a.mass;
+  const m2 = b.mass;
+  const e = restitution;
+
+  // 碰撞后法线方向速度（含恢复系数）
+  // 推导：基于动量守恒 m1*v1n+m2*v2n = m1*v1n'+m2*v2n'
+  //       以及恢复系数定义 e = -(v1n'-v2n')/(v1n-v2n)
+  const v1nAfter = (m1 * v1n + m2 * v2n + m2 * e * (v2n - v1n)) / (m1 + m2);
+  const v2nAfter = (m1 * v1n + m2 * v2n + m1 * e * (v1n - v2n)) / (m1 + m2);
+
+  // 切线方向速度不变（无摩擦假设）
+  // 合成回 x, y 分量
+  a.vx = v1nAfter * nx + v1t * tx;
+  a.vy = v1nAfter * ny + v1t * ty;
+  b.vx = v2nAfter * nx + v2t * tx;
+  b.vy = v2nAfter * ny + v2t * ty;
+
+  // 分离重叠的球（位置修正，按质量反比分配）
+  const overlap = (a.r + b.r) - dist;
+  if (overlap > 0) {
+    const totalMass = m1 + m2;
+    a.x -= overlap * (m2 / totalMass) * nx;
+    a.y -= overlap * (m2 / totalMass) * ny;
+    b.x += overlap * (m1 / totalMass) * nx;
+    b.y += overlap * (m1 / totalMass) * ny;
+  }
+
+  // 位置修正后，确保球不越出墙壁
+  clampToBounds(a);
+  clampToBounds(b);
+
+  collisionCount++;
+}
+
+/**
+ * 将球限制在边界内（碰撞修正后的安全网）
+ * 同时修正速度方向，避免下一步 wallCollision 误判碰墙并额外扣除能量
+ */
+function clampToBounds(ball) {
+  if (ball.x - ball.r < 0) {
+    ball.x = ball.r;
+    if (ball.vx < 0) ball.vx = -ball.vx;
+  }
+  if (ball.x + ball.r > W) {
+    ball.x = W - ball.r;
+    if (ball.vx > 0) ball.vx = -ball.vx;
+  }
+  if (ball.y - ball.r < 0) {
+    ball.y = ball.r;
+    if (ball.vy < 0) ball.vy = -ball.vy;
+  }
+  if (ball.y + ball.r > H) {
+    ball.y = H - ball.r;
+    if (ball.vy > 0) ball.vy = -ball.vy;
+  }
+}
+
+/**
+ * 墙壁碰撞 - 完全弹性反弹，乘以恢复系数
+ */
+function wallCollision(ball, restitution) {
+  // 左墙
+  if (ball.x - ball.r < 0) {
+    ball.x = ball.r;
+    ball.vx = Math.abs(ball.vx) * restitution;
+  }
+  // 右墙
+  if (ball.x + ball.r > W) {
+    ball.x = W - ball.r;
+    ball.vx = -Math.abs(ball.vx) * restitution;
+  }
+  // 上墙
+  if (ball.y - ball.r < 0) {
+    ball.y = ball.r;
+    ball.vy = Math.abs(ball.vy) * restitution;
+  }
+  // 下墙
+  if (ball.y + ball.r > H) {
+    ball.y = H - ball.r;
+    ball.vy = -Math.abs(ball.vy) * restitution;
+  }
+}
+
+/**
+ * 初始化球 - 确保不重叠
+ * 每个球的半径在基准半径上随机浮动（±50%），质量与面积成正比
+ */
+function initBalls() {
+  balls = [];
+  collisionCount = 0;
+  const n = parseInt(ui.ballCount.value);
+  const baseR = parseInt(ui.radius.value);
+  const maxSpeed = parseInt(ui.speed.value);
+
+  for (let i = 0; i < n; i++) {
+    // 每个球半径在 [baseR*0.5, baseR*1.5] 之间随机，增加物理多样性
+    const r = Math.round(baseR * (0.5 + Math.random()));
+
+    let x, y, valid;
+    let attempts = 0;
+    do {
+      valid = true;
+      x = r + Math.random() * (W - 2 * r);
+      y = r + Math.random() * (H - 2 * r);
+      for (const b of balls) {
+        const dx = x - b.x;
+        const dy = y - b.y;
+        if (Math.sqrt(dx * dx + dy * dy) < r + b.r + 2) {
+          valid = false;
+          break;
+        }
+      }
+      attempts++;
+    } while (!valid && attempts < 2000);
+
+    // 放置失败则跳过该球，避免创建重叠球导致物理爆炸
+    if (!valid) {
+      console.warn(`球 ${i} 放置失败（空间不足），已跳过`);
+      continue;
+    }
+
+    const angle = Math.random() * Math.PI * 2;
+    const speed = maxSpeed * (0.5 + Math.random() * 0.5);
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed;
+
+    // 质量与面积成正比 (密度均匀)，不同半径 → 不同质量
+    const mass = r * r;
+
+    balls.push(new Ball(x, y, vx, vy, r, mass, colors[i % colors.length]));
+  }
+}
+
+/**
+ * 物理更新 - 使用子步进以提高碰撞精度
+ */
+function update(dt) {
+  const restitution = parseInt(ui.restitution.value) / 100;
+  const useGravity = ui.gravityToggle.checked;
+  const gravityAcc = parseInt(ui.gravity.value);
+
+  // 动态计算子步进数量，防止高速小球穿越（tunneling）
+  // 原理：确保每个子步进中，任意球的最大位移不超过最小球半径
+  let maxVel = 0;
+  let minR = Infinity;
+  for (const ball of balls) {
+    const vel = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+    if (vel > maxVel) maxVel = vel;
+    if (ball.r < minR) minR = ball.r;
+  }
+  // subSteps 至少为 4，保证基本精度；上限 32 防止性能爆炸
+  const subSteps = Math.min(32, Math.max(4, Math.ceil(maxVel * dt / minR)));
+  const subDt = dt / subSteps;
+
+  for (let step = 0; step < subSteps; step++) {
+    // 更新位置和速度
+    for (const ball of balls) {
+      if (useGravity) {
+        ball.vy += gravityAcc * subDt;
+      }
+      ball.x += ball.vx * subDt;
+      ball.y += ball.vy * subDt;
+
+      wallCollision(ball, restitution);
+    }
+
+    // 检测球与球碰撞 (O(n^2)，对于30个球足够)
+    for (let i = 0; i < balls.length; i++) {
+      for (let j = i + 1; j < balls.length; j++) {
+        const a = balls[i];
+        const b = balls[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const distSq = dx * dx + dy * dy;
+        const minDist = a.r + b.r;
+        if (distSq < minDist * minDist) {
+          resolveCollision(a, b, restitution);
+        }
+      }
+    }
+  }
+
+  // 更新轨迹
+  const maxTrailLen = 20;
+  for (const ball of balls) {
+    ball.trail.push({ x: ball.x, y: ball.y });
+    if (ball.trail.length > maxTrailLen) ball.trail.shift();
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // 网格背景
+  ctx.strokeStyle = '#1a1a3e';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x <= W; x += 30) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y <= H; y += 30) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  for (const ball of balls) {
+    ball.draw(ctx);
+  }
+
+  // 速度矢量指示
+  ctx.lineWidth = 1.5;
+  for (const ball of balls) {
+    const scale = 0.1;
+    ctx.beginPath();
+    ctx.moveTo(ball.x, ball.y);
+    ctx.lineTo(ball.x + ball.vx * scale, ball.y + ball.vy * scale);
+    ctx.strokeStyle = ball.color + '60';
+    ctx.stroke();
+  }
+}
+
+function updateStats() {
+  const useGravity = ui.gravityToggle.checked;
+  const gravityAcc = parseInt(ui.gravity.value);
+
+  let totalKE = 0, totalPE = 0, totalPx = 0, totalPy = 0;
+  for (const b of balls) {
+    totalKE += b.kineticEnergy();
+    totalPx += b.momentumX();
+    totalPy += b.momentumY();
+    if (useGravity) {
+      // 重力势能：以底部(y=H)为零势能面，PE = m * g * (H - y)
+      // y 轴向下为正，所以越靠上势能越大
+      totalPE += b.mass * gravityAcc * (H - b.y);
+    }
+  }
+
+  ui.ke.textContent = totalKE.toFixed(1);
+  ui.px.textContent = totalPx.toFixed(1);
+  ui.py.textContent = totalPy.toFixed(1);
+  ui.collisions.textContent = collisionCount;
+
+  // 重力场景下显示势能和总机械能
+  if (useGravity) {
+    ui.peRow.style.display = '';
+    ui.meRow.style.display = '';
+    ui.pe.textContent = totalPE.toFixed(1);
+    ui.me.textContent = (totalKE + totalPE).toFixed(1);
+  } else {
+    ui.peRow.style.display = 'none';
+    ui.meRow.style.display = 'none';
+  }
+
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime >= 1000) {
+    currentFps = frameCount;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+  ui.fps.textContent = currentFps;
+}
+
+let lastTime = 0;
+function loop(timestamp) {
+  requestAnimationFrame(loop);
+  if (!lastTime) lastTime = timestamp;
+  let dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  // 限制最大 dt，防止切换标签页后跳帧
+  if (dt > 0.05) dt = 0.05;
+
+  if (!paused) {
+    update(dt);
+  }
+
+  draw();
+  updateStats();
+}
+
+// 事件绑定
+ui.ballCount.addEventListener('input', () => { ui.ballCountVal.textContent = ui.ballCount.value; });
+ui.radius.addEventListener('input', () => { ui.radiusVal.textContent = ui.radius.value; });
+ui.speed.addEventListener('input', () => { ui.speedVal.textContent = ui.speed.value; });
+ui.restitution.addEventListener('input', () => { ui.restitutionVal.textContent = (parseInt(ui.restitution.value) / 100).toFixed(2); });
+ui.gravity.addEventListener('input', () => { ui.gravityVal.textContent = ui.gravity.value; });
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  initBalls();
+});
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  paused = !paused;
+  if (!paused) {
+    // 恢复时重置 lastTime，避免暂停期间累积的 dt 导致物理跳变
+    lastTime = 0;
+  }
+  document.getElementById('pauseBtn').textContent = paused ? '继续' : '暂停';
+});
+
+// 启动
+initBalls();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

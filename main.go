@@ -177,6 +177,9 @@ func main() {
 	// 静态文件服务 - 修改为 /tools/static/
 	router.Static("/tools/static", "./static")
 
+	// 模拟展示文件服务
+	router.Static("/mock", "./mock_file")
+
 	// 添加访客统计中间件（只对首页进行统计）
 	router.Use(func(c *gin.Context) {
 		// 只对首页路由进行统计

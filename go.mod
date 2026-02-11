@@ -9,7 +9,6 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gomarkdown/markdown v0.0.0-20231222211730-1d6d20845b47
-	github.com/h2non/bimg v1.1.9
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sergi/go-diff v1.3.1
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 物理碰撞模拟</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+    overflow: hidden;
+  }
+  h1 {
+    margin: 12px 0 8px;
+    font-size: 22px;
+    color: #00d2ff;
+    text-shadow: 0 0 10px rgba(0,210,255,0.3);
+  }
+  .main {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  #canvas-container {
+    border: 2px solid #00d2ff;
+    border-radius: 4px;
+    box-shadow: 0 0 20px rgba(0,210,255,0.15);
+    cursor: grab;
+  }
+  #canvas-container:active { cursor: grabbing; }
+  .panel {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 16px;
+    width: 210px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .panel label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 12px;
+    color: #aaa;
+  }
+  .panel input[type="range"] {
+    width: 100%;
+    margin-bottom: 10px;
+    accent-color: #00d2ff;
+  }
+  .panel .value {
+    font-size: 13px;
+    color: #00d2ff;
+    font-weight: bold;
+  }
+  .panel button {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #00d2ff;
+    color: #0f0f23;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .panel button:hover { background: #00b4d8; }
+  .panel button.secondary {
+    background: transparent;
+    color: #00d2ff;
+    border: 1px solid #00d2ff;
+  }
+  .panel button.secondary:hover { background: rgba(0,210,255,0.1); }
+  .stats {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #2a2a4a;
+    font-size: 11px;
+    color: #888;
+    line-height: 1.8;
+  }
+  .stats span { color: #00d2ff; }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .checkbox-row input { accent-color: #00d2ff; }
+  .hint { font-size: 10px; color: #555; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>三维弹性碰撞物理模拟</h1>
+<div class="main">
+  <div id="canvas-container"></div>
+  <div class="panel">
+    <label>球的数量: <span id="ballCountVal" class="value">10</span></label>
+    <input type="range" id="ballCount" min="3" max="30" value="10">
+
+    <label>球的半径: <span id="radiusVal" class="value">1.5</span></label>
+    <input type="range" id="radius" min="5" max="30" value="15">
+
+    <label>初始速度: <span id="speedVal" class="value">8</span></label>
+    <input type="range" id="speed" min="2" max="20" value="8">
+
+    <label>恢复系数: <span id="restitutionVal" class="value">1.00</span></label>
+    <input type="range" id="restitution" min="50" max="100" value="100">
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="gravityToggle">
+      <label for="gravityToggle" style="margin:0">启用重力</label>
+    </div>
+
+    <label>重力加速度: <span id="gravityVal" class="value">15</span></label>
+    <input type="range" id="gravity" min="5" max="40" value="15">
+
+    <label>空间亮度: <span id="brightnessVal" class="value">100%</span></label>
+    <input type="range" id="brightness" min="5" max="100" value="100">
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="showBox" checked>
+      <label for="showBox" style="margin:0">显示边界框</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showTrails">
+      <label for="showTrails" style="margin:0">显示轨迹</label>
+    </div>
+
+    <button id="resetBtn">重新生成</button>
+    <button id="pauseBtn" class="secondary">暂停</button>
+    <p class="hint">鼠标拖拽旋转视角，滚轮缩放</p>
+
+    <div class="stats">
+      总动能: <span id="ke">0</span><br>
+      <span id="peRow" style="display:none">总势能: <span id="pe">0</span><br></span>
+      <span id="meRow" style="display:none">总机械能: <span id="me">0</span><br></span>
+      动量 Px: <span id="px">0</span><br>
+      动量 Py: <span id="py">0</span><br>
+      动量 Pz: <span id="pz">0</span><br>
+      碰撞次数: <span id="collisions">0</span><br>
+      FPS: <span id="fps">0</span>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ========== 常量 ==========
+const BOX_SIZE = 20; // 立方体边长
+const HALF = BOX_SIZE / 2;
+
+// ========== UI 引用 ==========
+const ui = {
+  ballCount: document.getElementById('ballCount'),
+  radius: document.getElementById('radius'),
+  speed: document.getElementById('speed'),
+  restitution: document.getElementById('restitution'),
+  gravityToggle: document.getElementById('gravityToggle'),
+  gravity: document.getElementById('gravity'),
+  brightness: document.getElementById('brightness'),
+  showBox: document.getElementById('showBox'),
+  showTrails: document.getElementById('showTrails'),
+  ballCountVal: document.getElementById('ballCountVal'),
+  brightnessVal: document.getElementById('brightnessVal'),
+  radiusVal: document.getElementById('radiusVal'),
+  speedVal: document.getElementById('speedVal'),
+  restitutionVal: document.getElementById('restitutionVal'),
+  gravityVal: document.getElementById('gravityVal'),
+  ke: document.getElementById('ke'),
+  pe: document.getElementById('pe'),
+  me: document.getElementById('me'),
+  peRow: document.getElementById('peRow'),
+  meRow: document.getElementById('meRow'),
+  px: document.getElementById('px'),
+  py: document.getElementById('py'),
+  pz: document.getElementById('pz'),
+  collisions: document.getElementById('collisions'),
+  fps: document.getElementById('fps'),
+};
+
+// ========== Three.js 场景 ==========
+const container = document.getElementById('canvas-container');
+const WIDTH = 700, HEIGHT = 600;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(50, WIDTH / HEIGHT, 0.1, 200);
+camera.position.set(22, 18, 28);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(WIDTH, HEIGHT);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+
+// ========== 光照：仅照亮箱体内部，外部始终漆黑 ==========
+// 极低环境光（仅让边界线框隐约可见，不照亮外部物体）
+const ambientLight = new THREE.AmbientLight(0x404060, 0.08);
+scene.add(ambientLight);
+
+// 箱体内部的照明点光源（distance 限制光照范围不超出箱体，decay=1 线性衰减更均匀）
+// 中心主灯 — 照亮整个空间核心
+const innerLight0 = new THREE.PointLight(0xffffff, 8.0, BOX_SIZE, 1);
+innerLight0.position.set(0, 0, 0);
+scene.add(innerLight0);
+// 上方补光
+const innerLight1 = new THREE.PointLight(0xeeeeff, 5.0, BOX_SIZE, 1);
+innerLight1.position.set(0, HALF * 0.7, 0);
+scene.add(innerLight1);
+// 前下角补光（减少死角暗区）
+const innerLight2 = new THREE.PointLight(0xffeedd, 4.0, BOX_SIZE * 0.9, 1);
+innerLight2.position.set(HALF * 0.6, -HALF * 0.5, HALF * 0.6);
+scene.add(innerLight2);
+// 后上角补光
+const innerLight3 = new THREE.PointLight(0xddddff, 4.0, BOX_SIZE * 0.9, 1);
+innerLight3.position.set(-HALF * 0.6, HALF * 0.5, -HALF * 0.6);
+scene.add(innerLight3);
+// 左下后补光
+const innerLight4 = new THREE.PointLight(0xffddee, 3.0, BOX_SIZE * 0.9, 1);
+innerLight4.position.set(-HALF * 0.6, -HALF * 0.5, HALF * 0.6);
+scene.add(innerLight4);
+// 右上前补光
+const innerLight5 = new THREE.PointLight(0xddeeff, 3.0, BOX_SIZE * 0.9, 1);
+innerLight5.position.set(HALF * 0.6, HALF * 0.5, -HALF * 0.6);
+scene.add(innerLight5);
+
+const innerLights = [innerLight0, innerLight1, innerLight2, innerLight3, innerLight4, innerLight5];
+const INNER_BASE = [8.0, 5.0, 4.0, 4.0, 3.0, 3.0]; // 各灯 100% 时的基准强度
+
+function applyBrightness() {
+  const t = parseInt(ui.brightness.value) / 100; // 0.05 ~ 1.0
+  for (let i = 0; i < innerLights.length; i++) {
+    innerLights[i].intensity = INNER_BASE[i] * t;
+  }
+  // 环境光极低，仅让边界框隐约可见
+  ambientLight.intensity = 0.05 + 0.15 * t;
+}
+
+// ========== 立体箱体（半透明六面 + 发光棱线） ==========
+const boxGroup = new THREE.Group();
+scene.add(boxGroup);
+
+// 六面面板：背靠三面（底、后、左）不透明白色，正对三面（顶、前、右）半透明
+const faceDefs = [
+  { axis: 'y', pos: -HALF, rx: -Math.PI/2, ry: 0,          solid: true  }, // 底面 — 白色不透明
+  { axis: 'y', pos:  HALF, rx:  Math.PI/2, ry: 0,          solid: false }, // 顶面
+  { axis: 'z', pos: -HALF, rx: 0,          ry: 0,          solid: true  }, // 后面 — 白色不透明
+  { axis: 'z', pos:  HALF, rx: 0,          ry: Math.PI,    solid: false }, // 前面
+  { axis: 'x', pos: -HALF, rx: 0,          ry:  Math.PI/2, solid: true  }, // 左面 — 白色不透明
+  { axis: 'x', pos:  HALF, rx: 0,          ry: -Math.PI/2, solid: false }, // 右面
+];
+
+const faceGeom = new THREE.PlaneGeometry(BOX_SIZE, BOX_SIZE);
+const faceMeshes = [];
+for (const f of faceDefs) {
+  let mat;
+  if (f.solid) {
+    // 背靠面：不透明白色，有轻微粗糙感
+    mat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      roughness: 0.6,
+      metalness: 0.0,
+    });
+  } else {
+    // 正对面：半透明玻璃
+    mat = new THREE.MeshPhysicalMaterial({
+      color: 0x00d2ff,
+      transparent: true,
+      opacity: 0.04,
+      side: THREE.DoubleSide,
+      roughness: 0.1,
+      metalness: 0.0,
+      depthWrite: false,
+    });
+  }
+  const mesh = new THREE.Mesh(faceGeom, mat);
+  if (f.axis === 'y') {
+    mesh.rotation.x = f.rx;
+    mesh.position.y = f.pos;
+  } else if (f.axis === 'z') {
+    mesh.rotation.y = f.ry;
+    mesh.position.z = f.pos;
+  } else {
+    mesh.rotation.y = f.ry;
+    mesh.position.x = f.pos;
+  }
+  mesh.receiveShadow = true;
+  boxGroup.add(mesh);
+  faceMeshes.push(mesh);
+}
+
+// 发光棱线
+const edgeBoxGeom = new THREE.BoxGeometry(BOX_SIZE, BOX_SIZE, BOX_SIZE);
+const edgeLines = new THREE.LineSegments(
+  new THREE.EdgesGeometry(edgeBoxGeom),
+  new THREE.LineBasicMaterial({ color: 0x00d2ff, transparent: true, opacity: 0.6 })
+);
+boxGroup.add(edgeLines);
+
+// 8 个角点发光小球（增强棱角感）
+const cornerGlow = [];
+const cornerGeom = new THREE.SphereGeometry(0.18, 8, 6);
+const cornerMat = new THREE.MeshBasicMaterial({ color: 0x00d2ff });
+for (let xi = -1; xi <= 1; xi += 2) {
+  for (let yi = -1; yi <= 1; yi += 2) {
+    for (let zi = -1; zi <= 1; zi += 2) {
+      const dot = new THREE.Mesh(cornerGeom, cornerMat);
+      dot.position.set(xi * HALF, yi * HALF, zi * HALF);
+      boxGroup.add(dot);
+      cornerGlow.push(dot);
+    }
+  }
+}
+
+// ========== 颜色列表 ==========
+const COLORS = [
+  0xff6b6b, 0xfeca57, 0x48dbfb, 0xff9ff3, 0x54a0ff,
+  0x5f27cd, 0x01a3a4, 0xf368e0, 0xff6348, 0x7bed9f,
+  0x70a1ff, 0xffa502, 0x2ed573, 0x1e90ff, 0xff4757,
+  0xeccc68, 0xfd79a8, 0x00cec9, 0xe17055, 0x0984e3,
+  0x6c5ce7, 0xfdcb6e, 0xe84393, 0x00b894, 0xd63031,
+  0x74b9ff, 0x55efc4, 0xa4b0be, 0x636e72, 0xdfe6e9,
+];
+
+// ========== 物理球数据 ==========
+let balls = [];         // 物理数据
+let meshes = [];        // Three.js 球体 Mesh
+let trailLines = [];    // 轨迹线
+let paused = false;
+let collisionCount = 0;
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let currentFps = 0;
+
+// ========== 3D 碰撞物理 ==========
+
+/**
+ * 三维弹性/非完全弹性碰撞
+ * 原理与 2D 版完全一致，扩展到三维空间：
+ *   1. 碰撞法线 n = (b.pos - a.pos) / |b.pos - a.pos|
+ *   2. 法线方向速度分量: v_n = dot(v, n)
+ *   3. 切线方向速度分量: v_t = v - v_n * n （在 3D 中切线平面是二维的，无需显式构造切线向量）
+ *   4. 法线分量按一维碰撞公式更新：
+ *      v1n' = (m1*v1n + m2*v2n + m2*e*(v2n - v1n)) / (m1 + m2)
+ *      v2n' = (m1*v1n + m2*v2n + m1*e*(v1n - v2n)) / (m1 + m2)
+ *   5. 新速度 = v1n' * n + v1_t
+ */
+function resolveCollision(a, b, restitution) {
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+  let dz = b.z - a.z;
+  let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+  // 两球完全重合时，给随机偏移避免除零
+  if (dist < 0.0001) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    dx = Math.sin(phi) * Math.cos(theta) * 0.001;
+    dy = Math.sin(phi) * Math.sin(theta) * 0.001;
+    dz = Math.cos(phi) * 0.001;
+    dist = 0.001;
+  }
+
+  // 法线单位向量
+  const nx = dx / dist;
+  const ny = dy / dist;
+  const nz = dz / dist;
+
+  // 法线方向速度分量（标量）
+  const v1n = a.vx * nx + a.vy * ny + a.vz * nz;
+  const v2n = b.vx * nx + b.vy * ny + b.vz * nz;
+
+  // 只有相互接近时才处理
+  if (v1n - v2n < 0) return;
+
+  // 切线方向速度分量（向量）= 原速度 - 法线分量
+  const v1tx = a.vx - v1n * nx;
+  const v1ty = a.vy - v1n * ny;
+  const v1tz = a.vz - v1n * nz;
+  const v2tx = b.vx - v2n * nx;
+  const v2ty = b.vy - v2n * ny;
+  const v2tz = b.vz - v2n * nz;
+
+  const m1 = a.mass, m2 = b.mass;
+  const e = restitution;
+
+  // 碰撞后法线方向速度
+  const v1nAfter = (m1 * v1n + m2 * v2n + m2 * e * (v2n - v1n)) / (m1 + m2);
+  const v2nAfter = (m1 * v1n + m2 * v2n + m1 * e * (v1n - v2n)) / (m1 + m2);
+
+  // 合成新速度 = 新法线分量 + 不变的切线分量
+  a.vx = v1nAfter * nx + v1tx;
+  a.vy = v1nAfter * ny + v1ty;
+  a.vz = v1nAfter * nz + v1tz;
+  b.vx = v2nAfter * nx + v2tx;
+  b.vy = v2nAfter * ny + v2ty;
+  b.vz = v2nAfter * nz + v2tz;
+
+  // 分离重叠
+  const overlap = (a.r + b.r) - dist;
+  if (overlap > 0) {
+    const totalMass = m1 + m2;
+    const ra = overlap * (m2 / totalMass);
+    const rb = overlap * (m1 / totalMass);
+    a.x -= ra * nx; a.y -= ra * ny; a.z -= ra * nz;
+    b.x += rb * nx; b.y += rb * ny; b.z += rb * nz;
+  }
+
+  clampToBounds(a);
+  clampToBounds(b);
+  collisionCount++;
+}
+
+/**
+ * 墙壁碰撞 — 6 个面
+ * 坐标范围: [-HALF, HALF] 各轴
+ */
+function wallCollision(ball, restitution) {
+  const r = ball.r;
+  if (ball.x - r < -HALF) { ball.x = -HALF + r; ball.vx = Math.abs(ball.vx) * restitution; }
+  if (ball.x + r >  HALF) { ball.x =  HALF - r; ball.vx = -Math.abs(ball.vx) * restitution; }
+  if (ball.y - r < -HALF) { ball.y = -HALF + r; ball.vy = Math.abs(ball.vy) * restitution; }
+  if (ball.y + r >  HALF) { ball.y =  HALF - r; ball.vy = -Math.abs(ball.vy) * restitution; }
+  if (ball.z - r < -HALF) { ball.z = -HALF + r; ball.vz = Math.abs(ball.vz) * restitution; }
+  if (ball.z + r >  HALF) { ball.z =  HALF - r; ball.vz = -Math.abs(ball.vz) * restitution; }
+}
+
+/**
+ * 边界约束安全网（碰撞修正后的保护）
+ */
+function clampToBounds(ball) {
+  const r = ball.r;
+  if (ball.x - r < -HALF) { ball.x = -HALF + r; if (ball.vx < 0) ball.vx = -ball.vx; }
+  if (ball.x + r >  HALF) { ball.x =  HALF - r; if (ball.vx > 0) ball.vx = -ball.vx; }
+  if (ball.y - r < -HALF) { ball.y = -HALF + r; if (ball.vy < 0) ball.vy = -ball.vy; }
+  if (ball.y + r >  HALF) { ball.y =  HALF - r; if (ball.vy > 0) ball.vy = -ball.vy; }
+  if (ball.z - r < -HALF) { ball.z = -HALF + r; if (ball.vz < 0) ball.vz = -ball.vz; }
+  if (ball.z + r >  HALF) { ball.z =  HALF - r; if (ball.vz > 0) ball.vz = -ball.vz; }
+}
+
+// ========== 初始化 ==========
+function getRadiusValue() {
+  return parseInt(ui.radius.value) / 10; // slider 5-30 → 0.5-3.0
+}
+
+function initBalls() {
+  // 清理旧 mesh（dispose geometry/material 防止 GPU 内存泄漏）
+  for (const m of meshes) {
+    scene.remove(m);
+    m.geometry.dispose();
+    m.material.dispose();
+  }
+  for (const t of trailLines) {
+    scene.remove(t);
+    t.geometry.dispose();
+    t.material.dispose();
+  }
+  meshes = [];
+  trailLines = [];
+  balls = [];
+  collisionCount = 0;
+
+  const n = parseInt(ui.ballCount.value);
+  const baseR = getRadiusValue();
+  const maxSpeed = parseInt(ui.speed.value);
+
+  for (let i = 0; i < n; i++) {
+    // 半径随机浮动 [baseR*0.5, baseR*1.5]
+    const r = baseR * (0.5 + Math.random());
+
+    let x, y, z, valid;
+    let attempts = 0;
+    do {
+      valid = true;
+      x = -HALF + r + Math.random() * (BOX_SIZE - 2 * r);
+      y = -HALF + r + Math.random() * (BOX_SIZE - 2 * r);
+      z = -HALF + r + Math.random() * (BOX_SIZE - 2 * r);
+      for (const b of balls) {
+        const dx = x - b.x, dy = y - b.y, dz = z - b.z;
+        if (Math.sqrt(dx*dx + dy*dy + dz*dz) < r + b.r + 0.1) {
+          valid = false;
+          break;
+        }
+      }
+      attempts++;
+    } while (!valid && attempts < 3000);
+
+    if (!valid) {
+      console.warn(`球 ${i} 放置失败（空间不足），已跳过`);
+      continue;
+    }
+
+    // 3D 随机方向速度（球面均匀分布）
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const speed = maxSpeed * (0.5 + Math.random() * 0.5);
+    const vx = Math.sin(phi) * Math.cos(theta) * speed;
+    const vy = Math.sin(phi) * Math.sin(theta) * speed;
+    const vz = Math.cos(phi) * speed;
+
+    // 质量与体积成正比 (密度均匀)，M ∝ r³
+    const mass = r * r * r;
+
+    const ball = { x, y, z, vx, vy, vz, r, mass, trail: [] };
+    balls.push(ball);
+
+    // 创建 Three.js 球体
+    const geom = new THREE.SphereGeometry(r, 24, 16);
+    const color = COLORS[i % COLORS.length];
+    const mat = new THREE.MeshStandardMaterial({
+      color,
+      metalness: 0.3,
+      roughness: 0.4,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.castShadow = true;
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+    meshes.push(mesh);
+
+    // 创建轨迹线（预分配缓冲区，避免每帧创建新对象）
+    const trailMat = new THREE.LineBasicMaterial({
+      color, transparent: true, opacity: 0.3
+    });
+    const trailGeom = new THREE.BufferGeometry();
+    const trailMaxPoints = 30;
+    const trailBuffer = new Float32Array(trailMaxPoints * 3);
+    trailGeom.setAttribute('position', new THREE.BufferAttribute(trailBuffer, 3));
+    trailGeom.setDrawRange(0, 0);
+    const trailLine = new THREE.Line(trailGeom, trailMat);
+    trailLine.frustumCulled = false;
+    scene.add(trailLine);
+    trailLines.push(trailLine);
+  }
+}
+
+// ========== 物理更新 ==========
+function update(dt) {
+  const restitution = parseInt(ui.restitution.value) / 100;
+  const useGravity = ui.gravityToggle.checked;
+  const gravityAcc = parseInt(ui.gravity.value);
+
+  // 动态子步进防 tunneling
+  let maxVel = 0, minR = Infinity;
+  for (const b of balls) {
+    const vel = Math.sqrt(b.vx*b.vx + b.vy*b.vy + b.vz*b.vz);
+    if (vel > maxVel) maxVel = vel;
+    if (b.r < minR) minR = b.r;
+  }
+  const subSteps = Math.min(32, Math.max(4, Math.ceil(maxVel * dt / minR)));
+  const subDt = dt / subSteps;
+
+  for (let step = 0; step < subSteps; step++) {
+    for (const ball of balls) {
+      // 重力沿 -Y 方向（Three.js 中 Y 向上）
+      if (useGravity) {
+        ball.vy -= gravityAcc * subDt;
+      }
+      ball.x += ball.vx * subDt;
+      ball.y += ball.vy * subDt;
+      ball.z += ball.vz * subDt;
+
+      wallCollision(ball, restitution);
+    }
+
+    // 球-球碰撞 O(n²)
+    for (let i = 0; i < balls.length; i++) {
+      for (let j = i + 1; j < balls.length; j++) {
+        const a = balls[i], b = balls[j];
+        const dx = b.x-a.x, dy = b.y-a.y, dz = b.z-a.z;
+        const distSq = dx*dx + dy*dy + dz*dz;
+        const minDist = a.r + b.r;
+        if (distSq < minDist * minDist) {
+          resolveCollision(a, b, restitution);
+        }
+      }
+    }
+  }
+
+  // 更新轨迹
+  const showTrails = ui.showTrails.checked;
+  const maxTrailLen = 30;
+  for (let i = 0; i < balls.length; i++) {
+    const b = balls[i];
+    if (showTrails) {
+      b.trail.push(b.x, b.y, b.z);
+      if (b.trail.length > maxTrailLen * 3) {
+        b.trail.splice(0, 3);
+      }
+    }
+  }
+}
+
+// ========== 渲染同步 ==========
+function syncMeshes() {
+  const showTrails = ui.showTrails.checked;
+  for (let i = 0; i < balls.length; i++) {
+    const b = balls[i];
+    meshes[i].position.set(b.x, b.y, b.z);
+
+    // 轨迹线 — 直接写入预分配的缓冲区
+    const tl = trailLines[i];
+    if (showTrails && b.trail.length >= 6) {
+      const posArr = tl.geometry.attributes.position.array;
+      const pointCount = b.trail.length / 3;
+      for (let k = 0; k < b.trail.length && k < posArr.length; k++) {
+        posArr[k] = b.trail[k];
+      }
+      tl.geometry.attributes.position.needsUpdate = true;
+      tl.geometry.setDrawRange(0, pointCount);
+      tl.visible = true;
+    } else {
+      tl.visible = false;
+    }
+  }
+
+  // 显示/隐藏边界框
+  boxGroup.visible = ui.showBox.checked;
+}
+
+// ========== 统计信息 ==========
+function updateStats() {
+  const useGravity = ui.gravityToggle.checked;
+  const gravityAcc = parseInt(ui.gravity.value);
+
+  let totalKE = 0, totalPE = 0, totalPx = 0, totalPy = 0, totalPz = 0;
+  for (const b of balls) {
+    const v2 = b.vx*b.vx + b.vy*b.vy + b.vz*b.vz;
+    totalKE += 0.5 * b.mass * v2;
+    totalPx += b.mass * b.vx;
+    totalPy += b.mass * b.vy;
+    totalPz += b.mass * b.vz;
+    if (useGravity) {
+      // 势能: m * g * h, h = y - (-HALF) = y + HALF (以底部为零势能面)
+      totalPE += b.mass * gravityAcc * (b.y + HALF);
+    }
+  }
+
+  ui.ke.textContent = totalKE.toFixed(1);
+  ui.px.textContent = totalPx.toFixed(1);
+  ui.py.textContent = totalPy.toFixed(1);
+  ui.pz.textContent = totalPz.toFixed(1);
+  ui.collisions.textContent = collisionCount;
+
+  if (useGravity) {
+    ui.peRow.style.display = '';
+    ui.meRow.style.display = '';
+    ui.pe.textContent = totalPE.toFixed(1);
+    ui.me.textContent = (totalKE + totalPE).toFixed(1);
+  } else {
+    ui.peRow.style.display = 'none';
+    ui.meRow.style.display = 'none';
+  }
+
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime >= 1000) {
+    currentFps = frameCount;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+  ui.fps.textContent = currentFps;
+}
+
+// ========== 主循环 ==========
+let lastTime = 0;
+function loop(timestamp) {
+  requestAnimationFrame(loop);
+  if (!lastTime) lastTime = timestamp;
+  let dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+  if (dt > 0.05) dt = 0.05;
+
+  if (!paused) {
+    update(dt);
+  }
+
+  syncMeshes();
+  controls.update();
+  renderer.render(scene, camera);
+  updateStats();
+}
+
+// ========== 事件 ==========
+ui.ballCount.addEventListener('input', () => { ui.ballCountVal.textContent = ui.ballCount.value; });
+ui.radius.addEventListener('input', () => { ui.radiusVal.textContent = (parseInt(ui.radius.value)/10).toFixed(1); });
+ui.speed.addEventListener('input', () => { ui.speedVal.textContent = ui.speed.value; });
+ui.restitution.addEventListener('input', () => { ui.restitutionVal.textContent = (parseInt(ui.restitution.value)/100).toFixed(2); });
+ui.gravity.addEventListener('input', () => { ui.gravityVal.textContent = ui.gravity.value; });
+ui.brightness.addEventListener('input', () => {
+  ui.brightnessVal.textContent = ui.brightness.value + '%';
+  applyBrightness();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => { initBalls(); });
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  paused = !paused;
+  if (!paused) lastTime = 0;
+  document.getElementById('pauseBtn').textContent = paused ? '继续' : '暂停';
+});
+
+// ========== 暴露到全局（用于调试/测试） ==========
+window._physics = { get balls() { return balls; }, get collisionCount() { return collisionCount; } };
+
+// ========== 启动 ==========
+applyBrightness();
+initBalls();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

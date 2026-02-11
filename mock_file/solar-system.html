@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>太阳系模拟 - 真实纹理版</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    cursor: grab;
+  }
+  body.dragging { cursor: grabbing; }
+  canvas { display: block; }
+
+  #loading-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: radial-gradient(ellipse at center, #0a0a2a 0%, #020210 70%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.8s;
+  }
+  #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  #loading-title {
+    color: #dde; font-size: 28px; font-weight: 300;
+    letter-spacing: 4px; margin-bottom: 30px;
+  }
+  #loading-bar-bg {
+    width: 320px; height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; overflow: hidden;
+  }
+  #loading-bar {
+    height: 100%; width: 0%; border-radius: 2px;
+    background: linear-gradient(90deg, #4a6cf7, #7b9cff);
+    transition: width 0.3s;
+  }
+  #loading-status {
+    color: #667; font-size: 13px; margin-top: 14px;
+    letter-spacing: 1px;
+  }
+
+  #info-panel {
+    position: fixed; top: 20px; left: 20px;
+    color: #ccc; font-size: 13px;
+    background: rgba(10, 10, 30, 0.75);
+    padding: 16px 20px; border-radius: 12px;
+    border: 1px solid rgba(100, 120, 255, 0.2);
+    backdrop-filter: blur(8px);
+    z-index: 10; min-width: 210px; user-select: none;
+  }
+  #info-panel h2 { color: #fff; font-size: 18px; margin-bottom: 10px; letter-spacing: 1px; }
+  #info-panel .label { color: #8890aa; }
+  #info-panel .value { color: #eef; font-weight: 600; }
+
+  #controls {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 12px; align-items: center;
+    background: rgba(10, 10, 30, 0.75);
+    padding: 12px 20px; border-radius: 30px;
+    border: 1px solid rgba(100, 120, 255, 0.2);
+    backdrop-filter: blur(8px);
+    z-index: 10; user-select: none;
+  }
+  #controls button {
+    background: rgba(60, 70, 120, 0.5); color: #ccd;
+    border: 1px solid rgba(100, 120, 255, 0.3);
+    padding: 8px 16px; border-radius: 20px;
+    cursor: pointer; font-size: 13px; transition: all 0.2s;
+  }
+  #controls button:hover { background: rgba(80, 90, 180, 0.6); color: #fff; }
+  #controls button.active {
+    background: rgba(100, 110, 220, 0.7); color: #fff;
+    border-color: rgba(140, 150, 255, 0.6);
+  }
+  #controls label { color: #99a; font-size: 13px; }
+  #speed-slider { width: 120px; accent-color: #667bff; }
+  #controls .sep {
+    width: 1px; height: 24px;
+    background: rgba(100, 120, 255, 0.2);
+    flex-shrink: 0;
+  }
+
+  #view-bar {
+    position: fixed; right: 20px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px;
+    background: rgba(10, 10, 30, 0.75);
+    padding: 10px 8px; border-radius: 14px;
+    border: 1px solid rgba(100, 120, 255, 0.2);
+    backdrop-filter: blur(8px);
+    z-index: 10; user-select: none;
+  }
+  #view-bar button {
+    background: rgba(60, 70, 120, 0.45); color: #aab;
+    border: 1px solid rgba(100, 120, 255, 0.2);
+    padding: 7px 10px; border-radius: 10px;
+    cursor: pointer; font-size: 12px; transition: all 0.25s;
+    white-space: nowrap; text-align: center; min-width: 64px;
+  }
+  #view-bar button:hover { background: rgba(80, 90, 180, 0.6); color: #fff; }
+  #view-bar button.active {
+    background: rgba(100, 110, 220, 0.7); color: #fff;
+    border-color: rgba(140, 150, 255, 0.6);
+    box-shadow: 0 0 10px rgba(100, 120, 255, 0.25);
+  }
+  #view-bar .view-title {
+    color: #667; font-size: 10px; text-align: center;
+    letter-spacing: 2px; margin-bottom: 2px;
+  }
+
+  #tooltip {
+    position: fixed; display: none;
+    background: rgba(15, 15, 40, 0.92); color: #eef;
+    padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(100, 120, 255, 0.3);
+    font-size: 13px; pointer-events: none;
+    z-index: 20; backdrop-filter: blur(6px); max-width: 280px;
+  }
+  #tooltip .name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  #tooltip .src { font-size: 10px; color: #556; margin-top: 4px; }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div id="loading-overlay">
+  <div id="loading-title">太 阳 系 模 拟 器</div>
+  <div id="loading-bar-bg"><div id="loading-bar"></div></div>
+  <div id="loading-status">正在加载纹理贴图...</div>
+</div>
+
+<div id="info-panel">
+  <h2>太阳系模拟器</h2>
+  <div><span class="label">行星数：</span><span class="value">8</span></div>
+  <div><span class="label">陨石数：</span><span class="value" id="asteroid-count">0</span></div>
+  <div><span class="label">流星数：</span><span class="value" id="meteor-count">0</span></div>
+  <div style="margin-top:8px;"><span class="label">缩放：</span><span class="value" id="zoom-val">1.00x</span></div>
+  <div><span class="label">速度：</span><span class="value" id="speed-val">1.00x</span></div>
+  <div><span class="label">纹理：</span><span class="value" id="tex-status">加载中</span></div>
+  <div style="margin-top:8px;"><span class="label">视角：</span><span class="value" id="view-angle">67°</span></div>
+  <div style="margin-top:10px;font-size:11px;color:#667;">拖拽旋转 | Shift+拖拽平移 | 滚轮缩放</div>
+</div>
+
+<div id="controls">
+  <button id="btn-pause">暂停</button>
+  <button id="btn-orbits" class="active">轨道线</button>
+  <button id="btn-labels" class="active">名称</button>
+  <button id="btn-trails">轨迹</button>
+  <label>速度</label>
+  <input type="range" id="speed-slider" min="0.1" max="10" step="0.1" value="1">
+  <button id="btn-reset">重置视角</button>
+</div>
+
+<div id="view-bar">
+  <div class="view-title">视 角</div>
+  <button data-view="top">俯视</button>
+  <button data-view="default" class="active">默认</button>
+  <button data-view="side">侧视</button>
+  <button data-view="front">正面</button>
+  <button data-view="angle45">45°</button>
+  <button data-view="cinematic">电影</button>
+  <button data-view="ecliptic">黄道面</button>
+  <button data-view="flip">翻转</button>
+</div>
+
+<div id="tooltip">
+  <div class="name" id="tip-name"></div>
+  <div id="tip-info"></div>
+  <div class="src" id="tip-src"></div>
+</div>
+
+<script>
+// =====================================================
+//  太阳系模拟器 - 真实 NASA 卫星纹理 + 球体渲染
+// =====================================================
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+// ===== 全局状态 =====
+let camera = { x: 0, y: 0, zoom: 1 };
+let targetCamera = { x: 0, y: 0, zoom: 1 };
+let paused = false, showOrbits = true, showLabels = true, showTrails = false;
+let speedMultiplier = 1, time = 0;
+
+// ===== 3D 轨道相机 =====
+// viewAzimuth: 绕垂直轴旋转 (水平方向观察角)
+// viewElevation: 俯仰角 (0=侧面, PI/2=正上方)
+let viewAzimuth = 0, viewElevation = 1.17;   // 1.17 rad ≈ 67° 初始倾斜
+let targetAzimuth = 0, targetElevation = 1.17;
+
+// ===== Wikimedia Commons 纹理 URL (Solar System Scope, CC-BY 4.0, 基于 NASA 数据) =====
+const TEX_BASE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/';
+const TEXTURES = {
+  sun:      TEX_BASE + 'c/cb/Solarsystemscope_texture_2k_sun.jpg/1024px-Solarsystemscope_texture_2k_sun.jpg',
+  mercury:  TEX_BASE + '9/92/Solarsystemscope_texture_2k_mercury.jpg/1024px-Solarsystemscope_texture_2k_mercury.jpg',
+  venus:    TEX_BASE + '6/63/Solarsystemscope_texture_2k_venus_atmosphere.jpg/1024px-Solarsystemscope_texture_2k_venus_atmosphere.jpg',
+  earth:    TEX_BASE + 'c/c3/Solarsystemscope_texture_2k_earth_daymap.jpg/1024px-Solarsystemscope_texture_2k_earth_daymap.jpg',
+  earthClouds: TEX_BASE + 'e/ed/Solarsystemscope_texture_2k_earth_clouds.jpg/1024px-Solarsystemscope_texture_2k_earth_clouds.jpg',
+  mars:     TEX_BASE + '4/46/Solarsystemscope_texture_2k_mars.jpg/1024px-Solarsystemscope_texture_2k_mars.jpg',
+  jupiter:  TEX_BASE + 'b/be/Solarsystemscope_texture_2k_jupiter.jpg/1024px-Solarsystemscope_texture_2k_jupiter.jpg',
+  saturn:   TEX_BASE + 'e/ea/Solarsystemscope_texture_2k_saturn.jpg/1024px-Solarsystemscope_texture_2k_saturn.jpg',
+  uranus:   TEX_BASE + '9/95/Solarsystemscope_texture_2k_uranus.jpg/1024px-Solarsystemscope_texture_2k_uranus.jpg',
+  neptune:  TEX_BASE + '1/1e/Solarsystemscope_texture_2k_neptune.jpg/1024px-Solarsystemscope_texture_2k_neptune.jpg',
+  moon:     TEX_BASE + '2/26/Solarsystemscope_texture_2k_moon.jpg/1024px-Solarsystemscope_texture_2k_moon.jpg',
+  saturnRing: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Solarsystemscope_texture_2k_saturn_ring_alpha.png',
+};
+
+// ===== 噪声函数 (用于程序化纹理备用方案) =====
+const PERM = new Uint8Array(512);
+(function initNoise() {
+  for (let i = 0; i < 256; i++) PERM[i] = i;
+  for (let i = 255; i > 0; i--) {
+    const j = (i * 16807 + 1) % 256; // 确定性shuffle
+    [PERM[i], PERM[j]] = [PERM[j], PERM[i]];
+  }
+  for (let i = 0; i < 256; i++) PERM[i + 256] = PERM[i];
+})();
+function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+function lerp(a, b, t) { return a + t * (b - a); }
+function noise2D(x, y) {
+  const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
+  const xf = x - Math.floor(x), yf = y - Math.floor(y);
+  const u = fade(xf), v = fade(yf);
+  const a = PERM[xi] + yi, b = PERM[xi + 1] + yi;
+  return lerp(lerp(PERM[a] / 255, PERM[b] / 255, u), lerp(PERM[a + 1] / 255, PERM[b + 1] / 255, u), v);
+}
+function fbm(x, y, oct = 4) {
+  let v = 0, a = 0.5, f = 1;
+  for (let i = 0; i < oct; i++) { v += a * noise2D(x * f, y * f); a *= 0.5; f *= 2.1; }
+  return v;
+}
+
+// ===== 程序化行星着色器 (备用方案) =====
+const SHADERS = {
+  sun(u, v) {
+    const n = fbm(u * 10, v * 5, 5);
+    return [255, 175 + n * 70, 30 + n * 50];
+  },
+  mercury(u, v) {
+    const n = fbm(u * 12, v * 6, 5), c = fbm(u * 30, v * 15, 3);
+    const b = 125 + n * 45 - c * 30;
+    return [b, b * 0.95, b * 0.9];
+  },
+  venus(u, v) {
+    const n = fbm(u * 6, v * 3, 4), c = fbm(u * 10, v * 5, 3);
+    return [195 + n * 35, 165 + n * 30 + c * 20, 95 + n * 40];
+  },
+  earth(u, v) {
+    const t = fbm(u * 8, v * 4, 6), d = fbm(u * 20, v * 10, 3);
+    if (Math.abs(v - 0.5) > 0.43) return [225 + d * 20, 232 + d * 15, 242];
+    const coast = 0.47 + fbm(u * 12 + 1, v * 6 + 1, 3) * 0.08;
+    if (t > coast) {
+      return t > 0.62 ? [135 + d * 45, 115 + d * 35, 75 + d * 25] : [35 + d * 30, 95 + d * 55, 25 + d * 22];
+    }
+    const dp = Math.max(0, coast - t) * 3;
+    return [8 + dp * 18, 28 + dp * 28 + d * 12, 95 + dp * 55 + d * 28];
+  },
+  mars(u, v) {
+    const n = fbm(u * 8, v * 4, 5), dk = fbm(u * 15, v * 7, 3);
+    if (Math.abs(v - 0.5) > 0.44) return [218, 208, 198];
+    return [155 + n * 55 - dk * 30, 75 + n * 35 - dk * 20, 35 + n * 18];
+  },
+  jupiter(u, v) {
+    const band = Math.sin(v * Math.PI * 12) * 0.5 + 0.5;
+    const tb = fbm(u * 8 + band, v * 20, 4);
+    let r = 178 + band * 42 + tb * 22, g = 148 + band * 32 + tb * 16, b = 98 + band * 12 + tb * 10;
+    const du = u - 0.6, dv = v - 0.55;
+    if (du * du * 4 + dv * dv * 16 < 0.01) { r = 198 + tb * 22; g = 95 + tb * 18; b = 75; }
+    return [r, g, b];
+  },
+  saturn(u, v) {
+    const band = Math.sin(v * Math.PI * 10) * 0.5 + 0.5;
+    const n = fbm(u * 6 + band * 0.5, v * 15, 3);
+    return [208 + band * 22 + n * 16, 188 + band * 18 + n * 12, 138 + band * 12 + n * 8];
+  },
+  uranus(u, v) {
+    const n = fbm(u * 4, v * 3, 3);
+    return [155 + n * 22, 208 + n * 18, 208 + n * 18];
+  },
+  neptune(u, v) {
+    const n = fbm(u * 5, v * 4, 4), band = Math.sin(v * Math.PI * 8) * 0.15;
+    return [38 + n * 22, 58 + n * 32 + band * 30, 175 + n * 42 + band * 22];
+  },
+  moon(u, v) {
+    const n = fbm(u * 10, v * 5, 5), c = Math.max(0, fbm(u * 25, v * 12, 3) - 0.4) * 2;
+    const b = 155 + n * 45 - c * 55;
+    return [b, b * 0.97, b * 0.95];
+  }
+};
+
+// ===== 纹理加载系统 =====
+const loadedTextures = {};      // name -> ImageData
+const textureStatus = {};       // name -> 'real' | 'procedural'
+let texturesReady = false;
+let realTextureCount = 0;
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const timeout = setTimeout(() => { img.src = ''; reject('timeout'); }, 12000);
+    img.onload = () => { clearTimeout(timeout); resolve(img); };
+    img.onerror = () => { clearTimeout(timeout); reject('error'); };
+    img.src = url;
+  });
+}
+
+function getTextureData(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth || img.width;
+  c.height = img.naturalHeight || img.height;
+  const cx = c.getContext('2d');
+  cx.drawImage(img, 0, 0);
+  return cx.getImageData(0, 0, c.width, c.height);
+}
+
+function generateProceduralTexture(shaderFn, w = 512, h = 256) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cx = c.getContext('2d');
+  const imgData = cx.createImageData(w, h);
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      const u = px / w, v = py / h;
+      const [r, g, b] = shaderFn(u, v);
+      const i = (py * w + px) * 4;
+      imgData.data[i] = Math.min(255, Math.max(0, r));
+      imgData.data[i + 1] = Math.min(255, Math.max(0, g));
+      imgData.data[i + 2] = Math.min(255, Math.max(0, b));
+      imgData.data[i + 3] = 255;
+    }
+  }
+  cx.putImageData(imgData, 0, 0);
+  return cx.getImageData(0, 0, w, h);
+}
+
+// ===== 球体射线投射渲染器 =====
+const SPHERE_SIZE = 128;     // 预渲染直径
+const FRAME_COUNT = 36;      // 旋转帧数
+const sphereFrames = {};     // bodyKey -> [canvas, canvas, ...]
+
+function renderSphereFrame(texData, rotation, size) {
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = size;
+  const c = cvs.getContext('2d');
+  const imgData = c.createImageData(size, size);
+  const R = size / 2;
+  const tw = texData.width, th = texData.height, td = texData.data;
+
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const nx = (px - R) / R;
+      const ny = (py - R) / R;
+      const d2 = nx * nx + ny * ny;
+      if (d2 >= 1) continue;
+
+      const nz = Math.sqrt(1 - d2);
+
+      // 球面 UV 映射
+      let lon = Math.atan2(nx, nz) + rotation;
+      const lat = Math.asin(-ny);
+      let u = ((lon / (Math.PI * 2)) % 1 + 1) % 1;
+      let v = lat / Math.PI + 0.5;
+
+      // 纹理采样
+      const tx = ((Math.floor(u * tw) % tw) + tw) % tw;
+      const ty = Math.min(th - 1, Math.max(0, Math.floor(v * th)));
+      const ti = (ty * tw + tx) * 4;
+
+      // 漫反射光照 (光源从左前方)
+      const light = Math.max(0.06, nz * 0.55 + nx * 0.12 + 0.38);
+
+      // Fresnel 边缘发光
+      const fresnel = Math.pow(1 - nz, 3) * 0.15;
+
+      const idx = (py * size + px) * 4;
+      imgData.data[idx]     = Math.min(255, td[ti] * light + fresnel * 60);
+      imgData.data[idx + 1] = Math.min(255, td[ti + 1] * light + fresnel * 80);
+      imgData.data[idx + 2] = Math.min(255, td[ti + 2] * light + fresnel * 120);
+      imgData.data[idx + 3] = 255;
+    }
+  }
+  c.putImageData(imgData, 0, 0);
+  return cvs;
+}
+
+// 太阳特殊渲染 (全亮无阴影)
+function renderSunFrame(texData, rotation, size) {
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = size;
+  const c = cvs.getContext('2d');
+  const imgData = c.createImageData(size, size);
+  const R = size / 2;
+  const tw = texData.width, th = texData.height, td = texData.data;
+
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const nx = (px - R) / R;
+      const ny = (py - R) / R;
+      const d2 = nx * nx + ny * ny;
+      if (d2 >= 1) continue;
+      const nz = Math.sqrt(1 - d2);
+      let lon = Math.atan2(nx, nz) + rotation;
+      const lat = Math.asin(-ny);
+      let u = ((lon / (Math.PI * 2)) % 1 + 1) % 1;
+      let v = lat / Math.PI + 0.5;
+      const tx = ((Math.floor(u * tw) % tw) + tw) % tw;
+      const ty = Math.min(th - 1, Math.max(0, Math.floor(v * th)));
+      const ti = (ty * tw + tx) * 4;
+
+      // 边缘略暗
+      const edge = 0.75 + nz * 0.25;
+      const idx = (py * size + px) * 4;
+      imgData.data[idx]     = Math.min(255, td[ti] * edge * 1.1);
+      imgData.data[idx + 1] = Math.min(255, td[ti + 1] * edge * 1.05);
+      imgData.data[idx + 2] = Math.min(255, td[ti + 2] * edge);
+      imgData.data[idx + 3] = 255;
+    }
+  }
+  c.putImageData(imgData, 0, 0);
+  return cvs;
+}
+
+async function initAllTextures() {
+  const bodies = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'moon'];
+  const total = bodies.length;
+  let loaded = 0;
+
+  for (const name of bodies) {
+    const status = document.getElementById('loading-status');
+    const bar = document.getElementById('loading-bar');
+    status.textContent = `加载 ${name} 纹理...`;
+
+    let texData;
+    try {
+      const img = await loadImage(TEXTURES[name]);
+      texData = getTextureData(img);
+      textureStatus[name] = 'real';
+      realTextureCount++;
+    } catch (e) {
+      // 使用程序化纹理
+      texData = generateProceduralTexture(SHADERS[name]);
+      textureStatus[name] = 'procedural';
+    }
+    loadedTextures[name] = texData;
+
+    // 预渲染球体旋转帧
+    status.textContent = `渲染 ${name} 球体...`;
+    sphereFrames[name] = [];
+    const isSun = (name === 'sun');
+    for (let f = 0; f < FRAME_COUNT; f++) {
+      const rot = (f / FRAME_COUNT) * Math.PI * 2;
+      const frame = isSun
+        ? renderSunFrame(texData, rot, SPHERE_SIZE)
+        : renderSphereFrame(texData, rot, SPHERE_SIZE);
+      sphereFrames[name].push(frame);
+    }
+
+    loaded++;
+    bar.style.width = (loaded / total * 100) + '%';
+    // 让浏览器有机会重绘进度条
+    await new Promise(r => setTimeout(r, 10));
+  }
+
+  // 加载土星环纹理
+  try {
+    const ringImg = await loadImage(TEXTURES.saturnRing);
+    loadedTextures.saturnRing = ringImg;
+    textureStatus.saturnRing = 'real';
+  } catch (e) {
+    textureStatus.saturnRing = 'procedural';
+  }
+
+  // 加载地球云层
+  try {
+    const cloudImg = await loadImage(TEXTURES.earthClouds);
+    const cloudData = getTextureData(cloudImg);
+    // 预渲染云层球体帧
+    sphereFrames.earthClouds = [];
+    for (let f = 0; f < FRAME_COUNT; f++) {
+      const rot = (f / FRAME_COUNT) * Math.PI * 2 + 0.3; // 云层偏移
+      sphereFrames.earthClouds.push(renderCloudFrame(cloudData, rot, SPHERE_SIZE));
+    }
+    textureStatus.earthClouds = 'real';
+  } catch (e) {
+    textureStatus.earthClouds = 'none';
+  }
+
+  document.getElementById('tex-status').textContent = `${realTextureCount}/10 真实`;
+  texturesReady = true;
+}
+
+function renderCloudFrame(texData, rotation, size) {
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = size;
+  const c = cvs.getContext('2d');
+  const imgData = c.createImageData(size, size);
+  const R = size / 2;
+  const tw = texData.width, th = texData.height, td = texData.data;
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const nx = (px - R) / R, ny = (py - R) / R;
+      const d2 = nx * nx + ny * ny;
+      if (d2 >= 1) continue;
+      const nz = Math.sqrt(1 - d2);
+      let lon = Math.atan2(nx, nz) + rotation;
+      const lat = Math.asin(-ny);
+      let u = ((lon / (Math.PI * 2)) % 1 + 1) % 1;
+      let v = lat / Math.PI + 0.5;
+      const tx = ((Math.floor(u * tw) % tw) + tw) % tw;
+      const ty = Math.min(th - 1, Math.max(0, Math.floor(v * th)));
+      const ti = (ty * tw + tx) * 4;
+      const brightness = td[ti]; // 云层亮度
+      const alpha = brightness > 80 ? Math.min(255, (brightness - 80) * 1.5) : 0;
+      const light = Math.max(0.2, nz * 0.6 + 0.4);
+      const idx = (py * size + px) * 4;
+      imgData.data[idx] = imgData.data[idx + 1] = imgData.data[idx + 2] = Math.min(255, brightness * light);
+      imgData.data[idx + 3] = alpha * light;
+    }
+  }
+  c.putImageData(imgData, 0, 0);
+  return cvs;
+}
+
+// ===== 获取当前球体帧 =====
+function getSphereFrame(name, rotationAngle) {
+  const frames = sphereFrames[name];
+  if (!frames || frames.length === 0) return null;
+  const idx = ((Math.floor((rotationAngle / (Math.PI * 2)) * FRAME_COUNT) % FRAME_COUNT) + FRAME_COUNT) % FRAME_COUNT;
+  return frames[idx];
+}
+
+// ===== 星空 =====
+const stars = [];
+for (let i = 0; i < 900; i++) {
+  stars.push({
+    x: Math.random() * 4000 - 2000, y: Math.random() * 4000 - 2000,
+    r: Math.random() * 1.5 + 0.3,
+    brightness: Math.random() * 0.5 + 0.5,
+    twinkleSpeed: Math.random() * 0.02 + 0.005,
+    color: Math.random() > 0.9 ? (Math.random() > 0.5 ? '#ffd8a8' : '#a8c8ff') : '#fff'
+  });
+}
+
+// ===== 太阳数据 =====
+const sun = {
+  name: '太阳', nameEn: 'Sun', radius: 45,
+  info: '恒星 | 直径139万km | 表面温度5778K',
+  rotationSpeed: 0.002
+};
+
+// ===== 行星数据 =====
+const planets = [
+  { name: '水星', nameEn: 'Mercury', texKey: 'mercury',
+    orbitRadius: 85, radius: 5, speed: 0.048,
+    color: '#b5b5b5', glowColor: 'rgba(181,181,181,0.25)',
+    info: '距太阳0.39AU | 直径4879km | 公转88天',
+    eccentricity: 0.205, rotationSpeed: 0.001 },
+  { name: '金星', nameEn: 'Venus', texKey: 'venus',
+    orbitRadius: 120, radius: 8, speed: 0.035,
+    color: '#e8cda0', glowColor: 'rgba(232,205,160,0.25)',
+    info: '距太阳0.72AU | 直径12104km | 公转225天',
+    eccentricity: 0.007, rotationSpeed: -0.0004, atmosphere: 'rgba(230,200,130,0.12)' },
+  { name: '地球', nameEn: 'Earth', texKey: 'earth',
+    orbitRadius: 165, radius: 9, speed: 0.029,
+    color: '#4a90d9', glowColor: 'rgba(74,144,217,0.3)',
+    info: '距太阳1.00AU | 直径12756km | 公转365天',
+    eccentricity: 0.017, hasMoon: true, rotationSpeed: 0.01,
+    atmosphere: 'rgba(100,160,255,0.15)' },
+  { name: '火星', nameEn: 'Mars', texKey: 'mars',
+    orbitRadius: 215, radius: 7, speed: 0.024,
+    color: '#c1440e', glowColor: 'rgba(193,68,14,0.25)',
+    info: '距太阳1.52AU | 直径6792km | 公转687天',
+    eccentricity: 0.093, rotationSpeed: 0.009,
+    atmosphere: 'rgba(200,140,100,0.06)' },
+  { name: '木星', nameEn: 'Jupiter', texKey: 'jupiter',
+    orbitRadius: 310, radius: 22, speed: 0.013,
+    color: '#c88b3a', glowColor: 'rgba(200,139,58,0.25)',
+    info: '距太阳5.20AU | 直径142984km | 公转4333天',
+    eccentricity: 0.049, moons: 4, rotationSpeed: 0.025 },
+  { name: '土星', nameEn: 'Saturn', texKey: 'saturn',
+    orbitRadius: 410, radius: 19, speed: 0.0097,
+    color: '#e8d191', glowColor: 'rgba(232,209,145,0.25)',
+    info: '距太阳9.58AU | 直径120536km | 公转10759天',
+    eccentricity: 0.057, hasRing: true, rotationSpeed: 0.022 },
+  { name: '天王星', nameEn: 'Uranus', texKey: 'uranus',
+    orbitRadius: 510, radius: 14, speed: 0.0068,
+    color: '#7ecfc0', glowColor: 'rgba(126,207,192,0.25)',
+    info: '距太阳19.2AU | 直径51118km | 公转30687天',
+    eccentricity: 0.046, rotationSpeed: -0.015,
+    atmosphere: 'rgba(130,210,200,0.1)' },
+  { name: '海王星', nameEn: 'Neptune', texKey: 'neptune',
+    orbitRadius: 600, radius: 13, speed: 0.0054,
+    color: '#4166f5', glowColor: 'rgba(65,102,245,0.25)',
+    info: '距太阳30.1AU | 直径49528km | 公转60190天',
+    eccentricity: 0.010, rotationSpeed: 0.016,
+    atmosphere: 'rgba(65,100,245,0.1)' }
+];
+planets.forEach(p => { p.trail = []; p.angle = Math.random() * Math.PI * 2; p.rotAngle = 0; });
+
+// ===== 小行星带 + 柯伊伯带 =====
+const asteroids = [], ASTEROID_COUNT = 260;
+for (let i = 0; i < ASTEROID_COUNT; i++) {
+  asteroids.push({
+    angle: Math.random() * Math.PI * 2,
+    orbitRadius: 250 + Math.random() * 40,
+    speed: 0.001 + Math.random() * 0.004,
+    radius: 0.8 + Math.random() * 2,
+    color: `rgba(${150+Math.random()*60},${140+Math.random()*50},${120+Math.random()*40},${0.5+Math.random()*0.5})`,
+    eccentricity: Math.random() * 0.15,
+    offsetAngle: Math.random() * Math.PI * 2
+  });
+}
+const kuiperObjects = [], KUIPER_COUNT = 180;
+for (let i = 0; i < KUIPER_COUNT; i++) {
+  kuiperObjects.push({
+    angle: Math.random() * Math.PI * 2,
+    orbitRadius: 650 + Math.random() * 120,
+    speed: 0.0005 + Math.random() * 0.002,
+    radius: 0.5 + Math.random() * 1.5,
+    color: `rgba(${100+Math.random()*60},${110+Math.random()*50},${140+Math.random()*60},${0.3+Math.random()*0.4})`,
+    eccentricity: Math.random() * 0.2,
+    offsetAngle: Math.random() * Math.PI * 2
+  });
+}
+
+// ===== 流星 + 彗星 =====
+const meteors = [], MAX_METEORS = 8;
+function spawnMeteor() {
+  const a = Math.random() * Math.PI * 2, dist = 700 + Math.random() * 300;
+  const ta = a + Math.PI + (Math.random() - 0.5) * 1.2, spd = 3 + Math.random() * 5;
+  meteors.push({
+    x: Math.cos(a)*dist, y: Math.sin(a)*dist,
+    vx: Math.cos(ta)*spd, vy: Math.sin(ta)*spd,
+    life: 1, decay: 0.003 + Math.random()*0.008,
+    size: 1 + Math.random()*2.5, trail: [],
+    color: ['#fff','#ffd','#adf','#ffa'][Math.floor(Math.random()*4)]
+  });
+}
+const comets = [];
+function spawnComet() {
+  comets.push({
+    angle: Math.random() * Math.PI * 2,
+    orbitRadius: 300 + Math.random() * 400,
+    speed: 0.002 + Math.random() * 0.003,
+    eccentricity: 0.6 + Math.random() * 0.35,
+    radius: 2 + Math.random() * 2,
+    tailLength: 30 + Math.random() * 40,
+    life: 1, decay: 0.0002 + Math.random() * 0.0003,
+    offsetAngle: Math.random() * Math.PI * 2
+  });
+}
+for (let i = 0; i < 3; i++) spawnComet();
+
+// ===== 3D 坐标转换 =====
+// 世界坐标 (wx, wy) 是黄道面, wz 是垂直于黄道面的高度
+function worldToScreen(wx, wy, wz) {
+  if (wz === undefined) wz = 0;
+  // 1) 绕 Z 轴旋转 (方位角)
+  const ca = Math.cos(viewAzimuth), sa = Math.sin(viewAzimuth);
+  const rx = wx * ca - wy * sa;
+  const ry = wx * sa + wy * ca;
+  // 2) 绕 X 轴旋转 (俯仰角) 投影到屏幕
+  const ce = Math.cos(viewElevation), se = Math.sin(viewElevation);
+  const sx = rx;
+  const sy = -(ry * se - wz * ce);
+  const depth = ry * ce + wz * se;
+  // 3) 应用相机平移和缩放
+  return {
+    x: (sx - camera.x) * camera.zoom + W / 2,
+    y: (sy - camera.y) * camera.zoom + H / 2,
+    depth: depth
+  };
+}
+function getPlanetPosition(p) {
+  const e = p.eccentricity || 0;
+  const r = p.orbitRadius * (1 - e * e) / (1 + e * Math.cos(p.angle));
+  return { x: r * Math.cos(p.angle), y: r * Math.sin(p.angle), z: 0 };
+}
+
+// ===== 绘制函数 =====
+function drawStars() {
+  stars.forEach(s => {
+    const sx = ((s.x - camera.x * 0.1) % W + W) % W;
+    const sy = ((s.y - camera.y * 0.1) % H + H) % H;
+    const tw = s.brightness + Math.sin(time * s.twinkleSpeed) * 0.3;
+    ctx.beginPath();
+    ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = s.color;
+    ctx.globalAlpha = Math.max(0.1, tw);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawSun() {
+  const { x, y } = worldToScreen(0, 0);
+  const r = sun.radius * camera.zoom;
+  const sunRotation = time * sun.rotationSpeed;
+
+  // 外层光晕
+  for (let i = 4; i >= 0; i--) {
+    const gr = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * (2.5 + i * 1.5));
+    gr.addColorStop(0, `rgba(253, 200, 50, ${0.08 - i * 0.012})`);
+    gr.addColorStop(0.5, `rgba(253, 150, 19, ${0.04 - i * 0.006})`);
+    gr.addColorStop(1, 'rgba(253, 100, 19, 0)');
+    ctx.beginPath(); ctx.arc(x, y, r * (2.5 + i * 1.5), 0, Math.PI * 2);
+    ctx.fillStyle = gr; ctx.fill();
+  }
+
+  // 动态光芒
+  for (let i = 0; i < 12; i++) {
+    const angle = (Math.PI * 2 / 12) * i + time * 0.005;
+    const len = r * (1.8 + Math.sin(time * 0.02 + i) * 0.6);
+    const endX = x + Math.cos(angle) * len, endY = y + Math.sin(angle) * len;
+    const gr = ctx.createLinearGradient(x, y, endX, endY);
+    gr.addColorStop(0, 'rgba(255, 220, 100, 0.25)');
+    gr.addColorStop(1, 'rgba(255, 200, 50, 0)');
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(endX, endY);
+    ctx.strokeStyle = gr; ctx.lineWidth = 2 * camera.zoom; ctx.stroke();
+  }
+
+  // 纹理球体
+  if (texturesReady) {
+    const frame = getSphereFrame('sun', sunRotation);
+    if (frame) {
+      ctx.drawImage(frame, x - r, y - r, r * 2, r * 2);
+    }
+  } else {
+    // 后备：渐变球
+    const sg = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, r * 0.1, x, y, r);
+    sg.addColorStop(0, '#fff8e0'); sg.addColorStop(0.3, '#fde74c');
+    sg.addColorStop(0.7, '#fdb813'); sg.addColorStop(1, '#e88a00');
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = sg; ctx.fill();
+  }
+
+  if (showLabels) {
+    ctx.fillStyle = 'rgba(255, 240, 200, 0.9)';
+    ctx.font = `bold ${Math.max(11, 14 * camera.zoom)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('太阳', x, y + r + 18 * camera.zoom);
+  }
+}
+
+function drawOrbit(p) {
+  if (!showOrbits) return;
+  ctx.beginPath();
+  for (let i = 0; i <= 120; i++) {
+    const a = (Math.PI * 2 / 120) * i;
+    const e = p.eccentricity || 0;
+    const r = p.orbitRadius * (1 - e * e) / (1 + e * Math.cos(a));
+    const { x, y } = worldToScreen(r * Math.cos(a), r * Math.sin(a), 0);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+  ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawPlanet(p) {
+  const pos = getPlanetPosition(p);
+  const scr = worldToScreen(pos.x, pos.y, pos.z);
+  const x = scr.x, y = scr.y;
+  const r = Math.max(2, p.radius * camera.zoom);
+  p.screenX = x; p.screenY = y; p.screenR = r; p.depth = scr.depth;
+
+  // 轨迹
+  if (showTrails && p.trail.length > 1) {
+    ctx.beginPath();
+    for (let i = 0; i < p.trail.length; i++) {
+      const tp = worldToScreen(p.trail[i].x, p.trail[i].y, p.trail[i].z || 0);
+      i === 0 ? ctx.moveTo(tp.x, tp.y) : ctx.lineTo(tp.x, tp.y);
+    }
+    ctx.globalAlpha = 0.3; ctx.strokeStyle = p.color;
+    ctx.lineWidth = 1; ctx.stroke(); ctx.globalAlpha = 1;
+  }
+
+  // 大气光晕
+  if (p.atmosphere) {
+    const atmR = r * 1.15;
+    const atm = ctx.createRadialGradient(x, y, r * 0.9, x, y, atmR);
+    atm.addColorStop(0, 'rgba(0,0,0,0)');
+    atm.addColorStop(0.5, p.atmosphere);
+    atm.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(x, y, atmR, 0, Math.PI * 2);
+    ctx.fillStyle = atm; ctx.fill();
+  }
+
+  // 光晕
+  const glow = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2.5);
+  glow.addColorStop(0, p.glowColor);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = glow; ctx.fill();
+
+  // 纹理球体
+  if (texturesReady && sphereFrames[p.texKey]) {
+    const frame = getSphereFrame(p.texKey, p.rotAngle);
+    if (frame) {
+      ctx.drawImage(frame, x - r, y - r, r * 2, r * 2);
+    }
+  } else {
+    // 后备渐变球
+    const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    grad.addColorStop(0, lightenColor(p.color, 40));
+    grad.addColorStop(0.7, p.color);
+    grad.addColorStop(1, darkenColor(p.color, 40));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = grad; ctx.fill();
+  }
+
+  // 地球云层
+  if (p.texKey === 'earth' && sphereFrames.earthClouds) {
+    const cloudRot = p.rotAngle + time * 0.003;
+    const cloudFrame = getSphereFrame('earthClouds', cloudRot);
+    if (cloudFrame) {
+      ctx.globalAlpha = 0.55;
+      ctx.drawImage(cloudFrame, x - r, y - r, r * 2, r * 2);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // 土星环
+  if (p.hasRing) {
+    drawSaturnRings(x, y, r);
+  }
+
+  // 月亮 (在 3D 世界坐标中计算)
+  if (p.hasMoon) {
+    const moonAngle = time * 0.08;
+    const moonWorldDist = p.radius * 2.5; // 月球轨道半径(世界坐标)
+    const moonWX = pos.x + Math.cos(moonAngle) * moonWorldDist;
+    const moonWY = pos.y + Math.sin(moonAngle) * moonWorldDist;
+    const moonWZ = Math.sin(moonAngle * 0.3) * moonWorldDist * 0.2; // 月球轨道微倾
+    const ms = worldToScreen(moonWX, moonWY, moonWZ);
+    const mr = Math.max(1.5, 2.5 * camera.zoom);
+    if (texturesReady && sphereFrames.moon) {
+      const moonFrame = getSphereFrame('moon', time * 0.005);
+      if (moonFrame) {
+        ctx.drawImage(moonFrame, ms.x - mr, ms.y - mr, mr * 2, mr * 2);
+      }
+    } else {
+      ctx.beginPath(); ctx.arc(ms.x, ms.y, mr, 0, Math.PI * 2);
+      ctx.fillStyle = '#ccc'; ctx.fill();
+    }
+  }
+
+  // 木星卫星 (在 3D 世界坐标中计算)
+  if (p.moons) {
+    const moonSizes = [1.8, 1.5, 1.6, 1.4];
+    const moonColors = ['#e8d8c0', '#c0b8a0', '#d0c8a8', '#b8b0a0'];
+    for (let i = 0; i < p.moons; i++) {
+      const mAngle = time * (0.04 + i * 0.015) + i * Math.PI / 2;
+      const mWorldDist = p.radius * (1.8 + i * 0.7);
+      const mWX = pos.x + Math.cos(mAngle) * mWorldDist;
+      const mWY = pos.y + Math.sin(mAngle) * mWorldDist;
+      const mWZ = Math.sin(mAngle) * mWorldDist * 0.15;
+      const ms = worldToScreen(mWX, mWY, mWZ);
+      const mr = Math.max(1, moonSizes[i] * camera.zoom);
+      ctx.beginPath(); ctx.arc(ms.x, ms.y, mr, 0, Math.PI * 2);
+      ctx.fillStyle = moonColors[i]; ctx.fill();
+    }
+  }
+
+  // 名称
+  if (showLabels) {
+    ctx.fillStyle = 'rgba(220, 225, 255, 0.85)';
+    ctx.font = `${Math.max(10, 12 * camera.zoom)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(p.name, x, y + r + 14 * camera.zoom);
+  }
+}
+
+function drawSaturnRings(x, y, r) {
+  const ringImg = loadedTextures.saturnRing;
+  const tilt = 0.3;
+
+  if (ringImg && ringImg instanceof HTMLImageElement) {
+    // 使用真实环纹理
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+    const rw = r * 2.5, rh = r * 0.15;
+    ctx.globalAlpha = 0.7;
+    ctx.drawImage(ringImg, -rw, -rh, rw * 2, rh * 2);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  } else {
+    // 程序化环
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      const ringR = r * (1.6 + i * 0.3);
+      const ringH = r * (0.35 + i * 0.08);
+      ctx.ellipse(x, y, ringR, ringH, tilt, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${200 + i * 15}, ${180 + i * 12}, ${140 + i * 10}, ${0.4 - i * 0.1})`;
+      ctx.lineWidth = (3 - i * 0.5) * camera.zoom;
+      ctx.stroke();
+    }
+  }
+}
+
+function drawAsteroids() {
+  asteroids.forEach(a => {
+    if (!paused) a.angle += a.speed * speedMultiplier * 0.016;
+    const e = a.eccentricity;
+    const r = a.orbitRadius * (1 - e * e) / (1 + e * Math.cos(a.angle + a.offsetAngle));
+    const { x, y } = worldToScreen(r * Math.cos(a.angle), r * Math.sin(a.angle), 0);
+    ctx.beginPath(); ctx.arc(x, y, Math.max(0.5, a.radius * camera.zoom), 0, Math.PI * 2);
+    ctx.fillStyle = a.color; ctx.fill();
+  });
+}
+
+function drawKuiper() {
+  kuiperObjects.forEach(k => {
+    if (!paused) k.angle += k.speed * speedMultiplier * 0.016;
+    const e = k.eccentricity;
+    const r = k.orbitRadius * (1 - e * e) / (1 + e * Math.cos(k.angle + k.offsetAngle));
+    const { x, y } = worldToScreen(r * Math.cos(k.angle), r * Math.sin(k.angle), 0);
+    ctx.beginPath(); ctx.arc(x, y, Math.max(0.3, k.radius * camera.zoom), 0, Math.PI * 2);
+    ctx.fillStyle = k.color; ctx.fill();
+  });
+}
+
+function drawMeteors() {
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const m = meteors[i];
+    if (!paused) {
+      m.x += m.vx * speedMultiplier; m.y += m.vy * speedMultiplier;
+      m.life -= m.decay * speedMultiplier;
+      m.trail.push({ x: m.x, y: m.y, z: 0 });
+      if (m.trail.length > 25) m.trail.shift();
+    }
+    if (m.life <= 0) { meteors.splice(i, 1); continue; }
+    if (m.trail.length > 1) {
+      for (let j = 1; j < m.trail.length; j++) {
+        const t0 = worldToScreen(m.trail[j-1].x, m.trail[j-1].y, 0);
+        const t1 = worldToScreen(m.trail[j].x, m.trail[j].y, 0);
+        ctx.beginPath(); ctx.moveTo(t0.x, t0.y); ctx.lineTo(t1.x, t1.y);
+        ctx.strokeStyle = m.color;
+        ctx.globalAlpha = (j / m.trail.length) * m.life * 0.6;
+        ctx.lineWidth = m.size * camera.zoom * (j / m.trail.length);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    const { x, y } = worldToScreen(m.x, m.y, 0);
+    ctx.beginPath(); ctx.arc(x, y, Math.max(1, m.size * camera.zoom), 0, Math.PI * 2);
+    ctx.fillStyle = m.color; ctx.globalAlpha = m.life; ctx.fill(); ctx.globalAlpha = 1;
+  }
+}
+
+function drawComets() {
+  for (let i = comets.length - 1; i >= 0; i--) {
+    const c = comets[i];
+    if (!paused) {
+      c.angle += c.speed * speedMultiplier * 0.016;
+      c.life -= c.decay * speedMultiplier * 0.016;
+    }
+    if (c.life <= 0) { comets.splice(i, 1); continue; }
+    const e = c.eccentricity;
+    const r = c.orbitRadius * (1 - e * e) / (1 + e * Math.cos(c.angle + c.offsetAngle));
+    const wx = r * Math.cos(c.angle), wy = r * Math.sin(c.angle);
+    const scr = worldToScreen(wx, wy, 0);
+    const x = scr.x, y = scr.y;
+    // 彗星尾巴方向：从太阳指向彗星 (在屏幕空间)
+    const sunScr = worldToScreen(0, 0, 0);
+    const tailDx = x - sunScr.x, tailDy = y - sunScr.y;
+    const tailDist = Math.sqrt(tailDx * tailDx + tailDy * tailDy) || 1;
+    const tdx = tailDx / tailDist, tdy = tailDy / tailDist;
+    const sunDist = Math.sqrt(wx * wx + wy * wy);
+    const tLen = c.tailLength * camera.zoom * (1 + 200 / sunDist);
+    const tg = ctx.createLinearGradient(x, y, x + tdx * tLen, y + tdy * tLen);
+    tg.addColorStop(0, `rgba(170,200,255,${0.6*c.life})`);
+    tg.addColorStop(0.3, `rgba(130,170,255,${0.3*c.life})`);
+    tg.addColorStop(1, 'rgba(100,150,255,0)');
+    ctx.beginPath();
+    ctx.moveTo(x - tdy * c.radius * camera.zoom, y + tdx * c.radius * camera.zoom);
+    ctx.lineTo(x + tdx * tLen, y + tdy * tLen);
+    ctx.lineTo(x + tdy * c.radius * camera.zoom, y - tdx * c.radius * camera.zoom);
+    ctx.closePath(); ctx.fillStyle = tg; ctx.fill();
+    const cr = Math.max(1.5, c.radius * camera.zoom);
+    const cg = ctx.createRadialGradient(x, y, 0, x, y, cr * 2);
+    cg.addColorStop(0, `rgba(220,240,255,${c.life})`);
+    cg.addColorStop(0.5, `rgba(150,200,255,${c.life*0.5})`);
+    cg.addColorStop(1, 'rgba(100,150,255,0)');
+    ctx.beginPath(); ctx.arc(x, y, cr * 2, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, cr, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240,248,255,${c.life})`; ctx.fill();
+  }
+}
+
+// ===== 颜色工具 =====
+function lightenColor(hex, amt) {
+  const n = parseInt(hex.replace('#',''), 16);
+  return `rgb(${Math.min(255,(n>>16)+amt)},${Math.min(255,((n>>8)&0xFF)+amt)},${Math.min(255,(n&0xFF)+amt)})`;
+}
+function darkenColor(hex, amt) {
+  const n = parseInt(hex.replace('#',''), 16);
+  return `rgb(${Math.max(0,(n>>16)-amt)},${Math.max(0,((n>>8)&0xFF)-amt)},${Math.max(0,(n&0xFF)-amt)})`;
+}
+
+// ===== 更新 =====
+function update() {
+  if (paused) return;
+  time += speedMultiplier;
+  planets.forEach(p => {
+    const e = p.eccentricity || 0;
+    const r = p.orbitRadius * (1 - e * e) / (1 + e * Math.cos(p.angle));
+    const speedMod = (p.orbitRadius * p.orbitRadius) / (r * r);
+    p.angle += p.speed * speedMultiplier * 0.016 * speedMod;
+    p.rotAngle += (p.rotationSpeed || 0.01) * speedMultiplier;
+    const pos = getPlanetPosition(p);
+    p.trail.push({ x: pos.x, y: pos.y, z: pos.z });
+    if (p.trail.length > 200) p.trail.shift();
+  });
+  if (meteors.length < MAX_METEORS && Math.random() < 0.02 * speedMultiplier) spawnMeteor();
+  if (comets.length < 3 && Math.random() < 0.001 * speedMultiplier) spawnComet();
+  camera.x += (targetCamera.x - camera.x) * 0.08;
+  camera.y += (targetCamera.y - camera.y) * 0.08;
+  camera.zoom += (targetCamera.zoom - camera.zoom) * 0.08;
+  // 3D 视角平滑插值
+  viewAzimuth += (targetAzimuth - viewAzimuth) * 0.08;
+  viewElevation += (targetElevation - viewElevation) * 0.08;
+}
+
+// ===== 主渲染 =====
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.7);
+  bg.addColorStop(0, '#0a0a1a'); bg.addColorStop(0.5, '#050510'); bg.addColorStop(1, '#020208');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  drawStars();
+  planets.forEach(drawOrbit);
+
+  if (showOrbits) {
+    // 小行星带提示
+    ctx.beginPath();
+    for (let i = 0; i <= 120; i++) {
+      const a = (Math.PI * 2 / 120) * i;
+      const { x, y } = worldToScreen(250 * Math.cos(a), 250 * Math.sin(a), 0);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 40 * camera.zoom; ctx.stroke();
+    // 柯伊伯带提示
+    ctx.beginPath();
+    for (let i = 0; i <= 120; i++) {
+      const a = (Math.PI * 2 / 120) * i;
+      const { x, y } = worldToScreen(710 * Math.cos(a), 710 * Math.sin(a), 0);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(100,130,200,0.02)'; ctx.lineWidth = 120 * camera.zoom; ctx.stroke();
+  }
+
+  drawKuiper(); drawAsteroids(); drawComets();
+
+  // ===== 深度排序：太阳 + 行星按 depth 从远到近绘制 =====
+  const sunDepth = worldToScreen(0, 0, 0).depth;
+  const drawOrder = planets.map((p, i) => {
+    const pos = getPlanetPosition(p);
+    const scr = worldToScreen(pos.x, pos.y, pos.z);
+    return { type: 'planet', idx: i, depth: scr.depth };
+  });
+  drawOrder.push({ type: 'sun', idx: -1, depth: sunDepth });
+  drawOrder.sort((a, b) => a.depth - b.depth); // 远的先画
+  drawOrder.forEach(item => {
+    if (item.type === 'sun') drawSun();
+    else drawPlanet(planets[item.idx]);
+  });
+
+  drawMeteors();
+
+  document.getElementById('asteroid-count').textContent = ASTEROID_COUNT + KUIPER_COUNT;
+  document.getElementById('meteor-count').textContent = meteors.length + comets.length;
+  document.getElementById('zoom-val').textContent = camera.zoom.toFixed(2) + 'x';
+  document.getElementById('speed-val').textContent = speedMultiplier.toFixed(1) + 'x';
+  document.getElementById('view-angle').textContent = Math.round(viewElevation * 180 / Math.PI) + '°';
+
+  update();
+  requestAnimationFrame(render);
+}
+
+// ===== 交互 =====
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  targetCamera.zoom = Math.max(0.15, Math.min(8, targetCamera.zoom * (e.deltaY > 0 ? 0.9 : 1.1)));
+}, { passive: false });
+
+let isDragging = false, dragStart = { x: 0, y: 0 };
+canvas.addEventListener('mousedown', e => {
+  isDragging = true; dragStart = { x: e.clientX, y: e.clientY };
+  document.body.classList.add('dragging');
+});
+canvas.addEventListener('mousemove', e => {
+  if (isDragging) {
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    if (e.shiftKey) {
+      // Shift+拖拽：平移
+      targetCamera.x -= dx / camera.zoom;
+      targetCamera.y -= dy / camera.zoom;
+    } else {
+      // 普通拖拽：3D 旋转视角
+      targetAzimuth -= dx * 0.005;
+      targetElevation = Math.max(0.15, Math.min(1.55, targetElevation + dy * 0.005));
+    }
+    dragStart = { x: e.clientX, y: e.clientY };
+  }
+  // 悬停检测
+  const tooltip = document.getElementById('tooltip');
+  let found = false;
+  const sunS = worldToScreen(0, 0);
+  if (Math.hypot(e.clientX - sunS.x, e.clientY - sunS.y) < sun.radius * camera.zoom + 10) {
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px';
+    document.getElementById('tip-name').textContent = '☀ ' + sun.name;
+    document.getElementById('tip-info').textContent = sun.info;
+    document.getElementById('tip-src').textContent = `纹理: ${textureStatus.sun || '加载中'}`;
+    found = true;
+  }
+  if (!found) {
+    for (const p of planets) {
+      if (p.screenX === undefined) continue;
+      if (Math.hypot(e.clientX - p.screenX, e.clientY - p.screenY) < p.screenR + 8) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px';
+        document.getElementById('tip-name').textContent = p.name + ' (' + p.nameEn + ')';
+        document.getElementById('tip-info').textContent = p.info;
+        document.getElementById('tip-src').textContent = `纹理: ${textureStatus[p.texKey] || '加载中'}`;
+        found = true; break;
+      }
+    }
+  }
+  if (!found) tooltip.style.display = 'none';
+});
+canvas.addEventListener('mouseup', () => { isDragging = false; document.body.classList.remove('dragging'); });
+canvas.addEventListener('mouseleave', () => { isDragging = false; document.body.classList.remove('dragging'); });
+
+// 按钮
+document.getElementById('btn-pause').addEventListener('click', function() {
+  paused = !paused; this.textContent = paused ? '播放' : '暂停'; this.classList.toggle('active', paused);
+});
+document.getElementById('btn-orbits').addEventListener('click', function() {
+  showOrbits = !showOrbits; this.classList.toggle('active', showOrbits);
+});
+document.getElementById('btn-labels').addEventListener('click', function() {
+  showLabels = !showLabels; this.classList.toggle('active', showLabels);
+});
+document.getElementById('btn-trails').addEventListener('click', function() {
+  showTrails = !showTrails; this.classList.toggle('active', showTrails);
+  if (!showTrails) planets.forEach(p => p.trail = []);
+});
+document.getElementById('speed-slider').addEventListener('input', function() {
+  speedMultiplier = parseFloat(this.value);
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  targetCamera = { x: 0, y: 0, zoom: 1 };
+  targetAzimuth = 0; targetElevation = 1.17;
+  document.getElementById('speed-slider').value = 1; speedMultiplier = 1;
+  setActiveView('default');
+});
+
+// ===== 视角预设 =====
+const VIEW_PRESETS = {
+  top:       { az: 0,             el: 1.55,  zoom: 1,   label: '俯视 — 正上方90°' },
+  default:   { az: 0,             el: 1.17,  zoom: 1,   label: '默认 — 倾斜67°' },
+  side:      { az: 0,             el: 0.25,  zoom: 0.9, label: '侧视 — 近乎水平' },
+  front:     { az: Math.PI / 2,   el: 0.35,  zoom: 0.9, label: '正面 — 前方视角' },
+  angle45:   { az: Math.PI / 6,   el: 0.78,  zoom: 1,   label: '45° — 经典斜视' },
+  cinematic: { az: -Math.PI / 4,  el: 0.52,  zoom: 0.7, label: '电影 — 广角透视' },
+  ecliptic:  { az: Math.PI / 3,   el: 0.15,  zoom: 0.85,label: '黄道面 — 极低角度' },
+  flip:      { az: Math.PI,       el: 1.17,  zoom: 1,   label: '翻转 — 180°反向' },
+};
+
+function setActiveView(name) {
+  document.querySelectorAll('#view-bar button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === name);
+  });
+}
+
+document.getElementById('view-bar').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-view]');
+  if (!btn) return;
+  const preset = VIEW_PRESETS[btn.dataset.view];
+  if (!preset) return;
+  targetAzimuth = preset.az;
+  targetElevation = preset.el;
+  targetCamera.zoom = preset.zoom;
+  targetCamera.x = 0; targetCamera.y = 0;
+  setActiveView(btn.dataset.view);
+});
+
+// 拖拽时取消视角按钮高亮 (自由视角)
+canvas.addEventListener('mousedown', e => {
+  if (!e.shiftKey) {
+    // 拖拽旋转时标记为自由视角
+    const onMove = () => {
+      setActiveView('');
+      canvas.removeEventListener('mousemove', onMove);
+    };
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseup', () => canvas.removeEventListener('mousemove', onMove), { once: true });
+  }
+});
+
+// ===== 启动 =====
+async function boot() {
+  render(); // 先用渐变球启动渲染
+  await initAllTextures();
+  document.getElementById('loading-overlay').classList.add('hidden');
+  setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 1000);
+}
+boot();
+</script>
+</body>
+</html>

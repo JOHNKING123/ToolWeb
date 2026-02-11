@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>动态平衡雕塑 · Kinetic Sculpture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #ddd; overflow: hidden;
+  }
+  h1 { margin: 14px 0 10px; font-size: 20px; color: #ccc; letter-spacing: 2px; }
+  .main { display: flex; gap: 16px; align-items: flex-start; }
+  #cv { border-radius: 6px; box-shadow: 0 4px 30px rgba(0,0,0,0.4); cursor: grab; }
+  #cv:active { cursor: grabbing; }
+  .pn {
+    background: #222; border-radius: 8px; padding: 16px;
+    width: 210px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .pn label { display: block; margin-bottom: 2px; font-size: 11px; color: #888; }
+  .pn input[type="range"] { width: 100%; margin-bottom: 10px; accent-color: #999; }
+  .pn .v { font-size: 12px; color: #bbb; font-weight: bold; }
+  .pn button {
+    width: 100%; padding: 7px; margin-top: 5px;
+    background: #555; color: #eee; border: none; border-radius: 4px;
+    cursor: pointer; font-size: 12px;
+  }
+  .pn button:hover { background: #777; }
+  .sep { height: 1px; background: #333; margin: 10px 0; }
+  .info { font-size: 10px; color: #555; margin-top: 10px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>动态平衡雕塑 · KINETIC SCULPTURE</h1>
+<div class="main">
+  <div id="cv"></div>
+  <div class="pn">
+    <label>速度: <span id="sV" class="v">1.0x</span></label>
+    <input type="range" id="sp" min="0" max="30" value="10">
+
+    <label>初始角速度: <span id="wV" class="v">3.5 rad/s</span></label>
+    <input type="range" id="w0" min="0" max="80" value="35">
+
+    <label>轨迹: <span id="trV" class="v">ON</span></label>
+    <input type="range" id="tr" min="0" max="1" value="1">
+
+    <div class="sep"></div>
+    <button id="goBtn">释放 (连续旋转)</button>
+    <button id="swBtn">释放 (摆动)</button>
+    <button id="rstBtn">归零停止</button>
+
+    <p class="info">
+      底座 V 框固定不动<br>
+      T 形(短竖杆 + 长横杆)在顶部<br>
+      绕支点在<b>竖直平面</b>内<br>
+      重力驱动 — 摆动或旋转<br>
+      角速度小→摆动, 大→转圈<br><br>
+      拖拽旋转视角 · 滚轮缩放
+    </p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const $ = id => document.getElementById(id);
+
+/* ================================================================
+   复合摆 (Compound Pendulum) — 竖直平面内旋转/摆动
+   T 形结构绕 V 框顶部支点旋转
+   θ: 从平衡位置量起的旋转角 (可超过 2π → 连续旋转)
+   θ'' = -ω₀² · sin(θ + α)
+   α: 重心偏移角 (因横杆一短一长)
+   ================================================================ */
+
+const G = 9.81;
+
+// T 形结构参数
+const STEM_LEN   = 1.6;    // 竖杆长度
+const BAR_LEFT   = 2.2;    // 横杆左端(短边)
+const BAR_RIGHT  = 4.8;    // 横杆右端(长边)
+const ROD_R      = 0.08;
+
+// 质量参数 (单位质量/单位长度)
+const M_STEM = STEM_LEN;
+const M_BAR  = BAR_LEFT + BAR_RIGHT;
+const M_TOT  = M_STEM + M_BAR;
+
+// 重心位置 (T 形本地坐标, 支点在原点, Y 向下为正)
+const CM_X = M_BAR * (BAR_RIGHT - BAR_LEFT) / 2 / M_TOT;
+const CM_Y = (M_STEM * STEM_LEN / 2 + M_BAR * STEM_LEN) / M_TOT;
+
+// 重心到支点的距离和偏移角
+const D_CM = Math.sqrt(CM_X * CM_X + CM_Y * CM_Y);
+const ALPHA = Math.atan2(CM_X, CM_Y); // 重心偏移角
+
+// 转动惯量 (绕支点)
+const I_STEM = M_STEM * STEM_LEN * STEM_LEN / 3;
+const I_BAR_CM = M_BAR * (BAR_LEFT + BAR_RIGHT) ** 2 / 12;
+const BAR_OFFSET_X = (BAR_RIGHT - BAR_LEFT) / 2;
+const I_BAR = I_BAR_CM + M_BAR * (STEM_LEN * STEM_LEN + BAR_OFFSET_X * BAR_OFFSET_X);
+const I_TOT = I_STEM + I_BAR;
+
+// 自然频率
+const OMEGA0_SQ = M_TOT * G * D_CM / I_TOT;
+// 连续旋转的角速度阈值
+const W_THRESHOLD = 2 * Math.sqrt(OMEGA0_SQ);
+
+// 运动方程: θ'' = -(M_TOT * G * D_CM / I_TOT) * sin(θ + ALPHA)
+function deriv([th, w]) {
+  return [w, -OMEGA0_SQ * Math.sin(th + ALPHA)];
+}
+
+function rk4(s, dt) {
+  const k1 = deriv(s);
+  const s2 = s.map((v,i) => v + k1[i]*dt*0.5);
+  const k2 = deriv(s2);
+  const s3 = s.map((v,i) => v + k2[i]*dt*0.5);
+  const k3 = deriv(s3);
+  const s4 = s.map((v,i) => v + k3[i]*dt);
+  const k4 = deriv(s4);
+  return s.map((v,i) => v + (k1[i]+2*k2[i]+2*k3[i]+k4[i])*dt/6);
+}
+
+let state = [-ALPHA, 3.5]; // [θ₀ = 平衡位置, ω₀ = 初始角速度]
+
+/* ======================== Three.js ======================== */
+const container = $('cv');
+const W = 820, H = 720;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd5cfc5);
+
+const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 200);
+camera.position.set(0, 5, 20);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+container.appendChild(renderer.domElement);
+
+const ctrl = new OrbitControls(camera, renderer.domElement);
+ctrl.enableDamping = true; ctrl.dampingFactor = 0.08;
+ctrl.target.set(0, 5, 0);
+
+// ---------- 光照 ----------
+scene.add(new THREE.AmbientLight(0xfff8f0, 0.5));
+const dL = new THREE.DirectionalLight(0xffffff, 1.6);
+dL.position.set(5, 12, 8); dL.castShadow = true;
+dL.shadow.mapSize.set(1024, 1024);
+dL.shadow.camera.near = 1; dL.shadow.camera.far = 30;
+dL.shadow.camera.left = -12; dL.shadow.camera.right = 12;
+dL.shadow.camera.top = 16; dL.shadow.camera.bottom = -5;
+scene.add(dL);
+const pL = new THREE.PointLight(0xe0e8ff, 0.4, 30);
+pL.position.set(-6, 4, 5); scene.add(pL);
+
+// ---------- 材质 ----------
+const rodMat  = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.22, metalness: 0.88 });
+const rodMat2 = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.15, metalness: 0.92 });
+const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.3 });
+const floorMt = new THREE.MeshStandardMaterial({ color: 0xc8c2b8, roughness: 0.8 });
+const pivMat  = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.3, metalness: 0.8 });
+
+// ---------- 地面 + 底座 ----------
+const fl = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), floorMt);
+fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; scene.add(fl);
+
+const base = new THREE.Mesh(new THREE.BoxGeometry(7, 1.2, 3.2), baseMat);
+base.position.set(0, 0.6, 0); base.castShadow = true; base.receiveShadow = true;
+scene.add(base);
+
+// ---------- 固定 V 框 ----------
+const rodGeo = new THREE.CylinderGeometry(1, 1, 1, 16);
+const capGeo = new THREE.SphereGeometry(1, 10, 8);
+
+function addRod(ax,ay,az, bx,by,bz, r, mat) {
+  const dx=bx-ax, dy=by-ay, dz=bz-az;
+  const len = Math.sqrt(dx*dx+dy*dy+dz*dz);
+  const m = new THREE.Mesh(rodGeo, mat);
+  m.scale.set(r, len, r);
+  m.position.set((ax+bx)/2,(ay+by)/2,(az+bz)/2);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(dx,dy,dz).normalize());
+  m.castShadow = true; scene.add(m);
+  for (const [px,py,pz] of [[ax,ay,az],[bx,by,bz]]) {
+    const c = new THREE.Mesh(capGeo, mat);
+    c.scale.setScalar(r*1.1); c.position.set(px,py,pz); scene.add(c);
+  }
+}
+
+const FTY = 8.5; // V 框顶点高度
+addRod(-2.5, 1.2, 0,  0.3, FTY, 0, ROD_R, rodMat);
+addRod( 1.8, 1.2, 0, -0.1, FTY, 0, ROD_R, rodMat);
+
+// V 框交叉点球
+const cx1=-2.5,cy1=1.2,cx2=0.3,cy2=FTY, cx3=1.8,cy3=1.2,cx4=-0.1,cy4=FTY;
+const cD=(cx1-cx2)*(cy3-cy4)-(cy1-cy2)*(cx3-cx4);
+const cT=((cx1-cx3)*(cy3-cy4)-(cy1-cy3)*(cx3-cx4))/cD;
+const cBall = new THREE.Mesh(new THREE.SphereGeometry(ROD_R*1.5,12,8), rodMat);
+cBall.position.set(cx1+cT*(cx2-cx1), cy1+cT*(cy2-cy1), 0); scene.add(cBall);
+
+// 支点
+const PIVOT = new THREE.Vector3(0.1, FTY, 0);
+const pivBall = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10), pivMat);
+pivBall.position.copy(PIVOT); scene.add(pivBall);
+
+// 支点轴 (水平轴, 沿 Z 方向, 用来挂 T)
+const axleGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.8, 10);
+const axle = new THREE.Mesh(axleGeo, pivMat);
+axle.rotation.x = Math.PI / 2; // 横过来
+axle.position.copy(PIVOT);
+scene.add(axle);
+
+// ---------- T 形摆体 ----------
+const tGroup = new THREE.Group();
+tGroup.position.copy(PIVOT);
+scene.add(tGroup);
+
+// 竖杆 (T 的竖笔画): 从 (0,0,0) 到 (0, -STEM_LEN, 0)
+const stemM = new THREE.Mesh(rodGeo, rodMat2);
+stemM.scale.set(ROD_R, STEM_LEN, ROD_R);
+stemM.position.set(0, -STEM_LEN/2, 0);
+stemM.castShadow = true;
+tGroup.add(stemM);
+
+// 横杆 (T 的横笔画): 在竖杆底端水平延伸
+const barLen = BAR_LEFT + BAR_RIGHT;
+const barM = new THREE.Mesh(rodGeo, rodMat2);
+barM.scale.set(ROD_R*0.9, barLen, ROD_R*0.9);
+barM.position.set((BAR_RIGHT-BAR_LEFT)/2, -STEM_LEN, 0);
+barM.rotation.z = Math.PI/2;
+barM.castShadow = true;
+tGroup.add(barM);
+
+// 端头球
+const BR = ROD_R * 1.15;
+for (const [x,y] of [[0,0],[0,-STEM_LEN],[-BAR_LEFT,-STEM_LEN],[BAR_RIGHT,-STEM_LEN]]) {
+  const c = new THREE.Mesh(capGeo, rodMat2);
+  c.scale.setScalar(BR); c.position.set(x,y,0); tGroup.add(c);
+}
+// T 交叉处关节球 (大一点)
+const jB = new THREE.Mesh(new THREE.SphereGeometry(ROD_R*1.7,12,8), pivMat);
+jB.position.set(0, -STEM_LEN, 0); tGroup.add(jB);
+
+// ---------- 轨迹 ----------
+const TMAX = 4000;
+function makeTrail(color) {
+  const buf = new Float32Array(TMAX * 3);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(buf, 3));
+  geo.setDrawRange(0, 0);
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+    color, transparent: true, opacity: 0.4
+  }));
+  scene.add(line);
+  return { buf, geo, line, count: 0 };
+}
+const trailR = makeTrail(0xcc4444); // 横杆长端
+const trailL = makeTrail(0x4477cc); // 横杆短端
+
+function resetTrails() {
+  trailR.count = 0; trailL.count = 0;
+  trailR.geo.setDrawRange(0,0); trailL.geo.setDrawRange(0,0);
+}
+
+function sampleTrail(trail, worldPos) {
+  const i = (trail.count % TMAX) * 3;
+  trail.buf[i] = worldPos.x; trail.buf[i+1] = worldPos.y; trail.buf[i+2] = worldPos.z;
+  trail.count++;
+  trail.geo.setDrawRange(0, Math.min(trail.count, TMAX));
+  trail.geo.attributes.position.needsUpdate = true;
+}
+
+// ---------- 动画 ----------
+const PHYS_DT = 1 / 800;
+let lastT = 0;
+let trailTick = 0;
+
+function loop(ts) {
+  requestAnimationFrame(loop);
+  if (!lastT) lastT = ts;
+  const raw = Math.min((ts - lastT) / 1000, 0.05);
+  lastT = ts;
+
+  const mul = parseInt($('sp').value) / 10;
+  const simT = raw * mul;
+  const steps = Math.max(1, Math.round(simT / PHYS_DT));
+  const dt = steps > 0 ? simT / steps : 0;
+
+  for (let i = 0; i < steps; i++) state = rk4(state, dt);
+
+  // T 形在竖直平面 (XY) 内旋转 → rotation.z
+  tGroup.rotation.z = state[0];
+
+  // 轨迹
+  trailTick++;
+  if (parseInt($('tr').value) && mul > 0 && trailTick % 2 === 0) {
+    const euler = new THREE.Euler(0, 0, state[0]);
+    const rPt = new THREE.Vector3(BAR_RIGHT, -STEM_LEN, 0).applyEuler(euler).add(PIVOT);
+    const lPt = new THREE.Vector3(-BAR_LEFT, -STEM_LEN, 0).applyEuler(euler).add(PIVOT);
+    sampleTrail(trailR, rPt);
+    sampleTrail(trailL, lPt);
+  }
+
+  ctrl.update();
+  renderer.render(scene, camera);
+}
+
+// ---------- UI ----------
+$('sp').oninput = () => $('sV').textContent = (parseInt($('sp').value)/10).toFixed(1) + 'x';
+$('w0').oninput = () => $('wV').textContent = (parseInt($('w0').value)/10).toFixed(1) + ' rad/s';
+$('tr').oninput = () => $('trV').textContent = parseInt($('tr').value) ? 'ON' : 'OFF';
+
+$('goBtn').onclick = () => {
+  const w = parseInt($('w0').value) / 10;
+  state = [-ALPHA, w]; // 从平衡位置释放, 给初始角速度
+  resetTrails();
+};
+
+$('swBtn').onclick = () => {
+  state = [-ALPHA + 1.2, 0]; // 从偏转位置释放, 零初速度 → 摆动
+  resetTrails();
+};
+
+$('rstBtn').onclick = () => {
+  state = [-ALPHA, 0]; // 平衡位置, 零速度
+  resetTrails();
+};
+
+// ---------- 启动 ----------
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

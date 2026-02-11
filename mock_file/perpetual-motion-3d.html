@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 混沌摆 · 钢管永动机</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0; overflow: hidden;
+  }
+  h1 { margin: 12px 0 8px; font-size: 22px; color: #ff9944;
+       text-shadow: 0 0 10px rgba(255,153,68,0.3); }
+  .main { display: flex; gap: 16px; align-items: flex-start; }
+  #canvas-container {
+    border: 2px solid #ff9944; border-radius: 4px;
+    box-shadow: 0 0 20px rgba(255,153,68,0.15); cursor: grab;
+  }
+  #canvas-container:active { cursor: grabbing; }
+  .panel {
+    background: #1a1a2e; border-radius: 8px; padding: 16px;
+    width: 210px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .panel label { display: block; margin-bottom: 3px; font-size: 12px; color: #aaa; }
+  .panel input[type="range"] { width: 100%; margin-bottom: 10px; accent-color: #ff9944; }
+  .panel .value { font-size: 13px; color: #ff9944; font-weight: bold; }
+  .panel button {
+    width: 100%; padding: 8px; margin-top: 6px;
+    background: #ff9944; color: #000; border: none; border-radius: 4px;
+    font-weight: bold; cursor: pointer; font-size: 13px;
+  }
+  .panel button:hover { background: #ffaa66; }
+  .hint { font-size: 10px; color: #555; margin-top: 10px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>3D 混沌摆 · 钢管永动机</h1>
+<div class="main">
+  <div id="canvas-container"></div>
+  <div class="panel">
+    <label>运转速度: <span id="speedVal" class="value">100%</span></label>
+    <input type="range" id="speed" min="0" max="300" value="100">
+
+    <label>空间亮度: <span id="brightnessVal" class="value">100%</span></label>
+    <input type="range" id="brightness" min="5" max="100" value="100">
+
+    <button id="resetBtn">重新释放</button>
+
+    <p class="hint">
+      4 根实心钢管首尾铰接<br>
+      从近水平位置释放<br>
+      纯靠重力，无摩擦，永久运动<br>
+      拖拽旋转视角 · 滚轮缩放
+    </p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ===================== 常量 =====================
+const BOX = 20;
+const HALF = BOX / 2;
+const PIVOT_Y = 5;
+const PIPE_LENGTHS = [2.8, 2.4, 2.0, 1.7];
+const PIPE_RADII  = [0.20, 0.17, 0.15, 0.13];
+const SIM_DT = 1 / 360;
+const BASE_SUBSTEPS = 6;
+const ITERS = 30;
+const BASE_GRAVITY = -18;
+
+// ===================== UI =====================
+const ui = {
+  speed: document.getElementById('speed'),
+  speedVal: document.getElementById('speedVal'),
+  brightness: document.getElementById('brightness'),
+  brightnessVal: document.getElementById('brightnessVal'),
+  resetBtn: document.getElementById('resetBtn'),
+};
+
+// ===================== 场景 =====================
+const container = document.getElementById('canvas-container');
+const W = 800, H = 680;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
+camera.position.set(4, 2, 24);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.4;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+
+// ===================== 展示箱体 =====================
+const boxGroup = new THREE.Group();
+scene.add(boxGroup);
+const faceGeom = new THREE.PlaneGeometry(BOX, BOX);
+const faceDefs = [
+  { axis:'y', pos:-HALF, rx:-Math.PI/2, solid:true },
+  { axis:'y', pos: HALF, rx: Math.PI/2, solid:false },
+  { axis:'z', pos:-HALF, ry:0,          solid:true },
+  { axis:'z', pos: HALF, ry:Math.PI,    solid:false },
+  { axis:'x', pos:-HALF, ry: Math.PI/2, solid:true },
+  { axis:'x', pos: HALF, ry:-Math.PI/2, solid:false },
+];
+for (const f of faceDefs) {
+  const mat = f.solid
+    ? new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.6 })
+    : new THREE.MeshPhysicalMaterial({ color: 0xff9944, transparent: true, opacity: 0.03,
+        side: THREE.DoubleSide, depthWrite: false });
+  const m = new THREE.Mesh(faceGeom, mat);
+  if (f.axis === 'y') { m.rotation.x = f.rx; m.position.y = f.pos; }
+  else if (f.axis === 'z') { m.rotation.y = f.ry || 0; m.position.z = f.pos; }
+  else { m.rotation.y = f.ry; m.position.x = f.pos; }
+  m.receiveShadow = true;
+  boxGroup.add(m);
+}
+boxGroup.add(new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(BOX, BOX, BOX)),
+  new THREE.LineBasicMaterial({ color: 0xff9944, transparent: true, opacity: 0.45 })
+));
+
+// ===================== 光照 =====================
+const ambientLight = new THREE.AmbientLight(0x606070, 0.12);
+scene.add(ambientLight);
+const mainLight = new THREE.PointLight(0xfff5e0, 12.0, BOX * 1.2, 1);
+mainLight.position.set(HALF * 0.7, HALF * 0.8, HALF * 0.6);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.set(1024, 1024);
+scene.add(mainLight);
+const fill1 = new THREE.PointLight(0xddeeff, 5.0, BOX, 1);
+fill1.position.set(-HALF * 0.5, HALF * 0.4, HALF * 0.4);
+scene.add(fill1);
+const fill2 = new THREE.PointLight(0xffeedd, 3.5, BOX, 1);
+fill2.position.set(0, -HALF * 0.5, HALF * 0.5);
+scene.add(fill2);
+const innerLights = [mainLight, fill1, fill2];
+const INNER_BASE = [12.0, 5.0, 3.5];
+
+function applyBrightness() {
+  const t = parseInt(ui.brightness.value) / 100;
+  for (let i = 0; i < innerLights.length; i++) innerLights[i].intensity = INNER_BASE[i] * t;
+  ambientLight.intensity = 0.06 + 0.18 * t;
+}
+
+// ===================== 材质 =====================
+const pipeMats = [
+  new THREE.MeshStandardMaterial({ color: 0xdedede, roughness: 0.08, metalness: 0.95 }),
+  new THREE.MeshStandardMaterial({ color: 0xd0c0a0, roughness: 0.14, metalness: 0.90 }),
+  new THREE.MeshStandardMaterial({ color: 0x9db0c8, roughness: 0.10, metalness: 0.93 }),
+  new THREE.MeshStandardMaterial({ color: 0xc8a050, roughness: 0.16, metalness: 0.87 }),
+];
+const jointMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.22, metalness: 0.88 });
+const fixedMat = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.30, metalness: 0.80 });
+
+// ===================== 物理引擎 =====================
+function makeParticle(x, y, z, mass, fixed) {
+  return {
+    pos: new THREE.Vector3(x, y, z),
+    prev: new THREE.Vector3(x, y, z),
+    mass,
+    invMass: fixed ? 0 : 1 / mass,
+    fixed: !!fixed,
+  };
+}
+
+let particles = [];
+let pipeConstraints = [];
+
+function initPendulum() {
+  particles = [];
+  pipeConstraints = [];
+
+  // p0: 固定悬挂点
+  particles.push(makeParticle(0, PIVOT_Y, 0, 1, true));
+
+  // p1 ~ p4: 初始近水平，略有3D偏移
+  const angles  = [ 0.12, -0.08,  0.10, -0.05];  // 垂直偏角（弧度）
+  const zShifts = [ 0.35,  0.55, -0.40,  0.25];  // Z偏移
+  let cx = 0, cy = PIVOT_Y, cz = 0;
+  for (let i = 0; i < PIPE_LENGTHS.length; i++) {
+    const L = PIPE_LENGTHS[i];
+    cx += L * Math.cos(angles[i]);
+    cy += L * Math.sin(angles[i]);
+    cz += zShifts[i];
+    const mPrev = PIPE_LENGTHS[i];
+    const mNext = (i + 1 < PIPE_LENGTHS.length) ? PIPE_LENGTHS[i + 1] : 0;
+    particles.push(makeParticle(cx, cy, cz, (mPrev + mNext) / 2, false));
+  }
+
+  // 距离约束
+  for (let i = 0; i < PIPE_LENGTHS.length; i++) {
+    pipeConstraints.push({
+      a: particles[i],
+      b: particles[i + 1],
+      len: PIPE_LENGTHS[i],
+    });
+  }
+}
+
+function simulate(dt, grav, iters) {
+  const dtSq = dt * dt;
+
+  // Verlet 积分
+  for (const p of particles) {
+    if (p.fixed) continue;
+    const vx = p.pos.x - p.prev.x;
+    const vy = p.pos.y - p.prev.y;
+    const vz = p.pos.z - p.prev.z;
+    p.prev.x = p.pos.x;
+    p.prev.y = p.pos.y;
+    p.prev.z = p.pos.z;
+    p.pos.x += vx;
+    p.pos.y += vy + grav * dtSq;
+    p.pos.z += vz;
+  }
+
+  // 约束求解（质量加权）
+  for (let it = 0; it < iters; it++) {
+    for (const c of pipeConstraints) {
+      const dx = c.b.pos.x - c.a.pos.x;
+      const dy = c.b.pos.y - c.a.pos.y;
+      const dz = c.b.pos.z - c.a.pos.z;
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (dist < 1e-8) continue;
+
+      const wa = c.a.invMass;
+      const wb = c.b.invMass;
+      const wt = wa + wb;
+      if (wt < 1e-10) continue;
+
+      const corr = (dist - c.len) / dist;
+      const fa = corr * wa / wt;
+      const fb = corr * wb / wt;
+
+      c.a.pos.x += dx * fa;
+      c.a.pos.y += dy * fa;
+      c.a.pos.z += dz * fa;
+      c.b.pos.x -= dx * fb;
+      c.b.pos.y -= dy * fb;
+      c.b.pos.z -= dz * fb;
+    }
+  }
+}
+
+// ===================== 渲染对象 =====================
+// 悬挂支架
+const bracketGroup = new THREE.Group();
+scene.add(bracketGroup);
+const barG = new THREE.CylinderGeometry(0.10, 0.10, 3.0, 12);
+const barMesh = new THREE.Mesh(barG, fixedMat);
+barMesh.rotation.z = Math.PI / 2;
+barMesh.position.set(0, PIVOT_Y, 0);
+barMesh.castShadow = true;
+bracketGroup.add(barMesh);
+// 左右支撑
+for (const sx of [-1.5, 1.5]) {
+  const leg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.06, 1.5, 8),
+    fixedMat
+  );
+  leg.position.set(sx, PIVOT_Y + 0.75, 0);
+  leg.castShadow = true;
+  bracketGroup.add(leg);
+  // 顶部连接
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.10, 8, 6), fixedMat);
+  cap.position.set(sx, PIVOT_Y + 1.5, 0);
+  bracketGroup.add(cap);
+}
+// 悬挂点标记
+const pivotMarker = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 10), fixedMat);
+pivotMarker.position.set(0, PIVOT_Y, 0);
+scene.add(pivotMarker);
+
+// 钢管 mesh（每帧更新位置/方向/缩放）
+const pipeUnitGeom = new THREE.CylinderGeometry(1, 1, 1, 20);
+const _yAxis = new THREE.Vector3(0, 1, 0);
+const _dir = new THREE.Vector3();
+const pipeVisuals = [];
+for (let i = 0; i < PIPE_LENGTHS.length; i++) {
+  const mesh = new THREE.Mesh(pipeUnitGeom, pipeMats[i]);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  pipeVisuals.push(mesh);
+}
+
+// 铰接球
+const jointVisuals = [];
+for (let i = 0; i <= PIPE_LENGTHS.length; i++) {
+  const r = i === 0 ? 0.24 : (PIPE_RADII[Math.min(i, PIPE_RADII.length) - 1] * 1.35);
+  const geo = new THREE.SphereGeometry(r, 14, 10);
+  const mesh = new THREE.Mesh(geo, i === 0 ? fixedMat : jointMat);
+  mesh.castShadow = true;
+  scene.add(mesh);
+  jointVisuals.push(mesh);
+}
+
+// 轨迹线（末端节点 p4）
+const TRAIL_MAX = 1200;
+const trailBuf = new Float32Array(TRAIL_MAX * 3);
+const trailGeom = new THREE.BufferGeometry();
+trailGeom.setAttribute('position', new THREE.BufferAttribute(trailBuf, 3));
+trailGeom.setDrawRange(0, 0);
+const trailMat = new THREE.LineBasicMaterial({ color: 0xff5522, transparent: true, opacity: 0.35 });
+const trailLine = new THREE.Line(trailGeom, trailMat);
+scene.add(trailLine);
+let trailCount = 0;
+let trailFrame = 0;
+
+// 第二条轨迹线（p3 节点，蓝色）
+const trail2Buf = new Float32Array(TRAIL_MAX * 3);
+const trail2Geom = new THREE.BufferGeometry();
+trail2Geom.setAttribute('position', new THREE.BufferAttribute(trail2Buf, 3));
+trail2Geom.setDrawRange(0, 0);
+const trail2Mat = new THREE.LineBasicMaterial({ color: 0x3388ff, transparent: true, opacity: 0.25 });
+const trail2Line = new THREE.Line(trail2Geom, trail2Mat);
+scene.add(trail2Line);
+let trail2Count = 0;
+
+// ===================== 更新渲染 =====================
+function updateVisuals() {
+  // 钢管
+  for (let i = 0; i < pipeVisuals.length; i++) {
+    const mesh = pipeVisuals[i];
+    const pA = particles[i].pos;
+    const pB = particles[i + 1].pos;
+    _dir.subVectors(pB, pA);
+    const len = _dir.length();
+    mesh.position.lerpVectors(pA, pB, 0.5);
+    mesh.scale.set(PIPE_RADII[i], Math.max(len, 0.01), PIPE_RADII[i]);
+    if (len > 1e-4) mesh.quaternion.setFromUnitVectors(_yAxis, _dir.normalize());
+  }
+  // 铰接球
+  for (let i = 0; i < jointVisuals.length; i++) {
+    jointVisuals[i].position.copy(particles[i].pos);
+  }
+}
+
+// ===================== 动画循环 =====================
+let lastTime = 0;
+
+function loop(timestamp) {
+  requestAnimationFrame(loop);
+  if (!lastTime) lastTime = timestamp;
+  const frameDt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  lastTime = timestamp;
+
+  const speedFactor = parseInt(ui.speed.value) / 100;
+  const steps = Math.max(1, Math.round(BASE_SUBSTEPS * speedFactor));
+
+  for (let s = 0; s < steps; s++) {
+    simulate(SIM_DT, BASE_GRAVITY, ITERS);
+  }
+
+  updateVisuals();
+
+  // 轨迹采样
+  trailFrame++;
+  if (trailFrame % 2 === 0 && speedFactor > 0) {
+    // p4 轨迹
+    const tip = particles[4].pos;
+    const idx = (trailCount % TRAIL_MAX) * 3;
+    trailBuf[idx] = tip.x; trailBuf[idx+1] = tip.y; trailBuf[idx+2] = tip.z;
+    trailCount++;
+    trailGeom.setDrawRange(0, Math.min(trailCount, TRAIL_MAX));
+    trailGeom.attributes.position.needsUpdate = true;
+
+    // p3 轨迹
+    const mid = particles[3].pos;
+    const idx2 = (trail2Count % TRAIL_MAX) * 3;
+    trail2Buf[idx2] = mid.x; trail2Buf[idx2+1] = mid.y; trail2Buf[idx2+2] = mid.z;
+    trail2Count++;
+    trail2Geom.setDrawRange(0, Math.min(trail2Count, TRAIL_MAX));
+    trail2Geom.attributes.position.needsUpdate = true;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ===================== 事件 =====================
+ui.speed.addEventListener('input', () => ui.speedVal.textContent = ui.speed.value + '%');
+ui.brightness.addEventListener('input', () => {
+  ui.brightnessVal.textContent = ui.brightness.value + '%';
+  applyBrightness();
+});
+ui.resetBtn.addEventListener('click', () => {
+  initPendulum();
+  trailCount = 0; trail2Count = 0;
+  trailGeom.setDrawRange(0, 0);
+  trail2Geom.setDrawRange(0, 0);
+});
+
+// ===================== 启动 =====================
+initPendulum();
+applyBrightness();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

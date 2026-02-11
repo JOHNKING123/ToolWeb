@@ -165,6 +165,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "quicksort",
+					Name:        "快排演示",
+					Description: "可视化演示快速排序算法过程",
+					Path:        "/tools/quicksort",
+					Icon:        "sort",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

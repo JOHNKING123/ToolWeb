@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 自由女神像</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+    overflow: hidden;
+  }
+  h1 {
+    margin: 12px 0 8px;
+    font-size: 22px;
+    color: #00d2ff;
+    text-shadow: 0 0 10px rgba(0,210,255,0.3);
+  }
+  .main { display: flex; gap: 16px; align-items: flex-start; }
+  #canvas-container {
+    border: 2px solid #00d2ff;
+    border-radius: 4px;
+    box-shadow: 0 0 20px rgba(0,210,255,0.15);
+    cursor: grab;
+  }
+  #canvas-container:active { cursor: grabbing; }
+  .panel {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 16px;
+    width: 200px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .panel label { display: block; margin-bottom: 3px; font-size: 12px; color: #aaa; }
+  .panel input[type="range"] { width: 100%; margin-bottom: 10px; accent-color: #00d2ff; }
+  .panel .value { font-size: 13px; color: #00d2ff; font-weight: bold; }
+  .hint { font-size: 10px; color: #555; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>3D 自由女神像 · 逆时针旋转</h1>
+<div class="main">
+  <div id="canvas-container"></div>
+  <div class="panel">
+    <label>旋转速度: <span id="rotSpeedVal" class="value">100%</span></label>
+    <input type="range" id="rotSpeed" min="0" max="200" value="100">
+
+    <label>空间亮度: <span id="brightnessVal" class="value">100%</span></label>
+    <input type="range" id="brightness" min="5" max="100" value="100">
+
+    <p class="hint">鼠标拖拽旋转视角，滚轮缩放</p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ========== 常量 ==========
+const BOX = 16;
+const HALF = BOX / 2;
+
+// ========== UI ==========
+const ui = {
+  rotSpeed: document.getElementById('rotSpeed'),
+  rotSpeedVal: document.getElementById('rotSpeedVal'),
+  brightness: document.getElementById('brightness'),
+  brightnessVal: document.getElementById('brightnessVal'),
+};
+
+// ========== 场景 ==========
+const container = document.getElementById('canvas-container');
+const W = 750, H = 650;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
+camera.position.set(16, 12, 22);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 2, 0);
+
+// ========== 箱体（背靠三面白色不透明，正对三面微透明） ==========
+const boxGroup = new THREE.Group();
+scene.add(boxGroup);
+
+const faceGeom = new THREE.PlaneGeometry(BOX, BOX);
+
+const faceDefs = [
+  { axis:'y', pos:-HALF, rx:-Math.PI/2, ry:0,          solid:true },
+  { axis:'y', pos: HALF, rx: Math.PI/2, ry:0,          solid:false },
+  { axis:'z', pos:-HALF, rx:0,          ry:0,          solid:true },
+  { axis:'z', pos: HALF, rx:0,          ry:Math.PI,    solid:false },
+  { axis:'x', pos:-HALF, rx:0,          ry: Math.PI/2, solid:true },
+  { axis:'x', pos: HALF, rx:0,          ry:-Math.PI/2, solid:false },
+];
+for (const f of faceDefs) {
+  const mat = f.solid
+    ? new THREE.MeshStandardMaterial({ color:0xffffff, side:THREE.DoubleSide, roughness:0.6 })
+    : new THREE.MeshPhysicalMaterial({ color:0x00d2ff, transparent:true, opacity:0.03, side:THREE.DoubleSide, depthWrite:false });
+  const m = new THREE.Mesh(faceGeom, mat);
+  if (f.axis==='y'){ m.rotation.x=f.rx; m.position.y=f.pos; }
+  else if (f.axis==='z'){ m.rotation.y=f.ry; m.position.z=f.pos; }
+  else { m.rotation.y=f.ry; m.position.x=f.pos; }
+  m.receiveShadow = true;
+  boxGroup.add(m);
+}
+
+// 棱线 + 角点
+const edges = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(BOX,BOX,BOX)),
+  new THREE.LineBasicMaterial({ color:0x00d2ff, transparent:true, opacity:0.5 })
+);
+boxGroup.add(edges);
+const cg = new THREE.SphereGeometry(0.15,8,6);
+const cm = new THREE.MeshBasicMaterial({ color:0x00d2ff });
+for(let x=-1;x<=1;x+=2) for(let y=-1;y<=1;y+=2) for(let z=-1;z<=1;z+=2){
+  const d=new THREE.Mesh(cg,cm); d.position.set(x*HALF,y*HALF,z*HALF); boxGroup.add(d);
+}
+
+// ========== 内部光照（右上角主光 + 补光） ==========
+const ambientLight = new THREE.AmbientLight(0x404060, 0.08);
+scene.add(ambientLight);
+
+// 主光源：右上角
+const mainLight = new THREE.PointLight(0xfff5e0, 10.0, BOX*1.1, 1);
+mainLight.position.set(HALF*0.7, HALF*0.7, HALF*0.5);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.set(1024,1024);
+scene.add(mainLight);
+
+// 补光
+const fillLight1 = new THREE.PointLight(0xddeeff, 4.0, BOX, 1);
+fillLight1.position.set(-HALF*0.5, HALF*0.3, HALF*0.3);
+scene.add(fillLight1);
+
+const fillLight2 = new THREE.PointLight(0xffeedd, 3.0, BOX, 1);
+fillLight2.position.set(0, -HALF*0.6, HALF*0.6);
+scene.add(fillLight2);
+
+const fillLight3 = new THREE.PointLight(0xeeeeff, 2.5, BOX, 1);
+fillLight3.position.set(HALF*0.3, 0, -HALF*0.6);
+scene.add(fillLight3);
+
+const innerLights = [mainLight, fillLight1, fillLight2, fillLight3];
+const INNER_BASE = [10.0, 4.0, 3.0, 2.5];
+
+function applyBrightness() {
+  const t = parseInt(ui.brightness.value)/100;
+  for(let i=0;i<innerLights.length;i++) innerLights[i].intensity = INNER_BASE[i]*t;
+  ambientLight.intensity = 0.05 + 0.15*t;
+}
+
+// ========== 构建自由女神像（精细版） ==========
+const statueGroup = new THREE.Group();
+
+// === 生成环境贴图（简易天光盒子） ===
+const envScene = new THREE.Scene();
+const envGrad = new THREE.Mesh(
+  new THREE.SphereGeometry(50, 16, 16),
+  new THREE.MeshBasicMaterial({ color: 0x667788, side: THREE.BackSide })
+);
+envScene.add(envGrad);
+const envLight = new THREE.Mesh(
+  new THREE.SphereGeometry(4, 8, 8),
+  new THREE.MeshBasicMaterial({ color: 0xffffff })
+);
+envLight.position.set(20, 30, 10);
+envScene.add(envLight);
+
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileCubemapShader();
+const cubeRT = new THREE.WebGLCubeRenderTarget(128);
+const cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRT);
+cubeCamera.update(renderer, envScene);
+const envMap = pmremGenerator.fromCubemap(cubeRT.texture).texture;
+pmremGenerator.dispose();
+
+// 材质（带环境映射 — 让铜表面更真实）
+const copperMat = new THREE.MeshStandardMaterial({
+  color: 0x5aab88, roughness: 0.38, metalness: 0.3, envMap, envMapIntensity: 0.4
+});
+const copperDark = new THREE.MeshStandardMaterial({
+  color: 0x3d8a68, roughness: 0.45, metalness: 0.3, envMap, envMapIntensity: 0.3
+});
+const copperLight = new THREE.MeshStandardMaterial({
+  color: 0x6ec49e, roughness: 0.35, metalness: 0.2, envMap, envMapIntensity: 0.35
+});
+const stoneMat = new THREE.MeshStandardMaterial({ color: 0xb5ad9e, roughness: 0.8 });
+const stoneLight = new THREE.MeshStandardMaterial({ color: 0xc8c0b0, roughness: 0.75 });
+const stoneDark = new THREE.MeshStandardMaterial({ color: 0x9a9488, roughness: 0.85 });
+const torchMat = new THREE.MeshStandardMaterial({
+  color: 0xd4a038, roughness: 0.2, metalness: 0.75, envMap, envMapIntensity: 0.6
+});
+const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa22 });
+const flameGlowMat = new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0.4 });
+const skinMat = new THREE.MeshStandardMaterial({
+  color: 0x5aab88, roughness: 0.45, metalness: 0.2, envMap, envMapIntensity: 0.3
+});
+
+const BY = -HALF; // 地面 Y
+
+// ======= 基座：星形底座 + 梯形主体 =======
+// 星形底座（11角星形台阶，接近真实基座）
+function createStarBase(outerR, innerR, points, height, y) {
+  const shape = new THREE.Shape();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    else shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  shape.closePath();
+  const geom = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+  const mesh = new THREE.Mesh(geom, stoneMat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = y;
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  return mesh;
+}
+statueGroup.add(createStarBase(3.5, 2.8, 11, 0.4, BY + 0.0));
+statueGroup.add(createStarBase(3.2, 2.6, 11, 0.3, BY + 0.4));
+
+// 方形台阶
+for (let i = 0; i < 3; i++) {
+  const s = 4.8 - i * 0.5;
+  const g = new THREE.BoxGeometry(s, 0.25, s);
+  const m = new THREE.Mesh(g, stoneLight);
+  m.position.y = BY + 0.7 + i * 0.25;
+  m.castShadow = true; m.receiveShadow = true;
+  statueGroup.add(m);
+}
+
+// 主基座（梯形柱体，上窄下宽 — 更多层次）
+const pedG = new THREE.CylinderGeometry(1.35, 1.85, 2.6, 8);
+const pedestal = new THREE.Mesh(pedG, stoneMat);
+pedestal.position.y = BY + 2.75;
+pedestal.castShadow = true; pedestal.receiveShadow = true;
+statueGroup.add(pedestal);
+
+// 基座中间腰线
+const pedBandG = new THREE.CylinderGeometry(1.68, 1.72, 0.12, 8);
+const pedBand = new THREE.Mesh(pedBandG, stoneLight);
+pedBand.position.y = BY + 2.85;
+statueGroup.add(pedBand);
+
+// 基座顶檐（分两层）
+const pedCapG = new THREE.CylinderGeometry(1.52, 1.38, 0.15, 8);
+const pedCap = new THREE.Mesh(pedCapG, stoneLight);
+pedCap.position.y = BY + 4.15;
+statueGroup.add(pedCap);
+
+const pedCap2G = new THREE.CylinderGeometry(1.58, 1.52, 0.1, 8);
+const pedCap2 = new THREE.Mesh(pedCap2G, stoneLight);
+pedCap2.position.y = BY + 4.05;
+statueGroup.add(pedCap2);
+
+// 基座底部台阶过渡
+const pedBaseG = new THREE.CylinderGeometry(1.9, 2.05, 0.15, 8);
+const pedBase = new THREE.Mesh(pedBaseG, stoneLight);
+pedBase.position.y = BY + 1.45;
+statueGroup.add(pedBase);
+
+// 基座装饰凹槽（壁柱风格 — 交替凹凸）
+for (let i = 0; i < 8; i++) {
+  const a = (i / 8) * Math.PI * 2;
+  // 壁柱
+  const pilasterG = new THREE.BoxGeometry(0.08, 2.2, 0.2);
+  const pilaster = new THREE.Mesh(pilasterG, stoneLight);
+  pilaster.position.set(Math.sin(a) * 1.68, BY + 2.75, Math.cos(a) * 1.68);
+  pilaster.rotation.y = -a;
+  statueGroup.add(pilaster);
+  // 壁柱顶部小帽
+  const capG = new THREE.BoxGeometry(0.12, 0.08, 0.25);
+  const cap = new THREE.Mesh(capG, stoneLight);
+  cap.position.set(Math.sin(a) * 1.68, BY + 3.9, Math.cos(a) * 1.68);
+  cap.rotation.y = -a;
+  statueGroup.add(cap);
+}
+
+// 基座门窗（4面各一个拱形窗口）
+for (let i = 0; i < 4; i++) {
+  const a = (i / 4) * Math.PI * 2 + Math.PI / 8;
+  const winW = 0.25, winH = 0.6;
+  // 窗框
+  const winFrameG = new THREE.BoxGeometry(0.03, winH, winW);
+  const winFrame = new THREE.Mesh(winFrameG, stoneDark);
+  winFrame.position.set(Math.sin(a) * 1.7, BY + 3.0, Math.cos(a) * 1.7);
+  winFrame.rotation.y = -a;
+  statueGroup.add(winFrame);
+  // 窗口拱顶
+  const archG = new THREE.TorusGeometry(winW / 2, 0.025, 6, 8, Math.PI);
+  const arch = new THREE.Mesh(archG, stoneDark);
+  arch.position.set(Math.sin(a) * 1.7, BY + 3.3, Math.cos(a) * 1.7);
+  arch.rotation.y = -a;
+  arch.rotation.x = 0;
+  arch.rotation.z = 0;
+  statueGroup.add(arch);
+}
+
+// 观景台栏杆（基座顶部一圈小柱子）
+for (let i = 0; i < 24; i++) {
+  const a = (i / 24) * Math.PI * 2;
+  const railG = new THREE.CylinderGeometry(0.02, 0.02, 0.2, 4);
+  const rail = new THREE.Mesh(railG, stoneLight);
+  rail.position.set(Math.sin(a) * 1.5, BY + 4.35, Math.cos(a) * 1.5);
+  statueGroup.add(rail);
+}
+// 栏杆顶部横杆
+const railRingG = new THREE.TorusGeometry(1.5, 0.025, 4, 24);
+const railRing = new THREE.Mesh(railRingG, stoneLight);
+railRing.position.y = BY + 4.45;
+railRing.rotation.x = Math.PI / 2;
+statueGroup.add(railRing);
+
+// ======= 身体（LatheGeometry — 更精细的长袍轮廓，含胸/腰/臀曲线） =======
+const bodyBase = BY + 4.45;
+const robeProfile = [
+  new THREE.Vector2(0,    0),
+  new THREE.Vector2(1.40, 0),       // 袍底宽
+  new THREE.Vector2(1.38, 0.08),
+  new THREE.Vector2(1.32, 0.25),
+  new THREE.Vector2(1.22, 0.6),
+  new THREE.Vector2(1.10, 1.1),
+  new THREE.Vector2(1.00, 1.7),
+  new THREE.Vector2(0.90, 2.3),
+  new THREE.Vector2(0.82, 2.8),
+  new THREE.Vector2(0.74, 3.2),     // 臀
+  new THREE.Vector2(0.66, 3.6),
+  new THREE.Vector2(0.58, 3.85),    // 腰部最窄
+  new THREE.Vector2(0.56, 4.0),
+  new THREE.Vector2(0.60, 4.2),     // 胸下缘
+  new THREE.Vector2(0.65, 4.5),     // 胸部
+  new THREE.Vector2(0.64, 4.75),
+  new THREE.Vector2(0.58, 5.0),     // 锁骨
+  new THREE.Vector2(0.52, 5.15),    // 肩
+  new THREE.Vector2(0.42, 5.3),
+  new THREE.Vector2(0.30, 5.45),
+  new THREE.Vector2(0.24, 5.55),    // 脖子底
+  new THREE.Vector2(0,    5.55),
+];
+const robeG = new THREE.LatheGeometry(robeProfile, 32);
+const robe = new THREE.Mesh(robeG, copperMat);
+robe.position.y = bodyBase;
+robe.castShadow = true;
+statueGroup.add(robe);
+
+// 腰带 — 双环样式
+for (const dy of [0, 0.12]) {
+  const beltG = new THREE.TorusGeometry(0.59, 0.035, 8, 32);
+  const belt = new THREE.Mesh(beltG, copperDark);
+  belt.position.y = bodyBase + 3.85 + dy;
+  belt.rotation.x = Math.PI / 2;
+  statueGroup.add(belt);
+}
+
+// === 肩部披巾 / Stola（从右肩斜跨到左腰 — 标志性特征） ===
+const stolaPts = [];
+const stolaSteps = 40;
+for (let i = 0; i <= stolaSteps; i++) {
+  const t = i / stolaSteps;
+  // 从右肩(0.45, 5.2, -0.1) 斜挂到左腰(-0.3, 3.9, 0.3) 再垂下
+  const sx = 0.45 - t * 0.75;
+  const sy = 5.2 - t * 1.6 + Math.sin(t * Math.PI) * 0.15;
+  const sz = -0.1 + t * 0.4 + Math.sin(t * Math.PI * 2) * 0.05;
+  const profileR = t < 0.5 ? 0.58 + t * 0.08 : 0.62 - (t-0.5)*0.04;
+  stolaPts.push(new THREE.Vector3(sx, sy, sz));
+}
+const stolaCurve = new THREE.CatmullRomCurve3(stolaPts);
+const stolaG = new THREE.TubeGeometry(stolaCurve, 30, 0.08, 6, false);
+const stola = new THREE.Mesh(stolaG, copperLight);
+stola.position.y = bodyBase;
+stola.castShadow = true;
+statueGroup.add(stola);
+
+// 斜挂带的悬垂部分（从左腰垂下）
+const stolaHangPts = [
+  new THREE.Vector3(-0.30, 3.6, 0.30),
+  new THREE.Vector3(-0.50, 2.8, 0.35),
+  new THREE.Vector3(-0.60, 2.0, 0.30),
+  new THREE.Vector3(-0.55, 1.2, 0.25),
+];
+const stolaHangCurve = new THREE.CatmullRomCurve3(stolaHangPts);
+const stolaHangG = new THREE.TubeGeometry(stolaHangCurve, 16, 0.06, 5, false);
+const stolaHang = new THREE.Mesh(stolaHangG, copperLight);
+stolaHang.position.y = bodyBase;
+statueGroup.add(stolaHang);
+
+// 长袍褶皱（更多更有层次感的竖线）
+for (let i = 0; i < 16; i++) {
+  const a = (i / 16) * Math.PI * 2;
+  const pts = [];
+  const depth = 0.015 + Math.random() * 0.01; // 随机深浅
+  for (let h = 0; h <= 1; h += 0.04) {
+    const y = h * 4.8;
+    // 根据身体轮廓计算半径
+    const t = y / 5.55;
+    const profileR = 1.38 * (1-t)*(1-t) + 0.58 * 2*t*(1-t) + 0.24 * t*t; // 贝塞尔插值
+    const wobble = Math.sin(h * Math.PI * 4 + i * 1.7) * 0.015;
+    pts.push(new THREE.Vector3(
+      Math.sin(a) * (profileR + wobble + depth),
+      y,
+      Math.cos(a) * (profileR + wobble + depth)
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const tubeG = new THREE.TubeGeometry(curve, 20, 0.012, 4, false);
+  const fold = new THREE.Mesh(tubeG, copperDark);
+  fold.position.y = bodyBase + 0.1;
+  statueGroup.add(fold);
+}
+
+// 袍摆底部褶皱（多层波浪）
+for (let ring = 0; ring < 2; ring++) {
+  const hemPts = [];
+  for (let i = 0; i <= 80; i++) {
+    const a = (i / 80) * Math.PI * 2;
+    const r = (1.35 - ring*0.1) + Math.sin(a * 10 + ring*2) * 0.05;
+    hemPts.push(new THREE.Vector3(Math.sin(a)*r, ring*0.08, Math.cos(a)*r));
+  }
+  const hemCurve = new THREE.CatmullRomCurve3(hemPts, true);
+  const hemTubeG = new THREE.TubeGeometry(hemCurve, 80, 0.04, 6, true);
+  const hem = new THREE.Mesh(hemTubeG, copperDark);
+  hem.position.y = bodyBase + 0.02;
+  statueGroup.add(hem);
+}
+
+// ======= 头部（更精细的面部） =======
+const headY = bodyBase + 5.55;
+
+// 脖子
+const neckG = new THREE.CylinderGeometry(0.18, 0.24, 0.5, 12);
+const neck = new THREE.Mesh(neckG, skinMat);
+neck.position.y = headY + 0.22;
+statueGroup.add(neck);
+
+// 头颅（主体）
+const headG = new THREE.SphereGeometry(0.42, 20, 14);
+const head = new THREE.Mesh(headG, skinMat);
+head.position.y = headY + 0.72;
+head.scale.set(0.88, 1.08, 0.88);
+head.castShadow = true;
+statueGroup.add(head);
+
+// 面部平面（让正脸稍微扁平）
+const facePlaneG = new THREE.SphereGeometry(0.38, 16, 12, 0, Math.PI*2, 0, Math.PI*0.5);
+const facePlane = new THREE.Mesh(facePlaneG, skinMat);
+facePlane.position.set(0, headY + 0.68, 0.06);
+facePlane.scale.set(0.8, 0.95, 0.25);
+statueGroup.add(facePlane);
+
+// 鼻子（棱形鼻梁 + 鼻尖）
+const noseBridgeG = new THREE.BoxGeometry(0.06, 0.16, 0.12);
+const noseBridge = new THREE.Mesh(noseBridgeG, skinMat);
+noseBridge.position.set(0, headY + 0.7, 0.4);
+statueGroup.add(noseBridge);
+
+const noseTipG = new THREE.SphereGeometry(0.04, 6, 6);
+const noseTip = new THREE.Mesh(noseTipG, skinMat);
+noseTip.position.set(0, headY + 0.63, 0.44);
+statueGroup.add(noseTip);
+
+// 眼窝 + 眼球
+for (const side of [-1, 1]) {
+  // 眼窝凹陷
+  const socketG = new THREE.SphereGeometry(0.06, 8, 6);
+  const socket = new THREE.Mesh(socketG, copperDark);
+  socket.position.set(side * 0.12, headY + 0.74, 0.35);
+  socket.scale.set(1.2, 0.7, 0.5);
+  statueGroup.add(socket);
+  // 眼珠
+  const eyeG = new THREE.SphereGeometry(0.025, 6, 6);
+  const eye = new THREE.Mesh(eyeG, skinMat);
+  eye.position.set(side * 0.12, headY + 0.74, 0.38);
+  statueGroup.add(eye);
+}
+
+// 嘴巴（细缝线条）
+const mouthG = new THREE.CapsuleGeometry(0.012, 0.1, 4, 6);
+const mouth = new THREE.Mesh(mouthG, copperDark);
+mouth.position.set(0, headY + 0.56, 0.38);
+mouth.rotation.z = Math.PI / 2;
+statueGroup.add(mouth);
+
+// 眉弓
+for (const side of [-1, 1]) {
+  const browG = new THREE.CapsuleGeometry(0.02, 0.1, 4, 6);
+  const brow = new THREE.Mesh(browG, skinMat);
+  brow.position.set(side * 0.12, headY + 0.80, 0.36);
+  brow.rotation.z = side * 0.2;
+  statueGroup.add(brow);
+}
+
+// 下巴
+const chinG = new THREE.SphereGeometry(0.1, 8, 6);
+const chin = new THREE.Mesh(chinG, skinMat);
+chin.position.set(0, headY + 0.48, 0.3);
+chin.scale.set(1, 0.55, 0.7);
+statueGroup.add(chin);
+
+// 颧骨
+for (const side of [-1, 1]) {
+  const cheekG = new THREE.SphereGeometry(0.08, 8, 6);
+  const cheek = new THREE.Mesh(cheekG, skinMat);
+  cheek.position.set(side * 0.2, headY + 0.62, 0.28);
+  cheek.scale.set(0.8, 0.6, 0.5);
+  statueGroup.add(cheek);
+}
+
+// 耳朵
+for (const side of [-1, 1]) {
+  const earG = new THREE.SphereGeometry(0.06, 6, 6);
+  const ear = new THREE.Mesh(earG, skinMat);
+  ear.position.set(side * 0.36, headY + 0.68, 0.0);
+  ear.scale.set(0.4, 0.9, 0.7);
+  statueGroup.add(ear);
+}
+
+// 发髻（后脑勺低髻 — 经典希腊式发型）
+const bunG = new THREE.SphereGeometry(0.22, 10, 8);
+const bun = new THREE.Mesh(bunG, copperDark);
+bun.position.set(0, headY + 0.5, -0.25);
+bun.scale.set(0.9, 0.7, 0.9);
+statueGroup.add(bun);
+
+// 头发覆盖（从头顶到后方的 cap）
+const hairCapG = new THREE.SphereGeometry(0.43, 16, 12, 0, Math.PI*2, 0, Math.PI*0.65);
+const hairCap = new THREE.Mesh(hairCapG, copperDark);
+hairCap.position.set(0, headY + 0.75, -0.02);
+hairCap.scale.set(0.88, 1.0, 0.85);
+statueGroup.add(hairCap);
+
+// 额前刘海线
+for (let i = -2; i <= 2; i++) {
+  const hairLineG = new THREE.CapsuleGeometry(0.012, 0.15, 4, 4);
+  const hairLine = new THREE.Mesh(hairLineG, copperDark);
+  hairLine.position.set(i * 0.07, headY + 0.88, 0.28);
+  hairLine.rotation.x = 0.4;
+  hairLine.rotation.z = i * 0.08;
+  statueGroup.add(hairLine);
+}
+
+// ======= 皇冠（升级版 — 更大光芒 + 窗口 + 冠带装饰） =======
+// 冠带（更厚实）
+const crownBandProfile = [];
+for (let i = 0; i <= 20; i++) {
+  const t = i / 20;
+  const y = t * 0.42;
+  const r = 0.47 + Math.sin(t * Math.PI) * 0.03;
+  crownBandProfile.push(new THREE.Vector2(r, y));
+}
+const crownBandG = new THREE.LatheGeometry(crownBandProfile, 24);
+const crownBand = new THREE.Mesh(crownBandG, copperDark);
+crownBand.position.y = headY + 0.98;
+statueGroup.add(crownBand);
+
+// 冠带上的装饰窗口（7个方形孔 — 模拟皇冠上的观景窗）
+for (let i = 0; i < 7; i++) {
+  const a = (i / 7) * Math.PI * 2;
+  const winG = new THREE.BoxGeometry(0.1, 0.18, 0.06);
+  const win = new THREE.Mesh(winG, copperLight);
+  win.position.set(
+    Math.sin(a) * 0.48,
+    headY + 1.16,
+    Math.cos(a) * 0.48
+  );
+  win.rotation.y = -a;
+  statueGroup.add(win);
+}
+
+// 7 条光芒（更长、更有力度的三角板 — 1.4长度）
+for (let i = 0; i < 7; i++) {
+  const a = (i / 7) * Math.PI * 2;
+  const rayShape = new THREE.Shape();
+  rayShape.moveTo(-0.09, 0);
+  rayShape.lineTo(-0.03, 0.5);
+  rayShape.lineTo(0, 1.4);         // 更长的光芒
+  rayShape.lineTo(0.03, 0.5);
+  rayShape.lineTo(0.09, 0);
+  rayShape.closePath();
+  const rayG = new THREE.ExtrudeGeometry(rayShape, { depth: 0.02, bevelEnabled: false });
+  const ray = new THREE.Mesh(rayG, copperDark);
+  ray.position.set(Math.sin(a) * 0.44, headY + 1.38, Math.cos(a) * 0.44);
+  ray.rotation.y = -a;
+  const tilt = 0.4;
+  ray.rotation.x = Math.cos(a) * tilt;
+  ray.rotation.z = -Math.sin(a) * tilt;
+  ray.castShadow = true;
+  statueGroup.add(ray);
+}
+
+// ======= 肩部袖口（连接手臂和身体的布料过渡） =======
+for (const [side, sx] of [['R', 0.5], ['L', -0.5]]) {
+  // 肩头球形衔接
+  const shoulderCapG = new THREE.SphereGeometry(0.18, 10, 8);
+  const shoulderCap = new THREE.Mesh(shoulderCapG, copperMat);
+  shoulderCap.position.set(sx, bodyBase + 5.15, 0);
+  shoulderCap.scale.set(1.0, 0.8, 0.9);
+  statueGroup.add(shoulderCap);
+  // 袖褶（布料从肩部向下垂）
+  const sleevePts = [
+    new THREE.Vector3(sx * 1.0, 5.15, 0),
+    new THREE.Vector3(sx * 1.15, 4.9, 0.05),
+    new THREE.Vector3(sx * 1.1, 4.6, 0.0),
+  ];
+  const sleeveCurve = new THREE.CatmullRomCurve3(sleevePts);
+  const sleeveG = new THREE.TubeGeometry(sleeveCurve, 8, 0.08, 6, false);
+  const sleeve = new THREE.Mesh(sleeveG, copperMat);
+  sleeve.position.y = bodyBase;
+  statueGroup.add(sleeve);
+}
+
+// ======= 右臂 + 火炬（高举过头 — 更粗壮的手臂 + 更大的火炬） =======
+const rArmGroup = new THREE.Group();
+statueGroup.add(rArmGroup);
+
+const shoulderR = { x: 0.5, y: bodyBase + 5.15, z: 0 };
+
+// 上臂 — 带袖口的锥形
+const rUpperG = new THREE.CylinderGeometry(0.11, 0.15, 1.6, 8);
+const rUpper = new THREE.Mesh(rUpperG, copperMat);
+rUpper.castShadow = true;
+rArmGroup.add(rUpper);
+
+// 肘关节
+const elbowG = new THREE.SphereGeometry(0.12, 8, 6);
+const elbowR = new THREE.Mesh(elbowG, copperMat);
+elbowR.position.y = 0.9;
+rArmGroup.add(elbowR);
+
+// 前臂
+const rForeG = new THREE.CylinderGeometry(0.09, 0.12, 1.3, 8);
+const rFore = new THREE.Mesh(rForeG, copperMat);
+rFore.position.y = 1.65;
+rFore.castShadow = true;
+rArmGroup.add(rFore);
+
+// 手腕
+const wristRG = new THREE.SphereGeometry(0.1, 8, 6);
+const wristR = new THREE.Mesh(wristRG, skinMat);
+wristR.position.y = 2.35;
+rArmGroup.add(wristR);
+
+// 手掌（更大更明显）
+const handRG = new THREE.SphereGeometry(0.13, 8, 6);
+const handR = new THREE.Mesh(handRG, skinMat);
+handR.position.y = 2.55;
+handR.scale.set(0.7, 1.1, 0.6);
+rArmGroup.add(handR);
+
+// 手指（握着火炬的样子 — 5根短柱环绕）
+for (let fi = 0; fi < 5; fi++) {
+  const fa = (fi / 5) * Math.PI * 2;
+  const fingerG = new THREE.CylinderGeometry(0.018, 0.022, 0.2, 4);
+  const finger = new THREE.Mesh(fingerG, skinMat);
+  finger.position.set(Math.sin(fa) * 0.06, 2.7, Math.cos(fa) * 0.06);
+  rArmGroup.add(finger);
+}
+
+// 火炬柄 — 更粗更有装饰
+const torchHandleG = new THREE.CylinderGeometry(0.055, 0.075, 0.9, 10);
+const torchHandle = new THREE.Mesh(torchHandleG, torchMat);
+torchHandle.position.y = 3.05;
+rArmGroup.add(torchHandle);
+
+// 火炬柄装饰环
+for (const dy of [2.75, 3.45]) {
+  const ringG = new THREE.TorusGeometry(0.08, 0.02, 6, 12);
+  const ring = new THREE.Mesh(ringG, torchMat);
+  ring.position.y = dy;
+  ring.rotation.x = Math.PI / 2;
+  rArmGroup.add(ring);
+}
+
+// 火炬杯（更精细更大的杯状 — 带装饰纹路）
+const cupProfile = [
+  new THREE.Vector2(0,    0),
+  new THREE.Vector2(0.07, 0),
+  new THREE.Vector2(0.09, 0.03),
+  new THREE.Vector2(0.12, 0.1),
+  new THREE.Vector2(0.18, 0.25),
+  new THREE.Vector2(0.25, 0.45),
+  new THREE.Vector2(0.28, 0.55),
+  new THREE.Vector2(0.26, 0.62),
+  new THREE.Vector2(0.22, 0.66),
+  new THREE.Vector2(0.20, 0.68),
+  new THREE.Vector2(0,    0.68),
+];
+const cupG = new THREE.LatheGeometry(cupProfile, 16);
+const cup = new THREE.Mesh(cupG, torchMat);
+cup.position.y = 3.5;
+rArmGroup.add(cup);
+
+// 杯沿装饰
+const cupRimG = new THREE.TorusGeometry(0.24, 0.02, 6, 16);
+const cupRim = new THREE.Mesh(cupRimG, torchMat);
+cupRim.position.y = 4.12;
+cupRim.rotation.x = Math.PI / 2;
+rArmGroup.add(cupRim);
+
+// 火焰 — 三层 + 更大（标志性火焰）
+const flame1G = new THREE.ConeGeometry(0.18, 0.65, 8);
+const flame = new THREE.Mesh(flame1G, flameMat);
+flame.position.y = 4.5;
+rArmGroup.add(flame);
+
+const flame2G = new THREE.ConeGeometry(0.12, 0.45, 6);
+const flame2 = new THREE.Mesh(flame2G, new THREE.MeshBasicMaterial({ color: 0xffdd44 }));
+flame2.position.y = 4.55;
+rArmGroup.add(flame2);
+
+const flame3G = new THREE.ConeGeometry(0.06, 0.3, 5);
+const flame3 = new THREE.Mesh(flame3G, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+flame3.position.y = 4.58;
+rArmGroup.add(flame3);
+
+// 光晕（更大更明显）
+const glowG = new THREE.SphereGeometry(0.4, 12, 8);
+const glow = new THREE.Mesh(glowG, flameGlowMat);
+glow.position.y = 4.45;
+rArmGroup.add(glow);
+
+// 外光晕
+const outerGlowG = new THREE.SphereGeometry(0.6, 12, 8);
+const outerGlowMat = new THREE.MeshBasicMaterial({ color: 0xffaa22, transparent: true, opacity: 0.12 });
+const outerGlow = new THREE.Mesh(outerGlowG, outerGlowMat);
+outerGlow.position.y = 4.45;
+rArmGroup.add(outerGlow);
+
+// 火炬光源（更亮）
+const torchLight = new THREE.PointLight(0xffaa33, 4.0, 10, 1.5);
+torchLight.position.y = 4.5;
+rArmGroup.add(torchLight);
+
+// 定位整个右臂
+rArmGroup.position.set(shoulderR.x, shoulderR.y, shoulderR.z);
+rArmGroup.rotation.z = -0.06;
+rArmGroup.rotation.x = -0.03;
+
+// ======= 左臂 + 石板（Tabula Ansata） =======
+const lArmGroup = new THREE.Group();
+statueGroup.add(lArmGroup);
+
+// 左上臂（稍粗）
+const lUpperG = new THREE.CylinderGeometry(0.1, 0.14, 1.0, 8);
+const lUpper = new THREE.Mesh(lUpperG, copperMat);
+lUpper.castShadow = true;
+lArmGroup.add(lUpper);
+
+// 左肘关节
+const lElbowG = new THREE.SphereGeometry(0.11, 8, 6);
+const lElbow = new THREE.Mesh(lElbowG, copperMat);
+lElbow.position.set(-0.1, -0.3, 0.15);
+lArmGroup.add(lElbow);
+
+// 左前臂（弯曲持书）
+const lForeG = new THREE.CylinderGeometry(0.08, 0.11, 0.9, 8);
+const lFore = new THREE.Mesh(lForeG, copperMat);
+lFore.position.set(-0.18, -0.2, 0.3);
+lFore.rotation.x = 0.85;
+lFore.rotation.z = 0.25;
+lArmGroup.add(lFore);
+
+// 左手
+const lHandG = new THREE.SphereGeometry(0.1, 8, 6);
+const lHand = new THREE.Mesh(lHandG, skinMat);
+lHand.position.set(-0.28, -0.38, 0.58);
+lHand.scale.set(0.7, 0.9, 0.6);
+lArmGroup.add(lHand);
+
+// 石板（Tabula Ansata — 独立宣言，更大更显眼）
+const tabletG = new THREE.BoxGeometry(0.14, 1.1, 0.72);
+const tablet = new THREE.Mesh(tabletG, copperDark);
+tablet.position.set(-0.32, -0.38, 0.58);
+tablet.rotation.x = 0.6;
+tablet.rotation.z = 0.18;
+tablet.castShadow = true;
+lArmGroup.add(tablet);
+
+// 石板边框
+const tabletFrameG = new THREE.BoxGeometry(0.15, 1.14, 0.76);
+const tabletFrameMat = new THREE.MeshStandardMaterial({ color: 0x4d9977, roughness: 0.5, metalness: 0.2, wireframe: true });
+const tabletFrame = new THREE.Mesh(tabletFrameG, tabletFrameMat);
+tabletFrame.position.copy(tablet.position);
+tabletFrame.rotation.copy(tablet.rotation);
+lArmGroup.add(tabletFrame);
+
+// 石板文字纹理（JULY IV MDCCLXXVI — 用凹槽线条表示）
+for (let row = 0; row < 6; row++) {
+  const lineLen = row === 0 ? 0.35 : row === 5 ? 0.25 : 0.45;
+  const lineG = new THREE.BoxGeometry(0.15, 0.006, lineLen);
+  const lineMesh = new THREE.Mesh(lineG, copperLight);
+  lineMesh.position.set(-0.32, -0.38 + (row - 2.5) * 0.1, 0.58);
+  lineMesh.rotation.x = 0.6;
+  lineMesh.rotation.z = 0.18;
+  lArmGroup.add(lineMesh);
+}
+
+lArmGroup.position.set(-0.52, bodyBase + 4.85, 0.1);
+lArmGroup.rotation.z = 0.45;
+lArmGroup.rotation.x = -0.08;
+
+// ======= 袍底前摆（左脚迈步掀袍 — 更自然的曲面） =======
+const drapePts = [
+  new THREE.Vector3(-0.4, 0.5, 0.9),
+  new THREE.Vector3(-0.1, 0.8, 1.15),
+  new THREE.Vector3(0.2, 0.6, 1.2),
+  new THREE.Vector3(0.45, 0.3, 1.0),
+];
+const drapeCurve = new THREE.CatmullRomCurve3(drapePts);
+const drapeG = new THREE.TubeGeometry(drapeCurve, 16, 0.12, 8, false);
+const drapeFront = new THREE.Mesh(drapeG, copperMat);
+drapeFront.position.y = bodyBase - 0.2;
+statueGroup.add(drapeFront);
+
+// 下垂的袍角
+const drapeHangPts = [
+  new THREE.Vector3(0.2, 0.6, 1.2),
+  new THREE.Vector3(0.15, 0.15, 1.3),
+  new THREE.Vector3(0.1, -0.1, 1.15),
+];
+const drapeHangCurve = new THREE.CatmullRomCurve3(drapeHangPts);
+const drapeHangG = new THREE.TubeGeometry(drapeHangCurve, 10, 0.08, 6, false);
+const drapeHang = new THREE.Mesh(drapeHangG, copperMat);
+drapeHang.position.y = bodyBase - 0.2;
+statueGroup.add(drapeHang);
+
+// ======= 脚部 + 凉鞋 =======
+for (const [sx, sz, sa] of [[-0.25, 0.55, 0.05], [0.25, 0.25, -0.05]]) {
+  // 脚
+  const footShape = new THREE.Shape();
+  footShape.ellipse(0, 0, 0.15, 0.32, 0, Math.PI * 2, false, 0);
+  const footG = new THREE.ExtrudeGeometry(footShape, { depth: 0.1, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 });
+  const foot = new THREE.Mesh(footG, copperDark);
+  foot.position.set(sx, bodyBase - 0.05, sz);
+  foot.rotation.x = -Math.PI / 2;
+  foot.rotation.z = sa;
+  statueGroup.add(foot);
+  // 凉鞋带
+  const strapG = new THREE.TorusGeometry(0.13, 0.015, 6, 12);
+  const strap = new THREE.Mesh(strapG, copperDark);
+  strap.position.set(sx, bodyBase + 0.02, sz);
+  strap.rotation.x = Math.PI / 2;
+  statueGroup.add(strap);
+}
+
+// ======= 断裂的锁链（脚下 — 象征自由） =======
+const chainMat = new THREE.MeshStandardMaterial({ color: 0x556655, roughness: 0.6, metalness: 0.4 });
+// 几节链环散落在脚下
+function createChainLink(x, y, z, ry) {
+  const linkG = new THREE.TorusGeometry(0.08, 0.025, 6, 10);
+  const link = new THREE.Mesh(linkG, chainMat);
+  link.position.set(x, y, z);
+  link.rotation.y = ry;
+  link.rotation.x = Math.PI / 2 + (Math.random()-0.5)*0.3;
+  link.castShadow = true;
+  return link;
+}
+// 右脚旁的断链
+const chainPts = [
+  [0.5, bodyBase-0.08, 0.1, 0], [0.6, bodyBase-0.08, 0.2, 0.8],
+  [0.7, bodyBase-0.1, 0.35, 0.2], [0.75, bodyBase-0.1, 0.5, 1.0],
+];
+for (const [cx, cy, cz, cr] of chainPts) {
+  statueGroup.add(createChainLink(cx, cy, cz, cr));
+}
+// 左脚旁的断链
+const chainPtsL = [
+  [-0.5, bodyBase-0.08, 0.6, 0.5], [-0.6, bodyBase-0.1, 0.7, 1.2],
+  [-0.65, bodyBase-0.1, 0.85, 0.3],
+];
+for (const [cx, cy, cz, cr] of chainPtsL) {
+  statueGroup.add(createChainLink(cx, cy, cz, cr));
+}
+// 断裂的锁链末端（粗短柱体）
+for (const [bx, bz] of [[0.45, 0.05], [-0.45, 0.55]]) {
+  const brokenG = new THREE.CylinderGeometry(0.035, 0.03, 0.12, 6);
+  const broken = new THREE.Mesh(brokenG, chainMat);
+  broken.position.set(bx, bodyBase - 0.02, bz);
+  broken.rotation.z = Math.random() * 0.5;
+  statueGroup.add(broken);
+}
+
+// ======= 旋转底盘 =======
+const platformGroup = new THREE.Group();
+scene.add(platformGroup);
+platformGroup.add(statueGroup);
+
+// 圆形展示底盘
+const diskG = new THREE.CylinderGeometry(2.8, 3.0, 0.15, 32);
+const diskMat = new THREE.MeshStandardMaterial({ color:0x666666, roughness:0.35, metalness:0.6 });
+const disk = new THREE.Mesh(diskG, diskMat);
+disk.position.y = BY + 0.08;
+disk.receiveShadow = true;
+platformGroup.add(disk);
+
+// ========== 主循环 ==========
+let lastTime = 0;
+
+function loop(timestamp) {
+  requestAnimationFrame(loop);
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  // 逆时针旋转（从上往下看，逆时针 = Y轴正方向旋转）
+  const speed = parseInt(ui.rotSpeed.value) / 100;
+  platformGroup.rotation.y += 0.5 * speed * dt;
+
+  // 火焰闪烁（三层 + 双光晕）
+  const flicker = 0.9 + Math.sin(timestamp * 0.008) * 0.1 + Math.sin(timestamp * 0.013) * 0.05;
+  flame.scale.set(flicker, 0.85 + Math.sin(timestamp * 0.01) * 0.18, flicker);
+  flame2.scale.set(flicker * 0.95, 0.9 + Math.sin(timestamp * 0.012) * 0.12, flicker * 0.95);
+  flame3.scale.set(flicker * 0.9, 0.88 + Math.sin(timestamp * 0.015) * 0.1, flicker * 0.9);
+  glow.scale.setScalar(0.8 + Math.sin(timestamp * 0.006) * 0.25);
+  outerGlow.scale.setScalar(0.9 + Math.sin(timestamp * 0.004) * 0.15);
+  torchLight.intensity = 3.5 + Math.sin(timestamp * 0.009) * 1.2;
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ========== 事件 ==========
+ui.rotSpeed.addEventListener('input', () => {
+  ui.rotSpeedVal.textContent = ui.rotSpeed.value + '%';
+});
+ui.brightness.addEventListener('input', () => {
+  ui.brightnessVal.textContent = ui.brightness.value + '%';
+  applyBrightness();
+});
+
+// ========== 启动 ==========
+applyBrightness();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

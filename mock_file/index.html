@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模拟展示 - 程序员工具箱</title>
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"></noscript>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-color: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --bg-color: #ffffff;
+            --bg-secondary: #f9fafb;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-secondary);
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background-color: var(--bg-color);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            gap: 1rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .navbar-brand:hover {
+            color: var(--primary-hover);
+        }
+
+        .navbar-menu {
+            margin-left: auto;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-menu a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .navbar-menu a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Hero 区域 */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 主内容区 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .section {
+            padding: 2rem 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .section-header .material-icons {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        /* 卡片网格 */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-preview {
+            height: 180px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-preview .material-icons {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 不同的卡片预览配色 */
+        .card:nth-child(1) .card-preview { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card:nth-child(2) .card-preview { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .card:nth-child(3) .card-preview { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .card:nth-child(4) .card-preview { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .card:nth-child(5) .card-preview { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .card:nth-child(6) .card-preview { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+        .card:nth-child(7) .card-preview { background: linear-gradient(135deg, #fccb90 0%, #d57eeb 100%); }
+        .card:nth-child(8) .card-preview { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+
+        .card-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            background: #eff6ff;
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .card-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .card-action .material-icons {
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover .card-action .material-icons {
+            transform: translateX(4px);
+        }
+
+        /* 底部 */
+        .footer {
+            background: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 2rem;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.6rem;
+            }
+
+            .hero p {
+                font-size: 0.95rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar-menu {
+                gap: 0.75rem;
+            }
+
+            .navbar-menu a {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/tools/index" class="navbar-brand">程序员工具箱</a>
+            <div class="navbar-menu">
+                <a href="/">博客首页</a>
+                <a href="/tools/index">工具首页</a>
+                <a href="/mock/">模拟展示</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>模拟展示</h1>
+        <p>精选的交互式 3D/物理模拟演示，涵盖太阳系、物理碰撞、混沌摆等多种有趣的可视化效果</p>
+    </section>
+
+    <main class="container">
+        <section class="section">
+            <div class="section-header">
+                <i class="material-icons">view_in_ar</i>
+                <h2>全部演示</h2>
+            </div>
+            <div class="cards-grid">
+                <a class="card" href="solar-system.html">
+                    <div class="card-preview">
+                        <i class="material-icons">public</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">太阳系模拟</div>
+                        <div class="card-desc">真实纹理版太阳系行星运行模拟，包含太阳、行星及其轨道的 3D 可视化展示。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="earth-moon-space.html">
+                    <div class="card-preview">
+                        <i class="material-icons">nightlight_round</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">地球与月球</div>
+                        <div class="card-desc">太空视角下地球与月球的真实纹理 3D 模拟，展示地月系统的运行关系。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="ball-physics-3d.html">
+                    <div class="card-preview">
+                        <i class="material-icons">sports_baseball</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">3D 物理碰撞模拟</div>
+                        <div class="card-desc">三维空间中球体的物理碰撞模拟，展示弹性碰撞、重力等物理效果。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="ball-physics.html">
+                    <div class="card-preview">
+                        <i class="material-icons">bubble_chart</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">物理碰撞模拟</div>
+                        <div class="card-desc">2D 物理碰撞模拟，展示球体间的碰撞检测与弹性响应效果。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">auto_awesome</i> 2D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="chaos-pendulum-3d.html">
+                    <div class="card-preview">
+                        <i class="material-icons">sync_alt</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">3D 三节混沌摆</div>
+                        <div class="card-desc">三维空间中三节混沌摆的运动模拟，展示混沌系统的不可预测性。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="perpetual-motion-3d.html">
+                    <div class="card-preview">
+                        <i class="material-icons">settings</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">混沌摆永动机</div>
+                        <div class="card-desc">3D 钢管永动机模拟，混沌摆系统的艺术化可视化呈现。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="kinetic-sculpture-3d.html">
+                    <div class="card-preview">
+                        <i class="material-icons">architecture</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">动态平衡雕塑</div>
+                        <div class="card-desc">Kinetic Sculpture 动态平衡雕塑的 3D 模拟，展现机械运动之美。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="card" href="statue-of-liberty-3d.html">
+                    <div class="card-preview">
+                        <i class="material-icons">location_city</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">3D 自由女神像</div>
+                        <div class="card-desc">自由女神像的 3D 建模与渲染展示，可交互旋转查看不同角度。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+    </footer>
+</body>
+</html>
