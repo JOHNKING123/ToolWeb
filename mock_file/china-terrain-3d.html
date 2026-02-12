@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国大陆及周边地区 3D 地形图</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #5a5a5e;
+    overflow: hidden;
+    font-family: 'SF Pro Display', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: #e0e8f0;
+}
+canvas { display: block; }
+
+#loading {
+    position: fixed; inset: 0; z-index: 200;
+    background: radial-gradient(ellipse at 60% 40%, #3a3a40 0%, #2a2a30 80%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 1s ease;
+}
+#loading.done { opacity: 0; pointer-events: none; }
+#loading h1 {
+    font-size: 30px; font-weight: 200; letter-spacing: 10px;
+    background: linear-gradient(135deg, #b0d0f0, #ffffff, #b0d0f0);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+}
+#loading .sub { font-size: 12px; color: #3a5a70; letter-spacing: 4px; margin-bottom: 32px; }
+.bar-bg { width: 260px; height: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; overflow: hidden; }
+.bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e88e5, #43a047); border-radius: 1px; transition: width 0.25s; }
+#load-msg { color: #2a4a5a; font-size: 10px; margin-top: 12px; letter-spacing: 1px; }
+
+#panel-info {
+    position: fixed; top: 16px; left: 16px; z-index: 10;
+    background: rgba(20,25,35,0.88); padding: 16px 20px; border-radius: 12px;
+    border: 1px solid rgba(100,160,220,0.12); backdrop-filter: blur(14px);
+    font-size: 12px; min-width: 220px;
+}
+#panel-info h2 {
+    font-size: 10px; font-weight: 700; color: #1e88e5;
+    letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px;
+}
+.row { display: flex; justify-content: space-between; gap: 16px; line-height: 1.9; }
+.lbl { color: #3a5a6a; } .val { color: #90b0c8; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+#panel-legend {
+    position: fixed; bottom: 20px; left: 20px; z-index: 10;
+    background: rgba(20,25,35,0.88); padding: 14px 18px; border-radius: 12px;
+    border: 1px solid rgba(100,160,220,0.12); backdrop-filter: blur(14px);
+    font-size: 10px; min-width: 135px;
+}
+#panel-legend h3 {
+    font-size: 9px; font-weight: 700; color: #3a6a8a;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px;
+}
+.leg { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.swatch { width: 22px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.leg span { color: #5a8a9a; }
+
+#hint {
+    position: fixed; bottom: 20px; right: 20px; z-index: 10;
+    background: rgba(8,16,30,0.85); padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(100,160,220,0.08); backdrop-filter: blur(10px);
+    font-size: 9px; color: #2a4a5a; line-height: 1.7; letter-spacing: 0.5px;
+}
+#compass {
+    position: fixed; top: 16px; right: 16px; z-index: 10;
+    width: 70px; height: 70px;
+}
+#compass svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+
+#tooltip {
+    position: fixed; z-index: 20; pointer-events: none; display: none;
+    background: rgba(8,16,30,0.92); padding: 8px 12px; border-radius: 8px;
+    border: 1px solid rgba(100,160,220,0.15); backdrop-filter: blur(10px);
+    font-size: 10px; color: #90b0c8; white-space: nowrap;
+}
+
+.tlabel {
+    color: #fff; font-size: 10px; font-weight: 500;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.3);
+    pointer-events: none; white-space: nowrap; letter-spacing: 1px;
+    transition: opacity 0.3s;
+    background: rgba(0,0,0,0.15); padding: 1px 4px; border-radius: 3px;
+}
+.tlabel.big { font-size: 16px; font-weight: 700; letter-spacing: 4px; color: #ffe0b0; background: rgba(0,0,0,0.2); padding: 2px 8px; }
+.tlabel.country { font-size: 11px; font-weight: 600; color: rgba(200,220,240,0.55); letter-spacing: 4px; background: none; }
+.tlabel.mtn { color: #f0d8c0; font-weight: 600; font-size: 9px; }
+.tlabel.sea { color: #2060a0; font-style: italic; font-weight: 500; letter-spacing: 3px; background: none;
+    text-shadow: 0 1px 4px rgba(255,255,255,0.4), 0 0 10px rgba(255,255,255,0.2); }
+.tlabel.river { color: #4a90c0; font-size: 9px; font-style: italic; background: none; letter-spacing: 2px; }
+.tlabel.desert { color: #c8a860; font-size: 9px; font-weight: 500; background: rgba(0,0,0,0.15); }
+.tlabel.plateau { color: #d8c8a0; font-size: 10px; }
+.tlabel.basin { color: #b0d0a0; font-size: 9px; }
+.tlabel.plain { color: #90d090; font-size: 9px; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+    <h1>3D 地形图</h1>
+    <div class="sub">CHINA &amp; SURROUNDING TERRAIN</div>
+    <div class="bar-bg"><div class="bar-fill" id="bar"></div></div>
+    <div id="load-msg">初始化场景...</div>
+</div>
+
+<div id="panel-info">
+    <h2>中国及周边 3D 地形</h2>
+    <div class="row"><span class="lbl">经度范围</span><span class="val">60°E — 150°E</span></div>
+    <div class="row"><span class="lbl">纬度范围</span><span class="val">0°N — 60°N</span></div>
+    <div class="row"><span class="lbl">最高点</span><span class="val">珠穆朗玛峰 8,849m</span></div>
+    <div class="row"><span class="lbl">最低点</span><span class="val">吐鲁番盆地 −154m</span></div>
+    <div class="row"><span class="lbl">垂直夸大</span><span class="val">≈ 80×</span></div>
+    <div class="row" id="cursor-row" style="display:none"><span class="lbl">光标</span><span class="val" id="cursor-val">—</span></div>
+</div>
+
+<div id="panel-legend">
+    <h3>高程图例</h3>
+    <div class="leg"><div class="swatch" style="background:linear-gradient(90deg,#eee,#fff)"></div><span>&gt;5500m 永久积雪</span></div>
+    <div class="leg"><div class="swatch" style="background:#8a6040"></div><span>3000 – 5000m</span></div>
+    <div class="leg"><div class="swatch" style="background:#a87830"></div><span>2000 – 3000m</span></div>
+    <div class="leg"><div class="swatch" style="background:#c8a030"></div><span>1000 – 2000m</span></div>
+    <div class="leg"><div class="swatch" style="background:#6a8820"></div><span>500 – 1000m</span></div>
+    <div class="leg"><div class="swatch" style="background:#1a6a1a"></div><span>200 – 500m</span></div>
+    <div class="leg"><div class="swatch" style="background:#004a00"></div><span>0 – 200m 平原</span></div>
+    <div class="leg"><div class="swatch" style="background:#d8c070"></div><span>沙漠 / 戈壁</span></div>
+    <div class="leg"><div class="swatch" style="background:#b09058"></div><span>黄土高原</span></div>
+    <div class="leg"><div class="swatch" style="background:linear-gradient(90deg,#0a1a50,#1565C0)"></div><span>海洋</span></div>
+    <div class="leg"><div class="swatch" style="background:#2277bb;opacity:0.6"></div><span>主要河流</span></div>
+</div>
+
+<div id="hint">
+    左键拖动旋转 · 右键 / 双指平移 · 滚轮缩放<br>
+    鼠标悬停查看坐标与海拔
+</div>
+
+<div id="tooltip"></div>
+
+<div id="compass">
+<svg viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="36" fill="rgba(8,16,30,0.7)" stroke="rgba(100,160,220,0.2)" stroke-width="1"/>
+    <polygon points="40,10 35,40 40,35 45,40" fill="#e05050" opacity="0.9"/>
+    <polygon points="40,70 35,40 40,45 45,40" fill="#8090a0" opacity="0.6"/>
+    <text x="40" y="9" text-anchor="middle" fill="#e05050" font-size="9" font-weight="700" font-family="sans-serif">N</text>
+    <text x="40" y="78" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="sans-serif">S</text>
+    <text x="75" y="43" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="sans-serif">E</text>
+    <text x="5" y="43" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="sans-serif">W</text>
+    <circle cx="40" cy="40" r="2" fill="#90b0c8"/>
+</svg>
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+/* ═══════════════ CONSTANTS ═══════════════ */
+const LO0 = 60, LO1 = 150, LA0 = 0, LA1 = 60;
+const GW = 580, GH = 400;          // grid segments (high detail for sharp ridges)
+const TW = 90, TH = 60;            // world-space size
+const ES = 0.00085;                 // elevation → world (vertical exaggeration ≈ 80×)
+
+/* ═══════════════ HELPERS ═══════════════ */
+const lerp  = (a,b,t) => a+(b-a)*t;
+const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+const ss    = (e0,e1,x) => { x=clamp((x-e0)/(e1-e0),0,1); return x*x*(3-2*x); };
+const gauss = (x,s) => Math.exp(-x*x/(2*s*s));
+const dist2 = (x1,y1,x2,y2) => Math.sqrt((x1-x2)**2+(y1-y2)**2);
+
+function dSeg(px,py,ax,ay,bx,by){
+    const dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy;
+    if(!l2) return dist2(px,py,ax,ay);
+    const t=clamp(((px-ax)*dx+(py-ay)*dy)/l2,0,1);
+    return dist2(px,py,ax+t*dx,ay+t*dy);
+}
+function dPoly(px,py,pts){
+    let m=1e9;
+    for(let i=0;i<pts.length-1;i++) m=Math.min(m,dSeg(px,py,pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1]));
+    return m;
+}
+
+/* geo ↔ world */
+function g2w(lon,lat){ return [(lon-LO0)/(LO1-LO0)*TW-TW/2, (LA1-lat)/(LA1-LA0)*TH-TH/2]; }
+function w2g(x,z){ return [LO0+(x+TW/2)/TW*(LO1-LO0), LA1-(z+TH/2)/TH*(LA1-LA0)]; }
+
+/* ═══════════════ NOISE ═══════════════ */
+const _fr = x=>x-Math.floor(x);
+const _h  = (x,y)=>_fr(Math.sin(x*127.1+y*311.7)*43758.5453);
+function n2d(x,y){
+    const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy;
+    const ux=fx*fx*(3-2*fx), uy=fy*fy*(3-2*fy);
+    return lerp(lerp(_h(ix,iy),_h(ix+1,iy),ux), lerp(_h(ix,iy+1),_h(ix+1,iy+1),ux), uy);
+}
+function fbm(x,y,oct=5){
+    let v=0,a=1,f=1,s=0;
+    for(let i=0;i<oct;i++){v+=a*n2d(x*f,y*f);s+=a;a*=.5;f*=2;}
+    return v/s;
+}
+
+/* ═══════════════ COASTLINE POLYGONS ═══════════════ */
+function pip(px,py,poly){
+    let ins=false;
+    for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+        const xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];
+        if((yi>py)!==(yj>py)&&px<(xj-xi)*(py-yi)/(yj-yi)+xi) ins=!ins;
+    }
+    return ins;
+}
+
+const ASIA=[
+    [60,60],[150,60],
+    [150,55.5],[147,53],[145,51],[143,49],[142,47],[141,45.5],
+    [139,44.5],[137,43.8],[135.5,43.3],[133,43],[131.5,43],
+    [130.5,42],[129.5,40.5],[129.2,39],[129,37.5],[129,36],[128.5,35.5],[127.5,35],[127,34.5],
+    [126,34.5],[126,35.5],[125.5,37],[125,38.5],
+    [124,39.5],[123,39.8],[122.5,40],
+    [122,39.5],[121.5,39.2],
+    [121,38.8],[120,38.3],[119.2,38],[118.5,37.5],
+    [118,37],[117.8,36.5],
+    [118.5,36],[119.5,36.2],[120.5,36.5],[121.5,37],[122.5,37],
+    [123,36.5],[122,35.5],[121.5,35],
+    [121,34],[121,33],[121.5,32],
+    [122,31],[122.2,30],[122,29],[121.5,28],
+    [121,27],[120.5,26.2],[119.5,25.5],[118.5,25],
+    [117.5,24],[117,23.5],[116,23],[115,22.5],
+    [114,22.5],[113.2,22],[112,21.5],[110.5,21],[109.5,21.5],[108.5,21.5],
+    [108,20],[107.2,18],[106.8,17],
+    [107.2,15],[108,13.5],[109,12],
+    [108.2,11],[107,10.5],[106.5,10],[106,9.5],[105.2,9],
+    [104.5,8],[103.5,7],[102.5,6.5],[101.5,5.5],[101,4.5],[100.8,3],[103,1.5],[104,1],[104.5,0],
+    [100,0],[99,2],[98,4.5],[97,6.5],[96,8.5],
+    [95,10.5],[94.5,12],[94,14.5],[93.5,16.5],[93,18],[92.5,20],[91.5,21.5],
+    [90,22],[89,22.5],
+    [87,21.2],[85.5,20],[83.5,17.5],[82,15.5],[81,14],[80.5,12],[79.5,10],[78.5,8.5],[77.5,8],
+    [76.8,8.3],[76,9],[75.5,10],
+    [74.5,12],[73.5,15],[73,17.5],[72.5,19.5],[72,21],[70.5,22.5],
+    [69,23.5],[68,24],[67,24.5],
+    [66,25],[64.5,25.5],[62.5,25.5],[61,25.5],[60,26],
+    [60,60]
+];
+
+const JAPAN_H=[[139,35.5],[139.8,36.5],[140,37.5],[140.2,38.5],[140.5,39.5],[140.3,40.5],[139.5,40],
+    [138,38.5],[137,37.5],[136,36.5],[135,35.5],[134,34.8],[133,34.3],[132,33.8],[131.2,33.5],
+    [131.5,34],[133,34.5],[135,35],[137,35.5],[139,35.5]];
+const JAPAN_K=[[140,42],[141.5,43],[143,43.5],[145,43.3],[145.2,42.5],[144,42],[142,41.8],[140,42]];
+const JAPAN_Y=[[130,33.3],[131,33.5],[131.5,33],[131.5,32],[131,31.2],[130.3,31.5],[130,32.5],[130,33.3]];
+const JAPAN_S=[[132.5,34],[133.8,34],[134.2,33.5],[134,33],[133,33],[132.5,33.5],[132.5,34]];
+const TAIWAN=[[120.3,25.2],[121.2,25.5],[122,25],[121.5,24],[121,23],[120.5,22.5],[120,23.5],[120.3,25.2]];
+const HAINAN=[[109.2,20],[110.3,20],[110.8,19.3],[110.5,18.3],[109.8,18.2],[109.2,18.8],[109.2,20]];
+const SRILANKA=[[80,9.8],[81,9.5],[82,8.2],[81.8,7],[81,6.2],[80,7.5],[79.8,8.5],[80,9.8]];
+
+function isLand(lo,la){
+    if(pip(lo,la,ASIA)) return true;
+    if(pip(lo,la,JAPAN_H)) return true;
+    if(pip(lo,la,JAPAN_K)) return true;
+    if(pip(lo,la,JAPAN_Y)) return true;
+    if(pip(lo,la,JAPAN_S)) return true;
+    if(pip(lo,la,TAIWAN)) return true;
+    if(pip(lo,la,HAINAN)) return true;
+    if(pip(lo,la,SRILANKA)) return true;
+    if(lo>=142&&lo<=144.5&&la>=46&&la<=54&&Math.abs(lo-143)<1.2) return true;  // Sakhalin
+    if(dist2(lo,la,114,1)<4.5) return true;   // Borneo
+    if(lo>=117&&lo<=127&&la>=5&&la<=19){       // Philippines
+        if(dist2(lo,la,121,15.5)<3) return true;
+        if(dist2(lo,la,125,8)<2.5) return true;
+        if(dist2(lo,la,123,11)<2) return true;
+    }
+    return false;
+}
+
+/* ═══════════════ TERRAIN FEATURES ═══════════════ */
+
+/* --- helpers --- */
+function plateau(lo,la,cx,cy,rx,ry,elev,e0=1.35,e1=0.5){
+    const dx=(lo-cx)/rx, dy=(la-cy)/ry, d=Math.sqrt(dx*dx+dy*dy);
+    return d>e0+0.2?0:ss(e0,e1,d)*elev;
+}
+function ridge(lo,la,pts,peak,w){
+    const d=dPoly(lo,la,pts);
+    return d>w*4?0:gauss(d,w)*peak;
+}
+
+/* --- Plateaus --- */
+const tibetP  = (o,a) => plateau(o,a, 86,33, 14,6, 4500);
+const imongP  = (o,a) => plateau(o,a, 112,44, 10,4, 1200);
+const loessP  = (o,a) => plateau(o,a, 108,37, 5,3, 1400);
+const yngzP   = (o,a) => plateau(o,a, 103,25, 6,3.5, 1900);
+const mongP   = (o,a) => plateau(o,a, 105,48, 12,5.5, 1300);
+const deccP   = (o,a) => plateau(o,a, 77,15, 5,6, 650);
+const cAsiaP  = (o,a) => plateau(o,a, 68,38, 8,5, 2200);
+const irPlat  = (o,a) => plateau(o,a, 60,32, 5,5, 1200);
+
+/* --- Mountain Ranges --- */
+const _him = [[73,35],[75,32.5],[78,30.5],[81,29],[84,28.2],[87,27.8],[90,27.8],[93,28],[96,28.5],[98,28.5]];
+const _kara= [[74,36.2],[76,36.5],[77,36.5]];
+const _kunl= [[74,37],[78,36.5],[82,36.2],[86,36.5],[90,37],[94,36.5],[98,36],[101,35.5]];
+const _tian= [[67,41.5],[72,42.2],[76,42.5],[80,42.2],[84,42.8],[87,43.5],[90,43.2]];
+const _alta= [[84,49],[86,48.5],[88.5,48],[91,47.5]];
+const _qinl= [[104,34],[107,34],[110,33.8],[113,34.2]];
+const _gkhg= [[119.5,43.5],[120.5,45.5],[121.5,47.5],[122.5,49.5],[123.5,51.5]];
+const _lkhg= [[127,47],[128.5,48.5],[130,50]];
+const _taih= [[113.5,35.5],[114,37],[114.5,39],[115,40.5]];
+const _heng= [[98,25.5],[99,27.5],[99.5,29.5],[100,31.5],[100.5,33]];
+const _nanl= [[110,24.8],[112,25.2],[114,25],[116,24.5]];
+const _chbai=[[127.5,41.5],[128.5,42.5],[129.5,43.2]];
+const _wghat=[[73.5,20],[74,17],[75,14.5],[76,11.5],[77,9]];
+const _hkush=[[66,35.5],[68,36.2],[71,36.5]];
+const _jpMt= [[131,33],[133,34.5],[135.5,35.5],[138,36.5],[140,38],[140.5,40]];
+const _twMt= [[121,22.8],[121,24],[121,25.3]];
+const _wuyi= [[117,25],[117.5,26.5],[118,28],[118.5,29]];
+const _pamr= [[72,38],[73,39],[74,39.5]];
+
+const himR  = (o,a)=>ridge(o,a,_him,5800,1.0);
+const karaR = (o,a)=>ridge(o,a,_kara,3800,0.8);
+const kunlR = (o,a)=>ridge(o,a,_kunl,2800,1.4);
+const tianR = (o,a)=>ridge(o,a,_tian,3200,1.3);
+const altaR = (o,a)=>ridge(o,a,_alta,2200,1.1);
+const qinlR = (o,a)=>ridge(o,a,_qinl,2200,0.9);
+const gkhgR = (o,a)=>ridge(o,a,_gkhg,1000,1.1);
+const lkhgR = (o,a)=>ridge(o,a,_lkhg,800,0.9);
+const taihR = (o,a)=>ridge(o,a,_taih,1300,0.8);
+const hengR = (o,a)=>ridge(o,a,_heng,3200,1.1);
+const nanlR = (o,a)=>ridge(o,a,_nanl,1000,0.7);
+const chbaiR= (o,a)=>ridge(o,a,_chbai,1200,0.9);
+const wghatR= (o,a)=>ridge(o,a,_wghat,1000,0.7);
+const hkushR= (o,a)=>ridge(o,a,_hkush,3200,1.0);
+const jpMtR = (o,a)=>ridge(o,a,_jpMt,1500,0.5);
+const twMtR = (o,a)=>ridge(o,a,_twMt,1600,0.3);
+const wuyiR = (o,a)=>ridge(o,a,_wuyi,800,0.6);
+const pamrR = (o,a)=>ridge(o,a,_pamr,3500,1.0);
+
+/* --- Basins (negative) --- */
+function basin(lo,la,cx,cy,rx,ry,depth){
+    const dx=(lo-cx)/rx,dy=(la-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
+    return d>1.2?0:-ss(1.1,0.25,d)*depth;
+}
+const tarimB = (o,a)=>basin(o,a,82,39.5,7,3,3000);
+const jungrB = (o,a)=>basin(o,a,85.5,45,5.5,2.5,1000);
+const sichB  = (o,a)=>basin(o,a,105.5,30,3.5,2.5,1100);
+const turpnB = (o,a)=>{const d=dist2(o,a,89,42.8);return d>2?0:-gauss(d,0.7)*600;};
+const qaidB  = (o,a)=>basin(o,a,95,37,3,1.5,400);
+
+/* --- Plains (reduce elevation) --- */
+const nePlain = (o,a)=>basin(o,a,126,46,4,5,450);
+const ncPlain = (o,a)=>basin(o,a,116,36,5,3,550);
+const gangPl  = (o,a)=>basin(o,a,81,27,10,2.5,900);
+
+/* Yangtze delta lowland */
+const yzPlain = (o,a)=>basin(o,a,119,30,4,3,400);
+
+/* Pearl River delta */
+const prPlain = (o,a)=>basin(o,a,113,23,3,2,300);
+
+/* --- Additional features --- */
+const _yinshan = [[107,41],[110,41.5],[112,41],[114,41.5]];
+const yinshanR = (o,a)=>ridge(o,a,_yinshan,1200,0.8);
+
+const _qilian = [[96,38.5],[98,38],[100,37.5],[102,37]];
+const qilianR = (o,a)=>ridge(o,a,_qilian,2800,1.0);
+
+/* Gobi/desert lowering in Mongolia/Inner Mongolia */
+function gobiDesert(lo,la){
+    const d=dist2(lo,la,108,43);
+    return d>8?0:-gauss(d,4)*300;
+}
+
+/* Southeast coastal hills */
+function seCoastalHills(lo,la){
+    if(lo<110||lo>122||la<22||la>30) return 0;
+    return fbm(lo*0.8+30,la*0.8+40,3)*350;
+}
+
+/* ═══════════════ TERRAIN TYPE DETECTION ═══════════════ */
+/* Returns 0-1 blend factors for special terrain types */
+function getTaklDesert(lo,la){
+    /* Taklamakan Desert: center of Tarim Basin */
+    const cx=82,cy=39,rx=5.5,ry=2;
+    const dx=(lo-cx)/rx,dy=(la-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
+    return d>1?0:ss(1,0.3,d);
+}
+function getGobiDesert(lo,la){
+    /* Gobi Desert: Mongolia-Inner Mongolia border region */
+    const d1=dist2(lo,la,105,44); // western gobi
+    const d2=dist2(lo,la,112,43); // eastern gobi
+    return Math.max(d1<8?gauss(d1,5):0, d2<6?gauss(d2,4):0)*0.7;
+}
+function getLoessPlatType(lo,la){
+    /* Loess Plateau special yellow-brown */
+    const cx=108,cy=37,rx=5,ry=2.5;
+    const dx=(lo-cx)/rx,dy=(la-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
+    return d>1.2?0:ss(1.1,0.4,d);
+}
+function getSichuanBasinType(lo,la){
+    /* Sichuan "Purple Basin" */
+    const cx=105.5,cy=30,rx=3,ry=2;
+    const dx=(lo-cx)/rx,dy=(la-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);
+    return d>1?0:ss(1,0.3,d);
+}
+function getTropicalType(lo,la){
+    /* Tropical forests: Southeast Asia, southern China */
+    if(la>25||la<5) return 0;
+    if(lo<92||lo>115) return 0;
+    return ss(25,18,la)*0.6;
+}
+
+/* Major rivers as subtle blue-green lines */
+const RIVERS={
+    yangtze:[[91,33],[95,32],[99,29],[102,28.5],[104,29],[106,30],[107,30.5],[109,31],[111,30.5],[113,30],[115,30.5],[117,31],[119,31.5],[121,31.5]],
+    yellow:[[96,35],[98,36],[100,37.5],[103,36],[104,37],[106,37.5],[108,38],[110,38],[111,36],[113,35],[115,35.5],[117,36],[119,35]],
+    mekong:[[96,32],[98,28],[99,25],[100,22],[101,18],[103,14],[105,10.5]],
+    ganges:[[79,30.5],[81,28],[83,27],[85,26],[87,25],[89,24],[90,23]],
+    indus:[[76,35],[73,33],[71,30],[69,27],[67,25]],
+    amur:[[120,49],[123,50],[127,49],[130,48.5],[133,48],[135,47]],
+    pearl:[[106,24],[108,23.5],[110,23],[112,22.5],[113,22.5]],
+};
+function getRiverFactor(lo,la){
+    let minD=99;
+    for(const key in RIVERS){
+        const d=dPoly(lo,la,RIVERS[key]);
+        minD=Math.min(minD,d);
+    }
+    return minD<0.3?gauss(minD,0.15)*0.5:0;
+}
+
+/* ═══════════════ MAIN ELEVATION ═══════════════ */
+function getElev(lo,la){
+    if(!isLand(lo,la)){
+        return -250 - fbm(lo*0.08+5,la*0.08+7,3)*600;
+    }
+    let e = 80;
+    // plateaus
+    e += tibetP(lo,la) + imongP(lo,la) + loessP(lo,la) + yngzP(lo,la);
+    e += mongP(lo,la) + deccP(lo,la) + cAsiaP(lo,la) + irPlat(lo,la);
+    // mountains
+    e += himR(lo,la) + karaR(lo,la) + kunlR(lo,la) + tianR(lo,la) + altaR(lo,la);
+    e += qinlR(lo,la) + gkhgR(lo,la) + lkhgR(lo,la) + taihR(lo,la) + hengR(lo,la);
+    e += nanlR(lo,la) + chbaiR(lo,la) + wghatR(lo,la) + hkushR(lo,la);
+    e += jpMtR(lo,la) + twMtR(lo,la) + wuyiR(lo,la) + pamrR(lo,la);
+    e += yinshanR(lo,la) + qilianR(lo,la);
+    // basins
+    e += tarimB(lo,la) + jungrB(lo,la) + sichB(lo,la) + turpnB(lo,la) + qaidB(lo,la);
+    // plains
+    e += nePlain(lo,la) + ncPlain(lo,la) + gangPl(lo,la);
+    e += yzPlain(lo,la) + prPlain(lo,la);
+    // additional features
+    e += gobiDesert(lo,la) + seCoastalHills(lo,la);
+    // multi-octave noise: much more detail at high elevations (match reference sharp ridges)
+    const baseE = e;
+    e += (fbm(lo*0.2+10,la*0.2+20,4)-0.5)*450;
+    e += (fbm(lo*0.6+50,la*0.6+60,3)-0.5)*250;
+    // High-frequency detail noise: much stronger at high elevation for ridge/valley texture
+    const hfAmp = baseE > 2000 ? 450 + (baseE-2000)*0.15 : baseE > 500 ? 150 : 40;
+    e += (fbm(lo*1.5+100,la*1.5+200,3)-0.5)*hfAmp;
+    e += (fbm(lo*3.5+77,la*3.5+133,2)-0.5)*(hfAmp*0.5);
+    // Extra sharp ridgeline detail for mountain ranges
+    if(baseE > 3000){
+        const ridgeN = fbm(lo*5+200,la*5+300,2);
+        e += (ridgeN > 0.55 ? (ridgeN-0.55)*1200 : ridgeN < 0.45 ? (ridgeN-0.45)*800 : 0);
+    }
+    return Math.max(e, 2);
+}
+
+/* ═══════════════ COLOR SYSTEM ═══════════════ */
+/*
+ * Matched to reference image style:
+ * - Vivid bright greens for lowlands
+ * - Light cyan/blue ocean
+ * - Warm tan/brown for mid-to-high elevations
+ * - Dark chocolate brown for plateau surface & ridges
+ * - Yellow-green transition zone
+ */
+const CS = [
+    [-1500,.55,.78,.88], [-600,.60,.82,.90], [-200,.65,.85,.92], [-30,.70,.88,.94],
+    [0,.15,.52,.15],  [50,.20,.58,.18], [100,.28,.64,.22], [200,.38,.70,.25],
+    [450,.50,.68,.25], [600,.58,.65,.26], [800,.64,.62,.26],
+    [1200,.70,.60,.28], [1600,.72,.56,.28],
+    [2000,.70,.55,.30], [2800,.65,.48,.28],
+    [3500,.58,.42,.26], [4200,.52,.38,.25],
+    [5000,.50,.36,.24], [5800,.58,.52,.46],
+    [6500,.72,.68,.62], [7500,.88,.86,.84], [9000,.98,.98,.97]
+];
+
+/* Special terrain type colors */
+const C_DESERT_SAND = [.82,.74,.52];
+const C_GOBI        = [.65,.58,.42];
+const C_LOESS       = [.70,.58,.34];
+const C_SICHUAN     = [.50,.42,.36];
+const C_TROPICAL    = [.15,.50,.18];
+const C_RIVER       = [.30,.55,.68];
+
+function interpolateCS(el){
+    for(let i=0;i<CS.length-1;i++){
+        if(el<=CS[i+1][0]){
+            const t=clamp((el-CS[i][0])/(CS[i+1][0]-CS[i][0]),0,1);
+            return [lerp(CS[i][1],CS[i+1][1],t),lerp(CS[i][2],CS[i+1][2],t),lerp(CS[i][3],CS[i+1][3],t)];
+        }
+    }
+    return [.98,.98,.97];
+}
+
+function elevColor(el,lo,la){
+    let [r,g,b] = interpolateCS(el);
+
+    /* terrain type overlays */
+    const takl=getTaklDesert(lo,la);
+    if(takl>0){ r=lerp(r,C_DESERT_SAND[0],takl*.8); g=lerp(g,C_DESERT_SAND[1],takl*.8); b=lerp(b,C_DESERT_SAND[2],takl*.8); }
+    const gobi=getGobiDesert(lo,la);
+    if(gobi>0){ r=lerp(r,C_GOBI[0],gobi*.65); g=lerp(g,C_GOBI[1],gobi*.65); b=lerp(b,C_GOBI[2],gobi*.65); }
+    const loess=getLoessPlatType(lo,la);
+    if(loess>0){ r=lerp(r,C_LOESS[0],loess*.6); g=lerp(g,C_LOESS[1],loess*.6); b=lerp(b,C_LOESS[2],loess*.6); }
+    const sich=getSichuanBasinType(lo,la);
+    if(sich>0){ r=lerp(r,C_SICHUAN[0],sich*.5); g=lerp(g,C_SICHUAN[1],sich*.5); b=lerp(b,C_SICHUAN[2],sich*.5); }
+    const trop=getTropicalType(lo,la);
+    if(trop>0&&el>0&&el<500){ r=lerp(r,C_TROPICAL[0],trop*.4); g=lerp(g,C_TROPICAL[1],trop*.4); b=lerp(b,C_TROPICAL[2],trop*.4); }
+    const river=getRiverFactor(lo,la);
+    if(river>0&&el>0){ r=lerp(r,C_RIVER[0],river); g=lerp(g,C_RIVER[1],river); b=lerp(b,C_RIVER[2],river); }
+
+    /* Color noise for surface texture (stronger at higher elevations) */
+    const texAmp = el>500 ? 0.08+clamp((el-500)/5000,0,0.1) : 0.03;
+    const cn=(fbm(lo*3+300,la*3+400,2)-0.5)*texAmp;
+    r=clamp(r+cn,0,1); g=clamp(g+cn*0.8,0,1); b=clamp(b+cn*0.6,0,1);
+
+    return new THREE.Color(r,g,b);
+}
+
+/* ═══════════════ THREE.JS SCENE ═══════════════ */
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping = THREE.LinearToneMapping;
+renderer.toneMappingExposure = 1.0;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x5a5a5e);
+scene.fog = new THREE.FogExp2(0x5a5a5e, 0.003);
+
+const camera = new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.1,600);
+camera.position.set(30,38,50);
+
+const labelR = new CSS2DRenderer();
+labelR.setSize(innerWidth,innerHeight);
+labelR.domElement.style.cssText='position:absolute;top:0;left:0;pointer-events:none;';
+document.body.appendChild(labelR.domElement);
+
+const ctrl = new OrbitControls(camera,renderer.domElement);
+ctrl.enableDamping=true; ctrl.dampingFactor=0.06;
+ctrl.minDistance=12; ctrl.maxDistance=130;
+ctrl.maxPolarAngle=Math.PI/2.15;
+ctrl.target.set(5,0,-5);
+
+/* lighting - bright, high-contrast like reference image */
+scene.add(new THREE.AmbientLight(0xcccccc,0.8));
+const sun=new THREE.DirectionalLight(0xffffff,1.6);
+sun.position.set(25,70,30);
+scene.add(sun);
+const fill1=new THREE.DirectionalLight(0xdddddd,0.5);
+fill1.position.set(-35,50,-10);scene.add(fill1);
+const fill2=new THREE.DirectionalLight(0xcccccc,0.35);
+fill2.position.set(-15,30,40);scene.add(fill2);
+const backLight=new THREE.DirectionalLight(0xaaaaaa,0.3);
+backLight.position.set(5,40,-45);scene.add(backLight);
+const hemi=new THREE.HemisphereLight(0xeeeeff,0x556644,0.5);scene.add(hemi);
+
+/* ═══════════════ GENERATE TERRAIN ═══════════════ */
+const bar=document.getElementById('bar'), msg=document.getElementById('load-msg');
+
+async function buildTerrain(){
+    msg.textContent='生成地形高程数据...'; bar.style.width='5%';
+    await tick();
+    const geo=new THREE.PlaneGeometry(TW,TH,GW,GH);
+    geo.rotateX(-Math.PI/2);
+    const pos=geo.attributes.position.array;
+    const vc=pos.length/3;
+    const colors=new Float32Array(pos.length);
+    const elevArr=new Float32Array(vc);
+    const batch=Math.floor(vc/20);
+
+    for(let i=0;i<vc;i++){
+        const x=pos[i*3], z=pos[i*3+2];
+        const [lo,la]=w2g(x,z);
+        const el=getElev(lo,la);
+        elevArr[i]=el;
+        pos[i*3+1]=el*ES;
+        const c=elevColor(el,lo,la);
+        colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+        if(i%batch===0){
+            bar.style.width=(5+(i/vc)*75)+'%';
+            await tick();
+        }
+    }
+    geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+    geo.computeVertexNormals();
+    msg.textContent='创建网格与海洋...'; bar.style.width='82%'; await tick();
+
+    const mat=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.receiveShadow=true;
+    scene.add(mesh);
+
+    /* water surface */
+    const wGeo=new THREE.PlaneGeometry(TW+30,TH+30,64,48);
+    wGeo.rotateX(-Math.PI/2);
+    const wMat=new THREE.MeshPhongMaterial({
+        color:0x8ec8e0, transparent:true, opacity:0.72,
+        shininess:60, specular:0x88bbcc,
+        side:THREE.DoubleSide
+    });
+    const water=new THREE.Mesh(wGeo,wMat);
+    water.position.y=-0.02;
+    scene.add(water);
+
+    /* Edge boundary frame */
+    const edgePts=[
+        new THREE.Vector3(-TW/2,0.01,-TH/2),new THREE.Vector3(TW/2,0.01,-TH/2),
+        new THREE.Vector3(TW/2,0.01,TH/2),new THREE.Vector3(-TW/2,0.01,TH/2),
+        new THREE.Vector3(-TW/2,0.01,-TH/2)
+    ];
+    const edgeGeo=new THREE.BufferGeometry().setFromPoints(edgePts);
+    scene.add(new THREE.Line(edgeGeo,new THREE.LineBasicMaterial({color:0x1a3a5a,transparent:true,opacity:0.3})));
+
+    /* grid lines (subtle) */
+    addGridLines();
+    /* terrain step boundary hints */
+    addStepLines();
+    /* major rivers */
+    addRivers();
+
+    msg.textContent='添加标注...'; bar.style.width='92%'; await tick();
+    addLabels();
+
+    bar.style.width='100%'; msg.textContent='完成';
+    await new Promise(r=>setTimeout(r,400));
+    document.getElementById('loading').classList.add('done');
+
+    return {mesh,elevArr,water};
+}
+
+function tick(){ return new Promise(r=>setTimeout(r,0)); }
+
+/* ═══════════════ GRID LINES ═══════════════ */
+function addGridLines(){
+    const mat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.04});
+    // longitude lines every 10°
+    for(let lo=60;lo<=150;lo+=10){
+        const pts=[];
+        for(let la=LA0;la<=LA1;la+=0.5){
+            const [x,z]=g2w(lo,la);
+            pts.push(new THREE.Vector3(x,0.05,z));
+        }
+        const g=new THREE.BufferGeometry().setFromPoints(pts);
+        scene.add(new THREE.Line(g,mat));
+    }
+    // latitude lines every 10°
+    for(let la=0;la<=60;la+=10){
+        const pts=[];
+        for(let lo=LO0;lo<=LO1;lo+=0.5){
+            const [x,z]=g2w(lo,la);
+            pts.push(new THREE.Vector3(x,0.05,z));
+        }
+        const g=new THREE.BufferGeometry().setFromPoints(pts);
+        scene.add(new THREE.Line(g,mat));
+    }
+}
+
+/* ═══════════════ RIVERS ═══════════════ */
+function addRivers(){
+    const rMat=new THREE.LineBasicMaterial({color:0x2277bb,transparent:true,opacity:0.35,linewidth:1});
+    for(const key in RIVERS){
+        const pts=RIVERS[key].map(([lo,la])=>{
+            const [x,z]=g2w(lo,la);
+            const el=getElev(lo,la);
+            return new THREE.Vector3(x,Math.max(el*ES+0.08,0.08),z);
+        });
+        const geo=new THREE.BufferGeometry().setFromPoints(pts);
+        scene.add(new THREE.Line(geo,rMat));
+    }
+}
+
+/* ═══════════════ STEP BOUNDARY LINES ═══════════════ */
+function addStepLines(){
+    /* First step boundary (Tibetan Plateau edge): Kunlun-Qilian-Hengduan */
+    const step1=[[73,35],[78,31],[83,29],[88,28],[93,28.5],[97,29],[100,31],[101,33],[100,35],[98,36.5],[95,37],[90,37.5],[86,37],[82,36.5],[78,37],[74,37]];
+    const step1Mat=new THREE.LineBasicMaterial({color:0xff6600,transparent:true,opacity:0.12});
+    const step1Pts=step1.map(([lo,la])=>{
+        const [x,z]=g2w(lo,la); const el=getElev(lo,la);
+        return new THREE.Vector3(x,el*ES+0.15,z);
+    });
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(step1Pts),step1Mat));
+
+    /* Second step boundary: Greater Khingan-Taihang-Wushan-Xuefeng */
+    const step2=[[119,51],[120,48],[120,45],[117,42],[115,40],[114,38],[113,36],[112,34],[110,32],[108,30],[106,28],[105,26]];
+    const step2Mat=new THREE.LineBasicMaterial({color:0x44aa44,transparent:true,opacity:0.12});
+    const step2Pts=step2.map(([lo,la])=>{
+        const [x,z]=g2w(lo,la); const el=getElev(lo,la);
+        return new THREE.Vector3(x,el*ES+0.15,z);
+    });
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(step2Pts),step2Mat));
+}
+
+/* ═══════════════ LABELS ═══════════════ */
+function mkLabel(txt,lo,la,elev,cls=''){
+    const d=document.createElement('div');
+    d.className='tlabel '+cls;
+    d.textContent=txt;
+    const lb=new CSS2DObject(d);
+    const [x,z]=g2w(lo,la);
+    lb.position.set(x,Math.max(elev*ES+0.6,0.6),z);
+    scene.add(lb);
+    /* big/country labels visible from far, detail labels need zoom */
+    const isBig=cls.includes('big')||cls.includes('country')||cls.includes('sea');
+    const isDetail=cls.includes('river')||cls.includes('desert');
+    allLabels.push({obj:lb, minDist:isBig?10:isDetail?8:8, maxDist:isBig?120:isDetail?70:80});
+    return lb;
+}
+
+function addLabels(){
+    /* 国家 */
+    mkLabel('中 国',105,35,1600,'big');
+    mkLabel('蒙 古',105,47,1400,'country');
+    mkLabel('俄 罗 斯',110,57,400,'country');
+    mkLabel('印 度',79,22,400,'country');
+    mkLabel('哈萨克斯坦',68,48,500,'country');
+    mkLabel('缅 甸',97,19,300,'country');
+    mkLabel('泰 国',101,13,200,'country');
+    mkLabel('越 南',107.5,16,300,'country');
+    mkLabel('日 本',139,37,900,'country');
+    mkLabel('韩 国',127.5,36,350,'country');
+    mkLabel('朝 鲜',127,39.5,350,'country');
+    mkLabel('巴基斯坦',69,30,600,'country');
+    mkLabel('尼泊尔',84,28.5,3500,'country');
+    mkLabel('不 丹',90,27.5,2500,'country');
+    mkLabel('孟加拉国',90,24,200,'country');
+    mkLabel('老 挝',103,18,300,'country');
+    mkLabel('柬埔寨',105,12,150,'country');
+    mkLabel('阿富汗',66,34,1500,'country');
+    mkLabel('台 湾',121,24,500,'country');
+
+    /* 山脉 */
+    mkLabel('喜马拉雅山脉',83,29,7000,'mtn');
+    mkLabel('珠穆朗玛峰 8849m',87,28,8500,'mtn');
+    mkLabel('昆仑山脉',86,36.5,5200,'mtn');
+    mkLabel('天山山脉',80,42.5,4800,'mtn');
+    mkLabel('秦 岭',108,34,2800,'mtn');
+    mkLabel('大兴安岭',121,48,1300,'mtn');
+    mkLabel('太行山',114.5,38,1800,'mtn');
+    mkLabel('横断山脉',99,28.5,4200,'mtn');
+    mkLabel('阿尔泰山',87,48.5,2800,'mtn');
+    mkLabel('喀喇昆仑山',75,37.5,4500,'mtn');
+    mkLabel('兴都库什山',67,37,3800,'mtn');
+    mkLabel('帕米尔高原',72,40,4500,'mtn');
+    mkLabel('长白山',128,42,1600,'mtn');
+    mkLabel('南 岭',113,25,1200,'mtn');
+    mkLabel('武夷山',118,27,1000,'mtn');
+    mkLabel('祁连山',99,38,3000,'mtn');
+    mkLabel('阴 山',110,41.5,1600,'mtn');
+
+    /* 高原 */
+    mkLabel('青 藏 高 原',88,33,5000,'plateau');
+    mkLabel('内蒙古高原',112,43.5,1600,'plateau');
+    mkLabel('黄土高原',108,37,1800,'plateau');
+    mkLabel('云贵高原',103,25.5,2400,'plateau');
+    mkLabel('德干高原',77,15,900,'plateau');
+
+    /* 盆地 */
+    mkLabel('塔里木盆地',80,40.5,1400,'basin');
+    mkLabel('准噶尔盆地',85,45.5,1000,'basin');
+    mkLabel('四川盆地',105.5,30,600,'basin');
+    mkLabel('吐鲁番盆地',89,42.8,300,'basin');
+    mkLabel('柴达木盆地',95,37,3000,'basin');
+
+    /* 平原 */
+    mkLabel('东北平原',126,45.5,200,'plain');
+    mkLabel('华北平原',116.5,36.5,200,'plain');
+    mkLabel('长江中下游平原',117,30,200,'plain');
+    mkLabel('恒河平原',81,27,200,'plain');
+
+    /* 河流 */
+    mkLabel('长  江',111,30.5,300,'river');
+    mkLabel('黄  河',108,38,800,'river');
+    mkLabel('珠  江',110,23,200,'river');
+    mkLabel('黑龙江',130,48,300,'river');
+    mkLabel('湄公河',100,20,300,'river');
+    mkLabel('恒  河',84,26.5,200,'river');
+    mkLabel('印度河',70,29,300,'river');
+
+    /* 沙漠 */
+    mkLabel('塔克拉玛干沙漠',82,39.5,1200,'desert');
+    mkLabel('戈 壁',105,44,1200,'desert');
+
+    /* 海洋 */
+    mkLabel('太  平  洋',142,22,0,'sea');
+    mkLabel('南  海',115,14,0,'sea');
+    mkLabel('东  海',126,28,0,'sea');
+    mkLabel('黄  海',123.5,35.5,0,'sea');
+    mkLabel('日 本 海',135,41,0,'sea');
+    mkLabel('渤  海',119.5,38.8,0,'sea');
+    mkLabel('孟加拉湾',87,12,0,'sea');
+    mkLabel('阿拉伯海',66,16,0,'sea');
+    mkLabel('印 度 洋',80,3,0,'sea');
+    mkLabel('鄂霍次克海',148,52,0,'sea');
+}
+
+/* ═══════════════ RAYCASTER / TOOLTIP ═══════════════ */
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+const tooltip=document.getElementById('tooltip');
+const cursorRow=document.getElementById('cursor-row');
+const cursorVal=document.getElementById('cursor-val');
+let terrainMesh=null, elevData=null;
+
+renderer.domElement.addEventListener('mousemove',e=>{
+    mouse.x=(e.clientX/innerWidth)*2-1;
+    mouse.y=-(e.clientY/innerHeight)*2+1;
+    if(!terrainMesh) return;
+    raycaster.setFromCamera(mouse,camera);
+    const hits=raycaster.intersectObject(terrainMesh);
+    if(hits.length){
+        const p=hits[0].point;
+        const [lo,la]=w2g(p.x,p.z);
+        const el=p.y/ES;
+        tooltip.style.display='block';
+        tooltip.style.left=(e.clientX+14)+'px';
+        tooltip.style.top=(e.clientY+14)+'px';
+        tooltip.textContent=`${lo.toFixed(1)}°E, ${la.toFixed(1)}°N | 海拔 ${Math.round(el)}m`;
+        cursorRow.style.display='flex';
+        cursorVal.textContent=`${lo.toFixed(1)}°E ${la.toFixed(1)}°N  ${Math.round(el)}m`;
+    } else {
+        tooltip.style.display='none';
+        cursorRow.style.display='none';
+    }
+});
+renderer.domElement.addEventListener('mouseleave',()=>{
+    tooltip.style.display='none';
+    cursorRow.style.display='none';
+});
+
+/* ═══════════════ RESIZE ═══════════════ */
+window.addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+    labelR.setSize(innerWidth,innerHeight);
+});
+
+/* ═══════════════ LABEL DISTANCE MANAGEMENT ═══════════════ */
+const allLabels=[];
+function updateLabelVisibility(){
+    const camPos=camera.position;
+    const dist=camPos.length();
+    allLabels.forEach(({obj,minDist,maxDist})=>{
+        const d=camPos.distanceTo(obj.position);
+        const el=obj.element;
+        if(dist<minDist||dist>maxDist){
+            el.style.opacity='0';
+        } else {
+            const fadeIn=ss(minDist,minDist+5,dist);
+            const fadeOut=ss(maxDist,maxDist-10,dist);
+            el.style.opacity=String(Math.min(fadeIn,fadeOut));
+        }
+    });
+}
+
+/* ═══════════════ ANIMATE ═══════════════ */
+let waterRef=null;
+let frameCount=0;
+function animate(t=0){
+    requestAnimationFrame(animate);
+    ctrl.update();
+    frameCount++;
+    /* gentle water animation */
+    if(waterRef){
+        const wp=waterRef.geometry.attributes.position.array;
+        const wc=wp.length/3;
+        for(let i=0;i<wc;i++){
+            wp[i*3+1]=Math.sin(t*0.0008+wp[i*3]*0.15)*0.03+Math.cos(t*0.0006+wp[i*3+2]*0.12)*0.02-0.02;
+        }
+        waterRef.geometry.attributes.position.needsUpdate=true;
+    }
+    /* update label visibility every 10 frames */
+    if(frameCount%10===0) updateLabelVisibility();
+    renderer.render(scene,camera);
+    labelR.render(scene,camera);
+}
+
+/* ═══════════════ INIT ═══════════════ */
+buildTerrain().then(res=>{
+    terrainMesh=res.mesh;
+    elevData=res.elevArr;
+    waterRef=res.water;
+    animate();
+});
+
+</script>
+</body>
+</html>

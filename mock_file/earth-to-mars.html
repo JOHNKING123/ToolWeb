@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星际飞船 - 地球前往火星</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; font-family: 'Segoe UI', 'PingFang SC', sans-serif; color: #fff; }
+  #container { width: 100vw; height: 100vh; }
+
+  /* 加载界面 */
+  #loading {
+    position: fixed; inset: 0; z-index: 100;
+    background: radial-gradient(ellipse at center, #0a0a2a 0%, #020210 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.8s ease;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  #loading h2 {
+    font-size: 24px; color: #ff8844; margin-bottom: 8px; font-weight: 300;
+    letter-spacing: 4px;
+  }
+  #loading .subtitle { font-size: 13px; color: #667; margin-bottom: 24px; letter-spacing: 2px; }
+  #progress-bar {
+    width: 300px; height: 3px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; overflow: hidden;
+  }
+  #progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #ff6633, #ff9944);
+    border-radius: 2px; transition: width 0.3s;
+  }
+  #progress-text { margin-top: 10px; font-size: 12px; color: #556; }
+
+  /* 信息面板 */
+  #info {
+    position: absolute; top: 20px; left: 20px;
+    background: rgba(5,5,20,0.7); padding: 16px 22px; border-radius: 14px;
+    font-size: 13px; line-height: 1.9; min-width: 240px;
+    backdrop-filter: blur(12px); border: 1px solid rgba(255,120,50,0.15);
+    pointer-events: none; user-select: none; z-index: 10;
+  }
+  #info h3 { font-size: 16px; margin-bottom: 8px; color: #ff9955; letter-spacing: 1px; }
+  #info .row { display: flex; justify-content: space-between; gap: 16px; }
+  #info .label { color: #7788aa; }
+  #info .value { color: #dde8ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #info .highlight { color: #ff9944; }
+  #info .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
+
+  /* 任务进度条 */
+  #mission-progress {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(5,5,20,0.7); padding: 12px 24px; border-radius: 30px;
+    backdrop-filter: blur(12px); border: 1px solid rgba(255,120,50,0.15);
+    display: flex; align-items: center; gap: 14px; z-index: 10;
+    pointer-events: none; user-select: none;
+  }
+  #mission-progress .prog-bar {
+    width: 200px; height: 6px; background: rgba(255,255,255,0.08);
+    border-radius: 3px; overflow: hidden; position: relative;
+  }
+  #mission-progress .prog-fill {
+    height: 100%; width: 0%; border-radius: 3px;
+    background: linear-gradient(90deg, #3388ff, #ff6633);
+    transition: width 0.3s;
+  }
+  #mission-progress .prog-text { font-size: 13px; color: #aab; white-space: nowrap; }
+  #mission-progress .prog-pct { color: #ff9944; font-weight: 700; font-size: 15px; min-width: 36px; }
+  .earth-dot { width: 10px; height: 10px; border-radius: 50%; background: #4488ff; border: 1px solid #6699ff; flex-shrink: 0; }
+  .mars-dot { width: 10px; height: 10px; border-radius: 50%; background: #cc4411; border: 1px solid #ee6633; flex-shrink: 0; }
+
+  /* 控制面板 */
+  #controls {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center;
+    background: rgba(5,5,20,0.7); padding: 10px 18px; border-radius: 14px;
+    backdrop-filter: blur(12px); border: 1px solid rgba(255,120,50,0.15);
+    z-index: 10;
+  }
+  .btn {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: #99aabb; padding: 7px 14px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; transition: all 0.2s; font-family: inherit; white-space: nowrap;
+  }
+  .btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+  .btn.active { background: rgba(255,130,50,0.2); border-color: rgba(255,130,50,0.4); color: #ffaa66; }
+  .btn.success { background: rgba(50,180,80,0.2); border-color: rgba(50,180,80,0.4); color: #66dd88; }
+  .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.08); margin: 0 4px; }
+
+  /* 视角面板 */
+  #viewpoints {
+    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px;
+    background: rgba(5,5,20,0.7); padding: 10px; border-radius: 14px;
+    backdrop-filter: blur(12px); border: 1px solid rgba(255,120,50,0.15);
+    z-index: 10;
+  }
+  .view-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    color: #8899aa; padding: 8px 14px; border-radius: 10px; cursor: pointer;
+    font-size: 12px; transition: all 0.25s; font-family: inherit;
+    white-space: nowrap; text-align: left;
+  }
+  .view-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .view-btn.active { background: rgba(255,130,50,0.2); border-color: rgba(255,130,50,0.35); color: #ffaa66; }
+  .view-btn .icon { margin-right: 5px; }
+  #viewpoints .vp-label {
+    font-size: 10px; color: rgba(255,255,255,0.25); text-align: center;
+    padding-bottom: 4px; letter-spacing: 2px;
+  }
+
+  /* 飞船状态面板 */
+  #ship-status {
+    position: absolute; bottom: 20px; right: 20px;
+    background: rgba(5,5,20,0.7); padding: 14px 18px; border-radius: 14px;
+    backdrop-filter: blur(12px); border: 1px solid rgba(255,120,50,0.15);
+    z-index: 10; pointer-events: none; user-select: none; min-width: 180px;
+  }
+  #ship-status h4 { font-size: 13px; color: #ff9955; margin-bottom: 6px; letter-spacing: 1px; }
+  #ship-status .row { display: flex; justify-content: space-between; font-size: 12px; line-height: 1.8; gap: 12px; }
+  #ship-status .label { color: #667788; }
+  #ship-status .value { color: #ccddef; font-weight: 600; }
+
+  /* 事件通知 */
+  #event-log {
+    position: absolute; bottom: 80px; left: 20px;
+    display: flex; flex-direction: column; gap: 6px; z-index: 10;
+    pointer-events: none;
+  }
+  .event-msg {
+    background: rgba(5,5,20,0.8); padding: 8px 16px; border-radius: 10px;
+    border-left: 3px solid #ff8844; font-size: 12px; color: #ccd;
+    backdrop-filter: blur(8px); animation: slideIn 0.4s ease, fadeOut 0.6s ease 4s forwards;
+    max-width: 340px;
+  }
+  .event-msg.celebrate {
+    border-left-color: #44ff88;
+    background: rgba(10,30,15,0.85);
+    color: #aaffcc;
+  }
+  @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+  /* 到达庆祝 */
+  #celebration {
+    position: fixed; inset: 0; z-index: 50;
+    display: none; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  #celebration.show { display: flex; animation: celebFade 4s ease forwards; }
+  #celebration .msg {
+    font-size: 36px; font-weight: 300; color: #ff9944;
+    letter-spacing: 6px; text-shadow: 0 0 30px rgba(255,150,70,0.5);
+    animation: celebPulse 2s ease infinite;
+  }
+  @keyframes celebFade { 0%{opacity:0} 15%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+  @keyframes celebPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+  /* 提示 */
+  #tip {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 14px; color: rgba(255,255,255,0.3);
+    pointer-events: none; transition: opacity 2s;
+  }
+  #tip.hidden { opacity: 0; }
+</style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<div id="loading">
+  <h2>星 际 飞 船</h2>
+  <div class="subtitle">地球 → 火星 · 霍曼转移轨道</div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="progress-text">正在加载纹理...</div>
+</div>
+
+<div id="info">
+  <h3>🚀 地球→火星 任务</h3>
+  <div class="row"><span class="label">任务阶段</span><span class="value" id="phase">准备发射</span></div>
+  <div class="row"><span class="label">已飞行天数</span><span class="value" id="days">0 天</span></div>
+  <div class="row"><span class="label">总航程</span><span class="value">≈ 259 天</span></div>
+  <div class="divider"></div>
+  <div class="row"><span class="label">距地球</span><span class="value" id="dist-earth">0 万km</span></div>
+  <div class="row"><span class="label">距火星</span><span class="value highlight" id="dist-mars">— 万km</span></div>
+  <div class="divider"></div>
+  <div class="row"><span class="label">飞船速度</span><span class="value" id="ship-speed">0 km/s</span></div>
+  <div class="row"><span class="label">燃料剩余</span><span class="value" id="fuel">100%</span></div>
+</div>
+
+<div id="mission-progress">
+  <div class="earth-dot"></div>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="mars-dot"></div>
+  <span class="prog-pct" id="prog-pct">0%</span>
+  <span class="prog-text" id="prog-label">准备发射</span>
+</div>
+
+<div id="controls">
+  <button class="btn" id="btn-launch">🚀 发射</button>
+  <div class="sep"></div>
+  <button class="btn speed-btn" data-speed="0.5">0.5x</button>
+  <button class="btn speed-btn active" data-speed="1">1x</button>
+  <button class="btn speed-btn" data-speed="3">3x</button>
+  <button class="btn speed-btn" data-speed="10">10x</button>
+  <button class="btn speed-btn" data-speed="30">30x</button>
+  <div class="sep"></div>
+  <button class="btn active" id="btn-orbit">轨道线</button>
+  <button class="btn active" id="btn-labels">标签</button>
+  <button class="btn" id="btn-trail">尾迹</button>
+</div>
+
+<div id="viewpoints">
+  <div class="vp-label">视 角</div>
+  <button class="view-btn active" data-view="overview"><span class="icon">🌌</span>任务总览</button>
+  <button class="view-btn" data-view="follow"><span class="icon">🚀</span>跟随飞船</button>
+  <button class="view-btn" data-view="cockpit"><span class="icon">🎯</span>驾驶舱</button>
+  <button class="view-btn" data-view="earth"><span class="icon">🌍</span>地球视角</button>
+  <button class="view-btn" data-view="mars"><span class="icon">🔴</span>火星视角</button>
+  <button class="view-btn" data-view="top"><span class="icon">📡</span>俯视全局</button>
+  <button class="view-btn" data-view="side"><span class="icon">🛰️</span>侧面视角</button>
+</div>
+
+<div id="ship-status">
+  <h4>🛸 飞船状态</h4>
+  <div class="row"><span class="label">引擎</span><span class="value" id="engine-state">待命</span></div>
+  <div class="row"><span class="label">姿态</span><span class="value" id="attitude">正常</span></div>
+  <div class="row"><span class="label">通信延迟</span><span class="value" id="comm-delay">0.0 s</span></div>
+  <div class="row"><span class="label">船体温度</span><span class="value" id="hull-temp">22 °C</span></div>
+</div>
+
+<div id="event-log"></div>
+
+<div id="celebration"><div class="msg">🎉 火星，我们到了！</div></div>
+
+<div id="tip">拖拽旋转视角 · 滚轮缩放 · 点击发射开始任务</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ===================== 常量 =====================
+const EARTH_RADIUS = 4;
+const MARS_RADIUS = 2.2;
+const SUN_RADIUS = 12;
+
+const EARTH_ORBIT_R = 80;
+const MARS_ORBIT_R = 122;
+
+// 公转速度（弧度/模拟天，1x速度下1秒≈1天）
+const EARTH_ORBIT_SPEED = (2 * Math.PI) / 365;
+const MARS_ORBIT_SPEED  = (2 * Math.PI) / 687;
+
+// 霍曼转移
+const TRANSFER_SEMI_MAJOR  = (EARTH_ORBIT_R + MARS_ORBIT_R) / 2;
+const TRANSFER_ECCENTRICITY = (MARS_ORBIT_R - EARTH_ORBIT_R) / (MARS_ORBIT_R + EARTH_ORBIT_R);
+const TRANSFER_DAYS = 259; // 霍曼转移半周期 ≈ π * sqrt(a^3 / μ)
+
+// ===== 正确计算火星初始角度以匹配发射窗口 =====
+// 飞船转移 π 弧度（半椭圆），火星在此期间公转 TRANSFER_DAYS × MARS_ORBIT_SPEED
+// 发射时地球在 0°，到达时飞船在 π 弧度
+// 火星也必须在到达时位于 π 弧度 → 发射时火星角度 = π - TRANSFER_DAYS × MARS_ORBIT_SPEED
+const MARS_TRANSFER_MOTION = TRANSFER_DAYS * MARS_ORBIT_SPEED;
+const MARS_LAUNCH_ANGLE = Math.PI - MARS_TRANSFER_MOTION; // ≈ 0.77 rad
+
+// 距离比例
+const SCENE_TO_WANKM = 14960 / EARTH_ORBIT_R; // 1场景单位 ≈ 多少万km
+
+// 地轴/火轴倾斜
+const EARTH_TILT = 23.44 * Math.PI / 180;
+const MARS_TILT  = 25.19 * Math.PI / 180;
+
+// 纹理
+const TEX_BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r162/examples/textures/';
+const WIKI_TEX = 'https://upload.wikimedia.org/wikipedia/commons/thumb/';
+const TEXTURES = {
+  earthDay:    TEX_BASE + 'planets/earth_atmos_2048.jpg',
+  earthNormal: TEX_BASE + 'planets/earth_normal_2048.jpg',
+  earthSpec:   TEX_BASE + 'planets/earth_specular_2048.jpg',
+  earthClouds: TEX_BASE + 'planets/earth_clouds_1024.png',
+  earthNight:  TEX_BASE + 'planets/earth_lights_2048.png',
+  mars:        WIKI_TEX + '4/46/Solarsystemscope_texture_2k_mars.jpg/1024px-Solarsystemscope_texture_2k_mars.jpg',
+  sun:         WIKI_TEX + 'c/cb/Solarsystemscope_texture_2k_sun.jpg/512px-Solarsystemscope_texture_2k_sun.jpg',
+};
+
+// ===================== 状态 =====================
+let speedMultiplier = 1;
+let missionTime = 0;
+let missionStarted = false;
+let missionComplete = false;
+let showOrbits = true, showLabels = true, showTrail = false;
+
+let earthAngle = 0;
+let marsAngle = MARS_LAUNCH_ANGLE;  // ← 修正：正确的发射窗口位置
+
+let shipProgress = 0;
+let launchEarthAngle = 0;
+
+// ===================== 场景 =====================
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 10000);
+cam.position.set(60, 100, 160);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.getElementById('container').appendChild(renderer.domElement);
+
+const orbitCtrl = new OrbitControls(cam, renderer.domElement);
+orbitCtrl.enableDamping = true;
+orbitCtrl.dampingFactor = 0.06;
+orbitCtrl.minDistance = 8;
+orbitCtrl.maxDistance = 400;
+orbitCtrl.enablePan = true;
+orbitCtrl.autoRotate = true;
+orbitCtrl.autoRotateSpeed = 0.15;
+
+// ===================== 纹理加载 =====================
+const loadMgr = new THREE.LoadingManager();
+const pFill = document.getElementById('progress-fill');
+const pText = document.getElementById('progress-text');
+
+loadMgr.onProgress = (url, loaded, total) => {
+  pFill.style.width = ((loaded / total) * 100) + '%';
+  pText.textContent = `加载中... ${Math.round((loaded / total) * 100)}%`;
+};
+loadMgr.onLoad = () => {
+  pText.textContent = '加载完成!';
+  setTimeout(() => document.getElementById('loading').classList.add('hidden'), 500);
+  setTimeout(() => document.getElementById('tip').classList.add('hidden'), 5000);
+};
+loadMgr.onError = () => {
+  pText.textContent = '部分纹理加载失败，使用备用方案';
+  setTimeout(() => document.getElementById('loading').classList.add('hidden'), 1500);
+};
+
+const tl = new THREE.TextureLoader(loadMgr);
+tl.crossOrigin = 'anonymous';
+function tex(url, cs) { const t = tl.load(url); if (cs) t.colorSpace = cs; return t; }
+
+const earthDayTex   = tex(TEXTURES.earthDay, THREE.SRGBColorSpace);
+const earthNormTex  = tex(TEXTURES.earthNormal);
+const earthSpecTex  = tex(TEXTURES.earthSpec);
+const earthCloudTex = tex(TEXTURES.earthClouds);
+const earthNightTex = tex(TEXTURES.earthNight, THREE.SRGBColorSpace);
+const marsTex       = tex(TEXTURES.mars, THREE.SRGBColorSpace);
+const sunTex        = tex(TEXTURES.sun, THREE.SRGBColorSpace);
+
+// ===================== 光照 =====================
+const sunLight = new THREE.PointLight(0xfff4e0, 3, 0, 0.5);
+sunLight.position.set(0, 0, 0);
+scene.add(sunLight);
+scene.add(new THREE.AmbientLight(0x111830, 0.6));
+
+// ===================== 辅助函数 =====================
+function makeGlowTex(size, stops) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  stops.forEach(s => g.addColorStop(s[0], s[1]));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
+function createLabel(text, scale = 1) {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 64;
+  const cx = cv.getContext('2d');
+  cx.font = 'bold 26px "Segoe UI","PingFang SC",sans-serif';
+  cx.textAlign = 'center';
+  cx.fillStyle = 'rgba(220,230,255,0.9)';
+  cx.fillText(text, 128, 42);
+  const t = new THREE.CanvasTexture(cv);
+  const m = new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false });
+  const s = new THREE.Sprite(m);
+  s.scale.set(8 * scale, 2 * scale, 1);
+  return s;
+}
+
+function createOrbitLine(radius, color, opacity) {
+  const pts = [];
+  for (let i = 0; i <= 128; i++) {
+    const a = (i / 128) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+  }
+  return new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+  );
+}
+
+function fmtDist(wanKm) {
+  const v = Math.round(wanKm);
+  if (v >= 10000) return (v / 10000).toFixed(2) + ' 亿km';
+  return v.toLocaleString() + ' 万km';
+}
+
+// ===================== 太阳 =====================
+const sunGeo = new THREE.SphereGeometry(SUN_RADIUS, 48, 48);
+const sunMesh = new THREE.Mesh(sunGeo, new THREE.MeshBasicMaterial({ map: sunTex, color: 0xfff8e0 }));
+scene.add(sunMesh);
+
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: makeGlowTex(256, [
+    [0,'rgba(255,240,200,0.6)'],[0.15,'rgba(255,200,80,0.2)'],
+    [0.4,'rgba(255,150,30,0.05)'],[1,'rgba(0,0,0,0)']
+  ]),
+  blending: THREE.AdditiveBlending, depthTest: false, transparent: true,
+}));
+sunGlow.scale.set(80, 80, 1);
+scene.add(sunGlow);
+
+const sunLabel = createLabel('☀ 太阳', 1.1);
+sunLabel.position.set(0, -SUN_RADIUS - 3, 0);
+scene.add(sunLabel);
+
+// ===================== 地球 =====================
+const earthGroup = new THREE.Group();
+scene.add(earthGroup);
+
+const earthBody = new THREE.Group();
+earthBody.rotation.z = EARTH_TILT;
+
+// 地球表面（带法线 + 高光）
+const earthMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_RADIUS, 64, 64),
+  new THREE.MeshPhongMaterial({
+    map: earthDayTex, normalMap: earthNormTex,
+    normalScale: new THREE.Vector2(0.6, 0.6),
+    specularMap: earthSpecTex,
+    specular: new THREE.Color(0x222222), shininess: 15,
+  })
+);
+earthBody.add(earthMesh);
+
+// 地球夜面灯光（ShaderMaterial，仅暗面可见）
+const nightMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_RADIUS * 1.002, 64, 64),
+  new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec2 vUv; varying vec3 vWorldNormal;
+      void main() {
+        vUv = uv;
+        vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      uniform sampler2D nightTex; uniform vec3 sunDir;
+      varying vec2 vUv; varying vec3 vWorldNormal;
+      void main() {
+        float dotNL = dot(vWorldNormal, sunDir);
+        float nightFactor = smoothstep(0.1, -0.25, dotNL);
+        vec4 lights = texture2D(nightTex, vUv);
+        vec3 warm = lights.rgb * vec3(1.0, 0.85, 0.6) * 2.5;
+        float a = max(lights.r, max(lights.g, lights.b)) * nightFactor * 0.9;
+        gl_FragColor = vec4(warm, a);
+      }`,
+    uniforms: {
+      nightTex: { value: earthNightTex },
+      sunDir: { value: new THREE.Vector3(1, 0, 0) } // 会动态更新
+    },
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  })
+);
+earthBody.add(nightMesh);
+
+// 云层
+const cloudMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_RADIUS * 1.008, 64, 64),
+  new THREE.MeshPhongMaterial({
+    map: earthCloudTex, transparent: true, opacity: 0.32,
+    depthWrite: false, side: THREE.DoubleSide,
+  })
+);
+earthBody.add(cloudMesh);
+
+// 大气层
+const earthAtmos = new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_RADIUS * 1.15, 64, 64),
+  new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec3 vNormal; varying vec3 vPos;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vPos = (modelViewMatrix * vec4(position,1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+      }`,
+    fragmentShader: `
+      varying vec3 vNormal; varying vec3 vPos;
+      void main() {
+        vec3 viewDir = normalize(-vPos);
+        float rim = 1.0 - max(dot(vNormal, viewDir), 0.0);
+        float intensity = pow(rim, 2.8) * 0.55;
+        vec3 col = mix(vec3(0.15, 0.45, 1.0), vec3(0.35, 0.65, 1.0), rim);
+        gl_FragColor = vec4(col, intensity);
+      }`,
+    transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending,
+  })
+);
+earthBody.add(earthAtmos);
+
+earthGroup.add(earthBody);
+
+const earthLabel = createLabel('🌍 地球', 0.9);
+earthLabel.position.set(0, -EARTH_RADIUS - 2.5, 0);
+earthBody.add(earthLabel);
+
+// ===================== 火星 =====================
+const marsGroup = new THREE.Group();
+scene.add(marsGroup);
+
+const marsBody = new THREE.Group();
+marsBody.rotation.z = MARS_TILT;
+
+const marsMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(MARS_RADIUS, 48, 48),
+  new THREE.MeshPhongMaterial({ map: marsTex, shininess: 3 })
+);
+marsBody.add(marsMesh);
+
+// 火星稀薄大气
+const marsAtmos = new THREE.Mesh(
+  new THREE.SphereGeometry(MARS_RADIUS * 1.06, 48, 48),
+  new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec3 vNormal; varying vec3 vPos;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vPos = (modelViewMatrix * vec4(position,1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+      }`,
+    fragmentShader: `
+      varying vec3 vNormal; varying vec3 vPos;
+      void main() {
+        vec3 viewDir = normalize(-vPos);
+        float rim = 1.0 - max(dot(vNormal, viewDir), 0.0);
+        float intensity = pow(rim, 4.0) * 0.25;
+        gl_FragColor = vec4(0.8, 0.4, 0.2, intensity);
+      }`,
+    transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending,
+  })
+);
+marsBody.add(marsAtmos);
+marsGroup.add(marsBody);
+
+const marsLabel = createLabel('🔴 火星', 0.75);
+marsLabel.position.set(0, -MARS_RADIUS - 2, 0);
+marsBody.add(marsLabel);
+
+// ===================== 轨道线 =====================
+const earthOrbitLine = createOrbitLine(EARTH_ORBIT_R, 0x4488ff, 0.2);
+scene.add(earthOrbitLine);
+const marsOrbitLine = createOrbitLine(MARS_ORBIT_R, 0xcc4422, 0.2);
+scene.add(marsOrbitLine);
+
+// 转移轨道（动态生成）
+const transferGeo = new THREE.BufferGeometry();
+const transferLine = new THREE.Line(transferGeo, new THREE.LineDashedMaterial({
+  color: 0xff8844, dashSize: 2, gapSize: 1, transparent: true, opacity: 0.5,
+}));
+transferLine.visible = false;
+scene.add(transferLine);
+
+// ===================== 飞船 (精细模型) =====================
+const shipGroup = new THREE.Group();
+shipGroup.visible = false;
+scene.add(shipGroup);
+
+// 主体 - 锥形机身
+const fuselageGeo = new THREE.CylinderGeometry(0.25, 0.5, 2.2, 8);
+fuselageGeo.rotateX(Math.PI / 2);
+const fuselageMat = new THREE.MeshPhongMaterial({ color: 0xd0d0dd, emissive: 0x2a2a3a, shininess: 60 });
+shipGroup.add(new THREE.Mesh(fuselageGeo, fuselageMat));
+
+// 头锥
+const noseGeo = new THREE.ConeGeometry(0.25, 0.8, 8);
+noseGeo.rotateX(-Math.PI / 2);
+const noseMesh = new THREE.Mesh(noseGeo, new THREE.MeshPhongMaterial({ color: 0xe0e0ee, emissive: 0x333344, shininess: 80 }));
+noseMesh.position.z = 1.5;
+shipGroup.add(noseMesh);
+
+// 驾驶舱玻璃
+const cockpitGeo = new THREE.SphereGeometry(0.22, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
+cockpitGeo.rotateX(-Math.PI / 2);
+const cockpitMesh = new THREE.Mesh(cockpitGeo, new THREE.MeshPhongMaterial({
+  color: 0x66aaff, emissive: 0x1144aa, transparent: true, opacity: 0.75, shininess: 120,
+}));
+cockpitMesh.position.set(0, 0.28, 0.7);
+shipGroup.add(cockpitMesh);
+
+// 太阳能板（左右各一）
+const panelGeo = new THREE.BoxGeometry(0.05, 3.2, 0.9);
+const panelMat = new THREE.MeshPhongMaterial({ color: 0x1a2255, emissive: 0x0a1133, shininess: 30 });
+const panelFrameMat = new THREE.MeshPhongMaterial({ color: 0x888899, emissive: 0x222233 });
+
+// 左太阳能板
+const panelGroupL = new THREE.Group();
+const panelL = new THREE.Mesh(panelGeo, panelMat);
+panelGroupL.add(panelL);
+// 支架
+const strutGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.6, 4);
+const strutL = new THREE.Mesh(strutGeo, panelFrameMat);
+strutL.rotation.z = Math.PI / 2;
+panelGroupL.add(strutL);
+panelGroupL.position.set(0, 0, -0.2);
+panelGroupL.rotation.z = 0.05; // 微倾
+shipGroup.add(panelGroupL);
+
+// 右太阳能板
+const panelGroupR = panelGroupL.clone();
+panelGroupR.rotation.z = Math.PI + 0.05;
+shipGroup.add(panelGroupR);
+
+// 引擎喷嘴
+const nozzleGeo = new THREE.CylinderGeometry(0.35, 0.18, 0.5, 12);
+nozzleGeo.rotateX(Math.PI / 2);
+const nozzleMat = new THREE.MeshPhongMaterial({ color: 0x555566, emissive: 0x111122, shininess: 40 });
+const nozzleMesh = new THREE.Mesh(nozzleGeo, nozzleMat);
+nozzleMesh.position.z = -1.35;
+shipGroup.add(nozzleMesh);
+
+// 引擎内壁发光
+const nozzleInner = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.16, 0.3, 0.4, 12),
+  new THREE.MeshBasicMaterial({ color: 0xff6633 })
+);
+nozzleInner.geometry.rotateX(Math.PI / 2);
+nozzleInner.position.z = -1.35;
+shipGroup.add(nozzleInner);
+
+// 天线
+const antennaGeo = new THREE.CylinderGeometry(0.01, 0.01, 1.2, 4);
+const antennaMesh = new THREE.Mesh(antennaGeo, panelFrameMat);
+antennaMesh.position.set(0, 0.6, -0.3);
+antennaMesh.rotation.z = 0.3;
+shipGroup.add(antennaMesh);
+
+const dishGeo = new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.4);
+const dishMesh = new THREE.Mesh(dishGeo, new THREE.MeshPhongMaterial({ color: 0xcccccc, emissive: 0x333333, side: THREE.DoubleSide }));
+dishMesh.position.set(0, 1.2, -0.3);
+dishMesh.rotation.x = -0.5;
+shipGroup.add(dishMesh);
+
+// 引擎点光源
+const engineLight = new THREE.PointLight(0xff6633, 2, 20);
+engineLight.position.set(0, 0, -1.8);
+shipGroup.add(engineLight);
+
+// 引擎辉光精灵
+const engineGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: makeGlowTex(128, [
+    [0,'rgba(255,200,100,1)'],[0.15,'rgba(255,140,40,0.8)'],
+    [0.4,'rgba(255,80,15,0.25)'],[1,'rgba(0,0,0,0)']
+  ]),
+  blending: THREE.AdditiveBlending, depthTest: false, transparent: true,
+}));
+engineGlow.scale.set(3.5, 3.5, 1);
+engineGlow.position.set(0, 0, -1.8);
+shipGroup.add(engineGlow);
+
+// ===================== 引擎粒子系统 =====================
+const PARTICLE_COUNT = 400;
+const pPos = new Float32Array(PARTICLE_COUNT * 3);
+const pCol = new Float32Array(PARTICLE_COUNT * 3);
+const pSiz = new Float32Array(PARTICLE_COUNT);
+const pLife = new Float32Array(PARTICLE_COUNT);
+const pVel = new Float32Array(PARTICLE_COUNT * 3);
+for (let i = 0; i < PARTICLE_COUNT; i++) pLife[i] = -1;
+
+const particleGeo = new THREE.BufferGeometry();
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+particleGeo.setAttribute('size', new THREE.BufferAttribute(pSiz, 1));
+
+const particles = new THREE.Points(particleGeo, new THREE.ShaderMaterial({
+  vertexShader: `
+    attribute float size; varying vec3 vColor;
+    void main() {
+      vColor = color;
+      vec4 mvPos = modelViewMatrix * vec4(position,1.0);
+      gl_PointSize = size * (500.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+    }`,
+  fragmentShader: `
+    varying vec3 vColor;
+    void main() {
+      float d = length(gl_PointCoord - 0.5) * 2.0;
+      float a = 1.0 - smoothstep(0.0, 1.0, d);
+      gl_FragColor = vec4(vColor, a * 0.8);
+    }`,
+  transparent: true, depthWrite: false, vertexColors: true, blending: THREE.AdditiveBlending,
+}));
+scene.add(particles);
+
+let pIdx = 0;
+function emitParticle(pos, dir, sizeMult) {
+  const i = (pIdx++) % PARTICLE_COUNT;
+  pPos[i*3]=pos.x; pPos[i*3+1]=pos.y; pPos[i*3+2]=pos.z;
+  const sp = 0.35;
+  pVel[i*3]  = dir.x*(1.5+Math.random())+(Math.random()-0.5)*sp;
+  pVel[i*3+1]= dir.y*(1.5+Math.random())+(Math.random()-0.5)*sp;
+  pVel[i*3+2]= dir.z*(1.5+Math.random())+(Math.random()-0.5)*sp;
+  const h = Math.random();
+  pCol[i*3]=1.0; pCol[i*3+1]=0.4+h*0.4; pCol[i*3+2]=0.1+h*0.2;
+  pSiz[i] = (1.5 + Math.random()*2) * (sizeMult || 1);
+  pLife[i] = 1.0;
+}
+
+function updateParticles(dt) {
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    if (pLife[i] <= 0) continue;
+    pLife[i] -= dt * 2.5;
+    if (pLife[i] <= 0) { pSiz[i] = 0; continue; }
+    pPos[i*3]   += pVel[i*3]*dt;
+    pPos[i*3+1] += pVel[i*3+1]*dt;
+    pPos[i*3+2] += pVel[i*3+2]*dt;
+    pSiz[i] *= 0.97;
+    pCol[i*3+1] *= 0.995;
+    pCol[i*3+2] *= 0.99;
+  }
+  particleGeo.attributes.position.needsUpdate = true;
+  particleGeo.attributes.color.needsUpdate = true;
+  particleGeo.attributes.size.needsUpdate = true;
+}
+
+// ===================== 庆祝粒子爆发 =====================
+function celebrationBurst(pos) {
+  for (let i = 0; i < 80; i++) {
+    const dir = new THREE.Vector3(
+      (Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2
+    ).normalize().multiplyScalar(2 + Math.random()*3);
+    const ci = (pIdx++) % PARTICLE_COUNT;
+    pPos[ci*3]=pos.x; pPos[ci*3+1]=pos.y; pPos[ci*3+2]=pos.z;
+    pVel[ci*3]=dir.x; pVel[ci*3+1]=dir.y; pVel[ci*3+2]=dir.z;
+    const t = Math.random();
+    // 橙/金/绿随机色
+    if (t < 0.4) { pCol[ci*3]=1; pCol[ci*3+1]=0.7; pCol[ci*3+2]=0.1; }
+    else if (t < 0.7) { pCol[ci*3]=0.2; pCol[ci*3+1]=1; pCol[ci*3+2]=0.4; }
+    else { pCol[ci*3]=1; pCol[ci*3+1]=0.4; pCol[ci*3+2]=0.2; }
+    pSiz[ci] = 2 + Math.random()*3;
+    pLife[ci] = 1.2;
+  }
+}
+
+// ===================== 尾迹 =====================
+const MAX_TRAIL = 600;
+const trailPoints = [];
+const trailGeo2 = new THREE.BufferGeometry();
+const trailLine = new THREE.Line(trailGeo2, new THREE.LineBasicMaterial({
+  color: 0xff8844, transparent: true, opacity: 0.35,
+}));
+trailLine.visible = false;
+scene.add(trailLine);
+
+// ===================== 星空 =====================
+const starCount = 8000;
+const sP = new Float32Array(starCount*3), sC = new Float32Array(starCount*3), sS = new Float32Array(starCount);
+for (let i = 0; i < starCount; i++) {
+  const th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1), r = 1200+Math.random()*300;
+  sP[i*3]   = r*Math.sin(ph)*Math.cos(th);
+  sP[i*3+1] = r*Math.sin(ph)*Math.sin(th);
+  sP[i*3+2] = r*Math.cos(ph);
+  const ct = Math.random();
+  if(ct<0.6){sC[i*3]=0.95;sC[i*3+1]=0.95;sC[i*3+2]=1;}
+  else if(ct<0.8){sC[i*3]=1;sC[i*3+1]=0.85;sC[i*3+2]=0.6;}
+  else{sC[i*3]=0.6;sC[i*3+1]=0.7;sC[i*3+2]=1;}
+  sS[i] = Math.random()*2.2+0.5;
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(sP, 3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(sC, 3));
+starGeo.setAttribute('size', new THREE.BufferAttribute(sS, 1));
+scene.add(new THREE.Points(starGeo, new THREE.ShaderMaterial({
+  vertexShader: `attribute float size; varying vec3 vColor; void main(){vColor=color;vec4 mvP=modelViewMatrix*vec4(position,1.0);gl_PointSize=size*(900.0/-mvP.z);gl_Position=projectionMatrix*mvP;}`,
+  fragmentShader: `varying vec3 vColor; void main(){float d=length(gl_PointCoord-0.5)*2.0;float a=1.0-smoothstep(0.0,1.0,d);gl_FragColor=vec4(vColor,a);}`,
+  transparent: true, depthWrite: false, vertexColors: true, blending: THREE.AdditiveBlending,
+})));
+
+// ===================== 位置计算 =====================
+function getEarthPos() { return new THREE.Vector3(Math.cos(earthAngle)*EARTH_ORBIT_R, 0, Math.sin(earthAngle)*EARTH_ORBIT_R); }
+function getMarsPos()  { return new THREE.Vector3(Math.cos(marsAngle)*MARS_ORBIT_R, 0, Math.sin(marsAngle)*MARS_ORBIT_R); }
+
+function getShipPos(progress) {
+  const ta = progress * Math.PI;
+  const r = TRANSFER_SEMI_MAJOR * (1 - TRANSFER_ECCENTRICITY**2) / (1 + TRANSFER_ECCENTRICITY * Math.cos(ta));
+  const a = launchEarthAngle + ta;
+  return new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r);
+}
+
+// ===================== 事件 =====================
+function addEvent(msg, type) {
+  const el = document.createElement('div');
+  el.className = 'event-msg' + (type === 'celebrate' ? ' celebrate' : '');
+  el.textContent = msg;
+  document.getElementById('event-log').appendChild(el);
+  setTimeout(() => el.remove(), 5500);
+}
+
+// ===================== 相机动画 =====================
+let camAnim = null;
+function animateCamera(toPos, toTarget, dur, cb) {
+  camAnim = {
+    sP: cam.position.clone(), eP: new THREE.Vector3(...toPos),
+    sT: orbitCtrl.target.clone(), eT: new THREE.Vector3(...toTarget),
+    t0: performance.now(), dur, cb
+  };
+}
+function updateCamAnim() {
+  if (!camAnim) return;
+  let t = Math.min((performance.now() - camAnim.t0) / camAnim.dur, 1);
+  t = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+  cam.position.lerpVectors(camAnim.sP, camAnim.eP, t);
+  orbitCtrl.target.lerpVectors(camAnim.sT, camAnim.eT, t);
+  orbitCtrl.update();
+  if (t >= 1) { if(camAnim.cb) camAnim.cb(); camAnim = null; }
+}
+
+let currentView = 'overview';
+function setView(name) {
+  currentView = name;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+}
+
+// ===================== 重置任务 =====================
+function resetMission() {
+  missionStarted = false;
+  missionComplete = false;
+  missionTime = 0;
+  shipProgress = 0;
+  earthAngle = 0;
+  marsAngle = MARS_LAUNCH_ANGLE;
+  shipGroup.visible = false;
+  transferLine.visible = false;
+  trailLine.visible = false;
+  trailPoints.length = 0;
+  engineGlow.visible = true;
+  nozzleInner.visible = true;
+  triggeredMilestones.clear();
+
+  document.getElementById('btn-launch').textContent = '🚀 发射';
+  document.getElementById('btn-launch').classList.remove('active', 'success');
+  document.getElementById('phase').textContent = '准备发射';
+  document.getElementById('days').textContent = '0 天';
+  document.getElementById('dist-earth').textContent = '0 万km';
+  document.getElementById('dist-mars').textContent = '— 万km';
+  document.getElementById('ship-speed').textContent = '0 km/s';
+  document.getElementById('fuel').textContent = '100%';
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('prog-pct').textContent = '0%';
+  document.getElementById('prog-label').textContent = '准备发射';
+  document.getElementById('engine-state').textContent = '待命';
+  document.getElementById('attitude').textContent = '正常';
+  document.getElementById('comm-delay').textContent = '0.0 s';
+  document.getElementById('hull-temp').textContent = '22 °C';
+
+  setView('overview');
+  animateCamera([60,100,160],[0,0,0], 1000, () => { orbitCtrl.autoRotate = true; });
+}
+
+// ===================== UI 事件 =====================
+document.getElementById('btn-launch').addEventListener('click', () => {
+  if (missionComplete) {
+    resetMission();
+    return;
+  }
+  if (missionStarted) return;
+  missionStarted = true;
+  missionTime = 0;
+  shipProgress = 0;
+  launchEarthAngle = earthAngle;
+
+  // 重建转移轨道线（对齐发射位置）
+  const pts = [];
+  for (let i = 0; i <= 120; i++) {
+    const t = i/120, ta = t*Math.PI;
+    const r = TRANSFER_SEMI_MAJOR*(1-TRANSFER_ECCENTRICITY**2)/(1+TRANSFER_ECCENTRICITY*Math.cos(ta));
+    const a = launchEarthAngle + ta;
+    pts.push(new THREE.Vector3(Math.cos(a)*r, 0, Math.sin(a)*r));
+  }
+  transferGeo.setFromPoints(pts);
+  transferLine.computeLineDistances();
+  transferLine.visible = true;
+  shipGroup.visible = true;
+  trailPoints.length = 0;
+
+  document.getElementById('btn-launch').textContent = '✈ 飞行中';
+  document.getElementById('btn-launch').classList.add('active');
+
+  addEvent('🚀 飞船发射！开始霍曼转移轨道飞行');
+  addEvent('📡 地面控制：所有系统正常，祝旅途顺利');
+  setView('follow');
+});
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    speedMultiplier = parseFloat(btn.dataset.speed);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.getElementById('btn-orbit').addEventListener('click', function() {
+  showOrbits = !showOrbits; this.classList.toggle('active', showOrbits);
+  earthOrbitLine.visible = showOrbits; marsOrbitLine.visible = showOrbits;
+});
+document.getElementById('btn-labels').addEventListener('click', function() {
+  showLabels = !showLabels; this.classList.toggle('active', showLabels);
+  earthLabel.visible = showLabels; marsLabel.visible = showLabels; sunLabel.visible = showLabels;
+});
+document.getElementById('btn-trail').addEventListener('click', function() {
+  showTrail = !showTrail; this.classList.toggle('active', showTrail);
+  trailLine.visible = showTrail && missionStarted;
+});
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setView(btn.dataset.view);
+    orbitCtrl.autoRotate = false;
+    const v = btn.dataset.view;
+    if(v==='overview') animateCamera([60,100,160],[0,0,0],1200,()=>{orbitCtrl.autoRotate=true;});
+    else if(v==='top') animateCamera([0,250,1],[0,0,0],1200,()=>{orbitCtrl.autoRotate=true;});
+    else if(v==='side') animateCamera([250,5,0],[0,0,0],1200);
+    else if(v==='earth'){const e=getEarthPos();animateCamera([e.x+8,6,e.z+10],[e.x,0,e.z],1000);}
+    else if(v==='mars'){const m=getMarsPos();animateCamera([m.x+5,4,m.z+7],[m.x,0,m.z],1000);}
+  });
+});
+
+addEventListener('resize', () => {
+  cam.aspect = innerWidth/innerHeight; cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ===================== 里程碑 =====================
+const milestones = [
+  { day: 1,   msg: '📡 飞船成功进入霍曼转移轨道' },
+  { day: 10,  msg: '🌍 已飞离地球 500 万公里' },
+  { day: 30,  msg: '🛰️ 飞船越过月球轨道区域' },
+  { day: 50,  msg: '📡 通信延迟增加至 3 分钟' },
+  { day: 100, msg: '🔭 已完成航程近半' },
+  { day: 130, msg: '☀️ 飞船到达轨道远日点' },
+  { day: 180, msg: '🔴 火星在视野中逐渐变大' },
+  { day: 220, msg: '🔴 火星引力开始影响航线' },
+  { day: 250, msg: '🚀 准备减速制动进入火星轨道' },
+];
+const triggeredMilestones = new Set();
+
+// ===================== 动画循环 =====================
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const simDt = dt * speedMultiplier;
+
+  // 行星公转
+  earthAngle += EARTH_ORBIT_SPEED * simDt;
+  marsAngle  += MARS_ORBIT_SPEED * simDt;
+
+  const earthPos = getEarthPos();
+  const marsPos  = getMarsPos();
+  earthGroup.position.copy(earthPos);
+  marsGroup.position.copy(marsPos);
+
+  // 更新地球夜面灯光着色器的太阳方向
+  const sunDirFromEarth = earthPos.clone().negate().normalize();
+  nightMesh.material.uniforms.sunDir.value.copy(sunDirFromEarth);
+
+  // 自转
+  earthMesh.rotation.y += dt * 0.3 * speedMultiplier;
+  nightMesh.rotation.y = earthMesh.rotation.y;
+  cloudMesh.rotation.y += dt * 0.32 * speedMultiplier;
+  marsMesh.rotation.y += dt * 0.28 * speedMultiplier;
+  sunMesh.rotation.y += dt * 0.05;
+
+  // 太阳光晕脉动
+  const breathe = 1 + Math.sin(performance.now()*0.001)*0.03;
+  sunGlow.scale.set(80*breathe, 80*breathe, 1);
+
+  // ===== 飞船飞行 =====
+  if (missionStarted && !missionComplete) {
+    missionTime += simDt;
+    shipProgress = Math.min(missionTime / TRANSFER_DAYS, 1.0);
+
+    const shipPos = getShipPos(shipProgress);
+    shipGroup.position.copy(shipPos);
+
+    // 飞船朝向（沿轨道切线方向）
+    const nextPos = getShipPos(Math.min(shipProgress + 0.003, 1));
+    const tangent = nextPos.clone().sub(shipPos).normalize();
+    shipGroup.lookAt(shipPos.clone().add(tangent));
+
+    // === 引擎状态：根据阶段调节粒子 ===
+    let particlesPerFrame = 2;   // 巡航：低功率
+    let particleSizeMult = 1.0;
+    let glowScale = 2.5;
+    let lightIntensity = 1.5;
+
+    if (shipProgress < 0.05) {
+      // 加速逃逸：全功率
+      particlesPerFrame = 8;
+      particleSizeMult = 1.5;
+      glowScale = 5;
+      lightIntensity = 4;
+    } else if (shipProgress < 0.12) {
+      // 轨道注入
+      particlesPerFrame = 5;
+      particleSizeMult = 1.2;
+      glowScale = 4;
+      lightIntensity = 3;
+    } else if (shipProgress > 0.92) {
+      // 制动减速：全功率
+      particlesPerFrame = 8;
+      particleSizeMult = 1.5;
+      glowScale = 5;
+      lightIntensity = 4;
+    } else if (shipProgress > 0.82) {
+      // 接近火星
+      particlesPerFrame = 4;
+      particleSizeMult = 1.1;
+      glowScale = 3;
+      lightIntensity = 2;
+    }
+
+    const engineWorldPos = shipGroup.localToWorld(new THREE.Vector3(0, 0, -1.8));
+    const engineDir = tangent.clone().negate();
+    for (let i = 0; i < particlesPerFrame; i++) {
+      emitParticle(engineWorldPos, engineDir, particleSizeMult);
+    }
+
+    const pulse = 0.85 + Math.sin(performance.now()*0.01)*0.15;
+    engineGlow.scale.set(glowScale*pulse, glowScale*pulse, 1);
+    engineLight.intensity = lightIntensity * pulse;
+    nozzleInner.material.color.setHSL(0.06, 1, 0.4 + pulse*0.2);
+
+    // 尾迹
+    if (showTrail) {
+      trailPoints.push(shipPos.clone());
+      if (trailPoints.length > MAX_TRAIL) trailPoints.shift();
+      trailGeo2.setFromPoints(trailPoints);
+      trailLine.visible = true;
+    }
+
+    // === 距离计算 ===
+    const distToEarth = shipPos.distanceTo(earthPos) * SCENE_TO_WANKM;
+    const distToMars  = shipPos.distanceTo(marsPos)  * SCENE_TO_WANKM;
+
+    // 速度（霍曼转移椭圆 vis-viva 简化估算）
+    const rScene = shipPos.length();
+    const rAU = rScene / EARTH_ORBIT_R;
+    const vKms = Math.sqrt(29.78 * 29.78 * (2/rAU - 1/((EARTH_ORBIT_R+MARS_ORBIT_R)/(2*EARTH_ORBIT_R))));
+    const shipSpd = isNaN(vKms) ? 25 : vKms.toFixed(1);
+
+    // 通信延迟
+    const commDelay = (distToEarth * 10000 / 300000).toFixed(1);
+
+    // 燃料
+    let fuelPct = 100;
+    if (shipProgress < 0.05) fuelPct = 100 - shipProgress * 200;
+    else if (shipProgress < 0.12) fuelPct = 90 - (shipProgress - 0.05) * 100;
+    else if (shipProgress > 0.92) fuelPct = 17 - (shipProgress - 0.92) * 150;
+    else fuelPct = 83 - (shipProgress - 0.12) * 82.5;
+    fuelPct = Math.max(3, Math.min(100, fuelPct));
+
+    // 船体温度（近日点时更热）
+    const hullTemp = 22 + Math.sin(shipProgress * Math.PI) * 38
+      + (shipProgress < 0.05 || shipProgress > 0.92 ? 15 : 0);
+
+    // 任务阶段
+    let phase = '巡航阶段', engineState = '低功率';
+    if (shipProgress < 0.05) { phase = '加速逃逸'; engineState = '全功率 🔥'; }
+    else if (shipProgress < 0.12) { phase = '轨道注入'; engineState = '推进中'; }
+    else if (shipProgress > 0.92) { phase = '制动减速'; engineState = '全功率 🔥'; }
+    else if (shipProgress > 0.82) { phase = '接近火星'; engineState = '调姿中'; }
+
+    // 更新 UI
+    document.getElementById('days').textContent = Math.floor(missionTime) + ' 天';
+    document.getElementById('dist-earth').textContent = fmtDist(distToEarth);
+    document.getElementById('dist-mars').textContent = fmtDist(distToMars);
+    document.getElementById('ship-speed').textContent = shipSpd + ' km/s';
+    document.getElementById('fuel').textContent = Math.floor(fuelPct) + '%';
+    document.getElementById('prog-fill').style.width = (shipProgress*100) + '%';
+    document.getElementById('prog-pct').textContent = Math.floor(shipProgress*100) + '%';
+    document.getElementById('comm-delay').textContent = parseFloat(commDelay) > 60 ?
+      (parseFloat(commDelay)/60).toFixed(1) + ' min' : commDelay + ' s';
+    document.getElementById('hull-temp').textContent = hullTemp.toFixed(0) + ' °C';
+    document.getElementById('phase').textContent = phase;
+    document.getElementById('engine-state').textContent = engineState;
+    document.getElementById('attitude').textContent = shipProgress > 0.82 ? '调整中' : '稳定';
+    document.getElementById('prog-label').textContent = phase;
+
+    // 里程碑事件
+    for (const m of milestones) {
+      if (missionTime >= m.day && !triggeredMilestones.has(m.day)) {
+        triggeredMilestones.add(m.day);
+        addEvent(m.msg);
+      }
+    }
+
+    // === 任务完成 ===
+    if (shipProgress >= 1.0) {
+      missionComplete = true;
+      addEvent('🎉 飞船成功抵达火星轨道！任务圆满完成！', 'celebrate');
+      addEvent('🔴 火星，我们到了！开始环火星轨道插入', 'celebrate');
+      document.getElementById('phase').textContent = '🎉 任务完成！';
+      document.getElementById('engine-state').textContent = '已关闭';
+      document.getElementById('btn-launch').textContent = '🔄 重新发射';
+      document.getElementById('btn-launch').classList.remove('active');
+      document.getElementById('btn-launch').classList.add('success');
+      document.getElementById('prog-label').textContent = '任务完成!';
+      engineGlow.visible = false;
+      nozzleInner.visible = false;
+      engineLight.intensity = 0;
+
+      // 庆祝！
+      celebrationBurst(shipPos);
+      document.getElementById('celebration').classList.add('show');
+      setTimeout(() => document.getElementById('celebration').classList.remove('show'), 4500);
+
+      // 切换到火星视角
+      setTimeout(() => {
+        if (missionComplete) {
+          setView('mars');
+          const mp = getMarsPos();
+          animateCamera([mp.x+6, 5, mp.z+8], [mp.x, 0, mp.z], 2000);
+        }
+      }, 1500);
+    }
+
+    // ===== 视角：跟随飞船 =====
+    if (currentView === 'follow' && !camAnim) {
+      const offset = tangent.clone().multiplyScalar(-15).add(new THREE.Vector3(0, 8, 0));
+      const side = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0,1,0)).normalize();
+      offset.add(side.multiplyScalar(5));
+      cam.position.lerp(shipPos.clone().add(offset), 0.03);
+      orbitCtrl.target.lerp(shipPos, 0.05);
+      orbitCtrl.update();
+    }
+
+    // ===== 视角：驾驶舱（修复 tangent 不再被 mutate）=====
+    if (currentView === 'cockpit' && !camAnim) {
+      const ahead = shipPos.clone().add(tangent.clone().multiplyScalar(2));
+      const cockpitPos = shipPos.clone().add(new THREE.Vector3(0, 1.2, 0));
+      cam.position.lerp(cockpitPos, 0.05);
+      orbitCtrl.target.lerp(ahead, 0.05);
+      orbitCtrl.update();
+    }
+  }
+
+  // 动态视角跟踪
+  if (currentView === 'earth' && !camAnim) {
+    cam.position.lerp(new THREE.Vector3(earthPos.x+8, 6, earthPos.z+10), 0.02);
+    orbitCtrl.target.lerp(earthPos, 0.03);
+    orbitCtrl.update();
+  }
+  if (currentView === 'mars' && !camAnim) {
+    cam.position.lerp(new THREE.Vector3(marsPos.x+5, 4, marsPos.z+7), 0.02);
+    orbitCtrl.target.lerp(marsPos, 0.03);
+    orbitCtrl.update();
+  }
+
+  updateParticles(dt);
+  updateCamAnim();
+
+  if (!camAnim && !['follow','cockpit','earth','mars'].includes(currentView)) {
+    orbitCtrl.update();
+  }
+
+  renderer.render(scene, cam);
+}
+
+animate();
+</script>
+</body>
+</html>
