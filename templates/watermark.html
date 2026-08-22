@@ -7,6 +7,7 @@
     <title>图片打水印工具 - 程序员工具箱</title>
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/image-preview.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
@@ -35,6 +36,11 @@
                     <div class="form-group">
                         <label for="fileInput">选择图片：</label>
                         <input type="file" name="file" id="fileInput" accept="image/*" required>
+                    </div>
+                    <div class="form-group upload-preview" id="watermarkUploadPreview" data-upload-preview="fileInput" data-preview-image="watermarkUploadImg" data-preview-size="watermarkUploadSize" style="display:none;">
+                        <label>原图预览</label>
+                        <img id="watermarkUploadImg" class="image-preview-open" alt="原图预览" draggable="false">
+                        <div id="watermarkUploadSize" class="upload-preview-size"></div>
                     </div>
                     <div class="form-group">
                         <label for="textInput">水印文字：</label>
@@ -93,6 +99,8 @@
         </div>
     </div>
 </div>
+{{template "image_preview_modal" .}}
+<script src="/tools/static/js/image-preview.js"></script>
 <script>
 // 动态加载字体选项
 fetch('/tools/api/fonts').then(resp => resp.json()).then(fonts => {
@@ -133,7 +141,7 @@ document.getElementById('watermarkForm').addEventListener('submit', async functi
         if (!resp.ok) throw new Error('生成失败');
         const blob = await resp.blob();
         const url = URL.createObjectURL(blob);
-        document.getElementById('preview').innerHTML = `<img src="${url}" class="preview-img" alt="预览">`;
+        document.getElementById('preview').innerHTML = `<img src="${url}" class="preview-img image-preview-open" alt="水印预览" draggable="false">`;
         document.getElementById('download').innerHTML = `<a href="${url}" download="watermarked.jpg" class="btn btn-secondary">下载图片</a>`;
     } catch (err) {
         alert('生成失败: ' + err.message);

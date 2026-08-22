@@ -7,6 +7,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,12 +35,28 @@ func HandleImgResizeAPI(c *gin.Context) {
 	if mode == "" {
 		mode = "scale"
 	}
-	width, _ := strconv.Atoi(widthStr)
-	height, _ := strconv.Atoi(heightStr)
-	if width <= 0 && height <= 0 {
+	widthF, _ := strconv.ParseFloat(widthStr, 64)
+	heightF, _ := strconv.ParseFloat(heightStr, 64)
+	unit := c.PostForm("unit")
+	if unit == "" {
+		unit = "px"
+	}
+	if strings.EqualFold(unit, "mm") {
+		dpiF := 96.0
+		if dpiStr := c.PostForm("dpi"); dpiStr != "" {
+			if parsed, err := strconv.ParseFloat(dpiStr, 64); err == nil && parsed > 0 {
+				dpiF = parsed
+			}
+		}
+		widthF = widthF * dpiF / 25.4
+		heightF = heightF * dpiF / 25.4
+	}
+	if widthF <= 0 && heightF <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": "请至少指定宽度或高度"})
 		return
 	}
+	width := int(math.Round(widthF))
+	height := int(math.Round(heightF))
 	targetFormat := c.PostForm("format")
 	if targetFormat == "" {
 		targetFormat = "jpg"

@@ -8,6 +8,7 @@
     <meta name="description" content="在线图片转Base64工具，支持PNG/JPG/GIF等格式，支持纯Base64和data:image头，安全高效。">
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/image-preview.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
@@ -26,6 +27,11 @@
                     <div class="form-group">
                         <label for="file">选择图片：</label>
                         <input type="file" id="file" name="file" accept="image/*" required>
+                    </div>
+                    <div class="form-group upload-preview" id="img2b64PreviewWrap" data-upload-preview="file" data-preview-image="img2b64PreviewImg" data-preview-size="img2b64PreviewSize" style="display:none;">
+                        <label>原图预览</label>
+                        <img id="img2b64PreviewImg" class="image-preview-open" alt="原图预览" draggable="false">
+                        <div id="img2b64PreviewSize" class="upload-preview-size"></div>
                     </div>
                     <div class="form-group">
                         <label>输出格式</label>
@@ -57,8 +63,11 @@
             </div>
         </div>
     </div>
+    {{template "image_preview_modal" .}}
+    <script src="/tools/static/js/image-preview.js"></script>
     <script>
     function clearImg2Base64() {
+        window.clearImageUploadPreview && window.clearImageUploadPreview('img2b64PreviewWrap');
         document.getElementById('file').value = '';
         document.getElementById('img2b64-result').innerHTML = '';
     }
@@ -84,7 +93,7 @@
             if(res.success) {
                 let preview = '';
                 if(mode === 'dataurl') {
-                    preview = `<img src='${res.result}' class='result-img-preview' alt='Base64预览' />`;
+                    preview = `<img src='${res.result}' class='result-img-preview image-preview-open' alt='Base64预览' draggable='false' />`;
                 } else {
                     // 纯base64，尝试推断图片类型
                     const ext = fileInput.files[0].name.split('.').pop().toLowerCase();
@@ -93,7 +102,7 @@
                     else if (ext === 'gif') mime = 'image/gif';
                     else if (ext === 'webp') mime = 'image/webp';
                     else if (ext === 'bmp') mime = 'image/bmp';
-                    preview = `<img src='data:${mime};base64,${res.result}' class='result-img-preview' alt='Base64预览' />`;
+                    preview = `<img src='data:${mime};base64,${res.result}' class='result-img-preview image-preview-open' alt='Base64预览' draggable='false' />`;
                 }
                 resultDiv.innerHTML = preview + `<textarea id='b64Result' class='result-textarea' rows='6' readonly style='margin-top:1em;'>${res.result}</textarea><button id='copyBtn' class='btn btn-success' style='margin-top:8px;'><i class='material-icons'>content_copy</i> 复制Base64</button>`;
                 setTimeout(()=>{

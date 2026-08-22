@@ -8,6 +8,7 @@
     <meta name="description" content="在线Base64转图片工具，支持带data:image头或纯Base64，自动识别图片类型，支持预览和下载。">
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/image-preview.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
@@ -50,6 +51,8 @@
             </div>
         </div>
     </div>
+    {{template "image_preview_modal" .}}
+    <script src="/tools/static/js/image-preview.js"></script>
     <script>
     document.getElementById('clearBtn').onclick = function() {
         document.getElementById('b64').value = '';
@@ -79,7 +82,7 @@
                     const m = b64.match(/^data:image\/(\w+);base64,/);
                     if (m && m[1]) ext = m[1];
                 }
-                let preview = `<img src='${url}' class='result-img-preview' alt='图片预览' />`;
+                let preview = `<img src='${url}' class='result-img-preview image-preview-open' alt='图片预览' draggable='false' />`;
                 preview += `<div style='margin-top:1em;'><a href='${url}' download='output.${ext}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
                 resultDiv.innerHTML = preview;
             } else {

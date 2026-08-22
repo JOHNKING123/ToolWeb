@@ -7,6 +7,7 @@
     <title>{{ .Title }} - 在线工具集</title>
     <meta name="description" content="在线Base64转图片工具，支持带data:image头或纯Base64，自动识别图片类型，支持预览和下载。">
     <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/image-preview.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 <body>
@@ -45,6 +46,8 @@
         </ul>
     </div>
 </div>
+{{template "image_preview_modal" .}}
+<script src="/tools/static/js/image-preview.js"></script>
 <script>
 const form = document.getElementById('b64imgForm');
 const b64Input = document.getElementById('b64');
@@ -69,7 +72,7 @@ form.addEventListener('submit', function(e) {
         return resp.blob();
     }).then(blob => {
         const url = URL.createObjectURL(blob);
-        previewArea.innerHTML = `<img src="${url}" class="img-preview" style="max-width:100%;max-height:320px;">`;
+        previewArea.innerHTML = `<img src="${url}" class="img-preview image-preview-open" alt="图片预览" style="max-width:100%;max-height:320px;" draggable="false">`;
         downloadBtn.href = url;
         // 自动推断扩展名
         let ext = 'png';

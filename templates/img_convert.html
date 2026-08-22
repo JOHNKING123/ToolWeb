@@ -9,6 +9,7 @@
     <meta name="keywords" content="图片格式转换,PNG转JPG,JPG转PNG,WebP,GIF,BMP,在线工具">
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="/tools/static/css/image-preview.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
@@ -27,6 +28,11 @@
                     <div class="form-group">
                         <label for="img-file">选择图片：</label>
                         <input type="file" id="img-file" name="file" accept="image/*" required>
+                    </div>
+                    <div class="form-group upload-preview" id="imgConvertPreviewWrap" data-upload-preview="img-file" data-preview-image="imgConvertPreviewImg" data-preview-size="imgConvertPreviewSize" style="display:none;">
+                        <label>原图预览</label>
+                        <img id="imgConvertPreviewImg" class="image-preview-open" alt="原图预览" draggable="false">
+                        <div id="imgConvertPreviewSize" class="upload-preview-size"></div>
                     </div>
                     <div class="form-group">
                         <label for="img-format">目标格式：</label>
@@ -61,8 +67,11 @@
             </div>
         </div>
     </div>
+    {{template "image_preview_modal" .}}
+    <script src="/tools/static/js/image-preview.js"></script>
     <script>
     function clearImgConvert() {
+        window.clearImageUploadPreview && window.clearImageUploadPreview('imgConvertPreviewWrap');
         document.getElementById('img-file').value = '';
         document.getElementById('img-convert-result').innerHTML = '';
     }
@@ -91,7 +100,7 @@
                 if(ext === 'jpg') ext = 'jpeg';
                 let preview = '';
                 if(["png","jpeg","gif","webp","bmp"].includes(ext)) {
-                    preview = `<img src="${url}" class="result-img-preview" alt="转换结果预览" />`;
+                    preview = `<img src="${url}" class="result-img-preview image-preview-open" alt="转换结果预览" draggable="false" />`;
                 }
                 resultDiv.innerHTML = preview + `<div style='margin-top:1em;'><a href='${url}' download='converted.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
             } else {

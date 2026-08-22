@@ -1,0 +1,23 @@
+{{define "image_preview_modal"}}
+<div id="imagePreviewModal" class="image-preview-modal" aria-hidden="true">
+    <div class="image-preview-toolbar">
+        <button type="button" class="image-preview-btn" id="imagePreviewZoomOut" title="缩小" aria-label="缩小">
+            <i class="material-icons">zoom_out</i>
+        </button>
+        <span class="image-preview-meta" id="imagePreviewMeta"></span>
+        <span class="image-preview-meta" id="imagePreviewZoomText">100%</span>
+        <button type="button" class="image-preview-btn" id="imagePreviewZoomIn" title="放大" aria-label="放大">
+            <i class="material-icons">zoom_in</i>
+        </button>
+        <button type="button" class="image-preview-btn" id="imagePreviewReset" title="重置缩放" aria-label="重置缩放">
+            <i class="material-icons">refresh</i>
+        </button>
+        <button type="button" class="image-preview-btn" id="imagePreviewClose" title="关闭" aria-label="关闭">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    <div class="image-preview-stage" id="imagePreviewStage">
+        <img id="imagePreviewImg" alt="" draggable="false">
+    </div>
+</div>
+{{end}}

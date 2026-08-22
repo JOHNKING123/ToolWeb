@@ -11,6 +11,130 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .result-img-preview {max-width: 320px; max-height: 220px; border:1px solid #e5e7eb; border-radius:6px; margin-top:1em;}
+        .unit-switch {
+            display: inline-flex;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+        .unit-btn {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        .unit-btn.active {
+            background: #fff;
+            color: var(--primary-color);
+            border-color: #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            font-weight: 500;
+        }
+        .original-preview {
+            margin-top: 0.75rem;
+        }
+        .original-preview img {
+            max-width: 100%;
+            max-height: 220px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .scale-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .scale-slider-row input[type="range"] {
+            flex: 1;
+        }
+        .slider-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        #scalePercent {
+            min-width: 3.2rem;
+            text-align: right;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        .open-image-preview {
+            cursor: zoom-in;
+        }
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(15, 23, 42, 0.94);
+            overflow: hidden;
+        }
+        .image-preview-modal.open {
+            display: block;
+        }
+        .image-preview-toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.65);
+            z-index: 2;
+        }
+        .image-preview-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            cursor: pointer;
+        }
+        .image-preview-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .image-preview-meta {
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+        .image-preview-stage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: grab;
+            touch-action: none;
+        }
+        .image-preview-stage.dragging {
+            cursor: grabbing;
+        }
+        #imagePreviewImg {
+            max-width: calc(100vw - 2rem);
+            max-height: calc(100vh - 5rem);
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            user-select: none;
+            -webkit-user-drag: none;
+            transform-origin: center center;
+            transition: transform 0.15s ease;
+        }
+        #imagePreviewImg.no-transition {
+            transition: none;
+        }
     </style>
 </head>
 <body>
@@ -27,14 +151,34 @@
                         <label for="file">选择图片：</label>
                         <input type="file" id="file" name="file" accept="image/*" required>
                     </div>
+                    <div class="form-group" id="originalPreviewWrap" style="display:none;">
+                        <label>原图预览</label>
+                        <div class="original-preview">
+                            <img id="originalPreview" class="open-image-preview" alt="原图预览" draggable="false">
+                            <div id="originalSizeText" style="color:#6b7280;font-size:0.9rem;margin-top:0.5rem;"></div>
+                        </div>
+                    </div>
+                    <div class="form-row" style="display:flex;gap:1rem;align-items:flex-end;">
+                        <div class="form-group" style="flex:1;">
+                            <label>尺寸单位</label>
+                            <div class="unit-switch" role="group" aria-label="尺寸单位">
+                                <button type="button" class="unit-btn active" data-unit="px">px</button>
+                                <button type="button" class="unit-btn" data-unit="mm">mm</button>
+                            </div>
+                        </div>
+                        <div class="form-group" id="dpiGroup" style="flex:1;display:none;">
+                            <label for="dpi">DPI</label>
+                            <input type="number" id="dpi" name="dpi" min="1" max="2400" step="1" value="96">
+                        </div>
+                    </div>
                     <div class="form-row" style="display:flex;gap:1rem;">
                         <div class="form-group" style="flex:1;">
-                            <label for="width">宽度(px)</label>
-                            <input type="number" id="width" name="width" min="1" placeholder="可选">
+                            <label for="width">宽度(<span id="widthUnit">px</span>)</label>
+                            <input type="number" id="width" name="width" min="0.01" step="0.01" placeholder="可选">
                         </div>
                         <div class="form-group" style="flex:1;">
-                            <label for="height">高度(px)</label>
-                            <input type="number" id="height" name="height" min="1" placeholder="可选">
+                            <label for="height">高度(<span id="heightUnit">px</span>)</label>
+                            <input type="number" id="height" name="height" min="0.01" step="0.01" placeholder="可选">
                         </div>
                     </div>
                     <div class="form-group">
@@ -43,6 +187,15 @@
                             <option value="scale">等比缩放（推荐）</option>
                             <option value="crop">强制裁剪</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="scaleSliderGroup">
+                        <label for="scaleSlider">缩放比例</label>
+                        <div class="scale-slider-row">
+                            <span class="slider-label">1%</span>
+                            <input type="range" id="scaleSlider" min="1" max="100" step="1" value="100">
+                            <span class="slider-label">100%</span>
+                            <span id="scalePercent">100%</span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>输出格式</label>
@@ -75,9 +228,296 @@
             </div>
         </div>
     </div>
+    <div id="imagePreviewModal" class="image-preview-modal" aria-hidden="true">
+        <div class="image-preview-toolbar">
+            <button type="button" class="image-preview-btn" id="imagePreviewZoomOut" title="缩小" aria-label="缩小">
+                <i class="material-icons">zoom_out</i>
+            </button>
+            <span class="image-preview-meta" id="imagePreviewMeta"></span>
+            <span class="image-preview-meta" id="imagePreviewZoomText">100%</span>
+            <button type="button" class="image-preview-btn" id="imagePreviewZoomIn" title="放大" aria-label="放大">
+                <i class="material-icons">zoom_in</i>
+            </button>
+            <button type="button" class="image-preview-btn" id="imagePreviewReset" title="重置缩放" aria-label="重置缩放">
+                <i class="material-icons">refresh</i>
+            </button>
+            <button type="button" class="image-preview-btn" id="imagePreviewClose" title="关闭" aria-label="关闭">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="image-preview-stage" id="imagePreviewStage">
+            <img id="imagePreviewImg" alt="" draggable="false">
+        </div>
+    </div>
     <script>
+    const MM_PER_INCH = 25.4;
+    let currentUnit = 'px';
+    let originalWidthPx = 0;
+    let originalHeightPx = 0;
+    let previewObjectUrl = '';
+    let imagePreviewScale = 1;
+    let imagePreviewPanX = 0;
+    let imagePreviewPanY = 0;
+    let imagePreviewDragging = false;
+    let imagePreviewDragStartX = 0;
+    let imagePreviewDragStartY = 0;
+
+    function getDpi() {
+        const dpi = parseFloat(document.getElementById('dpi').value);
+        return dpi > 0 ? dpi : 96;
+    }
+
+    function pxToMm(px, dpi) {
+        return px * MM_PER_INCH / dpi;
+    }
+
+    function mmToPx(mm, dpi) {
+        return mm * dpi / MM_PER_INCH;
+    }
+
+    function roundTo(value, digits) {
+        const factor = Math.pow(10, digits);
+        return Math.round(value * factor) / factor;
+    }
+
+    function convertValue(value, fromUnit, toUnit) {
+        if (value === '' || value === null || value === undefined) return '';
+        const num = parseFloat(value);
+        if (isNaN(num)) return '';
+        let px;
+        if (fromUnit === 'mm') {
+            px = mmToPx(num, getDpi());
+        } else {
+            px = num;
+        }
+        return toUnit === 'mm' ? roundTo(pxToMm(px, getDpi()), 2) : Math.round(px);
+    }
+
+    function setFieldFromPx(fieldId, px) {
+        const value = currentUnit === 'mm' ? roundTo(pxToMm(px, getDpi()), 2) : Math.round(px);
+        document.getElementById(fieldId).value = value;
+    }
+
+    function getFieldPx(fieldId) {
+        const value = parseFloat(document.getElementById(fieldId).value);
+        if (isNaN(value)) return NaN;
+        return currentUnit === 'mm' ? mmToPx(value, getDpi()) : value;
+    }
+
+    function setCurrentUnit(unit) {
+        if (currentUnit === unit) return;
+        const oldUnit = currentUnit;
+        document.getElementById('width').value = convertValue(document.getElementById('width').value, oldUnit, unit);
+        document.getElementById('height').value = convertValue(document.getElementById('height').value, oldUnit, unit);
+        currentUnit = unit;
+        document.querySelectorAll('.unit-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.unit === unit);
+        });
+        document.getElementById('widthUnit').textContent = unit;
+        document.getElementById('heightUnit').textContent = unit;
+        document.getElementById('dpiGroup').style.display = unit === 'mm' ? '' : 'none';
+        syncScaleSlider('width');
+    }
+
+    document.querySelectorAll('.unit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            setCurrentUnit(this.dataset.unit);
+        });
+    });
+
+    function updateScaleSliderVisibility() {
+        const isScale = document.getElementById('mode').value === 'scale';
+        document.getElementById('scaleSliderGroup').style.display = isScale ? '' : 'none';
+    }
+
+    function syncScaleSlider(fieldId) {
+        if (!originalWidthPx || !originalHeightPx) return;
+        const originalPx = fieldId === 'width' ? originalWidthPx : originalHeightPx;
+        const px = getFieldPx(fieldId);
+        if (isNaN(px) || px <= 0) return;
+        const percent = Math.min(100, Math.max(1, Math.round(px / originalPx * 100)));
+        document.getElementById('scaleSlider').value = percent;
+        document.getElementById('scalePercent').textContent = percent + '%';
+    }
+
+    function clearOriginalPreview() {
+        if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+            previewObjectUrl = '';
+        }
+        originalWidthPx = 0;
+        originalHeightPx = 0;
+        document.getElementById('originalPreviewWrap').style.display = 'none';
+        document.getElementById('originalPreview').removeAttribute('src');
+        document.getElementById('scaleSlider').value = 100;
+        document.getElementById('scalePercent').textContent = '100%';
+    }
+
+    function applyImagePreviewTransform() {
+        const img = document.getElementById('imagePreviewImg');
+        img.style.transform = 'translate(' + imagePreviewPanX + 'px, ' + imagePreviewPanY + 'px) scale(' + imagePreviewScale + ')';
+        document.getElementById('imagePreviewZoomText').textContent = Math.round(imagePreviewScale * 100) + '%';
+    }
+
+    function clampImagePreviewPan() {
+        const stage = document.getElementById('imagePreviewStage');
+        const img = document.getElementById('imagePreviewImg');
+        const maxX = Math.max(0, (img.offsetWidth * imagePreviewScale - stage.clientWidth) / 2);
+        const maxY = Math.max(0, (img.offsetHeight * imagePreviewScale - stage.clientHeight) / 2);
+        imagePreviewPanX = Math.max(-maxX, Math.min(maxX, imagePreviewPanX));
+        imagePreviewPanY = Math.max(-maxY, Math.min(maxY, imagePreviewPanY));
+    }
+
+    function updateImagePreviewZoom(factor) {
+        imagePreviewScale = Math.min(8, Math.max(0.25, imagePreviewScale * factor));
+        clampImagePreviewPan();
+        applyImagePreviewTransform();
+    }
+
+    function openImagePreview(thumb) {
+        const modal = document.getElementById('imagePreviewModal');
+        const img = document.getElementById('imagePreviewImg');
+        imagePreviewScale = 1;
+        imagePreviewPanX = 0;
+        imagePreviewPanY = 0;
+        img.src = thumb.currentSrc || thumb.src;
+        img.alt = thumb.alt || '';
+        document.getElementById('imagePreviewMeta').textContent = img.alt;
+        applyImagePreviewTransform();
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImagePreview() {
+        const modal = document.getElementById('imagePreviewModal');
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        document.getElementById('imagePreviewImg').removeAttribute('src');
+    }
+
+    document.addEventListener('click', function(e) {
+        const thumb = e.target.closest('.open-image-preview');
+        if (thumb) openImagePreview(thumb);
+    });
+
+    const previewModal = document.getElementById('imagePreviewModal');
+    const previewStage = document.getElementById('imagePreviewStage');
+    document.getElementById('imagePreviewZoomIn').addEventListener('click', function() {
+        updateImagePreviewZoom(1.25);
+    });
+    document.getElementById('imagePreviewZoomOut').addEventListener('click', function() {
+        updateImagePreviewZoom(0.8);
+    });
+    document.getElementById('imagePreviewReset').addEventListener('click', function() {
+        imagePreviewScale = 1;
+        imagePreviewPanX = 0;
+        imagePreviewPanY = 0;
+        applyImagePreviewTransform();
+    });
+    document.getElementById('imagePreviewClose').addEventListener('click', closeImagePreview);
+    previewStage.addEventListener('dblclick', function() {
+        updateImagePreviewZoom(2);
+    });
+    previewStage.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        updateImagePreviewZoom(e.deltaY < 0 ? 1.1 : 0.9);
+    }, { passive: false });
+    previewStage.addEventListener('pointerdown', function(e) {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        imagePreviewDragging = true;
+        imagePreviewDragStartX = e.clientX - imagePreviewPanX;
+        imagePreviewDragStartY = e.clientY - imagePreviewPanY;
+        previewStage.classList.add('dragging');
+        previewStage.setPointerCapture(e.pointerId);
+    });
+    previewStage.addEventListener('pointermove', function(e) {
+        if (!imagePreviewDragging) return;
+        imagePreviewPanX = e.clientX - imagePreviewDragStartX;
+        imagePreviewPanY = e.clientY - imagePreviewDragStartY;
+        applyImagePreviewTransform();
+    });
+    previewStage.addEventListener('pointerup', function() {
+        imagePreviewDragging = false;
+        previewStage.classList.remove('dragging');
+        clampImagePreviewPan();
+        applyImagePreviewTransform();
+    });
+    previewStage.addEventListener('pointercancel', function() {
+        imagePreviewDragging = false;
+        previewStage.classList.remove('dragging');
+    });
+    previewModal.addEventListener('click', function(e) {
+        if (e.target === previewModal || e.target === previewStage) closeImagePreview();
+    });
+    window.addEventListener('resize', function() {
+        clampImagePreviewPan();
+        applyImagePreviewTransform();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (!previewModal.classList.contains('open')) return;
+        if (e.key === 'Escape') {
+            closeImagePreview();
+        } else if (e.key === '+' || e.key === '=') {
+            updateImagePreviewZoom(1.25);
+        } else if (e.key === '-') {
+            updateImagePreviewZoom(0.8);
+        } else if (e.key === '0') {
+            imagePreviewScale = 1;
+            imagePreviewPanX = 0;
+            imagePreviewPanY = 0;
+            applyImagePreviewTransform();
+        }
+    });
+
+    document.getElementById('mode').addEventListener('change', updateScaleSliderVisibility);
+    document.getElementById('scaleSlider').addEventListener('input', function() {
+        const percent = parseInt(this.value, 10) || 100;
+        document.getElementById('scalePercent').textContent = percent + '%';
+        if (originalWidthPx > 0 && originalHeightPx > 0) {
+            setFieldFromPx('width', Math.max(1, Math.round(originalWidthPx * percent / 100)));
+            setFieldFromPx('height', Math.max(1, Math.round(originalHeightPx * percent / 100)));
+        }
+    });
+    document.getElementById('width').addEventListener('input', function() { syncScaleSlider('width'); });
+    document.getElementById('height').addEventListener('input', function() { syncScaleSlider('height'); });
+
+    document.getElementById('file').addEventListener('change', function() {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        clearOriginalPreview();
+        const objectUrl = URL.createObjectURL(file);
+        previewObjectUrl = objectUrl;
+        const img = new Image();
+        img.onload = function() {
+            const pxW = img.naturalWidth;
+            const pxH = img.naturalHeight;
+            originalWidthPx = pxW;
+            originalHeightPx = pxH;
+            setFieldFromPx('width', pxW);
+            setFieldFromPx('height', pxH);
+            document.getElementById('originalPreview').src = objectUrl;
+            document.getElementById('originalPreviewWrap').style.display = '';
+            document.getElementById('originalSizeText').textContent = pxW + ' x ' + pxH + ' px';
+            document.getElementById('scaleSlider').value = 100;
+            document.getElementById('scalePercent').textContent = '100%';
+        };
+        img.onerror = function() {
+            URL.revokeObjectURL(objectUrl);
+            previewObjectUrl = '';
+            originalWidthPx = 0;
+            originalHeightPx = 0;
+            alert('无法读取图片尺寸，请更换图片后重试');
+        };
+        img.src = objectUrl;
+    });
+
     function clearImgResize() {
+        clearOriginalPreview();
         document.getElementById('file').value = '';
+        document.getElementById('width').value = '';
+        document.getElementById('height').value = '';
         document.getElementById('resize-result').innerHTML = '';
     }
     document.getElementById('resizeForm').onsubmit = function(e) {
@@ -95,6 +535,8 @@
         formData.append('file', fileInput.files[0]);
         if(width) formData.append('width', width);
         if(height) formData.append('height', height);
+        formData.append('unit', currentUnit);
+        if(currentUnit === 'mm') formData.append('dpi', getDpi());
         formData.append('mode', mode);
         formData.append('format', format);
         const resultDiv = document.getElementById('resize-result');
@@ -111,7 +553,7 @@
                 if(ext === 'jpg') ext = 'jpeg';
                 let preview = '';
                 if(["png","jpeg","gif"].includes(ext)) {
-                    preview = `<img src="${url}" class="result-img-preview" alt="调整结果预览" />`;
+                    preview = `<img src="${url}" class="result-img-preview open-image-preview" alt="调整结果预览" draggable="false" />`;
                 }
                 resultDiv.innerHTML = preview + `<div style='margin-top:1em;'><a href='${url}' download='resized.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
             } else {
