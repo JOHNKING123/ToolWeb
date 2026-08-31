@@ -37,3 +37,4 @@ data/stats/*
 data/shorturl_mappings.json
 toolweb.pid
 toolWeb
+.codegraph
