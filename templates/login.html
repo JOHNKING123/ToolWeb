@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 电子书管理系统</title>
+    <title>登录 - 程序员工具箱</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         :root {
@@ -90,7 +90,7 @@
     <div class="login-container">
         <div class="login-header">
             <h1>登录</h1>
-            <p>请登录以访问电子书资源</p>
+            <p>{{.LoginMessage}}</p>
         </div>
 
         {{if .error}}
@@ -98,6 +98,7 @@
         {{end}}
 
         <form class="login-form" method="POST" action="/ebook/login">
+            <input type="hidden" name="next" value="{{.Next}}">
             <div class="form-group">
                 <label for="username">用户名</label>
                 <input type="text" id="username" name="username" required>

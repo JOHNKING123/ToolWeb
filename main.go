@@ -226,23 +226,33 @@ func main() {
 	{
 		// 登录相关路由 - 不需要权限验证
 		ebookGroup.GET("/login", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "login", gin.H{})
+			next := safeLoginRedirect(c.Query("next"))
+			message := "请登录以访问电子书资源"
+			if strings.HasPrefix(next, "/tools/personal") {
+				message = "请登录以访问个人工具"
+			}
+			c.HTML(http.StatusOK, "login", gin.H{
+				"Next":         next,
+				"LoginMessage": message,
+			})
 		})
 
 		ebookGroup.POST("/login", func(c *gin.Context) {
 			username := c.PostForm("username")
 			password := c.PostForm("password")
+			next := safeLoginRedirect(c.PostForm("next"))
 
-			// TODO: 这里应该添加实际的用户验证逻辑
-			if username == "admin" && password == "admin123" {
+			if middleware.ValidateCredentials(username, password) {
 				// 设置 session cookie
-				c.SetCookie("session", "user-session-id", 3600, "/", "", false, true)
-				c.Redirect(http.StatusFound, "/ebook/index")
+				c.SetCookie("session", middleware.SessionValue(), 3600, "/", "", false, true)
+				c.Redirect(http.StatusFound, next)
 				return
 			}
 
 			c.HTML(http.StatusOK, "login", gin.H{
-				"error": "用户名或密码错误",
+				"error":        "用户名或密码错误",
+				"Next":         next,
+				"LoginMessage": "请登录以继续",
 			})
 		})
 
@@ -372,6 +382,28 @@ func main() {
 			"TodayVisitors": stats["today_visitors"],
 		})
 	})
+
+	// 个人工具中心及文件管理
+	personal := router.Group("/tools/personal", middleware.AuthRequired())
+	{
+		personal.GET("", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "personal_tools", gin.H{
+				"Categories":    tools.GetCategories(),
+				"PersonalTools": tools.GetPersonalTools(),
+			})
+		})
+		personal.GET("/files", tools.HandlePersonalFilesPage)
+		personal.GET("/files/api/list", tools.HandlePersonalFileList)
+		personal.POST("/files/api/upload", tools.HandlePersonalFileUpload)
+		personal.POST("/files/api/folder", tools.HandlePersonalFolderCreate)
+		personal.POST("/files/api/rename", tools.HandlePersonalFileRename)
+		personal.POST("/files/api/delete", tools.HandlePersonalFileDelete)
+		personal.POST("/files/api/share", tools.HandlePersonalFileShare)
+		personal.GET("/files/content", tools.HandlePersonalFileContent)
+	}
+
+	// 分享链接通过随机令牌访问，无需登录。
+	router.GET("/share/personal-files/:token", tools.HandlePersonalFileSharedContent)
 
 	// SEO相关路由
 	router.GET("/sitemap.xml", func(c *gin.Context) {
@@ -1427,6 +1459,16 @@ func main() {
 	}
 
 	accessLogger.Println("服务器已关闭")
+}
+
+func safeLoginRedirect(next string) string {
+	if next == "" {
+		return "/ebook/index"
+	}
+	if !strings.HasPrefix(next, "/") || strings.HasPrefix(next, "//") {
+		return "/ebook/index"
+	}
+	return next
 }
 
 // sortMapKeys 递归地对 map 的键进行排序

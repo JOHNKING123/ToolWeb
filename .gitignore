@@ -35,6 +35,8 @@ Thumbs.db
 data/stats
 data/stats/*
 data/shorturl_mappings.json
+data/personal_files/
+data/personal_file_shares.json
 toolweb.pid
 toolWeb
 .codegraph

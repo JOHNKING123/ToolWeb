@@ -1,0 +1,60 @@
+{{define "personal_tools"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <style>
+        body { background: #f6f8fc; }
+        .personal-hero { padding: 56px 0 34px; background: linear-gradient(135deg, #eef4ff, #f8f5ff); border-bottom: 1px solid #e5e7eb; }
+        .personal-hero h1 { margin: 0 0 10px; color: #172033; font-size: 34px; }
+        .personal-hero p { margin: 0; color: #657085; font-size: 16px; }
+        .personal-shell { padding-top: 34px; padding-bottom: 70px; }
+        .personal-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .personal-heading h2 { margin: 0; color: #20293a; }
+        .private-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; color: #315cbd; background: #eaf1ff; border-radius: 999px; font-size: 13px; }
+        .personal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
+        .personal-card { display: flex; flex-direction: column; min-height: 210px; padding: 24px; background: #fff; border: 1px solid #e4e8f0; border-radius: 16px; box-shadow: 0 8px 24px rgba(35, 48, 80, .06); transition: .2s ease; }
+        .personal-card:hover { transform: translateY(-3px); border-color: #b9cbf4; box-shadow: 0 12px 30px rgba(35, 48, 80, .1); }
+        .personal-icon { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 18px; color: #fff; background: linear-gradient(135deg, #3267d6, #7452d6); border-radius: 14px; }
+        .personal-icon i { font-size: 28px; }
+        .personal-card h3 { margin: 0 0 9px; color: #20293a; font-size: 20px; }
+        .personal-card p { flex: 1; margin: 0 0 22px; color: #6b7486; line-height: 1.7; }
+        .personal-open { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 16px; color: #fff; background: #315fca; border-radius: 9px; text-decoration: none; font-weight: 600; }
+        @media (max-width: 680px) { .personal-hero { padding: 38px 0 26px; } .personal-hero h1 { font-size: 28px; } }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <section class="personal-hero">
+        <div class="container">
+            <h1>个人工具</h1>
+            <p>只对已登录用户开放的个人效率空间。</p>
+        </div>
+    </section>
+    <main class="container personal-shell">
+        <div class="personal-heading">
+            <h2>我的工具</h2>
+            <span class="private-badge"><i class="material-icons" style="font-size:17px">lock</i> 私有空间</span>
+        </div>
+        <div class="personal-grid">
+            {{range .PersonalTools}}
+            <article class="personal-card">
+                <div class="personal-icon"><i class="material-icons">{{.Icon}}</i></div>
+                <h3>{{.Name}}</h3>
+                <p>{{.Description}}</p>
+                {{if .Available}}
+                <a class="personal-open" href="{{.Path}}">打开工具 <i class="material-icons" style="font-size:18px">arrow_forward</i></a>
+                {{else}}
+                <span class="personal-open" style="background:#aab2c0">即将开放</span>
+                {{end}}
+            </article>
+            {{end}}
+        </div>
+    </main>
+</body>
+</html>
+{{end}}
