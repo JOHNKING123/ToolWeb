@@ -7,8 +7,19 @@
  async function api(url,options={}){
   const response=await fetch(url,{cache:'no-store',...options});
   if(response.redirected)throw Error('电脑端登录已过期，请重新登录后生成二维码');
-  const data=await response.json();
-  if(!response.ok){if(response.status===410){endpoint='';enable(false);if(owner)$('qr').hidden=true;}throw Error(data.error||'操作失败');}
+  if(response.status===410){
+   endpoint='';enable(false);if(owner)$('qr').hidden=true;
+   throw Error('连接已过期或已结束，请重新生成二维码并扫码');
+  }
+  const raw=await response.text();
+  let data;
+  try{data=raw.trim()?JSON.parse(raw):null;}catch{data=null;}
+  const valid=data!==null&&typeof data==='object'&&!Array.isArray(data);
+  if(!response.ok){
+   const fallback=response.status===404?'互传接口不存在，请确认服务器已更新并重新生成二维码':'请求失败，请稍后重试';
+   throw Error((valid&&typeof data.error==='string'?data.error:fallback)+'（HTTP '+response.status+'）');
+  }
+  if(!valid)throw Error('服务器返回空内容或非 JSON 数据，请检查代理配置（HTTP '+response.status+'）');
   return data;
  }
  function action(label,fn){const button=document.createElement('button');button.textContent=label;button.onclick=async()=>{button.disabled=true;try{await fn();}catch(e){message(e.message,true);}finally{button.disabled=false;}};return button;}

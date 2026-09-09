@@ -20,6 +20,9 @@ type transferSession struct {
 	Expires time.Time
 }
 
+// Keep temporary routes inside the deployed /tools reverse-proxy prefix.
+const transferGuestPrefix = "/tools/transfer/temporary"
+
 var transferSessions = struct {
 	sync.Mutex
 	Values map[string]transferSession
@@ -67,7 +70,7 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 		}
 		session := transferSession{Folder: folder, Expires: time.Now().Add(30 * time.Minute)}
 		transferSessions.Values[token] = session
-		c.JSON(200, gin.H{"token": token, "expires": session.Expires, "path": "/transfer/temporary/" + token})
+		c.JSON(200, gin.H{"token": token, "expires": session.Expires, "path": transferGuestPrefix + "/" + token})
 	})
 	owner.DELETE("/transfer/sessions/:token", func(c *gin.Context) {
 		transferSessions.Lock()
@@ -75,7 +78,7 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 		transferSessions.Unlock()
 		c.JSON(200, gin.H{"success": true})
 	})
-	guest := router.Group("/transfer/temporary/:token", func(c *gin.Context) {
+	guest := router.Group(transferGuestPrefix+"/:token", func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
 		c.Header("Referrer-Policy", "no-referrer")
 		c.Header("X-Content-Type-Options", "nosniff")
@@ -91,7 +94,7 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 		session, ok := transferSessions.Values[c.Param("token")]
 		transferSessions.Unlock()
 		if !ok || !time.Now().Before(session.Expires) {
-			if c.Request.URL.Path == "/transfer/temporary/"+c.Param("token") {
+			if c.Request.URL.Path == transferGuestPrefix+"/"+c.Param("token") {
 				c.String(410, "连接已过期或已结束，请让电脑端重新生成二维码。")
 			} else {
 				c.JSON(410, gin.H{"error": "连接已过期或已结束，请重新扫码"})
