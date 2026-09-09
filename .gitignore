@@ -37,6 +37,7 @@ data/stats/*
 data/shorturl_mappings.json
 data/personal_files/
 data/personal_file_shares.json
+data/personal_clipboard.json
 toolweb.pid
 toolWeb
 .codegraph

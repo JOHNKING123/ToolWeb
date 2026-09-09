@@ -19,5 +19,7 @@ func GetPersonalTools() []PersonalTool {
 			Icon:        "folder_managed",
 			Available:   true,
 		},
+		{Name: "手机电脑互传", Description: "扫码连接手机与电脑，双向上传和下载文件。", Path: "/tools/personal/transfer", Icon: "devices", Available: true},
+		{Name: "个人剪贴板", Description: "跨设备保存文字和链接，搜索、复制与管理历史内容。", Path: "/tools/personal/clipboard", Icon: "content_paste", Available: true},
 	}
 }

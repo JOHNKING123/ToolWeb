@@ -385,6 +385,7 @@ func main() {
 
 	// 个人工具中心及文件管理
 	personal := router.Group("/tools/personal", middleware.AuthRequired())
+	tools.RegisterPersonalUtilities(personal)
 	{
 		personal.GET("", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "personal_tools", gin.H{
