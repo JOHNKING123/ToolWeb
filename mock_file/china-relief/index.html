@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>山河之间 · 中国三维地形</title>
+<meta name="description" content="以真实高程数据探索中国及周边的山脉、高原与盆地。">
+<link rel="stylesheet" href="./style.css">
+<script type="importmap">{"imports":{"three":"./assets/three.module.js"}}</script>
+</head>
+<body>
+<main id="map" aria-label="可旋转的中国三维地形图"></main>
+<header><a class="brand" href="../china-terrain-3d.html" title="查看原版地形示例">山河之间<span>CHINA RELIEF ATLAS</span></a><div class="edition">中国及周边 · 三维地形 <b>01</b></div></header>
+<section class="intro"><p class="eyebrow">一览山河 / EXPLORE THE TERRAIN</p><h1>大地，自有起伏。</h1><p>从世界屋脊，到江海平原。</p></section>
+<aside class="panel" aria-label="地形控制">
+<div class="panel-title">地形视图 <span>RELIEF</span></div>
+<div class="views"><button id="oblique" class="active">立体</button><button id="top">俯视</button></div>
+<div class="zoom-buttons" role="group" aria-label="地图缩放"><button id="zoom-in" aria-label="放大地图">＋ 放大</button><button id="zoom-out" aria-label="缩小地图">− 缩小</button></div>
+<label for="height">地形起伏 <output id="height-value">50×</output></label><input id="height" type="range" min="1" max="100" value="50" step="1">
+<p class="muted">垂直高度经夸大显示</p>
+<label class="check"><span>地理标注</span><input id="labels" type="checkbox" checked></label>
+<button class="reset" id="reset">↺ 回到全国视角</button>
+<div class="divider"></div><div class="panel-title">去看看 <span>PLACES</span></div>
+<button class="place" data-place="tibet"><span>01　青藏高原</span><span>↗</span></button>
+<button class="place" data-place="sichuan"><span>02　四川盆地</span><span>↗</span></button>
+<button class="place" data-place="tianshan"><span>03　天山山脉</span><span>↗</span></button>
+<p id="place-note">西高东低，山河相连。</p>
+</aside>
+<div id="labels-layer" role="group" aria-label="地理标注，聚焦或点击查看说明"></div>
+<section id="geo-info" hidden aria-label="地理说明">
+<button id="geo-close" aria-label="关闭地理说明">×</button>
+<div id="geo-mode"></div><h2 id="geo-title"></h2><p id="geo-description"></p>
+<small id="geo-meta"></small>
+</section>
+<div class="compass" aria-hidden="true"><span id="north">↑</span>N</div>
+<section class="legend"><span>海拔 / m</span><div class="ramp"></div><div class="ticks"><span>0</span><span>1,000</span><span>3,000</span><span>6,000+</span></div></section>
+<footer><span>拖动旋转 · 右键平移 · 滚轮缩放</span><span>高程：<a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noreferrer">Mapzen / AWS Open Data</a> · 地貌示意，非行政区划图</span></footer>
+<div id="status" role="status"><span class="spinner"></span><strong>正在铺展山河</strong><p>加载本地高程与地形纹理…</p></div>
+<noscript>请启用 JavaScript 以查看三维地形。</noscript>
+<script type="module" src="./app.js"></script>
+</body></html>

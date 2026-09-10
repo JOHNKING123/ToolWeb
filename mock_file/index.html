@@ -180,6 +180,30 @@
         .card:nth-child(8) .card-preview { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
         .card:nth-child(9) .card-preview { background: linear-gradient(135deg, #f97316 0%, #ef4444 100%); }
 
+        .card .card-preview.terrain-preview {
+            background:
+                linear-gradient(180deg, rgb(15 52 45 / 0.08), rgb(15 52 45 / 0.35)),
+                url("china-relief/assets/relief.jpg") center 48% / cover;
+        }
+
+        .terrain-preview::after {
+            content: "REAL ELEVATION";
+            position: absolute;
+            right: 1rem;
+            bottom: 0.8rem;
+            padding: 0.25rem 0.55rem;
+            border: 1px solid rgb(255 255 255 / 0.65);
+            color: white;
+            background: rgb(22 63 53 / 0.72);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+        }
+
+        .terrain-preview .material-icons {
+            filter: drop-shadow(0 2px 5px rgb(0 0 0 / 0.35));
+        }
+
         .card-body {
             padding: 1.25rem;
             flex: 1;
@@ -286,7 +310,7 @@
 
     <section class="hero">
         <h1>模拟展示</h1>
-        <p>精选的交互式 3D/物理模拟演示，涵盖太阳系、物理碰撞、混沌摆等多种有趣的可视化效果</p>
+        <p>精选的交互式 3D 与物理模拟演示，涵盖真实地形、太阳系、物理碰撞和混沌系统</p>
     </section>
 
     <main class="container">
@@ -296,6 +320,20 @@
                 <h2>全部演示</h2>
             </div>
             <div class="cards-grid">
+                <a class="card" href="china-relief/">
+                    <div class="card-preview terrain-preview">
+                        <i class="material-icons">terrain</i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">中国三维地形图</div>
+                        <div class="card-desc">基于真实高程数据生成的中国及周边浮雕地形，支持缩放、旋转、地形起伏调节和地理标注说明。</div>
+                        <div class="card-footer">
+                            <span class="card-tag"><i class="material-icons" style="font-size:0.9rem">three_p</i> 3D 地理</span>
+                            <span class="card-action">查看演示 <i class="material-icons">arrow_forward</i></span>
+                        </div>
+                    </div>
+                </a>
+
                 <a class="card" href="solar-system.html">
                     <div class="card-preview">
                         <i class="material-icons">public</i>
@@ -426,7 +464,7 @@
     </main>
 
     <footer class="footer">
-        <p>&copy; 2025 程序员工具箱. All rights reserved.</p>
+        <p>&copy; 2026 程序员工具箱. All rights reserved.</p>
     </footer>
 </body>
 </html>
