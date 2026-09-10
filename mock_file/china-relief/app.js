@@ -64,6 +64,7 @@ try {
     const key=item ? item.name+automatic : '';
     if(key===shownKey)return;
     shownKey=key;$('geo-info').hidden=!item;
+    document.querySelector('.intro').hidden=Boolean(item);
     if(!item)return;
     $('geo-mode').textContent=automatic?'视野附近 · '+item.type:'地理说明 · '+item.type;
     $('geo-title').textContent=item.name;
