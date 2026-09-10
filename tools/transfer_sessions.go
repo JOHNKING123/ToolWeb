@@ -144,6 +144,10 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 			c.JSON(404, gin.H{"error": "文件不存在"})
 			return
 		}
+		if c.Query("preview") == "1" {
+			serveTransferImage(c, full)
+			return
+		}
 		servePersonalFile(c, full, true)
 	})
 	guest.DELETE("/file", func(c *gin.Context) {
@@ -158,6 +162,37 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 		}
 		c.JSON(200, gin.H{"success": true})
 	})
+}
+
+// serveTransferImage only renders supported raster content inline.
+func serveTransferImage(c *gin.Context, full string) {
+	file, err := os.Open(full)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "图片不存在"})
+		return
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "读取图片失败"})
+		return
+	}
+	buffer := make([]byte, 512)
+	n, _ := file.Read(buffer)
+	contentType := http.DetectContentType(buffer[:n])
+	switch contentType {
+	case "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp":
+	default:
+		c.JSON(415, gin.H{"error": "该文件不是支持的图片格式，请下载查看"})
+		return
+	}
+	if _, err := file.Seek(0, 0); err != nil {
+		c.JSON(500, gin.H{"error": "读取图片失败"})
+		return
+	}
+	c.Header("Content-Type", contentType)
+	c.Header("Content-Disposition", "inline")
+	http.ServeContent(c.Writer, c.Request, info.Name(), info.ModTime(), file)
 }
 
 func transferFile(c *gin.Context) (string, error) {

@@ -3,7 +3,43 @@
  const $=id=>document.getElementById(id), owner=document.body.dataset.transferOwner==='true';
  let endpoint=owner?'':location.pathname.replace(/\/$/,''),token='',expires=0,link='',busy=false,polling=false;
  const message=(text,error=false)=>{$('status').textContent=text;$('status').className=error?'error':'';};
- function enable(active){$('upload').disabled=!active;$('refresh').disabled=!active;if(owner){$('copy').disabled=!active;$('revoke').disabled=!active;}}
+ let previewRequest=null,previewURL='';
+ function releasePreview(){
+  if(previewRequest)previewRequest.abort();previewRequest=null;
+  $('previewImage').removeAttribute('src');$('previewImage').hidden=true;
+  if(previewURL)URL.revokeObjectURL(previewURL);previewURL='';
+ }
+ $('previewClose').onclick=()=>$('imagePreview').close();
+ $('imagePreview').addEventListener('close',releasePreview);
+ $('imagePreview').addEventListener('click',event=>{
+  if(event.target!==$('imagePreview'))return;
+  const rect=$('imagePreview').getBoundingClientRect();
+  if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)$('imagePreview').close();
+ });
+ async function preview(file,current){
+  releasePreview();
+  const controller=new AbortController();previewRequest=controller;
+  const url=current+'/content?name='+encodeURIComponent(file.name);
+  $('previewTitle').textContent=file.name;$('previewDownload').href=url;
+  $('previewStatus').textContent='正在加载图片…';
+  if(!$('imagePreview').open)$('imagePreview').showModal();
+  try{
+   const response=await fetch(url+'&preview=1',{cache:'no-store',signal:controller.signal});
+   if(response.status===410){endpoint='';enable(false);message('连接已过期或已结束，请重新扫码',true);return;}
+   if(!response.ok){
+    const data=await response.json().catch(()=>null);
+    throw Error(data?.error||'图片加载失败（HTTP '+response.status+'）');
+   }
+   if(!/^image\/(jpeg|png|gif|webp|bmp)(;|$)/i.test(response.headers.get('Content-Type')||''))throw Error('该文件不支持图片预览');
+   const blob=await response.blob();
+   if(controller.signal.aborted)return;
+   previewURL=URL.createObjectURL(blob);
+   $('previewImage').onload=()=>{$('previewStatus').textContent='';};
+   $('previewImage').onerror=()=>{$('previewStatus').textContent='图片损坏或浏览器不支持，请下载查看';$('previewImage').hidden=true;};
+   $('previewImage').alt=file.name;$('previewImage').src=previewURL;$('previewImage').hidden=false;
+  }catch(e){if(e.name!=='AbortError')$('previewStatus').textContent=e.message;}
+ }
+ function enable(active){$('upload').disabled=!active;$('refresh').disabled=!active;if(!active){$('imagePreview').close();releasePreview();}if(owner){$('copy').disabled=!active;$('revoke').disabled=!active;}}
  async function api(url,options={}){
   const response=await fetch(url,{cache:'no-store',...options});
   if(response.redirected)throw Error('电脑端登录已过期，请重新登录后生成二维码');
@@ -33,9 +69,15 @@
    if(!files.length)$('items').textContent='暂无文件，任一设备上传后会自动显示在这里。';
    for(const file of files){
     const row=document.createElement('div');row.className='entry row';
-    const name=document.createElement('span');name.className='file-name';name.textContent=file.name+' · '+(file.size/1048576).toFixed(2)+' MB';
+    const name=document.createElement('span');name.className='file-name';
+    if(file.previewable){
+     const open=action(file.name,()=>preview(file,current));open.className='image-name';open.title='点击预览图片';name.append(open);
+    }else{name.textContent=file.name;}
+    name.append(document.createTextNode(' · '+(file.size/1048576).toFixed(2)+' MB'));
     const download=document.createElement('a');download.className='download';download.textContent='下载';download.href=current+'/content?name='+encodeURIComponent(file.name);
-    row.append(name,download,action('删除',async()=>{if(!confirm('删除“'+file.name+'”？'))return;await api(current+'/file?name='+encodeURIComponent(file.name),{method:'DELETE'});await refresh();}));
+    row.append(name);
+    if(file.previewable)row.append(action('预览',()=>preview(file,current)));
+    row.append(download,action('删除',async()=>{if(!confirm('删除“'+file.name+'”？'))return;await api(current+'/file?name='+encodeURIComponent(file.name),{method:'DELETE'});await refresh();}));
     $('items').append(row);
    }
   }finally{polling=false;}

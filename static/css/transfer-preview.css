@@ -1,0 +1,9 @@
+.transfer-preview{box-sizing:border-box;width:min(960px,94vw);max-height:92dvh;overflow:auto;border:0;border-radius:14px;padding:18px;color:#24324a;background:#fff}
+.transfer-preview::backdrop{background:rgba(15,23,42,.78)}
+.transfer-preview .row{justify-content:space-between;flex-wrap:nowrap}
+.transfer-preview strong{min-width:0;overflow-wrap:anywhere}
+.transfer-preview button{flex-shrink:0}
+.transfer-preview img{display:block;max-width:100%;max-height:70dvh;object-fit:contain;margin:14px auto}
+.transfer-preview img[hidden]{display:none}
+.transfer-preview .download{display:inline-block}
+.utility .image-name{border:0;padding:0;text-align:left;overflow-wrap:anywhere;font:inherit;text-decoration:underline}
