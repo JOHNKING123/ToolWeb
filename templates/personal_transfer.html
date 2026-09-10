@@ -1,11 +1,11 @@
 {{define "personal_transfer"}}
 <!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>手机电脑互传</title><link rel="stylesheet" href="/tools/static/css/personal-utilities.css"><link rel="stylesheet" href="/tools/static/css/transfer-preview.css"></head>
 <body data-transfer-owner="true"><main class="utility"><a href="/tools/personal">← 个人工具</a><h1>手机电脑互传</h1><p>手机扫码即可收发，无需登录。临时连接 30 分钟有效，只能访问本次传输的文件。</p><div id="status" role="status"></div>
-<section class="panel connect"><img id="qr" class="qr" alt="扫码免登录收发文件" hidden><div><h2>连接手机</h2><p id="expiry">点击生成二维码开始互传</p><input id="address" list="addresses" aria-label="手机可访问的服务器地址" placeholder="http://192.168.1.100:8080"><datalist id="addresses"></datalist><div class="row"><button id="generate" class="primary">生成临时二维码</button><button id="copy" disabled>复制临时链接</button><button id="revoke" disabled>结束连接</button></div><p>本地运行时需连接同一 Wi-Fi。如无法连接，请切换局域网地址。</p></div></section>
+<section class="panel connect"><img id="qr" class="qr" alt="扫码免登录收发文件" hidden><div><h2>连接手机</h2><p id="expiry">点击生成二维码开始互传</p><input id="address" list="addresses" aria-label="手机可访问的服务器地址" placeholder="http://192.168.1.100:8080"><datalist id="addresses"></datalist><div class="row"><button id="generate" class="primary">生成临时二维码</button><button id="copy" disabled>复制临时链接</button><button id="renew" disabled>刷新授权时间</button><button id="revoke" disabled>结束连接</button></div><p>本地运行时需连接同一 Wi-Fi。如无法连接，请切换局域网地址。</p></div></section>
 {{template "transfer_controls" .}}
-<p>结束连接不会删除文件，可在个人文件管理的“手机电脑互传”文件夹中查看。</p></main><script src="/tools/static/js/transfer-session.js"></script></body></html>
+<p>结束连接、授权到期或重新生成二维码后，会自动删除本次会话文件，请提前下载保存。关闭网页不会立即结束会话。</p></main><script src="/tools/static/js/transfer-session.js"></script></body></html>
 {{end}}
 {{define "transfer_controls"}}
-<section class="panel"><div class="row"><h2>本次文件</h2><button id="upload" class="primary" disabled>上传文件</button><button id="refresh" disabled>刷新</button></div><p>单文件最大 50 MB，两端文件列表自动同步。</p><input id="files" type="file" multiple hidden><div id="drop">点击选择或拖入文件</div><div id="items">等待连接…</div></section>
+<section class="panel"><div class="row"><h2>本次文件</h2><button id="upload" class="primary" disabled>上传文件</button><button id="refresh" disabled>刷新</button></div><p>单文件最大 50 MB，两端文件列表自动同步。会话结束后文件自动清除。</p><p id="sessionExpiry"></p><input id="files" type="file" multiple hidden><div id="drop">点击选择或拖入文件</div><div id="items">等待连接…</div></section>
 <dialog id="imagePreview" class="transfer-preview" aria-labelledby="previewTitle"><div class="row"><strong id="previewTitle">图片预览</strong><button id="previewClose" type="button" aria-label="关闭图片预览">关闭</button></div><p id="previewStatus" role="status">正在加载图片…</p><img id="previewImage" alt="" hidden><a id="previewDownload" class="download">下载原图</a></dialog>
 {{end}}

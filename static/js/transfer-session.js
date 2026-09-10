@@ -39,7 +39,12 @@
    $('previewImage').alt=file.name;$('previewImage').src=previewURL;$('previewImage').hidden=false;
   }catch(e){if(e.name!=='AbortError')$('previewStatus').textContent=e.message;}
  }
- function enable(active){$('upload').disabled=!active;$('refresh').disabled=!active;if(!active){$('imagePreview').close();releasePreview();}if(owner){$('copy').disabled=!active;$('revoke').disabled=!active;}}
+ function enable(active){$('upload').disabled=!active;$('refresh').disabled=!active;if(!active){$('imagePreview').close();releasePreview();$('items').textContent='会话未开启或已结束';$('sessionExpiry').textContent='';}if(owner){$('copy').disabled=!active;$('revoke').disabled=!active;$('renew').disabled=!active;}}
+ function showExpiry(){
+  const text='授权有效至 '+new Date(expires).toLocaleTimeString()+'，到期后会话文件自动清除';
+  $('sessionExpiry').textContent=text;
+  if(owner)$('expiry').textContent=text;
+ }
  async function api(url,options={}){
   const response=await fetch(url,{cache:'no-store',...options});
   if(response.redirected)throw Error('电脑端登录已过期，请重新登录后生成二维码');
@@ -63,6 +68,8 @@
   if(!endpoint||polling)return;
   polling=true;const current=endpoint;
   try{
+   const session=await api(current+'/status');if(current!==endpoint)return;
+   expires=Date.parse(session.expires);showExpiry();
    const data=await api(current+'/list');if(current!==endpoint)return;
    $('items').replaceChildren();
    const files=data.items.filter(item=>!item.isDir);
@@ -110,13 +117,23 @@
     token=session.token;expires=Date.parse(session.expires);endpoint=session.path;
     link=target.origin+session.path;
     $('qr').src='/tools/personal/transfer/qr?url='+encodeURIComponent(link);$('qr').hidden=false;
-    $('expiry').textContent='有效至 '+new Date(expires).toLocaleTimeString()+'；重新生成会让旧二维码失效';
+    showExpiry();
     $('generate').textContent='重新生成二维码';enable(true);await refresh();message('手机扫码后可直接收发文件');
    }catch(e){message(e.message,true);}finally{$('generate').disabled=false;}
   };
   $('revoke').onclick=async()=>{
-   try{await api(manage+'/'+token,{method:'DELETE'});token='';endpoint='';link='';enable(false);$('qr').hidden=true;$('items').textContent='连接已结束';message('临时权限已撤销');}
+   try{await api(manage+'/'+token,{method:'DELETE'});token='';endpoint='';link='';enable(false);$('qr').hidden=true;$('items').textContent='连接已结束，会话文件已清除';message('临时权限已撤销，会话文件已清除');}
    catch(e){message(e.message,true);}
+  };
+  $('renew').onclick=async()=>{
+   const current=endpoint;
+   $('renew').disabled=true;
+   try{
+    const session=await api(manage+'/'+token+'/renew',{method:'POST'});
+    if(current!==endpoint)return;
+    expires=Date.parse(session.expires);showExpiry();
+    message('授权已刷新为 30 分钟，二维码和当前文件保持不变');
+   }catch(e){message(e.message,true);}finally{$('renew').disabled=!endpoint;}
   };
   $('copy').onclick=async()=>{
    try{
@@ -131,7 +148,6 @@
   }).catch(e=>message(e.message,true));
  }else{enable(true);refresh().catch(e=>message(e.message,true));}
  setInterval(()=>{
-  if(owner&&endpoint&&Date.now()>=expires){endpoint='';enable(false);$('qr').hidden=true;message('连接已到期，请重新生成二维码');}
   if(!document.hidden)refresh().catch(e=>message(e.message,true));
  },5000);
 })();

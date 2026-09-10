@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,20 +25,21 @@ type transferSession struct {
 const transferGuestPrefix = "/tools/transfer/temporary"
 
 var transferSessions = struct {
-	sync.Mutex
+	sync.RWMutex
 	Values map[string]transferSession
 }{Values: make(map[string]transferSession)}
 
 // RegisterTransferSessions issues narrow, expiring grants without admin cookies.
 func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
+	startTransferCleanup()
 	owner.POST("/transfer/sessions", func(c *gin.Context) {
 		transferSessions.Lock()
 		defer transferSessions.Unlock()
-		for token, session := range transferSessions.Values {
-			if !time.Now().Before(session.Expires) {
-				delete(transferSessions.Values, token)
-			}
+		if transferCleanupLoadErr != nil {
+			c.JSON(500, gin.H{"error": "无法读取会话清理记录，请检查服务器存储"})
+			return
 		}
+		cleanupExpiredTransfersLocked()
 		if len(transferSessions.Values) >= 100 {
 			c.JSON(429, gin.H{"error": "临时连接数量过多，请结束旧连接"})
 			return
@@ -70,13 +72,53 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 		}
 		session := transferSession{Folder: folder, Expires: time.Now().Add(30 * time.Minute)}
 		transferSessions.Values[token] = session
+		if err := saveTransferCleanupLocked(); err != nil {
+			session.Expires = time.Time{}
+			transferSessions.Values[token] = session
+			cleanupExpiredTransfersLocked()
+			c.JSON(500, gin.H{"error": "保存会话失败，请重试"})
+			return
+		}
 		c.JSON(200, gin.H{"token": token, "expires": session.Expires, "path": transferGuestPrefix + "/" + token})
 	})
 	owner.DELETE("/transfer/sessions/:token", func(c *gin.Context) {
 		transferSessions.Lock()
-		delete(transferSessions.Values, c.Param("token"))
-		transferSessions.Unlock()
+		defer transferSessions.Unlock()
+		token := c.Param("token")
+		if session, ok := transferSessions.Values[token]; ok {
+			session.Expires = time.Time{}
+			transferSessions.Values[token] = session
+			if err := removeTransferFolder(session.Folder); err != nil {
+				_ = saveTransferCleanupLocked()
+				c.JSON(500, gin.H{"error": "授权已结束，文件清理失败，后台将继续重试"})
+				return
+			}
+			delete(transferSessions.Values, token)
+			if err := saveTransferCleanupLocked(); err != nil {
+				log.Printf("保存互传清理记录失败: %v", err)
+			}
+		}
 		c.JSON(200, gin.H{"success": true})
+	})
+	owner.POST("/transfer/sessions/:token/renew", func(c *gin.Context) {
+		transferSessions.Lock()
+		defer transferSessions.Unlock()
+		token := c.Param("token")
+		session, ok := transferSessions.Values[token]
+		if !ok || !time.Now().Before(session.Expires) {
+			cleanupExpiredTransfersLocked()
+			c.JSON(410, gin.H{"error": "会话已结束，请重新生成二维码"})
+			return
+		}
+		previous := session
+		session.Expires = time.Now().Add(30 * time.Minute)
+		transferSessions.Values[token] = session
+		if err := saveTransferCleanupLocked(); err != nil {
+			transferSessions.Values[token] = previous
+			c.JSON(500, gin.H{"error": "刷新授权失败，请重试"})
+			return
+		}
+		c.JSON(200, gin.H{"success": true, "expires": session.Expires})
 	})
 	guest := router.Group(transferGuestPrefix+"/:token", func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
@@ -90,9 +132,10 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 				return
 			}
 		}
-		transferSessions.Lock()
+		// Keep cleanup from racing an in-flight upload or download.
+		transferSessions.RLock()
+		defer transferSessions.RUnlock()
 		session, ok := transferSessions.Values[c.Param("token")]
-		transferSessions.Unlock()
 		if !ok || !time.Now().Before(session.Expires) {
 			if c.Request.URL.Path == transferGuestPrefix+"/"+c.Param("token") {
 				c.String(410, "连接已过期或已结束，请让电脑端重新生成二维码。")
@@ -115,6 +158,10 @@ func RegisterTransferSessions(router *gin.Engine, owner *gin.RouterGroup) {
 		c.Next()
 	})
 	guest.GET("", func(c *gin.Context) { c.HTML(200, "transfer_guest", nil) })
+	guest.GET("/status", func(c *gin.Context) {
+		session := c.MustGet("transferSession").(transferSession)
+		c.JSON(200, gin.H{"expires": session.Expires})
+	})
 	guest.GET("/list", func(c *gin.Context) {
 		session := c.MustGet("transferSession").(transferSession)
 		query := c.Request.URL.Query()
