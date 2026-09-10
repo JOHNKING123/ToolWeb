@@ -4,15 +4,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>山河之间 · 中国三维地形</title>
 <meta name="description" content="以真实高程数据探索中国及周边的山脉、高原与盆地。">
-<link rel="stylesheet" href="./style.css?v=20260910.1">
+<link rel="stylesheet" href="./style.css?v=20260910.2">
 <script type="importmap">{"imports":{"three":"./assets/three.module.js"}}</script>
 </head>
 <body>
 <main id="map" aria-label="可旋转的中国三维地形图"></main>
 <header><a class="brand" href="../china-terrain-3d.html" title="查看原版地形示例">山河之间<span>CHINA RELIEF ATLAS</span></a><div class="edition">中国及周边 · 三维地形 <b>01</b></div></header>
 <section class="intro"><p class="eyebrow">一览山河 / EXPLORE THE TERRAIN</p><h1>大地，自有起伏。</h1><p>从世界屋脊，到江海平原。</p></section>
-<aside class="panel" aria-label="地形控制">
-<div class="panel-title">地形视图 <span>RELIEF</span></div>
+<button id="panel-toggle" class="panel-toggle" aria-controls="terrain-panel" aria-expanded="false"><span aria-hidden="true">⚙</span> 地形设置</button>
+<aside class="panel" id="terrain-panel" aria-label="地形控制">
+<div class="panel-title">地形视图 <span>RELIEF</span><button id="panel-close" class="panel-close" aria-label="关闭地形设置">×</button></div>
 <div class="views"><button id="oblique" class="active">立体</button><button id="top">俯视</button></div>
 <div class="zoom-buttons" role="group" aria-label="地图缩放"><button id="zoom-in" aria-label="放大地图">＋ 放大</button><button id="zoom-out" aria-label="缩小地图">− 缩小</button></div>
 <label for="height">地形起伏 <output id="height-value">50×</output></label><input id="height" type="range" min="1" max="100" value="50" step="1">
@@ -36,5 +37,5 @@
 <footer><span>拖动旋转 · 右键平移 · 滚轮缩放</span><span>高程：<a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noreferrer">Mapzen / AWS Open Data</a> · 地貌示意，非行政区划图</span></footer>
 <div id="status" role="status"><span class="spinner"></span><strong>正在铺展山河</strong><p>加载本地高程与地形纹理…</p></div>
 <noscript>请启用 JavaScript 以查看三维地形。</noscript>
-<script type="module" src="./app.js?v=20260910.1"></script>
+<script type="module" src="./app.js?v=20260910.2"></script>
 </body></html>

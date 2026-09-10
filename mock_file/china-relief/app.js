@@ -73,7 +73,18 @@ try {
   }
   function dismissInfo(){dismissed=candidate;selected=null;showInfo(null);}
   $('geo-close').onclick=dismissInfo;
-  addEventListener('keydown',event=>{if(event.key==='Escape')dismissInfo();});
+  const terrainPanel=$('terrain-panel');
+  const panelToggle=$('panel-toggle');
+  function setPanelOpen(open){
+    terrainPanel.classList.toggle('mobile-open',open);
+    panelToggle.classList.toggle('panel-open',open);
+    panelToggle.setAttribute('aria-expanded',String(open));
+  }
+  panelToggle.onclick=()=>setPanelOpen(true);
+  $('panel-close').onclick=()=>setPanelOpen(false);
+  addEventListener('keydown',event=>{
+    if(event.key==='Escape'){dismissInfo();setPanelOpen(false);}
+  });
   const labels=geography.map(item=>{
     const el=document.createElement('button');el.type='button';
     el.className='geo-label '+(item.type==='海域'?'sea':'');el.textContent=item.name;
@@ -121,8 +132,11 @@ try {
     const [lon,lat,note]=places[button.dataset.place];fly(point(lon,lat),new THREE.Vector3(0,24,17));
     $('place-note').textContent=note;selectView('oblique');document.querySelectorAll('.place').forEach(b=>b.classList.toggle('active',b===button));
   });
-  controls.addEventListener('start',()=>{flight=null;selected=null;});
-  addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  controls.addEventListener('start',()=>{flight=null;selected=null;if(innerWidth<=800)setPanelOpen(false);});
+  addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
+    if(innerWidth>800)setPanelOpen(false);
+  });
   const projected=new THREE.Vector3();
   function render(now){
     requestAnimationFrame(render);
