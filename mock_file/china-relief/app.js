@@ -138,6 +138,8 @@ try {
     if(innerWidth>800)setPanelOpen(false);
   });
   const projected=new THREE.Vector3();
+  const northOrigin=new THREE.Vector3();
+  const northPoint=new THREE.Vector3();
   function render(now){
     requestAnimationFrame(render);
     if(document.hidden)return;
@@ -166,7 +168,14 @@ try {
       if(selected)showInfo(selected);
       else if(now-candidateSince>450)showInfo(candidate===dismissed?null:candidate,true);
     }
-    $('north').style.transform=`rotate(${-controls.getAzimuthalAngle()*180/Math.PI}deg)`;
+    northOrigin.copy(controls.target).project(camera);
+    northPoint.copy(controls.target);
+    northPoint.z-=1;
+    northPoint.project(camera);
+    const northDx=(northPoint.x-northOrigin.x)*innerWidth*.5;
+    const northDy=-(northPoint.y-northOrigin.y)*innerHeight*.5;
+    const northAngle=Math.atan2(northDx,-northDy)*180/Math.PI;
+    $('north').style.transform=`rotate(${northAngle}deg)`;
   }
   status.style.display='none';requestAnimationFrame(render);
 } catch(error){
