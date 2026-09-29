@@ -488,6 +488,23 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "life",
+			Name:        "生活工具",
+			Description: "日常生活实用小工具",
+			Icon:        "home",
+			Tools: []Tool{
+				{
+					ID:          "relationship",
+					Name:        "亲戚关系计算器",
+					Description: "输入关系链查标准称谓，支持反向查询与南北口语别名",
+					Path:        "/tools/relationship-calculator",
+					Icon:        "family_restroom",
+					New:         true,
+					Category:    "生活工具",
+				},
+			},
+		},
 	}
 }
 

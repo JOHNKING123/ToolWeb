@@ -1,0 +1,329 @@
+{{define "relationship_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亲戚关系计算器 - 亲戚称谓查询_亲戚称呼计算器 | 程序员工具箱</title>
+    <meta name="description" content="免费在线亲戚关系计算器：输入“爸爸的妈妈的弟弟”秒查标准称谓（如舅公），支持反向查询（输入“舅妈”反推关系链），展示南北口语别名，春节聚会、婚宴必备。">
+    <meta name="keywords" content="亲戚关系计算器,亲戚称呼计算器,亲戚称谓查询,亲戚叫什么,称呼计算器,亲戚关系查询,辈分计算器,舅妈,姨妈,外公,婆婆,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/relationship-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "亲戚关系计算器",
+      "description": "免费在线亲戚关系计算器：输入关系链查标准称谓，支持反向查询与南北口语别名，纯前端秒出结果。",
+      "url": "https://www.johnkingzcq123.xyz/tools/relationship-calculator",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .rel-tabs { display:flex; gap:.6rem; margin-bottom:1.2rem; }
+        .rel-tab { flex:1; padding:.8rem; font-size:1.05rem; border:2px solid #e5e7eb; background:#fff; border-radius:.6rem; cursor:pointer; }
+        .rel-tab.active { border-color:#2563eb; color:#2563eb; font-weight:600; background:#eff6ff; }
+        .rel-quick { display:grid; grid-template-columns:repeat(5,1fr); gap:.6rem; margin:1rem 0; }
+        .rel-quick button { min-height:3.4rem; font-size:1.2rem; border:1px solid #e5e7eb; background:#f9fafb; border-radius:.6rem; cursor:pointer; }
+        .rel-quick button:active { background:#dbeafe; border-color:#2563eb; }
+        .rel-chainbox { background:#f3f4f6; border-radius:.6rem; padding:1rem; min-height:3.2rem; font-size:1.15rem; line-height:2; word-break:break-all; }
+        .rel-chip { display:inline-block; background:#dbeafe; color:#1d4ed8; border-radius:.4rem; padding:0 .5rem; margin:.15rem; }
+        .rel-result-main { font-size:2rem; font-weight:700; color:#2563eb; margin:.6rem 0; }
+        .rel-alias { display:inline-block; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:999px; padding:.2rem .8rem; margin:.2rem; font-size:.95rem; color:#374151; }
+        .rel-row { display:flex; align-items:center; justify-content:space-between; gap:.6rem; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem 1rem; margin:.5rem 0; font-size:1.05rem; }
+        .rel-example { display:inline-block; background:#fff; border:1px dashed #9ca3af; border-radius:999px; padding:.3rem .9rem; margin:.25rem; font-size:.9rem; color:#4b5563; cursor:pointer; }
+        .rel-example:active { background:#eff6ff; border-color:#2563eb; color:#2563eb; }
+        .rel-sex label { margin-right:1.2rem; font-size:1rem; }
+        .rel-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; }
+        @media (max-width:480px) {
+            .rel-quick button { min-height:3.8rem; font-size:1.3rem; }
+            .rel-result-main { font-size:1.7rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">family_restroom</i> 亲戚关系计算器</h1>
+            <p>过年聚会、婚宴再也不怕叫错人：输入关系链秒查标准称谓，也支持反查</p>
+        </div>
+        <div class="tool-content" style="max-width:720px;margin:auto;">
+            <div class="rel-tabs">
+                <button class="rel-tab active" id="tab-fwd" onclick="switchTab('fwd')">正向：查称谓</button>
+                <button class="rel-tab" id="tab-rev" onclick="switchTab('rev')">反向：查关系链</button>
+            </div>
+
+            <div id="panel-fwd">
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>点选输入关系</h3>
+                    <div class="rel-quick" id="rel-quick"></div>
+                    <div class="rel-chainbox" id="rel-chainbox"><span style="color:#9ca3af;">点选上方按钮，或在下方直接输入，如：爸爸的妈妈的弟弟</span></div>
+                    <div class="rel-actions">
+                        <button class="btn btn-secondary" onclick="backToken()"><i class="material-icons">backspace</i> 回退</button>
+                        <button class="btn btn-secondary" onclick="clearChain()">清空</button>
+                    </div>
+                </div>
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>关系链</h3>
+                    <div class="form-group">
+                        <input id="rel-input" type="text" class="input-area" placeholder="例如：爸爸的妈妈的弟弟" style="width:100%;font-size:1.1rem;">
+                    </div>
+                    <div class="form-group rel-sex" style="margin-top:.8rem;">
+                        <span style="color:#6b7280;">我是：</span>
+                        <label><input type="radio" name="rel-sex" value="-1" checked> 不限</label>
+                        <label><input type="radio" name="rel-sex" value="1"> 男</label>
+                        <label><input type="radio" name="rel-sex" value="0"> 女</label>
+                    </div>
+                    <div class="rel-actions">
+                        <button class="btn btn-primary" onclick="calcForward()"><i class="material-icons">search</i> 查称谓</button>
+                        <button class="btn btn-secondary" onclick="copyForward()">复制结果</button>
+                    </div>
+                    <div style="margin-top:.8rem;">
+                        <span style="color:#9ca3af;font-size:.9rem;">试试：</span>
+                        <span class="rel-example" onclick="fillExample('爸爸的爸爸')">爸爸的爸爸</span>
+                        <span class="rel-example" onclick="fillExample('妈妈的姐妹')">妈妈的姐妹</span>
+                        <span class="rel-example" onclick="fillExample('爸爸的哥哥')">爸爸的哥哥</span>
+                        <span class="rel-example" onclick="fillExample('妻子的弟弟')">妻子的弟弟</span>
+                        <span class="rel-example" onclick="fillExample('老公的妈妈')">老公的妈妈</span>
+                    </div>
+                    <div class="result-section" style="margin-top:1rem;">
+                        <div id="rel-result" class="result-area" style="min-height:2.5em;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-rev" style="display:none;">
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>输入称谓，反推关系链</h3>
+                    <div class="form-group">
+                        <input id="rel-rev-input" type="text" class="input-area" placeholder="例如：舅妈" style="width:100%;font-size:1.1rem;">
+                    </div>
+                    <div class="rel-actions">
+                        <button class="btn btn-primary" onclick="calcReverse()"><i class="material-icons">search</i> 反查关系链</button>
+                    </div>
+                    <div style="margin-top:.8rem;">
+                        <span style="color:#9ca3af;font-size:.9rem;">试试：</span>
+                        <span class="rel-example" onclick="fillRevExample('舅妈')">舅妈</span>
+                        <span class="rel-example" onclick="fillRevExample('婆婆')">婆婆</span>
+                        <span class="rel-example" onclick="fillRevExample('小舅子')">小舅子</span>
+                        <span class="rel-example" onclick="fillRevExample('嫂子')">嫂子</span>
+                        <span class="rel-example" onclick="fillRevExample('表哥')">表哥</span>
+                    </div>
+                    <div class="result-section" style="margin-top:1rem;">
+                        <div id="rel-rev-result" class="result-area" style="min-height:2.5em;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>小知识</h3>
+                <div style="color:#374151;line-height:1.9;font-size:.98rem;">
+                    <b>长幼不分时</b>：不确定排行（如只知道“妈妈的姐妹”）会同时给出“大姨 / 小姨”，并标注通用叫法“姨妈”。<br>
+                    <b>南北差异</b>：如“外公”在北方常叫“姥爷”，“舅爷爷”在南方常叫“舅公”，结果下方会列出口语别名。<br>
+                    <b>性别矛盾</b>：若选择“我是男”却查“老公的妈妈”，会查无结果——此时切换性别或选“不限”即可。<br>
+                    本工具计算逻辑移植自 MIT 开源项目 yugongwen/relationship，覆盖三代以内常见亲戚关系，纯前端运行不联网。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/relationship.js"></script>
+    <script>
+    /* 快捷按钮：显示字 -> 关系链 token */
+    var QUICK = [['父','爸爸'],['母','妈妈'],['兄','哥哥'],['弟','弟弟'],['姐','姐姐'],['妹','妹妹'],['夫','丈夫'],['妻','妻子'],['子','儿子'],['女','女儿']];
+    /* 年龄未定时多结果 -> 通用称谓 */
+    var GENERIC = {
+        '大姨|小姨':'姨妈','大舅|小舅':'舅舅','大姑|小姑':'姑妈',
+        '大姨子|小姨子':'姨子','大舅子|小舅子':'舅子','大姑子|小姑子':'姑子',
+        '大姨丈|小姨丈':'姨丈','大姑丈|小姑丈':'姑丈','大舅妈|小舅妈':'舅妈',
+        '堂哥|堂弟':'堂兄弟','堂姐|堂妹':'堂姐妹',
+        '舅表哥|舅表弟':'舅表兄弟','舅表姐|舅表妹':'舅表姐妹',
+        '姑表哥|姑表弟':'姑表兄弟','姑表姐|姑表妹':'姑表姐妹',
+        '姨哥|姨弟':'姨表兄弟','姨姐|姨妹':'姨表姐妹',
+        '表哥|表弟':'表兄弟','表姐|表妹':'表姐妹'
+    };
+    /* 按规格展示的标准称谓覆盖（算法原值 -> 展示主称谓） */
+    var PRIMARY = { '舅爷爷':'舅公' };
+    /* 南北/口语别名（主称谓 -> 别名列表） */
+    var ALIASES = {
+        '爷爷':['祖父','阿公'],'奶奶':['祖母','阿嬷'],
+        '外公':['姥爷','外祖父'],'外婆':['姥姥','外祖母'],
+        '伯父':['大伯'],'伯母':['大妈','大娘'],'叔叔':['叔父'],'婶婶':['婶母'],
+        '姑妈':['姑姑','姑母'],'舅舅':['母舅'],'姨妈':['姨母'],
+        '舅公':['舅爷爷','舅姥爷'],'姑外婆':['姑姥姥'],
+        '婆婆':['婆母'],'公公':['公爹'],'岳父':['岳丈'],'岳母':['丈母娘'],
+        '儿媳':['媳妇','儿媳妇'],'女婿':['姑爷'],
+        '嫂子':['嫂嫂'],'弟妹':['弟媳'],'姐夫':['姐丈'],'妹夫':['妹婿'],
+        '侄子':['侄儿'],'侄女':['侄女儿'],'外甥':['甥儿'],'外甥女':['甥女'],
+        '孙子':['孙儿'],'孙女':['孙女儿'],
+        '曾祖父':['太爷爷'],'曾祖母':['太奶奶'],
+        '堂兄弟':['堂哥','堂弟'],'堂姐妹':['堂姐','堂妹']
+    };
+
+    var chain = [];
+    var lastForward = null; /* {text, main} 供复制 */
+
+    function switchTab(which) {
+        document.getElementById('tab-fwd').className = 'rel-tab' + (which === 'fwd' ? ' active' : '');
+        document.getElementById('tab-rev').className = 'rel-tab' + (which === 'rev' ? ' active' : '');
+        document.getElementById('panel-fwd').style.display = which === 'fwd' ? '' : 'none';
+        document.getElementById('panel-rev').style.display = which === 'rev' ? '' : 'none';
+    }
+    function esc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function renderChain() {
+        var box = document.getElementById('rel-chainbox');
+        if (!chain.length) {
+            box.innerHTML = '<span style="color:#9ca3af;">点选上方按钮，或在下方直接输入，如：爸爸的妈妈的弟弟</span>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < chain.length; i++) {
+            if (i > 0) html += '<span style="color:#9ca3af;"> 的 </span>';
+            html += '<span class="rel-chip">' + esc(chain[i]) + '</span>';
+        }
+        box.innerHTML = html;
+    }
+    function syncInput() {
+        document.getElementById('rel-input').value = chain.join('的');
+        renderChain();
+    }
+    function addToken(t) { chain.push(t); syncInput(); }
+    function backToken() { chain.pop(); syncInput(); }
+    function clearChain() {
+        chain = [];
+        document.getElementById('rel-input').value = '';
+        document.getElementById('rel-result').innerHTML = '';
+        lastForward = null;
+        renderChain();
+    }
+    function fillExample(t) {
+        chain = t.split('的');
+        syncInput();
+        calcForward();
+    }
+    function fillRevExample(t) {
+        document.getElementById('rel-rev-input').value = t;
+        calcReverse();
+    }
+    function getSex() {
+        var els = document.querySelectorAll('input[name="rel-sex"]');
+        for (var i = 0; i < els.length; i++) { if (els[i].checked) return parseInt(els[i].value, 10); }
+        return -1;
+    }
+    /* 正向结果展示：多结果并列 + 通用称谓 + 别名 */
+    function presentForward(res) {
+        if (!res || !res.length) return null;
+        var key = res.slice().sort().join('|');
+        var main, variants = [];
+        if (GENERIC[key]) {
+            main = GENERIC[key];
+            variants = res.slice();
+        } else {
+            main = PRIMARY[res[0]] || res[0];
+            if (PRIMARY[res[0]]) variants.push(res[0]);
+            for (var i = 1; i < res.length; i++) variants.push(res[i]);
+        }
+        var aliases = [];
+        (ALIASES[main] || []).forEach(function(a) {
+            if (a !== main && variants.indexOf(a) < 0) aliases.push(a);
+        });
+        return { main: main, variants: variants, aliases: aliases };
+    }
+    function calcForward() {
+        var text = document.getElementById('rel-input').value.replace(/\s+/g, '').trim();
+        var out = document.getElementById('rel-result');
+        if (!text) { out.innerHTML = '<span style="color:#dc2626;">请先点选或输入关系链</span>'; return; }
+        var res;
+        try { res = relationship({ text: text, sex: getSex() }); }
+        catch (e) { res = []; }
+        var p = presentForward(res);
+        if (!p) {
+            lastForward = null;
+            out.innerHTML = '<span style="color:#dc2626;">没查到“' + esc(text) + '”的称谓。</span><br>' +
+                '<span style="color:#6b7280;font-size:.9rem;">可能原因：称谓超出三代以内常用范围，或所选性别与关系矛盾（如选了“我是男”又查“老公的妈妈”）——试试切换性别或选“不限”。</span>';
+            return;
+        }
+        lastForward = { text: text, main: p.main };
+        var html = '<div style="color:#6b7280;font-size:.9rem;">“' + esc(text) + '”应该叫：</div>' +
+            '<div class="rel-result-main">' + esc(p.main) + '</div>';
+        if (p.variants.length) {
+            html += '<div style="margin:.4rem 0;"><span style="color:#6b7280;font-size:.9rem;">按排行细分：</span>';
+            p.variants.forEach(function(v) { html += '<span class="rel-alias">' + esc(v) + '</span>'; });
+            html += '</div>';
+        }
+        if (p.aliases.length) {
+            html += '<div style="margin:.4rem 0;"><span style="color:#6b7280;font-size:.9rem;">口语/别名：</span>';
+            p.aliases.forEach(function(a) { html += '<span class="rel-alias">' + esc(a) + '</span>'; });
+            html += '</div>';
+        }
+        out.innerHTML = html;
+    }
+    function copyForward() {
+        if (!lastForward) { toast('还没有计算结果'); return; }
+        copyText(lastForward.main, '已复制：' + lastForward.main);
+    }
+    function calcReverse() {
+        var name = document.getElementById('rel-rev-input').value.replace(/\s+/g, '').trim();
+        var out = document.getElementById('rel-rev-result');
+        if (!name) { out.innerHTML = '<span style="color:#dc2626;">请输入称谓，如：舅妈</span>'; return; }
+        var chains;
+        try { chains = relationship({ text: name, type: 'chain', sex: getSex() }); }
+        catch (e) { chains = []; }
+        chains = chains.filter(function(c, i) { return c && chains.indexOf(c) === i; });
+        if (!chains.length) {
+            out.innerHTML = '<span style="color:#dc2626;">没查到“' + esc(name) + '”可能的关系链。</span><br>' +
+                '<span style="color:#6b7280;font-size:.9rem;">试试更常见的叫法，或切换性别为“不限”。</span>';
+            return;
+        }
+        var html = '<div style="color:#6b7280;font-size:.9rem;">“' + esc(name) + '”可能是你的：</div>';
+        chains.forEach(function(c, i) {
+            html += '<div class="rel-row"><span>' + esc(c) + '</span>' +
+                '<button class="btn btn-secondary btn-sm" onclick="copyText(' + esc(JSON.stringify(c)) + ')">复制</button></div>';
+        });
+        out.innerHTML = html;
+    }
+    function copyText(t, okMsg) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(t).then(function() { toast(okMsg || '已复制'); }, function() { toast('复制失败，请手动复制'); });
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = t; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); toast(okMsg || '已复制'); } catch (e) { toast('复制失败，请手动复制'); }
+            document.body.removeChild(ta);
+        }
+    }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function() { document.body.removeChild(el); }, 1600);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var box = document.getElementById('rel-quick');
+        QUICK.forEach(function(q) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = q[0];
+            b.title = q[1];
+            b.onclick = (function(t) { return function() { addToken(t); }; })(q[1]);
+            box.appendChild(b);
+        });
+        renderChain();
+        document.getElementById('rel-input').addEventListener('input', function() {
+            var v = this.value.replace(/\s+/g, '').trim();
+            chain = v ? v.split('的') : [];
+            renderChain();
+        });
+    });
+    </script>
+</body>
+</html>
+{{end}}
