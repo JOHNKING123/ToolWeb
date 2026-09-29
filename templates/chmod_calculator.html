@@ -1,0 +1,173 @@
+{{define "chmod_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chmod权限计算器 - 在线换算Linux文件权限 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Chmod 权限计算器：勾选 rwx 复选框，实时换算数字权限（如 755）与符号权限（如 rwxr-xr-x），附常用预设。">
+    <meta name="keywords" content="chmod,chmod计算器,Linux权限,文件权限,755,644,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/chmod-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Chmod权限计算器",
+      "description": "免费在线 Chmod 权限计算器：勾选换算数字权限与符号权限，附常用预设。",
+      "url": "https://www.johnkingzcq123.xyz/tools/chmod-calculator",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .perm-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .perm-table th, .perm-table td { border: 1px solid #e5e7eb; padding: .7rem; text-align: center; }
+        .perm-table th { background: #f9fafb; font-weight: 600; }
+        .perm-table input[type=checkbox] { width: 1.3em; height: 1.3em; }
+        .perm-result { font-family: ui-monospace,Menlo,Consolas,monospace; font-size: 1.3rem; background: #f3f4f6; border-radius: .5rem; padding: 1rem; margin: 1rem 0; word-break: break-all; }
+        .preset-btns { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">security</i> Chmod 权限计算器</h1>
+            <p>勾选权限，实时换算数字表示（如 755）与符号表示（如 rwxr-xr-x）</p>
+        </div>
+        <div class="tool-content" style="max-width:640px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <table class="perm-table">
+                    <tr><th></th><th>读 r (4)</th><th>写 w (2)</th><th>执行 x (1)</th></tr>
+                    <tr><th>所有者</th>
+                        <td><input type="checkbox" id="p-ur" checked></td>
+                        <td><input type="checkbox" id="p-uw" checked></td>
+                        <td><input type="checkbox" id="p-ux" checked></td></tr>
+                    <tr><th>所属组</th>
+                        <td><input type="checkbox" id="p-gr" checked></td>
+                        <td><input type="checkbox" id="p-gw"></td>
+                        <td><input type="checkbox" id="p-gx" checked></td></tr>
+                    <tr><th>其他人</th>
+                        <td><input type="checkbox" id="p-or" checked></td>
+                        <td><input type="checkbox" id="p-ow"></td>
+                        <td><input type="checkbox" id="p-ox" checked></td></tr>
+                </table>
+                <div class="perm-result" id="chmod-result">-</div>
+                <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="copyChmod()"><i class="material-icons">content_copy</i> 复制 chmod 命令</button>
+                </div>
+                <div class="form-group" style="margin-top:1.2rem;">
+                    <label for="chmod-num">或直接输入数字权限反查：</label>
+                    <input id="chmod-num" type="text" class="input-area" placeholder="例如 755" style="width:10em;" maxlength="3">
+                    <button class="btn btn-primary btn-sm" onclick="fromNumber()" style="margin-left:.5rem;">反查</button>
+                </div>
+                <div>
+                    <div style="font-weight:600;margin-bottom:.4rem;">常用预设：</div>
+                    <div class="preset-btns" id="chmod-presets"></div>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>权限速查</h3>
+                <div style="color:#374151;line-height:2;font-size:1rem;">
+                    <b>755</b>（rwxr-xr-x）：可执行文件、脚本、目录的常用权限<br>
+                    <b>644</b>（rw-r--r--）：普通文件、网页文件的常用权限<br>
+                    <b>600</b>（rw-------）：私钥、敏感配置，仅自己可读写<br>
+                    <b>700</b>（rwx------）：私有目录、~/.ssh 的常用权限<br>
+                    <b>777</b>（rwxrwxrwx）：所有人可读写执行，<span style="color:#dc2626;">有安全风险，慎用</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    var PRESETS = [
+        ['755', '可执行文件/目录'], ['644', '普通文件/网页'],
+        ['600', '私钥/敏感配置'], ['700', '私有目录'],
+        ['777', '完全开放（慎用）'], ['640', '日志文件']
+    ];
+    var IDS = ['p-ur','p-uw','p-ux','p-gr','p-gw','p-gx','p-or','p-ow','p-ox'];
+    function readBoxes() {
+        var bits = [0,0,0];
+        var groups = [['p-ur','p-uw','p-ux'],['p-gr','p-gw','p-gx'],['p-or','p-ow','p-ox']];
+        for (var g=0; g<3; g++) {
+            var v = 0;
+            if (document.getElementById(groups[g][0]).checked) v += 4;
+            if (document.getElementById(groups[g][1]).checked) v += 2;
+            if (document.getElementById(groups[g][2]).checked) v += 1;
+            bits[g] = v;
+        }
+        return bits;
+    }
+    function bitsToSymbolic(bits) {
+        var out = '';
+        var groups = [['p-ur','p-uw','p-ux'],['p-gr','p-gw','p-gx'],['p-or','p-ow','p-ox']];
+        var chars = ['r','w','x'];
+        for (var g=0; g<3; g++) {
+            for (var i=0; i<3; i++) {
+                out += document.getElementById(groups[g][i]).checked ? chars[i] : '-';
+            }
+        }
+        return out;
+    }
+    function updateChmod() {
+        var bits = readBoxes();
+        var num = '' + bits[0] + bits[1] + bits[2];
+        var sym = bitsToSymbolic(bits);
+        document.getElementById('chmod-result').innerHTML =
+            'chmod <b style="color:#2563eb;">' + num + '</b> &nbsp;·&nbsp; <span style="color:#059669;">' + sym + '</span>';
+        document.getElementById('chmod-result').dataset.num = num;
+    }
+    function copyChmod() {
+        var num = document.getElementById('chmod-result').dataset.num || '755';
+        copyText('chmod ' + num + ' <文件名>', '已复制 chmod 命令');
+    }
+    function fromNumber() {
+        var raw = document.getElementById('chmod-num').value.trim();
+        if (!/^[0-7]{3}$/.test(raw)) { toast('请输入 3 位 0-7 的数字，如 755'); return; }
+        var groups = [['p-ur','p-uw','p-ux'],['p-gr','p-gw','p-gx'],['p-or','p-ow','p-ox']];
+        for (var g=0; g<3; g++) {
+            var v = parseInt(raw[g], 10);
+            document.getElementById(groups[g][0]).checked = (v & 4) !== 0;
+            document.getElementById(groups[g][1]).checked = (v & 2) !== 0;
+            document.getElementById(groups[g][2]).checked = (v & 1) !== 0;
+        }
+        updateChmod();
+    }
+    function applyPreset(num) {
+        document.getElementById('chmod-num').value = num;
+        fromNumber();
+    }
+    function copyText(t, okMsg) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(t).then(function(){toast(okMsg||'已复制');}, function(){toast('复制失败，请手动复制');});
+        } else { toast('当前环境不支持一键复制，请手动复制'); }
+    }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function(){ document.body.removeChild(el); }, 1600);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        IDS.forEach(function(id){
+            document.getElementById(id).addEventListener('change', updateChmod);
+        });
+        var box = document.getElementById('chmod-presets');
+        PRESETS.forEach(function(p){
+            var b = document.createElement('button');
+            b.className = 'btn btn-secondary btn-sm';
+            b.textContent = p[0] + ' ' + p[1];
+            b.onclick = (function(num){ return function(){ applyPreset(num); }; })(p[0]);
+            box.appendChild(b);
+        });
+        updateChmod();
+    });
+    </script>
+</body>
+</html>
+{{end}}

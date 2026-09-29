@@ -1,0 +1,194 @@
+{{define "color_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色转换 - HEX/RGB/HSL互转与对比度检查 | 程序员工具箱</title>
+    <meta name="description" content="免费在线颜色转换工具：HEX、RGB、HSL 互转，颜色选择器实时预览，WCAG 对比度检查，纯本地运行。">
+    <meta name="keywords" content="颜色转换,HEX转RGB,RGB转HSL,颜色选择器,对⽐度检查,WCAG,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/color-converter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "颜色转换工具",
+      "description": "免费在线颜色转换工具：HEX、RGB、HSL 互转，实时预览，WCAG 对比度检查。",
+      "url": "https://www.johnkingzcq123.xyz/tools/color-converter",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .color-preview { width: 100%; height: 90px; border-radius: .5rem; border: 1px solid #e5e7eb; margin-bottom: 1rem; transition: background .2s; }
+        .color-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .color-row label { min-width: 4em; font-weight: 600; }
+        .color-row input[type=text] { flex: 1; min-width: 10em; }
+        .contrast-box { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+        .contrast-sample { flex: 1; min-width: 12em; padding: 1.2rem; border-radius: .5rem; text-align: center; font-weight: 600; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">palette</i> 颜色转换</h1>
+            <p>HEX / RGB / HSL 互转，实时预览，WCAG 对比度检查</p>
+        </div>
+        <div class="tool-content" style="max-width:640px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div id="color-preview" class="color-preview"></div>
+                <div class="color-row">
+                    <label>取色器</label>
+                    <input type="color" id="color-picker" value="#2563eb" style="width:4em;height:2.6em;padding:0;border:1px solid #e5e7eb;border-radius:.4rem;">
+                    <button class="btn btn-secondary" onclick="randomColor()"><i class="material-icons">autorenew</i> 随机颜色</button>
+                </div>
+                <div class="color-row">
+                    <label for="color-hex">HEX</label>
+                    <input id="color-hex" type="text" class="input-area" placeholder="#2563eb" spellcheck="false">
+                    <button class="btn btn-secondary btn-sm" onclick="copyField('color-hex')">复制</button>
+                </div>
+                <div class="color-row">
+                    <label for="color-rgb">RGB</label>
+                    <input id="color-rgb" type="text" class="input-area" placeholder="37, 99, 235" spellcheck="false">
+                    <button class="btn btn-secondary btn-sm" onclick="copyField('color-rgb')">复制</button>
+                </div>
+                <div class="color-row">
+                    <label for="color-hsl">HSL</label>
+                    <input id="color-hsl" type="text" class="input-area" placeholder="221, 83%, 53%" spellcheck="false">
+                    <button class="btn btn-secondary btn-sm" onclick="copyField('color-hsl')">复制</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>对比度检查（WCAG）</h3>
+                <p style="color:#6b7280;font-size:.9rem;">检查当前颜色作为文字/背景时的可读性。AA 级要求普通文本对比度 ≥ 4.5:1，大文本 ≥ 3:1。</p>
+                <div class="contrast-box">
+                    <div class="contrast-sample" id="sample-on-white" style="background:#fff;border:1px solid #e5e7eb;">示例文字 Ag</div>
+                    <div class="contrast-sample" id="sample-on-black" style="background:#000;">示例文字 Ag</div>
+                </div>
+                <div id="contrast-result" style="margin-top:1rem;line-height:2;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+    function parseHex(s) {
+        s = s.trim().replace(/^#/, '');
+        if (/^[0-9a-fA-F]{3}$/.test(s)) s = s.split('').map(function(c){return c+c;}).join('');
+        if (!/^[0-9a-fA-F]{6}$/.test(s)) return null;
+        return [parseInt(s.slice(0,2),16), parseInt(s.slice(2,4),16), parseInt(s.slice(4,6),16)];
+    }
+    function rgbToHex(r, g, b) {
+        return '#' + [r,g,b].map(function(v){ var h = clamp(Math.round(v),0,255).toString(16); return h.length<2?'0'+h:h; }).join('');
+    }
+    function rgbToHsl(r, g, b) {
+        r/=255; g/=255; b/=255;
+        var max=Math.max(r,g,b), min=Math.min(r,g,b), h=0, s=0, l=(max+min)/2;
+        if (max!==min) {
+            var d=max-min;
+            s = l>0.5 ? d/(2-max-min) : d/(max+min);
+            if (max===r) h=(g-b)/d+(g<b?6:0);
+            else if (max===g) h=(b-r)/d+2;
+            else h=(r-g)/d+4;
+            h*=60;
+        }
+        return [Math.round(h), Math.round(s*100), Math.round(l*100)];
+    }
+    function hslToRgb(h, s, l) {
+        h=((h%360)+360)%360; s=clamp(s,0,100)/100; l=clamp(l,0,100)/100;
+        var c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2, r=0,g=0,b=0;
+        if (h<60){r=c;g=x;} else if (h<120){r=x;g=c;} else if (h<180){g=c;b=x;}
+        else if (h<240){g=x;b=c;} else if (h<300){r=x;b=c;} else {r=c;b=x;}
+        return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+    }
+    function parseRgb(s) {
+        var m = s.trim().match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
+        if (!m) return null;
+        var v = [parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10)];
+        if (v.some(function(x){return x<0||x>255;})) return null;
+        return v;
+    }
+    function parseHsl(s) {
+        var m = s.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)%?\s*,\s*(\d+(?:\.\d+)?)%?$/);
+        if (!m) return null;
+        return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+    }
+    function luminance(r, g, b) {
+        var f = function(v){ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
+        return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b);
+    }
+    function contrastRatio(l1, l2) {
+        var a=Math.max(l1,l2), b=Math.min(l1,l2);
+        return (a+0.05)/(b+0.05);
+    }
+    var updating = false;
+    function setFromRgb(r, g, b, src) {
+        if (updating) return;
+        updating = true;
+        var hex = rgbToHex(r,g,b), hsl = rgbToHsl(r,g,b);
+        if (src!=='hex') document.getElementById('color-hex').value = hex;
+        if (src!=='rgb') document.getElementById('color-rgb').value = r+', '+g+', '+b;
+        if (src!=='hsl') document.getElementById('color-hsl').value = hsl[0]+', '+hsl[1]+'%, '+hsl[2]+'%';
+        if (src!=='picker') document.getElementById('color-picker').value = hex;
+        document.getElementById('color-preview').style.background = hex;
+        updateContrast(r,g,b);
+        updating = false;
+    }
+    function updateContrast(r,g,b) {
+        var lum = luminance(r,g,b);
+        var onWhite = contrastRatio(lum, luminance(255,255,255));
+        var onBlack = contrastRatio(lum, luminance(0,0,0));
+        var hex = rgbToHex(r,g,b);
+        document.getElementById('sample-on-white').style.color = hex;
+        document.getElementById('sample-on-black').style.color = hex;
+        document.getElementById('contrast-result').innerHTML =
+            '与白色背景对比度：<b>'+onWhite.toFixed(2)+':1</b> ' + badge(onWhite) + '<br>' +
+            '与黑色背景对比度：<b>'+onBlack.toFixed(2)+':1</b> ' + badge(onBlack);
+    }
+    function badge(ratio) {
+        if (ratio>=7) return '<span style="color:#059669;">AAA ✓</span>';
+        if (ratio>=4.5) return '<span style="color:#059669;">AA ✓</span>';
+        if (ratio>=3) return '<span style="color:#d97706;">仅大文本 AA</span>';
+        return '<span style="color:#dc2626;">不达标 ✗</span>';
+    }
+    function randomColor() {
+        setFromRgb(Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256), 'picker');
+    }
+    function copyField(id) {
+        var v = document.getElementById(id).value;
+        if (!v) { toast('没有可复制的内容'); return; }
+        copyText(v, '已复制');
+    }
+    function copyText(t, okMsg) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(t).then(function(){toast(okMsg||'已复制');}, function(){toast('复制失败，请手动复制');});
+        } else { toast('当前环境不支持一键复制，请手动复制'); }
+    }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function(){ document.body.removeChild(el); }, 1600);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var hexI=document.getElementById('color-hex'), rgbI=document.getElementById('color-rgb'),
+            hslI=document.getElementById('color-hsl'), picker=document.getElementById('color-picker');
+        hexI.addEventListener('input', function(){ var v=parseHex(hexI.value); if(v) setFromRgb(v[0],v[1],v[2],'hex'); });
+        rgbI.addEventListener('input', function(){ var v=parseRgb(rgbI.value); if(v) setFromRgb(v[0],v[1],v[2],'rgb'); });
+        hslI.addEventListener('input', function(){
+            var v=parseHsl(hslI.value); if(!v) return;
+            var rgb=hslToRgb(v[0],v[1],v[2]); setFromRgb(rgb[0],rgb[1],rgb[2],'hsl');
+        });
+        picker.addEventListener('input', function(){ var v=parseHex(picker.value); if(v) setFromRgb(v[0],v[1],v[2],'picker'); });
+        setFromRgb(37,99,235,'init');
+    });
+    </script>
+</body>
+</html>
+{{end}}

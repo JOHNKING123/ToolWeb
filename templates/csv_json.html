@@ -1,0 +1,184 @@
+{{define "csv_json"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV与JSON互转 - 在线转换表格数据 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSV 与 JSON 互转工具：CSV 转 JSON 数组、JSON 转 CSV 表格，支持自定义分隔符，纯本地运行。">
+    <meta name="keywords" content="CSV转JSON,JSON转CSV,CSV在线转换,表格数据转换,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/csv-json">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CSV与JSON互转工具",
+      "description": "免费在线 CSV 与 JSON 互转工具：CSV 转 JSON 数组、JSON 转 CSV，支持自定义分隔符。",
+      "url": "https://www.johnkingzcq123.xyz/tools/csv-json",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">table_chart</i> CSV ⇄ JSON 互转</h1>
+            <p>表格数据与 JSON 数组互转，支持自定义分隔符</p>
+        </div>
+        <div class="tool-content" style="max-width:720px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label>转换方向：</label>
+                    <label style="margin-left:1em;"><input type="radio" name="csv-dir" value="csv2json" checked> CSV → JSON</label>
+                    <label style="margin-left:1em;"><input type="radio" name="csv-dir" value="json2csv"> JSON → CSV</label>
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;">
+                    <label>分隔符：<input id="csv-delim" type="text" class="input-area" value="," style="width:3em;text-align:center;" maxlength="1"></label>
+                    <label><input type="checkbox" id="csv-header" checked> 首行为表头</label>
+                    <label><input type="checkbox" id="csv-pretty" checked> JSON 格式化输出</label>
+                </div>
+                <div class="form-group">
+                    <label for="csv-input">输入数据：</label>
+                    <textarea id="csv-input" rows="8" class="input-area" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;" placeholder="CSV 示例：&#10;name,age,city&#10;张三,25,深圳&#10;李四,30,广州" spellcheck="false"></textarea>
+                </div>
+                <div class="form-actions" style="margin-top:1rem;">
+                    <button onclick="doConvert()" class="btn btn-primary"><i class="material-icons">swap_horiz</i> 转换</button>
+                    <button class="btn btn-secondary" onclick="copyCsvResult()"><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn btn-secondary" onclick="downloadCsvResult()"><i class="material-icons">download</i> 下载结果</button>
+                    <button class="btn btn-secondary" onclick="clearCsv()">清空</button>
+                </div>
+                <div class="result-section" style="margin-top:1rem;">
+                    <h3>转换结果</h3>
+                    <textarea id="csv-output" rows="8" class="result-area input-area" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div style="color:#374151;line-height:2;font-size:1rem;">
+                    <b>CSV → JSON：</b>把 Excel 里复制的表格粘贴进来，首行默认当表头，得到 JSON 对象数组，方便调接口、写测试数据。<br>
+                    <b>JSON → CSV：</b>把接口返回的 JSON 数组粘贴进来，转回表格，方便粘贴到 Excel 做分析。<br>
+                    支持双引号包裹的字段（含逗号、换行），符合标准 CSV 规范。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function getDelim() {
+        var d = document.getElementById('csv-delim').value;
+        return d === '' ? ',' : d;
+    }
+    function parseCSV(text, delim) {
+        var rows = [], row = [], field = '', inQuotes = false;
+        for (var i = 0; i < text.length; i++) {
+            var c = text[i];
+            if (inQuotes) {
+                if (c === '"') {
+                    if (text[i+1] === '"') { field += '"'; i++; }
+                    else inQuotes = false;
+                } else field += c;
+            } else {
+                if (c === '"') inQuotes = true;
+                else if (c === delim) { row.push(field); field = ''; }
+                else if (c === '\r') { /* skip, handled with \n */ }
+                else if (c === '\n') { row.push(field); field = ''; rows.push(row); row = []; }
+                else field += c;
+            }
+        }
+        row.push(field); rows.push(row);
+        while (rows.length && rows[rows.length-1].length === 1 && rows[rows.length-1][0] === '') rows.pop();
+        return rows;
+    }
+    function csvEscape(v, delim) {
+        v = String(v == null ? '' : v);
+        if (v.indexOf('"') >= 0 || v.indexOf(delim) >= 0 || v.indexOf('\n') >= 0 || v.indexOf('\r') >= 0) {
+            return '"' + v.replace(/"/g, '""') + '"';
+        }
+        return v;
+    }
+    function getDir() {
+        var els = document.querySelectorAll('input[name="csv-dir"]');
+        for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;
+        return 'csv2json';
+    }
+    function doConvert() {
+        var input = document.getElementById('csv-input').value;
+        var out = document.getElementById('csv-output');
+        var delim = getDelim();
+        if (!input.trim()) { toast('请先输入数据'); return; }
+        try {
+            if (getDir() === 'csv2json') {
+                var rows = parseCSV(input, delim);
+                var useHeader = document.getElementById('csv-header').checked;
+                var result;
+                if (useHeader && rows.length > 0) {
+                    var header = rows[0];
+                    result = rows.slice(1).map(function(r){
+                        var o = {};
+                        header.forEach(function(h, i){ o[h] = r[i] !== undefined ? r[i] : ''; });
+                        return o;
+                    });
+                } else {
+                    result = rows;
+                }
+                out.value = document.getElementById('csv-pretty').checked
+                    ? JSON.stringify(result, null, 4)
+                    : JSON.stringify(result);
+            } else {
+                var data = JSON.parse(input);
+                if (!Array.isArray(data)) data = [data];
+                var keys = [];
+                data.forEach(function(o){
+                    Object.keys(o).forEach(function(k){ if (keys.indexOf(k) === -1) keys.push(k); });
+                });
+                var lines = [keys.map(function(k){return csvEscape(k, delim);}).join(delim)];
+                data.forEach(function(o){
+                    lines.push(keys.map(function(k){return csvEscape(o[k], delim);}).join(delim));
+                });
+                out.value = lines.join('\n');
+            }
+            toast('转换成功');
+        } catch (e) {
+            out.value = '';
+            toast('转换失败：' + e.message);
+        }
+    }
+    function copyCsvResult() {
+        var v = document.getElementById('csv-output').value;
+        if (!v) { toast('没有可复制的内容'); return; }
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(v).then(function(){toast('已复制');}, function(){toast('复制失败，请手动复制');});
+        } else { toast('当前环境不支持一键复制，请手动复制'); }
+    }
+    function downloadCsvResult() {
+        var v = document.getElementById('csv-output').value;
+        if (!v) { toast('没有可下载的内容'); return; }
+        var ext = getDir() === 'csv2json' ? 'json' : 'csv';
+        var blob = new Blob(["\ufeff" + v], {type: 'text/plain;charset=utf-8'});
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'converted.' + ext;
+        document.body.appendChild(a); a.click();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
+    }
+    function clearCsv() {
+        document.getElementById('csv-input').value = '';
+        document.getElementById('csv-output').value = '';
+    }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function(){ document.body.removeChild(el); }, 1600);
+    }
+    </script>
+</body>
+</html>
+{{end}}

@@ -89,6 +89,13 @@
     <style>
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;margin:0;padding:0;line-height:1.6;color:#333}
         .container{max-width:1200px;margin:0 auto;padding:0 1rem}
+        .trust-strip{background:#f0f7ff;border-bottom:1px solid #dbeafe}
+        .trust-items{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;padding:.9rem 1rem}
+        .trust-item{display:flex;align-items:center;gap:.6rem;color:#1e40af}
+        .trust-item .material-icons{font-size:1.6rem;color:#2563eb}
+        .trust-item b{display:block;font-size:.95rem}
+        .trust-item span{display:block;font-size:.8rem;color:#64748b}
+        @media (max-width:640px){.trust-items{justify-content:flex-start}}
         .navbar{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:100}
         
         .stats-link {
@@ -173,6 +180,24 @@
                 <i class="material-icons">search</i>
                 <input type="text" id="toolSearchLarge" placeholder="搜索工具，例如：JSON 解析、Base64 编码..." itemprop="query-input">
                 <meta itemprop="target" content="https://yourwebsite.com/search?q={query-input}">
+            </div>
+        </div>
+    </section>
+
+    <!-- 三零承诺：零广告 / 零登录 / 零上传 -->
+    <section class="trust-strip">
+        <div class="container trust-items">
+            <div class="trust-item">
+                <i class="material-icons">block</i>
+                <div><b>零广告</b><span>页面干净，没有弹窗和追踪广告</span></div>
+            </div>
+            <div class="trust-item">
+                <i class="material-icons">person_off</i>
+                <div><b>零登录</b><span>打开即用，不注册不收集信息</span></div>
+            </div>
+            <div class="trust-item">
+                <i class="material-icons">cloud_off</i>
+                <div><b>零上传</b><span>敏感计算只在浏览器本地完成</span></div>
             </div>
         </div>
     </section>

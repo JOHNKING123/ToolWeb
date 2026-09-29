@@ -1,0 +1,166 @@
+{{define "text_tools"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本工具集 - 字数统计/去重/排序/大小写转换 | 程序员工具箱</title>
+    <meta name="description" content="免费在线文本工具集：字数统计、行去重、排序、大小写转换、全半角转换、盘古空格、删除空行，纯本地运行。">
+    <meta name="keywords" content="字数统计,文本去重,文本排序,大小写转换,全角半角,盘古空格,在线文本工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-tools">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "文本工具集",
+      "description": "免费在线文本工具集：字数统计、行去重、排序、大小写转换、全半角转换、盘古空格。",
+      "url": "https://www.johnkingzcq123.xyz/tools/text-tools",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(7em, 1fr)); gap: .8rem; margin: 1rem 0; }
+        .stat-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .5rem; padding: .7rem; text-align: center; }
+        .stat-item .num { font-size: 1.4rem; font-weight: 700; color: #2563eb; }
+        .stat-item .lbl { font-size: .8rem; color: #6b7280; margin-top: .2rem; }
+        .op-btns { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">notes</i> 文本工具集</h1>
+            <p>字数统计、去重、排序、大小写转换等，一站式文本处理</p>
+        </div>
+        <div class="tool-content" style="max-width:720px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group">
+                    <label for="text-input">输入文本：</label>
+                    <textarea id="text-input" rows="8" class="input-area" style="width:100%;" placeholder="粘贴或输入要处理的文本…"></textarea>
+                </div>
+                <div class="stat-grid" id="text-stats">
+                    <div class="stat-item"><div class="num" id="st-chars">0</div><div class="lbl">总字符数</div></div>
+                    <div class="stat-item"><div class="num" id="st-cn">0</div><div class="lbl">中文字符</div></div>
+                    <div class="stat-item"><div class="num" id="st-words">0</div><div class="lbl">英文单词</div></div>
+                    <div class="stat-item"><div class="num" id="st-lines">0</div><div class="lbl">行数</div></div>
+                    <div class="stat-item"><div class="num" id="st-nonempty">0</div><div class="lbl">非空行</div></div>
+                </div>
+                <div class="op-btns">
+                    <button class="btn btn-secondary btn-sm" onclick="opDedupe()">行去重</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opSort(true)">升序排序</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opSort(false)">降序排序</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opUpper()">转大写</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opLower()">转小写</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opHalf()">全角→半角</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opFull()">半角→全角</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opPangu()">盘古空格</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opTrimLines()">去首尾空格</button>
+                    <button class="btn btn-secondary btn-sm" onclick="opRemoveEmpty()">删除空行</button>
+                </div>
+                <div class="form-actions" style="margin-top:1rem;">
+                    <button class="btn btn-primary" onclick="copyResult()"><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn btn-secondary" onclick="clearText()">清空</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>功能说明</h3>
+                <div style="color:#374151;line-height:2;font-size:1rem;">
+                    <b>字数统计：</b>实时统计总字符、中文字符、英文单词、行数，写周报、公众号排版前先数一数。<br>
+                    <b>行去重/排序：</b>处理日志、名单、关键词列表时的常用操作。<br>
+                    <b>盘古空格：</b>在中英文、中文与数字之间自动加上空格，符合中文排版规范。<br>
+                    <b>全半角转换：</b>把 ＡＢＣ１２３ 这类全角字符转成半角，方便程序处理。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function getText() { return document.getElementById('text-input').value; }
+    function setText(t) { document.getElementById('text-input').value = t; updateStats(); }
+    function updateStats() {
+        var t = getText();
+        var cn = (t.match(/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g) || []).length;
+        var words = (t.match(/[A-Za-z0-9_]+/g) || []).length;
+        var lines = t === '' ? 0 : t.split('\n').length;
+        var nonempty = t === '' ? 0 : t.split('\n').filter(function(l){return l.trim()!=='';}).length;
+        document.getElementById('st-chars').textContent = t.length;
+        document.getElementById('st-cn').textContent = cn;
+        document.getElementById('st-words').textContent = words;
+        document.getElementById('st-lines').textContent = lines;
+        document.getElementById('st-nonempty').textContent = nonempty;
+    }
+    function opDedupe() {
+        var seen = {}, out = [];
+        getText().split('\n').forEach(function(l){ if (!seen[l]) { seen[l] = 1; out.push(l); } });
+        setText(out.join('\n'));
+        toast('已去重');
+    }
+    function opSort(asc) {
+        var lines = getText().split('\n');
+        lines.sort();
+        if (!asc) lines.reverse();
+        setText(lines.join('\n'));
+    }
+    function opUpper() { setText(getText().toUpperCase()); }
+    function opLower() { setText(getText().toLowerCase()); }
+    function opHalf() {
+        setText(getText().split('').map(function(ch){
+            var code = ch.charCodeAt(0);
+            if (code === 12288) return ' ';
+            if (code >= 65281 && code <= 65374) return String.fromCharCode(code - 65248);
+            return ch;
+        }).join(''));
+        toast('已转为半角');
+    }
+    function opFull() {
+        setText(getText().split('').map(function(ch){
+            var code = ch.charCodeAt(0);
+            if (code === 32) return String.fromCharCode(12288);
+            if (code >= 33 && code <= 126) return String.fromCharCode(code + 65248);
+            return ch;
+        }).join(''));
+        toast('已转为全角');
+    }
+    function opPangu() {
+        var t = getText();
+        t = t.replace(/([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff])([A-Za-z0-9])/g, '$1 $2');
+        t = t.replace(/([A-Za-z0-9])([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff])/g, '$1 $2');
+        setText(t);
+        toast('已添加盘古空格');
+    }
+    function opTrimLines() {
+        setText(getText().split('\n').map(function(l){return l.trim();}).join('\n'));
+    }
+    function opRemoveEmpty() {
+        setText(getText().split('\n').filter(function(l){return l.trim()!=='';}).join('\n'));
+        toast('已删除空行');
+    }
+    function copyResult() {
+        var t = getText();
+        if (!t) { toast('没有可复制的内容'); return; }
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(t).then(function(){toast('已复制');}, function(){toast('复制失败，请手动复制');});
+        } else { toast('当前环境不支持一键复制，请手动复制'); }
+    }
+    function clearText() { setText(''); }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function(){ document.body.removeChild(el); }, 1600);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('text-input').addEventListener('input', updateStats);
+        updateStats();
+    });
+    </script>
+</body>
+</html>
+{{end}}

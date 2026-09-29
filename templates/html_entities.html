@@ -1,0 +1,137 @@
+{{define "html_entities"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML实体编解码 - Unicode转义在线转换 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 HTML 实体编解码工具：HTML 转义/反转义、Unicode \\u 转义、URL 相关转义，纯本地运行。">
+    <meta name="keywords" content="HTML实体,HTML转义,Unicode转义,\\u转义,实体编解码,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/html-entities">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "HTML实体编解码工具",
+      "description": "免费在线 HTML 实体编解码：HTML 转义/反转义、Unicode 转义，纯本地运行。",
+      "url": "https://www.johnkingzcq123.xyz/tools/html-entities",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> HTML 实体编解码</h1>
+            <p>HTML 转义 / 反转义、Unicode \u 转义，防 XSS 必备</p>
+        </div>
+        <div class="tool-content" style="max-width:720px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label>操作：</label>
+                    <label style="margin-left:1em;"><input type="radio" name="he-op" value="escape" checked> HTML 转义</label>
+                    <label style="margin-left:1em;"><input type="radio" name="he-op" value="unescape"> HTML 反转义</label>
+                    <label style="margin-left:1em;"><input type="radio" name="he-op" value="uencode"> Unicode \u 编码</label>
+                    <label style="margin-left:1em;"><input type="radio" name="he-op" value="udecode"> Unicode \u 解码</label>
+                </div>
+                <div class="form-group">
+                    <label for="he-input">输入：</label>
+                    <textarea id="he-input" rows="6" class="input-area" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;" placeholder="输入要转换的内容…" spellcheck="false"></textarea>
+                </div>
+                <div class="form-actions" style="margin-top:1rem;">
+                    <button onclick="doHeConvert()" class="btn btn-primary"><i class="material-icons">swap_horiz</i> 转换</button>
+                    <button class="btn btn-secondary" onclick="copyHeResult()"><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn btn-secondary" onclick="clearHe()">清空</button>
+                </div>
+                <div class="result-section" style="margin-top:1rem;">
+                    <h3>结果</h3>
+                    <textarea id="he-output" rows="6" class="result-area input-area" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>常用实体速查</h3>
+                <div style="color:#374151;line-height:2;font-size:1rem;font-family:ui-monospace,Menlo,Consolas,monospace;">
+                    &amp;amp; → &amp; &nbsp;&nbsp; &amp;lt; → &lt; &nbsp;&nbsp; &amp;gt; → &gt;<br>
+                    &amp;quot; → " &nbsp;&nbsp; &amp;#39; → ' &nbsp;&nbsp; &amp;nbsp; → 空格<br>
+                    &amp;copy; → © &nbsp;&nbsp; &amp;reg; → ® &nbsp;&nbsp; &amp;times; → × &nbsp;&nbsp; &amp;divide; → ÷
+                </div>
+                <p style="color:#6b7280;font-size:.9rem;margin-top:1rem;">输出用户内容到页面前记得做 HTML 转义，这是防范 XSS 注入最基础的一步。</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    var NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0', copy: '\u00a9', reg: '\u00ae', times: '\u00d7', divide: '\u00f7', hellip: '\u2026', mdash: '\u2014', ndash: '\u2013', laquo: '\u00ab', raquo: '\u00bb' };
+    function htmlEscape(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function htmlUnescape(s) {
+        return s.replace(/&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);/g, function(m, body) {
+            if (body[0] === '#') {
+                var code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+                if (isNaN(code)) return m;
+                try { return String.fromCodePoint(code); } catch (e) { return m; }
+            }
+            return NAMED[body] !== undefined ? NAMED[body] : m;
+        });
+    }
+    function unicodeEncode(s) {
+        var out = '';
+        for (var i = 0; i < s.length; i++) {
+            var code = s.charCodeAt(i);
+            if (code > 127) {
+                var h = code.toString(16);
+                while (h.length < 4) h = '0' + h;
+                out += '\\u' + h;
+            } else out += s[i];
+        }
+        return out;
+    }
+    function unicodeDecode(s) {
+        return s.replace(/\\u([0-9a-fA-F]{4})/g, function(m, h) { return String.fromCharCode(parseInt(h, 16)); });
+    }
+    function getOp() {
+        var els = document.querySelectorAll('input[name="he-op"]');
+        for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;
+        return 'escape';
+    }
+    function doHeConvert() {
+        var input = document.getElementById('he-input').value;
+        var out = document.getElementById('he-output');
+        if (!input) { toast('请先输入内容'); return; }
+        var op = getOp(), result = '';
+        if (op === 'escape') result = htmlEscape(input);
+        else if (op === 'unescape') result = htmlUnescape(input);
+        else if (op === 'uencode') result = unicodeEncode(input);
+        else result = unicodeDecode(input);
+        out.value = result;
+        toast('转换成功');
+    }
+    function copyHeResult() {
+        var v = document.getElementById('he-output').value;
+        if (!v) { toast('没有可复制的内容'); return; }
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(v).then(function(){toast('已复制');}, function(){toast('复制失败，请手动复制');});
+        } else { toast('当前环境不支持一键复制，请手动复制'); }
+    }
+    function clearHe() {
+        document.getElementById('he-input').value = '';
+        document.getElementById('he-output').value = '';
+    }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function(){ document.body.removeChild(el); }, 1600);
+    }
+    </script>
+</body>
+</html>
+{{end}}
