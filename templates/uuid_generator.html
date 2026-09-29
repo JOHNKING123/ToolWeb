@@ -1,0 +1,157 @@
+{{define "uuid_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UUID生成器 - 在线批量生成UUID | 程序员工具箱</title>
+    <meta name="description" content="免费在线UUID生成器：批量生成 v1/v4 UUID，支持大小写、连字符选项，一键复制，基于密码学安全随机数。">
+    <meta name="keywords" content="UUID,UUID生成器,GUID,在线UUID,批量生成UUID,程序员工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/uuid-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "UUID生成器",
+      "description": "免费在线UUID生成器：批量生成 v1/v4 UUID，支持大小写、连字符选项，一键复制。",
+      "url": "https://www.johnkingzcq123.xyz/tools/uuid-generator",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">tag</i> UUID 生成器</h1>
+            <p>批量生成 UUID（v1 / v4），支持大小写与连字符选项</p>
+        </div>
+        <div class="tool-content" style="max-width:640px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group">
+                    <label>版本：</label>
+                    <label style="margin-left:1em;"><input type="radio" name="uuid-ver" value="v4" checked> v4（随机）</label>
+                    <label style="margin-left:1em;"><input type="radio" name="uuid-ver" value="v1"> v1（时间戳）</label>
+                </div>
+                <div class="form-group" style="margin-top:1rem;">
+                    <label for="uuid-count">生成数量（1-500）：</label>
+                    <input id="uuid-count" type="number" min="1" max="500" value="10" class="input-area" style="width:8em;">
+                </div>
+                <div class="form-group" style="margin-top:1rem;">
+                    <label><input type="checkbox" id="uuid-upper"> 大写字母</label>
+                    <label style="margin-left:1.5em;"><input type="checkbox" id="uuid-nohyphen"> 去掉连字符</label>
+                </div>
+                <div class="form-actions" style="margin-top:1.5rem;">
+                    <button onclick="genUUIDs()" class="btn btn-primary"><i class="material-icons">autorenew</i> 生成</button>
+                    <button class="btn btn-secondary" onclick="copyAllUUIDs()"><i class="material-icons">content_copy</i> 复制全部</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <div class="result-section">
+                    <h3>生成结果</h3>
+                    <div id="uuid-result" class="result-area" style="min-height:2.5em;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;"></div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>UUID 版本说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    <b>v4：</b>基于密码学安全随机数生成，122 位随机，最常用，适合做主键、Token、请求 ID。<br>
+                    <b>v1：</b>基于时间戳 + 随机节点 ID 生成，同一毫秒内有序，适合需要大致按时间排序的场景。<br>
+                    本工具使用浏览器 <b>crypto.getRandomValues</b> 生成随机数，不经过网络，安全可靠。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    var lastUUIDs = [];
+    function randBytes(n) {
+        var a = new Uint8Array(n);
+        crypto.getRandomValues(a);
+        return a;
+    }
+    function hex(b) { return ('0' + b.toString(16)).slice(-2); }
+    function uuidV4() {
+        var b = randBytes(16);
+        b[6] = (b[6] & 0x0f) | 0x40;
+        b[8] = (b[8] & 0x3f) | 0x80;
+        return [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(function(i, idx) {
+            var s = hex(b[i]);
+            if (idx === 4 || idx === 6 || idx === 8 || idx === 10) s = '-' + s;
+            return s;
+        }).join('');
+    }
+    function uuidV1() {
+        var now = Date.now();
+        var gregorianOffset = 12219292800000;
+        var ts = (now + gregorianOffset) * 10000 + Math.floor(Math.random() * 10000);
+        var timeLow = (ts % 0x100000000).toString(16);
+        var timeMid = (Math.floor(ts / 0x100000000) % 0x10000).toString(16);
+        var timeHi = (Math.floor(ts / 0x1000000000000) % 0x1000).toString(16);
+        var b = randBytes(8);
+        b[0] = (b[0] & 0x3f) | 0x80;
+        while (timeLow.length < 8) timeLow = '0' + timeLow;
+        while (timeMid.length < 4) timeMid = '0' + timeMid;
+        while (timeHi.length < 4) timeHi = '0' + timeHi;
+        var node = [0,1,2,3,4,5].map(function(i){return hex(b[i+2]);}).join('');
+        return timeLow + '-' + timeMid + '-1' + timeHi.slice(1) + '-' + hex(b[0]) + hex(b[1]) + '-' + node;
+    }
+    function getVer() {
+        var els = document.querySelectorAll('input[name="uuid-ver"]');
+        for (var i = 0; i < els.length; i++) { if (els[i].checked) return els[i].value; }
+        return 'v4';
+    }
+    function genUUIDs() {
+        var count = parseInt(document.getElementById('uuid-count').value, 10);
+        if (!count || count < 1) count = 1;
+        if (count > 500) count = 500;
+        document.getElementById('uuid-count').value = count;
+        var ver = getVer();
+        var upper = document.getElementById('uuid-upper').checked;
+        var nohyphen = document.getElementById('uuid-nohyphen').checked;
+        lastUUIDs = [];
+        for (var i = 0; i < count; i++) {
+            var u = ver === 'v1' ? uuidV1() : uuidV4();
+            if (nohyphen) u = u.replace(/-/g, '');
+            if (upper) u = u.toUpperCase();
+            lastUUIDs.push(u);
+        }
+        renderUUIDs();
+    }
+    function renderUUIDs() {
+        var out = document.getElementById('uuid-result');
+        out.innerHTML = lastUUIDs.map(function(u) {
+            return '<div style="padding:.35rem 0;border-bottom:1px dashed #e5e7eb;word-break:break-all;">' + u + '</div>';
+        }).join('');
+    }
+    function copyAllUUIDs() {
+        if (!lastUUIDs.length) { toast('请先生成 UUID'); return; }
+        copyText(lastUUIDs.join('\n'), '已复制 ' + lastUUIDs.length + ' 个 UUID');
+    }
+    function copyText(t, okMsg) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(t).then(function() { toast(okMsg || '已复制'); }, function() { toast('复制失败，请手动复制'); });
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = t; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); toast(okMsg || '已复制'); } catch (e) { toast('复制失败，请手动复制'); }
+            document.body.removeChild(ta);
+        }
+    }
+    function toast(msg) {
+        var el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;';
+        document.body.appendChild(el);
+        setTimeout(function() { document.body.removeChild(el); }, 1600);
+    }
+    document.addEventListener('DOMContentLoaded', function() { genUUIDs(); });
+    </script>
+</body>
+</html>
+{{end}}
