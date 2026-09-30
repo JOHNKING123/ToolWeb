@@ -503,6 +503,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "random_decision",
+					Name:        "随机决策器",
+					Description: "选择困难症救星：今天吃什么随机抽、抛硬币3D翻转、Yes-No快问，在线抽签秒做决定",
+					Path:        "/tools/random-decision",
+					Icon:        "casino",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 	}

@@ -1,0 +1,177 @@
+{{define "random_decision"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机决策器 - 今天吃什么/抛硬币/YesNo 在线抽签 | 程序员工具箱</title>
+    <meta name="description" content="选择困难症救星：免费在线随机决策器。今天吃什么？随机抽取帮你秒做决定；抛硬币模拟3D翻转动画；Yes-No快问一键揭晓答案。选项可增删改、预设美食清单、抽奖历史自动保存，纯前端运行无需联网。">
+    <meta name="keywords" content="选择困难症,今天吃什么,抛硬币,在线抽签,随机抽奖,随机决策器,yes no,吃什么好,二选一,随机数,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/random-decision">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "随机决策器",
+      "description": "选择困难症救星：今天吃什么随机抽取、抛硬币3D翻转、Yes-No快问，免费在线抽签工具，纯前端运行。",
+      "url": "https://www.johnkingzcq123.xyz/tools/random-decision",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .rd-tabs { display:flex; gap:.6rem; margin-bottom:1.2rem; }
+        .rd-tab { flex:1; padding:.8rem .4rem; font-size:1.05rem; border:2px solid #e5e7eb; background:#fff; border-radius:.6rem; cursor:pointer; }
+        .rd-tab.active { border-color:#2563eb; color:#2563eb; font-weight:600; background:#eff6ff; }
+        .rd-chip { display:inline-block; background:#dbeafe; color:#1d4ed8; border-radius:999px; padding:.25rem .8rem; margin:.2rem; font-size:.95rem; cursor:pointer; }
+        .rd-chip .rd-del { margin-left:.4rem; color:#93c5fd; font-weight:700; }
+        .rd-chip .rd-del:hover { color:#dc2626; }
+        .rd-preset { display:inline-block; background:#fff; border:1px dashed #9ca3af; border-radius:999px; padding:.35rem 1rem; margin:.25rem; font-size:.9rem; color:#4b5563; cursor:pointer; }
+        .rd-preset:active { background:#eff6ff; border-color:#2563eb; color:#2563eb; }
+        .rd-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; }
+        .rd-draw-box { background:linear-gradient(135deg,#eff6ff,#f0fdf4); border:2px solid #bfdbfe; border-radius:.8rem; min-height:6rem; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; color:#1d4ed8; padding:1rem; text-align:center; word-break:break-all; transition:border-color .2s; }
+        .rd-draw-box.win { border-color:#16a34a; color:#15803d; background:linear-gradient(135deg,#f0fdf4,#ecfdf5); animation:rd-pop .5s ease; }
+        @keyframes rd-pop { 0% { transform:scale(.92); } 60% { transform:scale(1.05); } 100% { transform:scale(1); } }
+        .rd-hist { max-height:12rem; overflow-y:auto; }
+        .rd-hist-row { display:flex; justify-content:space-between; gap:.6rem; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.6rem; padding:.55rem .9rem; margin:.4rem 0; font-size:.92rem; }
+        .rd-hist-row .t { color:#9ca3af; font-size:.8rem; white-space:nowrap; }
+        .rd-hist-row .m { color:#6b7280; white-space:nowrap; }
+        .rd-hist-row .r { color:#1d4ed8; font-weight:600; word-break:break-all; text-align:right; }
+        /* 抛硬币 3D */
+        .rd-coin-stage { perspective:900px; padding:1.2rem 0; }
+        .rd-coin { width:11rem; height:11rem; margin:0 auto; position:relative; transform-style:preserve-3d; transition:transform 2.1s cubic-bezier(.15,.65,.25,1); }
+        .rd-face { position:absolute; inset:0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:3.4rem; font-weight:700; backface-visibility:hidden; -webkit-backface-visibility:hidden; box-shadow:0 .4rem 1.2rem rgba(0,0,0,.18), inset 0 0 0 .45rem rgba(255,255,255,.35); }
+        .rd-face.front { background:radial-gradient(circle at 32% 30%, #fde68a, #f59e0b 72%, #d97706); color:#78350f; }
+        .rd-face.back { background:radial-gradient(circle at 32% 30%, #e9d5ff, #8b5cf6 72%, #6d28d9); color:#fff; transform:rotateY(180deg); }
+        .rd-coin-result { text-align:center; font-size:1.6rem; font-weight:700; min-height:2.4rem; margin-top:.6rem; }
+        .rd-stats { display:flex; gap:.8rem; justify-content:center; margin-top:.8rem; }
+        .rd-stat { background:#f3f4f6; border-radius:.6rem; padding:.5rem 1.2rem; text-align:center; }
+        .rd-stat b { display:block; font-size:1.4rem; color:#2563eb; }
+        .rd-stat span { font-size:.85rem; color:#6b7280; }
+        /* YesNo */
+        .rd-yn-box { border-radius:.8rem; min-height:6rem; display:flex; align-items:center; justify-content:center; font-size:3rem; font-weight:800; padding:1rem; text-align:center; background:#f9fafb; border:2px dashed #d1d5db; color:#9ca3af; transition:all .25s; }
+        .rd-yn-box.yes { background:linear-gradient(135deg,#ecfdf5,#d1fae5); border:2px solid #34d399; color:#047857; }
+        .rd-yn-box.no { background:linear-gradient(135deg,#fef2f2,#fecaca); border:2px solid #f87171; color:#b91c1c; }
+        .rd-yn-box.thinking { border-style:solid; border-color:#93c5fd; color:#2563eb; }
+        @media (max-width:480px) {
+            .rd-tab { font-size:.92rem; padding:.7rem .2rem; }
+            .rd-draw-box { font-size:1.5rem; min-height:5rem; }
+            .rd-coin { width:8.5rem; height:8.5rem; }
+            .rd-face { font-size:2.6rem; }
+            .rd-yn-box { font-size:2.2rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">casino</i> 随机决策器</h1>
+            <p>选择困难症救星：今天吃什么、抛硬币、Yes-No 快问，一键交给命运</p>
+        </div>
+        <div class="tool-content" style="max-width:720px;margin:auto;">
+            <div class="rd-tabs">
+                <button class="rd-tab active" id="rd-tab-draw" onclick="rdSwitchTab('draw')">🎲 随机抽取</button>
+                <button class="rd-tab" id="rd-tab-coin" onclick="rdSwitchTab('coin')">🪙 抛硬币</button>
+                <button class="rd-tab" id="rd-tab-yesno" onclick="rdSwitchTab('yesno')">❓ Yes-No 快问</button>
+            </div>
+
+            <!-- 随机抽取 -->
+            <div id="rd-panel-draw">
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>选项清单 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（点击芯片可编辑，× 删除）</span></h3>
+                    <div id="rd-chips" style="min-height:2.6rem;"></div>
+                    <div class="rd-actions">
+                        <button class="btn btn-secondary" onclick="rdAddOption()"><i class="material-icons">add</i> 添加选项</button>
+                        <button class="btn btn-secondary" onclick="rdClearOptions()">清空</button>
+                    </div>
+                    <div style="margin-top:.9rem;">
+                        <span style="color:#9ca3af;font-size:.9rem;">预设清单：</span>
+                        <span class="rd-preset" onclick="rdLoadPreset('中餐')">🍜 中餐</span>
+                        <span class="rd-preset" onclick="rdLoadPreset('西餐')">🍔 西餐</span>
+                        <span class="rd-preset" onclick="rdLoadPreset('轻食')">🥗 轻食</span>
+                        <span class="rd-preset" onclick="rdLoadPreset('奶茶')">🧋 奶茶店</span>
+                    </div>
+                    <div class="form-group" style="margin-top:.9rem;">
+                        <label style="color:#6b7280;font-size:.9rem;">批量输入（每行一个选项）：</label>
+                        <textarea id="rd-batch" class="input-area" rows="4" style="width:100%;margin-top:.4rem;" placeholder="麻辣烫&#10;黄焖鸡米饭&#10;兰州拉面"></textarea>
+                    </div>
+                    <div class="rd-actions">
+                        <button class="btn btn-secondary" onclick="rdImportBatch(false)">追加导入</button>
+                        <button class="btn btn-secondary" onclick="rdImportBatch(true)">替换导入</button>
+                    </div>
+                </div>
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>开奖</h3>
+                    <div class="rd-draw-box" id="rd-draw-box">点下方按钮开始抽取</div>
+                    <div class="rd-actions">
+                        <button class="btn btn-primary" id="rd-draw-btn" onclick="rdDraw()"><i class="material-icons">play_arrow</i> 开始抽取</button>
+                        <button class="btn btn-secondary" onclick="rdCopyDraw()" id="rd-copy-draw-btn">复制结果</button>
+                    </div>
+                </div>
+                <div class="tool-card">
+                    <h3>抽奖历史 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（自动保存到本地）</span></h3>
+                    <div class="rd-hist" id="rd-history"></div>
+                    <div class="rd-actions">
+                        <button class="btn btn-secondary" onclick="rdClearHistory()">清空历史</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 抛硬币 -->
+            <div id="rd-panel-coin" style="display:none;">
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>抛硬币</h3>
+                    <div class="rd-coin-stage">
+                        <div class="rd-coin" id="rd-coin">
+                            <div class="rd-face front">正</div>
+                            <div class="rd-face back">反</div>
+                        </div>
+                    </div>
+                    <div class="rd-coin-result" id="rd-coin-result">点下方按钮抛一次</div>
+                    <div class="rd-stats">
+                        <div class="rd-stat"><b id="rd-coin-head">0</b><span>正面</span></div>
+                        <div class="rd-stat"><b id="rd-coin-tail">0</b><span>反面</span></div>
+                        <div class="rd-stat"><b id="rd-coin-total">0</b><span>总计</span></div>
+                    </div>
+                    <div class="rd-actions" style="justify-content:center;">
+                        <button class="btn btn-primary" id="rd-coin-btn" onclick="rdFlipCoin()"><i class="material-icons">autorenew</i> 抛硬币</button>
+                        <button class="btn btn-secondary" onclick="rdResetCoin()">清零统计</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yes-No -->
+            <div id="rd-panel-yesno" style="display:none;">
+                <div class="tool-card" style="margin-bottom:1.2rem;">
+                    <h3>Yes-No 快问</h3>
+                    <div class="form-group">
+                        <input id="rd-yn-input" type="text" class="input-area" placeholder="例如：今天要不要点奶茶？" style="width:100%;font-size:1.1rem;">
+                    </div>
+                    <div class="rd-yn-box" id="rd-yn-box" style="margin-top:1rem;">?</div>
+                    <div class="rd-actions">
+                        <button class="btn btn-primary" id="rd-yn-btn" onclick="rdAskYesNo()"><i class="material-icons">help_outline</i> 揭晓答案</button>
+                        <button class="btn btn-secondary" onclick="rdCopyYesNo()">复制结论</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>小知识</h3>
+                <div style="color:#374151;line-height:1.9;font-size:.98rem;">
+                    <b>数据保存在本地</b>：选项清单、抽奖历史和抛硬币统计都存在浏览器的 localStorage 里，不上传服务器，换设备不会同步。<br>
+                    <b>真随机</b>：抽取与抛硬币都使用浏览器的加密随机数（crypto.getRandomValues），结果公平公正，概不负责。<br>
+                    <b>今天吃什么</b>：点「预设清单」一键载入中餐 / 西餐 / 轻食 / 奶茶店，也可以自己批量导入常去的店，抽到不想吃的就再抽一次——命运给你无限次机会。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/random_decision.js"></script>
+</body>
+</html>
+{{end}}
