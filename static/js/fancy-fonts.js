@@ -233,7 +233,7 @@ label = STYLES[idx].name;
 out = DECOS[idx].wrap(text);
 label = DECOS[idx].name;
 }
-copyText(out, '已复制' + label + '：' + (out.length > 24? out.slice(0, 24) + '…': out));
+copyText(out, '已复制' + label + '：' + (out.length > 24? Array.from(out).slice(0, 24).join('') + '…': out));
 }
 
 /* ---------- 初始化 ---------- */
