@@ -512,6 +512,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "fancy_fonts",
+					Name:        "花体字生成器",
+					Description: "特殊字体在线生成：粗体/斜体/哥特/手写花体/气泡/方框等18种风格，昵称符号装饰一键复制",
+					Path:        "/tools/fancy-fonts",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 	}

@@ -1,0 +1,92 @@
+{{define "fancy_fonts"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花体字生成器 - 特殊字体/特殊符号昵称在线生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线花体字生成器：一键生成粗体、斜体、哥特体、手写花体、气泡字、方框字等18种特殊字体，另有 ꧁༺昵称༻꧂ 等12种特殊符号昵称装饰模板，复制即用，支持微信/QQ/游戏昵称，纯前端运行。">
+    <meta name="keywords" content="花体字生成器,特殊符号,昵称符号,花体字,特殊字体,艺术字在线生成,网名符号,火星文转换器,花体英文,符号昵称">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/fancy-fonts">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "花体字生成器",
+      "description": "免费在线花体字生成器：18种特殊字体风格一键生成，12种特殊符号昵称装饰模板，复制即用，纯前端运行。",
+      "url": "https://www.johnkingzcq123.xyz/tools/fancy-fonts",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .ff-input-row { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:.8rem; align-items:center; }
+        .ff-count { margin-left:auto; color:#9ca3af; font-size:.85rem; }
+        .ff-row { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem 1rem; margin:.6rem 0; }
+        .ff-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.45rem; }
+        .ff-name { font-weight:600; color:#374151; font-size:.95rem; }
+        .ff-name::before { content:"✒ "; }
+        .ff-out { font-size:1.35rem; line-height:1.7; color:#111827; word-break:break-all; background:#fff; border:1px dashed #d1d5db; border-radius:.5rem; padding:.55rem .8rem; min-height:2.6rem; }
+        .ff-copy { padding:.35rem .8rem; font-size:.85rem; white-space:nowrap; }
+        .ff-copy .material-icons { font-size:1rem; vertical-align:-2px; margin-right:.2rem; }
+        .ff-decos { display:grid; grid-template-columns:repeat(2, 1fr); gap:.7rem; }
+        .ff-deco { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.7rem; padding:.7rem .9rem; text-align:center; }
+        .ff-deco-name { font-size:.82rem; color:#6b7280; margin-bottom:.4rem; }
+        .ff-deco-out { font-size:1.2rem; margin-bottom:.55rem; }
+        .ff-tip { color:#374151; line-height:1.9; font-size:.95rem; }
+        .ff-tip b { color:#111827; }
+        @media (max-width:640px) {
+            .ff-out { font-size:1.1rem; }
+            .ff-decos { grid-template-columns:1fr; }
+            .ff-count { margin-left:0; width:100%; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">text_fields</i> 花体字生成器</h1>
+            <p>输入文字，实时生成 18 种特殊字体风格 + 12 种昵称符号装饰，一键复制即用</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>输入文字</h3>
+                <textarea id="ff-input" class="input-area" rows="3" style="width:100%;font-size:1.1rem;" placeholder="输入任意文字，例如：Hello World 123 你好 🎮"></textarea>
+                <div class="ff-input-row">
+                    <button class="btn btn-primary" id="ff-sample"><i class="material-icons">auto_fix_high</i> 填入示例</button>
+                    <button class="btn btn-secondary" id="ff-clear">清空</button>
+                    <span class="ff-count" id="ff-count">已输入 0 个字符</span>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>特殊字体 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（18 种风格，实时生成，点复制即可）</span></h3>
+                <div id="ff-styles"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>昵称符号装饰 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（符号模板自动包裹你的文字）</span></h3>
+                <div class="ff-decos" id="ff-decos"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>小知识</h3>
+                <div class="ff-tip">
+                    <b>纯前端运行</b>：所有转换都在浏览器里完成，不上传服务器，输入什么都放心。<br>
+                    <b>中文与 emoji 不受影响</b>：花体映射只针对英文字母和数字，中文、emoji、标点保持原样，不会乱码。<br>
+                    <b>复制即用</b>：生成结果可直接粘贴到微信昵称、QQ 网名、游戏 ID、社交媒体简介，大部分平台都支持这些 Unicode 字符。<br>
+                    <b>翻转镜像</b>：会把文字倒过来排（如 hello → oʃʃǝɥ），发朋友圈整活效果拉满。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/fancy-fonts.js"></script>
+</body>
+</html>
+{{end}}
