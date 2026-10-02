@@ -521,6 +521,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "nine_grid",
+					Name:        "九宫格切图",
+					Description: "朋友圈/IG 九宫格拼图在线切图：3×3/2×2/1×3/3×1 档位切分，逐张下载或一键打包",
+					Path:        "/tools/nine-grid",
+					Icon:        "grid_on",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 	}
