@@ -1,6 +1,26 @@
 # ToolWeb 需求 Backlog
 
-> 维护人：产品调研员 · 每日更新（2026-10-02）
+> 维护人：产品调研员 · 每日更新（2026-10-03）
+
+## 今日任务（2026-10-03 · 产品调研推荐，待产品经理决策）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构，产品经理三选一）：
+
+1. **JSON 转 TypeScript / Go 结构体** — 连续四轮备选后今日再获强验证：transform.tools 将 JSON→TypeScript 列为核心转换、DEV《How to Convert JSON to TypeScript Interfaces Automatically》长文 + jsontoall 在线工具、ToolsFam Universal Data Converter 均主打 JSON→TS 类型生成；对接 API 时手写类型定义繁琐易错是开发者高频痛点；与现有 JSON 解析器、JSON-YAML 互转、CSV-JSON 形成格式转换工具簇；纯前端递归推断（嵌套接口拆分、数组元素合并、可选字段），单页可高质量交付。SEO：JSON转TypeScript、JSON转Go结构体、JSON生成接口。
+2. **链接去追踪（URL 追踪参数清洗）** — 今日再获验证：slug.tools 将 query cleaner 与 UTM builder、URL parser、SERP preview 做成 URL 工具包，awesome-free-online-tools 收录；叠加昨日 B 站/小红书分享净化（fx-k/keke.su 在线版）、URLCheck 防跟踪长文；微信/小红书/B 站分享链接夹带 utm_*/fbclid/xsec_token/spm 等参数又长又泄露来源隐私，转发前清洗是大众+开发者通用动作；纯前端参数黑名单识别+一键清洗+清洗前后对比，单页可做。
+3. **图片打码/马赛克工具** — 昨日已列 P1，今日竞品再验证：Varkido 170+ 工具站将图片区域打码列为热门图片工具，norito 92 工具站图片/GIF 品类持续扩展，cleanup.pictures/魔术橡皮擦类「发图前处理」需求在中文实用网站清单中反复出现；发微信/朋友圈/工单截图前遮车牌、人脸、手机号、订单号是大众隐私刚需；canvas 框选 + 马赛克/高斯模糊 + 撤销/下载，纯前端单页，与现有水印/压缩/九宫格切图形成图片隐私工具簇。SEO：图片打码、截图打马赛克、照片遮脸。
+
+**备选顺延**：键盘按键测试（P1 保留，场景最窄）、SERP 搜索结果预览 / Meta 标签生成器 / robots.txt 生成器（SEO 工具簇，可打包一日）、人民币大写转换（中文财务长尾）、单位换算器（大众高频）、WiFi 二维码生成器（生活工具接力候选）。
+
+## 今日候选（2026-10-03 · 产品调研推荐）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构）：
+
+1. **JSON 转 TypeScript / Go 结构体** — transform.tools + DEV 长文 + jsontoall + ToolsFam 四重验证；对接 API 高频痛点；与 JSON 解析器/JSON-YAML 互转成工具簇；纯前端递归生成。
+2. **链接去追踪（URL 追踪参数清洗）** — slug.tools query cleaner + B站/小红书净化工具 + URLCheck 验证；追踪参数又长又侵犯隐私；纯前端单页。
+3. **图片打码/马赛克工具** — Varkido 热门图片工具 + norito 图片品类 + 中文发图前处理需求验证；canvas 框选打码纯前端；与水印/九宫格成图片隐私簇。
+
+---
 
 ## 今日任务（2026-10-02 · 产品经理已决策 ✅）
 
@@ -81,6 +101,14 @@
 
 ---
 
+## 2026-10-02 决策归档（已完成 ✅）
+
+**选定并已实现：图片九宫格切图（朋友圈/IG 九宫格）** — 路由 `/tools/nine-grid`（模板 `nine_grid`），commit fb036b2
+
+**决策理由**：LongPicCutter + x-puzzle-kit + Grid Maker + 朋友圈玩法教程多重验证大众高频社交场景；接力亲戚关系计算器→随机决策器→花体字生成器的「生活工具」大众流量策略第四步；canvas 纯前端分割，与图片压缩/水印/Base64 图片互转形成图片工具簇。
+
+**交付回顾**：上传预览、3×3/2×2/1×3/3×1 档位、逐张下载 + JSZip 打包（失败降级逐张）、合成九宫格预览图下载、大图缩放防卡死；纯前端无新增后端接口（以 commit fb036b2 为准，验收细节见 10-02 规格清单）。
+
 ## 2026-09-30 决策归档（已完成 ✅）
 
 **选定并已实现：随机决策器（今天吃什么 / 抛硬币 / Yes-No）** — 路由 `/tools/random-decision`（模板 `random_decision`），commit 52bb442
@@ -115,13 +143,13 @@
 
 **交付回顾**：≥12 种字体风格实时生成、中文原样输出、中英混排不乱码；特殊符号装饰模板（꧁༺昵称༻꧂ 等）；每个风格一键复制+toast；纯前端无新增后端接口。
 
-## P0 — 今日最值得做（2026-10-02）
+## P0 — 今日最值得做（2026-10-03）
 
 | 标题 | 痛点 | 难度 | 优先级 |
 |---|---|---|---|
-| 图片九宫格切图（朋友圈/IG 九宫格） | 今日新发现：wumingluren/LongPicCutter GitHub 宫格分割工具、shirolin/x-puzzle-kit 社交创意拆分器（3x3）、Play 商店 Grid Maker、360doc 春节朋友圈九宫格玩法教程；朋友圈/IG/小红书发九宫格是大众高频社交场景；canvas 前端分割+逐张下载/打包，单页可做；接力「生活工具」大众流量策略第四步 | 小 | P0 |
-| JSON 转 TypeScript / Go 结构体 | 连续三轮「次日备选」（9-29、9-30、10-01）；对接 API 手写类型定义繁琐易错；与 JSON 解析器/JSON-YAML 互转成工具簇；纯前端递归生成 | 小 | P0 |
-| 链接去追踪（URL 追踪参数清洗） | 今日新发现：fx-k/keke.su 博主专为 B 站/小红书分享链接做了净化工具（上线在线版）、0xzx URLCheck 防跟踪文章、CMO UTM 产生器 Chrome 扩展；分享链接带 utm_/fbclid 等追踪参数又长又侵犯隐私；纯前端识别追踪参数一键清洗，单页可做；开发者+普通用户通用痛点 | 小 | P0 |
+| JSON 转 TypeScript / Go 结构体 | 今日再验证：transform.tools 核心转换、DEV JSON→TS interface 长文 + jsontoall 在线工具、ToolsFam Universal Data Converter 主打 JSON→TS；连续四轮备选（9-29 起）；对接 API 手写类型定义繁琐易错；与 JSON 解析器/JSON-YAML 互转/CSV-JSON 成工具簇；纯前端递归推断嵌套接口/数组合并，单页可做 | 小 | P0 |
+| 链接去追踪（URL 追踪参数清洗） | 今日再验证：slug.tools 将 query cleaner 与 UTM builder/URL parser/SERP preview 打成 URL 工具包（awesome-free-online-tools 收录）；昨日 B 站/小红书净化工具 + URLCheck 已验证；分享链接带 utm_/fbclid/xsec_token/spm 又长又泄露隐私；纯前端黑名单识别+一键清洗+前后对比，单页可做；开发者+普通用户通用 | 小 | P0 |
+| 图片打码/马赛克工具 | Varkido 170+ 工具站热门图片工具、norito 92 工具站图片品类、中文「发图前处理/去水印擦除」清单反复验证；发截图/照片前遮车牌、人脸、手机号、订单号是隐私刚需；canvas 框选+马赛克/模糊+下载，纯前端单页；与水印/压缩/九宫格成图片隐私工具簇 | 小 | P0 |
 
 ## P1 — 高价值备选
 
@@ -152,12 +180,15 @@
 | WiFi 二维码生成器 | 分享 WiFi 密码逐字输入麻烦，扫码直连 | 小 | P1 |
 | 手写模拟器 | 中文社交爆款（凹凸工坊/萝卜工坊）：贺卡/信件/手账装饰字需求旺；canvas+手写字体，单页可交付（定位文艺/贺卡场景） | 中 | P1 |
 | 座位表生成器 | 婚礼/活动排桌分人繁琐；独立开发者 SEO 金矿案例已验证该细分需求 | 中 | P1 |
-| 假数据/Mock 生成器 | 前后端联调缺测试数据 | 中 | P1 |
+| 假数据/Mock 生成器 | 前后端联调缺测试数据（2026-10-03 竞品再验证：faker.tools 79 种合成数据生成器） | 中 | P1 |
 | cURL 转代码 | 抓包得到的 cURL 转 Python/Go/JS 代码手写麻烦 | 中 | P1 |
 | 图片打码/马赛克工具 | 发微信/朋友圈前遮车牌、人脸等隐私信息；canvas 区域选择+马赛克/模糊，纯前端单页（Varkido 热门图片工具验证需求） | 小 | P1 |
 | 富文本转 Markdown | Word/网页内容粘贴转 Markdown 写文档、发 GitHub 的痛点；Turndown 纯前端单页 | 小 | P1 |
 | PDF 合并/拆分 | 多个 PDF 合并、按页码提取（pdf-lib 纯前端，misc9.app 热帖验证需求） | 中 | P1 |
 | OpenGraph 社交卡片预览 | 发微信/微博/Twitter 前预览分享卡片标题图效果；纯前端表单+预览 | 小 | P1 |
+| 代码截图美化（Carbon 风格） | 今日新发现：awesome-free-online-tools 将 Carbon/ray.so/codeshot.io 列为 Code images 头部品类；发技术帖/工单时贴纯文本代码难看、截图带 IDE 杂边；纯前端语法高亮主题+窗口壳+PNG/SVG 导出，单页可做（需引入 highlight 库，注意体积） | 中 | P1 |
+| 发票/收据生成器 | 今日新发现：Medium《15 Free Online Tools Everyone Should Bookmark in 2026》与 FreeToolHub 190+ 计算器/文件工具均列 Invoice Generator 为文档类头部；自由职业/小商家手做发票排版麻烦；纯前端表单→A4 预览→打印/PDF，单页可做（仅模板生成、不涉税务开票） | 中 | P1 |
+| JSON 可视化树图 | 今日新发现：JSON Crack（JSON/YAML/CSV 转交互节点图）被 awesome 列表列为 Data & Testing 头部；深层 JSON 靠折叠文本看结构费眼；纯前端递归树渲染+搜索定位，单页可做；与现有 JSON 解析器互补而非重复 | 中 | P1 |
 
 ## P2 — 可做可不做
 
@@ -182,6 +213,8 @@
 | 文本分享（pastebin） | 临时分享文本片段（需后端存储） | 中 | P2 |
 | 邮箱提取器 | 从文本批量提取邮箱地址；正则纯前端单页 | 小 | P2 |
 | HEIC 转 JPG | iPhone 照片 HEIC 格式转通用 JPG（可并入图片转换工具簇） | 小 | P2 |
+| GIF 压缩/裁剪 | 今日新发现：norito 92 工具站最近主推整套 GIF 工具（maker/帧级去重压缩/resizer/splitter/captioning）；表情包/录屏 GIF 太大发不出去；canvas + gif 解析纯前端可做轻量版（压缩质量控制难，先列 P2 观察） | 中 | P2 |
+| 音频剪切（MP3 裁剪） | 今日新发现：awesome-no-signup-tools 收录 Audio Cutter Online（切/拼/淡入淡出、全本地）；截铃声/播客片段要装软件；Web Audio API 纯前端单页可做轻量版 | 中 | P2 |
 
 ## 已实现（不再进入候选）
 
@@ -197,6 +230,7 @@
 ~~亲戚关系计算器~~（2026-09-29 实现，commit 973eb88）、
 ~~随机决策器~~（2026-09-30 实现，commit 52bb442）、
 ~~花体字生成器~~（2026-10-01 实现，commit b27e4ae，修复 f144802）。
+~~九宫格切图~~（2026-10-02 实现，commit fb036b2）。
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
@@ -247,6 +281,15 @@
 - Hacker News Show HN「Free online tools that run in the browser」（UtlKit 170+ 纯前端工具）→ 印证纯前端路线
 - V2EX 2026-03/07 日报复盘（reducm/hugo-jasjojo）：出海远程工作者英文润色工具热帖（需 AI 后端，不适合单页）、Qwen Image 3 工具站 SEO 占位
 - 确认现有文本工具集已含字数统计（不重复造轮子）
+
+### 2026-10-03
+- awesome-free-online-tools（abdessamadbettal）/ awesome-browser-tools（285 ToolsFam 索引）：transform.tools（JSON→TypeScript 核心转换）、slug.tools（query cleaner + UTM builder + URL parser + SERP preview 工具包）、Carbon/ray.so/codeshot.io（代码截图美化）、JSON Crack（JSON 可视化树图）、faker.tools（79 种 Mock 数据）→ 再验证 JSON 转 TS、链接去追踪，新增代码截图/JSON 树图候选信号
+- DEV《How to Convert JSON to TypeScript Interfaces Automatically》+ jsontoall.tools/json-to-interface（嵌套接口自动拆分、client-side）→ JSON 转 TS 需求长文级验证
+- GitHub shubhmisaki/norito-devtoolbox（92 工具、Show HN 文案）：PDF/图片/GIF 全套（帧级去重压缩、splitter、captioning）全本地处理 → 图片打码同簇与 GIF 工具信号
+- Medium Topaitools《15 Free Online Tools Everyone Should Bookmark in 2026》（2026-09-19）：Invoice Generator、PDF Merger、Unit Converter、Word Counter、Loan EMI 等大众工具清单 → 发票生成器新增候选信号
+- ToolSura《Best Free Developer Tools 2026》+ PlainToolbox 87 工具（YouTube 介绍）：JSON formatter / regex / JWT / diff / CSS box-shadow·gradient 生成器为高频入口 → 印证现有工具簇方向与 CSS 生成器 P1 保留
+- aghazain10/awesome-no-signup-tools：Audio Cutter Online（全本地音频剪切）、CharCount → 音频剪切 P2 信号
+- 复核现有 50 个已注册工具（tools/categories.go）与模板清单：九宫格切图已上线（fb036b2）归档划掉；JSON 转 TS、链接去追踪仍未实现，图片打码仍为候选
 
 ### 2026-09-30
 - V2EX「做了一个抛硬币网站 - 用最简单的方式做决定」（t/1173579、t/1173593，两度发帖，wheelpage.com 转盘/抛硬币）
