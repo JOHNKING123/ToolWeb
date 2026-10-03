@@ -1,0 +1,92 @@
+{{define "img_mosaic"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片打码工具 - 截图/照片马赛克模糊在线处理 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片打码工具：框选区域一键马赛克或高斯模糊，遮车牌、人脸、手机号、订单号，纯前端本地处理不上传，导出保持原图分辨率。">
+    <meta name="keywords" content="图片打码,截图打马赛克,照片遮脸,图片马赛克,隐私遮挡">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/img-mosaic">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片打码工具","description":"免费在线图片打码工具：框选区域马赛克/高斯模糊，纯前端本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/img-mosaic","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .im-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .im-upload:hover,.im-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .im-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .im-info{color:#6b7280;font-size:.9rem;margin-top:.6rem;line-height:1.7}
+        .im-toolbar{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin:.8rem 0}
+        .im-mode-btn{border:1px solid #d1d5db;background:#fff;padding:.5rem 1.1rem;border-radius:.5rem;cursor:pointer;font-size:.95rem;color:#374151}
+        .im-mode-btn.active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:600}
+        .im-slider{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:#374151}
+        .im-slider input[type=range]{width:140px}
+        .im-canvas-wrap{text-align:center;margin:1rem 0;overflow:auto}
+        #im-canvas{max-width:100%;border:1px solid #e5e7eb;border-radius:.5rem;touch-action:none;cursor:crosshair;background:#f3f4f6}
+        .im-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .im-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .im-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .im-tip b{color:#111827}
+        .im-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em}
+        @media (max-width:640px){.im-upload{padding:1.6rem .8rem}.im-actions .btn{flex:1 1 45%;justify-content:center}.im-slider input[type=range]{width:100px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">blur_on</i> 图片打码</h1>
+            <p>框选区域一键马赛克 / 高斯模糊，遮车牌、人脸、手机号、订单号；图片仅在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>上传图片</h3>
+                <div class="im-upload" id="im-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择图片，或把图片拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 JPG / PNG / WebP，本地处理不上传，导出保持原图分辨率</div>
+                </div>
+                <input type="file" id="im-file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                <div class="im-info" id="im-fileinfo" style="display:none;"></div>
+                <div class="im-status" id="im-status"></div>
+            </div>
+
+            <div class="tool-card" id="im-workspace" style="margin-bottom:1.2rem;display:none;">
+                <h3>打码设置</h3>
+                <div class="im-toolbar" role="group" aria-label="打码效果">
+                    <button type="button" class="im-mode-btn active" data-mode="mosaic">马赛克</button>
+                    <button type="button" class="im-mode-btn" data-mode="blur">高斯模糊</button>
+                </div>
+                <div class="im-toolbar">
+                    <label class="im-slider" id="im-mosaic-ctl">粒度 <input type="range" id="im-granularity" min="4" max="40" value="14"> <span id="im-granularity-val">14</span>px</label>
+                    <label class="im-slider" id="im-blur-ctl" style="display:none;">半径 <input type="range" id="im-blur-radius" min="2" max="30" value="10"> <span id="im-blur-val">10</span>px</label>
+                    <span class="im-info" style="margin:0;">在图片上拖拽框选即可打码，已打码 <b id="im-count">0</b> 处</span>
+                </div>
+                <div class="im-canvas-wrap"><canvas id="im-canvas" width="640" height="400"></canvas></div>
+                <div class="im-actions">
+                    <button class="btn btn-secondary" id="im-undo"><i class="material-icons">undo</i> 撤销</button>
+                    <button class="btn btn-secondary" id="im-clear"><i class="material-icons">delete_sweep</i> 清空打码</button>
+                    <button class="btn btn-primary" id="im-export"><i class="material-icons">download</i> 导出 PNG</button>
+                    <button class="btn btn-secondary" id="im-reset"><i class="material-icons">refresh</i> 重新上传</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="im-tip">
+                    <b>怎么打码：</b>上传截图或照片后，在图片上按住鼠标（或手指）拖出一个矩形，松开即完成打码；可连续框选多处。<br>
+                    <b>两种效果：</b>马赛克适合彻底遮挡文字与号码，粒度越大块越大；高斯模糊更自然，适合遮人脸。<br>
+                    <b>导出：</b>导出的 PNG 与原图分辨率一致，预览里的缩放不会影响导出清晰度。<br>
+                    <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/img-mosaic.js"></script>
+</body>
+</html>
+{{end}}

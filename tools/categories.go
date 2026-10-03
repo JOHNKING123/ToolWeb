@@ -331,6 +331,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "img_mosaic",
+					Name:        "图片打码",
+					Description: "框选区域马赛克/高斯模糊打码，遮车牌人脸手机号，本地处理不上传",
+					Path:        "/tools/img-mosaic",
+					Icon:        "blur_on",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "base64toimg",
 					Name:        "Base64转图片",
 					Description: "将Base64字符串还原为图片并预览/下载",
