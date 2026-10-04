@@ -12,6 +12,40 @@
 
 **备选顺延**：链接去追踪（URL 追踪参数清洗，连续多重验证但低频、单页价值薄，P1 首选备选）、键盘按键测试（P1 保留，场景最窄）、SERP 搜索结果预览 / Meta 标签生成器 / robots.txt 生成器（SEO 工具簇）、人民币大写转换、单位换算器、WiFi 二维码生成器。
 
+## 今日任务（2026-10-04 · 产品经理已决策 ✅）
+
+**选定：JSON 转 TypeScript / Go 结构体** — 路由 `/tools/json-to-types`（模板 `json_to_types`）
+
+**决策理由**：
+1. 兑现立约、需求三重再验证：该候选自 9-29 起连续六轮备选，10-03 产品经理决策已立约「不再无限顺延、明日无更强大众候选即排它」；今日核查结论是无更强候选——图片拼接虽属大众需求，但九宫格切图（10-02）、图片打码（10-03）已连续两日投入图片方向，再排图片拼接为连续第三日同簇，边际收益低且工具簇失衡；AI Token 计数器为今日新信号，势头虽猛，但精确分词依赖各模型 tokenizer（GPT 系可精确、Claude/Gemini 等只能字符比近似），一日内交付容易在「数不准」上翻车，先列明日 P0 首选备选观察一天。JSON 转 TS/Go 今日再获 json.my 博客长文（嵌套接口拆分/可选字段/联合类型）、GitHub JSONCraft（JSON→TS/Go/Rust/Zod/Prisma）、codinganthem 工具箱 Converters 三重验证，需求真实性无悬念，今日到期兑现。
+2. 补「格式转换簇」的标配缺口：现有 JSON 解析器、JSON-YAML 互转、CSV-JSON 互转已成簇，唯独缺开发者对接 API 时最高频的「JSON → 类型定义」一环；transform.tools/it-tools 系站点人人有之、我们没有，是能力缺口而非差异化比拼——补齐后格式转换簇（解析/互转/类型生成）完整闭环，站内互链与 SEO 主题聚合更强。SEO 长尾明确：JSON转TypeScript、JSON转Go结构体、JSON生成interface。
+3. 一天可高质量交付：纯前端递归推断零外部依赖、零后端成本，结果确定性可测（嵌套对象拆分命名、数组元素合并推断可选字段正是 json.my 长文的核心卖点，做出来即有口碑点）；与连续两日图片工具形成开发向/大众向节奏平衡。
+
+**规格**：
+1. 输入区：JSON 文本输入框（支持粘贴），内置「填充示例」一键载入含嵌套对象/对象数组/混合类型的示例 JSON；输入非法 JSON 时给出明确错误提示（指出 JSON.parse 报错信息），不崩溃、不清屏。
+2. 类型推断核心（纯前端递归，`static/js/json-to-types.js`）：
+   - 标量映射：string→TS `string`/Go `string`；整数→TS `number`/Go `int64`，带小数点或指数→Go `float64`；boolean→`boolean`/`bool`；null→TS 并入联合（如 `string | null`）、Go `interface{}`。
+   - 对象：TS 生成嵌套 interface 并按路径 PascalCase 命名拆分（如根 `Root`、字段 `address`→`RootAddress`、`items[]` 元素→`RootItemsItem`，命名可预期、无重名冲突时复用同名）；Go 生成对应 struct，字段名 PascalCase + json tag（原 key），可选字段加 `,omitempty`。
+   - 数组：合并全部元素推断形状——对象数组取字段并集，某字段在部分元素缺失→TS 可选 `?`、Go `omitempty`；元素标量类型不一致→TS 联合类型（如 `(string | number)[]`）、Go `[]interface{}`；空数组→TS `unknown[]`、Go `[]interface{}`；嵌套数组递归处理。
+   - 根类型名可自定义（输入框，默认 `Root`），改名后输出实时刷新。
+3. 输出区：TypeScript / Go 两个 Tab 切换展示生成结果（等宽字体、带行号或至少保留缩进原样呈现）；输入变化实时重新生成（防抖即可）；一键复制当前 Tab 结果（toast 提示）、下载为 `.ts`/`.go` 文件。
+4. 辅助操作：格式化输入 JSON（美化缩进）、清空；页面文案明示本地处理、JSON 不上传服务器。
+5. 注册：`tools/categories.go`「格式转换」（convert）分类新增工具 ID `json_to_types`，Path `/tools/json-to-types`，Icon `schema`，New: true。
+6. SEO：title「JSON 转 TypeScript / Go 结构体 - JSON 生成 interface 在线工具」、description、keywords（JSON转TypeScript、JSON转Go结构体、JSON生成interface、json to typescript、json to go struct）；sitemap 自动生成。
+7. 移动端适配：输入/输出上下布局、Tab 与按钮够大、长代码横向滚动不错乱。
+
+**验收标准**：
+- [ ] `/tools/json-to-types` 返回 200，首页「格式转换」分类可见入口
+- [ ] 示例 JSON 一键载入并正确生成：嵌套对象拆分为独立命名的 interface/struct、对象数组缺失字段推断为可选（TS `?` / Go `omitempty`）、混合类型数组生成联合类型
+- [ ] 根类型名自定义生效；TS/Go Tab 切换、实时重新生成正常
+- [ ] 非法 JSON 给出明确错误提示且页面不崩溃；空数组/null/嵌套数组等边界不报错
+- [ ] 复制当前 Tab 结果、下载 .ts/.go 文件可用，内容与展示一致
+- [ ] 纯前端，无新增后端接口；`go build` 通过；SEO meta 完整；移动端布局不错乱
+
+**预计改动文件**：`templates/json_to_types.html`（新建）、`static/js/json-to-types.js`（新建）、`tools/categories.go`（格式转换分类注册工具）、`BACKLOG.md`（本小节）。
+
+**明日备选（顺延）**：AI Token 计数器（P0 首选备选，观察分词精度方案后再排）、图片拼接/长图拼接（图片簇下一站，等开发向节奏平衡后排）、链接去追踪（P1 首选备选）。
+
 ## 2026-10-03 决策归档（已完成 ✅）
 
 **选定并已实现：图片打码/马赛克工具** — 路由 `/tools/img-mosaic`（模板 `img_mosaic`），commit 90fa8c8
