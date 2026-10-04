@@ -1,6 +1,24 @@
 # ToolWeb 需求 Backlog
 
-> 维护人：产品调研员 · 每日更新（2026-10-03）
+> 维护人：产品调研员 · 每日更新（2026-10-04）
+
+## 今日候选（2026-10-04 · 产品调研推荐）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构）：
+
+1. **JSON 转 TypeScript / Go 结构体** — 10-03 已立约「不再无限顺延、明日无更强大众候选即排它」，今日无更强候选且需求再获三重验证：json.my 博客长文（3 天前抓取，讲嵌套接口拆分/可选字段/联合类型推断）、GitHub JSONCraft（JSON→TS/Go/Rust/Zod/Prisma 浏览器内全套转换）、codinganthem 工具箱将 JSON to TypeScript 列入 Converters；对接 API 手写类型定义繁琐易错；与 JSON 解析器/JSON-YAML 互转/CSV-JSON 成格式转换簇；纯前端递归推断，单页可做。SEO：JSON转TypeScript、JSON转Go结构体、JSON生成interface。
+2. **AI Token 计数器** — 今日新发现的强信号品类：ricodane/ai-token-counter（多模型 token 计数+费用估算，44 天）、token-lens 与 Claude Token Counter 两个 Chrome 扩展（31 天）、VSCode Live LLM Token Counter、tokl（4 天前，13 个 LLM 分词计数）、HN DevKit「AI & ML: Token counter」、codinganthem「Token Counter & Estimator」——44 天内六重独立信号；调 LLM API 前估算 prompt 的 token 数与成本是 AI 时代开发者高频动作，中文工具站鲜有此工具、可打差异化；纯前端（GPT 系用轻量分词库精确计数、其余模型字符比近似并明示），单页可做。SEO：token计数器、token计算、ChatGPT token。
+3. **图片拼接 / 长图拼接** — 今日新发现：Adobe Express 在线合并图片（7 天前抓取）、360doc 实用网站清单收录 Photo Collage Maker 在线拼图、CSDN uniapp「长图拼接」纯前端小程序系列（canvas 纵/横拼接）、App Store Tailor 拼截图（聊天记录拼长图）；聊天记录/截图/商品图一张张发又长又散是大众高频麻烦，与九宫格切图（拆）互补成图片「拼合」簇（另有打码/压缩/水印）；canvas 纯前端：多图上传→拖拽排序→纵/横拼接+间距→导出长图，单页可做。SEO：长图拼接、图片拼接、截图拼长图、在线拼图。
+
+**备选顺延**：链接去追踪（URL 追踪参数清洗，连续多重验证但低频、单页价值薄，P1 首选备选）、键盘按键测试（P1 保留，场景最窄）、SERP 搜索结果预览 / Meta 标签生成器 / robots.txt 生成器（SEO 工具簇）、人民币大写转换、单位换算器、WiFi 二维码生成器。
+
+## 2026-10-03 决策归档（已完成 ✅）
+
+**选定并已实现：图片打码/马赛克工具** — 路由 `/tools/img-mosaic`（模板 `img_mosaic`），commit 90fa8c8
+
+**决策理由**：Varkido 热门图片工具 + norito 图片品类 + 中文「发图前处理」清单多重验证；发微信/朋友圈/工单截图前遮车牌、人脸、手机号、订单号是大众隐私刚需；canvas 纯前端框选打码（马赛克/高斯模糊），与水印/压缩/九宫格切图形成图片隐私工具簇。
+
+**交付回顾**：上传预览、框选即时打码（马赛克/高斯模糊双效果+粒度调节）、多步撤销/清空、原图分辨率 PNG 导出、大图缩放坐标映射；纯前端无新增后端接口（以 commit 90fa8c8 为准，验收细节见 10-03 规格清单）。
 
 ## 今日任务（2026-10-03 · 产品经理已决策 ✅）
 
@@ -174,13 +192,13 @@
 
 **交付回顾**：≥12 种字体风格实时生成、中文原样输出、中英混排不乱码；特殊符号装饰模板（꧁༺昵称༻꧂ 等）；每个风格一键复制+toast；纯前端无新增后端接口。
 
-## P0 — 今日最值得做（2026-10-03）
+## P0 — 今日最值得做（2026-10-04）
 
 | 标题 | 痛点 | 难度 | 优先级 |
 |---|---|---|---|
-| JSON 转 TypeScript / Go 结构体 | 今日再验证：transform.tools 核心转换、DEV JSON→TS interface 长文 + jsontoall 在线工具、ToolsFam Universal Data Converter 主打 JSON→TS；连续四轮备选（9-29 起）；对接 API 手写类型定义繁琐易错；与 JSON 解析器/JSON-YAML 互转/CSV-JSON 成工具簇；纯前端递归推断嵌套接口/数组合并，单页可做 | 小 | P0 |
-| 链接去追踪（URL 追踪参数清洗） | 今日再验证：slug.tools 将 query cleaner 与 UTM builder/URL parser/SERP preview 打成 URL 工具包（awesome-free-online-tools 收录）；昨日 B 站/小红书净化工具 + URLCheck 已验证；分享链接带 utm_/fbclid/xsec_token/spm 又长又泄露隐私；纯前端黑名单识别+一键清洗+前后对比，单页可做；开发者+普通用户通用 | 小 | P0 |
-| 图片打码/马赛克工具 | Varkido 170+ 工具站热门图片工具、norito 92 工具站图片品类、中文「发图前处理/去水印擦除」清单反复验证；发截图/照片前遮车牌、人脸、手机号、订单号是隐私刚需；canvas 框选+马赛克/模糊+下载，纯前端单页；与水印/压缩/九宫格成图片隐私工具簇 | 小 | P0 |
+| JSON 转 TypeScript / Go 结构体 | 今日再验证：json.my 博客长文（嵌套接口拆分/可选字段/联合类型推断，3 天前抓取）、GitHub JSONCraft（JSON→TS/Go/Rust/Zod/Prisma 浏览器内转换）、codinganthem 工具箱列为核心转换；自 9-29 起连续六轮备选、10-03 立约「无更强候选即排它」，今日到期兑现；对接 API 手写类型定义繁琐易错；与 JSON 解析器/JSON-YAML 互转/CSV-JSON 成工具簇；纯前端递归推断，单页可做 | 小 | P0 |
+| AI Token 计数器 | 今日新发现：ricodane/ai-token-counter（多模型计数+费用估算）、token-lens、Claude Token Counter 扩展（31 天）、VSCode Live LLM Token Counter、tokl（4 天前，13 个 LLM 分词）、HN DevKit 与 codinganthem 均收录 Token Counter——44 天内六重独立信号；调 LLM API 前估 token 数与费用是 AI 时代开发者高频动作，中文工具站鲜有、可差异化；纯前端单页（GPT 系精确分词、其余近似并明示） | 小 | P0 |
+| 图片拼接/长图拼接 | 今日新发现：Adobe Express 在线合并图片（7 天前抓取）、Photo Collage Maker 在线拼图（360doc 实用清单）、CSDN 长图拼接小程序系列、Tailor 拼截图 App；聊天记录/截图/商品图一张张发又长又散；canvas 多图上传→拖拽排序→纵/横拼接+间距→导出长图，纯前端单页；与九宫格切图（拆）互补、与打码/压缩/水印成图片处理簇 | 小 | P0 |
 
 ## P1 — 高价值备选
 
@@ -213,13 +231,15 @@
 | 座位表生成器 | 婚礼/活动排桌分人繁琐；独立开发者 SEO 金矿案例已验证该细分需求 | 中 | P1 |
 | 假数据/Mock 生成器 | 前后端联调缺测试数据（2026-10-03 竞品再验证：faker.tools 79 种合成数据生成器） | 中 | P1 |
 | cURL 转代码 | 抓包得到的 cURL 转 Python/Go/JS 代码手写麻烦 | 中 | P1 |
-| 图片打码/马赛克工具 | 发微信/朋友圈前遮车牌、人脸等隐私信息；canvas 区域选择+马赛克/模糊，纯前端单页（Varkido 热门图片工具验证需求） | 小 | P1 |
+| 链接去追踪（URL 追踪参数清洗） | 连续多轮验证（slug.tools query cleaner、URLCheck、B站/小红书净化工具）但频率低、单页价值薄，10-03 起列备选，今日 Top3 让位图片拼接后顺延 P1 首选；分享链接带 utm_/fbclid/xsec_token/spm 又长又泄露隐私；纯前端黑名单识别+一键清洗+前后对比，单页可做 | 小 | P1 |
 | 富文本转 Markdown | Word/网页内容粘贴转 Markdown 写文档、发 GitHub 的痛点；Turndown 纯前端单页 | 小 | P1 |
 | PDF 合并/拆分 | 多个 PDF 合并、按页码提取（pdf-lib 纯前端，misc9.app 热帖验证需求） | 中 | P1 |
 | OpenGraph 社交卡片预览 | 发微信/微博/Twitter 前预览分享卡片标题图效果；纯前端表单+预览 | 小 | P1 |
 | 代码截图美化（Carbon 风格） | 今日新发现：awesome-free-online-tools 将 Carbon/ray.so/codeshot.io 列为 Code images 头部品类；发技术帖/工单时贴纯文本代码难看、截图带 IDE 杂边；纯前端语法高亮主题+窗口壳+PNG/SVG 导出，单页可做（需引入 highlight 库，注意体积） | 中 | P1 |
 | 发票/收据生成器 | 今日新发现：Medium《15 Free Online Tools Everyone Should Bookmark in 2026》与 FreeToolHub 190+ 计算器/文件工具均列 Invoice Generator 为文档类头部；自由职业/小商家手做发票排版麻烦；纯前端表单→A4 预览→打印/PDF，单页可做（仅模板生成、不涉税务开票） | 中 | P1 |
 | JSON 可视化树图 | 今日新发现：JSON Crack（JSON/YAML/CSV 转交互节点图）被 awesome 列表列为 Data & Testing 头部；深层 JSON 靠折叠文本看结构费眼；纯前端递归树渲染+搜索定位，单页可做；与现有 JSON 解析器互补而非重复 | 中 | P1 |
+| 汉字转拼音/注音 | 今日新发现：蛙蛙工具将中文转拼音注音列为招牌功能、CSDN 家长/老师汉字转拼音工具帖（8 天前抓取）验证教育场景——给孩子课文/生字注音靠手写标注太慢；纯前端拼音字典+声调标注（多音字取常用音并标示），单页可做 | 中 | P1 |
+| Bcrypt 哈希生成/校验 | 今日新发现：codinganthem 将 Bcrypt Generator 列入 Top tools；开发注册登录功能时生成/校验密码哈希常用，现有 MD5/SHA/AES 工具不覆盖 bcrypt；bcryptjs 纯前端，单页可做 | 小 | P1 |
 
 ## P2 — 可做可不做
 
@@ -246,6 +266,8 @@
 | HEIC 转 JPG | iPhone 照片 HEIC 格式转通用 JPG（可并入图片转换工具簇） | 小 | P2 |
 | GIF 压缩/裁剪 | 今日新发现：norito 92 工具站最近主推整套 GIF 工具（maker/帧级去重压缩/resizer/splitter/captioning）；表情包/录屏 GIF 太大发不出去；canvas + gif 解析纯前端可做轻量版（压缩质量控制难，先列 P2 观察） | 中 | P2 |
 | 音频剪切（MP3 裁剪） | 今日新发现：awesome-no-signup-tools 收录 Audio Cutter Online（切/拼/淡入淡出、全本地）；截铃声/播客片段要装软件；Web Audio API 纯前端单页可做轻量版 | 中 | P2 |
+| .gitignore 生成器 | 今日新发现：HN DevKit 将 .gitignore 列入 Generate 类；新建项目要按语言/IDE/系统拼忽略规则，手写易漏；静态模板勾选组合，纯前端单页 | 小 | P2 |
+| WCAG 颜色对比度检查 | 今日新发现：codinganthem Color Contrast Checker、HN DevKit Test 类均收录；前端/设计选文字配色要验对比度是否达 WCAG 可读标准；纯前端计算对比度+达标评级，单页可做 | 小 | P2 |
 
 ## 已实现（不再进入候选）
 
@@ -261,7 +283,8 @@
 ~~亲戚关系计算器~~（2026-09-29 实现，commit 973eb88）、
 ~~随机决策器~~（2026-09-30 实现，commit 52bb442）、
 ~~花体字生成器~~（2026-10-01 实现，commit b27e4ae，修复 f144802）。
-~~九宫格切图~~（2026-10-02 实现，commit fb036b2）。
+~~九宫格切图~~（2026-10-02 实现，commit fb036b2）、
+~~图片打码/马赛克~~（2026-10-03 实现，commit 90fa8c8）。
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
@@ -288,6 +311,15 @@
 **预计改动文件**：`templates/relationship_calculator.html`（新建）、`static/js/relationship.js`（新建）、`tools/categories.go`（新增分类+注册）、`BACKLOG.md`（本小节）。
 
 ## 调研来源
+
+### 2026-10-04
+- GitHub uditalias/json.my 博客《Generate TypeScript from JSON》（3 天前抓取：嵌套接口拆分、可选字段、联合类型推断）、Ghost-Sellz/JSONCraft（JSON→TypeScript/Go/Rust/Zod/Prisma 浏览器内转换）、rahulgo8u/codinganthem 工具箱（JSON to TypeScript 列入 Converters、Token Counter & Estimator 列入 AI 类、Bcrypt/Meta Tag 列入 Top tools）→ JSON 转 TS 再验证 + Token 计数器/Bcrypt 新信号
+- Hacker News Show HN「DevKit – 80 browser-based developer tools, no signup, all client-side」（3 天前抓取：AI & ML 类 Token counter、Generate 类 .gitignore/CSP、Test 类 Color Contrast）与「UtlKit 170+ 工具」→ 纯前端路线再印证与新候选信号
+- GitHub ricodane/ai-token-counter（44 天，多模型 token 计数+费用估算扩展）、cerokuo/token-lens、Chrome 商店 Claude Token Counter（31 天）、BedirT/LLM-Token-Counter-VSCode、openmachineware/tokl（4 天前，13 个 LLM 分词计数）→ AI Token 计数器六重独立信号
+- Adobe Express 在线合并图片（7 天前抓取）、360doc 实用网站清单 Photo Collage Maker 在线拼图、CSDN uniapp 长图拼接小程序（canvas 纵/横拼接）、App Store Tailor 拼截图（聊天记录拼长图）→ 图片拼接/长图拼接大众需求验证
+- 中文工具站复盘：即时工具 67tool（视频/音频/PDF/图片全品类）、蛙蛙工具（中文转拼音注音为招牌功能）、CSDN 汉字转拼音工具帖（家长/老师给孩子注音场景，8 天前抓取）→ 汉字转拼音新候选
+- 链接去追踪复核：0xzx URLCheck 防跟踪长文与既有 slug.tools/B站小红书净化信号仍在，但「低频、单页价值薄」判断不变，顺延 P1 首选备选
+- 复核现有 51 个已注册工具（tools/categories.go）与模板清单：图片打码/马赛克已上线（90fa8c8）归档划掉并清除 P0/P1 重复行；JSON 转 TS、链接去追踪、键盘按键测试仍未实现
 
 ### 2026-09-29
 - V2EX「有没有让你发出 WC，还有这样的网站」帖（t/949936）、V2EX 求工具/效率工具讨论
