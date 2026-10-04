@@ -280,6 +280,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "格式转换",
 				},
+				{
+					ID:          "json_to_types",
+					Name:        "JSON 转 TypeScript / Go 结构体",
+					Description: "粘贴 JSON 自动生成 TS interface 与 Go struct，嵌套拆分、可选字段与联合类型推断",
+					Path:        "/tools/json-to-types",
+					Icon:        "schema",
+					New:         true,
+					Category:    "格式转换",
+				},
 			},
 		},
 		{

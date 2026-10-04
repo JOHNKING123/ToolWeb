@@ -1,0 +1,95 @@
+{{define "json_to_types"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 转 TypeScript / Go 结构体 - JSON 生成 interface 在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSON 转 TypeScript / Go 结构体工具：粘贴 JSON 自动递归推断生成 TS interface 与 Go struct，嵌套对象拆分命名、数组字段并集可选推断、混合类型联合类型，纯前端本地处理不上传。">
+    <meta name="keywords" content="JSON转TypeScript,JSON转Go结构体,JSON生成interface,json to typescript,json to go struct">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-to-types">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON 转 TypeScript / Go 结构体","description":"免费在线 JSON 转 TypeScript / Go 结构体工具：粘贴 JSON 自动生成 TS interface 与 Go struct，纯前端本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/json-to-types","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jtt-layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+        .jtt-pane h3{margin-bottom:.6rem}
+        .jtt-textarea{width:100%;min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.6;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .jtt-output{width:100%;min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.6;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;box-sizing:border-box;background:#0f172a;color:#e2e8f0;overflow:auto;white-space:pre;margin:0}
+        .jtt-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0;align-items:center}
+        .jtt-toolbar .btn .material-icons{font-size:1.05rem;vertical-align:-3px;margin-right:.2rem}
+        .jtt-tabs{display:flex;gap:.5rem;margin-bottom:.6rem}
+        .jtt-tab{border:1px solid #d1d5db;background:#fff;padding:.5rem 1.2rem;border-radius:.5rem;cursor:pointer;font-size:.95rem;color:#374151}
+        .jtt-tab.active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:600}
+        .jtt-error{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:.5rem;padding:.6rem .9rem;font-size:.9rem;margin:.6rem 0;word-break:break-all}
+        .jtt-root-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.6rem 0;font-size:.95rem;color:#374151}
+        .jtt-root-input{padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.95rem;width:180px;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .jtt-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .jtt-tip b{color:#111827}
+        .jtt-note{color:#6b7280;font-size:.88rem;margin-top:.5rem;line-height:1.7}
+        @media (max-width:768px){
+            .jtt-layout{grid-template-columns:1fr}
+            .jtt-textarea,.jtt-output{min-height:240px}
+            .jtt-toolbar .btn{flex:1 1 42%;justify-content:center}
+            .jtt-root-input{flex:1;width:auto}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">schema</i> JSON 转 TypeScript / Go 结构体</h1>
+            <p>粘贴 JSON 自动递归推断生成 TS interface 与 Go struct，JSON 仅在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:1140px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="jtt-root-row">
+                    <label for="jtt-root">根类型名：</label>
+                    <input id="jtt-root" class="jtt-root-input" type="text" value="Root" spellcheck="false" aria-label="根类型名">
+                    <span class="jtt-note" style="margin:0;">改名后输出实时刷新，嵌套对象按路径自动命名（如 RootAddress）</span>
+                </div>
+                <div class="jtt-layout">
+                    <div class="jtt-pane">
+                        <h3>JSON 输入</h3>
+                        <textarea id="jtt-input" class="jtt-textarea" placeholder="在此粘贴 JSON，例如：&#10;{&#10;  &quot;id&quot;: 1,&#10;  &quot;name&quot;: &quot;张三&quot;&#10;}" spellcheck="false" aria-label="JSON 输入"></textarea>
+                        <div class="jtt-error" id="jtt-error" role="alert"></div>
+                        <div class="jtt-toolbar">
+                            <button class="btn btn-primary" id="jtt-sample"><i class="material-icons">data_object</i> 填充示例</button>
+                            <button class="btn btn-secondary" id="jtt-format"><i class="material-icons">format_align_left</i> 格式化</button>
+                            <button class="btn btn-secondary" id="jtt-clear"><i class="material-icons">clear</i> 清空</button>
+                        </div>
+                    </div>
+                    <div class="jtt-pane">
+                        <h3>生成结果</h3>
+                        <div class="jtt-tabs" role="tablist" aria-label="输出语言">
+                            <button type="button" class="jtt-tab active" data-tab="ts">TypeScript</button>
+                            <button type="button" class="jtt-tab" data-tab="go">Go</button>
+                        </div>
+                        <pre class="jtt-output" id="jtt-output" aria-label="生成结果"></pre>
+                        <div class="jtt-toolbar">
+                            <button class="btn btn-primary" id="jtt-copy"><i class="material-icons">content_copy</i> 复制结果</button>
+                            <button class="btn btn-secondary" id="jtt-download"><i class="material-icons">download</i> 下载文件</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="jtt-note">本地处理不上传：全部推断在你的浏览器内完成，JSON 不会发送到任何服务器。输入时实时生成（防抖），下载文件名随当前 Tab 为 .ts / .go。</div>
+            </div>
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="jtt-tip">
+                    <b>怎么用：</b>把接口返回的 JSON 粘贴到左侧（或点「填充示例」），右侧即刻生成 TypeScript interface 与 Go struct，切换 Tab 查看，根类型名可自定义。<br>
+                    <b>推断规则：</b>嵌套对象拆分为按路径 PascalCase 命名的独立类型（如 address → RootAddress）；对象数组合并全部元素取字段并集，部分元素缺失的字段推断为可选（TS <code>?</code> / Go <code>,omitempty</code>）；混合类型数组生成 TS 联合类型、Go <code>[]interface{}</code>；空数组为 <code>unknown[]</code> / <code>[]interface{}</code>；null 并入 TS 联合、Go 用 <code>interface{}</code>。<br>
+                    <b>隐私：</b>纯前端本地处理，JSON 只在你的浏览器里流转，不上传服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/json-to-types.js"></script>
+</body>
+</html>
+{{end}}
