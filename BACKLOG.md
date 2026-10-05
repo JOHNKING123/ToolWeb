@@ -1,8 +1,18 @@
 # ToolWeb 需求 Backlog
 
-> 维护人：产品调研员 · 每日更新（2026-10-04）
+> 维护人：产品调研员 · 每日更新（2026-10-05）
 
-## 今日候选（2026-10-04 · 产品调研推荐）
+## 今日候选（2026-10-05 · 产品调研推荐）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构）：
+
+1. **AI Token 计数器** — 昨日 P0 首选备选观察期满、今日信号再加强（七重验证）：DEV《I Built a Token Counter That Works Offline — 19 Models, File Drop, Cost Estimator》（19 模型实时计价+上下文窗占用条+文件拖入计数）、pramilk/dev-microtools《LLM Token Counter & API Cost Estimator》（GPT-5/Claude/Gemini 精确分词+费用，2026-08-29 更新）、mattbusel/llm-cost（9 天前，12 模型比价+预算守卫）、chris-dyson/ai-token-calculator（15 模型实时成本）、vibingtalk TokenSave（6 天前，GPT-6/Claude 5.5/Gemini 3.1 计价+非英语 token 溢价分析+一键清洗），叠加昨日 ricodane/token-lens/tokl 等六重信号——调 LLM API 前估 prompt token 数、会不会超上下文窗、要花多少钱是 AI 时代开发者每日高频动作，中文工具站鲜有此工具可打差异化；ToolWeb 尚无 AI 工具分类，此为开辟新簇首发。实现策略：GPT 系用轻量 BPE 分词库精确计数、Claude/Gemini 等用字符比近似并明示「估算」标签（DEV 高赞文已验证 ±5% 近似足够预算场景），纯前端单页可做。SEO：token计数器、token计算器、ChatGPT token计算、LLM费用估算。
+2. **图片拼接 / 长图拼接** — 昨日顺延后今日再获三重验证：Stitch It（APKMirror 2.3.0，聊天/收据/订单截图拼一张长图+打码一体）、Media.io Free Photo Stitch（16 小时前抓取，纵向截图拼接/商品并排/前后对比五场景）、GitHub ongxeno/web-collage（canvas 多图合并+拖拽排序+PNG 导出）+ prathameshmore07/snapstitch（19 天前，截图批量拖入→排序→导出），叠加昨日 Tailor/Adobe Express/CSDN 长图系列——聊天记录/截图/商品图一张张发又长又散是大众高频麻烦；昨日产品经理暂缓理由（连续两日图片工具、簇失衡）已随 JSON 转 TS 上线消解：今日排它与九宫格切图（拆）互补成图片「拼合」簇，与打码/压缩/水印同属图片处理分类、站内互链强。canvas 纯前端：多图上传→拖拽排序→纵/横拼接+间距/背景色→导出长图，单页可做。SEO：长图拼接、图片拼接、截图拼长图、聊天记录拼图。
+3. **EXIF 信息查看/清除** — 今日新发现的强隐私信号：itsjustadarsh/scrub（9 天前，浏览器内字节级剥离 EXIF/GPS/XMP 而非重编码）、NakliTechie/StripLocal（拖入即清 GPS/设备序列号/拍摄时间）、toolio EXIF Metadata Remover（6 天前，无上传清 GPS/机型/时间戳）、burakoskay EXIF Metadata Remover Skill（4 天前）+ PhotoAITagger/Pixvisor 隐私清洗长文——手机照片自带 GPS 坐标、设备型号、拍摄时间，发朋友圈/论坛/二手平台前泄露住址与行踪是大众隐私刚需，普通用户与开发者通用；与图片打码（遮内容）互补成「发图前隐私处理」双件套（一个遮像素、一个清元数据），同属图片处理簇。纯前端：解析展示 EXIF 字段表（GPS/机型/时间）→一键清除→canvas 重绘导出干净图（明示重编码），单页可做。SEO：EXIF清除、照片去除定位、图片元数据删除、照片隐私清理。
+
+**备选顺延**：链接去追踪（连续多轮验证但低频、单页价值薄，P1 首选备选）、PDF 合并/拆分（ToolOrbit/EasyTools/ClickJoy 多站标配，大众高频，pdf-lib 纯前端，中难度列 P1）、cURL 转代码（DevTools Hub/HN DevKit 验证，需解析引号/多行，中难度 P1）、SERP 搜索结果预览 / Meta 标签生成器（SEO 工具簇，devtoolbelt/ToolOrbit/codinganthem 三站标配，P1）、人民币大写转换、单位换算器、WiFi 二维码生成器。
+
+## 今日候选（2026-10-04 · 产品调研推荐，已决策归档）
 
 **推荐 Top3**（优先高频、单页可实现、契合现有架构）：
 
@@ -226,13 +236,13 @@
 
 **交付回顾**：≥12 种字体风格实时生成、中文原样输出、中英混排不乱码；特殊符号装饰模板（꧁༺昵称༻꧂ 等）；每个风格一键复制+toast；纯前端无新增后端接口。
 
-## P0 — 今日最值得做（2026-10-04）
+## P0 — 今日最值得做（2026-10-05）
 
 | 标题 | 痛点 | 难度 | 优先级 |
 |---|---|---|---|
-| JSON 转 TypeScript / Go 结构体 | 今日再验证：json.my 博客长文（嵌套接口拆分/可选字段/联合类型推断，3 天前抓取）、GitHub JSONCraft（JSON→TS/Go/Rust/Zod/Prisma 浏览器内转换）、codinganthem 工具箱列为核心转换；自 9-29 起连续六轮备选、10-03 立约「无更强候选即排它」，今日到期兑现；对接 API 手写类型定义繁琐易错；与 JSON 解析器/JSON-YAML 互转/CSV-JSON 成工具簇；纯前端递归推断，单页可做 | 小 | P0 |
-| AI Token 计数器 | 今日新发现：ricodane/ai-token-counter（多模型计数+费用估算）、token-lens、Claude Token Counter 扩展（31 天）、VSCode Live LLM Token Counter、tokl（4 天前，13 个 LLM 分词）、HN DevKit 与 codinganthem 均收录 Token Counter——44 天内六重独立信号；调 LLM API 前估 token 数与费用是 AI 时代开发者高频动作，中文工具站鲜有、可差异化；纯前端单页（GPT 系精确分词、其余近似并明示） | 小 | P0 |
-| 图片拼接/长图拼接 | 今日新发现：Adobe Express 在线合并图片（7 天前抓取）、Photo Collage Maker 在线拼图（360doc 实用清单）、CSDN 长图拼接小程序系列、Tailor 拼截图 App；聊天记录/截图/商品图一张张发又长又散；canvas 多图上传→拖拽排序→纵/横拼接+间距→导出长图，纯前端单页；与九宫格切图（拆）互补、与打码/压缩/水印成图片处理簇 | 小 | P0 |
+| AI Token 计数器 | 今日七重验证：DEV离线Token计数器（19模型+文件拖入+上下文窗占用条）、pramilk LLM Token Counter（GPT-5/Claude/Gemini精确分词+费用，2026-08-29）、mattbusel llm-cost（12模型比价，9天前）、chris-dyson计算器（15模型）、TokenSave（6天前，非英语溢价分析），叠加昨日ricodane/tokl等；调LLM API前估token数/上下文占用/费用是AI时代开发者高频动作，中文站鲜有可差异化；ToolWeb无AI工具，开辟新簇；纯前端单页（GPT系精确分词，其余近似明示） | 小 | P0 |
+| 图片拼接/长图拼接 | 今日再验证：Stitch It 2.3.0（聊天/收据拼长图）、Media.io Photo Stitch（16小时前，纵向截图/商品并排/前后对比）、web-collage + snapstitch（19天前截图批量拼接），叠加昨日Tailor/Adobe Express；聊天记录/截图/商品图一张张发又长又散；canvas多图上传→拖拽排序→纵/横拼接+间距→导出长图，纯前端单页；与九宫格切图（拆）互补、与打码/压缩/水印成图片处理簇；昨日暂缓的簇失衡理由已随JSON转TS上线消解 | 小 | P0 |
+| EXIF 信息查看/清除 | 今日新发现：itsjustadarsh/scrub（9天前字节级剥离EXIF/GPS/XMP）、StripLocal（清GPS/序列号/时间）、toolio EXIF Remover（6天前无上传清元数据）、burakoskay Skill（4天前）；手机照片带GPS/机型/时间，发图前泄露住址行踪是大众隐私刚需；与图片打码（遮像素）互补成发图前隐私双件套；纯前端解析展示字段表→一键清除→导出干净图，单页可做 | 小 | P0 |
 
 ## P1 — 高价值备选
 
@@ -246,7 +256,6 @@
 | URL 参数解析器 | 长 URL 的 query 参数肉眼解析困难，调试接口常用 | 小 | P1 |
 | 进制转换器 | 二/八/十/十六进制开发者日常换算 | 小 | P1 |
 | 文本转语音朗读 | 长文章校对、听小说需要免提朗读（Web Speech API 纯前端） | 小 | P1 |
-| EXIF 信息查看/清除 | 发照片前怕泄露拍摄地点、设备等隐私信息 | 小 | P1 |
 | HTTP 状态码速查 | 调试接口时快速查状态码含义，静态数据单页 | 小 | P1 |
 | Git 命令速查/生成器 | 非常用 Git 操作记不住参数 | 小 | P1 |
 | 取色器（图片取色） | 设计/前端需提取图片中的颜色值 | 小 | P1 |
@@ -318,7 +327,8 @@
 ~~随机决策器~~（2026-09-30 实现，commit 52bb442）、
 ~~花体字生成器~~（2026-10-01 实现，commit b27e4ae，修复 f144802）。
 ~~九宫格切图~~（2026-10-02 实现，commit fb036b2）、
-~~图片打码/马赛克~~（2026-10-03 实现，commit 90fa8c8）。
+~~图片打码/马赛克~~（2026-10-03 实现，commit 90fa8c8）、
+~~JSON 转 TypeScript / Go 结构体~~（2026-10-04 实现，commit 53d07ef，路由 /tools/json-to-types）。
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
@@ -345,6 +355,13 @@
 **预计改动文件**：`templates/relationship_calculator.html`（新建）、`static/js/relationship.js`（新建）、`tools/categories.go`（新增分类+注册）、`BACKLOG.md`（本小节）。
 
 ## 调研来源
+
+### 2026-10-05
+- DEV《I Built a Token Counter That Works Offline — 19 Models, File Drop, Cost Estimator》（19 模型实时计价 GPT-4o/4.1/o3、Claude 3.7/3.5、Gemini 2.5/2.0、DeepSeek/Llama/Mistral/Qwen，上下文窗占用条+token 着色可视化+文件拖入，±5% 近似足够预算场景）、pramilk/dev-microtools《LLM Token Counter & API Cost Estimator》（2026-08-29 更新，GPT-5/Claude/Gemini 精确分词说明：OpenAI 公开 BPE 可精确、Claude/Gemini 未公开只能明示估算）、mattbusel/llm-cost（9 天前，12 模型比价+预算守卫，价格核对 2026-09-25）、chris-dyson/ai-token-calculator（15 模型实时成本）、vibingtalk TokenSave（6 天前，GPT-6/Claude Sonnet 5.5/Gemini 3.1 计价+非英语 token 溢价仪表+一键清洗）→ AI Token 计数器七重验证、观察期满升今日 Top1
+- Stitch It 2.3.0（APKMirror：聊天/收据/订单截图拼一张长图+接缝裁剪+打码）、Media.io Free Photo Stitch（16 小时前抓取：纵向截图拼接/商品并排/前后对比/全景五场景）、GitHub ongxeno/web-collage（canvas 多图合并+拖拽排序+PNG 导出）、prathameshmore07/snapstitch（19 天前，截图批量拖入/粘贴→自动排序→导出 docx/pdf）→ 图片拼接/长图拼接再验证，昨日簇失衡暂缓理由已消解
+- itsjustadarsh/scrub（9 天前，浏览器字节级剥离 EXIF/GPS/XMP/IPTC 而非重编码、像素无损）、NakliTechie/StripLocal（拖入清 GPS/时间/机型/序列号，canvas 重绘+EXIF 方向校正）、toolio EXIF Metadata Remover（6 天前，无上传清 GPS/机型/时间戳）、burakoskay EXIF Metadata Remover Skill（4 天前，11 语言）、PhotoAITagger/Pixvisor 隐私清洗（GPS 单独清、保留版权的选择性清洗）→ EXIF 查看/清除新候选升 P0
+- DEV《I built 79 free developer tools with Astro》（2 天前：SERP Preview 像素宽计量、Extract Regex Matches 预设邮箱/URL、UULE Generator；作者自述 Search Console 显示 Google Search URL 生成器与 2FA 工具曝光最高，继续加码 search/dev 簇）、ToolOrbit 100+ 工具清单（8 天前：Meta Tag Generator、SERP Snippet Preview、Sitemap Generator、UTM Builder、PDF 合并/拆分标配）、DEV《I built 40 free developer tools》（3 天前：cURL→fetch/axios、JSON Schema validator、byte size、HTTP 状态码/MIME 参考）→ SERP/Meta/PDF/cURL 备选信号再确认，均列 P1
+- GitHub 复核：JSON 转 TypeScript/Go 已上线（53d07ef，templates/json_to_types.html + tools/categories.go 注册 json_to_types）归档划掉并清除 P0 重复行；AI Token、图片拼接、EXIF、链接去追踪、键盘按键测试仍未实现
 
 ### 2026-10-04
 - GitHub uditalias/json.my 博客《Generate TypeScript from JSON》（3 天前抓取：嵌套接口拆分、可选字段、联合类型推断）、Ghost-Sellz/JSONCraft（JSON→TypeScript/Go/Rust/Zod/Prisma 浏览器内转换）、rahulgo8u/codinganthem 工具箱（JSON to TypeScript 列入 Converters、Token Counter & Estimator 列入 AI 类、Bcrypt/Meta Tag 列入 Top tools）→ JSON 转 TS 再验证 + Token 计数器/Bcrypt 新信号
