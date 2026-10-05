@@ -507,6 +507,23 @@ func GetCategories() []Category {
 			},
 		},
 		{
+			ID:          "ai",
+			Name:        "AI 工具",
+			Description: "大模型与 AI 应用相关工具",
+			Icon:        "smart_toy",
+			Tools: []Tool{
+				{
+					ID:          "ai_token_counter",
+					Name:        "AI Token 计数器",
+					Description: "计算 GPT/Claude/Gemini 等模型 token 数、上下文窗占用与 API 费用估算",
+					Path:        "/tools/ai-token-counter",
+					Icon:        "token",
+					New:         true,
+					Category:    "AI 工具",
+				},
+			},
+		},
+		{
 			ID:          "life",
 			Name:        "生活工具",
 			Description: "日常生活实用小工具",
