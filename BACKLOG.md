@@ -12,6 +12,39 @@
 
 **备选顺延**：链接去追踪（连续多轮验证但低频、单页价值薄，P1 首选备选）、PDF 合并/拆分（ToolOrbit/EasyTools/ClickJoy 多站标配，大众高频，pdf-lib 纯前端，中难度列 P1）、cURL 转代码（DevTools Hub/HN DevKit 验证，需解析引号/多行，中难度 P1）、SERP 搜索结果预览 / Meta 标签生成器（SEO 工具簇，devtoolbelt/ToolOrbit/codinganthem 三站标配，P1）、人民币大写转换、单位换算器、WiFi 二维码生成器。
 
+## 今日任务（2026-10-05 · 产品经理已决策 ✅）
+
+**选定：AI Token 计数器** — 路由 `/tools/ai-token-counter`（模板 `ai_token_counter`），新开「AI 工具」分类首发工具
+
+**决策理由**：
+1. 观察期满 + 七重信号再加强：该候选 10-04 已列「明日 P0 首选备选」观察分词精度方案；今日调研新增 DEV 离线 Token 计数器（19 模型 + 文件拖入 + 上下文窗占用条）、pramilk LLM Token Counter（2026-08-29，GPT-5/Claude/Gemini 分词与费用说明）、mattbusel llm-cost（9 天前，12 模型比价 + 预算守卫）、chris-dyson（15 模型实时成本）、vibingtalk TokenSave（6 天前，非英语 token 溢价分析）等信号，叠加昨日 ricodane/token-lens/tokl 六重验证——调 LLM API 前估 token 数、会不会超上下文窗、要花多少钱，是 AI 时代开发者每日高频动作，需求真实性无悬念。
+2. 差异化开新簇：ToolWeb 现有 50+ 工具分属格式化/编码/开发/文本/格式转换/图片/文档/网络/加密/生活十类，尚无「AI 工具」分类；中文工具站鲜有 token 计数 + 费用估算一体工具，此为开辟 AI 工具簇的首发锚点，后续可接 Prompt 模板、模型比价等，一次投入换新流量入口，价值高于再补一张图片工具。
+3. 昨日的精度顾虑已有成熟解法：pramilk 与 DEV 高赞文均验证同一路线——OpenAI 系可用轻量 BPE 词表精确计数，Claude/Gemini 等未公开 tokenizer 的模型用字符比近似并明示「估算」标签，预算/超窗预警场景 ±5% 足够；今日按此实现，不再顺延。
+4. 落选说明：图片拼接/长图拼接需求同样真实，但图片处理簇近三日已连上九宫格切图（10-02）、图片打码（10-03），再排图片工具簇内边际收益递减，列明日 P0 首选备选；EXIF 查看/清除为今日新信号，先观察一轮竞品迭代，且其与图片打码同属「发图前隐私」场景、可与图片拼接打包成图片簇下一站，列 P1 首选备选。JSON 转 TS（10-04）刚上线，今日回归开发向工具节奏平衡（开发高频 + 大众可懂），不连续压图片方向。
+
+**规格**：
+1. 输入区：多行文本输入框（粘贴 prompt/文章/代码），实时统计字符数、单词数（英文按空格、中文按字计）、行数；支持 `.txt/.md/.json/.log` 文件拖入/点击读取（本地 FileReader 读取、明示不上传服务器）；内置「填充示例」（中英混排示例 prompt）、清空按钮。
+2. 模型选择：下拉/分组选择 ≥12 个主流模型，至少覆盖 OpenAI（GPT-4o、GPT-4o mini、GPT-4.1、GPT-4 Turbo、o3）、Anthropic（Claude 3.7 Sonnet、Claude 3.5 Sonnet、Claude 3 Opus）、Google（Gemini 2.5 Pro、Gemini 2.0 Flash）、DeepSeek（DeepSeek-V3/R1）、通义千问（Qwen2.5）四大家族；每个模型展示上下文窗大小（如 128K/200K/1M）与输入/输出单价（$/1M tokens，静态价格表，页面标注「价格为公开标价快照、仅供估算」）。
+3. Token 计数核心（纯前端 `static/js/ai-token-counter.js`）：OpenAI 系实现轻量 BPE 风格估算（按单词/标点/数字/中文字符分段计数，目标误差可接受范围并在页面明示方法）；Claude/Gemini/DeepSeek/Qwen 等用各家族字符比系数近似，结果旁明示「估算」标签与估算说明，不假装精确；输入变化实时重算（防抖）。
+4. 上下文窗占用条：进度条展示已输入 token 占所选模型上下文窗的百分比，<80% 绿色、80~100% 橙色预警、>100% 红色超限提示，并给出「约可再输入 X token」文案。
+5. 费用估算：按所选模型单价计算本次输入成本；可填「预计输出 token 数」（数字输入，默认 500）估算输出成本与总成本，USD 展示（可选附人民币按固定汇率换算并标注）；多模型比价小表（同输入在 3~4 个热门模型下的总价对比）为加分项，时间紧可降级为仅当前模型。
+6. 辅助：中英文混排提示（中文字符 token 密度说明，如「中文约 1 字 ≈ 1 token 量级，以实际计数为准」）；一键复制统计摘要（模型/token 数/预估费用）；页面明示纯本地处理、文本不上传。
+7. 注册：`tools/categories.go` 新增分类「AI 工具」（ID `ai`，Icon `smart_toy`），其下新增工具 ID `ai_token_counter`，Name「AI Token 计数器」，Path `/tools/ai-token-counter`，Icon `token`，New: true；通用路由 `/tools/:tool` 自动映射模板 `ai_token_counter`，无需新增 Go 路由。
+8. SEO：title「AI Token 计数器 - LLM Token 计算与 API 费用估算在线工具」、description、keywords（token计数器,token计算器,ChatGPT token计算,LLM费用估算,Claude token,Gemini token）；JSON-LD 与 canonical 沿用现有工具页写法；sitemap 自动生成。
+9. 移动端适配：输入区/结果区分上下布局，模型选择与按钮够大，占用条与比价表不错乱，长文本横向不溢出。
+
+**验收标准**：
+- [ ] `/tools/ai-token-counter` 返回 200，首页「AI 工具」分类可见入口（新分类仅此 1 个工具时也正常渲染）
+- [ ] 填充示例一键载入后，≥12 个模型切换均实时给出 token 数、字符/单词统计；OpenAI 系结果与官方量级一致（抽查英文段落误差在可接受范围），非 OpenAI 模型明确标注「估算」
+- [ ] 上下文窗占用条随模型/输入实时变化，80%/100% 两档预警变色与文案正确；超限时红色提示
+- [ ] 费用估算：输入成本 + 可编辑预计输出 token 的总成本计算正确，价格快照标注可见
+- [ ] 文件拖入（.txt/.md）读取填充成功；非法/超大文件有提示不崩溃；页面明确提示本地处理不上传
+- [ ] 复制统计摘要可用且内容与展示一致；纯前端，无新增后端接口；`go build` 通过；SEO meta 完整；移动端布局不错乱
+
+**预计改动文件**：`templates/ai_token_counter.html`（新建）、`static/js/ai-token-counter.js`（新建）、`tools/categories.go`（新增 AI 工具分类 + 注册工具）、`BACKLOG.md`（本小节）。
+
+**明日备选（顺延）**：图片拼接/长图拼接（P0 首选备选，图片「拼合」簇下一站）、EXIF 信息查看/清除（P1 首选备选，隐私双件套）。
+
 ## 今日候选（2026-10-04 · 产品调研推荐，已决策归档）
 
 **推荐 Top3**（优先高频、单页可实现、契合现有架构）：
