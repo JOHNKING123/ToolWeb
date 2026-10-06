@@ -1,0 +1,213 @@
+{{define "img_stitch"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片拼接工具 - 长图拼接/截图拼长图在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片拼接工具：多张图片纵向拼长图或横向并排拼接，聊天记录、订单截图拼长图，拖拽排序、间距与背景色可调，PNG/JPG 导出，纯前端运行不上传图片。">
+    <meta name="keywords" content="长图拼接,图片拼接,截图拼长图,聊天记录拼图,图片合并,拼长图,图片拼接工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/img-stitch">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "图片拼接 / 长图拼接",
+      "description": "免费在线图片拼接工具：多张图片纵向拼长图或横向并排拼接，拖拽排序、间距与背景色可调，PNG/JPG 导出，纯前端运行不上传图片。",
+      "url": "https://www.johnkingzcq123.xyz/tools/img-stitch",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .st-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: .8rem;
+            padding: 2.2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            background: #f9fafb;
+            transition: border-color .2s, background .2s;
+            color: #6b7280;
+        }
+        .st-upload:hover, .st-upload.dragover {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+            color: var(--primary-color);
+        }
+        .st-upload .material-icons { font-size: 2.6rem; display: block; margin-bottom: .5rem; }
+        .st-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .st-warn {
+            color: #92400e; background: #fffbeb; border: 1px solid #fde68a;
+            border-radius: .5rem; padding: .55rem .8rem; font-size: .88rem;
+            margin-top: .6rem; line-height: 1.6; display: none;
+        }
+        .st-thumbs {
+            display: flex; gap: .7rem; overflow-x: auto; padding: .4rem .1rem .7rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        .st-thumb {
+            flex: 0 0 auto; width: 104px; border: 1px solid #e5e7eb; border-radius: .6rem;
+            background: #fff; overflow: hidden; cursor: grab; position: relative;
+        }
+        .st-thumb.dragging { opacity: .45; }
+        .st-thumb.dragover { outline: 2px solid var(--primary-color); outline-offset: -2px; }
+        .st-thumb img {
+            width: 100%; height: 76px; object-fit: cover; display: block; background: #f3f4f6;
+            pointer-events: none;
+        }
+        .st-thumb .st-idx {
+            position: absolute; top: .3rem; left: .3rem; background: rgba(17,24,39,.78); color: #fff;
+            font-size: .72rem; border-radius: 999px; padding: .05rem .45rem; pointer-events: none;
+        }
+        .st-thumb .st-meta { font-size: .7rem; color: #6b7280; padding: .3rem .4rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .st-thumb .st-ops { display: flex; justify-content: space-between; padding: .25rem .3rem .4rem; }
+        .st-thumb .st-ops button {
+            border: 1px solid #e5e7eb; background: #fff; border-radius: .35rem; cursor: pointer;
+            width: 26px; height: 24px; line-height: 1; color: #374151; font-size: .8rem; padding: 0;
+        }
+        .st-thumb .st-ops button:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .st-thumb .st-ops button:disabled { opacity: .3; cursor: default; }
+        .st-thumb .st-ops button.st-del:hover { border-color: #ef4444; color: #ef4444; }
+        .st-row { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin: .55rem 0; }
+        .st-row > label { min-width: 5.2em; color: #374151; font-size: .95rem; }
+        .st-seg { display: flex; gap: .5rem; flex-wrap: wrap; }
+        .st-seg-btn {
+            border: 1px solid #d1d5db; background: #fff; padding: .45rem 1rem;
+            border-radius: .5rem; cursor: pointer; font-size: .92rem; color: #374151;
+        }
+        .st-seg-btn.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .st-range { flex: 1 1 180px; max-width: 320px; accent-color: var(--primary-color); }
+        .st-range-val { font-size: .9rem; color: #374151; min-width: 3.2em; }
+        .st-swatch {
+            width: 30px; height: 30px; border-radius: .45rem; border: 1px solid #d1d5db;
+            cursor: pointer; padding: 0; position: relative;
+        }
+        .st-swatch.active { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+        .st-swatch-transparent {
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 0 0/12px 12px;
+        }
+        .st-color { width: 44px; height: 30px; border: 1px solid #d1d5db; border-radius: .45rem; padding: 1px; background: #fff; cursor: pointer; }
+        .st-preview-wrap { text-align: center; margin-top: .6rem; }
+        .st-preview-wrap canvas {
+            max-width: 100%; height: auto; border: 1px solid #e5e7eb; border-radius: .5rem;
+            background: repeating-conic-gradient(#f3f4f6 0% 25%, #fff 0% 50%) 0 0/16px 16px;
+        }
+        .st-empty { color: #9ca3af; font-size: .92rem; padding: 1.6rem 0; text-align: center; }
+        .st-actions { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1rem; }
+        .st-actions .btn .material-icons { font-size: 1.1rem; vertical-align: -2px; margin-right: .25rem; }
+        .st-tip { color: #374151; line-height: 1.9; font-size: .95rem; }
+        .st-tip b { color: #111827; }
+        @media (max-width: 640px) {
+            .st-upload { padding: 1.6rem .8rem; }
+            .st-actions .btn { flex: 1 1 100%; justify-content: center; padding: .8rem; }
+            .st-range { max-width: none; }
+            .st-thumb { width: 92px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">view_column</i> 图片拼接 / 长图拼接</h1>
+            <p>多张图片一键拼成长图：聊天记录、订单截图纵向拼接，或商品图横向并排对比</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>上传图片</h3>
+                <div class="st-upload" id="st-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择图片，或把图片拖拽到这里（可多选、可多次追加）</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 JPG / PNG / WebP，图片仅在浏览器本地处理，不会上传到服务器</div>
+                </div>
+                <input type="file" id="st-file" accept="image/jpeg,image/png,image/webp" multiple style="display:none;">
+            </div>
+
+            <div class="tool-card" id="st-list-card" style="margin-bottom:1.2rem;display:none;">
+                <h3>图片列表 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（按住缩略图拖拽排序，移动端可用 ← → 按钮调整）</span></h3>
+                <div class="st-thumbs" id="st-thumbs"></div>
+                <div class="st-actions" style="margin-top:.2rem;">
+                    <button class="btn btn-secondary" id="st-add"><i class="material-icons">add_photo_alternate</i> 继续添加</button>
+                    <button class="btn btn-secondary" id="st-clear"><i class="material-icons">delete_sweep</i> 清空全部</button>
+                </div>
+            </div>
+
+            <div class="tool-card" id="st-settings-card" style="margin-bottom:1.2rem;display:none;">
+                <h3>拼接设置</h3>
+                <div class="st-row">
+                    <label>拼接方向</label>
+                    <div class="st-seg" role="group" aria-label="拼接方向">
+                        <button type="button" class="st-seg-btn active" data-dir="vertical">纵向拼接（拼长图）</button>
+                        <button type="button" class="st-seg-btn" data-dir="horizontal">横向拼接（并排）</button>
+                    </div>
+                </div>
+                <div class="st-row">
+                    <label for="st-gap">图片间距</label>
+                    <input type="range" class="st-range" id="st-gap" min="0" max="100" step="1" value="10">
+                    <span class="st-range-val" id="st-gap-val">10 px</span>
+                </div>
+                <div class="st-row">
+                    <label>背景色</label>
+                    <div class="st-seg" role="group" aria-label="背景色预设">
+                        <button type="button" class="st-swatch active" data-bg="#ffffff" style="background:#ffffff;" title="白色" aria-label="白色背景"></button>
+                        <button type="button" class="st-swatch" data-bg="#000000" style="background:#000000;" title="黑色" aria-label="黑色背景"></button>
+                        <button type="button" class="st-swatch st-swatch-transparent" data-bg="transparent" title="透明" aria-label="透明背景"></button>
+                    </div>
+                    <input type="color" class="st-color" id="st-bg-color" value="#ffffff" aria-label="自定义背景色">
+                </div>
+                <div class="st-row">
+                    <label>对齐方式</label>
+                    <div class="st-seg" role="group" aria-label="对齐方式">
+                        <button type="button" class="st-seg-btn" data-align="left">左对齐</button>
+                        <button type="button" class="st-seg-btn active" data-align="center">居中</button>
+                        <button type="button" class="st-seg-btn" data-align="right">右对齐</button>
+                    </div>
+                </div>
+                <div class="st-row">
+                    <label>导出格式</label>
+                    <div class="st-seg" role="group" aria-label="导出格式">
+                        <button type="button" class="st-seg-btn active" data-format="png">PNG（支持透明）</button>
+                        <button type="button" class="st-seg-btn" data-format="jpg">JPG（体积小）</button>
+                    </div>
+                </div>
+                <div class="st-info" id="st-size-info"></div>
+                <div class="st-warn" id="st-size-warn"></div>
+                <div class="st-warn" id="st-jpg-warn"></div>
+            </div>
+
+            <div class="tool-card" id="st-preview-card" style="margin-bottom:1.2rem;display:none;">
+                <h3>拼接预览 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（预览为等比缩放显示，导出为原分辨率）</span></h3>
+                <div class="st-preview-wrap"><canvas id="st-preview" width="10" height="10"></canvas></div>
+            </div>
+
+            <div class="tool-card" id="st-action-card" style="margin-bottom:1.2rem;display:none;">
+                <h3>导出</h3>
+                <div class="st-actions">
+                    <button class="btn btn-primary" id="st-export"><i class="material-icons">download</i> 导出拼接图</button>
+                    <button class="btn btn-secondary" id="st-reset"><i class="material-icons">refresh</i> 重新开始</button>
+                </div>
+                <div class="st-info" id="st-export-msg"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="st-tip">
+                    <b>怎么拼：</b>纵向拼接时所有图片等比缩放到统一宽度后上下排布（适合聊天记录、订单截图拼长图）；横向拼接时统一高度后左右并排（适合商品图对比）。<br>
+                    <b>排序：</b>桌面端按住缩略图拖拽即可调整顺序，移动端用每张图下方的 ← → 按钮移动；顺序变化会实时同步到预览与导出。<br>
+                    <b>背景色：</b>图片之间的间距与两侧留白用背景色填充；PNG 导出时可保留透明，JPG 不支持透明，透明背景导出 JPG 会自动转成白色。<br>
+                    <b>超长图：</b>浏览器画布单边上限约 16384px，拼接总尺寸超限时会自动等比降质导出并给出提示，不会出现导出空白。<br>
+                    <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/img-stitch.js"></script>
+</body>
+</html>
+{{end}}

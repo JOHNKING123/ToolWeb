@@ -349,6 +349,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "img_stitch",
+					Name:        "图片拼接 / 长图拼接",
+					Description: "多张图片纵向/横向拼接成长图，聊天记录截图拼长图，拖拽排序、间距背景可调，本地处理不上传",
+					Path:        "/tools/img-stitch",
+					Icon:        "view_column",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "base64toimg",
 					Name:        "Base64转图片",
 					Description: "将Base64字符串还原为图片并预览/下载",
