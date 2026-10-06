@@ -1,6 +1,16 @@
 # ToolWeb 需求 Backlog
 
-> 维护人：产品调研员 · 每日更新（2026-10-05）
+> 维护人：产品调研员 · 每日更新（2026-10-06）
+
+## 今日候选（2026-10-06 · 产品调研推荐）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构）：
+
+1. **图片拼接 / 长图拼接** — 昨日 P0 顺延后升为今日首选：Stitch It、Media.io Photo Stitch、web-collage/snapstitch 等多源信号持续，今日再获 Image Toolbox 将 Image Stitching 列为核心图片能力佐证；聊天记录/订单/收据截图一张张发又长又散、商品图并排对比是大众高频麻烦；与九宫格切图（拆分）互补成图片「拼合」簇，与打码/压缩/水印同属图片处理分类、站内互链强。实现：canvas 纯前端，多图上传→拖拽排序→纵/横拼接+间距/背景色→导出长图，单页可做。SEO：长图拼接、图片拼接、截图拼长图、聊天记录拼图。
+2. **EXIF 信息查看/清除** — 昨日 P0 信号今日再加强（五重新验证）：forjiang/image-metadata-cleaner（9 天前，批量清 EXIF/GPS/XMP/IPTC 并逐项日志展示）、capytools CapyStrip（以「remove exif data / photo metadata viewer / strip gps」为目标词新建浏览器端清除工具）、StripLocal 与 image-fingerprint-remover（扩展到 C2PA/AI 生成指纹清除）持续活跃，叠加中文 PixPix EXIF 工具长文（2026-09-19，强调 GPS/作者为隐私风险高亮项）——手机照片自带 GPS/机型/时间，发朋友圈/二手平台前泄露住址行踪是大众隐私刚需；与图片打码（遮像素）互补成「发图前隐私处理」双件套。实现：纯前端解析展示 EXIF 字段表（GPS/机型/时间高亮）→一键清除→canvas 重绘导出，单页可做。SEO：EXIF清除、照片去除定位、图片元数据删除、照片隐私清理。
+3. **PDF 合并/拆分** — 今日由 P1 升 P0：ToolSura/Tooliest 将 PDF 合并/拆分列为开发者与大众工具标配、NoUploadTools 与 Medium《15 Free Online Tools》（2026-09-19）均把 PDF Merger 列入文档类头部，ToolWeb 现仅有 DOC 转 PDF、尚无 PDF 处理簇，此为补齐大众文档刚需的锚点；多 PDF 合并、按页码拆分/提取是学生与办公人群高频动作。实现：pdf-lib 纯前端（文件不上传），拖拽排序→合并导出 / 按页范围拆分，单页可做（中难度）。SEO：PDF合并、PDF拆分、PDF在线合并、PDF页面提取。
+
+**备选顺延**：HEIC/Live Photo 转 JPG（LivePhotoKit 在 DEV 与 Medium 两处独立出现，iPhone 照片在 Windows/Android 打不开的高频痛点，可与 EXIF 同属发图前处理簇列 P1 首选）、链接去追踪（低频薄价值，继续 P1）、cURL 转代码（DevKit/ToolSura 验证，中难度 P1）、SERP/Meta 标签生成器（SEO 簇 P1）、人民币大写转换、单位换算器、WiFi 二维码生成器。
 
 ## 今日候选（2026-10-05 · 产品调研推荐）
 
@@ -269,13 +279,13 @@
 
 **交付回顾**：≥12 种字体风格实时生成、中文原样输出、中英混排不乱码；特殊符号装饰模板（꧁༺昵称༻꧂ 等）；每个风格一键复制+toast；纯前端无新增后端接口。
 
-## P0 — 今日最值得做（2026-10-05）
+## P0 — 今日最值得做（2026-10-06）
 
 | 标题 | 痛点 | 难度 | 优先级 |
 |---|---|---|---|
-| AI Token 计数器 | 今日七重验证：DEV离线Token计数器（19模型+文件拖入+上下文窗占用条）、pramilk LLM Token Counter（GPT-5/Claude/Gemini精确分词+费用，2026-08-29）、mattbusel llm-cost（12模型比价，9天前）、chris-dyson计算器（15模型）、TokenSave（6天前，非英语溢价分析），叠加昨日ricodane/tokl等；调LLM API前估token数/上下文占用/费用是AI时代开发者高频动作，中文站鲜有可差异化；ToolWeb无AI工具，开辟新簇；纯前端单页（GPT系精确分词，其余近似明示） | 小 | P0 |
-| 图片拼接/长图拼接 | 今日再验证：Stitch It 2.3.0（聊天/收据拼长图）、Media.io Photo Stitch（16小时前，纵向截图/商品并排/前后对比）、web-collage + snapstitch（19天前截图批量拼接），叠加昨日Tailor/Adobe Express；聊天记录/截图/商品图一张张发又长又散；canvas多图上传→拖拽排序→纵/横拼接+间距→导出长图，纯前端单页；与九宫格切图（拆）互补、与打码/压缩/水印成图片处理簇；昨日暂缓的簇失衡理由已随JSON转TS上线消解 | 小 | P0 |
-| EXIF 信息查看/清除 | 今日新发现：itsjustadarsh/scrub（9天前字节级剥离EXIF/GPS/XMP）、StripLocal（清GPS/序列号/时间）、toolio EXIF Remover（6天前无上传清元数据）、burakoskay Skill（4天前）；手机照片带GPS/机型/时间，发图前泄露住址行踪是大众隐私刚需；与图片打码（遮像素）互补成发图前隐私双件套；纯前端解析展示字段表→一键清除→导出干净图，单页可做 | 小 | P0 |
+| 图片拼接/长图拼接 | 昨日顺延升今日首选：Stitch It（聊天/收据拼长图）、Media.io Photo Stitch（纵向截图/商品并排/前后对比）、web-collage + snapstitch、Image Toolbox Stitching 佐证；聊天记录/截图/商品图一张张发又长又散；canvas多图上传→拖拽排序→纵/横拼接+间距/背景色→导出长图，纯前端单页；与九宫格切图（拆）互补、与打码/压缩/水印成图片处理簇 | 小 | P0 |
+| EXIF 信息查看/清除 | 今日五重再验证：forjiang/image-metadata-cleaner（9天前批量清EXIF/GPS/XMP+日志）、capytools CapyStrip（目标词remove exif/photo metadata viewer）、StripLocal、image-fingerprint-remover（扩展C2PA/AI指纹）、中文PixPix长文（GPS/作者高亮）；手机照片带GPS/机型/时间，发图前泄露住址行踪是大众隐私刚需；与图片打码互补成发图前隐私双件套；纯前端解析展示字段表→一键清除→导出，单页可做 | 小 | P0 |
+| PDF 合并/拆分 | 今日由P1升P0：ToolSura/Tooliest/NoUploadTools/Medium 15工具均列PDF合并为标配头部，ToolWeb仅有DOC转PDF、无PDF处理簇；多PDF合并、按页拆分/提取是学生办公高频动作；pdf-lib纯前端不上传，拖拽排序→合并导出/按页范围拆分，单页可做 | 中 | P0 |
 
 ## P1 — 高价值备选
 
@@ -309,7 +319,7 @@
 | cURL 转代码 | 抓包得到的 cURL 转 Python/Go/JS 代码手写麻烦 | 中 | P1 |
 | 链接去追踪（URL 追踪参数清洗） | 连续多轮验证（slug.tools query cleaner、URLCheck、B站/小红书净化工具）但频率低、单页价值薄，10-03 起列备选，今日 Top3 让位图片拼接后顺延 P1 首选；分享链接带 utm_/fbclid/xsec_token/spm 又长又泄露隐私；纯前端黑名单识别+一键清洗+前后对比，单页可做 | 小 | P1 |
 | 富文本转 Markdown | Word/网页内容粘贴转 Markdown 写文档、发 GitHub 的痛点；Turndown 纯前端单页 | 小 | P1 |
-| PDF 合并/拆分 | 多个 PDF 合并、按页码提取（pdf-lib 纯前端，misc9.app 热帖验证需求） | 中 | P1 |
+| HEIC/Live Photo 转 JPG | 今日再验证：LivePhotoKit 在 DEV「8 free tools」与 Medium「5 Free Browser Tools」两处独立出现（HEIC/Live Photo 转 JPG/PNG/WebP/MP4 全本地）；iPhone 默认 HEIC 在 Windows/Android 打不开、发给非苹果用户必转格式；纯前端解码（heic 解码库）单页可做，与 EXIF/图片拼接同属发图前处理簇，列 P1 首选备选 | 中 | P1 |
 | OpenGraph 社交卡片预览 | 发微信/微博/Twitter 前预览分享卡片标题图效果；纯前端表单+预览 | 小 | P1 |
 | 代码截图美化（Carbon 风格） | 今日新发现：awesome-free-online-tools 将 Carbon/ray.so/codeshot.io 列为 Code images 头部品类；发技术帖/工单时贴纯文本代码难看、截图带 IDE 杂边；纯前端语法高亮主题+窗口壳+PNG/SVG 导出，单页可做（需引入 highlight 库，注意体积） | 中 | P1 |
 | 发票/收据生成器 | 今日新发现：Medium《15 Free Online Tools Everyone Should Bookmark in 2026》与 FreeToolHub 190+ 计算器/文件工具均列 Invoice Generator 为文档类头部；自由职业/小商家手做发票排版麻烦；纯前端表单→A4 预览→打印/PDF，单页可做（仅模板生成、不涉税务开票） | 中 | P1 |
@@ -339,7 +349,6 @@
 | Whois 查询 | 查域名注册信息（需外部接口/后端代理） | 中 | P2 |
 | 文本分享（pastebin） | 临时分享文本片段（需后端存储） | 中 | P2 |
 | 邮箱提取器 | 从文本批量提取邮箱地址；正则纯前端单页 | 小 | P2 |
-| HEIC 转 JPG | iPhone 照片 HEIC 格式转通用 JPG（可并入图片转换工具簇） | 小 | P2 |
 | GIF 压缩/裁剪 | 今日新发现：norito 92 工具站最近主推整套 GIF 工具（maker/帧级去重压缩/resizer/splitter/captioning）；表情包/录屏 GIF 太大发不出去；canvas + gif 解析纯前端可做轻量版（压缩质量控制难，先列 P2 观察） | 中 | P2 |
 | 音频剪切（MP3 裁剪） | 今日新发现：awesome-no-signup-tools 收录 Audio Cutter Online（切/拼/淡入淡出、全本地）；截铃声/播客片段要装软件；Web Audio API 纯前端单页可做轻量版 | 中 | P2 |
 | .gitignore 生成器 | 今日新发现：HN DevKit 将 .gitignore 列入 Generate 类；新建项目要按语言/IDE/系统拼忽略规则，手写易漏；静态模板勾选组合，纯前端单页 | 小 | P2 |
@@ -361,7 +370,8 @@
 ~~花体字生成器~~（2026-10-01 实现，commit b27e4ae，修复 f144802）。
 ~~九宫格切图~~（2026-10-02 实现，commit fb036b2）、
 ~~图片打码/马赛克~~（2026-10-03 实现，commit 90fa8c8）、
-~~JSON 转 TypeScript / Go 结构体~~（2026-10-04 实现，commit 53d07ef，路由 /tools/json-to-types）。
+~~JSON 转 TypeScript / Go 结构体~~（2026-10-04 实现，commit 53d07ef，路由 /tools/json-to-types）、
+~~AI Token 计数器~~（2026-10-05 实现，commit d0bf771，路由 /tools/ai-token-counter，新开 AI 工具分类）。
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
@@ -388,6 +398,14 @@
 **预计改动文件**：`templates/relationship_calculator.html`（新建）、`static/js/relationship.js`（新建）、`tools/categories.go`（新增分类+注册）、`BACKLOG.md`（本小节）。
 
 ## 调研来源
+
+### 2026-10-06
+- forjiang/image-metadata-cleaner（9 天前：批量清 EXIF/GPS/XMP/IPTC/ICC、逐项日志、ZIP 打包、全本地）、unfoldingdimensions/capytools CapyStrip 实施计划（目标词 remove exif data / photo metadata viewer / strip gps、浏览器端清除）、NakliTechie/StripLocal 与 lhfer/image-fingerprint-remover（扩展到 C2PA/内容凭证与 AI 生成提示块清除）、中文 PixPix EXIF 长文（2026-09-19：GPS/作者为隐私风险高亮、本地不上传）→ EXIF 查看/清除五重再验证，稳居今日 Top2；AI 指纹清除作为差异化加分项记录，不扩大 v1 范围
+- njp86/imagetoolbox（Image Stitching 与 Splitting/EXIF 编辑同列核心图片能力）、昨日 Stitch It/Media.io/web-collage/snapstitch 信号延续 → 图片拼接/长图拼接顺延后升今日 Top1，与九宫格拆分互补
+- ToolSura《Best Free Developer Tools 2026》（11 天前更新：PDF 与 JSON/正则/JWT 同列日常标配）、Tooliest 浏览器工具综述（PDF 合并/拆分/保护为唯一无上传选项）、NoUploadTools（Merge PDFs 列入 PDF 工具组）、Medium《15 Free Online Tools》（2026-09-19：PDF Merger + Invoice Generator 列文档类头部）→ PDF 合并/拆分由 P1 升今日 Top3，补 ToolWeb 文档簇缺口
+- DEV《8 free, no-signup web tools I built with AI in 2026》与 Medium《5 Free Browser Tools》（LivePhotoKit 两处独立出现：HEIC/Live Photo 转 JPG/PNG/WebP 或提取 MP4、全本地）→ HEIC/Live Photo 转 JPG 由 P2 升 P1 首选备选
+- Hacker News Show HN DevKit（80 个浏览器端工具：Token counter 已由本站实现，.gitignore/CSP/Color Contrast 等 Generate/Test 类与本站 P1/P2 候选一致）、ToolVerve/UtlKit 纯前端工具站持续活跃 → 印证纯前端无上传路线，现有候选池（.gitignore 生成器、颜色对比度检查、SERP/Meta）方向无误，不新增重复候选
+- 复核 tools/categories.go 已注册 50+ 工具与 templates 清单：AI Token 计数器已上线（d0bf771）归档划掉并从 P0 清除；图片拼接、EXIF、PDF 合并仍未实现
 
 ### 2026-10-05
 - DEV《I Built a Token Counter That Works Offline — 19 Models, File Drop, Cost Estimator》（19 模型实时计价 GPT-4o/4.1/o3、Claude 3.7/3.5、Gemini 2.5/2.0、DeepSeek/Llama/Mistral/Qwen，上下文窗占用条+token 着色可视化+文件拖入，±5% 近似足够预算场景）、pramilk/dev-microtools《LLM Token Counter & API Cost Estimator》（2026-08-29 更新，GPT-5/Claude/Gemini 精确分词说明：OpenAI 公开 BPE 可精确、Claude/Gemini 未公开只能明示估算）、mattbusel/llm-cost（9 天前，12 模型比价+预算守卫，价格核对 2026-09-25）、chris-dyson/ai-token-calculator（15 模型实时成本）、vibingtalk TokenSave（6 天前，GPT-6/Claude Sonnet 5.5/Gemini 3.1 计价+非英语 token 溢价仪表+一键清洗）→ AI Token 计数器七重验证、观察期满升今日 Top1
