@@ -52,7 +52,15 @@ func ParseCron(expression string) *CronResponse {
 		}
 	}
 
-	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	// 同时支持标准 5 段（分 时 日 月 周）与 6 段（含秒：秒 分 时 日 月 周）
+	fields := strings.Fields(expression)
+	fiveField := len(fields) == 5
+	var parser cron.Parser
+	if fiveField {
+		parser = cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	} else {
+		parser = cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	}
 	schedule, err := parser.Parse(expression)
 
 	if err != nil {
@@ -84,14 +92,25 @@ func ParseCron(expression string) *CronResponse {
 	}
 
 	// 生成表达式描述
-	fields := strings.Fields(expression)
-	description := fmt.Sprintf("秒: %s\n分: %s\n时: %s\n日: %s\n月: %s\n周: %s",
-		describeCronField(fields[0], "秒"),
-		describeCronField(fields[1], "分"),
-		describeCronField(fields[2], "时"),
-		describeCronField(fields[3], "日"),
-		describeCronField(fields[4], "月"),
-		describeCronField(fields[5], "周"))
+	var description string
+	if fiveField {
+		description = fmt.Sprintf("分: %s\n时: %s\n日: %s\n月: %s\n周: %s",
+			describeCronField(fields[0], "分"),
+			describeCronField(fields[1], "时"),
+			describeCronField(fields[2], "日"),
+			describeCronField(fields[3], "月"),
+			describeCronField(fields[4], "周"))
+	} else if len(fields) == 6 {
+		description = fmt.Sprintf("秒: %s\n分: %s\n时: %s\n日: %s\n月: %s\n周: %s",
+			describeCronField(fields[0], "秒"),
+			describeCronField(fields[1], "分"),
+			describeCronField(fields[2], "时"),
+			describeCronField(fields[3], "日"),
+			describeCronField(fields[4], "月"),
+			describeCronField(fields[5], "周"))
+	} else {
+		description = "表达式：" + expression
+	}
 
 	return &CronResponse{
 		IsValid:     true,
