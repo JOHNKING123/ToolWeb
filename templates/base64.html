@@ -489,30 +489,44 @@
             encodeExamples.style.display = 'block';
             decodeExamples.style.display = 'none';
 
-            async function processText() {
-                if (!inputText.value.trim()) {
+            // 请求序号：输入事件会逐字触发请求，只允许最后一次请求的结果回填，
+            // 避免较慢的旧请求（如少一个字符时的结果）覆盖最新输出
+            let processSeq = 0;
+            let processTimer;
+            function processText() {
+                clearTimeout(processTimer);
+                processTimer = setTimeout(runProcessText, 250);
+            }
+
+            async function runProcessText() {
+                const seq = ++processSeq;
+                const mode = currentMode;
+                const value = inputText.value;
+                if (!value.trim()) {
                     outputText.value = '';
                     return;
                 }
 
                 try {
-                    const response = await fetch(`/tools/api/base64/${currentMode}`, {
+                    const response = await fetch(`/tools/api/base64/${mode}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            input: inputText.value
+                            input: value
                         }),
                     });
 
                     const data = await response.json();
+                    if (seq !== processSeq) return; // 已有更新的请求，丢弃过期结果
                     if (data.status === 'success') {
                         outputText.value = data.output;
                     } else {
-                        outputText.value = 'Error: ' + (data.error || '未知错误');
+                        outputText.value = 'Error: ' + (data.message || data.error || '未知错误');
                     }
                 } catch (error) {
+                    if (seq !== processSeq) return;
                     outputText.value = 'Error: ' + error.message;
                 }
             }
