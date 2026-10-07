@@ -25,22 +25,34 @@ genBtn.onclick = async function() {
     const size = parseInt(document.getElementById('qrSize').value) || 256;
     const fgColor = document.getElementById('qrFgColor').value;
     const bgColor = document.getElementById('qrBgColor').value;
-    const logoFile = document.getElementById('qrLogo').files[0];
     if (!text) return alert('请输入内容');
-    const formData = new FormData();
-    formData.append('text', text);
-    formData.append('size', size);
-    formData.append('fgColor', fgColor);
-    formData.append('bgColor', bgColor);
-    if (logoFile) formData.append('logo', logoFile);
-    const res = await fetch('/tools/api/qrcode/generate', {
-        method: 'POST',
-        body: formData
-    });
-    if (!res.ok) return alert('生成失败');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    document.getElementById('qrResult').innerHTML = `<img src="${url}" class="qrcode-img">`;
+    if (document.getElementById('qrLogo').files[0]) {
+        // 当前后端生成接口不支持叠加 Logo，先如实提示再生成普通二维码
+        alert('提示：Logo 叠加暂未启用，本次将生成不带 Logo 的二维码');
+    }
+    // 后端接口为 POST /tools/api/qrcode（JSON 入参，返回 PNG 图片）；
+    // 此前页面误用不存在的 /tools/api/qrcode/generate 且发 FormData，恒失败。
+    try {
+        const res = await fetch('/tools/api/qrcode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, size: size, fgColor: fgColor, bgColor: bgColor })
+        });
+        if (!res.ok) {
+            let msg = '生成失败（HTTP ' + res.status + '）';
+            try {
+                const data = await res.json();
+                if (data && data.error) msg = '生成失败：' + data.error;
+            } catch (e) { /* 响应非 JSON 时用默认提示 */ }
+            document.getElementById('qrResult').innerHTML = `<span style='color:red'>${msg}</span>`;
+            return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById('qrResult').innerHTML = `<img src="${url}" class="qrcode-img">`;
+    } catch (err) {
+        document.getElementById('qrResult').innerHTML = `<span style='color:red'>生成失败：${err.message}</span>`;
+    }
 };
 // 识别二维码
 const decodeBtn = document.getElementById('decodeBtn');
