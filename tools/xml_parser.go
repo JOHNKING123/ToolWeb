@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"io"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -45,14 +47,25 @@ func ParseXML(req *XMLRequest) (*XMLResponse, error) {
 		}
 	}
 
+	// 缩进：页面可选 2 空格 / 4 空格 / Tab，此前写死 4 空格导致选项不生效
+	indentStr := strings.Repeat(" ", 4)
+	if req.Indent == "tab" {
+		indentStr = "\t"
+	} else if n, err := strconv.Atoi(req.Indent); err == nil && n > 0 && n <= 8 {
+		indentStr = strings.Repeat(" ", n)
+	}
+
 	// 解析XML
 	decoder := xml.NewDecoder(strings.NewReader(input))
 	var buf bytes.Buffer
 	encoder := xml.NewEncoder(&buf)
-	encoder.Indent("", strings.Repeat(" ", 4))
+	encoder.Indent("", indentStr)
 
 	for {
 		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			LogError("XML解析器", err, "XML解析失败")
 			return nil, fmt.Errorf("XML解析失败: %v", err)
@@ -111,6 +124,9 @@ func MinifyXML(req *XMLRequest) (*XMLResponse, error) {
 
 	for {
 		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			LogError("XML解析器", err, "XML解析失败")
 			return nil, fmt.Errorf("XML解析失败: %v", err)
