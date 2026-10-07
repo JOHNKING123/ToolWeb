@@ -154,6 +154,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             })
+            .then(res => res.json())
             .then(res => {
                 const resultDiv = document.getElementById('rsa-result');
                 const copyBtn = document.getElementById('rsa-copy-btn');
@@ -166,6 +167,11 @@
                     resultDiv.innerHTML = '<span style="color:#dc2626;">' + errText + '</span>';
                     copyBtn.style.display = 'none';
                 }
+            })
+            .catch(err => {
+                const resultDiv = document.getElementById('rsa-result');
+                resultDiv.innerHTML = '<span style="color:#dc2626;">请求失败：' + err.message + '</span>';
+                document.getElementById('rsa-copy-btn').style.display = 'none';
             });
         }
         window.clearRSA = function() {

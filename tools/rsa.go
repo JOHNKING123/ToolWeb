@@ -36,6 +36,10 @@ func HandleRSAAPI(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": "参数错误"})
 		return
 	}
+	// 页面签名/验签把原文放在 input 字段，未单独传 signInput 时用 input 兜底
+	if req.SignInput == "" {
+		req.SignInput = req.Input
+	}
 	var result string
 	var err error
 	switch req.Mode {
