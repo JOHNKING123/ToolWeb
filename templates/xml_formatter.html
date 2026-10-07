@@ -399,7 +399,7 @@
             const xmlInput = document.getElementById('xmlInput');
             const xmlOutput = document.getElementById('xmlResult');
             const formatBtn = document.querySelector('.btn-primary');
-            const minifyBtn = document.querySelector('.btn-secondary');
+            const minifyBtn = document.getElementById('minifyBtn');
             const clearBtn = document.getElementById('clearBtn');
             const copyBtn = document.getElementById('copyBtn');
             const originalSize = document.getElementById('originalSize');
@@ -495,14 +495,24 @@
                 }, 1000);
             });
 
-            // 格式化按钮
-            formatBtn.addEventListener('click', () => {
+            // 表单提交（格式化按钮 type=submit）：拦截默认提交，避免页面重载清空输入
+            document.getElementById('xmlForm').addEventListener('submit', (e) => {
+                e.preventDefault();
                 clearTimeout(formatTimeout);
                 formatXML();
             });
 
-            // 压缩按钮
-            minifyBtn.addEventListener('click', minifyXML);
+            // 格式化按钮
+            formatBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearTimeout(formatTimeout);
+                formatXML();
+            });
+
+            // 压缩按钮（页面若提供该按钮才绑定）
+            if (minifyBtn) {
+                minifyBtn.addEventListener('click', minifyXML);
+            }
 
             // 清空按钮
             clearBtn.addEventListener('click', () => {
@@ -546,7 +556,7 @@
                         e.preventDefault();
                     } else if (e.key === 'm') {
                         // Ctrl+M 触发压缩
-                        minifyBtn.click();
+                        if (minifyBtn) minifyBtn.click();
                         e.preventDefault();
                     }
                 }
