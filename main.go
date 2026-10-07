@@ -1429,10 +1429,15 @@ func main() {
 		toolsGroup.GET("/shorturl/:shorturl", tools.RedirectHandler)
 	}
 
-	// 创建HTTP服务器
+	// 监听地址可用环境变量 TOOLWEB_ADDR 覆盖（默认 :8080，与既有部署一致）；
+	// Handler 外层包了 /tool-web 挂载映射，/tools 原路径不受影响。
+	listenAddr := os.Getenv("TOOLWEB_ADDR")
+	if listenAddr == "" {
+		listenAddr = ":8080"
+	}
 	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: router,
+		Addr:    listenAddr,
+		Handler: withToolWebMount(router),
 	}
 
 	// 创建一个通道来接收操作系统的信号
@@ -1441,7 +1446,7 @@ func main() {
 
 	// 在一个新的goroutine中启动服务器
 	go func() {
-		accessLogger.Println("HTTP服务器启动在 http://localhost:8080")
+		accessLogger.Printf("HTTP服务器启动在 %s", listenAddr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errorLogger.Printf("HTTP服务器错误: %v", err)
 			quit <- syscall.SIGTERM
