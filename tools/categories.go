@@ -358,6 +358,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "exif_strip",
+					Name:        "EXIF 信息查看/清除",
+					Description: "查看照片 EXIF 元数据（GPS 定位/机型/拍摄时间），一键字节级无损清除，本地处理不上传",
+					Path:        "/tools/exif-strip",
+					Icon:        "privacy_tip",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "base64toimg",
 					Name:        "Base64转图片",
 					Description: "将Base64字符串还原为图片并预览/下载",

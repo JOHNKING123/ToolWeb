@@ -1,0 +1,100 @@
+{{define "exif_strip"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXIF 信息查看与清除 - 照片去除定位/GPS 元数据在线工具</title>
+    <meta name="description" content="免费在线 EXIF 查看与清除工具：查看照片 GPS 定位、机型、拍摄时间、设备序列号等元数据，一键字节级无损清除（不重编码），纯前端本地处理不上传，保护照片隐私。">
+    <meta name="keywords" content="EXIF清除,照片去除定位,图片元数据删除,照片隐私清理,EXIF查看">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/exif-strip">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"EXIF 信息查看与清除","description":"免费在线 EXIF 查看与清除工具：查看照片 GPS 定位等元数据并一键字节级无损清除，纯前端本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/exif-strip","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .es-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .es-upload:hover,.es-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .es-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .es-info{color:#6b7280;font-size:.9rem;margin-top:.6rem;line-height:1.7}
+        .es-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em}
+        .es-queue{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:.8rem}
+        .es-item{width:96px;border:2px solid #e5e7eb;border-radius:.6rem;padding:.4rem;text-align:center;cursor:pointer;background:#fff;position:relative}
+        .es-item.active{border-color:var(--primary-color)}
+        .es-item img{width:100%;height:64px;object-fit:cover;border-radius:.4rem}
+        .es-item .nm{font-size:.68rem;color:#374151;word-break:break-all;line-height:1.3;margin-top:.3rem}
+        .es-item .sz{font-size:.68rem;color:#9ca3af}
+        .es-item .del{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;border:none;background:#ef4444;color:#fff;font-size:.8rem;line-height:20px;cursor:pointer;padding:0}
+        .es-item .badge{display:inline-block;font-size:.62rem;color:#fff;background:#f59e0b;border-radius:.3rem;padding:0 .3rem;margin-top:.2rem}
+        .es-item .badge.ok{background:#10b981}
+        .es-table-wrap{overflow-x:auto;margin-top:.6rem}
+        table.es-table{border-collapse:collapse;width:100%;min-width:420px;font-size:.9rem}
+        table.es-table th,table.es-table td{border:1px solid #e5e7eb;padding:.45rem .6rem;text-align:left;vertical-align:top}
+        table.es-table th{background:#f9fafb;color:#374151;width:34%;white-space:nowrap}
+        table.es-table td{color:#111827;word-break:break-all}
+        tr.es-warn td,tr.es-warn th{background:#fef2f2;color:#b91c1c;font-weight:600}
+        tr.es-serial td,tr.es-serial th{background:#fffbeb;color:#92400e;font-weight:600}
+        .es-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .es-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .es-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .es-tip b{color:#111827}
+        .es-result{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;margin-top:.8rem;line-height:1.8}
+        .es-empty{background:#f9fafb;border:1px solid #e5e7eb;color:#6b7280;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;margin-top:.8rem}
+        @media (max-width:640px){.es-upload{padding:1.6rem .8rem}.es-actions .btn{flex:1 1 45%;justify-content:center}.es-item{width:84px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">privacy_tip</i> EXIF 信息查看/清除</h1>
+            <p>查看照片里的 GPS 定位、机型、拍摄时间等隐藏元数据，一键清除；图片仅在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>上传图片（可多选批量处理）</h3>
+                <div class="es-upload" id="es-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择图片，或把图片拖拽到这里（支持多选）</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 JPG / JPEG / PNG / WebP，本地处理不上传，清除为字节级剥离、不重编码不损画质</div>
+                </div>
+                <input type="file" id="es-file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple style="display:none;">
+                <div class="es-status" id="es-status"></div>
+                <div class="es-queue" id="es-queue"></div>
+                <div class="es-actions" id="es-queue-actions" style="display:none;">
+                    <button class="btn btn-primary" id="es-strip-all"><i class="material-icons">cleaning_services</i> 全部一键清除并逐个下载</button>
+                    <button class="btn btn-primary" id="es-zip-all"><i class="material-icons">folder_zip</i> 全部清除并打包下载</button>
+                    <button class="btn btn-secondary" id="es-clear-all"><i class="material-icons">delete_sweep</i> 清空队列</button>
+                </div>
+                <div class="es-info" id="es-zipmsg"></div>
+            </div>
+
+            <div class="tool-card" id="es-detail" style="margin-bottom:1.2rem;display:none;">
+                <h3>元数据详情</h3>
+                <div class="es-info" id="es-basic" style="margin-top:0;"></div>
+                <div id="es-table-holder"></div>
+                <div id="es-result-holder"></div>
+                <div class="es-actions">
+                    <button class="btn btn-primary" id="es-strip"><i class="material-icons">cleaning_services</i> 一键清除元数据</button>
+                    <button class="btn btn-secondary" id="es-download" style="display:none;"><i class="material-icons">download</i> 下载清除后文件</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="es-tip">
+                    <b>为什么要清：</b>手机照片常带有 GPS 经纬度、拍摄时间、设备型号甚至序列号，直接发到社交平台或论坛可能暴露拍摄地点与设备信息；清除 EXIF 后图片内容与画质不变。<br>
+                    <b>怎么清除：</b>点「一键清除」即可。JPEG/PNG/WebP 采用字节级剥离，只删元数据段、不重新编码，画质无损；极少数异常文件会降级为重绘导出并明确提示已重编码。<br>
+                    <b>配套使用：</b>元数据清干净了，画面里的车牌、人脸、手机号等可见信息可以用<a href="/tools/img-mosaic">图片打码</a>遮住，两步完成发图前的隐私处理。<br>
+                    <b>隐私：</b>纯前端本地处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/exif-strip.js"></script>
+</body>
+</html>
+{{end}}
