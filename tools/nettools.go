@@ -51,11 +51,65 @@ func HandleDomainCheckAPI(c *gin.Context) {
 		return
 	}
 
+	// 上游 whois/RDAP 均不可达时的兜底（部分部署环境出网受限，如本机 RDAP
+	// 端点被拦截）：改用 DNS 记录推断注册状态并如实标注来源，避免工具完全
+	// 不可用。DNS 层面判断不如 whois 权威，胜在本地解析可用、结论明确标注。
+	if registered, text, ok := dnsInferDomain(domain); ok {
+		c.JSON(http.StatusOK, gin.H{
+			"success":    true,
+			"registered": registered,
+			"whois":      text,
+			"source":     "dns-fallback",
+		})
+		return
+	}
+
 	errMsg := err.Error()
 	if werr != nil {
 		errMsg += "; whois直查: " + werr.Error()
 	}
 	c.JSON(http.StatusOK, gin.H{"success": false, "msg": "域名查询失败", "error": errMsg})
+}
+
+// dnsInferDomain 用 DNS 记录推断域名注册状态（whois/RDAP 不可达时兜底）。
+// 有 NS 或可解析 => 大概率已注册；NXDOMAIN => 大概率未注册；
+// 其他情况（超时等）返回 ok=false，交由上层报错。
+func dnsInferDomain(domain string) (bool, string, bool) {
+	var lines []string
+	lines = append(lines, "Domain Name: "+strings.ToUpper(domain))
+	note := "数据来源: DNS 记录推断（whois/RDAP 上游从当前服务器不可达，无法获取完整注册信息，以下结论仅供参考）"
+
+	if nss, err := net.LookupNS(domain); err == nil && len(nss) > 0 {
+		lines = append(lines, "是否已注册: 是（存在 NS 记录）")
+		for _, ns := range nss {
+			lines = append(lines, "Name Server: "+strings.TrimSuffix(ns.Host, "."))
+		}
+		lines = append(lines, note)
+		return true, strings.Join(lines, "\n"), true
+	} else if isNXDOMAIN(err) {
+		lines = append(lines, "是否已注册: 否（域名不存在，无 DNS 记录）", note)
+		return false, strings.Join(lines, "\n"), true
+	}
+
+	if ips, err := net.LookupHost(domain); err == nil && len(ips) > 0 {
+		lines = append(lines, "是否已注册: 是（域名可解析）", note)
+		return true, strings.Join(lines, "\n"), true
+	} else if isNXDOMAIN(err) {
+		lines = append(lines, "是否已注册: 否（域名不存在，无 DNS 记录）", note)
+		return false, strings.Join(lines, "\n"), true
+	}
+
+	return false, "", false
+}
+
+func isNXDOMAIN(err error) bool {
+	if err == nil {
+		return false
+	}
+	if dnsErr, ok := err.(*net.DNSError); ok {
+		return dnsErr.IsNotFound
+	}
+	return false
 }
 
 // normalizeDomain 去掉协议/路径/端口，只保留域名本身
