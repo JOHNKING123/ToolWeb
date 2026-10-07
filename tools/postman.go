@@ -133,10 +133,12 @@ func (pm *PostmanManager) SendRequest(userID string, req HTTPRequest, envID stri
 		timeout = time.Duration(processedReq.Timeout) * time.Second
 	}
 
-	// 创建 HTTP 客户端
+	// 创建 HTTP 客户端（Proxy 显式用 ProxyFromEnvironment：自定义 Transport
+	// 若不设 Proxy 会绕过部署环境配置的出站代理，导致外部请求恒超时）
 	client := &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true, // 允许自签名证书
 			},
