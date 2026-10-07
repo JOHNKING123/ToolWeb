@@ -72,6 +72,11 @@
     {{template "image_preview_modal" .}}
     <script src="/tools/static/js/image-preview.js"></script>
     <script>
+    function formatImgBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
     function clearImgCompress() {
         window.clearImageUploadPreview && window.clearImageUploadPreview('imgCompressPreviewWrap');
         document.getElementById('img-file').value = '';
@@ -86,8 +91,10 @@
             alert('请先选择图片文件');
             return;
         }
+        const originalFile = fileInput.files[0];
+        const originalSize = originalFile.size;
         const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+        formData.append('file', originalFile);
         formData.append('format', format);
         formData.append('quality', quality);
         const resultDiv = document.getElementById('img-compress-result');
@@ -106,7 +113,20 @@
                 if(["png","jpeg","gif"].includes(ext)) {
                     preview = `<img src="${url}" class="result-img-preview image-preview-open" alt="压缩结果预览" draggable="false" />`;
                 }
-                resultDiv.innerHTML = preview + `<div style='margin-top:1em;'><a href='${url}' download='compressed.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
+                // 压缩效果统计：原图大小 / 压缩后大小 / 压缩率
+                const compressedSize = blob.size;
+                const saved = originalSize - compressedSize;
+                const ratioText = originalSize > 0
+                    ? (saved >= 0
+                        ? `压缩率 ${(saved / originalSize * 100).toFixed(1)}%（减小 ${formatImgBytes(saved)}）`
+                        : `体积增加 ${( -saved / originalSize * 100).toFixed(1)}%`)
+                    : '';
+                const stats = `<div class="compress-stats" style="margin-top:1em;color:#374151;line-height:1.9;">
+                    <div>原图大小：<b>${formatImgBytes(originalSize)}</b></div>
+                    <div>压缩后大小：<b>${formatImgBytes(compressedSize)}</b></div>
+                    <div>${ratioText}</div>
+                </div>`;
+                resultDiv.innerHTML = preview + stats + `<div style='margin-top:1em;'><a href='${url}' download='compressed.${format}' class='btn btn-primary'><i class='material-icons'>download</i> 下载图片</a></div>`;
             } else {
                 const res = await resp.json().catch(()=>({msg:'压缩失败'}));
                 resultDiv.innerHTML = `<span style='color:#dc2626;'>${res.msg||'压缩失败'}</span>`;
