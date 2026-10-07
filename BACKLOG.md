@@ -1,6 +1,18 @@
 # ToolWeb 需求 Backlog
 
-> 维护人：产品调研员 · 每日更新（2026-10-06）
+> 维护人：产品调研员 · 每日更新（2026-10-07）
+
+## 今日候选（2026-10-07 · 产品调研推荐）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构）：
+
+1. **EXIF 信息查看/清除** — 连续多日 P0、今日再获多源新信号：Imagera EXIF/GPS 清除长文（近 3 小时内再抓取、强调先看 GPS/机型/时间再一键清除）、Photo Metadata Viewer（EXIF/IPTC/GPS 查看+编辑+批量清除，全本地）、Scrub（11 天前更新，字节级剥离而非重编码）、StripLocal/PrivacyStrip 持续验证；手机照片自带 GPS/机型/时间，发朋友圈/二手平台/论坛前泄露住址行踪是大众隐私刚需；与图片打码（遮像素）、图片拼接同属图片处理簇，补齐「发图前隐私处理」缺口。实现：纯前端解析展示字段表（GPS/机型/时间高亮）→一键清除→导出干净图，单页可做（小难度）。SEO：EXIF清除、照片去除定位、图片元数据删除、照片隐私清理。
+2. **PDF 合并/拆分** — 昨日 P0 今日再加强：DEV OpenPDF Hub《Merge PDFs Without Uploading》（约 31 天前，强调无上传合并/拆分）、DEV PDF Splitter/Merger 系列（pdf-lib + JSZip 纯前端方案成熟）、Medium 15 工具清单与中文 PDF 合并测评（报名材料/合同/发票整理高频）持续收录，学生工具箱 Toolbench 亦将 PDF merge/split 列为标配；ToolWeb 仅有 DOC 转 PDF、无 PDF 处理簇，此为补齐文档刚需锚点。实现：pdf-lib 纯前端（文件不上传），拖拽排序→合并导出 / 按页范围拆分，单页可做（中难度）。SEO：PDF合并、PDF拆分、PDF在线合并、PDF页面提取。
+3. **HEIC / Live Photo 转 JPG** — 今日由 P1 首选升 Top3：Medium《5 Free Browser Tools》（2026-07-12，近 5 小时再抓取）将 LivePhotoKit 列首位（HEIC/Live Photo 浏览器内转 JPG/PNG/WebP/MP4）、DEV 多篇 HEIC 转 JPG/PDF 教程（Windows 打不开 iPhone 照片）、多家 HEIC 转换站持续活跃；iPhone 默认 HEIC 在 Windows/Android/老系统打不开是跨设备高频痛点，与 EXIF 同属「发图前处理」簇、可互链。实现：纯前端 HEIC 解码（WASM/heic 库）→ JPG/PNG/WebP 导出、批量转换，单页可做（中难度，需评估解码库体积）。SEO：HEIC转JPG、HEIC转换、iPhone照片转JPG、Live Photo转视频。
+
+**备选顺延**：链接去追踪（低频薄价值，P1）、cURL 转代码（中难度 P1）、SERP/Meta 标签生成器（SEO 簇 P1）、人民币大写转换、单位换算器、WiFi 二维码生成器、键盘按键测试。
+
+**昨日交付核对**：图片拼接/长图拼接已上线（commit f513cf3，`/tools/img-stitch`），自候选划掉并归入已实现。
 
 ## 今日候选（2026-10-06 · 产品调研推荐）
 
@@ -311,13 +323,13 @@
 
 **交付回顾**：≥12 种字体风格实时生成、中文原样输出、中英混排不乱码；特殊符号装饰模板（꧁༺昵称༻꧂ 等）；每个风格一键复制+toast；纯前端无新增后端接口。
 
-## P0 — 今日最值得做（2026-10-06）
+## P0 — 今日最值得做（2026-10-07）
 
 | 标题 | 痛点 | 难度 | 优先级 |
 |---|---|---|---|
-| 图片拼接/长图拼接 | 昨日顺延升今日首选：Stitch It（聊天/收据拼长图）、Media.io Photo Stitch（纵向截图/商品并排/前后对比）、web-collage + snapstitch、Image Toolbox Stitching 佐证；聊天记录/截图/商品图一张张发又长又散；canvas多图上传→拖拽排序→纵/横拼接+间距/背景色→导出长图，纯前端单页；与九宫格切图（拆）互补、与打码/压缩/水印成图片处理簇 | 小 | P0 |
-| EXIF 信息查看/清除 | 今日五重再验证：forjiang/image-metadata-cleaner（9天前批量清EXIF/GPS/XMP+日志）、capytools CapyStrip（目标词remove exif/photo metadata viewer）、StripLocal、image-fingerprint-remover（扩展C2PA/AI指纹）、中文PixPix长文（GPS/作者高亮）；手机照片带GPS/机型/时间，发图前泄露住址行踪是大众隐私刚需；与图片打码互补成发图前隐私双件套；纯前端解析展示字段表→一键清除→导出，单页可做 | 小 | P0 |
-| PDF 合并/拆分 | 今日由P1升P0：ToolSura/Tooliest/NoUploadTools/Medium 15工具均列PDF合并为标配头部，ToolWeb仅有DOC转PDF、无PDF处理簇；多PDF合并、按页拆分/提取是学生办公高频动作；pdf-lib纯前端不上传，拖拽排序→合并导出/按页范围拆分，单页可做 | 中 | P0 |
+| EXIF 信息查看/清除 | 今日再验证：Imagera EXIF/GPS 清除长文、Photo Metadata Viewer（查看/编辑/批量清除）、Scrub（字节级剥离）、StripLocal/PrivacyStrip；手机照片带 GPS/机型/时间，发图前泄露住址行踪是大众隐私刚需；与图片打码互补成发图前隐私双件套；纯前端解析展示字段表→一键清除→导出，单页可做 | 小 | P0 |
+| PDF 合并/拆分 | 今日再验证：DEV OpenPDF Hub 无上传合并、DEV PDF Splitter/Merger（pdf-lib 纯前端）、Medium/中文测评与学生工具箱均列标配；ToolWeb 仅有 DOC 转 PDF、无 PDF 处理簇；多 PDF 合并、按页拆分/提取是学生办公高频动作；pdf-lib 纯前端不上传，单页可做 | 中 | P0 |
+| HEIC / Live Photo 转 JPG | 今日升 P0：Medium《5 Free Browser Tools》将 LivePhotoKit 列首位、DEV 多篇 HEIC 转 JPG/PDF 教程、多家转换站持续活跃；iPhone HEIC 在 Windows/Android 打不开、发给非苹果用户必转格式；与 EXIF 同属发图前处理簇；纯前端 HEIC 解码→JPG/PNG/WebP 批量导出，单页可做（需评估解码库体积） | 中 | P0 |
 
 ## P1 — 高价值备选
 
@@ -351,7 +363,6 @@
 | cURL 转代码 | 抓包得到的 cURL 转 Python/Go/JS 代码手写麻烦 | 中 | P1 |
 | 链接去追踪（URL 追踪参数清洗） | 连续多轮验证（slug.tools query cleaner、URLCheck、B站/小红书净化工具）但频率低、单页价值薄，10-03 起列备选，今日 Top3 让位图片拼接后顺延 P1 首选；分享链接带 utm_/fbclid/xsec_token/spm 又长又泄露隐私；纯前端黑名单识别+一键清洗+前后对比，单页可做 | 小 | P1 |
 | 富文本转 Markdown | Word/网页内容粘贴转 Markdown 写文档、发 GitHub 的痛点；Turndown 纯前端单页 | 小 | P1 |
-| HEIC/Live Photo 转 JPG | 今日再验证：LivePhotoKit 在 DEV「8 free tools」与 Medium「5 Free Browser Tools」两处独立出现（HEIC/Live Photo 转 JPG/PNG/WebP/MP4 全本地）；iPhone 默认 HEIC 在 Windows/Android 打不开、发给非苹果用户必转格式；纯前端解码（heic 解码库）单页可做，与 EXIF/图片拼接同属发图前处理簇，列 P1 首选备选 | 中 | P1 |
 | OpenGraph 社交卡片预览 | 发微信/微博/Twitter 前预览分享卡片标题图效果；纯前端表单+预览 | 小 | P1 |
 | 代码截图美化（Carbon 风格） | 今日新发现：awesome-free-online-tools 将 Carbon/ray.so/codeshot.io 列为 Code images 头部品类；发技术帖/工单时贴纯文本代码难看、截图带 IDE 杂边；纯前端语法高亮主题+窗口壳+PNG/SVG 导出，单页可做（需引入 highlight 库，注意体积） | 中 | P1 |
 | 发票/收据生成器 | 今日新发现：Medium《15 Free Online Tools Everyone Should Bookmark in 2026》与 FreeToolHub 190+ 计算器/文件工具均列 Invoice Generator 为文档类头部；自由职业/小商家手做发票排版麻烦；纯前端表单→A4 预览→打印/PDF，单页可做（仅模板生成、不涉税务开票） | 中 | P1 |
@@ -403,7 +414,8 @@
 ~~九宫格切图~~（2026-10-02 实现，commit fb036b2）、
 ~~图片打码/马赛克~~（2026-10-03 实现，commit 90fa8c8）、
 ~~JSON 转 TypeScript / Go 结构体~~（2026-10-04 实现，commit 53d07ef，路由 /tools/json-to-types）、
-~~AI Token 计数器~~（2026-10-05 实现，commit d0bf771，路由 /tools/ai-token-counter，新开 AI 工具分类）。
+~~AI Token 计数器~~（2026-10-05 实现，commit d0bf771，路由 /tools/ai-token-counter，新开 AI 工具分类）、
+~~图片拼接/长图拼接~~（2026-10-06 实现，commit f513cf3，路由 /tools/img-stitch）。
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
@@ -430,6 +442,13 @@
 **预计改动文件**：`templates/relationship_calculator.html`（新建）、`static/js/relationship.js`（新建）、`tools/categories.go`（新增分类+注册）、`BACKLOG.md`（本小节）。
 
 ## 调研来源
+
+### 2026-10-07
+- Imagera《Remove EXIF & GPS Location From a Photo》（近 3 小时再抓取：先展示 GPS/机型/时间再清除）、zbmbase/photo-metadata-viewer（EXIF/IPTC/GPS 查看+编辑+批量清除、全本地）、itsjustadarsh/scrub（11 天前：字节级剥离 EXIF/GPS/XMP/IPTC 而非重编码）、NakliTechie/StripLocal、PrivacyStrip（2026-02 发布）→ EXIF 查看/清除今日再验证，升今日 Top1
+- DEV OpenPDF Hub《Merge PDFs Without Uploading Them Anywhere》（约 31 天前：无上传合并/拆分/压缩）、DEV PDF Splitter/PDF Merger 系列（pdf-lib + JSZip 纯前端、按页/范围拆分）、DEV 学生工具箱 Toolbench（38 工具含 PDF merge/split/image-to-PDF，pdf-lib 实现）、Medium《15 Free Online Tools》（PDF Merger 列文档类头部）、中文 PDF 合并测评（2026-04：报名材料/合同/发票整理场景）→ PDF 合并/拆分今日再验证，稳居 Top2
+- Medium《5 Free Browser Tools I Built for Everyday Problems》（2026-07-12，近 5 小时再抓取：LivePhotoKit 列首位，HEIC/Live Photo 浏览器内转换）、DEV 多篇 HEIC→JPG/PDF 教程（Windows 打不开 iPhone 照片、WASM 解码全本地批量转换）、HEICtoJPEG/Vidmore/CloudConvert 等转换站持续活跃 → HEIC/Live Photo 转 JPG 由 P1 首选升今日 Top3
+- awesome-no-signup-tools（18 天前更新：Audio Cutter/CharCount/FreeToolHub 190+ 工具等无注册纯前端清单）、DEV 无注册开发者工具合集（CSS 渐变/JSON/正则等与本站已有工具重合）→ 印证纯前端无上传路线，现有候选池方向无误，不新增重复候选
+- 复核 tools/categories.go（54 个已注册工具）与 templates 清单、git log：图片拼接已上线（f513cf3）归档划掉；EXIF、PDF 合并/拆分、HEIC 转换仍未实现
 
 ### 2026-10-06
 - forjiang/image-metadata-cleaner（9 天前：批量清 EXIF/GPS/XMP/IPTC/ICC、逐项日志、ZIP 打包、全本地）、unfoldingdimensions/capytools CapyStrip 实施计划（目标词 remove exif data / photo metadata viewer / strip gps、浏览器端清除）、NakliTechie/StripLocal 与 lhfer/image-fingerprint-remover（扩展到 C2PA/内容凭证与 AI 生成提示块清除）、中文 PixPix EXIF 长文（2026-09-19：GPS/作者为隐私风险高亮、本地不上传）→ EXIF 查看/清除五重再验证，稳居今日 Top2；AI 指纹清除作为差异化加分项记录，不扩大 v1 范围
