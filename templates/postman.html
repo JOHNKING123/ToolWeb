@@ -1013,7 +1013,18 @@
 
             } catch (error) {
                 showError('请求发送失败: ' + error.message);
-                
+
+                // 把错误如实回填到响应区，避免发送后静默无输出
+                const responseInfo = document.getElementById('responseInfo');
+                if (responseInfo) {
+                    responseInfo.innerHTML = '<div class="info-item"><div class="info-label">状态</div><div class="info-value status-error">请求失败</div></div>';
+                    responseInfo.style.display = 'grid';
+                }
+                const responseTextarea = document.getElementById('responseTextarea');
+                if (responseTextarea) {
+                    responseTextarea.value = '请求发送失败: ' + error.message;
+                }
+
                 // 保存错误到历史记录
                 const requestData = {
                     method: method,
@@ -1035,64 +1046,42 @@
             }
         }
 
-        // 在浏览器端发送 HTTP 请求
+        // 经后端代理发送 HTTP 请求（浏览器直发受 CORS 限制，后端接口
+        // /tools/api/postman/send 负责转发并返回状态/响应头/响应体；
+        // 后端失败时抛出其可读错误，由调用方展示到响应区，不静默）
         async function sendHttpRequest(requestData) {
-            const { method, url, headers, body, timeout } = requestData;
-            
-            // 创建 AbortController 用于超时控制
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
+            const { method, url, headers, body, contentType, timeout } = requestData;
 
-            try {
-                // 准备请求选项
-                const options = {
+            const res = await fetch('/tools/api/postman/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     method: method,
+                    url: url,
                     headers: headers,
-                    signal: controller.signal
-                };
+                    body: (method !== 'GET' && method !== 'HEAD') ? body : '',
+                    contentType: contentType,
+                    timeout: timeout || 15,
+                    envId: currentEnvironment || ''
+                })
+            });
 
-                // 添加请求体（如果有）
-                if (body && method !== 'GET' && method !== 'HEAD') {
-                    options.body = body;
-                }
-
-                // 发送请求
-                const response = await fetch(url, options);
-                clearTimeout(timeoutId);
-
-                // 读取响应体
-                let responseBody = '';
-                let contentType = '';
-                
-                try {
-                    responseBody = await response.text();
-                    contentType = response.headers.get('content-type') || 'text/plain';
-                } catch (e) {
-                    responseBody = '无法读取响应体: ' + e.message;
-                    contentType = 'text/plain';
-                }
-
-                // 构建响应头对象
-                const responseHeaders = {};
-                response.headers.forEach((value, key) => {
-                    responseHeaders[key] = value;
-                });
-
-                return {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: responseHeaders,
-                    body: responseBody,
-                    contentType: contentType
-                };
-
-            } catch (error) {
-                clearTimeout(timeoutId);
-                if (error.name === 'AbortError') {
-                    throw new Error('请求超时');
-                }
-                throw error;
+            const data = await res.json().catch(() => null);
+            if (!data) {
+                throw new Error('代理接口无响应（HTTP ' + res.status + '）');
             }
+            if (!data.success) {
+                throw new Error(data.error || '请求发送失败');
+            }
+
+            const r = data.data.response || {};
+            return {
+                status: r.statusCode,
+                statusText: r.statusText,
+                headers: r.headers || {},
+                body: r.body || '',
+                contentType: r.contentType || ''
+            };
         }
 
         // 处理环境变量

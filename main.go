@@ -1215,6 +1215,38 @@ func main() {
 			})
 		})
 
+		// 发送请求（服务端代理：浏览器直发会受 CORS 限制，统一经后端转发，
+		// 失败时把可读错误返回前端展示，不静默）
+		api.POST("/postman/send", func(c *gin.Context) {
+			var req struct {
+				tools.HTTPRequest
+				EnvID string `json:"envId"`
+			}
+			if err := c.BindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"error":   "无效的请求数据: " + err.Error(),
+				})
+				return
+			}
+			if req.Timeout <= 0 || req.Timeout > 30 {
+				req.Timeout = 15
+			}
+			pm := tools.GetPostmanManager()
+			result, err := pm.SendRequest(c.ClientIP(), req.HTTPRequest, req.EnvID)
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"error":   err.Error(),
+				})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    result,
+			})
+		})
+
 		// 获取环境列表
 		api.GET("/postman/environments", func(c *gin.Context) {
 			pm := tools.GetPostmanManager()
