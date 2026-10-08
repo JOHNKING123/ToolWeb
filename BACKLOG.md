@@ -1,6 +1,18 @@
 # ToolWeb 需求 Backlog
 
-> 维护人：产品调研员 · 每日更新（2026-10-07）
+> 维护人：产品调研员 · 每日更新（2026-10-08）
+
+## 今日候选（2026-10-08 · 产品调研推荐）
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构）：
+
+1. **PDF 合并/拆分** — 连续多日 P0、昨日决策已定为今日 P0 首选，今日再获强信号：DEV《How to Merge PDF Files Without Uploading Them Anywhere》（11 天前，pdf-lib 本地合并）、DEV OpenPDF Hub 合并文（22 小时内再抓取）、Medium 无上传合并文（9 小时内再抓取）、GitHub Zancta《PDF/image tools that run in the browser》Show HN 稿（merge/split/compress 全本地）、开源工具箱 DevSpork 将 PDF Merge/Split/Compress 列「Most popular tools」首位；中文 2026 PDF 拆分教程点名网申附件页数限制、合同提取页等刚需场景。ToolWeb 文档分类仅有 DOC 转 PDF，此为补齐文档刚需锚点、开辟 PDF 处理簇。实现：pdf-lib 纯前端（文件不上传），拖拽排序→合并导出 / 按页范围拆分，单页可做（中难度）。SEO：PDF合并、PDF拆分、PDF在线合并、PDF页面提取。
+2. **HEIC / Live Photo 转 JPG** — 连续多日 P0 顺延，今日再验证：Medium《5 Free Browser Tools》（近 2 小时再抓取）仍将 LivePhotoKit 列首位（HEIC/Live Photo 浏览器内转 JPG/PNG/WebP/MP4）、中文 HEIC 教程与 heicx 转换站持续活跃；iPhone 默认 HEIC 在 Windows/Android/老系统打不开是跨设备高频痛点，与已上线 EXIF 同属「发图前处理」簇、可互链。实现：纯前端 HEIC 解码（WASM/heic 库）→ JPG/PNG/WebP 导出、批量转换，单页可做（中难度，需评估解码库体积）。SEO：HEIC转JPG、HEIC转换、iPhone照片转JPG、Live Photo转视频。
+3. **文本敏感信息打码（分享前脱敏）** — 今日新信号：Hacker News/Reddit 本地优先工具 TinyLocal Tools（近 7 天抓取）以 PasteFix（粘贴文本清理）+ SafePaste（分享前遮蔽邮箱/手机号/API 密钥类敏感串）+ Markdown 表格修复切入「粘贴到别处之前」的日常瞬间；把日志、工单、报错、聊天记录发给同事/AI/论坛前先脱敏是开发者与办公人群高频隐私动作，承接昨日 EXIF 落地后的「隐私处理」叙事从图片扩展到文本。实现：纯前端正则识别邮箱/手机号/身份证/银行卡/密钥模式→一键遮蔽或替换占位符→前后对比与一键复制，单页可做（小难度）。SEO：文本脱敏、敏感信息打码、日志脱敏、隐私信息遮蔽。
+
+**备选顺延**：Markdown 表格修复（P1，与脱敏同源新信号）、图片裁剪（P1，HN CropImages 新信号，与现有缩放的强制裁剪互补）、链接去追踪（低频薄价值，P1）、cURL 转代码（中难度 P1）、SERP/Meta 标签生成器（SEO 簇 P1）、人民币大写转换、单位换算器、WiFi 二维码生成器、键盘按键测试。
+
+**昨日交付核对**：EXIF 信息查看/清除已上线（commit 9061653，`/tools/exif-strip`），自候选划掉并归入已实现。
 
 ## 今日候选（2026-10-07 · 产品调研推荐）
 
@@ -355,13 +367,13 @@
 
 **交付回顾**：≥12 种字体风格实时生成、中文原样输出、中英混排不乱码；特殊符号装饰模板（꧁༺昵称༻꧂ 等）；每个风格一键复制+toast；纯前端无新增后端接口。
 
-## P0 — 今日最值得做（2026-10-07）
+## P0 — 今日最值得做（2026-10-08）
 
 | 标题 | 痛点 | 难度 | 优先级 |
 |---|---|---|---|
-| EXIF 信息查看/清除 | 今日再验证：Imagera EXIF/GPS 清除长文、Photo Metadata Viewer（查看/编辑/批量清除）、Scrub（字节级剥离）、StripLocal/PrivacyStrip；手机照片带 GPS/机型/时间，发图前泄露住址行踪是大众隐私刚需；与图片打码互补成发图前隐私双件套；纯前端解析展示字段表→一键清除→导出，单页可做 | 小 | P0 |
-| PDF 合并/拆分 | 今日再验证：DEV OpenPDF Hub 无上传合并、DEV PDF Splitter/Merger（pdf-lib 纯前端）、Medium/中文测评与学生工具箱均列标配；ToolWeb 仅有 DOC 转 PDF、无 PDF 处理簇；多 PDF 合并、按页拆分/提取是学生办公高频动作；pdf-lib 纯前端不上传，单页可做 | 中 | P0 |
-| HEIC / Live Photo 转 JPG | 今日升 P0：Medium《5 Free Browser Tools》将 LivePhotoKit 列首位、DEV 多篇 HEIC 转 JPG/PDF 教程、多家转换站持续活跃；iPhone HEIC 在 Windows/Android 打不开、发给非苹果用户必转格式；与 EXIF 同属发图前处理簇；纯前端 HEIC 解码→JPG/PNG/WebP 批量导出，单页可做（需评估解码库体积） | 中 | P0 |
+| PDF 合并/拆分 | 连续多日 P0、昨日定为今日首选，今日再验证：DEV 无上传合并文（11 天前/22 小时再抓取）、Medium 无上传合并文（9 小时再抓取）、Zancta 浏览器 PDF 工具套件、DevSpork 热门工具首位、中文网申附件页数限制场景；ToolWeb 仅有 DOC 转 PDF、无 PDF 处理簇；多 PDF 合并、按页拆分/提取是学生办公高频动作；pdf-lib 纯前端不上传，单页可做 | 中 | P0 |
+| HEIC / Live Photo 转 JPG | 连续多日 P0 顺延，今日再验证：Medium《5 Free Browser Tools》LivePhotoKit 列首位（近 2 小时再抓取）、中文 HEIC 教程与转换站持续活跃；iPhone HEIC 在 Windows/Android 打不开、发给非苹果用户必转格式；与已上线 EXIF 同属发图前处理簇；纯前端 HEIC 解码→JPG/PNG/WebP 批量导出，单页可做（需评估解码库体积） | 中 | P0 |
+| 文本敏感信息打码（分享前脱敏） | 今日新信号：HN/Reddit TinyLocal Tools 以 SafePaste（分享前遮蔽邮箱/手机号/API 密钥类敏感串）切入粘贴前处理；日志/工单/报错/聊天记录外发前泄露隐私是开发者与办公人群高频动作；承接 EXIF 后的隐私处理叙事（图片→文本）；纯前端正则识别→一键遮蔽/替换→前后对比，单页可做 | 小 | P0 |
 
 ## P1 — 高价值备选
 
@@ -401,6 +413,8 @@
 | JSON 可视化树图 | 今日新发现：JSON Crack（JSON/YAML/CSV 转交互节点图）被 awesome 列表列为 Data & Testing 头部；深层 JSON 靠折叠文本看结构费眼；纯前端递归树渲染+搜索定位，单页可做；与现有 JSON 解析器互补而非重复 | 中 | P1 |
 | 汉字转拼音/注音 | 今日新发现：蛙蛙工具将中文转拼音注音列为招牌功能、CSDN 家长/老师汉字转拼音工具帖（8 天前抓取）验证教育场景——给孩子课文/生字注音靠手写标注太慢；纯前端拼音字典+声调标注（多音字取常用音并标示），单页可做 | 中 | P1 |
 | Bcrypt 哈希生成/校验 | 今日新发现：codinganthem 将 Bcrypt Generator 列入 Top tools；开发注册登录功能时生成/校验密码哈希常用，现有 MD5/SHA/AES 工具不覆盖 bcrypt；bcryptjs 纯前端，单页可做 | 小 | P1 |
+| Markdown 表格修复 | 今日新发现：HN/Reddit TinyLocal Tools 将 Markdown Table Fixer（修复/格式化 Markdown/CSV/TSV 表格）与文本清理、敏感打码并列；从网页/文档复制的表格粘到 Markdown 里错位破损是写文档高频麻烦；纯前端解析对齐+一键修复，单页可做；与现有 Markdown 预览互补 | 小 | P1 |
+| 图片裁剪 | 今日新发现：HN Show HN CropImages（近 4 天抓取，主打浏览器内像素级裁剪、无上传极速完成）、NullUpload 图片工具套件（近 5 天抓取）印证本地图片处理需求；现有图片缩放仅有填宽高的强制裁剪，缺拖拽选框/比例预设（头像/证件/封面）的可视化裁剪；canvas 纯前端，单页可做 | 小 | P1 |
 
 ## P2 — 可做可不做
 
@@ -448,6 +462,7 @@
 ~~JSON 转 TypeScript / Go 结构体~~（2026-10-04 实现，commit 53d07ef，路由 /tools/json-to-types）、
 ~~AI Token 计数器~~（2026-10-05 实现，commit d0bf771，路由 /tools/ai-token-counter，新开 AI 工具分类）、
 ~~图片拼接/长图拼接~~（2026-10-06 实现，commit f513cf3，路由 /tools/img-stitch）。
+~~EXIF 信息查看/清除~~（2026-10-07 实现，commit 9061653，路由 /tools/exif-strip）。
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
@@ -474,6 +489,14 @@
 **预计改动文件**：`templates/relationship_calculator.html`（新建）、`static/js/relationship.js`（新建）、`tools/categories.go`（新增分类+注册）、`BACKLOG.md`（本小节）。
 
 ## 调研来源
+
+### 2026-10-08
+- DEV《How to Merge PDF Files Without Uploading Them Anywhere》（11 天前，pdf-lib 本地合并、拖拽排序）、DEV OpenPDF Hub 合并文（22 小时内再抓取）、Medium 无上传 PDF 合并文（9 小时内再抓取）、GitHub Zancta Show HN 稿（浏览器内 merge/split/compress/EXIF/OCR 套件，pdf-lib/PDF.js 本地处理）、开源工具箱 DevSpork（PDF Merge/Split/Compress 列 Most popular tools 首位）、中文 2026 PDF 在线拆分教程（网申附件页数限制、合同提取页场景）→ PDF 合并/拆分连续多日 P0，今日 Top1
+- Medium《5 Free Browser Tools I Built for Everyday Problems》（近 2 小时再抓取，LivePhotoKit 列首位：HEIC/Live Photo 转 JPG/PNG/WebP/MP4）、中文 HEIC 转 JPEG 教程与 heicx 转换站 → HEIC / Live Photo 转 JPG 今日再验证，稳居 Top2
+- Hacker News/Reddit TinyLocal Tools 发布稿（近 7 天抓取：PasteFix 粘贴文本清理、SafePaste 分享前敏感信息遮蔽、Markdown Table Fixer 表格修复，全本地无上传）→ 文本敏感信息打码新候选升今日 Top3，Markdown 表格修复新增 P1
+- Hacker News Show HN CropImages（近 4 天抓取：浏览器内像素级裁剪、无上传）、Show HN NullUpload（近 5 天抓取：本地图片压缩/转换/缩放/元数据清除套件）→ 图片裁剪新增 P1（与现有缩放强制裁剪互补），本地图片处理路线再印证
+- DEV 本地优先开发者工具文（近 1 天抓取：强调用 DevTools Network 自查工具是否上传输入数据）→ 印证纯前端无上传路线与隐私文案卖点，现有候选池方向无误
+- 复核 tools/categories.go（55 个已注册工具）与 templates 清单、git log：EXIF 信息查看/清除已上线（9061653）归档划掉；PDF 合并/拆分、HEIC 转换仍未实现
 
 ### 2026-10-07
 - Imagera《Remove EXIF & GPS Location From a Photo》（近 3 小时再抓取：先展示 GPS/机型/时间再清除）、zbmbase/photo-metadata-viewer（EXIF/IPTC/GPS 查看+编辑+批量清除、全本地）、itsjustadarsh/scrub（11 天前：字节级剥离 EXIF/GPS/XMP/IPTC 而非重编码）、NakliTechie/StripLocal、PrivacyStrip（2026-02 发布）→ EXIF 查看/清除今日再验证，升今日 Top1
