@@ -1,0 +1,126 @@
+{{define "pdf_merge_split"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 合并/拆分 - PDF 在线合并与页面提取工具（本地处理不上传）</title>
+    <meta name="description" content="免费在线 PDF 合并与拆分工具：多个 PDF 按顺序合并为一个文件，或按页码范围提取页面、逐页导出；纯浏览器本地处理不上传，文件不经过任何服务器。">
+    <meta name="keywords" content="PDF合并,PDF拆分,PDF页面提取,PDF在线合并,pdf merge,pdf split">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-merge-split">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 合并/拆分","description":"免费在线 PDF 合并与拆分工具：多个 PDF 按顺序合并，或按页码范围提取页面、逐页导出，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-merge-split","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pms-tabs{display:flex;gap:.5rem;margin-bottom:1.2rem}
+        .pms-tab{flex:1;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.7rem .5rem;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:border-color .2s,background .2s,color .2s}
+        .pms-tab .material-icons{font-size:1.25rem}
+        .pms-tab.active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .pms-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pms-upload:hover,.pms-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pms-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pms-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pms-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .pms-list{list-style:none;margin:.8rem 0 0;padding:0}
+        .pms-item{display:flex;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.55rem;background:#fff}
+        .pms-item.dragging{opacity:.45;border-color:var(--primary-color)}
+        .pms-item .drag{color:#9ca3af;cursor:grab;flex:none}
+        .pms-item .meta{flex:1;min-width:0}
+        .pms-item .nm{font-size:.9rem;color:#111827;word-break:break-all;line-height:1.35}
+        .pms-item .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .pms-item .badge{display:inline-block;font-size:.7rem;color:#fff;background:#10b981;border-radius:.3rem;padding:.05rem .4rem;margin-left:.4rem;vertical-align:1px}
+        .pms-item .badge.err{background:#ef4444}
+        .pms-item .ops{flex:none;display:flex;gap:.3rem}
+        .pms-item .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pms-item .ops button:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .pms-item .ops button.del:hover{border-color:#ef4444;color:#ef4444}
+        .pms-item .ops .material-icons{font-size:1.05rem}
+        .pms-summary{background:#f9fafb;border:1px solid #e5e7eb;color:#374151;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;margin-top:.8rem;line-height:1.7}
+        .pms-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .pms-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pms-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pms-field label{display:block;font-size:.9rem;color:#374151;margin-bottom:.35rem}
+        .pms-field input{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .7rem;font-size:.95rem}
+        .pms-field input:focus{outline:none;border-color:var(--primary-color)}
+        .pms-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .pms-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pms-tip b{color:#111827}
+        @media (max-width:640px){
+            .pms-upload{padding:1.6rem .8rem}
+            .pms-actions .btn{flex:1 1 45%;justify-content:center}
+            .pms-item{gap:.4rem;padding:.5rem}
+            .pms-item .ops button{width:34px;height:34px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">picture_as_pdf</i> PDF 合并/拆分</h1>
+            <p>把多个 PDF 按顺序合并成一个，或把 PDF 按页码范围拆开提取；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="pms-tabs" role="tablist">
+                <button type="button" class="pms-tab active" id="pms-tab-merge" role="tab"><i class="material-icons">merge_type</i> PDF 合并</button>
+                <button type="button" class="pms-tab" id="pms-tab-split" role="tab"><i class="material-icons">call_split</i> PDF 拆分</button>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pms-upload" id="pms-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div id="pms-upload-title">点击选择 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;" id="pms-upload-sub">合并可多选、可分次追加；文件仅在浏览器本地处理，不上传</div>
+                </div>
+                <input type="file" id="pms-file" accept="application/pdf,.pdf" multiple style="display:none;">
+                <div class="pms-status" id="pms-status"></div>
+                <div class="pms-error" id="pms-lib-error" style="display:none;"></div>
+
+                <!-- 合并面板 -->
+                <div id="pms-panel-merge">
+                    <ul class="pms-list" id="pms-merge-list"></ul>
+                    <div class="pms-summary" id="pms-merge-summary">尚未添加文件：添加 2 个以上 PDF 后可按列表顺序合并导出。</div>
+                    <div class="pms-actions">
+                        <button class="btn btn-primary" id="pms-merge-btn" disabled><i class="material-icons">merge_type</i> 合并并下载 PDF</button>
+                        <button class="btn btn-secondary" id="pms-merge-clear"><i class="material-icons">delete_sweep</i> 清空全部</button>
+                    </div>
+                    <div class="pms-hint">用左侧拖动手柄调整顺序（移动端可用上移/下移按钮）；单个文件超过 50MB 时处理可能较慢，但不会拦截。加密或损坏的 PDF 会单独报错跳过，其余文件可继续合并。</div>
+                </div>
+
+                <!-- 拆分面板 -->
+                <div id="pms-panel-split" style="display:none;">
+                    <div class="pms-summary" id="pms-split-info">尚未选择文件：切到拆分后选择一个 PDF，这里会显示总页数。</div>
+                    <div class="pms-field" style="margin-top:1rem;">
+                        <label for="pms-range">要提取的页码范围</label>
+                        <input type="text" id="pms-range" placeholder="如 1-3,5,8-10" autocomplete="off">
+                        <div class="pms-hint">页码从 1 开始；用英文逗号分隔多段，短横线表示连续区间，例如 <b>1-3,5,8-10</b>。导出时按页码从小到大排列。</div>
+                    </div>
+                    <div class="pms-error" id="pms-split-error"></div>
+                    <div class="pms-actions">
+                        <button class="btn btn-primary" id="pms-split-one" disabled><i class="material-icons">description</i> 合并为一个 PDF</button>
+                        <button class="btn btn-primary" id="pms-split-each" disabled><i class="material-icons">file_copy</i> 每页一个 PDF</button>
+                        <button class="btn btn-secondary" id="pms-split-clear"><i class="material-icons">delete_sweep</i> 清除文件</button>
+                    </div>
+                    <div class="pms-hint">「每页一个 PDF」会把所选页逐页导出：多页时优先打包成 ZIP 下载，若打包组件加载失败会自动降级为逐个下载并提示。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pms-tip">
+                    <b>合并：</b>在「PDF 合并」里添加多个 PDF，核对总页数后按列表顺序合并导出为一个文件（文件名 merged_时间戳.pdf）。<br>
+                    <b>拆分：</b>在「PDF 拆分」里选一个 PDF，输入页码范围（如 1-3,5），可合并导出为单个 PDF，也可每页导出一个 PDF 打包 ZIP 下载。<br>
+                    <b>隐私：</b>基于 pdf-lib 的纯前端本地处理，文件只在你的浏览器里流转，不会上传到任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些。<br>
+                    <b>配套使用：</b>手头是 Word 文档时，先用 <a href="/tools/doc-to-pdf">DOC 转 PDF</a> 转成 PDF，再回到这里合并或拆分。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf-merge-split.js"></script>
+</body>
+</html>
+{{end}}

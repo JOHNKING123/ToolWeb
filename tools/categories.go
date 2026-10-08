@@ -391,6 +391,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_merge_split",
+					Name:        "PDF 合并/拆分",
+					Description: "多个 PDF 按序合并，或按页码范围拆分提取页面，本地处理不上传",
+					Path:        "/tools/pdf-merge-split",
+					Icon:        "picture_as_pdf",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
