@@ -400,6 +400,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_to_image",
+					Name:        "PDF 转图片/长图",
+					Description: "PDF 逐页导出 PNG/JPG 图片，或多页拼接成长图，本地处理不上传",
+					Path:        "/tools/pdf-to-image",
+					Icon:        "image",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{

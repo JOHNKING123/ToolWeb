@@ -1,0 +1,164 @@
+{{define "pdf_to_image"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 转图片/长图 - PDF 逐页导出 PNG/JPG 与长图拼接工具（本地处理不上传）</title>
+    <meta name="description" content="免费在线 PDF 转图片工具：把 PDF 逐页导出为 PNG/JPG 图片（可打包 ZIP 下载），或把多页拼接成一张长图；清晰度三档可选，纯浏览器本地处理不上传，不限页数不限次，不用开 WPS 会员。">
+    <meta name="keywords" content="PDF转图片,PDF转长图,PDF转JPG,PDF页面转图片,PDF转图在线免费">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-to-image">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 转图片/长图","description":"免费在线 PDF 转图片工具：PDF 逐页导出 PNG/JPG、打包 ZIP 下载，或多页拼接成长图，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-to-image","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pti-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pti-upload:hover,.pti-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pti-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pti-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pti-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .pti-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .pti-fileinfo .material-icons{color:#ef4444;flex:none}
+        .pti-fileinfo .meta{flex:1;min-width:0}
+        .pti-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .pti-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .pti-fileinfo .ops{flex:none}
+        .pti-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pti-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .pti-group{margin-top:1.1rem}
+        .pti-group>label,.pti-group .pti-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .pti-modes{display:flex;gap:.5rem}
+        .pti-mode{flex:1}
+        .pti-mode input,.pti-pill input{position:absolute;opacity:0;pointer-events:none}
+        .pti-mode span{display:flex;flex-direction:column;align-items:center;gap:.2rem;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.8rem .5rem;font-size:1rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s;text-align:center}
+        .pti-mode span .material-icons{font-size:1.4rem}
+        .pti-mode span small{font-size:.75rem;color:#9ca3af;font-weight:400}
+        .pti-mode input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .pti-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .pti-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .pti-pill span small{color:#9ca3af;font-size:.75rem}
+        .pti-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .pti-field input{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .7rem;font-size:.95rem}
+        .pti-field input:focus{outline:none;border-color:var(--primary-color)}
+        .pti-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .pti-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .pti-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pti-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pti-progress{display:none;margin-top:1rem}
+        .pti-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .pti-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .pti-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .pti-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pti-tip b{color:#111827}
+        @media (max-width:640px){
+            .pti-upload{padding:1.6rem .8rem}
+            .pti-modes{flex-direction:column}
+            .pti-actions .btn{flex:1 1 100%;justify-content:center}
+            .pti-fileinfo .ops button{width:34px;height:34px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">image</i> PDF 转图片/长图</h1>
+            <p>把 PDF 逐页导出为 PNG/JPG 图片，或把多页拼成一张长图；全部在浏览器本地渲染，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pti-upload" id="pti-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="pti-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="pti-status" id="pti-status"></div>
+                <div class="pti-error" id="pti-lib-error" style="display:none;"></div>
+
+                <div class="pti-fileinfo" id="pti-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="pti-file-name"></div>
+                        <div class="sub" id="pti-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="pti-clear" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="pti-group">
+                    <span class="pti-glabel">导出方式</span>
+                    <div class="pti-modes">
+                        <label class="pti-mode"><input type="radio" name="pti-mode" value="pages" checked><span><i class="material-icons">photo_library</i>逐页图片<small>每页一张图，多页打包 ZIP</small></span></label>
+                        <label class="pti-mode"><input type="radio" name="pti-mode" value="long"><span><i class="material-icons">view_agenda</i>拼成长图<small>所选页纵向拼成一张长图</small></span></label>
+                    </div>
+                </div>
+
+                <div class="pti-group">
+                    <span class="pti-glabel">页码范围</span>
+                    <div class="pti-pills">
+                        <label class="pti-pill"><input type="radio" name="pti-rangemode" value="all" checked><span>全部页面</span></label>
+                        <label class="pti-pill"><input type="radio" name="pti-rangemode" value="custom"><span>自定义范围</span></label>
+                    </div>
+                    <div class="pti-field" id="pti-range-wrap" style="display:none;margin-top:.6rem;">
+                        <input type="text" id="pti-range" placeholder="如 1-3,5,8-10" autocomplete="off">
+                        <div class="pti-hint">页码从 1 开始；用英文逗号分隔多段，短横线表示连续区间，例如 <b>1-3,5,8-10</b>。导出时按页码从小到大排列。</div>
+                    </div>
+                </div>
+
+                <div class="pti-group">
+                    <span class="pti-glabel">清晰度</span>
+                    <div class="pti-pills">
+                        <label class="pti-pill"><input type="radio" name="pti-scale" value="1"><span>标准 1x <small>约 72 DPI</small></span></label>
+                        <label class="pti-pill"><input type="radio" name="pti-scale" value="2" checked><span>高清 2x <small>约 144 DPI</small></span></label>
+                        <label class="pti-pill"><input type="radio" name="pti-scale" value="3"><span>超清 3x <small>约 216 DPI</small></span></label>
+                    </div>
+                </div>
+
+                <div class="pti-group">
+                    <span class="pti-glabel">图片格式</span>
+                    <div class="pti-pills">
+                        <label class="pti-pill"><input type="radio" name="pti-format" value="png" checked><span>PNG</span></label>
+                        <label class="pti-pill"><input type="radio" name="pti-format" value="jpg"><span>JPG <small>自动白底</small></span></label>
+                    </div>
+                </div>
+
+                <div class="pti-group" id="pti-gap-group" style="display:none;">
+                    <span class="pti-glabel">长图页间距</span>
+                    <div class="pti-pills">
+                        <label class="pti-pill"><input type="radio" name="pti-gap" value="0" checked><span>无缝 0px</span></label>
+                        <label class="pti-pill"><input type="radio" name="pti-gap" value="8"><span>白色 8px</span></label>
+                    </div>
+                </div>
+
+                <div class="pti-error" id="pti-error"></div>
+                <div class="pti-progress" id="pti-progress">
+                    <div class="bar"><i id="pti-progress-bar"></i></div>
+                    <div class="txt" id="pti-progress-txt"></div>
+                </div>
+                <div class="pti-actions">
+                    <button class="btn btn-primary" id="pti-export" disabled><i class="material-icons">download</i> 导出图片</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pti-tip">
+                    <b>逐页图片：</b>把 PDF 每一页渲染成一张 PNG/JPG，多页自动打包成一个 ZIP 下载（压缩包内文件名带原名与页码，如 pdfimg_合同_p1.png）。<br>
+                    <b>拼成长图：</b>把所选页面按页码顺序自上而下纵向拼成一张长图，适合发微信群、做长图分享；页面太多、太高时请改用「逐页图片」。<br>
+                    <b>和 WPS 比：</b>WPS 的「PDF 转图片」是会员功能，免费版有页数与次数限制；本站纯前端本地渲染，<b>文件不上传、不限页数、不限次数、不用开 WPS 会员</b>，打开网页就能用。<br>
+                    <b>隐私：</b>基于 pdf.js 在浏览器内渲染，文件只在你的浏览器里流转，不经过任何服务器；单个文件超过 50MB 仍可处理，只是渲染会慢一些。<br>
+                    <b>配套使用：</b>想先整理页面顺序、合并多个 PDF 或提取其中几页，先用 <a href="/tools/pdf-merge-split">PDF 合并/拆分</a> 处理，再回到这里转图；手头是 Word 文档时，先用 <a href="/tools/doc-to-pdf">DOC 转 PDF</a> 转成 PDF。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf-to-image.js"></script>
+</body>
+</html>
+{{end}}
