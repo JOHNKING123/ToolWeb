@@ -409,6 +409,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_watermark",
+					Name:        "PDF 加水印",
+					Description: "给 PDF 添加自定义文字水印（中文/平铺/透明度可调），防扩散防盗用，本地处理不上传",
+					Path:        "/tools/pdf-watermark",
+					Icon:        "branding_watermark",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
