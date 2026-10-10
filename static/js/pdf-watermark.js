@@ -254,7 +254,7 @@ function renderFileInfo() {
         $('pwm-file-sub').textContent = fmtSize(fileInfo.size) + ' · 共 ' + fileInfo.pages + ' 页' +
             (fileInfo.size > BIG_FILE ? ' · 文件较大，处理可能较慢' : '');
     }
-    $('pwm-preview').style.display = ok ? '' : 'none';
+    $('pwm-preview').style.display = ok ? 'block' : 'none';
     refreshExportState();
 }
 function updatePager() {
