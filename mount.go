@@ -79,15 +79,38 @@ func isTextualContentType(ct string) bool {
 }
 
 func rewriteToolWebBody(b []byte) []byte {
+	// 先改写 URL 编码形式（如登录跳转的 next=%2Ftools%2Fpersonal），
+	// 再改写明文形式；两者无子串重叠，顺序安全。
+	for _, r := range toolWebEncodedReplacements {
+		b = bytes.ReplaceAll(b, []byte(r[0]), []byte(r[1]))
+	}
 	return bytes.ReplaceAll(b, []byte(toolWebInternalPrefix+"/"), []byte(toolWebMountPrefix+"/"))
+}
+
+// toolWebEncodedReplacements 把正文/Location 里 URL 编码的 /tools/
+// 改写回 /tool-web/（QueryEscape 会把 / 编成 %2F，明文替换漏掉它）。
+var toolWebEncodedReplacements = [][2]string{
+	{"%2Ftools%2F", "%2Ftool-web%2F"},
+	{"%2ftools%2f", "%2ftool-web%2f"},
+}
+
+func rewriteToolWebLocation(loc string) string {
+	for _, r := range toolWebEncodedReplacements {
+		loc = strings.ReplaceAll(loc, r[0], r[1])
+	}
+	if strings.HasPrefix(loc, toolWebInternalPrefix+"/") {
+		return toolWebMountPrefix + strings.TrimPrefix(loc, toolWebInternalPrefix)
+	}
+	if loc == toolWebInternalPrefix {
+		return toolWebMountPrefix
+	}
+	return loc
 }
 
 func (w *toolWebRewriteWriter) rewriteLocationHeader() {
 	h := w.Header()
-	if loc := h.Get("Location"); strings.HasPrefix(loc, toolWebInternalPrefix+"/") {
-		h.Set("Location", toolWebMountPrefix+strings.TrimPrefix(loc, toolWebInternalPrefix))
-	} else if loc == toolWebInternalPrefix {
-		h.Set("Location", toolWebMountPrefix)
+	if loc := h.Get("Location"); loc != "" {
+		h.Set("Location", rewriteToolWebLocation(loc))
 	}
 }
 
