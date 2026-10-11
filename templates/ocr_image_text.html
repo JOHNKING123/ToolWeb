@@ -1,0 +1,172 @@
+{{define "ocr_image_text"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR 图片文字识别 - 图片转文字/扫描件提取文字（本地识别不上传）</title>
+    <meta name="description" content="免费在线 OCR 图片文字识别：截图、照片、扫描件一键转可编辑文字，中英文混排识别，支持框选区域识别；纯浏览器本地处理不上传，不限次数，不用开 WPS 会员。">
+    <meta name="keywords" content="OCR文字识别,图片转文字,扫描件转文字,截图提取文字,免费OCR,在线OCR识别">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ocr-image-text">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OCR 图片文字识别","description":"免费在线 OCR 图片文字识别：截图、照片、扫描件转可编辑文字，中英文混排识别，支持框选区域识别，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/ocr-image-text","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ocr-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .ocr-upload:hover,.ocr-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .ocr-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .ocr-upload kbd{border:1px solid #d1d5db;border-radius:.3rem;padding:0 .35rem;font-size:.78rem;background:#fff;font-family:inherit}
+        .ocr-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .ocr-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .ocr-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .ocr-fileinfo .material-icons{color:#2563eb;flex:none}
+        .ocr-fileinfo .meta{flex:1;min-width:0}
+        .ocr-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .ocr-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .ocr-fileinfo .ops{flex:none}
+        .ocr-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .ocr-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .ocr-group{margin-top:1.1rem}
+        .ocr-group>label,.ocr-group .ocr-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .ocr-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .ocr-pill input{position:absolute;opacity:0;pointer-events:none}
+        .ocr-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .ocr-pill span small{color:#9ca3af;font-size:.75rem}
+        .ocr-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .ocr-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .ocr-preview{margin-top:1.1rem;display:none}
+        .ocr-stage{position:relative;border:1px solid #e5e7eb;border-radius:.6rem;background:#f3f4f6;overflow:hidden;line-height:0}
+        .ocr-stage img{display:block;width:100%;height:auto}
+        .ocr-stage canvas.overlay{position:absolute;left:0;top:0;touch-action:none;cursor:crosshair}
+        .ocr-selbar{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.5rem;flex-wrap:wrap}
+        .ocr-selbar .tip{font-size:.82rem;color:#6b7280;min-height:1.3em;flex:1;min-width:200px}
+        .ocr-linkbtn{border:none;background:none;color:var(--primary-color);font-size:.85rem;cursor:pointer;padding:.4rem .2rem;flex:none}
+        .ocr-linkbtn:hover{text-decoration:underline}
+        .ocr-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .ocr-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ocr-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .ocr-progress{display:none;margin-top:1rem}
+        .ocr-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .ocr-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .ocr-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .ocr-result{margin-top:1.2rem;display:none;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .ocr-result .meta{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-bottom:.5rem}
+        .ocr-result .conf{font-size:.85rem;color:#059669;font-weight:600}
+        .ocr-result .count{font-size:.85rem;color:#6b7280}
+        .ocr-result textarea{width:100%;box-sizing:border-box;min-height:220px;border:1px solid #d1d5db;border-radius:.6rem;padding:.8rem;font-size:.95rem;line-height:1.8;color:#111827;resize:vertical}
+        .ocr-result textarea:focus{outline:none;border-color:var(--primary-color)}
+        .ocr-empty{border:1px dashed #d1d5db;border-radius:.6rem;padding:1.6rem 1rem;text-align:center;color:#6b7280;font-size:.92rem;line-height:1.8}
+        .ocr-empty .material-icons{font-size:2rem;display:block;margin-bottom:.4rem;color:#9ca3af}
+        .ocr-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .ocr-tip b{color:#111827}
+        @media (max-width:640px){
+            .ocr-upload{padding:1.6rem .8rem}
+            .ocr-actions .btn{flex:1 1 100%;justify-content:center}
+            .ocr-fileinfo .ops button{width:34px;height:34px}
+            .ocr-result textarea{min-height:180px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">text_fields</i> OCR 图片文字识别</h1>
+            <p>截图、照片、扫描件一键转成可编辑文字；全部在浏览器本地识别，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="ocr-upload" id="ocr-upload" role="button" tabindex="0" aria-label="点击选择、拖拽图片到此处，或按 Ctrl+V 粘贴截图">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一张图片，或把图片拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">也支持 <kbd>Ctrl</kbd>+<kbd>V</kbd> 直接粘贴截图 · 图片仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="ocr-file" accept="image/png,image/jpeg,image/webp,image/*" style="display:none;">
+                <div class="ocr-status" id="ocr-status"></div>
+                <div class="ocr-error" id="ocr-lib-error" style="display:none;"></div>
+
+                <div class="ocr-fileinfo" id="ocr-fileinfo">
+                    <i class="material-icons">image</i>
+                    <div class="meta">
+                        <div class="nm" id="ocr-file-name"></div>
+                        <div class="sub" id="ocr-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="ocr-clear" title="清除图片"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="ocr-group">
+                    <span class="ocr-glabel">识别语言</span>
+                    <div class="ocr-pills">
+                        <label class="ocr-pill"><input type="radio" name="ocr-lang" value="chi_sim+eng" checked><span>中英文混排 <small>默认</small></span></label>
+                        <label class="ocr-pill"><input type="radio" name="ocr-lang" value="eng"><span>仅英文 <small>语言包更小、加载更快</small></span></label>
+                    </div>
+                    <div class="ocr-hint">语言包首次使用时从 CDN 下载（中文约 2.5MB、英文约 4MB），加载过程会显示进度；下载后缓存在浏览器里，下次打开直接用。</div>
+                </div>
+
+                <div class="ocr-preview" id="ocr-preview">
+                    <span class="ocr-glabel" style="display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600;">图片预览（可框选区域）</span>
+                    <div class="ocr-stage" id="ocr-stage">
+                        <img id="ocr-img" alt="待识别图片预览">
+                        <canvas class="overlay" id="ocr-overlay"></canvas>
+                    </div>
+                    <div class="ocr-selbar">
+                        <span class="tip" id="ocr-sel-tip"></span>
+                        <button type="button" class="ocr-linkbtn" id="ocr-clear-sel">清除选框</button>
+                    </div>
+                </div>
+
+                <div class="ocr-error" id="ocr-error"></div>
+                <div class="ocr-progress" id="ocr-progress">
+                    <div class="bar"><i id="ocr-progress-bar"></i></div>
+                    <div class="txt" id="ocr-progress-txt"></div>
+                </div>
+                <div class="ocr-actions">
+                    <button class="btn btn-primary" id="ocr-run" disabled><i class="material-icons">document_scanner</i> 开始识别（整图）</button>
+                    <button class="btn" id="ocr-run-sel" disabled><i class="material-icons">crop</i> 识别选中区域</button>
+                    <button class="btn" id="ocr-cancel" style="display:none;"><i class="material-icons">close</i> 取消</button>
+                </div>
+
+                <div class="ocr-result" id="ocr-result-card">
+                    <h3 style="margin-top:0;">识别结果</h3>
+                    <div id="ocr-result-ok" style="display:none;">
+                        <div class="meta">
+                            <span class="conf" id="ocr-conf"></span>
+                            <span class="count" id="ocr-count"></span>
+                        </div>
+                        <textarea id="ocr-text" aria-label="识别结果文本，可直接编辑校对"></textarea>
+                        <div class="ocr-actions">
+                            <button class="btn btn-primary" id="ocr-copy"><i class="material-icons">content_copy</i> 一键复制</button>
+                            <button class="btn" id="ocr-export"><i class="material-icons">download</i> 导出 .txt</button>
+                        </div>
+                        <div class="ocr-hint">文本框可直接编辑校对；导出文件名为 ocr_时间戳.txt。</div>
+                    </div>
+                    <div class="ocr-empty" id="ocr-result-empty" style="display:none;">
+                        <i class="material-icons">search_off</i>
+                        未识别到文字，请换一张更清晰的图片，或框选文字区域后重试。
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ocr-tip">
+                    <b>怎么用：</b>上传图片（或 <kbd>Ctrl</kbd>+<kbd>V</kbd> 粘贴截图）→ 点「开始识别」整图识别，或在图上拖拽框选文字区域后点「识别选中区域」→ 在结果文本框里校对修改 → 一键复制或导出 .txt。<br>
+                    <b>常见场景：</b>聊天截图、会议 PPT 拍照转文字；小区通知、报销票据拍照摘字；证件/证书扫描件提取姓名编号；英文资料截图快速取词。<br>
+                    <b>和 WPS 比：</b>WPS 的图片转文字/OCR 是会员功能；本站基于开源 tesseract 引擎纯前端本地识别，<b>图片不上传、不限次数、不用开 WPS 会员</b>，打开网页就能用。<br>
+                    <b>隐私：</b>识别全程在你的浏览器里完成（WASM 本地运算），图片只在浏览器内存里流转，不经过任何服务器；语言包缓存在浏览器本地，第二次打开更快。<br>
+                    <b>识别小贴士：</b>图片越清晰、文字越横平，识别越准；拍照时尽量端正、光线均匀；手写体、艺术字、严重倾斜的图片识别效果会打折扣。<br>
+                    <b>配套使用：</b>识别出的文字想排版成文档，可先用 <a href="/tools/pdf-to-image">PDF 转图片/长图</a> 反向操作对照；图片太大先用 <a href="/tools/img-compress">图片压缩</a> 瘦身；发出去前给敏感信息打码用 <a href="/tools/img-mosaic">图片打码</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/ocr-image-text.js?v=1"></script>
+</body>
+</html>
+{{end}}

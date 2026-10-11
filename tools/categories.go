@@ -418,6 +418,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "ocr_image_text",
+					Name:        "OCR 图片文字识别",
+					Description: "截图/照片/扫描件转可编辑文字，中英文混排，框选区域识别，本地识别不上传、不限次",
+					Path:        "/tools/ocr-image-text",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
