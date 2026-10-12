@@ -427,6 +427,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "images_to_pdf",
+					Name:        "图片批量转 PDF",
+					Description: "多张图片批量合成一个 PDF，拖拽调序，A4/原尺寸可选，本地处理不上传、不限次、导出无水印",
+					Path:        "/tools/images-to-pdf",
+					Icon:        "picture_as_pdf",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{

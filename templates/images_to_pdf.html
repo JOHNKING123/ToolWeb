@@ -1,0 +1,156 @@
+{{define "images_to_pdf"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片批量转 PDF - 多图合并成一个 PDF（免费/不上传/无水印）</title>
+    <meta name="description" content="免费在线图片转 PDF 工具：批量上传 PNG/JPG/WebP 照片，拖拽调整页序，一键合成单个 PDF；支持 A4 等比居中、原图尺寸输出，压缩三档可选，纯浏览器本地处理不上传、不限次、导出无水印，不用开 WPS 会员。">
+    <meta name="keywords" content="图片转PDF,多图转PDF,照片转PDF,JPG转PDF,多张图片合并PDF,图片批量转PDF免费">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/images-to-pdf">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片批量转 PDF","description":"免费在线图片批量转 PDF 工具：多图上传、拖拽调序，合成单个 PDF，A4/原尺寸可选，纯浏览器本地处理不上传、不限次、导出无水印。","url":"https://www.johnkingzcq123.xyz/tools/images-to-pdf","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .itp-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .itp-upload:hover,.itp-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .itp-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .itp-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .itp-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .itp-warn{display:none;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.6rem .8rem;font-size:.87rem;margin-top:.8rem;line-height:1.6}
+        .itp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin-top:.9rem}
+        .itp-card{border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;overflow:hidden;position:relative;transition:border-color .2s,opacity .2s,transform .15s}
+        .itp-card.dragging{opacity:.45;border-color:var(--primary-color);transform:scale(.98)}
+        .itp-card.dragover{border-color:var(--primary-color);box-shadow:0 0 0 2px rgba(59,130,246,.25)}
+        .itp-thumb{height:120px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;cursor:grab;overflow:hidden;touch-action:pan-y}
+        .itp-thumb img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+        .itp-order{position:absolute;top:.35rem;left:.35rem;min-width:1.5rem;height:1.5rem;line-height:1.5rem;text-align:center;background:rgba(17,24,39,.78);color:#fff;font-size:.78rem;font-weight:700;border-radius:.35rem;padding:0 .35rem;z-index:2}
+        .itp-meta{padding:.45rem .55rem .55rem}
+        .itp-nm{font-size:.8rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .itp-sub{font-size:.74rem;color:#9ca3af;margin-top:.12rem}
+        .itp-ops{display:flex;gap:.3rem;margin-top:.4rem}
+        .itp-ops button{flex:1;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;font-size:.78rem}
+        .itp-ops button .material-icons{font-size:1rem}
+        .itp-ops button:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .itp-ops button.del:hover{border-color:#ef4444;color:#ef4444}
+        .itp-ops button:disabled{opacity:.35;cursor:default}
+        .itp-group{margin-top:1.1rem}
+        .itp-group>label,.itp-group .itp-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .itp-modes{display:flex;gap:.5rem}
+        .itp-mode{flex:1}
+        .itp-mode input,.itp-pill input{position:absolute;opacity:0;pointer-events:none}
+        .itp-mode span{display:flex;flex-direction:column;align-items:center;gap:.2rem;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.8rem .5rem;font-size:1rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s;text-align:center}
+        .itp-mode span .material-icons{font-size:1.4rem}
+        .itp-mode span small{font-size:.75rem;color:#9ca3af;font-weight:400}
+        .itp-mode input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .itp-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .itp-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .itp-pill span small{color:#9ca3af;font-size:.75rem}
+        .itp-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .itp-field input{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .7rem;font-size:.95rem}
+        .itp-field input:focus{outline:none;border-color:var(--primary-color)}
+        .itp-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .itp-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .itp-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .itp-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .itp-progress{display:none;margin-top:1rem}
+        .itp-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .itp-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .itp-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .itp-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .itp-tip b{color:#111827}
+        .itp-count{font-size:.85rem;color:#6b7280;margin-top:.8rem;display:none}
+        @media (max-width:640px){
+            .itp-upload{padding:1.6rem .8rem}
+            .itp-modes{flex-direction:column}
+            .itp-actions .btn{flex:1 1 100%;justify-content:center}
+            .itp-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">picture_as_pdf</i> 图片批量转 PDF</h1>
+            <p>多张图片按顺序合并成一个 PDF；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="itp-upload" id="itp-upload" role="button" tabindex="0" aria-label="点击选择、拖拽图片到此处，或 Ctrl+V 粘贴截图">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择图片，或把图片拖拽到这里，也可 Ctrl+V 直接粘贴截图</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / WebP（HEIC 暂不支持）；文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="itp-file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple style="display:none;">
+                <div class="itp-status" id="itp-status"></div>
+                <div class="itp-error" id="itp-lib-error" style="display:none;"></div>
+                <div class="itp-warn" id="itp-warn"></div>
+                <div class="itp-count" id="itp-count"></div>
+                <div class="itp-grid" id="itp-grid"></div>
+
+                <div class="itp-group">
+                    <span class="itp-glabel">页面尺寸</span>
+                    <div class="itp-modes">
+                        <label class="itp-mode"><input type="radio" name="itp-size" value="a4" checked><span><i class="material-icons">crop_portrait</i>A4 纸张<small>图片等比缩放、页内居中</small></span></label>
+                        <label class="itp-mode"><input type="radio" name="itp-size" value="orig"><span><i class="material-icons">photo</i>图片原尺寸<small>每页尺寸随图，无白边</small></span></label>
+                    </div>
+                </div>
+
+                <div class="itp-group" id="itp-margin-group">
+                    <span class="itp-glabel">A4 页边距</span>
+                    <div class="itp-pills">
+                        <label class="itp-pill"><input type="radio" name="itp-margin" value="0" checked><span>0mm <small>满页铺满</small></span></label>
+                        <label class="itp-pill"><input type="radio" name="itp-margin" value="10"><span>10mm</span></label>
+                        <label class="itp-pill"><input type="radio" name="itp-margin" value="20"><span>20mm</span></label>
+                    </div>
+                </div>
+
+                <div class="itp-group">
+                    <span class="itp-glabel">压缩质量</span>
+                    <div class="itp-pills">
+                        <label class="itp-pill"><input type="radio" name="itp-quality" value="high" checked><span>原图 <small>高质量，体积最大</small></span></label>
+                        <label class="itp-pill"><input type="radio" name="itp-quality" value="mid"><span>中等 <small>长边 ≤1920px</small></span></label>
+                        <label class="itp-pill"><input type="radio" name="itp-quality" value="low"><span>高压缩 <small>长边 ≤1280px</small></span></label>
+                    </div>
+                    <div class="itp-hint">压缩档只影响输出体积，不影响页面顺序与内容；原图档以近原质量嵌入。</div>
+                </div>
+
+                <div class="itp-group">
+                    <label for="itp-filename">输出文件名</label>
+                    <div class="itp-field">
+                        <input type="text" id="itp-filename" autocomplete="off">
+                    </div>
+                    <div class="itp-hint">默认 <b>images_时间戳.pdf</b>；无需带 .pdf 后缀。</div>
+                </div>
+
+                <div class="itp-error" id="itp-error"></div>
+                <div class="itp-progress" id="itp-progress">
+                    <div class="bar"><i id="itp-progress-bar"></i></div>
+                    <div class="txt" id="itp-progress-txt"></div>
+                </div>
+                <div class="itp-actions">
+                    <button class="btn btn-primary" id="itp-export" disabled><i class="material-icons">download</i> 合成并下载 PDF</button>
+                    <button class="btn" id="itp-clear-all" disabled><i class="material-icons">delete_sweep</i> 清空全部</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="itp-tip">
+                    <b>怎么用：</b>上传图片 → 按缩略图左上角数字确认顺序（拖拽卡片或点 ↑↓ 调序）→ 选页面尺寸与压缩档 → 合成下载。左上角数字就是最终 PDF 的页码。<br>
+                    <b>和 WPS 比：</b>WPS 的图片转 PDF 是会员功能，免费版输出 PDF 还可能带「WPS Office」标识水印；本站纯前端本地合成，<b>文件不上传、不限次数、导出无水印</b>，不用开 WPS 会员。<br>
+                    <b>隐私：</b>图片与 PDF 的合成全部在你的浏览器里完成，不经过任何服务器；截图 Ctrl+V 粘贴直接加入列表，作业拍照、票据截图、证件照拼页都顺手。<br>
+                    <b>配套使用：</b>导出前想先压小体积，用 <a href="/tools/img-compress">图片压缩</a>；把 PDF 转回图片用 <a href="/tools/pdf-to-image">PDF 转图片/长图</a>；导出的 PDF 想加水印，用 <a href="/tools/pdf-watermark">PDF 加水印</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/images-to-pdf.js"></script>
+</body>
+</html>
+{{end}}
