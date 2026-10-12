@@ -311,7 +311,7 @@ function buildPdf() {
     var cfg = qualityCfg();
     var mode = pageSizeMode();
     var margin = mode === 'a4' ? mmToPt(marginMm()) : 0;
-    var pdf = window.PDFLib.PDFDocument.create();
+    return window.PDFLib.PDFDocument.create().then(function (pdf) {
     var chain = Promise.resolve();
     items.forEach(function (it, idx) {
         chain = chain.then(function () {
@@ -358,6 +358,7 @@ function buildPdf() {
     return chain.then(function () {
         setProgress(items.length, items.length, '正在保存…');
         return pdf.save();
+    });
     });
 }
 
