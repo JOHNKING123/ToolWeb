@@ -179,12 +179,14 @@ function handleEncFile(f) {
             encSetStatus('');
             renderEncFileInfo();
             toast('已读取「' + f.name + '」');
-        }, function () {
-            // pdf-lib 加载失败（CDN 或文件问题）：仍允许加密，页数未知
-            encFile = { name: f.name, size: f.size, buf: buf, pages: 0 };
+        }, function (e) {
+            // 失败时不再降级放行：页数未知就意味着无法确认文件有效性，直接报错阻止导出
             encSetStatus('');
-            renderEncFileInfo();
-            toast('页数读取失败，仍可继续加密');
+            if (!window.PDFLib) {
+                encShowError('PDF 解析组件（pdf-lib）加载失败，请检查网络连接后重试');
+            } else {
+                encShowError('该文件不是有效的 PDF 或已损坏，无法读取，请更换文件后重试');
+            }
         });
     }).catch(function (e) {
         encSetStatus('');
@@ -292,7 +294,8 @@ function renderDecFileInfo() {
     box.style.display = 'flex';
     $('pec-dec-file-name').textContent = decFile.name;
     $('pec-dec-file-name').title = decFile.name;
-    var algo = !enc ? '高强度加密（兼容模式）' : (enc.V === 4 ? 'AES-128' : 'RC4');
+    var info = decFile.encInfo;
+    var algo = !info ? '高强度加密（兼容模式）' : (info.V === 4 ? 'AES-128' : 'RC4');
     $('pec-dec-file-sub').textContent = fmtSize(decFile.size) + ' · 已加密（' + algo + '）' +
         (decFile.size > BIG_FILE ? ' · 文件较大，处理可能较慢' : '');
     $('pec-dec-form').style.display = '';

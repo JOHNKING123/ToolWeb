@@ -4,7 +4,7 @@
 
 ## 今日任务（2026-10-15 · 产品经理已决策 ✅）
 
-**交付状态（2026-10-13 晚间开发）**：已交付（前端开发 commit 待生成；模板 `pdf_encrypt`、自研 `static/js/pdf-crypto.js` + `static/js/pdf-encrypt.js`、`categories.go` 已注册 `/tools/pdf-encrypt`；另给 `pdf_manage` 模板加了「整理完→加密发出」互链）。
+**交付状态（2026-10-13 晚间开发）**：已交付；第2轮（评审修复）完成——修复解密页 `renderDecFileInfo` 未定义变量 `enc` 阻断性 bug（改用 `decFile.encInfo`），损坏 PDF 降级分支改为可读中文报错并阻止导出，BACKLOG 补记自研 pdf-crypto.js 偏离说明。模板 `pdf_encrypt`、自研 `static/js/pdf-crypto.js` + `static/js/pdf-encrypt.js`、`categories.go` 已注册 `/tools/pdf-encrypt`；另给 `pdf_manage` 模板加了「整理完→加密发出」互链。
 
 **选定：PDF 加密/解密 [WPS]** — 路由 `/tools/pdf-encrypt`（模板 `pdf_encrypt`），归「文档转换」分类，WPS 专题周收官枪（10-15）、PDF 处理簇「保护」收官环
 
@@ -36,7 +36,10 @@
 - [ ] 异常不崩：损坏 PDF 有可读中文报错；pdf.js/pdf-lib CDN 懒加载失败有可读报错；>50MB 有可读提示不硬拦截
 - [ ] 全程纯前端、无新增后端接口、无文件上传请求；`go build` 通过；SEO meta 完整；移动端布局不错乱；底部有加密适用边界如实说明
 
-**预计改动文件**：`templates/pdf_encrypt.html`（新建）、`static/js/pdf-encrypt.js`（新建）、`tools/categories.go`（文档转换分类注册工具）、`BACKLOG.md`（本小节）。
+**预计改动文件**：`templates/pdf_encrypt.html`（新建）、`static/js/pdf-encrypt.js`（新建）、`static/js/pdf-crypto.js`（新建，自研 PDF 标准加密核心）、`tools/categories.go`（文档转换分类注册工具）、`templates/pdf_manage.html`（互链「整理完→加密发出」）、`BACKLOG.md`（本小节）。
+
+**偏离记录（2026-10-13 代码评审后补记 · 开发阶段已处理）**：规格第 2/3 条要求「加密用 pdf-lib 1.17.1 加密参数」，实际实现为自研 `static/js/pdf-crypto.js`（V=2 RC4-128 / V=4 AES-128 AESV2，纯字节级重写、无第三方依赖）——原因是 pdf-lib 1.17.1 无加密写入 API。小样门已过：28 项 Node 验证全过 + pypdf 独立互操作验证（user/owner 密码均可解、错密码 WRONG_PASSWORD、明文报 NOT_ENCRYPTED）；10-15 验收时补测 Adobe/Chrome 打开验证。自研密码学实现存在审计风险，如实记录于此。
+- 评审修复（2026-10-13 第2轮前端开发）：修复阻断性 bug（`pdf-encrypt.js` `renderDecFileInfo` 引用未定义变量 `enc`，改用 `decFile.encInfo`；导致解密模式选文件后密码表单不显示、导出按钮永久 disabled）；损坏 PDF 降级分支改为报错并阻止导出（不再允许「页数未知仍加密」）；以上改动复测通过。
 
 ## 今日任务（2026-10-14 · 产品经理已决策 ✅）
 
