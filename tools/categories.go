@@ -454,6 +454,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_encrypt",
+					Name:        "PDF 加密/解密",
+					Description: "PDF 加密码保护/解除密码，合同工资条发前加密，本地处理不上传、不限次",
+					Path:        "/tools/pdf-encrypt",
+					Icon:        "lock",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
