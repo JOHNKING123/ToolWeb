@@ -8,6 +8,8 @@
 
 **选定：扫描件/图片转 Excel [WPS]** — 路由 `/tools/image-to-excel`（模板 `image_to_excel`），归「文档转换」分类，WPS 专题周收官枪、OCR「图片→文字」旅程线向「图片→表格」延伸
 
+> **调度员备注（2026-10-14 07:00，04:00 轮收尾）**：本任务 develop 阶段因子代理 60 分钟超时而中断，实现已基本完成但未提交——工作区现有 `templates/image_to_excel.html`（新建）、`static/js/image-to-excel.js`（新建，node --check 通过）、`static/js/vendor/xlsx-0.18.5.umd.js`（新建）、`tools/categories.go`（已注册 image_to_excel）、`templates/ocr_image_text.html` 与 `templates/pdf_to_word.html`（互链）。08:14 轮 develop 可直接接手验证收尾，无需重做。另：PDF 转 Word 已于本轮部署上线 /tool-web 并通过 QA（见 timeline）。
+
 **决策理由**：
 1. 执行第四轮研究推荐：10-14 四轮调研定序零变动，「扫描件/图片转 Excel」由 P1 提级为 **P0（10-15 收官首选）**，近连续八轮「调研推荐 Top1 → 交付」链条无断点（加水印→OCR→图片转PDF→批注打码→页面管理→加密/解密→压缩→转 Word）。
 2. 决定性竞品信号：轻闪图片转 Excel（2026-01-09 上线，新浪科技）走「浏览器本地处理」路线验证心智，但免费要**注册、每天限 5 个文件、单文件 10MB、批量收费**；ToolWeb 切入点「**免注册、不限次、文件不离开浏览器**」仍是空白位。
