@@ -48,6 +48,11 @@
                     <label for="csv-input">输入数据：</label>
                     <textarea id="csv-input" rows="8" class="input-area" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;" placeholder="CSV 示例：&#10;name,age,city&#10;张三,25,深圳&#10;李四,30,广州" spellcheck="false"></textarea>
                 </div>
+                <div class="form-group" style="margin-top:.8rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                    <label for="csv-file" style="color:#374151;">或上传文件：</label>
+                    <input id="csv-file" type="file" accept=".csv,.tsv,.txt,.json">
+                    <span style="color:#6b7280;font-size:.85rem;">支持 CSV / JSON / TXT，自动识别 UTF-8 / GBK 编码，上传后自动转换</span>
+                </div>
                 <div class="form-actions" style="margin-top:1rem;">
                     <button onclick="doConvert()" class="btn btn-primary"><i class="material-icons">swap_horiz</i> 转换</button>
                     <button class="btn btn-secondary" onclick="copyCsvResult()"><i class="material-icons">content_copy</i> 复制结果</button>
@@ -64,6 +69,7 @@
                 <div style="color:#374151;line-height:2;font-size:1rem;">
                     <b>CSV → JSON：</b>把 Excel 里复制的表格粘贴进来，首行默认当表头，得到 JSON 对象数组，方便调接口、写测试数据。<br>
                     <b>JSON → CSV：</b>把接口返回的 JSON 数组粘贴进来，转回表格，方便粘贴到 Excel 做分析。<br>
+                    <b>上传文件：</b>可直接上传 .csv / .json / .txt 文件（自动识别 UTF-8 / GBK 编码），上传后按扩展名自动选择转换方向并转换。<br>
                     支持双引号包裹的字段（含逗号、换行），符合标准 CSV 规范。
                 </div>
             </div>
@@ -171,6 +177,38 @@
         document.getElementById('csv-input').value = '';
         document.getElementById('csv-output').value = '';
     }
+    // 读取上传文件：优先 UTF-8（严格），失败则按 GBK（Excel 导出常见）解码，并去掉 BOM
+    function readUploadFile(file, cb) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var buf = reader.result, text = null;
+            try { text = new TextDecoder('utf-8', {fatal: true}).decode(buf); }
+            catch (e) {
+                try { text = new TextDecoder('gbk').decode(buf); }
+                catch (e2) { text = new TextDecoder('utf-8').decode(buf); }
+            }
+            if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+            cb(text);
+        };
+        reader.onerror = function() { toast('文件读取失败'); };
+        reader.readAsArrayBuffer(file);
+    }
+    function setDir(v) {
+        var els = document.querySelectorAll('input[name="csv-dir"]');
+        for (var i = 0; i < els.length; i++) els[i].checked = (els[i].value === v);
+    }
+    document.getElementById('csv-file').addEventListener('change', function(e) {
+        var f = e.target.files && e.target.files[0];
+        if (!f) return;
+        var name = (f.name || '').toLowerCase();
+        readUploadFile(f, function(text) {
+            document.getElementById('csv-input').value = text;
+            // 按扩展名自动切换转换方向：.json -> JSON转CSV，其余按 CSV 解析
+            setDir(/\.json$/.test(name) ? 'json2csv' : 'csv2json');
+            doConvert();
+        });
+        e.target.value = '';
+    });
     function toast(msg) {
         var el = document.createElement('div');
         el.textContent = msg;
