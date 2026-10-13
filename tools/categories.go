@@ -463,6 +463,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_compress",
+					Name:        "PDF 压缩",
+					Description: "PDF 智能压缩/扫描件压缩减小体积，邮件门户附件发得出去，本地处理不上传、不限次",
+					Path:        "/tools/pdf-compress",
+					Icon:        "compress",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
