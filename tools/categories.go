@@ -436,6 +436,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_annotate",
+					Name:        "PDF 批注打码",
+					Description: "PDF 涂抹打码/荧光笔高亮，合同证件发前处理，本地处理不上传、不限次",
+					Path:        "/tools/pdf-annotate",
+					Icon:        "border_color",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{

@@ -1,0 +1,218 @@
+{{define "pdf_annotate"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 批注打码 - 合同证件涂抹/高亮标注（免费/不上传/无水印）</title>
+    <meta name="description" content="免费在线 PDF 批注打码工具：涂抹遮罩身份证号/金额/住址等敏感信息，荧光笔高亮圈重点、文字标注做说明，发合同证件前的最后一道处理；纯浏览器本地处理不上传，不限次免费，不用开 WPS 会员。">
+    <meta name="keywords" content="PDF打码,PDF涂抹,PDF高亮,PDF标注,PDF批注,合同打码,证件打码,PDF涂黑">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-annotate">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 批注打码","description":"免费在线 PDF 批注打码工具：涂抹打码遮敏感信息、荧光笔高亮圈重点、文字标注做说明，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-annotate","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pan-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pan-upload:hover,.pan-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pan-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pan-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pan-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .pan-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .pan-fileinfo .material-icons{color:#ef4444;flex:none}
+        .pan-fileinfo .meta{flex:1;min-width:0}
+        .pan-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .pan-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .pan-fileinfo .ops{flex:none}
+        .pan-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pan-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .pan-work{margin-top:1.1rem;display:none}
+        .pan-toolbox{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem}
+        .pan-tool{display:inline-flex;align-items:center;gap:.35rem;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.55rem 1rem;font-size:.92rem;cursor:pointer;min-height:44px}
+        .pan-tool .material-icons{font-size:1.25rem}
+        .pan-tool.active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .pan-tool small{color:#9ca3af;font-size:.75rem}
+        .pan-group{margin-top:.9rem}
+        .pan-group>label,.pan-group .pan-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .pan-colorrow{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+        .pan-swatch{width:40px;height:40px;border-radius:50%;border:2px solid #e5e7eb;cursor:pointer;padding:0;flex:none}
+        .pan-swatch.sel{border-color:var(--primary-color);box-shadow:0 0 0 2px #bfdbfe}
+        .pan-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .pan-pill input{position:absolute;opacity:0;pointer-events:none}
+        .pan-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;font-size:.9rem;cursor:pointer;min-height:40px;box-sizing:border-box}
+        .pan-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .pan-field input[type=text]{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .7rem;font-size:.95rem}
+        .pan-field input[type=text]:focus{outline:none;border-color:var(--primary-color)}
+        .pan-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .pan-stage{position:relative;border:1px solid #e5e7eb;border-radius:.6rem;background:#f3f4f6;overflow:hidden;line-height:0}
+        .pan-stage canvas{display:block;width:100%;height:auto}
+        .pan-stage canvas.overlay{position:absolute;left:0;top:0;touch-action:none;cursor:crosshair}
+        .pan-pager{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-top:.6rem;flex-wrap:wrap}
+        .pan-pager button{width:40px;height:40px;border:1px solid #e5e7eb;background:#fff;border-radius:.5rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex:none}
+        .pan-pager button:hover:not([disabled]){border-color:var(--primary-color);color:var(--primary-color)}
+        .pan-pager button[disabled]{opacity:.45;cursor:not-allowed}
+        .pan-pager .pg{font-size:.9rem;color:#374151;font-variant-numeric:tabular-nums}
+        .pan-pager .goto{display:flex;gap:.4rem;align-items:center}
+        .pan-pager .goto input{width:4.2rem;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .6rem;font-size:.9rem}
+        .pan-pager .goto button{width:auto;padding:0 .9rem;font-size:.9rem;height:40px}
+        .pan-pageann{font-size:.82rem;color:#6b7280;text-align:center;margin-top:.3rem;min-height:1.3em}
+        .pan-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .pan-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pan-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pan-progress{display:none;margin-top:1rem}
+        .pan-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .pan-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .pan-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .pan-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pan-tip b{color:#111827}
+        @media (max-width:640px){
+            .pan-upload{padding:1.6rem .8rem}
+            .pan-actions .btn{flex:1 1 100%;justify-content:center}
+            .pan-fileinfo .ops button{width:34px;height:34px}
+            .pan-tool{flex:1 1 30%;justify-content:center;padding:.55rem .3rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">border_color</i> PDF 批注打码</h1>
+            <p>涂抹遮罩敏感信息、荧光笔高亮圈重点，合同证件发出去前的最后一道处理；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pan-upload" id="pan-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="pan-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="pan-status" id="pan-status"></div>
+                <div class="pan-error" id="pan-lib-error" style="display:none;"></div>
+
+                <div class="pan-fileinfo" id="pan-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="pan-file-name"></div>
+                        <div class="sub" id="pan-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="pan-clear-file" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="pan-work" id="pan-work">
+                    <div class="pan-group">
+                        <span class="pan-glabel">批注工具</span>
+                        <div class="pan-toolbox" id="pan-toolbox">
+                            <button type="button" class="pan-tool active" id="pan-tool-redact" data-tool="redact"><span class="material-icons">format_color_fill</span>涂抹打码</button>
+                            <button type="button" class="pan-tool" id="pan-tool-hl" data-tool="highlight"><span class="material-icons">highlight</span>荧光笔高亮</button>
+                            <button type="button" class="pan-tool" id="pan-tool-text" data-tool="text"><span class="material-icons">title</span>文字标注</button>
+                        </div>
+                        <div class="pan-hint">在页面上框选/涂抹即可添加批注，批注按页保存，翻页后仍在。手机上用手指直接涂抹。</div>
+                    </div>
+
+                    <div class="pan-group">
+                        <span class="pan-glabel">打码颜色</span>
+                        <div class="pan-colorrow" id="pan-redact-colors">
+                            <button type="button" class="pan-swatch sel" data-color="#111827" style="background:#111827" title="黑色"></button>
+                            <button type="button" class="pan-swatch" data-color="#ffffff" style="background:#ffffff" title="白色"></button>
+                            <button type="button" class="pan-swatch" data-color="#9ca3af" style="background:#9ca3af" title="灰色"></button>
+                            <span class="pan-hint" style="margin-top:0;">选「涂抹打码」工具后，在页面上框选要遮住的区域</span>
+                        </div>
+                    </div>
+
+                    <div class="pan-group">
+                        <span class="pan-glabel">高亮颜色</span>
+                        <div class="pan-colorrow" id="pan-hl-colors">
+                            <button type="button" class="pan-swatch sel" data-color="#ffe14d" style="background:#ffe14d" title="黄色"></button>
+                            <button type="button" class="pan-swatch" data-color="#5ee86e" style="background:#5ee86e" title="绿色"></button>
+                            <button type="button" class="pan-swatch" data-color="#ff9bb5" style="background:#ff9bb5" title="粉色"></button>
+                        </div>
+                    </div>
+
+                    <div class="pan-group">
+                        <span class="pan-glabel">荧光笔粗细</span>
+                        <div class="pan-pills">
+                            <label class="pan-pill"><input type="radio" name="pan-hlwidth" value="4"><span>细</span></label>
+                            <label class="pan-pill"><input type="radio" name="pan-hlwidth" value="8" checked><span>中</span></label>
+                            <label class="pan-pill"><input type="radio" name="pan-hlwidth" value="14"><span>粗</span></label>
+                        </div>
+                    </div>
+
+                    <div class="pan-group" id="pan-textopts" style="display:none;">
+                        <div class="pan-group pan-field" style="margin-top:0;">
+                            <label for="pan-text">标注文字</label>
+                            <input type="text" id="pan-text" maxlength="60" placeholder="如：此处已确认、重点看这一条" autocomplete="off">
+                            <div class="pan-hint">选「文字标注」工具后，点击页面任意位置放置这段文字。</div>
+                        </div>
+                        <div class="pan-group">
+                            <span class="pan-glabel">字号</span>
+                            <div class="pan-pills">
+                                <label class="pan-pill"><input type="radio" name="pan-textsize" value="20"><span>小</span></label>
+                                <label class="pan-pill"><input type="radio" name="pan-textsize" value="28" checked><span>中</span></label>
+                                <label class="pan-pill"><input type="radio" name="pan-textsize" value="40"><span>大</span></label>
+                                <span class="pan-hint" id="pan-textsize-val" style="margin-top:0;">28pt</span>
+                            </div>
+                        </div>
+                        <div class="pan-group">
+                            <span class="pan-glabel">文字颜色</span>
+                            <div class="pan-colorrow" id="pan-text-colors">
+                                <button type="button" class="pan-swatch sel" data-color="#ef4444" style="background:#ef4444" title="红色"></button>
+                                <button type="button" class="pan-swatch" data-color="#111827" style="background:#111827" title="黑色"></button>
+                                <button type="button" class="pan-swatch" data-color="#2563eb" style="background:#2563eb" title="蓝色"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pan-group">
+                        <span class="pan-glabel">页面预览（点击页面直接批注）</span>
+                        <div class="pan-stage" id="pan-stage">
+                            <canvas id="pan-page"></canvas>
+                            <canvas class="overlay" id="pan-overlay"></canvas>
+                        </div>
+                        <div class="pan-pager">
+                            <button type="button" id="pan-prev" title="上一页"><span class="material-icons">chevron_left</span></button>
+                            <span class="pg" id="pan-pglabel">第 1 / 1 页</span>
+                            <button type="button" id="pan-next" title="下一页"><span class="material-icons">chevron_right</span></button>
+                            <span class="goto">
+                                <input type="number" id="pan-goto" min="1" placeholder="跳页" aria-label="跳转到页码">
+                                <button type="button" id="pan-goto-btn">跳转</button>
+                            </span>
+                        </div>
+                        <div class="pan-pageann" id="pan-pageann"></div>
+                    </div>
+                </div>
+
+                <div class="pan-error" id="pan-error"></div>
+                <div class="pan-progress" id="pan-progress">
+                    <div class="bar"><i id="pan-progress-bar"></i></div>
+                    <div class="txt" id="pan-progress-txt"></div>
+                </div>
+                <div class="pan-actions">
+                    <button class="btn" id="pan-undo" disabled><i class="material-icons">undo</i> 撤销上一步</button>
+                    <button class="btn" id="pan-clear" disabled><i class="material-icons">delete_outline</i> 清空当前页</button>
+                    <button class="btn btn-primary" id="pan-export" disabled><i class="material-icons">download</i> 导出批注 PDF</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pan-tip">
+                    <b>怎么用：</b>上传 PDF 后选择批注工具——「涂抹打码」在页面上框选身份证号、金额、住址等敏感信息，立即盖上黑/白/灰遮罩；「荧光笔高亮」拖拽圈出重点（半透明黄/绿/粉，粗细三档）；「文字标注」输入一句话再点页面任意位置放置。撤销上一步/清空当前页随时可用，多页可翻页、跳页，批注随页保留。确认后点「导出批注 PDF」，下载 <b>annotated_原文件名.pdf</b>，批注位置与预览一致，未批注的页面原样无损。<br>
+                    <b>如实说明：</b>打码以色块覆盖实现视觉遮挡（防截屏转发/打印可见），<b>底层文字层并未删除</b>；对防复制、防复制有强合规要求的场景，请打印后重新扫描。导出过程全在本地完成。<br>
+                    <b>和 WPS 比：</b>WPS 的 PDF 编辑批注是会员功能；本站纯前端本地处理，<b>文件不上传、不限次免费、不用开 WPS 会员</b>，打开网页就能用，导出无水印。<br>
+                    <b>隐私：</b>基于 pdf.js + pdf-lib 在浏览器内处理，文件只在你的浏览器里流转，不经过任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些。加密（带打开密码）的 PDF 需先解密才能批注。<br>
+                    <b>配套使用：</b>图片里的车牌人脸手机号，用 <a href="/tools/img-mosaic">图片打码</a>；想先合并多个 PDF 或提取几页，用 <a href="/tools/pdf-merge-split">PDF 合并/拆分</a>；合同、证件复印件加防盗用水印，用 <a href="/tools/pdf-watermark">PDF 加水印</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf-annotate.js?v=1"></script>
+</body>
+</html>
+{{end}}
