@@ -150,7 +150,7 @@ function renderEncFileInfo() {
     $('pec-enc-file-sub').textContent = fmtSize(encFile.size) +
         (encFile.pages ? ' · 共 ' + encFile.pages + ' 页' : ' · 页数未知') +
         (encFile.size > BIG_FILE ? ' · 文件较大，处理可能较慢' : '');
-    $('pec-enc-form').style.display = '';
+    $('pec-enc-form').style.display = 'block';
     $('pec-enc-export').disabled = false;
 }
 function handleEncFile(f) {
@@ -298,7 +298,7 @@ function renderDecFileInfo() {
     var algo = !info ? '高强度加密（兼容模式）' : (info.V === 4 ? 'AES-128' : 'RC4');
     $('pec-dec-file-sub').textContent = fmtSize(decFile.size) + ' · 已加密（' + algo + '）' +
         (decFile.size > BIG_FILE ? ' · 文件较大，处理可能较慢' : '');
-    $('pec-dec-form').style.display = '';
+    $('pec-dec-form').style.display = 'block';
     $('pec-dec-export').disabled = false;
 }
 function handleDecFile(f) {
