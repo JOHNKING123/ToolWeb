@@ -1,0 +1,143 @@
+{{define "pdf_manage"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 页面管理 - 旋转删页/调序/提取页面（免费/不上传/无水印）</title>
+    <meta name="description" content="免费在线 PDF 页面管理工具：单页顺时针旋转 90°、删除多余页面、拖拽调序、勾选提取指定页导出，整理扫描件与报告；纯浏览器本地处理不上传，不限次免费，不用开 WPS 会员。">
+    <meta name="keywords" content="PDF旋转,PDF删页,PDF页面调序,提取PDF页面,PDF删空白页,PDF页面管理,PDF删除页面">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-manage">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 页面管理","description":"免费在线 PDF 页面管理工具：单页旋转、删除多余页、拖拽调序、勾选提取指定页导出，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-manage","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pmg-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pmg-upload:hover,.pmg-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pmg-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pmg-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pmg-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .pmg-warn{color:#b45309;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .pmg-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .pmg-fileinfo .material-icons{color:#ef4444;flex:none}
+        .pmg-fileinfo .meta{flex:1;min-width:0}
+        .pmg-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .pmg-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .pmg-fileinfo .ops{flex:none}
+        .pmg-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pmg-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .pmg-work{margin-top:1.1rem;display:none}
+        .pmg-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;align-items:center}
+        .pmg-toolbar button{display:inline-flex;align-items:center;gap:.35rem;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.9rem;cursor:pointer;min-height:44px}
+        .pmg-toolbar button .material-icons{font-size:1.2rem}
+        .pmg-toolbar button:hover:not([disabled]){border-color:var(--primary-color);color:var(--primary-color)}
+        .pmg-toolbar button[disabled]{opacity:.45;cursor:not-allowed}
+        .pmg-selcount{font-size:.88rem;color:#6b7280;margin-left:auto}
+        .pmg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.9rem;margin-top:.4rem}
+        .pmg-card{border:2px solid #e5e7eb;border-radius:.7rem;background:#fff;padding:.5rem;display:flex;flex-direction:column;gap:.45rem;position:relative;transition:border-color .15s,box-shadow .15s}
+        .pmg-card:hover{border-color:#bfdbfe}
+        .pmg-card.dragover{border-color:var(--primary-color);box-shadow:0 0 0 2px #bfdbfe}
+        .pmg-card.dragging{opacity:.45}
+        .pmg-thumb{position:relative;border:1px solid #e5e7eb;border-radius:.45rem;background:#f3f4f6;overflow:hidden;line-height:0;cursor:grab}
+        .pmg-thumb canvas{display:block;width:100%;height:auto}
+        .pmg-pos{position:absolute;left:.35rem;top:.35rem;background:#111827;color:#fff;font-size:.78rem;font-weight:700;border-radius:.4rem;padding:.15rem .5rem;line-height:1.5}
+        .pmg-rot{position:absolute;right:.35rem;top:.35rem;background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;border-radius:.4rem;padding:.15rem .5rem;line-height:1.5}
+        .pmg-check{position:absolute;left:.35rem;bottom:.35rem;line-height:0;cursor:pointer}
+        .pmg-check input{width:26px;height:26px;accent-color:var(--primary-color);cursor:pointer;margin:0}
+        .pmg-orig{font-size:.8rem;color:#6b7280;text-align:center}
+        .pmg-ops{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem}
+        .pmg-ops button{border:1px solid #e5e7eb;background:#f9fafb;border-radius:.45rem;color:#374151;cursor:pointer;min-height:42px;display:flex;align-items:center;justify-content:center;padding:0}
+        .pmg-ops button:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .pmg-ops button.danger:hover{border-color:#ef4444;color:#ef4444}
+        .pmg-ops .material-icons{font-size:1.25rem}
+        .pmg-empty{display:none;text-align:center;color:#9ca3af;padding:2rem 0;font-size:.92rem}
+        .pmg-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .pmg-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pmg-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pmg-progress{display:none;margin-top:1rem}
+        .pmg-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .pmg-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .pmg-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .pmg-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pmg-tip b{color:#111827}
+        @media (max-width:640px){
+            .pmg-upload{padding:1.6rem .8rem}
+            .pmg-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.7rem}
+            .pmg-actions .btn{flex:1 1 100%;justify-content:center}
+            .pmg-fileinfo .ops button{width:34px;height:34px}
+            .pmg-selcount{margin-left:0;width:100%}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">dashboard_customize</i> PDF 页面管理</h1>
+            <p>旋转单页、删除多余页、拖拽调序、勾选提取指定页，整理扫描件与报告；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pmg-upload" id="pmg-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="pmg-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="pmg-status" id="pmg-status"></div>
+                <div class="pmg-warn" id="pmg-warn"></div>
+                <div class="pmg-error" id="pmg-lib-error" style="display:none;"></div>
+
+                <div class="pmg-fileinfo" id="pmg-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="pmg-file-name"></div>
+                        <div class="sub" id="pmg-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="pmg-clear-file" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="pmg-work" id="pmg-work">
+                    <div class="pmg-toolbar">
+                        <button type="button" id="pmg-selall"><span class="material-icons">select_all</span>全选</button>
+                        <button type="button" id="pmg-selnone"><span class="material-icons">deselect</span>全不选</button>
+                        <button type="button" id="pmg-clearrot"><span class="material-icons">rotate_left</span>清空旋转</button>
+                        <button type="button" id="pmg-undo" disabled><span class="material-icons">undo</span>撤销删除</button>
+                        <span class="pmg-selcount" id="pmg-selcount"></span>
+                    </div>
+                    <div class="pmg-grid" id="pmg-grid"></div>
+                    <div class="pmg-empty" id="pmg-empty">所有页面都删掉了，点「撤销删除」可恢复，或重新上传文件。</div>
+                </div>
+
+                <div class="pmg-error" id="pmg-error"></div>
+                <div class="pmg-progress" id="pmg-progress">
+                    <div class="bar"><i id="pmg-progress-bar"></i></div>
+                    <div class="txt" id="pmg-progress-txt"></div>
+                </div>
+                <div class="pmg-actions" id="pmg-actions" style="display:none;">
+                    <button class="btn btn-primary" id="pmg-export-sel" disabled><i class="material-icons">file_download</i> 提取选中页导出</button>
+                    <button class="btn" id="pmg-export-all" disabled><i class="material-icons">download</i> 导出全部保留页</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pmg-tip">
+                    <b>怎么用：</b>上传 PDF 后逐页缩略图即刻呈现——点 <b>旋转按钮</b>把方向不正的扫描页顺时针转 90°（可叠加，转角在卡片右上角有角标）；点 <b>删除</b>去掉空白页、错页、敏感页，删错了点「撤销删除」恢复；<b>拖拽卡片</b>（电脑）或点 <b>左移/右移按钮</b>（手机）调整页面顺序，左上角数字即当前页码；勾选若干页再点「提取选中页导出」，或直接点「导出全部保留页」。导出文件名为 <b>pages_原文件名.pdf</b>，页面顺序、旋转方向与预览一致，内容与页面尺寸无损。<br>
+                    <b>和 WPS 比：</b>WPS 的 PDF 删页、调序、提取页面是会员功能；本站纯前端本地处理，<b>文件不上传、不限次免费、不用开 WPS 会员</b>，打开网页就能用，导出无水印。<br>
+                    <b>隐私：</b>基于 pdf.js + pdf-lib 在浏览器内处理，文件只在你的浏览器里流转，不经过任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些。加密（带打开密码）的 PDF 需先解密才能整理。<br>
+                    <b>配套使用：</b>先合并多个 PDF 或按范围拆页，用 <a href="/tools/pdf-merge-split">PDF 合并/拆分</a>；合同证件先涂掉敏感信息，用 <a href="/tools/pdf-annotate">PDF 批注打码</a>；把 PDF 逐页转成图片，用 <a href="/tools/pdf-to-image">PDF 转图片</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf-manage.js?v=1"></script>
+</body>
+</html>
+{{end}}

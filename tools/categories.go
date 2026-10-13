@@ -445,6 +445,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_manage",
+					Name:        "PDF 页面管理",
+					Description: "PDF 旋转/删页/调序/提取单页，整理扫描件与报告，本地处理不上传、不限次",
+					Path:        "/tools/pdf-manage",
+					Icon:        "dashboard_customize",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
