@@ -3,7 +3,7 @@
  * 交互：涂抹打码（矩形框选，黑/白/灰不透明遮罩）、荧光笔高亮（拖拽画笔，半透明
  * 黄/绿/粉、线宽三档）、文字标注（点击放置，字号/颜色可调）。批注按页存储，翻页保留。
  * 导出：坐标按渲染 scale 映射回 PDF 磅值，pdf-lib 逐页 drawRectangle——打码块不透明
- * 覆盖、高亮按画笔路径包络矩形半透明覆盖；文字标注走 PNG stamp 嵌入；未批注页原样保留。
+ * 覆盖、高亮沿画笔轨迹描边半透明覆盖；文字标注走 PNG stamp 嵌入；未批注页原样保留。
  * 诚实说明：打码为视觉覆盖遮罩，底层文字层未被删除。
  * pdf.js 与 pdf-lib 均经 CDN 懒加载；文件只在浏览器本地以 ArrayBuffer 处理，不上传服务器。 */
 (function () {
@@ -326,7 +326,7 @@ function endStroke(e) {
 }
 function placeText(p) {
     var text = $('pan-text').value.trim();
-    if (!text) { toast('请先在左侧输入标注文字'); $('pan-text').focus(); return; }
+    if (!text) { toast('请先输入标注文字'); $('pan-text').focus(); return; }
     pageList().push({ type: 'text', text: text, x: p.x, y: p.y, size: textSize, color: textColor });
     redrawOverlay();
     updatePager();
@@ -426,7 +426,7 @@ function exportTextStamp(pdfDoc, page, texts, wPt, hPt) {
         page.drawImage(img, { x: 0, y: 0, width: wPt, height: hPt });
     });
 }
-/* 高亮按画笔路径包络矩形导出半透明色块；打码块按所选颜色不透明填充覆盖。 */
+/* 高亮沿画笔轨迹描边导出半透明色带（与预览一致）；打码块按所选颜色不透明填充覆盖。 */
 function exportAnnoRects(page, list, wPt, hPt) {
     list.forEach(function (a) {
         if (a.type === 'redact') {
@@ -436,18 +436,20 @@ function exportAnnoRects(page, list, wPt, hPt) {
                 color: window.PDFLib.rgb(c.r, c.g, c.b), opacity: 1
             });
         } else if (a.type === 'hl') {
-            var minX = a.pts[0].x, maxX = a.pts[0].x, minY = a.pts[0].y, maxY = a.pts[0].y;
-            a.pts.forEach(function (p) {
-                if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
-                if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
-            });
-            var pad = a.width / 2;
-            minX -= pad; minY -= pad; maxX += pad; maxY += pad;
             var c2 = hexToRgb(a.color);
-            page.drawRectangle({
-                x: minX, y: hPt - maxY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY),
-                color: window.PDFLib.rgb(c2.r, c2.g, c2.b), opacity: HL_OPACITY
-            });
+            var col = window.PDFLib.rgb(c2.r, c2.g, c2.b);
+            if (a.pts.length === 1) {
+                var p0 = a.pts[0];
+                page.drawCircle({ x: p0.x, y: hPt - p0.y, size: a.width / 2, color: col, opacity: HL_OPACITY });
+            } else {
+                var d = a.pts.map(function (p, i) {
+                    return (i === 0 ? 'M ' : 'L ') + p.x.toFixed(2) + ' ' + (hPt - p.y).toFixed(2);
+                }).join(' ');
+                page.drawSvgPath(d, {
+                    borderColor: col, borderWidth: a.width, borderOpacity: HL_OPACITY,
+                    borderLineCap: window.PDFLib.LineCapStyle.Round, borderLineJoin: window.PDFLib.LineJoinStyle.Round
+                });
+            }
         }
     });
 }
