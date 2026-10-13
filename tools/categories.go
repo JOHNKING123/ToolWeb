@@ -472,6 +472,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_to_word",
+					Name:        "PDF 转 Word",
+					Description: "PDF 转可编辑 Word 文档（文本提取版），本地处理不上传、不限次免费",
+					Path:        "/tools/pdf-to-word",
+					Icon:        "description",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
