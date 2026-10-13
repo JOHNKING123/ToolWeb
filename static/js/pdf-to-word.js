@@ -14,9 +14,17 @@ var PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.
 var PDFJS_WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 var DOCX_CDNS = [
   'https://unpkg.com/docx@9.5.1/dist/index.umd.cjs',
-  'https://cdn.npmmirror.com/packages/docx/9.5.1/files/dist/index.umd.cjs',
-  '/tools/static/js/vendor/docx-9.5.1.umd.js'  // 本地兜底：CDN 全挂时仍可用
+  'https://cdn.npmmirror.com/packages/docx/9.5.1/files/dist/index.umd.cjs'
 ];
+/* 本地兜底：按本脚本实际加载地址推导 vendor 路径。
+ * /tools/static/ 不会被挂载中间件改写，直接写绝对路径 '/tools/...' 在 /tool-web 下会 404；
+ * 这里用 document.currentScript.src 相对推导，/tools 与 /tool-web 两种挂载前缀都可用。
+ * IIFE 在脚本加载时同步执行，document.currentScript 有效。 */
+(function () {
+  var me = document.currentScript && document.currentScript.src;
+  var fb = me ? me.replace(/pdf-to-word\.js(\?.*)?$/, 'vendor/docx-9.5.1.umd.js') : '';
+  if (fb && fb !== me) DOCX_CDNS.push(fb);
+})();
 var BIG_FILE = 50 * 1024 * 1024;   // 超过仅提示，不硬拦截
 var SCAN_SAMPLE_PAGES = 3;          // 扫描件检测采样页数
 var SCAN_CHAR_LIMIT = 30;           // 采样页总字符数低于此 → 判定扫描件
@@ -379,8 +387,7 @@ async function startExtract() {
       setProgress((i + 1) / pages.length, '正在提取第 ' + (i + 1) + ' / ' + pages.length + ' 页…');
       await tick();
     }
-    var totalChars = S.pages.reduce(function (a, p) { return a + p.chars; }, 0);
-    if (totalChars < SCAN_CHAR_LIMIT) {
+    if (sampleChars < SCAN_CHAR_LIMIT) {
       S.scanned = true;
       showScanBox(true);
       setProgress(null);
@@ -439,10 +446,8 @@ async function buildDocx() {
       var b = pg.blocks[j];
       var firstOfDoc = (i === 0 && j === 0);
       if (b.text === '') {
-        children.push(new docx.Paragraph({
-          spacing: { after: 160 },
-          pageBreakBefore: !firstOfDoc && i > 0 && j === 0
-        }));
+        /* 空段：若它是后续页的第一个块，跳过 pageBreak，避免新页顶部多出空行 */
+        children.push(new docx.Paragraph({ spacing: { after: 160 } }));
         continue;
       }
       paraCount++;
