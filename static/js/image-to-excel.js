@@ -23,9 +23,12 @@ var XLSX_CDNS = [
   'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
 ];
 /* 本地兜底：按本脚本实际加载地址推导 vendor 路径（与 pdf-to-word.js 同款写法），
- * /tools 与 /tool-web 两种挂载前缀都可用。 */
+ * /tools 与 /tool-web 两种挂载前缀都可用。
+ * IIFE 在浏览器脚本加载时同步执行，document.currentScript 有效；
+ * Node 单测时 document 不存在，直接跳过（不影响纯逻辑导出）。 */
 (function () {
-  var me = document.currentScript && document.currentScript.src;
+  if (typeof document === 'undefined' || !document.currentScript) return;
+  var me = document.currentScript.src;
   var fb = me ? me.replace(/image-to-excel\.js(\?.*)?$/, 'vendor/xlsx-0.18.5.umd.js') : '';
   if (fb && fb !== me) XLSX_CDNS.push(fb);
 })();
@@ -497,7 +500,8 @@ async function cancelWork() {
   if (S.worker) { try { await S.worker.terminate(); } catch (e) {} S.worker = null; S.workerLangs = ''; }
 }
 
-/* ---------------- 事件绑定 ---------------- */
+/* ---------------- 事件绑定（仅浏览器；Node 单测时跳过） ---------------- */
+if (typeof document !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function () {
   var up = $('itx-upload'), fi = $('itx-file');
   up.addEventListener('click', function () { fi.click(); });
@@ -537,4 +541,5 @@ document.addEventListener('DOMContentLoaded', function () {
   $('itx-export-xlsx').addEventListener('click', exportXlsx);
   $('itx-export-csv').addEventListener('click', exportCsv);
 });
+}
 })();
