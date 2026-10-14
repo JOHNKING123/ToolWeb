@@ -108,14 +108,20 @@ if (!drHasParaAncestor(ps[i])) paras.push(drParaText(ps[i]));
 return paras;
 }
 
-/* 兜底路径：document.xml 良构性已坏（如被改写过），用正则按 w:t 粗提取文字 */
+/* 兜底路径：document.xml 良构性已坏（如被改写过），用正则按 w:t 粗提取文字。
+ * 单遍文档顺序 token 匹配：w:t 取字、w:br 换行、w:tab 制表。
+ * （旧版先把 w:br 预替换成 \n 再只拼 w:t 内部文本，会把换行丢掉，此处已修。） */
 function drExtractParagraphsFallback(xmlText) {
 var paras = [];
 var re = /([\s\S]*?)<\/w:p\s*>/gi, m;
 while ((m = re.exec(xmlText))!== null) {
-var chunk = m[1].replace(/<w:br[^>]*\/?>/gi, '\n').replace(/<w:tab[^>]*\/?>/gi, '\t');
-var tre = /<w:t[^>]*>([\s\S]*?)<\/w:t>/gi, tm, text = '';
-while ((tm = tre.exec(chunk))!== null) text += drUnescapeXml(tm[1]);
+var chunk = m[1];
+var tre = /<w:t(?=[\s/>])[^>]*>([\s\S]*?)<\/w:t>|<w:br[^>]*\/?>|<w:tab[^>]*\/?>/gi, tm, text = '';
+while ((tm = tre.exec(chunk))!== null) {
+if (tm[1]!== undefined) text += drUnescapeXml(tm[1]);
+else if (/^<w:br/i.test(tm[0])) text += '\n';
+else text += '\t';
+}
 paras.push(text);
 }
 return paras;
