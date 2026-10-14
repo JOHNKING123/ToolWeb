@@ -1,0 +1,163 @@
+{{define "pdf_to_word_batch"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量 PDF 转 Word - 免费在线批量转换（不上传/不限次）</title>
+    <meta name="description" content="免费在线批量 PDF 转 Word：一次选择多个 PDF，逐个提取文字生成可编辑 .docx，打包下载。纯浏览器本地处理、文件不上传，不限次免费、不用登录；WPS 批量转换为会员专属权益，这里免费。">
+    <meta name="keywords" content="批量PDF转Word,PDF批量转Word,PDF批量转Word免费,批量PDF转换,PDF批量转Word不上传">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-to-word-batch">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"批量 PDF 转 Word","description":"免费在线批量 PDF 转 Word：一次选择多个 PDF，逐个提取文字生成可编辑 .docx，打包下载。纯浏览器本地处理不上传、不限次免费、不用登录。","url":"https://www.johnkingzcq123.xyz/tools/pdf-to-word-batch","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pwb-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pwb-upload:hover,.pwb-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pwb-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pwb-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pwb-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.7}
+        .pwb-error a{color:#b91c1c;text-decoration:underline}
+        .pwb-lib-error{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .pwb-note{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .pwb-listbox{margin-top:1rem;display:none}
+        .pwb-list-title{font-size:.95rem;font-weight:700;color:#111827;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+        .pwb-list-title .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .pwb-empty{font-size:.88rem;color:#9ca3af;border:2px dashed #e5e7eb;border-radius:.6rem;padding:1rem;text-align:center;background:#fff}
+        .pwb-row{display:flex;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.5rem;background:#fff}
+        .pwb-ico{color:#ef4444;flex:none}
+        .pwb-meta{flex:1;min-width:0}
+        .pwb-nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .pwb-sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem;line-height:1.5}
+        .pwb-sub a{color:var(--primary-color)}
+        .pwb-errmsg{color:#b91c1c}
+        .pwb-rowbar{height:.35rem;background:#e5e7eb;border-radius:.2rem;overflow:hidden;margin-top:.3rem}
+        .pwb-rowbar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.2rem;transition:width .2s}
+        .pwb-st{flex:none;font-size:.78rem;font-weight:600;border-radius:.9rem;padding:.18rem .6rem;white-space:nowrap}
+        .pwb-st-pending{background:#f3f4f6;color:#6b7280}
+        .pwb-st-working{background:#dbeafe;color:#1d4ed8}
+        .pwb-st-done{background:#dcfce7;color:#15803d}
+        .pwb-st-failed{background:#fee2e2;color:#b91c1c}
+        .pwb-st-skipped{background:#fef3c7;color:#92400e}
+        .pwb-ops{flex:none;display:flex;gap:.3rem}
+        .pwb-ops button{width:32px;height:32px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pwb-ops button:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .pwb-ops .pwb-rm:hover{border-color:#ef4444;color:#ef4444}
+        .pwb-sect{margin-top:1.2rem}
+        .pwb-sect-title{font-size:.95rem;font-weight:700;color:#111827;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+        .pwb-sect-title .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .pwb-field{margin-bottom:.9rem}
+        .pwb-field>label{display:block;font-size:.9rem;color:#374151;margin-bottom:.35rem;font-weight:600}
+        .pwb-field .hint{font-size:.8rem;color:#9ca3af;font-weight:400;margin-top:.3rem;line-height:1.6}
+        .pwb-radio{display:flex;gap:.6rem;flex-wrap:wrap}
+        .pwb-radio label{display:flex;align-items:center;gap:.45rem;border:2px solid #e5e7eb;border-radius:.55rem;padding:.55rem .9rem;font-size:.9rem;font-weight:400;color:#374151;cursor:pointer;min-height:46px;box-sizing:border-box}
+        .pwb-radio input{width:18px;height:18px;accent-color:var(--primary-color)}
+        .pwb-radio label:has(input:checked){border-color:var(--primary-color);background:#eff6ff}
+        .pwb-progress{display:none;margin-top:1rem}
+        .pwb-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .pwb-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .pwb-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .pwb-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .pwb-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pwb-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pwb-summary{display:none;margin-top:1.1rem;border:2px solid #bbf7d0;background:#f0fdf4;border-radius:.7rem;padding:.9rem 1rem}
+        .pwb-summary .cmp{font-size:1rem;color:#111827;line-height:1.7;word-break:break-all}
+        .pwb-summary .cmp b{color:#15803d}
+        .pwb-summary .cmp a{color:var(--primary-color)}
+        .pwb-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pwb-tip b{color:#111827}
+        .pwb-tip a{color:var(--primary-color)}
+        @media (max-width:640px){
+            .pwb-upload{padding:1.6rem .8rem}
+            .pwb-actions .btn{flex:1 1 100%;justify-content:center}
+            .pwb-radio label{flex:1 1 100%;justify-content:flex-start}
+            .pwb-row{flex-wrap:wrap}
+            .pwb-meta{flex:1 1 100%}
+            .pwb-st{order:2}
+            .pwb-ops{order:3;margin-left:auto}
+            .pwb-ops button{width:38px;height:38px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">library_books</i> 批量 PDF 转 Word</h1>
+            <p>一次选择多个 PDF，逐个提取文字生成可编辑 .docx，打包一次下载；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pwb-upload" id="pwb-upload" role="button" tabindex="0" aria-label="点击选择或拖拽多个 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择多个 PDF 文件，或把 PDF 文件拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持多选（按住 Ctrl / Shift 批量勾选）；文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="pwb-file" accept="application/pdf,.pdf" multiple style="display:none;">
+                <div class="pwb-status" id="pwb-status"></div>
+                <div class="pwb-error" id="pwb-error"></div>
+                <div class="pwb-lib-error" id="pwb-lib-error"></div>
+                <div class="pwb-note" id="pwb-bignote"></div>
+
+                <div class="pwb-listbox" id="pwb-listbox">
+                    <div class="pwb-list-title"><i class="material-icons">queue</i> 待转换文件</div>
+                    <div id="pwb-list"></div>
+                </div>
+
+                <div class="pwb-progress" id="pwb-progress">
+                    <div class="bar"><i id="pwb-progress-bar"></i></div>
+                    <div class="txt" id="pwb-progress-txt"></div>
+                </div>
+
+                <div class="pwb-sect">
+                    <div class="pwb-sect-title"><i class="material-icons">tune</i> 导出选项（对本批所有文件生效）</div>
+                    <div class="pwb-field">
+                        <label>正文字体</label>
+                        <div class="pwb-radio">
+                            <label><input type="radio" name="pwb-font" value="dengxian" checked> 等线</label>
+                            <label><input type="radio" name="pwb-font" value="songti"> 宋体</label>
+                            <label><input type="radio" name="pwb-font" value="yahei"> 微软雅黑</label>
+                        </div>
+                    </div>
+                    <div class="pwb-field">
+                        <label>正文字号</label>
+                        <div class="pwb-radio">
+                            <label><input type="radio" name="pwb-size" value="wuhao" checked> 五号</label>
+                            <label><input type="radio" name="pwb-size" value="xiaosi"> 小四</label>
+                            <label><input type="radio" name="pwb-size" value="sihao"> 四号</label>
+                        </div>
+                        <div class="hint">导出后在 Word / WPS 里仍可随意改字体字号，这里只是预设。</div>
+                    </div>
+                </div>
+
+                <div class="pwb-actions">
+                    <button class="btn btn-primary" id="pwb-start" disabled><i class="material-icons">play_arrow</i> 开始批量转换</button>
+                    <button class="btn" id="pwb-zip" disabled><i class="material-icons">folder_zip</i> 打包下载全部（zip）</button>
+                    <button class="btn" id="pwb-clear" disabled><i class="material-icons">delete_sweep</i> 清空列表</button>
+                </div>
+
+                <div class="pwb-summary" id="pwb-summary">
+                    <div class="cmp" id="pwb-summary-text"></div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pwb-tip">
+                    <b>怎么用：</b>点击上方区域多选 PDF（或把文件拖进来）→ 按需选字体字号 → 点「开始批量转换」，队列逐个自动处理 → 每个文件可单独下载，也可点「打包下载全部（zip）」，得到 <b>批量PDF转Word_年月日_时分.zip</b>。某份失败（加密/损坏）或被判定为扫描件时，只标记该文件，<b>其余文件继续转换，不会整批中断</b>。<br>
+                    <b>和 WPS 比：</b>WPS 的「批量 PDF 转换」是<b>会员核心权益</b>——免费用户每天只能转 2 次，额度越收越紧，老会员甚至被无通知拆分过这项权益；本站纯前端本地转换，<b>一次转多少个都行、文件不上传、不限次免费、不用登录、导出无水印</b>。攒了三四份讲义、合同要一次转完？拖进来、点开始，打包一个 zip 带走。<br>
+                    <b>适用边界（如实说明）：</b>这是<b>文本版转换</b>——只提取 PDF 里的文字层生成可编辑文档，不还原复杂版式。复杂排版/表格/公式会从简处理：表格按文本行输出、多栏页面可能串行、图片位置标记为 <b>[图片]</b> 占位行请手动补图。<b>扫描件 PDF</b>（图片型、无文字层）文本版转出来是空的，本站会自动识别并标记「扫描件跳过」（不导出空文档），请走站内 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>。<br>
+                    <b>隐私：</b>提取、生成、打包全部在你的浏览器内完成，文件不经过任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些；损坏或加密的 PDF 会给出明确中文提示，不会白屏。<br>
+                    <b>配套使用：</b>只有一份 PDF 要精转细调（自定义页码范围、预览前 3 页小样），用 <a href="/tools/pdf-to-word">PDF 转 Word（单个精转）</a>；想把讲义转成可编辑课件，用 <a href="/tools/pdf-to-ppt">PDF 转 PPT</a>；扫描件先走 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>再排版；图片里是表格要转 Excel 用 <a href="/tools/image-to-excel">图片转 Excel</a>；文件太大先用 <a href="/tools/pdf-compress">PDF 压缩</a>瘦身；先用 <a href="/tools/pdf-manage">PDF 页面管理</a>整理好页面（旋转/删页/调序）再转出编辑。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf-to-word-batch.js?v=1"></script>
+</body>
+</html>
+{{end}}

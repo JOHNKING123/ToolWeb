@@ -508,6 +508,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "pdf_to_word_batch",
+					Name:        "批量 PDF 转 Word",
+					Description: "多个 PDF 一次转成可编辑 Word（文本提取版），本地处理不上传、不限次免费",
+					Path:        "/tools/pdf-to-word-batch",
+					Icon:        "library_books",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
