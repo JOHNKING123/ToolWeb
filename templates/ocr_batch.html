@@ -1,0 +1,158 @@
+{{define "ocr_batch"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量图片转文字 - 免费在线批量 OCR（不上传/不限次）</title>
+    <meta name="description" content="免费在线批量图片转文字：多张截图、课件照片一次转成可编辑文字，tesseract 本地识别不上传、不限次免费、不用开 WPS 会员；合并导出 txt、逐个复制下载、打包 zip。">
+    <meta name="keywords" content="批量图片转文字,批量OCR,图片批量转文字,截图批量转文字">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ocr-batch">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"批量图片转文字","description":"免费在线批量图片转文字：多张截图、课件照片一次转成可编辑文字，tesseract 本地识别不上传、不限次免费、不用开 WPS 会员；合并导出 txt、逐个复制下载、打包 zip。","url":"https://www.johnkingzcq123.xyz/tools/ocr-batch","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ob-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .ob-upload:hover,.ob-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .ob-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .ob-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .ob-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.7}
+        .ob-lib-error{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .ob-note{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .ob-listbox{margin-top:1rem;display:none}
+        .ob-list-title{font-size:.95rem;font-weight:700;color:#111827;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+        .ob-list-title .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .ob-row{display:flex;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.5rem;background:#fff}
+        .ob-thumb{width:56px;height:56px;object-fit:cover;border-radius:.4rem;flex:none;background:#f3f4f6;border:1px solid #e5e7eb}
+        .ob-thumb-ph{display:flex;align-items:center;justify-content:center;color:#9ca3af}
+        .ob-meta{flex:1;min-width:0}
+        .ob-nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .ob-sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem;line-height:1.6}
+        .ob-errmsg{color:#b91c1c}
+        .ob-rowbar{height:.35rem;background:#e5e7eb;border-radius:.2rem;overflow:hidden;margin-top:.3rem}
+        .ob-rowbar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.2rem;transition:width .2s}
+        .ob-st{flex:none;font-size:.78rem;font-weight:600;border-radius:.9rem;padding:.18rem .6rem;white-space:nowrap}
+        .ob-st-pending{background:#f3f4f6;color:#6b7280}
+        .ob-st-working{background:#dbeafe;color:#1d4ed8}
+        .ob-st-done{background:#dcfce7;color:#15803d}
+        .ob-st-failed{background:#fee2e2;color:#b91c1c}
+        .ob-ops{flex:none;display:flex;gap:.3rem}
+        .ob-ops button{width:32px;height:32px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .ob-ops button .material-icons{font-size:1.15rem}
+        .ob-ops button:hover:not([disabled]){border-color:var(--primary-color);color:var(--primary-color)}
+        .ob-ops button[disabled]{opacity:.4;cursor:not-allowed}
+        .ob-ops .ob-rm:hover:not([disabled]){border-color:#ef4444;color:#ef4444}
+        .ob-progress{display:none;margin-top:1rem}
+        .ob-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .ob-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .ob-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .ob-group{margin-top:1.1rem}
+        .ob-group>label,.ob-group .ob-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .ob-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .ob-pill input{position:absolute;opacity:0;pointer-events:none}
+        .ob-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .ob-pill span small{color:#9ca3af;font-size:.75rem}
+        .ob-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .ob-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .ob-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .ob-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ob-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .ob-summary{display:none;margin-top:1.1rem;border:2px solid #bbf7d0;background:#f0fdf4;border-radius:.7rem;padding:.9rem 1rem}
+        .ob-summary-fail{border-color:#fecaca;background:#fef2f2}
+        .ob-summary .cmp{font-size:1rem;color:#111827;line-height:1.7;word-break:break-all}
+        .ob-summary .cmp b{color:#15803d}
+        .ob-summary-fail .cmp b{color:#b91c1c}
+        .ob-summary .hint{font-size:.85rem;color:#6b7280;margin-top:.4rem;line-height:1.7}
+        .ob-fails{margin-top:.6rem}
+        .ob-fail{display:flex;gap:.5rem;font-size:.85rem;line-height:1.7;padding:.35rem 0;border-top:1px dashed #e5e7eb}
+        .ob-fail .nm{color:#111827;font-weight:600;flex:none;max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ob-fail .rs{color:#b91c1c;flex:1}
+        .ob-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .ob-tip b{color:#111827}
+        .ob-tip a{color:var(--primary-color)}
+        @media (max-width:640px){
+            .ob-upload{padding:1.6rem .8rem}
+            .ob-actions .btn{flex:1 1 100%;justify-content:center}
+            .ob-row{flex-wrap:wrap}
+            .ob-meta{flex:1 1 calc(100% - 68px)}
+            .ob-st{order:2}
+            .ob-ops{order:3;margin-left:auto}
+            .ob-ops button{width:38px;height:38px}
+            .ob-fail .nm{max-width:100%}
+            .ob-fail{flex-wrap:wrap}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">copy_all</i> 批量图片转文字</h1>
+            <p>多张截图、照片一次转成文字；全部在浏览器本地识别，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="ob-upload" id="ob-upload" role="button" tabindex="0" aria-label="点击选择或拖拽多张图片到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择多张图片，或把图片拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持多选（按住 Ctrl / Shift 批量勾选）；图片仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="ob-file" accept="image/*" multiple style="display:none;">
+                <div class="ob-status" id="ob-status"></div>
+                <div class="ob-error" id="ob-error"></div>
+                <div class="ob-lib-error" id="ob-lib-error"></div>
+                <div class="ob-note" id="ob-bignote"></div>
+                <div class="ob-note" id="ob-awake" style="display:none;">识别中请勿锁屏/切换后台：浏览器可能节流后台标签页，导致识别变慢甚至中断。</div>
+
+                <div class="ob-listbox" id="ob-listbox">
+                    <div class="ob-list-title"><i class="material-icons">queue</i> 待识别图片</div>
+                    <div id="ob-list"></div>
+                </div>
+
+                <div class="ob-group">
+                    <span class="ob-glabel">识别语言（对本批所有图片生效）</span>
+                    <div class="ob-pills">
+                        <label class="ob-pill"><input type="radio" name="ob-lang" value="chi_sim+eng" checked><span>中英文混排 <small>默认</small></span></label>
+                        <label class="ob-pill"><input type="radio" name="ob-lang" value="eng"><span>仅英文 <small>语言包更小、加载更快</small></span></label>
+                    </div>
+                    <div class="ob-hint">语言包首次使用时从 CDN 下载（中文约 7MB、英文约 4MB），加载过程会显示进度；下载后缓存在浏览器里，下次打开直接用。</div>
+                </div>
+
+                <div class="ob-progress" id="ob-progress">
+                    <div class="bar"><i id="ob-progress-bar"></i></div>
+                    <div class="txt" id="ob-progress-txt"></div>
+                </div>
+
+                <div class="ob-actions">
+                    <button class="btn btn-primary" id="ob-start" disabled><i class="material-icons">play_arrow</i> 开始批量识别</button>
+                    <button class="btn" id="ob-cancel" style="display:none;"><i class="material-icons">close</i> 取消</button>
+                    <button class="btn" id="ob-merge" disabled><i class="material-icons">download</i> 合并导出 .txt</button>
+                    <button class="btn" id="ob-zip" disabled><i class="material-icons">folder_zip</i> 打包下载全部（zip）</button>
+                    <button class="btn" id="ob-clear" disabled><i class="material-icons">delete_sweep</i> 清空列表</button>
+                </div>
+
+                <div class="ob-summary" id="ob-summary">
+                    <div class="cmp" id="ob-summary-text"></div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ob-tip">
+                    <b>怎么用：</b>点击上方区域多选图片（或把图片拖进来）→ 选识别语言 → 点「开始批量识别」，队列逐张自动识别 → 点「合并导出 .txt」得到 <b>批量OCR_年月日_时分.txt</b>（每段前标注原文件名），或逐个复制/下载，也可以「打包下载全部（zip）」每张一个独立 .txt。某张识别失败只标记该图片，<b>其余图片继续识别，不会整批中断</b>。<br>
+                    <b>和 WPS 比：</b>WPS 的「图片工具箱：批量转文字和表格」是<b>会员权益</b>，免费用户用不了批量转文字；本站基于开源 tesseract 引擎纯前端本地识别，<b>图片不上传、不限次数、不用登录、不用开 WPS 会员</b>，打开网页就能用。攒了一堆截图、课件照片要一次转完？拖进来、点开始，一次带走。<br>
+                    <b>适用边界（如实说明）：</b>识别准确率取决于图片清晰度——截图原图、端正拍摄的课件照片效果最好；<b>手写体、艺术字、严重倾斜、复杂排版会从简处理</b>，识别后请人工校对一遍。图片太糊、过暗、过曝时识别率会明显下降，可先用站内 <a href="/tools/img-compress">图片压缩</a> / 图片工具预处理，或换更清晰的原图。<br>
+                    <b>隐私：</b>识别全程在你的浏览器里完成（WASM 本地运算），图片只在浏览器内存里流转，不经过任何服务器；语言包缓存在浏览器本地，第二次打开更快。单张图片超过 50MB 仍可处理，只是会慢一些，不拦截。<br>
+                    <b>配套使用：</b>只有一张图想精校（框选区域识别），用 <a href="/tools/ocr-image-text">OCR 图片文字识别（单张精校）</a>；图片里是表格想转成 Excel，用 <a href="/tools/image-to-excel">图片转 Excel</a>；多张图片想先合成一个 PDF 再归档，用 <a href="/tools/images-to-pdf">图片批量转 PDF</a>；图片太大先用 <a href="/tools/img-compress">图片压缩</a>瘦身；发出去前给敏感信息打码用 <a href="/tools/img-mosaic">图片打码</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/ocr-batch.js?v=1"></script>
+</body>
+</html>
+{{end}}

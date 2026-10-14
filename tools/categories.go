@@ -517,6 +517,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "ocr_batch",
+					Name:        "批量图片转文字",
+					Description: "多张截图/照片一次转成文字，本地识别不上传、不限次免费",
+					Path:        "/tools/ocr-batch",
+					Icon:        "copy_all",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
