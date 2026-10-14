@@ -1,0 +1,178 @@
+{{define "pdf_to_ppt"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 转 PPT - 免费在线 PDF 转 PPT（不上传/不限次/可编辑）</title>
+    <meta name="description" content="免费在线 PDF 转 PPT：提取 PDF 文字生成可编辑 .pptx 幻灯片，纯浏览器本地处理、文件不上传，不限次免费、不用登录；WPS 转 PPT 要开会员，这里免费不限次。">
+    <meta name="keywords" content="PDF转PPT,PDF转PPT免费,PDF转可编辑PPT,PDF转PPT不上传">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-to-ppt">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 转 PPT","description":"免费在线 PDF 转 PPT：提取 PDF 文字生成可编辑 .pptx 幻灯片，纯浏览器本地处理不上传、不限次免费、不用登录。","url":"https://www.johnkingzcq123.xyz/tools/pdf-to-ppt","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ptp-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .ptp-upload:hover,.ptp-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .ptp-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .ptp-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .ptp-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.7}
+        .ptp-error a{color:#b91c1c;text-decoration:underline}
+        .ptp-lib-error{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .ptp-note{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .ptp-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .ptp-fileinfo .material-icons{color:#ef4444;flex:none}
+        .ptp-fileinfo .meta{flex:1;min-width:0}
+        .ptp-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .ptp-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .ptp-fileinfo .ops{flex:none}
+        .ptp-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .ptp-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .ptp-sect{margin-top:1.2rem;display:none}
+        .ptp-sect-title{font-size:.95rem;font-weight:700;color:#111827;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+        .ptp-sect-title .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .ptp-field{margin-bottom:.9rem}
+        .ptp-field>label{display:block;font-size:.9rem;color:#374151;margin-bottom:.35rem;font-weight:600}
+        .ptp-field .hint{font-size:.8rem;color:#9ca3af;font-weight:400;margin-top:.3rem;line-height:1.6}
+        .ptp-radio{display:flex;gap:.6rem;flex-wrap:wrap}
+        .ptp-radio label{display:flex;align-items:center;gap:.45rem;border:2px solid #e5e7eb;border-radius:.55rem;padding:.55rem .9rem;font-size:.9rem;font-weight:400;color:#374151;cursor:pointer;min-height:46px;box-sizing:border-box}
+        .ptp-radio input{width:18px;height:18px;accent-color:var(--primary-color)}
+        .ptp-radio label:has(input:checked){border-color:var(--primary-color);background:#eff6ff}
+        .ptp-scanbox{display:none;margin-top:1.1rem;border:2px solid #fcd34d;background:#fffbeb;border-radius:.7rem;padding:.9rem 1rem}
+        .ptp-scanbox .hd{display:flex;align-items:center;gap:.5rem;font-weight:700;color:#92400e;font-size:1rem}
+        .ptp-scanbox .hd .material-icons{font-size:1.3rem}
+        .ptp-scanbox p{font-size:.9rem;color:#78350f;line-height:1.8;margin:.5rem 0 .7rem}
+        .ptp-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .ptp-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ptp-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .ptp-progress{display:none;margin-top:1rem}
+        .ptp-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .ptp-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .ptp-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .ptp-preview{display:none;margin-top:1.1rem;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;background:#fff}
+        .ptp-prev-page h4{font-size:.88rem;color:#374151;margin:.6rem 0 .35rem}
+        .ptp-prev-page:first-child h4{margin-top:0}
+        .ptp-prev-page pre{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.5rem;padding:.6rem .8rem;font-size:.82rem;line-height:1.75;color:#374151;white-space:pre-wrap;word-break:break-all;max-height:16rem;overflow:auto;margin:0;font-family:inherit}
+        .ptp-prev-more{font-size:.82rem;color:#9ca3af;margin-top:.6rem}
+        .ptp-result{display:none;margin-top:1.1rem;border:2px solid #bbf7d0;background:#f0fdf4;border-radius:.7rem;padding:.9rem 1rem}
+        .ptp-result .cmp{font-size:1rem;color:#111827;line-height:1.7;word-break:break-all}
+        .ptp-result .cmp b{color:#15803d}
+        .ptp-result .sub{font-size:.82rem;color:#6b7280;margin-top:.35rem;line-height:1.6}
+        .ptp-result .ops{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.7rem}
+        .ptp-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .ptp-tip b{color:#111827}
+        .ptp-tip a{color:var(--primary-color)}
+        @media (max-width:640px){
+            .ptp-upload{padding:1.6rem .8rem}
+            .ptp-actions .btn{flex:1 1 100%;justify-content:center}
+            .ptp-radio label{flex:1 1 100%;justify-content:flex-start}
+            .ptp-fileinfo .ops button{width:34px;height:34px}
+            .ptp-result .ops .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">slideshow</i> PDF 转 PPT</h1>
+            <p>提取 PDF 文字生成可编辑 .pptx 幻灯片；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="ptp-upload" id="ptp-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="ptp-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="ptp-status" id="ptp-status"></div>
+                <div class="ptp-error" id="ptp-error"></div>
+                <div class="ptp-lib-error" id="ptp-lib-error"></div>
+                <div class="ptp-note" id="ptp-bignote"></div>
+                <div class="ptp-fileinfo" id="ptp-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="ptp-file-name"></div>
+                        <div class="sub" id="ptp-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="ptp-clear" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="ptp-sect" id="ptp-optbox">
+                    <div class="ptp-sect-title"><i class="material-icons">tune</i> 导出选项</div>
+                    <div class="ptp-field">
+                        <label>正文字体</label>
+                        <div class="ptp-radio">
+                            <label><input type="radio" name="ptp-font" value="dengxian" checked> 等线</label>
+                            <label><input type="radio" name="ptp-font" value="songti"> 宋体</label>
+                            <label><input type="radio" name="ptp-font" value="yahei"> 微软雅黑</label>
+                        </div>
+                    </div>
+                    <div class="ptp-field">
+                        <label>正文字号</label>
+                        <div class="ptp-radio">
+                            <label><input type="radio" name="ptp-size" value="wuhao" checked> 五号</label>
+                            <label><input type="radio" name="ptp-size" value="xiaosi"> 小四</label>
+                            <label><input type="radio" name="ptp-size" value="sihao"> 四号</label>
+                        </div>
+                        <div class="hint">标题字号自动比正文大 8pt。导出后在 PowerPoint / WPS 里仍可随意改字体字号，这里只是预设。</div>
+                    </div>
+                </div>
+
+                <div class="ptp-scanbox" id="ptp-scanbox">
+                    <div class="hd"><i class="material-icons">scanner</i> 这是扫描件 PDF，文本提取版无法识别</div>
+                    <p>采样前 3 页几乎没有可提取的文字，说明这份 PDF 是图片型扫描件（每一页都是一张图）。文本提取版只能处理带文字层的 PDF，继续转换只会得到空文档——所以这里不会导出空文件。<br>请用站内 <b>OCR 图片文字识别</b>处理扫描件：</p>
+                    <div class="ptp-actions" style="margin-top:0;">
+                        <a class="btn btn-primary" href="/tools/ocr-image-text"><i class="material-icons">text_fields</i> 去 OCR 识别扫描件</a>
+                    </div>
+                </div>
+
+                <div class="ptp-progress" id="ptp-progress">
+                    <div class="bar"><i id="ptp-progress-bar"></i></div>
+                    <div class="txt" id="ptp-progress-txt"></div>
+                </div>
+                <div class="ptp-actions">
+                    <button class="btn" id="ptp-extract" disabled><i class="material-icons">text_snippet</i> 重新提取文本</button>
+                    <button class="btn btn-primary" id="ptp-export" disabled><i class="material-icons">download</i> 导出 PPT</button>
+                </div>
+
+                <div class="ptp-preview" id="ptp-preview">
+                    <div class="ptp-sect-title" style="margin-top:0;"><i class="material-icons">preview</i> 提取预览（前 3 页小样）</div>
+                    <div id="ptp-preview-body"></div>
+                    <div class="ptp-prev-more">确认标题、正文顺序无误后再点「导出 PPT」。图片位置会标记为 <b>[图片]</b> 占位行，请在 PPT 里手动补图。</div>
+                </div>
+
+                <div class="ptp-result" id="ptp-result">
+                    <div class="cmp" id="ptp-result-text"></div>
+                    <div class="sub" id="ptp-result-sub"></div>
+                    <div class="ops">
+                        <button class="btn" id="ptp-redownload" type="button"><i class="material-icons">download</i> 重新下载</button>
+                        <button class="btn" id="ptp-regen" type="button"><i class="material-icons">refresh</i> 换选项重新生成</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ptp-tip">
+                    <b>怎么用：</b>上传 PDF → 自动提取文字并展示前 3 页小样（每页对应一张幻灯片，首文本行作标题）→ 确认无误点「导出 PPT」，得到 <b>原文件名.pptx</b>（自动下载），用 PowerPoint / WPS 打开即可编辑。结果区会展示「转换 X 页 / 生成 Y 张幻灯片」。<br>
+                    <b>和 WPS 比：</b>WPS 的 PDF 转 PPT 是超级会员功能，免费额度一压缩就转不动；本站纯前端本地转换，<b>全部页面都能转、文件不上传、不限次免费、不用登录、导出无水印</b>。讲义、报告甩过来要改成课件？拖进来、点导出，拿去就能讲。<br>
+                    <b>适用边界（如实说明）：</b>这是<b>文本提取版</b>——只提取 PDF 里的文字层生成可编辑幻灯片，<b>复杂版式从简处理</b>，不逐像素还原：每页一张幻灯片，首行作标题、其余作正文，段落分隔保留；<b>图片/公章页无法还原成可编辑内容</b>（图片位置标记为 <b>[图片]</b> 占位行请手动补图）；<b>多栏页面可能串行</b>（左右栏拼成一行）。<b>扫描件 PDF</b>（图片型、无文字层）请走站内 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>，文本提取版转出来是空的，本站会直接拦截不导出空文档。<br>
+                    <b>教师场景：</b>电子讲义、论文、政策文件转成课件底稿最合适——标题自动提取、正文分段落，导出来调一下字号配色就能上课用；图片多的讲义记得手动补图。<br>
+                    <b>隐私：</b>提取与生成全部在你的浏览器内完成，文件不经过任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些；损坏或加密的 PDF 会给出明确中文提示，不会白屏。<br>
+                    <b>配套使用：</b>转出的文字想细排成文档，用 <a href="/tools/pdf-to-word">PDF 转 Word</a>；扫描件先走 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>再排版；图片里是表格要转 Excel 用 <a href="/tools/image-to-excel">图片转 Excel</a>；文件太大先用 <a href="/tools/pdf-compress">PDF 压缩</a>瘦身；先用 <a href="/tools/pdf-manage">PDF 页面管理</a>整理好页面（删页/调序）再转出课件。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf-to-ppt.js?v=1"></script>
+</body>
+</html>
+{{end}}

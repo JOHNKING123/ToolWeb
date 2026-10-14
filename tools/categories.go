@@ -491,6 +491,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "pdf_to_ppt",
+					Name:        "PDF 转 PPT",
+					Description: "PDF 转可编辑 PPT 幻灯片（文本提取版），本地处理不上传、不限次免费",
+					Path:        "/tools/pdf-to-ppt",
+					Icon:        "slideshow",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "image_to_excel",
 					Name:        "图片转 Excel",
 					Description: "截图/扫描件表格转 Excel，本地识别不上传、免注册不限次",

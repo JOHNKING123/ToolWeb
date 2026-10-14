@@ -108,21 +108,26 @@ if (!drHasParaAncestor(ps[i])) paras.push(drParaText(ps[i]));
 return paras;
 }
 
-/* 兜底路径：document.xml 良构性已坏（如被改写过），用正则按 w:t 粗提取文字。
+/* 兜底路径：document.xml 良构性已坏（如被改写/尾部截断过），用正则按 w:t 粗提取文字。
  * 单遍文档顺序 token 匹配：w:t 取字、w:br 换行、w:tab 制表。
- * （旧版先把 w:br 预替换成 \n 再只拼 w:t 内部文本，会把换行丢掉，此处已修。） */
-function drExtractParagraphsFallback(xmlText) {
-var paras = [];
-var re = /([\s\S]*?)<\/w:p\s*>/gi, m;
-while ((m = re.exec(xmlText))!== null) {
-var chunk = m[1];
+ * （旧版先把 w:br 预替换成 \n 再只拼 w:t 内部文本，会把换行丢掉，此处已修。）
+ * 无闭合残段容忍：按 </w:p> 切分后，尾部缺闭合的残段（如截断在 </w:t></w 处）
+ * 也照常粗提取，避免"没有提取到任何文字"误报。 */
+function drCoarseChunkText(chunk) {
 var tre = /<w:t(?=[\s/>])[^>]*>([\s\S]*?)<\/w:t>|<w:br[^>]*\/?>|<w:tab[^>]*\/?>/gi, tm, text = '';
 while ((tm = tre.exec(chunk))!== null) {
 if (tm[1]!== undefined) text += drUnescapeXml(tm[1]);
 else if (/^<w:br/i.test(tm[0])) text += '\n';
 else text += '\t';
 }
-paras.push(text);
+return text;
+}
+function drExtractParagraphsFallback(xmlText) {
+var paras = [];
+var parts = String(xmlText).split(/<\/w:p\s*>/i);
+for (var i = 0; i < parts.length; i++) {
+var text = drCoarseChunkText(parts[i]);
+if (text.replace(/\s/g, '').length) paras.push(text);
 }
 return paras;
 }
