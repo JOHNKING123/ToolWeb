@@ -28,6 +28,29 @@
 
 **预计改动文件**：`BACKLOG.md`（本小节）。
 
+## 前端开发（2026-10-15 04:35 · 收官确认轮执行记录 ✅）
+
+**执行状态**：本轮无新开发任务、无代码改动；按既定执行两项：① 10-14 七交付 QA 兜底（部署后复核）；② 10-16 思维导图新品类技术预研；③ 表格拆分顺带预研。无新增开发债务。
+
+**① 10-14 七交付 QA 兜底**（公网 https://www.it-tool.eu.cc/tool-web/，qa-all.sh 同口径）：
+- 七 slug 全 200、页面 55–61KB、无 `/tools/` 残留链接：image-to-excel / pdf-to-word / docx-repair / pdf-to-ppt / pdf-to-word-batch / ocr-batch / pdf-merge-split
+- 主脚本全 200 可加载：image-to-excel.js?v=5、pdf-to-word.js?v=1、docx-repair.js?v=3、pdf-to-ppt.js?v=1、pdf-to-word-batch.js?v=1、ocr-batch.js?v=1、pdf-merge-split.js?v=2、tools-dropdown.js
+- 本地服务 127.0.0.1:18082 探活 200
+- 结论：七交付部署状态健康，无异常，无需回滚/修复。
+
+**② 10-16 思维导图新品类预研**：
+- 技术路线复核：static/js/vendor 无脑图库（仅 docx-9.5.1 / pptxgenjs-3.12.0 / xlsx-0.18.5）。建议**零依赖自绘、SVG 主渲染**（节点即 DOM、可直接点击编辑）：与 ToolWeb 原生 JS + 免账号不上传路线一致，单日可交付；不建议引入第三方脑图库（体积与中文维护不确定性）。
+- 导出链 PNG/SVG/Markdown：Markdown = 树→缩进列表纯逻辑函数（沿 ITX-PURE-BEGIN 惯例，Node 可单测）；SVG = XMLSerializer 序列化渲染根 + 内联样式后 Blob 下载；PNG = SVG→Blob URL→new Image→canvas.drawImage→toDataURL（exif-strip/img-stitch 已有 canvas 惯例）。
+- localStorage 草稿方案：键名建议 `mindmap_draft_v1`（沿 calendar.js `calendar_schedules` 蛇形惯例）；setItem 包 try/catch 忽略配额异常（沿 random_decision.js 惯例）；数据结构 {id,text,children} 树 JSON，800ms 防抖自动保存 + 手动「清空草稿」；恢复时校验结构、坏数据丢弃。
+
+**③ 表格拆分顺带预研**：
+- SheetJS 版本确认：xlsx-0.18.5.umd.js 在 static/js/vendor/（image-to-excel 在用）；加载惯例 = CDN 优先（jsdelivr+unpkg）+ 本地 vendor 兜底（document.currentScript.src 推导，/tools 与 /tool-web 双挂载通用）——表格拆分/合并直接复用。
+- JSZip 在栈：pdf-merge-split.js 经 cdnjs 3.10.1 懒加载（ensureLib 惯例，失败降级逐个下载）——表格拆分多文件打包沿用，无需新增 vendor。
+- 注册：tools/categories.go 新增 Category「表格工具」（当前 11 个品类）；思维导图届时另开新品类。
+- 拆分逻辑路线：XLSX.read(arraybuffer)→按列值分组→aoa_to_sheet→XLSX.write({type:'array'})→JSZip 打包；纯逻辑部分可 Node 单测。
+
+**验收对账**：① 七交付部署健康；② 10-16 思维导图预研结论就绪（自绘 SVG + 导出链 + 草稿方案）；③ 10-16 起排期定序未动（思维导图首选 → 表格拆分备选 → 表格合并备选），无新增开发债务。
+
 ## 今日任务（2026-10-15 03:00 · 产品调研员研究轮 ✅）
 
 **交付状态**：收官纪律延续。本轮只做证据加固、顺位确认，不引入新候选——10-16 起排期最终定序锁定不变（思维导图首选新品类 → 表格拆分备选 → 表格合并备选，节奏调节位）；10-15 今日按既定执行 QA 兜底（10-14 七交付）+ 10-16 新品类准备，无新增开发债务。
