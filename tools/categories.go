@@ -482,6 +482,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "docx_repair",
+					Name:        "文档修复",
+					Description: "损坏的 Word 文档文字抢救，本地解包不上传、免注册不限次",
+					Path:        "/tools/docx-repair",
+					Icon:        "healing",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "image_to_excel",
 					Name:        "图片转 Excel",
 					Description: "截图/扫描件表格转 Excel，本地识别不上传、免注册不限次",

@@ -1,0 +1,140 @@
+{{define "docx_repair"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档修复 - 损坏的 Word 文档文字抢救（免费在线）</title>
+    <meta name="description" content="免费在线文档修复：损坏的 Word（.docx）文档在浏览器本地解包抢救文字，预览确认后导出 .txt 与可打开的修复版 .docx，文件不上传、免注册不限次。">
+    <meta name="keywords" content="文档修复,docx损坏,word打不开,文件损坏修复,word文档损坏怎么恢复,docx修复">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/docx-repair">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文档修复","description":"免费在线文档修复：损坏的 Word（.docx）文档在浏览器本地解包抢救文字，导出 .txt 与可打开的修复版 .docx，文件不上传、免注册不限次。","url":"https://www.johnkingzcq123.xyz/tools/docx-repair","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .dr-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .dr-upload:hover,.dr-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .dr-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .dr-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .dr-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.7}
+        .dr-error a{color:#b91c1c;text-decoration:underline}
+        .dr-lib-error{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .dr-note{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .dr-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .dr-fileinfo .material-icons{color:#ef4444;flex:none}
+        .dr-fileinfo .meta{flex:1;min-width:0}
+        .dr-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .dr-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .dr-fileinfo .ops{flex:none}
+        .dr-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .dr-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .dr-progress{display:none;margin-top:1rem}
+        .dr-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .dr-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .dr-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .dr-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .dr-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .dr-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .dr-preview{display:none;margin-top:1.1rem;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;background:#fff}
+        .dr-sect-title{font-size:.95rem;font-weight:700;color:#111827;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+        .dr-sect-title .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .dr-preview pre{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.5rem;padding:.7rem .9rem;font-size:.9rem;line-height:1.8;color:#111827;white-space:pre-wrap;word-break:break-all;max-height:22rem;overflow:auto;margin:0;font-family:inherit}
+        .dr-stats{display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:.6rem;font-size:.88rem;color:#374151}
+        .dr-stats b{color:#15803d;font-size:1.05rem}
+        .dr-result{display:none;margin-top:1.1rem;border:2px solid #bbf7d0;background:#f0fdf4;border-radius:.7rem;padding:.9rem 1rem}
+        .dr-result .cmp{font-size:1rem;color:#111827;line-height:1.7}
+        .dr-result .cmp b{color:#15803d}
+        .dr-result .sub{font-size:.82rem;color:#6b7280;margin-top:.35rem;line-height:1.6}
+        .dr-result .ops{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.7rem}
+        .dr-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .dr-tip b{color:#111827}
+        .dr-tip a{color:var(--primary-color)}
+        @media (max-width:640px){
+            .dr-upload{padding:1.6rem .8rem}
+            .dr-actions .btn{flex:1 1 100%;justify-content:center}
+            .dr-fileinfo .ops button{width:34px;height:34px}
+            .dr-result .ops .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">healing</i> 文档修复</h1>
+            <p>损坏的 Word（.docx）文档本地解包，抢救出里面的文字；不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="dr-upload" id="dr-upload" role="button" tabindex="0" aria-label="点击选择或拖拽损坏的 docx 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个打不开的 .docx 文件，或把它拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="dr-file" accept=".docx" style="display:none;">
+                <div class="dr-status" id="dr-status"></div>
+                <div class="dr-error" id="dr-error"></div>
+                <div class="dr-lib-error" id="dr-lib-error"></div>
+                <div class="dr-note" id="dr-bignote"></div>
+                <div class="dr-fileinfo" id="dr-fileinfo">
+                    <i class="material-icons">description</i>
+                    <div class="meta">
+                        <div class="nm" id="dr-file-name"></div>
+                        <div class="sub" id="dr-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="dr-clear" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="dr-progress" id="dr-progress">
+                    <div class="bar"><i id="dr-progress-bar"></i></div>
+                    <div class="txt" id="dr-progress-txt"></div>
+                </div>
+                <div class="dr-actions">
+                    <button class="btn btn-primary" id="dr-rescue" disabled><i class="material-icons">medical_services</i> 开始抢救文字</button>
+                    <button class="btn" id="dr-export-txt" disabled><i class="material-icons">download</i> 导出纯文本 .txt</button>
+                    <button class="btn" id="dr-export-docx" disabled><i class="material-icons">download</i> 导出修复版 .docx</button>
+                </div>
+
+                <div class="dr-preview" id="dr-preview">
+                    <div class="dr-sect-title"><i class="material-icons">preview</i> 抢救出的文字预览</div>
+                    <pre id="dr-preview-body"></pre>
+                    <div class="dr-stats">
+                        <span>抢救出 <b id="dr-stat-para">0</b> 段</span>
+                        <span><b id="dr-stat-char">0</b> 字</span>
+                        <span style="color:#9ca3af;" id="dr-stat-note"></span>
+                    </div>
+                </div>
+
+                <div class="dr-result" id="dr-result">
+                    <div class="cmp" id="dr-result-text"></div>
+                    <div class="sub" id="dr-result-sub"></div>
+                    <div class="ops" id="dr-result-ops" style="display:none;">
+                        <button class="btn" id="dr-redownload-txt" type="button"><i class="material-icons">download</i> 重新下载 .txt</button>
+                        <button class="btn" id="dr-redownload-docx" type="button"><i class="material-icons">download</i> 重新下载修复版 .docx</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="dr-tip">
+                    <b>怎么用：</b>上传打不开的 .docx → 点「开始抢救文字」→ 页面展示抢救出的文字预览与「抢救出 X 段 / Y 字」统计 → 确认文字无误后导出 <b>原文件名_抢救.txt</b> 或 <b>原文件名_修复版.docx</b>（都能直接下载）。抢救分两个阶段：①「正在解包分析」②「正在生成文档」。<br>
+                    <b>能救什么：</b>Word 提示「文件已损坏，无法打开」、WPS 打不开但文件 zip 结构还完整的 .docx——原理是把 docx 当作 zip 解包，直接读取正文 <code>word/document.xml</code> 里的文字，保留段落与换行。文本框、页眉页脚里的文字也会顺带提取，标注来源。<br>
+                    <b>和 WPS 比：</b>WPS 的文档修复是超级会员权益，开了会员才能用；本站把 docx 本地解包抢救文字，<b>文件不上传、免注册、不限次、不用登录</b>。赶稿前夜文档打不开，先把文字抢出来保住底稿，比重写强得多。<br>
+                    <b>如实说明适用边界：</b>这是<b>轻量文字抢救、不是完整修复</b>——只能救出文字，版式、图片、表格样式、字体颜色都会从简；<b>zip 索引损坏</b>（文件整个压缩包都打不开了）本站无解，请找备份或历史版本；老格式 <b>.doc</b>（非 zip 结构）不支持，请先在 Word/WPS 里另存为 .docx 再试；加密文档请先用正确密码解除加密。<br>
+                    <b>隐私：</b>解包、提取、生成全部在你的浏览器内完成，文件不经过任何服务器；超过 50MB 的文件仍可处理，只是会慢一些。<br>
+                    <b>配套使用：</b>抢救出的文字想排成正式文档，用 <a href="/tools/pdf-to-word">PDF 转 Word</a> 类似的排版思路手动整理（或用修复版 .docx 直接在 Word 里续改）；扫描件图片转文字走 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>；文档修好后想加密码保护，用 <a href="/tools/pdf-encrypt">PDF 加密/解密</a> 先转 PDF 再加密。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/docx-repair.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -4,7 +4,16 @@
 
 ## 今日任务（2026-10-14 11:40 · 产品经理决策 ✅）
 
-**交付状态**：待开发。本决策执行 2026-10-14 第六轮调研推荐 Top1。今日 09:38 轮收官枪「扫描件/图片转 Excel [WPS]」已交付部署并 QA 通过（commit 8173fa3/ab36fab），链条无断点。
+**交付状态**：🛠️ 开发交付（2026-10-14 前端开发轮）。实现文件已提交开发分支，待评审→部署→QA。
+
+**开发交付记录**：
+- 新增 `templates/docx_repair.html`（SEO meta：title/文档修复关键词/canonical/JSON-LD；「新」徽标入口紧随 PDF 转 Word）
+- 新增 `static/js/docx-repair.js`：JSZip（cdnjs 3.10.1 → npmmirror 双 CDN 懒加载）解包，`word/document.xml` 按 w:p 取段、w:t 取字、w:br 换行；DOM 解析失败时正则兜底粗提取；文本框嵌套 w:p 去重；页眉/页脚顺带提取并标注来源；导出 `<原名>_抢救.txt`（BOM）与复用 vendor docx-9.5.1 重建 `<原名>_修复版.docx`；两阶段进度（解包分析/生成文档）；结果区「抢救出 X 段 / Y 字」
+- 诚实范围：zip 索引损坏 →「文件结构损坏严重，无法抢救」不白屏不导出空文件；.doc 老格式（OLE 魔数判定）→ 引导另存为 .docx；加密文档（EncryptionInfo 判定）→ 引导解密并互链 PDF 加密/解密；>50MB 提示不硬拦截；JSZip/docx CDN 失败可读报错
+- `tools/categories.go` 注册 `docx_repair`（文档转换分类、healing 图标、New: true）；`pdf_to_word.html`、`ocr_image_text.html` 使用说明区互链
+- 验证：`go build` 通过；本地 `/tools/docx-repair` 200、sitemap 收录、首页「文档转换」分类入口 + 「新」徽标；Node 端到端 26 项全过（中文段落/跨 run/换行/制表/实体/文本框/页眉提取、截断 XML 正则兜底、坏 zip 拒绝、vendor docx 重建往返读回无乱码）
+
+本决策执行 2026-10-14 第六轮调研推荐 Top1。今日 09:38 轮收官枪「扫描件/图片转 Excel [WPS]」已交付部署并 QA 通过（commit 8173fa3/ab36fab），链条无断点。
 
 **选定：文档修复/损坏文档文字抢救 [WPS]** — 路由 `/tools/docx-repair`（模板 `docx_repair`），归「文档转换」分类。WPS 专题周新 P0 候选、会员权益「文档修复」正面刚。
 
