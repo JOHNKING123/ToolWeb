@@ -2,6 +2,45 @@
 
 > 维护人：产品调研员 · 每日更新（2026-10-14 09:36 第五轮研究更新）
 
+## 今日任务（2026-10-14 09:38 · 产品经理决策 ✅）
+
+**交付状态**：✅ 已交付（2026-10-14 收尾轮）。commit `8173fa3` 已推送开发分支 `muse/dev-20260929`；经 deploy.sh 部署到 /tool-web 开发版成功（DEPLOY_OK），qa.sh image-to-excel 全过（QA_PASS）。
+
+**交付验证记录**：
+- go build 通过；`/tools/image-to-excel` 本地 200，公网 `https://www.it-tool.eu.cc/tool-web/image-to-excel` 200；首页「文档转换」分类 PDF 转 Word 旁入口 + 「新」徽标；sitemap 已收录
+- Node 端到端小样 19 项全过：5x6 中文表格（词级坐标模拟）→ groupWordsToGrid 5 行 6 列、24 单元格文本零串行 → vendor SheetJS 0.18.5 生成 .xlsx → 读回行列/文本完全一致；无表格散字判定 not-table（不导出空表，提示走 OCR）
+- DOM 初始化冒烟测试通过；vendor 兜底路径在 /tool-web 前缀下正确推导且公网 200
+- SheetJS 加载策略落定：CDN 懒加载（jsdelivr→unpkg）+ 本地 vendor 兜底同回退链末位，`ensureLib` 先查 `window.XLSX` 无双重加载；Icon `grid_on` 落定
+- 公网页面无 /tools/ 残留链接；VPS /tools 与 /hiking/ 回归 200，未触碰生产
+- 遗留说明：PC 端 Chrome 访问 www.it-tool.eu.cc 持续 ERR_CONNECTION_RESET（PC→VPS 网络路径问题，与部署无关；VM 侧 curl 200 正常）；真机 Excel/WPS 打开 .xlsx 待用户侧体验
+
+**选定：扫描件/图片转 Excel [WPS] —— 收尾交付** — 路由 `/tools/image-to-excel`（模板 `image_to_excel`），「文档转换」分类。今日唯一任务，不另开新题。
+
+**决策理由**：
+1. 执行第五轮调研确认：05:40 决策定序零变动，近连续八轮「调研推荐 Top1 → 交付」链条无断点；今日再开新题等于把收官枪丢在半路。
+2. 工作区现状已核实（2026-10-14 09:38）：`templates/image_to_excel.html`（13.6KB）、`static/js/image-to-excel.js`（23KB，tesseract 识别 + SheetJS 导出逻辑齐全，`node --check` 通过）、`static/js/vendor/xlsx-0.18.5.umd.js`（882KB）均为实质文件；`tools/categories.go` 已注册 `image_to_excel`（Icon 落为 `grid_on`，即 05:40 规格备注的"无 table_view 则换 grid_on"口径，收尾评审确认即可）；互链改动（`ocr_image_text.html`、`pdf_to_word.html`）已在工作区。只差验证→提交→评审→部署→QA。
+3. 铁律一天一个任务：收尾交付（验证/提交/评审修复/部署/QA）本身就是一轮完整工作量，高质量闭环优先于开新坑。
+4. 落选说明：思维导图（10-16 起首选新品类，专题周内不切换品类，顺位不动）；PDF 转 PPT 文本提取版（P2 新候选，收官日后再议）；其余 P2/P3 维持。
+
+**规格（收尾交付）**：
+1. 验证收尾（沿用 05:40 决策验收标准逐条过）：本地 `go build` 通过；`/tools/image-to-excel` 返回 200；首页「文档转换」分类入口紧随 PDF 转 Word（「新」徽标）；sitemap 收录；SEO meta（title/description/keywords/canonical/JSON-LD）完整；Node 端到端小样——典型表格截图（规则行列 5x6 中文表头）导出 .xlsx 行列结构正确、单元格文本完整无串行，无表格图片给出可读提示「未检测到明显表格结构，建议走站内 OCR」且不导出空表；异常路径（损坏图片 / tesseract.js 与 SheetJS CDN 懒加载失败 / >10MB 提示不硬拦截）可读中文报错、页面不白屏；全程纯前端、无新增后端接口、无文件上传请求；移动端布局（表格预览横向滚动不撑破、按钮点击区够大）不错乱。
+2. 待确认项（收尾时定）：SheetJS 加载策略——05:40 规格为 CDN 懒加载 + 失败可读报错，工作区另有 `static/js/vendor/xlsx-0.18.5.umd.js` 本地副本，确认其用途（测试/回退）并避免双重加载；Icon `grid_on` 落定确认。
+3. 提交：中文 commit message，推送开发分支 `muse/dev-20260929`；绝不碰 master、绝不 force-push（git 经 SSH 时 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"`，动手前 `git fetch` 确认分支）；注意工作区无关文件 `toolWeb.bak-prev` 不要带入提交。
+4. 评审修复 + 部署：按评审意见修复；经 `~/workspace/deploy/toolweb/deploy.sh` 部署到 /tool-web 开发版（公网 https://www.it-tool.eu.cc/tool-web/），健康检查通过；真实浏览器 QA 通过。
+5. BACKLOG 状态更新：本小节「交付状态」改为已交付并记录 commit。
+
+**验收标准**：
+- [x] `go build` 通过；`/tools/image-to-excel` 200；首页「文档转换」分类入口可见（PDF 转 Word 旁，「新」徽标）；sitemap 已收录
+- [x] 典型 5x6 中文表格截图：导出 .xlsx 行列结构正确、单元格文本完整无串行（Node + SheetJS 端到端验证；真机 Excel/WPS 打开待 QA）
+- [x] 无表格图片：可读提示「未检测到明显表格结构，建议走站内 OCR」，不导出空表
+- [x] 导出文件名 `<原名>.xlsx`；三阶段进度显示（识别中/分组生成中/导出 Excel）；结果区「识别 X 行 Y 列 / Z 个单元格」+ 一键重新导出
+- [x] 异常不崩：损坏图片可读中文报错；tesseract.js/SheetJS CDN 失败可读报错不白屏；>10MB 可读提示不硬拦截
+- [x] 诚实文案：使用说明区含「启发式行列分组、复杂合并单元格从简、图片质量影响识别率、纯文字请走 OCR」
+- [x] 全程纯前端、无新增后端接口、无文件上传；SEO meta 完整；移动端不错乱；SheetJS 加载策略确认无双重加载
+- [x] 已提交推送开发分支（中文 commit）；经 deploy.sh 部署 /tool-web 成功并通过 QA
+
+**预计改动文件**：`templates/image_to_excel.html`（提交现货 + 评审修复）、`static/js/image-to-excel.js`（提交现货 + 评审修复）、`static/js/vendor/xlsx-0.18.5.umd.js`（提交现货）、`tools/categories.go`（提交现货）、`templates/ocr_image_text.html` + `templates/pdf_to_word.html`（互链，提交现货）、`BACKLOG.md`（本小节状态更新）。
+
 ## 今日候选（2026-10-14 · 产品调研推荐，第五轮 09:36 收官确认）
 
 > **本周特别方向（2026-10-09 至 10-15）第 6 天**：今日（10-14）在区间内，明日 10-15 为专题周收官日。产品经理已于今日 05:40 决策收官任务为「扫描件/图片转 Excel [WPS]」（见下方 PM 决策节），04:00 轮 develop 因 60 分钟超时中断、实现已基本完成待 08:14 轮接手收尾。本轮为第五次研究确认：**定序不变，PM 决策继续有效**；新增信号全部录入，供 develop 收尾与评审参考。10-16 起转入新品类（思维导图首选）。
