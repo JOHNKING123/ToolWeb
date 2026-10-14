@@ -5,6 +5,7 @@
 ## 今日任务（2026-10-14 09:38 · 产品经理决策 ✅）
 
 **交付状态**：✅ 已交付（2026-10-14 收尾轮）。commit `8173fa3` 已推送开发分支 `muse/dev-20260929`；经 deploy.sh 部署到 /tool-web 开发版成功（DEPLOY_OK），qa.sh image-to-excel 全过（QA_PASS）。
+- 评审轮（同日 09:47）：发现 `image-to-excel.js` 头注释承诺纯逻辑 Node 可测，但顶部 vendor 回退 IIFE 与底部 DOMContentLoaded 绑定在模块加载时直接访问 `document`，Node require 抛 ReferenceError；已加 `typeof document` 守卫修复（浏览器行为不变），commit `ab36fab` 推送开发分支，重新 deploy.sh 部署（DEPLOY_OK，qa.sh QA_PASS）。
 
 **交付验证记录**：
 - go build 通过；`/tools/image-to-excel` 本地 200，公网 `https://www.it-tool.eu.cc/tool-web/image-to-excel` 200；首页「文档转换」分类 PDF 转 Word 旁入口 + 「新」徽标；sitemap 已收录
