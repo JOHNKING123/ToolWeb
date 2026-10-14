@@ -260,6 +260,7 @@ function renderSplit() {
             ? splitItem.name + '（' + fmtSize(splitItem.size) + '）：' + splitItem.err + '，请换一个文件。'
             : splitItem.name + '（' + fmtSize(splitItem.size) + '），共 ' + splitItem.pages + ' 页' + (splitItem.size > BIG_FILE ? '；文件较大，处理可能较慢' : '') + '。';
     $('pms-split-one').disabled = !ok;
+    $('pms-split-ranges').disabled = !ok;
     $('pms-split-each').disabled = !ok;
     $('pms-split-error').textContent = '';
 }
@@ -306,6 +307,70 @@ function splitParseOrShow() {
     }
     $('pms-split-error').textContent = '';
     return r.pages;
+}
+/* 页码范围按逗号分段解析：返回 {segments:[{label, pages}]}，label 如 "1-3"/"5" */
+function parseRangeSegments(text, total) {
+    if (!text || !String(text).trim()) return { error: '请先输入页码范围，例如 1-3,5' };
+    var cleaned = String(text).replace(/，/g, ',').replace(/[－–—]/g, '-').replace(/\s+/g, '');
+    if (!cleaned) return { error: '请先输入页码范围，例如 1-3,5' };
+    var tokens = cleaned.split(',');
+    var segments = [];
+    for (var i = 0; i < tokens.length; i++) {
+        var tk = tokens[i];
+        if (!tk) return { error: '页码范围里有空段（多余的逗号），请检查后重试' };
+        var pages = [];
+        var m = tk.match(/^(\d+)-(\d+)$/);
+        if (m) {
+            var a = Number(m[1]), b = Number(m[2]);
+            if (a < 1 || a > total || b < 1 || b > total) return { error: '区间 ' + tk + ' 超出范围：该 PDF 共 ' + total + ' 页，页码须在 1-' + total + ' 之间' };
+            if (a > b) return { error: '区间 ' + tk + ' 写反了：起始页不能大于结束页' };
+            for (var p = a; p <= b; p++) pages.push(p);
+        } else if (/^\d+$/.test(tk)) {
+            var n = Number(tk);
+            if (n < 1 || n > total) return { error: '页码 ' + n + ' 超出范围：该 PDF 共 ' + total + ' 页，页码须在 1-' + total + ' 之间' };
+            pages.push(n);
+        } else {
+            return { error: '无法识别「' + tk + '」：请用数字与短横线，如 1-3,5,8-10' };
+        }
+        segments.push({ label: tk, pages: pages });
+    }
+    if (!segments.length) return { error: '没有选中任何页面，请检查页码范围' };
+    return { segments: segments };
+}
+function splitParseSegmentsOrShow() {
+    if (!splitItem || splitItem.err) { toast('请先选择一个可用的 PDF'); return null; }
+    var r = parseRangeSegments($('pms-range').value, splitItem.pages);
+    if (r.error) {
+        $('pms-split-error').textContent = r.error;
+        return null;
+    }
+    $('pms-split-error').textContent = '';
+    return r.segments;
+}
+/* 拆分结果下载：1 个文件直接下载，多个打包 ZIP（JSZip 失败则降级逐个下载） */
+function downloadSplitFiles(files, zipName, singleDoneMsg) {
+    if (files.length === 1) {
+        downloadBlob(new Blob([files[0].bytes], { type: 'application/pdf' }), files[0].name);
+        setStatus('');
+        toast(singleDoneMsg);
+        return Promise.resolve();
+    }
+    return ensureJSZip().then(function () {
+        var zip = new window.JSZip();
+        files.forEach(function (f) { zip.file(f.name, f.bytes); });
+        return zip.generateAsync({ type: 'blob' }).then(function (blob) {
+            downloadBlob(blob, zipName);
+            setStatus('');
+            toast('已打包下载 ' + files.length + ' 个文件：' + zipName);
+        });
+    }).catch(function () {
+        setStatus('');
+        $('pms-split-error').textContent = '打包组件（JSZip CDN）加载失败，已自动降级为逐个下载，请在浏览器中允许下载多个文件。';
+        toast('打包组件加载失败，已降级为逐个下载');
+        files.forEach(function (f, i) {
+            setTimeout(function () { downloadBlob(new Blob([f.bytes], { type: 'application/pdf' }), f.name); }, i * 450);
+        });
+    });
 }
 $('pms-split-one').addEventListener('click', function () {
     var pages = splitParseOrShow();
@@ -354,28 +419,36 @@ $('pms-split-each').addEventListener('click', function () {
             return Promise.all(jobs);
         });
     }).then(function (files) {
-        if (files.length === 1) {
-            downloadBlob(new Blob([files[0].bytes], { type: 'application/pdf' }), files[0].name);
-            setStatus('');
-            toast('已导出单页 PDF');
-            return;
-        }
-        return ensureJSZip().then(function () {
-            var zip = new window.JSZip();
-            files.forEach(function (f) { zip.file(f.name, f.bytes); });
-            return zip.generateAsync({ type: 'blob' }).then(function (blob) {
-                downloadBlob(blob, baseName(splitItem.name) + '_pages_' + timestamp() + '.zip');
-                setStatus('');
-                toast('已打包下载 ' + files.length + ' 页：' + baseName(splitItem.name) + '_pages_' + timestamp() + '.zip');
+        return downloadSplitFiles(files, baseName(splitItem.name) + '_pages_' + timestamp() + '.zip', '已导出单页 PDF');
+    }).catch(function () {
+        setStatus('');
+        showLibError('PDF 处理组件（pdf-lib CDN）');
+    }).then(function () {
+        btn.disabled = !(splitItem && !splitItem.err);
+    });
+});
+$('pms-split-ranges').addEventListener('click', function () {
+    var segments = splitParseSegmentsOrShow();
+    if (!segments) return;
+    var btn = $('pms-split-ranges');
+    btn.disabled = true;
+    setStatus('正在按 ' + segments.length + ' 个区间拆分…');
+    ensurePdfLib().then(function () {
+        return loadDoc(splitItem.buf).then(function (src) {
+            var jobs = segments.map(function (seg) {
+                return window.PDFLib.PDFDocument.create().then(function (out) {
+                    return out.copyPages(src, seg.pages.map(function (p) { return p - 1; })).then(function (copied) {
+                        copied.forEach(function (pg) { out.addPage(pg); });
+                        return out.save();
+                    });
+                }).then(function (bytes) {
+                    return { name: baseName(splitItem.name) + '_p' + seg.label + '.pdf', bytes: bytes };
+                });
             });
-        }).catch(function () {
-            setStatus('');
-            $('pms-split-error').textContent = '打包组件（JSZip CDN）加载失败，已自动降级为逐个下载，请在浏览器中允许下载多个文件。';
-            toast('打包组件加载失败，已降级为逐个下载');
-            files.forEach(function (f, i) {
-                setTimeout(function () { downloadBlob(new Blob([f.bytes], { type: 'application/pdf' }), f.name); }, i * 450);
-            });
+            return Promise.all(jobs);
         });
+    }).then(function (files) {
+        return downloadSplitFiles(files, baseName(splitItem.name) + '_split_' + timestamp() + '.zip', '已按区间拆分导出 1 个 PDF');
     }).catch(function () {
         setStatus('');
         showLibError('PDF 处理组件（pdf-lib CDN）');

@@ -102,10 +102,11 @@
                     <div class="pms-error" id="pms-split-error"></div>
                     <div class="pms-actions">
                         <button class="btn btn-primary" id="pms-split-one" disabled><i class="material-icons">description</i> 提取为一个 PDF</button>
+                        <button class="btn btn-primary" id="pms-split-ranges" disabled><i class="material-icons">call_split</i> 按区间拆分</button>
                         <button class="btn btn-primary" id="pms-split-each" disabled><i class="material-icons">file_copy</i> 每页一个 PDF</button>
                         <button class="btn btn-secondary" id="pms-split-clear"><i class="material-icons">delete_sweep</i> 清除文件</button>
                     </div>
-                    <div class="pms-hint">「每页一个 PDF」会把所选页逐页导出：多页时优先打包成 ZIP 下载，若打包组件加载失败会自动降级为逐个下载并提示。</div>
+                    <div class="pms-hint">「按区间拆分」按输入框里逗号分隔的每段各导出一个 PDF（如 1-3,5,8-10 得到 3 个文件）；「每页一个 PDF」会把所选页逐页导出：多文件时优先打包成 ZIP 下载，若打包组件加载失败会自动降级为逐个下载并提示。</div>
                 </div>
             </div>
 
@@ -113,7 +114,7 @@
                 <h3>使用说明</h3>
                 <div class="pms-tip">
                     <b>合并：</b>在「PDF 合并」里添加多个 PDF，核对总页数后按列表顺序合并导出为一个文件（文件名 merged_时间戳.pdf）。<br>
-                    <b>拆分：</b>在「PDF 拆分」里选一个 PDF，输入页码范围（如 1-3,5），可合并导出为单个 PDF，也可每页导出一个 PDF 打包 ZIP 下载。<br>
+                    <b>拆分：</b>在「PDF 拆分」里选一个 PDF，输入页码范围（如 1-3,5,8-10），可提取为单个 PDF、按区间各导出一个 PDF（上例得 3 个文件），也可每页导出一个 PDF 打包 ZIP 下载。<br>
                     <b>隐私：</b>基于 pdf-lib 的纯前端本地处理，文件只在你的浏览器里流转，不会上传到任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些。<br>
                     <b>配套使用：</b>手头是 Word 文档时，先用 <a href="/tools/doc-to-pdf">DOC 转 PDF</a> 转成 PDF，再回到这里合并或拆分；合并/拆分好后想把页面转成图片或长图分享，用 <a href="/tools/pdf-to-image">PDF 转图片/长图</a>。
                 </div>
