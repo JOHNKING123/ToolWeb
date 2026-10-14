@@ -466,6 +466,24 @@ async function doRecognize() {
     var recogImg = removeTableLines($('itx-img'));   // 先擦除表格网格线再识别
     S.dbgLines = !!(recogImg && recogImg._itxLinesRemoved);
     S.dbgKind = recogImg ? recogImg.tagName || 'OBJECT' : 'NONE';
+    try {   // 临时调试：把预处理后的图可见展示
+      var dbgBox = $('itx-dbgbox');
+      if (!dbgBox) {
+        dbgBox = document.createElement('div');
+        dbgBox.id = 'itx-dbgbox';
+        dbgBox.style.cssText = 'margin:1rem 0;padding:.5rem;border:2px dashed #f59e0b;';
+        dbgBox.innerHTML = '<div style="font-size:.8rem;color:#92400e;">[调试] 预处理后送入识别的图像：</div>';
+        var di = document.createElement('img');
+        di.id = 'itx-dbgimg';
+        di.style.cssText = 'max-width:100%;border:1px solid #ccc;';
+        dbgBox.appendChild(di);
+        $('itx-result-card').parentNode.insertBefore(dbgBox, $('itx-result-card'));
+      }
+      dbgBox.style.display = 'block';
+      var di2 = $('itx-dbgimg');
+      if (recogImg && recogImg.tagName === 'CANVAS') di2.src = recogImg.toDataURL();
+      else { di2.removeAttribute('src'); }
+    } catch (e2) {}
     var res = await w.recognize(recogImg);
     if (mySeq !== S.seq || S.cancelled) return;
     var words = (res.data && res.data.words) || [];
