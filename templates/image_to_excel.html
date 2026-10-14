@@ -1,0 +1,163 @@
+{{define "image_to_excel"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转 Excel - 免费在线表格识别（不上传/不限次）</title>
+    <meta name="description" content="免费在线图片转 Excel：扫描件、截图里的表格一键识别转成可编辑 .xlsx，中英文表格识别，识别后表格预览确认再导出；纯浏览器本地处理不上传，不限次数，不用开 WPS 会员。">
+    <meta name="keywords" content="图片转Excel,扫描件转Excel,表格识别,图片表格转Excel,截图转Excel">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/image-to-excel">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片转 Excel","description":"免费在线图片转 Excel：扫描件、截图里的表格一键识别转成可编辑 .xlsx，识别后表格预览确认再导出，纯浏览器本地处理不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/image-to-excel","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .itx-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .itx-upload:hover,.itx-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .itx-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .itx-upload kbd{border:1px solid #d1d5db;border-radius:.3rem;padding:0 .35rem;font-size:.78rem;background:#fff;font-family:inherit}
+        .itx-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .itx-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .itx-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .itx-fileinfo .material-icons{color:#2563eb;flex:none}
+        .itx-fileinfo .meta{flex:1;min-width:0}
+        .itx-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .itx-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .itx-fileinfo .ops{flex:none}
+        .itx-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .itx-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .itx-group{margin-top:1.1rem}
+        .itx-group .itx-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .itx-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .itx-pill input{position:absolute;opacity:0;pointer-events:none}
+        .itx-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .itx-pill span small{color:#9ca3af;font-size:.75rem}
+        .itx-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .itx-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .itx-preview{margin-top:1.1rem;display:none}
+        .itx-preview img{display:block;width:100%;height:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#f3f4f6}
+        .itx-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .itx-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .itx-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .itx-progress{display:none;margin-top:1rem}
+        .itx-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .itx-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .itx-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .itx-notable{margin-top:1.2rem;display:none;border:1px dashed #d1d5db;border-radius:.6rem;padding:1.6rem 1rem;text-align:center;color:#6b7280;font-size:.92rem;line-height:1.8}
+        .itx-notable .material-icons{font-size:2rem;display:block;margin-bottom:.4rem;color:#9ca3af}
+        .itx-notable .btn{margin-top:.6rem}
+        .itx-result{margin-top:1.2rem;display:none;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .itx-result .meta{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin-bottom:.6rem}
+        .itx-result .stat{font-size:.95rem;color:#059669;font-weight:700}
+        .itx-table-wrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;max-height:420px;overflow-y:auto}
+        table.itx-table{border-collapse:collapse;min-width:100%;font-size:.85rem}
+        table.itx-table th,table.itx-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;white-space:nowrap;text-align:left;color:#111827}
+        table.itx-table th{background:#eff6ff;font-weight:700}
+        table.itx-table tr:nth-child(even) td{background:#f9fafb}
+        .itx-name-hint{color:#6b7280;font-size:.85rem;margin-top:.5rem}
+        .itx-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .itx-tip b{color:#111827}
+        @media (max-width:640px){
+            .itx-upload{padding:1.6rem .8rem}
+            .itx-actions .btn{flex:1 1 100%;justify-content:center}
+            .itx-fileinfo .ops button{width:34px;height:34px}
+            table.itx-table th,table.itx-table td{padding:.35rem .5rem;font-size:.8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">grid_on</i> 图片转 Excel</h1>
+            <p>扫描件、截图里的表格一键识别成可编辑 .xlsx；先表格预览确认，再导出，全程不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="itx-upload" id="itx-upload" role="button" tabindex="0" aria-label="点击选择、拖拽图片到此处，或按 Ctrl+V 粘贴截图">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一张表格图片，或把图片拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">也支持 <kbd>Ctrl</kbd>+<kbd>V</kbd> 直接粘贴截图 · 图片仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="itx-file" accept="image/png,image/jpeg,image/webp,image/*" style="display:none;">
+                <div class="itx-status" id="itx-status"></div>
+                <div class="itx-error" id="itx-lib-error" style="display:none;"></div>
+
+                <div class="itx-fileinfo" id="itx-fileinfo">
+                    <i class="material-icons">image</i>
+                    <div class="meta">
+                        <div class="nm" id="itx-file-name"></div>
+                        <div class="sub" id="itx-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="itx-clear" title="清除图片"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="itx-group">
+                    <span class="itx-glabel">识别语言</span>
+                    <div class="itx-pills">
+                        <label class="itx-pill"><input type="radio" name="itx-lang" value="chi_sim+eng" checked><span>中英文混排 <small>默认</small></span></label>
+                        <label class="itx-pill"><input type="radio" name="itx-lang" value="eng"><span>仅英文 <small>语言包更小、加载更快</small></span></label>
+                    </div>
+                    <div class="itx-hint">语言包首次使用时从 CDN 下载（中文约 2.5MB、英文约 4MB），下载后缓存在浏览器里，下次打开直接用。</div>
+                </div>
+
+                <div class="itx-preview" id="itx-preview">
+                    <span class="itx-glabel" style="display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600;">图片预览</span>
+                    <img id="itx-img" alt="待识别表格图片预览">
+                </div>
+
+                <div class="itx-error" id="itx-error"></div>
+                <div class="itx-progress" id="itx-progress">
+                    <div class="bar"><i id="itx-progress-bar"></i></div>
+                    <div class="txt" id="itx-progress-txt"></div>
+                </div>
+                <div class="itx-actions">
+                    <button class="btn btn-primary" id="itx-run" disabled><i class="material-icons">document_scanner</i> 开始识别表格</button>
+                    <button class="btn" id="itx-cancel" style="display:none;"><i class="material-icons">close</i> 取消</button>
+                </div>
+
+                <div class="itx-notable" id="itx-notable">
+                    <i class="material-icons">search_off</i>
+                    <div id="itx-notable-why"></div>
+                    <div>未检测到明显表格结构，建议走站内 OCR 提取纯文字。</div>
+                    <a class="btn btn-primary" href="/tools/ocr-image-text"><i class="material-icons">text_fields</i> 去 OCR 图片文字识别</a>
+                </div>
+
+                <div class="itx-result" id="itx-result-card">
+                    <h3 style="margin-top:0;">表格预览（请先核对）</h3>
+                    <div class="meta">
+                        <span class="stat" id="itx-stat"></span>
+                    </div>
+                    <div class="itx-table-wrap" id="itx-table-wrap"></div>
+                    <div class="itx-name-hint" id="itx-name-hint"></div>
+                    <div class="itx-actions">
+                        <button class="btn btn-primary" id="itx-export-xlsx"><i class="material-icons">download</i> 导出 .xlsx</button>
+                        <button class="btn" id="itx-export-csv"><i class="material-icons">description</i> 导出 .csv</button>
+                    </div>
+                    <div class="itx-hint">列宽已按内容自动调整；表格提取完想排版成文档，用 <a href="/tools/pdf-to-word">PDF 转 Word</a>；图片里是纯文字没有表格？用 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="itx-tip">
+                    <b>怎么用：</b>上传一张表格图片（或 <kbd>Ctrl</kbd>+<kbd>V</kbd> 粘贴截图）→ 点「开始识别表格」→ 在预览表格里核对「识别 X 行 Y 列 / Z 个单元格」→ 点「导出 .xlsx」下载，文件名为原图片名 + .xlsx；也可以导出 .csv 备选。<br>
+                    <b>常见场景：</b>主管在群里丢一张表格截图要可编辑版；财务报表扫描件转 Excel 做账；快递单/报价单拍照转表格存档；论文里的实验数据表转成 Excel 再画图。<br>
+                    <b>和 WPS 比：</b>WPS 图片工具箱的「图片转表格」是会员功能；本站基于开源 tesseract 引擎 + 启发式行列分组纯前端本地识别，<b>图片不上传、免注册、不限次数、不用登录</b>，打开网页就能用。<br>
+                    <b>隐私：</b>识别与导出全程在你的浏览器里完成（WASM 本地运算），图片只在浏览器内存里流转，不经过任何服务器；语言包缓存在浏览器本地，第二次打开更快。<br>
+                    <b>适用边界（如实说明）：</b>本站用的是<b>启发式行列分组</b>（按文字纵坐标聚行、横坐标区间聚类推导列），不是逐线检测表格框线，所以<b>复杂合并单元格、多表同页、跨行换行的单元格会从简处理</b>（可能并行或串行）；<b>识别准确率受图片质量影响大</b>——模糊、倾斜、透视变形、手写体会明显打折扣，拍得越端正越清晰越准；<b>图片里是纯文字、没有表格结构</b>，本站会直接提示不导出空表，请走 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>。<br>
+                    <b>配套使用：</b>纯文字图片用 <a href="/tools/ocr-image-text">OCR 图片文字识别</a> 提取文字；表格提取完想排版成正式文档用 <a href="/tools/pdf-to-word">PDF 转 Word</a>；图片太大先用 <a href="/tools/img-compress">图片压缩</a> 瘦身。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/image-to-excel.js?v=1"></script>
+</body>
+</html>
+{{end}}

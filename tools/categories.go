@@ -481,6 +481,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "image_to_excel",
+					Name:        "图片转 Excel",
+					Description: "截图/扫描件表格转 Excel，本地识别不上传、免注册不限次",
+					Path:        "/tools/image-to-excel",
+					Icon:        "grid_on",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
