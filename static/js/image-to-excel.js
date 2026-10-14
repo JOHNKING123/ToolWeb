@@ -67,7 +67,7 @@ function normWords(words) {
   return out;
 }
 /* 启发式行列分组：按 Y 容差聚行，按 X 区间聚类推导列边界，生成二维网格。
- * words: [{text, bbox:{x0,y0,x1,y1}, confidence?}]（tesseract.js v6 recognize 的 data.words）
+ * words: [{text, bbox:{x0,y0,x1,y1}, confidence?}]（自 blocks 逐层 flatten 得到，见 doRecognize）
  * 返回 {ok, rows, cols, grid, filled, colBands, rowBands, reason} */
 function groupWordsToGrid(words) {
   var ws = normWords(words);
@@ -442,7 +442,6 @@ function removeTableLines(img) {
   for (i2 = 0; i2 < cRuns.length; i2++) { r = cRuns[i2]; if (r[1] - r[0] + 1 <= MAXT) { found = true; whiten(r[0], 0, r[1], ch - 1); } }
   if (!found) return img;
   ctx.putImageData(d, 0, 0);
-  cv._itxLinesRemoved = true;   // 调试标记：确实发现并擦除了线条
   return cv;
 }
 
@@ -464,29 +463,17 @@ async function doRecognize() {
     if (mySeq !== S.seq || S.cancelled) return;
     showPhase('阶段 1/3 · 识别中…0%', 0);
     var recogImg = removeTableLines($('itx-img'));   // 先擦除表格网格线再识别
-    S.dbgLines = !!(recogImg && recogImg._itxLinesRemoved);
-    S.dbgKind = recogImg ? recogImg.tagName || 'OBJECT' : 'NONE';
-    try {   // 临时调试：把预处理后的图可见展示
-      var dbgBox = $('itx-dbgbox');
-      if (!dbgBox) {
-        dbgBox = document.createElement('div');
-        dbgBox.id = 'itx-dbgbox';
-        dbgBox.style.cssText = 'margin:1rem 0;padding:.5rem;border:2px dashed #f59e0b;';
-        dbgBox.innerHTML = '<div style="font-size:.8rem;color:#92400e;">[调试] 预处理后送入识别的图像：</div>';
-        var di = document.createElement('img');
-        di.id = 'itx-dbgimg';
-        di.style.cssText = 'max-width:100%;border:1px solid #ccc;';
-        dbgBox.appendChild(di);
-        $('itx-result-card').parentNode.insertBefore(dbgBox, $('itx-result-card'));
-      }
-      dbgBox.style.display = 'block';
-      var di2 = $('itx-dbgimg');
-      if (recogImg && recogImg.tagName === 'CANVAS') di2.src = recogImg.toDataURL();
-      else { di2.removeAttribute('src'); }
-    } catch (e2) {}
-    var res = await w.recognize(recogImg);
+    /* tesseract.js v6 默认只回 text；词级 bbox 需显式要 blocks 并逐层 flatten */
+    var res = await w.recognize(recogImg, {}, { blocks: true });
     if (mySeq !== S.seq || S.cancelled) return;
-    var words = (res.data && res.data.words) || [];
+    var words = [];
+    (res.data.blocks || []).forEach(function (blk) {
+      (blk.paragraphs || []).forEach(function (par) {
+        (par.lines || []).forEach(function (ln) {
+          (ln.words || []).forEach(function (wd) { words.push(wd); });
+        });
+      });
+    });
     /* --- 阶段 2：启发式行列分组 --- */
     showPhase('阶段 2/3 · 分组生成中…', 0.75);
     await tick();   // 让进度条有机会刷新
@@ -509,8 +496,7 @@ function showNoTable(reason) {
   var box = $('itx-notable');
   box.style.display = 'block';
   var why = { 'empty': '图片中没有识别到文字', 'rows<2': '只识别到不足 2 行', 'cols<2': '只识别到 1 列（像普通段落文字）', 'filled<4': '有效单元格太少' }[reason] || '结构不明显';
-  $('itx-notable-why').textContent = '未检测到明显表格结构（' + why + '），不会导出空表。'
-    + ' [调试] 预处理去线=' + (S.dbgLines ? '是' : '否') + '，识别输入=' + (S.dbgKind || '?');
+  $('itx-notable-why').textContent = '未检测到明显表格结构（' + why + '），不会导出空表。';
   setStatus('未检测到表格结构。');
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
