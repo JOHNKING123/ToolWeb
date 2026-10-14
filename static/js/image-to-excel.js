@@ -442,6 +442,7 @@ function removeTableLines(img) {
   for (i2 = 0; i2 < cRuns.length; i2++) { r = cRuns[i2]; if (r[1] - r[0] + 1 <= MAXT) { found = true; whiten(r[0], 0, r[1], ch - 1); } }
   if (!found) return img;
   ctx.putImageData(d, 0, 0);
+  cv._itxLinesRemoved = true;   // 调试标记：确实发现并擦除了线条
   return cv;
 }
 
@@ -463,6 +464,8 @@ async function doRecognize() {
     if (mySeq !== S.seq || S.cancelled) return;
     showPhase('阶段 1/3 · 识别中…0%', 0);
     var recogImg = removeTableLines($('itx-img'));   // 先擦除表格网格线再识别
+    S.dbgLines = !!(recogImg && recogImg._itxLinesRemoved);
+    S.dbgKind = recogImg ? recogImg.tagName || 'OBJECT' : 'NONE';
     var res = await w.recognize(recogImg);
     if (mySeq !== S.seq || S.cancelled) return;
     var words = (res.data && res.data.words) || [];
@@ -488,7 +491,8 @@ function showNoTable(reason) {
   var box = $('itx-notable');
   box.style.display = 'block';
   var why = { 'empty': '图片中没有识别到文字', 'rows<2': '只识别到不足 2 行', 'cols<2': '只识别到 1 列（像普通段落文字）', 'filled<4': '有效单元格太少' }[reason] || '结构不明显';
-  $('itx-notable-why').textContent = '未检测到明显表格结构（' + why + '），不会导出空表。';
+  $('itx-notable-why').textContent = '未检测到明显表格结构（' + why + '），不会导出空表。'
+    + ' [调试] 预处理去线=' + (S.dbgLines ? '是' : '否') + '，识别输入=' + (S.dbgKind || '?');
   setStatus('未检测到表格结构。');
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
