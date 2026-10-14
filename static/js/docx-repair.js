@@ -362,6 +362,7 @@ $('dr-export-txt').disabled = false;
 $('dr-export-docx').disabled = false;
 } catch (e) {
 setProgress(null);
+setStatus('');   // 失败时清掉残留的状态文字，避免与错误提示并存造成困惑
 var msg = e && e.message;
 if (msg === 'lib') {
 setLibError('解包组件（JSZip）加载失败：cdnjs / npmmirror CDN 都不可达。请检查网络后重试。');
