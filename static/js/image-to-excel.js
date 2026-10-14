@@ -402,6 +402,49 @@ async function ensureWorker(code, mySeq) {
   return w;
 }
 
+/* ---------------- 表格线去除（OCR 前预处理） ----------------
+ * tesseract 会被粗表格网格线带偏，整图识别失败（实测：带 3px 网格线的清晰表格
+ * 直接识别只能吐出几个乱字符、置信度 17%；去线后 96% 全对）。
+ * 做法：灰度阈值找"暗像素占比超 60%"的连续行/列游程，厚度<=8px 的视为线条并擦白；
+ * 更厚的深色块（如深色标题栏）予以保留，避免误删。返回 canvas；无细线时返回原图。 */
+function removeTableLines(img) {
+  var w = img.naturalWidth, h = img.naturalHeight;
+  if (!w || !h) return img;
+  var scale = Math.min(1, 2000 / Math.max(w, h));   // 限长边 2000px，控像素循环量
+  var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+  var cv = document.createElement('canvas');
+  cv.width = cw; cv.height = ch;
+  var ctx = cv.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, cw, ch);
+  var d;
+  try { d = ctx.getImageData(0, 0, cw, ch); } catch (e) { return img; }
+  var px = d.data, TH = 0.6, MAXT = 8;
+  function isDark(i) { return (px[i] + px[i + 1] + px[i + 2]) / 3 < 128; }
+  function rowDark(y) { var c = 0; for (var x = 0; x < cw; x++) if (isDark((y * cw + x) * 4)) c++; return c / cw > TH; }
+  function colDark(x) { var c = 0; for (var y = 0; y < ch; y++) if (isDark((y * cw + x) * 4)) c++; return c / ch > TH; }
+  function runs(isD, n) {
+    var rs = [], s = -1, i;
+    for (i = 0; i < n; i++) {
+      if (isD(i)) { if (s < 0) s = i; }
+      else if (s >= 0) { rs.push([s, i - 1]); s = -1; }
+    }
+    if (s >= 0) rs.push([s, n - 1]);
+    return rs;
+  }
+  function whiten(x0, y0, x1, y1) {
+    for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) {
+      var i = (y * cw + x) * 4; px[i] = px[i + 1] = px[i + 2] = 255;
+    }
+  }
+  var found = false, r, i2;
+  var rRuns = runs(rowDark, ch), cRuns = runs(colDark, cw);
+  for (i2 = 0; i2 < rRuns.length; i2++) { r = rRuns[i2]; if (r[1] - r[0] + 1 <= MAXT) { found = true; whiten(0, r[0], cw - 1, r[1]); } }
+  for (i2 = 0; i2 < cRuns.length; i2++) { r = cRuns[i2]; if (r[1] - r[0] + 1 <= MAXT) { found = true; whiten(r[0], 0, r[1], ch - 1); } }
+  if (!found) return img;
+  ctx.putImageData(d, 0, 0);
+  return cv;
+}
+
 /* ---------------- 识别 → 分组 → 预览 ---------------- */
 function tick() { return new Promise(function (r) { setTimeout(r, 30); }); }
 async function doRecognize() {
@@ -419,7 +462,8 @@ async function doRecognize() {
     var w = await ensureWorker(code, mySeq);
     if (mySeq !== S.seq || S.cancelled) return;
     showPhase('阶段 1/3 · 识别中…0%', 0);
-    var res = await w.recognize($('itx-img'));
+    var recogImg = removeTableLines($('itx-img'));   // 先擦除表格网格线再识别
+    var res = await w.recognize(recogImg);
     if (mySeq !== S.seq || S.cancelled) return;
     var words = (res.data && res.data.words) || [];
     /* --- 阶段 2：启发式行列分组 --- */
