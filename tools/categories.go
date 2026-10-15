@@ -729,6 +729,23 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "sheet",
+			Name:        "表格工具",
+			Description: "Excel/CSV 表格处理工具",
+			Icon:        "table_view",
+			Tools: []Tool{
+				{
+					ID:          "sheet_split",
+					Name:        "表格拆分",
+					Description: "Excel 表格按列/按行数/按工作表拆分：关键列同值归为一张表，保留表头，多结果一键打包 ZIP，纯前端本地处理不上传 · Split Excel by column value, row count or worksheet",
+					Path:        "/tools/sheet-split",
+					Icon:        "call_split",
+					New:         true,
+					Category:    "表格工具",
+				},
+			},
+		},
 	}
 }
 

@@ -1,0 +1,180 @@
+{{define "sheet_split"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格拆分 - 免费在线 Excel 按列/按行数/按工作表拆分（不上传/不限次）</title>
+    <meta name="description" content="免费在线 Excel 表格拆分：按关键列同值拆成多张表、按行数拆分、按工作表拆分，拆出结果保留首行表头，多结果一键打包 ZIP；纯浏览器本地处理，文件不上传服务器，不限次数。Free online Excel splitter: split by column value, row count or worksheet.">
+    <meta name="keywords" content="Excel拆分,表格按列拆分,Excel按列拆分,Excel分表,xlsx拆分,Excel拆分多个工作表,Excel按行拆分,Excel split by column,split excel online">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/sheet-split">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"表格拆分","description":"免费在线 Excel 表格拆分：按关键列同值拆成多张表、按行数拆分、按工作表拆分，保留表头，多结果一键打包 ZIP，纯浏览器本地处理不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/sheet-split","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ss-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .ss-upload:hover,.ss-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .ss-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .ss-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .ss-error{display:none;color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .ss-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .ss-fileinfo .material-icons{color:#2563eb;flex:none}
+        .ss-fileinfo .meta{flex:1;min-width:0}
+        .ss-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .ss-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .ss-fileinfo .ops{flex:none}
+        .ss-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .ss-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .ss-group{margin-top:1.1rem}
+        .ss-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .ss-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .ss-pill input{position:absolute;opacity:0;pointer-events:none}
+        .ss-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .ss-pill span small{display:block;color:#9ca3af;font-size:.75rem;font-weight:400;margin-top:.15rem}
+        .ss-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .ss-pill input:checked+span small{color:var(--primary-color)}
+        .ss-row{display:flex;gap:.8rem;flex-wrap:wrap}
+        .ss-field{flex:1 1 220px;min-width:0}
+        .ss-field select,.ss-field input{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;font-size:.92rem;color:#111827;background:#fff}
+        .ss-field select:focus,.ss-field input:focus{outline:none;border-color:var(--primary-color)}
+        .ss-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .ss-preview{margin-top:1.1rem}
+        .ss-preview-stat{font-size:.9rem;color:#374151;line-height:1.8;margin-bottom:.5rem}
+        .ss-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;max-height:380px}
+        table.ss-table{border-collapse:collapse;min-width:100%;font-size:.85rem}
+        table.ss-table th,table.ss-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;white-space:nowrap;text-align:left;color:#111827}
+        table.ss-table th{background:#eff6ff;font-weight:700}
+        table.ss-table tr:nth-child(even) td{background:#f9fafb}
+        .ss-empty{padding:1.4rem;text-align:center;color:#9ca3af;font-size:.9rem}
+        .ss-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .ss-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ss-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .ss-progress{display:none;margin-top:1rem}
+        .ss-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .ss-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .ss-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .ss-result{margin-top:1.2rem;display:none;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .ss-item{display:flex;align-items:center;gap:.6rem;border:1px solid #e5e7eb;border-radius:.6rem;padding:.5rem .7rem;margin-bottom:.5rem;background:#fff}
+        .ss-item .material-icons{color:#2563eb;flex:none}
+        .ss-item .meta{flex:1;min-width:0}
+        .ss-item .nm{font-size:.88rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ss-item .sub{font-size:.76rem;color:#9ca3af;margin-top:.1rem}
+        .ss-item .ops{flex:none}
+        .ss-item .btn-sm{font-size:.82rem;padding:.35rem .7rem}
+        .ss-item .btn-sm .material-icons{font-size:1rem;vertical-align:-2px;margin-right:.2rem}
+        .ss-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .ss-tip b{color:#111827}
+        .ss-tip kbd{border:1px solid #d1d5db;border-radius:.3rem;padding:0 .35rem;font-size:.78rem;background:#fff;font-family:inherit}
+        @media (max-width:640px){
+            .ss-upload{padding:1.6rem .8rem}
+            .ss-actions .btn{flex:1 1 100%;justify-content:center}
+            table.ss-table th,table.ss-table td{padding:.35rem .5rem;font-size:.8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">call_split</i> 表格拆分</h1>
+            <p>Excel 按关键列同值拆成多张表，也支持按行数、按工作表拆分；保留表头，多结果一键打包，全程不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="ss-upload" id="ss-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 Excel 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择 Excel 文件，或把文件拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 .xlsx / .xls / .csv · 文件仅在浏览器本地解析，不上传服务器</div>
+                </div>
+                <input type="file" id="ss-file" accept=".xlsx,.xls,.csv" style="display:none;">
+                <div class="ss-status" id="ss-status"></div>
+                <div class="ss-error" id="ss-lib-error" style="display:none;"></div>
+
+                <div class="ss-fileinfo" id="ss-fileinfo">
+                    <i class="material-icons">table_view</i>
+                    <div class="meta">
+                        <div class="nm" id="ss-file-name"></div>
+                        <div class="sub" id="ss-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="ss-clear" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div id="ss-params" style="display:none;">
+                    <div class="ss-group">
+                        <span class="ss-glabel">拆分模式</span>
+                        <div class="ss-pills">
+                            <label class="ss-pill"><input type="radio" name="ss-mode" value="column" checked><span>按列拆分 <small>核心：选定关键列，同值归为一张表</small></span></label>
+                            <label class="ss-pill"><input type="radio" name="ss-mode" value="rows"><span>按行数拆分 <small>每 N 行一张表</small></span></label>
+                            <label class="ss-pill"><input type="radio" name="ss-mode" value="sheet"><span>按工作表拆分 <small>每张工作表单独成文件</small></span></label>
+                        </div>
+                    </div>
+
+                    <div class="ss-group ss-row">
+                        <div class="ss-field" id="ss-sheet-wrap" style="display:none;">
+                            <span class="ss-glabel">拆分目标工作表</span>
+                            <select id="ss-sheet"></select>
+                        </div>
+                        <div class="ss-field" id="ss-col-wrap">
+                            <span class="ss-glabel">关键列（同值归为一张表）</span>
+                            <select id="ss-col"></select>
+                            <div class="ss-hint">例如选「部门」列：销售部的所有行拆成一张表，技术部另成一张表，表头自动保留。</div>
+                        </div>
+                        <div class="ss-field" id="ss-rows-wrap" style="display:none;">
+                            <span class="ss-glabel">每张表行数 N</span>
+                            <input type="number" id="ss-rowcount" value="100" min="1" max="100000" step="1">
+                            <div class="ss-hint">数据行从表头下一行起计数，每满 N 行切出一张表。</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ss-preview" id="ss-preview" style="display:none;">
+                    <span class="ss-glabel">数据预览</span>
+                    <div class="ss-preview-stat" id="ss-preview-stat"></div>
+                    <div class="ss-table-wrap" id="ss-preview-table"></div>
+                </div>
+
+                <div class="ss-error" id="ss-error"></div>
+                <div class="ss-progress" id="ss-progress">
+                    <div class="bar"><i id="ss-progress-bar"></i></div>
+                    <div class="txt" id="ss-progress-txt"></div>
+                </div>
+                <div class="ss-actions">
+                    <button class="btn btn-primary" id="ss-run" disabled><i class="material-icons">call_split</i> 开始拆分</button>
+                </div>
+
+                <div class="ss-result" id="ss-result">
+                    <h3 style="margin-top:0;">拆分结果</h3>
+                    <div id="ss-result-list"></div>
+                    <div class="ss-actions">
+                        <button class="btn btn-primary" id="ss-dl-single" style="display:none;"><i class="material-icons">download</i> 下载 .xlsx</button>
+                        <button class="btn btn-primary" id="ss-dl-zip" style="display:none;"><i class="material-icons">folder_zip</i> 打包下载 ZIP</button>
+                    </div>
+                    <div class="ss-hint">单结果直接下载 .xlsx；多结果默认打包为一个 ZIP（经 CDN 加载打包组件，加载失败时自动降级为逐个下载）。文件名按「原文件名_列值/序号」命名。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ss-tip">
+                    <b>怎么用：</b>上传 .xlsx/.xls/.csv 文件 → 选择拆分模式并设置参数 → 在预览区核对「分组/分块统计」与前 10 行数据 → 点「开始拆分」→ 单结果直接下载，多结果一键打包 ZIP。<br>
+                    <b>按列拆分（核心）：</b>选定关键列后，同一列值的所有行自动归为一张表，表头保留，文件名取「原文件名_列值」。典型场景：按「部门」拆工资表、按「班级」拆成绩单、按「客户」拆订单明细、按「月份」拆流水账。<br>
+                    <b>按行数拆分：</b>大表切小表，每 N 行一张表，文件名按序号补零（如 _01、_02），方便排序归档。<br>
+                    <b>按工作表拆分：</b>一个工作簿里多张工作表，一键各存为独立 .xlsx 文件，文件名取「原文件名_工作表名」。<br>
+                    <b>和 WPS 比：</b>WPS 的「拆分表格」是会员功能；本站纯前端本地拆分，<b>文件不上传、免注册、不限次数、不用登录</b>，打开网页就能用。<br>
+                    <b>隐私：</b>解析、分组、打包全程在你的浏览器里完成，文件只在浏览器内存里流转，不经过任何服务器。<br>
+                    <b>适用边界（如实说明）：</b>拆分依据的是<b>首行即表头</b>的规整表格；多层表头、合并单元格、跨行填写的单元格会按原样保留但不再智能识别（合并单元格只在左上角保留值）；日期显示为序列值属 Excel 内部存储差异，内容无丢失；超大文件（50MB+）解析与打包会慢一些，请耐心等待。<br>
+                    <b>配套使用：</b>截图里的表格先用 <a href="/tools/image-to-excel">图片转 Excel</a> 转成可编辑表格，再来这里按列拆分。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/sheet_split.js?v=1"></script>
+</body>
+</html>
+{{end}}
