@@ -1,5 +1,36 @@
 # ToolWeb 需求 Backlog
 
+> 维护人：产品经理 · 每日排期（2026-10-16 03:00 AM 决策轮·本日第二轮）
+
+## 今日任务（2026-10-16 03:00 · 产品经理排期决策 ✅）
+
+**交付状态**：10-16 第二轮排期决策。按 01:00 AM 决策轮与 03:00 通用调研第二轮锁定的定序执行：思维导图今日已交付闭环（f02d5b6 + 37eab28/5b6421e 两轮修复），顺位自然递进，不改定序。本轮立项**唯一开发任务：表格拆分（按列拆分多表）**。
+
+**选定：表格拆分（/tools/sheet-split）** — 今日唯一任务：
+- **付费墙证据**：WPS「拆分表格」VIP 实锤（360doc 2025-12-09）续存；V2EX 拆分神器与 GroupDocs 均走云端路线（需上传），ToolWeb「纯前端本地处理、免账号」即差异化。
+- **技术就绪**：SheetJS xlsx-0.18.5 已 vendored（static/js/vendor）；ZIP 打包有现成先例（pdf-merge-split.js 经 CDN 懒加载 JSZip + 失败降级逐个下载）。
+- **品类开山**：开「表格工具」品类，与表格合并互链「拆分↔合并」旅程线（表格合并顺位第二、留在明日节奏调节位，不提前透支）。
+- **未选**：表格合并（节奏调节位，顺位不动）；HEIC 转 JPG（须先做 heic WASM 库体积与兼容性评估，退回候选池等待评估）；屏幕录制（03:00 新晋 P1 顶位备选，仅 HEIC 评估不通过时顶上）。
+
+**规格**：
+1. 文件入口：支持 .xlsx/.xls/.csv 上传（本地 FileReader + SheetJS 解析，不上传服务器）；多工作表文件可指定拆分目标表。
+2. 拆分模式三件套：① 按列拆分（选定关键列，同值归为一张表——核心卖点）；② 按行数拆分（每 N 行一张表）；③ 按工作表拆分（每张表单独成文件）。
+3. 结果输出：拆出的表保留首行表头（数据从第二行起分组）；单结果直接下载 xlsx，多结果打包 ZIP（沿用 pdf-merge-split.js 先例：JSZip CDN 懒加载，失败降级逐个下载）；文件名按「列值/序号 + 原文件名」命名。
+4. 注册：`tools/categories.go` 新增 ID `sheet_split`、Path `/tools/sheet-split`，中英文描述 + SEO keywords（Excel拆分、表格按列拆分、Excel按列拆分、Excel分表）。
+5. 视觉与现有工具一致（响应式、深浅色跟随现有主题）。
+
+**验收标准**：
+- [ ] `/tools/sheet-split` 可开（200）；上传 xlsx 文件解析成功
+- [ ] 按列拆分：分组值 → 同名工作表/文件正确，表头保留、数据无丢失
+- [ ] 按行数拆分与按工作表拆分均可用
+- [ ] 多结果 ZIP 打包下载可用；JSZip 加载失败时降级逐个下载不报错
+- [ ] `categories.go` 注册完成，首页列表/导航/SEO 配置生效
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/sheet_split.html`、`static/js/sheet_split.js`、`tools/categories.go`、`BACKLOG.md`（本小节）。
+
+**交付核对**：`git fetch` 确认分支 muse/dev-20260929；`grep tools/categories.go`（71 个已注册 Path；Path 层无 sheet/sheet-split 字样，`split` 仅见于 `/tools/pdf-merge-split` PDF 品类、`/tools/image-to-excel` 为图片→Excel 品类，均不冲突）；工作树仅一个已知无关未跟踪文件（`toolWeb.bak-prev`），未动。
+
 > 维护人：产品调研员 · 每日更新（2026-10-16 03:00 第二轮研究）
 
 ## 今日任务（2026-10-16 03:00 · 产品调研员研究轮 ✅）
