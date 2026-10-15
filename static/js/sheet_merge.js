@@ -84,6 +84,19 @@ function parseWorkbook(XLSX, buf, fileName) {
   }
   return { sheets: sheets };
 }
+/* 列键：表头规范化名 + 同名在表内出现序号，保证同表内唯一
+ * （解决：空白列折叠、重复非空表头折叠导致的静默丢列） */
+function tableColKeys(t) {
+  var keys = [], counts = Object.create(null);
+  var src = (t && t.header) || [];
+  for (var j = 0; j < src.length; j++) {
+    var k = headerKey(src[j]);
+    var n = counts[k] || 0;
+    counts[k] = n + 1;
+    keys.push(k + '\u0000' + n);
+  }
+  return keys;
+}
 /* 纵向合并（纯逻辑核心）
  * tables: [{label, header, rows}] — header 为表头行数组（未保留表头时 header 为空数组），rows 为数据行
  * opts: {strategy: 'union'|'intersect', keepHeader: bool, sourceCol: bool, sourceColName}
@@ -97,69 +110,72 @@ function mergeTables(tables, opts) {
   var keepHeader = opts.keepHeader !== false;
   var addSource = !!opts.sourceCol;
   var srcName = opts.sourceColName || SOURCE_COL_NAME;
-  var outHeader = [], i, j, t;
+  var outHeader = [], outKeys = [], i, j, t;
+  /* 各表的列键（keepHeader 时使用；表内唯一） */
+  var keyss = [];
+  /* 各表实际列数（keepHeader=false 时 = 表头行宽与数据行宽的最大值） */
+  var widths = [];
 
   if (keepHeader) {
+    for (i = 0; i < tables.length; i++) keyss.push(tableColKeys(tables[i]));
     if (strategy === 'union') {
       var seen = Object.create(null);
       for (i = 0; i < tables.length; i++) {
         t = tables[i];
-        var seenLocal = Object.create(null);
-        for (j = 0; j < t.header.length; j++) {
-          var k = headerKey(t.header[j]);
-          if (k in seenLocal) continue;            // 同表内重复表头只取首次出现
-          seenLocal[k] = 1;
-          if (!(k in seen)) { seen[k] = 1; outHeader.push(t.header[j]); }
+        for (j = 0; j < keyss[i].length; j++) {
+          var uk = keyss[i][j];
+          if (uk in seen) continue;
+          seen[uk] = 1;
+          outKeys.push(uk);
+          outHeader.push(t.header[j]);      // 显示仍用原始表头值
         }
       }
     } else {
-      var base = tables.length ? tables[0].header : [];
-      var common = [], bseen = Object.create(null);
-      for (i = 0; i < base.length; i++) {
-        var bk = headerKey(base[i]);
-        if (bk in bseen) continue;
-        bseen[bk] = 1;
-        var ok = true;
-        for (j = 1; j < tables.length; j++) {
-          var tkeys = Object.create(null), found = false;
-          for (var h = 0; h < tables[j].header.length; h++) {
-            if (!(headerKey(tables[j].header[h]) in tkeys)) {
-              tkeys[headerKey(tables[j].header[h])] = 1;
-              if (headerKey(tables[j].header[h]) === bk) { found = true; break; }
-            }
+      if (tables.length) {
+        for (j = 0; j < keyss[0].length; j++) {
+          var bk = keyss[0][j], ok = true;
+          for (i = 1; i < tables.length; i++) {
+            if (keyss[i].indexOf(bk) < 0) { ok = false; break; }
           }
-          if (!found) { ok = false; break; }
+          if (ok) { outKeys.push(bk); outHeader.push(tables[0].header[j]); }
         }
-        if (ok) common.push({ val: base[i], key: bk });
       }
-      outHeader = common.map(function (c) { return c.val; });
     }
   } else {
-    /* 不保留表头：按位置合并；union 取最大列数，intersect 取最小列数 */
-    var width = 0, minw = 0;
+    /* 不保留表头：按列位置合并；union 取最大列数，intersect 取最小列数
+     * 注意：此时 t.header 为 []（表头已当作数据行），列宽必须按实际行宽计算，
+     * 不能用 t.header.length（会得到 0 → 输出全空列）。 */
+    var width = 0, minw = -1;
     for (i = 0; i < tables.length; i++) {
-      var w = tables[i].header.length;
-      if (i === 0) minw = w;
-      width = Math.max(width, w);
-      minw = Math.min(minw, w);
+      t = tables[i];
+      var w = t.header ? t.header.length : 0;
+      for (var r = 0; r < (t.rows || []).length; r++) {
+        var rl = (t.rows[r] || []).length;
+        if (rl > w) w = rl;
+      }
+      widths.push(w);
+      if (w > width) width = w;
+      if (minw < 0 || w < minw) minw = w;
     }
-    if (strategy === 'intersect') width = minw;
+    if (strategy === 'intersect') width = (minw < 0 ? 0 : minw);
     for (i = 0; i < width; i++) outHeader.push('第' + (i + 1) + '列');
   }
 
   var outRows = [], perTable = [];
-  /* 预建各表的「表头键 → 输出列下标」映射（同表内重复表头取首次出现） */
+  /* 预建各表的「本表列下标 → 输出列下标」映射（-1 表示不参与） */
   var tableMaps = [];
+  var keyToIdx = Object.create(null);
+  for (j = 0; j < outKeys.length; j++) keyToIdx[outKeys[j]] = j;
   for (i = 0; i < tables.length; i++) {
     t = tables[i];
-    var back = Object.create(null);
-    for (j = 0; j < outHeader.length; j++) back[headerKey(outHeader[j])] = j;
-    var m = Object.create(null), seenH = Object.create(null);
-    for (j = 0; j < t.header.length; j++) {
-      var k = headerKey(t.header[j]);
-      if (k in seenH) continue;
-      seenH[k] = 1;
-      m[k] = (k in back) ? back[k] : -1;
+    var m = [];
+    if (keepHeader) {
+      for (j = 0; j < keyss[i].length; j++) {
+        m.push((keyss[i][j] in keyToIdx) ? keyToIdx[keyss[i][j]] : -1);
+      }
+    } else {
+      var w2 = widths[i] || 0, width2 = outHeader.length;
+      for (j = 0; j < w2; j++) m.push(j < width2 ? j : -1);
     }
     tableMaps.push(m);
   }
@@ -168,19 +184,17 @@ function mergeTables(tables, opts) {
     var tm = tableMaps[i], count = 0;
     for (var r = 0; r < t.rows.length; r++) {
       var row = t.rows[r] || [], out = [];
+      for (j = 0; j < outHeader.length; j++) out.push('');
       if (keepHeader) {
-        for (j = 0; j < outHeader.length; j++) out.push('');
-        var filled = Object.create(null);
-        for (j = 0; j < row.length; j++) {
-          var rkj = headerKey(t.header[j]);
-          if (rkj in tm && tm[rkj] >= 0 && !(tm[rkj] in filled)) {
-            out[tm[rkj]] = (row[j] === null || row[j] === undefined) ? '' : row[j];
-            filled[tm[rkj]] = 1;
-          }
+        /* 列键在表内唯一，每列最多命中一个输出列，按列下标直接映射 */
+        var lim = Math.min(row.length, tm.length);
+        for (j = 0; j < lim; j++) {
+          var oi = tm[j];
+          if (oi >= 0 && row[j] !== null && row[j] !== undefined) out[oi] = row[j];
         }
       } else {
         for (j = 0; j < outHeader.length; j++) {
-          out.push(j < row.length && row[j] !== null && row[j] !== undefined ? row[j] : '');
+          out[j] = (j < row.length && row[j] !== null && row[j] !== undefined) ? row[j] : '';
         }
       }
       if (addSource) out.push(t.label);
@@ -546,7 +560,6 @@ function doMerge() {
   $('sm-progress').style.display = 'block';
   $('sm-progress-txt').textContent = '正在合并…';
   $('sm-progress-bar').style.width = '40%';
-  var self = this;
   setTimeout(function () {
     try {
       var merged = mergeTables(src.tables, {
