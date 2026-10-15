@@ -1,0 +1,179 @@
+{{define "sheet_merge"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格合并 - 免费在线合并多个 Excel/CSV 文件（多文件纵向合并 · 不上传/不限次）</title>
+    <meta name="description" content="免费在线 Excel 表格合并：多个 Excel/CSV 文件纵向合并为一张表（表头自动对齐：并集补空或交集保留）、同文件多工作表合并，可选追加来源列；纯浏览器本地处理，文件不上传服务器，不限次数。Free online Excel merger: merge multiple xlsx/csv files or worksheets vertically.">
+    <meta name="keywords" content="Excel合并,表格合并,合并多个Excel,多文件合并Excel,xlsx合并,CSV合并,工作表合并,Excel纵向合并,merge excel online,merge multiple excel files">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/sheet-merge">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"表格合并","description":"免费在线 Excel 表格合并：多文件纵向合并（表头对齐并集补空/交集保留）、同文件多工作表合并，可选追加来源列；纯浏览器本地处理不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/sheet-merge","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sm-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .sm-upload:hover,.sm-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .sm-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .sm-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .sm-error{display:none;color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .sm-filelist{margin-top:.8rem;display:none}
+        .sm-fileinfo{display:flex;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.5rem;background:#fff}
+        .sm-fileinfo .material-icons{color:#2563eb;flex:none}
+        .sm-fileinfo .meta{flex:1;min-width:0}
+        .sm-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .sm-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .sm-fileinfo .ops{flex:none;display:flex;gap:.4rem;align-items:center}
+        .sm-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .sm-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .sm-sheet-sel{border:2px solid #e5e7eb;border-radius:.4rem;padding:.25rem .4rem;font-size:.8rem;color:#111827;background:#fff;max-width:170px}
+        .sm-group{margin-top:1.1rem}
+        .sm-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .sm-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+        .sm-pill input{position:absolute;opacity:0;pointer-events:none}
+        .sm-pill span{display:inline-block;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .9rem;font-size:.92rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+        .sm-pill span small{display:block;color:#9ca3af;font-size:.75rem;font-weight:400;margin-top:.15rem}
+        .sm-pill input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .sm-pill input:checked+span small{color:var(--primary-color)}
+        .sm-chk{display:inline-flex;align-items:center;gap:.35rem;border:2px solid #e5e7eb;background:#f9fafb;border-radius:.6rem;padding:.45rem .7rem;font-size:.88rem;color:#374151;cursor:pointer;margin:0 .5rem .5rem 0}
+        .sm-chk input{accent-color:var(--primary-color);width:1rem;height:1rem}
+        .sm-opt-row{display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:.2rem}
+        .sm-opt-row .sm-chk{margin-bottom:.4rem}
+        .sm-field{margin-top:.2rem}
+        .sm-field select{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;font-size:.92rem;color:#111827;background:#fff}
+        .sm-field select:focus{outline:none;border-color:var(--primary-color)}
+        .sm-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .sm-preview{margin-top:1.1rem}
+        .sm-preview-stat{font-size:.9rem;color:#374151;line-height:1.8;margin-bottom:.5rem}
+        .sm-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;max-height:380px}
+        table.sm-table{border-collapse:collapse;min-width:100%;font-size:.85rem}
+        table.sm-table th,table.sm-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;white-space:nowrap;text-align:left;color:#111827}
+        table.sm-table th{background:#eff6ff;font-weight:700}
+        table.sm-table tr:nth-child(even) td{background:#f9fafb}
+        .sm-empty{padding:1.4rem;text-align:center;color:#9ca3af;font-size:.9rem}
+        .sm-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .sm-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .sm-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .sm-progress{display:none;margin-top:1rem}
+        .sm-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .sm-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .sm-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .sm-result{margin-top:1.2rem;display:none;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .sm-result-name{font-size:.85rem;color:#6b7280;margin-top:.4rem}
+        .sm-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .sm-tip b{color:#111827}
+        @media (max-width:640px){
+            .sm-upload{padding:1.6rem .8rem}
+            .sm-actions .btn{flex:1 1 100%;justify-content:center}
+            table.sm-table th,table.sm-table td{padding:.35rem .5rem;font-size:.8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">merge_type</i> 表格合并</h1>
+            <p>多个 Excel/CSV 纵向并成一张表，也支持同文件多工作表合并；表头自动对齐，全程不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="sm-upload" id="sm-upload" role="button" tabindex="0" aria-label="点击选择或拖拽多个 Excel 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择多个 Excel 文件，或把文件拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 .xlsx / .xls / .csv（可混传）· 文件仅在浏览器本地解析，不上传服务器</div>
+                </div>
+                <input type="file" id="sm-file" accept=".xlsx,.xls,.csv" multiple style="display:none;">
+                <div class="sm-status" id="sm-status"></div>
+                <div class="sm-error" id="sm-lib-error" style="display:none;"></div>
+
+                <div class="sm-filelist" id="sm-filelist"></div>
+                <div class="sm-actions" id="sm-clear-wrap" style="display:none;margin-top:.6rem;">
+                    <button class="btn" id="sm-clear"><i class="material-icons">delete_sweep</i> 清除全部</button>
+                </div>
+
+                <div id="sm-options" style="display:none;">
+                    <div class="sm-group">
+                        <span class="sm-glabel">合并模式</span>
+                        <div class="sm-pills">
+                            <label class="sm-pill"><input type="radio" name="sm-mode" value="files" checked><span>多文件纵向合并 <small>每文件选一张工作表，纵向拼接</small></span></label>
+                            <label class="sm-pill"><input type="radio" name="sm-mode" value="sheets"><span>同文件多工作表合并 <small>一个文件内多张工作表并成一张</small></span></label>
+                        </div>
+                    </div>
+
+                    <div class="sm-group" id="sm-mode-sheets-ui" style="display:none;">
+                        <span class="sm-glabel">选择参与合并的文件与工作表</span>
+                        <div class="sm-field" style="margin-bottom:.6rem;">
+                            <select id="sm-mergefile"></select>
+                        </div>
+                        <div id="sm-sheetchecks"></div>
+                        <div class="sm-hint">勾选同一文件内的多张工作表，纵向合并为一张表（来源列记录的是工作表名）。</div>
+                    </div>
+
+                    <div class="sm-group">
+                        <span class="sm-glabel">表头对齐策略</span>
+                        <div class="sm-pills">
+                            <label class="sm-pill"><input type="radio" name="sm-strategy" value="union" checked><span>并集补空 <small>取所有表头的并集，缺失的列留空</small></span></label>
+                            <label class="sm-pill"><input type="radio" name="sm-strategy" value="intersect"><span>交集保留 <small>只保留所有表共有的列</small></span></label>
+                        </div>
+                    </div>
+
+                    <div class="sm-group">
+                        <span class="sm-glabel">选项</span>
+                        <div class="sm-opt-row">
+                            <label class="sm-chk"><input type="checkbox" id="sm-keepheader" checked><span>保留首行表头</span></label>
+                            <label class="sm-chk"><input type="checkbox" id="sm-sourcecol" checked><span>追加「来源文件」列</span></label>
+                        </div>
+                        <div class="sm-hint">「保留首行表头」取消勾选时，各表按列位置对齐（并集取最宽列数、交集取最窄列数），表头自动生成「第1列、第2列…」。「来源文件」列记录每行数据的出处，便于追溯。</div>
+                    </div>
+                </div>
+
+                <div class="sm-preview" id="sm-preview" style="display:none;">
+                    <span class="sm-glabel">合并统计与预览</span>
+                    <div class="sm-preview-stat" id="sm-preview-stat"></div>
+                    <div class="sm-table-wrap" id="sm-preview-table"></div>
+                </div>
+
+                <div class="sm-error" id="sm-error"></div>
+                <div class="sm-progress" id="sm-progress">
+                    <div class="bar"><i id="sm-progress-bar"></i></div>
+                    <div class="txt" id="sm-progress-txt"></div>
+                </div>
+                <div class="sm-actions">
+                    <button class="btn btn-primary" id="sm-run" disabled><i class="material-icons">merge_type</i> 开始合并</button>
+                </div>
+
+                <div class="sm-result" id="sm-result">
+                    <h3 style="margin-top:0;">合并完成</h3>
+                    <div class="sm-preview-stat" id="sm-result-stat"></div>
+                    <div class="sm-actions">
+                        <button class="btn btn-primary" id="sm-dl"><i class="material-icons">download</i> 下载合并结果 .xlsx</button>
+                    </div>
+                    <div class="sm-result-name" id="sm-result-name"></div>
+                    <div class="sm-hint">结果为单个 xlsx 文件（工作表「合并结果」），文件名按 merge-时间戳 命名。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="sm-tip">
+                    <b>怎么用：</b>上传多个 .xlsx/.xls/.csv 文件（可混传、可拖拽多选）→ 选择合并模式 → 设表头对齐策略与选项 → 在预览区核对「合并统计」与前 10 行 → 点「开始合并」→ 下载单个 xlsx。<br>
+                    <b>多文件纵向合并：</b>典型场景：12 个月的销售表、各地分公司的工资表、多个平台的订单导出——同结构纵向拼成一张大表。每个文件可单独选择参与的工作表（默认第一张）。<br>
+                    <b>表头对齐策略：</b>表头完全一致时两种策略效果相同；表头有差异时，「并集补空」取所有列、缺失留空（适合补全字段），「交集保留」只留共同列（适合只看共有字段）。<br>
+                    <b>追加来源列：</b>合并后多一列「来源文件」，记录每行来自哪个文件/工作表，汇总对账时追溯方便。多工作表合并时记录的是工作表名。<br>
+                    <b>和 WPS 比：</b>WPS 的「合并表格」是会员功能；本站纯前端本地合并，<b>文件不上传、免注册、不限次数、不用登录</b>，打开网页就能用。<br>
+                    <b>隐私：</b>解析、合并、导出全程在你的浏览器里完成，文件只在浏览器内存里流转，不经过任何服务器。<br>
+                    <b>适用边界（如实说明）：</b>合并依据的是<b>首行即表头</b>的规整表格；多层表头、合并单元格按原样保留但不再智能识别；日期显示为序列值属 Excel 内部存储差异，内容无丢失；超大文件（50MB+）解析会慢一些，请耐心等待。<br>
+                    <b>配套使用：</b>一张大表想先拆开处理，用 <a href="/tools/sheet-split">表格拆分</a>（拆分↔合并互链）；图片里的表格先用 <a href="/tools/image-to-excel">图片转 Excel</a> 转成可编辑表格再合并。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/sheet_merge.js?v=1"></script>
+</body>
+</html>
+{{end}}

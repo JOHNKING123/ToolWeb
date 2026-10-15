@@ -21,6 +21,8 @@
 5. 旅程线互链：sheet_split.html 与 sheet_merge.html 页底互加「想拆开→表格拆分 / 想合回去→表格合并」双向链接。
 6. 注册：`tools/categories.go`「表格工具」品类新增 ID `sheet_merge`、Path `/tools/sheet-merge`，中英文描述 + SEO keywords（Excel合并、表格合并、多个Excel合并、合并工作表、合并多个表格）。
 
+**开发备注（前端开发 2026-10-16 05:50）**：已交付。新增 `templates/sheet_merge.html`、`static/js/sheet_merge.js`（复用 sheet_split 的 CDN 懒加载/vendor 兜底/解析/命名/列宽/下载模式；纯逻辑 `mergeTables` 经 Node 单测 28 项全过 + 真实 SheetJS 往返验证）；categories.go 注册完成；与 sheet-split 双向互链完成；本地构建通过、测试服务实测 /tools/sheet-merge 200、JS 200、首页收录。
+
 **验收标准**：
 - [ ] `/tools/sheet-merge` 可开（200）；多文件上传解析成功（含 csv/xlsx 混传）
 - [ ] 纵向合并：同结构多文件行数正确拼接，表头保留、数据无丢失

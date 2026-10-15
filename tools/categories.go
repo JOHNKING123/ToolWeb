@@ -744,6 +744,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "表格工具",
 				},
+				{
+					ID:          "sheet_merge",
+					Name:        "表格合并",
+					Description: "多个 Excel/CSV 文件纵向合并为一张表：表头自动对齐（并集补空/交集保留），同文件多工作表合并，可选追加来源列，纯前端本地处理不上传 · Merge multiple Excel/CSV files or worksheets into one table",
+					Path:        "/tools/sheet-merge",
+					Icon:        "merge_type",
+					New:         true,
+					Category:    "表格工具",
+				},
 			},
 		},
 	}
