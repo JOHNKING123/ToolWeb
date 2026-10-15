@@ -42,7 +42,7 @@ function sanitizeSheetName(s) {
 }
 /* 去重：重名追加 (2)、(3)…，保持原顺序 */
 function uniqueNames(names) {
-  var seen = {}, out = [];
+  var seen = Object.create(null), out = [];
   for (var i = 0; i < names.length; i++) {
     var n = names[i], k = n, c = 2;
     while (seen[k]) { k = n + ' (' + (c++) + ')'; }
@@ -77,7 +77,7 @@ function keyLabel(key) {
 /* 按列分组：rows 为数据行（不含表头），colIdx 为关键列下标
  * 返回 [{key, label, rows}]，按分组值首次出现顺序排列 */
 function groupRowsByColumn(rows, colIdx) {
-  var groups = [], idx = {};
+  var groups = [], idx = Object.create(null);
   for (var i = 0; i < rows.length; i++) {
     var row = rows[i] || [];
     var v = colIdx < row.length ? row[colIdx] : '';
@@ -499,8 +499,8 @@ function downloadZip() {
   }).catch(function () {
     /* 降级：逐个下载 */
     hideProgress();
-    toast('打包组件加载失败，已降级为逐个下载');
-    showError('打包组件（JSZip CDN）加载失败，已自动降级为逐个下载，请在浏览器中允许下载多个文件。');
+    toast('打包失败，已降级为逐个下载');
+    showError('ZIP 打包失败（可能是 JSZip CDN 加载异常），已自动降级为逐个下载，请在浏览器中允许下载多个文件。');
     var i = 0;
     (function next() {
       if (i >= S.parts.length) return;
