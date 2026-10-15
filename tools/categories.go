@@ -718,6 +718,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "mind_map",
+					Name:        "思维导图",
+					Description: "免费在线思维导图编辑器：节点增删改、折叠展开、拖拽移动，导出 PNG/SVG/Markdown 大纲，草稿自动保存 · Free online mind map editor",
+					Path:        "/tools/mind-map",
+					Icon:        "account_tree",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 	}

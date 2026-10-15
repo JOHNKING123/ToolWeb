@@ -1,0 +1,143 @@
+{{define "mind_map"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维导图 - 免费在线思维导图编辑器 | 程序员工具箱</title>
+    <meta name="description" content="免费在线思维导图工具：自绘 SVG 脑图编辑器，支持添加子节点/同级节点、双击编辑、折叠展开、拖拽移动，一键导出 PNG/SVG/Markdown 大纲，草稿自动保存，多脑图管理，无需注册。">
+    <meta name="keywords" content="思维导图,在线思维导图,免费思维导图,脑图工具,思维导图编辑器,在线脑图,免费脑图,mindmap">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mind-map">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "思维导图",
+      "description": "免费在线思维导图编辑器：节点增删改、折叠展开、拖拽移动，导出 PNG/SVG/Markdown，草稿自动保存。",
+      "url": "https://www.johnkingzcq123.xyz/tools/mind-map",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"},
+      "featureList": ["思维导图编辑", "节点折叠展开", "拖拽移动节点", "导出PNG", "导出SVG", "导出Markdown大纲", "自动保存草稿", "多脑图管理"]
+    }
+    </script>
+    <style>
+        .mm-layout { display: flex; gap: 1rem; align-items: stretch; }
+        .mm-sidebar { width: 250px; flex: 0 0 250px; display: flex; flex-direction: column; }
+        .mm-sidebar h3 { margin: 0 0 .8rem; font-size: 1rem; display: flex; align-items: center; gap: .4rem; }
+        .mm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .mm-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .8rem; align-items: center; }
+        .mm-toolbar .sep { width: 1px; align-self: stretch; background: #e5e7eb; margin: 0 .2rem; }
+        .mm-btn { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid #d1d5db; background: #fff;
+            padding: .45rem .8rem; border-radius: .5rem; cursor: pointer; font-size: .88rem; color: #374151; transition: all .15s; }
+        .mm-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: #eff6ff; }
+        .mm-btn.primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+        .mm-btn.primary:hover { filter: brightness(1.08); color: #fff; }
+        .mm-btn .material-icons { font-size: 1.05rem; }
+        .mm-btn kbd { font-size: .72rem; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: .3rem; padding: 0 .3rem; color: #6b7280; }
+        .mm-btn.primary kbd { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.3); color: #fff; }
+        .mm-canvas-wrap { position: relative; height: 560px; border: 1px solid #e5e7eb; border-radius: .6rem;
+            background: #fbfcfe; overflow: hidden; touch-action: none; }
+        .mm-canvas-wrap svg { width: 100%; height: 100%; display: block; }
+        .mm-canvas-title { position: absolute; top: .7rem; left: 1rem; font-size: .85rem; color: #9ca3af; pointer-events: none; }
+        .mm-editor { position: absolute; display: none; z-index: 5; }
+        .mm-editor input { border: 2px solid var(--primary-color); border-radius: .5rem; padding: 0 .5rem;
+            outline: none; background: #fff; box-shadow: 0 4px 14px rgba(37,99,235,.25); }
+        .mm-hint { margin-top: .7rem; font-size: .82rem; color: #9ca3af; line-height: 1.8; }
+        .mm-hint kbd { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: .3rem; padding: 0 .35rem; font-size: .75rem; }
+        .mm-toast { position: absolute; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(8px);
+            background: #1f2937; color: #fff; font-size: .85rem; padding: .55rem 1.1rem; border-radius: .5rem;
+            opacity: 0; pointer-events: none; transition: all .25s; z-index: 6; white-space: nowrap; }
+        .mm-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .mm-list { list-style: none; margin: 0 0 .8rem; padding: 0; overflow-y: auto; max-height: 380px; }
+        .mm-map-item { display: flex; align-items: center; border: 1px solid #e5e7eb; border-radius: .55rem;
+            margin-bottom: .5rem; background: #fff; overflow: hidden; }
+        .mm-map-item.active { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .mm-map-main { flex: 1; min-width: 0; border: none; background: none; text-align: left; cursor: pointer; padding: .55rem .7rem; }
+        .mm-map-name { display: block; font-size: .9rem; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mm-map-item.active .mm-map-name { font-weight: 600; color: var(--primary-color); }
+        .mm-map-time { display: block; font-size: .72rem; color: #9ca3af; margin-top: .15rem; }
+        .mm-map-ops { display: flex; padding-right: .4rem; }
+        .mm-icon-btn { border: none; background: none; cursor: pointer; color: #9ca3af; padding: .35rem; border-radius: .4rem;
+            display: inline-flex; }
+        .mm-icon-btn:hover { color: var(--primary-color); background: #eff6ff; }
+        .mm-icon-btn.danger:hover { color: #dc2626; background: #fef2f2; }
+        .mm-icon-btn .material-icons { font-size: 1.1rem; }
+        .mm-savehint { font-size: .78rem; color: #9ca3af; margin-top: auto; padding-top: .6rem; }
+        .mm-savehint.ok { color: #059669; }
+        .mm-tip { color: #6b7280; font-size: .9rem; line-height: 1.9; }
+        .mm-tip b { color: #374151; }
+        @media (max-width: 900px) {
+            .mm-layout { flex-direction: column; }
+            .mm-sidebar { width: 100%; flex: none; }
+            .mm-canvas-wrap { height: 440px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">account_tree</i> 思维导图 <span id="mm-current-name" style="font-size:.85rem;color:#9ca3af;font-weight:400;"></span></h1>
+            <p>零依赖自绘 SVG 在线脑图：增删改节点、折叠展开、拖拽排版，一键导出 PNG / SVG / Markdown，草稿自动保存</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="mm-layout">
+                <aside class="mm-sidebar tool-card">
+                    <h3><i class="material-icons">folder_open</i> 我的脑图</h3>
+                    <ul class="mm-list" id="mm-list"></ul>
+                    <button type="button" class="mm-btn primary" id="mm-new-map" style="justify-content:center;">
+                        <i class="material-icons">add</i> 新建脑图
+                    </button>
+                    <div class="mm-savehint" id="mm-savehint">草稿自动保存已开启（约1秒防抖）</div>
+                </aside>
+                <div class="mm-main tool-card">
+                    <div class="mm-toolbar" role="toolbar" aria-label="脑图编辑工具栏">
+                        <button type="button" class="mm-btn primary" id="mm-add-child"><i class="material-icons">subdirectory_arrow_right</i>添加子节点 <kbd>Tab</kbd></button>
+                        <button type="button" class="mm-btn" id="mm-add-sibling"><i class="material-icons">playlist_add</i>添加同级 <kbd>Enter</kbd></button>
+                        <button type="button" class="mm-btn" id="mm-delete"><i class="material-icons">delete</i>删除 <kbd>Del</kbd></button>
+                        <span class="sep"></span>
+                        <button type="button" class="mm-btn" id="mm-collapse-all"><i class="material-icons">unfold_less</i>全部折叠</button>
+                        <button type="button" class="mm-btn" id="mm-expand-all"><i class="material-icons">unfold_more</i>全部展开</button>
+                        <span class="sep"></span>
+                        <button type="button" class="mm-btn" id="mm-zoom-in" title="放大"><i class="material-icons">zoom_in</i></button>
+                        <button type="button" class="mm-btn" id="mm-zoom-out" title="缩小"><i class="material-icons">zoom_out</i></button>
+                        <button type="button" class="mm-btn" id="mm-zoom-fit" title="适应画布"><i class="material-icons">fit_screen</i></button>
+                        <span class="sep"></span>
+                        <button type="button" class="mm-btn" id="mm-export-png"><i class="material-icons">image</i>导出 PNG</button>
+                        <button type="button" class="mm-btn" id="mm-export-svg"><i class="material-icons">code</i>导出 SVG</button>
+                        <button type="button" class="mm-btn" id="mm-export-md"><i class="material-icons">description</i>导出 Markdown</button>
+                    </div>
+                    <div class="mm-canvas-wrap" id="mm-canvas-wrap">
+                        <svg id="mm-svg" role="application" aria-label="思维导图画布"></svg>
+                        <div class="mm-canvas-title" id="mm-canvas-title"></div>
+                        <div class="mm-editor" id="mm-editor"><input id="mm-input" maxlength="120" aria-label="编辑节点文本"></div>
+                        <div class="mm-toast" id="mm-toast"></div>
+                    </div>
+                    <div class="mm-hint">
+                        <kbd>Tab</kbd> 添加子节点 · <kbd>Enter</kbd> 添加同级节点 · <kbd>Del</kbd> 删除选中 · 双击节点编辑文本 ·
+                        拖拽节点到目标节点上可移动分支 · 拖拽空白处平移画布 · 滚轮缩放 · 点击节点右下角 <b>+</b>/<b>−</b> 折叠/展开分支
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-top:1rem;">
+                <h3>玩法说明</h3>
+                <div class="mm-tip">
+                    <b>怎么画：</b>选中任意节点后按 <kbd>Tab</kbd> 加子节点、<kbd>Enter</kbd> 加同级节点，双击节点直接改文字；分支太多时点节点右下角的 <b>−</b> 折叠起来。<br>
+                    <b>怎么排：</b>按住节点拖到另一个节点上松开，整棵分支搬过去；拖空白处平移、滚轮缩放，右上角一键适应画布。<br>
+                    <b>怎么存：</b>所有修改约 1 秒后自动存入浏览器 localStorage，刷新页面自动恢复；左侧可建多个脑图，支持重命名、删除、切换。<br>
+                    <b>怎么导：</b>PNG（高清 2 倍渲染，含全部可见节点）、SVG（矢量无限放大）、Markdown（缩进大纲），文件名均为 <b>mindmap-</b> 前缀。<br>
+                    <b>隐私：</b>纯前端运行，脑图只存在你的浏览器本地，不会上传到任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/mind_map.js"></script>
+</body>
+</html>
+{{end}}
