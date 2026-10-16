@@ -1,5 +1,39 @@
 # ToolWeb 需求 Backlog
 
+> 维护人：产品经理 · 每日排期（2026-10-16 12:15 PM 决策轮·10-16 第四轮）
+
+## 今日任务（2026-10-16 12:15 · 产品经理排期决策 ✅）
+
+**交付状态**：10-16 第四轮排期决策。按 11:30 通用调研第四轮锁定的推荐顺位（HEIC 转 JPG 顺位首选、WASM 评估证据到齐）与 10-16 既定定序（表格合并 → HEIC（待 WASM 评估）→ 屏幕录制（顶位备选））执行：WASM 评估已实质通过，HEIC 自然递进，无定序变更。本轮立项**唯一开发任务：HEIC 转 JPG**。
+
+**选定：HEIC 转 JPG（/tools/heic-convert）** — 今日唯一任务：
+- **顺位递进**：表格合并今日已交付闭环（93e5349 + 7038b8a），按 05:00 起锁定的定序自然递进；11:30 研究轮明确标注 P1 顺位首选。
+- **技术评估实质通过**：mochifile ADR（2026-10-04）实战复核确认 libheif-js 1.23.2（~469KB gzip、零 unsafe-eval、独立 .wasm）为维护中生产路线，heic2any 明确淘汰；装载按 JSZip 先例（CDN 懒加载 + vendor 兜底），不再是技术风险项。
+- **需求证据三重**：① V2EX 2025-10 独立验证 + 2026-01/06 本地解码叙事；② 现有站 50MB 上限/每日配额/必须上传（隐私）三重痛点续存；③ 医生职业体验反馈「图片批量转 PDF 支持 HEIC 输入」再强化。
+- **差异化**：纯前端本地解码、免上传、不限次；开「图片格式」子旅程线，与 images-to-pdf 互链「转格式→转 PDF」。
+- **未选**：成绩统计分析（本轮新晋 P1、难度小，教师刚需，留下一顺位/节奏调节位，与表格拆分形成「拆分→统计」工具链，不提前透支）；屏幕录制（HEIC 评估通过，顶位备选条件未触发，顺位不动）；图片拼图/医学单位换算/二手房税费等其余 P1 留在候选池。
+
+**规格**：
+1. 文件入口：多文件上传 .heic/.heif（input multiple + 拖拽），本地 FileReader 读取 ArrayBuffer，不上传服务器；批量文件列表带缩略图预览与逐文件状态（待转换/转换中/完成/失败）。
+2. 解码路线：libheif-js 1.23.2（LGPL-3.0；mochifile ADR 2026-10-04 生产路线；heic2any 已淘汰不用）；装载沿 JSZip 先例：jsdelivr CDN 懒加载 + `static/js/vendor/libheif.js`、`static/js/vendor/libheif.wasm` 本地兜底，CDN 失败自动切 vendor。
+3. 转换输出：解码 → canvas → toBlob；输出格式 JPG（质量滑杆 1-100，默认 92）/ PNG（无损）二选一；旋转/镜像/alpha 按 libheif 解析结果保留；文件名沿用原名改后缀（如 IMG_0001.jpg）。
+4. 下载：单文件直接下载；多文件打包 ZIP（沿用 sheet_split 的 JSZip 懒加载 + 失败降级逐个下载）；转换统计（成功/失败数、总耗时）展示。
+5. 隐私声明：页面显眼位置声明「所有处理在浏览器本地完成，文件不上传任何服务器」。
+6. 旅程线互链：heic-convert 页底加「还要转成 PDF？→ 图片批量转 PDF（/tools/images-to-pdf）」；images-to-pdf 页底加「HEIC 图片打不开？先转成 JPG →」反向链接（响应医生反馈）。
+7. 注册：`tools/categories.go`「图片处理」品类新增 ID `heic_convert`、Path `/tools/heic-convert`，中英文描述 + SEO keywords（HEIC转JPG、苹果照片转JPG、HEIC在线转换、HEIC免费转换、HEIC本地转换）。
+
+**验收标准**：
+- [ ] `/tools/heic-convert` 可开（200）；多文件 .heic 上传解析成功
+- [ ] 真实 HEIC 文件解码成功，转出 JPG/PNG 可正常打开且尺寸/方向正确
+- [ ] 质量滑杆生效（低质量文件明显更小）；多文件 ZIP 打包下载可用；JSZip/libheif CDN 失败时降级链路不报错
+- [ ] 与 /tools/images-to-pdf 双向互链链接有效
+- [ ] `categories.go` 注册完成，首页列表/导航/SEO 配置生效
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/heic_convert.html`、`static/js/heic_convert.js`、`tools/categories.go`、`static/js/vendor/libheif.js` + `static/js/vendor/libheif.wasm`（CDN 兜底本地副本）、`templates/images_to_pdf.html`（互链编辑）、`BACKLOG.md`（本小节）。
+
+**交付核对**：`git fetch` 确认分支 muse/dev-20260929 存在；`grep tools/categories.go`（73 个已注册 Path；Path 层无 heic/heif/苹果照片字样，`img-convert` 为通用图片格式转换品类、形态不同不冲突；ID `heic_convert` 无重叠）；工作树干净，无未跟踪改动。
+
 > 维护人：产品调研员 · 每日更新（2026-10-16 11:30 第四轮研究）
 
 ## 今日任务（2026-10-16 11:30 · 产品调研员研究轮 ✅）
