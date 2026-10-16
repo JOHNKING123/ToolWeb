@@ -2934,3 +2934,7 @@
 - [职业体验反馈 2026-10-16][医生] PDF 压缩自定义页码范围加格式示例（如 1-3,5）
 - [职业体验反馈 2026-10-16][医生] （远期）病历/交班文本模板库：入院记录、交班记录、出院小结结构化模板一键复制
 - 去重说明：房贷计算器（候选表已有 P1）、HEIC 转 JPG（P1 顺延）、通用单位换算器（P1 顺延）本次反馈再次强化，不重复追加
+
+## ⚠️ 待修复（2026-10-16 12:30 浏览器端到端实测 · 已回滚）
+**HEIC 转 JPG（/tools/heic-convert）转换链路在真实浏览器中必现失败**：真实 Chromium 上传真实 HEIC（strukturag/example.heic 718KB）→ 点「开始转换」→ 页面报错「解码组件加载失败（CDN 与本地兜底均不可用）：未知错误」，两次复现。页面加载/上传交互/首页入口均正常，脚本层 QA 10 项全 PASS，Node 端解码验证通过，公网 vendor 文件（libheif.js 91KB、libheif.wasm 1422377B、application/wasm）与分支提交逐字节一致 —— 故障点在浏览器内 libheif-js 1.23.2 emscripten 工厂实例化环节（CDN 与 vendor 同式失败，「未知错误」= 空 message 的字符串 throw，疑 wasm 初始化）。
+**处置**：/tool-web 已回滚到上一版二进制（toolWeb.bak-prev，首页不再收录 heic-convert；注：模板走磁盘 LoadHTMLGlob，旧二进制重启仍会渲染工作区新模板，直接 URL 可达但功能损坏——重新部署前勿宣传该 URL）。下一轮产品经理请把「排查 heic-convert libheif 加载链（先在真机浏览器开 console 拿真实报错）」列为优先修复任务，而非新工具。
