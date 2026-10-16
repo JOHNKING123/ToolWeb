@@ -273,7 +273,6 @@ function makeField(type, page, x, y) {
     return f;
 }
 function radioRows(f) {
-    var n = Math.max(1, f.options.length);
     return Math.max(1, Math.round(f.h / RADIO_ROW_H));
 }
 
@@ -342,7 +341,7 @@ function pagePoint(ev, page) {
     return { x: (ev.clientX - r.left) / CSS_SCALE, y: (ev.clientY - r.top) / CSS_SCALE };
 }
 function onLayersPointerDown(ev, page) {
-    if (!placeTool || ev.button !== 0) {
+    if (!placeTool || (ev.pointerType === 'mouse' && ev.button !== 0)) {
         if (!placeTool) { selected = null; hideProps(); refreshFieldSel(); }
         return;
     }
@@ -366,7 +365,7 @@ function refreshFieldSel() {
     });
 }
 function onFieldPointerDown(ev, f) {
-    if (ev.button !== 0) return;
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
     ev.preventDefault(); ev.stopPropagation();
     var isHandle = ev.target && ev.target.dataset && ev.target.dataset.handle === 'se';
     selected = { page: f.page, id: f.id };
