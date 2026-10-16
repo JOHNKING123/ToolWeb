@@ -316,6 +316,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "heic_convert",
+					Name:        "HEIC 转 JPG",
+					Description: "苹果 HEIC/HEIF 照片批量转 JPG/PNG，质量滑杆可调，纯浏览器本地解码、文件不上传",
+					Path:        "/tools/heic-convert",
+					Icon:        "photo_library",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img-compress",
 					Name:        "图片压缩",
 					Description: "无损/有损压缩图片，减小体积，支持多种格式",

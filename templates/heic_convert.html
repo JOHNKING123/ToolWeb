@@ -1,0 +1,154 @@
+{{define "heic_convert"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIC 转 JPG - 苹果照片 HEIC 批量转 JPG/PNG（免费/本地转换/不上传）</title>
+    <meta name="description" content="免费在线 HEIC 转 JPG 工具：苹果手机 HEIC/HEIF 照片批量转 JPG 或 PNG，JPG 质量滑杆 1-100 可调；纯浏览器本地解码转换，文件不上传服务器、不限次、无水印。Convert HEIC to JPG online free, local processing, no upload.">
+    <meta name="keywords" content="HEIC转JPG,苹果照片转JPG,HEIC在线转换,HEIC免费转换,HEIC本地转换,HEIC转PNG,HEIF转JPG,HEIC to JPG,convert HEIC to JPG online,HEIC converter">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/heic-convert">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HEIC 转 JPG","description":"免费在线 HEIC 转 JPG 工具：苹果 HEIC/HEIF 照片批量转 JPG/PNG，质量可调，纯浏览器本地解码、文件不上传、不限次、无水印。","url":"https://www.johnkingzcq123.xyz/tools/heic-convert","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hc-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .hc-upload:hover,.hc-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .hc-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .hc-privacy{display:flex;align-items:center;gap:.5rem;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:.6rem;padding:.7rem .9rem;color:#065f46;font-size:.92rem;font-weight:600;margin-bottom:1rem;line-height:1.6}
+        .hc-privacy .material-icons{font-size:1.3rem}
+        .hc-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .hc-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin-top:.9rem}
+        .hc-card{border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;overflow:hidden;position:relative;transition:border-color .2s}
+        .hc-card.hc-converting{border-color:var(--primary-color)}
+        .hc-card.hc-done{border-color:#10b981}
+        .hc-card.hc-fail{border-color:#ef4444}
+        .hc-badge{position:absolute;top:.35rem;left:.35rem;background:rgba(17,24,39,.78);color:#fff;font-size:.74rem;font-weight:700;border-radius:.35rem;padding:.15rem .45rem;z-index:2}
+        .hc-card.hc-converting .hc-badge{background:#2563eb}
+        .hc-card.hc-done .hc-badge{background:#059669}
+        .hc-card.hc-fail .hc-badge{background:#dc2626}
+        .hc-thumb{height:120px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .hc-thumb img{max-width:100%;max-height:100%;object-fit:contain}
+        .hc-thumb-icon{font-size:2.6rem;color:#cbd5e1}
+        .hc-meta{padding:.45rem .55rem .55rem}
+        .hc-nm{font-size:.8rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .hc-sub{font-size:.74rem;color:#9ca3af;margin-top:.12rem}
+        .hc-failmsg{font-size:.74rem;color:#b91c1c;margin-top:.15rem;line-height:1.5;word-break:break-all}
+        .hc-ops{display:flex;gap:.3rem;margin-top:.4rem}
+        .hc-ops button{flex:1;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;font-size:.78rem}
+        .hc-ops button .material-icons{font-size:1rem}
+        .hc-ops button:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .hc-ops button.del:hover{border-color:#ef4444;color:#ef4444}
+        .hc-group{margin-top:1.1rem}
+        .hc-group .hc-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .hc-modes{display:flex;gap:.5rem}
+        .hc-mode{flex:1}
+        .hc-mode input{position:absolute;opacity:0;pointer-events:none}
+        .hc-mode span{display:flex;flex-direction:column;align-items:center;gap:.2rem;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.8rem .5rem;font-size:1rem;cursor:pointer;transition:border-color .2s,background .2s,color .2s;text-align:center}
+        .hc-mode span .material-icons{font-size:1.4rem}
+        .hc-mode span small{font-size:.75rem;color:#9ca3af;font-weight:400}
+        .hc-mode input:checked+span{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .hc-range{display:flex;align-items:center;gap:.7rem}
+        .hc-range input[type=range]{flex:1;accent-color:var(--primary-color)}
+        .hc-range b{font-size:1rem;color:var(--primary-color);min-width:2.5rem;text-align:right}
+        .hc-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .hc-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .hc-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .hc-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .hc-progress{display:none;margin-top:1rem}
+        .hc-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .hc-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .hc-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .hc-stats{display:none;margin-top:.8rem;background:#f0fdf4;border:1px solid #6ee7b7;border-radius:.5rem;padding:.6rem .8rem;font-size:.88rem;color:#065f46;line-height:1.6}
+        .hc-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .hc-tip b{color:#111827}
+        .hc-count{font-size:.85rem;color:#6b7280;margin-top:.8rem;display:none}
+        @media (max-width:640px){
+            .hc-upload{padding:1.6rem .8rem}
+            .hc-modes{flex-direction:column}
+            .hc-actions .btn{flex:1 1 100%;justify-content:center}
+            .hc-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">photo_library</i> HEIC 转 JPG</h1>
+            <p>苹果手机 HEIC/HEIF 照片批量转 JPG 或 PNG；全部在浏览器本地解码转换，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="hc-privacy">
+                    <i class="material-icons">lock</i>
+                    <span>隐私承诺：所有处理在浏览器本地完成，文件不上传任何服务器——解码、转换、打包全程离线可跑。</span>
+                </div>
+                <div class="hc-upload" id="hc-upload" role="button" tabindex="0" aria-label="点击选择、或拖拽 HEIC/HEIF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择 HEIC 文件，或把文件拖拽到这里（可多选）</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 .heic / .heif（苹果手机照片默认格式）；文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="hc-file" accept=".heic,.heif" multiple style="display:none;">
+                <div class="hc-status" id="hc-status"></div>
+                <div class="hc-error" id="hc-lib-error" style="display:none;"></div>
+                <div class="hc-count" id="hc-count"></div>
+                <div class="hc-grid" id="hc-grid"></div>
+
+                <div class="hc-group">
+                    <span class="hc-glabel">输出格式</span>
+                    <div class="hc-modes">
+                        <label class="hc-mode"><input type="radio" name="hc-format" value="jpg" checked><span><i class="material-icons">image</i>JPG<small>通用格式，体积小</small></span></label>
+                        <label class="hc-mode"><input type="radio" name="hc-format" value="png"><span><i class="material-icons">photo</i>PNG<small>无损，保留透明</small></span></label>
+                    </div>
+                </div>
+
+                <div class="hc-group" id="hc-quality-group">
+                    <span class="hc-glabel">JPG 质量</span>
+                    <div class="hc-range">
+                        <input type="range" id="hc-quality" min="1" max="100" value="92" step="1">
+                        <b id="hc-quality-val">92</b>
+                    </div>
+                    <div class="hc-hint">1–100，默认 92；调低质量可明显减小文件体积（适合发微信、传附件）。</div>
+                </div>
+
+                <div class="hc-error" id="hc-error"></div>
+                <div class="hc-progress" id="hc-progress">
+                    <div class="bar"><i id="hc-progress-bar"></i></div>
+                    <div class="txt" id="hc-progress-txt"></div>
+                </div>
+                <div class="hc-stats" id="hc-stats"></div>
+                <div class="hc-actions">
+                    <button class="btn btn-primary" id="hc-convert" disabled><i class="material-icons">autorenew</i> 开始转换</button>
+                    <button class="btn" id="hc-download" disabled><i class="material-icons">download</i> 下载全部</button>
+                    <button class="btn" id="hc-clear-all" disabled><i class="material-icons">delete_sweep</i> 清空全部</button>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>使用说明</h3>
+                <div class="hc-tip">
+                    <b>怎么用：</b>上传 HEIC 文件 → 选输出格式（JPG 可调质量）→ 开始转换 → 下载单个文件或打包 ZIP。文件名沿用原名只改后缀，如 IMG_0001.heic → IMG_0001.jpg。<br>
+                    <b>为什么需要：</b>iPhone 默认用 HEIC 存照片，体积小但很多 Windows 软件、老版本应用打不开；转成 JPG 后处处可看。<b>和那些要上传文件的在线转换站不同，本站纯前端本地解码，照片不出你的浏览器</b>，不限次数、导出无水印。<br>
+                    <b>转换细节：</b>HEIC 内的拍摄方向（旋转/镜像）会自动还原；JPG 不支持透明，有透明通道的图会铺白底；PNG 为无损输出。<br>
+                    <b>配套使用：</b>转好的 JPG 想合成一个 PDF，用 <a href="/tools/images-to-pdf">图片批量转 PDF</a>；想先压小体积，用 <a href="/tools/img-compress">图片压缩</a>。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>还要转成 PDF？</h3>
+                <div class="hc-tip">
+                    HEIC 转好 JPG 后，想把多张照片合成一个 PDF 发出去？直接用 <a href="/tools/images-to-pdf"><b>图片批量转 PDF</b></a>：拖拽调序、A4/原尺寸可选，同样本地处理不上传。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/heic_convert.js?v=30ecfdfb"></script>
+</body>
+</html>
+{{end}}

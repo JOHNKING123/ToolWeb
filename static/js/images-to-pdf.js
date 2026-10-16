@@ -111,7 +111,7 @@ function addFiles(files) {
         })(f);
     }
     if (added > 0) setStatus('已加入 ' + added + ' 张图片');
-    if (skipped.length > 0) setError('以下文件格式不受支持已跳过（仅 PNG/JPG/WebP；HEIC 暂不支持）：' + skipped.map(esc).join('、'));
+    if (skipped.length > 0) setError('以下文件格式不受支持已跳过（仅 PNG/JPG/WebP）：' + skipped.map(esc).join('、') + '；HEIC 请先到「HEIC 转 JPG」工具转换。');
 }
 
 function bindUpload() {

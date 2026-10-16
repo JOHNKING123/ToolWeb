@@ -84,7 +84,7 @@
                 <div class="itp-upload" id="itp-upload" role="button" tabindex="0" aria-label="点击选择、拖拽图片到此处，或 Ctrl+V 粘贴截图">
                     <i class="material-icons">cloud_upload</i>
                     <div>点击选择图片，或把图片拖拽到这里，也可 Ctrl+V 直接粘贴截图</div>
-                    <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / WebP（HEIC 暂不支持）；文件仅在浏览器本地处理，不上传服务器</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / WebP；HEIC 图片打不开？先用 <a href="/tools/heic-convert">HEIC 转 JPG</a> 转一下；文件仅在浏览器本地处理，不上传服务器</div>
                 </div>
                 <input type="file" id="itp-file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple style="display:none;">
                 <div class="itp-status" id="itp-status"></div>
@@ -145,12 +145,13 @@
                     <b>怎么用：</b>上传图片 → 按缩略图左上角数字确认顺序（拖拽卡片或点 ↑↓ 调序）→ 选页面尺寸与压缩档 → 合成下载。左上角数字就是最终 PDF 的页码。<br>
                     <b>和 WPS 比：</b>WPS 的图片转 PDF 是会员功能，免费版输出 PDF 还可能带「WPS Office」标识水印；本站纯前端本地合成，<b>文件不上传、不限次数、导出无水印</b>，不用开 WPS 会员。<br>
                     <b>隐私：</b>图片与 PDF 的合成全部在你的浏览器里完成，不经过任何服务器；截图 Ctrl+V 粘贴直接加入列表，作业拍照、票据截图、证件照拼页都顺手。<br>
-                    <b>配套使用：</b>导出前想先压小体积，用 <a href="/tools/img-compress">图片压缩</a>；把 PDF 转回图片用 <a href="/tools/pdf-to-image">PDF 转图片/长图</a>；导出的 PDF 想加水印，用 <a href="/tools/pdf-watermark">PDF 加水印</a>；图片里的文字想批量提取，用 <a href="/tools/ocr-batch">批量图片转文字</a>。
+                    <b>配套使用：</b>导出前想先压小体积，用 <a href="/tools/img-compress">图片压缩</a>；把 PDF 转回图片用 <a href="/tools/pdf-to-image">PDF 转图片/长图</a>；导出的 PDF 想加水印，用 <a href="/tools/pdf-watermark">PDF 加水印</a>；图片里的文字想批量提取，用 <a href="/tools/ocr-batch">批量图片转文字</a>。<br>
+                    <b>HEIC 图片打不开？</b>苹果手机照片是 HEIC 格式，本页暂不支持直接加入——先用 <a href="/tools/heic-convert"><b>HEIC 转 JPG</b></a> 转成 JPG 再来合成（同样本地处理不上传）。
                 </div>
             </div>
         </div>
     </div>
-    <script src="/tools/static/js/images-to-pdf.js?v=cded433b"></script>
+    <script src="/tools/static/js/images-to-pdf.js?v=fff536a1"></script>
 </body>
 </html>
 {{end}}

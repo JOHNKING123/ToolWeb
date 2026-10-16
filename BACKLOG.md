@@ -32,6 +32,8 @@
 
 **预计改动文件**：`templates/heic_convert.html`、`static/js/heic_convert.js`、`tools/categories.go`、`static/js/vendor/libheif.js` + `static/js/vendor/libheif.wasm`（CDN 兜底本地副本）、`templates/images_to_pdf.html`（互链编辑）、`BACKLOG.md`（本小节）。
 
+**开发备注（前端开发 2026-10-16 12:40）**：已交付。新增 `templates/heic_convert.html`（隐私承诺横幅置顶、SEO keywords 含 5 个指定中文词+英文词、JSON-LD）、`static/js/heic_convert.js`（多文件上传/拖拽、逐文件状态+缩略图、libheif-js 1.23.2 jsdelivr CDN 懒加载→vendor 自动兜底、解码→canvas→toBlob、JPG 质量滑杆 1-100 默认 92 / PNG 无损、单文件直下 / 多文件 JSZip 打包 + JSZip 失败降级逐个下载、转换统计）；`static/js/vendor/` 落盘 libheif.js（91KB）+ libheif.wasm（1.4MB，实测 Content-Type: application/wasm）；Node 实测真 HEIC（strukturag/example.heic）解码成功 1280×854、像素数据有效；categories.go「图片处理」注册 heic_convert（New:true）；与 images-to-pdf 双向互链完成（互链文案+上传区提示+JS 跳过提示同步更新，images-to-pdf.js 缓存版本同步刷新）。本地构建通过；测试服务实测：/tools/heic-convert 200、vendor 两文件 200、/tool-web 挂载改写正常、首页已收录。
+
 **交付核对**：`git fetch` 确认分支 muse/dev-20260929 存在；`grep tools/categories.go`（73 个已注册 Path；Path 层无 heic/heif/苹果照片字样，`img-convert` 为通用图片格式转换品类、形态不同不冲突；ID `heic_convert` 无重叠）；工作树干净，无未跟踪改动。
 
 > 维护人：产品调研员 · 每日更新（2026-10-16 11:30 第四轮研究）
