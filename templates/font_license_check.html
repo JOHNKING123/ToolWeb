@@ -1,0 +1,166 @@
+{{define "font_license_check"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字体版权查询 - 一键检测本地字体是否可商用/免费商用字体库（本地检测不上传）</title>
+    <meta name="description" content="免费在线字体版权查询工具：一键检测电脑已安装字体的版权状态（免费商用/需付费授权/高风险），支持批量手动输入查询，内置约200款常见字体离线版权库，附免费商用替代推荐；纯浏览器本地检测，字体列表不出浏览器、不上传服务器。Font license check: is this font free for commercial use?">
+    <meta name="keywords" content="字体版权查询,字体可商用吗,字体侵权查询,免费可商用字体,字体版权检测,微软雅黑商用,方正字体版权,汉仪字体授权,思源黑体商用,阿里巴巴普惠体,站酷字体免费,font license check,free commercial use font">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/font-license-check">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"字体版权查询","description":"一键检测电脑已安装字体的版权状态：免费商用/需付费授权/高风险，支持批量手动输入查询，内置约200款常见字体离线版权库并附免费商用替代推荐；纯浏览器本地检测，字体列表不出浏览器、不上传服务器。","url":"https://www.johnkingzcq123.xyz/tools/font-license-check","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .flc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .flc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .flc-privacy b{color:#047857}
+        .flc-disclaimer{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .flc-disclaimer .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .flc-disclaimer b{color:#b45309}
+        .flc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .flc-limit .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .flc-limit b{color:#1d4ed8}
+        .flc-sec{margin:1.3rem 0 .6rem}
+        .flc-sec h3{margin:0 0 .3rem;font-size:1.02rem;color:#111827}
+        .flc-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.4rem 0}
+        .flc-textarea{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .75rem;font-size:.9rem;color:#111827;background:#fff;font-family:inherit;min-height:7rem;resize:vertical;line-height:1.7}
+        .flc-textarea:focus{outline:none;border-color:var(--primary-color)}
+        .flc-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.8rem;align-items:center}
+        .flc-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .flc-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .flc-btn-sm{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.35rem .8rem;font-size:.85rem;cursor:pointer}
+        .flc-btn-sm:hover{background:#f3f4f6}
+        .flc-bar{display:none;margin-top:.8rem;background:#e5e7eb;border-radius:999px;height:.7rem;overflow:hidden}
+        .flc-bar-fill{height:100%;width:0;background:var(--primary-color);border-radius:999px;transition:width .15s}
+        .flc-bar-label{font-size:.82rem;color:#6b7280;margin-top:.3rem}
+        .flc-group{margin-top:1rem}
+        .flc-group-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem}
+        .flc-group-head b{color:#111827;font-size:.98rem}
+        .flc-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+        .flc-chip{font-size:.78rem;font-weight:700;border-radius:999px;padding:.12rem .65rem;white-space:nowrap}
+        .flc-chip.free{background:#d1fae5;color:#065f46}
+        .flc-chip.paid{background:#fef3c7;color:#92400e}
+        .flc-chip.risk{background:#fee2e2;color:#b91c1c}
+        .flc-chip.unknown{background:#e5e7eb;color:#374151}
+        .flc-item{border:1px solid #e5e7eb;border-radius:.6rem;padding:.65rem .85rem;background:#fff;margin-bottom:.55rem}
+        .flc-item.st-free{border-left:4px solid #10b981}
+        .flc-item.st-paid{border-left:4px solid #f59e0b}
+        .flc-item.st-risk{border-left:4px solid #ef4444}
+        .flc-item.st-unknown{border-left:4px solid #9ca3af}
+        .flc-item-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.25rem}
+        .flc-name{font-weight:700;color:#111827;font-size:.98rem}
+        .flc-badge{font-size:.76rem;font-weight:700;border-radius:999px;padding:.12rem .65rem;white-space:nowrap}
+        .flc-badge.free{background:#10b981;color:#fff}
+        .flc-badge.paid{background:#f59e0b;color:#fff}
+        .flc-badge.risk{background:#ef4444;color:#fff}
+        .flc-badge.unknown{background:#9ca3af;color:#fff}
+        .flc-desc{font-size:.88rem;color:#4b5563;line-height:1.7}
+        .flc-alt{display:flex;gap:.45rem;align-items:flex-start;margin-top:.35rem;font-size:.86rem;color:#047857;line-height:1.65}
+        .flc-alt .material-icons{font-size:1.05rem;flex:none;margin-top:.1rem}
+        .flc-empty{border:1px dashed #d1d5db;border-radius:.6rem;padding:1.1rem;text-align:center;color:#6b7280;font-size:.9rem;background:#f9fafb}
+        .flc-filters{display:flex;gap:.45rem;flex-wrap:wrap;margin:.6rem 0}
+        .flc-fchip{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:.28rem .85rem;font-size:.85rem;cursor:pointer}
+        .flc-fchip.on{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:700}
+        .flc-search{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .75rem;font-size:.9rem;color:#111827;background:#fff;font-family:inherit}
+        .flc-search:focus{outline:none;border-color:var(--primary-color)}
+        .flc-tip{color:#374151;line-height:2;font-size:.93rem}
+        .flc-tip b{color:#111827}
+        .flc-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        @media (max-width:640px){
+            .flc-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">gavel</i> 字体版权查询</h1>
+            <p>一键检测电脑已装字体的版权状态：免费商用 / 需付费授权 / 高风险，并给出免费商用替代推荐；也支持批量手动输入查询。内置约 200 款常见字体离线版权库。</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="flc-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：纯前端本地检测，字体列表不出浏览器。</b>一键检测与手动查询全部在当前浏览器内完成，不会上传到任何服务器，也不会被记录或分享。打开 DevTools 的 Network 面板可验证：本页面检测过程无任何网络请求。</div>
+            </div>
+            <div class="flc-disclaimer" role="note">
+                <i class="material-icons">warning</i>
+                <div><b>版权准确性声明：版权信息整理自公开资料，仅供参考。</b>字体授权政策可能随时间调整，具体以各权利方官方授权政策为准；如有商业用途需求，建议咨询专业人士或直接向权利方确认。</div>
+            </div>
+            <div class="flc-limit" role="note">
+                <i class="material-icons">info</i>
+                <div><b>技术限制说明：</b>一键检测采用 canvas measureText 宽度比对原理——将候选字体与系统基线字体（monospace / serif / sans-serif）的渲染宽度对比，宽度不同即判定为已安装。<b>字形度量相近的字体可能误报或漏报</b>，不同浏览器 / 操作系统的检测结果可能略有差异；「已安装」不等于「已获商用授权」，请以版权状态判定为准。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="flc-sec">
+                    <h3>① 一键检测本机已安装字体</h3>
+                    <div class="flc-hint">点击后自动用 canvas 探测版权库中约 200 款字体是否安装在本机，并按版权状态分组展示。</div>
+                </div>
+                <div class="flc-actions">
+                    <button class="btn btn-primary" id="flc-detect"><i class="material-icons">search</i> 开始检测本机字体</button>
+                </div>
+                <div class="flc-bar" id="flc-detect-bar"><div class="flc-bar-fill" id="flc-detect-fill"></div></div>
+                <div class="flc-bar-label" id="flc-detect-pct" style="display:none;"></div>
+                <div id="flc-detect-result"></div>
+            </div>
+
+            <div class="tool-card">
+                <div class="flc-sec">
+                    <h3>② 手动输入查询</h3>
+                    <div class="flc-hint">每行输入一个字体名称（支持中英文，如「微软雅黑」「Microsoft YaHei」「方正兰亭黑」），批量查询版权状态。</div>
+                </div>
+                <textarea class="flc-textarea" id="flc-input" placeholder="例如：&#10;微软雅黑&#10;方正兰亭黑&#10;思源黑体&#10;阿里巴巴普惠体"></textarea>
+                <div class="flc-actions">
+                    <button class="btn btn-primary" id="flc-query"><i class="material-icons">fact_check</i> 查询版权状态</button>
+                    <button class="flc-btn-sm" id="flc-sample">填入示例</button>
+                    <button class="flc-btn-sm" id="flc-clear">清空</button>
+                </div>
+                <div id="flc-manual-result"></div>
+            </div>
+
+            <div class="tool-card">
+                <div class="flc-actions" style="margin-top:0;">
+                    <button class="btn" id="flc-copy" disabled><i class="material-icons">content_copy</i> 复制检测报告</button>
+                    <span class="flc-copy-tip" id="flc-copy-tip"></span>
+                </div>
+                <div class="flc-hint">报告包含检测时间、一键检测与手动查询结果分组汇总，以及版权声明，可直接粘贴到文档或发给法务 / 设计同事确认。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="flc-sec">
+                    <h3>③ 版权库浏览 <span class="cnt" style="font-weight:400;color:#6b7280;font-size:.85rem;">（共 <span id="flc-lib-count">0</span> 款）</span></h3>
+                    <div class="flc-hint">离线版权状态库：免费商用 / 需付费授权 / 高风险三档，支持关键词搜索与状态筛选。</div>
+                </div>
+                <input class="flc-search" id="flc-lib-search" type="search" placeholder="搜索字体名称，如：思源 / 方正 / 华文…" autocomplete="off">
+                <div class="flc-filters" id="flc-lib-filters">
+                    <button type="button" class="flc-fchip on" data-f="all">全部</button>
+                    <button type="button" class="flc-fchip" data-f="free">免费商用</button>
+                    <button type="button" class="flc-fchip" data-f="paid">需付费授权</button>
+                    <button type="button" class="flc-fchip" data-f="risk">高风险</button>
+                </div>
+                <div id="flc-lib-list"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>状态说明与常见问题</h3>
+                <div class="flc-tip">
+                    <b>免费商用：</b>权利方明确免费授权（含 SIL OFL 等开源协议与厂商公益免费字体），个人与企业可直接用于商业用途；OFL 协议字体不可单独售卖字体文件本身。<br>
+                    <b>需付费授权：</b>商用前须向权利方购买授权；系统自带字体（宋体 / 黑体 / 楷体 / 仿宋、微软雅黑除外见下）随操作系统仅获使用许可，商业印刷与发布前建议确认授权或改用免费替代。<br>
+                    <b>高风险：</b>维权诉讼高发厂商的字体（如方正 / 汉仪 / 华康 / 造字工房 / 叶根友），以及版权归属方正的微软雅黑；商用前务必获得书面授权。<br>
+                    <b>未收录：</b>版权库暂未收录的字体，请以权利方官方政策为准。<br>
+                    <b>问：检测显示「已安装」是否代表可以用？</b>不代表。检测只判断字体是否安装在本机，能否商用请看版权状态徽章。<br>
+                    <b>问：免费商用字体能用于 Logo / 商标吗？</b>部分免费字体的授权排除 Logo 与商标注册场景，商用前请细读该字体的官方授权文本。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/font_license_check.js?v=1"></script>
+</body>
+</html>
+{{end}}

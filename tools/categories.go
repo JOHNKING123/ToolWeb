@@ -257,6 +257,23 @@ func GetCategories() []Category {
 			},
 		},
 		{
+			ID:          "font",
+			Name:        "文字工具",
+			Description: "字体版权查询与文字排版相关工具",
+			Icon:        "font_download",
+			Tools: []Tool{
+				{
+					ID:          "font_license_check",
+					Name:        "字体版权查询",
+					Description: "一键检测电脑已装字体的版权状态：免费商用/需付费授权/高风险，附免费商用替代推荐，纯前端本地检测不上传 · Check if a font is free for commercial use",
+					Path:        "/tools/font-license-check",
+					Icon:        "gavel",
+					New:         true,
+					Category:    "文字工具",
+				},
+			},
+		},
+		{
 			ID:          "convert",
 			Name:        "格式转换",
 			Description: "各种格式之间的转换工具",
