@@ -1,0 +1,160 @@
+{{define "score_stats"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成绩统计分析 - 班级平均分/及格率/优秀率/分数段分布在线计算（不上传/不限次）</title>
+    <meta name="description" content="免费在线成绩统计分析：逐行粘贴分数或上传 CSV，本地计算人数、平均分、最高/最低/中位数、及格率、优秀率与五档分数段分布，自绘柱状图可视化，统计结果一键导出 CSV；纯浏览器本地处理，数据不上传服务器，不限次数。Free online score statistics: average, pass/excellent rate and score distribution.">
+    <meta name="keywords" content="成绩分析,分数段统计,班级成绩分析,及格率计算,成绩统计,平均分计算,优秀率计算,成绩分布图,score statistics,grade analysis">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/score-stats">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"成绩统计分析","description":"免费在线成绩统计分析：粘贴分数或上传 CSV，本地计算平均分、及格率、优秀率、五档分数段分布，自绘柱状图，结果可导出 CSV，纯浏览器本地处理不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/score-stats","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .gs-tabs{display:flex;gap:.5rem;margin-bottom:1rem}
+        .gs-tab{flex:1;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.6rem .8rem;font-size:.92rem;cursor:pointer;text-align:center;transition:border-color .2s,background .2s,color .2s}
+        .gs-tab .material-icons{font-size:1.2rem;vertical-align:-3px;margin-right:.25rem}
+        .gs-tab.active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .gs-pane{display:none}
+        .gs-pane.active{display:block}
+        .gs-textarea{width:100%;box-sizing:border-box;min-height:190px;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .8rem;font-size:.92rem;line-height:1.7;color:#111827;font-family:inherit;resize:vertical}
+        .gs-textarea:focus{outline:none;border-color:var(--primary-color)}
+        .gs-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:1.8rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .gs-upload:hover,.gs-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .gs-upload .material-icons{font-size:2.4rem;display:block;margin-bottom:.4rem}
+        .gs-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .gs-fileinfo .material-icons{color:#2563eb;flex:none}
+        .gs-fileinfo .meta{flex:1;min-width:0}
+        .gs-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .gs-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.1rem}
+        .gs-fileinfo .ops{flex:none}
+        .gs-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .gs-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .gs-row{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1rem}
+        .gs-field{flex:1 1 200px;min-width:0}
+        .gs-field label{display:block;font-size:.9rem;color:#374151;margin-bottom:.4rem;font-weight:600}
+        .gs-field input{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;font-size:.92rem;color:#111827;background:#fff}
+        .gs-field input:focus{outline:none;border-color:var(--primary-color)}
+        .gs-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .gs-statline{color:var(--primary-color);font-size:.9rem;margin-top:.8rem;line-height:1.7;min-height:1.4em}
+        .gs-error{display:none;color:#b91c1c;font-size:.9rem;margin-top:.6rem;line-height:1.6}
+        .gs-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .gs-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .gs-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .gs-result{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .gs-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.7rem;margin-bottom:1.1rem}
+        .gs-kpi{border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .5rem;text-align:center;background:#fff}
+        .gs-kpi .v{font-size:1.35rem;font-weight:700;color:var(--primary-color);line-height:1.3}
+        .gs-kpi .k{font-size:.8rem;color:#6b7280;margin-top:.2rem}
+        .gs-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;margin-top:1rem}
+        table.gs-table{border-collapse:collapse;min-width:100%;font-size:.88rem}
+        table.gs-table th,table.gs-table td{border:1px solid #e5e7eb;padding:.5rem .8rem;white-space:nowrap;text-align:center;color:#111827}
+        table.gs-table th{background:#eff6ff;font-weight:700}
+        table.gs-table tr:nth-child(even) td{background:#f9fafb}
+        table.gs-table td.l{text-align:left}
+        .gs-chart{margin-top:1.1rem;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;padding:1rem .5rem .5rem}
+        .gs-chart h4{margin:0 0 .6rem;text-align:center;color:#374151;font-size:.95rem}
+        .gs-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .gs-tip b{color:#111827}
+        .gs-tip kbd{border:1px solid #d1d5db;border-radius:.3rem;padding:0 .35rem;font-size:.78rem;background:#fff;font-family:inherit}
+        @media (max-width:640px){
+            .gs-actions .btn{flex:1 1 100%;justify-content:center}
+            .gs-kpi .v{font-size:1.15rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">bar_chart</i> 成绩统计分析</h1>
+            <p>粘贴分数列或上传 CSV，本地算出平均分、及格率、优秀率与分数段分布；分数不上传，全程在浏览器里完成</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="gs-tabs" role="tablist">
+                    <button type="button" class="gs-tab active" id="gs-tab-text" role="tab"><i class="material-icons">edit_note</i>逐行输入分数</button>
+                    <button type="button" class="gs-tab" id="gs-tab-csv" role="tab"><i class="material-icons">upload_file</i>上传 CSV 文件</button>
+                </div>
+
+                <div class="gs-pane active" id="gs-pane-text" role="tabpanel">
+                    <textarea class="gs-textarea" id="gs-text" placeholder="每行一个分数，粘贴即算，例如：&#10;92&#10;78.5&#10;61&#10;45&#10;&#10;也支持「姓名 分数」格式（如：张三 88），自动取每行最后一个数字；空行与非数字行自动跳过并计数。"></textarea>
+                    <div class="gs-hint">从 Excel 复制一列分数直接粘贴即可；小数、百分制/150 分制都支持，按实际数字统计。</div>
+                </div>
+
+                <div class="gs-pane" id="gs-pane-csv" role="tabpanel">
+                    <div class="gs-upload" id="gs-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 CSV 文件到此处">
+                        <i class="material-icons">cloud_upload</i>
+                        <div>点击选择 CSV 文件，或把文件拖拽到这里</div>
+                        <div style="font-size:.82rem;margin-top:.4rem;">仅支持 .csv · 文件只在浏览器本地解析，不上传服务器</div>
+                    </div>
+                    <input type="file" id="gs-file" accept=".csv" style="display:none;">
+                    <div class="gs-fileinfo" id="gs-fileinfo">
+                        <i class="material-icons">table_view</i>
+                        <div class="meta">
+                            <div class="nm" id="gs-file-name"></div>
+                            <div class="sub" id="gs-file-sub"></div>
+                        </div>
+                        <div class="ops">
+                            <button type="button" id="gs-clear" title="清除文件"><span class="material-icons">close</span></button>
+                        </div>
+                    </div>
+                    <div class="gs-hint">CSV 多列时取每行最后一个数字作为分数（常见格式：学号，姓名，分数）；首行若为表头（无数字）自动跳过。</div>
+                </div>
+
+                <div class="gs-row">
+                    <div class="gs-field">
+                        <label for="gs-pass">及格线</label>
+                        <input type="number" id="gs-pass" value="60" min="0" max="1000" step="any">
+                    </div>
+                    <div class="gs-field">
+                        <label for="gs-excellent">优秀线</label>
+                        <input type="number" id="gs-excellent" value="90" min="0" max="1000" step="any">
+                    </div>
+                </div>
+                <div class="gs-hint">及格率 = ≥ 及格线的占比；优秀率 = ≥ 优秀线的占比；要求优秀线 &gt; 及格线。分数段固定五档：&lt;及格线 / 及格线– / 中段两档 / ≥优秀线。</div>
+
+                <div class="gs-statline" id="gs-statline"></div>
+                <div class="gs-error" id="gs-error"></div>
+                <div class="gs-actions">
+                    <button class="btn btn-primary" id="gs-run"><i class="material-icons">calculate</i> 开始统计</button>
+                    <button class="btn" id="gs-export" disabled><i class="material-icons">download</i> 导出统计结果 CSV</button>
+                </div>
+
+                <div class="gs-result" id="gs-result">
+                    <h3 style="margin-top:0;">统计结果</h3>
+                    <div class="gs-kpis" id="gs-kpis"></div>
+                    <div class="gs-table-wrap">
+                        <table class="gs-table" id="gs-tier-table">
+                            <thead><tr><th>分数段</th><th>人数</th><th>占比</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="gs-chart">
+                        <h4>分数段分布</h4>
+                        <div id="gs-chart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="gs-tip">
+                    <b>怎么用：</b>①「逐行输入」把分数列粘贴进文本框（每行一个分数，也认「姓名 分数」格式）；②或「上传 CSV」选文件，本地解析；③按需调整及格线/优秀线；④点「开始统计」看结果，柱状图随参数实时重算；⑤「导出统计结果 CSV」下载汇总表。<br>
+                    <b>统计口径：</b>人数、平均分（保留 2 位小数）、最高分、最低分、中位数、及格人数/及格率（≥ 及格线）、优秀人数/优秀率（≥ 优秀线）、五档分数段人数+占比。空行与非数字行自动跳过并计数，不影响有效分数。<br>
+                    <b>分数段：</b>五档分界由及格线 P 与优秀线 E 决定：&lt;P、P–(P+9)、(P+10)–(P+19)、(P+20)–(E-1)、≥E。默认 60/90 时即为 &lt;60、60–69、70–79、80–89、≥90；优秀线高于 90 时第五档以优秀线为界。<br>
+                    <b>旅程线：</b>需要先把成绩表拆成多张？先用 <a href="/tools/sheet-split">表格拆分</a> 按班级/科目拆好表，再回来这里逐个统计——「拆分→统计」一条龙。<br>
+                    <b>隐私：</b>解析、统计、绘图、导出全程在你的浏览器里完成，分数只在浏览器内存里流转，不经过任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/score_stats.js?v=1"></script>
+</body>
+</html>
+{{end}}

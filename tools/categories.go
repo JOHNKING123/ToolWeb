@@ -762,6 +762,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "表格工具",
 				},
+				{
+					ID:          "score_stats",
+					Name:        "成绩统计分析",
+					Description: "班级成绩统计分析：逐行粘贴分数或上传 CSV，本地计算人数/平均分/及格率/优秀率/五档分数段分布，自绘柱状图，结果导出 CSV，纯前端不上传 · Score statistics: average, pass/excellent rate and score distribution",
+					Path:        "/tools/score-stats",
+					Icon:        "bar_chart",
+					New:         true,
+					Category:    "表格工具",
+				},
 			},
 		},
 	}
