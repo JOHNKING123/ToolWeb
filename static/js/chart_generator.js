@@ -372,7 +372,13 @@ function renderPie(o) {
     var frac = p.value / total;
     var a1 = a + frac * Math.PI * 2;
     var col = colors[i % colors.length];
-    s += '<path d="' + arcPath(cx, cy, R, r0, a, a1) + '" fill="' + col + '" stroke="#fff" stroke-width="2"/>';
+    if (a1 - a >= Math.PI * 2 - 1e-4) {
+      // 单块占满整圆：弧段起点=终点时 SVG 会丢弃路径，直接画整圆
+      s += '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="' + R + '" fill="' + col + '" stroke="#fff" stroke-width="2"/>';
+      if (r0 > 0) s += '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="' + r0 + '" fill="#fff"/>';
+    } else {
+      s += '<path d="' + arcPath(cx, cy, R, r0, a, a1) + '" fill="' + col + '" stroke="#fff" stroke-width="2"/>';
+    }
     var mid = (a + a1) / 2;
     if (o.piePercent && frac >= 0.045) {
       var lr = r0 > 0 ? (R + r0) / 2 : R * 0.68;
@@ -546,6 +552,7 @@ function renderPreview(emptySkipped, numCols) {
 
 /* 由 state 组装渲染模型并绘图 */
 function renderChart() {
+  showError('');
   els.warn.innerHTML = '';
   if (!state.rows.length || !state.colCount) {
     els.chart.innerHTML = '<div class="cg-empty">粘贴表格数据后，这里会自动生成图表。<br>点「填入示例数据」可先看效果。</div>';
@@ -553,7 +560,8 @@ function renderChart() {
     state.lastSvg = '';
     return;
   }
-  if (!state.valueCols.length) {
+  var vCols = state.valueCols.filter(function (c) { return c < state.colCount; });
+  if (!vCols.length) {
     showError('请至少勾选一个数值列（数值列用于决定柱子/折线的高度）。');
     els.chart.innerHTML = '';
     els.png.disabled = true; els.svgcopy.disabled = true;
@@ -561,7 +569,6 @@ function renderChart() {
     return;
   }
   var xCol = Math.min(state.xCol, state.colCount - 1);
-  var vCols = state.valueCols.filter(function (c) { return c < state.colCount; });
   var labels = state.rows.map(function (r) { return String(r[xCol]).trim() === '' ? '（空）' : String(r[xCol]).trim(); });
   var series = vCols.map(function (c) {
     var vals = state.rows.map(function (r) {
@@ -724,6 +731,8 @@ els.hasHeader.addEventListener('change', function () {
 function refreshParsedKeepHeader() {
   var t = parseTable(els.text.value);
   if (!t.cells.length) { refreshParsed(); return; }
+  var autoH = guessHasHeader(t.cells);
+  els.headerAuto.textContent = autoH ? '（已自动识别为有表头，可手动改）' : '（已自动识别为无表头，可手动改）';
   var sp = splitHeader(t.cells, els.hasHeader.checked);
   state.headers = sp.headers; state.rows = sp.rows; state.colCount = t.colCount;
   var numCols = findNumericCols(state.rows, state.colCount);

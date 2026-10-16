@@ -61,6 +61,13 @@
 - [x] 与成绩统计双向互链生效（双方页面均可点到对方）
 - [x] SVG 输出 XML 合法、柱体几何落在绘图区内；模板内 23 个 JS 引用 ID 全存在
 
+**评审反馈修复（2026-10-17 第2轮，评审意见逐条修复 ✅）**：
+- [x] Bug1：renderChart() 首行加 `showError('')`——列映射变更/类型 tab/标题/开关等直接走 renderChart() 的路径不再残留红色错误条
+- [x] Bug2：先算 `vCols = state.valueCols.filter(c < colCount)` 再用 `if (!vCols.length)` 做报错分支，删掉重复声明——粘贴更少列新数据后旧索引不再渲染空坐标轴
+- [x] Bug3：renderPie() 单分类（a1-a ≥ 2π-1e-4）画整圆——饼图用 `<circle r=R>`，环形图再叠白色 `<circle r=r0>`，中心文字层叠正常；多分类仍走 arc 切片
+- [x] 可选打磨：refreshParsedKeepHeader() 同步刷新 #cg-header-auto 自动识别提示文案
+- [x] node 单测 29 项全过（含单分类饼/环形图整圆、越界 vCols、源码断言、纯函数回归）
+
 # ToolWeb 需求 Backlog
 
 > 维护人：产品调研员 · 每日更新（2026-10-17 07:36 第四轮研究）
