@@ -270,12 +270,10 @@ var cartTotal = rd.items.reduce(function (a, it) { return a + it.cents;}, 0);
 var res = planTiers(rd.items, rt.tiers);
 
 /* KPI */
-var maxFull = -1, maxMinus = 0, minPay = 0, reachCount = 0;
+var reachCount = 0;
 res.plans.forEach(function (p) {
 if (p.reachable) {
 reachCount++;
-if (p.tier.minus > maxMinus) { maxMinus = p.tier.minus; maxFull = p.tier.full;}
-if (minPay === 0 || p.pay < minPay) { minPay = p.pay;}
 }
 });
 var kpis = [
@@ -362,7 +360,7 @@ $('d11-result').scrollIntoView({ behavior: 'smooth', block: 'start'});
 function copyResult() {
 var cartTotal = $('d11-kpis').innerText;
 var text = '\n' + cartTotal.replace(/\n/g, ' ') + '\n\n';
-var plans = document.querySelectorAll('#d11-plans.d11-plan');
+var plans = document.querySelectorAll('#d11-plans .d11-plan');
 plans.forEach(function (pl) {
 var title = pl.querySelector('.d11-plan-title').textContent;
 var badge = pl.querySelector('.d11-badge').textContent;
