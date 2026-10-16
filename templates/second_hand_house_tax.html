@@ -1,0 +1,134 @@
+{{define "second_hand_house_tax"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二手房税费计算器 - 契税/个人所得税/增值税明细在线计算（本地计算）</title>
+    <meta name="description" content="免费在线二手房税费计算器：输入成交价、建筑面积、购房套数（首套/二套/三套及以上）、持有情况（满五唯一/满二非唯一/不满二），按现行规则本地计算契税、个人所得税、增值税明细与税费总计、税负占比，支持一键复制结果；纯浏览器本地计算，数据不上传，不限次数。Second-hand house tax calculator: deed tax, income tax, VAT.">
+    <meta name="keywords" content="二手房税费,二手房税费计算器,契税计算,契税计算器,个人所得税计算,增值税计算,满五唯一,满二,二手房税费明细,税负占比,second hand house tax,deed tax calculator">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/second-hand-house-tax">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"二手房税费计算器","description":"免费在线二手房税费计算器：按成交价、面积、购房套数、持有情况本地计算契税、个人所得税、增值税明细与税费总计、税负占比，一键复制结果；纯浏览器本地处理，数据不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/second-hand-house-tax","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tx-disclaimer{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .tx-disclaimer .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .tx-disclaimer b{color:#b45309}
+        .tx-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1rem}
+        .tx-field label{display:block;font-size:.9rem;color:#374151;margin-bottom:.4rem;font-weight:600}
+        .tx-field input,.tx-field select{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .75rem;font-size:.95rem;color:#111827;background:#fff;font-family:inherit}
+        .tx-field input:focus,.tx-field select:focus{outline:none;border-color:var(--primary-color)}
+        .tx-field .unit{position:relative}
+        .tx-field .unit input{padding-right:2.6rem}
+        .tx-field .unit .u{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem}
+        .tx-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin-top:-.4rem;margin-bottom:.6rem}
+        .tx-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;font-size:.9rem;margin:0 0 1rem;padding:.6rem .9rem;line-height:1.6}
+        .tx-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.4rem}
+        .tx-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .tx-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .tx-result{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .tx-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.7rem;margin-bottom:1.1rem}
+        .tx-kpi{border:1px solid #e5e7eb;border-radius:.6rem;padding:.75rem .5rem;text-align:center;background:#fff}
+        .tx-kpi .v{font-size:1.3rem;font-weight:700;color:var(--primary-color);line-height:1.35;word-break:break-all}
+        .tx-kpi .k{font-size:.8rem;color:#6b7280;margin-top:.2rem}
+        .tx-kpi.total{border-color:var(--primary-color);background:#eff6ff}
+        .tx-kpi.total .v{color:var(--primary-color)}
+        .tx-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff}
+        table.tx-table{border-collapse:collapse;width:100%;font-size:.9rem}
+        table.tx-table th,table.tx-table td{border:1px solid #e5e7eb;padding:.55rem .85rem;text-align:left;color:#111827;vertical-align:top}
+        table.tx-table th{background:#eff6ff;font-weight:700;white-space:nowrap}
+        table.tx-table td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+        table.tx-table tr.total td{background:#eff6ff;font-weight:700}
+        .tx-tip{color:#374151;line-height:2;font-size:.95rem}
+        .tx-tip b{color:#111827}
+        @media (max-width:640px){
+            .tx-actions .btn{flex:1 1 100%;justify-content:center}
+            .tx-kpi .v{font-size:1.1rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">home_work</i> 二手房税费计算器</h1>
+            <p>输入成交价、面积、套数与持有情况，本地算出契税 / 个人所得税 / 增值税明细、税费总计与税负占比；数据不上传，全程在浏览器里完成</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tx-disclaimer" role="note">
+                <i class="material-icons">info</i>
+                <div><b>本地计算、结果仅供参考，以税务机关核定为准。</b>各地执行细则可能存在差异，实际应纳税额请以税务机关最终核定为准。</div>
+            </div>
+            <div class="tool-card">
+                <div class="tx-form">
+                    <div class="tx-field">
+                        <label for="tx-price">成交价</label>
+                        <div class="unit">
+                            <input type="number" id="tx-price" placeholder="例如：320" min="0" step="any" inputmode="decimal">
+                            <span class="u">万元</span>
+                        </div>
+                    </div>
+                    <div class="tx-field">
+                        <label for="tx-area">建筑面积</label>
+                        <div class="unit">
+                            <input type="number" id="tx-area" placeholder="例如：120" min="0" step="any" inputmode="decimal">
+                            <span class="u">㎡</span>
+                        </div>
+                    </div>
+                    <div class="tx-field">
+                        <label for="tx-count">购房套数</label>
+                        <select id="tx-count">
+                            <option value="first">首套</option>
+                            <option value="second">二套</option>
+                            <option value="third">三套及以上</option>
+                        </select>
+                    </div>
+                    <div class="tx-field">
+                        <label for="tx-hold">持有情况</label>
+                        <select id="tx-hold">
+                            <option value="five_only">满五唯一</option>
+                            <option value="two_notonly">满二非唯一</option>
+                            <option value="under_two">不满二</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="tx-hint">满五唯一：房产证满 5 年且为卖方家庭唯一住房；满二：房产证满 2 年。面积分界以 140㎡ 为准（含 140㎡ 按 ≤140 档）。</div>
+                <div class="tx-error" id="tx-error"></div>
+                <div class="tx-actions">
+                    <button class="btn btn-primary" id="tx-run"><i class="material-icons">calculate</i> 计算税费</button>
+                    <button class="btn" id="tx-copy" disabled><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn" id="tx-reset"><i class="material-icons">refresh</i> 重置</button>
+                </div>
+                <div class="tx-result" id="tx-result">
+                    <h3 style="margin-top:0;">税费计算结果</h3>
+                    <div class="tx-kpis" id="tx-kpis"></div>
+                    <div class="tx-table-wrap">
+                        <table class="tx-table">
+                            <thead><tr><th>税种</th><th>计税依据</th><th>适用规则 / 税率</th><th style="text-align:right;">税额（元）</th></tr></thead>
+                            <tbody id="tx-rows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>计税规则说明</h3>
+                <div class="tx-tip">
+                    <b>契税（买方缴纳）：</b>首套 ≤140㎡ 按 1%、&gt;140㎡ 按 1.5%；二套 ≤140㎡ 按 1%、&gt;140㎡ 按 2%；三套及以上统一按 3%。<br>
+                    <b>个人所得税（卖方缴纳）：</b>满五唯一免征；否则按成交价的 1% 征收。<br>
+                    <b>增值税（卖方缴纳）：</b>满二免征（含满五唯一）；不满二按 5.6% 征收。<br>
+                    <b>税费总计：</b>契税 + 个人所得税 + 增值税。<br>
+                    <b>税负占比：</b>税费总计 ÷ 成交价 × 100%。<br>
+                    <b>免责声明：</b>本工具为本地计算，结果仅供参考，具体税率与优惠政策以当地税务机关核定为准。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/second_hand_house_tax.js?v=1"></script>
+</body>
+</html>
+{{end}}

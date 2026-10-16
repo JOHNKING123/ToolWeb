@@ -736,6 +736,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "second_hand_house_tax",
+					Name:        "二手房税费计算器",
+					Description: "二手房税费在线计算：输入成交价/建筑面积/购房套数/持有情况，按现行规则本地算契税/个人所得税/增值税明细、税费总计与税负占比，一键复制结果 · Second-hand house tax calculator: deed tax, income tax, VAT",
+					Path:        "/tools/second-hand-house-tax",
+					Icon:        "home_work",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
