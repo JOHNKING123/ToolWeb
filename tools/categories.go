@@ -835,6 +835,23 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "job",
+			Name:        "求职工具",
+			Description: "简历诊断与求职辅助工具",
+			Icon:        "work",
+			Tools: []Tool{
+				{
+					ID:          "resume_checker",
+					Name:        "简历预检工具",
+					Description: "粘贴简历+JD文本一键诊断：JD关键词匹配度评分、ATS友好度检测、经历逻辑链检查、简历雷区清单，纯前端本地分析不出浏览器 · Resume checker: JD keyword match & ATS check, 100% client-side",
+					Path:        "/tools/resume-checker",
+					Icon:        "fact_check",
+					New:         true,
+					Category:    "求职工具",
+				},
+			},
+		},
 	}
 }
 

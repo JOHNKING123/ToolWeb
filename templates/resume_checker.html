@@ -1,0 +1,163 @@
+{{define "resume_checker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简历预检工具 - JD关键词匹配度/ATS友好度检测/简历诊断（本地分析不上传）</title>
+    <meta name="description" content="免费在线简历预检工具：粘贴简历+JD文本，一键输出四模块诊断报告——JD关键词匹配度评分、ATS友好度检测、经历逻辑链检查、简历雷区清单；内置技术栈词典与动作动词库，一键复制诊断报告。纯浏览器本地分析，简历文本不出浏览器、不上传服务器。Resume checker: JD keyword match & ATS check, 100% client-side.">
+    <meta name="keywords" content="简历检查,简历优化,ATS检测,简历关键词匹配,简历诊断,JD关键词,简历匹配度,简历预检,简历修改,求职工具,resume ATS check,resume keyword match,JD match score">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/resume-checker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"简历预检工具","description":"粘贴简历与JD文本，一键输出四模块诊断报告：JD关键词匹配度评分、ATS友好度检测、经历逻辑链检查、简历雷区清单；纯浏览器本地分析，简历文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/resume-checker","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .rc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .rc-privacy b{color:#047857}
+        .rc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .rc-limit .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .rc-limit b{color:#1d4ed8}
+        .rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+        .rc-field label{display:block;font-weight:700;color:#111827;margin-bottom:.35rem;font-size:.95rem}
+        .rc-field label .cnt{font-weight:400;color:#6b7280;font-size:.82rem;margin-left:.4rem}
+        .rc-textarea{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .75rem;font-size:.9rem;color:#111827;background:#fff;font-family:inherit;min-height:14rem;resize:vertical;line-height:1.7}
+        .rc-textarea:focus{outline:none;border-color:var(--primary-color)}
+        .rc-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .rc-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .rc-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .rc-btn-sm{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.35rem .8rem;font-size:.85rem;cursor:pointer}
+        .rc-btn-sm:hover{background:#f3f4f6}
+        .rc-err{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;padding:.6rem .9rem;margin-top:.8rem;font-size:.9rem}
+        .rc-mod{margin-bottom:1.6rem}
+        .rc-mod:last-child{margin-bottom:0}
+        .rc-mod h3{margin:0 0 .7rem;font-size:1.05rem;color:#111827;display:flex;align-items:center;gap:.5rem}
+        .rc-mod-num{display:inline-flex;align-items:center;justify-content:center;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--primary-color);color:#fff;font-size:.85rem;font-weight:700;flex:none}
+        .rc-score-wrap{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem}
+        .rc-score{display:flex;align-items:baseline}
+        .rc-score-num{font-size:2.6rem;font-weight:800;line-height:1}
+        .rc-score-num.rc-great{color:#059669}.rc-score-num.rc-good{color:#2563eb}.rc-score-num.rc-mid{color:#d97706}.rc-score-num.rc-low{color:#dc2626}
+        .rc-score-den{color:#9ca3af;font-size:1.1rem;margin-left:.15rem}
+        .rc-score-meta b{font-size:1.05rem;color:#111827;display:block}
+        .rc-score-meta span{font-size:.85rem;color:#6b7280}
+        .rc-bar{background:#e5e7eb;border-radius:999px;height:.7rem;overflow:hidden;margin:.4rem 0 1rem}
+        .rc-bar-fill{height:100%;width:0;border-radius:999px;transition:width .4s}
+        .rc-bar-fill.rc-great{background:#10b981}.rc-bar-fill.rc-good{background:#3b82f6}.rc-bar-fill.rc-mid{background:#f59e0b}.rc-bar-fill.rc-low{background:#ef4444}
+        .rc-sub{font-weight:700;color:#374151;margin:.9rem 0 .45rem;font-size:.93rem}
+        .rc-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+        .rc-chip{font-size:.82rem;border-radius:999px;padding:.2rem .7rem;white-space:nowrap;border:1px solid}
+        .rc-chip.hit{background:#d1fae5;color:#065f46;border-color:#6ee7b7;font-weight:600}
+        .rc-chip.miss{background:#fee2e2;color:#b91c1c;border-color:#fca5a5;font-weight:600}
+        .rc-details{margin-top:.7rem;border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb}
+        .rc-details summary{cursor:pointer;padding:.55rem .8rem;font-size:.88rem;color:#374151;font-weight:600}
+        .rc-hl{margin:0;padding:.8rem;font-size:.85rem;line-height:1.9;white-space:pre-wrap;word-break:break-word;max-height:22rem;overflow:auto;font-family:inherit;color:#111827}
+        .rc-hit{background:#fde68a;border-radius:.2rem;padding:0 .1rem}
+        .rc-tip{display:flex;gap:.45rem;align-items:flex-start;margin-top:.7rem;font-size:.88rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.6rem .8rem;line-height:1.7}
+        .rc-tip .material-icons{font-size:1.1rem;flex:none;color:#f59e0b;margin-top:.1rem}
+        .rc-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem}
+        .rc-empty{border:1px dashed #d1d5db;border-radius:.6rem;padding:1.1rem;text-align:center;color:#6b7280;font-size:.9rem;background:#f9fafb}
+        .rc-pass-line{display:flex;gap:.45rem;align-items:center;color:#047857;font-size:.92rem;font-weight:600}
+        .rc-pass-line .material-icons{color:#10b981}
+        .rc-ats-item{display:flex;gap:.7rem;align-items:flex-start;border:1px solid #e5e7eb;border-radius:.6rem;padding:.65rem .85rem;background:#fff;margin-bottom:.55rem}
+        .rc-ats-item.rc-pass{border-left:4px solid #10b981}
+        .rc-ats-item.rc-warn{border-left:4px solid #f59e0b}
+        .rc-ats-item.rc-fail{border-left:4px solid #ef4444}
+        .rc-ats-item.rc-info{border-left:4px solid #3b82f6}
+        .rc-ats-item>.material-icons{flex:none;margin-top:.1rem}
+        .rc-pass>.material-icons{color:#10b981}.rc-warn>.material-icons{color:#f59e0b}.rc-fail>.material-icons{color:#ef4444}.rc-info>.material-icons{color:#3b82f6}
+        .rc-ats-head{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.2rem}
+        .rc-ats-head b{color:#111827;font-size:.95rem}
+        .rc-badge{font-size:.74rem;font-weight:700;border-radius:999px;padding:.1rem .6rem;white-space:nowrap}
+        .rc-badge.rc-pass{background:#d1fae5;color:#065f46}
+        .rc-badge.rc-warn{background:#fef3c7;color:#92400e}
+        .rc-badge.rc-fail{background:#fee2e2;color:#b91c1c}
+        .rc-badge.rc-info{background:#dbeafe;color:#1d4ed8}
+        .rc-ats-d{font-size:.88rem;color:#4b5563;line-height:1.7}
+        .rc-ats-f{font-size:.86rem;color:#92400e;line-height:1.7;margin-top:.15rem}
+        .rc-logic-sum{font-size:.93rem;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .85rem;margin-bottom:.7rem;line-height:1.7}
+        .rc-logic-sum b{color:#111827}
+        .rc-logic-item{border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .8rem;background:#fff;margin-bottom:.5rem}
+        .rc-logic-text{font-size:.9rem;color:#111827;line-height:1.7}
+        .rc-logic-badges{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.35rem}
+        .rc-mini-badge{font-size:.74rem;font-weight:700;border-radius:999px;padding:.08rem .55rem}
+        .rc-mini-badge.ok{background:#d1fae5;color:#065f46}
+        .rc-mini-badge.warn{background:#fef3c7;color:#92400e}
+        .rc-mini-badge.bad{background:#fee2e2;color:#b91c1c}
+        .rc-logic-hint{font-size:.85rem;color:#1d4ed8;background:#eff6ff;border-radius:.45rem;padding:.4rem .6rem;margin-top:.4rem;line-height:1.7}
+        .rc-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .rc-faq{color:#374151;line-height:2;font-size:.93rem}
+        .rc-faq b{color:#111827}
+        @media (max-width:720px){
+            .rc-grid{grid-template-columns:1fr}
+            .rc-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">fact_check</i> 简历预检工具</h1>
+            <p>粘贴简历文本 + JD 文本，一键输出四模块诊断报告：JD 关键词匹配度、ATS 友好度检测、经历逻辑链检查、简历雷区清单。内置技术栈词典与动作动词库，纯前端规则引擎。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="rc-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：简历文本不出浏览器。</b>粘贴的简历与 JD 文本全部在当前浏览器本地分析，不会上传到任何服务器，不做任何存储与记录。分析过程无网络请求，可打开 DevTools 的 Network 面板验证。</div>
+            </div>
+            <div class="rc-limit" role="note">
+                <i class="material-icons">info</i>
+                <div><b>说明：</b>本工具为启发式规则诊断（关键词词典匹配 + 文本模式检查），不能替代人工审阅与真实面试反馈；评分仅供投递前自查参考。请勿在简历中堆砌关键词或虚构经历，背调与面试会被追问。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rc-grid">
+                    <div class="rc-field">
+                        <label>简历文本<span class="cnt" id="rc-resume-count"></span></label>
+                        <textarea class="rc-textarea" id="rc-resume" placeholder="粘贴简历纯文本（从 Word / PDF 复制文字后粘贴）。&#10;&#10;建议：把 Word 表格简历“粘贴为纯文本”后再贴进来，更接近 ATS 看到的样子。"></textarea>
+                    </div>
+                    <div class="rc-field">
+                        <label>JD 文本（可选）<span class="cnt" id="rc-jd-count"></span></label>
+                        <textarea class="rc-textarea" id="rc-jd" placeholder="粘贴目标岗位的 JD 全文（岗位职责+任职要求）。&#10;&#10;不填 JD 也可分析：ATS / 逻辑链 / 雷区三个模块不受影响。"></textarea>
+                    </div>
+                </div>
+                <div class="rc-actions">
+                    <button class="btn btn-primary" id="rc-analyze"><i class="material-icons">play_arrow</i> 一键分析</button>
+                    <button class="rc-btn-sm" id="rc-sample">填入示例</button>
+                    <button class="rc-btn-sm" id="rc-clear">清空</button>
+                </div>
+                <div class="rc-err" id="rc-err" role="alert"></div>
+            </div>
+
+            <div class="tool-card" id="rc-report-card" style="display:none;">
+                <div id="rc-report"></div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rc-actions" style="margin-top:0;">
+                    <button class="btn" id="rc-copy" disabled><i class="material-icons">content_copy</i> 复制诊断报告</button>
+                    <span class="rc-copy-tip" id="rc-copy-tip"></span>
+                </div>
+                <div class="rc-hint">报告为纯文本版，含四模块完整结论与改写提示，可直接粘贴保存或发给朋友帮忙把关。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>评分与检查口径说明</h3>
+                <div class="rc-faq">
+                    <b>关键词匹配度怎么算？</b>先从 JD 中提取词典关键词并统计出现频次，再检查简历命中情况；评分 = 命中词频次加权 / JD 总词频次 × 100。JD 里出现次数越多的词权重越高。<br>
+                    <b>缺失关键词都要补吗？</b>只补确实掌握的。堆砌不会的词=面试挖坑；掌握但没写的，补进「专业技能」或对应项目经历的条目里。<br>
+                    <b>什么是好的经历条目？</b>公式：<b>动作动词 + 做了什么 + 量化结果</b>。以「主导/设计/实现/优化」开头，少用「负责/参与」；每条只讲一件事，25–140 字为宜。<br>
+                    <b>ATS 到底是什么？</b>企业招聘系统（Applicant Tracking System）先由机器解析简历再推给 HR；表格残留、特殊符号、图片式 PDF 都可能导致解析失败=白投。<br>
+                    <b>为什么强调纯文本粘贴？</b>你粘贴进来的样子，就是 ATS 大致看到的样子——排版在机器解析面前几乎不存在，内容本身才是本体。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/resume_checker.js?v=1"></script>
+</body>
+</html>
+{{end}}
