@@ -264,7 +264,7 @@ function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 function termPattern(term){
   var e = escRe(term);
   if(/^[A-Za-z][A-Za-z0-9]*$/.test(term)){
-    return '(?<![A-Za-z0-9_&+#])' + e + '(?![A-Za-z0-9_+#])';
+    return '(?<![A-Za-z0-9_&+#])' + e + '(?![A-Za-z0-9_&+#])';
   }
   return e;
 }
