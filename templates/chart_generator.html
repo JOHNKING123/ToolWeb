@@ -1,0 +1,184 @@
+{{define "chart_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线图表生成器 - 粘贴表格数据一键生成柱状图/折线图/饼图（不上传/高清导出）</title>
+    <meta name="description" content="免费在线图表生成器：粘贴 CSV/TSV 或从 Excel 直接复制的表格行，自动解析预览，柱状图/折线图/饼图/环形图一键切换，X 轴与多数值列自由映射，标题/配色主题可调，自绘 SVG 零依赖，高清 PNG 导出与 SVG 源码复制。纯浏览器本地处理，数据不出浏览器。Free online chart generator: paste table data to bar/line/pie/donut charts, 100% client-side.">
+    <meta name="keywords" content="在线图表生成,柱状图生成器,折线图生成器,饼图生成器,环形图,在线做图表,CSV转图表,Excel数据可视化,数据可视化工具,chart generator,bar chart maker,pie chart online">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/chart-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线图表生成器","description":"粘贴 CSV/TSV/Excel 表格数据，一键生成柱状图/折线图/饼图/环形图：列映射、配色主题可调，自绘 SVG 零依赖，高清 PNG 导出；纯浏览器本地处理，数据不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/chart-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cg-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .cg-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .cg-privacy b{color:#047857}
+        .cg-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .cg-limit .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .cg-limit b{color:#1d4ed8}
+        .cg-textarea{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .8rem;font-size:.9rem;color:#111827;background:#fff;font-family:inherit;min-height:11rem;resize:vertical;line-height:1.7}
+        .cg-textarea:focus{outline:none;border-color:var(--primary-color)}
+        .cg-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .cg-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .cg-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .cg-btn-sm{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.35rem .8rem;font-size:.85rem;cursor:pointer}
+        .cg-btn-sm:hover{background:#f3f4f6}
+        .cg-check{display:inline-flex;align-items:center;gap:.45rem;font-size:.9rem;color:#374151;cursor:pointer}
+        .cg-check input{width:1rem;height:1rem;accent-color:var(--primary-color)}
+        .cg-check em{font-style:normal;color:#9ca3af;font-size:.8rem}
+        .cg-auto{font-size:.82rem;color:#6b7280}
+        .cg-statline{color:var(--primary-color);font-size:.9rem;margin-top:.8rem;line-height:1.7;min-height:1.4em}
+        .cg-err{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;padding:.6rem .9rem;margin-top:.8rem;font-size:.9rem}
+        .cg-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;margin-top:.9rem;max-height:22rem}
+        table.cg-table{border-collapse:collapse;min-width:100%;font-size:.86rem}
+        table.cg-table th,table.cg-table td{border:1px solid #e5e7eb;padding:.45rem .75rem;white-space:nowrap;text-align:left;color:#111827}
+        table.cg-table th{background:#eff6ff;font-weight:700}
+        table.cg-table tr:nth-child(even) td{background:#f9fafb}
+        .cg-hint{color:#6b7280;font-size:.84rem;margin-top:.45rem;line-height:1.6}
+        .cg-empty{border:1px dashed #d1d5db;border-radius:.6rem;padding:1.6rem 1rem;text-align:center;color:#6b7280;font-size:.92rem;background:#f9fafb;line-height:1.9}
+        .cg-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+        .cg-type-tab{flex:1 1 120px;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.55rem .6rem;font-size:.9rem;cursor:pointer;text-align:center;transition:border-color .2s,background .2s,color .2s}
+        .cg-type-tab .material-icons{font-size:1.15rem;vertical-align:-3px;margin-right:.25rem}
+        .cg-type-tab.active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .cg-row{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1rem;align-items:flex-start}
+        .cg-field{flex:1 1 220px;min-width:0}
+        .cg-field>label{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .cg-field input[type=text],.cg-field select{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;font-size:.92rem;color:#111827;background:#fff;font-family:inherit}
+        .cg-field input[type=text]:focus,.cg-field select:focus{outline:none;border-color:var(--primary-color)}
+        .cg-vcols{display:flex;gap:.6rem 1.1rem;flex-wrap:wrap;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .8rem;background:#fff}
+        .cg-toggles{display:flex;gap:1.1rem;flex-wrap:wrap;align-items:center}
+        .cg-chartbox{border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;padding:1rem .5rem;overflow-x:auto}
+        .cg-warnline{display:flex;gap:.45rem;align-items:flex-start;margin-top:.7rem;font-size:.88rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.55rem .8rem;line-height:1.7}
+        .cg-warnline .material-icons{font-size:1.1rem;flex:none;color:#f59e0b;margin-top:.1rem}
+        .cg-export{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .cg-export select{border:2px solid #e5e7eb;border-radius:.6rem;padding:.5rem .7rem;font-size:.9rem;color:#111827;background:#fff}
+        .cg-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .cg-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .cg-tip b{color:#111827}
+        .cg-tip kbd{border:1px solid #d1d5db;border-radius:.3rem;padding:0 .35rem;font-size:.78rem;background:#fff;font-family:inherit}
+        @media (max-width:640px){
+            .cg-actions .btn,.cg-export .btn{flex:1 1 100%;justify-content:center}
+            .cg-type-tab{flex:1 1 45%}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">insert_chart</i> 在线图表生成器</h1>
+            <p>粘贴表格数据，一键生成柱状图 / 折线图 / 饼图 / 环形图；列映射、配色、标题自由调，高清 PNG 导出。数据不出浏览器，全程本地绘制</p>
+        </div>
+        <div class="tool-content" style="max-width:1000px;margin:auto;">
+            <div class="cg-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：数据不出浏览器。</b>粘贴的表格数据全部在当前浏览器本地解析、本地绘图，不会上传到任何服务器，不做任何存储与记录。导出过程无网络请求，可打开 DevTools 的 Network 面板验证。</div>
+            </div>
+            <div class="cg-limit" role="note">
+                <i class="material-icons">info</i>
+                <div><b>轻量路径说明：</b>本工具只做「一张表 → 一张图」的轻量转换，不做数据透视、多表关联等复杂分析；饼图/环形图使用第一个数值列且不支持负值。复杂需求请先用 Excel/WPS 整理好再粘贴。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>① 粘贴表格数据</h3>
+                <textarea class="cg-textarea" id="cg-text" placeholder="从 Excel 直接复制行/列粘贴，或粘贴 CSV / TSV 文本，例如：&#10;&#10;月份,产品A,产品B&#10;1月,120,85&#10;2月,135,92&#10;&#10;分隔符（逗号/制表符/分号）自动识别，引号包裹字段自动处理。"></textarea>
+                <div class="cg-actions">
+                    <button class="cg-btn-sm" id="cg-sample1">填入示例①：季度销售</button>
+                    <button class="cg-btn-sm" id="cg-sample2">填入示例②：渠道占比</button>
+                    <button class="cg-btn-sm" id="cg-clear">清空</button>
+                    <label class="cg-check" style="margin-left:.3rem;"><input type="checkbox" id="cg-header" checked> 首行为表头 <span class="cg-auto" id="cg-header-auto"></span></label>
+                </div>
+                <div class="cg-statline" id="cg-statline"></div>
+                <div class="cg-err" id="cg-err" role="alert"></div>
+                <div id="cg-preview"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>② 图表配置</h3>
+                <div class="cg-tabs" role="tablist" aria-label="图表类型">
+                    <button type="button" class="cg-type-tab active" data-type="bar" role="tab"><i class="material-icons">bar_chart</i>柱状图</button>
+                    <button type="button" class="cg-type-tab" data-type="line" role="tab"><i class="material-icons">show_chart</i>折线图</button>
+                    <button type="button" class="cg-type-tab" data-type="pie" role="tab"><i class="material-icons">pie_chart</i>饼图</button>
+                    <button type="button" class="cg-type-tab" data-type="donut" role="tab"><i class="material-icons">donut_large</i>环形图</button>
+                </div>
+                <div class="cg-row">
+                    <div class="cg-field" style="flex:1 1 180px;">
+                        <label for="cg-xcol">X 轴（分类）列</label>
+                        <select id="cg-xcol"></select>
+                    </div>
+                    <div class="cg-field" style="flex:2 1 320px;">
+                        <label>数值列（可多选，分组对比）</label>
+                        <div class="cg-vcols" id="cg-vcols"></div>
+                    </div>
+                </div>
+                <div class="cg-row">
+                    <div class="cg-field">
+                        <label for="cg-title">图表标题（可选）</label>
+                        <input type="text" id="cg-title" placeholder="例如：2026 年上半年产品销量对比" maxlength="60">
+                    </div>
+                    <div class="cg-field">
+                        <label for="cg-subtitle">副标题（可选）</label>
+                        <input type="text" id="cg-subtitle" placeholder="例如：数据来源：销售部月报" maxlength="80">
+                    </div>
+                    <div class="cg-field" style="flex:1 1 150px;">
+                        <label for="cg-theme">配色主题</label>
+                        <select id="cg-theme">
+                            <option value="blue">经典蓝</option>
+                            <option value="warm">暖阳</option>
+                            <option value="fresh">清新</option>
+                            <option value="morandi">莫兰迪</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="cg-row">
+                    <div class="cg-toggles">
+                        <label class="cg-check"><input type="checkbox" id="cg-grid" checked> 网格线</label>
+                        <label class="cg-check"><input type="checkbox" id="cg-labels" checked> 数据标签</label>
+                        <label class="cg-check"><input type="checkbox" id="cg-piepct" checked> 饼图显示百分比</label>
+                    </div>
+                </div>
+                <div class="cg-hint">多数值列勾选后，柱状图按分类分组并排、折线图多条线对比；饼图/环形图只取第一个数值列。数值支持小数、负数与「60%」写法（按数字部分取值）。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>③ 图表预览</h3>
+                <div class="cg-chartbox" id="cg-chart"></div>
+                <div id="cg-warn"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>④ 导出</h3>
+                <div class="cg-export">
+                    <select id="cg-scale" aria-label="导出清晰度">
+                        <option value="1">清晰度：1x（标准）</option>
+                        <option value="2" selected>清晰度：2x（高清）</option>
+                        <option value="3">清晰度：3x（超清）</option>
+                    </select>
+                    <button class="btn btn-primary" id="cg-png" disabled><i class="material-icons">download</i> 导出 PNG 图片</button>
+                    <button class="btn" id="cg-svgcopy" disabled><i class="material-icons">content_copy</i> 复制 SVG 源码</button>
+                </div>
+                <div class="cg-copy-tip" id="cg-copytip"></div>
+                <div class="cg-hint">PNG 为白底高清图，可直接插入 PPT / 公众号 / 论文；SVG 源码可粘贴保存为 .svg 矢量文件，无限放大不模糊。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="cg-tip">
+                    <b>怎么用：</b>①把 Excel 表格区域复制后直接粘贴（或粘贴 CSV/TSV 文本），数据自动解析并预览；②选图表类型，确认 X 轴列与数值列映射（数值列可多选做分组对比）；③调标题、配色主题、网格线与数据标签；④选清晰度导出 PNG，或复制 SVG 源码。<br>
+                    <b>数据格式：</b>首行建议为表头（可自动识别也可手动勾选）；数值列支持小数、负数，空单元格按缺口处理；「60%」按 60 取值。从网页表格复制时建议先过一遍 Excel 再复制，避免错位。<br>
+                    <b>旅程线：</b>先算好平均分/及格率再画图？用 <a href="/tools/score-stats">成绩统计分析</a> 粘贴分数算出统计结果，再把结果表粘贴到这里生成分布图——「统计→图表」一条龙。<br>
+                    <b>隐私：</b>解析、绘图、导出全程在你的浏览器里完成，数据只在浏览器内存里流转，不经过任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/chart_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

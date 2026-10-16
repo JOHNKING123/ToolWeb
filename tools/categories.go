@@ -833,6 +833,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "表格工具",
 				},
+				{
+					ID:          "chart_generator",
+					Name:        "在线图表生成器",
+					Description: "粘贴 CSV/TSV/Excel 表格数据一键生成图表：柱状图/折线图/饼图/环形图切换，X 轴与多数值列映射，标题配色主题可调，自绘 SVG 零依赖，高清 PNG 导出，纯前端数据不出浏览器 · Paste table data to generate charts: bar/line/pie/donut, 100% client-side",
+					Path:        "/tools/chart-generator",
+					Icon:        "insert_chart",
+					New:         true,
+					Category:    "表格工具",
+				},
 			},
 		},
 		{
