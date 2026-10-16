@@ -772,6 +772,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "double11_bundling_calculator",
+					Name:        "双十一凑单计算器",
+					Description: "双十一凑单满减在线计算：输入商品清单+价格，自定义多档满减（满300减50等），子集和/0-1背包DP求每档「溢出最小」最优凑单组合，输出推荐清单/凑单总额/达标档位/立减金额/实付明细，未达档位提示还差多少并给候补单品建议，纯前端本地计算不上传 · Double 11 bundling discount calculator with minimum-overflow subset DP",
+					Path:        "/tools/double11-bundling-calculator",
+					Icon:        "shopping_cart",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
