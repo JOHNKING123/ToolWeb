@@ -341,7 +341,7 @@ var LAST_REPORT = {detected: [], manual: [], at: null};
 
 function buildReportText() {
 var lines = [];
-lines.push('');
+lines.push('字体版权查询检测报告');
 lines.push('生成时间：' + (LAST_REPORT.at || new Date().toLocaleString('zh-CN')));
 lines.push('');
 if (LAST_REPORT.detected.length) {
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function () {
 renderLibrary();
 
 /* 筛选 chips */
-var chips = document.querySelectorAll('#flc-lib-filters.flc-fchip');
+var chips = document.querySelectorAll('#flc-lib-filters .flc-fchip');
 chips.forEach(function (ch) {
 ch.addEventListener('click', function () {
 chips.forEach(function (c) { c.classList.remove('on');});
@@ -482,6 +482,8 @@ $('flc-input').value = '微软雅黑\n方正兰亭黑\n汉仪旗黑\n思源黑�
 $('flc-clear').addEventListener('click', function () {
 $('flc-input').value = '';
 $('flc-manual-result').innerHTML = '';
+LAST_REPORT.manual = [];
+$('flc-copy').disabled =!(LAST_REPORT.detected.length || LAST_REPORT.manual.length);
 });
 
 /* 复制报告 */
