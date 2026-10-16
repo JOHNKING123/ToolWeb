@@ -745,6 +745,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "mortgage_calculator",
+					Name:        "房贷计算器",
+					Description: "房贷月供在线计算：输入贷款总额/年限/年利率，对比等额本息与等额本金的首月月供/月均月供、总利息、还款总额与逐期还款明细，一键复制结果 · Mortgage calculator: equal installment / equal principal monthly payment",
+					Path:        "/tools/mortgage-calculator",
+					Icon:        "account_balance",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
