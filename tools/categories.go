@@ -763,6 +763,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "salary_tax_calculator",
+					Name:        "工资个税计算器",
+					Description: "工资个税在线计算：输入税前月薪/年终奖/社保公积金与七项专项附加扣除，按累计预扣预缴规则本地算月度/年度个税、税后工资与有效税率，年终奖单独计税与并入综合所得对比+划算建议，一键复制结果 · Salary income tax calculator with year-end bonus comparison",
+					Path:        "/tools/salary-tax-calculator",
+					Icon:        "payments",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
