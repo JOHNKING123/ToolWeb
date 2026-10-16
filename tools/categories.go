@@ -455,6 +455,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "pdf_form_maker",
+					Name:        "PDF 可填写表单制作器",
+					Description: "在 PDF 上添加可填写表单域：文本框/复选框/单选组/下拉列表，导出标准 AcroForm 可填写 PDF（Acrobat/浏览器可填），中文表单域内嵌字体，本地处理不上传",
+					Path:        "/tools/pdf-form-maker",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "pdf_manage",
 					Name:        "PDF 页面管理",
 					Description: "PDF 旋转/删页/调序/提取单页，整理扫描件与报告，本地处理不上传、不限次",

@@ -1,0 +1,172 @@
+{{define "pdf_form_maker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 可填写表单制作器 - 添加文本框/复选框/单选/下拉表单域（免费/不上传/无水印）</title>
+    <meta name="description" content="免费在线 PDF 可填写表单制作器：上传 PDF 后在页面上放置文本框（单行/多行）、复选框、单选按钮组、下拉列表，拖拽排版，导出标准 AcroForm 可填写 PDF（Acrobat/Reader/浏览器可直接填写）；中文表单域内嵌字体，纯浏览器本地处理不上传。">
+    <meta name="keywords" content="PDF 可填写表单,PDF 添加表单域,PDF 表单制作,免费 PDF 表单工具,AcroForm,PDF 文本框,PDF 复选框,PDF 单选框,PDF 下拉框,可填写 PDF">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-form-maker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 可填写表单制作器","description":"免费在线 PDF 可填写表单制作器：在 PDF 上放置文本框、复选框、单选组、下拉列表，导出标准 AcroForm 可填写 PDF，中文表单域内嵌字体，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-form-maker","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fm-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .fm-upload:hover,.fm-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .fm-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .fm-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #a7f3d0;background:#ecfdf5;border-radius:.8rem;padding:.9rem 1rem;margin-bottom:1.2rem}
+        .fm-privacy .material-icons{color:#059669;font-size:1.6rem;flex:none;margin-top:.1rem}
+        .fm-privacy b{color:#065f46}
+        .fm-privacy div{font-size:.92rem;color:#065f46;line-height:1.7}
+        .fm-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .fm-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .fm-warn{color:#b45309;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .fm-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .fm-fileinfo .material-icons{color:#ef4444;flex:none}
+        .fm-fileinfo .meta{flex:1;min-width:0}
+        .fm-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .fm-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .fm-fileinfo .ops{flex:none}
+        .fm-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .fm-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .fm-work{margin-top:1.1rem;display:none}
+        .fm-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;align-items:stretch}
+        .fm-tool{display:inline-flex;align-items:center;gap:.35rem;border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.55rem .9rem;font-size:.9rem;cursor:pointer;min-height:44px}
+        .fm-tool .material-icons{font-size:1.25rem}
+        .fm-tool.active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .fm-tool small{color:#9ca3af;font-size:.72rem}
+        .fm-hint{color:#6b7280;font-size:.85rem;margin:.2rem 0 .8rem;line-height:1.6}
+        .fm-props{display:none;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.7rem;padding:.9rem 1rem;margin-bottom:.9rem}
+        .fm-props h4{margin:0 0 .6rem;font-size:.95rem;color:#1e40af;display:flex;align-items:center;gap:.4rem}
+        .fm-props h4 .material-icons{font-size:1.1rem}
+        .fm-prow{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-bottom:.55rem}
+        .fm-prow:last-child{margin-bottom:0}
+        .fm-prow label{font-size:.88rem;color:#374151;min-width:4.2em}
+        .fm-prow input[type=text],.fm-prow input[type=number],.fm-prow textarea{border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .65rem;font-size:.9rem;box-sizing:border-box}
+        .fm-prow input[type=text]{flex:1;min-width:10rem}
+        .fm-prow input[type=number]{width:4.5rem}
+        .fm-prow textarea{width:100%;min-height:3.2em;resize:vertical}
+        .fm-prow input:focus,.fm-prow textarea:focus{outline:none;border-color:var(--primary-color)}
+        .fm-optlist{display:flex;flex-direction:column;gap:.4rem;width:100%}
+        .fm-opt{display:flex;gap:.45rem;align-items:center}
+        .fm-opt input[type=text]{flex:1;min-width:0}
+        .fm-opt button{border:1px solid #e5e7eb;background:#fff;border-radius:.45rem;color:#6b7280;cursor:pointer;min-width:34px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0}
+        .fm-opt button:hover{border-color:#ef4444;color:#ef4444}
+        .fm-opt button.def{color:#9ca3af}
+        .fm-opt button.def.on{border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff}
+        .fm-addopt{border:1px dashed #93c5fd;background:#fff;color:#2563eb;border-radius:.5rem;padding:.45rem .9rem;font-size:.88rem;cursor:pointer;align-self:flex-start}
+        .fm-addopt:hover{background:#eff6ff}
+        .fm-del{border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;border-radius:.5rem;padding:.5rem 1rem;font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
+        .fm-del:hover{background:#fee2e2}
+        .fm-pages{display:flex;flex-direction:column;gap:1.2rem;align-items:center}
+        .fm-page{position:relative;border:1px solid #d1d5db;border-radius:.4rem;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08);line-height:0}
+        .fm-page canvas{display:block;width:100%;height:auto;border-radius:.4rem}
+        .fm-pagelabel{position:absolute;left:.5rem;top:.5rem;background:rgba(17,24,39,.75);color:#fff;font-size:.78rem;font-weight:700;border-radius:.4rem;padding:.15rem .55rem;line-height:1.6;z-index:5}
+        .fm-layers{position:absolute;left:0;top:0;right:0;bottom:0;z-index:4}
+        .fm-layers.placing{cursor:crosshair}
+        .fm-field{position:absolute;border:2px dashed #3b82f6;background:rgba(59,130,246,.08);border-radius:3px;box-sizing:border-box;cursor:move;touch-action:none;line-height:1.4;overflow:hidden}
+        .fm-field.sel{border:2px solid #2563eb;background:rgba(37,99,235,.12);box-shadow:0 0 0 2px #bfdbfe;z-index:6}
+        .fm-field .fm-finner{position:absolute;left:0;top:0;right:0;bottom:0;padding:2px 4px;font-size:11px;color:#1e40af;pointer-events:none;overflow:hidden}
+        .fm-field.fm-check .fm-finner,.fm-field.fm-radio .fm-finner{display:flex;align-items:center;justify-content:center;font-size:14px}
+        .fm-field.fm-radio .fm-finner{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px}
+        .fm-field.fm-radio .fm-ropt{display:flex;align-items:center;gap:4px;white-space:nowrap}
+        .fm-field.fm-radio .fm-rc{width:11px;height:11px;border:2px solid #3b82f6;border-radius:50%;flex:none;box-sizing:border-box}
+        .fm-field.fm-radio .fm-rc.on{background:#3b82f6}
+        .fm-handle{position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;background:#2563eb;border:2px solid #fff;border-radius:50%;cursor:nwse-resize;display:none;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+        .fm-field.sel .fm-handle{display:block}
+        .fm-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .fm-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .fm-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .fm-count{font-size:.88rem;color:#6b7280;margin-left:auto;align-self:center}
+        .fm-progress{display:none;margin-top:1rem}
+        .fm-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .fm-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .fm-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .fm-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .fm-tip b{color:#111827}
+        @media (max-width:640px){
+            .fm-upload{padding:1.6rem .8rem}
+            .fm-actions .btn{flex:1 1 100%;justify-content:center}
+            .fm-count{margin-left:0;width:100%;text-align:right}
+            .fm-prow input[type=text]{min-width:0}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">text_fields</i> PDF 可填写表单制作器</h1>
+            <p>上传 PDF，在页面上放置文本框、复选框、单选组、下拉列表，导出标准 AcroForm 可填写 PDF（Acrobat / 浏览器可直接填写）</p>
+        </div>
+        <div class="tool-content" style="max-width:1020px;margin:auto;">
+            <div class="fm-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>隐私承诺：纯前端本地处理。</b>你的 PDF 文件只在当前浏览器里流转，从上传、排版到导出全程不经过任何服务器；中文字体文件也从本站直接加载并缓存在本地，不走第三方。关掉页面，什么都不留下。</div>
+            </div>
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="fm-upload" id="fm-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="fm-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="fm-status" id="fm-status"></div>
+                <div class="fm-warn" id="fm-warn"></div>
+                <div class="fm-error" id="fm-error"></div>
+                <div class="fm-error" id="fm-lib-error" style="display:none;"></div>
+
+                <div class="fm-fileinfo" id="fm-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="fm-file-name"></div>
+                        <div class="sub" id="fm-file-sub"></div>
+                    </div>
+                    <div class="ops"><button type="button" id="fm-clear-file" title="移除文件"><i class="material-icons">close</i></button></div>
+                </div>
+
+                <div class="fm-work" id="fm-work">
+                    <div class="fm-toolbar" id="fm-toolbar" role="toolbar" aria-label="表单域工具">
+                        <button type="button" class="fm-tool" data-tool="text"><i class="material-icons">text_fields</i>单行文本框</button>
+                        <button type="button" class="fm-tool" data-tool="textarea"><i class="material-icons">notes</i>多行文本框</button>
+                        <button type="button" class="fm-tool" data-tool="check"><i class="material-icons">check_box</i>复选框</button>
+                        <button type="button" class="fm-tool" data-tool="radio"><i class="material-icons">radio_button_checked</i>单选按钮组</button>
+                        <button type="button" class="fm-tool" data-tool="select"><i class="material-icons">arrow_drop_down_circle</i>下拉列表</button>
+                    </div>
+                    <div class="fm-hint" id="fm-hint">① 在上方选择一种表单域 → ② 点击页面任意位置放置 → ③ 拖拽移动、拖右下角圆点缩放 → ④ 点击表单域选中，在下方属性面板里改字段名、默认值、选项。键盘 Delete 可删除选中的表单域。</div>
+                    <div class="fm-props" id="fm-props"></div>
+                    <div class="fm-pages" id="fm-pages"></div>
+                    <div class="fm-progress" id="fm-progress">
+                        <div class="bar"><i id="fm-progress-bar"></i></div>
+                        <div class="txt" id="fm-progress-txt"></div>
+                    </div>
+                    <div class="fm-actions">
+                        <button class="btn btn-primary" id="fm-export" disabled><i class="material-icons">download</i> 导出可填写 PDF</button>
+                        <button class="btn" id="fm-clear-fields" disabled><i class="material-icons">delete_outline</i> 清空全部表单域</button>
+                        <span class="fm-count" id="fm-count"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="fm-tip">
+                    <b>怎么用：</b>上传 PDF（逐页预览渲染）→ 选表单域类型 → 点页面放置 → 拖拽排版 → 选中后改字段名/默认值/下拉选项 → 「导出可填写 PDF」，下载 <b>fillable_原文件名.pdf</b>。导出的 PDF 是标准 AcroForm 表单，用 Adobe Acrobat / Reader、Chrome / Edge 浏览器、手机 PDF 阅读器打开都能直接填写。<br>
+                    <b>四种表单域：</b>「单行文本框」适合姓名、电话、身份证号；「多行文本框」适合地址、备注、事由说明；「复选框」适合"同意条款""已阅读"这类勾选；「单选按钮组」适合性别、婚姻状况等多选一；「下拉列表」适合籍贯、部门、城市等多选项。<br>
+                    <b>中文表单域：</b>文本框、下拉选项里的中文，导出时以外观流内嵌 Noto Sans SC 子集中文字体（OFL 开源字体），在任何设备上打开都能正常显示中文，无需对方电脑装中文字体。若中文字体加载失败，页面会明确提示，导出自动降级为英文字体（中文可能显示为空白）。<br>
+                    <b>隐私：</b>基于 pdf.js + pdf-lib + fontkit 在浏览器内处理，文件只在你的浏览器里流转，不经过任何服务器；中文字体从本站加载并本地缓存。单个文件超过 50MB 仍可处理，只是会慢一些。加密（带打开密码）的 PDF 请先用 <a href="/tools/pdf-encrypt">PDF 加密/解密</a> 解密后再制作表单。<br>
+                    <b>合同表单旅程线：</b>合同先 <a href="/tools/pdf-annotate">PDF 批注打码</a> 涂掉敏感信息 → 在本页做成可填写表单发给对方填 → 填完用 <a href="/tools/pdf-encrypt">PDF 加密/解密</a> 加密码保护。配套：多页合同先 <a href="/tools/pdf-merge-split">PDF 合并/拆分</a> 整理好再来加表单域。<br>
+                    <b>和 Adobe 比：</b>Acrobat Pro 的表单域制作是付费订阅功能；本站纯前端本地处理，<b>文件不上传、不限次免费</b>，打开网页就能用，导出无水印。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf_form_maker.js?v=1"></script>
+</body>
+</html>
+{{end}}

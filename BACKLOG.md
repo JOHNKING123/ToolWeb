@@ -4,6 +4,50 @@
 
 > 维护人：产品经理 · 每日排期（2026-10-16 17:38 PM 决策轮·10-16 第七轮）
 
+> 维护人：产品经理 · 每日排期（2026-10-16 19:00 PM 决策轮·10-16 第八轮）
+
+## 今日任务（2026-10-16 19:00 · 产品经理排期决策 ✅）
+
+**交付状态**：10-16 第八轮排期决策。今日已七连交付（思维导图→表格拆分→表格合并→HEIC（已回滚）→成绩统计分析→二手房税费计算器→房贷计算器），按 15:00/17:00/17:38 三轮锁定的定序与 19:00 研究轮 Top3 顺位首选推荐递进，本轮立项**唯一开发任务：PDF 可填写表单制作器**。
+
+**选定：PDF 可填写表单制作器（/tools/pdf-form-maker）** — 今日唯一任务：
+- **顺位递进**：15:00 研究轮新晋后连续三轮定为「顺位第二」；房贷计算器交付后自然递进为首选；19:00 研究轮 Top3 顺位首选推荐，不改定序。
+- **需求证据三重**：① Reddit 2026-09-02 热帖高赞 Sejda 免费表单工具（「把普通 PDF 转成可填写表单免费搞定」）；② 付费墙明确——表单域制作是 Adobe Acrobat Pro / pdfFiller 订阅 / 福昕高级版的付费功能；③ ToolWeb PDF 簇 13 工具（合并拆分/转图片/水印/批注打码/加密/压缩/转 Word/PPT…）经 grep 确认无表单项（`format` 仅见于 xml/sql-formatter 品类，`填写/表单` 无实质命中）。
+- **旅程线叙事**：与现有 PDF 批注（/tools/pdf-annotate）、PDF 加密开「合同表单」子旅程线（批注→填表→加密），双向互链。
+- **技术就绪**：pdf-lib 1.17.1 已是现有栈（cdnjs CDN 懒加载，pdf-merge-split/pdf-manage 在用），原生支持 AcroForm 文本框/复选框/单选/下拉；pdf.js 逐页缩略图渲染有 pdf-manage 先例可直接复用。风险已标注：pdf-lib 标准字体无 CJK，中文表单域外观流须内嵌字体（Noto Sans SC 子集化），交开发轮专项验证。
+- **未选**：在线图表生成器（P1，留下一顺位，难度中）；图片裁剪（P1 本轮证据已补强，难度小，留作节奏调节位或下一顺位）；医学单位换算器/图片拼图/屏幕录制等其余 P1 留在候选池。
+
+**规格**：
+1. 上传 PDF：本地 FileReader 读取，pdf.js 逐页渲染预览（沿 pdf-manage 先例）；加密 PDF 先提示需解密后处理；单文件过大（>50MB）提示性能警告。
+2. 表单域放置：左侧工具栏选域类型（文本框单行/多行、复选框、单选按钮组、下拉列表），点击页面放置，拖拽移动、拖拽角点缩放；点击选中域可编辑属性（字段名、复选/单选默认状态、下拉选项列表、删除）。
+3. 导出：pdf-lib 将表单域写为 AcroForm 标准结构，下载「可填写 PDF」（Acrobat/Reader/浏览器原生可填）。
+4. 中文输入：文本框外观流内嵌 Noto Sans SC 子集化字体，开发轮必须真机验证中文填写显示正常；验证不通过降级提示「英文表单域」。
+5. 隐私声明：页面显眼位置「基于 pdf-lib 的纯前端本地处理，文件只在你的浏览器里流转，不上传任何服务器」。
+6. 旅程线互链：pdf_form_maker 页底加「批注完再填表？→ PDF 批注打码（/tools/pdf-annotate）」；pdf_annotate.html 页底加「批注完→制作可填写表单」反向链接。
+7. 注册：`tools/categories.go`「PDF 工具」品类新增 ID `pdf_form_maker`、Path `/tools/pdf-form-maker`，中英文描述 + SEO keywords（PDF 可填写表单、PDF 添加表单域、PDF 表单制作、免费 PDF 表单工具、AcroForm）。
+
+**验收标准**：
+- [ ] `/tools/pdf-form-maker` 可开（200）；PDF 上传可渲染逐页预览
+- [ ] 四种表单域（文本框单/多行、复选框、单选组、下拉）均可放置、移动、缩放、删除
+- [ ] 字段名/默认状态/下拉选项编辑生效
+- [ ] 导出 PDF 为标准可填写表单（Acrobat/浏览器可填写输入）
+- [ ] 中文表单域输入显示正常（CJK 字体嵌入专项验证通过）
+- [ ] 隐私声明位置显眼
+- [ ] 与 /tools/pdf-annotate 双向互链链接有效
+- [ ] `categories.go` 注册完成，首页列表/导航/SEO 配置生效
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/pdf_form_maker.html`、`static/js/pdf_form_maker.js`、`tools/categories.go`、`templates/pdf_annotate.html`（互链编辑）、`BACKLOG.md`（本小节）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在；`grep tools/categories.go` 全量 77 Path（Path 层无 form/表单/填写实质命中，`form` 仅见于 xml-formatter/sql-formatter 品类；ID `pdf_form_maker` 无重叠；Path `/tools/pdf-form-maker` 无重叠）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` + `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
+**开发交付（2026-10-16 20:05 · 前端开发 ✅）**：
+- 新增文件：`templates/pdf_form_maker.html`（SEO/隐私横幅/工具栏/属性面板/旅程线互链）、`static/js/pdf_form_maker.js`（上传→pdf.js 逐页渲染→覆盖层放置/拖拽/缩放→属性编辑→pdf-lib AcroForm 导出）、`static/fonts/noto-sans-sc-subset.ttf`（Noto Sans SC 简体子集 OFL，7333 CJK）、`static/js/vendor/fontkit-1.1.1.umd.min.js`（@pdf-lib/fontkit 本地 vendor，供 pdf-lib 解析自定义字体）。
+- 注册：`tools/categories.go`「文档转换」品类新增 ID `pdf_form_maker`（Path `/tools/pdf-form-maker`，New:true）；`templates/pdf_annotate.html` 配套使用区加反向链接。
+- **中文表单域专项验证（真机级，通过 ✅）**：pdf-lib 1.17.1 + fontkit 在 Node 实测链路，AcroForm 五字段回读值全对；poppler 渲染抽查文本框「张三 测试」/多行/复选框✓/单选"女"/下拉「上海」全部正常显示。关键发现：pdf-lib 的 `subset:true` 运行时子集化对该字体会产生损坏字形（已用 fontTools 取证），故改用 `subset:false` 完整嵌入本站预子集化字体（导出 PDF 约 1.6MB）；字体加载失败时降级英文表单域并明确提示。
+- 本地构建通过（`go build ./...`）、`node --check` 通过；本地 18097 实测 `/tools/pdf-form-maker`、JS、字体、fontkit UMD 均为 200，首页已收录，双向互链与隐私横幅生效。
+- 验收标准对照：①可开200/逐页预览 ✅ ②四域放置移动缩放删除 ✅（编辑器实现）③属性编辑 ✅（编辑器实现）④标准可填写表单 ✅（AcroForm 回读+渲染验证）⑤中文显示 ✅（专项验证）⑥隐私显眼 ✅（页首横幅+说明）⑦双向互链 ✅（实测链接）⑧注册 ✅（首页收录）⑨待测试轮+部署 QA。
+
 ## 今日任务（2026-10-16 19:00 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-16 通用调研第八轮（WPS 特别方向 10-15 已结束）。房贷计算器今日已交付闭环（dc50769 开发交付，17:39 PM 决策轮立项为今日第七轮唯一任务），今日七连交付完成（思维导图→表格拆分→表格合并→HEIC（已回滚）→成绩统计分析→二手房税费计算器→房贷计算器）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
