@@ -1,0 +1,219 @@
+{{define "math_worksheet_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算术题生成器 - 小学口算练习题/竖式计算一键生成打印（本地免费）</title>
+    <meta name="description" content="免费在线算术题生成器：一年级20以内加减、二年级100以内加减、表内乘除、混合四则、脱式计算、竖式计算一键生成 A4 口算练习纸，附独立答案页，浏览器直接打印；进位/退位/括号开关可调，纯前端本地出题，数据不出浏览器。Math worksheet generator: printable arithmetic practice sheets with answer key, 100% client-side.">
+    <meta name="keywords" content="口算练习题,算术题生成器,小学数学练习打印,竖式计算练习,口算天天练,20以内加减,表内乘除,脱式计算,混合运算练习,math worksheet generator">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/math-worksheet-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"算术题生成器","description":"小学口算/竖式练习题一键生成打印：年级预设+进退位/括号开关，A4 练习纸+独立答案页，浏览器直接打印；纯前端本地出题，数据不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/math-worksheet-generator","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mwg-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .mwg-honest .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .mwg-honest b{color:#047857}
+        .mwg-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem}
+        .mwg-preset{border:2px solid #e5e7eb;border-radius:.7rem;padding:.7rem .6rem;text-align:center;cursor:pointer;background:#fff;transition:border-color .15s,background .15s;font-size:.92rem;color:#374151;line-height:1.5}
+        .mwg-preset:hover{border-color:#93c5fd}
+        .mwg-preset.on{border-color:var(--primary-color);background:#eff6ff;color:#1d4ed8;font-weight:700}
+        .mwg-preset small{display:block;font-size:.78rem;color:#9ca3af;font-weight:400;margin-top:.15rem}
+        .mwg-preset.on small{color:#3b82f6}
+        .mwg-row{display:flex;gap:1.1rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+        .mwg-field{display:flex;align-items:center;gap:.45rem;font-size:.93rem;color:#374151}
+        .mwg-field label{font-weight:600}
+        .mwg-field input[type="number"]{width:5.2rem;border:2px solid #e5e7eb;border-radius:.5rem;padding:.4rem .55rem;font-size:.95rem;color:#111827}
+        .mwg-field input[type="number"]:focus{outline:none;border-color:var(--primary-color)}
+        .mwg-check{display:inline-flex;align-items:center;gap:.4rem;font-size:.93rem;color:#374151;cursor:pointer;user-select:none}
+        .mwg-check input{width:1.05rem;height:1.05rem;accent-color:var(--primary-color);cursor:pointer}
+        .mwg-counts{display:flex;gap:.6rem}
+        .mwg-count{border:2px solid #e5e7eb;border-radius:.6rem;padding:.45rem 1.1rem;cursor:pointer;font-size:.93rem;color:#374151;background:#fff}
+        .mwg-count.on{border-color:var(--primary-color);background:#eff6ff;color:#1d4ed8;font-weight:700}
+        .mwg-modes{display:flex;gap:.6rem}
+        .mwg-mode{border:2px solid #e5e7eb;border-radius:.6rem;padding:.45rem 1rem;cursor:pointer;font-size:.93rem;color:#374151;background:#fff}
+        .mwg-mode.on{border-color:#059669;background:#ecfdf5;color:#065f46;font-weight:700}
+        .mwg-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        .mwg-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .mwg-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .mwg-btn2{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.5rem 1rem;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
+        .mwg-btn2:hover{background:#f3f4f6}
+        .mwg-btn2 .material-icons{font-size:1.05rem}
+        .mwg-status{font-size:.9rem;min-height:1.4em;margin-top:.7rem;line-height:1.7;color:#059669}
+        .mwg-note{font-size:.82rem;color:#9ca3af;margin-top:.3rem}
+        .mwg-sec{font-weight:700;color:#111827;margin:0 0 .55rem;font-size:1rem;display:flex;align-items:center;gap:.4rem}
+        .mwg-sec .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        /* ---- A4 练习纸 ---- */
+        .mwg-paper{background:#fff;border:1px solid #e5e7eb;border-radius:.4rem;box-shadow:0 2px 12px rgba(0,0,0,.08);max-width:190mm;margin:1.6rem auto 0;padding:12mm 10mm;color:#111;box-sizing:border-box}
+        .mwg-phead{text-align:center;border-bottom:2px solid #111;padding-bottom:.6rem;margin-bottom:.9rem}
+        .mwg-phead h2{margin:0 0 .5rem;font-size:1.5rem;letter-spacing:.35em;text-indent:.35em}
+        .mwg-phead .mwg-sub{font-size:.85rem;color:#555;margin-bottom:.55rem}
+        .mwg-pinfo{display:flex;justify-content:space-between;gap:1rem;font-size:.95rem;text-align:left}
+        .mwg-pinfo span{border-bottom:1px solid #999;display:inline-block;min-width:6.5em}
+        .mwg-qs{column-count:3;column-gap:2rem;font-size:1.02rem;line-height:2.5}
+        .mwg-qs.cols2{column-count:2;font-size:1.12rem}
+        .mwg-q{break-inside:avoid;display:flex;align-items:baseline;gap:.45em;margin:0;padding:0}
+        .mwg-qnum{color:#555;font-size:.85em;min-width:2.2em}
+        .mwg-qexpr{font-family:"Times New Roman",Georgia,serif;letter-spacing:.06em;white-space:nowrap}
+        .mwg-v{display:flex;align-items:flex-start;gap:.45em;break-inside:avoid;margin:.35rem 0 1rem}
+        .mwg-vnum{color:#555;font-size:.85em;min-width:2.2em;padding-top:.35rem}
+        .mwg-vg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.25rem;line-height:1.55}
+        .mwg-vr{display:flex}
+        .mwg-vc{width:1.15em;text-align:center}
+        .mwg-vline{border-bottom:2px solid #111;margin:.1rem 0}
+        .mwg-vblank .mwg-vc{border-bottom:1px dotted #bbb;min-height:1.5em}
+        .mwg-ans .mwg-qexpr{font-weight:700}
+        .mwg-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .mwg-tip b{color:#111827}
+        .mwg-faq b{color:#111827}
+        .mwg-faq{line-height:2;font-size:.93rem;color:#4b5563}
+        @media (max-width:640px){
+            .mwg-presets{grid-template-columns:repeat(2,1fr)}
+            .mwg-qs{column-count:2}
+            .mwg-paper{padding:6mm 5mm}
+            .mwg-pinfo{flex-wrap:wrap}
+        }
+        @media print{
+            .no-print{display:none!important}
+            body{background:#fff!important}
+            .container{max-width:none!important;padding:0!important;margin:0!important}
+            .mwg-paper{box-shadow:none;border:none;border-radius:0;max-width:none;width:100%;margin:0;padding:0}
+            .mwg-paper + .mwg-paper{page-break-before:always}
+            @page{size:A4 portrait;margin:11mm 10mm}
+        }
+        body.mwg-mode-practice #mwg-answer-paper{display:none}
+        body.mwg-mode-answer #mwg-paper{display:none}
+    </style>
+</head>
+<body class="mwg-mode-both">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">calculate</i> 算术题生成器</h1>
+            <p>小学口算/竖式练习题一键生成 A4 练习纸，附独立答案页，浏览器直接打印；纯前端本地出题，数据不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1060px;margin:auto;">
+            <div class="mwg-honest no-print">
+                <i class="material-icons">verified</i>
+                <div><b>本地出题承诺：</b>全部题目由浏览器里的随机出题引擎现场生成，<b>不联网、不上传</b>；除法保证整商、加减法按进位/退位开关出题、竖式数位严格对齐。生成后可直接打印或存为 PDF，发班级群也很方便。</div>
+            </div>
+
+            <div class="tool-card no-print">
+                <p class="mwg-sec"><i class="material-icons">school</i> 1 · 选择年级预设</p>
+                <div class="mwg-presets" id="mwg-presets" role="radiogroup" aria-label="年级预设">
+                    <div class="mwg-preset" data-preset="g1" role="radio" tabindex="0">一年级 · 20以内加减<small>0–20 加减法</small></div>
+                    <div class="mwg-preset on" data-preset="g2" role="radio" tabindex="0">二年级 · 100以内加减<small>0–100 加减法</small></div>
+                    <div class="mwg-preset" data-preset="muldiv" role="radio" tabindex="0">表内乘除<small>1–9 乘法 / 整除除法</small></div>
+                    <div class="mwg-preset" data-preset="mixed" role="radio" tabindex="0">混合四则<small>两步混合运算</small></div>
+                    <div class="mwg-preset" data-preset="deshi" role="radio" tabindex="0">脱式计算<small>递等式分步计算</small></div>
+                    <div class="mwg-preset" data-preset="vertical" role="radio" tabindex="0">竖式计算<small>加减乘竖式排版</small></div>
+                </div>
+
+                <p class="mwg-sec"><i class="material-icons">tune</i> 2 · 调整出题参数</p>
+                <div class="mwg-row" id="mwg-row-range">
+                    <div class="mwg-field"><label for="mwg-min">数值范围</label><input type="number" id="mwg-min" value="0" min="0" max="9999"> <span>～</span> <input type="number" id="mwg-max" value="100" min="1" max="9999"></div>
+                    <span class="mwg-note">加减/混合/脱式/竖式的操作数取值区间</span>
+                </div>
+                <div class="mwg-row" id="mwg-row-muldivnote" style="display:none;">
+                    <span class="mwg-note">表内乘除固定为 1–9 乘法表范围，保证除法整商。</span>
+                </div>
+                <div class="mwg-row" id="mwg-row-carry">
+                    <label class="mwg-check"><input type="checkbox" id="mwg-carry" checked> 允许进位加法</label>
+                    <label class="mwg-check"><input type="checkbox" id="mwg-borrow" checked> 允许退位减法</label>
+                    <span class="mwg-note">取消勾选则只出不进位/不退位的题</span>
+                </div>
+                <div class="mwg-row" id="mwg-row-bracket" style="display:none;">
+                    <label class="mwg-check"><input type="checkbox" id="mwg-bracket"> 题目中加入括号</label>
+                    <label class="mwg-check" id="mwg-check-mulmix"><input type="checkbox" id="mwg-mulmix" checked> 包含乘除（× ÷）</label>
+                    <span class="mwg-note">混合四则默认含 ×；脱式默认只出加减</span>
+                </div>
+                <div class="mwg-row" id="mwg-row-mdop" style="display:none;">
+                    <label class="mwg-check"><input type="checkbox" id="mwg-inc-mul" checked> 包含乘法</label>
+                    <label class="mwg-check"><input type="checkbox" id="mwg-inc-div" checked> 包含除法</label>
+                </div>
+
+                <p class="mwg-sec"><i class="material-icons">format_list_numbered</i> 3 · 题量与打印</p>
+                <div class="mwg-row">
+                    <div class="mwg-counts" id="mwg-counts" role="radiogroup" aria-label="题量">
+                        <div class="mwg-count" data-count="50" role="radio" tabindex="0">50 题</div>
+                        <div class="mwg-count on" data-count="100" role="radio" tabindex="0">100 题</div>
+                        <div class="mwg-count" data-count="200" role="radio" tabindex="0">200 题</div>
+                    </div>
+                </div>
+                <div class="mwg-row">
+                    <div class="mwg-modes" id="mwg-modes" role="radiogroup" aria-label="打印模式">
+                        <div class="mwg-mode on" data-mode="both" role="radio" tabindex="0">练习 + 答案</div>
+                        <div class="mwg-mode" data-mode="practice" role="radio" tabindex="0">仅练习纸</div>
+                        <div class="mwg-mode" data-mode="answer" role="radio" tabindex="0">仅答案页</div>
+                    </div>
+                    <span class="mwg-note">打印时按此模式输出；答案页供家长批改用</span>
+                </div>
+
+                <div class="mwg-actions">
+                    <button class="btn btn-primary" id="mwg-generate"><i class="material-icons">autorenew</i> 生成练习题</button>
+                    <button class="mwg-btn2" id="mwg-sample"><i class="material-icons">lightbulb</i> 示例填入</button>
+                    <button class="mwg-btn2" id="mwg-regen" disabled><i class="material-icons">refresh</i> 重新出题</button>
+                    <button class="mwg-btn2" id="mwg-copy" disabled><i class="material-icons">content_copy</i> 复制题目文本</button>
+                    <button class="mwg-btn2" id="mwg-print" disabled><i class="material-icons">print</i> 打印 / 存 PDF</button>
+                    <span class="mwg-status" id="mwg-status"></span>
+                </div>
+            </div>
+
+            <div id="mwg-empty" class="no-print" style="text-align:center;color:#9ca3af;padding:2.2rem 0;font-size:.95rem;">
+                <i class="material-icons" style="font-size:2.4rem;display:block;margin-bottom:.5rem;">description</i>
+                选择预设并点击「生成练习题」，A4 练习纸与答案页会在这里预览
+            </div>
+
+            <div id="mwg-paper" class="mwg-paper" style="display:none;">
+                <div class="mwg-phead">
+                    <h2 id="mwg-title">口算天天练</h2>
+                    <div class="mwg-sub" id="mwg-paper-sub"></div>
+                    <div class="mwg-pinfo">
+                        <div>姓名 <span>&nbsp;</span></div>
+                        <div>班级 <span>&nbsp;</span></div>
+                        <div>日期 <span>&nbsp;</span></div>
+                        <div>用时 <span>&nbsp;</span> 分钟</div>
+                        <div>得分 <span>&nbsp;</span></div>
+                    </div>
+                </div>
+                <div class="mwg-qs" id="mwg-questions"></div>
+            </div>
+
+            <div id="mwg-answer-paper" class="mwg-paper mwg-ans" style="display:none;">
+                <div class="mwg-phead">
+                    <h2>参考答案</h2>
+                    <div class="mwg-sub" id="mwg-answer-sub">供家长批改使用，请勿提前给孩子看</div>
+                </div>
+                <div class="mwg-qs" id="mwg-answers"></div>
+            </div>
+
+            <div class="tool-card no-print" style="margin-top:1.6rem;">
+                <h3>使用说明</h3>
+                <div class="mwg-tip">
+                    <b>给家长：</b>选好年级预设→生成→直接点「打印 / 存 PDF」，浏览器打印对话框里选「另存为 PDF」即可得到电子版，发班级群、打印店都方便。答案页单独成页，打印时可选「仅练习纸」不带出答案。<br>
+                    <b>进位/退位开关：</b>刚学加减法时可先取消勾选，只练不进位不退位的题；熟练后再打开加大难度。<br>
+                    <b>题目会重复吗？</b>出题引擎用题面做去重，同一次生成的题目不重复；表内乘除组合共 162 种，选 200 题时会有少量重复（状态栏会提示）。<br>
+                    <b>竖式题：</b>数位严格对齐，横线下方留空给孩子列竖式作答。
+                </div>
+            </div>
+
+            <div class="tool-card no-print">
+                <h3>常见问题</h3>
+                <div class="mwg-faq">
+                    <b>除法会有余数吗？</b>不会。本工具的除法题全部保证整除（被除数 = 除数 × 商），适合小学表内除法练习。<br>
+                    <b>混合运算的运算顺序对吗？</b>对。先乘除后加减，有括号先算括号；答案按标准运算顺序计算。<br>
+                    <b>打印出来是 A4 吗？</b>是。打印样式按 A4 纵向排版，页边距已预设；浏览器打印时请保持「默认页边距」、关闭「页眉页脚」以获得最干净的练习纸。<br>
+                    <b>数据会上传吗？</b>不会。纯前端本地生成，关掉网络也能出题（首次加载页面除外）。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/math_worksheet_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

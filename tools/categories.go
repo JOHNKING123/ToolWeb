@@ -950,6 +950,23 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "study",
+			Name:        "学习工具",
+			Description: "小学数学练习与学习辅助工具",
+			Icon:        "school",
+			Tools: []Tool{
+				{
+					ID:          "math_worksheet_generator",
+					Name:        "算术题生成器",
+					Description: "小学口算/竖式练习题一键生成打印：年级预设+进退位/括号开关，A4 练习纸+独立答案页，浏览器直接打印，纯前端本地出题不出浏览器 · Math worksheet generator: printable arithmetic practice sheets with answer key, 100% client-side",
+					Path:        "/tools/math-worksheet-generator",
+					Icon:        "calculate",
+					New:         true,
+					Category:    "学习工具",
+				},
+			},
+		},
 	}
 }
 
