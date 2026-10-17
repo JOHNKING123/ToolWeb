@@ -6,8 +6,9 @@
  *   「表格1/2/3」，Excel 非法字符替换、31 字符截断、重名自动加后缀）
  * → 单元格类型：千分位数字/百分比存真实数值、15 位+长 ID/前导零存文本
  *   （防科学计数法）→ 卡片化预览（表头粗体、斑马纹、统计信息）
- * → 导出 .xlsx（SheetJS 0.18.5 CDN 懒加载 + 本地 vendor 兜底，表头粗体+填充、
- *   冻结首行、自动列宽）/ 单表复制 TSV / 示例数据一键填入。
+ * → 导出 .xlsx（SheetJS 0.18.5 CDN 懒加载 + 本地 vendor 兜底，列宽自动调整；
+ *   社区版不支持写单元格样式：表头粗体/浅蓝底、首行冻结、0.00% 数字格式均不落盘，
+ *   但数值与文本类型正确）/ 单表复制 TSV / 示例数据一键填入。
  * 全程不上传服务器，无新增后端接口；CDN 失败时给出可读报错，页面不白屏。
  */
 /* 全局 XLSX（懒加载后挂载） */
@@ -132,6 +133,12 @@ function uniqueSheetName(name, used) {
   used[n] = true;
   return n;
 }
+/* 所有表格的最终工作表名（含去重）：预览与导出共用，保证显示一致 */
+function sheetNamesFor(tables) {
+  var used = {}, names = [];
+  tables.forEach(function (t) { names.push(uniqueSheetName(sanitizeSheetName(t.title), used)); });
+  return names;
+}
 
 /* 主引擎：从整段文本提取表格。返回 [{title, header:[cell], rows:[[cell]]}] */
 function extractTables(text) {
@@ -194,12 +201,15 @@ function textWidth(s) {
   return w;
 }
 
-/* 用 SheetJS 生成工作簿：表头粗体+浅蓝底、冻结首行、自动列宽 */
+/* 用 SheetJS 生成工作簿：自动列宽。
+ * 注：SheetJS 0.18.5 社区版写入器不支持单元格样式——粗体/填充/冻结窗格/数字格式
+ * 均不落盘，故不设置 cell.s 与 ws['!freeze']；cell.z 仅作语义保留。
+ * 数值与文本类型正确。 */
 function buildWorkbook(XLSX, tables) {
   var wb = XLSX.utils.book_new();
-  var used = {};
-  tables.forEach(function (t) {
-    var name = uniqueSheetName(sanitizeSheetName(t.title), used);
+  var names = sheetNamesFor(tables);
+  tables.forEach(function (t, ti) {
+    var name = names[ti];
     var allRows = [t.header].concat(t.rows);
     var aoa = allRows.map(function (r) { return r.map(function (c) { return c.v; }); });
     var ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -212,11 +222,10 @@ function buildWorkbook(XLSX, tables) {
         if (!cell) continue;
         var src = allRows[R][C];
         cell.t = src.t;
+        /* 社区版不写样式：z 赋值仅作语义保留，Excel 打开时不显示 0.00% 格式；数值本身正确 */
         if (src.t === 'n' && src.z) cell.z = src.z;
-        if (R === 0) cell.s = { font: { bold: true, color: { rgb: 'FF1F2937' } }, fill: { patternType: 'solid', fgColor: { rgb: 'FFDCE9FD' } } };
       }
     }
-    ws['!freeze'] = { xSplit: 1, ySplit: 1, topLeftCell: 'B2', activePane: 'bottomRight', state: 'frozen' };
     var widths = [];
     for (C = 0; C <= range.e.c; C++) {
       var w = 8;
@@ -255,9 +264,9 @@ function downloadName(srcName) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     extractTables: extractTables, classifyCell: classifyCell, sanitizeSheetName: sanitizeSheetName,
-    uniqueSheetName: uniqueSheetName, tableStats: tableStats, tableToTSV: tableToTSV,
-    downloadName: downloadName, buildWorkbook: buildWorkbook, splitPipeCells: splitPipeCells,
-    isDelimiterLine: isDelimiterLine, stripInlineMd: stripInlineMd
+    uniqueSheetName: uniqueSheetName, sheetNamesFor: sheetNamesFor, tableStats: tableStats,
+    tableToTSV: tableToTSV, downloadName: downloadName, buildWorkbook: buildWorkbook,
+    splitPipeCells: splitPipeCells, isDelimiterLine: isDelimiterLine, stripInlineMd: stripInlineMd
   };
 }
 
@@ -325,12 +334,13 @@ if (typeof module !== 'undefined' && module.exports) {
   function renderPreview() {
     summary.innerHTML = '共识别到 <b>' + tables.length + '</b> 张表格' +
       (tables.length > 1 ? '，导出为 ' + tables.length + ' 个工作表' : '');
+    var names = sheetNamesFor(tables);
     var html = '';
     tables.forEach(function (t, i) {
       var st = tableStats(t);
       html += '<div class="m2x-card"><div class="m2x-card-head">' +
         '<div><div class="m2x-card-title">' + esc(t.title) + '</div>' +
-        '<div class="m2x-card-stat">数据 ' + st.rows + ' 行 × ' + st.cols + ' 列 · 共 ' + st.cells + ' 个单元格（数值 ' + st.nums + ' / 文本 ' + st.texts + '）· 将导出为 sheet「' + esc(sanitizeSheetName(t.title)) + '」</div></div>' +
+        '<div class="m2x-card-stat">数据 ' + st.rows + ' 行 × ' + st.cols + ' 列 · 共 ' + st.cells + ' 个单元格（数值 ' + st.nums + ' / 文本 ' + st.texts + '）· 将导出为 sheet「' + esc(names[i]) + '」</div></div>' +
         '<button class="btn btn-secondary m2x-copy" data-i="' + i + '"><i class="material-icons">content_copy</i> 复制 TSV</button>' +
         '</div><div class="m2x-table-wrap"><table class="m2x-table"><thead><tr>' +
         t.header.map(function (c) { return '<th>' + esc(c.d) + '</th>'; }).join('') +

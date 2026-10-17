@@ -68,7 +68,7 @@
         <div class="tool-content" style="max-width:900px;margin:auto;">
             <div class="m2x-honest">
                 <i class="material-icons">verified</i>
-                <div><b>诚实声明：</b>本工具只识别「表头 + <code>---</code> 分隔行」结构的 Markdown 表格；<b><code>```</code> 代码块里的表格会被有意跳过</b>（那是示例代码，不是数据）；表格里没有分隔行的纯文本对齐表识别不了。请核对下方预览再导出。</div>
+                <div><b>诚实声明：</b>本工具只识别「表头 + <code>---</code> 分隔行」结构的 Markdown 表格；<b><code>```</code> 代码块里的表格会被有意跳过</b>（那是示例代码，不是数据）；只有表头、没有数据行的空表格不会被提取；没有分隔行的纯文本对齐表识别不了。请核对下方预览再导出。</div>
             </div>
             <div class="tool-card" style="margin-bottom:1.2rem;">
                 <div class="m2x-upload" id="m2x-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 .md 文本文件到此处">
@@ -95,7 +95,7 @@
                         <button class="btn btn-primary" id="m2x-export" disabled><i class="material-icons">download</i> 导出 .xlsx（全部表格）</button>
                     </div>
                     <div style="color:#6b7280;font-size:.85rem;margin-top:.5rem;line-height:1.6;">
-                        导出文件：表头<b>加粗</b>、首行<b>冻结</b>、列宽按内容<b>自动调整</b>；千分位数字与百分比为真实数值（可直接求和），15 位以上长 ID 与前导零存为文本（防科学计数法）。
+                        导出文件：列宽按内容<b>自动调整</b>；千分位数字与百分比存为真实数值（可直接求和；百分比打开后显示为小数，选中列设为「百分比」格式即恢复）；15 位以上长 ID 与前导零存为文本（防科学计数法）。注：所用 SheetJS 社区版不支持写单元格样式，表头加粗/底色、首行冻结、0.00% 数字格式在导出的文件中不生效。
                     </div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                 <div class="m2x-tip">
                     <b>怎么用：</b>把 ChatGPT / Claude / DeepSeek 等 AI 回答（含 Markdown 表格）整段粘贴进来，或上传 .md 文件 → 点「解析表格」→ 在预览卡片里核对表数、表头与统计 → 点「导出 .xlsx」下载（多张表格自动分成多个工作表）。<br>
                     <b>表名规则：</b>每张表格取其上方最近的 <code>#</code>/<code>##</code> 标题做 sheet 名；无标题用「表格1/2/3」；非法字符（<code>\ / ? * [ ] :</code>）替换为下划线、超 31 字符自动截断、重名自动加 <code>_2</code> 后缀。<br>
-                    <b>单元格类型：</b><code>1,234,567.89</code> 这类千分位数字、<code>12.5%</code> 这类百分比存为<b>真实数值</b>（百分比带 <code>0.00%</code> 格式，可直接求和/画图）；15 位以上长数字 ID（如订单号 <code>20260118000123456</code>）与前导零编号（如 <code>00123</code>）存为<b>文本</b>，Excel 打开不会变成科学计数法丢精度。<br>
+                    <b>单元格类型：</b><code>1,234,567.89</code> 这类千分位数字、<code>12.5%</code> 这类百分比存为<b>真实数值</b>（百分比按小数存储，如 <code>12.5%</code> 存为 0.125，可直接求和/画图；在 Excel 里选中该列设为「百分比」格式即显示为 12.50%）；15 位以上长数字 ID（如订单号 <code>20260118000123456</code>）与前导零编号（如 <code>00123</code>）存为<b>文本</b>，Excel 打开不会变成科学计数法丢精度。<br>
                     <b>单表复制：</b>每张预览卡片右上角「复制 TSV」，可直接粘贴进 Excel / WPS，不挤列。<br>
                     <b>转义竖线：</b>单元格里的 <code>\|</code> 会还原为 <code>|</code>，不会被误切成两列；行内 <code>**加粗**</code>、<code>`代码`</code>、<code>[链接](url)</code> 等 Markdown 修饰会被清理成纯文本。<br>
                     <b>隐私：</b>解析与导出全程在你的浏览器里完成，文本只在浏览器内存里流转，不经过任何服务器；SheetJS 库从 CDN 懒加载（失败时自动走本站本地副本），你的数据不会发给 CDN。<br>
@@ -117,7 +117,7 @@
             </div>
         </div>
     </div>
-    <script src="/tools/static/js/markdown_to_excel.js?v=1"></script>
+    <script src="/tools/static/js/markdown_to_excel.js?v=2"></script>
 </body>
 </html>
 {{end}}
