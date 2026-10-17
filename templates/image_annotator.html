@@ -1,0 +1,423 @@
+{{define "image_annotator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片标注工具 - 截图批注箭头/文字/马赛克在线处理 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片标注工具：上传截图/JPG/PNG/WebP，用箭头、直线、矩形、圆形、文字、荧光笔、马赛克打码批注，撤销重做，PNG/JPEG 导出，纯前端本地处理不上传。">
+    <meta name="keywords" content="图片标注,截图批注,箭头标注,图片打马赛克,截图画圈,在线标注工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/image-annotator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片标注工具","description":"免费在线图片标注工具：箭头/直线/矩形/圆形/文字/荧光笔/马赛克批注，纯前端本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/image-annotator","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ia-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .ia-upload:hover,.ia-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .ia-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .ia-info{color:#6b7280;font-size:.9rem;margin-top:.6rem;line-height:1.7}
+        .ia-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em}
+        .ia-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.8rem 0}
+        .ia-tool-btn{border:1px solid #d1d5db;background:#fff;padding:.45rem .9rem;border-radius:.5rem;cursor:pointer;font-size:.92rem;color:#374151;display:inline-flex;align-items:center;gap:.3rem}
+        .ia-tool-btn .material-icons{font-size:1.15rem}
+        .ia-tool-btn.active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:600}
+        .ia-tool-btn:disabled{opacity:.45;cursor:not-allowed}
+        .ia-sep{width:1px;height:1.6rem;background:#e5e7eb}
+        .ia-ctl{display:flex;align-items:center;gap:.45rem;font-size:.9rem;color:#374151}
+        .ia-ctl input[type=range]{width:110px}
+        .ia-ctl input[type=color]{width:2rem;height:2rem;border:1px solid #d1d5db;border-radius:.4rem;padding:0;background:#fff;cursor:pointer}
+        .ia-swatches{display:flex;gap:.3rem;align-items:center}
+        .ia-sw{width:1.5rem;height:1.5rem;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+        .ia-sw.active{border-color:#111827;transform:scale(1.12)}
+        .ia-canvas-wrap{position:relative;text-align:center;margin:1rem 0;overflow:auto;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.5rem;padding:.6rem}
+        #ia-canvas{max-width:100%;height:auto;touch-action:none;cursor:crosshair;background:#fff;display:block;margin:auto;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+        #ia-text-input{position:absolute;display:none;z-index:5;border:1px dashed var(--primary-color);background:rgba(255,255,255,.92);padding:.25rem .4rem;outline:none;resize:none;overflow:hidden;font-family:sans-serif;line-height:1.3;color:#111827}
+        .ia-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .ia-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ia-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .ia-tip b{color:#111827}
+        .ia-rel{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+        .ia-rel .btn{font-size:.9rem}
+        .ia-rel .ia-current{border:1px solid var(--primary-color);color:var(--primary-color);border-radius:.5rem;padding:.5rem 1rem;font-size:.9rem;background:#eff6ff;font-weight:600}
+        @media (max-width:640px){.ia-upload{padding:1.6rem .8rem}.ia-actions .btn{flex:1 1 45%;justify-content:center}.ia-ctl input[type=range]{width:80px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">draw</i> 图片标注</h1>
+            <p>截图批注神器：箭头 / 直线 / 矩形 / 圆形 / 文字 / 荧光笔 / 马赛克打码，撤销重做随心改；图片仅在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>上传图片</h3>
+                <div class="ia-upload" id="ia-upload" role="button" tabindex="0" aria-label="点击选择、拖拽或粘贴图片上传">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择图片，或拖拽 / 直接粘贴截图到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 JPG / PNG / WebP，本地处理不上传，导出保持原图分辨率</div>
+                </div>
+                <input type="file" id="ia-file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                <div class="ia-info" id="ia-fileinfo" style="display:none;"></div>
+                <div class="ia-status" id="ia-status"></div>
+            </div>
+
+            <div class="tool-card" id="ia-workspace" style="margin-bottom:1.2rem;display:none;">
+                <h3>标注工具</h3>
+                <div class="ia-toolbar" role="group" aria-label="标注工具选择">
+                    <button type="button" class="ia-tool-btn active" data-tool="arrow" title="箭头"><i class="material-icons">north_east</i>箭头</button>
+                    <button type="button" class="ia-tool-btn" data-tool="line" title="直线"><i class="material-icons">remove</i>直线</button>
+                    <button type="button" class="ia-tool-btn" data-tool="rect" title="矩形"><i class="material-icons">crop_square</i>矩形</button>
+                    <button type="button" class="ia-tool-btn" data-tool="ellipse" title="圆形/椭圆"><i class="material-icons">circle</i>圆形</button>
+                    <button type="button" class="ia-tool-btn" data-tool="text" title="文字"><i class="material-icons">text_fields</i>文字</button>
+                    <button type="button" class="ia-tool-btn" data-tool="highlighter" title="荧光笔"><i class="material-icons">brush</i>荧光笔</button>
+                    <button type="button" class="ia-tool-btn" data-tool="mosaic" title="马赛克打码（像素化，不可逆）"><i class="material-icons">grid_on</i>马赛克</button>
+                    <span class="ia-sep"></span>
+                    <button type="button" class="ia-tool-btn" id="ia-undo" title="撤销 (Ctrl+Z)"><i class="material-icons">undo</i>撤销</button>
+                    <button type="button" class="ia-tool-btn" id="ia-redo" title="重做 (Ctrl+Y)"><i class="material-icons">redo</i>重做</button>
+                    <button type="button" class="ia-tool-btn" id="ia-clear" title="清空所有标注，回到原图"><i class="material-icons">delete_sweep</i>清空</button>
+                </div>
+                <div class="ia-toolbar" role="group" aria-label="样式设置">
+                    <span class="ia-ctl">颜色
+                        <span class="ia-swatches" id="ia-swatches">
+                            <button type="button" class="ia-sw active" data-c="#ff3b30" style="background:#ff3b30" aria-label="红色"></button>
+                            <button type="button" class="ia-sw" data-c="#ff9500" style="background:#ff9500" aria-label="橙色"></button>
+                            <button type="button" class="ia-sw" data-c="#ffcc00" style="background:#ffcc00" aria-label="黄色"></button>
+                            <button type="button" class="ia-sw" data-c="#34c759" style="background:#34c759" aria-label="绿色"></button>
+                            <button type="button" class="ia-sw" data-c="#007aff" style="background:#007aff" aria-label="蓝色"></button>
+                            <button type="button" class="ia-sw" data-c="#af52de" style="background:#af52de" aria-label="紫色"></button>
+                            <button type="button" class="ia-sw" data-c="#000000" style="background:#000000" aria-label="黑色"></button>
+                            <button type="button" class="ia-sw" data-c="#ffffff" style="background:#ffffff" aria-label="白色"></button>
+                        </span>
+                        <input type="color" id="ia-color" value="#ff3b30" aria-label="自定义颜色">
+                    </span>
+                    <span class="ia-sep"></span>
+                    <span class="ia-ctl" id="ia-lw-wrap">线宽 <input type="range" id="ia-linewidth" min="2" max="30" value="4"> <b id="ia-linewidth-val">4</b>px</span>
+                    <span class="ia-ctl" id="ia-ts-wrap" style="display:none;">字号 <input type="range" id="ia-textsize" min="14" max="120" value="32"> <b id="ia-textsize-val">32</b>px</span>
+                    <span class="ia-ctl" id="ia-mb-wrap" style="display:none;">马赛克粒度 <input type="range" id="ia-mosaicblock" min="6" max="60" value="16"> <b id="ia-mosaicblock-val">16</b>px</span>
+                </div>
+                <div class="ia-canvas-wrap" id="ia-canvas-wrap">
+                    <canvas id="ia-canvas"></canvas>
+                    <textarea id="ia-text-input" rows="1" placeholder="输入文字，回车确认，Esc 取消"></textarea>
+                </div>
+            </div>
+
+            <div class="tool-card" id="ia-export-card" style="margin-bottom:1.2rem;display:none;">
+                <h3>导出</h3>
+                <div class="ia-toolbar" role="group" aria-label="导出设置">
+                    <span class="ia-ctl">格式
+                        <button type="button" class="ia-tool-btn active" data-fmt="png">PNG</button>
+                        <button type="button" class="ia-tool-btn" data-fmt="jpeg">JPEG</button>
+                    </span>
+                    <span class="ia-ctl" id="ia-q-wrap" style="display:none;">JPEG 质量 <input type="range" id="ia-quality" min="10" max="100" value="92"> <b id="ia-quality-val">92</b>%</span>
+                </div>
+                <div class="ia-actions">
+                    <button class="btn btn-primary" id="ia-export"><i class="material-icons">download</i> 导出图片</button>
+                    <button class="btn btn-secondary" id="ia-reupload"><i class="material-icons">refresh</i> 换一张图</button>
+                </div>
+                <div class="ia-info" id="ia-export-msg"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>📷 图片旅程线</h3>
+                <div class="ia-rel">
+                    <span class="ia-current">① 图片标注（当前）</span>
+                    <a class="btn btn-secondary" href="/tools/img-resize">② 图片尺寸调整</a>
+                    <a class="btn btn-secondary" href="/tools/watermark">③ 图片打水印</a>
+                    <a class="btn btn-secondary" href="/tools/nine-grid">④ 九宫格切图</a>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ia-tip">
+                    <b>标注：</b>左侧选工具（箭头/直线/矩形/圆形/文字/荧光笔/马赛克），在图片上按住拖拽即可绘制；文字工具点一下图片弹出输入框，回车确认、Esc 取消。<br>
+                    <b>马赛克：</b>拖拽框选要打码的区域，松开即像素化，导出后不可逆；粒度越大色块越大。<br>
+                    <b>撤销/重做：</b>支持 Ctrl+Z 撤销、Ctrl+Y（或 Ctrl+Shift+Z）重做，最多保留 40 步；「清空」回到原图，也可撤销。<br>
+                    <b>导出：</b>PNG 保留透明通道；JPEG 体积小、可调质量（透明背景导出 JPEG 会自动垫白底）。<br>
+                    <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+(function(){
+    "use strict";
+    var $ = function(id){ return document.getElementById(id); };
+    var canvas = $('ia-canvas'), ctx = canvas.getContext('2d');
+    var wrap = $('ia-canvas-wrap'), textInput = $('ia-text-input');
+    var img = new Image(), hasImage = false;
+    var tool = 'arrow', color = '#ff3b30', lineWidth = 4, textSize = 32, mosaicBlock = 16;
+    var fmt = 'png', quality = 0.92;
+    var drawing = false, startPt = null, movePt = null, points = [], tempBase = null, textAnchor = null;
+    var undoStack = [], redoStack = [], MAX_HIST = 40;
+
+    function status(msg){ $('ia-status').textContent = msg || ''; }
+    function cloneCanvas(c){ var t = document.createElement('canvas'); t.width = c.width; t.height = c.height; t.getContext('2d').drawImage(c, 0, 0); return t; }
+    function commitHistory(base){ undoStack.push(base); if (undoStack.length > MAX_HIST) undoStack.shift(); redoStack.length = 0; updateHistBtns(); }
+    function updateHistBtns(){ $('ia-undo').disabled = undoStack.length === 0; $('ia-redo').disabled = redoStack.length === 0; }
+    function undo(){ if (!undoStack.length) return; redoStack.push(cloneCanvas(canvas)); var p = undoStack.pop(); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(p,0,0); updateHistBtns(); status('已撤销'); }
+    function redo(){ if (!redoStack.length) return; undoStack.push(cloneCanvas(canvas)); var p = redoStack.pop(); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(p,0,0); updateHistBtns(); status('已重做'); }
+
+    function evtPos(e){
+        var r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * canvas.width / r.width, y: (e.clientY - r.top) * canvas.height / r.height };
+    }
+
+    function setupCtx(alpha){
+        ctx.save();
+        ctx.strokeStyle = color; ctx.fillStyle = color;
+        ctx.lineWidth = lineWidth; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        if (alpha) ctx.globalAlpha = alpha;
+    }
+    function drawArrow(p1, p2){
+        var dx = p2.x - p1.x, dy = p2.y - p1.y;
+        if (Math.hypot(dx, dy) < 2) return;
+        var ang = Math.atan2(dy, dx), hl = Math.max(14, lineWidth * 4);
+        ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(p2.x - hl * Math.cos(ang - Math.PI/6), p2.y - hl * Math.sin(ang - Math.PI/6));
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(p2.x - hl * Math.cos(ang + Math.PI/6), p2.y - hl * Math.sin(ang + Math.PI/6));
+        ctx.stroke();
+    }
+    function drawShape(p1, p2, isHighlighter, hlPts){
+        setupCtx(isHighlighter ? 0.35 : 0);
+        if (isHighlighter){
+            ctx.lineWidth = lineWidth * 3;
+            ctx.beginPath();
+            ctx.moveTo(hlPts[0].x, hlPts[0].y);
+            for (var i = 1; i < hlPts.length; i++) ctx.lineTo(hlPts[i].x, hlPts[i].y);
+            ctx.stroke();
+        } else if (tool === 'arrow'){ drawArrow(p1, p2); }
+        else if (tool === 'line'){ ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+        else if (tool === 'rect'){ ctx.strokeRect(Math.min(p1.x,p2.x), Math.min(p1.y,p2.y), Math.abs(p2.x-p1.x), Math.abs(p2.y-p1.y)); }
+        else if (tool === 'ellipse'){
+            ctx.beginPath();
+            ctx.ellipse((p1.x+p2.x)/2, (p1.y+p2.y)/2, Math.abs(p2.x-p1.x)/2, Math.abs(p2.y-p1.y)/2, 0, 0, Math.PI*2);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+    function pixelateRect(p1, p2){
+        var x = Math.round(Math.min(p1.x,p2.x)), y = Math.round(Math.min(p1.y,p2.y));
+        var w = Math.round(Math.abs(p2.x-p1.x)), h = Math.round(Math.abs(p2.y-p1.y));
+        x = Math.max(0,x); y = Math.max(0,y); w = Math.min(w, canvas.width-x); h = Math.min(h, canvas.height-y);
+        if (w < 4 || h < 4) return false;
+        var bs = Math.max(4, mosaicBlock);
+        var sw = Math.max(1, Math.round(w/bs)), sh = Math.max(1, Math.round(h/bs));
+        var t = document.createElement('canvas'); t.width = sw; t.height = sh;
+        t.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, sw, sh);
+        ctx.save(); ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(t, 0, 0, sw, sh, x, y, w, h);
+        ctx.restore();
+        return true;
+    }
+    function drawPreview(){
+        ctx.drawImage(tempBase, 0, 0);
+        if (tool === 'mosaic'){
+            setupCtx(0); ctx.setLineDash([8,6]);
+            ctx.strokeStyle = '#ff3b30'; ctx.lineWidth = 2;
+            ctx.strokeRect(Math.min(startPt.x,movePt.x), Math.min(startPt.y,movePt.y), Math.abs(movePt.x-startPt.x), Math.abs(movePt.y-startPt.y));
+            ctx.setLineDash([]); ctx.restore();
+        } else if (tool === 'highlighter'){ drawShape(startPt, movePt, true, points); }
+        else { drawShape(startPt, movePt, false); }
+    }
+
+    canvas.addEventListener('pointerdown', function(e){
+        if (!hasImage || textInput.style.display === 'block') return;
+        if (tool === 'text'){ openTextInput(e); return; }
+        e.preventDefault();
+        canvas.setPointerCapture(e.pointerId);
+        drawing = true; startPt = evtPos(e); movePt = startPt;
+        points = [startPt];
+        tempBase = cloneCanvas(canvas);
+    });
+    canvas.addEventListener('pointermove', function(e){
+        if (!drawing) return;
+        movePt = evtPos(e);
+        if (tool === 'highlighter') points.push(movePt);
+        drawPreview();
+    });
+    function finishDraw(){
+        if (!drawing) return;
+        drawing = false;
+        var ok = false;
+        ctx.drawImage(tempBase, 0, 0);
+        if (tool === 'mosaic'){ ok = pixelateRect(startPt, movePt); }
+        else if (tool === 'highlighter'){ if (points.length > 1){ drawShape(startPt, movePt, true, points); ok = true; } }
+        else { if (Math.hypot(movePt.x-startPt.x, movePt.y-startPt.y) > 2){ drawShape(startPt, movePt, false); ok = true; } }
+        if (ok) commitHistory(tempBase); else tempBase = null;
+        tempBase = null; points = [];
+        status(ok ? '' : '绘制太小，已忽略');
+    }
+    canvas.addEventListener('pointerup', finishDraw);
+    canvas.addEventListener('pointercancel', function(){ drawing = false; if (tempBase){ ctx.drawImage(tempBase,0,0); tempBase = null; } });
+
+    // 文字输入
+    function openTextInput(e){
+        var r = canvas.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+        textAnchor = evtPos(e);
+        var scale = r.width / canvas.width;
+        textInput.style.display = 'block';
+        textInput.style.left = (r.left - wr.left + (e.clientX - r.left)) + 'px';
+        textInput.style.top = (r.top - wr.top + (e.clientY - r.top)) + 'px';
+        textInput.style.fontSize = Math.max(10, textSize * scale) + 'px';
+        textInput.style.color = color;
+        textInput.value = '';
+        textInput.focus();
+    }
+    function commitText(){
+        var v = textInput.value.replace(/\s+$/,'');
+        textInput.style.display = 'none';
+        if (!v || !textAnchor) { textAnchor = null; return; }
+        commitHistory(cloneCanvas(canvas));
+        ctx.save();
+        ctx.font = textSize + 'px sans-serif';
+        ctx.fillStyle = color; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = Math.max(2, textSize/10);
+        var lh = textSize * 1.35, y = textAnchor.y;
+        v.split('\n').forEach(function(line){ ctx.fillText(line, textAnchor.x, y); y += lh; });
+        ctx.restore();
+        textAnchor = null; updateHistBtns();
+    }
+    textInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); commitText(); }
+        else if (e.key === 'Escape'){ textInput.style.display = 'none'; textAnchor = null; }
+        e.stopPropagation();
+    });
+
+    // 工具切换
+    var toolBtns = document.querySelectorAll('[data-tool]');
+    toolBtns.forEach(function(b){
+        b.addEventListener('click', function(){
+            toolBtns.forEach(function(x){ x.classList.remove('active'); });
+            b.classList.add('active');
+            tool = b.getAttribute('data-tool');
+            $('ia-ts-wrap').style.display = tool === 'text' ? '' : 'none';
+            $('ia-mb-wrap').style.display = tool === 'mosaic' ? '' : 'none';
+            $('ia-lw-wrap').style.display = (tool === 'text' || tool === 'mosaic') ? 'none' : '';
+            canvas.style.cursor = tool === 'text' ? 'text' : 'crosshair';
+            status(tool === 'mosaic' ? '马赛克：框选区域松开即像素化，导出后不可逆' : '');
+        });
+    });
+
+    // 颜色
+    var sws = document.querySelectorAll('.ia-sw');
+    sws.forEach(function(s){
+        s.addEventListener('click', function(){
+            sws.forEach(function(x){ x.classList.remove('active'); });
+            s.classList.add('active');
+            color = s.getAttribute('data-c'); $('ia-color').value = color;
+        });
+    });
+    $('ia-color').addEventListener('input', function(e){
+        color = e.target.value;
+        sws.forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-c').toLowerCase() === color.toLowerCase()); });
+    });
+
+    // 滑杆
+    function bindRange(id, valId, fn){
+        $(id).addEventListener('input', function(e){ $(valId).textContent = e.target.value; fn(+e.target.value); });
+    }
+    bindRange('ia-linewidth','ia-linewidth-val',function(v){ lineWidth = v; });
+    bindRange('ia-textsize','ia-textsize-val',function(v){ textSize = v; });
+    bindRange('ia-mosaicblock','ia-mosaicblock-val',function(v){ mosaicBlock = v; });
+    bindRange('ia-quality','ia-quality-val',function(v){ quality = v/100; });
+
+    // 撤销/重做/清空
+    $('ia-undo').addEventListener('click', undo);
+    $('ia-redo').addEventListener('click', redo);
+    $('ia-clear').addEventListener('click', function(){
+        if (!hasImage) return;
+        commitHistory(cloneCanvas(canvas));
+        ctx.drawImage(img, 0, 0);
+        status('已清空标注（可撤销）');
+    });
+    document.addEventListener('keydown', function(e){
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey){ e.preventDefault(); undo(); }
+        else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))){ e.preventDefault(); redo(); }
+        else if (e.key === 'Escape' && drawing){ drawing = false; if (tempBase){ ctx.drawImage(tempBase,0,0); tempBase = null; } }
+    });
+
+    // 导出格式
+    var fmtBtns = document.querySelectorAll('[data-fmt]');
+    fmtBtns.forEach(function(b){
+        b.addEventListener('click', function(){
+            fmtBtns.forEach(function(x){ x.classList.remove('active'); });
+            b.classList.add('active');
+            fmt = b.getAttribute('data-fmt');
+            $('ia-q-wrap').style.display = fmt === 'jpeg' ? '' : 'none';
+        });
+    });
+    $('ia-export').addEventListener('click', function(){
+        if (!hasImage) return;
+        var name = 'annotated-' + Date.now();
+        if (fmt === 'png'){
+            canvas.toBlob(function(blob){
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = name + '.png'; a.click();
+                setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+                $('ia-export-msg').textContent = '已导出 PNG（' + canvas.width + '×' + canvas.height + '）';
+            }, 'image/png');
+        } else {
+            var t = document.createElement('canvas'); t.width = canvas.width; t.height = canvas.height;
+            var tc = t.getContext('2d');
+            tc.fillStyle = '#ffffff'; tc.fillRect(0,0,t.width,t.height);
+            tc.drawImage(canvas, 0, 0);
+            var a = document.createElement('a');
+            a.href = t.toDataURL('image/jpeg', quality); a.download = name + '.jpg'; a.click();
+            $('ia-export-msg').textContent = '已导出 JPEG（质量 ' + Math.round(quality*100) + '%，' + canvas.width + '×' + canvas.height + '）';
+        }
+    });
+    $('ia-reupload').addEventListener('click', function(){ $('ia-file').click(); });
+
+    // 上传
+    function loadFile(f){
+        if (!f || !/^image\/(jpeg|png|webp)$/.test(f.type)){ status('仅支持 JPG / PNG / WebP 图片'); return; }
+        if (f.size > 30 * 1024 * 1024){ status('图片超过 30MB，请先压缩'); return; }
+        var rd = new FileReader();
+        rd.onload = function(){
+            img.onload = function(){
+                canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+                ctx.drawImage(img, 0, 0);
+                hasImage = true;
+                undoStack.length = 0; redoStack.length = 0; updateHistBtns();
+                $('ia-workspace').style.display = '';
+                $('ia-export-card').style.display = '';
+                $('ia-fileinfo').style.display = '';
+                $('ia-fileinfo').textContent = '已加载：' + f.name + '（' + img.naturalWidth + '×' + img.naturalHeight + '，' + (f.size/1024).toFixed(0) + ' KB）';
+                $('ia-export-msg').textContent = '';
+                status('图片已加载，在画布上拖拽即可标注');
+            };
+            img.onerror = function(){ status('图片解码失败，请换一张试试'); };
+            img.src = rd.result;
+        };
+        rd.readAsDataURL(f);
+    }
+    $('ia-upload').addEventListener('click', function(){ $('ia-file').click(); });
+    $('ia-upload').addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('ia-file').click(); } });
+    $('ia-file').addEventListener('change', function(e){ loadFile(e.target.files[0]); e.target.value = ''; });
+    ['dragover','dragenter'].forEach(function(ev){ $('ia-upload').addEventListener(ev, function(e){ e.preventDefault(); $('ia-upload').classList.add('dragover'); }); });
+    ['dragleave','drop'].forEach(function(ev){ $('ia-upload').addEventListener(ev, function(e){ e.preventDefault(); $('ia-upload').classList.remove('dragover'); }); });
+    $('ia-upload').addEventListener('drop', function(e){ var f = e.dataTransfer.files && e.dataTransfer.files[0]; loadFile(f); });
+    document.addEventListener('paste', function(e){
+        if (!e.clipboardData) return;
+        for (var i = 0; i < e.clipboardData.items.length; i++){
+            var it = e.clipboardData.items[i];
+            if (it.type.indexOf('image/') === 0){ loadFile(it.getAsFile()); break; }
+        }
+    });
+    updateHistBtns();
+})();
+</script>
+</body>
+</html>
+{{end}}

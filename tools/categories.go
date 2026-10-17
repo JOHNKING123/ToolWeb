@@ -384,6 +384,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "image_annotator",
+					Name:        "图片标注",
+					Description: "截图批注：箭头/直线/矩形/圆形/文字/荧光笔/马赛克打码，撤销重做，PNG/JPEG 导出，本地处理不上传",
+					Path:        "/tools/image-annotator",
+					Icon:        "draw",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img_stitch",
 					Name:        "图片拼接 / 长图拼接",
 					Description: "多张图片纵向/横向拼接成长图，聊天记录截图拼长图，拖拽排序、间距背景可调，本地处理不上传",
