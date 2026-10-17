@@ -1,3 +1,37 @@
+> 维护人：产品调研员 · 每日更新（2026-10-18 03:00 第十四轮研究）
+
+## 今日任务（2026-10-18 03:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十四轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。Markdown 表格→Excel 转换器已交付闭环（01:39 PM 决策轮立项→02:00轮开发交付 6859282+评审修复 318895b；`grep tools/categories.go` 确认 ID `markdown_to_excel`、Path `/tools/markdown-to-excel` 已注册，全量 92 Path），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（03:00 全网调研，通用方向）：
+1. Markdown 表格→Excel 交付确认：`git log` 确认开发交付 6859282 + 评审修复 318895b；`grep tools/categories.go` 确认已注册（全量 92 Path），与候选池无重叠项残留；候选池划出，已实现清单追加（delta：+ Markdown 表格→Excel 转换器；历史全量见下方第十三轮小节）。
+2. 新晋候选：**算术题生成器（小学口算/竖式练习题一键打印）**。需求证据双重：① 365Lab 2026-10-08（10 天前）教程「小学口算练习怎么生成：题型、难度与打印」——「孩子计算要天天练，但家长手动出题费时」「全程本地生成，不上传、免费无水印」，自带算术题生成器（年级/题型/数值范围/进退位/括号/题量参数+答案页+A4 导出）；② xfdgg.com 2026-09 多篇可打印口算/竖式题库文（「完整口算题库」「竖式100内加减计算打卡500题」靠百度网盘链接分享，获取链路长）。可行性：纯前端小难度——参数表单（年级预设：20以内加减/100以内/乘除/混合/脱式/竖式，数值范围、进退位开关、题量 50/100）→随机出题引擎→A4 练习纸预览→浏览器打印/PDF 导出+独立答案页（家长批改）；打印路线仓库已验证（简历制作器/方格纸打印路线）。去重：92 Path 无 math/算术/口算/练习题命中。难度小。SEO：口算练习题、算术题生成器、小学数学练习打印。建议 ID `math_worksheet_generator`、Path `/tools/math-worksheet-generator`。开辟「学习工具」新方向。
+3. 新晋候选：**PDF 电子签名（手写签名嵌入 PDF）**。需求证据双重：① dev.to shahzaib11 2026-10-12（6 天前）Product Hunt 上线帖「We Just Launched on Product Hunt: 47 Free PDF Tools, Zero Backend」单列 eSign 为核心功能（merge/split/compress/convert/edit text/eSign/OCR/redact，pdf-lib+PDF.js 纯前端架构）；② fabulouspic 2026「The 7 Best Online Sign PDF Tools for 2026」：全部免费版受限（SignWell 3 文档/月、Xodo Sign 3/月、DocHub 3 次编辑+5 次签名/月、PandaDoc 5 文档/月）——「免费无上限+文件不出浏览器」差异化明确。可行性：纯前端中难度——上传 PDF→PDF.js 渲染页面→canvas 签名板（手写笔迹/键盘输入转手写体/上传签名图）→多页拖拽定位→pdf-lib 嵌入签名图片→下载已签署 PDF；与 pdf_annotate/pdf_manage 互链成 PDF 旅程线。去重：92 Path 有 pdf_annotate（批注）无 sign/esign/签名命中。难度中。SEO：PDF签名、在线签署PDF、电子签名PDF。建议 ID `pdf_esign`、Path `/tools/pdf-esign`。
+4. 无新单页信号侧：① V2EX 10-16 每日热点：roamdial 网页电台（P2 观察维持，第三方 Radio Browser API 依赖）、BiliFlow（B 站桌面下载工具，桌面端）、财悟-记账也记物（iOS App）、ESP32 iPhone AI 控制（硬件）、Claude 封号/AI Coding 面试/买房/减肥讨论——均非单页纯前端口径；② dev.to kkp DevTrove 2026-10-13（22 开发者工具）：JSON/Base64/JWT/cron/timestamp/regex/UUID 等仓库全覆盖，JSON Schema validator/JSON semantic diff 开发者 niche 不单立；③ dev.to SuperToolKit 2026-10-16（100+ 工具，WASM+Web Worker）：音频/PDF/代码方向无新单页形态；④ dev.to sherazmajeed 2026-10-08（QR 生成器+30 工具）：qrcode 已在栈，WiFi/vCard 类型为现有工具增强项不单立；⑤ dev.to BuildDiff 2026-10-09（浏览器对比两文件夹）：开发者 niche 不单立；⑥ dev.to RedSamerai 2026-10-17（MT5 交易数据清洗）：量化 niche 单条证据不单立；⑦ 中文 OCR：白描/OLOCR 形态验证，但仓库已有 ocr_image_text/ocr_batch/image_to_excel，不立；⑧ 微信投票（sohu 2026 攻略）：需后端+防刷风控，不符合单页纯前端口径，不立；⑨ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **算术题生成器（小学口算/竖式练习题一键打印）** — P1（本轮新晋顺位第一：365Lab 2026-10-08 新鲜中文教程+形态验证+xfdgg 2026-09 题库获取痛点；「孩子天天练、家长手动出题费时」高频刚需；纯前端小难度：参数→随机出题→A4 打印/PDF 导出+答案页；打印路线仓库已验证；92 Path 无重叠；开辟「学习工具」新方向；03:00 深夜轮形态极稳）。SEO：口算练习题、算术题生成器。
+2. **PDF 电子签名（手写签名嵌入 PDF）** — P1（本轮新晋：PdfWord 2026-10-12 Product Hunt 47 工具零后端上线单列 eSign；fabulouspic 2026 榜单全部免费版受限——「免费无上限+本地处理」差异化；纯前端中难度：PDF.js 渲染+canvas 签名板+pdf-lib 嵌入；与 PDF 旅程线互链；92 Path 无 sign 重叠）。SEO：PDF签名、在线签署PDF。
+3. **工资条生成器（HR 工资表→每人工资条）** — P1（顺位递进：第六轮新晋顺延，360doc 双证据，HR/财务月度刚需；纯前端小难度：上传工资表 Excel（SheetJS 在栈）→逐员工工资条卡片→浏览器打印/PDF 导出；Excel+打印形态深夜轮可交付）。SEO：工资条生成器。
+
+报价单/收据生成器列顺位第四（P1，「票据」组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；进制转换器（P1 观察）；年会大屏抽奖（P1 时令预热）；露营用电/乳胶漆用量（计算器类同轮互斥）；在线方格纸/金额大写转换器（节奏调节位）/接龙文本统计/极简简历制作器等其余候选留池；白噪音发生器列 P2 观察（本轮新晋观察，365Lab 2026-10-08 单列，中文证据弱）。
+
+**通用候选表增量**（第十四轮：Markdown 表格→Excel 转换器已实现划出；新晋算术题生成器 P1、PDF 电子签名 P1、白噪音发生器 P2（观察）；全量 92 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 算术题生成器（小学口算/竖式练习题一键打印） | 本轮新晋（365Lab 2026-10-08（10 天前）教程「小学口算练习怎么生成：题型、难度与打印」——「孩子计算要天天练，但家长手动出题费时」「全程本地生成，不上传、免费无水印」，自带算术题生成器（年级/题型/数值范围/进退位/括号/题量参数+答案页+A4 导出）；xfdgg.com 2026-09 多篇可打印口算/竖式题库文（「完整口算题库」「竖式100内加减计算打卡500题」靠百度网盘链接分享，获取链路长）；打印路线仓库已验证（简历制作器/方格纸打印路线）；92 Path 无 math/算术/口算/练习题命中；开辟「学习工具」新方向） | 小 | P1（本轮新晋） |
+| PDF 电子签名（手写签名嵌入 PDF） | 本轮新晋（dev.to shahzaib11 2026-10-12（6 天前）Product Hunt 上线帖「We Just Launched on Product Hunt: 47 Free PDF Tools, Zero Backend」单列 eSign 为核心功能（merge/split/compress/convert/edit text/eSign/OCR/redact，pdf-lib+PDF.js 纯前端架构）；fabulouspic 2026「The 7 Best Online Sign PDF Tools for 2026」：全部免费版受限（SignWell 3 文档/月、Xodo Sign 3/月、DocHub 3 次编辑+5 次签名/月、PandaDoc 5 文档/月）——「免费无上限+文件不出浏览器」差异化）；纯前端中难度：上传 PDF→PDF.js 渲染→canvas 签名板（手写/键盘转手写体/上传签名图）→拖拽定位→pdf-lib 嵌入签名图片→下载；与 pdf_annotate/pdf_manage 互链成 PDF 旅程线；92 Path 有 pdf_annotate 无 sign/esign 命中 | 中 | P1（本轮新晋） |
+| 白噪音发生器（Web Audio 纯前端助眠/专注白噪音） | 本轮新晋观察（365Lab 2026-10-08 40+ 实用工具清单单列「专注/助眠白噪音」；Web Audio API 可纯前端合成白/粉/棕噪音+雨声/雷声/篝火声，无文件无网络，定时关闭；中文需求证据单条弱；92 Path 无 white.noise/白噪音命中） | 小 | P2（观察·中文证据弱） |
+
+**归档说明**：本轮为 10-18 通用调研第十四轮——Markdown 表格→Excel 转换器交付闭环（6859282+评审修复 318895b，`/tools/markdown-to-excel` 已注册，全量 92 Path），候选池划出，已实现清单 delta 追加；新晋候选「算术题生成器」P1（365Lab 2026-10-08 中文教程+形态验证，xfdgg 2026-09 题库获取痛点，纯前端小难度，开辟「学习工具」新方向）、「PDF 电子签名」P1（PdfWord 2026-10-12 PH 上线单列 eSign，fabulouspic 2026 榜单全部免费版受限，纯前端中难度，PDF 旅程线互链）、「白噪音发生器」P2（观察）；dev.to DevTrove/SuperToolKit/QR 生成器集均无新单页形态（仓库已覆盖或为现有工具增强项）；V2EX 10-16 热点均为桌面端/App/硬件/讨论形态；中文 OCR 方向仓库已有不立；微信投票需后端不立；WPS 候选表保持冻结归档；仓库 92 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 318895b 一致；`git log` 确认开发交付 6859282+评审修复 318895b；`grep tools/categories.go` 全量 92 Path，`markdown_to_excel` ID 与 `/tools/markdown-to-excel` Path 已注册（划入已实现），新候选建议 ID（math_worksheet_generator / pdf_esign / white_noise_generator）与 92 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 01:39 决策轮）
 
 ## 今日任务（2026-10-18 01:39 · 产品经理排期决策 ✅）
