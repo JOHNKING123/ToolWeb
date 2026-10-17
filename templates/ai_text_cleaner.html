@@ -1,0 +1,133 @@
+{{define "ai_text_cleaner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 文本清洁器 - 隐藏字符扫描清理（零宽字符/BOM/非断空格去除）</title>
+    <meta name="description" content="免费在线 AI 文本清洁器：粘贴文本一键扫描零宽字符（U+200B–U+200F）、BOM、非断空格、软连字符、变体选择符、方向控制符、标签字符等不可见字符，逐类计数+可视化高亮标记，一键清除并对比字符数，一键复制干净文本。纯本地处理，数据不上传。">
+    <meta name="keywords" content="AI 文本清理,去除隐藏字符,零宽字符清理,AI 文本去水印,隐藏字符检测,零宽空格去除,BOM去除,非断空格清理">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ai-text-cleaner">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"AI 文本清洁器","description":"免费在线 AI 文本清洁器：扫描并清除文本中的零宽字符、BOM、非断空格、软连字符、变体选择符、方向控制符、标签字符等不可见字符，可视化标记、一键清除、一键复制；纯浏览器本地处理，数据不上传。","url":"https://www.johnkingzcq123.xyz/tools/ai-text-cleaner","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tlc-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .tlc-honest .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .tlc-honest b{color:#047857}
+        .tlc-layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+        .tlc-textarea{width:100%;min-height:280px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .tlc-countline{display:flex;justify-content:space-between;align-items:center;font-size:.88rem;color:#6b7280;margin:.4rem 0}
+        .tlc-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:center}
+        .tlc-toolbar .btn .material-icons{font-size:1.05rem;vertical-align:-3px;margin-right:.2rem}
+        .tlc-result{display:none;margin-top:.8rem}
+        .tlc-summary{border-radius:.6rem;padding:.7rem 1rem;font-size:.95rem;line-height:1.7;margin-bottom:.7rem}
+        .tlc-summary b{font-size:1.2rem}
+        .tlc-summary-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+        .tlc-summary-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+        .tlc-ok-icon{font-weight:700}
+        .tlc-cat{display:flex;gap:.6rem;align-items:center;border:1px solid #e5e7eb;border-radius:.6rem;padding:.55rem .8rem;margin-bottom:.5rem;background:#fff}
+        .tlc-dot{width:.8rem;height:.8rem;border-radius:50%;flex:none}
+        .tlc-chip-zw{background:#f59e0b}.tlc-chip-bom{background:#ef4444}.tlc-chip-nbsp{background:#3b82f6}
+        .tlc-chip-shy{background:#8b5cf6}.tlc-chip-vs{background:#ec4899}.tlc-chip-bidi{background:#14b8a6}
+        .tlc-chip-tags{background:#64748b}
+        .tlc-cat-info{flex:1;line-height:1.5}
+        .tlc-cat-info b{font-size:.92rem;color:#111827}
+        .tlc-range{display:inline-block;font-size:.72rem;color:#6b7280;background:#f3f4f6;border-radius:.3rem;padding:.05rem .4rem;margin-left:.4rem;font-family:ui-monospace,monospace}
+        .tlc-desc{display:block;font-size:.78rem;color:#9ca3af}
+        .tlc-num{font-size:1.25rem;font-weight:700;color:#b45309;flex:none}
+        .tlc-preview{border:1px solid #e5e7eb;border-radius:.6rem;background:#fafafa;padding:.8rem;font-size:.9rem;line-height:2.2;word-break:break-all;max-height:300px;overflow:auto;margin-top:.4rem}
+        .tlc-chip{display:inline-block;font-size:.7rem;font-weight:700;color:#fff;border-radius:.3rem;padding:.08rem .38rem;margin:0 .1rem;vertical-align:1px;cursor:help;font-family:ui-monospace,monospace}
+        .tlc-preview-title{font-size:.88rem;color:#6b7280;margin:.7rem 0 .3rem}
+        .tlc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:.8rem 0}
+        .tlc-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:.5rem;padding:.6rem;text-align:center}
+        .tlc-stat .num{font-size:1.35rem;font-weight:700;color:#111827}
+        .tlc-stat .lbl{font-size:.8rem;color:#6b7280;margin-top:.15rem}
+        .tlc-out-wrap{display:none;margin-top:1rem;border-top:1px solid #e5e7eb;padding-top:1rem}
+        .tlc-output{width:100%;min-height:160px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#f0fdf4}
+        .tlc-copy-tip{display:none;margin-top:.6rem;font-size:.86rem}
+        .tlc-copy-ok{color:#047857}.tlc-copy-fail{color:#b91c1c}
+        .tlc-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .tlc-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:.8rem}
+        .tlc-combo a{color:#1d4ed8;font-weight:600}
+        @media (max-width:768px){
+            .tlc-layout{grid-template-columns:1fr}
+            .tlc-textarea{min-height:220px}
+            .tlc-stats{grid-template-columns:repeat(3,1fr)}
+            .tlc-toolbar .btn{flex:1 1 42%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">cleaning_services</i> AI 文本清洁器</h1>
+            <p>扫描 AI 生成文本中的不可见字符并一键清除，纯浏览器本地处理，数据不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1140px;margin:auto;">
+            <div class="tlc-honest">
+                <i class="material-icons">verified</i>
+                <div><b>诚实声明：</b>本工具<b>仅清除不可见字符</b>（零宽字符、BOM、非断空格、软连字符、变体选择符、方向控制符、标签字符），<b>不改写任何词句</b>，<b>不触碰统计水印</b>（如基于词频/困惑度的 AI 文本检测特征）。清理前后文本肉眼看起来完全一致。</div>
+            </div>
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="tlc-layout">
+                    <div>
+                        <h3>文本输入</h3>
+                        <textarea id="tlc-input" class="tlc-textarea" placeholder="在此粘贴从 AI / 网页 / Word 复制来的文本……" spellcheck="false" aria-label="文本输入"></textarea>
+                        <div class="tlc-countline"><span>输入即自动扫描</span><span>字符数：<b id="tlc-count">0</b></span></div>
+                        <div class="tlc-toolbar">
+                            <button class="btn btn-primary" id="tlc-scan"><i class="material-icons">radar</i> 立即扫描</button>
+                            <button class="btn btn-secondary" id="tlc-sample"><i class="material-icons">data_object</i> 填充示例</button>
+                            <button class="btn btn-secondary" id="tlc-clear"><i class="material-icons">clear</i> 清空</button>
+                        </div>
+                        <div class="tlc-result" id="tlc-result">
+                            <h3>扫描结果</h3>
+                            <div class="tlc-summary" id="tlc-summary"></div>
+                            <div id="tlc-cats"></div>
+                            <div class="tlc-preview-title">可视化标记预览（彩色徽标 = 发现的不可见字符，悬停查看码点）</div>
+                            <div class="tlc-preview" id="tlc-preview"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>清除与复制</h3>
+                        <div class="tlc-toolbar">
+                            <button class="btn btn-primary" id="tlc-clean" disabled><i class="material-icons">auto_fix_high</i> 一键清除全部</button>
+                            <button class="btn btn-secondary" id="tlc-copy"><i class="material-icons">content_copy</i> 一键复制</button>
+                            <button class="btn btn-secondary" id="tlc-reset"><i class="material-icons">restart_alt</i> 用清理结果重新扫描</button>
+                        </div>
+                        <div class="tlc-tip" style="font-size:.88rem;color:#6b7280;">「仅清除此类」可只清理某一类字符；「用清理结果重新扫描」把干净文本放回输入区再验一次。</div>
+                        <div class="tlc-out-wrap" id="tlc-out-wrap">
+                            <div class="tlc-stats">
+                                <div class="tlc-stat"><div class="num" id="tlc-stat-orig">0</div><div class="lbl">原始字符数</div></div>
+                                <div class="tlc-stat"><div class="num" id="tlc-stat-removed" style="color:#b45309">0</div><div class="lbl">清除隐藏字符</div></div>
+                                <div class="tlc-stat"><div class="num" id="tlc-stat-clean" style="color:#047857">0</div><div class="lbl">清理后字符数</div></div>
+                            </div>
+                            <textarea id="tlc-output" class="tlc-output" readonly aria-label="清理结果"></textarea>
+                        </div>
+                        <div class="tlc-copy-tip" id="tlc-copy-tip" role="status"></div>
+                        <div class="tlc-combo">
+                            <b>「AI 写作」组合：</b>文本清干净后，用 <a href="/tools/ai-token-counter">AI Token 计数器</a> 估算发给大模型的 token 数与 API 费用 —— 先清杂质、再算用量，一套流程走完。
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="tlc-tip">
+                    <b>怎么用：</b>把文本粘贴到输入区，工具自动扫描：按 7 类（零宽字符 / BOM / 非断空格 / 软连字符 / 变体选择符 / 方向控制符 / 标签字符）逐类计数，预览区用彩色徽标标出每一个不可见字符的确切位置；点「一键清除全部」得到干净文本，可对比清除前后字符数，一键复制带走。<br>
+                    <b>为什么需要：</b>AI 生成或网页复制的文本常夹带零宽空格、非断空格等看不见的字符，会导致搜索不到、排版错乱、字数统计虚高；本工具把它们找出来、清干净。<br>
+                    <b>诚实声明：</b>本工具仅清除不可见字符，不改写词句、不触碰统计水印，清理前后肉眼看起来完全一致。<br>
+                    <b>隐私：</b>纯前端本地处理，文本只在你的浏览器里流转，不上传任何服务器（可在浏览器 DevTools 的 Network 面板验证：操作全程无网络请求）。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/ai-text-cleaner.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -718,6 +718,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "AI 工具",
 				},
+				{
+					ID:          "ai_text_cleaner",
+					Name:        "AI 文本清洁器",
+					Description: "扫描清除文本中的零宽字符、BOM、非断空格等不可见隐藏字符，可视化标记一键清理",
+					Path:        "/tools/ai-text-cleaner",
+					Icon:        "cleaning_services",
+					New:         true,
+					Category:    "AI 工具",
+				},
 			},
 		},
 		{
