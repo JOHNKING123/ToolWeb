@@ -97,6 +97,10 @@
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // 码点计数：标签字符（U+E0000–U+E0FFF）位于超平面，每个占 2 个 UTF-16 码元，
+    // 必须用迭代器按码点计数，否则与扫描摘要 total 口径矛盾。
+    function cplen(s) { return [...s].length; }
+
     function chipHtml(ch) {
         var cp = ch.codePointAt(0), rule = ruleOf(ch);
         var cls = rule ? rule.key : 'other';
@@ -129,7 +133,7 @@
     var lastCleaned = '';
 
     function refreshCount() {
-        countEl.textContent = input.value.length;
+        countEl.textContent = cplen(input.value);
     }
 
     function render() {
@@ -181,12 +185,12 @@
     function doClean(onlyKey) {
         var text = input.value;
         var cleaned = onlyKey ? cleanOne(text, onlyKey) : cleanAll(text);
-        var removed = text.length - cleaned.length;
+        var removed = cplen(text) - cplen(cleaned);
         lastCleaned = cleaned;
         output.value = cleaned;
-        statOrig.textContent = text.length;
+        statOrig.textContent = cplen(text);
         statRemoved.textContent = removed;
-        statClean.textContent = cleaned.length;
+        statClean.textContent = cplen(cleaned);
         outWrap.style.display = 'block';
         copyTip.style.display = 'none';
         outWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
