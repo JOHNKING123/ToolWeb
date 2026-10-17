@@ -60,6 +60,7 @@
         .mwg-q{break-inside:avoid;display:flex;align-items:baseline;gap:.45em;margin:0;padding:0}
         .mwg-qnum{color:#555;font-size:.85em;min-width:2.2em}
         .mwg-qexpr{font-family:"Times New Roman",Georgia,serif;letter-spacing:.06em;white-space:nowrap}
+        .mwg-qs.cols2 .mwg-qexpr{white-space:normal;overflow-wrap:break-word}
         .mwg-v{display:flex;align-items:flex-start;gap:.45em;break-inside:avoid;margin:.35rem 0 1rem}
         .mwg-vnum{color:#555;font-size:.85em;min-width:2.2em;padding-top:.35rem}
         .mwg-vg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.25rem;line-height:1.55}
@@ -91,9 +92,9 @@
     </style>
 </head>
 <body class="mwg-mode-both">
-    {{template "nav" .}}
+    <div class="no-print">{{template "nav" .}}</div>
     <div class="container">
-        <div class="tool-header">
+        <div class="tool-header no-print">
             <h1><i class="material-icons">calculate</i> 算术题生成器</h1>
             <p>小学口算/竖式练习题一键生成 A4 练习纸，附独立答案页，浏览器直接打印；纯前端本地出题，数据不出浏览器</p>
         </div>

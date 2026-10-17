@@ -89,7 +89,8 @@ function evalMixed(a, op1, b, op2, c) {
     if (op2 === '×') { var r = calc2(b, '×', c); return r === null ? null : calc2(a, op1, r); }
     if (op1 === '×') { var l = calc2(a, '×', b); return l === null ? null : calc2(l, op2, c); }
     var m = calc2(a, op1, b);
-    return m === null ? null : calc2(m, op2, c);
+    if (m === null || m < 0) return null; // 混合四则不允许负的中间值（与脱式计算一致）
+    return calc2(m, op2, c);
 }
 function makeMixed(o) {
     var ops = ['+', '-'];
