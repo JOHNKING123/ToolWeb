@@ -1,0 +1,123 @@
+{{define "markdown_to_excel"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 表格转 Excel - AI 回答表格一键转 xlsx（本地/免费/不限次）</title>
+    <meta name="description" content="免费在线 Markdown 表格转 Excel：粘贴 ChatGPT/Claude 等 AI 回答或上传 .md 文件，一键把 Markdown 表格转成可编辑 .xlsx；多表自动分 sheet、千分位数字与百分比存真实数值、长 ID 防科学计数法；纯浏览器本地处理，数据不上传，不限次数。">
+    <meta name="keywords" content="Markdown 转 Excel,AI 表格转 Excel,md 转 xlsx,ChatGPT 表格导出 Excel,AI 表格粘贴到 Excel,markdown 表格转换">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/markdown-to-excel">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Markdown 表格转 Excel","description":"粘贴 AI 回答或上传 .md 文件，一键把 Markdown 表格转成可编辑 .xlsx：多表自动分 sheet、千分位数字与百分比存真实数值、15 位以上长 ID 存文本防科学计数法；纯浏览器本地处理，数据不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/markdown-to-excel","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .m2x-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .m2x-honest .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .m2x-honest b{color:#047857}
+        .m2x-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:1.4rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280;margin-bottom:1rem}
+        .m2x-upload:hover,.m2x-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .m2x-upload .material-icons{font-size:2.2rem;display:block;margin-bottom:.4rem}
+        .m2x-textarea{width:100%;min-height:260px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .m2x-countline{display:flex;justify-content:space-between;align-items:center;font-size:.88rem;color:#6b7280;margin:.4rem 0}
+        .m2x-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:center}
+        .m2x-toolbar .btn .material-icons{font-size:1.05rem;vertical-align:-3px;margin-right:.2rem}
+        .m2x-toolbar .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .m2x-status{font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6;color:#059669}
+        .m2x-error{display:none;color:#b91c1c;font-size:.9rem;margin-top:.6rem;line-height:1.6}
+        .m2x-result{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .m2x-summary{font-size:1rem;color:#111827;margin-bottom:.8rem}
+        .m2x-summary b{color:#059669;font-size:1.2rem}
+        .m2x-card{border:1px solid #e5e7eb;border-radius:.7rem;margin-bottom:1rem;overflow:hidden;background:#fff}
+        .m2x-card-head{display:flex;justify-content:space-between;align-items:center;gap:.8rem;padding:.75rem 1rem;background:#f8fafc;border-bottom:1px solid #e5e7eb;flex-wrap:wrap}
+        .m2x-card-title{font-size:1rem;font-weight:700;color:#111827}
+        .m2x-card-stat{font-size:.82rem;color:#6b7280;margin-top:.2rem;line-height:1.6}
+        .m2x-copy .material-icons{font-size:1rem;vertical-align:-2px;margin-right:.2rem}
+        .m2x-table-wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+        table.m2x-table{border-collapse:collapse;min-width:100%;font-size:.85rem}
+        table.m2x-table th,table.m2x-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;white-space:nowrap;text-align:left;color:#111827}
+        table.m2x-table th{background:#dce9fd;font-weight:700;position:sticky;top:0}
+        table.m2x-table tbody tr:nth-child(even) td{background:#f9fafb}
+        table.m2x-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+        .m2x-more{text-align:center;color:#9ca3af;font-size:.8rem}
+        .m2x-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .m2x-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .m2x-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+        .m2x-combo a{color:#1d4ed8;font-weight:600}
+        .m2x-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .m2x-tip b{color:#111827}
+        @media (max-width:640px){
+            .m2x-toolbar .btn{flex:1 1 42%;justify-content:center}
+            .m2x-actions .btn{flex:1 1 100%;justify-content:center}
+            .m2x-card-head{align-items:flex-start}
+            table.m2x-table th,table.m2x-table td{padding:.35rem .5rem;font-size:.8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">grid_on</i> Markdown 表格转 Excel</h1>
+            <p>粘贴 AI 回答或上传 .md 文件，一键把 Markdown 表格转成可编辑 .xlsx；纯浏览器本地处理，数据不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:900px;margin:auto;">
+            <div class="m2x-honest">
+                <i class="material-icons">verified</i>
+                <div><b>诚实声明：</b>本工具只识别「表头 + <code>---</code> 分隔行」结构的 Markdown 表格；<b><code>```</code> 代码块里的表格会被有意跳过</b>（那是示例代码，不是数据）；表格里没有分隔行的纯文本对齐表识别不了。请核对下方预览再导出。</div>
+            </div>
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="m2x-upload" id="m2x-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 .md 文本文件到此处">
+                    <i class="material-icons">upload_file</i>
+                    <div>点击选择或拖拽 <b>.md / .txt</b> 文件到这里（FileReader 本地读取，不上传）</div>
+                    <div style="font-size:.82rem;margin-top:.3rem;">也可以直接把整段 AI 回答粘贴到下方文本框</div>
+                </div>
+                <input type="file" id="m2x-file" accept=".md,.markdown,.txt,text/plain" style="display:none;">
+                <textarea id="m2x-input" class="m2x-textarea" placeholder="在此粘贴整段 AI 回答（含 Markdown 表格）……" spellcheck="false" aria-label="Markdown 文本输入"></textarea>
+                <div class="m2x-countline"><span>粘贴后点「解析表格」</span><span>字符数：<b id="m2x-count">0</b></span></div>
+                <div class="m2x-toolbar">
+                    <button class="btn btn-primary" id="m2x-parse"><i class="material-icons">table_chart</i> 解析表格</button>
+                    <button class="btn btn-secondary" id="m2x-sample"><i class="material-icons">data_object</i> 填充示例</button>
+                    <button class="btn btn-secondary" id="m2x-clear"><i class="material-icons">clear</i> 清空</button>
+                </div>
+                <div class="m2x-status" id="m2x-status"></div>
+                <div class="m2x-error" id="m2x-error" role="alert"></div>
+
+                <div class="m2x-result" id="m2x-result">
+                    <h3 style="margin-top:0;">表格预览（请先核对）</h3>
+                    <div class="m2x-summary" id="m2x-summary"></div>
+                    <div id="m2x-cards"></div>
+                    <div class="m2x-actions">
+                        <button class="btn btn-primary" id="m2x-export" disabled><i class="material-icons">download</i> 导出 .xlsx（全部表格）</button>
+                    </div>
+                    <div style="color:#6b7280;font-size:.85rem;margin-top:.5rem;line-height:1.6;">
+                        导出文件：表头<b>加粗</b>、首行<b>冻结</b>、列宽按内容<b>自动调整</b>；千分位数字与百分比为真实数值（可直接求和），15 位以上长 ID 与前导零存为文本（防科学计数法）。
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="m2x-tip">
+                    <b>怎么用：</b>把 ChatGPT / Claude / DeepSeek 等 AI 回答（含 Markdown 表格）整段粘贴进来，或上传 .md 文件 → 点「解析表格」→ 在预览卡片里核对表数、表头与统计 → 点「导出 .xlsx」下载（多张表格自动分成多个工作表）。<br>
+                    <b>表名规则：</b>每张表格取其上方最近的 <code>#</code>/<code>##</code> 标题做 sheet 名；无标题用「表格1/2/3」；非法字符（<code>\ / ? * [ ] :</code>）替换为下划线、超 31 字符自动截断、重名自动加 <code>_2</code> 后缀。<br>
+                    <b>单元格类型：</b><code>1,234,567.89</code> 这类千分位数字、<code>12.5%</code> 这类百分比存为<b>真实数值</b>（百分比带 <code>0.00%</code> 格式，可直接求和/画图）；15 位以上长数字 ID（如订单号 <code>20260118000123456</code>）与前导零编号（如 <code>00123</code>）存为<b>文本</b>，Excel 打开不会变成科学计数法丢精度。<br>
+                    <b>单表复制：</b>每张预览卡片右上角「复制 TSV」，可直接粘贴进 Excel / WPS，不挤列。<br>
+                    <b>转义竖线：</b>单元格里的 <code>\|</code> 会还原为 <code>|</code>，不会被误切成两列；行内 <code>**加粗**</code>、<code>`代码`</code>、<code>[链接](url)</code> 等 Markdown 修饰会被清理成纯文本。<br>
+                    <b>隐私：</b>解析与导出全程在你的浏览器里完成，文本只在浏览器内存里流转，不经过任何服务器；SheetJS 库从 CDN 懒加载（失败时自动走本站本地副本），你的数据不会发给 CDN。<br>
+                    <b>适用边界（如实说明）：</b>没有 <code>---</code> 分隔行的表格识别不了；表格里的合并单元格会被展开成普通单元格；超大文本（几十万字符）解析可能需要几秒，属正常。
+                </div>
+                <div class="m2x-combo">
+                    <b>「AI 写作→办公」组合：</b>粘贴 AI 文本前，先用 <a href="/tools/ai-text-cleaner">AI 文本清洁器</a> 清掉零宽字符等看不见的杂质，用 <a href="/tools/ai-token-counter">AI Token 计数器</a> 估算发给大模型的 token 数与费用；回答里的表格，回到本页一键转成 .xlsx —— 清杂质、算用量、转表格，一套流程走完。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/markdown_to_excel.js?v=1"></script>
+</body>
+</html>
+{{end}}

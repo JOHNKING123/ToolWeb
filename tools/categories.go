@@ -579,6 +579,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "markdown_to_excel",
+					Name:        "Markdown 表格转 Excel",
+					Description: "粘贴 AI 回答或上传 .md，一键把 Markdown 表格转成可编辑 .xlsx：多表自动分 sheet、千分位数字与百分比存真实数值、长 ID 防科学计数法，纯浏览器本地处理不上传 · Markdown table to Excel converter, 100% client-side",
+					Path:        "/tools/markdown-to-excel",
+					Icon:        "grid_on",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
