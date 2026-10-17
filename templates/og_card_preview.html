@@ -1,0 +1,568 @@
+{{define "og_card_preview"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OG 社交卡片预览 - Open Graph / Twitter Card / 微信分享卡片预览（本地渲染不上传）</title>
+    <meta name="description" content="免费在线 OG 社交卡片预览工具：输入页面标题/描述/URL/缩略图，实时渲染 Twitter Card（Summary / Summary Large Image）、Facebook、LinkedIn、微信聊天卡片四版式；标题描述字符计数与各平台长度规则提示；一键复制 og:/twitter: meta 标签代码。纯浏览器本地渲染，数据不出浏览器。Social card preview: Twitter Card, Facebook, LinkedIn, WeChat share card preview, meta tags generator, 100% client-side.">
+    <meta name="keywords" content="OG预览,Open Graph预览,社交分享卡片预览,微信分享卡片,Twitter Card预览,facebook分享卡片预览,linkedin卡片预览,og image预览,og标签生成,twitter card validator,营销工具,social card preview">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/og-card-preview">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OG 社交卡片预览","description":"输入页面标题/描述/URL/缩略图，实时渲染 Twitter Card、Facebook、LinkedIn、微信聊天卡片四版式；各平台标题描述长度与图片尺寸规则提示；生成 og:/twitter: meta 标签代码一键复制，纯前端本地渲染不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/og-card-preview","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ogc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ogc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ogc-privacy b{color:#047857}
+        .ogc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+        .ogc-field label{display:block;font-weight:700;color:#111827;margin-bottom:.35rem;font-size:.95rem}
+        .ogc-field label .cnt{font-weight:400;color:#6b7280;font-size:.82rem;margin-left:.4rem}
+        .ogc-field .hint{font-weight:400;color:#9ca3af;font-size:.8rem;margin-left:.4rem}
+        .ogc-input{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .75rem;font-size:.92rem;color:#111827;background:#fff;font-family:inherit;line-height:1.7}
+        .ogc-input:focus{outline:none;border-color:var(--primary-color)}
+        textarea.ogc-input{min-height:5.5rem;resize:vertical}
+        .ogc-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .ogc-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ogc-btn-sm{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.35rem .8rem;font-size:.85rem;cursor:pointer}
+        .ogc-btn-sm:hover{background:#f3f4f6}
+        .ogc-stat{display:flex;justify-content:space-between;font-size:.83rem;color:#6b7280;margin-top:.3rem;gap:.5rem;flex-wrap:wrap}
+        .ogc-stat .ok{color:#059669;font-weight:600}
+        .ogc-stat .warn{color:#d97706;font-weight:600}
+        .ogc-stat .bad{color:#dc2626;font-weight:600}
+        .ogc-radio{display:inline-flex;align-items:center;gap:.35rem;font-size:.9rem;color:#374151;margin-right:1.1rem;cursor:pointer}
+        .ogc-radio input{accent-color:var(--primary-color);width:1rem;height:1rem;cursor:pointer}
+        .ogc-thumb-row{display:flex;gap:.6rem;align-items:center}
+        .ogc-thumb-row .ogc-input{flex:1}
+        .ogc-thumb-prev{width:64px;height:51px;object-fit:cover;border-radius:.4rem;border:1px solid #e5e7eb;background:#f3f4f6;flex:none}
+        .ogc-sect{margin-bottom:1.6rem}
+        .ogc-sect:last-child{margin-bottom:0}
+        .ogc-sect h3{margin:0 0 .7rem;font-size:1.05rem;color:#111827;display:flex;align-items:center;gap:.5rem}
+        .ogc-sect h3 .material-icons{color:var(--primary-color)}
+        .ogc-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .ogc-cards{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+        .ogc-card-item{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem;min-width:0}
+        .ogc-card-item .plat{display:flex;align-items:center;gap:.45rem;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:.7rem}
+        .ogc-card-item .plat .material-icons{font-size:1.05rem;color:var(--primary-color)}
+        .ogc-card-item .plat .tag{font-weight:400;font-size:.75rem;color:#9ca3af;border:1px solid #e5e7eb;border-radius:999px;padding:.05rem .55rem;margin-left:auto;white-space:nowrap}
+        /* Twitter 大卡（2:1） */
+        .tw-large{max-width:520px;border:1px solid #e1e8ed;border-radius:14px;overflow:hidden;background:#fff}
+        .tw-large img{width:100%;aspect-ratio:2/1;object-fit:cover;display:block;background:#f3f4f6}
+        .tw-large .tw-body{padding:.75rem 1rem;border-top:1px solid #e1e8ed}
+        .tw-large .tw-domain,.tw-sum .tw-domain{color:#657786;font-size:12.5px;margin-bottom:2px;display:flex;align-items:center;gap:.3rem}
+        .tw-large .tw-title,.tw-sum .tw-title{color:#14171a;font-size:15px;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .tw-large .tw-desc,.tw-sum .tw-desc{color:#657786;font-size:14px;line-height:1.45;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        /* Twitter 小卡（Summary 1:1） */
+        .tw-sum{max-width:520px;border:1px solid #e1e8ed;border-radius:14px;overflow:hidden;background:#fff;display:flex}
+        .tw-sum img{width:130px;height:130px;object-fit:cover;flex:none;background:#f3f4f6}
+        .tw-sum .tw-body{padding:.7rem .9rem;min-width:0}
+        /* Facebook（1.91:1 上图下文） */
+        .fb-card{max-width:520px;background:#fff;border:1px solid #dddfe2;border-radius:0;overflow:hidden}
+        .fb-card img{width:100%;aspect-ratio:1.91/1;object-fit:cover;display:block;background:#f3f4f6}
+        .fb-card .fb-body{background:#f2f3f5;padding:.65rem .8rem;border-top:1px solid #dddfe2}
+        .fb-card .fb-domain{color:#606770;font-size:12px;text-transform:uppercase;margin-bottom:2px}
+        .fb-card .fb-title{color:#1c1e21;font-size:16px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .fb-card .fb-desc{color:#606770;font-size:14px;line-height:1.4;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        /* LinkedIn */
+        .li-card{max-width:520px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden}
+        .li-card img{width:100%;aspect-ratio:1.91/1;object-fit:cover;display:block;background:#f3f4f6}
+        .li-card .li-body{padding:.7rem .9rem}
+        .li-card .li-title{color:rgba(0,0,0,.9);font-size:14px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .li-card .li-desc{color:rgba(0,0,0,.6);font-size:12px;line-height:1.45;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .li-card .li-domain{color:rgba(0,0,0,.6);font-size:12px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        /* 微信聊天卡片（5:4 缩略图） */
+        .wx-phone{max-width:360px;margin:0 auto;background:#ededed;border-radius:.6rem;padding:1rem .8rem}
+        .wx-bubble{background:#fff;border-radius:.35rem;padding:.6rem .7rem;display:flex;gap:.6rem;align-items:flex-start}
+        .wx-bubble .wx-text{flex:1;min-width:0}
+        .wx-bubble .wx-title{color:#000;font-size:15px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+        .wx-bubble .wx-src{color:#999;font-size:11.5px;margin-top:.55rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .wx-bubble img{width:64px;height:51px;object-fit:cover;flex:none;border-radius:.2rem;background:#f3f4f6}
+        .ogc-ph{background:#f3f4f6;color:#9ca3af;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+        .ogc-meta{background:#1f2937;color:#e5e7eb;border-radius:.6rem;padding:.9rem 1rem;font-family:ui-monospace,Consolas,monospace;font-size:.82rem;line-height:1.75;white-space:pre-wrap;word-break:break-all;max-height:22rem;overflow:auto}
+        .ogc-rule{display:flex;gap:.7rem;align-items:flex-start;border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .9rem;margin-bottom:.6rem;background:#fff}
+        .ogc-rule .material-icons{flex:none;margin-top:.15rem}
+        .ogc-rule b{color:#111827}
+        .ogc-rule .st-ok{color:#059669}.ogc-rule .st-warn{color:#d97706}.ogc-rule .st-bad{color:#dc2626}
+        .ogc-link{color:#1a0dab;text-decoration:none}
+        .ogc-link:hover{text-decoration:underline}
+        @media (max-width:900px){.ogc-cards{grid-template-columns:1fr}}
+        @media (max-width:720px){.ogc-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">share</i> OG 社交卡片预览</h1>
+            <p>输入页面标题 / 描述 / URL / 缩略图，实时渲染 Twitter Card（Summary / Summary Large Image）、Facebook、LinkedIn、微信聊天卡片四版式；各平台标题描述长度与图片尺寸规则逐项提示；生成 og: / twitter: meta 标签代码一键复制。纯前端本地渲染。</p>
+        </div>
+        <div class="tool-content" style="max-width:1080px;margin:auto;">
+            <div class="ogc-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：输入内容不出浏览器。</b>标题、URL、描述、缩略图（含本地上传转 base64 的图片）全部在当前浏览器本地渲染与计算，不上传到任何服务器，不做任何存储与记录。计算过程无网络请求，可打开 DevTools 的 Network 面板验证。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ogc-sect">
+                    <h3><i class="material-icons">edit</i> 输入</h3>
+                    <div class="ogc-grid">
+                        <div class="ogc-field">
+                            <label>页面标题（og:title）<span class="cnt" id="ogc-title-count"></span><span class="hint">Twitter 约 70 字符截断</span></label>
+                            <input type="text" class="ogc-input" id="ogc-title" placeholder="例如：2026 双十一凑单攻略：满 300 减 50 最优组合计算方法" autocomplete="off">
+                            <div class="ogc-stat"><span id="ogc-title-stat"></span></div>
+                        </div>
+                        <div class="ogc-field">
+                            <label>页面 URL（og:url）<span class="cnt" id="ogc-url-count"></span><span class="hint">建议填写完整链接</span></label>
+                            <input type="text" class="ogc-input" id="ogc-url" placeholder="https://example.com/shuang11-coudan" autocomplete="off">
+                            <div class="ogc-stat"><span id="ogc-url-stat"></span></div>
+                        </div>
+                    </div>
+                    <div class="ogc-field" style="margin-top:.9rem;">
+                        <label>页面描述（og:description）<span class="cnt" id="ogc-desc-count"></span><span class="hint">Twitter 约 200 字符截断</span></label>
+                        <textarea class="ogc-input" id="ogc-desc" placeholder="例如：双十一凑单怎么凑最划算？输入商品清单，自动算出每档满减的最优组合，附凑单总额、立减金额与实付明细。"></textarea>
+                        <div class="ogc-stat"><span id="ogc-desc-stat"></span></div>
+                    </div>
+                    <div class="ogc-field" style="margin-top:.9rem;">
+                        <label>缩略图（og:image）<span class="cnt" id="ogc-img-count"></span><span class="hint">og:image 必须为可公网访问的绝对地址；本地上传仅用于预览，转 base64 不上传</span></label>
+                        <div class="ogc-thumb-row">
+                            <input type="text" class="ogc-input" id="ogc-imgurl" placeholder="https://example.com/cover.jpg（图片直链）" autocomplete="off">
+                            <img class="ogc-thumb-prev ogc-ph" id="ogc-thumb" alt="缩略图预览">
+                            <label class="ogc-btn-sm" style="white-space:nowrap;cursor:pointer;">本地上传<input type="file" id="ogc-file" accept="image/*" style="display:none;"></label>
+                        </div>
+                        <div class="ogc-stat"><span id="ogc-img-stat"></span><span id="ogc-img-size"></span></div>
+                    </div>
+                    <div class="ogc-field" style="margin-top:.9rem;">
+                        <label>Twitter 卡片类型</label>
+                        <div>
+                            <label class="ogc-radio"><input type="radio" name="ogc-twtype" value="summary_large_image" checked> Summary Large Image（大图 2:1）</label>
+                            <label class="ogc-radio"><input type="radio" name="ogc-twtype" value="summary"> Summary（小图 1:1）</label>
+                        </div>
+                        <div class="ogc-note" style="margin-top:.35rem;">twitter:card 取值决定 Twitter 展示大图还是小图；Facebook / LinkedIn / 微信不受此选项影响。</div>
+                    </div>
+                    <div class="ogc-actions">
+                        <button class="btn btn-primary" id="ogc-sample"><i class="material-icons">auto_awesome</i> 填入示例</button>
+                        <button class="ogc-btn-sm" id="ogc-clear">清空</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ogc-sect">
+                    <h3><i class="material-icons">view_carousel</i> 四平台卡片实时预览</h3>
+                    <div class="ogc-cards">
+                        <div class="ogc-card-item">
+                            <div class="plat"><i class="material-icons">article</i> Twitter Card<span class="tag" id="ogc-tw-tag">Summary Large Image · 2:1</span></div>
+                            <div id="ogc-tw-large" style="display:none;">
+                                <div class="tw-large">
+                                    <img id="twl-img" alt="Twitter 大卡图片">
+                                    <div class="tw-body">
+                                        <div class="tw-domain" id="twl-domain"></div>
+                                        <div class="tw-title" id="twl-title"></div>
+                                        <div class="tw-desc" id="twl-desc"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="ogc-tw-small" style="display:none;">
+                                <div class="tw-sum">
+                                    <img id="tws-img" alt="Twitter 小卡图片">
+                                    <div class="tw-body">
+                                        <div class="tw-domain" id="tws-domain"></div>
+                                        <div class="tw-title" id="tws-title"></div>
+                                        <div class="tw-desc" id="tws-desc"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ogc-note" style="margin-top:.55rem;" id="ogc-tw-note"></div>
+                        </div>
+                        <div class="ogc-card-item">
+                            <div class="plat"><i class="material-icons">thumb_up</i> Facebook 分享卡片<span class="tag">1.91:1 · 上图下文</span></div>
+                            <div class="fb-card">
+                                <img id="fb-img" alt="Facebook 分享图片">
+                                <div class="fb-body">
+                                    <div class="fb-domain" id="fb-domain"></div>
+                                    <div class="fb-title" id="fb-title"></div>
+                                    <div class="fb-desc" id="fb-desc"></div>
+                                </div>
+                            </div>
+                            <div class="ogc-note" style="margin-top:.55rem;" id="ogc-fb-note"></div>
+                        </div>
+                        <div class="ogc-card-item">
+                            <div class="plat"><i class="material-icons">work</i> LinkedIn 分享卡片<span class="tag">1.91:1 · 横幅</span></div>
+                            <div class="li-card">
+                                <img id="li-img" alt="LinkedIn 分享图片">
+                                <div class="li-body">
+                                    <div class="li-title" id="li-title"></div>
+                                    <div class="li-desc" id="li-desc"></div>
+                                    <div class="li-domain" id="li-domain"></div>
+                                </div>
+                            </div>
+                            <div class="ogc-note" style="margin-top:.55rem;" id="ogc-li-note"></div>
+                        </div>
+                        <div class="ogc-card-item">
+                            <div class="plat"><i class="material-icons">chat</i> 微信聊天卡片<span class="tag">缩略图 5:4</span></div>
+                            <div class="wx-phone">
+                                <div style="text-align:center;color:#999;font-size:.75rem;margin-bottom:.5rem;">微信聊天（示意）</div>
+                                <div class="wx-bubble">
+                                    <div class="wx-text">
+                                        <div class="wx-title" id="wx-title"></div>
+                                        <div class="wx-src" id="wx-src"></div>
+                                    </div>
+                                    <img id="wx-img" alt="微信分享缩略图">
+                                </div>
+                            </div>
+                            <div class="ogc-note" style="margin-top:.55rem;" id="ogc-wx-note"></div>
+                        </div>
+                    </div>
+                    <div class="ogc-note" style="margin-top:.8rem;">以上为各平台当前公开版式的大致还原（桌面端优先），实际展示受平台版本、客户端与缓存影响；首次分享前建议用各平台官方调试工具（Twitter Card Validator / Facebook 分享调试工具）抓取一次刷新缓存。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ogc-sect">
+                    <h3><i class="material-icons">rule</i> 各平台字段与图片规则</h3>
+                    <div class="ogc-rule">
+                        <i class="material-icons" id="ogc-r-tw-icon">check_circle</i>
+                        <div><b>Twitter Card</b>：标题约 <b>70 字符</b>截断、描述约 <b>200 字符</b>截断；Summary Large Image 图片建议 <b>2:1（1200×600，最小 300×157）</b>，Summary 图片建议 <b>1:1（最小 144×144）</b>。<span id="ogc-r-tw"></span></div>
+                    </div>
+                    <div class="ogc-rule">
+                        <i class="material-icons" id="ogc-r-fb-icon">check_circle</i>
+                        <div><b>Facebook</b>：og:title / og:description 无硬性字符上限（标题约展示 2 行、描述约 2~4 行，过长折叠）；og:image 建议 <b>1200×630（1.91:1），最小 200×200</b>，小于 200×200 不展示大图。<span id="ogc-r-fb"></span></div>
+                    </div>
+                    <div class="ogc-rule">
+                        <i class="material-icons" id="ogc-r-li-icon">check_circle</i>
+                        <div><b>LinkedIn</b>：标题建议 ≤ <b>150 字符</b>、描述建议 ≤ <b>256 字符</b>；og:image 建议 <b>1200×627（1.91:1）</b>。<span id="ogc-r-li"></span></div>
+                    </div>
+                    <div class="ogc-rule">
+                        <i class="material-icons" id="ogc-r-wx-icon">check_circle</i>
+                        <div><b>微信聊天卡片</b>：标题建议 ≤ <b>30 字</b>（聊天列表约展示 2 行）、描述建议 ≤ <b>40 字</b>；缩略图建议 <b>5:4（240×200 或更大）</b>，微信会按比例裁剪居中。<span id="ogc-r-wx"></span></div>
+                    </div>
+                    <div class="ogc-rule">
+                        <i class="material-icons" id="ogc-r-img-icon">check_circle</i>
+                        <div><b>og:image 通用要求</b>：必须为 <b>http(s):// 开头的绝对地址</b>且公网可访问（爬虫抓取用）；建议 JPG/PNG、单张 <b>≤ 8MB</b>（Facebook 上限），本地上传转 base64 的 data URL 仅用于本页预览，<b>不能</b>作为 og:image 上线。<span id="ogc-r-img"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ogc-sect">
+                    <h3><i class="material-icons">code</i> meta 标签代码片段</h3>
+                    <div class="ogc-meta" id="ogc-meta-code">&lt;!-- 先填写上方输入，代码片段实时生成 --&gt;</div>
+                    <div class="ogc-actions">
+                        <button class="btn btn-primary" id="ogc-copy-meta"><i class="material-icons">content_copy</i> 一键复制 meta 代码</button>
+                        <button class="ogc-btn-sm" id="ogc-copy-tw">只复制 twitter: 部分</button>
+                    </div>
+                    <div class="ogc-note" style="margin-top:.6rem;">把这段代码放到页面的 <b>&lt;head&gt;</b> 里即可；twitter:title / twitter:description 未填写时会回退使用 og:title / og:description（本工具已按此逻辑生成，可删减）。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ogc-sect">
+                    <h3><i class="material-icons">help_outline</i> 口径说明</h3>
+                    <div class="ogc-note">
+                        <b>字符数按什么口径？</b>本工具按 JavaScript 字符串长度计数（一个汉字计 1）。Twitter 实际按字符数截断（70 / 200 为经验值，含空格与标点）；微信按中文语境给出字数建议。<br>
+                        <b>图片为什么显示不出来？</b>检查三点：① 是否为 http(s) 绝对地址；② 是否公网可访问（内网地址、需登录的地址爬虫抓不到）；③ 是否被防盗链（Referer 限制）。本地上传的图片仅本页预览有效。<br>
+                        <b>为什么预览和真实分享不一样？</b>各平台会缓存抓取结果，改完 og 标签后要用官方调试工具重新抓取刷新缓存；另外客户端版本、深色模式、折叠逻辑都会带来差异，本工具是发文前的快速自查口径。<br>
+                        <b>配套使用：</b>分享出去之前，先去 <a class="ogc-link" href="/tools/serp-snippet-preview">SERP 搜索结果片段预览</a> 检查同一标题/描述在 Google 与百度搜索结果里的展示效果（搜索结果预览 ↔ 社交分享预览，营销工具双链路）。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        "use strict";
+        var TW_TITLE_MAX = 70, TW_DESC_MAX = 200;
+        var LI_TITLE_MAX = 150, LI_DESC_MAX = 256;
+        var WX_TITLE_MAX = 30, WX_DESC_MAX = 40;
+
+        var titleEl = document.getElementById("ogc-title");
+        var urlEl = document.getElementById("ogc-url");
+        var descEl = document.getElementById("ogc-desc");
+        var imgUrlEl = document.getElementById("ogc-imgurl");
+        var fileEl = document.getElementById("ogc-file");
+        var thumbEl = document.getElementById("ogc-thumb");
+        var uploadedDataUrl = "";
+
+        function esc(s) {
+            return String(s == null ? "" : s)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+        function escAttr(s) {
+            return esc(s).replace(/\n/g, "&#10;");
+        }
+        function stat(el, ok, warn, bad) {
+            if (bad) { el.innerHTML = '<span class="bad">' + bad + "</span>"; }
+            else if (warn) { el.innerHTML = '<span class="warn">' + warn + "</span>"; }
+            else { el.innerHTML = '<span class="ok">' + ok + "</span>"; }
+        }
+        function domainOf(url) {
+            url = url.trim();
+            if (!url) return "";
+            try {
+                var u = new URL(/^https?:\/\//i.test(url) ? url : "https://" + url);
+                return u.hostname.replace(/^www\./, "");
+            } catch (e) { return url.replace(/^https?:\/\//, "").split("/")[0]; }
+        }
+        function imgSrc() {
+            if (uploadedDataUrl) return uploadedDataUrl;
+            var u = imgUrlEl.value.trim();
+            return u || "";
+        }
+        function setImg(img, src) {
+            if (src) {
+                img.style.display = "";
+                img.classList.remove("ogc-ph");
+                if (img.getAttribute("src") !== src) img.src = src;
+                img.onerror = function () {
+                    img.style.display = "none";
+                    img.onerror = null;
+                };
+            } else {
+                img.style.display = "none";
+                img.removeAttribute("src");
+            }
+        }
+
+        function twType() {
+            var r = document.querySelector('input[name="ogc-twtype"]:checked');
+            return r ? r.value : "summary_large_image";
+        }
+
+        function render() {
+            var title = titleEl.value;
+            var url = urlEl.value.trim();
+            var desc = descEl.value;
+            var src = imgSrc();
+            var domain = domainOf(url);
+
+            // Twitter
+            var large = twType() === "summary_large_image";
+            document.getElementById("ogc-tw-large").style.display = large ? "" : "none";
+            document.getElementById("ogc-tw-small").style.display = large ? "none" : "";
+            document.getElementById("ogc-tw-tag").textContent = large ? "Summary Large Image · 2:1" : "Summary · 1:1";
+            var p = large ? "twl" : "tws";
+            document.getElementById(p + "-domain").textContent = domain || "example.com";
+            document.getElementById(p + "-title").textContent = title || "请输入页面标题";
+            document.getElementById(p + "-desc").textContent = desc || "请输入页面描述，实时预览各平台分享卡片的展示效果。";
+            setImg(document.getElementById(p + "-img"), src);
+            document.getElementById("ogc-tw-note").innerHTML = large
+                ? "大卡图片按 <b>2:1</b> 裁剪展示；标题超约 70 字符、描述超约 200 字符会被截断。"
+                : "小卡图片按 <b>1:1</b> 方形展示；标题超约 70 字符、描述超约 200 字符会被截断。";
+
+            // Facebook
+            document.getElementById("fb-domain").textContent = (domain || "example.com").toUpperCase();
+            document.getElementById("fb-title").textContent = title || "请输入页面标题";
+            document.getElementById("fb-desc").textContent = desc || "请输入页面描述，实时预览各平台分享卡片的展示效果。";
+            setImg(document.getElementById("fb-img"), src);
+            document.getElementById("ogc-fb-note").textContent = "图片按 1.91:1 展示；小于 200×200 的图片不会以大图形式展示。";
+
+            // LinkedIn
+            document.getElementById("li-title").textContent = title || "请输入页面标题";
+            document.getElementById("li-desc").textContent = desc || "请输入页面描述，实时预览各平台分享卡片的展示效果。";
+            document.getElementById("li-domain").textContent = domain || "example.com";
+            setImg(document.getElementById("li-img"), src);
+            document.getElementById("ogc-li-note").textContent = "图片按 1.91:1 横幅展示；标题建议 ≤150 字符、描述 ≤256 字符。";
+
+            // 微信
+            document.getElementById("wx-title").textContent = title || "请输入页面标题";
+            document.getElementById("wx-src").textContent = domain ? domain + " · 分享" : "公众号 / 网站名称 · 分享";
+            setImg(document.getElementById("wx-img"), src);
+            document.getElementById("ogc-wx-note").textContent = "缩略图按 5:4 展示（微信会居中裁剪）；标题建议 ≤30 字，超出约 2 行会被截断。";
+
+            // 缩略图小预览
+            if (src) {
+                thumbEl.classList.remove("ogc-ph");
+                if (thumbEl.getAttribute("src") !== src) thumbEl.src = src;
+                thumbEl.style.display = "";
+                thumbEl.onerror = function () { thumbEl.style.display = "none"; thumbEl.onerror = null; };
+            } else {
+                thumbEl.style.display = "none";
+                thumbEl.removeAttribute("src");
+            }
+
+            updateStats(title, url, desc, src);
+            renderMeta(title, url, desc, src);
+        }
+
+        function ruleLine(iconId, textId, state, msg) {
+            var icon = document.getElementById(iconId);
+            var el = document.getElementById(textId);
+            el.className = "st-" + state;
+            el.textContent = msg;
+            if (state === "ok") { icon.textContent = "check_circle"; icon.style.color = "#059669"; }
+            else if (state === "warn") { icon.textContent = "warning"; icon.style.color = "#d97706"; }
+            else { icon.textContent = "error"; icon.style.color = "#dc2626"; }
+        }
+
+        function updateStats(title, url, desc, src) {
+            document.getElementById("ogc-title-count").textContent = "（" + title.length + " 字符）";
+            document.getElementById("ogc-desc-count").textContent = "（" + desc.length + " 字符）";
+            document.getElementById("ogc-url-count").textContent = url ? "（" + url.length + " 字符）" : "";
+            document.getElementById("ogc-img-count").textContent = uploadedDataUrl ? "（本地上传，已转 base64）" : "";
+
+            // 标题
+            var tStat = document.getElementById("ogc-title-stat");
+            if (!title) { tStat.textContent = "等待输入"; }
+            else if (title.length > TW_TITLE_MAX) stat(tStat, 0, 0, title.length + " 字符：Twitter 约 70 字符截断，超出部分不展示");
+            else if (title.length > WX_TITLE_MAX) stat(tStat, 0, title.length + " 字符：Twitter 正常，微信聊天卡片约 2 行（≤30 字）可能被截断", 0);
+            else stat(tStat, title.length + " 字符：Twitter / 微信均可完整展示", 0, 0);
+
+            // 描述
+            var dStat = document.getElementById("ogc-desc-stat");
+            if (!desc) { dStat.textContent = "等待输入"; }
+            else if (desc.length > TW_DESC_MAX) stat(dStat, 0, 0, desc.length + " 字符：Twitter 约 200 字符截断");
+            else if (desc.length > LI_DESC_MAX) stat(dStat, 0, 0, desc.length + " 字符：超出 LinkedIn 建议 256 字符");
+            else if (desc.length > WX_DESC_MAX) stat(dStat, 0, desc.length + " 字符：Twitter / LinkedIn 正常，微信建议 ≤40 字", 0);
+            else stat(dStat, desc.length + " 字符：各平台均可完整展示", 0, 0);
+
+            // URL
+            var uStat = document.getElementById("ogc-url-stat");
+            uStat.textContent = !url ? "建议填写完整链接，卡片域名行更真实"
+                : (/^https?:\/\//i.test(url) ? "链接格式正常" : "提示：建议填写以 http(s):// 开头的完整链接");
+
+            // 图片
+            var iStat = document.getElementById("ogc-img-stat");
+            var iSize = document.getElementById("ogc-img-size");
+            if (!src) { iStat.textContent = "未填写：各平台将只展示文字卡片"; iSize.textContent = ""; }
+            else if (uploadedDataUrl) { iStat.innerHTML = '<span class="warn">本地上传：仅本页预览有效，og:image 上线必须换成公网绝对地址</span>'; iSize.textContent = ""; }
+            else if (!/^https?:\/\//i.test(src)) { iStat.innerHTML = '<span class="bad">非绝对地址：爬虫无法抓取，og:image 必须为 http(s):// 开头</span>'; iSize.textContent = ""; }
+            else { iStat.innerHTML = '<span class="ok">绝对地址，可被爬虫抓取</span>'; iSize.textContent = ""; loadImgSize(src, iSize); }
+
+            // 规则行状态
+            ruleLine("ogc-r-tw-icon", "ogc-r-tw", !title ? "ok" : title.length > TW_TITLE_MAX ? "bad" : "ok",
+                !title ? "等待输入。" : "当前标题 " + title.length + " 字符" + (title.length > TW_TITLE_MAX ? "，超出约 70 字符，Twitter 会被截断。" : "，Twitter 展示完整。") +
+                "当前描述 " + desc.length + " 字符" + (desc.length > TW_DESC_MAX ? "，超出约 200 字符会被截断。" : "，展示完整。"));
+            ruleLine("ogc-r-fb-icon", "ogc-r-fb", "ok", src ? "已有缩略图，Facebook 将展示图文卡片。" : "未填缩略图，Facebook 将只展示文字链接。");
+            ruleLine("ogc-r-li-icon", "ogc-r-li", !title && !desc ? "ok" : (title.length > LI_TITLE_MAX || desc.length > LI_DESC_MAX) ? "warn" : "ok",
+                (!title && !desc) ? "等待输入。" : "当前标题 " + title.length + " / 150 字符，描述 " + desc.length + " / 256 字符" +
+                ((title.length > LI_TITLE_MAX || desc.length > LI_DESC_MAX) ? "，超出 LinkedIn 建议长度。" : "，在建议长度内。"));
+            ruleLine("ogc-r-wx-icon", "ogc-r-wx", !title ? "ok" : title.length > WX_TITLE_MAX ? "warn" : "ok",
+                !title ? "等待输入。" : "当前标题 " + title.length + " 字" + (title.length > WX_TITLE_MAX ? "，超出 30 字建议，聊天卡片可能截断。" : "，微信聊天卡片展示完整。"));
+            ruleLine("ogc-r-img-icon", "ogc-r-img", !src ? "ok" : /^https?:\/\//i.test(src) && !uploadedDataUrl ? "ok" : "warn",
+                !src ? "等待输入。" : uploadedDataUrl ? "当前为本地上传的 base64，仅预览有效，上线前务必替换为公网图片地址。" : /^https?:\/\//i.test(src) ? "当前为绝对地址，符合爬虫抓取要求。" : "当前不是 http(s) 绝对地址，爬虫无法抓取。");
+        }
+
+        var sizeTimer = null;
+        function loadImgSize(src, el) {
+            if (sizeTimer) clearTimeout(sizeTimer);
+            sizeTimer = setTimeout(function () {
+                var im = new Image();
+                im.onload = function () {
+                    el.textContent = "图片实际尺寸 " + im.naturalWidth + "×" + im.naturalHeight +
+                        (im.naturalWidth < 200 || im.naturalHeight < 200 ? "（小于 200×200，Facebook 不展示大图）" : "");
+                };
+                im.onerror = function () { el.textContent = "图片加载失败：检查地址是否可访问 / 是否防盗链"; };
+                im.src = src;
+            }, 400);
+        }
+
+        function metaCode(title, url, desc, src, twOnly) {
+            var lines = [];
+            function m(p, v) { lines.push('<meta property="' + p + '" content="' + escAttr(v) + '">'); }
+            function n(p, v) { lines.push('<meta name="' + p + '" content="' + escAttr(v) + '">'); }
+            if (!twOnly) {
+                m("og:type", "website");
+                if (title) m("og:title", title);
+                if (desc) m("og:description", desc);
+                if (url) m("og:url", url);
+                if (src && /^https?:\/\//i.test(src)) m("og:image", src);
+            }
+            n("twitter:card", twType());
+            if (title) n("twitter:title", title);
+            if (desc) n("twitter:description", desc);
+            if (src && /^https?:\/\//i.test(src)) n("twitter:image", src);
+            return lines.join("\n");
+        }
+
+        function renderMeta(title, url, desc, src) {
+            var code = metaCode(title, url, desc, src, false);
+            var box = document.getElementById("ogc-meta-code");
+            box.textContent = code || "<!-- 先填写上方输入，代码片段实时生成 -->";
+        }
+
+        function copyText(t, okMsg) {
+            if (!t) { toast("内容为空，无需复制"); return; }
+            function done() { toast(okMsg || "已复制到剪贴板"); }
+            function fail() { toast("复制失败，请手动复制"); }
+            if (navigator.clipboard && window.isSecureContext !== false) {
+                navigator.clipboard.writeText(t).then(done, function () { fallbackCopy(t, done, fail); });
+            } else {
+                fallbackCopy(t, done, fail);
+            }
+        }
+        function fallbackCopy(t, done, fail) {
+            var ta = document.createElement("textarea");
+            ta.value = t;
+            ta.style.cssText = "position:fixed;opacity:0;";
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy") ? done() : fail(); }
+            catch (e) { fail(); }
+            document.body.removeChild(ta);
+        }
+        function toast(msg) {
+            var el = document.createElement("div");
+            el.textContent = msg;
+            el.style.cssText = "position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:90vw;text-align:center;";
+            document.body.appendChild(el);
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1800);
+        }
+
+        document.getElementById("ogc-sample").addEventListener("click", function () {
+            titleEl.value = "2026 双十一凑单攻略：满 300 减 50 最优组合计算方法";
+            urlEl.value = "https://www.example.com/youhui/shuang11-coudan-gonglue-2026";
+            descEl.value = "双十一凑单怎么凑最划算？输入商品清单与各档满减规则，自动算出溢出最小的最优组合，附凑单总额、立减金额与实付明细。";
+            imgUrlEl.value = "";
+            uploadedDataUrl = "";
+            fileEl.value = "";
+            render();
+        });
+        document.getElementById("ogc-clear").addEventListener("click", function () {
+            titleEl.value = ""; urlEl.value = ""; descEl.value = "";
+            imgUrlEl.value = ""; uploadedDataUrl = ""; fileEl.value = "";
+            render();
+            titleEl.focus();
+        });
+        document.getElementById("ogc-copy-meta").addEventListener("click", function () {
+            copyText(metaCode(titleEl.value, urlEl.value.trim(), descEl.value, imgSrc(), false) || "", "meta 代码已复制");
+        });
+        document.getElementById("ogc-copy-tw").addEventListener("click", function () {
+            copyText(metaCode(titleEl.value, urlEl.value.trim(), descEl.value, imgSrc(), true) || "", "twitter: 部分已复制");
+        });
+        fileEl.addEventListener("change", function () {
+            var f = fileEl.files && fileEl.files[0];
+            if (!f) return;
+            if (!/^image\//.test(f.type)) { toast("请选择图片文件"); return; }
+            if (f.size > 5 * 1024 * 1024) { toast("图片超过 5MB，仅用于预览仍可继续"); }
+            var rd = new FileReader();
+            rd.onload = function () {
+                uploadedDataUrl = String(rd.result || "");
+                render();
+                toast("本地图片已载入预览（base64，不上传）");
+            };
+            rd.onerror = function () { toast("图片读取失败"); };
+            rd.readAsDataURL(f);
+        });
+        imgUrlEl.addEventListener("input", function () {
+            if (imgUrlEl.value.trim()) { uploadedDataUrl = ""; fileEl.value = ""; }
+            render();
+        });
+        ["input", "change"].forEach(function (ev) {
+            titleEl.addEventListener(ev, render);
+            urlEl.addEventListener(ev, render);
+            descEl.addEventListener(ev, render);
+        });
+        document.querySelectorAll('input[name="ogc-twtype"]').forEach(function (r) {
+            r.addEventListener("change", render);
+        });
+        render();
+    })();
+    </script>
+</body>
+</html>
+{{end}}

@@ -904,6 +904,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "营销工具",
 				},
+				{
+					ID:          "og_card_preview",
+					Name:        "OG 社交卡片预览",
+					Description: "输入页面标题/描述/URL/缩略图，实时渲染 Twitter Card（Summary / Summary Large Image）、Facebook、LinkedIn、微信聊天卡片四版式；标题描述字符计数与各平台长度规则提示；一键复制 og:/twitter: meta 标签代码，纯前端本地渲染不出浏览器 · Social card preview: Twitter Card, Facebook, LinkedIn, WeChat share card preview, meta tags generator, 100% client-side",
+					Path:        "/tools/og-card-preview",
+					Icon:        "share",
+					New:         true,
+					Category:    "营销工具",
+				},
 			},
 		},
 		{
