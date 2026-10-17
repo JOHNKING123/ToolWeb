@@ -1,3 +1,39 @@
+> 维护人：产品调研员 · 每日更新（2026-10-18 07:00 第十六轮研究）
+
+## 今日任务（2026-10-18 07:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十六轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。工资条生成器已交付闭环（05:41 PM 决策轮立项→开发交付 fecca94；`grep tools/categories.go` 确认 ID `payslip_generator`、Path `/tools/payslip-generator` 已注册，全量 94 Path），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（07:00 全网调研，通用方向）：
+1. 工资条生成器交付确认：`git log` 确认开发交付 fecca94；`grep tools/categories.go` 确认已注册（全量 94 Path），与候选池无重叠项残留；候选池划出，已实现清单追加（delta：+ 工资条生成器；历史全量见下方第十五轮小节）。
+2. 新晋候选：**宠物体重记录追踪器（多宠物体重/健康数据本地追踪）**。需求证据三重：① V2EX 2026-10-17（23 小时前）「极简猫咪体重记录工具 Purrfit」——Cloudflare Workers+KV，多猫咪管理、趋势图（3M/6M/全部）、CSV 导入导出、PWA、亮/暗色、中英双语，作者为记录绝育前增重缓慢的猫咪而自建——形态验证+真实动机；② petslately.app：纯浏览器宠物记录站（Weight Tracker / Vet Visit Summary / Symptom Timeline / Medication Schedule 四工具，「No account, entries stay in this browser」——「数据不出浏览器」共识与仓库铁律同构）；③ nibble.conylab.workers.dev（3 天前抓取）：宠物减重计划工具（体况评分→每日喂食克数→每周称重→减重速度守卫），印证「体重管理」为宠物主高频需求；④ Google Play PetnotePlus / Pet Care Tracker / Pet Journal 宠物健康 App 矩阵——宠物健康记录为成熟需求方向。在线形态稀缺（多为 App/需账号），浏览器单页本地版是差异化。可行性：纯前端小难度——多宠物档案（localStorage）→体重录入（日期+kg/lb，支持「抱着称减体重」）→趋势折线图（canvas，3M/6M/全部）→增重/减重速度预警（猫咪快速掉体重是就医信号）→CSV 导出/导入。去重：94 Path 无 pet/宠物/猫/体重/weight/健康/health 命中（此前 grep "pet" 命中仅 serp_snippet_preview 描述中的字母组合，非宠物工具）。难度小。SEO：宠物体重记录、猫咪体重追踪、宠物健康记录。建议 ID `pet_weight_tracker`、Path `/tools/pet-weight-tracker`。开辟「宠物/生活」新方向。
+3. 新晋候选：**文本隐私脱敏工具（粘贴文本→敏感信息自动识别遮盖）**。需求证据三重：① dev.to Antigravity Tools 2026-10-14（4 天前，59 工具集）单列「PII Masker — strip emails, credit cards, SSNs, IPs from text」，「every operation runs inside your browser」——隐私叙事与仓库「数据不出浏览器」铁律同构；② getweeve.io/tools/anonymize：浏览器端文档匿名化（规则识别 email/phone/SSN/IBAN/postcode/dates/links，on-device 模型识别人名/组织，「Nothing you paste or upload leaves this page」，免费无账号）——形态族验证；③ lddgo.net 在线数据脱敏：「使用浏览器能力实现，您的数据不会被上传到云端」，支持 txt/csv/json/excel，哈希/遮盖/替换/洗牌脱敏——中文形态验证。中文场景：发截图/贴报错日志到 GitHub/社群前先脱敏手机号、身份证号、银行卡、车牌、IP。可行性：纯前端小难度——粘贴文本→正则自动识别（中国手机号/身份证/银行卡/邮箱/IPv4/车牌）→高亮预览逐条确认（防过杀/漏杀）→一键遮盖（✳ 部分保留）/替换假名→复制/下载；与 text_diff 互链成「文本处理」旅程线。去重：94 Path 无 mask/脱敏/pii/redac/隐私命中。难度小。SEO：文本脱敏、隐私信息遮盖、日志脱敏。建议 ID `text_privacy_masker`、Path `/tools/text-privacy-masker`。
+4. 新晋候选：**网站图标生成器（一键生成 favicon 多尺寸+代码片段）**。需求证据双重：① 365Lab 2026-10-08（10 天前）「2026 免费在线工具推荐：40+ 实用工具」单列「图标生成器：网站图标」（与贴纸生成器并列图片工具组）——竞品工具站形态验证；② dev.to Byte-Kit（24 工具集，7 天前）内置 favicon generator 同形态。可行性：纯前端小难度——上传 logo（canvas 重采样）→一键生成 16/32/180/192/512 多尺寸 PNG + apple-touch-icon + Web App Manifest JSON + HTML <link> 代码片段一键复制→打包下载；开发者/站长建站高频刚需，仓库开发者工具品类可互链（JWT/JSON/正则工具同人群）。去重：94 Path 无 favicon/图标命中（"icon" 命中仅 calendar 的 Icon 字段名）。难度小。SEO：favicon 生成、网站图标制作、app icon 生成。建议 ID `favicon_generator`、Path `/tools/favicon-generator`。
+
+无新单页信号侧：① V2EX 10-17/10-18：BiliFlow（B 站桌面下载+直播录制，桌面端）、闲置资源共享变现平台（平台想法，非单页）、AI 视频去物 removeobjects.video（需 AI 后端）、remox.ai 图片擦除/去背景（AI 后端；纯前端 inpainting 不可行，需求归档观察）、Yir.AI 生图生视频比价路由（平台）、财悟-记账也记物（iOS App）、随声提词（Mac/iOS 原生+本地语音识别）、Iterlay（AI 画布桌面端）——均非单页纯前端口径；② dev.to UniRecorder 40+ 工具（21 天前）：录屏/计算器类与仓库重叠或已有；③ Hacker News 10-15：Tiny Little Office（浏览器办公套件，单页承载过大）、Fleeting 假会议录音+日历邀请生成器（.ics 生成器单页可实现，但恶搞属性强、仓库已有 /tools/calendar，暂不单立）；④ 365Lab 榜单其余项（证件照/发票助手/拼图/背景图/配色网/词云/网名生成器/显卡测试）：仓库已覆盖或为已有工具增强项；⑤ info35/techtippr 榜单：水印/AI 音乐/生图 API——仓库水印已覆盖、AI 需后端；⑥ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **宠物体重记录追踪器（多宠物体重/健康数据本地追踪）** — P1（本轮新晋顺位第一：V2EX 2026-10-17（23 小时前）Purrfit 形态验证+真实养猫动机；petslately 四工具「数据不出浏览器」共识；nibble 宠物减重计划（3 天前）印证体重管理高频；Google Play 宠物健康 App 矩阵成熟需求；在线单页形态稀缺=差异化；纯前端小难度：多宠物档案→体重录入→趋势图→增速预警→CSV 导入导出；94 Path 无重叠；开辟「宠物/生活」新方向；07:00 清晨轮形态稳：表单+图表+localStorage，无文件上传复杂逻辑）。SEO：宠物体重记录、猫咪体重追踪。
+2. **文本隐私脱敏工具（粘贴文本→敏感信息自动识别遮盖）** — P1（本轮新晋：dev.to Antigravity 2026-10-14（4 天前）PII Masker 形态；getweeve 浏览器端匿名化形态族验证；lddgo.net 中文脱敏形态验证；隐私叙事与仓库「数据不出浏览器」铁律同构；纯前端小难度：粘贴→正则识别（手机号/身份证/银行卡/邮箱/IP/车牌）→高亮逐条确认→一键遮盖→复制/下载；与 text_diff 互链成文本旅程线；94 Path 无重叠）。SEO：文本脱敏、隐私信息遮盖。
+3. **网站图标生成器（一键生成 favicon 多尺寸+代码片段）** — P1（本轮新晋：365Lab 2026-10-08（10 天前）竞品榜单单列「图标生成器」形态验证；Byte-Kit favicon generator 同形态；纯前端小难度：上传 logo→canvas 重采样→16/32/180/192/512 PNG+Manifest+<link>代码片段→打包下载；开发者/站长建站刚需，与仓库开发者工具同人群互链；94 Path 无重叠）。SEO：favicon 生成、网站图标制作。
+
+PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSign + fabulouspic 榜单全部免费版受限，「免费无上限+文件不出浏览器」差异化；但难度中且需新增 PDF.js+pdf-lib 两个大依赖，留池作后续上午大轮次首选）；SRT 字幕编辑器（P1，顺位顺延：dev.to 2026-10-15 纯 JS 形态+四家在线字幕编辑器形态族验证+中文桌面版需求证明，开辟字幕/视频新方向；按顺位递进规则继续留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；进制转换器（P1 观察）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察，中文证据弱）；MP3 标签编辑器（P2 观察，开辟音频工具方向）等其余候选留池。
+
+**通用候选表增量**（第十六轮：工资条生成器已实现划出；新晋宠物体重记录追踪器 P1、文本隐私脱敏工具 P1、网站图标生成器 P1；全量 94 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 宠物体重记录追踪器（多宠物体重/健康数据本地追踪） | 本轮新晋（V2EX 2026-10-17（23 小时前）「极简猫咪体重记录工具 Purrfit」——Cloudflare Workers+KV，多猫管理、趋势图 3M/6M/全部、CSV 导入导出、PWA、亮/暗色、中英双语，作者为记录绝育前增重缓慢的猫咪而自建——形态验证+真实动机；petslately.app 纯浏览器宠物记录四工具（Weight Tracker / Vet Visit Summary / Symptom Timeline / Medication Schedule，「No account, entries stay in this browser」——「数据不出浏览器」共识）；nibble.conylab.workers.dev（3 天前）宠物减重计划（体况评分→每日喂食克数→每周称重→减重速度守卫），印证体重管理为宠物主高频需求；Google Play PetnotePlus / Pet Care Tracker / Pet Journal 宠物健康 App 矩阵——成熟需求方向）；在线单页形态稀缺（多为 App/需账号），浏览器本地版是差异化；纯前端小难度：多宠物档案（localStorage）→体重录入（日期+kg/lb，支持「抱着称减体重」）→趋势折线图（canvas，3M/6M/全部）→增重/减重速度预警（猫咪快速掉体重是就医信号）→CSV 导出/导入；94 Path 无 pet/宠物/猫/体重/weight/健康/health 命中（此前 "pet" 命中仅 serp_snippet_preview 描述字母组合）；开辟「宠物/生活」新方向 | 小 | P1（本轮新晋） |
+| 文本隐私脱敏工具（粘贴文本→敏感信息自动识别遮盖） | 本轮新晋（dev.to Antigravity Tools 2026-10-14（4 天前，59 工具集）单列「PII Masker — strip emails, credit cards, SSNs, IPs from text」，「every operation runs inside your browser」——隐私叙事与仓库「数据不出浏览器」铁律同构；getweeve.io/tools/anonymize 浏览器端文档匿名化（规则识别 email/phone/SSN/IBAN/postcode/dates/links，on-device 模型识别人名/组织，「Nothing you paste or upload leaves this page」，免费无账号）——形态族验证；lddgo.net 在线数据脱敏：「使用浏览器能力实现，您的数据不会被上传到云端」，支持 txt/csv/json/excel，哈希/遮盖/替换/洗牌脱敏——中文形态验证）；中文场景：发截图/贴报错日志到 GitHub/社群前先脱敏手机号、身份证号、银行卡、车牌、IP；纯前端小难度：粘贴文本→正则自动识别（中国手机号/身份证/银行卡/邮箱/IPv4/车牌）→高亮预览逐条确认（防过杀/漏杀）→一键遮盖（✳ 部分保留）/替换假名→复制/下载；与 text_diff 互链成「文本处理」旅程线；94 Path 无 mask/脱敏/pii/redac/隐私命中 | 小 | P1（本轮新晋） |
+| 网站图标生成器（一键生成 favicon 多尺寸+代码片段） | 本轮新晋（365Lab 2026-10-08（10 天前）「2026 免费在线工具推荐：40+ 实用工具」单列「图标生成器：网站图标」（与贴纸生成器并列图片工具组）——竞品工具站形态验证；dev.to Byte-Kit（24 工具集，7 天前）内置 favicon generator 同形态）；开发者/站长建站高频刚需（favicon.ico + apple-touch-icon + Manifest 每次都要手配）；纯前端小难度：上传 logo（canvas 重采样）→一键生成 16/32/180/192/512 多尺寸 PNG + apple-touch-icon + Web App Manifest JSON + HTML <link> 代码片段一键复制→打包下载；与仓库开发者工具（JWT/JSON/正则）同人群互链；94 Path 无 favicon/图标命中（"icon" 仅 calendar 的 Icon 字段名） | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第十六轮——工资条生成器交付闭环（fecca94，`/tools/payslip-generator` 已注册，「生活工具」品类，「HR 财务」组合互链，全量 94 Path），候选池划出，已实现清单 delta 追加；新晋候选「宠物体重记录追踪器」P1（V2EX 2026-10-17 Purrfit 形态验证 + petslately/nibble 形态族 + App 矩阵需求证明，纯前端小难度，开辟「宠物/生活」新方向）、「文本隐私脱敏工具」P1（dev.to 2026-10-14 PII Masker + getweeve/lddgo 形态族，隐私叙事与「不出浏览器」铁律同构，纯前端小难度）、「网站图标生成器」P1（365Lab 2026-10-08 竞品榜单形态验证 + Byte-Kit 同形态，开发者建站刚需，纯前端小难度）；V2EX 10-17/10-18 热点均为桌面端/App/AI 后端/平台形态（BiliFlow、AI 视频去物、remox.ai 擦除、Yir.AI 比价、闲置平台、记账 App、提词 App）无单页可落地新信号；HN 10-15 Tiny Little Office 单页承载过大、Fleeting .ics 生成器恶搞属性强且仓库已有 calendar；365Lab 榜单其余项为仓库已覆盖或增强项；info35/techtippr 为水印/AI 方向（已覆盖/需后端）；WPS 候选表保持冻结归档；仓库 94 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD fecca94 一致；`git log` 确认开发交付 fecca94；`grep tools/categories.go` 全量 94 Path，`payslip_generator` ID 与 `/tools/payslip-generator` Path 已注册（划入已实现），新候选建议 ID（pet_weight_tracker / text_privacy_masker / favicon_generator）与 Path 均无重叠；健康/体重/隐私/图标四类关键词在 categories.go 全量零命中；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 05:41 决策轮）
 
 ## 今日任务（2026-10-18 05:41 · 产品经理排期决策 ✅）
@@ -4856,6 +4892,26 @@
 - [职业体验反馈 2026-10-17][快递员] 文本排序增加「按数字大小排序」选项（楼栋/单元/序号不再按字典序排错）
 - [职业体验反馈 2026-10-17][快递员] 首页加「快递/物流」场景标签页，把条码、二维码、文本工具、OCR 聚到一起
 - 去重说明：PDF 打码"真打码/删除文字层"选项已由 2026-10-16 房产中介条目覆盖，不重复追加
+
+## 职业体验反馈 2026-10-18（数据分析师/财务会计/新媒体编辑，平均 4.1/5，公网入口 200 正常）
+- [职业体验反馈 2026-10-18][数据分析师] 表格合并/拆分 CSV 解析加上 GBK 自动识别：复用 CSV⇄JSON 已有的 readUploadFile 试错回退逻辑（国内 Excel 默认导出 GBK CSV，当前固定 UTF-8 解码会乱码）
+- [职业体验反馈 2026-10-18][数据分析师] 图表生成器超 60 行时给「按周/月聚合后绘制」开关，避免直接截断前 60 行误导结论
+- [职业体验反馈 2026-10-18][数据分析师] 图表生成器自动识别百分号列（超半数单元格带 % 即标注口径），避免 3.2% 与 1280 同轴无单位绘制
+- [职业体验反馈 2026-10-18][数据分析师] 图表生成器支持直接上传 .xlsx/.csv 文件（复用站内 SheetJS 解析逻辑），减少复制粘贴一步
+- [职业体验反馈 2026-10-18][数据分析师] CSV⇄JSON 互转输出规范化字段内换行符（\r\n→\n），避免下游 Excel 出现多余回车
+- [职业体验反馈 2026-10-18][数据分析师] 表格合并加「表头映射预览」：并集模式下表头名仅差空格/全半角时提示合并去重（trim 之外的中间差异仍会生成两列）
+- [职业体验反馈 2026-10-18][财务会计] 工资条生成器合计兜底逻辑修正：明细求和时表头含社保/公积金/个税/扣款/代扣/减项的列按负值计入，或交叉校验（应发≈实发+扣减项）不一致时弹醒目提示——含扣减项时静默求和会算出错误合计并可能被打印发出
+- [职业体验反馈 2026-10-18][财务会计] 工资条生成器应发/实发关键词库扩充（税前合计/应发合计/实发金额/到手工资等），自动识别失败时高亮提醒用户手动指定
+- [职业体验反馈 2026-10-18][财务会计] 新增发票信息结构化提取：OCR 基础上加增值税发票字段模板（代码/号码/开票日期/购买方/金额/税额/价税合计），识别后导出 Excel 台账（报销审核/进项管理最高频场景）
+- [职业体验反馈 2026-10-18][财务会计] 工资个税计算器住房租金做成城市规模三档下拉（直辖市/省会/计划单列市 1500、人口超 100 万 1100、其他 800）自动带入金额，减少手动填错档
+- [职业体验反馈 2026-10-18][财务会计] 图片转 Excel 增加银行对账单/费用明细场景说明与无网格线表格列对齐优化，或明确标注适用边界
+- [职业体验反馈 2026-10-18][新媒体编辑] 短链接生成器加 URL 合法性校验（至少 DNS/连通性探测）、localStorage 本地历史（同长链复用同一短码）、基础访问统计（PV/UV 按天）
+- [职业体验反馈 2026-10-18][新媒体编辑] 九宫格切图加手动框选裁剪区 + JPG/质量导出选项（固定中心裁剪会把偏边主体切掉，9 张 PNG 体积大）
+- [职业体验反馈 2026-10-18][新媒体编辑] 新增公众号封面图裁剪工具：2.35:1（900×383）等预设 + 手动框选裁剪区
+- [职业体验反馈 2026-10-18][新媒体编辑] OG 社交卡片预览加国内平台（公众号/朋友圈分享卡片、小红书封面预览），补上「朋友圈转发只显示标题」知识点与 emoji 计数口径说明
+- [职业体验反馈 2026-10-18][新媒体编辑] 文本工具集加「不计空格字数」「微信公众号字数口径」选项，英文单词计数排除纯数字，破坏性操作（全角化/大小写转换）加撤销
+- [职业体验反馈 2026-10-18][新媒体编辑] 新增敏感词/违禁词检测工具（发文前自查，新媒体刚需，站内目前没有）
+- 去重说明：短链接 http→https 统一已由 2026-10-16 房产中介条目覆盖，本次只追加校验/历史/统计三件，不重复追加
 
 ## ⚠️ 待修复（2026-10-16 12:30 浏览器端到端实测 · 已回滚）
 **HEIC 转 JPG（/tools/heic-convert）转换链路在真实浏览器中必现失败**：真实 Chromium 上传真实 HEIC（strukturag/example.heic 718KB）→ 点「开始转换」→ 页面报错「解码组件加载失败（CDN 与本地兜底均不可用）：未知错误」，两次复现。页面加载/上传交互/首页入口均正常，脚本层 QA 10 项全 PASS，Node 端解码验证通过，公网 vendor 文件（libheif.js 91KB、libheif.wasm 1422377B、application/wasm）与分支提交逐字节一致 —— 故障点在浏览器内 libheif-js 1.23.2 emscripten 工厂实例化环节（CDN 与 vendor 同式失败，「未知错误」= 空 message 的字符串 throw，疑 wasm 初始化）。
