@@ -881,6 +881,23 @@ func GetCategories() []Category {
 			},
 		},
 		{
+			ID:          "marketing",
+			Name:        "营销工具",
+			Description: "SEO 优化与内容营销辅助工具",
+			Icon:        "campaign",
+			Tools: []Tool{
+				{
+					ID:          "serp_snippet_preview",
+					Name:        "SERP 搜索结果片段预览",
+					Description: "输入标题/URL/描述，实时渲染 Google 桌面+移动端结果卡；标题 ~600px 像素宽度截断预警并标红截断点；描述 155~160 字符长度条；百度展示规则（标题约 30 汉字/描述约 78 汉字）对照提示；一键复制标题/描述，纯前端本地渲染不出浏览器 · SERP snippet preview: Google desktop/mobile result cards, title pixel-width & description length check, Baidu display rules, 100% client-side",
+					Path:        "/tools/serp-snippet-preview",
+					Icon:        "preview",
+					New:         true,
+					Category:    "营销工具",
+				},
+			},
+		},
+		{
 			ID:          "job",
 			Name:        "求职工具",
 			Description: "简历诊断与求职辅助工具",

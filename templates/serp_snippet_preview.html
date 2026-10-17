@@ -1,0 +1,437 @@
+{{define "serp_snippet_preview"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERP 搜索结果片段预览 - SEO 标题描述检查/百度收录预览（本地渲染不上传）</title>
+    <meta name="description" content="免费在线 SERP 搜索结果片段预览工具：输入标题/URL/描述，实时渲染 Google 桌面+移动端结果卡；标题像素宽度估算（~600px 截断预警并标红截断点）；描述 155~160 字符长度条；百度展示规则对照（标题约 30 汉字/描述约 78 汉字）；一键复制标题/描述。纯浏览器本地渲染，数据不出浏览器、不上传服务器。SERP snippet preview: Google desktop/mobile preview, title pixel-width & description length check, Baidu rules, 100% client-side.">
+    <meta name="keywords" content="SERP预览,搜索结果预览,SEO标题描述检查,百度收录预览,serp snippet preview,google snippet preview,搜索结果片段,标题截断检查,meta description 检查,营销工具,serp preview,seo title checker">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/serp-snippet-preview">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"SERP 搜索结果片段预览","description":"输入标题/URL/描述，实时渲染 Google 桌面+移动端结果卡；标题 ~600px 像素宽度截断预警并标红截断点；描述 155~160 字符长度条；百度展示规则（标题约 30 汉字/描述约 78 汉字）对照提示；一键复制，纯前端本地渲染不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/serp-snippet-preview","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ssp-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ssp-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ssp-privacy b{color:#047857}
+        .ssp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+        .ssp-field label{display:block;font-weight:700;color:#111827;margin-bottom:.35rem;font-size:.95rem}
+        .ssp-field label .cnt{font-weight:400;color:#6b7280;font-size:.82rem;margin-left:.4rem}
+        .ssp-field .hint{font-weight:400;color:#9ca3af;font-size:.8rem;margin-left:.4rem}
+        .ssp-input{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .75rem;font-size:.92rem;color:#111827;background:#fff;font-family:inherit;line-height:1.7}
+        .ssp-input:focus{outline:none;border-color:var(--primary-color)}
+        textarea.ssp-input{min-height:7rem;resize:vertical}
+        .ssp-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .ssp-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ssp-btn-sm{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.35rem .8rem;font-size:.85rem;cursor:pointer}
+        .ssp-btn-sm:hover{background:#f3f4f6}
+        .ssp-bar{height:.55rem;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:.35rem;position:relative}
+        .ssp-bar-fill{height:100%;border-radius:999px;transition:width .3s,background .3s;background:#10b981}
+        .ssp-bar-fill.warn{background:#f59e0b}
+        .ssp-bar-fill.bad{background:#ef4444}
+        .ssp-bar .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:#6b7280;opacity:.7}
+        .ssp-stat{display:flex;justify-content:space-between;font-size:.83rem;color:#6b7280;margin-top:.3rem;gap:.5rem;flex-wrap:wrap}
+        .ssp-stat .ok{color:#059669;font-weight:600}
+        .ssp-stat .warn{color:#d97706;font-weight:600}
+        .ssp-stat .bad{color:#dc2626;font-weight:600}
+        .ssp-warn{display:none;gap:.45rem;align-items:flex-start;margin-top:.6rem;font-size:.88rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.6rem .8rem;line-height:1.7}
+        .ssp-warn .material-icons{font-size:1.1rem;flex:none;color:#f59e0b;margin-top:.1rem}
+        .ssp-warn.bad{color:#b91c1c;background:#fef2f2;border-color:#fca5a5}
+        .ssp-warn.bad .material-icons{color:#ef4444}
+        /* Google 桌面结果卡 */
+        .g-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;max-width:640px}
+        .g-title{color:#1a0dab;font-size:20px;line-height:1.3;cursor:pointer;display:inline-block;max-width:100%}
+        .g-title:hover{text-decoration:underline}
+        .g-title .cut{background:#fecaca;border-radius:.2rem}
+        .g-url{color:#006621;font-size:14px;margin-top:2px;word-break:break-all;line-height:1.5}
+        .g-desc{color:#4d5156;font-size:14px;line-height:1.58;margin-top:3px;word-break:break-word}
+        .g-desc .cut{background:#fecaca;border-radius:.2rem}
+        /* Google 移动端结果卡 */
+        .g-mobile{background:#fff;border:1px solid #e5e7eb;border-radius:1rem;padding:1rem;max-width:380px;margin:0 auto}
+        .g-mobile .g-title{font-size:18px}
+        .g-mobile .g-url{font-size:13px}
+        .g-mobile .g-desc{font-size:13.5px}
+        .g-phone{border:2px solid #d1d5db;border-radius:1.6rem;padding:.7rem;background:#f9fafb;max-width:420px;margin:0 auto}
+        .g-notch{text-align:center;color:#9ca3af;font-size:.75rem;margin-bottom:.4rem}
+        /* 百度结果卡 */
+        .b-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;max-width:640px}
+        .b-title{color:#2440b3;font-size:18px;font-weight:400;line-height:1.4;cursor:pointer;display:inline-block;max-width:100%}
+        .b-title:hover{text-decoration:underline}
+        .b-title .cut{background:#fecaca;border-radius:.2rem}
+        .b-url{color:#008000;font-size:13px;margin-top:4px;word-break:break-all}
+        .b-desc{color:#666;font-size:13px;line-height:1.6;margin-top:4px;word-break:break-word}
+        .b-desc .cut{background:#fecaca;border-radius:.2rem}
+        .ssp-sect{margin-bottom:1.6rem}
+        .ssp-sect:last-child{margin-bottom:0}
+        .ssp-sect h3{margin:0 0 .7rem;font-size:1.05rem;color:#111827;display:flex;align-items:center;gap:.5rem}
+        .ssp-sect h3 .material-icons{color:var(--primary-color)}
+        .ssp-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .ssp-rule{display:flex;gap:.7rem;align-items:flex-start;border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .9rem;margin-bottom:.6rem;background:#fff}
+        .ssp-rule .material-icons{flex:none;margin-top:.15rem}
+        .ssp-rule b{color:#111827}
+        .ssp-rule .st-ok{color:#059669}.ssp-rule .st-warn{color:#d97706}.ssp-rule .st-bad{color:#dc2626}
+        @media (max-width:720px){.ssp-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">preview</i> SERP 搜索结果片段预览</h1>
+            <p>输入标题 / URL / 描述，实时渲染 Google 桌面端与移动端搜索结果卡；标题按 ~600px 像素宽度截断预警（标红截断点），描述按 155~160 字符长度条校验，另附百度展示规则（标题约 30 汉字 / 描述约 78 汉字）对照提示。纯前端本地渲染。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ssp-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：输入内容不出浏览器。</b>标题、URL、描述全部在当前浏览器本地渲染与计算，不上传到任何服务器，不做任何存储与记录。计算过程无网络请求，可打开 DevTools 的 Network 面板验证。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ssp-sect">
+                    <h3><i class="material-icons">edit</i> 输入</h3>
+                    <div class="ssp-grid">
+                        <div class="ssp-field">
+                            <label>标题（title）<span class="cnt" id="ssp-title-count"></span><span class="hint">Google 按像素宽度截断，约 600px</span></label>
+                            <input type="text" class="ssp-input" id="ssp-title" placeholder="例如：2026 双十一凑单攻略：满 300 减 50 最优组合计算方法" autocomplete="off">
+                            <div class="ssp-bar" title="标题像素宽度（/ 600px）"><div class="ssp-bar-fill" id="ssp-title-bar"></div></div>
+                            <div class="ssp-stat"><span id="ssp-title-stat"></span><span id="ssp-title-cjk"></span></div>
+                            <div class="ssp-warn" id="ssp-title-warn" role="alert"><i class="material-icons">warning</i><div></div></div>
+                        </div>
+                        <div class="ssp-field">
+                            <label>URL<span class="cnt" id="ssp-url-count"></span><span class="hint">建议填写完整链接</span></label>
+                            <input type="text" class="ssp-input" id="ssp-url" placeholder="https://example.com/shuang11-coudan" autocomplete="off">
+                            <div class="ssp-stat"><span id="ssp-url-stat"></span></div>
+                        </div>
+                    </div>
+                    <div class="ssp-field" style="margin-top:.9rem;">
+                        <label>描述（meta description）<span class="cnt" id="ssp-desc-count"></span><span class="hint">Google 建议 155~160 字符</span></label>
+                        <textarea class="ssp-input" id="ssp-desc" placeholder="例如：双十一凑单怎么凑最划算？输入商品清单，自动算出每档满减的最优组合…"></textarea>
+                        <div class="ssp-bar" title="描述字符数（/ 160）"><div class="ssp-bar-fill" id="ssp-desc-bar"></div><div class="mark" id="ssp-desc-mark155" title="155 字符"></div><div class="mark" id="ssp-desc-mark160" title="160 字符"></div></div>
+                        <div class="ssp-stat"><span id="ssp-desc-stat"></span><span id="ssp-desc-cjk"></span></div>
+                        <div class="ssp-warn" id="ssp-desc-warn" role="alert"><i class="material-icons">warning</i><div></div></div>
+                    </div>
+                    <div class="ssp-actions">
+                        <button class="btn btn-primary" id="ssp-copy-title"><i class="material-icons">content_copy</i> 复制标题</button>
+                        <button class="btn btn-primary" id="ssp-copy-desc"><i class="material-icons">content_copy</i> 复制描述</button>
+                        <button class="ssp-btn-sm" id="ssp-sample">填入示例</button>
+                        <button class="ssp-btn-sm" id="ssp-clear">清空</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ssp-sect">
+                    <h3><i class="material-icons">desktop_windows</i> Google · 桌面端预览</h3>
+                    <div class="g-card">
+                        <div class="g-title" id="g-d-title">请输入标题</div>
+                        <div class="g-url" id="g-d-url">example.com › …</div>
+                        <div class="g-desc" id="g-d-desc">请输入描述，实时预览搜索结果片段的展示效果。</div>
+                    </div>
+                    <div class="ssp-note" style="margin-top:.6rem;">桌面端标题截断阈值约为 <b>600px</b>（20px 字号实测像素宽度）；超出部分搜索结果会以省略号截断，本工具用红色底标出截断点之后的内容。</div>
+                </div>
+                <div class="ssp-sect">
+                    <h3><i class="material-icons">smartphone</i> Google · 移动端预览</h3>
+                    <div class="g-phone">
+                        <div class="g-notch">Google 移动搜索（示意）</div>
+                        <div class="g-mobile">
+                            <div class="g-title" id="g-m-title">请输入标题</div>
+                            <div class="g-url" id="g-m-url">example.com › …</div>
+                            <div class="g-desc" id="g-m-desc">请输入描述，实时预览搜索结果片段的展示效果。</div>
+                        </div>
+                    </div>
+                    <div class="ssp-note" style="margin-top:.6rem;">移动端标题截断阈值约为 <b>430px</b>（18px 字号），同样用红色底标出截断点。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ssp-sect">
+                    <h3><i class="material-icons">compare</i> 百度展示规则对照</h3>
+                    <div class="b-card" style="margin-bottom:.8rem;">
+                        <div class="b-title" id="b-title">请输入标题</div>
+                        <div class="b-url" id="b-url">example.com/…</div>
+                        <div class="b-desc" id="b-desc">请输入描述，实时预览百度搜索结果的展示效果。</div>
+                    </div>
+                    <div class="ssp-rule">
+                        <i class="material-icons" id="ssp-baidu-title-icon">check_circle</i>
+                        <div><b>百度标题</b>：约展示 <b>30 个汉字</b>（全角计 1、半角计 0.5）。<span id="ssp-baidu-title"></span></div>
+                    </div>
+                    <div class="ssp-rule">
+                        <i class="material-icons" id="ssp-baidu-desc-icon">check_circle</i>
+                        <div><b>百度描述</b>：约展示 <b>78 个汉字</b>（全角计 1、半角计 0.5）。<span id="ssp-baidu-desc"></span></div>
+                    </div>
+                    <div class="ssp-note">百度口径与 Google 口径不同：Google 按<b>像素宽度</b>截断标题（英文约 60 字符、中文混排更短），百度按<b>字符宽度</b>截断（标题约 30 汉字、描述约 78 汉字）。同一标题可能在 Google 正常、在百度被截断，两边都要看。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="ssp-sect">
+                    <h3><i class="material-icons">help_outline</i> 口径说明</h3>
+                    <div class="ssp-note">
+                        <b>标题像素宽度怎么估？</b>用 Canvas measureText 按 Google 结果页标题字号（桌面 20px / 移动 18px）逐字累加实测像素宽度，超过阈值即判定截断。估算值与真实渲染接近，但浏览器字体差异会有 ±10px 浮动，留有余量更稳妥。<br>
+                        <b>为什么英文标题用 ~60 字符？</b>这是像素宽度在纯英文场景下的经验换算；含中文/全角符号时同样字符数像素更宽，一律以像素宽度为准。<br>
+                        <b>描述 155~160 字符是什么？</b>Google 桌面端描述约展示 155~160 个字符（移动端更短，约 120 字符）；超出部分会被截断。百度描述约 78 汉字。<br>
+                        <b>这只是估算吗？</b>是的。搜索引擎实际展示受查询词加粗、站点名称、favicon、富媒体结果等因素影响，本工具给出的是发文前的快速自查口径，不是搜索引擎官方保证。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        "use strict";
+        var TITLE_PX_DESKTOP = 600;
+        var TITLE_PX_MOBILE = 430;
+        var DESC_OK = 155, DESC_MAX = 160;
+        var BAIDU_TITLE_CJK = 30, BAIDU_DESC_CJK = 78;
+
+        var titleEl = document.getElementById("ssp-title");
+        var urlEl = document.getElementById("ssp-url");
+        var descEl = document.getElementById("ssp-desc");
+
+        var measureCanvas = document.createElement("canvas");
+        var measureCtx = measureCanvas.getContext("2d");
+
+        function esc(s) {
+            return String(s == null ? "" : s)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+        // 像素宽度（Google 口径）：按结果卡标题字号实测
+        function pxWidth(text, font) {
+            measureCtx.font = font;
+            return measureCtx.measureText(text).width;
+        }
+        // 全角计 1、半角计 0.5（百度口径）
+        function cjkWidth(text) {
+            var w = 0;
+            for (var i = 0; i < text.length; i++) {
+                var c = text.charCodeAt(i);
+                w += (c > 255 || (c >= 0xFF61 && c <= 0xFF9F)) ? 1 : 0.5;
+            }
+            return w;
+        }
+        // 返回 [可见部分, 截断部分]：按像素宽度找截断点
+        function splitByPx(text, maxPx, font) {
+            measureCtx.font = font;
+            var acc = 0, idx = text.length;
+            for (var i = 0; i < text.length; i++) {
+                acc += measureCtx.measureText(text[i]).width;
+                if (acc > maxPx) { idx = i; break; }
+            }
+            return [text.slice(0, idx), text.slice(idx)];
+        }
+        // 返回 [可见部分, 截断部分]：按全角宽度找截断点（百度口径）
+        function splitByCjk(text, maxW) {
+            var acc = 0, idx = text.length;
+            for (var i = 0; i < text.length; i++) {
+                var c = text.charCodeAt(i);
+                acc += (c > 255 || (c >= 0xFF61 && c <= 0xFF9F)) ? 1 : 0.5;
+                if (acc > maxW) { idx = i; break; }
+            }
+            return [text.slice(0, idx), text.slice(idx)];
+        }
+        function renderTitle(text, maxPx, font) {
+            if (!text) return "请输入标题";
+            var parts = splitByPx(text, maxPx, font);
+            if (!parts[1]) return esc(parts[0]);
+            return esc(parts[0]) + '<span class="cut" title="超出截断阈值，在搜索结果中会被省略号截断">' + esc(parts[1]) + "</span>";
+        }
+        function renderDescBaidu(text) {
+            if (!text) return "请输入描述，实时预览百度搜索结果的展示效果。";
+            var parts = splitByCjk(text, BAIDU_DESC_CJK);
+            if (!parts[1]) return esc(parts[0]);
+            return esc(parts[0]) + '<span class="cut" title="超出百度展示长度，会被截断">' + esc(parts[1]) + "</span>";
+        }
+        function fmtUrl(url) {
+            url = url.trim();
+            if (!url) return "";
+            var shown = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+            return shown || url;
+        }
+
+        function render() {
+            var title = titleEl.value;
+            var url = urlEl.value.trim();
+            var desc = descEl.value;
+
+            // Google 桌面
+            document.getElementById("g-d-title").innerHTML = renderTitle(title, TITLE_PX_DESKTOP, "20px Arial, sans-serif");
+            document.getElementById("g-d-url").textContent = fmtUrl(url) || "example.com › …";
+            document.getElementById("g-d-desc").textContent = desc || "请输入描述，实时预览搜索结果片段的展示效果。";
+            // Google 移动
+            document.getElementById("g-m-title").innerHTML = renderTitle(title, TITLE_PX_MOBILE, "18px Arial, sans-serif");
+            document.getElementById("g-m-url").textContent = fmtUrl(url) || "example.com › …";
+            document.getElementById("g-m-desc").textContent = desc || "请输入描述，实时预览搜索结果片段的展示效果。";
+            // 百度
+            if (title) {
+                var bt = splitByCjk(title, BAIDU_TITLE_CJK);
+                document.getElementById("b-title").innerHTML = bt[1]
+                    ? esc(bt[0]) + '<span class="cut" title="超出百度展示长度，会被截断">' + esc(bt[1]) + "</span>"
+                    : esc(bt[0]);
+            } else {
+                document.getElementById("b-title").textContent = "请输入标题";
+            }
+            document.getElementById("b-url").textContent = fmtUrl(url) || "example.com/…";
+            document.getElementById("b-desc").innerHTML = renderDescBaidu(desc);
+
+            updateStats(title, url, desc);
+        }
+
+        function updateStats(title, url, desc) {
+            // 标题：像素宽度
+            var wD = title ? pxWidth(title, "20px Arial, sans-serif") : 0;
+            var wM = title ? pxWidth(title, "18px Arial, sans-serif") : 0;
+            var tCount = document.getElementById("ssp-title-count");
+            var tStat = document.getElementById("ssp-title-stat");
+            var tCjk = document.getElementById("ssp-title-cjk");
+            var tBar = document.getElementById("ssp-title-bar");
+            var tWarn = document.getElementById("ssp-title-warn");
+            tCount.textContent = "（" + title.length + " 字符）";
+            tCjk.textContent = "全角宽度 " + cjkWidth(title).toFixed(1);
+            var pct = Math.min(100, wD / TITLE_PX_DESKTOP * 100);
+            tBar.style.width = pct + "%";
+            if (!title) {
+                tStat.innerHTML = "等待输入"; tStat.className = "";
+                tBar.className = "ssp-bar-fill"; tWarn.style.display = "none";
+            } else if (wD > TITLE_PX_DESKTOP) {
+                tStat.innerHTML = '<span class="bad">桌面端约 ' + Math.round(wD) + "px，超出 600px 会被截断</span>";
+                tBar.className = "ssp-bar-fill bad"; tBar.style.width = "100%";
+                showWarn(tWarn, true, "标题在 Google 桌面端会被截断：实测约 " + Math.round(wD) + "px，超出 600px 阈值约 " + Math.round(wD - TITLE_PX_DESKTOP) + "px。结果卡中红色底部分为被截掉的内容，建议精简到 600px 以内（纯英文约 60 字符，含中文更短）。");
+            } else {
+                var cls = wD > TITLE_PX_DESKTOP * 0.9 ? "warn" : "ok";
+                tStat.innerHTML = '<span class="' + cls + '">桌面端约 ' + Math.round(wD) + "px / 600px，移动端约 " + Math.round(wM) + "px / 430px</span>";
+                tBar.className = "ssp-bar-fill" + (cls === "ok" ? "" : " warn");
+                if (wM > TITLE_PX_MOBILE) {
+                    showWarn(tWarn, false, "标题在桌面端正常，但移动端（阈值约 430px）会被截断，实测约 " + Math.round(wM) + "px。移动流量占比高的话建议再精简。");
+                } else { tWarn.style.display = "none"; }
+            }
+
+            // URL
+            document.getElementById("ssp-url-count").textContent = url ? "（" + url.length + " 字符）" : "";
+            document.getElementById("ssp-url-stat").textContent = url
+                ? (/^https?:\/\//.test(url) ? "链接格式正常" : "提示：建议填写以 http(s):// 开头的完整链接")
+                : "建议填写完整链接，预览面包屑更真实";
+
+            // 描述：字符数
+            var n = desc.length;
+            var dCount = document.getElementById("ssp-desc-count");
+            var dStat = document.getElementById("ssp-desc-stat");
+            var dCjk = document.getElementById("ssp-desc-cjk");
+            var dBar = document.getElementById("ssp-desc-bar");
+            var dWarn = document.getElementById("ssp-desc-warn");
+            dCount.textContent = "（" + n + " 字符）";
+            dCjk.textContent = "全角宽度 " + cjkWidth(desc).toFixed(1) + "（百度约 78 汉字）";
+            dBar.style.width = Math.min(100, n / DESC_MAX * 100) + "%";
+            var m155 = document.getElementById("ssp-desc-mark155");
+            var m160 = document.getElementById("ssp-desc-mark160");
+            m155.style.left = (DESC_OK / DESC_MAX * 100) + "%";
+            m160.style.left = "100%";
+            if (!desc) {
+                dStat.innerHTML = "等待输入"; dBar.className = "ssp-bar-fill"; dWarn.style.display = "none";
+            } else if (n > DESC_MAX) {
+                dStat.innerHTML = '<span class="bad">' + n + " 字符，超出 160 字符会被截断</span>";
+                dBar.className = "ssp-bar-fill bad";
+                showWarn(dWarn, true, "描述共 " + n + " 字符，超出 Google 桌面端约 160 字符的展示上限，超出部分会被省略号截断。建议压缩到 155 字符以内。");
+            } else if (n > DESC_OK) {
+                dStat.innerHTML = '<span class="warn">' + n + " 字符，接近上限（155~160 临界区）</span>";
+                dBar.className = "ssp-bar-fill warn";
+                showWarn(dWarn, false, "描述 " + n + " 字符，落在 155~160 临界区：桌面端大概率完整展示，移动端（约 120 字符）会被截断。如重视移动端，建议压缩到 120 字符以内。");
+            } else {
+                dStat.innerHTML = '<span class="ok">' + n + " 字符，桌面/移动端均可完整展示</span>";
+                dBar.className = "ssp-bar-fill";
+                dWarn.style.display = "none";
+            }
+
+            // 百度口径
+            var bwT = cjkWidth(title), bwD = cjkWidth(desc);
+            var btEl = document.getElementById("ssp-baidu-title");
+            var btIcon = document.getElementById("ssp-baidu-title-icon");
+            var bdEl = document.getElementById("ssp-baidu-desc");
+            var bdIcon = document.getElementById("ssp-baidu-desc-icon");
+            if (!title) {
+                btEl.textContent = "等待输入。"; btIcon.textContent = "help_outline"; btIcon.style.color = "#9ca3af";
+            } else if (bwT > BAIDU_TITLE_CJK) {
+                btEl.innerHTML = '当前约 <b>' + bwT.toFixed(1) + '</b>，超出约 30 汉字上限，百度结果中会被截断（红色底部分）。';
+                btEl.className = "st-bad"; btIcon.textContent = "error"; btIcon.style.color = "#dc2626";
+            } else {
+                btEl.innerHTML = '当前约 <b>' + bwT.toFixed(1) + '</b>，在约 30 汉字上限内，展示完整。';
+                btEl.className = "st-ok"; btIcon.textContent = "check_circle"; btIcon.style.color = "#059669";
+            }
+            if (!desc) {
+                bdEl.textContent = "等待输入。"; bdIcon.textContent = "help_outline"; bdIcon.style.color = "#9ca3af";
+            } else if (bwD > BAIDU_DESC_CJK) {
+                bdEl.innerHTML = '当前约 <b>' + bwD.toFixed(1) + '</b>，超出约 78 汉字上限，百度结果中会被截断（红色底部分）。';
+                bdEl.className = "st-bad"; bdIcon.textContent = "error"; bdIcon.style.color = "#dc2626";
+            } else {
+                bdEl.innerHTML = '当前约 <b>' + bwD.toFixed(1) + '</b>，在约 78 汉字上限内，展示完整。';
+                bdEl.className = "st-ok"; bdIcon.textContent = "check_circle"; bdIcon.style.color = "#059669";
+            }
+        }
+
+        function showWarn(el, bad, msg) {
+            el.className = "ssp-warn" + (bad ? " bad" : "");
+            el.style.display = "flex";
+            el.querySelector("div").textContent = msg;
+        }
+
+        function copyText(t, okMsg) {
+            if (!t) { toast("内容为空，无需复制"); return; }
+            function done() { toast(okMsg || "已复制到剪贴板"); }
+            function fail() { toast("复制失败，请手动复制"); }
+            if (navigator.clipboard && window.isSecureContext !== false) {
+                navigator.clipboard.writeText(t).then(done, function () { fallbackCopy(t, done, fail); });
+            } else {
+                fallbackCopy(t, done, fail);
+            }
+        }
+        function fallbackCopy(t, done, fail) {
+            var ta = document.createElement("textarea");
+            ta.value = t;
+            ta.style.cssText = "position:fixed;opacity:0;";
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy") ? done() : fail(); }
+            catch (e) { fail(); }
+            document.body.removeChild(ta);
+        }
+        function toast(msg) {
+            var el = document.createElement("div");
+            el.textContent = msg;
+            el.style.cssText = "position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:90vw;text-align:center;";
+            document.body.appendChild(el);
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1800);
+        }
+
+        document.getElementById("ssp-copy-title").addEventListener("click", function () {
+            copyText(titleEl.value.trim(), "标题已复制");
+        });
+        document.getElementById("ssp-copy-desc").addEventListener("click", function () {
+            copyText(descEl.value.trim(), "描述已复制");
+        });
+        document.getElementById("ssp-sample").addEventListener("click", function () {
+            titleEl.value = "2026 双十一凑单攻略：满 300 减 50 最优组合计算方法（附凑单清单）";
+            urlEl.value = "https://www.example.com/youhui/shuang11-coudan-gonglue-2026";
+            descEl.value = "双十一凑单怎么凑最划算？输入商品清单与各档满减规则，自动算出溢出最小的最优凑单组合，附凑单总额、立减金额与实付明细，复制清单直接下单。";
+            render();
+        });
+        document.getElementById("ssp-clear").addEventListener("click", function () {
+            titleEl.value = ""; urlEl.value = ""; descEl.value = "";
+            render();
+            titleEl.focus();
+        });
+        ["input", "change"].forEach(function (ev) {
+            titleEl.addEventListener(ev, render);
+            urlEl.addEventListener(ev, render);
+            descEl.addEventListener(ev, render);
+        });
+        render();
+    })();
+    </script>
+</body>
+</html>
+{{end}}
