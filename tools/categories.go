@@ -254,6 +254,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "gbt7714_reference_generator",
+					Name:        "GB/T 7714 参考文献格式生成器",
+					Description: "按 GB/T 7714-2015 国标生成参考文献条目：[J][M][D][C][N][S][R][P][EB/OL][A] 十种文献类型表单录入，顺序编码制/著者-出版年制双制式切换，中文「等」/英文「et al」自动处理，多条目累积排序与导出，纯前端本地运行不出浏览器 · GB/T 7714 reference generator: 10 doc types, dual citation styles, 100% client-side",
+					Path:        "/tools/gbt7714-reference-generator",
+					Icon:        "menu_book",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{
