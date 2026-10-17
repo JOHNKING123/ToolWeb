@@ -1,0 +1,221 @@
+{{define "aa_bill_splitter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AA制费用分摊计算器 - 聚餐/旅游/合租账单分摊与最少转账结算（本地计算）</title>
+    <meta name="description" content="免费在线AA制费用分摊计算器：聚餐AA、旅游分摊、合租记账，多人多笔支出录入，支持均摊/按份分摊、全局服务费按比例分摊，自动计算每人净余额并给出最少转账笔数的结算方案，红绿净额一览+一键复制结算文本发群；纯浏览器本地计算，数据不上传。AA bill splitter with minimal-settlement transfers.">
+    <meta name="keywords" content="AA制计算器,聚餐分摊,账单分摊,旅游AA,合租记账,AA结算,最少转账,分摊计算器,AA制,费用分摊">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/aa-bill-splitter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"AA制费用分摊计算器","description":"免费在线AA制费用分摊计算器：聚餐、旅游、合租等多笔支出录入，支持均摊/按份分摊与全局服务费按比例分摊，自动算每人净余额并给出最少转账笔数结算方案，红绿净额一览，一键复制结算文本发群；纯浏览器本地计算，数据不上传。","url":"https://www.johnkingzcq123.xyz/tools/aa-bill-splitter","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .aa-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .aa-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .aa-privacy b{color:#047857}
+        .aa-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.5rem 0}
+        .aa-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;font-size:.9rem;margin:.6rem 0 0;padding:.6rem .9rem;line-height:1.6}
+        .aa-sec{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:1.3rem 0 .6rem;flex-wrap:wrap}
+        .aa-sec h3{margin:0;font-size:1rem;color:#111827}
+        .aa-sec .cnt{font-size:.85rem;color:#6b7280}
+        .aa-chip-row{display:flex;flex-wrap:wrap;gap:.55rem;margin:.4rem 0}
+        .aa-chip{display:inline-flex;align-items:center;gap:.35rem;border:1.5px solid #d1d5db;background:#f9fafb;border-radius:999px;padding:.35rem .4rem .35rem .85rem;font-size:.9rem;color:#111827}
+        .aa-chip button{border:none;background:#e5e7eb;color:#6b7280;border-radius:50%;width:1.45rem;height:1.45rem;line-height:1.45rem;cursor:pointer;font-size:.85rem;padding:0}
+        .aa-chip button:hover{background:#fecaca;color:#b91c1c}
+        .aa-form{display:grid;gap:.7rem}
+        .aa-form label{font-size:.88rem;font-weight:700;color:#374151;display:block;margin-bottom:.25rem}
+        .aa-inp{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.5rem;padding:.5rem .6rem;font-size:.9rem;color:#111827;background:#fff;font-family:inherit}
+        .aa-inp:focus{outline:none;border-color:var(--primary-color)}
+        .aa-row2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+        .aa-checks{display:flex;flex-wrap:wrap;gap:.5rem}
+        .aa-check{display:inline-flex;align-items:center;gap:.35rem;border:1.5px solid #e5e7eb;border-radius:.6rem;padding:.4rem .7rem;font-size:.9rem;color:#111827;cursor:pointer;background:#fff;user-select:none}
+        .aa-check.on{border-color:var(--primary-color);background:#eff6ff}
+        .aa-check input{accent-color:var(--primary-color)}
+        .aa-share-inp{width:4.2rem;border:2px solid #e5e7eb;border-radius:.45rem;padding:.25rem .4rem;font-size:.88rem;text-align:center}
+        .aa-radio{display:inline-flex;align-items:center;gap:.35rem;border:1.5px solid #e5e7eb;border-radius:.6rem;padding:.4rem .8rem;font-size:.9rem;cursor:pointer;background:#fff;margin-right:.5rem}
+        .aa-radio.on{border-color:var(--primary-color);background:#eff6ff;font-weight:700}
+        .aa-radio input{accent-color:var(--primary-color)}
+        .aa-exp{border:1px solid #e5e7eb;border-radius:.7rem;padding:.8rem .9rem;background:#fff;margin-bottom:.7rem}
+        .aa-exp-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+        .aa-exp-title{font-weight:700;color:#111827;font-size:.98rem}
+        .aa-exp-meta{font-size:.86rem;color:#6b7280;margin-top:.35rem;line-height:1.7}
+        .aa-exp-meta b{color:#111827}
+        .aa-del{border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;border-radius:.45rem;padding:.25rem .55rem;cursor:pointer;font-size:.85rem}
+        .aa-del:hover{background:#fee2e2}
+        .aa-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .aa-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .aa-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .aa-btn-sm{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.35rem .8rem;font-size:.85rem;cursor:pointer}
+        .aa-btn-sm:hover{background:#f3f4f6}
+        .aa-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.7rem;margin-bottom:1.1rem}
+        .aa-kpi{border:1px solid #e5e7eb;border-radius:.6rem;padding:.75rem .5rem;text-align:center;background:#fff}
+        .aa-kpi .v{font-size:1.15rem;font-weight:700;color:var(--primary-color);line-height:1.35;word-break:break-all}
+        .aa-kpi .k{font-size:.8rem;color:#6b7280;margin-top:.2rem}
+        .aa-net{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;margin-bottom:1.1rem}
+        .aa-net-item{border-radius:.6rem;padding:.7rem .8rem;background:#fff;border:1.5px solid #e5e7eb}
+        .aa-net-item .n{font-weight:700;color:#111827;font-size:.95rem;margin-bottom:.25rem}
+        .aa-net-item .a{font-size:1.05rem;font-weight:700}
+        .aa-net-item.pos{border-color:#34d399;background:#f0fdf4}
+        .aa-net-item.pos .a{color:#059669}
+        .aa-net-item.neg{border-color:#f87171;background:#fef2f2}
+        .aa-net-item.neg .a{color:#dc2626}
+        .aa-net-item.zero .a{color:#6b7280}
+        .aa-transfer{background:#fff;border:1px solid #e5e7eb;border-radius:.7rem;padding:.75rem 1rem;margin-bottom:.55rem;display:flex;align-items:center;gap:.6rem;font-size:.98rem}
+        .aa-transfer .idx{flex:none;width:1.6rem;height:1.6rem;border-radius:50%;background:#eff6ff;color:var(--primary-color);font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+        .aa-transfer .amt{margin-left:auto;font-weight:700;color:#111827;white-space:nowrap}
+        .aa-transfer .material-icons{color:#6b7280}
+        .aa-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff}
+        table.aa-table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:34rem}
+        table.aa-table th,table.aa-table td{border:1px solid #e5e7eb;padding:.5rem .7rem;text-align:left;color:#111827;vertical-align:middle}
+        table.aa-table th{background:#eff6ff;font-weight:700;white-space:nowrap}
+        table.aa-table td.num{text-align:right;white-space:nowrap}
+        .aa-empty{color:#9ca3af;font-size:.9rem;text-align:center;padding:1.2rem 0;line-height:1.8}
+        .aa-tip{color:#374151;line-height:2;font-size:.95rem}
+        .aa-tip b{color:#111827}
+        .aa-journey{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:1.2rem 0 0;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .aa-journey .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .aa-journey a{color:#1d4ed8;font-weight:700}
+        .aa-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;border-radius:.6rem;padding:.6rem 1.1rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:90vw}
+        .aa-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .aa-row2{grid-template-columns:1fr}
+            .aa-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">group</i> AA制费用分摊计算器</h1>
+            <p>聚餐、旅游、合租，多人多笔支出一次录完：均摊 / 按份分摊 + 全局服务费按比例分摊，自动算清每人净余额，给出最少转账笔数的结算方案，一键复制发群</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="aa-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：纯前端本地计算，数据不出浏览器。</b>参与人、支出与金额仅在当前浏览器内处理，自动保存在本机 localStorage，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="aa-sec">
+                    <h3>① 参与人 <span class="cnt">（共 <span id="aa-people-count">0</span> 人）</span></h3>
+                    <div>
+                        <button type="button" class="aa-btn-sm" id="aa-sample">载入示例数据</button>
+                        <button type="button" class="aa-btn-sm" id="aa-clear-all">清空全部</button>
+                    </div>
+                </div>
+                <div class="aa-row2">
+                    <div>
+                        <label for="aa-new-name" style="font-size:.88rem;font-weight:700;color:#374151;display:block;margin-bottom:.25rem">添加参与人</label>
+                        <input class="aa-inp" id="aa-new-name" placeholder="输入名字后回车，如：小明" maxlength="12">
+                    </div>
+                    <div style="display:flex;align-items:flex-end;">
+                        <button type="button" class="btn" id="aa-add-person" style="width:100%;justify-content:center"><i class="material-icons">person_add</i> 添加</button>
+                    </div>
+                </div>
+                <div class="aa-chip-row" id="aa-people"></div>
+                <div class="aa-hint">点名字右侧 × 删除。删除参与人会自动将其从所有支出的分摊名单中移除；若其是某笔支出的付款人，付款人自动顺延给第一位参与人。</div>
+
+                <div class="aa-sec">
+                    <h3>② 支出录入 <span class="cnt">（共 <span id="aa-exp-count">0</span> 笔）</span></h3>
+                </div>
+                <div class="aa-form" id="aa-exp-form">
+                    <div>
+                        <label for="aa-exp-title">支出名称</label>
+                        <input class="aa-inp" id="aa-exp-title" placeholder="如：火锅聚餐 / 打车 / 奶茶" maxlength="30">
+                    </div>
+                    <div class="aa-row2">
+                        <div>
+                            <label for="aa-exp-payer">付款人</label>
+                            <select class="aa-inp" id="aa-exp-payer"></select>
+                        </div>
+                        <div>
+                            <label for="aa-exp-amount">金额（元）</label>
+                            <input class="aa-inp" id="aa-exp-amount" type="number" min="0.01" step="0.01" placeholder="如：480">
+                        </div>
+                    </div>
+                    <div>
+                        <label>参与分摊人</label>
+                        <div class="aa-checks" id="aa-exp-parts"></div>
+                    </div>
+                    <div>
+                        <label>分摊方式</label>
+                        <div>
+                            <label class="aa-radio on"><input type="radio" name="aa-mode" value="equal" checked> 均摊（平分）</label>
+                            <label class="aa-radio"><input type="radio" name="aa-mode" value="itemized"> 按份分摊</label>
+                        </div>
+                        <div class="aa-checks" id="aa-exp-shares" style="display:none;margin-top:.5rem"></div>
+                        <div class="aa-hint">按份分摊：给每位参与人填份额（如 1 / 2 / 0.5），金额按份额占比分配，精确到分。</div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary" id="aa-add-expense"><i class="material-icons">add_circle</i> 添加这笔支出</button>
+                    </div>
+                </div>
+                <div class="aa-error" id="aa-error"></div>
+                <div id="aa-expenses" style="margin-top:1rem"></div>
+
+                <div class="aa-sec">
+                    <h3>③ 全局服务费（可选）</h3>
+                </div>
+                <div class="aa-row2">
+                    <div>
+                        <label for="aa-fee" style="font-size:.88rem;font-weight:700;color:#374151;display:block;margin-bottom:.25rem">服务费金额（元）</label>
+                        <input class="aa-inp" id="aa-fee" type="number" min="0" step="0.01" placeholder="如外卖配送费，0 表示无">
+                    </div>
+                    <div>
+                        <label for="aa-fee-payer" style="font-size:.88rem;font-weight:700;color:#374151;display:block;margin-bottom:.25rem">服务费垫付人</label>
+                        <select class="aa-inp" id="aa-fee-payer"></select>
+                    </div>
+                </div>
+                <div class="aa-hint">垫付人先行垫付服务费，服务费按「各人应分摊金额占比」分摊到每个人头上（精确到分），结算时垫付人通过转账收回多垫部分。</div>
+
+                <div class="aa-sec">
+                    <h3>④ 结算结果</h3>
+                    <button type="button" class="aa-btn-sm" id="aa-copy">一键复制结算文本（发群）</button>
+                </div>
+                <div class="aa-kpis" id="aa-kpis"></div>
+                <h3 style="margin:0 0 .6rem;font-size:1rem;color:#111827">净额一览</h3>
+                <div class="aa-net" id="aa-net"></div>
+                <h3 style="margin:1rem 0 .6rem;font-size:1rem;color:#111827">最少转账方案 <span class="cnt" style="font-size:.85rem;color:#6b7280" id="aa-transfer-count"></span></h3>
+                <div id="aa-transfers"></div>
+                <h3 style="margin:1rem 0 .6rem;font-size:1rem;color:#111827">支出明细回看</h3>
+                <div class="aa-table-wrap">
+                    <table class="aa-table">
+                        <thead><tr><th>支出</th><th>付款人</th><th>金额</th><th>分摊方式</th><th>参与人</th></tr></thead>
+                        <tbody id="aa-detail"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>算法与规则说明</h3>
+                <div class="aa-tip">
+                    <b>净余额：</b>每人净额 = 实际付款 − 应分摊金额 − 分摊的服务费；正数为「应收回」（绿），负数为「应付」（红）。<br>
+                    <b>均摊：</b>金额在参与人之间平分，精确到分，除不尽的零头按参与人顺序逐个补 1 分。<br>
+                    <b>按份分摊：</b>金额 ×（个人份额 ÷ 总份额），小数部分采用「最大余数法」补齐，保证分摊总额与原金额分毫不差。<br>
+                    <b>全局服务费：</b>由垫付人先行垫付，按各人「应分摊金额」占比分摊（最大余数法精确到分），结算时垫付人通过转账收回；保证全员净额总和为零，内部转账即可完全结清。<br>
+                    <b>最少转账结算：</b>标准贪心算法——每次让欠款最多的人向应收最多的人转账两者较小值，转账笔数 ≤ 人数−1，是常用意义上的最少笔数方案。<br>
+                    <b>隐私：</b>纯前端本地计算，所有数据保存在本机浏览器 localStorage，不上传任何服务器；换浏览器或清缓存后数据会丢失。
+                </div>
+            </div>
+            <div class="aa-journey">
+                <i class="material-icons">shopping_cart</i>
+                <div><b>聚餐拼单：</b>聚餐前先用 <a href="/tools/double11-bundling-calculator">双十一凑单计算器</a> 把满减凑到位，省下的钱再回来这里 AA。</div>
+            </div>
+            <div class="aa-journey">
+                <i class="material-icons">casino</i>
+                <div><b>谁请客：</b>AA 还是请客拿不定主意？用 <a href="/tools/random-decision">随机决策器</a> 抛个硬币、抽次签，秒做决定。</div>
+            </div>
+        </div>
+    </div>
+    <div class="aa-toast" id="aa-toast"></div>
+    <script src="/tools/static/js/aa_bill_splitter.js?v=1"></script>
+</body>
+</html>
+{{end}}

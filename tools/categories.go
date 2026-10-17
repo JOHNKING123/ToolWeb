@@ -843,6 +843,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "aa_bill_splitter",
+					Name:        "AA制费用分摊计算器",
+					Description: "AA制费用分摊在线计算：聚餐分摊/旅游AA/合租记账，多笔支出录入，支持均摊与按份分摊、全局服务费按比例分摊，自动算每人净余额并给出最少转账笔数的结算方案，红绿净额一览+一键复制结算文本发群，纯前端本地计算不上传 · AA bill splitter with minimal-settlement transfers",
+					Path:        "/tools/aa-bill-splitter",
+					Icon:        "group",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
