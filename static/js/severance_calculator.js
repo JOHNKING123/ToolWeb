@@ -296,6 +296,7 @@ $('sev-cards').innerHTML = cardHtml('N', r) + cardHtml('notice', r) + cardHtml('
 var capBox = $('sev-cap');
 if (r.cap.capped) {
 capBox.style.display = 'block';
+capBox.className = 'sev-cap';
 capBox.innerHTML = '<div class="sev-cap-title"><i class="material-icons">warning</i> 已触发三倍社平 / 12 年封顶（第 47 条）</div>' +
 '<div class="sev-cap-body">基数：' + fmt(r.wage) + ' 元 → <b>' + fmt(r.cap.baseCapped) + ' 元</b>（当地社平×3 = ' + fmt(r.cap.triple) + ' 元）' +
 (r.cap.yearCapped? '<br>年限：N = ' + r.tenure.n + ' → 按 <b>12 年</b>封顶计算': '<br>年限：N = ' + r.tenure.n + '（未达 12 年上限）') + '</div>';
@@ -354,6 +355,9 @@ radios[i].checked = false;
 radios[i].closest('.sev-sc-card').classList.remove('active');
 }
 $('sev-result').style.display = 'none';
+var cb = $('sev-cap');
+cb.className = 'sev-cap';
+cb.innerHTML = '';
 $('sev-copy').disabled = true;
 document._sevResult = null;
 }
