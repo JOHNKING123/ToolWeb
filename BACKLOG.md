@@ -1,3 +1,35 @@
+> 维护人：产品调研员 · 每日更新（2026-10-18 01:00 第十三轮研究）
+
+## 今日任务（2026-10-18 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十三轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。AA 制费用分摊计算器已交付闭环（23:00 PM 决策轮立项→开发交付 6548945；`grep tools/categories.go` 确认 ID `aa_bill_splitter`、Path `/tools/aa-bill-splitter` 已注册，全量 91 Path），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（01:00 全网调研，通用方向）：
+1. AA 制费用分摊计算器交付确认：`git log` 确认开发交付 6548945（+ PM 排期提交 ac34fc7）；`grep tools/categories.go` 确认已注册（全量 91 Path），与候选池无重叠项残留；候选池划出，已实现清单追加（delta：+ AA 制费用分摊计算器；历史全量见下方第十二轮小节）。
+2. 新晋候选：**Markdown 表格→Excel 转换器（AI 输出表格一键转 xlsx）**。需求证据三重：① dev.to lanxk 2026-10-16（1 天前）「I built a free tool that turns AI-generated Markdown tables into Excel」——"Tables from ChatGPT, Claude or Gemini are written in Markdown. Paste one into Excel and every row ends up in column A, pipes and all."；② Medium @Lanxk 2026-10-17（数小时前）cross-post「Turn AI-Generated Markdown Tables into Excel in One Click」同形态二次传播；③ thebricks.com 多篇 AI→Excel 教程（text/table/worksheet 三篇）均把"粘贴后全部挤进一列→再用分列抢救"写成标准步骤，反证该痛点为 AI 办公时代的经典高频问题。可行性：纯前端小难度——粘贴整段 AI 回答或上传 `.md`→自动提取全部 Markdown 表格（代码块内表格、转义竖线需容错）→多表→多 sheet（以上方标题命名）→`1,234.50`/`12.5%` 存真实数值、15 位+ 长 ID 存文本（防 Excel 科学计数法）→粗体冻结表头+自动列宽→下载 `.xlsx` / 一键复制粘贴进 Excel/WPS；SheetJS 在栈（工资条生成器候选同路线），或沿 md-to.com 路线手写轻量 xlsx writer（fflate 压缩 XML，零大依赖）。与已实现的 AI 文本清洁器（`/tools/ai-text-cleaner`）+ AI Token 计数器互链成「AI 写作→办公」组合。去重：91 Path 无 markdown/excel 表格转换命中（`/tools/image-to-excel` 为 OCR 图片转表格、`/tools/markdown-preview` 为反向预览，均不同方向）。难度小。SEO：Markdown 转 Excel、AI 表格转 Excel、md 转 xlsx。建议 ID `markdown_to_excel`、Path `/tools/markdown-to-excel`。
+3. 无新单页信号侧：① Product Hunt Tooleek（2026-10-08）：PDF 合并/拆分/压缩、图片转换压缩（含 HEIC）、二维码生成——仓库全量覆盖；② dev.to SuperToolKit（2026-10-16，100+ 工具，WASM+Web Worker 本地处理）：音频/PDF/代码方向无新单页形态；③ Medium Toolenix（Oct 2026，113 工具）：同上无新形态；④ dev.to etemora（2026-10-11）：RDAP 域名生成器（与仓库 domain-check 同方向，已归档 P2 观察，不单立）、Invoice generator（报价单/收据生成器候选已立）、SERP 预览（已实现）——无新信号；⑤ V2EX 2026-10-17 当天：听力流利度练习软件（单 HTML 语言学习 niche）、ESP32 iPhone AI 控制（硬件）、Claude Opus 幻觉讨论、电商直播弹窗讨论——均非单页纯前端口径；⑥ 中文榜单（info35 2026-09-18）：在线加水印/抠图/AI 音乐——均为仓库已覆盖或非纯前端口径方向。
+4. WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **Markdown 表格→Excel 转换器（AI 输出表格一键转 xlsx）** — P1（本轮新晋顺位第一：dev.to 2026-10-16（1 天前）+ Medium 2026-10-17 cross-post 双证据形态验证；AI 时代高频痛点——ChatGPT/DeepSeek/豆包/Kimi 生成的表格粘贴到 Excel/WPS 全部挤进 A 列带竖线；纯前端小难度：整段 AI 回答粘贴→自动提取表格→多表多 sheet（标题命名）→数字存真实数值、长 ID 存文本→.xlsx 下载/一键复制；SheetJS 在栈；与 AI 文本清洁器互链成「AI 写作→办公」组合；91 Path 无重叠；01:00 深夜轮形态极稳：纯文本输入+表格渲染，无文件上传复杂逻辑）。SEO：Markdown 转 Excel、AI 表格转 Excel。
+2. **工资条生成器（HR 工资表→每人工资条）** — P1（顺位递进：第六轮新晋，360doc 双证据；HR/财务月度刚需；纯前端小难度：上传工资表 Excel（SheetJS 在栈）→逐员工工资条卡片→浏览器打印/PDF 导出；与工资个税计算器互链成「HR 财务」组合；Excel+打印形态与今日晚间已交付的 AA 制计算器错峰）。SEO：工资条生成器。
+3. **报价单/收据生成器** — P1（顺位递进：第七轮新晋，Medium 15 工具单列 Invoice Generator；纯前端：客户/供方信息+项目明细行自动算金额→A4 预览→打印/PDF 导出；金额大写自动转换，与金额大写转换器互链成「票据」组合；用户本人玻璃店实战场景强相关）。SEO：报价单生成器、收据打印。
+
+视频抽帧列顺位第四（P1，难度中，19:00 PM 决策轮明确「适合上午轮次留足时间」，深夜轮不推）；进制转换器（第十二轮新晋 P1 观察，中文证据间接，留池）；年会大屏抽奖（P1 时令预热）；露营用电/乳胶漆用量（计算器类同轮互斥）；在线方格纸/金额大写转换器（节奏调节位）/接龙文本统计/极简简历制作器/MP3 标签编辑器/图片转 SVG 等其余候选留池。
+
+**通用候选表增量**（第十三轮：AA 制费用分摊计算器已实现划出；新晋 Markdown 表格→Excel 转换器 P1；全量 91 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Markdown 表格→Excel 转换器（AI 输出表格一键转 xlsx） | 本轮新晋（dev.to lanxk 2026-10-16（1 天前）「I built a free tool that turns AI-generated Markdown tables into Excel」——"Tables from ChatGPT, Claude or Gemini are written in Markdown. Paste one into Excel and every row ends up in column A, pipes and all."；Medium @Lanxk 2026-10-17 cross-post「Turn AI-Generated Markdown Tables into Excel in One Click」；thebricks.com 多篇 AI→Excel 教程均把"粘贴后挤进一列→再用分列抢救"写成标准步骤，反证经典高频痛点）；AI 时代高频：ChatGPT/DeepSeek/豆包/Kimi 生成的表格粘贴到 Excel/WPS 全部挤进 A 列带竖线；纯前端小难度：粘贴整段 AI 回答或上传 .md→自动提取全部表格→多表→多 sheet（以上方标题命名）→`1,234.50`/`12.5%` 存真实数值、15 位+ 长 ID 存文本（防科学计数法）→粗体冻结表头+自动列宽→下载 .xlsx / 一键复制粘贴；SheetJS 在栈（工资条候选同路线），或沿 md-to.com 路线手写轻量 xlsx writer（fflate 压缩 XML）；与 AI 文本清洁器互链成「AI 写作→办公」组合；91 Path 无 markdown/excel 表格转换命中（/tools/image-to-excel 为 OCR 图片转表格、/tools/markdown-preview 为反向预览，均不同方向） | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第十三轮——AA 制费用分摊计算器交付闭环（6548945，`/tools/aa-bill-splitter` 已注册，全量 91 Path），候选池划出，已实现清单 delta 追加；新晋候选「Markdown 表格→Excel 转换器」P1（dev.to 2026-10-16+Medium 2026-10-17 双证据，AI 表格→Excel 高频痛点，纯前端小难度，与 AI 文本清洁器互链成「AI 写作→办公」组合）；Tooleek（Product Hunt 2026-10-08）/ SuperToolKit（dev.to 2026-10-16）/ Toolenix（Medium Oct 2026）/ etemora（dev.to 2026-10-11）均无新单页形态（PDF/图片/二维码/RDAP/Invoice/SERP 皆为仓库已覆盖或已立候选）；V2EX 10-17 当天为硬件/语言学习/模型讨论形态，无单页可落地新信号；中文榜单加水印/抠图方向均为仓库已覆盖；WPS 候选表保持冻结归档；仓库 91 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在；`git log` 确认开发交付 6548945；`grep tools/categories.go` 全量 91 Path，`aa_bill_splitter` ID 与 `/tools/aa-bill-splitter` Path 已注册（划入已实现），新候选建议 ID（markdown_to_excel）与 91 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-17 23:00 决策轮）
 
 ## 今日任务（2026-10-17 23:00 · 产品经理排期决策 ✅）
