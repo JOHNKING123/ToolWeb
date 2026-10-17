@@ -1,0 +1,206 @@
+{{define "double11_final_price"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双11到手价计算器 - 优惠叠加模拟/国补怎么算（本地计算）</title>
+    <meta name="description" content="免费在线双11到手价计算器：输入商品活动价与各层优惠（店铺券/品类券/跨店满减/会员折扣/红包/以旧换新/国补），按商品直降→店铺券→品类券→跨店满减→会员折扣→红包→以旧换新→国补的固定顺序叠加模拟，输出预计到手价与逐层扣减明细，京东/淘宝平台预设一键带入，一键填入冰箱6599→4135实战案例；纯浏览器本地计算，数据不上传。Double 11 final price calculator.">
+    <meta name="keywords" content="双十一到手价,双11优惠叠加计算器,国补怎么算,到手价计算器,双11省钱,跨店满减计算,88VIP怎么算,PLUS95折">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/double11-final-price">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"双11到手价计算器","description":"免费在线双11到手价计算器：输入商品活动价与各层优惠，按固定顺序叠加模拟（商品直降→店铺券→品类券→跨店满减→会员折扣→红包→以旧换新→国补），输出预计到手价与逐层扣减明细，支持京东/淘宝平台预设与国补品类封顶校验，纯浏览器本地计算，数据不上传。","url":"https://www.johnkingzcq123.xyz/tools/double11-final-price","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .d11f-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .d11f-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .d11f-privacy b{color:#047857}
+        .d11f-disclaimer{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .d11f-disclaimer .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .d11f-disclaimer b{color:#b45309}
+        .d11f-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.5rem 0}
+        .d11f-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;font-size:.9rem;margin:0 0 1rem;padding:.6rem .9rem;line-height:1.6}
+        .d11f-sec{margin:1.3rem 0 .6rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .d11f-sec:first-of-type{border-top:none;padding-top:0;margin-top:0}
+        .d11f-sec h3{margin:0 0 .7rem;font-size:1rem;color:#111827}
+        .d11f-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem}
+        .d11f-field label{display:block;font-size:.85rem;color:#4b5563;margin-bottom:.3rem;font-weight:600}
+        .d11f-inp{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.5rem;padding:.5rem .6rem;font-size:.95rem;color:#111827;background:#fff;font-family:inherit}
+        .d11f-inp:focus{outline:none;border-color:var(--primary-color)}
+        .d11f-radio-row{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.95rem;color:#111827;align-items:center}
+        .d11f-radio-row label{display:flex;align-items:center;gap:.35rem;cursor:pointer}
+        .d11f-tier{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .d11f-tier .d11f-inp{width:8rem}
+        .d11f-check{display:flex;gap:.45rem;align-items:center;font-size:.92rem;color:#374151;cursor:pointer}
+        .d11f-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .d11f-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .d11f-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .d11f-result{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .d11f-final-card{text-align:center;background:#eff6ff;border:2px solid var(--primary-color);border-radius:.9rem;padding:1.1rem 1rem;margin-bottom:1rem}
+        .d11f-final-card .lbl{font-size:.9rem;color:#4b5563}
+        .d11f-final-card .val{font-size:2.3rem;font-weight:800;color:var(--primary-color);line-height:1.4}
+        .d11f-final-card .sub{font-size:.9rem;color:#6b7280;margin-top:.2rem}
+        .d11f-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;margin-bottom:1rem}
+        table.d11f-table{border-collapse:collapse;width:100%;font-size:.92rem}
+        table.d11f-table th,table.d11f-table td{border:1px solid #e5e7eb;padding:.55rem .75rem;text-align:left;color:#111827;vertical-align:top}
+        table.d11f-table th{background:#eff6ff;font-weight:700;white-space:nowrap}
+        table.d11f-table td.num{text-align:right;white-space:nowrap}
+        .d11f-step-note{font-size:.82rem;color:#b45309;margin-top:.25rem;line-height:1.6}
+        .d11f-notes{background:#fffbeb;border:1px solid #fde68a;border-radius:.7rem;padding:.85rem 1rem;margin-bottom:.8rem;font-size:.9rem;line-height:1.8;color:#92400e}
+        .d11f-notes-title{display:flex;align-items:center;gap:.4rem;font-weight:700;margin-bottom:.3rem;color:#b45309}
+        .d11f-notes-title .material-icons{font-size:1.25rem}
+        .d11f-notes ul{margin:0;padding-left:1.2rem}
+        .d11f-tip{color:#374151;line-height:2;font-size:.95rem}
+        .d11f-tip b{color:#111827}
+        .d11f-journey{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:1.2rem 0 0;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .d11f-journey .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .d11f-journey a{color:#1d4ed8;font-weight:700}
+        @media (max-width:640px){
+            .d11f-actions .btn{flex:1 1 100%;justify-content:center}
+            .d11f-tier .d11f-inp{width:6.5rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">savings</i> 双11到手价计算器</h1>
+            <p>把活动价、店铺券、品类券、跨店满减、会员折扣、红包、以旧换新、国补全部录入，按真实叠加顺序一层层模拟扣减，算出预计到手价与每层扣减明细：优惠叠加一次看清，不再靠心算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="d11f-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：纯前端本地计算，数据不出浏览器。</b>您输入的价格与优惠信息仅在当前浏览器内处理，不会上传到任何服务器，也不会被记录或分享。</div>
+            </div>
+            <div class="d11f-disclaimer" role="note">
+                <i class="material-icons">info</i>
+                <div><b>规则免责声明：优惠叠加规则以各平台 / 店铺实际页面为准</b>，本工具按常见叠加顺序做数学模拟（如国补按直降后价 × 15%、实战案例 6599 → 4135 验证），实际下单页可能因品类、分单、资格校验略有出入，结果仅供比价参考，不构成购买建议。</div>
+            </div>
+            <div class="tool-card">
+                <div class="d11f-sec">
+                    <h3>① 平台与商品</h3>
+                    <div class="d11f-radio-row" style="margin-bottom:.8rem;">
+                        <span style="font-size:.85rem;color:#4b5563;font-weight:600;">平台预设（<span id="d11f-platform-name">京东</span>档位自动带入）：</span>
+                        <label><input type="radio" name="d11f-platform" id="d11f-platform-jd" checked> 京东</label>
+                        <label><input type="radio" name="d11f-platform" id="d11f-platform-tb"> 淘宝</label>
+                    </div>
+                    <div class="d11f-grid">
+                        <div class="d11f-field">
+                            <label>商品活动价（元）<span style="color:#b91c1c;">*</span></label>
+                            <input class="d11f-inp" id="d11f-price" type="number" min="0" step="0.01" placeholder="如 6599">
+                        </div>
+                        <div class="d11f-field">
+                            <label>商品直降立减（元，可选）</label>
+                            <input class="d11f-inp" id="d11f-direct" type="number" min="0" step="0.01" placeholder="如 500，不填为 0">
+                        </div>
+                    </div>
+                    <div class="d11f-hint">叠加顺序第 1 层：商品直降。直降后的价格也是国补的计算基数。</div>
+                </div>
+
+                <div class="d11f-sec">
+                    <h3>② 店铺券 / 品类券</h3>
+                    <div class="d11f-grid">
+                        <div class="d11f-field">
+                            <label>店铺券金额（元）</label>
+                            <input class="d11f-inp" id="d11f-shop" type="number" min="0" step="0.01" placeholder="如 300">
+                        </div>
+                        <div class="d11f-field">
+                            <label>品类券 / 平台券金额（元）</label>
+                            <input class="d11f-inp" id="d11f-cat" type="number" min="0" step="0.01" placeholder="如 299">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d11f-sec">
+                    <h3>③ 跨店满减</h3>
+                    <div class="d11f-tier">
+                        <span class="d11f-tier-label" style="font-weight:600;color:#374151;">满</span>
+                        <input class="d11f-inp" id="d11f-tier-th" type="number" min="0" step="0.01" placeholder="如 300">
+                        <span style="font-weight:600;color:#374151;">减</span>
+                        <input class="d11f-inp" id="d11f-tier-off" type="number" min="0" step="0.01" placeholder="如 50">
+                        <label class="d11f-check"><input type="checkbox" id="d11f-tier-stack"> 每满减可叠加（如满 600 减 100）</label>
+                    </div>
+                    <div class="d11f-hint">留空表示不使用跨店满减。当前价未达到档位时不触发，并会提示还差多少。</div>
+                </div>
+
+                <div class="d11f-sec">
+                    <h3>④ 会员折扣 / 红包 / 以旧换新</h3>
+                    <div class="d11f-grid">
+                        <div class="d11f-field">
+                            <label>会员折扣</label>
+                            <select class="d11f-inp" id="d11f-member"></select>
+                        </div>
+                        <div class="d11f-field">
+                            <label>红包金额（元）</label>
+                            <input class="d11f-inp" id="d11f-redpacket" type="number" min="0" step="0.01" placeholder="如 50">
+                        </div>
+                        <div class="d11f-field">
+                            <label>以旧换新折价（元）</label>
+                            <input class="d11f-inp" id="d11f-tradein" type="number" min="0" step="0.01" placeholder="如 400">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d11f-sec">
+                    <h3>⑤ 国补</h3>
+                    <div class="d11f-tier">
+                        <label class="d11f-check"><input type="checkbox" id="d11f-guobu"> 我有国补资格（按直降后价 × 15%）</label>
+                        <select class="d11f-inp" id="d11f-guobu-cat" style="width:10rem;">
+                            <option value="home">家电（封顶 1500）</option>
+                            <option value="digital">数码（封顶 500）</option>
+                            <option value="phone">手机（封顶 500，≤6000 红线）</option>
+                        </select>
+                    </div>
+                    <div class="d11f-hint">手机单价（直降后）超过 6000 元不符合国补条件；封顶：家电 1500 元 / 数码与手机 500 元。</div>
+                </div>
+
+                <div class="d11f-error" id="d11f-error"></div>
+                <div class="d11f-actions">
+                    <button class="btn btn-primary" id="d11f-run"><i class="material-icons">calculate</i> 计算到手价</button>
+                    <button class="btn" id="d11f-example"><i class="material-icons">auto_awesome</i> 一键填入实战案例（冰箱 6599→4135）</button>
+                    <button class="btn" id="d11f-copy" disabled><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn" id="d11f-reset"><i class="material-icons">refresh</i> 重置</button>
+                </div>
+
+                <div class="d11f-result" id="d11f-result">
+                    <div class="d11f-final-card">
+                        <div class="lbl">预计到手价</div>
+                        <div class="val" id="d11f-final">¥0.00</div>
+                        <div class="sub">共节省 <b id="d11f-saved">¥0.00</b>　·　国补基数（直降后价）<b id="d11f-base">¥0.00</b></div>
+                    </div>
+                    <div class="d11f-table-wrap">
+                        <table class="d11f-table">
+                            <thead><tr><th>叠加层</th><th style="width:10rem;">本层扣减（元）</th><th style="width:10rem;">扣后剩余（元）</th></tr></thead>
+                            <tbody id="d11f-steps"></tbody>
+                        </table>
+                    </div>
+                    <div id="d11f-notes"></div>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>叠加顺序与规则说明</h3>
+                <div class="d11f-tip">
+                    <b>固定叠加顺序：</b>商品活动价 → 商品直降 → 店铺券 → 品类券 → 跨店满减 → 会员折扣（95 折） → 红包 → 以旧换新折价 → 国补（直降后价 × 15%，封顶）→ 预计到手价。<br>
+                    <b>跨店满减：</b>勾选「每满减可叠加」按 ⌊当前价 ÷ 满⌋ × 减 计算；未勾选则当前价 ≥ 满时减一次；未达档位不触发并提示还差多少。<br>
+                    <b>国补：</b>补贴 = 直降后价 × 15%，家电封顶 1500 元，数码封顶 500 元，手机封顶 500 元且单价（直降后）须 ≤ 6000 元，超红线按 0 计算并提示。<br>
+                    <b>以旧换新：</b>折价直接抵扣实付；部分平台国补资格校验以「券后价」为基数，若平台把以旧换新计入优惠，基数会进一步缩小，请以实际下单页为准。<br>
+                    <b>金额精度：</b>全部按「分」为单位整数运算，展示保留两位小数，无浮点误差。<br>
+                    <b>免责声明：</b>叠加规则以各平台 / 店铺实际页面为准；本工具仅做数学模拟，不构成购买建议。<br>
+                    <b>隐私：</b>纯前端本地计算，输入数据不出浏览器，不上传任何服务器。
+                </div>
+            </div>
+            <div class="d11f-journey">
+                <i class="material-icons">route</i>
+                <div><b>「双11省钱」组合：</b>多件商品先用 <a href="/tools/double11-bundling-calculator">双十一凑单计算器</a> 凑到满减档位、算出凑单后单价，再回到本工具叠加店铺券 / 国补算最终到手价，省钱不漏算。</div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/double11_final_price_calculator.js?v=1"></script>
+</body>
+</html>
+{{end}}

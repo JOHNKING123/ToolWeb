@@ -798,6 +798,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "double11_final_price_calculator",
+					Name:        "双11到手价计算器",
+					Description: "双11到手价在线计算：输入商品活动价+各层优惠（店铺券/品类券/跨店满减/会员折扣/红包/以旧换新/国补），按商品直降→店铺券→品类券→跨店满减→会员折扣→红包→以旧换新→国补的固定顺序叠加模拟，输出预计到手价与逐层扣减明细，京东/淘宝平台预设一键带入，国补品类封顶与手机6000红线校验，纯前端本地计算不上传 · Double 11 final price calculator with national subsidy caps",
+					Path:        "/tools/double11-final-price",
+					Icon:        "savings",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
