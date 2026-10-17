@@ -1,3 +1,35 @@
+> 维护人：产品调研员 · 每日更新（2026-10-18 05:00 第十五轮研究）
+
+## 今日任务（2026-10-18 05:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十五轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。算术题生成器已交付闭环（03:40 PM 决策轮立项→开发交付 cc325f6+评审修复 7ef58a5；`grep tools/categories.go` 确认 ID `math_worksheet_generator`、Path `/tools/math-worksheet-generator` 已注册，「学习工具」新品类落地，全量 93 Path），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（05:00 全网调研，通用方向）：
+1. 算术题生成器交付确认：`git log` 确认开发交付 cc325f6+评审修复 7ef58a5；`grep tools/categories.go` 确认已注册（全量 93 Path），与候选池无重叠项残留；候选池划出，已实现清单追加（delta：+ 算术题生成器；历史全量见下方第十四轮小节）。
+2. 新晋候选：**SRT 字幕编辑器（字幕文本+时间轴本地编辑）**。需求证据三重：① dev.to rehmanarain521svg 2026-10-15（2 天前）浏览器工具集上线帖单列「SRT Editor — pure JavaScript」（同形态含图片压缩/尺寸调整/Image to PDF/PDF 合并）；② 在线字幕编辑器形态族验证：VexaScribe（CPS 阅读速度实时校验+双点时间漂移校正）、Subformer（SRT↔VTT 互转+时间轴拖拽）、ConvertICO（支持 9 种字幕格式互转+全局时间平移+查找替换）、subtitling.net（字幕质量评分 0-100）——全部「浏览器本地解析、免费、无注册」共识；③ 中文需求证据：6mf.net 2026-09-23（1 个月前）《字幕编辑软件 Subtitle Workshop v6.3.7 便携版》——中文用户仍在靠桌面版做「字幕翻译、校时、纠错与导出」，印证字幕校对/格式转换需求。可行性：纯前端小-中难度——上传 `.srt`/`.vtt`（FileReader 本地解析，数据不出浏览器）→条目表（文本/起止时间码可编辑）→增删/拆分/合并条目→全局时间平移（核心痛点：字幕与视频对不上，一键整体前移/后移 N 秒）→重叠时间码检测→导出 `.srt`/`.vtt`（附 SRT↔VTT 互转）→自动重编号；与视频抽帧候选互链成「视频工具」方向。去重：93 Path 无 subtitle/srt/vtt/字幕命中。SEO：字幕编辑器、SRT 编辑、字幕时间校准、SRT 转 VTT。建议 ID `subtitle_editor`、Path `/tools/subtitle-editor`。
+3. 明确去重（不立）：shykov.dev 2026-10-17（1 天前）浏览器端 ATS 简历检查器（cv.shykov.dev）——仓库已有 `/tools/resume-checker`（简历预检工具，JD 关键词匹配+ATS 友好度检测），同方向已覆盖，不单立。
+4. 无新单页信号侧：① V2EX 10-17/10-18：BiliFlow（B 站桌面下载，桌面端）、Iterlay（AI 画布，桌面+自带模型）、财悟-记账也记物（iOS App）、随声提词（Mac/iOS 原生语音提词，需本地语音识别）、AI 视频去物（需 AI 后端）、看榜小工具（tranco+GitHub Action 定时抓取，需后端流水线）——均非单页纯前端口径；② dev.to BlanzaTools 2026-10-11（14 工具）：年龄/BMI/百分比/倒计时等——与仓库 93 Path 工具族重叠或为现有计算器类增强项，不单立；③ Medium PH 本周榜（JSONexLab 7 B2B API）：IBAN/VAT/SWIFT/制裁筛查均为后端 API 产品；Retriever AI（浏览器 AI agent）非单页工具；④ Antops 2026-10-15 SEO Audit Checker：需服务端抓取目标页（CORS 限制），纯前端不可靠，单篇厂商新闻稿，进 P3 不单立；⑤ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **PDF 电子签名（手写签名嵌入 PDF）** — P1（顺位第一：03:00 新晋，PdfWord 2026-10-12 Product Hunt 47 工具零后端上线单列 eSign；fabulouspic 2026 榜单全部免费版受限——「免费无上限+文件不出浏览器」差异化；纯前端中难度：PDF.js 渲染+canvas 签名板+pdf-lib 嵌入；与 pdf_annotate/pdf_manage 互链成 PDF 旅程线；93 Path 无 sign 重叠）。SEO：PDF签名、在线签署PDF。
+2. **工资条生成器（HR 工资表→每人工资条）** — P1（多轮顺位递进：第六轮新晋，360doc 双证据；HR/财务月度刚需；纯前端小难度：上传工资表 Excel（SheetJS 在栈）→逐员工工资条卡片→浏览器打印/PDF 导出；与工资个税计算器互链成「HR 财务」组合）。SEO：工资条生成器。
+3. **SRT 字幕编辑器（字幕文本+时间轴本地编辑）** — P1（本轮新晋：dev.to xmico 2026-10-15（2 天前）纯 JS 字幕编辑器形态；VexaScribe/Subformer/ConvertICO/subtitling.net 形态族验证（本地解析+免费+无注册共识）；6mf.net 2026-09-23 中文桌面版需求证明；纯前端小-中难度：上传→条目编辑→增删拆分合并→全局时间平移→SRT↔VTT 互转导出；93 Path 无重叠；开辟「字幕/视频工具」新方向）。SEO：字幕编辑器、SRT 转 VTT。
+
+报价单/收据生成器列顺位第四（P1，「票据」组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；进制转换器（P1 观察）；年会大屏抽奖（P1 时令预热）；白噪音发生器（P2 观察）；金额大写转换器（节奏调节位）；MP3 标签编辑器（P2 观察，开辟音频工具方向）等其余候选留池。
+
+**通用候选表增量**（第十五轮：算术题生成器已实现划出；新晋 SRT 字幕编辑器 P1；去重 ATS 简历检查器（已有 resume_checker 覆盖）；全量 93 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SRT 字幕编辑器（字幕文本+时间轴本地编辑） | 本轮新晋（dev.to rehmanarain521svg 2026-10-15（2 天前）浏览器工具集上线帖单列「SRT Editor — pure JavaScript」（图片压缩/尺寸调整/Image to PDF/PDF 合并同形态）；形态族验证：VexaScribe（CPS 阅读速度实时校验+双点时间漂移校正）、Subformer（SRT↔VTT 互转+时间轴拖拽）、ConvertICO（9 种字幕格式互转+全局时间平移+查找替换）、subtitling.net（字幕质量评分）——全部「浏览器本地解析、免费、无注册」共识；中文需求证据：6mf.net 2026-09-23（1 个月前）《Subtitle Workshop v6.3.7 便携版》——中文用户仍靠桌面版做「字幕翻译、校时、纠错与导出」）；核心痛点：字幕与视频对不上（全局时间平移）、格式互转麻烦；纯前端小-中难度：上传 .srt/.vtt（本地解析）→条目表可编辑（文本/起止时间码）→增删/拆分/合并→全局时间平移→重叠检测→导出 .srt/.vtt（附互转）→自动重编号；与视频抽帧互链成「视频工具」方向；93 Path 无 subtitle/srt/vtt/字幕命中 | 小-中 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第十五轮——算术题生成器交付闭环（cc325f6+评审修复 7ef58a5，`/tools/math-worksheet-generator` 已注册，「学习工具」新品类落地，全量 93 Path），候选池划出，已实现清单 delta 追加；新晋候选「SRT 字幕编辑器」P1（dev.to 2026-10-15 纯 JS 形态+四家在线字幕编辑器形态族验证+中文桌面版需求证明，纯前端小-中难度，开辟字幕/视频工具方向）；去重 shykov ATS 简历检查器（仓库已有 `/tools/resume-checker` 覆盖）；V2EX 10-17/10-18 均为桌面端/App/AI/后端形态，无单页可落地新信号；BlanzaTools 14 工具与仓库重叠或为增强项；JSONexLab B2B API 与 Antops SEO 审计均为后端产品形态；WPS 候选表保持冻结归档；仓库 93 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 7ef58a5 一致；`git log` 确认开发交付 cc325f6+评审修复 7ef58a5；`grep tools/categories.go` 全量 93 Path，`math_worksheet_generator` ID 与 `/tools/math-worksheet-generator` Path 已注册（划入已实现），新候选建议 ID（subtitle_editor）与 93 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 03:40 决策轮）
 
 ## 今日任务（2026-10-18 03:40 · 产品经理排期决策 ✅）
