@@ -826,6 +826,15 @@ func GetCategories() []Category {
 					Category:    "生活工具",
 				},
 				{
+					ID:          "payslip_generator",
+					Name:        "工资条生成器",
+					Description: "工资条在线生成打印：上传 HR 工资表 Excel（.xlsx/.xls），SheetJS 在浏览器本地解析、自动识别首行表头，可手动指定姓名列与工资项列范围，一键生成逐员工工资条卡片（公司名+姓名+月份、明细千分位、应发/实发合计、签名栏），A4 一页 2/3/4 条带裁剪虚线打印，每员工单独 sheet 导出 .xlsx；工资数据不出浏览器 · Payslip generator: HR payroll table to printable pay slips, 100% client-side",
+					Path:        "/tools/payslip-generator",
+					Icon:        "receipt_long",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "severance_calculator",
 					Name:        "经济补偿金计算器",
 					Description: "经济补偿金在线计算：输入入职/离职日期与前12个月平均工资，按《劳动合同法》第47条精确到日折算工龄N，一键算经济补偿金N/代通知金+1（第40条）/违法解除赔偿金2N，含三倍社平封顶与12年封顶规则、法条标注与免责声明，一键复制结果，纯前端本地计算不上传 · Severance pay N/N+1/2N compensation calculator",
