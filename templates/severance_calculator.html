@@ -1,0 +1,211 @@
+{{define "severance_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经济补偿金计算器 - N/N+1/2N 离职补偿/赔偿金在线计算（本地计算）</title>
+    <meta name="description" content="免费在线经济补偿金计算器：输入入职/离职日期与前12个月平均工资，按《劳动合同法》第47条折算工龄 N，一键算出经济补偿金 N、代通知金 +1（第40条）、违法解除赔偿金 2N，含三倍社平封顶与12年封顶规则、法条标注；纯浏览器本地计算，数据不上传，不限次数。Severance pay / N+1 / 2N compensation calculator.">
+    <meta name="keywords" content="经济补偿金计算器,N+1赔偿,2N赔偿金,离职补偿怎么算,被辞退补偿怎么算,代通知金,经济补偿金,违法解除赔偿金,工龄折算,三倍封顶,severance calculator">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/severance-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"经济补偿金计算器","description":"免费在线经济补偿金计算器：按入职/离职日期与前12个月平均工资，依《劳动合同法》第47条折算工龄 N，计算经济补偿金 N、代通知金 +1（第40条）、违法解除赔偿金 2N，含三倍社平封顶与12年封顶规则，一键复制结果；纯浏览器本地处理，数据不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/severance-calculator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sev-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .sev-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .sev-privacy b{color:#047857}
+        .sev-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1rem}
+        .sev-field label{display:block;font-size:.9rem;color:#374151;margin-bottom:.4rem;font-weight:600}
+        .sev-field label .req{color:#b91c1c}
+        .sev-field input{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .75rem;font-size:.95rem;color:#111827;background:#fff;font-family:inherit}
+        .sev-field input:focus{outline:none;border-color:var(--primary-color)}
+        .sev-field .unit{position:relative}
+        .sev-field .unit input{padding-right:2.6rem}
+        .sev-field .unit .u{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.85rem}
+        .sev-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin-top:.35rem}
+        .sev-hint b{color:#b45309}
+        .sev-warn-hint{display:flex;gap:.55rem;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.65rem .85rem;font-size:.87rem;line-height:1.7;color:#92400e;margin-top:.5rem}
+        .sev-warn-hint .material-icons{flex:none;color:#d97706;font-size:1.25rem}
+        .sev-sc-title{font-size:.95rem;font-weight:700;color:#111827;margin:1.2rem 0 .6rem}
+        .sev-sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem}
+        .sev-sc-card{display:block;border:2px solid #e5e7eb;border-radius:.7rem;padding:.65rem .8rem;cursor:pointer;background:#fff;transition:border-color .15s,background .15s}
+        .sev-sc-card:hover{border-color:#93c5fd}
+        .sev-sc-card.active{border-color:var(--primary-color);background:#eff6ff}
+        .sev-sc-card input{display:none}
+        .sev-sc-name{display:block;font-weight:700;color:#111827;font-size:.92rem;line-height:1.5}
+        .sev-sc-tag{display:inline-block;font-size:.72rem;font-weight:700;border-radius:.35rem;padding:.08rem .45rem;margin-left:.35rem;vertical-align:1px}
+        .sev-sc-tag.n{background:#dbeafe;color:#1d4ed8}
+        .sev-sc-tag.n1{background:#e0e7ff;color:#4338ca}
+        .sev-sc-tag.twice{background:#fee2e2;color:#b91c1c}
+        .sev-sc-tag.none{background:#f3f4f6;color:#6b7280}
+        .sev-sc-desc{display:block;font-size:.78rem;color:#6b7280;margin-top:.25rem;line-height:1.6}
+        .sev-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;font-size:.9rem;margin:1rem 0 0;padding:.6rem .9rem;line-height:1.6}
+        .sev-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .sev-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .sev-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .sev-result{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .sev-sec-title{margin:1.4rem 0 .6rem;font-size:1rem;font-weight:700;color:#111827}
+        .sev-tenure{border:1px solid #e5e7eb;border-radius:.7rem;padding:.85rem 1rem;background:#f9fafb;margin-bottom:.8rem}
+        .sev-tenure-n{font-size:1.05rem;color:#111827}
+        .sev-tenure-n b{color:var(--primary-color);font-size:1.5rem}
+        .sev-tenure-d{font-size:.87rem;color:#4b5563;line-height:1.8;margin-top:.3rem}
+        .sev-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem;margin-bottom:.8rem}
+        .sev-card{border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;background:#fff}
+        .sev-card-hot{border:2px solid var(--primary-color);background:#eff6ff}
+        .sev-card-na{border-style:dashed;background:#f9fafb}
+        .sev-card-k{font-weight:700;color:#111827;font-size:.95rem;margin-bottom:.35rem}
+        .sev-card-v{font-size:1.5rem;font-weight:700;color:var(--primary-color)}
+        .sev-card-v span{font-size:.8rem;color:#6b7280;font-weight:400}
+        .sev-card-na .sev-card-v{color:#9ca3af;font-size:1.15rem}
+        .sev-card-note{font-size:.83rem;color:#6b7280;line-height:1.7;margin-top:.35rem}
+        .sev-badge-hot{display:inline-block;background:var(--primary-color);color:#fff;font-size:.72rem;font-weight:700;border-radius:.35rem;padding:.08rem .45rem;margin-left:.3rem;vertical-align:1px}
+        .sev-cap{display:block;border:1px solid #fde68a;background:#fffbeb;border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;line-height:1.9;color:#92400e;margin-bottom:.8rem}
+        .sev-cap-ok{border-color:#d1fae5;background:#ecfdf5;color:#065f46}
+        .sev-cap-title{display:flex;gap:.5rem;align-items:center;font-weight:700;margin-bottom:.25rem}
+        .sev-cap-title .material-icons{color:#d97706}
+        .sev-cap-body b{color:#b45309}
+        .sev-cap-ok .sev-cap-body b{color:#047857}
+        .sev-law{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.7rem;padding:.85rem 1rem;font-size:.88rem;line-height:2;color:#374151;margin-bottom:.8rem}
+        .sev-law b{color:#111827}
+        .sev-disclaimer{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;font-size:.92rem;line-height:1.8;color:#92400e;margin-bottom:.8rem}
+        .sev-disclaimer .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .sev-disclaimer b{color:#b45309}
+        .sev-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .sev-notes{background:#fff;border:1px solid #e5e7eb;border-radius:.7rem;padding:.85rem 1rem;font-size:.88rem;line-height:2;color:#374151}
+        .sev-notes b{color:#111827}
+        .sev-notes ul{margin:.2rem 0;padding-left:1.2rem}
+        .sev-journey{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:1.2rem 0 0;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .sev-journey .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .sev-journey a{color:#1d4ed8;font-weight:700}
+        @media (max-width:640px){
+            .sev-actions .btn{flex:1 1 100%;justify-content:center}
+            .sev-sc-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">gavel</i> 经济补偿金计算器</h1>
+            <p>按《劳动合同法》第 47 条折算工龄 N，一键算出经济补偿金 N、代通知金 +1、违法解除赔偿金 2N：被辞退、被裁员、合同到期不续签，离职前先算清自己应得多少</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="sev-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：纯前端本地计算，数据不出浏览器。</b>您输入的日期、工资等信息仅在当前浏览器内处理，不会上传到任何服务器，也不会被记录或分享。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="sev-form">
+                    <div class="sev-field">
+                        <label for="sev-start">入职日期 <span class="req">*</span></label>
+                        <input type="date" id="sev-start">
+                    </div>
+                    <div class="sev-field">
+                        <label for="sev-end">离职 / 解除日期 <span class="req">*</span></label>
+                        <input type="date" id="sev-end">
+                    </div>
+                    <div class="sev-field">
+                        <label for="sev-wage">前 12 个月平均工资 <span class="req">*</span></label>
+                        <div class="unit"><input type="number" id="sev-wage" min="0" step="any" inputmode="decimal" placeholder="如 12000"><span class="u">元</span></div>
+                        <div class="sev-warn-hint">
+                            <i class="material-icons">priority_high</i>
+                            <div><b>必须包含奖金、津贴、补贴、加班费等全部应得工资</b>（第 47 条的「月工资」指解除/终止前 12 个月平均应得工资）。约 30% 的企业把月薪漏算成基本工资，这正是仲裁中最常见的争议焦点。</div>
+                        </div>
+                    </div>
+                    <div class="sev-field">
+                        <label for="sev-avg">当地上年度职工月平均工资（选填）</label>
+                        <div class="unit"><input type="number" id="sev-avg" min="0" step="any" inputmode="decimal" placeholder="如 10620"><span class="u">元</span></div>
+                        <div class="sev-hint">仅用于判定「三倍社平封顶」；<b>留空则不做封顶校验</b>（可在当地统计局 / 人社局官网查到上年度口径）。</div>
+                    </div>
+                </div>
+
+                <div class="sev-sc-title">解除情形（六选一）<span class="req" style="color:#b91c1c;"> *</span></div>
+                <div class="sev-sc-grid" id="sev-sc-grid">
+                    <label class="sev-sc-card">
+                        <input type="radio" name="sev-sc" value="mutual">
+                        <span class="sev-sc-name">协商一致解除（单位提出）<span class="sev-sc-tag n">N</span></span>
+                        <span class="sev-sc-desc">单位提出、双方协商一致解除。劳动者本人提出协商一致的无补偿。</span>
+                    </label>
+                    <label class="sev-sc-card">
+                        <input type="radio" name="sev-sc" value="layoff">
+                        <span class="sev-sc-name">裁员 / 客观情况重大变化<span class="sev-sc-tag n">N</span></span>
+                        <span class="sev-sc-desc">经济性裁员，或订立合同时的客观情况发生重大变化致合同无法履行。</span>
+                    </label>
+                    <label class="sev-sc-card">
+                        <input type="radio" name="sev-sc" value="illegal">
+                        <span class="sev-sc-name">单位违法解除<span class="sev-sc-tag twice">2N</span></span>
+                        <span class="sev-sc-desc">单位违反法律规定解除/终止合同，可要求继续履行或支付赔偿金。</span>
+                    </label>
+                    <label class="sev-sc-card">
+                        <input type="radio" name="sev-sc" value="expire">
+                        <span class="sev-sc-name">合同到期，单位不续签<span class="sev-sc-tag n">N</span></span>
+                        <span class="sev-sc-desc">合同期满单位不同意续订（维持/提高条件而劳动者不同意的除外）。</span>
+                    </label>
+                    <label class="sev-sc-card">
+                        <input type="radio" name="sev-sc" value="resign">
+                        <span class="sev-sc-name">员工主动辞职 / 过失性解除<span class="sev-sc-tag none">无补偿</span></span>
+                        <span class="sev-sc-desc">劳动者主动辞职，或单位依第 39 条（严重违纪等）解除，依法无补偿。</span>
+                    </label>
+                    <label class="sev-sc-card">
+                        <input type="radio" name="sev-sc" value="article40">
+                        <span class="sev-sc-name">第 40 条无过失性解除<span class="sev-sc-tag n1">N+1</span></span>
+                        <span class="sev-sc-desc">医疗期满不能工作、不能胜任工作、客观情况重大变化；可叠加代通知金。</span>
+                    </label>
+                </div>
+
+                <div class="sev-error" id="sev-error" role="alert"></div>
+                <div class="sev-actions">
+                    <button class="btn btn-primary" id="sev-run"><i class="material-icons">calculate</i> 计算补偿金</button>
+                    <button class="btn" id="sev-sample"><i class="material-icons">auto_fix_high</i> 填入示例</button>
+                    <button class="btn" id="sev-copy" disabled><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn" id="sev-reset"><i class="material-icons">refresh</i> 重置</button>
+                </div>
+                <div class="sev-copy-tip" id="sev-copytip"></div>
+
+                <div class="sev-result" id="sev-result">
+                    <h3 class="sev-sec-title" style="margin-top:0;">工龄折算（第 47 条）</h3>
+                    <div class="sev-tenure" id="sev-tenure"></div>
+                    <h3 class="sev-sec-title">三档金额</h3>
+                    <div class="sev-cards" id="sev-cards"></div>
+                    <h3 class="sev-sec-title">封顶校验</h3>
+                    <div class="sev-cap" id="sev-cap" style="display:none;"></div>
+                    <h3 class="sev-sec-title">法条依据</h3>
+                    <div class="sev-law" id="sev-law"></div>
+                    <div class="sev-disclaimer" role="note">
+                        <i class="material-icons">warning</i>
+                        <div><b>免责声明：</b>计算结果仅供参考，不构成法律意见。月工资口径、工龄起算时点、封顶规则适用、2008 年前后工龄分段等问题，具体以劳动仲裁 / 法院认定为准。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>计算规则说明</h3>
+                <div class="sev-notes">
+                    <ul>
+                        <li><b>工龄折算 N（第 47 条）：</b>按在本单位工作的年限，每满一年支付一个月工资；六个月以上不满一年的按一年计算；不满六个月的支付半个月工资。本工具精确到日折算。</li>
+                        <li><b>月工资口径（第 47 条）：</b>劳动合同解除或终止前十二个月的平均工资，包括计时/计件工资、奖金、津贴、补贴、加班费等全部应得工资（税前应发口径）。</li>
+                        <li><b>三倍封顶 + 12 年封顶（第 47 条）：</b>月工资高于本地区上年度职工月平均工资三倍的，按三倍数额支付，且支付年限最高不超过十二年。月工资未超三倍的不封顶。</li>
+                        <li><b>代通知金（第 40 条）：</b>仅无过失性解除（医疗期满、不能胜任、客观情况重大变化）情形可用：未提前 30 日书面通知的，额外支付 1 个月工资；按正常月工资计，不适用三倍封顶。</li>
+                        <li><b>赔偿金 2N（第 48 条、第 87 条）：</b>单位违法解除/终止的，按经济补偿标准的二倍支付赔偿金；支付赔偿金后不再叠加代通知金。</li>
+                        <li><b>2008 年说明：</b>《劳动合同法》自 2008 年 1 月 1 日施行，经济补偿年限一般自施行之日起算分段计算，2008 年前工龄按当时有关规定处理；本工具按连续工龄整体折算，涉 2008 年前工龄的请以仲裁/法院认定为准。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sev-journey">
+                <i class="material-icons">route</i>
+                <div><b>「劳动财务」组合：</b>补偿金额算清后，用 <a href="/tools/salary-tax-calculator">工资个税计算器</a> 算一下税后实际到手多少——离职补偿的个税口径，一次看清。</div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/severance_calculator.js?v=1"></script>
+</body>
+</html>
+{{end}}

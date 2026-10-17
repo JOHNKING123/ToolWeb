@@ -799,6 +799,15 @@ func GetCategories() []Category {
 					Category:    "生活工具",
 				},
 				{
+					ID:          "severance_calculator",
+					Name:        "经济补偿金计算器",
+					Description: "经济补偿金在线计算：输入入职/离职日期与前12个月平均工资，按《劳动合同法》第47条精确到日折算工龄N，一键算经济补偿金N/代通知金+1（第40条）/违法解除赔偿金2N，含三倍社平封顶与12年封顶规则、法条标注与免责声明，一键复制结果，纯前端本地计算不上传 · Severance pay N/N+1/2N compensation calculator",
+					Path:        "/tools/severance-calculator",
+					Icon:        "gavel",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "double11_bundling_calculator",
 					Name:        "双十一凑单计算器",
 					Description: "双十一凑单满减在线计算：输入商品清单+价格，自定义多档满减（满300减50等），子集和/0-1背包DP求每档「溢出最小」最优凑单组合，输出推荐清单/凑单总额/达标档位/立减金额/实付明细，未达档位提示还差多少并给候补单品建议，纯前端本地计算不上传 · Double 11 bundling discount calculator with minimum-overflow subset DP",
