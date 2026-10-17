@@ -38,6 +38,39 @@
 
 ---
 
+> 维护人：产品调研员 · 每日更新（2026-10-17 23:00 第十二轮研究）
+
+## 今日任务（2026-10-17 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-17 通用调研第十二轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。OG 社交卡片预览已交付闭环（21:00 PM 决策轮立项→开发交付 3ad2c8a；`grep tools/categories.go` 确认 ID `og_card_preview`、Path `/tools/og-card-preview` 已注册，全量 90 Path），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（23:00 全网调研，通用方向）：
+1. OG 卡片预览交付确认：`git log` 确认开发交付 3ad2c8a；`grep tools/categories.go` 确认已注册（全量 90 Path），与候选池无重叠项残留；候选池划出，已实现清单追加（delta：+ OG 社交卡片预览；历史全量见下方第十一轮小节）。
+2. 新晋观察候选：**进制转换器（Number Base Converter）**。需求证据三重：① dev.to everydaytoolz 2026-10-12（5 天前）「I built a free developer toolkit that runs in your browser (UUID, Base64, regex, hashes)」单列 Number Base Converter——"binary, decimal, octal, and hex, converted at once"；② calculators.im Binary, Hex & Base Converter：「Number base conversion is a daily skill for software engineers」，hex 为调试/颜色代码/MAC 地址标准表示；③ 学习考试场景：subnetlab 指出 CCNA 等认证考试常考进制转换、值得背熟转换表，腾讯云开发者社区/博客园有多篇中文二进制↔十六进制教程（中文学习需求）。可行性：纯前端极小——2/8/10/16 四进制并排实时互转+0x/0b/0o 前缀自动识别+二进制位权重可视化+逐位步骤讲解（教学差异化）；与子网计算器（/tools/subnet-calculator）互链成「开发者」组合。去重：90 Path 无 base/进制命中。难度小。SEO：进制转换、二进制转十六进制。建议 ID `number_base_converter`、Path `/tools/number-base-converter`。中文证据为间接（学习/考试场景），进 P1 观察。
+3. 新晋观察候选：**MP3 标签/封面编辑器（ID3 tag editor）**。需求证据三重：① dev.to Uwarp 2026-10-15（2 天前）「Uwarp: 500+ Free Browser UI Tools」单列 MP3 Cover Adder——"embed album art and edit ID3 tags in the browser"；② banger.show MP3 ID3 标签编辑器隐私叙事——「直接在网页浏览器中处理 MP3 文件，资料始终不会离开您的计算机」，对标 TagMP3 等上传型工具（广告多、强制转码降质、单文件限制）；③ anymp4 2026 十款 MP3 标签编辑器名单形态验证：上传音频→改文本字段→选封面图→下载新文件。可行性：纯前端中难度——本地读取 MP3→解析 ID3v2 帧→编辑标题/艺人/专辑/流派→嵌入 JPEG 封面（APIC 帧）→Blob 下载，全本地不上传；开辟「音频工具」新方向。去重：90 Path 无 mp3/id3/音频命中。中文需求证据弱（车载 U 盘无封面为间接推断）、难度中，进 P2 观察。SEO：MP3 标签编辑、MP3 添加封面。建议 ID `mp3_tag_editor`、Path `/tools/mp3-tag-editor`。
+4. 无新单页信号侧：① V2EX 2026-10-17 当天：BiliFlow（B 站桌面下载工具，桌面端）、财悟-记账也记物（iOS App）、听力流利度练习软件（单 HTML 语言学习 niche）、浏览器端 AI 视频去物（需 AI 后端）、tranco 看榜工具（GitHub Action+后端定时任务）——均非单页纯前端口径；② dev.to Antigravity 59 个 dev 工具（2026-10-13）：RSA/ECC Key Generator 与仓库 /tools/rsa 重叠、AI Token Counter 已在栈、PII Masker 与候选池「文本敏感信息打码」（P1 观察）同方向不单立、Markdown Viewer/UUID/File Size Converter 开发者 niche 证据单条不单立；③ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **AA 制费用分摊计算器（最少转账结算）** — P1（顺位第一：21:00 PM 决策轮后已交付 OG 卡片预览（渲染展示型），计算器节奏已错峰；Cashinator/SplitPop/App Store 分帳 App 三重形态验证；纯前端小难度：人员名单+多笔支出录入→净余额→贪心最少转账方案→明细一键复制；90 Path 无重叠）。SEO：AA 制计算器、聚餐分摊。
+2. **工资条生成器（HR 工资表→每人工资条）** — P1（顺位递进：第六轮新晋，360doc 双证据；HR/财务月度刚需；纯前端小难度：上传工资表 Excel（SheetJS 在栈）→逐员工工资条卡片→浏览器打印/PDF 导出；Excel+打印形态与今日已交付全部错峰）。SEO：工资条生成器。
+3. **报价单/收据生成器** — P1（顺位递进：第七轮新晋，Medium 15 必备工具单列 Invoice Generator；纯前端：客户/供方信息+项目明细行自动算金额→A4 预览→打印/PDF 导出；金额大写自动转换，与金额大写转换器互链成「票据」组合；用户本人玻璃店实战场景）。SEO：报价单生成器、收据打印。
+
+视频抽帧列顺位第四（P1，难度中，建议上午轮次，19:00 PM 决策轮结论）；露营用电计算器/乳胶漆用量计算器（计算器类同轮互斥）；年会大屏抽奖（P1 时令预热）；在线方格纸/金额大写转换器（节奏调节位）/接龙文本统计/极简简历制作器/进制转换器（本轮新晋 P1 观察）等其余候选留池。
+
+**通用候选表增量**（第十二轮：OG 社交卡片预览已实现划出；新晋进制转换器 P1 观察、MP3 标签/封面编辑器 P2 观察；全量 90 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 进制转换器（Number Base Converter：2/8/10/16 进制互转+步骤讲解） | 本轮新晋（dev.to everydaytoolz 2026-10-12（5 天前）「free developer toolkit that runs in your browser」单列 Number Base Converter——"binary, decimal, octal, and hex, converted at once"；calculators.im：「Number base conversion is a daily skill for software engineers」；subnetlab：CCNA 等认证考试常考进制转换、值得背熟转换表；腾讯云开发者社区/博客园多篇中文二进制↔十六进制教程（中文学习需求））；纯前端极小：四进制并排实时互转+0x/0b/0o 前缀自动识别+二进制位权重可视化+逐位步骤讲解（教学差异化）；与子网计算器互链成「开发者」组合；90 Path 无 base/进制命中 | 小 | P1（观察） |
+| MP3 标签/封面编辑器（ID3 标签+专辑封面嵌入） | 本轮新晋观察（dev.to Uwarp 2026-10-15（2 天前）「500+ Free Browser UI Tools」单列 MP3 Cover Adder——"embed album art and edit ID3 tags in the browser"；banger.show 浏览器本地 ID3 编辑隐私叙事——「资料始终不会离开您的计算机」，对标 TagMP3 等上传型工具（广告多/强制转码降质/单文件限制）；anymp4 2026 十款 MP3 标签编辑器名单形态验证：上传音频→改文本字段→选封面图→下载新文件）；纯前端中难度：本地读取 MP3→解析 ID3v2 帧→编辑标题/艺人/专辑/流派→嵌入 JPEG 封面（APIC 帧）→Blob 下载，全本地不上传；开辟「音频工具」新方向；90 Path 无 mp3/id3/音频命中；中文证据弱、难度中，进 P2 | 中 | P2（观察·中文证据弱） |
+
+**归档说明**：本轮为 10-17 通用调研第十二轮——OG 社交卡片预览交付闭环（3ad2c8a，`/tools/og-card-preview` 已注册，全量 90 Path），候选池划出，已实现清单 delta 追加；新晋候选「进制转换器」P1（观察）（dev.to everydaytoolz 2026-10-12 新鲜形态，纯前端极小，与子网计算器互链成「开发者」组合）、「MP3 标签/封面编辑器」P2（观察）（dev.to Uwarp 2026-10-15 新鲜形态，开辟「音频工具」新方向，中文证据弱）；dev.to Antigravity 59 工具中 RSA/Token 计数器已在栈、PII Masker 与候选池「文本敏感信息打码」同方向不单立；V2EX 10-17 当天均为桌面端/App/AI/后端形态，无单页可落地新信号；WPS 候选表保持冻结归档；仓库 90 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git ls-remote`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 3ad2c8a 一致；`git log` 确认开发交付 3ad2c8a；`grep tools/categories.go` 全量 90 Path，`og_card_preview` ID 与 `/tools/og-card-preview` Path 已注册（划入已实现），新候选建议 ID（number_base_converter / mp3_tag_editor）与 90 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-17 21:00 第十一轮研究）
 
 ## 今日任务（2026-10-17 21:00 · 产品调研员研究轮 ✅）
