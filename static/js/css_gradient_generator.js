@@ -123,10 +123,19 @@ function buildCss(includeWebkit) {
 }
 
 /* ---------- 渲染 ---------- */
+/* 棋盘格底纹：与模板 .cg-checker 同图案。渐变叠在棋盘格上层，色标透明时
+ * 透明区域显示棋盘格而非纯白（background 简写会覆盖类背景，必须逐项设置）。 */
+var CHECKER_TILE = 'linear-gradient(45deg,#d1d5db 25%,transparent 25%,transparent 75%,#d1d5db 75%)';
+function applyLayeredBg(el, css) {
+    el.style.backgroundImage = css + ',' + CHECKER_TILE + ',' + CHECKER_TILE;
+    el.style.backgroundSize = 'auto auto,16px 16px,16px 16px';
+    el.style.backgroundPosition = '0 0,0 0,8px 8px';
+    el.style.backgroundColor = '#fff';
+}
 function render() {
     var css = gradientFn(false);
-    $('cg-bar').style.background = css;
-    $('cg-preview').style.background = css;
+    applyLayeredBg($('cg-bar'), css);
+    applyLayeredBg($('cg-preview'), css);
     $('cg-sample-btn').style.background = css;
     $('cg-sample-hero').style.background = css;
     $('cg-code').textContent = buildCss($('cg-webkit').checked);
@@ -167,8 +176,13 @@ function barPosFromEvent(e, bar) {
     var p = (x - rect.left) / rect.width * 100;
     return Math.max(0, Math.min(100, p));
 }
+/* 双击空白处会触发两次 pointerdown：300ms 内同位置重复点击只加一个色标 */
+var lastAddTime = 0, lastAddPos = -1;
 function addStopAt(pos) {
-    state.stops.push({ color: state.stops[state.selected].color, alpha: state.stops[state.selected].alpha, pos: pos });
+    var now = Date.now();
+    if (now - lastAddTime < 300 && Math.abs(pos - lastAddPos) < 2) return;
+    lastAddTime = now;
+    lastAddPos = pos;    state.stops.push({ color: state.stops[state.selected].color, alpha: state.stops[state.selected].alpha, pos: pos });
     state.selected = state.stops.length - 1;
     render();
 }
@@ -181,7 +195,9 @@ function bindBar() {
         if (t.classList && t.classList.contains('cg-stop')) {
             dragIdx = parseInt(t.dataset.idx, 10);
             state.selected = dragIdx;
-            t.setPointerCapture(e.pointerId);
+            /* 捕获设在常驻的 bar 上：render() 会重建 .cg-stop 元素，旧元素上的
+             * 捕获会被隐式释放，导致条外松开鼠标后 dragIdx 卡死 */
+            bar.setPointerCapture(e.pointerId);
             render();
         } else {
             addStopAt(barPosFromEvent(e, bar));
@@ -302,6 +318,10 @@ function fillPosSelect(sel, includeCustom) {
 /* ---------- 输出与随机配色 ---------- */
 function bindActions() {
     $('cg-copy').addEventListener('click', function () {
+        copyText(buildCss($('cg-webkit').checked), 'CSS 已复制，粘贴即用');
+    });
+    /* 样例按钮「点 击 复 制」：文案即功能，点击复制当前渐变的 CSS */
+    $('cg-sample-btn').addEventListener('click', function () {
         copyText(buildCss($('cg-webkit').checked), 'CSS 已复制，粘贴即用');
     });
     $('cg-random').addEventListener('click', randomPalette);
