@@ -1,3 +1,45 @@
+> 维护人：产品经理 · 每日排期（2026-10-18 10:00 决策轮）
+
+## 今日任务（2026-10-18 10:00 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-18 排期决策轮（10:00 第十七轮研究之后）。宠物体重追踪器已交付闭环（07:00 PM 决策轮立项→开发交付 3c9f8b7+评审修复 776a91d；`grep tools/categories.go` 确认 ID `pet_weight_tracker`、Path `/tools/pet-weight-tracker` 已注册，「宠物生活」新品类落地，全量 88 Path），候选池划出。本轮立项**今日唯一任务：PDF 电子签名（手写签名嵌入 PDF）**。
+
+**选定：PDF 电子签名（/tools/pdf-sign）** — 本轮唯一任务：
+- **07:00 PM 决策轮预定兑现**：明确预定「后续上午大轮次首选」，本轮 10:00 正是上午大轮次窗口；第十七轮研究推荐 Top3 之首、多轮顺位递进第一顺位。
+- **栈全部验证、风险解除**：05:41 轮 defer 理由是「需新增 PDF.js+pdf-lib 大依赖」；实测仓库已有成熟惯例——`pdf-watermark.js` 的「pdf.js 3.11.174 预览 + pdf-lib 1.17.1 回写」CDN 懒加载组合正是签名所需的形态（签名=透明 PNG 印章按页嵌入），无需 vendor 入库，无新增依赖，中难度降为可控。
+- **差异化明确**：PdfWord 2026-10-12 Product Hunt「47 Free PDF Tools, Zero Backend」上线单列 eSign；fabulouspic 2026 榜单 7 款在线签名工具免费版全部受限（3–5 文档/月）——「免费无上限+文件不出浏览器」差异化成立。
+- **旅程线闭环**：仓库 PDF 工具族已 13 个（pdf_annotate/pdf_manage 等同「文档转换」品类），签名是 PDF 旅程线最后一块拼图，双向互链成「PDF 办公」组合。
+- **节奏错峰**：今日已交付结算算法型（AA 制）、转换导出型（Markdown→Excel）、教育生成型（算术题）、HR 打印型（工资条）、数据追踪型（宠物追踪）；本轮是 PDF 办公签署型，形态完全错峰。
+
+**规格**：
+1. 上传 PDF：pdf-lib 本地加载（CDN 懒加载惯例，沿 pdf-merge-split.js），文件只以 ArrayBuffer 在浏览器处理，不出浏览器。
+2. pdf.js 3.11.174 逐页预览（CDN 懒加载惯例，沿 pdf-to-image.js，含 worker）；页码跳转、缩放预览。
+3. 签名制作三方式：① 手写签名板（canvas，鼠标/触屏，笔画平滑）；② 上传签名图片（PNG/JPG，白底一键转透明）；③ 键入姓名→手写体风格渲染；签名库存 localStorage，可存多枚、改名/删除。
+4. 签署交互：在预览页点击放置签名→拖拽定位、等比缩放、删除；多页可放置多枚签名；签名位置以 PDF 坐标系换算（pdf.js viewport→PDF points）。
+5. 导出：pdf-lib embedPng 将各签名按页/坐标嵌入，回写输出新 PDF 下载；原文件不修改；附「签署清单」预览（第几页、几个签名）。
+6. 隐私声明：工具页显著位置声明「PDF 文件只在你的浏览器里处理，不上传服务器」。
+7. 纯前端、数据不出浏览器；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「文档转换」品类新增 ID `pdf_sign`、Path `/tools/pdf-sign`（New: true），中英文描述 + SEO keywords（PDF签名、在线签署PDF、电子签名、PDF手写签名），与 pdf_annotate/pdf_manage 双向互链。
+
+**验收标准**：
+- [ ] `/tools/pdf-sign` 可开（200）
+- [ ] 上传 PDF→pdf.js 预览逐页渲染正常（多页文档页码跳转正确）
+- [ ] 三种签名制作方式均可用；签名库 localStorage 持久化（刷新不丢失）
+- [ ] 预览页点击放置→拖拽→缩放→删除全流程可用；签名位置与导出 PDF 实际位置一致（无偏移/镜像）
+- [ ] 导出 PDF 可用阅读器正常打开，签名清晰、位置正确；原文件未被修改
+- [ ] CDN 加载失败时有诚实降级提示（沿 showLibError 惯例）
+- [ ] 纯前端无后端调用（DevTools Network 抽查）
+- [ ] `categories.go` 注册完成（「文档转换」品类），首页/导航/sitemap 生效；与 pdf_annotate/pdf_manage 互链
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/pdf_sign.html`（新建：上传+pdf.js 预览+签名板+签署交互+导出，纯前端）、`static/js/pdf_sign.js`（新建：pdf.js/pdf-lib CDN 懒加载+签名库+坐标换算+嵌入回写，沿仓库 PDF 工具惯例）、`tools/categories.go`（「文档转换」品类注册+PDF 旅程线互链）、`BACKLOG.md`（本小节）。
+
+**未选**：文本隐私脱敏工具（P1，07:00 PM 决策轮「下轮优先」，按顺位递进留待下轮）；图片隐写工具（P1，本轮新晋顺位第三：365Lab 2026-10-08 竞品+英文形态族，纯前端小难度，留池）；网站图标生成器（P1，顺位顺延）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，本轮新晋，顺位递进留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；进制转换器（P1 观察）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 3d3da07 一致；`grep tools/categories.go` 全量 88 Path，`pdf_sign`/`esign`/`sign` 全零命中（去重通过），ID `pdf_sign`、Path `/tools/pdf-sign` 无重叠；「文档转换」品类确认存在（含 pdf_annotate/pdf_manage 等 13 个 PDF 工具）；pdf.js 3.11.174 与 pdf-lib 1.17.1 均为 CDN 懒加载惯例（pdf-watermark.js/pdf-to-image.js/pdf-merge-split.js 已验证），无需新增依赖；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-18 10:00 第十七轮研究）
 
 ## 今日任务（2026-10-18 10:00 · 产品调研员研究轮 ✅）
