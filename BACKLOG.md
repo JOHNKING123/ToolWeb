@@ -1,4 +1,49 @@
 
+> 维护人：产品经理 · 每日排期（2026-10-19 01:39 排期轮）
+
+## 今日任务（2026-10-19 01:39 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-19 排期决策轮（01:00 第二十五轮研究之后）。图片复古做旧已交付闭环（23:00 PM 决策轮立项→开发交付 14f9016；`grep tools/categories.go` 确认 ID `img_retro_filter`、Path `/tools/img-retro-filter` 已注册，全量 **96 Path**），候选池划出。本轮立项**今日唯一任务：在线音频裁剪器（Audio Trimmer）**。
+
+**选定：在线音频裁剪器（/tools/audio-trimmer）** — 本轮唯一任务：
+- **凌晨轮只排小难度（既定规则）**：01:00 研究轮明确「01:00 凌晨轮沿用『晚间轮只排小难度』规则」；JSON Schema 验证器（中难度，21:00 轮已明确「晚间轮一天内高质量交付风险大，留待上午大轮次」）本轮不立项，顺位递进留池（第一候补，上午大轮次优先）。
+- **本轮新晋 + 证据最硬**：25 轮新晋 P1，六家形态验证（notevibes MP3 Cutter / zalt.me / aivideogenerator.so / audio.pi7.org / ercc.cc 中文音频裁剪 / docfixer.online），全部 "100% in browser, Web Audio API, no upload, no watermark" 口径，与仓库 local-first 铁律同构。
+- **开辟「音频处理」新品类**：`grep tools/categories.go` 核对——`audio/音频/mp3/MP3/wav/剪辑/trim/音频裁剪` 全零命中，仓库零音频工具；现有品类（图片处理/文档转换/开发工具/生活工具等）均无音频工具，差异化强。
+- **用户方向一致**：聚焦 ToolWeb 工具本身，非泛财务/生活计算器；品类错峰（图片→时间→音频），用户侧感知不重复。
+- **纯前端小难度、一轮可高质量交付**：Web Audio API decodeAudioData 解码→canvas 波形渲染→拖拽起止手柄+毫秒微调+选区试听→AudioBuffer 切片→WAV 手工编码导出，零依赖；MP3 导出用 lamejs 本地 vendor（仓库已有 SheetJS 本地 vendor 先例）。
+
+**规格**：
+1. 上传/拖拽音频：MP3/WAV/OGG/M4A 多格式（decodeAudioData 解码），FileReader 全本地处理；工具页显著位置隐私声明：「音频只在你的浏览器里处理，不上传服务器」。
+2. 波形渲染：canvas 绘制波形概览（峰值抽取），缩放自适应；加载中状态友好提示。
+3. 裁剪选区：拖拽起止手柄选定区间 + 开始/结束时间毫秒级微调输入（精确到毫秒），选区外区域灰化。
+4. 选区试听：播放选中区间（循环预览可选），播放进度指示条同步。
+5. 导出：AudioBuffer 切片→WAV 手工编码本地下载（零依赖）；MP3 导出用 lamejs 本地 vendor（比特率 64/128/192/320kbps 可选）。
+6. 纯前端、零 CDN 依赖、无后端调用；响应式，桌面端优先、移动端可用。
+7. 注册：`tools/categories.go` 新增「音频处理」品类（ID `audio`，Icon `audio_file`），新增工具 ID `audio_trimmer`、Path `/tools/audio-trimmer`（New: true），中英文描述 + SEO keywords（音频裁剪、音频剪辑、MP3裁剪、语音裁剪、audio trimmer）；与 MP3 标签编辑器（P2 在池）预留互链位。
+
+**验收标准**：
+- [ ] `/tools/audio-trimmer` 可开（200）
+- [ ] 上传 MP3/WAV/OGG 后波形正确渲染；长音频（≥10 分钟）渲染无明显卡顿
+- [ ] 拖拽起止手柄 + 毫秒微调选区正确；试听播放选中区间正常，进度指示同步
+- [ ] WAV 本地导出成功，文件可播、时长与选区一致
+- [ ] MP3 导出成功（如含 lamejs 路线），比特率可调、文件可播
+- [ ] 隐私声明显著；DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（「音频处理」新品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（上传+选区+试听+导出）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/audio_trimmer.html`（新建：上传拖拽区+波形画布+起止手柄+时间微调+试听+导出按钮，纯前端）、`static/js/audio_trimmer.js`（新建：Web Audio 解码、波形渲染引擎、选区引擎、AudioBuffer 切片、WAV 手工编码，零依赖）、`static/js/vendor/lamejs.min.js`（可选：MP3 导出本地 vendor，仓库 SheetJS vendor 先例）、`tools/categories.go`（「音频处理」新品类+工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- JSON Schema 验证器（P1，第一候补；kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重证据；中难度——ajv 本地 vendor 或自研 draft-07 核心子集 + 错误行列定位，「难度中留待上午大轮次」规则顺位递进留池，下轮优先）。
+- 网站图标生成器（P1，顺位顺延：16 轮新晋→24 轮顺延；365Lab 10-08 竞品形态验证；纯前端小难度：上传→16/32/180/192/512 多尺寸→ZIP 打包+HTML 引用代码；96 Path 无重叠）。
+- 进制转换器（P1 观察：本轮证据增强，PH 10-12 Everyday Tools 榜单单列，为该榜单仓库唯一缺口；纯前端小难度）。
+- 浏览器屏幕录制器（P1；中难度，适合上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；SQLite 数据库查看器（P1，中难度，留待上午大轮次）；OFD 阅读与转 PDF（P1，中-大，适合上午大轮次）；视频抽帧（P1，难度中，适合上午轮次）；日期加减/日期差（P1 观察，计算器口径谨慎）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察，开发者 niche）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；在线钢琴（P2 观察，娱乐应用形态）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察，音频品类互链位）；贴纸生成器（P2 观察，AI 抠图需后端）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD 4330fca 一致；`git log` 确认开发交付 14f9016 + 研究轮 4330fca；`grep tools/categories.go` 全量 96 Path（95+1），`img_retro_filter` ID 与 `/tools/img-retro-filter` Path 已注册（划入已实现），新候选 ID `audio_trimmer`、Path `/tools/audio-trimmer` 与 96 Path 无重叠（`audio/音频/mp3/MP3/wav/剪辑/trim` 全零命中；现有品类均无音频工具）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-19 01:00 第二十五轮研究）
 
 ## 今日任务（2026-10-19 01:00 · 产品调研员研究轮 ✅）
