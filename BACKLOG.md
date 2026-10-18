@@ -33,6 +33,8 @@
 
 **预计改动文件**：`templates/text_privacy_masker.html`（新建：输入+高亮标注+遮盖控制+结果区，纯前端）、`static/js/text_privacy_masker.js`（新建：识别规则引擎+逐条确认+遮盖+复制/下载，零依赖）、`tools/categories.go`（「文本工具」品类注册+与 text_diff 双向互链）、`BACKLOG.md`（本小节）。
 
+**开发交付记录（2026-10-18 11:xx 前端开发轮 ✅）**：新建 `templates/text_privacy_masker.html`（SEO meta+keywords+JSON-LD，页首显著「文本只在你的浏览器里处理，不上传服务器」隐私承诺横幅，类型开关/输入/高亮预览/逐条忽略/遮盖设置/结果区/「文本旅程线」互链；零 CDN 依赖，未引入 Google Fonts，导航图标做本地降级）、`static/js/text_privacy_masker.js`（纯前端引擎：手机号 11 位号段校验、身份证 18 位校验码+15 位日期校验、银行卡 15–19 位 Luhn、邮箱、IPv4 分段 0–255、车牌蓝牌/新能源/使领，冲突按身份证>银行卡>邮箱>车牌>IPv4>手机号优先级消解；按类型着色高亮+逐条忽略；全遮盖 ***/部分保留（身份证前6后4/手机号前3后4/银行卡后4/邮箱留域名/IPv4 留首段/车牌前2后1，位数可调）/自定义字符；原始坐标拼接无偏移；复制剪贴板+下载 .txt+统计；无 fetch/XHR）；node 38 项正反例单元测试全过（含 Luhn/校验码误报反例、邮箱内数字串冲突、忽略项不参与遮盖）。`tools/categories.go`「文本工具」品类注册 ID `text_privacy_masker`、Path `/tools/text-privacy-masker`（New: true，中英描述），与 text_diff 双向互链。本地构建通过；127.0.0.1:18099 实测页面 200、JS 200、sitemap/index/导航生效、text-diff 200 且互链生效；测试服务已清理。commit 待推送。
+
 **未选**：OFD 阅读与转 PDF（P1，本轮新晋：365Lab 电子发票痛点原话+iLovePDF 免费版受限差异化+纯前端可行双先例，真实需求强，但纯前端中-大难度+嵌入字体/复杂版式风险，适合留待上午大轮次单独占一轮高质量交付，不适合与今日任务挤一轮）；图片隐写工具（P1，第十七轮新晋顺位第三，365Lab「画中画」+英文形态族验证，纯前端小难度，留池按顺位递进）；网站图标生成器（P1，顺位顺延）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）等其余候选留池。
 
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD 48b2fc2 一致；`grep tools/categories.go` 全量 89 Path，`text_privacy_masker`/`mask`/`pii`/`desensitize`/`steg`/`ofd` 全零命中（去重通过），ID `text_privacy_masker`、Path `/tools/text-privacy-masker` 无重叠；「文本工具」品类确认存在（text_diff 注册 ID `diff`）；本地当前分支 muse/dev-20260929；工作树仅 `toolWeb.bak-prev`/`toolweb` 构建产物未跟踪（历史已知无关项）。

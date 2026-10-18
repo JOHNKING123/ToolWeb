@@ -237,6 +237,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "text_privacy_masker",
+					Name:        "文本隐私脱敏",
+					Description: "粘贴文本自动识别手机号/身份证号/银行卡号/邮箱/IPv4/车牌号，高亮标注逐条确认，三种遮盖方式一键脱敏，纯前端本地处理不出浏览器 · Text privacy masker: auto-detect PII (phone/ID/bank card/email/IPv4/plate), per-item confirm, 3 masking modes, 100% client-side",
+					Path:        "/tools/text-privacy-masker",
+					Icon:        "privacy_tip",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "markdown",
 					Name:        "Markdown 预览",
 					Description: "实时预览 Markdown 文档",

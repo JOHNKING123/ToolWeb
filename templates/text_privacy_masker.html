@@ -1,0 +1,175 @@
+{{define "text_privacy_masker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本隐私脱敏工具 - 敏感信息自动识别遮盖（手机号/身份证/银行卡打码）</title>
+    <meta name="description" content="免费在线文本脱敏工具：粘贴文本自动识别手机号、身份证号、银行卡号、邮箱、IPv4、车牌号，按类型着色高亮、逐条确认忽略，三种遮盖方式一键脱敏，复制/下载结果。纯浏览器本地处理，文本不上传服务器。">
+    <meta name="keywords" content="文本脱敏,隐私信息遮盖,身份证脱敏,手机号遮盖,敏感信息打码,银行卡打码,邮箱脱敏,车牌遮盖,PII脱敏">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-privacy-masker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文本隐私脱敏工具","description":"粘贴文本自动识别手机号、身份证号、银行卡号、邮箱、IPv4、车牌号并遮盖脱敏；纯浏览器本地处理，文本不上传服务器。","url":"https://www.johnkingzcq123.xyz/tools/text-privacy-masker","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tpm-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .tpm-wrap .navbar .material-icons { display: none; }
+        .tpm-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .tpm-privacy .tpm-lock { font-size: 1.6rem; flex: none; }
+        .tpm-privacy b { color: #047857; }
+        .tpm-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .tpm-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .tpm-types { display: flex; flex-wrap: wrap; gap: .6rem; }
+        .tpm-type { display: inline-flex; align-items: center; gap: .45rem; border: 1px solid #e5e7eb;
+            border-radius: 2rem; padding: .35rem .8rem .35rem .6rem; cursor: pointer; font-size: .9rem;
+            background: #f9fafb; user-select: none; }
+        .tpm-type input { accent-color: #2563eb; }
+        .tpm-dot { width: .8rem; height: .8rem; border-radius: 50%; flex: none; display: inline-block; }
+        .tpm-textarea { width: 100%; min-height: 200px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: .9rem; line-height: 1.7; padding: .8rem; border: 1px solid #d1d5db; border-radius: .5rem;
+            resize: vertical; box-sizing: border-box; background: #fff; }
+        .tpm-countline { display: flex; justify-content: space-between; align-items: center; font-size: .85rem; color: #6b7280; margin: .4rem 0; }
+        .tpm-toolbar { display: flex; gap: .6rem; flex-wrap: wrap; margin: .6rem 0; align-items: center; }
+        .tpm-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1.1rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .9rem; }
+        .tpm-btn:hover { background: var(--primary-color-dark); }
+        .tpm-btn-ghost { background: #f3f4f6; color: #374151; }
+        .tpm-btn-ghost:hover { background: #e5e7eb; }
+        .tpm-btn-sm { padding: .25rem .7rem; font-size: .8rem; border-radius: .35rem; }
+        .tpm-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin-bottom: .8rem; }
+        .tpm-tip-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+        .tpm-tip-ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .tpm-preview { border: 1px solid #e5e7eb; border-radius: .6rem; background: #fafafa; padding: .9rem;
+            font-size: .92rem; line-height: 2.3; word-break: break-all; white-space: pre-wrap;
+            max-height: 320px; overflow: auto; }
+        .tpm-empty { color: #9ca3af; font-size: .88rem; line-height: 1.8; }
+        .tpm-mark { border: 1px solid; border-radius: .3rem; padding: .05rem .3rem; position: relative; cursor: help; }
+        .tpm-mark .tpm-tag { font-size: .62rem; font-weight: 700; border-radius: .25rem; padding: 0 .25rem;
+            margin-left: .25rem; background: rgba(255,255,255,.65); vertical-align: 2px; white-space: nowrap; }
+        .tpm-mark.tpm-ignored { opacity: .45; text-decoration: line-through; }
+        .tpm-list { margin-top: .8rem; display: flex; flex-direction: column; gap: .45rem; max-height: 300px; overflow: auto; }
+        .tpm-item { display: flex; align-items: center; gap: .6rem; border: 1px solid #e5e7eb; border-radius: .5rem;
+            padding: .45rem .7rem; font-size: .88rem; background: #fff; }
+        .tpm-item.is-ignored { opacity: .55; background: #f9fafb; }
+        .tpm-item.is-ignored .tpm-val { text-decoration: line-through; }
+        .tpm-idx { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #f3f4f6; color: #6b7280;
+            display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; flex: none; }
+        .tpm-badge { border-radius: .3rem; padding: .1rem .5rem; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+        .tpm-val { font-family: ui-monospace, monospace; font-weight: 600; color: #111827; word-break: break-all; }
+        .tpm-pos { margin-left: auto; color: #9ca3af; font-size: .78rem; white-space: nowrap; }
+        .tpm-stats { font-size: .92rem; color: #374151; line-height: 1.8; margin: .6rem 0; }
+        .tpm-stats b { color: #111827; font-size: 1.05rem; }
+        .tpm-modes { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: .7rem; }
+        .tpm-modes label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font-size: .92rem; }
+        .tpm-modes input { accent-color: #2563eb; }
+        .tpm-cfg-row { display: flex; align-items: center; gap: .6rem; padding: .3rem 0; font-size: .88rem; border-bottom: 1px dashed #f3f4f6; }
+        .tpm-cfg-row:last-child { border-bottom: none; }
+        .tpm-cfg-name { width: 5.2rem; color: #374151; }
+        .tpm-cfg-row input[type=number] { width: 3.2rem; padding: .2rem .3rem; border: 1px solid #d1d5db; border-radius: .3rem; }
+        .tpm-cfg-row label { color: #6b7280; display: inline-flex; align-items: center; gap: .3rem; }
+        .tpm-custom-input { width: 8rem; padding: .4rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .9rem; }
+        .tpm-output { width: 100%; min-height: 160px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: .9rem; line-height: 1.7; padding: .8rem; border: 1px solid #d1d5db; border-radius: .5rem;
+            resize: vertical; box-sizing: border-box; background: #f0fdf4; }
+        .tpm-copy-tip { display: none; margin-top: .5rem; font-size: .86rem; }
+        .tpm-copy-ok { color: #047857; } .tpm-copy-fail { color: #b91c1c; }
+        .tpm-combo { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .6rem; padding: .7rem 1rem;
+            font-size: .92rem; line-height: 1.8; color: #1e40af; margin-top: 1.2rem; }
+        .tpm-combo a { color: #1d4ed8; font-weight: 600; }
+        .tpm-note { font-size: .85rem; color: #6b7280; line-height: 1.9; margin-top: .8rem; }
+        .tpm-note b { color: #4b5563; }
+        @media (max-width: 768px) {
+            .tpm-wrap .container { padding: 1rem; }
+            .tpm-item { flex-wrap: wrap; }
+            .tpm-pos { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tpm-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔒 文本隐私脱敏工具</h1>
+            <p>粘贴文本 → 自动识别敏感信息 → 逐条确认 → 一键遮盖脱敏</p>
+        </div>
+
+        <div class="tpm-privacy">
+            <span class="tpm-lock">🔒</span>
+            <div><b>隐私承诺：文本只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：识别、遮盖、复制、下载全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 粘贴再敏感的文本，也不会产生一次网络请求。</div>
+        </div>
+
+        <div class="tpm-panel">
+            <h3>1️⃣ 选择要识别的类型（每类可单独开关）</h3>
+            <div class="tpm-types" id="tpm-types"></div>
+            <div class="tpm-note">识别规则：手机号（11 位 + 号段校验）、身份证号（18 位校验码 / 15 位日期合法性验证）、银行卡号（15–19 位 + Luhn 校验）、邮箱、IPv4（0–255 分段校验）、车牌号（蓝牌 / 新能源绿牌）。纯数字串必须通过校验码才会命中，避免误报。</div>
+        </div>
+
+        <div class="tpm-panel">
+            <h3>2️⃣ 粘贴文本</h3>
+            <textarea class="tpm-textarea" id="tpm-input" placeholder="在此粘贴需要脱敏的文本，例如：&#10;张三，手机号 13812345678，身份证号 11010519491231002X……"></textarea>
+            <div class="tpm-countline"><span id="tpm-count">共 0 字符</span></div>
+            <div class="tpm-toolbar">
+                <button class="tpm-btn" id="tpm-detect">🔍 开始识别</button>
+                <button class="tpm-btn tpm-btn-ghost" id="tpm-sample">📝 填入示例</button>
+                <button class="tpm-btn tpm-btn-ghost" id="tpm-clear">🗑 清空</button>
+            </div>
+        </div>
+
+        <div class="tpm-panel" id="tpm-mask-sec" style="display:none">
+            <h3>3️⃣ 检查识别结果（按类型着色标注）</h3>
+            <div class="tpm-tip" id="tpm-tip"></div>
+            <div class="tpm-preview" id="tpm-preview"></div>
+            <div class="tpm-stats" id="tpm-stats"></div>
+            <div class="tpm-list" id="tpm-list"></div>
+        </div>
+
+        <div class="tpm-panel" id="tpm-cfg-sec" style="display:none">
+            <h3>4️⃣ 选择遮盖方式</h3>
+            <div class="tpm-modes">
+                <label><input type="radio" name="tpm-mode" value="partial" checked> 部分保留（默认策略，可调位数）</label>
+                <label><input type="radio" name="tpm-mode" value="full"> 全遮盖（<code>***</code>）</label>
+                <label><input type="radio" name="tpm-mode" value="custom"> 自定义字符</label>
+            </div>
+            <div id="tpm-cfg-wrap">
+                <div class="tpm-note" style="margin:0 0 .4rem">默认保留策略：身份证前 6 后 4、手机号前 3 后 4、银行卡后 4；邮箱只遮 @ 前部分、保留域名；IPv4 保留首段；车牌保留前 2 后 1。位数可调。</div>
+                <div id="tpm-cfg"></div>
+            </div>
+            <div id="tpm-custom-wrap" style="display:none">
+                <label>遮盖字符：<input class="tpm-custom-input" id="tpm-custom-char" value="***" maxlength="12" placeholder="如 *** 或 #"></label>
+                <span class="tpm-note">整段敏感信息将被替换为此处填写的内容。</span>
+            </div>
+            <div class="tpm-toolbar">
+                <button class="tpm-btn" id="tpm-mask-all">🛡 一键全部遮盖</button>
+            </div>
+        </div>
+
+        <div class="tpm-panel" id="tpm-result-sec" style="display:none">
+            <h3>5️⃣ 脱敏结果</h3>
+            <div class="tpm-stats" id="tpm-out-stats"></div>
+            <textarea class="tpm-output" id="tpm-output" readonly></textarea>
+            <div class="tpm-toolbar">
+                <button class="tpm-btn" id="tpm-copy">📋 复制结果</button>
+                <button class="tpm-btn tpm-btn-ghost" id="tpm-download">⬇ 下载 .txt</button>
+            </div>
+            <div class="tpm-copy-tip" id="tpm-copy-tip"></div>
+        </div>
+
+        <div class="tpm-combo">
+            <b>「文本旅程线」组合：</b>脱敏前想先看两版文本哪里不一样？用 <a href="/tools/text-diff">文本比较工具</a> 并排对比；脱敏完成后再比一次，确认敏感信息已全部遮盖 —— 先比对、再脱敏，一套流程走完。
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/text_privacy_masker.js?v=1"></script>
+</body>
+</html>
+{{end}}
