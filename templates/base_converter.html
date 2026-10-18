@@ -1,0 +1,177 @@
+{{define "base_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进制转换器 - 二进制/八进制/十进制/十六进制/32进制在线互转 | 程序员工具箱</title>
+    <meta name="description" content="免费在线进制转换器：二进制、八进制、十进制、十六进制、三十二进制一键互转，支持 0x/0b/0o 前缀自动识别，非法字符实时红色校验，大整数用 BigInt 精确无损换算。纯前端本地计算，不上传数据。">
+    <meta name="keywords" content="进制转换,进制换算,二进制转十进制,十进制转十六进制,base converter,进制计算器,二进制,八进制,十六进制,32进制,BigInt">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/base-converter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"进制转换器","description":"免费在线进制转换器：二进制、八进制、十进制、十六进制、三十二进制一键互转，支持 0x/0b/0o 前缀自动识别，大整数 BigInt 精确换算，纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/base-converter","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bc-wrap .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        .bc-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .bc-privacy .bc-lock { font-size: 1.6rem; flex: none; }
+        .bc-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+        .bc-panel h3 { margin: 0 0 .8rem; font-size: 1rem; color: #111827; }
+        .bc-radix-row { display: flex; gap: .6rem; flex-wrap: wrap; margin: .8rem 0; }
+        .bc-radix { position: relative; }
+        .bc-radix input { position: absolute; opacity: 0; pointer-events: none; }
+        .bc-radix span { display: inline-block; padding: .5rem 1.1rem; border: 1px solid #d1d5db; border-radius: .55rem;
+            font-size: .92rem; cursor: pointer; background: #fff; color: #374151; transition: all .15s; }
+        .bc-radix input:checked + span { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .bc-radix input:focus-visible + span { box-shadow: 0 0 0 2px rgba(37,99,235,.25); }
+        .bc-input { width: 100%; box-sizing: border-box; padding: .75rem .9rem; font-size: 1.05rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; border: 1px solid #d1d5db; border-radius: .55rem; background: #fff; }
+        .bc-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .bc-input.bc-invalid { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.12); }
+        .bc-error { display: none; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: .55rem; padding: .6rem .9rem; font-size: .9rem; margin-top: .6rem; }
+        .bc-prefix-note { display: none; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: .55rem; padding: .6rem .9rem; font-size: .88rem; margin-top: .6rem; }
+        .bc-hint { color: #6b7280; font-size: .85rem; margin-top: .5rem; line-height: 1.7; }
+        .bc-hint code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .bc-toolbar { display: flex; gap: 1.4rem; flex-wrap: wrap; align-items: center; margin-top: .8rem; }
+        .bc-switch { display: flex; align-items: center; gap: .5rem; font-size: .9rem; color: #374151; cursor: pointer; }
+        .bc-switch input { width: 1.05rem; height: 1.05rem; accent-color: var(--primary-color); cursor: pointer; }
+        .bc-select { padding: .4rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .88rem; background: #fff; }
+        .bc-btn { padding: .5rem 1.2rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: #fff; color: var(--primary-color); font-size: .9rem; cursor: pointer; transition: background .15s; }
+        .bc-btn:hover { background: #eff6ff; }
+        .bc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .8rem; }
+        .bc-card { border: 1px solid #e5e7eb; border-radius: .7rem; padding: .9rem 1rem; background: #f9fafb; position: relative; }
+        .bc-card.bc-current { border-color: var(--primary-color); box-shadow: 0 0 0 1px var(--primary-color); background: #fff; }
+        .bc-card .bc-tag { display: inline-block; font-size: .72rem; font-weight: 700; color: #fff; background: var(--primary-color);
+            border-radius: .3rem; padding: .08rem .45rem; margin-right: .4rem; vertical-align: 1px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .bc-card h4 { margin: 0 0 .5rem; font-size: .95rem; color: #111827; font-weight: 600; }
+        .bc-value { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .95rem; line-height: 1.7;
+            word-break: break-all; color: #111827; background: #fff; border: 1px solid #e5e7eb;
+            border-radius: .5rem; padding: .6rem .7rem; min-height: 2.6em; white-space: pre-wrap; }
+        .bc-copy { margin-top: .6rem; padding: .35rem 1rem; font-size: .82rem; border-radius: .45rem;
+            border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; }
+        .bc-copy:hover:not([disabled]) { border-color: var(--primary-color); color: var(--primary-color); }
+        .bc-copy[disabled] { opacity: .45; cursor: not-allowed; }
+        .bc-examples { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .6rem; }
+        .bc-example { padding: .4rem .9rem; font-size: .85rem; border-radius: .5rem; border: 1px dashed #d1d5db;
+            background: #fff; color: #4b5563; cursor: pointer; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .bc-example:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .bc-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .bc-doc b { color: #111827; }
+        .bc-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .bc-doc a { color: var(--primary-color); text-decoration: none; }
+        .bc-doc a:hover { text-decoration: underline; }
+        @media (max-width: 640px) {
+            .bc-wrap .container { padding: 1rem; }
+            .bc-toolbar { gap: .9rem; }
+            .bc-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bc-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔢 进制转换器</h1>
+            <p>二进制 / 八进制 / 十进制 / 十六进制 / 三十二进制一键互转，超大整数精确无损</p>
+        </div>
+
+        <div class="bc-privacy">
+            <span class="bc-lock">🔒</span>
+            <div><b>隐私承诺：输入只在你的浏览器里换算，不上传服务器。</b><br>
+            纯前端单页应用：输入解析、前缀识别、非法字符校验、BigInt 大整数换算、结果渲染全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 输入任何数字都不会产生网络请求。断网也能用。</div>
+        </div>
+
+        <div class="bc-panel">
+            <h3>1️⃣ 输入数字</h3>
+            <div class="bc-hint" style="margin:0 0 .5rem;">先选择输入进制，或直接粘贴带 <code>0x</code> / <code>0b</code> / <code>0o</code> 前缀的数字（会自动识别，前缀优先）。</div>
+            <div class="bc-radix-row" role="radiogroup" aria-label="输入进制">
+                <label class="bc-radix"><input type="radio" name="bc-radix" value="2"><span>二进制 BIN</span></label>
+                <label class="bc-radix"><input type="radio" name="bc-radix" value="8"><span>八进制 OCT</span></label>
+                <label class="bc-radix"><input type="radio" name="bc-radix" value="10" checked><span>十进制 DEC</span></label>
+                <label class="bc-radix"><input type="radio" name="bc-radix" value="16"><span>十六进制 HEX</span></label>
+                <label class="bc-radix"><input type="radio" name="bc-radix" value="32"><span>三十二进制</span></label>
+            </div>
+            <input id="bc-input" class="bc-input" type="text" autocomplete="off" spellcheck="false"
+                placeholder="例如：255、0xFF、0b1010、1_000_000" aria-label="输入要转换的数字">
+            <div id="bc-error" class="bc-error" role="alert"></div>
+            <div id="bc-prefix-note" class="bc-prefix-note"></div>
+            <div class="bc-toolbar">
+                <button class="bc-btn" id="bc-clear" type="button">清空</button>
+                <label class="bc-switch"><input type="checkbox" id="bc-prefix-switch" checked> 十六进制加 0x 前缀</label>
+                <label class="bc-switch"><input type="checkbox" id="bc-group-switch"> 分组显示
+                    <select class="bc-select" id="bc-group-size" aria-label="分组位数">
+                        <option value="4" selected>每 4 位</option>
+                        <option value="8">每 8 位</option>
+                    </select>
+                </label>
+            </div>
+            <div class="bc-examples">
+                <button class="bc-example" type="button" data-input="255">试试：255</button>
+                <button class="bc-example" type="button" data-input="0xFF">试试：0xFF</button>
+                <button class="bc-example" type="button" data-input="0b1010">试试：0b1010</button>
+                <button class="bc-example" type="button" data-input="1267650600228229401496703205376">试试：2^100 大整数</button>
+            </div>
+            <div class="bc-hint">支持负数（如 <code>-42</code>）；空格与下划线会被忽略，可用于分隔长数字（如 <code>1_000_000</code>）。</div>
+        </div>
+
+        <div class="bc-panel">
+            <h3>2️⃣ 转换结果（全部进制一次展示）</h3>
+            <div class="bc-cards" id="bc-cards">
+                <div class="bc-card" id="bc-card-2">
+                    <h4><span class="bc-tag">BIN</span>二进制</h4>
+                    <div class="bc-value">—</div>
+                    <button class="bc-copy" type="button" disabled>复制</button>
+                </div>
+                <div class="bc-card" id="bc-card-8">
+                    <h4><span class="bc-tag">OCT</span>八进制</h4>
+                    <div class="bc-value">—</div>
+                    <button class="bc-copy" type="button" disabled>复制</button>
+                </div>
+                <div class="bc-card" id="bc-card-10">
+                    <h4><span class="bc-tag">DEC</span>十进制</h4>
+                    <div class="bc-value">—</div>
+                    <button class="bc-copy" type="button" disabled>复制</button>
+                </div>
+                <div class="bc-card" id="bc-card-16">
+                    <h4><span class="bc-tag">HEX</span>十六进制</h4>
+                    <div class="bc-value">—</div>
+                    <button class="bc-copy" type="button" disabled>复制</button>
+                </div>
+                <div class="bc-card" id="bc-card-32">
+                    <h4><span class="bc-tag">B32</span>三十二进制</h4>
+                    <div class="bc-value">—</div>
+                    <button class="bc-copy" type="button" disabled>复制</button>
+                </div>
+            </div>
+            <div class="bc-hint">复制按钮复制的是原始无空格结果；边框高亮的卡片为当前输入进制。</div>
+        </div>
+
+        <div class="bc-panel">
+            <h3>使用说明</h3>
+            <div class="bc-doc">
+                <b>进制选择：</b>先选输入进制再输入数字；若输入带 <code>0x</code>（十六进制）、<code>0b</code>（二进制）、<code>0o</code>（八进制）前缀，会自动按前缀识别，优先级高于手动选择。<br>
+                <b>实时校验：</b>输入中出现当前进制不允许的字符会立即红色提示，如二进制下输入 <code>2</code>、十六进制下输入 <code>G</code>。<br>
+                <b>大整数：</b>全部换算基于 <code>BigInt</code> 逐位累加，不经过 <code>Number</code>，即使 <code>2^100</code> 这样远超安全整数的数字也精确无损。<br>
+                <b>分组显示：</b>打开开关后，长数字按每 4 位 / 8 位插入空格分隔，读长串更轻松；复制时仍是无空格原始值。<br>
+                <b>十六进制 0x 前缀：</b>开关控制结果是否显示 <code>0x</code> 前缀（复制时不带前缀）。<br>
+                <b>互链工具：</b>数字处理常用组合 —— <a href="/tools/timestamp">时间戳转换</a>、<a href="/tools/uuid-generator">UUID 生成器</a>、<a href="/tools/base64">Base64 编解码</a>、<a href="/tools/cron-parser">Cron 表达式</a>。<br>
+                <b>隐私：</b>全程无网络请求 —— 解析、校验、换算、复制都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/base_converter.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,4 +1,48 @@
 
+> 维护人：产品经理 · 每日排期（2026-10-19 05:45 排期轮）
+
+## 今日任务（2026-10-19 05:45 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-19 排期决策轮（05:36 第二十七轮研究之后）。网站图标生成器已交付闭环（03:39 PM 决策轮立项→开发交付 3fb07e1；`grep tools/categories.go` 确认 ID `favicon_generator`、Path `/tools/favicon-generator` 已注册，全量 **98 Path**），候选池划出。本轮立项**今日唯一任务：进制转换器（Base Converter）**。
+
+**选定：进制转换器（/tools/base-converter）** — 本轮唯一任务：
+- **顺位递进（公平性）**：03:39 PM 排期轮明确「本轮顺延，下一轮节奏调节位优先」；27 轮研究轮 Top3 将其排在首位。连续两轮顺延让位后本轮理应立项。
+- **凌晨轮只排小难度（既定规则）**：纯前端小难度（输入→BigInt 精确换算→多进制展示+复制），一轮可高质量交付；JSON Schema 验证器/EPUB 阅读器/浏览器屏幕录制器/SQLite 查看器等中难度留待上午大轮次。
+- **证据已增强**：Product Hunt 2026-10-12 "Everyday Tools" 榜单单列 number base converter，为该榜单中仓库唯一缺口（同榜单 Base64/UUID/Markdown/子网计算器已覆盖）；dev.to 51 工具集形态族二重化。
+- **旅程线完备**：与 timestamp/cron/uuid/base64/jwt 开发者工具家族互链，工具家族叙事成立。
+- **去重实锤**：`grep tools/categories.go` 实核——`进制`/`base_converter` 零命中，全量 98 Path 无重叠；`templates/color_converter.html` 为 HEX/RGB/HSL 颜色互转孤儿模板（categories.go 未注册），与数字进制换算能力不重叠；`base` 前缀现存仅 base64 家族。
+- **痛点真实**：开发/运维日常进制换算（掩码、颜色值、调试），现有在线方案多带广告。
+
+**规格**：
+1. 输入区：文本输入框 + 进制选择器（2/8/10/16/32），支持 0x/0b/0o 前缀自动识别与非法字符实时校验（红色提示）。
+2. 结果区：一次展示全部五进制结果，卡片式列表，16 进制支持 0x 前缀开关；每结果一键复制按钮。
+3. 增强：分组显示开关（每 4/8 位分组，便于读长串）；大整数用 BigInt 换算（无精度损失，超出 JS 安全整数仍精确）。
+4. 纯前端、零 CDN 依赖、无后端调用、无外部请求；响应式，桌面端优先、移动端可用。
+5. 注册：`tools/categories.go`「开发工具」品类新增工具 ID `base_converter`、Path `/tools/base-converter`（New: true），中英文描述 + SEO keywords（进制转换、进制换算、二进制转十进制、十进制转十六进制、base converter、进制计算器）。
+
+**验收标准**：
+- [ ] `/tools/base-converter` 可开（200）
+- [ ] 2/8/10/16/32 任意进制互转正确；0x/0b/0o 前缀识别正确；非法输入有红色提示
+- [ ] 大整数（超出 Number 安全整数，如 2^100）换算精确
+- [ ] 分组显示开关生效；各结果一键复制可用
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（开发工具品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（输入+切换+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/base_converter.html`（新建：输入区+进制选择+结果卡片+复制按钮，纯前端）、`static/js/base_converter.js`（新建：BigInt 换算引擎、输入校验、分组格式化、复制逻辑，零依赖）、`tools/categories.go`（开发工具品类+工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 图片精确体积压缩器（P1；26 轮新晋，DodoDeck 10-18 headline 功能佐证，≤X KB 硬限制痛点真实，img-compress 无目标体积模式实锤去重；03:39 与上上轮图片复古做旧错峰顺延后，本轮再顺延一次——连续图片品类节奏调节，下轮或再下轮优先）。
+- robots.txt 生成器（P1；27 轮本轮新晋，Varkido 10-01 SEO 套装单列、同套装 SERP/OG 已交付家族佐证；顺位递进：刚入池，下一轮顺位优先）。
+- YouTube 缩略图下载器（P1；27 轮本轮新晋，四档分辨率 i.ytimg.com 直链，纯前端小难度；顺位顺延留池）。
+- 代码压缩器（P1；27 轮本轮新晋，Varkido Dev 套装单列同套装唯一缺口；与本轮进制转换器同开发者工具家族，节奏调节留池）。
+- 音频合并器（P1；26 轮新晋，音频品类连续两弹感知留 PM 定序，本轮顺延）；JSON Schema 验证器（P1，第一候补；中难度，上午大轮次优先）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；浏览器屏幕录制器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；SRT 字幕编辑器（P1，顺位顺延）；单位换算器（P1 观察）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 新观察）；DNS 传播检查（P2 新观察，需出网）；cURL 转请求代码（P2 新观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，本地 HEAD ab5e41a（27 轮研究）；`git log` 确认开发交付 3fb07e1（网站图标生成器）；`grep tools/categories.go` 全量 98 Path，`favicon_generator` ID 与 `/tools/favicon-generator` Path 已注册（划入已实现）；新候选 ID `base_converter`、Path `/tools/base-converter` 与 98 Path 无重叠（`进制`/`base_converter` 零命中；color_converter.html 仅孤儿模板未注册）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-19 05:36 第二十七轮研究）
 
 ## 今日任务（2026-10-19 05:36 · 产品调研员研究轮 ✅）

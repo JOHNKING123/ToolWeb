@@ -246,6 +246,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "base_converter",
+					Name:        "进制转换器",
+					Description: "2/8/10/16/32 进制在线互转，支持 0x/0b/0o 前缀自动识别、非法字符实时校验，大整数 BigInt 精确无损换算，分组显示+一键复制，纯前端本地计算 · Base converter: binary/octal/decimal/hex/base-32, auto-detect prefixes, BigInt precision, 100% client-side",
+					Path:        "/tools/base-converter",
+					Icon:        "dialpad",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
