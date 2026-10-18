@@ -1,0 +1,240 @@
+{{define "img_retro_filter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片复古做旧 - 复古滤镜/胶片质感/CCD风在线生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片复古做旧工具：柯达/富士胶片调色、CCD 数码风、褪色老照片、黑白胶片、漏光叠加、Vignette 暗角、胶片颗粒噪点可调，PNG/JPEG 本地导出。纯浏览器本地处理，图片不上传服务器。">
+    <meta name="keywords" content="复古滤镜,胶片质感,CCD风,老照片做旧,retro film filter,照片做旧,漏光,暗角,胶片颗粒,图片复古,柯达,富士">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/img-retro-filter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片复古做旧","description":"照片一键复古做旧：柯达/富士胶片调色、CCD 数码风、褪色老照片、黑白胶片、漏光叠加、Vignette 暗角、胶片颗粒噪点可调，PNG/JPEG 本地导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/img-retro-filter","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rf-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .rf-wrap .navbar .material-icons { display: none; }
+        .rf-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .rf-privacy .rf-lock { font-size: 1.6rem; flex: none; }
+        .rf-privacy b { color: #047857; }
+        .rf-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .rf-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .rf-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .rf-upload:hover, .rf-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .rf-upload .rf-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .rf-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .rf-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; }
+        .rf-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .rf-row label { font-size: .92rem; color: #374151; }
+        .rf-row input[type=range] { flex: 1; min-width: 140px; max-width: 300px; }
+        .rf-val { display: inline-block; min-width: 4.5em; font-weight: 600; color: var(--primary-color); font-size: .92rem; }
+        .rf-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .8rem; margin: .5rem 0; }
+        .rf-card { border: 2px solid #e5e7eb; border-radius: .7rem; padding: .7rem .9rem; background: #fff; }
+        .rf-card.on { border-color: var(--primary-color); background: #f5f9ff; }
+        .rf-card-head { display: flex; align-items: center; gap: .5rem; font-weight: 600; font-size: .93rem; color: #111827; margin-bottom: .4rem; cursor: pointer; }
+        .rf-card-head input { width: 1rem; height: 1rem; accent-color: var(--primary-color); cursor: pointer; }
+        .rf-card .rf-row { margin: .3rem 0; }
+        .rf-card .rf-hint { font-size: .8rem; color: #9ca3af; line-height: 1.6; }
+        .rf-stage-wrap { margin: .5rem 0; }
+        .rf-stage { position: relative; width: 100%; max-width: 860px; margin: 0 auto; overflow: hidden;
+            border: 1px solid #e5e7eb; border-radius: .6rem; background: #111827; touch-action: none; cursor: ew-resize;
+            user-select: none; -webkit-user-select: none; }
+        .rf-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .rf-tag { position: absolute; top: .5rem; font-size: .75rem; color: #fff; background: rgba(0,0,0,.55);
+            padding: .15rem .6rem; border-radius: .4rem; pointer-events: none; z-index: 3; }
+        .rf-tag-l { left: .5rem; } .rf-tag-r { right: .5rem; }
+        .rf-divider { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; z-index: 2;
+            box-shadow: 0 0 8px rgba(0,0,0,.5); transform: translateX(-50%); pointer-events: none; }
+        .rf-handle { position: absolute; top: 50%; width: 38px; height: 38px; background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center;
+            font-size: .8rem; color: #374151; box-shadow: 0 2px 8px rgba(0,0,0,.35); pointer-events: none; }
+        .rf-stage-hint { text-align: center; font-size: .82rem; color: #9ca3af; margin-top: .4rem; }
+        .rf-meta { font-size: .88rem; color: #6b7280; line-height: 1.8; }
+        .rf-meta b { color: #374151; }
+        .rf-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.3rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .92rem; }
+        .rf-btn:hover:not(:disabled) { background: var(--primary-color-dark); }
+        .rf-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+        .rf-btn-ghost { background: #f3f4f6; color: #374151; }
+        .rf-btn-ghost:hover { background: #e5e7eb; }
+        .rf-quality { display: inline-flex; gap: .5rem; }
+        .rf-quality label { display: inline-flex; align-items: center; gap: .3rem; font-size: .92rem; color: #374151;
+            border: 1px solid #e5e7eb; border-radius: .5rem; padding: .4rem .8rem; cursor: pointer; background: #fff; }
+        .rf-quality label.on { border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; background: #eff6ff; }
+        .rf-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin: .7rem 0; }
+        .rf-tip-err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .rf-combo { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: .8rem; padding: .9rem 1.1rem;
+            font-size: .92rem; line-height: 1.9; color: #0c4a6e; margin-bottom: 1rem; }
+        .rf-combo a { color: #1d4ed8; font-weight: 600; }
+        .rf-doc { color: #374151; line-height: 1.9; font-size: .93rem; }
+        .rf-doc b { color: #111827; }
+        .rf-doc code { background: #f3f4f6; padding: .1rem .4rem; border-radius: .3rem; font-size: .85em; }
+        select.rf-sel { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .4rem .6rem; font-size: .9rem; color: #374151; background: #fff; }
+        @media (max-width:640px){ .rf-wrap .container{padding:1rem;} .rf-presets{grid-template-columns:1fr;} }
+    </style>
+</head>
+<body>
+    <div class="rf-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎞️ 图片复古做旧</h1>
+            <p>照片一键复古做旧：柯达/富士胶片调色、CCD 数码风、褪色老照片、黑白胶片、漏光叠加、暗角、胶片颗粒，全部可调</p>
+        </div>
+
+        <div class="rf-privacy">
+            <span class="rf-lock">🔒</span>
+            <div><b>隐私承诺：图片只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：上传读取、滤镜渲染、预览、导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 上传的图片不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="rf-panel">
+            <h3>1️⃣ 上传图片</h3>
+            <div class="rf-upload" id="rf-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                <span class="rf-big">🖼️</span>
+                <div>点击选择图片，或把图片拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / JPEG / WebP；大图会自动下采样到工作分辨率，页面不卡顿</div>
+            </div>
+            <input type="file" id="rf-file" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <div class="rf-info" id="rf-srcinfo" style="display:none;"></div>
+            <div class="rf-status" id="rf-status"></div>
+            <div class="rf-tip" id="rf-tip"></div>
+        </div>
+
+        <div class="rf-panel" id="rf-controls" style="display:none;">
+            <h3>2️⃣ 调整复古参数（实时预览，可叠加）</h3>
+
+            <div class="rf-presets">
+                <div class="rf-card on" id="rf-card-kodak">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-kodak-on" checked> 📷 柯达暖黄</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-kodak-s" min="0" max="100" step="1" value="70">
+                        <span class="rf-val" id="rf-kodak-val">70 %</span></div>
+                    <div class="rf-hint">Kodak Gold 风格：暖黄调色矩阵，暖色上扬、冷色压低</div>
+                </div>
+                <div class="rf-card" id="rf-card-fuji">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-fuji-on"> 🎞️ 富士胶片</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-fuji-s" min="0" max="100" step="1" value="70">
+                        <span class="rf-val" id="rf-fuji-val">70 %</span></div>
+                    <div class="rf-hint">Fuji 风格：绿色调柔和，绿通道上扬、对比稍低</div>
+                </div>
+                <div class="rf-card" id="rf-card-ccd">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-ccd-on"> 📟 CCD 数码风</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-ccd-s" min="0" max="100" step="1" value="70">
+                        <span class="rf-val" id="rf-ccd-val">70 %</span></div>
+                    <div class="rf-hint">老数码相机味：高对比 + 冷色偏，蓝通道上扬</div>
+                </div>
+                <div class="rf-card" id="rf-card-faded">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-faded-on"> 🕰️ 褪色老照片</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-faded-s" min="0" max="100" step="1" value="70">
+                        <span class="rf-val" id="rf-faded-val">70 %</span></div>
+                    <div class="rf-hint">岁月感：提黑降对比 + 暖调 + 轻微去饱和</div>
+                </div>
+                <div class="rf-card" id="rf-card-bw">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-bw-on"> ⬛ 黑白胶片</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-bw-s" min="0" max="100" step="1" value="85">
+                        <span class="rf-val" id="rf-bw-val">85 %</span></div>
+                    <div class="rf-hint">经典黑白：亮度灰度 + 轻对比，配颗粒更出片</div>
+                </div>
+                <div class="rf-card" id="rf-card-leak">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-leak-on"> 🌞 漏光叠加</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-leak-s" min="0" max="100" step="1" value="60">
+                        <span class="rf-val" id="rf-leak-val">60 %</span></div>
+                    <div class="rf-row"><label>位置：</label>
+                        <select class="rf-sel" id="rf-leak-pos">
+                            <option value="auto">自动（多角）</option>
+                            <option value="tl">左上</option>
+                            <option value="tr">右上</option>
+                            <option value="bl">左下</option>
+                            <option value="br">右下</option>
+                            <option value="diag">对角</option>
+                        </select></div>
+                    <div class="rf-hint">胶片漏光：暖色径向光晕，screen 混合叠加</div>
+                </div>
+                <div class="rf-card" id="rf-card-vig">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-vig-on" checked> 🌑 Vignette 暗角</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-vig-s" min="0" max="100" step="1" value="30">
+                        <span class="rf-val" id="rf-vig-val">30 %</span></div>
+                    <div class="rf-hint">四周径向压暗，突出画面中心</div>
+                </div>
+                <div class="rf-card on" id="rf-card-grain">
+                    <label class="rf-card-head"><input type="checkbox" id="rf-grain-on" checked> ✨ 胶片颗粒</label>
+                    <div class="rf-row"><label>强度：</label>
+                        <input type="range" id="rf-grain-int" min="0" max="100" step="1" value="25">
+                        <span class="rf-val" id="rf-grain-int-val">25 %</span></div>
+                    <div class="rf-row"><label>粒度：</label>
+                        <input type="range" id="rf-grain-size" min="1" max="8" step="1" value="2">
+                        <span class="rf-val" id="rf-grain-size-val">2 px</span></div>
+                    <div class="rf-hint">纯前端生成的噪点，粒度越大颗粒越粗；强度 0 即关闭</div>
+                </div>
+            </div>
+
+            <div class="rf-row">
+                <button class="rf-btn rf-btn-ghost" id="rf-reset">↩️ 重置为默认参数</button>
+            </div>
+        </div>
+
+        <div class="rf-panel" id="rf-result" style="display:none;">
+            <h3>3️⃣ 对比预览与导出</h3>
+            <div class="rf-stage-wrap">
+                <div class="rf-stage" id="rf-stage" aria-label="原图与效果对比：拖动分隔线查看">
+                    <canvas id="rf-orig-canvas"></canvas>
+                    <canvas id="rf-eff-canvas"></canvas>
+                    <span class="rf-tag rf-tag-l">效果</span>
+                    <span class="rf-tag rf-tag-r">原图</span>
+                    <div class="rf-divider" id="rf-divider"><div class="rf-handle">◀ ▶</div></div>
+                </div>
+                <div class="rf-stage-hint">👆 按住图片左右拖动分隔线，对比原图与复古效果</div>
+            </div>
+            <div class="rf-meta" id="rf-meta"></div>
+            <div class="rf-row" style="margin-top:.8rem;">
+                <label>💾 JPEG 质量：</label>
+                <span class="rf-quality" id="rf-quality">
+                    <label><input type="radio" name="rfq" value="0.8"> 0.8（小体积）</label>
+                    <label class="on"><input type="radio" name="rfq" value="0.92" checked> 0.92（推荐）</label>
+                    <label><input type="radio" name="rfq" value="1.0"> 1.0（最高）</label>
+                </span>
+            </div>
+            <div class="rf-row">
+                <button class="rf-btn" id="rf-export-png">⬇️ 导出 PNG</button>
+                <button class="rf-btn" id="rf-export-jpg">⬇️ 导出 JPEG</button>
+                <button class="rf-btn rf-btn-ghost" id="rf-reupload">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <div class="rf-combo">
+            <b>🎞️ 「图片旅程线」组合：</b>原图太大/格式不对？先用 <a href="/tools/img-compress">图片压缩</a> 或 <a href="/tools/img-convert">图片格式转换</a> 准备好 → 在本工具做旧成胶片质感导出 → 想把照片转成像素风游戏画？用 <a href="/tools/pixel-art-converter">图片转像素画</a>（GameBoy/PICO-8 调色板 + 像素量化）；要把照片变成能动手绣的图纸，用 <a href="/tools/cross-stitch-pattern">照片转十字绣图案生成器</a>；给原图局部打码时用 <a href="/tools/img-mosaic">图片打码</a> —— 风格化创作 + 图片加工，一套流程走完。
+        </div>
+
+        <div class="rf-panel">
+            <h3>使用说明</h3>
+            <div class="rf-doc">
+                <b>原理：</b>七种预设按顺序堆叠渲染 —— 5 种色调矩阵（柯达暖黄 / 富士胶片 / CCD 数码风 / 褪色老照片 / 黑白胶片）先逐像素变换，每种按强度与原像素线性混合（<code>result = lerp(原图, 变换后, 强度)</code>）；再叠加漏光（暖色径向渐变，screen 混合）、暗角（四周径向压暗）、胶片颗粒（逐块确定性伪随机噪点）。勾选多个预设即叠加生效，取消勾选或强度 0 即关闭。<br>
+                <b>胶片颗粒：</b>纯前端用整数哈希函数逐块生成噪点（<code>hash2(x,y)</code> 确定性伪随机），不依赖任何纹理图片；「粒度」控制噪点块边长（1–8px），越大颗粒越粗；导出时按输出分辨率逐像素重绘颗粒，不是简单放大预览噪点。<br>
+                <b>对比条：</b>效果图在左、原图在右，按住图片左右拖动分隔线即可滑动对比。<br>
+                <b>大图处理：</b>超过 2048px（长边）的图片会自动下采样到工作分辨率再处理；预览按 1024px 长边实时渲染、滑杆拖动用 rAF 节流，手机浏览器也不卡顿；导出时按工作分辨率全尺寸重绘，保证画质。<br>
+                <b>导出：</b>PNG 无损；JPEG 三档质量（0.8 / 0.92 / 1.0）可选；canvas 重绘导出会自然剥离原图 EXIF（拍摄时间、GPS 等隐私信息不会带入导出文件）。<br>
+                <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/img_retro_filter.js?v=1"></script>
+</body>
+</html>
+{{end}}

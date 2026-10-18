@@ -1,4 +1,50 @@
 
+> 维护人：产品经理 · 每日排期（2026-10-18 23:00 排期轮）
+
+## 今日任务（2026-10-18 23:00 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-18 排期决策轮（23:00 第二十四轮研究之后）。时区转换器已交付闭环（21:00 PM 决策轮立项→开发交付 c2e5f69 + 评审反馈修复 df583c7；`grep tools/categories.go` 确认 ID `timezone_converter`、Path `/tools/timezone-converter` 已注册，全量 **95 Path**），候选池划出。本轮立项**今日唯一任务：图片复古做旧（复古滤镜/胶片质感）**。
+
+**选定：图片复古做旧（/tools/img-retro-filter）** — 本轮唯一任务：
+- **晚间轮只排小难度（既定规则）**：JSON Schema 验证器（中难度，21:00 PM 决策已明确「晚间轮一天内高质量交付风险大，留待上午大轮次」）、屏幕录制器（中难度，研究轮明确「适合上午大轮次」）本轮均不立项，顺位递进留池（JSON Schema 仍为第一候补）。
+- **日期加减/日期差不立项**：P1（观察，计算器口径）——用户 10-18 方向修正持续有效（聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器），且其「星期/ISO 周数/与今日差值」口径与既有 timestamp（时间戳转换）有潜在感知重叠，本轮不占位。
+- **证据四重化**：365Lab 10-08 竞品 + Medium 榜单 + dev.to 形态族 + Medium Siloshan 2026-10-18（15 小时前）《7 Free Browser Tools Worth Bookmarking This October》单列 OldRoll（retro film or digicam look）。
+- **图片品类错峰位已到**：19:00 十字绣（图片品类）→21:00 时区转换器（时间/效率品类）→本轮回图片品类，感知不重复（沿用「连续图片感知重复错峰」规则）。
+- **痛点真实**：手机修图 App 要么收费解锁滤镜、要么导出加水印；「打开页面即修、本地导出不上传」无隐私顾虑，符合仓库 local-first 惯例。
+- **去重通过**：95 Path 中 `复古/retro/film/胶片/ccd/做旧/滤镜` 全量唯一字面命中为 `pixel_art_converter` 描述中的「GameBoy/PICO-8 复古调色板」——该工具是像素量化风，与本工具的胶片颗粒/漏光/褪色/暗角能力无重叠（规格中明确差异化），ID `img_retro_filter`、Path `/tools/img-retro-filter` 无重叠。
+- **纯前端小难度、一天可高质量交付**：canvas 滤镜矩阵 + 噪点/漏光叠加 → 胶片/CCD 质感 → 本地导出；零依赖、无后端、无 CDN。
+
+**规格**：
+1. 上传/拖拽图片：FileReader + canvas 全本地处理，不上传；支持多格式（JPEG/PNG/WebP）。
+2. 预设滤镜组（≥6 种）：胶片暖黄（Kodak/Fuji 风格调色矩阵）、CCD 数码风（高对比+冷色偏）、褪色老照片、黑白胶片（颗粒强化）、漏光叠加、Vignette 暗角；每种预设有强度滑杆（0–100）可调。
+3. 胶片颗粒噪点：可调粒度的随机噪点叠加（纯前端生成，不依赖图片纹理包）。
+4. 实时预览：canvas 即时渲染；原图/效果对比（滑动对比条）。
+5. 本地导出：PNG/JPEG 下载（JPEG 质量可选 0.8/0.92/1.0），导出不携带原图 EXIF 隐私（canvas 重绘即自然剥离）。
+6. 纯前端、零第三方依赖、无后端调用；响应式，桌面端优先、移动端可用。
+7. 注册：`tools/categories.go`「图片处理」品类新增 ID `img_retro_filter`、Path `/tools/img-retro-filter`（New: true），中英文描述 + SEO keywords（复古滤镜、胶片质感、CCD 风、老照片做旧、retro film filter），与 `pixel_art_converter`（图片转像素画）双向互链（图片品类互链，与 img_compress/cross_stitch_pattern 同属旅程线）。
+
+**验收标准**：
+- [ ] `/tools/img-retro-filter` 可开（200）
+- [ ] 上传照片后 ≥6 种预设滤镜实时生效，强度滑杆 0–100 可调，预览无卡顿
+- [ ] 原图/效果对比条拖动正常；胶片颗粒强度可调且可关闭
+- [ ] PNG/JPEG 本地导出成功，文件可开；JPEG 三档质量导出体积递减
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（「图片处理」品类，New: true），首页/导航/sitemap 生效；与 pixel_art_converter 双向互链
+- [ ] 移动端可操作（上传+预览+导出）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/img_retro_filter.html`（新建：上传拖拽区+预设滤镜面板+强度滑杆+对比条+导出按钮，纯前端）、`static/js/img_retro_filter.js`（新建：滤镜矩阵库、噪点/漏光/暗角叠加引擎、canvas 实时渲染，零依赖）、`tools/categories.go`（「图片处理」品类注册+与 pixel_art_converter 互链）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- JSON Schema 验证器（P1，第一候补；三重证据；中难度——ajv 本地 vendor 或自研 draft-07 核心子集 + 错误行列定位，参照「难度中留待上午大轮次」规则顺位递进留池，下轮优先）。
+- 浏览器屏幕录制器（P1；waqar112 40+ 工具集 + MediaRecorder API 纯前端路线验证；中难度，适合上午大轮次；顺位递进留池）。
+- 日期加减/日期差（P1 观察：计算器口径，用户方向下不扩展；与 timestamp 感知重叠风险；本轮不占位）。
+- 网站图标生成器（P1，顺位顺延）；SVG 转 React JSX（P1 观察，开发者 niche）；屏幕常亮工具（P1，留池）；SRT 字幕编辑器（P1，顺位顺延）；SQLite 数据库查看器（P1，难度中，留待上午大轮次）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；在线钢琴（P2 观察，娱乐应用形态）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥，known_hosts 换机修复后重拉成功）确认 origin/muse/dev-20260929 = 本地 HEAD f68ca90 一致；`git log` 确认开发交付 c2e5f69 + 评审修复 df583c7 + 研究轮 f68ca90；`grep tools/categories.go` 全量 95 Path（94+1），`timezone_converter` ID 与 `/tools/timezone-converter` Path 已注册（划入已实现），新候选 ID `img_retro_filter`、Path `/tools/img-retro-filter` 与 95 Path 无重叠（`复古/retro/film/胶片/ccd/做旧/滤镜` 全量唯一字面命中为 pixel_art_converter 描述，能力无重叠）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-18 23:00 第二十四轮研究）
 
 ## 今日任务（2026-10-18 23:00 · 产品调研员研究轮 ✅）

@@ -464,6 +464,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "img_retro_filter",
+					Name:        "图片复古做旧",
+					Description: "照片一键复古做旧：柯达/富士胶片调色、CCD 数码风、褪色老照片、黑白胶片、漏光叠加、暗角、胶片颗粒噪点可调，PNG/JPEG 本地导出，本地处理不上传 · Retro film filter",
+					Path:        "/tools/img-retro-filter",
+					Icon:        "filter_vintage",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "cross_stitch_pattern",
 					Name:        "照片转十字绣图案生成器",
 					Description: "照片转十字绣图纸：内置 DMC 绣线色卡最近邻量化，针数可调，14CT/11CT/18CT 布边长实时换算，符号网格图预览，每色针数与线量估算，PNG 导出/打印 PDF，纯浏览器本地处理 · Photo to cross stitch pattern",
