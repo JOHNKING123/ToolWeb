@@ -1002,6 +1002,23 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "audio",
+			Name:        "音频处理",
+			Description: "音频裁剪、转换与处理工具",
+			Icon:        "audiotrack",
+			Tools: []Tool{
+				{
+					ID:          "audio_trimmer",
+					Name:        "在线音频裁剪器",
+					Description: "上传/拖拽 MP3/WAV/OGG/M4A 本地解码，canvas 波形峰值渲染，拖拽起止手柄+毫秒微调选定裁剪区间，选区试听（循环可选）进度同步，WAV 手工编码/MP3(lamejs 64–320kbps)本地导出，纯前端零上传 · Audio trimmer: upload audio, select range on waveform, preview, export WAV/MP3 locally",
+					Path:        "/tools/audio-trimmer",
+					Icon:        "content_cut",
+					New:         true,
+					Category:    "音频处理",
+				},
+			},
+		},
 	}
 }
 

@@ -1,0 +1,206 @@
+{{define "audio_trimmer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线音频裁剪器 - MP3/WAV/OGG/M4A 波形剪辑免费在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线音频裁剪器：上传/拖拽 MP3、WAV、OGG、M4A 音频，浏览器本地解码不上传；canvas 波形峰值渲染，拖拽起止手柄 + 毫秒级微调选定裁剪区间，选区试听（循环可选）进度同步，WAV 手工编码 / MP3(64-320kbps) 本地导出。纯前端、零 CDN、零后端。">
+    <meta name="keywords" content="音频裁剪,音频剪辑,MP3裁剪,语音裁剪,audio trimmer,MP3剪切,在线裁剪音频,波形编辑,音频切割,WAV裁剪,OGG裁剪">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/audio-trimmer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线音频裁剪器","description":"音频本地裁剪工具：波形可视化选定区间，毫秒级微调，选区试听，WAV/MP3 本地导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/audio-trimmer","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .at-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .at-wrap .navbar .material-icons { display: none; }
+        .at-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .at-privacy .at-lock { font-size: 1.6rem; flex: none; }
+        .at-privacy b { color: #047857; }
+        .at-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .at-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .at-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .at-upload:hover, .at-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .at-upload .at-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .at-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .at-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .at-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .at-row label { font-size: .92rem; color: #374151; }
+        .at-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .at-btn:hover { filter: brightness(.93); }
+        .at-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .at-btn-ghost { background: #fff; color: var(--primary-color); }
+        .at-btn-stop { background: #ef4444; border-color: #ef4444; }
+        /* 波形舞台 */
+        .at-stage { position: relative; width: 100%; height: 220px; border: 1px solid #e5e7eb; border-radius: .6rem;
+            background: #0f172a; overflow: hidden; touch-action: none; cursor: crosshair;
+            user-select: none; -webkit-user-select: none; margin: .5rem 0; }
+        .at-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .at-handle { position: absolute; top: 0; bottom: 0; width: 30px; margin-left: -15px; cursor: ew-resize;
+            touch-action: none; z-index: 3; }
+        .at-handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px;
+            transform: translateX(-50%); background: #f59e0b; border-radius: 2px; }
+        .at-handle::after { content: "◀▶"; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+            font-size: .68rem; color: #92400e; background: #fde68a; border-radius: .35rem; padding: .1rem .3rem;
+            white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+        .at-handle.h-start::after { content: "◀ 起点"; }
+        .at-handle.h-end::after { content: "终点 ▶"; }
+        .at-stage-hint { text-align: center; font-size: .82rem; color: #9ca3af; margin-top: .4rem; }
+        /* 时间微调 */
+        .at-timegrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .8rem; margin: .6rem 0; }
+        .at-tcard { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .9rem; background: #f9fafb; }
+        .at-tcard .at-tt { font-weight: 600; font-size: .9rem; color: #111827; margin-bottom: .4rem; }
+        .at-tcard .at-tv { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.05rem;
+            color: var(--primary-color); font-weight: 700; }
+        .at-tcard input[type=number] { width: 9.5em; padding: .35rem .5rem; border: 1px solid #d1d5db;
+            border-radius: .4rem; font-size: .9rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .at-nudge { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .45rem; }
+        .at-nudge button { padding: .3rem .55rem; border-radius: .4rem; border: 1px solid #d1d5db; background: #fff;
+            font-size: .78rem; cursor: pointer; color: #374151; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .at-nudge button:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .at-len { font-size: .9rem; color: #374151; }
+        .at-len b { color: #b45309; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        /* 导出 */
+        .at-export-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+        .at-export-row select { padding: .5rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .9rem; }
+        .at-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .at-doc b { color: #111827; }
+        .at-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .at-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .at-combo b { color: #111827; }
+        .at-combo a { color: var(--primary-color); }
+        @media (max-width: 640px) {
+            .at-wrap .container { padding: 1rem .7rem; }
+            .at-stage { height: 170px; }
+            .at-handle { width: 40px; margin-left: -20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="at-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎧 在线音频裁剪器</h1>
+            <p>波形可视化选区裁剪：上传 MP3 / WAV / OGG / M4A，拖出手柄 + 毫秒微调，试听后一键导出</p>
+        </div>
+
+        <div class="at-privacy">
+            <span class="at-lock">🔒</span>
+            <div><b>隐私承诺：音频只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、<code>decodeAudioData</code> 本地解码、波形渲染、裁剪、WAV/MP3 编码导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 MP3 编码器 lamejs 也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 上传的音频不会产生一次网络请求。断网也能用（MP3 导出同样离线可用）。</div>
+        </div>
+
+        <div class="at-panel">
+            <h3>1️⃣ 上传音频</h3>
+            <div class="at-upload" id="at-upload" role="button" tabindex="0" aria-label="点击选择或拖拽音频文件到此处上传">
+                <span class="at-big">🎵</span>
+                <div>点击选择音频，或把音频文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 MP3 / WAV / OGG / M4A（实际以浏览器解码能力为准）；超长音频波形按峰值抽取渲染，页面不卡顿</div>
+            </div>
+            <input type="file" id="at-file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,.mp3,.wav,.ogg,.oga,.m4a" style="display:none;">
+            <div class="at-info" id="at-srcinfo" style="display:none;"></div>
+            <div class="at-status" id="at-status"></div>
+        </div>
+
+        <div class="at-panel" id="at-editor" style="display:none;">
+            <h3>2️⃣ 框选裁剪区间（波形）</h3>
+            <div class="at-stage" id="at-stage" aria-label="音频波形，拖拽框选裁剪区间">
+                <canvas id="at-canvas"></canvas>
+                <div class="at-handle h-start" id="at-hstart" title="拖动调整起点"></div>
+                <div class="at-handle h-end" id="at-hend" title="拖动调整终点"></div>
+            </div>
+            <div class="at-stage-hint">👆 在波形上按住拖动可直接框选区间；拖动黄色手柄微调起止点；双击恢复全选</div>
+
+            <div class="at-timegrid">
+                <div class="at-tcard">
+                    <div class="at-tt">⏱️ 起点 <span class="at-tv" id="at-start-label">0:00.000</span></div>
+                    <div><input type="number" id="at-start-ms" min="0" step="1" value="0" aria-label="起点毫秒"> ms</div>
+                    <div class="at-nudge" data-side="start">
+                        <button data-d="-1000">−1s</button><button data-d="-100">−100ms</button>
+                        <button data-d="-10">−10ms</button><button data-d="-1">−1ms</button>
+                        <button data-d="1">+1ms</button><button data-d="10">+10ms</button>
+                        <button data-d="100">+100ms</button><button data-d="1000">+1s</button>
+                    </div>
+                </div>
+                <div class="at-tcard">
+                    <div class="at-tt">⏱️ 终点 <span class="at-tv" id="at-end-label">0:00.000</span></div>
+                    <div><input type="number" id="at-end-ms" min="0" step="1" value="0" aria-label="终点毫秒"> ms</div>
+                    <div class="at-nudge" data-side="end">
+                        <button data-d="-1000">−1s</button><button data-d="-100">−100ms</button>
+                        <button data-d="-10">−10ms</button><button data-d="-1">−1ms</button>
+                        <button data-d="1">+1ms</button><button data-d="10">+10ms</button>
+                        <button data-d="100">+100ms</button><button data-d="1000">+1s</button>
+                    </div>
+                </div>
+            </div>
+            <div class="at-row">
+                <span class="at-len">选中时长：<b id="at-len-label">0:00.000</b></span>
+                <button class="at-btn at-btn-ghost" id="at-select-all">全选</button>
+            </div>
+        </div>
+
+        <div class="at-panel" id="at-preview-panel" style="display:none;">
+            <h3>3️⃣ 试听选区</h3>
+            <div class="at-row">
+                <button class="at-btn" id="at-play">▶ 试听选区</button>
+                <button class="at-btn at-btn-stop" id="at-stop" disabled>⏹ 停止</button>
+                <label style="font-size:.9rem;"><input type="checkbox" id="at-loop"> 🔁 循环播放</label>
+                <span class="at-len">播放进度：<b id="at-play-pos">0:00.000</b></span>
+            </div>
+        </div>
+
+        <div class="at-panel" id="at-export-panel" style="display:none;">
+            <h3>4️⃣ 导出裁剪结果</h3>
+            <div class="at-export-row">
+                <button class="at-btn" id="at-export-wav">⬇️ 导出 WAV</button>
+                <button class="at-btn" id="at-export-mp3">⬇️ 导出 MP3</button>
+                <label>MP3 比特率：
+                    <select id="at-bitrate">
+                        <option value="64">64 kbps（小体积）</option>
+                        <option value="128" selected>128 kbps（推荐）</option>
+                        <option value="192">192 kbps（高音质）</option>
+                        <option value="320">320 kbps（最高）</option>
+                    </select>
+                </label>
+            </div>
+            <div class="at-info">文件名自动为「原文件名_trimmed.扩展名」。WAV 为手工编码的 16-bit PCM 无损导出；MP3 由本地 vendor 的 lamejs 编码（离线可用）。</div>
+            <div class="at-status" id="at-export-status"></div>
+            <div class="at-row" style="margin-top:1rem;">
+                <button class="at-btn at-btn-ghost" id="at-reupload">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <div class="at-combo">
+            <b>🎧 「音频旅程线」组合：</b>裁剪前想先知道音频里说了什么？本工具纯本地处理不上传。裁剪后的片段需要转文字时，可配合站内其他工具处理；导出为 MP3/WAV 后直接可用作铃声、语音素材或播客片段 —— 上传 → 框选 → 试听 → 导出，一套流程走完。
+        </div>
+
+        <div class="at-panel">
+            <h3>使用说明</h3>
+            <div class="at-doc">
+                <b>解码：</b>文件经 <code>FileReader</code> 读入 ArrayBuffer 后，用 Web Audio API 的 <code>decodeAudioData</code> 在浏览器本地解码为 AudioBuffer（MP3/WAV/OGG/M4A 是否支持取决于浏览器解码器；Safari 对 OGG 支持有限）。<br>
+                <b>波形：</b>对声道混合后的采样做峰值抽取（默认 2048 个柱体，取每区间最大/最小值），长音频也不会卡顿；选区外区域灰化，黄色区域为裁剪区间，黄色手柄可拖动。<br>
+                <b>选区：</b>在波形上按住拖动直接框选；拖动黄色起止手柄；毫秒输入框直接输入精确毫秒数；±1ms ~ ±1s 八个微调按钮逐级逼近。双击波形恢复全选。<br>
+                <b>试听：</b>只播放选中区间，播放进度与波形上的黄色播放线实时同步；勾选「循环播放」可反复试听衔接处。<br>
+                <b>裁剪：</b>按选区起止毫秒对 AudioBuffer 做通道切片（保留原采样率与声道数），再手工编码为 16-bit PCM WAV，或经本地 lamejs 编码为 MP3（重采样到 44100Hz，声道数取原音频的 1/2 声道）。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、渲染、试听、编码、下载都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/lamejs.min.js?v=1"></script>
+    <script src="/tools/static/js/audio_trimmer.js?v=1"></script>
+</body>
+</html>
+{{end}}
