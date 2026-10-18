@@ -233,7 +233,7 @@ function savePet() {
     var targetRaw = $('pwt-target').value.trim(), targetKg = null;
     if (targetRaw !== '') {
         targetKg = parseFloat(targetRaw);
-        if (!(targetKg > 0) || targetKg > 500) { setStatus($('pwt-entry-status'), '', false); alert('目标体重请输入 0~500 之间的数字（kg）'); return; }
+        if (!(targetKg > 0) || targetKg > 500) { setStatus($('pwt-entry-status'), '目标体重请输入 0~500 之间的数字（kg）', true); return; }
         targetKg = Math.round(targetKg * 1000) / 1000;
     }
     var birth = $('pwt-birth').value || '';
@@ -514,7 +514,7 @@ function init() {
         l.addEventListener('click', function () {
             Array.prototype.forEach.call($('pwt-kind').querySelectorAll('label'), function (x) { x.classList.remove('on'); });
             l.classList.add('on');
-            if (!$('pwt-avatar').value.trim()) $('pwt-avatar').value = l.textContent.trim().charAt(0);
+            if (!$('pwt-avatar').value.trim()) $('pwt-avatar').value = Array.from(l.textContent.trim())[0];
         });
     });
     Array.prototype.forEach.call($('pwt-emoji-pick').querySelectorAll('button'), function (b) {
