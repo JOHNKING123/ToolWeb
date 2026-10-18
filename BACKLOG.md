@@ -1,4 +1,37 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-18 19:00 第二十二轮研究）
+
+## 今日任务（2026-10-18 19:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第二十二轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。CSS 渐变生成器已交付闭环（17:40 PM 决策轮立项→开发交付 06bb838 + 评审反馈修复 dabf470；`grep tools/categories.go` 确认 ID `css_gradient_generator`、Path `/tools/css-gradient-generator` 已注册，全量 **93 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（19:00 全网调研，通用方向）：
+1. CSS 渐变生成器交付确认：`git log` 确认开发交付 06bb838（可视化色标编辑、linear/radial/conic 三类型、随机配色+10 款预设、一键复制 CSS）+ 评审反馈修复 dabf470（棋盘格底纹被覆盖、拖拽卡死、样例按钮无响应、双击重复加色标）；`git fetch`（先 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复 VM 换机清空 known_hosts，TOOLS.md 既有记载；GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD dabf470 一致；`grep tools/categories.go` 全量 93 Path（92+1），`css_gradient_generator` ID 与 `/tools/css-gradient-generator` Path 已注册；候选池划出，已实现清单追加（delta：+ CSS 渐变生成器；历史全量见下方各轮小节）。
+2. 新晋候选：**时区转换器（Time Zone Converter）**。需求证据：dev.to 2026-10-13（5 天前）《I Replaced My Productivity Apps with 10 Free Browser Tools (No Sign-Up, No Backend)》单列 Time Zone Converter（40 IANA 时区并排对比，DST 自动处理）——新鲜形态验证；跨境协作/远程会议为持续刚需，中文单页多为水印广告站。差异化：仓库 `timestamp` 工具仅支持本地时区/UTC 二选一，无多城市并排对比、无会议时间对齐视图。可行性：纯前端小难度——城市多选（IANA 时区搜索+收藏）→并排时间条/网格→`Intl.DateTimeFormat` 原生 DST 处理→北京时间/UTC 换算→分享链接（时区参数编码）；与 timestamp 等时间/开发者工具互链。去重：93 Path 无 timezone/时区转换命中（timestamp 仅为时间戳互转，品类不同）。难度小。SEO：时区转换、世界时钟、北京时间换算。建议 ID `timezone_converter`、Path `/tools/timezone-converter`。
+3. 新晋候选：**图片尺寸调整器（Image Resizer）**。需求证据三重：① dev.to blanzatools 2026-10-11（7 天前）《14 Free Browser Tools I Built with Vanilla JS》单列 Image Resizer（exact pixel dimensions for social media and web）——榜单形态验证；② dev.to velnoxlabstools 2026-09-27（3 周前）51 工具集同单列——英文形态族；③ Medium toptoolai 2026-09-19 15 工具集单列 Image Resizer——榜单形态再证。痛点真实：社媒/证件照改尺寸刚需，手机修图 App 收费或加水印；img-compress 只有压缩无尺寸调整。可行性：纯前端小难度——上传图片→宽高输入（锁定比例开关）→社交/证件预设尺寸（微信头像/公众号封面/身份证/护照/小红书）→canvas 高质量缩放→导出 PNG/JPG/WebP；与 img-compress/image-steganography 等图片品类互链。去重：93 Path 无 resizer/尺寸调整命中。难度小。SEO：图片改尺寸、图片缩放、证件照尺寸。建议 ID `image_resizer`、Path `/tools/image-resizer`。
+4. 无新单页信号侧：① TTS 文本转语音朗读器（dev.to md_shohan 同文 Speech to Text / Text to Speech + toolio/sozai/vocalize4u 形态族）——品类已高度成熟（中英文单页众多），差异化弱，列 P2 观察不单立；② DevTrove（dev.to kkp 10-13）22 开发者工具——仓库已有 `jwt`/`cron`，语义 diff 与 text_diff 重叠，其余 niche，不单立；③ V2EX 10-18：vaneform 流量榜单（需数据后端）、v2explore（浏览器插件形态）、NASDrop（群晖套件+桌面形态）——均非单页纯前端口径；④ HN 本轮：WallHop（付费墙绕过，灰色地带不做）、OpenClaw HN CLI（agent 方案）、Chrome 多标签复制（浏览器功能非单页形态）——无可落地新信号；⑤ Medium malikanwaar 10-16 10 工具 / toptoolai 09-19 15 工具：年龄/密码/单位换算/单词计数/二维码——仓库已全覆盖；其 PDF Merger / PDF to Word——仓库 `pdf_merge_split` / `pdf_to_word` 已覆盖；Resume Builder——与 `resume_checker` 同族（简历方向仓库已有，生成器差异化弱，不单立）；Background Remover——需 AI/后端，纯前端不成立；⑥ 知乎直答（AI 问答产品）、36kr 10 工具（Cleanup.pictures 需 AI、PDF24 为成熟品类、Rome2rio 需路由数据）——无单页可落地新信号；⑦ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **照片转十字绣图案生成器** — P1（PM 17:40 明确「顺位递进留池，下轮优先」；Medium 10-18 今日榜单 + dev.to 09-06 英文形态双重验证；DMC 配色+PDF 导出免费无上限差异化；纯前端小难度；图片品类互链；93 Path 无重叠）。SEO：十字绣图案、照片转十字绣。
+2. **时区转换器（Time Zone Converter）** — P1（本轮新晋：dev.to 10-13（5 天前）新鲜形态验证；timestamp 仅本地/UTC 二选一，多城市并排对比无重叠；纯前端小难度：Intl API 自动 DST；开发者/跨境办公双人群；时间与开发者工具互链；93 Path 无重叠）。SEO：时区转换、世界时钟。
+3. **图片尺寸调整器（Image Resizer）** — P1（本轮新晋：blanzatools 10-11 + velnoxlabstools 09-27 + toptoolai 09-19 三重榜单验证；img-compress 无尺寸调整功能；纯前端小难度：canvas 缩放→社媒/证件预设→导出；图片品类互链；93 Path 无重叠）。SEO：图片改尺寸、证件照尺寸。
+
+图片复古做旧列顺位第四（P1，顺位顺延；节奏考量：十字绣若立项将是连续第三轮图片品类，PM 17:40 已提示感知重复风险）；SQLite 数据库查看器（P1，难度中，留待上午大轮次）；SVG 转 React JSX（P1 观察，开发者 niche）；网站图标生成器（P1，顺位顺延）；SRT 字幕编辑器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；TTS 文本转语音朗读器（P2 观察，本轮新评估：品类成熟差异化弱）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**通用候选表增量**（第二十二轮：CSS 渐变生成器已实现划出；新晋时区转换器 P1、图片尺寸调整器 P1；全量 93 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 时区转换器（Time Zone Converter） | 本轮新晋（dev.to 2026-10-13（5 天前）《I Replaced My Productivity Apps with 10 Free Browser Tools (No Sign-Up, No Backend)》单列 Time Zone Converter（40 IANA 时区并排对比，DST 自动处理）——新鲜形态验证；跨境协作/远程会议持续刚需；仓库 timestamp 仅支持本地时区/UTC 二选一，多城市并排对比+会议时间对齐视图无重叠）；纯前端小难度：城市多选（IANA 时区搜索+收藏）→并排时间条/网格→Intl.DateTimeFormat 原生 DST→北京时间/UTC 换算→分享链接；93 Path 无 timezone 命中 | 小 | P1（本轮新晋） |
+| 图片尺寸调整器（Image Resizer） | 本轮新晋（dev.to blanzatools 2026-10-11（7 天前）14 工具集单列 Image Resizer（exact pixel dimensions for social media and web）——榜单形态验证；dev.to velnoxlabstools 2026-09-27 51 工具集同单列——英文形态族；Medium toptoolai 2026-09-19 15 工具集单列——榜单形态再证；痛点：社媒/证件照改尺寸刚需，手机修图 App 收费或加水印；img-compress 只有压缩无尺寸调整）；纯前端小难度：上传→宽高输入（锁比例）→社交/证件预设尺寸→canvas 高质量缩放→导出 PNG/JPG/WebP；图片品类互链；93 Path 无 resizer 命中 | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第二十二轮——CSS 渐变生成器交付闭环（06bb838 + 评审修复 dabf470，`/tools/css-gradient-generator` 已注册，全量 93 Path），候选池划出，已实现清单 delta 追加；新晋「时区转换器」P1（dev.to 10-13 五天前新鲜形态验证：40 IANA 时区并排对比 + DST 自动处理；timestamp 仅本地/UTC 二选一，多城市并排对比无重叠；纯前端小难度 Intl 原生 DST；93 Path 无重叠）、「图片尺寸调整器」P1（blanzatools 10-11 + velnoxlabstools 09-27 + toptoolai 09-19 三重榜单验证；img-compress 无尺寸调整功能；纯前端小难度；93 Path 无重叠）；TTS 朗读器（P2 观察，品类成熟差异化弱）、DevTrove 22 开发者工具（jwt/cron 已有、语义 diff 与 text_diff 重叠）不单立；V2EX 10-18（vaneform 需数据后端、v2explore 插件形态、NASDrop 桌面套件形态）、HN 本轮（WallHop 灰色地带、OpenClaw agent 方案、Chrome 多标签复制为浏览器功能）无可落地新信号；malikanwaar/toptoolai 榜单其余项仓库已覆盖（PDF Merger/PDF to Word 仓库已有；简历生成与 resume_checker 同族不单立；Background Remover 需 AI/后端不成立）；知乎直答/36kr（Cleanup.pictures 需 AI、Rome2rio 需路由数据）无单页新信号；WPS 候选表保持冻结归档；仓库 93 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环；本轮复用 VM 换机 known_hosts 修复（TOOLS.md 既有记载）。
+
+**交付核对**：`git fetch`（ssh-keyscan 修复 known_hosts 后，GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD dabf470 一致；`git log` 确认开发交付 06bb838 + 评审修复 dabf470；`grep tools/categories.go` 全量 93 Path（92+1），`css_gradient_generator` ID 与 `/tools/css-gradient-generator` Path 已注册（划入已实现），新候选建议 ID（timezone_converter / image_resizer）与 93 Path 无重叠；timezone/time-zone/resizer 关键词在 categories.go 全量零命中（timestamp 仅本地/UTC 二选一，img-compress 无尺寸调整功能）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 17:40 排期轮）
 
 ## 今日任务（2026-10-18 17:40 · 产品经理排期决策 ✅）
