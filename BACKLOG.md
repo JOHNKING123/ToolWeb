@@ -1,4 +1,46 @@
 
+> 维护人：产品经理 · 每日排期（2026-10-18 19:00 排期轮）
+
+## 今日任务（2026-10-18 19:00 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-18 排期决策轮（19:00 第二十二轮研究之后）。CSS 渐变生成器已交付闭环（17:40 PM 决策轮立项→开发交付 06bb838 + 评审反馈修复 dabf470；`grep tools/categories.go` 确认 ID `css_gradient_generator`、Path `/tools/css-gradient-generator` 已注册，全量 **93 Path**），候选池划出。本轮立项**今日唯一任务：照片转十字绣图案生成器（Photo → Cross Stitch Pattern）**。
+
+**选定：照片转十字绣图案生成器（/tools/cross-stitch-pattern）** — 本轮唯一任务：
+- **顺位递进兑现**：第二十轮新晋顺位第三→第二十一轮顺位第二→第二十二轮顺位第一，且 PM 17:40 明确「顺位递进留池，下轮优先」，本轮兑现。
+- **感知重复风险已解除**：13:30 隐写、15:38 像素画连续两轮图片品类→17:40 渐变已换开发者/设计品类，本轮回图片品类并非连续三轮（17:40 决策轮的担忧已消解）。
+- **形态证据最硬**：Medium 10-18 今日榜单单列 StitchCraft（照片转十字绣，全浏览器运行、无需注册）+ dev.to 09-06 《How to Turn Any Photo Into a Cross Stitch Pattern》英文形态验证（DMC 配色+PDF 导出免费无上限）——双重验证；中文在线单页形态稀缺。
+- **纯前端小难度、一天可高质量交付**：上传照片→网格缩小（针数/布数可调）→DMC 线色量化（内置约 450 色色卡表）→符号网格渲染（标 DMC 色号+线量估算）→导出 PNG/打印 PDF，零依赖、无后端、无 CDN 风险。
+- **旅程线闭环**：与 img-compress/img-convert/img-mosaic/pixel-art-converter 等图片处理品类双向互链。
+
+**规格**：
+1. 输入：上传照片（PNG/JPG/WebP，拖拽+点击双通道）；工具页显著位置隐私声明：「图片只在你的浏览器里处理，不上传服务器」。
+2. 网格参数：宽×高针数可调（滑块/数字输入），实时显示成品绣布边长换算（14CT/11CT/18CT 等常用布数）。
+3. DMC 量化：内置 DMC 色卡表（约 450 色）最近邻颜色匹配；色数限制可选；每色分配符号标记（黑白打印可区分）。
+4. 图案渲染：符号/色块网格图预览（symbol chart），标注 DMC 色号、每色针数、预估线量（股数×绣线长度估算）；色数过多时提示合并建议。
+5. 导出：导出 PNG（符号图高清）；浏览器打印 PDF（沿仓库浏览器打印惯例）。
+6. 纯前端、零第三方依赖、无后端调用；响应式，桌面端优先、移动端可用。
+7. 注册：`tools/categories.go`「图片处理」品类新增 ID `cross_stitch_pattern`、Path `/tools/cross-stitch-pattern`（New: true），中英文描述 + SEO keywords（十字绣图案、照片转十字绣、十字绣图纸生成、cross stitch pattern），与 img-compress/img-convert/img-mosaic/pixel-art-converter 双向互链。
+
+**验收标准**：
+- [ ] `/tools/cross-stitch-pattern` 可开（200）
+- [ ] 上传照片→调节针数→DMC 量化→符号网格渲染正确，色号标注准确；不同针数下换算边长正确
+- [ ] 线量估算合理；导出 PNG 与预览一致；打印 PDF 可用
+- [ ] 隐私声明显著；DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（「图片处理」品类），首页/导航/sitemap 生效；与图片品类互链
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/cross_stitch_pattern.html`（新建：上传+参数面板+符号图预览+导出，纯前端）、`static/js/cross_stitch_pattern.js`（新建：网格缩小/DMC 量化/符号渲染引擎，零依赖）、`tools/categories.go`（「图片处理」品类注册+图片品类互链）、`BACKLOG.md`（本小节）。
+
+**未选（并纠正一项去重误判）**：
+- 时区转换器（P1，本轮新晋：dev.to 10-13（5 天前）《I Replaced My Productivity Apps with 10 Free Browser Tools》单列 Time Zone Converter（40 IANA 时区并排对比、DST 自动处理）新鲜验证；timestamp 仅本地时区/UTC 二选一，93 Path 无 timezone/时区转换/世界时钟重叠；纯前端小难度 Intl 原生 DST；顺位递进留池，下轮优先）。
+- **图片尺寸调整器（纠正：不单立）**——研究轮去重核查误判：`grep -iE 'timezone|时区转换|resizer'` 实际命中 Name「图片尺寸调整」，仓库已有 `img-resize`（ID `img-resize`、Path `/tools/img-resize`、「自定义缩放、裁剪图片，支持指定宽高」，「图片处理」品类）。研究轮 grep 关键词 "resizer" 漏掉了 "img-resize"，错误写成「93 Path 无 resizer/尺寸调整命中」。纠正后：候选与现有工具功能重叠（缩放/指定宽高/裁剪已全覆盖），不单立，留池移除。教训沉淀：立候选前 grep 关键词须含中文名变体与 ID 片段双核（"resizer" 需兼查 "resize"/"尺寸调整"）。
+- SQLite 数据库查看器（P1，难度中：sql.js WASM 本地 vendor + 查询编辑器 + 大文件分页；留待上午大轮次单独占一轮高质量交付）。
+- 图片复古做旧（P1，顺位顺延）；网站图标生成器（P1，顺位顺延）；SVG 转 React JSX（P1 观察，开发者 niche）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD bd96bc1 一致；`grep tools/categories.go` 全量 93 Path，`cross-stitch`/`十字绣`（除既有 img_stitch 图片拼接外）零命中（品类不同，去重通过），`timezone`/`时区转换`/`世界时钟` 零命中，ID `cross_stitch_pattern`、Path `/tools/cross-stitch-pattern` 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-18 19:00 第二十二轮研究）
 
 ## 今日任务（2026-10-18 19:00 · 产品调研员研究轮 ✅）
