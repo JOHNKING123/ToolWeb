@@ -1,0 +1,213 @@
+{{define "cross_stitch_pattern"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片转十字绣图案生成器 - 在线生成十字绣图纸/DMC色卡符号图 | 程序员工具箱</title>
+    <meta name="description" content="免费在线照片转十字绣图案工具：上传照片一键生成十字绣图纸，内置约400色 DMC 绣线色卡最近邻量化，针数可调，14CT/11CT/18CT 布边长实时换算，符号网格图预览，每色针数与线量估算，PNG 高清符号图导出、浏览器打印 PDF。纯浏览器本地处理，图片不上传服务器。">
+    <meta name="keywords" content="十字绣图案,照片转十字绣,十字绣图纸生成,cross stitch pattern,十字绣生成器,DMC色卡,十字绣符号图,绣线用量估算,14CT换算">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/cross-stitch-pattern">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"照片转十字绣图案生成器","description":"照片一键转十字绣图纸：内置 DMC 绣线色卡最近邻量化，针数可调，14CT/11CT/18CT 布边长换算，符号网格图预览，每色针数与线量估算，PNG 导出/打印 PDF；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/cross-stitch-pattern","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cs-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .cs-wrap .navbar .material-icons { display: none; }
+        .cs-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .cs-privacy .cs-lock { font-size: 1.6rem; flex: none; }
+        .cs-privacy b { color: #047857; }
+        .cs-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .cs-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .cs-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .cs-upload:hover, .cs-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .cs-upload .cs-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .cs-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .cs-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; }
+        .cs-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .cs-row label { font-size: .92rem; color: #374151; }
+        .cs-row input[type=range] { flex: 1; min-width: 160px; max-width: 360px; }
+        .cs-row input[type=number] { width: 5em; padding: .3rem .5rem; border: 1px solid #d1d5db; border-radius: .4rem; }
+        .cs-row input[type=number]:disabled { background: #f3f4f6; color: #9ca3af; }
+        .cs-val { display: inline-block; min-width: 4.5em; font-weight: 600; color: var(--primary-color); font-size: .92rem; }
+        .cs-size { font-size: .9rem; color: #374151; line-height: 2; background: #f9fafb; border: 1px solid #e5e7eb;
+            border-radius: .6rem; padding: .7rem 1rem; margin-top: .5rem; }
+        .cs-check { display: inline-flex; align-items: center; gap: .4rem; font-size: .92rem; color: #374151; cursor: pointer; }
+        .cs-view canvas { display: block; max-width: 100%; height: auto; margin: 0 auto;
+            border: 1px solid #e5e7eb; border-radius: .5rem; background: #f3f4f6; }
+        .cs-view figcaption { font-size: .85rem; color: #6b7280; margin-bottom: .4rem; text-align: center; }
+        .cs-legend { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: .5rem; }
+        .cs-legend th, .cs-legend td { border: 1px solid #e5e7eb; padding: .35rem .6rem; text-align: left; }
+        .cs-legend th { background: #f9fafb; color: #374151; }
+        .cs-legend tr.cs-total td { font-weight: 700; background: #eff6ff; }
+        .cs-sw { display: inline-block; min-width: 2.2em; height: 1.6em; line-height: 1.6em; text-align: center;
+            border-radius: .3rem; font-size: .9rem; padding: 0 .3em; }
+        .cs-meta { font-size: .88rem; color: #6b7280; line-height: 1.8; }
+        .cs-meta b { color: #374151; }
+        .cs-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.3rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .92rem; }
+        .cs-btn:hover { background: var(--primary-color-dark); }
+        .cs-btn-ghost { background: #f3f4f6; color: #374151; }
+        .cs-btn-ghost:hover { background: #e5e7eb; }
+        .cs-scale { display: inline-flex; gap: .5rem; }
+        .cs-scale label { display: inline-flex; align-items: center; gap: .3rem; font-size: .92rem; color: #374151;
+            border: 1px solid #e5e7eb; border-radius: .5rem; padding: .4rem .8rem; cursor: pointer; background: #fff; }
+        .cs-scale label.on { border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; background: #eff6ff; }
+        .cs-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin: .7rem 0;
+            background: #f0f9ff; border: 1px solid #bae6fd; color: #0c4a6e; }
+        .cs-tip-err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .cs-combo { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: .8rem; padding: .9rem 1.1rem;
+            font-size: .92rem; line-height: 1.9; color: #0c4a6e; margin-bottom: 1rem; }
+        .cs-combo a { color: #1d4ed8; font-weight: 600; }
+        .cs-doc { color: #374151; line-height: 1.9; font-size: .93rem; }
+        .cs-doc b { color: #111827; }
+        .cs-doc code { background: #f3f4f6; padding: .1rem .4rem; border-radius: .3rem; font-size: .85em; }
+        #cs-print-area { display: none; }
+        @media print {
+            .cs-wrap .navbar, .cs-wrap .tool-header, .cs-privacy, .cs-panel, .cs-combo, .cs-no-print { display: none !important; }
+            .cs-wrap .container { max-width: none; padding: 0; }
+            #cs-print-area { display: block !important; }
+            #cs-print-area h2 { font-size: 18pt; margin: 0 0 4pt; color: #000; }
+            #cs-print-area p { font-size: 10pt; color: #333; margin: 0 0 8pt; }
+            #cs-print-canvas { max-width: 100%; height: auto; border: 1px solid #999; }
+            #cs-print-area table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 10pt; }
+            #cs-print-area th, #cs-print-area td { border: 1px solid #999; padding: 3pt 6pt; text-align: left; }
+        }
+        @media (max-width:640px){ .cs-wrap .container{padding:1rem;} }
+    </style>
+</head>
+<body>
+    <div class="cs-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧵 照片转十字绣图案生成器</h1>
+            <p>照片一键转十字绣图纸：内置 DMC 绣线色卡最近邻量化，针数可调，14CT/11CT/18CT 布边长实时换算，符号网格图预览，每色针数与线量估算</p>
+        </div>
+
+        <div class="cs-privacy">
+            <span class="cs-lock">🔒</span>
+            <div><b>隐私承诺：图片只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：下采样、DMC 颜色量化、符号图渲染、线量估算、PNG 导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 上传的图片不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="cs-panel cs-no-print">
+            <h3>1️⃣ 上传照片</h3>
+            <div class="cs-upload" id="cs-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                <span class="cs-big">🖼️</span>
+                <div>点击选择照片，或把照片拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / JPEG / WebP；人物/宠物/风景照转十字绣效果最佳</div>
+            </div>
+            <input type="file" id="cs-file" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <div class="cs-info" id="cs-srcinfo" style="display:none;"></div>
+            <div class="cs-status" id="cs-status"></div>
+            <div class="cs-tip" id="cs-tip"></div>
+        </div>
+
+        <div class="cs-panel cs-no-print" id="cs-controls" style="display:none;">
+            <h3>2️⃣ 图案参数（调整后点「重新生成」）</h3>
+            <div class="cs-row">
+                <label>📐 宽度针数：</label>
+                <input type="range" id="cs-w" min="40" max="300" step="1" value="120">
+                <input type="number" id="cs-w-num" min="40" max="300" value="120" aria-label="宽度针数">
+                <span class="cs-val" id="cs-w-val">120 针</span>
+            </div>
+            <div class="cs-row">
+                <label>📏 高度针数：</label>
+                <input type="range" id="cs-h" min="20" max="400" step="1" value="90">
+                <input type="number" id="cs-h-num" min="20" max="400" value="90" aria-label="高度针数">
+                <span class="cs-val" id="cs-h-val">90 针</span>
+                <label class="cs-check"><input type="checkbox" id="cs-lock" checked> 🔒 锁定纵横比（按原图比例）</label>
+            </div>
+            <div class="cs-row">
+                <label>🎨 最多色数：</label>
+                <input type="range" id="cs-colors" min="4" max="60" step="1" value="24">
+                <input type="number" id="cs-colors-num" min="4" max="60" value="24" aria-label="最多色数">
+                <span class="cs-val" id="cs-colors-val">24 色</span>
+            </div>
+            <div class="cs-size" id="cs-size"></div>
+            <div class="cs-row" style="margin-top:.8rem;">
+                <button class="cs-btn" id="cs-regen">🔄 重新生成图纸</button>
+                <button class="cs-btn cs-btn-ghost" id="cs-reupload">📷 换一张照片</button>
+            </div>
+            <div class="cs-info">针数越大细节越丰富，但绣制工作量也越大；新手建议宽 80–150 针、色数 20–30 色起步。</div>
+        </div>
+
+        <div class="cs-panel" id="cs-result" style="display:none;">
+            <h3 class="cs-no-print">3️⃣ 图案预览</h3>
+            <div class="cs-row cs-no-print">
+                <label>👁️ 预览模式：</label>
+                <span class="cs-scale" id="cs-viewmode">
+                    <label class="on"><input type="radio" name="csview" value="symbol" checked> 符号图</label>
+                    <label><input type="radio" name="csview" value="color"> 纯色块</label>
+                </span>
+            </div>
+            <figure class="cs-view">
+                <figcaption class="cs-no-print">符号图纸预览（每 10 格加粗线，方便数格；符号与导出 PNG 一致）</figcaption>
+                <canvas id="cs-canvas"></canvas>
+            </figure>
+        </div>
+
+        <div class="cs-panel" id="cs-legend-panel" style="display:none;">
+            <h3 class="cs-no-print">4️⃣ 线材清单（DMC 色号）</h3>
+            <div class="cs-meta cs-no-print" id="cs-count-note" style="margin-bottom:.5rem;"></div>
+            <div style="overflow-x:auto;">
+            <table class="cs-legend">
+                <thead><tr><th>#</th><th>符号</th><th>DMC 色号</th><th>色名</th><th>针数</th><th>预估线长(米)</th><th>需购绞数</th></tr></thead>
+                <tbody id="cs-legend-body"></tbody>
+            </table>
+            </div>
+            <div class="cs-info cs-no-print">线量按「2 股全针、每针约耗 2.5cm 线、每绞 8 米」估算（向上取整），实际用量因个人针法松紧略有出入，建议每色多备半绞。购线时以 DMC 色号为准，屏幕色仅供参考。</div>
+        </div>
+
+        <div class="cs-panel cs-no-print" id="cs-export-panel" style="display:none;">
+            <h3>5️⃣ 导出 / 打印</h3>
+            <div class="cs-meta" id="cs-export-info" style="margin-bottom:.8rem;"></div>
+            <div class="cs-row">
+                <button class="cs-btn" id="cs-export">⬇️ 导出 PNG 高清符号图</button>
+                <button class="cs-btn cs-btn-ghost" id="cs-print">🖨️ 打印图纸 / 存为 PDF</button>
+            </div>
+            <div class="cs-info">PNG 为高清符号图（含标题、图纸、线材清单），可直接发去打印店；「打印」会打开浏览器打印对话框，选「另存为 PDF」即得图纸 PDF。</div>
+        </div>
+
+        <div id="cs-print-area">
+            <h2 id="cs-print-title"></h2>
+            <p id="cs-print-sub"></p>
+            <canvas id="cs-print-canvas"></canvas>
+            <table>
+                <thead><tr><th>#</th><th>符号</th><th>DMC 色号</th><th>色名</th><th>针数</th><th>预估线长(米)</th><th>需购绞数</th></tr></thead>
+                <tbody id="cs-print-legend-body"></tbody>
+            </table>
+        </div>
+
+        <div class="cs-combo cs-no-print">
+            <b>「图片加工线」组合：</b>照片太大/格式不对？先用 <a href="/tools/img-compress">图片压缩</a> 或 <a href="/tools/img-convert">图片格式转换</a> 处理 → 在本工具生成十字绣图纸 → 想先把照片转成像素风看看色块分布？试试 <a href="/tools/pixel-art-converter">图片转像素画</a>；需要遮挡隐私部位再转图纸，用 <a href="/tools/img-mosaic">图片打码</a> —— 图片加工 + 十字绣创作，一套流程走完。
+        </div>
+
+        <div class="cs-panel cs-no-print">
+            <h3>使用说明</h3>
+            <div class="cs-doc">
+                <b>原理：</b>先把照片缩小到「宽度针数 × 高度针数」的网格（drawImage 区域平均下采样，保留整体色调），再对每个格子在内置 DMC 六股绣线色卡（约 400 色）中做最近邻颜色匹配；超出「最多色数」的尾部色彩会自动合并到最接近的保留色，最后为每色分配一个符号，渲染成符号网格图。<br>
+                <b>针数与布：</b>14CT 表示每英寸 14 针，是最常用的十字绣布；11CT 格子大适合新手，18CT 更细腻。布边长 = 针数 ÷ CT，下方实时换算已给出英寸与厘米，记得再各加 5–8cm 留边。<br>
+                <b>色数：</b>默认 24 色；色数越多过渡越自然，但换线越频繁。新手建议 20–30 色；超过 40 色会提示合并。<br>
+                <b>符号图：</b>预览与导出 PNG 的符号一一对应，每 10 格一条粗线方便数格；黑白打印时靠符号区分颜色。<br>
+                <b>线量：</b>按 2 股全针、每针约 2.5cm 线、DMC 每绞 8 米估算并向上取整；实际因针法松紧有出入，每色建议多备半绞。<br>
+                <b>DMC 色卡：</b>内置色卡基于 MIT 许可的开源数据集（有公开 hex 的色号直接采用），部分色号补用了广泛流传的参考近似值；屏幕显示色仅供参考，购买绣线请以 DMC 色号为准。<br>
+                <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/cross_stitch_pattern.js?v=1"></script>
+</body>
+</html>
+{{end}}

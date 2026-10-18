@@ -454,6 +454,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "cross_stitch_pattern",
+					Name:        "照片转十字绣图案生成器",
+					Description: "照片转十字绣图纸：内置 DMC 绣线色卡最近邻量化，针数可调，14CT/11CT/18CT 布边长实时换算，符号网格图预览，每色针数与线量估算，PNG 导出/打印 PDF，纯浏览器本地处理 · Photo to cross stitch pattern",
+					Path:        "/tools/cross-stitch-pattern",
+					Icon:        "texture",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{
