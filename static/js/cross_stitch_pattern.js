@@ -18,7 +18,6 @@
 var DMC = [
 ["B5200","Snow White","#ffffff"],
 ["Blanc","White","#ffffff"],
-["White","White","#fefefe"],
 ["Ecru","Ecru/off-white","#f3ebdb"], // FB
 ["150","Red - Bright","#ab0249"],
 ["151","Pink","#f0ced4"],
@@ -526,8 +525,8 @@ function limitColors(counts, maxColors) {
     return { kept: keptIdx, remap: remap };
 }
 
-// 符号池（纯文本符号，打印/导出不依赖字体图标）
-var SYMBOLS = ('●▲■◆★♥♦♣♠✚✖◍◎◉⬟⬢✦❖✜♀♂☀☁☂☾♩♪♫⚑⚐⚓⚙⚛☘☕✉✌☮☯♻◐◑◒◓◔◕⬔⬕⬗⬘⬙⬚◤◥◣◢◈⬖⬗').split('');
+// 符号池（纯文本符号，打印/导出不依赖字体图标；65 个互不相同，覆盖最多 60 色）
+var SYMBOLS = ('●▲■◆★♥♦♣♠✚✖◍◎◉⬟⬢✦❖✜♀♂☀☁☂☾♩♪♫⚑⚐⚓⚙⚛☘☕✉✌☮☯♻◐◑◒◓◔◕⬔⬕⬗⬘⬙⬚◤◥◣◢◈⬖❀✿♞♜▣▤◊').split('');
 function assignSymbols(kept) {
     var map = {};
     kept.forEach(function (idx, i) { map[idx] = SYMBOLS[i % SYMBOLS.length]; });
@@ -779,6 +778,11 @@ if (typeof document !== 'undefined') (function () {
         setTimeout(function () {
             try {
                 var cell = 24, pad = 40, gap = 30;
+                // 大尺寸图纸动态缩小格子，避免 canvas 过大爆内存/卡死
+                var total = stitchW * stitchH;
+                if (total > 80000) cell = 12; else if (total > 40000) cell = 16;
+                var symFont = Math.max(8, Math.floor(cell * 0.7));
+                if (cell < 24) setStatus('图纸较大，已自动缩小导出格距，稍等…');
                 var patW = stitchW * cell, patH = stitchH * cell;
                 var titleH = 90;
                 var legCols = 2, legRowH = 34;
@@ -805,7 +809,7 @@ if (typeof document !== 'undefined') (function () {
                         ctx.fillStyle = L.hex;
                         ctx.fillRect(px + x * cell, py + y * cell, cell, cell);
                         ctx.fillStyle = textColorFor(DMC_RGB[L.idx].rgb);
-                        ctx.font = '17px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.font = symFont + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText(L.symbol, px + x * cell + cell / 2, py + y * cell + cell / 2 + 1);
                     }
                 }
@@ -931,7 +935,13 @@ if (typeof document !== 'undefined') (function () {
         });
 
         document.querySelectorAll('input[name="csview"]').forEach(function (r) {
-            r.addEventListener('change', function () { viewMode = this.value; renderPreview(); });
+            r.addEventListener('change', function () {
+                viewMode = this.value;
+                document.querySelectorAll('#cs-viewmode label').forEach(function (l) {
+                    l.classList.toggle('on', l.querySelector('input') === r);
+                });
+                renderPreview();
+            });
         });
 
         $('cs-export').addEventListener('click', exportPNG);
