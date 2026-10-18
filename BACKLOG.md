@@ -1,4 +1,52 @@
 
+> 维护人：产品经理 · 每日排期（2026-10-19 03:39 排期轮）
+
+## 今日任务（2026-10-19 03:39 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-19 排期决策轮（03:36 第二十六轮研究之后）。在线音频裁剪器已交付闭环（01:39 PM 决策轮立项→开发交付 1e8057b + 评审修复 357f056；`grep tools/categories.go` 确认 ID `audio_trimmer`、Path `/tools/audio-trimmer` 已注册，全量 **97 Path**，「音频处理」新品类已开张），候选池划出。本轮立项**今日唯一任务：网站图标生成器（Favicon Generator）**。
+
+**选定：网站图标生成器（/tools/favicon-generator）** — 本轮唯一任务：
+- **凌晨轮只排小难度（既定规则）**：纯前端小难度（上传→canvas 多尺寸导出→预览→ZIP 打包+HTML 引用代码），一轮可高质量交付；JSON Schema 验证器/EPUB 阅读器/浏览器屏幕录制器等中难度留待上午大轮次（顺位递进留池）。
+- **顺位递进（公平性）**：16 轮新晋→24/25 轮连续顺延，三次让位后本轮理应立项；26 轮 Top3 亦将其排在首位。
+- **品类错峰**：上轮音频（新品类）→上上轮图片；favicon 归建站/开发者口径（「开发工具」品类，与 qrcode/css_gradient_generator 同族群），与相邻轮次不重叠；图片精确体积压缩器（图片口径，与 img-compress 同品类、感知太近）与音频合并器（音频品类连续两弹，26 轮已注连续感知留 PM 定序）本轮均顺延留池。
+- **证据持续有效**：365Lab 10-08 竞品形态验证 + 10-08 40+ 工具榜单二重佐证图标生成器热度；本轮实测复核 97 Path `favicon/网站图标/图标生成/favicon_generator` 全零命中。
+- **去重实锤**：`img-compress` 为通用压缩（无目标体积模式），与本工具多尺寸图标+ICO+打包+代码片段能力不重叠。
+
+**规格**：
+1. 上传/拖拽图片：PNG/JPG/WebP/SVG（SVG 经 canvas 光栅化），透明背景保留；工具页显著位置隐私声明：「图片只在你的浏览器里处理，不上传服务器」。
+2. 多尺寸一键生成：16×16、32×32、48×48（favicon 标准）、180×180（apple-touch-icon）、192×192、512×512（PWA/manifest），canvas 高质量缩放（imageSmoothingQuality high）。
+3. favicon.ico 本地手工编码：ICONDIR+ICONDIRENTRY 头 + PNG 数据打包，零依赖手写（仓库 WAV 手工编码先例）。
+4. 实时预览：浏览器标签页模拟预览 + 深色/浅色背景对比预览；各尺寸缩略图一览。
+5. 打包下载：ZIP 一键打包（favicon.ico + 各尺寸 PNG + site.webmanifest 片段），JSZip 本地 vendor（仓库 SheetJS/lamejs 本地 vendor 先例）。
+6. HTML 引用代码一键复制：`<link rel="icon">` / apple-touch-icon / manifest 三段代码，含中文注释说明放哪。
+7. 纯前端、零 CDN 依赖、无后端调用；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「开发工具」品类新增工具 ID `favicon_generator`、Path `/tools/favicon-generator`（New: true），中英文描述 + SEO keywords（网站图标生成器、favicon 生成、网站图标制作、favicon generator、apple touch icon）。
+
+**验收标准**：
+- [x] `/tools/favicon-generator` 可开（200）
+- [ ] 上传 PNG/JPG/SVG 后各尺寸（16/32/48/180/192/512）正确生成，透明背景保留
+- [ ] favicon.ico 下载成功，Windows/浏览器可识别
+- [ ] ZIP 打包下载成功，内含 ico+各尺寸 PNG+manifest 片段
+- [ ] HTML 引用代码一键复制可用，三段代码无误
+- [ ] 隐私声明显著；DevTools Network 抽查无后端调用、无 CDN 依赖
+- [x] `categories.go` 注册完成（开发工具品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（上传+生成+下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**开发交付（2026-10-19 前端开发轮 ✅）**：commit 待推送。本地 `go build` 通过；127.0.0.1:18999 实测 `/tools/favicon-generator` 200、JS/JSZip vendor 200、sitemap 与首页索引已含新 Path、页面无外部 URL 引用。ICO 手工编码逻辑经 node 抽取实测 19 项校验全过（ICONDIR 头 + 16/32/48 三 entry，偏移/长度/载荷完整、PNG 魔数正确）；JSZip v3.10.1 本地 vendor 打包→回读验证通过；`node --check` 语法通过。六尺寸 canvas 导出、SVG 注入宽高光栅化、contain 透明居中、标签页模拟/深浅对比预览、三段 HTML 代码复制均为前端实测逻辑，待测试轮浏览器实测复核。
+
+**预计改动文件**：`templates/favicon_generator.html`（新建：上传拖拽区+尺寸预览栅格+标签页模拟预览+下载按钮+代码复制区，纯前端）、`static/js/favicon_generator.js`（新建：SVG 光栅化、多尺寸 canvas 导出、ICO 手工编码、ZIP 打包编排、代码片段生成，零依赖）、`static/js/vendor/jszip.min.js`（新增：ZIP 打包本地 vendor，仓库 SheetJS/lamejs 先例）、`tools/categories.go`（开发工具品类+工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 进制转换器（P1；PH 10-12 Everyday Tools 榜单单列、该榜单仓库唯一缺口；纯前端小难度；本轮顺延，下一轮节奏调节位优先）。
+- 图片精确体积压缩器（P1；26 轮新晋，DodoDeck 10-18 headline 功能佐证，≤X KB 硬限制痛点真实，img-compress 无目标体积模式实锤去重；与 img-compress 同图片品类、与上上轮图片复古做旧感知太近，本轮错峰顺延）。
+- 音频合并器（P1；26 轮新晋，与 audio_trimmer 同技术栈；音频品类连续两弹的感知问题留 PM 定序，本轮顺延，与 MP3 标签编辑器 P2 组音频三件套时再议）。
+- JSON Schema 验证器（P1，第一候补；中难度，上午大轮次优先）；EPUB 电子书阅读器（P1 新观察，中难度，上午大轮次）；浏览器屏幕录制器（P1，中难度，上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；单位换算器（P1 观察）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，本地 HEAD 6e8ef79；`git log` 确认开发交付 1e8057b + 评审修复 357f056 + 研究轮 6e8ef79；`grep tools/categories.go` 全量 97 Path，`audio_trimmer` ID 与 `/tools/audio-trimmer` Path 已注册（划入已实现）；新候选 ID `favicon_generator`、Path `/tools/favicon-generator` 与 97 Path 无重叠（`favicon/网站图标/图标生成` 零命中；`base` 命中均为 base64 家族工具，非进制转换）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-19 03:36 第二十六轮研究）
 
 ## 今日任务（2026-10-19 03:36 · 产品调研员研究轮 ✅）

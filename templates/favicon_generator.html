@@ -1,0 +1,195 @@
+{{define "favicon_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站图标生成器 - 在线 Favicon 生成 | PNG 转 ICO 多尺寸免费在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线网站图标生成器：上传/拖拽 PNG、JPG、WebP、SVG 图片，浏览器本地一键生成 16/32/48/180/192/512 六种尺寸，favicon.ico 本地手工编码（零依赖），ZIP 一键打包下载（ico + 各尺寸 PNG + site.webmanifest 片段），附 HTML 引用代码。纯前端、零上传、零 CDN。">
+    <meta name="keywords" content="网站图标生成器,favicon 生成,网站图标制作,favicon generator,apple touch icon,PNG 转 ICO,图标生成器,site.webmanifest,多尺寸图标,在线生成 favicon.ico">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/favicon-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"网站图标生成器","description":"纯前端网站图标生成器：上传图片本地生成 16/32/48/180/192/512 六种尺寸，手工编码 favicon.ico，ZIP 打包下载，附 HTML 引用代码，图片不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/favicon-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fg-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .fg-wrap .navbar .material-icons { display: none; }
+        .fg-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .fg-privacy .fg-lock { font-size: 1.6rem; flex: none; }
+        .fg-privacy b { color: #047857; }
+        .fg-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .fg-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .fg-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .fg-upload:hover, .fg-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .fg-upload .fg-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .fg-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .fg-info code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .fg-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .fg-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .fg-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .fg-btn:hover { filter: brightness(.93); }
+        .fg-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .fg-btn-ghost { background: #fff; color: var(--primary-color); }
+        /* 透明棋盘格：展示图标透明背景 */
+        .fg-checker { background-image: conic-gradient(#e5e7eb 0 25%, #ffffff 0 50%, #e5e7eb 0 75%, #ffffff 0);
+            background-size: 14px 14px; }
+        /* 尺寸预览栅格 */
+        .fg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .8rem; margin: .6rem 0; }
+        .fg-cell { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem; background: #fff; text-align: center; }
+        .fg-cell .fg-thumb { display: flex; align-items: center; justify-content: center; height: 96px;
+            border-radius: .45rem; margin-bottom: .5rem; overflow: hidden; }
+        .fg-cell .fg-thumb img { max-width: 100%; max-height: 100%; image-rendering: auto; }
+        .fg-cell .fg-label { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; color: #111827; font-weight: 700; }
+        .fg-cell .fg-use { font-size: .75rem; color: #6b7280; margin: .15rem 0 .5rem; line-height: 1.5; }
+        .fg-cell .fg-dl { padding: .32rem .8rem; font-size: .8rem; border-radius: .45rem; border: 1px solid var(--primary-color);
+            background: #fff; color: var(--primary-color); cursor: pointer; }
+        .fg-cell .fg-dl:hover { background: #eff6ff; }
+        /* 浏览器标签页模拟预览 */
+        .fg-tabmock { border: 1px solid #e5e7eb; border-radius: .6rem; overflow: hidden; margin: .6rem 0; max-width: 560px; }
+        .fg-tabbar { display: flex; background: #eef1f4; padding: .45rem .6rem .0rem; gap: .4rem; }
+        .fg-tab { display: flex; align-items: center; gap: .45rem; background: #fff; border-radius: .5rem .5rem 0 0;
+            padding: .4rem .8rem; font-size: .83rem; color: #374151; max-width: 240px; }
+        .fg-tab span.fg-tab-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fg-tab .fg-tab-x { color: #9ca3af; font-size: .95rem; }
+        .fg-tabbody { background: #fff; padding: .7rem .9rem; font-size: .83rem; color: #6b7280; border-top: 1px solid #e5e7eb; }
+        /* 深色/浅色对比预览 */
+        .fg-contrast { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .8rem; margin: .6rem 0; }
+        .fg-contrast-card { border: 1px solid #e5e7eb; border-radius: .6rem; padding: 1rem; text-align: center; font-size: .85rem; }
+        .fg-contrast-card.fg-light { background: #ffffff; color: #111827; }
+        .fg-contrast-card.fg-dark { background: #111827; color: #f9fafb; }
+        .fg-contrast-card img { width: 48px; height: 48px; margin-bottom: .5rem; }
+        /* 代码区 */
+        .fg-codeblock { position: relative; margin: .6rem 0; }
+        .fg-codeblock pre { background: #0f172a; color: #e2e8f0; border-radius: .6rem; padding: 1rem 1rem 1rem;
+            font-size: .82rem; line-height: 1.7; overflow-x: auto; margin: 0; }
+        .fg-codeblock .fg-copy { position: absolute; top: .6rem; right: .6rem; padding: .3rem .8rem; font-size: .78rem;
+            border-radius: .4rem; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; cursor: pointer; }
+        .fg-codeblock .fg-copy:hover { background: #334155; }
+        .fg-codeblock .fg-cap { font-size: .85rem; color: #4b5563; margin-bottom: .3rem; }
+        .fg-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .fg-doc b { color: #111827; }
+        .fg-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        @media (max-width: 640px) {
+            .fg-wrap .container { padding: 1rem .7rem; }
+            .fg-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="fg-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🖼️ 网站图标生成器</h1>
+            <p>上传一张图片，本地生成 16/32/48/180/192/512 六种尺寸 + favicon.ico，一键打包下载</p>
+        </div>
+
+        <div class="fg-privacy">
+            <span class="fg-lock">🔒</span>
+            <div><b>隐私承诺：图片只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：图片读取、SVG 光栅化、多尺寸缩放、<code>favicon.ico</code> 手工编码、ZIP 打包、下载全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 ZIP 打包库 JSZip 也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 上传的图片不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="fg-panel">
+            <h3>1️⃣ 上传图片</h3>
+            <div class="fg-upload" id="fg-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片文件到此处上传">
+                <span class="fg-big">🖼️</span>
+                <div>点击选择图片，或把图片文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / WebP / SVG；透明背景（PNG/SVG/WebP）完整保留；建议原图 ≥ 512×512 以获得最佳效果</div>
+            </div>
+            <input type="file" id="fg-file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" style="display:none;">
+            <div class="fg-info" id="fg-srcinfo" style="display:none;"></div>
+            <div class="fg-status" id="fg-status"></div>
+        </div>
+
+        <div id="fg-workspace" style="display:none;">
+            <div class="fg-panel">
+                <h3>2️⃣ 各尺寸预览与单独下载</h3>
+                <div class="fg-grid" id="fg-grid"></div>
+                <div class="fg-info">棋盘格背景表示透明区域 —— PNG/SVG/WebP 的透明背景在全部尺寸中完整保留。<code>favicon.ico</code> 包含 16/32/48 三个尺寸的 PNG 数据，由浏览器本地手工编码（ICONDIR + PNG，零依赖）。</div>
+            </div>
+
+            <div class="fg-panel">
+                <h3>3️⃣ 效果预览</h3>
+                <div class="fg-row" style="align-items:flex-start;">
+                    <div style="flex:1;min-width:280px;">
+                        <div class="fg-info" style="margin:0 0 .4rem;">浏览器标签页模拟（16×16）</div>
+                        <div class="fg-tabmock">
+                            <div class="fg-tabbar">
+                                <div class="fg-tab"><img id="fg-tab-icon" width="16" height="16" alt="标签页图标预览"><span class="fg-tab-title">我的网站 - 首页</span><span class="fg-tab-x">×</span></div>
+                            </div>
+                            <div class="fg-tabbody">地址栏左侧与标签页上显示的正是你刚生成的 16×16 图标</div>
+                        </div>
+                    </div>
+                    <div style="flex:1;min-width:280px;">
+                        <div class="fg-info" style="margin:0 0 .4rem;">深色 / 浅色背景对比（48×48）</div>
+                        <div class="fg-contrast">
+                            <div class="fg-contrast-card fg-light"><img id="fg-prev-light" class="fg-checker" alt="浅色背景预览"><div>浅色背景</div></div>
+                            <div class="fg-contrast-card fg-dark"><img id="fg-prev-dark" class="fg-checker" alt="深色背景预览"><div>深色背景</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fg-panel">
+                <h3>4️⃣ 打包下载</h3>
+                <div class="fg-row">
+                    <button class="fg-btn" id="fg-dl-ico">⬇️ 下载 favicon.ico</button>
+                    <button class="fg-btn" id="fg-dl-zip">⬇️ 一键打包下载 ZIP</button>
+                </div>
+                <div class="fg-info">ZIP 内含：<code>favicon.ico</code>、各尺寸 PNG（16/32/48/180/192/512）、<code>site.webmanifest</code> 片段。解压后把文件放到网站根目录即可。</div>
+                <div class="fg-status" id="fg-export-status"></div>
+                <div class="fg-row" style="margin-top:1rem;">
+                    <button class="fg-btn fg-btn-ghost" id="fg-reupload">🔄 重新上传</button>
+                </div>
+            </div>
+
+            <div class="fg-panel">
+                <h3>5️⃣ HTML 引用代码（一键复制）</h3>
+                <div class="fg-codeblock">
+                    <div class="fg-cap">① 基础图标引用 —— 放到每个页面的 <code>&lt;head&gt;</code> 里</div>
+                    <pre id="fg-code-1"></pre>
+                    <button class="fg-copy" data-copy="fg-code-1">📋 复制</button>
+                </div>
+                <div class="fg-codeblock">
+                    <div class="fg-cap">② Apple 触控图标 —— iOS「添加到主屏幕」时使用，同样放 <code>&lt;head&gt;</code></div>
+                    <pre id="fg-code-2"></pre>
+                    <button class="fg-copy" data-copy="fg-code-2">📋 复制</button>
+                </div>
+                <div class="fg-codeblock">
+                    <div class="fg-cap">③ PWA 应用清单 —— 安卓安装与主题色配置，配合 <code>site.webmanifest</code> 文件使用</div>
+                    <pre id="fg-code-3"></pre>
+                    <button class="fg-copy" data-copy="fg-code-3">📋 复制</button>
+                </div>
+                <div class="fg-status" id="fg-copy-status"></div>
+            </div>
+        </div>
+
+        <div class="fg-panel">
+            <h3>使用说明</h3>
+            <div class="fg-doc">
+                <b>读取：</b>图片经 <code>FileReader</code> / <code>URL.createObjectURL</code> 在浏览器本地加载；SVG 先注入宽高属性再光栅化，避免无尺寸 SVG 渲染为空。<br>
+                <b>缩放：</b>每个目标尺寸用独立 <code>canvas</code> 绘制，<code>imageSmoothingQuality = "high"</code> 高质量缩放；非正方形原图按 contain 居中、其余区域保留透明。<br>
+                <b>ICO 编码：</b>手工拼装 ICO 文件头（<code>ICONDIR</code> + <code>ICONDIRENTRY</code>），内嵌 16/32/48 三个尺寸的 PNG 数据，无需任何编码库。<br>
+                <b>打包：</b>ZIP 由本地 vendor 的 JSZip（v3.10.1）在浏览器内生成，离线可用；<code>site.webmanifest</code> 为文本片段，可按需修改 name 等字段。<br>
+                <b>部署：</b>把 <code>favicon.ico</code>、各尺寸 PNG、<code>site.webmanifest</code> 放到网站根目录，再把上面三段代码粘进页面 <code>&lt;head&gt;</code> 即可生效。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、缩放、编码、打包、下载都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/jszip.min.js?v=1"></script>
+    <script src="/tools/static/js/favicon_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

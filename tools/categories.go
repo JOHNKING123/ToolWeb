@@ -237,6 +237,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "favicon_generator",
+					Name:        "网站图标生成器",
+					Description: "上传/拖拽 PNG/JPG/WebP/SVG 本地生成 16/32/48/180/192/512 六种尺寸，favicon.ico 本地手工编码（ICONDIR+PNG 零依赖），JSZip 本地打包下载（ico+各尺寸 PNG+site.webmanifest 片段），HTML 引用代码一键复制，标签页模拟+深浅对比预览，纯前端零上传 · Favicon generator: upload image, export 6 sizes, hand-encoded ICO, ZIP pack, copy HTML snippets, 100% client-side",
+					Path:        "/tools/favicon-generator",
+					Icon:        "image",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
