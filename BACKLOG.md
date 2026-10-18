@@ -1,4 +1,42 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-19 05:36 第二十七轮研究）
+
+## 今日任务（2026-10-19 05:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第二十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。网站图标生成器已交付闭环（03:39 PM 决策轮立项→开发交付 3fb07e1：六尺寸生成+favicon.ico 手工编码+JSZip 打包+HTML 引用代码；`grep tools/categories.go` 确认 ID `favicon_generator`、Path `/tools/favicon-generator` 已注册，全量 **98 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；凌晨轮沿用「只排小难度」规则。
+
+**本轮五件事**（05:36 全网调研，通用方向）：
+1. 图标生成器交付确认：`git log` 确认开发交付 3fb07e1；本地分支 muse/dev-20260929；`git fetch` 经 GIT_SSH_COMMAND 密钥拉取时提示 Host key verification failed（首次抓 github.com 已自动加 known_hosts，重试即通，不影响本轮核稿）；`grep` 全量 98 Path，ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 网站图标生成器）。
+2. 新晋候选：**robots.txt 生成器（Robots.txt Generator）**。需求证据：dev.to contact_varkido 2026-10-01《How I Built 170+ Free Online Tools》SEO 工具套装明列（Schema markup generator / Meta tag generator / SERP snippet preview / Open Graph generator / FAQ schema builder / **robots.txt generator**）——同套装 SERP snippet preview 与 OG 生成器仓库已覆盖并已交付，robots.txt 为该 SEO 家族中仓库唯一缺口，家族佐证成立。痛点真实：站长写 robots.txt 靠记语法或抄模板，Disallow/Allow/Sitemap/Crawl-delay 规则写错会导致收录事故。可行性：纯前端小难度——可视化规则拼装（User-agent+规则列表+站点地图）→实时预览→一键复制/下载 robots.txt；零依赖无后端。去重：98 Path 中 robots/robots.txt 全零命中；SEO 工具旅程线可与 serp_snippet_preview、og_card_preview 互链。难度小。SEO：robots.txt 生成、搜索引擎抓取规则。建议 ID `robots_txt_generator`、Path `/tools/robots-txt-generator`。P1。
+3. 新晋候选：**YouTube 缩略图下载器（YouTube Thumbnail Downloader）**。需求证据：dev.to codeofrelevancy 2026-10-09《I Built 30+ Free Browser Tools That Never See Your Data》单列（与 SQLite DB Viewer、Token Counter、ChatGPT Text Cleaner 同文，本地处理口径）。痛点真实：做视频二创/公众号运营/汇报 PPT 经常需要拿视频封面图，现有方案要装插件或用带广告的下载站。可行性：纯前端小难度——粘贴视频链接/ID→正则解析 video ID→展示四档分辨率缩略图（maxresdefault/hqdefault/sddefault/mqdefault，i.ytimg.com 静态直链，`<img>` 预览无需 CORS）→点击原图查看/下载（a[download]/canvas 中转）；零依赖无后端。去重：98 Path 中 youtube/YouTube/缩略图全零命中（og_card_preview 的「缩略图」仅指社交卡片预览输入项，能力不重叠）。难度小。SEO：YouTube 缩略图下载、视频封面提取。建议 ID `youtube_thumbnail`、Path `/tools/youtube-thumbnail`。P1。
+4. 新晋候选：**代码压缩器（HTML/CSS/JS Minifier）**。需求证据：同 Varkido 2026-10-01 170+ 工具 Dev 套装明列（HTML/CSS/JS minifier）——同套装 JSON formatter/regex tester/diff/Base64/JWT/URL 编解码/时间戳仓库均已覆盖，minifier 为该 Dev 家族中仓库唯一缺口。痛点真实：前端交付/邮件模板/埋点脚本上线前去注释压缩，现有在线方案多带广告或要注册。可行性：纯前端小难度——HTML 去注释+多余空白、CSS 去注释+压缩空白、JS 保守策略去注释+行尾空白（不做语义混淆，安全优先），压缩前后体积对比+一键复制；零依赖无后端。去重：98 Path 中 minif/代码压缩全零命中；与 base64/encode/开发工具家族互链。难度小。SEO：代码压缩、HTML 压缩、CSS 压缩、JS 压缩。建议 ID `code_minifier`、Path `/tools/code-minifier`。P1。
+5. 新观察/证据记录：① **重复词查找器（Duplicate Word Finder）**——同 Tooltri 2026-10-09 文单列（与 Word Counter、Text Case Converter 同文）；写作校对场景（「然后然后」「这个这个」）；98 Path duplicate/重复词零命中；纯前端小难度；P2 观察（写作 niche）。② **DNS 传播检查（DNS Propagation Checker）**——dev.to invvodel 2026-10-01 SiteIndex 70+ 工具 Internet & Network 品类单列（propagation checker）；仓库 dns-lookup 仅做单记录查询，无多解析器对比；纯前端可做（多公共 DoH 端点 fetch 对比，dns.google/cloudflare-dns 支持 CORS），但依赖外部解析器可用性且属「出网调用」口径；P2 观察。③ **cURL 转请求代码（cURL Converter）**——VelnoxLabs 2026-09-27 51 工具集单列 cURL to Python Requests Converter；仓库 postman 工具仅注释占位未实现，curl 零命中；dev 高频需求；P2 观察（niche）。④ nathaniel_ady 2026-10-15 9 dev utilities（JSON 格式化/正则/Base64/JWT/cron/时间戳/Markdown 转 HTML/文本 diff/子网计算器）——除 JSON→CSV 提及外，9 项仓库已全覆盖（markdown/csvjson/text-diff 均有；csv-json 双向）；Markdown 转 HTML 属 markdown 工具已有能力，不单立。⑤ Noloii 图片工具族（bellal_hossain 2026-10-04：sharpen/blur/pixelate/noise reducer/brightness）——仓库已有 img_mosaic（框选马赛克/高斯模糊）与 image_annotator、img_retro_filter（噪点/调色），能力重叠，不单立。⑥ V2EX 10-18/19：文本加密解密工具（仓库 crypto/aes/des/rsa 已覆盖）、喝水提醒 app（生活应用形态不做）、BiliFlow B 站下载桌面工具（桌面形态不做）、关键词订阅推送（需后端不做）——无单页新信号。⑦ WPS 候选表保持冻结归档。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；05:36 凌晨轮只排小难度）：
+
+1. **进制转换器（Base Converter）** — P1（25 轮证据增强：PH 10-12 Everyday Tools 榜单单列，为该榜单仓库唯一缺口；dev.to 51 工具集形态族二重化；纯前端小难度：2/8/10/16/32 互转+分组显示+一键复制；开发者工具家族 timestamp/cron/uuid/base64/jwt 旅程线；98 Path 进制零命中）。
+2. **图片精确体积压缩器（Compress to Target KB）** — P1（26 轮新晋：dev.to mdshamimali 2026-10-18 DodoDeck 发布帖 headline 功能 "exact KB image resizer" 佐证；证件照/考试报名/公众号「≤X KB」硬限制痛点真实；img-compress 无目标体积模式已实锤去重（templates grep 零命中）；纯前端小难度：目标 KB→二分质量+尺寸降级→一次命中导出；98 Path 无重叠）。
+3. **robots.txt 生成器（Robots.txt Generator）** — P1（本轮新晋：Varkido 2026-10-01 SEO 套装单列，同套装 SERP/OG 已交付形成家族佐证；SEO 工具旅程线与 serp_snippet_preview、og_card_preview 互链；纯前端小难度：可视化规则拼装→实时预览→复制/下载；98 Path robots 零命中）。
+
+YouTube 缩略图下载器（P1 本轮新晋，纯前端小难度，媒体/运营人群，四档分辨率 i.ytimg.com 直链）；代码压缩器（P1 本轮新晋，Varkido Dev 套装单列、该套装仓库唯一缺口，开发工具家族互链，纯前端小难度）；JSON Schema 验证器（P1，中难度，第一候补，上午大轮次）；浏览器屏幕录制器（P1，中难度，上午大轮次）；音频合并器（P1，26 轮新晋，音频品类旅程线；连续音频品类感知留 PM 定序）；SRT 字幕编辑器（P1，顺位顺延）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；单位换算器（P1 观察）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察，开发者 niche）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；在线钢琴（P2 观察，娱乐应用形态）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察，音频品类互链位）；贴纸生成器（P2 观察，AI 抠图需后端）；重复词查找器（P2 新观察）；DNS 传播检查（P2 新观察，需出网）；cURL 转请求代码（P2 新观察）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**通用候选表增量**（第二十七轮：图标生成器已实现划出；新晋 robots.txt 生成器 P1、YouTube 缩略图下载器 P1、代码压缩器 P1；新观察重复词查找器/DNS 传播检查/cURL 转请求代码 P2；全量 98 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| robots.txt 生成器（Robots.txt Generator） | 本轮新晋（dev.to contact_varkido 2026-10-01 170+ 工具 SEO 套装单列；同套装 SERP snippet preview/OG 生成器仓库已交付，本工具为该 SEO 家族唯一缺口；痛点：站长手写抓取规则易错导致收录事故；纯前端小难度：可视化规则拼装（User-agent/Allow/Disallow/Sitemap/Crawl-delay）→实时预览→复制/下载；98 Path robots/robots.txt 全零命中；与 serp_snippet_preview、og_card_preview 互链） | 小 | P1（本轮新晋） |
+| YouTube 缩略图下载器（YouTube Thumbnail Downloader） | 本轮新晋（dev.to codeofrelevancy 2026-10-09 30+ 工具单列；痛点：二创/公众号运营/汇报 PPT 取视频封面图，现有方案装插件或进广告下载站；纯前端小难度：解析视频链接/ID→四档分辨率缩略图（maxresdefault/hqdefault/sddefault/mqdefault，i.ytimg.com 静态直链，`<img>` 预览免 CORS）→查看原图/下载；98 Path youtube/YouTube/缩略图全零命中；og_card_preview 的「缩略图」仅为社交卡片输入项，能力不重叠） | 小 | P1（本轮新晋） |
+| 代码压缩器（HTML/CSS/JS Minifier） | 本轮新晋（dev.to contact_varkido 2026-10-01 170+ 工具 Dev 套装单列；同套装 JSON/正则/diff/Base64/JWT/URL/时间戳仓库均已覆盖，minifier 为该 Dev 家族唯一缺口；痛点：前端交付/邮件模板/埋点脚本上线前去注释压缩，现有在线方案带广告或要注册；纯前端小难度：HTML 去注释+多余空白、CSS 去注释+空白、JS 保守去注释+行尾空白（不做语义混淆），压缩前后体积对比+一键复制；98 Path minif/代码压缩全零命中；开发工具家族互链） | 小 | P1（本轮新晋） |
+| 重复词查找器（Duplicate Word Finder） | 新观察（同 Tooltri 2026-10-09 文单列，与 Word Counter、Text Case Converter 同文；写作校对「然后然后」「这个这个」场景；98 Path duplicate/重复词零命中；纯前端小难度） | 小 | P2 观察 |
+| DNS 传播检查（DNS Propagation Checker） | 新观察（dev.to invvodel 2026-10-01 SiteIndex 70+ 工具 Internet & Network 品类单列；仓库 dns-lookup 仅单记录查询，无多解析器对比；纯前端可做多公共 DoH 端点 fetch 对比，但依赖外部解析器可用性且属出网调用口径；98 Path propagation 零命中） | 小 | P2 观察 |
+| cURL 转请求代码（cURL Converter） | 新观察（VelnoxLabs 2026-09-27 51 工具集单列 cURL to Python Requests Converter；仓库 postman 仅注释占位未实现，curl 零命中；dev 高频需求；纯前端小难度：解析 cURL→生成 Python requests/Go/fetch 代码） | 小 | P2 观察 |
+
+**归档说明**：本轮为 10-19 通用调研第二十七轮——网站图标生成器交付闭环（3fb07e1，`/tools/favicon-generator` 已注册，全量 98 Path，开发工具品类），候选池划出，已实现清单 delta 追加；新晋「robots.txt 生成器」P1（Varkido 10-01 SEO 套装单列，家族佐证：SERP/OG 已交付，同套装唯一缺口，纯前端小难度，98 Path 无重叠）、「YouTube 缩略图下载器」P1（Tooltri 10-09 单列，四档分辨率 i.ytimg.com 静态直链，纯前端小难度，98 Path 无重叠）、「代码压缩器」P1（Varkido 10-01 Dev 套装单列，同套装唯一缺口，纯前端小难度，98 Path 无重叠）；新观察「重复词查找器」「DNS 传播检查」「cURL 转请求代码」均为 P2；nathaniel_ady 9 dev utilities（10-15）除 JSON→CSV 外仓库全覆盖、Markdown 转 HTML 属 markdown 已有能力；Noloii 图片工具族（sharpen/blur/pixelate/noise reducer）与 img_mosaic/image_annotator/img_retro_filter 能力重叠；V2EX 10-18/19（文本加密/喝水提醒/B站下载桌面工具/关键词推送后端）无单页新信号；WPS 候选表保持冻结归档；仓库 98 注册工具全量核对无重叠，核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：本地分支 muse/dev-20260929；`git log` 确认开发交付 3fb07e1；`grep tools/categories.go` 全量 98 Path（97+1），`favicon_generator` ID 与 `/tools/favicon-generator` Path 已注册（划入已实现），新候选建议 ID（robots_txt_generator / youtube_thumbnail / code_minifier / duplicate_word_finder / dns_propagation / curl_converter）与 98 Path 无重叠；robots/thumbnail/缩略图/youtube/minif/代码压缩/duplicate/重复词/propagation/curl 关键词在 categories.go 核对（markdown/csvjson/text-diff/serp_snippet_preview/og_card_preview/img_mosaic/image_annotator/img_retro_filter/crypto 系列已覆盖判定）；fetch 首轮 known_hosts 失败后自动补录 github.com 重试即通；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-19 03:39 排期轮）
 
 ## 今日任务（2026-10-19 03:39 · 产品经理排期决策 ✅）
