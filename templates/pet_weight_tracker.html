@@ -1,0 +1,252 @@
+{{define "pet_weight_tracker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物体重记录追踪器 - 猫咪/狗狗体重追踪，多宠物健康记录（本地免费）</title>
+    <meta name="description" content="免费在线宠物体重记录追踪器：多宠物档案管理（猫/狗/其他+目标体重），每日体重录入（kg/lb 一键切换）、抱着称减体重模式、canvas 自绘趋势折线图（3M/6M/全部+目标参考线）、体重异常下降预警、CSV 导出/导入、示例数据一键填入；数据只存本浏览器 localStorage，不出浏览器 · Pet weight tracker: multi-pet profiles, weigh-with-holder mode, trend chart, weight-loss alerts, CSV import/export, 100% client-side">
+    <meta name="keywords" content="宠物体重记录,猫咪体重追踪,宠物健康记录,宠物减肥记录,多宠物体重管理,抱着称体重,狗狗体重记录,pet weight tracker">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pet-weight-tracker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"宠物体重记录追踪器","description":"多宠物档案+每日体重录入（kg/lb 切换、抱着称减体重）+趋势折线图+体重异常预警+CSV 导出导入；数据只存本浏览器 localStorage。","url":"https://www.johnkingzcq123.xyz/tools/pet-weight-tracker","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pwt-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .pwt-honest .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .pwt-honest b{color:#047857}
+        .pwt-sec{font-weight:700;color:#111827;margin:0 0 .55rem;font-size:1rem;display:flex;align-items:center;gap:.4rem}
+        .pwt-sec .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .pwt-pets{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+        .pwt-chip{display:inline-flex;align-items:center;gap:.45rem;border:2px solid #e5e7eb;border-radius:2rem;padding:.42rem .9rem .42rem .55rem;cursor:pointer;background:#fff;font-size:.93rem;color:#374151;transition:border-color .15s,background .15s;line-height:1.4}
+        .pwt-chip:hover{border-color:#93c5fd}
+        .pwt-chip.on{border-color:var(--primary-color);background:#eff6ff;color:#1d4ed8;font-weight:700}
+        .pwt-chip .pwt-ava{font-size:1.35rem;line-height:1}
+        .pwt-chip-add{border-style:dashed;color:#6b7280}
+        .pwt-form{display:grid;grid-template-columns:1fr 1fr;gap:.7rem .9rem;margin-top:.4rem}
+        .pwt-form .full{grid-column:1/-1}
+        .pwt-field{display:flex;flex-direction:column;gap:.3rem;font-size:.9rem;color:#374151}
+        .pwt-field>span{font-weight:600}
+        .pwt-field input,.pwt-field select{border:2px solid #e5e7eb;border-radius:.5rem;padding:.5rem .6rem;font-size:.95rem;color:#111827;background:#fff;width:100%;box-sizing:border-box}
+        .pwt-field input:focus,.pwt-field select:focus{outline:none;border-color:var(--primary-color)}
+        .pwt-kind{display:flex;gap:.5rem}
+        .pwt-kind label{flex:1;border:2px solid #e5e7eb;border-radius:.6rem;padding:.5rem .3rem;text-align:center;cursor:pointer;font-size:.92rem;color:#374151;background:#fff;font-weight:400}
+        .pwt-kind input{display:none}
+        .pwt-kind label.on{border-color:var(--primary-color);background:#eff6ff;color:#1d4ed8;font-weight:700}
+        .pwt-emoji-pick{display:flex;gap:.35rem;flex-wrap:wrap}
+        .pwt-emoji-pick button{border:1px solid #e5e7eb;background:#fff;border-radius:.5rem;font-size:1.25rem;padding:.25rem .45rem;cursor:pointer;line-height:1.3}
+        .pwt-emoji-pick button.on{border-color:var(--primary-color);background:#eff6ff}
+        .pwt-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .pwt-btn{border:none;border-radius:.55rem;padding:.55rem 1.25rem;font-size:.93rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-weight:600}
+        .pwt-btn .material-icons{font-size:1.05rem}
+        .pwt-btn.primary{background:var(--primary-color);color:#fff}
+        .pwt-btn.ghost{border:1px solid #d1d5db;background:#fff;color:#374151}
+        .pwt-btn.ghost:hover{background:#f3f4f6}
+        .pwt-btn.danger{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+        .pwt-btn.danger:hover{background:#fee2e2}
+        .pwt-btn:disabled{opacity:.55;cursor:not-allowed}
+        .pwt-status{font-size:.9rem;min-height:1.4em;line-height:1.7;color:#059669}
+        .pwt-status.err{color:#dc2626}
+        .pwt-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.9rem}
+        .pwt-mode{display:inline-flex;border:2px solid #e5e7eb;border-radius:.65rem;overflow:hidden}
+        .pwt-mode button{border:none;background:#fff;padding:.5rem 1rem;font-size:.9rem;color:#6b7280;cursor:pointer}
+        .pwt-mode button.on{background:var(--primary-color);color:#fff;font-weight:700}
+        .pwt-unit{display:inline-flex;border:2px solid #e5e7eb;border-radius:.65rem;overflow:hidden}
+        .pwt-unit button{border:none;background:#fff;padding:.5rem .9rem;font-size:.9rem;color:#6b7280;cursor:pointer}
+        .pwt-unit button.on{background:#0ea5e9;color:#fff;font-weight:700}
+        .pwt-holdcalc{background:#f0f9ff;border:1px dashed #7dd3fc;border-radius:.6rem;padding:.7rem .9rem;font-size:.95rem;color:#075985;margin-bottom:.9rem;line-height:1.8}
+        .pwt-holdcalc b{font-size:1.15rem;color:#0284c7}
+        .pwt-range{display:flex;gap:.5rem;margin-bottom:.6rem;flex-wrap:wrap}
+        .pwt-range button{border:2px solid #e5e7eb;background:#fff;border-radius:2rem;padding:.35rem 1rem;font-size:.88rem;color:#6b7280;cursor:pointer}
+        .pwt-range button.on{border-color:var(--primary-color);background:#eff6ff;color:#1d4ed8;font-weight:700}
+        #pwt-chart{width:100%;height:300px;display:block;touch-action:pan-y}
+        .pwt-legend{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.85rem;color:#6b7280;margin-top:.5rem;align-items:center}
+        .pwt-legend .sw{display:inline-block;width:1.6rem;height:0;border-top:3px solid #2563eb;vertical-align:middle;margin-right:.3rem}
+        .pwt-legend .sw.tgt{border-top:3px dashed #f59e0b}
+        .pwt-stats{display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:.6rem;font-size:.9rem;color:#374151;line-height:1.8}
+        .pwt-stats b{color:#111827}
+        .pwt-stats .up{color:#dc2626;font-weight:700}
+        .pwt-stats .down{color:#059669;font-weight:700}
+        .pwt-alert{display:none;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.9rem 1rem;margin-top:1.2rem;font-size:.93rem;line-height:1.9;color:#92400e}
+        .pwt-alert.show{display:flex}
+        .pwt-alert .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .pwt-alert b{color:#b45309}
+        .pwt-alert .pwt-disclaimer{display:block;font-size:.82rem;color:#a16207;margin-top:.3rem}
+        .pwt-table{width:100%;border-collapse:collapse;font-size:.9rem}
+        .pwt-table th,.pwt-table td{padding:.55rem .5rem;border-bottom:1px solid #f3f4f6;text-align:left;vertical-align:middle}
+        .pwt-table th{color:#6b7280;font-weight:600;font-size:.83rem;white-space:nowrap}
+        .pwt-table td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+        .pwt-table .del{color:#dc2626;cursor:pointer;background:none;border:none;font-size:1.05rem;padding:.2rem}
+        .pwt-table .delta-up{color:#dc2626}
+        .pwt-table .delta-down{color:#059669}
+        .pwt-tablewrap{overflow-x:auto}
+        .pwt-empty{text-align:center;color:#9ca3af;padding:1.6rem 0;font-size:.93rem;line-height:2}
+        .pwt-empty .material-icons{font-size:2.2rem;display:block;margin-bottom:.4rem}
+        .pwt-note{font-size:.83rem;color:#9ca3af;line-height:1.8;margin-top:.6rem}
+        .pwt-tip{color:#374151;line-height:1.9;font-size:.93rem}
+        .pwt-tip b{color:#111827}
+        .pwt-faq{line-height:2;font-size:.92rem;color:#4b5563}
+        .pwt-faq b{color:#111827}
+        .pwt-filelabel{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.55rem;padding:.55rem 1.1rem;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .pwt-filelabel:hover{background:#f3f4f6}
+        .pwt-filelabel .material-icons{font-size:1.05rem}
+        @media (max-width:640px){
+            .pwt-form{grid-template-columns:1fr}
+            #pwt-chart{height:250px}
+            .pwt-row{gap:.6rem}
+        }
+    </style>
+</head>
+<body>
+    <div>{{template "nav" .}}</div>
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">pets</i> 宠物体重记录追踪器</h1>
+            <p>多宠物档案 · 每日体重录入 · 趋势折线图 · 体重异常预警 · CSV 导出导入 —— 数据只存本浏览器，免费使用</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="pwt-honest">
+                <i class="material-icons">verified</i>
+                <div><b>本地存储承诺：</b>全部宠物档案与体重记录只保存在<b>本浏览器的 localStorage</b> 里，<b>不出浏览器、不上传服务器</b>；刷新页面数据不丢失。注意：更换浏览器、清除缓存或使用无痕模式会导致数据丢失，建议定期用 CSV 导出备份。</div>
+            </div>
+
+            <div class="tool-card">
+                <p class="pwt-sec"><i class="material-icons">pets</i> 1 · 宠物档案</p>
+                <div class="pwt-pets" id="pwt-pet-list"></div>
+                <div id="pwt-pet-form" style="display:none;">
+                    <div class="pwt-form">
+                        <div class="pwt-field"><span>名字 *</span><input id="pwt-name" maxlength="20" placeholder="例如：橘子"></div>
+                        <div class="pwt-field"><span>头像 emoji</span><input id="pwt-avatar" maxlength="4" placeholder="🐱"></div>
+                        <div class="pwt-field full"><span>种类</span>
+                            <div class="pwt-kind" id="pwt-kind">
+                                <label data-kind="cat" class="on"><input type="radio" name="pwt-kind" value="cat" checked>🐱 猫</label>
+                                <label data-kind="dog"><input type="radio" name="pwt-kind" value="dog">🐶 狗</label>
+                                <label data-kind="other"><input type="radio" name="pwt-kind" value="other">🐾 其他</label>
+                            </div>
+                        </div>
+                        <div class="pwt-field full"><span>常用头像</span>
+                            <div class="pwt-emoji-pick" id="pwt-emoji-pick">
+                                <button type="button">🐱</button><button type="button">🐶</button><button type="button">🐰</button><button type="button">🐹</button><button type="button">🐷</button><button type="button">🐥</button><button type="button">🦜</button><button type="button">🐢</button>
+                            </div>
+                        </div>
+                        <div class="pwt-field"><span>目标体重（kg，可选）</span><input id="pwt-target" type="number" min="0.1" max="300" step="0.1" placeholder="例如：4.5"></div>
+                        <div class="pwt-field"><span>出生日期（可选）</span><input id="pwt-birth" type="date"></div>
+                    </div>
+                    <div class="pwt-actions">
+                        <button class="pwt-btn primary" id="pwt-pet-save"><i class="material-icons">check</i> 保存宠物</button>
+                        <button class="pwt-btn ghost" id="pwt-pet-cancel">取消</button>
+                        <button class="pwt-btn danger" id="pwt-pet-del" style="display:none;"><i class="material-icons">delete</i> 删除该宠物</button>
+                    </div>
+                </div>
+                <div class="pwt-empty" id="pwt-no-pet">
+                    <i class="material-icons">pets</i>
+                    还没有宠物档案，点击下方按钮添加第一只宠物吧
+                </div>
+                <div class="pwt-actions" id="pwt-pet-addwrap">
+                    <button class="pwt-btn ghost" id="pwt-pet-add"><i class="material-icons">add</i> 新增宠物</button>
+                </div>
+            </div>
+
+            <div class="tool-card" id="pwt-entry-card" style="display:none;">
+                <p class="pwt-sec"><i class="material-icons">edit_note</i> 2 · 体重录入 <span style="font-weight:400;font-size:.85rem;color:#6b7280;" id="pwt-entry-pet"></span></p>
+                <div class="pwt-row">
+                    <div class="pwt-mode" id="pwt-mode" role="tablist" aria-label="录入模式">
+                        <button data-mode="direct" class="on" role="tab">直接录入</button>
+                        <button data-mode="hold" role="tab">抱着称减体重</button>
+                    </div>
+                    <div class="pwt-unit" id="pwt-unit" aria-label="单位切换">
+                        <button data-unit="kg" class="on">kg</button>
+                        <button data-unit="lb">lb</button>
+                    </div>
+                </div>
+                <div class="pwt-row">
+                    <div class="pwt-field"><span>日期</span><input id="pwt-date" type="date"></div>
+                    <div class="pwt-field" id="pwt-direct-wrap"><span>体重（<span class="pwt-u">kg</span>）</span><input id="pwt-weight" type="number" min="0.05" max="500" step="0.01" placeholder="例如：4.35"></div>
+                </div>
+                <div id="pwt-hold-wrap" style="display:none;">
+                    <div class="pwt-row">
+                        <div class="pwt-field"><span>抱宠总重（<span class="pwt-u">kg</span>）</span><input id="pwt-hold-total" type="number" min="0" step="0.01" placeholder="抱着宠物称的读数"></div>
+                        <div class="pwt-field"><span>抱宠者体重（<span class="pwt-u">kg</span>）</span><input id="pwt-hold-self" type="number" min="0" step="0.01" placeholder="自己单独称的体重"></div>
+                    </div>
+                    <div class="pwt-holdcalc" id="pwt-hold-result">宠物体重 = 抱宠总重 − 抱宠者体重，请先填写上方两项</div>
+                </div>
+                <div class="pwt-row">
+                    <div class="pwt-field" style="flex:1;min-width:12rem;"><span>备注（可选）</span><input id="pwt-note" maxlength="60" placeholder="例如：换粮第一周 / 绝育手术后"></div>
+                </div>
+                <div class="pwt-actions">
+                    <button class="pwt-btn primary" id="pwt-entry-save"><i class="material-icons">save</i> 保存记录</button>
+                    <span class="pwt-status" id="pwt-entry-status"></span>
+                </div>
+                <div class="pwt-note">同一天多次录入会覆盖为最新一条；体重在内部统一按 kg 存储，切换 kg/lb 只改变显示与输入单位。</div>
+            </div>
+
+            <div class="tool-card" id="pwt-chart-card" style="display:none;">
+                <p class="pwt-sec"><i class="material-icons">show_chart</i> 3 · 体重趋势</p>
+                <div class="pwt-range" id="pwt-range" role="tablist" aria-label="时间范围">
+                    <button data-range="90" class="on" role="tab">近 3 个月</button>
+                    <button data-range="180" role="tab">近 6 个月</button>
+                    <button data-range="0" role="tab">全部</button>
+                </div>
+                <canvas id="pwt-chart"></canvas>
+                <div class="pwt-legend"><span><span class="sw"></span>实际体重</span><span><span class="sw tgt"></span>目标体重参考线</span></div>
+                <div class="pwt-stats" id="pwt-stats"></div>
+                <div class="pwt-alert" id="pwt-alert" role="alert">
+                    <i class="material-icons">warning</i>
+                    <div><b>体重变化预警：</b><span id="pwt-alert-text"></span><span class="pwt-disclaimer">本提示仅根据你录入的数据做趋势提醒，不构成医疗诊断；如有疑虑请咨询兽医。</span></div>
+                </div>
+            </div>
+
+            <div class="tool-card" id="pwt-list-card" style="display:none;">
+                <p class="pwt-sec"><i class="material-icons">list_alt</i> 4 · 体重记录</p>
+                <div class="pwt-tablewrap"><table class="pwt-table">
+                    <thead><tr><th>日期</th><th>体重</th><th>较上次</th><th>备注</th><th></th></tr></thead>
+                    <tbody id="pwt-tbody"></tbody>
+                </table></div>
+                <div class="pwt-empty" id="pwt-tbody-empty" style="display:none;"><i class="material-icons">inbox</i>暂无体重记录，先在上方录入第一条吧</div>
+            </div>
+
+            <div class="tool-card">
+                <p class="pwt-sec"><i class="material-icons">import_export</i> 5 · 数据管理</p>
+                <div class="pwt-actions">
+                    <button class="pwt-btn ghost" id="pwt-export"><i class="material-icons">download</i> 导出 CSV</button>
+                    <label class="pwt-filelabel"><i class="material-icons">upload</i> 导入 CSV<input type="file" id="pwt-import" accept=".csv,text/csv" style="display:none;"></label>
+                    <button class="pwt-btn ghost" id="pwt-sample"><i class="material-icons">auto_awesome</i> 一键填入示例数据</button>
+                    <button class="pwt-btn danger" id="pwt-clear"><i class="material-icons">delete_forever</i> 清空全部数据</button>
+                </div>
+                <div class="pwt-status" id="pwt-data-status" style="margin-top:.6rem;"></div>
+                <div class="pwt-note">CSV 格式：宠物名,日期,体重kg,备注（UTF-8，Excel / WPS 可直接打开）。导入时按「宠物名+日期」匹配：同名宠物合并、同日期记录覆盖；CSV 里出现的新宠物名会自动建档。示例数据为一只叫「橘子」的猫约 3 个月的体重记录（含一段体重下降，可体验预警提示）。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pwt-tip">
+                    <b>多宠物：</b>顶部宠物 chips 点击即可切换当前宠物；每只宠物的体重记录、目标体重相互独立。<br>
+                    <b>抱着称减体重：</b>小体型宠物直接上秤会乱动时，先抱着宠物一起称得到「抱宠总重」，再单独称自己的体重，工具自动相减得出宠物体重。<br>
+                    <b>单位：</b>kg / lb 一键切换，内部统一按 kg 存储，切换不会丢失精度。<br>
+                    <b>预警规则：</b>近 3 周内体重下降 ≥10%，或最近 4 次记录连续下降且累计 ≥5%，会弹出「建议咨询兽医」提示（猫咪短期快速掉体重是常见的就医信号）。<br>
+                    <b>备份：</b>数据只存在本浏览器，换设备前请先「导出 CSV」。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="pwt-faq">
+                    <b>数据存在哪里？会被别人看到吗？</b>只存在你当前浏览器的 localStorage 里，不经过任何服务器，别人看不到；但清除浏览器缓存/重装浏览器会丢失。<br>
+                    <b>换手机后数据能带走吗？</b>可以：旧设备上「导出 CSV」，新设备上「导入 CSV」即可恢复。<br>
+                    <b>抱着称模式准吗？</b>取决于两次称重姿势一致；建议同一台秤、同一时间段（如每天早上喂食前）称，趋势比单次绝对值更重要。<br>
+                    <b>预警提示是诊断吗？</b>不是。它只是根据录入数据算出的趋势提醒，不构成医疗诊断；是否需要就医请咨询兽医。<br>
+                    <b>CSV 用 Excel 打开乱码？</b>导出文件带 UTF-8 BOM，Excel / WPS 直接双击打开即为正常中文；若仍乱码，请用「数据 → 从文本导入」并选 UTF-8 编码。
+                </div>
+            </div>
+
+            <div class="pwt-note" style="text-align:center;padding:.4rem 0 1.4rem;">宠物体重记录追踪器 · 全部计算均在浏览器本地完成，不收集、不上传任何数据</div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pet_weight_tracker.js?v=1"></script>
+</body>
+</html>
+{{end}}

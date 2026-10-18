@@ -34,6 +34,8 @@
 
 **预计改动文件**：`templates/pet_weight_tracker.html`（新建：宠物档案+体重录入+趋势图+预警+CSV，纯前端）、`static/js/pet_weight_tracker.js`（新建：localStorage 数据层+canvas 趋势图渲染引擎，沿仓库独立 JS 惯例）、`tools/categories.go`（新品类「宠物生活」注册）、`BACKLOG.md`（本小节）。
 
+**开发交付记录（2026-10-18 07:xx 前端开发轮 ✅）**：新建 `templates/pet_weight_tracker.html`（宠物档案 chips+表单、体重录入、canvas 趋势图、预警横幅、记录表、CSV 管理、使用说明/FAQ，页首 localStorage 隐私承诺横幅）、`static/js/pet_weight_tracker.js`（localStorage 数据层、kg/lb 换算、抱着称差值计算、canvas 自绘折线图 3M/6M/全部+目标参考线、近3周≥10%/连续4次下降≥5%预警、CSV 导出 BOM/导入/示例数据，纯函数经 node 20 项单元测试全过）；`tools/categories.go` 新增「宠物生活」品类（ID pet_weight_tracker、Path /tools/pet-weight-tracker、New: true，中英描述+SEO keywords）。本地构建通过；127.0.0.1:18099 实测 /tools/pet-weight-tracker 200、JS 200、sitemap 命中、首页品类与路径生效；测试服务已清理。commit 待推送。
+
 **未选**：文本隐私脱敏工具（P1，本轮新晋：dev.to Antigravity 2026-10-14 PII Masker+getweeve/lddgo 形态族，隐私叙事与「不出浏览器」铁律同构；按顺位递进留池，下轮优先）；网站图标生成器（P1，本轮新晋：365Lab 2026-10-08 竞品榜单+Byte-Kit 同形态，开发者建站刚需；顺位留池）；PDF 电子签名（P1，顺位第四：PdfWord 2026-10-12 PH eSign+fabulouspic 榜单全部免费版受限；难度中且需新增 PDF.js+pdf-lib 大依赖，留池作后续上午大轮次首选）；SRT 字幕编辑器（P1，顺位顺延，开辟字幕/视频新方向）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察，中文证据弱）；MP3 标签编辑器（P2 观察，开辟音频工具方向）等其余候选留池。
 
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 9c76d44 一致；`grep tools/categories.go` 全量 94 Path，无 pet/宠物/猫/体重/weight 命中（"pet" 仅命中 serp_snippet_preview 描述字母组合，非宠物工具），ID `pet_weight_tracker`、Path `/tools/pet-weight-tracker` 无重叠；新品类「宠物生活」无冲突；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。

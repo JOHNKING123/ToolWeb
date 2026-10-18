@@ -913,6 +913,23 @@ func GetCategories() []Category {
 				},
 			},
 		},
+		{
+			ID:          "pet",
+			Name:        "宠物生活",
+			Description: "宠物饲养与健康记录工具",
+			Icon:        "pets",
+			Tools: []Tool{
+				{
+					ID:          "pet_weight_tracker",
+					Name:        "宠物体重记录追踪器",
+					Description: "宠物体重记录：多宠物档案（猫/狗/其他+目标体重），每日体重录入（kg/lb 一键切换）、抱着称减体重模式、canvas 自绘趋势折线图（3M/6M/全部+目标参考线）、体重异常下降预警、CSV 导出/导入、示例数据一键填入，数据只存本浏览器 localStorage 不出浏览器 · Pet weight tracker: multi-pet profiles, weigh-with-holder mode, trend chart, weight-loss alerts, CSV import/export, 100% client-side",
+					Path:        "/tools/pet-weight-tracker",
+					Icon:        "pets",
+					New:         true,
+					Category:    "宠物生活",
+				},
+			},
+		},
 	}
 }
 
