@@ -427,6 +427,15 @@ func GetCategories() []Category {
 					Icon:        "image_search",
 					Category:    "图片处理",
 				},
+				{
+					ID:          "image_steganography",
+					Name:        "图片隐写",
+					Description: "把中文文字藏进图片像素（LSB 隐写），可选口令加密，导出 PNG 一键提取，本地处理不上传 · Hide text inside images with LSB steganography",
+					Path:        "/tools/image-steganography",
+					Icon:        "visibility_off",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

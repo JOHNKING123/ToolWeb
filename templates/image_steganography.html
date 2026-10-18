@@ -1,0 +1,222 @@
+{{define "image_steganography"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片隐写工具 - 图片藏文字/LSB隐写在线处理 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片隐写工具：把中文文字藏进图片像素最低位（LSB 隐写），可选口令加密，容量实时显示，导出 PNG 无损保位，一键提取。纯浏览器本地处理，图片和文字不上传服务器。">
+    <meta name="keywords" content="图片隐写,图片藏文字,LSB 隐写,图片水印隐藏,隐写术,steganography,图片加密,图片藏信息">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/image-steganography">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片隐写工具","description":"把文字藏进图片像素最低位（LSB 隐写），可选口令加密，导出 PNG，一键提取；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/image-steganography","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .stg-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .stg-wrap .navbar .material-icons { display: none; }
+        .stg-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .stg-privacy .stg-lock { font-size: 1.6rem; flex: none; }
+        .stg-privacy b { color: #047857; }
+        .stg-tabs { display: flex; gap: .6rem; margin-bottom: 1rem; }
+        .stg-tab { border: 1px solid #d1d5db; background: #fff; padding: .55rem 1.4rem; border-radius: .6rem;
+            cursor: pointer; font-size: .95rem; color: #374151; }
+        .stg-tab.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .stg-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .stg-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .stg-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .stg-upload:hover, .stg-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .stg-upload .stg-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .stg-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .stg-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; }
+        .stg-cap-panel { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .6rem; padding: .8rem 1rem; margin: .8rem 0; }
+        .stg-capline { font-size: .9rem; color: #374151; line-height: 1.8; }
+        .stg-capline.stg-over, .stg-capline.stg-over b { color: #dc2626; }
+        .stg-capbar { height: .55rem; background: #e5e7eb; border-radius: 1rem; margin-top: .5rem; overflow: hidden; }
+        .stg-capbar-fill { height: 100%; width: 0; background: var(--primary-color); border-radius: 1rem; transition: width .2s; }
+        .stg-capbar-fill.stg-over { background: #dc2626; }
+        .stg-cap-warn { display: none; margin-top: .6rem; font-size: .9rem; color: #dc2626; font-weight: 600; line-height: 1.7; }
+        .stg-textarea { width: 100%; min-height: 150px; font-size: .95rem; line-height: 1.8; padding: .8rem;
+            border: 1px solid #d1d5db; border-radius: .5rem; resize: vertical; box-sizing: border-box; background: #fff; }
+        .stg-output { width: 100%; min-height: 150px; font-size: .95rem; line-height: 1.8; padding: .8rem;
+            border: 1px solid #d1d5db; border-radius: .5rem; box-sizing: border-box; background: #f9fafb; }
+        .stg-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .stg-pwd-wrap { position: relative; display: inline-flex; align-items: center; }
+        .stg-pwd-wrap input { padding: .5rem 2.2rem .5rem .8rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .92rem; width: 230px; box-sizing: border-box; }
+        .stg-pwd-toggle { position: absolute; right: .4rem; border: none; background: none; cursor: pointer; font-size: 1rem; padding: .2rem; }
+        .stg-hint { font-size: .83rem; color: #9ca3af; }
+        .stg-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.3rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .92rem; }
+        .stg-btn:hover:not(:disabled) { background: var(--primary-color-dark); }
+        .stg-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+        .stg-btn-ghost { background: #f3f4f6; color: #374151; }
+        .stg-btn-ghost:hover { background: #e5e7eb; }
+        .stg-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin: .7rem 0; }
+        .stg-tip-err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .stg-tip-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+        .stg-tip-ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .stg-result-info { font-size: .9rem; color: #166534; line-height: 1.8; margin: .6rem 0; }
+        .stg-compare { margin: 1rem 0; }
+        .stg-compare-view { position: relative; display: inline-block; max-width: 100%; border: 1px solid #e5e7eb; border-radius: .5rem; overflow: hidden; --pos: 50%; }
+        .stg-compare-view canvas { display: block; max-width: 100%; height: auto; }
+        .stg-compare-top { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+        .stg-compare-line { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: #fff; box-shadow: 0 0 4px rgba(0,0,0,.5); }
+        .stg-compare-ctl { display: flex; align-items: center; gap: .7rem; margin-top: .6rem; font-size: .88rem; color: #374151; }
+        .stg-compare-ctl input[type=range] { flex: 1; max-width: 420px; }
+        .stg-compare-labels { display: flex; justify-content: space-between; max-width: 460px; font-size: .82rem; color: #6b7280; margin-top: .2rem; }
+        .stg-combo { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: .8rem; padding: .9rem 1.1rem;
+            font-size: .92rem; line-height: 1.9; color: #0c4a6e; margin-bottom: 1rem; }
+        .stg-combo a { color: #1d4ed8; font-weight: 600; }
+        .stg-doc { color: #374151; line-height: 1.9; font-size: .93rem; }
+        .stg-doc b { color: #111827; }
+        .stg-doc code { background: #f3f4f6; padding: .1rem .4rem; border-radius: .3rem; font-size: .85em; }
+        @media (max-width:640px){ .stg-wrap .container{padding:1rem;} .stg-pwd-wrap input{width:180px;} }
+    </style>
+</head>
+<body>
+    <div class="stg-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🖼️ 图片隐写工具</h1>
+            <p>把文字藏进图片像素里（LSB 隐写），可选口令加密，导出 PNG 后一键提取</p>
+        </div>
+
+        <div class="stg-privacy">
+            <span class="stg-lock">🔒</span>
+            <div><b>隐私承诺：图片和文字只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：嵌入、提取、导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 传再私密的图片和文字，也不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="stg-tabs" role="tablist">
+            <button type="button" class="stg-tab active" data-mode="embed" role="tab">📥 嵌入文字</button>
+            <button type="button" class="stg-tab" data-mode="extract" role="tab">📤 提取文字</button>
+        </div>
+
+        <!-- ============ 嵌入模式 ============ -->
+        <div id="stg-embed-panel">
+            <div class="stg-panel">
+                <h3>1️⃣ 上传载体图片</h3>
+                <div class="stg-upload" id="stg-embed-upload" role="button" tabindex="0" aria-label="点击选择或拖拽载体图片到此处上传">
+                    <span class="stg-big">🖼️</span>
+                    <div>点击选择图片，或把图片拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 JPG / PNG / WebP；图片越大，能藏的文字越多</div>
+                </div>
+                <input type="file" id="stg-embed-file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                <div class="stg-info" id="stg-embed-info" style="display:none;"></div>
+                <div class="stg-status" id="stg-embed-status"></div>
+            </div>
+
+            <div class="stg-panel" id="stg-cap-panel" style="display:none;">
+                <h3>2️⃣ 输入要隐藏的文字（支持中文）</h3>
+                <div class="stg-cap-panel">
+                    <div class="stg-capline" id="stg-capline">请先上传载体图片</div>
+                    <div class="stg-capbar"><div class="stg-capbar-fill" id="stg-capbar-fill"></div></div>
+                    <div class="stg-cap-warn" id="stg-cap-warn"></div>
+                </div>
+                <textarea class="stg-textarea" id="stg-text" placeholder="在此输入要藏进图片的文字，例如：&#10;今晚八点，老地方见。"></textarea>
+                <div class="stg-row">
+                    <label>🔑 口令（可选）：</label>
+                    <span class="stg-pwd-wrap">
+                        <input type="password" id="stg-pwd" placeholder="不设口令则任何人可提取" maxlength="64" autocomplete="off">
+                        <button type="button" class="stg-pwd-toggle" aria-label="显示/隐藏口令">👁</button>
+                    </span>
+                    <span class="stg-hint">口令用于轻量加密（防顺手查看，非军用级加密）</span>
+                </div>
+                <div class="stg-row">
+                    <button class="stg-btn" id="stg-embed-btn" disabled>✨ 开始嵌入</button>
+                    <button class="stg-btn stg-btn-ghost" id="stg-sample">📝 填入示例</button>
+                    <button class="stg-btn stg-btn-ghost" id="stg-clear">🗑 清空</button>
+                    <button class="stg-btn stg-btn-ghost" id="stg-reupload-embed">🔄 重新上传</button>
+                </div>
+            </div>
+
+            <div class="stg-panel" id="stg-result" style="display:none;">
+                <h3>3️⃣ 嵌入完成</h3>
+                <div class="stg-result-info" id="stg-result-info"></div>
+                <div class="stg-compare" id="stg-compare" style="display:none;">
+                    <div class="stg-compare-view" id="stg-compare-view">
+                        <canvas id="stg-cmp-carrier"></canvas>
+                        <div class="stg-compare-top"><canvas id="stg-cmp-stego"></canvas></div>
+                        <div class="stg-compare-line" id="stg-compare-line"></div>
+                    </div>
+                    <div class="stg-compare-ctl">
+                        <span>拖动对比：</span>
+                        <input type="range" id="stg-compare-range" min="0" max="100" value="50">
+                        <span id="stg-compare-val">50%</span>
+                    </div>
+                    <div class="stg-compare-labels"><span>◀ 隐写图（含隐藏文字）</span><span>载体原图 ▶</span></div>
+                    <div class="stg-hint" style="margin-top:.3rem;">LSB 嵌入只改动像素最低位，肉眼几乎不可见 —— 拖动滑块可验证两图一致。</div>
+                </div>
+                <div class="stg-row">
+                    <button class="stg-btn" id="stg-download">⬇ 导出 PNG（无损保位）</button>
+                </div>
+                <div class="stg-hint">⚠️ 务必导出 PNG 后再分享：JPG/WebP 有损压缩会破坏像素最低位，导致文字无法提取。</div>
+            </div>
+        </div>
+
+        <!-- ============ 提取模式 ============ -->
+        <div id="stg-extract-panel" style="display:none;">
+            <div class="stg-panel">
+                <h3>1️⃣ 上传隐写图（PNG）</h3>
+                <div class="stg-upload" id="stg-ext-upload" role="button" tabindex="0" aria-label="点击选择或拖拽隐写图片到此处上传">
+                    <span class="stg-big">🔍</span>
+                    <div>点击选择图片，或把图片拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">请上传本工具导出的 PNG；上传后自动尝试提取</div>
+                </div>
+                <input type="file" id="stg-ext-file" accept="image/png,image/jpeg,image/webp" style="display:none;">
+                <div class="stg-info" id="stg-ext-info" style="display:none;"></div>
+                <div class="stg-status" id="stg-ext-status"></div>
+            </div>
+
+            <div class="stg-panel">
+                <h3>2️⃣ 提取隐藏文字</h3>
+                <div class="stg-row">
+                    <label>🔑 口令（如嵌入时设置过）：</label>
+                    <span class="stg-pwd-wrap">
+                        <input type="password" id="stg-ext-pwd" placeholder="无口令可留空" maxlength="64" autocomplete="off">
+                        <button type="button" class="stg-pwd-toggle" aria-label="显示/隐藏口令">👁</button>
+                    </span>
+                    <button class="stg-btn" id="stg-ext-btn">🔓 提取文字</button>
+                    <button class="stg-btn stg-btn-ghost" id="stg-reupload-ext">🔄 重新上传</button>
+                </div>
+                <div class="stg-tip" id="stg-ext-tip"></div>
+                <div id="stg-ext-out" style="display:none;">
+                    <div class="stg-result-info" id="stg-ext-meta"></div>
+                    <textarea class="stg-output" id="stg-ext-text" readonly></textarea>
+                    <div class="stg-row">
+                        <button class="stg-btn" id="stg-ext-copy">📋 复制文字</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stg-combo">
+            <b>「图片旅程线」组合：</b>载体图太大？先用 <a href="/tools/img-compress">图片压缩</a> 或 <a href="/tools/img-convert">图片格式转换</a> 准备好图片 → 在本工具把文字藏进像素里导出 PNG → 需要显性遮挡车牌人脸时，用 <a href="/tools/img-mosaic">图片打码</a> 框选马赛克 —— 隐性藏字 + 显性打码，一套流程走完。
+        </div>
+
+        <div class="stg-panel">
+            <h3>使用说明</h3>
+            <div class="stg-doc">
+                <b>原理：</b>把文字按 UTF-8 编码成字节，逐比特写入图片每个像素 R/G/B 通道的最低有效位（LSB）。只改动最低位，颜色变化 ≤1/255，肉眼不可见。<br>
+                <b>数据包：</b>魔数 <code>STEG</code> + 版本 + 加密标志 + 载荷长度 + CRC16 校验，提取时逐项校验，失败会如实报错（非隐写图 / 口令错误 / 数据损坏都有明确提示）。<br>
+                <b>容量：</b>约「宽 × 高 × 3 ÷ 8 − 12」字节（如 1920×1080 的图约可藏 777KB 文本，约 25 万汉字）。超长时嵌入按钮自动禁用并红字提示。<br>
+                <b>口令：</b>可选。设口令后载荷经密钥流异或轻量加密，可防顺手查看；但请注意这是混淆而非军用级加密，极私密内容建议配合专业加密工具。<br>
+                <b>导出：</b>必须导出 PNG（无损）。JPG/WebP 有损压缩、缩放、裁剪都会破坏像素最低位，导致无法提取。<br>
+                <b>隐私：</b>纯前端 canvas 处理，图片和文字只在你的浏览器里流转，不会上传到任何服务器。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/image_steganography.js?v=1"></script>
+</body>
+</html>
+{{end}}
