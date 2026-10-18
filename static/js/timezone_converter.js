@@ -246,7 +246,7 @@ function saveSel() {
     updateShareURL();
 }
 function updateShareURL() {
-    var q = "?tz=" + selected.map(encodeURIComponent).join(",");
+    var q = selected.length ? "?tz=" + selected.map(encodeURIComponent).join(",") : "";
     try { history.replaceState(null, "", location.pathname + q); } catch (e) { /* ignore */ }
 }
 function shareURL() {
@@ -337,8 +337,12 @@ function renderGrid() {
             "</div>";
     }).join("");
 }
+var tickCount = 0;
 function tickGrid() {
     if (!$("tz-auto").checked) return;
+    tickCount++;
+    /* 每 60 秒整格重绘一次：刷新日期、UTC 偏移、夏令时徽标（跨午夜后自动校准） */
+    if (tickCount % 60 === 0) { renderGrid(); return; }
     var now = new Date();
     var els = document.querySelectorAll(".tz-time[data-tz]");
     for (var i = 0; i < els.length; i++) {
@@ -389,9 +393,11 @@ function renderMeeting() {
     }).join("");
 }
 function meetingNow() {
-    var n = new Date();
-    $("mt-dt").value = n.getFullYear() + "-" + pad2(n.getMonth() + 1) + "-" + pad2(n.getDate()) +
-        "T" + pad2(n.getHours()) + ":" + pad2(n.getMinutes());
+    /* 按基准时区取“现在”的墙钟时间：浏览器本地时区 ≠ 基准时区时，
+     * 直接用 getHours() 填充会被整体错位（评审 bug 修复）。 */
+    var base = $("mt-base").value || "Asia/Shanghai";
+    var p = parts(new Date(), base);
+    $("mt-dt").value = p.y + "-" + pad2(p.mo) + "-" + pad2(p.d) + "T" + pad2(p.h) + ":" + pad2(p.mi);
     renderMeeting();
 }
 
