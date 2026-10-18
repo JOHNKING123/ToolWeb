@@ -233,7 +233,7 @@ function drawScaled(canvas, small, k, grid) {
     var ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
-    if (grid && k >= 3) {
+    if (grid && k >= 2) {
         ctx.strokeStyle = 'rgba(0,0,0,0.28)';
         ctx.lineWidth = 1;
         ctx.beginPath();
