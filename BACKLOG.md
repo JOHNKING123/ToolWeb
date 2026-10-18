@@ -1,4 +1,37 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-19 01:00 第二十五轮研究）
+
+## 今日任务（2026-10-19 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第二十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片复古做旧已交付闭环（23:00 PM 决策轮立项→开发交付 14f9016；`grep tools/categories.go` 确认 ID `img_retro_filter`、Path `/tools/img-retro-filter` 已注册，全量 **96 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（01:00 全网调研，通用方向）：
+1. 复古做旧交付确认：`git log` 确认开发交付 14f9016（柯达/富士胶片调色+CCD数码风+漏光暗角颗粒，纯前端本地导出）；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD 14f9016 一致；`grep tools/categories.go` 全量 96 Path（95+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 图片复古做旧；历史全量见下方各轮小节）。
+2. 新晋候选：**在线音频裁剪器（Audio Trimmer）**。需求证据簇（六家形态验证，技术路线成熟）：① notevibes MP3 Cutter（Web Audio API 本地处理，"Your file never leaves your device"，可选 64/192/320kbps 导出）；② zalt.me Audio Trimmer（Web Audio API + lamejs 本地编解码，无上传无水印无时长限制）；③ aivideogenerator.so（浏览器内 FFmpeg 剪辑）；④ audio.pi7.org（WebAssembly 本地切割，"zero audio bytes leave the browser"，200MB 实测）；⑤ ercc.cc 音频裁剪（中文单页：波形视图+WAV 无损导出）；⑥ docfixer.online（毫秒级时间输入+裁剪区试听）。痛点真实：录音/语音备忘录去头尾静音、播客/采访取片段、会议录音截取——桌面软件要装（Audacity）、云端方案有隐私顾虑、免费版限时长加水印；「打开页面即剪、本地导出」与仓库 local-first 铁律同构。可行性：纯前端小难度——上传音频→decodeAudioData 解码→canvas 波形渲染→拖拽起止手柄（毫秒微调+试听预览）→AudioBuffer 切片→WAV 手工编码导出（零依赖）；MP3 导出需 lamejs 本地 vendor（仓库已有 SheetJS 本地 vendor 先例），可先做 WAV 路线。去重：96 Path 中 mp3/音频/audio/wav/剪辑/trim 全零命中（仓库零音频工具，开辟「音频处理」新品类；MP3 标签编辑器 P2 观察在池，可互链成音频组合）。难度小。SEO：音频剪辑、音频裁剪、MP3裁剪、语音裁剪、audio trimmer。建议 ID `audio_trimmer`、Path `/tools/audio-trimmer`。P1。
+3. 证据增强：**进制转换器**。Product Hunt 2026-10-12 "Everyday Tools" 套装（regex tester / Base64 encoder / hash generator / UUID v4 generator / number base converter / IP subnet calculator / Markdown viewer / file size converter）单列 number base converter——其中 Base64/UUID/Markdown/IP 子网计算器仓库已覆盖，进制转换为该榜单中仓库唯一缺口；英文形态族（dev.to velnoxlabstools 51 工具集 / Everyday Tools PH）二重化。痛点真实：开发/运维日常进制换算（掩码/颜色值/调试），现有在线方案多带广告。纯前端小难度：2/8/10/16/32 进制互转+分组显示+一键复制；与 timestamp/cron/uuid/base64 开发者工具家族旅程线。去重：96 Path 进制零命中。难度小。P1（观察→证据增强）。
+4. 无新单页信号侧：① V2EX 10-18/19：NASDrop（群晖 SPK + Docker，桌面/NAS 形态）、TokenMarket（AI API 中转小站，需后端）、ATBCmder（macOS 原生文件管理器 App）、rainbowsea 看榜小工具（tranco 每日拉取 + GitHub Action 流水线，需后端数据）、OpenI 免费算力社区（平台形态）——均非单页纯前端口径；② HN：Tiny Little Office（浏览器办公套件，16 轮已判单页承载过大）、WallHop（付费墙绕过，灰色地带不做）、Quake Rust 移植（游戏）、HN hiring thread 情报站（招聘分析）——无单页新信号；③ PdfWord 47 PDF 工具（2026-10-12 PH 上线）：eSign 已交付、OCR 仓库已有 ocr_image_text/ocr_batch、merge/split/compress/转 Word 仓库已覆盖，redact 为 PDF niche 增强暂不单立；④ laing_lii Site Tools Box（2026-10-18 dev.to 20+ 工具集）：DNS & Whois Lookup——仓库已有 dns-lookup/domain-check，不立；Bulk Domain Availability（RDAP 批量，domain-check 转 VPS 决策未定）；E-commerce & ROI 计算器——用户方向下不扩展；⑤ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；01:00 凌晨轮沿用「晚间轮只排小难度」规则）：
+
+1. **在线音频裁剪器（Audio Trimmer）** — P1（本轮新晋：六家形态验证 + Web Audio API 纯前端路线成熟；仓库零音频工具，开辟「音频处理」新品类；纯前端小难度：波形渲染+拖拽裁剪+WAV 本地导出零依赖；96 Path 无重叠）。SEO：音频剪辑、音频裁剪、MP3裁剪。
+2. **网站图标生成器（Favicon Generator）** — P1（顺位递进：16 轮新晋→24 轮顺位顺延；365Lab 10-08 竞品形态验证；纯前端小难度：上传→16/32/180/192/512 多尺寸生成→ZIP 打包+HTML 引用代码；96 Path favicon/网站图标/图标生成零命中；开发者/建站人群旅程线）。
+3. **JSON Schema 验证器（JSON Schema Validator）** — P1（顺位第一候补，22→23→24 轮连续递进；kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重证据；但纯前端中难度→留待上午大轮次高质量交付。若凌晨轮只排小难度，顺位递补日期加减/日期差工具（P1 观察：dev.to 10-13 榜单验证，纯前端小难度，时间效率口径））。
+
+浏览器屏幕录制器（P1，中难度，上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；进制转换器（P1 证据增强：PH 10-12 Everyday Tools 榜单单列，为该榜单仓库唯一缺口）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察，开发者 niche）；屏幕常亮工具（P1，留池）；金额大写转换器（节奏调节位）；年会大屏抽奖（时令预热）；日期加减/日期差（P1 观察，纯前端小难度，凌晨轮递补位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；在线钢琴（P2 观察，娱乐应用形态）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察，音频品类互链位）；贴纸生成器（P2 观察，AI 抠图需后端）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**通用候选表增量**（第二十五轮：复古做旧已实现划出；新晋音频裁剪器 P1、进制转换器证据增强；全量 96 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 在线音频裁剪器（Audio Trimmer） | 本轮新晋（六家形态验证：notevibes MP3 Cutter / zalt.me / aivideogenerator.so / audio.pi7.org / ercc.cc 中文音频裁剪 / docfixer.online——全部 "100% in browser, Web Audio API, no upload, no watermark" 口径，与仓库 local-first 铁律同构；痛点：录音/语音备忘录去头尾静音、播客/采访取片段、会议录音截取，桌面软件要装、云端方案有隐私顾虑、免费版限时长加水印；纯前端小难度：decodeAudioData→canvas 波形→拖拽起止手柄+毫秒微调+试听→AudioBuffer 切片→WAV 手工编码导出零依赖；MP3 导出可选 lamejs 本地 vendor（仓库有 SheetJS vendor 先例）；96 Path mp3/音频/audio/wav/剪辑/trim 全零命中，仓库零音频工具，开辟「音频处理」新品类；MP3 标签编辑器 P2 在池可互链） | 小 | P1（本轮新晋） |
+| 进制转换器 | 证据增强（Product Hunt 2026-10-12 "Everyday Tools" 榜单单列 number base converter；该榜单 Base64/UUID/Markdown/IP 子网计算器仓库已覆盖，进制转换为唯一缺口；dev.to velnoxlabstools 51 工具集形态族二重化；纯前端小难度：2/8/10/16/32 进制互转+分组显示+一键复制；96 Path 进制零命中；开发者工具家族 timestamp/cron/uuid/base64 旅程线） | 小 | P1（证据增强，观察） |
+
+**归档说明**：本轮为 10-19 通用调研第二十五轮——图片复古做旧交付闭环（14f9016，`/tools/img-retro-filter` 已注册，全量 96 Path），候选池划出，已实现清单 delta 追加；新晋「在线音频裁剪器」P1（六家形态验证 + Web Audio API 路线成熟，仓库零音频工具开辟新品类，纯前端小难度 WAV 零依赖路线，96 Path 无重叠）；「进制转换器」证据增强（PH 10-12 Everyday Tools 榜单单列，为该榜单仓库唯一缺口）；V2EX 10-18/19（NASDrop NAS SPK+Docker、TokenMarket AI 中转、ATBCmder macOS App、rainbowsea 需后端流水线、OpenI 平台形态）、HN（Tiny Little Office 单页承载过大、WallHop 灰色地带、Quake 游戏）、PdfWord 47 工具（eSign 已交付/OCR 已有/其余已覆盖）、laing_lii 20+ 工具集（DNS & Whois 仓库已有、ROI 计算器方向下不扩展）均无新单页可落地信号；WPS 候选表保持冻结归档；仓库 96 注册工具全量核对无重叠，核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD 14f9016 一致；`git log` 确认开发交付 14f9016；`grep tools/categories.go` 全量 96 Path（95+1），`img_retro_filter` ID 与 `/tools/img-retro-filter` Path 已注册（划入已实现），新候选建议 ID（audio_trimmer）与 96 Path 无重叠；mp3/音频/audio/wav/剪辑/trim/进制/favicon/网站图标/图标生成关键词在 categories.go 核对（零音频工具；Base64/UUID/Markdown/子网计算器/DNS 已有）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 23:00 排期轮）
 
 ## 今日任务（2026-10-18 23:00 · 产品经理排期决策 ✅）
