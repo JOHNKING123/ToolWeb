@@ -1,3 +1,35 @@
+> 维护人：产品调研员 · 每日更新（2026-10-18 11:00 第十八轮研究）
+
+## 今日任务（2026-10-18 11:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十八轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。PDF 电子签名已交付闭环（10:00 PM 决策轮立项→开发交付 0dd6451；`grep tools/categories.go` 确认 ID `pdf_sign`、Path `/tools/pdf-sign` 已注册，「文档转换」品类，全量 89 Path），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（11:00 全网调研，通用方向）：
+1. PDF 电子签名交付确认：`git log` 确认开发交付 0dd6451（手写签名板/上传图片白底转透明/键入姓名手写体三制签，签名库 localStorage，pdf.js 逐页预览点击放置拖拽缩放，pdf-lib embedPng 按页嵌入导出，与 pdf_annotate/pdf_manage 双向互链成「PDF 办公」组合）；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD b4ba6b3 一致；`grep tools/categories.go` 全量 89 Path，`pdf_sign` ID 与 `/tools/pdf-sign` Path 已注册；候选池划出，已实现清单追加（delta：+ PDF 电子签名；历史全量见下方第十七轮小节）。
+2. 新晋候选：**OFD 阅读与转 PDF（电子发票 OFD 版式）**。需求证据四重：① 365Lab 2026-10-08（10 天前）《电子发票怎么打印、报销与 OFD 转 PDF：财务小白完整指南》——"Reimbursing e-invoices usually trips people up on three things: printing layout, unopenable OFD files, and manual data entry"，自带发票助手 OFD→PDF 本地转换+A4 拼版——竞品形态验证+痛点原话；② 博客园 2026-09（1 个月前）纯前端 OFD 阅读器 ofd.11m18.cn（GB/T 33190，WASM 内核全程本地、打开即验签+文本精确提取）——纯前端可行性证明；③ UPDF 官方指南：iLovePDF 每天 2 次免费转换、3MB 以内——竞品免费版受限，「免费无上限+文件不出浏览器」差异化成立（发票敏感文件不上服务器是决定性卖点）；④ appbrain：OFD to PDF Converter & Reader 安卓 App 2026-09 上架——移动端需求证明。需求背景：全电/数电发票 OFD 版式全国推行，「OFD文件怎么打开」为高频中文搜索。可行性：纯前端中-大难度——OFD 为 ZIP+XML 版式（GB/T 33190），路线为 JSZip 解包→XML 解析→canvas 逐页渲染→浏览器打印/A4+导出 PDF（沿 pdf_sign/pdf-to-image 惯例）；风险点为嵌入字体与复杂版式。去重：89 Path 无 ofd/发票/invoice 命中。SEO：OFD转PDF、OFD文件怎么打开、电子发票OFD、OFD阅读器。建议 ID `ofd_reader`、Path `/tools/ofd-reader`。与 doc-to-pdf/PDF 工具族互链成「文档转换」组合。
+3. 无新单页信号侧：① dev.to 2026-10-14 Chess Blunder Heatmap（Stockfish WASM 零后端国际象棋失误热力图）——国际象棋小众，暂不单立；② dev.to 2026-10-09 BuildDiff（浏览器内递归对比两文件夹，File System Access API 目录选择）——开发者 niche，仓库已有 text_diff，不单立；③ HN ArkhamMirror ACH（CIA 竞争假设分析矩阵，localStorage 零后端）——情报分析 niche，不单立；④ HN Merge JPG/批量图片模糊——仓库 img-stitch/img-mosaic 已覆盖；⑤ V2EX 10-18：Yir.AI（AI 生图比价路由，需后端）、新词雷达（需付费 API+LLM 富化）、AI Code Review 讨论帖——均非单页纯前端口径；⑥ PH Weatherling（Mac 桌面 App）、Probe（原生 API 客户端）——桌面端形态；⑦ WPS 候选表保持冻结归档（本轮为通用方向）。
+4. 去重确认：新候选建议 ID（ofd_reader）与 89 Path 无重叠；ofd/发票/invoice 关键词在 categories.go 全量零命中。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **文本隐私脱敏工具（粘贴文本→敏感信息自动识别遮盖）** — P1（顺位递进到位：第十六轮新晋、第十七轮顺位第二、10:00 PM 决策轮明确「按顺位递进留待下轮」；dev.to Antigravity 2026-10-14 PII Masker+getweeve/lddgo 形态族；隐私叙事与仓库「数据不出浏览器」铁律同构；纯前端小难度：粘贴→正则识别（手机号/身份证/银行卡/邮箱/IP/车牌）→高亮逐条确认→一键遮盖→复制/下载；与 text_diff 互链成文本旅程线；89 Path 无重叠）。SEO：文本脱敏、隐私信息遮盖。
+2. **图片隐写工具（图片藏文字/提取）** — P1（第十七轮新晋顺位第三递进：365Lab 2026-10-08 竞品工具「画中画（图片隐写）」+ 6 分钟教程形态验证；stegtool/tembrica/imgcnv/toolshu 英文形态族；纯前端小难度：上传载体图→LSB 嵌入（+可选口令）→导出 PNG→一键提取→容量实时显示；89 Path 无重叠）。
+3. **OFD 阅读与转 PDF（电子发票 OFD 版式）** — P1（本轮新晋：365Lab 2026-10-08 电子发票指南「unopenable OFD files」核心痛点原话；iLovePDF 免费版 2次/天+3MB 受限——「免费无上限+文件不出浏览器」差异化（发票不上服务器）；纯前端可行有双先例（ofd.11m18.cn WASM 内核、365Lab 发票助手本地转换）；难度中-大，适合上午轮次留足时间；与 PDF 工具族互链；89 Path 无重叠）。
+
+网站图标生成器列顺位第四（P1，顺位顺延）；SRT 字幕编辑器（P1，顺位顺延，开辟字幕/视频新方向）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察，中文证据弱）；MP3 标签编辑器（P2 观察，开辟音频工具方向）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**通用候选表增量**（第十八轮：PDF 电子签名已实现划出；新晋 OFD 阅读与转 PDF（电子发票 OFD 版式）P1；全量 89 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| OFD 阅读与转 PDF（电子发票 OFD 版式） | 本轮新晋（365Lab 2026-10-08（10 天前）《电子发票怎么打印、报销与 OFD 转 PDF》——"unopenable OFD files" 为三大报销痛点之一，自带发票助手 OFD→PDF 本地转换+A4 拼版——竞品形态验证；博客园 2026-09（1 个月前）纯前端 OFD 阅读器 ofd.11m18.cn（GB/T 33190，WASM 内核全程本地、验签+文本精确提取）——纯前端可行性证明；UPDF 指南：iLovePDF 每天 2 次免费、3MB 以内——竞品免费版受限，「免费无上限+文件不出浏览器」差异化（发票敏感文件不上服务器）；appbrain：OFD to PDF 安卓 App 2026-09 上架——移动端需求证明）；需求背景：全电/数电发票 OFD 版式全国推行，「OFD文件怎么打开」高频中文搜索；纯前端中-大难度：OFD 为 ZIP+XML 版式（GB/T 33190），路线 JSZip 解包→XML 解析→canvas 逐页渲染→浏览器打印/导出 PDF（沿 pdf_sign/pdf-to-image 惯例），风险点为嵌入字体与复杂版式；与 PDF 工具族互链成「文档转换」组合；89 Path 无 ofd/发票/invoice 命中 | 中-大 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第十八轮——PDF 电子签名交付闭环（0dd6451，`/tools/pdf-sign` 已注册，「文档转换」品类，「PDF 办公」组合互链，全量 89 Path），候选池划出，已实现清单 delta 追加；新晋候选「OFD 阅读与转 PDF」P1（365Lab 2026-10-08 电子发票指南痛点原话 + 博客园 2026-09 纯前端 WASM 内核可行性证明 + iLovePDF 免费版受限差异化 + 安卓 App 移动端需求证明，纯前端中-大难度，适合上午轮次）；dev.to 2026-10-14 国际象棋热力图（小众）、2026-10-09 BuildDiff（开发者 niche，已有 text_diff）、HN ArkhamMirror ACH（情报分析 niche）、HN 图片合并/模糊（仓库已覆盖）均不单立；V2EX 10-18 为 AI 后端/平台/讨论形态，PH 为桌面端形态；WPS 候选表保持冻结归档；仓库 89 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD b4ba6b3 一致；`git log` 确认开发交付 0dd6451；`grep tools/categories.go` 全量 89 Path，`pdf_sign` ID 与 `/tools/pdf-sign` Path 已注册（划入已实现），新候选建议 ID（ofd_reader）与 Path（/tools/ofd-reader）均无重叠；ofd/发票/invoice 关键词在 categories.go 全量零命中；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（均为构建产物，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 10:00 决策轮）
 
 ## 今日任务（2026-10-18 10:00 · 产品经理排期决策 ✅）
