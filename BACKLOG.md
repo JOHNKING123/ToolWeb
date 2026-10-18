@@ -1,4 +1,37 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-18 17:00 第二十一轮研究）
+
+## 今日任务（2026-10-18 17:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第二十一轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片转像素画已交付闭环（15:38 PM 决策轮立项→开发交付 f6f693e + 评审反馈修复 153a309；`grep tools/categories.go` 确认 ID `pixel_art_converter`、Path `/tools/pixel-art-converter` 已注册，全量 **92 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮五件事**（17:00 全网调研，通用方向）：
+1. 图片转像素画交付确认：`git log` 确认开发交付 f6f693e（图片转像素画）+ 评审反馈修复 153a309（导出放大倍数默认 2×、网格线阈值降为 k>=2）；`git fetch`（GIT_SSH_COMMAND 指定密钥，先 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复 VM 换机清空 known_hosts 的 Host key verification failed，见 TOOLS.md）确认 origin/muse/dev-20260929 与本地 HEAD 153a309 一致；`grep tools/categories.go` 全量 92 Path（91+1），`pixel_art_converter` ID 与 `/tools/pixel-art-converter` Path 已注册；候选池划出，已实现清单追加（delta：+ 图片转像素画；历史全量见下方各轮小节）。
+2. 新晋候选：**SQLite 数据库查看器（浏览器内 .db 文件）**。需求证据五重：① sqlitelab.com（9 小时前抓取活跃）——"Open .db, .sqlite and .sqlite3 files, inspect tables, and run SQLite queries directly in your browser. No installation, account, or file upload. Your files stay on your device"——形态验证+隐私卖点原话；② dev.to sysmaya SQLite Javascript Editor（WASM sql.js 全程本地，上传即查、无服务器）——技术路线验证；③ dev.to hollygg "Stop uploading your DBs! View SQLite files 100% locally with WASM"——痛点原话（别再把数据库上传到云端）；④ add0n.com SQLite Viewer 扩展（Emscripten sql.js，no remote server，关标签页内存清零）——英文形态族；⑤ HN Eatmydata.ai（8 天前，Local-First Question-to-SQL，in-browser sqlite）——浏览器内 sqlite 热度再证。痛点真实：想看 db 文件要么装 DB Browser，要么把含敏感数据的库文件上传到在线工具；「文件不出浏览器」是决定性卖点，与仓库「数据不出浏览器」铁律同构；中文在线单页形态稀缺。开辟「数据库/开发者」新方向（与 sql-formatter 互链成开发者旅程线）。可行性：难度中——sql.js WASM 须本地 vendor（仓库无 CDN 依赖铁律，约 1-2MB 静态文件可接受）→上传 .db/.sqlite/.sqlite3→表结构浏览→SQL 查询编辑器→结果分页渲染→导出 CSV/下载 db。去重：92 Path 无 sqlite/db 命中（`sql` 工具为 SQL 格式化，品类不同；"stitch" 仅命中 img_stitch）。SEO：sqlite查看器、db文件怎么打开、sqlite在线查询。建议 ID `sqlite_viewer`、Path `/tools/sqlite-viewer`。适合上午大轮次单独占一轮高质量交付。
+3. 新晋候选：**SVG 转 React JSX**。需求证据双重：① dev.to supertoolkit 2026-10-16（2 天前）《I built 100+ free browser tools》100+ 工具集单列 "SVG to React JSX"——榜单形态验证；② 前端高频手工活：从 Figma/图标库复制 SVG 粘贴到 React 组件需手改属性（stroke-width→strokeWidth、class→className、style 字符串→对象），svgr 为库/CLI 形态，在线中文单页稀缺。可行性：纯前端小难度——粘贴 SVG→正则/轻量解析转驼峰属性→style 转对象→输出可复制 JSX 函数组件；与 fancy-fonts、color-converter 等开发者工具互链。去重：92 Path 无 jsx 命中（"svg" 仅命中描述文字 2 处，无独立工具）。难度小。SEO：svg转jsx、svg转react组件。建议 ID `svg_to_jsx`、Path `/tools/svg-to-jsx`。P1（观察：开发者 niche，顺位不提前）。
+4. 无新单页信号侧：① Token 计数器 / AI 文本清理器（Tooltri/supertoolkit 榜单）——仓库已有 `ai_token_counter` / `ai_text_cleaner`，不单立；② 重复词查找器（Tooltri）——文本小工具，差异化弱，P2 观察不单立；③ YouTube 缩略图下载器——URL 拼接 trivial，形态单薄，不单立；④ V2EX 10-18：出海情报站（信息平台）、Claude 封号教程站（资讯站）、Windows 开源软件商店（平台想法）、ChatGPT MCP 联网（agent 方案）、SSD 寿命公式（知识帖）——均非单页工具口径；⑤ HN 本轮多为 8 个月前旧帖（Embedding Explorer/Ava 语音助手/Infectio 恶意软件分析/DataKit 等），唯一新鲜 Eatmydata.ai 为 AI agent+远程 LLM 应用形态，不单立（但佐证浏览器内 sqlite 热度，见第 2 条）；⑥ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **CSS 渐变生成器（CSS Gradient Generator）** — P1（顺位递进到位：第十九轮新晋→第二十轮顺位第二→本轮递进第一；dev.to mou1z 2026-09-29（19 天前）5 工具集单列形态验证；前端/设计师高频刚需，与 color-converter 互补；纯前端小难度：可视化色标编辑→实时预览→一键复制 CSS（linear/radial/conic）→随机配色；开发者工具互链；92 Path 无重叠）。SEO：CSS渐变、渐变生成器。
+2. **照片转十字绣图案生成器** — P1（顺位递进：第二十轮新晋顺位第三→本轮递进第二；Medium 7 小时前今日榜单 + dev.to 09-06 英文形态双重验证；DMC 配色+PDF 导出免费无上限差异化；纯前端小难度：网格缩小→DMC 量化→符号网格渲染→导出；手工爱好+个性化礼物长尾需求；图片品类互链；92 Path 无重叠）。SEO：十字绣图案、照片转十字绣。
+3. **SQLite 数据库查看器（浏览器内 .db 文件）** — P1（本轮新晋：sqlitelab.com 9 小时前活跃+dev.to sysmaya/hollygg WASM 路线+"Stop uploading your DBs" 痛点原话+add0n 形态族+HN 8 天前热度再证，五重英文形态验证；开发者真实痛点「免安装看 db 文件」；隐私叙事与仓库铁律同构（数据库文件含敏感数据，不上服务器是决定性卖点）；中文单页稀缺；开辟数据库新方向；与 sql-formatter 互链；92 Path 无重叠；难度中——sql.js WASM 本地 vendor + 查询编辑器 + 大文件分页，建议留待上午大轮次单独占一轮高质量交付；若本轮只做小难度，顺位递补图片复古做旧）。SEO：sqlite查看器、db文件怎么打开。
+
+图片复古做旧列顺位第四（P1，第二十轮新晋，顺位顺延；365Lab 10-08 竞品+指南+Medium 榜单三重验证，纯前端小难度，批量场景差异化）；网站图标生成器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；SVG 转 React JSX（P1 观察，本轮新晋，开发者 niche，顺位不提前）；报价单/收据生成器（P1，票据组合，顺位顺延，用户方向下不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察，开辟音频方向）；贴纸生成器（P2 观察，AI 抠图需后端）；重复词查找器（P2 观察，差异化弱）等其余候选留池。
+
+**通用候选表增量**（第二十一轮：图片转像素画已实现划出；新晋 SQLite 数据库查看器 P1、SVG 转 React JSX P1（观察）；全量 92 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SQLite 数据库查看器（浏览器内 .db 文件） | 本轮新晋（sqlitelab.com 9 小时前抓取活跃——"Open .db, .sqlite and .sqlite3 files... No installation, account, or file upload. Your files stay on your device"——形态验证+隐私卖点原话；dev.to sysmaya SQLite Javascript Editor（WASM sql.js 全程本地）——技术路线验证；dev.to hollygg "Stop uploading your DBs! View SQLite files 100% locally with WASM"——痛点原话；add0n.com SQLite Viewer 扩展（Emscripten sql.js，no remote server）——英文形态族；HN Eatmydata.ai 8 天前 in-browser sqlite——热度再证）；痛点：看 db 文件要么装软件要么上传敏感库文件，「文件不出浏览器」是决定性卖点，与仓库铁律同构；中文单页稀缺；开辟数据库/开发者新方向（与 sql-formatter 互链）；难度中：sql.js WASM 本地 vendor（无 CDN 铁律）→上传 .db→表浏览→SQL 查询编辑器→结果分页→导出 CSV；92 Path 无 sqlite/db 命中 | 中 | P1（本轮新晋；建议上午大轮次） |
+| SVG 转 React JSX | 本轮新晋（dev.to supertoolkit 2026-10-16（2 天前）100+ 工具集单列 "SVG to React JSX"——榜单形态验证；前端高频手工活：Figma/图标库复制 SVG 到 React 需手改属性，svgr 为库形态，在线中文单页稀缺）；纯前端小难度：粘贴 SVG→属性转驼峰（stroke-width→strokeWidth、class→className）→style 字符串转对象→输出可复制 JSX 组件；与 fancy-fonts、color-converter 等开发者工具互链；92 Path 无 jsx 命中（"svg" 仅命中描述文字 2 处） | 小 | P1（观察：开发者 niche，顺位不提前） |
+
+**归档说明**：本轮为 10-18 通用调研第二十一轮——图片转像素画交付闭环（f6f693e+153a309，`/tools/pixel-art-converter` 已注册，全量 92 Path），候选池划出，已实现清单 delta 追加；新晋「SQLite 数据库查看器」P1（五重英文形态验证：sqlitelab.com 9 小时前活跃 + dev.to sysmaya/hollygg WASM 路线 + "Stop uploading your DBs" 痛点原话 + add0n 形态族 + HN 8 天前热度再证；「文件不出浏览器」隐私卖点与仓库铁律同构；中文单页稀缺；开辟数据库新方向；难度中，建议上午大轮次）、「SVG 转 React JSX」P1（观察，dev.to 2 天前 100+ 工具榜单形态验证，纯前端小难度，开发者 niche）；ai_token_counter/ai_text_cleaner 已有（Token 计数器/AI 文本清理器不单立）、重复词查找器（P2 观察差异化弱）、YouTube 缩略图下载器（trivial 不单立）均不单立；V2EX 10-18 为平台/资讯站/agent/知识帖形态；HN 本轮多为 8 个月前旧帖；WPS 候选表保持冻结归档；仓库 92 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环；本轮修复 VM 换机清空 known_hosts 致 git fetch 失败（ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts，TOOLS.md 已有记载）。
+
+**交付核对**：`git fetch`（先修复 known_hosts，GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 153a309 一致；`git log` 确认开发交付 f6f693e + 评审修复 153a309；`grep tools/categories.go` 全量 92 Path（91+1），`pixel_art_converter` ID 与 `/tools/pixel-art-converter` Path 已注册（划入已实现），新候选建议 ID（sqlite_viewer / svg_to_jsx）与 92 Path 无重叠；sqlite/db/jsx 关键词在 categories.go 全量零命中（"svg" 仅命中描述文字 2 处，"stitch" 仅命中 img_stitch ID/Path 行，"sql" 为 SQL 格式化工具，品类不同）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-18 15:30 第二十轮研究）
 
 ## 今日任务（2026-10-18 15:38 · 产品经理排期决策 ✅）
