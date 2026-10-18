@@ -1,4 +1,38 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-18 23:00 第二十四轮研究）
+
+## 今日任务（2026-10-18 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第二十四轮（WPS 特别方向已结束；用户方向修正持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。时区转换器已交付闭环（21:00 PM 决策轮立项→开发交付 c2e5f69 + 评审反馈修复 df583c7；`grep tools/categories.go` 确认 ID `timezone_converter`、Path `/tools/timezone-converter` 已注册，全量 **95 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮五件事**（23:00 全网调研，通用方向）：
+1. 时区转换器交付确认：`git log` 确认开发交付 c2e5f69（多城市并排对比+会议时间对齐+DST 自动处理）+ 评审反馈修复 df583c7（meetingNow 基准时区取当前时刻、tick 跨日刷新、分享链接空值清理、Node 测试入仓）；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD df583c7 一致；`grep tools/categories.go` 全量 95 Path（94+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 时区转换器；历史全量见下方各轮小节）。
+2. 新晋候选：**浏览器屏幕录制器（Screen Recorder）**。需求证据：dev.to waqar112 2026-09-20《I Built 40+ Free Browser Tools》单列 "4K Screen Recorder with webcam overlay (using MediaRecorder API)"——技术路线验证（纯前端 MediaRecorder API 可成）；痛点真实：录屏工具要么装桌面软件，要么在线方案免费版限时长（Loom 免费版 5 分钟上限、付费 $50+/年），「打开页面即录、录完本地导出」有真实场景（录操作演示、Bug 复现、临时演示）。可行性：纯前端中难度——getDisplayMedia 捕获屏幕/窗口/标签页→MediaRecorder 编码（WebM/VP9）→暂停/继续→录完本地导出下载，摄像头画中画可选（同屏 getUserMedia 叠加 canvas 合成）；零依赖、无后端、无 CDN；HTTPS/localhost 环境 getDisplayMedia 直接可用（/tool-web 为 HTTPS，条件成立）。去重：95 Path 中 recorder/录屏/录制/屏幕录全零命中（无音频/视频录制类工具，开辟新方向）。难度中。SEO：在线录屏、屏幕录制、screen recorder。建议 ID `screen_recorder`、Path `/tools/screen-recorder`。P1（中难度，适合上午大轮次；但纯前端零依赖、测试自包含）。
+3. 新晋候选：**日期加减/日期差工具（Date Add & Subtract）**。需求证据：dev.to md_shohan 2026-10-13（5 天前）《I Replaced My Productivity Apps with 10 Free Browser Tools》同文单列 Date Add / Subtract（含 ISO 周数、可复制 ISO 8601 时间戳）——与时区转换器出自同一榜单的品类族验证（该榜单单列时区转换器已兑现交付）；项目排期/考勤/合同起止日常需求。差异化：仓库 timestamp 仅做时间戳互转、在线日历仅为日历视图，均无「N 天后是几号」「两日期相差 X 天 Y 月」计算。纯前端小难度：日期输入+天数/月数/年数加减→结果日期+星期+ISO 周数+与今日差值→一键复制 ISO 8601。去重：95 Path 中 date_add/日期差/日期加减/日期计算全零命中。难度小。SEO：日期计算器、日期加减、天数计算。建议 ID `date_add_subtract`、Path `/tools/date-add-subtract`。P1（观察：带「计算器」字样，用户方向下只做时间/效率口径，不扩展泛生活计算器）。
+4. 证据强化：**图片复古做旧**获最新佐证——Medium Siloshan 2026-10-18（15 小时前）《7 Free Browser Tools Worth Bookmarking This October》单列 OldRoll（retro film or digicam look），与既有 365Lab 10-08 竞品+Medium 榜单+dev.to 形态族形成四重验证；且时区（时间品类）已交付，图片品类感知重复错峰完毕（21 轮/23 轮两轮连续非图片品类），节奏位已到。
+5. 无新单页信号侧：① 同 Medium Siloshan 榜单其余项——SyncWhen（无注册会议约时间：需多人协作/后端，非单页口径，不单立）；SortaSeat（婚礼座位表：应用形态重，不单立）；urPiano（浏览器弹钢琴：Web Audio 可实现但属娱乐应用形态，P2 观察）；llmspeed（本地 AI 模型跑速评估：AI niche，不单立）；Calcy（带单位科学计算器：方向下计算器类谨慎，观察不单立）。② dev.to yuvaraj_radhakrishnan 59 开发者工具集——PII Masker（仓库已有 `text_privacy_masker`，不单立）；JWT Inspector（仓库已有 `jwt`）；Universal Encoder/Decoder（仓库已有 Base64/URL/HTML 实体编解码三件套）；AI Token Counter（仓库已有 `ai_token_counter`）；RSA & ECC Key Generator（仓库已有 `rsa` 加解密，密钥生成功能同族）；System Prompt Builder / AI Text Humanizer / Prompt Cost Trimmer（AI niche，不单立）。③ blanzatools 14 工具其余项——Image Compressor（仓库已有 `img-compress`）、Countdown Timer（P2 观察）、JSON Formatter（仓库已有 `json_parser`）；④ V2EX 本轮仅算力社区帖，HN 无新单页信号；⑤ WPS 候选表保持冻结归档。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **图片复古做旧** — P1（证据四重化：365Lab 10-08 + Medium 榜单 + dev.to 形态族 + Siloshan 10-18（15 小时前）OldRoll retro film/digicam look；图片品类错峰位已到：时区已交付、JSON Schema 与屏幕录制均为非图片品类；纯前端小难度：canvas 滤镜矩阵+噪点/漏光叠加→胶片/CCD 质感→导出；图片品类互链；95 Path 无重叠）。SEO：复古滤镜、胶片质感、CCD 风。
+2. **JSON Schema 验证器** — P1（顺位递进：20 轮新晋→21/22/23 轮连续递进第一候补；三重证据；纯前端中难度 ajv 本地 vendor+错误行列定位；建议上午大轮次单独占一轮高质量交付；json 工具家族互链；95 Path 无重叠）。
+3. **浏览器屏幕录制器（Screen Recorder）** — P1（本轮新晋：waqar112 40+ 工具集 + MediaRecorder API 纯前端路线验证；Loom 免费版 5 分钟限时痛点真实；零依赖无后端；95 Path recorder/录屏/录制全零命中，开辟浏览器媒体录制新方向；/tool-web 为 HTTPS，getDisplayMedia 权限条件成立）。若晚间轮只排小难度，顺位递补日期加减工具（P1 观察：纯前端小难度，日期加减/日期差/ISO 周数，时间效率口径，95 Path 无重叠）。
+
+屏幕常亮工具（P1，留池）；网站图标生成器（P1，顺位顺延）；SVG 转 React JSX（P1 观察，开发者 niche）；SRT 字幕编辑器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；日期加减/日期差（P1 观察，计算器口径谨慎）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；在线钢琴（P2 观察，娱乐应用形态，本轮新评估）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**通用候选表增量**（第二十四轮：时区转换器已实现划出；新晋屏幕录制器 P1、日期加减 P1（观察）；图片复古做旧证据四重化；全量 95 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 浏览器屏幕录制器（Screen Recorder） | 本轮新晋（dev.to waqar112 2026-09-20《I Built 40+ Free Browser Tools》单列 "4K Screen Recorder with webcam overlay (using MediaRecorder API)"——纯前端技术路线验证；痛点：桌面软件要安装、在线方案免费版限时长（Loom 5 分钟上限、付费 $50+/年），「打开页面即录、录完本地导出」真实场景：操作演示/Bug 复现；纯前端中难度：getDisplayMedia 捕获屏幕/窗口/标签页→MediaRecorder 编码 WebM→暂停/继续→本地导出，摄像头画中画可选；零依赖无后端；/tool-web 为 HTTPS，权限条件成立；95 Path recorder/录屏/录制全零命中，开辟新方向） | 中 | P1（本轮新晋；适合上午大轮次） |
+| 日期加减/日期差工具（Date Add & Subtract） | 本轮新晋（dev.to md_shohan 2026-10-13《I Replaced My Productivity Apps with 10 Free Browser Tools》单列 Date Add / Subtract（含 ISO 周数、可复制 ISO 8601）——与时区转换器同榜单品类族验证；项目排期/考勤/合同起止日常需求；差异化：timestamp 仅时间戳互转、在线日历仅日历视图；纯前端小难度：日期+N 天/月/年→结果+星期+ISO 周数+与今日差值→复制 ISO 8601；95 Path date_add/日期差/日期加减全零命中） | 小 | P1（观察：计算器口径，用户方向下仅时间/效率） |
+
+**归档说明**：本轮为 10-18 通用调研第二十四轮——时区转换器交付闭环（c2e5f69 + 评审修复 df583c7，`/tools/timezone-converter` 已注册，全量 95 Path），候选池划出，已实现清单 delta 追加；新晋「浏览器屏幕录制器」P1（waqar112 40+ 工具集+MediaRecorder API 纯前端路线验证，Loom 免费限时痛点，开辟新方向，建议上午大轮次）、「日期加减/日期差」P1（观察：与时区转换器同榜单品类族验证，纯前端小难度，计算器口径谨慎）；图片复古做旧证据四重化（Siloshan 10-18（15 小时前）OldRoll retro film/digicam look），图片品类错峰位已到；PII 脱敏/图片标注/编码器/AI Token 计数器/JWT/RSA 均仓库已有不单立；会议约时间/座位表需后端或应用形态重不单立；V2EX/HN 本轮无新单页信号；WPS 候选表保持冻结归档；仓库 95 注册工具全量核对无重叠，核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD df583c7 一致；`git log` 确认开发交付 c2e5f69 + 评审修复 df583c7；`grep tools/categories.go` 全量 95 Path（94+1），`timezone_converter` ID 与 `/tools/timezone-converter` Path 已注册（划入已实现），新候选建议 ID（screen_recorder / date_add_subtract）与 95 Path 无重叠；recorder/录屏/录制/date_add/日期差/日期加减/piano/钢琴/会议投票关键词在 categories.go 核对（image_annotator/text_privacy_masker/Base64/URL 编码器已有，不单立）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 21:00 排期轮）
 
 ## 今日任务（2026-10-18 21:00 · 产品经理排期决策 ✅）
