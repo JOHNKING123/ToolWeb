@@ -1,0 +1,178 @@
+{{define "pixel_art_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转像素画 - 像素风头像/Pixel Art 在线生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片转像素画工具：照片一键转像素风，GameBoy 4 色 / PICO-8 16 色 / 复古 16 色调色板 + 自定义色数，像素宽度 16–256 可调，网格叠加，PNG 导出。纯浏览器本地处理，图片不上传服务器。">
+    <meta name="keywords" content="像素画,图片转像素风,像素头像,pixel art,像素风头像,GameBoy调色板,PICO-8,像素化,照片转像素">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pixel-art-converter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片转像素画","description":"照片一键转像素风：GameBoy/PICO-8 复古调色板、自定义色数量化、像素宽度可调、网格叠加、PNG 导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pixel-art-converter","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .px-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .px-wrap .navbar .material-icons { display: none; }
+        .px-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .px-privacy .px-lock { font-size: 1.6rem; flex: none; }
+        .px-privacy b { color: #047857; }
+        .px-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .px-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .px-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .px-upload:hover, .px-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .px-upload .px-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .px-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .px-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; }
+        .px-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .px-row label { font-size: .92rem; color: #374151; }
+        .px-row input[type=range] { flex: 1; min-width: 160px; max-width: 360px; }
+        .px-val { display: inline-block; min-width: 4.5em; font-weight: 600; color: var(--primary-color); font-size: .92rem; }
+        .px-palettes { display: flex; gap: .6rem; flex-wrap: wrap; margin: .5rem 0; }
+        .px-pal { border: 2px solid #e5e7eb; background: #fff; border-radius: .6rem; padding: .45rem .8rem;
+            cursor: pointer; font-size: .9rem; color: #374151; display: inline-flex; align-items: center; gap: .5rem; }
+        .px-pal.active { border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; background: #eff6ff; }
+        .px-swatches { display: inline-flex; gap: 2px; }
+        .px-swatches i { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.15); display: block; }
+        .px-check { display: inline-flex; align-items: center; gap: .4rem; font-size: .92rem; color: #374151; cursor: pointer; }
+        .px-compare { display: flex; gap: 1rem; flex-wrap: wrap; margin: .5rem 0; }
+        .px-view { flex: 1 1 300px; min-width: 0; }
+        .px-view figcaption { font-size: .85rem; color: #6b7280; margin-bottom: .4rem; text-align: center; }
+        .px-view canvas { display: block; max-width: 100%; height: auto; margin: 0 auto;
+            border: 1px solid #e5e7eb; border-radius: .5rem; background: #f3f4f6; image-rendering: pixelated; }
+        .px-meta { font-size: .88rem; color: #6b7280; line-height: 1.8; }
+        .px-meta b { color: #374151; }
+        .px-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.3rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .92rem; }
+        .px-btn:hover:not(:disabled) { background: var(--primary-color-dark); }
+        .px-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+        .px-btn-ghost { background: #f3f4f6; color: #374151; }
+        .px-btn-ghost:hover { background: #e5e7eb; }
+        .px-scale { display: inline-flex; gap: .5rem; }
+        .px-scale label { display: inline-flex; align-items: center; gap: .3rem; font-size: .92rem; color: #374151;
+            border: 1px solid #e5e7eb; border-radius: .5rem; padding: .4rem .8rem; cursor: pointer; background: #fff; }
+        .px-scale label.on { border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; background: #eff6ff; }
+        .px-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin: .7rem 0; }
+        .px-tip-err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .px-combo { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: .8rem; padding: .9rem 1.1rem;
+            font-size: .92rem; line-height: 1.9; color: #0c4a6e; margin-bottom: 1rem; }
+        .px-combo a { color: #1d4ed8; font-weight: 600; }
+        .px-doc { color: #374151; line-height: 1.9; font-size: .93rem; }
+        .px-doc b { color: #111827; }
+        .px-doc code { background: #f3f4f6; padding: .1rem .4rem; border-radius: .3rem; font-size: .85em; }
+        @media (max-width:640px){ .px-wrap .container{padding:1rem;} .px-compare{flex-direction:column;} }
+    </style>
+</head>
+<body>
+    <div class="px-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧱 图片转像素画</h1>
+            <p>照片一键转像素风：GameBoy / PICO-8 复古调色板 + 自定义色数，像素宽度可调，网格叠加，PNG 导出</p>
+        </div>
+
+        <div class="px-privacy">
+            <span class="px-lock">🔒</span>
+            <div><b>隐私承诺：图片只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：缩小、调色板量化、预览、导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 上传的图片不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="px-panel">
+            <h3>1️⃣ 上传图片</h3>
+            <div class="px-upload" id="px-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                <span class="px-big">🖼️</span>
+                <div>点击选择图片，或把图片拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / JPEG / WebP；大图会自动下采样到工作分辨率，页面不卡顿</div>
+            </div>
+            <input type="file" id="px-file" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <div class="px-info" id="px-srcinfo" style="display:none;"></div>
+            <div class="px-status" id="px-status"></div>
+            <div class="px-tip" id="px-tip"></div>
+        </div>
+
+        <div class="px-panel" id="px-controls" style="display:none;">
+            <h3>2️⃣ 调整像素化参数（实时预览）</h3>
+            <div class="px-row">
+                <label>📐 像素宽度：</label>
+                <input type="range" id="px-width" min="16" max="256" step="1" value="64">
+                <span class="px-val" id="px-width-val">64 px</span>
+            </div>
+            <div class="px-row" style="margin-top:1rem;">
+                <label>🎨 调色板：</label>
+            </div>
+            <div class="px-palettes" id="px-palettes" role="radiogroup" aria-label="调色板选择">
+                <button type="button" class="px-pal active" data-pal="gameboy"><span class="px-swatches" data-sw="gameboy"></span>GameBoy 4 色</button>
+                <button type="button" class="px-pal" data-pal="pico8"><span class="px-swatches" data-sw="pico8"></span>PICO-8 16 色</button>
+                <button type="button" class="px-pal" data-pal="retro16"><span class="px-swatches" data-sw="retro16"></span>复古 16 色</button>
+                <button type="button" class="px-pal" data-pal="fullcolor">🌈 全彩保持</button>
+                <button type="button" class="px-pal" data-pal="custom">🎚️ 自定义色数</button>
+            </div>
+            <div class="px-row" id="px-custom-row" style="display:none;">
+                <label>🎚️ 色数（中位切分量化）：</label>
+                <input type="range" id="px-colors" min="2" max="64" step="1" value="16">
+                <span class="px-val" id="px-colors-val">16 色</span>
+            </div>
+            <div class="px-row">
+                <label class="px-check"><input type="checkbox" id="px-grid"> 🔲 网格线叠加（方便按格临摹）</label>
+                <label class="px-check"><input type="checkbox" id="px-alpha" checked> 🫥 保留透明背景（PNG）</label>
+            </div>
+        </div>
+
+        <div class="px-panel" id="px-result" style="display:none;">
+            <h3>3️⃣ 对比预览与导出</h3>
+            <div class="px-compare">
+                <figure class="px-view">
+                    <figcaption>原图</figcaption>
+                    <canvas id="px-src-canvas"></canvas>
+                </figure>
+                <figure class="px-view">
+                    <figcaption>像素化预览（nearest-neighbor 放大，边缘无模糊）</figcaption>
+                    <canvas id="px-out-canvas"></canvas>
+                </figure>
+            </div>
+            <div class="px-meta" id="px-meta"></div>
+            <div class="px-row" style="margin-top:.8rem;">
+                <label>💾 导出放大倍数：</label>
+                <span class="px-scale" id="px-scale">
+                    <label class="on"><input type="radio" name="pxs" value="1"> 1×</label>
+                    <label><input type="radio" name="pxs" value="2" checked> 2×</label>
+                    <label><input type="radio" name="pxs" value="4"> 4×</label>
+                </span>
+            </div>
+            <div class="px-row">
+                <button class="px-btn" id="px-export">⬇️ 导出 PNG</button>
+                <button class="px-btn px-btn-ghost" id="px-reupload">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <div class="px-combo">
+            <b>「图片旅程线」组合：</b>原图太大/格式不对？先用 <a href="/tools/img-compress">图片压缩</a> 或 <a href="/tools/img-convert">图片格式转换</a> 准备好 → 在本工具转成像素风导出 PNG → 想把像素画的创作灵感藏进图片里？试试 <a href="/tools/image-steganography">图片隐写工具</a>（LSB 隐写），或给原图打码遮挡时用 <a href="/tools/img-mosaic">图片打码</a> —— 风格化创作 + 图片加工，一套流程走完。
+        </div>
+
+        <div class="px-panel">
+            <h3>使用说明</h3>
+            <div class="px-doc">
+                <b>原理：</b>先把图片缩小到「像素宽度」指定的小尺寸（工作分辨率），再按所选调色板对每个像素做最近邻颜色匹配（自定义色数用中位切分算法从原图提炼色板），最后用 nearest-neighbor 放大回显示尺寸 —— 放大只复制硬像素、不做任何平滑，所以边缘永远锐利无模糊。<br>
+                <b>调色板：</b><code>GameBoy 4 色</code> 是掌机经典绿阶（#0f380f / #306230 / #8bac0f / #9bbc0f）；<code>PICO-8 16 色</code> 是幻想游戏机标准色板；<code>复古 16 色</code> 是 DOS 时代 VGA 16 色；<code>全彩保持</code> 不做颜色量化，只做像素化；<code>自定义色数</code> 在 2–64 色之间用中位切分从原图自动提炼色板。<br>
+                <b>大图处理：</b>超过 2048px（长边）的图片会自动下采样到工作分辨率再处理，内存占用可控，手机浏览器也不卡顿；工作分辨率本身最高 256px 宽，处理量始终很小。<br>
+                <b>网格线：</b>仅叠加在预览上方便数格子临摹，导出 PNG 时不带网格线（导出的是纯净像素图）。<br>
+                <b>导出：</b>PNG 像素级无损；1× 即工作分辨率原尺寸，2×/4× 为整数倍 nearest-neighbor 放大，与预览像素一一对应。<br>
+                <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/pixel_art_converter.js?v=1"></script>
+</body>
+</html>
+{{end}}

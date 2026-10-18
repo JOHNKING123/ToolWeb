@@ -436,6 +436,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "pixel_art_converter",
+					Name:        "图片转像素画",
+					Description: "照片一键转像素风：GameBoy/PICO-8 复古调色板+自定义色数量化，像素宽度可调，网格叠加，PNG 导出，本地处理不上传 · Turn photos into pixel art",
+					Path:        "/tools/pixel-art-converter",
+					Icon:        "grid_on",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{
