@@ -193,6 +193,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "timezone_converter",
+					Name:        "时区转换器",
+					Description: "多城市时区并排对比：IANA 时区搜索多选、北京时间换算、会议时间对齐、夏令时自动标注，纯前端 · Multi-city time zone converter with meeting planner",
+					Path:        "/tools/timezone-converter",
+					Icon:        "public",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "uuid",
 					Name:        "UUID 生成器",
 					Description: "批量生成 UUID，支持 v1/v4、大小写与连字符选项",
