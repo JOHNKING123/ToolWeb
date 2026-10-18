@@ -1,0 +1,178 @@
+{{define "css_gradient_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 渐变生成器 - linear/radial/conic 渐变在线生成复制 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 渐变生成器：可视化渐变条编辑（色标增删、拖拽调位置、颜色+透明度），linear/radial/conic 三种类型，角度/形状/位置实时预览，随机和谐配色，10 款常用预设一键套用，复制 background: linear-gradient(...) CSS 代码。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS渐变,渐变生成器,gradient generator,css gradient,linear-gradient,radial-gradient,conic-gradient,渐变配色,CSS背景渐变">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-gradient-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 渐变生成器","description":"免费在线 CSS 渐变生成器：可视化渐变条编辑，linear/radial/conic 三种类型，角度/形状/位置实时预览，随机和谐配色，10 款预设一键套用，一键复制 CSS 代码，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-gradient-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cg-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .cg-wrap .navbar .material-icons { display: none; }
+        .cg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .cg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .cg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .cg-checker { background-color:#fff; background-image:linear-gradient(45deg,#d1d5db 25%,transparent 25%,transparent 75%,#d1d5db 75%),linear-gradient(45deg,#d1d5db 25%,transparent 25%,transparent 75%,#d1d5db 75%); background-size:16px 16px; background-position:0 0,8px 8px; }
+        .cg-type-tabs { display:flex; gap:.5rem; margin-bottom:.9rem; flex-wrap:wrap; }
+        .cg-type-tab { border:2px solid #e5e7eb; background:#fff; border-radius:.6rem; padding:.5rem 1.1rem; cursor:pointer; font-size:.92rem; color:#374151; }
+        .cg-type-tab.active { border-color:var(--primary-color); color:var(--primary-color); font-weight:600; background:#eff6ff; }
+        .cg-param-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .cg-param-row label { font-size:.92rem; color:#374151; min-width:4.2em; }
+        .cg-param-row input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        .cg-val { display:inline-block; min-width:4.2em; font-weight:600; color:var(--primary-color); font-size:.92rem; }
+        .cg-param-row select { padding:.4rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; color:#374151; background:#fff; }
+        .cg-bar-wrap { position:relative; padding:22px 12px 8px; margin:.5rem 0 .2rem; }
+        .cg-bar { position:relative; height:52px; border-radius:.6rem; cursor:crosshair; border:1px solid rgba(0,0,0,.15); touch-action:none; }
+        .cg-stop { position:absolute; top:50%; width:20px; height:20px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.45); transform:translate(-50%,-50%); cursor:grab; z-index:2; }
+        .cg-stop.selected { outline:3px solid var(--primary-color); outline-offset:1px; }
+        .cg-stop:active { cursor:grabbing; }
+        .cg-bar-tip { font-size:.85rem; color:#9ca3af; margin-top:.4rem; }
+        .cg-editor { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem 1rem; margin-top:.5rem; }
+        .cg-editor label { font-size:.9rem; color:#374151; }
+        .cg-editor input[type=color] { width:44px; height:34px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .cg-hex { width:92px; padding:.42rem .55rem; border:1px solid #d1d5db; border-radius:.45rem; font-size:.9rem; font-family:monospace; text-transform:uppercase; }
+        .cg-editor input[type=range] { width:110px; }
+        .cg-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .cg-btn:hover { background:#f3f4f6; }
+        .cg-btn.danger { color:#dc2626; border-color:#fecaca; }
+        .cg-btn.danger:hover { background:#fef2f2; }
+        .cg-preview-big { height:230px; border-radius:.7rem; border:1px solid rgba(0,0,0,.12); }
+        .cg-samples { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-top:.8rem; }
+        .cg-sample-btn { height:74px; border:none; border-radius:.6rem; color:#fff; font-size:1.05rem; font-weight:700; letter-spacing:.15em; cursor:pointer; text-shadow:0 1px 3px rgba(0,0,0,.4); }
+        .cg-sample-hero { height:74px; border-radius:.6rem; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.05rem; font-weight:700; letter-spacing:.1em; text-shadow:0 1px 3px rgba(0,0,0,.4); border:1px solid rgba(0,0,0,.08); }
+        .cg-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; min-height:3.4rem; }
+        .cg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .cg-check { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:#374151; cursor:pointer; }
+        .cg-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:.7rem; }
+        .cg-preset { border:1px solid #e5e7eb; border-radius:.6rem; overflow:hidden; cursor:pointer; background:#fff; transition:transform .12s, box-shadow .12s; }
+        .cg-preset:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.12); }
+        .cg-preset-swatch { height:58px; }
+        .cg-preset-name { padding:.4rem .5rem; font-size:.85rem; color:#374151; text-align:center; }
+        .cg-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .cg-tip a { color:var(--primary-color); }
+        .cg-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        @media (max-width:640px) {
+            .cg-samples { grid-template-columns:1fr; }
+            .cg-preview-big { height:160px; }
+            .cg-bar-wrap { padding:22px 4px 8px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="cg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎨 CSS 渐变生成器</h1>
+            <p>可视化拖拽编辑 linear / radial / conic 渐变，实时预览，一键复制 CSS 代码</p>
+        </div>
+        <div class="tool-content">
+            <div class="cg-card">
+                <h3>渐变编辑 <span class="cg-hint">（点击渐变条添加色标 · 拖拽色标调位置 · 点击色标选中编辑）</span></h3>
+                <div class="cg-type-tabs" id="cg-type-tabs">
+                    <button class="cg-type-tab active" data-type="linear">线性 Linear</button>
+                    <button class="cg-type-tab" data-type="radial">径向 Radial</button>
+                    <button class="cg-type-tab" data-type="conic">锥形 Conic</button>
+                </div>
+                <div id="cg-params-linear" class="cg-params">
+                    <div class="cg-param-row">
+                        <label>角度</label>
+                        <input type="range" id="cg-angle" min="0" max="360" value="135">
+                        <span class="cg-val" id="cg-angle-val">135°</span>
+                    </div>
+                </div>
+                <div id="cg-params-radial" class="cg-params" style="display:none;">
+                    <div class="cg-param-row">
+                        <label>形状</label>
+                        <select id="cg-radial-shape">
+                            <option value="ellipse">ellipse 椭圆</option>
+                            <option value="circle">circle 正圆</option>
+                        </select>
+                        <label>位置</label>
+                        <select id="cg-radial-pos"></select>
+                    </div>
+                    <div class="cg-param-row" id="cg-radial-xy" style="display:none;">
+                        <label>水平</label>
+                        <input type="range" id="cg-radial-x" min="0" max="100" value="50">
+                        <span class="cg-val" id="cg-radial-x-val">50%</span>
+                        <label>垂直</label>
+                        <input type="range" id="cg-radial-y" min="0" max="100" value="50">
+                        <span class="cg-val" id="cg-radial-y-val">50%</span>
+                    </div>
+                </div>
+                <div id="cg-params-conic" class="cg-params" style="display:none;">
+                    <div class="cg-param-row">
+                        <label>起始角</label>
+                        <input type="range" id="cg-conic-from" min="0" max="360" value="0">
+                        <span class="cg-val" id="cg-conic-from-val">0°</span>
+                        <label>中心位置</label>
+                        <select id="cg-conic-pos"></select>
+                    </div>
+                </div>
+                <div class="cg-bar-wrap">
+                    <div class="cg-bar cg-checker" id="cg-bar"></div>
+                    <div class="cg-bar-tip">💡 至少保留 2 个色标；双击色标也可删除</div>
+                </div>
+                <div class="cg-editor" id="cg-editor">
+                    <label>颜色</label>
+                    <input type="color" id="cg-color" value="#ff6b6b">
+                    <input class="cg-hex" id="cg-hex" value="#FF6B6B" maxlength="7" spellcheck="false" placeholder="#RRGGBB">
+                    <label>不透明度</label>
+                    <input type="range" id="cg-alpha" min="0" max="100" value="100">
+                    <span class="cg-val" id="cg-alpha-val">100%</span>
+                    <label>位置</label>
+                    <input type="range" id="cg-pos" min="0" max="100" value="0">
+                    <span class="cg-val" id="cg-pos-val">0%</span>
+                    <button class="cg-btn danger" id="cg-remove-stop">删除色标</button>
+                </div>
+            </div>
+
+            <div class="cg-card">
+                <h3>实时预览</h3>
+                <div class="cg-preview-big cg-checker" id="cg-preview"></div>
+                <div class="cg-samples">
+                    <button class="cg-sample-btn" id="cg-sample-btn">点 击 复 制</button>
+                    <div class="cg-sample-hero" id="cg-sample-hero">Hero 横幅样式预览</div>
+                </div>
+            </div>
+
+            <div class="cg-card">
+                <h3>CSS 代码输出</h3>
+                <div class="cg-code" id="cg-code"></div>
+                <div class="cg-actions">
+                    <button class="btn btn-primary" id="cg-copy">📋 一键复制 CSS</button>
+                    <button class="btn btn-secondary" id="cg-random">🎲 随机和谐配色</button>
+                    <label class="cg-check"><input type="checkbox" id="cg-webkit"> 输出含 -webkit- 前缀</label>
+                </div>
+            </div>
+
+            <div class="cg-card">
+                <h3>常用预设 <span class="cg-hint">（点击套用）</span></h3>
+                <div class="cg-presets" id="cg-presets"></div>
+            </div>
+
+            <div class="cg-card">
+                <h3>小知识</h3>
+                <div class="cg-tip">
+                    <b>纯前端运行</b>：所有编辑、预览、代码生成都在浏览器里完成，不向服务器发任何请求，复制的代码直接粘贴到样式表即用。<br>
+                    <b>角度说明</b>：linear-gradient(90deg) 是从左到右，180deg 是从上到下；conic 的 from 角度是渐变起始方向。<br>
+                    <b>透明度</b>：把色标不透明度调低可做出玻璃拟态、叠层阴影等效果，棋盘格底纹帮你看清透明区域。<br>
+                    <b>配套使用</b>：想精确取色 / HEX-RGB-HSL 互转，用 <a href="/tools/color-converter">颜色转换</a>（渐变↔取色互链）；海报标题想玩花样字，用 <a href="/tools/fancy-fonts">花体字生成器</a>（渐变背景 + 花体标题互链）。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/css_gradient_generator.js"></script>
+</body>
+</html>
+{{end}}

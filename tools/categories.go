@@ -211,6 +211,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_gradient_generator",
+					Name:        "CSS 渐变生成器",
+					Description: "CSS 渐变可视化编辑器：拖拽色标、linear/radial/conic 三种类型、随机和谐配色、10 款预设，一键复制 CSS · CSS gradient generator: visual editor with draggable color stops, linear/radial/conic types, harmonious palettes, presets, copy CSS",
+					Path:        "/tools/css-gradient-generator",
+					Icon:        "gradient",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "chmod",
 					Name:        "Chmod 权限计算器",
 					Description: "勾选换算 Linux 文件权限数字表示与符号表示",

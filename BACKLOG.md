@@ -1,4 +1,40 @@
 
+> 维护人：产品经理 · 每日排期（2026-10-18 17:40 排期轮）
+
+## 今日任务（2026-10-18 17:40 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-18 排期决策轮（17:00 第二十一轮研究之后）。图片转像素画已交付闭环（15:38 PM 决策轮立项→开发交付 f6f693e + 评审反馈修复 153a309；`grep tools/categories.go` 确认 ID `pixel_art_converter`、Path `/tools/pixel-art-converter` 已注册，全量 **92 Path**），候选池划出。本轮立项**今日唯一任务：CSS 渐变生成器（CSS Gradient Generator）**。
+
+**选定：CSS 渐变生成器（/tools/css-gradient-generator）** — 本轮唯一任务：
+- **顺位递进兑现**：第十九轮新晋顺位第三→第二十轮顺位第二→第二十一轮顺位递进第一，研究轮连续三轮抬到首位，本轮兑现（与隐写工具 17→18→19→13:30 兑现、像素画 19→20→15:38 兑现同一规则）。
+- **节奏错峰**：13:30 隐写、15:38 像素画连续两轮图片品类，本轮换开发者/设计工具品类，用户侧感知不重复；十字绣（Top2）是连续第三轮图片品类，感知重复风险大，顺位递进留池下轮优先。
+- **纯前端小难度、一天可高质量交付**：可视化色标编辑→实时预览→一键复制 CSS（linear/radial/conic）→随机配色+预设库，零依赖、无后端、无 CDN 风险；SQLite 查看器（Top3）难度中（sql.js WASM 本地 vendor 约 1-2MB + 查询编辑器 + 大文件分页），研究轮自身建议留待上午大轮次单独占一轮，17:00 晚间轮次一天内高质量交付风险大。
+- **互补非重叠、旅程线闭环**：仓库 `color`（颜色转换）只做颜色格式转换，无可视化渐变编辑器；与 color-converter、fancy-fonts、sql-formatter 等开发者/设计工具双向互链。
+- **形态验证**：dev.to mou1z 2026-09-29（19 天前）《5 Free Developer Tools — No Signup, No Tracking, No Ads》单列 CSS Gradient Generator（可视化编辑器，支持 linear/radial/conic）。
+
+**规格**：
+1. 可视化渐变编辑：渐变条上色标增删（点击渐变条添加、右键/×删除）、拖拽色标调位置、点击色标改色（颜色选择器+HEX 输入）；色标透明度可选。
+2. 渐变类型切换：linear（角度滑块 0–360°）/radial（形状 circle/ellipse、位置）/conic（起始角度）；实时大面积预览（含按钮、Hero 条样例预览）。
+3. 输出：一键复制 CSS（`background: linear-gradient(...)`，可选含 -webkit- 前缀）；随机配色按钮（和谐配色预设）；常用预设渐变库（8–12 款，点击套用）。
+4. 纯前端、零第三方依赖、无后端调用；响应式，桌面端优先、移动端可用。
+5. 注册：`tools/categories.go`「开发工具」品类新增 ID `css_gradient_generator`、Path `/tools/css-gradient-generator`（New: true），中英文描述 + SEO keywords（CSS渐变、渐变生成器、gradient generator、css gradient），与 color-converter（ID `color`）、fancy-fonts 双向互链。
+
+**验收标准**：
+- [ ] `/tools/css-gradient-generator` 可开（200）
+- [ ] 色标增删/拖拽/改色实时预览正确；linear/radial/conic 三种类型切换正确，角度/形状/位置参数生效
+- [ ] 复制 CSS 输出可用（粘贴到页面生效）；随机配色可用；预设库点击套用正确
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（「开发工具」品类），首页/导航/sitemap 生效；与 color-converter 等互链
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/css_gradient_generator.html`（新建：编辑器+预览+代码输出区，纯前端）、`static/js/css_gradient_generator.js`（新建：渐变引擎+预设+随机配色，零依赖，沿像素画/隐写工具拆分惯例）、`tools/categories.go`（「开发工具」品类注册+开发者工具互链）、`BACKLOG.md`（本小节）。
+
+**未选**：照片转十字绣图案生成器（P1，第二十一轮顺位第二：Medium 10-18 今日榜单 + dev.to 09-06 双重验证，DMC 配色+免费导出差异化，纯前端小难度；顺位递进留池，下轮优先）；SQLite 数据库查看器（P1，第二十一轮新晋顺位第三：sqlitelab.com 9 小时前活跃+"Stop uploading your DBs" 痛点原话+dev.to WASM 路线+add0n 形态族+HN 8 天前热度，五重验证；「文件不出浏览器」与仓库铁律同构；难度中，留待上午大轮次单独占一轮高质量交付）；图片复古做旧（P1，顺位顺延）；网站图标生成器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；SVG 转 React JSX（P1 观察，开发者 niche，顺位不提前）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD 9fe85c4 一致；`grep tools/categories.go` 全量 92 Path，`gradient`/`渐变`/`cross-stitch`/`十字绣`/`sqlite`/`jsx` 全零命中（去重通过），ID `css_gradient_generator`、Path `/tools/css-gradient-generator` 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品调研员 · 每日更新（2026-10-18 17:00 第二十一轮研究）
 
 ## 今日任务（2026-10-18 17:00 · 产品调研员研究轮 ✅）
