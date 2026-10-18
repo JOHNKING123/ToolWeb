@@ -1,4 +1,39 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-18 21:00 第二十三轮研究）
+
+## 今日任务（2026-10-18 21:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第二十三轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。照片转十字绣图案生成器已交付闭环（19:00 PM 决策轮立项→开发交付 aa128a2 + 评审反馈修复 379277c；`grep tools/categories.go` 确认 ID `cross_stitch_pattern`、Path `/tools/cross-stitch-pattern` 已注册，全量 **94 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（21:00 全网调研，通用方向）：
+1. 十字绣交付确认：`git log` 确认开发交付 aa128a2（DMC 色卡量化+符号图纸+线量估算，纯前端）+ 评审反馈修复 379277c（符号池扩至 65 唯一符号、双向互链补齐、删除冗余近白 DMC、视图 label 高亮同步、PNG 大尺寸动态缩小格距）；`git fetch`（复用 VM 换机 known_hosts 修复，TOOLS.md 既有记载；GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 379277c，本地 HEAD 3b02cdc（评审轮缺陷清单补记两条 P0：水印中文静默丢字、二维码识别假功能，ahead 1 本轮不触）；`grep tools/categories.go` 全量 94 Path（93+1）；候选池划出，已实现清单追加（delta：+ 照片转十字绣图案生成器；历史全量见下方各轮小节）。
+2. 新晋候选：**JSON Schema 验证器（JSON Schema Validator）**。需求证据从单条变为三重：① dev.to kkp 2026-10-13 DevTrove 22 开发者工具集单列 JSON Schema validator（21 轮记为「开发者 niche 且证据单条，不单立」）；② dev.to pyfiletoolkit 2026-08-08《13 Free Browser Tools Every Developer Needs in 2026》单列 JSON Schema Validator（Validate data against JSON Schema specs）；③ dev.to Varkido 2026-10-01《How I Built 170+ Free Online Tools》170+ 工具集同覆盖——「证据单条」判断被推翻，正式立候选。痛点真实：前后端联调/配置校验时 JSON 结构合规性校验是持续刚需，现有在线方案多要注册或上传。可行性：纯前端中难度——Schema 编辑器 + JSON 实例输入 → 本地校验（ajv 本地 vendor，遵循仓库零 CDN 惯例；或自研 draft-07 核心子集）→ 错误定位行列标注 + 合规/违规一键复制；与 json_parser/json_yaml/text_diff 开发者工具家族双向互链。去重：94 Path 中 `json_schema`/`JSON Schema`/`Schema validator` 全零命中（仅有个别 Icon 字段字面 "schema"，工具无重叠）。难度中。SEO：JSON Schema 校验、JSON 结构验证。建议 ID `json_schema_validator`、Path `/tools/json-schema-validator`。
+3. 新观察项（P2/不立，形态或品类受限）：① **番茄钟（Pomodoro Timer）**（dev.to mou1z 2026-09-29《5 Free Developer Tools — No Signup, No Tracking, No Ads》单列，自定义工作/休息间隔；纯前端小难度：工作/休息循环计时+浏览器通知+localStorage 统计；94 Path `pomodoro`/番茄零命中；生活/效率品类，用户方向下不优先，P2 观察，与白噪音发生器/屏幕常亮可组「专注工作」三件套联动）；② **Kanban 看板**（mou1z 同文单列，拖拽+localStorage 持久化；纯前端小难度；94 Path `kanban`/看板零命中；应用形态重于工具形态，P2 观察）；③ **倒计时器（Countdown Timer）**（dev.to blanzatools 2026-10-11 14 工具集单列；纯前端小难度；94 Path `countdown`/倒计时零命中；形态泛化无差异化，P2 观察）；④ **域名生成器**（dev.to etemora 2026-10-10 单列：关键词→多后缀组合生成；生成部分纯前端，但可用性核查依赖出网 RDAP——domain-check 转 VPS 执行决策未定，低优先不单立）。
+4. 无新单页信号侧：① V2EX 10-18：NASDrop（群晖 SPK/桌面形态）、AI 视频去物 removeobjects.video（需 AI 后端）、remox.ai 图片擦除去背景（AI API 商业项目）——均非单页纯前端口径；② Reddit 本轮搜索均为营销工具榜单（RankCow/Subreddit Signals 等），无单页工具信号；③ 中文「最实用在线工具」榜单均为 AI 工具白嫖指南（需后端/AI/注册）；④ Medium malikanwaar 10-16 10 工具榜单：年龄/密码/单位换算/单词计数/二维码——仓库已全覆盖（22 轮已评估）；⑤ Medium etemora 8 天前三项形态：SERP Snippet Preview——仓库 `serp_snippet_preview` 已有，不立；Invoice Generator——即票据组合（报价单/收据生成器），用户方向下顺位不提前，维持；Domain name generator——见上（低优先不单立）；⑥ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **时区转换器（Time Zone Converter）** — P1（PM 19:00 明确「顺位递进留池，下轮优先」；dev.to 10-13（5 天前）新鲜形态验证：40 IANA 时区并排对比 + DST 自动处理；timestamp 仅本地/UTC 二选一，多城市并排对比+会议时间对齐视图无重叠；纯前端小难度：城市多选（IANA 时区搜索+收藏）→并排时间条→`Intl.DateTimeFormat` 原生 DST→北京时间/UTC 换算→分享链接；94 Path 无重叠）。SEO：时区转换、世界时钟。
+2. **JSON Schema 验证器（JSON Schema Validator）** — P1（本轮新晋：三重证据推翻 21 轮「单条证据不单立」判断——kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 170+ 10-01；纯前端中难度：本地校验+错误行列定位；json 工具家族互链；94 Path 无重叠）。SEO：JSON Schema 校验、JSON 结构验证。
+3. **图片复古做旧** — P1（顺位顺延；节奏考量：时区转换器与 JSON Schema 验证器是两轮连续非图片品类，本轮之后回图片品类感知不重复）。备选错峰位：SRT 字幕编辑器（P1 顺位顺延，媒体品类）。
+
+图片复古做旧列第三（P1，顺位顺延）；网站图标生成器（P1，顺位顺延）；SVG 转 React JSX（P1 观察，开发者 niche）；SQLite 数据库查看器（P1，难度中，留待上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次；本轮 tonytoolbox local-first 文章的 FrameExtractor 浏览器原生解码抽帧形态再佐证）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；番茄钟（P2 观察，本轮新评估）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**通用候选表增量**（第二十三轮：十字绣已实现划出；新晋 JSON Schema 验证器 P1、番茄钟/Kanban 看板/倒计时器 P2 观察；全量 94 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| JSON Schema 验证器（JSON Schema Validator） | 本轮新晋（证据三重化：dev.to kkp 2026-10-13 DevTrove 22 工具单列 JSON Schema validator + dev.to pyfiletoolkit 2026-08-08《13 Free Browser Tools Every Developer Needs in 2026》单列 + dev.to Varkido 2026-10-01 170+ 工具集同覆盖——推翻 21 轮「证据单条不单立」判断；痛点：前后端联调/配置校验时 JSON 结构合规性校验刚需，现有方案多要注册或上传；纯前端中难度：Schema 编辑器+JSON 实例→本地校验（ajv 本地 vendor 或自研 draft-07 核心子集，零 CDN）→错误行列定位；与 json_parser/json_yaml/text_diff 互链；94 Path 中 json_schema/JSON Schema/Schema validator 全零命中） | 中 | P1（本轮新晋） |
+| 番茄钟（Pomodoro Timer） | 本轮新观察（dev.to mou1z 2026-09-29《5 Free Developer Tools — No Signup, No Tracking, No Ads》单列，自定义工作/休息间隔；纯前端小难度：工作/休息循环计时+浏览器通知+localStorage 统计；94 Path pomodoro/番茄零命中；生活/效率品类，用户方向下不优先；与白噪音发生器/屏幕常亮可组「专注工作」三件套联动） | 小 | P2 观察 |
+| Kanban 看板 | 本轮新观察（dev.to mou1z 2026-09-29 同文单列，拖拽+localStorage 持久化；纯前端小难度；94 Path kanban/看板零命中；应用形态重于工具形态，不优先） | 小 | P2 观察 |
+| 倒计时器（Countdown Timer） | 本轮新观察（dev.to blanzatools 2026-10-11 14 工具集单列；纯前端小难度；94 Path countdown/倒计时零命中；形态泛化无差异化，不优先） | 小 | P2 观察 |
+
+**归档说明**：本轮为 10-18 通用调研第二十三轮——照片转十字绣图案生成器交付闭环（aa128a2 + 评审修复 379277c，`/tools/cross-stitch-pattern` 已注册，全量 94 Path），候选池划出，已实现清单 delta 追加；新晋「JSON Schema 验证器」P1（证据三重化：kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01，推翻 21 轮「单条证据不单立」判断；纯前端中难度：ajv 本地 vendor 或自研 draft-07 核心子集+错误行列定位；json 工具家族互链；94 Path 无重叠）；新观察番茄钟/Kanban 看板/倒计时器 P2（形态或品类受限）；域名生成器低优先不单立（可用性核查依赖出网 RDAP，domain-check 转 VPS 决策未定）；V2EX 10-18（NASDrop NAS 套件、removeobjects.video AI 视频去物、remox.ai AI 抠图）、Reddit（营销工具榜单）、中文榜单（AI 工具白嫖指南）本轮无新单页纯前端信号；Medium malikanwaar 10-16 榜单仓库全覆盖；etemora 三形态：SERP 预览仓库已有、Invoice=票据组合顺位不提前、域名生成器低优先；视频抽帧获 tonytoolbox local-first 文章 FrameExtractor 形态再佐证；WPS 候选表保持冻结归档；仓库 94 注册工具全量核对无重叠，核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环；本轮复用 VM 换机 known_hosts 修复（TOOLS.md 既有记载）。
+
+**交付核对**：`git fetch`（ssh-keyscan 修复 known_hosts 后，GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 379277c 存在；本地 HEAD 3b02cdc 为评审轮缺陷清单补记 P0（ahead 1，本轮不触）；`git log` 确认开发交付 aa128a2 + 评审修复 379277c；`grep tools/categories.go` 全量 94 Path（93+1），`cross_stitch_pattern` ID 与 `/tools/cross-stitch-pattern` Path 已注册（划入已实现），新候选建议 ID（json_schema_validator）与 94 Path 无重叠；`json_schema`/`JSON Schema`/`Schema validator`/`pomodoro`/番茄/`kanban`/看板/`countdown`/倒计时关键词在 categories.go 全量零命中（Icon 字面 "schema" 为字段名非工具）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 19:00 排期轮）
 
 ## 今日任务（2026-10-18 19:00 · 产品经理排期决策 ✅）
