@@ -844,6 +844,15 @@ func GetCategories() []Category {
 			Icon:        "home",
 			Tools: []Tool{
 				{
+					ID:          "unit_converter",
+					Name:        "单位换算器",
+					Description: "长度/重量/温度/数据存储四分类在线换算：mm/cm/m/km/英寸/英里、mg/g/kg/斤/磅/盎司、℃/℉/K 公式换算、bit/B/KB~TB 与 KiB~TiB 双口径一键切换，实时换算+一键复制，纯前端本地计算 · Unit converter: length/weight/temperature/data storage, KB=1000 vs KiB=1024 dual radix, 100% client-side",
+					Path:        "/tools/unit-converter",
+					Icon:        "straighten",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "relationship",
 					Name:        "亲戚关系计算器",
 					Description: "输入关系链查标准称谓，支持反向查询与南北口语别名",
