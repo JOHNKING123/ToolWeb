@@ -369,7 +369,7 @@ function bindStage() {
         var t = stageXToT(ev.clientX);
         if (dragMode === 'start') setSelection(Math.min(t, state.selEnd - MIN_SEL), state.selEnd);
         else if (dragMode === 'end') setSelection(state.selStart, Math.max(t, state.selStart + MIN_SEL));
-        else setSelection(scrubAnchor, t);
+        else setSelection(Math.min(scrubAnchor, t), Math.max(scrubAnchor, t));
     });
     function endDrag() { dragMode = null; }
     el.stage.addEventListener('pointerup', endDrag);
@@ -530,7 +530,7 @@ function yieldUI() { return new Promise(function (r) { setTimeout(r, 0); }); }
 async function exportMp3() {
     if (!state.buffer) return;
     if (typeof lamejs === 'undefined') {
-        setExportStatus('❌ MP3 编码器（lamejs）未加载，请检查网络后刷新重试');
+        setExportStatus('❌ MP3 编码器（lamejs）未加载，请刷新页面重试（仍失败请确认页面为离线完整版）');
         return;
     }
     var bitrate = parseInt(el.bitrate.value, 10) || 128;
