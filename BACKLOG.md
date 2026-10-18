@@ -1,4 +1,37 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-18 15:30 第二十轮研究）
+
+## 今日任务（2026-10-18 15:30 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第二十轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片隐写工具已交付闭环（13:30 PM 决策轮立项→开发交付 1689509 + 排期提交 081cebf；`grep tools/categories.go` 确认 ID `image_steganography`、Path `/tools/image-steganography` 已注册，全量 **91 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（15:30 全网调研，通用方向）：
+1. 图片隐写工具交付确认：`git log` 确认开发交付 1689509（图片像素藏文字/提取）+ 排期提交 081cebf；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD 081cebf9be5864765fdbe0a54a9edc2f42b8a3a8 一致；`grep tools/categories.go` 全量 91 Path（90+1），ID `image_steganography` 与 Path `/tools/image-steganography` 已注册；候选池划出，已实现清单追加（delta：+ 图片隐写工具；历史全量见下方第十九轮小节）。
+2. 新晋候选：**照片转十字绣图案生成器（Photo → Cross Stitch Pattern）**。需求证据三重：① Medium siloshan 2026-10-18（7 小时前）《7 Free Browser Tools Worth Bookmarking This October》单列 StitchCraft（照片转十字绣图案，全浏览器运行，无需注册）——今日新上线榜单验证；② dev.to vshandev 2026-09-06（6 周前）《How to Turn Any Photo Into a Cross Stitch Pattern》——"with a web-based converter... the direct photo-to-chart conversion runs entirely in your browser"，推荐 StitchCraft（DMC 配色+PDF 导出免费无上限）——英文形态验证+技术路线验证；③ 十字绣为持续活跃的手工爱好（个性化礼物/家居装饰长尾需求），中文在线单页形态稀缺。可行性：纯前端小难度——上传照片→网格缩小（针数/布数可调）→DMC 线色量化（内置 DMC 约 450 色色卡表）→符号/色块网格图渲染（标 DMC 色号+线量估算）→导出 PNG/打印 PDF（沿仓库浏览器打印惯例）；与 img-compress/img-convert/img-mosaic 等图片品类互链。去重：91 Path 无 cross-stitch/十字绣命中（"stitch" 仅命中 img_stitch 图片拼接工具，品类不同）。难度小。SEO：十字绣图案、照片转十字绣、十字绣图纸生成。建议 ID `cross_stitch_pattern`、Path `/tools/cross-stitch-pattern`。
+3. 新晋候选：**图片复古做旧（Vintage Photo Effects）**。需求证据三重：① 365Lab 2026-10-08（10 天前）竞品工具「图片复古做旧」+ 5 分钟指南《老照片复古做旧：滤镜、批量与本地处理》（泛黄/褪色、颗粒、暗角、划痕预设，可调强度/对比/色调、批量套用统一风格，全程本地处理不上传）——竞品形态验证+中文指南验证；② Medium siloshan 2026-10-18（7 小时前）同榜单单列 OldRoll（retro film/digicam look）——今日新上线榜单双重验证；③ kaze.ai 2026-10-18 老相机滤镜为反例（AI 路线需后端，纯前端滤镜路线更轻更快）。可行性：纯前端小难度——上传照片→预设（老照片泛黄/胶片/拍立得/暗角）→canvas 像素处理（褪色/颗粒噪声/暗角/划痕叠加）→强度/对比/色调微调→批量套用多图统一怀旧调性→导出 PNG/JPG；图片品类互链；批量场景是差异化卖点。去重：91 Path 无 vintage/复古/做旧/滤镜命中。难度小。SEO：复古照片、老照片做旧、怀旧滤镜。建议 ID `vintage_photo_effects`、Path `/tools/vintage-photo-effects`。
+4. 无新单页信号侧：① Medium 同榜单的 SyncWhen（无注册会议时间投票）——投票跨人协作本质需后端同步，纯前端单页无法成立，不单立；② SortaSeat（婚礼/活动座位表）——拖拽排座纯前端可做，但婚礼策划 niche 且 10 月国庆婚礼旺季已过，列 P2 观察不单立；③ Calcy（带单位/范围计算器）——泛计算器形态，用户方向修正下不扩展，不单立；④ urPiano（浏览器钢琴）——音乐 niche；llmspeed（本地 AI 模型速度预估）——需 WebGPU+模型下载，单页过重；⑤ dev.to blanzatools 2026-10-11 14 工具——QR/密码/字数/JSON/Unit converter 等与仓库已有工具重叠，无新信号；⑥ V2EX 10-17/10-18：ProxyLane（桌面透明代理 exe）、vaneform（网站流量/SEO 数据，需数据后端）、codux（macOS 原生终端 App）、removeobjects.video（AI 视频去物，需 AI 后端）——均非单页纯前端口径；Windows 开源软件商店讨论（平台想法）、ChatGPT MCP 联网（agent 方案）——非工具口径；⑦ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **图片转像素画（Pixel Art 转换器）** — P1（顺位递进到位：第十九轮新晋→13:30 决策轮立项隐写工具时它是 Top3 之二，本轮递进第一；dev.to tonytoolbox 2026-09-30（18 天前）本地优先栈单列 PixelArt 形态+技术路线双验证；像素风头像/复古游戏素材中文单页稀缺；纯前端小难度：canvas 缩小→调色板量化（GameBoy/PICO-8/16 色预设）→nearest-neighbor 放大→导出 PNG；图片品类互链；91 Path 无重叠）。SEO：像素画、图片转像素风。
+2. **CSS 渐变生成器（CSS Gradient Generator）** — P1（第十九轮新晋顺位递进：dev.to mou1z 2026-09-29（19 天前）5 工具集单列形态验证；前端/设计师高频刚需，与 color-converter 互补；纯前端小难度：可视化色标编辑→实时预览→一键复制 CSS（linear/radial/conic）→随机配色；91 Path 无重叠）。SEO：CSS渐变、渐变生成器。
+3. **照片转十字绣图案生成器** — P1（本轮新晋：Medium 7 小时前今日榜单 + dev.to 09-06 英文形态双重验证；DMC 配色+PDF 导出免费无上限是差异化；纯前端小难度：网格缩小→DMC 量化→符号网格渲染→导出；手工爱好+个性化礼物长尾需求；图片品类互链；91 Path 无重叠）。SEO：十字绣图案、照片转十字绣。
+
+图片复古做旧列顺位第四（P1，本轮新晋：365Lab 10-08 竞品+指南+Medium 7 小时前榜单三重验证，纯前端小难度，批量场景差异化，顺位顺延）；网站图标生成器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；婚礼座位表（P2 观察，niche+婚礼旺季已过）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**通用候选表增量**（第二十轮：图片隐写工具已实现划出；新晋照片转十字绣图案生成器 P1、图片复古做旧 P1；全量 91 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 照片转十字绣图案生成器 | 本轮新晋（Medium siloshan 2026-10-18（7 小时前）《7 Free Browser Tools Worth Bookmarking This October》单列 StitchCraft（照片转十字绣，全浏览器运行、无需注册）——今日新上线榜单验证；dev.to vshandev 2026-09-06（6 周前）《How to Turn Any Photo Into a Cross Stitch Pattern》——"with a web-based converter... runs entirely in your browser"，StitchCraft DMC 配色+PDF 导出免费无上限——英文形态验证+技术路线验证；十字绣为持续活跃的手工爱好（个性化礼物/家居装饰长尾），中文在线单页稀缺）；纯前端小难度：上传照片→网格缩小（针数/布数可调）→DMC 线色量化（内置约 450 色色卡）→符号网格图渲染（DMC 色号+线量估算）→导出 PNG/打印 PDF；与 img-compress/img-convert/img-mosaic 等图片品类互链；91 Path 无 cross-stitch/十字绣命中（"stitch" 仅命中 img_stitch 图片拼接，品类不同） | 小 | P1（本轮新晋） |
+| 图片复古做旧（Vintage Photo Effects） | 本轮新晋（365Lab 2026-10-08（10 天前）竞品工具「图片复古做旧」+ 5 分钟指南《老照片复古做旧：滤镜、批量与本地处理》（泛黄/褪色、颗粒、暗角、划痕预设，可调强度/对比/色调、批量套用统一风格、全程本地处理不上传）——竞品形态验证+中文指南验证；Medium siloshan 2026-10-18（7 小时前）同榜单单列 OldRoll（retro film/digicam look）——今日新上线榜单双重验证；kaze.ai 2026-10-18 老相机滤镜为反例（AI 路线需后端，纯前端更轻））；纯前端小难度：上传照片→预设（老照片泛黄/胶片/拍立得/暗角）→canvas 像素处理（褪色/颗粒噪声/暗角/划痕叠加）→强度/对比/色调微调→批量套用多图→导出 PNG/JPG（批量场景是差异化卖点）；图片品类互链；91 Path 无 vintage/复古/做旧/滤镜命中 | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第二十轮——图片隐写工具交付闭环（1689509+081cebf，`/tools/image-steganography` 已注册，全量 91 Path），候选池划出，已实现清单 delta 追加；新晋「照片转十字绣图案生成器」P1（Medium 7 小时前今日榜单 + dev.to 09-06 英文形态验证，DMC 配色免费无上限差异化，纯前端小难度）、「图片复古做旧」P1（365Lab 10-08 竞品+指南 + Medium 7 小时前榜单三重验证，纯前端小难度，批量场景差异化）；SyncWhen 会议投票（需后端不成立）、婚礼座位表（P2 观察，niche+旺季已过）、Calcy（泛计算器方向下不扩展）、urPiano/llmspeed（niche/过重）、blanzatools 14 工具（重叠）均不单立；V2EX 10-17/10-18 为桌面端/需后端/平台想法形态；WPS 候选表保持冻结归档；仓库 91 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 081cebf9be5864765fdbe0a54a9edc2f42b8a3a8 一致；`git log` 确认开发交付 1689509 + 排期提交 081cebf；`grep tools/categories.go` 全量 91 Path（90+1），`image_steganography` ID 与 `/tools/image-steganography` Path 已注册（划入已实现），新候选建议 ID（cross_stitch_pattern / vintage_photo_effects）与 91 Path 无重叠；cross-stitch/十字绣/vintage/复古/做旧/滤镜关键词在 categories.go 全量零命中（"stitch" 仅命中 img_stitch 图片拼接）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（均为构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 13:30 排期轮）
 
 ## 今日任务（2026-10-18 13:30 · 产品经理排期决策 ✅）
