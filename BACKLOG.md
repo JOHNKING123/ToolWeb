@@ -1,4 +1,37 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-19 07:36 第二十八轮研究）
+
+## 今日任务（2026-10-19 07:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第二十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。进制转换器已交付闭环（05:45 PM 决策轮立项→开发交付 acb7159；`grep tools/categories.go` 确认 ID `base_converter`、Path `/tools/base-converter` 已注册（250/253 行），全量 **99 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 上午轮次，中难度候选可排。
+
+**本轮四件事**（07:36 全网调研，通用方向）：
+1. 进制转换器交付确认：`git log` 确认开发交付 acb7159（2/8/10/16/32 互转+0x/0b/0o 前缀识别+BigInt 大整数精确换算+分组显示+一键复制，纯前端零后端）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`grep` 全量 99 Path（98+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 进制转换器）。
+2. 新晋候选：**文件夹对比（Folder Diff）**。需求证据：dev.to dev5942-b 2026-10-09 BuildDiff 发布帖（"compare two folders recursively in your browser"：选两文件夹→递归比对→新增/删除/修改/未变四态报告→复制结果/下载纯文本报告，隐私口径 "folder comparison happens locally in your browser"，首版即称 Minimum Useful Version 试水）。痛点真实：发布前后构建 diff、备份文件夹对账、两次导出版本比对——桌面方案要装软件（Beyond Compare 付费）、在线方案此能力空白。差异化实锤：仓库 text-diff 仅做两段文本对比，文件夹递归树对比为全新能力（99 Path 中 folder/文件夹对比/builddiff/构建对比/directory 全零命中）。可行性：纯前端中难度——File System Access API `showDirectoryPicker` ×2（Chrome/Edge）→递归遍历条目→文件内容 Web Crypto SHA-256 哈希比对（大文件分片流式哈希防内存爆）→差异树渲染+筛选（仅差异/全部）→复制摘要/下载报告；零上传零依赖无后端；Firefox 无 API 需显式降级提示。可行性提示：上午大轮次优先。难度中。SEO：文件夹对比、目录对比、文件差异对比、folder diff。建议 ID `folder_diff`、Path `/tools/folder-diff`。P1。
+3. 证据增强/晋升：**单位换算器**。26 轮已入表（P1 观察），本轮证据三重化晋升 P1（强）：① dev.to anupghi EverydayToolz 2026-10-12 "File Size Converter: bytes, KB, MB, and GB in binary or decimal" 直接单列（与 base converter 同榜单形态家族）；② dev.to blanzatools 2026-10-11 14 工具集单列 Unit Converter（长度/重量/温度/数据）；③ PH 10-12 Everyday Tools file size converter 仓库缺口（25/26 轮已记录）。痛点真实：开发运维日常数据大小换算（KB=1000 vs KiB=1024 混淆）、设计师长度单位互转。差异化：文件大小二进制/十进制双口径开关+常用单位一站式。可行性：纯前端小难度——长度/重量/温度/数据存储 SI·英制互转，文件大小 KB=1000/KiB=1024 可切换；零依赖无后端。去重：99 Path 中 单位换算/unit_converter/文件大小/文件体积全零命中。难度小。SEO：单位换算、单位换算器、文件大小换算、KB MB GB 换算。建议 ID `unit_converter`、Path `/tools/unit-converter`。P1（晋升）。
+4. 新观察/证据记录：① **批量域名可用性检测**——dev.to laing_lii SiteToolsBox（2026-10-18 发布，23 小时前）20+ 工具集单列 "Bulk Domain Availability Check (via RDAP)"；25 轮已记录本信号；仓库 domain-check（RDAP+whois 直查）Muse VM 出网被拦截、转 VPS 决策未定，批量版共享同一出网依赖——本轮无变化，不单立。② **HTTP 重定向链追踪**——HN Ask HN "What simple tools" 提及 followww.co（展示 URL 跳转链+每步 cookie）+ SiteToolsBox 10-18 "HTTP Status Checker"：浏览器 fetch 无法穿透 CORS 拿到中间跳转链（redirect:'manual' 下响应 opaque），必须后端代理发请求，不符合纯前端 local-first 口径；不单立。③ **V2EX 10-18/19**：cc-session（远程 Claude 会话 agent 形态）、Windows 开源软件商店（桌面/包管理形态）、ChatGPT MCP 实时联网（插件/agent 形态）、SSD 寿命公式（内容帖非工具）、Livid 访谈——无单页新信号。④ **PH 本周**（10-12~10-18）：PdfWord 47 PDF 工具（25 轮已判：eSign 已交付/OCR 仓库已有/其余已覆盖）、OpenMuse/Harness agent（agent 形态）、数字宠物五连发（娱乐应用形态）、Retriever AI browser agent（agent 形态）、Life Story Compiler（App 形态）——无单页新信号。⑤ **HN/Reddit**：ToolHop/Toolbit Show HN（旧帖非新信号）、daily.dev 工具发现指南（meta 无工具信号）——无新单页信号。⑥ **冗余复核**：EverydayToolz Hash Generator（MD5/SHA-1/SHA-256/384/512）——仓库已有 md5/sha256，不单立（SHA-1/384/512 可作为 hash 家族后续扩展，暂不入候选）；BlanzaTools 10-11 百分比/Age/BMI 计算器——泛生活计算器口径，用户方向 10-18 下不扩展；qrgenrateronline 15 种 QR 类型——仓库已有 qrcode，类型扩展暂不单立。⑦ WPS 候选表保持冻结归档。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；07:36 上午轮次，中难度可排）：
+
+1. **单位换算器（Unit Converter）** — P1（本轮晋升：证据三重化（blanzatools 10-11 + EverydayToolz 10-12 文件大小转换器单列 + PH 10-12 file size converter 仓库缺口）；纯前端小难度：长度/重量/温度/数据存储 SI·英制互转 + 文件大小 binary/decimal 双口径开关差异化；99 Path 单位换算零命中）。
+2. **文件夹对比（Folder Diff）** — P1（本轮新晋：BuildDiff 2026-10-09 形态验证，递归对比+四态报告+本地隐私口径；桌面 Beyond Compare 付费方案的免费替代；纯前端中难度：File System Access API 双目录选择→Web Crypto 流式哈希比对→差异树渲染+报告下载；Chrome/Edge，Firefox 降级提示；99 Path folder/文件夹对比零命中，与 text-diff 不重叠）。
+3. **图片精确体积压缩器（Compress to Target KB）** — P1（26 轮新晋：DodoDeck 10-18 headline 功能 "exact KB image resizer" 佐证；证件照/考试报名/公众号「≤X KB」硬限制痛点真实；img-compress 无目标体积模式已实锤去重；纯前端小难度：目标 KB→二分质量+尺寸降级→一次命中导出；连续两轮顺延后本轮优先）。
+
+robots.txt 生成器（P1；27 轮新晋，Varkido 10-01 SEO 套装单列，同套装 SERP/OG 已交付家族佐证；纯前端小难度）；YouTube 缩略图下载器（P1；27 轮新晋，四档分辨率 i.ytimg.com 直链，纯前端小难度）；代码压缩器（P1；27 轮新晋，Varkido Dev 套装单列同套装唯一缺口，纯前端小难度）；JSON Schema 验证器（P1，中难度，上午大轮次第一候补）；浏览器屏幕录制器（P1，中难度，上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，26 轮新晋，音频品类连续两弹感知留 PM 定序）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第二十八轮：进制转换器已实现划出；新晋文件夹对比 P1；单位换算器证据三重化晋升 P1；全量 99 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文件夹对比（Folder Diff） | 本轮新晋（dev.to dev5942-b 2026-10-09 BuildDiff 发布帖：浏览器内选两文件夹递归对比，新增/删除/修改/未变四态报告，复制结果/下载纯文本报告，"folder comparison happens locally in your browser"；痛点：发布构建 diff、备份文件夹对账，桌面方案付费/要装、在线此能力空白；纯前端中难度：File System Access API 双目录选择（Chrome/Edge，Firefox 降级提示）→Web Crypto SHA-256 流式哈希比对→差异树渲染+筛选→复制摘要/下载报告，零上传无后端；99 Path folder/文件夹对比/builddiff/构建对比/directory 全零命中；与 text-diff 文本对比能力不重叠） | 中 | P1（本轮新晋） |
+| 单位换算器（Unit Converter） | 证据三重化晋升（26 轮已入表 P1 观察；本轮：dev.to EverydayToolz 2026-10-12 "File Size Converter: bytes, KB, MB, and GB in binary or decimal" 直接单列 + blanzatools 10-11 Unit Converter 复述 + PH 10-12 file size converter 仓库缺口；痛点：开发运维数据大小换算（KB=1000 vs KiB=1024 混淆）、设计师长度单位互转；差异化：文件大小二进制/十进制双口径开关+常用单位一站式；纯前端小难度：长度/重量/温度/数据存储 SI·英制互转；99 Path 单位换算/unit_converter/文件大小全零命中） | 小 | P1（晋升；证据三重化） |
+
+**归档说明**：本轮为 10-19 通用调研第二十八轮——进制转换器交付闭环（acb7159，`/tools/base-converter` 已注册，全量 99 Path，开发工具品类），候选池划出，已实现清单 delta 追加；新晋「文件夹对比」P1（BuildDiff 10-09 形态验证，纯前端中难度：File System Access API+Web Crypto 流式哈希，99 Path 无重叠，Firefox 降级提示，适合上午大轮次）、「单位换算器」P1 晋升（证据三重化：blanzatools 10-11 + EverydayToolz 10-12 + PH 10-12，文件大小 binary/decimal 双口径差异化，纯前端小难度）；批量域名可用性检测（SiteToolsBox 10-18）维持 25 轮判定（domain-check 转 VPS 决策未定，不单立）；HTTP 重定向链追踪（followww.co/SiteToolsBox）需后端代理不符合纯前端口径不单立；V2EX 10-18/19（cc-session agent、Windows 商店桌面形态、MCP 联网、SSD 公式内容帖）、PH 本周（PdfWord 25 轮已判、agent/数字宠物/App 形态）、HN/Reddit（旧 Show HN/meta 指南）均无单页新信号；冗余复核（EverydayToolz Hash 仓库已覆盖、BlanzaTools 百分比/Age/BMI 计算器用户方向下不扩展、QR 15 类型仓库已有 qrcode）；WPS 候选表保持冻结归档；仓库 99 注册工具全量核对无重叠，核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 acb7159；`grep tools/categories.go` 全量 99 Path（98+1），`base_converter` ID 与 `/tools/base-converter` Path 已注册（250/253 行），新候选建议 ID（folder_diff / unit_converter）与 99 Path 无重叠；folder/文件夹对比/builddiff/构建对比/directory/单位换算/unit_converter/文件大小关键词在 categories.go 核对（postman 工具为注释占位不影响判定）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-19 05:45 排期轮）
 
 ## 今日任务（2026-10-19 05:45 · 产品经理排期决策 ✅）
