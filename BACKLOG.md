@@ -1,3 +1,36 @@
+> 维护人：产品调研员 · 每日更新（2026-10-18 10:00 第十七轮研究）
+
+## 今日任务（2026-10-18 10:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十七轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研）。宠物体重记录追踪器已交付闭环（07:00 PM 决策轮立项→开发交付 3c9f8b7+评审修复 776a91d；`grep tools/categories.go` 确认 ID `pet_weight_tracker`、Path `/tools/pet-weight-tracker` 已注册，「宠物生活」新品类落地）。**用户方向修正（2026-10-18）**：聚焦 ToolWeb 工具本身，不再扩展泛财务/生活计算器类——7 个工具（工资个税/二手房税费/房贷/双十一凑单/双11到手价/经济补偿金/工资条生成器）已从开发版下线（c4efe50，grep 零残留），当前全量 **88 Path**（07:00 轮 94 − 7 下线 + 1 新增）。候选池划出宠物体重追踪器。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（10:00 全网调研，通用方向）：
+1. 宠物体重追踪器交付确认：`git log` 确认开发交付 3c9f8b7+评审修复 776a91d；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD 776a91d 一致；`grep tools/categories.go` 全量 88 Path，`pet_weight_tracker` ID 与 `/tools/pet-weight-tracker` Path 已注册；下线 7 工具 grep 零残留（payslip_generator/salary-tax/mortgage/double11/economic-compensation/invoice-tax 全零命中）；候选池划出，已实现清单追加（delta：+ 宠物体重记录追踪器；历史全量见下方第十六轮小节）。
+2. 新晋候选：**图片隐写工具（图片藏文字/提取）**。需求证据三重：① 365Lab 2026-10-08（10 天前）竞品工具「画中话（图片隐写）」+ 6 分钟教程《图片隐写入门：把文字或文件藏进图片》（隐藏文字/隐藏文件/图种/幻影坦克四种玩法，「全程本地处理不上传」）——竞品形态验证；② 英文形态族：stegtool.com（批量 LSB 编码，20 图并行）、tembrica.com（LSB+AES-256-GCM 口令加密+容量仪表）、imgcnv.com、toolshu.com（中文字符支持）、reducerimage.com（AES-GCM+CRC32）、privacypixtools.com（LSB 原理科普）——成熟工具类目；③ 隐私叙事与仓库「图片不出浏览器」铁律同构。可行性：纯前端小难度——上传载体图（canvas 读像素）→输入隐藏文本（+可选口令）→LSB 最低有效位嵌入→导出 PNG（无损保位）→上传隐写图一键提取；附容量实时显示（载体尺寸→可藏字符数）。去重：88 Path 无 steg/隐写命中。难度小。SEO：图片隐写、图片藏文字、隐写工具。建议 ID `image_steganography`、Path `/tools/image-steganography`。
+3. 新晋候选：**屏幕常亮工具（Wake Lock 防息屏）**。需求证据三重：① 365Lab 2026-10-08（10 天前）40+ 工具榜单单列「屏幕常亮」（生活实用组，与密码生成器/WiFi 二维码并列）——竞品形态验证；② 形态族：stayawake.page（Wake Lock+白噪音+计时器，FAQ 完整）、mcstumble.com/tools/keep-screen-awake（状态指示+计时+浏览器限制说明）、dev.to 2026-05《How to Keep Your Screen Awake》指南——场景：做饭看菜谱、演示、监控长任务；③ MDN WakeLock 基线 2025：Chrome/Edge/Safari 16.4+，需 HTTPS 安全上下文，Firefox 不支持需诚实降级提示。可行性：纯前端极小难度——一键申请 `navigator.wakeLock.request('screen')`→状态指示→visibilitychange 自动重获→计时显示→手动释放。去重：88 Path 无 wake/awake/常亮命中。难度小。SEO：屏幕常亮、防息屏、保持屏幕常亮。建议 ID `screen_wake_lock`、Path `/tools/screen-wake-lock`。
+4. 无新单页信号侧：① 贴纸生成器（365Lab 2026-10-08 教程+工具「贴纸生成器」：AI 抠图→白边圆角阴影→512×512 透明 PNG；但 AI 抠图需后端，纯前端版只能做整图白边/圆角，形态弱，列 P2 观察不单立）；② Tooltri 30+ 工具（dev.to 2026-10-08）：SQLite 查看器（sql.js WASM，开发者 niche）、SVG 转 JSX（开发者 niche）、Token Counter/AI 文本清理（仓库已有 ai-token-counter/ai-text-cleaner 覆盖）——不单立；③ Hacker News 10-11/10-15 roundup：big-arrow（macOS CLI agent 标注工具）、OpenMuse/browser-use（agent 平台）、DNS leak test（旧工具）——均非单页纯前端口径；④ V2EX 10-17/10-18：AI 视频去物 removeobjects.video（需 AI 后端）、BiliFlow（B 站桌面下载）、Chrome 插件 key-to-magpie（插件形态）、听力流利度练习 HTML（语言学习 niche）——无单页新信号；⑤ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **PDF 电子签名（手写签名嵌入 PDF）** — P1（多轮顺位递进第一顺位；07:00 PM 决策轮预定「后续上午大轮次首选」，本轮 10:00 正是上午大轮次窗口；PdfWord 2026-10-12 Product Hunt 47 工具零后端上线单列 eSign；fabulouspic 2026 榜单全部免费版受限——「免费无上限+文件不出浏览器」差异化；纯前端中难度：PDF.js 渲染+canvas 签名板+pdf-lib 嵌入；与 pdf_annotate/pdf_manage 互链成 PDF 旅程线；88 Path 无 sign 重叠）。SEO：PDF签名、在线签署PDF。
+2. **文本隐私脱敏工具（粘贴文本→敏感信息自动识别遮盖）** — P1（07:00 PM 决策轮「下轮优先」；dev.to Antigravity 2026-10-14 PII Masker+getweeve/lddgo 形态族；隐私叙事与仓库「数据不出浏览器」铁律同构；纯前端小难度：粘贴→正则识别（手机号/身份证/银行卡/邮箱/IP/车牌）→高亮逐条确认→一键遮盖→复制/下载；与 text_diff 互链成文本旅程线；88 Path 无重叠）。SEO：文本脱敏、隐私信息遮盖。
+3. **图片隐写工具（图片藏文字/提取）** — P1（本轮新晋顺位第三：365Lab 2026-10-08 竞品工具+6 分钟教程形态验证；stegtool/tembrica/imgcnv/toolshu/reducerimage 英文形态族；纯前端小难度：LSB 嵌入/提取+容量实时显示；图片品类互链；88 Path 无重叠）。SEO：图片隐写、图片藏文字。
+
+网站图标生成器列顺位第四（P1，顺位顺延）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，本轮新晋，顺位递进留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；进制转换器（P1 观察）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察，中文证据弱）；MP3 标签编辑器（P2 观察，开辟音频工具方向）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**通用候选表增量**（第十七轮：宠物体重追踪器已实现划出；用户方向修正 7 工具下线（94−7+1=88 Path）；新晋图片隐写工具 P1、屏幕常亮工具 P1；观察贴纸生成器 P2）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片隐写工具（图片藏文字/提取） | 本轮新晋（365Lab 2026-10-08（10 天前）竞品工具「画中话（图片隐写）」+ 6 分钟教程《图片隐写入门》（隐藏文字/文件/图种/幻影坦克四种玩法，全程本地处理）——竞品形态验证；英文形态族：stegtool.com（批量 LSB 编码）、tembrica.com（LSB+AES-256-GCM 口令加密）、imgcnv.com、toolshu.com、reducerimage.com、privacypixtools.com——成熟工具类目；隐私叙事与仓库「图片不出浏览器」铁律同构）；纯前端小难度：上传载体图→输入隐藏文本（+可选口令）→LSB 最低有效位嵌入→导出 PNG→上传隐写图一键提取→容量实时显示；88 Path 无 steg/隐写命中 | 小 | P1（本轮新晋） |
+| 屏幕常亮工具（Wake Lock 防息屏） | 本轮新晋（365Lab 2026-10-08 40+ 工具榜单单列「屏幕常亮」——竞品形态验证；形态族：stayawake.page（Wake Lock+白噪音+计时）、mcstumble.com keep-screen-awake（状态+计时）、dev.to 2026-05 指南；场景：做饭看菜谱/演示/监控长任务；MDN WakeLock 基线 2025：Chrome/Edge/Safari 16.4+，需 HTTPS，Firefox 不支持需诚实降级）；纯前端极小难度：一键申请 wakeLock→状态指示→visibilitychange 自动重获→计时→手动释放；88 Path 无 wake/awake/常亮命中 | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第十七轮——宠物体重追踪器交付闭环（3c9f8b7+评审修复 776a91d，`/tools/pet-weight-tracker` 已注册，「宠物生活」新品类落地）；用户方向修正（2026-10-18）：聚焦 ToolWeb 工具本身，7 个泛财务/生活计算器（工资个税/二手房税费/房贷/双十一凑单/双11到手价/经济补偿金/工资条生成器）已下线（c4efe50，grep 零残留），当前全量 88 Path；新晋「图片隐写工具」P1（365Lab 2026-10-08 竞品+教程+英文形态族，纯前端小难度）、「屏幕常亮工具」P1（365Lab 榜单+stayawake/mcstumble 形态族，Wake Lock 纯前端极小难度）；观察贴纸生成器 P2（AI 抠图需后端）；V2EX/HN/dev.to 本轮无单页可落地新信号（AI 后端/桌面端/插件/agent 平台形态）；WPS 候选表保持冻结归档；仓库 88 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD 776a91d 一致；`git log` 确认开发交付 3c9f8b7+评审修复 776a91d；`grep tools/categories.go` 全量 88 Path，`pet_weight_tracker` ID 与 `/tools/pet-weight-tracker` Path 已注册（划入已实现），下线 7 工具 grep 零残留，新候选建议 ID（image_steganography / screen_wake_lock）与 88 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 07:00 决策轮）
 
 ## 今日任务（2026-10-18 07:00 · 产品经理排期决策 ✅）
