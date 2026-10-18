@@ -1,3 +1,81 @@
+
+> 维护人：产品经理 · 每日排期（2026-10-18 13:30 排期轮）
+
+## 今日任务（2026-10-18 13:30 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-18 排期决策轮（13:30 第十九轮研究之后）。文本隐私脱敏工具已交付闭环（11:00 PM 决策轮立项→开发交付 d4439c7；`grep tools/categories.go` 确认 ID `text_privacy_masker`、Path `/tools/text-privacy-masker` 已注册，「文本工具」品类，全量 90 Path），候选池划出。本轮立项**今日唯一任务：图片隐写工具（图片藏文字/提取）**。
+
+**选定：图片隐写工具（/tools/image-steganography）** — 本轮唯一任务：
+- **顺位递进兑现**：第十七轮新晋顺位第三→第十八轮顺位第二→第十九轮顺位递进第一，研究轮连续三轮抬到首位，本轮兑现。
+- **形态证据最硬**：365Lab 2026-10-08（10 天前）竞品工具「画中话」+ 6 分钟教程《图片隐写入门》（隐藏文字/文件/图种/幻影坦克四种玩法，「全程本地处理不上传」）——竞品形态验证+中文教程验证；stegtool/tembrica/imgcnv/toolshu/reducerimage/privacypixtools 英文形态族——成熟工具类目。
+- **纯前端小难度、一天可高质量交付**：canvas 读像素 LSB 嵌入/提取 + 口令（XOR 扰动或 AES-GCM，沿 tembrica 形态）+ 容量实时显示，零依赖、无后端、无 CDN 风险。
+- **隐私叙事与仓库「图片不出浏览器」铁律同构**：私密信息藏进图片，纯前端是产品优势本身而非技术妥协。
+- **旅程线闭环**：与 img-compress/img-convert/img-mosaic 等图片品类双向互链，图片工具族再加一块拼图。
+- **节奏错峰**：上一轮是文本正则型（文本隐私脱敏），本轮图片像素型（LSB 隐写），形态完全错峰。
+
+**规格**：
+1. 嵌入模式：上传载体图（PNG/JPG/JPEG，图片只在浏览器处理）；输入隐藏文本（支持中文，UTF-8 编码）；可选口令（有口令则加密/扰动密钥，无口令明文藏入）。
+2. LSB 嵌入：每像素 RGB 通道最低有效位写入 bit 流，头部含魔数+版本+长度+校验+加密标志；大图自动提示容量。
+3. 容量实时显示：根据载体图尺寸实时计算可藏字符数（(w×h×3 − headerBits)/8 ÷ 字符字节数），输入超长时禁用嵌入按钮并红字提示。
+4. 提取模式：上传隐写图→输入口令（如有）→一键提取，校验失败时给出诚实提示（"非隐写图或口令错误"）；提取结果复制到剪贴板。
+5. 导出：嵌入后导出 PNG（无损保位，下载）；对比滑块预览载体图 vs 隐写图（LSB 改动人眼不可见，滑块用于放大对比说明）。
+6. 工具页显著位置隐私声明：「图片与隐藏文本只在你的浏览器里处理，不上传服务器」。
+7. 纯前端、零第三方依赖、无后端调用；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「图片工具」品类（确认品类名后沿用）新增 ID `image_steganography`、Path `/tools/image-steganography`（New: true），中英文描述 + SEO keywords（图片隐写、图片藏文字、隐写工具、LSB 隐写），与 img-compress/img-convert/img-mosaic 双向互链。
+
+**验收标准**：
+- [ ] `/tools/image-steganography` 可开（200）
+- [ ] 嵌入：长文本+中文可完整嵌入；导出的 PNG 重新上传提取结果一致（往返无损）；不同尺寸载体图（小/大）容量计算正确
+- [ ] 口令模式：无口令提取有口令的图时校验失败并诚实报错；口令正确时提取成功；口令错误时提取失败并提示
+- [ ] 容量实时显示准确，输入超长时禁用嵌入按钮并红字提示
+- [ ] 提取失败路径（非隐写图/口令错误/损坏）均有明确提示，不崩不卡
+- [ ] 隐私声明显著；DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（「图片工具」品类），首页/导航/sitemap 生效；与图片品类互链
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/image_steganography.html`（新建：嵌入/提取双模式+容量实时显示+对比滑块，纯前端）、`static/js/image_steganography.js`（新建：LSB 嵌入/提取引擎+口令加密+容量计算，零依赖）、`tools/categories.go`（「图片工具」品类注册+图片品类互链）、`BACKLOG.md`（本小节）。
+
+**未选**：图片转像素画（P1，本轮新晋：dev.to tonytoolbox 2026-09-30 本地优先栈形态+技术路线双验证，纯前端小难度，图片品类互链，SEO 像素画/像素头像；顺位递进留池，下轮优先）；CSS 渐变生成器（P1，本轮新晋：dev.to mou1z 2026-09-29 5 工具集形态验证，与 color-converter 互补，开发者/设计刚需；顺位留池）；OFD 阅读与转 PDF（P1，难度中-大，留待上午大轮次单独占一轮）；网站图标生成器（P1，顺位顺延）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，顺位顺延）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD d4439c7 一致；`grep tools/categories.go` 全量 90 Path，`steg`/`隐写`/`藏文字`/`steganography`/`pixel-art`/`像素画`/`gradient`/`渐变` 全零命中（去重通过），ID `image_steganography`、Path `/tools/image-steganography` 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（均为构建产物，历史已知无关项，本轮未动）。
+
+---
+
+> 维护人：产品调研员 · 每日更新（2026-10-18 13:00 第十九轮研究）
+
+## 今日任务（2026-10-18 13:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-18 通用调研第十九轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。文本隐私脱敏工具已交付闭环（11:00 PM 决策轮立项→开发交付 d4439c7；`grep tools/categories.go` 确认 ID `text_privacy_masker` 已注册，全量 **90 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮四件事**（13:00 全网调研，通用方向）：
+1. 文本隐私脱敏工具交付确认：`git log` 确认开发交付 d4439c7（粘贴文本→正则识别手机号/身份证/银行卡/邮箱/IPv4/车牌→高亮逐条确认→一键遮盖→复制/下载，隐私横幅）；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD d4439c7 一致；`grep tools/categories.go` 全量 90 Path（89+1），`text_privacy_masker` ID 已注册；候选池划出，已实现清单追加（delta：+ 文本隐私脱敏工具；历史全量见下方第十八轮小节）。
+2. 新晋候选：**图片转像素画（Pixel Art 转换器）**。需求证据三重：① dev.to tonytoolbox 2026-09-30（18 天前）《Building browser-only tools that never upload your files（本地优先 web 栈）》单列 PixelArt 为实战形态——「canvas downscale + palette quantisation turns photos into game-ready sprites」，纯浏览器本地处理——形态验证+技术路线验证；② 像素风头像/复古游戏素材为持续小众刚需（社交头像像素化、独立游戏素材），在线单页形态以英文站为主，中文工具站稀缺；③ 与仓库「图片不出浏览器」铁律同构。可行性：纯前端小难度——上传图片→canvas 缩小→调色板量化（GameBoy 4 色 / PICO-8 / 16 色复古预设）→nearest-neighbor 放大→导出 PNG；与 img-compress/img-convert/img-mosaic 等图片品类互链。去重：90 Path 无 pixel-art/像素画命中（"pixel" 仅命中 serp_snippet_preview 描述文字）。难度小。SEO：像素画、图片转像素风、像素头像。建议 ID `pixel_art_converter`、Path `/tools/pixel-art-converter`。
+3. 新晋候选：**CSS 渐变生成器（CSS Gradient Generator）**。需求证据双重：① dev.to mou1z 2026-09-29（19 天前）《5 Free Developer Tools — No Signup, No Tracking, No Ads》单列 CSS Gradient Generator（可视化编辑器，支持 linear/radial/conic）——形态验证；② 前端/设计师高频刚需（按钮背景、Hero 区、海报底），仓库 `color` 工具只做颜色格式转换，无渐变可视化编辑器，属互补非重叠。可行性：纯前端小难度——可视化色标编辑（增删/拖拽色标）→实时预览→一键复制 CSS 代码片段→随机配色；与 color-converter、fancy-fonts 等开发者/设计工具互链。去重：90 Path 无 gradient/渐变命中。难度小。SEO：CSS渐变、渐变生成器、gradient generator。建议 ID `css_gradient_generator`、Path `/tools/css-gradient-generator`。
+4. 存量候选证据增强（不新立）：① **SRT 字幕编辑器**——Subtitle Edit v5.3.0 2026-10-14 更新（4 天前，gndown 阅读 1W+，SRT/ASS/VTT 数十种格式、字幕同步/合并/拆分/修复为核心功能）；猎人社区 2026-10-12（6 天前）「字幕大师」免费本地离线字幕工具（字幕生成/翻译全本地）；dev.to tonytoolbox SubToolbox（SRT/VTT/ASS 解析、resync、合并纯客户端）——「下载字幕时间轴对不上」为经典高频痛点，单页可落地形态=时间轴整体偏移（±秒）、逐行微调、合并/拆分、SRT↔VTT 转换；② **视频抽帧**——tonytoolbox FrameExtractor（浏览器原生解码 seek 抽帧）为纯前端可行性再验证；③ **报价单/收据生成器**——Medium toptoolai 2026-09-19 榜单单列 Invoice Generator（Create a clean, downloadable invoice）为英文形态佐证，但属票据/财务边缘类，在用户「不扩展泛财务计算器」方向下保持 P1 留池、顺位不提前。
+
+无新单页信号侧：① TheTextKit（dev.to 2026-09-29，30 文本工具）含 Extract Emails/URLs、URL Slug Generator——文本提取形态与刚交付的 text_privacy_masker（正则识别实体）重叠，不单立；② dev.to mou1z 同文的番茄钟（Pomodoro Timer）/看板（Kanban Board）——通用效率 App 形态，差异化弱，不单立；③ Show HN 邮件 HTML 构建器（单文件拖拽生成邮件安全 HTML）——营销/开发者 niche，难度中，不单立；④ HN TTSLab（浏览器 WebGPU TTS/STT）——需 WebGPU+大模型下载，单页过重；Kromacut（3D 打印 lithophane）——3D 打印 niche；⑤ V2EX 10-17/10-18：Windows 开源软件商店讨论（平台想法）、ChatGPT MCP 联网（agent 方案）、听力流利度练习 HTML（语言学习 niche）——均非单页工具口径；⑥ WPS 候选表保持冻结归档（本轮为通用方向）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进）：
+
+1. **图片隐写工具（图片藏文字/提取）** — P1（顺位递进到位：第十七轮新晋顺位第三→第十八轮顺位第二→本轮顺位递进第一；365Lab 2026-10-08 竞品工具「画中画」+ 6 分钟教程形态验证；stegtool/tembrica/imgcnv/toolshu/reducerimage 英文形态族；隐私叙事与仓库「图片不出浏览器」铁律同构；纯前端小难度：上传载体图→LSB 嵌入（+可选口令）→导出 PNG→一键提取→容量实时显示；90 Path 无重叠）。SEO：图片隐写、图片藏文字。
+2. **图片转像素画（Pixel Art 转换器）** — P1（本轮新晋：dev.to tonytoolbox 2026-09-30（18 天前）本地优先栈单列 PixelArt 形态+技术路线双验证；像素风头像/复古游戏素材中文单页稀缺；纯前端小难度：canvas 缩小→调色板量化（GameBoy/PICO-8/16 色预设）→nearest-neighbor 放大→导出 PNG；图片品类互链；90 Path 无重叠）。SEO：像素画、图片转像素风。
+3. **CSS 渐变生成器（CSS Gradient Generator）** — P1（本轮新晋：dev.to mou1z 2026-09-29（19 天前）5 工具集单列形态验证；前端/设计师高频刚需，与 color-converter 互补；纯前端小难度：可视化色标编辑→实时预览→一键复制 CSS（linear/radial/conic）→随机配色；开发者工具互链；90 Path 无重叠）。SEO：CSS渐变、渐变生成器。
+
+屏幕常亮工具列顺位第四（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；网站图标生成器（P1，顺位顺延）；SRT 字幕编辑器（P1，本轮证据增强：Subtitle Edit v5.3.0 4 天前更新+gndown 1W+阅读+字幕大师本地化+SubToolbox resync 形态，顺位顺延）；报价单/收据生成器（P1，票据组合，顺位顺延，用户方向下不提前）；视频抽帧（P1，难度中，本轮 FrameExtractor 可行性再验证，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**通用候选表增量**（第十九轮：文本隐私脱敏工具已实现划出；新晋图片转像素画 P1、CSS 渐变生成器 P1；全量 90 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片转像素画（Pixel Art 转换器） | 本轮新晋（dev.to tonytoolbox 2026-09-30（18 天前）《Building browser-only tools that never upload your files》单列 PixelArt 为本地优先栈实战形态——「canvas downscale + palette quantisation turns photos into game-ready sprites」，纯浏览器本地处理——形态验证+技术路线验证；像素风头像/复古游戏素材为持续小众刚需，中文在线单页形态稀缺；与仓库「图片不出浏览器」铁律同构）；纯前端小难度：上传图片→canvas 缩小→调色板量化（GameBoy 4 色/PICO-8/16 色复古预设）→nearest-neighbor 放大→导出 PNG；与 img-compress/img-convert/img-mosaic 等图片品类互链；90 Path 无 pixel-art/像素画命中 | 小 | P1（本轮新晋） |
+| CSS 渐变生成器（CSS Gradient Generator） | 本轮新晋（dev.to mou1z 2026-09-29（19 天前）《5 Free Developer Tools — No Signup, No Tracking, No Ads》单列 CSS Gradient Generator（可视化编辑器，支持 linear/radial/conic）——形态验证；前端/设计师高频刚需（按钮背景/Hero 区/海报底），仓库 color 工具只做颜色格式转换、无渐变可视化编辑器，互补非重叠）；纯前端小难度：可视化色标编辑（增删/拖拽）→实时预览→一键复制 CSS 代码片段→随机配色；与 color-converter、fancy-fonts 等开发者/设计工具互链；90 Path 无 gradient/渐变命中 | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-18 通用调研第十九轮——文本隐私脱敏工具交付闭环（d4439c7，`/tools/text-privacy-masker` 已注册，全量 90 Path），候选池划出，已实现清单 delta 追加；新晋「图片转像素画」P1（dev.to 18 天前本地优先栈形态+路线双验证，纯前端小难度，图片品类互链）、「CSS 渐变生成器」P1（dev.to 19 天前 5 工具集形态验证，与 color-converter 互补，开发者/设计人群）；存量候选证据增强：SRT 字幕编辑器（Subtitle Edit v5.3.0 4 天前更新+猎人社区字幕大师 6 天前+SubToolbox resync，单页形态=时间轴偏移/逐行微调/合并拆分/格式转换）、视频抽帧（FrameExtractor 可行性再验证）、报价单生成器（英文榜单佐证但用户方向下不提前）；TheTextKit 文本提取（与 text_privacy_masker 重叠）、番茄钟/看板（通用 App 形态差异化弱）、邮件 HTML 构建器（niche 难度中）、HN TTSLab/Kromacut（过重/niche）、V2EX 本轮（平台想法/agent/语言学习 niche）均不单立；WPS 候选表保持冻结归档；仓库 90 注册工具全量核对无重叠，核稿反馈（立候选前先 grep）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 存在且与本地 HEAD d4439c7 一致；`git log` 确认开发交付 d4439c7；`grep tools/categories.go` 全量 90 Path（89+1），`text_privacy_masker` ID 已注册（划入已实现），新候选建议 ID（pixel_art_converter / css_gradient_generator）与 90 Path 无重叠；pixel-art/像素画/gradient/渐变关键词在 categories.go 全量零命中（"pixel" 仅命中 serp_snippet_preview 描述文字）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（均为构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-18 11:00 排期轮）
 
 ## 今日任务（2026-10-18 11:00 · 产品经理排期决策 ✅）
