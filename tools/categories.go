@@ -463,6 +463,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "pdf_sign",
+					Name:        "PDF 电子签名",
+					Description: "手写签名嵌入 PDF：手写板/上传图片/键入姓名三种制签，点击放置拖拽定位，导出新 PDF，本地处理不上传、不限次",
+					Path:        "/tools/pdf-sign",
+					Icon:        "draw",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "ocr_image_text",
 					Name:        "OCR 图片文字识别",
 					Description: "截图/照片/扫描件转可编辑文字，中英文混排，框选区域识别，本地识别不上传、不限次",

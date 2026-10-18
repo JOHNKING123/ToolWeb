@@ -1,0 +1,220 @@
+{{define "pdf_sign"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 电子签名 - 手写签名嵌入 PDF 工具（本地处理不上传）</title>
+    <meta name="description" content="免费在线 PDF 电子签名工具：手写签名板/上传签名图片/键入姓名手写体渲染三种制作方式，点击页面放置、拖拽定位、等比缩放，pdf-lib 按页嵌入导出新 PDF；纯浏览器本地处理不上传，不限次数、不用注册。">
+    <meta name="keywords" content="PDF签名,在线签署PDF,电子签名,PDF手写签名,PDF盖章,合同签名,本地PDF签名">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-sign">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 电子签名","description":"免费在线 PDF 电子签名工具：三种签名制作方式、点击放置拖拽定位、导出带签名的新 PDF，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-sign","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pgs-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pgs-upload:hover,.pgs-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pgs-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pgs-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pgs-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6}
+        .pgs-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .pgs-fileinfo .material-icons{color:#ef4444;flex:none}
+        .pgs-fileinfo .meta{flex:1;min-width:0}
+        .pgs-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .pgs-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .pgs-fileinfo .ops{flex:none}
+        .pgs-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pgs-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .pgs-privacy{margin-top:.9rem;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:.6rem;padding:.7rem .9rem;font-size:.88rem;line-height:1.7}
+        .pgs-privacy b{color:#14532d}
+        .pgs-group{margin-top:1.1rem}
+        .pgs-group>label,.pgs-group .pgs-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .pgs-tabs{display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:2px solid #e5e7eb;padding-bottom:.55rem;margin-bottom:.8rem}
+        .pgs-tab{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .95rem;font-size:.9rem;cursor:pointer}
+        .pgs-tab.active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .pgs-pane{display:none}
+        .pgs-pane.active{display:block}
+        .pgs-field input[type=text]{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .7rem;font-size:.95rem}
+        .pgs-field input[type=text]:focus{outline:none;border-color:var(--primary-color)}
+        .pgs-hint{color:#6b7280;font-size:.85rem;margin-top:.4rem;line-height:1.6}
+        .pgs-padwrap{border:1px solid #d1d5db;border-radius:.6rem;background:#fff;touch-action:none;position:relative;overflow:hidden}
+        .pgs-padwrap canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+        .pgs-padtools{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem;align-items:center}
+        .pgs-btnrow{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .pgs-fontrow{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+        .pgs-font{border:2px solid #e5e7eb;background:#fff;border-radius:.5rem;padding:.45rem .7rem;font-size:1.15rem;cursor:pointer;min-width:3.4rem}
+        .pgs-font.active{border-color:var(--primary-color);background:#eff6ff}
+        .pgs-siglist{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.2rem}
+        .pgs-sig{position:relative;border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;padding:.3rem;cursor:pointer}
+        .pgs-sig img{display:block;max-height:52px;max-width:130px}
+        .pgs-sig .nm{font-size:.72rem;color:#6b7280;text-align:center;margin-top:.2rem;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .pgs-sig.active{border-color:var(--primary-color);background:#eff6ff}
+        .pgs-sig .del{position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;color:#ef4444;font-size:.8rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+        .pgs-sig .del:hover{background:#fee2e2}
+        .pgs-empty{color:#9ca3af;font-size:.85rem}
+        .pgs-stage{position:relative;border:1px solid #e5e7eb;border-radius:.6rem;background:#f3f4f6;overflow:hidden;line-height:0}
+        .pgs-stage canvas{display:block;width:100%;height:auto}
+        .pgs-sign-el{position:absolute;border:2px solid transparent;cursor:move;line-height:0;user-select:none;-webkit-user-select:none;touch-action:none}
+        .pgs-sign-el img{display:block;width:100%;height:100%;pointer-events:none}
+        .pgs-sign-el.selected{border-color:var(--primary-color);border-style:dashed;background:rgba(59,130,246,.06)}
+        .pgs-sign-el .handle{position:absolute;width:14px;height:14px;background:#fff;border:2px solid var(--primary-color);border-radius:50%;right:-9px;bottom:-9px;cursor:nwse-resize;display:none;z-index:2}
+        .pgs-sign-el .cls{position:absolute;width:18px;height:18px;background:#ef4444;color:#fff;border-radius:50%;right:-10px;top:-10px;font-size:.75rem;line-height:18px;text-align:center;cursor:pointer;display:none;z-index:2}
+        .pgs-sign-el.selected .handle,.pgs-sign-el.selected .cls{display:block}
+        .pgs-pager{display:flex;align-items:center;justify-content:center;gap:.8rem;margin-top:.6rem}
+        .pgs-pager button{width:36px;height:36px;border:1px solid #e5e7eb;background:#fff;border-radius:.5rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pgs-pager button:hover:not([disabled]){border-color:var(--primary-color);color:var(--primary-color)}
+        .pgs-pager button[disabled]{opacity:.45;cursor:not-allowed}
+        .pgs-pager .pg{font-size:.9rem;color:#374151;font-variant-numeric:tabular-nums}
+        .pgs-jump{display:flex;align-items:center;gap:.35rem;font-size:.85rem;color:#6b7280}
+        .pgs-jump input{width:3.2rem;border:1px solid #d1d5db;border-radius:.4rem;padding:.3rem .4rem;font-size:.85rem;text-align:center}
+        .pgs-modebar{font-size:.85rem;color:#6b7280;margin-top:.6rem;line-height:1.6;min-height:1.5em}
+        .pgs-modebar b{color:var(--primary-color)}
+        .pgs-checklist{margin-top:.8rem;display:none}
+        .pgs-checklist table{width:100%;border-collapse:collapse;font-size:.86rem}
+        .pgs-checklist th,.pgs-checklist td{border:1px solid #e5e7eb;padding:.4rem .55rem;text-align:left}
+        .pgs-checklist th{background:#f9fafb;color:#374151}
+        .pgs-checklist td img{max-height:26px;vertical-align:middle}
+        .pgs-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .pgs-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pgs-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pgs-progress{display:none;margin-top:1rem}
+        .pgs-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .pgs-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .pgs-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .pgs-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pgs-tip b{color:#111827}
+        @media (max-width:640px){
+            .pgs-upload{padding:1.6rem .8rem}
+            .pgs-actions .btn{flex:1 1 100%;justify-content:center}
+            .pgs-fileinfo .ops button{width:34px;height:34px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">draw</i> PDF 电子签名</h1>
+            <p>手写签名嵌入 PDF：制作签名 → 点击页面放置 → 导出带签名的新 PDF，全程浏览器本地处理</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pgs-privacy"><b>隐私承诺：文件不出浏览器。</b>你上传的 PDF 与签名图片只在你的浏览器里流转处理，不上传任何服务器；签名库保存在你浏览器的本地存储（localStorage），仅本机可见，可随时删除。</div>
+
+                <div class="pgs-upload" id="pgs-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="pgs-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="pgs-status" id="pgs-status"></div>
+                <div class="pgs-error" id="pgs-lib-error" style="display:none;"></div>
+
+                <div class="pgs-fileinfo" id="pgs-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="pgs-file-name"></div>
+                        <div class="sub" id="pgs-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="pgs-clear" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <!-- 签名制作 -->
+                <div class="pgs-group" id="pgs-maker">
+                    <span class="pgs-glabel">第一步：制作签名（可存多枚，刷新不丢失）</span>
+                    <div class="pgs-tabs" role="tablist">
+                        <button type="button" class="pgs-tab active" data-tab="draw" role="tab">✍️ 手写签名板</button>
+                        <button type="button" class="pgs-tab" data-tab="image" role="tab">🖼️ 上传签名图片</button>
+                        <button type="button" class="pgs-tab" data-tab="text" role="tab">⌨️ 键入姓名生成</button>
+                    </div>
+                    <div class="pgs-pane active" id="pgs-pane-draw">
+                        <div class="pgs-padwrap"><canvas id="pgs-pad" width="800" height="320"></canvas></div>
+                        <div class="pgs-padtools">
+                            <button type="button" class="btn" id="pgs-pad-undo"><i class="material-icons">undo</i> 撤销一笔</button>
+                            <button type="button" class="btn" id="pgs-pad-clear"><i class="material-icons">delete_sweep</i> 清空</button>
+                            <button type="button" class="btn btn-primary" id="pgs-pad-save"><i class="material-icons">save</i> 存入签名库</button>
+                        </div>
+                        <div class="pgs-hint">用鼠标或手指在上方白板上书写，多余空白会自动裁剪；存入后可重复使用。</div>
+                    </div>
+                    <div class="pgs-pane" id="pgs-pane-image">
+                        <div class="pgs-btnrow">
+                            <button type="button" class="btn" id="pgs-img-pick"><i class="material-icons">file_upload</i> 选择签名图片（PNG/JPG）</button>
+                            <button type="button" class="btn btn-primary" id="pgs-img-save" disabled><i class="material-icons">auto_fix_high</i> 白底转透明并存入签名库</button>
+                        </div>
+                        <input type="file" id="pgs-img-file" accept="image/png,image/jpeg" style="display:none;">
+                        <div class="pgs-hint" id="pgs-img-hint">支持白底手写签名照片/扫描件；存入时自动把接近白色的底色转成透明，裁掉多余空白。</div>
+                    </div>
+                    <div class="pgs-pane" id="pgs-pane-text">
+                        <div class="pgs-field">
+                            <input type="text" id="pgs-name" maxlength="24" placeholder="输入你的姓名，如 张三 / ZHANG SAN" autocomplete="off">
+                        </div>
+                        <div class="pgs-fontrow" id="pgs-fontrow">
+                            <button type="button" class="pgs-font active" data-font="hand1" style="font-family:'Segoe Script','Comic Sans MS','Kaiti SC','KaiTi',cursive;">张三</button>
+                            <button type="button" class="pgs-font" data-font="hand2" style="font-family:'Brush Script MT','Segoe Script',cursive;">John</button>
+                            <button type="button" class="pgs-font" data-font="kaiti" style="font-family:'Kaiti SC','KaiTi','STKaiti',serif;">张三</button>
+                            <button type="button" class="pgs-font" data-font="xing" style="font-family:'Xingkai SC','Kaiti SC','KaiTi',cursive;">张三</button>
+                        </div>
+                        <div class="pgs-btnrow">
+                            <button type="button" class="btn btn-primary" id="pgs-text-save"><i class="material-icons">save</i> 生成并存入签名库</button>
+                        </div>
+                        <div class="pgs-hint">四种手写体风格任选一种，渲染为签名图片存入库；实际效果取决于你设备上的字体。</div>
+                    </div>
+                    <div class="pgs-group">
+                        <span class="pgs-glabel">我的签名库（点击选中当前使用的签名）</span>
+                        <div class="pgs-siglist" id="pgs-siglist"></div>
+                    </div>
+                </div>
+
+                <!-- 预览与放置 -->
+                <div class="pgs-group" id="pgs-preview" style="display:none;">
+                    <span class="pgs-glabel">第二步：在页面上放置签名</span>
+                    <div class="pgs-stage" id="pgs-stage">
+                        <canvas id="pgs-page"></canvas>
+                    </div>
+                    <div class="pgs-pager">
+                        <button type="button" id="pgs-prev" title="上一页"><span class="material-icons">chevron_left</span></button>
+                        <span class="pg" id="pgs-pglabel">第 1 / 1 页</span>
+                        <button type="button" id="pgs-next" title="下一页"><span class="material-icons">chevron_right</span></button>
+                        <span class="pgs-jump">跳至 <input type="number" id="pgs-jump" min="1" value="1"> <button type="button" class="btn" id="pgs-jump-go" style="padding:.25rem .7rem;">跳</button></span>
+                    </div>
+                    <div class="pgs-modebar" id="pgs-modebar">先在上方签名库中点选一枚签名，再点击页面空白处即可放置。</div>
+                    <div class="pgs-checklist" id="pgs-checklist">
+                        <span class="pgs-glabel">签署清单（共 <b id="pgs-count">0</b> 处）</span>
+                        <table><thead><tr><th>签名</th><th>所在页</th><th>尺寸（磅）</th><th>操作</th></tr></thead>
+                        <tbody id="pgs-checklist-body"></tbody></table>
+                    </div>
+                </div>
+
+                <div class="pgs-error" id="pgs-error"></div>
+                <div class="pgs-progress" id="pgs-progress">
+                    <div class="bar"><i id="pgs-progress-bar"></i></div>
+                    <div class="txt" id="pgs-progress-txt"></div>
+                </div>
+                <div class="pgs-actions">
+                    <button class="btn btn-primary" id="pgs-export" disabled><i class="material-icons">download</i> 导出已签名 PDF</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pgs-tip">
+                    <b>怎么用：</b>① 制作签名：三种方式任选，手写签名板最像亲笔、上传图片适合已有签名照片、键入姓名最快；签名存入「我的签名库」，关网页再回来也不会丢。② 放置签名：先点选一枚签名，再点击页面想签字的位置；拖拽可微调位置，选中后右下角圆点拖拽等比缩放，右上角 × 或按 Delete 键删除；可翻页在不同页面放多枚。③ 导出：点「导出已签名 PDF」下载 <b>signed_原文件名.pdf</b>，原文件不被修改；签署清单列出每一处签名的位置。<br>
+                    <b>常见场景：</b>劳动合同、offer、租赁协议、报价单、验收单、授权书等在线签署，不用打印扫描；外包验收、自由职业合同远程签字。<br>
+                    <b>和市面工具比：</b>市面在线签名工具免费版多半限制每月 3–5 份文档；本站纯前端本地处理，<b>文件不上传、不限次数、不用注册</b>，打开网页就能签。<br>
+                    <b>隐私：</b>PDF 与签名图片只在你的浏览器里处理，不经过任何服务器；签名库只存在你浏览器的 localStorage，随时可删除。单个文件超过 50MB 仍可处理，只是会慢一些。加密（带打开密码）的 PDF 需先解密才能签署。<br>
+                    <b>法律提醒：</b>电子签名本身合法有效，但具体合同是否能用电子签、以哪种形式签署，建议事先和对方确认；本站工具只帮你把手写签名嵌进 PDF，不提供实名认证。<br>
+                    <b>配套使用：</b>合同发之前想先涂掉敏感信息，用 <a href="/tools/pdf-annotate">PDF 批注打码</a>；多页合同先整理页序，用 <a href="/tools/pdf-manage">PDF 页面管理</a>；想先把纸质合同扫成 PDF，用 <a href="/tools/images-to-pdf">图片批量转 PDF</a>；重要合同签署后加个密码，用 <a href="/tools/pdf-encrypt">PDF 加密/解密</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf_sign.js?v=1"></script>
+</body>
+</html>
+{{end}}
