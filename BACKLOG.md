@@ -1,4 +1,39 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-19 03:36 第二十六轮研究）
+
+## 今日任务（2026-10-19 03:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第二十六轮（WPS 特别方向已结束；用户方向修正持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。在线音频裁剪器已交付闭环（01:39 PM 决策轮立项→开发交付 1e8057b + 评审修复 357f056；`grep tools/categories.go` 确认 ID `audio_trimmer`、Path `/tools/audio-trimmer` 已注册，全量 **97 Path**，「音频处理」新品类已开张），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；凌晨轮沿用「晚间轮只排小难度」规则。
+
+**本轮四件事**（03:36 全网调研，通用方向）：
+1. 音频裁剪器交付确认：`git log` 确认开发交付 1e8057b（波形选区裁剪+试听，WAV/MP3 本地导出）+ 评审修复 357f056（框选起止点归一化、lamejs 报错文案）；`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD 4e613d9 一致；`grep` 全量 97 Path（96+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 在线音频裁剪器）。
+2. 新晋候选：**图片精确体积压缩器（Compress to Target KB）**。需求证据：dev.to mdshamimali 2026-10-18 DodoDeck 发布帖 headline 功能 "exact KB image resizer"（19 小时前热帖）。痛点真实：证件照/考试报名/公众号/简历附件的「≤X KB」硬限制，现有压缩工具靠手动调质量反复试运气。差异化实锤：仓库 `img-compress` 经查 templates/img_compress.html 无「目标体积/指定大小」模式（grep 零命中），本工具为目标驱动 UX（输入目标 KB → 二分质量+尺寸降级 → 一次命中导出），能力不重叠。可行性：纯前端小难度——canvas toBlob 二分 JPEG/WebP 质量（必要时等比降分辨率），本地循环至 ≤目标体积，实时体积进度条；零依赖无后端。去重：97 Path 中 target_kb/目标体积/精确压缩全零命中。难度小。SEO：图片压缩到指定大小、KB 压缩、证件照压缩。建议 ID `img_target_kb`、Path `/tools/img-target-kb`。P1。
+3. 新晋候选：**音频合并器（Audio Merger）**。需求证据：dev.to supertoolkit 2026-10-16《I built 100+ free browser tools》主打 audio in browser（Web Audio API 本地音频编辑主题），与刚开张的「音频处理」品类同构。痛点真实：多段会议录音/语音备忘录拼接、播客片头片尾拼接，桌面方案要装软件、在线方案要上传。可行性：纯前端小难度——多文件上传→decodeAudioData→AudioBuffer 顺序拼接（采样率归一化）→WAV 手工编码/MP3(lamejs)本地导出，与 audio_trimmer 同技术栈（评审刚趟过 lamejs 路线），一轮可交付。去重：97 Path 中 merger/音频拼接零命中（PDF 合并/表格合并为文档类，不重叠）。难度小。SEO：音频合并、MP3 合并、录音拼接。建议 ID `audio_merger`、Path `/tools/audio-merger`。P1（注：音频品类刚交付裁剪器，连续音频品类感知考量留 PM 定序；可与 MP3 标签编辑器 P2 组音频三件套）。
+4. 新观察/证据记录：① **单位换算器**——dev.to blanzatools 2026-10-11 14 工具集单列 Unit Converter（长度/重量/温度/数据），PH 10-12 Everyday Tools 榜单 file size converter 为仓库缺口侧证；97 Path 单位换算/unit_converter/文件大小全零命中；纯前端小难度（SI/英制/数据存储单位互转）；工具本身口径、非泛财务计算器，用户方向下可做；P1 观察。② **EPUB 电子书阅读器**——ToolSlash 2026-10-12 发布 catalogue 明列 "EPUB reader"（零遥测本地处理竞品）；纯前端中难度——手写 zip central directory 解析 + DecompressionStream('deflate-raw') 解包 + OPF manifest/spine 章节渲染，零第三方依赖；97 Path epub/电子书/阅读器零命中；建议上午大轮次；P1（中难度留待上午）。③ **V2EX Reloadwright**（2026-10-14，Edge 自动刷新+网页变化监控通知到手机）：变化监控需常驻后台/插件形态，单页无法持久轮询，不单立。④ **DodoDeck AI TTS**（10-18）：TTS 已在池 P2（品类成熟差异化弱），证据未改判。⑤ **365Lab 10-08 40+ 工具榜单**：图标生成器/贴纸生成器/白噪音/屏幕常亮/网名生成器——图标生成器在池 P1（本轮再佐证），其余或已覆盖或 P2 维持。⑥ V2EX 10-17/18（v2explore 聊天插件、ChatGPT MCP 代理、removeobjects.video 需 AI 后端）、HN（Rill Browser 浏览器形态、OpenMuse agent）——均非单页纯前端口径。⑦ WPS 候选表保持冻结归档。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；凌晨轮只排小难度）：
+
+1. **网站图标生成器（Favicon Generator）** — P1（顺位递进：16 轮新晋→24/25 轮顺延；365Lab 10-08 竞品 + 10-08 40+ 榜单再佐证图标生成器热度；纯前端小难度：上传→16/32/180/192/512 多尺寸→ZIP 打包+HTML 引用代码；97 Path favicon/网站图标/图标生成零命中）。
+2. **进制转换器（Base Converter）** — P1（PH 2026-10-12 Everyday Tools 榜单单列，为该榜单仓库唯一缺口，25 轮证据已增强；纯前端小难度：2/8/10/16/32 互转+分组显示+一键复制；开发者工具家族旅程线；97 Path 进制零命中）。
+3. **图片精确体积压缩器（Compress to Target KB）** — P1（本轮新晋：DodoDeck 2026-10-18 headline 功能佐证；「≤X KB」硬限制痛点真实；img-compress 无目标体积模式已实锤去重；纯前端小难度：目标 KB 输入→二分质量+尺寸降级→一次命中导出；97 Path 无重叠）。
+
+音频合并器（P1 新晋，音频品类旅程线；与裁剪器同技术栈；连续音频品类感知留 PM 定序）；JSON Schema 验证器（P1，中难度，上午大轮次第一候补）；浏览器屏幕录制器（P1，中难度，上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，难度中-大，上午大轮次）；视频抽帧（P1，难度中，上午轮次）；EPUB 电子书阅读器（P1 新观察，中难度，上午大轮次）；单位换算器（P1 观察）；日期加减/日期差（P1 观察，计算器口径谨慎）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察，开发者 niche）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察，应用形态重）；倒计时器（P2 观察，形态泛化）；在线钢琴（P2 观察，娱乐应用形态）；TTS 文本转语音朗读器（P2 观察，品类成熟差异化弱）；MP3 标签编辑器（P2 观察，音频品类三件套位）；贴纸生成器（P2 观察，AI 抠图需后端）；域名生成器（观察，低优先，需出网）等其余候选留池。
+
+**通用候选表增量**（第二十六轮：音频裁剪器已实现划出；新晋图片精确体积压缩器 P1、音频合并器 P1；新观察单位换算器/EPUB 阅读器；全量 97 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片精确体积压缩器（Compress to Target KB） | 本轮新晋（dev.to mdshamimali 2026-10-18 DodoDeck 发布帖 headline 功能 "exact KB image resizer"；痛点：证件照/考试报名/公众号「≤X KB」硬限制，现有压缩靠手动调质量反复试运气；差异化实锤：img-compress 无目标体积模式（templates grep 零命中），本工具目标驱动 UX：输入目标 KB→二分质量+尺寸降级→一次命中导出；纯前端小难度，canvas toBlob，零依赖无后端；97 Path target_kb/目标体积/精确压缩零命中） | 小 | P1（本轮新晋） |
+| 音频合并器（Audio Merger） | 本轮新晋（dev.to supertoolkit 2026-10-16 100+ browser tools 主打 audio in browser / Web Audio API 本地音频编辑；痛点：多段会议录音/语音备忘录拼接、播客片头片尾拼接，桌面要装、在线要上传；纯前端小难度：多文件上传→decodeAudioData→AudioBuffer 顺序拼接（采样率归一化）→WAV 手工编码/MP3(lamejs)本地导出，与 audio_trimmer 同技术栈；97 Path merger/音频拼接零命中；音频品类第二弹，与 MP3 标签编辑器 P2 组三件套） | 小 | P1（本轮新晋；品类连续感知留 PM 定序） |
+| 单位换算器（Unit Converter） | 新观察（dev.to blanzatools 2026-10-11 14 工具集单列 Unit Converter；PH 10-12 Everyday Tools file size converter 仓库缺口侧证；97 Path 单位换算/unit_converter/文件大小零命中；纯前端小难度：长度/重量/温度/数据存储 SI·英制互转；工具本身口径非泛财务计算器，用户方向下可做） | 小 | P1 观察 |
+| EPUB 电子书阅读器（EPUB Reader） | 新观察（ToolSlash 2026-10-12 发布 catalogue 明列 "EPUB reader"，零遥测本地处理竞品；纯前端中难度：手写 zip central directory 解析 + DecompressionStream('deflate-raw') 解包 + OPF manifest/spine 章节渲染，零第三方依赖；97 Path epub/电子书/阅读器零命中） | 中 | P1（观察；中难度留待上午大轮次） |
+
+**归档说明**：本轮为 10-19 通用调研第二十六轮——在线音频裁剪器交付闭环（1e8057b + 评审修复 357f056，`/tools/audio-trimmer` 已注册，全量 97 Path，「音频处理」新品类开张），候选池划出，已实现清单 delta 追加；新晋「图片精确体积压缩器」P1（DodoDeck 10-18 headline 功能佐证，≤X KB 硬限制痛点，img-compress 无目标体积模式实锤去重，纯前端小难度）、「音频合并器」P1（supertoolkit 10-16 audio in browser 主题，与裁剪器同技术栈，音频品类旅程线；连续音频品类感知留 PM 定序）；新观察「单位换算器」P1（blanzatools 10-11 + PH 榜单侧证）、「EPUB 电子书阅读器」P1 中难度（ToolSlash 10-12 catalogue，留待上午大轮次）；V2EX Reloadwright（需常驻后台/插件形态不单立）、removeobjects.video（AI 后端不单立）、Rill Browser/OpenMuse（agent/浏览器形态不单立）均无单页信号；TTS P2 维持；365Lab 榜单再佐证图标生成器热度；WPS 候选表保持冻结归档；仓库 97 注册工具全量核对无重叠，核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 = 本地 HEAD 4e613d9 一致；`git log` 确认开发交付 1e8057b + 评审修复 357f056；`grep tools/categories.go` 全量 97 Path（96+1），`audio_trimmer` ID 与 `/tools/audio-trimmer` Path 已注册（划入已实现），新候选建议 ID（img_target_kb / audio_merger / unit_converter / epub_reader）与 97 Path 无重叠；target_kb/目标体积/merger/音频拼接/单位换算/epub/电子书关键词在 categories.go 核对；img-compress 无目标体积模式经 templates grep 实锤；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-19 01:39 排期轮）
 
 ## 今日任务（2026-10-19 01:39 · 产品经理排期决策 ✅）
