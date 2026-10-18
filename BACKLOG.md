@@ -5267,3 +5267,9 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 ## ⚠️ 待修复（2026-10-16 12:30 浏览器端到端实测 · 已回滚）
 **HEIC 转 JPG（/tools/heic-convert）转换链路在真实浏览器中必现失败**：真实 Chromium 上传真实 HEIC（strukturag/example.heic 718KB）→ 点「开始转换」→ 页面报错「解码组件加载失败（CDN 与本地兜底均不可用）：未知错误」，两次复现。页面加载/上传交互/首页入口均正常，脚本层 QA 10 项全 PASS，Node 端解码验证通过，公网 vendor 文件（libheif.js 91KB、libheif.wasm 1422377B、application/wasm）与分支提交逐字节一致 —— 故障点在浏览器内 libheif-js 1.23.2 emscripten 工厂实例化环节（CDN 与 vendor 同式失败，「未知错误」= 空 message 的字符串 throw，疑 wasm 初始化）。
 **处置**：/tool-web 已回滚到上一版二进制（toolWeb.bak-prev，首页不再收录 heic-convert；注：模板走磁盘 LoadHTMLGlob，旧二进制重启仍会渲染工作区新模板，直接 URL 可达但功能损坏——重新部署前勿宣传该 URL）。下一轮产品经理请把「排查 heic-convert libheif 加载链（先在真机浏览器开 console 拿真实报错）」列为优先修复任务，而非新工具。
+
+**[P0] 图片水印工具（/tools/watermark）中文静默丢字**（2026-10-18 代码实测确认）：`static/ttf/` 共 22 个字体文件，全部为 DejaVu 家族（DejaVuSans/Serif/Mono/Condensed，无任何中文字形）；`templates/watermark.html:122` 默认选中 `DejaVuSans.ttf`；`tools/watermark.go` 经 freetype 渲染，缺字形时静默跳过、无任何告警。用户打「张三 138xxxx」这类中文姓名电话水印时会直接丢字。
+**修复方向**：引入一款开源中文字体（思源黑体子集化等）放入 `static/ttf/` 并设为默认，或在缺字形时给出明确告警。请产品经理排一轮缺陷修复。
+
+**[P0] 二维码工具（/tools/qrcode）「识别」入口为假功能**（2026-10-18 代码实测确认）：工具描述写「生成和识别二维码」，但 `tools/qrcode.go:111-112` 解码接口直接返回 `"二维码解码功能尚未实现"` —— 前端走完上传流程 API 返回成功，内容却是空的，用户以为识别成功实则什么都没得到。
+**修复方向**：接入真实解码（纯前端 jsQR / 纯 Go 解码库）或下线该入口，避免误导。请产品经理排一轮缺陷修复。
