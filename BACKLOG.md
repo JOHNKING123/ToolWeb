@@ -1,6 +1,47 @@
 
 > 维护人：产品调研员 · 每日更新（2026-10-18 15:30 第二十轮研究）
 
+## 今日任务（2026-10-18 15:38 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-18 排期决策轮（15:38 第二十轮研究之后）。图片隐写工具已交付闭环（13:30 PM 决策轮立项→开发交付 1689509 + 排期提交 081cebf/4abf44e；`grep tools/categories.go` 确认 ID `image_steganography`、Path `/tools/image-steganography` 已注册，「图片处理」品类，全量 91 Path），候选池划出。本轮立项**今日唯一任务：图片转像素画（Pixel Art 转换器）**。
+
+**选定：图片转像素画（/tools/pixel-art-converter）** — 本轮唯一任务：
+- **顺位递进兑现**：第十九轮新晋顺位第一→第二十轮研究轮顺位递进到位（连续两轮抬到首位），本轮兑现。
+- **形态+技术路线双验证**：dev.to tonytoolbox 2026-09-30（18 天前）《Building browser-only tools that never upload your files》单列 PixelArt 为本地优先栈实战形态——「canvas downscale + palette quantisation turns photos into game-ready sprites」，纯浏览器本地处理；与仓库「图片不出浏览器」铁律同构。
+- **中文单页稀缺**：像素风头像/复古游戏素材为持续小众刚需（社交头像像素化、独立游戏素材），中文在线单页形态稀缺。
+- **纯前端小难度、一天可高质量交付**：canvas 缩小→调色板量化（GameBoy/PICO-8/16 色预设）→nearest-neighbor 放大→导出 PNG，零依赖、无后端、无 CDN 风险。
+- **旅程线闭环**：与 img-compress/img-convert/img-mosaic/image-steganography 等图片处理品类双向互链。
+- **节奏错峰说明**：连续两轮均为图片品类（隐写→像素画），但形态完全不同（隐写=信息隐藏/安全叙事；像素画=风格化创作/娱乐叙事），用户侧感知不重复；且顺位递进规则优先。
+
+**规格**：
+1. 输入：上传图片（PNG/JPG/JPEG/WebP，图片只在浏览器处理）；拖拽+点击双通道；大图自动下采样到工作分辨率。
+2. 像素化控制：输出宽度（像素数）滑块（如 16–256px），实时预览；nearest-neighbor 放大还原到显示尺寸。
+3. 调色板量化：预设调色板（GameBoy 4 色 / PICO-8 16 色 / 复古 16 色 / 全彩保持）+ 自定义色数滑块（最近邻颜色匹配）；实时对比原图 vs 像素化图（并排或滑块）。
+4. 网格线叠加开关（可选，方便按格临摹/数格子）；背景透明度保持（PNG 透明通道可选保留）。
+5. 导出：导出 PNG（像素级无损）；可选导出放大倍数（1×/2×/4×，nearest-neighbor）。
+6. 工具页显著位置隐私声明：「图片只在你的浏览器里处理，不上传服务器」。
+7. 纯前端、零第三方依赖、无后端调用；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「图片处理」品类新增 ID `pixel_art_converter`、Path `/tools/pixel-art-converter`（New: true），中英文描述 + SEO keywords（像素画、图片转像素风、像素头像、pixel art），与 img-compress/img-convert/img-mosaic/image-steganography 双向互链。
+
+**验收标准**：
+- [ ] `/tools/pixel-art-converter` 可开（200）
+- [ ] 上传照片→调节像素宽度→调色板切换（GameBoy/PICO-8/复古/全彩）实时预览正确，放大边缘保持硬像素（nearest-neighbor，无模糊）
+- [ ] 自定义色数量化生效；网格线开关生效；导出 PNG 与预览一致（放大倍数正确）
+- [ ] 大图（>2MP）不卡顿（工作分辨率下采样生效）；移动端可用
+- [ ] 隐私声明显著；DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（「图片处理」品类），首页/导航/sitemap 生效；与图片品类互链
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/pixel_art_converter.html`（新建：上传+参数面板+双预览+导出，纯前端）、`static/js/pixel_art_converter.js`（新建：canvas 缩小/量化/放大引擎，零依赖）、`tools/categories.go`（「图片处理」品类注册+图片品类互链）、`BACKLOG.md`（本小节）。
+
+**未选**：CSS 渐变生成器（P1，第二十轮顺位第二：dev.to mou1z 2026-09-29 形态验证，与 color-converter 互补，开发者/设计刚需；顺位递进留池，下轮优先）；照片转十字绣图案生成器（P1，本轮新晋顺位第三：Medium 7 小时前今日榜单 + dev.to 09-06 英文形态验证，DMC 配色免费无上限差异化，纯前端小难度；顺位递进留池）；图片复古做旧（P1，本轮新晋顺位第四：365Lab 10-08 竞品+指南+Medium 7 小时前榜单三重验证，批量场景差异化；顺位顺延）；网站图标生成器（P1，顺位顺延）；OFD 阅读与转 PDF（P1，难度中-大，适合上午大轮次）；SRT 字幕编辑器（P1，顺位顺延）；屏幕常亮工具（P1，留池）；报价单/收据生成器（P1，票据组合，用户方向下顺位不提前）；视频抽帧（P1，难度中，适合上午轮次）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；进制转换器（P1 观察）；白噪音发生器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察，AI 抠图需后端）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）确认 origin/muse/dev-20260929 与本地 HEAD 4abf44ee5fd5d04a29a90204ff97c325bef64a0c 一致；`grep tools/categories.go` 全量 91 Path，`pixel-art`/`像素画`/`gradient`/`渐变`/`cross-stitch`/`十字绣` 全零命中（去重通过），ID `pixel_art_converter`、Path `/tools/pixel-art-converter` 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（均为构建产物，历史已知无关项，本轮未动）。
+
+---
+
+> 维护人：产品调研员 · 每日更新（2026-10-18 15:30 第二十轮研究）
+
 ## 今日任务（2026-10-18 15:30 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-18 通用调研第二十轮（WPS 特别方向 10-09~10-15 已结束，区间外恢复通用调研；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片隐写工具已交付闭环（13:30 PM 决策轮立项→开发交付 1689509 + 排期提交 081cebf；`grep tools/categories.go` 确认 ID `image_steganography`、Path `/tools/image-steganography` 已注册，全量 **91 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
