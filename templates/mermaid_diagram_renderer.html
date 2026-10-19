@@ -29,6 +29,7 @@
         .mm-code{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .8rem;font-size:.88rem;color:#111827;background:#fff;font-family:Consolas,Menlo,"Courier New",monospace;min-height:26rem;resize:vertical;line-height:1.7;tab-size:4}
         .mm-code:focus{outline:none;border-color:var(--primary-color)}
         .mm-preview{border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;min-height:26rem;max-height:36rem;overflow:auto;padding:1rem;display:flex;align-items:center;justify-content:center}
+        .mm-preview.mm-dark{background:#1f2937;border-color:#374151}
         .mm-preview svg{max-width:100%;height:auto}
         .mm-preview .mm-empty{color:#9ca3af;font-size:.9rem;text-align:center;line-height:2}
         .mm-err{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
@@ -118,7 +119,7 @@
                     <button class="btn" id="mm-srccopy"><i class="material-icons">code</i> 复制 Mermaid 源码</button>
                 </div>
                 <div class="mm-copy-tip" id="mm-copytip"></div>
-                <div class="mm-tip" style="margin-top:.7rem;font-size:.86rem;">PNG 为高清位图，可直接插入 PPT / 公众号 / 文档；SVG 为矢量文件，无限放大不模糊，方便在网页/设计软件中继续编辑。</div>
+                <div class="mm-tip" style="margin-top:.7rem;font-size:.86rem;">PNG 为高清位图，可直接插入 PPT / 公众号 / 文档；SVG 为矢量文件，无限放大不模糊，方便在网页/设计软件中继续编辑。深色（dark）主题渲染时预览区为深色背景；导出 PNG 时建议选「背景：透明」，浅色文字在白色背景上会看不清。</div>
             </div>
 
             <div class="tool-card">
@@ -133,7 +134,7 @@
             </div>
         </div>
     </div>
-    <script src="/tools/static/js/mermaid_diagram_renderer.js?v=1"></script>
+    <script src="/tools/static/js/mermaid_diagram_renderer.js?v=2"></script>
 </body>
 </html>
 {{end}}

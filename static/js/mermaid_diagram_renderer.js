@@ -115,17 +115,26 @@
         if (window.mermaid) return Promise.resolve(window.mermaid);
         if (state.cdnLoading) return state.cdnLoading;
         state.cdnLoading = new Promise(function (resolve, reject) {
+            var timer = null;
+            // 失败时把 state.cdnLoading 置回 null：下次输入会重新发起 CDN 加载，
+            // 与提示文案「不用刷新页面」保持一致；成功/失败时都清理超时定时器
+            function fail(err) {
+                state.cdnLoading = null;
+                if (timer) clearTimeout(timer);
+                reject(err);
+            }
             var s = document.createElement('script');
             s.src = MERMAID_CDN;
             s.async = true;
             s.onload = function () {
+                if (timer) clearTimeout(timer);
                 if (window.mermaid) resolve(window.mermaid);
-                else reject(new Error('脚本已加载但 mermaid 对象不可用'));
+                else fail(new Error('脚本已加载但 mermaid 对象不可用'));
             };
-            s.onerror = function () { reject(new Error('CDN 加载失败')); };
+            s.onerror = function () { fail(new Error('CDN 加载失败')); };
             document.head.appendChild(s);
-            setTimeout(function () {
-                if (!window.mermaid) reject(new Error('CDN 加载超时'));
+            timer = setTimeout(function () {
+                if (!window.mermaid) fail(new Error('CDN 加载超时'));
             }, 20000);
         });
         return state.cdnLoading;
@@ -135,7 +144,7 @@
         window.mermaid.initialize({
             startOnLoad: false,
             theme: state.theme,
-            securityLevel: 'loose',
+            securityLevel: 'strict',
             flowchart: { useMaxWidth: true },
             sequence: { useMaxWidth: true },
             fontFamily: '"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif'
@@ -219,6 +228,8 @@
     /* ---------- 主题切换 ---------- */
     $('mm-theme').addEventListener('change', function () {
         state.theme = this.value;
+        // dark 主题 SVG 文字为浅色，预览区同步换深色背景，保证可读性
+        previewEl.classList.toggle('mm-dark', this.value === 'dark');
         if (codeEl.value.trim()) renderNow();
     });
 
@@ -269,6 +280,10 @@
         btn.disabled = true;
         var scale = parseInt($('mm-scale').value, 10) || 2;
         var bgMode = $('mm-bg').value;
+        // dark 主题浅色文字 + 白色背景 PNG 会看不清，提醒用户改用透明背景（不阻塞导出）
+        if (state.theme === 'dark' && bgMode === 'white') {
+            tip('提醒：当前为「深色」主题，浅色文字在白色背景 PNG 上可能看不清；建议选「背景：透明」重新导出。');
+        }
         var svg = ensureSvgHeader(state.svg);
         var size = svgSize(svg);
         var cw = Math.round(size.w * scale), ch = Math.round(size.h * scale);
