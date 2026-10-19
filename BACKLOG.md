@@ -1,6 +1,54 @@
 
 > 维护人：产品调研员 · 每日更新（2026-10-19 11:37 第三十轮研究）
 
+---
+
+> 维护人：产品经理 · 每日排期（2026-10-19 11:42 排期轮）
+
+## 今日任务（2026-10-19 11:42 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-19 排期决策轮（11:37 第三十轮研究之后）。图片精确体积压缩器已交付闭环（09:47 PM 决策轮立项→开发交付 7f54c22；`grep tools/categories.go` 确认 ID `img_target_kb`、Path `/tools/img-target-kb` 已注册，全量 **101 Path**），候选池划出。本轮立项**今日唯一任务：JSON Schema 验证器（JSON Schema Validator）**。
+
+**选定：JSON Schema 验证器（/tools/json-schema-validator）** — 本轮唯一任务：
+- **顺位递进兑现**：22→29 轮连续八轮顺位第一候补；09:47 PM 排期轮明确「下一上午轮优先」；本轮即该上午轮，理应兑现。
+- **证据三重化**：kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重独立证据；开发者粘贴 JSON 需本地校验 schema 的痛点真实，现有在线方案多上传服务器或带广告，本地隐私口径为核心差异点。
+- **家族互链**：与 json_parser/json_yaml/text_diff 开发者工具家族互链，「格式化工具」品类叙事完备。
+- **节奏新鲜**：上午两轮为单位换算器、图片精确体积压缩器（通用+图片口径），本工具为开发者工具口径，与两者不重叠。
+- **去重实锤**：本轮实测 `grep tools/categories.go`（101 Path 全量）——`json_schema/JSON Schema/folder/文件夹对比/robots` 全零命中（仅 og_card_preview 描述中出现"缩略图"一词，与本工具无关）；现存 JSON 家族（json_parser/json_yaml/csv_json）仅做解析/格式转换，无 schema 校验能力。
+
+**规格**：
+1. 双文本编辑区：JSON 实例输入 + Schema 输入（拖拽/粘贴均可），语法错误实时提示。
+2. 校验引擎：自研 draft-07 核心子集（type/object/properties/required/array/items/enum/pattern/minLength/maxLength/minimum/maximum/format），零依赖、纯前端本地校验；错误输出 JSON Path（$.a.b[0]）+ 中文错误描述 + 实例行列定位。
+3. 交互：输入即实时校验（防抖 300ms）；结果区通过/失败状态横幅 + 错误列表，点击错误条目跳转到实例对应行。
+4. 样例一键加载：内置「用户档案」示例 schema + 合法/非法实例一键切换。
+5. 纯前端、零 CDN 依赖、无后端调用、无外部请求；响应式，桌面端优先、移动端可用。
+6. 注册：`tools/categories.go`「格式化工具」品类新增工具 Name「JSON Schema 验证器」、Path `/tools/json-schema-validator`（New: true），中英文描述 + SEO keywords（JSON Schema 验证、JSON schema 校验、JSON 校验器、json schema validator、schema 本地验证）。
+
+**验收标准**：
+- [ ] `/tools/json-schema-validator` 可开（200）
+- [ ] 正确 schema + 合法实例 → 通过；非法实例 → 失败并列出全部错误，每条带 JSON Path + 中文描述
+- [ ] draft-07 核心关键字覆盖：type/properties/required/items/enum/pattern/minLength/maxLength/minimum/maximum/format
+- [ ] 实例或 schema 存在 JSON 语法错误 → 语法错误行列提示，不崩
+- [ ] 点击错误条目 → 实例编辑器跳到对应行
+- [ ] 样例一键加载可用（合法/非法实例切换）
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖
+- [ ] `categories.go` 注册完成（格式化工具品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（输入+切换+校验）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/json_schema_validator.html`（新建：双编辑区+校验状态横幅+错误列表+样例加载，纯前端）、`static/js/json_schema_validator.js`（新建：自研 draft-07 核心子集校验引擎+错误行列定位+实时校验防抖，零依赖）、`tools/categories.go`（格式化工具品类+工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 文件夹对比（P1；28 轮新晋，BuildDiff 10-09 形态验证；纯前端中难度；PM 07:41 明确「留待后续上午轮从容交付」，留待后续上午轮）。
+- robots.txt 生成器（P1；27 轮新晋，Varkido 10-01 SEO 套装单列、同套装 SERP/OG 已交付家族佐证；顺位顺延留池）。
+- YouTube 缩略图下载器（P1；27 轮新晋，i.ytimg.com 四档分辨率直链；顺位顺延留池）。
+- 代码压缩器（P1；27 轮新晋，Varkido Dev 套装单列同套装唯一缺口；与本轮同开发者工具家族，节奏调节留池）。
+- 音频合并器（P1；26 轮新晋，与 audio_trimmer 同技术栈；音频品类连续感知留 PM 定序，顺延）；浏览器屏幕录制器（P1，中难度，上午大轮次）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；SRT 字幕编辑器（P1，顺位顺延）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；创意涂鸦画板（P2 新观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，本地 HEAD e4c4052（30 轮研究）；`git log` 确认开发交付 7f54c22（图片精确体积压缩器）；`grep tools/categories.go` 全量 101 Path，`img_target_kb` ID 与 `/tools/img-target-kb` Path 已注册（划入已实现）；新候选 Name「JSON Schema 验证器」、Path `/tools/json-schema-validator` 与 101 Path 无重叠（`json_schema/JSON Schema` 零命中；「缩略图」仅命中 og_card_preview 描述，与本工具无关）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 ## 今日任务（2026-10-19 11:37 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-19 通用调研第三十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片精确体积压缩器已交付闭环（09:47 PM 决策轮立项→开发交付 7f54c22；`grep tools/categories.go` 确认 ID `img_target_kb`、Path `/tools/img-target-kb` 已注册（407 行），全量 **101 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:37 上午轮次，中难度候选可排。
