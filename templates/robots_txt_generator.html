@@ -1,0 +1,141 @@
+{{define "robots_txt_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>robots.txt 生成器 - 多规则组拼装/Crawl-delay/Sitemap/一键复制下载（纯前端）</title>
+    <meta name="description" content="免费在线 robots.txt 生成器：多 User-agent 规则组编辑器（增删组、Allow/Disallow 行），Crawl-delay 抓取延迟，Sitemap 列表，四种常用模板一键加载，实时预览输出文本，中文化基础校验（空 User-agent、路径缺前导 /、Sitemap 非 URL 提示），一键复制、Blob 下载 robots.txt。纯前端本地生成，不上传服务器、无外部请求。Robots.txt generator: multi user-agent rule groups, crawl-delay, sitemap, templates, copy & download, 100% client-side.">
+    <meta name="keywords" content="robots.txt生成器,robots.txt,robots generator,搜索引擎爬虫,抓取规则,User-agent,Sitemap,Crawl-delay,Disallow,Allow,SEO工具,营销工具,robots.txt生成,网站收录,屏蔽爬虫">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/robots-txt-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"robots.txt 生成器","description":"多 User-agent 规则组编辑器：增删规则组、Allow/Disallow 行、Crawl-delay 抓取延迟、Sitemap 列表，四种常用模板一键加载，实时预览输出文本，中文化基础校验，一键复制与 Blob 下载 robots.txt，纯前端本地生成不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/robots-txt-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rtg-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .rtg-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .rtg-privacy b{color:#047857}
+        .rtg-sect{margin-bottom:1.6rem}
+        .rtg-sect:last-child{margin-bottom:0}
+        .rtg-sect h3{margin:0 0 .7rem;font-size:1.05rem;color:#111827;display:flex;align-items:center;gap:.5rem}
+        .rtg-sect h3 .material-icons{color:var(--primary-color)}
+        .rtg-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .rtg-tpl{display:flex;gap:.6rem;flex-wrap:wrap}
+        .rtg-tpl button{border:1.5px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.6rem;padding:.55rem 1rem;font-size:.9rem;cursor:pointer;display:flex;align-items:center;gap:.4rem}
+        .rtg-tpl button:hover{border-color:var(--primary-color);background:#f8fafc}
+        .rtg-tpl button .material-icons{font-size:1.1rem;color:var(--primary-color)}
+        .rtg-group{border:1px solid #e5e7eb;border-radius:.8rem;padding:.9rem 1rem;margin-bottom:.8rem;background:#fff}
+        .rtg-group-head{display:flex;gap:.6rem;align-items:center;margin-bottom:.7rem;flex-wrap:wrap}
+        .rtg-group-head .badge{background:#eef2ff;color:#4f46e5;font-size:.78rem;font-weight:700;border-radius:999px;padding:.15rem .6rem}
+        .rtg-group-head input{flex:1;min-width:10rem;border:2px solid #e5e7eb;border-radius:.55rem;padding:.5rem .7rem;font-size:.92rem;font-family:inherit}
+        .rtg-group-head input:focus{outline:none;border-color:var(--primary-color)}
+        .rtg-group-del{margin-left:auto;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;border-radius:.55rem;padding:.4rem .7rem;font-size:.85rem;cursor:pointer;display:flex;align-items:center;gap:.3rem}
+        .rtg-group-del:hover{background:#fee2e2}
+        .rtg-row{display:flex;gap:.5rem;align-items:center;margin-bottom:.45rem}
+        .rtg-row .rtg-kind{flex:none;font-size:.78rem;font-weight:700;border-radius:.4rem;padding:.3rem .55rem;background:#f3f4f6;color:#374151;min-width:5.2rem;text-align:center}
+        .rtg-row .rtg-kind.allow{background:#ecfdf5;color:#047857}
+        .rtg-row .rtg-kind.disallow{background:#fef2f2;color:#b91c1c}
+        .rtg-row input{flex:1;border:1px solid #e5e7eb;border-radius:.5rem;padding:.45rem .65rem;font-size:.9rem;font-family:inherit}
+        .rtg-row input:focus{outline:none;border-color:var(--primary-color)}
+        .rtg-row .rtg-rm{flex:none;border:none;background:none;color:#9ca3af;cursor:pointer;padding:.3rem;border-radius:.4rem;display:flex}
+        .rtg-row .rtg-rm:hover{color:#dc2626;background:#fef2f2}
+        .rtg-addrow{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+        .rtg-btn-sm{border:1px dashed #cbd5e1;background:#f8fafc;color:#475569;border-radius:.5rem;padding:.35rem .8rem;font-size:.84rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
+        .rtg-btn-sm:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .rtg-btn-sm .material-icons{font-size:1rem}
+        .rtg-delay{display:flex;gap:.6rem;align-items:center;margin-top:.6rem;font-size:.9rem;color:#374151;flex-wrap:wrap}
+        .rtg-delay input{width:6rem;border:1px solid #e5e7eb;border-radius:.5rem;padding:.4rem .6rem;font-size:.9rem;font-family:inherit}
+        .rtg-delay input:focus{outline:none;border-color:var(--primary-color)}
+        .rtg-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .rtg-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .rtg-warn{display:none;gap:.45rem;align-items:flex-start;margin-bottom:.6rem;font-size:.88rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.6rem .8rem;line-height:1.7}
+        .rtg-warn.show{display:flex}
+        .rtg-warn .material-icons{font-size:1.1rem;flex:none;color:#f59e0b;margin-top:.1rem}
+        .rtg-warn ul{margin:0;padding-left:1.1rem}
+        .rtg-preview{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.65;background:#111827;color:#e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;white-space:pre-wrap;word-break:break-all;min-height:12rem;max-height:32rem;overflow-y:auto}
+        .rtg-empty{color:#6b7280}
+        @media (max-width:720px){.rtg-actions .btn{flex:1;justify-content:center}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">robot</i> robots.txt 生成器</h1>
+            <p>可视化拼装 robots.txt：多 User-agent 规则组（Allow / Disallow 逐行增删）、Crawl-delay 抓取延迟、Sitemap 列表，四种常用模板一键加载，右侧实时预览输出文本，基础校验给出中文提示，一键复制、Blob 下载 robots.txt。纯前端本地生成。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="rtg-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：输入内容不出浏览器。</b>所有规则配置、预览文本都在当前浏览器本地计算与拼接，不上传到任何服务器，不做任何存储与记录。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rtg-sect">
+                    <h3><i class="material-icons">flash_on</i> 常用模板一键加载</h3>
+                    <div class="rtg-tpl">
+                        <button type="button" id="rtg-tpl-allowall"><i class="material-icons">public</i> 允许全部抓取</button>
+                        <button type="button" id="rtg-tpl-disallowall"><i class="material-icons">block</i> 禁止全部抓取</button>
+                        <button type="button" id="rtg-tpl-mainstream"><i class="material-icons">travel_explore</i> 仅允许主流搜索引擎</button>
+                        <button type="button" id="rtg-tpl-admin"><i class="material-icons">admin_panel_settings</i> 屏蔽后台与私有路径</button>
+                    </div>
+                    <div class="rtg-note" style="margin-top:.6rem;">点击即覆盖当前全部规则组与 Sitemap，载入该模板的预设配置，可再手动微调。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rtg-sect">
+                    <h3><i class="material-icons">rule</i> User-agent 规则组</h3>
+                    <div id="rtg-warn" class="rtg-warn" role="alert"><i class="material-icons">warning</i><div><ul id="rtg-warn-list"></ul></div></div>
+                    <div id="rtg-groups"></div>
+                    <div class="rtg-addrow">
+                        <button type="button" class="rtg-btn-sm" id="rtg-add-group"><i class="material-icons">add</i> 新增规则组</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rtg-sect">
+                    <h3><i class="material-icons">map</i> Sitemap 列表</h3>
+                    <div id="rtg-sitemaps"></div>
+                    <div class="rtg-addrow">
+                        <button type="button" class="rtg-btn-sm" id="rtg-add-sitemap"><i class="material-icons">add</i> 新增 Sitemap</button>
+                    </div>
+                    <div class="rtg-note" style="margin-top:.6rem;">Sitemap 必须是完整 URL，例如 <b>https://example.com/sitemap.xml</b>，一行一条，可填多条。</div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rtg-sect">
+                    <h3><i class="material-icons">text_snippet</i> 实时预览</h3>
+                    <div class="rtg-preview" id="rtg-preview" aria-live="polite"><span class="rtg-empty"># 规则组尚未添加，请点击上方「新增规则组」或一键加载模板</span></div>
+                    <div class="rtg-actions" style="margin-top:.9rem;">
+                        <button class="btn btn-primary" id="rtg-copy"><i class="material-icons">content_copy</i> 复制 robots.txt</button>
+                        <button class="btn btn-primary" id="rtg-download"><i class="material-icons">download</i> 下载 robots.txt</button>
+                        <button class="rtg-btn-sm" id="rtg-clear" style="margin-left:auto;"><i class="material-icons">delete_sweep</i> 清空全部</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="rtg-sect">
+                    <h3><i class="material-icons">help_outline</i> 口径说明</h3>
+                    <div class="rtg-note">
+                        <b>行顺序是什么？</b>输出按 <b>User-agent → Allow / Disallow → Crawl-delay → Sitemap</b> 的顺序拼装；多个 User-agent 行属于同一组时各占一行。<br>
+                        <b>Crawl-delay 是什么？</b>建议的抓取间隔（秒），部分爬虫（如 Bing、Yandex）支持，Googlebot 已忽略，仅作礼貌声明。<br>
+                        <b>Allow/Disallow 的路径怎么写？</b>必须以 <b>/</b> 开头（如 <b>/admin/</b>），支持 <b>*</b> 通配与 <b>$</b> 结尾锚定；根目录全部禁止写作 <b>Disallow: /</b>，全部允许写作 <b>Disallow:</b>（空值）。<br>
+                        <b>robots.txt 能挡住坏人吗？</b>不能。它只是礼貌约定，恶意爬虫与攻击者不会理会；真正敏感的路径请用密码保护或 IP 白名单。<br>
+                        <b>配套使用：</b>上线前先确认页面标题描述在搜索结果里长什么样，去 <a href="/tools/serp-snippet-preview" style="color:#1a0dab;">SERP 搜索结果片段预览</a>；分享到社交平台看卡片样式，去 <a href="/tools/og-card-preview" style="color:#1a0dab;">OG 社交卡片预览</a>（robots.txt ↔ SERP ↔ OG，SEO 家族三件套）。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/robots_txt_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
