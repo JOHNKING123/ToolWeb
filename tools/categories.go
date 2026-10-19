@@ -404,6 +404,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "img_target_kb",
+					Name:        "图片精确体积压缩器",
+					Description: "图片压缩到指定大小：上传 JPG/PNG/WebP，输入目标 KB，二分质量迭代+尺寸降级兜底，一次命中目标体积（偏差 ±5%），证件照压缩必备，纯浏览器本地处理 · Compress image to exact KB",
+					Path:        "/tools/img-target-kb",
+					Icon:        "photo_size_select_small",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img-resize",
 					Name:        "图片尺寸调整",
 					Description: "自定义缩放、裁剪图片，支持指定宽高",
