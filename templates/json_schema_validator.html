@@ -1,0 +1,154 @@
+{{define "json_schema_validator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Schema 验证器 - 在线校验 JSON 是否符合 Schema，本地验证 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSON Schema 验证器：粘贴 JSON 实例与 Schema，本地实时校验是否符合 draft-07 规范，错误精确定位到 JSON Path 与行列。支持 type、properties、required、items、enum、pattern、minLength/maxLength、minimum/maximum、format 等核心关键字，零上传、纯前端本地校验。">
+    <meta name="keywords" content="JSON Schema 验证,JSON schema 校验,JSON 校验器,json schema validator,json schema 在线,json 模式验证,json schema 本地验证,draft-07,JSON Path">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-schema-validator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON Schema 验证器","description":"免费在线 JSON Schema 验证器：本地实时校验 JSON 实例是否符合 draft-07 Schema，错误定位到 JSON Path 与行列，零上传。","url":"https://www.johnkingzcq123.xyz/tools/json-schema-validator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jsv-wrap .container { max-width: 1180px; margin: 0 auto; padding: 2rem; }
+        .jsv-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .jsv-privacy .jsv-lock { font-size: 1.6rem; flex: none; }
+        .jsv-toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .jsv-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.1rem; font-size: .9rem;
+            border-radius: .55rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .jsv-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .jsv-btn.jsv-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .jsv-btn.jsv-primary:hover { background: var(--primary-hover, #1d4ed8); color: #fff; }
+        .jsv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .jsv-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.1rem; position: relative; }
+        .jsv-panel h3 { margin: 0 0 .6rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .45rem; }
+        .jsv-panel h3 .jsv-tag { font-size: .72rem; font-weight: 400; color: #6b7280; background: #f3f4f6;
+            border-radius: .35rem; padding: .1rem .5rem; }
+        .jsv-drop { position: relative; }
+        .jsv-textarea { width: 100%; height: 380px; box-sizing: border-box; padding: .9rem 1rem; resize: vertical;
+            border: 1px solid #d1d5db; border-radius: .55rem; background: #f9fafb; color: #111827;
+            font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.65; tab-size: 2; }
+        .jsv-textarea:focus { outline: none; border-color: var(--primary-color); background: #fff;
+            box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .jsv-textarea.jsv-syntax-err { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.12); }
+        .jsv-textarea.jsv-flash { animation: jsv-flash .8s ease; }
+        @keyframes jsv-flash { 0% { box-shadow: 0 0 0 3px rgba(37,99,235,.45); } 100% { box-shadow: none; } }
+        .jsv-dragover::after { content: "松开鼠标，载入此文件 📥"; position: absolute; inset: 0; z-index: 5;
+            display: flex; align-items: center; justify-content: center; font-size: 1.05rem; font-weight: 600; color: #1d4ed8;
+            background: rgba(239,246,255,.92); border: 2px dashed #3b82f6; border-radius: .55rem; pointer-events: none; }
+        .jsv-hint { color: #6b7280; font-size: .82rem; margin-top: .45rem; }
+        .jsv-status { border-radius: .7rem; padding: .9rem 1.1rem; font-size: .95rem; line-height: 1.8; margin-bottom: 1rem;
+            border: 1px solid #e5e7eb; background: #f9fafb; color: #4b5563; }
+        .jsv-status a { color: var(--primary-color); }
+        .jsv-status.jsv-ok { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+        .jsv-status.jsv-fail { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+        .jsv-status.jsv-syntax { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+        .jsv-err-head { display: flex; align-items: center; gap: .5rem; margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .jsv-err-head .jsv-count { background: #ef4444; color: #fff; font-size: .8rem; font-weight: 700;
+            border-radius: 999px; padding: .1rem .6rem; }
+        #jsv-errors { display: none; margin-bottom: 1rem; }
+        .jsv-error-item { display: flex; gap: .7rem; align-items: flex-start; width: 100%; box-sizing: border-box;
+            text-align: left; background: #fff; border: 1px solid #fecaca; border-radius: .6rem;
+            padding: .7rem .9rem; margin-bottom: .5rem; cursor: pointer; font-size: .9rem; transition: all .15s; }
+        .jsv-error-item:hover { border-color: #ef4444; background: #fef2f2; transform: translateX(2px); }
+        .jsv-err-no { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 999px; background: #ef4444; color: #fff;
+            font-size: .78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: .1rem; }
+        .jsv-err-body { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+        .jsv-err-path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; color: #1d4ed8;
+            word-break: break-all; }
+        .jsv-err-msg { color: #374151; line-height: 1.7; }
+        .jsv-err-pos { font-size: .78rem; color: #9ca3af; }
+        .jsv-doc { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem; }
+        .jsv-doc h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .jsv-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .jsv-doc b { color: #111827; }
+        .jsv-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .jsv-doc a { color: var(--primary-color); text-decoration: none; }
+        .jsv-doc a:hover { text-decoration: underline; }
+        .jsv-kw { display: inline-block; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+            border-radius: .35rem; padding: 0 .45rem; margin: .1rem .15rem; font-size: .82rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+        @media (max-width: 860px) {
+            .jsv-wrap .container { padding: 1rem; }
+            .jsv-grid { grid-template-columns: 1fr; }
+            .jsv-textarea { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="jsv-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧩 JSON Schema 验证器</h1>
+            <p>校验 JSON 实例是否符合 Schema（draft-07 核心子集），错误定位到 JSON Path 与行列，输入即实时校验</p>
+        </div>
+
+        <div class="jsv-privacy">
+            <span class="jsv-lock">🔒</span>
+            <div><b>隐私承诺：校验只在你的浏览器里完成，不上传服务器。</b><br>
+            自研校验引擎（无第三方库、无 CDN）：JSON 解析、Schema 校验、错误定位全部在本地运行，不调用任何后端接口、不加载任何外部资源。你可以在 DevTools 的 Network 面板验证 —— 输入任何内容都不会产生网络请求。断网也能用。</div>
+        </div>
+
+        <div class="jsv-toolbar">
+            <button class="jsv-btn jsv-primary" id="jsv-sample-valid" type="button">✨ 载入合法示例</button>
+            <button class="jsv-btn" id="jsv-sample-invalid" type="button">🧪 载入非法示例</button>
+            <button class="jsv-btn" id="jsv-read-instance" type="button">📂 读取实例文件</button>
+            <button class="jsv-btn" id="jsv-read-schema" type="button">📂 读取 Schema 文件</button>
+            <button class="jsv-btn" id="jsv-clear" type="button">🗑️ 清空</button>
+            <input type="file" id="jsv-instance-file" accept=".json,application/json" style="display:none">
+            <input type="file" id="jsv-schema-file" accept=".json,application/json" style="display:none">
+        </div>
+
+        <div class="jsv-grid">
+            <div class="jsv-panel" id="jsv-drop-instance">
+                <h3>📄 JSON 实例 <span class="jsv-tag">待校验的数据</span></h3>
+                <div class="jsv-drop">
+                    <textarea id="jsv-instance" class="jsv-textarea" spellcheck="false" autocomplete="off"
+                        placeholder='粘贴 JSON 实例，例如：&#10;{&#10;  "username": "zhangsan_01",&#10;  "email": "zhangsan@example.com",&#10;  "age": 28&#10;}&#10;&#10;也可以把 .json 文件直接拖进来'></textarea>
+                </div>
+                <div class="jsv-hint">支持粘贴 / 拖拽 .json 文件；语法错误会标出行列；Ctrl+Enter 立即校验</div>
+            </div>
+            <div class="jsv-panel" id="jsv-drop-schema">
+                <h3>📐 JSON Schema <span class="jsv-tag">draft-07 核心子集</span></h3>
+                <div class="jsv-drop">
+                    <textarea id="jsv-schema" class="jsv-textarea" spellcheck="false" autocomplete="off"
+                        placeholder='粘贴 JSON Schema，例如：&#10;{&#10;  "type": "object",&#10;  "required": ["username"],&#10;  "properties": {&#10;    "username": { "type": "string", "minLength": 3 }&#10;  }&#10;}&#10;&#10;也可以把 .json 文件直接拖进来'></textarea>
+                </div>
+                <div class="jsv-hint">支持粘贴 / 拖拽 .json 文件；先点「载入合法示例」看看完整写法</div>
+            </div>
+        </div>
+
+        <div class="jsv-status jsv-idle" id="jsv-status" role="status"></div>
+
+        <h3 class="jsv-err-head">⚠️ 错误列表 <span class="jsv-count" id="jsv-errcount">0</span></h3>
+        <div id="jsv-errors"></div>
+
+        <div class="jsv-doc">
+            <h3>📖 支持的关键字（draft-07 核心子集）</h3>
+            <div>
+                <span class="jsv-kw">type</span><span class="jsv-kw">properties</span><span class="jsv-kw">required</span><span class="jsv-kw">items</span><span class="jsv-kw">enum</span><span class="jsv-kw">pattern</span><span class="jsv-kw">minLength</span><span class="jsv-kw">maxLength</span><span class="jsv-kw">minimum</span><span class="jsv-kw">maximum</span><span class="jsv-kw">format</span><span class="jsv-kw">$ref（本地）</span>
+            </div>
+            <div style="margin-top:.6rem">
+                <b>type</b> 可取 <code>string</code> / <code>number</code> / <code>integer</code> / <code>boolean</code> / <code>object</code> / <code>array</code> / <code>null</code>（也支持数组形式如 <code>["string","null"]</code>）；<b>format</b> 支持 <code>date</code> / <code>time</code> / <code>date-time</code> / <code>email</code> / <code>uri</code> / <code>url</code> / <code>hostname</code> / <code>ipv4</code> / <code>ipv6</code> / <code>uuid</code>（未知 format 会被忽略）；<b>$ref</b> 仅支持指向本文档内的本地引用（如 <code>#/definitions/address</code>）。<br>
+                <b>错误定位：</b>每条错误给出 JSON Path（如 <code>$.address.zipcode</code>、<code>$.hobbies[1]</code>）+ 中文描述 + 实例中的行列，点击错误即可跳转到对应行。<br>
+                <b>互链工具：</b>先用 <a href="/tools/json-parser">JSON 解析器</a> 格式化 JSON，用 <a href="/tools/json-yaml-converter">JSON/YAML 互转</a> 转换格式，用 <a href="/tools/text-diff">文本对比</a> 对照两个版本的实例差异。<br>
+                <b>隐私：</b>全程无网络请求 —— 解析、校验、定位都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/json_schema_validator.js?v=1"></script>
+</body>
+</html>
+{{end}}

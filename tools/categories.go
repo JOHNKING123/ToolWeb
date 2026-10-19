@@ -40,6 +40,15 @@ func GetCategories() []Category {
 					Category:    "格式化工具",
 				},
 				{
+					ID:          "json_schema_validator",
+					Name:        "JSON Schema 验证器",
+					Description: "校验 JSON 实例是否符合 Schema（draft-07 核心子集）：type/properties/required/items/enum/pattern/format 全覆盖，错误定位到 JSON Path 与行列，输入即实时校验，纯浏览器本地验证零上传 · JSON Schema validator: validate JSON against schema locally in your browser",
+					Path:        "/tools/json-schema-validator",
+					Icon:        "rule",
+					New:         true,
+					Category:    "格式化工具",
+				},
+				{
 					ID:          "xml",
 					Name:        "XML 格式化",
 					Description: "格式化和验证 XML 数据",
