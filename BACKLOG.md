@@ -1,3 +1,37 @@
+## 今日任务（2026-10-20 01:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第三十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。JSON 语义化对比器交付闭环（58a0c44「新增工具：JSON 语义化对比器（/tools/json-semantic-diff）」，`grep tools/categories.go` 确认 ID `json_semantic_diff`、Path `/tools/json-semantic-diff` 已注册（52~55 行），全量 **108 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:36 深夜轮次，小难度候选优先。
+
+**本轮四件事**（01:36 全网调研，通用方向）：
+1. JSON 语义化对比器交付确认：`git log` 头部 58a0c44 落盘（研究轮 36 推荐→PM 决策轮立项→本轮前交付）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（58a0c44）；`grep` 全量 108 Path（107+1），`json_semantic_diff` ID 与 `/tools/json-semantic-diff` Path 已注册；候选池划出，已实现清单追加（delta：+ JSON 语义化对比器，格式化工具品类，JSON 家族新成员）。
+2. 新晋候选：**JWT 签名生成器/验证器（JWT Encoder/Verifier）**。需求证据：① dev.to kkp（2026-10-13，DevTrove 22 开发者工具套装）在清单单列 **"JWT decoder and encoder/verifier"**，说明 encode/verify 与 decode 并列是 JWT 工具套件的标配双形态；② 痛点真实：开发者联调时需要现场签一个测试 token（HS256/HS384/HS512、RS256）、校验传入 token 的签名、识别 `alg: none` 等弱算法风险；③ 仓库覆盖核对：`jwt` 工具仅 JWT 解析器（解码，无签发/验签），JWT 家族形态零覆盖（`grep`：`jwt.*encode/jwt.*sign/签名/签发` 全零命中；`encode` 品类 ID 为编码转换品类无关）；④ 纯前端小-中难度：Web Crypto API 本地签名/验签、最小密钥长度强制、`alg: none` 拒绝、测试密钥随机生成，零依赖零后端。去重：108 Path 无重叠。建议 ID `jwt_signer_verifier`、Path `/tools/jwt-signer-verifier`，P1。
+3. 新观察二则（均 P2 观察，不立）：
+   ① **色盲模拟器（Color Blind Simulator）**——形态验证：dev.to yurukusa（2026-08-12，「101 Free Developer Tools」Staff Picks 实战清单单列 Color Blind Sim：Test any image for 8 types of color blindness）；痛点真实：设计师/前端自查 UI 对色盲用户的可读性（无障碍 WCAG 语境下的高频刚需）；纯前端小难度：上传图片→Canvas 色觉模拟矩阵（protanopia/deuteranopia/tritanopia 等 8 类）→原图/模拟对比查看。去重：108 Path `blind/色盲/colorblind` 全零命中（颜色转换为取色/格式转换形态，不同）。建议 ID `color_blind_simulator`、Path `/tools/color-blind-simulator`，P2（无障碍 niche，留待设计工具家族轮再议）。
+   ② **Tailwind 转换器（CSS ↔ Tailwind）**——形态验证：dev.to yurukusa 同文 Staff Picks 单列 Tailwind Converter（CSS ↔ Tailwind bidirectional converter）；痛点中等：前端把旧 CSS 迁移到 Tailwind 时的映射查表（常用属性→类名双向）；纯前端小-中难度：高频 CSS 属性映射表（spacing/color/typography/layout）＋反向解析，零依赖。去重：108 Path `tailwind` 全零命中。建议 ID `tailwind_converter`、Path `/tools/tailwind-converter`，P2（niche 前端场景，归档）。
+4. 去重消化（不单立）：① dev.to pyfile-toolkit（2026-08，13 浏览器工具）——JSON 格式化/JSON Schema/文本 diff/Base64/URL/HTML 编码/UUID/二维码/CSS 压缩/JS 压缩/Markdown 预览/调色板/批量图片缩放：**仓库全部已覆盖**（代码压缩器 code_minifier、图片尺寸调整 img-resize 等）；② dev.to codeofrelevancy Tooltri（2026-10-09，30+ 工具）——Token Counter（`ai_token_counter` 已覆盖）、ChatGPT Text Cleaner（`ai_text_cleaner` 已覆盖）、SQLite DB Viewer（P1 在池）、图片压缩/Merge PDF/JPG to PDF（PDF 合并/拆分、图片批量转 PDF 已覆盖）、二维码（已覆盖）、YouTube 缩略图下载器（CORS 条件未达成，P1 留池）；③ V2EX 10-18 每日热点——蓝牙语音遥控器（硬件形态）、BeatBrowser（Chrome 扩展＋本地 MCP 桥接，非单页形态）、Tervia（AI Coding 桌面终端工具，桌面形态）、zcode 非官方手机端（Android 客户端），均不立；④ HN——HushWork（专注环境：番茄钟＋白噪音组合形态；番茄钟/白噪音 P2 观察在池）、WebCodecs 浏览器视频编辑器（大难度，留待上午大轮次技术预研）、YAML→JSON（仓库覆盖）、AI Summarizer（Chrome 扩展＋需登录 AI 账号，非纯前端形态）、GhDj dev-tools 24（套装泛复述，无新单页信号）；⑤ Reddit 英文 query 本轮噪声为主（SEO 站/引流帖），无有效单页信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；01:36 深夜轮次，小难度优先）：
+
+1. **JWT 签名生成器/验证器（JWT Encoder/Verifier）** — P1（本轮新晋：dev.to kkp DevTrove（2026-10-13，22 开发者工具套装）单列 "JWT decoder and encoder/verifier" 形态验证，encode/verify 是 JWT 套件的标配双形态；痛点真实：联调签发测试 token、校验签名、识别 alg:none 弱算法；纯前端小-中难度：Web Crypto API 本地签名/验签、最小密钥长度强制、alg:none 拒绝、测试密钥随机生成，零依赖；108 Path jwt.*encode/jwt.*sign/签名/签发全零命中；JWT 家族（jwt 解析器）新成员叙事，深夜小难度节奏调节位）。
+2. **批量重命名助手（Batch Rename Helper）** — P1（36 轮新观察顺位递进→上轮 Top2 顺位递进：365lab 形态验证、小难度确定性高；痛点：摄影师/下载党批量整理文件名（加前缀/编号/日期/查找替换）；纯前端小难度：粘贴/拖拽文件列表（只读文件名）→规则配置（查找替换/前后缀/序号/日期）→新旧对照预览→生成 .bat/.ps1/.sh 可执行脚本下载，零后端；108 Path batch_rename/rename/重命名全零命中；深夜小难度节奏调节位）。
+3. **色盲模拟器（Color Blind Simulator）** — P2 本轮新观察（dev.to yurukusa 101 工具 Staff Picks 实战清单形态验证；无障碍 niche：设计师/前端自查 UI 色盲可读性；纯前端小难度：上传图片→Canvas 8 类色觉模拟矩阵→原图/模拟对比；108 Path blind/色盲全零命中，颜色转换为取色形态不同；深夜零风险填充位，PM 可视 P1 情况决定是否提前）。
+
+YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com CORS 抽查条件未达成——连续六轮 PM 决策一致（抽查通过前不立项）；本轮不再重复推入 Top3，待测试轮 CORS 抽查通过后自动恢复顺位。文件夹对比（P1；上午大轮次第一候补，PM 07:41 留待上午轮从容交付）；Markdown 转 Word（P1；上午大轮次候补，DocForge 形态验证+markdown_to_excel 技术路线验证）；浏览器屏幕录制器（P1，中难度，上午大轮次候补）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，音频品类连续感知留 PM 定序）；SRT 字幕编辑器（P1，顺位顺延）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；屏幕常亮工具（P1，留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器（P2 36 轮新观察）；Tailwind 转换器（P2 本轮新观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享（P2 观察）；词云生成器（P2 观察）；白噪音发生器/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS 传播/cURL 转代码/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第三十七轮：JSON 语义化对比器已实现划出；新晋 JWT 签名生成器/验证器 P1；新观察 色盲模拟器/Tailwind 转换器（均 P2）；全量 108 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| JWT 签名生成器/验证器（JWT Encoder/Verifier） | 本轮新晋（dev.to kkp 2026-10-13 DevTrove 22 开发者工具套装单列 "JWT decoder and encoder/verifier"；痛点：联调签发测试 token（HS256/384/512、RS256）、校验签名、识别 alg:none 弱算法；仓库仅 JWT 解析器（解码），签名/验签形态零覆盖；纯前端小-中难度：Web Crypto API 本地签名/验签、最小密钥长度强制、alg:none 拒绝、测试密钥随机生成，零依赖零后端；108 Path jwt.*encode/jwt.*sign/签名/签发全零命中；建议 ID jwt_signer_verifier、Path /tools/jwt-signer-verifier） | 小-中 | P1（本轮新晋） |
+| 色盲模拟器（Color Blind Simulator） | 新观察（dev.to yurukusa 2026-08-12「101 Free Developer Tools」Staff Picks 实战清单单列 Color Blind Sim：8 types of color blindness；痛点：设计师/前端自查 UI 对色盲用户的可读性（无障碍刚需）；纯前端小难度：上传图片→Canvas 8 类色觉模拟矩阵→原图/模拟对比；108 Path blind/色盲/colorblind 全零命中（颜色转换为取色/格式转换形态，不同）；建议 ID color_blind_simulator、Path /tools/color-blind-simulator；无障碍 niche，归档 P2） | 小 | P2（新观察） |
+| Tailwind 转换器（CSS ↔ Tailwind） | 新观察（dev.to yurukusa 同文 Staff Picks 单列 Tailwind Converter（CSS ↔ Tailwind bidirectional converter）；痛点：旧 CSS 迁移 Tailwind 的映射查表（常用属性→类名双向）；纯前端小-中难度：高频 CSS 属性映射表＋反向解析，零依赖；108 Path tailwind 全零命中；建议 ID tailwind_converter、Path /tools/tailwind-converter；niche 前端场景，归档 P2） | 小-中 | P2（新观察） |
+
+**归档说明**：本轮为 10-20 通用调研第三十七轮——JSON 语义化对比器交付闭环（58a0c44，`/tools/json-semantic-diff` 已注册（52~55 行），格式化工具品类，JSON 家族，全量 108 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-20：kkp DevTrove→本轮唯一 P1 新单页信号 JWT 签名生成器/验证器（encode/verify 双形态，108 Path 无重叠，JWT 家族叙事）；yurukusa 101 工具 Staff Picks→色盲模拟器 P2 观察（无障碍 niche）＋Tailwind 转换器 P2 观察（niche 前端场景）；pyfile-toolkit 13 工具全覆盖；Tooltri 30+ 工具全覆盖（Token Counter/Text Cleaner/SQLite Viewer/图片工具/缩略图下载器均已覆盖或在池）；V2EX 10-18 热点：语音遥控硬件/BeatBrowser 扩展+MCP/Tervia 桌面/zcode Android 客户端均非单页形态不立；HN：HushWork 番茄钟+白噪音组合（P2 观察在池）、WebCodecs 视频编辑器（大难度留上午轮技术预研）、YAML→JSON（仓库覆盖）、AI Summarizer（扩展+登录形态不立）、GhDj dev-tools（泛复述无新信号）；Reddit 英文 query 本轮噪声为主无有效信号）均已消化；顺位更新（JWT 签名生成器/验证器新晋 P1、批量重命名助手顺位递进至 Top2、色盲模拟器节奏调节 Top3、YouTube 缩略图 CORS 条件未变暂不推入 Top3、文件夹对比/Markdown 转 Word 上午大轮次候补）；WPS 候选表保持冻结归档；仓库 108 注册工具全量核对无重叠（Top3 建议 ID jwt_signer_verifier / batch_rename_helper / color_blind_simulator；新观察 tailwind_converter；P1 留池各候选 ID 待 PM 立项时定），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（58a0c44）；`git log` 确认开发交付 58a0c44（JSON 语义化对比器，格式化工具品类）；`grep tools/categories.go` 全量 108 Path（107+1），`json_semantic_diff` ID 与 `/tools/json-semantic-diff` Path 已注册（划入已实现），Top3 建议 ID（jwt_signer_verifier / batch_rename_helper）与新观察 ID（color_blind_simulator / tailwind_converter）与 108 Path 无重叠（`jwt.*encode/jwt.*sign/签名/签发/batch_rename/rename/重命名/blind/色盲/tailwind` 关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加，未提交（研究轮惯例：BACKLOG 随 PM/开发轮次提交）。
+
+---
+
 ## 今日任务（2026-10-19 23:00 · 产品经理排期轮）
 
 **选定：JSON 语义化对比器（/tools/json-semantic-diff）** — 本轮唯一任务：
