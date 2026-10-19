@@ -1,4 +1,36 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-19 11:37 第三十轮研究）
+
+## 今日任务（2026-10-19 11:37 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第三十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片精确体积压缩器已交付闭环（09:47 PM 决策轮立项→开发交付 7f54c22；`grep tools/categories.go` 确认 ID `img_target_kb`、Path `/tools/img-target-kb` 已注册（407 行），全量 **101 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:37 上午轮次，中难度候选可排。
+
+**本轮四件事**（11:37 全网调研，通用方向）：
+1. 图片精确体积压缩器交付确认：`git log` 确认开发交付 7f54c22（输入目标 KB 一次命中导出，二分质量迭代+尺寸降级兜底，偏差±5%，纯前端零后端；「图片处理」品类；templates/img_target_kb.html + static/js/img_target_kb.js 落盘确认）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（换机丢 known_hosts 自动补录 github.com，重试即通，历史已知）；`grep` 全量 101 Path（100+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 图片精确体积压缩器）。
+2. 新信号扫描（全网，无新单页可落地信号）：① dev.to lanxk 2026-10-16 md-to Markdown 表格转 Excel（AI 回答粘贴→多表自动分 sheet、手写 XLSX writer+fflate 纯浏览器）——仓库已有 markdown_to_excel（`/tools/markdown-to-excel`，已交付），不单立，去重实锤；② dev.to SuperToolKit 2026-10-16 100+ 工具集（音频/PDF/代码，WASM 本地处理口径）——通用复述，无新单页形态；③ dev.to 10-18/10-19 Hacktoberfest Week2 Side Hustle 提交四连发（QuoteForge/Walk the Block/Quotely/Resume Tailor）——均依赖本地 LLM（Ollama/Gemma）推理，不符合纯前端 local-first 口径，不单立；④ dev.to scraperwatch 10-18（需后端爬虫指标数据）、termstash（Claude Code CLI 插件）——非单页工具形态，不单立；⑤ V2EX 10-19 热门（paint-board 网页创意画板、蓝牙语音遥控 Vibe Coding、BeatBrowser MCP、AI API 中转、夜市模拟器）——画板属涂鸦娱乐重应用形态（在线钢琴 P2 观察先例），其余为 agent/桌面/硬件/游戏形态，无单页新信号；⑥ HN（Ask HN simple tools 系列均旧帖；Who is hiring 解析为爬虫/SaaS 口径）——无新单页信号；⑦ Site Tools Box（laing_lii 2026-10-18 20+ 工具集：JSON Formatter/DNS&Whois/HTTP Status/Bulk Domain RDAP/Password Generator）——JSON/DNS/密码仓库已覆盖，Bulk Domain RDAP 与 HTTP Status 前轮已判（转 VPS 未定/需后端代理）不单立。
+3. 顺位更新（不引入新候选）：① **JSON Schema 验证器**——22→29 轮连续递进八轮第一候补（kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重证据），纯前端中难度：ajv 本地 vendor 或自研 draft-07 核心子集+错误行列定位；11:37 上午轮次可排；② **文件夹对比**——28 轮新晋（BuildDiff 10-09 形态验证），PM 07:41 明确「留待后续上午轮从容交付」；③ robots.txt 生成器/YouTube 缩略图下载器/代码压缩器（27 轮新晋，小难度，顺位顺延，节奏调节位）。
+4. 候选池维护：图片精确体积压缩器划出（已实现 +1，全量 101 Path）；其余候选顺位不变——JSON Schema 验证器（第一候补）、文件夹对比（上午大轮次候补）、robots.txt 生成器/YouTube 缩略图下载器/代码压缩器（27 轮新晋顺位顺延）；音频合并器（音频品类连续感知留 PM 定序）；浏览器屏幕录制器/EPUB 阅读器/SQLite 查看器/OFD/视频抽帧（中-大难度，上午轮次候补）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮等 P1 留池。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；11:37 上午轮次，中难度可排）：
+
+1. **JSON Schema 验证器（JSON Schema Validator）** — P1（顺位第一候补：22→29 轮连续八轮递进；kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重证据；纯前端中难度：ajv 本地 vendor 或自研 draft-07 核心子集 + 错误行列定位；11:37 上午大轮次可高质量交付；json 工具家族（json_parser/json_yaml/text_diff）互链；101 Path `json_schema`/`JSON Schema` 零命中）。
+2. **文件夹对比（Folder Diff）** — P1（28 轮新晋：dev.to dev5942-b 2026-10-09 BuildDiff 发布帖形态验证，递归对比+新增/删除/修改/未变四态报告+本地隐私口径；桌面 Beyond Compare 付费方案的免费替代；纯前端中难度：File System Access API 双目录选择→Web Crypto SHA-256 流式哈希比对→差异树渲染+报告下载；Chrome/Edge，Firefox 降级提示；PM 07:41 明确「留待后续上午轮从容交付」；101 Path folder/文件夹对比/builddiff 零命中，与 text-diff 文本对比不重叠）。
+3. **robots.txt 生成器（Robots.txt Generator）** — P1（27 轮新晋：Varkido 10-01 SEO 套装单列，同套装 SERP/OG 已交付家族佐证；SEO 工具旅程线与 serp_snippet_preview、og_card_preview 互链；纯前端小难度：可视化规则拼装（User-agent/Allow/Disallow/Sitemap/Crawl-delay）→实时预览→复制/下载；101 Path robots 零命中；小难度节奏调节位）。
+
+YouTube 缩略图下载器（P1；27 轮新晋，i.ytimg.com 四档分辨率直链，纯前端小难度，顺位顺延）；代码压缩器（P1；27 轮新晋，Varkido Dev 套装单列同套装唯一缺口，开发工具家族互链，纯前端小难度）；浏览器屏幕录制器（P1，中难度，上午大轮次候补）；SRT 字幕编辑器（P1，顺位顺延）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，26 轮新晋，音频品类连续三弹感知留 PM 定序）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；创意涂鸦画板（P2 新观察，V2EX 10-19 paint-board，GitHub LHRUN/paint-board 网页创意画板形态，重应用涂鸦娱乐口径）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第三十轮：图片精确体积压缩器已实现划出；本轮无新单页信号，未立新候选；新观察创意涂鸦画板 P2；全量 101 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 创意涂鸦画板（Paint Board） | 新观察（V2EX 10-19 热门：GitHub LHRUN/paint-board，完全开源免费的网页端创意画板，多种画笔/涂鸦图形/文字图片；涂鸦娱乐重应用形态（在线钢琴 P2 观察先例）；纯前端 Canvas 可实现但非工具刚需口径；101 Path whiteboard/画板/画笔零命中——仅两处 Icon:"draw" 图标占位） | 中 | P2（新观察） |
+
+**归档说明**：本轮为 10-19 通用调研第三十轮——图片精确体积压缩器交付闭环（7f54c22，`/tools/img-target-kb` 已注册（407 行），全量 101 Path，「图片处理」品类），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to md-to Markdown转Excel 仓库已有 markdown_to_excel 去重实锤、SuperToolKit 100+ 通用复述、Hacktoberfest Side Hustle 四连发均需本地 LLM 不单立、scraperwatch/termstash 非单页形态、V2EX 10-19 paint-board 涂鸦娱乐形态其余 agent/桌面/硬件形态、HN 旧帖、Site Tools Box 20+ 工具集前轮已判）均无新单页可落地信号；新观察「创意涂鸦画板」P2（重应用形态）；顺位更新三项（JSON Schema 验证器连续八轮第一候补+上午大轮次可排、文件夹对比留待上午轮从容交付、robots.txt/YouTube 缩略图/代码压缩器小难度节奏调节位）；WPS 候选表保持冻结归档；仓库 101 注册工具全量核对无重叠（Top3 建议 ID json_schema_validator / folder_diff / robots_txt_generator），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 7f54c22；`grep tools/categories.go` 全量 101 Path（100+1），`img_target_kb` ID 与 `/tools/img-target-kb` Path 已注册（407 行，划入已实现），Top3 建议 ID（json_schema_validator / folder_diff / robots_txt_generator）与 101 Path 无重叠（`json_schema/JSON Schema/folder/文件夹对比/robots/缩略图/minif/代码压缩` 关键词核对）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-19 09:47 排期轮）
 
 ## 今日任务（2026-10-19 09:47 · 产品经理排期决策 ✅）
