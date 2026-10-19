@@ -62,7 +62,7 @@
         RS256: { kind: 'rsa', hash: 'SHA-256' }
     };
 
-    const UNSUPPORTED_ALGS = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512'];
+    const UNSUPPORTED_ALGS = ['RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512'];
 
     // ---------- DOM ----------
     const $ = id => document.getElementById(id);
@@ -88,7 +88,7 @@
     const encodeErr = $('jsv-encode-err'), tokenOutput = $('jsv-token-output'), tokenSection = $('jsv-token-section');
 
     headerInput.value = JSON.stringify({ typ: 'JWT' }, null, 2);
-    payloadInput.value = JSON.stringify({ sub: '1234567890', name: '张三', iat: 1798761600 }, null, 2);
+    payloadInput.value = JSON.stringify({ sub: '1234567890', name: '张三', iat: nowSec() }, null, 2);
 
     function refreshKeyPanel() {
         const cfg = ALGS[algSelect.value];
@@ -383,17 +383,13 @@
                 '检测到 <b>alg: none</b> 或签名段为空——该 token 根本没有签名，任何人都可以伪造。请勿信任其中的身份声明。');
             return;
         }
-        if (!(alg in ALGS) && alg !== '') {
-            if (!UNSUPPORTED_ALGS.some(a => a.toLowerCase() === alg)) {
-                setVerifyResult('warn', '未知算法', 'Header 中 alg 为「' + escapeHtml(currentAlg) + '」，本工具仅支持 HS256/HS384/HS512/RS256 的本地验签。');
-            } else {
-                setVerifyResult('warn', '算法暂不支持', 'alg 为「' + escapeHtml(currentAlg) + '」，本工具目前仅支持 HS256/HS384/HS512/RS256。');
-            }
-            return;
-        }
         const normAlg = Object.keys(ALGS).find(a => a.toLowerCase() === alg);
         if (!normAlg) {
-            setVerifyResult('warn', '未知算法', 'Header 中 alg 为「' + escapeHtml(currentAlg) + '」，本工具仅支持 HS256/HS384/HS512/RS256。');
+            if (UNSUPPORTED_ALGS.some(a => a.toLowerCase() === alg)) {
+                setVerifyResult('warn', '算法暂不支持', 'alg 为「' + escapeHtml(currentAlg) + '」，本工具目前仅支持 HS256/HS384/HS512/RS256。');
+            } else {
+                setVerifyResult('warn', '未知算法', 'Header 中 alg 为「' + escapeHtml(currentAlg) + '」，本工具仅支持 HS256/HS384/HS512/RS256 的本地验签。');
+            }
             return;
         }
         const cfg = ALGS[normAlg];
@@ -475,9 +471,9 @@
         tokenInput.focus();
     });
 
-    // 「去签发页签」跳转
+    // 「去验证页签」跳转
     $('jsv-goto-encode').addEventListener('click', () => {
-        switchTab('encode');
+        switchTab('verify');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 

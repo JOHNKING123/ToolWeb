@@ -41,6 +41,13 @@
 
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD aaa4228（研究轮 37 研究结论，待随开发轮次推送），origin/muse/dev-20260929 头部 58a0c44（JSON 语义化对比器已交付）；`grep tools/categories.go` 确认现有 JWT 工具仅 `jwt`（`/tools/jwt-parser`，解码形态），`jwt.*encode/jwt.*sign/签名/签发` 全零命中无重叠；本地当前分支 muse/dev-20260929；工作树仅有未跟踪 `toolWeb.bak-prev`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
 
+**修复轮（2026-10-20 01:47 · 前端开发第 2 轮，评审反馈逐条修复）**：
+- 【致命】验证页签 `jsv-verify-btn` handler 被短路：`alg` 取小写（如 `hs256`）与大写键的 `ALGS` 做 `in` 判定恒为 true，且 `UNSUPPORTED_ALGS` 误含 HS256/384/512/RS256，致 HS256 等 token 全部命中「算法暂不支持」分支 return（Node 复现实测 HS256/384/512/RS256 均走 `warn-unsupported`，REAL-VERIFY 从未到达）。修复（评审方案 B）：删除坏分支，改为先 `normAlg = Object.keys(ALGS).find(a => a.toLowerCase() === alg)` 规范化查找；未命中时再按 `UNSUPPORTED_ALGS` 区分「算法暂不支持」/「未知算法」；`UNSUPPORTED_ALGS` 清理为仅 RS384/RS512/ES256/ES384/ES512/PS256/PS384/PS512。Node 实测：HS256/384/512/RS256（大小写）均到达 REAL-VERIFY，RS384/ES256 → warn-unsupported，未知算法 → warn-unknown。
+- 【中】`jsv-goto-encode` 按钮（文字「➡ 拿到「验证」页签去校验」）handler 误调 `switchTab('encode')`，改为 `switchTab('verify')`，注释同步为「去验证页签」。
+- 【小瑕疵】签发表单初始 Payload 的 `iat: 1798761600`（2027-01-01 未来时间）改为载入时动态 `nowSec()`。
+- 自测：`node --check` 语法通过；Web Crypto（Node crypto.subtle）端到端：本页签发 HS256 token → 验证签名有效 ✓，篡改 Payload → 签名无效并说明原因 ✓，`alg:none`/空签名段 → 未签名警告 ✓。
+- 改动文件：`static/js/jwt_signer_verifier.js`（3 处修复）、`BACKLOG.md`（本段）；随本轮开发提交一并 push 开发分支。
+
 ---
 
 ## 今日任务（2026-10-20 01:36 · 产品调研员研究轮 ✅）
