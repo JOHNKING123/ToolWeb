@@ -1,3 +1,48 @@
+## 今日任务（2026-10-20 01:45 · 产品经理排期轮）
+
+**选定：JWT 签名生成器/验证器（/tools/jwt-signer-verifier）** — 本轮唯一任务：
+- **顺位递进**：研究轮 37（01:36）新晋 P1 Top1 推荐 → 01:45 PM 决策轮立项；尊重顺位定序，无硬伤不跳过（与 10-19 23:00 PM 轮先例一致）。
+- **形态双重验证**：dev.to kkp（2026-10-13，DevTrove 22 开发者工具套装）单列 "JWT decoder and encoder/verifier"——encode/verify 与 decode 并列是 JWT 工具套件的标配双形态；痛点真实：开发者联调时现场签发测试 token（HS256/384/512、RS256）、校验传入 token 签名、识别 `alg: none` 等弱算法风险。
+- **家族叙事**：仓库仅有 JWT 解析器（`jwt` / `/tools/jwt-parser`，解码形态，实测 `jwt.*encode/jwt.*sign/签名/签发` 全零命中、开发工具品类 108 Path 无重叠）；新工具与解析器互链（JWT 家族双件套：解码 / 签发+验签）。
+- **纯度高**：纯前端、零依赖、零后端、零上传——Web Crypto API 本地签名/验签（crypto.subtle HMAC/RSASSA-PKCS1-v1_5）、最小密钥长度强制、`alg: none` 明确拒绝、测试密钥本地随机生成；01:45 深夜轮次小-中难度节奏位。
+- **安全红线前置**：拒绝签发/验证 `alg: none`（给出中文警告「该 token 未签名，不安全」）；HS 密钥不足最小长度时拒绝签发并提示；RSA 私钥/公钥均为 PEM 本地导入（PKCS#8 / SPKI），密钥与 token 不出浏览器。
+
+**规格**：
+1. 双页签：**签发（Encoder）** / **验证（Verifier）**。
+2. 签发：算法选择（HS256 / HS384 / HS512 / RS256；`alg` 字段由选择锁定，不可手写）；Header JSON 可编辑（除 alg）；Payload JSON 文本编辑器 + 常用声明快捷插入（iss/sub/aud/iat/nbf/exp/jti、「1 小时后过期」快捷按钮）；密钥区：HS 用 Secret 文本框 + 「随机生成」按钮（HS256/384/512 最小密钥长度 32/48/64 字节，低于阈值拒绝签发并中文提示）；RS256 用私钥 PEM 粘贴 + 「本地生成 RSA 密钥对」按钮（同时给出公钥 PEM 供验证页签使用）。点击「生成 JWT」→输出 token（Header/Payload 着色展示、可复制、可下载 .txt）。
+3. 验证：粘贴 token → 自动解码展示 Header/Payload（只读，高亮 exp/nbf/iit 状态）；签名校验区：HS 输入 Secret / RS256 输入公钥 PEM；点击「验证签名」→ 三态结果：签名有效 ✓ / 签名无效 ✗（说明原因）/ 未签名警告（检测到 `alg: none` 或签名段为空时显式警示，不做弱校验）；有效期校验：exp/nbf 过期/未生效徽章。
+4. 示例按钮：两侧各一键载入示例（签发：示例 Payload + 测试 Secret；验证：预生成的有效 token + 对应公钥/密钥；以及一个 alg:none 恶意 token 展示弱算法警告）。
+5. 纯前端、零依赖、零后端、零上传；响应式，桌面双栏、移动端堆叠可用；所有密码学操作仅 crypto.subtle / crypto.getRandomValues。
+6. 注册：`tools/categories.go`「开发工具」品类（紧随 JWT 解析器），新增工具 ID `jwt_signer_verifier`、Name「JWT 签名生成器/验证器」、Path `/tools/jwt-signer-verifier`（New: true），中英文描述 + SEO keywords（JWT 签发、JWT 签名、JWT 验证、JWT encoder、JWT verifier、JWT 在线签名）；与 JWT 解析器（/tools/jwt-parser）页面互链（「相关工具」入口）。
+7. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/jwt-signer-verifier` 可开（200）
+- [ ] 签发：HS256/384/512、RS256 均可正常签发，生成 token 三段式正确
+- [ ] 本页签发的 token 在验证页签中校验为「签名有效」
+- [ ] 篡改 Payload 后校验为「签名无效」，并说明原因
+- [ ] `alg: none` token（Header alg 为 none）验证时给出显式弱算法警告，不误报为有效
+- [ ] HS Secret 低于最小密钥长度（HS256<32 字节）时拒绝签发并中文提示；随机生成密钥长度合规
+- [ ] 非法 JSON 输入（Header/Payload）给出中文错误提示不崩；非法 PEM 给出中文提示
+- [ ] exp 过期/nbf 未生效的 token 显示相应徽章
+- [ ] 示例按钮可用（含有效 token 示例与 alg:none 恶意示例）
+- [ ] DevTools Network 抽查无后端调用、无外部请求
+- [ ] `categories.go` 注册完成（开发工具品类、New: true），首页/导航/sitemap 生效；与 JWT 解析器互链生效
+- [ ] 移动端可操作（输入+签发+验证）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/jwt_signer_verifier.html`（新建：双页签＋签发表单＋验证区＋示例工具栏）、`static/js/jwt_signer_verifier.js`（新建：Web Crypto 签名/验签（HMAC、RSASSA-PKCS1-v1_5）＋密钥随机生成＋PEM 导入＋alg:none 检测＋有效期校验，零依赖）、`tools/categories.go`（开发工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 批量重命名助手（P1；37 轮 Top2）：365lab 形态验证、小难度确定性高，但顺位在本轮 JWT 签名生成器/验证器之后；列为下一深夜小难度轮次首选。
+- 色盲模拟器（P2；37 轮新观察）：无障碍 niche，形态验证充分（dev.to yurukusa Staff Picks），留待设计工具家族轮或深夜零风险填充位再议。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续七轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，仍为上午大轮次第一候补）；Markdown 转 Word（P1；上午大轮次候补）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD aaa4228（研究轮 37 研究结论，待随开发轮次推送），origin/muse/dev-20260929 头部 58a0c44（JSON 语义化对比器已交付）；`grep tools/categories.go` 确认现有 JWT 工具仅 `jwt`（`/tools/jwt-parser`，解码形态），`jwt.*encode/jwt.*sign/签名/签发` 全零命中无重叠；本地当前分支 muse/dev-20260929；工作树仅有未跟踪 `toolWeb.bak-prev`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 01:36 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-20 通用调研第三十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。JSON 语义化对比器交付闭环（58a0c44「新增工具：JSON 语义化对比器（/tools/json-semantic-diff）」，`grep tools/categories.go` 确认 ID `json_semantic_diff`、Path `/tools/json-semantic-diff` 已注册（52~55 行），全量 **108 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:36 深夜轮次，小难度候选优先。

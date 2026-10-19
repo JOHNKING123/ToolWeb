@@ -1,0 +1,259 @@
+{{define "jwt_signer_verifier"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT 签名生成器/验证器 - 在线签发与校验 JWT Token | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JWT 签名生成器与验证器：HS256/HS384/HS512、RS256 算法签发 JWT，Header/Payload 可视化编辑，常用声明一键插入，密钥长度强制校验，RSA 密钥对本地生成；粘贴 token 自动解码、签名三态校验、alg:none 弱算法显式警告、exp/nbf 有效期徽章。纯前端本地运行，密钥不出浏览器。">
+    <meta name="keywords" content="JWT 签发,JWT 签名,JWT 验证,JWT encoder,JWT verifier,JWT 在线签名,JWT 生成器,JWT 校验,alg none,HS256,RS256,JWT 工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/jwt-signer-verifier">
+    <meta property="og:title" content="JWT 签名生成器/验证器 - 在线签发与校验 JWT Token">
+    <meta property="og:description" content="HS256/HS384/HS512、RS256 签发与验签，alg:none 弱算法警告，纯前端本地运行零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/jwt-signer-verifier">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JWT 签名生成器/验证器","description":"免费在线 JWT 签名生成器与验证器：HS256/HS384/HS512、RS256 签发，签名三态校验，alg:none 弱算法显式警告，纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/jwt-signer-verifier","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jsv-wrap .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+        .jsv-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .jsv-privacy .jsv-lock { font-size: 1.6rem; flex: none; }
+        .jsv-tabs { display: flex; gap: .6rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+        .jsv-tab { display: inline-flex; align-items: center; gap: .45rem; padding: .6rem 1.4rem; font-size: 1rem;
+            border-radius: .6rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .jsv-tab:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .jsv-tab.jsv-on { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .jsv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .jsv-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.1rem; }
+        .jsv-panel h3 { margin: 0 0 .6rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+        .jsv-panel h3 .jsv-tag { font-size: .72rem; font-weight: 400; color: #6b7280; background: #f3f4f6;
+            border-radius: .35rem; padding: .1rem .5rem; }
+        .jsv-textarea { width: 100%; box-sizing: border-box; padding: .9rem 1rem; resize: vertical;
+            border: 1px solid #d1d5db; border-radius: .55rem; background: #f9fafb; color: #111827;
+            font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.65; tab-size: 2; }
+        .jsv-textarea:focus { outline: none; border-color: var(--primary-color); background: #fff;
+            box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .jsv-textarea[readonly] { background: #f3f4f6; }
+        .jsv-toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .jsv-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.1rem; font-size: .9rem;
+            border-radius: .55rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .jsv-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .jsv-btn.jsv-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .jsv-btn.jsv-primary:hover { background: var(--primary-hover, #1d4ed8); color: #fff; }
+        .jsv-btn.jsv-danger { border-color: #fca5a5; color: #b91c1c; }
+        .jsv-btn.jsv-danger:hover { border-color: #dc2626; color: #dc2626; }
+        .jsv-claim-btn { padding: .35rem .75rem; font-size: .82rem; border-radius: .45rem; border: 1px solid #d1d5db;
+            background: #f9fafb; color: #374151; cursor: pointer; }
+        .jsv-claim-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: #eff6ff; }
+        .jsv-claims { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0 1rem; }
+        .jsv-err { display: none; margin: 0 0 1rem; padding: .7rem .9rem; background: #fef2f2; border: 1px solid #fca5a5;
+            border-radius: .55rem; color: #991b1b; font-size: .88rem; line-height: 1.7; }
+        .jsv-hint { color: #6b7280; font-size: .82rem; margin-top: .45rem; line-height: 1.7; }
+        .jsv-select, .jsv-input { padding: .55rem .8rem; border: 1px solid #d1d5db; border-radius: .55rem;
+            font-size: .92rem; color: #111827; background: #fff; }
+        .jsv-select:focus, .jsv-input:focus { outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .jsv-row { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+        .jsv-row label { font-size: .92rem; color: #374151; font-weight: 500; }
+        .jsv-ok { color: #059669; font-weight: 600; }
+        .jsv-bad { color: #dc2626; font-weight: 600; }
+        .jsv-output-token { word-break: break-all; background: #f0fdf4; border: 1px solid #6ee7b7;
+            border-radius: .55rem; padding: .9rem 1rem; font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: 13px; line-height: 1.7; color: #065f46; }
+        .jsv-pre { margin: 0; padding: .9rem 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .55rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.65;
+            overflow-x: auto; color: #111827; white-space: pre-wrap; word-break: break-word; }
+        .jsv-badge { display: inline-block; padding: .22rem .7rem; border-radius: 999px; font-size: .8rem;
+            margin: .15rem .25rem .15rem 0; border: 1px solid; }
+        .jsv-b-green { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+        .jsv-b-red { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+        .jsv-b-gray { background: #f3f4f6; color: #4b5563; border-color: #d1d5db; }
+        .jsv-b-yellow { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+        .jsv-result { border-radius: .7rem; padding: 1rem 1.1rem; margin-top: 1rem; border: 1px solid; }
+        .jsv-r-title { font-size: 1.05rem; font-weight: 700; margin-bottom: .4rem; }
+        .jsv-r-detail { font-size: .9rem; line-height: 1.8; }
+        .jsv-r-ok { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+        .jsv-r-bad { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+        .jsv-r-warn { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+        .jsv-info { margin-top: 2rem; padding: 1.5rem; background-color: var(--bg-secondary, #f9fafb);
+            border-radius: .75rem; border: 1px solid var(--border-color, #e5e7eb); }
+        .jsv-info h3 { font-size: 1.1rem; font-weight: 600; margin: 0 0 1rem; display: flex; align-items: center; gap: .5rem; }
+        .jsv-info ul { list-style: none; padding: 0; margin: 0; display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+        .jsv-info li { display: flex; align-items: flex-start; gap: .5rem; font-size: .9rem; padding: .75rem;
+            background: #fff; border-radius: .5rem; border: 1px solid var(--border-color, #e5e7eb); line-height: 1.7; }
+        .jsv-link-box { margin-top: 1.5rem; padding: 1rem 1.2rem; background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: .75rem; font-size: .92rem; line-height: 1.9; color: #1e40af; }
+        .jsv-link-box a { color: var(--primary-color); font-weight: 600; }
+        @media (max-width: 860px) {
+            .jsv-grid { grid-template-columns: 1fr; }
+            .jsv-wrap .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container jsv-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">vpn_key</i> JWT 签名生成器/验证器</h1>
+            <p>签发（Encoder）与验证（Verifier）双页签：HS256/384/512、RS256 本地签发验签，alg:none 弱算法显式警告</p>
+        </div>
+
+        <div class="jsv-privacy">
+            <span class="jsv-lock">🔒</span>
+            <div><b>隐私承诺：</b>本工具 100% 在您的浏览器本地运行。签名、验签、密钥生成全部使用浏览器 Web Crypto API，密钥与 token 永不上传服务器、无任何后端调用。您可以断开网络后照常使用。</div>
+        </div>
+
+        <div class="jsv-tabs">
+            <button type="button" class="jsv-tab jsv-on" id="jsv-tab-encode">✍️ 签发（Encoder）</button>
+            <button type="button" class="jsv-tab" id="jsv-tab-verify">🔍 验证（Verifier）</button>
+        </div>
+
+        <!-- ============ 签发页签 ============ -->
+        <div id="jsv-panel-encode">
+            <div class="jsv-err" id="jsv-encode-err"></div>
+
+            <div class="jsv-row">
+                <label for="jsv-alg">签名算法：</label>
+                <select class="jsv-select" id="jsv-alg">
+                    <option value="HS256">HS256（HMAC + SHA-256）</option>
+                    <option value="HS384">HS384（HMAC + SHA-384）</option>
+                    <option value="HS512">HS512（HMAC + SHA-512）</option>
+                    <option value="RS256">RS256（RSA + SHA-256）</option>
+                </select>
+                <span class="jsv-hint">Header 中的 alg 由此锁定，编辑器里无需填写（填写也会被覆盖）</span>
+                <button type="button" class="jsv-btn" id="jsv-sample-encode">📋 载入示例</button>
+            </div>
+
+            <div class="jsv-grid">
+                <div class="jsv-panel">
+                    <h3>Header <span class="jsv-tag">JSON 对象，alg 自动锁定</span></h3>
+                    <textarea class="jsv-textarea" id="jsv-header" rows="8" spellcheck="false"></textarea>
+                </div>
+                <div class="jsv-panel">
+                    <h3>Payload <span class="jsv-tag">声明集合</span></h3>
+                    <textarea class="jsv-textarea" id="jsv-payload" rows="8" spellcheck="false"></textarea>
+                    <div class="jsv-claims">
+                        <button type="button" class="jsv-claim-btn" data-claim="iss">+ iss</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="sub">+ sub</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="aud">+ aud</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="iat">+ iat（现在）</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="nbf">+ nbf（现在）</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="exp">+ exp（1小时后）</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="jti">+ jti（随机）</button>
+                        <button type="button" class="jsv-claim-btn" data-claim="exp1h">⏱ 1 小时后过期</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jsv-panel" id="jsv-key-hs" style="margin-bottom:1rem">
+                <h3>🔑 HS Secret <span class="jsv-tag">当前 <span id="jsv-secret-len">0</span> 字节 / 最少 <span id="jsv-secret-min">32</span> 字节</span></h3>
+                <textarea class="jsv-textarea" id="jsv-secret" rows="2" placeholder="粘贴 HS Secret（文本按 UTF-8 计字节数）" spellcheck="false"></textarea>
+                <div class="jsv-toolbar" style="margin:.6rem 0 0">
+                    <button type="button" class="jsv-btn" id="jsv-gen-secret">🎲 随机生成合规密钥</button>
+                    <span class="jsv-hint">HS256 ≥ 32 字节 / HS384 ≥ 48 字节 / HS512 ≥ 64 字节，不足将拒绝签发</span>
+                </div>
+            </div>
+
+            <div class="jsv-panel" id="jsv-key-rsa" style="margin-bottom:1rem;display:none">
+                <h3>🔑 RSA 私钥（PEM） <span class="jsv-tag">PKCS#8 格式</span></h3>
+                <textarea class="jsv-textarea" id="jsv-priv-pem" rows="5" placeholder="-----BEGIN PRIVATE KEY----- ..." spellcheck="false"></textarea>
+                <div class="jsv-toolbar" style="margin:.6rem 0 0">
+                    <button type="button" class="jsv-btn" id="jsv-gen-rsa">🔐 本地生成 RSA 密钥对（2048 位）</button>
+                    <button type="button" class="jsv-btn" id="jsv-copy-pub">📋 复制公钥 PEM</button>
+                </div>
+                <textarea class="jsv-textarea" id="jsv-pub-pem" rows="4" readonly placeholder="生成的公钥 PEM 显示在这里，可复制到「验证」页签使用" spellcheck="false"></textarea>
+            </div>
+
+            <div class="jsv-toolbar">
+                <button type="button" class="jsv-btn jsv-primary" id="jsv-sign" style="font-size:1rem;padding:.7rem 1.8rem">🚀 生成 JWT</button>
+            </div>
+
+            <div class="jsv-panel" id="jsv-token-section" style="display:none">
+                <h3>🎉 生成的 Token <span class="jsv-tag" id="jsv-token-alg"></span></h3>
+                <div class="jsv-output-token" id="jsv-token-output"></div>
+                <div class="jsv-toolbar" style="margin:.8rem 0 0">
+                    <button type="button" class="jsv-btn" id="jsv-copy-token">📋 复制 Token</button>
+                    <button type="button" class="jsv-btn" id="jsv-download-token">⬇ 下载 .txt</button>
+                    <button type="button" class="jsv-btn" id="jsv-goto-encode">➡ 拿到「验证」页签去校验</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 验证页签 ============ -->
+        <div id="jsv-panel-verify" style="display:none">
+            <div class="jsv-err" id="jsv-decode-err"></div>
+
+            <div class="jsv-panel" style="margin-bottom:1rem">
+                <h3>📥 粘贴 JWT Token <span class="jsv-tag">自动解码</span></h3>
+                <textarea class="jsv-textarea" id="jsv-verify-input" rows="4" placeholder="在此粘贴 JWT（Header.Payload.Signature 三段式）" spellcheck="false"></textarea>
+                <div class="jsv-toolbar" style="margin:.6rem 0 0">
+                    <button type="button" class="jsv-btn" id="jsv-sample-valid">📋 载入有效示例（含密钥）</button>
+                    <button type="button" class="jsv-btn jsv-danger" id="jsv-sample-none">⚠ 载入 alg:none 恶意示例</button>
+                    <button type="button" class="jsv-btn" id="jsv-clear-verify">🧹 清空</button>
+                </div>
+            </div>
+
+            <div id="jsv-decoded" style="display:none">
+                <div class="jsv-panel" style="margin-bottom:1rem">
+                    <h3>⏳ 有效期 <span class="jsv-tag">alg: <span id="jsv-v-alg">—</span></span></h3>
+                    <div id="jsv-validity"></div>
+                </div>
+                <div class="jsv-grid">
+                    <div class="jsv-panel">
+                        <h3>Header <span class="jsv-tag">只读</span></h3>
+                        <pre class="jsv-pre" id="jsv-v-header"></pre>
+                    </div>
+                    <div class="jsv-panel">
+                        <h3>Payload <span class="jsv-tag">只读</span></h3>
+                        <pre class="jsv-pre" id="jsv-v-payload"></pre>
+                    </div>
+                </div>
+
+                <div class="jsv-panel" id="jsv-vkey-hs" style="margin-bottom:1rem">
+                    <h3>🔑 HS Secret</h3>
+                    <textarea class="jsv-textarea" id="jsv-v-secret" rows="2" placeholder="输入签发时使用的 HS Secret" spellcheck="false"></textarea>
+                </div>
+                <div class="jsv-panel" id="jsv-vkey-rsa" style="margin-bottom:1rem">
+                    <h3>🔑 RSA 公钥（PEM） <span class="jsv-tag">SPKI 格式</span></h3>
+                    <textarea class="jsv-textarea" id="jsv-v-pub-pem" rows="4" placeholder="-----BEGIN PUBLIC KEY----- ..." spellcheck="false"></textarea>
+                </div>
+
+                <div class="jsv-toolbar">
+                    <button type="button" class="jsv-btn jsv-primary" id="jsv-verify-btn" style="font-size:1rem;padding:.7rem 1.8rem">✅ 验证签名</button>
+                </div>
+                <div id="jsv-verify-result"></div>
+            </div>
+        </div>
+
+        <div class="jsv-link-box">
+            <b>🔗 相关工具：</b>只想快速解码查看 token 结构？用 <a href="/tools/jwt-parser">JWT 解析器</a>（Header/Payload/Signature 三段展示、时间戳自动解析）。
+        </div>
+
+        <div class="jsv-info">
+            <h3><i class="material-icons">info</i> 功能说明</h3>
+            <ul>
+                <li><b>✍️ 签发：</b>HS256 / HS384 / HS512 / RS256 四种算法，alg 由算法选择锁定，防手写错配</li>
+                <li><b>📝 声明快捷插入：</b>iss / sub / aud / iat / nbf / exp / jti 一键写入 Payload，另有「1 小时后过期」快捷按钮</li>
+                <li><b>🔑 密钥安全：</b>HS Secret 强制最小长度（32/48/64 字节），不足拒绝签发；RS256 私钥 PEM 本地导入或一键本地生成 2048 位密钥对</li>
+                <li><b>🔍 验证三态：</b>签名有效 ✓ / 签名无效 ✗（说明可能原因）/ 未签名警告（alg:none 或空签名段显式警示）</li>
+                <li><b>⏳ 有效期徽章：</b>exp 已过期 / nbf 未生效自动标注，附带本地时间换算</li>
+                <li><b>⚠ 恶意示例：</b>一键载入 alg:none token，直观感受弱算法风险</li>
+                <li><b>🔒 零上传：</b>签名验签全走浏览器 Web Crypto API，无后端调用、无外部请求，断网可用</li>
+                <li><b>📱 响应式：</b>桌面双栏、移动端自动堆叠，均可完整操作</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="/tools/static/js/jwt_signer_verifier.js?v=1"></script>
+</body>
+</html>
+{{end}}

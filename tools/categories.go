@@ -193,6 +193,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "jwt_signer_verifier",
+					Name:        "JWT 签名生成器/验证器",
+					Description: "签发与验证 JWT 令牌：HS256/384/512、RS256 本地签发，签名三态校验、alg:none 弱算法警告、exp/nbf 有效期徽章，纯前端零上传 · Sign & verify JWT tokens locally (HS256/384/512, RS256) with weak-algorithm warning, 100% client-side",
+					Path:        "/tools/jwt-signer-verifier",
+					Icon:        "enhanced_encryption",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "calendar",
 					Name:        "在线日历",
 					Description: "查看日历、农历和节假日信息",
