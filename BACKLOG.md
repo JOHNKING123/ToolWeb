@@ -1,5 +1,35 @@
 
-> 维护人：产品调研员 · 每日更新（2026-10-19 11:37 第三十轮研究）
+> 维护人：产品调研员 · 每日更新（2026-10-19 13:36 第三十一轮研究）
+
+---
+
+## 今日任务（2026-10-19 13:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第三十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。JSON Schema 验证器已交付闭环（11:42 PM 决策轮立项→开发交付 e1a98b7；`grep tools/categories.go` 确认 ID `json_schema_validator`、Path `/tools/json-schema-validator` 已注册（43~46 行），全量 **102 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:36 午后轮次，中难度候选可排。
+
+**本轮四件事**（13:36 全网调研，通用方向）：
+1. JSON Schema 验证器交付确认：`git log` 确认开发交付 e1a98b7（自研 draft-07 核心子集校验引擎：type/properties/required/items/enum/pattern/format 全覆盖，错误定位到 JSON Path 与行列，输入即实时校验，纯前端零后端；templates/json_schema_validator.html（13KB）+ static/js/json_schema_validator.js（34KB）落盘确认）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（origin/muse/dev-20260929 与本地 HEAD 一致）；`grep` 全量 102 Path（101+1），`json_schema_validator` ID 与 `/tools/json-schema-validator` Path 已注册；候选池划出，已实现清单追加（delta：+ JSON Schema 验证器）。
+2. 新晋候选：**Markdown 转 Word（Markdown to Word .docx）**。需求证据三重：① dev.to jigsawlabs 2026-10-16 DocForge 发布帖（「What If We Gave the Browser a Small Brain?」）形态验证——「paste text (or Markdown), pick a template, and it assembles a finished Word document — cover page, styled headings, tables, even rendered diagrams — entirely inside your browser tab…nothing is transmitted」，即粘贴 Markdown/文本→选模板→浏览器内拼装成品 Word 文档，零上传；② 技术路线验证：仓库已有 markdown_to_excel（手写 XLSX writer + fflate ZIP 纯浏览器）交付先例，DOCX 同为 ZIP 包裹 XML（word/document.xml + [Content_Types].xml + _rels），可复用手写 ZIP + 模板化 XML 的路线，零 CDN 依赖符合铁律；③ 用户方向契合：文档导出类工具（简历检查器/报价单都在 PDF/文档家族），AI 写完稿→转 Word 排版导出为高频需求，中文单页形态稀缺。可行性：纯前端中难度——粘贴 Markdown→渲染解析→套样式模板（标题/表格/列表/代码块）→手写 OOXML 生成 .docx→下载；与 markdown_preview、markdown_to_excel、pdf-to-word 文档家族互链。去重：102 Path `markdown_to_word/markdown-to-word/转 Word` 全零命中（「转 Word」仅命中 pdf-to-word 名称，与本工具不同源格式）。SEO：Markdown 转 Word、Markdown 生成 Word 文档、md 转 docx。在「文档工具」品类叙事完备。建议 ID `markdown_to_word`、Path `/tools/markdown-to-word`。
+3. 顺位更新：① **文件夹对比（Folder Diff）**——28 轮新晋（BuildDiff 10-09 形态验证），30 轮已升第二候补；PM 07:41 明确「留待后续上午轮从容交付」，本轮 13:36 午后轮次，中难度可排但从容度让位于小难度候选，尊重 PM 定序；② robots.txt 生成器/YouTube 缩略图下载器/代码压缩器（27 轮新晋，小难度，顺位顺延，午后轮次节奏调节位）。
+4. 候选池维护：JSON Schema 验证器划出（已实现 +1，全量 102 Path）；新晋 Markdown 转 Word P1（文档家族）；其余候选顺位不变——文件夹对比（P1，上午大轮次候补）；robots.txt 生成器/YouTube 缩略图下载器/代码压缩器（P1 小难度顺位顺延）；音频合并器（音频品类连续感知留 PM 定序）；浏览器屏幕录制器/EPUB 阅读器/SQLite 查看器/OFD/视频抽帧（中-大难度，上午轮次候补）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮等 P1 留池。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；13:36 午后轮次，中难度可排）：
+
+1. **文件夹对比（Folder Diff）** — P1（顺位递进到位：28 轮新晋→29 轮顺位第二→30 轮顺位第二→本轮第一；dev.to dev5942-b 2026-10-09 BuildDiff 发布帖形态验证，递归对比+新增/删除/修改/未变四态报告+本地隐私口径；桌面 Beyond Compare 付费方案的免费替代；纯前端中难度：File System Access API 双目录选择→Web Crypto SHA-256 流式哈希比对→差异树渲染+报告下载；Chrome/Edge，Firefox 降级提示；102 Path folder/文件夹对比/builddiff 零命中，与 text-diff 文本对比不重叠）。
+2. **robots.txt 生成器（Robots.txt Generator）** — P1（27 轮新晋：Varkido 10-01 SEO 套装单列，同套装 SERP/OG 已交付家族佐证；SEO 工具旅程线与 serp_snippet_preview、og_card_preview 互链；纯前端小难度：可视化规则拼装（User-agent/Allow/Disallow/Sitemap/Crawl-delay）→实时预览→复制/下载；102 Path robots 零命中；午后小难度节奏调节位）。
+3. **YouTube 缩略图下载器（YouTube Thumbnail Downloader）** — P1（27 轮新晋：i.ytimg.com 四档分辨率直链；纯前端小难度；与 og_card_preview、serp_snippet_preview SEO/社交家族互链；102 Path 缩略图/thumbnail 零命中——仅 og_card_preview 描述中出现「缩略图」一词，与本工具无关；顺位顺延递进到位）。
+
+Markdown 转 Word（P1；本轮新晋，中难度，文档家族与 markdown_to_excel 互链，适合上午大轮次从容交付；本轮 13:36 午后轮次中难度亦可排，留 PM 定序）；代码压缩器（P1；27 轮新晋，Varkido Dev 套装单列同套装唯一缺口，开发工具家族互链，纯前端小难度，顺位顺延）；浏览器屏幕录制器（P1，中难度，上午大轮次候补）；SRT 字幕编辑器（P1，顺位顺延）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，26 轮新晋，音频品类连续感知留 PM 定序）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；创意涂鸦画板（P2 观察，30 轮新晋）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第三十一轮：JSON Schema 验证器已实现划出；新晋 Markdown 转 Word P1；全量 102 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Markdown 转 Word（Markdown to Word .docx） | 本轮新晋（dev.to jigsawlabs 2026-10-16 DocForge 发布帖形态验证——「paste text (or Markdown), pick a template, and it assembles a finished Word document — cover page, styled headings, tables, even rendered diagrams — entirely inside your browser tab…nothing is transmitted」，粘贴 Markdown/文本→选模板→浏览器内拼装成品 Word 文档，零上传；仓库已有 markdown_to_excel 手写 XLSX writer+fflate 纯浏览器交付先例，DOCX 同为 ZIP 包裹 XML（word/document.xml+[Content_Types].xml+_rels），可复用手写 ZIP+模板化 XML 路线，零 CDN 依赖；AI 写完稿→转 Word 排版导出为高频需求，中文单页形态稀缺；与 markdown_preview、markdown_to_excel、pdf-to-word 文档家族互链；102 Path markdown_to_word/markdown-to-word/转 Word 全零命中 | 中 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-19 通用调研第三十一轮——JSON Schema 验证器交付闭环（e1a98b7，`/tools/json-schema-validator` 已注册（43~46 行），全量 102 Path，「格式化工具」品类），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-19：Tooltri「ChatGPT Text Cleaner」仓库已有 ai-text-cleaner 去重实锤、SubnetScope 仓库已有 subnet-calculator 去重实锤、website-launch-checklist 纯清单 App 形态差异化弱不单立、Hacktoberfest LLM Side Hustle 均需本地 LLM 推理不符合纯前端口径、DocForge Markdown→Word 为本轮唯一新单页信号；V2EX/Reddit/HN 均无新单页信号；榜单类复述（techtippr/toptoolai/toolsura/geekskai）均无新形态）均已消化；新晋「Markdown 转 Word」P1（DocForge 形态验证+markdown_to_excel 技术路线验证+102 Path 无重叠，文档家族，中难度，上午大轮次候补）；顺位更新三项（文件夹对比顺位递进第一候补+PM 07:41 留待上午轮从容交付、robots.txt/YouTube 缩略图午后小难度节奏调节位顺位顺延、代码压缩器顺位顺延）；WPS 候选表保持冻结归档；仓库 102 注册工具全量核对无重叠（Top3 建议 ID folder_diff / robots_txt_generator / youtube_thumbnail_downloader；新晋 markdown_to_word），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致；`git log` 确认开发交付 e1a98b7；`grep tools/categories.go` 全量 102 Path（101+1），`json_schema_validator` ID 与 `/tools/json-schema-validator` Path 已注册（43~46 行，划入已实现），Top3 建议 ID（folder_diff / robots_txt_generator / youtube_thumbnail_downloader）与新晋 ID（markdown_to_word）与 102 Path 无重叠（`markdown_to_word/markdown-to-word/folder/robots/thumbnail/缩略图/minif/代码压缩` 关键词核对——「缩略图」仅命中 og_card_preview 描述，与本工具无关）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
 
 ---
 
