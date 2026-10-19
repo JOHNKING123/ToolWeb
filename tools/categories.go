@@ -264,6 +264,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "code_minifier",
+					Name:        "代码压缩器",
+					Description: "自研零依赖 JS/CSS 压缩引擎：JS 去注释去冗余空白（强压缩压成一行/轻压缩保留换行，字符串与正则内注释符号不误删，ASI 安全合行），CSS 去注释空白（保留 div p 后代空格）、#ffffff→#fff 颜色简写、0px→0 零值去单位；实时显示原体积/压缩后体积/压缩率/节省字节，输入输出对照、一键复制、Blob 下载 code.min.js / style.min.css，纯前端本地压缩不出浏览器 · Code minifier: JavaScript & CSS minify online, compression ratio stats, 100% client-side",
+					Path:        "/tools/code-minifier",
+					Icon:        "compress",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

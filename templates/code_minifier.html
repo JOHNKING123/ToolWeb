@@ -1,0 +1,130 @@
+{{define "code_minifier"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码压缩器 - JS/CSS 在线压缩/体积优化/压缩率统计（纯前端）</title>
+    <meta name="description" content="免费在线代码压缩器：自研零依赖 JS 压缩引擎（去注释、去冗余空白，强压缩/轻压缩两种模式）与 CSS 压缩（去注释空白、#ffffff→#fff 颜色简写、0px→0 零值去单位），实时显示原体积/压缩后体积/压缩率/节省字节，输入输出对照视图，一键复制、Blob 下载 code.min.js / style.min.css，纯前端本地压缩不出浏览器。Code minifier: JavaScript & CSS minify online, compression ratio stats, 100% client-side.">
+    <meta name="keywords" content="代码压缩器,JS 压缩,CSS 压缩,代码体积优化,JavaScript 压缩,CSS minify,code minifier,javascript minify,css minifier,代码压缩率">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/code-minifier">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"代码压缩器","description":"自研零依赖 JS/CSS 压缩引擎：JS 去注释去冗余空白（强压缩/轻压缩）、CSS 去注释空白/颜色简写/零值去单位，实时压缩率统计，一键复制与 Blob 下载，纯前端本地压缩不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/code-minifier","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cm-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .cm-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .cm-privacy b{color:#047857}
+        .cm-toolbar{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+        .cm-type-tabs{display:flex;gap:.4rem;background:#f3f4f6;border-radius:.7rem;padding:.25rem}
+        .cm-type-tab{border:none;background:transparent;padding:.5rem 1rem;border-radius:.55rem;font-size:.9rem;cursor:pointer;color:#4b5563;font-family:inherit}
+        .cm-type-tab.active{background:#fff;color:#111827;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+        .cm-mode{display:flex;gap:.8rem;align-items:center;font-size:.9rem;color:#374151}
+        .cm-mode label{display:flex;gap:.35rem;align-items:center;cursor:pointer}
+        .cm-actions{margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap}
+        .cm-btn-sm{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.45rem .85rem;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-family:inherit}
+        .cm-btn-sm:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .cm-btn-sm .material-icons{font-size:1.05rem}
+        .cm-css-note{font-size:.84rem;color:#6b7280;margin:-.4rem 0 1rem}
+        .cm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1rem}
+        .cm-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:.7rem;padding:.7rem .9rem;text-align:center}
+        .cm-stat-label{font-size:.78rem;color:#6b7280;margin-bottom:.25rem}
+        .cm-stat-val{font-size:1.25rem;font-weight:800;color:#111827;font-variant-numeric:tabular-nums}
+        .cm-stat-val.good{color:#059669}
+        .cm-stat-val.ok{color:#d97706}
+        .cm-stat-val.none{color:#9ca3af}
+        .cm-panes{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+        .cm-pane{display:flex;flex-direction:column;min-width:0}
+        .cm-pane-head{display:flex;align-items:center;gap:.5rem;font-size:.92rem;font-weight:700;color:#374151;margin-bottom:.5rem}
+        .cm-pane-head .material-icons{font-size:1.1rem;color:var(--primary-color)}
+        .cm-type-badge{font-size:.75rem;font-weight:600;color:#4f46e5;background:#eef2ff;border-radius:999px;padding:.12rem .6rem}
+        .cm-pane-head .spacer{flex:1}
+        .cm-io{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;min-height:22rem;max-height:34rem;overflow:auto;background:#fff;color:#111827;width:100%;box-sizing:border-box;resize:vertical}
+        .cm-io:focus{outline:none;border-color:var(--primary-color)}
+        div.cm-io{background:#111827;color:#e5e7eb;white-space:pre-wrap;word-break:break-all}
+        .cm-empty{color:#6b7280}
+        .cm-error{color:#fca5a5}
+        .cm-foot{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .cm-foot .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .cm-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .cm-note b{color:#374151}
+        @media (max-width:860px){
+            .cm-panes{grid-template-columns:1fr}
+            .cm-stats{grid-template-columns:repeat(2,1fr)}
+            .cm-io{min-height:14rem}
+            .cm-actions{margin-left:0}
+            .cm-foot .btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">compress</i> 代码压缩器</h1>
+            <p>自研零依赖压缩引擎：JS 去注释、去冗余空白（强压缩压成一行 / 轻压缩保留换行），CSS 去注释空白、颜色简写（#ffffff→#fff）、零值去单位（0px→0）。输入即实时压缩，附体积与压缩率统计。</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="cm-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：输入代码不出浏览器。</b>压缩全部在当前页面本地计算，不上传到任何服务器，不做任何存储与记录。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="cm-toolbar">
+                    <div class="cm-type-tabs" role="tablist" aria-label="代码类型">
+                        <button type="button" class="cm-type-tab active" data-type="auto" role="tab">自动识别</button>
+                        <button type="button" class="cm-type-tab" data-type="js" role="tab">JavaScript</button>
+                        <button type="button" class="cm-type-tab" data-type="css" role="tab">CSS</button>
+                    </div>
+                    <div class="cm-mode" id="cm-mode-row">
+                        <label><input type="radio" name="cm-mode" value="strong" checked> 强压缩（压成一行）</label>
+                        <label><input type="radio" name="cm-mode" value="light"> 轻压缩（保留换行）</label>
+                    </div>
+                    <div class="cm-actions">
+                        <button type="button" class="cm-btn-sm" id="cm-sample-js"><i class="material-icons">javascript</i> JS 示例</button>
+                        <button type="button" class="cm-btn-sm" id="cm-sample-css"><i class="material-icons">css</i> CSS 示例</button>
+                        <button type="button" class="cm-btn-sm" id="cm-clear"><i class="material-icons">delete_sweep</i> 清空</button>
+                    </div>
+                </div>
+                <div class="cm-css-note" id="cm-css-note" style="display:none;">CSS 采用全量压缩：去注释、去空白（保留 <b>div p</b> 这类后代选择器空格）、<b>#ffffff→#fff</b> 颜色简写、<b>0px→0</b> 零值去单位。</div>
+
+                <div class="cm-stats" aria-live="polite">
+                    <div class="cm-stat"><div class="cm-stat-label">原体积</div><div class="cm-stat-val" id="cm-stat-orig">—</div></div>
+                    <div class="cm-stat"><div class="cm-stat-label">压缩后体积</div><div class="cm-stat-val" id="cm-stat-min">—</div></div>
+                    <div class="cm-stat"><div class="cm-stat-label">压缩率</div><div class="cm-stat-val" id="cm-stat-ratio">—</div></div>
+                    <div class="cm-stat"><div class="cm-stat-label">节省字节</div><div class="cm-stat-val" id="cm-stat-saved">—</div></div>
+                </div>
+
+                <div class="cm-panes">
+                    <div class="cm-pane">
+                        <div class="cm-pane-head"><i class="material-icons">input</i> 输入代码</div>
+                        <textarea class="cm-io" id="cm-input" placeholder="在此粘贴 JavaScript 或 CSS 代码，输入即实时压缩…" spellcheck="false"></textarea>
+                    </div>
+                    <div class="cm-pane">
+                        <div class="cm-pane-head"><i class="material-icons">output</i> 压缩结果 <span class="cm-type-badge" id="cm-type-badge"></span></div>
+                        <div class="cm-io" id="cm-output" aria-live="polite"><span class="cm-empty">请在左侧输入要压缩的代码…</span></div>
+                    </div>
+                </div>
+
+                <div class="cm-foot">
+                    <button class="btn btn-primary" id="cm-copy"><i class="material-icons">content_copy</i> 复制结果</button>
+                    <button class="btn btn-primary" id="cm-download"><i class="material-icons">download</i> 下载文件</button>
+                    <span class="cm-note" style="margin:0;">下载文件名按类型自动命名：<b>code.min.js</b> / <b>style.min.css</b></span>
+                </div>
+
+                <div class="cm-note">
+                    <b>引擎说明：</b>JS 引擎为自研单遍扫描器——字符串（' " `）、模板字符串 ${}、正则字面量内的 <b>//</b> 与 <b>/* */</b> 不会被误删；换行合并时按 ASI（自动分号插入）规则补 <b>;</b> 或留空格，保证语义不变；危险合并（<b>++ -- // /* */</b>）自动保留分隔空格。<b>强压缩</b>把全部代码压成一行，体积最小；<b>轻压缩</b>仅去注释与冗余空白、保留换行，便于调试。空输入会给出中文提示，不会报错。<br>
+                    <b>CSS 说明：</b>注释整体移除；空白折叠时保留 <b>div p</b> 后代选择器与 <b>1px solid red</b> 这类必需空格；<b>#ffffff→#fff</b>、<b>#ff0000→#f00</b> 颜色简写；<b>0px→0</b> 零值去单位；去掉 <b>}</b> 前多余分号。字符串内容（如 <b>content:"…"</b>）原样保留。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/code_minifier.js?v=1"></script>
+</body>
+</html>
+{{end}}
