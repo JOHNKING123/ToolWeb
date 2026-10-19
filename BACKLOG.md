@@ -1,3 +1,49 @@
+## 今日任务（2026-10-19 23:00 · 产品经理排期轮）
+
+**选定：JSON 语义化对比器（/tools/json-semantic-diff）** — 本轮唯一任务：
+- **顺位递进**：研究轮 36 新晋 P1（Top1 推荐）→ 23:00 PM 决策轮立项；尊重顺位定序，无硬伤不跳过（与 19:00/21:00 PM 轮先例一致）。
+- **纯度高**：纯前端、零依赖、零后端、零上传，双侧 JSON.parse→递归结构 diff，一轮交付确定性高；23:00 深夜轮次小难度节奏调节位。
+- **家族叙事**：JSON 家族（JSON 解析器/json_schema_validator/json2yaml/json_to_types）+ 文本比较 text_diff 结构感知对比形态零覆盖；与 JSON 解析器、文本比较互链（语义对比/文本对比双件套）。
+- **方向契合**：开发者工具形态，符合用户方向修正（2026-10-18 聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。
+- **形态验证充分**：dev.to kkp（2026-10-13，DevTrove 22 开发者工具套装）单列 JSON semantic diff；jsonwebviewer.com JSON 工具横向对比把 semantic diff 列为对比维度；JSONEditor.io 标配 Compare JSON documents；痛点真实：接口回归/API 版本比对时纯文本 diff 被键顺序、缩进、空白差异淹没。
+- **去重实锤**：实测 `grep tools/categories.go`（107 Path 全量）——`json.*diff/diff.*json/json_compare/semantic/语义对比` 全零命中；diff 工具为纯文本行级对比，形态不同。
+
+**规格**：
+1. 双侧输入：左右两栏 textarea 粘贴 JSON；任意一侧非法给出中文错误提示（标注侧与行列），不崩，修复后恢复。
+2. 结构感知 diff 算法：对象按键名对齐比较（键序无关）、数组按索引逐项比较；四态分类：新增（added）/删除（deleted）/修改（modified）/类型变化（type-changed，string→number 等单独归类）。
+3. 差异渲染：统一差异列表 + 并排高亮（或树形高亮，开发轮自选呈现方式），四态颜色区分；差异计数汇总（新增 N / 删除 M / 修改 K / 类型变化 T）。
+4. 嵌套路径定位：每条差异标注 JSONPath（如 `$.data.items[2].price`），点击跳转定位到原 JSON 对应位置。
+5. 视图过滤：仅看差异 / 显示全部切换。
+6. 示例按钮：一键载入示例 JSON（两侧含键序差异+缩进差异+类型变化，展示「语义相同但文本不同」的判别能力）。
+7. 纯前端、零依赖、零后端、零上传；响应式，桌面双栏、移动端上下堆叠可用。
+8. 注册：`tools/categories.go`「格式化工具」品类（JSON 家族旁），新增工具 ID `json_semantic_diff`、Name「JSON 语义化对比器」、Path `/tools/json-semantic-diff`（New: true），中英文描述 + SEO keywords（JSON 对比、JSON semantic diff、API 接口对比、JSON 差异比较、JSON diff 在线）；与 JSON 解析器（/tools/json-parser）、文本比较（/tools/text-diff）页面互链（「相关工具」入口）。
+9. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/json-semantic-diff` 可开（200）
+- [ ] 键序不同但语义相同的 JSON 判定为无差异（0 差异）
+- [ ] 缩进/空白/换行差异不产生误报
+- [ ] 新增/删除/修改/类型变化四态高亮正确，计数汇总准确
+- [ ] 嵌套数组/对象差异的 JSONPath 定位正确，点击可跳转
+- [ ] 任意一侧非法 JSON 给出中文错误提示（标注侧、行列）不崩；修复后恢复
+- [ ] 仅看差异/显示全部切换生效；示例按钮可用
+- [ ] DevTools Network 抽查无后端调用、无外部请求
+- [ ] `categories.go` 注册完成（格式化工具品类，New: true），首页/导航/sitemap 生效；与 JSON 解析器/文本比较互链生效
+- [ ] 移动端可操作（输入+对比+浏览差异）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/json_semantic_diff.html`（新建：双侧输入＋差异列表/并排高亮＋过滤/示例工具栏）、`static/js/json_semantic_diff.js`（新建：JSON 解析校验＋递归结构 diff 算法（键序无关、四态分类、JSONPath 生成）＋渲染逻辑，零依赖）、`tools/categories.go`（格式化工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 批量重命名助手（P1；33 轮新观察）：365lab 形态验证、小难度确定性高，但顺位在本轮 JSON 语义化对比器之后；列为下一晚间小难度候补。
+- 金额大写转换器（节奏调节位）：**用户方向修正（2026-10-18）明确「不扩展泛财务/生活计算器」**，金额大写是财务报销/合同场景的典型泛财务工具——方向否决，不列排期。研究轮「深夜轮次零风险填充位」的建议不予采纳：排期只从工具本身需求出发。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续五轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，仍为上午大轮次第一候补）；Markdown 转 Word（P1；上午大轮次候补，DocForge 形态验证+markdown_to_excel 技术路线验证）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器（P1，音频品类连续感知留 PM 定序）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG（P2 新观察）；词云生成器/标签页收藏打包分享（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）；随机点名器/URL Slug 生成器（P2 本轮新观察）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——本轮初遇 fetch 报 access rights，按 TOOLS.md `ssh-keyscan -t ed25519 github.com` 补录 /root/.ssh/known_hosts（ssh 以 root 运行）后即通（历史已知），origin/muse/dev-20260929 与本地 HEAD 一致（f5c074c）；`grep tools/categories.go` 全量 107 Path（106+1），新候选 ID `json_semantic_diff`、Path `/tools/json-semantic-diff` 与 107 Path 无重叠（`json.*diff/diff.*json/json_compare/semantic/语义对比/batch_rename/rename/重命名/amount_capital/金额大写/大写转换` 关键词全零命中）；本地当前分支 muse/dev-20260929；工作树仅有未跟踪文件 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 ## 今日任务（2026-10-19 23:00 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-19 通用调研第三十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器；订阅管理 dashboard 类生活管理形态按此方向不立）。Mermaid 图表渲染与导出器已交付闭环（21:00 PM 决策轮立项→开发交付 9bb55ff＋评审修复 962b234；`grep tools/categories.go` 确认 ID `mermaid_diagram_renderer`、Path `/tools/mermaid-diagram-renderer` 已注册（151~154 行），全量 **107 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 深夜轮次，小难度候选优先。

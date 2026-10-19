@@ -1,0 +1,198 @@
+{{define "json_semantic_diff"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 语义化对比器 - 忽略键序与格式差异的结构对比，API 回归比对 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSON 语义化对比器：左右粘贴两份 JSON，递归结构 diff 自动忽略键顺序、缩进、换行等文本差异；新增/删除/修改/类型变化四态高亮，差异计数汇总，每条差异标注 JSONPath 可点击跳转定位，纯前端本地对比零上传。">
+    <meta name="keywords" content="JSON 对比,JSON semantic diff,API 接口对比,JSON 差异比较,JSON diff 在线,json compare,JSON 结构对比,接口回归测试,JSONPath 定位">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-semantic-diff">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON 语义化对比器","description":"免费在线 JSON 语义化对比器：递归结构 diff，自动忽略键序、缩进、空白差异，新增/删除/修改/类型变化四态高亮，JSONPath 点击跳转定位，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/json-semantic-diff","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jsd-wrap .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .jsd-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .jsd-privacy .jsd-lock { font-size: 1.6rem; flex: none; }
+        .jsd-toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .jsd-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.1rem; font-size: .9rem;
+            border-radius: .55rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .jsd-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .jsd-btn.jsd-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .jsd-btn.jsd-primary:hover { background: var(--primary-hover, #1d4ed8); color: #fff; }
+        .jsd-btn.jsd-on { border-color: var(--primary-color); color: var(--primary-color); background: #eff6ff; font-weight: 600; }
+        .jsd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .jsd-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.1rem; }
+        .jsd-panel h3 { margin: 0 0 .6rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .45rem; }
+        .jsd-panel h3 .jsd-tag { font-size: .72rem; font-weight: 400; color: #6b7280; background: #f3f4f6;
+            border-radius: .35rem; padding: .1rem .5rem; }
+        .jsd-textarea { width: 100%; height: 340px; box-sizing: border-box; padding: .9rem 1rem; resize: vertical;
+            border: 1px solid #d1d5db; border-radius: .55rem; background: #f9fafb; color: #111827;
+            font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.65; tab-size: 2; }
+        .jsd-textarea:focus { outline: none; border-color: var(--primary-color); background: #fff;
+            box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .jsd-textarea.jsd-syntax-err { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.12); }
+        .jsd-err { display: none; margin-top: .5rem; padding: .6rem .8rem; background: #fef2f2; border: 1px solid #fca5a5;
+            border-radius: .5rem; color: #991b1b; font-size: .85rem; line-height: 1.7; }
+        .jsd-hint { color: #6b7280; font-size: .82rem; margin-top: .45rem; }
+        .jsd-status { border-radius: .7rem; padding: .9rem 1.1rem; font-size: .95rem; line-height: 1.9; margin-bottom: 1rem;
+            border: 1px solid #e5e7eb; background: #f9fafb; color: #4b5563; }
+        .jsd-status.jsd-ok { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+        .jsd-status.jsd-diff { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+        .jsd-status.jsd-syntax { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+        .jsd-dot { display: inline-block; width: .7rem; height: .7rem; border-radius: 999px; margin: 0 .15rem 0 .3rem; vertical-align: baseline; }
+        .jsd-dot.d-added { background: #16a34a; } .jsd-dot.d-removed { background: #dc2626; }
+        .jsd-dot.d-modified { background: #d97706; } .jsd-dot.d-type { background: #7c3aed; }
+        .jsd-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .8rem; font-size: .85rem; color: #4b5563; }
+        .jsd-legend .sw { display: inline-block; width: 1.1rem; height: 1.1rem; border-radius: .3rem; vertical-align: -2px; margin-right: .3rem; }
+        .sw-added { background: #dcfce7; border: 1px solid #86efac; }
+        .sw-removed { background: #fee2e2; border: 1px solid #fca5a5; }
+        .sw-modified { background: #fef3c7; border: 1px solid #fcd34d; }
+        .sw-type { background: #ede9fe; border: 1px solid #c4b5fd; }
+        .jsd-err-head { display: flex; align-items: center; gap: .5rem; margin: 1.2rem 0 .7rem; font-size: 1rem; color: #111827; }
+        .jsd-err-head .jsd-count { background: #d97706; color: #fff; font-size: .8rem; font-weight: 700;
+            border-radius: 999px; padding: .1rem .6rem; }
+        #jsd-difflist { margin-bottom: 1.2rem; }
+        .jsd-none { padding: 1.2rem; text-align: center; color: #065f46; background: #ecfdf5; border: 1px solid #6ee7b7;
+            border-radius: .6rem; font-size: .95rem; }
+        .jsd-item { display: flex; gap: .7rem; align-items: flex-start; width: 100%; box-sizing: border-box;
+            text-align: left; background: #fff; border: 1px solid #e5e7eb; border-radius: .6rem;
+            padding: .7rem .9rem; margin-bottom: .5rem; cursor: pointer; font-size: .9rem; transition: all .15s; }
+        .jsd-item:hover { transform: translateX(2px); }
+        .jsd-item.d-added { border-left: 4px solid #16a34a; } .jsd-item.d-added:hover { background: #f0fdf4; }
+        .jsd-item.d-removed { border-left: 4px solid #dc2626; } .jsd-item.d-removed:hover { background: #fef2f2; }
+        .jsd-item.d-modified { border-left: 4px solid #d97706; } .jsd-item.d-modified:hover { background: #fffbeb; }
+        .jsd-item.d-type { border-left: 4px solid #7c3aed; } .jsd-item.d-type:hover { background: #f5f3ff; }
+        .jsd-no { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 999px; background: #6b7280; color: #fff;
+            font-size: .78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: .1rem; }
+        .jsd-item.d-added .jsd-no { background: #16a34a; } .jsd-item.d-removed .jsd-no { background: #dc2626; }
+        .jsd-item.d-modified .jsd-no { background: #d97706; } .jsd-item.d-type .jsd-no { background: #7c3aed; }
+        .jsd-body { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+        .jsd-path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; color: #1d4ed8; word-break: break-all; }
+        .jsd-desc { color: #374151; line-height: 1.7; word-break: break-word; }
+        .jsd-desc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .jsd-kind { display: inline-block; font-size: .75rem; font-weight: 700; border-radius: .35rem; padding: .05rem .5rem; margin-right: .4rem; }
+        .jsd-item.d-added .jsd-kind { background: #dcfce7; color: #15803d; }
+        .jsd-item.d-removed .jsd-kind { background: #fee2e2; color: #b91c1c; }
+        .jsd-item.d-modified .jsd-kind { background: #fef3c7; color: #b45309; }
+        .jsd-item.d-type .jsd-kind { background: #ede9fe; color: #6d28d9; }
+        .jsd-na { color: #9ca3af; }
+        .jsd-pane { border: 1px solid #e5e7eb; border-radius: .6rem; background: #f8fafc; height: 420px;
+            overflow: auto; padding: .6rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.65; }
+        .jsd-line { display: flex; white-space: pre; padding: 0 .8rem 0 0; border-left: 3px solid transparent; }
+        .jsd-ln { flex: none; width: 3rem; text-align: right; padding-right: .8rem; color: #9ca3af; font-size: 11.5px;
+            user-select: none; line-height: 1.85; }
+        .jsd-lt { flex: 1; min-width: 0; }
+        .jsd-line.d-added { background: #dcfce7; border-left-color: #16a34a; }
+        .jsd-line.d-removed { background: #fee2e2; border-left-color: #dc2626; }
+        .jsd-line.d-modified { background: #fef3c7; border-left-color: #d97706; }
+        .jsd-line.d-type { background: #ede9fe; border-left-color: #7c3aed; }
+        .jsd-line.d-ancestor { border-left-color: #cbd5e1; }
+        .jsd-line.jsd-flash { animation: jsd-flash 1.4s ease; }
+        @keyframes jsd-flash { 0%, 40% { box-shadow: inset 0 0 0 2px var(--primary-color); background: #dbeafe; } 100% { box-shadow: none; } }
+        .jsd-only-diff .jsd-line:not(.d-added):not(.d-removed):not(.d-modified):not(.d-type):not(.d-ancestor) { display: none; }
+        .jsd-doc { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem;
+            font-size: .88rem; color: #4b5563; line-height: 2; margin-top: 1.2rem; }
+        .jsd-doc h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .jsd-doc b { color: #111827; }
+        .jsd-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .jsd-doc a { color: var(--primary-color); text-decoration: none; }
+        .jsd-doc a:hover { text-decoration: underline; }
+        @media (max-width: 860px) {
+            .jsd-wrap .container { padding: 1rem; }
+            .jsd-grid { grid-template-columns: 1fr; }
+            .jsd-textarea { height: 280px; }
+            .jsd-pane { height: 340px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="jsd-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🆚 JSON 语义化对比器</h1>
+            <p>忽略键顺序、缩进、空白差异的结构感知对比 —— 接口回归 / API 版本比对专用</p>
+        </div>
+
+        <div class="jsd-privacy">
+            <span class="jsd-lock">🔒</span>
+            <div><b>隐私承诺：对比只在你的浏览器里完成，不上传服务器。</b><br>
+            自研递归 diff 引擎（无第三方库、无 CDN）：JSON 解析、结构对比、差异渲染全部在本地运行，不调用任何后端接口、不加载任何外部资源。你可以在 DevTools 的 Network 面板验证 —— 输入任何内容都不会产生网络请求。断网也能用。</div>
+        </div>
+
+        <div class="jsd-toolbar">
+            <button class="jsd-btn jsd-primary" id="jsd-compare" type="button">⚖️ 开始对比</button>
+            <button class="jsd-btn" id="jsd-sample" type="button">✨ 载入示例 JSON</button>
+            <button class="jsd-btn" id="jsd-filter" type="button">🔍 仅看差异</button>
+            <button class="jsd-btn" id="jsd-clear" type="button">🗑️ 清空</button>
+        </div>
+
+        <div class="jsd-grid">
+            <div class="jsd-panel">
+                <h3>📄 左侧 JSON <span class="jsd-tag">A · 旧版本</span></h3>
+                <textarea id="jsd-a" class="jsd-textarea" spellcheck="false" autocomplete="off"
+                    placeholder='粘贴左侧 JSON（旧版本），例如：&#10;{&#10;  "name": "张三",&#10;  "age": 28&#10;}&#10;&#10;输入后自动对比；Ctrl+Enter 立即对比'></textarea>
+                <div class="jsd-err" id="jsd-err-a"></div>
+                <div class="jsd-hint">键顺序、缩进、换行差异会被自动忽略；语法错误会标出侧别与行列</div>
+            </div>
+            <div class="jsd-panel">
+                <h3>📄 右侧 JSON <span class="jsd-tag">B · 新版本</span></h3>
+                <textarea id="jsd-b" class="jsd-textarea" spellcheck="false" autocomplete="off"
+                    placeholder='粘贴右侧 JSON（新版本），例如：&#10;{&#10;  "age": 29,&#10;  "name": "张三",&#10;  "city": "深圳"&#10;}&#10;&#10;输入后自动对比；Ctrl+Enter 立即对比'></textarea>
+                <div class="jsd-err" id="jsd-err-b"></div>
+                <div class="jsd-hint">支持任意顶层类型（对象 / 数组 / 字符串 / 数字 / 布尔 / null）</div>
+            </div>
+        </div>
+
+        <div class="jsd-status jsd-idle" id="jsd-status" role="status">在左右两栏粘贴 JSON 后自动开始对比（键顺序、缩进、空白差异会被自动忽略）</div>
+
+        <div id="jsd-result" style="display:none">
+            <div class="jsd-legend">
+                <span><span class="sw sw-added"></span>新增（右侧多出）</span>
+                <span><span class="sw sw-removed"></span>删除（右侧缺失）</span>
+                <span><span class="sw sw-modified"></span>修改（同类型值变化）</span>
+                <span><span class="sw sw-type"></span>类型变化（string→number 等）</span>
+            </div>
+
+            <h3 class="jsd-err-head">📋 差异列表 <span class="jsd-count" id="jsd-diffcount">0</span><span style="font-size:.8rem;color:#6b7280;font-weight:400">点击任意一条，跳转到两侧对应位置</span></h3>
+            <div id="jsd-difflist"></div>
+
+            <div class="jsd-grid">
+                <div class="jsd-panel">
+                    <h3>⬅️ 左侧渲染 <span class="jsd-tag">A</span></h3>
+                    <div class="jsd-pane" id="jsd-pane-a"></div>
+                </div>
+                <div class="jsd-panel">
+                    <h3>➡️ 右侧渲染 <span class="jsd-tag">B</span></h3>
+                    <div class="jsd-pane" id="jsd-pane-b"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="jsd-doc">
+            <h3>📖 对比规则说明</h3>
+            <div>
+                <b>对象</b>按键名对齐比较，<b>键顺序无关</b> —— <code>{"a":1,"b":2}</code> 与 <code>{"b":2,"a":1}</code> 判定为无差异；<b>缩进、换行、多余空白</b>不产生误报。<b>数组</b>按索引逐项比较（不做乱序匹配，接口字段顺序变化本身即是有意义的差异）。<br>
+                <b>四态分类：</b><code>新增</code>（右侧多出的键/元素） / <code>删除</code>（右侧缺失的键/元素） / <code>修改</code>（同类型值变化） / <code>类型变化</code>（如 <code>"99.9"</code> 字符串变为 <code>99.9</code> 数字 —— 接口回归中最容易踩坑的一类）。<br>
+                <b>JSONPath 定位：</b>每条差异标注路径（如 <code>$.data.items[1].price</code>），点击后两侧渲染区自动滚动并高亮闪烁定位。<b>仅看差异</b>可折叠未变化的行，聚焦改动。<br>
+                <b>互链工具：</b>先用 <a href="/tools/json-parser">JSON 解析器</a> 格式化与校验单份 JSON；需要逐行文本对照时用 <a href="/tools/text-diff">文本比较</a>；结构级语义对比就用本工具。<br>
+                <b>隐私：</b>全程无网络请求 —— 解析、对比、渲染都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/json_semantic_diff.js?v=1"></script>
+</body>
+</html>
+{{end}}

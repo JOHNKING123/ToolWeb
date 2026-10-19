@@ -49,6 +49,15 @@ func GetCategories() []Category {
 					Category:    "格式化工具",
 				},
 				{
+					ID:          "json_semantic_diff",
+					Name:        "JSON 语义化对比器",
+					Description: "左右粘贴两份 JSON 做结构感知对比：自动忽略键顺序、缩进、空白差异，新增/删除/修改/类型变化四态高亮，差异计数汇总，每条差异标注 JSONPath 可点击跳转定位，纯前端本地对比零上传 · JSON semantic diff: structure-aware compare ignoring key order & formatting, 4-state highlight, JSONPath click-to-locate, 100% client-side",
+					Path:        "/tools/json-semantic-diff",
+					Icon:        "compare_arrows",
+					New:         true,
+					Category:    "格式化工具",
+				},
+				{
 					ID:          "xml",
 					Name:        "XML 格式化",
 					Description: "格式化和验证 XML 数据",
