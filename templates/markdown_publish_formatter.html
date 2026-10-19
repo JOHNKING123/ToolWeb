@@ -1,0 +1,178 @@
+{{define "markdown_publish_formatter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 公众号一键排版 - Markdown 转公众号富文本，4 套主题免费在线排版 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Markdown 公众号排版工具：粘贴 Markdown 源码，4 套公众号主题（朱砂红/商务蓝/竹青/暖阳橙）一键切换，字号行距可调，实时预览，一键复制富文本到微信公众号/知乎/头条后台不掉格式。纯前端本地渲染，零上传。">
+    <meta name="keywords" content="Markdown转公众号,公众号排版,Markdown排版工具,一键复制富文本,微信公众号编辑器,markdown转微信公众号,公众号编辑器,Markdown公众号一键排版">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/markdown-publish-formatter">
+    <meta property="og:title" content="Markdown 公众号一键排版 - 4 套主题，复制即发">
+    <meta property="og:description" content="Markdown 写完一键排版：4 套公众号主题实时预览，一键复制富文本粘贴到公众号后台不掉格式。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/markdown-publish-formatter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Markdown 公众号一键排版","description":"免费在线 Markdown 公众号排版工具：粘贴 Markdown 源码，4 套公众号主题一键切换，字号行距可调，实时预览，一键复制富文本到微信公众号后台不掉格式；自研轻量渲染引擎，纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/markdown-publish-formatter","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mpf-wrap .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .mpf-wrap .navbar .material-icons { display: none; }
+        .mpf-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .mpf-privacy .mpf-lock { font-size: 1.6rem; flex: none; }
+        .mpf-privacy b { color: #047857; }
+        .mpf-toolbar { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
+            background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem;
+            padding: .9rem 1.2rem; margin-bottom: 1.2rem; }
+        .mpf-group { display: inline-flex; align-items: center; gap: .5rem; font-size: .9rem; color: #4b5563; }
+        .mpf-group > span { color: #9ca3af; font-size: .85rem; }
+        .mpf-theme-btn { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .8rem;
+            border: 2px solid #e5e7eb; background: #fff; border-radius: 2rem; cursor: pointer; font-size: .88rem; color: #374151; }
+        .mpf-theme-btn .dot { width: .9rem; height: .9rem; border-radius: 50%; flex: none; }
+        .mpf-theme-btn[aria-pressed="true"] { border-color: var(--primary-color); background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+        .mpf-seg { display: inline-flex; border: 1px solid #d1d5db; border-radius: .5rem; overflow: hidden; }
+        .mpf-seg button { border: none; background: #fff; padding: .4rem .8rem; cursor: pointer; font-size: .85rem; color: #4b5563; }
+        .mpf-seg button + button { border-left: 1px solid #e5e7eb; }
+        .mpf-seg button[aria-pressed="true"] { background: var(--primary-color); color: #fff; }
+        .mpf-select { padding: .4rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .88rem; background: #fff; color: #374151; }
+        .mpf-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
+        .mpf-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; }
+        .mpf-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .5rem; }
+        .mpf-count { margin-left: auto; font-size: .78rem; color: #9ca3af; font-weight: 400; }
+        .mpf-textarea { width: 100%; min-height: 520px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: .88rem; line-height: 1.7; padding: .8rem; border: 1px solid #d1d5db; border-radius: .5rem;
+            resize: vertical; box-sizing: border-box; background: #fff; color: #1f2937; }
+        .mpf-textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+        .mpf-preview-box { border: 1px solid #e5e7eb; border-radius: .5rem; background: #fff;
+            padding: 1.6rem 1.4rem; min-height: 520px; max-height: 78vh; overflow-y: auto; transition: max-width .2s; }
+        .mpf-preview-empty { color: #9ca3af; font-size: .9rem; line-height: 2; }
+        .mpf-bar { display: flex; gap: .6rem; flex-wrap: wrap; margin: .8rem 0 0; align-items: center; }
+        .mpf-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.2rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .92rem; font-weight: 600; }
+        .mpf-btn:hover { background: var(--primary-color-dark); }
+        .mpf-btn-ghost { background: #f3f4f6; color: #374151; font-weight: 400; }
+        .mpf-btn-ghost:hover { background: #e5e7eb; }
+        .mpf-btn-sm { padding: .35rem .8rem; font-size: .84rem; border-radius: .4rem; }
+        .mpf-toast { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem;
+            line-height: 1.7; margin-bottom: 1rem; border: 1px solid; }
+        .mpf-combo { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .6rem; padding: .7rem 1rem;
+            font-size: .92rem; line-height: 1.8; color: #1e40af; margin-top: 1.2rem; }
+        .mpf-combo a { color: #1d4ed8; font-weight: 600; }
+        .mpf-info { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-top: 1.2rem; }
+        .mpf-info h3 { margin: 0 0 .6rem; font-size: 1rem; }
+        .mpf-info ul { margin: 0; padding-left: 1.2rem; font-size: .9rem; line-height: 2; color: #4b5563; }
+        .mpf-info b { color: #1f2937; }
+        .mpf-info code { font-family: ui-monospace, Menlo, Consolas, monospace; background: #f3f4f6;
+            padding: .1rem .35rem; border-radius: .3rem; font-size: .85em; color: #c7254e; }
+        @media (max-width: 960px) {
+            .mpf-grid { grid-template-columns: 1fr; }
+            .mpf-wrap .container { padding: 1rem; }
+            .mpf-textarea, .mpf-preview-box { min-height: 380px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mpf-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📝 Markdown 公众号一键排版</h1>
+            <p>粘贴 Markdown → 选主题实时预览 → 一键复制富文本，粘贴到公众号后台不掉格式</p>
+        </div>
+
+        <div class="mpf-privacy">
+            <span class="mpf-lock">🔒</span>
+            <div><b>隐私承诺：文章只在你的浏览器里排版，不上传服务器。</b><br>
+            自研轻量 Markdown 渲染引擎（零第三方依赖），不走后端渲染接口；复制、导出全部本地完成，无任何内容上传。你可以在 DevTools 的 Network 面板验证 —— 排版过程零网络请求。</div>
+        </div>
+
+        <div class="mpf-toast" id="mpf-toast"></div>
+
+        <div class="mpf-toolbar">
+            <div class="mpf-group">
+                <span>🎨 主题</span>
+                <button class="mpf-theme-btn" data-mpf-theme="cinnabar" aria-pressed="true"><span class="dot" style="background:#c0392b"></span>朱砂红</button>
+                <button class="mpf-theme-btn" data-mpf-theme="blue" aria-pressed="false"><span class="dot" style="background:#1f6fb2"></span>商务蓝</button>
+                <button class="mpf-theme-btn" data-mpf-theme="bamboo" aria-pressed="false"><span class="dot" style="background:#2e7d4f"></span>竹青</button>
+                <button class="mpf-theme-btn" data-mpf-theme="orange" aria-pressed="false"><span class="dot" style="background:#d9731a"></span>暖阳橙</button>
+            </div>
+            <div class="mpf-group">
+                <span>🔠 字号</span>
+                <select class="mpf-select" id="mpf-fontsize">
+                    <option value="15">15px</option>
+                    <option value="16" selected>16px</option>
+                    <option value="17">17px</option>
+                </select>
+            </div>
+            <div class="mpf-group">
+                <span>↕ 行距</span>
+                <select class="mpf-select" id="mpf-lineheight">
+                    <option value="1.5">1.5</option>
+                    <option value="1.75" selected>1.75</option>
+                    <option value="2">2.0</option>
+                </select>
+            </div>
+            <div class="mpf-group">
+                <span>📱 预览宽度</span>
+                <div class="mpf-seg">
+                    <button data-mpf-width="full" aria-pressed="true">全宽</button>
+                    <button data-mpf-width="phone" aria-pressed="false">手机 375px</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mpf-grid">
+            <div class="mpf-panel">
+                <h3>✏️ Markdown 源码 <span class="mpf-count" id="mpf-count"></span></h3>
+                <textarea class="mpf-textarea" id="mpf-src" placeholder="在这里粘贴 Markdown 源码，例如：&#10;&#10;# 我的第一篇推送&#10;&#10;> 一段引言，写点想说的话。&#10;&#10;正文支持 **加粗**、*斜体*、~~删除线~~、`行内代码`、[链接](https://example.com)。&#10;&#10;- 无序列表&#10;1. 有序列表&#10;- [ ] 任务列表&#10;&#10;```js&#10;console.log(&quot;代码块自动转义&quot;);&#10;```" spellcheck="false"></textarea>
+                <div class="mpf-bar">
+                    <button class="mpf-btn mpf-btn-ghost mpf-btn-sm" id="mpf-sample">📝 载入示例文章</button>
+                    <button class="mpf-btn mpf-btn-ghost mpf-btn-sm" id="mpf-import">📥 导入 .md</button>
+                    <input type="file" id="mpf-import-file" accept=".md,.markdown,.txt" style="display:none">
+                    <button class="mpf-btn mpf-btn-ghost mpf-btn-sm" id="mpf-export-md">💾 导出 .md</button>
+                    <button class="mpf-btn mpf-btn-ghost mpf-btn-sm" id="mpf-clear">🗑 清空</button>
+                </div>
+            </div>
+
+            <div class="mpf-panel">
+                <h3>👁 排版预览</h3>
+                <div class="mpf-preview-box" id="mpf-preview-box">
+                    <div id="mpf-preview"></div>
+                </div>
+                <div class="mpf-bar">
+                    <button class="mpf-btn" id="mpf-copy">📋 一键复制富文本</button>
+                    <button class="mpf-btn mpf-btn-ghost" id="mpf-export-html">🌐 导出独立 .html</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mpf-combo">
+            <b>🔗 相关工具：</b>只想快速看一眼 Markdown 长什么样、不需要排版？用 <a href="/tools/markdown-preview">Markdown 预览</a>；文章里的数字、空格、大小写还要顺手整理？<a href="/tools/text-tools">文本工具集</a> 一并搞定。
+        </div>
+
+        <div class="mpf-info">
+            <h3>ℹ️ 功能说明</h3>
+            <ul>
+                <li><b>✏️ 输入：</b>左侧粘贴 Markdown 源码（防抖 250ms 实时渲染），或点「导入 .md」从本地文件载入（FileReader 本地读取，不上传）、「载入示例文章」一键体验全部分支语法。</li>
+                <li><b>🎨 主题：</b>朱砂红 / 商务蓝 / 竹青 / 暖阳橙 4 套公众号主题，切换即时重渲染；正文字号 15/16/17px、行距 1.5/1.75/2.0 可调；预览宽度可在全宽与手机 375px 模拟之间切换。</li>
+                <li><b>🧩 语法覆盖：</b>H1-H4 标题、加粗 / 斜体 / 删除线、引用块、无序 / 有序 / 任务列表（含嵌套）、代码块、行内代码、链接（含自动链接）、图片（max-width:100% 自适应）、表格（表头底色＋对齐）、分割线；段落内单个换行按 <code>&lt;br&gt;</code> 处理，符合公众号阅读习惯。</li>
+                <li><b>🛡 输出规范：</b>渲染结果全部使用内联 <code>style</code> 属性，零 <code>class</code>、零 <code>&lt;style&gt;</code> 标签（公众号编辑器会剥离 class）；代码块与行内代码内 HTML 统一转义，<code>javascript:</code> 等危险链接协议自动清洗，防 XSS。</li>
+                <li><b>📋 一键复制：</b>Clipboard API 同时写入 <code>text/html</code>＋<code>text/plain</code>，粘贴到微信公众号 / 知乎 / 头条后台不掉格式；旧浏览器自动降级为 execCommand 方案。</li>
+                <li><b>💾 导出：</b>「导出独立 .html」生成内联样式单文件，离线双击可开；「导出 .md」下载编辑区源码，与源码完全一致。</li>
+                <li><b>📱 响应式：</b>桌面左右双栏、移动端自动上下堆叠，主题 / 字号 / 复制全功能触屏可用。</li>
+            </ul>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/markdown_publish_formatter.js?v=1"></script>
+</body>
+</html>
+{{end}}

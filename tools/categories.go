@@ -362,6 +362,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "markdown_publish_formatter",
+					Name:        "Markdown 公众号一键排版",
+					Description: "Markdown 转公众号富文本：粘贴源码实时预览，朱砂红/商务蓝/竹青/暖阳橙 4 套公众号主题一键切换，字号行距可调，一键复制富文本到微信公众号后台不掉格式，自研轻量渲染引擎输出全内联样式零 class，纯前端本地运行不出浏览器 · Markdown publish formatter: 4 WeChat-ready themes, copy rich text with inline styles, 100% client-side",
+					Path:        "/tools/markdown-publish-formatter",
+					Icon:        "format_paint",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{

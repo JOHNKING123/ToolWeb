@@ -1,3 +1,96 @@
+## 开发交付（2026-10-20 06:10 · 前端开发轮 ✅）
+
+**交付：Markdown 公众号一键排版（/tools/markdown-publish-formatter）** —— 按 05:40 PM 规格实现：
+- **自研渲染引擎**（`static/js/markdown_publish_formatter.js`，零依赖）：行内（加粗/斜体/删除线/行内代码/链接/自动链接/图片）＋块级（H1-H6/引用/无序有序任务列表含嵌套/代码围栏/表格对齐/分割线/段落单换行转 br）；源码先抽行内代码占位→全量转义→再套内联样式，`javascript:` 等危险协议清洗；输出全部内联 `style`、零 class、零 `<style>` 标签。
+- **主题引擎**：朱砂红/商务蓝/竹青/暖阳橙 4 套（H1 居中主题色/H2 左色条/引用左框/代码纯色底/表头浅底），字号 15/16/17px、行距 1.5/1.75/2、预览宽度（全宽/手机 375px）即时重渲染。
+- **交互**：防抖 250ms 实时渲染；Clipboard API `text/html`+`text/plain` 一键复制富文本（execCommand 降级）；导出独立 .html（内联样式单文件）/导出 .md /导入 .md（FileReader 本地读）/示例文章一键载入；中文 toast 反馈。
+- **注册与 SEO**：`tools/categories.go` 文本工具品类（`markdown_publish_formatter`，New: true）；模板 SEO 面板配齐（标题/描述/keywords/canonical/og/JSON-LD）；与 Markdown 预览互链；全页零 CDN（无 Google Fonts），DevTools 零外部请求。
+- **自测**：Node 32 项断言全过（语法覆盖/零 class/转义/XSS/嵌套列表/表格对齐）；DOM stub 驱动 init 全链路（示例载入→主题/字号/行距/宽度切换→复制降级）无接线错误；本地构建通过，`TOOLWEB_ADDR=127.0.0.1:18991` 实测页面与 JS 均 200、首页已收录新工具；测试服务已关闭，线上 18082 未动。
+
+---
+
+## 今日任务（2026-10-20 05:40 · 产品经理排期轮）
+
+**选定：Markdown 公众号一键排版（Markdown Publish Formatter）** — 本轮唯一任务：
+- **顺位递进**：研究轮 38（03:36）新晋 P1 Top2 → 研究轮 39（05:36）Top1 推荐 → 05:40 PM 决策轮立项；尊重顺位定序，无硬伤不跳过（与 10-20 01:45 / 03:45 PM 轮先例一致）。
+- **三重形态验证**：质速导航网 Modern MD Editor（Markdown 写完一键复制带内联样式富文本，粘公众号/知乎/头条不掉格式）＋烁皓的工具箱（Markdown→X 长文＋公众号排版）＋yiban.io Top7 Markdown 公众号编辑器。
+- **痛点真实**：中国内容创作者写完→发布之间的排版重复劳动（半小时→几秒）。
+- **纯度高**：纯前端、零依赖、零后端（不走 `/tools/api/markdown/render` 后端渲染链路——现有 Markdown 预览工具走后端 API，有网络依赖；本工具自研轻量渲染引擎，全程浏览器内完成）、零上传；05:00 深夜轮次小难度节奏调节位，交付确定性高。
+- **去重实锤**：`grep tools/categories.go`（全量 110 Path）——ID `markdown_publish_formatter`、Path `/tools/markdown-publish-formatter`、「公众号」全零命中；「排版」仅命中字体版权查询品类描述（非工具）；现有 Markdown 工具（markdown / markdown_preview / markdown_to_excel）为编辑/后端渲染预览/转 Excel 形态，排版导出形态零覆盖。
+
+**规格**：
+1. 布局：左 Markdown 源码编辑区（textarea，防抖实时渲染）＋ 右渲染预览区；桌面双栏、移动端堆叠；预览区宽度可切换（手机 375px 模拟 / 全宽）。
+2. 输入工具栏：示例文章一键载入（含标题/引用/代码块/列表/表格/图片/分割线全形态）、清空、导入 .md 文件（FileReader 本地读取，不上传）、导出 .md 源码。
+3. 主题：4 套公众号主题（朱砂红 / 商务蓝 / 竹青 / 暖阳橙），切换即时重渲染；正文字号（15/16/17px）、行距（1.5/1.75/2）可调。
+4. 渲染引擎：自研轻量 Markdown→HTML（零依赖，不引 markdown-it CDN、不走后端 API）：支持 H1-H4、加粗/斜体/删除线、引用块、无序/有序/任务列表、代码块（纯色底＋单色内联高亮）、行内代码、链接、图片（max-width:100%）、表格（表头底色＋边框内联）、分割线；输出全部内联 `style` 属性，零 class、零 `<style>` 标签（公众号编辑器会剥离 class）；代码块/行内代码内 HTML 做转义（XSS 安全）。
+5. 一键复制：Clipboard API `write([text/html, text/plain])` 复制富文本，粘贴到公众号/知乎/头条后台不掉格式；复制成功中文 toast；Clipboard 不可用时 execCommand 降级。
+6. 导出：下载独立 .html 文件（内联样式，离线可开）；复制 Markdown 源码按钮。
+7. 注册：`tools/categories.go`「文本工具」品类（内容创作排版场景），新增工具 ID `markdown_publish_formatter`、Name「Markdown 公众号一键排版」、Path `/tools/markdown-publish-formatter`（New: true），中英文描述 + SEO keywords（Markdown 转公众号、公众号排版、Markdown 排版工具、一键复制富文本、微信公众号编辑器）；与 Markdown 预览（/tools/markdown-preview）互链（「相关工具」入口）。
+8. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/markdown-publish-formatter` 可开（200）
+- [ ] 粘贴/导入 Markdown 后左右实时渲染，防抖不卡顿
+- [ ] 4 套主题切换正确，字号/行距调节即时生效
+- [ ] 渲染覆盖 H1-H4/加粗/斜体/删除线/引用/无序有序任务列表/代码块/行内代码/链接/图片/表格/分割线；输出 HTML 全部内联样式，无 class、无 `<style>` 标签
+- [ ] 代码块中 `<script>` 等 HTML 被转义，不执行
+- [ ] 一键复制后剪贴板含 text/html；在公众号后台粘贴格式不丢失（QA 人工验证）
+- [ ] 导出 .html 独立打开样式正常；导出 .md 与源码一致
+- [ ] 示例文章一键载入可用
+- [ ] DevTools Network 抽查无后端调用（不走 `/tools/api/markdown/render`）、无外部请求、无内容上传
+- [ ] `categories.go` 注册完成（文本工具品类、New: true），首页/导航/sitemap 生效；与 Markdown 预览互链生效
+- [ ] 移动端可操作（编辑+主题切换+预览+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/markdown_publish_formatter.html`（新建：编辑器＋主题/字号/行距面板＋预览区＋复制/导出工具栏）、`static/js/markdown_publish_formatter.js`（新建：自研 Markdown 解析＋内联样式主题引擎＋剪贴板富文本复制＋文件导入导出，零依赖）、`tools/categories.go`（文本工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- URL 追踪参数清除器（P1；39 轮新晋 Top2）：V2EX 10-18「勿追踪」形态验证，纯前端极小难度；顺位在本轮之后，列为下一深夜小难度轮次首选。
+- cURL → Python Requests 转换器（P1；39 轮新晋 Top3）：dev.to 51 工具清单＋transform.tools 双重验证；小难度，开发者工具家族轮或深夜轮次候补。
+- SVG 压缩优化器（P1；39 轮新晋留池）：留待设计工具家族轮或深夜填充位。
+- 婚宴座位表生成器（P1；38 轮 Top3 顺位顺延）：小-中难度含拖拽交互，留上午轮次或 PM 定序从容交付。
+- 单位感知记事本计算器（P1 留池；中难度，留待上午轮次或 PM 定序）。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续八轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 文件夹对比（P1；上午大轮次第一候补）；Markdown 转 Word（P1；上午大轮次候补）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，本地 HEAD 与 origin/muse/dev-20260929 一致（97c5288）；`grep tools/categories.go` 全量 110 Path，`markdown_publish_formatter` ID、`/tools/markdown-publish-formatter` Path、「公众号」与 110 Path 无重叠（「排版」仅命中字体版权品类描述，非工具）；现有 Markdown 三工具（markdown/markdown_preview/markdown_to_excel）形态核对：排版导出零覆盖；本地当前分支 muse/dev-20260929；工作树仅有 BACKLOG.md 未提交修改（05:36 研究轮追加）＋未跟踪 `toolWeb.bak-prev`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 05:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第三十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。批量重命名助手交付闭环（cfcc674「新增工具：批量重命名助手（/tools/batch-rename-helper）」，`grep tools/categories.go` 确认 ID `batch_rename_helper`、Path `/tools/batch-rename-helper` 已注册，全量 **110 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:36 深夜轮次，小难度候选优先。
+
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. 批量重命名助手交付确认：`git log` 头部 cfcc674 落盘（03:45 PM 决策轮立项→本轮前交付）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（97c5288）；`grep` 全量 110 Path（109+1），`batch_rename_helper` ID 与 `/tools/batch-rename-helper` Path 已注册；候选池划出，已实现清单追加（delta：+ 批量重命名助手，文本工具品类，文件名文本变换场景）。
+2. 新晋候选三则（均 P1）：
+   ① **URL 追踪参数清除器（URL Tracker Cleaner）**——形态验证：V2EX 2026-10-18「勿追踪」（StopTrackingMe 开源安卓应用）：在分享链路中自动去除链接追踪参数，规则可订阅（rules.json）；回复提出更轻量方案「多数分享链接会进入剪贴板，做快捷磁贴读取剪贴板并替换参数」——剪贴板→粘贴→净化即网页形态验证。痛点真实：微信/淘宝/小红书/抖音分享链接动辄几十个追踪参数（utm_*/fbclid/gclid/spm/from），转发前手动清理折磨；纯前端极小难度：粘贴 URL→解析 query→追踪参数黑名单剔除（utm_source/medium/campaign/term/content、fbclid、gclid、spm、from、_ijt 等，保留商品 id 等业务参数）→干净链接一键复制。去重：110 Path `utm/追踪参数/分享链接/链接清洗` 全零命中。建议 ID `url_tracker_cleaner`、Path `/tools/url-tracker-cleaner`，P1。
+   ② **cURL → Python Requests 转换器（cURL to Python Requests）**——形态验证：dev.to velnoxlabstools（2026-09-27，51 免登录浏览器工具）单列 cURL to Python Requests Converter；transform.tools 同款是开发者标配形态。痛点真实：中国开发者从浏览器 DevTools 复制 cURL（接口联调/爬虫）→手写 requests 样板（headers/cookies/data/json）是高频重复劳动；纯前端小难度：cURL 解析（方法/-H/-d/--data/-b cookie/--compressed）→生成可运行 Python requests 代码（json/data 自动判别），零依赖零后端。去重：110 Path `curl/cURL` ID/Name 全零命中（池内「cURL 转代码」P2 观察本轮升级证据）。建议 ID `curl_to_requests`、Path `/tools/curl-to-requests`，P1。
+   ③ **SVG 压缩优化器（SVG Optimizer）**——形态验证：dev.to contact_varkido（2026-09-25，170 工具）清单单列 "SVG viewer and optimizer"；dev.to Ultimate Toolbox（2026）单列 SVGOMG。痛点：设计师/前端手里图标 SVG 常带编辑器注释、空属性、冗余小数位；纯前端小难度：粘贴/上传 SVG→简化版优化规则（删注释/空属性/默认属性、数值精度裁剪）→压缩前后字节对比→一键下载，零依赖。去重：110 Path 无 SVG 专用工具（仅 mermaid/favicon/mindmap 描述含 SVG 导出，非优化形态）。建议 ID `svg_optimizer`、Path `/tools/svg-optimizer`，P1（留池，设计工具家族轮或深夜填充位）。
+3. 去重消化（不单立）：① dev.to pyfile-toolkit（2026-08，13 工具）——JSON 格式化/JSON Schema/文本 diff/Base64/URL/HTML 编码/UUID/二维码/CSS 压缩/JS 压缩/Markdown 预览/调色板/批量图片缩放：仓库全部已覆盖（code_minifier、img-resize 等）；② dev.to mou1z（5 工具，约 20 天前）——Kanban/番茄钟（P2 观察在池）、CSS 渐变（css_gradient_generator 已覆盖）、JSON 格式化/正则（已覆盖）；③ dev.to freetoolsy（约 23 天前）——重复行删除→texttools（字数统计、行去重、排序）已覆盖；Slug 生成器→P2 观察在池；Cron Tester→cron-parser（解析＋未来执行时间）已覆盖；图片转 Base64→img2base64 已覆盖；AI Token Counter→ai_token_counter 已覆盖；WCAG 对比度→颜色转换器描述含 WCAG 对比度检查，已覆盖形态；④ dev.to contact_varkido（170 工具）——图片局部模糊→img_mosaic（框选马赛克/高斯模糊打码）已覆盖；像素化→pixel_art_converter 部分重叠（记作 img_mosaic 二期增强备选，不单立）；robots.txt→robots_txt_generator 已覆盖；Meta/OG 标签→SEO 家族观察；⑤ V2EX 10-19——订阅管理（20 回复真实痛点，用户方向修正下不立，19 轮已决议）、Tervia（AI Coding 桌面终端，桌面形态不立）、蓝牙语音遥控器（硬件形态不立）；⑥ HN——WallHop（付费墙绕过，合规风险不立）、ngrok 替代品（隧道服务形态，非单页工具不立）、Zapmarks/Bookmarq（需账号形态不立）；⑦ weichen.ink X 运营工具箱——文章同步助手（Chrome 插件形态不立）、烁皓的工具箱（Markdown→X 长文＋公众号排版；markdown_publish_formatter P1 在池，形态一致不重复立）、小木 X 创作工具箱（蒸馏/排期需 AI 后端，非纯前端形态不立）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；05:36 深夜轮次，小难度优先）：
+
+1. **Markdown 公众号一键排版（Markdown Publish Formatter）** — P1（38 轮新晋 Top2 顺位递进：质速导航网 Modern MD Editor＋烁皓的工具箱＋yiban.io Top7 三重形态验证；痛点：中国内容创作者写完→发布之间的排版重复劳动（半小时→几秒）；纯前端小难度：markdown-it 渲染＋3~4 套公众号主题内联样式＋一键复制富文本＋代码块高亮，零依赖；110 Path markdown 排版形态零覆盖；深夜小难度节奏调节位）。
+2. **URL 追踪参数清除器（URL Tracker Cleaner）** — P1（本轮新晋：V2EX 10-18「勿追踪」开源安卓应用形态验证——分享链路自动去追踪参数，剪贴板→粘贴→净化即网页形态；痛点：微信/淘宝/小红书分享链接追踪参数泛滥，转发前手动清理折磨；纯前端极小难度：粘贴 URL→黑名单剔除 utm_*/fbclid/gclid/spm/from（保留业务参数）→干净链接一键复制，零依赖；110 Path utm/追踪参数全零命中；隐私赛道中国场景刚需；深夜零风险填充位）。
+3. **cURL → Python Requests 转换器（cURL to Python Requests）** — P1（本轮新晋：dev.to 2026-09-27 51 工具清单单列 cURL to Python Requests Converter＋transform.tools 标配形态双重验证；痛点：开发者从 DevTools 复制 cURL（接口联调/爬虫）→手写 requests 样板高频重复劳动；纯前端小难度：cURL 解析（方法/-H/-d/--data/-b cookie/--compressed）→可运行 Python requests 代码（json/data 自动判别），零依赖；110 Path curl 全零命中，池内「cURL 转代码」P2 观察本轮升级证据）。
+
+SVG 压缩优化器（P1；本轮新晋留池：170 工具清单＋Ultimate Toolbox SVGOMG 双重形态验证；小难度；110 Path svg 专用工具零命中；留待设计工具家族轮或深夜填充位）。婚宴座位表生成器（P1；38 轮 Top3 顺位顺延：小-中难度含拖拽交互，留上午轮次或 PM 定序从容交付）；单位感知记事本计算器（P1 留池；中难度，留待上午轮次或 PM 定序）；YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com CORS 抽查条件未达成——连续八轮 PM 决策一致（抽查通过前不立项），顺位继续顺延；文件夹对比（P1；上午大轮次第一候补）；Markdown 转 Word（P1；上午大轮次候补）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第三十九轮：批量重命名助手已实现划出；新晋 URL 追踪参数清除器/cURL → Python Requests 转换器（均 P1）＋SVG 压缩优化器（P1 留池）；全量 110 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| URL 追踪参数清除器（URL Tracker Cleaner） | 本轮新晋（V2EX 2026-10-18「勿追踪」开源安卓应用形态验证：分享链路自动去追踪参数，剪贴板→粘贴→净化即网页形态；痛点：微信/淘宝/小红书分享链接追踪参数泛滥（utm_*/fbclid/gclid/spm/from），转发前手动清理折磨；纯前端极小难度：粘贴 URL→黑名单剔除（保留业务参数）→干净链接一键复制，零依赖零后端；110 Path utm/追踪参数/分享链接全零命中；建议 ID url_tracker_cleaner、Path /tools/url-tracker-cleaner） | 小 | P1（本轮新晋） |
+| cURL → Python Requests 转换器（cURL to Python Requests） | 本轮新晋（dev.to velnoxlabstools 2026-09-27 51 工具清单单列 cURL to Python Requests Converter＋transform.tools 标配形态；痛点：开发者从 DevTools 复制 cURL（接口联调/爬虫）→手写 requests 样板高频重复劳动；纯前端小难度：cURL 解析（方法/-H/-d/--data/-b cookie/--compressed）→可运行 Python requests 代码（json/data 自动判别），零依赖；110 Path curl/cURL 全零命中；建议 ID curl_to_requests、Path /tools/curl-to-requests） | 小 | P1（本轮新晋） |
+| SVG 压缩优化器（SVG Optimizer） | 本轮新晋留池（dev.to contact_varkido 2026-09-25 170 工具清单单列 "SVG viewer and optimizer"＋dev.to Ultimate Toolbox 单列 SVGOMG 双重形态验证；痛点：设计师/前端图标 SVG 带编辑器注释/空属性/冗余小数位；纯前端小难度：粘贴/上传 SVG→删注释/空属性/数值精度裁剪→压缩前后字节对比→一键下载；110 Path 无 SVG 专用工具；建议 ID svg_optimizer、Path /tools/svg-optimizer；留待设计工具家族轮） | 小 | P1（留池） |
+
+**归档说明**：本轮为 10-20 通用调研第三十九轮——批量重命名助手交付闭环（cfcc674，`/tools/batch-rename-helper` 已注册，文本工具品类，全量 110 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-20：velnoxlabstools 51 工具清单→cURL → Python Requests P1 新晋（池内 P2 升级）；mou1z 5 工具→Kanban/番茄钟 P2 在池、其余全覆盖；freetoolsy→重复行/texttools 已覆盖、Slug P2 在池、Cron/img2base64/Token 对比度均已覆盖；contact_varkido 170 工具→SVG 优化器 P1 新晋留池、局部模糊/img_mosaic 已覆盖、robots 已覆盖、FAQ Schema P2 观察；kkp DevTrove 已消化；V2EX 10-19→勿追踪 URL 追踪参数清除器 P1 新晋（剪贴板净化即网页形态）、订阅管理/Tervia/语音遥控均不立；HN→WallHop 付费墙合规风险不立、隧道/书签需账号形态不立；weichen.ink X 工具箱→烁皓的工具箱与 markdown_publish_formatter 形态一致不重复立、小木 AI 工具需后端不立）均已消化；顺位更新（Markdown 公众号排版顺位递进至 Top1、URL 追踪参数清除器新晋 Top2、cURL→Requests 新晋 Top3、婚宴座位表顺延至上午轮、SVG 优化器 P1 留池、YouTube 缩略图 CORS 条件未变暂不推入 Top3）；WPS 候选表保持冻结归档；仓库 110 注册工具全量核对无重叠（Top3 建议 ID markdown_publish_formatter / url_tracker_cleaner / curl_to_requests；留池 svg_optimizer；P1 留池各候选 ID 待 PM 立项时定），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（97c5288）；`git log` 确认开发交付 cfcc674（批量重命名助手，文本工具品类）；`grep tools/categories.go` 全量 110 Path（109+1），`batch_rename_helper` ID 与 `/tools/batch-rename-helper` Path 已注册（划入已实现），Top3 建议 ID（markdown_publish_formatter / url_tracker_cleaner / curl_to_requests）与留池 ID（svg_optimizer）与 110 Path 无重叠（`排版/utm/追踪参数/分享链接/链接清洗/curl/svg.*optim/压缩优化` 关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加，未提交（研究轮惯例：BACKLOG 随 PM/开发轮次提交）。
+
+---
+
 ## 今日任务（2026-10-20 03:45 · 产品经理排期轮）
 
 **选定：批量重命名助手（/tools/batch-rename-helper）** — 本轮唯一任务：
