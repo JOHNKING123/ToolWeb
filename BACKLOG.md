@@ -6565,3 +6565,6 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 
 **[P0] 二维码工具（/tools/qrcode）「识别」入口为假功能**（2026-10-18 代码实测确认）：工具描述写「生成和识别二维码」，但 `tools/qrcode.go:111-112` 解码接口直接返回 `"二维码解码功能尚未实现"` —— 前端走完上传流程 API 返回成功，内容却是空的，用户以为识别成功实则什么都没得到。
 **修复方向**：接入真实解码（纯前端 jsQR / 纯 Go 解码库）或下线该入口，避免误导。请产品经理排一轮缺陷修复。
+
+**[P1] 公网 /tool-web 下 sitemap.xml 与 robots.txt 返回 200 但 body 0 字节**（2026-10-20 QA 实测确认）：Go 服务将 sitemap/robots 注册在根路径（/sitemap.xml），/tool-web 挂载层按 /tool-web/<x>→/tools/<x> 映射够不到 handler；生产 https://www.it-tool.eu.cc/tools/sitemap.xml 同样 200 空 body，非本次部署引入。
+**修复方向**：让挂载层把 /tool-web/sitemap.xml（与 robots.txt）正确映射到 sitemap/robots handler，或在 /tool-web/<x> 路由里加直通。请产品经理排一轮缺陷修复。本地直连 127.0.0.1:18082/sitemap.xml 正常（20286B、111 个 URL，含 batch-rename-helper），SEO 数据本身无问题。
