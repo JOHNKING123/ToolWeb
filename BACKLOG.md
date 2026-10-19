@@ -1,3 +1,101 @@
+## 今日任务（2026-10-20 03:45 · 产品经理排期轮）
+
+**选定：批量重命名助手（/tools/batch-rename-helper）** — 本轮唯一任务：
+- **顺位递进**：研究轮 37（01:36）新观察 Top2 → 研究轮 38（03:36）Top1 推荐 → 03:45 PM 决策轮立项；尊重顺位定序，无硬伤不跳过（与 10-19 23:00 / 10-20 01:45 PM 轮先例一致）。
+- **形态验证**：365lab 单页形态验证（粘贴/拖拽文件列表→规则配置→新旧对照预览→生成可执行脚本下载）；现有方案多为桌面软件，在线工具形态差异化。
+- **痛点真实**：摄影师/下载党批量整理文件名（加前缀/编号/日期/查找替换）是高频刚需；浏览器安全限制下无法直接改名，生成 .bat/.ps1/.sh 脚本下载执行是成熟解法。
+- **纯度高**：纯前端、零依赖、零后端、零上传（只读文件名，不读取文件内容）；03:45 深夜轮次小难度节奏调节位，交付确定性高。
+- **去重实锤**：`grep tools/categories.go`（109 Path 全量）——`batch_rename/rename/重命名/batch` 仅命中 `ocr_batch`（OCR 批量识别）与 `pdf_to_word_batch`（PDF 批量转 Word），均为批量处理形态、非文件名重命名，形态不同无重叠；建议 ID `batch_rename_helper`、Path `/tools/batch-rename-helper` 全零命中。
+
+**规格**：
+1. 输入区：文本框粘贴文件名列表（每行一个）＋ 文件拖拽到虚线框（仅读取 `file.name`，不读取文件内容、不上传，页面明示「只取文件名」）；支持一键清空、去重、排序（原序/字母序）。
+2. 规则配置（可组合多条，按序应用，支持拖拽调整顺序/删除单条）：
+   - 查找替换：普通文本或正则（正则非法时中文提示，不崩），替换为；
+   - 加前缀 / 加后缀（支持 `{date}`、`{n}` 占位符）；
+   - 编号：起始号、步长、位数（补零）、位置（前缀/后缀）、分隔符；
+   - 日期：格式（YYYY-MM-DD / YYYYMMDD / 自定义）、固定日期或当天日期、位置（前缀/后缀）；
+   - 大小写：全大写 / 全小写 / 首字母大写；
+   - 删除字符：删除首 N 个字符 / 尾 N 个字符 / 所有空格。
+3. 新旧对照预览：表格展示 原名 → 新名（变化部分高亮）；重名冲突自动标红并给出中文警告（冲突行不参与脚本生成或自动追加序号二选一，开发轮定实现）；统计「共 N 个文件，M 个将改名」。
+4. 导出：按当前预览结果生成可执行脚本下载三选一——`.bat`（Windows cmd，`ren` 命令）、`.ps1`（PowerShell，`Rename-Item -LiteralPath`）、`.sh`（macOS/Linux，`mv --`）；脚本内对引号/空格/特殊字符做转义，首行加中文注释说明用法（下载后双击/拖入终端执行）。
+5. 示例按钮：一键载入示例文件名（含中文、空格、括号、重复名冲突样例），展示规则组合与冲突警告。
+6. 纯前端、零依赖、零后端、零上传；响应式，桌面双栏（左规则右预览）、移动端堆叠可用；不读取文件内容，DevTools 无网络请求。
+7. 注册：`tools/categories.go`「文本工具」品类（文件名文本变换场景），新增工具 ID `batch_rename_helper`、Name「批量重命名助手」、Path `/tools/batch-rename-helper`（New: true），中英文描述 + SEO keywords（批量重命名、批量改文件名、文件名编号、rename 工具、批量加前缀、bat 重命名脚本）；与文本替换/正则相关工具互链（「相关工具」入口，开发轮按现有互链规范接）。
+8. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/batch-rename-helper` 可开（200）
+- [ ] 粘贴 10 个文件名 + 拖拽文件（只取文件名）均可载入；清空/去重/排序可用
+- [ ] 查找替换（含正则）、前后缀、编号（补零/步长）、日期、大小写、删字符六类规则单独与组合应用结果正确
+- [ ] 多规则顺序应用正确，拖拽调序后预览实时更新
+- [ ] 新旧对照预览高亮变化部分；重名冲突标红并中文警告
+- [ ] 生成的 .bat/.ps1/.sh 三脚本语法可用：转义正确（引号/空格/中文），首行中文注释；Node/shellcheck 抽查或人工 review 确认
+- [ ] 非法正则给出中文错误提示不崩；示例按钮可用
+- [ ] DevTools Network 抽查无后端调用、无外部请求、无文件内容上传
+- [ ] `categories.go` 注册完成（文本工具品类、New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（输入+配规则+预览+下载脚本）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/batch_rename_helper.html`（新建：输入区＋规则配置面板＋新旧对照预览＋导出工具栏）、`static/js/batch_rename_helper.js`（新建：文件名解析＋规则引擎（查找替换/前后缀/编号/日期/大小写/删字符）＋冲突检测＋三平台脚本生成与转义，零依赖）、`tools/categories.go`（文本工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- Markdown 公众号一键排版（P1；38 轮新晋 Top2）：三重形态验证（质速导航网 Modern MD Editor＋烁皓的工具箱＋yiban.io Top7），纯前端小难度；顺位在本轮批量重命名助手之后，列为下一深夜小难度轮次首选。
+- 婚宴座位表生成器（P1；38 轮新晋 Top3）：SortaSeat 形态验证，名单粘贴→自动分桌→拖拽微调→海报排版打印/PDF；小-中难度（含拖拽交互），留上午轮次或 PM 定序从容交付。
+- 单位感知记事本计算器（P1；38 轮新晋留池）：中难度，留待上午轮次或 PM 定序。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续八轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，仍为上午大轮次第一候补）；Markdown 转 Word（P1；上午大轮次候补）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（a499fe3）；`grep tools/categories.go` 全量 109 Path，`batch_rename_helper` ID、`/tools/batch-rename-helper` Path 与 109 Path 无重叠（`batch_rename/rename/重命名` 仅命中 ocr_batch/pdf_to_word_batch 两种批量处理形态，非文件名重命名）；本地当前分支 muse/dev-20260929；工作树仅有未跟踪 `toolWeb.bak-prev`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 03:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第三十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。JWT 签名生成器/验证器交付闭环（01:45 PM 决策轮立项→开发交付 d4376b0＋评审修复 a499fe3；`grep tools/categories.go` 确认 ID `jwt_signer_verifier`、Path `/tools/jwt-signer-verifier` 已注册（196~199 行），全量 **109 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:36 深夜轮次，小难度候选优先。
+
+**本轮四件事**（03:36 全网调研，通用方向）：
+1. JWT 签名生成器/验证器交付确认：`git log` 头部 a499fe3「修复 JWT 签名生成器/验证器验证页签短路与跳转错页签问题」＋d4376b0「新增工具：JWT 签名生成器/验证器（/tools/jwt-signer-verifier）」落盘；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（a499fe3）；`grep` 全量 109 Path（108+1），`jwt_signer_verifier` ID 与 `/tools/jwt-signer-verifier` Path 已注册；候选池划出，已实现清单追加（delta：+ JWT 签名生成器/验证器，开发工具品类，JWT 家族双件套闭环）。
+2. 新晋候选二则（均 P1）：
+   ① **Markdown 公众号一键排版（Markdown Publish Formatter）**——形态验证：质速导航网（2026-10-09 收录）Modern MD Editor：Markdown 写完一键复制带内联样式富文本，粘到公众号/知乎/头条不掉格式（标题加粗/行距/引用块/代码块底色全保留，「把排版从半小时缩到几秒钟」）；weichen.ink X 运营工具箱推荐「烁皓的工具箱」（Markdown→X 长文格式＋公众号排版＋封面图/二维码）；yiban.io「2026 高口碑公众号编辑器 Top7」单列 Markdown 公众号编辑器（Markdown 一键转公众号适配格式，减少码字后排版时间）。痛点真实：中国内容创作者高频刚需（写完→发布之间的排版是重复劳动）；纯前端小难度：markdown-it 渲染＋3~4 套公众号主题（内联样式）＋一键复制富文本＋代码块高亮，零依赖零后端。去重：109 Path `markdown` 仅 Markdown 预览（实时预览形态），排版导出形态零覆盖。建议 ID `markdown_publish_formatter`、Path `/tools/markdown-publish-formatter`，P1。
+   ② **婚宴座位表生成器（Seating Chart Maker）**——形态验证：Medium Siloshan「7 Free Browser Tools Worth Bookmarking This October」（2026-10-18）单列 SortaSeat：粘贴宾客名单→自动按姓氏分组分桌→海报式排版→打印/PDF，名单不出浏览器（分享链接含名单，明示只发可信人）。痛点真实：婚礼/公司年会/婚宴座位表是 spreadsheet 折腾刚需，中国婚宴场景（桌号/宾客分组/打印座位图）价值更高；纯前端小-中难度：名单粘贴（姓名/桌/备注列）→按人数自动分桌＋分组规则→拖拽微调→海报排版打印/PDF，零后端。去重：109 Path `座位/seating/婚宴/婚礼` 全零命中。建议 ID `seating_chart_maker`、Path `/tools/seating-chart-maker`，P1。
+   另有一 P1 级信号归档留池：**单位感知记事本计算器（Calcy/Soulver-like）**——同上 Medium 清单单列 Calcy（2026-10-18，新开源 GPL-3.0）："5 km + 3 mi" 单位感知算术、"800 to 1200" 区间不确定性 Monte Carlo 传播、单位冲突预警；痛点：工程师/采购/科研日常估算——单位换算＋多行连续计算，计算器 App 不支持单位、Excel 太重；纯前端中难度：行级表达式解析＋物理单位换算表＋变量引用上一行结果（货币汇率需外部源，首版只做物理单位；区间传播可简化为低/高两列或二期）；109 Path `科学计算/scientific/表达式计算/记事本` 全零命中（仅 chmod/子网/亲戚关系计算器）。建议 ID `unit_notepad_calculator`、Path `/tools/unit-notepad-calculator`，P1 留池（中难度，留待上午轮次或 PM 定序）。
+3. 新观察六则（均 P2 观察，不立）：
+   ① **Zod Schema 生成器**——dev.to dev_in_the_fog NerdKit（2026-10-08，35 零信任工具）单列 JSON to TypeScript / Zod Schema Generator；json_to_types 已覆盖 TS/Go，Zod 为新形态 niche；建议 ID `zod_schema_generator`、Path `/tools/zod-schema-generator`。
+   ② **Docker Compose → K8s Manifest 转换器**——同文 NerdKit 单列；devops niche，中难度；建议 ID `compose_to_k8s_converter`、Path `/tools/compose-to-k8s-converter`。
+   ③ **SQL → Prisma/Drizzle ORM Schema 转换器**——同文 NerdKit 单列；devops niche；建议 ID `sql_to_orm_schema`、Path `/tools/sql-to-orm-schema`。
+   ④ **正则可视化＋ReDoS 安全检测**——同文 NerdKit 单列 Regex Visualizer & ReDoS safety tester；仓库 regex-tester 仅实时匹配测试，可视化解析树＋灾难性回溯风险提示为增强形态，P2 观察（或记作 regex-tester 二期增强备选）。
+   ⑤ **LLM 本地推理速度模拟器**——同清单单列 llmspeed：选显卡/芯片＋模型→模拟 token 输出速度（含首字等待），社区 benchmark 数据驱动；AI 硬件 niche，中难度（需数据表维护）；建议 ID `llm_speed_estimator`、Path `/tools/llm-speed-estimator`。
+   ⑥ **Flesch 可读性分析**——dev.to raag3arun ToolPry（2026-10-14）字数统计器附带 Flesch readability/grade level/keyword density；英文 SEO niche，字数统计增强形态，P2 观察。
+4. 去重消化（不单立）：① dev.to etemora（2026-10-11）——SERP 片段预览→仓库 `serp_snippet_preview` 去重实锤；Invoice generator→报价单/收据生成器 P1 已在池（用户方向下顺位不提前），不重复立；域名生成器＋RDAP 实时可用性→domain-check 已有（RDAP＋whois 改法，VM 出网拦截待用户决定转 VPS），域名生成器 P2 观察在池，组合形态备注不单立；PDF 工具（压缩/合并/拆分/转图）仓库全覆盖；② dev.to nathaniel_ady（2026-10-15，9 免登录工具）——JSON 格式化/正则/Base64/JWT 解码/Cron/时间戳/文本 diff 仓库全覆盖，子网计算器→subnet 已覆盖，Markdown to HTML→markdown 预览已覆盖，无新单页信号；③ dev.to raag3arun ToolPry（2026-10-14）——哈希（md5/sha1/sha256 已覆盖，文件哈希对比为增强非新工具）、UUID/二维码/字数统计/Markdown 预览/时间戳/颜色转换器全部已覆盖，CSS 渐变→css_gradient_generator 已覆盖；④ Medium 2026-10-18 七工具——OldRoll 复古滤镜→图片复古做旧（胶片/CCD/漏光/暗角/颗粒）已覆盖，StitchCraft 十字绣→照片转十字绣图案生成器（cross_stitch_pattern）去重实锤，urPiano→在线钢琴 P2 观察在池，SyncWhen 免登录会议投票（多人投票需后端，非单页形态）不立；⑤ V2EX 10-19——订阅管理（20 回复真实痛点，用户方向修正下不立，19 轮已决议）、蓝牙语音遥控器（硬件形态）、BeatBrowser（Chrome 扩展＋MCP 桥接）、Jev arXiv 文献管线（后端＋LLM，非单页）均不立；⑥ HN——Tiny Little Office（浏览器办公套件，非单页形态）、ToolHop/Dev Tools 24（套装泛复述，无新单页信号）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；03:36 深夜轮次，小难度优先）：
+
+1. **批量重命名助手（Batch Rename Helper）** — P1（顺位递进：37 轮 Top2 → 本轮 Top1；365lab 形态验证、小难度确定性高；痛点：摄影师/下载党批量整理文件名（加前缀/编号/日期/查找替换）；纯前端小难度：粘贴/拖拽文件列表（只读文件名）→规则配置（查找替换/前后缀/序号/日期）→新旧对照预览→生成 .bat/.ps1/.sh 可执行脚本下载，零后端；109 Path batch_rename/rename/重命名全零命中；深夜小难度节奏调节位）。
+2. **Markdown 公众号一键排版（Markdown Publish Formatter）** — P1（本轮新晋：质速导航网 2026-10-09 Modern MD Editor 形态验证（一键复制带内联样式富文本，粘公众号/知乎/头条不掉格式）＋weichen.ink 烁皓的工具箱＋yiban.io Top7 Markdown 公众号编辑器三重验证；痛点真实：中国内容创作者写完→发布之间的排版重复劳动（半小时→几秒）；纯前端小难度：markdown-it 渲染＋3~4 套公众号主题内联样式＋一键复制富文本＋代码块高亮，零依赖；109 Path markdown 仅预览形态，排版导出零覆盖；深夜小难度节奏调节位）。
+3. **婚宴座位表生成器（Seating Chart Maker）** — P1（本轮新晋：Medium Siloshan 2026-10-18 七工具清单单列 SortaSeat 形态验证；痛点：婚礼/婚宴/年会座位表是 spreadsheet 折腾刚需，中国婚宴桌号场景价值更高；纯前端小-中难度：名单粘贴→自动分桌＋分组规则→拖拽微调→海报排版打印/PDF，名单不出浏览器；109 Path 座位/婚宴/婚礼全零命中）。
+
+单位感知记事本计算器（P1；本轮新晋，Medium 2026-10-18 Calcy 形态验证，Soulver-like 单位感知＋区间不确定性；中难度，留待上午轮次或 PM 定序）。YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com CORS 抽查条件未达成——连续七轮 PM 决策一致（抽查通过前不立项）；本轮不再重复推入 Top3，待测试轮 CORS 抽查通过后自动恢复顺位。文件夹对比（P1；上午大轮次第一候补，PM 07:41 留待上午轮从容交付）；Markdown 转 Word（P1；上午大轮次候补）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；色盲模拟器/随机点名器/URL Slug 生成器/Tailwind 转换器（P2 36~37 轮新观察）；Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性（P2 本轮新观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第三十八轮：JWT 签名生成器/验证器已实现划出；新晋 Markdown 公众号一键排版/婚宴座位表生成器（均 P1）＋单位感知记事本计算器（P1 留池）；新观察 Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性（均 P2）；全量 109 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Markdown 公众号一键排版（Markdown Publish Formatter） | 本轮新晋（质速导航网 2026-10-09 Modern MD Editor 形态验证：一键复制带内联样式富文本，粘公众号/知乎/头条不掉格式；weichen.ink 烁皓的工具箱（Markdown→X 长文/公众号排版）；yiban.io Top7 Markdown 公众号编辑器；痛点：中国内容创作者写完→发布之间的排版重复劳动；纯前端小难度：markdown-it 渲染＋3~4 套公众号主题内联样式＋一键复制富文本＋代码块高亮，零依赖零后端；109 Path markdown 仅预览形态，排版导出零覆盖；建议 ID markdown_publish_formatter、Path /tools/markdown-publish-formatter） | 小 | P1（本轮新晋） |
+| 婚宴座位表生成器（Seating Chart Maker） | 本轮新晋（Medium Siloshan「7 Free Browser Tools Worth Bookmarking This October」（2026-10-18）单列 SortaSeat 形态验证：粘贴宾客名单→自动分组分桌→海报排版→打印/PDF，名单不出浏览器；痛点：婚礼/婚宴/年会座位表是 spreadsheet 折腾刚需，中国婚宴桌号场景价值更高；纯前端小-中难度：名单粘贴（姓名/桌/备注）→按人数自动分桌＋分组规则→拖拽微调→海报排版打印/PDF；109 Path 座位/seating/婚宴/婚礼全零命中；建议 ID seating_chart_maker、Path /tools/seating-chart-maker） | 小-中 | P1（本轮新晋） |
+| 单位感知记事本计算器（Unit-Aware Notepad Calculator） | 本轮新晋留池（Medium 2026-10-18 同清单单列 Calcy（新开源 GPL-3.0）：Soulver-like，"5 km + 3 mi" 单位感知算术、"800 to 1200" 区间不确定性传播、单位冲突预警；痛点：工程师/采购/科研日常估算——单位换算＋多行连续计算，计算器 App 不支持单位、Excel 太重；纯前端中难度：行级表达式解析＋物理单位换算表＋变量引用上一行结果（首版只做物理单位，货币汇率需外部源；区间传播可二期）；109 Path 科学计算/scientific/表达式计算/记事本全零命中；建议 ID unit_notepad_calculator、Path /tools/unit-notepad-calculator；中难度留待上午轮次） | 中 | P1（留池） |
+| Zod Schema 生成器 | 新观察（dev.to dev_in_the_fog NerdKit 2026-10-08 单列 JSON to TypeScript / Zod Schema Generator；json_to_types 已覆盖 TS/Go，Zod 为新形态 niche；建议 ID zod_schema_generator、Path /tools/zod-schema-generator；归档 P2） | 小-中 | P2（新观察） |
+| Docker Compose → K8s Manifest 转换器 | 新观察（同文 NerdKit 单列 Docker Compose to Kubernetes Manifest Converter；devops niche，中难度；建议 ID compose_to_k8s_converter、Path /tools/compose-to-k8s-converter；归档 P2） | 中 | P2（新观察） |
+| SQL → Prisma/Drizzle ORM Schema 转换器 | 新观察（同文 NerdKit 单列 SQL to Drizzle ORM / Prisma Schema Converter；devops niche；建议 ID sql_to_orm_schema、Path /tools/sql-to-orm-schema；归档 P2） | 中 | P2（新观察） |
+| 正则可视化＋ReDoS 安全检测 | 新观察（同文 NerdKit 单列 Regex Visualizer & ReDoS safety tester；仓库 regex-tester 仅实时匹配测试，可视化解析树＋灾难性回溯风险提示为增强形态；归档 P2，或记作 regex-tester 二期增强备选） | 小-中 | P2（新观察） |
+| LLM 本地推理速度模拟器 | 新观察（Medium 2026-10-18 同清单单列 llmspeed：选显卡/芯片＋模型→模拟 token 输出速度与首字等待，社区 benchmark 数据驱动；AI 硬件 niche，中难度（数据表维护成本）；建议 ID llm_speed_estimator、Path /tools/llm-speed-estimator；归档 P2） | 中 | P2（新观察） |
+| Flesch 可读性分析 | 新观察（dev.to raag3arun ToolPry 2026-10-14：字数统计器附带 Flesch readability/grade level/keyword density；英文 SEO niche，字数统计增强形态；归档 P2） | 小 | P2（新观察） |
+
+**归档说明**：本轮为 10-20 通用调研第三十八轮——JWT 签名生成器/验证器交付闭环（d4376b0＋a499fe3，`/tools/jwt-signer-verifier` 已注册（196~199 行），开发工具品类，JWT 家族双件套闭环，全量 109 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-20：etemora 2026-10-11（SERP 预览去重实锤/Invoice→报价单 P1 在池不重复立/域名生成器+RDAP→domain-check 已有不单立）；nathaniel_ady 2026-10-15 9 工具全覆盖（子网→subnet 已有）；raag3arun ToolPry 2026-10-14（哈希/渐变/颜色转换等全覆盖→Flesch 可读性 P2 观察）；dev_in_the_fog NerdKit 2026-10-08（JSON→Zod/Docker→K8s/SQL→ORM/正则可视化+ReDoS 均 P2 观察）；Medium Siloshan 2026-10-18 七工具清单（SortaSeat→婚宴座位表生成器 P1 新晋/Calcy→单位感知记事本计算器 P1 留池/StitchCraft→照片转十字绣图案生成器去重实锤/llmspeed→LLM 速度模拟器 P2/OldRoll→图片复古做旧去重实锤/urPiano→在线钢琴 P2 在池/SyncWhen 需后端不立）；质速导航网 2026-10-09 Modern MD Editor→Markdown 公众号一键排版 P1 新晋（三重形态验证：烁皓的工具箱/yiban.io Top7）；V2EX 10-19：订阅管理（用户方向下不立）、蓝牙遥控（硬件）、BeatBrowser（扩展+MCP）、Jev arXiv（后端+LLM）均不立；HN：Tiny Little Office（办公套件非单页）、ToolHop/Dev Tools 24（套装泛复述）无新单页信号）均已消化；顺位更新（批量重命名助手顺位递进至 Top1、Markdown 公众号一键排版新晋 P1 Top2、婚宴座位表生成器新晋 P1 Top3、单位感知记事本计算器 P1 留池、YouTube 缩略图 CORS 条件未变暂不推入 Top3、文件夹对比/Markdown 转 Word 上午大轮次候补）；WPS 候选表保持冻结归档；仓库 109 注册工具全量核对无重叠（Top3 建议 ID batch_rename_helper / markdown_publish_formatter / seating_chart_maker；留池 unit_notepad_calculator；新观察 zod_schema_generator / compose_to_k8s_converter / sql_to_orm_schema / llm_speed_estimator；P1 留池各候选 ID 待 PM 立项时定），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（a499fe3）；`git log` 确认开发交付 d4376b0（JWT 签名生成器/验证器，开发工具品类）＋评审修复 a499fe3；`grep tools/categories.go` 全量 109 Path（108+1），`jwt_signer_verifier` ID 与 `/tools/jwt-signer-verifier` Path 已注册（划入已实现），Top3 建议 ID（batch_rename_helper / markdown_publish_formatter / seating_chart_maker）与留池 ID（unit_notepad_calculator）及新观察 ID 与 109 Path 无重叠（`markdown.*排版/座位/seating/婚宴/婚礼/科学计算/scientific/表达式计算/记事本/zod/docker/k8s/orm/prisma/redos/llm_speed/flesch/可读性` 关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加，未提交（研究轮惯例：BACKLOG 随 PM/开发轮次提交）。
+
+---
+
 ## 今日任务（2026-10-20 01:45 · 产品经理排期轮）
 
 **选定：JWT 签名生成器/验证器（/tools/jwt-signer-verifier）** — 本轮唯一任务：

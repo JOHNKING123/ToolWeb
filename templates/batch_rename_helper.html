@@ -1,0 +1,205 @@
+{{define "batch_rename_helper"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量重命名助手 - 在线批量改文件名/编号/加前后缀，生成 bat/ps1/sh 改名脚本 | 程序员工具箱</title>
+    <meta name="description" content="免费在线批量重命名工具：粘贴文件名列表或拖拽文件（只取文件名），查找替换/加前后缀/编号/日期/大小写/删字符六类规则自由组合拖拽调序，新旧对照预览变化高亮、重名冲突标红警告，一键生成 .bat/.ps1/.sh 可执行改名脚本下载。纯前端本地运行，零上传。">
+    <meta name="keywords" content="批量重命名,批量改文件名,文件名编号,rename工具,批量加前缀,bat重命名脚本,批量重命名工具,在线改名,文件批量改名,rename脚本生成">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/batch-rename-helper">
+    <meta property="og:title" content="批量重命名助手 - 在线批量改文件名，生成 bat/ps1/sh 脚本">
+    <meta property="og:description" content="六类规则自由组合、新旧对照预览、重名冲突警告，一键生成三平台可执行改名脚本。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/batch-rename-helper">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"批量重命名助手","description":"在线批量重命名工具：文件名列表粘贴/拖拽载入，查找替换、加前后缀、编号、日期、大小写、删字符六类规则组合，新旧对照预览，重名冲突警告，生成 .bat/.ps1/.sh 可执行脚本下载；纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/batch-rename-helper","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .brh-wrap .container { max-width: 1320px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .brh-wrap .navbar .material-icons { display: none; }
+        .brh-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .brh-privacy .brh-lock { font-size: 1.6rem; flex: none; }
+        .brh-privacy b { color: #047857; }
+        .brh-flash { display: none; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
+            border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; margin-bottom: 1rem; }
+        .brh-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.2rem; align-items: start; }
+        .brh-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
+        .brh-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .brh-textarea { width: 100%; min-height: 170px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: .88rem; line-height: 1.7; padding: .8rem; border: 1px solid #d1d5db; border-radius: .5rem;
+            resize: vertical; box-sizing: border-box; background: #fff; }
+        .brh-drop { border: 2px dashed #c7d2fe; border-radius: .6rem; background: #eef2ff; color: #4338ca;
+            text-align: center; padding: 1.1rem .8rem; margin-top: .7rem; font-size: .9rem; line-height: 1.7; cursor: pointer; }
+        .brh-drop-hover { border-color: #4f46e5; background: #e0e7ff; }
+        .brh-toolbar { display: flex; gap: .6rem; flex-wrap: wrap; margin: .7rem 0 0; align-items: center; }
+        .brh-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1.1rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .9rem; }
+        .brh-btn:hover { background: var(--primary-color-dark); }
+        .brh-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+        .brh-btn-ghost { background: #f3f4f6; color: #374151; }
+        .brh-btn-ghost:hover { background: #e5e7eb; }
+        .brh-btn-sm { padding: .3rem .75rem; font-size: .82rem; border-radius: .4rem; }
+        .brh-addrules { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .8rem; }
+        .brh-rule { border: 1px solid #e5e7eb; border-radius: .6rem; margin-bottom: .6rem; background: #fafafa; }
+        .brh-rule.brh-dragging { opacity: .45; }
+        .brh-rule.brh-droptarget { border-color: #4f46e5; box-shadow: 0 0 0 2px #c7d2fe; }
+        .brh-rule-head { display: flex; align-items: center; gap: .5rem; padding: .5rem .8rem;
+            background: #f3f4f6; border-radius: .6rem .6rem 0 0; font-size: .9rem; }
+        .brh-grip { cursor: grab; color: #9ca3af; font-size: 1rem; user-select: none; }
+        .brh-rule-desc { color: #6b7280; font-size: .8rem; }
+        .brh-rule-ops { margin-left: auto; display: flex; gap: .25rem; }
+        .brh-rule-ops button { border: 1px solid #d1d5db; background: #fff; border-radius: .35rem;
+            padding: .15rem .45rem; cursor: pointer; font-size: .78rem; color: #4b5563; }
+        .brh-rule-ops button:hover { background: #e5e7eb; }
+        .brh-rule-body { padding: .7rem .8rem; display: flex; flex-wrap: wrap; gap: .6rem .9rem; align-items: flex-end; }
+        .brh-f { display: inline-flex; flex-direction: column; gap: .25rem; font-size: .82rem; color: #4b5563; }
+        .brh-f input[type=text], .brh-f input[type=number], .brh-f select {
+            padding: .4rem .55rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .88rem; background: #fff; }
+        .brh-f input[type=number] { width: 4.2rem; }
+        .brh-chk { flex-direction: row; align-items: center; gap: .35rem; }
+        .brh-chk input { accent-color: #2563eb; }
+        .brh-hint { font-size: .8rem; color: #9ca3af; line-height: 1.7; flex-basis: 100%; }
+        .brh-empty { color: #9ca3af; font-size: .88rem; line-height: 1.8; padding: .6rem 0; }
+        .brh-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin-bottom: .8rem; }
+        .brh-tip-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+        .brh-tip-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+        .brh-stats { font-size: .92rem; color: #374151; line-height: 1.8; margin: .6rem 0; }
+        .brh-stats b { color: #111827; }
+        .brh-red { color: #b91c1c !important; }
+        .brh-table-wrap { overflow: auto; max-height: 480px; border: 1px solid #e5e7eb; border-radius: .6rem; }
+        table.brh-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+        table.brh-table th { position: sticky; top: 0; background: #f9fafb; text-align: left;
+            padding: .55rem .7rem; border-bottom: 1px solid #e5e7eb; white-space: nowrap; z-index: 1; }
+        table.brh-table td { padding: .5rem .7rem; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+        .brh-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
+        .brh-chg { background: #fef08a; border-radius: .2rem; padding: 0 .1rem; }
+        tr.brh-changed td { background: #f0fdf4; }
+        tr.brh-conflict td { background: #fef2f2; }
+        tr.brh-conflict .brh-mono { color: #b91c1c; font-weight: 600; }
+        .brh-badge { border-radius: .3rem; padding: .1rem .5rem; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+        .brh-badge-ok { background: #d1fae5; color: #065f46; }
+        .brh-badge-idle { background: #f3f4f6; color: #6b7280; }
+        .brh-badge-warn { background: #fee2e2; color: #b91c1c; }
+        .brh-export-tip { font-size: .85rem; color: #6b7280; margin-top: .5rem; line-height: 1.7; }
+        .brh-combo { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .6rem; padding: .7rem 1rem;
+            font-size: .92rem; line-height: 1.8; color: #1e40af; margin-top: 1.2rem; }
+        .brh-combo a { color: #1d4ed8; font-weight: 600; }
+        .brh-info { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-top: 1.2rem; }
+        .brh-info h3 { margin: 0 0 .6rem; font-size: 1rem; }
+        .brh-info ul { margin: 0; padding-left: 1.2rem; font-size: .9rem; line-height: 2; color: #4b5563; }
+        .brh-info b { color: #1f2937; }
+        @media (max-width: 960px) {
+            .brh-grid { grid-template-columns: 1fr; }
+            .brh-wrap .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brh-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📁 批量重命名助手</h1>
+            <p>粘贴 / 拖拽文件名 → 规则组合 → 新旧对照预览 → 生成 bat / ps1 / sh 改名脚本下载</p>
+        </div>
+
+        <div class="brh-privacy">
+            <span class="brh-lock">🔒</span>
+            <div><b>隐私承诺：文件名只在你的浏览器里处理，不上传服务器、不读取文件内容。</b><br>
+            拖拽文件时仅读取 <code>file.name</code>（文件名），不会打开、读取或上传任何文件内容；规则计算、冲突检测、脚本生成全部在本地完成，无任何后端调用、无第三方请求。你可以在 DevTools 的 Network 面板验证 —— 没有一次网络请求。</div>
+        </div>
+
+        <div class="brh-flash" id="brh-flash"></div>
+
+        <div class="brh-grid">
+            <div>
+                <div class="brh-panel">
+                    <h3>1️⃣ 文件名列表</h3>
+                    <textarea class="brh-textarea" id="brh-input" placeholder="每行粘贴一个文件名，例如：&#10;旅行照片 001.jpg&#10;IMG_20250101_120000.png&#10;下载 (1).pdf" spellcheck="false"></textarea>
+                    <div class="brh-drop" id="brh-drop">📥 把文件拖到这里（只取文件名，不读内容）<br><span style="font-size:.8rem">也可直接把文件从资源管理器 / Finder 拖进来</span></div>
+                    <div class="brh-toolbar">
+                        <button class="brh-btn brh-btn-ghost brh-btn-sm" id="brh-sample">📝 填入示例</button>
+                        <button class="brh-btn brh-btn-ghost brh-btn-sm" id="brh-dedupe">🧹 去重</button>
+                        <button class="brh-btn brh-btn-ghost brh-btn-sm" id="brh-sort">🔤 排序</button>
+                        <button class="brh-btn brh-btn-ghost brh-btn-sm" id="brh-clear">🗑 清空</button>
+                    </div>
+                </div>
+
+                <div class="brh-panel">
+                    <h3>2️⃣ 重命名规则（可多条组合，按从上到下顺序依次应用）</h3>
+                    <div class="brh-addrules">
+                        <button class="brh-btn brh-btn-sm" data-addrrule="findreplace">＋ 查找替换</button>
+                        <button class="brh-btn brh-btn-sm" data-addrrule="prefix">＋ 加前缀</button>
+                        <button class="brh-btn brh-btn-sm" data-addrrule="suffix">＋ 加后缀</button>
+                        <button class="brh-btn brh-btn-sm" data-addrrule="number">＋ 编号</button>
+                        <button class="brh-btn brh-btn-sm" data-addrrule="date">＋ 日期</button>
+                        <button class="brh-btn brh-btn-sm" data-addrrule="case">＋ 大小写</button>
+                        <button class="brh-btn brh-btn-sm" data-addrrule="trim">＋ 删字符</button>
+                    </div>
+                    <div id="brh-rules"></div>
+                    <div class="brh-hint">拖拽卡片左侧 ⠿ 或点 ▲▼ 可调整规则顺序；预览实时更新。</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="brh-panel">
+                    <h3>3️⃣ 新旧对照预览</h3>
+                    <div class="brh-tip brh-tip-warn" id="brh-warn"></div>
+                    <div class="brh-tip brh-tip-err" id="brh-err"></div>
+                    <div class="brh-stats" id="brh-stats"></div>
+                    <div class="brh-table-wrap">
+                        <table class="brh-table">
+                            <thead><tr><th>#</th><th>原文件名</th><th>新文件名</th><th>状态</th></tr></thead>
+                            <tbody id="brh-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="brh-panel">
+                    <h3>4️⃣ 导出可执行脚本</h3>
+                    <div class="brh-toolbar" style="margin-top:0">
+                        <button class="brh-btn" id="brh-dl-bat">⬇ .bat（Windows cmd）</button>
+                        <button class="brh-btn" id="brh-dl-ps1">⬇ .ps1（PowerShell）</button>
+                        <button class="brh-btn" id="brh-dl-sh">⬇ .sh（macOS/Linux）</button>
+                    </div>
+                    <div class="brh-export-tip" id="brh-export-tip"></div>
+                    <div class="brh-hint">脚本首行起附中文注释说明用法；引号/空格/特殊字符已按各平台规则转义；重名冲突行不会写入脚本。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="brh-combo">
+            <b>🔗 相关工具：</b>改名前想先比对两版文件名清单？用 <a href="/tools/text-diff">文本比较</a> 并排看差异；写正则替换规则前先用 <a href="/tools/regex-tester">正则表达式测试</a> 验证表达式；文件名里还有多余空格/大小写混乱？<a href="/tools/text-tools">文本工具集</a> 一并整理。
+        </div>
+
+        <div class="brh-info">
+            <h3><i class="material-icons">info</i> 功能说明</h3>
+            <ul>
+                <li><b>📥 输入：</b>文本框每行一个文件名粘贴；或把文件拖进虚线框（仅取文件名，不读内容、不上传）。支持去重、字母排序、清空。</li>
+                <li><b>🔍 查找替换：</b>普通文本全文替换，或开「正则模式」（JS 语法，替换支持 $1/$& 引用；正则非法时中文提示，不会崩）。</li>
+                <li><b>⏮⏭ 前缀/后缀：</b>支持 <code>{date}</code>（当天 YYYYMMDD）、<code>{n}</code>（1 起序号，3 位补零）占位符；后缀插在扩展名前面。</li>
+                <li><b>🔢 编号：</b>起始号、步长、位数补零、位置（前缀/后缀）、分隔符自由配。</li>
+                <li><b>📅 日期：</b>YYYY-MM-DD / YYYYMMDD / YYYYMMDD_HHmmss / 自定义格式，当天或固定日期，前缀/后缀位置可选。</li>
+                <li><b>🔠 大小写：</b>全大写 / 全小写 / 首字母大写。</li>
+                <li><b>✂ 删字符：</b>删除首 N 个 / 尾 N 个字符，或删除所有空格（含全角空格）。</li>
+                <li><b>⚠ 冲突：</b>改名后出现同名文件时标红并中文警告，冲突行自动排除在导出脚本之外（建议加一条「编号」规则消除冲突）。</li>
+                <li><b>💾 导出：</b>.bat 用 <code>ren</code>（双击运行）、.ps1 用 <code>Rename-Item -LiteralPath</code>（右键用 PowerShell 运行）、.sh 用 <code>mv --</code>（chmod +x 后执行），三者均含中文注释与特殊字符转义。</li>
+                <li><b>📱 响应式：</b>桌面左右双栏、移动端自动堆叠，规则卡片支持 ▲▼ 调序（触屏友好）。</li>
+            </ul>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/batch_rename_helper.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -353,6 +353,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "batch_rename_helper",
+					Name:        "批量重命名助手",
+					Description: "批量改文件名：粘贴/拖拽文件名列表（只取文件名不读内容），查找替换/加前后缀/编号/日期/大小写/删字符六类规则自由组合拖拽调序，新旧对照预览变化高亮、重名冲突标红中文警告，一键生成 .bat/.ps1/.sh 可执行改名脚本下载，纯前端本地运行不出浏览器 · Batch rename helper: combine find-replace/prefix-suffix/numbering/date/case/trim rules, preview with conflict warnings, export .bat/.ps1/.sh scripts, 100% client-side",
+					Path:        "/tools/batch-rename-helper",
+					Icon:        "drive_file_rename_outline",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{
