@@ -1,4 +1,38 @@
-## 今日任务（2026-10-19 15:40 · 产品经理决策轮 ✅）
+## 今日任务（2026-10-19 17:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第三十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。代码压缩器已交付闭环（15:40 PM 决策轮立项→开发交付 a6fa63e＋评审修复 d085973；`grep tools/categories.go` 确认 ID `code_minifier`、Path `/tools/code-minifier` 已注册（268~271 行），全量 **104 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 傍晚轮次，小难度候选优先。
+
+**本轮四件事**（17:36 全网调研，通用方向）：
+1. 代码压缩器交付确认：`git log` 确认开发交付 a6fa63e（JS/CSS 自研压缩引擎：去注释去空白、强/轻两种模式、压缩率统计、对照视图、复制/Blob 下载，纯前端零依赖）＋评审修复 d085973（声明关键字换行留空格、async/as/from/get-set 语义修复、CSS 零值正则去后行断言）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——VM 换机丢 known_hosts，按 TOOLS.md `ssh-keyscan -t ed25519 github.com` 补录 /root/.ssh/known_hosts 后即通（历史已知）；`grep` 全量 104 Path（103+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 代码压缩器）。
+2. 新晋候选：**PDF 元数据查看与清除器（PDF Metadata Viewer & Remover）**。需求证据：① dev.to bellal_hossain_057bfd620a 2026-10-04「Your PDF Is Leaking Data: How to View and Remove PDF Metadata」发布 Noloii PDF Privacy & Security 工具套件，单列 **PDF Metadata Viewer**（查看作者/标题/创建者/创建与修改时间）与 **PDF Metadata Remover**（发文件前清除隐藏元数据），点名法务/HR/财务合规场景；② 痛点真实：PDF 里藏着的作者名、创建时间、Producer 信息对外发送即泄露，现有在线方案多要求上传服务器；③ 仓库 PDF 家族已有 14 工具（合并/拆分/压缩/转 Word/加水印/批注打码/电子签名/表单制作器…），但**元数据维度零覆盖**（`grep`：元数据仅 1 命中＝照片 EXIF 描述，metadata/印章全零）——与 pdf_annotate（批注打码，内容层）互补组成「PDF 隐私」双件套；④ 纯前端小难度：pdf.js/pdf-lib 本地 vendor 解析 Info 字典＋XMP→表格展示→一键清除重写下载，零后端零上传。去重：104 Path `pdf_metadata/元数据/metadata` 全零命中。SEO：PDF 元数据清除、PDF 查看元信息、pdf metadata remover。建议 ID `pdf_metadata_cleaner`、Path `/tools/pdf-metadata-cleaner`。
+3. 去重消化（不单立）：① dev.to codeofrelevancy 2026-10-08 Tooltri 30+ 工具清单——Token Counter（仓库已有 ai_token_counter「AI Token 计数器」去重实锤）、YouTube Thumbnail Downloader（P1 在池）、SQLite DB Viewer（P1 在池）、SVG to React JSX（P1 观察在池）、Duplicate Word Finder（重复词查找器 P2 在池）；② dev.to TaskKit（2026-10-14）/BlanzaTools（2026-10-11）/SuperToolKit（2026-10-16）/qrgenrateronline（2026-10-08）套装——JSON 格式化/图片压缩/二维码/密码生成器/字数统计/倒计时/单位换算/年龄计算器，仓库均已覆盖，泛复述无新形态；③ 365lab.top 2026-10-08「40+ 实用工具」清单——证件照（img_target_kb 描述覆盖）、PDF 工具箱（仓库 14 工具覆盖）、发票助手/OFD 转 PDF（在池）、拼图/九宫格（仓库已有）、文件重命名（→本轮新观察「批量重命名助手」）、简历制作（resume_checker 覆盖）、算术题生成器（仓库已有）、白噪音（P2 在池）、屏幕常亮（P1 在池）、词云（→本轮 P2 新观察）、网名生成器（纯娱乐，不立）；④ HN——Opensidian（笔记应用级）、ToEnvelope（WYSIWYG 信封打印，local-first，Word 边距痛点真实但偏小众打印场景，观察不立）、Toolbit 43 工具（泛复述）；⑤ V2EX 10-19——蓝牙语音遥控/Vibe Coding、BeatBrowser MCP、夜市模拟器，均为硬件/agent/游戏形态，无单页新信号。
+4. 候选池维护：代码压缩器划出（已实现 +1，全量 104 Path）；新晋 PDF 元数据查看与清除器 P1（Noloii 形态验证＋104 Path 无重叠，PDF 隐私家族，小难度，傍晚轮次节奏调节位）；新观察 批量重命名助手 P1（365lab「文件重命名」场景）、词云生成器 P2（365lab「词云」休闲创意口径，在线钢琴/涂鸦画板先例）；顺位更新——邮件签名生成器（P1，32 轮新晋→本轮顺位第一候补）、文件夹对比（P1，PM 07:41 明确留待上午轮从容交付，仍为上午大轮次第一候补）、Markdown 转 Word（P1，上午大轮次候补）、YouTube 缩略图下载器（P1 小难度，i.ytimg.com CORS 待测试轮抽查，不承诺前不立项，顺位顺延）；其余顺位不变——浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器（音频品类连续感知留 PM 定序）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；金额大写转换器（节奏调节位）；白噪音发生器/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS 传播/cURL 转代码/创意涂鸦画板（P2 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；域名生成器（观察，低优先）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；17:36 傍晚轮次，小难度优先）：
+
+1. **邮件签名生成器（HTML Email Signature Generator）** — P1（顺位递进到位：32 轮新晋顺位第三→本轮第一；dev.to goodyuanbo 2026-09-09 MailSig 形态验证，单文件 anti-SaaS 路线与 ToolWeb 纯前端口径同族；痛点真实：跨客户端渲染安全的 table+内联样式 HTML 签名手写门槛高，中文单页无注册墙形态稀缺；纯前端小难度：表单→实时预览→复制富文本粘贴 Gmail/Outlook，3~4 套模板；104 Path mail_signature/邮件签名 全零命中；与 resume_checker 求职家族互链；傍晚小难度节奏调节位）。
+2. **PDF 元数据查看与清除器（PDF Metadata Viewer & Remover）** — P1（本轮新晋：dev.to Noloii 2026-10-04 PDF Privacy & Security 套件形态验证，法务/HR/财务合规场景点名；痛点真实：作者/创建时间/Producer 隐藏信息对外发送即泄露，在线方案多要求上传；纯前端小难度：pdf.js/pdf-lib 本地解析 Info+XMP→表格展示→一键清除重写下载，零后端；104 Path pdf_metadata/元数据/metadata 全零命中（元数据仅命中照片 EXIF 描述）；与 pdf_annotate 批注打码组成「PDF 隐私」双件套；SEO：PDF 元数据清除、PDF 查看元信息）。
+3. **YouTube 缩略图下载器（YouTube Thumbnail Downloader）** — P1（27 轮新晋顺位顺延：i.ytimg.com 四档分辨率直链形态验证；纯前端小难度：粘贴 URL/ID→解析 videoId→四档预览→点击下载；与 og_card_preview、serp_snippet_preview SEO/社交家族互链；104 Path 缩略图/thumbnail/youtube 零命中——「缩略图」仅命中 og_card_preview 描述；CORS 不确定性：13:40/15:40 两轮 PM 决策均明确测试轮先做 i.ytimg.com CORS 抽查，抽查通过前不立项）。
+
+文件夹对比（P1；上午大轮次第一候补，PM 07:41 留待上午轮从容交付）；Markdown 转 Word（P1；上午大轮次候补，DocForge 形态验证+markdown_to_excel 技术路线验证）；浏览器屏幕录制器（P1，中难度，上午大轮次候补）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，26 轮新晋，音频品类连续感知留 PM 定序）；SRT 字幕编辑器（P1，顺位顺延）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；批量重命名助手（P1 新观察）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；年假拼假优化器（用户方向下不扩展）；词云生成器（P2 新观察）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）；浏览器实时听写（P1 观察）等其余候选留池。
+
+**通用候选表增量**（第三十三轮：代码压缩器已实现划出；新晋 PDF 元数据查看与清除器 P1；新观察 批量重命名助手 P1、词云生成器 P2；全量 104 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| PDF 元数据查看与清除器（PDF Metadata Viewer & Remover） | 本轮新晋（dev.to bellal_hossain_057bfd620a 2026-10-04「Your PDF Is Leaking Data」Noloii PDF Privacy & Security 套件形态验证——PDF Metadata Viewer/Remover，点名法务/HR/财务对外发文前清除隐藏信息；痛点：PDF 藏着的作者名/标题/创建者/Producer/创建与修改时间对外发送即泄露，现有在线方案多要求上传服务器；仓库 PDF 家族 14 工具但元数据维度零覆盖（元数据仅命中照片 EXIF 描述，metadata/印章全零），与 pdf_annotate 批注打码互补成「PDF 隐私」双件套；纯前端小难度：pdf.js/pdf-lib 本地解析 Info 字典+XMP→表格展示→一键清除重写下载，零后端；SEO：PDF 元数据清除、PDF 查看元信息；104 Path pdf_metadata/元数据/metadata 全零命中；建议 ID pdf_metadata_cleaner、Path /tools/pdf-metadata-cleaner） | 小 | P1（本轮新晋） |
+| 批量重命名助手（Batch Rename Helper） | 新观察（365lab.top 2026-10-08「40+ 实用工具」清单「文件重命名」场景；痛点：摄影师/下载党批量整理文件名（加前缀/编号/日期/查找替换），现有方案多为桌面软件；纯前端小难度形态：粘贴/拖拽文件列表（只读文件名）→规则配置（查找替换/前后缀/序号/日期）→新旧对照预览→生成 .bat/.ps1/.sh 可执行脚本下载，零后端；104 Path batch_rename/rename/重命名全零命中；建议 ID batch_rename_helper、Path /tools/batch-rename-helper） | 小 | P1（新观察） |
+| 词云生成器（Word Cloud Generator） | 新观察（365lab.top 2026-10-08「40+ 实用工具」清单收录「词云」为休闲创意工具；场景：年终总结/PPT 汇报词云图，现有方案多上传或带水印；纯前端小难度：粘贴文本→词频统计→Canvas 螺旋布局→配色/形状调节→PNG 下载，零后端；104 Path word_cloud/wordcloud/词云全零命中；创意娱乐口径重（在线钢琴/创意涂鸦画板 P2 观察先例）；建议 ID word_cloud_generator、Path /tools/word-cloud-generator） | 小 | P2（新观察） |
+
+**归档说明**：本轮为 10-19 通用调研第三十三轮——代码压缩器交付闭环（a6fa63e＋评审修复 d085973，`/tools/code-minifier` 已注册（268~271 行），全量 104 Path，「开发工具」品类），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-19：Noloii 10-04 PDF 隐私套件→本轮唯一 P1 新单页信号 PDF 元数据查看与清除器；Tooltri 10-08 30+ 工具清单——Token Counter（ai_token_counter 去重实锤）、YouTube 缩略图/SQLite/SQL-to-JSX/重复词（均在池去重）；TaskKit/BlanzaTools/SuperToolKit/qrgenrateronline 套装泛复述无新形态；365lab 10-08 40+ 清单→批量重命名助手（P1 观察）+词云生成器（P2 观察）；HN：Opensidian/ToEnvelope/Toolbit 均为应用级或泛复述（ToEnvelope 信封打印 niche 观察不立）；V2EX 10-19 无新单页信号）均已消化；新晋「PDF 元数据查看与清除器」P1（Noloii 形态验证+104 Path 无重叠，PDF 隐私家族，小难度，傍晚轮次节奏调节位）；顺位更新（邮件签名生成器顺位第一候补、文件夹对比/Markdown 转 Word 上午大轮次候补、YouTube 缩略图 CORS 待抽查顺位顺延）；WPS 候选表保持冻结归档；仓库 104 注册工具全量核对无重叠（Top3 建议 ID mail_signature_generator / pdf_metadata_cleaner / youtube_thumbnail_downloader；新观察 batch_rename_helper / word_cloud_generator），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——VM 换机丢 known_hosts 按 TOOLS.md `ssh-keyscan -t ed25519 github.com` 补录 /root/.ssh/known_hosts 后即通（历史已知），origin/muse/dev-20260929 与本地 HEAD 一致；`git log` 确认开发交付 a6fa63e（代码压缩器）＋评审修复 d085973；`grep tools/categories.go` 全量 104 Path（103+1），`code_minifier` ID 与 `/tools/code-minifier` Path 已注册（268~271 行，划入已实现），Top3 建议 ID（mail_signature_generator / pdf_metadata_cleaner / youtube_thumbnail_downloader）与新观察 ID（batch_rename_helper / word_cloud_generator）与 104 Path 无重叠（`pdf_metadata/metadata/元数据/word_cloud/词云/batch_rename/重命名/mail_signature/邮件签名` 关键词核对——「元数据」仅命中照片 EXIF 描述，「缩略图」仅命中 og_card_preview 描述，均与本工具无关）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
+> 维护人：产品调研员 · 每日更新（2026-10-19 17:36 第三十三轮研究）
+
+> 维护人：产品调研员 · 每日更新（2026-10-19 15:00 第三十二轮研究）
 
 **交付状态**：待前端开发轮交付。10-19 排期决策轮（15:00 第三十二轮研究之后）。robots.txt 生成器已交付闭环（13:40 PM 决策轮立项→开发交付 8faeeef；`grep tools/categories.go` 确认 ID `robots_txt_generator`、Path `/tools/robots-txt-generator` 已注册，全量 **103 Path**），候选池划出。本轮立项**今日唯一任务：代码压缩器（Code Minifier）**。
 
