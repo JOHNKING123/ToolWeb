@@ -607,6 +607,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "pdf_metadata_cleaner",
+					Name:        "PDF 元数据查看清除",
+					Description: "查看并一键清除 PDF 文档属性元数据（标题/作者/软件/时间戳）与 XMP，发文件前去痕防社工，纯前端本地处理不上传 · PDF metadata viewer & remover: inspect Info & XMP, one-click clean, 100% client-side",
+					Path:        "/tools/pdf-metadata-cleaner",
+					Icon:        "privacy_tip",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "pdf_form_maker",
 					Name:        "PDF 可填写表单制作器",
 					Description: "在 PDF 上添加可填写表单域：文本框/复选框/单选组/下拉列表，导出标准 AcroForm 可填写 PDF（Acrobat/浏览器可填），中文表单域内嵌字体，本地处理不上传",

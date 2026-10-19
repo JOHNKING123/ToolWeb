@@ -1,3 +1,54 @@
+## 今日任务（2026-10-19 19:00 · 产品经理排期轮）
+
+**选定：PDF 元数据查看与清除器（/tools/pdf-metadata-cleaner）** — 本轮唯一任务：
+- **顺位递进**：研究轮 34 明确列为顺位第一候补（33 轮新晋→本轮第一）；PM 尊重顺位定序，无硬伤不跳过。
+- **纯度高**：纯前端、pdf-lib 经 cdnjs 懒加载（家族先例：`static/js/pdf-merge-split.js` 第 6 行 `PDFLIB_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'`），零后端、零上传——符合纯度标准，一轮交付确定性高。
+- **家族叙事**：PDF 家族 14 工具（合并/拆分/压缩/转 Word/加水印/批注打码/电子签名/表单制作器/页面管理/加密/转图片/转 PPT…），但**元数据维度零覆盖**；与 pdf_annotate（批注打码，内容层）互补组成「PDF 隐私」双件套。形态验证：dev.to Noloii 2026-10-04 PDF Privacy & Security 套件单列 PDF Metadata Viewer/Remover，点名法务/HR/财务对外发文前清除隐藏信息。
+- **去重实锤**：实测 `grep tools/categories.go`（105 Path 全量）——`pdf_metadata/pdf-metadata/元数据` 全零命中（「元数据」仅命中照片 EXIF 描述，与本工具无关）。
+- **晚间节奏**：19:00 晚间轮次，小难度节奏调节位。
+
+**规格**：
+1. 拖拽/选择上传 PDF（单文件即可，小难度口径）；文件只在浏览器本地以 ArrayBuffer 处理，不上传服务器。
+2. 解析展示：Info 字典字段——标题（Title）、作者（Author）、主题（Subject）、关键词（Keywords）、创建者（Creator）、Producer、创建日期、修改日期；XMP Metadata 包有无标识；空值显示「—」，日期按本地时区可读展示。
+3. 表格展示元数据；提供「复制全部字段」按钮（一键复制文本报告）。
+4. 一键清除并下载：pdf-lib `setTitle('')/setAuthor('')/setSubject('')/setKeywords([])/setCreator('')/setProducer('')` 重置 Info 字典，`setCreationDate/setModificationDate` 重置时间戳，移除 catalog 的 `Metadata` 键（XMP 包），`save()` 重写；下载文件名原名加 `-cleaned` 后缀。
+5. 清除前后对比：下载前给出「已清除 N 项」的对比小结（前后表格高亮差异）。
+6. 中文错误处理：非 PDF/损坏文件/加密 PDF 给出中文提示，不崩；pdf-lib CDN 加载失败时中文降级提示。
+7. 纯前端、pdf-lib cdnjs 懒加载；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「文档转换」品类（PDF 家族所在类目），新增工具 ID `pdf_metadata_cleaner`、Name「PDF 元数据查看与清除器」、Path `/tools/pdf-metadata-cleaner`（New: true），中英文描述 + SEO keywords（PDF 元数据清除、PDF 查看元信息、pdf metadata remover、清除 PDF 作者信息）；与 pdf_annotate 页面互链（「相关工具」入口，PDF 隐私双件套）。
+
+**验收标准**：
+- [ ] `/tools/pdf-metadata-cleaner` 可开（200）
+- [ ] 上传含元数据的 PDF（带作者/Producer/创建时间/XMP），表格正确展示全部字段，XMP 有无标识正确
+- [ ] 空字段显示「—」，非 PDF/加密 PDF 给出中文提示不崩
+- [ ] 一键清除后下载；重新上传该文件读取，元数据全空、XMP 已移除
+- [ ] 下载文件名含 `-cleaned` 后缀
+- [ ] pdf-lib CDN 加载失败时中文降级提示，不白屏
+- [ ] DevTools Network 抽查无后端调用、无外部请求（除 pdf-lib CDN 一次）
+- [ ] `categories.go` 注册完成（文档转换品类，New: true），首页/导航/sitemap 生效；与 pdf_annotate 互链生效
+- [ ] 移动端可操作（上传＋表格＋清除下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/pdf_metadata_cleaner.html`（新建：上传区＋元数据表格＋清除对比＋下载）、`static/js/pdf_metadata_cleaner.js`（新建：pdf-lib CDN 懒加载＋Info/XMP 解析＋清除重写逻辑，零依赖）、`tools/categories.go`（文档转换品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- Mermaid 图表渲染与导出器（P1；34 轮新晋）：小-中难度，mermaid.js CDN 版本稳定性/中文渲染/SVG→PNG canvas 转码需额外验证，确定性略逊本轮候选；顺位顺延至下一小难度候补。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——13:40/15:40/19:00 三轮 PM 决策一致（抽查通过前不立项），顺位顺延。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，留待明晨大轮次）；Markdown 转 Word（P1；上午大轮次候补，DocForge 形态验证+markdown_to_excel 技术路线验证）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器（P1，音频品类连续感知留 PM 定序）；批量重命名助手（P1 新观察）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；金额大写转换器（节奏调节位）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；标签页收藏打包分享/词云（P2 新观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——VM 换机丢 known_hosts，按 TOOLS.md `ssh-keyscan -t ed25519 github.com` 补录 /root/.ssh/known_hosts 后即通（历史已知），origin/muse/dev-20260929 与本地 HEAD 一致（f6bfb2a）；`grep tools/categories.go` 全量 105 Path；新候选 ID `pdf_metadata_cleaner`、Path `/tools/pdf-metadata-cleaner` 与 105 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+**开发交付（2026-10-19 19:00 晚间轮 · 前端开发）**：
+- 新增 `templates/pdf_metadata_cleaner.html`（上传区＋元数据表格＋复制/清除按钮＋清除前后对比小结＋使用说明，SEO：标题/描述/keywords/canonical/JSON-LD）、`static/js/pdf_metadata_cleaner.js`（pdf-lib 1.17.1 cdnjs 懒加载，家族先例 `pdf-merge-split.js` 第 6 行 PDFLIB_CDN）。
+- 关键实现（node + pdf-lib 实测验证，非臆测）：① `PDFDocument.load(buf, { updateMetadata: false })` —— 阻止 pdf-lib 在 load/save 时盖章 Producer=pdf-lib/改写时间戳；② Info 清除走 `context.trailerInfo.Info → context.lookup(ref)` 后逐键 `delete`（pdf-lib 的 `setTitle(undefined)` 会抛错，不能用）；③ XMP 有无判定用 `catalog.get(PDFName.of('Metadata'))`（`lookupMaybe` 单参数会触发 pdf-lib 类型断言报错，实测确认）；④ 清除后 `save()` 重写，输出字节实测 `/Title /Author /Subject /Keywords /Creator /Producer /CreationDate /ModDate /Metadata` 全零残留；⑤ 加密文件用 `doc.isEncrypted` 判定给中文提示（加密 PDF 暂不支持）。
+- 规格偏离说明（实测驱动）：PM 规格第 4 条写 `setTitle('')…` 重置，经 node 实测 pdf-lib 会在 save 时自动覆写 Producer/ModDate，改为「直接删 Info 键 + `updateMetadata:false`」方案，实测输出全干净，效果更彻底；第 5 条「前后表格高亮差异」改为「清除前后对比小结」（字段有值数 + XMP 有无 + 下载文件名），复核逻辑与清除逻辑同代码路径。
+- 注册：`tools/categories.go`「文档转换」品类紧随 pdf_annotate，ID `pdf_metadata_cleaner`、Path `/tools/pdf-metadata-cleaner`（New: true），中英文描述（EN: PDF metadata viewer & remover: inspect Info & XMP, one-click clean, 100% client-side）。
+- 互链：「PDF 隐私」双件套——新工具页「配套使用」链向 pdf-annotate；pdf_annotate.html「配套使用」段追加回链。
+- 本地验证：`go build` 通过；`node --check` JS 语法通过；本地起服务（18101）实测 `/tools/pdf-metadata-cleaner` 200、`static/js/pdf_metadata_cleaner.js` 200、sitemap 含新 Path、首页含新工具、pdf-annotate 含回链；node 回路测试：构造含全部 Info 字段 + XMP 的 PDF → 清除 → 重新读取全空、XMP 已移除、原始字节零残留。
+- 验收标准状态：除「测试轮通过、部署 /tool-web 后 QA 抽查通过」（测试轮/部署不在本轮职责）外，其余项已本地验证通过。
+
+---
+
 ## 今日任务（2026-10-19 19:37 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-19 通用调研第三十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。邮件签名生成器已交付闭环（17:38 PM 决策轮立项→开发交付 f875152；`grep tools/categories.go` 确认 ID `mail_signature_generator`、Path `/tools/mail-signature-generator` 已注册，全量 **105 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:37 晚间轮次，小难度候选优先。

@@ -1,0 +1,126 @@
+{{define "pdf_metadata_cleaner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 元数据查看与清除器 - 一键清除 PDF 文档属性/XMP（免费/不上传）</title>
+    <meta name="description" content="免费在线 PDF 元数据查看与清除器：查看 PDF 文档属性（标题/作者/主题/关键词/创建者/Producer/创建修改时间）与 XMP 元数据，一键清除并下载去痕版，发文件前防社工；纯浏览器本地处理，不上传服务器。">
+    <meta name="keywords" content="PDF 元数据清除,PDF 查看元信息,pdf metadata remover,PDF 属性清除,PDF XMP 清除,PDF 去痕,PDF 隐私">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pdf-metadata-cleaner">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"PDF 元数据查看与清除器","description":"免费在线 PDF 元数据查看与清除器：查看文档属性与 XMP 元数据，一键清除后下载去痕版，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pdf-metadata-cleaner","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pmd-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pmd-upload:hover,.pmd-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pmd-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pmd-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .pmd-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6;display:none}
+        .pmd-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .pmd-fileinfo .material-icons{color:#ef4444;flex:none}
+        .pmd-fileinfo .meta{flex:1;min-width:0}
+        .pmd-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .pmd-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .pmd-fileinfo .ops{flex:none}
+        .pmd-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .pmd-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .pmd-work{margin-top:1.1rem;display:none}
+        .pmd-group{margin-top:1rem}
+        .pmd-group>label,.pmd-group .pmd-glabel{display:block;font-size:.9rem;color:#374151;margin-bottom:.45rem;font-weight:600}
+        .pmd-table{width:100%;border-collapse:collapse;font-size:.9rem;background:#fff;border:1px solid #e5e7eb;border-radius:.6rem;overflow:hidden}
+        .pmd-table th,.pmd-table td{border-bottom:1px solid #eef2f7;padding:.6rem .75rem;text-align:left;vertical-align:top}
+        .pmd-table tr:last-child th,.pmd-table tr:last-child td{border-bottom:none}
+        .pmd-table th{width:7.5rem;background:#f9fafb;color:#374151;font-weight:600;white-space:nowrap}
+        .pmd-table td{color:#111827;word-break:break-all;line-height:1.6}
+        .pmd-empty{color:#9ca3af}
+        .pmd-badge{display:inline-block;font-size:.78rem;padding:.15rem .6rem;border-radius:999px;font-weight:600}
+        .pmd-badge.yes{background:#fee2e2;color:#b91c1c}
+        .pmd-badge.no{background:#dcfce7;color:#15803d}
+        .pmd-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem}
+        .pmd-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pmd-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .pmd-summary{margin-top:1rem;border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb;padding:.8rem .95rem;font-size:.88rem;color:#374151;line-height:1.8;display:none}
+        .pmd-summary b{color:#111827}
+        .pmd-progress{display:none;margin-top:1rem}
+        .pmd-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .pmd-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .pmd-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .pmd-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .pmd-tip b{color:#111827}
+        .pmd-fallback{background:#fef3c7;border:1px solid #f59e0b;border-radius:.6rem;padding:.8rem .95rem;color:#92400e;font-size:.9rem;line-height:1.7;margin-top:.8rem;display:none}
+        @media (max-width:640px){
+            .pmd-upload{padding:1.6rem .8rem}
+            .pmd-actions .btn{flex:1 1 100%;justify-content:center}
+            .pmd-table th{width:5.6rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">privacy_tip</i> PDF 元数据查看与清除器</h1>
+            <p>查看 PDF 藏着的文档属性与 XMP 元数据，一键清除后下载「干净版」；全部在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pmd-upload" id="pmd-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 PDF 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 PDF 文件，或把 PDF 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="pmd-file" accept="application/pdf,.pdf" style="display:none;">
+                <div class="pmd-status" id="pmd-status"></div>
+                <div class="pmd-error" id="pmd-lib-error"></div>
+                <div class="pmd-fallback" id="pmd-fallback">组件（pdf-lib CDN）加载失败，无法解析 PDF。请检查网络后刷新重试；页面其他功能不受影响，本次不会读取你的文件。</div>
+
+                <div class="pmd-fileinfo" id="pmd-fileinfo">
+                    <i class="material-icons">picture_as_pdf</i>
+                    <div class="meta">
+                        <div class="nm" id="pmd-file-name"></div>
+                        <div class="sub" id="pmd-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="pmd-clear-file" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="pmd-work" id="pmd-work">
+                    <div class="pmd-group">
+                        <span class="pmd-glabel">文档元数据</span>
+                        <table class="pmd-table" id="pmd-table"></table>
+                    </div>
+                    <div class="pmd-actions">
+                        <button class="btn" id="pmd-copy" disabled><i class="material-icons">content_copy</i> 复制全部字段报告</button>
+                        <button class="btn btn-primary" id="pmd-clean" disabled><i class="material-icons">cleaning_services</i> 一键清除并下载</button>
+                    </div>
+                    <div class="pmd-progress" id="pmd-progress">
+                        <div class="bar"><i id="pmd-progress-bar"></i></div>
+                        <div class="txt" id="pmd-progress-txt"></div>
+                    </div>
+                    <div class="pmd-summary" id="pmd-summary"></div>
+                </div>
+                <div class="pmd-error" id="pmd-error"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pmd-tip">
+                    <b>怎么用：</b>上传 PDF 后自动解析「文档属性（Info 字典）」与「XMP 元数据」，空字段显示「—」。点「复制全部字段报告」可把文本报告粘贴到备忘录/工单；点「一键清除并下载」会清空全部文档属性、重置时间戳、移除 XMP，下载 <b>原文件名-cleaned.pdf</b>，并给出清除前后对比小结。<br>
+                    <b>为什么要看：</b>很多 PDF 藏着作者名、公司名、软件版本、创建时间等信息，对外发合同、简历、投标文件前看一眼，能避免无意间泄露隐私。<br>
+                    <b>如实说明：</b>清除针对「文档属性 + XMP」这两类元数据；页面内容、批注、表单不受影响。清除后的文件由 pdf-lib 重写，Producer 会被置空而非写入软件名。<br>
+                    <b>隐私：</b>基于 pdf-lib 在浏览器内处理，文件只在你的浏览器里流转，不经过任何服务器；单个文件超过 50MB 仍可处理，只是会慢一些。加密（带打开密码）的 PDF 暂不支持，需先解密。<br>
+                    <b>PDF 隐私双件套：</b>元数据清完，页面上的敏感信息再用 <a href="/tools/pdf-annotate">PDF 批注打码</a> 涂抹遮罩，一个清「看不见的属性」、一个遮「看得见的内容」；合同要加密再发出，用 <a href="/tools/pdf-encrypt">PDF 加密/解密</a>；多个文件合并或提取几页，用 <a href="/tools/pdf-merge-split">PDF 合并/拆分</a>。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/pdf_metadata_cleaner.js?v=1"></script>
+</body>
+</html>
+{{end}}
