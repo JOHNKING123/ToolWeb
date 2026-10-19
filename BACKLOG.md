@@ -1,9 +1,83 @@
+## 今日任务（2026-10-19 15:40 · 产品经理决策轮 ✅）
 
-> 维护人：产品调研员 · 每日更新（2026-10-19 13:36 第三十一轮研究）
+**交付状态**：待前端开发轮交付。10-19 排期决策轮（15:00 第三十二轮研究之后）。robots.txt 生成器已交付闭环（13:40 PM 决策轮立项→开发交付 8faeeef；`grep tools/categories.go` 确认 ID `robots_txt_generator`、Path `/tools/robots-txt-generator` 已注册，全量 **103 Path**），候选池划出。本轮立项**今日唯一任务：代码压缩器（Code Minifier）**。
+
+**选定：代码压缩器（/tools/code-minifier）** — 本轮唯一任务：
+- **确定性优先**：纯前端自研压缩引擎，零外部请求、零依赖、无 CORS/跨域变量，一轮交付确定性 100%。这是 13:40 轮 PM 决策确立的"纯度"标准（robots.txt 胜出 YouTube 缩略图下载器即因后者下载链路有 CORS 不确定性）。
+- **顺位与叙事**：27 轮新晋候选，Varkido 10-01 Dev 套装单列同套装唯一缺口——本轮交付后该套装形态在本站完备；与 regex_tester、json_parser、js_formatter、cron-parser 等「开发工具」家族互链，站点受众契合度最高。
+- **痛点真实**：开发者需要无上传的 JS/CSS 压缩（去注释去空白+压缩率展示），现有在线方案多带广告或要求上传服务器；本地处理不出浏览器，符合本站"不出浏览器"口径。
+- **午后节奏**：今日已连交付两轮（JSON Schema 验证器 11:42 中难度、robots.txt 13:40 小难度），本轮 15:40 午后轮次，小难度工具最合适一轮高质量交付。
+- **去重实锤**：本轮实测 `grep tools/categories.go`（103 Path 全量）——`minif/代码压缩/minify/代码压缩器` 全零命中。
+
+**规格**：
+1. JS 压缩：自研轻量压缩引擎（零依赖，无第三方库）：去除单行 `//` 与多行 `/* */` 注释（字符串/正则字面量内不误删），去除冗余空白（保留必要的分隔空格，如 `return x` 中的空格）；两种模式——「强压缩」（尽量压成一行）、「轻压缩」（保留换行便于调试）。
+2. CSS 压缩：去注释、去空白（保留 `div p` 选择器必要空格），压缩颜色值（`#ffffff`→`#fff`、`#ff0000`→`#f00`），省略零值单位（`0px`→`0`）。
+3. 压缩率展示：原体积 / 压缩后体积 / 压缩率（百分比）/ 节省字节数，字节数人类可读（B/KB）。
+4. 压缩前后对照：输入与结果并排（或标签页切换），输入即实时压缩；一键复制压缩结果；Blob 下载（文件名 `code.min.js` / `style.min.css`，按输入类型自动后缀）。
+5. 中文错误处理：空输入/非法输入给出中文提示，不崩。
+6. 纯前端、零 CDN 依赖、无后端调用、无外部请求；响应式，桌面端优先、移动端可用。
+7. 注册：`tools/categories.go`「开发工具」品类新增工具 ID `code_minifier`、Name「代码压缩器」、Path `/tools/code-minifier`（New: true），中英文描述 + SEO keywords（代码压缩器、JS 压缩、CSS 压缩、代码体积优化、JavaScript 压缩、CSS minify、code minifier、javascript minify、css minifier、代码压缩率）。
+
+**验收标准**：
+- [ ] `/tools/code-minifier` 可开（200）
+- [ ] JS 示例压缩：注释与冗余空白去除且语义不变（压缩前后等价性抽查：node 桩或浏览器 console 对比执行结果一致）
+- [ ] CSS 示例压缩：`#ffffff`→`#fff`、`0px`→`0`、注释去除
+- [ ] 压缩率数字准确（压缩率 = (原体积 − 压缩后体积) / 原体积 × 100%），原体积/后体积/压缩率三件齐全
+- [ ] 空输入给出中文提示，不崩
+- [ ] 复制按钮可用；下载文件名按类型为 `code.min.js` / `style.min.css`，内容与结果框一致
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖、无外部请求
+- [ ] `categories.go` 注册完成（开发工具品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（输入+压缩+复制/下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/code_minifier.html`（新建：输入区+模式切换（JS/CSS 自动识别或手动切）+压缩率面板+对照视图+复制/下载，纯前端）、`static/js/code_minifier.js`（新建：JS/CSS 压缩引擎+压缩率统计+复制/下载逻辑，零依赖）、`tools/categories.go`（开发工具品类+工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- YouTube 缩略图下载器（P1；27 轮新晋，研究轮顺位第一）：i.ytimg.com 直链预览无问题，但核心功能"点击下载"需 fetch→blob 下载，其 CORS 响应头尚未经测试轮抽查验证——13:40 轮 PM 决策已因同一原因将其让位给 robots.txt，无新验证前不承诺核心功能，保持留池，待测试轮做 i.ytimg.com CORS 抽查后再立项。
+- 邮件签名生成器（P1；本轮新晋，MailSig 形态验证）：同样小难度纯前端，但富文本复制（ClipboardItem）跨浏览器行为需 QA 逐一踩坑；开发工具家族叙事不如代码压缩器完整，顺位顺延留池。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，留待明晨大轮次）。
+- Markdown 转 Word（P1；中难度，留待后续上午轮从容交付）。
+- 音频合并器（P1；音频品类连续感知留 PM 定序，顺延）；浏览器屏幕录制器（P1，中难度，上午大轮次）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；SRT 字幕编辑器（P1，顺位顺延）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；年假拼假优化器（新观察，用户方向下不扩展）；创意涂鸦画板（P2 新观察）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；域名生成器（观察，低优先）；浏览器实时听写（P1 观察）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（origin/muse/dev-20260929 与本地 HEAD 一致）；`git log` 确认开发交付 8faeeef（robots.txt 生成器）；`grep tools/categories.go` 全量 103 Path，`robots_txt_generator` ID 与 `/tools/robots-txt-generator` Path 已注册（营销工具品类，营销工具三件套完备）；新候选 ID `code_minifier`、Path `/tools/code-minifier` 与 103 Path 无重叠（`minif/代码压缩/minify/代码压缩器` 关键词核对全零命中）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
+
+> 维护人：产品调研员 · 每日更新（2026-10-19 15:00 第三十二轮研究）
 
 > 维护人：产品经理 · 每日排期（2026-10-19 13:40 排期轮）
+> 维护人：产品经理 · 每日排期（2026-10-19 15:40 排期轮）
 
-## 今日任务（2026-10-19 13:40 · 产品经理排期决策 ✅）
+## 今日任务（2026-10-19 15:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第三十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。robots.txt 生成器已交付闭环（13:40 PM 决策轮立项→开发交付 8faeeef；`grep tools/categories.go` 确认 ID `robots_txt_generator`、Path `/tools/robots-txt-generator` 已注册，全量 **103 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 午后轮次，小难度候选优先。
+
+**本轮四件事**（15:00 全网调研，通用方向）：
+1. robots.txt 生成器交付确认：`git log` 确认开发交付 8faeeef（规则组编辑器+Sitemap/Crawl-delay+实时预览+四模板+复制/Blob 下载，纯前端零外部请求；SEO 三件套完备，营销工具品类）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（origin/muse/dev-20260929 与本地 HEAD 一致）；`grep` 全量 103 Path（102+1），`robots_txt_generator` ID 与 `/tools/robots-txt-generator` Path 已注册；候选池划出，已实现清单追加（delta：+ robots.txt 生成器）。
+2. 新晋候选：**邮件签名生成器（HTML Email Signature Generator）**。需求证据：① dev.to goodyuanbo 2026-09-09（20+ 隐私优先浏览器工具，单文件 anti-SaaS 路线）单列 **MailSig — generates clean HTML email signatures**，与 ToolWeb 纯前端口径同族；② 痛点真实：专业 HTML 邮件签名（姓名/职位/公司/电话/微信/头像/网站）在 Gmail/Outlook/QQ 邮箱跨客户端渲染靠 table 内联样式手写最稳，现有中文生成器多为注册墙/付费/排版丑陋；③ 纯前端小难度：表单输入（姓名/职位/公司/电话/邮箱/微信/网站/头像可选）→邮件客户端安全 HTML（table+内联样式）实时预览→一键复制富文本粘贴进 Gmail/Outlook→3~4 套模板（简洁/商务/极简/双语），零后端零依赖。去重：103 Path `mail_signature/邮件签名/MailSig` 全零命中（「mail」仅命中 text_masker 描述中「邮箱」一词，与本工具无关；「签名」仅命中 PDF 电子签名/RSA 签名）。SEO：邮件签名生成器、邮箱签名制作、HTML 邮件签名、email signature generator。求职/职场家族：与 resume_checker 简历检查器互链。建议 ID `mail_signature_generator`、Path `/tools/mail-signature-generator`。
+3. 去重消化（不单立）：① dev.to md_shohan_102187760726951 2026-10-13（10 浏览器工具清单）——Time Zone Converter（仓库已有 timezone_converter 多城市时区对比）、Date Add/Subtract（P1 观察 日期加减/日期差已有）、Countdown Timer（P2 观察 倒计时器已有）、Image Annotator（仓库已有 image_annotator 图片标注：箭头/矩形/文字/马赛克/PNG 导出）、Speech to Text（P1 观察 浏览器实时听写已有）/Text to Speech（P2 观察 TTS 文本转语音朗读器已有）；② HN Show HN ChartFromText（粘贴 key-value 文本→饼/柱/折线→PNG 下载，纯前端）——仓库已有 chart_generator 在线图表生成器（CSV/TSV/Excel 粘贴→柱状/折线/饼/环形，自绘 SVG 零依赖→PNG 导出），输入形态差异不构成单独立项；③ HN Show HN 开源 PDF 涂抹工具（浏览器手动涂黑+AI 自动识别，AI 部分需后端付费）——手动涂黑部分仓库已有 pdf_annotate PDF 批注打码（涂抹打码/荧光笔高亮，合同证件发前处理），不单立；④ HN Show HN PTO holiday optimizer（年假+法定假日拼长假最优解）——纯前端单页技术可行（节假日数据表内嵌），但属泛生活计算器，用户方向修正（2026-10-18）下不扩展，归档观察；⑤ HN Site Spy（网页元素变化监控→RSS/推送）——需后端定时抓取+通知流水线，非单页纯前端口径，不立项；⑥ V2EX 本轮无新单页信号；⑦ 榜单类复述（1024toolkit 45 工具/dev.to 45 tiny tools：finance/engineering/health/dev，dev 类仓库已全覆盖，其余泛计算类不合用户方向）无新形态。
+4. 候选池维护：robots.txt 生成器划出（已实现 +1，全量 103 Path）；新晋 邮件签名生成器 P1（MailSig 形态验证+103 Path 无重叠，职场/求职家族，小难度，午后轮次节奏调节位）；顺位更新——文件夹对比（P1，PM 07:41 明确留待上午轮从容交付，仍为上午大轮次第一候补）、Markdown 转 Word（P1，上午大轮次候补）、YouTube 缩略图下载器（P1 小难度，27 轮新晋，i.ytimg.com 四档分辨率直链，顺位顺延）、代码压缩器（P1 小难度，27 轮新晋，Varkido Dev 套装唯一缺口，开发工具家族互链，顺位顺延）；其余顺位不变——浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器（音频品类连续感知留 PM 定序）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；金额大写转换器（节奏调节位）；白噪音发生器/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS 传播/cURL 转代码/创意涂鸦画板（P2 观察）；年会大屏抽奖（时令预热）；域名生成器（观察，低优先）；年假拼假优化器（新观察：用户方向下不扩展）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；15:00 午后轮次，小难度优先）：
+
+1. **YouTube 缩略图下载器（YouTube Thumbnail Downloader）** — P1（顺位递进到位：27 轮新晋→28 轮顺位第三→29 轮顺位第二→30/31 轮顺位第二/三→本轮第一；i.ytimg.com 四档分辨率（default/mqdefault/hqdefault/sddefault/maxresdefault）直链形态验证；纯前端小难度：粘贴视频 URL/ID→解析 11 位 videoId→四档预览→点击下载（a[download]，跨域 CORS 抽查由测试轮覆盖）；与 og_card_preview、serp_snippet_preview SEO/社交家族互链；103 Path 缩略图/thumbnail/youtube 零命中（「缩略图」仅命中 og_card_preview 描述，与本工具无关）；午后小难度节奏调节位）。
+2. **代码压缩器（Code Minifier）** — P1（27 轮新晋，Varkido 10-01 Dev 套装单列同套装唯一缺口，开发工具家族互链：regex_tester/json_parser/js_formatter 等；纯前端小难度：自研轻量压缩引擎（JS/CSS 去注释去空白+安全压缩比展示+压缩率统计）零依赖，本地处理不出浏览器；103 Path minif/代码压缩 零命中；午后小难度节奏调节位）。
+3. **邮件签名生成器（HTML Email Signature Generator）** — P1（本轮新晋：dev.to goodyuanbo 2026-09-09 MailSig 形态验证，单文件 anti-SaaS 路线与 ToolWeb 纯前端口径同族；痛点真实：跨客户端渲染安全的 table+内联样式 HTML 签名手写门槛高，中文单页无注册墙形态稀缺；纯前端小难度：表单→实时预览→复制富文本粘贴 Gmail/Outlook，3~4 套模板；103 Path mail_signature/邮件签名/MailSig 零命中；与 resume_checker 求职家族互链；SEO：邮件签名生成器、邮箱签名制作、HTML 邮件签名）。
+
+文件夹对比（P1；上午大轮次第一候补，PM 07:41 留待上午轮从容交付）；Markdown 转 Word（P1；上午大轮次候补，DocForge 形态验证+markdown_to_excel 技术路线验证）；浏览器屏幕录制器（P1，中难度，上午大轮次候补）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，26 轮新晋，音频品类连续感知留 PM 定序）；SRT 字幕编辑器（P1，顺位顺延）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；年假拼假优化器（新观察，用户方向下不扩展）；创意涂鸦画板（P2 新观察）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；域名生成器（观察，低优先）；浏览器实时听写（P1 观察）等其余候选留池。
+
+**通用候选表增量**（第三十二轮：robots.txt 生成器已实现划出；新晋 邮件签名生成器 P1；全量 103 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 邮件签名生成器（HTML Email Signature Generator） | 本轮新晋（dev.to goodyuanbo 2026-09-09「I Built 20+ Privacy-First Browser Tools」单列 MailSig — generates clean HTML email signatures，单文件 anti-SaaS 路线与 ToolWeb 纯前端口径同族；痛点：跨客户端（Gmail/Outlook/QQ 邮箱）渲染安全的 table+内联样式 HTML 签名手写门槛高，现有中文生成器多为注册墙/付费/排版丑；形态：表单（姓名/职位/公司/电话/邮箱/微信/网站/头像可选）→实时预览→一键复制富文本粘贴进 Gmail/Outlook，3~4 套模板（简洁/商务/极简/双语），纯前端零后端；与 resume_checker 求职家族互链；SEO：邮件签名生成器、邮箱签名制作、HTML 邮件签名；103 Path mail_signature/邮件签名/MailSig 全零命中 | 小 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-19 通用调研第三十二轮——robots.txt 生成器交付闭环（8faeeef，`/tools/robots-txt-generator` 已注册，全量 103 Path，营销工具/SEO 三件套），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-19：md_shohan 10-13 10 工具清单、1024toolkit/45 tiny tools、goodyuanbo 20+ 单文件工具——MailSig 为本轮唯一新单页信号，其余信号均被仓库现有工具（timezone_converter/image_annotator/chart_generator/pdf_annotate）或观察候选（TTS/STT/日期加减/倒计时）去重消化；HN：ChartFromText（chart_generator 去重）、PDF redaction（pdf_annotate 去重）、PTO optimizer（用户方向下归档观察）、Site Spy（需后端不立项）；V2EX 无新单页信号）均已消化；新晋「邮件签名生成器」P1（MailSig 形态验证+103 Path 无重叠，求职家族，小难度，午后轮次节奏调节位）；顺位更新（文件夹对比/Markdown 转 Word 上午大轮次候补、YouTube 缩略图下载器/代码压缩器/邮件签名生成器午后小难度顺位递进）；WPS 候选表保持冻结归档；仓库 103 注册工具全量核对无重叠（Top3 建议 ID youtube_thumbnail_downloader / code_minifier / mail_signature_generator），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致；`git log` 确认开发交付 8faeeef；`grep tools/categories.go` 全量 103 Path（102+1），`robots_txt_generator` ID 与 `/tools/robots-txt-generator` Path 已注册，Top3 建议 ID（youtube_thumbnail_downloader / code_minifier / mail_signature_generator）与 103 Path 无重叠（`mail_signature/邮件签名/minif/代码压缩/youtube/缩略图/thumbnail` 关键词核对——「mail」仅命中 text_masker 描述中「邮箱」一词，「缩略图」仅命中 og_card_preview 描述，均与本工具无关）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
 
 **交付状态**：待前端开发轮交付。10-19 排期决策轮（13:36 第三十一轮研究之后）。JSON Schema 验证器已交付闭环（11:42 PM 决策轮立项→开发交付 e1a98b7；`grep tools/categories.go` 确认 ID `json_schema_validator`、Path `/tools/json-schema-validator` 已注册（43~46 行），全量 **102 Path**），候选池划出。本轮立项**今日唯一任务：robots.txt 生成器（Robots.txt Generator）**。
 
