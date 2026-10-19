@@ -1,0 +1,148 @@
+{{define "mail_signature_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件签名生成器 - HTML 邮件签名免费在线制作/复制粘贴进 Gmail Outlook 签名</title>
+    <meta name="description" content="免费在线邮件签名生成器：填写姓名、职位、公司、电话、邮箱等，一键生成 Gmail/Outlook/QQ 邮箱兼容的 HTML 邮件签名（table+内联样式），4 套模板（简洁/商务/极简/双语）实时预览，复制富文本粘贴进签名设置即用，纯前端本地生成不出浏览器。Email signature generator: 4 templates, copy rich text to Gmail/Outlook, 100% client-side.">
+    <meta name="keywords" content="邮件签名生成器,邮箱签名制作,HTML 邮件签名,email signature generator,outlook 邮件签名,gmail 签名设置,邮件签名模板,签名档制作">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mail-signature-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"邮件签名生成器","description":"填写表单即生成邮件客户端安全的 HTML 签名：4 套模板（简洁/商务/极简/双语），table+内联样式，Gmail/Outlook/QQ 邮箱兼容，一键复制富文本粘贴进签名设置即用，纯前端本地生成。","url":"https://www.johnkingzcq123.xyz/tools/mail-signature-generator","applicationCategory":"BusinessApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .msg-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .msg-privacy b{color:#047857}
+        .msg-tabs{display:flex;gap:.4rem;background:#f3f4f6;border-radius:.7rem;padding:.25rem;margin-bottom:1rem;flex-wrap:wrap}
+        .msg-tpl-tab{border:none;background:transparent;padding:.5rem 1.1rem;border-radius:.55rem;font-size:.9rem;cursor:pointer;color:#4b5563;font-family:inherit}
+        .msg-tpl-tab.active{background:#fff;color:#111827;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+        .msg-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+        .msg-field{display:flex;flex-direction:column;gap:.3rem}
+        .msg-field label{font-size:.85rem;font-weight:600;color:#374151}
+        .msg-field label .req{color:#ef4444}
+        .msg-field input{border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .8rem;font-size:.92rem;font-family:inherit;color:#111827;box-sizing:border-box;width:100%}
+        .msg-field input:focus{outline:none;border-color:var(--primary-color)}
+        .msg-field .hint{font-size:.78rem;color:#9ca3af}
+        .msg-minimal-note{font-size:.85rem;color:#6b7280;margin:.6rem 0 0}
+        .msg-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.1rem;align-items:center}
+        .msg-actions .btn{font-family:inherit;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#1f2937}
+        .msg-actions .btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .msg-actions .btn-primary{border:none;background-color:var(--primary-color);color:#fff}
+        .msg-actions .btn-primary:hover{background-color:var(--primary-color);filter:brightness(.95);color:#fff}
+        .msg-preview-wrap{margin-top:1.2rem}
+        .msg-preview-title{font-size:.95rem;font-weight:700;color:#374151;margin-bottom:.5rem}
+        .msg-preview{background:#fff;border:1px solid #e5e7eb;border-radius:.7rem;padding:1.2rem;overflow:auto;min-height:9rem}
+        .msg-source-wrap{margin-top:1rem}
+        .msg-source-wrap summary{font-size:.9rem;font-weight:600;color:#4b5563;cursor:pointer}
+        .msg-source{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.6;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;width:100%;box-sizing:border-box;min-height:10rem;margin-top:.6rem;color:#111827;background:#f8fafc;resize:vertical}
+        .msg-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .msg-note b{color:#374151}
+        @media (max-width:860px){
+            .msg-grid{grid-template-columns:1fr}
+            .msg-actions .btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>邮件签名生成器</h1>
+            <p>填写信息 → 选模板 → 实时预览 → 一键复制富文本，粘贴进 Gmail / Outlook / QQ 邮箱的签名设置即用。生成的签名是邮件客户端安全的 HTML（table + 内联样式）。</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="msg-privacy" role="note">
+                <div><b>隐私声明：签名信息不出浏览器。</b>全部在当前页面本地生成，不上传到任何服务器。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无 CDN 依赖、无外部请求。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="msg-tabs" role="tablist" aria-label="签名模板">
+                    <button type="button" class="msg-tpl-tab active" data-tpl="simple" role="tab">简洁</button>
+                    <button type="button" class="msg-tpl-tab" data-tpl="business" role="tab">商务</button>
+                    <button type="button" class="msg-tpl-tab" data-tpl="minimal" role="tab">极简</button>
+                    <button type="button" class="msg-tpl-tab" data-tpl="bilingual" role="tab">双语</button>
+                </div>
+                <p class="msg-minimal-note" id="msg-minimal-note" style="display:none;">极简模板为纯文本排版，不含头像与色块，适合追求干净的签名场景。</p>
+
+                <div class="msg-grid" style="margin-top:1rem;">
+                    <div class="msg-field">
+                        <label for="msg-name">姓名 <span class="req">*</span></label>
+                        <input type="text" id="msg-name" placeholder="例如：张伟" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-name-en">英文名</label>
+                        <input type="text" id="msg-name-en" placeholder="例如：Wei Zhang（双语模板显示）" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-title">职位</label>
+                        <input type="text" id="msg-title" placeholder="例如：高级工程师" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-title-en">英文职位</label>
+                        <input type="text" id="msg-title-en" placeholder="例如：Senior Engineer" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-company">公司</label>
+                        <input type="text" id="msg-company" placeholder="例如：胜源科技有限公司" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-company-en">英文公司</label>
+                        <input type="text" id="msg-company-en" placeholder="例如：Shengyuan Technology" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-phone">电话</label>
+                        <input type="text" id="msg-phone" placeholder="例如：135 0000 0000" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-email">邮箱</label>
+                        <input type="text" id="msg-email" placeholder="例如：zhangwei@example.com" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-wechat">微信</label>
+                        <input type="text" id="msg-wechat" placeholder="例如：zhangwei_wx" autocomplete="off">
+                    </div>
+                    <div class="msg-field">
+                        <label for="msg-website">网站</label>
+                        <input type="text" id="msg-website" placeholder="例如：www.example.com" autocomplete="off">
+                    </div>
+                    <div class="msg-field" style="grid-column:1/-1;">
+                        <label for="msg-avatar">头像 URL（可选）</label>
+                        <input type="text" id="msg-avatar" placeholder="例如：https://example.com/avatar.png" autocomplete="off" spellcheck="false">
+                        <span class="hint">头像以远程图片形式引用，请使用公开可访问的图床链接；留空则不显示头像。</span>
+                    </div>
+                </div>
+
+                <div class="msg-actions">
+                    <button class="btn btn-primary" id="msg-copy-rich">复制富文本签名</button>
+                    <button class="btn" id="msg-copy-source">复制 HTML 源码</button>
+                    <button class="btn" id="msg-clear">清空</button>
+                </div>
+
+                <div class="msg-preview-wrap">
+                    <div class="msg-preview-title">实时预览</div>
+                    <div class="msg-preview" id="msg-preview" aria-live="polite"></div>
+                </div>
+
+                <div class="msg-source-wrap">
+                    <details>
+                        <summary>查看 HTML 源码（与预览一致）</summary>
+                        <textarea class="msg-source" id="msg-source" readonly spellcheck="false"></textarea>
+                    </details>
+                </div>
+
+                <div class="msg-note">
+                    <b>使用方法：</b>点击「复制富文本签名」，然后去邮箱设置里粘贴——Gmail：设置 → 查看所有设置 → 签名；Outlook：设置 → 邮件 → 签名；QQ 邮箱：设置 → 常规 → 个人签名。若浏览器不支持富文本复制（会有中文提示），可改用「复制 HTML 源码」，粘贴到支持 HTML 的签名编辑器中。<br>
+                    <b>兼容性说明：</b>生成的签名只用 table 布局与内联样式，不含 &lt;style&gt; 块、外部 CSS 与 flex/grid，在 Gmail、Outlook、QQ 邮箱等客户端排版一致；头像为远程引用，发送后收件人需联网加载。<br>
+                    <b>必填项：</b>仅「姓名」为必填；未填姓名时复制会给出中文提示，不会报错。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/mail_signature_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

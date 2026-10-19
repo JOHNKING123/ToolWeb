@@ -1029,6 +1029,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "求职工具",
 				},
+				{
+					ID:          "mail_signature_generator",
+					Name:        "邮件签名生成器",
+					Description: "填写姓名职位公司等信息，一键生成邮件客户端安全的 HTML 邮件签名：4 套模板（简洁/商务/极简/双语）实时预览，复制富文本粘贴进 Gmail/Outlook/QQ 邮箱签名设置即用，纯前端本地生成不出浏览器 · Email signature generator: 4 templates, copy rich text to Gmail/Outlook, 100% client-side",
+					Path:        "/tools/mail-signature-generator",
+					Icon:        "mail",
+					New:         true,
+					Category:    "求职工具",
+				},
 			},
 		},
 		{

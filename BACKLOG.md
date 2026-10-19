@@ -1,3 +1,45 @@
+## 今日任务（2026-10-19 17:38 · 产品经理排期轮）
+
+**选定：邮件签名生成器（/tools/mail-signature-generator）** — 本轮唯一任务：
+- **顺位递进**：研究轮 33 明确列为顺位第一候补（32 轮新晋顺位第三→本轮第一）；PM 尊重顺位定序，无硬伤不跳过。
+- **纯度最高**：纯前端、零依赖、零外部请求、零后端调用——完全符合 13:40 轮确立的"纯度"标准，一轮交付确定性 100%。
+- **15:40 未选理由消解**：当时两条——①"开发工具家族叙事不如代码压缩器"已随代码压缩器交付（a6fa63e）消解；②"富文本复制（ClipboardItem）跨浏览器 QA 踩坑"——本轮规格用双复制路径对冲（富文本复制＋HTML 源码复制兜底＋不支持时中文降级提示），测试轮覆盖 Chrome/Edge/Firefox 实测。
+- **品类叙事**：归入「求职工具」品类，与 resume_checker 简历检查器互链；今日已交付格式化/营销/开发三个品类，职场线为新叙事线。
+- **去重实锤**：实测 `grep tools/categories.go`（104 Path 全量）——`mail_signature/mail-signature/邮件签名` 全零命中。
+
+**规格**：
+1. 表单输入：姓名（必填）、职位、公司、电话、邮箱、微信、网站、头像 URL（可选）；支持英文名/双语字段。
+2. 4 套模板：简洁 / 商务 / 极简 / 双语；全部 table＋内联样式的邮件客户端安全 HTML（无 `<style>` 块、无外部 CSS、无 flex/grid、无背景图依赖，Gmail/Outlook/QQ 邮箱兼容）。
+3. 实时预览：输入即更新，所见即所得。
+4. 一键复制富文本：ClipboardItem（text/html），粘贴进 Gmail/Outlook 签名设置即用；同时提供「复制 HTML 源码」兜底；不支持 ClipboardItem 的浏览器给出中文降级提示。
+5. 头像为 URL 引用并提示使用公开可访问图床；可不带头像。
+6. 中文错误处理：姓名为空等给出中文提示，不崩。
+7. 纯前端、零 CDN 依赖、无后端调用、无外部请求；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「求职工具」品类新增工具 ID `mail_signature_generator`、Name「邮件签名生成器」、Path `/tools/mail-signature-generator`（New: true），中英文描述 + SEO keywords（邮件签名生成器、邮箱签名制作、HTML 邮件签名、email signature generator、outlook 邮件签名、gmail 签名设置）。
+
+**验收标准**：
+- [ ] `/tools/mail-signature-generator` 可开（200）
+- [ ] 4 套模板切换，预览实时更新
+- [ ] 生成 HTML 仅 table＋内联样式（无 `<style>` 块、无外部 CSS）
+- [ ] 富文本复制后粘贴到 Gmail/Outlook 签名框排版正常（测试轮实测 Chrome/Edge/Firefox）
+- [ ] HTML 源码复制可用，内容与预览一致
+- [ ] 空姓名给出中文提示，不崩；不支持 ClipboardItem 时中文降级提示
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖、无外部请求
+- [ ] `categories.go` 注册完成（求职工具品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（表单＋预览＋复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/mail_signature_generator.html`（新建：表单＋4 模板切换＋实时预览＋双复制按钮，纯前端）、`static/js/mail_signature_generator.js`（新建：模板渲染引擎＋ClipboardItem 富文本复制＋源码复制＋校验，零依赖）、`tools/categories.go`（求职工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 未经测试轮抽查——任务说明与 13:40/15:40 两轮 PM 决策一致，抽查通过前不立项，留池。
+- PDF 元数据查看与清除器（P1；33 轮新晋，Noloii 形态验证）：与 pdf_annotate 组成「PDF 隐私」双件套，纯前端小难度；但需 pdf-lib（CDN 懒加载为家族先例）且 XMP 清除细节需额外验证，纯度与确定性略逊本轮候选，顺位顺延至下一小难度轮次。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，留待明晨大轮次）；Markdown 转 Word（P1；中难度，上午大轮次候补）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器（P1，音频品类连续感知留 PM 定序）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮/批量重命名助手（P1 留池）；浏览器实时听写（P1 观察）；金额大写转换器（节奏调节位）；年会大屏抽奖（时令预热）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板/词云（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（b090f8b）；`git log` 确认开发交付 a6fa63e（代码压缩器）＋评审修复 d085973；`grep tools/categories.go` 全量 104 Path；新候选 ID `mail_signature_generator`、Path `/tools/mail-signature-generator` 与 104 Path 无重叠（`mail_signature/mail-signature/邮件签名` 全零命中；「元数据」1 命中＝照片 EXIF 描述，与本工具无关）；pdf-lib 现状：现有 PDF 家族经 cdnjs CDN 懒加载（`static/js/pdf-merge-split.js` PDFLIB_CDN），vendor/ 为 Go 依赖，本轮不新增 JS 依赖；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 ## 今日任务（2026-10-19 17:36 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-19 通用调研第三十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。代码压缩器已交付闭环（15:40 PM 决策轮立项→开发交付 a6fa63e＋评审修复 d085973；`grep tools/categories.go` 确认 ID `code_minifier`、Path `/tools/code-minifier` 已注册（268~271 行），全量 **104 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 傍晚轮次，小难度候选优先。
@@ -82,6 +124,7 @@
 
 > 维护人：产品经理 · 每日排期（2026-10-19 13:40 排期轮）
 > 维护人：产品经理 · 每日排期（2026-10-19 15:40 排期轮）
+> 维护人：产品经理 · 每日排期（2026-10-19 17:38 排期轮）
 
 ## 今日任务（2026-10-19 15:00 · 产品调研员研究轮 ✅）
 
