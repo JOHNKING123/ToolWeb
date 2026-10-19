@@ -1,6 +1,52 @@
 
 > 维护人：产品调研员 · 每日更新（2026-10-19 13:36 第三十一轮研究）
 
+> 维护人：产品经理 · 每日排期（2026-10-19 13:40 排期轮）
+
+## 今日任务（2026-10-19 13:40 · 产品经理排期决策 ✅）
+
+**交付状态**：待前端开发轮交付。10-19 排期决策轮（13:36 第三十一轮研究之后）。JSON Schema 验证器已交付闭环（11:42 PM 决策轮立项→开发交付 e1a98b7；`grep tools/categories.go` 确认 ID `json_schema_validator`、Path `/tools/json-schema-validator` 已注册（43~46 行），全量 **102 Path**），候选池划出。本轮立项**今日唯一任务：robots.txt 生成器（Robots.txt Generator）**。
+
+**选定：robots.txt 生成器（/tools/robots-txt-generator）** — 本轮唯一任务：
+- **尊重 PM 定序**：PM 07:41 轮明确「文件夹对比留待后续上午轮从容交付」（File System Access API Chrome/Edge 限定 + Firefox 降级提示，QA 面重），13:36 研究轮已照此把文件夹对比列为上午大轮次候补，本轮理应不挤占。
+- **午后节奏调节**：本轮为午后轮次，今日已连交付五轮（含 11:42 中难度的 JSON Schema 验证器），小难度工具最合适一轮高质量交付。
+- **SEO 家族三连完备**：营销工具品类已有 serp_snippet_preview、og_card_preview 交付佐证，robots.txt 生成器补上「搜索引擎友好三件套」的最后一块，与两者互链，品类叙事闭环。
+- **痛点真实**：站长手写 robots.txt 规则（User-agent/Allow/Disallow/Sitemap/Crawl-delay）易出错、缩进与指令大小写常踩坑，可视化拼装+实时预览是真实刚需。
+- **纯前端最纯**：零外部请求、零后端调用，比 YouTube 缩略图下载器（需加载 i.ytimg.com 外链图片、跨域下载有 CORS 不确定性）更符合「不出浏览器」口径。
+- **去重实锤**：本轮实测 `grep tools/categories.go`（102 Path 全量）——`robots/robots.txt/robots_txt` 全零命中。
+
+**规格**：
+1. 规则组编辑器：多个 User-agent 规则组可增删；每组含 User-agent 列表（默认 `*`）、Allow/Disallow 路径行（增删行，Disallow 默认 `/`）。
+2. 全局项：Crawl-delay 数值输入（秒）、Sitemap URL 列表（增删行）。
+3. 实时预览：左侧拼装、右侧实时生成 robots.txt 文本（纯前端字符串拼接，输入即更新）。
+4. 常用模板一键加载：「允许全部抓取」「禁止全部抓取」「仅允许主流搜索引擎」「屏蔽后台/管理路径」。
+5. 基础校验：User-agent 为空提示、路径必须以 `/` 开头、Sitemap 须为完整 URL，中文化的内联提示不阻断。
+6. 一键复制 + 下载 robots.txt 文件（Blob 下载，文件名固定 `robots.txt`）。
+7. 纯前端、零 CDN 依赖、无后端调用、无外部请求；响应式，桌面端优先、移动端可用。
+8. 注册：`tools/categories.go`「营销工具」品类新增工具 ID `robots_txt_generator`、Name「robots.txt 生成器」、Path `/tools/robots-txt-generator`（New: true），中英文描述 + SEO keywords（robots.txt 生成器、robots.txt 生成、robots.txt 规则、爬虫协议生成、robots txt generator、robots.txt 文件下载、搜索引擎收录设置）。
+
+**验收标准**：
+- [ ] `/tools/robots-txt-generator` 可开（200）
+- [ ] 多 User-agent 规则组 + Allow/Disallow/Sitemap/Crawl-delay 拼装输出文本格式正确（指令顺序：User-agent → Allow/Disallow → Crawl-delay → Sitemap）
+- [ ] 四个模板一键加载输出符合预期
+- [ ] 非法输入（空 User-agent、路径缺前导 `/`、Sitemap 非 URL）给出中文提示，不崩
+- [ ] 复制按钮可用；下载文件名为 `robots.txt`，内容与预览一致
+- [ ] DevTools Network 抽查无后端调用、无 CDN 依赖、无外部请求
+- [ ] `categories.go` 注册完成（营销工具品类，New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（增删组/行+预览+复制/下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/robots_txt_generator.html`（新建：规则组编辑器+Sitemap/Crawl-delay 区+实时预览+模板按钮+复制/下载，纯前端）、`static/js/robots_txt_generator.js`（新建：规则模型管理+文本拼接生成+模板+校验+复制/下载逻辑，零依赖）、`tools/categories.go`（营销工具品类+工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 文件夹对比（P1；28 轮新晋，BuildDiff 10-09 形态验证；PM 07:41 明确「留待后续上午轮从容交付」，留待明晨大轮次）。
+- Markdown 转 Word（P1；31 轮新晋，DocForge 形态验证+markdown_to_excel 技术路线验证；中难度，留待后续上午轮从容交付）。
+- YouTube 缩略图下载器（P1；27 轮新晋，i.ytimg.com 四档分辨率直链；跨域图片下载存在 CORS 不确定性，纯度低于本轮候选，顺位顺延留池）。
+- 代码压缩器（P1；27 轮新晋，Varkido Dev 套装单列同套装唯一缺口；开发工具家族互链，顺位顺延留池）。
+- 音频合并器（P1；26 轮新晋，与 audio_trimmer 同技术栈；音频品类连续感知留 PM 定序，顺延）；浏览器屏幕录制器（P1，中难度，上午大轮次）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；SRT 字幕编辑器（P1，顺位顺延）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；创意涂鸦画板（P2 新观察）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（VM 换机丢 known_hosts 已按 TOOLS.md 自动补录 github.com，重试即通，历史已知）；`git log` 确认开发交付 e1a98b7（JSON Schema 验证器）；`grep tools/categories.go` 全量 102 Path，`json_schema_validator` ID 与 `/tools/json-schema-validator` Path 已注册（43~46 行，划入已实现）；新候选 ID `robots_txt_generator`、Path `/tools/robots-txt-generator` 与 102 Path 无重叠（`robots/robots.txt/robots_txt` 零命中）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
 ---
 
 ## 今日任务（2026-10-19 13:36 · 产品调研员研究轮 ✅）
