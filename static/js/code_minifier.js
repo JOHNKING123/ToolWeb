@@ -242,12 +242,56 @@
     }
 
     // ================= JS 空白决策 =================
-    var RESTRICTED_WORDS = { "return": 1, "throw": 1, "break": 1, "continue": 1, "yield": 1, "debugger": 1, "async": 1 };
-    var UNARY_PREFIX_WORDS = { "typeof": 1, "void": 1, "delete": 1, "new": 1 };
+    var RESTRICTED_WORDS = { "return": 1, "throw": 1, "break": 1, "continue": 1, "yield": 1, "debugger": 1 };
+    // 声明关键字：其后空白在任何情况下都必须保留至少一个空格（import{/export{/from"m"/export default function 等）
+    var DECL_SPACE_AFTER = { "var": 1, "let": 1, "const": 1, "function": 1, "class": 1, "extends": 1, "import": 1, "export": 1, "default": 1, "static": 1 };
+    var UNARY_PREFIX_WORDS = { "typeof": 1, "void": 1, "delete": 1, "new": 1, "await": 1 };
     var BINARY_MID_WORDS = { "in": 1, "instanceof": 1, "of": 1 };
     var ELSE_WORDS = { "else": 1, "catch": 1, "finally": 1 };
     var BLOCK_OPEN_WORDS = { "do": 1, "else": 1, "try": 1, "finally": 1 };
     var STMT_OPEN_WORDS = { "else": 1, "do": 1, "try": 1, "finally": 1 };
+
+    // 词 tokens[以 endIdx 结尾] 是否紧跟在 "." 之后（成员访问 a.var / a.static）
+    function wordPrecededByDot(tokens, endIdx, word) {
+        var j = endIdx - word.length;
+        while (j >= 0 && tokens[j].t === "ws") { j--; }
+        return j >= 0 && tokens[j].t === "ch" && tokens[j].v === ".";
+    }
+
+    // 位置 i 的空白是否处于 import/export 语句内（具名 {} 内，或 from 子句），
+    // 用于 as/from 前后留空格；普通标识符的 ASI 换行不受影响
+    function inImportExport(tokens, i) {
+        var depth = 0;
+        for (var j = i - 1; j >= 0; j--) {
+            var t = tokens[j];
+            if (t.t === "ws" || t.t === "str") { continue; }
+            var v = t.v;
+            if (v === "}" || v === ")" || v === "]") { depth++; continue; }
+            if (v === "{" || v === "(" || v === "[") {
+                if (depth > 0) { depth--; continue; }
+                // 顶层 {：前面是 import/export 才是具名导入/导出的括号
+                var k = j - 1;
+                while (k >= 0 && tokens[k].t === "ws") { k--; }
+                if (k >= 0 && tokens[k].t === "ch" && isWordChar(tokens[k].v)) {
+                    var w = wordEndingAt(tokens, k);
+                    if (w === "import" || w === "export") { return true; }
+                }
+                return false;
+            }
+            if (v === ";" && depth === 0) { return false; }
+        }
+        // 文件开头：看首个有效词
+        for (var m = 0; m < tokens.length; m++) {
+            var tm = tokens[m];
+            if (tm.t === "ws") { continue; }
+            if (tm.t === "ch" && isWordChar(tm.v)) {
+                var w0 = wordStartingAt(tokens, m);
+                return w0 === "import" || w0 === "export";
+            }
+            return false;
+        }
+        return false;
+    }
 
     // 把某处空白替换成 "" / " " / ";"（强压缩模式，含换行）
     function decideStrong(tokens, i) {
@@ -274,11 +318,32 @@
             return rep;
         }
 
+        // 0a) 声明关键字后换行：var/let/const/function/class/extends/import/export/static 之后必须留空格
+        //     （成员访问 a.var / a.static 排除：词前面是 . 时走正常 ASI 规则）
+        if (pw && DECL_SPACE_AFTER[pw] && (ncW || nc === "(" || nc === "*" || nc === "{" || nc === "[" || nt.t === "str") &&
+            !wordPrecededByDot(tokens, pi, pw)) { return " "; }
+        // 0b) async 特殊处理：async function / async() / async *gen / async x=>x 必须留空格，其余才按 ASI 打分号
+        if (pw === "async") {
+            if (nw === "function" || nc === "(" || nc === "*") { return " "; }
+            if (ncW) {
+                var ei = ni + nw.length - 1, a = nextSigIdx(tokens, ei), b = a >= 0 ? nextSigIdx(tokens, a) : -1;
+                if (a >= 0 && b >= 0 && tokens[a].v === "=" && tokens[b].v === ">") { return " "; }
+            }
+            return ";";
+        }
         // 1) 受限产生式：return/throw/break/continue/yield 后换行 = ASI，用分号等价还原
         if (pw && RESTRICTED_WORDS[pw]) { return ";"; }
         // 2) else/catch/finally 前必须留空格
         if (nw && ELSE_WORDS[nw]) { return " "; }
-        // 2b) do/else/try/finally 后直接跟语句：留空格
+        // 2b) import/export 语句内 as/from 前后留空格：x as y / from "m"；
+        //     仅限 import/export 语句上下文，普通标识符换行（如 foo\nfrom）仍走 ASI
+        if ((nw === "as" || nw === "from" || pw === "as" || pw === "from") && inImportExport(tokens, i)) { return " "; }
+        // 2c) 对象 getter/setter：get\nx(){} / set\nx(v){} 必须留空格
+        if ((pw === "get" || pw === "set") && ncW) {
+            var nwEnd = ni + nw.length - 1, afterW = nextSigIdx(tokens, nwEnd);
+            if (afterW >= 0 && tokens[afterW].t === "ch" && tokens[afterW].v === "(") { return " "; }
+        }
+        // 2d) do/else/try/finally 后直接跟语句：留空格
         if (pw && STMT_OPEN_WORDS[pw]) { return " "; }
 
         // 3) 下一个是 {
@@ -337,7 +402,14 @@
         var pi = prevSigIdx(tokens, i), ni = nextSigIdx(tokens, i);
         if (pi < 0 || ni < 0) { return ""; }
         var pc = lastChar(tokens[pi]), nc = firstChar(tokens[ni]);
-        if (isWordChar(pc) && isWordChar(nc)) { return " "; }
+        var pcW = isWordChar(pc), ncW = isWordChar(nc);
+        if (pcW && ncW) { return " "; }
+        var pw = pcW && tokens[pi].t === "ch" ? wordEndingAt(tokens, pi) : "";
+        // 声明关键字后必须留空格：import{ / export{ / function( / let[ / import"m"（成员访问 a.var 排除）
+        if (pw && DECL_SPACE_AFTER[pw] && (nc === "(" || nc === "*" || nc === "{" || nc === "[" || tokens[ni].t === "str") &&
+            !wordPrecededByDot(tokens, pi, pw)) { return " "; }
+        // import/export 语句内 from 后跟字符串：from"m" 必须留空格
+        if (pw === "from" && tokens[ni].t === "str" && inImportExport(tokens, i)) { return " "; }
         if ((pc === "+" && nc === "+") || (pc === "-" && nc === "-") ||
             (pc === "/" && (nc === "/" || nc === "*")) ||
             (pc === "*" && nc === "/") || (pc === "<" && nc === "!")) {
@@ -441,7 +513,7 @@
             return m;
         });
         // 零值去单位：0px -> 0（排除 10px / 0.5px 这类）
-        s = s.replace(/(?<![\d.])0(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|q|in|pt|pc|deg|grad|rad|turn|s|ms|%)(?![\w%])/g, "0");
+        s = s.replace(/(^|[^\d.])0(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|q|in|pt|pc|deg|grad|rad|turn|s|ms|%)(?![\w%])/g, "$10");
         // 去掉 } 前多余的分号
         s = s.replace(/;}/g, "}");
         return s;
