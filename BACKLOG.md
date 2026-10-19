@@ -1,4 +1,36 @@
 
+> 维护人：产品调研员 · 每日更新（2026-10-19 09:36 第二十九轮研究）
+
+## 今日任务（2026-10-19 09:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-19 通用调研第二十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。单位换算器已交付闭环（07:41 PM 决策轮立项→开发交付 59e735f；`grep tools/categories.go` 确认 ID `unit_converter`、Path `/tools/unit-converter` 已注册（847/850 行），全量 **100 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 上午轮次，中难度候选可排。
+
+**本轮四件事**（09:36 全网调研，通用方向）：
+1. 单位换算器交付确认：`git log` 确认开发交付 59e735f（长度/重量/温度/数据存储四分类 + KB=1000/KiB=1024 双口径开关 + 纯前端实时换算 + 一键复制，「生活工具」品类）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（换机丢 known_hosts 自动补录 github.com，重试即通，历史已知）；`grep` 全量 100 Path（99+1），ID/Path 已注册；候选池划出，已实现清单追加（delta：+ 单位换算器）。
+2. 新信号扫描（全网，无新单页可落地信号）：① V2EX 每日热点 2026-10-18（v2ex.top）：LayoutKeeper（多屏窗口布局记忆，macOS 桌面 App 形态）、「勿追踪」安卓开源应用（无障碍权限去分享链接追踪参数，移动端 App 形态）、Mac 锁屏 Codex/ChatGPT 离线排查（问题帖非工具）——均非单页纯前端口径，不单立；② HN：Ask HN「simple tools/products/web apps」系列均为 9 天–336 天前旧帖或征集帖（无新实现形态），无新单页信号；③ dev.to「I built」系列复扫：TheTextKit（adilbensied，30 文本工具：行去重/排序、大小写、邮箱/URL 提取、slug 生成）——行去重/排序/字数/大小写仓库 `text_tools` 已覆盖（templates 实核 opDedupe/opSort）、邮箱提取器 P2 在池、`ai_text_cleaner` 已交付、其余为 SIP/EMI/税计算器（用户方向下不扩展），不单立；④ 网址导航类 SEO 文章（Smallpdf/iLovePDF/Remove.bg/Pixlr/TinyPNG/ProcessOn 等）均为已知形态复述，无新单页信号；⑤ PH 本周多为 agent/数字宠物/App 形态，无单页新信号。
+3. 顺位更新（不引入新候选）：① **图片精确体积压缩器**——PM 07:41 轮明确「下轮图片节奏冷却后优先立项」；本轮即该下轮（favicon 03:39 交付后已隔 base-converter、unit-converter 两轮非图片品类，错峰完毕）；② **JSON Schema 验证器**——22→26 轮连续递进第一候补（kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重证据），纯前端中难度，09:36 上午大轮次可排；③ **文件夹对比**——28 轮新晋（BuildDiff 10-09 形态验证），PM 07:41 明确「留待后续上午轮从容交付」，上午轮候选。
+4. 候选池维护：单位换算器划出（已实现 +1，全量 100 Path）；其余候选顺位不变——robots.txt 生成器/YouTube 缩略图下载器/代码压缩器（27 轮新晋，顺位顺延）；音频合并器（音频品类连续感知留 PM 定序）；浏览器屏幕录制器/EPUB 阅读器/SQLite 查看器/OFD/视频抽帧（中难度，上午轮次候补）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮等 P1 留池。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；09:36 上午轮次，中难度可排）：
+
+1. **图片精确体积压缩器（Compress to Target KB）** — P1（PM 07:41 明确「下轮图片节奏冷却后优先立项」；连续三轮顺延兑现顺位；dev.to mdshamimali 2026-10-18 DodoDeck 发布帖 headline 功能 "exact KB image resizer" 佐证；证件照/考试报名/公众号/简历附件的「≤X KB」硬限制痛点真实；img-compress 无目标体积模式已实锤去重；纯前端小难度：目标 KB→二分质量+尺寸降级→一次命中导出；100 Path 无重叠）。
+2. **JSON Schema 验证器（JSON Schema Validator）** — P1（顺位第一候补：22→26 轮连续递进；kkp DevTrove 10-13 + pyfiletoolkit 08-08 + Varkido 10-01 三重证据；纯前端中难度：ajv 本地 vendor 或自研 draft-07 核心子集 + 错误行列定位；09:36 上午大轮次可高质量交付；json 工具家族（json_parser/json_yaml/text_diff）互链；100 Path `json_schema`/`JSON Schema` 零命中）。
+3. **文件夹对比（Folder Diff）** — P1（28 轮新晋：dev.to dev5942-b 2026-10-09 BuildDiff 发布帖形态验证，递归对比+新增/删除/修改/未变四态报告+本地隐私口径；桌面 Beyond Compare 付费方案的免费替代；纯前端中难度：File System Access API 双目录选择→Web Crypto SHA-256 流式哈希比对→差异树渲染+报告下载；Chrome/Edge，Firefox 降级提示；PM 07:41 明确「留待后续上午轮从容交付」；100 Path folder/文件夹对比/builddiff 零命中，与 text-diff 文本对比不重叠）。
+
+robots.txt 生成器（P1；27 轮新晋，Varkido 10-01 SEO 套装单列，同套装 SERP/OG 已交付家族佐证；纯前端小难度；顺位顺延）；YouTube 缩略图下载器（P1；27 轮新晋，四档分辨率 i.ytimg.com 直链，纯前端小难度；顺位顺延）；代码压缩器（P1；27 轮新晋，Varkido Dev 套装单列同套装唯一缺口，纯前端小难度；顺位顺延）；浏览器屏幕录制器（P1，中难度，上午大轮次候补）；SRT 字幕编辑器（P1，顺位顺延）；EPUB 电子书阅读器（P1，中难度，上午大轮次）；SQLite 数据库查看器（P1，中难度，上午大轮次）；OFD 阅读与转 PDF（P1，中-大，上午大轮次）；视频抽帧（P1，中难度，上午轮次）；音频合并器（P1，26 轮新晋，音频品类连续两弹感知留 PM 定序）；日期加减/日期差（P1 观察）；报价单/收据生成器（P1，用户方向下顺位不提前）；SVG 转 React JSX（P1 观察）；屏幕常亮工具（P1，留池）；年会大屏抽奖（时令预热）；金额大写转换器（节奏调节位）；白噪音发生器（P2 观察）；番茄钟（P2 观察）；Kanban 看板（P2 观察）；倒计时器（P2 观察）；在线钢琴（P2 观察）；TTS 文本转语音朗读器（P2 观察）；MP3 标签编辑器（P2 观察）；贴纸生成器（P2 观察）；重复词查找器（P2 观察）；DNS 传播检查（P2 观察）；cURL 转请求代码（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第二十九轮：单位换算器已实现划出；本轮无新单页信号，未立新候选；全量 100 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| （本轮无新增候选行） | 新信号扫描（V2EX 10-18 热点桌面/App 形态、HN 旧帖、dev.to「I built」TheTextKit 文本族已覆盖、网址导航 SEO 复述、PH agent/App 形态）均无新单页可落地信号；顺位更新：图片精确体积压缩器（PM 07:41 下轮优先）、JSON Schema 验证器（连续递进第一候补，上午轮可排）、文件夹对比（留待上午轮） | — | — |
+
+**归档说明**：本轮为 10-19 通用调研第二十九轮——单位换算器交付闭环（59e735f，`/tools/unit-converter` 已注册（847/850 行），全量 100 Path，「生活工具」品类），候选池划出，已实现清单 delta 追加；新信号扫描（V2EX 10-18 热点桌面/App 形态、HN 旧帖/征集帖、dev.to TheTextKit 文本族已覆盖、网址导航 SEO 复述、PH 本周 agent/App 形态）均无新单页可落地信号；顺位更新三项（图片精确体积压缩器 PM 07:41 明确下轮优先+连续三轮顺延兑现、JSON Schema 验证器连续递进第一候补+上午大轮次可排、文件夹对比留待上午轮）；WPS 候选表保持冻结归档；仓库 100 注册工具全量核对无重叠（Top3 建议 ID img_target_kb / json_schema_validator / folder_diff），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 59e735f；`grep tools/categories.go` 全量 100 Path（99+1），`unit_converter` ID 与 `/tools/unit-converter` Path 已注册（847/850 行，划入已实现），Top3 建议 ID（img_target_kb / json_schema_validator / folder_diff）与 100 Path 无重叠（`img_target_kb/目标体积/json_schema/JSON Schema/folder/文件夹对比/builddiff` 关键词核对）；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物，历史已知无关项，本轮未动）。
+
+---
+
 > 维护人：产品经理 · 每日排期（2026-10-19 07:41 排期轮）
 
 ## 今日任务（2026-10-19 07:41 · 产品经理排期决策 ✅）
