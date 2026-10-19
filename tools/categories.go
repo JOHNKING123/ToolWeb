@@ -148,6 +148,15 @@ func GetCategories() []Category {
 				// 	Category:    "开发工具",
 				// },
 				{
+					ID:          "mermaid_diagram_renderer",
+					Name:        "Mermaid 图表渲染与导出器",
+					Description: "粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：6 套模板一键插入、四套主题切换、中文错误提示，SVG 下载、PNG 高清导出（2x/3x，透明/白色背景），纯前端本地渲染，代码不出浏览器 · Paste Mermaid code for live flowchart/sequence/gantt/class/ER/state diagrams with SVG & high-res PNG export, 100% client-side",
+					Path:        "/tools/mermaid-diagram-renderer",
+					Icon:        "account_tree",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "regex",
 					Name:        "正则表达式测试",
 					Description: "测试和验证正则表达式，实时显示匹配结果",

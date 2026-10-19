@@ -1,0 +1,139 @@
+{{define "mermaid_diagram_renderer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid 图表渲染与导出器 - 在线画流程图/时序图/甘特图/类图/ER图/状态图，一键导出 PNG/SVG</title>
+    <meta name="description" content="免费在线 Mermaid 图表渲染器：粘贴或手写 Mermaid 代码，输入即实时渲染流程图、时序图、甘特图、类图、ER 图、状态图；四套主题切换，SVG 直接下载、PNG 高清导出（2x/3x），纯浏览器本地渲染，代码不出浏览器。Free online Mermaid diagram renderer: live preview, SVG/PNG export, 100% client-side.">
+    <meta name="keywords" content="Mermaid 渲染,Mermaid 转图片,Mermaid to PNG,Mermaid to SVG,流程图在线渲染,时序图生成器,甘特图在线画,类图生成器,ER图在线,状态图绘制,Mermaid 导出 PNG,Mermaid 在线编辑器,mermaid diagram renderer,sequence diagram online">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mermaid-diagram-renderer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Mermaid 图表渲染与导出器","description":"粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：四套主题切换，SVG 下载、PNG 高清导出（2x/3x）；纯浏览器本地渲染，代码不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/mermaid-diagram-renderer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mm-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .mm-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .mm-privacy b{color:#047857}
+        .mm-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:0 0 1rem}
+        .mm-tpl-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;transition:border-color .2s,background .2s}
+        .mm-tpl-btn .material-icons{font-size:1.1rem}
+        .mm-tpl-btn:hover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .mm-dual{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .mm-pane h4{margin:0 0 .5rem;font-size:.92rem;color:#374151;display:flex;align-items:center;gap:.35rem}
+        .mm-pane h4 .material-icons{font-size:1.1rem;color:var(--primary-color)}
+        .mm-code{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .8rem;font-size:.88rem;color:#111827;background:#fff;font-family:Consolas,Menlo,"Courier New",monospace;min-height:26rem;resize:vertical;line-height:1.7;tab-size:4}
+        .mm-code:focus{outline:none;border-color:var(--primary-color)}
+        .mm-preview{border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;min-height:26rem;max-height:36rem;overflow:auto;padding:1rem;display:flex;align-items:center;justify-content:center}
+        .mm-preview svg{max-width:100%;height:auto}
+        .mm-preview .mm-empty{color:#9ca3af;font-size:.9rem;text-align:center;line-height:2}
+        .mm-err{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+        .mm-statline{color:var(--primary-color);font-size:.85rem;margin-top:.5rem;min-height:1.3em}
+        .mm-export{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .mm-export select{border:2px solid #e5e7eb;border-radius:.6rem;padding:.5rem .7rem;font-size:.9rem;color:#111827;background:#fff}
+        .mm-export .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .mm-export .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .mm-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .mm-cdn-tip{display:none;border:2px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:.6rem;padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7}
+        .mm-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .mm-tip b{color:#111827}
+        .mm-tip kbd{border:1px solid #d1d5db;border-radius:.3rem;padding:0 .35rem;font-size:.78rem;background:#fff;font-family:inherit}
+        @media (max-width:860px){
+            .mm-dual{grid-template-columns:1fr}
+            .mm-code{min-height:16rem}
+            .mm-preview{min-height:16rem}
+            .mm-export .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">account_tree</i> Mermaid 图表渲染与导出器</h1>
+            <p>左侧写 Mermaid 代码，右侧实时渲染预览；6 套模板一键插入、四套主题切换，SVG 下载、PNG 高清导出。全程浏览器本地渲染，代码不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="mm-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：代码不出浏览器。</b>粘贴或编写的 Mermaid 代码全部在当前浏览器本地渲染、本地导出，不会上传到任何服务器。渲染只用到 Mermaid.js 官方库一次 CDN 加载（可在 DevTools Network 面板验证），除此之外无任何网络请求。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>① 模板一键插入</h3>
+                <div class="mm-toolbar" id="mm-templates">
+                    <button type="button" class="mm-tpl-btn" data-tpl="flowchart"><i class="material-icons">account_tree</i>流程图 flowchart</button>
+                    <button type="button" class="mm-tpl-btn" data-tpl="sequence"><i class="material-icons">swap_calls</i>时序图 sequenceDiagram</button>
+                    <button type="button" class="mm-tpl-btn" data-tpl="gantt"><i class="material-icons">view_timeline</i>甘特图 gantt</button>
+                    <button type="button" class="mm-tpl-btn" data-tpl="class"><i class="material-icons">class</i>类图 classDiagram</button>
+                    <button type="button" class="mm-tpl-btn" data-tpl="er"><i class="material-icons">storage</i>ER 图 erDiagram</button>
+                    <button type="button" class="mm-tpl-btn" data-tpl="state"><i class="material-icons">radio_button_checked</i>状态图 stateDiagram</button>
+                    <button type="button" class="mm-tpl-btn" id="mm-clear"><i class="material-icons">delete_sweep</i>清空</button>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>② 编辑与预览 <span class="mm-statline" id="mm-statline"></span></h3>
+                <div class="mm-dual">
+                    <div class="mm-pane">
+                        <h4><i class="material-icons">code</i> Mermaid 代码（停止输入约 0.5 秒自动渲染）</h4>
+                        <textarea class="mm-code" id="mm-code" spellcheck="false" placeholder="在这里粘贴或手写 Mermaid 代码，例如：&#10;&#10;graph TD&#10;    A[开始] --> B{判断}&#10;    B -->|是| C[结束]&#10;    B -->|否| D[重试]&#10;    D --> B&#10;&#10;或点上方「模板一键插入」快速起步。"></textarea>
+                    </div>
+                    <div class="mm-pane">
+                        <h4><i class="material-icons">preview</i> 实时预览</h4>
+                        <div class="mm-preview" id="mm-preview">
+                            <div class="mm-empty">代码输入或模板插入后，这里会显示渲染结果</div>
+                        </div>
+                        <div class="mm-err" id="mm-err" role="alert"></div>
+                        <div class="mm-cdn-tip" id="mm-cdn-tip"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>③ 主题与导出</h3>
+                <div class="mm-export">
+                    <select id="mm-theme" aria-label="渲染主题">
+                        <option value="default">主题：默认（default）</option>
+                        <option value="neutral">主题：中性（neutral）</option>
+                        <option value="dark">主题：深色（dark）</option>
+                        <option value="forest">主题：森林（forest）</option>
+                    </select>
+                    <select id="mm-scale" aria-label="PNG 导出清晰度">
+                        <option value="2" selected>清晰度：2x（高清）</option>
+                        <option value="3">清晰度：3x（超清）</option>
+                        <option value="1">清晰度：1x（标准）</option>
+                    </select>
+                    <select id="mm-bg" aria-label="PNG 背景">
+                        <option value="white">背景：白色</option>
+                        <option value="transparent">背景：透明</option>
+                    </select>
+                    <button class="btn btn-primary" id="mm-png" disabled><i class="material-icons">download</i> 导出 PNG</button>
+                    <button class="btn" id="mm-svgdl" disabled><i class="material-icons">file_download</i> 下载 SVG</button>
+                    <button class="btn" id="mm-svgcopy" disabled><i class="material-icons">content_copy</i> 复制 SVG 代码</button>
+                    <button class="btn" id="mm-srccopy"><i class="material-icons">code</i> 复制 Mermaid 源码</button>
+                </div>
+                <div class="mm-copy-tip" id="mm-copytip"></div>
+                <div class="mm-tip" style="margin-top:.7rem;font-size:.86rem;">PNG 为高清位图，可直接插入 PPT / 公众号 / 文档；SVG 为矢量文件，无限放大不模糊，方便在网页/设计软件中继续编辑。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="mm-tip">
+                    <b>怎么用：</b>①点上方模板按钮插入一张图起步，或直接把写好的 Mermaid 代码粘贴到左侧编辑框；停止输入约 0.5 秒后右侧自动渲染，语法错误会给出中文提示（含行号定位）；②切主题看效果；③选清晰度与背景，下载 PNG / SVG，或一键复制代码。<br>
+                    <b>语法速查：</b>流程图 <kbd>graph TD / LR</kbd>；时序图 <kbd>sequenceDiagram</kbd>，参与者用 <kbd>participant</kbd>；甘特图 <kbd>gantt</kbd>，中文任务名直接写即可；类图 <kbd>classDiagram</kbd>；ER 图 <kbd>erDiagram</kbd>；状态图 <kbd>stateDiagram-v2</kbd>。<br>
+                    <b>中文友好：</b>中文节点名、中文注释、甘特图中文任务名均可直接渲染；中文错误提示会尽量指出出错的行号。注意：ER 图（erDiagram）的实体名与属性名按 Mermaid 语法规必须用英文标识符，流程图/时序图/甘特图/类图/状态图则可直接写中文。<br>
+                    <b>「图表双件套」：</b>表格数据（CSV/Excel）转柱状图、折线图、饼图，用 <a href="/tools/chart-generator">在线图表生成器</a>；代码式图表（流程图/时序图/甘特图等）用本页。两个工具都是纯前端、数据不出浏览器。<br>
+                    <b>离线说明：</b>Mermaid.js 渲染库经 cdnjs（版本号锁定）懒加载，首次渲染时加载一次；若当前网络打不开 cdnjs，页面会给出中文提示，不会白屏，代码不会丢失。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/mermaid_diagram_renderer.js?v=1"></script>
+</body>
+</html>
+{{end}}

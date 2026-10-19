@@ -1,3 +1,47 @@
+## 今日任务（2026-10-19 21:00 · 产品经理排期轮）
+
+**选定：Mermaid 图表渲染与导出器（/tools/mermaid-diagram-renderer）** — 本轮唯一任务：
+- **顺位递进**：研究轮 34 新晋 P1 → 35 轮顺位第一候补 → 21:00 PM 立项；尊重顺位定序，无硬伤不跳过。
+- **纯度高**：纯前端，mermaid.js 经 CDN 懒加载（家族先例：pdf-lib 1.17.1 cdnjs 懒加载已跑通，PDF 元数据清除器生产验证），零后端、零上传，一轮交付确定性高。
+- **家族叙事**：代码式图表输入形态零覆盖——chart_generator 只做数据图表（CSV→柱/折/饼）、思维导图只做节点编辑；与 chart_generator、markdown_to_excel（文档转换）形成开发/文档家族互链。形态验证：dev.to rishabdugar fizzdoc 64 浏览器工具套装（纯浏览器本地、开源）单列 Mermaid to PNG/SVG；痛点真实：文档/博客写手手写 Mermaid（流程图/时序图/甘特图/类图/ER 图）后需要输入即渲染+PNG/SVG 导出，中文本站式单页形态稀缺。
+- **去重实锤**：实测 `grep tools/categories.go`（106 Path 全量）——`mermaid/flowchart/流程图` 全零命中（「图表」仅命中 chart_generator 描述）。
+- **晚间节奏**：21:00 晚间轮次，小-中难度节奏调节位；19:00 PM 提过的三项技术担忧（CDN 版本稳定性/中文渲染/SVG→PNG 转码）已核定为可控风险而非硬伤：CDN 固定版本号（mermaid@10 cdnjs 懒加载，版本锁定不浮动）、中文渲染为 SVG text 节点随页面 CSS 字体（标准做法无坑）、SVG→PNG 走 XMLSerializer 序列化 + canvas 绘制（mermaid 输出为纯 SVG 无 foreignObject，无 tainted canvas 风险）。
+
+**规格**：
+1. 编辑器：左侧 textarea 粘贴/手写 Mermaid 代码，输入防抖（约 500ms）即渲染右侧预览；语法错误给出中文提示并尽量定位行号，不崩。
+2. 6 套模板一键插入：流程图（flowchart）/时序图（sequenceDiagram）/甘特图（gantt）/类图（classDiagram）/ER 图（erDiagram）/状态图（stateDiagram）。
+3. 渲染：mermaid.js CDN 懒加载（版本号固定，失败时中文降级提示不白屏），mermaid.render 输出 SVG 预览。
+4. 主题与配色：default/neutral/dark/forest 四主题切换；PNG 导出支持透明背景/白色背景。
+5. 下载：SVG 直接下载（原始矢量）；PNG 经 canvas 转码下载，支持 2x/3x 高清倍率。
+6. 复制：复制 SVG 代码、复制 Mermaid 源码两个按钮。
+7. 纯前端、零后端、零上传；响应式，桌面端优先（编辑器+预览双栏）、移动端上下堆叠可用。
+8. 注册：`tools/categories.go`「开发工具」品类，新增工具 ID `mermaid_diagram_renderer`、Name「Mermaid 图表渲染与导出器」、Path `/tools/mermaid-diagram-renderer`（New: true），中英文描述 + SEO keywords（Mermaid 渲染、Mermaid 转图片、Mermaid to PNG、流程图在线渲染、时序图生成器）；与 chart_generator（在线图表生成器）页面互链（「相关工具」入口，图表双件套）。
+9. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/mermaid-diagram-renderer` 可开（200）
+- [ ] 6 套模板逐一插入→渲染成功，SVG 预览正常（重点抽查甘特图中文任务名、时序图中文注释渲染）
+- [ ] 非法代码给出中文错误提示不崩；修复代码后渲染恢复
+- [ ] 下载 SVG 文件内容为合法 SVG；下载 PNG 可开、高清倍率生效（2x 尺寸约为 1x 两倍）
+- [ ] 主题切换生效；透明/白色背景 PNG 均可用
+- [ ] 复制 SVG/Mermaid 源码成功，粘贴验证
+- [ ] DevTools Network 抽查无后端调用、无外部请求（除 mermaid.js CDN 一次）
+- [ ] mermaid CDN 拦截时中文降级提示，不白屏
+- [ ] `categories.go` 注册完成（开发工具品类，New: true），首页/导航/sitemap 生效；与 chart_generator 互链生效
+- [ ] 移动端可操作（编辑+渲染+下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/mermaid_diagram_renderer.html`（新建：双栏编辑器+预览区＋模板按钮＋下载/复制工具栏）、`static/js/mermaid_diagram_renderer.js`（新建：mermaid CDN 懒加载＋防抖渲染＋SVG/PNG 导出逻辑，零依赖）、`tools/categories.go`（开发工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——13:40/15:40/17:38/19:00/21:00 研究轮连续五轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 批量重命名助手（P1；33 轮新观察）：365lab 形态验证、小难度确定性高，但顺位在本轮 Mermaid 之后；为下一晚间小难度候补。
+- 文件夹对比（P1；PM 07:41 明确留待上午轮从容交付，仍为上午大轮次第一候补）；Markdown 转 Word（P1；上午大轮次候补，DocForge 形态验证+markdown_to_excel 技术路线验证）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器（P1，音频品类连续感知留 PM 定序）；SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；金额大写转换器（节奏调节位）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享（P2 新观察）；词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（fd1c450）；`grep tools/categories.go` 全量 106 Path；新候选 ID `mermaid_diagram_renderer`、Path `/tools/mermaid-diagram-renderer` 与 106 Path 无重叠；本地当前分支 muse/dev-20260929；工作树未跟踪文件为 `toolWeb.bak-prev` 与 `toolweb`（构建产物/目录，历史已知无关项，本轮未动）。
+
+---
+
 ## 今日任务（2026-10-19 21:00 · 产品调研员研究轮 ✅）
 
 **交付状态**：10-19 通用调研第三十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。PDF 元数据查看与清除器已交付闭环（19:00 PM 决策轮立项→开发交付 3bf4c0e；`grep tools/categories.go` 确认 ID `pdf_metadata_cleaner`、Path `/tools/pdf-metadata-cleaner` 已注册，全量 **106 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 晚间轮次，小难度候选优先。
