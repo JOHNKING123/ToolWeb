@@ -1,0 +1,235 @@
+{{define "invoice_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>发票生成器 - 在线发票模板生成/打印导出 PDF（invoice generator）| 程序员工具箱</title>
+<meta name="description" content="免费在线发票生成器：填写卖方/买方信息与行项目（品名/数量/单价/折扣/税率），0/1/3/6/9/13% 税率预设、整单折扣、合计/税额/价税合计自动计算、人民币金额大写自动生成，多草稿本地保存，A4 发票样式一键打印导出 PDF。纯前端零上传，单据不出电脑。Invoice generator: line items, tax rates, discounts, Chinese uppercase amounts, print-ready A4 invoice, 100% client-side.">
+<meta name="keywords" content="发票生成,发票生成器,电子发票,发票打印,发票模板,发票导出 PDF,金额大写,人民币大写,增值税发票模板,invoice generator,invoice maker,invoice template PDF">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/invoice-generator">
+<meta property="og:title" content="发票生成器 - 在线发票模板生成/打印导出 PDF">
+<meta property="og:description" content="卖方/买方信息＋行项目（折扣/税率）＋合计税额自动计算＋人民币金额大写，多草稿本地保存，A4 打印样式导出 PDF，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/invoice-generator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"发票生成器","alternateName":"invoice generator","description":"在线发票模板生成：卖方/买方信息、行项目（品名/规格/数量/单价/折扣/税率）增减行、0/1/3/6/9/13% 税率预设、整单折扣、合计/税额/价税合计自动计算、人民币金额大写自动生成，多草稿 localStorage 保存，A4 发票样式打印导出 PDF；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/invoice-generator","applicationCategory":"BusinessApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.inv-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.inv-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.inv-drafts{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:.9rem 1.1rem;margin-bottom:1.2rem;
+display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.inv-drafts .material-icons{color:#2563eb}
+.inv-draft-list{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.inv-draft-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #93c5fd;background:#eff6ff;
+color:#1d4ed8;border-radius:999px;padding:.35rem .4rem .35rem .9rem;font-size:.85rem;cursor:pointer;font-weight:600}
+.inv-draft-chip em{font-style:normal;color:#6b7280;font-weight:400;font-size:.78rem}
+.inv-draft-chip button{border:none;background:#dbeafe;color:#1d4ed8;border-radius:50%;width:1.3rem;height:1.3rem;
+cursor:pointer;font-size:.9rem;line-height:1}
+.inv-draft-empty{font-size:.85rem;color:#9ca3af}
+.inv-work{display:grid;grid-template-columns:minmax(380px,460px) 1fr;gap:1.2rem;align-items:start}
+.inv-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.inv-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.inv-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+.inv-grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.inv-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.7rem}
+.inv-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.inv-field input,.inv-field select{border:1px solid #d1d5db;border-radius:.45rem;padding:.5rem .7rem;
+font-size:.9rem;background:#fff;color:#1f2937;width:100%;box-sizing:border-box}
+.inv-field input:focus,.inv-field select:focus{outline:none;border-color:#2563eb;
+box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+.inv-items{width:100%;border-collapse:collapse;font-size:.85rem}
+.inv-items th{background:#f8fafc;color:#4b5563;font-weight:600;padding:.45rem .3rem;border:1px solid #e5e7eb;
+white-space:nowrap;font-size:.78rem}
+.inv-items td{border:1px solid #e5e7eb;padding:.25rem}
+.inv-items input,.inv-items select{border:1px solid #e5e7eb;border-radius:.35rem;padding:.35rem .4rem;
+font-size:.85rem;width:100%;box-sizing:border-box;background:#fff}
+.inv-items input:focus,.inv-items select:focus{outline:none;border-color:#2563eb}
+.inv-items .r-amt{white-space:nowrap;text-align:right;font-weight:600;color:#111827;min-width:4.5em}
+.inv-del{border:1px solid #fecaca;background:#fef2f2;color:#dc2626;border-radius:.4rem;width:1.7rem;height:1.7rem;
+cursor:pointer;font-size:1rem;line-height:1}
+.inv-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.inv-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.inv-btn .material-icons{font-size:1.1rem}
+.inv-btn-primary{background:#2563eb;color:#fff}
+.inv-btn-primary:hover{background:#1d4ed8}
+.inv-btn-green{background:#07c160;color:#fff}
+.inv-btn-green:hover{background:#06a953}
+.inv-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.inv-btn-secondary:hover{background:#e5e7eb}
+.inv-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.7}
+/* ---- 发票纸面（预览＝打印） ---- */
+.inv-sheet{background:#fff;border:1px solid #d1d5db;border-radius:.3rem;padding:1.6rem 1.8rem;
+color:#111827;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.inv-sheet h2{text-align:center;font-size:1.5rem;letter-spacing:.6em;margin:0 0 1rem;text-indent:.6em}
+.inv-meta{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.8rem;flex-wrap:wrap;gap:.4rem}
+.inv-parties{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.9rem}
+.inv-party{border:1px solid #111827;padding:.6rem .8rem;font-size:.85rem;line-height:1.9}
+.inv-party b{display:block;font-size:.9rem;margin-bottom:.2rem}
+.inv-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:.8rem}
+.inv-table th,.inv-table td{border:1px solid #111827;padding:.45rem .4rem;text-align:left}
+.inv-table th{background:#f3f4f6;text-align:center;font-size:.82rem}
+.inv-table .num{text-align:right;white-space:nowrap}
+.inv-table tfoot td{font-weight:700}
+.inv-cn{border:1px solid #111827;padding:.6rem .8rem;font-size:.92rem;margin-bottom:.8rem;line-height:1.9}
+.inv-foot{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;font-size:.85rem;line-height:1.9}
+.inv-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.inv-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.inv-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.inv-related .soon{opacity:.55;cursor:not-allowed}
+#inv-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #34d399}
+#inv-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:1100px){.inv-work{grid-template-columns:1fr}}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff}
+  body *{visibility:hidden}
+  #inv-sheet,#inv-sheet *{visibility:visible}
+  #inv-sheet{position:absolute;left:0;top:0;width:100%;margin:0;border:none;border-radius:0;
+  box-shadow:none;padding:0}
+  #inv-toast{display:none!important}
+}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">receipt_long</i> 发票生成器</h1>
+<p>填写卖方 / 买方信息与行项目，合计 / 税额 / 价税合计自动计算，人民币金额大写自动生成 —— A4 发票样式一键打印导出 PDF，多草稿本地保存。</p>
+</div>
+<div class="tool-content" style="max-width:1280px;margin:auto;">
+<div class="inv-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>发票计算、金额大写、草稿保存（localStorage）全部在浏览器本地完成，无任何后端请求，单据内容不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="inv-drafts inv-screen">
+<i class="material-icons">save</i>
+<b style="font-size:.92rem">发票草稿</b>
+<div class="inv-draft-list" id="inv-draft-list"></div>
+<span style="font-size:.8rem;color:#9ca3af">表单自动暂存，刷新不丢；点芯片载入草稿</span>
+</div>
+
+<div class="inv-work">
+<!-- 左：表单 -->
+<div class="inv-screen" id="inv-form">
+<div class="inv-panel">
+<h3><i class="material-icons">store</i> 卖方信息</h3>
+<div class="inv-grid2">
+<div class="inv-field"><label>单位名称</label><input id="inv-seller-name" placeholder="例：深圳市某某科技有限公司"></div>
+<div class="inv-field"><label>纳税人识别号（税号）</label><input id="inv-seller-tax" placeholder="例：91440300XXXXXXXXXX"></div>
+</div>
+<div class="inv-field"><label>地址、电话</label><input id="inv-seller-addr" placeholder="地址＋电话"></div>
+<div class="inv-field"><label>开户行及账号</label><input id="inv-seller-bank" placeholder="开户行＋账号"></div>
+<div class="inv-field"><label>开票人</label><input id="inv-seller-drawer" placeholder="开票人姓名"></div>
+</div>
+<div class="inv-panel">
+<h3><i class="material-icons">person</i> 买方信息</h3>
+<div class="inv-grid2">
+<div class="inv-field"><label>名称</label><input id="inv-buyer-name" placeholder="购买方名称"></div>
+<div class="inv-field"><label>纳税人识别号（税号，可选）</label><input id="inv-buyer-tax" placeholder="购买方税号"></div>
+</div>
+</div>
+<div class="inv-panel">
+<h3><i class="material-icons">list_alt</i> 行项目</h3>
+<table class="inv-items">
+<thead><tr><th>品名</th><th>规格型号</th><th>单位</th><th>数量</th><th>单价</th><th>折扣%</th><th>税率</th><th>不含税金额</th><th></th></tr></thead>
+<tbody id="inv-rows"></tbody>
+</table>
+<div class="inv-actions">
+<button type="button" class="inv-btn inv-btn-secondary" id="inv-add-row"><i class="material-icons">add</i> 增加行</button>
+</div>
+<div class="inv-grid2" style="margin-top:.9rem">
+<div class="inv-field"><label>整单折扣率 %（先行折、后整折）</label><input id="inv-discount" type="number" min="0" max="100" step="any" value="0"></div>
+<div class="inv-field"><label>发票日期</label><input id="inv-date" type="date"></div>
+</div>
+<div class="inv-field"><label>发票编号（可选）</label><input id="inv-no" placeholder="例：20261021001"></div>
+<div class="inv-field"><label>备注</label><input id="inv-remark" placeholder="备注信息"></div>
+<div class="inv-caliber">计算口径：先按「行折扣」折出行金额，再按「整单折扣」折出不含税金额，税额 = 不含税金额 × 税率（税额按折后计）；每行金额保留到分、四舍五入。</div>
+</div>
+<div class="inv-panel">
+<h3><i class="material-icons">print</i> 保存与导出</h3>
+<div class="inv-actions">
+<button type="button" class="inv-btn inv-btn-secondary" id="inv-save-draft"><i class="material-icons">save</i> 保存草稿</button>
+<button type="button" class="inv-btn inv-btn-secondary" id="inv-new"><i class="material-icons">note_add</i> 新建空白</button>
+<button type="button" class="inv-btn inv-btn-primary" id="inv-print"><i class="material-icons">print</i> 打印 / 导出 PDF</button>
+</div>
+<div class="inv-caliber">打印时仅输出右侧发票纸面（A4），表单控件不进入打印；浏览器打印对话框选「另存为 PDF」即导出。</div>
+</div>
+</div>
+
+<!-- 右：发票预览（＝打印纸面） -->
+<div>
+<div class="inv-sheet" id="inv-sheet">
+<h2>发 票</h2>
+<div class="inv-meta"><span>发票编号：<b id="inv-pv-no">—</b></span><span>开票日期：<b id="inv-pv-date">—</b></span></div>
+<div class="inv-parties">
+<div class="inv-party"><b>卖方</b><span id="inv-pv-seller"></span></div>
+<div class="inv-party"><b>买方</b><span id="inv-pv-buyer"></span></div>
+</div>
+<table class="inv-table">
+<thead><tr><th>序号</th><th>品名</th><th>规格型号</th><th>单位</th><th>数量</th><th>单价</th><th>折扣</th><th>税率</th><th>不含税金额</th><th>税额</th><th>价税合计</th></tr></thead>
+<tbody id="inv-pv-rows"></tbody>
+<tfoot>
+<tr><td colspan="8" style="text-align:right">折前合计</td><td class="num" id="inv-pv-gross">0.00</td><td colspan="2"></td></tr>
+<tr><td colspan="8" style="text-align:right">行折扣后合计</td><td class="num" id="inv-pv-net">0.00</td><td colspan="2"></td></tr>
+<tr><td colspan="8" style="text-align:right">整单折扣（<span id="inv-pv-id">无</span>）后不含税合计</td><td class="num" id="inv-pv-base">0.00</td><td colspan="2"></td></tr>
+<tr><td colspan="8" style="text-align:right">税额合计</td><td class="num" id="inv-pv-tax">0.00</td><td colspan="2"></td></tr>
+<tr><td colspan="8" style="text-align:right">价税合计（小写）</td><td class="num" colspan="3" id="inv-pv-total">0.00</td></tr>
+</tfoot>
+</table>
+<div class="inv-cn">价税合计（大写）：<b id="inv-pv-total-cn">零圆整</b></div>
+<div class="inv-foot">
+<div>备注：<span id="inv-pv-remark">—</span></div>
+<div>开票人：<span id="inv-pv-drawer">—</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="inv-panel inv-screen" style="margin-top:1.2rem">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="inv-faq">
+<dt>折扣和税额是怎么算的？</dt>
+<dd>先按每行的「行折扣」折出行金额，再按「整单折扣率」折出不含税金额，最后税额 = 不含税金额 × 税率（税额按折后计）。每行金额保留到分、四舍五入，合计为各行舍入后相加。</dd>
+<dt>金额大写符合财务规范吗？</dt>
+<dd>按人民币汉字大写规则生成（壹贰叁肆伍陆柒捌玖拾佰仟万亿＋圆角分整），零的补位规则（如壹佰零壹、壹万零壹拾）已按规范处理，仅供单据参考，正式报销请以财务要求为准。</dd>
+<dt>草稿存在哪里？会丢吗？</dt>
+<dd>草稿保存在本机浏览器 localStorage，可保存多张、随时载入/删除；表单输入也会自动暂存，刷新页面不丢。清理浏览器数据会一并清除。</dd>
+<dt>怎么导出 PDF？</dt>
+<dd>点「打印 / 导出 PDF」，在浏览器打印对话框选择「另存为 PDF」即可；打印样式已按 A4 适配，只输出发票纸面，不含表单控件。</dd>
+<dt>我的单据数据会上传吗？</dt>
+<dd>不会。本工具纯前端运行，无后端、无网络请求，所有内容只在你的浏览器里，可打开开发者工具 Network 面板验证。</dd>
+</dl>
+</div>
+
+<div class="inv-panel inv-screen">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="inv-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">发票生成器（当前）</span>
+<a href="/tools/markdown-to-excel" class="btn btn-secondary" style="font-size:.9rem;">Markdown 表格转 Excel</a>
+<a href="/tools/pdf-sign" class="btn btn-secondary" style="font-size:.9rem;">PDF 电子签名</a>
+<!-- 与 P1 池「报价单」预留双向互链：报价单上线后此处改为 <a href="/tools/quotation">报价单</a>，并在报价单页回链本页 -->
+<span class="btn btn-secondary soon" style="font-size:.9rem;" title="即将上线，上线后与本页双向互链">报价单（即将上线）</span>
+</div>
+</div>
+
+</div>
+</div>
+<div id="inv-toast"></div>
+<script src="/tools/static/js/invoice_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

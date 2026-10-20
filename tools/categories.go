@@ -858,6 +858,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "invoice_generator",
+					Name:        "发票生成器",
+					Description: "在线发票模板生成：卖方/买方信息、行项目（品名/规格/数量/单价/折扣/税率）增减行、0/1/3/6/9/13% 税率预设、整单折扣（先行折后整折、税额按折后计）、合计/税额/价税合计自动计算、人民币金额大写自动生成，多草稿 localStorage 保存，A4 发票样式打印导出 PDF，纯前端零上传 · Invoice generator: tax rates, discounts, Chinese uppercase amounts, print-ready A4 invoice, 100% client-side",
+					Path:        "/tools/invoice-generator",
+					Icon:        "receipt_long",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{

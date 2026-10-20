@@ -1,3 +1,106 @@
+## 开发交付（2026-10-21 · 开发轮 ✅）
+
+**交付：发票生成器（invoice_generator）** — 07:00 PM 决策轮立项本轮唯一任务，开发闭环：
+- **实现**：左侧表单区（卖方：单位名称/税号/地址电话/开户行账号/开票人；买方：名称/税号；发票编号/日期/备注）＋右侧发票实时预览区，桌面左右分栏、移动端堆叠；行项目（品名/规格型号/单位/数量/单价/行折扣%/税率）增减行，税率 0/1/3/6/9/13% 预设＋自定义。
+- **计算口径**：先行折、后整折，税额按折后不含税金额计；每行金额保留到分、四舍五入，合计为各行舍入后相加；人民币金额大写自动生成（壹贰叁肆伍陆柒捌玖拾佰仟万亿＋圆角分整，节间/角位零补位按规范）。
+- **草稿**：localStorage 多草稿保存/载入/删除（`tw_invoice_drafts_v1`）＋表单自动暂存（`tw_invoice_autosave_v1`）防刷新丢失；顶部草稿切换栏。
+- **导出**：`@media print` 发票专用样式（A4、仅输出发票纸面、表单控件不进入打印）→ 浏览器打印选「另存为 PDF」导出；纯前端零后端零上传（JS 内零 fetch/XHR，Network 可验证）。
+- **SEO**：title/description/keywords/canonical/og/JSON-LD（SoftwareApplication）配齐；与 P1 池「报价单」预留双向互链（相关工具区「报价单（即将上线）」芯片＋HTML 注释说明上线后改为双向链接）。
+- **验证**：`go build -mod=vendor` 通过；本地 18321 端口 `/tools/invoice-generator` 200、JS 200、title/JSON-LD 命中、sitemap.xml 与首页 index 均含 invoice-generator；`node tests/invoice_generator.test.js` **51 断言全过**（金额大写边界 18：零/整/角分/万亿兆进位/连续零/负数/浮点舍入；行计算口径 19：先行折后整折/税额按折后计/分舍入/超限钳制/异常归零；典型三行项目 6：折前 1349.99/折后 1279.99/税额 117.90/价税 1397.89＋大写壹仟叁佰玖拾柒圆捌角玖分；整单折扣组合 4：1151.99/106.11/1258.10＋大写；空行 2；格式化 2）；DOM stub 烟雾测试 init→渲染→草稿存取无异常。
+- **开发中修复**：金额大写节间补零规则（10010→壹万零壹拾、100001→壹拾万零壹，低位节最高位不足仟时补零）＋角为零分有值时补零（1.05→壹圆零伍分、10010.05→壹万零壹拾圆零伍分）。
+- **注册**：`tools/categories.go` 文档转换品类新增 ID `invoice_generator`、Path `/tools/invoice-generator`（New: true），全量 **124 Path**。
+- **改动文件**：`templates/invoice_generator.html`（新建）、`static/js/invoice_generator.js`（新建）、`tests/invoice_generator.test.js`（新建）、`tools/categories.go`（注册）、`BACKLOG.md`（本 delta）。未碰 master。
+- **已知局限**：金额大写为单据参考写法（FAQ 已声明正式报销以财务要求为准）；草稿存于本机浏览器，清理浏览器数据会清除（FAQ 已声明）。
+
+---
+
+## 今日任务（2026-10-21 07:00 · 产品经理排期轮）
+
+**选定：发票生成器（invoice_generator）** — 本轮唯一任务：
+- **顺位递进**：Markdown 聊天图文转换器交付闭环（c54ac1f＋bb16300 评审修复，全量 123 Path）→ 07:36 研究轮定序「发票生成器晋升第一顺位」，无硬伤不跳过（尊重研究轮定序：研究轮只做新信号挖掘与候选池维护，不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。
+- **轮次匹配**：07:00 早间轮次，纯前端小难度，一轮可高质量交付。
+- **痛点真实**：小商户/自由职业者开正规发票得去注册/上传/付费模板的在线工具；零注册零上传的本地发票生成刚好打掉这个摩擦。
+- **形态验证**：VelnoxLabs 51 清单＋Etemora 帖双重单列（logo＋行项＋折扣＋税→PDF 下载、无水印无注册）＋Toolslay 200+ 站清单多重佐证。
+- **去重实锤**：`grep -inE 'invoice|发票' tools/categories.go`（全量 123 Path）零命中。
+- **方向合规**：业务单据文档工具（非税务计算器），符合用户 10-18 方向修正（聚焦 ToolWeb 工具本身、不扩展泛财务/生活计算器）；与 P1 池「报价单」形成文档模板家族互链。
+- **未选**：代码打包给 LLM（Project to TXT，P1；开发工具家族轮强候补——留开发工具家族轮次用，本轮不提前占用；建议 ID project_to_txt、Path /tools/project-to-txt）；婚宴座位表生成器（P1；上午轮次从容交付）。
+
+**规格**：
+1. 布局：左侧表单区（卖方/买方信息＋行项目编辑＋税率折扣设置）、右侧发票实时预览区；顶部草稿切换栏；桌面左右分栏、移动端堆叠。
+2. 表单：卖方（单位名称/税号/地址电话/开户行账号/开票人）、买方（名称/税号，可选）；行项目（品名/规格型号/单位/数量/单价/折扣率/税率）：增减行、合计/税额/价税合计自动计算。
+3. 金额大写：人民币汉字大写自动生成（圆角分整规则），纯前端算法，node 测试覆盖边界用例。
+4. 税率折扣：常用税率预设（0/1/3/6/9/13%）、整单折扣，行折扣＋整单折扣组合计算口径明确（先行折后整折，税额按折后计）。
+5. 导出：浏览器打印/@media print 发票专用样式（A4 适配）→ PDF 导出；零上传。
+6. 草稿：localStorage 存多张草稿（保存/载入/删除/新建），自动暂存防丢。
+7. 纯前端、零后端、零上传；复制/打印/导出走浏览器原生能力。
+8. 注册：文档转换品类（doc），新增工具 ID `invoice_generator`、Name「发票生成器」、Path `/tools/invoice-generator`（New: true），中英文描述 + SEO keywords（发票生成、电子发票、发票打印、发票模板、invoice generator）；SEO 面板（title/description/keywords/canonical/JSON-LD）按家族标准配齐；与报价单（P1 池，后续）预留双向互链。
+
+**验收标准**：
+- [ ] `/tools/invoice-generator` 可开（200）
+- [ ] 典型三行项目（含折扣＋不同税率）合计/税额/价税合计计算正确、金额大写正确
+- [ ] 打印样式发票形态正确（A4，无表单控件残留）
+- [ ] localStorage 草稿存取/载入/删除可用，刷新不丢
+- [ ] 零上传：Network 抽查无内容外发
+- [ ] `categories.go` 注册完成（文档转换品类、New: true），首页/导航/sitemap 生效
+- [ ] node 测试：金额大写＋行项目计算断言全过
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：
+- `tools/categories.go`：文档转换品类注册 `invoice_generator`（/tools/invoice-generator，New: true）
+- 新建 `templates/invoice_generator.html`（表单区＋预览区＋打印样式＋草稿 UI）
+- 新建 `static/js/invoice_generator.js`（行项目计算＋金额大写＋localStorage 草稿＋打印）
+- 新建 `tests/invoice_generator.test.js`（node 纯逻辑测试：金额大写边界＋计算用例）
+- `BACKLOG.md`：本轮决策已追加；开发交付后追加已实现 delta
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD bb16300；本地当前分支 muse/dev-20260929；`grep -inE 'invoice|发票' tools/categories.go`（全量 123 Path）零命中；建议 ID `invoice_generator`、Path `/tools/invoice-generator` 未被占用；工作树：BACKLOG.md 未提交修改（07:36 研究轮追加＋本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`（历史构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-21 07:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。Markdown 聊天图文转换器交付闭环（05:45 PM 决策轮立项→开发交付 c54ac1f「自研纯前端 Markdown 块解析引擎，智能拆分文字块与表格/代码块/公式/mermaid 流程图；微信/钉钉/飞书/企微四平台语法适配一键复制（clipboard API＋execCommand 双路径），纯文字版可编辑；复杂块 canvas 本地渲染图片卡片（1x/2x/3x＋浅色/深色）可复制/下载；零依赖零 CDN 零上传；文本工具品类注册（New:true），SEO 面板配齐；附 node 纯逻辑测试 100 断言」＋评审反馈修复 bb16300「四平台 H1/加粗纯文本复制丢内容、纯文字版编辑复制生效、CSS 选择器、FAQ 隐私声明、mermaid RL 反向布局；测试 106 断言全过」；`grep tools/categories.go` 确认 ID `md_to_chat`、Path `/tools/md-to-chat` 已注册，全量 **123 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：发票生成器晋升第一顺位，代码打包给 LLM（Project to TXT）为开发工具家族轮强候补。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. Markdown 聊天图文转换器交付确认：`git log` 头部 c54ac1f（新工具）＋bb16300（评审修复）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929 工作树干净（仅未跟踪 `toolWeb.bak-prev` 历史构建产物）；`grep` 全量 123 Path（122+1），`md_to_chat` ID 与 `/tools/md-to-chat` Path 已注册；候选池划出，已实现清单追加（delta：＋ Markdown 聊天图文转换器，文本工具赛道，AI 回答/笔记→微信/钉钉/飞书/企微聊天框排版场景）。
+2. 新信号扫描：
+   - **Toolslay**（dev.to，10-21 昨天帖，200+ 工具站）：首周 Search Console 实测——长尾查询「roman numeral converter」「robots.txt generator」带来 4K impressions；robots.txt 生成器=`robots_txt_generator` 已实现核稿实锤，**罗马数字转换器**零覆盖→见新晋候选；另其「一工具一页＋FAQ SEO」策略与 ToolWeb 注册架构同频，属赛道佐证；
+   - **Show HN ToEnvelope**（local-first WYSIWYG 信封打印）：浏览器本地渲染信封＋打印/PDF，零上传隐私卖点——**信封打印**形态新→见新晋候选（niche 观察）；
+   - **FreeAICV**（dev.to 10-20，AI CV 构建器）：AI 能力（bullet 润色/ATS 评分）需模型不立；但其「Cover Letter & Resignation Letter Generator」纯模板形态可脱 AI 实现——**辞职信/求职信模板生成器**→见新晋候选（niche 观察）；
+   - **DevTrove**（dev.to 10-13，22 开发者工具）：JWT decoder/encoder→`jwt_decoder` 已实现；regex tester＋Web Worker 防卡死→`regex_explainer` 已实现；cron explainer→`cron` 6 命中已实现；JSON semantic diff→池内「文档差异对比器」P2 观察已有；Base64/URL/HTML 编码→全已实现；零新立；
+   - **FreeToolsy**（10-13 前后）：Duplicate Line Remover→现有文本工具描述「行去重」已覆盖；WCAG Contrast Checker→`color`（颜色转换）描述「WCAG 对比度检查」已覆盖；Slug Generator→池内 P2 观察已有；AI Token Counter→`ai_token_counter` 已实现；零新立；
+   - **SEOAnalytics Lab**（dev.to 10-20，50+ 工具）：图片背景移除/AI 放大→池内 P2 观察「图片背景移除」已有；PDF/SEO 形态→全已实现或池内有；零新立；
+   - **EazyStudio**（80+ 工具）：Device preview（响应式设备预览）→浏览器 iframe 普遍被目标站 X-Frame-Options 拦截、纯前端价值有限，本轮不立（记账备忘）；
+   - **Medium sitetoolsbox**（2 天前）：Bulk Domain Availability→池内 P2 观察「批量域名可用性查询」已有；Bulk HTTP Checker→浏览器 CORS 下 no-cors 读不到真实状态码、纯前端不可靠，本轮不立（记账备忘）；
+   - **HN 搜索其余**：Rocus（浏览器本地 LLM 整理书签）→需本地模型不立；ArkhamMirror ACH（浏览器端竞争假设分析）→形态 niche 且带可选 AI 依赖，不立；hn-client（终端 HN 客户端）→非网页形态不立；
+   - **V2EX 10-20/10-19 热点回顾**：Tervia（终端+Git 轻编辑桌面工具）/复刻 JetBrains Git 插件→非网页单页形态，无信号。
+3. 新晋候选三则（均为 P2 观察；P1 队列饱和，本轮不新立 P1，尊重 PM 定序）：
+   - **罗马数字转换器**：痛点——教学/出版/文档场景阿拉伯数字↔罗马数字互转；形态验证：Toolslay 10-21 帖首周 Search Console 实测「roman numeral converter」带来真实长尾流量；纯前端小难度（双向转换＋大小写＋减法记数法规则说明＋大数边界提示）；开发/文本赛道；建议 ID `roman_numeral_converter`、Path `/tools/roman-numeral-converter`；
+   - **信封打印机**：痛点——打印信封要在 Word 里折腾边距、在线工具要上传地址隐私差；形态验证：Show HN ToEnvelope（local-first WYSIWYG 信封打印）；纯前端小难度（收发件人表单＋中式/西式尺寸预设＋浏览器打印/PDF 导出，零上传）；niche 观察；建议 ID `envelope_printer`、Path `/tools/envelope-printer`；
+   - **辞职信/求职信模板生成器**：痛点——写辞职信/求职信不知格式措辞，网上模板要下载或注册；形态验证：FreeAICV 10-20 帖（AI 能力可脱，纯模板形态成立）；纯前端小难度（表单填姓名/公司/日期/原因→多套正式模板实时预览→复制/打印，零 AI 零上传）；文档工具赛道；niche 观察；建议 ID `letter_generator`、Path `/tools/letter-generator`。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；md2chat 交付闭环后）：
+
+1. **发票生成器** — P1（顺位递进：Markdown 聊天图文转换器交付闭环（c54ac1f＋bb16300），自动递补第一顺位；痛点：小商户/自由职业者要正规发票，现有工具注册/上传/付费模板；形态验证：Medium PDF Prem＋dev.to Etemora＋Toolslay/SuperToolKit 50-80+ 工具清单多重单列；纯前端小难度：卖方信息＋行项目＋税率折扣＋金额大写＋打印/PDF 导出，localStorage 存草稿，零注册零上传；文档模板赛道、与报价单互链，非税务计算用户方向合规；123 Path invoice/发票全零命中；建议 ID invoice_generator、Path /tools/invoice-generator）。
+2. **代码打包给 LLM（Project to TXT）** — P1（48 轮新晋，开发工具家族轮强候补；Show HN project2txt 形态验证：拖拽项目文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt 喂 LLM，100% 私有零上传；痛点：给 AI 喂代码上下文逐个文件复制粘贴慢；纯前端小-中难度：webkitGetAsEntry 读文件夹＋忽略规则 chips＋输出格式＋大文件保护；建议 ID project_to_txt、Path /tools/project-to-txt）。
+3. **婚宴座位表生成器** — P1（上午轮次从容交付；座位编排手工 Excel 繁琐，拖拽排桌＋打印导出纯前端形态成熟）。
+
+URL 即文档·文本分享链接生成器（P2，50 轮新晋观察；HN Tiny Little Office 形态验证）为 P2 新鲜信号候补；单位感知记事本计算器（P1 留池；中难度）；网页表格转 CSV/Lorem Ipsum 生成器（P2，48 轮新晋观察）；罗马数字转换器/信封打印机/辞职信·求职信模板生成器（P2，本轮新晋观察）；SVG 转 React JSX（P2，49 轮新晋）；简历模板生成器（P2，49 轮新晋）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第五十一轮：Markdown 聊天图文转换器已实现划出；罗马数字转换器/信封打印机/辞职信·求职信模板生成器 P2 新晋；全量 123 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Markdown 聊天图文转换器 | 已实现划出（c54ac1f 落盘＋bb16300 评审反馈修复；ID md_to_chat、Path /tools/md-to-chat 已注册；全量 123 Path；node 测试 106 断言全过；零依赖零 CDN 零上传） | — | 已实现 |
+| 罗马数字转换器 | 本轮新晋（Toolslay 10-21 帖 Search Console 实测「roman numeral converter」长尾流量；痛点：教学/出版/文档场景阿拉伯数字↔罗马数字互转；纯前端：双向转换＋大小写＋减法记数法规则说明；建议 ID roman_numeral_converter、Path /tools/roman-numeral-converter） | 小 | P2（51 轮新晋观察） |
+| 信封打印机 | 本轮新晋（Show HN ToEnvelope 形态验证：local-first WYSIWYG 信封打印；痛点：Word 排信封边距折腾、在线工具要上传地址；纯前端：收发件人表单＋中式/西式尺寸预设＋浏览器打印/PDF 导出，零上传；niche；建议 ID envelope_printer、Path /tools/envelope-printer） | 小 | P2（51 轮新晋观察） |
+| 辞职信/求职信模板生成器 | 本轮新晋（FreeAICV 10-20 帖纯模板形态成立；痛点：辞职信/求职信不知格式措辞，网上模板要下载注册；纯前端：表单→多套正式模板实时预览→复制/打印，零 AI 零上传；niche；建议 ID letter_generator、Path /tools/letter-generator） | 小 | P2（51 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第五十一轮——Markdown 聊天图文转换器交付闭环（c54ac1f，＋bb16300 评审反馈修复，`/tools/md-to-chat` 已注册，文本工具赛道，全量 123 Path），候选池划出，已实现清单 delta 追加；新信号扫描（Toolslay 200+ 工具站 10-21 帖→首周 Search Console「roman numeral converter」长尾实证→罗马数字转换器新晋 P2、robots.txt 实锤已实现；Show HN ToEnvelope→信封打印机新晋 P2 niche；FreeAICV 10-20→辞职信/求职信模板生成器新晋 P2 niche；DevTrove 22 工具→JWT/regex/cron/Base64 全已实现实锤、JSON diff 归入池内 P2；FreeToolsy→重复行/WCAG/Slug/AI Token 全已实现或池内有实锤；SEOAnalytics Lab→背景移除归入池内 P2；EazyStudio 设备预览→iframe 拦截纯前端价值有限不立（记账）；Medium sitetoolsbox 批量 HTTP 检查→CORS 读不到状态码不立（记账）；HN Rocus/Ach/hn-client→需模型或非单页不立；V2EX 10-20/19→桌面形态无信号）均已消化；顺位更新（发票生成器晋升第一顺位、代码打包给 LLM 开发工具家族轮强候补、婚宴座位表生成器 P1 上午轮次候补）；WPS 候选表保持冻结归档；仓库 123 注册工具全量核对无重叠（Top3 建议 ID invoice_generator / project_to_txt /＋新晋 ID roman_numeral_converter / envelope_printer / letter_generator；中文名+ID 片段双核＋零命中逐项可复现：`invoice/发票/project_to_txt/project-to-txt/代码打包/roman/罗马数字/envelope/信封打印/letter_generator/letter-generator/辞职信/求职信` 全零命中），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 c54ac1f（Markdown 聊天图文转换器）＋bb16300（评审反馈修复）；`grep tools/categories.go` 全量 123 Path（`md_to_chat` ID 与 `/tools/md-to-chat` Path 已注册，划入已实现）；Top3＋新晋建议 ID（invoice_generator / project_to_txt / roman_numeral_converter / envelope_printer / letter_generator）与 123 Path 无重叠（关键词核对全零命中；`envelope` 零命中、`robots` 4 命中为 robots_txt_generator 已实现描述）；本地当前分支 muse/dev-20260929；工作树干净（仅未跟踪 `toolWeb.bak-prev` 历史构建产物）；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 开发交付（2026-10-21 · 开发轮第 2 轮 ✅）
 
 **交付：Markdown 聊天图文转换器（md2chat）评审反馈修复** — 上一轮评审「不通过」，逐条修复如下：
