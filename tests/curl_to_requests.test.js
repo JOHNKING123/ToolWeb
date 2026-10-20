@@ -181,6 +181,18 @@ function contains(s, sub, name) { ok(String(s).indexOf(sub) !== -1, name + "（�
 
 /* ---------- 12. 缺 URL 报错 ---------- */
 
+/* ---------- 12b. env 前缀与 VAR=value 赋值跳过 ---------- */
+
+(function () {
+    var r = C.parseCurl("env FOO=1 curl https://example.com");
+    eq(r.url, "https://example.com", "env 前缀 + 赋值被跳过，URL 正确");
+})();
+
+(function () {
+    var r = C.parseCurl("FOO=bar curl https://example.com/api");
+    eq(r.url, "https://example.com/api", "前导 VAR=value 赋值被跳过");
+})();
+
 (function () {
     var r = C.parseCurl("curl -H 'X: 1'");
     ok(r.errors.length > 0, "缺 URL 时 errors 非空");

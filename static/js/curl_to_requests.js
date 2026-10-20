@@ -152,7 +152,9 @@ function parseCurl(src) {
 
     var i = 0;
     // 跳过前导的 curl 本体与 env 赋值
-    if (tokens[0] === "curl") i = 1;
+    if (tokens[0] === "env") i = 1;
+    while (i < tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[i])) i++;
+    if (tokens[i] === "curl") i++;
 
     function takeValue(opt) {
         // 注意：for 循环尾部还有 i++，这里只把 i 停在 value 上（缺值时停在 option 本身）
