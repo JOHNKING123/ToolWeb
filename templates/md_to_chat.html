@@ -1,0 +1,228 @@
+{{define "md_to_chat"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown 聊天图文转换器 - AI 回答转微信/钉钉/飞书聊天排版（md2chat）| 程序员工具箱</title>
+<meta name="description" content="免费在线 md2chat：粘贴 Markdown / AI 回答或导入.md，智能拆分文字块与表格/代码块/数学公式/流程图——文字版按微信/钉钉/飞书/企微四平台语法适配一键复制，复杂块用 canvas 本地渲染为图片卡片可复制/下载。纯前端零上传，聊天排版不炸。Markdown to chat converter: split text and render tables/code/formulas/flowcharts as image cards, 100% client-side.">
+<meta name="keywords" content="Markdown 转图片,md2chat,微信排版,钉钉排版,飞书排版,企微排版,聊天排版,markdown 转聊天,表格转图片,代码转图片,公式转图片,流程图转图片,AI 回答复制,markdown to image,wechat markdown">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/md-to-chat">
+<meta property="og:title" content="Markdown 聊天图文转换器（md2chat）- AI 回答转聊天排版">
+<meta property="og:description" content="粘贴 AI 回答，文字版按微信/钉钉/飞书/企微适配复制，表格/代码/公式/流程图本地转图片卡片，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/md-to-chat">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Markdown 聊天图文转换器","alternateName":"md2chat","description":"粘贴 Markdown / AI 回答或导入.md，智能拆分文字块与表格/代码块/数学公式/流程图：文字版按微信/钉钉/飞书/企微四平台语法适配一键复制，复杂块 canvas 本地渲染为图片卡片可复制/下载；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/md-to-chat","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.mc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.mc-privacy.material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.mc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+.mc-panel h3{margin:0 0.9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.mc-panel h3.material-icons{font-size:1.15rem;color:#2563eb}
+.mc-plats{display:flex;gap:.6rem;flex-wrap:wrap}
+.mc-plat{flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:.45rem;
+border:1px solid #d1d5db;border-radius:.6rem;padding:.7rem.6rem;background:#f9fafb;cursor:pointer;
+font-size:.95rem;font-weight:600;color:#374151;transition:all.15s}
+.mc-plat.material-icons{font-size:1.25rem}
+.mc-plat[data-mc-plat="wechat"].material-icons{color:#07c160}
+.mc-plat[data-mc-plat="dingtalk"].material-icons{color:#0089ff}
+.mc-plat[data-mc-plat="feishu"].material-icons{color:#3370ff}
+.mc-plat[data-mc-plat="wecom"].material-icons{color:#3b7ddd}
+.mc-plat[aria-pressed="true"]{border-color:#2563eb;background:#eff6ff;color:#1d4ed8;
+box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+.mc-plat-tip{font-size:.88rem;color:#4b5563;background:#f8fafc;border:1px dashed #d1d5db;
+border-radius:.5rem;padding:.55rem.8rem;margin-top:.7rem;line-height:1.7}
+.mc-work{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start}
+.mc-src{box-sizing:border-box;width:100%;min-height:430px;resize:vertical;padding:.8rem 1rem;
+border:1px solid #d1d5db;border-radius:.6rem;font-size:.88rem;line-height:1.7;
+font-family:ui-monospace,Menlo,Consolas,monospace;color:#1f2937;background:#fbfdff}
+.mc-src:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+.mc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.mc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.mc-btn.material-icons{font-size:1.1rem}
+.mc-btn-primary{background:#2563eb;color:#fff}
+.mc-btn-primary:hover{background:#1d4ed8}
+.mc-btn-green{background:#07c160;color:#fff}
+.mc-btn-green:hover{background:#06a953}
+.mc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.mc-btn-secondary:hover{background:#e5e7eb}
+.mc-count{font-size:.85rem;color:#6b7280;font-weight:500}
+.mc-tabs{display:flex;gap:.5rem;margin-bottom:.8rem}
+.mc-tab{border:1px solid #d1d5db;background:#f9fafb;border-radius:.5rem;padding:.5rem 1.1rem;
+font-size:.9rem;font-weight:600;color:#4b5563;cursor:pointer}
+.mc-tab[aria-pressed="true"]{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+.mc-preview{background:#f1f5f9;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem;min-height:430px;
+max-height:640px;overflow:auto}
+.mc-preview[contenteditable="true"]{background:#fffdf5;border-color:#fcd34d}
+.mc-preview[contenteditable="true"]:focus{outline:none;box-shadow:0 0 0 2px rgba(252,211,77,.35)}
+.mc-edit-hint{font-size:.82rem;color:#92400e;background:#fef3c7;border-radius:.4rem;
+padding:.35rem.7rem;margin-bottom:.6rem;display:none}
+.mc-cards{display:flex;flex-direction:column;gap:1rem;margin-top:1rem}
+.mc-card{border:1px solid #e5e7eb;border-radius:.8rem;overflow:hidden;background:#fff}
+.mc-card-head{display:flex;align-items:center;gap:.5rem;background:#f8fafc;border-bottom:1px solid #e5e7eb;
+padding:.6rem.9rem;flex-wrap:wrap}
+.mc-card-head.material-icons{color:#2563eb}
+.mc-card-head b{font-size:.92rem;color:#111827}
+.mc-card-sub{font-size:.8rem;color:#9ca3af;margin-right:auto}
+.mc-mini{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;background:#fff;
+border-radius:.45rem;padding:.4rem.85rem;font-size:.83rem;cursor:pointer;color:#374151}
+.mc-mini:hover{border-color:#2563eb;color:#2563eb}
+.mc-mini.material-icons{font-size:1rem}
+.mc-card-body{padding:1rem;overflow-x:auto;background:#fff;text-align:center}
+.mc-card-body canvas{border-radius:.4rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.mc-empty{color:#94a3b8;text-align:center;padding:2rem 1rem;font-size:.92rem;border:1px dashed #e5e7eb;
+border-radius:.6rem;background:#fafafa}
+.mc-copyrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.mc-opt{display:inline-flex;align-items:center;gap:.45rem;font-size:.9rem;color:#374151}
+.mc-opt select{border:1px solid #d1d5db;border-radius:.45rem;padding:.45rem.7rem;font-size:.88rem;background:#fff}
+.mc-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+.mc-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+border-radius:.3rem;padding:.05rem.35rem;font-size:.85rem}
+.mc-faq dt{font-weight:700;color:#111827;margin:.9rem 0.3rem;font-size:.95rem}
+.mc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.mc-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+border-radius:.3rem;padding:.05rem.35rem;font-size:.85rem}
+.mc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#mc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #34d399}
+#mc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:900px){
+.mc-work{grid-template-columns:1fr}
+.mc-src,.mc-preview{min-height:320px}
+.mc-plat{min-width:calc(50% -.3rem)}
+.mc-btn{flex:1;justify-content:center}
+}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">chat</i> Markdown 聊天图文转换器</h1>
+<p>粘贴 Markdown / AI 回答，智能拆成「文字块」和「表格 / 代码 / 公式 / 流程图」复杂块：文字版按微信 / 钉钉 / 飞书 / 企微四平台语法适配一键复制，复杂块本地渲染为图片卡片可复制可下载。聊天框粘贴，排版不再炸。</p>
+</div>
+<div class="tool-content" style="max-width:1180px;margin:auto;">
+<div class="mc-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>Markdown 解析、平台适配、图片卡片渲染全部在浏览器本地完成，无任何 CDN 依赖（Material Icons 字体为页面静态资源），内容不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">forum</i> ① 选择目标平台</h3>
+<div class="mc-plats">
+<button type="button" class="mc-plat" data-mc-plat="wechat" aria-pressed="true"><i class="material-icons">chat</i>微信</button>
+<button type="button" class="mc-plat" data-mc-plat="dingtalk" aria-pressed="false"><i class="material-icons">business</i>钉钉</button>
+<button type="button" class="mc-plat" data-mc-plat="feishu" aria-pressed="false"><i class="material-icons">flight</i>飞书</button>
+<button type="button" class="mc-plat" data-mc-plat="wecom" aria-pressed="false"><i class="material-icons">work</i>企微</button>
+</div>
+<div class="mc-plat-tip" id="mc-plat-tip"></div>
+</div>
+
+<div class="mc-work">
+<div class="mc-panel">
+<h3><i class="material-icons">edit_note</i> ② 粘贴 Markdown / AI 回答</h3>
+<textarea class="mc-src" id="mc-src" placeholder="把 AI 的回答 / Markdown 笔记粘贴到这里…&#10;&#10;支持：标题、列表、引用、表格、代码块、$$ 公式 $$、```mermaid 流程图"></textarea>
+<div class="mc-actions">
+<button type="button" class="mc-btn mc-btn-secondary" id="mc-import-btn"><i class="material-icons">upload_file</i>导入.md</button>
+<button type="button" class="mc-btn mc-btn-secondary" id="mc-sample-btn"><i class="material-icons">science</i>填入示例</button>
+<button type="button" class="mc-btn mc-btn-secondary" id="mc-clear-btn"><i class="material-icons">clear</i>清空</button>
+<span class="mc-count" id="mc-count"></span>
+</div>
+<input type="file" id="mc-file" accept=".md,.markdown,.txt" style="display:none;">
+</div>
+<div class="mc-panel">
+<h3><i class="material-icons">preview</i> ③ 预览（文字版可编辑）</h3>
+<div class="mc-tabs">
+<button type="button" class="mc-tab" data-mc-tab="mix" aria-pressed="true">混合预览</button>
+<button type="button" class="mc-tab" data-mc-tab="text" aria-pressed="false">纯文字版（可编辑）</button>
+</div>
+<div class="mc-edit-hint" id="mc-edit-hint">✏️ 当前为可编辑模式：可直接修改文字，改完再点复制按钮</div>
+<div class="mc-preview" id="mc-preview"></div>
+</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">content_copy</i> ④ 复制到聊天框</h3>
+<div class="mc-copyrow">
+<button type="button" class="mc-btn mc-btn-green" id="mc-copy-plain"><i class="material-icons">content_copy</i>复制文字版（纯文本）</button>
+<button type="button" class="mc-btn mc-btn-primary" id="mc-copy-rich"><i class="material-icons">auto_awesome</i>复制富文本</button>
+<label class="mc-opt">卡片配色
+<select id="mc-theme">
+<option value="light" selected>浅色</option>
+<option value="dark">深色</option>
+</select>
+</label>
+<label class="mc-opt">分辨率
+<select id="mc-scale">
+<option value="1">1x</option>
+<option value="2" selected>2x（推荐）</option>
+<option value="3">3x</option>
+</select>
+</label>
+<span class="mc-count" id="mc-card-count"></span>
+</div>
+<div class="mc-plat-tip">复制走 clipboard API，失败自动降级 execCommand；图片卡片点「复制图片」进剪贴板（部分浏览器不支持时请用「下载 PNG」再发送）。文字版里的复杂块已替换为「📊」类占位行，记得把对应图片卡片一起发出去。</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">image</i> ⑤ 图片卡片（表格 / 代码 / 公式 / 流程图）</h3>
+<div class="mc-empty" id="mc-card-empty">暂无复杂块——粘贴含表格、代码块、$$ 公式 $$ 或 ```mermaid 流程图的内容后，这里会自动生成图片卡片</div>
+<div class="mc-cards" id="mc-cards"></div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<div class="mc-tip">
+<b>流程：</b>选目标平台 → 左侧粘贴 Markdown / AI 回答（或导入.md）→ 右侧实时预览 → 点「复制文字版 / 复制富文本」粘贴到聊天框 → 复杂块用下方图片卡片「复制图片 / 下载 PNG」发出。<br>
+<b>智能拆分：</b>标题、段落、列表、引用走文字版（可编辑）；表格、围栏代码块、<code>$$…$$</code> 块级公式、<code>```mermaid</code> 流程图自动转为图片卡片。行内公式 <code>$…$</code> 会简化为 Unicode（如 <code>\alpha</code>→α、<code>\frac{a}{b}</code>→(a)/(b)）直接留在文字版。<br>
+<b>平台适配差异：</b>微信标题用/〖〗强调、引用前缀｜、列表 •；钉钉标题◆、引用 &gt;、列表 ▪；飞书标题『』、引用 ▍、列表 ·；企微标题〖〗、引用 &gt;、列表 -。行内代码微信用「」包裹，其余三平台保留反引号。具体规则见下方 FAQ。<br>
+<b>可编辑：</b>切换到「纯文字版」页签可直接改字、删段落，改完再复制——复制的是你改完的内容。<br>
+<b>图片卡片：</b>canvas 本地绘制，配色（浅色/深色）与分辨率（1x/2x/3x）可调；代码超 120 行自动截断并标注；mermaid 仅支持 <code>graph TD/TB/LR/BT</code>＋矩形/菱形/圆角/圆形节点＋普通箭头，超出子集的语法会自动降级为源码卡片并明确标注。
+</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">quiz</i> 常见问题</h3>
+<dl class="mc-faq">
+<dt>内容会被上传吗？</dt>
+<dd>不会。解析、适配、绘图全部在浏览器本地完成，页面不依赖任何 JS CDN（除 Material Icons 字体这一静态资源）。打开开发者工具 Network 面板可验证：除页面自身资源外没有任何请求发出。</dd>
+<dt>为什么表格/代码/公式/流程图要转图片？</dt>
+<dd>微信、钉钉、飞书、企微的聊天输入框都不渲染 Markdown：表格会变成夹竖线的乱文本、公式露出 LaTeX 符号、流程图只剩源码。转成图片是唯一「排版不炸」的办法；文字版里对应位置会留占位行提醒你把图一起发出去。</dd>
+<dt>公式渲染是精确排版吗？</dt>
+<dd>不是。本工具把常用 LaTeX 命令映射为 Unicode 近似显示（√∑∫αβ→ 等），目标是聊天里「看得懂」，不是论文级排版。复杂公式建议配合原截图发送。</dd>
+<dt>mermaid 支持哪些语法？</dt>
+<dd>子集：<code>graph TD/TB/LR/BT</code>（<code>flowchart</code> 同义），节点 <code>A[矩形]</code>、<code>A{菱形}</code>、<code>A(圆角)</code>、<code>A((圆))</code>，边 <code>A--&gt;B</code> / <code>A--&gt;|文字|B</code>。链式 <code>A--&gt;B--&gt;C</code>、子图、样式语句等超出子集时会明确标注并降级为源码卡片。</dd>
+<dt>复制图片没反应？</dt>
+<dd>图片进剪贴板依赖浏览器的 ClipboardItem image/png 支持；不支持时会明确提示，改用「下载 PNG」再发到聊天里即可。文字复制走 clipboard API＋execCommand 双路径，失败会提示手动框选。</dd>
+<dt>和「Markdown 公众号一键排版」有什么区别？</dt>
+<dd>公众号排版输出的是带内联样式的富文本、目标是公众号编辑器；本工具输出的是「聊天消息框」形态：按聊天平台语法做纯文本适配＋复杂排版转图片＋分平台复制入口，两者互补。</dd>
+</dl>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="mc-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">Markdown 聊天图文转换器（当前）</span>
+<a href="/tools/markdown-preview" class="btn btn-secondary" style="font-size:.9rem;">Markdown 预览</a>
+<a href="/tools/markdown-publish-formatter" class="btn btn-secondary" style="font-size:.9rem;">Markdown 公众号一键排版</a>
+<a href="/tools/markdown-to-word" class="btn btn-secondary" style="font-size:.9rem;">Markdown 转 Word</a>
+<a href="/tools/markdown-to-excel" class="btn btn-secondary" style="font-size:.9rem;">Markdown 表格转 Excel</a>
+</div>
+</div>
+</div>
+</div>
+<div id="mc-toast"></div>
+<script src="/tools/static/js/md_to_chat.js?v=1"></script>
+</body>
+</html>
+{{end}}

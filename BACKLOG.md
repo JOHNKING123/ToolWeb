@@ -1,3 +1,88 @@
+## 开发交付（2026-10-21 · 开发轮 ✅）
+
+**交付：Markdown 聊天图文转换器（md2chat）** — 05:45 PM 决策轮立项本轮唯一任务，开发闭环：
+- **实现**：自研轻量 Markdown 块解析引擎（纯前端零依赖零 CDN）：智能拆分文字块（标题/段落/列表/引用）与复杂块（表格/围栏代码块/`$$` 块级公式/```mermaid 流程图）；行内公式 `$…$` 简化为 Unicode 留文字版；mermaid 支持 graph TD/TB/LR/BT＋矩形/菱形/圆角/圆形节点＋普通箭头子集，超集降级源码卡片并明确标注。
+- **四平台适配**：微信/钉钉/飞书/企微纯文本映射（标题【】/〖〗/◆/『』、引用｜/&gt;/▍、列表•/▪/·/-，行内代码微信「」其余保留反引号），文字版富文本/纯文本一键复制（clipboard API＋execCommand 双路径兜底）；纯文字版页签 contenteditable 可编辑后复制。
+- **图片卡片**：表格/代码/公式/流程图 canvas 本地渲染（2x 默认，1x/2x/3x＋浅色/深色可选），单卡复制图片（ClipboardItem image/png，不支持提示下载）/下载 PNG；代码超 120 行截断标注。
+- **布局**：顶部平台选择器＋复制入口，桌面左右分栏、移动端 &lt;900px 堆叠；SEO 面板（title/description/keywords/canonical/og/JSON-LD）配齐；与 Markdown 家族（预览/公众号排版/转 Word/表格转 Excel）双向互链。
+- **验证**：`go build -mod=vendor` 通过；本地 :8080 `/tools/md-to-chat` 200、标题正确、`/tools/static/js/md_to_chat.js` 200、index 列表含 md-to-chat；`node tests/md_to_chat.test.js` **100 断言全过**（块拆分/表格对齐与转义/行内渲染 XSS 与协议过滤/公式简化/mermaid 解析与布局/表格布局折行/四平台适配差异/预览 HTML）；JS 内零 fetch/XHR，零上传成立（Material Icons 字体为页面静态资源）。
+- **注册**：`tools/categories.go` 文本工具品类新增 ID `md_to_chat`、Path `/tools/md-to-chat`（New: true），全量 **123 Path**。
+- **改动文件**：`templates/md_to_chat.html`（新建）、`static/js/md_to_chat.js`（新建）、`tests/md_to_chat.test.js`（新建）、`tools/categories.go`（注册）、`BACKLOG.md`（本 delta）。
+- **已知局限**：公式为 Unicode 近似渲染非精确排版（FAQ 已声明）；mermaid 仅子集（FAQ 已声明）；图片复制依赖浏览器 ClipboardItem 支持，不支持时走下载（已兜底提示）。
+
+---
+
+## 今日任务（2026-10-21 05:45 · 产品经理排期轮）
+
+**选定：Markdown 聊天图文转换器（md2chat）** — 本轮唯一任务：
+- **顺位递进**：SVG 压缩优化器交付闭环（750808d，全量 122 Path）→ P1 第一顺位 Markdown 聊天图文转换器自动递补，无硬伤不跳过（尊重 05:36 研究轮定序：研究轮只做新信号挖掘与候选池维护，不动排期定序）。
+- **轮次匹配**：05:45 早间轮次，纯前端小-中难度，一轮可高质量交付。
+- **痛点真实且新鲜**：AI 回答/Markdown 笔记复制进微信、钉钉、飞书、企微聊天框排版炸裂（表格夹竖线、公式露符号、流程图剩源码）；形态验证：V2EX 10-20 当天帖 md2chat 开源实现「文字可编辑＋表格/代码/公式/流程图转图片＋分平台复制入口」。
+- **纯度高**：纯前端、零后端、零上传；转图用 canvas/DOM 截图本地渲染，内容不出浏览器。
+- **去重实锤**：`grep -inE 'md_to_chat|md-to-chat|聊天图文' tools/categories.go`（全量 122 Path）零命中；既有 Markdown 家族（`markdown` 预览、`markdown_publish_formatter` 公众号富文本、`markdown_to_word` 转 Word、`markdown_to_excel` 表格转 Excel）均为「文档导出」形态，本候选是「聊天消息框」形态：按目标平台适配转换＋复杂排版转图片＋一键复制，与家族互补零重叠。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**：
+1. 布局：左 Markdown 输入区（粘贴/AI 回答粘贴＋导入 .md），右预览区（按目标平台渲染：文字版可编辑＋图片卡片）；顶部平台选择器（微信/钉钉/飞书/企微），分平台复制入口（一键复制文字版富文本/纯文本适配各平台换行与样式限制，一键复制/下载图片卡片）；桌面宽屏左右分栏、移动端堆叠。
+2. 智能拆分：纯文本结构（标题/列表/引用）→ 按平台语法适配转换并保持可编辑复制；复杂块（表格/代码块/数学公式/流程图 mermaid）→ 按块渲染为图片卡片（分辨率/配色可选），文字版与图片版可切换预览。
+3. 转换引擎（纯前端）：自研轻量 Markdown 渲染（或 marked 懒加载）；表格/代码/公式/流程图转图用 canvas/DOM 快照本地渲染，零上传；CDN 失败必须本地降级可用。
+4. 分平台适配：微信/钉钉/飞书/企微四平台复制按钮，文字版按各平台换行与特殊字符兼容处理；复制走 execCommand/clipboard API 双路径兜底。
+5. 纯前端、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传（静态资源加载除外）。
+6. 注册：文本工具品类，新增工具 ID `md_to_chat`、Name「Markdown 聊天图文转换器」、Path `/tools/md-to-chat`（New: true），中英文描述 + SEO keywords（Markdown 转图片、md2chat、聊天排版、微信排版、钉钉飞书排版）。
+
+**验收标准**：
+- [ ] `/tools/md-to-chat` 可开（200）
+- [ ] 粘贴一段含表格＋代码块＋公式的典型 AI 回答，文字版可编辑复制、复杂块转图片卡片清晰可读，图片可复制/下载
+- [ ] 四平台（微信/钉钉/飞书/企微）复制入口均可复制到剪贴板，文字版在目标平台粘贴排版不炸
+- [ ] 零上传：Network 抽查无内容外发
+
+**预计改动文件**：
+- `tools/categories.go`：注册 `md_to_chat`（/tools/md-to-chat，文本工具品类，New: true）
+- 新建 `templates/md-to-chat.html`（或按家族惯例的页面模板）：输入区/平台选择器/预览区/图片卡片渲染/复制逻辑（纯前端 JS）
+- `web/static/` 下新增配套 JS/CSS（如需）；SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐
+- `BACKLOG.md`：本轮决策已追加；开发交付后追加已实现 delta
+
+---
+
+## 今日任务（2026-10-21 05:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。SVG 压缩优化器交付闭环（03:41 PM 决策轮立项→开发交付 750808d「SVGO 浏览器引擎三档预设＋数值精度滑块＋5 项清理开关，jsdelivr→npmmirror CDN 懒加载、失败降级内置轻量清理并明确标注；拖拽/粘贴双入口批量队列，压缩率 chips＋原图/优化后并排预览＋缩放，复制代码/下载 .min.svg；DOMParser 校验失败标红不中断队列；纯前端零上传；图片处理品类注册（New:true），SEO 配齐；附 node 测试 98 断言，真实 SVGO 3.3.3 引擎臃肿样本压缩率 49.5%/55.0%/60.0%，降级 44.3%」；`grep tools/categories.go` 确认 ID `svg_compressor`、Path `/tools/svg-compressor` 已注册，全量 **122 Path**），候选池划出，已实现清单 delta 追加（＋ sitemap.xml 已知问题记账 283b1bb：公网 /tool-web/sitemap.xml 挂载层返回 0 字节 body，非核心未回滚）。顺位自动递补：Markdown 聊天图文转换器晋升第一顺位，发票生成器为 P1 强候补，代码打包给 LLM 为开发工具家族轮强候补。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. SVG 压缩优化器交付确认：`git log` 头部 750808d（新工具）＋283b1bb（sitemap 已知问题记账）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 122 Path，`svg_compressor` ID 与 `/tools/svg-compressor` Path 已注册；候选池划出，已实现清单追加（delta：＋ SVG 压缩优化器，图片处理赛道，设计交付 SVG 臃肿场景）。
+2. 新信号扫描：
+   - **HN Tiny Little Office**（2026-10-15 HN 前页汇总，643 points，181 评论）：浏览器办公套件核心创意是「document is the link」——内容 percent-encoded 进 URL fragment，无账号、无服务端存储、可选加密短链（密钥服务端不可见）、附 llms.txt 让模型直接生成文档 URL。讨论指出分享大文件 URL 过长的天花板，但纯前端形态成立——见新晋 P2 观察「URL 即文档·文本分享链接生成器」；
+   - **PixelForge**（批量图片处理站，抓取 6 小时内刷新）：37 个批量工具中 Batch Rename、Watermark 被划为 Pro 付费——需求价值被商业验证，但 T4UHubIMG 同类「Batch Rename Images」免费浏览器端形态（{basename}-{index} 模式、100% 本地处理、无上限）更贴合 ToolWeb 免费纯前端定位；已实现 `batch_rename_helper`（110 Path 交付）受佐证增强，不立新项；
+   - **PixelForge Strip EXIF**：「批量清除照片 GPS/机型元数据」→ `exif_strip` 已实现（字节级无损清除、本地处理），核稿实锤不重复立；
+   - **百业软件 AI 出图批量重命名整理**（2026-09-29 desktop 免费版）：痛点——AI 出图（ComfyUI/Midjourney/即梦）文件名乱码乱、按生成顺序交稿靠人工数、尺寸混杂——适用场景扩展到 AI 生成图流，但形态与 `batch_rename_helper` 重叠，佐证增强不立；
+   - **Medium 10 Best Free Online Tools 2026**（10-16，Malik Anwaar）：QR 码/密码生成/单位换算/年龄计算/字数统计——全部被现有工具家族覆盖（`unit_converter`、`password` 相关 2 命中、字数/年龄类 17/35 命中），零新立；
+   - **dev.to breakinggood**（10-20）：「npx 一条命令把任意网站反向工程成 React」——依赖 AI 视觉模型＋服务端抓取，非单页形态，低优先不立；
+   - **剪去水印 desktop**（xjzyw 9 月更新）：图片/视频去水印——涉及他人版权水印抹除的合规风险，不立；
+   - **Show HN featureless.app**：无干扰写作（单标题＋一写作面＋自动保存、无字数/格式）——niche，与现有 `notes` 赛道重叠，不立。
+3. 新晋候选一则（P2 观察；P1 队列饱和，本轮不新立 P1，尊重 PM 定序）：
+   - **URL 即文档·文本分享链接生成器**：痛点——想分享一段 Markdown/文本给无账号的对方，现有渠道要么发文件、要么走在线文档登录；形态验证：HN Tiny Little Office 643 points 热议「内容即 URL」；纯前端小难度（文本→lz-string 压缩→base64url→URL hash，打开链接渲染 Markdown 预览；可选 AES-GCM 密码加密、密钥不出浏览器；长文 URL 超长限制做显式提示）；文档/分享赛道；与 `notes`（本地便签）、`shorturl`（长 URL→短链转跳）形态零重叠（内容直接住进 URL，零存储、LLM 可直接生成链接）；建议 ID `url_note_share`、Path `/tools/url-note-share`。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；SVG 压缩优化器交付闭环后）：
+
+1. **Markdown 聊天图文转换器（md2chat）** — P1（V2EX 10-20 当天帖 md2chat 最强新鲜信号延续：痛点——AI 回答/Markdown 笔记复制进微信/钉钉/飞书/企微聊天框排版炸裂（表格夹竖线/公式露符号/流程图剩源码）；形态验证：作者开源实现「文字可编辑＋表格/代码/公式/流程图转图片＋分平台复制入口」；纯前端小-中难度：按目标平台适配转换＋复杂排版转图片组合＋一键复制，零上传；122 Path md2chat/md-to-chat/聊天图文全零命中；建议 ID md_to_chat、Path /tools/md-to-chat）。
+2. **发票生成器** — P1（49 轮新晋 P1 强候补；Medium PDF Prem＋dev.to Etemora 双重单列形态验证：卖方信息＋行项目＋税率折扣＋金额大写＋打印/PDF 导出，localStorage 存草稿，零注册零上传；痛点：小商户/自由职业者要正规发票，现有工具注册/上传/付费模板；纯前端小难度；文档模板赛道、与报价单互链，非税务计算用户方向合规；建议 ID invoice_generator、Path /tools/invoice-generator）。
+3. **代码打包给 LLM（Project to TXT）** — P1（48 轮新晋，开发工具家族轮强候补；Show HN project2txt 形态验证：拖拽项目文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt 喂 LLM，100% 私有零上传；痛点：给 AI 喂代码上下文逐个文件复制粘贴慢；纯前端小-中难度：webkitGetAsEntry 读文件夹＋忽略规则 chips＋输出格式＋大文件保护；建议 ID project_to_txt、Path /tools/project-to-txt）。
+
+婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；网页表格转 CSV/Lorem Ipsum 生成器（P2，48 轮新晋观察）；URL 即文档·文本分享链接生成器（P2，新晋观察；Tiny Little Office 形态验证）；SVG 转 React JSX（P2，49 轮新晋）；简历模板生成器（P2，49 轮新晋）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第五十轮：SVG 压缩优化器已实现划出；URL 即文档·文本分享链接生成器 P2 新晋；全量 122 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SVG 压缩优化器 | 已实现划出（750808d 落盘；ID svg_compressor、Path /tools/svg-compressor 已注册；全量 122 Path；SVGO 3.3.3 真实臃肿样本三档压缩率 49.5%/55.0%/60.0%，降级 44.3%） | — | 已实现 |
+| URL 即文档·文本分享链接生成器 | 本轮新晋 P2（HN Tiny Little Office 643 points 形态验证「内容即 URL」：文本压缩进 URL hash，打开即渲染，零存储；可选 AES-GCM 密码加密密钥不出浏览器；与 notes（本地便签）、shorturl（长 URL→短链转跳）形态零重叠；纯前端；建议 ID url_note_share、Path /tools/url-note-share） | 小 | P2（50 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第五十轮——SVG 压缩优化器交付闭环（750808d，`/tools/svg-compressor` 已注册，图片处理赛道，全量 122 Path；sitemap.xml 已知问题记账 283b1bb），候选池划出，已实现清单 delta 追加；新信号扫描（HN Tiny Little Office→URL 即文档 P2 新晋；PixelForge/T4UHubIMG 批量重命名 Pro 收费＋免费浏览器形态→`batch_rename_helper` 佐证增强；PixelForge Strip EXIF→`exif_strip` 已实现核稿实锤；AI 出图批量重命名 desktop→`batch_rename_helper` 佐证；Medium 10 Best 2026→QR/密码/单位/年龄/字数全覆盖零新立；breakinggood→需后端不立；去水印→版权风险不立；featureless.app→与 notes 重叠不立）均已消化；顺位更新（Markdown 聊天图文转换器晋升第一顺位、发票生成器 P1 强候补、代码打包给 LLM 开发工具家族轮候补）；WPS 候选表保持冻结归档；仓库 122 注册工具全量核对无重叠（Top3 建议 ID md_to_chat / invoice_generator / project_to_txt＋新晋 ID url_note_share；中文名+ID 片段双核＋零命中逐项可复现：`md_to_chat/md-to-chat/聊天图文/invoice/发票/project_to_txt/project-to-txt/代码打包/url_note_share/url-note-share/分享链接` 全零命中；`shorturl` 为长 URL→短链转跳、`notes` 为本地便签，均与「内容住进 URL」形态无重叠），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 750808d（SVG 压缩优化器）＋283b1bb（sitemap 已知问题记账）；`grep tools/categories.go` 全量 122 Path（`svg_compressor` ID 与 `/tools/svg-compressor` Path 已注册，划入已实现）；Top3＋新晋建议 ID（md_to_chat / invoice_generator / project_to_txt / url_note_share）与 122 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 03:41 · 产品经理排期轮）
 
 **选定：SVG 压缩优化器（svg-compressor）** — 本轮唯一任务：

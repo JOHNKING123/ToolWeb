@@ -426,6 +426,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "md_to_chat",
+					Name:        "Markdown 聊天图文转换器",
+					Description: "Markdown 聊天图文转换器（md2chat）：粘贴 AI 回答或导入 .md，智能拆分文字块与表格/代码块/数学公式/流程图——文字版按微信/钉钉/飞书/企微四平台语法适配一键复制，复杂块 canvas 本地渲染为图片卡片可复制/下载；纯前端零上传 · md2chat: split Markdown into chat-ready text per platform + render tables/code/formulas/flowcharts as image cards, 100% client-side",
+					Path:        "/tools/md-to-chat",
+					Icon:        "chat",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "markdown_to_word",
 					Name:        "Markdown 转 Word",
 					Description: "Markdown 一键转 Word：粘贴 AI 文章或导入 .md，左右实时预览，标题/列表/表格/代码块/引用/超链接样式完整映射，base64 本地图片直接嵌入，一键导出 .docx；纯浏览器本地处理不上传 · Markdown to Word converter: live preview, full style mapping, images embedded, export .docx, 100% client-side",
