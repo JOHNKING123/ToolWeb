@@ -184,6 +184,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "regex_explainer",
+					Name:        "正则表达式解释器",
+					Description: "粘贴正则逐段中文讲解：字符类/量词/分组/断言/转义/修饰符 token 级中文解释，结构树可视化，语法错误即时定位，Web Worker 安全匹配测试（3 秒超时熔断防 ReDoS），纯前端零上传 · Regex explainer: Chinese token-by-token explanation, syntax tree visualization, ReDoS-safe test in Web Worker, 100% client-side",
+					Path:        "/tools/regex-explainer",
+					Icon:        "psychology",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "cron",
 					Name:        "Cron 表达式解析",
 					Description: "解析和验证 Cron 表达式，查看未来执行时间",

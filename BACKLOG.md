@@ -1,3 +1,84 @@
+## 今日任务（2026-10-20 23:00 · 产品经理排期轮）
+
+**选定：正则表达式解释器（Regex Explainer）** — 本轮唯一任务：
+- **顺位递进**：40 轮新晋 P1 → 图片批量缩放器交付闭环（f1a9451＋abb2298 逐个下载 bugfix，全量 119 Path）→ 自动递补第一顺位，无硬伤不跳过。
+- **轮次匹配**：23:00 深夜轮次，纯前端小-中难度（正则解析解释器＋Web Worker 安全测试），一轮可高质量交付。
+- **痛点真实**：读不懂他人/历史写的正则，现有 `regex`（/tools/regex-tester）仅后端匹配测试、解释形态零覆盖；43 轮证据升级（DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」）。
+- **纯度高**：纯前端、零后端、零上传；解释引擎纯 JS、测试匹配走 Web Worker＋超时熔断，主线程永不卡死。
+- **去重实锤**：`grep -icE 'regex_explainer|regex-explainer|正则解释' tools/categories.go`（全量 119 Path）零命中；现有 `regex`（/tools/regex-tester）为 Go 后端匹配测试形态，与「逐段中文解释＋可视化」形态零重叠。
+
+**规格**：
+1. 布局：上正则输入区（输入框＋语法错误即时报错定位）、中解释结果区（逐段中文解释：字符类/量词/分组/断言/转义/修饰符，token 级高亮）、下安全测试区（样本输入＋匹配高亮＋超时熔断状态）；可视化：铁路图或结构树渲染（零依赖自绘 canvas/SVG）；桌面宽屏、移动端堆叠。
+2. 解释引擎（纯前端）：自研轻量正则词法解析（不依赖完整正则引擎源码复现），覆盖常见语法：`\d\w\s`、`.`、字符集 `[...]`、量词 `*+?{n,m}`、贪婪/非贪婪、分组 `(…)`/命名组 `(?<name>…)`、断言 `^$`/`\b`、零宽断言 `(?=…)/(?!…)`、分支 `|`、转义、修饰符 `gi`；每段输出中文自然语言解释＋示例；解析失败给出友好错误与位置提示。
+3. 安全测试（Web Worker＋超时熔断）：样本匹配走 Worker 线程，单次测试超时熔断（如 3 秒自动中断并提示疑似 ReDoS），主线程永不阻塞；与现有 /tools/regex-tester（后端匹配测试）互链「相关工具」双向，页面文案标注「在线解释版（纯前端）」差异化。
+4. 纯前端、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传。
+5. 注册：开发工具家族，新增工具 ID `regex_explainer`、Name「正则表达式解释器」、Path `/tools/regex-explainer`（New: true），中英文描述 + SEO keywords（正则表达式解释、正则可视化、regex explainer、正则在线解释、ReDoS 安全测试）；与正则表达式测试（/tools/regex-tester）互链。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/regex-explainer` 可开（200）
+- [ ] 典型正则逐段中文解释正确（测试轮用 ≥6 个覆盖各类语法的用例复核：量词/分组/断言/字符集/分支/修饰符）
+- [ ] 可视化渲染可用（铁路图/结构树任一）
+- [ ] 无效正则即时报错且定位准确
+- [ ] 安全测试：构造 ReDoS 模式（如 `(a+)+$` 配长串）Worker 超时熔断，主线程无卡死；正常匹配高亮正确
+- [ ] DevTools Network 抽查：无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（开发工具品类、New: true），首页/导航/sitemap 生效；与 regex-tester 互链生效
+- [ ] 移动端可操作（输入+解释+测试）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/regex_explainer.html`（新建：正则输入＋解释结果＋可视化＋安全测试区）、`static/js/regex_explainer.js`（新建：前端正则词法解析器＋中文解释生成＋可视化渲染，零构建依赖）、`static/js/regex_explainer_worker.js`（新建：Web Worker 内匹配测试＋超时熔断）、`tools/categories.go`（开发工具品类＋工具注册）、`tests/regex_explainer.test.js`（新建：node 纯逻辑测试——解析器 token 化＋中文解释快照断言＋修饰符/错误用例）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）：第二顺位（建议 ID curl_to_requests、Path /tools/curl-to-requests）。
+- SVG 压缩优化器（P1；设计工具家族轮）：第三顺位（建议 ID svg_compressor、Path /tools/svg-compressor）。
+- 代码打包给 LLM（P1；48 轮新晋，Show HN project2txt 形态验证）：强候补，开发工具家族轮后续顺位（建议 ID project_to_txt、Path /tools/project-to-txt）。
+- 婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；网页表格转 CSV/Lorem Ipsum 生成器（P2，48 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD 与 origin/muse/dev-20260929 一致（abb2298）；`grep -icE` 全量 119 Path，`regex_explainer/regex-explainer/正则解释` 全零命中（现有 `regex` 为 Go 后端匹配测试形态）；建议 ID `regex_explainer`、Path `/tools/regex-explainer` 未被占用；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。图片批量缩放器交付闭环（21:41 PM 决策轮立项→开发交付 f1a9451「拖拽多图队列＋四预设等比缩放＋输出格式与 JPEG 质量滑块，canvas 批量引擎＋逐项进度＋逐个/JSZip 打包下载；图片处理品类注册（New:true），与图片尺寸调整双向互链」＋ bugfix abb2298「downloadOne 每次重建 objectURL、命名改用 it.fmt」；`grep tools/categories.go` 确认 ID `bulk_image_resizer`、Path `/tools/bulk-image-resizer` 已注册，全量 **119 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：正则表达式解释器晋升第一顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 深夜轮次，小难度候选可排。
+
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. 图片批量缩放器交付确认：`git log` 头部 abb2298（f1a9451 新工具＋abb2298 逐个下载 bugfix）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（本轮初曾报 access rights，github host key 自动补录后重取成功）；origin/muse/dev-20260929 与本地 HEAD 一致（abb2298）；`grep` 全量 119 Path（118+1），`bulk_image_resizer` ID 与 `/tools/bulk-image-resizer` Path 已注册；候选池划出，已实现清单追加（delta：+ 图片批量缩放器，图片处理赛道，批量配图场景）。
+2. 新信号扫描：
+   - **Project2txt**（Show HN，13 天前，news.ycombinator.com/item?id=45446670）：浏览器内「拖拽项目文件夹→读文件树→忽略 node_modules/.git→带路径合并成一个 .txt 喂 LLM」，100% 私有、零上传——AI 时代给 ChatGPT 喂代码的强痛点（逐个复制粘贴慢、zip 不能用），单页纯前端可实现（Chrome DataTransferItem.webkitGetAsEntry 读文件夹）→ 新晋 P1；
+   - **BlanzaTools**（dev.to，2026-10-11，「14 Free Browser Tools…No Signup, No Uploads」）：Image Compressor/Resizer、Word/Case、Age/BMI/Percentage、Unit Converter（已实现 `unit_converter`）、Password/QR/JSON/Countdown→全已实现或用户方向不扩展（计算器类）；**Lorem Ipsum Generator（占位文本生成器）**为新形态，见新晋候选；
+   - **goodyuanbo**（dev.to，41 天前，抓取 2 小时内刷新）：**Page2CSV**（网页表格粘贴→干净 CSV：解决复制网页表格贴进 Excel 乱成一团的痛点）为新形态；SRT Studio→候选池已有「SRT 字幕编辑器（P1 留池）」不重复立；CleanSlate/TimeLedger/DropBoard/ChapterForge→聚合型/桌面/重形态，无单页信号；
+   - Varkido 170+ 清单重扫→已实现或表中已有（Image blur/pixelate→`img_mosaic` 已实现；SVG optimizer→SVG 压缩优化器已 P1 立项；Sprite generator→精灵图生成器 P2 观察已有）；pyfiletoolkit 13 工具（Bulk Image Resizer→44 轮立项且已交付）无新立项；
+   - James G. ideas list：「print a coffee sign for zoom calls」→为已 P2 观察「大屏文字展示器」再添形态佐证（bigwords.page Show HN 之外）；「keyboard transposer（键盘错位一键偏移矫正打字）」→niche，P2 观察备忘；
+   - Diffnote（Show HN，PDF/DOCX 浏览器端文档对比，pdf.js+mammoth+diff-match-patch 零上传）→与已实现 `text_diff`（文本形态）差异化，文档形态可作 P2 观察备忘，本轮不单立（候选池 P2 饱和，待定序）。
+3. 新晋候选三则（1 个 P1 新晋＋2 个 P2 观察）：
+   - **代码打包给 LLM（Project to TXT）**：痛点——给 ChatGPT/Claude 喂代码上下文，逐个文件复制粘贴慢且 zip 不能用；形态验证：Show HN 13 天前 project2txt（拖拽项目文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt→复制/下载，100% 私有零上传）；纯前端小-中难度（拖拽文件夹 File System Access/webkitGetAsEntry、忽略规则 chips、输出格式可选 `==== path ==== + 内容`、大文件分片读取保护、localStorage 记忽略配置）；开发工具赛道；建议 ID `project_to_txt`、Path `/tools/project-to-txt`；
+   - **网页表格转 CSV（Page2CSV）**：痛点——网页复制表格粘贴到 Excel/Sheets 乱成一团（合并单元格/换行错位）；形态验证：dev.to goodyuanbo Page2CSV；纯前端小难度（粘贴 HTML/文本表格→DOM 表格解析→列对齐→CSV 转义→复制/下载）；数据工具赛道；建议 ID `page_to_csv`、Path `/tools/page-to-csv`；
+   - **Lorem Ipsum 占位文本生成器**：痛点——原型/排版占位中文 Lorem Ipsum 网上抄的质量差、要多语言段落数控制；形态验证：dev.to BlanzaTools 10-11 清单单列；纯前端极小难度（段落/词数/句子数控制＋中文版 Lorem Ipsum 内置＋一键复制，零依赖）；设计/文本赛道；建议 ID `lorem_ipsum`、Path `/tools/lorem-ipsum`。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；23:00 深夜轮次，小难度可排）：
+
+1. **正则表达式解释器（Regex Explainer）** — P1（顺位递进：图片批量缩放器交付闭环（f1a9451＋abb2298 bugfix），自动递补第一顺位；40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；痛点：读不懂他人/历史正则，现有 `regex`（正则表达式测试）仅匹配测试、解释形态零覆盖；纯前端小-中难度：正则逐段中文解释＋可视化＋Worker 超时熔断，零后端；开发者工具家族轮；119 Path regex_explainer/regex-explainer/正则解释全零命中；建议 ID regex_explainer、Path /tools/regex-explainer）。
+2. **cURL → Python Requests 转换器** — P1（顺位递补第二；23:00 深夜轮次小难度快打位；痛点：浏览器 DevTools / 接口文档复制的 cURL 命令，手工改写成 Python requests 代码繁琐易错；纯前端小难度：cURL 参数解析（-H / -d / --data / --compressed / -X / --url）→生成可运行 requests 代码＋一键复制，零后端；119 Path curl_to_requests/curl-to-requests 全零命中；建议 ID curl_to_requests、Path /tools/curl-to-requests）。
+3. **SVG 压缩优化器** — P1（顺位递补第三；设计工具家族轮；痛点：设计交付/导出的 SVG 体积臃肿（冗余节点/注释/精度过高），手工精简繁琐，在线压缩多要上传；形态验证：Varkido 170+ 清单 SVG viewer and optimizer 标配项；纯前端小难度：SVGO 浏览器端（CDN 懒加载）＋压缩率对比＋预览，零上传；119 Path svg_compress/svg-compress/svg压缩全零命中；建议 ID svg_compressor、Path /tools/svg-compressor）。
+
+代码打包给 LLM（P1 新晋，开发工具家族轮强候补，Show HN 13 天前新鲜信号）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；网页表格转 CSV（P2 观察，本轮新晋）；Lorem Ipsum 生成器（P2 观察，本轮新晋）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2 观察，47 轮新晋）；文档差异对比器（PDF/DOCX，P2 观察备忘，Diffnote Show HN 形态验证）；键盘错位矫正器（P2 观察，niche）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十八轮：图片批量缩放器已实现划出；代码打包给 LLM（P1）/网页表格转 CSV（P2）/Lorem Ipsum 生成器（P2）新晋；全量 119 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片批量缩放器 | 已实现划出（f1a9451 落盘＋abb2298 逐个下载 bugfix；ID bulk_image_resizer、Path /tools/bulk-image-resizer 已注册；全量 119 Path） | — | 已实现 |
+| 代码打包给 LLM [Project to TXT] | 本轮新晋 P1（Show HN 13 天前 project2txt 形态验证：拖拽项目文件夹→浏览器读文件树→忽略 node_modules/.git→带路径合并单 .txt 喂 LLM，100% 私有零上传；痛点：给 AI 喂代码逐个复制粘贴慢、zip 不能用；纯前端：webkitGetAsEntry 读文件夹＋忽略规则 chips＋`==== path ====` 输出格式＋大文件保护；开发工具赛道；建议 ID project_to_txt、Path /tools/project-to-txt） | 小-中 | P1（48 轮新晋） |
+| 网页表格转 CSV | 本轮新晋（dev.to goodyuanbo Page2CSV 形态验证；痛点：网页复制表格粘贴进 Excel 乱成一团；纯前端：粘贴 HTML 表格→DOM 解析→CSV 转义→复制/下载；数据工具赛道；建议 ID page_to_csv、Path /tools/page-to-csv） | 小 | P2（48 轮新晋观察） |
+| Lorem Ipsum 占位文本生成器 | 本轮新晋（dev.to BlanzaTools 10-11 清单单列；痛点：原型排版占位文本网抄质量差、要中英文段落数控制；纯前端极小：段落/词/句数控制＋中英文 Lorem Ipsum 内置＋一键复制；设计/文本赛道；建议 ID lorem_ipsum、Path /tools/lorem-ipsum） | 极小 | P2（48 轮新晋观察） |
+
+**归档说明**：本轮为 10-20 通用调研第四十八轮——图片批量缩放器交付闭环（f1a9451，＋abb2298 下载通道 bugfix，`/tools/bulk-image-resizer` 已注册，图片处理赛道，全量 119 Path），候选池划出，已实现清单 delta 追加；新信号扫描（Project2txt Show HN 13 天前→P1 新晋；BlanzaTools 14 工具清单 10-11→计算器类用户方向不扩展、Unit Converter 已实现实锤、Lorem Ipsum 新晋 P2；goodyuanbo 清单→Page2CSV 新晋 P2、SRT 形态与池内留项重叠不立；Varkido 170+ 重扫→Image blur/pixelate＝`img_mosaic` 已实现、SVG optimizer＝SVG 压缩优化器已立项，零新立；pyfiletoolkit→Bulk 已交付无新立；jamesg ideas→大屏文字展示器再佐证；Diffnote→文档差异对比器 P2 备忘）均已消化；顺位更新（正则表达式解释器晋升第一顺位、cURL→Python Requests 深夜快打位第二、SVG 压缩优化器设计家族轮第三；代码打包给 LLM 为开发工具家族轮强候补）；WPS 候选表保持冻结归档；仓库 119 注册工具全量核对无重叠（Top3 建议 ID regex_explainer / curl_to_requests / svg_compressor＋新晋 ID project_to_txt / page_to_csv / lorem_ipsum；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（本轮初 github host key 补录后重取）；origin/muse/dev-20260929 与本地 HEAD 一致（abb2298）；`git log` 确认开发交付 f1a9451（图片批量缩放器）＋abb2298（逐个下载 bugfix）；`grep tools/categories.go` 全量 119 Path（118+1），`bulk_image_resizer` ID 与 `/tools/bulk-image-resizer` Path 已注册（划入已实现）；Top3＋新晋建议 ID（regex_explainer / curl_to_requests / svg_compressor / project_to_txt / page_to_csv / lorem_ipsum）与 119 Path 无重叠（`regex_explainer/regex-explainer/正则解释/curl_to_requests/curl-to-requests/curl转/svg_compress/svg-compress/svg压缩/project_to_txt/project-to-txt/project2txt/代码打包/page2csv/page-to-csv/网页表格转/lorem/ipsum/占位` 关键词核对全零命中；现有 `regex` 为匹配测试形态、svg 仅命中 mermaid/favicon/思维导图图表描述非压缩工具）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 21:41 · 产品经理排期轮）
 
 **选定：图片批量缩放器（Bulk Image Resizer）** — 本轮唯一任务：
