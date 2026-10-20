@@ -300,6 +300,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "folder_compare",
+					Name:        "文件夹对比",
+					Description: "拖拽或选择两个文件夹做递归差异对比：相对路径归一化，新增/删除/修改/相同四态分类高亮，统计差异数量与字节数，过滤搜索+按目录分组折叠，导出 Markdown / CSV 差异报告；只读文件名、大小、修改时间，不读内容，纯前端本地运行不出浏览器 · Folder compare: recursive diff of two folders, added/removed/modified/same highlight, stats, MD/CSV export, 100% client-side",
+					Path:        "/tools/folder-compare",
+					Icon:        "folder_copy",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

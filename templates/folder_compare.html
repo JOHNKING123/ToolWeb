@@ -1,0 +1,238 @@
+{{define "folder_compare"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件夹对比 - 在线对比两个文件夹差异，新增/删除/修改三态高亮，导出报告 | 程序员工具箱</title>
+    <meta name="description" content="免费在线文件夹对比工具：拖拽或选择两个文件夹，递归对比相对路径下的全部文件，按新增/删除/修改/相同四态分类高亮，统计差异数量与字节数，一键导出 Markdown / CSV 差异报告。只读取文件名、大小、修改时间，不读取文件内容，纯前端本地运行零上传。">
+    <meta name="keywords" content="文件夹对比,文件夹差异比较,folder compare,目录对比,在线文件夹diff,Beyond Compare 在线版,备份差异核对,文件夹同步对比,文件夹内容比较">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/folder-compare">
+    <meta property="og:title" content="文件夹对比 - 在线对比两个文件夹差异，三态高亮">
+    <meta property="og:description" content="拖拽两个文件夹即比：新增/删除/修改三态高亮，统计差异数量与字节数，导出 MD/CSV 报告。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/folder-compare">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文件夹对比","description":"在线文件夹对比工具：拖拽或选择两个文件夹，递归对比相对路径下全部文件，新增/删除/修改/相同四态分类高亮，统计差异数量与字节数，导出 Markdown / CSV 差异报告；只读文件名、大小、修改时间，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/folder-compare","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fc-wrap .container { max-width: 1320px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .fc-wrap .navbar .material-icons { display: none; }
+        .fc-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .fc-privacy .fc-lock { font-size: 1.6rem; flex: none; }
+        .fc-privacy b { color: #047857; }
+        .fc-privacy code { background: #d1fae5; padding: .05rem .4rem; border-radius: .3rem; font-size: .85rem; }
+        .fc-flash { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem;
+            line-height: 1.7; margin-bottom: 1rem; }
+        .fc-flash-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+        .fc-flash-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+        .fc-flash-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+        .fc-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem;
+            padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
+        .fc-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .fc-opts-row { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; align-items: center; }
+        .fc-chk { display: inline-flex; align-items: center; gap: .4rem; font-size: .92rem; color: #374151; cursor: pointer; }
+        .fc-chk input { accent-color: #2563eb; width: 1rem; height: 1rem; }
+        .fc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+        .fc-zone { border: 2px dashed #c7d2fe; border-radius: .8rem; background: #eef2ff; color: #4338ca;
+            text-align: center; padding: 2rem 1rem; cursor: pointer; transition: all .15s; min-height: 170px;
+            display: flex; flex-direction: column; justify-content: center; gap: .6rem; }
+        .fc-zone:hover { border-color: #4f46e5; background: #e0e7ff; }
+        .fc-zone.fc-dragover { border-color: #4f46e5; background: #e0e7ff; box-shadow: 0 0 0 3px #c7d2fe; }
+        .fc-zone.fc-loaded { border-style: solid; border-color: #6ee7b7; background: #ecfdf5; color: #065f46; }
+        .fc-zone .fc-big { font-size: 2rem; }
+        .fc-zone .fc-zt { font-size: 1.05rem; font-weight: 700; }
+        .fc-zone .fc-zs { font-size: .85rem; line-height: 1.7; }
+        .fc-prog { display: none; margin-top: .4rem; }
+        .fc-prog-track { height: .5rem; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+        .fc-prog-fill { height: 100%; width: 0; background: #4f46e5; border-radius: 999px; transition: width .2s; }
+        .fc-prog-text { font-size: .8rem; color: #6b7280; margin-top: .25rem; }
+        .fc-mini { border: 1px solid #d1d5db; background: #fff; border-radius: .35rem; padding: .1rem .5rem;
+            font-size: .78rem; cursor: pointer; color: #6b7280; }
+        .fc-mini:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+        .fc-comparebar { text-align: center; margin-bottom: 1.2rem; }
+        .fc-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.6rem; border: none;
+            border-radius: .55rem; background: var(--primary-color); color: #fff; cursor: pointer;
+            font-size: 1rem; font-weight: 600; }
+        .fc-btn:hover { background: var(--primary-color-dark); }
+        .fc-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+        .fc-btn-ghost { background: #f3f4f6; color: #374151; font-weight: 400; }
+        .fc-btn-ghost:hover { background: #e5e7eb; }
+        .fc-btn-sm { padding: .35rem .9rem; font-size: .85rem; }
+        .fc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; margin-bottom: 1rem; }
+        .fc-stat { border-radius: .7rem; padding: .8rem 1rem; border: 1px solid #e5e7eb; background: #fff; }
+        .fc-stat-t { font-size: .85rem; font-weight: 700; margin-bottom: .2rem; }
+        .fc-stat-n { font-size: 1.5rem; font-weight: 800; color: #111827; }
+        .fc-stat-s { font-size: .8rem; color: #6b7280; margin-top: .15rem; }
+        .fc-added { border-left: 4px solid #16a34a; } .fc-added .fc-stat-t { color: #15803d; }
+        .fc-removed { border-left: 4px solid #dc2626; } .fc-removed .fc-stat-t { color: #b91c1c; }
+        .fc-modified { border-left: 4px solid #d97706; } .fc-modified .fc-stat-t { color: #b45309; }
+        .fc-same { border-left: 4px solid #9ca3af; } .fc-same .fc-stat-t { color: #6b7280; }
+        .fc-toolbar { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: center;
+            background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: .8rem 1.1rem; margin-bottom: 1rem; }
+        .fc-toolbar .fc-chk { font-size: .86rem; }
+        .fc-search { flex: 1; min-width: 160px; padding: .45rem .7rem; border: 1px solid #d1d5db;
+            border-radius: .5rem; font-size: .9rem; }
+        .fc-search:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .fc-statline { font-size: .85rem; color: #6b7280; }
+        .fc-count { font-size: .85rem; color: #6b7280; }
+        .fc-group { margin-bottom: .6rem; border: 1px solid #e5e7eb; border-radius: .6rem; overflow: hidden; background: #fff; }
+        .fc-ghead { display: flex; align-items: center; gap: .5rem; padding: .55rem .9rem; background: #f9fafb;
+            cursor: pointer; font-size: .92rem; }
+        .fc-ghead:hover { background: #f3f4f6; }
+        .fc-gname { font-weight: 700; color: #1f2937; font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: .86rem; word-break: break-all; }
+        .fc-gcounts { margin-left: auto; display: flex; gap: .35rem; flex: none; }
+        .fc-gcounts i { font-style: normal; font-size: .75rem; font-weight: 700; border-radius: .35rem; padding: .08rem .5rem; }
+        i.fc-b-added { background: #dcfce7; color: #15803d; }
+        i.fc-b-removed { background: #fee2e2; color: #b91c1c; }
+        i.fc-b-modified { background: #fef3c7; color: #b45309; }
+        i.fc-b-same { background: #f3f4f6; color: #6b7280; }
+        .fc-gbody { padding: .4rem; }
+        .fc-row { display: flex; align-items: center; gap: .6rem; padding: .55rem .8rem; border-radius: .5rem;
+            cursor: pointer; font-size: .9rem; border-left: 4px solid transparent; margin-bottom: .25rem; background: #fff;
+            border-top: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; }
+        .fc-row:hover { filter: brightness(.97); }
+        .fc-r-added { border-left-color: #16a34a; } .fc-r-added:hover { background: #f0fdf4; }
+        .fc-r-removed { border-left-color: #dc2626; } .fc-r-removed:hover { background: #fef2f2; }
+        .fc-r-modified { border-left-color: #d97706; } .fc-r-modified:hover { background: #fffbeb; }
+        .fc-r-same { border-left-color: #9ca3af; } .fc-r-same:hover { background: #f9fafb; }
+        .fc-caret { color: #9ca3af; font-size: .8rem; flex: none; }
+        .fc-badge { flex: none; font-size: .75rem; font-weight: 700; border-radius: .35rem; padding: .12rem .55rem; white-space: nowrap; }
+        .fc-b-added { background: #dcfce7; color: #15803d; }
+        .fc-b-removed { background: #fee2e2; color: #b91c1c; }
+        .fc-b-modified { background: #fef3c7; color: #b45309; }
+        .fc-b-same { background: #f3f4f6; color: #6b7280; }
+        .fc-path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; color: #1f2937;
+            word-break: break-all; }
+        .fc-dirt { margin-right: .3rem; }
+        .fc-note { margin-left: auto; flex: none; font-size: .78rem; color: #92400e; background: #fef3c7;
+            border-radius: .35rem; padding: .1rem .5rem; }
+        .fc-detail { margin: -.1rem 0 .5rem; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: .5rem;
+            padding: .5rem .8rem; overflow-x: auto; }
+        table.fc-dtab { width: 100%; border-collapse: collapse; font-size: .84rem; }
+        table.fc-dtab th { text-align: left; padding: .4rem .6rem; color: #6b7280; font-weight: 400;
+            border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+        table.fc-dtab td { padding: .4rem .6rem; border-bottom: 1px solid #f3f4f6; font-family: ui-monospace, Menlo, Consolas, monospace;
+            word-break: break-all; }
+        table.fc-dtab td:first-child { font-family: inherit; white-space: nowrap; }
+        .fc-na { color: #9ca3af; }
+        .fc-empty { text-align: center; color: #9ca3af; padding: 2rem; background: #fff;
+            border: 1px dashed #e5e7eb; border-radius: .6rem; }
+        .fc-combo { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .6rem; padding: .7rem 1rem;
+            font-size: .92rem; line-height: 1.8; color: #1e40af; margin-top: 1.2rem; }
+        .fc-combo a { color: #1d4ed8; font-weight: 600; }
+        .fc-info { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-top: 1.2rem; }
+        .fc-info h3 { margin: 0 0 .6rem; font-size: 1rem; }
+        .fc-info ul { margin: 0; padding-left: 1.2rem; font-size: .9rem; line-height: 2; color: #4b5563; }
+        .fc-info b { color: #1f2937; }
+        .fc-info code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        @media (max-width: 960px) {
+            .fc-wrap .container { padding: 1rem; }
+            .fc-grid { grid-template-columns: 1fr; }
+            .fc-stats { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="fc-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📂 文件夹对比</h1>
+            <p>拖拽 / 选择两个文件夹 → 递归对比 → 新增 / 删除 / 修改三态高亮 → 导出差异报告</p>
+        </div>
+
+        <div class="fc-privacy">
+            <span class="fc-lock">🔒</span>
+            <div><b>隐私承诺：只读取文件名、文件大小和修改时间，不读取文件内容，不上传任何数据。</b><br>
+            文件夹扫描与对比全程在你的浏览器本地完成，无任何后端调用、无第三方请求。你可以在 DevTools 的 Network 面板验证 —— 没有一次网络请求。文件夹选择优先使用浏览器原生的 <code>showDirectoryPicker</code>（文件不离开本机）。</div>
+        </div>
+
+        <div class="fc-flash" id="fc-flash"></div>
+
+        <div class="fc-panel">
+            <h3>⚙️ 对比选项</h3>
+            <div class="fc-opts-row">
+                <label class="fc-chk"><input type="checkbox" id="fc-opt-ignorecase"> 忽略文件名大小写</label>
+                <label class="fc-chk"><input type="checkbox" id="fc-opt-sizeonly"> 只比较大小（忽略修改时间）</label>
+                <label class="fc-chk"><input type="checkbox" id="fc-opt-nohidden"> 排除隐藏文件（<code>.</code> 开头）</label>
+                <span style="flex:1"></span>
+                <button class="fc-btn fc-btn-ghost fc-btn-sm" id="fc-sample">📝 载入示例数据</button>
+            </div>
+        </div>
+
+        <div class="fc-grid">
+            <div class="fc-zone" id="fc-zone-a" role="button" tabindex="0">
+                <div class="fc-big">📁</div>
+                <div class="fc-zt">文件夹 A（旧版本 / 源）</div>
+                <div class="fc-zs">点击选择文件夹，或把文件夹拖到这里<br><span style="font-size:.78rem">Chrome/Edge 用系统目录选择器，其它浏览器用文件夹上传控件</span></div>
+                <div class="fc-zs" id="fc-status-a">尚未选择</div>
+                <div class="fc-prog" id="fc-prog-a"><div class="fc-prog-track"><div class="fc-prog-fill"></div></div><div class="fc-prog-text"></div></div>
+                <input type="file" id="fc-input-a" webkitdirectory directory multiple hidden>
+            </div>
+            <div class="fc-zone" id="fc-zone-b" role="button" tabindex="0">
+                <div class="fc-big">📁</div>
+                <div class="fc-zt">文件夹 B（新版本 / 目标）</div>
+                <div class="fc-zs">点击选择文件夹，或把文件夹拖到这里<br><span style="font-size:.78rem">与 A 对比：仅 B 有 = 新增，仅 A 有 = 删除</span></div>
+                <div class="fc-zs" id="fc-status-b">尚未选择</div>
+                <div class="fc-prog" id="fc-prog-b"><div class="fc-prog-track"><div class="fc-prog-fill"></div></div><div class="fc-prog-text"></div></div>
+                <input type="file" id="fc-input-b" webkitdirectory directory multiple hidden>
+            </div>
+        </div>
+
+        <div class="fc-comparebar">
+            <button class="fc-btn" id="fc-compare" disabled>🔍 开始对比（请先载入两侧文件夹）</button>
+        </div>
+
+        <div id="fc-result" style="display:none">
+            <div class="fc-stats" id="fc-stats"></div>
+
+            <div class="fc-toolbar">
+                <label class="fc-chk"><input type="checkbox" id="fc-f-added" checked> 新增</label>
+                <label class="fc-chk"><input type="checkbox" id="fc-f-removed" checked> 删除</label>
+                <label class="fc-chk"><input type="checkbox" id="fc-f-modified" checked> 修改</label>
+                <label class="fc-chk"><input type="checkbox" id="fc-f-same"> 相同</label>
+                <label class="fc-chk"><input type="checkbox" id="fc-group" checked> 按目录分组</label>
+                <input class="fc-search" id="fc-search" type="search" placeholder="🔎 按路径搜索…">
+                <span class="fc-count" id="fc-count"></span>
+                <span class="fc-statline" id="fc-statline"></span>
+                <span style="flex:1"></span>
+                <button class="fc-btn fc-btn-ghost fc-btn-sm" id="fc-export-md">⬇ 导出 .md 报告</button>
+                <button class="fc-btn fc-btn-ghost fc-btn-sm" id="fc-export-csv">⬇ 导出 .csv</button>
+            </div>
+
+            <div id="fc-list"></div>
+        </div>
+
+        <div class="fc-combo">
+            <b>🔗 相关工具：</b>改名前想先对两版文件名清单做文本级 diff？用 <a href="/tools/text-diff">文本比较</a>；批量改文件名用 <a href="/tools/batch-rename-helper">批量重命名助手</a>；写排除规则的正则先用 <a href="/tools/regex-tester">正则表达式测试</a> 验证。
+        </div>
+
+        <div class="fc-info">
+            <h3>📖 对比规则说明</h3>
+            <ul>
+                <li><b>三态分类：</b><span class="fc-badge fc-b-removed">删除</span> 仅 A 侧有（旧版有、新版没了） / <span class="fc-badge fc-b-added">新增</span> 仅 B 侧有（新版多出来的） / <span class="fc-badge fc-b-modified">修改</span> 两侧都有但大小或修改时间不同；完全一致的记为 <span class="fc-badge fc-b-same">相同</span>（默认隐藏，可勾选显示）。</li>
+                <li><b>空目录纳入对比：</b>Chrome/Edge 下用系统目录选择器可识别空目录（计入新增/删除/相同）；降级到文件夹上传控件时浏览器不暴露空目录。</li>
+                <li><b>路径归一化：</b>以相对路径为键，统一 <code>/</code> 分隔符；拖入单个文件夹时自动去掉顶层文件夹名，使 A/B 根对齐。</li>
+                <li><b>对比选项：</b>「忽略文件名大小写」适配 Windows/macOS 大小写不敏感场景；「只比较大小」忽略 mtime（跨机器拷贝常导致 mtime 全变）；「排除隐藏文件」跳过 <code>.git/</code>、<code>.DS_Store</code> 等。</li>
+                <li><b>性能：</b>扫描按批次让出 UI 线程并显示进度，上千文件不卡顿；列表一次性拼接渲染，搜索防抖。</li>
+                <li><b>导出：</b><code>.md</code> 报告含统计与三态分组明细表，<code>.csv</code> 含路径/状态/两侧大小与修改时间，文件名带时间戳。</li>
+                <li><b>📱 响应式：</b>桌面双栏、移动端自动堆叠，触屏可点选、对比、导出。</li>
+            </ul>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/folder_compare.js?v=1"></script>
+</body>
+</html>
+{{end}}

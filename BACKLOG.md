@@ -1,3 +1,82 @@
+## 今日任务（2026-10-20 07:46 · 产品经理排期轮）
+
+**选定：文件夹对比（Folder Compare）** — 本轮唯一任务：
+- **顺位递进**：多轮 PM 确认的**上午大轮次第一候补** → 研究轮 40（07:36）Top1 推荐 → 07:46 PM 决策轮立项；尊重顺位定序，无硬伤不跳过（与 10-20 01:45 / 03:45 / 05:40 PM 轮先例一致）。
+- **痛点真实**：备份/部署前后两份文件夹差异核对是高频刚需；Beyond Compare 是桌面软件，在线形态差异化。
+- **纯度高**：纯前端、零依赖、零后端、零上传（只读取文件名＋大小＋mtime，不读取文件内容；页面明示）；早班中难度从容交付位，交付确定性高。
+- **去重实锤**：`grep tools/categories.go`（全量 111 Path）——`folder_compare/folder-compare/文件夹对比` 全零命中。
+
+**规格**：
+1. 布局：左右双文件夹拖放区（A/B 对比），桌面双栏、移动端堆叠；支持拖拽文件夹＋点击选择（Chrome/Edge 优先 File System Access API `showDirectoryPicker`，其余降级 `<input webkitdirectory>`）；页面明示「只读取文件名、大小、修改时间，不读取文件内容，不上传」。
+2. 输入处理：递归遍历取相对路径→`{path → {size, mtime}}` Map，双树归一化（统一 `/` 分隔符）；大文件夹分批处理＋进度提示，避免长任务卡顿。
+3. 对比引擎（纯前端零依赖）：三态——仅 A 侧有（删除/仅左侧）/ 仅 B 侧有（新增/仅右侧）/ 两侧都有但大小或 mtime 不同（修改）；空目录纳入对比；对比选项：忽略文件名大小写、只比大小（忽略 mtime）、排除隐藏文件（`.` 开头）。
+4. 结果展示：差异列表按相对路径排序（三态色块＋中文标签）；过滤器（全部/新增/删除/修改）＋文件名搜索＋按目录分组折叠；统计面板（新增 N 个 x 字节 / 删除 M 个 y 字节 / 修改 K 个 / 相同 S 个）；单文件行点击展开两侧大小/mtime 明细。
+5. 导出：差异报告本地下载——Markdown 报告（默认，含统计＋三态分组列表）＋ CSV（路径,状态,大小A,大小B,mtimeA,mtimeB）；文件名带时间戳。
+6. 示例：一键载入内置模拟数据（两棵虚拟树，演示新增/删除/修改三态＋统计）。
+7. 纯前端、零依赖、零后端、零上传；DevTools 无网络请求。
+8. 注册：`tools/categories.go`「开发工具」品类（备份/部署前后差异核对场景），新增工具 ID `folder_compare`、Name「文件夹对比」、Path `/tools/folder-compare`（New: true），中英文描述 + SEO keywords（文件夹对比、文件夹差异比较、Beyond Compare 在线版、备份差异核对、文件夹同步对比）。
+9. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/folder-compare` 可开（200）
+- [ ] 两文件夹（或示例数据）载入，对比三态分类正确（新增/删除/修改）
+- [ ] 只读取文件名/大小/mtime；DevTools Network 抽查无后端调用、无外部请求、无文件内容上传
+- [ ] 1000+ 文件对比不卡顿（有进度提示）
+- [ ] 过滤器/搜索/对比选项生效；统计面板数字正确
+- [ ] 导出 .md / .csv 报告下载可用、内容正确
+- [ ] 示例按钮可用
+- [ ] `categories.go` 注册完成（开发工具品类、New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（选择+对比+导出）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/folder_compare.html`（新建：双文件夹拖放区＋对比选项＋过滤搜索＋差异列表＋统计面板＋导出工具栏）、`static/js/folder_compare.js`（新建：文件夹递归遍历＋相对路径树构建＋三态对比引擎＋统计＋MD/CSV 报告导出，零依赖）、`tools/categories.go`（开发工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- URL 追踪参数清除器（P1；40 轮新晋 Top2）：V2EX 10-18「勿追踪」＋HN Wirier（210+ 参数、短链展开）＋39 轮三重形态验证，纯前端小难度；顺位在本轮之后，列为下一深夜小难度轮次首选。
+- Markdown 转 Word（P1；40 轮 Top3）：上午大轮次候补；中难度，顺位顺延。
+- 正则表达式解释器（P1；40 轮新晋：dev.to RegexBuilder 形态验证）：留待开发者工具家族轮。
+- cURL → Python Requests 转换器（P1；39 轮新晋 Top3）：开发者工具家族轮或深夜轮次候补。
+- SVG 压缩优化器（P1；39 轮新晋留池）：留待设计工具家族轮。
+- 婚宴座位表生成器（P1；38 轮新晋 Top3）：上午轮次从容交付。
+- 单位感知记事本计算器（P1 留池；中难度，留待上午轮次或 PM 定序）。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续九轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，本地 HEAD 与 origin/muse/dev-20260929 一致（2b00570）；`grep tools/categories.go` 全量 111 Path，`folder_compare/folder-compare/文件夹对比` 与 111 Path 全零命中；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（07:36 研究轮追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 07:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。Markdown 公众号一键排版交付闭环（05:40 PM 决策轮立项→开发交付 e5dba75＋评审修复 2b00570「Markdown 预览页回链公众号一键排版（双向互链）」；`grep tools/categories.go` 确认 ID `markdown_publish_formatter`、Path `/tools/markdown-publish-formatter` 已注册，全量 **111 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 早班轮次，中难度候选可排。
+
+**本轮四件事**（07:36 全网调研，通用方向）：
+1. Markdown 公众号一键排版交付确认：`git log` 头部 2b00570（评审修复：预览页回链双向互链）＋e5dba75（新增工具）落盘；`git fetch`（GIT_SSH_COMMAND 指定密钥，StrictHostKeyChecking=no）——本轮初遇 `Host key verification failed`（VM 换机丢 /root/.ssh/known_hosts，TOOLS.md 历史已知，按 `ssh-keyscan -t ed25519 github.com` 补录后即通）；origin/muse/dev-20260929 与本地 HEAD 一致（2b00570）；`grep` 全量 111 Path（110+1），`markdown_publish_formatter` ID 与 `/tools/markdown-publish-formatter` Path 已注册（文本工具品类，内容创作排版场景）；候选池划出，已实现清单追加。
+2. 已实现清单断更补录：核查发现 `## 已实现（不再进入候选）` 清单自 10-14（扫描件/图片转 Excel）起断更——36~39 轮小节声称「delta 追加」但未实际落盘。本轮按 `git log` 逐条核实 commit＋注册路由，一次性补录 **43 条**（10-14：文档修复/PDF 转 PPT/批量 PDF 转 Word/批量图片转文字；10-15：思维导图/表格拆分/表格合并；10-16：HEIC 转 JPG/PDF 可填写表单制作器/成绩统计分析/字体版权查询/简历预检工具/在线图表生成器；10-17：AI 文本清洁器/SERP 搜索结果片段预览/图片标注/OG 社交卡片预览/AA制费用分摊计算器/Markdown 表格转 Excel/算术题生成器/GB/T 7714 参考文献格式生成器；10-18：PDF 电子签名/文本隐私脱敏/图片隐写/CSS 渐变生成器/照片转十字绣图案生成器/时区转换器/图片复古做旧/图片转像素画/在线音频裁剪器/网站图标生成器/进制转换器/单位换算器/宠物体重记录追踪器；10-19：图片精确体积压缩器/JSON Schema 验证器/robots.txt 生成器/代码压缩器/邮件签名生成器/PDF 元数据查看与清除器/Mermaid 图表渲染与导出器/JSON 语义化对比器/JWT 签名生成器/验证器/批量重命名助手/Markdown 公众号一键排版）。10-18 用户指令下线的 7 个泛财务/生活计算器（工资个税/二手房税费/房贷/双十一凑单/双11到手价/经济补偿金/工资条生成器）未列入（已从代码库移除）。清单与 111 Path 全量对齐。
+3. 新晋候选一则（P1）：
+   **正则表达式解释器（Regex Explainer）**——形态验证：dev.to aipredictions_dev「Dev tools that run 100% in your browser」（2026，抓取 16 小时前）单列 RegexBuilder："live match highlighting + a plain-English explainer"（Pro 导出 JS/Python）——解释器与匹配器并列是正则工具套件的标配双形态。痛点真实：开发者读不懂他人写的正则（`(?<=...)`/`(?:...)`/`\b` 组合），仓库 `regex-tester` 只能实时匹配测试、不能讲人话；纯前端小-中难度：正则 AST 解析（手写递归下降，非法正则中文报错；灾难性回溯风险提示可二期）→ 中文分段讲解（字符类/量词/分组/断言/锚点逐块释义＋整体匹配流程说明）→ 多语言代码片段生成（JS/Python/Go/Java 转义对照＋match/findall 样板）。去重：111 Path `regex` 仅命中正则表达式测试（实时匹配形态），解释器形态零覆盖。建议 ID `regex_explainer`、Path `/tools/regex-explainer`，P1（开发者工具家族轮）。
+4. 去重消化（不单立）：① HN Show HN Wirier（浏览器 URL 追踪参数清除器：210+ 参数、纯前端、短链展开还原）→ URL 追踪参数清除器 P1 形态**三重验证**（V2EX 10-18「勿追踪」＋39 轮＋本轮），差异化：中国场景参数（spm/from/utm_/淘宝/拼多多/小红书/抖音/微信）＋规则可订阅，不重复立；② HN Show HN Screentell（浏览器录屏＋站内裁剪编辑，getDisplayMedia/MediaRecorder）→ 浏览器屏幕录制器 P1 留池形态验证（早班大轮次候补），不重复立；③ HN Show HN 免费开源 PDF redaction（浏览器手动打码；AI 自动打码 OCR 限次）→ 仓库 `PDF 批注打码`（pdf-annotate：涂抹打码/荧光笔高亮，合同证件发前处理）形态已覆盖，不重复立；④ dev.to aipredictions_dev 同文——JSONForge（format/diff/validate/infer schema）→ JSON 格式化器/语义化对比器/Schema 验证器全覆盖；PasswordForge（本地密码生成）→ 随机密码生成器已覆盖；ColorWell（调色板＋WCAG）→ 颜色转换器（WCAG 检查）＋CSS 渐变生成器覆盖；CronExplain→cron-parser（解析＋未来执行时间）已覆盖；MetaForge（meta-tag audit＋社交预览）→ serp_snippet_preview＋og_card_preview 组合覆盖；TimeForge（多时区重叠规划）→ 时区转换器「会议时间对齐」形态覆盖；PrivateScribe/Grimhollow（浏览器端 AI 模型）→ 需模型下载，非单页轻量形态，不立；⑤ V2EX 10-19——Tervia（AI Coding 终端＋Git 桌面应用）、agy-menubar（Antigravity Token 监控 macOS 菜单栏）、zcode-mobile（多机群控 Android 客户端）、LayoutKeeper（macOS 多屏窗口布局恢复）→ 均为桌面/移动形态，非单页工具，不立；⑥ HN——1 Day Protocol（自我疗愈日记 App）、Guitoro（键盘吉他，娱乐）、Boolean search builder（招聘 niche）→ 非工具/娱乐/niche，不立；⑦ 中文「希望有一个网站能」搜索→SEO 噪音（BI 选型/建站公司软文），无单页信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；07:36 早班轮次，中难度可排）：
+
+1. **文件夹对比（Folder Compare）** — P1（多轮 PM 确认的**上午大轮次第一候补**；痛点：备份/部署前后两份文件夹差异核对，Beyond Compare 是桌面软件、在线形态差异化；纯前端中难度：拖拽两个文件夹（File System Access API / webkitdirectory，只读文件名＋大小＋mtime，不读取文件内容）→ 树形差异对比（新增/删除/修改三态＋字节差异统计）→ 差异报告导出，零后端；111 Path folder/文件夹对比全零命中；建议 ID folder_compare、Path /tools/folder-compare）。
+2. **URL 追踪参数清除器（URL Tracker Cleaner）** — P1（本轮**三重形态验证**：V2EX 10-18「勿追踪」＋HN Wirier（210+ 参数、短链展开）＋39 轮；痛点：微信/淘宝/小红书/抖音分享链接追踪参数泛滥，转发前手动清理折磨；纯前端小难度：粘贴 URL→中国场景黑名单剔除（utm_*/fbclid/gclid/spm/from/_ijt 等，保留商品 id 等业务参数）→短链展开还原→干净链接一键复制，零依赖；111 Path utm/追踪参数全零命中；隐私赛道高频刚需，早班快打位；建议 ID url_tracker_cleaner、Path /tools/url-tracker-cleaner）。
+3. **Markdown 转 Word（Markdown to Word）** — P1（上午大轮次候补；痛点：AI 生成的 Markdown 长文要交差（报告/论文/公文）需 .docx；纯前端中难度：Markdown AST→docx（自研 docx XML 拼装或轻量库，标题/表格/代码块/列表样式映射）→ .docx 本地下载，零后端；现有 PDF 转 Word 为文本提取形态、Markdown 转 Excel 为表格形态，MD→Word 完整文档形态零覆盖；111 Path markdown_to_word 全零命中；建议 ID markdown_to_word、Path /tools/markdown-to-word）。
+
+正则表达式解释器（P1；本轮新晋：dev.to RegexBuilder 形态验证，现有 regex-tester 仅匹配测试、解释形态零覆盖；小-中难度；留待开发者工具家族轮）。cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1；中难度，上午轮次）；浏览器屏幕录制器（P1；中难度，HN Screentell 形态验证，早班候补）；EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com CORS 抽查条件未达成——连续九轮 PM 决策一致（抽查通过前不立项），顺位继续顺延；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十轮：Markdown 公众号一键排版已实现划出；新晋 正则表达式解释器 P1；已实现清单断更 43 条一次性补录；全量 111 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 正则表达式解释器（Regex Explainer） | 本轮新晋（dev.to aipredictions_dev「Dev tools that run 100% in your browser」单列 RegexBuilder："live match highlighting + a plain-English explainer"；痛点：读不懂他人正则，仓库 regex-tester 只能实时匹配测试、不能讲人话；纯前端小-中难度：正则 AST 解析（手写递归下降，非法正则中文报错）→中文分段讲解（字符类/量词/分组/断言/锚点逐块释义）→多语言代码片段（JS/Python/Go/Java 转义对照＋样板）；111 Path regex 仅测试形态，解释器零覆盖；建议 ID regex_explainer、Path /tools/regex-explainer） | 小-中 | P1（本轮新晋） |
+
+**归档说明**：本轮为 10-20 通用调研第四十轮——Markdown 公众号一键排版交付闭环（e5dba75＋2b00570，`/tools/markdown-publish-formatter` 已注册，文本工具品类，内容创作排版场景，全量 111 Path），候选池划出，已实现清单 delta 追加；已实现清单断更补录 43 条（10-14~10-19，按 git log 逐条核实 commit＋注册路由，7 个已下线财务/生活计算器未列入）；新信号扫描（dev.to aipredictions_dev→正则表达式解释器 P1 新晋（RegexBuilder 形态验证，现有 regex-tester 仅匹配测试，解释形态零覆盖；其余 6 个信号点全部已覆盖或非单页形态）；HN→Wirier（URL 追踪参数清除器三重验证）/Screentell（浏览器屏幕录制器形态验证）/PDF redaction（PDF 批注打码已覆盖）/其余非工具或 niche 均不立；V2EX 10-19→Tervia/agy-menubar/zcode-mobile/LayoutKeeper 桌面移动形态均不立；中文「希望有一个网站能」→SEO 噪音无信号）均已消化；顺位更新（文件夹对比上午大轮次第一候补、URL 追踪参数清除器三重验证早班快打位、Markdown 转 Word 上午大轮次候补、正则表达式解释器 P1 新晋留开发者家族轮、YouTube 缩略图 CORS 条件未变连续第九轮顺延）；WPS 候选表保持冻结归档；仓库 111 注册工具全量核对无重叠（Top3 建议 ID folder_compare / url_tracker_cleaner / markdown_to_word；新晋 regex_explainer），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——本轮初遇 Host key verification failed（VM 换机丢 /root/.ssh/known_hosts，按 TOOLS.md `ssh-keyscan -t ed25519 github.com` 补录后即通，历史已知）；origin/muse/dev-20260929 与本地 HEAD 一致（2b00570）；`git log` 确认开发交付 e5dba75（Markdown 公众号一键排版）＋评审修复 2b00570（预览页回链双向互链）；`grep tools/categories.go` 全量 111 Path（110+1），`markdown_publish_formatter` ID 与 `/tools/markdown-publish-formatter` Path 已注册（划入已实现），Top3 建议 ID（folder_compare / url_tracker_cleaner / markdown_to_word）与新晋 ID（regex_explainer）与 111 Path 无重叠（`folder_compare/folder-compare/文件夹对比/markdown_to_word/markdown-to-word/regex_explainer/regex-explainer/url_tracker_cleaner/url-tracker-cleaner` 全零命中）；本地当前分支 muse/dev-20260929；本轮 BACKLOG.md 追加＋已实现清单补录（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 开发交付（2026-10-20 06:10 · 前端开发轮 ✅）
 
 **交付：Markdown 公众号一键排版（/tools/markdown-publish-formatter）** —— 按 05:40 PM 规格实现：
@@ -6543,6 +6622,52 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 ~~PDF 压缩~~（2026-10-14 实现，e35387c，路由 /tools/pdf-compress）、
 ~~PDF 转 Word（文本提取版）~~（2026-10-14 实现，5252fe2/2a0e67f，路由 /tools/pdf-to-word，已部署 /tool-web 并通过 QA）、
 ~~扫描件/图片转 Excel~~（2026-10-14 实现，8173fa3/ab36fab，路由 /tools/image-to-excel，已部署 /tool-web 并通过 QA）。
+~~文档修复~~（2026-10-14 实现，commit abace1c，路由 /tools/docx-repair）、
+~~PDF 转 PPT（文本提取版）~~（2026-10-14 实现，commit 7393640，路由 /tools/pdf-to-ppt）、
+~~批量 PDF 转 Word~~（2026-10-14 实现，commit 93d3a47，路由 /tools/pdf-to-word-batch）、
+~~批量图片转文字~~（2026-10-14 实现，commit e9f7a3c，路由 /tools/ocr-batch）。
+~~思维导图~~（2026-10-15 实现，commit f02d5b6，路由 /tools/mind-map）、
+~~表格拆分~~（2026-10-15 实现，commit 3ac0bea，路由 /tools/sheet-split）、
+~~表格合并~~（2026-10-15 实现，commit 93e5349，路由 /tools/sheet-merge）。
+~~HEIC 转 JPG~~（2026-10-16 实现，commit 85d17b6，路由 /tools/heic-convert）、
+~~PDF 可填写表单制作器~~（2026-10-16 实现，commit fb3735d，路由 /tools/pdf-form-maker）、
+~~成绩统计分析~~（2026-10-16 实现，commit 0c5b969，路由 /tools/score-stats）、
+~~字体版权查询~~（2026-10-16 实现，commit abe5db0，路由 /tools/font-license-check）、
+~~简历预检工具~~（2026-10-16 实现，commit b15c6e7，路由 /tools/resume-checker）、
+~~在线图表生成器~~（2026-10-16 实现，commit 1c6a9e3，路由 /tools/chart-generator）。
+~~AI 文本清洁器~~（2026-10-17 实现，commit 9a0111a，路由 /tools/ai-text-cleaner）、
+~~SERP 搜索结果片段预览~~（2026-10-17 实现，commit 29ccefb，路由 /tools/serp-snippet-preview）、
+~~图片标注~~（2026-10-17 实现，commit 7470877，路由 /tools/image-annotator）、
+~~OG 社交卡片预览~~（2026-10-17 实现，commit 3ad2c8a，路由 /tools/og-card-preview）、
+~~AA制费用分摊计算器~~（2026-10-17 实现，commit 6548945，路由 /tools/aa-bill-splitter）、
+~~Markdown 表格转 Excel~~（2026-10-17 实现，commit 6859282，路由 /tools/markdown-to-excel）、
+~~算术题生成器~~（2026-10-17 实现，commit cc325f6，路由 /tools/math-worksheet-generator）、
+~~GB/T 7714 参考文献格式生成器~~（2026-10-17 实现，commit acdfccd，路由 /tools/gbt7714-reference-generator）。
+~~PDF 电子签名~~（2026-10-18 实现，commit 0dd6451，路由 /tools/pdf-sign）、
+~~文本隐私脱敏~~（2026-10-18 实现，commit d4439c7，路由 /tools/text-privacy-masker）、
+~~图片隐写~~（2026-10-18 实现，commit 1689509，路由 /tools/image-steganography）、
+~~CSS 渐变生成器~~（2026-10-18 实现，commit 06bb838，路由 /tools/css-gradient-generator）、
+~~照片转十字绣图案生成器~~（2026-10-18 实现，commit aa128a2，路由 /tools/cross-stitch-pattern）、
+~~时区转换器~~（2026-10-18 实现，commit c2e5f69，路由 /tools/timezone-converter）、
+~~图片复古做旧~~（2026-10-18 实现，commit 14f9016，路由 /tools/img-retro-filter）、
+~~图片转像素画~~（2026-10-18 实现，commit f6f693e，路由 /tools/pixel-art-converter）、
+~~在线音频裁剪器~~（2026-10-18 实现，commit 1e8057b，路由 /tools/audio-trimmer）、
+~~网站图标生成器~~（2026-10-18 实现，commit 3fb07e1，路由 /tools/favicon-generator）、
+~~进制转换器~~（2026-10-18 实现，commit acb7159，路由 /tools/base-converter）、
+~~单位换算器~~（2026-10-18 实现，commit 59e735f，路由 /tools/unit-converter）、
+~~宠物体重记录追踪器~~（2026-10-18 实现，commit 3c9f8b7，路由 /tools/pet-weight-tracker）。
+~~图片精确体积压缩器~~（2026-10-19 实现，commit 7f54c22，路由 /tools/img-target-kb）、
+~~JSON Schema 验证器~~（2026-10-19 实现，commit e1a98b7，路由 /tools/json-schema-validator）、
+~~robots.txt 生成器~~（2026-10-19 实现，commit 8faeeef，路由 /tools/robots-txt-generator）、
+~~代码压缩器~~（2026-10-19 实现，commit a6fa63e，路由 /tools/code-minifier）、
+~~邮件签名生成器~~（2026-10-19 实现，commit f875152，路由 /tools/mail-signature-generator）、
+~~PDF 元数据查看与清除器~~（2026-10-19 实现，commit 3bf4c0e，路由 /tools/pdf-metadata-cleaner）、
+~~Mermaid 图表渲染与导出器~~（2026-10-19 实现，commit 9bb55ff，路由 /tools/mermaid-diagram-renderer）、
+~~JSON 语义化对比器~~（2026-10-19 实现，commit 58a0c44，路由 /tools/json-semantic-diff）、
+~~JWT 签名生成器/验证器~~（2026-10-19 实现，commit d4376b0，路由 /tools/jwt-signer-verifier）、
+~~批量重命名助手~~（2026-10-19 实现，commit cfcc674，路由 /tools/batch-rename-helper）、
+~~Markdown 公众号一键排版~~（2026-10-19 实现，commit e5dba75，路由 /tools/markdown-publish-formatter）。
+（补录说明：2026-10-20 07:36 第四十轮研究轮发现本清单自 10-14 起断更，按 git log 逐条核实 commit 与注册路由一次性补录 43 条；10-18 用户指令下线的 7 个泛财务/生活计算器未列入。）
 
 ## 2026-09-29 决策归档（已完成 ✅）
 
