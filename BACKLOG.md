@@ -1,3 +1,86 @@
+## 开发轮（2026-10-20 17:4x · 前端开发）
+
+**交付：.gitignore 生成器** — 全部验收项自测通过，随本轮提交：
+- 新建 `templates/gitignore_generator.html`（选择区/预览区/复制下载工具栏/使用说明/FAQ/相关工具互链；SEO 面板：标题/描述/keywords/canonical/OG/JSON-LD 配齐）。
+- 新建 `static/js/gitignore_generator.js`（23 个官方模板内置：语言 9 / 框架 8 / 系统IDE 6；合并引擎：语言→框架→IDE/OS 顺序、`# ===== 模板名 =====` 块注释分隔、重复行只留首次；chips 多选＋搜索过滤＋分组全选＋4 个快捷预设；带行号预览＋统计栏；clipboard＋execCommand 降级复制；Blob 下载 `.gitignore`；localStorage 持久化；零依赖、零 fetch/XHR、无后端调用）。
+- `tools/categories.go`：开发工具品类注册（ID `gitignore_generator`、Path `/tools/gitignore-generator`、New: true、Icon block）。
+- 反向互链：`mock_data_generator.html` / `url_tracker_cleaner.html` 组合用法区各加一句指向新工具。
+- 新建 `tests/gitignore_generator.test.js`：node 纯逻辑测试 112 断言全过（模板完整性/分组数量/拼接顺序/去重规则/块注释/空选择）。
+- 本地 `go build` 通过；127.0.0.1:8080 实测：`/tools/gitignore-generator` 200、JS 200、首页卡片与 sitemap 已收录、页面 13 个关键元素齐全；DOM 桩冒烟验证选择恢复/预览渲染/复制下载按钮启用正常。
+- 备注：`pkill -f toolweb-dev-test` 曾误杀自身 shell（pattern 命中自身命令行），已改用 `ss -ltn` 查端口确认服务已停。
+
+## 今日任务（2026-10-20 17:39 · 产品经理排期轮）
+
+**选定：.gitignore 生成器（.gitignore Generator）** — 本轮唯一任务：
+- **顺位递进**：42 轮新晋 P1 → 15:39 PM 轮明确「第二顺位，开发者工具家族轮快打位」→ YouTube 缩略图下载器交付闭环（be6c077），顺位自动递补第一，无硬伤不跳过。
+- **轮次匹配**：17:39 傍晚轮次，三候选中最小难度（纯前端极小：模板拼接＋预览＋复制/下载），交付确定性最高，适合快打。
+- **痛点真实**：新建仓库配 .gitignore 手工拼模板、上网抄，语言混搭（前端＋后端＋IDE/OS）易漏配；dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"（开发者工具套件标配项）。
+- **纯度高**：纯前端、零依赖、零后端、零上传；官方模板内置（离线可用，不实时拉取）。
+- **去重实锤**：`grep -icE 'gitignore|Gitignore|\.gitignore' tools/categories.go`（全量 116 Path）零命中。
+
+**规格**：
+1. 布局：上语言/框架/IDE 多选区（分组 chips：语言/框架/OS/IDE-编辑器，支持搜索过滤）、中拼接预览区（带行号、模板块 `#` 注释分隔标注来源）、下一键复制＋下载 `.gitignore` 按钮；桌面宽屏、移动端堆叠。
+2. 模板引擎（纯前端零依赖，模板内置）：内置官方模板主流子集——语言（Node、Python、Java、Go、Rust、PHP、Ruby、C#/C++）、框架（Vue、React、Django、Laravel、Flutter、Android、iOS/Xcode、.NET）、OS/IDE（macOS、Windows、Linux、VSCode、JetBrains、Vim/Emacs）；多选拼接时去重合并（同语言→框架→IDE/OS 顺序拼，重复行只留一次），模板块之间以 `# ===== <模板名> =====` 注释分隔。
+3. 交互：勾选即时预览；一键复制（navigator.clipboard＋降级方案）；下载 `.gitignore` 文件（blob＋a[download]）；选择状态 localStorage 持久化，刷新保留。
+4. 纯前端、零依赖、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传。
+5. 注册：开发工具家族，新增工具 ID `gitignore_generator`、Name「.gitignore 生成器」、Path `/tools/gitignore-generator`（New: true），中英文描述 + SEO keywords（gitignore 生成器、.gitignore 模板、gitignore 生成、忽略文件配置）；与开发工具家族相关工具（Mock 数据生成器/URL 追踪参数清除器）互链（「相关工具」入口）。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/gitignore-generator` 可开（200）
+- [ ] 语言/框架/IDE 分组多选（含搜索过滤），拼接预览实时更新，重复行去重正确、模板块注释分隔清晰
+- [ ] 一键复制可用（剪贴板写入正确）；下载 `.gitignore` 文件可用（内容＝预览内容）
+- [ ] 选择状态 localStorage 持久化，刷新页面后保留
+- [ ] DevTools Network 抽查：无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（开发工具品类、New: true），首页/导航/sitemap 生效；相关工具互链生效
+- [ ] 移动端可操作（多选+预览+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/gitignore_generator.html`（新建：多选区＋预览区＋复制/下载工具栏）、`static/js/gitignore_generator.js`（新建：内置官方模板库＋去重拼接引擎＋复制/下载，零依赖）、`tools/categories.go`（开发工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 文件校验和计算器（P1；43 轮新晋：DevToolsCave "File Checksum — Streams large files, no crash" 形态验证；痛点：下载系统镜像/大安装包后对照官方 SHA256 校验完整性，现有哈希工具均为文本形态；纯前端小难度：File.slice 分片流式＋crypto.subtle.digest＋进度条＋官方值一键比对，零上传；116 Path checksum/校验和/文件哈希全零命中）：第二顺位递补（建议 ID file_checksum、Path /tools/file-checksum）。
+- 图片区域模糊/马赛克打码（P1；本轮新晋：Varkido 170+ 工具清单 Image Tools 标配＋Toolou/siutil/Snapframe/BlurOutAI 单页形态群＋Snagit Smart Redact 商业验证；痛点：截图分享前涂抹账号/手机号/车牌/人脸，在线工具多要上传第三方（隐私雷）；形态差异：PDF 批注打码为 PDF 形态，图像形态零覆盖；纯前端小难度：拖拽框选→高斯模糊/马赛克/纯色遮盖→Ctrl+V 粘贴→破坏性压平导出（EXIF 剥离），零上传；116 Path blur/模糊/马赛克/pixelate 全零命中）：最强候补，下一轮优先排（建议 ID image_privacy_blur、Path /tools/image-privacy-blur）。
+- 图片批量缩放器（P1；44 轮新晋：pyfiletoolkit "Bulk Image Resizer" 形态验证；痛点：几十张配图逐张缩放；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度）：第四候补（建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer）。
+- 正则表达式解释器（P1；40 轮新晋；43 轮证据升级：Web Worker＋超时熔断防 ReDoS，「安全正则测试器」差异化）：开发者工具家族轮。cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD 与 origin/muse/dev-20260929 一致（be6c077）；`grep -icE` 全量 116 Path，`gitignore/Gitignore/checksum/校验和/文件哈希/image_privacy/image-privacy/blur/模糊/马赛克/pixelate` 全零命中（「打码」仅命中 PDF 批注工具 Description（PDF 形态），「涂抹」同）；建议 ID `gitignore_generator`、Path `/tools/gitignore-generator` 未被占用；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（17:36 研究轮＋本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 17:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。YouTube 缩略图下载器交付闭环（15:39 PM 决策轮立项→开发交付 be6c077「URL/ID 解析＋5 档分辨率预览＋fetch blob 本地下载，maxres 404 降级，图片处理品类注册」；`grep tools/categories.go` 确认 ID `youtube_thumbnail_downloader`、Path `/tools/youtube-thumbnail-downloader` 已注册，全量 **116 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：.gitignore 生成器晋升第一顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 傍晚轮次，小难度候选可排。
+
+**本轮三件事**（17:36 全网调研，通用方向）：
+1. YouTube 缩略图下载器交付确认：`git log` 头部 be6c077；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（本轮初 github.com host key 缺失自动补录），origin/muse/dev-20260929 与本地 HEAD 一致（be6c077）；`grep` 全量 116 Path（115+1），`youtube_thumbnail_downloader` ID 与 `/tools/youtube-thumbnail-downloader` Path 已注册；候选池划出，已实现清单追加（delta：+ YouTube 缩略图下载器，图片处理赛道，视频封面/配图场景）。
+2. **核稿误判纠偏**：15:36 研究轮新晋 P1「HTML 实体编解码器」实为已实现工具 `htmlentities`（Name「HTML 实体编解码」）的形态重叠误判（PM 轮已划出）；本轮复核确认 `htmlentities` 已注册，不再立项；教训：立候选前 grep 须覆盖「中文名+ID 片段双核」的 ID 命名变体（htmlentities 这类压缩式 ID），核稿反馈持续闭环。
+3. 新晋候选一则（P1）：
+   **图片区域模糊/马赛克打码（Image Privacy Blur）**——多重形态验证：dev.to contact_varkido「How I Built 170+ Free Online Tools」（26 天前发布）Image Tools 20+ 类标配 **"Image blur with region selection"**＋**"Pixelate tool with adjustable block size"**；单页形态群：Toolou Image Redactor（100% client-side，blur/blackout/pixelate 三模式，Ctrl+V 直接粘贴，EXIF 剥离，破坏性压平导出）、siutil Mosaic & Pixelate（发 X/Discord 前本地打码）、Snapframe（一键 auto-redact＋拖拽模糊，浏览器内运行）、dev.to chenjiayan BlurOutAI（23 天前，纯浏览器端 AI 脸部/PII 打码）；商业验证：TechSmith Snagit Smart Redact（自动检测邮箱/电话/卡号/人脸打码）。痛点真实：发截图/照片前涂抹账号、手机号、聊天记录人名、车牌、人脸等敏感信息是高频刚需，现有在线工具多要求上传到第三方服务器（隐私雷）。**形态差异实锤**：仓库已有「PDF 批注打码」（`pdf_annotate`，PDF 文档形态），但图像形态零覆盖——`grep -icE 'blur|模糊|马赛克|打码|pixelate'` 116 Path 全零命中（「打码」仅命中 PDF 工具 Description，形态不同）。纯前端小难度：拖拽/画笔框选区域→高斯模糊/马赛克像素化/纯色遮盖三模式＋强度调节→Ctrl+V 直接粘贴截图→canvas 破坏性压平导出（EXIF 自动剥离）＋一键复制/下载，零上传。建议 ID `image_privacy_blur`、Path `/tools/image-privacy-blur`，P1。
+4. 去重消化（不单立）：① dev.to pyfiletoolkit 13 工具清单→HTML Entity Encoder（已实现 `htmlentities`，误判教训）、Bulk Image Resizer（44 轮已立 P1）；② dev.to mou1z 5 工具→Kanban/Pomodoro/CSS 渐变/JSON/正则均已实现或表中已有；③ dev.to kkp DevTrove（22 工具，10-13 发布）→正则 Worker 超时形态已立证据升级、JWT/JSON/Base64/UUID/二维码均已实现；④ dev.to snappy_tools 26 工具→HTML Entity 已实现；⑤ dev.to lidevtools 33+ 工具→**WeChat Markdown Editor 划出**：仓库已实现「Markdown 公众号一键排版」（`grep -E 'Name:.*公众号'` 实锤，形态完全重叠）；CSV Viewer & Editor→仓库已有 `csvjson`「CSV ⇄ JSON 互转」（转换形态），表格化查看编辑形态差异化但价值中等，归档 P2 观察；XML Formatter→已实现 `xml`「XML 格式化」；Favicon Generator→`grep favicon` 3 命中已实现；⑥ HN：ImgExtender（AI outpainting/去背景需后端/AI，非纯前端形态）→其 Blur Background 与本轮图片打码信号同源，已消化；Picker Wheel Pro（转盘抽奖）→仓库已有随机点名器 P2＋年会大屏抽奖候选，不重复立；Web Audio Studio（可视化调试器，中-大难度非单页小工具）→不立；Mii Maker（头像生成器，niche）→P2 观察；⑦ Varkido：Sprite generator→niche 开发者工具，P2 观察；⑧ 中文「希望有一个网站」→疼痛医疗 SEO 噪音，无单页信号；V2EX 中文搜索→无结果。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；17:36 傍晚轮次，小难度可排）：
+
+1. **.gitignore 生成器（.gitignore Generator）** — P1（顺位递进：YouTube 缩略图下载器交付闭环（be6c077），自动递补第一顺位；42 轮新晋：dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"；痛点：新建仓库手工拼模板、语言混搭易漏配；纯前端极小难度：语言/框架/IDE 多选→官方模板拼接→预览＋复制/下载，零后端；116 Path gitignore 全零命中；开发者工具家族轮快打位；建议 ID gitignore_generator、Path /tools/gitignore-generator）。
+2. **文件校验和计算器（File Checksum）** — P1（顺位递补第二：43 轮新晋，DevToolsCave "File Checksum — Streams large files, no crash" 形态验证；痛点：下载系统镜像/大安装包后对照官方 SHA256 校验完整性，现有哈希工具为文本形态；纯前端小难度：File.slice 分片流式＋crypto.subtle.digest＋进度条＋官方值一键比对，零上传；116 Path checksum/校验和/文件哈希全零命中；建议 ID file_checksum、Path /tools/file-checksum）。
+3. **图片区域模糊/马赛克打码（Image Privacy Blur）** — P1（本轮新晋；多重形态验证：Varkido 170+ 工具清单 Image Tools 标配「Image blur with region selection」「Pixelate tool with adjustable block size」＋Toolou/siutil/Snapframe/BlurOutAI 单页形态群＋Snagit Smart Redact 商业验证；痛点：截图分享前涂抹账号/手机号/聊天记录/车牌/人脸，在线工具多要上传第三方（隐私雷）；形态差异：仓库 PDF 批注打码为 PDF 形态，图像形态零覆盖（grep blur/模糊/马赛克/打码/pixelate 全零）；纯前端小难度：拖拽框选→高斯模糊/马赛克/纯色遮盖→Ctrl+V 粘贴→破坏性压平导出（EXIF 剥离），零上传；建议 ID image_privacy_blur、Path /tools/image-privacy-blur）。
+
+图片批量缩放器（P1；44 轮新晋：pyfiletoolkit "Bulk Image Resizer" 形态验证；痛点：几十张配图逐张缩放；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度；116 Path 全零命中；建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer；第四候补）。正则表达式解释器（P1；40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；开发者工具家族轮）。HTML 实体编解码器（已实现 `htmlentities`，15:36 研究轮误判新晋，PM 轮划出，不再立项）。证书解码器/日志着色器/订阅管理助手（P2；42 轮新观察）；HMAC 签名生成器（P2；41 轮新观察）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2；43 轮新观察）；CSV 查看编辑器/精灵图生成器/头像生成器（P2；本轮新观察）；cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十五轮：YouTube 缩略图下载器已实现划出；图片区域模糊/马赛克打码 P1 新晋；HTML 实体编解码器误判纠偏（已实现）；全量 116 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片区域模糊/马赛克打码 | 本轮新晋（dev.to Varkido 170+ 工具清单 Image Tools 标配 "Image blur with region selection"＋"Pixelate tool with adjustable block size"；单页形态群 Toolou/siutil/Snapframe/BlurOutAI＋Snagit Smart Redact 商业验证；痛点：截图分享前涂抹账号/手机号/聊天记录/车牌/人脸，在线工具多要上传第三方；形态差异：仓库 PDF 批注打码（`pdf_annotate`）为 PDF 形态，图像形态零覆盖，`grep -iE 'blur\|模糊\|马赛克\|打码\|pixelate'` 116 Path 全零命中；纯前端小难度：拖拽框选→高斯模糊/马赛克/纯色遮盖→Ctrl+V 粘贴→破坏性压平导出（EXIF 剥离），零上传；建议 ID image_privacy_blur、Path /tools/image-privacy-blur） | 小 | P1（本轮新晋） |
+| YouTube 缩略图下载器 | 已实现划出（be6c077 落盘；ID youtube_thumbnail_downloader、Path /tools/youtube-thumbnail-downloader 已注册；全量 116 Path） | — | 已实现 |
+| HTML 实体编解码器 | 误判纠偏（15:36 研究轮新晋实为已实现 `htmlentities`「HTML 实体编解码」形态重叠；不再立项） | — | 已实现 |
+
+**归档说明**：本轮为 10-20 通用调研第四十五轮——YouTube 缩略图下载器交付闭环（be6c077，`/tools/youtube-thumbnail-downloader` 已注册，图片处理赛道，全量 116 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 五清单：Varkido 170+→图片区域模糊/马赛克 P1 新晋（图像形态零覆盖，与 PDF 批注打码形态差异实锤）；lidevtools 33+→WeChat Markdown Editor 划出（「Markdown 公众号一键排版」已实现）、CSV Viewer & Editor 归档 P2（csvjson 为转换形态）、XML/Favicon 已实现；pyfiletoolkit/mou1z/kkp/snappy_tools→均已实现或表中已有；HN→ImgExtender（AI/后端形态不立，打码信号同源消化）/Picker Wheel（随机点名器已立）/Web Audio Studio（太重不立）/Mii Maker（P2 niche）；中文搜索→疼痛医疗 SEO 噪音无单页信号）均已消化；顺位更新（.gitignore 生成器晋升第一顺位、文件校验和计算器递补第二、图片区域模糊/马赛克打码本轮新晋第三、图片批量缩放器第四候补）；WPS 候选表保持冻结归档；仓库 116 注册工具全量核对无重叠（Top3 建议 ID gitignore_generator / file_checksum / image_privacy_blur），核稿反馈（中文名+ID 片段双核防 htmlentities 式误判）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功（本轮初 github.com host key 自动补录）；origin/muse/dev-20260929 与本地 HEAD 一致（be6c077）；`git log` 确认开发交付 be6c077（YouTube 缩略图下载器）；`grep tools/categories.go` 全量 116 Path（115+1），`youtube_thumbnail_downloader` ID 与 `/tools/youtube-thumbnail-downloader` Path 已注册（划入已实现）；Top3 建议 ID（gitignore_generator / file_checksum / image_privacy_blur）与 116 Path 无重叠（`gitignore/Gitignore/checksum/校验和/文件哈希/image_privacy/image-privacy/blur/模糊/马赛克/pixelate` 关键词核对全零命中；「打码」仅命中 PDF 批注工具 Description（PDF 形态），「涂抹」同）；公众号排版形态已实现「Markdown 公众号一键排版」核稿实锤（WeChat Markdown Editor 不立）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 15:39 · 产品经理排期轮）
 
 **选定：YouTube 缩略图下载器（YouTube Thumbnail Downloader）** — 本轮唯一任务：

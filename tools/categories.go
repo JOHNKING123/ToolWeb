@@ -327,6 +327,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "gitignore_generator",
+					Name:        ".gitignore 生成器",
+					Description: ".gitignore 一键生成：勾选语言/框架/IDE（Node/Python/Java/Go/Rust/Vue/React/Django/Laravel/Flutter/macOS/Windows/VSCode/JetBrains…），官方模板离线拼接、重复行自动去重，带行号实时预览，一键复制/下载 .gitignore，选择状态本地记忆，纯前端零上传 · .gitignore generator: merge official templates for languages, frameworks & IDEs, dedupe lines, live preview, copy/download, 100% client-side",
+					Path:        "/tools/gitignore-generator",
+					Icon:        "block",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

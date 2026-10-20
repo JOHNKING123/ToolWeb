@@ -1,0 +1,181 @@
+{{define "gitignore_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.gitignore 生成器 - Node/Python/Java/Go/Rust 等多语言忽略模板在线合并生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 .gitignore 生成器：勾选编程语言（Node/Python/Java/Go/Rust/PHP/Ruby/C#/C++）、框架（Vue/React/Django/Laravel/Flutter/Android/iOS/.NET）与系统/IDE（macOS/Windows/Linux/VSCode/JetBrains/Vim），内置官方模板离线拼接、重复行自动去重，带行号实时预览，一键复制或下载 .gitignore。纯前端本地运行零上传。">
+    <meta name="keywords" content="gitignore 生成器,.gitignore 模板,gitignore 生成,忽略文件配置,git 忽略文件,gitignore template,gitignore 生成器在线">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/gitignore-generator">
+    <meta property="og:title" content=".gitignore 生成器 - 多语言忽略模板一键合并">
+    <meta property="og:description" content="勾选语言/框架/IDE，官方 .gitignore 模板离线拼接去重，带行号预览，一键复制或下载 .gitignore。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/gitignore-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":".gitignore 生成器","description":"在线 .gitignore 生成器：勾选语言/框架/IDE，内置官方模板离线拼接、重复行自动去重，带行号实时预览，一键复制或下载 .gitignore 文件；纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/gitignore-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .gi-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .gi-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .gi-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .gi-panel h3{margin:0 0 .7rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .gi-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .gi-search{width:100%;box-sizing:border-box;padding:.65rem .9rem;border:1px solid #d1d5db;border-radius:.5rem;
+            font-size:.92rem;margin-bottom:1rem}
+        .gi-search:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .gi-presets{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;align-items:center}
+        .gi-presets .gi-preset-label{font-size:.85rem;color:#6b7280}
+        .gi-mini{border:1px solid #d1d5db;background:#f9fafb;border-radius:.4rem;padding:.25rem .7rem;
+            font-size:.82rem;cursor:pointer;color:#374151}
+        .gi-mini:hover{border-color:#2563eb;color:#2563eb}
+        .gi-group{margin-bottom:1rem}
+        .gi-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;
+            font-size:.9rem;font-weight:700;color:#374151}
+        .gi-chips{display:flex;flex-wrap:wrap;gap:.5rem}
+        .gi-chip{border:1px solid #d1d5db;background:#f9fafb;border-radius:999px;padding:.4rem 1rem;
+            font-size:.88rem;cursor:pointer;color:#374151;transition:all .15s}
+        .gi-chip:hover{border-color:#2563eb;color:#2563eb}
+        .gi-chip.on{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:600}
+        .gi-stats{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;margin-bottom:.8rem;padding:.8rem 1rem;background:#eff6ff;
+            border:1px solid #bfdbfe;border-radius:.6rem;font-size:.9rem;color:#1e40af}
+        .gi-stats b{font-size:1.15rem;color:#1d4ed8}
+        .gi-preview{background:#0f172a;border-radius:.6rem;padding:.9rem 0;max-height:520px;overflow:auto;
+            font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.7;margin-bottom:1rem}
+        .gi-line{display:flex;min-width:max-content}
+        .gi-line:hover{background:rgba(255,255,255,.04)}
+        .gi-num{flex:none;width:3.2em;text-align:right;padding-right:.9rem;color:#475569;user-select:none}
+        .gi-code{flex:1;color:#e2e8f0;white-space:pre;padding-right:1rem}
+        .gi-code.gi-comment{color:#7dd3fc}
+        .gi-empty{color:#94a3b8;text-align:center;padding:3rem 1rem;font-family:system-ui,sans-serif;font-size:.95rem}
+        .gi-actions{display:flex;flex-wrap:wrap;gap:.6rem}
+        .gi-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .gi-btn .material-icons{font-size:1.1rem}
+        .gi-btn-primary{background:#2563eb;color:#fff}
+        .gi-btn-primary:hover{background:#1d4ed8}
+        .gi-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .gi-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .gi-btn-secondary:hover{background:#e5e7eb}
+        .gi-btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        .gi-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .gi-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .gi-combo{margin-top:.9rem;padding:.8rem 1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.6rem;
+            font-size:.9rem;line-height:1.9;color:#14532d}
+        .gi-combo a{color:#047857;font-weight:600}
+        .gi-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .gi-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .gi-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #gi-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #gi-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .gi-preview{font-size:.78rem;max-height:420px}
+            .gi-btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">block</i> .gitignore 生成器</h1>
+            <p>勾选语言 / 框架 / 系统 / IDE，官方忽略模板自动拼接去重，实时预览，一键复制或下载 <code>.gitignore</code>。模板内置离线可用，不联网也能用。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="gi-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>模板内置在页面脚本里，所有拼接、去重、复制、下载都在你的浏览器本地完成，不发起任何后端请求、不上传任何内容，断网也能用。</div>
+            </div>
+
+            <div class="gi-panel">
+                <h3><i class="material-icons">tune</i> ① 选择模板（多选）</h3>
+                <input type="text" id="gi-search" class="gi-search" placeholder="搜索模板，如 python、vue、mac…" autocomplete="off">
+                <div class="gi-presets">
+                    <span class="gi-preset-label">快捷预设：</span>
+                    <button type="button" class="gi-mini" data-gi-preset="node,vue,macos,vscode">前端开发</button>
+                    <button type="button" class="gi-mini" data-gi-preset="python,django,linux,vscode">Python 后端</button>
+                    <button type="button" class="gi-mini" data-gi-preset="java,windows,jetbrains">Java 后端</button>
+                    <button type="button" class="gi-mini" data-gi-preset="flutter,android,xcode,macos">移动端</button>
+                </div>
+                <div id="gi-groups"></div>
+            </div>
+
+            <div class="gi-panel">
+                <h3><i class="material-icons">preview</i> ② 合并预览</h3>
+                <div class="gi-stats" id="gi-stats" style="display:none">
+                    <span class="gi-stat">已选模板 <b id="gi-stat-tpl">0</b> 个</span>
+                    <span class="gi-stat">合并后 <b id="gi-stat-lines">0</b> 行</span>
+                    <span class="gi-stat">去重 <b id="gi-stat-dup">0</b> 行</span>
+                </div>
+                <div class="gi-preview" id="gi-preview"></div>
+                <div class="gi-actions">
+                    <button type="button" class="gi-btn gi-btn-primary" id="gi-copy-btn" disabled>
+                        <i class="material-icons">content_copy</i> 复制 .gitignore
+                    </button>
+                    <button type="button" class="gi-btn gi-btn-primary" id="gi-dl-btn" disabled>
+                        <i class="material-icons">download</i> 下载 .gitignore
+                    </button>
+                    <button type="button" class="gi-btn gi-btn-secondary" id="gi-clear-btn">
+                        <i class="material-icons">clear</i> 清空选择
+                    </button>
+                </div>
+            </div>
+
+            <div class="gi-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="gi-tip">
+                    <b>怎么用：</b>在上方按「编程语言 → 框架/平台 → 系统/IDE」勾选你的技术栈（如 Node + Vue + macOS + VSCode），合并结果实时出现在预览区；点「复制 .gitignore」粘贴到项目根目录，或点「下载 .gitignore」直接保存文件。<br>
+                    <b>拼接顺序：</b>语言模板在前、框架居中、系统/IDE 殿后；每个模板块以 <code># ===== 模板名 =====</code> 注释分隔并标注来源，方便日后手动维护。<br>
+                    <b>去重规则：</b>不同模板里的完全相同的行（如 <code>.env</code>、<code>*.log</code>、<code>*.iml</code>）只保留第一次出现的位置，统计栏会显示去掉了多少重复行。<br>
+                    <b>选择记忆：</b>你的勾选会自动存到浏览器 localStorage，下次打开直接沿用上次的组合。<br>
+                    <b>模板来源：</b>内置 github/gitignore 官方模板的主流核心规则（离线可用，不实时拉取）；若项目有特殊忽略需求，下载后可直接在文件末尾追加。<br>
+                    <b>适用边界：</b>本工具只负责生成忽略规则文本，不会替你执行 <code>git add</code>；已经被 git 跟踪的文件即使写进 .gitignore 也不会被忽略，需要先 <code>git rm --cached</code>。
+                </div>
+                <div class="gi-combo">
+                    <b>「开发一条龙」：</b>新仓库刚搭好缺测试数据？用 <a href="/tools/mock-data-generator">假数据/Mock 生成器</a> 一键造中文假数据；分享链接怕带追踪参数？用 <a href="/tools/url-tracker-cleaner">URL 追踪参数清除器</a> 先净化再发 —— 配环境、造数据、发链接，一套流程走完。
+                </div>
+            </div>
+
+            <div class="gi-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="gi-faq">
+                    <dt>生成的 .gitignore 会上传到服务器吗？</dt>
+                    <dd>不会。模板库和拼接引擎都在浏览器本地的 JavaScript 里运行，不发起任何后端请求、不上传任何内容，你可以在开发者工具 Network 面板验证，也可以断网使用。</dd>
+                    <dt>为什么有些模板很长、有些很短？</dt>
+                    <dd>模板取自 github/gitignore 官方仓库的主流核心规则：语言模板（如 Python、Node）覆盖构建产物/依赖/缓存等通用规则；框架模板只补该框架特有的目录（如 Vue 的 dist、Django 的 db.sqlite3）；系统/IDE 模板只管编辑器与系统文件。按需勾选即可，不要贪多。</dd>
+                    <dt>重复行是怎么去重的？</dt>
+                    <dd>按「语言 → 框架 → 系统/IDE」的顺序拼接时，内容完全相同的行只保留第一次出现的位置（如 Node 和 Python 都有 <code>.env</code>，只保留 Node 块里的那一行），预览区上方的统计栏会显示本次去掉了多少重复行。</dd>
+                    <dt>勾选了 Flutter，为什么 .idea/ 还在？</dt>
+                    <dd>Flutter 官方模板本身包含 .idea/ 等 IDE 规则；如果你同时勾选了 JetBrains 模板，重复行会被自动去重，不会写两遍。最终文件里每个规则只出现一次。</dd>
+                    <dt>下载的文件名为什么是 .gitignore？</dt>
+                    <dd>这就是 git 约定的文件名：放在仓库根目录即生效。Windows 下如果浏览器改了扩展名，手动改回 <code>.gitignore</code> 即可。</dd>
+                    <dt>选择状态下次打开还在吗？</dt>
+                    <dd>在。勾选状态实时存入浏览器 localStorage，刷新或下次打开会自动恢复；点「清空选择」可重置。换浏览器或清缓存后需要重新选择。</dd>
+                </dl>
+            </div>
+
+            <div class="gi-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="gi-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">.gitignore 生成器（当前）</span>
+                    <a href="/tools/mock-data-generator" class="btn btn-secondary" style="font-size:.9rem;">假数据/Mock 生成器</a>
+                    <a href="/tools/url-tracker-cleaner" class="btn btn-secondary" style="font-size:.9rem;">URL 追踪参数清除器</a>
+                    <a href="/tools/regex-tester" class="btn btn-secondary" style="font-size:.9rem;">正则表达式测试</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gi-toast"></div>
+    <script src="/tools/static/js/gitignore_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
