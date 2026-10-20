@@ -82,6 +82,7 @@
   // ---------------- 载入：三种入口 ----------------
   function resetSide(side) {
     side.name = ''; side.entries = new Map(); side.loaded = false;
+    $('fc-result').style.display = 'none'; // 清除一侧后隐藏旧对比结果，避免展示过期内容
     renderZone(side === S.A ? 'A' : 'B');
     updateCompareBtn();
   }
@@ -217,13 +218,11 @@
     }
 
     try {
-      var sawDir = false;
       if (items && items.length && items[0].webkitGetAsEntry) {
         for (var i = 0; i < items.length; i++) {
           var entry = items[i].webkitGetAsEntry();
           if (!entry) continue;
           if (entry.isDirectory) {
-            sawDir = true;
             if (!side.name) side.name = entry.name;
             side.entries.set('D\x00' + entry.name, { path: entry.name, size: null, mtime: null, isDir: true });
             await readDirEntry(entry, entry.name);
@@ -236,10 +235,16 @@
         }
       } else {
         var files = dataTransfer.files || [];
+        var segs = [];
         for (var j = 0; j < files.length; j++) {
-          var fj = files[j];
-          var pj = normPath(fj.webkitRelativePath || fj.name).split('/');
-          if (pj.length > 1 && sawDir) pj.shift();
+          segs.push(normPath(files[j].webkitRelativePath || files[j].name).split('/'));
+        }
+        // 降级分支（无 webkitGetAsEntry）：仅当所有文件共享同一首段时去掉它
+        // （拖入单个文件夹的情形），使 A/B 根对齐；多来源混合拖入则保持原样
+        var strip = segs.length > 0 && segs.every(function (s) { return s.length > 1 && s[0] === segs[0][0]; });
+        for (var k = 0; k < files.length; k++) {
+          var fj = files[k];
+          var pj = strip ? segs[k].slice(1) : segs[k];
           side.entries.set('F\x00' + pj.join('/'), { path: pj.join('/'), size: fj.size, mtime: fj.lastModified, isDir: false });
           scanned++;
         }
@@ -378,7 +383,7 @@
   function rowHtml(d) {
     var badge = '<span class="fc-badge fc-b-' + d.state + '">' + STATE_LABEL[d.state] + '</span>';
     var dirTag = d.a && d.a.isDir ? '<span class="fc-dirt">📁</span>' : '';
-    var key = d.key.replace(/"/g, '&quot;');
+    var key = d.key;
     var open = S.expanded[d.key];
     var h = '<div class="fc-row fc-r-' + d.state + '" data-key="' + escHtml(key) + '" role="button" tabindex="0">' +
       '<span class="fc-caret">' + (open ? '▾' : '▸') + '</span>' + badge +
@@ -577,6 +582,9 @@
       } else {
         input.click(); // 降级：webkitdirectory
       }
+    });
+    zone.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); zone.click(); }
     });
     input.addEventListener('change', function () {
       ingestWebkitFiles(which, input.files);
