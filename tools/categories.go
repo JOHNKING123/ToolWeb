@@ -328,6 +328,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "curl_to_requests",
+					Name:        "cURL → Python Requests 转换器",
+					Description: "粘贴 DevTools 复制的 cURL 命令即生成可运行的 Python requests 代码：自研 shell 词法切分（单双引号/转义/续行）＋参数映射（-X/--request、--url、-H、-d/--data*、--compressed、-u、-b、-A、-k、-F、--max-time）；JSON 自动用 json=、表单用 data=、文件上传用 files=、-k 生成 verify=False 并附中文安全警告，GET 带 data 提示改用 params=，未知参数进入诊断列表不静默丢弃；结构化解析展示＋一键复制＋下载 .py，纯前端本地转换不出浏览器 · curl to requests converter: convert curl command to Python requests code online, 100% client-side",
+					Path:        "/tools/curl-to-requests",
+					Icon:        "terminal",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "folder_compare",
 					Name:        "文件夹对比",
 					Description: "拖拽或选择两个文件夹做递归差异对比：相对路径归一化，新增/删除/修改/相同四态分类高亮，统计差异数量与字节数，过滤搜索+按目录分组折叠，导出 Markdown / CSV 差异报告；只读文件名、大小、修改时间，不读内容，纯前端本地运行不出浏览器 · Folder compare: recursive diff of two folders, added/removed/modified/same highlight, stats, MD/CSV export, 100% client-side",

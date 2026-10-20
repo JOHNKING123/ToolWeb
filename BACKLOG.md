@@ -1,3 +1,42 @@
+## 今日任务（2026-10-21 01:00 · 产品经理排期轮）
+
+**选定：cURL → Python Requests 转换器（curl-to-requests）** — 本轮唯一任务：
+- **顺位递进**：40 轮新晋 P1（23:00 轮立项第二顺位）→ 正则表达式解释器交付闭环（b1d3bb1，全量 120 Path）→ 自动递补第一顺位，无硬伤不跳过。
+- **轮次匹配**：01:00 深夜轮次，纯前端小难度快打位（23:00 轮 PM 决策轮明确定位：开发者工具家族轮或深夜填充位），一轮可高质量交付。
+- **痛点真实**：浏览器 DevTools / 接口文档复制的 cURL 命令，手工改写成 Python requests 代码繁琐易错（引号转义、-d 拼装、header 分隔符是最常见的坑）；零构建依赖纯前端即转即用。
+- **纯度高**：纯前端、零后端、零上传；自研轻量 shell 词法切分（单双引号/反斜杠转义/续行 `\`）＋参数映射 → 生成可直接运行的 requests 代码，无内容外发。
+- **去重实锤**：`grep -inE 'curl' tools/categories.go`（全量 120 Path）零命中（唯一命中行是正则解释器的 SVG 可视化描述，无压缩/转换形态）；已屏蔽的 `postman` 为 HTTP 发送形态、与「cURL 命令→requests 代码」形态零重叠。
+
+**规格**：
+1. 布局：上 cURL 输入区（多行 textarea：粘贴 DevTools 复制的 cURL 命令＋「填入示例」按钮）、中结构化解析区（方法/URL/Headers/Data/Cookies/超时 等 chips 展示，一眼确认解析无误）、下 Python 代码输出区（可直接运行的 requests 代码＋一键复制＋下载 .py）；桌面宽屏、移动端堆叠。
+2. 解析引擎（纯前端零依赖）：轻量 shell 词法切分（处理单/双引号、反斜杠转义、行尾续行 `\`）；参数映射覆盖常用项：`-X/--request` 方法、`--url`/位置参数 URL、`-H/--header`、`-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode`、 `--compressed`（Accept-Encoding）、`-u/--user`（auth 元组）、`-b/--cookie`、`-A/--user-agent`、`-k/--insecure`（verify=False＋中文警告注释）、`-F/--form`（files=data 形态）、`--max-time`（timeout）、`-o/--output` 仅提示忽略；未知长短参数进入「未处理参数」诊断列表提示手动补。
+3. 代码生成规则：data 若为合法 JSON → 生成 `json={...}`（附注释说明 `json=` 会自动设 Content-Type）；否则 `data='...'`（转义后 Python 字面量）；headers 为空则省略；cookies 合并进 headers 或用 `cookies=` 字典；GET 带 data 时提示改用 `params=`；输出 PEP8 友好、附 requests 未安装提示注释。
+4. 纯前端、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传。
+5. 注册：开发工具家族，新增工具 ID `curl_to_requests`、Name「cURL → Python Requests 转换器」、Path `/tools/curl-to-requests`（New: true），中英文描述 + SEO keywords（cURL 转 Python、curl to requests、curl 转换器、requests 代码生成、接口调试）。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/curl-to-requests` 可开（200）
+- [ ] DevTools 复制的典型 cURL（GET 带 headers、POST JSON、POST form-data、Basic Auth、-k 自签名）转换正确，生成代码可直接运行且与原命令等效（测试轮用 ≥6 个用例复核：引号嵌套/续行/--data-raw JSON/form/-F/-u/-k）
+- [ ] 未知参数有明确诊断提示，不静默丢弃
+- [ ] 一键复制＋下载 .py 可用
+- [ ] DevTools Network 抽查：无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（开发工具品类、New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（粘贴+转换+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/curl_to_requests.html`（新建：cURL 输入区＋结构化解析区＋代码输出区）、`static/js/curl_to_requests.js`（新建：shell 词法切分＋参数映射＋requests 代码生成，零构建依赖）、`tools/categories.go`（开发工具品类＋工具注册）、`tests/curl_to_requests.test.js`（新建：node 纯逻辑测试——词法切分用例＋参数映射快照＋代码生成断言）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- SVG 压缩优化器（P1；设计工具家族轮；纯前端：SVGO 浏览器端（CDN 懒加载）＋压缩率对比＋预览，零上传；120 Path svg_compress/svg-compress/svg压缩全零命中）：第二顺位（建议 ID svg_compressor、Path /tools/svg-compressor）。
+- Markdown 聊天图文转换器（P1；V2EX 10-20 当天帖 md2chat 最强新信号；痛点：AI 回答/Markdown 笔记复制进微信/钉钉/飞书/企微聊天框排版炸裂；纯前端小-中：按目标平台适配转换，文字保持可编辑＋复杂排版转图片组合，一键复制；120 Path md2chat/md-to-chat/聊天图文全零命中）：强候补，顺位递补（建议 ID md_to_chat、Path /tools/md-to-chat）。
+- 代码打包给 LLM（P1；48 轮新晋，Show HN project2txt 形态验证；建议 ID project_to_txt、Path /tools/project-to-txt）：开发工具家族轮后续顺位。
+- 婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；网页表格转 CSV/Lorem Ipsum 生成器（P2，48 轮新晋观察）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：本地 HEAD 与开发分支一致（b1d3bb1，正则表达式解释器已交付）；`grep -inE 'curl'` 全量 120 Path 零命中（postman 屏蔽项为 HTTP 发送形态、非转换形态）；建议 ID `curl_to_requests`、Path `/tools/curl-to-requests` 未被占用；本地当前分支 muse/dev-20260929；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 23:00 · 产品经理排期轮）
 
 **选定：正则表达式解释器（Regex Explainer）** — 本轮唯一任务：
@@ -7439,3 +7478,45 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 
 **[P1] 公网 /tool-web 下 sitemap.xml 与 robots.txt 返回 200 但 body 0 字节**（2026-10-20 QA 实测确认）：Go 服务将 sitemap/robots 注册在根路径（/sitemap.xml），/tool-web 挂载层按 /tool-web/<x>→/tools/<x> 映射够不到 handler；生产 https://www.it-tool.eu.cc/tools/sitemap.xml 同样 200 空 body，非本次部署引入。
 **修复方向**：让挂载层把 /tool-web/sitemap.xml（与 robots.txt）正确映射到 sitemap/robots handler，或在 /tool-web/<x> 路由里加直通。请产品经理排一轮缺陷修复。本地直连 127.0.0.1:18082/sitemap.xml 正常（20286B、111 个 URL，含 batch-rename-helper），SEO 数据本身无问题。
+## 今日任务（2026-10-21 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第四十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器；发票生成器按文档模板工具立项、非税务计算，方向合规）。正则表达式解释器交付闭环（23:00 PM 决策轮立项→开发交付 b1d3bb1「正则词法解析器逐段中文讲解（字符类/量词/分组/断言/转义/修饰符）＋语法错误即时定位＋结构树可视化＋Web Worker 安全匹配测试（3 秒熔断防 ReDoS），纯前端零上传；开发工具品类注册（New:true），与正则表达式测试双向互链，SEO 面板配齐；附 node 纯逻辑测试 111 断言」；`grep tools/categories.go` 确认 ID `regex_explainer`、Path `/tools/regex-explainer` 已注册，全量 **120 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：cURL → Python Requests 转换器晋升第一顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 凌晨轮次，小难度候选可排。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 正则表达式解释器交付确认：`git log` 头部 b1d3bb1（新增正则表达式解释器）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（b1d3bb1）；`grep` 全量 120 Path（119+1），`regex_explainer` ID 与 `/tools/regex-explainer` Path 已注册；候选池划出，已实现清单追加（delta：+ 正则表达式解释器，开发工具赛道，与正则表达式测试双向互链）。
+2. 新信号扫描（V2EX 10-20 新帖＋英文榜单复盘，去重拦截四起）：
+   - **md2chat「贴贴 Markdown」**（V2EX，10-20 当天帖，forgeturl.github.io/md2chat）：痛点直击——AI 回答/Markdown 笔记复制进微信/钉钉/飞书/企微/邮件聊天框，表格变夹竖线文字、公式露符号、流程图剩源码；形态：左侧输入 Markdown → 右侧按目标平台（微信/钉钉/飞书/企微/邮件）适配转换（文字保持可编辑，表格/代码/公式/流程图转图片，按原文顺序组合）→一键复制粘贴。当天新帖＋真实痛点讨论→**49 轮最强新信号，P1 新晋**；
+   - **发票生成器（Invoice Generator）**（Medium PDF Prem 40+ 工具清单＋dev.to Etemora Show DEV 双重单列）：痛点——自由职业者/小商户要开正规发票，在线工具多要求注册/上传/付费模板；形态：行项目＋税率＋折扣＋打印/PDF 导出，纯前端小难度；文档模板工具（与池内 P1 报价单同源赛道，非税务计算器，用户方向合规）→P1 新晋；
+   - **Siloshan 7 工具榜单（10 月，2 天前）**：「SortaSeat（婚宴/活动座位表）」→池内 P1 **婚宴座位表生成器**再添新鲜形态佐证；「OldRoll（复古照片）」→已实现 `img_retro_filter`「图片复古做旧」（/tools/img-retro-filter）去重拦截；「StitchCraft（照片转十字绣）」→已实现 `cross_stitch_pattern`「照片转十字绣图案生成器」去重拦截；「urPiano（浏览器钢琴）」→池内 P2 观察「在线钢琴」再佐证；「Calcy（单位感知计算）」→池内 P1「单位感知记事本计算器」再佐证；「llmspeed」→池内 P2 观察「LLM 速度模拟器」再佐证；「SyncWhen（免注册会议约时间）」需后端会议室状态，单页形态不成立，不立；
+   - **AIToolsForBloggers**（Product Hunt，10-16）：JSON/图片压缩/Base64/UUID/字数/大小写/取色/Lorem Ipsum→全已实现或池内已有（Lorem Ipsum 生成器 48 轮 P2 观察已有）；**阅读时长计算器（Reading Time Calculator）**为新形态→P2 观察；
+   - **PDF Prem 清单（10 月）**：压缩/合并拆分/PDF↔Word/JPG/OCR/AI 背景移除→均已实现或池内已有（背景移除 47 轮 P2 观察已有）；**打字速度测试（Typing Speed Test）**为新形态→P2 观察；**CSV→Excel** 单列但形态为格式互转、已有 csv/json 转换工具家族覆盖，不立；
+   - **Etemora SERP 片段预览**（Google 搜索结果标题/描述桌面+移动预览）：痛点——SEO 从业者发文前预估搜索结果展示；纯前端小难度；与已实现 `og_card_preview`（社交卡片预览，微信/Twitter/Facebook）形态差异化（Google SERP 场景）→P2 观察备忘；
+   - **Open Resume**（V2EX 10-20 自荐帖，156 款模板简历工具）：已实现 `简历预检工具` 覆盖简历赛道；156 模板完整简历编辑器为多页重形态、非单页小工具，且需中文简历模板沉淀，不单立。
+3. 新晋候选四则（2 个 P1＋2 个 P2 观察；01:00 凌晨轮次，小难度优先排）：
+   - **Markdown 聊天图文转换器**（P1 新晋；V2EX 10-20 md2chat 当天帖形态验证：左 Markdown 输入→按微信/钉钉/飞书/企微/邮件目标平台适配→文字可编辑＋表格/代码/公式/流程图转图片组合→一键复制；痛点：AI 回答贴进聊天框排版炸裂；纯前端小-中难度：marked 类 Markdown 渲染＋mermaid/公式渲染＋html2canvas 转图，零依赖可走 CDN 懒加载；AI 工具/办公赛道；建议 ID `md_to_chat`、Path `/tools/md-to-chat`）；
+   - **发票生成器（Invoice Generator）**（P1 新晋；Medium PDF Prem＋dev.to Etemora 双重单列；痛点：小商户/自由职业者要正规发票，现有在线工具注册/上传/付费模板；纯前端小难度：卖方信息＋行项目＋税率折扣＋金额大写＋打印/PDF 导出，localStorage 存草稿；文档模板赛道，与报价单互链；建议 ID `invoice_generator`、Path `/tools/invoice-generator`）；
+   - **打字速度测试（Typing Speed Test）**（P2 观察；PDF Prem 清单单列；痛点：打字学习者测 WPM/准确率，现有在线测试多要注册；纯前端小难度：随机文本＋计时＋WPM/准确率统计＋中英文文本库；娱乐/效率赛道；建议 ID `typing_test`、Path `/tools/typing-test`）；
+   - **SERP 片段预览**（P2 观察备忘；Etemora Show DEV 形态验证；痛点：SEO 从业者/博客作者预估 Google 搜索结果展示；纯前端小难度：标题/描述输入→桌面+移动 Google SERP 实时渲染＋字符计数规则提示；与 og_card_preview 差异化（Google 场景非社交卡片）；建议 ID `serp_preview`、Path `/tools/serp-preview`）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；01:00 凌晨轮次，小难度可排）：
+
+1. **cURL → Python Requests 转换器** — P1（顺位递进：正则表达式解释器交付闭环（b1d3bb1），自动递补第一顺位；痛点：浏览器 DevTools / 接口文档复制的 cURL 命令，手工改写成 Python requests 代码繁琐易错；纯前端小难度：cURL 参数解析（-H / -d / --data / --compressed / -X / --url）→生成可运行 requests 代码＋一键复制，零后端；120 Path curl_to_requests/curl-to-requests 全零命中；01:00 凌晨轮次小难度快打位；建议 ID curl_to_requests、Path /tools/curl-to-requests）。
+2. **SVG 压缩优化器** — P1（顺位递补第二；设计工具家族轮；痛点：设计交付/导出的 SVG 体积臃肿（冗余节点/注释/精度过高），手工精简繁琐，在线压缩多要上传；形态验证：Varkido 170+ 清单 SVG viewer and optimizer 标配项；纯前端小难度：SVGO 浏览器端（CDN 懒加载）＋压缩率对比＋预览，零上传；120 Path svg_compress/svg-compress/svg压缩全零命中；建议 ID svg_compressor、Path /tools/svg-compressor）。
+3. **Markdown 聊天图文转换器** — P1（49 轮新晋；V2EX 10-20 当天帖 md2chat 最强新信号；痛点：AI 回答/Markdown 贴进微信钉钉聊天框排版炸（表格夹竖线、公式露符号）；纯前端小-中难度：按目标平台适配转换、文字可编辑＋复杂排版转图片组合、一键复制；AI 工具/办公赛道；120 Path md_to_chat/md-to-chat/聊天图文全零命中；建议 ID md_to_chat、Path /tools/md-to-chat）。
+
+发票生成器（P1 新晋强候补，文档模板赛道；与报价单互链）；代码打包给 LLM（P1；开发工具家族轮强候补）；婚宴座位表生成器（P1；上午轮次从容交付，本轮再添 SortaSeat 新鲜佐证）；单位感知记事本计算器（P1 留池；中难度，本轮再添 Calcy 佐证）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察；llmspeed 为 LLM 速度模拟器再佐证；urPiano 为在线钢琴再佐证）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；网页表格转 CSV（P2 观察，48 轮新晋）；Lorem Ipsum 生成器（P2 观察，48 轮新晋）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2 观察，47 轮新晋）；打字速度测试（P2 观察，本轮新晋）；SERP 片段预览（P2 观察，本轮新晋备忘）；阅读时长计算器（P2 观察，本轮新晋）；文档差异对比器（PDF/DOCX，P2 观察备忘，Diffnote Show HN 形态验证）；键盘错位矫正器（P2 观察，niche）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十九轮：正则表达式解释器已实现划出；Markdown 聊天图文转换器/发票生成器 P1 新晋、打字速度测试/SERP 片段预览/阅读时长计算器 P2 新晋；全量 120 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 正则表达式解释器 | 已实现划出（b1d3bb1 落盘；ID regex_explainer、Path /tools/regex-explainer 已注册；全量 120 Path） | — | 已实现 |
+| Markdown 聊天图文转换器 | 本轮新晋 P1（V2EX 10-20 当天帖 md2chat 形态验证：左 Markdown 输入→按微信/钉钉/飞书/企微/邮件目标平台适配→文字可编辑＋表格/代码/公式/流程图转图片组合→一键复制；痛点：AI 回答贴进聊天框排版炸裂；纯前端：Markdown 渲染＋mermaid/公式渲染＋html2canvas 转图；AI 工具/办公赛道；建议 ID md_to_chat、Path /tools/md-to-chat） | 小-中 | P1（49 轮新晋） |
+| 发票生成器 | 本轮新晋 P1（Medium PDF Prem＋dev.to Etemora 双重单列；痛点：小商户/自由职业者要正规发票，现有工具注册/上传/付费模板；纯前端：卖方信息＋行项目＋税率折扣＋金额大写＋打印/PDF 导出，localStorage 存草稿；文档模板赛道、与报价单互链，非税务计算用户方向合规；建议 ID invoice_generator、Path /tools/invoice-generator） | 小 | P1（49 轮新晋） |
+| 打字速度测试 | 本轮新晋（PDF Prem 清单单列；痛点：打字学习者测 WPM/准确率，现有在线测试多要注册；纯前端：随机文本＋计时＋WPM/准确率＋中英文文本库；娱乐/效率赛道；建议 ID typing_test、Path /tools/typing-test） | 小 | P2（49 轮新晋观察） |
+| SERP 片段预览 | 本轮新晋备忘（Etemora Show DEV 形态验证；痛点：SEO 从业者预估 Google 搜索结果展示；纯前端：标题/描述→桌面+移动 SERP 实时渲染＋字符计数；与 og_card_preview 差异化（Google 场景）；建议 ID serp_preview、Path /tools/serp-preview） | 小 | P2（49 轮新晋观察） |
+| 阅读时长计算器 | 本轮新晋（Product Hunt AIToolsForBloggers 单列；痛点：博客/长文作者预估读者阅读耗时；纯前端：字数→分钟换算＋中英文语速参数；文本赛道；与字数统计工具互链候选；建议 ID reading_time、Path /tools/reading-time） | 极小 | P2（49 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第四十九轮——正则表达式解释器交付闭环（b1d3bb1，`/tools/regex-explainer` 已注册，开发工具赛道，全量 120 Path），候选池划出，已实现清单 delta 追加；新信号扫描（V2EX 10-20 md2chat 当天帖→Markdown 聊天图文转换器 P1 新晋；PDF Prem＋Etemora 双重单列→发票生成器 P1 新晋；PDF Prem→打字速度测试 P2；AIToolsForBloggers→阅读时长计算器 P2；Etemora→SERP 片段预览 P2 备忘；Siloshan 榜单：SortaSeat→婚宴座位表生成器再佐证、urPiano→在线钢琴再佐证、Calcy→单位感知记事本计算器再佐证、llmspeed→LLM 速度模拟器再佐证；去重拦截四起：OldRoll→`img_retro_filter` 已实现、StitchCraft→`cross_stitch_pattern` 已实现、Open Resume→`简历预检工具` 赛道覆盖且非单页形态不立、SyncWhen→需后端不立；CSV→Excel→csv 转换家族覆盖不立）均已消化；顺位更新（cURL→Python Requests 转换器晋升第一顺位、SVG 压缩优化器递补第二、Markdown 聊天图文转换器 P1 新晋第三；发票生成器 P1 强候补；代码打包给 LLM 开发工具家族轮候补）；WPS 候选表保持冻结归档；仓库 120 注册工具全量核对无重叠（Top3 建议 ID curl_to_requests / svg_compressor / md_to_chat＋新晋 ID invoice_generator / typing_test / serp_preview / reading_time；中文名+ID 片段双核＋零命中结论逐项可复现：`curl_to_requests/curl-to-requests/md_to_chat/md-to-chat/聊天图文/invoice/发票/typing_test/typing-test/打字/serp_preview/serp-preview/SERP/reading_time/reading-time/阅读时长` 全零命中），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（b1d3bb1）；`git log` 确认开发交付 b1d3bb1（正则表达式解释器）；`grep tools/categories.go` 全量 120 Path（119+1），`regex_explainer` ID 与 `/tools/regex-explainer` Path 已注册（划入已实现）；Top3＋新晋建议 ID（curl_to_requests / svg_compressor / md_to_chat / invoice_generator / typing_test / serp_preview / reading_time）与 120 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。

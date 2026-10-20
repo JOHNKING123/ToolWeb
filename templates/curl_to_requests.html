@@ -1,0 +1,120 @@
+{{define "curl_to_requests"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cURL 转 Python Requests 在线转换器 - 粘贴 cURL 命令生成 requests 代码（纯前端）</title>
+    <meta name="description" content="免费在线 cURL 转 Python Requests 转换器：粘贴浏览器 DevTools 复制的 cURL 命令，自研 shell 词法引擎解析方法/URL/Headers/Data/Cookies，JSON 自动用 json=、表单用 data=、文件上传用 files=，-k 自动生成 verify=False 并附安全警告，未知参数进入诊断列表不静默丢弃，一键复制、下载 .py，纯前端本地转换不出浏览器。curl to requests converter online, convert curl command to Python requests code, 100% client-side.">
+    <meta name="keywords" content="cURL 转 Python,curl to requests,curl 转换器,requests 代码生成,curl 转 requests 代码,cURL 命令解析,接口调试工具,Python requests 生成器,curl to python,curl command converter">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/curl-to-requests">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"cURL → Python Requests 转换器","description":"粘贴 cURL 命令即生成可运行的 Python requests 代码：自研 shell 词法切分（单双引号/转义/续行），参数映射 -X/--request、-H、-d/--data*、--compressed、-u、-b、-A、-k、-F、--max-time；JSON 自动用 json=、表单用 data=、文件上传用 files=，未知参数进入诊断列表不静默丢弃，一键复制与下载 .py，纯前端本地转换不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/curl-to-requests","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .c2r-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .c2r-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .c2r-privacy b{color:#047857}
+        .c2r-sec-title{display:flex;align-items:center;gap:.5rem;font-size:1.02rem;font-weight:700;color:#111827;margin:0 0 .7rem}
+        .c2r-sec-title .material-icons{color:var(--primary-color);font-size:1.25rem}
+        .c2r-sec-title .step{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--primary-color);color:#fff;font-size:.85rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+        .c2r-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem;align-items:center}
+        .c2r-btn-sm{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.45rem .85rem;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-family:inherit}
+        .c2r-btn-sm:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .c2r-btn-sm .material-icons{font-size:1.05rem}
+        .c2r-input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;min-height:11rem;width:100%;box-sizing:border-box;resize:vertical;background:#fff;color:#111827}
+        .c2r-input:focus{outline:none;border-color:var(--primary-color)}
+        .c2r-parsed{border:1px solid #e5e7eb;border-radius:.7rem;background:#f8fafc;padding:.9rem 1rem;font-size:.9rem;line-height:1.9;margin-bottom:1.2rem;min-height:4rem}
+        .c2r-kv{display:flex;gap:.7rem;align-items:flex-start;padding:.3rem 0;border-bottom:1px dashed #e5e7eb;flex-wrap:wrap}
+        .c2r-kv:last-child{border-bottom:none}
+        .c2r-k{flex:none;width:4.5rem;font-weight:700;color:#374151}
+        .c2r-method{display:inline-block;background:#111827;color:#fff;font-weight:800;font-size:.8rem;border-radius:.4rem;padding:.1rem .55rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .c2r-sub{color:#6b7280;font-size:.82rem}
+        .c2r-url{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;color:#1d4ed8}
+        .c2r-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+        .c2r-chip{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;padding:.15rem .6rem;font-size:.82rem;font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+        .c2r-chip b{color:#4f46e5}
+        .c2r-chip.c2r-cookie b{color:#059669}
+        .c2r-none{color:#9ca3af}
+        .c2r-warn{color:#b45309;font-weight:700}
+        .c2r-diag{border-radius:.6rem;padding:.6rem .9rem;margin-top:.7rem;font-size:.85rem;line-height:1.8}
+        .c2r-diag ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .c2r-diag code{background:rgba(0,0,0,.06);border-radius:.3rem;padding:.05rem .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .c2r-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+        .c2r-unhandled{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+        .c2r-warnbox{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+        .c2r-empty{color:#6b7280}
+        .c2r-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;min-height:16rem;max-height:32rem;overflow:auto;background:#111827;color:#e5e7eb;white-space:pre;word-break:normal;margin:0}
+        .c2r-foot{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.9rem;align-items:center}
+        .c2r-foot .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .c2r-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .c2r-note b{color:#374151}
+        .c2r-note code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .c2r-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;font-size:.9rem;border-radius:.6rem;padding:.6rem 1.2rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:9999}
+        .c2r-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:860px){
+            .c2r-k{width:3.6rem}
+            .c2r-input{min-height:9rem}
+            .c2r-code{min-height:12rem}
+            .c2r-foot .btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">terminal</i> cURL → Python Requests 转换器</h1>
+            <p>粘贴浏览器 DevTools 复制的 cURL 命令，即生成可直接运行的 Python requests 代码：结构化解析确认无误，一键复制、下载 .py。</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="c2r-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：命令内容不出浏览器。</b>解析与代码生成全部在当前页面本地计算，不上传到任何服务器，不做任何存储与记录。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求（除页面自身的字体/样式资源）。</div>
+            </div>
+
+            <div class="tool-card">
+                <div class="c2r-sec-title"><span class="step">1</span><i class="material-icons">input</i> 粘贴 cURL 命令</div>
+                <div class="c2r-toolbar">
+                    <button type="button" class="c2r-btn-sm" data-sample="get"><i class="material-icons">http</i> 示例：GET 请求</button>
+                    <button type="button" class="c2r-btn-sm" data-sample="postJson"><i class="material-icons">data_object</i> 示例：POST JSON</button>
+                    <button type="button" class="c2r-btn-sm" data-sample="form"><i class="material-icons">upload_file</i> 示例：表单上传</button>
+                    <button type="button" class="c2r-btn-sm" data-sample="auth"><i class="material-icons">vpn_key</i> 示例：认证+自签名</button>
+                    <button type="button" class="c2r-btn-sm" id="c2r-clear"><i class="material-icons">delete_sweep</i> 清空</button>
+                </div>
+                <textarea class="c2r-input" id="c2r-input" placeholder="在此粘贴 cURL 命令，例如：&#10;curl 'https://api.example.com/v1/users' \&#10;  -H 'Authorization: Bearer xxx' \&#10;  --data-raw '{&quot;name&quot;: &quot;张三&quot;}'&#10;&#10;支持多行续行 \、单/双引号、$'...' 引号。输入即自动解析…" spellcheck="false"></textarea>
+
+                <div class="c2r-sec-title" style="margin-top:1.4rem;"><span class="step">2</span><i class="material-icons">fact_check</i> 结构化解析（确认解析无误）</div>
+                <div class="c2r-parsed" id="c2r-parsed" aria-live="polite">
+                    <div class="c2r-empty">在上方粘贴 cURL 命令后，解析结果会显示在这里。</div>
+                </div>
+
+                <div class="c2r-sec-title"><span class="step">3</span><i class="material-icons">code</i> Python requests 代码
+                    <span style="flex:1"></span>
+                    <button type="button" class="c2r-btn-sm" id="c2r-convert"><i class="material-icons">refresh</i> 立即转换</button>
+                </div>
+                <pre class="c2r-code" id="c2r-code"># 在上方粘贴 cURL 命令，生成的 Python requests 代码会显示在这里。</pre>
+
+                <div class="c2r-foot">
+                    <button class="btn btn-primary" id="c2r-copy"><i class="material-icons">content_copy</i> 复制代码</button>
+                    <button class="btn btn-primary" id="c2r-download"><i class="material-icons">download</i> 下载 .py 文件</button>
+                    <span class="c2r-note" style="margin:0;">下载文件名为 <b>curl_to_requests.py</b>，运行前请 <b>pip install requests</b></span>
+                </div>
+
+                <div class="c2r-note">
+                    <b>引擎说明：</b>自研轻量 shell 词法切分——单/双引号、反斜杠转义、<code>$'...'</code> ANSI 引号、行尾续行 <code>\</code> 均可正确处理；参数映射覆盖 <code>-X/--request</code>、<code>--url</code>、<code>-H</code>、<code>-d/--data/--data-raw/--data-binary/--data-ascii/--data-urlencode</code>、<code>--compressed</code>、<code>-u</code>、<code>-b</code>、<code>-A</code>、<code>-k</code>、<code>-F/--form</code>、<code>--max-time</code>。<br>
+                    <b>代码生成规则：</b>data 为合法 JSON → <code>json=</code>（requests 自动设置 Content-Type）；普通表单 → <code>data=</code>；<code>-F</code> 文件上传 → <code>files=</code>；<code>-k</code> → <code>verify=False</code> 并附中文安全警告；GET 携带 data 会提示改用 <code>params=</code>。<b>未知参数一律进入诊断列表并写入代码注释，绝不静默丢弃。</b><br>
+                    <b>等价性说明：</b>生成的 requests 调用与原 cURL 命令语义等效（方法/URL/请求头/Cookie/请求体/超时/证书校验）；纯展示类选项（如 <code>-s</code>、<code>-v</code>、<code>-o</code>）会在代码注释中列出，请按需手动处理响应保存。
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="c2r-toast" id="c2r-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/curl_to_requests.js?v=1"></script>
+</body>
+</html>
+{{end}}
