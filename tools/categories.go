@@ -256,6 +256,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "mock_data_generator",
+					Name:        "假数据/Mock 生成器",
+					Description: "一键生成中文测试假数据：姓名/性别/手机号/邮箱/虚拟身份证/虚拟银行卡/省市区地址/UUID/时间戳，seed 可复现，JSON/CSV/SQL 导出 · 纯前端 Mock data generator",
+					Path:        "/tools/mock-data-generator",
+					Icon:        "science",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color",
 					Name:        "颜色转换",
 					Description: "HEX/RGB/HSL 互转，实时预览，WCAG 对比度检查",

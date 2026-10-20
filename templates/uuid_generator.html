@@ -63,7 +63,8 @@
                 <div style="color:#374151;line-height:1.8;font-size:1rem;">
                     <b>v4：</b>基于密码学安全随机数生成，122 位随机，最常用，适合做主键、Token、请求 ID。<br>
                     <b>v1：</b>基于时间戳 + 随机节点 ID 生成，同一毫秒内有序，适合需要大致按时间排序的场景。<br>
-                    本工具使用浏览器 <b>crypto.getRandomValues</b> 生成随机数，不经过网络，安全可靠。
+                    本工具使用浏览器 <b>crypto.getRandomValues</b> 生成随机数，不经过网络，安全可靠。<br>
+                    需要带中文姓名、手机号、地址的完整测试行？试试 <a href="/tools/mock-data-generator">假数据/Mock 生成器</a>（seed 可复现，JSON/CSV/SQL 导出）。
                 </div>
             </div>
         </div>

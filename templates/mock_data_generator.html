@@ -1,0 +1,190 @@
+{{define "mock_data_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>假数据/Mock 生成器 - 中文测试数据一键生成，JSON/CSV/SQL 导出 | 程序员工具箱</title>
+    <meta name="description" content="免费在线假数据生成器：勾选字段一键生成中文测试数据——中文姓名、性别、中国真实号段手机号、邮箱、身份证（虚拟，校验位正确）、银行卡（虚拟，Luhn 正确）、省市区三级地址、UUID、时间戳/日期；seed 可复现，JSON/CSV/SQL INSERT 三格式导出。纯前端本地运行零上传。">
+    <meta name="keywords" content="假数据生成器,Mock 数据,测试数据生成,中文假数据,JSON 测试数据,SQL 测试数据,Mock 数据生成器,随机数据生成,身份证校验,银行卡 Luhn,seed 可复现">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mock-data-generator">
+    <meta property="og:title" content="假数据/Mock 生成器 - 中文测试数据一键生成">
+    <meta property="og:description" content="中文姓名、手机号、虚拟身份证/银行卡、省市区地址、UUID、时间戳——seed 可复现，JSON/CSV/SQL INSERT 导出。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/mock-data-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"假数据/Mock 生成器","description":"在线假数据生成器：中文姓名、性别、中国手机号段、邮箱、虚拟身份证（校验位正确）、虚拟银行卡（Luhn 正确）、省市区地址、UUID、时间戳/日期，seed 可复现，JSON/CSV/SQL INSERT 三格式导出，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/mock-data-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mdg-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .mdg-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .mdg-privacy b{color:#047857}
+        .mdg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .mdg-panel h3{margin:0 0 .8rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .mdg-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .mdg-sec{margin-bottom:1.1rem}
+        .mdg-sec-title{font-weight:600;color:#374151;font-size:.92rem;margin-bottom:.5rem}
+        .mdg-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr));gap:.35rem .8rem}
+        .mdg-check{display:flex;align-items:center;gap:.35rem;font-size:.92rem;color:#1f2937;cursor:pointer;padding:.25rem 0}
+        .mdg-check input{accent-color:#2563eb;width:1.05rem;height:1.05rem}
+        .mdg-row{display:flex;flex-wrap:wrap;gap:.9rem 1.4rem;align-items:center}
+        .mdg-field{display:flex;align-items:center;gap:.5rem;font-size:.92rem;color:#374151}
+        .mdg-field input,.mdg-field select{padding:.45rem .6rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.92rem;background:#fff}
+        .mdg-field input:focus,.mdg-field select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .mdg-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+        .mdg-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.15rem;border:none;border-radius:.5rem;
+            cursor:pointer;font-size:.92rem;transition:filter .15s}
+        .mdg-btn .material-icons{font-size:1.05rem}
+        .mdg-btn-primary{background:#2563eb;color:#fff}
+        .mdg-btn-primary:hover{filter:brightness(1.08)}
+        .mdg-btn-ghost{background:#f3f4f6;color:#1f2937;border:1px solid #d1d5db}
+        .mdg-btn-ghost:hover{background:#e5e7eb}
+        .mdg-btn-sm{padding:.4rem .8rem;font-size:.85rem}
+        .mdg-tablewrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:.6rem;max-height:60vh;overflow-y:auto}
+        .mdg-tablewrap table{width:100%;border-collapse:collapse;font-size:.85rem;white-space:nowrap}
+        .mdg-tablewrap thead th{position:sticky;top:0;background:#f9fafb;color:#374151;font-weight:600;text-align:left;
+            padding:.55rem .7rem;border-bottom:2px solid #e5e7eb;z-index:1}
+        .mdg-tablewrap tbody td{padding:.45rem .7rem;border-bottom:1px solid #f3f4f6;color:#1f2937;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .mdg-tablewrap tbody tr:nth-child(even){background:#fafafa}
+        .mdg-idx{color:#9ca3af;font-family:inherit}
+        .mdg-pager{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.8rem;font-size:.88rem;color:#4b5563}
+        .mdg-pager button:disabled{opacity:.4;cursor:not-allowed}
+        .mdg-toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.9rem}
+        .mdg-tip{font-size:.88rem;color:#4b5563;line-height:1.8}
+        .mdg-tip b{color:#111827}
+        .mdg-combo{margin-top:.8rem;padding:.8rem 1rem;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.6rem;
+            font-size:.92rem;line-height:1.8;color:#1e40af}
+        .mdg-faq{font-size:.92rem;color:#374151;line-height:1.9}
+        .mdg-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .mdg-faq dd{margin:.2rem 0 0}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">science</i> 假数据/Mock 生成器</h1>
+            <p>勾选字段 → 一键生成中文测试假数据，seed 可复现，JSON / CSV / SQL INSERT 导出</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="mdg-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>隐私承诺：</b>全部生成逻辑在你的浏览器本地运行，<b>不经过任何后端、不上传任何数据</b>，可断网使用。<b>身份证、银行卡均为虚拟号码（校验位合法、仅用于格式测试）</b>，切勿用于任何真实业务场景。</div>
+            </div>
+
+            <div class="mdg-panel">
+                <h3><i class="material-icons">tune</i> 字段与参数</h3>
+                <div class="mdg-sec">
+                    <div class="mdg-sec-title">勾选字段</div>
+                    <div class="mdg-fields" id="mdg-fields"></div>
+                </div>
+                <div class="mdg-sec">
+                    <div class="mdg-sec-title">生成参数</div>
+                    <div class="mdg-row">
+                        <label class="mdg-field">生成行数（1–20000）
+                            <input id="mdg-count" type="number" min="1" max="20000" value="100" style="width:6.5em;">
+                        </label>
+                        <label class="mdg-field">seed（相同 seed + 相同配置 = 相同结果）
+                            <input id="mdg-seed" type="number" min="0" style="width:9em;">
+                            <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgNewSeed()"><i class="material-icons">casino</i> 换一个</button>
+                        </label>
+                    </div>
+                </div>
+                <div class="mdg-sec">
+                    <div class="mdg-sec-title">日期范围（同时控制「身份证出生日期」与「时间戳/日期」字段）</div>
+                    <div class="mdg-row">
+                        <label class="mdg-field">开始日期 <input id="mdg-date-start" type="date" value="2015-01-01"></label>
+                        <label class="mdg-field">结束日期 <input id="mdg-date-end" type="date" value="2026-10-20"></label>
+                        <label class="mdg-field">时间戳/日期格式
+                            <select id="mdg-dt-format">
+                                <option value="dt">日期时间（YYYY-MM-DD HH:mm:ss）</option>
+                                <option value="date">日期（YYYY-MM-DD）</option>
+                                <option value="ts_s">秒时间戳（10 位）</option>
+                                <option value="ts_ms">毫秒时间戳（13 位）</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="mdg-actions">
+                    <button type="button" class="mdg-btn mdg-btn-primary" onclick="mdgGenerate()"><i class="material-icons">autorenew</i> 生成数据</button>
+                </div>
+            </div>
+
+            <div class="mdg-panel">
+                <h3><i class="material-icons">table_view</i> 数据预览</h3>
+                <div class="mdg-toolbar">
+                    <label class="mdg-field">表名 <input id="mdg-table" type="text" value="mock_data" style="width:9em;"></label>
+                    <label class="mdg-field">SQL 方言
+                        <select id="mdg-dialect">
+                            <option value="mysql">MySQL</option>
+                            <option value="postgres">PostgreSQL</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="mdg-toolbar">
+                    <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgExport('json', true)"><i class="material-icons">content_copy</i> 复制 JSON</button>
+                    <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgExport('csv', true)"><i class="material-icons">content_copy</i> 复制 CSV</button>
+                    <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgExport('sql', true)"><i class="material-icons">content_copy</i> 复制 SQL</button>
+                    <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgExport('json', false)"><i class="material-icons">download</i> 下载 .json</button>
+                    <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgExport('csv', false)"><i class="material-icons">download</i> 下载 .csv</button>
+                    <button type="button" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgExport('sql', false)"><i class="material-icons">download</i> 下载 .sql</button>
+                </div>
+                <div class="mdg-tablewrap">
+                    <table>
+                        <thead id="mdg-thead"></thead>
+                        <tbody id="mdg-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="mdg-pager">
+                    <button type="button" id="mdg-first" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgFirst()">首页</button>
+                    <button type="button" id="mdg-prev" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgGotoPage(-1)">上一页</button>
+                    <button type="button" id="mdg-next" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgGotoPage(1)">下一页</button>
+                    <button type="button" id="mdg-last" class="mdg-btn mdg-btn-ghost mdg-btn-sm" onclick="mdgLast()">末页</button>
+                    <span id="mdg-pageinfo"></span>
+                </div>
+                <div class="mdg-tip" style="margin-top:.8rem;">万行预览采用分页渲染（每页 100 行），只渲染当前页，生成与翻页都不卡。</div>
+            </div>
+
+            <div class="mdg-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="mdg-tip">
+                    <b>怎么用：</b>勾选需要的字段 → 设置行数与 seed → 点「生成数据」→ 在预览表里翻页检查 → 按需复制或下载 JSON / CSV / SQL。<b>同 seed、同字段、同日期范围两次生成结果完全一致</b>，方便回归测试。<br>
+                    <b>字段说明：</b>手机号取自中国真实在用号段（130–199 系）；身份证为<b>虚拟号码</b>（行政区划代码真实、出生日期按你设的范围随机、第 18 位校验位按 GB 11643 算法正确，性别顺序码与性别字段联动）；银行卡为<b>虚拟号码</b>（真实发卡行 BIN + Luhn 校验位正确）；省市区地址取真实地名。<br>
+                    <b>SQL 导出：</b>可自定义表名、选择 MySQL / PostgreSQL 方言（标识符引用与注释相应变化），每 1000 行一条多值 INSERT。<br>
+                    <b>配置记忆：</b>字段勾选、行数、seed、日期范围、时间格式、表名、方言都会自动存到浏览器 localStorage，下次打开直接沿用。<br>
+                    <b>适用边界：</b>本工具生成的是格式合法的<b>假数据</b>，不能通过运营商/银行/公安的真实性核验，仅用于开发联调与界面测试。
+                </div>
+                <div class="mdg-combo">
+                    <b>组合用法：</b>只需要 UUID 做主键？用 <a href="/tools/uuid-generator">UUID 生成器</a> 批量生成 v1 / v4；需要带中文姓名、手机号、地址的完整测试行？回本工具一键生成。
+                </div>
+            </div>
+
+            <div class="mdg-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="mdg-faq">
+                    <dt>生成的数据会上传到服务器吗？</dt>
+                    <dd>不会。所有生成逻辑都在浏览器本地的 JavaScript 里运行，不发起任何后端请求，你可以在开发者工具 Network 面板验证，也可以断网使用。</dd>
+                    <dt>身份证、银行卡号码是真的吗？</dt>
+                    <dd>是虚拟号码：校验位按真实算法生成（身份证第 18 位、银行卡 Luhn 位都合法），但号码本身随机编造，不能用于任何真实业务、实名认证或支付场景，仅供格式测试。</dd>
+                    <dt>seed 是什么？为什么两次生成结果一样？</dt>
+                    <dd>seed 是随机数种子。本工具使用 mulberry32 确定性随机算法：相同 seed 加上相同的字段勾选、行数、日期范围，生成的每一行都完全一致，方便测试复现。换 seed 即换一批数据。</dd>
+                    <dt>一万行会卡吗？</dt>
+                    <dd>不会。生成 10000 行在普通电脑上只需几十毫秒；预览采用分页渲染（每页 100 行），DOM 只保留当前页；导出直接拼接字符串后下载。</dd>
+                    <dt>CSV 用 Excel 打开中文乱码怎么办？</dt>
+                    <dd>导出的 CSV 自带 UTF-8 BOM，Excel / WPS 双击打开即正常显示中文。</dd>
+                    <dt>SQL 导出支持哪些数据库？</dt>
+                    <dd>支持 MySQL 与 PostgreSQL 两种方言：标识符引用（反引号 / 双引号）与文件头注释自动切换，多值 INSERT 每 1000 行一条，兼容大多数数据库的导入限制。</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/mock_data_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
