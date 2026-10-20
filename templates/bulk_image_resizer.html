@@ -1,0 +1,231 @@
+{{define "bulk_image_resizer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片批量缩放器 - 多张图片批量调整尺寸在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片批量缩放器：拖拽多张 PNG / JPG / WebP 图片一键批量调整尺寸，按宽度/按高度/百分比/最长边四种预设等比缩放，JPEG 质量滑块，支持逐张下载与打包下载 ZIP。纯前端本地处理，图片零上传。Bulk image resizer online: batch resize images by width, height, percent or max side, download individually or as ZIP, 100% client-side.">
+    <meta name="keywords" content="图片批量缩放,批量压缩图片尺寸,批量调整图片大小,批量缩放图片,batch resize images,bulk image resizer,批量缩小图片,图片批量 resize,多张图片缩放">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bulk-image-resizer">
+    <meta property="og:title" content="图片批量缩放器 - 多张图片批量调整尺寸">
+    <meta property="og:description" content="拖拽多张 PNG/JPG/WebP 一键批量缩放：按宽度/高度/百分比/最长边等比调整，逐张下载或打包 ZIP。纯前端本地处理零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bulk-image-resizer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片批量缩放器","description":"在线图片批量缩放器：拖拽多张 PNG/JPG/WebP 图片一键批量调整尺寸，按宽度/按高度/百分比/最长边四种预设等比缩放，JPEG 质量可调，逐张下载或打包 ZIP；纯前端本地处理，图片零上传。","url":"https://www.johnkingzcq123.xyz/tools/bulk-image-resizer","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bir-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .bir-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .bir-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .bir-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .bir-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .bir-dropzone{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2.2rem 1rem;
+            text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+        .bir-dropzone:hover,.bir-dropzone.bir-drag{border-color:#2563eb;background:#eff6ff}
+        .bir-dropzone .material-icons{font-size:2.6rem;color:#60a5fa;display:block;margin-bottom:.5rem}
+        .bir-dz-hint{font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:.3rem}
+        .bir-dz-sub{font-size:.85rem;color:#64748b}
+        .bir-modes{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0;align-items:center}
+        .bir-mode-label{font-size:.9rem;color:#6b7280;font-weight:600;width:100%}
+        .bir-mode{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;color:#374151;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .9rem;background:#f9fafb}
+        .bir-mode input{accent-color:#2563eb}
+        .bir-mode:has(input:checked){border-color:#2563eb;background:#eff6ff;color:#1d4ed8;font-weight:600}
+        .bir-value-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.6rem 0}
+        .bir-input{box-sizing:border-box;padding:.55rem .8rem;border:1px solid #d1d5db;border-radius:.5rem;
+            font-size:.92rem;width:220px}
+        .bir-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .bir-unit{font-size:.9rem;color:#6b7280;font-weight:600;min-width:2rem}
+        .bir-formats{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:center}
+        .bir-quality-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.8rem;font-size:.9rem;color:#374151}
+        .bir-quality-row input[type=range]{flex:1;min-width:180px;accent-color:#2563eb}
+        .bir-quality-val{font-weight:700;color:#1d4ed8;min-width:2.2rem;text-align:right}
+        .bir-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+        .bir-summary{font-size:.9rem;color:#4b5563;font-weight:600;width:100%}
+        .bir-zip-prog{font-size:.85rem;color:#6b7280}
+        .bir-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .bir-btn .material-icons{font-size:1.1rem}
+        .bir-btn-primary{background:#2563eb;color:#fff}
+        .bir-btn-primary:hover{background:#1d4ed8}
+        .bir-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .bir-btn-danger{background:#dc2626;color:#fff}
+        .bir-btn-danger:hover{background:#b91c1c}
+        .bir-btn-danger:disabled{opacity:.5;cursor:not-allowed}
+        .bir-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .bir-btn-secondary:hover{background:#e5e7eb}
+        .bir-btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        .bir-empty{color:#94a3b8;text-align:center;padding:2.2rem 1rem;font-size:.95rem}
+        .bir-row{display:flex;gap:.8rem;border:1px solid #e5e7eb;border-radius:.7rem;padding:.8rem;margin-bottom:.8rem;background:#fff}
+        .bir-row.bir-done{border-color:#a7f3d0;background:#f0fdf4}
+        .bir-row.bir-error{border-color:#fecaca;background:#fef2f2}
+        .bir-thumb{width:64px;height:64px;object-fit:contain;flex:none;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.45rem}
+        .bir-row-main{flex:1;min-width:0}
+        .bir-row-head{display:flex;align-items:center;gap:.6rem}
+        .bir-name{flex:1;display:flex;align-items:center;gap:.45rem;min-width:0;font-weight:600;color:#111827;font-size:.93rem}
+        .bir-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .bir-size{flex:none;font-size:.82rem;color:#6b7280;background:#f3f4f6;border-radius:.35rem;padding:.15rem .55rem}
+        .bir-icon-btn{flex:none;border:none;background:transparent;color:#9ca3af;cursor:pointer;border-radius:.4rem;
+            padding:.25rem;display:inline-flex}
+        .bir-icon-btn:hover{color:#dc2626;background:#fef2f2}
+        .bir-icon-btn:disabled{opacity:.35;cursor:not-allowed}
+        .bir-icon-btn .material-icons{font-size:1.15rem}
+        .bir-progress{height:.55rem;background:#e5e7eb;border-radius:999px;margin:.6rem 0 .4rem;overflow:hidden}
+        .bir-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#2563eb);border-radius:999px;transition:width .2s}
+        .bir-row.bir-done .bir-progress-fill{background:linear-gradient(90deg,#34d399,#10b981)}
+        .bir-meta{display:flex;justify-content:space-between;gap:.6rem;font-size:.82rem;color:#6b7280;align-items:center}
+        .bir-mini{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;background:#f9fafb;
+            border-radius:.45rem;padding:.4rem .85rem;font-size:.85rem;cursor:pointer;color:#374151;flex:none}
+        .bir-mini:hover{border-color:#2563eb;color:#2563eb}
+        .bir-mini .material-icons{font-size:1rem}
+        .bir-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .bir-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .bir-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .bir-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .bir-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .bir-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #bir-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #bir-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .bir-input{width:100%}
+            .bir-btn{flex:1;justify-content:center}
+            .bir-row{gap:.6rem}
+            .bir-thumb{width:52px;height:52px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">photo_size_select_large</i> 图片批量缩放器</h1>
+            <p>拖拽或选择多张图片，一键批量调整尺寸：按宽度 / 按高度 / 百分比 / 最长边四种预设等比缩放，JPEG 质量可调，逐张下载或打包 ZIP。电商上新、文章配图，一次搞定几十张图。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="bir-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>图片解码与 canvas 缩放全部在你的浏览器本地完成，不发起任何后端请求、不上传任何图片内容，可在开发者工具 Network 面板验证，也可断网使用（打包下载功能需要联网加载一次 JSZip 库）。</div>
+            </div>
+
+            <div class="bir-panel">
+                <h3><i class="material-icons">upload_file</i> ① 选择图片</h3>
+                <div class="bir-dropzone" id="bir-dropzone">
+                    <i class="material-icons">cloud_upload</i>
+                    <div class="bir-dz-hint">把图片拖到这里，或点击选择</div>
+                    <div class="bir-dz-sub">支持多图片批量加入队列 · PNG / JPG / WebP</div>
+                    <div style="margin-top:.9rem;">
+                        <button type="button" class="bir-btn bir-btn-secondary" id="bir-pick-btn">
+                            <i class="material-icons">folder_open</i> 选择图片
+                        </button>
+                    </div>
+                    <input type="file" id="bir-file-input" accept="image/png,image/jpeg,image/webp" multiple style="display:none;">
+                </div>
+            </div>
+
+            <div class="bir-panel">
+                <h3><i class="material-icons">tune</i> ② 缩放设置</h3>
+                <div class="bir-modes">
+                    <span class="bir-mode-label">缩放方式：</span>
+                    <label class="bir-mode"><input type="radio" name="bir-mode" value="width" checked> 按宽度</label>
+                    <label class="bir-mode"><input type="radio" name="bir-mode" value="height"> 按高度</label>
+                    <label class="bir-mode"><input type="radio" name="bir-mode" value="percent"> 百分比</label>
+                    <label class="bir-mode"><input type="radio" name="bir-mode" value="max"> 最长边</label>
+                </div>
+                <div class="bir-value-row">
+                    <span class="bir-mode-label">数值：</span>
+                    <input type="number" class="bir-input" id="bir-value" value="1200" min="1" placeholder="例如 1200（目标宽度）">
+                    <span class="bir-unit" id="bir-unit">px</span>
+                </div>
+                <div class="bir-formats">
+                    <span class="bir-mode-label">输出格式：</span>
+                    <label class="bir-mode"><input type="radio" name="bir-format" value="keep" checked> 保持原格式</label>
+                    <label class="bir-mode"><input type="radio" name="bir-format" value="jpeg"> JPEG</label>
+                    <label class="bir-mode"><input type="radio" name="bir-format" value="webp"> WebP</label>
+                </div>
+                <div class="bir-quality-row">
+                    <span>JPEG / WebP 质量：</span>
+                    <input type="range" id="bir-quality" min="1" max="100" value="92">
+                    <span class="bir-quality-val" id="bir-quality-val">92</span>
+                </div>
+                <div class="bir-actions">
+                    <button type="button" class="bir-btn bir-btn-primary" id="bir-start-btn">
+                        <i class="material-icons">play_arrow</i> 开始批量缩放
+                    </button>
+                    <button type="button" class="bir-btn bir-btn-danger" id="bir-cancel-btn" style="display:none;">
+                        <i class="material-icons">stop</i> 取消
+                    </button>
+                    <button type="button" class="bir-btn bir-btn-secondary" id="bir-clear-btn">
+                        <i class="material-icons">clear</i> 清空队列
+                    </button>
+                    <button type="button" class="bir-btn bir-btn-secondary" id="bir-zip-btn" disabled>
+                        <i class="material-icons">folder_zip</i> 下载全部（打包 ZIP）
+                    </button>
+                    <span class="bir-zip-prog" id="bir-zip-prog"></span>
+                    <div class="bir-summary" id="bir-summary"></div>
+                </div>
+            </div>
+
+            <div class="bir-panel">
+                <h3><i class="material-icons">list_alt</i> ③ 处理结果</h3>
+                <div id="bir-list"></div>
+            </div>
+
+            <div class="bir-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="bir-tip">
+                    <b>怎么用：</b>把图片拖进上方虚线框（或点「选择图片」），选好缩放方式与输出格式后点「开始批量缩放」；每张图片独立显示进度条与「原尺寸→新尺寸」，完成后可逐张下载，也可点「下载全部」打包成 <code>resized-images.zip</code>。<br>
+                    <b>四种缩放方式：</b>按宽度——所有图统一缩放到指定宽度、高度等比；按高度——同理统一高度；百分比——例如填 <code>50</code> 就是每张图缩到一半；最长边——例如填 <code>1200</code>，长图与方图的长边都压到 1200 以内，适合统一上传规格。<br>
+                    <b>输出格式：</b>「保持原格式」原样输出；转 JPEG 时 PNG 透明区域会自动垫白色底；JPEG / WebP 质量滑块拖动即生效（数值越高质量越好、体积越大）。<br>
+                    <b>大图保护：</b>单张输出边长上限 8192px，大图逐级降采样缩放，内存可控不卡死；单张超 40MB 会提示处理较慢。<br>
+                    <b>断网降级：</b>「下载全部」打包需要加载 JSZip 库（cdnjs → npmmirror 自动备），若两者都不可达会自动降级为逐张下载并提示。<br>
+                    <b>隐私：</b>所有处理都在浏览器本地完成，图片不会上传到任何服务器；临时预览链接处理完即回收。
+                </div>
+            </div>
+
+            <div class="bir-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="bir-faq">
+                    <dt>图片会被上传到服务器吗？</dt>
+                    <dd>不会。图片解码与 canvas 缩放都在浏览器本地完成，不发起任何后端请求、不上传任何图片内容，你可以在开发者工具 Network 面板验证。</dd>
+                    <dt>和「图片尺寸调整」有什么区别？</dt>
+                    <dd>「图片尺寸调整」是单张精细操作（自定义宽高、裁剪）；本工具是批量形态——一次拖入几十张图，用同一套预设统一缩放并打包下载，适合电商上新、文章配图批量处理。</dd>
+                    <dt>PNG 透明图转 JPEG 会变黑吗？</dt>
+                    <dd>不会。检测到 PNG / WebP 透明图输出 JPEG 时，会先垫一层白色底再压缩，透明区域显示为白色。</dd>
+                    <dt>百分比填 200 会放大图片吗？</dt>
+                    <dd>会。百分比支持 1~1000，填 200 就是放大到 2 倍（放大为双三次插值，画质取决于原图）；按宽度/高度/最长边填大于原尺寸的数值同理会放大。</dd>
+                    <dt>「下载全部」点了没反应？</dt>
+                    <dd>打包需要从 CDN 加载 JSZip 库（先 cdnjs 再 npmmirror）。若网络不可达，页面会提示并自动降级为逐张下载；逐张下载始终可用。</dd>
+                    <dt>一次能加多少张图？</dt>
+                    <dd>数量不限，但图片是逐张在主线程缩放的（中间让出线程保持页面响应），几十张常规照片一般在几十秒内完成；超大图（40MB+）会逐张提示。</dd>
+                </dl>
+            </div>
+
+            <div class="bir-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="bir-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">图片批量缩放器（当前）</span>
+                    <a href="/tools/img-resize" class="btn btn-secondary" style="font-size:.9rem;">图片尺寸调整</a>
+                    <a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩</a>
+                    <a href="/tools/img-target-kb" class="btn btn-secondary" style="font-size:.9rem;">图片精确体积压缩器</a>
+                    <a href="/tools/img-convert" class="btn btn-secondary" style="font-size:.9rem;">图片格式转换</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="bir-toast"></div>
+    <script src="/tools/static/js/bulk_image_resizer.js?v=1"></script>
+</body>
+</html>
+{{end}}

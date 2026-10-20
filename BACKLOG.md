@@ -1,3 +1,84 @@
+## 今日任务（2026-10-20 21:41 · 产品经理排期轮）
+
+**选定：图片批量缩放器（Bulk Image Resizer）** — 本轮唯一任务：
+- **顺位递进**：44 轮新晋 P1 → 文件校验和计算器交付闭环（dfc69f3，全量 118 Path）→ 顺位自动递补第一，无硬伤不跳过。
+- **轮次匹配**：21:41 晚间轮次，小-中难度（canvas 批量缩放＋文件队列＋多下载通道），一轮可高质量交付。
+- **痛点真实**：电商上新/文章配图几十张图逐张缩放是重复折磨；现有 img-resize「图片尺寸调整」仅单图形态，批量形态零覆盖；pyfiletoolkit "Bulk Image Resizer" 形态验证。
+- **纯度高**：纯前端、零后端、零上传；canvas 批量处理主线程＋逐张进度，批量下载走仓库已有 JSZip CDN 懒加载模式（docx-repair.js 实证：cdnjs → npmmirror 备），不新增构建依赖。
+- **去重实锤**：`grep -icE 'bulk_image|bulk-image|批量缩放' tools/categories.go`（全量 118 Path）零命中；现有 img-resize 为单图缩放形态，批量零覆盖。
+
+**规格**：
+1. 布局：上拖拽/选择文件区（多文件：PNG / JPG / WebP，可清空/删除单项）、中统一缩放预设区（按宽度 / 按高度 / 百分比 / 最大边＋数值输入＋输出格式（保持原格式/JPEG/WebP）＋JPEG 质量滑块）、下批量结果列表（文件名＋原尺寸→新尺寸＋逐项进度＋缩略图预览＋逐个下载按钮＋「下载全部」打包按钮）；桌面宽屏、移动端堆叠。
+2. 批量缩放引擎（纯前端）：Image decode → canvas 按预设等比/定值缩放（大图降采样保护、透明背景 PNG 按格式输出）、toDataURL/toBlob 导出；逐张完成即入结果列表并更新总进度（n/m），主线程分片式批量不卡死页面；objectURL 用后 revoke 防内存泄漏；跨域图片不涉及（仅本地文件）。
+3. 打包下载：复用仓库已有模式 `static/js/docx-repair.js`（JSZip 3.10.1 CDN 懒加载 → cdnjs 备 → npmmirror 备，加载失败降级为逐个下载＋提示）；zip 文件名 `resized-images.zip`，包内文件按「原名_宽x高.扩展名」命名防冲突。
+4. 纯前端、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传（JSZip 仅从 CDN 取库文件，无业务数据外发）。
+5. 注册：图片处理家族，新增工具 ID `bulk_image_resizer`、Name「图片批量缩放器」、Path `/tools/bulk-image-resizer`（New: true），中英文描述 + SEO keywords（图片批量缩放、批量压缩图片尺寸、bulk image resizer、图片批量 resize）；与图片尺寸调整（/tools/img-resize）互链（「相关工具」入口，双向）。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/bulk-image-resizer` 可开（200）
+- [ ] 拖拽/选择单文件与多文件均可批量缩放，逐项进度＋总进度实时更新；删除单项/清空队列可用
+- [ ] 按宽度/按高度/百分比/最大边四种预设结果尺寸正确（测试轮用已知尺寸图片复核等比计算）
+- [ ] 输出格式切换（保持原/JPEG/WebP）＋ JPEG 质量滑块生效；PNG 透明图转 JPEG 时垫白底
+- [ ] 逐个下载与「下载全部」打包均可用（无网环境下 JSZip 加载失败时降级提示＋逐个下载可用）
+- [ ] DevTools Network 抽查：无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（图片处理品类、New: true），首页/导航/sitemap 生效；与 img-resize 互链生效
+- [ ] 移动端可操作（选择+缩放+下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/bulk_image_resizer.html`（新建：文件区＋预设区＋结果列表＋下载区）、`static/js/bulk_image_resizer.js`（新建：队列管理＋canvas 批量缩放引擎＋逐项/打包下载，零构建依赖）、`tools/categories.go`（图片处理品类＋工具注册）、`tests/bulk_image_resizer.test.js`（新建：node 纯逻辑测试——四种预设等比尺寸计算＋输出文件名命名规则）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 正则表达式解释器（P1；40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；痛点：读不懂他人/历史正则，现有 regex（正则表达式测试）仅匹配测试、解释形态零覆盖；纯前端小-中难度）：第二顺位，开发者工具家族轮（建议 ID regex_explainer、Path /tools/regex-explainer）。
+- cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）：第三顺位（建议 ID curl_to_requests、Path /tools/curl-to-requests）。
+- SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD 与 origin/muse/dev-20260929 一致（dfc69f3）；`grep -icE` 全量 118 Path，`bulk_image/bulk-image/批量缩放` 全零命中；建议 ID `bulk_image_resizer`、Path `/tools/bulk-image-resizer` 未被占用；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（21:36 研究轮＋本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 21:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。文件校验和计算器交付闭环（19:41 PM 决策轮立项→开发交付 dfc69f3「多文件拖拽队列、4MB 分片＋Web Worker 内纯 JS 增量 SHA-256/512/1 摘要器（进度实时、内存恒定、可取消），官方哈希粘贴自动归一化一键比对（一致绿/不一致红），复制按钮；纯前端零依赖零后端零上传；加密解密品类注册（New:true），与 SHA256 摘要双向互链，SEO 面板配齐；附 node 纯逻辑测试 200 断言」；`grep tools/categories.go` 确认 ID `file_checksum`、Path `/tools/file-checksum` 已注册，全量 **118 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：图片批量缩放器晋升第一顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:36 深夜轮次，小难度候选可排。
+
+**本轮三件事**（21:36 全网调研，通用方向）：
+1. 文件校验和计算器交付确认：`git log` 头部 dfc69f3（新增文件校验和计算器）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（dfc69f3）；`grep` 全量 118 Path（117+1），`file_checksum` ID 与 `/tools/file-checksum` Path 已注册；候选池划出，已实现清单追加（delta：+ 文件校验和计算器，加密解密赛道，下载文件完整性校验场景）。
+2. 新信号扫描（dev.to 三清单新帖＋竞品形态交叉验证；V2EX/中文/Reddit/HN 本轮噪音为主）：
+   - **Napizo**（dev.to，11 天前：「I Built 15 Free Browser Tools That Never Touch a Server」15 纯浏览器工具：PDF to JPG / JPG to PDF / PDF merger / PDF compressor / image compressor / image resizer / background remover / QR / word counter / AI caption generator / InPage Urdu-to-Unicode / EPUB splitter）：PDF 四形态→`pdf_to_image` / `图片批量转 PDF` / `pdf_merge_split` / `pdf_compress` 全已实现；图片压缩/缩放/二维码/字数统计→已实现；AI caption（需 AI）/ Urdu-to-Unicode（niche）不立；**EPUB splitter** 与 **background remover** 为新形态信号，见新晋候选；
+   - **KeptTools**（dev.to，5 天前：「I Got Tired of 'Free Tools' That Upload My Files」）：JSON / SQL / JWT / Base64 / 正则 / cron / UUID / URL / HTML 编码均已实现；PNG/JPG→WebP / 压缩 / 裁剪→已实现；**Image→SVG**→已 P2 观察（位图转矢量 SVG）归档不重复立；**Change background（白/蓝/自定义/透明换底）**→与 background remover 同源，归入新晋候选备注；
+   - **Tooltri**（dev.to，12 天前：「I Built 30+ Free Browser Tools That Never See Your Data」）：Token Counter→已实现 `ai_token_counter`（AI Token 计数器，/tools/ai-token-counter）核稿实锤；ChatGPT Text Cleaner→已实现 `ai_text_cleaner`（AI 文本清洁器）核稿实锤；Unix Time→`timestamp` 已实现；YouTube Thumbnail 下载→已实现；Merge PDF / JPG to PDF→已实现；无新立项（去重前置拦截两起潜在误判）；
+   - **Textly / Calcly / PromptForge**（dev.to instinctagent）：word counter / case converter / duplicate line remover / whitespace cleaner / text diff→`texttools`（字数/行去重/大小写/盘古空格）与 `text_diff` 全覆盖；Calcly 计算器类→用户方向下不扩展；PromptForge→新晋 P2 观察（见下）；
+   - **EPUB 拆分形态验证**：dev.to 201 天前「How to Split an EPUB Collection into Individual Books」实锤 **100% 浏览器端**实现（合集拆单本、保留排版/图片/元数据、ZIP 打包下载、零上传）＋ Napizo 15 工具单列 "EPUB splitter"；竞品 GroupDocs / Conholdate 全部走服务器上传（电子书隐私雷）→ ToolWeb「本地处理不上传」差异化成立；
+   - **bigwords.page**（Show HN，13 天前：「Turn any screen into a sign. The URL is the app」）：URL 即应用、无后端零存储、slides / 动画 / 倒计时 / 计时器——为已 P2 观察「大屏文字展示器」提供新鲜形态验证，信号升级，仍留 P2；
+   - V2EX / 中文「希望有一个网站能」/ Reddit / HN 本轮→噪音为主（疼痛医疗 SEO、网站建设商软文、Show HN 数据分析元讨论），无有效单页信号。
+3. 新晋候选三则（均为 P2 观察；P1 队列饱和，本轮不新立 P1，尊重 PM 定序）：
+   - **EPUB 拆分器（EPUB Splitter）**：痛点——合集版 EPUB 拆成单本 / 按章节提取，现有在线拆分工具全部要求上传服务器；形态验证：dev.to 纯浏览器实现＋Napizo 单列；纯前端中难度（EPUB=zip：container.xml→OPF→spine 章节解析，重新打包输出；零依赖需自研轻量 zip 解压/打包）；建议 ID `epub_splitter`、Path `/tools/epub-splitter`；
+   - **图片背景移除（Background Remover）**：痛点——证件照/商品图/头像换底去背景，现有免费方案要上传第三方或限次扣费；形态验证：Napizo 单列 "background remover"＋KeptTools "Change background"；浏览器端 ML（biRefNet/ONNX）需下载数十 MB 模型、与零依赖精神冲突→P2 观察，备选轻量形态（纯色/绿幕简易抠图）可降级小难度；建议 ID `bg_remover`、Path `/tools/bg-remover`；
+   - **AI 提示词构建器（Prompt Builder）**：痛点——AI 时代写不好提示词，网上抄模板零散；形态验证：dev.to PromptForge（角色/任务/上下文/格式/语气/约束结构化构建＋提示词库＋prompt roast 打分）；纯前端小难度：表单化结构组装＋提示词库＋规则质检打分（roast 若走 LLM 需后端，本形态只做规则版）；AI 工具赛道；建议 ID `prompt_builder`、Path `/tools/prompt-builder`。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；21:36 深夜轮次，小难度可排）：
+
+1. **图片批量缩放器（Bulk Image Resizer）** — P1（顺位递进：文件校验和计算器交付闭环（dfc69f3），自动递补第一顺位；44 轮新晋：pyfiletoolkit "Bulk Image Resizer" 形态验证；痛点：电商上新/文章配图几十张图逐张缩放是重复折磨；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度：多文件队列＋统一预设（按宽/按高/百分比/最大边）＋canvas 批量处理＋逐个/打包下载，零上传；118 Path bulk_image/bulk-image/批量缩放全零命中；建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer）。
+2. **正则表达式解释器（Regex Explainer）** — P1（顺位递补第二：40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；痛点：读不懂他人/历史正则，现有 `regex`（正则表达式测试）仅匹配测试、解释形态零覆盖；纯前端小-中难度：正则逐段中文解释＋可视化＋Worker 超时熔断，零后端；开发者工具家族轮；建议 ID regex_explainer、Path /tools/regex-explainer）。
+3. **cURL → Python Requests 转换器** — P1（开发者工具家族轮或深夜填充位；痛点：浏览器 DevTools / 接口文档复制的 cURL 命令，手工改写成 Python requests 代码繁琐易错；纯前端小难度：cURL 参数解析（-H / -d / --data / --compressed / -X / --url）→生成可运行 requests 代码＋一键复制，零后端；118 Path curl_to_requests/curl-to-requests 全零命中；21:36 深夜轮次小难度快打位；建议 ID curl_to_requests、Path /tools/curl-to-requests）。
+
+SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察，bigwords.page Show HN 形态验证升级）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十七轮：文件校验和计算器已实现划出；EPUB 拆分器/图片背景移除/AI 提示词构建器 P2 新晋；全量 118 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文件校验和计算器 | 已实现划出（dfc69f3 落盘；ID file_checksum、Path /tools/file-checksum 已注册；全量 118 Path） | — | 已实现 |
+| EPUB 拆分器 | 本轮新晋（dev.to 201 天前「How to Split an EPUB Collection into Individual Books」100% 浏览器端形态验证：合集拆单本、保留排版/图片/元数据、ZIP 打包下载、零上传；Napizo 15 工具单列 "EPUB splitter"；竞品 GroupDocs/Conholdate 全走服务器上传，ToolWeb 本地处理差异化成立；纯前端：container.xml→OPF→spine 章节解析＋重新打包，零依赖需自研轻量 zip 解压/打包；建议 ID epub_splitter、Path /tools/epub-splitter） | 中 | P2（47 轮新晋观察） |
+| 图片背景移除 | 本轮新晋（Napizo 15 工具单列 "background remover"＋KeptTools "Change background（白/蓝/自定义/透明）"同源信号；痛点：证件照/商品图换底去背景，免费方案要上传或限次扣费；浏览器端 ML 需数十 MB 模型下载、与零依赖精神冲突→P2 观察，备选纯色/绿幕简易抠图可降级小难度；建议 ID bg_remover、Path /tools/bg-remover） | 中-大 | P2（47 轮新晋观察） |
+| AI 提示词构建器 | 本轮新晋（dev.to PromptForge 形态验证：角色/任务/上下文/格式/语气/约束结构化构建＋提示词库＋prompt roast 打分；痛点：AI 时代写不好提示词、网上模板零散；纯前端：表单化结构组装＋提示词库＋规则质检打分，roast 若走 LLM 需后端、本形态只做规则版；AI 工具赛道；建议 ID prompt_builder、Path /tools/prompt-builder） | 小 | P2（47 轮新晋观察） |
+
+**归档说明**：本轮为 10-20 通用调研第四十七轮——文件校验和计算器交付闭环（dfc69f3，`/tools/file-checksum` 已注册，加密解密赛道，全量 118 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 四清单：Napizo 15 工具→PDF 四形态/图片压缩缩放/二维码/字数全已实现，EPUB splitter＋background remover 为新形态；KeptTools→Image→SVG 归档已有 P2 观察、Change background 同源归入新晋；Tooltri→Token Counter / AI 文本清洁器核稿实锤已实现（`ai_token_counter` / `ai_text_cleaner`），去重前置拦截两起潜在误判；Textly→文本工具全覆盖、计算器类用户方向不扩展、PromptForge 新晋 P2；EPUB 拆分纯浏览器形态双重验证；bigwords.page Show HN 为大屏文字展示器提供新鲜验证，信号升级仍留 P2；V2EX/中文/Reddit/HN→噪音无单页信号）均已消化；顺位更新（图片批量缩放器晋升第一顺位、正则表达式解释器递补第二、cURL→Python Requests 转换器深夜快打位第三）；WPS 候选表保持冻结归档；仓库 118 注册工具全量核对无重叠（Top3 建议 ID bulk_image_resizer / regex_explainer / curl_to_requests＋新晋 ID epub_splitter / bg_remover / prompt_builder；中文名+ID 片段双核＋零命中结论逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（dfc69f3）；`git log` 确认开发交付 dfc69f3（文件校验和计算器）；`grep tools/categories.go` 全量 118 Path（117+1），`file_checksum` ID 与 `/tools/file-checksum` Path 已注册（划入已实现）；Top3＋新晋建议 ID（bulk_image_resizer / regex_explainer / curl_to_requests / epub_splitter / bg_remover / prompt_builder）与 118 Path 无重叠（`bulk_image/bulk-image/批量缩放/regex_explainer/regex-explainer/正则解释/curl_to_requests/curl-to-requests/epub_splitter/epub-splitter/背景移除/bg_remover/prompt_builder/prompt-builder/提示词构建` 关键词核对全零命中；现有 `regex` 为匹配测试形态、`texttools` 已覆盖行去重/大小写、`timestamp` 已覆盖 Unix 时间、`ai_token_counter` / `ai_text_cleaner` 核稿实锤已实现）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 19:41 · 产品经理排期轮）
 
 **选定：文件校验和计算器（File Checksum）** — 本轮唯一任务：

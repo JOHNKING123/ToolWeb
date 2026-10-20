@@ -529,6 +529,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "bulk_image_resizer",
+					Name:        "图片批量缩放器",
+					Description: "多张 PNG/JPG/WebP 图片批量调整尺寸：按宽度/按高度/百分比/最长边四种预设等比缩放，JPEG 质量可调，逐张下载或打包 ZIP，纯前端本地处理零上传 · Bulk image resizer: batch resize multiple images by width, height, percent or max side, download individually or as ZIP, 100% client-side",
+					Path:        "/tools/bulk-image-resizer",
+					Icon:        "photo_size_select_large",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img2base64",
 					Name:        "图片转Base64",
 					Description: "将图片文件转换为Base64字符串，支持多格式",
