@@ -269,6 +269,13 @@ function parseMarkdown(src) {
 }
 
 /* ================= HTML 预览渲染 ================= */
+/* 链接协议白名单：只放行 http/https/mailto 与相对地址，其余（如 javascript:）降级为纯文本 */
+function safePreviewHref(href) {
+    var h = String(href).replace(/^\s+/, '');
+    if (/^(https?:|mailto:)/i.test(h)) return href;
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(h)) return href;
+    return null;
+}
 function renderInlineHtml(tokens) {
     return tokens.map(function (tk) {
         switch (tk.t) {
@@ -278,7 +285,11 @@ function renderInlineHtml(tokens) {
             case 'del': return '<del>' + renderInlineHtml(tk.text) + '</del>';
             case 'code': return '<code>' + escXml(tk.v) + '</code>';
             case 'br': return tk.hard ? '<br>' : ' ';
-            case 'link': return '<a href="' + escXml(tk.href) + '" target="_blank" rel="noopener">' + renderInlineHtml(tk.text) + '</a>';
+            case 'link': {
+                var safeHref = safePreviewHref(tk.href);
+                var linkText = renderInlineHtml(tk.text);
+                return safeHref ? '<a href="' + escXml(safeHref) + '" target="_blank" rel="noopener">' + linkText + '</a>' : linkText;
+            }
             case 'img': return '<img src="' + escXml(tk.src) + '" alt="' + escXml(tk.alt) + '" loading="lazy">';
             default: return '';
         }
@@ -417,6 +428,8 @@ function buildDocRels(ctx) {
     return xml + '</Relationships>';
 }
 
+/* r:id 占位哨兵（U+E000 私有区字符）：正文字面出现 RIDL0/RIDI3 也不会被误替换 */
+var RID_SENT = '\uE000';
 /* ---- 行内 token 展平为 docx run 叶子 ---- */
 function flattenInline(tokens, props, link) {
     var out = [];
@@ -436,6 +449,7 @@ function flattenInline(tokens, props, link) {
     return out;
 }
 function leafRunXml(leaf, ctx) {
+    if (leaf.img) return imageRunXml(leaf.img, ctx);
     if (leaf.br) return leaf.hard ? '<w:r><w:br/></w:r>' : '<w:r><w:t xml:space="preserve"> </w:t></w:r>';
     var rpr = '';
     leaf.props.forEach(function (p) {
@@ -448,7 +462,7 @@ function leafRunXml(leaf, ctx) {
     if (leaf.link) {
         var idx = ctx.linkMap.get(leaf.link);
         if (idx === undefined) { idx = ctx.links.length; ctx.linkMap.set(leaf.link, idx); ctx.links.push(leaf.link); }
-        return '<w:hyperlink RIDL' + idx + '>' + r + '</w:hyperlink>';
+        return '<w:hyperlink ' + RID_SENT + 'RIDL' + idx + RID_SENT + '>' + r + '</w:hyperlink>';
     }
     return r;
 }
@@ -476,17 +490,18 @@ function paraXml(runsXml, opts) {
     if (opts.pBdr) ppr += opts.pBdr;
     return '<w:p>' + (ppr ? '<w:pPr>' + ppr + '</w:pPr>' : '') + runsXml + '</w:p>';
 }
-function imageBlockXml(img, ctx) {
+/* 图片 run（行内图）：base64 本地图片嵌入为行内 drawing；非 base64 返回灰色占位 run */
+function imageRunXml(img, ctx) {
     var p = parseDataUrl(img.src);
     if (!p) {
         ctx.skippedImages++;
-        return paraXml('<w:r><w:rPr><w:i/><w:color w:val="9CA3AF"/></w:rPr>' +
-            '<w:t xml:space="preserve">[图片未嵌入：仅支持 base64 本地图片' + (img.alt ? '（' + escXml(img.alt) + '）' : '') + ']</w:t></w:r>');
+        return '<w:r><w:rPr><w:i/><w:color w:val="9CA3AF"/></w:rPr>' +
+            '<w:t xml:space="preserve">[图片未嵌入：仅支持 base64 本地图片' + (img.alt ? '（' + escXml(img.alt) + '）' : '') + ']</w:t></w:r>';
     }
     var idx = ctx.images.length;
     ctx.images.push(p);
     var size = imageDisplaySize(p), cx = size.w * 9525, cy = size.h * 9525, picId = idx + 1;
-    return '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing>' +
+    return '<w:r><w:drawing>' +
         '<wp:inline distT="0" distB="0" distL="0" distR="0">' +
         '<wp:extent cx="' + cx + '" cy="' + cy + '"/>' +
         '<wp:docPr id="' + picId + '" name="图片' + picId + '"/>' +
@@ -494,10 +509,14 @@ function imageBlockXml(img, ctx) {
         '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
         '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
         '<pic:nvPicPr><pic:cNvPr id="' + picId + '" name="图片' + picId + '"/><pic:cNvPicPr/></pic:nvPicPr>' +
-        '<pic:blipFill><a:blip r:embed="RIDI' + idx + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+        '<pic:blipFill><a:blip r:embed="' + RID_SENT + 'RIDI' + idx + RID_SENT + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
         '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm>' +
         '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
-        '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+        '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
+}
+/* 独立图片块 = 居中段落包裹图片 run */
+function imageBlockXml(img, ctx) {
+    return paraXml(imageRunXml(img, ctx), { align: 'center' });
 }
 function listBlockXml(list, ctx, ilvl, numId) {
     var xml = '';
@@ -589,8 +608,8 @@ var DOC_TAIL =
 function buildDocx(blocks) {
     var ctx = { links: [], linkMap: new Map(), images: [], numDefs: [], nextNumId: 3, skippedImages: 0 };
     var body = blocks.map(function (b) { return blockToDocxXml(b, ctx); }).join('');
-    body = body.replace(/RIDL(\d+)/g, function (m, i) { return 'r:id="rId' + (3 + (+i)) + '"'; })
-               .replace(/RIDI(\d+)/g, function (m, i) { return 'rId' + (3 + ctx.links.length + (+i)); });
+    body = body.replace(new RegExp(RID_SENT + 'RIDL(\\d+)' + RID_SENT, 'g'), function (m, i) { return 'r:id="rId' + (3 + (+i)) + '"'; })
+               .replace(new RegExp(RID_SENT + 'RIDI(\\d+)' + RID_SENT, 'g'), function (m, i) { return 'rId' + (3 + ctx.links.length + (+i)); });
     var files = [
         { name: '[Content_Types].xml', data: strToU8(CONTENT_TYPES) },
         { name: '_rels/.rels', data: strToU8(PKG_RELS) },

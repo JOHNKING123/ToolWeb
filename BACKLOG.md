@@ -28,6 +28,12 @@
 
 **预计改动文件**：`templates/markdown_to_word.html`（新建：编辑器＋预览区＋样式映射说明＋导出工具栏）、`static/js/markdown_to_word.js`（新建：自研 Markdown 解析＋预览渲染＋OOXML docx 自研拼装＋zip 打包＋本地下载，零依赖）、`tools/categories.go`（文本工具品类＋工具注册）、`BACKLOG.md`（本小节）。
 
+**第2轮开发（评审反馈修复，2026-10-20）**：
+- 修复1（导出崩溃）：标题/表格单元格内含行内图片时 `leafRunXml` 因 `{img}` 叶子无 props 抛错致整个 .docx 导不出。把 `imageBlockXml` 的 `<w:drawing>` 抽为 `imageRunXml(img, ctx)`（返回 `<w:r><w:drawing>…</w:r>` 行内图；非 base64 返回原灰色占位 run 并计 skippedImages），`leafRunXml` 开头加 `if (leaf.img)` 分支，`imageBlockXml` 改为居中段落包裹 `imageRunXml`。
+- 修复2（互链）：`templates/markdown_preview.html`「相关工具」行追加 `Markdown 转 Word` 回链（/tools/markdown-to-word），与转 Word 页的单向链接形成双向互链。
+- 打磨（不阻塞）：① 预览区链接加协议白名单（仅 http/https/mailto/相对地址，`javascript:` 等降级为纯文本）；② r:id 占位改用 U+E000 哨兵包裹（RIDL/RIDI），正文字面出现 "RIDL0" 不再被误替换。
+- 自测：node 桩跑 15 项全过（标题/单元格行内图导出不抛错、document.xml 内 heading 与 w:tc 含 drawing、rId/rels 交叉引用一致、全 XML 良构、协议白名单 4 项、复杂文档回归）；`go build ./...` 通过。
+
 **未选**：
 - URL 追踪参数清除器（P1；41 轮 Top2；三重形态验证：V2EX 10-18「勿追踪」＋HN Wirier（210+ 参数、短链展开）＋39 轮；纯前端小难度；隐私赛道高频刚需）：顺位在本轮之后，列为**下一深夜/早班小难度轮次首选**。
 - 假数据/Mock 生成器（P1；41 轮 Top3，本轮**四重形态再验证**证据升级：dev.to aibars DevTools Hub 40 工具标配项＋inventivehq 单页工具＋Chrome「模拟数据」扩展＋reqres.in Best Mock API Tools 2026；差异化：中文姓名/手机号/身份证（虚拟明示）/银行卡 Luhn/地址本地化＋seed 可复现；纯前端小-中难度）：留上午轮次或 PM 定序从容交付。
