@@ -1,0 +1,190 @@
+{{define "url_tracker_cleaner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 追踪参数清除器 - 一键清除 utm_/fbclid/spm 等追踪参数，批量净化链接 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 URL 追踪参数清除器：粘贴链接（支持多行批量），自动剔除 utm_*、fbclid、gclid、msclkid、ttclid、spm、from 等广告/社媒追踪参数，保留商品 id / 视频 id 等业务参数；短链展开还原、逐项勾选保留、一键复制、批量下载 .txt。纯前端本地运行零上传。">
+    <meta name="keywords" content="URL 追踪参数清除,utm 参数删除,fbclid 去除,gclid 清除,链接净化,短链展开,spm 参数,追踪参数,隐私链接,干净链接">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/url-tracker-cleaner">
+    <meta property="og:title" content="URL 追踪参数清除器 - 一键净化链接，去掉广告追踪参数">
+    <meta property="og:description" content="粘贴链接即清：utm_*/fbclid/gclid/spm/from 等追踪参数自动剔除，业务参数保留，短链可展开还原。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/url-tracker-cleaner">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"URL 追踪参数清除器","description":"在线 URL 追踪参数清除：批量粘贴链接，自动剔除 utm_*、fbclid、gclid、msclkid、ttclid、spm、from 等追踪参数，保留商品 id / 视频 id 等业务参数，支持短链展开还原、逐项勾选保留、一键复制与批量下载 .txt；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/url-tracker-cleaner","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .utc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .utc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .utc-privacy b{color:#047857}
+        .utc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .utc-panel h3{margin:0 0 .7rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .utc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .utc-input{width:100%;min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;
+            line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box}
+        .utc-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .utc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem}
+        .utc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.15rem;border:none;border-radius:.5rem;
+            font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .utc-btn .material-icons{font-size:1.1rem}
+        .utc-btn-primary{background:#2563eb;color:#fff}
+        .utc-btn-primary:hover{background:#1d4ed8}
+        .utc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .utc-btn-secondary:hover{background:#e5e7eb}
+        .utc-kbd{font-size:.78rem;color:#6b7280;margin-top:.5rem}
+        .utc-stats{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;margin:1.2rem 0;padding:.8rem 1rem;background:#eff6ff;
+            border:1px solid #bfdbfe;border-radius:.6rem;font-size:.9rem;color:#1e40af}
+        .utc-stat b{font-size:1.15rem;color:#1d4ed8}
+        .utc-card{border:1px solid #e5e7eb;border-radius:.8rem;background:#fff;padding:1rem 1.2rem;margin-bottom:1rem}
+        .utc-card-err{border-color:#fecaca;background:#fef2f2}
+        .utc-card-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+        .utc-idx{font-weight:700;color:#374151;font-size:.9rem}
+        .utc-badge{font-size:.75rem;padding:.15rem .6rem;border-radius:999px}
+        .utc-badge-ok{background:#d1fae5;color:#065f46}
+        .utc-badge-warn{background:#fef3c7;color:#92400e}
+        .utc-clean-count{margin-left:auto;font-size:.85rem;color:#6b7280}
+        .utc-row{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:.6rem}
+        .utc-label{flex:none;font-size:.82rem;color:#6b7280;padding-top:.35rem;min-width:4.5em}
+        .utc-clean{flex:1;word-break:break-all;font-size:.85rem;background:#f0fdf4;border:1px solid #bbf7d0;
+            border-radius:.4rem;padding:.5rem .7rem;color:#14532d}
+        .utc-raw{font-size:.82rem;color:#9ca3af;word-break:break-all;margin-top:.3rem}
+        .utc-err{font-size:.9rem;color:#b91c1c}
+        .utc-removed{border-top:1px dashed #e5e7eb;margin-top:.7rem;padding-top:.7rem}
+        .utc-removed ul{list-style:none;margin:.5rem 0 0;padding:0;display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.4rem}
+        .utc-removed li{display:flex;align-items:center;gap:.5rem;font-size:.83rem;background:#fef2f2;
+            border:1px solid #fecaca;border-radius:.4rem;padding:.4rem .6rem}
+        .utc-removed li label{display:flex;align-items:center;gap:.3rem;color:#b91c1c;cursor:pointer;flex:none}
+        .utc-removed li input{accent-color:#2563eb}
+        .utc-removed code{color:#7f1d1d;font-weight:600}
+        .utc-val{color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%}
+        .utc-expandrow{border-top:1px dashed #e5e7eb;margin-top:.7rem;padding-top:.7rem}
+        .utc-hint{font-size:.82rem;color:#6b7280}
+        .utc-manual{display:flex;gap:.5rem;margin-top:.5rem}
+        .utc-manual input{flex:1;padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.85rem}
+        .utc-mini{border:1px solid #d1d5db;background:#fff;border-radius:.35rem;padding:.3rem .7rem;font-size:.8rem;
+            cursor:pointer;color:#374151;flex:none}
+        .utc-mini:hover:not(:disabled){background:#eff6ff;border-color:#93c5fd}
+        .utc-mini:disabled{opacity:.6;cursor:wait}
+        .utc-rules{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .utc-rule-row{display:flex;gap:.5rem;margin:.5rem 0}
+        .utc-rule-row input{flex:1;padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.85rem}
+        .utc-rule-current{font-size:.8rem;color:#6b7280;line-height:1.8;word-break:break-all}
+        .utc-rule-current code{color:#1e40af;background:#eff6ff;padding:.05rem .35rem;border-radius:.25rem}
+        .utc-samples{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+        .utc-tip{font-size:.9rem;line-height:1.9;color:#374151}
+        .utc-tip b{color:#111827}
+        .utc-tip code{background:#f3f4f6;padding:.1rem .4rem;border-radius:.3rem;font-size:.82rem;color:#b91c1c}
+        .utc-combo{margin-top:.8rem;padding:.8rem 1rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:.6rem;
+            font-size:.9rem;line-height:1.9;color:#0c4a6e}
+        .utc-combo a{color:#0284c7;font-weight:600}
+        #utc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:rgba(17,24,39,.92);
+            color:#fff;font-size:.88rem;padding:.6rem 1.2rem;border-radius:.5rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:999}
+        #utc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:768px){
+            .utc-rules{grid-template-columns:1fr}
+            .utc-row{flex-wrap:wrap}
+            .utc-removed ul{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">link_off</i> URL 追踪参数清除器</h1>
+            <p>粘贴链接（支持多行批量），一键剔除广告追踪参数，还你干净可分享的链接</p>
+        </div>
+        <div class="tool-content">
+
+            <div class="utc-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>隐私承诺：</b>本工具纯浏览器本地运行、<b>零依赖、无后端上传</b>；你粘贴的链接只在当前页面内存中处理，不发送到任何服务器。短链展开是浏览器<b>直接请求目标短链网站</b>（不经过本站代理），目标站若拒绝跨域请求会如实标记「未展开」。</div>
+            </div>
+
+            <div class="utc-panel">
+                <h3><i class="material-icons">edit</i> 输入链接（每行一条，可批量）</h3>
+                <textarea id="utc-input" class="utc-input" spellcheck="false"
+                    placeholder="粘贴要净化的链接，每行一条，例如：&#10;https://example.com/item?id=12345&utm_source=wechat&utm_medium=share&spm=a1z10.1.0.0&#10;https://t.cn/xxxxxx"></textarea>
+                <div class="utc-actions">
+                    <button type="button" class="utc-btn utc-btn-primary" id="utc-clean-btn">
+                        <i class="material-icons">cleaning_services</i> 一键清除追踪参数
+                    </button>
+                    <button type="button" class="utc-btn utc-btn-secondary" id="utc-expandall-btn">
+                        <i class="material-icons">open_in_new</i> 批量展开短链
+                    </button>
+                    <button type="button" class="utc-btn utc-btn-secondary" id="utc-copyall-btn">
+                        <i class="material-icons">content_copy</i> 复制全部干净链接
+                    </button>
+                    <button type="button" class="utc-btn utc-btn-secondary" id="utc-dl-btn">
+                        <i class="material-icons">download</i> 下载 .txt
+                    </button>
+                    <button type="button" class="utc-btn utc-btn-secondary" id="utc-clear-btn">
+                        <i class="material-icons">clear</i> 清空
+                    </button>
+                </div>
+                <div class="utc-kbd">快捷键：Ctrl/⌘ + Enter 快速清除</div>
+                <div class="utc-samples">
+                    <button type="button" class="utc-mini" data-sample="https://item.taobao.com/item.htm?id=694206533210&spm=a21bo.jianhua.201876.d1&from=share&utm_source=wechat&utm_medium=social">淘宝示例（含 spm）</button>
+                    <button type="button" class="utc-mini" data-sample="https://www.example.com/article?aid=8888&fbclid=IwAR3xyz&utm_campaign=summer_sale&from=timeline">社媒示例（含 fbclid）</button>
+                    <button type="button" class="utc-mini" data-sample="https://www.google.com/search?q=url%E8%BF%BD%E8%B8%AA%E5%8F%82%E6%95%B0&gclid=EAIaIQobChMI&sourceid=chrome">搜索示例（含 gclid）</button>
+                </div>
+            </div>
+
+            <div class="utc-stats" id="utc-stats" style="display:none"></div>
+            <div id="utc-results"></div>
+
+            <div class="utc-panel">
+                <h3><i class="material-icons">tune</i> 自定义规则（保存在本机浏览器，下次自动生效）</h3>
+                <div class="utc-rules">
+                    <div>
+                        <div class="utc-tip"><b>追加剔除参数：</b>凡是命中就清除（白名单业务参数除外）</div>
+                        <div class="utc-rule-row">
+                            <input type="text" id="utc-black-input" placeholder="参数名，多个用逗号或空格分隔，如 ref,aff_id">
+                            <button type="button" class="utc-mini" id="utc-black-add">追加</button>
+                            <button type="button" class="utc-mini" id="utc-black-reset">清空</button>
+                        </div>
+                        <div class="utc-rule-current">已追加：<span id="utc-black-list"></span></div>
+                    </div>
+                    <div>
+                        <div class="utc-tip"><b>追加保留参数：</b>即使命中黑名单也绝不清除（如业务参数）</div>
+                        <div class="utc-rule-row">
+                            <input type="text" id="utc-keep-input" placeholder="参数名，多个用逗号或空格分隔，如 token,order_id">
+                            <button type="button" class="utc-mini" id="utc-keep-add">追加</button>
+                            <button type="button" class="utc-mini" id="utc-keep-reset">清空</button>
+                        </div>
+                        <div class="utc-rule-current">已追加：<span id="utc-keep-list"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="utc-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="utc-tip">
+                    <b>怎么用：</b>把要分享的链接粘贴到输入框（可多行批量）→ 点「一键清除追踪参数」→ 每条链接下方展示剔除清单，<b>勾选「保留」可逐项恢复</b>单个参数 → 点「复制」/「复制全部干净链接」或「下载 .txt」。<br>
+                    <b>内置黑名单：</b><code>utm_*</code> 全系列、<code>fbclid</code>、<code>gclid</code>、<code>msclkid</code>、<code>ttclid</code>、<code>igshid</code>、<code>_ijt</code> 等广告/社媒归因参数，以及中国场景的 <code>spm</code>、<code>scm</code>、<code>from</code>、<code>share_*</code> 等；任何 <code>utm_</code> 开头的参数都会被兜底清除。<br>
+                    <b>白名单保留：</b><code>id</code>、<code>goods_id</code>、<code>aweme_id</code>、<code>bvid</code> 等商品/视频业务参数默认保留，即使名字撞上黑名单也不会被清除；可在上方「追加保留参数」自行补充。<br>
+                    <b>短链展开（如实说明）：</b>点「尝试展开短链」后由你的浏览器直接请求短链域名并跟随跳转；多数短链站（如 t.cn / bit.ly）<b>不允许跨域请求</b>，此时会如实标记「未展开」并给出手动粘贴入口——你可在新标签页打开短链、把地址栏的完整链接粘贴回来再清除。本工具不走任何后端代理，这是刻意的隐私设计，不是功能缺失。<br>
+                    <b>适用边界：</b>参数藏在路径里（如 /s/xxxx）或经二次编码的追踪串无法识别；清除后极少数依赖追踪参数做跳转的活动页可能打不开，属正常。
+                </div>
+                <div class="utc-combo">
+                    <b>「URL 一条龙」：</b>链接里有乱码/百分号编码？先用 <a href="/tools/url-codec">URL 编码/解码</a> 解码看清真实参数，再用本工具清除追踪参数 —— 解码、净化，一套流程走完。
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="utc-toast"></div>
+    <script src="/tools/static/js/url_tracker_cleaner.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -102,6 +102,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "url_tracker_cleaner",
+					Name:        "URL 追踪参数清除器",
+					Description: "一键清除链接中的 utm_/fbclid/spm 等追踪参数，支持批量与短链展开还原",
+					Path:        "/tools/url-tracker-cleaner",
+					Icon:        "cleaning_services",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "qrcode",
 					Name:        "二维码工具",
 					Description: "生成和识别二维码",

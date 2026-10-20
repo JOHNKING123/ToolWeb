@@ -1,3 +1,87 @@
+## 今日任务（2026-10-20 11:44 · 产品经理排期轮）
+
+**选定：URL 追踪参数清除器（URL Tracker Cleaner）** — 本轮唯一任务：
+- **顺位递进**：40 轮 Top2 → 41 轮 Top2 → 09:46 PM 决策轮明确「顺位在本轮之后，列为下一深夜/早班小难度轮次首选」→ 11:36 研究轮 Top1 推荐「早班快打位」；Markdown 转 Word（09:46 PM 轮）交付闭环（61a2d93＋7738642），顺位自动递补；无硬伤不跳过。
+- **痛点真实**：微信/淘宝/小红书/抖音分享链接追踪参数泛滥，转发前手动清理折磨；隐私赛道高频刚需。
+- **形态三重验证**：V2EX 10-18「勿追踪」＋HN Show HN Wirier（210+ 参数、纯前端、短链展开）＋39 轮；差异化：中国场景参数（spm/from/utm_/fbclid/gclid/_ijt 等淘宝/拼多多/小红书/抖音/微信参数）。
+- **纯度高**：纯前端、零依赖、零后端、零上传；小难度，早班快打位，交付确定性高。
+- **去重实锤**：`grep -iE 'url_tracker|cleaner|追踪参数|utm_|fbclid|mock|gitignore' tools/categories.go`（全量 113 Path）全零命中（`url` 仅命中 URL 编码/解码，非清理形态）。
+
+**规格**：
+1. 布局：上输入区（粘贴 URL，支持多行批量）、中参数剔除结果预览（原链接→干净链接对照，剔除的参数逐项列出并可勾选保留）、下一键复制干净链接；桌面宽屏、移动端堆叠。
+2. 清理引擎（纯前端零依赖）：内置黑名单（utm_* 系列、fbclid、gclid、msclkid、ttclid、spm、from、_ijt、igshid、share_token 等）＋中国场景参数（淘宝/拼多多 spm、微信 from、抖音/小红书 share 参数等）；白名单规则保留业务参数（商品 id、视频 id 等）；支持用户自定义追加剔除参数＋自定义保留参数，选项 localStorage 持久化。
+3. 短链展开：客户端 fetch 尝试展开短链（follow redirect）；受 CORS 限制展开失败时标记「未展开」并继续清理可见 URL，提供手动粘贴已展开链接入口；不经过任何后端代理。
+4. 一键复制干净链接（Clipboard API，降级 execCommand）；批量模式输出全部干净链接（每行一条）＋批量复制/下载 .txt。
+5. 纯前端、零依赖、零后端、零上传；DevTools 无网络请求（短链展开 fetch 仅用户主动触发）。
+6. 注册：建议工具家族为「文本工具」或「开发工具」（URL 处理场景），新增工具 ID `url_tracker_cleaner`、Name「URL 追踪参数清除器」、Path `/tools/url-tracker-cleaner`（New: true），中英文描述 + SEO keywords（URL 追踪参数清除、去掉 utm 参数、链接去追踪、分享链接清理、URL cleaner）；与 URL 编码/解码（/tools/url-codec）互链（「相关工具」入口）。
+7. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/url-tracker-cleaner` 可开（200）
+- [ ] 粘贴带追踪参数的链接，剔除正确（黑名单参数全部去掉、业务参数保留）；剔除清单逐项展示可勾选保留
+- [ ] 批量多行粘贴可用；一键复制/下载可用
+- [ ] 短链展开：可展开的短链正确还原；CORS 失败时有「未展开」提示而非报错卡死
+- [ ] DevTools Network 抽查无后端调用、无内容上传（除用户主动触发的短链展开 fetch）
+- [ ] `categories.go` 注册完成（New: true），首页/导航/sitemap 生效；与 URL 编码/解码互链生效
+- [ ] 移动端可操作（粘贴+清理+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/url_tracker_cleaner.html`（新建：输入区＋参数剔除预览＋复制/导出工具栏）、`static/js/url_tracker_cleaner.js`（新建：黑名单/白名单引擎＋短链展开＋批量处理＋复制下载，零依赖）、`tools/categories.go`（工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 假数据/Mock 生成器（P1；41 轮**四重形态再验证**证据升级：dev.to aibars DevTools Hub 40 工具标配项＋inventivehq 单页工具＋Chrome「模拟数据」扩展＋reqres.in Best Mock API Tools 2026；差异化：中文姓名/手机号/身份证（虚拟明示）/银行卡 Luhn/地址本地化＋seed 可复现；纯前端小-中难度；113 Path mock/模拟数据/测试数据全零命中）：留上午轮次或 PM 定序从容交付，本轮后自动递补第一候补。
+- .gitignore 生成器（P1；42 轮新晋：dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"；痛点：新建仓库手工拼模板、语言混搭易漏配；纯前端极小难度：多选语言/框架→官方模板拼接→预览＋复制/下载，零后端；113 Path gitignore 全零命中）：开发者工具家族轮快打位。
+- 正则表达式解释器（P1；40 轮新晋，dev.to RegexBuilder 形态验证；小-中难度）：留待开发者工具家族轮。
+- cURL → Python Requests 转换器（P1；39 轮新晋 Top3）：开发者工具家族轮或深夜轮次候补。
+- SVG 压缩优化器（P1；39 轮新晋留池）：留待设计工具家族轮或深夜填充位。
+- 婚宴座位表生成器（P1；38 轮新晋 Top3）：上午轮次从容交付。
+- 单位感知记事本计算器（P1 留池；中难度，留待上午轮次或 PM 定序）。
+- HMAC 签名生成器（P2；41 轮新观察：带密钥 HMAC-SHA256/512 形态零覆盖；纯前端 crypto.subtle 极小难度）：归档 P2，留待深夜填充位或开发者工具家族轮。
+- 证书解码器（P2；42 轮新观察：PEM 文本解析形态零覆盖；运维 niche）；日志着色/分析器（P2；42 轮新观察：运维 niche）；订阅/会员管理助手（P2；42 轮新观察：提醒类工具，通知权限转化待验证）。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续十二轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，本地 HEAD 与 origin/muse/dev-20260929 一致（7738642）；`grep -iE` 全量 113 Path，`url_tracker_cleaner/url-tracker-cleaner/追踪参数/utm_/fbclid/mock/gitignore` 全零命中；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（09:46 PM 决策轮＋11:36 研究轮追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 11:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。Markdown 转 Word 交付闭环（09:46 PM 决策轮立项→开发交付 61a2d93＋评审修复 7738642「修复行内图片导出崩溃与预览互链缺失」；`grep tools/categories.go` 确认 ID `markdown_to_word`、Path `/tools/markdown-to-word` 已注册（文本工具品类，文档转换场景），全量 **113 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:36 上午轮次，中难度候选可排。
+
+**本轮四件事**（11:36 全网调研，通用方向）：
+1. Markdown 转 Word 交付确认：`git log` 头部 7738642（评审修复：行内图片导出崩溃与预览互链缺失）＋61a2d93（新增工具：自研解析+预览+OOXML docx 打包）落盘；`git fetch`（GIT_SSH_COMMAND 指定密钥）——本轮初遇 Host key verification failed（VM 换机丢 /root/.ssh/known_hosts，TOOLS.md 历史已知，`ssh-keyscan -t ed25519 github.com` 补录后即通）；origin/muse/dev-20260929 与本地 HEAD 一致（7738642）；`grep` 全量 113 Path（112+1），`markdown_to_word` ID 与 `/tools/markdown-to-word` Path 已注册；候选池划出，已实现清单 delta 追加。
+2. 新晋候选一则（P1）：
+   **.gitignore 生成器（.gitignore Generator）**——形态验证：dev.to shabir_ahmad_tech「I Built 47 Free Dev Tools That Run Entirely in Your Browser」（KRUMB.DEV，47 工具）Generators 类单列 **".gitignore"**（与密码/UUID/HMAC/QR/Lorem 并列，开发者工具套件标配项）。痛点真实：新建仓库配 .gitignore 每次手工拼、上网抄模板，语言混搭（Node+Python+macOS）易漏配；纯前端极小难度：语言/框架/IDE 多选 → 官方模板拼接（GitHub gitignore 模板数据内置）→ 预览＋一键复制/下载 `.gitignore`，零后端。去重：113 Path `gitignore/Gitignore` 全零命中。建议 ID `gitignore_generator`、Path `/tools/gitignore-generator`，P1（开发者工具家族轮快打位）。
+3. 新观察三则（P2，不立）：
+   - **证书解码器（PEM/x509）**——dev.to lucasmdevdev「I Built 22 Free Developer Tools in a Single Website」文末 "What's next" 计划项 **"Certificate decoder (PEM/x509)"**；仓库「SSL证书检测」为网站在线检测形态（走后端），粘贴 PEM 文本本地解析（颁发者/使用者/有效期/指纹/SAN）形态零覆盖（`grep -iE 'cert|x509'` 113 Path 零命中，「证书」仅命中 SSL 网站检测）；痛点：运维/开发排障时贴证书文本看过期与颁发信息；纯前端小难度（ASN.1/DER 解析）；建议 ID `cert_decoder`、Path `/tools/cert-decoder`，P2 观察（运维 niche）。
+   - **日志着色/分析器**——dev.to tecleadev「800+ developer utilities」DevOps 类单列 **"Kubernetes Pod Log Colorizer"**；痛点：运维/开发者贴几百行日志肉眼找 ERROR/WARN 折磨；纯前端小-中难度：粘贴日志 → 按级别着色（ERROR 红/WARN 黄/INFO 灰）＋关键词过滤＋时间戳提取排序；`grep -iE '日志|log_'` 113 Path 零命中；P2 观察（运维 niche，通用化二期）。
+   - **订阅/会员管理助手**——V2EX 10-19 热帖「大家是怎么管理各种订阅的」（20 回复，2026-10-19 22:46）：多家会员额度清零日期/续费日分散、月底清零焦虑；痛点：续费日＋额度到期提醒；纯前端小难度：localStorage 本地 CRUD（名称/周期/价格/续费日/额度到期日）＋浏览器 Notification 提前提醒（持久化架构已有宠物体重追踪器验证）；`grep 订阅` 113 Path 零命中；P2 观察（提醒类工具，通知权限转化待验证）。
+4. 去重消化（不单立）：① dev.to 七清单全量核对——QuickKit（38 工具）/Varkido（170+）/TaskKit（2026-10-14）/DevOmniTools（45+）/KRUMB（47）/lucasmdevdev（22）/Teclea（800+）：JSON/二维码/Base64/哈希/UUID/密码/时间戳/颜色/Cron/JWT/Diff/正则测试/单位换算/robots.txt/SERP 片段/OG 预览/CSS 渐变/图片压缩均已实现或表中已有；HMAC（表中 P2 新观察）、Mock 数据（表中 P1）、FAQ Schema（表中 P2 观察）不重复立；SVG→React JSX/TSX、CSP Header Builder、IBAN validator、GraphQL→TypeScript、Tailwind palette visualizer → 纯前端 niche，归档不立；② Medium 10-16《10 Best Free Online Tools You Should Bookmark in 2026》榜首**年龄计算器**（精确年月日＋总天数）→ 用户方向修正（10-18 不扩展泛生活计算器）下不单立，记作 P1 留池「日期加减」形态细化备选；③ HN Show HN holiday-optimizer（PTO 拼假优化）→ 年假拼假优化器方向下不扩展（既有决议），不立；HN PDF redaction（12 天前）→ PDF 批注打码已覆盖；④ V2EX 10-20——Pitwall（Mac Agent 调度看板，桌面 App 非单页）、zcode-mobile（Android 群控，移动形态）均不立；⑤ 中文「最好用的在线工具」搜索→AI 生图/免费 AI 榜单 SEO 噪音（需后端/AI，非单页轻量形态），无信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；11:36 上午轮次，中难度可排）：
+
+1. **URL 追踪参数清除器（URL Tracker Cleaner）** — P1（顺位递进：40 轮 Top2 → 41 轮 Top2 → 09:46 PM「顺位在本轮之后，列为下一深夜/早班小难度轮次首选」；**三重形态验证**：V2EX 10-18「勿追踪」＋HN Wirier（210+ 参数、短链展开）＋39 轮；痛点：微信/淘宝/小红书/抖音分享链接追踪参数泛滥，转发前手动清理折磨；纯前端小难度：粘贴 URL→中国场景黑名单剔除（utm_*/fbclid/gclid/spm/from/_ijt 等，保留商品 id 等业务参数）→短链展开还原→干净链接一键复制，零依赖；113 Path utm/追踪参数全零命中；隐私赛道高频刚需，早班快打位；建议 ID url_tracker_cleaner、Path /tools/url-tracker-cleaner）。
+2. **假数据/Mock 生成器（Mock Data Generator）** — P1（41 轮**四重形态再验证**：dev.to aibars DevTools Hub 40 工具标配项＋inventivehq 单页工具（浏览器内运行、JSON/CSV/SQL 导出、seed 可复现）＋Chrome 应用商店「模拟数据」扩展＋reqres.in Best Mock API Tools 2026；表中已有 P1（难度中）；痛点：中国开发者前后端联调/UI 开发造假数据（中文姓名/手机号/邮箱/地址/UUID/时间戳）高频重复劳动；差异化：中文姓名/中国手机号段/身份证（虚拟明示）/银行卡 Luhn/地址本地化＋JSON/CSV/SQL INSERT 导出＋seed 可复现；纯前端小-中难度；113 Path mock/模拟数据/测试数据全零命中；上午中难度从容交付位；建议 ID mock_data_generator、Path /tools/mock-data-generator）。
+3. **.gitignore 生成器（.gitignore Generator）** — P1（本轮新晋：dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"（开发者工具套件标配项）；痛点：新建仓库配 .gitignore 手工拼/上网抄模板、语言混搭易漏；纯前端极小难度：语言/框架/IDE 多选→官方模板拼接→预览＋一键复制/下载 `.gitignore`，零后端；113 Path gitignore 全零命中；开发者工具家族轮快打位；建议 ID gitignore_generator、Path /tools/gitignore-generator）。
+
+证书解码器/日志着色器/订阅管理助手（P2；本轮新观察：PEM 文本解析形态零覆盖、Pod Log Colorizer 形态、V2EX 订阅管理热帖；运维/提醒 niche）。HMAC 签名生成器（P2；41 轮新观察）。正则表达式解释器（P1；40 轮新晋，开发者工具家族轮）；cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续十一轮 PM 决策一致（抽查通过前不立项），顺位继续顺延；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十二轮：Markdown 转 Word 已实现划出；新晋 .gitignore 生成器 P1；新观察 证书解码器/日志着色器/订阅管理助手 P2；全量 113 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| .gitignore 生成器 | 本轮新晋（dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"（开发者工具套件标配项）；痛点：新建仓库配 .gitignore 手工拼/上网抄模板、语言混搭易漏；纯前端极小难度：语言/框架/IDE 多选→官方模板拼接→预览＋一键复制/下载 `.gitignore`，零后端；113 Path gitignore 全零命中；建议 ID gitignore_generator、Path /tools/gitignore-generator） | 小 | P1（本轮新晋） |
+| 证书解码器（PEM/x509） | 新观察（dev.to lucasmdevdev 22 工具 "What's next" 计划项 "Certificate decoder (PEM/x509)"；仓库 SSL证书检测 为网站在线检测形态，粘贴 PEM 文本本地解析（颁发者/有效期/指纹/SAN）形态零覆盖；痛点：运维/开发排障贴证书文本看过期信息；纯前端小难度；建议 ID cert_decoder、Path /tools/cert-decoder；运维 niche） | 小 | P2（新观察） |
+| 日志着色/分析器 | 新观察（dev.to Teclea 800+ 工具 DevOps 类 "Kubernetes Pod Log Colorizer"；痛点：运维/开发者贴几百行日志肉眼找 ERROR/WARN；纯前端小-中难度：按级别着色＋关键词过滤＋时间戳排序；113 Path 日志零命中；运维 niche，通用化二期） | 小-中 | P2（新观察） |
+| 订阅/会员管理助手 | 新观察（V2EX 10-19 热帖「大家是怎么管理各种订阅的」（20 回复）：多家会员额度清零日期/续费日分散管理焦虑；纯前端小难度：localStorage 本地 CRUD＋浏览器 Notification 提前提醒（持久化架构已有宠物体重追踪器验证）；113 Path 订阅零命中；提醒类工具，通知权限转化待验证） | 小 | P2（新观察） |
+
+**归档说明**：本轮为 10-20 通用调研第四十二轮——Markdown 转 Word 交付闭环（61a2d93＋7738642，`/tools/markdown-to-word` 已注册，文本工具品类，文档转换场景，全量 113 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 七清单：KRUMB.DEV→.gitignore 生成器 P1 新晋（47 工具 Generators 类单列，113 Path gitignore 零命中）；lucasmdevdev→证书解码器 P2 新观察（"What's next" 计划项，PEM 文本解析形态零覆盖）；Teclea 800+→日志着色器 P2 新观察（Pod Log Colorizer 形态）；其余清单项：HMAC（表中 P2）、Mock 数据（表中 P1）、FAQ Schema（表中 P2）不重复立，SVG→React/CSP/IBAN/GraphQL→TS 等纯 niche 归档；V2EX→订阅管理热帖（P2 新观察）/Pitwall/zcode-mobile（桌面移动形态不立）；HN→holiday-optimizer（年假拼假方向下不扩展）/PDF redaction（已覆盖）；Medium 10-16→年龄计算器（生活计算器方向下不单立，记日期加减形态备选）；中文「最好用的在线工具」→AI 生图榜单 SEO 噪音无单页信号）均已消化；顺位更新（URL 追踪参数清除器顺位递进早班快打位、假数据/Mock 生成器上午中难度位、.gitignore 生成器 P1 新晋开发者家族轮快打位、证书解码器/日志着色器/订阅管理助手 P2 新观察、YouTube 缩略图 CORS 条件未变连续第十一轮顺延）；WPS 候选表保持冻结归档；仓库 113 注册工具全量核对无重叠（Top3 建议 ID url_tracker_cleaner / mock_data_generator / gitignore_generator；新观察 cert_decoder），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——本轮初遇 Host key verification failed（VM 换机丢 /root/.ssh/known_hosts，历史已知，`ssh-keyscan -t ed25519 github.com` 补录后即通）；origin/muse/dev-20260929 与本地 HEAD 一致（7738642）；`git log` 确认开发交付 61a2d93（Markdown 转 Word：自研解析+预览+OOXML docx 打包）＋评审修复 7738642（行内图片导出崩溃与预览互链缺失）；`grep tools/categories.go` 全量 113 Path（112+1），`markdown_to_word` ID 与 `/tools/markdown-to-word` Path 已注册（划入已实现），Top3 建议 ID（url_tracker_cleaner / mock_data_generator / gitignore_generator）与 P2 新观察 ID（cert_decoder）与 113 Path 无重叠（`url_tracker_cleaner/url-tracker-cleaner/mock_data/mock-data/模拟数据/测试数据/gitignore/Gitignore/cert_decoder/cert-decoder` 关键词核对全零命中；「证书」仅命中 SSL证书检测 非解码形态）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 09:46 · 产品经理排期轮）
 
 **选定：Markdown 转 Word（Markdown to Word）** — 本轮唯一任务：
@@ -6753,6 +6837,7 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 ~~批量重命名助手~~（2026-10-19 实现，commit cfcc674，路由 /tools/batch-rename-helper）、
 ~~Markdown 公众号一键排版~~（2026-10-19 实现，commit e5dba75，路由 /tools/markdown-publish-formatter）。
 ~~文件夹对比~~（2026-10-20 实现，commit 008e5f9，评审修复 1f3ff41，路由 /tools/folder-compare）。
+~~Markdown 转 Word~~（2026-10-20 实现，commit 61a2d93，评审修复 7738642，路由 /tools/markdown-to-word）。
 （补录说明：2026-10-20 07:36 第四十轮研究轮发现本清单自 10-14 起断更，按 git log 逐条核实 commit 与注册路由一次性补录 43 条；10-18 用户指令下线的 7 个泛财务/生活计算器未列入。）
 
 ## 2026-09-29 决策归档（已完成 ✅）
