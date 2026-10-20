@@ -1,3 +1,79 @@
+## 今日任务（2026-10-20 19:41 · 产品经理排期轮）
+
+**选定：文件校验和计算器（File Checksum）** — 本轮唯一任务：
+- **顺位递进**：43 轮新晋 P1 → 19:36 研究轮确认 .gitignore 生成器交付闭环（25cc911，全量 117 Path），顺位自动递补第一，无硬伤不跳过。
+- **轮次匹配**：19:41 晚间轮次，纯前端小难度（分片流式＋Web Worker 增量摘要），快打位，交付确定性高。
+- **痛点真实**：下载系统镜像/大安装包后需对照官方 SHA256 校验完整性，现有 md5/sha1/sha256 工具均为文本形态（textarea 输入），文件形态零覆盖；DevToolsCave "File Checksum — Streams large files, no crash" 形态验证（分片流式、大文件不卡死）。
+- **纯度高**：纯前端、零依赖、零后端、零上传；File.slice 分片读取＋Web Worker 内纯 JS 增量摘要器，内存恒定。
+- **去重实锤**：`grep -icE 'file_checksum|file-checksum|校验和|文件哈希|文件校验' tools/categories.go`（全量 117 Path）零命中；现有 md5/sha1/sha256 均为文本摘要形态（加密解密家族）。
+
+**规格**：
+1. 布局：上拖拽/选择文件区（支持多文件队列、可清空/删除单项）、中算法选择（SHA-256 / SHA-512 / SHA-1，默认 SHA-256）、下结果列表（文件名＋大小＋进度条＋哈希值＋复制按钮）；官方值比对区（粘贴官方哈希，自动归一化大小写/空格/换行，一键比对→一致绿/不一致红）；桌面宽屏、移动端堆叠。
+2. 分片流式引擎（纯前端零依赖）：File.slice 按 4~8MB 分片读 ArrayBuffer，Web Worker 内纯 JS 增量摘要器逐块 update（crypto.subtle.digest 非增量接口，大文件不能全量 concat；Worker 内联实现不引入第三方库），进度条按已读字节实时更新；内存恒定；取消按钮终止 Worker。
+3. 官方值一键比对：归一化（去空格/换行、不分大小写）后逐字对比，一致/不一致高亮反馈；支持多文件逐项比对。
+4. 纯前端、零依赖、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传。
+5. 注册：加密解密家族，新增工具 ID `file_checksum`、Name「文件校验和计算器」、Path `/tools/file-checksum`（New: true），中英文描述 + SEO keywords（文件校验和、SHA256 校验、文件完整性校验、file checksum、哈希校验）；与 SHA256 摘要（/tools/sha256）互链（「相关工具」入口）。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/file-checksum` 可开（200）
+- [ ] 拖拽/选择单文件与多文件均可计算，进度条实时更新；取消按钮可用
+- [ ] SHA-256 / SHA-512 / SHA-1 三算法可切换，结果与 `sha256sum`/`sha512sum`/`sha1sum` 命令行一致（测试轮用已知内容文件复核）
+- [ ] 大文件（≥1GB）计算不卡死浏览器（分片流式内存恒定证据；Worker 不阻塞主线程）
+- [ ] 官方值一键比对：一致/不一致明确高亮反馈，忽略大小写与空白
+- [ ] 复制按钮可用；DevTools Network 抽查：无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（加密解密品类、New: true），首页/导航/sitemap 生效；与 SHA256 摘要互链生效
+- [ ] 移动端可操作（选择+计算+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/file_checksum.html`（新建：文件区＋算法选择＋结果列表＋比对区）、`static/js/file_checksum.js`（新建：主线程 UI＋Worker 通信＋复制/比对逻辑，零依赖）、`static/js/file_checksum_worker.js`（新建：Web Worker 内纯 JS 增量 SHA-256/512/1 摘要器）、`tools/categories.go`（加密解密品类＋工具注册）、`tests/file_checksum.test.js`（新建：node 纯逻辑测试——官方值归一化/比对逻辑＋小文件摘要值复核）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- 图片批量缩放器（P1；44 轮新晋：dev.to pyfiletoolkit "Bulk Image Resizer" 形态验证；痛点：几十张配图逐张缩放；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度；117 Path 全零命中）：第二顺位，顺位自动递补（建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer）。
+- 正则表达式解释器（P1；40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；痛点：读不懂他人/历史正则，现有 regex（正则表达式测试）仅匹配测试、解释形态零覆盖；纯前端小-中难度）：第三顺位，开发者工具家族轮（建议 ID regex_explainer、Path /tools/regex-explainer）。
+- 图片区域模糊/马赛克打码（P1；45 轮新晋 —— 19:36 研究轮核稿判定误判，与已实现 `img_mosaic`「图片打码」形态重叠（90fa8c8 早已注册，/tools/img-mosaic，Description 含「马赛克/高斯模糊打码」），候选划出，不再立项）。
+- cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD 与 origin/muse/dev-20260929 一致（25cc911）；`grep -icE` 全量 117 Path，`file_checksum/file-checksum/校验和/文件哈希/文件校验` 全零命中（md5/sha1/sha256 为文本摘要形态）；建议 ID `file_checksum`、Path `/tools/file-checksum` 未被占用；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（19:36 研究轮＋本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 19:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。`.gitignore 生成器`交付闭环（17:39 PM 决策轮立项→开发交付 25cc911「23 个官方模板内置（语言 9/框架 8/系统 IDE 6），分组 chips 多选＋搜索过滤＋4 个快捷预设，语言→框架→IDE/OS 顺序拼接、重复行去重、模板块注释分隔，带行号实时预览＋统计，一键复制（clipboard 降级）/下载 `.gitignore`，选择 localStorage 持久化；纯前端零依赖零上传；开发工具品类注册（New:true）；附 node 纯逻辑测试 112 断言」；`grep tools/categories.go` 确认 ID `gitignore_generator`、Path `/tools/gitignore-generator` 已注册，全量 **117 Path**），候选池划出，已实现清单 delta 追加。**误判纠偏**：45 轮新晋 P1「图片区域模糊/马赛克打码（image_privacy_blur）」实为已实现工具 `img_mosaic`（Name「图片打码」，90fa8c8 早已注册，Description「框选区域马赛克/高斯模糊打码，遮车牌人脸手机号，本地处理不上传」）的形态重叠误判，候选池划出（参照 44 轮 htmlentities 纠偏先例）；45 轮声称 `grep -icE 'blur|模糊|马赛克|pixelate'` 116 Path 零命中实为误报（`img_mosaic` 描述中明含「马赛克/高斯模糊打码」）。顺位自动递补：文件校验和计算器晋升第一顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:36 晚间轮次，小难度候选可排。
+
+**本轮三件事**（19:36 全网调研，通用方向）：
+1. .gitignore 生成器交付确认：`git log` 头部 25cc911（10-20 09:47）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（25cc911）；`grep` 全量 117 Path（116+1），`gitignore_generator` ID 与 `/tools/gitignore-generator` Path 已注册；候选池划出，已实现清单追加（delta：+ .gitignore 生成器，开发工具赛道）。
+2. **核稿误判纠偏**：45 轮新晋 P1「图片区域模糊/马赛克打码」与已实现 `img_mosaic`（图片打码，/tools/img-mosaic，纯前端，90fa8c8 注册）形态完全重叠——同为「框选区域→马赛克/高斯模糊打码」单页形态；`git show be6c077:tools/categories.go` 实锤 45 轮 HEAD 时 `img_mosaic` 已注册（Description 含「马赛克/高斯模糊打码」），45 轮 grep 零命中声称为误报。按 44 轮 htmlentities 纠偏先例：不再立项，候选池划出。教训升级：grep 零命中结论必须可复现——本轮复核 `grep -iE 'file_checksum|file-checksum|校验和|image_privacy|image-privacy|blur|模糊|马赛克|pixelate|bulk_image|bulk-image|批量.*缩放'` 得 3 命中（`img_mosaic` 描述行＋`blur_on` 图标行＋`image_annotator` 描述行），逐行核对后确认均为已实现工具、非候选冲突。
+3. 新信号扫描（均已消化，无新立项）：
+   - dev.to 重扫（pyfiletoolkit 13 工具 / mou1z 5 工具 / Varkido 170+ / snappy_tools 26 / kkp DevTrove / lidevtools 33+ / AgentsAITools 86+ 套装）：全部已实现或表中已有（HTML Entity→`htmlentities` 已实现；Bulk Image Resizer→44 轮已立 P1；WeChat Markdown Editor→公众号一键排版已实现；Subnet Calc→`subnet` 已实现；AgentsAITools 为 Crypto/Converters/Web/Text/Network 分类复述），无新形态；
+   - V2EX 10-20：Open Resume（自部署简历工具，Docker/Node 后端形态；简历方向已有 resume_checker，生成器差异化弱不单立）/ AI 张大妈（AI 产品比价聚合，需后端数据采集，非纯前端）/ Pitwall（Mac 桌面应用，非单页）/ FrameCut（Mac vlog 剪辑桌面应用；语音转字幕为 Apple 端侧神经引擎，浏览器不可复现；浏览器实时听写 P1 观察已在池）——无可落地新信号；
+   - HN：Sphinx（git hook quiz，CLI 形态，44 轮已消化）/ DEV·TV（单文件聚合看板，聚合型应用非单页工具形态，依赖第三方 API）/ LeetPost（GitHub+AI 简历/作品集生成，需后端+AI；简历方向已覆盖）/ HN reader（Rust/egui 桌面应用）——无新单页信号；
+   - it-tools GitHub feature request 搜索：依赖更新 PR 噪音为主，无明确高票新工具需求；
+   - Reddit "wish there was a website"：噪音为主，无有效单页信号；
+   - 中文「希望有一个网站能」：FineReport/加速器/WigglyPaint SEO 噪音，无单页信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；19:36 晚间轮次，小难度可排）：
+
+1. **文件校验和计算器（File Checksum）** — P1（顺位递进：.gitignore 生成器交付闭环（25cc911），自动递补第一顺位；43 轮新晋：DevToolsCave "File Checksum — Streams large files, no crash" 形态验证；痛点：下载系统镜像/大安装包后对照官方 SHA256 校验完整性，现有哈希工具均为文本形态；纯前端小难度：File.slice 分片流式＋crypto.subtle.digest＋进度条＋官方值一键比对，零上传；117 Path checksum/校验和/文件哈希全零命中；建议 ID file_checksum、Path /tools/file-checksum）。
+2. **图片批量缩放器（Bulk Image Resizer）** — P1（顺位递进第二：44 轮新晋，pyfiletoolkit "Bulk Image Resizer" 形态验证；痛点：电商上新/文章配图几十张图逐张缩放是重复折磨；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度：多文件队列＋统一预设（按宽/按高/百分比/最大边）＋canvas 批量处理＋逐个/打包下载，零上传；117 Path bulk_image/bulk-image/批量缩放全零命中；建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer）。
+3. **正则表达式解释器（Regex Explainer）** — P1（顺位递进第三：40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；痛点：读不懂他人/历史正则，现有 `regex`（正则表达式测试）仅匹配测试、解释形态零覆盖；纯前端小-中难度：正则逐段中文解释＋可视化＋Worker 超时熔断，零后端；开发者工具家族轮；建议 ID regex_explainer、Path /tools/regex-explainer）。
+
+cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十六轮：.gitignore 生成器已实现划出；图片区域模糊/马赛克打码误判纠偏划出；无新晋候选；全量 117 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| .gitignore 生成器 | 已实现划出（25cc911 落盘；ID gitignore_generator、Path /tools/gitignore-generator 已注册；全量 117 Path） | — | 已实现 |
+| 图片区域模糊/马赛克打码 | 误判纠偏（45 轮新晋 P1 实为已实现 `img_mosaic`「图片打码」形态重叠：90fa8c8 早已注册（/tools/img-mosaic），Description「框选区域马赛克/高斯模糊打码，遮车牌人脸手机号，本地处理不上传」；45 轮 grep 零命中声称为误报（`git show be6c077` 实锤）；不再立项） | — | 已实现（划出） |
+
+**归档说明**：本轮为 10-20 通用调研第四十六轮——.gitignore 生成器交付闭环（25cc911，`/tools/gitignore-generator` 已注册，开发工具赛道，全量 117 Path），候选池划出，已实现清单 delta 追加；核稿误判纠偏（45 轮新晋 P1 图片区域模糊/马赛克打码与已实现 `img_mosaic` 形态重叠，`git show be6c077` 实锤注册先于 45 轮，45 轮 grep 零命中为误报；教训：零命中结论必须可复现，本轮复核 3 命中逐行核对）；新信号扫描（dev.to 七清单重扫：pyfiletoolkit/mou1z/Varkido/snappy_tools/DevTrove/lidevtools/AgentsAITools 全消化无新形态；V2EX 10-20→Open Resume（Docker 后端＋简历已覆盖）/AI 张大妈（需后端）/Pitwall（Mac 桌面）/FrameCut（Mac 桌面，端侧语音字幕不可复现）均不立；HN→Sphinx（CLI）/DEV·TV（聚合看板）/LeetPost（后端+AI）/HN reader（桌面）均不立；it-tools GitHub feature request→依赖 PR 噪音；Reddit/中文搜索→噪音）均已消化；顺位更新（文件校验和计算器晋升第一顺位、图片批量缩放器递补第二、正则表达式解释器开发者工具家族轮第三）；WPS 候选表保持冻结归档；仓库 117 注册工具全量核对无重叠（Top3 建议 ID file_checksum / bulk_image_resizer / regex_explainer；`img_mosaic`/`image_annotator` 描述含马赛克打码已核对非候选冲突），核稿反馈（中文名+ID 片段双核＋零命中可复现）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（25cc911）；`git log` 确认开发交付 25cc911（.gitignore 生成器）；`grep tools/categories.go` 全量 117 Path（116+1），`gitignore_generator` ID 与 `/tools/gitignore-generator` Path 已注册（划入已实现）；`git show be6c077:tools/categories.go` 确认 45 轮 HEAD 时 `img_mosaic`（图片打码，/tools/img-mosaic）已注册（Description 含「马赛克/高斯模糊打码」），image_privacy_blur 误判纠偏实锤；Top3 建议 ID（file_checksum / bulk_image_resizer / regex_explainer）与 117 Path 无重叠（`file_checksum/file-checksum/校验和/bulk_image/bulk-image/批量缩放/regex_explainer/正则解释` 关键词核对全零命中；现有 `regex` 为匹配测试形态，解释形态零覆盖）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 开发轮（2026-10-20 17:4x · 前端开发）
 
 **交付：.gitignore 生成器** — 全部验收项自测通过，随本轮提交：

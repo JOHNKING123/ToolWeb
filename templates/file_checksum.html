@@ -1,0 +1,208 @@
+{{define "file_checksum"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件校验和计算器 - 在线计算文件 SHA-256/SHA-512/SHA-1 哈希值 | 程序员工具箱</title>
+    <meta name="description" content="免费在线文件校验和计算器：拖拽多文件批量计算 SHA-256 / SHA-512 / SHA-1 哈希值，4MB 分片流式读取＋Web Worker 本地计算不卡死，进度条实时显示，官方哈希一键比对校验文件完整性。纯前端本地运行，文件零上传。">
+    <meta name="keywords" content="文件校验和,文件哈希,哈希校验,SHA256 校验,文件完整性校验,file checksum,hash checker,SHA-512 校验,SHA-1 校验,校验和计算器,MD5 校验">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/file-checksum">
+    <meta property="og:title" content="文件校验和计算器 - 文件 SHA-256/SHA-512/SHA-1 在线校验">
+    <meta property="og:description" content="拖拽多文件批量计算 SHA-256/SHA-512/SHA-1，4MB 分片＋Web Worker 本地计算，官方哈希一键比对。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/file-checksum">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文件校验和计算器","description":"在线文件校验和计算器：拖拽多文件批量计算 SHA-256/SHA-512/SHA-1 哈希值，4MB 分片流式读取＋Web Worker 本地增量计算，进度条实时显示，官方哈希一键比对；纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/file-checksum","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .fc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .fc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .fc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .fc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .fc-dropzone{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2.2rem 1rem;
+            text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+        .fc-dropzone:hover,.fc-dropzone.fc-drag{border-color:#2563eb;background:#eff6ff}
+        .fc-dropzone .material-icons{font-size:2.6rem;color:#60a5fa;display:block;margin-bottom:.5rem}
+        .fc-dz-hint{font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:.3rem}
+        .fc-dz-sub{font-size:.85rem;color:#64748b}
+        .fc-algos{display:flex;gap:1.2rem;flex-wrap:wrap;margin:1rem 0;align-items:center}
+        .fc-algos .fc-algo-label{font-size:.9rem;color:#6b7280;font-weight:600}
+        .fc-algo{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;color:#374151;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .9rem;background:#f9fafb}
+        .fc-algo input{accent-color:#2563eb}
+        .fc-algo:has(input:checked){border-color:#2563eb;background:#eff6ff;color:#1d4ed8;font-weight:600}
+        .fc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.4rem}
+        .fc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .fc-btn .material-icons{font-size:1.1rem}
+        .fc-btn-primary{background:#2563eb;color:#fff}
+        .fc-btn-primary:hover{background:#1d4ed8}
+        .fc-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .fc-btn-danger{background:#dc2626;color:#fff}
+        .fc-btn-danger:hover{background:#b91c1c}
+        .fc-btn-danger:disabled{opacity:.5;cursor:not-allowed}
+        .fc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .fc-btn-secondary:hover{background:#e5e7eb}
+        .fc-btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        .fc-empty{color:#94a3b8;text-align:center;padding:2.2rem 1rem;font-size:.95rem}
+        .fc-row{border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;margin-bottom:.8rem;background:#fff}
+        .fc-row.fc-done{border-color:#a7f3d0;background:#f0fdf4}
+        .fc-row.fc-error{border-color:#fecaca;background:#fef2f2}
+        .fc-row-head{display:flex;align-items:center;gap:.6rem}
+        .fc-name{flex:1;display:flex;align-items:center;gap:.45rem;min-width:0;font-weight:600;color:#111827;font-size:.93rem}
+        .fc-name .material-icons{color:#94a3b8;flex:none}
+        .fc-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .fc-size{flex:none;font-size:.82rem;color:#6b7280;background:#f3f4f6;border-radius:.35rem;padding:.15rem .55rem}
+        .fc-icon-btn{flex:none;border:none;background:transparent;color:#9ca3af;cursor:pointer;border-radius:.4rem;
+            padding:.25rem;display:inline-flex}
+        .fc-icon-btn:hover{color:#dc2626;background:#fef2f2}
+        .fc-icon-btn:disabled{opacity:.35;cursor:not-allowed}
+        .fc-icon-btn .material-icons{font-size:1.15rem}
+        .fc-progress{height:.55rem;background:#e5e7eb;border-radius:999px;margin:.7rem 0 .4rem;overflow:hidden}
+        .fc-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#2563eb);border-radius:999px;transition:width .2s}
+        .fc-row.fc-done .fc-progress-fill{background:linear-gradient(90deg,#34d399,#10b981)}
+        .fc-meta{display:flex;justify-content:space-between;gap:.6rem;font-size:.82rem;color:#6b7280;margin-bottom:.2rem}
+        .fc-hex-wrap{display:flex;gap:.6rem;align-items:flex-start;margin-top:.5rem}
+        .fc-hex{flex:1;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.6;
+            color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:.45rem;padding:.5rem .7rem;
+            word-break:break-all;user-select:all}
+        .fc-compare{display:flex;gap:.5rem;margin-top:.6rem;align-items:center;flex-wrap:wrap}
+        .fc-input{flex:1;min-width:200px;box-sizing:border-box;padding:.55rem .8rem;border:1px solid #d1d5db;
+            border-radius:.5rem;font-size:.88rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .fc-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .fc-mini{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;background:#f9fafb;
+            border-radius:.45rem;padding:.45rem .9rem;font-size:.85rem;cursor:pointer;color:#374151;flex:none}
+        .fc-mini:hover{border-color:#2563eb;color:#2563eb}
+        .fc-mini .material-icons{font-size:1rem}
+        .fc-mini-primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:600}
+        .fc-mini-primary:hover{background:#1d4ed8;color:#fff}
+        .fc-badge{font-size:.85rem;font-weight:700;padding:.4rem .9rem;border-radius:999px}
+        .fc-badge-ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+        .fc-badge-bad{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+        .fc-badge-warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+        .fc-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .fc-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .fc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .fc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .fc-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .fc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #fc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #fc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .fc-compare{flex-direction:column;align-items:stretch}
+            .fc-input{min-width:0;width:100%}
+            .fc-mini{justify-content:center}
+            .fc-btn{flex:1;justify-content:center}
+            .fc-hex{font-size:.72rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">verified</i> 文件校验和计算器</h1>
+            <p>拖拽或选择多个文件，批量计算 SHA-256 / SHA-512 / SHA-1 校验和；4MB 分片流式读取＋Web Worker 后台计算，大文件不卡死；粘贴官方哈希值一键比对，验证下载文件是否完整。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="fc-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>文件分片读取与哈希计算全部在你的浏览器本地完成（Web Worker 后台线程），不发起任何后端请求、不上传任何文件内容，可在开发者工具 Network 面板验证，也可断网使用。</div>
+            </div>
+
+            <div class="fc-panel">
+                <h3><i class="material-icons">upload_file</i> ① 选择文件</h3>
+                <div class="fc-dropzone" id="fc-dropzone">
+                    <i class="material-icons">cloud_upload</i>
+                    <div class="fc-dz-hint">把文件拖到这里，或点击选择</div>
+                    <div class="fc-dz-sub">支持多文件批量加入队列 · 任意类型 · 大小不限（建议 2GB 以内）</div>
+                    <div style="margin-top:.9rem;">
+                        <button type="button" class="fc-btn fc-btn-secondary" id="fc-pick-btn">
+                            <i class="material-icons">folder_open</i> 选择文件
+                        </button>
+                    </div>
+                    <input type="file" id="fc-file-input" multiple style="display:none;">
+                </div>
+                <div class="fc-algos">
+                    <span class="fc-algo-label">算法：</span>
+                    <label class="fc-algo"><input type="radio" name="fc-algo" value="sha256" checked> SHA-256</label>
+                    <label class="fc-algo"><input type="radio" name="fc-algo" value="sha512"> SHA-512</label>
+                    <label class="fc-algo"><input type="radio" name="fc-algo" value="sha1"> SHA-1</label>
+                </div>
+                <div class="fc-actions">
+                    <button type="button" class="fc-btn fc-btn-primary" id="fc-start-btn">
+                        <i class="material-icons">play_arrow</i> 开始计算
+                    </button>
+                    <button type="button" class="fc-btn fc-btn-danger" id="fc-cancel-btn" style="display:none;">
+                        <i class="material-icons">stop</i> 取消计算
+                    </button>
+                    <button type="button" class="fc-btn fc-btn-secondary" id="fc-clear-btn">
+                        <i class="material-icons">clear</i> 清空队列
+                    </button>
+                </div>
+            </div>
+
+            <div class="fc-panel">
+                <h3><i class="material-icons">list_alt</i> ② 计算队列与结果</h3>
+                <div id="fc-list"></div>
+            </div>
+
+            <div class="fc-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="fc-tip">
+                    <b>怎么用：</b>把文件拖进上方虚线框（或点「选择文件」），选好算法后点「开始计算」；每个文件独立显示进度条，算完即出哈希值，点「复制」即可粘贴使用。<br>
+                    <b>校验下载文件：</b>把官网公布的 SHA256 值粘贴到对应文件的比对框，点「比对」——一致显示绿色「文件完整」，不一致显示红色警告。比对时自动忽略大小写、空格、换行，也支持直接粘贴 <code>sha256sum</code> 输出的「哈希值＋文件名」整行。<br>
+                    <b>大文件不卡死：</b>文件按 4MB 分片流式读取，哈希在 Web Worker 后台线程里增量计算，内存占用恒定、页面保持流畅；1GB 以上大文件也可以算，只是耗时稍长（纯 JS 计算约数十 MB/秒）。<br>
+                    <b>多文件队列：</b>一次可加入多个文件，按顺序逐个计算；计算过程中可点「取消计算」随时终止当前文件。<br>
+                    <b>算法怎么选：</b>对照官方值用哪个算法就选哪个——绝大多数官网（系统镜像、安装包）公布的是 SHA-256；SHA-512 更长更安全；SHA-1 仅用于核对老旧软件的校验值。<br>
+                    <b>隐私：</b>所有计算都在浏览器本地完成，文件不会上传到任何服务器。
+                </div>
+            </div>
+
+            <div class="fc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="fc-faq">
+                    <dt>文件会被上传到服务器吗？</dt>
+                    <dd>不会。分片读取和哈希计算都在浏览器本地的 Web Worker 线程里完成，不发起任何后端请求、不上传任何文件内容，你可以在开发者工具 Network 面板验证，也可以断网使用。</dd>
+                    <dt>计算结果和 sha256sum 命令行一致吗？</dt>
+                    <dd>一致。本工具内置的 SHA-256 / SHA-512 / SHA-1 增量实现已用标准测试向量与 <code>sha256sum</code> / <code>sha512sum</code> / <code>sha1sum</code> 命令行交叉验证（10MB 随机文件、4MB 边界文件、空文件三算法全对）。</dd>
+                    <dt>1GB 以上的大文件会卡死浏览器吗？</dt>
+                    <dd>不会。文件按 4MB 分片逐块读取，任意时刻内存里只保留当前分片；计算在 Worker 后台线程进行，主线程只更新进度条，页面保持可操作。耗时取决于纯 JS 计算速度（约数十 MB/秒），1GB 文件约需一两分钟。</dd>
+                    <dt>比对时官方值大小写/换行不一样怎么办？</dt>
+                    <dd>不用管。比对前会自动归一化：转小写、去掉全部空格/换行/制表符；直接粘贴 <code>sha256sum</code> 的「哈希值＋文件名」整行也能识别。</dd>
+                    <dt>为什么切换算法后要重新计算？</dt>
+                    <dd>不同算法的摘要值完全不同、无法互相转换，所以切换算法会自动把已有结果标记为待计算，点「开始计算」重新跑一遍即可。</dd>
+                    <dt>取消计算后文件还在队列里吗？</dt>
+                    <dd>在。取消只终止当前文件的计算，该文件回到待计算状态，可随时重新开始；用行右侧的 × 可把单个文件移出队列。</dd>
+                </dl>
+            </div>
+
+            <div class="fc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="fc-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">文件校验和计算器（当前）</span>
+                    <a href="/tools/sha256" class="btn btn-secondary" style="font-size:.9rem;">SHA256 摘要</a>
+                    <a href="/tools/sha1" class="btn btn-secondary" style="font-size:.9rem;">SHA1 摘要</a>
+                    <a href="/tools/md5" class="btn btn-secondary" style="font-size:.9rem;">MD5 加密/摘要</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="fc-toast"></div>
+    <script src="/tools/static/js/file_checksum_core.js?v=1"></script>
+    <script src="/tools/static/js/file_checksum.js?v=1"></script>
+</body>
+</html>
+{{end}}

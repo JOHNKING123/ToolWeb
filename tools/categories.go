@@ -944,6 +944,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "加密解密",
 				},
+				{
+					ID:          "file_checksum",
+					Name:        "文件校验和计算器",
+					Description: "拖拽多文件批量计算 SHA-256/SHA-512/SHA-1 校验和，4MB 分片流式＋Web Worker 本地增量计算，进度条实时显示，官方哈希一键比对，纯前端零上传 · File checksum: batch SHA-256/SHA-512/SHA-1 hashing of local files, chunked streaming in a Web Worker, official hash one-click compare, 100% client-side",
+					Path:        "/tools/file-checksum",
+					Icon:        "verified",
+					New:         true,
+					Category:    "加密解密",
+				},
 			},
 		},
 		{
