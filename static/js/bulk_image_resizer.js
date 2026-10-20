@@ -222,7 +222,7 @@ function tick() { return new Promise(function (r) { setTimeout(r, 0); }); }
 /* ---------------- 状态 ---------------- */
 var BIG_WARN = 40 * 1024 * 1024; /* 单张超 40MB 仅提示，不硬拦截 */
 var S = {
-    items: [],     /* [{id,file,name,type,size,thumbUrl,status,prog,ow,oh,tw,th,blob,dlUrl,err}] */
+    items: [],     /* [{id,file,name,type,size,thumbUrl,status,prog,ow,oh,tw,th,blob,dlUrl,fmt,err}] */
     seq: 0,
     busy: false,
     cancel: false
@@ -244,7 +244,7 @@ function addFiles(fileList) {
         S.items.push({
             id: ++S.seq, file: f, name: f.name, type: f.type, size: f.size,
             thumbUrl: URL.createObjectURL(f), status: 'wait', prog: 0,
-            ow: 0, oh: 0, tw: 0, th: 0, blob: null, dlUrl: null, err: ''
+            ow: 0, oh: 0, tw: 0, th: 0, blob: null, dlUrl: null, fmt: null, err: ''
         });
         added++;
         if (f.size > BIG_WARN) toast('提示：「' + f.name + '」超 40MB，处理会慢一些');
@@ -351,6 +351,7 @@ function resizeOne(it, preset, outFmt, quality) {
             if (it.dlUrl) URL.revokeObjectURL(it.dlUrl);
             it.blob = blob;
             it.dlUrl = URL.createObjectURL(blob);
+            it.fmt = outFmt; /* 处理时刻的输出格式：下载命名用它，不用点击时刻的 readFormat() */
             it.status = 'done';
             it.prog = 1;
         });
@@ -395,8 +396,11 @@ function runBatch() {
 function downloadOne(id) {
     for (var i = 0; i < S.items.length; i++) {
         var it = S.items[i];
-        if (it.id === id && it.dlUrl) {
-            var name = birOutName(it.name, it.tw, it.th, it.type, readFormat());
+        if (it.id === id && it.blob) {
+            /* 每次下载都重建 URL：downloadUrl() 会在 800ms 后回收旧 URL，旧 URL 不可复用 */
+            if (it.dlUrl) URL.revokeObjectURL(it.dlUrl);
+            it.dlUrl = URL.createObjectURL(it.blob);
+            var name = birOutName(it.name, it.tw, it.th, it.type, it.fmt || 'keep');
             downloadUrl(it.dlUrl, name);
             return;
         }
@@ -408,9 +412,8 @@ function downloadZip() {
     var used = [];
     birEnsureJSZip().then(function () {
         var zip = new JSZip();
-        var fmt = readFormat();
         doneItems.forEach(function (it) {
-            var name = birUniqueName(birOutName(it.name, it.tw, it.th, it.type, fmt), used);
+            var name = birUniqueName(birOutName(it.name, it.tw, it.th, it.type, it.fmt || 'keep'), used);
             used.push(name);
             zip.file(name, it.blob);
         });
