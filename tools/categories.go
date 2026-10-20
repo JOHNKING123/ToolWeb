@@ -556,6 +556,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "svg_compressor",
+					Name:        "SVG 压缩优化器",
+					Description: "拖拽/粘贴 SVG 代码，SVGO 浏览器引擎本地压缩：无损/轻度/激进三档预设、数值精度滑块、清理项开关，批量多文件队列，压缩率对比＋原图/优化后并排预览，复制代码或下载 .svg，纯前端零上传 · SVG optimizer: compress SVG locally with SVGO (lossless/balanced/aggressive presets), batch queue, before/after preview, 100% client-side",
+					Path:        "/tools/svg-compressor",
+					Icon:        "compress",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img2base64",
 					Name:        "图片转Base64",
 					Description: "将图片文件转换为Base64字符串，支持多格式",

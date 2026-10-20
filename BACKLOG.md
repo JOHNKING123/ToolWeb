@@ -1,3 +1,89 @@
+## 今日任务（2026-10-21 03:41 · 产品经理排期轮）
+
+**选定：SVG 压缩优化器（svg-compressor）** — 本轮唯一任务：
+- **顺位递进**：cURL → Python Requests 转换器交付闭环（b11e2e8＋5682189 parseCurl 修复，全量 121 Path）→ P1 第一顺位 SVG 压缩优化器自动递补，无硬伤不跳过（尊重 03:00 研究轮定序：研究轮只做新信号挖掘与候选池维护，不动排期定序）。
+- **轮次匹配**：03:41 深夜轮次，纯前端小难度快打位（03:00 研究轮明确定位：深夜轮次小难度可排），一轮可高质量交付。
+- **痛点真实**：设计交付/导出的 SVG 体积臃肿（编辑器注释、冗余命名空间、过高数值精度），手工精简繁琐；在线压缩工具多要上传文件，隐私与便捷俱差。
+- **纯度高**：纯前端、零后端、零上传；SVGO 浏览器端（CDN 懒加载＋降级内置轻量清理），SVG 内容不出浏览器。
+- **去重实锤**：`grep -inE 'svg_compress|svg-compress|svg压缩' tools/categories.go`（全量 121 Path）零命中；既有 svg 提及仅为 mermaid/favicon/思维导图/图表工具的 SVG 导出能力描述，与「SVG 压缩优化」形态零重叠。
+
+**规格**：
+1. 布局：上 SVG 输入区（拖拽/点击上传＋粘贴代码双入口，支持批量多文件队列）、中优化选项区（预设三档：无损/轻度/激进＋小数精度滑块＋清理项 toggles：注释/metadata/编辑器命名空间/空属性/默认属性）、下结果区（每个文件：原体积→压缩后体积＋压缩率% chips、原图/优化后图并排预览＋缩放、复制代码＋下载 .svg）；桌面宽屏、移动端堆叠。
+2. 压缩引擎（纯前端）：SVGO 浏览器构建经 CDN 懒加载（jsdelivr 首选→npmmirror 兜底，与 bulk_image_resizer 的 cdnjs→npmmirror 降级策略一致）；CDN 失败时降级为内置轻量清理（去注释/去多余空白/压缩数值精度），页面明确标注降级状态；无损预设默认不移除 viewBox（保响应式缩放）。
+3. 对比与验证：压缩前后字节数＋压缩率展示；预览渲染验证 SVG 仍可正常显示（解析失败文件标红并给原因，不中断队列）。
+4. 纯前端、零后端、零上传；DevTools Network 抽查无后端调用、无内容上传（CDN 拉取 SVGO 构建除外，属静态资源加载）。
+5. 注册：图片处理品类，新增工具 ID `svg_compressor`、Name「SVG 压缩优化器」、Path `/tools/svg-compressor`（New: true），中英文描述 + SEO keywords（SVG 压缩、SVG 优化、svg optimizer、svg 体积压缩、svg 在线压缩）。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/svg-compressor` 可开（200）
+- [ ] 典型臃肿 SVG（Illustrator/Inkscape 导出含注释＋命名空间＋6 位小数）压缩率显著（如 ≥30%），优化后渲染与原图视觉一致
+- [ ] 三档预设＋精度滑块＋清理 toggles 生效且可组合
+- [ ] CDN 失败降级路径可用（断网模拟：内置清理仍工作＋明确标注）
+- [ ] 批量队列：多文件逐个出结果，坏文件标错不中断
+- [ ] 复制 SVG 代码＋下载 .svg 可用
+- [ ] DevTools Network 抽查：无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（图片处理品类、New: true），首页/导航/sitemap 生效
+- [ ] 移动端可操作（上传/粘贴+压缩+复制）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/svg_compressor.html`（新建：SVG 输入区＋优化选项区＋结果对比区）、`static/js/svg_compressor.js`（新建：SVGO CDN 懒加载＋降级内置清理＋压缩率对比＋预览渲染，零构建依赖）、`tools/categories.go`（图片处理品类＋工具注册）、`tests/svg_compressor.test.js`（新建：node 纯逻辑测试——降级清理函数用例＋体积/压缩率计算断言）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- Markdown 聊天图文转换器（P1；V2EX 10-20 当天帖 md2chat 最强新鲜信号；痛点：AI 回答/Markdown 复制进微信/钉钉/飞书/企微聊天框排版炸裂；纯前端小-中：文字可编辑＋复杂排版转图片组合＋分平台复制；121 Path md2chat/md-to-chat/聊天图文全零命中）：第二顺位强候补（建议 ID md_to_chat、Path /tools/md-to-chat）。
+- 代码打包给 LLM（P1；48 轮新晋，Show HN project2txt 形态验证；建议 ID project_to_txt、Path /tools/project-to-txt）：开发工具家族轮后续顺位。
+- SVG 转 React JSX 组件生成器（P2，49 轮新晋观察；Tooltri 形态验证；建议 ID svg_to_jsx、Path /tools/svg-to-jsx）：P1 队列饱和，留池观察——注：与本轮 SVG 压缩优化器同属 SVG 赛道但形态零重叠（压缩 vs 代码转换），可形成 SVG 工具小家族，后续顺位考虑。
+- 发票/账单生成器（P2，49 轮新晋观察；财务方向边界：属业务单据文档工具非计算器，但偏财务，按用户 10-18 方向供 PM 权衡；建议 ID invoice_generator、Path /tools/invoice-generator）：留池观察。
+- 简历模板生成器（P2，49 轮新晋观察；V2EX Open Resume 热帖；与 resume_checker（JD 诊断）形态零重叠；建议 ID resume_builder、Path /tools/resume-builder）：留池观察。
+- 婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；网页表格转 CSV/Lorem Ipsum 生成器（P2，48 轮新晋观察）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD 与 origin/muse/dev-20260929 一致（5682189）；`grep -inE` 全量 121 Path，`svg_compress/svg-compress/svg压缩` 全零命中（既有 svg 提及仅 mermaid/favicon/思维导图/图表工具的 SVG 导出描述）；建议 ID `svg_compressor`、Path `/tools/svg-compressor` 未被占用；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（03:00 研究轮追加＋本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-21 03:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第四十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。cURL → Python Requests 转换器交付闭环（01:00 PM 决策轮立项→开发交付 b11e2e8「cURL 输入区＋结构化解析 chips＋可运行 requests 代码输出（复制/下载 .py），自研 shell 词法切分覆盖 -X/-H/-d/--compressed/-u/-b/-A/-k/-F/--max-time，未知参数诊断列表；开发工具品类注册（New:true），SEO 面板配齐；附 node 纯逻辑测试」＋ bugfix 5682189「parseCurl 前导 env 赋值跳过修复＋补测试断言」；`grep tools/categories.go` 确认 ID `curl_to_requests`、Path `/tools/curl-to-requests` 已注册，全量 **121 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：SVG 压缩优化器晋升第一顺位，Markdown 聊天图文转换器（V2EX md2chat 10-20 当天新鲜热帖再添强信号）晋升第二顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 深夜轮次，小难度候选可排。
+
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. cURL → Python Requests 转换器交付确认：`git log` 头部 b11e2e8（新工具）＋5682189（parseCurl 修复）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（5682189）；`grep` 全量 121 Path（120+1），`curl_to_requests` ID 与 `/tools/curl-to-requests` Path 已注册；候选池划出，已实现清单追加（delta：+ cURL → Python Requests 转换器，开发工具赛道，DevTools 接口调试场景）。
+2. 新信号扫描：
+   - **V2EX md2chat**（10-20 当天帖，t/1250428）：「AI 回答写好了怎么发到聊天框」— 左侧输 Markdown、右侧实时预览，文字保持可编辑＋表格/代码/公式/流程图转图片，微信/钉钉/飞书/企微/邮件分平台复制、桌面版托盘剪贴板转换——为候选池 P1「Markdown 聊天图文转换器」提供**当天新鲜热帖级形态验证**，信号显著升级，建议顺位提升；
+   - **V2EX Open Resume**（10-20 当天帖，t/1250292）：开源自部署简历工具「156 款模板全部开放、编辑导出免费、无付费导出/水印」— 现有 `resume_checker`（/tools/resume-checker）为 JD 匹配诊断形态、模板生成形态零覆盖，见新晋候选；
+   - **Tooltri**（dev.to，30+ 浏览器工具清单）：**SVG to React JSX** 为新形态；Token Counter→`ai_token_counter` 已实现核稿实锤；JWT/HMAC 工具→`jwt_decoder` 已实现、`hmac_generator` 池内 P2 不重复立；SQLite DB Viewer→池内 P2 观察已有；Invoice generator→新形态，见新晋候选（财务方向边界备注）；
+   - **Etemora**（dev.to）：Invoice generator（logo＋行项＋折扣＋税→PDF 下载）再添佐证；SERP snippet preview→`serp_snippet_preview` 已实现核稿实锤；PDF 工具四形态→全已实现；
+   - **DodoDeck**（dev.to，10-18）：「exact KB image resizer」→现有「图片压缩」已覆盖「上传 JPG/PNG/WebP 输入目标 KB、二分质量迭代±5% 命中」，核稿实锤不重复立；P2P 文件分享→需对端架构不成立；AI TTS→需模型/P2 已观察；
+   - **SuperToolKit**（dev.to，10-16，100+ 浏览器工具）：音频编辑（WASM）→现有 `audio_trimmer` 已实现；PDF/图片形态→全已实现；无新单页信号；
+   - **VelnoxLabs**（dev.to，9-27，51 工具）：cURL to Python Requests→10-21 刚交付核稿实锤；Invoice Generator→归入新晋候选备注；
+   - V2EX livesub（直播字幕/翻译，npm 桌面工具非单页）/ Lyra（自托管音乐库工具）/ FrameCut（Mac vlog 剪辑）→非单页形态，无信号。
+3. 新晋候选三则（均为 P2 观察；P1 队列饱和，本轮不新立 P1，尊重 PM 定序）：
+   - **SVG 转 React JSX 组件生成器**：痛点——设计/图标 SVG 手工改写成 React 组件繁琐（属性 camelCase、class→className、注释清理）；形态验证：Tooltri 30+ 清单单列 SVG to React JSX；纯前端小难度（SVG→JSX 属性映射＋组件名/prop 选项＋TS 类型选项＋实时预览＋复制/下载）；开发工具赛道；建议 ID `svg_to_jsx`、Path `/tools/svg-to-jsx`；
+   - **发票/账单生成器**：痛点——自由职业/小微企业开收据/报价发票要找模板或走 SaaS；形态验证：VelnoxLabs 51 清单＋Etemora 单列（logo＋行项＋折扣＋税＋PDF 下载、无水印无注册）；纯前端小难度（行项表单＋金额/税率自动算＋浏览器打印/PDF 导出，零上传）；方向边界：属业务单据文档工具（非计算器），但偏财务——按用户 10-18 方向记备注供 PM 权衡，建议 ID `invoice_generator`、Path `/tools/invoice-generator`；
+   - **简历模板生成器**：痛点——网上简历模板多绑下载付费/水印；形态验证：V2EX Open Resume 10-20 当天帖「156 模板编辑导出免费」热议；与已实现 `resume_checker`（JD 诊断）形态零重叠；纯前端中难度（精选 3~5 套内置模板＋表单录入＋实时预览＋浏览器打印/PDF 导出）；文档工具赛道；建议 ID `resume_builder`、Path `/tools/resume-builder`。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；03:00 深夜轮次，小难度可排）：
+
+1. **SVG 压缩优化器** — P1（顺位递进：cURL→Python Requests 转换器交付闭环（b11e2e8＋5682189），自动递补第一顺位；痛点：设计交付/导出的 SVG 体积臃肿（冗余节点/注释/精度过高），手工精简繁琐，在线压缩多要上传；形态验证：Varkido 170+ 清单 SVG optimizer 标配项；纯前端小难度：SVGO 浏览器端（CDN 懒加载）＋压缩率对比＋预览，零上传；121 Path svg_compress/svg-compress/svg压缩全零命中；建议 ID svg_compressor、Path /tools/svg-compressor）。
+2. **Markdown 聊天图文转换器（md2chat）** — P1（V2EX 10-20 当天帖 md2chat 最强新鲜信号：痛点——AI 回答/Markdown 笔记复制进微信/钉钉/飞书/企微聊天框排版炸裂（表格夹竖线/公式露符号/流程图剩源码）；形态验证：作者开源实现「文字可编辑＋表格/代码/公式/流程图转图片＋分平台复制入口」；纯前端小-中难度：按目标平台适配转换＋复杂排版转图片组合＋一键复制，零上传；121 Path md2chat/md-to-chat/聊天图文全零命中；建议 ID md_to_chat、Path /tools/md-to-chat）。
+3. **代码打包给 LLM（Project to TXT）** — P1（48 轮新晋，Show HN 13 天前 project2txt 形态验证：拖拽项目文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt 喂 LLM，100% 私有零上传；痛点：给 AI 喂代码上下文逐个文件复制粘贴慢、zip 不能用；纯前端小-中难度：webkitGetAsEntry 读文件夹＋忽略规则 chips＋输出格式＋大文件保护；开发工具赛道；建议 ID project_to_txt、Path /tools/project-to-txt）。
+
+婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；SVG 转 React JSX（P2 新晋，本轮）；发票/账单生成器（P2 新晋，财务方向边界备注）；简历模板生成器（P2 新晋）；网页表格转 CSV/Lorem Ipsum 生成器（P2，48 轮新晋观察）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十九轮：cURL → Python Requests 转换器已实现划出；SVG 转 React JSX/发票/账单生成器/简历模板生成器 P2 新晋；全量 121 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| cURL → Python Requests 转换器 | 已实现划出（b11e2e8 落盘＋5682189 parseCurl 修复；ID curl_to_requests、Path /tools/curl-to-requests 已注册；全量 121 Path） | — | 已实现 |
+| SVG 转 React JSX 组件生成器 | 本轮新晋（Tooltri 30+ 清单单列 SVG to React JSX；痛点：图标 SVG 手工改 React 组件繁琐；纯前端：属性 camelCase 映射＋组件名/prop/TS 选项＋预览＋复制/下载；开发工具赛道；建议 ID svg_to_jsx、Path /tools/svg-to-jsx） | 小 | P2（49 轮新晋观察） |
+| 发票/账单生成器 | 本轮新晋（VelnoxLabs 51 清单＋Etemora 单列；痛点：自由职业/小微企业开收据发票要模板或 SaaS；纯前端：行项表单＋金额税率自动算＋打印/PDF 导出；方向边界：业务单据文档工具非计算器，但偏财务按用户 10-18 方向供 PM 权衡；建议 ID invoice_generator、Path /tools/invoice-generator） | 小 | P2（49 轮新晋观察） |
+| 简历模板生成器 | 本轮新晋（V2EX Open Resume 10-20 当天帖「156 模板编辑导出免费」热议；痛点：网上模板多绑下载付费/水印；与 resume_checker（JD 诊断）形态零重叠；纯前端中：精选 3~5 套模板＋表单录入＋实时预览＋打印/PDF 导出；建议 ID resume_builder、Path /tools/resume-builder） | 中 | P2（49 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第四十九轮——cURL → Python Requests 转换器交付闭环（b11e2e8，＋5682189 parseCurl 修复，`/tools/curl-to-requests` 已注册，开发工具赛道，全量 121 Path），候选池划出，已实现清单 delta 追加；新信号扫描（V2EX 10-20 当天双热帖：md2chat→Markdown 聊天图文转换器信号显著升级、Open Resume→简历模板生成器新晋 P2；Tooltri 30+ 清单→SVG to React JSX 新晋 P2、Token Counter/JWT/SQLite 全已实现或池内已有（核稿拦截误判）；Etemora→Invoice generator 佐证、SERP 已实现实锤；DodoDeck 10-18→exact KB 压图＝现有「图片压缩」已覆盖实锤；SuperToolKit 10-16→音频编辑＝audio_trimmer 已实现；VelnoxLabs 51→cURL 转 requests 刚交付实锤；V2EX livesub/Lyra/FrameCut→非单页无信号）均已消化；顺位更新（SVG 压缩优化器晋升第一顺位、Markdown 聊天图文转换器信号升级晋升第二、代码打包给 LLM 开发工具家族轮强候补第三）；WPS 候选表保持冻结归档；仓库 121 注册工具全量核对无重叠（Top3 建议 ID svg_compressor / md_to_chat / project_to_txt＋新晋 ID svg_to_jsx / invoice_generator / resume_builder；中文名+ID 片段双核＋零命中逐项可复现；jsx/发票/resume 模板三组形态与既有 `resume_checker`/`serp_snippet_preview`/gitignore 描述零重叠），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（5682189）；`git log` 确认开发交付 b11e2e8（cURL → Python Requests 转换器）＋5682189（parseCurl 修复）；`grep tools/categories.go` 全量 121 Path（120+1），`curl_to_requests` ID 与 `/tools/curl-to-requests` Path 已注册（划入已实现）；Top3＋新晋建议 ID（svg_compressor / md_to_chat / project_to_txt / svg_to_jsx / invoice_generator / resume_builder）与 121 Path 无重叠（`svg_compress/svg-compress/svg压缩/md2chat/md-to-chat/聊天图文/project_to_txt/project-to-txt/代码打包/svg_to_jsx/svg-to-jsx/jsx转换/invoice_generator/invoice-generator/发票/resume_builder/resume-builder/简历模板` 关键词核对全零命中；现有 `resume_checker` 为 JD 诊断形态、gitignore 描述仅提 React 非 JSX 转换）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 01:00 · 产品经理排期轮）
 
 **选定：cURL → Python Requests 转换器（curl-to-requests）** — 本轮唯一任务：

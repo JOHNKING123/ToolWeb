@@ -1,0 +1,257 @@
+{{define "svg_compressor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 压缩优化器 - 在线压缩 SVG 体积（SVGO 本地引擎）| 程序员工具箱</title>
+    <meta name="description" content="免费在线 SVG 压缩优化器：拖拽/粘贴 SVG 代码，SVGO 浏览器引擎本地压缩（无损/轻度/激进三档预设、数值精度滑块、清理项开关），批量多文件队列，压缩率对比＋原图/优化后并排预览，一键复制代码或下载 .svg。纯前端本地处理，SVG 内容零上传。SVG optimizer online: compress SVG locally with SVGO, batch queue, before/after preview, 100% client-side.">
+    <meta name="keywords" content="SVG 压缩,SVG 优化,svg optimizer,svg 体积压缩,svg 在线压缩,svg minify,svg 瘦身,压缩 svg 文件,svg 体积减小,svgo 在线">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/svg-compressor">
+    <meta property="og:title" content="SVG 压缩优化器 - 在线压缩 SVG 体积">
+    <meta property="og:description" content="拖拽或粘贴 SVG，SVGO 本地引擎三档预设压缩：无损/轻度/激进，批量队列＋压缩率对比＋并排预览，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/svg-compressor">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"SVG 压缩优化器","description":"在线 SVG 压缩优化器：拖拽/粘贴 SVG 代码，SVGO 浏览器引擎本地压缩（无损/轻度/激进三档预设、数值精度可调、清理项开关），批量多文件队列，压缩率对比与原图/优化后并排预览，一键复制代码或下载 .svg；纯前端本地处理，内容零上传。","url":"https://www.johnkingzcq123.xyz/tools/svg-compressor","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .sc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .sc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .sc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .sc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .sc-dropzone{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2rem 1rem;
+            text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+        .sc-dropzone:hover,.sc-dropzone.sc-drag{border-color:#2563eb;background:#eff6ff}
+        .sc-dropzone .material-icons{font-size:2.6rem;color:#60a5fa;display:block;margin-bottom:.5rem}
+        .sc-dz-hint{font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:.3rem}
+        .sc-dz-sub{font-size:.85rem;color:#64748b}
+        .sc-paste{box-sizing:border-box;width:100%;min-height:120px;resize:vertical;margin-top:1rem;
+            padding:.7rem .9rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.85rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace;color:#1f2937;background:#fbfdff}
+        .sc-paste:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .sc-presets{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:stretch}
+        .sc-preset{flex:1;min-width:150px;display:flex;flex-direction:column;gap:.15rem;font-size:.92rem;color:#374151;
+            cursor:pointer;border:1px solid #d1d5db;border-radius:.5rem;padding:.6rem .9rem;background:#f9fafb}
+        .sc-preset input{accent-color:#2563eb}
+        .sc-preset:has(input:checked){border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+        .sc-preset b{font-size:.95rem}
+        .sc-preset small{color:#6b7280;font-size:.78rem;line-height:1.5}
+        .sc-preset-desc{font-size:.85rem;color:#4b5563;background:#f8fafc;border:1px dashed #d1d5db;
+            border-radius:.5rem;padding:.55rem .8rem;margin:.4rem 0 .8rem;line-height:1.7}
+        .sc-slider-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.8rem 0;font-size:.9rem;color:#374151}
+        .sc-slider-row input[type=range]{flex:1;min-width:180px;accent-color:#2563eb}
+        .sc-slider-val{font-weight:700;color:#1d4ed8;min-width:3rem;text-align:right}
+        .sc-toggles{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0}
+        .sc-toggle{display:inline-flex;align-items:center;gap:.4rem;font-size:.9rem;color:#374151;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .85rem;background:#f9fafb}
+        .sc-toggle input{accent-color:#2563eb}
+        .sc-toggle:has(input:checked){border-color:#10b981;background:#ecfdf5;color:#065f46}
+        .sc-toggle small{color:#9ca3af;font-size:.75rem}
+        .sc-engine{font-size:.85rem;color:#4b5563;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.5rem;
+            padding:.55rem .8rem;margin:.6rem 0;line-height:1.7;display:flex;flex-direction:column;gap:.15rem}
+        .sc-eng-ok{font-weight:700;color:#059669}
+        .sc-eng-warn{font-weight:700;color:#d97706}
+        .sc-eng-idle{font-weight:700;color:#6b7280}
+        .sc-eng-sub{color:#6b7280;font-size:.8rem}
+        .sc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+        .sc-summary{font-size:.9rem;color:#4b5563;font-weight:600;width:100%}
+        .sc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .sc-btn .material-icons{font-size:1.1rem}
+        .sc-btn-primary{background:#2563eb;color:#fff}
+        .sc-btn-primary:hover{background:#1d4ed8}
+        .sc-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .sc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .sc-btn-secondary:hover{background:#e5e7eb}
+        .sc-btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        .sc-empty{color:#94a3b8;text-align:center;padding:2.2rem 1rem;font-size:.95rem}
+        .sc-row{border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem;margin-bottom:.9rem;background:#fff}
+        .sc-row.sc-done{border-color:#a7f3d0;background:#f0fdf4}
+        .sc-row.sc-error{border-color:#fecaca;background:#fef2f2}
+        .sc-row-head{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.4rem}
+        .sc-name{flex:1;display:flex;align-items:center;gap:.45rem;min-width:140px;font-weight:600;color:#111827;font-size:.93rem}
+        .sc-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .sc-chip{flex:none;font-size:.8rem;border-radius:.35rem;padding:.18rem .6rem;font-weight:600}
+        .sc-chip-size{background:#f3f4f6;color:#4b5563}
+        .sc-chip-good{background:#d1fae5;color:#065f46}
+        .sc-chip-mid{background:#fef3c7;color:#92400e}
+        .sc-chip-bad{background:#fee2e2;color:#991b1b}
+        .sc-chip-none{background:#f3f4f6;color:#9ca3af}
+        .sc-chip-svgo{background:#dbeafe;color:#1d4ed8}
+        .sc-chip-fb{background:#ffedd5;color:#9a3412}
+        .sc-icon-btn{flex:none;border:none;background:transparent;color:#9ca3af;cursor:pointer;border-radius:.4rem;
+            padding:.25rem;display:inline-flex}
+        .sc-icon-btn:hover{color:#dc2626;background:#fef2f2}
+        .sc-icon-btn:disabled{opacity:.35;cursor:not-allowed}
+        .sc-icon-btn .material-icons{font-size:1.15rem}
+        .sc-errmsg{display:flex;gap:.45rem;align-items:flex-start;color:#991b1b;font-size:.88rem;line-height:1.7;
+            background:#fee2e2;border-radius:.45rem;padding:.55rem .8rem}
+        .sc-errmsg .material-icons{font-size:1.1rem;flex:none;margin-top:.15rem}
+        .sc-row-status{font-size:.88rem;color:#6b7280;padding:.4rem 0}
+        .sc-pp{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.6rem 0}
+        .sc-pp-label{font-size:.85rem;font-weight:600;color:#374151;margin-bottom:.35rem}
+        .sc-pp-size{font-weight:400;color:#6b7280;font-size:.78rem}
+        .sc-pp-box{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;min-height:120px;max-height:300px;
+            overflow:auto;display:flex;align-items:center;justify-content:center;padding:.6rem;
+            background-image:linear-gradient(45deg,#f3f4f6 25%,transparent 25%,transparent 75%,#f3f4f6 75%),
+                linear-gradient(45deg,#f3f4f6 25%,transparent 25%,transparent 75%,#f3f4f6 75%);
+            background-size:16px 16px;background-position:0 0,8px 8px}
+        .sc-pp-img{max-width:100%;height:auto;display:block}
+        .sc-zoom-row{display:flex;gap:.6rem;align-items:center;font-size:.85rem;color:#6b7280;margin:.4rem 0}
+        .sc-zoom-row input[type=range]{flex:1;min-width:120px;accent-color:#2563eb}
+        .sc-zoom-val{min-width:3rem;text-align:right;font-weight:600;color:#1d4ed8}
+        .sc-row-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.5rem}
+        .sc-mini{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;background:#fff;
+            border-radius:.45rem;padding:.45rem .9rem;font-size:.85rem;cursor:pointer;color:#374151}
+        .sc-mini:hover{border-color:#2563eb;color:#2563eb}
+        .sc-mini .material-icons{font-size:1rem}
+        .sc-dlname{font-size:.8rem;color:#9ca3af}
+        .sc-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .sc-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .sc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .sc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .sc-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .sc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #sc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #sc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .sc-pp{grid-template-columns:1fr}
+            .sc-preset{min-width:100%}
+            .sc-btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">compress</i> SVG 压缩优化器</h1>
+            <p>拖拽或粘贴 SVG 代码，SVGO 引擎在浏览器本地压缩：无损 / 轻度 / 激进三档预设、数值精度滑块、清理项开关自由组合。批量多文件队列，压缩率对比＋原图/优化后并排预览，复制代码或下载 .svg 一气呵成。Illustrator / Inkscape 导出的臃肿 SVG，一键瘦身。</p>
+        </div>
+        <div class="tool-content" style="max-width:1040px;margin:auto;">
+            <div class="sc-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>SVGO 压缩引擎在浏览器本地执行，SVG 内容不出你的电脑，可在开发者工具 Network 面板验证（首次压缩时从 CDN 懒加载一次 SVGO 构建约 900KB，属静态资源加载；CDN 不可用时自动降级为内置轻量清理）。</div>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">upload_file</i> ① 输入 SVG</h3>
+                <div class="sc-dropzone" id="sc-dropzone">
+                    <i class="material-icons">cloud_upload</i>
+                    <div class="sc-dz-hint">把 .svg 文件拖到这里，或点击选择</div>
+                    <div class="sc-dz-sub">支持批量多文件加入队列 · 也可以在下方直接粘贴 SVG 代码</div>
+                    <div style="margin-top:.9rem;">
+                        <button type="button" class="sc-btn sc-btn-secondary" id="sc-pick-btn">
+                            <i class="material-icons">folder_open</i> 选择 SVG 文件
+                        </button>
+                    </div>
+                    <input type="file" id="sc-file-input" accept=".svg,image/svg+xml" multiple style="display:none;">
+                </div>
+                <textarea class="sc-paste" id="sc-paste" placeholder="或把 SVG 代码粘贴到这里（支持 Illustrator / Inkscape / Figma 导出的代码）"></textarea>
+                <div class="sc-actions">
+                    <button type="button" class="sc-btn sc-btn-secondary" id="sc-add-paste-btn">
+                        <i class="material-icons">playlist_add</i> 加入队列
+                    </button>
+                    <button type="button" class="sc-btn sc-btn-secondary" id="sc-sample-btn">
+                        <i class="material-icons">science</i> 填入示例 SVG
+                    </button>
+                </div>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">tune</i> ② 优化选项</h3>
+                <div class="sc-presets">
+                    <label class="sc-preset"><input type="radio" name="sc-preset" value="lossless"><b>无损</b><small>安全整理，渲染 100% 一致，保留 viewBox</small></label>
+                    <label class="sc-preset"><input type="radio" name="sc-preset" value="balanced" checked><b>轻度</b><small>去元数据/编辑器痕迹，保留 viewBox（推荐）</small></label>
+                    <label class="sc-preset"><input type="radio" name="sc-preset" value="aggressive"><b>激进</b><small>多遍优化，体积最小；会移除 viewBox</small></label>
+                </div>
+                <div class="sc-preset-desc" id="sc-preset-desc"></div>
+                <div class="sc-slider-row">
+                    <span>数值精度（小数位数）：</span>
+                    <input type="range" id="sc-precision" min="0" max="6" value="3">
+                    <span class="sc-slider-val" id="sc-precision-val">3 位</span>
+                </div>
+                <div class="sc-toggles">
+                    <label class="sc-toggle"><input type="checkbox" id="sc-tg-comments" checked> 去注释 <small>comments</small></label>
+                    <label class="sc-toggle"><input type="checkbox" id="sc-tg-metadata" checked> 去 metadata <small>元数据</small></label>
+                    <label class="sc-toggle"><input type="checkbox" id="sc-tg-editorns" checked> 去编辑器命名空间 <small>inkscape/sodipodi</small></label>
+                    <label class="sc-toggle"><input type="checkbox" id="sc-tg-emptyattrs" checked> 去空属性 <small>attr=""</small></label>
+                    <label class="sc-toggle"><input type="checkbox" id="sc-tg-defaultattrs" checked> 去默认属性 <small>fill="#000" 等</small></label>
+                </div>
+                <div class="sc-engine" id="sc-engine-status"></div>
+                <div class="sc-actions">
+                    <button type="button" class="sc-btn sc-btn-primary" id="sc-start-btn">
+                        <i class="material-icons">play_arrow</i> 开始压缩
+                    </button>
+                    <button type="button" class="sc-btn sc-btn-secondary" id="sc-clear-btn">
+                        <i class="material-icons">clear</i> 清空队列
+                    </button>
+                    <div class="sc-summary" id="sc-summary"></div>
+                </div>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">list_alt</i> ③ 压缩结果</h3>
+                <div id="sc-list"></div>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="sc-tip">
+                    <b>怎么用：</b>把 .svg 文件拖进上方虚线框（或点「选择 SVG 文件」），也可以直接粘贴 SVG 代码点「加入队列」；选好预设与清理项后点「开始压缩」。每个文件独立显示「原体积 → 压缩后体积」和压缩率，并排预览原图与优化后效果，可复制代码或下载 <code>.min.svg</code>。<br>
+                    <b>三档预设：</b>「无损」只做安全整理（去 doctype、合并分组、空容器清理），渲染与原图 100% 一致；「轻度」额外清理元数据与编辑器命名空间（推荐日常用）；「激进」多遍优化、移除 viewBox/title/desc，体积最小——注意去 viewBox 后 SVG 不再随容器缩放，图标字体场景慎用。<br>
+                    <b>数值精度：</b>滑块控制小数保留位数（0~6，默认 3）。Illustrator 导出的 6 位小数压到 3 位，体积立减且肉眼无差；图标类可试 1~2 位。<br>
+                    <b>清理项开关：</b>五个开关可与预设自由组合——关闭即表示「这一项不要动」（例如取消「去注释」可保留版权注释）。<br>
+                    <b>坏文件处理：</b>解析失败的文件会标红并给出原因（如「根元素不是 &lt;svg&gt;」），不影响队列里其他文件。<br>
+                    <b>断网降级：</b>SVGO 引擎从 CDN 懒加载（jsdelivr → npmmirror）；若两者都不可达，页面会明确标注「已降级：内置轻量清理」，仍可完成压缩（去注释/去多余空白/压缩数值精度）。<br>
+                    <b>隐私：</b>所有压缩都在浏览器本地完成，SVG 内容不会上传到任何服务器；预览链接处理后即回收。
+                </div>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="sc-faq">
+                    <dt>SVG 会被上传到服务器吗？</dt>
+                    <dd>不会。SVGO 引擎运行在浏览器本地，SVG 内容不出你的电脑。你可以在开发者工具 Network 面板验证：除首次加载 SVGO 构建（静态 JS，约 900KB）外，没有任何上传请求。</dd>
+                    <dt>压缩后图标变形/变色了怎么办？</dt>
+                    <dd>先用「无损」预设重压一遍。若仍有问题，把「数值精度」调高（如 4~6 位）、关闭「激进」预设；多色渐变图标对 <code>cleanupIds</code> 敏感时，可关闭「去默认属性」再试。预览区并排对比能直接看出差异。</dd>
+                    <dt>为什么「激进」预设会移除 viewBox？</dt>
+                    <dd>这是 SVGO 的体积优化手段：有 <code>width/height</code> 时去掉 <code>viewBox</code> 可省字节。但副作用是 SVG 失去响应式缩放能力——用作 <code>&lt;img&gt;</code> 固定尺寸图标没问题，内联进页面做自适应布局时请用「轻度」。</dd>
+                    <dt>批量一次能压多少个文件？</dt>
+                    <dd>数量不限，队列逐个顺序处理（中间让出线程保持页面响应）。几十个常规 SVG 一般在几秒内完成；单个超大文件（几 MB）会慢一些。</dd>
+                    <dt>和「图片压缩」工具有什么区别？</dt>
+                    <dd>「图片压缩」处理的是 PNG/JPG/WebP 位图（像素压缩）；本工具处理的是 SVG 矢量代码（结构精简），两者形态完全不同。SVG 压完还是 SVG，可直接用于网页。</dd>
+                    <dt>断网能用吗？</dt>
+                    <dd>能。SVGO 加载失败会自动降级为内置轻量清理（去注释、去多余空白、压缩数值精度），页面顶部会明确标注降级状态；压缩、预览、复制、下载全部可用。</dd>
+                </dl>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="sc-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">SVG 压缩优化器（当前）</span>
+                    <a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩</a>
+                    <a href="/tools/bulk-image-resizer" class="btn btn-secondary" style="font-size:.9rem;">图片批量缩放器</a>
+                    <a href="/tools/img-convert" class="btn btn-secondary" style="font-size:.9rem;">图片格式转换</a>
+                    <a href="/tools/favicon-generator" class="btn btn-secondary" style="font-size:.9rem;">favicon 生成器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="sc-toast"></div>
+    <script src="/tools/static/js/svg_compressor.js?v=1"></script>
+</body>
+</html>
+{{end}}
