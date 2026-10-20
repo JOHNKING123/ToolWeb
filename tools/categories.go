@@ -607,6 +607,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "youtube_thumbnail_downloader",
+					Name:        "YouTube 缩略图下载器",
+					Description: "粘贴 YouTube 视频链接或 11 位 ID，解析 5 档高清缩略图（最高 1280×720）一键下载：支持 watch/youtu.be/shorts/embed/music 链接，老视频无 maxres 档优雅降级，纯前端本地下载图片不经过服务器 · YouTube thumbnail downloader",
+					Path:        "/tools/youtube-thumbnail-downloader",
+					Icon:        "smart_display",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

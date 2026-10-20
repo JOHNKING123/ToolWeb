@@ -1,3 +1,78 @@
+## 今日任务（2026-10-20 15:39 · 产品经理排期轮）
+
+**选定：YouTube 缩略图下载器（YouTube Thumbnail Downloader）** — 本轮唯一任务：
+- **顺位递进**：27 轮新晋 → 连续十二轮 PM 决策 CORS 阻塞（抽查通过前不立项）→ 13:00 研究轮阻塞解除 → 13:00 PM 轮「本轮后自动递补第一候补」→ 假数据/Mock 生成器交付闭环（495c480），本轮顺位自动递补第一，无硬伤不跳过。
+- **阻塞条件新鲜有效**：15:36 研究轮双视频 ID（`dQw4w9WgXcQ`、`9bZkp7q19f0`）复验 `curl -I -H "Origin: https://www.it-tool.eu.cc"` 均返回 `Access-Control-Allow-Origin: *`＋HTTP 200 真实字节（65324/184051），条件持续有效。
+- **痛点真实**：做封面/文章配图需高清缩略图，右键另存常被页面脚本拦截或只有低清；i.ytimg.com 直链下载链路 CORS 放行，纯前端即可本地下载。
+- **纯度高**：纯前端、零依赖、零后端、零上传；小难度，午后快打位，交付确定性高。
+- **去重实锤**：`grep -icE 'youtube_thumbnail|youtube-thumbnail|gitignore|checksum'`（全量 115 Path）全零命中；「缩略图」仅命中 OG 社交卡片预览 Description（非下载形态）。
+
+**规格**：
+1. 布局：上输入区（粘贴视频 URL 或 11 位视频 ID，附示例按钮）、中解析结果（视频 ID＋默认高清预览）、下 5 档分辨率卡片（maxresdefault 1280×720 / sddefault 640×480 / hqdefault 480×360 / mqdefault 320×180 / default 120×90），每档：预览图＋分辨率标注＋单档下载按钮＋「全部下载」；桌面宽屏、移动端堆叠。
+2. ID 解析（纯前端）：支持 `youtube.com/watch?v=`、`youtu.be/`、`/shorts/`、`/embed/`、`/v/`、`music.youtube.com`、裸 11 位 ID；校验 `[A-Za-z0-9_-]{11}` 格式，非法输入给明确错误提示。
+3. 下载引擎（纯前端零依赖）：`fetch(https://i.ytimg.com/vi/{id}/{tier}.jpg)` → blob → `URL.createObjectURL` → `a[download]` 触发本地下载，完事 revoke；老视频无 maxres（404）时 onerror 降级到 sd 并在该档标注「该视频无此档」，不报错卡死。
+4. 纯前端、零依赖、零后端、零上传；DevTools Network 抽查仅见 i.ytimg.com 图片请求（用户主动触发），无后端调用。
+5. 注册：建议工具家族为「图片处理」，新增工具 ID `youtube_thumbnail_downloader`、Name「YouTube 缩略图下载器」、Path `/tools/youtube-thumbnail-downloader`（New: true），中英文描述 + SEO keywords（YouTube 缩略图下载、视频封面下载、YouTube thumbnail downloader、高清缩略图）；与图片尺寸调整（/tools/img-resize）互链（「相关工具」入口）。
+6. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/youtube-thumbnail-downloader` 可开（200）
+- [ ] 粘贴 watch/ youtu.be/ shorts/ embed/ 裸 ID 均正确解析出 11 位 ID；非法输入有明确错误提示
+- [ ] 5 档分辨率预览图全部渲染；老视频无 maxres 时优雅降级（标注「该视频无此档」）不卡死
+- [ ] 单档下载可用（blob 本地下载，文件名带视频 ID＋档位）；全部下载可用
+- [ ] DevTools Network 抽查：除用户主动触发的 i.ytimg.com 图片请求外，无后端调用、无内容上传
+- [ ] `categories.go` 注册完成（图片处理品类、New: true），首页/导航/sitemap 生效；与图片尺寸调整互链生效
+- [ ] 移动端可操作（粘贴+解析+下载）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/youtube_thumbnail_downloader.html`（新建：输入区＋解析结果＋5 档分辨率卡片＋下载工具栏）、`static/js/youtube_thumbnail_downloader.js`（新建：URL/ID 解析器＋分档预览渲染＋fetch blob 下载引擎＋404 降级，零依赖）、`tools/categories.go`（图片处理品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- .gitignore 生成器（P1；42 轮新晋：dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"；痛点：新建仓库手工拼模板、语言混搭易漏配；纯前端极小难度：语言/框架/IDE 多选→官方模板拼接→预览＋复制/下载，零后端；115 Path gitignore 全零命中）：第二顺位，开发者工具家族轮快打位（建议 ID gitignore_generator、Path /tools/gitignore-generator）。
+- 文件校验和计算器（P1；43 轮新晋：DevToolsCave "File Checksum — Streams large files, no crash" 形态验证；痛点：下载系统镜像/大安装包后对照官方 SHA256 校验完整性，现有哈希工具为文本形态；纯前端小难度：File.slice 分片流式＋crypto.subtle.digest＋进度条＋官方值一键比对，零上传；115 Path checksum/校验和/文件哈希全零命中）：第三顺位，排期递补（建议 ID file_checksum、Path /tools/file-checksum）。
+- **HTML 实体编解码器（15:36 研究轮新晋 P1 —— 本轮核稿判定误判，候选划出，不再立项）**：研究轮去重 `grep -iE 'html_entity|html-entity|HTML实体|html实体'` 漏掉了已实现工具 `htmlentities`（Name「HTML 实体编解码」，Description「HTML 转义/反转义、Unicode \\u 转义」），形态完全重叠；PM 轮复核 `grep -B6 'Name: *"HTML 实体编解码"' tools/categories.go` 实锤 ID `htmlentities` 已注册。反馈给研究轮：立候选前 grep 须覆盖「中文名+ID 片段双核」的 ID 命名变体（如 htmlentities），本轮核稿反馈已闭环。
+- 图片批量缩放器（P1；44 轮新晋：dev.to pyfiletoolkit Creative 类单列 "Bulk Image Resizer — Resize multiple images at once"；痛点：几十张配图逐张缩放；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度；115 Path 全零命中）：留池候补（建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer）。
+- 正则表达式解释器（P1；40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」）：开发者工具家族轮。
+- cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（495c480）；`grep -icE` 全量 115 Path，`youtube_thumbnail/youtube-thumbnail/gitignore/Gitignore/checksum/校验和/文件哈希` 全零命中；`htmlentities`（HTML 实体编解码）已实现核稿实锤，研究轮 15:36 新晋 P1 误判划出；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（15:36 研究轮＋本轮 PM 追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 15:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。假数据/Mock 生成器交付闭环（13:00 PM 决策轮立项→开发交付 495c480「中文姓名/手机号/邮箱/虚拟身份证/银行卡 Luhn/省市区地址/UUID/时间戳字段勾选，seed 可复现 mulberry32，分页预览万行不卡，JSON/CSV/SQL INSERT 导出，零依赖纯前端，与 UUID 生成器双向互链」；`grep tools/categories.go` 确认 ID `mock_data_generator`、Path `/tools/mock-data-generator` 已注册，全量 **115 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:36 午后轮次，小难度候选可排。
+
+**本轮三件事**（15:36 全网调研，通用方向）：
+1. 假数据/Mock 生成器交付确认：`git log` 头部 495c480（新增假数据/Mock 生成器）落盘；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功，origin/muse/dev-20260929 与本地 HEAD 一致（495c480）；`grep` 全量 115 Path（114+1），`mock_data_generator` ID 与 `/tools/mock-data-generator` Path 已注册；候选池划出，已实现清单追加（delta：+ 假数据/Mock 生成器，开发工具赛道，联调/测试场景）。
+2. **YouTube 缩略图下载器 CORS 条件复验（证据新鲜度）**：13:00 轮解除阻塞后，本轮 15:36 双视频 ID（`dQw4w9WgXcQ`、`9bZkp7q19f0`）复验 `curl -I -H "Origin: https://www.it-tool.eu.cc"` 均返回 `Access-Control-Allow-Origin: *`＋HTTP 200（Content-Length 65324 / 184051 真实字节），条件持续有效；115 Path 缩略图下载形态仍零覆盖；顺位自动递补第一。
+3. 新晋候选两则（P1）：
+   **HTML 实体编解码器（HTML Entity Encoder/Decoder）**——形态验证：dev.to pyfiletoolkit「13 Free Browser Tools Every Developer Needs in 2026」（83 天前发布）Encoding Tools 类单列 **"HTML Entity Encoder — Escape or unescape HTML entities"**。痛点真实：前端开发贴 HTML 片段进富文本/JS 字符串需转义（`&`→`&amp;`），或抓包/爬虫拿到转义串需解码调试；纯前端极小难度：双向编解码＋命名实体/数字实体切换＋常用符号速查表，零后端。去重：`grep -iE 'html_entity|html-entity|HTML实体|html实体'` 115 Path 全零命中。建议 ID `html_entity_codec`、Path `/tools/html-entity-codec`，P1。
+   **图片批量缩放器（Bulk Image Resizer）**——形态验证：同清单 Creative Tools 类单列 **"Bulk Image Resizer — Resize multiple images at once"**。痛点真实：电商上新/文章配图几十张图逐张缩放是重复折磨；现有 `img-resize`（/tools/img-resize）为单图形态（`templates/img_resize.html` 无 multiple 多文件入口），批量形态零覆盖。纯前端小-中难度：多文件队列＋统一预设（按宽/按高/百分比/最大边）＋canvas 批量处理＋逐个/打包下载，零上传。去重：`grep -iE 'bulk_image|bulk-image|批量图片|批量.*缩放'` 115 Path 全零命中。建议 ID `bulk_image_resizer`、Path /tools/bulk-image-resizer，P1。
+4. 去重消化（不单立）：① dev.to yurukusa「101 Free Developer Tools」（69 天前）Staff Picks **Subnet Calc**（Network/broadcast/host range with CIDR bit visualization）→ 仓库已有 `subnet`（/tools/subnet-calculator，「IP 子网计算器」，CIDR 网段换算：网络地址、广播地址、可用 IP 范围），不重复立；同清单 JSON Schema Validator→已实现 `json_schema_validator`；YAML→已实现 `json2yaml`；LLM Price/Prompt cost calculator→`ai_token_counter` 描述已含「API 费用估算」，不单独立项；Tailwind Converter/Color Blind Sim→表中 P2 观察已有；Kanban/Pomodoro→表中 P2 观察已有；② dev.to mou1z「5 Free Developer Tools」（21 天前）：Kanban/Pomodoro/CSS 渐变/JSON/正则均已实现或表中已有，无新形态；③ HN（10-20）：Sphinx（git hook quiz，CLI 形态）、Radix（agent UI）、Maki（agent 框架）、StoreReady/cxgrd（CLI）——均为非单页形态，不立；④ 中文「希望有一个网站」搜索→FineBI 企业 BI 选型软文/电商免费工具清单（一页式建站/打单工具，非单页小工具形态）/老沈一页式网页（落地页建站平台），无单页信号；⑤ V2EX 中文搜索→油猴脚本/awesome-v2ex-tips（平台指南非工具需求），无信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；15:36 午后轮次，小难度可排）：
+
+1. **YouTube 缩略图下载器（YouTube Thumbnail Downloader）** — P1（顺位递进：27 轮新晋→连续十二轮 PM 决策 CORS 阻塞→13:00 轮阻塞解除→mock_data 交付后自动递补第一顺位；**本轮 15:36 复验**：双视频 ID `Access-Control-Allow-Origin: *`＋200 真实字节，条件持续有效；形态侧证：dev.to Tooltri 标配项；痛点：做封面/配图需高清缩略图，右键另存被拦截或只有低清；纯前端小难度：视频 URL/ID 解析→5 档分辨率（maxres/sd/hq/mq/default）预览→fetch blob 本地下载，零后端；115 Path 缩略图下载形态零覆盖；午后小难度快打位；建议 ID youtube_thumbnail_downloader、Path /tools/youtube-thumbnail-downloader）。
+2. **.gitignore 生成器（.gitignore Generator）** — P1（42 轮新晋：dev.to KRUMB.DEV 47 工具清单 Generators 类单列 ".gitignore"（开发者工具套件标配项）；痛点：新建仓库配 .gitignore 手工拼/上网抄模板、语言混搭易漏；纯前端极小难度：语言/框架/IDE 多选→官方模板拼接→预览＋一键复制/下载 `.gitignore`，零后端；115 Path gitignore 全零命中；开发者工具家族轮快打位；建议 ID gitignore_generator、Path /tools/gitignore-generator）。
+3. **文件校验和计算器（File Checksum）** — P1（43 轮新晋：DevToolsCave Security & Hashing 类单列 "File Checksum — Streams large files, no crash" 形态验证；痛点：下载系统镜像/大安装包后对照官方 SHA256 校验完整性，现有哈希工具为文本形态；纯前端小难度：File.slice 分片流式读取＋crypto.subtle.digest（SHA-256/512/SHA-1）逐块累进＋进度条＋官方值一键比对，零上传；115 Path checksum/校验和/文件哈希全零命中；建议 ID file_checksum、Path /tools/file-checksum）。
+
+HTML 实体编解码器（P1；本轮新晋：dev.to pyfiletoolkit "HTML Entity Encoder" 形态验证；痛点：HTML 片段转义/解码；纯前端极小难度；115 Path 零命中；建议 ID html_entity_codec、Path /tools/html-entity-codec；第五候补）。图片批量缩放器（P1；本轮新晋：pyfiletoolkit "Bulk Image Resizer" 形态验证；痛点：几十张配图逐张缩放；现有 img-resize 单图形态，批量零覆盖；纯前端小-中难度；建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer；第六候补）。正则表达式解释器（P1；40 轮新晋；43 轮证据升级：DevTrove Web Worker＋超时熔断防 ReDoS 卡死，差异化「安全正则测试器」；开发者工具家族轮）。证书解码器/日志着色器/订阅管理助手（P2；42 轮新观察）；HMAC 签名生成器（P2；41 轮新观察）；cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1 留池；中难度）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；IP 子网计算器（已实现，不重复立）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十四轮：假数据/Mock 生成器已实现划出；新晋 HTML 实体编解码器 P1、图片批量缩放器 P1；YouTube CORS 条件复验有效；全量 115 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HTML 实体编解码器 | 本轮新晋（dev.to pyfiletoolkit 13 工具 Encoding 类单列 "HTML Entity Encoder — Escape or unescape HTML entities"；痛点：前端开发 HTML 片段转义进富文本/JS 字符串、或解码调试；纯前端极小难度：双向编解码＋命名/数字实体切换＋常用符号速查表，零后端；`grep -iE 'html_entity\|html-entity\|HTML实体'` 115 Path 全零命中；建议 ID html_entity_codec、Path /tools/html-entity-codec） | 小 | P1（本轮新晋） |
+| 图片批量缩放器 | 本轮新晋（dev.to pyfiletoolkit Creative 类单列 "Bulk Image Resizer — Resize multiple images at once"；痛点：电商上新/文章配图几十张图逐张缩放折磨；现有 img-resize 为单图形态（模板无 multiple），批量形态零覆盖；纯前端小-中难度：多文件队列＋统一预设＋canvas 批量处理＋逐个/打包下载，零上传；115 Path bulk_image/bulk-image/批量图片全零命中；建议 ID bulk_image_resizer、Path /tools/bulk-image-resizer） | 小-中 | P1（本轮新晋） |
+| YouTube 缩略图下载器 | 条件复验（13:00 轮解除阻塞；本轮 15:36 双视频 ID 复验 `Access-Control-Allow-Origin: *`＋200 真实字节，条件持续有效；顺位自动递补第一；建议 ID youtube_thumbnail_downloader、Path /tools/youtube-thumbnail-downloader） | 小 | P1（顺位第一） |
+
+**归档说明**：本轮为 10-20 通用调研第四十四轮——假数据/Mock 生成器交付闭环（495c480，`/tools/mock-data-generator` 已注册，开发工具赛道，全量 115 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 三清单：pyfiletoolkit→HTML 实体编解码器 P1 新晋（115 Path 零命中）、图片批量缩放器 P1 新晋（img-resize 单图形态已实现，批量零覆盖）；yurukusa 101→Subnet Calc 不立（`subnet` 已实现）、JSON Schema/YAML/LLM 费用/Kanban/Pomodoro/Tailwind/色盲均已实现或表中已有；mou1z 5 工具→全消化无新形态；HN 10-20→Sphinx/Radix/Maki/StoreReady/cxgrd 均为 CLI/agent 非单页形态不立；中文「希望有一个网站」→BI 选型软文/电商清单/一页式建站无单页信号；V2EX 中文→无信号）均已消化；顺位更新（YouTube 缩略图下载器 CORS 条件复验有效、顺位第一，.gitignore 生成器第二，文件校验和计算器第三，HTML 实体编解码器/图片批量缩放器 P1 新晋留池）；WPS 候选表保持冻结归档；仓库 115 注册工具全量核对无重叠（Top3 建议 ID youtube_thumbnail_downloader / gitignore_generator / file_checksum；新晋 html_entity_codec / bulk_image_resizer），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（495c480）；`git log` 确认开发交付 495c480（假数据/Mock 生成器）；`grep tools/categories.go` 全量 115 Path（114+1），`mock_data_generator` ID 与 `/tools/mock-data-generator` Path 已注册（划入已实现），Top3 建议 ID（youtube_thumbnail_downloader / gitignore_generator / file_checksum）与 P1 新晋 ID（html_entity_codec / bulk_image_resizer）与 115 Path 无重叠（关键词核对全零命中；「子网/CIDR」命中已实现 `subnet`，已排除）；YouTube CORS 双视频 ID 15:36 复验：`curl -I -H "Origin: https://www.it-tool.eu.cc"` 均返回 `Access-Control-Allow-Origin: *`＋HTTP 200 真实字节（65324/184051）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 13:00 · 产品经理排期轮）
 
 **选定：假数据/Mock 生成器（Mock Data Generator）** — 本轮唯一任务：

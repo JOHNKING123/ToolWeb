@@ -1,0 +1,142 @@
+{{define "youtube_thumbnail_downloader"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 缩略图下载器 - 视频封面高清图在线下载 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 YouTube 缩略图下载器：粘贴视频链接或 11 位 ID，解析 5 档高清缩略图（1280×720 / 640×480 / 480×360 / 320×180 / 120×90），一键预览下载。支持 watch / youtu.be / shorts / embed / music 链接，纯本地运行。">
+    <meta name="keywords" content="YouTube缩略图下载,视频封面下载,YouTube thumbnail downloader,高清缩略图,YouTube封面提取,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/youtube-thumbnail-downloader">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "YouTube 缩略图下载器",
+      "description": "粘贴 YouTube 视频链接或 ID，解析并下载 5 档高清缩略图（最高 1280×720），纯本地运行。",
+      "url": "https://www.johnkingzcq123.xyz/tools/youtube-thumbnail-downloader",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .yt-examples { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.75rem; }
+        .yt-examples button {
+            border:1px solid #e5e7eb; background:#f9fafb; border-radius:.375rem;
+            padding:.35rem .7rem; font-size:.85rem; cursor:pointer; color:#4b5563;
+        }
+        .yt-examples button:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        #yt-error {
+            display:none; margin-top:.75rem; padding:.7rem 1rem; border-radius:.5rem;
+            background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:.92rem; line-height:1.6;
+        }
+        .yt-main-preview-wrap { text-align:center; margin:1rem 0; }
+        .yt-main-preview-wrap img {
+            max-width:100%; max-height:320px; border-radius:.5rem;
+            border:1px solid #e5e7eb; box-shadow:0 4px 14px rgba(0,0,0,.08);
+        }
+        .yt-video-id {
+            display:inline-block; font-family:ui-monospace,Menlo,Consolas,monospace;
+            background:#f3f4f6; border:1px solid #e5e7eb; border-radius:.375rem;
+            padding:.15rem .6rem; font-size:.95rem; margin:0 .3rem;
+        }
+        .yt-tiers-grid {
+            display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+            gap:1rem; margin-top:1rem;
+        }
+        .yt-tier-card {
+            border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem;
+            background:#fff; text-align:center; transition:box-shadow .15s;
+        }
+        .yt-tier-card:hover { box-shadow:0 4px 14px rgba(0,0,0,.08); }
+        .yt-tier-card.yt-tier-missing { background:#f9fafb; }
+        .yt-tier-preview { position:relative; min-height:100px; display:flex; align-items:center; justify-content:center; }
+        .yt-tier-preview img { max-width:100%; border-radius:.375rem; border:1px solid #e5e7eb; }
+        .yt-tier-badge {
+            position:absolute; top:.35rem; left:.35rem; background:#b91c1c; color:#fff;
+            font-size:.75rem; padding:.15rem .5rem; border-radius:.375rem;
+        }
+        .yt-tier-name { font-weight:600; margin-top:.6rem; font-size:.95rem; }
+        .yt-tier-desc { color:#6b7280; font-size:.85rem; margin:.2rem 0 .7rem; }
+        .yt-dl-btn { width:100%; font-size:.9rem; padding:.5rem .5rem; }
+        .yt-dl-btn:disabled { opacity:.5; cursor:not-allowed; }
+        @media (max-width:520px) {
+            .yt-tiers-grid { grid-template-columns:repeat(2,1fr); gap:.7rem; }
+            .yt-tier-card { padding:.6rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">smart_display</i> YouTube 缩略图下载器</h1>
+            <p>粘贴视频链接或 11 位 ID，解析 5 档高清缩略图（最高 1280×720），一键预览下载。纯本地运行，图片不经过本站服务器。</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:2rem;">
+                <div class="form-group">
+                    <label for="yt-input">视频链接或视频 ID：</label>
+                    <textarea id="yt-input" rows="2" class="input-area" style="width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;" placeholder="粘贴 YouTube 视频链接，或直接输入 11 位视频 ID，例如：dQw4w9WgXcQ" spellcheck="false"></textarea>
+                    <div class="yt-examples">
+                        <span style="font-size:.85rem;color:#6b7280;align-self:center;">示例：</span>
+                        <button type="button" onclick="ytFillExample('watch')">watch 链接</button>
+                        <button type="button" onclick="ytFillExample('short')">youtu.be 短链</button>
+                        <button type="button" onclick="ytFillExample('shorts')">Shorts</button>
+                        <button type="button" onclick="ytFillExample('embed')">embed</button>
+                        <button type="button" onclick="ytFillExample('music')">Music</button>
+                        <button type="button" onclick="ytFillExample('bare')">裸 ID</button>
+                    </div>
+                    <div id="yt-error"></div>
+                </div>
+                <div class="form-actions" style="margin-top:1rem;">
+                    <button onclick="ytParse()" class="btn btn-primary"><i class="material-icons">search</i> 解析缩略图</button>
+                    <button onclick="ytClear()" class="btn btn-secondary"><i class="material-icons">clear</i> 清空</button>
+                </div>
+            </div>
+            <div id="yt-result" class="tool-card" style="margin-bottom:2rem;display:none;">
+                <h3>解析结果</h3>
+                <div style="text-align:center;color:#374151;">
+                    视频 ID：<span class="yt-video-id" id="yt-video-id"></span>
+                    <a id="yt-video-link" href="#" target="_blank" rel="noopener" style="font-size:.85rem;">在 YouTube 打开</a>
+                </div>
+                <div class="yt-main-preview-wrap">
+                    <img id="yt-main-preview" alt="视频缩略图高清预览" draggable="false">
+                </div>
+                <div class="result-section">
+                    <h3>5 档分辨率</h3>
+                    <div class="yt-tiers-grid" id="yt-tiers"></div>
+                </div>
+                <div class="form-actions" style="margin-top:1.5rem;text-align:center;">
+                    <button id="yt-download-all" onclick="ytDownloadAll()" class="btn btn-primary"><i class="material-icons">download</i> 全部下载</button>
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>工具说明</h3>
+                <div style="color:#374151;line-height:1.8;font-size:1rem;">
+                    <b>支持的输入格式：</b> youtube.com/watch?v= 链接、youtu.be 短链、/shorts/ 短视频、/embed/ 嵌入链接、/v/ 链接、music.youtube.com 链接，以及裸 11 位视频 ID。<br>
+                    <b>5 档缩略图：</b> maxresdefault（1280×720 高清）、sddefault（640×480 标清）、hqdefault（480×360）、mqdefault（320×180）、default（120×90）。<br>
+                    <b>关于缺失档位：</b> 部分老视频没有 maxres 高清档，该卡片会显示「该视频无此档」并自动用 sd 档预览；单档下载时会自动降级为 sd 档。<br>
+                    <b>下载方式：</b> 浏览器直连 i.ytimg.com 拉取原图并本地保存（文件名：youtube-视频ID-档位.jpg），图片不经过本站服务器，隐私无忧。<br>
+                    <b>全部下载：</b> 顺序逐档下载，缺失档位自动跳过；若浏览器拦截多文件下载，请允许本站点「自动下载多个文件」。
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:2rem;">
+                <h3>🖼️ 相关工具</h3>
+                <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">YouTube 缩略图下载器（当前）</span>
+                    <a href="/tools/img-resize" class="btn btn-secondary" style="font-size:.9rem;">图片尺寸调整</a>
+                    <a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/youtube_thumbnail_downloader.js"></script>
+</body>
+</html>
+{{end}}
