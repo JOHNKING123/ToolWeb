@@ -1,0 +1,134 @@
+{{define "markdown_to_word"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 转 Word - 粘贴 Markdown 一键导出 .docx（本地/免费/不限次）</title>
+    <meta name="description" content="免费在线 Markdown 转 Word：粘贴 AI 生成的文章或导入 .md 文件，左右实时预览，标题/列表/表格/代码块/引用/超链接样式完整映射，base64 本地图片直接嵌入，一键导出 .docx；纯浏览器本地处理，数据不上传，不限次数。">
+    <meta name="keywords" content="Markdown 转 Word,Markdown 转 docx,MD 转 Word,AI 文章转 Word,markdown 导出 word,文档格式转换">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/markdown-to-word">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Markdown 转 Word","description":"粘贴 AI 生成的 Markdown 或导入 .md 文件，实时预览后一键导出 .docx：标题/列表/表格/代码块/引用/超链接样式完整映射，本地图片直接嵌入；纯浏览器本地处理，数据不上传、不限次。","url":"https://www.johnkingzcq123.xyz/tools/markdown-to-word","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .m2w-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .m2w-honest .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .m2w-honest b{color:#047857}
+        .m2w-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:1.1rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280;margin-bottom:1rem}
+        .m2w-upload:hover,.m2w-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .m2w-upload .material-icons{font-size:2rem;display:block;margin-bottom:.3rem}
+        .m2w-split{display:flex;gap:1rem;align-items:stretch}
+        .m2w-pane{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
+        .m2w-pane-title{font-size:.88rem;font-weight:700;color:#374151;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem}
+        .m2w-pane-title .material-icons{font-size:1.05rem;color:#6b7280}
+        .m2w-textarea{width:100%;min-height:420px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff;flex:1}
+        .m2w-preview{flex:1;min-height:420px;max-height:640px;overflow-y:auto;border:1px solid #d1d5db;border-radius:.5rem;background:#fff;padding:1rem 1.2rem;box-sizing:border-box;font-size:.95rem;line-height:1.8;color:#111827;word-wrap:break-word}
+        .m2w-empty{color:#9ca3af;text-align:center;padding:4rem 1rem;line-height:2.2}
+        .m2w-preview h1{font-size:1.5rem;color:#1f4e79;border-bottom:2px solid #e5e7eb;padding-bottom:.3rem;margin:1.1rem 0 .7rem}
+        .m2w-preview h2{font-size:1.3rem;color:#2e75b6;margin:1rem 0 .6rem}
+        .m2w-preview h3{font-size:1.15rem;color:#2e75b6;margin:.9rem 0 .5rem}
+        .m2w-preview h4{font-size:1.05rem;color:#1f4e79;margin:.8rem 0 .4rem}
+        .m2w-preview h5{font-size:.95rem;color:#404040;margin:.7rem 0 .4rem}
+        .m2w-preview h6{font-size:.88rem;color:#595959;margin:.6rem 0 .4rem}
+        .m2w-preview p{margin:.55rem 0}
+        .m2w-preview a{color:#0563c1}
+        .m2w-preview code{font-family:ui-monospace,Consolas,Menlo,monospace;background:#f2f2f2;border-radius:.25rem;padding:.1em .35em;font-size:.88em}
+        .m2w-preview pre{background:#f2f2f2;border-radius:.5rem;padding:.8rem 1rem;overflow-x:auto;margin:.8rem 0}
+        .m2w-preview pre code{background:none;padding:0;font-size:.88rem}
+        .m2w-preview blockquote{border-left:3px solid #9d9d9d;margin:.8rem 0;padding:.3rem 0 .3rem 1rem;color:#595959;font-style:italic;background:#fafafa;border-radius:0 .4rem .4rem 0}
+        .m2w-preview blockquote p{margin:.35rem 0}
+        .m2w-preview ul,.m2w-preview ol{margin:.55rem 0;padding-left:1.6rem}
+        .m2w-preview li{margin:.25rem 0}
+        .m2w-preview hr{border:none;border-bottom:1px solid #9ca3af;margin:1.2rem 0}
+        .m2w-preview img{max-width:100%;border-radius:.3rem}
+        .m2w-preview .m2w-img{text-align:center;margin:.8rem 0}
+        .m2w-tblwrap{overflow-x:auto;margin:.8rem 0}
+        .m2w-preview table{border-collapse:collapse;width:100%;font-size:.88rem}
+        .m2w-preview th,.m2w-preview td{border:1px solid #9ca3af;padding:.4rem .65rem;text-align:left}
+        .m2w-preview th{background:#d9e2f3;font-weight:700}
+        .m2w-countline{display:flex;justify-content:space-between;align-items:center;font-size:.88rem;color:#6b7280;margin:.4rem 0}
+        .m2w-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:center}
+        .m2w-toolbar .btn .material-icons{font-size:1.05rem;vertical-align:-3px;margin-right:.2rem}
+        .m2w-toolbar .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .m2w-status{font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6;color:#059669}
+        .m2w-error{display:none;color:#b91c1c;font-size:.9rem;margin-top:.6rem;line-height:1.6}
+        .m2w-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .m2w-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .m2w-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .m2w-tip b{color:#111827}
+        .m2w-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+        .m2w-combo a{color:#1d4ed8;font-weight:600}
+        @media (max-width:768px){
+            .m2w-split{flex-direction:column}
+            .m2w-textarea{min-height:280px}
+            .m2w-preview{min-height:280px;max-height:520px}
+            .m2w-toolbar .btn{flex:1 1 42%;justify-content:center}
+            .m2w-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">description</i> Markdown 转 Word</h1>
+            <p>粘贴 Markdown 或导入 .md，实时预览排版，一键导出格式完整的 .docx；纯浏览器本地处理，数据不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="m2w-honest">
+                <i class="material-icons">verified</i>
+                <div><b>诚实声明：</b>导出的是<b>标准 .docx</b>（自研 OOXML 拼装，Word/WPS 可直接打开）；样式映射：H1–H6→标题样式、加粗/斜体/删除线/行内代码、列表自动编号、引用块左边框+缩进、表格表头底色+边框、代码块等宽+浅底、超链接蓝色下划线。<b>只有 <code>data:image/…;base64,…</code> 形式的本地图片会被嵌入</b>，网络图片（http 链接）因浏览器跨域与离线限制无法抓取，会以文字占位提示；行内小图导出为独立居中图片段落。请核对右侧预览再导出。</div>
+            </div>
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="m2w-upload" id="m2w-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 .md 文本文件到此处">
+                    <i class="material-icons">upload_file</i>
+                    <div>点击选择或拖拽 <b>.md / .txt</b> 文件到这里（FileReader 本地读取，不上传）</div>
+                    <div style="font-size:.82rem;margin-top:.3rem;">也可以直接把 ChatGPT / DeepSeek 等 AI 生成的 Markdown 粘贴到左侧编辑区</div>
+                </div>
+                <input type="file" id="m2w-file" accept=".md,.markdown,.txt,text/plain" style="display:none;">
+                <div class="m2w-split">
+                    <div class="m2w-pane">
+                        <div class="m2w-pane-title"><i class="material-icons">edit_note</i> Markdown 编辑区</div>
+                        <textarea id="m2w-input" class="m2w-textarea" placeholder="在此粘贴 Markdown 源码……&#10;&#10;# 示例&#10;&#10;这是一段 **加粗** 文本。" spellcheck="false" aria-label="Markdown 源码输入"></textarea>
+                    </div>
+                    <div class="m2w-pane">
+                        <div class="m2w-pane-title"><i class="material-icons">preview</i> 实时预览（导出效果对照）</div>
+                        <div id="m2w-preview" class="m2w-preview" aria-live="polite"></div>
+                    </div>
+                </div>
+                <div class="m2w-countline"><span>输入即实时渲染（防抖 250ms）</span><span>字符数：<b id="m2w-count">0</b></span></div>
+                <div class="m2w-toolbar">
+                    <button class="btn btn-primary" id="m2w-export-docx"><i class="material-icons">download</i> 导出 .docx</button>
+                    <button class="btn btn-secondary" id="m2w-sample"><i class="material-icons">data_object</i> 示例文档</button>
+                    <button class="btn btn-secondary" id="m2w-export-md"><i class="material-icons">save</i> 导出 .md</button>
+                    <button class="btn btn-secondary" id="m2w-clear"><i class="material-icons">clear</i> 清空</button>
+                </div>
+                <div class="m2w-status" id="m2w-status"></div>
+                <div class="m2w-error" id="m2w-error" role="alert"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="m2w-tip">
+                    <b>怎么用：</b>把 AI 生成的 Markdown 长文（报告/论文/周报/公文）粘贴到左侧，或导入 .md 文件 → 右侧实时预览排版 → 点「导出 .docx」下载 Word 文档（文件名自动带时间戳）。<br>
+                    <b>样式映射：</b><code>#</code>–<code>######</code>→Word 标题 1–6；<code>**加粗**</code>/<code>*斜体*</code>/<code>~~删除线~~</code>/<code>`代码`</code>；<code>-</code>/<code>1.</code>→项目/编号列表（支持嵌套与续编号，导出后每段列表独立编号）；<code>&gt;</code>→引用块（左边框+缩进+斜体）；<code>```</code>→等宽+浅底代码块；<code>| 表 |</code>→带边框表格（表头底色+加粗，对齐方式保留）；<code>[文字](链接)</code>→蓝色下划线超链接；<code>---</code>→分隔线；<code>- [ ]</code>→☐/☑ 任务列表。<br>
+                    <b>图片：</b>只有 <code>data:image/png;base64,…</code> 这类内嵌 base64 图片会被真正嵌入 .docx（自动按宽高比缩放、最宽 520px）；网络图片会以灰色文字占位提示，不会静默丢失。<br>
+                    <b>导出 .md：</b>把编辑区当前内容存为 .md 文件，方便存档。<br>
+                    <b>隐私：</b>Markdown 解析、预览渲染、docx 拼装（自研 zip 打包）全程在你的浏览器里完成，文本与图片只在浏览器内存里流转，不经过任何服务器、不上传任何内容；页面无任何外部 JS/CSS 依赖（除站内公共样式与图标字体）。<br>
+                    <b>适用边界（如实说明）：</b>数学公式（LaTeX）、脚注、目录 TOC、页眉页脚暂不支持，会按普通文本导出；超大文档（几十万字符）生成可能需要几秒，属正常。
+                </div>
+                <div class="m2w-combo">
+                    <b>「Markdown 一条龙」：</b>先用 <a href="/tools/markdown-preview">Markdown 预览</a> 快速看排版，用 <a href="/tools/ai-text-cleaner">AI 文本清洁器</a> 清掉 AI 回答里的零宽字符等杂质，回答里的表格用 <a href="/tools/markdown-to-excel">Markdown 表格转 Excel</a> 转成 .xlsx，需要发公众号再用 <a href="/tools/markdown-publish-formatter">Markdown 公众号一键排版</a> —— 写稿、转表、排版、交 Word，一套流程走完。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/markdown_to_word.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,81 @@
+## 今日任务（2026-10-20 09:46 · 产品经理排期轮）
+
+**选定：Markdown 转 Word（Markdown to Word）** — 本轮唯一任务：
+- **顺位递进**：研究轮 40（07:36）Top3 → 研究轮 41（09:36）Top1 推荐「文件夹对比交付后早班第一候补自动递补」→ 09:46 PM 决策轮立项；尊重顺位定序，无硬伤不跳过（与 10-20 01:45 / 03:45 / 05:40 / 07:46 PM 轮先例一致）。
+- **痛点真实**：AI 生成的 Markdown 长文要交差（报告/论文/公文）时，报告/论文/公文交付形态是 .docx；现有 PDF 转 Word 为文本提取形态、Markdown 转 Excel 为表格形态，MD→Word 完整文档形态零覆盖（112 Path 全零命中）。
+- **纯度高**：纯前端、零依赖、零后端、零上传；中难度，早班轮次从容交付位，交付确定性高。
+- **去重实锤**：`grep tools/categories.go`（全量 112 Path）——`markdown_to_word`/`markdown-to-word` 全零命中（`docx` 仅命中 docx_repair 修复工具，非转换形态）。
+
+**规格**：
+1. 布局：左 Markdown 源码编辑区（textarea，防抖实时渲染）＋ 右 HTML 预览区（预览 word 导出效果）；桌面双栏、移动端堆叠；导入 .md 文件（FileReader 本地读取，不上传）、导出 .md、清空、一键载入内置示例文档（含标题/表格/代码块/列表/引用全形态）。
+2. 导出 .docx（核心）：浏览器内自研 Markdown AST 解析 → 自研 OOXML docx 拼装（最小 zip 打包：[Content_Types].xml/_rels/word/document.xml，零依赖，Blob 本地下载，文件名带时间戳），不引 docx.js CDN。
+3. 样式映射：标题 H1-H6 → Heading 1-6；加粗/斜体/删除线/行内代码；无序/有序/任务列表（编号段落 numPr）；引用块（左侧边框＋缩进）；表格（w:tbl，表头底色＋边框）；代码块（等宽字体＋浅底＋段落底纹）；链接（超链接关系＋蓝色下划线）；图片：Markdown 本地图片为 base64/dataURL 时嵌入 docx（二期再做远程图片抓取）。
+4. 预览与导出一致性：预览区展示的排版即导出版式（字号/段落间距/表格边框对应），所见即所得。
+5. 纯前端、零依赖、零后端、零上传；DevTools 无网络请求、无外部请求。
+6. 注册：`tools/categories.go`「文本工具」品类（文档转换场景），新增工具 ID `markdown_to_word`、Name「Markdown 转 Word」、Path `/tools/markdown-to-word`（New: true），中英文描述 + SEO keywords（Markdown 转 Word、Markdown 转 docx、MD 转 Word、AI 文章转 Word、文档格式转换）；与 Markdown 预览（/tools/markdown-preview）互链（「相关工具」入口）。
+7. 全站 SEO 面板（标题/描述/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/markdown-to-word` 可开（200）
+- [ ] 粘贴/导入 Markdown 后左右实时预览，防抖不卡顿
+- [ ] 导出 .docx 可下载；Word/WPS 打开无损坏、无乱码、无「需要修复」提示
+- [ ] 导出内容正确：H1-H6 标题样式正确、表格结构/边框/表头正确、代码块等宽字体+浅底、列表编号正确、引用块格式正确
+- [ ] 示例文档一键载入可用；导入 .md / 导出 .md 可用
+- [ ] DevTools Network 抽查无后端调用、无外部请求、无内容上传
+- [ ] `categories.go` 注册完成（文本工具品类、New: true），首页/导航/sitemap 生效；与 Markdown 预览互链生效
+- [ ] 移动端可操作（编辑+预览+导出）
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：`templates/markdown_to_word.html`（新建：编辑器＋预览区＋样式映射说明＋导出工具栏）、`static/js/markdown_to_word.js`（新建：自研 Markdown 解析＋预览渲染＋OOXML docx 自研拼装＋zip 打包＋本地下载，零依赖）、`tools/categories.go`（文本工具品类＋工具注册）、`BACKLOG.md`（本小节）。
+
+**未选**：
+- URL 追踪参数清除器（P1；41 轮 Top2；三重形态验证：V2EX 10-18「勿追踪」＋HN Wirier（210+ 参数、短链展开）＋39 轮；纯前端小难度；隐私赛道高频刚需）：顺位在本轮之后，列为**下一深夜/早班小难度轮次首选**。
+- 假数据/Mock 生成器（P1；41 轮 Top3，本轮**四重形态再验证**证据升级：dev.to aibars DevTools Hub 40 工具标配项＋inventivehq 单页工具＋Chrome「模拟数据」扩展＋reqres.in Best Mock API Tools 2026；差异化：中文姓名/手机号/身份证（虚拟明示）/银行卡 Luhn/地址本地化＋seed 可复现；纯前端小-中难度）：留上午轮次或 PM 定序从容交付。
+- 正则表达式解释器（P1；40 轮新晋，dev.to RegexBuilder 形态验证；小-中难度）：留待开发者工具家族轮。
+- cURL → Python Requests 转换器（P1；39 轮新晋 Top3）：开发者工具家族轮或深夜轮次候补。
+- SVG 压缩优化器（P1；39 轮新晋留池）：留待设计工具家族轮或深夜填充位。
+- 婚宴座位表生成器（P1；38 轮新晋 Top3）：上午轮次从容交付。
+- 单位感知记事本计算器（P1 留池；中难度，留待上午轮次或 PM 定序）。
+- HMAC 签名生成器（P2；41 轮新观察：带密钥 HMAC-SHA256/512 形态零覆盖；纯前端 crypto.subtle 极小难度）：归档 P2，留待深夜填充位或开发者工具家族轮。
+- YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续十轮 PM 决策一致（抽查通过前不立项），顺位继续顺延。
+- 浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——本轮初遇 Host key verification failed（VM 换机丢 /root/.ssh/known_hosts，TOOLS.md 历史已知，`ssh-keyscan -t ed25519 github.com` 补录后即通）；本地 HEAD 与 origin/muse/dev-20260929 一致（1f3ff41）；`grep tools/categories.go` 全量 112 Path，`markdown_to_word/markdown-to-word` 全零命中（`docx` 仅命中 docx_repair，非转换形态）；本地当前分支 muse/dev-20260929；工作树：BACKLOG.md 未提交修改（09:36 研究轮追加）＋未跟踪 `toolWeb.bak-prev`/`toolweb`（历史已知构建产物，未动）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用研究/PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-20 09:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-20 通用调研第四十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。文件夹对比交付闭环（07:46 PM 决策轮立项→开发交付 008e5f9＋评审修复 1f3ff41「修复 data-key 双重转义 bug 及交互体验问题」；`grep tools/categories.go` 确认 ID `folder_compare`、Path `/tools/folder-compare` 已注册（304 行，开发工具品类），全量 **112 Path**），候选池划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 早班轮次，中难度候选可排。
+
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. 文件夹对比交付确认：`git log` 头部 1f3ff41（评审修复：data-key 双重转义 bug＋交互体验）＋008e5f9（新增工具：文件夹对比）落盘；`git fetch`（GIT_SSH_COMMAND 指定密钥）初遇 Host key verification failed（VM 换机丢 /root/.ssh/known_hosts，历史已知，补录后即通）；origin/muse/dev-20260929 与本地 HEAD 一致（1f3ff41）；`grep` 全量 112 Path（111+1），`folder_compare` ID 与 `/tools/folder-compare` Path 已注册；候选池划出，已实现清单追加（delta：+ 文件夹对比，开发工具品类，备份/部署差异核对场景）。
+2. 假数据/Mock 生成器四重形态再验证（表中已有 P1，难度中；不重复立，强化证据）：① dev.to aibars（2026-10-02，DevTools Hub 40 工具套装）Generators 类单列 **"mock JSON data generator"**（与 UUID/密码/QR/Lorem 并列，开发者工具套件标配项）；② inventivehq Mock Data Generator 单页工具：字段勾选→行数→seed 可复现→JSON/CSV/SQL INSERT 导出，浏览器内运行、免注册；③ Chrome 应用商店「模拟数据」扩展（中文）：字段选择→本地化（特定国家姓名/地址/电话）→预览→导出，开发者/QA/数据分析师目标用户明示；④ reqres.in《Best Mock API Tools for Testing in 2026》（1 小时前更新）Mock API 需求侧印证。痛点：中国开发者前后端联调/UI 开发时造假数据（姓名/手机号/邮箱/地址/UUID/时间戳）是高频重复劳动；差异化：中文姓名/中国手机号段/身份证（虚拟、明示测试用途）/银行卡 Luhn/地址本地化＋JSON/CSV/SQL INSERT 导出＋seed 可复现，纯前端小-中难度。去重：112 Path `mock/模拟数据/测试数据/数据生成器/faker` 全零命中；表中 2026-10-03 已立 P1（faker.tools 79 种），本轮仅证据升级，不重复立。建议 ID `mock_data_generator`、Path `/tools/mock-data-generator`（PM 立项时定）。
+3. 新观察一则（P2 观察，不立）：**HMAC 签名生成器**——dev.to aibars DevTools Hub 40 工具 Encoders 类单列 **"HMAC generator"**（与 Base64/JWT encoder/HMAC 并列）；仓库 `MD5/SHA1/SHA256`（已实现）为无密钥哈希形态，Bcrypt 哈希生成/校验 P1 在表，**带密钥 HMAC-SHA256/512 形态零覆盖**（`grep -i hmac` 112 Path 零命中）；痛点：对接支付/企业微信/webhook 回调时现场算签名验签，手写脚本重复劳动；纯前端 crypto.subtle.importKey+sign，极小难度。建议 ID `hmac_generator`、Path `/tools/hmac-generator`，P2 观察（API 签名 niche，归档）。
+
+去重消化（不单立）：① aibars DevTools Hub 其余项——URL 解析器（表中 P1 已有「URL 参数解析器」）、HTTP 状态码（表中 P1 已有「HTTP 状态码速查」）、字节单位（单位换算器已覆盖 KB=1000/KiB=1024 双口径）、时区转换器（10-18 已实现）、时间戳/JSON/YAML/SQL 格式化/二维码（已实现）、ASCII/MIME 参考（静态数据低价值 niche）均不立；② CSS 单位换算器（px/rem/em/vw/vh；同清单 Dev utilities CSS unit converter）——单位换算器未覆盖 CSS 单位（grep rem 仅命中两处无关描述），但纯前端 niche 场景，暂归档不立（记作单位换算器二期增强备选）；③ V2EX 10-20 中文搜索→V2EX 币 SEO 噪音，无单页信号；④ HN 本轮——WallHop（付费墙绕过，合规风险不立，19 轮已决议）、Quake Rust 移植（游戏非工具）、HN API 指南（导购自家工具，无单页信号）均不立；⑤ zhzyk.vip 9 月科技资讯合集——PicLite 图轻（图片压缩本地工具；仓库图片精确体积压缩器/img-resize 已覆盖「压缩到指定体积」形态）、ReadAware 本地电子书（AI+插件市场，非单页轻量形态）、NeumanOS（个人 OS，非单页）均不立；⑥ 中文「希望有一个网站能」→医疗 PainSpot 等 SEO 噪音，无单页信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；09:36 早班轮次，中难度可排）：
+
+1. **Markdown 转 Word（Markdown to Word）** — P1（顺位递进：40 轮 Top3 → 本轮 Top1；07:46 PM 明确「上午大轮次候补」，文件夹对比交付后早班第一候补自动递补；痛点：AI 生成的 Markdown 长文要交差（报告/论文/公文）需 .docx；纯前端中难度：Markdown AST→docx（自研 docx XML 拼装或轻量库，标题/表格/代码块/列表样式映射）→ .docx 本地下载，零后端；现有 PDF 转 Word 为文本提取形态、Markdown 转 Excel 为表格形态，MD→Word 完整文档形态零覆盖；112 Path markdown_to_word 全零命中；早班中难度从容交付位；建议 ID markdown_to_word、Path /tools/markdown-to-word）。
+2. **URL 追踪参数清除器（URL Tracker Cleaner）** — P1（三重形态验证：V2EX 10-18「勿追踪」＋HN Wirier（210+ 参数、短链展开）＋39 轮；07:46 PM 列为「下一深夜小难度轮次首选」，早班亦可快打；痛点：微信/淘宝/小红书/抖音分享链接追踪参数泛滥，转发前手动清理折磨；纯前端小难度：粘贴 URL→中国场景黑名单剔除（utm_*/fbclid/gclid/spm/from/_ijt 等，保留商品 id 等业务参数）→短链展开还原→干净链接一键复制，零依赖；112 Path utm/追踪参数全零命中；隐私赛道高频刚需；建议 ID url_tracker_cleaner、Path /tools/url-tracker-cleaner）。
+3. **假数据/Mock 生成器（Mock Data Generator）** — P1（本轮**四重形态再验证**：dev.to aibars DevTools Hub 40 工具标配项＋inventivehq 单页工具（浏览器内运行、JSON/CSV/SQL 导出、seed 可复现）＋Chrome 应用商店「模拟数据」扩展＋reqres.in Best Mock API Tools 2026＋10-03 faker.tools；表中已有 P1（难度中），本轮证据升级不重复立；痛点：中国开发者前后端联调/UI 开发造假数据（中文姓名/手机号/邮箱/地址/UUID/时间戳）高频重复劳动；差异化：中文姓名/中国手机号段/身份证（明示虚拟+测试用途）/银行卡 Luhn/地址本地化＋JSON/CSV/SQL INSERT 导出＋seed 可复现；纯前端小-中难度；112 Path mock/模拟数据/测试数据全零命中；早班中难度从容交付位；建议 ID mock_data_generator、Path /tools/mock-data-generator）。
+
+HMAC 签名生成器（P2；本轮新观察：aibars DevTools Hub Encoders 类单列，仓库无密钥哈希形态已覆盖、带密钥 HMAC 零覆盖，`grep -i hmac` 112 Path 零命中；API/支付签名调试 niche，极小难度；归档 P2，留待深夜填充位或开发者工具家族轮）。正则表达式解释器（P1；40 轮新晋，开发者工具家族轮）；cURL → Python Requests 转换器（P1；开发者工具家族轮或深夜填充位）；SVG 压缩优化器（P1；设计工具家族轮）；婚宴座位表生成器（P1；上午轮次从容交付）；单位感知记事本计算器（P1；中难度，上午轮次）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；音频合并器/SRT 字幕编辑器/日期加减/报价单/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；YouTube 缩略图下载器（P1；27 轮新晋）：i.ytimg.com 下载链路 CORS 抽查条件未达成——连续十轮 PM 决策一致（抽查通过前不立项），顺位继续顺延；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第四十一轮：文件夹对比已实现划出；假数据/Mock 生成器 P1 证据升级（表中已有，不重复立）；HMAC 签名生成器 P2 新观察；全量 112 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 假数据/Mock 生成器 | 证据升级（表中已有 P1，不重复立）：本轮四重形态再验证——dev.to aibars DevTools Hub 40 工具将 mock JSON data generator 列为开发者工具套件标配项；inventivehq 单页工具（浏览器内运行、JSON/CSV/SQL 导出、seed 可复现）；Chrome 应用商店「模拟数据」扩展（中文、字段选择→本地化→导出）；reqres.in《Best Mock API Tools 2026》（1 小时前更新）需求侧印证＋10-03 faker.tools；痛点：中国开发者前后端联调/UI 开发造假数据高频重复劳动；差异化：中文姓名/手机号/身份证（虚拟明示）/银行卡 Luhn/地址本地化＋seed 可复现；纯前端小-中难度；112 Path mock/模拟数据/测试数据全零命中；建议 ID mock_data_generator、Path /tools/mock-data-generator | 中 | P1（证据升级） |
+| HMAC 签名生成器 | 新观察（dev.to aibars DevTools Hub 40 工具 Encoders 类单列 HMAC generator；仓库 MD5/SHA1/SHA256 为无密钥哈希形态已实现，Bcrypt P1 在表，带密钥 HMAC-SHA256/512 形态零覆盖，`grep -i hmac` 112 Path 零命中；痛点：对接支付/企业微信/webhook 回调时现场算签名验签；纯前端 crypto.subtle，极小难度；建议 ID hmac_generator、Path /tools/hmac-generator；API 签名 niche，归档 P2） | 小 | P2（新观察） |
+
+**归档说明**：本轮为 10-20 通用调研第四十一轮——文件夹对比交付闭环（008e5f9＋1f3ff41，`/tools/folder-compare` 已注册（304 行），开发工具品类，全量 112 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to aibars DevTools Hub 40 工具→假数据/Mock 生成器四重形态再验证（表中已有 P1，证据升级）＋HMAC 签名生成器 P2 新观察（带密钥形态零覆盖，API 签名 niche）；其余项：URL 解析器/HTTP 状态码/字节单位/时区/时间戳/二维码均已覆盖或表中已有，CSS 单位换算记作单位换算器二期备选，MIME/ASCII 静态数据低价值不立；inventivehq 单页工具＋Chrome「模拟数据」扩展＋reqres.in Best Mock API Tools 2026 均为 Mock 形态验证；zhzyk.vip 9 月合集→PicLite（图片压缩已覆盖）/ReadAware（AI+插件非单页）/NeumanOS（OS 非单页）均不立；HN→WallHop（合规不立）/Quake（游戏）/HN API 指南（导购）均不立；V2EX→10-20 中文搜索 V2EX 币 SEO 噪音；中文「希望有一个网站能」→医疗 PainSpot 噪音无信号）均已消化；顺位更新（文件夹对比交付后上午大轮次第一候补递补→Markdown 转 Word，URL 追踪参数清除器早班快打位，假数据/Mock 生成器证据升级 Top3，HMAC 签名生成器 P2 新观察，YouTube 缩略图 CORS 条件未变连续第十轮顺延）；WPS 候选表保持冻结归档；仓库 112 注册工具全量核对无重叠（Top3 建议 ID markdown_to_word / url_tracker_cleaner / mock_data_generator；P2 新观察 hmac_generator），核稿反馈（立候选前先 grep，中文名+ID 片段双核）持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功——本轮初遇 Host key verification failed（VM 换机丢 /root/.ssh/known_hosts，历史已知，补录后即通）；origin/muse/dev-20260929 与本地 HEAD 一致（1f3ff41）；`git log` 确认开发交付 008e5f9（文件夹对比）＋评审修复 1f3ff41（data-key 双重转义 bug＋交互体验）；`grep tools/categories.go` 全量 112 Path（111+1），`folder_compare` ID 与 `/tools/folder-compare` Path 已注册（划入已实现），Top3 建议 ID（markdown_to_word / url_tracker_cleaner / mock_data_generator）与 P2 新观察 ID（hmac_generator）与 112 Path 无重叠（`markdown_to_word/markdown-to-word/url_tracker_cleaner/url-tracker-cleaner/mock_data/mock-data/模拟数据/测试数据/数据生成器/hmac` 关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-20 07:46 · 产品经理排期轮）
 
 **选定：文件夹对比（Folder Compare）** — 本轮唯一任务：
@@ -6551,7 +6629,7 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 | WiFi 二维码生成器 | 分享 WiFi 密码逐字输入麻烦，扫码直连 | 小 | P1 |
 | 手写模拟器 | 中文社交爆款（凹凸工坊/萝卜工坊）：贺卡/信件/手账装饰字需求旺；canvas+手写字体，单页可交付（定位文艺/贺卡场景） | 中 | P1 |
 | 座位表生成器 | 婚礼/活动排桌分人繁琐；独立开发者 SEO 金矿案例已验证该细分需求 | 中 | P1 |
-| 假数据/Mock 生成器 | 前后端联调缺测试数据（2026-10-03 竞品再验证：faker.tools 79 种合成数据生成器） | 中 | P1 |
+| 假数据/Mock 生成器 | 前后端联调缺测试数据（2026-10-03 竞品再验证：faker.tools 79 种合成数据生成器；2026-10-20 四重形态再验证：dev.to aibars DevTools Hub 40 工具将 mock JSON data generator 列为开发者工具套件标配项＋inventivehq 单页工具（浏览器内运行、JSON/CSV/SQL 导出、seed 可复现）＋Chrome 应用商店「模拟数据」扩展（中文、字段选择→本地化→导出）＋reqres.in《Best Mock API Tools 2026》需求侧印证；中国开发者联调假数据高频刚需，差异化：中文姓名/手机号/身份证（明示虚拟+测试用途）/银行卡 Luhn/地址本地化＋seed 可复现；纯前端小-中难度；建议 ID mock_data_generator、Path /tools/mock-data-generator） | 中 | P1 |
 | cURL 转代码 | 抓包得到的 cURL 转 Python/Go/JS 代码手写麻烦 | 中 | P1 |
 | 链接去追踪（URL 追踪参数清洗） | 连续多轮验证（slug.tools query cleaner、URLCheck、B站/小红书净化工具）但频率低、单页价值薄，10-03 起列备选，今日 Top3 让位图片拼接后顺延 P1 首选；分享链接带 utm_/fbclid/xsec_token/spm 又长又泄露隐私；纯前端黑名单识别+一键清洗+前后对比，单页可做 | 小 | P1 |
 | 富文本转 Markdown | Word/网页内容粘贴转 Markdown 写文档、发 GitHub 的痛点；Turndown 纯前端单页 | 小 | P1 |
@@ -6590,6 +6668,7 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 | 音频剪切（MP3 裁剪） | 今日新发现：awesome-no-signup-tools 收录 Audio Cutter Online（切/拼/淡入淡出、全本地）；截铃声/播客片段要装软件；Web Audio API 纯前端单页可做轻量版 | 中 | P2 |
 | .gitignore 生成器 | 今日新发现：HN DevKit 将 .gitignore 列入 Generate 类；新建项目要按语言/IDE/系统拼忽略规则，手写易漏；静态模板勾选组合，纯前端单页 | 小 | P2 |
 | WCAG 颜色对比度检查 | 今日新发现：codinganthem Color Contrast Checker、HN DevKit Test 类均收录；前端/设计选文字配色要验对比度是否达 WCAG 可读标准；纯前端计算对比度+达标评级，单页可做 | 小 | P2 |
+| HMAC 签名生成器 | 2026-10-20 新观察：dev.to aibars DevTools Hub 40 工具 Encoders 类单列 HMAC generator；仓库 MD5/SHA1/SHA256 为无密钥哈希形态已实现，Bcrypt P1 在表，带密钥 HMAC-SHA256/512 形态零覆盖（grep -i hmac 112 Path 零命中）；痛点：对接支付/企业微信/webhook 回调时现场算签名验签，手写脚本重复劳动；纯前端 crypto.subtle，极小难度；建议 ID hmac_generator、Path /tools/hmac-generator；API 签名 niche，归档 P2 | 小 | P2（新观察） |
 
 ## 已实现（不再进入候选）
 
@@ -6667,6 +6746,7 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 ~~JWT 签名生成器/验证器~~（2026-10-19 实现，commit d4376b0，路由 /tools/jwt-signer-verifier）、
 ~~批量重命名助手~~（2026-10-19 实现，commit cfcc674，路由 /tools/batch-rename-helper）、
 ~~Markdown 公众号一键排版~~（2026-10-19 实现，commit e5dba75，路由 /tools/markdown-publish-formatter）。
+~~文件夹对比~~（2026-10-20 实现，commit 008e5f9，评审修复 1f3ff41，路由 /tools/folder-compare）。
 （补录说明：2026-10-20 07:36 第四十轮研究轮发现本清单自 10-14 起断更，按 git log 逐条核实 commit 与注册路由一次性补录 43 条；10-18 用户指令下线的 7 个泛财务/生活计算器未列入。）
 
 ## 2026-09-29 决策归档（已完成 ✅）

@@ -380,6 +380,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "markdown_to_word",
+					Name:        "Markdown 转 Word",
+					Description: "Markdown 一键转 Word：粘贴 AI 文章或导入 .md，左右实时预览，标题/列表/表格/代码块/引用/超链接样式完整映射，base64 本地图片直接嵌入，一键导出 .docx；纯浏览器本地处理不上传 · Markdown to Word converter: live preview, full style mapping, images embedded, export .docx, 100% client-side",
+					Path:        "/tools/markdown-to-word",
+					Icon:        "description",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{
