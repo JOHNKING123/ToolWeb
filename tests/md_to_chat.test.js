@@ -128,6 +128,10 @@ eq(M.parseMermaidGraph("A-->B"), null, "无 graph 声明返回 null");
 eq(M.parseMermaidGraph("graph TD"), null, "无节点返回 null");
 var gLR = M.parseMermaidGraph("flowchart LR\nX1-->Y2");
 eq(gLR.dir, "LR", "flowchart LR 方向");
+var gRL = M.parseMermaidGraph("graph RL\nA-->B");
+eq(gRL.dir, "RL", "graph RL 方向");
+var layRL = M.mermaidLayout(gRL, 14);
+ok(layRL.nodes[0].cx > layRL.nodes[1].cx, "RL 反向横向：前驱在右侧");
 
 /* ---------- 6. mermaid 布局 ---------- */
 var lay = M.mermaidLayout(g1, 14);
@@ -155,9 +159,10 @@ eq(M.textWidth("中", 10), 10, "CJK 宽度估算");
 /* ---------- 8. 四平台适配 ---------- */
 var bp = M.parseBlocks("# 大标题\n## 小标题\n**加粗** 与 *斜体* 与 `代码`\n\n> 引用行\n\n- 项一\n- 项二\n\n1. 首项\n2. 次项\n\n---\n\n[链接](https://example.com)\n\n| 表头 |\n|---|\n| 数据 |\n");
 var wx = M.blocksToPlain(bp, "wechat");
-contains(wx, "", "微信 H1");
+contains(wx, "【大标题】", "微信 H1 保留标题文本");
 contains(wx, "〖小标题〗", "微信 H2");
-contains(wx, "", "微信加粗");
+contains(wx, "加粗", "微信加粗保留文本");
+notContains(wx, "**", "无 markdown 残留");
 contains(wx, "「斜体」", "微信斜体");
 contains(wx, "「代码」", "微信行内代码");
 contains(wx, "｜引用行", "微信引用");
@@ -166,20 +171,23 @@ contains(wx, "1. 首项", "微信有序列表");
 contains(wx, "链接（https://example.com）", "微信链接展开");
 contains(wx, "📊", "微信表格占位");
 var dd = M.blocksToPlain(bp, "dingtalk");
+contains(dd, "◆ 大标题", "钉钉 H1 保留标题文本");
 contains(dd, "◆ 小标题", "钉钉 H2 差异");
 contains(dd, "▪ 项一", "钉钉列表符号差异");
 contains(dd, "> 引用行", "钉钉引用符号差异");
 contains(dd, "`代码`", "钉钉行内代码保留反引号");
 var fs = M.blocksToPlain(bp, "feishu");
+contains(fs, "『大标题』", "飞书 H1 保留标题文本");
 contains(fs, "『小标题』", "飞书 H2 差异");
 contains(fs, "· 项一", "飞书列表符号差异");
 contains(fs, "▍ 引用行", "飞书引用符号差异");
 var wc = M.blocksToPlain(bp, "wecom");
+contains(wc, "【大标题】", "企微 H1 保留标题文本");
 contains(wc, "〖小标题〗", "企微 H2");
 contains(wc, "- 项一", "企微列表符号差异");
 notContains(wc, "**加粗**", "企微无 markdown 残留");
 /* 未知平台降级微信 */
-eq(M.blocksToPlain(bp, "unknown").indexOf("")!== -1, true, "未知平台降级微信");
+eq(M.blocksToPlain(bp, "unknown"), M.blocksToPlain(bp, "wechat"), "未知平台降级微信");
 /* 复杂块全覆盖 */
 var bcx = M.parseBlocks("```js\nx\n```\n$$a$$\n```mermaid\ngraph TD\nA-->B\n```");
 var px = M.blocksToPlain(bcx, "wechat");

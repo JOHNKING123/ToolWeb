@@ -1,3 +1,18 @@
+## 开发交付（2026-10-21 · 开发轮第 2 轮 ✅）
+
+**交付：Markdown 聊天图文转换器（md2chat）评审反馈修复** — 上一轮评审「不通过」，逐条修复如下：
+- **P0-1（丢内容·标题）**：四平台纯文本适配中一级标题被整行丢弃——`static/js/md_to_chat.js` 的 h() 映射数组首元素为空串。修复：微信/企微 L1 用 `【】`、钉钉 L1 用 `◆ `、飞书 L1 用 `『』`；同步更新 `platTip()` 与模板说明文案。
+- **P0-2（丢内容·加粗）**：`bold: function(t){ return ''; }` 整段丢弃加粗文本。修复：改为返回原文；同步更新 `platTip()`「加粗→原文保留」与模板说明。
+- **P0-3（编辑不生效）**：`copyForPlatform()` 始终从 `state.blocks` 重新生成、从未读取 contenteditable 预览区 DOM。修复：当 `state.tab==='text'` 时，纯文本复制取 `mc-preview` 的 `innerText`、富文本复制取 `innerHTML`（用户改完的内容）；'mix' 页签保持原有 blocks 路径。
+- **P0-4（测试空断言合法化 bug）**：`tests/md_to_chat.test.js` 中 `contains(wx, "", ...)` 恒过断言改为真实内容断言（微信 H1 `【大标题】`、加粗保留文本、`notContains(wx, "**")` 无 markdown 残留），钉钉/飞书/企微补 H1 断言，RL 反向布局新增回归断言，未知平台降级断言改为真实相等断言。`node tests/md_to_chat.test.js` **106 / 106 全过**（原 100）。
+- **P2-5（CSS 选择器写错）**：`templates/md_to_chat.html` 六处 `.x.material-icons` 改为后代选择器 `.x .material-icons`（图标是子元素 `<i>`）。
+- **P2-6（隐私声明夸大）**：FAQ 改为「除页面自身静态资源和你粘贴内容中引用的图片 URL 外，没有任何其他请求发出」。
+- **P3-7（RL 方向）**：`mermaidLayout` 新增 RL 反向横向处理（画布中心镜像横坐标，层从右往左排），模板 FAQ 同步为 `graph TD/TB/LR/RL/BT`。
+- **验证**：`go build -mod=vendor` 通过；本地 18765 端口 `/tools/md-to-chat` 200、JS 200、CSS/JS 修复点逐项 curl 验证命中；JS 内仍零 fetch/XHR。
+- **改动文件**：`static/js/md_to_chat.js`（P0-1/2/3、P3-7）、`tests/md_to_chat.test.js`（P0-4）、`templates/md_to_chat.html`（P2-5/6、FAQ 文案）、`BACKLOG.md`（本 delta）。未碰 master。
+
+---
+
 ## 开发交付（2026-10-21 · 开发轮 ✅）
 
 **交付：Markdown 聊天图文转换器（md2chat）** — 05:45 PM 决策轮立项本轮唯一任务，开发闭环：

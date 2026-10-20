@@ -261,7 +261,7 @@ return trim(s);
 }
 
 /* ================= mermaid 子集解析（纯函数） =================
-* 支持 graph TD/TB/LR/BT + 节点 A[矩形] A{菱形} A(圆角) A((圆)) + 边 A-->B / A-->|文字|B / A---|文字|B
+* 支持 graph TD/TB/LR/RL/BT + 节点 A[矩形] A{菱形} A(圆角) A((圆)) + 边 A-->B / A-->|文字|B / A---|文字|B
 * 返回 null 表示超出子集（调用方降级为源码卡片）。
 */
 function parseMermaidGraph(src) {
@@ -329,8 +329,8 @@ return 'rect';
 function basePlatform(over) {
 var p = {
 id: '', label: '',
-h: function (lv, t) { return ['', '〖' + t + '〗', '「' + t + '」'][Math.min(lv, 3) - 1];},
-bold: function (t) { return '';},
+h: function (lv, t) { return ['【' + t + '】', '〖' + t + '〗', '「' + t + '」'][Math.min(lv, 3) - 1];},
+bold: function (t) { return t;},
 italic: function (t) { return '「' + t + '」';},
 strike: function (t) { return '〔' + t + '〕';},
 code: function (t) { return '「' + t + '」';},
@@ -349,21 +349,21 @@ var PLATFORMS = {
 wechat: basePlatform({ id: 'wechat', label: '微信'}),
 dingtalk: basePlatform({
 id: 'dingtalk', label: '钉钉',
-h: function (lv, t) { return ['', '◆ ' + t, '▪ ' + t][Math.min(lv, 3) - 1];},
+h: function (lv, t) { return ['◆ ' + t, '◆ ' + t, '▪ ' + t][Math.min(lv, 3) - 1];},
 quote: function (t) { return '> ' + t;},
 bullet: '▪ ', hr: '----------',
 code: function (t) { return '`' + t + '`';}
 }),
 feishu: basePlatform({
 id: 'feishu', label: '飞书',
-h: function (lv, t) { return ['', '『' + t + '』', '· ' + t][Math.min(lv, 3) - 1];},
+h: function (lv, t) { return ['『' + t + '』', '『' + t + '』', '· ' + t][Math.min(lv, 3) - 1];},
 quote: function (t) { return '▍ ' + t;},
 bullet: '· ',
 code: function (t) { return '`' + t + '`';}
 }),
 wecom: basePlatform({
 id: 'wecom', label: '企微',
-h: function (lv, t) { return ['', '〖' + t + '〗', '- ' + t][Math.min(lv, 3) - 1];},
+h: function (lv, t) { return ['【' + t + '】', '〖' + t + '〗', '- ' + t][Math.min(lv, 3) - 1];},
 quote: function (t) { return '> ' + t;},
 bullet: '- ',
 code: function (t) { return '`' + t + '`';}
@@ -539,7 +539,7 @@ out.push(line);
 return out;
 }
 
-/* mermaid 布局：分层（TD 纵向 / LR 横向），返回节点坐标与边 */
+/* mermaid 布局：分层（TD/TB/BT 纵向 / LR/RL 横向，RL 反向），返回节点坐标与边 */
 function mermaidLayout(g, fontPx, measure) {
 measure = measure || function (t) { return textWidth(t, fontPx);};
 var nodes = g.nodes.map(function (nd) {
@@ -588,6 +588,8 @@ arr.forEach(function (nd) { span = Math.max(span, vertical? nd.cx + nd.w / 2: nd
 var off = ((vertical? W: H) - span) / 2;
 arr.forEach(function (nd) { if (vertical) nd.cx += off; else nd.cy += off;});
 });
+/* RL 反向横向：以画布中心镜像横坐标，层从右往左排 */
+if (g.dir === 'RL') nodes.forEach(function (nd) { nd.cx = W - nd.cx;});
 return { nodes: nodes, byId: byId, edges: g.edges, W: Math.ceil(W), H: Math.ceil(H), vertical: vertical};
 }
 
@@ -978,10 +980,10 @@ $('mc-copy-rich').innerHTML = '<i class="material-icons">auto_awesome</i>复制�
 
 function platTip(pid) {
 return {
-wechat: '标题用/〖〗强调，加粗→，引用→｜，列表用 •，复杂块转为图片卡片发送。',
-dingtalk: '标题用/◆ 强调，加粗→，引用→>，列表用 ▪，复杂块转为图片卡片发送。',
-feishu: '标题用/『』强调，加粗→，引用→▍，列表用 ·，复杂块转为图片卡片发送。',
-wecom: '标题用/〖〗强调，加粗→，引用→>，列表用 -，复杂块转为图片卡片发送。'
+wechat: '标题一/二级用【】/〖〗强调，加粗→原文保留，引用→｜，列表用 •，复杂块转为图片卡片发送。',
+dingtalk: '标题一/二级用◆ 强调，加粗→原文保留，引用→>，列表用 ▪，复杂块转为图片卡片发送。',
+feishu: '标题一/二级用『』强调，加粗→原文保留，引用→▍，列表用 ·，复杂块转为图片卡片发送。',
+wecom: '标题一/二级用【】/〖〗强调，加粗→原文保留，引用→>，列表用 -，复杂块转为图片卡片发送。'
 }[pid];
 }
 
@@ -1056,13 +1058,17 @@ var hint = $('mc-edit-hint'); if (hint) hint.style.display = tab === 'text' ? 'b
 
 function copyForPlatform(kind) {
 var p = PLATFORMS[state.platform];
-var plain = blocksToPlain(state.blocks, state.platform);
+var box = hasDOM()? $('mc-preview'): null;
+/* 纯文字版页签为 contenteditable：此时复制用户改完后的 DOM，而非重新生成 */
+var useEdited = !!box && state.tab === 'text';
+var plain = useEdited? box.innerText: blocksToPlain(state.blocks, state.platform);
 function done(ok) {
 toast(ok? '✅ 已复制（' + p.label + (kind === 'rich'? '富文本': '纯文本') + '），去聊天框粘贴吧'
 : '❌ 复制失败，请手动框选右侧预览区复制', ok);
 }
 if (kind === 'rich') {
-var html = '<div style="font-family:' + SANS + ';font-size:15px;color:#1f2937;">' +
+var html = useEdited? box.innerHTML:
+'<div style="font-family:' + SANS + ';font-size:15px;color:#1f2937;">' +
 blocksToEditableHtml(state.blocks, state.platform) + '</div>';
 copyRichHtml(html, plain, done);
 } else {
