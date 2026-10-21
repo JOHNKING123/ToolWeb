@@ -1,0 +1,231 @@
+{{define "slowed_reverb"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频变速混响生成器 - Slowed+Reverb 一键生成，免费在线 | 程序员工具箱</title>
+    <meta name="description" content="免费在线音频变速混响生成器：上传 MP3/WAV/OGG/M4A/AAC，浏览器本地解码不上传；变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调自然变化），ConvolverNode 卷积混响（怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），离线渲染＋进度条，A/B 对比试听，WAV 手工编码 / MP3(128-320kbps) 本地导出。纯前端、零 CDN、零后端。">
+    <meta name="keywords" content="slowed reverb,音频变速,混响生成器,slowed 音频,nightcore,在线变速音频,音频慢放,卷积混响,音频加混响,变调不变速,lofi 混响,ambient 混响">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/slowed-reverb">
+    <meta property="og:title" content="音频变速混响生成器 - Slowed+Reverb 一键生成，免费在线">
+    <meta property="og:description" content="变速 0.5x–1.5x（Slowed/Nightcore 一键预设）＋程序化卷积混响 4 预设，离线渲染、A/B 试听，WAV/MP3 本地导出，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/slowed-reverb">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"音频变速混响生成器","description":"音频变速＋卷积混响效果工具：本地解码，0.5x–1.5x 变速（Slowed/Nightcore 预设），程序化合成脉冲响应四混响预设，离线渲染，A/B 试听，WAV/MP3 本地导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/slowed-reverb","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sr-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .sr-wrap .navbar .material-icons { display: none; }
+        .sr-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .sr-privacy .sr-lock { font-size: 1.6rem; flex: none; }
+        .sr-privacy b { color: #047857; }
+        .sr-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .sr-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .sr-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .sr-upload:hover, .sr-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .sr-upload .sr-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .sr-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .sr-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .sr-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .sr-row label { font-size: .92rem; color: #374151; }
+        .sr-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .sr-btn:hover { filter: brightness(.93); }
+        .sr-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .sr-btn-ghost { background: #fff; color: var(--primary-color); }
+        .sr-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .sr-chip { padding: .42rem .9rem; border-radius: 999px; border: 1px solid #d1d5db; background: #fff;
+            font-size: .88rem; cursor: pointer; color: #374151; transition: all .15s; }
+        .sr-chip:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .sr-chip.on { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); font-weight: 700; }
+        .sr-val { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--primary-color);
+            font-size: 1.05rem; min-width: 4.2em; display: inline-block; }
+        input[type=range].sr-slider { flex: 1; min-width: 180px; accent-color: var(--primary-color); }
+        /* 混响预设卡片 */
+        .sr-rcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .7rem; margin: .6rem 0; }
+        .sr-rcard { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .9rem; background: #f9fafb;
+            cursor: pointer; transition: all .15s; }
+        .sr-rcard:hover { border-color: var(--primary-color); }
+        .sr-rcard.on { border-color: var(--primary-color); background: #eff6ff; box-shadow: 0 0 0 1px var(--primary-color); }
+        .sr-rcard-t { font-weight: 700; font-size: .92rem; color: #111827; }
+        .sr-rcard-t span { font-weight: 400; font-size: .78rem; color: #9ca3af; margin-left: .3rem; }
+        .sr-rcard.on .sr-rcard-t { color: var(--primary-color); }
+        .sr-rcard-d { font-size: .82rem; color: #6b7280; margin-top: .25rem; line-height: 1.6; }
+        /* 渲染进度 */
+        .sr-progress { height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin: .6rem 0 .3rem; }
+        .sr-progress .sr-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary-color), #34d399);
+            border-radius: 999px; transition: width .2s; }
+        .sr-pct { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; color: #6b7280; }
+        /* 导出 */
+        .sr-export-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+        .sr-export-row select { padding: .5rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .9rem; }
+        .sr-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .sr-doc b { color: #111827; }
+        .sr-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .sr-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .sr-combo b { color: #111827; }
+        .sr-combo a { color: var(--primary-color); }
+        .sr-faq dt { font-weight: 700; color: #111827; margin: .9rem 0 .3rem; font-size: .95rem; }
+        .sr-faq dd { margin: 0; color: #4b5563; line-height: 1.9; font-size: .92rem; }
+        .sr-faq dd code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .sr-related { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .4rem; align-items: center; }
+        @media (max-width: 640px) {
+            .sr-wrap .container { padding: 1rem .7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sr-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎛️ 音频变速混响生成器</h1>
+            <p>Slowed + Reverb 一键生成：0.5x–1.5x 变速 × 程序化卷积混响，离线渲染、A/B 试听、本地导出</p>
+        </div>
+
+        <div class="sr-privacy">
+            <span class="sr-lock">🔒</span>
+            <div><b>隐私承诺：音频只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、<code>decodeAudioData</code> 本地解码、变速＋卷积混响离线渲染、A/B 试听、WAV/MP3 编码导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 MP3 编码器 lamejs 也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 上传的音频不会产生一次网络请求。刷新页面后音频不恢复（不做任何本地存储）。</div>
+        </div>
+
+        <div class="sr-panel">
+            <h3>1️⃣ 上传音频</h3>
+            <div class="sr-upload" id="sr-upload" role="button" tabindex="0" aria-label="点击选择或拖拽音频文件到此处上传">
+                <span class="sr-big">🎵</span>
+                <div>点击选择音频，或把音频文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 MP3 / WAV / OGG / M4A / AAC 等常见格式（实际以浏览器解码能力为准）</div>
+            </div>
+            <input type="file" id="sr-file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,.mp3,.wav,.ogg,.oga,.m4a,.aac" style="display:none;">
+            <div class="sr-info" id="sr-srcinfo" style="display:none;"></div>
+            <div class="sr-status" id="sr-status"></div>
+        </div>
+
+        <div class="sr-panel" id="sr-panel-params" style="display:none;">
+            <h3>2️⃣ 调节参数</h3>
+            <div class="sr-row">
+                <label><b>🐢 变速</b></label>
+                <input type="range" class="sr-slider" id="sr-speed" min="0.5" max="1.5" step="0.01" value="1" aria-label="变速比">
+                <span class="sr-val" id="sr-speed-val">1.00x</span>
+            </div>
+            <div class="sr-row" id="sr-presets" aria-label="变速一键预设"></div>
+            <div class="sr-info">变速同时改变音调（0.8x 降调变慢 = Slowed 味，1.25x 升调变快 = Nightcore 味），不做变调补偿。</div>
+            <div class="sr-row" style="margin-top:1rem;">
+                <label><b>🌊 混响预设</b></label>
+            </div>
+            <div class="sr-rcards" id="sr-reverb-cards"></div>
+            <div class="sr-row">
+                <label><b>🎚️ 混响量</b></label>
+                <input type="range" class="sr-slider" id="sr-wet" min="0" max="100" step="1" value="50" aria-label="混响量">
+                <span class="sr-val" id="sr-wet-val">50%</span>
+            </div>
+            <div class="sr-info">混响量 0% = 纯变速（干声直通）；100% = 纯湿声。采用等功率交叉淡化，中间档位不损失响度。</div>
+            <div class="sr-info" id="sr-estimate" style="margin-top:.6rem;"></div>
+        </div>
+
+        <div class="sr-panel" id="sr-panel-render" style="display:none;">
+            <h3>3️⃣ 生成效果（离线渲染）</h3>
+            <div class="sr-row">
+                <button class="sr-btn" id="sr-render">⚙️ 生成效果</button>
+                <span class="sr-info">在浏览器内离线渲染全部音频，长音频请耐心等待</span>
+            </div>
+            <div class="sr-progress"><div class="sr-bar" id="sr-render-bar"></div></div>
+            <div class="sr-pct" id="sr-render-pct">0%</div>
+            <div class="sr-status" id="sr-render-status"></div>
+        </div>
+
+        <div class="sr-panel" id="sr-panel-preview" style="display:none;">
+            <h3>4️⃣ A/B 对比试听</h3>
+            <div class="sr-row">
+                <button class="sr-btn sr-btn-ghost" id="sr-play-orig">▶ 播放原音频</button>
+                <button class="sr-btn" id="sr-play-fx">▶ 播放效果</button>
+                <button class="sr-btn sr-btn-stop" id="sr-stop-play" disabled>⏹ 停止</button>
+            </div>
+            <div class="sr-status" id="sr-play-status"></div>
+        </div>
+
+        <div class="sr-panel" id="sr-panel-export" style="display:none;">
+            <h3>5️⃣ 导出</h3>
+            <div class="sr-export-row">
+                <button class="sr-btn" id="sr-export-wav">⬇️ 导出 WAV</button>
+                <button class="sr-btn" id="sr-export-mp3">⬇️ 导出 MP3</button>
+                <label>MP3 比特率：
+                    <select id="sr-bitrate">
+                        <option value="128" selected>128 kbps（推荐）</option>
+                        <option value="192">192 kbps（高音质）</option>
+                        <option value="320">320 kbps（最高）</option>
+                    </select>
+                </label>
+            </div>
+            <div class="sr-info" id="sr-export-filename"></div>
+            <div class="sr-info">WAV 为手工编码的 16-bit PCM 无损导出；MP3 由本地 vendor 的 lamejs 编码（离线可用）。文件名自动后缀，无需手动命名。</div>
+            <div class="sr-status" id="sr-export-status"></div>
+            <div class="sr-row" style="margin-top:1rem;">
+                <button class="sr-btn sr-btn-ghost" id="sr-reupload">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <div class="sr-combo">
+            <b>🎧 「音频旅程线」组合：</b>效果做好了想剪掉前后多余部分？去 <a href="/tools/audio-trimmer">在线音频裁剪器</a> 框选裁剪；有多段处理好的音频想拼成一条？去 <a href="/tools/audio-merger">音频合并器</a> 排序合并 —— 变速混响 → 裁剪 → 合并，一套流程走完。
+        </div>
+
+        <div class="sr-panel">
+            <h3>使用说明</h3>
+            <div class="sr-doc">
+                <b>解码：</b>文件经 <code>FileReader</code> 读入 ArrayBuffer 后，用 Web Audio API 的 <code>decodeAudioData</code> 在浏览器本地解码为 AudioBuffer（MP3/WAV/OGG/M4A/AAC 是否支持取决于浏览器解码器）。<br>
+                <b>变速：</b>滑块 0.5x–1.5x（超出自动钳制），或点一键预设：<code>0.8x Slowed</code> / <code>1.0x 正常</code> / <code>1.25x Nightcore</code>。实现为 <code>playbackRate</code>，音调随速度自然变化。<br>
+                <b>混响：</b>四选一脉冲响应预设 —— 怀旧磁带（Nostalgic）/ 空灵氛围（Ambient）/ 深邃房间（Deep Room）/ 柔和回声（Soft Echo，带离散回声抽头）。脉冲响应由确定性随机算法程序化合成（同一预设每次结果一致），经 <code>ConvolverNode</code> 卷积；混响量滑块控制干湿比（等功率淡化）。<br>
+                <b>渲染：</b><code>OfflineAudioContext</code> 离线渲染整轨，进度条分段更新；渲染结果 = 变速后主干时长 ＋ 混响尾音。<br>
+                <b>试听：</b>A/B 对比 —— 「播放原音频」与「播放效果」一键切换，确认满意再导出。<br>
+                <b>导出：</b>WAV 为手工编码的 16-bit PCM（44 字节标准头）；MP3 经本地 lamejs 编码（重采样到 44100Hz，128/192/320kbps 可选，长音频分块编码不卡死页面）。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、渲染、试听、编码、下载都在你的浏览器里完成，可在 DevTools Network 面板验证；刷新页面后音频不恢复。
+            </div>
+        </div>
+
+        <div class="sr-panel">
+            <h3>❓ 常见问题</h3>
+            <dl class="sr-faq">
+                <dt>音频会被上传到服务器吗？</dt>
+                <dd>不会。所有步骤（上传读取、解码、变速、混响渲染、A/B 试听、WAV/MP3 编码、下载）都在你的浏览器本地完成，脚本内零 <code>fetch</code>/XHR。你可以在开发者工具的 Network 面板验证：上传音频后没有任何网络请求发出。刷新页面后音频不恢复。</dd>
+                <dt>Slowed 和 Nightcore 是什么？</dt>
+                <dd>都是变速听歌的流行玩法：<code>0.8x Slowed</code> 把歌放慢并降调，配上混响就是经典的 slowed+reverb 味；<code>1.25x Nightcore</code> 加速并升调，元气满满。本工具一键预设这两个速度，也可以用滑块在 0.5x–1.5x 间自由调节。</dd>
+                <dt>四个混响预设有什么区别？</dt>
+                <dd>怀旧磁带（Nostalgic）：温暖老旧磁带感，中长尾音，最适合 slowed；空灵氛围（Ambient）：超长尾音，空间感开阔；深邃房间（Deep Room）：尾音短促集中，闷而深；柔和回声（Soft Echo）：带离散回声抽头，余音有节奏地渐弱。</dd>
+                <dt>混响量调到 0% 会怎样？</dt>
+                <dd>等于纯变速：干声直通、湿声关闭，渲染结果就是单纯变速后的音频，时长 = 原时长 ÷ 变速比（如 1.25x 下约原时长的 80%）。</dd>
+                <dt>渲染后的时长为什么比变速后的长一点？</dt>
+                <dd>因为包含了混响尾音。渲染总时长 = 变速后主干时长 ＋ 该预设脉冲响应的时长（如怀旧磁带约 2 秒）。想要精确卡时长可以再用<a href="/tools/audio-trimmer">音频裁剪器</a>修一下尾巴。</dd>
+                <dt>导出的 MP3 时长和 WAV 一致吗？</dt>
+                <dd>一致。两者都来自同一份离线渲染结果，只是编码格式不同（WAV 无损体积大，MP3 有损体积小）。比特率越高 MP3 体积越大、音质越好。</dd>
+                <dt>导出的文件叫什么名字？</dt>
+                <dd>自动命名为「原文件名_slowed-{速度}x_reverb-{混响量}.扩展名」，例如 <code>夜曲_slowed-0.8x_reverb-50.mp3</code>；混响量为 0% 时省略 reverb 段。如需其他名字，下载后重命名即可。</dd>
+            </dl>
+        </div>
+
+        <div class="sr-panel">
+            <h3>🔗 相关工具</h3>
+            <div class="sr-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">变速混响生成器（当前）</span>
+                <a href="/tools/audio-trimmer" class="btn btn-secondary" style="font-size:.9rem;">在线音频裁剪器</a>
+                <a href="/tools/audio-merger" class="btn btn-secondary" style="font-size:.9rem;">音频合并器</a>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/lamejs.min.js?v=1"></script>
+    <script src="/tools/static/js/slowed_reverb.js?v=1"></script>
+</body>
+</html>
+{{end}}

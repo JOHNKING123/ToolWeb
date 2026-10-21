@@ -1,3 +1,81 @@
+## 今日任务（2026-10-22 03:47 · 产品经理排期轮）
+
+**选定：音频变速混响生成器（slowed_reverb）** — 本轮唯一任务：
+- **顺位**：AI 提示词脱敏器交付闭环（开发轮 8732394＋评审修复 320ee32，全量 133 Path）→ 03:00 研究轮 61 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。今日 01:00/01:41 两轮均按研究轮 Top1 顺位递进（SRT 字幕编辑器→AI 提示词脱敏器），本轮继续。
+- **形态族验证**：LimeWire 2026-10-21 当日发布 Creator Arsenal（EINPresswire 新闻稿：8 款浏览器原生工具，WebAssembly/Web Audio/Canvas 纯客户端零上传）中 Audio & Producer Lab 三形态之一「Sped Up & Slowed + Reverb Generator」；多方独立形态验证：allfiletools Slowed Reverb Studio（Medium 推广文：调速＋混响量可调）/beatmusic.ai（MP3/WAV/FLAC/M4A 实时预览）/imagine.art（nostalgic/ambient/deep-room/soft echo 预设）/AppBrain「Slowed and Reverb App」（8.8 万安装，2026-10-09 刚更新）。
+- **痛点高频真实**：TikTok/Douyin 创作者做 Nightcore 加速版、Slowed+Reverb 版音频：桌面方案要装软件（Audacity 等），在线方案要上传隐私音频到第三方服务器。
+- **零重叠实锤**：`grep -oinE 'slowed|reverb|变速|混响|nightcore' tools/categories.go templates/*.html`（base.html 的 Tailwind 框架引用除外）零命中；现有仅 audio_trimmer/audio_merger（剪辑/合并），本工具为变速变调＋卷积混响处理，形态零重叠；建议 ID `slowed_reverb`、Path `/tools/slowed-reverb` 未被占用。
+- **轮次匹配**：03:47 深夜轮次，研究轮明确「深夜轮次，P1 可排」；纯前端小-中难度（Web Audio API＋OfflineAudioContext 离线渲染＋程序化合成脉冲响应，无外部 IR 文件/无模型推理），一轮可高质量交付。
+- **家族归位**：音频处理家族（与 audio_trimmer/audio_merger 同品类同用户画像：创作者音频预处理工具链；双向互链「剪辑→变速混响→合并」）。
+- **复用点实锤**：MP3 导出复用仓库内 vendor `./static/js/vendor/lamejs.min.js`（audio_trimmer 已用路径）；波形预览可复用 audio_trimmer 的 canvas 绘制思路。
+- **方向合规**：ToolWeb 音频工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正；与站内「隐私即架构」零上传定位高度契合。
+- **未选**：CSS 转 Tailwind 转换器（P1；61 轮次席；六方独立形态共识＋DevDock 佐证；建议 ID css_to_tailwind、Path /tools/css-to-tailwind；留池下一轮）；MBOX 邮件存档查看器（P1；58 轮新晋；分块 File API 索引＋MIME 解码中难度，研究轮明确深夜轮次交付风险略高；建议 ID mbox_viewer、Path /tools/mbox-viewer；留池更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化组装 TTF 输出可用性验证成本较高；留池下一轮）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，研究轮明确留待更从容轮次）；8D 环绕声转换器/BPM 调性检测器（P2 本轮新晋观察）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，本轮不动）；其余候选留池。
+
+**规格**：
+- 输入：拖拽/选择上传音频（MP3/WAV/OGG/M4A/AAC，浏览器 decodeAudioData 本地解码，GB 级以内不爆内存）；可选试听原音频；零上传纯前端。
+- 变速：滑块 0.5x–1.5x（减速 Slowed 区 0.5x–1.0x / 加速 Nightcore 区 1.0x–1.5x，一键预设按钮：0.8x 经典 Slowed / 1.25x 经典 Nightcore）；音调随速度自然变化（标准 Nightcore/Slowed 形态，界面注明）。
+- 混响：ConvolverNode 卷积混响，脉冲响应程序化合成（噪声衰减 IR，零外部文件）；4 预设 nostalgic/ambient/deep-room/soft echo（预设参数：衰减时间/预延迟/立体声宽度）；混响量（wet/dry 混合比）滑块 0–100% 可调。
+- 渲染链：AudioBufferSourceNode(playbackRate)→Dry 直通＋Convolver(wet)→OfflineAudioContext 离线渲染→渲染进度条→试听播放（可 A/B 对比原音）→本地导出。
+- 导出：WAV（PCM 本地编码）＋MP3（复用 static/js/vendor/lamejs.min.js，比特率 128/192/320kbps 可选）；文件名自动后缀（如 `xxx_nightcore-1.25x_reverb-nostalgic.mp3`）。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）；音频数据只在内存，不落盘。
+- 注册：音频处理品类（与 audio_trimmer/audio_merger 同族），新增工具 ID `slowed_reverb`、Name「音频变速混响生成器」、Path `/tools/slowed-reverb`（New: true），中英文描述＋SEO keywords（Nightcore、Slowed and Reverb、变速、混响、音频加速、音频减速、slowed reverb generator）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+- 互链：与 `/tools/audio-trimmer`、`/tools/audio-merger` 双向互链（音频处理工具矩阵：「剪辑→变速混响→合并」创作者链路）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `slowed_reverb`、Path `/tools/slowed-reverb` 注册，注册总数 134 Path；与 audio-trimmer/audio-merger 双向互链可点。
+2. 上传一段测试音频→设 1.25x＋nostalgic 混响 50%→离线渲染完成→试听播放无爆音无卡顿→导出 WAV 文件可正常播放、时长≈原时长/1.25。
+3. 同参数导出 MP3（lamejs 128kbps）：文件可用、时长与 WAV 渲染一致。
+4. 变速滑块边界钳制：0.5x–1.5x 外输入被钳制；混响量 0% 时输出≈纯变速无混响（干湿比逻辑正确）。
+5. 零上传：脚本内零 fetch/XHR，Network 抽查无内容外发；刷新页面后音频数据不恢复（不落盘）。
+6. node 测试 80+ 断言全过（IR 合成函数确定性/衰减包络、WAV PCM 编码头、变速参数钳制、预设参数表完整性、文件名后缀规则）。
+7. 公网 /tool-web 部署后 QA：/tools/slowed-reverb 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID slowed_reverb、Path /tools/slowed-reverb，音频处理品类，New: true）
+- 新建 `templates/slowed_reverb.html`、`static/js/slowed_reverb.js`、`tests/slowed_reverb.test.js`
+- 改动 `templates/audio_trimmer.html`、`templates/audio_merger.html`（互链入口，双向）
+
+**交付核对**：本地 HEAD 320ee32；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮仍报 access rights 异常（与 59/60/61 轮同故障模式，本地分支未动，仓库读取以本地为准；开发轮次需复核网络与密钥）；零重叠 grep 全零命中（base.html 的 Tailwind 框架引用除外）；建议 ID `slowed_reverb`、Path `/tools/slowed-reverb` 未被占用；lamejs vendor 路径 `./static/js/vendor/lamejs.min.js` 实锤存在；03:00 研究轮 BACKLOG 追加随本轮一并提交（沿用惯例）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-22 03:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。AI 提示词脱敏器交付闭环（开发轮 8732394＋评审修复 320ee32；`grep tools/categories.go` 确认 ID `prompt_sanitizer`、Path `/tools/prompt-sanitizer` 已注册，全量 **133 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 深夜轮次，P1 可排。
+
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. prompt_sanitizer 交付确认：`git log` 头部 320ee32（评审修复）＋8732394（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（`Please make sure you have the correct access rights and the repository exists`，与 59/60 轮同故障模式，本地分支 muse/dev-20260929 未动，仓库读取以本地为准；后续 PM/开发轮次需复核网络与密钥）；本地工作树干净（仅未跟踪 `toolWeb.bak-prev`／`toolweb` 历史构建产物残留）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 133 Path，`prompt_sanitizer` ID 与 `/tools/prompt-sanitizer` Path 已注册；候选池划出。
+2. 新信号扫描：
+   - **LimeWire（2026-10-21 当日发布）Creator Arsenal**：8 款免费浏览器原生工具（EINPresswire 新闻稿；WebAssembly/Web Audio/Canvas 纯客户端，零上传）→ Audio & Producer Lab 三形态：① Sped Up & Slowed + Reverb Generator（一键 Nightcore 加速版 / Slowed+Reverb 版）② 8D Audio Converter（立体声→360° 环绕声）③ BPM, Key & Pitch Finder → 多方独立形态验证：allfiletools Slowed Reverb Studio（Medium 推广文：调速＋混响量可调）/beatmusic.ai（MP3/WAV/FLAC/M4A，实时预览）/imagine.art（nostalgic/ambient/deep-room/soft echo 预设）/AppBrain「Slowed and Reverb App」（8.8 万安装，2026-10-09 刚更新）→ 池内零覆盖（`grep -cinE '混响|reverb|Reverb|变速|nightcore|Nightcore|慢速|8D|环绕声|BPM|bpm'` 全零命中；现有仅 audio_trimmer/audio_merger）→ 本轮记 **P1 新晋「音频变速混响生成器」**（建议 ID `slowed_reverb`、Path `/tools/slowed-reverb`；形态：上传音频→变速（加速 Nightcore / 减速 Slowed，变调可选）＋卷积混响（nostalgic/ambient/deep-room/soft echo 预设）→离线渲染试听→WAV/MP3 本地导出（复用 audio_trimmer lamejs/vendor 路径）；音频处理家族增强）；8D 环绕声→P2 观察（声像旋转噱头较重）、BPM/调性检测→P2 观察（onset 自相关算法中难度）；
+   - **dev.to Antigravity Tools（2 天前新帖，59 款浏览器开发者工具，零依赖零服务端）**：RSA & ECC Key Generator / AI Token Counter / AI Text Humanizer / System Prompt Builder / PII Masker / JWT Inspector 等 → 去重自查修正（⚠️ 本轮首轮 grep 因 shell 转义 bug——双引号内 `\\|` 被 ERE 当字面量管道——误报零命中，二次修正复核实锤三项已实现）：`ai_token_counter`（/tools/ai-token-counter）已实现→AI Token 计数器不立记账；`serp_snippet_preview`（/tools/serp-snippet-preview）已实现→SERP 搜索结果预览不立记账；`rsa`（/tools/rsa「RSA 加解密」）已含「生成RSA密钥对」（WebCrypto.generateKey 本地生成，templates/rsa.html:86-224）→RSA/ECC 密钥对生成器不立（ECC 曲线可记 rsa 工具 P3 增强观察）；PII Masker＝自有 `text_privacy_masker` 实锤；AI Text Humanizer→需 LLM，不立；System Prompt Builder→表单模板痛点弱，P2 观察；
+   - **dev.to xmico.site（2026-10-15）**：Image Compressor/Resizer/Image to PDF/PDF Merger/**SRT Editor**→ 均自有已实现实锤（subtitle_editor 在 133 Path 内），复现不重复记账；
+   - **dev.to prestofiles（2026-10-21 当日）** 零上传套件方法论帖→ 架构趋势（Canvas/WASM/Web Audio 纯浏览器执行、隐私即架构）持续佐证＋竞品参照记账，无新工具形态；
+   - **dev.to Toolscase（2026-10-15）** 浏览器内 ChatPDF 替代（PDF.js＋浏览器内 RAG）→ 需向量检索/小模型推理，非单页小工具形态，不立记账；
+   - **dev.to DevTrove（10-13）/RVUtils（10-16）/BlanzaTools（10-11）/ToolVerse/SuperToolKit**→ JWT/cron/chmod/curl/HEIC/基础工具均为自有已实现实锤，无新形态；
+   - **V2EX 10-21/22**：t/1250292 Open Resume（49 轮已记不立）/t/1250522 protohub（53 轮已记不立）/t/1250690 Builderoom（57 轮已记不立）/t/1250428 md2chat（自有 `md_to_chat` 实锤）/t/1250538 Antumi（桌面形态不立）→ 全部已消化复现，无重复记账。
+3. 候选池变动：音频变速混响生成器 P1 新晋（LimeWire 10-21 当日发布＋allfiletools/beatmusic/imagine.art/AppBrain 多方独立验证＋音频处理家族归位＋零覆盖；去重核稿：中文名＋ID 片段双核零命中，可复现）；AI Token 计数器/SERP 搜索结果预览/RSA 密钥对生成器→自有实锤不立（去重 bug 自查修正记账）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **音频变速混响生成器** — P1（本轮新晋；LimeWire 2026-10-21 Creator Arsenal 当日发布形态验证＋allfiletools/beatmusic.ai/imagine.art/AppBrain（8.8 万安装）多方独立验证；痛点高频：TikTok/Douyin 创作者做 Nightcore 加速版、Slowed+Reverb 版，桌面方案要装软件、在线方案要上传隐私音频；纯前端小-中难度：上传→变速（加速/减速，变调可选）＋卷积混响（nostalgic/ambient/deep-room/soft echo 预设）→OfflineAudioContext 离线渲染试听→WAV/MP3 本地导出（复用 audio_trimmer lamejs/vendor 路径）；音频处理家族增强（audio_trimmer/audio_merger 同族）；与站内零重叠；建议 ID slowed_reverb、Path /tools/slowed-reverb）。
+2. **CSS 转 Tailwind 转换器** — P1（60 轮新晋；01:41 PM 轮留池；csstoolkit.net/iotools.cloud/tooladda.online/js2ts.com/testmuai/softonic 六方独立形态共识＋DevDock 佐证；痛点：迁移老样式表到 Tailwind 逐条手写 class 慢；纯前端小难度：CSS 声明解析→scale 匹配命名工具类（16px→p-4、色板精确匹配→bg-blue-500）→未命中任意值语法兜底（w-[137px]）＋无映射项行内注释；可附 v3/v4 切换＋实时预览；开发工具家族归位；与站内零重叠；建议 ID css_to_tailwind、Path /tools/css-to-tailwind）。
+3. **MBOX 邮件存档查看器** — P1（58 轮新晋；Medium 2026-10-21 readmbox 新帖形态验证＋One Scales（PRLog 2026-08）/Univik/Mailward/GoldFynch 多方独立验证；痛点：Google Takeout 导出邮件包（MBOX）后无处打开，现有在线查看器要求上传全部邮件历史（隐私噩梦）；纯前端中难度：分块 File API 索引（GB 级大文件不爆内存）＋"From " 分隔解析＋MIME（base64/quoted-printable）解码＋全文搜索＋EML/CSV 导出＋附件提取；与站内「隐私即架构」零上传定位高度契合；03:00 深夜轮次交付风险略高，顺位待选；建议 ID mbox_viewer、Path /tools/mbox-viewer）。
+
+SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化组装 TTF 输出可用性验证成本较高，深夜轮次让位；留池下一轮）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留待更从容轮次）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；8D 环绕声转换器（P2 本轮新晋观察；声像旋转 niche，噱头较重）；BPM/调性检测器（P2 本轮新晋观察；onset 自相关算法中难度）；System Prompt 构建器（P2 本轮新晋观察；表单模板痛点弱）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第六十一轮：AI 提示词脱敏器已实现划出；音频变速混响生成器 P1 新晋；去重自查修正：AI Token 计数器/SERP 搜索结果预览/RSA 密钥对生成器自有实锤不立；全量 133 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| AI 提示词脱敏器 | 已实现划出（8732394 落盘＋320ee32 评审修复；ID prompt_sanitizer、Path /tools/prompt-sanitizer 已注册；全量 133 Path；粘贴代码/日志或上传 .txt/.log/.env/.md→本地正则识别 API Key/JWT/PEM 私钥/Bearer Token/数据库连接串→逐条确认→占位符替换一键复制发问；映射表仅 sessionStorage（关闭即销毁）；LLM 答案一键本地还原；与代码打包给 LLM 双向互链；纯前端零上传；node 测试 122 断言全过） | — | 已实现 |
+| 音频变速混响生成器 | 本轮 P1 新晋（LimeWire 2026-10-21 Creator Arsenal 当日发布形态验证＋allfiletools/beatmusic.ai/imagine.art/AppBrain 多方独立验证；痛点：TikTok/Douyin 创作者做 Nightcore 加速版、Slowed+Reverb 版，桌面要装软件、在线要上传；纯前端：上传→变速（加速/减速，变调可选）＋卷积混响（nostalgic/ambient/deep-room/soft echo 预设）→离线渲染试听→WAV/MP3 本地导出；音频处理家族增强（audio_trimmer/audio_merger 同族）；建议 ID slowed_reverb、Path /tools/slowed-reverb） | 小-中 | P1（61 轮新晋） |
+
+**归档说明**：本轮为 10-22 通用调研第六十一轮——AI 提示词脱敏器交付闭环（8732394＋320ee32，`/tools/prompt-sanitizer` 已注册，开发工具品类，全量 133 Path），候选池划出，已实现清单 delta 追加；新信号扫描（LimeWire 10-21 Creator Arsenal→音频变速混响生成器 P1 新晋（多方独立验证＋音频处理家族归位＋零覆盖）；dev.to Antigravity Tools→去重自查修正：首轮 grep shell 转义 bug 误报零命中，二次修正复核实锤 `ai_token_counter`/`serp_snippet_preview`/`rsa（含密钥对生成）`已实现，三个候选不立记账；xmico.site SRT Editor＝subtitle_editor 实锤/prestofiles 方法论记账/Toolscase 浏览器内 RAG 不立/DevTrove·RVUtils·BlanzaTools·ToolVerse·SuperToolKit 自有实锤/V2EX 10-21/22→Open Resume·protohub·Builderoom·md2chat·Antumi 全部已消化复现）均已消化；WPS 候选表保持冻结归档；仓库 133 注册工具全量核对无重叠（Top3 建议 ID slowed_reverb / css_to_tailwind / mbox_viewer；中文名+ID 片段双核＋修正后零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（access rights 报错，与 59/60 轮同故障模式；后续 PM/开发轮次需复核网络与密钥）；`git log` 确认开发交付 8732394（prompt_sanitizer）＋评审修复 320ee32；`grep tools/categories.go` 全量 133 Path（`prompt_sanitizer` ID 与 `/tools/prompt-sanitizer` Path 已注册，划入已实现）；新晋 ID `slowed_reverb` 与 133 Path 无重叠（关键词核对零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-22 01:41 · 产品经理排期轮）
 
 **选定：AI 提示词脱敏器（prompt_sanitizer）** — 本轮唯一任务：

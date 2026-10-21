@@ -1341,6 +1341,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "音频处理",
 				},
+				{
+					ID:          "slowed_reverb",
+					Name:        "音频变速混响生成器",
+					Description: "上传 MP3/WAV/OGG/M4A/AAC 本地解码，变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调随速度自然变化），ConvolverNode 卷积混响（程序化合成脉冲响应：怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），OfflineAudioContext 离线渲染＋进度条，A/B 对比试听，WAV 手工编码/MP3(lamejs 128–320kbps)本地导出，纯前端零上传 · Slowed+reverb generator: change speed 0.5x-1.5x, convolution reverb, offline render, A/B preview, export WAV/MP3 locally",
+					Path:        "/tools/slowed-reverb",
+					Icon:        "tune",
+					New:         true,
+					Category:    "音频处理",
+				},
 			},
 		},
 	}
