@@ -1,0 +1,203 @@
+{{define "teleprompter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线提词器 - 大字滚动提词/演讲提词器/直播提词（teleprompter）| 程序员工具箱</title>
+<meta name="description" content="免费在线提词器（Teleprompter）：网页端大字滚动提词，演讲、拍视频、直播、上台发言提词神器；左侧编辑文案＋字号/行距/滚动速度/镜像设置，右侧大字平滑滚动播放，速度 1x–5x＋暂停/继续，空格暂停、↑↓调速、F 全屏快捷键，进度条点击跳转＋当前行高亮，镜像模式适配物理提词镜面，全屏深色高对比提词，localStorage 自动暂存＋示例演讲稿＋预计朗读时长。纯前端零上传，文案不出电脑。Free online teleprompter: smooth large-text scrolling, mirror mode, fullscreen, 100% client-side.">
+<meta name="keywords" content="提词器,在线提词器,teleprompter,演讲提词器,直播提词,视频提词,提词器网页版,镜像提词,滚动提词,大字提词,提词器app,演讲稿提词">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/teleprompter">
+<meta property="og:title" content="在线提词器 - 大字滚动提词/演讲直播提词神器">
+<meta property="og:description" content="网页端大字滚动提词器：文案编辑＋字号/行距/速度/镜像设置，大字平滑滚动播放，空格暂停、↑↓调速、F 全屏，进度条跳转＋当前行高亮，镜像模式适配提词镜，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/teleprompter">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线提词器","alternateName":"teleprompter","description":"网页端大字滚动提词器：演讲/拍视频/直播提词；左侧编辑文案＋字号/行距/滚动速度/镜像设置，右侧大字平滑滚动播放（速度 1x–5x＋暂停/继续），空格暂停、↑↓调速、F 全屏快捷键，进度条点击跳转＋当前行高亮，镜像模式适配物理提词镜面，全屏深色高对比，localStorage 自动暂存＋示例演讲稿＋预计朗读时长（180 字/分钟）；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/teleprompter","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.tp-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.tp-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.tp-work{display:grid;grid-template-columns:minmax(380px,440px) 1fr;gap:1.2rem;align-items:start}
+.tp-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.tp-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.tp-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.tp-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.tp-field label{font-size:.82rem;color:#6b7280;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.tp-field label b{color:#1d4ed8;font-weight:700}
+.tp-field textarea{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.92rem;
+background:#fff;color:#1f2937;width:100%;box-sizing:border-box;resize:vertical;line-height:1.8;font-family:inherit}
+.tp-field textarea:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.tp-field input[type=range]{width:100%;accent-color:#1d4ed8}
+.tp-check{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:#374151;margin-bottom:.8rem;cursor:pointer}
+.tp-check input{width:1.05rem;height:1.05rem;accent-color:#1d4ed8}
+.tp-stats{font-size:.85rem;color:#4b5563;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.tp-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.tp-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.tp-btn .material-icons{font-size:1.1rem}
+.tp-btn-primary{background:#1d4ed8;color:#fff}
+.tp-btn-primary:hover{background:#1e40af}
+.tp-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.tp-btn-secondary:hover{background:#e5e7eb}
+.tp-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+/* ---- 播放区 ---- */
+#tp-player-wrap{background:#0b0e14;border-radius:.8rem;overflow:hidden;border:1px solid #1f2937}
+#tp-player-wrap:fullscreen{border-radius:0;border:none}
+.tp-viewport{position:relative;height:520px;overflow-y:auto;overflow-x:hidden;background:#0b0e14;scrollbar-width:thin}
+#tp-player-wrap:fullscreen .tp-viewport{height:calc(100vh - 96px)}
+.tp-marker{position:absolute;left:0;right:0;top:35%;height:2px;background:#ef4444;opacity:.85;
+pointer-events:none;z-index:5}
+.tp-marker::before{content:"◀";position:absolute;left:6px;top:-11px;color:#ef4444;font-size:14px}
+#tp-content{color:#f9fafb;padding-left:2.2rem;padding-right:2.2rem;will-change:transform}
+#tp-content .tp-line{margin:0 0 .9em;padding:.15em .4em;border-radius:.25em;transition:background .2s,color .2s}
+#tp-content .tp-line.tp-cur{background:rgba(250,204,21,.14);color:#fde047}
+.tp-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4b5563;
+font-size:1.1rem;pointer-events:none;text-align:center;line-height:2;padding:0 2rem}
+.tp-progress{height:10px;background:#1f2937;cursor:pointer;position:relative}
+.tp-progress-fill{height:100%;width:0;background:#fbbf24;transition:width .1s linear}
+.tp-bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.7rem .9rem;background:#111827;
+border-top:1px solid #1f2937}
+.tp-bar .tp-btn{padding:.5rem 1rem;font-size:.85rem}
+.tp-speed-read{color:#e5e7eb;font-size:.9rem;display:inline-flex;align-items:center;gap:.4rem}
+.tp-speed-read b{color:#fbbf24;font-size:1.05rem;min-width:3.2em;display:inline-block;text-align:center}
+.tp-step{width:2rem;height:2rem;border-radius:.4rem;border:1px solid #374151;background:#1f2937;color:#e5e7eb;
+font-size:1.1rem;cursor:pointer;line-height:1}
+.tp-step:hover{background:#374151}
+.tp-hint{font-size:.78rem;color:#6b7280;padding:.5rem .9rem .7rem;background:#111827;line-height:1.8}
+.tp-hint kbd{background:#1f2937;border:1px solid #374151;border-radius:.3rem;padding:.05rem .4rem;
+font-family:inherit;color:#d1d5db}
+.tp-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.tp-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.tp-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#tp-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#tp-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:1100px){.tp-work{grid-template-columns:1fr}.tp-viewport{height:60vh}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">campaign</i> 在线提词器</h1>
+<p>网页端大字滚动提词器 —— 演讲、拍视频、直播、上台发言的提词神器：左侧编辑文案，右侧大字平滑滚动，空格暂停、↑↓调速、F 全屏，镜像模式适配物理提词镜。</p>
+</div>
+<div class="tool-content" style="max-width:1360px;margin:auto;">
+<div class="tp-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>文案解析、滚动播放、草稿暂存（localStorage）全部在浏览器本地完成，无任何后端请求，文案不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="tp-work">
+<!-- 左：编辑区 -->
+<div>
+<div class="tp-panel">
+<h3><i class="material-icons">edit_note</i> 演讲文案</h3>
+<div class="tp-field">
+<label>文案内容（每行一段，回车换段）</label>
+<textarea id="tp-text" rows="14" placeholder="在这里粘贴或输入演讲稿…&#10;每写一行，右侧就是一段提词。"></textarea>
+</div>
+<div class="tp-stats" id="tp-stats">共 0 段 · 0 字</div>
+<div class="tp-actions">
+<button type="button" class="tp-btn tp-btn-secondary" id="tp-sample"><i class="material-icons">auto_awesome</i> 载入示例演讲稿</button>
+<button type="button" class="tp-btn tp-btn-secondary" id="tp-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+</div>
+
+<div class="tp-panel">
+<h3><i class="material-icons">tune</i> 显示与播放设置</h3>
+<div class="tp-field">
+<label>字号 <b id="tp-fontsize-label">56px</b></label>
+<input type="range" id="tp-fontsize" min="24" max="120" step="2" value="56">
+</div>
+<div class="tp-field">
+<label>行距 <b id="tp-lineheight-label">1.8</b></label>
+<input type="range" id="tp-lineheight" min="1.2" max="2.5" step="0.1" value="1.8">
+</div>
+<div class="tp-field">
+<label>滚动速度 <b id="tp-speed-label">1.0x</b></label>
+<input type="range" id="tp-speed" min="1" max="5" step="0.5" value="1">
+</div>
+<label class="tp-check"><input type="checkbox" id="tp-mirror"> 镜像模式（水平翻转，配合物理提词镜面使用）</label>
+<label class="tp-check"><input type="checkbox" id="tp-showprogress" checked> 显示底部进度条（点击可跳转）</label>
+<div class="tp-caliber">预计朗读时长按 180 字/分钟估算，仅供参考，实际语速因人而异；所有设置随文案自动暂存到本机，刷新不丢。</div>
+</div>
+</div>
+
+<!-- 右：播放预览区 -->
+<div>
+<div class="tp-panel" style="padding:0;overflow:hidden;border:none;background:transparent">
+<div id="tp-player-wrap">
+<div class="tp-viewport" id="tp-viewport">
+<div class="tp-marker" title="读稿基准线：保持当前行压在这条线上"></div>
+<div id="tp-content"></div>
+<div class="tp-empty" id="tp-empty">← 在左侧输入文案<br>点击「播放」开始提词</div>
+</div>
+<div class="tp-progress" id="tp-progress" title="点击跳转到对应位置"><div class="tp-progress-fill" id="tp-progress-fill"></div></div>
+<div class="tp-bar">
+<button type="button" class="tp-btn tp-btn-primary" id="tp-play"><i class="material-icons">play_arrow</i> 播放</button>
+<button type="button" class="tp-btn tp-btn-secondary" id="tp-restart"><i class="material-icons">restart_alt</i> 回到开头</button>
+<span class="tp-speed-read">速度
+<button type="button" class="tp-step" id="tp-slower" title="减速 (↓)">−</button>
+<button type="button" class="tp-step" id="tp-faster" title="加速 (↑)">＋</button>
+</span>
+<button type="button" class="tp-btn tp-btn-secondary" id="tp-fullscreen" style="margin-left:auto"><i class="material-icons">fullscreen</i> 全屏</button>
+</div>
+<div class="tp-hint">快捷键：<kbd>空格</kbd> 播放 / 暂停 · <kbd>↑</kbd><kbd>↓</kbd> 微调速度 · <kbd>F</kbd> 全屏 · <kbd>Esc</kbd> 退出全屏（全屏下快捷键同样可用）</div>
+</div>
+</div>
+
+<div class="tp-panel">
+<h3><i class="material-icons">tips_and_updates</i> 使用小贴士</h3>
+<div class="tp-caliber" style="margin-top:0">1）先点「全屏」再开始，提词区独占屏幕、深色高对比，观众席看不清屏幕内容；2）把当前朗读的段落压在红色基准线上，语速最稳；3）有物理提词镜时打开「镜像模式」，文字水平翻转后经镜面反射即为正像；4）正式开讲前用示例稿试播一遍，调到舒服的速度。</div>
+</div>
+</div>
+</div>
+
+<div class="tp-panel" style="margin-top:1.2rem">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="tp-faq">
+<dt>提词器是怎么工作的？</dt>
+<dd>在左侧输入演讲稿，右侧提词区以大字平滑向上滚动。点「播放」开始，红色基准线划过的位置就是当前应读的段落，该段落会高亮显示。播到底会自动停止。</dd>
+<dt>有哪些快捷键？</dt>
+<dd>空格：播放 / 暂停；↑ / ↓：速度 ±0.5x（范围 1x–5x）；F：进入 / 退出全屏；Esc：退出全屏（浏览器原生行为）。在左侧输入框里打字时快捷键自动让路，不会误触。</dd>
+<dt>镜像模式是做什么的？</dt>
+<dd>给配了物理提词镜（分光镜）的用户准备的：打开后文字水平翻转显示，经过镜面反射后，演讲者看到的即为正像。没有镜面设备请保持关闭。</dd>
+<dt>全屏提词是什么效果？</dt>
+<dd>点「全屏」后提词区独占整个屏幕，深色背景＋高对比大字，Esc 退出。全屏下空格暂停、↑↓调速、F 退出全屏照常可用。</dd>
+<dt>进度条怎么用？</dt>
+<dd>点击进度条任意位置，提词立即跳转到对应进度。讲串行了、临时要跳段时最管用。</dd>
+<dt>预计朗读时长准吗？</dt>
+<dd>按 180 字/分钟估算，仅供参考。实际语速受停顿、互动影响，开场前建议实测一遍并微调速度档。</dd>
+<dt>文案会暂存吗？会上传吗？</dt>
+<dd>文案和全部设置自动暂存到本机浏览器 localStorage（tw_teleprompter_v1），刷新页面不丢，清理浏览器数据会一并清除。本工具纯前端运行，无后端、无网络请求，文案只在你的浏览器里，可打开开发者工具 Network 面板验证。</dd>
+</dl>
+</div>
+
+<div class="tp-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="tp-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">在线提词器（当前）</span>
+<a href="/tools/ai-text-cleaner" class="btn btn-secondary" style="font-size:.9rem;">AI 文本清洗工具</a>
+<a href="/tools/ai-token-counter" class="btn btn-secondary" style="font-size:.9rem;">AI Token 计数器</a>
+<a href="/tools/text-tools" class="btn btn-secondary" style="font-size:.9rem;">文本工具箱</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="tp-toast"></div>
+<script src="/tools/static/js/teleprompter.js?v=1"></script>
+</body>
+</html>
+{{end}}

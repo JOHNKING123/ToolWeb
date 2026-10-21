@@ -1113,6 +1113,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "teleprompter",
+					Name:        "在线提词器",
+					Description: "在线提词器（Teleprompter）：网页端大字滚动提词，演讲/拍视频/直播提词神器；左侧编辑文案＋字号/行距/滚动速度/镜像设置，右侧大字平滑滚动播放，速度 1x–5x＋暂停/继续，空格暂停/↑↓调速/F 全屏快捷键，进度条点击跳转＋当前行高亮，镜像模式适配物理提词镜面，全屏深色高对比提词，localStorage 自动暂存＋示例演讲稿＋预计朗读时长，纯前端零上传 · Free online teleprompter: smooth large-text scrolling, mirror mode, fullscreen, 100% client-side",
+					Path:        "/tools/teleprompter",
+					Icon:        "campaign",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
