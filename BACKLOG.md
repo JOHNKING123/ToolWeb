@@ -1,3 +1,80 @@
+## 今日任务（2026-10-21 23:00 · 产品经理排期轮）
+
+**选定：SRT 字幕编辑器（subtitle_editor）** — 本轮唯一任务：
+- **顺位**：音频合并器交付闭环（77354bf＋128d1b7，全量 131 Path）→ 23:00 研究轮 59 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。17:45/19:00/21:00 三轮均按研究轮 Top1 顺位递进，本轮继续。
+- **形态族验证**：dev.to 纯 JS 字幕编辑器＋VexaScribe/Subformer/ConvertICO/subtitling.net「浏览器本地解析、免费、无注册」共识。
+- **痛点真实**：字幕与视频对不上要整体平移、格式互转要上传。
+- **轮次匹配**：23:00 深夜轮次，P1 可排；纯前端小-中难度（上传→解析→条目编辑→全局平移→SRT↔VTT 导出），一轮可高质量交付。
+- **家族归位**：与已交付在线提词器（`/tools/teleprompter`，生活工具品类）形成视频创作者工具矩阵，双向互链。
+- **去重实锤**：`grep -cinE 'subtitle_editor|subtitle-editor|SRT字幕'`（全量 131 Path）全零命中；建议 ID `subtitle_editor`、Path `/tools/subtitle-editor` 未被占用。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：MBOX 邮件存档查看器（P1；58 轮新晋；分块 File API 索引＋MIME 解码中难度，深夜轮次单轮交付风险高；建议 ID mbox_viewer、Path /tools/mbox-viewer；留池下一轮）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化组装 TTF 输出可用性验证成本较高，深夜轮次让位顺位递进的 SRT；建议 ID svg_to_font、Path /tools/svg-to-font；留池下一轮）；单位感知记事本计算器（P1；研究轮明确「蒙特卡洛部分单轮交付风险高，留待更从容轮次」，深夜轮次不动）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，本轮不动）；其余候选留池。
+
+**规格**：
+- 输入：拖拽/选择上传 .srt / .vtt 文件（本地 FileReader 解析，零上传）；支持粘贴字幕文本导入。
+- 条目编辑：条目列表（序号＋起止时间＋文本），起止时间可编辑（毫秒级微调）、文本可编辑；新增条目/删除条目/拆分（按光标位置拆成两条）/合并（相邻两条合并）。
+- 时间平移：全局一键整体 ±毫秒平移（字幕与视频对不上痛点核心）；单条 ±0.5s/±1s 快捷微调。
+- 导出：SRT ↔ VTT 互转导出（两种格式任选，本地下载）。
+- 纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+- 注册：生活工具品类（与提词器同品类），新增工具 ID `subtitle_editor`、Name「SRT 字幕编辑器」、Path `/tools/subtitle-editor`（New: true），中英文描述＋SEO keywords（字幕编辑、SRT 编辑器、字幕时间平移、VTT 互转、subtitle editor、srt editor）；SEO 面板（title/description/keywords/canonical/JSON-LD/FAQ）按家族标准配齐。
+- 互链：与 `/tools/teleprompter` 双向互链（提词器页加「需要编辑字幕？」入口，字幕页加「拍视频需要提词？」回链），兑现视频创作者工具矩阵。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `subtitle_editor`、Path `/tools/subtitle-editor` 注册，注册总数 132 Path；与 teleprompter 双向互链可点。
+2. 上传一份 SRT：条目列表正确解析（序号/起止时间/文本）；粘贴 VTT 文本同样可导入。
+3. 编辑一条的时间和文本后导出 SRT，内容与编辑结果对应；拆分/合并相邻条目后导出正确。
+4. 全局平移 ±2000ms：所有条目时间整体平移且文本不变。
+5. SRT → VTT、VTT → SRT 互转导出格式正确（时间戳格式符合规范）。
+6. 零上传：Network 抽查无内容外发。
+7. node 测试 80+ 断言全过（SRT/VTT 解析往返、时间戳格式转换、平移计算、拆分合并逻辑、导出格式校验）。
+8. 公网 /tool-web 部署后 QA：/tools/subtitle-editor 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID subtitle_editor、Path /tools/subtitle-editor，生活工具品类，New: true）
+- 新建 `templates/subtitle_editor.html`、`static/js/subtitle_editor.js`、`tests/subtitle_editor.test.js`
+- 改动 `templates/teleprompter.html`（互链入口＋回链，双向）
+
+**交付核对**：本地 HEAD 128d1b7；本地当前分支 muse/dev-20260929；`grep -cinE 'subtitle_editor|subtitle-editor|SRT字幕'`（全量 131 Path）全零命中；建议 ID `subtitle_editor`、Path `/tools/subtitle-editor` 未被占用；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-21 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。音频合并器交付闭环（开发轮 77354bf「多文件上传/拖拽本地解码＋上移/下移/删除排序＋采样率（44100Hz）/声道归一化顺序拼接＋淡入淡出/静音间隔＋试听与总时长/体积预估＋WAV 手工编码/MP3（lamejs 64–320kbps）本地导出，纯前端零上传；音频处理品类注册 New:true；SEO 面板配齐；与在线音频裁剪器双向互链「裁剪→合并」；node 测试 94 断言全过」＋评审修复 128d1b7「material-icons 字面文本改 emoji＋多选文件并行解码 fileSeq 序号排序（insertSegmentBySeq 纯函数，测试增至 101 断言全过）」；`grep tools/categories.go` 确认 ID `audio_merger`、Path `/tools/audio-merger` 已注册，全量 **131 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 深夜轮次，P1 可排。
+
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. 音频合并器交付确认：`git log` 头部 128d1b7（评审修复）＋77354bf（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（`Please make sure you have the correct access rights and the repository exists`，本地分支 muse/dev-20260929 未动，仓库读取以本地为准）；本地工作树干净（仅未跟踪 `toolWeb.bak-prev` 历史构建产物残留）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 131 Path，`audio_merger` ID 与 `/tools/audio-merger` Path 已注册；候选池划出。
+2. 新信号扫描：
+   - **dev.to（2026-10-20 新帖）DevOmniTools**「Why We Rebuilt Popular Web Utilities to Run 100% Client-Side」→ **SVG to Font Converter**：「Through client-side WebAssembly and JavaScript vector compilers in our SVG to Font Converter, vector coordinates are parsed directly into TrueType glyph tables in browser memory, generating downloadable font packages with zero server uploads」——浏览器内把 SVG 矢量路径直接解析成 TrueType 字形表、生成可下载字体包，零上传；痛点：设计师/前端做图标字体要走 icomoon.io/fontello（上传全套 SVG）；纯前端实现路径清晰：SVG path 解析（自有 svg 系列经验：svg_compressor/svg_to_jsx 已交付）→ opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→ 预览＋本地下载；池内零覆盖（`grep -cinE 'svg_to_font|svg-to-font|SVG 转字体|字体生成|图标字体生成' tools/categories.go` 零命中；现有只有字体版权查询 font_license_check 与花体字生成器 fancy_fonts，形态零重叠；SVG 赛道小家族扩展：压缩/JSX 转换/字体生成）→ 本轮记 P1 新晋「SVG 转字体图标生成器」（建议 ID `svg_to_font`、Path `/tools/svg-to-font`）；
+   - **V2EX 10-21**：t/1250428 md2chat（贴贴 Markdown：Markdown→聊天软件图文）→ 自有 `md_to_chat`（`/tools/md-to-chat`）已实现实锤，本轮复现不重复记账；t/1250522 protohub（原型托管，53 轮已消化需后端不立）/t/1250690 Builderoom（57 轮已消化元讨论不立）复现无重复记账；t/1250502 NodeAI API 额度广告，不立；t/1250292 Open Resume（简历工具自部署，桌面/服务端形态，非单页，不立，49 轮已记）；
+   - **Medium 10月榜单（56/57 轮已消化）**：SortaSeat（婚宴座位表）→ 自有 `wedding_seating_chart`（`/tools/wedding-seating-chart`）已实现实锤；SyncWhen（免注册会议投票）→ 需后端共享存储，不立（57 轮记账）；OldRoll→img_retro_filter/StitchCraft→cross_stitch_pattern 自有实锤；urPiano→在线钢琴 P2 观察记账；llmspeed→LLM 速度模拟器 P2 记账；Calcy→单位感知记事本 P1 再佐证记账；
+   - **dev.to md_shohan（2026-10-13）生产力工具 10 件**：Image Annotator（截图箭头/形状/文字标注导出 PNG）→ 自有 `image_annotator` 已实现实锤；Speech to Text→ 池内 P1 观察「浏览器实时听写」形态一致，记账不重复立；Time Zone Converter/Countdown Timer/Notepad/Planner→ 均自有已实现或需后端同步，不立；
+   - **dev.to DevTrove（10-13）/RVUtils（10-16）/Zovixia 开发者工具清单**：JWT 解码/JSON 格式化/cron 解析/时间戳/正则测试等→ 自有已实现实锤（cron→`/tools/cron-parser`、chmod→`/tools/chmod-calculator`、curl→requests→`/tools/curl-to-requests`、HEIC→`/tools/heic-convert`），无新形态；
+   - **Rocus（10-20 发布，浏览器本地 LLM 整理书签笔记）**→ 需 WebGPU 大模型推理，非单页小工具形态，不立；
+   - **零上传套件新帖**（prestofiles 10-21/FileOmniTool 10-21/dev.to indiemaker 10-01 方法论）→ 架构趋势（Canvas/WASM/Web Audio 纯浏览器执行、隐私即架构）持续佐证＋竞品参照记账（prestofiles/FileOmniTool），无新工具形态。
+3. 候选池变动：SVG 转字体图标生成器 P1 新晋（DevOmniTools 10-20 形态验证＋浏览器内 TrueType 字形表组装技术路径清晰＋零覆盖；去重核稿：中文名＋ID 片段双核零命中，可复现）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **SRT 字幕编辑器** — P1（26 轮新晋；形态族验证：dev.to 纯 JS 字幕编辑器＋VexaScribe/Subformer/ConvertICO/subtitling.net「浏览器本地解析、免费、无注册」共识；痛点：字幕与视频对不上要整体平移、格式互转要上传；纯前端小-中难度：上传→条目编辑→增删拆分合并→全局时间平移→SRT↔VTT 互转导出；与已交付提词器形成视频创作者工具矩阵；建议 ID subtitle_editor、Path /tools/subtitle-editor）。
+2. **MBOX 邮件存档查看器** — P1（58 轮新晋；Medium 2026-10-21 当日 readmbox 新帖形态验证＋One Scales（PRLog 2026-08）/Univik/Mailward/GoldFynch 多方独立验证；痛点：Google Takeout 导出邮件包（MBOX）后无处打开，现有在线查看器要求上传全部邮件历史（隐私噩梦）；纯前端中难度：分块 File API 索引（GB 级大文件不爆内存）＋"From " 分隔解析＋MIME（base64/quoted-printable）解码＋全文搜索＋EML/CSV 导出＋附件提取；与站内「隐私即架构」零上传定位高度契合；建议 ID mbox_viewer、Path /tools/mbox-viewer）。
+3. **SVG 转字体图标生成器** — P1（本轮新晋；DevOmniTools 2026-10-20 当日新帖形态验证：浏览器内 SVG 矢量坐标→TrueType 字形表组装、可下载字体包，零上传；痛点：设计师/前端做图标字体要走 icomoon.io/fontello（上传全套 SVG）；纯前端小-中难度：SVG path 解析（复用 svg 系列经验）→ opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→ 预览＋本地下载；SVG 赛道小家族扩展（svg_compressor/svg_to_jsx 同赛道）；建议 ID svg_to_font、Path /tools/svg-to-font）。
+
+单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，研究轮明确「留待更从容轮次」，23:00 深夜轮次不动）；浏览器实时听写/屏幕常亮（P1 留池）；年会大屏抽奖（时令预热，11 月）；人像背景一键虚化（P2 新晋观察；分割模型路径待验证）；打卡习惯追踪器/AHP 层次分析法决策工具/GIF 压缩器/PDF 原生文本编辑器/在线钢琴（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第五十九轮：音频合并器已实现划出；SVG 转字体图标生成器 P1 新晋；全量 131 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 音频合并器 | 已实现划出（77354bf 落盘＋128d1b7 评审修复；ID audio_merger、Path /tools/audio-merger 已注册；全量 131 Path；node 测试 101 断言全过；多文件上传/拖拽＋上移/下移/删除排序＋采样率/声道归一化（44100Hz）顺序拼接＋淡入淡出/静音间隔＋试听与预估＋WAV 手工编码/MP3（lamejs 64–320kbps）本地导出＋与在线音频裁剪器双向互链；纯前端零上传） | — | 已实现 |
+| SVG 转字体图标生成器 | 本轮 P1 新晋（DevOmniTools 2026-10-20 新帖形态验证：浏览器内 SVG 矢量坐标直接解析成 TrueType 字形表、生成可下载字体包，零服务器上传；痛点：设计师/前端做图标字体要走 icomoon.io/fontello（上传全套 SVG）；纯前端：SVG path 解析（复用 svg 系列经验）→ opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→ 预览＋本地下载；SVG 赛道小家族扩展（svg_compressor/svg_to_jsx 同赛道）；建议 ID svg_to_font、Path /tools/svg-to-font） | 小-中 | P1（59 轮新晋） |
+
+**归档说明**：本轮为 10-21 通用调研第五十九轮——音频合并器交付闭环（77354bf＋128d1b7，`/tools/audio-merger` 已注册，音频处理品类，全量 131 Path），候选池划出，已实现清单 delta 追加；新信号扫描（DevOmniTools 10-20→SVG 转字体图标生成器 P1 新晋（SVG→TrueType 字形表浏览器内存组装形态验证＋技术路径清晰＋零覆盖）；V2EX 10-21→md2chat 复现（自有 md_to_chat 实锤）/protohub·Builderoom·Open Resume 已消化复现/NodeAI 广告不立；Medium 10月榜单→SortaSeat＝wedding_seating_chart 实锤/SyncWhen 需后端不立/OldRoll/StitchCraft 自有实锤/urPiano·llmspeed·Calcy P2/P1 记账；dev.to md_shohan→Image Annotator＝image_annotator 实锤/语音听写与 P1 观察一致记账；DevTrove/RVUtils/Zovixia 清单→JWT/cron/chmod/curl/HEIC 自有实锤；Rocus 本地 LLM→非单页形态不立；零上传套件新帖→架构趋势佐证＋竞品参照记账）均已消化；WPS 候选表保持冻结归档；仓库 131 注册工具全量核对无重叠（Top3 建议 ID subtitle_editor / mbox_viewer / svg_to_font；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（access rights 报错；后续 PM/开发轮次需复核网络与密钥）；`git log` 确认开发交付 77354bf（音频合并器）＋评审修复 128d1b7；`grep tools/categories.go` 全量 131 Path（`audio_merger` ID 与 `/tools/audio-merger` Path 已注册，划入已实现）；新晋 ID `svg_to_font` 与 131 Path 无重叠（`svg_to_font/svg-to-font/SVG 转字体/字体生成/图标字体生成` 全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 21:00 · 产品经理排期轮）
 
 **选定：音频合并器（audio_merger）** — 本轮唯一任务：

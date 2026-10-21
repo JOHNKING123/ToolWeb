@@ -1149,6 +1149,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "subtitle_editor",
+					Name:        "SRT 字幕编辑器",
+					Description: "SRT 字幕在线编辑：拖拽/选择上传 .srt/.vtt 本地 FileReader 解析（零上传）＋粘贴字幕文本导入；条目列表可视化编辑（起止时间文本框毫秒级编辑＋文本编辑），新增/删除/按时长中点拆分/与下一条合并；全局一键 ±毫秒整体平移（解决字幕与视频对不上痛点）＋单条 ±0.5s/±1s 快捷微调；SRT ↔ VTT 互转本地导出，localStorage 自动暂存 · Free online subtitle editor: edit SRT/VTT timings, shift all cues, convert formats, 100% client-side",
+					Path:        "/tools/subtitle-editor",
+					Icon:        "subtitles",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

@@ -1,0 +1,195 @@
+{{define "subtitle_editor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SRT 字幕编辑器 - 在线编辑字幕/字幕时间平移/SRT VTT 互转 | 程序员工具箱</title>
+<meta name="description" content="免费在线 SRT 字幕编辑器：拖拽上传 .srt/.vtt 字幕文件或粘贴字幕文本本地解析，条目列表可视化编辑（起止时间毫秒级微调＋文本编辑），新增/删除/拆分/合并条目，全局一键 ±毫秒整体平移（解决字幕与视频对不上），单条 ±0.5s/±1s 快捷微调，SRT ↔ VTT 互转本地导出。纯前端零上传，字幕不出电脑。Free online subtitle editor: edit SRT/VTT, shift timings, convert formats, 100% client-side.">
+<meta name="keywords" content="字幕编辑,SRT 编辑器,在线字幕编辑器,字幕时间平移,字幕时间轴调整,VTT 互转,SRT 转 VTT,VTT 转 SRT,字幕延迟调整,subtitle editor,srt editor,subtitle timing shift,srt to vtt">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/subtitle-editor">
+<meta property="og:title" content="SRT 字幕编辑器 - 在线编辑字幕/时间平移/SRT VTT 互转">
+<meta property="og:description" content="拖拽上传 .srt/.vtt 本地解析，条目可视化编辑：毫秒级时间微调、拆分合并、全局 ±毫秒整体平移、单条 ±0.5s/±1s 快捷微调，SRT ↔ VTT 互转本地导出，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/subtitle-editor">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"SRT 字幕编辑器","alternateName":"subtitle editor","description":"在线 SRT/VTT 字幕编辑器：拖拽上传 .srt/.vtt 本地 FileReader 解析或粘贴字幕文本导入；条目列表可视化编辑（起止时间文本框毫秒级编辑＋文本编辑）；新增/删除/按时长中点拆分/与下一条合并；全局一键 ±毫秒整体平移（字幕与视频对不上痛点）＋单条 ±0.5s/±1s 快捷微调；SRT ↔ VTT 互转本地 Blob 下载导出；localStorage 自动暂存；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/subtitle-editor","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.se-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.se-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.se-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.se-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.se-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.se-drop{border:2px dashed #93c5fd;border-radius:.7rem;background:#eff6ff;padding:1.6rem 1rem;text-align:center;
+color:#1d4ed8;cursor:pointer;transition:all .15s;margin-bottom:.8rem}
+.se-drop:hover{background:#dbeafe}
+.se-drop.drag{background:#bfdbfe;border-color:#1d4ed8}
+.se-drop .material-icons{font-size:2rem;display:block;margin-bottom:.3rem}
+.se-drop b{display:block;font-size:.95rem;margin-bottom:.2rem}
+.se-drop span{font-size:.82rem;color:#6b7280}
+.se-paste{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.88rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.se-paste:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.se-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.se-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.se-btn .material-icons{font-size:1.1rem}
+.se-btn-primary{background:#1d4ed8;color:#fff}
+.se-btn-primary:hover{background:#1e40af}
+.se-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.se-btn-secondary:hover{background:#e5e7eb}
+.se-btn-export{background:#059669;color:#fff}
+.se-btn-export:hover{background:#047857}
+.se-stats{font-size:.85rem;color:#4b5563;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.se-shiftrow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.7rem}
+.se-shiftrow input[type=number]{width:7rem;padding:.5rem .6rem;border:1px solid #d1d5db;border-radius:.45rem;font-size:.9rem}
+.se-qbtn{padding:.5rem .8rem;border:1px solid #d1d5db;background:#fff;border-radius:.45rem;font-size:.85rem;
+cursor:pointer;color:#1d4ed8;font-weight:600}
+.se-qbtn:hover{background:#eff6ff}
+.se-qbtn.neg{color:#b91c1c}
+.se-qbtn.neg:hover{background:#fef2f2}
+.se-srcinfo{font-size:.82rem;color:#6b7280;margin-bottom:.4rem}
+/* ---- 条目列表 ---- */
+#se-empty{display:flex;align-items:center;justify-content:center;min-height:140px;color:#9ca3af;font-size:.95rem;
+border:1px dashed #d1d5db;border-radius:.6rem;background:#f9fafb;text-align:center;line-height:2;padding:1rem}
+.se-item{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem .9rem;margin-bottom:.7rem;background:#fff}
+.se-item-head{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.5rem}
+.se-idx{display:inline-flex;align-items:center;justify-content:center;min-width:1.8rem;height:1.8rem;border-radius:50%;
+background:#1d4ed8;color:#fff;font-weight:700;font-size:.85rem;padding:0 .4rem}
+.se-item-head label{font-size:.8rem;color:#6b7280;font-weight:600;display:inline-flex;align-items:center;gap:.3rem}
+.se-ts{width:9.5rem;padding:.4rem .5rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.85rem;
+font-family:ui-monospace,Menlo,Consolas,monospace;color:#111827}
+.se-ts:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.se-nudge{display:inline-flex;gap:.25rem}
+.se-nudge button,.se-ops button{padding:.4rem .55rem;border:1px solid #d1d5db;background:#f9fafb;border-radius:.4rem;
+font-size:.8rem;cursor:pointer;color:#374151}
+.se-nudge button:hover{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+.se-ops{margin-left:auto;display:inline-flex;gap:.25rem}
+.se-ops button:hover{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
+.se-ops button:disabled{opacity:.4;cursor:not-allowed}
+.se-text{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.55rem .7rem;
+font-size:.92rem;line-height:1.7;font-family:inherit;resize:vertical;background:#fff;color:#1f2937}
+.se-text:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.se-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.se-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.se-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.se-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+#se-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#se-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">subtitles</i> SRT 字幕编辑器</h1>
+<p>本地字幕编辑神器 —— 拖拽上传 .srt/.vtt 或粘贴字幕文本，条目可视化编辑、毫秒级时间微调、全局一键整体平移，SRT ↔ VTT 互转本地导出。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+<div class="se-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>字幕解析、时间平移、格式转换、文件导出全部在浏览器本地完成，无任何后端请求，字幕内容不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="se-panel">
+<h3><i class="material-icons">upload_file</i> 导入字幕</h3>
+<div class="se-drop" id="se-drop">
+<i class="material-icons">cloud_upload</i>
+<b>点击选择或拖拽字幕文件到此处</b>
+<span>支持 .srt / .vtt / .txt（本地 FileReader 解析，不上传服务器）</span>
+<input type="file" id="se-file" accept=".srt,.vtt,.txt" style="display:none">
+</div>
+<textarea class="se-paste" id="se-paste" rows="5" placeholder="或在此粘贴字幕文本（SRT / VTT 均可，自动识别格式）…"></textarea>
+<div class="se-actions">
+<button type="button" class="se-btn se-btn-primary" id="se-btn-paste"><i class="material-icons">content_paste</i> 从粘贴文本导入</button>
+<button type="button" class="se-btn se-btn-secondary" id="se-btn-sample"><i class="material-icons">auto_awesome</i> 载入示例字幕</button>
+<button type="button" class="se-btn se-btn-secondary" id="se-btn-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+</div>
+
+<div class="se-panel">
+<h3><i class="material-icons">schedule</i> 全局时间平移</h3>
+<div class="se-srcinfo" id="se-srcinfo">尚未导入字幕</div>
+<div class="se-shiftrow">
+<input type="number" id="se-shift" value="2000" min="1" step="100" title="毫秒">
+<button type="button" class="se-btn se-btn-secondary" id="se-shift-neg"><i class="material-icons">fast_rewind</i> 整体提前</button>
+<button type="button" class="se-btn se-btn-secondary" id="se-shift-pos"><i class="material-icons">fast_forward</i> 整体延后</button>
+</div>
+<div class="se-shiftrow">
+<button type="button" class="se-qbtn neg" data-shift="-5000">−5s</button>
+<button type="button" class="se-qbtn neg" data-shift="-2000">−2s</button>
+<button type="button" class="se-qbtn neg" data-shift="-500">−0.5s</button>
+<button type="button" class="se-qbtn" data-shift="500">+0.5s</button>
+<button type="button" class="se-qbtn" data-shift="2000">+2s</button>
+<button type="button" class="se-qbtn" data-shift="5000">+5s</button>
+</div>
+<div class="se-caliber">字幕和视频对不上？先试 ±2000ms：所有条目起止时间整体平移，文本不变；起点不会被移到 0 之前。单条微调可用每条下方的 −1s/−0.5s/+0.5s/+1s 按钮。</div>
+</div>
+
+<div class="se-panel">
+<h3><i class="material-icons">list_alt</i> 字幕条目</h3>
+<div class="se-stats" id="se-stats">共 0 条 · 总时长 00:00</div>
+<div class="se-actions" style="margin:0 0 .8rem">
+<button type="button" class="se-btn se-btn-secondary" id="se-add"><i class="material-icons">add</i> 新增条目</button>
+<button type="button" class="se-btn se-btn-secondary" id="se-sort"><i class="material-icons">sort</i> 按开始时间排序</button>
+</div>
+<div id="se-empty">← 先在上方导入字幕文件或粘贴字幕文本<br>也可以点「载入示例字幕」试试</div>
+<div id="se-list"></div>
+</div>
+
+<div class="se-panel">
+<h3><i class="material-icons">download</i> 导出</h3>
+<div class="se-shiftrow">
+<label style="font-size:.85rem;color:#6b7280">文件名 <input type="text" id="se-outname" value="subtitle" style="width:12rem;padding:.5rem .6rem;border:1px solid #d1d5db;border-radius:.45rem;font-size:.9rem"></label>
+<button type="button" class="se-btn se-btn-export" id="se-export-srt"><i class="material-icons">download</i> 导出 SRT</button>
+<button type="button" class="se-btn se-btn-export" id="se-export-vtt"><i class="material-icons">download</i> 导出 VTT</button>
+</div>
+<div class="se-caliber">SRT ↔ VTT 互转：时间戳自动按目标格式规范输出（SRT 用逗号 00:00:01,000，VTT 用点 00:00:01.000 并带 WEBVTT 头），条目自动重编号。</div>
+</div>
+
+<div class="se-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="se-faq">
+<dt>字幕和视频对不上怎么办？</dt>
+<dd>这是最常见的痛点：用「全局时间平移」把所有条目整体提前或延后。先试 ±2000ms，看字幕是超前还是滞后，再逐步微调到对齐。起点不会被移到 0 之前，文本不受影响。</dd>
+<dt>支持哪些字幕格式？</dt>
+<dd>导入支持 SRT（.srt）和 WebVTT（.vtt），可拖拽上传、选择文件或直接粘贴文本，格式自动识别。导出时任选 SRT 或 VTT，实现 SRT ↔ VTT 互转。</dd>
+<dt>单条字幕的时间怎么微调？</dt>
+<dd>每条字幕下方有 −1s / −0.5s / +0.5s / +1s 四个快捷按钮，整条起止时间同步移动；也可以直接在「开始」「结束」输入框里按 00:00:05,000 格式毫秒级编辑。</dd>
+<dt>拆分和合并是怎么工作的？</dt>
+<dd>「拆分」把一条按时长中点切成两条，文本按时间比例分配；「合并↓」把当前条与下一条合并，时间取并集、文本按时间顺序换行拼接。</dd>
+<dt>字幕会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行：文件用 FileReader 本地读取解析，导出用 Blob 本地下载，全程零网络请求。可打开开发者工具 Network 面板验证无外发。</dd>
+<dt>编辑进度会丢失吗？</dt>
+<dd>条目内容自动暂存到本机浏览器 localStorage，刷新页面不丢，清理浏览器数据会一并清除。</dd>
+</dl>
+</div>
+
+<div class="se-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="se-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">SRT 字幕编辑器（当前）</span>
+<a href="/tools/teleprompter" class="btn btn-secondary" style="font-size:.9rem;">在线提词器</a>
+<a href="/tools/ai-text-cleaner" class="btn btn-secondary" style="font-size:.9rem;">AI 文本清洗工具</a>
+<a href="/tools/text-tools" class="btn btn-secondary" style="font-size:.9rem;">文本工具箱</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="se-toast"></div>
+<script src="/tools/static/js/subtitle_editor.js?v=1"></script>
+</body>
+</html>
+{{end}}
