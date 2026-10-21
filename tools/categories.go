@@ -175,6 +175,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "prompt_sanitizer",
+					Name:        "AI 提示词脱敏器",
+					Description: "喂 LLM 前先脱敏：粘贴代码/日志或上传 .txt/.log/.env/.md，浏览器本地正则识别 API Key（sk-/ghp_/AKIA/xoxb- 等）、JWT、PEM 私钥、Bearer Token、数据库连接串（postgres/mongodb/mysql），逐条确认后替换为占位符（__API_KEY_1__ 等）一键复制发问；粘贴 LLM 答案一键本地还原。映射表只存本标签页 sessionStorage，关闭即销毁，纯前端零上传 · Prompt sanitizer: detect & mask API keys, JWT, PEM keys, DB connection strings locally with reversible placeholders, restore LLM answers in-browser, 100% client-side",
+					Path:        "/tools/prompt-sanitizer",
+					Icon:        "shield",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "mermaid_diagram_renderer",
 					Name:        "Mermaid 图表渲染与导出器",
 					Description: "粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：6 套模板一键插入、四套主题切换、中文错误提示，SVG 下载、PNG 高清导出（2x/3x，透明/白色背景），纯前端本地渲染，代码不出浏览器 · Paste Mermaid code for live flowchart/sequence/gantt/class/ER/state diagrams with SVG & high-res PNG export, 100% client-side",

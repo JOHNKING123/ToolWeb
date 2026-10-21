@@ -196,10 +196,10 @@
                     <b>输出格式：</b>顶部是汇总头（文件数、总字符数、预估 Token、生成时间），每个文件以 <code>====…====</code> 分隔线 + <code>FILE: 相对路径（N 字符）</code> 开头、全文紧随其后，LLM 能清晰分辨文件边界。<br>
                     <b>Token 预估：</b>按 ASCII 约 4 字符 / 中日韩字符约 1.5 字符折算，为启发式估算，实际以各模型 tokenizer 为准；超长项目建议分模块多次打包。<br>
                     <b>大文件保护：</b>单个文件超过 1MB 自动跳过（常见于误选的日志、bundle 产物），避免一次生成几十万字符卡死页面。<br>
-                    <b>适用边界：</b>本工具只做「文本合并」，不会执行代码；含密钥的 <code>.env</code> 文件默认会被打包，喂给 LLM 前请自行剔除或脱敏。
+                    <b>适用边界：</b>本工具只做「文本合并」，不会执行代码；含密钥的 <code>.env</code> 文件默认会被打包，喂给 LLM 前请自行剔除，或到 <a href="/tools/prompt-sanitizer">AI 提示词脱敏器</a> 一键脱敏后再发问。
                 </div>
                 <div class="ptx-combo">
-                    <b>「开发一条龙」：</b>仓库刚搭好缺忽略规则？先用 <a href="/tools/gitignore-generator">.gitignore 生成器</a> 生成忽略文件；正则写不准？用 <a href="/tools/regex-tester">正则表达式测试</a> 在线验证 —— 配环境、验表达式、打包喂 AI，一套流程走完。
+                    <b>「开发一条龙」：</b>仓库刚搭好缺忽略规则？先用 <a href="/tools/gitignore-generator">.gitignore 生成器</a> 生成忽略文件；正则写不准？用 <a href="/tools/regex-tester">正则表达式测试</a> 在线验证；打包文本里混着密钥？先去 <a href="/tools/prompt-sanitizer">AI 提示词脱敏器</a> 一键脱敏再发问 —— 配环境、验表达式、打包、脱敏、喂 AI，一套流程走完。
                 </div>
             </div>
 
@@ -231,6 +231,7 @@
                     <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">代码打包给 LLM（当前）</span>
                     <a href="/tools/gitignore-generator" class="btn btn-secondary" style="font-size:.9rem;">.gitignore 生成器</a>
                     <a href="/tools/regex-tester" class="btn btn-secondary" style="font-size:.9rem;">正则表达式测试</a>
+                    <a href="/tools/prompt-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">AI 提示词脱敏器</a>
                     <a href="/tools/json-parser" class="btn btn-secondary" style="font-size:.9rem;">JSON 解析器</a>
                 </div>
             </div>

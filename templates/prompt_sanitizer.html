@@ -1,0 +1,215 @@
+{{define "prompt_sanitizer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 提示词脱敏器 - API Key/JWT/连接串一键脱敏+本地还原 | 程序员工具箱</title>
+<meta name="description" content="免费在线 AI 提示词脱敏器：粘贴代码/日志/提示词或上传 .txt/.log/.env/.md，浏览器本地正则识别 API Key（sk-/ghp_/AKIA/xoxb-）、JWT、PEM 私钥、Bearer Token、数据库连接串（postgres/mongodb/mysql），逐条确认后替换为占位符（__API_KEY_1__ 等），一键复制发给 LLM；粘贴 LLM 答案一键本地还原。映射表只存本标签页 sessionStorage，关闭即销毁。纯前端零上传。Prompt sanitizer: detect & mask API keys, JWT, PEM keys, DB connection strings locally, restore LLM answers, 100% client-side.">
+<meta name="keywords" content="提示词脱敏,AI 脱敏,API Key 脱敏,prompt sanitizer,密钥脱敏,发问脱敏,JWT 脱敏,连接串脱敏,占位符脱敏,LLM 隐私,API 密钥泄露">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/prompt-sanitizer">
+<meta property="og:title" content="AI 提示词脱敏器 - 喂 LLM 前先脱敏，密钥不出浏览器">
+<meta property="og:description" content="粘贴代码/日志自动识别 API Key、JWT、PEM 私钥、数据库连接串，逐条确认后占位符替换；LLM 答案一键本地还原。纯前端零上传，映射表关闭标签页即销毁。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/prompt-sanitizer">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"AI 提示词脱敏器","alternateName":"prompt sanitizer","description":"粘贴代码/日志/提示词或上传 .txt/.log/.env/.md 文件，浏览器本地正则识别 API Key、JWT、PEM 私钥、Bearer Token、数据库连接串，逐条确认后替换为占位符（__API_KEY_1__ 等），一键复制发给 LLM；粘贴 LLM 答案一键本地还原占位符。映射表只存本标签页 sessionStorage，关闭即销毁，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/prompt-sanitizer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ps-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.ps-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.ps-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ps-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ps-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ps-drop{border:2px dashed #93c5fd;border-radius:.7rem;background:#eff6ff;padding:1.2rem 1rem;text-align:center;
+color:#1d4ed8;cursor:pointer;transition:all .15s;margin-bottom:.8rem}
+.ps-drop:hover{background:#dbeafe}
+.ps-drop.drag{background:#bfdbfe;border-color:#1d4ed8}
+.ps-drop .material-icons{font-size:1.8rem;display:block;margin-bottom:.3rem}
+.ps-drop b{display:block;font-size:.92rem;margin-bottom:.2rem}
+.ps-drop span{font-size:.82rem;color:#6b7280}
+.ps-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.88rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.ps-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ps-area.out{background:#f0fdf4}
+.ps-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ps-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ps-btn .material-icons{font-size:1.1rem}
+.ps-btn-primary{background:#1d4ed8;color:#fff}
+.ps-btn-primary:hover{background:#1e40af}
+.ps-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ps-btn-secondary:hover{background:#e5e7eb}
+.ps-btn-danger{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.ps-btn-danger:hover{background:#fee2e2}
+.ps-btn-sm{padding:.35rem .8rem;font-size:.82rem}
+.ps-types{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:.8rem}
+.ps-type{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #e5e7eb;border-radius:2rem;
+padding:.35rem .85rem .35rem .65rem;cursor:pointer;font-size:.88rem;background:#f9fafb;user-select:none}
+.ps-type input{accent-color:#2563eb}
+.ps-dot{width:.8rem;height:.8rem;border-radius:50%;flex:none;display:inline-block;background:var(--dot,#999)}
+.ps-count{font-size:.85rem;color:#6b7280;margin:.4rem 0}
+.ps-tip{display:none;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;line-height:1.7;margin-bottom:.8rem}
+.ps-tip-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.ps-tip-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.ps-stats{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.ps-stats b{color:#111827}
+.ps-list{display:flex;flex-direction:column;gap:.45rem;max-height:340px;overflow:auto;margin-top:.6rem}
+.ps-item{display:flex;align-items:center;gap:.6rem;border:1px solid #e5e7eb;border-radius:.5rem;
+padding:.45rem .7rem;font-size:.88rem;background:#fff;cursor:pointer}
+.ps-item input{accent-color:#2563eb;flex:none}
+.ps-item.is-ignored{opacity:.55;background:#f9fafb}
+.ps-item.is-ignored .ps-val{text-decoration:line-through}
+.ps-idx{width:1.6rem;height:1.6rem;border-radius:50%;background:#f3f4f6;color:#6b7280;display:inline-flex;
+align-items:center;justify-content:center;font-size:.75rem;flex:none}
+.ps-badge{border-radius:.3rem;padding:.1rem .5rem;font-size:.75rem;font-weight:700;white-space:nowrap}
+.ps-val{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:600;color:#111827;word-break:break-all}
+.ps-pos{margin-left:auto;color:#9ca3af;font-size:.78rem;white-space:nowrap;flex:none}
+.ps-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+.ps-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ps-note b{color:#4b5563}
+.ps-mapbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.8rem;padding:.7rem 1rem;
+background:#f8fafc;border:1px dashed #d1d5db;border-radius:.6rem;font-size:.88rem;color:#4b5563}
+.ps-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ps-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ps-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ps-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.ps-combo a{color:#1d4ed8;font-weight:600}
+.ps-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.ps-copy-ok{color:#047857}.ps-copy-fail{color:#b91c1c}
+#ps-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#ps-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.ps-item{flex-wrap:wrap}.ps-pos{margin-left:0}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">shield</i> AI 提示词脱敏器</h1>
+<p>喂 LLM 前先脱敏 —— 粘贴代码/日志 → 本地识别密钥 → 占位符替换 → 一键复制发问；LLM 答案粘回一键还原。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ps-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>隐私承诺：密钥只在你的浏览器里处理，不上传服务器。</b><br>
+本工具为纯前端单页应用：识别、替换、还原、复制全部在本地完成，脚本内零 fetch / XHR，不加载任何第三方资源。映射表只存本标签页的 sessionStorage —— <b>关闭标签页自动销毁，刷新页面不恢复</b>。你可以在 DevTools 的 Network 面板验证：粘贴再敏感的密钥，也不会产生一次网络请求。</div>
+</div>
+
+<div class="ps-panel">
+<h3><i class="material-icons">input</i> 1️⃣ 粘贴文本 / 上传文件</h3>
+<div class="ps-types" id="ps-types"></div>
+<div class="ps-drop" id="ps-drop">
+<i class="material-icons">cloud_upload</i>
+<b>点击选择或拖拽文件到此处（可选）</b>
+<span>支持 .txt / .log / .env / .md —— 本地 FileReader 读取，不上传服务器；文件内容会载入下方文本框</span>
+<input type="file" id="ps-file" accept=".txt,.log,.env,.md" style="display:none">
+</div>
+<textarea class="ps-area" id="ps-input" rows="9" placeholder="在此粘贴要发给 LLM 的代码 / 日志 / 提示词，例如：&#10;OPENAI_API_KEY=sk-proj-xxxx&#10;DATABASE_URL=postgres://user:pass@host:5432/db&#10;Authorization: Bearer eyJhbGciOi..."></textarea>
+<div class="ps-count" id="ps-count">共 0 字符</div>
+<div class="ps-actions">
+<button type="button" class="ps-btn ps-btn-primary" id="ps-detect"><i class="material-icons">search</i> 开始识别</button>
+<button type="button" class="ps-btn ps-btn-secondary" id="ps-sample"><i class="material-icons">auto_awesome</i> 填入示例</button>
+<button type="button" class="ps-btn ps-btn-secondary" id="ps-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+<div class="ps-note">识别规则：PEM 私钥块（BEGIN/END 整块）、数据库连接串（postgres/postgresql/mongodb(+srv)/mysql/mariadb/redis/amqp）、JWT（eyJ 开头三段）、Bearer Token、API Key（<code>sk-</code>/<code>ghp_</code>/<code>AKIA</code>/<code>xoxb-</code>/<code>AIza</code>/<code>ya29.</code>/<code>glpat-</code> 等）、通用密钥对（key 名含 api_key/secret/token/password 且值 ≥12 字符）。重叠区间按优先级只保留一处。</div>
+</div>
+
+<div class="ps-panel" id="ps-detect-sec" style="display:none">
+<h3><i class="material-icons">fact_check</i> 2️⃣ 检查识别结果（逐条确认）</h3>
+<div class="ps-tip" id="ps-tip"></div>
+<div class="ps-stats" id="ps-stats"></div>
+<div class="ps-toolbar">
+<button type="button" class="ps-btn ps-btn-secondary ps-btn-sm" id="ps-all">全选</button>
+<button type="button" class="ps-btn ps-btn-secondary ps-btn-sm" id="ps-none">全不选</button>
+</div>
+<div class="ps-list" id="ps-list"></div>
+<div class="ps-actions">
+<button type="button" class="ps-btn ps-btn-primary" id="ps-sanitize"><i class="material-icons">enhanced_encryption</i> 确认并脱敏（占位符替换）</button>
+</div>
+<div class="ps-note">预览只显示每条敏感值的前 6 / 后 4 字符（中间打码），完整值不会展示在列表里。取消勾选的条目将保留原文、不参与脱敏。</div>
+</div>
+
+<div class="ps-panel" id="ps-out-sec" style="display:none">
+<h3><i class="material-icons">content_copy</i> 3️⃣ 脱敏结果（一键复制发给 LLM）</h3>
+<div class="ps-stats" id="ps-out-stats"></div>
+<textarea class="ps-area out" id="ps-output" rows="9" readonly></textarea>
+<div class="ps-actions">
+<button type="button" class="ps-btn ps-btn-primary" id="ps-copy"><i class="material-icons">content_copy</i> 复制脱敏文本</button>
+</div>
+<div class="ps-copy-tip" id="ps-copy-tip"></div>
+</div>
+
+<div class="ps-panel">
+<h3><i class="material-icons">replay</i> 4️⃣ 粘贴 LLM 答案，一键本地还原</h3>
+<div class="ps-note" style="margin:0 0 .6rem">LLM 返回的答案里会带着 <code>__API_KEY_1__</code> 这类占位符。把答案粘贴到下面，点「一键还原」，占位符按本页映射表替换回原始值 —— <b>还原只在本页发生，你复制给 LLM 的文本里永远没有真实密钥</b>。</div>
+<textarea class="ps-area" id="ps-answer" rows="7" placeholder="在此粘贴 LLM 返回的答案文本（含 __API_KEY_1__ / __JWT_1__ 等占位符）…"></textarea>
+<div class="ps-actions">
+<button type="button" class="ps-btn ps-btn-primary" id="ps-restore"><i class="material-icons">replay</i> 一键还原占位符</button>
+</div>
+<div id="ps-ansout-sec" style="display:none;margin-top:.8rem">
+<div class="ps-stats" id="ps-ans-stats"></div>
+<textarea class="ps-area out" id="ps-answer-out" rows="7" readonly></textarea>
+<div class="ps-actions">
+<button type="button" class="ps-btn ps-btn-secondary" id="ps-copy-ans"><i class="material-icons">content_copy</i> 复制还原结果</button>
+</div>
+<div class="ps-copy-tip" id="ps-ans-copy-tip"></div>
+</div>
+<div class="ps-mapbar">
+<i class="material-icons" style="font-size:1.1rem;color:#6b7280">vpn_key</i>
+<span id="ps-map-status">当前映射表：<b>空</b></span>
+<button type="button" class="ps-btn ps-btn-danger ps-btn-sm" id="ps-destroy" style="margin-left:auto"><i class="material-icons">delete_forever</i> 手动销毁映射表</button>
+</div>
+</div>
+
+<div class="ps-combo">
+<b>「喂 LLM 工具链」：</b>先用 <a href="/tools/project-to-txt">代码打包给 LLM</a> 把项目打成单个 TXT，再来这里脱敏密钥，最后粘贴发问 —— 打包 → 脱敏 → 发问，一套流程走完，密钥从不出浏览器。
+</div>
+
+<div class="ps-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ps-faq">
+<dt>脱敏后的文本发给 LLM 安全吗？</dt>
+<dd>敏感值已被替换为 <code>__API_KEY_1__</code> 这类无意义占位符，真实密钥只存在于你本标签页的内存映射表里。只要不同时把映射表发出去，LLM 侧看不到任何真实密钥。</dd>
+<dt>映射表存在哪里？关掉页面会怎样？</dt>
+<dd>只存在本标签页的 sessionStorage（内存级存储）。关闭标签页自动销毁；刷新页面后不恢复，需要重新粘贴脱敏。也可以点「手动销毁映射表」立即清零。</dd>
+<dt>LLM 答案里的占位符怎么还原？</dt>
+<dd>把答案粘贴到第 4 步点「一键还原」，占位符按映射表替换回原始值。注意：必须在<b>同一个标签页</b>里操作 —— 换了标签页或刷新后映射表已销毁，就无法还原了。</dd>
+<dt>识别不到我的密钥格式怎么办？</dt>
+<dd>通用密钥对规则会兜底：key 名含 api_key / secret / token / password 且值 ≥12 字符的 <code>key=value</code> / <code>key: value</code> 都会被识别。若仍漏报，可以先用「文本隐私脱敏工具」做二次检查。</dd>
+<dt>文本会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行：文件用 FileReader 本地读取，识别/替换/还原全在浏览器本地 JavaScript 里完成，脚本中没有任何 fetch / XHR 上传逻辑。可打开开发者工具 Network 面板验证无外发，也可断网使用（首次加载页面除外）。</dd>
+<dt>和「文本隐私脱敏工具」有什么区别？</dt>
+<dd>「文本隐私脱敏」面向个人 PII（手机号/身份证号/银行卡号/邮箱/车牌），单程不可逆遮盖；本工具面向开发者密钥（API Key/JWT/PEM 私钥/Token/数据库连接串），特点是<b>可逆</b>：占位符映射表让你能把 LLM 答案一键还原。两者互补。</dd>
+</dl>
+</div>
+
+<div class="ps-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ps-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">AI 提示词脱敏器（当前）</span>
+<a href="/tools/project-to-txt" class="btn btn-secondary" style="font-size:.9rem;">代码打包给 LLM</a>
+<a href="/tools/text-privacy-masker" class="btn btn-secondary" style="font-size:.9rem;">文本隐私脱敏工具</a>
+<a href="/tools/regex-tester" class="btn btn-secondary" style="font-size:.9rem;">正则表达式测试</a>
+<a href="/tools/jwt-parser" class="btn btn-secondary" style="font-size:.9rem;">JWT 解析器</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ps-toast"></div>
+<script src="/tools/static/js/prompt_sanitizer.js?v=1"></script>
+</body>
+</html>
+{{end}}

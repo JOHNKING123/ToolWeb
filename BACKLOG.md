@@ -1,3 +1,77 @@
+## 今日任务（2026-10-22 01:41 · 产品经理排期轮）
+
+**选定：AI 提示词脱敏器（prompt_sanitizer）** — 本轮唯一任务：
+- **顺位**：SRT 字幕编辑器交付闭环（1a8478f，全量 132 Path）→ 01:00 研究轮 60 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。今日 15:40/17:45/19:00/21:00/23:00 五轮均按研究轮 Top1 顺位递进，本轮继续。
+- **形态族验证**：dev.to MiniToolDesk 2026-10-15「Why you should never paste raw logs or API keys into ChatGPT and how to sanitize in browser」＋内置 AI Sanitizer 双程闭环（脱敏发问→答案一键本地还原）。
+- **痛点高频真实**：开发者每天往 ChatGPT/Claude 粘带 API Key/JWT/连接串/日志的代码，现有做法全凭手动删改，容易泄露密钥。
+- **零重叠实锤**：自有「文本隐私脱敏」（ID text_privacy_masker，文本工具品类）为单程不可逆、仅个人 PII（手机号/身份证号/银行卡号/邮箱/IPv4/车牌）；本工具面向开发者密钥（API Key/JWT/PEM 私钥/Token/数据库连接串/AWS Key）＋可逆占位映射表＋LLM 答案一键还原双程闭环，形态零重叠；`grep -cinE 'prompt_sanitizer|prompt-sanitizer|提示词脱敏|AI脱敏|tailwind'`（全量 132 Path）全零命中；建议 ID `prompt_sanitizer`、Path `/tools/prompt-sanitizer` 未被占用。
+- **轮次匹配**：01:41 深夜轮次，P1 可排；纯前端小难度（检测→逐条确认→占位替换→一键还原），一轮可高质量交付。
+- **家族归位**：开发者工具品类（与「代码打包给 LLM」project_to_txt 同用户画像：喂 LLM 前的预处理工具链；可与 project_to_txt 互链「打包→脱敏→发问」）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：CSS 转 Tailwind 转换器（P1；60 轮次席；六方独立工具形态共识＋DevDock 佐证；建议 ID css_to_tailwind、Path /tools/css-to-tailwind；留池下一轮）；MBOX 邮件存档查看器（P1；58 轮新晋；分块 File API 索引＋MIME 解码中难度，深夜轮次单轮交付风险高；建议 ID mbox_viewer、Path /tools/mbox-viewer；留池下一轮）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化组装 TTF 输出可用性验证成本较高；建议 ID svg_to_font、Path /tools/svg-to-font；留池下一轮）；单位感知记事本计算器（P1；研究轮明确「蒙特卡洛部分单轮交付风险高，留待更从容轮次」，深夜轮次不动）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，本轮不动）；其余候选留池。
+
+**规格**：
+- 输入：多行文本输入（粘贴代码/日志/提示词文本）；可选拖拽/选择上传 .txt/.log/.env/.md 文件本地 FileReader 读取。
+- 检测引擎（纯前端正则）：API Key（通用高熵 key 模式：`sk-`/`ghp_`/`AKIA`/xoxb- 等）、JWT（eyJ…）、PEM 私钥块、Token/Bearer、数据库连接串（postgres://、mongodb://、mysql://）、AWS Access Key、邮箱/手机号（与文本隐私脱敏的 PII 集部分交叠属合理，不构成重复）；命中列表展示类型＋脱敏后预览＋逐条勾选确认（默认全选）。
+- 脱敏：逐条确认后占位符替换（如 `__API_KEY_1__`、`__JWT_1__`、`__DB_CONN_1__`），本地映射表（sessionStorage，关闭标签页自动销毁，不写磁盘）；一键复制脱敏文本（粘回 ChatGPT/Claude）。
+- 还原：粘贴 LLM 返回答案文本→按映射表一键本地还原占位符→输出还原后文本，一键复制；映射表销毁按钮（手动清零）。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）；映射表只在内存/sessionStorage，不落盘。
+- 注册：开发工具品类，新增工具 ID `prompt_sanitizer`、Name「AI 提示词脱敏器」、Path `/tools/prompt-sanitizer`（New: true），中英文描述＋SEO keywords（提示词脱敏、AI 脱敏、API Key 脱敏、prompt sanitizer、密钥脱敏、发问脱敏）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+- 互链：与 `/tools/project-to-txt` 双向互链（打包页加「喂 LLM 前先脱敏」入口，脱敏页加「先打包代码再脱敏」回链），兑现开发者喂 LLM 工具链。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `prompt_sanitizer`、Path `/tools/prompt-sanitizer` 注册，注册总数 133 Path；与 project-to-txt 双向互链可点。
+2. 粘贴一段带 API Key＋JWT＋postgres 连接串的文本：检测列表正确识别三类命中，逐条确认后脱敏文本中敏感值全部替换为占位符。
+3. 模拟 LLM 答案（含占位符的文本）：一键还原后占位符正确还原为原始敏感值。
+4. 映射表关闭标签页后销毁；手动销毁按钮可用；刷新页面后映射表不恢复（不落盘）。
+5. 零上传：脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 80+ 断言全过（各检测正则命中/误报、占位符替换往返、映射表还原、连接串/JWT/PEM 解析）。
+7. 公网 /tool-web 部署后 QA：/tools/prompt-sanitizer 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID prompt_sanitizer、Path /tools/prompt-sanitizer，开发工具品类，New: true）
+- 新建 `templates/prompt_sanitizer.html`、`static/js/prompt_sanitizer.js`、`tests/prompt_sanitizer.test.js`
+- 改动 `templates/project_to_txt.html`（互链入口＋回链，双向）
+
+**交付核对**：本地 HEAD 1a8478f；本地当前分支 muse/dev-20260929；`grep -cinE 'prompt_sanitizer|prompt-sanitizer|提示词脱敏|AI脱敏'`（全量 132 Path）全零命中；建议 ID `prompt_sanitizer`、Path `/tools/prompt-sanitizer` 未被占用；01:00 研究轮 BACKLOG 追加随本轮一并提交（沿用惯例）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-22 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。SRT 字幕编辑器交付闭环（开发轮 1a8478f「拖拽/选择上传 .srt/.vtt 本地 FileReader 解析（零上传）＋粘贴字幕文本导入；条目列表可视化编辑（起止时间毫秒级＋文本）、新增/删除/按时长中点拆分/与下一条合并；全局一键 ±毫秒整体平移（±500/±2000/±5000 快捷，起点钳制≥0）＋单条 ±0.5s/±1s 微调；SRT↔VTT 互转本地 Blob 下载导出；localStorage 自动暂存；生活工具品类注册（ID subtitle_editor，New:true），全量 **132 Path**；与在线提词器双向互链（视频创作者工具矩阵）；node 测试 112 断言全过」；`grep tools/categories.go` 确认 ID `subtitle_editor`、Path `/tools/subtitle-editor` 已注册，全量 **132 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 深夜轮次，P1 可排。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. SRT 字幕编辑器交付确认：`git log` 头部 1a8478f（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（`Host key verification failed`，与 59 轮同故障模式，本地分支 muse/dev-20260929 未动，仓库读取以本地为准；后续 PM/开发轮次需复核网络与密钥）；本地工作树干净（仅未跟踪 `toolWeb.bak-prev` 历史构建产物残留）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 132 Path，`subtitle_editor` ID 与 `/tools/subtitle-editor` Path 已注册；候选池划出。
+2. 新信号扫描：
+   - **dev.to（2026-10-15）MiniToolDesk「Why you should never paste raw logs or API keys into ChatGPT and how to sanitize in browser」**：「With developers feeding code into LLMs daily, proprietary API keys and database credentials frequently leak into chat history」＋内置 **AI Sanitizer**：「Instantly redacts API keys, JWTs, and PII before prompting ChatGPT/Claude, with 1-click local de-anonymization when you get the answer back」→ 双程脱敏形态（脱敏发问→拿回答案一键还原），与站内自有 `文本隐私脱敏`（单程不可逆、仅个人 PII：手机号/身份证号/银行卡/邮箱/IPv4/车牌）零重叠（`grep -cinE 'prompt_sanitizer|prompt-sanitizer|提示词脱敏|AI脱敏'` 全零命中；差异：开发者密钥检测（API Key/JWT/PEM/连接串/AWS Key）＋可逆占位映射表＋LLM 答案一键还原闭环）→ 本轮记 **P1 新晋「AI 提示词脱敏器」**（建议 ID `prompt_sanitizer`、Path `/tools/prompt-sanitizer`）；
+   - **dev.to（2026-10-04）DevDock** 主力工具清单含 **CSS to Tailwind Converter** → 多方独立形态验证：csstoolkit.net（双向 CSS↔Tailwind，v3/v4，浏览器内实时转换）/iotools.cloud（声明→utility 逐条映射＋色板精确匹配＋任意值回退）/tooladda.online（版本/变体感知＋警告）/js2ts.com（媒体查询→sm:/md: 前缀）/testmuai（LambdaTest 出品）/softonic 工具页，共识形态「粘贴 CSS→输出 Tailwind 工具类，命中命名类、未命中用任意值语法兜底、纯浏览器零上传」→ 池内零覆盖（`grep -cinE 'tailwind'` 全零命中；现有仅 css_gradient_generator 与代码压缩器，形态零重叠）→ 本轮记 **P1 新晋「CSS 转 Tailwind 转换器」**（开发工具家族成员：project_to_txt/curl-to-requests/cron-parser 同族；建议 ID `css_to_tailwind`、Path `/tools/css-to-tailwind`）；
+   - **V2EX 10-21/22**：t/1250522 protohub 对外开放注册帖复现（53 轮已消化需后端托管，不立）；t/1250502 NodeAI 1024 额度广告，不立；t/1250428 md2chat 更新复现（自有 `md_to_chat` 实锤，不重复记账）；t/1250538 Antumi（多 Agent 桌面工作台，桌面 App 形态，非网页单页，不立）；
+   - **搜索复现（无重复记账）**：dev.to Multinook 10-20（HEIC 转 JPG/PDF 压缩合并→自有 heic-convert 及 PDF 工具实锤）；dev.to VantorKit（PDF 合并拆分/favicon/CSV→JSON/Base64/文本 Diff→均自有已实现）；dev.to UtilityGrid（350 工具瑞士军刀；财务/健康/教育计算器类→10-18 方向修正下跳过；社交媒体 caption 长度多平台校验→自有 social_card_preview 为分享卡元数据方向，caption 写作限数形态零覆盖，本轮记 P2 观察「社交媒体文案长度检查器」不立）；dev.to BlanzaTools 10-11（14 基础工具→均自有已实现）；Medium 10 月 7 工具榜（56 轮已消化）；emergent Rocus（59 轮已 dismiss，本地 LLM 非单页形态，不立）；dev.to RVUtils（已消化）。
+3. 候选池变动：AI 提示词脱敏器 P1 新晋（MiniToolDesk 10-15 双程脱敏形态验证＋开发者密钥检测差异＋零覆盖；去重核稿：中文名＋ID 片段双核零命中，可复现）；CSS 转 Tailwind 转换器 P1 新晋（6 家独立工具形态共识＋DevDock 佐证＋开发工具家族归位＋零覆盖；去重核稿：中文名＋ID 片段双核零命中，可复现）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **AI 提示词脱敏器** — P1（本轮新晋；MiniToolDesk 2026-10-15 形态验证：「绝不要把原始日志/API Key 粘进 ChatGPT」＋内置 AI Sanitizer 双程闭环；痛点高频：开发者每天往 LLM 里喂带密钥/连接串的代码与日志，现有做法全凭手动删改；纯前端小难度：正则检测（API Key/JWT/PEM 私钥/Token/连接串/AWS Key/邮箱/手机号等）→ 逐条确认→ 占位符替换（__API_KEY_1__）＋本地映射表 → 粘回 ChatGPT/Claude → 答案一键本地还原；与自有「文本隐私脱敏」（单程个人 PII）零重叠；开发者工具家族成员（project_to_txt 同族用户画像）；建议 ID prompt_sanitizer、Path /tools/prompt-sanitizer）。
+2. **CSS 转 Tailwind 转换器** — P1（本轮新晋；csstoolkit.net/iotools.cloud/tooladda.online/js2ts.com/testmuai/softonic 六方独立形态共识＋DevDock 佐证；痛点：迁移老样式表到 Tailwind 逐条手写 class 慢；纯前端小难度：CSS 声明解析→ 间距/颜色/字号/圆角/Flex 等 scale 匹配命名工具类（16px→p-4、#3b82f6→bg-blue-500）→ 未命中用任意值语法兜底（w-[137px]、[clip-path:circle(50%)]）＋无法映射项行内注释提示；可附实时预览＋Tailwind v3/v4 版本切换；与站内零重叠；建议 ID css_to_tailwind、Path /tools/css-to-tailwind）。
+3. **MBOX 邮件存档查看器** — P1（58 轮新晋；Medium readmbox 当日新帖＋One Scales/Univik/Mailward/GoldFynch 多方独立验证；痛点：Google Takeout 导出邮件包（MBOX）后无处打开，现有在线查看器要求上传全部邮件历史（隐私噩梦）；纯前端中难度：分块 File API 索引（GB 级大文件不爆内存）＋"From " 分隔解析＋MIME（base64/quoted-printable）解码＋全文搜索＋EML/CSV 导出＋附件提取；与站内「隐私即架构」零上传定位高度契合；01:00 深夜轮次交付风险略高，作为 Top3 顺位待选；建议 ID mbox_viewer、Path /tools/mbox-viewer）。
+
+SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化组装 TTF 输出可用性验证成本较高，深夜轮次让位；留池下一轮）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留待更从容轮次）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；社交媒体文案长度检查器（P2 本轮新晋观察；caption 多平台字数限数一键校验，自有 social_card_preview 为分享卡元数据方向形态零重叠；建议 ID caption_length_checker、Path /tools/caption-length-checker 待定）；人像背景一键虚化（P2 新晋观察；分割模型路径待验证）；打卡习惯追踪器/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第六十轮：SRT 字幕编辑器已实现划出；AI 提示词脱敏器 P1 新晋；CSS 转 Tailwind 转换器 P1 新晋；全量 132 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SRT 字幕编辑器 | 已实现划出（1a8478f 落盘；ID subtitle_editor、Path /tools/subtitle-editor 已注册；全量 132 Path；拖拽/选择上传 .srt/.vtt 本地 FileReader 解析（零上传）＋粘贴导入；条目可视化编辑（起止时间毫秒级＋文本）、新增/删除/拆分/合并；全局一键 ±毫秒整体平移（±500/±2000/±5000 快捷，起点钳制≥0）＋单条微调；SRT↔VTT 互转 Blob 下载导出；localStorage 暂存；生活工具品类 New:true；与在线提词器双向互链（视频创作者工具矩阵）；SEO 面板配齐；node 测试 112 断言全过） | — | 已实现 |
+| AI 提示词脱敏器 | 本轮 P1 新晋（MiniToolDesk 2026-10-15 形态验证「AI Sanitizer：脱敏发问→答案一键本地还原」；痛点：开发者每天往 ChatGPT/Claude 喂带密钥/连接串的代码日志，全凭手动删改易泄露；与自有「文本隐私脱敏」（单程不可逆、仅个人 PII）零重叠；纯前端：正则检测（API Key/JWT/PEM/Token/连接串/AWS Key）→ 逐条确认 → 占位符替换＋本地映射表 → LLM 答案一键还原；建议 ID prompt_sanitizer、Path /tools/prompt-sanitizer） | 小 | P1（60 轮新晋） |
+| CSS 转 Tailwind 转换器 | 本轮 P1 新晋（csstoolkit.net／iotools.cloud／tooladda.online／js2ts.com／testmuai／softonic 六方独立形态共识＋DevDock 10-04 佐证：粘贴 CSS→输出 Tailwind 工具类，命中命名类、未命中任意值语法兜底，纯浏览器零上传；痛点：迁移老样式表到 Tailwind 逐条手写 class 慢；纯前端：CSS 声明解析→ scale 匹配（16px→p-4、色板精确匹配→bg-blue-500）→ 任意值兜底（w-[137px]）＋无映射项行内注释；可附 v3/v4 切换＋实时预览；开发工具家族归位；建议 ID css_to_tailwind、Path /tools/css-to-tailwind） | 小 | P1（60 轮新晋） |
+
+**归档说明**：本轮为 10-22 通用调研第六十轮——SRT 字幕编辑器交付闭环（1a8478f，`/tools/subtitle-editor` 已注册，生活工具品类，全量 132 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to MiniToolDesk 10-15→AI 提示词脱敏器 P1 新晋（双程脱敏形态验证＋开发者密钥检测差异＋零覆盖）；dev.to DevDock 10-04＋六方独立工具→CSS 转 Tailwind 转换器 P1 新晋（形态共识＋开发工具家族归位＋零覆盖）；V2EX 10-21/22→protohub·md2chat 复现/NodeAI 广告不立/Antumi 桌面形态不立；搜索复现→Multinook·VantorKit·BlanzaTools·Medium 榜单·Rocus·RVUtils 均为已消化或自有实锤，无重复记账；UtilityGrid 社交媒体 caption 校验→P2 观察记账）均已消化；WPS 候选表保持冻结归档；仓库 132 注册工具全量核对无重叠（Top3 建议 ID prompt_sanitizer / css_to_tailwind / mbox_viewer；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（Host key verification failed，与 59 轮同故障模式；后续 PM/开发轮次需复核网络与密钥）；`git log` 确认开发交付 1a8478f（SRT 字幕编辑器）；`grep tools/categories.go` 全量 132 Path（`subtitle_editor` ID 与 `/tools/subtitle-editor` Path 已注册，划入已实现）；Top3 建议 ID（prompt_sanitizer / css_to_tailwind / mbox_viewer）与 132 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 23:00 · 产品经理排期轮）
 
 **选定：SRT 字幕编辑器（subtitle_editor）** — 本轮唯一任务：
