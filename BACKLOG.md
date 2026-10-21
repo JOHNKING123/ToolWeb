@@ -1,4 +1,83 @@
-## 已实现 delta（2026-10-21 10:00 · 前端开发轮 ✅）
+## 今日任务（2026-10-21 11:15 · 产品经理排期轮）
+
+**选定：提词器（Teleprompter，teleprompter）** — 本轮唯一任务：
+- **顺位**：婚宴座位表生成器交付闭环（60952f6，全量 125 Path）→ 11:00 研究轮 53 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。
+- **轮次匹配**：11:15 上午轮次，纯前端小难度，大字滚动＋调速＋镜像＋快捷键＋进度条，一轮可高质量交付。
+- **商业验证**：CueCut（getcuecut.com）Show HN 当日形态验证——录视频/播客/Zoom 开会忘词是高频痛点，手机提词 App 要安装要付费；网页端大字滚动提词器零安装；第三方产品形态一致，需求真实性被商业验证，规格直接对标其功能清单。
+- **痛点真实**：手机屏幕小、提词 App 要安装/订阅；浏览器开一页即可大字滚动提词，跨设备零成本。
+- **去重实锤**：`grep -inE 'teleprompter|提词器' tools/categories.go`（全量 125 Path）全零命中；ID `teleprompter`、Path `/tools/teleprompter` 未被占用。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正（提词器属创作者/生活工具场景）。
+- **未选**：文档转 Markdown（P1；小-中难度，需 mammoth＋SheetJS＋pdf.js 多解析库 vendor 化或 CDN 引入，一轮高质量交付风险高，留待更从容轮次；建议 ID doc_to_markdown、Path /tools/doc-to-markdown）；PDF 涂黑安全检测（P1；niche 安全工具，误报/漏报涉及泄密风险，质量门槛高于一般工具，留待专轮打磨；建议 ID pdf_redaction_check、Path /tools/pdf-redaction-check）；代码打包给 LLM（P1；开发工具家族轮强候补，不提前占用）；报价单/单位感知记事本计算器/音频合并器/SRT 字幕编辑器/屏幕常亮（P1 留池）。
+
+**规格**：
+1. 布局：左侧编辑区（文案文本区＋设置：字号/行距/滚动速度/镜像模式/显示进度条/高亮当前行）、右侧播放预览区；桌面左右分栏、移动端堆叠。
+2. 文案输入：大文本区粘贴/编辑提词文案（支持从剪贴板逐段换行），实时字符数/预计朗读时长（按每分钟 180 汉字估算）统计。
+3. 播放：大字滚动提词播放，速度滑杆（慢速 1x–5x 档）＋暂停/继续，键盘快捷键（空格暂停继续、↑↓微调速度、F 全屏），进度条点击跳转行，当前行高亮指示。
+4. 镜像模式：水平翻转显示（配单向透视提词器/玻璃提词板物理镜面用），一键切换。
+5. 全屏提词：播放区全屏（Fullscreen API），深色背景大字高对比，Esc 退出。
+6. 导出/草稿：文案 localStorage 自动暂存（`tw_teleprompter_v1`）防刷新丢失；示例演讲稿一键载入。
+7. 纯前端、零后端、零上传。
+8. 注册：生活工具品类，新增工具 ID `teleprompter`、Name「提词器」、Path `/tools/teleprompter`（New: true），中英文描述 + SEO keywords（提词器、演讲提词、视频提词、播客提词、teleprompter）；SEO 面板（title/description/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/teleprompter` 可开（200）
+- [ ] 粘贴文案（50+ 行）→ 播放：大字平滑滚动、速度档可调、暂停/继续生效
+- [ ] 镜像模式：播放区水平翻转正确
+- [ ] 快捷键：空格暂停/继续、↑↓微调速度、F 全屏均生效
+- [ ] 进度条：点击跳转到对应行，当前行高亮指示正确
+- [ ] 全屏：全屏深色大字显示正常，Esc 退出
+- [ ] localStorage 自动暂存，刷新不丢；示例文案一键载入
+- [ ] 零上传：Network 抽查无内容外发
+- [ ] `categories.go` 注册完成（生活工具品类、New: true），首页/导航/sitemap 生效
+- [ ] node 测试：滚动位置计算（行高×行号→scrollTop 映射）＋快捷键映射＋文案解析（分行/字符数/时长估算）断言全过
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：
+- `tools/categories.go`：生活工具品类注册 `teleprompter`（/tools/teleprompter，New: true）
+- 新建 `templates/teleprompter.html`（编辑区＋播放区＋全屏样式＋快捷键）
+- 新建 `static/js/teleprompter.js`（文案解析＋滚动引擎＋速度控制＋镜像＋进度条＋localStorage 暂存）
+- 新建 `tests/teleprompter.test.js`（node 纯逻辑测试：滚动映射/文案解析/快捷键）
+- `BACKLOG.md`：本轮决策已追加；开发交付后追加已实现 delta
+
+**交付核对**：本地 HEAD 60952f6；本地当前分支 muse/dev-20260929；`grep -inE 'teleprompter|提词器' tools/categories.go`（全量 125 Path）全零命中；建议 ID `teleprompter`、Path `/tools/teleprompter` 未被占用；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+
+**交付状态**：10-21 通用调研第五十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。婚宴座位表生成器交付闭环（10:00 开发轮 60952f6「名单粘贴去重计数＋一键自动分桌＋拖拽调桌＋多尺寸打印级海报＋浏览器另存为 PDF，纯前端零上传；生活工具品类注册 New:true；node 测试 66 断言全过」；`grep tools/categories.go` 确认 ID `wedding_seating_chart`、Path `/tools/wedding-seating-chart` 已注册，全量 **125 Path**），候选池划出，已实现清单 delta 在顶。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 上午轮次，P1 可排。
+
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. 婚宴座位表生成器交付确认：`git log` 头部 60952f6（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 125 Path，`wedding_seating_chart` ID 与 `/tools/wedding-seating-chart` Path 已注册；候选池划出。
+2. 新信号扫描：
+   - **Show HN 当日 feed（showhn.buzzing.cc，2026-10-21）**：**PDFkind**（pdfkind.com，「a PDF editor that edits the existing text, in the browser」浏览器内 PDF 原生文本编辑）→ 与池内 `pdf_annotate`（批注打码，视觉遮罩）形态不同，内容流文本改写纯前端技术路径未验证，本轮记 P2 观察（先研究其实现路径再立项，避免一轮交付质量风险），不立 P1；**MarkItDown AI**（markitdownai.org，「Convert documents to Markdown locally in the browser」浏览器本地文档转 Markdown）→ 见新晋 P1；**blurdata.app**（「Check if a PDF's redactions can be undone, in the browser」检测 PDF 涂黑是否可还原）→ 见新晋 P1；**CueCut**（getcuecut.com，视频/播客/Zoom 提词器）→ 见新晋 P1；**Yedoo.ai**（eBook 听书，任意页朗读）→ 池内 P2「EPUB 电子书阅读器」＋「TTS」双佐证，不立；**WeDecide**（团体出行决策工具）→ P2「AHP 层次分析法决策工具」佐证，不立；**PackText/packtxt.xyz**（词云排版引擎；packtxt 同域名另有项目打包 txt 形态）→ P1 `project_to_txt`（代码打包给 LLM）佐证再添，不立；**csvfile.tools**（CSV 查看编辑器）→ 池内 P2「CSV 查看编辑器」佐证，不立；**BudgetFlow**（预算 Sankey）→ 泛财务，方向修正下跳过；其余（Tapelark/NotchSub 录屏字幕、Axon Obsidian 插件、Classic Ads 浏览器插件、Rocus 本地 LLM、Stillplay 游戏、桌面/移动应用）形态不合或需后端/插件宿主，不立；
+   - **V2EX 10-20（t/1250428）**：forgeturl.github.io/**md2chat**（AI 回答 Markdown→聊天图文）→ ToolWeb 自有 `md2chat`（markdown_publish_formatter）形态重叠，记竞品观察不立；其迭代点（快捷键设置/dsh 插件/托盘「剪贴板转换」入口）可作自有 md2chat 后续优化对标清单；
+   - **Medium「4 New AI Tools」（1 天前）**：OpenWhispr（语音转文字）→ 转写需服务端模型，纯前端不可（池内 P1 观察「浏览器实时听写」另论），不立；Clotr（AI 聊天框密码粘贴预警）→ 浏览器插件形态，非网页单页工具，不立；IrisGo（RPA 录制回放）→ 桌面应用，不立；
+   - **Reddit/dev.to/中文搜索**：dev.to notes-site（单文件自托管笔记）需服务端，不合；中文区 PDF.cn 软文/AI PPT 盘点无新网页工具形态；零新立。
+3. 去重核稿：新晋三项建议 ID（`doc_to_markdown` / `teleprompter` / `pdf_redaction_check`）＋ Path（`/tools/doc-to-markdown`、`/tools/teleprompter`、`/tools/pdf-redaction-check`）与 125 Path 零重叠（中文名＋ID 片段双核：`doc-to-markdown/doc_to_markdown/转Markdown/提词器/teleprompter/pdf-redaction/pdf_redaction/涂黑检测` 全零命中），可复现。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；站内 P1 队列 project_to_txt / unit_calc_notepad / 报价单 / 音频合并器 / SRT 字幕编辑器 / 屏幕常亮仍在池，PM 可顺位）：
+
+1. **提词器（Teleprompter）** — P1（CueCut Show HN 当日形态验证：录视频/播客/Zoom 忘词是高频痛点，手机提词 App 要装要付费；纯前端小难度：大字滚动＋调速＋镜像模式＋快捷键＋进度条，单页一轮可高质量交付；125 Path 零命中；建议 ID teleprompter、Path /tools/teleprompter；11:00 上午轮次可排）。
+2. **文档转 Markdown（Word/Excel/PPT/PDF/HTML→Markdown）** — P1（MarkItDown AI「浏览器本地转 Markdown」Show HN 当日形态验证；痛点：AI 时代给 LLM 喂文档/建知识库前要清洗格式，现有方案多要上传或付费；纯前端小-中难度：mammoth 解析 docx→md、SheetJS 表格→md 表、pdf.js 文本→md、DOM 清洗 HTML→md，全本地零上传；文档转换品类家族增强；建议 ID doc_to_markdown、Path /tools/doc-to-markdown）。
+3. **PDF 涂黑安全检测（脱敏可逆性检查）** — P1（blurdata.app Show HN 当日形态验证：「涂黑」只是画黑块、底层文本可复制还原——律师/记者/政务发文的真实泄密事故形态；与自家 `pdf_annotate`（视觉遮罩打码）天然互补：检测→真脱敏闭环；纯前端小-中难度：pdf.js 提取文本层＋坐标碰撞检测遮罩/黑块下可恢复文本→风险页清单→一键真脱敏导出（转图片型 PDF）；niche 但高价值；建议 ID pdf_redaction_check、Path /tools/pdf-redaction-check）。
+
+**通用候选表增量**（第五十三轮：婚宴座位表生成器已实现划出；提词器/文档转 Markdown/PDF 涂黑安全检测 P1 新晋；PDF 原生文本编辑器 P2 观察；全量 125 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 婚宴座位表生成器 | 已实现划出（60952f6 落盘；ID wedding_seating_chart、Path /tools/wedding-seating-chart 已注册；全量 125 Path；node 测试 66 断言全过；名单粘贴去重＋一键自动分桌＋拖拽调桌＋多尺寸打印级海报＋浏览器另存为 PDF；纯前端零上传） | — | 已实现 |
+| 提词器 | 本轮新晋（CueCut Show HN 当日形态验证：录视频/播客/Zoom 忘词；纯前端：大字滚动＋调速＋镜像＋快捷键＋进度条；建议 ID teleprompter、Path /tools/teleprompter） | 小 | P1（53 轮新晋） |
+| 文档转 Markdown | 本轮新晋（MarkItDown AI 浏览器本地转 Markdown Show HN 当日形态验证；痛点：AI 喂文档/建知识库前清洗格式，现有方案要上传或付费；纯前端：mammoth docx→md＋SheetJS 表格→md 表＋pdf.js→md＋DOM 清洗 HTML→md；文档转换品类家族；建议 ID doc_to_markdown、Path /tools/doc-to-markdown） | 小-中 | P1（53 轮新晋） |
+| PDF 涂黑安全检测 | 本轮新晋（blurdata.app「检测 PDF 涂黑是否可还原」Show HN 当日形态验证；痛点：黑块涂抹底层文本可复制还原的泄密事故；与 pdf_annotate 视觉遮罩互补闭环；纯前端：pdf.js 文本层＋坐标碰撞→风险页清单→一键真脱敏导出（转图片型 PDF）；建议 ID pdf_redaction_check、Path /tools/pdf-redaction-check） | 小-中 | P1（53 轮新晋） |
+| PDF 原生文本编辑器 | 本轮新晋观察（PDFkind「浏览器内编辑 PDF 已有文本」Show HN 当日形态验证；痛点：PDF 改错别字要开 WPS/Adobe 会员；技术路径：PDF 内容流文本改写纯前端实现未验证，先研究 pdfkind 路径再立项；与 pdf_annotate 形态零重叠） | 中（待验证） | P2（53 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第五十三轮——婚宴座位表生成器交付闭环（60952f6，`/tools/wedding-seating-chart` 已注册，生活工具品类，全量 125 Path），候选池划出；新信号扫描（Show HN 当日 feed→PDFkind P2 观察/MarkItDown AI→文档转 Markdown P1 新晋/blurdata.app→PDF 涂黑安全检测 P1 新晋/CueCut→提词器 P1 新晋/Yedoo.ai→EPUB＋TTS 佐证/WeDecide→AHP 佐证/PackText→project_to_txt 佐证/csvfile.tools→CSV 池内佐证/BudgetFlow 泛财务跳过/其余形态不合不立；V2EX md2chat→自有 md2chat 竞品观察（迭代点记优化对标清单）；Medium 4 New AI Tools→OpenWhispr 需后端/Clotr 插件形态/IrisGo 桌面应用均不立；Reddit/dev.to/中文搜索→零新立）均已消化；WPS 候选表保持冻结归档；仓库 125 注册工具全量核对无重叠（Top3 建议 ID teleprompter / doc_to_markdown / pdf_redaction_check＋P2 观察 ID 未定；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 60952f6（婚宴座位表生成器）；`grep tools/categories.go` 全量 125 Path（`wedding_seating_chart` ID 与 `/tools/wedding-seating-chart` Path 已注册，划入已实现）；Top3 建议 ID（teleprompter / doc_to_markdown / pdf_redaction_check）与 125 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
+
 
 **＋ 婚宴座位表生成器**（`/tools/wedding-seating-chart`，ID `wedding_seating_chart`，生活工具品类，New: true）：纯前端零上传的婚宴/活动座位编排工具，对标 SortaSeat 商业形态——
 - 左侧编辑区：名单粘贴（每行「姓名」/「姓名,组别」，兼容逗号/分号/Tab/空格分隔，Excel 直贴）自动去重计数＋组别统计；婚宴信息（新人姓名/日期/场地）；桌设置（桌数/每桌人数/主桌预留席位）；一键自动分桌算法（组别人数降序整组 best-fit 优先同桌、超桌拆分、无组别宾客 1→N→1→N 蛇形均衡、容量钳制永不超额、溢出单独提示）；分桌结果拖拽手动调桌（HTML5 DnD，满桌拒绝）。
@@ -7904,3 +7983,8 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；origin/muse/dev-20260929 与本地 HEAD 一致（b1d3bb1）；`git log` 确认开发交付 b1d3bb1（正则表达式解释器）；`grep tools/categories.go` 全量 120 Path（119+1），`regex_explainer` ID 与 `/tools/regex-explainer` Path 已注册（划入已实现）；Top3＋新晋建议 ID（curl_to_requests / svg_compressor / md_to_chat / invoice_generator / typing_test / serp_preview / reading_time）与 120 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
 
 **已知问题（2026-10-21 03:00 轮 QA 遗留，非核心，未回滚）**：公网 `/tool-web/sitemap.xml` 返回 200 但 body 为 0 字节——挂载层把 `/tool-web/<x>` 映射到内部 `/tools/<x>`，sitemap.xml 命中了工具 slug 路由；真实 sitemap 在服务根路径 `/sitemap.xml` 正常（22.5KB、123 条 URL）。属挂载层历史行为，与本次发布无关（sitemap.go/main.go 本轮未动）。候选修复：挂载层对 sitemap.xml、robots.txt 等静态特殊路径做白名单透传。
+
+---
+
+## 待修 Bug（2026-10-21 12:20 浏览器冒烟补测发现）
+- **提词器 Esc 退出全屏失效**：真机冒烟发现按 Esc 三次均无法退出全屏，疑似 CSS 伪全屏未自行处理 Esc（页面 FAQ 却写明「Esc：退出全屏（浏览器原生行为）」——若用的是 Fullscreen API，Esc 应由浏览器原生退出；现疑实现为伪全屏，需核实并修复：要么改用 Fullscreen API，要么在伪全屏里自行监听 Esc 退出，并修正 FAQ 描述）。不影响回滚判定（核心播放功能正常），列为下轮优先小修。
