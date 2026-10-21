@@ -1,3 +1,77 @@
+## 今日任务（2026-10-21 21:00 · 产品经理排期轮）
+
+**选定：音频合并器（audio_merger）** — 本轮唯一任务：
+- **顺位**：URL 即文档·文本分享链接生成器交付闭环（a19242e＋bfe83fc，全量 130 Path）→ 21:00 研究轮 58 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。19:00 PM 轮明确「留池下一轮」的音频合并器即本轮。
+- **技术栈同门**：已交付 audio_trimmer（decodeAudioData 本地解码＋仓库内 vendor lamejs MP3 编码（44100Hz 重采样，64/128/192/320kbps 可选）＋WAV 手工编码，评审路线已趟过）直接复用；音频处理品类「裁剪→合并」家族增强。
+- **痛点真实**：多段会议录音/语音备忘录/播客片头片尾拼接，桌面方案要装软件、在线方案要上传隐私音频。
+- **轮次匹配**：21:00 晚间轮次，P1 可排；纯前端小难度（多文件→解码→采样率/声道归一化→顺序拼接→本地导出），一轮可高质量交付。
+- **去重实锤**：`grep -cinE 'audio_merger|audio-merger|音频合并' tools/categories.go`（全量 130 Path）全零命中；建议 ID `audio_merger`、Path `/tools/audio-merger` 未被占用。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：SRT 字幕编辑器（P1；视频创作者工具矩阵；建议 ID subtitle_editor、Path /tools/subtitle-editor；留池下一轮）；MBOX 邮件存档查看器（P1；58 轮新晋；建议 ID mbox_viewer、Path /tools/mbox-viewer；留池下一轮）；单位感知记事本计算器（P1；研究轮明确「蒙特卡洛部分单轮交付风险高，留待更从容轮次」，晚间轮次不动）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，本轮不动）；其余候选留池。
+
+**规格**：
+- 多文件上传/拖拽（MP3/WAV/OGG/M4A），文件列表可排序（上移/下移/删除）＋单段删除；每段显示时长/采样率/声道。
+- AudioContext.decodeAudioData 本地解码→采样率（目标 44100Hz，配合 lamejs 编码路径）＋声道归一化→AudioBuffer 顺序拼接；可选片段间淡入淡出（默认 0ms）或插入静音间隔（自定义秒数）。
+- 合并预览：总时长/总大小预估、试听（拼接后一次播放）。
+- 导出：WAV 手工编码本地下载；MP3 经仓库内 vendor lamejs（比特率 64/128/192/320kbps 可选，复用 audio_trimmer 路径）。
+- 纯前端、零后端、零上传（lamejs 为仓库内 vendor 文件，无 CDN）。
+- 注册：音频处理品类，新增工具 ID `audio_merger`、Name「音频合并器」、Path `/tools/audio-merger`（New: true），中英文描述＋SEO keywords（音频合并、合并音频、拼接音频、会议录音拼接、merge audio、播客拼接）；SEO 面板（title/description/keywords/canonical/JSON-LD/FAQ）按家族标准配齐。
+- 互链：与 `/tools/audio-trimmer` 双向互链，「裁剪→合并」闭环（裁剪页加「需要合并多段？」入口，合并页加「需要裁剪片段？」回链）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `audio_merger`、Path `/tools/audio-merger` 注册，注册总数 131 Path；与 audio-trimmer 双向互链可点。
+2. 上传 3 段不同采样率音频，调整顺序后合并导出：WAV 可播放、时长＝各段之和（±0.1s）。
+3. MP3 导出各比特率档可播放；比特率越高文件越大。
+4. 片段上移/下移/删除后，导出音频内容与列表顺序对应。
+5. 零上传：脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 80+ 断言全过（采样率归一化拼接/声道归一/排序逻辑/WAV 编码头校验/时长计算/静音插入）。
+7. 公网 /tool-web 部署后 QA：/tools/audio-merger 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID audio_merger、Path /tools/audio-merger，音频处理品类，New: true）
+- 新建 `templates/audio_merger.html`、`static/js/audio_merger.js`、`tests/audio_merger.test.js`
+- 改动 `templates/audio_trimmer.html`（互链入口＋回链，双向）
+
+**交付核对**：本地 HEAD bfe83fc；本地当前分支 muse/dev-20260929；`grep -cinE 'audio_merger|audio-merger|音频合并' tools/categories.go`（全量 130 Path）全零命中；建议 ID `audio_merger`、Path `/tools/audio-merger` 未被占用；21:00 研究轮 BACKLOG 追加随开发轮次一并提交（沿用惯例）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-21 21:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。URL 即文档·文本分享链接生成器交付闭环（开发轮 a19242e「纯前端 URL fragment 分享＋Markdown 预览＋AES-GCM 口令加密」＋评审修复 bfe83fc「复制 svg_compressor 既有 8 条 .sc-panel/.sc-faq/.sc-related 内联样式，补齐 FAQ/相关工具面板」；`grep tools/categories.go` 确认 ID `url_note_share`、Path `/tools/url-note-share` 已注册，全量 **130 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 晚间轮次，P1 可排。
+
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. url_note_share 交付确认：`git log` 头部 bfe83fc（评审修复）＋a19242e（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929 工作树干净（仅未跟踪 `toolWeb.bak-prev`／`toolweb` 历史构建产物残留）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 130 Path，`url_note_share` ID 与 `/tools/url-note-share` Path 已注册；候选池划出。
+2. 新信号扫描：
+   - **Medium（2026-10-21 当日新帖）readmbox.com 作者「I Love Apps That Run in Your Browser and Keep Your Data There」**：浏览器内打开 MBOX 文件（Google Takeout 导出的 Gmail 邮件存档），100% 本地解析、零上传；关键洞察：「People don't search "MBOX viewer." They search "how to open my Gmail export."」（真实搜索意图锚定）→ 池内零覆盖（`grep -cinE 'mbox|eml|邮件存档|邮件查看|takeout'` 零命中）→ 本轮记 P1 新晋「MBOX 邮件存档查看器」（建议 ID `mbox_viewer`、Path `/tools/mbox-viewer`）；
+   - **多方独立形态验证**：PRLog 2026-08 One Scales Inc「MBOX Viewer」新闻稿（分块 File API 读取 10-50GB 大存档、二栏浏览＋发件人/主题/日期搜索、导出 CSV/PDF/EML、附件一键提取）；Univik 在线 MBOX 查看器（「单网页、无上传、无账号，可离线运行」）；Mailward（4MB 分块扫描、X-Gmail-Labels 重建标签文件夹）；GoldFynch MBOX Viewer（2024 起，法律 eDiscovery 场景）；techbullion 10-18 评测文 → 「导出包无处打开＋上传全部邮件历史的隐私恐惧」痛点双重验证；
+   - **SuperToolKit 10-19/20 新帖**（Vocal Remover 人声消除/BPM Key 检测/PDF Redactor/cron/chmod/curl/HEIC）：Vocal Remover 音乐 niche 不立；PDF Redactor＝PM 暂缓项 `pdf_redaction_check` 复现，不重复记账；cron（/tools/cron-parser）/chmod（/tools/chmod-calculator）/curl→requests（/tools/curl-to-requests）/HEIC（/tools/heic-convert）均为自有已实现实锤，不立；
+   - **dev.to KeptTools**（人像背景替换，模型下载纯前端）→ 与 P2 观察 `selfie_bg_blur`（Scrub 形态）技术路径一致，记账不重复立；
+   - **V2EX 10-21**：Antumi（开源多 Agent 桌面工作台，桌面 App 形态，不立）；NodeAI（API 额度广告，不立）；protohub（53 轮已记不立）/Builderoom（57 轮已消化，元讨论不立）复现无重复记账；每日热点（Apple TV＋IPTV 源/本地 LLM 硬件预算/招行信用卡年费/月读 iOS TXT 阅读器/羊奶粉/iOS 开发者模式）→ 无网页单页工具形态信号，零新立，记账；
+   - **零上传套件新帖**（prestofiles 10-21/FileOmniTool 10-21/ToolSlash 10-12/OmniTools 榜单）→ 架构趋势（Canvas/WASM/Web Audio 纯浏览器执行、隐私即架构）持续佐证＋竞品参照记账（自有参照：SuperToolKit/toolvero/pdfutils/tonytoolbox/tapdot.org/prestofiles），无新工具形态。
+3. 候选池变动：MBOX 邮件存档查看器 P1 新晋（Medium 当日 readmbox 新帖＋PRLog/One Scales/Univik/Mailward/GoldFynch 多方独立验证；去重核稿：中文名＋ID 片段双核零命中，可复现）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **音频合并器** — P1（57 轮次席，无硬伤顺位递进；26 轮新晋；与已交付 audio_trimmer 同技术栈（lamejs 导出路线评审已趟过）；痛点：多段会议录音/语音备忘录/播客片头片尾拼接，桌面方案要装软件、在线方案要上传；纯前端小难度：多文件上传→decodeAudioData→AudioBuffer 顺序拼接（采样率归一化）→WAV/MP3 本地导出；音频处理品类「裁剪→合并」家族增强；建议 ID audio_merger、Path /tools/audio-merger）。
+2. **SRT 字幕编辑器** — P1（57 轮第三；形态族验证：dev.to 纯 JS 字幕编辑器＋VexaScribe/Subformer/ConvertICO/subtitling.net「浏览器本地解析、免费、无注册」共识；痛点：字幕与视频对不上要整体平移、格式互转要上传；纯前端小-中难度：上传→条目编辑→增删拆分合并→全局时间平移→SRT↔VTT 互转导出；与已交付提词器形成视频创作者工具矩阵；建议 ID subtitle_editor、Path /tools/subtitle-editor）。
+3. **MBOX 邮件存档查看器** — P1（本轮新晋；Medium 2026-10-21 当日 readmbox 新帖形态验证＋One Scales（PRLog 2026-08）/Univik/Mailward/GoldFynch 多方独立验证；痛点：Google Takeout 导出邮件包（MBOX）后无处打开，现有在线查看器要求上传全部邮件历史（隐私噩梦）；纯前端中难度：分块 File API 索引（GB 级大文件不爆内存）＋"From " 分隔解析＋MIME（base64/quoted-printable）解码＋全文搜索＋EML/CSV 导出＋附件提取；与站内「隐私即架构」零上传定位高度契合；建议 ID mbox_viewer、Path /tools/mbox-viewer）。
+
+单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，21:00 晚间轮次不动，留待更从容轮次）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第五十八轮：URL 即文档·文本分享链接生成器已实现划出；MBOX 邮件存档查看器 P1 新晋；全量 130 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| URL 即文档·文本分享链接生成器 | 已实现划出（a19242e 落盘＋bfe83fc 评审修复；ID url_note_share、Path /tools/url-note-share 已注册；全量 130 Path；纯前端 URL fragment 分享＋Markdown 预览＋WebCrypto AES-GCM 口令加密（密钥放 fragment，服务端不可见）；SEO 面板配齐；node 测试全过） | — | 已实现 |
+| MBOX 邮件存档查看器 | 本轮 P1 新晋（Medium 2026-10-21 当日新帖 readmbox.com 作者「I Love Apps That Run in Your Browser and Keep Your Data There」形态验证：浏览器内打开 MBOX，零上传；关键洞察「People don't search MBOX viewer. They search how to open my Gmail export」；PRLog One Scales（2026-08）＋Univik＋Mailward＋GoldFynch 多方独立验证：分块 File API 读取 10-50GB 大存档、索引＋搜索、导出 EML/CSV、附件提取；痛点：Google Takeout 导出邮件包后无处打开，现有在线查看器要求上传全部邮件历史；纯前端：分块索引＋"From " 分隔解析＋MIME 解码＋全文搜索＋EML/CSV 导出＋附件提取；建议 ID mbox_viewer、Path /tools/mbox-viewer） | 中 | P1（58 轮新晋） |
+
+**归档说明**：本轮为 10-21 通用调研第五十八轮——URL 即文档·文本分享链接生成器交付闭环（a19242e＋bfe83fc，`/tools/url-note-share` 已注册，全量 130 Path），候选池划出，已实现清单 delta 追加；新信号扫描（Medium 当日 readmbox 新帖→MBOX 邮件存档查看器 P1 新晋（多方独立验证＋零覆盖）；SuperToolKit 10-19/20 新帖→Vocal Remover 音乐 niche 不立/PDF Redactor 暂缓复现/cron·chmod·curl·HEIC 自有已实现实锤；dev.to KeptTools→人像背景替换与 selfie_bg_blur 路径一致记账；V2EX 10-21→Antumi 桌面形态不立/NodeAI 广告不立/protohub·Builderoom 已消化/每日热点无工具形态；零上传套件新帖→架构趋势佐证＋竞品参照记账）均已消化；WPS 候选表保持冻结归档；仓库 130 注册工具全量核对无重叠（Top3 建议 ID audio_merger / subtitle_editor / mbox_viewer；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 a19242e（url_note_share）＋评审修复 bfe83fc；`grep tools/categories.go` 全量 130 Path（`url_note_share` ID 与 `/tools/url-note-share` Path 已注册，划入已实现）；Top3 建议 ID（audio_merger / subtitle_editor / mbox_viewer）与 130 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 19:00 · 产品经理排期轮）
 
 **选定：URL 即文档·文本分享链接生成器（url_note_share）** — 本轮唯一任务：

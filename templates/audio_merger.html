@@ -1,0 +1,236 @@
+{{define "audio_merger"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频合并器 - MP3/WAV/OGG/M4A 多段音频拼接免费在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线音频合并器：多文件上传/拖拽 MP3、WAV、OGG、M4A，浏览器本地解码不上传；列表自由排序（上移/下移/删除），采样率/声道自动归一化，淡入淡出与静音间隔可选，合并试听，总时长/体积预估，WAV 手工编码 / MP3(64-320kbps) 本地导出。纯前端、零 CDN、零后端。">
+    <meta name="keywords" content="音频合并,合并音频,拼接音频,音频拼接,会议录音拼接,MP3合并,WAV合并,merge audio,播客拼接,在线合并音频,多段音频合并,语音备忘录合并">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/audio-merger">
+    <meta property="og:title" content="音频合并器 - MP3/WAV/OGG/M4A 多段音频拼接免费在线工具">
+    <meta property="og:description" content="多段音频本地拼接：上传/拖拽多个音频，排序、归一化、淡入淡出/静音间隔可选，合并试听，WAV/MP3 本地导出，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/audio-merger">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"音频合并器","description":"多段音频本地拼接工具：多文件上传/拖拽解码，列表排序，采样率/声道归一化，淡入淡出与静音间隔可选，合并试听，WAV 手工编码/MP3 本地导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/audio-merger","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .am-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .am-wrap .navbar .material-icons { display: none; }
+        .am-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .am-privacy .am-lock { font-size: 1.6rem; flex: none; }
+        .am-privacy b { color: #047857; }
+        .am-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .am-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .am-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .am-upload:hover, .am-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .am-upload .am-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .am-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .am-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .am-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .am-row label { font-size: .92rem; color: #374151; }
+        .am-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .am-btn:hover { filter: brightness(.93); }
+        .am-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .am-btn-ghost { background: #fff; color: var(--primary-color); }
+        .am-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .am-btn-danger { background: #fff; color: #ef4444; border-color: #fca5a5; }
+        /* 片段列表 */
+        .am-empty { color: #9ca3af; font-size: .92rem; padding: 1rem 0; text-align: center; }
+        .am-item { display: flex; align-items: center; gap: .7rem; padding: .6rem .8rem; border: 1px solid #e5e7eb;
+            border-radius: .6rem; background: #f9fafb; margin-bottom: .5rem; }
+        .am-item:hover { border-color: #bfdbfe; background: #eff6ff; }
+        .am-idx { flex: none; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--primary-color);
+            color: #fff; font-size: .82rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .am-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-size: .92rem; color: #111827; font-weight: 600; }
+        .am-meta { flex: none; font-size: .8rem; color: #6b7280; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .am-ops { flex: none; display: flex; gap: .3rem; }
+        .am-ops button { padding: .3rem .5rem; border-radius: .4rem; border: 1px solid #d1d5db; background: #fff;
+            font-size: .8rem; cursor: pointer; color: #374151; line-height: 1; }
+        .am-ops button:hover:not([disabled]) { border-color: var(--primary-color); color: var(--primary-color); }
+        .am-ops button[data-act=del]:hover:not([disabled]) { border-color: #ef4444; color: #ef4444; }
+        .am-ops button[disabled] { opacity: .4; cursor: not-allowed; }
+        /* 选项 */
+        .am-optgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .8rem; margin: .6rem 0; }
+        .am-ocard { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .9rem; background: #f9fafb; }
+        .am-ocard .am-ot { font-weight: 600; font-size: .9rem; color: #111827; margin-bottom: .4rem; }
+        .am-ocard input[type=number] { width: 7em; padding: .35rem .5rem; border: 1px solid #d1d5db;
+            border-radius: .4rem; font-size: .9rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .am-ocard select { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .9rem; }
+        .am-ocard .am-ohint { font-size: .78rem; color: #9ca3af; margin-top: .35rem; line-height: 1.6; }
+        /* 预览 */
+        .am-total { font-size: 1rem; color: #111827; line-height: 2; }
+        .am-total b { color: var(--primary-color); font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .am-est { font-size: .9rem; color: #374151; line-height: 2; }
+        .am-est b { color: #b45309; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .am-len { font-size: .9rem; color: #374151; }
+        .am-len b { color: #b45309; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        /* 导出 */
+        .am-export-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+        .am-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .am-doc b { color: #111827; }
+        .am-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .am-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .am-combo b { color: #111827; }
+        .am-combo a { color: var(--primary-color); }
+        .sc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .sc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .sc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .sc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .sc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .sc-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .sc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width: 640px) {
+            .am-wrap .container { padding: 1rem .7rem; }
+            .am-item { flex-wrap: wrap; }
+            .am-meta { flex-basis: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="am-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎧 音频合并器</h1>
+            <p>多段音频本地拼接：上传 MP3 / WAV / OGG / M4A → 排序 → 归一化合并 → 试听导出</p>
+        </div>
+
+        <div class="am-privacy">
+            <span class="am-lock">🔒</span>
+            <div><b>隐私承诺：音频只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、<code>decodeAudioData</code> 本地解码、排序、采样率/声道归一化、拼接、试听、WAV/MP3 编码导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 MP3 编码器 lamejs 也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 上传的音频不会产生一次网络请求。断网也能用（MP3 导出同样离线可用）。</div>
+        </div>
+
+        <div class="am-panel">
+            <h3>1️⃣ 上传音频（可多选 / 拖拽多个）</h3>
+            <div class="am-upload" id="am-upload" role="button" tabindex="0" aria-label="点击选择或拖拽多个音频文件到此处上传">
+                <span class="am-big">🎵</span>
+                <div>点击选择多个音频，或把多个音频文件一起拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 MP3 / WAV / OGG / M4A 等常见格式（实际以浏览器解码能力为准）；可分多次添加，列表按添加顺序排列</div>
+            </div>
+            <input type="file" id="am-file" multiple accept="audio/mpeg,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,.mp3,.wav,.ogg,.oga,.m4a" style="display:none;">
+            <div class="am-status" id="am-status"></div>
+        </div>
+
+        <div class="am-panel" id="am-list-panel">
+            <h3>2️⃣ 排列片段顺序</h3>
+            <div class="am-empty" id="am-empty">还没有音频：点击上方上传区添加，或把多个音频文件一起拖进来。</div>
+            <div id="am-list" style="display:none;"></div>
+            <div class="am-info">▲ 上移 / ▼ 下移调整拼接顺序，✕ 删除该片段；序号即拼接顺序。排序或删除后合并结果自动更新。</div>
+        </div>
+
+        <div class="am-panel" id="am-opt-panel" style="display:none;">
+            <h3>3️⃣ 合并选项</h3>
+            <div class="am-optgrid">
+                <div class="am-ocard">
+                    <div class="am-ot">🎚️ 淡入淡出</div>
+                    <div><input type="number" id="am-fade" min="0" max="10000" step="50" value="0" aria-label="淡入淡出毫秒"> ms</div>
+                    <div class="am-ohint">每段开头淡入、结尾淡出（余弦曲线），衔接更自然；0 = 不淡化。超过段长一半时自动钳制。</div>
+                </div>
+                <div class="am-ocard">
+                    <div class="am-ot">🔇 静音间隔</div>
+                    <div><input type="number" id="am-gap" min="0" max="60" step="0.5" value="0" aria-label="段间静音间隔秒"> 秒</div>
+                    <div class="am-ohint">相邻片段之间插入的静音时长；0 = 紧密拼接。适合会议录音分段、语音备忘录。</div>
+                </div>
+                <div class="am-ocard">
+                    <div class="am-ot">🎛️ MP3 比特率</div>
+                    <div>
+                        <select id="am-bitrate">
+                            <option value="64">64 kbps（小体积）</option>
+                            <option value="128" selected>128 kbps（推荐）</option>
+                            <option value="192">192 kbps（高音质）</option>
+                            <option value="320">320 kbps（最高）</option>
+                        </select>
+                    </div>
+                    <div class="am-ohint">导出 MP3 时使用；所有音频统一重采样到 44100Hz 后由本地 lamejs 编码。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="am-panel" id="am-preview-panel" style="display:none;">
+            <h3>4️⃣ 合并预览</h3>
+            <div class="am-total" id="am-total">—</div>
+            <div class="am-est" id="am-est">—</div>
+            <div class="am-row">
+                <button class="am-btn" id="am-play">▶ 试听合并结果</button>
+                <button class="am-btn am-btn-stop" id="am-stop" disabled>⏹ 停止</button>
+                <span class="am-len">播放进度：<b id="am-play-pos">0:00.000</b></span>
+            </div>
+        </div>
+
+        <div class="am-panel" id="am-export-panel" style="display:none;">
+            <h3>5️⃣ 导出合并结果</h3>
+            <div class="am-export-row">
+                <button class="am-btn" id="am-export-wav">⬇️ 导出 WAV</button>
+                <button class="am-btn" id="am-export-mp3">⬇️ 导出 MP3</button>
+                <button class="am-btn am-btn-danger" id="am-clear">🗑 清空全部</button>
+            </div>
+            <div class="am-info">文件名自动为「首个片段名_merged.扩展名」。WAV 为手工编码的 16-bit PCM 无损导出（44100Hz）；MP3 由本地 vendor 的 lamejs 编码（离线可用）。</div>
+            <div class="am-status" id="am-export-status"></div>
+        </div>
+
+        <div class="am-combo">
+            <b>🎧 「音频旅程线」组合：</b>合并前想先把某段多余部分剪掉？去 <a href="/tools/audio-trimmer">在线音频裁剪器</a> 把片段裁好再回来合并 —— 裁剪 → 合并，一套流程走完。
+        </div>
+
+        <div class="am-panel">
+            <h3>使用说明</h3>
+            <div class="am-doc">
+                <b>解码：</b>文件经 <code>FileReader</code> 读入 ArrayBuffer 后，用 Web Audio API 的 <code>decodeAudioData</code> 在浏览器本地解码为 AudioBuffer（MP3/WAV/OGG/M4A 是否支持取决于浏览器解码器；Safari 对 OGG 支持有限）。可一次选择多个文件，也可分多次添加。<br>
+                <b>排序：</b>列表序号即拼接顺序，▲/▼ 调整，✕ 删除；排序或删除后合并结果自动重新生成，导出内容与列表顺序严格对应。<br>
+                <b>归一化：</b>各段统一重采样到 <code>44100Hz</code>（与 MP3 编码路径一致，保证段间衔接无采样率跳变）；声道统一为全单声道→单声道、否则立体声（单声道段复制为双声道，多声道取前两声道）。<br>
+                <b>淡入淡出 / 静音间隔：</b>可选每段开头淡入、结尾淡出（余弦曲线，默认 0ms），或在相邻段之间插入自定义秒数的静音；两者都计入总时长。<br>
+                <b>试听：</b>把拼接后的完整音频一次播放，进度实时显示。<br>
+                <b>导出：</b>WAV 为手工编码的 16-bit PCM（44 字节标准头）；MP3 经本地 lamejs 编码（64/128/192/320kbps 可选，长音频分块编码不卡死页面）。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、排序、拼接、试听、编码、下载都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+
+        <div class="sc-panel">
+            <h3><i class="material-icons">quiz</i> 常见问题</h3>
+            <dl class="sc-faq">
+                <dt>合并音频会被上传到服务器吗？</dt>
+                <dd>不会。所有步骤（上传读取、解码、排序、归一化、拼接、试听、WAV/MP3 编码、下载）都在你的浏览器本地完成，脚本内零 <code>fetch</code>/XHR。你可以在开发者工具的 Network 面板验证：添加音频后没有任何网络请求发出。</dd>
+                <dt>不同采样率/声道的音频能合并吗？</dt>
+                <dd>可以。合并前所有片段会自动归一化：统一重采样到 <code>44100Hz</code>，声道统一为全单声道→单声道、否则立体声（单声道片段复制为双声道）。归一化后拼接，衔接处不会出现采样率跳变或声道错乱。</dd>
+                <dt>合并后总时长是多少？</dt>
+                <dd>默认（无淡化、无静音间隔）时，总时长 = 各段时长之和（±0.1s 内，取决于重采样舍入）。设置了静音间隔后，每段之间会计入相应秒数；淡入淡出不改变总时长。</dd>
+                <dt>MP3 比特率越高文件越大吗？</dt>
+                <dd>是的。64/128/192/320kbps 四档，比特率越高音质越好、文件越大。预估体积 ≈ 比特率 × 总时长 ÷ 8（页面会显示各格式的预计导出体积）。</dd>
+                <dt>支持哪些格式？一次能加多少个文件？</dt>
+                <dd>支持 MP3 / WAV / OGG / M4A 等常见格式（实际以浏览器解码能力为准）。文件数量没有硬性上限，但解码后的音频全部驻留内存 —— 超长音频（如数小时）请注意浏览器内存占用。</dd>
+                <dt>导出的文件叫什么名字？</dt>
+                <dd>自动命名为「首个片段的文件名（去扩展名）_merged.扩展名」，例如 <code>会议记录_merged.mp3</code>。如需其他名字，下载后重命名即可。</dd>
+            </dl>
+        </div>
+
+        <div class="sc-panel">
+            <h3><i class="material-icons">link</i> 相关工具</h3>
+            <div class="sc-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">音频合并器（当前）</span>
+                <a href="/tools/audio-trimmer" class="btn btn-secondary" style="font-size:.9rem;">在线音频裁剪器</a>
+                <a href="/tools/teleprompter" class="btn btn-secondary" style="font-size:.9rem;">提词器</a>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/lamejs.min.js?v=1"></script>
+    <script src="/tools/static/js/audio_merger.js?v=1"></script>
+</body>
+</html>
+{{end}}

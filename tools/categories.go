@@ -1314,6 +1314,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "音频处理",
 				},
+				{
+					ID:          "audio_merger",
+					Name:        "音频合并器",
+					Description: "多文件上传/拖拽 MP3/WAV/OGG/M4A 本地解码，列表上移/下移/删除自由排序，采样率/声道自动归一化（44100Hz），淡入淡出与静音间隔可选，合并试听+总时长/体积预估，WAV 手工编码/MP3(lamejs 64–320kbps)本地导出，纯前端零上传 · Audio merger: upload multiple audios, reorder, normalize, merge, preview, export WAV/MP3 locally",
+					Path:        "/tools/audio-merger",
+					Icon:        "merge",
+					New:         true,
+					Category:    "音频处理",
+				},
 			},
 		},
 	}
