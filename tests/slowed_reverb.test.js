@@ -124,9 +124,9 @@ eq(M.SPEED_PRESETS.length, 3, "变速预设 3 个");
   eq(ir[0].length, expectLen, "IR 长度 = irLen × 采样率");
   eq(ir[1].length, expectLen, "IR 右声道长度一致");
 
-  function peak(ch) { var p = 0; for (var i = 0; i < ch.length; i++) { var a = Math.abs(ch[i]); if (a > p) p = a; } return p; }
-  approx(peak(ir[0]), 1.0, 1e-6, "IR 左声道峰值归一化到 1.0");
-  approx(peak(ir[1]), 1.0, 1e-6, "IR 右声道峰值归一化到 1.0");
+  function energy(ch) { var e = 0; for (var i = 0; i < ch.length; i++) e += ch[i] * ch[i]; return e; }
+  approx(energy(ir[0]), 1.0, 1e-6, "IR 左声道能量归一化（Σh²≈1.0）");
+  approx(energy(ir[1]), 1.0, 1e-6, "IR 右声道能量归一化（Σh²≈1.0）");
 
   // 衰减包络：前 10% 能量显著大于后 10%
   function meanAbs(ch, from, to) { var s = 0; for (var i = from; i < to; i++) s += Math.abs(ch[i]); return s / (to - from); }
@@ -174,10 +174,17 @@ eq(M.SPEED_PRESETS.length, 3, "变速预设 3 个");
   var withEcho = M.synthesizeIR("soft-echo", SR, 1)[0];
 
   var d = Math.floor(savedEcho.delayMs / 1000 * SR);
-  // 第一抽头之前完全一致
-  var beforeSame = true;
-  for (var i = 0; i < d; i += 11) { if (noEcho[i] !== withEcho[i]) { beforeSame = false; break; } }
-  ok(beforeSame, "soft-echo 第一抽头前与无抽头版本一致");
+  // 能量归一化后两版本的归一化系数不同，抽头前区域应成固定比例（常数倍）
+  var ratios = [];
+  for (var i = 0; i < d; i += 11) {
+    if (Math.abs(noEcho[i]) > 1e-9) ratios.push(withEcho[i] / noEcho[i]);
+  }
+  ok(ratios.length > 0, "soft-echo 抽头前区域有足够采样点计算比例");
+  var ratioConst = true;
+  for (var r = 1; r < ratios.length; r++) {
+    if (Math.abs(ratios[r] - ratios[0]) > 1e-6 * Math.abs(ratios[0])) { ratioConst = false; break; }
+  }
+  ok(ratioConst, "soft-echo 第一抽头前与无抽头版本成固定比例（能量归一化所致）");
   // 抽头位置叠加了能量：抽头处两者不同
   ok(noEcho[d + 10] !== withEcho[d + 10], "soft-echo 抽头位置叠加了回声");
   // 抽头窗口能量更大

@@ -108,7 +108,7 @@ function mulberry32(seed) {
     };
 }
 
-// 程序化合成脉冲响应：确定性白噪声 → 单极点低通（阻尼）→ 指数衰减包络 → 峰值归一化到 1.0
+// 程序化合成脉冲响应：确定性白噪声 → 单极点低通（阻尼）→ 指数衰减包络 → 能量归一化
 // nCh=1 单声道 / 2 立体声（两声道用不同种子去相关，避免中央堆积）
 // 返回：Float32Array 数组（每声道一条），预设非法/采样率非法时返回 null
 function synthesizeIR(presetKey, sampleRate, nCh) {
@@ -137,10 +137,11 @@ function synthesizeIR(presetKey, sampleRate, nCh) {
                 for (var j = 0; j < lim; j++) ch[j + off] += snap[j] * g;
             }
         }
-        // 峰值归一化到 1.0（防止卷积后爆音）
-        var peak = 0;
-        for (i = 0; i < len; i++) { var a = Math.abs(ch[i]); if (a > peak) peak = a; }
-        if (peak > 0) for (i = 0; i < len; i++) ch[i] /= peak;
+        // 能量归一化（每声道 Σh²=1）：卷积后功率≈输入功率，配合等功率干湿比不会爆音
+        var energy = 0;
+        for (i = 0; i < len; i++) energy += ch[i] * ch[i];
+        var norm = energy > 0 ? 1 / Math.sqrt(energy) : 1;
+        for (i = 0; i < len; i++) ch[i] *= norm;
         out.push(ch);
     }
     return out;
@@ -275,6 +276,8 @@ var state = {
     wet: 0.5,            // 当前混响量 0..1
     rendered: null,      // AudioBuffer（渲染后效果）
     renderParams: null,  // 渲染时的参数快照 {speed, reverbKey, wet}
+    rendering: false,    // 渲染进行中
+    renderSeq: 0,        // 渲染序列号：handleFile 成功解码时递增，使在飞的旧渲染失效
     playing: null        // 当前试听节点 {src, stop}
 };
 
@@ -312,6 +315,7 @@ function handleFile(f) {
             state.buffer = buf;
             state.rendered = null;
             state.renderParams = null;
+            state.renderSeq++; // 新文件：作废任何在飞的旧渲染
             var dot = f.name.lastIndexOf('.');
             state.fileBase = dot > 0 ? f.name.slice(0, dot) : f.name;
             el.srcinfo.style.display = 'block';
@@ -334,6 +338,7 @@ function resetAll() {
     stopPlayback();
     state.buffer = null; state.rendered = null; state.renderParams = null;
     state.fileBase = '';
+    state.renderSeq++; // 作废在飞的旧渲染
     el.file.value = '';
     el.srcinfo.style.display = 'none';
     el.panel_params.style.display = 'none';
@@ -436,6 +441,8 @@ function renderEffect() {
     if (!state.buffer) { setRenderStatus('❌ 请先上传音频'); return; }
     if (state.rendering) return;
     state.rendering = true;
+    state.renderSeq++;
+    var seq = state.renderSeq; // 在飞的渲染带序列号：中途若换文件则本轮结果作废
     setRenderStatus('⏳ 正在离线渲染…');
     el.render_bar.style.width = '0%'; el.render_pct.textContent = '0%';
     el.render.disabled = true;
@@ -495,10 +502,15 @@ function renderEffect() {
     armNext();
 
     off.startRendering().then(function (rendered) {
-        state.rendered = rendered;
-        state.renderParams = { speed: speed, reverbKey: presetKey, wet: wet };
         state.rendering = false;
         el.render.disabled = false;
+        if (seq !== state.renderSeq) {
+            // 渲染中途换了文件：旧结果作废，不写回、不点亮试听/导出面板
+            setRenderStatus('⚠️ 渲染已过期（文件已更换），请按当前参数重新渲染');
+            return;
+        }
+        state.rendered = rendered;
+        state.renderParams = { speed: speed, reverbKey: presetKey, wet: wet };
         el.render_bar.style.width = '100%'; el.render_pct.textContent = '100%';
         setRenderStatus('✅ 渲染完成：' + fmtTime(rendered.duration * 1000) +
             '，可 A/B 试听对比后导出');
