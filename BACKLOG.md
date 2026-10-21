@@ -1,3 +1,75 @@
+## 今日任务（2026-10-21 15:40 · 产品经理排期轮）
+
+**选定：报价单生成器（Quotation Generator，quotation_generator）** — 本轮唯一任务：
+- **顺位**：15:00 研究轮 55 轮 Top3 次席；首位 project_to_txt（开发工具家族轮强候补）、第三 url_note_share（本轮 P2→P1 晋升）留池下一轮；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓（多解析库 vendor 化单轮风险高／niche 安全工具质量门槛高），不动。
+- **真实用户痛点锚定**：用户 10-17 华侨城客户 9 项 13746 元报价单曾走 PC 端 PowerShell＋Excel 实战——他自己亲手做过的活，工具直接为他下一次报价单服务，锚定他的生活。
+- **闭环补全**：发票生成器已交付，并在 `templates/invoice_generator.html` 第 224-225 行预留「报价单（即将上线）」占位、注释明示上线后替换为真实链接并回链——本轮交付即兑现该预留，形成「报价→开票」闭环。
+- **代码可复用**：发票生成器的行项目/折扣/税率/人民币金额大写/打印样式逻辑可直接复用，纯前端小难度，一轮可高质量交付。
+- **去重实锤**：`grep -cinE 'quotation|报价单' tools/categories.go` 全零命中；建议 ID `quotation_generator`、Path `/tools/quotation-generator` 未被占用。
+- **方向合规**：商务文档模板工具，非泛财务/生活计算器（10-18 被下线的 7 个是税费/房贷/凑单类计算器），与发票生成器/简历模板生成器同属已获批赛道，符合用户 10-18 方向修正。
+- **Path 定案**：`/tools/quotation-generator`（研究轮多轮建议一致）；发票模板注释里的 `/tools/quotation` 为早期占位写法，本轮一并更正为 `/tools/quotation-generator`。
+- **轮次匹配**：15:40 午后轮次，P1 可排。
+
+**规格**：
+- 买卖方信息（公司/联系人/电话/地址）＋行项目（品名/规格/数量/单价/小计，增删改）＋整单折扣/税率＋自动合计（未税/税额/价税合计）＋人民币金额大写＋报价有效期/备注/签章区。
+- A4 打印样式导出 PDF（@media print 隐藏编辑区，仅输出报价单页；边距/分页控制）。
+- localStorage 多草稿（`tw_quotation_v1`）防刷新丢失＋示例报价单一键载入（示例用虚构公司，不用真实客户名）。
+- 与 `/tools/invoice-generator` 双向互链：发票页占位替换为真实链接，报价单页回链发票页，「报价→开票」闭环。
+- SEO 面板配齐（title/description/keywords/canonical/JSON-LD）。
+- node 纯逻辑测试：金额计算（小计/折扣/税率/价税合计）/人民币金额大写/草稿持久化/字段校验，80+ 断言。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `quotation_generator`、Path `/tools/quotation-generator` 注册，注册总数 128 Path；发票页占位已替换为真实链接，报价单页回链发票页，双向可点。
+2. 行项目增删改、折扣/税率变更实时重算（小计/税额/价税合计/人民币大写）。
+3. Chrome 打印预览为干净 A4 单页（或合理分页），无编辑区/导航栏残留。
+4. localStorage 多草稿：刷新不丢、草稿新建/切换/删除可用；示例报价单一键载入可用。
+5. node 测试 80+ 断言全过。
+6. 公网 /tool-web 部署后 QA：/tools/quotation-generator 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID quotation_generator、Path /tools/quotation-generator，文档工具品类，New: true）
+- 新建 `templates/quotation_generator.html`、`static/js/quotation_generator.js`、`tests/quotation_generator.test.js`
+- 改动 `templates/invoice_generator.html`（第 224-225 行占位替换为真实链接；注释中的 `/tools/quotation` 更正为 `/tools/quotation-generator`）
+
+**未选**：代码打包给 LLM（P1；开发工具家族轮强候补；建议 ID project_to_txt、Path /tools/project-to-txt；留池下一轮）；URL 即文档·文本分享链接生成器（P1；本轮刚由 P2 晋升，Tiny Little Office HN 643 points「文档即链接」形态验证；建议 ID url_note_share、Path /tools/url-note-share；留池下一轮）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，不动）；其余候选留池。
+
+---
+
+## 今日任务（2026-10-21 15:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。简历模板生成器交付闭环（13:39 PM 决策轮立项 92e250d→开发交付 ab4c602「左侧分段表单录入（基本信息/求职意向/教育/工作/项目/技能/荣誉）＋4 套内置模板（简约商务/现代双栏/学术严谨/创意配色）实时预览一键切换，浏览器打印样式 A4 优化导出 PDF，localStorage 自动暂存（tw_resume_builder_v1）＋示例简历一键载入，与简历预检工具双向互链成「生成→诊断」闭环，纯前端零上传；求职工具品类注册（New:true），SEO 面板配齐；node 测试 118 断言全过；顺带修复提词器 Esc 退出全屏失效（keyAction 显式映射 Escape→exitfs＋exitFullscreenExplicit() 页面级兜底，FAQ 同步修正，提词器测试 86 断言全过）」；`grep tools/categories.go` 确认 ID `resume_builder`、Path `/tools/resume-builder` 已注册，全量 **127 Path**），候选池划出，已实现清单 delta 追加。顺位递补逻辑：54 轮 Top3 首位文档转 Markdown、次席简历模板生成器——简历模板生成器已交付闭环；文档转 Markdown（P1）与 PDF 涂黑安全检测（P1）PM 13:40 已明确暂缓（多解析库 vendor 化单轮交付风险高／niche 安全工具误报漏报质量门槛高），本轮顺位自然递进至开发工具家族轮强候补「代码打包给 LLM」。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 午后轮次，P1 可排。
+
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. 简历模板生成器交付确认：`git log` 头部 ab4c602（新工具）＋92e250d（13:39 排期轮 BACKLOG 落盘）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929 工作树干净（仅未跟踪 `toolWeb.bak-prev` 历史构建产物）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 127 Path，`resume_builder` ID 与 `/tools/resume-builder` Path 已注册；候选池划出，已实现清单 delta 追加（＋ 简历模板生成器，求职工具赛道，与 `resume_checker`「生成→诊断」双向互链闭环）。
+2. 新信号扫描：
+   - **HN Front Page Roundup（duklee.net，2026-10-15）**：**Tiny Little Office**（tinylittleoffice.com，HN 643 points；Aboard 出品，MIT 开源；浏览器办公套件十应用 write/outline/deck/sheet/calc/draw/diagram/anim/cal/trip；核心机制「文档即链接」——内容 percent-encode 进 URL fragment，无账号无服务端存储，可选加密短链（密钥服务端不接触），附 llms.txt 供 LLM 直接生成文档 URL）→ 池内 P2「URL 即文档·文本分享链接生成器」（50 轮新晋观察）强佐证，本轮 P2→P1 晋升；Catch a Bird（catchabird.com，369 points，匿名开心事小鸟社交小品）→ 需后端（FastAPI＋Postgres），形态不合，不立；OpenCode 2.0（837 points，AI coding agent）→ 与站内无关，不立；其余（医药长文/牙医回忆录/自杀率/广告间谍软件/版本控制归属口水/博客写作论战/拟物 Wayland 桌面/Starlink 纵火/银行 AI 数据中心债务/Muse Spark Open 816B）→ 无网页单页工具形态，零新立；
+   - **Show HN 当日 feed（showhn.buzzing.cc，2026-10-21 刷新）**：**Daymark**（daymark.one，iPhone 习惯追踪 App，$14.99 一次性买断；卖点：无订阅、无 streak-shaming、数据只留本机隐私设计）→ 池内 P2「打卡习惯追踪器」商业验证佐证增强（Habenna「grace days 代替连续打卡」形态＋Daymark 付费 App 双重验证「断签挫败感」痛点真实）；**ntree.ai**（浏览器内调试器绘制数据结构）→ 开发者 niche，需代码执行环境，非通用单页工具，不立；Grafista（AI 平面设计）→ 需 AI 后端，不立；Inca（类 Maya 开源 3D）→ 桌面级应用形态，不立；eze.page（HTML 文件夹→私有 URL）→ 需托管后端，不立；其余（Litedeck/Unterm/Hibi 终端与笔记应用、TapRev 电话销售 App、Megapop 浏览器上帝游戏、Koody/Worklicant 记账与 ATS SaaS、LongTerMemory/Penmentor AI 依赖、Minute of Fame 社交游戏、Classic Ads 浏览器插件、myretrotunes/wherecelebsgo 内容站）→ 形态不合或需后端/AI/插件宿主，均不立；53/54 轮已消化条目（PDFkind/MarkItDown AI/blurdata.app/CueCut/Habenna/AHP Matrix/ObsQRity/Mnemoloci/LaunchLoop/Creatohunt/Tripps.io/EchoSphere/Seclai/packtxt.xyz/PianoTry/PurePDF/12 Axes/Yedoo.ai/WeDecide）无重复记账；
+   - **V2EX 10-21 最热**：公司内部原型交付工具对外开放注册（protohub 形态，53 轮已记不立）；cleanyourtv（电视去广告列表）→ niche，不立；单片机模拟网站（分享创造）→ 开发者教育 niche，不立；其余（前端已死/Claude 账号硬度/电瓶车配件/拼多多双 11/共享菜园/美元汇率 6.68）→ 无网页工具形态信号，零新立；
+   - **通用搜索**（「希望有一个网站能…」中文 SEO 农场文、V2EX 在线工具推荐搜索）→ 软文/无关结果，无新信号。
+3. 候选池变动：URL 即文档·文本分享链接生成器 P2→P1 晋升（建议 ID `url_note_share`、Path `/tools/url-note-share` 沿用 50 轮建议；Tiny Little Office HN 643 points「文档即链接」形态验证；纯前端小难度：文本/Markdown→压缩＋base64→URL fragment 生成分享链接，打开即解码渲染，零后端零上传；与自有文本分享/文档家族互补）；打卡习惯追踪器 P2 佐证增强（新增 Daymark $14.99 买断制商业验证；建议 ID `habit_tracker`、Path `/tools/habit-tracker` 不变，仍 P2 观察）；去重核稿：Top3＋观察建议 ID（project_to_txt / quotation_generator / url_note_share / habit_tracker）与 127 Path 零重叠（中文名＋ID 片段双核：`project_to_txt/project-to-txt/代码打包/quotation_generator/quotation-generator/报价单生成/url_note_share/url-note-share/URL即文档/habit_tracker/habit-tracker/打卡习惯` 全零命中），可复现。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；54 轮首位文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮顺位递进至可排 P1）：
+
+1. **代码打包给 LLM（Project to TXT）** — P1（开发工具家族轮强候补；packtxt.xyz＋project2txt 双重 Show HN 形态验证；痛点：给 AI 喂代码上下文逐个文件复制粘贴慢；纯前端小-中难度：File System Access API 拖拽文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt，100% 本地零上传；一轮可高质量交付；建议 ID project_to_txt、Path /tools/project-to-txt）。
+2. **报价单生成器** — P1（池内老将；用户 10-17 真实痛点：华侨城客户 9 项 13746 元报价单曾走 PC 端 PowerShell＋Excel 实战；发票生成器（invoice_generator）已交付且预留双向互链，行项目/折扣/税率/人民币大写/打印样式代码可复用；纯前端小难度：买卖方＋行项目＋折扣税率＋人民币金额大写＋localStorage 多草稿＋A4 打印导出 PDF；文档模板赛道「报价→开票」闭环；建议 ID quotation_generator、Path /tools/quotation-generator）。
+3. **URL 即文档·文本分享链接生成器** — P1（本轮 P2→P1 晋升；Tiny Little Office「文档即链接」HN 643 points 形态验证：内容 percent-encode 进 URL fragment，无账号无服务端存储；痛点：临时分享一段文本/配置/Markdown 要走 pastebin 类网站（广告/注册/内容留服务器）；纯前端小难度：文本→压缩＋base64→URL fragment 分享链接，打开即解码渲染，可选 WebCrypto AES-GCM 口令加密（密钥放 fragment，服务端不可见）；建议 ID url_note_share、Path /tools/url-note-share）。
+
+文档转 Markdown（P1，PM 13:40 明确「留待更从容轮次」——mammoth＋SheetJS＋pdf.js 多解析库 vendor 化，单轮高质量交付风险高）；PDF 涂黑安全检测（P1，PM 13:40 明确「留待专轮打磨」——niche 安全工具，误报/漏报涉泄密风险，质量门槛高于一般工具）；单位感知记事本计算器/音频合并器/SRT 字幕编辑器/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热，11 月）；打卡习惯追踪器（P2 佐证增强：Habenna grace days＋Daymark $14.99 买断商业验证）；AHP 层次分析法决策工具/GIF 压缩器（P2，52 轮新晋观察）；其余候选留池。
+
+**通用候选表增量**（第五十五轮：简历模板生成器已实现划出；URL 即文档 P2→P1 晋升；打卡习惯追踪器佐证增强；全量 127 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 简历模板生成器 | 已实现划出（ab4c602 落盘；ID resume_builder、Path /tools/resume-builder 已注册；全量 127 Path；node 测试 118 断言全过；4 套内置模板＋分段表单＋实时预览＋浏览器打印 A4 导出 PDF＋localStorage 自动暂存＋示例简历，与 resume_checker 双向互链「生成→诊断」闭环；纯前端零上传；顺带修复提词器 Esc 退出全屏失效） | — | 已实现 |
+| URL 即文档·文本分享链接生成器 | P2→P1 晋升（50 轮 P2 观察；本轮 Tiny Little Office HN 643 points 形态验证：「文档即链接」，内容 percent-encode 进 URL fragment，无账号无服务端存储，MIT 开源十应用；痛点：临时分享文本/配置/Markdown 要走 pastebin 类网站（广告/注册/内容留服务器）；纯前端：文本→压缩＋base64→URL fragment 分享链接，打开即解码渲染，可选口令加密；建议 ID url_note_share、Path /tools/url-note-share） | 小 | P1（55 轮晋升） |
+| 打卡习惯追踪器 | P2 佐证增强（54 轮新晋观察；本轮新增 Daymark iOS 习惯追踪 $14.99 一次性买断商业验证：无订阅＋无 streak-shaming＋数据只留本机；与 Habenna「grace days 代替连续打卡」形态双重验证「断签挫败感」痛点真实；建议 ID habit_tracker、Path /tools/habit-tracker 不变） | 小 | P2（55 轮佐证增强） |
+
+**归档说明**：本轮为 10-21 通用调研第五十五轮——简历模板生成器交付闭环（ab4c602，`/tools/resume-builder` 已注册，求职工具品类，全量 127 Path），候选池划出，已实现清单 delta 追加；新信号扫描（HN 10-15 roundup→Tiny Little Office 643 points「文档即链接」佐证 URL 即文档 P2→P1 晋升/Catch a Bird 需后端不立/其余无工具形态；Show HN 当日 feed→Daymark 打卡习惯追踪器商业验证佐证/ntree.ai 开发者 niche 不立/Grafista·Inca·eze.page·Koody 等需后端/AI/桌面应用形态不立/53-54 轮已消化条目无重复记账；V2EX 10-21 最热→原型交付工具已记不立/cleanyourtv·单片机模拟 niche 不立/其余无信号；通用搜索→SEO 软文零新立）均已消化；WPS 候选表保持冻结归档；仓库 127 注册工具全量核对无重叠（Top3 建议 ID project_to_txt / quotation_generator / url_note_share＋P2 观察 ID habit_tracker；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 ab4c602（简历模板生成器）＋排期轮 92e250d；`grep tools/categories.go` 全量 127 Path（`resume_builder` ID 与 `/tools/resume-builder` Path 已注册，划入已实现）；Top3 建议 ID（project_to_txt / quotation_generator / url_note_share）与 127 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 13:40 · 产品经理排期轮）
 
 **选定：简历模板生成器（Resume Builder，resume_builder）** — 本轮唯一任务，顺带修复提词器 Esc 退出全屏 bug：
