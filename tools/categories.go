@@ -301,6 +301,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_to_tailwind",
+					Name:        "CSS 转 Tailwind 转换器",
+					Description: "粘贴 CSS 样式表/声明块或上传 .css 文件，浏览器本地解析声明并映射为 Tailwind 工具类：间距（16px→p-4）、字号（text-base）、颜色精确色板匹配（#3b82f6→bg-blue-500）、圆角（rounded-lg）、Flex/Grid 布局逐条对应；未命中命名类用任意值语法兜底（w-[137px]、[clip-path:circle(50%)]），无法映射项输出原声明加行内注释；支持 Tailwind v3/v4 版本切换，媒体查询块输出 sm:/md:/lg: 前缀变体；左右双栏实时预览＋HTML 预览渲染区，一键复制/下载，纯前端零上传 · CSS to Tailwind converter: parse CSS locally and map declarations to utility classes with arbitrary-value fallback, v3/v4 switch, media query variants, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-to-tailwind",
+					Icon:        "css",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "css_gradient_generator",
 					Name:        "CSS 渐变生成器",
 					Description: "CSS 渐变可视化编辑器：拖拽色标、linear/radial/conic 三种类型、随机和谐配色、10 款预设，一键复制 CSS · CSS gradient generator: visual editor with draggable color stops, linear/radial/conic types, harmonious palettes, presets, copy CSS",

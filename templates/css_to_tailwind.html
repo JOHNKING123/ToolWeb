@@ -1,0 +1,201 @@
+{{define "css_to_tailwind"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSS 转 Tailwind 转换器 - 粘贴 CSS 一键生成工具类 | 程序员工具箱</title>
+<meta name="description" content="免费在线 CSS 转 Tailwind 转换器：粘贴 CSS 样式表或上传 .css 文件，浏览器本地解析声明并映射为 Tailwind 工具类——间距（16px→p-4）、字号（text-base）、颜色精确色板匹配（#3b82f6→bg-blue-500）、圆角（rounded-lg）、Flex/Grid 布局逐条对应；未命中命名类用任意值语法兜底（w-[137px]、[clip-path:circle(50%)]），无法映射项输出原声明加注释；支持 Tailwind v3/v4 版本切换与媒体查询 sm:/md:/lg: 前缀，左右双栏实时预览＋HTML 渲染预览，一键复制/下载。纯前端零上传。CSS to Tailwind converter: map CSS declarations to utility classes locally, arbitrary-value fallback, v3/v4 switch, media query variants, 100% client-side.">
+<meta name="keywords" content="CSS 转 Tailwind,css to tailwind,Tailwind 转换,utility class,样式迁移,Tailwind 工具类生成,CSS 迁移 Tailwind,任意值语法,媒体查询 sm md lg,Tailwind v4">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-to-tailwind">
+<meta property="og:title" content="CSS 转 Tailwind 转换器 - 粘贴 CSS 一键生成工具类">
+<meta property="og:description" content="粘贴 CSS 或上传 .css 文件，本地逐条映射为 Tailwind 工具类：间距/字号/颜色/圆角/Flex 命名类精确命中，未命中用任意值语法兜底，支持 v3/v4 切换与媒体查询前缀。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-to-tailwind">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 转 Tailwind 转换器","alternateName":"css to tailwind converter","description":"粘贴 CSS 样式表/声明块或上传 .css 文件，浏览器本地解析 CSS 声明并映射为 Tailwind 工具类：间距、字号、颜色（精确色板匹配）、圆角、Flex/Grid 布局逐条对应；未命中命名类用任意值语法兜底，无法映射项输出原声明加行内注释；支持 Tailwind v3/v4 版本切换，媒体查询块输出 sm:/md:/lg: 前缀变体；左右双栏实时预览＋HTML 预览渲染区，一键复制/下载，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/css-to-tailwind","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ct-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.ct-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.ct-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ct-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ct-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ct-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.ct-drop{border:2px dashed #93c5fd;border-radius:.7rem;background:#eff6ff;padding:1rem;text-align:center;
+color:#1d4ed8;cursor:pointer;transition:all .15s;margin-bottom:.8rem;font-size:.88rem}
+.ct-drop:hover{background:#dbeafe}
+.ct-drop.drag{background:#bfdbfe;border-color:#1d4ed8}
+.ct-drop .material-icons{font-size:1.6rem;display:block;margin-bottom:.2rem}
+.ct-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.85rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.ct-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ct-count{font-size:.85rem;color:#6b7280;margin:.4rem 0}
+.ct-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ct-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ct-btn .material-icons{font-size:1.1rem}
+.ct-btn-primary{background:#1d4ed8;color:#fff}
+.ct-btn-primary:hover{background:#1e40af}
+.ct-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ct-btn-secondary:hover{background:#e5e7eb}
+.ct-btn-sm{padding:.35rem .8rem;font-size:.82rem}
+.ct-version{display:flex;gap:.6rem;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;font-size:.9rem}
+.ct-ver{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #e5e7eb;border-radius:2rem;
+padding:.4rem 1rem;cursor:pointer;font-size:.9rem;background:#f9fafb;user-select:none;font-weight:600}
+.ct-ver input{accent-color:#2563eb}
+.ct-ver.on{border-color:#1d4ed8;background:#eff6ff;color:#1d4ed8}
+.ct-stats{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.ct-stats b{color:#111827}
+.ct-ok{color:#047857}.ct-warn{color:#b45309}.ct-bad{color:#b91c1c}
+.ct-out{border:1px solid #e5e7eb;border-radius:.6rem;background:#f8fafc;padding:.8rem;max-height:520px;overflow:auto}
+.ct-rule-head{font-weight:700;color:#1e40af;font-size:.88rem;margin:.7rem 0 .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+.ct-rule-head:first-child{margin-top:0}
+.ct-line{display:flex;align-items:flex-start;gap:.5rem;padding:.3rem .2rem;border-bottom:1px dashed #eef2f7;
+font-size:.83rem;flex-wrap:wrap}
+.ct-line:last-child{border-bottom:none}
+.ct-badge{border-radius:.3rem;padding:.08rem .45rem;font-size:.72rem;font-weight:700;white-space:nowrap;flex:none;margin-top:.1rem}
+.ct-b-named{background:#d1fae5;color:#065f46}
+.ct-b-arb{background:#fef3c7;color:#92400e}
+.ct-b-unsup{background:#fee2e2;color:#991b1b}
+.ct-decl{font-family:ui-monospace,Menlo,Consolas,monospace;color:#4b5563}
+.ct-arrow{color:#9ca3af;flex:none}
+.ct-cls{font-family:ui-monospace,Menlo,Consolas,monospace;color:#1d4ed8;background:#eff6ff;border-radius:.3rem;padding:.1rem .4rem;font-weight:600}
+.ct-note{color:#9ca3af;font-size:.78rem}
+.ct-empty{color:#9ca3af;font-size:.9rem;text-align:center;padding:2rem 1rem}
+.ct-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.ct-copy-ok{color:#047857}.ct-copy-fail{color:#b91c1c}
+.ct-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.9rem}
+.ct-demo-card{border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem;background:#fff}
+.ct-demo-label{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;color:#1e40af;font-weight:700;margin-bottom:.5rem}
+.ct-demo-box{border:1px dashed #cbd5e1;border-radius:.4rem;padding:.8rem;min-height:3rem;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:.85rem;background:#f9fafb}
+.ct-chips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
+.ct-chip{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;background:#eff6ff;color:#1d4ed8;border-radius:.3rem;padding:.12rem .45rem}
+.ct-diff{background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.8rem 1rem;font-size:.9rem;line-height:2;color:#92400e}
+.ct-diff b{color:#78350f}
+.ct-diff code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#fef3c7;border-radius:.3rem;padding:.08rem .4rem;font-size:.82rem}
+.ct-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ct-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ct-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#ct-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#ct-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:900px){.ct-cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">css</i> CSS 转 Tailwind 转换器</h1>
+<p>粘贴 CSS → 逐条生成 Tailwind 工具类：命名类精确命中，未命中用任意值语法兜底，支持 v3/v4 切换与媒体查询前缀。</p>
+</div>
+<div class="tool-content" style="max-width:1180px;margin:auto;">
+
+<div class="ct-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>隐私承诺：样式代码只在你的浏览器里处理，不上传服务器。</b><br>
+本工具为纯前端单页应用：CSS 解析、声明映射、预览渲染、复制下载全部在本地完成，脚本内零 fetch / XHR，不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证：粘贴再长的样式表，也不会产生一次网络请求（断网可用，首次加载页面除外）。</div>
+</div>
+
+<div class="ct-cols">
+<div class="ct-panel">
+<h3><i class="material-icons">input</i> 输入 CSS</h3>
+<div class="ct-version">
+<span style="color:#6b7280">Tailwind 版本：</span>
+<label class="ct-ver on" id="ct-ver3-label"><input type="radio" name="ct-version" id="ct-v3" checked> v3</label>
+<label class="ct-ver" id="ct-ver4-label"><input type="radio" name="ct-version" id="ct-v4"> v4</label>
+</div>
+<div class="ct-drop" id="ct-drop">
+<i class="material-icons">cloud_upload</i>
+<b>点击选择或拖拽 .css 文件到此处（可选）</b><br>
+<span style="font-size:.8rem;color:#6b7280">本地 FileReader 读取，不上传服务器；内容载入下方文本框</span>
+<input type="file" id="ct-file" accept=".css" style="display:none">
+</div>
+<textarea class="ct-area" id="ct-input" rows="16" placeholder="在此粘贴 CSS 样式表、声明块，或上传 .css 文件，例如：&#10;.card {&#10;  padding: 16px;&#10;  background-color: #3b82f6;&#10;  border-radius: 8px;&#10;  display: flex;&#10;}&#10;@media (min-width: 768px) {&#10;  .card { padding: 32px; }&#10;}"></textarea>
+<div class="ct-count" id="ct-count">共 0 字符</div>
+<div class="ct-actions">
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-sample"><i class="material-icons">auto_awesome</i> 填入示例</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+</div>
+
+<div class="ct-panel">
+<h3><i class="material-icons">bolt</i> 转换结果（实时）</h3>
+<div class="ct-stats" id="ct-stats">等待输入…</div>
+<div class="ct-out" id="ct-out"><div class="ct-empty">在左侧粘贴 CSS 后，这里会逐条显示对应的 Tailwind 工具类。</div></div>
+<div class="ct-actions">
+<button type="button" class="ct-btn ct-btn-primary" id="ct-copy"><i class="material-icons">content_copy</i> 一键复制</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-download"><i class="material-icons">download</i> 下载 .txt</button>
+</div>
+<div class="ct-copy-tip" id="ct-copy-tip"></div>
+</div>
+</div>
+
+<div class="ct-panel">
+<h3><i class="material-icons">preview</i> HTML 预览渲染区</h3>
+<div class="ct-preview-grid" id="ct-preview"><div class="ct-empty">暂无可预览的规则。</div></div>
+<div class="ct-count" style="margin-top:.6rem">预览区用原始 CSS 声明做内联样式渲染（视觉参照），下方 chips 为生成的 Tailwind 工具类 —— 无需加载 Tailwind CDN，离线可用。</div>
+</div>
+
+<div class="ct-panel">
+<h3><i class="material-icons">difference</i> v3 / v4 版本差异说明</h3>
+<div class="ct-diff">
+<b>命名类重命名（切换版本后输出自动调整）：</b><code>rounded-sm</code>→<code>rounded-xs</code>、<code>rounded</code>→<code>rounded-sm</code>、<code>shadow-sm</code>→<code>shadow-xs</code>、<code>shadow</code>→<code>shadow-sm</code>、<code>blur-sm</code>→<code>blur-xs</code>、<code>flex-shrink-*</code>→<code>shrink-*</code>、<code>flex-grow-*</code>→<code>grow-*</code>、<code>bg-gradient-to-*</code>→<code>bg-linear-to-*</code>、<code>outline-none</code>→<code>outline-hidden</code>。<br>
+<b>动态间距（仅 v4）：</b>v4 的间距 scale 是动态的，任意 4px 倍数都合法 —— 如 <code>padding: 18px</code> 在 v4 输出 <code>p-4.5</code>，v3 则只能用任意值 <code>p-[18px]</code>。<br>
+<b>important 修饰符：</b>v3 输出前缀式 <code>!p-4</code> / <code>md:!p-4</code>，v4 输出后缀式 <code>p-4!</code> / <code>md:p-4!</code>。<br>
+<b>两版一致：</b>颜色色板、字号、字重、Flex/Grid 布局、定位等命名类在 v3/v4 中相同。
+</div>
+</div>
+
+<div class="ct-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ct-faq">
+<dt>转换逻辑是精确的吗？颜色是怎么匹配的？</dt>
+<dd>颜色走<b>精确色板匹配</b>：先把你的颜色值归一化为标准 hex（如 <code>#3b82f6</code>、<code>rgb(59,130,246)</code>、<code>#fff</code> 都会归一），再与 Tailwind 默认色板逐项比对，命中才输出 <code>bg-blue-500</code> 这类命名类；色板里没有的颜色输出任意值如 <code>bg-[#12ab34]</code>，视觉 100% 还原。</dd>
+<dt>「任意值」和「需手写」有什么区别？</dt>
+<dd>「任意值」指 Tailwind 原生支持的 <code>[...]</code> 语法（如 <code>w-[137px]</code>、<code>[clip-path:circle(50%)]</code>），可直接用；「需手写」指该声明没有可靠的工具类表达（如 CSS 变量定义 <code>--brand: #fff</code>），输出原声明并附行内注释提示，需你手动处理。</dd>
+<dt>媒体查询怎么转换？</dt>
+<dd><code>@media (min-width: 768px)</code> 这类条件按断点映射为 <code>sm:</code>（640px）、<code>md:</code>（768px）、<code>lg:</code>（1024px）、<code>xl:</code>（1280px）、<code>2xl:</code>（1536px）前缀变体；<code>max-width</code> 映射为 <code>max-sm:</code> 等；非常规断点输出 <code>min-[500px]:</code> 任意变体。</dd>
+<dt>只粘贴几条裸声明（没有选择器和花括号）可以吗？</dt>
+<dd>可以。解析器做了容错：<code>padding: 16px; color: red</code> 这样的裸声明会被当作一条匿名规则处理，照样逐条输出。</dd>
+<dt>我的 CSS 会上传到服务器吗？</dt>
+<dd>不会。解析、映射、预览、复制、下载全部在浏览器本地 JavaScript 里完成，脚本中没有任何 fetch / XHR 上传逻辑，可断网使用（首次加载页面除外）。</dd>
+<dt>转换结果能直接用在项目里吗？</dt>
+<dd>命名类和任意值类都是标准 Tailwind 语法，可直接粘贴进 <code>class</code> 属性。注意两点：一是确认项目用的是 v3 还是 v4（页内可切换）；二是「需手写」的条目要手动补 CSS。</dd>
+</dl>
+</div>
+
+<div class="ct-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ct-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">CSS 转 Tailwind 转换器（当前）</span>
+<a href="/tools/css-gradient-generator" class="btn btn-secondary" style="font-size:.9rem;">CSS 渐变生成器</a>
+<a href="/tools/color-converter" class="btn btn-secondary" style="font-size:.9rem;">颜色转换</a>
+<a href="/tools/html-entities" class="btn btn-secondary" style="font-size:.9rem;">HTML 实体编解码</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ct-toast"></div>
+<script src="/tools/static/js/css_to_tailwind.js?v=1"></script>
+<script>
+(function(){
+  var v3=document.getElementById('ct-v3'),v4=document.getElementById('ct-v4');
+  var l3=document.getElementById('ct-ver3-label'),l4=document.getElementById('ct-ver4-label');
+  function sync(){l3.classList.toggle('on',v3.checked);l4.classList.toggle('on',v4.checked);}
+  v3.addEventListener('change',sync);v4.addEventListener('change',sync);sync();
+})();
+</script>
+</body>
+</html>
+{{end}}
