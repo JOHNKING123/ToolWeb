@@ -1,3 +1,77 @@
+## 今日任务（2026-10-21 17:45 · 产品经理排期轮）
+
+**选定：代码打包给 LLM（Project to TXT，project_to_txt）** — 本轮唯一任务：
+- **顺位**：报价单生成器交付闭环（3b4954d，全量 128 Path）→ 56 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。该候选在 54/55/56 三轮连续位列 Top3 首位，15:40 PM 轮已明确「留池下一轮」，本轮即该轮次。
+- **双重独立形态验证**：packtxt.xyz＋project2txt 双重 Show HN 形态验证——给 AI 喂代码上下文时逐个文件复制粘贴慢，痛点真实且高频（用户本人就是边工作边写代码的程序员，喂仓库上下文是他的日常操作）。
+- **轮次匹配**：17:45 傍晚轮次，P1 可排；纯前端小-中难度（File System Access API 拖拽文件夹读文件树＋忽略规则＋合并单 txt），100% 本地零上传，一轮可高质量交付。
+- **家族归位**：开发工具家族成员，与站内 Markdown 工具家族同级增强。
+- **去重实锤**：`grep -cinE 'project_to_txt|project-to-txt|代码打包' tools/categories.go`（全量 128 Path）全零命中；建议 ID `project_to_txt`、Path `/tools/project-to-txt` 未被占用。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：URL 即文档·文本分享链接生成器（P1；55 轮刚由 P2 晋升，Tiny Little Office HN 643 points 形态验证；建议 ID url_note_share、Path /tools/url-note-share；留池下一轮）；单位感知记事本计算器（P1；研究轮明确「蒙特卡洛部分单轮交付风险高，留待更从容轮次」，17:45 非从容轮次，不动）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，本轮不动）；人像背景一键虚化（P2 新晋观察，客户端分割模型路径待验证，不立）；其余候选留池。
+
+**规格**：
+- 文件夹接入：拖拽文件夹或点击选择文件夹（File System Access API，兼容回退 input[type=file] webkitdirectory）；浏览器端遍历文件树，零上传。
+- 忽略规则：默认忽略 node_modules/、.git/、.idea/、.vscode/、dist/、build/、__pycache__/、*.lock、二进制文件（图片/音视频/压缩包/wasm 等按扩展名＋魔数/零字节率识别）；支持扩展名白名单过滤（如只打包 .ts/.js/.go/.py/.md）。
+- 文件树选择：文件树展示＋复选框全选/逐项剔除，单文件大小上限保护（默认单个文件 >1MB 跳过并提示）。
+- 合并输出：带文件路径分隔头（`==== path/to/file ====…==== END ====` 或 Markdown 代码围栏带路径）合并为单 .txt；输出统计（文件数/总字符数/预估 token 数）。
+- 一键复制全文＋下载 .txt 文件。
+- 纯前端、零后端、零上传。
+- 注册：开发工具品类，新增工具 ID `project_to_txt`、Name「代码打包给 LLM」、Path `/tools/project-to-txt`（New: true），中英文描述 + SEO keywords（代码打包、project to txt、AI 上下文、LLM 提示词、代码合并）；SEO 面板（title/description/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `project_to_txt`、Path `/tools/project-to-txt` 注册，注册总数 129 Path。
+2. 拖入一个含 node_modules 的测试文件夹：node_modules/.git 自动忽略，二进制文件自动跳过并在列表中标注。
+3. 文件树复选框可全选/逐项剔除，剔除后输出内容实时更新。
+4. 输出 txt 带路径分隔头、含文件数/字符数/预估 token 统计；一键复制＋下载可用。
+5. 零上传：Network 抽查无内容外发。
+6. node 测试 80+ 断言全过（忽略规则/树展平/合并格式/token 估算）。
+7. 公网 /tool-web 部署后 QA：/tools/project-to-txt 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID project_to_txt、Path /tools/project-to-txt，开发工具品类，New: true）
+- 新建 `templates/project_to_txt.html`、`static/js/project_to_txt.js`、`tests/project_to_txt.test.js`
+
+**交付核对**：本地 HEAD 123fb62；本地当前分支 muse/dev-20260929；`grep -cinE 'project_to_txt|project-to-txt|代码打包' tools/categories.go`（全量 128 Path）全零命中；建议 ID `project_to_txt`、Path `/tools/project-to-txt` 未被占用；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-21 17:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。报价单生成器交付闭环（开发轮 3b4954d「买卖方信息＋行项目（品名/规格/数量/单价/小计）增删改＋整单折扣/税率实时重算（未税/税额/价税合计/人民币大写）＋报价有效期/备注/签章区，A4 打印样式导出 PDF；localStorage 多草稿（tw_quotation_drafts_v1）＋示例报价单一键载入；与发票生成器双向互链兑现「报价单即将上线」占位；文档工具品类注册 New:true；SEO 面板配齐；node 测试 107 断言全过」；`grep tools/categories.go` 确认 ID `quotation_generator`、Path `/tools/quotation-generator` 已注册，全量 **128 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 傍晚轮次，P1 可排。
+
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. 报价单生成器交付确认：`git log` 头部 3b4954d（新工具）＋123fb62（15:39 排期轮 BACKLOG 落盘）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929 工作树干净（仅未跟踪 `toolWeb.bak-prev`／`toolweb` 历史构建产物残留）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 128 Path，`quotation_generator` ID 与 `/tools/quotation-generator` Path 已注册；候选池划出。
+2. 新信号扫描：
+   - **dev.to（2026-10-21 当日新帖）**：**Scrub**（作者 Metrix187，MIT；浏览器内一键虚化自拍背景隐私工具——「pick a photo, tap once to blur the room out from behind you, share」，100% 本地运行照片不出设备；痛点：自拍里房间细节可被反查租房/房产中介实拍图反定位，甚至被 Raven/GeoSpy 类 AI 地理定位；Blurring isn't anonymity 诚实声明）→ 池内已实现 `img_mosaic`（框选区域打码）为手动形态，Scrub 的「自动人像/背景分离一键虚化」零覆盖→ 本轮记 P2 新晋观察「人像背景一键虚化」（见候选表；技术路径：客户端分割模型 vendor 化（onnx/biRefNet 或 TF.js BodyPix）需先验证一轮交付可行性，先观察不立 P1；建议 ID selfie_bg_blur、Path /tools/selfie-background-blur 待定）；
+   - **Medium（Oct 2026）「7 Free Browser Tools Worth Bookmarking This October」**：**Calcy**（「best for back-of-the-envelope maths with units and ranges」行内数学＋单位＋范围估算）→ 池内 P1「单位感知记事本计算器」佐证再升级（52 轮 Calcy OSS 新品一次验证＋本轮消费者向榜单独立二度验证）；**SyncWhen**（免注册会议时间投票）→ 投票结果聚合需后端共享存储，形态不合，不立（记账）；**OldRoll**（复古胶片滤镜）→ 自有 `img_retro_filter` 已实现实锤，不立；**StitchCraft**（照片转十字绣图案）→ 52 轮已记 cross_stitch_pattern 已实现实锤，不立；**urPiano**（浏览器键盘可弹钢琴）→ 池内已有 P2 观察「在线钢琴」（52 轮 PianoTry 佐证），本轮再佐证，记账不重复立；llmspeed（本地 LLM 速度预估，需本机模型）→ 不立；
+   - **Show HN 当日 feed（showhn.buzzing.cc，10-21 刷新）**：**Mile Pace Calculator**（「free pace and split tools for runners」配速/距离/时间互算＋分段配速表，纯前端形态可做）→ 方向不合：10-18 用户方向修正后不扩展泛生活/健康计算器类（与 BMI 同类），本轮观察记账、不立项；**Visual cdecl**（C 声明中英/图可视化）→ 开发者 niche，不立；Grafista/Inca/AHP Matrix（AI 平面设计/3D Maya 平替/AHP 池内 P2 佐证，均 52-55 轮已消化）→ 无重复记账；其余（Rocus 浏览器本地 LLM 书签整理需本机模型/PhotoCraft Rust DirectML 工具条桌面形态/游戏/终端/AI 代理）→ 形态不合或需后端，均不立；
+   - **V2EX 10-21 通用搜索**：AI 数字人广告聚合＋老旧教程帖，无网页工具形态信号，零新立；
+   - **dev.to/browser-local 两篇玩法长文**（「Your files don't need to leave the device」「Browser-native tools that never upload your files」）→ 浏览器本地工具架构方法论，无具体新工具形态；「文件永不上传」结构化隐私叙事与站内零上传定位一致，可作后续工具页文案素材，记账。
+3. 候选池变动：人像背景一键虚化 P2 新晋观察（Scrub 当日形态验证；建议 ID `selfie_bg_blur`、Path `/tools/selfie-background-blur`；先观察客户端分割模型路径，不立 P1）；单位感知记事本计算器佐证升级（52 轮一次＋本轮 Medium 榜单二度独立验证，仍 P1 留池；中难度＋蒙特卡洛范围传播单轮交付风险高，继续「留待更从容轮次」）；去重核稿：Top3＋新晋观察建议 ID（project_to_txt / url_note_share / unit_calc_notepad / selfie_bg_blur）与 128 Path 零重叠（中文名＋ID 片段双核：`project_to_txt/project-to-txt/代码打包/url_note_share/url-note-share/URL即文档/文本分享链接/unit_calc_notepad/unit-calc-notepad/记事本计算器/selfie_bg_blur/selfie-background/背景虚化` 全零命中），可复现。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）:
+
+1. **代码打包给 LLM（Project to TXT）** — P1（开发工具家族轮强候补；packtxt.xyz＋project2txt 双重 Show HN 形态验证；痛点：给 AI 喂代码上下文逐个文件复制粘贴慢；纯前端小-中难度：File System Access API 拖拽文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt，100% 本地零上传；一轮可高质量交付；建议 ID project_to_txt、Path /tools/project-to-txt）。
+2. **URL 即文档·文本分享链接生成器** — P1（55 轮 P2→P1 晋升；Tiny Little Office「文档即链接」HN 643 points 形态验证；痛点：临时分享一段文本/配置/Markdown 要走 pastebin 类网站（广告/注册/内容留服务器）；本轮浏览器本地隐私叙事（Scrub「照片不出设备」）再添佐证——零上传分享形态正当时；纯前端小难度：文本→压缩＋base64→URL fragment 分享链接，打开即解码渲染，可选 WebCrypto AES-GCM 口令加密（密钥放 fragment，服务端不可见）；建议 ID url_note_share、Path /tools/url-note-share）。
+3. **单位感知记事本计算器** — P1（52 轮 Calcy OSS 新品一次验证＋本轮 Medium「7 Free Browser Tools Worth Bookmarking This October」榜单「best for back-of-the-envelope maths with units and ranges」独立二度验证；痛点：日常估算要兼顾单位换算和误差范围，Excel 太重；纯前端中难度：记事本行输入＋单位感知运算＋范围蒙特卡洛传播；蒙特卡洛部分单轮交付风险高，建议从容轮次；建议 ID unit_calc_notepad、Path /tools/unit-calc-notepad）。
+
+人像背景一键虚化（P2 新晋观察：Scrub 当日形态验证；客户端分割模型路径待验证；建议 ID selfie_bg_blur、Path /tools/selfie-background-blur）；打卡习惯追踪器（P2 佐证；55 轮 Daymark 商业验证）；AHP 层次分析法决策工具/GIF 压缩器/PDF 原生文本编辑器/在线钢琴（P2 留池观察）；跑步配速计算器（本轮观察记账，方向不合不立）；音频合并器/SRT 字幕编辑器/屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；其余候选留池。
+
+**通用候选表增量**（第五十六轮：报价单生成器已实现划出；人像背景一键虚化 P2 新晋观察；单位感知记事本计算器佐证升级；全量 128 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 报价单生成器 | 已实现划出（3b4954d 落盘；ID quotation_generator、Path /tools/quotation-generator 已注册；全量 128 Path；node 测试 107 断言全过；买卖方＋行项目增删改＋折扣税率实时重算（未税/税额/价税合计/人民币大写）＋有效期/备注/签章区＋A4 打印导出 PDF＋localStorage 多草稿＋示例报价单，与 invoice_generator 双向互链「报价→开票」闭环；纯前端零上传） | — | 已实现 |
+| 人像背景一键虚化 | 本轮新晋观察（dev.to 2026-10-21 新帖 Scrub 形态验证：自拍背景房间细节可被反查租房/房产实拍图反定位、GeoSpy 类 AI 地理定位威胁；浏览器内一键虚化背景，照片不出设备；与自有 img_mosaic 手动框选打码形态互补；技术路径：客户端分割模型（onnx/biRefNet 或 TF.js BodyPix）vendor 化需先验证一轮交付可行性，先观察不立 P1；建议 ID selfie_bg_blur、Path /tools/selfie-background-blur） | 中（待验证） | P2（56 轮新晋观察） |
+| 单位感知记事本计算器 | 佐证升级（52 轮 Calcy OSS 新品一次验证；本轮 Medium「7 Free Browser Tools Worth Bookmarking This October」榜单「best for back-of-the-envelope maths with units and ranges」独立二度验证；纯前端：记事本行输入＋单位感知运算＋范围蒙特卡洛传播；蒙特卡洛部分单轮交付风险高，留待更从容轮次；建议 ID unit_calc_notepad、Path /tools/unit-calc-notepad） | 中 | P1（56 轮佐证升级） |
+
+**归档说明**：本轮为 10-21 通用调研第五十六轮——报价单生成器交付闭环（3b4954d，`/tools/quotation-generator` 已注册，文档工具品类，全量 128 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 当日 Scrub→人像背景一键虚化 P2 新晋观察/与 img_mosaic 手动形态互补/分割模型路径待验证；Medium 10月榜单→Calcy 单位感知记事本佐证二度验证/OldRoll＝img_retro_filter 实锤/StitchCraft＝cross_stitch_pattern 实锤/urPiano→在线钢琴 P2 再佐证/SyncWhen 需后端不立；Show HN 当日 feed→Mile Pace Calculator 纯前端可做但 10-18 方向修正下不立（记账）/Visual cdecl 开发者 niche 不立/52-55 轮已消化条目无重复记账；V2EX 通用搜索→零新立；browser-local 玩法长文→方法论无新形态）均已消化；WPS 候选表保持冻结归档；仓库 128 注册工具全量核对无重叠（Top3 建议 ID project_to_txt / url_note_share / unit_calc_notepad＋新晋观察 ID selfie_bg_blur；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 3b4954d（报价单生成器）＋排期轮 123fb62；`grep tools/categories.go` 全量 128 Path（`quotation_generator` ID 与 `/tools/quotation-generator` Path 已注册，划入已实现）；Top3＋新晋观察建议 ID（project_to_txt / url_note_share / unit_calc_notepad / selfie_bg_blur）与 128 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
+
 ## 今日任务（2026-10-21 15:40 · 产品经理排期轮）
 
 **选定：报价单生成器（Quotation Generator，quotation_generator）** — 本轮唯一任务：

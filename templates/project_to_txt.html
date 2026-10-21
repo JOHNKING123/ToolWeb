@@ -1,0 +1,243 @@
+{{define "project_to_txt"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码打包给 LLM（Project to TXT）- 文件夹一键打包成单个 TXT 喂给 AI | 程序员工具箱</title>
+    <meta name="description" content="免费在线代码打包工具：拖拽项目文件夹，浏览器本地遍历文件树，node_modules/.git/dist 等默认智能忽略，二进制文件（图片/压缩包/可执行文件）自动跳过并标注，文件树复选框全选/逐项剔除，单文件 1MB 上限保护，带路径分隔头合并成单个 TXT，输出文件数/字符数/预估 Token 统计，一键复制或下载。纯前端零上传，代码不出浏览器。">
+    <meta name="keywords" content="代码打包 LLM,项目打包 txt,文件夹转文本,project to text,代码喂给 AI,LLM 上下文打包,repomix 替代,在线代码打包,源码合并工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/project-to-txt">
+    <meta property="og:title" content="代码打包给 LLM - 文件夹一键打包成 TXT">
+    <meta property="og:description" content="拖拽项目文件夹，智能忽略依赖与二进制文件，带路径分隔头合并成单个 TXT，一键复制喂给 ChatGPT/Claude/Gemini。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/project-to-txt">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"代码打包给 LLM（Project to TXT）","description":"拖拽项目文件夹，浏览器本地遍历文件树：node_modules/.git/dist 等默认忽略，二进制文件自动跳过标注，文件树复选框全选/逐项剔除，单文件 1MB 上限保护，带路径分隔头合并成单个 TXT，输出文件数/字符数/预估 Token 统计，一键复制或下载；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/project-to-txt","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ptx-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .ptx-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ptx-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ptx-panel h3{margin:0 0 .7rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .ptx-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .ptx-dropzone{border:2px dashed #93c5fd;background:#f8fbff;border-radius:.8rem;padding:2.2rem 1.2rem;
+            text-align:center;cursor:pointer;transition:all .15s;color:#374151}
+        .ptx-dropzone:hover,.ptx-dropzone.ptx-drag{border-color:#2563eb;background:#eff6ff}
+        .ptx-dropzone .material-icons{font-size:2.6rem;color:#60a5fa;display:block;margin-bottom:.5rem}
+        .ptx-dropzone p{margin:.3rem 0;font-size:.92rem}
+        .ptx-dropzone .ptx-sub{font-size:.82rem;color:#6b7280}
+        .ptx-btnrow{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;justify-content:center}
+        .ptx-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .ptx-btn .material-icons{font-size:1.1rem}
+        .ptx-btn-primary{background:#2563eb;color:#fff}
+        .ptx-btn-primary:hover{background:#1d4ed8}
+        .ptx-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .ptx-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .ptx-btn-secondary:hover{background:#e5e7eb}
+        .ptx-btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        .ptx-status{font-size:.85rem;color:#6b7280;margin-top:.6rem;text-align:center;min-height:1.2em}
+        .ptx-field{margin-bottom:1rem}
+        .ptx-field label{display:block;font-size:.88rem;font-weight:600;color:#374151;margin-bottom:.35rem}
+        .ptx-field input[type=text]{width:100%;box-sizing:border-box;padding:.6rem .8rem;border:1px solid #d1d5db;
+            border-radius:.5rem;font-size:.9rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .ptx-field input[type=text]:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ptx-hint{font-size:.82rem;color:#6b7280;margin-top:.3rem;line-height:1.7}
+        .ptx-hint code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.8rem}
+        .ptx-toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem;align-items:center}
+        .ptx-mini{border:1px solid #d1d5db;background:#f9fafb;border-radius:.4rem;padding:.3rem .8rem;
+            font-size:.85rem;cursor:pointer;color:#374151;display:inline-flex;align-items:center;gap:.3rem}
+        .ptx-mini:hover{border-color:#2563eb;color:#2563eb}
+        .ptx-mini .material-icons{font-size:1rem}
+        .ptx-stats{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;margin-bottom:.8rem;padding:.8rem 1rem;background:#eff6ff;
+            border:1px solid #bfdbfe;border-radius:.6rem;font-size:.9rem;color:#1e40af}
+        .ptx-stats b{font-size:1.15rem;color:#1d4ed8}
+        .ptx-tree{border:1px solid #e5e7eb;border-radius:.6rem;max-height:480px;overflow:auto;padding:.5rem .3rem;
+            background:#fcfdff;font-size:.9rem}
+        .ptx-empty{color:#94a3b8;text-align:center;padding:3rem 1rem;font-size:.92rem;line-height:2}
+        .ptx-node{display:flex;align-items:center;gap:.45rem;padding:.22rem .6rem;border-radius:.35rem;white-space:nowrap}
+        .ptx-node:hover{background:#f1f5ff}
+        .ptx-caret{width:1.1em;flex:none;color:#9ca3af;font-size:.75rem;user-select:none;text-align:center}
+        .ptx-caret-leaf{visibility:hidden}
+        .ptx-check{flex:none;width:1rem;height:1rem;accent-color:#2563eb;cursor:pointer}
+        .ptx-ico{flex:none;font-size:1.15rem;color:#f59e0b}
+        .ptx-name{color:#1f2937;overflow:hidden;text-overflow:ellipsis}
+        .ptx-size{flex:none;font-size:.78rem;color:#9ca3af;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .ptx-tag{flex:none;font-size:.72rem;border-radius:.3rem;padding:.08rem .45rem;font-weight:600}
+        .ptx-tag-ignore{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+        .ptx-tag-binary{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+        .ptx-tag-large{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+        .ptx-reason{flex:none;font-size:.76rem;color:#9ca3af;overflow:hidden;text-overflow:ellipsis}
+        .ptx-preview{background:#0f172a;border-radius:.6rem;padding:1rem;max-height:520px;overflow:auto;
+            font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.7;color:#e2e8f0;
+            white-space:pre-wrap;word-break:break-all;margin-bottom:1rem}
+        .ptx-actions{display:flex;flex-wrap:wrap;gap:.6rem}
+        .ptx-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .ptx-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .ptx-combo{margin-top:.9rem;padding:.8rem 1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.6rem;
+            font-size:.9rem;line-height:1.9;color:#14532d}
+        .ptx-combo a{color:#047857;font-weight:600}
+        .ptx-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .ptx-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .ptx-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #ptx-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #ptx-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .ptx-preview{font-size:.76rem;max-height:420px}
+            .ptx-btn{flex:1;justify-content:center}
+            .ptx-tree{max-height:380px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">folder_zip</i> 代码打包给 LLM（Project to TXT）</h1>
+            <p>把整个项目文件夹打包成单个 TXT：一键喂给 ChatGPT / Claude / Gemini 做代码审查、重构、答疑。智能忽略依赖与构建产物，二进制文件自动跳过。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ptx-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>文件夹遍历、忽略过滤、二进制识别、文本合并全部在你的浏览器本地完成，不发起任何后端请求、不上传一行代码，断网也能用。你可以在开发者工具 Network 面板验证。</div>
+            </div>
+
+            <div class="ptx-panel">
+                <h3><i class="material-icons">create_new_folder</i> ① 选择项目文件夹</h3>
+                <div class="ptx-dropzone" id="ptx-dropzone" tabindex="0" role="button" aria-label="拖拽文件夹到此处或点击选择">
+                    <i class="material-icons">cloud_upload</i>
+                    <p><b>把项目文件夹拖到这里</b></p>
+                    <p class="ptx-sub">或点击下方按钮选择（Chrome / Edge 优先使用系统文件夹选择器，其他浏览器自动降级为传统目录选择）</p>
+                    <div class="ptx-btnrow">
+                        <button type="button" class="ptx-btn ptx-btn-primary" id="ptx-pick-fsa">
+                            <i class="material-icons">folder_open</i> 选择文件夹
+                        </button>
+                        <button type="button" class="ptx-btn ptx-btn-secondary" id="ptx-pick-input">
+                            <i class="material-icons">drive_folder_upload</i> 兼容模式选择
+                        </button>
+                    </div>
+                    <input type="file" id="ptx-file-input" webkitdirectory directory multiple hidden>
+                </div>
+                <div class="ptx-status" id="ptx-scan-status"></div>
+            </div>
+
+            <div class="ptx-panel">
+                <h3><i class="material-icons">tune</i> ② 打包设置</h3>
+                <div class="ptx-field">
+                    <label for="ptx-ignore-dirs">忽略目录（逗号分隔，任意层级精确匹配）</label>
+                    <input type="text" id="ptx-ignore-dirs" autocomplete="off" spellcheck="false">
+                    <div class="ptx-hint">默认忽略 <code>node_modules</code> <code>.git</code> <code>.idea</code> <code>.vscode</code> <code>dist</code> <code>build</code> <code>__pycache__</code>；另有 <code>*.lock</code>（如 yarn.lock / Cargo.lock）、<code>.DS_Store</code> / <code>Thumbs.db</code> 固定忽略。改完点「应用设置」重新分类。</div>
+                </div>
+                <div class="ptx-field">
+                    <label for="ptx-whitelist">扩展名白名单（可选，逗号分隔，留空 = 全部文本文件）</label>
+                    <input type="text" id="ptx-whitelist" placeholder="例如：js,ts,vue,py,md" autocomplete="off" spellcheck="false">
+                    <div class="ptx-hint">只想打包某几类源码时填写，如 <code>js,ts,vue</code>；无扩展名的文件（如 Makefile）在白名单模式下会被排除。</div>
+                </div>
+                <div class="ptx-hint" style="margin-bottom:1rem">二进制文件（图片 / 音频 / 视频 / 压缩包 / 可执行文件 / 字体 / PDF 等）按<b>扩展名 + 文件头魔数 + NUL 字节</b>三重识别，自动跳过并在文件树中标注；单个文件超过 <b>1MB</b> 自动跳过并标注，避免一次塞爆 LLM 上下文。</div>
+                <button type="button" class="ptx-btn ptx-btn-secondary" id="ptx-reclassify">
+                    <i class="material-icons">refresh</i> 应用设置并重新分类
+                </button>
+            </div>
+
+            <div class="ptx-panel">
+                <h3><i class="material-icons">account_tree</i> ③ 文件树（勾选要打包的文件）</h3>
+                <div class="ptx-toolbar">
+                    <button type="button" class="ptx-mini" id="ptx-select-all"><i class="material-icons">done_all</i> 全选</button>
+                    <button type="button" class="ptx-mini" id="ptx-select-none"><i class="material-icons">remove_done</i> 全不选</button>
+                    <span class="ptx-hint" style="margin:0">目录复选框支持半选状态；被忽略 / 跳过的文件不可勾选</span>
+                </div>
+                <div class="ptx-stats" id="ptx-stats" style="display:none">
+                    <span>扫描到文件 <b id="ptx-stat-total">0</b> 个</span>
+                    <span>已勾选 <b id="ptx-stat-sel">0</b> 个</span>
+                    <span>忽略/跳过 <b id="ptx-stat-skip">0</b> 个</span>
+                </div>
+                <div class="ptx-tree" id="ptx-tree"></div>
+                <div style="margin-top:1rem">
+                    <button type="button" class="ptx-btn ptx-btn-primary" id="ptx-generate-btn" disabled>
+                        <i class="material-icons">bolt</i> 生成打包文本
+                    </button>
+                    <div class="ptx-status" id="ptx-gen-status" style="text-align:left"></div>
+                </div>
+            </div>
+
+            <div class="ptx-panel" id="ptx-output-panel">
+                <h3><i class="material-icons">description</i> ④ 打包结果</h3>
+                <div class="ptx-stats" id="ptx-out-stats" style="display:none">
+                    <span>文件数 <b id="ptx-out-files">0</b></span>
+                    <span>总字符数 <b id="ptx-out-chars">0</b></span>
+                    <span>预估 Token <b id="ptx-out-tokens">0</b></span>
+                </div>
+                <div class="ptx-preview" id="ptx-preview">尚未生成。先在上方选择文件夹、勾选文件，然后点击「生成打包文本」。输出格式：顶部汇总（文件数 / 总字符数 / 预估 Token / 生成时间），之后每个文件以 <code>FILE: 相对路径</code> 分隔头 + 全文依次拼接。</div>
+                <div class="ptx-actions">
+                    <button type="button" class="ptx-btn ptx-btn-primary" id="ptx-copy-btn" disabled>
+                        <i class="material-icons">content_copy</i> 一键复制全文
+                    </button>
+                    <button type="button" class="ptx-btn ptx-btn-primary" id="ptx-dl-btn" disabled>
+                        <i class="material-icons">download</i> 下载 .txt
+                    </button>
+                </div>
+            </div>
+
+            <div class="ptx-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="ptx-tip">
+                    <b>三步上手：</b>① 把项目文件夹拖进虚线框（或点「选择文件夹」）；② 在文件树里确认勾选 —— node_modules/.git/dist 等已自动剔除，二进制文件标黄跳过；③ 点「生成打包文本」，一键复制后粘贴到 ChatGPT / Claude / Gemini / Kimi 的输入框即可。<br>
+                    <b>输出格式：</b>顶部是汇总头（文件数、总字符数、预估 Token、生成时间），每个文件以 <code>====…====</code> 分隔线 + <code>FILE: 相对路径（N 字符）</code> 开头、全文紧随其后，LLM 能清晰分辨文件边界。<br>
+                    <b>Token 预估：</b>按 ASCII 约 4 字符 / 中日韩字符约 1.5 字符折算，为启发式估算，实际以各模型 tokenizer 为准；超长项目建议分模块多次打包。<br>
+                    <b>大文件保护：</b>单个文件超过 1MB 自动跳过（常见于误选的日志、bundle 产物），避免一次生成几十万字符卡死页面。<br>
+                    <b>适用边界：</b>本工具只做「文本合并」，不会执行代码；含密钥的 <code>.env</code> 文件默认会被打包，喂给 LLM 前请自行剔除或脱敏。
+                </div>
+                <div class="ptx-combo">
+                    <b>「开发一条龙」：</b>仓库刚搭好缺忽略规则？先用 <a href="/tools/gitignore-generator">.gitignore 生成器</a> 生成忽略文件；正则写不准？用 <a href="/tools/regex-tester">正则表达式测试</a> 在线验证 —— 配环境、验表达式、打包喂 AI，一套流程走完。
+                </div>
+            </div>
+
+            <div class="ptx-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="ptx-faq">
+                    <dt>文件夹内容会上传到服务器吗？</dt>
+                    <dd>不会。遍历、过滤、合并全在浏览器本地的 JavaScript 里完成，页面脚本中没有任何 fetch / XHR 上传逻辑，你可以在开发者工具 Network 面板验证，也可以断网使用（首次加载页面除外）。</dd>
+                    <dt>为什么 node_modules / .git / dist 被自动忽略了？</dt>
+                    <dd>这些是依赖、版本历史与构建产物，喂给 LLM 只会浪费 token。默认忽略目录为 node_modules、.git、.idea、.vscode、dist、build、__pycache__，外加 *.lock 锁文件与系统垃圾文件（.DS_Store / Thumbs.db）；可在「打包设置」里增删，改完点「应用设置」即时重新分类。</dd>
+                    <dt>图片、压缩包这些二进制文件怎么处理？</dt>
+                    <dd>按「扩展名 + 文件头魔数 + NUL 字节」三重识别自动跳过，并在文件树中以黄色「二进制跳过」标签标注（含识别依据，如 PNG / ZIP / .exe），不会混入文本。</dd>
+                    <dt>单个文件超过 1MB 会怎样？</dt>
+                    <dd>自动跳过并标注「超 1MB 跳过」，不计入打包结果。这是为了防止误选的日志文件或打包产物一次生成几十万字符、卡死页面或爆掉 LLM 上下文。</dd>
+                    <dt>预估 Token 准确吗？</dt>
+                    <dd>是启发式估算：ASCII 按约 4 字符/token、中日韩字符按约 1.5 字符/token 折算。不同模型的分词器有差异，实际值以模型方为准；当估算值接近模型上下文上限时，建议分模块多次打包。</dd>
+                    <dt>扩展名白名单怎么用？</dt>
+                    <dd>在「打包设置」里填写如 <code>js,ts,vue</code>，则只打包这些扩展名的文本文件。留空表示不过滤。注意白名单模式下无扩展名的文件（如 Makefile）会被排除。</dd>
+                    <dt>生成后的 TXT 怎么喂给 LLM？</dt>
+                    <dd>点「一键复制全文」，粘贴到 ChatGPT / Claude / Gemini / Kimi 等任意对话输入框，附一句「请基于以下项目代码回答…」即可。文件较大时建议下载 .txt，通过支持文件上传的模型直接上传附件。</dd>
+                    <dt>哪些浏览器可以用？</dt>
+                    <dd>Chrome / Edge 完整支持系统文件夹选择器（File System Access API）与拖拽；Firefox / Safari 自动降级为传统目录选择（webkitdirectory），功能一致。</dd>
+                </dl>
+            </div>
+
+            <div class="ptx-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="ptx-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">代码打包给 LLM（当前）</span>
+                    <a href="/tools/gitignore-generator" class="btn btn-secondary" style="font-size:.9rem;">.gitignore 生成器</a>
+                    <a href="/tools/regex-tester" class="btn btn-secondary" style="font-size:.9rem;">正则表达式测试</a>
+                    <a href="/tools/json-parser" class="btn btn-secondary" style="font-size:.9rem;">JSON 解析器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ptx-toast"></div>
+    <script src="/tools/static/js/project_to_txt.js?v=1"></script>
+</body>
+</html>
+{{end}}

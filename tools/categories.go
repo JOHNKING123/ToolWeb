@@ -166,6 +166,15 @@ func GetCategories() []Category {
 				// 	Category:    "开发工具",
 				// },
 				{
+					ID:          "project_to_txt",
+					Name:        "代码打包给 LLM",
+					Description: "拖拽项目文件夹一键打包成单个 TXT 喂给 LLM：浏览器本地遍历文件树，node_modules/.git/dist 等默认智能忽略，二进制文件（扩展名+魔数+NUL 三重识别）自动跳过标注，文件树复选框全选/逐项剔除，单文件 1MB 上限保护，扩展名白名单可选，带路径分隔头合并＋文件数/字符数/预估 Token 统计，一键复制或下载，纯前端零上传 · Pack project source into one TXT for LLMs: folder drag & drop, smart ignores, binary auto-skip, checkbox file tree, per-file 1MB cap, path-separated merge with file/char/token stats, 100% client-side",
+					Path:        "/tools/project-to-txt",
+					Icon:        "folder_zip",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "mermaid_diagram_renderer",
 					Name:        "Mermaid 图表渲染与导出器",
 					Description: "粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：6 套模板一键插入、四套主题切换、中文错误提示，SVG 下载、PNG 高清导出（2x/3x，透明/白色背景），纯前端本地渲染，代码不出浏览器 · Paste Mermaid code for live flowchart/sequence/gantt/class/ER/state diagrams with SVG & high-res PNG export, 100% client-side",
