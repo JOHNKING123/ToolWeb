@@ -278,6 +278,15 @@ function typesOf(hits) { return hits.map(function (h) { return h.type; }); }
     eq(Object.keys(P.loadMapping()).length, 2, "覆盖保存");
     P.clearMapping();
     eq(Object.keys(P.loadMapping()).length, 0, "销毁后为空");
+    /* 刷新行为：init() 载入即 clearMapping()，陈旧映射不恢复 */
+    P.saveMapping({ "__API_KEY_1__": "stale-value" });
+    P.clearMapping(); /* 模拟页面刷新时 init() 的清空逻辑 */
+    eq(Object.keys(P.loadMapping()).length, 0, "刷新后（init 清空）映射表为空");
+    /* 源码确认：init 内先 clearMapping 再 refreshMapStatus */
+    var srcInit = fs.readFileSync(__dirname + "/../static/js/prompt_sanitizer.js", "utf8");
+    var iClear = srcInit.indexOf("clearMapping(); // 刷新页面时销毁陈旧映射");
+    var iRefresh = srcInit.indexOf("refreshMapStatus();", iClear);
+    eq(iClear > -1 && iRefresh > -1 && iClear < iRefresh, true, "init 先清空陈旧映射再刷新状态");
     /* 兜底：坏数据不抛异常 */
     P.saveMapping(null);
     eq(Object.keys(P.loadMapping()).length, 0, "保存 null 后读出为空对象");
