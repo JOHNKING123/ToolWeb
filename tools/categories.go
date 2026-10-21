@@ -867,6 +867,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "quotation_generator",
+					Name:        "报价单生成器",
+					Description: "在线报价单制作：报价方/客户信息（公司/联系人/电话/地址）、行项目（品名/规格/数量/单价/小计）增减行、整单折扣、0/1/3/6/9/13% 税率预设、未税合计/税额/价税合计自动计算、人民币金额大写自动生成，报价有效期、备注、签章区，多草稿 localStorage 保存，A4 报价单样式打印导出 PDF，纯前端零上传 · Quotation generator: line items, discount, tax rates, Chinese uppercase amounts, validity & signature blocks, print-ready A4, 100% client-side",
+					Path:        "/tools/quotation-generator",
+					Icon:        "request_quote",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{
