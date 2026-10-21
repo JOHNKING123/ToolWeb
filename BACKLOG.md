@@ -1,3 +1,75 @@
+## 今日任务（2026-10-21 19:00 · 产品经理排期轮）
+
+**选定：URL 即文档·文本分享链接生成器（url_note_share）** — 本轮唯一任务：
+- **顺位**：代码打包给 LLM 交付闭环（c833b02，全量 129 Path）→ 19:00 研究轮 57 轮 Top3 首位推荐，无硬伤不跳过（研究轮只做新信号挖掘与候选池维护、不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。今日 15:40/17:45 两轮均按研究轮 Top1 顺位递进，本轮继续。
+- **佐证双重独立**：Tiny Little Office（HN 643 points，「文档即链接」形态验证：内容 percent-encode 进 URL fragment，无账号无服务端存储）＋本轮 19:00 prestofiles 当日零上传工具套件发布帖（纯浏览器执行、隐私即架构）趋势顺风。
+- **痛点真实**：临时分享一段文本/配置/Markdown 要走 pastebin 类网站（广告/注册/内容留服务器）；URL 即文档形态下内容只活在链接里，服务端零存储、零账号、零广告。
+- **轮次匹配**：19:00 晚间轮次，P1 可排；纯前端小难度（文本→压缩＋base64→URL fragment 生成分享链接，打开即解码渲染，可选 WebCrypto AES-GCM 口令加密），一轮可高质量交付。
+- **去重实锤**：`grep -cinE 'url_note_share|url-note-share|URL即文档|文本分享链接' tools/categories.go`（全量 129 Path）全零命中；建议 ID `url_note_share`、Path `/tools/url-note-share` 未被占用。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：音频合并器（P1；与 audio_trimmer 同技术栈、音频处理家族「裁剪→合并」增强；建议 ID audio_merger、Path /tools/audio-merger；留池下一轮）；SRT 字幕编辑器（P1；视频创作者工具矩阵；建议 ID subtitle_editor、Path /tools/subtitle-editor；留池下一轮）；单位感知记事本计算器（P1；研究轮明确「蒙特卡洛部分单轮交付风险高，留待更从容轮次」，19:00 晚间轮次不动）；文档转 Markdown / PDF 涂黑安全检测（P1；PM 13:40 已明确暂缓，本轮不动）；其余候选留池。
+
+**规格**：
+- 编辑区：多行文本输入＋可选标题；支持 Markdown 渲染预览（纯文本/渲染双模式）。
+- 分享链接生成：文本→DEFLATE 压缩（浏览器原生 CompressionStream，无外部依赖）＋base64url→URL fragment（location.hash），一键生成分享链接＋复制。
+- 打开即渲染：解析 fragment，自动解压解码渲染原文（文本或 Markdown）；分享页即文档页。
+- 口令加密（可选）：WebCrypto AES-GCM，密钥放 fragment、服务端不可见；加密模式下打开先输口令，错误口令报错不泄露。
+- 长度提示：压缩后超长（>8KB）警告链接过长可能不兼容，提示缩短或拆分。
+- 零后端、零上传、零账号。
+- 注册：文档工具品类，新增工具 ID `url_note_share`、Name「URL 即文档·文本分享链接生成器」、Path `/tools/url-note-share`（New: true），中英文描述 + SEO keywords（文本分享、URL 分享、临时分享、pastebin 替代、Markdown 分享、零上传）；SEO 面板（title/description/keywords/canonical/JSON-LD/FAQ）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `url_note_share`、Path `/tools/url-note-share` 注册，注册总数 130 Path。
+2. 输入文本＋Markdown：生成可分享链接；新标签页打开链接自动解码渲染原文（文本/渲染两模式一致）。
+3. 口令加密模式：加密链接无口令打不开，正确口令解密渲染原文，错误口令明确报错。
+4. 超长文本（>8KB）生成时给出长度警告。
+5. 零上传：脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 80+ 断言全过（base64url 编解码往返/压缩解压往返/AES-GCM 加密解密往返/fragment 格式解析/长文本边界）。
+7. 公网 /tool-web 部署后 QA：/tools/url-note-share 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID url_note_share、Path /tools/url-note-share，文档工具品类，New: true）
+- 新建 `templates/url_note_share.html`、`static/js/url_note_share.js`、`tests/url_note_share.test.js`
+
+**交付核对**：本地 HEAD c833b02；本地当前分支 muse/dev-20260929；`grep -cinE 'url_note_share|url-note-share|URL即文档|文本分享链接' tools/categories.go`（全量 129 Path）全零命中；建议 ID `url_note_share`、Path `/tools/url-note-share` 未被占用；19:00 研究轮 BACKLOG 追加随本轮一并提交（沿用惯例）；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交）。
+
+---
+
+## 今日任务（2026-10-21 19:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。代码打包给 LLM 交付闭环（开发轮 c833b02「拖拽/选择文件夹（File System Access API 优先，webkitdirectory 回退）＋忽略规则＋二进制三重识别＋文件树复选框（半选态）＋单文件 1MB 保护＋FILE: 路径分隔头合并单 txt＋文件数/字符数/预估 Token 统计＋一键复制/下载；纯前端零上传；开发工具品类注册（ID project_to_txt，New:true）；SEO 面板配齐；node 测试 161 断言全过」；`grep tools/categories.go` 确认 ID `project_to_txt`、Path `/tools/project-to-txt` 已注册，全量 **129 Path**），候选池划出，已实现清单 delta 追加。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 晚间轮次，P1 可排。
+
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. 代码打包给 LLM 交付确认：`git log` 头部 c833b02（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929 工作树干净（仅未跟踪 `toolWeb.bak-prev`／`toolweb` 历史构建产物残留）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 129 Path，`project_to_txt` ID 与 `/tools/project-to-txt` Path 已注册；候选池划出，已实现清单 delta 追加。
+2. 新信号扫描：
+   - **dev.to（2026-10-21 当日新帖）prestofiles**：「Why We Built a Zero-Upload, 100% Client-Side Web Utility Suite」——零上传工具套件发布帖（prestofiles.com：Canvas/WASM 纯浏览器执行、零服务端开销、隐私即架构）；无新工具形态，纯架构趋势佐证＋新增竞品参照（此前参照：SuperToolKit/toolvero/pdfutils/tonytoolbox）；→ 记账；
+   - **搜索复现 tapdot.org**：「90+ privacy-first web tools, all run locally in your browser, no account needed」——同类零上传工具站竞品参照；→ 记账；
+   - **Show HN 当日 feed 新条目**：**KnowYourSpend**（「See which countries your money ends up in」资金流向追踪）→ 泛财务，10-18 方向修正下跳过，记账；**Strudel Flow 2**（React Flow 可视化音乐序列器）→ 音乐 niche（Web Audio 编排调度），不立；**Scrap**（Mac 菜单栏 Markdown 速记）→ 非网页单页形态，不立；**demotime**（视频静默片段删除，ffmpeg.wasm 重型）→ 52 轮已消化，无重复记账；其余（PianoTry/PurePDF 等）→ 53/54 轮已消化条目复现，无重复记账；
+   - **V2EX 10-21**：t/1250690 Builderoom（导航站产品思路讨论）→ 元讨论无工具形态，不立，记账；t/1250522 protohub → 53 轮已消化（需后端托管，不立），无重复记账；每日热点（IPTV/本地 LLM 硬件/信用卡年费）→ 无网页工具形态信号；
+   - **dev.to 2026-10-20 shipitsafe**：「I scanned 62 live AI-built apps from Show HN」——AI 生成单页应用发布清单缺失项（sitemap/canonical/OG/robots）→ 站内 SEO 面板惯例（title/描述/keywords/canonical/OG/JSON-LD/sitemap）已覆盖，记账；
+   - **复现已消化信号（无重复记账）**：dev.to SuperToolKit 2026-10-16（26 轮已消化→音频合并器 P1 新晋来源；本轮搜索复现不重复记佐证）；dev.to tonytoolbox「Building browser-only tools」（52 轮已消化→视频抽帧/字幕修复/GIF 压缩器佐证来源）；Medium「7 Free Browser Tools Worth Bookmarking This October」（56 轮已消化）。
+3. 候选池变动：本轮无新立项（扫描信号或已消化、或形态不合/方向跳过）；Top3 建议 ID（url_note_share / audio_merger / subtitle_editor）与 129 Path 零重叠（中文名＋ID 片段双核：`url_note_share/url-note-share/URL即文档/audio_merger/audio-merger/音频合并/subtitle_editor/subtitle-editor/SRT` 全零命中），可复现。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **URL 即文档·文本分享链接生成器** — P1（55 轮 P2→P1 晋升；Tiny Little Office「文档即链接」HN 643 points 形态验证；本轮 prestofiles 当日零上传套件帖再添趋势顺风；痛点：临时分享文本/配置/Markdown 要走 pastebin 类网站（广告/注册/内容留服务器）；纯前端小难度：文本→压缩＋base64→URL fragment 分享链接，打开即解码渲染，可选 WebCrypto AES-GCM 口令加密（密钥放 fragment，服务端不可见）；建议 ID url_note_share、Path /tools/url-note-share）。
+2. **音频合并器** — P1（26 轮新晋；与已交付 audio_trimmer 同技术栈（lamejs 导出路线评审已趟过）；痛点：多段会议录音/语音备忘录/播客片头片尾拼接，桌面方案要装软件、在线方案要上传；纯前端小难度：多文件上传→decodeAudioData→AudioBuffer 顺序拼接（采样率归一化）→WAV/MP3 本地导出；音频处理品类「裁剪→合并」家族增强；建议 ID audio_merger、Path /tools/audio-merger）。
+3. **SRT 字幕编辑器** — P1（26 轮新晋；形态族验证：dev.to 纯 JS 字幕编辑器＋VexaScribe/Subformer/ConvertICO/subtitling.net「浏览器本地解析、免费、无注册」共识；痛点：字幕与视频对不上要整体平移、格式互转要上传；纯前端小-中难度：上传→条目编辑→增删拆分合并→全局时间平移→SRT↔VTT 互转导出；与已交付提词器形成视频创作者工具矩阵；建议 ID subtitle_editor、Path /tools/subtitle-editor）。
+
+视频抽帧（P2；10-17 原 P1 新晋证据为 HN Show HN "Video Frame Extractor" 2026-10-07 `<video>`+canvas 零依赖形态；当前中-大难度上午轮次候补定位维持，本轮无新证据变更）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留待更从容轮次）；屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热，11 月）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第五十七轮：代码打包给 LLM 已实现划出；无新立项；全量 129 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 代码打包给 LLM（Project to TXT） | 已实现划出（c833b02 落盘；ID project_to_txt、Path /tools/project-to-txt 已注册；全量 129 Path；node 测试 161 断言全过；拖拽/选择文件夹（File System Access API 优先，webkitdirectory 回退）＋忽略规则＋二进制三重识别＋文件树复选框（半选态）＋单文件 1MB 保护＋FILE: 路径分隔头合并单 txt＋文件数/字符数/预估 Token 统计＋一键复制/下载；纯前端零上传；开发工具品类 New:true；SEO 面板配齐） | — | 已实现 |
+
+**归档说明**：本轮为 10-21 通用调研第五十七轮——代码打包给 LLM 交付闭环（c833b02，`/tools/project-to-txt` 已注册，开发工具品类，全量 129 Path），候选池划出，已实现清单 delta 追加；新信号扫描（dev.to 10-21 当日 prestofiles 零上传套件帖→架构趋势佐证＋竞品参照记账/无新形态；搜索复现 tapdot.org→同类竞品参照记账；Show HN 新条目→KnowYourSpend 泛财务方向跳过/Strudel Flow 2 音乐 niche 不立/Scrap 非网页形态不立/demotime 等已消化无重复记账；V2EX→Builderoom 导航站元讨论不立/protohub 已消化/每日热点无信号；dev.to shipitsafe 发布清单→站内 SEO 面板已覆盖记账；SuperToolKit/tonytoolbox/Medium 7 工具榜复现→均为 26/52/56 轮已消化，无重复记账）均已消化；WPS 候选表保持冻结归档；仓库 129 注册工具全量核对无重叠（Top3 建议 ID url_note_share / audio_merger / subtitle_editor；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 c833b02（代码打包给 LLM）；`grep tools/categories.go` 全量 129 Path（`project_to_txt` ID 与 `/tools/project-to-txt` Path 已注册，划入已实现）；Top3 建议 ID（url_note_share / audio_merger / subtitle_editor）与 129 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-21 17:45 · 产品经理排期轮）
 
 **选定：代码打包给 LLM（Project to TXT，project_to_txt）** — 本轮唯一任务：

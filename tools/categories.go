@@ -688,6 +688,15 @@ func GetCategories() []Category {
 			Icon:        "file_copy",
 			Tools: []Tool{
 				{
+					ID:          "url_note_share",
+					Name:        "文本分享链接生成器",
+					Description: "URL 即文档：输入文本（可选 Markdown 渲染预览），DEFLATE 压缩 + base64url 编码进 URL fragment 一键生成分享链接，打开即解压渲染原文；可选 WebCrypto AES-GCM 口令加密（密钥只在链接里、服务端不可见），压缩后超 8KB 给出长度警告，纯前端零上传 · URL-based note sharing: deflate + base64url into URL fragment, Markdown preview, AES-GCM password encryption, 100% client-side",
+					Path:        "/tools/url-note-share",
+					Icon:        "link",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "doc2pdf",
 					Name:        "DOC 转 PDF",
 					Description: "将 DOC/DOCX 文件转换为 PDF 格式",

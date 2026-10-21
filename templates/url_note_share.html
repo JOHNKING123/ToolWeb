@@ -1,0 +1,162 @@
+{{define "url_note_share"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本分享链接生成器 - URL 即文档：文本/Markdown 压缩成分享链接（零上传/口令加密）</title>
+    <meta name="description" content="免费在线文本分享链接生成器：输入文本（可选 Markdown 渲染预览），DEFLATE 压缩 + base64url 编码进 URL fragment，一键生成分享链接；打开链接即解压渲染原文。支持 WebCrypto AES-GCM 口令加密，密钥只在链接里、服务器永远看不到。纯前端零上传。">
+    <meta name="keywords" content="文本分享链接,URL 即文档,文本转链接,Markdown 分享,口令加密分享,AES-GCM,URL fragment,零上传,url note share">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/url-note-share">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文本分享链接生成器","description":"输入文本（可选 Markdown 渲染预览），DEFLATE 压缩 + base64url 编码进 URL fragment 生成分享链接；打开链接即解压渲染原文。支持 WebCrypto AES-GCM 口令加密，密钥只在链接 fragment 里、服务端不可见。纯前端本地运行，零上传。","url":"https://www.johnkingzcq123.xyz/tools/url-note-share","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .uns-split{display:flex;gap:1rem;align-items:stretch}
+        .uns-pane{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
+        .uns-pane-title{font-size:.88rem;font-weight:700;color:#374151;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem}
+        .uns-pane-title .material-icons{font-size:1.05rem;color:#6b7280}
+        .uns-textarea{width:100%;min-height:380px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff;flex:1}
+        .uns-preview{flex:1;min-height:380px;max-height:560px;overflow-y:auto;border:1px solid #d1d5db;border-radius:.5rem;background:#fff;padding:1rem 1.2rem;box-sizing:border-box;font-size:.95rem;line-height:1.8;color:#111827;word-wrap:break-word}
+        .uns-preview h1,.uns-preview h2,.uns-preview h3{margin:.6em 0 .4em;line-height:1.4}
+        .uns-preview table{border-collapse:collapse;margin:.6em 0;width:100%}
+        .uns-preview th,.uns-preview td{border:1px solid #d1d5db;padding:.4em .6em;text-align:left}
+        .uns-preview th{background:#f3f4f6}
+        .uns-preview pre{background:#f3f4f6;border-radius:.4rem;padding:.8em;overflow-x:auto}
+        .uns-preview code{background:#f3f4f6;padding:.1em .35em;border-radius:.3rem;font-size:.88em}
+        .uns-preview pre code{background:none;padding:0}
+        .uns-preview blockquote{border-left:4px solid #d1d5db;margin:.6em 0;padding:.2em 0 .2em .9em;color:#4b5563}
+        .uns-preview img{max-width:100%}
+        .uns-msg{display:none;border:1px solid;border-radius:.5rem;padding:.7rem 1rem;margin-top:1rem;font-size:.92rem;line-height:1.7}
+        .uns-linkbox{display:flex;gap:.5rem;margin-top:.8rem}
+        .uns-linkbox input{flex:1;min-width:0;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.85rem;color:#374151;background:#f9fafb}
+        .uns-stat{font-size:.82rem;color:#6b7280;margin-top:.4rem}
+        .uns-pwrow{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:.9rem 0}
+        .uns-pwrow input{padding:.55rem .8rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.9rem;min-width:220px}
+        .uns-hint{font-size:.82rem;color:#6b7280;line-height:1.7}
+        .uns-reader-doc{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.6rem 1.8rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+        @media (max-width:768px){.uns-split{flex-direction:column}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">link</i> 文本分享链接生成器</h1>
+            <p>URL 即文档：文本压缩进链接 fragment，打开即看原文 · 可选 AES-GCM 口令加密 · 全程零上传</p>
+        </div>
+
+        <!-- ============ 编辑模式 ============ -->
+        <div id="uns-editor" class="tool-content" style="max-width:1080px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.5rem;">
+                <div class="uns-split">
+                    <div class="uns-pane">
+                        <div class="uns-pane-title"><i class="material-icons">edit</i> 输入文本</div>
+                        <textarea id="uns-input" class="uns-textarea" placeholder="在此粘贴或输入要分享的文本…&#10;&#10;支持 Markdown 语法（右侧实时渲染预览）。"></textarea>
+                        <div class="uns-stat" id="uns-stat">原文 0 字 / 0 字节</div>
+                    </div>
+                    <div class="uns-pane">
+                        <div class="uns-pane-title"><i class="material-icons">visibility</i> 渲染预览</div>
+                        <div id="uns-preview" class="uns-preview"></div>
+                    </div>
+                </div>
+                <div style="margin:1rem 0 .4rem;display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;">
+                    <span style="font-size:.92rem;color:#374151;font-weight:600;">内容模式：</span>
+                    <label style="font-size:.92rem;"><input type="radio" name="uns-mode" value="t" checked> 纯文本</label>
+                    <label style="font-size:.92rem;"><input type="radio" name="uns-mode" value="md"> Markdown</label>
+                </div>
+                <div class="uns-pwrow">
+                    <label for="uns-password" style="font-size:.92rem;color:#374151;font-weight:600;"><i class="material-icons" style="vertical-align:-6px;">lock</i> 口令加密（可选）：</label>
+                    <input id="uns-password" type="password" placeholder="留空=不加密；填写= AES-GCM 加密" autocomplete="off">
+                    <span class="uns-hint">加密后打开链接需输入口令才能查看；口令只参与本地密钥派生，绝不上传。</span>
+                </div>
+                <div class="form-actions">
+                    <button id="uns-gen-btn" class="btn btn-primary"><i class="material-icons">link</i> 生成分享链接</button>
+                    <button id="uns-clear-btn" type="button" class="btn btn-secondary"><i class="material-icons">clear</i> 清空</button>
+                </div>
+                <div id="uns-msg" class="uns-msg"></div>
+                <div id="uns-result" style="display:none;">
+                    <div class="uns-linkbox">
+                        <input id="uns-link" readonly onclick="this.select()" placeholder="生成的分享链接会显示在这里">
+                        <button id="uns-copy-btn" class="btn btn-secondary"><i class="material-icons">content_copy</i> 复制链接</button>
+                        <button id="uns-open-btn" class="btn btn-secondary"><i class="material-icons">open_in_new</i> 新标签页打开</button>
+                    </div>
+                    <div class="uns-stat" id="uns-linkstat"></div>
+                    <div id="uns-warn" class="uns-msg"></div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.5rem;">
+                <h3><i class="material-icons">info</i> 原理：为什么服务器看不到你的内容？</h3>
+                <div style="color:#374151;line-height:1.9;font-size:.95rem;">
+                    1. <b>压缩</b>：原文先经浏览器原生 <code>CompressionStream</code>（DEFLATE）压缩；<br>
+                    2. <b>编码</b>：压缩字节做 base64url 编码，拼成 <code>#u1,模式,数据</code> 放在 URL 的 <b>fragment</b>（# 后面）里；<br>
+                    3. <b>分享</b>：浏览器请求 URL 时<b>不会把 # 后面的内容发给服务器</b>，对方打开链接后由本页 JS 在本地解码、解压、渲染；<br>
+                    4. <b>加密（可选）</b>：填写口令后，压缩数据经 WebCrypto <b>AES-GCM-256</b> 加密（PBKDF2-SHA256 派生密钥，10 万次迭代，随机盐+随机 IV），密钥只存在于链接 fragment 中，服务端永远不可见。打开时输错口令会明确报错；<br>
+                    5. <b>零上传</b>：全程零 <code>fetch</code>/XHR，可在开发者工具 Network 面板验证（除页面自身静态资源外无任何请求）。
+                </div>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="sc-faq">
+                    <dt>分享的文本会被上传到服务器吗？</dt>
+                    <dd>不会。文本只编码在 URL 的 #fragment 里，浏览器发起请求时不会发送 fragment，服务器（包括本站服务器）永远收不到原文。Network 面板可验证：点击生成后无任何网络请求。</dd>
+                    <dt>口令加密安全吗？忘记口令怎么办？</dt>
+                    <dd>采用 AES-GCM-256 + PBKDF2-SHA256（10 万次迭代）+ 随机盐/随机 IV，密钥只由你填写的口令在本地派生，绝不上传。忘记口令则无法解密——本站也没有任何办法恢复，请务必通过其他渠道把口令告诉接收方。</dd>
+                    <dt>链接有多长？太长怎么办？</dt>
+                    <dd>链接长度 ≈ 压缩后体积 × 4/3。中文文本通常能压到 1/4~1/3。若压缩后仍超过 8KB，页面会给出长度警告：超长链接在微信、短信、二维码等场景可能被截断，建议拆成多段分别分享。</dd>
+                    <dt>对方打开链接需要安装什么吗？</dt>
+                    <dd>不需要。任何现代浏览器（Chrome/Edge/Firefox/Safari，含手机浏览器）打开链接即自动解码渲染；加密链接会先提示输入口令。</dd>
+                    <dt>Markdown 模式支持哪些语法？</dt>
+                    <dd>支持标题、加粗/斜体/删除线、行内代码与代码围栏、引用、 有序/无序列表、表格、链接、图片、分隔线。渲染前做严格 XSS 过滤，<code>javascript:</code> 等危险协议会被拦截。</dd>
+                    <dt>链接会过期吗？</dt>
+                    <dd>不会。数据就在链接本身里，没有服务器存储，也就没有过期一说——但反过来，链接一旦发出就无法撤回，涉密内容请务必加口令。</dd>
+                </dl>
+            </div>
+
+            <div class="sc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="sc-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">文本分享链接生成器（当前）</span>
+                    <a href="/tools/markdown-to-word" class="btn btn-secondary" style="font-size:.9rem;">Markdown 转 Word</a>
+                    <a href="/tools/markdown-publish-formatter" class="btn btn-secondary" style="font-size:.9rem;">Markdown 公众号排版</a>
+                    <a href="/tools/base64" class="btn btn-secondary" style="font-size:.9rem;">Base64 编解码</a>
+                    <a href="/tools/aes" class="btn btn-secondary" style="font-size:.9rem;">AES 加解密</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ 阅读模式（带分享 fragment 打开时显示） ============ -->
+        <div id="uns-reader" class="tool-content" style="max-width:860px;margin:auto;display:none;">
+            <div class="tool-card">
+                <div class="tool-header" style="text-align:left;margin-bottom:1rem;">
+                    <h2 style="font-size:1.4rem;"><i class="material-icons">description</i> 分享的文档</h2>
+                    <div class="uns-stat" id="uns-readmeta"></div>
+                </div>
+                <div id="uns-pwbox" style="display:none;margin-bottom:1rem;">
+                    <p style="color:#374151;font-size:.95rem;"><i class="material-icons" style="vertical-align:-6px;">lock</i> 该文档已加密，请输入口令查看：</p>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                        <input id="uns-readpw" type="password" placeholder="输入口令" autocomplete="off" style="padding:.55rem .8rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.9rem;min-width:220px;">
+                        <button id="uns-decrypt-btn" class="btn btn-primary"><i class="material-icons">lock_open</i> 解密查看</button>
+                    </div>
+                </div>
+                <div id="uns-readmsg" class="uns-msg"></div>
+                <div id="uns-content" class="uns-reader-doc uns-preview" style="min-height:200px;"></div>
+                <div class="form-actions" style="margin-top:1rem;">
+                    <button id="uns-copy-src" class="btn btn-secondary"><i class="material-icons">content_copy</i> 复制原文</button>
+                    <a href="/tools/url-note-share" class="btn btn-secondary"><i class="material-icons">add</i> 我也要分享文本</a>
+                </div>
+                <p class="uns-hint" style="margin-top:1rem;">文档内容由链接本地解码渲染，未经过任何服务器。想分享自己的文本？点击「我也要分享文本」。</p>
+            </div>
+        </div>
+    </div>
+    <div id="sc-toast"></div>
+    <script src="/tools/static/js/url_note_share.js?v=1"></script>
+</body>
+</html>
+{{end}}
