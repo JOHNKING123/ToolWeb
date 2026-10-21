@@ -229,5 +229,41 @@ function seg(fill, seconds, sr, nch) {
   eq(M.moveItem([], 0, 1), null, "空列表");
 })();
 
+/* ---------- 10. 解码完成按添加序号插回（乱序完成仍按添加顺序） ---------- */
+(function () {
+  function names(l) { return l.map(function (s) { return s.name; }).join(","); }
+  function S(name, seq) { return { name: name, seq: seq }; }
+  // 空列表插入
+  var l1 = [];
+  M.insertSegmentBySeq(l1, S("a", 0));
+  eq(names(l1), "a", "空列表插入");
+  // 模拟解码乱序完成：先完成 seq=2，再 seq=0，最后 seq=1
+  var l2 = [];
+  M.insertSegmentBySeq(l2, S("c", 2));
+  M.insertSegmentBySeq(l2, S("a", 0));
+  M.insertSegmentBySeq(l2, S("b", 1));
+  eq(names(l2), "a,b,c", "乱序完成仍按添加顺序排列");
+  // 第二批次（seq 更大）追加到已有列表末尾
+  M.insertSegmentBySeq(l2, S("d", 3));
+  M.insertSegmentBySeq(l2, S("e", 4));
+  eq(names(l2), "a,b,c,d,e", "新批次追加到末尾");
+  // 某文件解码失败（seq 缺位）不影响其余顺序
+  var l3 = [];
+  M.insertSegmentBySeq(l3, S("a", 0));
+  M.insertSegmentBySeq(l3, S("c", 2)); // seq=1 解码失败
+  eq(names(l3), "a,c", "缺位序号不影响其余顺序");
+  // 用户手动上移/下移后（只换位置不改 seq），新文件仍追加到末尾
+  var l4 = [S("c", 2), S("a", 0), S("b", 1)]; // 用户把 c 移到最前
+  M.insertSegmentBySeq(l4, S("d", 3));
+  eq(names(l4), "c,a,b,d", "手动排序后新批次追加到末尾");
+  // 无 seq 的历史对象视为 0
+  var l5 = [{ name: "old" }];
+  M.insertSegmentBySeq(l5, { name: "new", seq: 1 });
+  eq(names(l5), "old,new", "无 seq 视为 0");
+  // 返回值即原数组（原地修改）
+  var l6 = [];
+  ok(M.insertSegmentBySeq(l6, S("x", 0)) === l6, "返回原数组引用");
+})();
+
 console.log("\n断言总数: " + total + "，通过: " + pass + "，失败: " + fail);
 process.exit(fail === 0 ? 0 : 1);

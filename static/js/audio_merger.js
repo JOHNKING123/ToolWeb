@@ -9,7 +9,7 @@
  * 零上传：无后端调用、无第三方依赖、无 CDN（lamejs 为仓库内 vendor 文件），脚本内零 fetch/XHR。
  * 纯函数（fmtTime / clamp / floatTo16BitPCM / interleaveChannels / encodeWavDataView /
  *   resampleLinear / normalizeChannels / applyFade / concatSegments / estimateWavBytes /
- *   estimateMp3Bytes / moveItem / fmtSize）在 node 下可单元测试。
+ *   estimateMp3Bytes / moveItem / insertSegmentBySeq / fmtSize）在 node 下可单元测试。
  */
 (function () {
 'use strict';
@@ -213,6 +213,21 @@ function moveItem(list, idx, dir) {
     return copy;
 }
 
+// 并行 decodeAudioData 的完成顺序不可控：入队时记录添加序号 seq，
+// 解码完成后按 seq 插回对应位置，保证"列表按添加顺序排列"；
+// 用户手动上移/下移只改变数组顺序不改动 seq，新批次仍追加到末尾。
+// 无 seq 的历史对象视为 seq=0。返回 segments（原地修改）。
+function insertSegmentBySeq(segments, seg) {
+    var seq = (seg && typeof seg.seq === 'number') ? seg.seq : 0;
+    var pos = segments.length;
+    for (var i = 0; i < segments.length; i++) {
+        var s = (segments[i] && typeof segments[i].seq === 'number') ? segments[i].seq : 0;
+        if (s > seq) { pos = i; break; }
+    }
+    segments.splice(pos, 0, seg);
+    return segments;
+}
+
 // node 下导出纯函数以便单元测试
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -221,7 +236,8 @@ if (typeof module !== 'undefined' && module.exports) {
         encodeWavDataView: encodeWavDataView, resampleLinear: resampleLinear,
         normalizeChannels: normalizeChannels, applyFade: applyFade,
         concatSegments: concatSegments, estimateWavBytes: estimateWavBytes,
-        estimateMp3Bytes: estimateMp3Bytes, moveItem: moveItem
+        estimateMp3Bytes: estimateMp3Bytes, moveItem: moveItem,
+        insertSegmentBySeq: insertSegmentBySeq
     };
     return;
 }
@@ -241,6 +257,9 @@ var state = {
 };
 
 function $(id) { return document.getElementById(id); }
+
+// 文件添加序号：并行解码完成顺序不可控，解码后按此序号插回列表正确位置
+var fileSeq = 0;
 
 var el = {};
 ['am-upload', 'am-file', 'am-status', 'am-list-panel', 'am-list', 'am-empty',
@@ -286,6 +305,7 @@ function handleFiles(files) {
     setStatus('⏳ 正在本地解码 ' + list.length + ' 个音频…');
     var pending = list.length;
     list.forEach(function (f) {
+        var seq = fileSeq++; // 入队序号：解码完成后按此插回列表（完成顺序≠添加顺序）
         var reader = new FileReader();
         reader.onerror = function () {
             pending--;
@@ -294,7 +314,7 @@ function handleFiles(files) {
         };
         reader.onload = function () {
             actx.decodeAudioData(reader.result).then(function (buffer) {
-                onDecoded(buffer, f);
+                onDecoded(buffer, f, seq);
                 pending--;
                 if (pending === 0) refreshAll();
                 else setStatus('⏳ 解码中…（剩余 ' + pending + ' 个）');
@@ -308,16 +328,18 @@ function handleFiles(files) {
     });
 }
 
-function onDecoded(buffer, file) {
+function onDecoded(buffer, file, seq) {
     var data = [];
     for (var c = 0; c < buffer.numberOfChannels; c++) data.push(buffer.getChannelData(c).slice());
-    state.segments.push({
+    // 按添加序号插入，而非按解码完成顺序 push（小文件先解完会导致乱序）
+    insertSegmentBySeq(state.segments, {
         name: file.name,
         size: file.size,
         sampleRate: buffer.sampleRate,
         channels: buffer.numberOfChannels,
         duration: buffer.duration,
-        data: data
+        data: data,
+        seq: seq
     });
 }
 
