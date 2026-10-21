@@ -170,7 +170,7 @@ transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px soli
 <dt>提词器是怎么工作的？</dt>
 <dd>在左侧输入演讲稿，右侧提词区以大字平滑向上滚动。点「播放」开始，红色基准线划过的位置就是当前应读的段落，该段落会高亮显示。播到底会自动停止。</dd>
 <dt>有哪些快捷键？</dt>
-<dd>空格：播放 / 暂停；↑ / ↓：速度 ±0.5x（范围 1x–5x）；F：进入 / 退出全屏；Esc：退出全屏（浏览器原生行为）。在左侧输入框里打字时快捷键自动让路，不会误触。</dd>
+<dd>空格：播放 / 暂停；↑ / ↓：速度 ±0.5x（范围 1x–5x）；F：进入 / 退出全屏；Esc：退出全屏（页面已显式监听 Esc 并调用退出，即使浏览器原生处理被拦截也能退出；未全屏时按 Esc 无任何副作用）。在左侧输入框里打字时快捷键自动让路，不会误触。</dd>
 <dt>镜像模式是做什么的？</dt>
 <dd>给配了物理提词镜（分光镜）的用户准备的：打开后文字水平翻转显示，经过镜面反射后，演讲者看到的即为正像。没有镜面设备请保持关闭。</dd>
 <dt>全屏提词是什么效果？</dt>
@@ -197,7 +197,7 @@ transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px soli
 </div>
 </div>
 <div id="tp-toast"></div>
-<script src="/tools/static/js/teleprompter.js?v=1"></script>
+<script src="/tools/static/js/teleprompter.js?v=2"></script>
 </body>
 </html>
 {{end}}

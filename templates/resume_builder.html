@@ -1,0 +1,303 @@
+{{define "resume_builder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简历模板生成器 - 在线免费简历制作/多套模板一键切换/A4打印导出PDF | 程序员工具箱</title>
+<meta name="description" content="免费在线简历模板生成器：左侧分段表单录入（基本信息/求职意向/教育经历/工作经历/项目经历/专业技能/荣誉证书），4 套内置模板（简约商务/现代双栏/学术严谨/创意配色）实时预览一键切换，浏览器打印样式 A4 优化、一键导出 PDF，localStorage 自动暂存＋示例简历一键载入，与简历预检工具互链成「生成→诊断」闭环。纯前端零上传，简历不出电脑。Free online resume builder: fill form, 4 live templates, A4 print to PDF, 100% client-side.">
+<meta name="keywords" content="简历模板生成器,在线简历制作,简历模板免费,简历排版,简历导出PDF,免费简历模板,求职简历制作,resume builder,online resume maker,resume template free">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/resume-builder">
+<meta property="og:title" content="简历模板生成器 - 在线免费制作/A4打印导出PDF">
+<meta property="og:description" content="分段表单录入，4 套模板实时预览一键切换，浏览器打印 A4 导出 PDF，localStorage 自动暂存，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/resume-builder">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"简历模板生成器","alternateName":"resume builder","description":"免费在线简历模板生成器：左侧分段表单录入（基本信息/求职意向/教育/工作/项目/技能/荣誉），4 套内置模板实时预览一键切换，浏览器打印样式 A4 优化导出 PDF，localStorage 自动暂存＋示例简历一键载入，与简历预检工具互链；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/resume-builder","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.rb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.rb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.rb-work{display:grid;grid-template-columns:minmax(400px,460px) 1fr;gap:1.2rem;align-items:start}
+.rb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.rb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.rb-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.rb-panel h3 .rb-add{margin-left:auto}
+.rb-grid2{display:grid;grid-template-columns:1fr 1fr;gap:.1rem .8rem}
+.rb-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.rb-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.rb-req{color:#ef4444}
+.rb-field input[type=text],.rb-field input[type=tel],.rb-field input[type=email],.rb-field textarea,.rb-field select{
+border:1px solid #d1d5db;border-radius:.45rem;padding:.55rem .7rem;font-size:.92rem;background:#fff;color:#1f2937;
+width:100%;box-sizing:border-box;font-family:inherit;line-height:1.7}
+.rb-field textarea{resize:vertical}
+.rb-field input:focus,.rb-field textarea:focus,.rb-field select:focus{outline:none;border-color:#1d4ed8;
+box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.rb-field input.rb-invalid,.rb-field textarea.rb-invalid{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.12)}
+.rb-item{border:1px dashed #c7d2fe;background:#f8faff;border-radius:.6rem;padding:.9rem;margin-bottom:.9rem}
+.rb-item-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.rb-item-head b{font-size:.88rem;color:#1e40af}
+.rb-add{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .8rem;border:1px dashed #93c5fd;
+background:#eff6ff;color:#1d4ed8;border-radius:.45rem;font-size:.82rem;font-weight:600;cursor:pointer}
+.rb-add:hover{background:#dbeafe}
+.rb-del{padding:.25rem .7rem;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;border-radius:.4rem;
+font-size:.78rem;cursor:pointer}
+.rb-del:hover{background:#fee2e2}
+.rb-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.2rem}
+.rb-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.rb-btn .material-icons{font-size:1.1rem}
+.rb-btn-primary{background:#1d4ed8;color:#fff}
+.rb-btn-primary:hover{background:#1e40af}
+.rb-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.rb-btn-secondary:hover{background:#e5e7eb}
+.rb-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+/* ---- 模板切换 ---- */
+.rb-tpls{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.2rem}
+.rb-tpl{text-align:left;border:2px solid #e5e7eb;background:#fff;border-radius:.6rem;padding:.6rem .8rem;cursor:pointer}
+.rb-tpl b{display:block;font-size:.9rem;color:#111827}
+.rb-tpl span{font-size:.76rem;color:#6b7280;line-height:1.5}
+.rb-tpl.on{border-color:#1d4ed8;background:#eff6ff}
+.rb-tpl:hover{border-color:#93c5fd}
+/* ---- 预览区 ---- */
+.rb-preview-head{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem;flex-wrap:wrap}
+.rb-preview-head h3{margin:0;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.rb-preview-head h3 .material-icons{color:#1d4ed8}
+.rb-pages{font-size:.8rem;color:#6b7280}
+.rb-preview-head .rb-btn{margin-left:auto}
+.rb-sheet-wrap{background:#9ca3af;border-radius:.6rem;padding:1.4rem;display:flex;justify-content:center}
+#rb-sheet{background:#fff;width:100%;max-width:800px;min-height:900px;box-shadow:0 4px 24px rgba(0,0,0,.28);
+border-radius:2px;padding:2.2rem 2.4rem;box-sizing:border-box;overflow:hidden}
+.rb-ph{color:#9ca3af;font-style:normal}
+/* ---- 简历模板1：简约商务 ---- */
+.rb-t-minimal{font-size:13.5px;line-height:1.75;color:#1a1a1a;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.rb-m-head{border-bottom:2.5px solid #1a1a1a;padding-bottom:.7rem;margin-bottom:1rem}
+.rb-m-name{font-size:1.85rem;font-weight:800;letter-spacing:.06em}
+.rb-m-contact{color:#444;font-size:.85rem;margin-top:.3rem}
+.rb-m-intent{margin-top:.35rem;font-size:.92rem}
+.rb-m-sep{color:#bbb;margin:0 .3rem}
+.rb-m-sec{margin-bottom:1.05rem}
+.rb-m-sec-t{font-size:1.02rem;font-weight:700;border-bottom:1px solid #999;padding-bottom:.28rem;
+margin-bottom:.55rem;letter-spacing:.12em}
+.rb-m-item{margin-bottom:.6rem}
+.rb-m-row{display:flex;gap:.7rem;align-items:baseline;flex-wrap:wrap}
+.rb-m-row b{font-size:.96rem}
+.rb-m-sub{color:#444;font-size:.85rem}
+.rb-m-date{margin-left:auto;color:#666;font-size:.82rem;white-space:nowrap}
+.rb-m-ul{margin:.3rem 0 0 1.05rem;padding:0;font-size:.88rem;color:#333}
+.rb-m-ul li{margin-bottom:.18rem}
+.rb-m-skills{font-size:.88rem;color:#333;line-height:2}
+.rb-dot{color:#999;margin:0 .25rem}
+/* ---- 简历模板2：现代双栏 ---- */
+.rb-t-twocol{display:flex;font-size:13px;line-height:1.75;color:#222;min-height:1000px;
+font-family:"PingFang SC","Microsoft YaHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rb-tc-side{width:31%;flex:none;background:#1f2937;color:#e5e7eb;padding:1.4rem 1.1rem;box-sizing:border-box}
+.rb-tc-name{font-size:1.55rem;font-weight:800;letter-spacing:.05em;color:#fff}
+.rb-tc-intent{font-size:.85rem;color:#93c5fd;margin:.4rem 0 1rem;line-height:1.9}
+.rb-tc-sec{margin-bottom:1.2rem}
+.rb-tc-sec-t{font-size:.92rem;font-weight:700;color:#fbbf24;letter-spacing:.15em;border-bottom:1px solid #374151;
+padding-bottom:.3rem;margin-bottom:.5rem}
+.rb-tc-contact{font-size:.82rem;line-height:2;color:#d1d5db;word-break:break-all}
+.rb-tc-ul{margin:0;padding-left:1.05rem;font-size:.83rem;line-height:2;color:#d1d5db}
+.rb-tc-main{flex:1;padding:1.4rem 1.3rem;box-sizing:border-box;min-width:0}
+.rb-tc-msec{margin-bottom:1.1rem}
+.rb-tc-msec-t{font-size:.98rem;font-weight:800;color:#1f2937;letter-spacing:.12em;border-left:4px solid #f59e0b;
+padding-left:.55rem;margin-bottom:.55rem}
+.rb-tc-item{margin-bottom:.65rem}
+.rb-tc-row{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+.rb-tc-row b{font-size:.92rem;color:#111827}
+.rb-tc-sub{color:#4b5563;font-size:.82rem}
+.rb-tc-date{margin-left:auto;color:#6b7280;font-size:.78rem;white-space:nowrap}
+.rb-tc-mul{margin:.25rem 0 0 1.05rem;padding:0;font-size:.85rem;color:#374151}
+.rb-tc-mul li{margin-bottom:.15rem}
+/* ---- 简历模板3：学术严谨 ---- */
+.rb-t-academic{font-size:13.5px;line-height:1.8;color:#111;font-family:"PingFang SC","Microsoft YaHei",SimSun,serif}
+.rb-a-head{text-align:center;border-bottom:3px double #333;padding-bottom:.8rem;margin-bottom:1rem}
+.rb-a-name{font-size:2rem;font-weight:800;letter-spacing:.25em;text-indent:.25em}
+.rb-a-meta{margin-top:.35rem;font-size:.85rem;color:#333}
+.rb-a-intent{margin-top:.3rem;font-size:.9rem}
+.rb-a-sec{margin-bottom:1.05rem}
+.rb-a-sec-t{text-align:center;margin-bottom:.55rem}
+.rb-a-sec-t span{font-size:1.02rem;font-weight:800;letter-spacing:.35em;text-indent:.35em;
+border-bottom:1px solid #333;padding-bottom:.2rem}
+.rb-a-item{margin-bottom:.6rem}
+.rb-a-row{display:flex;justify-content:space-between;align-items:baseline;gap:.8rem}
+.rb-a-l b{font-size:.95rem}
+.rb-a-r{color:#444;font-size:.82rem;white-space:nowrap}
+.rb-a-sub{color:#333;font-size:.86rem;margin:.1rem 0 .2rem}
+.rb-a-ul{margin:.25rem 0 0 1.05rem;padding:0;font-size:.88rem;color:#222}
+.rb-a-ul li{margin-bottom:.15rem}
+.rb-a-skills{font-size:.88rem;line-height:2}
+/* ---- 简历模板4：创意配色 ---- */
+.rb-t-creative{font-size:13.5px;line-height:1.75;color:#1f2937;font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rb-c-head{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;border-radius:.5rem;
+padding:1.3rem 1.5rem;margin-bottom:1.1rem}
+.rb-c-name{font-size:1.8rem;font-weight:800;letter-spacing:.06em}
+.rb-c-intent{margin-top:.3rem;font-size:.92rem;color:#e0e7ff}
+.rb-c-contact{margin-top:.25rem;font-size:.83rem;color:#c7d2fe}
+.rb-c-sep{margin:0 .3rem;color:#a5b4fc}
+.rb-c-sec{margin-bottom:1.05rem}
+.rb-c-sec-t{display:inline-block;font-size:.95rem;font-weight:800;color:#fff;background:#4f46e5;border-radius:.35rem;
+padding:.15rem .8rem;letter-spacing:.12em;margin-bottom:.55rem}
+.rb-c-card{background:#f5f3ff;border-radius:.45rem;padding:.7rem .9rem;margin-bottom:.6rem}
+.rb-c-row{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+.rb-c-row b{font-size:.94rem;color:#312e81}
+.rb-c-sub{color:#5b21b6;font-size:.83rem;margin-top:.1rem}
+.rb-c-date{margin-left:auto;color:#6d28d9;font-size:.8rem;white-space:nowrap}
+.rb-c-ul{margin:.3rem 0 0 1.05rem;padding:0;font-size:.87rem;color:#374151}
+.rb-c-ul li{margin-bottom:.15rem}
+.rb-c-pills{display:flex;flex-wrap:wrap;gap:.45rem}
+.rb-c-pill{background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;border-radius:999px;padding:.18rem .8rem;font-size:.82rem}
+/* ---- FAQ / 相关 ---- */
+.rb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.rb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.rb-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#rb-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all .25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#rb-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:1100px){.rb-work{grid-template-columns:1fr}.rb-tpls{grid-template-columns:1fr 1fr}}
+/* ---- 打印：仅输出简历页 ---- */
+@media print{
+  @page{size:A4;margin:11mm 12mm}
+  body{background:#fff}
+  body *{visibility:hidden}
+  #rb-sheet,#rb-sheet *{visibility:visible}
+  #rb-sheet{position:absolute;left:0;top:0;width:100%;max-width:none;min-height:0;margin:0;padding:0;
+  box-shadow:none;border-radius:0;overflow:visible}
+  .rb-sheet-wrap{background:#fff;padding:0}
+  #rb-toast{display:none!important}
+  .rb-ph{color:#999}
+}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">description</i> 简历模板生成器</h1>
+<p>左侧分段表单填写，右侧实时预览 —— 4 套内置模板一键切换，浏览器打印 A4 一键导出 PDF，写完即投递。</p>
+</div>
+<div class="tool-content" style="max-width:1360px;margin:auto;">
+<div class="rb-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>表单录入、模板渲染、打印导出、草稿暂存（localStorage）全部在浏览器本地完成，无任何后端请求，简历内容不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="rb-actions">
+<button type="button" class="rb-btn rb-btn-secondary" id="rb-sample"><i class="material-icons">auto_awesome</i> 载入示例简历</button>
+<button type="button" class="rb-btn rb-btn-secondary" id="rb-clear"><i class="material-icons">clear_all</i> 清空重填</button>
+</div>
+
+<div class="rb-tpls" id="rb-tpls">
+<button type="button" class="rb-tpl on" data-rtpl="minimal"><b>简约商务</b><span>黑白灰经典单栏，适合大多数岗位</span></button>
+<button type="button" class="rb-tpl" data-rtpl="twocol"><b>现代双栏</b><span>深色信息栏＋经历主栏，层次分明</span></button>
+<button type="button" class="rb-tpl" data-rtpl="academic"><b>学术严谨</b><span>居中标题＋细分割线，稳重克制</span></button>
+<button type="button" class="rb-tpl" data-rtpl="creative"><b>创意配色</b><span>彩色头图＋技能标签，个性出挑</span></button>
+</div>
+
+<div class="rb-work">
+<!-- 左：分段表单 -->
+<div id="rb-form">
+<div class="rb-panel">
+<h3><i class="material-icons">person</i> 基本信息</h3>
+<div class="rb-grid2">
+<div class="rb-field"><label>姓名 <span class="rb-req">*</span></label><input type="text" data-rbf="basic.name" maxlength="20" placeholder="如：陈晓峰"></div>
+<div class="rb-field"><label>性别</label><input type="text" data-rbf="basic.gender" maxlength="6" placeholder="如：男"></div>
+<div class="rb-field"><label>出生年月</label><input type="text" data-rbf="basic.birth" maxlength="16" placeholder="如：1998年5月"></div>
+<div class="rb-field"><label>所在城市</label><input type="text" data-rbf="basic.city" maxlength="20" placeholder="如：深圳"></div>
+<div class="rb-field"><label>手机号</label><input type="tel" data-rbf="basic.phone" maxlength="11" placeholder="11 位手机号"></div>
+<div class="rb-field"><label>邮箱</label><input type="email" data-rbf="basic.email" maxlength="60" placeholder="如：name@example.com"></div>
+</div>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">work</i> 求职意向</h3>
+<div class="rb-grid2">
+<div class="rb-field"><label>期望职位 <span class="rb-req">*</span></label><input type="text" data-rbf="intention.position" maxlength="30" placeholder="如：前端开发工程师"></div>
+<div class="rb-field"><label>期望城市</label><input type="text" data-rbf="intention.city" maxlength="20" placeholder="如：深圳"></div>
+<div class="rb-field"><label>期望薪资</label><input type="text" data-rbf="intention.salary" maxlength="20" placeholder="如：15-20K"></div>
+<div class="rb-field"><label>求职类型</label><select id="rb-intention-type"><option>全职</option><option>实习</option><option>兼职</option></select></div>
+</div>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">school</i> 教育经历 <button type="button" class="rb-add" data-radd="education">＋ 添加</button></h3>
+<div id="rb-list-education"></div>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">business_center</i> 工作经历 <button type="button" class="rb-add" data-radd="work">＋ 添加</button></h3>
+<div id="rb-list-work"></div>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">folder_special</i> 项目经历 <button type="button" class="rb-add" data-radd="projects">＋ 添加</button></h3>
+<div id="rb-list-projects"></div>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">psychology</i> 专业技能</h3>
+<div class="rb-field"><label>每行一条，建议写“熟练程度＋技术点”</label><textarea data-rbf="skills" rows="5" placeholder="如：&#10;熟练掌握 JavaScript / TypeScript，熟悉 ES6+ 语法&#10;熟练使用 Vue 3，了解其响应式原理"></textarea></div>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">emoji_events</i> 荣誉证书</h3>
+<div class="rb-field"><label>每行一条</label><textarea data-rbf="honors" rows="3" placeholder="如：&#10;2022 年度公司优秀员工&#10;英语 CET-6（512 分）"></textarea></div>
+</div>
+</div>
+
+<!-- 右：实时预览 -->
+<div>
+<div class="rb-preview-head">
+<h3><i class="material-icons">visibility</i> 实时预览</h3>
+<span class="rb-pages" id="rb-pages"></span>
+<button type="button" class="rb-btn rb-btn-primary" id="rb-print"><i class="material-icons">print</i> 打印 / 导出 PDF</button>
+</div>
+<div class="rb-sheet-wrap"><div id="rb-sheet"></div></div>
+<div class="rb-caliber">打印说明：点「打印 / 导出 PDF」，在打印对话框的目标打印机选「另存为 PDF」即得 PDF 简历；页边距建议选「默认」。打印时仅输出上方简历页，表单与导航自动隐藏。内容较多时浏览器会自动分页，双栏模板建议控制在一页内。</div>
+</div>
+</div>
+
+<div class="rb-panel" style="margin-top:1.2rem">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="rb-faq">
+<dt>我填的内容会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行：表单录入、模板渲染、打印导出、草稿暂存（localStorage，key 为 tw_resume_builder_v1）全部在你的浏览器本地完成，没有任何后端请求，简历内容不出你的电脑，可打开开发者工具 Network 面板验证。</dd>
+<dt>怎么把简历导出成 PDF？</dt>
+<dd>点右上角「打印 / 导出 PDF」，在系统打印对话框的目标打印机里选「另存为 PDF」（或 Microsoft Print to PDF），页边距选默认，即可得到 A4 版式 PDF。打印样式已做 A4 优化：只输出简历页，编辑区、导航栏不会出现在 PDF 里。</dd>
+<dt>模板可以随时切换吗？内容会丢吗？</dt>
+<dd>可以。4 套模板（简约商务 / 现代双栏 / 学术严谨 / 创意配色）点一下即时切换，所有填写内容完整保留，刷新页面也不丢（自动暂存到本机）。</dd>
+<dt>打印出来会有几页？</dt>
+<dd>预览区上方会显示按 A4 密度估算的页数。建议把简历控制在一页：经历条目用「动作动词＋量化结果」精简表达，技能与荣誉只留最相关的。内容实在多时浏览器会自动分页。</dd>
+<dt>简历生成后，怎么检查写得好不好？</dt>
+<dd>用站内的<a href="/tools/resume-checker">简历预检工具</a>：粘贴简历纯文本＋目标岗位 JD，一键诊断 JD 关键词匹配度、ATS 友好度、经历逻辑链与简历雷区，和本工具形成「生成→诊断」闭环。</dd>
+<dt>换电脑或清理浏览器数据，草稿会丢吗？</dt>
+<dd>会。草稿只存在本机浏览器 localStorage 里，换电脑、重装浏览器或清理站点数据都会丢失。定稿后建议立即导出 PDF 存档（网盘/邮箱各存一份）。</dd>
+</dl>
+</div>
+
+<div class="rb-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="rb-related">
+<a href="/tools/resume-checker" class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;">简历预检工具：生成 → 诊断 JD 匹配度</a>
+<a href="/tools/mail-signature-generator" class="btn btn-secondary" style="font-size:.9rem;">邮件签名生成器</a>
+<a href="/tools/gbt7714-reference-generator" class="btn btn-secondary" style="font-size:.9rem;">GB/T 7714 参考文献格式生成器</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="rb-toast"></div>
+<script src="/tools/static/js/resume_builder.js?v=1"></script>
+</body>
+</html>
+{{end}}

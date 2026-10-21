@@ -1219,6 +1219,15 @@ func GetCategories() []Category {
 					Category:    "求职工具",
 				},
 				{
+					ID:          "resume_builder",
+					Name:        "简历模板生成器",
+					Description: "左侧分段表单录入（基本信息/求职意向/教育/工作/项目/技能/荣誉），4 套内置模板（简约商务/现代双栏/学术严谨/创意配色）实时预览一键切换，浏览器打印样式 A4 优化导出 PDF，localStorage 自动暂存＋示例简历一键载入，与简历预检工具互链成「生成→诊断」闭环，纯前端零上传 · Resume builder: form fill + 4 live templates, A4 print to PDF, 100% client-side",
+					Path:        "/tools/resume-builder",
+					Icon:        "description",
+					New:         true,
+					Category:    "求职工具",
+				},
+				{
 					ID:          "mail_signature_generator",
 					Name:        "邮件签名生成器",
 					Description: "填写姓名职位公司等信息，一键生成邮件客户端安全的 HTML 邮件签名：4 套模板（简洁/商务/极简/双语）实时预览，复制富文本粘贴进 Gmail/Outlook/QQ 邮箱签名设置即用，纯前端本地生成不出浏览器 · Email signature generator: 4 templates, copy rich text to Gmail/Outlook, 100% client-side",

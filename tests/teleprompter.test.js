@@ -108,7 +108,9 @@ eq(M.keyAction("ArrowUp"), "faster", "↑ = 加速");
 eq(M.keyAction("ArrowDown"), "slower", "↓ = 减速");
 eq(M.keyAction("f"), "fullscreen", "f = 全屏");
 eq(M.keyAction("F"), "fullscreen", "F = 全屏");
-eq(M.keyAction("Escape"), null, "Esc 交给浏览器原生退出全屏");
+eq(M.keyAction("Escape"), "exitfs", "Esc 显式映射为 exitfs（2026-10-21 修复：不再完全依赖浏览器原生）");
+eq(M.keyAction("Esc"), "exitfs", "老式 Esc 键名兼容");
+eq(M.exitFullscreenExplicit(), false, "node 无 document 时返回 false、无副作用");
 eq(M.keyAction("Enter"), null, "无关按键不处理");
 eq(M.keyAction("a"), null, "字母键不处理");
 

@@ -4,10 +4,10 @@
 *  1) 左侧编辑区：文案 textarea ＋ 字号 / 行距 / 滚动速度 / 镜像 / 进度条显示设置，
 *     字数统计＋预计朗读时长（180 字/分钟），示例演讲稿一键载入。
 *  2) 右侧播放区：大字平滑滚动（rAF 驱动），速度 1x–5x，暂停/继续，
-*     快捷键：空格 播放/暂停，↑/↓ 微调速度（±0.5x），F 全屏，Esc 退出全屏（浏览器原生）。
+*     快捷键：空格 播放/暂停，↑/↓ 微调速度（±0.5x），F 全屏，Esc 显式退出全屏（页面监听兜底，2026-10-21 修复）。
 *  3) 进度条点击跳转，当前行（基准线所在段落）高亮。
 *  4) 镜像模式：内容水平翻转（scaleX(-1)），适配物理提词镜面。
-*  5) 全屏：Fullscreen API，深色高对比，Esc 原生退出。
+*  5) 全屏：Fullscreen API，深色高对比，Esc 页面显式监听＋浏览器原生双保险退出。
 *  6) localStorage 自动暂存（tw_teleprompter_v1），刷新不丢。
 * 纯函数全部经 module.exports 暴露，node tests/teleprompter.test.js 自测；
 * 浏览器内 init 挂 DOMContentLoaded；无网络请求（零上传）。
@@ -133,12 +133,15 @@ function findCurrentLine(tops, markerY) {
 }
 
 /* ---------- 6. 快捷键与镜像 ---------- */
-/* keyAction：键盘事件 key → 动作；返回 null 表示不处理 */
+/* keyAction：键盘事件 key → 动作；返回 null 表示不处理。
+* 注意：Esc 显式映射为 exitfs——此前完全依赖浏览器原生 Esc 退出全屏，
+* 2026-10-21 真机冒烟发现原生处理在部分环境下不触发，改为页面显式监听兜底。 */
 function keyAction(key) {
   if (key === " " || key === "Spacebar") return "toggle";
   if (key === "ArrowUp") return "faster";
   if (key === "ArrowDown") return "slower";
   if (key === "f" || key === "F") return "fullscreen";
+  if (key === "Escape" || key === "Esc") return "exitfs";
   return null;
 }
 
@@ -383,12 +386,26 @@ function seekToFraction(frac) {
 function toggleFullscreen() {
   var wrap = $("tp-player-wrap");
   if (document.fullscreenElement) {
-    document.exitFullscreen().catch(function () {});
+    exitFullscreenExplicit();
   } else if (wrap.requestFullscreen) {
     wrap.requestFullscreen().catch(function () { toast("浏览器拒绝了全屏请求"); });
   } else {
     toast("当前浏览器不支持全屏 API");
   }
+}
+
+/* exitFullscreenExplicit：显式退出全屏（2026-10-21 新增）。
+* 背景：Esc 原生退出全屏在部分真机环境下不触发（如远程键入路径吞掉按键），
+* 此处做页面级兜底：只要当前处于全屏，就主动调 exitFullscreen()。
+* 未在全屏时返回 false、无任何副作用；原生已退出时 guard 使其成为空操作。 */
+function exitFullscreenExplicit() {
+  if (typeof document === "undefined") return false;
+  if (!document.fullscreenElement) return false;
+  try {
+    var p = document.exitFullscreen();
+    if (p && typeof p.catch === "function") p.catch(function () {});
+  } catch (e) { /* 忽略 */ }
+  return true;
 }
 
 function refreshStats() {
@@ -512,6 +529,7 @@ function init() {
     else if (act === "faster") setSpeed(adjustSpeed(state.speed, 0.5));
     else if (act === "slower") setSpeed(adjustSpeed(state.speed, -0.5));
     else if (act === "fullscreen") toggleFullscreen();
+    else if (act === "exitfs") exitFullscreenExplicit();
   });
 
   /* 点击按钮后失焦，避免空格键重复触发按钮 */
@@ -540,6 +558,7 @@ if (typeof module !== "undefined" && module.exports) {
     progressFromScroll: progressFromScroll, scrollTopFromProgress: scrollTopFromProgress,
     findCurrentLine: findCurrentLine,
     keyAction: keyAction, mirrorTransform: mirrorTransform,
+    exitFullscreenExplicit: exitFullscreenExplicit,
     SAMPLE_LINES: SAMPLE_LINES, SAMPLE_TEXT: SAMPLE_TEXT
   };
 }
