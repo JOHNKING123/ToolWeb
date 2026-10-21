@@ -1104,6 +1104,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "wedding_seating_chart",
+					Name:        "婚宴座位表生成器",
+					Description: "婚宴座位表在线生成：粘贴宾客名单（姓名/组别）自动去重计数，一键自动分桌（同组优先同桌＋蛇形均衡＋容量钳制），拖拽手动调桌，主桌预留席位；A3/A2/60×90cm/16:9 电子屏多尺寸打印级海报预览＋3mm 出血裁切标记，浏览器打印另存为 PDF，localStorage 自动暂存，纯前端零上传 · Wedding seating chart generator: auto table assignment, drag-and-drop, print-ready poster, 100% client-side",
+					Path:        "/tools/wedding-seating-chart",
+					Icon:        "event_seat",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

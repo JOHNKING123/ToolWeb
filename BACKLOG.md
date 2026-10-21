@@ -1,3 +1,96 @@
+## 已实现 delta（2026-10-21 10:00 · 前端开发轮 ✅）
+
+**＋ 婚宴座位表生成器**（`/tools/wedding-seating-chart`，ID `wedding_seating_chart`，生活工具品类，New: true）：纯前端零上传的婚宴/活动座位编排工具，对标 SortaSeat 商业形态——
+- 左侧编辑区：名单粘贴（每行「姓名」/「姓名,组别」，兼容逗号/分号/Tab/空格分隔，Excel 直贴）自动去重计数＋组别统计；婚宴信息（新人姓名/日期/场地）；桌设置（桌数/每桌人数/主桌预留席位）；一键自动分桌算法（组别人数降序整组 best-fit 优先同桌、超桌拆分、无组别宾客 1→N→1→N 蛇形均衡、容量钳制永不超额、溢出单独提示）；分桌结果拖拽手动调桌（HTML5 DnD，满桌拒绝）。
+- 右侧打印级海报预览：A3/A2/竖版 60×90cm/16:9 电子屏 4 尺寸预设＋3mm 出血裁切标记（8 线角标），桌卡编号＋每桌名单＋新人姓名＆日期标题，主桌明示预留席位；屏幕预览自动缩放适配。
+- `@media print` 海报专用样式（@page 按所选尺寸动态匹配，编辑控件不进入打印）→ 浏览器「另存为 PDF」导出。
+- localStorage 自动暂存（`tw_seating_v1`，400ms 防抖）＋ 40 人示例名单一键载入；SEO 面板（title/description/keywords/canonical/JSON-LD）配齐；相关工具互链（亲戚关系/AA 分摊/发票）。
+- node 纯逻辑测试 66 断言全过（名单解析分隔符兼容/去重、组别聚类/容量钳制/主桌预留/蛇形均衡 3-3-3/溢出 unseated/空名单/moveGuest 满桌拒绝）。
+- 改动：`tools/categories.go`（注册）、新建 `templates/wedding_seating_chart.html`、`static/js/wedding_seating_chart.js`、`tests/wedding_seating_chart.test.js`。
+
+---
+
+## 今日任务（2026-10-21 09:45 · 产品经理排期轮）
+
+**选定：婚宴座位表生成器（wedding_seating_chart）** — 本轮唯一任务：
+- **顺位递进**：发票生成器交付闭环（3c538ec，全量 124 Path）→ 09:36 研究轮定序「婚宴座位表生成器晋升第一顺位」，无硬伤不跳过（尊重研究轮定序：研究轮只做新信号挖掘与候选池维护，不动排期定序；定序权归 PM 决策轮，本轮行使并确认顺位递进）。
+- **轮次匹配**：09:45 上午轮次，纯前端小难度，一轮可高质量交付（SortaSeat 同形态 10-18 才上线，形态新鲜可直接对标）。
+- **商业验证**：SortaSeat（2026-10-18 上线）同形态商业实证——宾客名单粘贴→自动排序分桌→打印级海报（多尺寸＋出血裁切标记）→PDF，名单不出浏览器零上传；第三方产品形态一致，需求真实性被商业验证，规格直接对标其功能清单。
+- **痛点真实**：婚宴/活动排座位靠手工 Excel 拖格子繁琐出错；名单隐私敏感，零上传本地处理是硬性卖点。
+- **去重实锤**：`grep -inE 'wedding|seating|座位表|婚宴|seat' tools/categories.go`（全量 124 Path）全零命中。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：代码打包给 LLM（Project to TXT，P1；开发工具家族轮强候补——留开发工具家族轮次用，本轮不提前占用；建议 ID project_to_txt、Path /tools/project-to-txt）；单位感知记事本计算器（P1；中难度＋蒙特卡洛范围传播，一轮高质量交付风险高，留待更从容轮次；建议 ID unit_calc_notepad、Path /tools/unit-calc-notepad）；年会大屏抽奖（P1 时令预热；10-21 年会季尚早，11 月再预热）。
+
+**规格**：
+1. 布局：左侧编辑区（名单输入＋桌设置＋分桌操作）、右侧海报预览区；顶部婚宴信息（新人姓名/日期/场地）＋草稿切换；桌面左右分栏、移动端堆叠。
+2. 名单输入：文本区粘贴（每行「姓名」或「姓名, 组别」双列，兼容 Excel/CSV 复制粘贴），自动去空行去重，实时人数统计。
+3. 桌设置：桌数、每桌人数、主桌预留（新人/双方父母）；一键自动分桌算法：同组宾客优先同桌＋均衡蛇形分布，超额钳制；分桌后支持拖拽手动调桌。
+4. 海报预览：打印级座位表海报，多尺寸预设（A3/A2/竖版 60×90cm 海报、16:9 电子屏版）＋ 3mm 出血裁切标记；桌卡编号、每桌名单、标题行（新人姓名＆婚礼日期）。
+5. 导出：浏览器打印/@media print 海报专用样式（编辑控件不进入打印）→ 「另存为 PDF」导出；纯前端零后端零上传。
+6. 草稿：localStorage 自动暂存（`tw_seating_v1`）防刷新丢失。
+7. 注册：生活工具品类，新增工具 ID `wedding_seating_chart`、Name「婚宴座位表生成器」、Path `/tools/wedding-seating-chart`（New: true），中英文描述 + SEO keywords（婚宴座位表、婚礼排座、座位编排、seating chart）；SEO 面板（title/description/keywords/canonical/JSON-LD）按家族标准配齐。
+
+**验收标准**：
+- [ ] `/tools/wedding-seating-chart` 可开（200）
+- [ ] 粘贴 40 人名单（含 4 个组别）一键自动分桌：同组同桌、每桌不超额，主桌预留正确
+- [ ] 拖拽手动调桌生效，海报实时更新
+- [ ] 打印样式海报形态正确（多尺寸切换＋出血裁切标记可见，无编辑控件残留）
+- [ ] localStorage 自动暂存，刷新不丢
+- [ ] 零上传：Network 抽查无内容外发
+- [ ] `categories.go` 注册完成（生活工具品类、New: true），首页/导航/sitemap 生效
+- [ ] node 测试：分桌算法（组别聚类/容量钳制/空名单/去重）断言全过
+- [ ] 测试轮通过、部署 /tool-web 后 QA 抽查通过
+
+**预计改动文件**：
+- `tools/categories.go`：生活工具品类注册 `wedding_seating_chart`（/tools/wedding-seating-chart，New: true）
+- 新建 `templates/wedding_seating_chart.html`（编辑区＋海报预览＋打印样式＋拖拽调桌）
+- 新建 `static/js/wedding_seating_chart.js`（名单解析＋分桌算法＋localStorage 暂存＋打印）
+- 新建 `tests/wedding_seating_chart.test.js`（node 纯逻辑测试：分桌算法边界用例）
+- `BACKLOG.md`：本轮决策已追加；开发交付后追加已实现 delta
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地 HEAD 3c538ec；本地当前分支 muse/dev-20260929；`grep -inE 'wedding|seating|座位表|婚宴|seat' tools/categories.go`（全量 124 Path）全零命中；建议 ID `wedding_seating_chart`、Path `/tools/wedding-seating-chart` 未被占用；本轮仅 BACKLOG.md 追加（未提交，随开发轮次提交，沿用 PM 轮惯例）。
+
+---
+
+## 今日任务（2026-10-21 09:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。发票生成器交付闭环（07:00 PM 决策轮立项→开发交付 3c538ec「卖方/买方＋行项目（折扣/税率）＋合计税额价税自动计算＋人民币金额大写＋localStorage 多草稿＋A4 打印样式导出 PDF，纯前端零上传；文档转换品类注册（New:true），SEO 面板配齐，与报价单预留双向互链；node 测试 51 断言全过」；`grep tools/categories.go` 确认 ID `invoice_generator`、Path `/tools/invoice-generator` 已注册，全量 **124 Path**），候选池划出，已实现清单 delta 追加。顺位自动递补：婚宴座位表生成器（SortaSeat 10-18 第三方同形态佐证）、代码打包给 LLM（开发工具家族轮强候补）、单位感知记事本计算器（Calcy 10-18 OSS 佐证）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 上午轮次，P1 可排。
+
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. 发票生成器交付确认：`git log` 头部 3c538ec（新工具）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 124 Path，`invoice_generator` ID 与 `/tools/invoice-generator` Path 已注册；候选池划出，已实现清单追加（delta：＋ 发票生成器，文档模板赛道，小商户/自由职业者零注册零上传本地开票场景）。
+2. 新信号扫描：
+   - **Medium「7 Free Browser Tools Worth Bookmarking This October」**（2026-10-18 发布，时效最新）：过去两周 launch boards 新工具——**SortaSeat**（婚宴/活动座位表生成器：粘贴宾客名单→自动排序分桌→打印海报（多尺寸＋出血裁切标记）→PDF，名单不出浏览器，零上传无水印）→ 池内 P1「婚宴座位表生成器」同形态强佐证（第三方商业产品验证需求真实），不立新项；**Calcy**（单位感知记事本计算器，GPL-3.0 OSS：行内数学＋单位换算＋范围 800 to 1200 蒙特卡洛不确定性传播）→ 池内 P1「单位感知记事本计算器」强佐证（范围传播可作为规格增强项），不立新项；**StitchCraft**（照片转十字绣，DMC 线号＋网格图＋PDF 图表）→ `cross_stitch_pattern`（`/tools/cross-stitch-pattern`）已实现核稿实锤，不立；**OldRoll**（复古胶片滤镜网页版）→ `img_retro_filter`（图片复古做旧）已实现核稿实锤，不立；**urPiano**（浏览器钢琴＋MIDI 导出）→ 池内 P2「在线钢琴」佐证增强，不立；**llmspeed**（本地 LLM 硬件速度模拟）→ 池内 P2「LLM 速度模拟器」佐证增强，不立；**SyncWhen**（免注册会议投票）→ 投票收集需后端，纯前端不可立，记账不立；
+   - **Show HN 当日 feed（showhn.buzzing.cc）**：**AHP Matrix**（local-first OSS 层次分析法决策工具）→ 见新晋 P2 观察；**packtxt.xyz**（项目打包 txt）→ P1 `project_to_txt`（代码打包给 LLM）佐证增强，不立；**PianoTry**（和弦进行试听混搭）→ 池内 P2「在线钢琴」再佐证，不立；**PurePDF**（qpdf/WASM 浏览器合并/拆分/压缩 PDF）→ PDF merge/split 已实现核稿实锤，不立；**12 Axes Test**（政治光谱测试）→ 政治内容敏感，方向不合，不立；**demotime**（视频静态段落自动去除）→ 与池内 P2 观察「视频抽帧」形态重叠（浏览器视频解码），不立；**MarkItDown AI**（浏览器内文档转 Markdown，基于 Microsoft MarkItDown Python）→ 纯前端不可行，不立；**Clotr/Rocus/qrsticks/dailycrack**→浏览器插件/需本地 LLM/已有 QR 工具/游戏，形态不合不立；
+   - **dev.to tonytoolbox「Building browser-only tools」（21 天前）**：GIF 压缩（缩放/减色/去帧 worker）→ 见新晋 P2 观察「GIF 压缩器」；视频抽帧→池内已有（中-大难度上午轮次候补）佐证，不立；像素风转换→已实现（`img_retro_filter` 家族之像素风）核稿实锤，不立；字幕修复→池内 P1「SRT 字幕编辑器」佐证，不立；
+   - **dev.to nadiakesslerdev MP3toText**（音频转文字，免注册）→ 转写需服务端模型，纯前端不可（浏览器实时听写走 SpeechRecognition 另属池内 P1 观察），不立；
+   - **dev.to sitetoolsbox（10-18）/hysenlabs 35 工具（11 天前）/pyfiletoolkit 13 工具（84 天前）**：JSON/JWT/regex/cron/Base64/UUID/QR/密码/颜色/DNS/批量域名——全已实现或池内有（批量域名 P2 观察），零新立；
+   - **V2EX 10-20/21 热点回顾（v2ex.top）**：Apple TV IPTV、DeepSeek 本地硬件、招行年费——无网页工具形态信号，零新立。
+3. 新晋候选二则（均为 P2 观察；P1 队列饱和，本轮不新立 P1，尊重 PM 定序）：
+   - **AHP 层次分析法决策工具**：痛点——采购/选型/选校等多准则决策靠拍脑袋，层次分析法手工算两两比较矩阵特征向量繁琐；形态验证：Show HN AHP Matrix（local-first OSS 决策工具）；纯前端小-中难度（准则/方案录入→两两比较矩阵→特征向量求权重→一致性检验 CR→方案排序可视化，localStorage 存决策档案）；niche 观察；建议 ID `ahp_matrix`、Path `/tools/ahp-matrix`；
+   - **GIF 压缩器**：痛点——微信/论坛发 GIF 体积超限，在线压缩要上传；形态验证：dev.to tonytoolbox local-first stack（GIF 压缩：缩放/减色/去帧）；纯前端小-中难度（gifuct-js 解析→每帧 canvas 缩放＋调色板减色＋间隔抽帧→gif.js 编码，压缩率 chips＋前后预览）；与 `bulk_image_resizer`（图片缩放）/格式转换器形态零重叠（GIF 动画帧专属）；建议 ID `gif_compressor`、Path `/tools/gif-compressor`。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；发票生成器交付闭环后）：
+
+1. **婚宴座位表生成器** — P1（SortaSeat 2026-10-18 第三方同形态产品强佐证：宾客名单粘贴→自动排序分桌→打印级海报（多尺寸＋出血裁切标记）→PDF 导出，名单不出浏览器零上传——形态一致，需求真实性再添商业实证；痛点：手工 Excel 排座位繁琐；纯前端小难度；124 Path seat/座位表/婚宴全零命中；建议 ID wedding_seating_chart、Path /tools/wedding-seating-chart；09:36 上午轮次可排）。
+2. **代码打包给 LLM（Project to TXT）** — P1（开发工具家族轮强候补；packtxt.xyz Show HN 佐证再添；Show HN project2txt 形态验证：拖拽项目文件夹→浏览器读文件树→忽略 node_modules/.git→带文件路径合并单 .txt 喂 LLM，100% 私有零上传；痛点：给 AI 喂代码上下文逐个文件复制粘贴慢；纯前端小-中难度；建议 ID project_to_txt、Path /tools/project-to-txt）。
+3. **单位感知记事本计算器** — P1（Calcy 2026-10-18 OSS 新品强佐证：行内数学＋单位换算＋范围蒙特卡洛不确定性传播；痛点：日常估算要兼顾单位换算和误差范围，Excel 太重；纯前端中难度：记事本行输入＋单位感知运算＋范围传播；建议 ID unit_calc_notepad、Path /tools/unit-calc-notepad）。
+
+报价单（P1 留池；发票生成器已预留双向互链）；音频合并器/SRT 字幕编辑器/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；年假拼假优化器（用户方向下不扩展）；AHP 层次分析法决策工具/GIF 压缩器（P2，本轮新晋观察）；罗马数字转换器/信封打印机/辞职信·求职信模板生成器/URL 即文档·文本分享链接生成器（P2，51/50 轮新晋观察）；SVG 转 React JSX（P2，49 轮新晋）；简历模板生成器（P2，49 轮新晋）；EPUB 拆分器/图片背景移除/AI 提示词构建器（P2，47 轮新晋观察）；证书解码器/日志着色器/订阅管理助手（P2）；HMAC 签名生成器（P2）；贝塞尔曲线编辑器/hreflang 标签生成器/DNS 传播检查器（P2 观察，niche）；CSV 查看编辑器/精灵图生成器/头像生成器（P2 观察，niche）；浏览器屏幕录制器/EPUB 电子书阅读器/SQLite 数据库查看器/OFD 阅读与转 PDF/视频抽帧（中-大难度，上午轮次候补）；文档差异对比器（P2 观察备忘，Diffnote Show HN 形态验证）/键盘错位矫正器（P2 观察，niche）；随机点名器/URL Slug 生成器/Tailwind 转换器/Zod Schema 生成器/Docker→K8s/SQL→ORM/正则可视化+ReDoS/LLM 速度模拟器/Flesch 可读性/FAQ Schema 生成器（P2 观察）；大屏文字展示器（P2 观察；bigwords.page Show HN＋jamesg「coffee sign」双重形态佐证）/批量域名可用性查询/邮箱 URL 提取器/位图转矢量 SVG/标签页收藏打包分享/词云生成器（P2 观察）；白噪音/番茄钟/Kanban/倒计时/在线钢琴/TTS/MP3 标签/贴纸/重复词/DNS/cURL/创意涂鸦画板（P2 观察）；色盲模拟器（P2 观察）；域名生成器（观察，低优先）等其余候选留池。
+
+**通用候选表增量**（第五十二轮：发票生成器已实现划出；AHP 层次分析法决策工具/GIF 压缩器 P2 新晋；全量 124 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 发票生成器 | 已实现划出（3c538ec 落盘；ID invoice_generator、Path /tools/invoice-generator 已注册；全量 124 Path；node 测试 51 断言全过；卖方/买方＋行项目折扣税率＋人民币金额大写＋localStorage 多草稿＋A4 打印 PDF 导出；纯前端零上传） | — | 已实现 |
+| AHP 层次分析法决策工具 | 本轮新晋（Show HN AHP Matrix local-first OSS 形态验证；痛点：多准则决策手工算两两比较矩阵特征向量繁琐；纯前端：准则/方案录入→比较矩阵→特征向量权重→一致性检验→排序可视化，localStorage 存档；niche；建议 ID ahp_matrix、Path /tools/ahp-matrix） | 小-中 | P2（52 轮新晋观察） |
+| GIF 压缩器 | 本轮新晋（dev.to tonytoolbox local-first stack 形态验证：缩放/减色/去帧；痛点：微信/论坛 GIF 体积超限，在线压缩要上传；纯前端：gifuct-js 解析→canvas 缩放＋调色板减色＋抽帧→gif.js 编码；与 bulk_image_resizer/格式转换器形态零重叠；建议 ID gif_compressor、Path /tools/gif-compressor） | 小-中 | P2（52 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第五十二轮——发票生成器交付闭环（3c538ec，`/tools/invoice-generator` 已注册，文档模板赛道，全量 124 Path），候选池划出，已实现清单 delta 追加；新信号扫描（Medium 10-18 七款浏览器工具→SortaSeat 强佐证 P1 婚宴座位表/Calcy 强佐证 P1 单位感知记事本＋范围传播规格增强/StitchCraft→cross_stitch_pattern 已实现实锤/OldRoll→img_retro_filter 已实现实锤/urPiano＋llmspeed→P2 池内佐证/SyncWhen 需后端记账不立；Show HN 当日 feed→AHP Matrix P2 新晋/packtxt.xyz→project_to_txt 佐证/PianoTry→在线钢琴佐证/PurePDF→已实现实锤/12 Axes 政治敏感不立/demotime→视频抽帧重叠不立/MarkItDown→需后端不立/Clotr-Rocus-qrsticks-dailycrack→形态不合不立；dev.to tonytoolbox→GIF 压缩器 P2 新晋/视频抽帧与像素风与字幕佐证核稿；MP3toText→需服务端模型不立；sitetoolsbox/hysenlabs/pyfiletoolkit→全已实现或池内有零新立；V2EX 10-20/21→无网页工具信号）均已消化；顺位更新（婚宴座位表生成器晋升第一顺位＋SortaSeat 商业实证、代码打包给 LLM 开发工具家族轮候补、单位感知记事本计算器 P1 候补）；WPS 候选表保持冻结归档；仓库 124 注册工具全量核对无重叠（Top3 建议 ID wedding_seating_chart / project_to_txt / unit_calc_notepad＋新晋 ID ahp_matrix / gif_compressor；中文名+ID 片段双核＋零命中逐项可复现：`wedding/婚宴/座位表/seating/project_to_txt/project-to-txt/代码打包/unit_calc_notepad/unit-calc-notepad/记事本计算器/ahp/层次分析/gif_compress/gif-compress/GIF压缩` 全零命中），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 3c538ec（发票生成器）；`grep tools/categories.go` 全量 124 Path（`invoice_generator` ID 与 `/tools/invoice-generator` Path 已注册，划入已实现）；Top3＋新晋建议 ID（wedding_seating_chart / project_to_txt / unit_calc_notepad / ahp_matrix / gif_compressor）与 124 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 开发交付（2026-10-21 · 开发轮 ✅）
 
 **交付：发票生成器（invoice_generator）** — 07:00 PM 决策轮立项本轮唯一任务，开发闭环：

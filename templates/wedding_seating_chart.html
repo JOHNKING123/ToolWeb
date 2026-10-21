@@ -1,0 +1,254 @@
+{{define "wedding_seating_chart"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>婚宴座位表生成器 - 婚礼宾客一键分桌/打印级座位表海报（wedding seating chart）| 程序员工具箱</title>
+<meta name="description" content="免费在线婚宴座位表生成器：粘贴宾客名单（姓名/组别）自动去重计数，一键自动分桌（同组优先同桌＋蛇形均衡＋容量钳制），拖拽手动调桌，主桌预留席位；A3/A2/60×90cm 竖版海报/16:9 电子屏多尺寸打印级海报预览＋3mm 出血裁切标记，浏览器打印另存为 PDF，localStorage 自动暂存。纯前端零上传，名单不出电脑。Wedding seating chart generator: auto table assignment, drag-and-drop, print-ready poster, 100% client-side.">
+<meta name="keywords" content="婚宴座位表,婚宴座位表生成器,婚礼排座,座位编排,婚宴桌位表,宾客分桌,婚礼座位安排,主桌预留,seating chart,wedding seating chart,table assignment">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/wedding-seating-chart">
+<meta property="og:title" content="婚宴座位表生成器 - 婚礼宾客一键分桌/打印级海报">
+<meta property="og:description" content="粘贴宾客名单一键自动分桌（同组优先同桌＋蛇形均衡＋容量钳制），拖拽手动调桌，多尺寸打印级海报＋3mm 出血裁切标记，浏览器打印另存为 PDF，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/wedding-seating-chart">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"婚宴座位表生成器","alternateName":"wedding seating chart","description":"婚宴/活动座位编排工具：粘贴宾客名单（姓名/组别）自动去重计数，一键自动分桌（同组优先同桌＋蛇形均衡＋容量钳制），拖拽手动调桌，主桌预留席位；A3/A2/60×90cm/16:9 电子屏多尺寸打印级海报预览＋3mm 出血裁切标记，浏览器打印另存为 PDF，localStorage 自动暂存；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/wedding-seating-chart","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style id="seat-pagesize">@page{size:A3 portrait;margin:0}</style>
+<style>
+.seat-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.seat-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.seat-work{display:grid;grid-template-columns:minmax(400px,470px) 1fr;gap:1.2rem;align-items:start}
+.seat-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.seat-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.seat-panel h3 .material-icons{font-size:1.15rem;color:#b91c1c}
+.seat-grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.seat-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem}
+.seat-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.7rem}
+.seat-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.seat-field input,.seat-field select,.seat-field textarea{border:1px solid #d1d5db;border-radius:.45rem;
+padding:.5rem .7rem;font-size:.9rem;background:#fff;color:#1f2937;width:100%;box-sizing:border-box}
+.seat-field input:focus,.seat-field select:focus,.seat-field textarea:focus{outline:none;border-color:#b91c1c;
+box-shadow:0 0 0 2px rgba(185,28,28,.12)}
+.seat-field textarea{resize:vertical;line-height:1.7;font-family:inherit}
+.seat-count{font-size:.85rem;color:#4b5563;background:#fef2f2;border:1px dashed #fca5a5;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.seat-count b{color:#b91c1c}
+.seat-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.seat-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.seat-btn .material-icons{font-size:1.1rem}
+.seat-btn-primary{background:#b91c1c;color:#fff}
+.seat-btn-primary:hover{background:#991b1b}
+.seat-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.seat-btn-secondary:hover{background:#e5e7eb}
+.seat-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+/* ---- 分桌结果（可拖拽） ---- */
+.seat-empty{font-size:.88rem;color:#9ca3af;background:#f9fafb;border:1px dashed #d1d5db;border-radius:.6rem;
+padding:1rem;line-height:1.9}
+.seat-table{border:1px solid #e5e7eb;border-radius:.6rem;margin-bottom:.7rem;overflow:hidden}
+.seat-table-hd{display:flex;justify-content:space-between;align-items:center;background:#fef2f2;
+padding:.45rem .8rem;font-size:.88rem;color:#7f1d1d}
+.seat-table-hd b{font-size:.95rem}
+.seat-table-hd span{font-size:.8rem;color:#b91c1c}
+.seat-drop{padding:.6rem .7rem;display:flex;flex-wrap:wrap;gap:.45rem;min-height:2.6rem;background:#fff}
+.seat-drop.over{background:#fef3c7;outline:2px dashed #f59e0b;outline-offset:-2px}
+.seat-drop-hint{font-size:.8rem;color:#d1d5db}
+.seat-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #fca5a5;background:#fff7ed;
+color:#7c2d12;border-radius:999px;padding:.3rem .75rem;font-size:.85rem;cursor:grab;font-weight:500}
+.seat-chip:active{cursor:grabbing}
+.seat-chip em{font-style:normal;font-size:.72rem;color:#b45309;background:#ffedd5;border-radius:999px;
+padding:.1rem .45rem}
+.seat-warn{display:flex;gap:.6rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.6rem;padding:.8rem 1rem;font-size:.88rem;line-height:1.8;color:#92400e;margin-top:.6rem}
+.seat-warn .material-icons{color:#f59e0b;flex:none}
+/* ---- 海报预览 ---- */
+.seat-preview-bar{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.8rem}
+.seat-preview-bar label{font-size:.85rem;color:#6b7280;font-weight:600}
+.seat-preview-bar select{border:1px solid #d1d5db;border-radius:.45rem;padding:.45rem .6rem;font-size:.88rem}
+#seat-preview{background:#6b7280;border-radius:.6rem;overflow:auto;padding:12px}
+#seat-poster-scaler{transform-origin:top left;margin:0 auto}
+#seat-poster{position:relative;background:#fffdf7;color:#1f2937;box-sizing:border-box;
+padding:3mm;overflow:visible;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+#seat-poster .cm{position:absolute;background:#111827;z-index:5}
+#seat-poster .cm.h{width:8mm;height:.35mm}
+#seat-poster .cm.v{width:.35mm;height:8mm}
+#seat-poster .tl-h{left:-5mm;top:3mm}#seat-poster .tl-v{left:3mm;top:-5mm}
+#seat-poster .tr-h{right:-5mm;top:3mm}#seat-poster .tr-v{right:3mm;top:-5mm}
+#seat-poster .bl-h{left:-5mm;bottom:3mm}#seat-poster .bl-v{left:3mm;bottom:-5mm}
+#seat-poster .br-h{right:-5mm;bottom:3mm}#seat-poster .br-v{right:3mm;bottom:-5mm}
+.seat-poster-hd{text-align:center;padding:1.6em 1em 1em;border-bottom:.18em double #b91c1c;margin-bottom:1.2em}
+.seat-poster-xi{display:inline-flex;align-items:center;justify-content:center;width:2.2em;height:2.2em;
+border-radius:50%;background:#b91c1c;color:#fff;font-size:2em;line-height:1;margin-bottom:.3em}
+.seat-poster-hd h2{margin:.2em 0;font-size:1.9em;letter-spacing:.12em;color:#7f1d1d}
+.seat-poster-hd p{margin:0;font-size:1em;color:#6b7280;letter-spacing:.2em}
+.seat-poster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(11.5em,1fr));gap:.9em}
+.seat-poster-card{border:.14em solid #b91c1c;border-radius:.4em;overflow:hidden;background:#fff;break-inside:avoid}
+.seat-poster-card.main{border-width:.2em;box-shadow:0 0 0 .12em #fbbf24}
+.seat-poster-card-hd{background:#b91c1c;color:#fff;font-weight:700;font-size:1.05em;padding:.35em .6em;
+display:flex;justify-content:space-between;align-items:center}
+.seat-poster-card-hd span{font-size:.72em;font-weight:400;background:rgba(255,255,255,.25);
+border-radius:999px;padding:.15em .6em}
+.seat-poster-names{padding:.5em .7em;font-size:.98em;line-height:2;min-height:4em}
+.seat-poster-names span{display:inline-block;margin-right:.7em;white-space:nowrap}
+.seat-poster-names .empty-seat{color:#e5e7eb}
+.seat-poster-card-ft{text-align:right;font-size:.78em;color:#9ca3af;padding:.2em .7em .5em}
+.seat-poster-empty{text-align:center;color:#9ca3af;font-size:1.1em;padding:4em 1em;line-height:2}
+.seat-poster-note{margin-top:1em;font-size:.85em;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;
+border-radius:.4em;padding:.6em .9em;line-height:1.8}
+.seat-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.seat-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.seat-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#seat-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #f87171}
+#seat-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:1100px){.seat-work{grid-template-columns:1fr}}
+@media print{
+  body{background:#fff}
+  body *{visibility:hidden}
+  #seat-poster,#seat-poster *{visibility:visible}
+  #seat-poster{position:absolute;left:0;top:0;margin:0;box-shadow:none}
+  #seat-poster-scaler{transform:none!important;width:auto!important;height:auto!important;margin:0}
+  #seat-preview{height:auto!important;overflow:visible;background:#fff;padding:0}
+  .seat-screen{display:none!important}
+  #seat-toast{display:none!important}
+}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">event_seat</i> 婚宴座位表生成器</h1>
+<p>粘贴宾客名单一键自动分桌（同组优先同桌＋蛇形均衡＋容量钳制），拖拽手动调桌 —— 多尺寸打印级海报预览，浏览器打印另存为 PDF。</p>
+</div>
+<div class="tool-content" style="max-width:1360px;margin:auto;">
+<div class="seat-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>名单解析、自动分桌、草稿暂存（localStorage）全部在浏览器本地完成，无任何后端请求，宾客名单不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="seat-work">
+<!-- 左：编辑区 -->
+<div class="seat-screen">
+<div class="seat-panel">
+<h3><i class="material-icons">favorite</i> 婚宴信息</h3>
+<div class="seat-grid2">
+<div class="seat-field"><label>新郎姓名</label><input id="seat-couple1" placeholder="例：陈子涵"></div>
+<div class="seat-field"><label>新娘姓名</label><input id="seat-couple2" placeholder="例：林欣怡"></div>
+</div>
+<div class="seat-grid2">
+<div class="seat-field"><label>婚礼日期</label><input id="seat-date" type="date"></div>
+<div class="seat-field"><label>场地（可选）</label><input id="seat-venue" placeholder="例：深圳湾万丽酒店宴会厅"></div>
+</div>
+</div>
+
+<div class="seat-panel">
+<h3><i class="material-icons">groups</i> 宾客名单</h3>
+<div class="seat-field">
+<label>每行「姓名」或「姓名,组别」（兼容逗号/分号/Tab/空格分隔，可直接从 Excel 复制粘贴）</label>
+<textarea id="seat-guests" rows="10" placeholder="张三,男方亲友&#10;李四,男方亲友&#10;王芳,女方亲友&#10;赵磊&#10;……"></textarea>
+</div>
+<div class="seat-count" id="seat-count">共 <b>0</b> 位宾客</div>
+<div class="seat-actions">
+<button type="button" class="seat-btn seat-btn-secondary" id="seat-sample"><i class="material-icons">auto_awesome</i> 载入 40 人示例名单</button>
+<button type="button" class="seat-btn seat-btn-primary" id="seat-auto"><i class="material-icons">auto_fix_high</i> 一键自动分桌</button>
+</div>
+<div class="seat-caliber">分桌口径：组别按人数降序整组优先入桌（同组尽量同桌、剩余空间最小优先）；单组超一桌容量时拆分；无组别宾客按 1→N→1→N 蛇形轮次均衡落座；任何桌人数永不超额，超出总容量者会单独提示。</div>
+</div>
+
+<div class="seat-panel">
+<h3><i class="material-icons">table_restaurant</i> 桌设置</h3>
+<div class="seat-grid3">
+<div class="seat-field"><label>桌数</label><input id="seat-tables" type="number" min="1" max="200" value="8"></div>
+<div class="seat-field"><label>每桌人数</label><input id="seat-pertable" type="number" min="1" max="60" value="10"></div>
+<div class="seat-field"><label>主桌预留席位</label><input id="seat-reserved" type="number" min="0" max="60" value="2"></div>
+</div>
+<div class="seat-caliber">1 号桌默认为主桌，可安排宾客容量 = 每桌人数 − 主桌预留席位（预留给新人/双方父母，在海报主桌卡上明示）。改动桌设置后请重新点「一键自动分桌」。</div>
+</div>
+
+<div class="seat-panel">
+<h3><i class="material-icons">drag_indicator</i> 分桌结果（拖拽调桌）</h3>
+<div id="seat-tables-result"></div>
+</div>
+
+<div class="seat-panel">
+<h3><i class="material-icons">print</i> 保存与导出</h3>
+<div class="seat-actions">
+<button type="button" class="seat-btn seat-btn-primary" id="seat-print"><i class="material-icons">print</i> 打印 / 导出 PDF</button>
+<button type="button" class="seat-btn seat-btn-secondary" id="seat-clear"><i class="material-icons">clear_all</i> 清空名单与分桌</button>
+<button type="button" class="seat-btn seat-btn-secondary" id="seat-reset-all"><i class="material-icons">restart_alt</i> 恢复初始</button>
+</div>
+<div class="seat-caliber">输入自动暂存到本机 localStorage（tw_seating_v1），刷新不丢；打印时仅输出右侧海报（含出血裁切标记），编辑控件不进入打印；浏览器打印对话框选「另存为 PDF」即导出。</div>
+</div>
+</div>
+
+<!-- 右：海报预览 -->
+<div>
+<div class="seat-panel">
+<div class="seat-preview-bar">
+<h3 style="margin:0"><i class="material-icons">image</i> 海报预览</h3>
+<label for="seat-size">尺寸</label>
+<select id="seat-size">
+<option value="a3">A3 竖版（297×420mm）</option>
+<option value="a2">A2 竖版（420×594mm）</option>
+<option value="poster6090">竖版海报 60×90cm</option>
+<option value="screen169">16:9 电子屏（1920×1080）</option>
+</select>
+<span style="font-size:.8rem;color:#9ca3af">3mm 出血＋裁切标记 · 打印 @page 自动匹配所选尺寸</span>
+</div>
+<div id="seat-preview">
+<div id="seat-poster-scaler">
+<div id="seat-poster"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="seat-panel seat-screen" style="margin-top:1.2rem">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="seat-faq">
+<dt>自动分桌的逻辑是什么？</dt>
+<dd>组别按人数从大到小整组优先入桌，尽量让同组宾客坐同一桌（选择剩余空间最小的合适桌子）；如果单个组别超过一桌容量，会拆分到多桌；没有填组别的宾客按 1→N→1→N 蛇形轮次逐桌落座，保证各桌人数均衡；任何桌的人数都不会超过设定容量。</dd>
+<dt>主桌预留席位是什么意思？</dt>
+<dd>1 号桌默认为主桌，可安排宾客数 = 每桌人数 − 主桌预留席位。预留席位是给新人、双方父母等不列入宾客名单的人，海报主桌卡上会明示「预留 N 席」。</dd>
+<dt>怎么手动调整座位？</dt>
+<dd>在左侧「分桌结果」里直接把宾客名字拖到另一桌即可，右侧海报实时更新。目标桌已满时会拒绝并提示（容量钳制）。</dd>
+<dt>人数超过总容量怎么办？</dt>
+<dd>超出容量的宾客会单独列出提示，不会硬塞进桌子。请增加桌数或每桌人数后重新点「一键自动分桌」。</dd>
+<dt>怎么导出 PDF？</dt>
+<dd>点「打印 / 导出 PDF」，在浏览器打印对话框选择「另存为 PDF」即可。打印样式已按所选海报尺寸（A3/A2/60×90cm/16:9）适配 @page，只输出海报（含 3mm 出血裁切标记），不含编辑控件。</dd>
+<dt>名单暂存在哪里？会丢吗？</dt>
+<dd>所有输入（名单、设置、分桌结果）自动暂存到本机浏览器 localStorage（tw_seating_v1），刷新页面不丢；点「恢复初始」可彻底清空。清理浏览器数据会一并清除。</dd>
+<dt>宾客名单会上传吗？</dt>
+<dd>不会。本工具纯前端运行，无后端、无网络请求，所有内容只在你的浏览器里，可打开开发者工具 Network 面板验证。</dd>
+</dl>
+</div>
+
+<div class="seat-panel seat-screen">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="seat-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">婚宴座位表生成器（当前）</span>
+<a href="/tools/relationship-calculator" class="btn btn-secondary" style="font-size:.9rem;">亲戚关系计算器</a>
+<a href="/tools/aa-bill-splitter" class="btn btn-secondary" style="font-size:.9rem;">AA制费用分摊计算器</a>
+<a href="/tools/invoice-generator" class="btn btn-secondary" style="font-size:.9rem;">发票生成器</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="seat-toast"></div>
+<script src="/tools/static/js/wedding_seating_chart.js?v=1"></script>
+</body>
+</html>
+{{end}}
