@@ -1,3 +1,90 @@
+## 今日任务（2026-10-21 13:40 · 产品经理排期轮）
+
+**选定：简历模板生成器（Resume Builder，resume_builder）** — 本轮唯一任务，顺带修复提词器 Esc 退出全屏 bug：
+- **顺位**：提词器交付闭环（933daa5，全量 126 Path）→ 13:36 研究轮 54 轮 Top3 首位为文档转 Markdown、次席即本任务；文档转 Markdown 需 mammoth＋SheetJS＋pdf.js 多解析库 vendor 化、单轮高质量交付风险高，留待更从容轮次；PDF 涂黑安全检测属 niche 安全工具，误报/漏报涉及泄密风险，质量门槛高于一般工具，留待专轮打磨；按研究轮推荐顺位递进，本轮自然落点为简历模板生成器。
+- **佐证三重独立**：V2EX 10-20 Open Resume（开源自部署、156 模板、免费导出、MIT，热议帖）＋Medium 09-19 topaitools「15 Free Online Tools」Resume/CV Builder 盘点单列＋365lab 10-08「40+ 实用工具」榜单「简历制作」单列；54 轮由 P2 晋升 P1。
+- **痛点真实**：网上简历模板绑下载/付费/水印，Open Resume 需自部署有门槛；网页端免安装零上传的模板生成＋打印导出是真实需求。
+- **互补性**：与已实现 `resume_checker`（JD 诊断）形态零重叠——生成 vs 诊断，两者可互链形成「生成→诊断」闭环。
+- **去重实锤**：`grep -cinE 'resume_builder|resume-builder' tools/categories.go`（全量 126 Path）全零命中；建议 ID `resume_builder`、Path `/tools/resume-builder` 未被占用。
+- **轮次匹配**：13:40 午后轮次，纯前端小-中难度（3~5 套内置模板＋表单录入＋实时预览＋浏览器打印/PDF 导出＋localStorage 存档，零 AI 零上传），一轮可高质量交付。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正（简历工具属文档/职场工具场景）。
+- **顺带小修**（BACKLOG 尾部「待修 Bug」已记为下轮优先小修）：提词器 Esc 退出全屏失效（疑 CSS 伪全屏未自行处理 Esc）——本轮一并核实修复（改用 Fullscreen API 或伪全屏监听 Esc），并修正 FAQ 描述。
+
+**规格**：
+- 左侧分段表单录入（基本信息/求职意向/教育经历/工作经历/项目经历/技能/荣誉证书），全部字段必填提示＋长度限制。
+- 3~5 套内置模板（简约商务/现代双栏/学术严谨/创意配色/单页紧凑），实时预览一键切换。
+- 打印导出：浏览器打印样式 A4 纸张优化（@media print 隐藏编辑区，仅输出简历页；边距/分页控制）。
+- localStorage 自动暂存（`tw_resume_builder_v1`）防刷新丢失＋示例简历一键载入。
+- 与 `/tools/resume-checker` 双向互链（「生成→诊断」闭环）。
+- SEO 面板配齐（title/description/keywords/canonical/JSON-LD）。
+- node 纯逻辑测试：模板渲染字段映射/简历数据校验（必填/邮箱/手机号）/打印分页估算/字段→预览绑定，80+ 断言。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `resume_builder`、Path `/tools/resume-builder` 注册，注册总数 127 Path，与 resume_checker 双向互链可点。
+2. 至少 3 套模板可切换，全部表单字段变更实时反映在预览（含双栏布局）。
+3. Chrome 打印预览为干净 A4 单页（或合理分页），无编辑区/导航栏残留。
+4. localStorage 刷新后数据不丢失；示例简历一键载入可用。
+5. node 测试 80+ 断言全过；提词器 Esc 退出全屏修复并经真机冒烟验证。
+6. 公网 /tool-web 部署后 QA：/tools/resume-builder 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID resume_builder、Path /tools/resume-builder，文档工具品类，New: true；与 resume_checker 互链）
+- 新建 `templates/resume_builder.html`、`static/js/resume_builder.js`、`tests/resume_builder.test.js`
+- 打印样式可与页面同文件（<style> 内 @media print），或 `static/css/resume_builder.css` 按惯例拆分
+- 小修：`static/js/teleprompter.js`（Esc 退出全屏逻辑）
+
+**未选**：文档转 Markdown（P1；多解析库 vendor 化，一轮高质量交付风险高，留待更从容轮次；建议 ID doc_to_markdown、Path /tools/doc-to-markdown）；PDF 涂黑安全检测（P1；niche 安全工具，误报/漏报涉泄密风险，质量门槛高，留待专轮打磨；建议 ID pdf_redaction_check、Path /tools/pdf-redaction-check）；代码打包给 LLM（P1；开发工具家族轮强候补）；打卡习惯追踪器（P2；54 轮新晋观察）；其余 P1 候选（发票生成器/单位感知记事本计算器/报价单/音频合并器/SRT 字幕编辑器/屏幕常亮/浏览器实时听写）留池。
+
+---
+
+## 今日任务（2026-10-21 13:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-21 通用调研第五十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。提词器交付闭环（11:51 开发轮 933daa5「左侧文案编辑＋字号/行距/滚动速度/镜像/进度条设置，右侧大字平滑滚动播放（1x–5x＋暂停/继续），空格暂停/↑↓调速/F 全屏快捷键，进度条点击跳转＋当前行高亮，镜像模式适配物理提词镜，全屏深色高对比提词，localStorage 自动暂存（tw_teleprompter_v1）＋59 行示例演讲稿＋预计朗读时长（180 字/分钟），纯前端零上传；生活工具品类注册 New:true；SEO 面板配齐；node 测试 84 断言全过」；`grep tools/categories.go` 确认 ID `teleprompter`、Path `/tools/teleprompter` 已注册，全量 **126 Path**），候选池划出，已实现清单 delta 追加。已知遗留：12:20 冒烟补测发现 Esc 退出全屏失效（BACKLOG 尾部「待修 Bug」已记，列为下轮优先小修；本轮研究轮不动代码）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:36 午后轮次，P1 可排。
+
+**本轮三件事**（13:36 全网调研，通用方向）：
+1. 提词器交付确认：`git log` 头部 933daa5（新工具）＋1da8b34（11:15 排期轮 BACKLOG 落盘）；`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；本地分支 muse/dev-20260929 工作树干净（仅未跟踪 `toolWeb.bak-prev` 历史构建产物）；`grep` 全量 126 Path（125+1），`teleprompter` ID 与 `/tools/teleprompter` Path 已注册；候选池划出，已实现清单追加（delta：＋ 提词器，生活工具赛道，对标 CueCut Show HN 商业形态）。
+2. 新信号扫描：
+   - **Show HN 当日 feed（showhn.buzzing.cc，2026-10-21 刷新）**：**Habenna**（「a habit tracker with grace days instead of streaks」，用宽限日代替连续打卡）→ 见新晋 P2 观察；ObsQRity（真实二维码上的每日解谜）→ 游戏解谜形态 niche，不立；mdfocus（Show HN: distraction-free Markdown reader for localhost，npx CLI）→ CLI 形态非网页单页，自有 markdown 工具家族（md2chat/Markdown 编辑器）已覆盖场景，不立；LaunchLoop（repo→Product Hunt/X/LinkedIn 发稿，AI 依赖）→ 不立；Mnemoloci（Markdown second brain for Claude Code）→ 开发者 niche，markdown 家族不重复立；Creatohunt（creator 追踪 SaaS）→ 需后端 SaaS 形态，不立；Shazam but for AI Slop Music→ 需检测模型，不立；其余（KiviDB/PensionHunter/Tripps.io/EchoSphere/Seclai/Innerwall/Sorcerer/Algebras）→ 基础设施/桌面应用/需后端/形态不合，不立；53 轮已消化条目（PDFkind/MarkItDown AI/blurdata.app/CueCut）无重复记账；
+   - **V2EX 10-20/10-21**：t/1250292 Open Resume（开源自部署简历工具，156 模板，编辑导出免费，MIT）→ 池内 P2「简历模板生成器」再佐证（49 轮已记该帖热议，本轮新增 Medium＋365lab 两处独立佐证）；t/1250538 Antumi（多 Agent 桌面工作台）→ 桌面应用，不立；t/1250522 protohub（原型交付托管站）→ 需后端托管，不立；t/1250253 AI 张大妈（AI 店铺/羊毛信息聚合）→ 信息聚合非单页工具形态，不立；
+   - **中文工具站盘点（本轮新增）**：**365lab.top「2026 免费在线工具推荐：40+ 实用工具」（10-08 发布）**→ 算术题生成器＝自家 `math_worksheet_generator` 已实现核稿实锤（ID＋中文名双核命中），不立；「简历制作」单列→简历模板生成器佐证（新增）；其余（证件照/PDF 工具箱/发票助手/拼图/九宫格/Markdown 编辑器/文件重命名/壁纸/配色网/白噪音/密码/屏幕常亮/WiFi 二维码/网名生成器/词云）全已实现或池内有，零新立；**Medium topaitools「15 Free Online Tools」（09-19）**→ Resume/CV Builder 单列→简历模板生成器佐证（新增）；其余（BMI/Loan EMI→泛财务跳过；invoice generator/PDF merger→已实现）零新立；**Medium malikanwaar「10 Best Free Online Tools」（10-16）**→ age/password/unit/word count/QR 全已实现，零新立。
+3. 候选池变动：简历模板生成器 P2→P1 晋升（建议 ID `resume_builder`、Path `/tools/resume-builder` 沿用 49 轮建议；与已实现 `resume_checker`（JD 诊断）形态零重叠——生成 vs 诊断，可互链；三重独立佐证：V2EX 10-20 Open Resume 帖＋Medium 09-19 盘点＋365lab 10-08 榜单）；打卡习惯追踪器 P2 新晋观察（建议 ID `habit_tracker`、Path `/tools/habit-tracker`）；去重核稿：两项建议 ID＋Path 与 126 Path 零重叠（中文名＋ID 片段双核：`resume_builder/resume-builder/简历模板/habit_tracker/habit-tracker/打卡习惯/习惯追踪` 全零命中），可复现。
+
+**推荐 Top3**（排期建议；尊重 PM 定序，顺位递进；提词器交付闭环后）：
+
+1. **文档转 Markdown（Word/Excel/PPT/PDF/HTML→Markdown）** — P1（53 轮新晋，顺位递进第一顺位；MarkItDown AI「浏览器本地转 Markdown」Show HN 形态验证；痛点：AI 时代给 LLM 喂文档/建知识库前清洗格式，现有方案要上传或付费；纯前端小-中难度：mammoth docx→md＋SheetJS 表格→md 表＋pdf.js→md＋DOM 清洗 HTML→md，全本地零上传；文档转换品类家族增强；建议 ID doc_to_markdown、Path /tools/doc-to-markdown）。
+2. **简历模板生成器** — P1（49 轮 P2 观察本轮晋升；三重独立佐证：V2EX 10-20 Open Resume 开源自部署 156 模板免费导出热帖＋Medium 09-19「15 Free Online Tools」Resume/CV Builder 盘点单列＋365lab 10-08「40+ 实用工具」榜单「简历制作」单列；痛点：网上简历模板绑下载/付费/水印，Open Resume 需自部署有门槛；与已实现 `resume_checker`（JD 诊断）形态零重叠——生成 vs 诊断，可互链；纯前端小-中难度：精选 3~5 套内置模板＋表单录入＋实时预览＋浏览器打印/PDF 导出＋localStorage 存档，零 AI 零上传；文档工具赛道；建议 ID resume_builder、Path /tools/resume-builder）。
+3. **PDF 涂黑安全检测（脱敏可逆性检查）** — P1（53 轮新晋；blurdata.app「检测 PDF 涂黑是否可还原」Show HN 形态验证；痛点：黑块涂抹底层文本可复制还原的泄密事故形态；与自家 `pdf_annotate`（视觉遮罩打码）天然互补：检测→真脱敏闭环；纯前端小-中难度：pdf.js 提取文本层＋坐标碰撞检测遮罩/黑块下可恢复文本→风险页清单→一键真脱敏导出（转图片型 PDF）；建议 ID pdf_redaction_check、Path /tools/pdf-redaction-check）。
+
+代码打包给 LLM（P1，开发工具家族轮强候补，不提前占用）；单位感知记事本计算器/报价单/音频合并器/SRT 字幕编辑器/屏幕常亮（P1 留池）；浏览器实时听写（P1 观察）；年会大屏抽奖（时令预热）；打卡习惯追踪器（P2，本轮新晋观察）；其余候选留池（见 53 轮归档清单）。
+
+**通用候选表增量**（第五十四轮：提词器已实现划出；简历模板生成器 P2→P1 晋升；打卡习惯追踪器 P2 新晋观察；全量 126 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 提词器 | 已实现划出（933daa5 落盘；ID teleprompter、Path /tools/teleprompter 已注册；全量 126 Path；node 测试 84 断言全过；左侧文案编辑＋设置，右侧大字平滑滚动播放＋调速＋镜像＋快捷键＋进度条＋全屏，localStorage 自动暂存＋示例演讲稿；纯前端零上传） | — | 已实现 |
+| 简历模板生成器 | P2→P1 晋升（49 轮 P2 观察；本轮新增两处独立佐证：Medium 09-19 topaitools「15 Free Online Tools」Resume/CV Builder 盘点单列＋365lab 10-08「40+ 实用工具」榜单「简历制作」单列；连同 V2EX 10-20 Open Resume（156 模板免费导出 MIT 开源自部署）三重验证；与已实现 resume_checker（JD 诊断）形态零重叠；纯前端：3~5 套内置模板＋表单录入＋实时预览＋打印/PDF 导出＋localStorage 存档；建议 ID resume_builder、Path /tools/resume-builder） | 小-中 | P1（54 轮晋升） |
+| 打卡习惯追踪器 | 本轮新晋观察（Show HN Habenna「habit tracker with grace days instead of streaks」形态验证；痛点：打卡 App 要安装/注册/订阅，断签清零挫败感强；纯前端：习惯列表＋月历打卡＋grace days 宽限机制＋streak 统计＋localStorage 持久化；生活工具品类番茄钟/倒计时同族；建议 ID habit_tracker、Path /tools/habit-tracker） | 小 | P2（54 轮新晋观察） |
+
+**归档说明**：本轮为 10-21 通用调研第五十四轮——提词器交付闭环（933daa5，`/tools/teleprompter` 已注册，生活工具品类，全量 126 Path），候选池划出；新信号扫描（Show HN 当日 feed 刷新→Habenna 打卡习惯追踪器 P2 新晋观察/其余基础设施·桌面应用·需后端·形态不合不立/53 轮已消化条目无重复记账；V2EX 10-20/21→Open Resume 简历模板生成器再佐证/Antumi 桌面应用·protohub 需后端·AI 张大妈信息聚合不立；中文工具站盘点→365lab 10-08 榜单：算术题生成器＝自家 math_worksheet_generator 已实现实锤/简历制作佐证新增/其余全已实现或池内有；Medium 09-19 盘点：Resume/CV Builder 佐证新增；Medium 10-16 盘点：全已实现零新立）均已消化；简历模板生成器三重独立佐证后 P2→P1 晋升（与 `resume_checker` 生成/诊断互补）；WPS 候选表保持冻结归档；仓库 126 注册工具全量核对无重叠（Top3 建议 ID doc_to_markdown / resume_builder / pdf_redaction_check＋新晋观察 ID habit_tracker；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）成功；`git log` 确认开发交付 933daa5（提词器）；`grep tools/categories.go` 全量 126 Path（`teleprompter` ID 与 `/tools/teleprompter` Path 已注册，划入已实现）；Top3＋新晋建议 ID（doc_to_markdown / resume_builder / pdf_redaction_check / habit_tracker）与 126 Path 无重叠（关键词核对全零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
+
+**＋ 提词器**（`/tools/teleprompter`，ID `teleprompter`，生活工具品类，New: true）：纯前端零上传的在线提词器，对标 CueCut（getcuecut.com）Show HN 商业形态——
+- 左侧编辑区：提词文案文本区＋设置（字号/行距/滚动速度/镜像模式/显示进度条/高亮当前行），实时字符数/预计朗读时长（按每分钟 180 汉字估算）统计。
+- 右侧播放区：大字平滑滚动播放，速度滑杆（1x–5x 档）＋暂停/继续，键盘快捷键（空格暂停/继续、↑↓调速、F 全屏），进度条点击跳转行＋当前行高亮指示。
+- 镜像模式：播放区水平翻转显示，适配单向透视提词器/玻璃提词板物理镜面。
+- 全屏提词：播放区全屏深色背景大字高对比（Esc 退出）。
+- localStorage 自动暂存（`tw_teleprompter_v1`）防刷新丢失＋ 59 行示例演讲稿一键载入；SEO 面板（title/description/keywords/canonical/JSON-LD）配齐。
+- node 纯逻辑测试 84 断言全过（滚动位置计算行高×行号→scrollTop 映射＋快捷键映射＋文案解析分行/字符数/时长估算）。
+- 改动：`tools/categories.go`（注册）、新建 `templates/teleprompter.html`、`static/js/teleprompter.js`、`tests/teleprompter.test.js`。
+- 已知遗留（2026-10-21 12:20 冒烟补测）：Esc 退出全屏失效（疑伪全屏未自行处理 Esc），已记 BACKLOG 尾部「待修 Bug」，列为下轮优先小修。
+
+---
+
+
 ## 今日任务（2026-10-21 11:15 · 产品经理排期轮）
 
 **选定：提词器（Teleprompter，teleprompter）** — 本轮唯一任务：
