@@ -95,6 +95,12 @@ eq(svg, svg2, "同一协议串 SVG 输出稳定一致");
 /* 中文载荷也能生成有效矩阵 */
 var mcn = wqr.makeQrMatrix(cnPayload, "Q");
 ok(mcn.count >= 21, "中文 SSID 载荷生成有效矩阵");
+/* 回归：二维码引擎对中文载荷必须用 UTF-8 编码（非 Latin-1 截断），否则扫码得乱码 SSID 连不上 */
+wqr.makeQrMatrix("WIFI:T:WPA;S:咖;;", "M");
+ok(wqr.getQrEngine().stringToBytes === wqr.getQrEngine().stringToBytesFuncs["UTF-8"],
+    "二维码引擎对中文载荷使用 UTF-8 编码（非 Latin-1 截断）");
+ok(JSON.stringify(wqr.getQrEngine().stringToBytes("咖啡")) === "[229,146,150,229,149,161]",
+    "中文'咖啡'编码为 UTF-8 字节 229,146,150,229,149,161");
 
 /* ---------- 源码零 fetch/XHR ---------- */
 var src = fs.readFileSync(path.join(__dirname, "..", "static", "js", "wifi_qr_generator.js"), "utf8");

@@ -110,6 +110,10 @@ function validateWifi(values) {
 function makeQrMatrix(text, ecLevel) {
     var engine = getQrEngine();
     if (!engine) { throw new Error("二维码引擎未加载"); }
+    /* qrcode-generator 默认按 Latin-1 取字节，中文 SSID 必须强制 UTF-8 编码，否则扫码得乱码 SSID 连不上 */
+    if (engine.stringToBytesFuncs && engine.stringToBytesFuncs["UTF-8"]) {
+        engine.stringToBytes = engine.stringToBytesFuncs["UTF-8"];
+    }
     var qr = engine(0, ecLevel || "M");
     qr.addData(text);
     qr.make();
