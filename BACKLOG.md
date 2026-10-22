@@ -1,3 +1,75 @@
+## 今日任务（2026-10-22 08:23 · 产品经理排期轮）
+
+**选定：继续完成 CSS 转 Tailwind 转换器（css_to_tailwind）** — 本轮唯一任务（b899165 WIP 续做，不开新工具）：
+- **顺位**：05:47 PM 轮已按研究轮 Top1 顺位选定本工具并开工（commit b899165「WIP: CSS 转 Tailwind 转换器」，05:36 develop 阶段 agent 超时中断，未完成自测/提交流程）；研究轮 63 轮新晋 Top3（MCP 配置诊断器/视频帧提取器/Schema.org 生成器）为排期建议，定序权归 PM 决策轮。依惯例「无硬伤不跳过」：WIP 落盘完整（5 文件 1848 行：注册＋模板＋JS 1259 行＋node 测试 299 行）、全量 135 Path 注册已含 css_to_tailwind、无质量硬伤，跳开新工具将造成已投入的续做断层。剩余工作量为补齐自测→评审修复→提交→部署，单轮可高质量闭环。
+- **形态族验证**：csstoolkit.net/iotools.cloud/tooladda.online/js2ts.com/testmuai/softonic 六方独立形态共识＋dev.to DevDock 2026-10-04 佐证（共识形态「粘贴 CSS→输出 Tailwind 工具类，命中命名类、未命中用任意值语法兜底、纯浏览器零上传」）；痛点：迁移老样式表到 Tailwind 逐条手写 class 慢且易错；与站内零重叠（`grep -cinE 'css_to_tailwind|css-to-tailwind|tailwind|转Tailwind'` 全量 135 Path 中仅本工具自身命中）；开发工具家族归位；符合用户 10-18 方向修正。
+- **未选**：MCP 服务器配置诊断器（P1；63 轮新晋 Top1；dev.to 2026-10-19 mcp-doctor 形态验证；建议 ID mcp_config_doctor、Path /tools/mcp-config-doctor；顺位递延至本任务闭环后下一轮，首席备选）；视频帧提取器（P1；62 轮新晋；小-中难度，运动扫描部分单轮交付风险略高；建议 ID video_frame_extractor、Path /tools/video-frame-extractor；留池）；Schema.org 结构化数据生成器（P1；62 轮新晋；七方独立形态共识；建议 ID schema_org_generator、Path /tools/schema-org-generator；留池）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts 形态验证；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；分块 File API＋MIME 解码中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；番茄钟专注计时器（P2；63 轮新晋；方向边界观察）；其余候选留池。
+
+**规格**（开发轮按此执行；基于 b899165 续做）：
+- 先行核对 b899165 落盘完整性：`grep tools/categories.go` 确认 ID `css_to_tailwind`、Path `/tools/css-to-tailwind` 注册完整（开发工具品类、New: true、中英文描述＋SEO keywords），注册总数 135 Path；`node --test tests/css_to_tailwind.test.js` 先跑一遍，补齐失败/缺口断言。
+- 输入：多行文本粘贴 CSS（整段样式表/单条声明块/`{}` 外裸声明容错）；可选 .css 文件本地 FileReader 读取；纯前端零上传。
+- 映射引擎（纯前端）：CSS 声明解析→Tailwind 命名工具类映射——间距（16px→p-4/m-4/px-4 等方向/轴向展开）、字号（16px→text-base）、颜色（色板精确匹配 #3b82f6→bg-blue-500/text-blue-500/border-blue-500）、圆角（8px→rounded-lg）、Flex/Grid（display:flex→flex、justify-content:center→justify-center）、字重/对齐/显示/定位等高频声明；输出逐声明对应结果行。
+- 兜底：未命中命名类→任意值语法（w-[137px]、[clip-path:circle(50%)]）；完全无法映射→输出原声明＋行内注释（如 `/* 无对应工具类，需手写 */`）。
+- v3/v4 版本切换（映射按版本差异调整，注明主要差异）；媒体查询块→sm:/md:/lg: 前缀变体；左右双栏实时预览（CSS 输入→Tailwind 输出）＋简单 HTML 预览渲染区；一键复制、下载 .txt。
+- SEO 面板按家族标准配齐（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）；与代码压缩器（如相关）评估单向/双向互链入口（开发轮确定并记录）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_to_tailwind`、Path `/tools/css-to-tailwind` 注册完整，注册总数 135 Path。
+2. 粘贴含 margin/padding/颜色/字号/圆角/flex 的 CSS：输出命名工具类逐条对应正确（16px→p-4、#3b82f6→bg-blue-500、display:flex→flex）。
+3. width:137px、clip-path 等输出任意值语法 w-[137px] / [clip-path:...]；无法映射项输出原声明＋行内注释。
+4. v3/v4 切换后输出按版本差异调整；媒体查询块输出 sm:/md: 前缀变体；实时预览、复制、下载可用。
+5. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 80+ 断言全过（声明解析、间距/颜色/字号/圆角/flex 映射、色板精确匹配、任意值兜底、注释提示、v3/v4 差异、媒体查询前缀）。
+7. 公网 /tool-web 部署后 QA：/tools/css-to-tailwind 200、无 /tools 残留链接。
+
+**预计改动文件**（基于 b899165 续做）：
+- 补齐/修复：`templates/css_to_tailwind.html`、`static/js/css_to_tailwind.js`、`tests/css_to_tailwind.test.js`（b899165 已落盘，按自测/评审结果补缺口）
+- 视需要：`tools/categories.go`（注册/互链补齐）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例；07:00 研究轮 39 行追加随开发轮次一并提交）
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常，本地 HEAD b899165 与 `origin/muse/dev-20260929` 同步（59/60/61 轮 access rights 故障后持续恢复，62 轮研究轮曾打通）；本地当前分支 muse/dev-20260929；工作树仅 BACKLOG.md 未跟踪改动（39 行，07:00 研究轮追加，随开发轮次提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-22 07:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。CSS 转 Tailwind 转换器被 05:47 PM 轮选中并已开工（本地 HEAD b899165「WIP: CSS 转 Tailwind 转换器」、`grep tools/categories.go` 全量 **135 Path**（含 css_to_tailwind 注册），候选池对应条目划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:00 早间轮次，P1 可排。
+
+**本轮三件事**（07:00 全网调研，通用方向）：
+1. css_to_tailwind 开发中确认：`git log` 头部 b899165（WIP，05:36 轮 develop agent 超时中断，未完成自测/提交，待继续）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮仍异常（`Permission denied (publickey)`，与 59/60/61 轮同故障模式，本地分支 muse/dev-20260929 未动，仓库读取以本地为准；开发轮次需复核网络与密钥）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 135 Path；候选池划出。
+2. 新信号扫描：
+   - **HN Front Page Roundup（2026-10-09，duklee.net；讨论帖 600 points）「Sorry, I'm in a meeting」**（iminafleeting.com）：双产品之一 **calendar-invite generator**——选会议、标题、日期、时长、重复规则、加入链接、标记 private→下载 `.ics` / 交给 Google Calendar/Outlook；全部浏览器内生成，nothing sent to their server；痛点：线上开会/远程工作发假会议邀请做「职场自卫」＋真实会议排期不想把内容泄露给第三方服务；纯前端小难度（RFC 5545 文本拼装＋Blob 下载）；站内仅有「在线日历」（查看日历/农历/节假日，`templates/calendar.html` 无 ics 逻辑；`grep -cinE 'ics|会议邀请|meeting_invite'` 全零命中）形态零重叠→ 本轮记 **P1 新晋「会议邀请 (.ics) 生成器」**（建议 ID `meeting_invite_generator`、Path `/tools/meeting-invite-generator`；效率办公家族归位；可附「假装开会」预设主题包呼应 HN 场景）；
+   - **dev.to om_vaghani（2026-10-16 更新）ClockAura**：免费在线计时平台（190+ 页面、8 语言）：Pomodoro（25/5 循环＋任务清单＋每日统计）、秒表（圈速＋CSV 导出）、倒计时（任意时长＋预设）、闹钟、HIIT 间歇计时、世界时钟；作者痛点自述：现有免费计时站「界面过时臃肿、弹窗广告遮计时、基础功能逼登录」；站内 `grep -cinE 'pomodoro|番茄|计时器|stopwatch|倒计时' tools/categories.go` **零命中**，计时器类全缺→ 本轮记 **P2 新晋「番茄钟专注计时器」**（纯前端小难度：Pomodoro 25/5 循环＋任务清单＋本地统计（localStorage）；方向备注：生产力工具而非财务/生活计算器，但属效率类边界，建议 P2 观察后再议；建议 ID `pomodoro_timer`、Path `/tools/pomodoro-timer`）；
+   - **dev.to（2026-10-13）DevTrove「I built a set of developer tools that run entirely in your browser」**：22 工具——JSON formatter/validator、**JSON semantic diff**、YAML↔JSON、JWT 编解码/校验、Base64、hash、正则、cron 解释器、时间戳→ 去重：`json_semantic_diff`（/tools/json-semantic-diff）/yaml/subnet/base-converter/uuid/jwt/cron-parser/text_diff 均为自有已实现实锤，「JSON 语义对比」为 DevTrove 唯一亮点已被站内覆盖→ 复现不记账；Web Worker 超时隔离灾难正则思路记账为架构参考；
+   - **dev.to（2026-10-16）PDF Utils「I built free PDF tools that never upload your files」**：merge/split/compress/sign/rotate/extract→ 自有 pdf_compress/pdf-sign 等实锤全覆盖；OCR 明确缺位（作者自述「语言模型太重不塞浏览器」，WPS 规则下需后端/AI→低优先不立）→ 复现不记账；
+   - **dev.to（2026-10-18）SiteToolsBox**：DNS & Whois→自有 `dns`/`whois` 实锤；Bulk Domain Availability（RDAP）→自有 domain-check（RDAP+whois 直查代码已改，Muse VM 出网被拦截待用户决定是否转 VPS）形态重叠→ 不立；ROI/电商计算器→10-18 方向下不立；
+   - **dev.to（2026-10-11）BlanzaTools**：Image Compressor/Resizer→自有实锤；Age Calculator→泛生活计算器（10-18 方向下不立）；其余 QR/密码/JSON 均为自有实锤→ 复现不记账；
+   - **dev.to（2026-10-12）everydaytoolz / （2026-10-16）RVUtils**：UUID v4/v7、Base64（Unicode 安全）、正则、hash、进制转换、IP 子网、Markdown 查看器、JWT 解码、WCAG 对比、Unix 时间、时区转换、文本 diff→ 逐项自查均为自有已实现实锤（uuid-generator/base-converter/subnet-calculator/Markdown 家族/jwt/时间戳/时区/text_diff/WCAG）→ 复现不记账；
+   - **dev.to goodyuanbo（2026-09-09 重回视线）20 privacy-first tools**：TaxNap/RunwayCalc/MeetingCost/LateFee→财务/生活计算器，10-18 方向下不立；ATSMatch→自有 `resume_checker` 实锤；MailSig→自有 `mail_signature_generator` 实锤；「单文件离线可用」方法论记账。
+3. 候选池变动：CSS 转 Tailwind 转换器已开工划出（b899165，135 Path）；会议邀请 (.ics) 生成器 P1 新晋（HN 600pts 形态验证＋效率办公家族＋零覆盖；去重核稿：中文名＋ID 片段双核零命中，可复现）；番茄钟专注计时器 P2 新晋（ClockAura 形态验证＋站内计时器类全缺；方向边界备注 P2 观察）；DevTrove/PDF Utils/SiteToolsBox/BlanzaTools/everydaytoolz/RVUtils/goodyuanbo 均复现自有实锤或方向下不立，不重复记账；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **MCP 服务器配置诊断器** — P1（62 轮新晋；dev.to 2026-10-19 mcp-doctor 形态验证；痛点：MCP 配置静默失败排错靠肉眼；用户本人 MCP 重度用户共鸣强；纯前端小难度：JSON 解析＋规则检查＋分级报告；开发者工具家族归位；与站内零重叠；建议 ID mcp_config_doctor、Path /tools/mcp-config-doctor）。
+2. **视频帧提取器** — P1（62 轮新晋；dev.to tonytoolbox 2026-10-01 FrameExtractor 形态验证：浏览器原生解码＋seek，等间隔抽帧/精确抓帧/运动扫描，零 ffmpeg 零上传；痛点：做视频封面/找关键帧要装软件或上传视频；纯前端小-中难度；视频创作者工具矩阵归位；与站内零重叠；建议 ID video_frame_extractor、Path /tools/video-frame-extractor）。
+3. **Schema.org 结构化数据生成器** — P1（62 轮新晋；七方独立形态共识；选类型→表单填字段→实时生成 JSON-LD→一键复制；痛点：手写 schema.org 语法繁琐易错；营销工具家族归位；纯前端小难度；与站内零重叠；建议 ID schema_org_generator、Path /tools/schema-org-generator）。
+
+会议邀请 (.ics) 生成器（P1；本轮新晋；HN 600pts「Sorry, I'm in a meeting」形态验证；纯前端小难度：标题/日期/时长/重复/加入链接/隐私标记→.ics 下载；效率办公家族；与站内零重叠；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；顺位待 PM 定序）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留池）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；番茄钟专注计时器（P2 本轮新晋；方向边界生产力工具，观察）；SQLite 数据库查看器（P2；62 轮新晋；sql.js WASM vendor 风险）；SEO 日志分析器（P2；62 轮新晋；SEO niche）；8D 环绕声转换器/BPM 调性检测器（P2 观察）；System Prompt 构建器（P2 观察）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴/社交媒体文案长度检查器（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第六十三轮：CSS 转 Tailwind 转换器已开工划出（b899165，135 Path）；会议邀请 (.ics) 生成器 P1 新晋；番茄钟专注计时器 P2 新晋；DevTrove JSON 语义对比＝自有实锤/PDF Utils 形态＝自有实锤＋OCR 不立/SiteToolsBox DNS&Whois＝自有实锤/BlanzaTools/everydaytoolz/RVUtils/goodyuanbo 均为复现或方向下不立；全量 135 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 转 Tailwind 转换器 | 已开工划出（b899165 WIP：05:36 轮 develop agent 超时中断，未完成自测/提交；ID css_to_tailwind、Path /tools/css-to-tailwind 已注册；全量 135 Path；待 PM 轮决定续做或补齐） | — | 开发中 |
+| 会议邀请 (.ics) 生成器 | 本轮 P1 新晋（HN Front Page Roundup 2026-10-09：iminafleeting「Sorry, I'm in a meeting」讨论 600pts；形态：选会议/标题/日期/时长/重复规则/加入链接/标记 private→下载 .ics/交给 Google Calendar/Outlook，全浏览器内生成；痛点：远程工作发会议邀请不想把内容泄露给第三方＋职场自卫场景；纯前端小难度：RFC 5545 文本拼装＋Blob 下载；效率办公家族归位；站内仅在线日历（查看/农历/节假日，无 ics）零重叠；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator） | 小 | P1（63 轮新晋） |
+| 番茄钟专注计时器 | 本轮 P2 新晋（dev.to om_vaghani 2026-10-16 ClockAura 形态验证：Pomodoro 25/5 循环＋任务清单＋每日统计；痛点：现有免费计时站界面臃肿/弹窗广告/逼登录；纯前端：Pomodoro 循环＋任务清单＋localStorage 本地统计；方向备注：生产力工具，属效率类边界，建议 P2 观察；建议 ID pomodoro_timer、Path /tools/pomodoro-timer） | 小 | P2（63 轮新晋） |
+
+**归档说明**：本轮为 10-22 通用调研第六十三轮——CSS 转 Tailwind 转换器开发中（b899165，135 Path），候选池划出，已实现清单 delta 追加；新信号扫描（HN 10-09 roundup 600pts→会议邀请 (.ics) 生成器 P1 新晋（职场自卫场景＋隐私痛点＋零覆盖）；dev.to ClockAura 10-16→番茄钟专注计时器 P2 新晋（站内计时器类全缺＋方向边界观察）；dev.to DevTrove 10-13→JSON 语义对比＝自有实锤复现；PDF Utils 10-16→合并/分割/压缩/签名自有实锤＋OCR 不立；SiteToolsBox 10-18→DNS/Whois 自有实锤＋bulk RDAP＝domain-check 形态重叠；BlanzaTools 10-11/everydaytoolz/RVUtils→自有实锤或方向下不立；goodyuanbo→财务计算器不立）均已消化；WPS 候选表保持冻结归档；仓库 135 注册工具全量核对无重叠（Top3 建议 ID mcp_config_doctor / video_frame_extractor / schema_org_generator＋本轮新晋 meeting_invite_generator / pomodoro_timer；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（Permission denied (publickey)，与 59/60/61 轮同故障模式；后续 PM/开发轮次需复核网络与密钥）；`git log` 头部 b899165（css_to_tailwind WIP）；`grep tools/categories.go` 全量 135 Path（`css_to_tailwind` ID 与 `/tools/css-to-tailwind` Path 已注册，划入开发中）；新晋 ID `meeting_invite_generator` / `pomodoro_timer` 与 135 Path 无重叠（关键词核对零命中）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-22 05:47 · 产品经理排期轮）
 
 **选定：CSS 转 Tailwind 转换器（css_to_tailwind）** — 本轮唯一任务：
