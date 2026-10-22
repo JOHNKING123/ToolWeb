@@ -1,0 +1,338 @@
+{{define "countdown_timer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线倒计时/番茄钟 - 倒计时器/秒表/番茄工作法/在线闹钟（countdown timer / pomodoro）| 程序员工具箱</title>
+<meta name="description" content="免费在线倒计时/番茄钟：倒计时（时分秒＋快捷预设）/秒表（计次圈速＋最快最慢标色）/番茄钟（25/5/15 可调、四轮长休息、自动轮转、完成统计持久化）/在线闹钟（HH:MM 准点响铃）四模式单页，全屏大字数字、WebAudio 本地合成结束音效、标题栏实时剩余时间、命名预设 localStorage 保存，纯前端零上传。Free online countdown timer, stopwatch, pomodoro & alarm clock, 100% client-side.">
+<meta name="keywords" content="倒计时,在线倒计时,倒计时器,番茄钟,在线番茄钟,秒表,在线秒表,在线闹钟,计时器,番茄工作法,pomodoro,focus timer,countdown timer,stopwatch,alarm clock">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/countdown-timer">
+<meta property="og:title" content="在线倒计时/番茄钟 - 倒计时器/秒表/番茄工作法/在线闹钟">
+<meta property="og:description" content="倒计时/秒表/番茄钟/在线闹钟四模式单页计时器：全屏大字数字、本地合成结束音效、标题栏实时剩余时间、命名预设保存，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/countdown-timer">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线倒计时/番茄钟","alternateName":"countdown_timer","description":"免费在线倒计时/番茄钟：倒计时（时分秒＋快捷预设）/秒表（计次圈速）/番茄钟（专注/短休息/长休息可调、自动轮转、完成统计）/在线闹钟（HH:MM 准点响铃）四模式单页；全屏大字数字、WebAudio 本地合成结束音效、浏览器标题栏实时显示剩余时间、命名预设 localStorage 保存；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/countdown-timer","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ct-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.ct-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+/* ---- 模式 Tab ---- */
+.ct-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:0 0 1.1rem}
+.ct-tab{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.6rem;padding:.55rem 1.15rem;
+font-size:.92rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s}
+.ct-tab .material-icons{font-size:1.15rem}
+.ct-tab:hover{border-color:#93c5fd;background:#eff6ff}
+.ct-tab.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.ct-pane{display:none}
+.ct-pane.active{display:block}
+/* ---- 面板 ---- */
+.ct-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ct-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ct-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ct-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.ct-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.ct-field input,.ct-field select{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.95rem;
+background:#fff;color:#1f2937;box-sizing:border-box}
+.ct-field input:focus,.ct-field select:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ct-row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end}
+.ct-row .ct-field{flex:1;min-width:5.2rem}
+.ct-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.ct-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ct-btn .material-icons{font-size:1.1rem}
+.ct-btn-primary{background:#1d4ed8;color:#fff}
+.ct-btn-primary:hover{background:#1e40af}
+.ct-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ct-btn-secondary:hover{background:#e5e7eb}
+.ct-btn-danger{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.ct-btn-danger:hover{background:#fecaca}
+.ct-btn:disabled{opacity:.45;cursor:not-allowed}
+.ct-quick{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:2rem;padding:.35rem .95rem;
+font-size:.85rem;font-weight:600;cursor:pointer}
+.ct-quick:hover{background:#dbeafe}
+/* ---- 展示区 ---- */
+#ct-stage-wrap{background:#0b0e14;border-radius:.8rem;overflow:hidden;border:1px solid #1f2937;margin-bottom:1.2rem}
+#ct-stage-wrap:fullscreen{border-radius:0;border:none}
+#ct-stage-wrap.is-fullscreen .ct-stage-hint{display:none}
+.ct-viewport{position:relative;height:44vh;min-height:300px;display:flex;flex-direction:column;align-items:center;
+justify-content:center;overflow:hidden;padding:4vmin;box-sizing:border-box;user-select:none}
+#ct-stage-wrap:fullscreen .ct-viewport{height:100vh;min-height:0}
+.ct-digit{font-family:"SF Mono","Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+font-weight:900;line-height:1.2;text-align:center;color:#f8fafc;font-size:min(20vmin,7rem);letter-spacing:.02em}
+#ct-stage-wrap:fullscreen .ct-digit{font-size:min(30vmin,26rem)}
+.ct-subline{color:#94a3b8;font-size:1rem;margin-top:.6rem;letter-spacing:.2em}
+.ct-phase{display:inline-block;font-size:.85rem;font-weight:700;padding:.25rem 1rem;border-radius:2rem;margin-bottom:.4rem}
+.ct-phase-focus{background:#1d4ed8;color:#fff}
+.ct-phase-short{background:#059669;color:#fff}
+.ct-phase-long{background:#7c3aed;color:#fff}
+.ct-stage-hint{font-size:.78rem;color:#6b7280;padding:.5rem .9rem .7rem;background:#111827;line-height:1.8;text-align:center}
+.ct-stage-hint kbd{background:#1f2937;border:1px solid #374151;border-radius:.3rem;padding:.05rem .4rem;
+font-family:inherit;color:#d1d5db}
+.ct-stage-bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.7rem .9rem;background:#111827;
+border-top:1px solid #1f2937;justify-content:center}
+/* ---- 圈速表 ---- */
+.ct-laptable{width:100%;border-collapse:collapse;font-size:.88rem}
+.ct-laptable th,.ct-laptable td{border:1px solid #e5e7eb;padding:.45rem .6rem;text-align:center}
+.ct-laptable th{background:#f3f4f6;color:#4b5563}
+.ct-laptable tr.fast td{background:#ecfdf5;color:#065f46;font-weight:700}
+.ct-laptable tr.slow td{background:#fef2f2;color:#b91c1c}
+.ct-emptylap{font-size:.85rem;color:#9ca3af;text-align:center;padding:.8rem}
+#ct-sw-laps{max-height:260px;overflow-y:auto;margin-top:.8rem}
+/* ---- 预设 ---- */
+.ct-preset-item{display:flex;align-items:center;gap:.7rem;border:1px solid #e5e7eb;border-radius:.55rem;
+padding:.55rem .8rem;margin-bottom:.5rem;background:#f8fafc}
+.ct-preset-name{font-weight:700;color:#111827}
+.ct-preset-desc{font-size:.82rem;color:#6b7280;flex:1}
+.ct-mini-btn{border:1px solid #d1d5db;background:#fff;border-radius:.4rem;padding:.3rem .8rem;font-size:.8rem;
+cursor:pointer;color:#374151}
+.ct-mini-btn:hover{background:#f3f4f6}
+.ct-mini-btn.ct-use{border-color:#1d4ed8;color:#1d4ed8}
+.ct-mini-btn.ct-del{border-color:#fca5a5;color:#b91c1c}
+/* ---- 闹钟浮层 ---- */
+#ct-al-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;
+justify-content:center;z-index:10000}
+#ct-al-overlay.show{display:flex}
+.ct-al-card{background:#fff;border-radius:1rem;padding:2rem 2.6rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.ct-al-card .material-icons{font-size:3.5rem;color:#f59e0b;animation:ct-ring 1s infinite}
+@keyframes ct-ring{0%,100%{transform:rotate(0)}25%{transform:rotate(18deg)}75%{transform:rotate(-18deg)}}
+.ct-al-card h2{margin:.6rem 0 .4rem;color:#111827}
+.ct-al-card p{color:#6b7280;margin:0 0 1.2rem}
+/* ---- toast ---- */
+#ct-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all .25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#ct-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ct-grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start}
+.ct-note{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+.ct-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ct-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ct-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+@media (max-width:900px){.ct-grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">timer</i> 在线倒计时/番茄钟</h1>
+<p>倒计时 / 秒表 / 番茄钟 / 在线闹钟四模式单页计时器 —— 全屏大字数字、本地合成结束音效、标题栏实时剩余时间、命名预设一键复用，考试计时、演讲计时、做饭健身、专注工作都够用。</p>
+</div>
+<div class="tool-content" style="max-width:1100px;margin:auto;">
+<div class="ct-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>计时、音效合成（WebAudio 本地生成）、预设保存（localStorage）全部在浏览器本地完成，无任何后端请求，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<!-- 模式切换 -->
+<div class="ct-tabs" role="tablist">
+<button type="button" class="ct-tab active" data-mode="countdown"><i class="material-icons">hourglass_empty</i>倒计时</button>
+<button type="button" class="ct-tab" data-mode="stopwatch"><i class="material-icons">timer</i>秒表</button>
+<button type="button" class="ct-tab" data-mode="pomodoro"><i class="material-icons">schedule</i>番茄钟</button>
+<button type="button" class="ct-tab" data-mode="alarm"><i class="material-icons">alarm</i>闹钟</button>
+</div>
+
+<!-- 全屏展示区 -->
+<div id="ct-stage-wrap">
+<div class="ct-viewport">
+<div class="ct-pane active" data-pane="countdown" style="display:flex;flex-direction:column;align-items:center">
+<div class="ct-digit" id="ct-cd-display">00:00</div>
+<div class="ct-subline" id="ct-cd-status">就绪</div>
+</div>
+<div class="ct-pane" data-pane="stopwatch" style="flex-direction:column;align-items:center">
+<div class="ct-digit" id="ct-sw-display">00:00.00</div>
+<div class="ct-subline">秒表 · 空格计次</div>
+</div>
+<div class="ct-pane" data-pane="pomodoro" style="flex-direction:column;align-items:center">
+<span class="ct-phase ct-phase-focus" id="ct-pomo-phase">专注</span>
+<div class="ct-digit" id="ct-pomo-display">25:00</div>
+<div class="ct-subline" id="ct-pomo-cycles">已完成专注轮：0 / 今日番茄：0 🍅</div>
+</div>
+<div class="ct-pane" data-pane="alarm" style="flex-direction:column;align-items:center">
+<div class="ct-digit" id="ct-al-display">--:--</div>
+<div class="ct-subline" id="ct-al-info">闹钟未启用</div>
+</div>
+</div>
+<div class="ct-stage-bar">
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-fullscreen"><i class="material-icons">fullscreen</i>全屏大字（F）</button>
+</div>
+<div class="ct-stage-hint">按 <kbd>F</kbd> 进入全屏大字模式，<kbd>Esc</kbd> 退出；秒表模式按 <kbd>空格</kbd> 可计次</div>
+</div>
+
+<!-- 倒计时面板 -->
+<div class="ct-pane active" data-pane="countdown">
+<div class="ct-grid2">
+<div class="ct-panel">
+<h3><i class="material-icons">edit_note</i> 设置时长</h3>
+<div class="ct-row">
+<div class="ct-field"><label>时</label><input type="number" id="ct-cd-h" min="0" max="99" value="0"></div>
+<div class="ct-field"><label>分</label><input type="number" id="ct-cd-m" min="0" max="59" value="5"></div>
+<div class="ct-field"><label>秒</label><input type="number" id="ct-cd-s" min="0" max="59" value="0"></div>
+</div>
+<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.4rem 0">
+<button type="button" class="ct-quick" data-min="1">1 分钟</button>
+<button type="button" class="ct-quick" data-min="5">5 分钟</button>
+<button type="button" class="ct-quick" data-min="10">10 分钟</button>
+<button type="button" class="ct-quick" data-min="15">15 分钟</button>
+<button type="button" class="ct-quick" data-min="25">25 分钟</button>
+<button type="button" class="ct-quick" data-min="30">30 分钟</button>
+<button type="button" class="ct-quick" data-min="45">45 分钟</button>
+<button type="button" class="ct-quick" data-min="60">60 分钟</button>
+</div>
+<div class="ct-actions">
+<button type="button" class="ct-btn ct-btn-primary" id="ct-cd-start"><i class="material-icons">play_arrow</i>开始</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-cd-pause"><i class="material-icons">pause</i>暂停</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-cd-reset"><i class="material-icons">restart_alt</i>复位</button>
+</div>
+<div class="ct-note">基于 Date.now() 锚点计算剩余时间，避免 setInterval 累计漂移；归零播放结束音效并闪烁标题栏，切后台标签页也能感知。</div>
+</div>
+<div class="ct-panel">
+<h3><i class="material-icons">bookmark</i> 倒计时预设（最多 5 组）</h3>
+<div class="ct-row">
+<div class="ct-field"><label>预设名称</label><input type="text" id="ct-preset-name-cd" placeholder="如：健身 45" maxlength="20"></div>
+</div>
+<div class="ct-actions"><button type="button" class="ct-btn ct-btn-secondary" id="ct-save-preset-cd"><i class="material-icons">save</i>保存当前时长为预设</button></div>
+<div id="ct-preset-countdown" style="margin-top:.9rem"></div>
+</div>
+</div>
+</div>
+
+<!-- 秒表面板 -->
+<div class="ct-pane" data-pane="stopwatch">
+<div class="ct-panel">
+<h3><i class="material-icons">timer</i> 秒表控制</h3>
+<div class="ct-actions" style="margin-top:0">
+<button type="button" class="ct-btn ct-btn-primary" id="ct-sw-start"><i class="material-icons">play_arrow</i>开始</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-sw-pause"><i class="material-icons">pause</i>暂停</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-sw-lap"><i class="material-icons">flag</i>计次</button>
+<button type="button" class="ct-btn ct-btn-danger" id="ct-sw-reset"><i class="material-icons">restart_alt</i>复位</button>
+</div>
+<div id="ct-sw-laps"></div>
+<div class="ct-note">🏆 绿色为最快圈、红色为最慢圈；复位后圈速记录清空。</div>
+</div>
+</div>
+
+<!-- 番茄钟面板 -->
+<div class="ct-pane" data-pane="pomodoro">
+<div class="ct-grid2">
+<div class="ct-panel">
+<h3><i class="material-icons">tune</i> 番茄参数</h3>
+<div class="ct-row">
+<div class="ct-field"><label>专注（分钟）</label><input type="number" id="ct-pomo-focus" min="1" max="180" value="25"></div>
+<div class="ct-field"><label>短休息（分钟）</label><input type="number" id="ct-pomo-short" min="1" max="120" value="5"></div>
+<div class="ct-field"><label>长休息（分钟）</label><input type="number" id="ct-pomo-long" min="1" max="120" value="15"></div>
+<div class="ct-field"><label>几轮后长休息</label><input type="number" id="ct-pomo-rounds" min="1" max="12" value="4"></div>
+</div>
+<div class="ct-actions">
+<button type="button" class="ct-btn ct-btn-primary" id="ct-pomo-start"><i class="material-icons">play_arrow</i>开始专注</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-pomo-pause"><i class="material-icons">pause</i>暂停</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-pomo-skip"><i class="material-icons">skip_next</i>跳过本阶段</button>
+<button type="button" class="ct-btn ct-btn-secondary" id="ct-pomo-reset"><i class="material-icons">restart_alt</i>重置轮次</button>
+</div>
+<div class="ct-note">完成一轮专注自动进入短休息（四轮后长休息），伴随提示音与弹窗 toast；轮次计数与「今日番茄数」保存在浏览器本地，跨天清零。</div>
+</div>
+<div class="ct-panel">
+<h3><i class="material-icons">bookmark</i> 番茄钟预设（最多 5 组）</h3>
+<div class="ct-row">
+<div class="ct-field"><label>预设名称</label><input type="text" id="ct-preset-name-pomo" placeholder="如：深度工作 50" maxlength="20"></div>
+</div>
+<div class="ct-actions"><button type="button" class="ct-btn ct-btn-secondary" id="ct-save-preset-pomo"><i class="material-icons">save</i>保存当前参数为预设</button></div>
+<div id="ct-preset-pomodoro" style="margin-top:.9rem"></div>
+</div>
+</div>
+</div>
+
+<!-- 闹钟面板 -->
+<div class="ct-pane" data-pane="alarm">
+<div class="ct-panel">
+<h3><i class="material-icons">alarm</i> 闹钟设定</h3>
+<div class="ct-row">
+<div class="ct-field"><label>时（0–23）</label><input type="number" id="ct-al-hour" min="0" max="23" value="7"></div>
+<div class="ct-field"><label>分（0–59）</label><input type="number" id="ct-al-min" min="0" max="59" value="0"></div>
+<div class="ct-field"><label>重复</label><select id="ct-al-repeat">
+<option value="daily">每天</option>
+<option value="weekdays">仅工作日</option>
+<option value="once">仅一次</option>
+</select></div>
+<div class="ct-field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:.5rem;font-size:.92rem;color:#374151">
+<input type="checkbox" id="ct-al-toggle" style="width:1.1rem;height:1.1rem"> 启用闹钟</label></div>
+</div>
+<div class="ct-actions">
+<button type="button" class="ct-btn ct-btn-primary" id="ct-al-apply"><i class="material-icons">check</i>设定闹钟</button>
+</div>
+<div class="ct-note">页面保持打开时准点响铃（浏览器后台标签页计时器可能被节流，建议保持本标签页可见）；「仅一次」响铃后自动关闭，每日/工作日自动安排下一次。</div>
+</div>
+</div>
+
+<!-- 音效 -->
+<div class="ct-panel">
+<h3><i class="material-icons">volume_up</i> 结束音效</h3>
+<div class="ct-row">
+<div class="ct-field"><label>音效类型（WebAudio 本地合成，零音频文件）</label><select id="ct-sound">
+<option value="beep">蜂鸣（默认）</option>
+<option value="bell">铃铛</option>
+<option value="chime">风铃</option>
+<option value="mute">静音</option>
+</select></div>
+<div class="ct-field"><label>&nbsp;</label><div><button type="button" class="ct-btn ct-btn-secondary" id="ct-test-sound"><i class="material-icons">play_arrow</i>试听</button></div></div>
+</div>
+</div>
+
+<!-- 使用说明 -->
+<div class="ct-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="ct-faq">
+<dt>倒计时怎么用？</dt>
+<dd>输入时/分/秒，或点快捷预设（如 25 分钟），点击「开始」。暂停可继续，复位清零。归零时播放结束音效并闪烁浏览器标题栏。</dd>
+<dt>番茄钟如何自动轮转？</dt>
+<dd>默认专注 25 分钟 → 短休息 5 分钟，每完成 4 轮专注进入长休息 15 分钟；参数都可调。阶段切换自动伴随提示音与 toast，每完成一轮专注「今日番茄数」+1（保存在浏览器本地，跨天清零）。</dd>
+<dt>秒表圈速怎么记？</dt>
+<dd>秒表运行中点「计次」或按空格，圈速列表实时追加，最快圈绿色标 🏆、最慢圈红色标。复位清空全部记录。</dd>
+<dt>闹钟在后台标签页会响吗？</dt>
+<dd>浏览器会节流后台标签页的计时器，准时性依赖页面可见。建议重要提醒保持本标签页可见；响铃时标题栏闪烁＋弹窗提醒。</dd>
+<dt>全屏大字怎么用？</dt>
+<dd>点「全屏大字（F）」或直接按 F 键，数字放大到全屏，Esc 退出。适合演讲、考试、直播时远距离看时间。</dd>
+<dt>预设保存在哪里？</dt>
+<dd>保存在本机浏览器的 localStorage（倒计时/番茄钟各最多 5 组），不上传服务器；清浏览器数据会丢失。</dd>
+<dt>计时准吗？</dt>
+<dd>倒计时/秒表基于 Date.now() 锚点计算剩余/流逝时间，不依赖 setInterval 累加，避免长时间运行的累计漂移。</dd>
+</dl>
+</div>
+
+<!-- 相关工具 -->
+<div class="ct-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="ct-related">
+<span class="ct-quick" style="cursor:default">生活工具：</span>
+<a class="ct-quick" href="/tools/big-sign-display" style="text-decoration:none">大字标牌展示器</a>
+<a class="ct-quick" href="/tools/teleprompter" style="text-decoration:none">在线提词器</a>
+<a class="ct-quick" href="/tools/random-decision" style="text-decoration:none">随机决策器</a>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- 闹钟响铃浮层 -->
+<div id="ct-al-overlay">
+<div class="ct-al-card">
+<i class="material-icons">alarm</i>
+<h2>⏰ 闹钟时间到！</h2>
+<p id="ct-al-ringtime"></p>
+<button type="button" class="ct-btn ct-btn-primary" id="ct-al-dismiss"><i class="material-icons">check</i>知道了</button>
+</div>
+</div>
+
+<div id="ct-toast"></div>
+<script src="/tools/static/js/countdown_timer.js?v=1"></script>
+</body>
+</html>
+{{end}}

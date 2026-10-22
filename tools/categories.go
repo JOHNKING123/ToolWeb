@@ -1230,6 +1230,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "countdown_timer",
+					Name:        "在线倒计时/番茄钟",
+					Description: "在线倒计时/番茄钟：倒计时（时/分/秒＋1/5/10/15/25/30/45/60 分钟快捷预设）/秒表（计次圈速＋最快/最慢标色）/番茄钟（专注/短休息/长休息可调、四轮后长休息、自动轮转、轮次＋今日完成数持久化）/在线闹钟（HH:MM 设定＋每日/工作日/仅一次、准点响铃）四模式单页；全屏大字数字（F 键）、WebAudio 本地合成结束音效、标题栏实时剩余时间、localStorage 命名预设（倒计时/番茄各 5 组），Date.now() 锚点抗漂移，纯前端零上传 · Countdown timer, stopwatch, pomodoro & alarm clock: fullscreen big digits, WebAudio alarm, title countdown, presets, 100% client-side",
+					Path:        "/tools/countdown-timer",
+					Icon:        "timer",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

@@ -1,3 +1,82 @@
+## 今日任务（2026-10-23 03:00 · 产品经理排期轮）
+
+**选定：在线倒计时/番茄钟（countdown_timer）** — 本轮唯一任务（新工具）：
+- **顺位**：03:00 研究轮（71 轮）Top1 推荐；会议邀请 (.ics) 生成器（b8e3111）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选二席：NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；WebRTC STUN 纯前端检测；建议 ID nat_type_detector、Path /tools/nat-type-detector；留池二席）、单位感知记事本计算器（P1；Calcy ranges 增强观察；记事本式输入＋单位感知＋行间变量；蒙特卡洛部分分期二期、首期控单轮风险；留池三席）。
+- **形态验证**：69 轮新晋；双形态共识——dev.to ClockAura（2026-10 更新，免费在线计时器痛点实锤：现有计时站界面杂乱、侵入式广告、基础功能要注册、一个站只有一种计时器；更新后 190+ 页面、8 语言）＋ dev.to BlanzaTools（2026-10-11，14 个 vanilla JS 工具集，含 Countdown Timer）。
+- **痛点**：考试/直播/演讲/做饭/运动计时要干净无广告、免注册、免下载的工具；现有免费计时站广告多、强制注册、单功能、界面杂乱。
+- **零重叠实锤**：本轮复核——`grep -cinE '倒计时|番茄钟|秒表|pomodoro|stopwatch|countdown|timer' tools/categories.go` 零命中；`grep -rinE 'countdown_timer|countdown-timer|nat_type_detector|nat-type-detector' tools/categories.go templates/ static/js/ tests/` 零命中；全量 142 Path 中计时器空白实锤；建议 ID `countdown_timer`、Path `/tools/countdown-timer` 未被占用。
+- **品类归位**：注册到「生活工具」品类（已有 11 工具，含在线提词器/大字标牌展示器等生活场景单页工具；「效率工具」在 categories.go 中不存在，不硬造，沿用 22 日 PM 轮纠偏惯例）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 四模式单页（Tab/模式切换）：**倒计时**（时/分/秒输入，支持快捷预设 1/5/10/15/25/30/45/60 分钟）、**秒表**（开始/暂停/复位/计次 lap 圈速记录＋最快/最慢圈标色）、**番茄钟**（专注 25 分钟/短休息 5/长休息 15 可调参数，四轮后长休息，自动轮转，轮次计数＋已完成番茄统计）、**闹钟**（HH:MM 设定＋工作日/每日/仅一次，页面可见时准点响铃，标签页后台时 title 闪烁＋到期提示）。
+- 核心体验：全屏大字数字显示（F 键全屏 / 全屏按钮）；结束音效（WebAudio 本地合成铃声，可选音效/静音，零音频文件）；浏览器标题栏实时显示剩余时间（后台切页可感知）；预设保存（localStorage 自定义命名预设，倒计时/番茄参数两类各存 5 组）。
+- 精度：倒计时/秒表基于 Date.now() 锚点计算（避免 setInterval 漂移）；番茄钟自动轮转间隙 toast＋声音提示；闹钟在页面可见时准时触发。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+- 注册：生活工具品类，新增工具 ID `countdown_timer`、Name「在线倒计时/番茄钟」、Path `/tools/countdown-timer`（New: true），中英文描述＋SEO keywords（倒计时、番茄钟、秒表、在线闹钟、计时器、pomodoro、focus timer）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `countdown_timer`、Path `/tools/countdown-timer` 注册完整（Category 生活工具），注册总数 142→143 Path。
+2. 倒计时输入 00:05（5 秒）→ 启动后显示递减、归零时播放结束音效＋标题栏闪烁提示；暂停/继续/复位逻辑正确。
+3. 秒表：开始→暂停→计次 3 圈→圈速表显示 3 条记录＋最快/最慢标色；复位清空圈速。
+4. 番茄钟：默认 25/5/15 参数，完成第 1 个专注轮 → 自动进入 5 分钟短休息（toast 提示「专注完成，休息一下」）；轮次计数器＋今日完成番茄数持久化（localStorage）。
+5. 闹钟：设定当前时间+2 分钟 → 页面可见时准点响铃；标题栏显示剩余时间（HH:MM:SS 格式）。
+6. 全屏按钮/F 键进入全屏大字模式，ESC 退出；预设保存：命名「健身 45」存 45 分钟倒计时预设 → 刷新页面后预设列表仍在。
+7. 脚本内零 fetch/XHR，Network 抽查无内容外发；node 测试 30+ 断言全过（时间格式化 mm:ss/小时位、Date.now 锚点计算、番茄轮转状态机、预设序列化/反序列化、标题栏文案）。
+
+**预计改动文件**：
+- `templates/countdown_timer.html`（新增；含 SEO 面板按家族标准）
+- `static/js/countdown_timer.js`（新增；四模式状态机、WebAudio 音效、全屏、localStorage 预设、标题栏计时）
+- `tests/countdown_timer.test.js`（新增；格式化、轮转状态机、预设序列化、锚点计算）
+- `tools/categories.go`（生活工具品类注册：ID countdown_timer、Path /tools/countdown-timer、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD b8e3111（会议邀请 (.ics) 生成器交付闭环）与远程分支一致（git fetch 正常，须 GIT_SSH_COMMAND 指定密钥）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 142 Path；零重叠 grep 本轮复核全零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（构建产物/备份残留，多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 03:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。会议邀请 (.ics) 生成器已交付闭环（`git log` 头部 b8e3111「新增会议邀请 (.ics) 生成器」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **142 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 深夜轮次，P1 小难度可排。
+
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. meeting_invite_generator 交付确认：`git log` 头部 b8e3111（RFC 5545 VCALENDAR 纯前端表单→.ics 下载+复制+Gmail/Outlook/Apple 导入指引，注册文档转换品类；node 测试 89 断言全过）；`grep tools/categories.go` 全量 142 Path（ID meeting_invite_generator、Path /tools/meeting-invite-generator 已注册）；候选池划出。
+2. 新信号扫描：
+   - **V2EX 10-20「md2chat / 贴贴 Markdown」**：AI 回答 Markdown 复制进聊天框排版崩坏痛点 → 自有 `md_to_chat`（/tools/md-to-chat「Markdown 聊天图文转换器」，描述内直接注明 md2chat：文字块微信/钉钉/飞书/企微四平台语法适配一键复制＋表格/代码/公式/流程图 canvas 本地渲染图片卡片，纯前端零上传）**实锤复现** → 不立。
+   - **dev.to Graffitizer（2026-10-16）**：浏览器涂鸦字体工作室——打字→风格预设→逐字母拖放/旋转/图层→SVG 路径+透明 PNG 导出，零 AI 零注册；痛点：创意字体设计工具在下载按钮处收费/水印/强制注册 → 自有 `fancy_fonts`（/tools/fancy-fonts）是 Unicode 文本风格转换，形态不同 → **新晋 P2「涂鸦字体工作室」**（niche：头像字标/海报字/贴纸字；纯前端中难度：字母拖放/旋转/缩放/图层＋预设风格；`graffiti|涂鸦工作室` 零命中实锤；建议 ID graffiti_lettering、Path /tools/graffiti-lettering）。
+   - **shykov.dev 10-16「ATS 简历检测器」**：浏览器本地解析简历给 ATS 解析度打分（规则公开、免上传）→ 自有 `resume_checker`（/tools/resume-checker「简历预检工具」：JD 关键词匹配度/ATS 友好度检测/经历逻辑链/雷区清单，纯前端）**实锤复现** → 不立；V2EX 10-20 Open Resume（156 模板自部署简历工具，需 Node/SQLite 后端）→ 不立。
+   - **V2EX 10-19「Paint Board」**（Web 创意画板升级：多种画笔/涂鸦图形/文字图片）→ 自有无同类画板（canvas 命中均为图表/音频波形），但完整画板单轮交付风险高 → 不立，观察。
+   - **V2EX 10-18「NASDrop」**（群晖下载队列，需 NAS+Chrome 扩展）→ 非纯前端单页形态，不立；**MergeCal**（多 iCal feed 合并，需服务端抓取，浏览器 CORS 不可纯做）→ 不立，观察。
+   - **HN 10-22 front**：Show HN Death Plan Switch（dead man's switch，自托管需后端）/ AI-built browser games directory（游戏目录非工具）/ AI memory 真伪 quiz（玩具）/ Kuron（LLM 模拟 App，需 BYOK）/ iOS on Android（非 web）/ PHP2Shell scanner（服务端扫描）→ 均不立；Sphinx（68 轮已消化）/ PHP2Shell（69 轮已消化）热点延续观察。
+   - **dev.to 工具站自荐**（SuperToolKit 100+ / SEOAnalytics Lab 50+ / Site Tools Box 20+ / RVUtils 13 / DevUtils 40）：类目（PDF/JSON/JWT/Base64/正则/cron/DNS/密码/二维码/词数统计）均为自有实锤 → 不立；Graffitizer 为其中唯一自有空白形态。
+3. 候选池变动：会议邀请 (.ics) 生成器已交付划出（b8e3111，142 Path）；**新晋 1 个**（涂鸦字体工作室 P2）；md2chat/cv.shykov/Open Resume 自有复现或需后端不立；Paint Board 画板重形态观察；MergeCal/NASDrop 非单页形态不立；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；meeting_invite_generator 交付闭环后按顺位递进）：
+
+1. **在线倒计时/番茄钟** — P1（69 轮新晋；dev.to ClockAura 2026-10 更新＋BlanzaTools 双形态验证；自有 142 Path `倒计时|计时器|秒表|番茄|闹钟|countdown|stopwatch|pomodoro|timer` 零命中实锤空白；痛点：现有免费计时站广告多/强制注册/单功能/界面杂乱；倒计时/秒表/番茄钟/闹钟四模式单页＋全屏大字＋结束音效＋预设保存，纯前端小难度；建议 ID countdown_timer、Path /tools/countdown-timer）。
+2. **NAT 类型检测器** — P1（64 轮新晋；Show HN NatChecker；痛点：P2P 联机/游戏/NAT 穿透前想知道自己 NAT 类型，命令行难用；WebRTC STUN 纯前端检测 Full Cone/Restricted/Port Restricted/Symmetric；建议 ID nat_type_detector、Path /tools/nat-type-detector）。
+3. **单位感知记事本计算器** — P1（Calcy ranges 增强观察；痛点：记事本里随手写算式要带单位换算、范围汇总，现有计算器割裂；记事本式输入＋单位感知＋行间变量，蒙特卡洛部分分期二期做、首期控单轮风险；纯前端小难度）。
+
+其余 P1 留池：MBOX 邮件存档查看器（58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（59 轮新晋；opentype.js vendor 化验证成本高，留池）；屏幕常亮/浏览器实时听写（留池）；年会大屏抽奖（时令预热，11 月）；TOTP 动态口令生成器（P2；安全敏感）；人像背景一键虚化（P2；WASM vendor 化成本高）；涂鸦字体工作室（P2；71 轮新晋，niche）。
+
+**通用候选表增量**（第七十一轮：会议邀请 (.ics) 生成器已交付划出（b8e3111，142 Path）；新晋 1 个；md2chat→md_to_chat 自有实锤复现；cv.shykov ATS→resume_checker 自有实锤复现；Open Resume/NASDrop/MergeCal 需后端不立；Paint Board 画板重形态观察；HN 10-22 front 无单页工具形态；dev.to 工具站自荐类目均为自有实锤；全量 142 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 涂鸦字体工作室 | 新晋（71 轮；dev.to Graffitizer 2026-10-16 形态验证：浏览器涂鸦字体工作室，逐字母拖放/旋转/图层＋SVG/透明 PNG 导出，零注册；痛点：创意字体工具下载时收费/水印/强制注册；与自有 fancy_fonts（Unicode 文本风格转换）形态不同零重叠；建议 ID graffiti_lettering、Path /tools/graffiti-lettering） | 中 | P2 |
+| meeting_invite_generator | 已交付划出（b8e3111 交付闭环；ID meeting_invite_generator、Path /tools/meeting-invite-generator 已注册；全量 142 Path；候选池划出） | — | 已实现 |
+| md2chat 观察 | 本轮不新立（V2EX 10-20；AI 回答 Markdown→聊天图文痛点；自有 md_to_chat（/tools/md-to-chat，描述内注明 md2chat）实锤复现） | — | 观察 |
+| cv.shykov ATS 检测器观察 | 本轮不新立（shykov.dev 10-16；浏览器本地 ATS 解析度评分规则公开；自有 resume_checker（/tools/resume-checker：ATS 友好度检测）实锤复现） | — | 观察 |
+| Open Resume / NASDrop / MergeCal / Paint Board | 本轮不立（Open Resume 需 Node/SQLite 后端；NASDrop 需 NAS+浏览器扩展；MergeCal 需服务端抓取 iCal feed（CORS）；Paint Board 完整 Web 画板单轮交付风险高，观察） | — | 不立 |
+| HN 10-22 front | 本轮不立（Death Plan Switch 需后端；AI 游戏目录非工具；AI memory quiz 玩具；Kuron 需 BYOK；iOS on Android 非 web；PHP2Shell scanner 服务端扫描；Sphinx/PHP2Shell 热点已消化观察） | — | 不立 |
+| dev.to 工具站自荐（SuperToolKit/SEOAnalyticsLab/Site Tools Box/RVUtils/DevUtils） | 本轮不立（PDF/JSON/JWT/Base64/正则/cron/DNS/密码/二维码/词数统计类目均为自有实锤；Graffitizer 为唯一空白形态，已单独立为 P2） | — | 不立 |
+
+**归档说明**：本轮为 10-23 通用调研第七十一轮——会议邀请 (.ics) 生成器交付闭环（b8e3111，`/tools/meeting-invite-generator` 已注册，文档转换品类，全量 142 Path），候选池划出；新信号扫描（V2EX md2chat 10-20＝自有 md_to_chat 实锤复现；dev.to Graffitizer 10-16→**新晋 P2 涂鸦字体工作室**；shykov.dev ATS 简历检测器＝自有 resume_checker 实锤复现；V2EX Open Resume 需后端/NASDrop 需 NAS/Paint Board 画板重形态观察；MergeCal iCal 合并不立；HN 10-22 front 无单页工具形态；dev.to 工具站自荐类目均为自有实锤）均已消化；WPS 候选表保持冻结归档；仓库 142 注册工具全量核对无重叠（Top3 建议 ID countdown_timer / nat_type_detector；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（github.com 重新写入 known_hosts）；`git log` 头部 b8e3111（meeting_invite_generator 交付闭环）；`grep tools/categories.go` 全量 142 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（构建产物/备份残留，多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-23 01:00 · 产品经理排期轮）
 
 **选定：会议邀请 (.ics) 生成器（meeting_invite_generator）** — 本轮唯一任务（新工具）：
