@@ -1,3 +1,84 @@
+## 今日任务（2026-10-22 21:00 · 产品经理排期轮）
+
+**选定：WiFi 二维码生成器（wifi_qr_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：21:00 研究轮（69 轮）Top1 推荐；Schema.org 结构化数据生成器（094658b）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。
+- **形态验证**：65 轮新晋；dev.to 2026-10-08 qrgenrateronline（15 类型二维码站）形态共识。
+- **痛点**：来客/店铺/活动现场分享 WiFi，口头报密码易错易泄露；现有免费二维码站多要注册或带水印。
+- **零重叠实锤**：本轮复核——全仓库 `grep -inE 'wifi|无线网|无线网络'` 零命中；`grep -ci 'qrcode|二维码' tools/categories.go` 仅命中自有通用「二维码工具」（ID qrcode、/tools/qrcode，文本/URL 通用生成+识别）；`grep -inE '\.ics|会议邀请'` 零命中（会议邀请生成器仍留池，无冲突）；`grep -inE 'countdown|pomodoro|番茄钟|秒表|倒计时'` 零命中（计时器空白实锤，留池三席）。WiFi 专用 `WIFI:T:..;S:..;P:..;;` 协议串＋打印张贴页形态与自有通用二维码零重叠、互补。
+- **品类归位**：注册到「编码转换」品类（自有二维码工具/条形码生成器所在品类，自然同族；研究轮建议的「效率工具」在 categories.go 中不存在，按实际品类纠偏）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池二席）；在线倒计时/番茄钟（P1；69 轮新晋；dev.to ClockAura 2026-10 更新形态验证；自有 139 Path 计时器空白实锤；建议 ID countdown_timer、Path /tools/countdown-timer；留池三席）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度；留池）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高；留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高；留池）；其余候选留池。
+
+**规格**（开发轮按此执行）：
+- 表单（左侧）：SSID（必填，内联空校验）；加密类型下拉（WPA/WPA2/WPA3、WEP、无密码）：选「无密码」时密码栏禁用并隐藏；密码（加密类型必填）；隐藏网络开关（勾选则输出 `H:true`）；备注名（打印页用，如「前台接待 WiFi」）。
+- WIFI 协议串构建：`WIFI:T:<auth>;S:<ssid>;P:<password>;H:true;;`——auth 映射（WPA/WPA2/WPA3→WPA，WEP→WEP，无密码→nopass 且省略 P 段）；SSID/密码中的 `\` `;` `,` `:` `"` 按规范反斜杠转义；无密码网络输出 `WIFI:T:nopass;S:xxx;;`；空 SSID 或加密网络空密码时禁用生成并内联定位报错。
+- 二维码：容错等级可选（M/Q，默认 M）；尺寸滑杆；前景/背景色；实时预览；下载 PNG（canvas 导出）/ SVG（矢量直写）；复制协议串文本。
+- 打印页：A4 张贴海报（大二维码＋SSID/密码明文＋连接说明「微信/相机扫码直连」），排版支持单张大图 / 2×2 四张；`@media print` 隐藏编辑区、仅打印海报；打印前预览。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR；二维码用自有/已 vendor 化库本地渲染）。
+- 注册：编码转换品类，新增工具 ID `wifi_qr_generator`、Name「WiFi 二维码生成器」、Path `/tools/wifi-qr-generator`（New: true），中英文描述＋SEO keywords（WiFi 二维码、无线网络分享、扫码连 WiFi、WIFI 二维码生成）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `wifi_qr_generator`、Path `/tools/wifi-qr-generator` 注册完整（Category 编码转换），注册总数 139→140 Path。
+2. SSID 含 `;,:` 等特殊字符（如 `客厅;2.4G`）时协议串正确转义（`客厅\;2.4G`）；含中文 SSID 输出 UTF-8 明文（不做 URL 编码）。
+3. WPA2 网络（SSID `Office-Guest` / 密码 `Welcome2026`）→ 输出 `WIFI:T:WPA;S:Office-Guest;P:Welcome2026;;`，生成的二维码用手机相机/微信扫码可直连（协议串文本与二维码 payload 一致）。
+4. 无密码网络 → 输出 `WIFI:T:nopass;S:xxx;;`（无 P 段）；隐藏网络勾选 → 追加 `H:true`。
+5. 空 SSID 或加密网络空密码时生成按钮禁用、错误提示定位到具体字段。
+6. PNG/SVG 下载可用（文件非空、SVG 可浏览器直接打开渲染）；打印页在打印预览中仅显示海报、无编辑区残留。
+7. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+
+**预计改动文件**：
+- `templates/wifi_qr_generator.html`（新增；含 SEO 面板按家族标准＋打印页样式）
+- `static/js/wifi_qr_generator.js`（新增；WIFI 协议串构建/转义、二维码渲染、PNG/SVG 导出、打印）
+- `tests/wifi_qr_generator.test.js`（新增；协议串构建、转义规则、nopass/H:true 分支）
+- `tools/categories.go`（编码转换品类注册：ID wifi_qr_generator、Path /tools/wifi-qr-generator、New: true）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 正常（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 094658b（schema_org_generator 交付闭环）；`grep tools/categories.go` 全量 139 Path；本轮仅读操作＋BACKLOG.md 追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录有未跟踪的 `toolWeb.bak-prev` 与 `toolweb`（疑似构建产物/备份残留，非本轮引入，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
+## 今日任务（2026-10-22 21:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。Schema.org 结构化数据生成器已交付闭环（`git log` 头部 094658b「新增 Schema.org 结构化数据生成器（营销工具）」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **139 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）。
+
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. schema_org_generator 交付确认：`git log` 头部 094658b（选类型→表单填字段→实时生成 JSON-LD，营销工具品类）；`grep tools/categories.go` 全量 139 Path（ID schema_org_generator、Path /tools/schema-org-generator 已注册）；候选池划出。
+2. 新信号扫描：
+   - **dev.to 10-16「I built a free tool that turns AI-generated Markdown tables into Excel」**（md-to.com）：AI 生成的 Markdown 表格粘进 Excel 全挤 A 列痛点 → 自有 `markdown_to_excel`（/tools/markdown-to-excel）**实锤复现** → 不立；技术观察：作者用手写轻量 xlsx writer + fflate 零依赖方案（浏览器内直写 zip+XML），值得性能/体积对照参考。
+   - **dev.to 10-18「I built a free invoice generator with zero backend」**（free-invoicegen.pages.dev）：自由职业者开票 admin 痛点，纯客户端 PDF 下载 → 自有 `invoice_generator`（/tools/invoice-generator：行项目/税率/整单折扣/人民币大写/A4 打印导出）**实锤复现** → 不立。
+   - **dev.to ClockAura（2026-10 更新，5 天前）**：免费在线计时器痛点实锤（现有计时站界面杂乱、侵入式广告、基础功能要注册、一个站只有一种计时器；作者因此自建，更新后 190+ 页面、8 语言、link timer/OBS overlay/教室模式）→ 自有全库 `grep -inE '倒计时|计时器|秒表|番茄|闹钟|countdown|stopwatch|pomodoro'` **零命中**（139 Path 计时器空白实锤）→ **新晋候选 P1**。
+   - **V2EX 10-22「PHP2Shell 应急辅助工具 checkphp2shell」**（今日帖；HN 今日 front「Major PHP Vulnerability Leaked」「Upcoming critical PHP security release」热点联动）：输入域名查响应头 PHP 版本暴露、版本阈值核对、php.ini/Nginx/WAF 配置引导 → 域名响应头检查需后端发 HEAD 请求（纯前端 CORS 限制不可做）→ 不立，热点事件观察。
+   - **V2EX 10-15「图片擦除物体和去背景 remox.ai」**：remove.bg 2026-12-01 关闭独立站并入 Canva，背景移除需求窗口期 → 池内 P2「人像背景一键虚化」**补形态验证观察**（WASM on-device AI 抠图形态；WASM vendor 化成本高，维持 P2 不升级）。
+   - **V2EX 10-21「原型托管工具 protohub」**：拖 zip/HTML/文件夹生成固定地址、版本管理 → 需后端存储 → 不立。
+   - **HN 10-21 front**：AI/安全/PHP 漏洞/政治新闻为主，无单页 web 工具形态 → 不立。
+   - **Show HN new（今日）**：Return Ledger（portfolio TWR/XIRR tracker，需后端+AI PDF 导入）不立；RecordRelay（DNS 记录串链玩具，需后端）不立；Tinytowns（随机地名生成器，小众创意、需求弱）不立；ExplAIn（AI 合规分目录）不立。
+   - **知乎/Reddit 需求帖**：知乎返回均为泛站群 SEO 引流站（灰色词代发 spam），Reddit「I wish there was a website」无可消化需求帖 → 本轮空。
+3. 候选池变动：schema_org_generator 已交付划出（094658b，139 Path）；**新晋 1 个**（在线倒计时/番茄钟 P1）；其余新信号均为自有实锤复现或不立。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；schema_org_generator 交付闭环后按顺位递进）：
+
+1. **WiFi 二维码生成器** — P1（65 轮新晋；dev.to 2026-10-08 qrgenrateronline 15 类型形态验证；痛点：来客/店铺/活动现场分享 WiFi 口头报密码易错，现有二维码站多要注册或带水印；纯前端小难度：SSID/加密方式（WPA2/WPA3/无密码）/密码/隐藏网络→`WIFI:T:..;S:..;P:..;;`→二维码＋打印页；效率工具家族；与自有通用二维码互补零重叠；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator）。
+2. **会议邀请 (.ics) 生成器** — P1（63 轮新晋；HN 600pts；痛点：组织会议手动手写 .ics 或在日历 App 里逐个建事件效率低；填表单（标题/时间/地点/参会人/提醒）→生成标准 .ics 下载→邮件/IM 分发；纯前端小难度；效率工具家族；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator）。
+3. **在线倒计时/番茄钟** — P1（69 轮新晋；dev.to ClockAura 2026-10 更新形态验证：现有免费计时站广告多/强制注册/单功能/界面杂乱；作者更新后 190+ 页面、8 语言，需求真实；自有 139 Path 零计时器工具实锤空白；痛点：考试/直播/演讲/做饭计时要干净无广告的工具；倒计时/秒表/番茄钟/闹钟四模式单页＋全屏大字＋结束音效＋预设保存，纯前端小难度；效率工具家族；建议 ID countdown_timer、Path /tools/countdown-timer）。
+
+其余 P1 留池：NAT 类型检测器（64 轮新晋；Show HN NatChecker；零重叠复核；留池）；MBOX 邮件存档查看器（58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（蒙特卡洛部分单轮交付风险高；留池）；屏幕常亮/浏览器实时听写（留池）；年会大屏抽奖（时令预热，11 月）。
+
+**通用候选表增量**（第六十九轮：schema_org_generator 已交付划出（094658b，139 Path）；新晋 1 个；md-to.com→markdown_to_excel 自有复现；free-invoicegen→invoice_generator 自有复现；checkphp2shell 需后端不立＋PHP 漏洞热点观察；全量 139 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 在线倒计时/番茄钟 | 新晋（69 轮；dev.to ClockAura 2026-10 更新形态验证；自有 139 Path「倒计时/番茄/pomodoro/stopwatch」零命中实锤空白；倒计时/秒表/番茄钟/闹钟四模式单页＋全屏大字＋结束音效，纯前端；效率工具家族；建议 ID countdown_timer、Path /tools/countdown-timer） | 小 | P1 |
+| schema_org_generator | 已交付划出（094658b 交付闭环；ID schema_org_generator、Path /tools/schema-org-generator 已注册；全量 139 Path；候选池划出） | — | 已实现 |
+| md-to.com 观察 | 本轮不新立（dev.to 10-16；AI 生成 Markdown 表格→Excel 痛点；自有 markdown_to_excel 实锤复现；作者手写 xlsx writer+fflate 零依赖方案技术观察） | — | 观察 |
+| free-invoicegen 观察 | 本轮不新立（dev.to 10-18；零后端发票生成；自有 invoice_generator 实锤复现） | — | 观察 |
+| checkphp2shell | 本轮不立（V2EX 10-22；PHP2Shell 应急响应头检查；域名 HEAD 请求需后端，纯前端 CORS 不可做；HN 今日 PHP 重大漏洞热点联动观察） | — | 不立 |
+| protohub / Return Ledger / RecordRelay / Tinytowns | 本轮不立（V2EX 10-21 原型托管需后端；Show HN portfolio tracker 需后端+AI；DNS 记录链玩具需后端；随机地名生成器小众需求弱） | — | 不立 |
+
+**归档说明**：本轮为 10-22 通用调研第六十九轮——Schema.org 结构化数据生成器交付闭环（094658b，`/tools/schema-org-generator` 已注册，营销工具品类，全量 139 Path），候选池划出；新信号扫描（dev.to md-to.com Markdown 表格转 Excel＝自有 markdown_to_excel 实锤复现；dev.to free-invoicegen 零后端发票＝自有 invoice_generator 实锤复现；dev.to ClockAura 在线计时器更新→**新晋 P1 在线倒计时/番茄钟**（139 Path 计时器空白实锤）；V2EX checkphp2shell 需后端不立＋PHP 漏洞今日热点观察；V2EX remox.ai→P2 人像背景虚化补验证；V2EX protohub 需后端不立；HN 10-21 front 无工具形态；Show HN new 均为后端/小众形态不立；知乎/Reddit 需求帖 SEO 垃圾无可消化）均已消化；WPS 候选表保持冻结归档；仓库 139 注册工具全量核对无重叠（Top3 建议 ID wifi_qr_generator / meeting_invite_generator / countdown_timer；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮恢复正常（首轮报 host key verification failed，加 StrictHostKeyChecking=no 后成功，github.com 已写入 known_hosts）；`git log` 头部 094658b（schema_org_generator 交付闭环）；`grep tools/categories.go` 全量 139 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-22 19:00 · 产品经理排期轮）
 
 **选定：Schema.org 结构化数据生成器（schema_org_generator）** — 本轮唯一任务（新工具）：
