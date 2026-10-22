@@ -1,0 +1,192 @@
+{{define "big_sign_display"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大字标牌展示器 - 全屏超大字体展示/会议室传话牌/店铺招牌展示（big sign display）| 程序员工具箱</title>
+<meta name="description" content="免费大字标牌展示器（Big Sign Display）：输入文案，单独一行的 --- 分页符切多屏，全屏超大字体自适应字号（短文本巨字、长文自动缩小无溢出），黑底白字/白底黑字/黄底黑字三套高对比主题，镜像翻转适配店面玻璃内向展示，←/→/空格翻页、F 全屏、编辑/展示双模式，会议室传话牌/店铺招牌/活动标语神器，纯前端零上传。Free big sign display: auto-fit giant fullscreen text, multi-page, themes, mirror mode, 100% client-side.">
+<meta name="keywords" content="大字标牌展示器,大字标牌,超大字体展示,会议室传话牌,店铺招牌展示,标语展示屏,电子标牌,传话牌,标语牌,Bigwords,荧光字展示,LED字幕牌,big sign display">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/big-sign-display">
+<meta property="og:title" content="大字标牌展示器 - 全屏超大字体展示/会议室传话牌/店铺招牌">
+<meta property="og:description" content="输入文案，--- 分页符切多屏，全屏超大字体自适应，黑底白字/白底黑字/黄底黑字三套高对比主题，镜像翻转适配店面玻璃，←/→/空格翻页、F 全屏，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/big-sign-display">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"大字标牌展示器","alternateName":"big_sign_display","description":"大字标牌在线展示：输入文案，--- 分页符切多屏，全屏超大字体自适应字号（短文本巨字、长文自动缩小无溢出），黑底白字/白底黑字/黄底黑字三套高对比主题，镜像翻转适配店面玻璃内向展示，←/→/空格翻页＋F 全屏＋编辑/展示双模式，会议室传话牌/店铺招牌/活动标语神器；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/big-sign-display","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.bsd-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.bsd-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.bsd-work{display:grid;grid-template-columns:minmax(380px,1fr) minmax(300px,400px);gap:1.2rem;align-items:start}
+.bsd-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.bsd-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.bsd-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.bsd-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.bsd-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.bsd-field textarea{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.92rem;
+background:#fff;color:#1f2937;width:100%;box-sizing:border-box;resize:vertical;line-height:1.8;font-family:inherit}
+.bsd-field textarea:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.bsd-stats{font-size:.85rem;color:#4b5563;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.bsd-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.bsd-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.bsd-btn .material-icons{font-size:1.1rem}
+.bsd-btn-primary{background:#1d4ed8;color:#fff}
+.bsd-btn-primary:hover{background:#1e40af}
+.bsd-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.bsd-btn-secondary:hover{background:#e5e7eb}
+.bsd-btn:disabled{opacity:.45;cursor:not-allowed}
+.bsd-theme{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem}
+.bsd-theme label{display:inline-flex;align-items:center;gap:.45rem;font-size:.88rem;color:#374151;cursor:pointer;
+border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .8rem;background:#fff}
+.bsd-theme input{width:1.05rem;height:1.05rem;accent-color:#1d4ed8}
+.bsd-theme .sw{display:inline-block;width:1.4rem;height:1.4rem;border-radius:.3rem;border:1px solid #9ca3af;flex:none}
+.bsd-check{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:#374151;margin-bottom:.8rem;cursor:pointer}
+.bsd-check input{width:1.05rem;height:1.05rem;accent-color:#1d4ed8}
+.bsd-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+/* ---- 展示区 ---- */
+#bsd-stage-wrap{background:#0b0e14;border-radius:.8rem;overflow:hidden;border:1px solid #1f2937}
+#bsd-stage-wrap:fullscreen{border-radius:0;border:none}
+#bsd-stage-wrap.is-fullscreen #bsd-bar,#bsd-stage-wrap.is-fullscreen #bsd-hint{display:none}
+#bsd-viewport{position:relative;height:62vh;min-height:420px;display:flex;align-items:center;justify-content:center;
+overflow:hidden;cursor:pointer;padding:4vmin;box-sizing:border-box;user-select:none}
+#bsd-stage-wrap:fullscreen #bsd-viewport{height:100vh;min-height:0}
+#bsd-text{font-weight:900;line-height:1.28;text-align:center;word-break:break-word;max-width:100%;max-height:100%}
+#bsd-floatlabel{position:absolute;top:1rem;right:1.2rem;font-size:.85rem;padding:.3rem .9rem;border-radius:2rem;
+background:rgba(0,0,0,.4);color:#fff;opacity:0;transition:opacity .4s;pointer-events:none;z-index:5}
+#bsd-floatlabel.show{opacity:1}
+#bsd-bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.7rem .9rem;background:#111827;
+border-top:1px solid #1f2937;justify-content:center}
+#bsd-bar .bsd-btn{padding:.5rem 1rem;font-size:.85rem}
+#bsd-pagelabel{color:#e5e7eb;font-size:.9rem;min-width:7em;text-align:center}
+#bsd-hint{font-size:.78rem;color:#6b7280;padding:.5rem .9rem .7rem;background:#111827;line-height:1.8;text-align:center}
+#bsd-hint kbd{background:#1f2937;border:1px solid #374151;border-radius:.3rem;padding:.05rem .4rem;
+font-family:inherit;color:#d1d5db}
+.bsd-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.bsd-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.bsd-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#bsd-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#bsd-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:1100px){.bsd-work{grid-template-columns:1fr}#bsd-viewport{height:60vh;min-height:320px}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">signpost</i> 大字标牌展示器</h1>
+<p>输入文案，--- 分页符切多屏，全屏超大字体自适应展示 —— 会议室传话牌、店铺招牌、活动标语、店面玻璃内向展示的神器：三套高对比主题，镜像翻转，←/→/空格翻页，F 全屏。</p>
+</div>
+<div class="tool-content" style="max-width:1360px;margin:auto;">
+<div class="bsd-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>文案解析、分页、自适应字号、主题渲染、草稿暂存（localStorage）全部在浏览器本地完成，无任何后端请求，文案不出你的电脑，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<!-- 编辑模式 -->
+<div id="bsd-editmode">
+<div class="bsd-work">
+<div>
+<div class="bsd-panel">
+<h3><i class="material-icons">edit_note</i> 展示文案</h3>
+<div class="bsd-field">
+<label>文案内容（单独一行的 --- 为分页符，切为下一屏）</label>
+<textarea id="bsd-input" rows="12" placeholder="在这里输入展示文案…&#10;单独写一行 --- 即切为下一屏。"></textarea>
+</div>
+<div class="bsd-stats" id="bsd-stats">共 0 屏 · 0 字</div>
+<div class="bsd-actions">
+<button type="button" class="bsd-btn bsd-btn-secondary" id="bsd-sample"><i class="material-icons">auto_awesome</i> 载入示例文案</button>
+<button type="button" class="bsd-btn bsd-btn-secondary" id="bsd-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+</div>
+</div>
+
+<div>
+<div class="bsd-panel">
+<h3><i class="material-icons">tune</i> 显示设置</h3>
+<div class="bsd-field"><label>高对比主题</label></div>
+<div class="bsd-theme">
+<label><input type="radio" name="bsd-theme" value="dark" checked><span class="sw" style="background:#000"></span>黑底白字</label>
+<label><input type="radio" name="bsd-theme" value="light"><span class="sw" style="background:#fff"></span>白底黑字</label>
+<label><input type="radio" name="bsd-theme" value="yellow"><span class="sw" style="background:#ffe600"></span>黄底黑字</label>
+</div>
+<label class="bsd-check"><input type="checkbox" id="bsd-mirror"> 镜像翻转（店面玻璃由内向外展示时开启）</label>
+<div class="bsd-actions">
+<button type="button" class="bsd-btn bsd-btn-primary" id="bsd-enter"><i class="material-icons">play_arrow</i> 进入展示</button>
+</div>
+<div class="bsd-caliber">字号按单屏字符数自动计算：短文本显示为全屏巨字，长文自动缩小，保证不溢出；文案、主题、镜像与当前页自动暂存本机，刷新不丢。</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 展示模式 -->
+<div id="bsd-displaymode" style="display:none">
+<div id="bsd-stage-wrap">
+<div id="bsd-viewport" title="点击翻到下一页">
+<div id="bsd-text"></div>
+<div id="bsd-floatlabel"></div>
+</div>
+<div id="bsd-bar">
+<button type="button" class="bsd-btn bsd-btn-secondary" id="bsd-prev"><i class="material-icons">chevron_left</i> 上一页</button>
+<span id="bsd-pagelabel">暂无内容</span>
+<button type="button" class="bsd-btn bsd-btn-secondary" id="bsd-next">下一页 <i class="material-icons">chevron_right</i></button>
+<button type="button" class="bsd-btn bsd-btn-secondary" id="bsd-fs" style="margin-left:auto"><i class="material-icons">fullscreen</i> 全屏</button>
+<button type="button" class="bsd-btn bsd-btn-secondary" id="bsd-back"><i class="material-icons">edit</i> 返回编辑</button>
+</div>
+<div id="bsd-hint">快捷键：<kbd>空格</kbd>/<kbd>→</kbd> 下一页 · <kbd>←</kbd> 上一页 · <kbd>F</kbd> 全屏 · <kbd>Esc</kbd> 返回编辑（全屏时先退出全屏）· 点击展示区也可翻页</div>
+</div>
+</div>
+
+<div class="bsd-panel" style="margin-top:1.2rem">
+<h3><i class="material-icons">tips_and_updates</i> 使用小贴士</h3>
+<div class="bsd-caliber" style="margin-top:0">1）展示前先点「全屏」，标牌独占整个屏幕，控制条自动隐藏，远处看得更清楚；2）店面玻璃想从店内向外展示时，打开「镜像翻转」，外面看到的即为正像；3）黄底黑字在强光/户外可读性最好，室内暗光用黑底白字；4）每屏只放一句话，字才够大——多屏就用 --- 多切几屏，空格/点击连续翻页。</div>
+</div>
+
+<div class="bsd-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="bsd-faq">
+<dt>分页符 --- 怎么用？</dt>
+<dd>在文案中单独写一行 <kbd>---</kbd>（三个连字符，前后可带空格），即切为下一屏。连续多个 --- 不会产生空屏，文案首尾的 --- 会被忽略。每屏字数会实时显示在编辑区统计栏，方便控制每屏长度。</dd>
+<dt>字号是自动计算的吗？</dt>
+<dd>是。字号按单屏有效字符数用面积法估算：短文本显示为全屏巨字，长文本自动缩小；渲染后还会实测是否溢出，溢出则逐级缩小直到收敛，保证任何长度都不出框。窗口缩放、全屏切换后会自动重算。</dd>
+<dt>镜像翻转是做什么的？</dt>
+<dd>给店面玻璃内向展示准备的：把显示器/平板放在玻璃内侧向外展示时，打开镜像翻转，文字水平翻转后，玻璃外看到的即为正像。普通正向展示请保持关闭。</dd>
+<dt>有哪些快捷键？</dt>
+<dd>展示模式下：空格 / → / PageDown 下一页，← / PageUp 上一页，Home 回第一页，End 到最后一页，F 进入/退出全屏，Esc 先退出全屏、再按返回编辑模式。点击展示区也可翻页（末页点回第一页，方便循环展示）。在编辑区输入框里打字时快捷键自动让路。</dd>
+<dt>全屏展示是什么效果？</dt>
+<dd>点「全屏」后展示区独占整个屏幕，底部控制条与提示条自动隐藏，鼠标移动时右上角浮现当前页码、3 秒无操作自动淡出。Esc 退出全屏。</dd>
+<dt>文案会暂存吗？会上传吗？</dt>
+<dd>文案、主题、镜像开关与当前页码自动暂存到本机浏览器 localStorage（tw_big_sign_display_v1），刷新页面不丢，清理浏览器数据会一并清除。本工具纯前端运行，无后端、无网络请求，文案只在你的浏览器里，可打开开发者工具 Network 面板验证。</dd>
+</dl>
+</div>
+
+<div class="bsd-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="bsd-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">大字标牌展示器（当前）</span>
+<a href="/tools/teleprompter" class="btn btn-secondary" style="font-size:.9rem;">在线提词器</a>
+<a href="/tools/subtitle-editor" class="btn btn-secondary" style="font-size:.9rem;">SRT 字幕编辑器</a>
+<a href="/tools/ai-text-cleaner" class="btn btn-secondary" style="font-size:.9rem;">AI 文本清洗工具</a>
+<a href="/tools/text-tools" class="btn btn-secondary" style="font-size:.9rem;">文本工具箱</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="bsd-toast"></div>
+<script src="/tools/static/js/big_sign_display.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,78 @@
+## 今日任务（2026-10-22 16:00 · 产品经理排期轮）
+
+**选定：大字标牌展示器（big_sign_display）** — 本轮唯一任务（新工具）：
+- **顺位**：15:00 研究轮（66 轮）Top1 推荐、首席顺位（mcp_config_doctor 交付闭环后顺位首席）。ac5744c「新增 MCP 服务器配置诊断器」已落盘交付（全量 136 Path，候选池划出），首席顺位正式生效；依惯例「无硬伤不跳过」，本轮排定。
+- **形态族验证**：Show HN Bigwords.page 724pts 形态验证（超大字体全屏展示；66 轮实锤）。
+- **痛点**：会议室/店铺/活动现场远距离传话（举牌喊话的数字化替代；不用打印、不用举手写板）。
+- **零重叠实锤**：`grep -cinE 'big_sign|big-sign|大字标牌|bigword' tools/categories.go` 零命中（本轮复核）；全量 136 Path 中无形态重叠工具；建议 ID `big_sign_display`、Path `/tools/big-sign-display` 未被占用。
+- **轮次匹配**：午后轮次，P1 可排；纯前端小难度（自适应字号渲染＋分页＋主题，全站无同类交互），单轮可高质量交付。
+- **场景归位**：生活工具品类（会议室/店铺/活动现场展示场景）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：视频帧提取器（P1；62 轮新晋→66 轮次席；dev.to tonytoolbox 2026-10-01 FrameExtractor 形态验证；小-中难度，运动扫描部分单轮交付风险略高，顺位次席留池；建议 ID video_frame_extractor、Path /tools/video-frame-extractor）；Schema.org 结构化数据生成器（P1；62 轮新晋；七方独立形态共识；建议 ID schema_org_generator、Path /tools/schema-org-generator；留池三席）；WiFi 二维码生成器（P1；65 轮新晋；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator；留池）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；建议 ID nat_type_detector、Path /tools/nat-type-detector；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留池）；其余候选留池。
+
+**规格**（开发轮按此执行）：
+- 输入：多行文本框输入展示文案；分页符 `---`（或连续空行）切多屏；纯前端零上传。
+- 展示：全屏超大字体展示区；字号随单屏字符数自适应（vw/vh 动态计算，长文自动缩小、短文巨字顶满）；黑底白字/白底黑字/黄底黑字三套高对比主题；镜像翻转开关（店面玻璃内向展示）；上一页/下一页切换（按钮＋←/→/Space 快捷键）；F 键或按钮进入全屏模式；编辑/展示双模式切换。
+- 注册：生活工具品类，新增工具 ID `big_sign_display`、Name「大字标牌展示器」、Path `/tools/big-sign-display`（New: true），中英文描述＋SEO keywords（大字标牌、超大字体展示、会议室传话牌、店铺招牌展示、Bigwords）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `big_sign_display`、Path `/tools/big-sign-display` 注册完整，注册总数 137 Path。
+2. 输入单行短文本→全屏居中巨字显示；输入长文→字号自动缩小以完整显示（无溢出、无滚动）。
+3. 含 `---` 分页符的多段文本→分页切换可用（按钮/←/→/Space）。
+4. 三套主题切换生效；镜像翻转生效；全屏模式可用；编辑/展示双模式可用。
+5. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 40+ 断言全过（自适应字号算法、分页符切分、主题/镜像状态切换、分页导航边界）。
+7. 公网 /tool-web 部署后 QA：/tools/big-sign-display 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID big_sign_display、Path /tools/big-sign-display，生活工具品类，New: true）
+- 新建 `templates/big_sign_display.html`、`static/js/big_sign_display.js`、`tests/big_sign_display.test.js`
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD ac5744c（mcp_config_doctor 交付闭环）与 `origin/muse/dev-20260929` 同步；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常；`grep -cinE 'big_sign|big-sign|大字标牌|bigword'` 零命中（本轮复核），全量 136 Path；工作树 BACKLOG.md 改动待提交（66 轮 15:00 研究轮追加＋本轮，随开发轮次提交，沿用惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-22 15:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。MCP 服务器配置诊断器已交付闭环（`git log` 头部 ac5744c「新增 MCP 服务器配置诊断器」；`grep tools/categories.go` 全量 **136 Path**，候选池对应条目划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 午后轮次，P1 可排。
+
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. mcp_config_doctor 交付确认：`git log` 头部 ac5744c（新增 MCP 服务器配置诊断器：粘贴 Claude Desktop / Cursor / OpenCode 的 mcpServers 配置 JSON，纯前端静态诊断输出分级报告）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常；本地当前分支 muse/dev-20260929；全量 136 Path；候选池划出。
+2. 新信号扫描（本轮新信号均被自有工具覆盖，无新晋）：
+   - **V2EX（2026-10-20）md2chat「贴贴 Markdown」**：AI 回答（Markdown 排版）复制进聊天框格式崩坏（表格竖线暴露/公式露符号/Mermaid 露源码）；形态：左侧 Markdown→智能拆分文字块与表格/代码块/公式/流程图，文字按微信/钉钉/飞书/企微平台语法适配复制，复杂块转图片卡片→ 自查 `tools/categories.go`：自有「Markdown 聊天图文转换器（md2chat）」**实锤复现**（文字版按四平台语法适配＋复杂块 canvas 本地渲染为图片卡片，纯前端零上传）→ 复现不记账；
+   - **dev.to builddiff（2026-10-09）BuildDiff「对比软件构建」**：选两个文件夹→浏览器内递归对比（新增/删除/修改/移动），本地处理不上传→ 自查：自有文件夹对比工具**实锤复现**（递归 diff 两个文件夹，新增/删除/修改/相同高亮，统计，MD/CSV 导出，100% 客户端）；BuildDiff 唯一增量是文件内容级哈希对比（自有仅读文件名/大小/修改时间不读内容）→ 记 **P2 观察**（内容级对比可作为自有文件夹对比器功能增强，不新立工具）；
+   - **dev.to hackgo_6978（2026-10-20）「Redact the Log Before You Send It」**：发日志求助前先脱敏（API key/token/密码/邮箱正则打码，denylist 自定义）→ 自查：自有「AI 提示词脱敏器」（prompt_sanitizer：粘贴代码/日志，浏览器本地正则识别 API Key/JWT/PEM 私钥/Bearer/数据库连接串，可逆占位符＋本地还原）＋「文本隐私脱敏」（手机号/身份证/银行卡/邮箱/IPv4/车牌）**实锤复现**，双工具合围日志脱敏场景→ 复现不记账；
+   - **dev.to lixingliangsy（2026-10-19）ReDoS 检测**：识别嵌套量词等灾难性回溯模式＋timing ladder 长度梯度测试→ 自有正则测试器实锤；ReDoS 检测为 niche 开发者增强→ 记 **P2 观察**（可作为自有正则测试器功能增强，不新立工具）；
+   - **dev.to arnav20007（2026-10-18）ToolForge 浏览器内 ATS 简历评分**：关键词匹配 JD、X-Y-Z bullet 检查、pdfjs 本地解析→ 自查：自有 `resume_checker` **实锤**→ 复现不记账；
+   - **HN 10-11 roundup Show HN: WallHop（279pts）**：12ft.io 关闭后的付费墙绕过替代→ 绕付费墙有合规风险，不立；
+   - **HN 10-09/10-15 roundup**：Tiny Little Office（643pts，document-is-the-link 办公套件，巨型形态非单页工具，不立）；bigarrow（329pts，macOS CLI，非 web，不立）；Rocus 书签 LLM 整理（需后端/AI，不立）；BetterWispr 听写（macOS 桌面应用，非 web，不立）；How random are you（213pts 趣味随机性测试，niche，不立）；Invoice to JSON regex API（需后端/LLM fallback，不立）；
+   - **知乎 2026 工具站搜索**：SEO 垃圾站与去水印营销文为主，无可用信号（OCR/Watermark 均为自有覆盖或需后端/AI）。
+3. 候选池变动：MCP 服务器配置诊断器已交付划出（ac5744c，136 Path）；本轮新信号全为自有实锤复现或不立，无新晋；文件夹内容级哈希对比记自有文件夹对比器增强观察；ReDoS 检测记自有正则测试器增强观察；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序）：
+
+1. **大字标牌展示器** — P1（64 轮新晋；Show HN Bigwords.page 724pts 形态验证；mcp_config_doctor 交付闭环后顺位首席；纯前端小难度；与站内零重叠；建议 ID big_sign_display、Path /tools/big-sign-display）。
+2. **视频帧提取器** — P1（62 轮新晋→64 轮次席；dev.to tonytoolbox 2026-10-01 FrameExtractor 形态验证：浏览器原生解码＋seek，等间隔抽帧/精确抓帧/运动扫描，零 ffmpeg 零上传；纯前端小-中难度；建议 ID video_frame_extractor、Path /tools/video-frame-extractor）。
+3. **Schema.org 结构化数据生成器** — P1（62 轮新晋；七方独立形态共识；选类型→表单填字段→实时生成 JSON-LD→一键复制；纯前端小难度；营销工具家族归位；建议 ID schema_org_generator、Path /tools/schema-org-generator）。
+
+WiFi 二维码生成器（P1；65 轮新晋；qrgenrateronline 15 类型形态验证；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator；留池）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留池）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；文件夹内容级哈希对比/ReDoS 检测（P2 本轮新晋增强观察；分别记自有文件夹对比器/正则测试器增强）；文本提取器（P2；65 轮新晋）；URL Slug 生成器（P2；65 轮新晋）；番茄钟专注计时器（P2；63 轮新晋；方向边界观察）；本地 LLM 硬件检测器/应用商店截图生成器（P2；65 轮新晋；niche）；SQLite 数据库查看器（P2；62 轮新晋；sql.js WASM vendor 风险）；SEO 日志分析器（P2；62 轮新晋；SEO niche）；8D 环绕声转换器/BPM 调性检测器（P2 观察）；System Prompt 构建器（P2 观察）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴/社交媒体文案长度检查器（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第六十六轮：MCP 服务器配置诊断器已交付划出（ac5744c，136 Path）；md2chat＝自有「Markdown 聊天图文转换器」实锤/文件夹对比＝自有实锤（内容级哈希对比记增强观察）/日志脱敏＝prompt_sanitizer＋text_privacy_masker 双实锤/ATS 简历评分＝resume_checker 实锤；ReDoS 检测记自有正则测试器增强观察；WallHop（付费墙绕过）/Tiny Little Office（巨型形态）/Rocus（需后端）/BetterWispr（桌面应用）/Invoice API（需后端）/随机性测试（niche）均不立；无新晋候选；全量 136 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| MCP 服务器配置诊断器 | 已交付划出（ac5744c 交付闭环；ID mcp_config_doctor、Path /tools/mcp-config-doctor 已注册；全量 136 Path；候选池划出） | — | 已实现 |
+| 文件夹内容级哈希对比（增强观察） | 本轮 P2 观察（dev.to BuildDiff 2026-10-09 增量：文件内容级哈希对比；自有文件夹对比器仅读文件名/大小/修改时间不读内容；可作为功能增强，不新立工具） | 小 | P2 观察 |
+| ReDoS 检测（增强观察） | 本轮 P2 观察（dev.to lixingliangsy 2026-10-19 增量：嵌套量词模式识别＋timing ladder；自有正则测试器实锤；可作为功能增强，不新立工具） | 小 | P2 观察 |
+
+**归档说明**：本轮为 10-22 通用调研第六十六轮——MCP 服务器配置诊断器交付闭环（ac5744c，`/tools/mcp-config-doctor` 已注册，开发工具品类，全量 136 Path），候选池划出；新信号扫描（V2EX 10-20 md2chat＝自有实锤复现；dev.to 10-09 BuildDiff＝自有文件夹对比器实锤＋内容级哈希对比记增强观察；dev.to 10-20 日志脱敏＝prompt_sanitizer＋text_privacy_masker 双实锤复现；dev.to 10-19 ReDoS＝自有正则测试器增强观察；dev.to 10-18 ATS＝resume_checker 实锤；HN 10-09~10-20 roundup：WallHop/Tiny Little Office/bigarrow/Rocus/BetterWispr/Invoice API/How random are you 均不立；知乎搜索无可用信号）均已消化；WPS 候选表保持冻结归档；仓库 136 注册工具全量核对无重叠（Top3 建议 ID big_sign_display / video_frame_extractor / schema_org_generator；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常；`git log` 头部 ac5744c（mcp_config_doctor 交付闭环）；`grep tools/categories.go` 全量 136 Path（`mcp_config_doctor` ID 与 `/tools/mcp-config-doctor` Path 已注册，划入已实现）；本轮仅 md2chat/BuildDiff/日志脱敏/ATS 实锤复现（ID 片段双核零新增），无新晋 ID；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-22 13:55 · 产品经理排期轮）
 
 **选定：MCP 服务器配置诊断器（mcp_config_doctor）** — 本轮唯一任务（新工具）：

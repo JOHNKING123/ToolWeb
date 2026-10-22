@@ -1185,6 +1185,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "big_sign_display",
+					Name:        "大字标牌展示器",
+					Description: "大字标牌在线展示：输入文案，--- 分页符切多屏，全屏超大字体自适应字号（短文本巨字、长文自动缩小无溢出），黑底白字/白底黑字/黄底黑字三套高对比主题，镜像翻转适配店面玻璃内向展示，←/→/空格翻页＋F 全屏＋编辑/展示双模式，会议室传话牌/店铺招牌/活动标语神器，纯前端零上传 · Big sign display: auto-fit giant fullscreen text, multi-page, high-contrast themes, mirror mode, 100% client-side",
+					Path:        "/tools/big-sign-display",
+					Icon:        "signpost",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
