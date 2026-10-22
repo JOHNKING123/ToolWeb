@@ -110,11 +110,18 @@ function pomoModeDurationSec(mode, focusMin, shortMin, longMin) {
 
 /* ---------- 5. 闹钟 ---------- */
 /* alarmNextTs(hour, min, repeat, nowMs)：返回下一个触发时间戳（毫秒）
- * repeat: daily | weekdays | once。nowMs 可注入便于测试。 */
+ * repeat: daily | weekdays | once。nowMs 可注入便于测试。
+ * once 为“仅一次”：只看今天，今天时间已过 → 返回 null。 */
 function alarmNextTs(hour, min, repeat, nowMs) {
   hour = clampNum(hour, 0, 0, 23); min = clampNum(min, 0, 0, 59);
   nowMs = (nowMs == null) ? Date.now() : nowMs;
   var now = new Date(nowMs);
+  if (repeat === "once") {
+    /* “仅一次”只针对今天：今天时间未到 → 今天触发；已过 → 返回 null 不再排期 */
+    var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+      hour, min, 0, 0).getTime();
+    return t0 > nowMs ? t0 : null;
+  }
   var dayOffset = 0;
   if (repeat === "weekdays") {
     /* 找下一个工作日（含今天） */
@@ -501,13 +508,15 @@ function pomoTick() {
   if (rem <= 0) { pomoPhaseDone(); return; }
   pomoRender();
 }
-function pomoPhaseDone() {
+/* completed：true=自然完成（统计/轮次照常），false=跳过（不计入今日番茄） */
+function pomoPhaseDone(completed) {
+  completed = (completed !== false);
   pomoStopTimer();
   var finished = pomo.mode;
   var nx = pomoNext(pomo.mode, pomo.cyclesCompleted, pomo.cyclesBeforeLong);
   pomo.mode = nx.mode;
   pomo.cyclesCompleted = nx.cyclesCompleted;
-  if (finished === "focus") {
+  if (completed && finished === "focus") {
     pomo.todayDone++;
     pomoSaveDaily();
   }
@@ -516,15 +525,18 @@ function pomoPhaseDone() {
   pomo.remainingMs = pomoDurationMs();
   pomoRender();
   restoreDocTitle();
-  var msg = finished === "focus"
-    ? "🍅 专注完成，休息一下！"
+  var msg = !completed ? "已跳过本阶段"
+    : finished === "focus" ? "🍅 专注完成，休息一下！"
     : "✅ 休息结束，开始下一个专注吧！";
   showToast(msg);
+  /* 阶段完成后自动开始下一阶段（默认开启，可取消勾选） */
+  var autoBox = $("ct-pomo-auto");
+  if (autoBox && autoBox.checked) pomoStart();
 }
 function pomoSkip() {
   if (pomo.state === "idle") return;
   pomoStopTimer();
-  pomoPhaseDone();
+  pomoPhaseDone(false);
 }
 function pomoReset() {
   stopBlink();
@@ -579,6 +591,9 @@ function alarmRender() {
 function alarmReschedule() {
   if (!alarm.enabled) { alarm.nextTs = null; return; }
   alarm.nextTs = alarmNextTs(alarm.hour, alarm.min, alarm.repeat, Date.now());
+  if (alarm.nextTs === null && alarm.repeat === "once") {
+    showToast("设定时间已过，请选择未来的时间");
+  }
 }
 function alarmCheck() {
   if (!alarm.enabled || alarm.ringing || !alarm.nextTs) return;
