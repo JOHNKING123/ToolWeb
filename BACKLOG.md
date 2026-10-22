@@ -1,3 +1,34 @@
+## 今日任务（2026-10-22 11:53 · 产品经理排期轮）
+
+**选定：CSS 转 Tailwind 转换器交付闭环（css_to_tailwind）** — 本轮唯一任务（不开新工具）：
+- **顺位**：08:23 PM 轮已按「无硬伤不跳过」惯例选定续做 css_to_tailwind WIP（b899165 未完成自测/提交流程），并由 2f5c67e 排期提交（含代码压缩器↔CSS转Tailwind 双向互链补齐）；64 轮（09:00）研究轮 Top3（MCP 服务器配置诊断器/视频帧提取器/Schema.org 结构化数据生成器）＋64 轮新晋 P1（大字标牌展示器、NAT 类型检测器）均为排期建议，定序权归本 PM 决策轮。本轮核实 WIP 本体已落实盘：`node --test tests/css_to_tailwind.test.js` 180/180 断言全过（覆盖 v3/v4 差异 27 处媒体查询/版本断言），脚本与模板零 fetch/XHR，135 Path 注册完整（ID css_to_tailwind、Path /tools/css-to-tailwind），双向互链 grep 实锤（css_to_tailwind.html→/tools/code-minifier、code_minifier.html→/tools/css-to-tailwind），工作树仅 BACKLOG.md 改动待提交、`git fetch` 本轮恢复正常（03:10 以来 access rights 故障解除，HEAD=origin/muse/dev-20260929=2f5c67e）。结论：WIP 续做内容已实质完成，剩余工作为交付闭环（自测确认→构建→/tool-web 部署→公网 QA）；跳开新工具将造成续做断层，故本轮唯一任务定为交付闭环，不排新工具。
+- **未选**：MCP 服务器配置诊断器（P1；62 轮新晋→63 轮首席→64 轮首席顺位递进；dev.to 2026-10-19 mcp-doctor 形态验证；建议 ID mcp_config_doctor、Path /tools/mcp-config-doctor；本任务闭环后首席备选）；视频帧提取器（P1；62 轮新晋→64 轮次席；建议 ID video_frame_extractor、Path /tools/video-frame-extractor；留池）；Schema.org 结构化数据生成器（P1；62 轮新晋→64 轮三席；建议 ID schema_org_generator、Path /tools/schema-org-generator；留池）；大字标牌展示器（P1；64 轮新晋；Show HN Bigwords.page 724pts；建议 ID big_sign_display、Path /tools/big-sign-display；下顺位首席）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；建议 ID nat_type_detector、Path /tools/nat-type-detector；下顺位次席）；会议邀请 (.ics) 生成器（P1；63 轮新晋；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；留池）；其余候选留池。
+
+**规格**（开发/部署轮按此执行；基于 2f5c67e 续做）：
+- 先行核对：`grep tools/categories.go` 确认 ID `css_to_tailwind`、Path `/tools/css-to-tailwind` 注册（开发工具品类、New: true、中英文描述＋SEO keywords），注册总数 135 Path；`node --test tests/css_to_tailwind.test.js` 180/180 断言现状复核，任一失败则按失败项补齐断言/修代码。
+- 功能自测（浏览器/构建后本地服务）：粘贴含 margin/padding/颜色/字号/圆角/flex 的 CSS，逐条核对命名工具类映射（16px→p-4、#3b82f6→bg-blue-500、display:flex→flex）；width:137px、clip-path 等输出任意值语法 w-[137px]/[clip-path:...]；无法映射项输出原声明＋行内注释；v3/v4 切换输出按版本差异调整；媒体查询块输出 sm:/md: 前缀变体；实时双栏预览、HTML 渲染预览、一键复制、下载 .txt 逐项可用；确认互链双向可点（/tools/css-to-tailwind ↔ /tools/code-minifier）。
+- 隐私：纯前端零上传（已确认脚本内零 fetch/XHR；Network 抽查无内容外发）。
+- 部署：走 ~/workspace/deploy/toolweb/deploy.sh 部署到 Muse VM /tool-web（开发版；绝不碰 VPS /tools 生产版、不碰 master）。
+- SEO 面板按家族标准复核配齐（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_to_tailwind`、Path `/tools/css-to-tailwind` 注册完整，注册总数 135 Path。
+2. 自测核对：粘贴含 margin/padding/颜色/字号/圆角/flex 的 CSS，输出命名工具类逐条对应正确（16px→p-4、#3b82f6→bg-blue-500、display:flex→flex）。
+3. width:137px、clip-path 等输出任意值语法 w-[137px]/[clip-path:...]；无法映射项输出原声明＋行内注释。
+4. v3/v4 切换后输出按版本差异调整；媒体查询块输出 sm:/md: 前缀变体；实时预览、复制、下载可用；与代码压缩器双向互链可点。
+5. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 180 断言全过（声明解析、间距/颜色/字号/圆角/flex 映射、色板精确匹配、任意值兜底、注释提示、v3/v4 差异、媒体查询前缀）。
+7. 公网 /tool-web 部署后 QA：https://www.it-tool.eu.cc/tools/css-to-tailwind 200、无 /tools 残留链接、JS 200 加载。
+
+**预计改动文件**：
+- 视自测结果：`templates/css_to_tailwind.html`、`static/js/css_to_tailwind.js`、`tests/css_to_tailwind.test.js`（2f5c67e 已落盘，仅按自测/评审缺口补齐）
+- 视需要：`tools/categories.go`（注册/互链补齐）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交；64 轮 09:00 研究轮 37 行追加随开发轮次一并提交，沿用惯例）
+
+**交付核对**：本地 HEAD 2f5c67e 与 `origin/muse/dev-20260929` 同步；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮恢复正常（59/60/61/63/64 轮故障后恢复，64 轮研究轮的「仍异常」结论已被本轮实测推翻，后续轮次可恢复常规 fetch 流程）；工作树仅 BACKLOG.md 未提交（37 行，09:00 研究轮 64 轮追加，随开发轮次提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-22 08:23 · 产品经理排期轮）
 
 **选定：继续完成 CSS 转 Tailwind 转换器（css_to_tailwind）** — 本轮唯一任务（b899165 WIP 续做，不开新工具）：
@@ -8748,3 +8779,40 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 
 ## 待修 Bug（2026-10-21 12:20 浏览器冒烟补测发现）
 - **提词器 Esc 退出全屏失效**：真机冒烟发现按 Esc 三次均无法退出全屏，疑似 CSS 伪全屏未自行处理 Esc（页面 FAQ 却写明「Esc：退出全屏（浏览器原生行为）」——若用的是 Fullscreen API，Esc 应由浏览器原生退出；现疑实现为伪全屏，需核实并修复：要么改用 Fullscreen API，要么在伪全屏里自行监听 Esc 退出，并修正 FAQ 描述）。不影响回滚判定（核心播放功能正常），列为下轮优先小修。
+
+## 今日任务（2026-10-22 09:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。CSS 转 Tailwind 转换器仍在开发中（本地 HEAD 2f5c67e，PM 轮续做 b899165 WIP；`grep tools/categories.go` 全量 **135 Path**，候选池对应条目划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:00 上午轮次，P1 可排。
+
+**本轮三件事**（09:00 全网调研，通用方向）：
+1. css_to_tailwind 开发中确认：`git log` 头部 2f5c67e（排期 2026-10-21：08:23 PM 决策轮续做 CSS 转 Tailwind WIP＋补代码压缩器双向互链）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮仍异常（`Permission denied (publickey)`，与 59/60/61/63 轮同故障模式；分支 muse/dev-20260929 未动，仓库读取以本地为准；开发轮次需复核网络与密钥）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 135 Path；候选池划出。
+2. 新信号扫描：
+   - **Show HN: Bigwords.page（HN 724 points，2026-10-12 roundup）「Turn any screen into a sign. The URL is the app」**：往 URL 里塞文字→打开即全屏巨字标牌；痛点：机场举牌接人/会议室门口「开会中」/直播间「SOLD OUT」/家门口「宝宝睡觉请勿敲门」——需要一个「从远处一眼看清」的临时字牌，现有方案要装 App 或手写纸牌；纯前端微难度（输入框→全屏巨字展示，字号/颜色/背景/闪烁可调，文本编码进 URL hash 可分享直达）；站内零覆盖（`grep -cinE 'bigwords|大字显示|大屏文字|LED字幕|跑马灯|字幕牌|标牌|字牌|signboard'` categories.go＋全量模板**全零命中**；提词器为滚动朗读形态，字牌为静态远读形态，形态不同）→ 本轮记 **P1 新晋「大字标牌展示器」**（建议 ID `big_sign_display`、Path `/tools/big-sign-display`）；
+   - **Show HN: NatChecker（HN 近期）「free online NAT type detector, runs entirely in your browser using WebRTC and public STUN servers」**：一键检测 NAT 类型（Full Cone/Restricted/Port Restricted/Symmetric≈NAT1/2/3）；痛点：游戏联机/P2P 打洞/PCDN 场景下 Symmetric NAT 导致连不上，用户不知道自己是哪类 NAT；纯前端小难度（WebRTC ICE 候选收集＋公共 STUN，结果映射 NAT 类型＋联机建议）；网络工具家族归位（my_ip/ip_lookup/port_scan/dns_lookup/ssl_check 同族）；站内零覆盖（`nat|NAT` 全量 135 注册仅 regex-explainer 的 coordinate、nation、signature 等误命中，真实 NAT 工具零命中）→ 本轮记 **P1 新晋「NAT 类型检测器」**（建议 ID `nat_type_detector`、Path `/tools/nat-type-detector`）；
+   - **Show HN: BlurFaces（HN 近期）「one-tap face blurring in the browser, no upload」**：拖照片→自动检测全部人脸→一键模糊，支持单张脸开关＋模糊强度；痛点：发家庭照/闲置物品上架图/截图时不想暴露他人身份，手动打码逐张框选费时；站内 img_mosaic 为手动框选马赛克（描述含「遮车牌人脸手机号」但为手动），自动人脸检测零覆盖（`grep -cinE '人脸|face|face-api|blazeface'` categories.go 仅 json_to_types 的 interface 误命中＋img_mosaic 描述）；中难度：face-api.js TinyFaceDetector 模型 vendor（约 190KB，首次加载下载模型，后续纯本地）→ 本轮记 **P2 新晋「一键人脸模糊」**（建议 ID `face_blur`、Path `/tools/face-blur`）；
+   - **dev.to TheTextKit（30 browser text tools）：Extract Emails / Extract URLs**：粘贴长文本→正则提取邮箱/手机号/链接列表；痛点：从聊天记录/简历/网页复制的大段文本里抠联系方式；站内文本工具集仅字数统计/去重/排序/大小写转换，提取类零覆盖；纯前端微难度（正则＋分类列表＋一键复制）→ 本轮记 **P2 新晋「联系信息提取器」**（建议 ID `contact_info_extractor`、Path `/tools/contact-info-extractor`）；
+   - **复现不记账**：Medium Vikram Singh 2026-10-19 Modifyle「exact KB 压缩二分查找」＝自有 `img_target_kb` 实锤（static/js/img_target_kb.js 内 binary/二分 8 处命中）→ 复现不记账；KeptTools「JSON converter（CSV/Laravel/TypeScript/PHP）」＝自有 `json_to_types` 实锤（TS＋Go 双语言覆盖）→ 复现不记账（PHP 增量不构成新工具）；TheTextKit 其余 28 项＝文本工具集/JSON/正则/diff 自有实锤，GPA 计算器＝10-18 方向下不立；dev.to pyfile-toolkit 13 tools / RVUtils 13 tools / VelnoxLabs 51 tools / SmartTools 79 tools / Toolbit 20+ tools＝逐项自查均为自有已实现实锤（JSON/Base64/JWT/UUID/正则/hash/二维码/颜色/Markdown/时间戳/时区/cron）→ 复现不记账；xyzconverter「7 Browser Tools That Replace Paid Software」：PDF merge/split/compress/rotate/watermark＝自有实锤，OCR＝低优先不立，QR＝自有实锤；Tooliest PDF suite：password protect＝自有 `pdf_encrypt` 实锤，page reorder＝自有 `pdf_manage` 实锤（描述「PDF 旋转/删页/调序/提取单页」）→ 复现不记账；FocusBox timeboxing＝番茄钟 P2 已在池→ 复现不记账；
+   - **不立**：Whistle「Speech to Text in 16.9MB」（HN 954 pts）→ 需 AI 模型下载，WPS 规则延续低优先不立；ArkhamMirror ACH（CIA 竞争假设分析 8 步法）→ 情报分析 niche 过窄，且决策分析家族已有 AHP 层次分析法 P2 占位，不立；Gridpaper（gnuplot WASM 图形编辑器）→ 重型编辑器形态非单页小工具，不立；big-arrow（macOS CLI）→ 非单页形态不立（53 轮已消化）；V2EX 本轮搜索无有效工具需求信号。
+3. 候选池变动：CSS 转 Tailwind 转换器开发中划出（2f5c67e，135 Path）；大字标牌展示器 P1 新晋（Show HN Bigwords.page 724pts 形态验证＋URL即应用形态新颖＋零覆盖；去重核稿：中文名＋ID 片段双核零命中，可复现）；NAT 类型检测器 P1 新晋（Show HN NatChecker 形态验证＋网络工具家族归位＋零覆盖；去重核稿：误命中排除后零命中，可复现）；一键人脸模糊 P2 新晋（Show HN BlurFaces 形态验证＋自动检测vs手动马赛克差异化＋模型 vendor 风险→P2）；联系信息提取器 P2 新晋（TheTextKit 形态验证＋文本工具集提取类空白＋微难度）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；顺位递进逻辑沿用 63 轮：62 轮新晋三席依次递进；本轮两新晋 P1 列下顺位）：
+
+1. **MCP 服务器配置诊断器** — P1（62 轮新晋→63 轮首席，顺位递进；dev.to 2026-10-19 mcp-doctor 形态验证：粘贴配置 JSON→分级诊断报告（mcpServers 拼写/command/args/url 校验/npx 包名缺失/env 未定义/重复条目）；痛点：MCP 配置静默失败排错靠肉眼；用户本人 MCP 重度用户共鸣强；纯前端小难度；开发者工具家族归位；与站内零重叠；建议 ID mcp_config_doctor、Path /tools/mcp-config-doctor）。
+2. **视频帧提取器** — P1（62 轮新晋→63 轮次席，顺位递进；dev.to tonytoolbox 2026-10-01 FrameExtractor 形态验证：浏览器原生解码＋seek，等间隔抽帧/精确抓帧/运动扫描，零 ffmpeg 零上传；痛点：做视频封面/找关键帧要装软件或上传视频；纯前端小-中难度；视频创作者工具矩阵归位；与站内零重叠；建议 ID video_frame_extractor、Path /tools/video-frame-extractor）。
+3. **Schema.org 结构化数据生成器** — P1（62 轮新晋→63 轮三席，顺位递进；七方独立形态共识；选类型→表单填字段→实时生成 JSON-LD→一键复制；痛点：手写 schema.org 语法繁琐易错；营销工具家族归位；纯前端小难度；与站内零重叠；建议 ID schema_org_generator、Path /tools/schema-org-generator）。
+
+大字标牌展示器（P1；本轮新晋；Show HN Bigwords.page 724pts「URL is the app」形态验证；纯前端微难度；生活效率家族；下顺位首席）；NAT 类型检测器（P1；本轮新晋；Show HN NatChecker 形态验证：WebRTC＋公共 STUN 一键检测；网络工具家族；下顺位次席）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts 形态验证；效率办公家族；顺位待 PM 定序）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留池）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；一键人脸模糊（P2 本轮新晋；模型 vendor 风险）；联系信息提取器（P2 本轮新晋；微难度文本小工具）；番茄钟专注计时器（P2；63 轮新晋；方向边界观察）；SQLite 数据库查看器（P2；62 轮新晋；sql.js WASM vendor 风险）；SEO 日志分析器（P2；62 轮新晋；SEO niche）；8D 环绕声转换器/BPM 调性检测器（P2 观察）；System Prompt 构建器（P2 观察）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴/社交媒体文案长度检查器（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第六十四轮：CSS 转 Tailwind 转换器开发中划出（2f5c67e，135 Path）；大字标牌展示器/NAT 类型检测器 P1 新晋；一键人脸模糊/联系信息提取器 P2 新晋；复现不记账＝Modifyle exact-KB 二分（img_target_kb 自有实锤）/KeptTools JSON 转换（json_to_types 自有实锤）/TheTextKit 余项（文本工具集自有实锤）/pyfile-toolkit·RVUtils·VelnoxLabs·SmartTools·Toolbit（全自有实锤）/xyzconverter（PDF/QR 自有实锤＋OCR 不立）/Tooliest（pdf_encrypt/pdf_manage 自有实锤）/FocusBox（番茄钟 P2 已在池）；不立＝Whistle 语音转文字（需 AI 模型）/ACH（niche＋AHP 占位）/Gridpaper（重型形态）/big-arrow（非单页）；全量 135 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 转 Tailwind 转换器 | 开发中划出（2f5c67e 续做 WIP；ID css_to_tailwind、Path /tools/css-to-tailwind 已注册；全量 135 Path；待 PM/开发轮闭环） | — | 开发中 |
+| 大字标牌展示器 | 本轮 P1 新晋（Show HN Bigwords.page，HN 724pts：「Turn any screen into a sign. The URL is the app」；痛点：机场举牌接人/会议室「开会中」门牌/直播「SOLD OUT」/「宝宝睡觉请勿敲门」——需要远处一眼看清的临时字牌，现有方案要装 App 或手写纸牌；纯前端微难度：输入→全屏巨字（字号/颜色/背景/闪烁可调），文本编码进 URL hash 可分享直达；提词器为滚动朗读形态零重叠；建议 ID big_sign_display、Path /tools/big-sign-display） | 微-小 | P1（64 轮新晋） |
+| NAT 类型检测器 | 本轮 P1 新晋（Show HN NatChecker：WebRTC＋公共 STUN 一键检测 NAT 类型；痛点：游戏联机/P2P 打洞/PCDN 场景 Symmetric NAT 导致连不上却不知自己是哪类；纯前端小难度：WebRTC ICE 候选收集→NAT 类型映射＋联机建议；网络工具家族归位（my_ip/ip_lookup/port_scan/dns_lookup/ssl_check）；建议 ID nat_type_detector、Path /tools/nat-type-detector） | 小 | P1（64 轮新晋） |
+| 一键人脸模糊 | 本轮 P2 新晋（Show HN BlurFaces：拖照片→自动检测全部人脸→一键模糊，单张脸开关＋强度可调；痛点：发家庭照/闲置上架图/截图不想暴露他人身份，手动框选打码费时；img_mosaic 为手动框选，自动检测零覆盖；face-api.js TinyFaceDetector 模型 vendor 约 190KB→P2） | 中 | P2（64 轮新晋） |
+| 联系信息提取器 | 本轮 P2 新晋（dev.to TheTextKit Extract Emails/URLs 形态验证；痛点：从聊天记录/简历/复制网页的大段文本里抠邮箱/手机号/链接；纯前端微难度：正则分类提取＋列表＋一键复制；文本工具集提取类空白；建议 ID contact_info_extractor、Path /tools/contact-info-extractor） | 微-小 | P2（64 轮新晋） |
+
+**归档说明**：本轮为 10-22 通用调研第六十四轮——CSS 转 Tailwind 转换器开发中（2f5c67e，`/tools/css-to-tailwind` 已注册，全量 135 Path），候选池划出，已实现清单 delta 追加；新信号扫描（Show HN Bigwords.page 724pts→大字标牌展示器 P1 新晋（URL即应用形态＋远读字牌痛点＋零覆盖）；Show HN NatChecker→NAT 类型检测器 P1 新晋（WebRTC＋STUN 纯前端＋网络工具家族归位＋误命中排除后零覆盖）；Show HN BlurFaces→一键人脸模糊 P2 新晋（自动检测差异化＋模型 vendor 风险）；dev.to TheTextKit→联系信息提取器 P2 新晋（文本工具集提取类空白）；复现不记账→Modifyle exact-KB＝img_target_kb 自有实锤/KeptTools JSON 转换＝json_to_types 自有实锤/TheTextKit 余项＝文本工具集自有实锤/5 家工具站清单＝全自有实锤/xyzconverter＝PDF·QR 自有实锤＋OCR 不立/Tooliest＝pdf_encrypt·pdf_manage 自有实锤/FocusBox＝番茄钟 P2 已在池；不立→Whistle 语音转文字（需 AI 模型）/ACH（niche＋AHP P2 占位）/Gridpaper（重型形态）/big-arrow（非单页形态）；V2EX 本轮无有效信号）均已消化；WPS 候选表保持冻结归档；仓库 135 注册工具全量核对无重叠（Top3 建议 ID mcp_config_doctor / video_frame_extractor / schema_org_generator＋本轮新晋 big_sign_display / nat_type_detector / face_blur / contact_info_extractor；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮仍异常（Permission denied (publickey)，与 59/60/61/63 轮同故障模式；后续 PM/开发轮次需复核网络与密钥）；`git log` 头部 2f5c67e（css_to_tailwind WIP 续做）；`grep tools/categories.go` 全量 135 Path（`css_to_tailwind` ID 与 `/tools/css-to-tailwind` Path 已注册，划入开发中）；Top3 建议 ID（mcp_config_doctor / video_frame_extractor / schema_org_generator）与本轮新晋 ID（big_sign_display / nat_type_detector / face_blur / contact_info_extractor）与 135 Path 无重叠（关键词核对全零命中，NAT 误命中已排除）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
