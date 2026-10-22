@@ -1,0 +1,212 @@
+{{define "schema_org_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schema.org 结构化数据生成器 - JSON-LD 在线生成，SEO 富媒体 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Schema.org 结构化数据生成器：12 类 Schema 类型表单向导（文章、产品、菜谱、活动、FAQ、面包屑、组织、本地商家、招聘、软件、视频、网站搜索框），必填项逐字段校验内联定位，右侧 JSON-LD 实时高亮预览，一键复制、下载 .json、下载 HTML 片段，支持多类型 @graph 堆叠，纯前端本地生成零上传。">
+    <meta name="keywords" content="结构化数据生成器,JSON-LD 生成,Schema.org,SEO 优化,schema markup,富媒体搜索结果,FAQ schema,Product schema,Recipe schema,Event schema,BreadcrumbList,JobPosting,结构化数据在线,json-ld 生成器,SEO工具,营销工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/schema-org-generator">
+    <meta property="og:title" content="Schema.org 结构化数据生成器 - JSON-LD 在线生成">
+    <meta property="og:description" content="12 类 Schema 类型表单向导，必填校验内联定位，JSON-LD 实时预览，一键复制/下载，支持 @graph 多类型堆叠，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/schema-org-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Schema.org 结构化数据生成器","description":"12 类 Schema 类型表单向导：必填项逐字段校验内联定位，JSON-LD 实时高亮预览，一键复制/下载 .json/下载 HTML 片段，多类型 @graph 堆叠，纯前端本地生成零上传。","url":"https://www.johnkingzcq123.xyz/tools/schema-org-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sog-wrap .container { max-width: 1380px; margin: 0 auto; padding: 2rem 1.2rem; }
+        .sog-wrap h1 { font-size: 1.6rem; margin: 0 0 .4rem; color: #111827; }
+        .sog-intro { color: #6b7280; font-size: .95rem; margin: 0 0 1.2rem; line-height: 1.8; }
+        .sog-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .sog-privacy .sog-lock { font-size: 1.6rem; flex: none; }
+        .sog-main { display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1.05fr); gap: 1rem; margin-bottom: 1rem; align-items: start; }
+        .sog-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem; }
+        .sog-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .45rem; }
+        .sog-panel h3 .sog-tag { font-size: .72rem; font-weight: 400; color: #6b7280; background: #f3f4f6; border-radius: .35rem; padding: .1rem .5rem; }
+        /* 左侧标签页 */
+        .sog-tabs-head { display: flex; gap: .4rem; margin-bottom: .6rem; }
+        .sog-link { background: none; border: none; color: var(--primary-color); font-size: .8rem; cursor: pointer; padding: 0; }
+        .sog-link:hover { text-decoration: underline; }
+        #sog-tabs { display: flex; flex-direction: column; gap: .35rem; max-height: 640px; overflow-y: auto; }
+        .sog-tab { display: flex; align-items: center; gap: .55rem; padding: .55rem .7rem; border: 1px solid #e5e7eb;
+            border-radius: .55rem; cursor: pointer; transition: all .15s; background: #fff; }
+        .sog-tab:hover { border-color: #93c5fd; background: #f8fbff; }
+        .sog-tab-active { border-color: var(--primary-color); background: #eff6ff; box-shadow: 0 0 0 1px var(--primary-color); }
+        .sog-check input { width: 1rem; height: 1rem; accent-color: var(--primary-color); cursor: pointer; }
+        .sog-tab-main { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+        .sog-tab-icon { font-size: 1.05rem; flex: none; }
+        .sog-tab-label { font-size: .9rem; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sog-tab-err { color: #ef4444; font-size: .7rem; flex: none; }
+        /* 中部表单 */
+        .sog-form-head h2 { margin: 0 0 .3rem; font-size: 1.15rem; color: #111827; }
+        .sog-form-desc { color: #6b7280; font-size: .85rem; margin: 0 0 .8rem; line-height: 1.7; }
+        .sog-form-tools { display: flex; gap: .5rem; margin-bottom: .8rem; }
+        .sog-field { margin-bottom: .85rem; }
+        .sog-label { display: block; font-size: .88rem; font-weight: 600; color: #374151; margin-bottom: .35rem; }
+        .sog-req { color: #ef4444; font-weight: 700; }
+        .sog-input { width: 100%; box-sizing: border-box; padding: .55rem .7rem; font-size: .9rem; color: #111827;
+            border: 1px solid #d1d5db; border-radius: .5rem; background: #f9fafb; font-family: inherit; }
+        .sog-input:focus { outline: none; border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        textarea.sog-input { resize: vertical; line-height: 1.6; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; }
+        .sog-hint { color: #9ca3af; font-size: .78rem; margin-top: .3rem; line-height: 1.6; }
+        .sog-err { color: #dc2626; font-size: .8rem; margin-top: .3rem; min-height: 0; line-height: 1.6; }
+        .sog-err:empty { display: none; }
+        .sog-field.sog-invalid .sog-input { border-color: #ef4444; background: #fef2f2; }
+        .sog-field.sog-invalid .sog-label { color: #b91c1c; }
+        .sog-flash { animation: sog-flash 1.2s ease; border-radius: .5rem; }
+        @keyframes sog-flash { 0% { box-shadow: 0 0 0 3px rgba(37,99,235,.5); } 100% { box-shadow: none; } }
+        /* 动态行 */
+        .sog-row { border: 1px dashed #d1d5db; border-radius: .55rem; padding: .7rem; margin-bottom: .6rem; background: #fafbfc; }
+        .sog-row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem;
+            font-size: .82rem; font-weight: 700; color: #6b7280; }
+        .sog-row-del { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: .9rem; padding: .1rem .4rem; }
+        .sog-row-del:hover { color: #ef4444; }
+        .sog-row-label { font-size: .82rem; margin-top: .5rem; }
+        .sog-add-row { margin-top: .2rem; }
+        /* 右侧预览 */
+        .sog-outbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .7rem; }
+        .sog-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1rem; font-size: .88rem;
+            border-radius: .55rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .sog-btn:hover:not(:disabled) { border-color: var(--primary-color); color: var(--primary-color); }
+        .sog-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .sog-btn.sog-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .sog-btn.sog-primary:hover:not(:disabled) { background: var(--primary-hover, #1d4ed8); color: #fff; }
+        #sog-preview { background: #0f172a; color: #e2e8f0; border-radius: .6rem; padding: 1rem; font-size: .82rem;
+            line-height: 1.7; font-family: ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-all;
+            max-height: 560px; overflow-y: auto; margin: 0; min-height: 200px; }
+        .sog-t-key { color: #7dd3fc; }
+        .sog-t-str { color: #86efac; }
+        .sog-t-num { color: #fbbf24; }
+        .sog-t-bool { color: #f0abfc; }
+        .sog-t-null { color: #94a3b8; }
+        .sog-status { border-radius: .7rem; padding: .8rem 1rem; font-size: .9rem; line-height: 1.7; margin-bottom: .8rem;
+            border: 1px solid #e5e7eb; background: #f9fafb; color: #4b5563; }
+        .sog-status.sog-ok { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+        .sog-status.sog-fail { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+        #sog-errors { margin-bottom: .5rem; }
+        .sog-err-group { margin-bottom: .7rem; }
+        .sog-err-type { font-size: .9rem; font-weight: 700; color: #111827; margin-bottom: .4rem; }
+        .sog-count { background: #ef4444; color: #fff; font-size: .75rem; font-weight: 700; border-radius: 999px; padding: .05rem .55rem; }
+        .sog-error-item { display: flex; gap: .7rem; align-items: flex-start; width: 100%; box-sizing: border-box;
+            text-align: left; background: #fff; border: 1px solid #fecaca; border-radius: .6rem;
+            padding: .65rem .85rem; margin-bottom: .45rem; cursor: pointer; font-size: .88rem; transition: all .15s; }
+        .sog-error-item:hover { border-color: #ef4444; background: #fef2f2; transform: translateX(2px); }
+        .sog-err-no { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: #ef4444; color: #fff;
+            font-size: .75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: .1rem; }
+        .sog-err-body { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+        .sog-err-path { font-size: .85rem; color: #1d4ed8; font-weight: 600; }
+        .sog-err-msg { color: #374151; line-height: 1.6; }
+        .sog-toast { position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px); z-index: 99;
+            background: #111827; color: #fff; padding: .7rem 1.3rem; border-radius: .6rem; font-size: .9rem;
+            opacity: 0; pointer-events: none; transition: all .25s; }
+        .sog-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .sog-toast.ok { background: #065f46; }
+        .sog-toast.fail { background: #991b1b; }
+        .sog-doc { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem;
+            font-size: .88rem; color: #4b5563; line-height: 2; }
+        .sog-doc h3 { margin: 0 0 .6rem; font-size: 1rem; color: #111827; }
+        .sog-doc b { color: #111827; }
+        .sog-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .sog-doc a { color: var(--primary-color); text-decoration: none; }
+        .sog-doc a:hover { text-decoration: underline; }
+        .sog-type-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin: .5rem 0; }
+        .sog-type-table th, .sog-type-table td { border: 1px solid #e5e7eb; padding: .45rem .6rem; text-align: left; vertical-align: top; }
+        .sog-type-table th { background: #f9fafb; color: #111827; }
+        @media (max-width: 1080px) {
+            .sog-main { grid-template-columns: 1fr; }
+            #sog-tabs { max-height: 260px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="sog-wrap">
+    <div class="container">
+        <h1>🏷️ Schema.org 结构化数据生成器</h1>
+        <p class="sog-intro">手写 JSON-LD 总要翻 schema.org 文档？选类型 → 逐字段填写 → 右侧实时生成 <code>@context</code> 规范的 JSON-LD。必填项带红星 <span class="sog-req">*</span>，缺失时自动禁用输出并内联定位；支持多类型 <code>@graph</code> 堆叠，一键复制、下载 .json、下载可直接粘贴进 <code>&lt;head&gt;</code> 的 HTML 片段。</p>
+
+        <div class="sog-privacy">
+            <span class="sog-lock">🔒</span>
+            <div><b>隐私承诺：全部在你的浏览器里完成，不上传服务器。</b><br>
+            表单解析、校验、JSON-LD 生成、复制下载全部本地运行，零后端接口、零第三方库、零 CDN。你可以在 DevTools 的 Network 面板验证 —— 任何操作都不会产生网络请求。断网也能用。</div>
+        </div>
+
+        <div class="sog-main">
+            <div class="sog-panel">
+                <h3>📚 Schema 类型 <span class="sog-tag">勾选加入输出</span></h3>
+                <div class="sog-tabs-head">
+                    <button type="button" class="sog-link" id="sog-check-all">全选</button>
+                    <span style="color:#d1d5db">|</span>
+                    <button type="button" class="sog-link" id="sog-uncheck-all">全不选</button>
+                </div>
+                <div id="sog-tabs"></div>
+            </div>
+
+            <div class="sog-panel">
+                <div id="sog-form"></div>
+            </div>
+
+            <div class="sog-panel">
+                <h3>⚡ JSON-LD 输出 <span class="sog-tag">实时预览</span></h3>
+                <div class="sog-status" id="sog-status" role="status"></div>
+                <div class="sog-outbar">
+                    <button type="button" class="sog-btn sog-primary" id="sog-copy">📋 一键复制</button>
+                    <button type="button" class="sog-btn" id="sog-dl-json">💾 下载 .json</button>
+                    <button type="button" class="sog-btn" id="sog-dl-html">🧩 下载 HTML 片段</button>
+                </div>
+                <pre id="sog-preview"></pre>
+                <div id="sog-errors" style="margin-top:.8rem"></div>
+            </div>
+        </div>
+
+        <div class="sog-doc">
+            <h3>📖 使用说明</h3>
+            <div>
+                <b>三步上手：</b>① 左侧勾选要生成的 Schema 类型（可多选堆叠），点击切换编辑；② 中间表单逐字段填写，带 <span class="sog-req">*</span> 为必填，填错会红框 + 中文提示；③ 右侧实时预览生成的 JSON-LD，校验通过后一键复制或下载。<br>
+                <b>校验规则：</b>必填缺失、URL 格式（须 <code>http(s)://</code> 开头）、日期（<code>YYYY-MM-DD</code>）、ISO 8601 时长（如 <code>PT20M</code>）、数字、枚举取值全部实时校验；校验未通过的类型不会进入输出，点击错误列表可直接定位到出错字段。<br>
+                <b>多类型堆叠：</b>勾选 2 个以上类型时，输出自动包成 <code>{"@context":"https://schema.org","@graph":[…]}</code> 数组，一次粘贴搞定整页结构化数据。<br>
+                <b>枚举约束：</b>Recipe 适用饮食（<code>suitableForDiet</code>）、Event 举办形式（线下/线上/混合，选线上时地点自动校验为 URL）、Event 活动状态、Product 库存状态、JobPosting 雇佣类型、SoftwareApplication 应用分类等均按 schema.org 枚举输出完整 IRI。<br>
+                <b>部署建议：</b>把下载的 HTML 片段粘贴到页面 <code>&lt;head&gt;</code> 内；上线后用 Google 富媒体搜索结果测试工具验证。<br>
+                <b>互链工具：</b>先用 <a href="/tools/serp-snippet-preview">SERP 搜索结果片段预览</a> 看标题描述在搜索结果里的样子，用 <a href="/tools/og-card-preview">OG 社交卡片预览</a> 配分享卡片，用 <a href="/tools/json-parser">JSON 解析器</a> 二次检查生成的 JSON-LD（SEO 家族工具联动）。
+            </div>
+            <h3 style="margin-top:1rem">🗂️ 支持的 12 类 Schema</h3>
+            <table class="sog-type-table">
+                <tr><th>类型</th><th>适用页面</th><th>必填字段</th></tr>
+                <tr><td>Article / NewsArticle / BlogPosting</td><td>文章、博客、新闻</td><td>标题、作者、发布日期</td></tr>
+                <tr><td>Product</td><td>商品详情页</td><td>产品名称、价格、货币</td></tr>
+                <tr><td>Recipe</td><td>菜谱页</td><td>菜谱名称、食材清单、制作步骤</td></tr>
+                <tr><td>Event</td><td>活动页（线上/线下）</td><td>活动名称、开始时间、举办形式、地点</td></tr>
+                <tr><td>FAQPage</td><td>常见问题页</td><td>至少一条问答</td></tr>
+                <tr><td>BreadcrumbList</td><td>任意有层级的页面</td><td>至少一层导航</td></tr>
+                <tr><td>Organization</td><td>公司/组织官网</td><td>组织名称、官网 URL</td></tr>
+                <tr><td>LocalBusiness</td><td>本地商家页</td><td>商家名称、街道地址、城市</td></tr>
+                <tr><td>JobPosting</td><td>招聘职位页</td><td>职位名称、职位描述、发布日期、雇佣类型、公司、工作城市</td></tr>
+                <tr><td>SoftwareApplication</td><td>软件/App 介绍页</td><td>应用名称、应用分类、操作系统</td></tr>
+                <tr><td>VideoObject</td><td>视频页</td><td>视频标题、简介、缩略图、上传日期</td></tr>
+                <tr><td>WebSite</td><td>网站首页（可选站内搜索框）</td><td>网站名称、首页 URL</td></tr>
+            </table>
+            <h3 style="margin-top:1rem">❓ 常见问题</h3>
+            <div>
+                <b>生成的 JSON-LD 直接能用吗？</b>可以。输出严格遵循 schema.org 词汇表，<code>@context</code> 固定为 <code>https://schema.org</code>，建议再用 Google 富媒体测试工具复核一次。<br>
+                <b>我的数据会上传吗？</b>不会。所有计算都在浏览器本地完成，无任何网络请求，可断网使用。<br>
+                <b>一个页面能放多种类型吗？</b>可以。勾选多个类型即生成 <code>@graph</code> 数组，一次粘贴即可。<br>
+                <b>为什么复制按钮是灰的？</b>说明当前勾选的类型都有校验错误未通过；按右侧错误列表逐条修正即可启用。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="sog-toast" id="sog-toast"></div>
+
+    <script src="/tools/static/js/schema_org_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

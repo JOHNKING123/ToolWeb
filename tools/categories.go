@@ -1282,6 +1282,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "营销工具",
 				},
+				{
+					ID:          "schema_org_generator",
+					Name:        "Schema.org 结构化数据生成器",
+					Description: "12 类 Schema 类型表单向导（文章/产品/菜谱/活动/FAQ/面包屑/组织/本地商家/招聘/软件/视频/网站搜索框）：必填红星逐字段校验内联定位，右侧 JSON-LD 实时高亮预览，一键复制、下载 .json、下载可直接粘贴进 head 的 HTML 片段，多类型 @graph 堆叠，纯前端零上传 · Schema.org structured data generator: JSON-LD builder with live preview, validation & @graph stacking, 100% client-side",
+					Path:        "/tools/schema-org-generator",
+					Icon:        "hub",
+					New:         true,
+					Category:    "营销工具",
+				},
 			},
 		},
 		{

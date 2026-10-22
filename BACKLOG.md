@@ -1,3 +1,81 @@
+## 今日任务（2026-10-22 19:00 · 产品经理排期轮）
+
+**选定：Schema.org 结构化数据生成器（schema_org_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：19:00 研究轮（68 轮）Top1 推荐；视频帧提取器（c12bb29）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。
+- **形态验证**：62 轮新晋，七方独立形态共识；营销工具家族归位（品类已有 3 工具）。
+- **痛点**：手写 SEO JSON-LD 需逐字段查 schema.org 文档，语法错误难排查；选类型→表单填字段→实时生成 JSON-LD→一键复制/下载，纯前端小难度，一轮可高质量交付。
+- **零重叠实锤**：`grep -cinE 'schema_org|schema-org|结构化数据|JSON-LD|jsonld'` 全仓库仅模板 SEO 注释行命中，无任何工具形态重叠；全量 138 Path 中无同类工具；建议 ID `schema_org_generator`、Path `/tools/schema-org-generator` 未被占用。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：WiFi 二维码生成器（P1；65 轮新晋；dev.to qrgenrateronline 15 类型形态验证；与自有通用二维码互补零重叠；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator；留池二席）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池三席）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；零重叠复核；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高；留池）；其余候选留池。
+
+**规格**（开发轮按此执行）：
+- Schema 类型（多选标签页，每类独立表单）：Article/NewsArticle、Product、Recipe、Event、FAQPage、BreadcrumbList、Organization、LocalBusiness、JobPosting、SoftwareApplication、VideoObject、WebSite+SearchAction（不少于 10 类）。
+- 表单体验：左侧表单逐字段填写（必填项红星标记，必填为空时禁用生成并内联提示）；右侧代码面板实时预览 JSON-LD（带缩进高亮），随输入即时更新；校验反馈内联定位到出错字段。
+- 输出：**一键复制**（clipboard API，fallback execCommand）、**下载 .json 文件**（Blob 直下）、可选"下载带 <script type=application/ld+json> 标签的 HTML 片段"；支持多类型堆叠生成（同时输出多个 @graph 对象）。
+- 质量：Schema 校验——JSON 语法错误/必填缺失逐字段内联报错；常用字段枚举约束（Recipe 食材量单位、Event 在线/线下类型切换、Product offer/aggregateRating 嵌套）。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+- 注册：营销工具品类，新增工具 ID `schema_org_generator`、Name「Schema.org 结构化数据生成器」、Path `/tools/schema-org-generator`（New: true），中英文描述＋SEO keywords（结构化数据、JSON-LD、Schema.org、SEO 优化、schema markup）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `schema_org_generator`、Path `/tools/schema-org-generator` 注册完整，注册总数 138→139 Path。
+2. 每类 Schema 表单必填项缺失时生成被禁用、错误提示定位到具体字段。
+3. 填写 Article（标题/作者/日期/图片）→ 生成 JSON-LD 经 `JSON.parse` 合法，且包含 `@context: "https://schema.org"` 与正确 `@type`。
+4. 一键复制/下载 .json/下载 HTML 片段三种输出均可用。
+5. 双类型堆叠（如 FAQPage+Product）生成合法 @graph 数组。
+6. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+
+**预计改动文件**：
+- `templates/schema_org_generator.html`（新增；含 SEO 面板按家族标准）
+- `static/js/schema_org_generator.js`（新增；表单→JSON-LD 实时生成、校验、复制/下载）
+- `tests/schema_org_generator.test.js`（新增；JSON 生成正确性、必填校验、输出拼接）
+- `tools/categories.go`（营销工具品类注册：ID schema_org_generator、Path /tools/schema-org-generator、New: true）
+
+**交付核对**：本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
+## 今日任务（2026-10-22 19:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。视频帧提取器已交付闭环（`git log` 头部 c12bb29「新增视频帧提取器」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **138 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 晚间轮次，P1 可排。
+
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. video_frame_extractor 交付确认：`git log` 头部 c12bb29（本地视频三模式逐帧提取，纯前端零上传）；`grep tools/categories.go` 全量 138 Path（ID video_frame_extractor、Path /tools/video-frame-extractor 已注册）；候选池划出。
+2. 新信号扫描：
+   - **HN 10-15 roundup：Tiny Little Office 643pts**（浏览器办公套件，"the document *is* the link"——内容 percent-encoded 进 URL fragment，免账号免服务端存储；643pts/181 评论强验证）→ 自有 `/tools/url-note-share`（ID url_note_share「文本分享链接生成器」：DEFLATE+base64url 编码进 URL fragment、Markdown 预览、AES-GCM 口令加密，纯前端零上传）**实锤复现** → 不立，补 HN 643pts 形态验证观察；
+   - **dev.to BuildDiff（2026-10-08）**：浏览器内对比两个文件夹/构建版本（新增/删除/变更/移动文件清单，纯前端本地对比，导出纯文本报告，隐私卖点）→ 自有 `folder_compare` **实锤复现** → 不立；
+   - **dev.to DodoDeck（2026-10-18）**：exact KB image resizer（二分压缩精确到 KB）→ 自有「图片压缩」（目标 KB 二分质量迭代+尺寸降级兜底）**实锤复现** → 不立；1GB P2P file share 需信令服务器 → 不立；
+   - **dev.to BGone（2026-10-01）**：remove.bg 2026-12-01 关闭独立站并入 Canva → 背景移除需求窗口期打开；浏览器端 WASM on-device AI 抠图（无水印无注册）形态 → 池内 P2「人像背景一键虚化」**补形态验证观察**（WASM 模型 vendor 化成本高，维持 P2 不升级）；
+   - **dev.to DevTrove / RVUtils / BlanzaTools / Site Tools Box / ConvertLinx**（10-07~10-18 五篇工具站自荐）：类目（JSON/JWT/Base64/正则/cron/时间戳/DNS&Whois/HTTP 状态/密码/二维码/单位换算/倒计时）均为自有实锤 → 不立；Site Tools Box 的 ROI 计算器系泛财务类（方向修正排除）；
+   - **HN 10-18 roundup**：Sphinx（git pre-push hook，CLI 形态）→ 非 web 工具 → 不立；WallHop（paywall bypass，265pts）→ 需后端抓取+法律灰色 → 不立；
+   - **HN 10-19/10-20 roundup**：AI/基础设施/WhatsApp 隐藏 prompt 指令（redact.dev 702pts）等新闻为主，无单页 web 工具形态 → 不立；
+   - **V2EX**：HangDry（macOS 原生临时文件归档应用）→ 非 web 形态不立；vaneform（网站流量查询）→ 需后端数据不立；10-21 热点「局域网跨设备剪贴板」（微信输入法/SyncClipboard/LocalSend）→ 原生应用方案，web 形态需后端中继不立；Open Resume（10-20）→ 67 轮已消化（非单页形态）。
+3. 候选池变动：视频帧提取器已交付划出（c12bb29，138 Path）；本轮新信号全为自有实锤复现或不立 → **无新晋**；Tiny Little Office 643pts→文本分享链接生成器形态验证观察；BGone→人像背景一键虚化 P2 补验证观察；nat_type_detector / mbox_candidate 本轮零重叠复核（nat 命中均为 explanation/donation 类误命中；mbox 零命中）→ 留池。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；video_frame_extractor 交付闭环后按顺位递进）：
+
+1. **Schema.org 结构化数据生成器** — P1（62 轮新晋；七方独立形态共识；痛点：手写 SEO JSON-LD 逐字段查 schema、语法错难排查；选类型→表单填字段→实时生成 JSON-LD→一键复制/下载；纯前端小难度；营销工具家族归位；建议 ID schema_org_generator、Path /tools/schema-org-generator）。
+2. **WiFi 二维码生成器** — P1（65 轮新晋；dev.to 2026-10-08 qrgenrateronline 15 类型形态验证；痛点：来客/店铺/活动现场分享 WiFi 口头报密码易错，现有二维码站多要注册或带水印；纯前端小难度：SSID/加密方式（WPA2/WPA3/无密码）/密码/隐藏网络→`WIFI:T:..;S:..;P:..;;`→二维码＋打印页；效率工具家族；与自有通用二维码互补零重叠；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator）。
+3. **会议邀请 (.ics) 生成器** — P1（63 轮新晋；HN 600pts；痛点：组织会议手动手写 .ics 或在日历 App 里逐个建事件效率低；填表单（标题/时间/地点/参会人/提醒）→生成标准 .ics 下载→邮件/IM 分发；纯前端小难度；效率工具家族；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator）。
+
+其余 P1 留池：NAT 类型检测器（64 轮新晋；Show HN NatChecker；零重叠复核；留池）；MBOX 邮件存档查看器（58 轮新晋；中难度；零重叠复核；留池）；SVG 转字体图标生成器（59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（Calcy ranges 增强观察；蒙特卡洛部分单轮交付风险高；留池）；屏幕常亮/浏览器实时听写（留池）；年会大屏抽奖（时令预热，11 月）。
+
+**通用候选表增量**（第六十八轮：视频帧提取器已交付划出（c12bb29，138 Path）；无新晋候选；Tiny Little Office 643pts→文本分享链接生成器形态验证观察；BGone→人像背景一键虚化 P2 补验证观察；nat/mbox 零重叠复核留池；全量 138 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 视频帧提取器 | 已交付划出（c12bb29 交付闭环；ID video_frame_extractor、Path /tools/video-frame-extractor 已注册；全量 138 Path；候选池划出） | — | 已实现 |
+| Tiny Little Office 观察 | 本轮不新立（HN 10-15 643pts，"document is the link" URL fragment 编码形态；自有 url_note_share 文本分享链接生成器实锤复现，补形态验证） | — | 观察 |
+| BGone 观察 | 本轮不新立（dev.to 10-01；remove.bg 2026-12-01 关闭独立站，背景移除需求窗口期；浏览器端 WASM on-device AI 抠图形态；池内 P2「人像背景一键虚化」补验证，WASM vendor 化成本高维持 P2） | — | P2 观察 |
+| BuildDiff | 本轮不立（dev.to 10-08；浏览器内文件夹/构建对比；自有 folder_compare 实锤复现） | — | 不立 |
+| DodoDeck | 本轮不立（dev.to 10-18；exact KB 图片压缩＝自有图片压缩实锤复现；1GB P2P 文件分享需信令服务器） | — | 不立 |
+| WallHop / Sphinx | 本轮不立（HN 10-18；paywall bypass 需后端+法律灰色；git hook 为 CLI 非 web 形态） | — | 不立 |
+
+**归档说明**：本轮为 10-22 通用调研第六十八轮——视频帧提取器交付闭环（c12bb29，`/tools/video-frame-extractor` 已注册，图片处理品类，全量 138 Path），候选池划出；新信号扫描（HN 10-15 Tiny Little Office 643pts＝自有文本分享链接生成器实锤复现补验证；dev.to BuildDiff＝自有 folder_compare 实锤复现；dev.to DodoDeck exact KB＝自有图片压缩实锤复现、P2P 分享需后端不立；dev.to BGone：remove.bg 12-01 关闭独立站窗口期，池内人像背景一键虚化 P2 补 WASM 形态验证；dev.to 五篇工具站自荐类目均为自有实锤；HN 10-18 Sphinx/WallHop 不立；HN 10-19/10-20 无工具形态；V2EX HangDry/vaneform/跨设备剪贴板/Open Resume 不立）均已消化；WPS 候选表保持冻结归档；仓库 138 注册工具全量核对无重叠（Top3 建议 ID schema_org_generator / wifi_qr_generator / meeting_invite_generator；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常；`git log` 头部 c12bb29（video_frame_extractor 交付闭环）；`grep tools/categories.go` 全量 138 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 开发交付（2026-10-22 17:50 · 前端开发轮）
 
 **交付：视频帧提取器（video_frame_extractor）** — 本轮唯一任务闭环：
