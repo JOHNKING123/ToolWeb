@@ -1,3 +1,99 @@
+## 今日任务（2026-10-23 05:00 · 前端开发轮 ✅）
+
+**交付**：NAT 类型检测器（nat_type_detector，/tools/nat-type-detector）已实现并提交开发分支。
+- **新增文件**：`templates/nat_type_detector.html`（SEO 面板 title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具按家族标准＋隐私提示区＋硬限制说明区）、`static/js/nat_type_detector.js`（每台 STUN 独立 RTCPeerConnection 收集 srflx 候选、映射行为判定、结果渲染、12 秒超时兜底）、`tests/nat_type_detector.test.js`（node 84 断言全过，覆盖候选解析/映射判定/类型映射/建议文案/STUN URL 校验/零 fetch·XHR·WebSocket·sendBeacon·EventSource）。
+- **注册**：`tools/categories.go` 网络工具品类追加（ID nat_type_detector、Name「NAT 类型检测器」、Path /tools/nat-type-detector、Icon hub、New: true、Category 网络工具）；`grep -oE '"/tools/[^"]+"'` 全量 **144 Path**（143→144）；gofmt 干净。
+- **核心实现**：双默认公共 STUN（stun:stun.l.google.com:19302、stun:stun1.l.google.com:19302）＋可自定义（normalizeStunUrl 校验、stun:/stuns:、缺端口补 3478、非法输入忽略并提示）；两台 srflx 映射一致→锥形 NAT（5★、含「浏览器无法区分 Full/Restricted/Port Restricted 过滤行为」硬限制说明）、不一致→对称型 NAT（2★、含 TURN 中继建议）；端口保留/改写推断（host 候选本地端口 vs 映射端口）；无 srflx→12 秒超时兜底失败态（webrtc_unsupported/host_only/no_srflx/single_stun 四种原因文案＋排查指引）；结果含公网 IP、映射端口、映射行为、端口行为、星级、耗时、STUN 列表。
+- **验证**：`go build` 通过；冒烟起服务（127.0.0.1:18099）`GET /tools/nat-type-detector` 200、JS 200、首页已收录；测试服务已关闭。真实 WebRTC 采集需浏览器环境，验收 2/3 的 15 秒/重复一致性请评审轮在浏览器补测。
+- **顺手清理**：根目录未跟踪残留 `toolWeb.bak-prev` 已删除（613a155 曾清理，疑似构建/部署重建，勿入库）。
+- **交付核对**：分支 muse/dev-20260929；本地 HEAD 即将为本轮提交；`git fetch`（GIT_SSH_COMMAND 指定密钥）首次直连报 access rights、重试正常（瞬时抖动）；铁律：不碰 master、不 force-push、部署仅 /tool-web（经 ~/workspace/deploy/toolweb/deploy.sh，留待后续轮次）。
+
+---
+
+## 今日任务（2026-10-23 05:00 · 产品经理排期轮）
+
+**选定：NAT 类型检测器（nat_type_detector）** — 本轮唯一任务（新工具）：
+- **顺位**：05:00 研究轮（72 轮）Top1 推荐；在线倒计时/番茄钟（5578591）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选：单位感知记事本计算器（P1；49/66/67/71 轮形态验证链；记事本式输入＋单位感知＋行间变量；蒙特卡洛分期二期；留池二席）、MBOX 邮件存档查看器（P1；58 轮新晋；中难度；留池三席）、SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高；留池）。
+- **形态验证**：64 轮新晋；Show HN NatChecker 形态共识——纯前端 WebRTC ICE 候选收集＋公共 STUN→NAT 类型映射＋联机建议，无需安装/命令行。
+- **痛点**：P2P 联机/游戏/远程桌面用户需先知道 NAT 类型才能选打洞方案（Full Cone 直连友好、Symmetric 需 TURN 中继）；现有检测多为命令行工具或需安装桌面软件，浏览器里一键可测的是空白。
+- **零重叠实锤**：本轮复核——`grep -cinE 'nat_type_detector|nat-type-detector|NAT类型检测器|NAT 类型' tools/categories.go` 零命中；全量 143 Path 中无同类工具；建议 ID `nat_type_detector`、Path `/tools/nat-type-detector` 未被占用。
+- **品类归位**：注册到「网络工具」品类（已有 ping/DNS 解析查询/SSL 证书检测/IP 子网计算器，家族归位自然）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 核心流程：一键「开始检测」→ 创建 RTCPeerConnection（iceServers 配置 2 个公共 STUN：`stun:stun.l.google.com:19302`、`stun:stun1.l.google.com:19302`，可加用户自定义 STUN 输入）→ 收集 srflx（server reflexive）候选 → 按映射行为推断 NAT 类型 → 输出结果＋联机建议；全程页面内进度指示（连接中/收集候选/分析中）。
+- 检测逻辑（浏览器可行近似启发式）：
+  - 本地候选 host vs srflx 映射地址/端口：映射地址一致＋本地端口＝映射端口 → 端口保留；映射地址一致但端口不同 → 端口改写；
+  - 两台 STUN 服务器各取一条 srflx：映射地址/端口一致 → Endpoint-Independent Mapping（锥形 NAT）；不一致 → Address/Port-Dependent Mapping（对称 NAT 特征）；
+  - 类型映射：锥形 NAT → 显示「锥形 NAT（Cone NAT）」并注明*浏览器无法区分 Full Cone / Restricted / Port Restricted 的过滤行为*（如实交代硬限制，开工前说在前面）；对称 NAT → 显示「对称型 NAT（Symmetric NAT）」；
+  - 无 srflx 候选 → 判「UDP 被拦截/WebRTC 被禁用」，给出排查指引（换网络/检查浏览器 WebRTC 开关/公司防火墙）。
+- 输出信息：公网 IP（srflx 地址）、映射端口、映射行为（endpoint-independent / dependent）、NAT 类型判定、打洞友好度星级＋联机建议文案（如「P2P 直连通常可行，建议优先尝试 UDP 打洞」「对称型 NAT：P2P 打洞成功率低，建议使用 TURN 中继/换网络」）、检测耗时、所用 STUN 服务器列表。
+- 隐私与诚实：页面显著提示——检测需向公共 STUN 服务器发送请求，你的公网 IP 会暴露给所选 STUN 服务器；检测为启发式近似，非 RFC 5780 完整行为测试；脚本内零 fetch/XHR（RTCPeerConnection 的 STUN/UDP 不走 XHR）。
+- 注册：网络工具品类，新增工具 ID `nat_type_detector`、Name「NAT 类型检测器」、Path `/tools/nat-type-detector`（New: true），中英文描述＋SEO keywords（NAT 类型检测、NAT type、P2P 打洞、STUN、WebRTC、锥形 NAT、对称 NAT）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `nat_type_detector`、Path `/tools/nat-type-detector` 注册完整（Category 网络工具），注册总数 143→144 Path。
+2. 点击开始检测 → 15 秒内（STUN 可达时通常 2–5 秒）输出公网 IP（IPv4/IPv6 均可）、映射端口、NAT 类型判定三项核心字段；超时（12 秒无 srflx）→ 明确提示失败原因＋排查指引，不无限转圈。
+3. 同一网络下重复检测 2 次 → 类型判定一致（映射行为稳定）；自定义 STUN 输入 `stun:stun.cloudflare.com:3478` 可替换默认服务器并参与判定。
+4. 锥形 NAT 结果页含「浏览器无法区分 Full/Restricted/Port Restricted 过滤行为」说明；对称 NAT 结果页含「建议 TURN 中继」联机建议；UDP 被拦截场景有可复现的失败态文案。
+5. 脚本内零 fetch/XHR，Network 抽查无内容外发（STUN 走 UDP 不在 Network 面板属正常，需在说明中注明）。
+6. node 测试 30+ 断言全过（srflx 候选解析、映射行为判定逻辑、类型映射表、建议文案分支、STUN URL 校验）。
+
+**预计改动文件**：
+- `templates/nat_type_detector.html`（新增；含 SEO 面板按家族标准＋隐私/启发式说明区）
+- `static/js/nat_type_detector.js`（新增；RTCPeerConnection 封装、双 STUN 候选收集、映射行为判定、结果渲染、超时兜底）
+- `tests/nat_type_detector.test.js`（新增；候选解析、判定逻辑、类型映射、文案分支）
+- `tools/categories.go`（网络工具品类注册：ID nat_type_detector、Path /tools/nat-type-detector、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 5578591（在线倒计时/番茄钟交付闭环）与远程分支一致；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（首次直连曾报 access rights，重试后正常，疑似瞬时网络抖动，沿用 10-22 22:00 轮经验）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 143 Path；零重叠 grep 本轮复核全零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（构建产物/备份残留，多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 05:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。在线倒计时/番茄钟已交付闭环（`git log` 头部 5578591「修复倒计时/番茄钟三轮评审反馈」；交付提交 613a155；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **143 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:00 深夜轮次，P1 小难度可排。
+
+**本轮三件事**（05:00 全网调研，通用方向）：
+1. countdown_timer 交付确认：`git log` 头部 5578591（613a155 新增：倒计时/秒表/番茄钟/闹钟四模式单页＋全屏大字（F 键）＋WebAudio 本地合成结束音效＋标题栏实时剩余时间＋localStorage 命名预设（倒计时/番茄各 5 组），Date.now() 锚点抗漂移，纯前端零 fetch/XHR；注册生活工具品类（ID countdown_timer，New:true），工具总数 142→143；node 测试 86 断言全过；5578591 评审修复：alarm once 仅限今天/pomo 阶段完成后自动轮转/跳过不计统计，补 once 语义断言 88/88 全过）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（换机清 known_hosts 后 ssh-keyscan 重写）；`grep tools/categories.go` 全量 143 Path（ID countdown_timer、Path /tools/countdown-timer 已注册）；候选池划出。
+2. 新信号扫描：
+   - **dev.to everydaytoolz（2026-10-12）**：UUID 生成器/Base64（Unicode-safe）/正则测试器/Hash 生成器/进制转换器/文件大小转换器 → 均为自有实锤复现；**IP 子网计算器**（netmask/network/broadcast/可用主机范围）→ 自有 `subnet`（ID subnet「IP 子网计算器」、Path /tools/subnet-calculator）**实锤复现**；Markdown Viewer → 自有 `markdown`（Markdown 预览、/tools/markdown-preview）**实锤复现** → 不立；
+   - **dev.to ToolkitLoop（2026-10-03）小费计算器**（3 国小费＋税＋AA 分摊）：生活计算器类 → 用户 10-18 方向修正排除，不立；
+   - **HN 10-22 front**（hnfront.buzzing.cc）：Show HN SimCity-with-Permits（927pts，城市模拟游戏）/ Dovepass（旧金山无人机路径合法性查询，niche 需后端数据）/ agent-usage-guard（Claude Code CLI mod，非 web）/ Omnara（Claude Managed Agents 开源替代，需后端平台）/ Uberblok（ZFS 内部结构交互博物馆，教育向）/ Aven（AI 编程规则守卫，AI 类）/ Dedoomify（AI 新闻去恐慌，AI 类）/ iOS-on-Android（非 web）；其余为 PHP2Shell/eMudhra 证书/Quad9 退法/LiteLLM 投毒安全新闻 → 无单页 web 工具形态 → 不立；
+   - **V2EX**：NASDrop（10-18，群晖下载中转，需 NAS+Chrome 扩展→70/71 轮已消化，不立）；Pitwall（10-21，Codex/Claude Code 多 Agent 调度看板，macOS 原生应用→非 web 形态，不立）；PHP2Shell 应急辅助工具（10-22 重帖，checkphp2shell.com，响应头检查需后端 HEAD 请求→69/71 轮已消化，不立）；Open Resume（10-20 重帖，156 模板自部署简历工具，需 Node/SQLite→67/71 轮已消化，不立）；
+   - **Medium**：Siloshan 十月 7 工具（70/71 轮已消化）；Site Tools Box 20+ 开发者工具（70 轮已消化）；**NoSignups 268 开源免注册工具目录**（目录聚合非工具形态，不立）；LastBrowser（本地 AI 浏览器桌面应用，非 web 工具，不立）；
+   - **Etemora domain-name-generator**（dev.to 10-11 重帖：关键词→域名创意＋12+ 后缀 RDAP 可用性检查）：赛道＝自有 domain_check（10-07 黑盒 QA 记录：RDAP+whois 协议直查；Muse VM 出网被拦截，是否转 VPS 待用户决定）→ 需求侧自有覆盖，不新立；
+   - **Reddit「I wish there was a website」**：本轮返回均为营销/方法论 SEO 内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：在线倒计时/番茄钟已交付划出（613a155＋5578591，143 Path）；本轮新信号全为自有实锤复现或不立 → **无新晋**；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；countdown_timer 交付闭环后按顺位递进）：
+
+1. **NAT 类型检测器** — P1（64 轮新晋；Show HN NatChecker；痛点：P2P 联机/游戏/远程桌面用户需知 NAT 类型决定打洞方案，现有检测多为命令行或需安装；纯前端小难度：WebRTC ICE 候选收集＋公共 STUN→NAT 类型映射＋联机建议；网络工具家族归位；`grep -cinE 'nat_type_detector|nat-type-detector|NAT类型检测器'` 零命中实锤；建议 ID nat_type_detector、Path /tools/nat-type-detector）。
+2. **单位感知记事本计算器** — P1（49/66/67/71 轮形态验证链：Calcy units+ranges 草稿计算＋Medium 十月精选双重佐证；痛点：记事本里随手写算式要带单位换算、范围汇总，现有计算器割裂；记事本式输入＋单位感知＋行间变量；蒙特卡洛部分分期二期做、首期控单轮风险；纯前端小难度；零命中复核）。
+3. **MBOX 邮件存档查看器** — P1（58 轮新晋；痛点：MBOX 导出邮件只能用 Thunderbird/文本编辑器打开；浏览器本地解析邮件列表＋全文搜索＋附件清单，纯前端；中难度，留待更从容轮次；零命中复核）。
+
+其余 P1 留池：SVG 转字体图标生成器（59 轮新晋；opentype.js vendor 化验证成本高；留池）；屏幕常亮/浏览器实时听写（留池）；年会大屏抽奖（时令预热，11 月临近，PM 顺位备选）。
+其余 P2 留池：涂鸦字体工作室（71 轮新晋）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴/番茄钟专注计时器（方向边界观察）；本地 LLM 硬件检测器/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器（P2 留池）。
+
+**通用候选表增量**（第七十二轮：在线倒计时/番茄钟已交付划出（613a155＋5578591，143 Path）；无新晋候选；everydaytoolz 子网/Markdown＝自有 subnet/markdown 实锤复现；ToolkitLoop 小费计算器生活类不立；HN 10-22 front 无工具形态；V2EX NASDrop/Pitwall/PHP2Shell/Open Resume 已消化或非 web 不立；Medium NoSignups/LastBrowser 目录与桌面应用不立；Etemora 域名生成器＝自有 domain_check 赛道覆盖；Reddit 需求帖本轮空；全量 143 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| countdown_timer | 已交付划出（613a155 交付＋5578591 评审修复闭环；ID countdown_timer、Path /tools/countdown-timer 已注册；全量 143 Path；候选池划出） | — | 已实现 |
+| everydaytoolz 观察 | 本轮不新立（dev.to 10-12；UUID/Base64/正则/Hash/进制/文件大小均为自有实锤；IP 子网计算器→自有 subnet（/tools/subnet-calculator）实锤复现；Markdown Viewer→自有 markdown（/tools/markdown-preview）实锤复现） | — | 观察 |
+| ToolkitLoop 小费计算器 | 本轮不立（dev.to 10-03；3 国小费＋税＋AA 分摊；生活计算器类；用户 10-18 方向修正排除） | — | 不立 |
+| HN 10-22 front | 本轮不立（SimCity-with-Permits 游戏；Dovepass 无人机路径 niche 需后端；agent-usage-guard CLI；Omnara 需后端平台；Uberblok 教育博物馆；Aven/Dedoomify AI 类；iOS-on-Android 非 web；PHP2Shell/eMudhra/Quad9/LiteLLM 安全新闻；无单页 web 工具形态） | — | 不立 |
+| V2EX NASDrop / Pitwall / PHP2Shell / Open Resume | 本轮不立（NASDrop 需 NAS+扩展，70/71 轮已消化；Pitwall macOS 原生应用非 web；PHP2Shell 响应头检查需后端，69/71 轮已消化；Open Resume 需 Node/SQLite 自部署，67/71 轮已消化） | — | 不立 |
+| NoSignups 268 目录 / LastBrowser | 本轮不立（Medium；工具目录聚合非工具形态；AI 浏览器为桌面应用非 web 工具） | — | 不立 |
+| Etemora domain-name-generator 观察 | 本轮不新立（dev.to 10-11 重帖；域名创意＋RDAP 可用性检查；赛道＝自有 domain_check（10-07 QA：RDAP+whois 直查，VM 出网被拦截待定）→需求侧自有覆盖） | — | 观察 |
+| Reddit 需求帖 | 本轮空（"I wish there was a website" 返回均为营销/方法论 SEO 内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十二轮（注：01:00 与 03:00 两研究轮在文件中均标为「第七十一轮」，为编号笔误，本轮起按序记 72 轮）——在线倒计时/番茄钟交付闭环（613a155＋5578591，`/tools/countdown-timer` 已注册，生活工具品类，全量 143 Path），候选池划出；新信号扫描（dev.to everydaytoolz→子网/Markdown 均为自有实锤复现；dev.to ToolkitLoop 小费计算器→方向修正排除；HN 10-22 front 无单页工具形态；V2EX NASDrop/Pitwall/PHP2Shell/Open Resume 已消化或非 web 不立；Medium NoSignups/LastBrowser 不立；Etemora 域名生成器＝自有 domain_check 赛道覆盖；Reddit 需求帖本轮空）均已消化；WPS 候选表保持冻结归档；仓库 143 注册工具全量核对无重叠（Top3 建议 ID nat_type_detector；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 5578591（countdown_timer 交付＋评审修复闭环）；`grep tools/categories.go` 全量 143 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（613a155 曾顺手清理，疑似后续构建/部署重建，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-23 03:00 · 产品经理排期轮）
 
 **选定：在线倒计时/番茄钟（countdown_timer）** — 本轮唯一任务（新工具）：

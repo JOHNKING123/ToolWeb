@@ -1023,6 +1023,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "网络工具",
 				},
+				{
+					ID:          "nat_type_detector",
+					Name:        "NAT 类型检测器",
+					Description: "纯前端 WebRTC+双 STUN 检测 NAT 类型（锥形/对称），为 P2P 打洞选方案",
+					Path:        "/tools/nat-type-detector",
+					Icon:        "hub",
+					New:         true,
+					Category:    "网络工具",
+				},
 			},
 		},
 		{

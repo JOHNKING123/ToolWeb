@@ -1,0 +1,164 @@
+{{define "nat_type_detector"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAT 类型检测器 - 一键检测锥形/对称 NAT（STUN/WebRTC 纯前端）| 程序员工具箱</title>
+<meta name="description" content="免费在线 NAT 类型检测器：纯前端 WebRTC ICE 候选收集＋双公共 STUN 服务器（google stun / stun1，可自定义）映射行为推断，一键检测公网 IP、映射端口、锥形 NAT / 对称型 NAT 类型，打洞友好度星级＋P2P 联机建议（对称 NAT 建议 TURN 中继），零 fetch/XHR。Free NAT type detector (cone/symmetric), WebRTC STUN, 100% client-side.">
+<meta name="keywords" content="NAT 类型检测,NAT type,锥形 NAT,对称 NAT,P2P 打洞,STUN,WebRTC,NAT 检测,公网 IP 查询,full cone,restricted cone,port restricted,symmetric NAT,nat type detector">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/nat-type-detector">
+<meta property="og:title" content="NAT 类型检测器 - 一键检测锥形/对称 NAT">
+<meta property="og:description" content="纯前端 WebRTC＋双公共 STUN 检测你的 NAT 类型（锥形/对称）、公网 IP 与映射端口，打洞友好度星级＋P2P 联机建议，零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/nat-type-detector">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"NAT 类型检测器","alternateName":"nat_type_detector","description":"免费在线 NAT 类型检测器：纯前端 WebRTC ICE 候选收集＋双公共 STUN 映射行为推断，输出公网 IP、映射端口、NAT 类型（锥形/对称）、打洞友好度星级与 P2P 联机建议；对称 NAT 建议 TURN 中继；零 fetch/XHR。","url":"https://www.johnkingzcq123.xyz/tools/nat-type-detector","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.nt-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.nt-privacy .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.nt-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.nt-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.nt-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.nt-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.nt-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.nt-field textarea{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.9rem;
+background:#fff;color:#1f2937;box-sizing:border-box;font-family:inherit;resize:vertical;min-height:4.2rem}
+.nt-field textarea:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.nt-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.4rem}
+.nt-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.6rem;border:none;border-radius:.5rem;
+font-size:.95rem;font-weight:700;cursor:pointer;transition:all .15s}
+.nt-btn .material-icons{font-size:1.1rem}
+.nt-btn-primary{background:#1d4ed8;color:#fff}
+.nt-btn-primary:hover{background:#1e40af}
+.nt-btn:disabled{opacity:.45;cursor:not-allowed}
+.nt-hint{font-size:.82rem;color:#6b7280;margin-top:.5rem;line-height:1.8}
+/* 进度指示 */
+.nt-steps{display:flex;gap:.6rem;align-items:center;margin:1rem 0 .4rem;flex-wrap:wrap}
+.nt-step{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;color:#9ca3af;
+border:1px solid #e5e7eb;border-radius:2rem;padding:.3rem .9rem}
+.nt-step.active{color:#1d4ed8;border-color:#93c5fd;background:#eff6ff;font-weight:700}
+.nt-step .material-icons{font-size:1rem}
+#nt-status{font-size:.9rem;color:#4b5563;margin:.4rem 0 0;min-height:1.4em}
+/* 结果 */
+.nt-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.7rem;margin-bottom:1rem}
+.nt-card{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem .9rem;background:#f8fafc}
+.nt-label{display:block;font-size:.78rem;color:#6b7280;font-weight:600;margin-bottom:.25rem}
+.nt-value{font-size:1.05rem;color:#111827;font-weight:700}
+.nt-mono{font-family:"SF Mono","Cascadia Code","JetBrains Mono",Consolas,monospace;word-break:break-all}
+.nt-verdict{display:flex;gap:.9rem;align-items:flex-start;border-radius:.8rem;padding:1rem 1.1rem;margin-bottom:1rem}
+.nt-verdict .material-icons{font-size:2rem;flex:none}
+.nt-cone{background:#ecfdf5;border:2px solid #34d399}
+.nt-cone .material-icons{color:#059669}
+.nt-symmetric{background:#fff7ed;border:2px solid #fb923c}
+.nt-symmetric .material-icons{color:#ea580c}
+.nt-undetermined,.nt-none{background:#fef2f2;border:2px solid #f87171}
+.nt-undetermined .material-icons,.nt-none .material-icons{color:#dc2626}
+.nt-verdict-type{font-size:1.25rem;font-weight:800;color:#111827;margin-bottom:.2rem}
+.nt-stars{font-size:1.05rem;color:#b45309;letter-spacing:.15em;margin-bottom:.4rem}
+.nt-verdict p{margin:.3rem 0;color:#374151;line-height:1.9;font-size:.93rem}
+.nt-limit{font-size:.85rem!important;color:#6b7280!important;background:#fff;border:1px dashed #d1d5db;
+border-radius:.5rem;padding:.5rem .8rem}
+.nt-meta{font-size:.82rem;color:#6b7280;line-height:1.9}
+.nt-meta code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.78rem}
+.nt-fail{display:flex;gap:.8rem;align-items:flex-start;border:2px solid #f87171;background:#fef2f2;
+border-radius:.8rem;padding:1rem 1.1rem}
+.nt-fail .material-icons{color:#dc2626;font-size:1.8rem;flex:none}
+.nt-fail p{margin:.4rem 0;color:#7f1d1d;line-height:1.9;font-size:.92rem}
+.nt-guide{background:#fff;border:1px dashed #fca5a5;border-radius:.5rem;padding:.6rem .9rem}
+.nt-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.nt-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.nt-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.nt-quick{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:2rem;padding:.35rem .95rem;
+font-size:.85rem;font-weight:600}
+a.nt-quick{text-decoration:none}
+a.nt-quick:hover{background:#dbeafe}
+.nt-note{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">hub</i> NAT 类型检测器</h1>
+<p>一键检测你的 NAT 类型：纯前端 WebRTC 收集 ICE 候选，向双公共 STUN 服务器查询公网映射，按映射行为推断<b>锥形 NAT</b> / <b>对称型 NAT</b>，给出打洞友好度星级与 P2P 联机建议——玩联机游戏、P2P 直连、远程桌面前先知道自己的网络能不能打洞。</p>
+</div>
+<div class="tool-content" style="max-width:1100px;margin:auto;">
+<div class="nt-privacy">
+<i class="material-icons">privacy_tip</i>
+<div><b>隐私提示：</b>检测需要向公共 STUN 服务器（默认 Google 的两台，可自定义）发送 UDP 请求，<b>你的公网 IP 会暴露给所选 STUN 服务器</b>。除 STUN 查询外，本页脚本不发起任何网络请求（零 fetch/XHR）。检测为启发式近似，非 RFC 5780 完整行为测试。</div>
+</div>
+
+<div class="nt-panel">
+<h3><i class="material-icons">settings_input_antenna</i> STUN 服务器配置</h3>
+<div class="nt-field">
+<label>自定义 STUN 服务器（可选，每行/逗号/空格分隔一条，格式 stun:host:port；留空用默认两台 Google STUN）</label>
+<textarea id="nt-stun-input" placeholder="例如：&#10;stun:stun.cloudflare.com:3478&#10;stun:stun.miwifi.com:3478"></textarea>
+</div>
+<div class="nt-hint" id="nt-stun-hint">默认使用 stun:stun.l.google.com:19302 与 stun:stun1.l.google.com:19302 两台公共 STUN 服务器。映射行为对比至少需要两台服务器各自返回 srflx 候选。</div>
+<div class="nt-actions">
+<button type="button" class="nt-btn nt-btn-primary" id="nt-start"><i class="material-icons">play_arrow</i>开始检测</button>
+</div>
+<div class="nt-steps" id="nt-steps">
+<span class="nt-step"><i class="material-icons">radio_button_unchecked</i>连接中</span>
+<span class="nt-step"><i class="material-icons">radio_button_unchecked</i>收集候选中</span>
+<span class="nt-step"><i class="material-icons">radio_button_unchecked</i>分析中</span>
+</div>
+<p id="nt-status">就绪</p>
+</div>
+
+<div class="nt-panel">
+<h3><i class="material-icons">assessment</i> 检测结果</h3>
+<div id="nt-result">
+<div class="nt-note" style="margin-top:0">点击「开始检测」后，这里将显示公网 IP、映射端口、映射行为、NAT 类型判定、打洞友好度星级与联机建议。检测通常 2–5 秒完成；12 秒内未收到服务器反射候选（srflx）会自动给出失败原因与排查指引。</div>
+</div>
+</div>
+
+<div class="nt-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="nt-faq">
+<dt>什么是 NAT 类型检测？</dt>
+<dd>路由器/运营商的 NAT 会把内网地址映射为公网地址。P2P 联机（如联机游戏、远程桌面直连）需要「打洞」穿透 NAT，不同 NAT 类型的打洞难度差异很大。本工具向两台 STUN 服务器分别查询你的公网映射地址，对比映射行为推断 NAT 类型。</dd>
+<dt>怎么判断锥形 NAT 还是对称型 NAT？</dt>
+<dd>向两台不同 STUN 服务器查询：如果两次返回的公网 IP＋端口<b>完全一致</b>，说明映射与目标端点无关 → 锥形 NAT（Cone NAT）；如果 IP 或端口<b>不一致</b>，说明映射随目标变化 → 对称型 NAT（Symmetric NAT）特征。这是浏览器可行的启发式近似，不是 RFC 5780 的完整行为测试。</dd>
+<dt>浏览器有什么做不到的？（硬限制）</dt>
+<dd>浏览器只能看到映射行为，<b>无法区分 Full Cone / Restricted Cone / Port Restricted Cone 三种过滤行为</b>（它们映射行为相同、过滤策略不同），所以锥形 NAT 结果只给到「锥形」一层，不会细化三类过滤类型。</dd>
+<dt>对称型 NAT 该怎么办？</dt>
+<dd>P2P 打洞成功率低，建议改用 TURN 中继服务器转发流量，或换到锥形 NAT 网络（如手机热点）再试。锥形 NAT 通常可以直接尝试 UDP 打洞。</dd>
+<dt>检测失败「未收到 srflx」怎么办？</dt>
+<dd>最常见原因是 UDP 出向被拦截（公司/校园网防火墙）。排查：① 换手机热点再测；② 检查浏览器未禁用 WebRTC；③ 公司网络咨询 IT 是否放行 UDP 3478/19302 端口；④ 尝试自定义其他 STUN 服务器（如 stun:stun.cloudflare.com:3478）。</dd>
+<dt>同一网络重复检测结果会一致吗？</dt>
+<dd>映射行为通常是稳定的，同一网络重复检测判定应一致。如果两次结果不同，说明网络环境有变化（如运营商会话超时后重新分配映射），可多测两次取多数结论。</dd>
+<dt>我的公网 IP 会被记录吗？</dt>
+<dd>本工具不记录、不上传任何数据。你的公网 IP 只会被你选择的 STUN 服务器看到（STUN 协议本身需要），页面上显示的 IP 仅存在于你的浏览器内存中。</dd>
+</dl>
+</div>
+
+<div class="nt-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="nt-related">
+<span class="nt-quick" style="cursor:default">网络工具：</span>
+<a class="nt-quick" href="/tools/my-ip">我的IP</a>
+<a class="nt-quick" href="/tools/ip-lookup">IP查询</a>
+<a class="nt-quick" href="/tools/ping">Ping测试</a>
+<a class="nt-quick" href="/tools/dns-lookup">DNS解析查询</a>
+<a class="nt-quick" href="/tools/port-scan">端口扫描</a>
+<a class="nt-quick" href="/tools/subnet-calculator">IP 子网计算器</a>
+</div>
+</div>
+
+</div>
+</div>
+
+<script src="/tools/static/js/nat_type_detector.js?v=1"></script>
+</body>
+</html>
+{{end}}
