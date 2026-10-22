@@ -1,3 +1,81 @@
+## 今日任务（2026-10-22 23:00 · 产品经理排期轮）
+
+**选定：社区搜索聚合器（去 AI 垃圾搜索路由，search_router）** — 本轮唯一任务（新工具）：
+- **顺位**：23:00 研究轮（70 轮）Top1 推荐；WiFi 二维码生成器（f178e92）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。
+- **形态验证**：70 轮新晋；dev.to BoardScout（2026-10-20）形态验证——100% client-side minimalist search router，痛点直指 Google 结果被 AI SEO 农场/affiliate 内容淹没；OpenSearch 支持（可加为浏览器地址栏自定义搜索引擎）。
+- **痛点**：开发者找真实技术讨论要手动拼 site:reddit.com / site:stackoverflow.com 等过滤语法，效率低；AI SEO 垃圾内容挤占通用搜索结果。
+- **零重叠实锤**：本轮复核——`grep -oinE 'search_router|search-router|社区搜索|聚合搜索|reddit|hackernews|stackexchange'` 全零命中；`grep -oinE 'site:' tools/categories.go` 无工具形态命中；全量 140 Path 中无同类工具；建议 ID `search_router`、Path `/tools/search-router` 未被占用。
+- **品类归位**：注册到「开发工具」品类（dev；受众为开发者查找真实技术讨论，与正则/URL/文件夹对比等同族）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池二席）；在线倒计时/番茄钟（P1；69 轮新晋；dev.to ClockAura 2026-10 更新＋BlanzaTools 双形态验证；自有 140 Path 计时器空白实锤；建议 ID countdown_timer、Path /tools/countdown-timer；留池三席）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度；留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高；留池）；单位感知记事本计算器（P1；Calcy ranges 增强观察；蒙特卡洛部分单轮交付风险高；留池）；TOTP 动态口令生成器（P2；70 轮新晋；V2EX Spot Authenticator 形态观察；安全敏感降 P2；留池）；年会大屏抽奖（时令预热，11 月）。
+
+**规格**（开发轮按此执行）：
+- 核心交互：关键词输入框（回车即搜）＋社区板块多选（Reddit、Hacker News、Stack Exchange（StackOverflow/ServerFault/SuperUser）、Quora、V2EX、知乎，默认全选或用户记忆上次选择）＋时间范围下拉（不限/过去 24 小时/过去 1 周/过去 1 个月/过去 1 年）。
+- 路由生成：每个已选板块生成一条引擎搜索链接——通用方案：Google `site:` 过滤链接（如 `https://www.google.com/search?q=site:reddit.com+<关键词>+after:2025`）；板块内方案优先用站内搜索（如 StackOverflow `stackoverflow.com/search?q=`、知乎 `zhihu.com/search?type=content&q=`、V2EX `v2ex.com/search?q=`、HN `hn.algolia.com/?q=`、Reddit `reddit.com/search/?q=`）；列表展示「板块 × 链接」，点击单条新标签打开；**一键全开**按钮（popup 拦截兜底：逐个打开失败时改为复制全部链接到剪贴板＋toast 提示）。
+- OpenSearch：提供 `/search-router/opensearch.xml`（或内嵌描述文件生成），页面内给出 Chrome/Edge/Firefox「添加为地址栏自定义搜索引擎」操作说明＋一键复制 URL。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR；链接构造全部本地拼串）。
+- 注册：开发工具品类，新增工具 ID `search_router`、Name「社区搜索聚合器」、Path `/tools/search-router`（New: true），中英文描述＋SEO keywords（社区搜索、去 AI 垃圾、搜索聚合、reddit 搜索、site 过滤、真实技术讨论）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `search_router`、Path `/tools/search-router` 注册完整（Category 开发工具），注册总数 140→141 Path。
+2. 输入关键词 `python asyncio 连接池`、全板块选中→每条链接 URL 含正确的 site/站内搜索语法与 URL 编码后的关键词；时间范围「过去 1 个月」→Google 链接含 `after:` 日期参数（取当前日期前推 1 个月）。
+3. 单板块（如只选 Reddit）→只生成 1 条链接；一键全开在被浏览器拦截时降级为复制全部链接（clipboard 写入成功且 toast 提示）。
+4. OpenSearch 描述文件可访问且 XML 合法（含 ShortName 与 Url template `?q={searchTerms}` 占位）。
+5. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+6. node 测试 30+ 断言全过（关键词编码、site 语法拼装、时间范围 after 日期、OpenSearch XML 字段）。
+
+**预计改动文件**：
+- `templates/search_router.html`（新增；含 SEO 面板按家族标准＋浏览器自定义搜索引擎说明区）
+- `static/js/search_router.js`（新增；链接构造、一键全开、OpenSearch XML 生成、复制）
+- `tests/search_router.test.js`（新增；语法拼装、编码、after 日期、OpenSearch XML）
+- `tools/categories.go`（开发工具品类注册：ID search_router、Path /tools/search-router、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 7e0c7be（排期：21:39 PM 决策轮立项 WiFi 二维码生成器）与远程分支一致；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（fetch_rc=0；22:22 首次 fetch 曾报 access rights，重试后正常，疑似瞬时网络抖动）；`grep tools/categories.go` 全量 140 Path；零重叠 grep 本轮复核全零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（疑似构建产物/备份，21:00 PM 轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-22 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第七十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。WiFi 二维码生成器已交付闭环（`git log` 头部 f178e92「新增 WiFi 二维码生成器」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **140 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 深夜轮次，P1 可排。
+
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. wifi_qr_generator 交付确认：`git log` 头部 f178e92（WIFI: 协议串构建/特殊字符转义/中文 SSID UTF-8 明文/隐藏网络 H:true，纯前端二维码实时预览＋PNG/SVG 下载＋A4 打印海报，零后端零网络请求）；`grep tools/categories.go` 全量 140 Path（ID wifi_qr_generator、Path /tools/wifi-qr-generator 已注册，编码转换品类）；候选池划出。
+2. 新信号扫描：
+   - **dev.to BoardScout（2026-10-20，2 天前）**：minimalist search router——痛点是 Google 结果被 AI SEO 农场/affiliate 淹没，找真实讨论要手动拼 site:；100% client-side、隐私优先、走 Google clean web-only index、OpenSearch 支持加为浏览器地址栏自定义搜索 → **新晋 P1**（纯前端小难度：关键词＋板块多选（Reddit/HN/Stack Exchange/Quora/V2EX/知乎）＋时间范围 → 各引擎 `site:` 过滤搜索链接一键全开；`grep -oinE '搜索路由|聚合搜索|reddit|hackernews|stackexchange'` 全零命中实锤）。
+   - **V2EX 10-12 Spot Authenticator**（独立开发者 2FA 验证器分享帖送 Pro 兑换码）：2FA 验证码要掏手机、开发者测试 TOTP 流程麻烦 → **新晋 P2「TOTP 动态口令生成器」**（Base32 密钥→6/8 位动态码＋倒计时进度环＋剩余秒数；crypto.subtle HMAC-SHA1 纯前端；localStorage 多账号；密钥只存浏览器本地＋显著安全提示；安全敏感降 P2；categories.go `totp|authenticator|动态口令|2fa` 零命中）。
+   - **dev.to BlanzaTools（2026-10-11）**：14 个 vanilla JS 工具（图片压缩/词数统计/密码/二维码/JSON/倒计时等）→ 类目均为自有实锤；其中 Countdown Timer 为池内 P1「在线倒计时/番茄钟」**补第二形态验证**。
+   - **dev.to chuanbuilds（8 小工具复盘）**：Camp Power Calc（露营功率/电池/太阳能板）、Room Paint Calculator、Fry Calc、Cold Plunge Calculator → 均为生活计算器类 → 方向修正（10-18）排除，不立。
+   - **Show HN Tapirscan**（浏览器任意角度条码扫描）→ 自有扫码族覆盖（qrcode 识别＋barcode 族），不单独立，观察；**Show HN 栅栏规划器**（fence planner 布局/材料/成本估算）→ 成本估算生活类，不立；**Show HN 免费星盘/塔罗**（no signup）→ 玄学娱乐不合 ToolWeb 调性，不立；**Show HN PHP2Shell free checker** → 需后端 HEAD 请求（纯前端 CORS 不可做），不立（69 轮已消化，热点延续观察）。
+   - **HN 10-21/10-22 front**：PHP 重大漏洞/CVE/证书泄露/DeepSeek 封禁/AI 新闻为主，无其他单页 web 工具形态 → 不立。
+   - **V2EX 其余**：vaneform（需后端数据，67 轮已消化）/蓝海小站点榜单（需后端数据）/HangDry（macOS 原生应用）/OpenI 免费算力（平台类）/来财记账（App＋AI）→ 均非纯前端单页形态，不立。
+3. 候选池变动：WiFi 二维码生成器已交付划出（f178e92，140 Path）；**新晋 2 个**（P1 社区搜索聚合器、P2 TOTP 动态口令生成器）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；wifi_qr_generator 交付闭环后按顺位递进）：
+
+1. **社区搜索聚合器（去 AI 垃圾搜索路由）** — P1（70 轮新晋；dev.to BoardScout 2026-10-20 形态验证：100% client-side，Reddit/HN/Stack Exchange/Quora 多板块路由，Google clean web-only index，OpenSearch；痛点：Google 结果被 AI SEO 农场淹没，找真实讨论要手动拼 site:；关键词＋板块多选＋时间范围 → 各引擎 site: 搜索链接一键全开＋可加为浏览器自定义搜索引擎；纯前端小难度；零重叠实锤；建议 ID search_router、Path /tools/search-router）。
+2. **会议邀请 (.ics) 生成器** — P1（63 轮新晋；HN 600pts；痛点：组织会议手写 .ics 或在日历 App 逐个建事件效率低；填表单（标题/时间/地点/参会人/提醒）→ 生成标准 .ics 下载 → 邮件/IM 分发；纯前端小难度；`grep -inE '\.ics|会议邀请'` 零命中（唯一 meeting 命中为时区工具描述"会议时间对齐"误命中）；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator）。
+3. **在线倒计时/番茄钟** — P1（69 轮新晋；dev.to ClockAura 2026-10 更新＋BlanzaTools 2026-10-11 双形态验证；自有 140 Path `倒计时|计时器|秒表|番茄|闹钟|countdown|stopwatch|pomodoro|timer` 零命中实锤空白；痛点：现有免费计时站广告多/强制注册/单功能/界面杂乱；倒计时/秒表/番茄钟/闹钟四模式单页＋全屏大字＋结束音效＋预设保存；纯前端小难度；建议 ID countdown_timer、Path /tools/countdown-timer）。
+
+其余 P1 留池：NAT 类型检测器（64 轮新晋；Show HN NatChecker；零重叠复核；留池）；MBOX 邮件存档查看器（58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；Calcy ranges 增强观察；蒙特卡洛部分单轮交付风险高；留池）；屏幕常亮/浏览器实时听写（留池）；年会大屏抽奖（时令预热，11 月）。
+
+**通用候选表增量**（第七十轮：WiFi 二维码生成器已交付划出（f178e92，140 Path）；新晋 2 个；BoardScout→P1 社区搜索聚合器；Spot Authenticator→P2 TOTP 动态口令生成器；BlanzaTools 倒计时补 countdown_timer 第二形态验证；chuanbuilds 生活计算器类不立；Tapirscan 自有扫码族覆盖观察；栅栏规划器/星盘塔罗/PHP2Shell checker 不立；HN 10-21/10-22 front 无工具形态；V2EX 其余非单页形态不立；全量 140 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社区搜索聚合器（去 AI 垃圾搜索路由） | 新晋（70 轮；dev.to BoardScout 2026-10-20 形态验证：100% client-side 多板块搜索路由，Reddit/HN/Stack Exchange/Quora，Google clean web-only index＋OpenSearch；痛点：Google 结果被 AI SEO 农场淹没；关键词＋板块多选＋时间范围→各引擎 site: 搜索链接一键全开；纯前端；零重叠实锤；建议 ID search_router、Path /tools/search-router） | 小 | P1 |
+| TOTP 动态口令生成器 | 新晋（70 轮；V2EX 10-12 Spot Authenticator 2FA 形态观察；痛点：2FA 验证码要掏手机、开发者测试 TOTP 麻烦；Base32 密钥→6/8 位动态码＋倒计时进度环；crypto.subtle HMAC-SHA1 纯前端；localStorage 多账号；密钥只存浏览器本地＋显著安全提示；建议 ID totp_generator、Path /tools/totp-generator） | 小 | P2 |
+| WiFi 二维码生成器 | 已交付划出（f178e92 交付闭环；ID wifi_qr_generator、Path /tools/wifi-qr-generator 已注册；全量 140 Path；候选池划出） | — | 已实现 |
+| BlanzaTools 倒计时观察 | 本轮不新立（dev.to 10-11；14 工具均为自有实锤；Countdown Timer 为池内 P1「在线倒计时/番茄钟」补第二形态验证） | — | P1 观察 |
+| chuanbuilds 8 小工具 | 本轮不立（dev.to；露营功率/油漆/油炸/冷水浴计算器均为生活计算器类；用户 10-18 方向修正排除） | — | 不立 |
+| Tapirscan / 栅栏规划器 / 星盘塔罗 / PHP2Shell checker | 本轮不立（Show HN；任意角度条码扫描＝自有扫码族覆盖观察；栅栏规划器成本估算生活类；星盘塔罗玄学娱乐不合调性；PHP2Shell checker 需后端 HEAD 请求纯前端 CORS 不可做） | — | 不立 |
+
+**归档说明**：本轮为 10-22 通用调研第七十轮——WiFi 二维码生成器交付闭环（f178e92，`/tools/wifi-qr-generator` 已注册，编码转换品类，全量 140 Path），候选池划出；新信号扫描（dev.to BoardScout 10-20→**新晋 P1 社区搜索聚合器**；V2EX Spot Authenticator→**新晋 P2 TOTP 动态口令生成器**；dev.to BlanzaTools→countdown_timer 补第二形态验证；dev.to chuanbuilds 生活计算器类方向修正排除；Show HN Tapirscan/栅栏规划器/星盘塔罗/PHP2Shell checker 不立；HN 10-21/10-22 front 无工具形态；V2EX 其余非单页形态不立）均已消化；WPS 候选表保持冻结归档；仓库 140 注册工具全量核对无重叠（Top3 建议 ID search_router / meeting_invite_generator / countdown_timer；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮恢复正常（github.com 重新写入 known_hosts）；`git log` 头部 f178e92（wifi_qr_generator 交付闭环）；`grep tools/categories.go` 全量 140 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-22 21:00 · 产品经理排期轮）
 
 **选定：WiFi 二维码生成器（wifi_qr_generator）** — 本轮唯一任务（新工具）：

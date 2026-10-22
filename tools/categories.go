@@ -399,6 +399,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "search_router",
+					Name:        "社区搜索聚合器",
+					Description: "去 AI 垃圾搜索路由：关键词一键直达 Reddit/Hacker News/Stack Exchange/Quora/V2EX/知乎真实技术讨论，Google site: 过滤+官方站内搜索双路由，时间范围过滤、一键全开、OpenSearch 地址栏自定义搜索，纯前端零上传 · community search router: route keywords to real discussions on Reddit/HN/StackExchange/Quora/V2EX/Zhihu, Google site: filters + in-site search, time ranges, open-all, OpenSearch, 100% client-side",
+					Path:        "/tools/search-router",
+					Icon:        "forum",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

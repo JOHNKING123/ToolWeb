@@ -1,0 +1,194 @@
+{{define "search_router"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社区搜索聚合器 - 绕过 AI 垃圾，直达 Reddit/HN/知乎真实讨论 | 程序员工具箱</title>
+    <meta name="description" content="免费在线社区搜索聚合器（去 AI 垃圾搜索路由）：输入关键词，勾选 Reddit、Hacker News、Stack Exchange、Quora、V2EX、知乎社区板块，一键生成 Google site: 过滤与官方站内搜索链接，支持时间范围过滤、一键全开、复制全部链接；提供 OpenSearch 描述文件，可加为浏览器地址栏自定义搜索引擎。纯前端本地运行，关键词不上传。">
+    <meta name="keywords" content="社区搜索聚合器,去 AI 垃圾搜索,搜索路由,reddit 搜索,site 过滤,真实技术讨论,Hacker News 搜索,StackOverflow 搜索,知乎搜索,V2EX 搜索,OpenSearch 自定义搜索引擎,AI SEO 垃圾过滤,社区搜索工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/search-router">
+    <meta property="og:title" content="社区搜索聚合器 - 绕过 AI 垃圾，直达真实技术讨论">
+    <meta property="og:description" content="关键词一键直达 Reddit、Hacker News、Stack Exchange、Quora、V2EX、知乎真实讨论；Google site: 过滤+站内搜索双路由，时间范围可选，一键全开，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/search-router">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"社区搜索聚合器","description":"去 AI 垃圾搜索路由：输入关键词，勾选 Reddit、Hacker News、Stack Exchange、Quora、V2EX、知乎社区板块，一键生成 Google site: 过滤与官方站内搜索链接，支持时间范围过滤、一键全开与 OpenSearch 浏览器自定义搜索引擎，纯前端本地运行。","url":"https://www.johnkingzcq123.xyz/tools/search-router","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sr-wrap .container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.2rem; }
+        .sr-wrap h1 { font-size: 1.6rem; margin: 0 0 .4rem; color: #111827; }
+        .sr-intro { color: #6b7280; font-size: .95rem; margin: 0 0 1.2rem; line-height: 1.8; }
+        .sr-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .sr-privacy .sr-lock { font-size: 1.6rem; flex: none; }
+        .sr-main { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1rem; margin-bottom: 1rem; align-items: start; }
+        .sr-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem; }
+        .sr-panel h3 { margin: 0 0 .8rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .45rem; }
+        .sr-panel h3 .sr-tag { font-size: .72rem; font-weight: 400; color: #6b7280; background: #f3f4f6; border-radius: .35rem; padding: .1rem .5rem; }
+        .sr-field { margin-bottom: .9rem; }
+        .sr-label { display: block; font-size: .88rem; font-weight: 600; color: #374151; margin-bottom: .35rem; }
+        .sr-input { width: 100%; box-sizing: border-box; padding: .55rem .7rem; font-size: .9rem; color: #111827;
+            border: 1px solid #d1d5db; border-radius: .5rem; background: #f9fafb; font-family: inherit; }
+        .sr-input:focus { outline: none; border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        select.sr-input { cursor: pointer; }
+        .sr-hint { color: #9ca3af; font-size: .78rem; margin-top: .3rem; line-height: 1.6; }
+        .sr-err { color: #dc2626; font-size: .8rem; margin-top: .3rem; min-height: 0; line-height: 1.6; }
+        .sr-err:empty { display: none; }
+        .sr-boards { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+        .sr-check { display: flex; align-items: center; gap: .45rem; font-size: .88rem; color: #374151;
+            border: 1px solid #e5e7eb; border-radius: .55rem; padding: .55rem .7rem; cursor: pointer; transition: all .15s; }
+        .sr-check:hover { border-color: var(--primary-color); background: #f8fafc; }
+        .sr-check input { width: 1.05rem; height: 1.05rem; accent-color: var(--primary-color); cursor: pointer; }
+        .sr-outbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .6rem; }
+        .sr-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1rem; font-size: .88rem;
+            border-radius: .55rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .sr-btn:hover:not(:disabled) { border-color: var(--primary-color); color: var(--primary-color); }
+        .sr-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .sr-btn.sr-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .sr-btn.sr-primary:hover:not(:disabled) { background: var(--primary-hover, #1d4ed8); color: #fff; }
+        .sr-sample-link { background: none; border: none; color: var(--primary-color); font-size: .8rem; cursor: pointer; padding: 0; }
+        .sr-sample-link:hover { text-decoration: underline; }
+        /* 结果列表 */
+        #sr-results { display: flex; flex-direction: column; gap: .6rem; }
+        .sr-row { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .85rem; background: #fff; transition: all .15s; }
+        .sr-row:hover { border-color: var(--primary-color); }
+        .sr-row-head { display: flex; align-items: center; gap: .5rem; margin-bottom: .3rem; }
+        .sr-board { font-weight: 700; font-size: .9rem; color: #111827; }
+        .sr-tag { font-size: .72rem; color: #6b7280; background: #f3f4f6; border-radius: .35rem; padding: .1rem .5rem; }
+        .sr-mini { margin-left: auto; background: none; border: 1px solid #d1d5db; border-radius: .4rem;
+            font-size: .78rem; color: #4b5563; padding: .2rem .6rem; cursor: pointer; }
+        .sr-mini:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .sr-url { font-size: .82rem; color: var(--primary-color); word-break: break-all; line-height: 1.6;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-decoration: none; }
+        .sr-url:hover { text-decoration: underline; }
+        .sr-note { font-size: .76rem; color: #9ca3af; margin-top: .25rem; }
+        .sr-empty { color: #9ca3af; font-size: .9rem; text-align: center; padding: 2rem 0; line-height: 2;
+            border: 1px dashed #d1d5db; border-radius: .6rem; }
+        /* OpenSearch */
+        .sr-os { margin-top: 1rem; }
+        #sr-os-xml { width: 100%; box-sizing: border-box; min-height: 11rem; font-size: .78rem; line-height: 1.7;
+            font-family: ui-monospace, Menlo, Consolas, monospace; color: #1f2937;
+            border: 1px solid #d1d5db; border-radius: .5rem; background: #f9fafb; padding: .7rem .8rem; }
+        .sr-os-steps { font-size: .85rem; color: #4b5563; line-height: 2; margin: .6rem 0 0; }
+        .sr-os-steps code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .8rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        /* 文档区 */
+        .sr-doc { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem;
+            font-size: .88rem; color: #4b5563; line-height: 2; margin-top: 1rem; }
+        .sr-doc h3 { margin: 0 0 .6rem; font-size: 1rem; color: #111827; }
+        .sr-doc b { color: #111827; }
+        .sr-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .sr-doc a { color: var(--primary-color); text-decoration: none; }
+        .sr-doc a:hover { text-decoration: underline; }
+        /* toast */
+        .sr-toast { position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px); z-index: 99;
+            background: #111827; color: #fff; padding: .7rem 1.3rem; border-radius: .6rem; font-size: .9rem;
+            opacity: 0; pointer-events: none; transition: all .25s; max-width: 90vw; text-align: center; }
+        .sr-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .sr-toast.ok { background: #065f46; }
+        .sr-toast.fail { background: #991b1b; }
+        @media print {
+            .navbar, .sr-toast { display: none !important; }
+        }
+        @media (max-width: 900px) {
+            .sr-main { grid-template-columns: 1fr; }
+            .sr-boards { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="sr-wrap">
+    <div class="container">
+        <h1>🧭 社区搜索聚合器</h1>
+        <p class="sr-intro">Google 结果被 AI SEO 农场淹没？输入关键词，一键直达 Reddit、Hacker News、Stack Exchange、Quora、V2EX、知乎的真实技术讨论 —— 绕过内容农场，只看真人经验。</p>
+
+        <div class="sr-privacy">
+            <span class="sr-lock">🔒</span>
+            <div><b>隐私承诺：关键词只留在你的浏览器里，不上传服务器。</b><br>
+            链接构造、OpenSearch 描述文件生成、复制全部在本地完成，零后端接口、零第三方库、零 CDN。你可以在 DevTools 的 Network 面板验证 —— 任何操作都不会产生网络请求。断网也能用（生成的链接需要联网才能打开）。</div>
+        </div>
+
+        <div class="sr-main">
+            <div class="sr-panel">
+                <h3>🔍 搜索条件 <span class="sr-tag">左侧填写</span>
+                    <button type="button" class="sr-sample-link" id="sr-sample" style="margin-left:auto">填入示例</button>
+                </h3>
+                <div class="sr-field">
+                    <label class="sr-label" for="sr-keyword">关键词</label>
+                    <input class="sr-input" id="sr-keyword" type="text" placeholder="例如：python asyncio 连接池（回车即搜）" autocomplete="off">
+                    <div class="sr-err" id="sr-err"></div>
+                </div>
+                <div class="sr-field">
+                    <label class="sr-label">社区板块</label>
+                    <div class="sr-boards" id="sr-boards"></div>
+                    <div class="sr-hint">默认全选；你的选择会被浏览器记住，下次打开自动恢复。</div>
+                </div>
+                <div class="sr-field">
+                    <label class="sr-label" for="sr-range">时间范围</label>
+                    <select class="sr-input" id="sr-range"></select>
+                    <div class="sr-hint">Google 路由追加 <code>after:日期</code> 过滤；Hacker News 走官方 Algolia 的日期范围参数。</div>
+                </div>
+                <div class="sr-outbar">
+                    <button type="button" class="sr-btn sr-primary" id="sr-go">🚀 生成搜索链接</button>
+                </div>
+            </div>
+
+            <div class="sr-panel">
+                <h3>🔗 搜索链接 <span class="sr-tag">点击新标签打开</span></h3>
+                <div class="sr-outbar">
+                    <button type="button" class="sr-btn sr-primary" id="sr-open-all" disabled>⚡ 一键全开</button>
+                    <button type="button" class="sr-btn" id="sr-copy-all" disabled>📋 复制全部链接</button>
+                </div>
+                <div class="sr-hint" style="margin-bottom:.7rem">一键全开若被浏览器拦截弹窗，会自动降级为复制全部链接到剪贴板并提示。</div>
+                <div id="sr-results"><div class="sr-empty">搜索链接列表区<br>左侧填写关键词后实时生成</div></div>
+
+                <div class="sr-os">
+                    <h3 style="margin-top:1rem">🌐 OpenSearch：加为浏览器地址栏搜索引擎</h3>
+                    <div class="sr-outbar">
+                        <button type="button" class="sr-btn" id="sr-os-copy">📋 复制 XML</button>
+                        <button type="button" class="sr-btn" id="sr-os-download">⬇️ 下载 XML</button>
+                    </div>
+                    <textarea id="sr-os-xml" readonly spellcheck="false"></textarea>
+                    <div class="sr-os-steps">
+                        <b>Chrome / Edge（推荐，最快）：</b>设置 → 搜索引擎 → 管理搜索引擎和网站搜索 → 添加 → 名称填「社区搜索」、快捷字词填 <code>sr</code>、网址填 <code>https://www.it-tool.eu.cc/tools/search-router?q=%s</code> → 以后在地址栏输入 <code>sr</code> + 空格即可直搜。<br>
+                        <b>Firefox：</b>把本页加入书签，编辑该书签设置关键词为 <code>sr</code>，地址栏输入 <code>sr 关键词</code> 直达。<br>
+                        <b>标准 OpenSearch：</b>下载上方 XML 部署到你的网站，在页面 <code>&lt;head&gt;</code> 加 <code>&lt;link rel="search" type="application/opensearchdescription+xml" href="…xml"&gt;</code> 即可被浏览器自动发现。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sr-doc">
+            <h3>📖 使用说明</h3>
+            <div>
+                <b>三步上手：</b>① 左侧输入关键词（回车即搜）、勾选社区板块、选择时间范围；② 右侧得到各社区搜索链接，点击单条在新标签页打开；③ 赶时间可用「一键全开」批量打开，或「复制全部链接」粘贴分享。<br>
+                <b>路由规则：</b>Reddit / Quora 走 Google <code>site:</code> 过滤（Google 对这两站的索引质量远胜其站内搜索）；Hacker News 走官方 Algolia 搜索（<code>hn.algolia.com</code>，支持日期范围）；Stack Exchange 走 <code>stackoverflow.com/search</code>、V2EX 走 <code>v2ex.com/search</code>、知乎走 <code>zhihu.com/search?type=content</code> 官方站内搜索 —— 彻底绕开 Google 的 AI SEO 垃圾。<br>
+                <b>时间范围：</b>Google 链接追加 <code>after:YYYY-MM-DD</code>（从今天前推）；HN 链接映射为 Algolia 的 <code>dateRange</code> 参数（last24h / pastWeek / pastMonth / pastYear）。<br>
+                <b>地址栏直搜：</b>本页支持 <code>?q=关键词</code> 参数 —— 把它设为浏览器自定义搜索引擎后，地址栏输入即可直达本页并自动生成链接。<br>
+                <b>互链工具：</b>关键词需要编码调试可用 <a href="/tools/url-codec">URL 编解码</a>；搜索结果筛选文本可用 <a href="/tools/regex-tester">正则测试</a>（开发工具家族联动）。
+            </div>
+            <h3 style="margin-top:1rem">❓ 常见问题</h3>
+            <div>
+                <b>为什么不用 Google 直接搜？</b>通用搜索结果正被 AI SEO 农场和 affiliate 站淹没；社区里的真实踩坑讨论、版本号细节、高赞回答，在站内搜索里更容易找到。<br>
+                <b>Reddit / Quora 为什么走 Google 而不是站内搜索？</b>Reddit 站内搜索对历史内容召回差，Quora 站内搜索登录墙严重；Google 的 <code>site:</code> 索引反而是这两站最高质量的入口。<br>
+                <b>一键全开没反应？</b>浏览器拦截了批量弹窗 —— 本工具会自动降级为复制全部链接到剪贴板并 toast 提示；也可以把本站加入弹窗白名单。<br>
+                <b>我的搜索关键词会上传吗？</b>不会。链接全部在浏览器本地拼串生成，无任何网络请求，可断网使用（打开链接本身需要联网）。<br>
+                <b>OpenSearch XML 怎么用？</b>上方文本框即标准描述文件（含 ShortName 与 <code>?q={searchTerms}</code> 模板），复制或下载后按说明部署；最快的方式是直接用 Chrome 自定义搜索引擎（<code>%s</code> 占位）。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="sr-toast" id="sr-toast"></div>
+
+    <script src="/tools/static/js/search_router.js?v=1"></script>
+</body>
+</html>
+{{end}}
