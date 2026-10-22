@@ -948,6 +948,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文档转换",
 				},
+				{
+					ID:          "meeting_invite_generator",
+					Name:        "会议邀请 (.ics) 生成器",
+					Description: "表单生成 RFC 5545 标准日历文件：标题/起止时间/全天开关/时区/地点/参会人邮箱/多档提醒 → VCALENDAR/VEVENT（文本转义、75 字节折行、TZID 时区、VALARM 提醒、ATTENDEE 参会人），.ics 下载、文本复制，附 Gmail/Outlook/Apple 日历导入指引，纯前端零上传 · Meeting invite (.ics) generator: form to RFC 5545 VCALENDAR, 100% client-side",
+					Path:        "/tools/meeting-invite-generator",
+					Icon:        "event",
+					New:         true,
+					Category:    "文档转换",
+				},
 			},
 		},
 		{

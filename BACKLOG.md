@@ -1,3 +1,39 @@
+## 今日任务（2026-10-23 01:00 · 产品经理排期轮）
+
+**选定：会议邀请 (.ics) 生成器（meeting_invite_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：23:00 研究轮（70 轮）Top3 推荐之首；社区搜索聚合器（a689ca3）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选三席：在线倒计时/番茄钟（P1；69 轮新晋；dev.to ClockAura＋BlanzaTools 双形态验证；计时器空白实锤；建议 ID countdown_timer、Path /tools/countdown-timer；留池二席）、NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；建议 ID nat_type_detector、Path /tools/nat-type-detector；留池三席）。
+- **形态验证**：63 轮新晋；Hacker News 600pts 热点信号；单页表单→标准 .ics 文件下载→邮件/IM 分发链路，无竞争形态。
+- **痛点**：组织会议手写 .ics 或在日历 App 里逐个建事件效率低；现有免费路径多为 App 内嵌、流程割裂；填表单（标题/时间/地点/参会人/提醒）一次生成标准 .ics 下载即可分发。
+- **零重叠实锤**：本轮复核——全仓库 `grep -rinE '\.ics|会议邀请' tools/ templates/ static/js/ tests/` 零命中；`grep -ciE 'meeting' tools/categories.go` 唯一 1 命中为时区工具描述「会议时间对齐」误命中；`grep -inE 'nat_type|nat-type'` 零命中（case-insensitive 的 NAT 命中均为 signature/quotation 等词内子串，属误命中）；建议 ID `meeting_invite_generator`、Path `/tools/meeting-invite-generator` 未被占用。
+- **品类归位**：注册到「文档转换」品类（23 个工具；输出标准日历文档文件；「效率工具」在 categories.go 中不存在，不硬造）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 表单：标题（必填，内联空校验）；开始时间/结束时间（datetime-local，结束须晚于开始，否则内联报错＋禁用生成）；全天事件开关（开启后隐藏起止时刻，只留日期）；时区选择（IANA 下拉，默认 Asia/Shanghai）；地点；参会人（逗号/换行分隔邮箱，逐个邮箱格式校验）；描述（多行文本）；提醒预设多选（5/15/30 分钟、1 小时、1 天，默认 15 分钟，可全不选）。
+- ICS 生成（RFC 5545，CRLF 换行）：`BEGIN:VCALENDAR / VERSION:2.0 / PRODID / BEGIN:VEVENT / UID(时间戳+随机串) / DTSTAMP(UTC) / DTSTART;TZID=<时区>:YYYYMMDDTHHMMSS（全天事件用 DTSTART;VALUE=DATE:YYYYMMDD）/ DTEND 同规则 / SUMMARY / DESCRIPTION / LOCATION（文本转义 `\,` `\;` `\n`，长行按 75 字节折行）/ ATTENDEE;CN=xx:mailto:xx（逐个邮箱）/ BEGIN:VALARM TRIGGER:-PT15M…END:VALARM / END:VEVENT / END:VCALENDAR`。
+- 输出：.ics 文件下载（Blob；文件名按标题+日期，如 `周会-20261024.ics`，非法字符过滤）、复制 .ics 文本、导入指引区（Gmail 网页导入/Outlook/Apple 日历导入步骤说明）。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+- 注册：文档转换品类，新增工具 ID `meeting_invite_generator`、Name「会议邀请 (.ics) 生成器」、Path `/tools/meeting-invite-generator`（New: true），中英文描述＋SEO keywords（会议邀请、ics 生成器、日历邀请、会议日程、VCALENDAR）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `meeting_invite_generator`、Path `/tools/meeting-invite-generator` 注册完整（Category 文档转换），注册总数 141→142 Path。
+2. 输入「周会」、2026-10-24 14:00→15:00 Asia/Shanghai、地点「腾讯会议 123-456」、参会人 `a@example.com, b@example.com`、提醒 15 分钟 → .ics 含 `BEGIN:VEVENT/END:VEVENT`、`DTSTART;TZID=Asia/Shanghai:20261024T140000`、`DTEND;TZID=Asia/Shanghai:20261024T150000`、LOCATION、两个 `ATTENDEE:mailto:`、`VALARM`+`TRIGGER:-PT15M`；下载文件以文本打开头尾为 BEGIN/END:VCALENDAR。
+3. 标题/描述含 `,` `;` 换行 → 输出正确转义为 `\,` `\;` `\n`；单行超长（含参会人多）→ 按 75 字节 CRLF+空格折行。
+4. 全天事件（2026-10-25）→ 输出 `DTSTART;VALUE=DATE:20261025`，无 TZID/时间部分。
+5. 结束早于/等于开始 → 表单内联报错定位字段、生成按钮禁用；邮箱非法 → 逐项标红、禁用生成。
+6. 脚本内零 fetch/XHR，Network 抽查无内容外发；node 测试 30+ 断言全过（转义规则、折行、日期格式、VALARM、UID/DTSTAMP、文件名过滤）。
+
+**预计改动文件**：
+- `templates/meeting_invite_generator.html`（新增；含 SEO 面板按家族标准＋导入指引区）
+- `static/js/meeting_invite_generator.js`（新增；RFC 5545 拼装/转义/折行、Blob 下载、复制、表单校验）
+- `tests/meeting_invite_generator.test.js`（新增；转义规则、折行、日期格式、VALARM、UID/DTSTAMP）
+- `tools/categories.go`（文档转换品类注册：ID meeting_invite_generator、Path /tools/meeting-invite-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD a689ca3（社区搜索聚合器交付闭环）与远程分支一致；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 141 Path；零重叠 grep 本轮复核全零命中（meeting 唯一命中为时区工具误命中，NAT 大小写命中均为词内子串误命中）；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（疑似构建产物/备份，两轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-22 23:00 · 产品经理排期轮）
 
 **选定：社区搜索聚合器（去 AI 垃圾搜索路由，search_router）** — 本轮唯一任务（新工具）：
@@ -9307,3 +9343,44 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 **归档说明**：本轮为 10-22 通用调研第六十四轮——CSS 转 Tailwind 转换器开发中（2f5c67e，`/tools/css-to-tailwind` 已注册，全量 135 Path），候选池划出，已实现清单 delta 追加；新信号扫描（Show HN Bigwords.page 724pts→大字标牌展示器 P1 新晋（URL即应用形态＋远读字牌痛点＋零覆盖）；Show HN NatChecker→NAT 类型检测器 P1 新晋（WebRTC＋STUN 纯前端＋网络工具家族归位＋误命中排除后零覆盖）；Show HN BlurFaces→一键人脸模糊 P2 新晋（自动检测差异化＋模型 vendor 风险）；dev.to TheTextKit→联系信息提取器 P2 新晋（文本工具集提取类空白）；复现不记账→Modifyle exact-KB＝img_target_kb 自有实锤/KeptTools JSON 转换＝json_to_types 自有实锤/TheTextKit 余项＝文本工具集自有实锤/5 家工具站清单＝全自有实锤/xyzconverter＝PDF·QR 自有实锤＋OCR 不立/Tooliest＝pdf_encrypt·pdf_manage 自有实锤/FocusBox＝番茄钟 P2 已在池；不立→Whistle 语音转文字（需 AI 模型）/ACH（niche＋AHP P2 占位）/Gridpaper（重型形态）/big-arrow（非单页形态）；V2EX 本轮无有效信号）均已消化；WPS 候选表保持冻结归档；仓库 135 注册工具全量核对无重叠（Top3 建议 ID mcp_config_doctor / video_frame_extractor / schema_org_generator＋本轮新晋 big_sign_display / nat_type_detector / face_blur / contact_info_extractor；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
 
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮仍异常（Permission denied (publickey)，与 59/60/61/63 轮同故障模式；后续 PM/开发轮次需复核网络与密钥）；`git log` 头部 2f5c67e（css_to_tailwind WIP 续做）；`grep tools/categories.go` 全量 135 Path（`css_to_tailwind` ID 与 `/tools/css-to-tailwind` Path 已注册，划入开发中）；Top3 建议 ID（mcp_config_doctor / video_frame_extractor / schema_org_generator）与本轮新晋 ID（big_sign_display / nat_type_detector / face_blur / contact_info_extractor）与 135 Path 无重叠（关键词核对全零命中，NAT 误命中已排除）；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
+## 今日任务（2026-10-23 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。社区搜索聚合器已交付闭环（`git log` 头部 a689ca3「新增社区搜索聚合器（/tools/search-router）」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **141 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 深夜轮次，P1 可排。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. search_router 交付确认：`git log` 头部 a689ca3（关键词＋社区板块多选＋时间范围→Google site:/站内搜索链接一键全开，OpenSearch 描述文件，纯前端零网络请求；node 测试 50 断言全过）；`grep tools/categories.go` 全量 141 Path（ID search_router、Path /tools/search-router 已注册，开发工具品类）；候选池划出。
+2. 新信号扫描：
+   - **dev.to README-Glassfolio（2026-10-18，5 天前）**：GitHub profile README 生成器，无 badge API、无后端——痛点是第三方 stats/徽章图片服务挂掉→profile 破图＋每次访问打点隐私泄露；作者方案全部画成纯 SVG 存自己仓库。→ **新晋 P2「GitHub 主页 README 生成器」**（输入用户名→浏览器直调 api.github.com（CORS 允许）拉公开仓库/star/语言统计→生成 Markdown README＋自包含 SVG 统计卡片（不依赖第三方服务）→一键复制/下载；纯前端小难度；`grep -oinE 'github|readme' tools/categories.go` **零命中**实锤；建议 ID github_readme_generator、Path /tools/github-readme-generator；受众开发者、需求频次中等，定 P2 观察）。
+   - **dev.to Antigravity Tools（59 个 vanilla JS 工具，4 天前）**：PII Masker→自有 `masker`（PII 脱敏器）**实锤复现**；AI Token Counter→自有 `ai_token_counter`（AI Token 计数器）**实锤复现**；JWT Inspector/RSA&ECC 密钥生成/Hash/Universal Encoder→自有 jwt_parser/rsa/base64/url_encode 等**实锤复现**；System Prompt Builder/AI Humanizer/Prompt Cost Trimmer 系 AI 提示词类→不合 ToolWeb 调性，不立。
+   - **byte-kit.dev（24 工具，10-10）**：EXIF remover→自有 `exif_strip` **实锤复现**；其余图片压缩/追踪/zip 均为自有覆盖 → 不立。
+   - **Medium「7 Free Browser Tools Worth Bookmarking This October」（4 天前）**：SyncWhen（免注册会议投票→需后端，不立）；SortaSeat（婚礼座位表→生活类，不立）；OldRoll（复古照片滤镜）→自有 `img_retro_filter` **实锤复现**；StitchCraft（照片转十字绣）→自有 `cross_stitch_pattern` **实锤复现**；urPiano（浏览器钢琴→娱乐，不合调性）；**Calcy（带单位和范围的心算记事本）→池内 P1「单位感知记事本计算器」补第三方形态验证**（编辑精选推荐 units and ranges 计算器，此前观察为 Calcy ranges 增强，验证链加固）；llmspeed（本地 AI 模型跑分→AI 硬件类，跳过）。
+   - **V2EX**：Open Resume 重帖（10-20，需 Node+SQLite 自部署→67 轮已消化，不立）；NASDrop（10-18，群晖下载中转→需 NAS/服务端，不立）；Folkbench Switch（10-16，Tauri+Rust 桌面小工具→非 web 形态，不立）；**md2chat 贴贴 Markdown（10-20 更新）→自有 `md_to_chat`（/tools/md-to-chat）实锤复现→不立（外部形态验证：AI 生成 Markdown 粘进微信/飞书格式崩坏痛点真实）**；HangDry（10-14，macOS 原生→68 轮已消化）；实时数字人 Mynah（10-13，需 GPU 服务端，不立）。
+   - **HN 10-22**：HTTP/3 QPACK 漏洞/PHP2Shell 供应链/Railway 密钥泄露/LiteLLM 投毒/WhatsApp 隐藏指令→均为安全新闻，无单页 web 工具形态 → 不立。
+   - **Reddit「I wish there was a website」**：返回均为 SEO 引流/营销内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：search_router 已交付划出（a689ca3，141 Path）；**新晋 1 个**（GitHub 主页 README 生成器 P2）；Calcy→单位感知记事本计算器补形态验证；其余新信号均为自有实锤复现或不立。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；search_router 交付闭环后按顺位递进）：
+
+1. **会议邀请 (.ics) 生成器** — P1（63 轮新晋；HN 600pts；本轮零重叠复核：`grep -inE 'ics|meeting_invite|会议邀请'` 2 处命中均为 "diagnostics"/"statistics" 英文词内误命中，无工具形态重叠；痛点：组织会议手写 .ics 或在日历 App 逐个建事件效率低；填表单（标题/时间/地点/参会人/提醒）→ 生成标准 .ics 下载 → 邮件/IM 分发；纯前端小难度；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator）。
+2. **在线倒计时/番茄钟** — P1（69 轮新晋；dev.to ClockAura 2026-10 更新＋BlanzaTools 2026-10-11 双形态验证；自有 141 Path `倒计时|计时器|秒表|番茄|闹钟|countdown|stopwatch|pomodoro|timer` 零命中实锤空白；痛点：现有免费计时站广告多/强制注册/单功能/界面杂乱；倒计时/秒表/番茄钟/闹钟四模式单页＋全屏大字＋结束音效＋预设保存；纯前端小难度；建议 ID countdown_timer、Path /tools/countdown-timer）。
+3. **NAT 类型检测器** — P1（64 轮新晋；Show HN NatChecker；`grep -cinE 'nat_type|nat-type|NAT类型'` 零命中；痛点：P2P/联机游戏/远程桌面用户需知 NAT 类型决定打洞方案，现有检测多为命令行或需安装；纯前端 WebRTC STUN 打洞检测（STUN 服务器直连，无中继后端）；小难度；建议 ID nat_type_detector、Path /tools/nat-type-detector）。
+
+其余 P1 留池：MBOX 邮件存档查看器（58 轮新晋；中难度；`grep -cinE 'mbox|MBOX|邮件存档'` 零命中；留待更从容轮次）；SVG 转字体图标生成器（59 轮新晋；opentype.js vendor 化验证成本高；留池）；单位感知记事本计算器（P1；本轮 Medium Calcy 补第三方形态验证，验证链加固；蒙特卡洛部分单轮交付风险高；留池）；屏幕常亮/浏览器实时听写（留池）；年会大屏抽奖（时令预热，11 月）。
+
+**通用候选表增量**（第七十一轮：search_router 已交付划出（a689ca3，141 Path）；新晋 1 个；README-Glassfolio→P2 GitHub README 生成器；Antigravity PII/Token/JWT→自有实锤复现；byte-kit EXIF→自有实锤；Medium 7 工具→十字绣/复古滤镜自有实锤、Calcy 补单位计算器验证；V2EX md2chat→自有 md_to_chat 实锤、其余需后端/非 web 不立；HN 10-22 安全新闻无工具形态；Reddit 需求帖空；全量 141 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| GitHub 主页 README 生成器 | 新晋（71 轮；dev.to README-Glassfolio 2026-10-18 形态验证：第三方 badge/stats 图片服务挂掉→profile 破图＋隐私打点；输入用户名→浏览器直调 api.github.com 拉公开仓库/star/语言统计→生成 Markdown README＋自包含 SVG 统计卡片（零第三方服务依赖）→复制/下载；纯前端；`github|readme` 零命中实锤；建议 ID github_readme_generator、Path /tools/github-readme-generator） | 小 | P2 |
+| search_router | 已交付划出（a689ca3 交付闭环；ID search_router、Path /tools/search-router 已注册；全量 141 Path；候选池划出） | — | 已实现 |
+| Antigravity Tools 观察 | 本轮不新立（dev.to；59 vanilla JS 工具；PII Masker→自有 masker 实锤；AI Token Counter→自有 ai_token_counter 实锤；JWT/RSA/ECC/Universal Encoder→自有覆盖实锤；AI 提示词类不合调性） | — | 观察 |
+| byte-kit.dev 观察 | 本轮不新立（dev.to 10-10；24 工具；EXIF remover→自有 exif_strip 实锤复现；其余自有覆盖） | — | 观察 |
+| Medium 十月 7 工具观察 | 本轮不新立（4 天前；SyncWhen 需后端；SortaSeat 生活类；OldRoll 复古滤镜→自有 img_retro_filter 实锤；StitchCraft 十字绣→自有 cross_stitch_pattern 实锤；urPiano 娱乐不合调性；llmspeed AI 硬件跳过；Calcy→池内单位感知记事本计算器补形态验证） | — | P1 观察 |
+| V2EX md2chat / Open Resume / NASDrop / Folkbench / HangDry / 数字人 | 本轮不立（md2chat→自有 md_to_chat 实锤复现，外部形态验证；Open Resume 需后端自部署 67 轮已消化；NASDrop 需 NAS/服务端；Folkbench Switch 桌面非 web；HangDry macOS 原生 68 轮已消化；Mynah 数字人需 GPU 服务端） | — | 不立 |
+
+**归档说明**：本轮为 10-23 通用调研第七十一轮——社区搜索聚合器交付闭环（a689ca3，`/tools/search-router` 已注册，开发工具品类，全量 141 Path），候选池划出；新信号扫描（dev.to README-Glassfolio→**新晋 P2 GitHub 主页 README 生成器**（github/readme 零命中）；dev.to Antigravity 59 工具→PII/Token/JWT/RSA 均为自有实锤复现；byte-kit.dev→EXIF 自有实锤；Medium 十月 7 工具→OldRoll/StitchCraft 自有实锤、Calcy 补单位感知记事本计算器形态验证；V2EX md2chat→自有 md_to_chat 实锤复现、Open Resume/NASDrop/Folkbench/HangDry/数字人需后端或非 web 不立；HN 10-22 安全新闻无工具形态；Reddit 需求帖 SEO 垃圾本轮空）均已消化；WPS 候选表保持冻结归档；仓库 141 注册工具全量核对无重叠（Top3 建议 ID meeting_invite_generator / countdown_timer / nat_type_detector；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 a689ca3（search_router 交付闭环）；`grep tools/categories.go` 全量 141 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（疑似构建产物/备份，21:00 PM 轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
