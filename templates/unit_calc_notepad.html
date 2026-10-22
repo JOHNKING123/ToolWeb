@@ -1,0 +1,156 @@
+{{define "unit_calc_notepad"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>单位感知记事本计算器 - 逐行算式+单位换算+行间变量 | 程序员工具箱</title>
+<meta name="description" content="免费在线单位感知记事本计算器：记事本式逐行写算式，行内即时出结果；长度/重量/体积/时间/温度（℃↔℉）/货币单位自动换算，加减归一化到首单位；行间变量、百分比、sum(a1..a3) 范围汇总，底部求和/平均/最大值/最小值/计数；自写解析零 eval，纯前端零上传。Free unit-aware notepad calculator with inline results, 100% client-side.">
+<meta name="keywords" content="记事本计算器,单位换算,notepad calculator,Calcy,行间变量,单位感知计算,算式记事本,温度转换,百分比计算,求和汇总,单位转换器,在线计算器">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/unit-calc-notepad">
+<meta property="og:title" content="单位感知记事本计算器 - 逐行算式，单位自动换算">
+<meta property="og:description" content="像写记事本一样写算式：5kg*3、10km+500m、25C to F，行内即时结果，底部自动汇总。纯前端，零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/unit-calc-notepad">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"单位感知记事本计算器","alternateName":"unit_calc_notepad","description":"免费在线单位感知记事本计算器：记事本式逐行算式输入，长度/重量/体积/时间/温度/货币单位自动换算，行间变量、百分比、范围汇总，行内即时结果与底部分组汇总，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/unit-calc-notepad","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.uc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.uc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.uc-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.uc-toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.9rem}
+.uc-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;transition:all .15s}
+.uc-btn:hover{background:#dbeafe}
+.uc-btn .material-icons{font-size:1.05rem}
+.uc-btn-ghost{background:#fff;border-color:#e5e7eb;color:#4b5563}
+.uc-btn-ghost:hover{background:#f9fafb}
+.uc-hint{font-size:.82rem;color:#6b7280;line-height:1.8}
+.uc-workspace{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #d1d5db;border-radius:.6rem;overflow:hidden;background:#fff}
+.uc-colhead{font-size:.82rem;font-weight:700;color:#6b7280;background:#f8fafc;border-bottom:1px solid #e5e7eb;padding:.5rem .9rem}
+.uc-col + .uc-col{border-left:1px solid #e5e7eb}
+#uc-input,#uc-results{font-family:"SF Mono","Cascadia Code","JetBrains Mono",Consolas,monospace;
+font-size:15px;line-height:1.7;padding:.6rem .9rem;box-sizing:border-box}
+#uc-input{width:100%;height:380px;border:none;resize:vertical;white-space:pre;overflow:auto;color:#1f2937;background:#fff}
+#uc-input:focus{outline:none}
+#uc-results{height:380px;overflow:hidden;background:#fcfdff}
+.uc-row{min-height:calc(15px * 1.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937}
+.uc-row.uc-ok{color:#1d4ed8;font-weight:600}
+.uc-eq{color:#9ca3af;font-weight:400;margin-right:.4rem}
+.uc-row.uc-err{color:#dc2626;font-size:.82rem}
+.uc-errico{margin-right:.35rem}
+.uc-sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem}
+.uc-card{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem .95rem;background:#f8fafc}
+.uc-cardt{font-size:.85rem;font-weight:800;color:#111827;margin-bottom:.45rem;
+border-bottom:2px solid #bfdbfe;padding-bottom:.3rem}
+.uc-stat{display:flex;justify-content:space-between;gap:.6rem;font-size:.85rem;color:#4b5563;padding:.14rem 0}
+.uc-stat b{color:#1d4ed8;font-weight:700;text-align:right;word-break:break-all}
+.uc-sumempty{font-size:.88rem;color:#6b7280;line-height:1.9;background:#f8fafc;
+border:1px dashed #d1d5db;border-radius:.5rem;padding:.7rem .9rem}
+.uc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.uc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.uc-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem;
+font-family:"SF Mono","Cascadia Code",Consolas,monospace;color:#1d4ed8}
+.uc-unitable{width:100%;border-collapse:collapse;font-size:.85rem;margin:.4rem 0}
+.uc-unitable th,.uc-unitable td{border:1px solid #e5e7eb;padding:.35rem .6rem;text-align:left}
+.uc-unitable th{background:#f8fafc;color:#374151}
+.uc-unitable td{color:#4b5563}
+.uc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.uc-quick{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:2rem;padding:.35rem .95rem;
+font-size:.85rem;font-weight:600}
+a.uc-quick{text-decoration:none}
+a.uc-quick:hover{background:#dbeafe}
+@media (max-width:760px){.uc-workspace{grid-template-columns:1fr}.uc-col + .uc-col{border-left:none;border-top:1px solid #e5e7eb}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">calculate</i> 单位感知记事本计算器</h1>
+<p>像写记事本一样写算式：每行一个表达式，右侧行内即时显示结果。带<b>单位感知</b>——长度、重量、体积、时间、温度（℃↔℉）、货币自动换算，加减自动归一化到最先出现的单位；支持<b>行间变量</b>、百分比、<code>sum(a1..a3)</code> 范围汇总，底部按维度分组给出求和 / 平均 / 最大值 / 最小值 / 计数。自写词法解析（零 eval），纯前端零上传。</p>
+</div>
+<div class="tool-content" style="max-width:1100px;margin:auto;">
+
+<div class="uc-panel">
+<div class="uc-toolbar">
+<button type="button" class="uc-btn" id="uc-ex-pack"><i class="material-icons">inventory_2</i>示例：快递打包</button>
+<button type="button" class="uc-btn" id="uc-ex-reno"><i class="material-icons">straighten</i>示例：装修量房</button>
+<button type="button" class="uc-btn uc-btn-ghost" id="uc-clear"><i class="material-icons">delete_outline</i>清空</button>
+</div>
+<div class="uc-workspace">
+<div class="uc-col">
+<div class="uc-colhead">输入（每行一个算式，# 开头为注释）</div>
+<textarea id="uc-input" wrap="off" spellcheck="false" placeholder="例如：&#10;5kg * 3&#10;10km + 500m&#10;25C to F&#10;total = 5kg * 3&#10;total / 2"></textarea>
+</div>
+<div class="uc-col">
+<div class="uc-colhead">行内即时结果</div>
+<div id="uc-results" aria-live="polite"></div>
+</div>
+</div>
+<p class="uc-hint" style="margin:.6rem 0 0">输入会自动保存在本机浏览器（localStorage），刷新不丢失；非法行会标红提示，但不影响其他行的计算。</p>
+</div>
+
+<div class="uc-panel">
+<h3><i class="material-icons">functions</i> 底部汇总（按单位维度分组，赋值行不计入）</h3>
+<div class="uc-sumgrid" id="uc-summary"></div>
+</div>
+
+<div class="uc-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="uc-faq">
+<dt>基本写法</dt>
+<dd>每行写一个算式，支持 <code>+ - * /</code>、括号、<code>%</code>：<code>5kg * 3</code> → <code>15 kg</code>；<code>(长 + 宽) * 2</code>。非法行行内标红，不中断其余行。</dd>
+<dt>单位换算与归一化</dt>
+<dd>加减时结果自动归一化到<b>最先出现</b>的单位：<code>10km + 500m</code> → <code>10.5 km</code>；<code>500m + 10km</code> → <code>10500 m</code>。乘除会派生复合单位：<code>2m * 3m</code> → <code>6 m²</code>，<code>10km / 2h</code> → <code>5 km/h</code>。
+<table class="uc-unitable">
+<tr><th>维度</th><th>支持的单位</th></tr>
+<tr><td>长度</td><td>km（千米/公里）、m（米）、cm（厘米/公分）、mm（毫米）、in（英寸）、ft（英尺）、mi（英里）</td></tr>
+<tr><td>重量</td><td>t（吨）、kg（千克/公斤）、g（克）、斤、lb（磅）、oz（盎司）</td></tr>
+<tr><td>体积</td><td>m³（立方米）、L（升）、mL（毫升）、gal（加仑）</td></tr>
+<tr><td>时间</td><td>d（天）、h（小时）、min（分钟）、s（秒）</td></tr>
+<tr><td>温度</td><td>°C（C/℃/摄氏度）、°F（F/℉/华氏度）、K（开尔文）</td></tr>
+<tr><td>货币</td><td>¥（￥）、$、€ —— 仅为标签，不参与换算</td></tr>
+</table></dd>
+<dt>单位转换</dt>
+<dd>用 <code>to</code> 或 <code>-&gt;</code>：<code>25C to F</code> → <code>77°F</code>；<code>10km -&gt; m</code> → <code>10000 m</code>；<code>3斤 to g</code> → <code>1500 g</code>。</dd>
+<dt>行间变量</dt>
+<dd>用 <code>=</code> 赋值，变量名可用中英文：<code>total = 5kg * 3</code>，后续行直接写 <code>total / 2</code>。<code>to</code> / <code>of</code> 是保留字，不能做变量名。</dd>
+<dt>百分比</dt>
+<dd><code>5% of 200</code> → <code>10</code>；<code>200 + 5%</code> → <code>210</code>（加价 5%）；<code>200 - 5%</code> → <code>190</code>；<code>200 * 1.05</code> → <code>210</code>。</dd>
+<dt>范围汇总</dt>
+<dd><code>sum(a1..a3)</code> / <code>avg</code> / <code>max</code> / <code>min</code> / <code>count</code>：对 <code>a1、a2、a3</code> 三个已赋值变量汇总；也支持逗号写法 <code>sum(p1, p2, p3)</code>。</dd>
+<dt>货币说明</dt>
+<dd>¥ / $ / € 写在数字前后均可（<code>¥100</code>、<code>100$</code>），结果保留原符号；不同货币不能相加，货币不参与单位换算。</dd>
+<dt>注释</dt>
+<dd><code>#</code> 或 <code>//</code> 之后的内容当注释忽略，方便给算式加备注。</dd>
+<dt>已知限制</dt>
+<dd>数字后紧跟的字母会被识别为单位（如 <code>5m</code> 是 5 米），变量与数字相乘请写 <code>5 * m</code>；概率分布 / 蒙特卡洛模拟为二期规划，本期暂不提供。</dd>
+</dl>
+</div>
+
+<div class="uc-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="uc-related">
+<span class="uc-quick" style="cursor:default">开发工具：</span>
+<a class="uc-quick" href="/tools/chmod-calculator">Chmod 权限计算器</a>
+<a class="uc-quick" href="/tools/base-converter">进制转换</a>
+<a class="uc-quick" href="/tools/timestamp">时间戳转换</a>
+<a class="uc-quick" href="/tools/timezone-converter">时区转换</a>
+<a class="uc-quick" href="/tools/subnet-calculator">IP 子网计算器</a>
+</div>
+</div>
+
+</div>
+</div>
+
+<script src="/tools/static/js/unit_calc_notepad.js?v=1"></script>
+</body>
+</html>
+{{end}}

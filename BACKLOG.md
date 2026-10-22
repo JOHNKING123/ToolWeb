@@ -1,3 +1,92 @@
+## 今日任务（2026-10-23 07:40 · 产品经理排期轮）
+
+**选定：单位感知记事本计算器（unit_calc_notepad）** — 本轮唯一任务（新工具）：
+- **顺位**：10-23 07:36 研究轮（73 轮）Top1 推荐；NAT 类型检测器（63f13fe）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选：MBOX 邮件存档查看器（P1；58 轮新晋；中难度；留池二席）、SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高；留池三席）。
+- **形态验证**：49/66/67/71 轮四度验证链——Calcy units+ranges 草稿计算＋Medium 十月精选双重佐证。
+- **痛点**：记事本里随手写算式要带单位换算、范围汇总，现有计算器割裂；记事本式输入＋单位感知＋行间变量，一页完成草稿计算。
+- **范围控制**：蒙特卡洛部分分期二期，首期控单轮风险；纯前端小难度，早间轮次可交付。
+- **零重叠实锤**：本轮复核——`grep -cinE 'unit_calc_notepad|unit-calc-notepad|单位感知记事本' tools/categories.go` 零命中；全量 144 Path 中无同类工具；建议 ID `unit_calc_notepad`、Path `/tools/unit-calc-notepad` 未被占用。
+- **品类归位**：注册到「开发工具」品类（与现有各类计算器为邻）或「实用工具」，评审轮按家族归位习惯定；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器（本轮专注单位换算与算式汇总的通用草稿计算，不按财务口径做税/工资类计算），符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 核心形态：左（或上）大块文本输入区，记事本式逐行书写；每行输入算式或赋值，右侧（行内）即时显示该行结果；底部汇总区（求和/平均/最大值/最小值/计数）。
+- 语法：`total = 5kg * 3` 行间变量赋值（`=`），后续行可引用；单位感知：长度（km/m/cm/mm/in/ft/mi）、重量（kg/g/t/lb/oz）、体积（L/mL/m³/gal）、时间（h/min/s）、温度（℃↔℉）、货币前缀（¥/$/€，纯标签不参与换算，结果取原样）；`10km + 500m = 10.5km` 自动归一化到最先出现单位；`5% of 200`、`200 * 1.05` 百分比写法；范围汇总 `sum(a1..a3)` 行引用。
+- 安全：不使用 eval，纯前端自写词法/解析（数字+单位 token→SI 中间值→目标单位回显）；非法行行内标红但不中断其余行；脚本内零 fetch/XHR。
+- 模板示例：内置「快递打包」「装修量房」两个示例，一键填充，方便用户理解形态。
+- 注册：新增工具 ID `unit_calc_notepad`、Name「单位感知记事本计算器」、Path `/tools/unit-calc-notepad`（New: true），中英文描述＋SEO keywords（记事本计算器、单位换算、notepad calculator、Calcy、行间变量）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `unit_calc_notepad`、Path `/tools/unit-calc-notepad` 注册完整，注册总数 144→145 Path。
+2. 输入 `5kg * 3` 行内即时显示 `15 kg`；`10km + 500m` 显示 `10.5 km`（归一化到最先出现单位）；`total = 1000` 后续行 `total * 2` 得 2000；`25℃` 转 `77 ℉`。
+3. 非法行（如 `abc +`）行内标红提示，其余行计算不受影响；空行自动跳过。
+4. 汇总区：sum/avg/max/min/count 对所有数值结果行生效，汇总行显示单位统一为各自行归一化后值（sum 按首单位）。
+5. 脚本内零 fetch/XHR；node 测试 40+ 断言全过（单位换算表、行间变量、归一化、百分比、范围汇总、非法行容错）。
+6. 不碰蒙特卡洛：二期事项留池，不在本轮实现。
+
+**预计改动文件**：
+- `templates/unit_calc_notepad.html`（新增；含 SEO 面板按家族标准）
+- `static/js/unit_calc_notepad.js`（新增；词法/解析/单位表/SI 中间值/行间变量/行内结果/汇总）
+- `tests/unit_calc_notepad.test.js`（新增；换算表/变量/归一化/百分比/汇总/容错）
+- `tools/categories.go`（注册：ID unit_calc_notepad、Path /tools/unit-calc-notepad、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 63f13fe（NAT 类型检测器交付闭环）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 144 Path；零重叠 grep 本轮复核全零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（nat 轮已删、疑似构建/部署重建又出现，请开发轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 07:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。NAT 类型检测器已交付闭环（`git log` 头部 63f13fe；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **144 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 早间轮次，P1 可排。
+
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. nat_type_detector 交付确认：`git log` 头部 63f13fe（纯前端 WebRTC＋双公共 STUN 映射行为推断锥形/对称 NAT，公网 IP/映射端口/打洞星级＋TURN 建议/硬限制说明，12 秒超时兜底失败态；注册网络工具品类，143→144 Path；node 测试 84 断言全过）；`grep tools/categories.go` 全量 144 Path（ID nat_type_detector、Path /tools/nat-type-detector 已注册）；候选池划出。
+2. 新信号扫描：
+   - **dev.to DevTrove（2026-10-13）**：22 个纯浏览器开发者工具（JWT 解码/签发验证、JSON 语义 diff、JSON Schema、YAML↔JSON、CSV↔JSON、cron 解释器、时间戳转换等）→ 自有 `jwt`、`jwt_signer_verifier`、`json_semantic_diff`、`uuid`、base64、URL 编码、正则、`cron`、`timestamp` 全部实锤复现 → 不立；
+   - **dev.to RVUtils（2026-10-16）**：13 个浏览器端工具（JSON/XML 格式化、JWT、Base64、URL 编码、正则、MD5/SHA/HMAC、UUID v4/v7、颜色 WCAG 对比、Unix 时间、时区转换、文本 diff）→ 全部自有实锤复现 → 不立；
+   - **dev.to Productivity（2026-10-13）**：Image Annotator（截图箭头/形状/文字标注导出 PNG/JPEG）→ 自有图片标注工具（`annotator`）实锤复现 → 不立；Speech to Text / Text to Speech（浏览器语音 API）→ 池内「浏览器实时听写」已留池，本轮仅形态验证补强 → 不立新；
+   - **dev.to DevOmniTools（2026-10-20）**：SVG to Font Converter（客户端 WebAssembly 矢量编译器把 SVG 坐标直接解析成 TrueType 字形表、生成可下载字体包，零上传）→ **59 轮已消化**，本轮重现 → 池内 P1「SVG 转字体图标生成器」形态验证二次确认 → 不立新；
+   - **Show HN Linkit（10-21）**：AI 书签管理器（100% 免费开源）→ AI 类＋需存储后端 → 不立；
+   - **Show HN Bigwords.page（10-11，720pts）**：「URL 就是 App」的大字标牌 → 自有大字标牌展示器（/tools/big-sign-display）实锤复现 → 不立；
+   - **HN Whistle（10-11，944pts）**：16.9MB 设备端语音转文本 → 池内「浏览器实时听写」形态验证补强（设备端本地语音转写可行）→ 不立新；
+   - **V2EX ProtoHub（10-21）**：原型交付/静态文件托管（拖拽 zip/HTML/文件夹/PDF/文档生成固定地址，版本/密码/访问次数）→ 需后端 → 不立；
+   - **V2EX Aion2Kit（10-15）**：AION2 在线人数追踪＋伴侣工具站（Steam API）→ niche＋需后端 → 不立；
+   - **V2EX PHP2Shell（10-22 重帖）**：69/71 轮已消化（响应头检查需后端 HEAD 请求）→ 不立；
+   - **V2EX md2chat（10-20 重帖）**：自有 `md_to_chat` 实锤复现 → 不立；
+   - **V2EX Open Resume（10-20 重帖）**：需 Node/SQLite 自部署 → 不立；
+   - **V2EX pimg.ai（10-22）**：AI 图片增强/放大/修复 → AI 类需后端 → 不立；
+   - **Reddit「I wish there was a website」**：本轮返回均为方法论/营销内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：NAT 类型检测器已交付划出（63f13fe，144 Path）；本轮新信号全为自有实锤复现、形态验证补强或不立 → **无新晋**；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；nat_type_detector 交付闭环后按顺位递进）：
+
+1. **单位感知记事本计算器** — P1（49/66/67/71 轮形态验证链：Calcy units+ranges 草稿计算＋Medium 十月精选双重佐证；痛点：记事本里随手写算式要带单位换算、范围汇总，现有计算器割裂；记事本式输入＋单位感知＋行间变量；蒙特卡洛部分分期二期做、首期控单轮风险；纯前端小难度；零命中复核；建议 ID unit_calc_notepad、Path /tools/unit-calc-notepad）。
+2. **MBOX 邮件存档查看器** — P1（58 轮新晋；痛点：MBOX 导出邮件只能用 Thunderbird/文本编辑器打开；浏览器本地解析邮件列表＋全文搜索＋附件清单，纯前端；中难度，早间轮次可排；零命中复核；建议 ID mbox_viewer、Path /tools/mbox-viewer）。
+3. **SVG 转字体图标生成器** — P1（59 轮新晋；本轮 DevOmniTools SVG to Font Converter 形态验证二次确认：客户端 WASM 矢量编译器→TrueType 零上传可行；痛点：设计师/前端做图标字体要走 icomoon.io/fontello 上传全套 SVG；纯前端小-中难度：SVG path 解析（复用 svg 系列经验）→ opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→ 预览＋本地下载；SVG 赛道小家族扩展；零命中复核；建议 ID svg_to_font、Path /tools/svg-to-font）。
+
+其余 P1 留池：屏幕常亮/浏览器实时听写（本轮 Whistle 944pts＋dev.to Productivity 语音 API 形态验证双补强；留池）；年会大屏抽奖（时令预热，11 月临近，PM 顺位备选）；CSS 转 Tailwind 转换器（留池）。
+其余 P2 留池：涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十三轮：NAT 类型检测器已交付划出（63f13fe，144 Path）；无新晋候选；DevTrove/RVUtils 工具类目全部自有实锤；dev.to Productivity 标注器＝自有图片标注实锤、语音 API＝浏览器实时听写形态补强；DevOmniTools SVG→Font＝59 轮已消化、形态验证二次确认；Show HN Linkit AI 书签需后端不立；Bigwords.page＝自有大字标牌实锤；HN Whistle 设备端语音转写＝实时听写形态补强；V2EX ProtoHub 需后端/Aion2Kit niche 需后端不立；PHP2Shell/md2chat/Open Resume 重帖已消化；pimg.ai AI 类不立；Reddit 需求帖本轮空；全量 144 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| nat_type_detector | 已交付划出（63f13fe 交付闭环；ID nat_type_detector、Path /tools/nat-type-detector 已注册；全量 144 Path；候选池划出） | — | 已实现 |
+| DevTrove/RVUtils 工具类目 | 本轮不新立（JWT/JSON diff/UUID/Base64/正则/cron/时间戳全部自有实锤复现） | — | 观察 |
+| dev.to Productivity 标注器/语音 API | 本轮不新立（Image Annotator＝自有 annotator 实锤复现；Speech to Text/Text to Speech 浏览器语音 API＝池内浏览器实时听写形态验证补强） | — | 观察 |
+| DevOmniTools SVG to Font Converter | 本轮不新立（59 轮已消化；池内 SVG 转字体图标生成器形态验证二次确认：客户端 WASM 矢量编译器→TrueType 字形表零上传可行；建议 ID svg_to_font、Path /tools/svg-to-font） | — | 观察 |
+| HN Whistle（16.9MB 设备端语音转文本） | 本轮不新立（944pts；本地语音转写可行；池内浏览器实时听写形态验证补强） | — | 观察 |
+| Show HN Linkit / Bigwords.page | 本轮不立（Linkit AI 书签管理器需存储后端；Bigwords.page 大字标牌＝自有 /tools/big-sign-display 实锤复现） | — | 不立 |
+| V2EX ProtoHub / Aion2Kit / pimg.ai | 本轮不立（ProtoHub 原型交付/静态托管需后端；Aion2Kit 游戏 niche＋Steam API 需后端；pimg.ai AI 图片类需后端） | — | 不立 |
+| V2EX PHP2Shell/md2chat/Open Resume 重帖 | 本轮不立（PHP2Shell 69/71 轮已消化；md2chat＝自有 md_to_chat 实锤复现；Open Resume 需 Node/SQLite） | — | 不立 |
+| Reddit 需求帖 | 本轮空（"I wish there was a website" 返回均为方法论/营销内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十三轮——NAT 类型检测器交付闭环（63f13fe，`/tools/nat-type-detector` 已注册，网络工具品类，全量 144 Path），候选池划出；新信号扫描（dev.to DevTrove 10-13 / RVUtils 10-16 工具类目全部自有实锤；dev.to Productivity 10-13 标注器＝自有图片标注实锤、语音 API 补浏览器实时听写形态验证；dev.to DevOmniTools 10-20 SVG→Font 形态验证二次确认；Show HN Linkit AI 书签需后端不立、Bigwords.page＝自有大字标牌实锤；HN Whistle 944pts 设备端语音转写补实时听写形态验证；V2EX ProtoHub 需后端/Aion2Kit niche 需后端/pimg.ai AI 类不立；PHP2Shell/md2chat/Open Resume 重帖已消化；Reddit 需求帖本轮空）均已消化；WPS 候选表保持冻结归档；仓库 144 注册工具全量核对无重叠（Top3 建议 ID unit_calc_notepad / mbox_viewer / svg_to_font；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）首次直连报 access rights、重试正常（瞬时抖动，沿用 10-22/10-23 惯例）；`git log` 头部 63f13fe（nat_type_detector 交付闭环）；`grep tools/categories.go` 全量 144 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（613a155 曾顺手清理，疑似后续构建/部署重建，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-23 05:00 · 前端开发轮 ✅）
 
 **交付**：NAT 类型检测器（nat_type_detector，/tools/nat-type-detector）已实现并提交开发分支。
