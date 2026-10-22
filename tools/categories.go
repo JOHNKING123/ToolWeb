@@ -310,6 +310,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "mcp_config_doctor",
+					Name:        "MCP 服务器配置诊断器",
+					Description: "粘贴 Claude Desktop / Cursor / OpenCode 的 mcpServers 配置 JSON，纯前端静态诊断输出分级报告（错误/警告/建议）：顶层键名拼写检查（#1 常见 bug）、JSON 语法错误行号列号定位、stdio 缺 command / http·SSE 缺 url 报错及字段类型校验、npx 缺包名警告、${VAR} 环境变量未定义警告、同名重复条目警告、args 非数组等格式问题；一键载入示例（正常+典型故障）、一键复制报告，与 JSON 解析器互链，纯前端零上传 · MCP config doctor: paste mcpServers JSON, graded diagnostics locally (typo check, syntax location, command/url validation, npx package, env refs, duplicates), 100% client-side",
+					Path:        "/tools/mcp-config-doctor",
+					Icon:        "medical_services",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "css_gradient_generator",
 					Name:        "CSS 渐变生成器",
 					Description: "CSS 渐变可视化编辑器：拖拽色标、linear/radial/conic 三种类型、随机和谐配色、10 款预设，一键复制 CSS · CSS gradient generator: visual editor with draggable color stops, linear/radial/conic types, harmonious palettes, presets, copy CSS",

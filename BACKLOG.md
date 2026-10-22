@@ -1,3 +1,89 @@
+## 今日任务（2026-10-22 13:55 · 产品经理排期轮）
+
+**选定：MCP 服务器配置诊断器（mcp_config_doctor）** — 本轮唯一任务（新工具）：
+- **顺位**：14:00 研究轮（65 轮）Top3 首位推荐（首席顺位生效：CSS 转 Tailwind 转换器 a1c4aef 交付闭环、135 Path，首席备选转正）。62 轮新晋→63 轮首席→64 轮首席顺位递进→65 轮首席，顺位逻辑完整，无硬伤不跳过。
+- **形态族验证**：dev.to 2026-10-19 mcp-doctor（CLI＋web 工具形态）：粘贴 MCP 配置 JSON→分级诊断报告（mcpServers 拼写/#1 bug、command/args/url 校验、npx 包名缺失、env 未定义、重复条目）；--live spawn 模式浏览器内不可做，仅静态诊断可单页实现。
+- **痛点**：MCP 配置静默失败排错靠肉眼逐行看；用户本人 MCP 重度用户（Windows-MCP/AutoCAD MCP 实战）共鸣强。
+- **零重叠实锤**：`grep -cinE 'mcp|MCP' tools/categories.go` 零命中；全量 135 Path 中无形态重叠工具；建议 ID `mcp_config_doctor`、Path `/tools/mcp-config-doctor` 未被占用。
+- **轮次匹配**：午后轮次，P1 可排；纯前端小难度（JSON 解析＋规则检查＋分级报告，无外部依赖），一轮可高质量交付。
+- **家族归位**：开发工具品类（与 json_parser/curl-to-requests/cron-parser 同用户画像：开发者配置与效能工具链）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：大字标牌展示器（P1；64 轮新晋；Show HN Bigwords.page 724pts；建议 ID big_sign_display、Path /tools/big-sign-display；首席备选顺位递延，留池下一轮）；WiFi 二维码生成器（P1；65 轮新晋；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator；留池）；视频帧提取器（P1；62 轮新晋；建议 ID video_frame_extractor、Path /tools/video-frame-extractor；留池）；Schema.org 结构化数据生成器（P1；62 轮新晋；建议 ID schema_org_generator、Path /tools/schema-org-generator；留池）；NAT 类型检测器（P1；64 轮新晋；建议 ID nat_type_detector、Path /tools/nat-type-detector；留池）；会议邀请 (.ics) 生成器（P1；63 轮新晋；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留池）；其余候选留池。
+
+**规格**（开发轮按此执行）：
+- 输入：多行文本粘贴 MCP 客户端配置文件 JSON（Claude Desktop/Cursor/OpenCode 的 `mcpServers` 配置）；可选 .json 文件本地 FileReader 读取；纯前端零上传（浏览器内不做 --live spawn，仅静态诊断）。
+- 诊断规则（静态）：① 顶层键名拼写——`mcpServers` vs `mcp_servers`/`MCP_SERVERS` 等常见拼错（作者称 #1 常见 bug）；② JSON 语法错误定位（行号/列号提示）；③ 每 server 必需字段——stdio 型缺 command、http/SSE 型缺 url 时报错，字段类型非法时报错；④ npx 模式——command 为 npx 但 args 缺包名（如仅 `-y` 或无 `@scope/pkg`）警告；⑤ env 引用——command/args 中 `${VAR}` 形式引用的环境变量在 env 中未定义时警告；⑥ 重复 server 条目（同名重复定义）警告；⑦ args 非数组等常见格式问题。
+- 输出：分级诊断报告（错误/警告/建议三级，按严重程度排序，逐条标注定位与修复建议）；合法配置输出全绿通过；一键复制报告；示例配置一键载入（正常＋典型故障各一份）。
+- 互链：与 json_parser（自动检测和修复常见错误）评估双向互链（开发轮确定并记录）。
+- 注册：开发工具品类，新增工具 ID `mcp_config_doctor`、Name「MCP 服务器配置诊断器」、Path `/tools/mcp-config-doctor`（New: true），中英文描述＋SEO keywords（MCP 配置、mcpServers、MCP 服务器诊断、Claude Desktop 配置、Cursor MCP）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `mcp_config_doctor`、Path `/tools/mcp-config-doctor` 注册完整，注册总数 136 Path。
+2. 输入含 `mcp_servers` 拼错的配置→报告指出顶层键名拼写错误（#1 bug 规则命中）。
+3. 输入缺 command/args/url 的 server→报错；输入 JSON 语法错误→定位行号/列号。
+4. npx 缺包名→警告；`${ENV_VAR}` 未定义→警告；同名重复条目→警告。
+5. 合法配置→全绿通过；示例配置一键载入可用；报告一键复制可用。
+6. 零上传：脚本内零 fetch/XHR，Network 抽查无内容外发。
+7. node 测试 60+ 断言全过（JSON 解析、拼写规则、字段校验、npx 包名、env 引用、重复条目、分级报告）。
+8. 公网 /tool-web 部署后 QA：/tools/mcp-config-doctor 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID mcp_config_doctor、Path /tools/mcp-config-doctor，开发工具品类，New: true；互链评估 json_parser）
+- 新建 `templates/mcp_config_doctor.html`、`static/js/mcp_config_doctor.js`、`tests/mcp_config_doctor.test.js`
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD a1c4aef（css_to_tailwind 交付闭环）；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常（14:00 研究轮正常，13:55 PM 轮复测无 Permission denied；59/60/61/63 轮故障模式未再现）；零重叠 grep 零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-22 14:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。CSS 转 Tailwind 转换器已交付闭环（`git log` 头部 a1c4aef「交付闭环 CSS 转 Tailwind 转换器」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **135 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；14:00 午间轮次，P1 可排。
+
+**本轮三件事**（14:00 全网调研，通用方向）：
+1. css_to_tailwind 交付确认：`git log` 头部 a1c4aef（交付闭环，继 b899165 WIP＋2f5c67e 排期）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常（Warning 首次 known_hosts 写入后 exit 0，59~64 轮故障模式未再现）；本地当前分支 muse/dev-20260929；工作树仅未跟踪历史构建产物（toolWeb.bak-prev／toolweb，沿用）；全量 135 Path，候选池划出。
+2. 新信号扫描：
+   - **Medium Vikram Singh（2026-10-19）Modifyle「精确到 KB 的图片压缩」**：政务/考试报名「strictly between 20KB and 50KB or form rejected」，普通压缩器只有质量滑块靠猜；作者用 binary search 在浏览器内找最高质量达标值，零上传→ 自查 `grep tools/categories.go`：自有 `img_target_kb`「图片精确体积压缩器」（/tools/img-target-kb）**实锤复现**（输入目标 KB，二分质量迭代＋尺寸降级兜底，偏差 ±5%，证件照压缩必备）→ 复现不记账；
+   - **dev.to increasephotosize（2026-10-16）「把图片放大而不是压小」**：反向场景——表单要求「至少 50KB」，现有工具只会压不会放；附考试预设（SBI/SSC 表单）＋签名制作→ 压缩侧＝img_target_kb 实锤；**放大到最小 KB 侧未覆盖**＋考试预设缺位→ 记 **P2 观察**（要求「不小于 X KB」的表单较少；可作为 img_target_kb 功能增强，不新立工具）；
+   - **dev.to SuperToolKit（2026-10-16）「100+ tools…PWA offline」**：WebAssembly＋Web Audio＋Web Workers＋Service Worker 离线 PWA→ 工具形态均为自有实锤（音频/PDF/代码）；**PWA 离线能力记账为架构优化项**，不新立工具；
+   - **dev.to sherazmajeed（2026-10-08）qrgenrateronline「15 种二维码类型」**：URL/WiFi/vCard/WhatsApp/UPI/Email/SMS/电话/位置/事件/社交/YouTube 等，纯客户端零上传；痛点：来客/店铺分享 WiFi 扫码直连，现有二维码站多要注册或带水印→ 自查 `grep -cinE 'WIFI:|ssid|SSID|加密方式|WPA|wifi|vcard' templates/qrcode.html static/js/qrcode*.js` **全零命中**（自有仅通用二维码生成/扫码，`qrcode`/`qr_code`/`qr_code_scanner` 135 Path 注册）→ 本轮记 **P1 新晋「WiFi 二维码生成器」**（建议 ID `wifi_qr_generator`、Path `/tools/wifi-qr-generator`；形态：SSID/加密方式（WPA2/WPA3/无密码）/密码/隐藏网络→`WIFI:T:..;S:..;P:..;;`→二维码＋打印页；纯前端小难度；与自有通用二维码工具互补零重叠；去重核稿：中文名＋ID 片段双核零命中，可复现）；
+   - **jsonstudio.online（23 目标 JSON 转换器）**：JSON→TypeScript/Go/Rust/Kotlin/Java/C#/JSON Schema/Python dict/PHP array/Ruby hash/SQL INSERT/CSV/flatten/Markdown 表＋Repair（修尾随逗号/单引号/注释/无引号键）→ 自查：`json_to_types`（ID 已注册）仅覆盖 TypeScript＋Go；Repair＝`json_parser`「自动检测和修复常见错误」实锤→ **Laravel/PHP/Python/SQL/CSV/多语言 struct 多目标记为 json_to_types 功能增强观察**，不新立工具；
+   - **dev.to ameenuusman（2026-10-15）KeptTools**：JSON converter（CSV/Laravel/TS/PHP）、slug、Image→SVG、证件照换底色→ slug 零覆盖→ 记 **P2「URL Slug 生成器」**（micro；TheTextKit 10-01 同形态佐证）；证件照换底色＝自有实锤；
+   - **dev.to _developk（4 天前）「60+ dev tools…network ones」**：DNS-over-HTTPS（cloudflare-dns.com）/RDAP（rdap.org）/ip-api/ipwho.is/直连 fetch 做 HTTP 头与 OGP 检查，零后端→ DNS/Whois＝自有实锤；OGP/HTTP 头检查与自有 `og_card_preview` 部分形态重叠→ **记账为架构参考**（CORS 友好公共 API 做网络类工具），不新立；
+   - **dev.to lucian_lkb（2026-10-20 更新）lkforge OCR＋签名**：tesseract.js 浏览器内 OCR（~8.8MB 一次性模型下载）→ WPS 规则下 OCR＝需重型 WASM→低优先不立（沿用）；
+   - **dev.to shahrukh_10 toolspace.cloud（272 tools）**：ffmpeg.wasm 视频转换（MOV→MP4）、libheif-js（自有 heic_convert 实锤）→ ffmpeg.wasm 体积风险＋大难度，不立；
+   - **dev.to adilbensied（2026-10-01）TheTextKit 30 文本工具**：Extract Emails/URLs、Duplicate Word Finder→ 提取类 `grep -oinE '(extract|提取器)' tools/categories.go` **零命中**→ 记 **P2「文本提取器（邮箱/URL/电话）」**（小难度正则提取；去重可复现）；
+   - **V2EX（2026-10-15）rainbowsea 蓝海榜单**：tranco 日榜＋LLM 富化＋GitHub Action 定时→ 需后端/定时/LLM，非单页形态，不立；
+   - **CanIRun.ai（runaihome 2026 评测）「本地 LLM 硬件检测」**：WebGPU 读显卡名→显存规格库→推荐可跑模型＋量化版本；痛点：想本地跑大模型不知显卡带不带得动→ 零覆盖（`grep -oinE 'canirun|显存|vram|显卡' ` 全零）→ 记 **P2「本地 LLM 硬件检测器」**（纯前端小难度；niche：本地跑模型用户群小，WebGPU 检测粗糙需手动输入，观察）；
+   - **launchshots.app（2026 对比文）App Store/Play 截图生成器**：设备框＋本地化文案→多尺寸截图导出；痛点：独立开发者上架截图要设计工具→ 零覆盖→ 记 **P2「应用商店截图生成器」**（中难度多尺寸模板；app 开发者 niche，观察）。
+3. 候选池变动：CSS 转 Tailwind 转换器已交付划出（a1c4aef，135 Path）；WiFi 二维码生成器 P1 新晋（qrgenrateronline 15 类型形态验证＋分享 WiFi 扫码直连高频场景＋与自有通用二维码互补零重叠；去重核稿双核零命中，可复现）；文本提取器（邮箱/URL/电话）P2 新晋；URL Slug 生成器 P2 新晋；本地 LLM 硬件检测器 P2 新晋（niche）；应用商店截图生成器 P2 新晋（niche）；图片放大到最小 KB＋考试预设记 img_target_kb 增强观察；JSON 多目标转换记 json_to_types 增强观察；PWA 离线记账架构优化项；Modifyle 精确 KB＝img_target_kb 实锤/JSON Repair＝json_parser 实锤/DNS-Whois＝自有实锤/OCR（低优先）/ffmpeg.wasm 视频转换（大难度）/rainbowsea（需后端）均不立；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文档转 Markdown 与 PDF 涂黑安全检测 PM 13:40 已明确暂缓，本轮不动）：
+
+1. **MCP 服务器配置诊断器** — P1（62 轮新晋→63 轮首席→64 轮首席顺位递进；css_to_tailwind 交付闭环后首席备选顺位生效；dev.to 2026-10-19 mcp-doctor 形态验证：粘贴配置 JSON→分级诊断报告（mcpServers 拼写/command/args/url 校验/npx 包名缺失/env 未定义/重复条目）；痛点：MCP 配置静默失败排错靠肉眼；用户本人 MCP 重度用户共鸣强；纯前端小难度（浏览器内不做 --live spawn）；开发者工具家族归位；与站内零重叠；建议 ID mcp_config_doctor、Path /tools/mcp-config-doctor）。
+2. **大字标牌展示器** — P1（64 轮新晋；Show HN Bigwords.page 724pts 形态验证；下顺位首席；纯前端小难度；与站内零重叠）。
+3. **WiFi 二维码生成器** — P1（本轮新晋；dev.to 2026-10-08 qrgenrateronline 15 类型形态验证；痛点：来客/店铺/活动现场分享 WiFi 扫码直连，现有二维码站多要注册或带水印；纯前端小难度：SSID/加密方式/密码/隐藏网络→WIFI: URI→二维码＋打印页；效率工具家族；与自有通用二维码（qrcode/qr_code/qr_code_scanner）互补零重叠；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator）。
+
+视频帧提取器（P1；62 轮新晋；tonytoolbox 10-01 形态验证；留池）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；留池）；Schema.org 结构化数据生成器（P1；62 轮新晋；七方形态共识；留池）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；下顺位次席，留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高，留池）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；文本提取器（P2 本轮新晋）；URL Slug 生成器（P2 本轮新晋）；番茄钟专注计时器（P2；63 轮新晋；方向边界观察）；本地 LLM 硬件检测器（P2 本轮新晋；niche）；应用商店截图生成器（P2 本轮新晋；niche）；SQLite 数据库查看器（P2；62 轮新晋；sql.js WASM vendor 风险）；SEO 日志分析器（P2；62 轮新晋；SEO niche）；8D 环绕声转换器/BPM 调性检测器（P2 观察）；System Prompt 构建器（P2 观察）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/在线钢琴/社交媒体文案长度检查器（P2 留池）；其余候选留池。
+
+**通用候选表增量**（第六十五轮：CSS 转 Tailwind 转换器已交付划出（a1c4aef，135 Path）；WiFi 二维码生成器 P1 新晋；文本提取器/URL Slug 生成器/本地 LLM 硬件检测器/应用商店截图生成器 P2 新晋；图片放大到最小 KB 记 img_target_kb 增强观察；JSON 多目标转换记 json_to_types 增强观察；PWA 离线记账架构优化项；Modifyle 精确 KB＝img_target_kb 实锤/JSON Repair＝json_parser 实锤复现不记账；全量 135 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 转 Tailwind 转换器 | 已交付划出（a1c4aef 交付闭环；ID css_to_tailwind、Path /tools/css-to-tailwind 已注册；全量 135 Path；候选池划出） | — | 已实现 |
+| WiFi 二维码生成器 | 本轮 P1 新晋（dev.to 2026-10-08 qrgenrateronline 15 类型形态验证：URL/WiFi/vCard/事件等纯客户端；痛点：来客/店铺分享 WiFi 扫码直连，现有站多要注册或带水印；纯前端小难度：SSID/加密方式/密码/隐藏网络→WIFI: URI→二维码＋打印页；与自有通用二维码工具（qrcode/qr_code/qr_code_scanner）互补零重叠；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator） | 小 | P1（65 轮新晋） |
+| 文本提取器（邮箱/URL/电话） | 本轮 P2 新晋（dev.to TheTextKit 2026-10-01 形态：Extract Emails/URLs；痛点：大段文本里抠出所有邮箱/链接/电话靠肉眼；纯前端小难度：正则提取＋分组列表＋一键复制；`grep -oinE '(extract|提取器)' tools/categories.go` 零命中） | 小 | P2（65 轮新晋） |
+| URL Slug 生成器 | 本轮 P2 新晋（dev.to KeptTools 2026-10-15＋TheTextKit 同形态：标题→url-safe slug；痛点：写博客/CMS 手工拼 slug 易错；纯前端 micro；零覆盖） | 小 | P2（65 轮新晋） |
+| 本地 LLM 硬件检测器 | 本轮 P2 新晋（CanIRun.ai 形态验证：WebGPU 读显卡名→显存规格库→推荐可跑模型＋量化版本；痛点：想本地跑大模型不知显卡带不带得动；纯前端小难度；niche：本地跑模型用户群小＋WebGPU 检测粗糙需手动输入→P2 观察） | 小 | P2（65 轮新晋） |
+| 应用商店截图生成器 | 本轮 P2 新晋（launchshots.app 形态验证：设备框＋本地化文案→多尺寸截图导出；痛点：独立开发者上架 App Store/Play 截图要设计工具；纯前端中难度：多尺寸 canvas 模板；niche：app 开发者→P2 观察） | 中 | P2（65 轮新晋） |
+
+**归档说明**：本轮为 10-22 通用调研第六十五轮——CSS 转 Tailwind 转换器交付闭环（a1c4aef，`/tools/css-to-tailwind` 已注册，开发工具品类，全量 135 Path），候选池划出；新信号扫描（Medium Modifyle 10-19 精确 KB＝img_target_kb 实锤复现；dev.to increasephotosize 10-16→图片放大到最小 KB 记 img_target_kb 增强观察；dev.to SuperToolKit 10-16→PWA 离线记账架构优化项；dev.to qrgenrateronline 10-08→WiFi 二维码生成器 P1 新晋（与自有通用二维码互补零覆盖）；jsonstudio 23 目标→Repair＝json_parser 实锤/多目标记 json_to_types 增强观察；dev.to KeptTools 10-15＋TheTextKit 10-01→URL Slug 生成器/文本提取器 P2 新晋；dev.to developk→CORS 公共 API 记账架构参考；lkforge OCR（低优先）/toolspace ffmpeg.wasm（大难度）/V2EX rainbowsea（需后端）均不立；CanIRun.ai→本地 LLM 硬件检测器 P2 新晋；launchshots→应用商店截图生成器 P2 新晋）均已消化；WPS 候选表保持冻结归档；仓库 135 注册工具全量核对无重叠（Top3 建议 ID mcp_config_doctor / big_sign_display / wifi_qr_generator；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮正常（首次 known_hosts 写入后 exit 0；后续 PM/开发轮次恢复常规 fetch 流程）；`git log` 头部 a1c4aef（css_to_tailwind 交付闭环）；`grep tools/categories.go` 全量 135 Path（`css_to_tailwind` ID 与 `/tools/css-to-tailwind` Path 已注册，划入已实现）；新晋 ID `wifi_qr_generator` 与 135 Path 无重叠（WIFI:/ssid/SSID/加密方式/WPA 关键词＋ID 片段双核零命中）；本地当前分支 muse/dev-20260929；工作树仅未跟踪历史构建产物（toolWeb.bak-prev／toolweb）；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-22 11:53 · 产品经理排期轮）
 
 **选定：CSS 转 Tailwind 转换器交付闭环（css_to_tailwind）** — 本轮唯一任务（不开新工具）：

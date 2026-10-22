@@ -1,0 +1,176 @@
+{{define "mcp_config_doctor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP 服务器配置诊断器 - mcpServers 配置粘贴即诊断 | 程序员工具箱</title>
+<meta name="description" content="免费在线 MCP 服务器配置诊断器：粘贴 Claude Desktop / Cursor / OpenCode 的 mcpServers 配置 JSON，纯前端静态诊断输出分级报告（错误/警告/建议）——顶层键名拼写检查（#1 常见 bug）、JSON 语法错误行号列号定位、stdio 缺 command / http·SSE 缺 url 报错、npx 缺包名警告、${VAR} 环境变量未定义警告、同名重复条目警告。零上传，浏览器本地完成。MCP config doctor: paste mcpServers JSON, get graded diagnostics locally, 100% client-side.">
+<meta name="keywords" content="MCP 配置,mcpServers,MCP 服务器诊断,Claude Desktop 配置,Cursor MCP,MCP config 诊断,mcpServers 拼写,OpenCode MCP,JSON 配置检查,环境变量诊断">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mcp-config-doctor">
+<meta property="og:title" content="MCP 服务器配置诊断器 - mcpServers 配置粘贴即诊断">
+<meta property="og:description" content="粘贴 MCP 客户端配置 JSON，本地输出分级诊断报告：键名拼写、语法错误定位、command/url 缺失、npx 包名、env 引用、重复条目。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/mcp-config-doctor">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MCP 服务器配置诊断器","alternateName":"mcp config doctor","description":"粘贴 Claude Desktop / Cursor / OpenCode 的 mcpServers 配置 JSON，纯前端静态诊断输出分级报告：顶层键名拼写检查、JSON 语法错误行号列号定位、stdio 缺 command / http·SSE 缺 url 报错、npx 缺包名警告、${VAR} 环境变量未定义警告、同名重复条目警告，一键载入示例、一键复制报告，零上传。","url":"https://www.johnkingzcq123.xyz/tools/mcp-config-doctor","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.md-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.md-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.md-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.md-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.md-panel h3 .material-icons{font-size:1.15rem;color:#0d9488}
+.md-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.md-drop{border:2px dashed #5eead4;border-radius:.7rem;background:#f0fdfa;padding:1rem;text-align:center;
+color:#0f766e;cursor:pointer;transition:all .15s;margin-bottom:.8rem;font-size:.88rem}
+.md-drop:hover{background:#ccfbf1}
+.md-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.83rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.md-area:focus{outline:none;border-color:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.12)}
+.md-count{font-size:.85rem;color:#6b7280;margin:.4rem 0}
+.md-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.md-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.md-btn .material-icons{font-size:1.1rem}
+.md-btn-primary{background:#0d9488;color:#fff}
+.md-btn-primary:hover{background:#0f766e}
+.md-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.md-btn-secondary:hover{background:#e5e7eb}
+.md-stats{font-size:.9rem;color:#374151;background:#f0fdfa;border:1px dashed #5eead4;border-radius:.5rem;
+padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.md-stats b{color:#111827}
+.md-ok{color:#047857}.md-warn{color:#b45309}.md-bad{color:#b91c1c}
+.md-out{border:1px solid #e5e7eb;border-radius:.6rem;background:#f8fafc;padding:.8rem;max-height:560px;overflow:auto}
+.md-issue{display:flex;align-items:flex-start;gap:.6rem;padding:.65rem .2rem;border-bottom:1px dashed #eef2f7;font-size:.86rem}
+.md-issue:last-child{border-bottom:none}
+.md-badge{border-radius:.3rem;padding:.1rem .5rem;font-size:.74rem;font-weight:700;white-space:nowrap;flex:none;margin-top:.1rem}
+.md-b-err{background:#fee2e2;color:#991b1b}
+.md-b-warn{background:#fef3c7;color:#92400e}
+.md-b-info{background:#dbeafe;color:#1e40af}
+.md-body{flex:1;min-width:0}
+.md-title{font-weight:700;color:#111827;margin-bottom:.15rem}
+.md-loc{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;color:#0f766e;margin-bottom:.15rem}
+.md-detail{color:#4b5563;line-height:1.8;white-space:pre-wrap}
+.md-fix{color:#065f46;background:#ecfdf5;border-radius:.4rem;padding:.35rem .6rem;margin-top:.35rem;line-height:1.8}
+.md-pass{display:flex;gap:.8rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;border-radius:.6rem;
+padding:1rem;color:#065f46;line-height:1.9}
+.md-pass .material-icons{font-size:2rem;color:#10b981;flex:none}
+.md-empty{color:#9ca3af;font-size:.9rem;text-align:center;padding:2rem 1rem}
+.md-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.md-copy-ok{color:#047857}.md-copy-fail{color:#b91c1c}
+.md-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.md-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.md-faq code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border-radius:.3rem;padding:.08rem .4rem;font-size:.82rem}
+.md-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.md-guide ol{margin:.2rem 0 .2rem 1.2rem;padding:0;color:#4b5563;line-height:2;font-size:.92rem}
+.md-guide code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border-radius:.3rem;padding:.08rem .4rem;font-size:.82rem}
+#md-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #5eead4}
+#md-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:900px){.md-cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">medical_services</i> MCP 服务器配置诊断器</h1>
+<p>粘贴 Claude Desktop / Cursor / OpenCode 的 mcpServers 配置 JSON → 本地输出分级诊断报告：拼写、语法、字段、npx 包名、环境变量、重复条目逐条检查。</p>
+</div>
+<div class="tool-content" style="max-width:1180px;margin:auto;">
+
+<div class="md-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>隐私承诺：配置文件只在你的浏览器里诊断，不上传服务器。</b><br>
+本工具为纯前端单页应用：JSON 解析、全部 7 类诊断规则、报告渲染、复制全部在本地完成，脚本内零 fetch / XHR，不加载任何第三方资源。配置里常含 API Key 等敏感信息——你可以在 DevTools 的 Network 面板验证：粘贴再长的配置，也不会产生一次网络请求（断网可用，首次加载页面除外）。</div>
+</div>
+
+<div class="md-cols">
+<div class="md-panel">
+<h3><i class="material-icons">input</i> 输入 MCP 配置 JSON</h3>
+<div class="md-drop" id="md-drop">
+<i class="material-icons">cloud_upload</i>
+<b>点击选择 .json 配置文件（可选）</b><br>
+<span style="font-size:.8rem;color:#6b7280">本地 FileReader 读取，不上传服务器；内容载入下方文本框</span>
+<input type="file" id="md-file" accept=".json,application/json" style="display:none">
+</div>
+<textarea class="md-area" id="md-input" rows="18" placeholder="在此粘贴 MCP 客户端配置文件，例如：&#10;{&#10;  &quot;mcpServers&quot;: {&#10;    &quot;filesystem&quot;: {&#10;      &quot;command&quot;: &quot;npx&quot;,&#10;      &quot;args&quot;: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;]&#10;    }&#10;  }&#10;}"></textarea>
+<div class="md-count" id="md-count">共 0 字符</div>
+<div class="md-actions">
+<button type="button" class="md-btn md-btn-secondary" id="md-sample-ok"><i class="material-icons">check_circle</i> 载入正常示例</button>
+<button type="button" class="md-btn md-btn-secondary" id="md-sample-bad"><i class="material-icons">bug_report</i> 载入故障示例</button>
+<button type="button" class="md-btn md-btn-secondary" id="md-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+</div>
+
+<div class="md-panel">
+<h3><i class="material-icons">fact_check</i> 诊断报告（实时）</h3>
+<div class="md-stats" id="md-stats">等待输入…</div>
+<div class="md-out" id="md-out"><div class="md-empty">在左侧粘贴 MCP 配置 JSON 后，这里会输出分级诊断报告（错误 / 警告 / 建议）。</div></div>
+<div class="md-actions">
+<button type="button" class="md-btn md-btn-primary" id="md-copy"><i class="material-icons">content_copy</i> 一键复制报告</button>
+</div>
+<div class="md-copy-tip" id="md-copy-tip"></div>
+</div>
+</div>
+
+<div class="md-panel md-guide">
+<h3><i class="material-icons">menu_book</i> 使用说明</h3>
+<ol>
+<li>打开你的 MCP 客户端配置文件：Claude Desktop（<code>claude_desktop_config.json</code>）、Cursor（<code>.cursor/mcp.json</code> 或设置页）、OpenCode（<code>opencode.json</code> 的 <code>mcp</code> 段，注意其顶层键名与客户端有关）。</li>
+<li>复制其中的 <code>mcpServers</code> 配置 JSON，粘贴到左侧文本框（或直接上传 .json 文件），报告实时生成。</li>
+<li>按严重程度阅读：<b style="color:#b91c1c">错误</b>必须修（配置无法加载），<b style="color:#b45309">警告</b>建议修（运行时大概率出问题），<b style="color:#1e40af">建议</b>按需优化。</li>
+<li>每条诊断都给出定位与修复建议；<b>一键复制报告</b>可把文本版报告粘给 AI 或同事协助排查。</li>
+<li>配置合法时会显示全绿通过。注意：本工具只做静态诊断，不会实际启动 server 进程（浏览器里做不到）。</li>
+</ol>
+</div>
+
+<div class="md-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="md-faq">
+<dt>为什么说顶层键名拼写是 #1 常见 bug？</dt>
+<dd>大量 MCP 配置"静默失败"（配了但一个 server 都不加载）的根因是顶层写成了 <code>mcp_servers</code>、<code>MCP_SERVERS</code> 等。客户端只认大小写敏感的 <code>mcpServers</code>，拼错不会报错、只会静默忽略。本工具会把它标为错误并给出正确写法。</dd>
+<dt>JSON 语法错误能定位到行列吗？</dt>
+<dd>能。解析失败时会报出"第 X 行，第 Y 列"并展示该行内容，常见元凶是多余的尾逗号、未闭合的引号/括号。修好语法后可先用 <a href="/tools/json-parser">JSON 解析器</a>格式化确认。</dd>
+<dt>stdio / http / SSE 三种 server 都支持吗？</dt>
+<dd>支持。默认按 stdio 检查（必须有 <code>command</code>）；检测到 <code>url</code> 或 <code>type</code> 为 http/sse 时按远程型检查（必须有 <code>url</code>）。建议给远程型显式声明 <code>type</code>，避免客户端按默认 stdio 解析。</dd>
+<dt>npx 缺包名是什么意思？</dt>
+<dd><code>"command": "npx", "args": ["-y"]</code> 这样的写法漏了包名，npx 不知道要运行哪个包。正确写法如 <code>"args": ["-y", "@modelcontextprotocol/server-filesystem"]</code>。</dd>
+<dt><code>${VAR}</code> 引用的环境变量怎么检查？</dt>
+<dd>工具会扫描 <code>command</code> / <code>args</code> / <code>env</code> 值里的 <code>${VAR}</code> 形式引用；凡在同级 <code>env</code> 里没定义的都会告警——运行时它可能展开为空导致 server 启动失败。确认变量来自系统环境的可忽略。</dd>
+<dt>同名重复条目为什么危险？</dt>
+<dd>JSON 里同名键只保留最后一个，前面的被静默丢弃。你会看到"明明改了配置却没生效"。本工具扫描原文（而非解析后的对象）来发现重复定义。</dd>
+<dt>我的配置（含 API Key）会上传吗？</dt>
+<dd>不会。解析、诊断、报告渲染、复制全部在浏览器本地 JavaScript 里完成，脚本中没有任何 fetch / XHR 上传逻辑，断网可用（首次加载页面除外）。</dd>
+</dl>
+</div>
+
+<div class="md-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="md-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#f0fdfa;font-weight:600;cursor:default;">MCP 服务器配置诊断器（当前）</span>
+<a href="/tools/json-parser" class="btn btn-secondary" style="font-size:.9rem;">JSON 解析器</a>
+<a href="/tools/json-schema-validator" class="btn btn-secondary" style="font-size:.9rem;">JSON Schema 校验</a>
+<a href="/tools/curl-to-requests" class="btn btn-secondary" style="font-size:.9rem;">cURL 转 Requests</a>
+<a href="/tools/cron-parser" class="btn btn-secondary" style="font-size:.9rem;">Cron 表达式解析</a>
+</div>
+<div style="margin-top:.8rem;font-size:.88rem;color:#6b7280;line-height:1.9;">
+<b>互链说明：</b>JSON 语法报错先用 <a href="/tools/json-parser">JSON 解析器</a>格式化修复，再回本工具做 MCP 语义诊断——"语法→语义"两步排查闭环。
+</div>
+</div>
+
+</div>
+</div>
+<div id="md-toast"></div>
+<script src="/tools/static/js/mcp_config_doctor.js?v=1"></script>
+</body>
+</html>
+{{end}}
