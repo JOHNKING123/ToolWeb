@@ -1,0 +1,271 @@
+{{define "video_frame_extractor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视频帧提取器 - 本地视频逐帧提取/精确时间点抓帧/差异度扫描（video frame extractor）| 程序员工具箱</title>
+<meta name="description" content="免费视频帧提取器（Video Frame Extractor）：本地 mp4/webm/mov 拖拽上传，浏览器本地解码零上传；等间隔抽帧、精确时间点抓帧（hh:mm:ss.mmm，误差≤0.2s）、差异度扫描取精彩 Top K；缩略图网格＋时间戳，点击预览大图，PNG/JPEG 单张下载、全选一键逐个下载。Free video frame extractor: extract frames from local video evenly, at exact timestamps, or by motion scan, 100% client-side.">
+<meta name="keywords" content="视频帧提取器,视频截图,视频关键帧,帧抓取,视频转图片,视频抽帧,精确抓帧,视频精彩截图,video frame extractor,extract frames from video,video to image,video thumbnail extractor">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/video-frame-extractor">
+<meta property="og:title" content="视频帧提取器 - 本地视频逐帧提取/精确抓帧/差异度扫描">
+<meta property="og:description" content="本地视频拖拽即提帧：等间隔抽帧、精确时间点抓帧、差异度扫描取精彩 Top K；缩略图网格＋时间戳，PNG/JPEG 下载，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/video-frame-extractor">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"视频帧提取器","alternateName":"video_frame_extractor","description":"本地视频逐帧提取：mp4/webm/mov 拖拽本地解码（零上传），等间隔抽帧 / 精确时间点抓帧（hh:mm:ss.mmm）/ 差异度扫描取精彩 Top K，缩略图网格＋时间戳，点击预览大图，PNG/JPEG 单张下载、全选一键逐个下载；纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/video-frame-extractor","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.vfe-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.vfe-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+.vfe-work{display:grid;grid-template-columns:minmax(360px,5fr) minmax(300px,7fr);gap:1.2rem;align-items:start}
+.vfe-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.vfe-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.vfe-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.vfe-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.vfe-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.vfe-field input[type=text],.vfe-field input[type=number],.vfe-field textarea,.vfe-field select{
+border:1px solid #d1d5db;border-radius:.45rem;padding:.55rem .7rem;font-size:.92rem;background:#fff;
+color:#1f2937;width:100%;box-sizing:border-box;font-family:inherit}
+.vfe-field input:focus,.vfe-field textarea:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.vfe-row{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+.vfe-radio{display:inline-flex;align-items:center;gap:.45rem;font-size:.88rem;color:#374151;cursor:pointer;
+border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .8rem;background:#fff}
+.vfe-radio input{width:1.05rem;height:1.05rem;accent-color:#1d4ed8}
+.vfe-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.vfe-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all.15s}
+.vfe-btn .material-icons{font-size:1.1rem}
+.vfe-btn-primary{background:#1d4ed8;color:#fff}
+.vfe-btn-primary:hover{background:#1e40af}
+.vfe-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.vfe-btn-secondary:hover{background:#e5e7eb}
+.vfe-btn:disabled{opacity:.45;cursor:not-allowed}
+.vfe-mini{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:.4rem;font-size:.78rem;
+padding:.25rem .6rem;cursor:pointer}
+.vfe-mini:hover{background:#dbeafe}
+#vfe-drop{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fbff;padding:1.6rem 1rem;text-align:center;
+cursor:pointer;transition:all.15s;color:#475569;line-height:2}
+#vfe-drop .material-icons{font-size:2.4rem;color:#1d4ed8;display:block;margin:0 auto .3rem}
+#vfe-drop.over{border-color:#1d4ed8;background:#eff6ff}
+#vfe-drop.busy{opacity:.5;cursor:wait}
+#vfe-video-info{font-size:.85rem;color:#4b5563;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.9;word-break:break-all}
+#vfe-player-wrap video{width:100%;max-height:260px;background:#000;border-radius:.5rem;margin-top:.7rem}
+.vfe-tabs{display:flex;gap:.4rem;margin-bottom:.9rem;border-bottom:2px solid #e5e7eb}
+.vfe-tab{border:none;background:none;padding:.55rem 1rem;font-size:.92rem;font-weight:600;color:#6b7280;cursor:pointer;
+border-bottom:3px solid transparent;margin-bottom:-2px}
+.vfe-tab.active{color:#1d4ed8;border-bottom-color:#1d4ed8}
+.vfe-tab:hover{color:#1d4ed8}
+.vfe-hint{font-size:.8rem;color:#6b7280;line-height:1.8;margin-top:.3rem}
+#vfe-progress-wrap{display:none;background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:.9rem 1.1rem;margin-bottom:1.2rem}
+#vfe-progress-track{height:.7rem;background:#e5e7eb;border-radius:1rem;overflow:hidden;margin-top:.5rem}
+#vfe-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#1d4ed8,#60a5fa);border-radius:1rem;transition:width .2s}
+#vfe-progress-text{font-size:.85rem;color:#374151}
+#vfe-result-bar{display:none;align-items:center;gap:.6rem;flex-wrap:wrap;background:#fff;border:1px solid #e5e7eb;
+border-radius:.8rem;padding:.8rem 1.1rem;margin-bottom:1rem}
+#vfe-result-count{font-size:.9rem;font-weight:700;color:#111827;margin-right:auto}
+#vfe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.9rem}
+.vfe-card{position:relative;background:#fff;border:1px solid #e5e7eb;border-radius:.7rem;overflow:hidden;cursor:zoom-in;transition:all.15s}
+.vfe-card:hover{border-color:#1d4ed8;box-shadow:0 4px 14px rgba(29,78,216,.15)}
+.vfe-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#111827}
+.vfe-meta{display:flex;align-items:center;justify-content:space-between;gap:.4rem;padding:.45rem .6rem;font-size:.78rem}
+.vfe-ts{font-family:ui-monospace,Consolas,monospace;color:#1d4ed8;font-weight:700}
+.vfe-score{color:#b45309;background:#fef3c7;border-radius:.3rem;padding:.1rem .4rem;font-size:.72rem}
+.vfe-card-actions{padding:0 .6rem .55rem;display:flex;gap:.4rem}
+.vfe-check{position:absolute;top:.45rem;left:.45rem;z-index:2}
+.vfe-check input{width:1.2rem;height:1.2rem;accent-color:#1d4ed8;cursor:pointer}
+.vfe-empty{grid-column:1/-1;text-align:center;color:#9ca3af;padding:2.5rem 1rem;font-size:.9rem;line-height:2}
+#vfe-preview-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;
+align-items:center;justify-content:center;flex-direction:column;gap:.7rem;padding:1.5rem;box-sizing:border-box}
+#vfe-preview-img{max-width:92vw;max-height:80vh;border-radius:.5rem;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+#vfe-preview-cap{color:#e5e7eb;font-size:.9rem;font-family:ui-monospace,Consolas,monospace}
+#vfe-preview-close{position:absolute;top:1rem;right:1.2rem;background:rgba(255,255,255,.15);border:none;color:#fff;
+font-size:1.4rem;border-radius:50%;width:2.6rem;height:2.6rem;cursor:pointer}
+.vfe-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.vfe-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.vfe-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+#vfe-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:10000;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#vfe-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.vfe-caliber{font-size:.82rem;color:#6b7280;background:#f8fafc;border:1px dashed #d1d5db;border-radius:.5rem;
+padding:.55rem .8rem;margin-top:.7rem;line-height:1.8}
+kbd{background:#f3f4f6;border:1px solid #d1d5db;border-radius:.3rem;padding:.05rem .4rem;font-family:inherit;font-size:.82rem}
+@media (max-width:1100px){.vfe-work{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">movie</i> 视频帧提取器</h1>
+<p>本地视频拖拽即提帧：等间隔抽帧、精确时间点抓帧、差异度扫描取精彩 Top K —— 缩略图网格＋时间戳，点击预览大图，PNG/JPEG 下载，全部在浏览器本地完成。</p>
+</div>
+<div class="tool-content" style="max-width:1360px;margin:auto;">
+<div class="vfe-privacy">
+<i class="material-icons">verified_user</i>
+<div><b>纯前端运行，零上传：</b>视频解码、seek 抓帧、差异度计算、PNG/JPEG 编码全部在浏览器本地完成，视频文件不出你的电脑，无任何后端请求与网络外发，可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div id="vfe-progress-wrap">
+<div id="vfe-progress-text">抓帧中</div>
+<div id="vfe-progress-track"><div id="vfe-progress-bar"></div></div>
+</div>
+
+<div class="vfe-work">
+<div>
+<div class="vfe-panel">
+<h3><i class="material-icons">video_file</i> 1. 选择视频</h3>
+<div id="vfe-drop">
+<i class="material-icons">cloud_upload</i>
+<div><b>拖拽视频文件到这里</b>，或点击选择文件</div>
+<div style="font-size:.8rem">支持 mp4 / webm / mov 等浏览器可解码格式 · 文件只在本地解码，不上传</div>
+<input type="file" id="vfe-file" accept="video/*,.mp4,.webm,.mov,.m4v,.ogv" style="display:none">
+</div>
+<div id="vfe-video-info">尚未选择视频</div>
+<div id="vfe-player-wrap" style="display:none">
+<video id="vfe-video" controls playsinline preload="auto"></video>
+</div>
+</div>
+
+<div class="vfe-panel">
+<h3><i class="material-icons">tune</i> 2. 提取模式</h3>
+<div class="vfe-tabs">
+<button type="button" class="vfe-tab active" data-tab="even">等间隔抽帧</button>
+<button type="button" class="vfe-tab" data-tab="exact">精确抓帧</button>
+<button type="button" class="vfe-tab" data-tab="scan">差异度扫描</button>
+</div>
+
+<div class="vfe-pane" data-pane="even">
+<div class="vfe-row" style="margin-bottom:.8rem">
+<label class="vfe-radio"><input type="radio" name="vfe-even-sub" id="vfe-even-mode-count" checked> 按帧数均匀抽取</label>
+<label class="vfe-radio"><input type="radio" name="vfe-even-sub" id="vfe-even-mode-interval"> 每 X 秒一帧</label>
+</div>
+<div class="vfe-field" id="vfe-even-count-row">
+<label>抽取帧数 N（均匀分布在全片时长内）</label>
+<input type="number" id="vfe-even-n" value="12" min="1" max="200" step="1">
+</div>
+<div class="vfe-field" id="vfe-even-interval-row" style="display:none">
+<label>间隔 X（秒）</label>
+<input type="number" id="vfe-every-x" value="5" min="0.5" max="3600" step="0.5">
+</div>
+<div class="vfe-actions">
+<button type="button" class="vfe-btn vfe-btn-primary" id="vfe-run-even" data-vfe-run><i class="material-icons">play_arrow</i> 开始抽帧</button>
+</div>
+</div>
+
+<div class="vfe-pane" data-pane="exact" style="display:none">
+<div class="vfe-field">
+<label>时间点列表（每行 / 逗号 / 分号分隔一个）</label>
+<textarea id="vfe-exact-list" rows="6" placeholder="00:01:23.500&#10;01:23&#10;83.5"></textarea>
+<div class="vfe-hint" id="vfe-exact-hint">支持 hh:mm:ss.mmm、mm:ss.mmm、mm:ss、纯秒小数四种写法</div>
+</div>
+<div class="vfe-actions">
+<button type="button" class="vfe-btn vfe-btn-primary" id="vfe-run-exact" data-vfe-run><i class="material-icons">play_arrow</i> 精确抓帧</button>
+</div>
+</div>
+
+<div class="vfe-pane" data-pane="scan" style="display:none">
+<div class="vfe-row">
+<div class="vfe-field" style="flex:1;min-width:140px">
+<label>采样间隔（秒）</label>
+<input type="number" id="vfe-scan-step" value="1" min="0.2" max="60" step="0.1">
+</div>
+<div class="vfe-field" style="flex:1;min-width:140px">
+<label>取差异最大 K 帧</label>
+<input type="number" id="vfe-scan-k" value="12" min="1" max="200" step="1">
+</div>
+</div>
+<div class="vfe-hint">按间隔采样全片，计算相邻帧像素差异度，输出差异最大的 K 帧并按差异度降序排列，适合抓取场景切换与精彩画面。超长视频请适当增大采样间隔。</div>
+<div class="vfe-actions">
+<button type="button" class="vfe-btn vfe-btn-primary" id="vfe-run-scan" data-vfe-run><i class="material-icons">play_arrow</i> 开始扫描</button>
+</div>
+</div>
+</div>
+
+<div class="vfe-panel">
+<h3><i class="material-icons">image</i> 3. 输出格式</h3>
+<div class="vfe-row" style="margin-bottom:.8rem">
+<label class="vfe-radio"><input type="radio" name="vfe-format" value="png" checked> PNG（无损）</label>
+<label class="vfe-radio"><input type="radio" name="vfe-format" value="jpeg"> JPEG（体积小）</label>
+</div>
+<div class="vfe-field" id="vfe-quality-row" style="display:none">
+<label>JPEG 质量（0.5 - 1）</label>
+<input type="number" id="vfe-quality" value="0.92" min="0.5" max="1" step="0.01">
+</div>
+<div class="vfe-caliber">输出帧最大边 1280px（超则等比缩小）；文件名形如 <kbd>原文件名_frame_01-02-03-456.png</kbd>，时间戳取实际抓帧时刻。</div>
+</div>
+</div>
+
+<div>
+<div class="vfe-panel">
+<h3><i class="material-icons">grid_view</i> 4. 提取结果</h3>
+<div id="vfe-result-bar">
+<span id="vfe-result-count">共 0 帧</span>
+<button type="button" class="vfe-btn vfe-btn-secondary" id="vfe-select-all" style="padding:.45rem .9rem;font-size:.82rem">全选</button>
+<button type="button" class="vfe-btn vfe-btn-secondary" id="vfe-select-none" style="padding:.45rem .9rem;font-size:.82rem">全不选</button>
+<button type="button" class="vfe-btn vfe-btn-primary" id="vfe-download-sel" style="padding:.45rem .9rem;font-size:.82rem"><i class="material-icons">download</i> 下载所选</button>
+<button type="button" class="vfe-btn vfe-btn-secondary" id="vfe-clear" style="padding:.45rem .9rem;font-size:.82rem"><i class="material-icons">clear_all</i> 清空重选</button>
+</div>
+<div id="vfe-grid"><div class="vfe-empty">暂无帧 —— 选择视频并执行提取后，缩略图将显示在这里</div></div>
+<div class="vfe-hint" style="margin-top:.7rem">点击缩略图预览大图；勾选后「下载所选」逐个下载；「清空重选」释放内存并重新开始。</div>
+</div>
+</div>
+</div>
+
+<div class="vfe-panel">
+<h3><i class="material-icons">tips_and_updates</i> 使用小贴士</h3>
+<div class="vfe-caliber" style="margin-top:0">1）抓取电影/课程精彩画面用「差异度扫描」，采样间隔 1～2 秒、K 取 12～20，场景切换帧会排在最前面；2）要固定时刻（如片头字幕、进球瞬间）用「精确抓帧」，时间点精确到毫秒，输出时间戳即实际抓帧时刻；3）做视频封面九宫格用「等间隔抽帧」，N 取 9，均匀覆盖全片；4）JPEG 体积约为 PNG 的 1/5～1/10，批量下载建议选 JPEG；5）4K 长视频建议先选小采样间隔试扫，确认效果再全量提取。</div>
+</div>
+
+<div class="vfe-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="vfe-faq">
+<dt>视频会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行：视频通过本地 objectURL 交给浏览器 &lt;video&gt; 解码，seek 抓帧、差异度计算、PNG/JPEG 编码全部在你的浏览器里完成，无任何后端请求与网络外发，可打开开发者工具 Network 面板验证。</dd>
+<dt>精确抓帧的时间戳误差有多大？</dt>
+<dd>输出时间戳取的是 seek 完成后 <kbd>video.currentTime</kbd> 的实际值，而非你输入的请求值，因此标注的就是真实抓到的那一帧时刻，浏览器 seek 精度通常在 0.2 秒以内。</dd>
+<dt>差异度扫描是什么原理？</dt>
+<dd>按你设定的采样间隔逐帧抓取，计算相邻两帧的像素灰度平均绝对差并归一化为 0～100% 的差异度，输出差异最大的 K 帧并按差异度降序排列。画面变化剧烈处（场景切换、运镜、动作高潮）差异度最高，会排在最前面。这是简化版实现，不做复杂运动跟踪，单轮交付更稳。</dd>
+<dt>哪些视频格式支持？</dt>
+<dd>取决于你的浏览器解码能力：Chrome/Edge 通常支持 mp4（H.264/H.265）、webm（VP8/VP9）、mov（H.264）；老旧 avi、rmvb 等浏览器原生不支持的格式会报解码失败，可先用格式转换工具转成 mp4。</dd>
+<dt>为什么有些帧看起来一模一样？</dt>
+<dd>等间隔抽帧是按时间均匀取点，静态对话段落相邻时间点画面可能几乎无变化。如需去重或只找变化大的画面，请改用「差异度扫描」模式。</dd>
+<dt>一次最多能提取多少帧？</dt>
+<dd>等间隔/精确抓帧上限 200 帧；差异度扫描采样点上限 600 个（超限会提示增大采样间隔）。输出帧最大边 1280px，超则等比缩小，以控制内存与编码耗时。</dd>
+<dt>下载时浏览器拦截了多个文件怎么办？</dt>
+<dd>「下载所选」是逐个触发下载（间隔 350ms），Chrome 首次可能会拦截并在地址栏弹出提示，点「允许」即可；之后同一站点不再拦截。</dd>
+</dl>
+</div>
+
+<div class="vfe-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="vfe-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">视频帧提取器（当前）</span>
+<a href="/tools/youtube-thumbnail-downloader" class="btn btn-secondary" style="font-size:.9rem;">YouTube 缩略图下载器</a>
+<a href="/tools/img-stitch" class="btn btn-secondary" style="font-size:.9rem;">图片拼接 / 长图拼接</a>
+<a href="/tools/image-annotator" class="btn btn-secondary" style="font-size:.9rem;">图片标注</a>
+<a href="/tools/img-target-kb" class="btn btn-secondary" style="font-size:.9rem;">图片精确体积压缩器</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="vfe-preview-ov">
+<button type="button" id="vfe-preview-close" title="关闭">✕</button>
+<img id="vfe-preview-img" alt="帧预览">
+<div id="vfe-preview-cap"></div>
+<button type="button" class="vfe-btn vfe-btn-primary" id="vfe-preview-dl"><i class="material-icons">download</i> 下载此帧</button>
+</div>
+<div id="vfe-toast"></div>
+<script src="/tools/static/js/video_frame_extractor.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -706,6 +706,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "video_frame_extractor",
+					Name:        "视频帧提取器",
+					Description: "本地视频逐帧提取：mp4/webm/mov 拖拽本地解码（零上传），等间隔抽帧 / 精确时间点抓帧（hh:mm:ss.mmm，误差≤0.2s）/ 差异度扫描取精彩 Top K，缩略图网格＋时间戳，点击预览大图，PNG/JPEG 单张下载、全选一键逐个下载，清空重选，纯前端零上传 · Video frame extractor: extract frames from local video evenly, at exact timestamps, or by motion scan, 100% client-side",
+					Path:        "/tools/video-frame-extractor",
+					Icon:        "movie",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

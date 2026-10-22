@@ -1,3 +1,96 @@
+## 开发交付（2026-10-22 17:50 · 前端开发轮）
+
+**交付：视频帧提取器（video_frame_extractor）** — 本轮唯一任务闭环：
+- 新增 `templates/video_frame_extractor.html`（SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）、`static/js/video_frame_extractor.js`（纯前端，脚本内零网络请求）、`tests/video_frame_extractor.test.js`；`tools/categories.go` 图片处理品类注册（New: true），Path 总数 137→138。
+- 三模式：①等间隔抽帧（按 N 均匀 / 每 X 秒一帧）；②精确抓帧（hh:mm:ss.mmm 等四种写法，输出时间戳取 video.currentTime 实际值）；③差异度扫描（相邻帧像素灰度平均绝对差归一化 0..1，Top K 降序）。输出缩略图网格＋时间戳、点击预览大图、单张 PNG/JPEG 下载、全选逐个下载（350ms 间隔防拦截）、清空重选；输出帧最大边 1280px。
+- 自测：`go build ./...` 通过；本地 18099 起服 `/tools/video-frame-extractor` 200、title/搜索/JS 引用均正常；`node tests/video_frame_extractor.test.js` **69/69 全过**（解析/格式化/时间点生成/差异度算法/TopK/文件名/导出清单/零上传）。
+- 备注：本轮开工前 `git fetch` 报 Host key verification failed，按 TOOLS.md（换机清 known_hosts）复核——`/home/hatch/.ssh/known_hosts` 已有 github.com 条目（10-19 修复遗留），重试 fetch 成功；自杀教训复现一次：`pkill -f` 与目标字面量同串误杀父 shell，已按 AGENTS.md 分两步处理。
+
+## 今日任务（2026-10-22 17:38 · 产品经理排期轮）
+
+**选定：视频帧提取器（video_frame_extractor）** — 本轮唯一任务（新工具）：
+- **顺位**：17:00 研究轮（67 轮）Top1 推荐；64 轮次席→66 轮二席→16:00 PM 轮留池次席，big_sign_display（3b817b4）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。
+- **形态族验证**：dev.to tonytoolbox 2026-10-01 FrameExtractor 形态验证（浏览器原生解码＋seek，等间隔抽帧/精确抓帧/运动扫描，零 ffmpeg 零上传；67 轮实锤）。
+- **痛点**：视频关键帧/精彩画面抓取靠播放器逐张截图或装 ffmpeg；纯前端小-中难度，一轮可高质量交付。
+- **零重叠实锤**：`grep -cinE 'video_frame_extractor|video-frame-extractor|视频帧提取'` 零命中（本轮复核）；全量 137 Path 中无形态重叠工具；建议 ID `video_frame_extractor`、Path `/tools/video-frame-extractor` 未被占用。
+- **单轮交付风险管控**：运动扫描部分交付风险略高（64 轮记录）→ 本轮规格定为「差异度扫描（相邻帧像素差异排序）」简化版，不做复杂运动跟踪；与等间隔抽帧/精确抓帧共三模式，风险可控。
+- **场景归位**：图片处理品类（视频→静态图片产出，与站内媒体处理工具链同族）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **未选**：Schema.org 结构化数据生成器（P1；62 轮新晋；七方独立形态共识；建议 ID schema_org_generator、Path /tools/schema-org-generator；留池二席）；WiFi 二维码生成器（P1；65 轮新晋；dev.to qrgenrateronline 15 类型形态验证；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator；留池三席）；会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；建议 ID meeting_invite_generator、Path /tools/meeting-invite-generator；留池）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；建议 ID nat_type_detector、Path /tools/nat-type-detector；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛部分单轮交付风险高；Calcy ranges 增量补 67 轮观察；留池）；其余候选留池。
+
+**规格**（开发轮按此执行）：
+- 输入：本地视频文件（拖拽＋文件选择，mp4/webm/mov 等浏览器可解码格式）；`<video>` 元素本地解码，纯前端零上传。
+- 三模式（标签页切换）：
+  - ① 等间隔抽帧：输入帧数 N（默认 12）→ 按 duration/(N+1) 均匀时间点 seek 抓帧；或按「每 X 秒一帧」。
+  - ② 精确抓帧：输入时间点（支持 hh:mm:ss.mmm / mm:ss / 秒小数），seek 到精确时间点抓帧，支持多条时间点列表。
+  - ③ 差异度扫描：按间隔（如每 1 秒）采样帧，计算相邻帧像素差异度，输出差异最大的 K 帧（默认 12），适配精彩画面/场景切换抓取。
+- 输出：缩略图网格展示（每张标注时间戳）；点击缩略图预览大图；单张 PNG/JPEG 下载；全选一键逐个下载（纯前端 `a[download]`，不依赖 ZIP 库）；清空重选。
+- 进度与边界：seek 抓帧期间进度条提示；视频时长未知/解码失败时友好错误提示；超长视频提示建议缩短采样间隔。
+- 注册：图片处理品类，新增工具 ID `video_frame_extractor`、Name「视频帧提取器」、Path `/tools/video-frame-extractor`（New: true），中英文描述＋SEO keywords（视频帧提取、视频截图、视频关键帧、帧抓取、video frame extractor）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `video_frame_extractor`、Path `/tools/video-frame-extractor` 注册完整，注册总数 138 Path。
+2. 加载 mp4/webm 视频→等间隔抽 N 帧→缩略图网格 N 张，每张时间戳单调递增且覆盖全片时长。
+3. 输入精确时间点（如 00:01:23.500）→抓帧输出时间戳与输入一致（误差 ≤0.2s）。
+4. 差异度扫描→输出 K 帧按差异度降序（测试用静态片头＋动态段落视频，动态段落帧排前）。
+5. 单张 PNG/JPEG 下载可用；全选一键下载可用；清空重选可用。
+6. 脚本内零 fetch/XHR，Network 抽查无内容外发。
+7. node 测试 40+ 断言全过（时间点解析 hh:mm:ss.mmm、均匀帧时间点计算、相邻帧差异度算法、帧文件名格式化、导出清单生成）。
+8. 公网 /tool-web 部署后 QA：/tools/video-frame-extractor 200、无 /tools 残留链接。
+
+**预计改动文件**：
+- `tools/categories.go`（注册 ID video_frame_extractor、Path /tools/video-frame-extractor，图片处理品类，New: true）
+- 新建 `templates/video_frame_extractor.html`、`static/js/video_frame_extractor.js`、`tests/video_frame_extractor.test.js`
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 3b817b4（big_sign_display 交付闭环）与本地分支一致；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（`Host key verification failed`，59/60/61/67 轮研究轮故障模式；16:00 PM 轮曾正常；TOOLS.md 换机清 known_hosts 已知原因；本地分支 muse/dev-20260929 未动，仓库读取以本地为准，开发/推送轮次前复核）；零重叠 grep 三轮全零命中（本轮复核），全量 137 Path；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-22 17:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-22 通用调研第六十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。大字标牌展示器已交付闭环（`git log` 头部 3b817b4「新增大字标牌展示器」；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **137 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 傍晚轮次，P1 可排。
+
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. big_sign_display 交付确认：`git log` 头部 3b817b4（新增大字标牌展示器：输入文案 `---` 分页多屏，全屏超大字体自适应展示）；`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（`Host key verification failed`，59/60/61 轮故障模式再现；16:00 PM 轮曾正常；本地分支 muse/dev-20260929 未动，仓库读取以本地为准；开发轮次需复核）；`grep tools/categories.go` 全量 137 Path（`big_sign_display` ID 与 `/tools/big-sign-display` Path 已注册）；候选池划出。
+2. 新信号扫描：
+   - **Medium Siloshan（2026-10，本周）「7 Free Browser Tools Worth Bookmarking This October」**（过去两周 launch boards 新工具合集）：7 个逐个对账：
+     - **SyncWhen**（免注册会议时间投票）→ `grep -oinE '投票|poll|问卷' tools/categories.go` **零命中**，但真实会议投票需后端聚合他人投票结果，纯前端单页无法实现 → **不立（需后端）**；
+     - **SortaSeat**（婚礼/活动座位表生成器）→ 自有 `/tools/wedding-seating-chart`（ID wedding_seating_chart，templates/static 落盘）**实锤复现** → 不记账；
+     - **OldRoll**（复古胶片风照片效果）→ 自有 `/tools/img-retro-filter` **实锤复现** → 不记账；
+     - **StitchCraft**（照片转十字绣图案）→ 自有 `/tools/cross-stitch-pattern` **实锤复现** → 不记账；
+     - **urPiano**（浏览器弹钢琴/学琴）→ 池内已有 P2「在线钢琴」候选；新工具上市＝fresh 形态验证 → **留池（补验证，不新立）**；
+     - **Calcy**（带单位＋区间范围的草稿计算）→ 需求族＝池内 P1「单位感知记事本计算器」；**ranges（区间值计算）为增量** → 记 **P1 增强观察**（可作为该候选功能增强，不新立）；
+     - **llmspeed**（买硬件前测本地 AI 模型跑多快）→ HN Front Page Roundup 10-18 实锤：Show HN: Llmspeed 215→318pts（+103，remarkable staying power）；需求族＝池内 P2「本地 LLM 硬件检测器」（CanIRun.ai 形态）niche 观察 → **P2 观察补 HN 前页验证，不新立**（受众 niche 不变）；
+   - **dev.to invvodel（2026-09）SiteIndex「70+ free web tools, no signup」**：类目（DNS 查询/端口/SSL/SEO audit/PDF 合并/图片/文本/单位换算）均为自有实锤；旗舰 Website Score（SEO＋性能＋安全＋无障碍整站审计）需后端 Lighthouse → **不立**；
+   - **V2EX（2026-10-20）Open Resume**：156 款模板开源自部署简历工具（编辑/导出全免费）；完整简历编辑器＋模板体系非单页形态，大难度；ATS 评分侧＝自有 `resume_checker` 实锤 → **不立（观察：简历编辑器非单页形态）**；
+   - **V2EX（2026-10-22）Qovia**：抖音/小红书/B 站/微博等 20+ 平台统一 JSON 数据 API＋MCP → 需后端/计费 API，非 web 工具形态 → **不立**；
+   - **HN 10-18 roundup 其余**：MapQuest/Flock 摄像头地图（数据站非工具）、DeepSeek-v4.1（模型发布）、OpenCode 凭证泄露（安全事件）→ 不立；10-09/10-11/10-15 roundup 上轮已消化（bigarrow/macOS CLI、How random are you/niche、Invoice to JSON/需后端）。
+3. 候选池变动：大字标牌展示器已交付划出（3b817b4，137 Path）；本轮新信号全为自有实锤复现或不立/观察，**无新晋**；Calcy ranges 记单位感知记事本计算器增强观察；llmspeed HN 前页验证补本地 LLM 硬件检测器 P2 观察；urPiano 补在线钢琴 P2 形态验证；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；big_sign_display 交付闭环后按顺位递进）：
+
+1. **视频帧提取器** — P1（62 轮新晋→64 轮次席→66 轮二席→16:00 PM 轮留池次席；dev.to tonytoolbox 2026-10-01 FrameExtractor 形态验证：浏览器原生解码＋seek，等间隔抽帧/精确抓帧/运动扫描，零 ffmpeg 零上传；痛点：视频关键帧/精彩画面抓取靠播放器逐张截图或装 ffmpeg；纯前端小-中难度；建议 ID video_frame_extractor、Path /tools/video-frame-extractor）。
+2. **Schema.org 结构化数据生成器** — P1（62 轮新晋；七方独立形态共识；痛点：手写 SEO JSON-LD 逐字段查 schema、语法错难排查；选类型→表单填字段→实时生成 JSON-LD→一键复制；纯前端小难度；营销工具家族归位；建议 ID schema_org_generator、Path /tools/schema-org-generator）。
+3. **WiFi 二维码生成器** — P1（65 轮新晋；dev.to 2026-10-08 qrgenrateronline 15 类型形态验证；痛点：来客/店铺/活动现场分享 WiFi 口头报密码易错，现有二维码站多要注册或带水印；纯前端小难度：SSID/加密方式（WPA2/WPA3/无密码）/密码/隐藏网络→`WIFI:T:..;S:..;P:..;;`→二维码＋打印页；效率工具家族；与自有通用二维码（qrcode/qr_code/qr_code_scanner）互补零重叠；建议 ID wifi_qr_generator、Path /tools/wifi-qr-generator）。
+
+会议邀请 (.ics) 生成器（P1；63 轮新晋；HN 600pts；留池）；NAT 类型检测器（P1；64 轮新晋；Show HN NatChecker；留池）；MBOX 邮件存档查看器（P1；58 轮新晋；中难度，留待更从容轮次）；SVG 转字体图标生成器（P1；59 轮新晋；opentype.js vendor 化验证成本高，留池）；单位感知记事本计算器（P1；蒙特卡洛/ranges 部分单轮交付风险高；本轮补 Calcy ranges 增量观察；留池）；屏幕常亮/浏览器实时听写（P1 留池）；年会大屏抽奖（时令预热，11 月）；文本提取器（P2；65 轮新晋）；URL Slug 生成器（P2；65 轮新晋）；番茄钟专注计时器（P2；63 轮新晋；方向边界观察）；本地 LLM 硬件检测器（P2；65 轮新晋；本轮补 HN llmspeed 前页验证；niche）；应用商店截图生成器（P2；65 轮新晋；niche）；在线钢琴（P2；本轮补 urPiano 形态验证；留池）；SQLite 数据库查看器（P2；62 轮新晋；sql.js WASM vendor 风险）；SEO 日志分析器（P2；62 轮新晋；SEO niche）；8D 环绕声转换器/BPM 调性检测器（P2 观察）；System Prompt 构建器（P2 观察）；打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器（P2 留池）；文件夹内容级哈希对比/ReDoS 检测（P2 增强观察）；其余候选留池。
+
+**通用候选表增量**（第六十七轮：大字标牌展示器已交付划出（3b817b4，137 Path）；无新晋候选；Calcy ranges→单位感知记事本计算器增强观察；llmspeed→本地 LLM 硬件检测器 P2 观察补验证；urPiano→在线钢琴 P2 补验证；SyncWhen（需后端）/SiteIndex Website Score（需后端）/Open Resume（非单页形态）/Qovia（需后端 API）不立；SortaSeat/OldRoll/StitchCraft＝自有实锤复现；全量 137 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 大字标牌展示器 | 已交付划出（3b817b4 交付闭环；ID big_sign_display、Path /tools/big-sign-display 已注册；全量 137 Path；候选池划出） | — | 已实现 |
+| SyncWhen 类免注册会议投票 | 本轮不立（Medium 10 月 7 工具之一；`投票/poll/问卷` 零覆盖但他人在线投票需后端聚合，纯前端单页无法实现） | — | 不立 |
+| Calcy ranges 增量（增强观察） | 本轮 P1 池内候选「单位感知记事本计算器」增强观察（Medium Calcy 形态：带单位＋区间 ranges 草稿计算；ranges 侧未覆盖，可作为功能增强） | 小 | P1 增强观察 |
+
+**归档说明**：本轮为 10-22 通用调研第六十七轮——大字标牌展示器交付闭环（3b817b4，`/tools/big-sign-display` 已注册，生活工具品类，全量 137 Path），候选池划出；新信号扫描（Medium 10 月 7 工具合集：SortaSeat＝自有婚礼座位表实锤/OldRoll＝自有复古滤镜实锤/StitchCraft＝自有十字绣实锤/urPiano 补在线钢琴 P2 验证/Calcy→单位感知记事本计算器 ranges 增强观察/llmspeed→本地 LLM 硬件检测器 P2 观察补 HN 前页验证/SyncWhen 需后端不立；dev.to SiteIndex 类目均为自有实锤、Website Score 需后端不立；V2EX Open Resume 非单页形态不立；V2EX Qovia 需后端 API 不立；HN 10-18 roundup 其余不立）均已消化；WPS 候选表保持冻结归档；仓库 137 注册工具全量核对无重叠（Top3 建议 ID video_frame_extractor / schema_org_generator / wifi_qr_generator；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥）本轮异常（`Host key verification failed`，59/60/61 轮故障模式再现；16:00 PM 轮曾正常；本地分支 muse/dev-20260929 未动）；`git log` 头部 3b817b4（big_sign_display 交付闭环）；`grep tools/categories.go` 全量 137 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）。
+
+---
+
 ## 今日任务（2026-10-22 16:00 · 产品经理排期轮）
 
 **选定：大字标牌展示器（big_sign_display）** — 本轮唯一任务（新工具）：
