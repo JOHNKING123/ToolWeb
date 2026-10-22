@@ -146,6 +146,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "编码转换",
 				},
+				{
+					ID:          "wifi_qr_generator",
+					Name:        "WiFi 二维码生成器",
+					Description: "输入 SSID 与密码生成 WiFi 二维码，手机扫码直连；支持 PNG/SVG 下载与 A4 打印张贴海报",
+					Path:        "/tools/wifi-qr-generator",
+					Icon:        "wifi",
+					New:         true,
+					Category:    "编码转换",
+				},
 			},
 		},
 		{

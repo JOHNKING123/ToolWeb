@@ -1,0 +1,243 @@
+{{define "wifi_qr_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi 二维码生成器 - 扫码直连 WiFi，支持打印张贴 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 WiFi 二维码生成器：输入 SSID、加密类型与密码，按 WIFI: 协议规范生成二维码，手机扫码直连；特殊字符自动转义、中文 SSID 明文、隐藏网络支持；二维码实时预览（容错/尺寸/颜色可调），下载 PNG/SVG、复制协议串，一键生成 A4 打印张贴海报。纯前端本地运行，密码不上传。">
+    <meta name="keywords" content="WiFi 二维码生成器,wifi 二维码,扫码连 wifi,WIFI: 协议,二维码生成器,无线网络二维码,打印 wifi 海报,扫码直连,ssid 二维码,wifi 分享二维码,二维码 png svg 下载">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/wifi-qr-generator">
+    <meta property="og:title" content="WiFi 二维码生成器 - 扫码直连 WiFi">
+    <meta property="og:description" content="输入 SSID 与密码生成 WiFi 二维码，手机扫码直连；支持 PNG/SVG 下载与 A4 打印张贴海报，纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/wifi-qr-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"WiFi 二维码生成器","description":"输入 SSID、加密类型与密码，按 WIFI: 协议规范生成二维码，手机扫码直连 WiFi；特殊字符自动转义、中文 SSID 明文、隐藏网络支持，二维码实时预览（容错/尺寸/颜色可调），下载 PNG/SVG、复制协议串，一键生成 A4 打印张贴海报，纯前端本地运行。","url":"https://www.johnkingzcq123.xyz/tools/wifi-qr-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .wqr-wrap .container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.2rem; }
+        .wqr-wrap h1 { font-size: 1.6rem; margin: 0 0 .4rem; color: #111827; }
+        .wqr-intro { color: #6b7280; font-size: .95rem; margin: 0 0 1.2rem; line-height: 1.8; }
+        .wqr-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .wqr-privacy .wqr-lock { font-size: 1.6rem; flex: none; }
+        .wqr-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; margin-bottom: 1rem; align-items: start; }
+        .wqr-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem; }
+        .wqr-panel h3 { margin: 0 0 .8rem; font-size: 1rem; color: #111827; display: flex; align-items: center; gap: .45rem; }
+        .wqr-panel h3 .wqr-tag { font-size: .72rem; font-weight: 400; color: #6b7280; background: #f3f4f6; border-radius: .35rem; padding: .1rem .5rem; }
+        /* 表单 */
+        .wqr-field { margin-bottom: .9rem; }
+        .wqr-label { display: block; font-size: .88rem; font-weight: 600; color: #374151; margin-bottom: .35rem; }
+        .wqr-req { color: #ef4444; font-weight: 700; }
+        .wqr-input { width: 100%; box-sizing: border-box; padding: .55rem .7rem; font-size: .9rem; color: #111827;
+            border: 1px solid #d1d5db; border-radius: .5rem; background: #f9fafb; font-family: inherit; }
+        .wqr-input:focus { outline: none; border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .wqr-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+        select.wqr-input { cursor: pointer; }
+        .wqr-hint { color: #9ca3af; font-size: .78rem; margin-top: .3rem; line-height: 1.6; }
+        .wqr-err { color: #dc2626; font-size: .8rem; margin-top: .3rem; min-height: 0; line-height: 1.6; }
+        .wqr-err:empty { display: none; }
+        .wqr-field.wqr-invalid .wqr-input { border-color: #ef4444; background: #fef2f2; }
+        .wqr-field.wqr-invalid .wqr-label { color: #b91c1c; }
+        .wqr-flash { animation: wqr-flash 1.2s ease; border-radius: .5rem; }
+        @keyframes wqr-flash { 0% { box-shadow: 0 0 0 3px rgba(37,99,235,.5); } 100% { box-shadow: none; } }
+        .wqr-switch { display: flex; align-items: center; gap: .6rem; cursor: pointer; font-size: .88rem; color: #374151; }
+        .wqr-switch input { width: 1.1rem; height: 1.1rem; accent-color: var(--primary-color); cursor: pointer; }
+        .wqr-sample-link { background: none; border: none; color: var(--primary-color); font-size: .8rem; cursor: pointer; padding: 0; }
+        .wqr-sample-link:hover { text-decoration: underline; }
+        /* 错误列表 */
+        #wqr-errors { margin-top: .6rem; }
+        .wqr-error-item { display: flex; gap: .7rem; align-items: flex-start; width: 100%; box-sizing: border-box;
+            text-align: left; background: #fff; border: 1px solid #fecaca; border-radius: .6rem;
+            padding: .65rem .85rem; margin-bottom: .45rem; cursor: pointer; font-size: .88rem; transition: all .15s; }
+        .wqr-error-item:hover { border-color: #ef4444; background: #fef2f2; transform: translateX(2px); }
+        .wqr-err-no { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: #ef4444; color: #fff;
+            font-size: .75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: .1rem; }
+        .wqr-err-body { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+        .wqr-err-msg { color: #374151; line-height: 1.6; }
+        /* 预览 */
+        #wqr-preview { background: #fff; border: 1px dashed #d1d5db; border-radius: .6rem; padding: 1rem;
+            min-height: 300px; display: flex; align-items: center; justify-content: center; }
+        .wqr-preview-empty { color: #9ca3af; font-size: .9rem; text-align: center; line-height: 2; }
+        #wqr-payload { background: #0f172a; color: #86efac; border-radius: .6rem; padding: .8rem 1rem; font-size: .85rem;
+            line-height: 1.7; font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all;
+            margin: .8rem 0; min-height: 3.2rem; }
+        .wqr-opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-bottom: .8rem; }
+        .wqr-color-row { display: flex; gap: .7rem; margin-bottom: .8rem; }
+        .wqr-color-item { display: flex; align-items: center; gap: .45rem; font-size: .85rem; color: #4b5563; }
+        .wqr-color-item input[type="color"] { width: 2.4rem; height: 2rem; border: 1px solid #d1d5db; border-radius: .4rem; padding: 0; cursor: pointer; background: #fff; }
+        .wqr-outbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .6rem; }
+        .wqr-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1rem; font-size: .88rem;
+            border-radius: .55rem; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all .15s; }
+        .wqr-btn:hover:not(:disabled) { border-color: var(--primary-color); color: var(--primary-color); }
+        .wqr-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .wqr-btn.wqr-primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; font-weight: 600; }
+        .wqr-btn.wqr-primary:hover:not(:disabled) { background: var(--primary-hover, #1d4ed8); color: #fff; }
+        .wqr-ec-info { color: #9ca3af; font-size: .78rem; margin-top: .5rem; }
+        .wqr-layout-pick { display: flex; gap: 1rem; font-size: .85rem; color: #4b5563; margin-bottom: .6rem; }
+        .wqr-layout-pick label { display: flex; align-items: center; gap: .35rem; cursor: pointer; }
+        .wqr-layout-pick input { accent-color: var(--primary-color); }
+        /* 文档区 */
+        .wqr-doc { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem;
+            font-size: .88rem; color: #4b5563; line-height: 2; }
+        .wqr-doc h3 { margin: 0 0 .6rem; font-size: 1rem; color: #111827; }
+        .wqr-doc b { color: #111827; }
+        .wqr-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .wqr-doc a { color: var(--primary-color); text-decoration: none; }
+        .wqr-doc a:hover { text-decoration: underline; }
+        /* toast */
+        .wqr-toast { position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px); z-index: 99;
+            background: #111827; color: #fff; padding: .7rem 1.3rem; border-radius: .6rem; font-size: .9rem;
+            opacity: 0; pointer-events: none; transition: all .25s; }
+        .wqr-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .wqr-toast.ok { background: #065f46; }
+        .wqr-toast.fail { background: #991b1b; }
+        /* 打印海报：屏幕上隐藏 */
+        .wqr-print-zone { display: none; }
+        @media print {
+            .navbar, .wqr-no-print { display: none !important; }
+            .wqr-wrap .container { max-width: none; padding: 0; margin: 0; }
+            .wqr-print-zone { display: block !important; }
+            .wqr-layout-1x1 .wqr-poster-card { width: 100%; page-break-inside: avoid; }
+            .wqr-layout-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+            .wqr-layout-2x2 .wqr-poster-card { page-break-inside: avoid; border: 1px dashed #9ca3af; }
+            .wqr-poster-card { text-align: center; padding: 1.2cm; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+            .wqr-poster-title { font-size: 28pt; margin: 0 0 .6cm; color: #111; }
+            .wqr-poster-qr svg { width: 9cm; height: 9cm; }
+            .wqr-layout-2x2 .wqr-poster-qr svg { width: 6.2cm; height: 6.2cm; }
+            .wqr-layout-2x2 .wqr-poster-title { font-size: 20pt; }
+            .wqr-poster-row { display: flex; justify-content: center; gap: .5em; font-size: 15pt; margin: .25cm 0; color: #111; }
+            .wqr-layout-2x2 .wqr-poster-row { font-size: 11pt; }
+            .wqr-poster-k { color: #555; }
+            .wqr-poster-v { font-weight: 700; word-break: break-all; }
+            .wqr-poster-tip { font-size: 11pt; color: #555; margin-top: .8cm; line-height: 1.8; }
+            .wqr-layout-2x2 .wqr-poster-tip { font-size: 9pt; margin-top: .4cm; }
+        }
+        @media (max-width: 900px) {
+            .wqr-main { grid-template-columns: 1fr; }
+            .wqr-opt-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="wqr-wrap">
+    <div class="container">
+        <div class="wqr-no-print">
+        <h1>📶 WiFi 二维码生成器</h1>
+        <p class="wqr-intro">给家里、办公室、店铺的 WiFi 生成一张二维码：客人手机相机一扫就自动连网，不用再念密码。按 <code>WIFI:T:..;S:..;P:..;H:..;;</code> 通用协议串生成，iOS / 安卓相机、微信、支付宝都能扫。</p>
+
+        <div class="wqr-privacy">
+            <span class="wqr-lock">🔒</span>
+            <div><b>隐私承诺：WiFi 密码只留在你的浏览器里，不上传服务器。</b><br>
+            表单校验、协议串构建、二维码渲染、下载、打印全部本地完成，零后端接口、零第三方库、零 CDN。你可以在 DevTools 的 Network 面板验证 —— 任何操作都不会产生网络请求。断网也能用。</div>
+        </div>
+
+        <div class="wqr-main">
+            <div class="wqr-panel">
+                <h3>📝 WiFi 信息 <span class="wqr-tag">左侧填写</span>
+                    <button type="button" class="wqr-sample-link" id="wqr-sample" style="margin-left:auto">填入示例</button>
+                </h3>
+                <div class="wqr-field" id="wqr-field-ssid">
+                    <label class="wqr-label" for="wqr-ssid">WiFi 名称（SSID） <span class="wqr-req">*</span></label>
+                    <input class="wqr-input" id="wqr-ssid" type="text" placeholder="例如：Office-Guest" autocomplete="off">
+                    <div class="wqr-err" id="wqr-err-ssid"></div>
+                </div>
+                <div class="wqr-field">
+                    <label class="wqr-label" for="wqr-auth">加密类型 <span class="wqr-req">*</span></label>
+                    <select class="wqr-input" id="wqr-auth"></select>
+                    <div class="wqr-hint" id="wqr-auth-hint"></div>
+                </div>
+                <div class="wqr-field" id="wqr-field-password">
+                    <label class="wqr-label" for="wqr-password">WiFi 密码 <span class="wqr-req">*</span></label>
+                    <input class="wqr-input" id="wqr-password" type="text" placeholder="例如：Welcome2026" autocomplete="off">
+                    <div class="wqr-err" id="wqr-err-password"></div>
+                    <div class="wqr-hint">选「无密码」时此栏自动禁用，协议串不含密码段。</div>
+                </div>
+                <div class="wqr-field">
+                    <label class="wqr-switch"><input type="checkbox" id="wqr-hidden"> 隐藏网络（SSID 不广播）</label>
+                    <div class="wqr-hint">勾选后协议串追加 <code>H:true</code>，手机扫码仍可直连。</div>
+                </div>
+                <div class="wqr-field">
+                    <label class="wqr-label" for="wqr-note">打印备注名（可选）</label>
+                    <input class="wqr-input" id="wqr-note" type="text" placeholder="例如：二楼会议室 WiFi（只出现在打印海报标题）" autocomplete="off">
+                </div>
+                <div id="wqr-errors"></div>
+            </div>
+
+            <div class="wqr-panel">
+                <h3>⚡ 二维码预览 <span class="wqr-tag">实时生成</span></h3>
+                <div id="wqr-preview"><div class="wqr-preview-empty">二维码预览区<br>填写完整后实时生成</div></div>
+                <div id="wqr-payload">— 修正上方标红项后自动生成 —</div>
+                <div class="wqr-opt-grid">
+                    <div>
+                        <label class="wqr-label" for="wqr-ec">容错级别</label>
+                        <select class="wqr-input" id="wqr-ec"></select>
+                    </div>
+                    <div>
+                        <label class="wqr-label" for="wqr-size">下载尺寸</label>
+                        <select class="wqr-input" id="wqr-size">
+                            <option value="256">256 × 256</option>
+                            <option value="512" selected>512 × 512</option>
+                            <option value="1024">1024 × 1024</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="wqr-color-row">
+                    <label class="wqr-color-item">前景色 <input type="color" id="wqr-fg" value="#000000"></label>
+                    <label class="wqr-color-item">背景色 <input type="color" id="wqr-bg" value="#ffffff"></label>
+                </div>
+                <div class="wqr-outbar">
+                    <button type="button" class="wqr-btn wqr-primary" id="wqr-copy" disabled>📋 复制协议串</button>
+                    <button type="button" class="wqr-btn" id="wqr-dl-png" disabled>🖼️ 下载 PNG</button>
+                    <button type="button" class="wqr-btn" id="wqr-dl-svg" disabled>🧩 下载 SVG</button>
+                </div>
+                <div class="wqr-ec-info" id="wqr-ec-info"></div>
+                <h3 style="margin-top:1rem">🖨️ A4 打印张贴 <span class="wqr-tag">仅打印海报</span></h3>
+                <div class="wqr-layout-pick">
+                    <label><input type="radio" name="wqr-layout" value="1x1" checked> 单张大海报</label>
+                    <label><input type="radio" name="wqr-layout" value="2x2"> 2×2 四张拼版</label>
+                </div>
+                <div class="wqr-outbar">
+                    <button type="button" class="wqr-btn wqr-primary" id="wqr-print" disabled>🖨️ 打印张贴页</button>
+                </div>
+                <div class="wqr-hint">打印时仅输出海报（大二维码 + SSID/密码明文 + 扫码说明），编辑区与说明文字不会出现在纸上。</div>
+            </div>
+        </div>
+
+        <div class="wqr-doc">
+            <h3>📖 使用说明</h3>
+            <div>
+                <b>三步上手：</b>① 左侧填写 WiFi 名称、加密类型、密码（带 <span class="wqr-req">*</span> 为必填）；② 右侧实时预览二维码与协议串；③ 一键复制协议串、下载 PNG/SVG，或打印 A4 张贴海报贴在墙上。<br>
+                <b>协议串格式：</b><code>WIFI:T:加密;S:名称;P:密码;H:true;;</code>。加密映射：WPA/WPA2/WPA3 → <code>WPA</code>，WEP → <code>WEP</code>，无密码 → <code>nopass</code>（省略 <code>P:</code> 段）；隐藏网络追加 <code>H:true</code>。<br>
+                <b>转义规则：</b>SSID 或密码中的 <code>\ ; , : "</code> 会自动加反斜杠转义；中文 SSID 按 UTF-8 明文输出，无需转义。<br>
+                <b>必填校验：</b>SSID 为空、密码缺失或长度不合规时，生成按钮自动禁用，标红字段 + 错误列表，点击错误可直接定位到对应输入框。<br>
+                <b>互链工具：</b>需要通用文本/链接二维码可用 <a href="/tools/qrcode">二维码工具</a>；需要条形码可用 <a href="/tools/barcode-generator">条形码生成器</a>（编码转换家族工具联动）。
+            </div>
+            <h3 style="margin-top:1rem">❓ 常见问题</h3>
+            <div>
+                <b>手机扫码后没反应？</b>确认 SSID 与密码大小写完全一致；隐藏网络需勾选「隐藏网络」开关；部分老旧安卓机对 WPA3 支持不佳，可改选 WPA/WPA2。<br>
+                <b>容错级别选 M 还是 Q？</b>默认 M 即可；要打印得很小或贴在可能磨损的位置（如门把手旁）建议选 Q。<br>
+                <b>二维码里会不会泄露我的密码？</b>会 —— 扫码直连的原理就是把密码写进二维码，任何人扫码都能连网。请只把海报贴在可信场所。<br>
+                <b>我的 WiFi 密码会上传吗？</b>不会。全部计算在浏览器本地完成，无任何网络请求，可断网使用。
+            </div>
+        </div>
+        </div><!-- /.wqr-no-print -->
+
+        <div class="wqr-print-zone" id="wqr-print-zone"></div>
+    </div>
+    </div>
+    <div class="wqr-toast" id="wqr-toast"></div>
+
+    <script src="/tools/static/js/vendor/qrcode-generator-1.4.4.min.js"></script>
+    <script src="/tools/static/js/wifi_qr_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
