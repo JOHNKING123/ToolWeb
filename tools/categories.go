@@ -751,6 +751,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "ascii_art_generator",
+					Name:        "ASCII 字符画生成器",
+					Description: "图片一键转 ASCII 字符画：PNG/JPG/GIF/WebP 拖拽上传，字符宽度 40/80/120/160 四档、精简/标准/半调三档字符集、反色与彩色模式可调，一键复制或下载 .txt，图片只在本机浏览器处理不上传 · Image to ASCII art: convert images to ASCII text locally, copy or download as .txt, 100% client-side",
+					Path:        "/tools/ascii-art-generator",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

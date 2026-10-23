@@ -1,3 +1,79 @@
+## 今日任务（2026-10-24 05:41 · 产品经理排期轮）
+
+**选定：ASCII 字符画生成器（ascii_art_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：05:00 研究轮（83 轮）Top3 **首席推荐**；本地看板任务管理已交付闭环（71df4b9 评审修复＋6035bc2 新增，155 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 155 Path，ID kanban_board、Path /tools/kanban-board 已注册，实用工具品类；origin/muse/dev-20260929 已同步；候选池划出）后顺位递进生效，依惯例「无硬伤不跳过」。未选：HTTP 状态码速查（P2；KRUMB.DEV＋UniversalTools.org 双重验证补强，无硬伤，留池顺位递进）、本地 LLM 硬件检测器（P2；四次形态验证多轮留池，无硬伤，留池顺位递进）、CSS Sprite 雪碧图生成器（本轮新晋 niche P2，留池）。
+- **选定理由**：① **研究轮首席推荐，无硬伤不跳过**——HN「Animated ASCII Art for Web Pages」466 pts（83 轮）＋Show HN Toolcraft「ASCII/pixel/halftone effects」用例双重形态验证；② **纯前端小难度一轮可高质量交付**——上传图片→canvas 本地降采样→亮度映射 ASCII 字符集（宽度/字符集/反色/彩色模式可调）→复制＋导出 .txt，零上传、零第三方库；③ **零重叠复核**——本轮实测 `grep -rniE 'ascii_art_generator|ascii-art-generator|字符画'` 在 tools/categories.go、templates/、static/js/、tests/ **全路零命中实锤**（`ascii` 仅命中 barcode_generator/curl_to_requests 等偶发字符集上下文；pixel_art_converter 仅像素风转换，非字符画）；④ **痛点明确**——想把图片转成字符画发论坛/签名/代码注释，现有站点广告多或要求上传图片；「本地处理不上传」正中隐私痛点。
+- **品类归位**：注册到「图片处理」品类（与 img_mosaic 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **降采样采样步长必须可调且默认合理**——字符宽度默认 80、可调（40/80/120/160 档），行高按 0.5 纵横比压缩（等宽字体字符约高 2 倍宽），否则字符画被横向拉长；② **字符集必须提供密度梯度多档**——至少 3 档：精简（`@#S%?*+;:,.` 10 级）、标准（`$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,.\"^`.'  70 级）、半调（` .:-=+*#%@`）；字符密度必须单调；③ **彩色模式可选**——默认灰度字符画；彩色模式用 span 逐字着色（采样点原色），导出 .txt 时降级为灰度字符画并 toast 提示；④ **零上传文案如实**——页面如实写「图片只在本机浏览器处理，不上传任何服务器」；脚本零 fetch/XHR；⑤ **导出双通道**——复制到剪贴板（一键复制＋复制成功提示）与下载 .txt（UTF-8 编码、文件名带时间戳）；⑥ **性能兜底**——大图先 canvas 缩放到 ≤480px 再采样，避免逐字 span 在彩色模式下卡顿（宽度 160 档彩色输出上限先测，卡顿时提示降档）。
+- **ID/Path**：`ascii_art_generator`、`/tools/ascii-art-generator`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 上传区：拖拽＋点击上传（PNG/JPG/GIF 静态帧/webp）；本地 FileReader→Image→canvas 解码，全程不上传。
+- 转换参数：字符宽度 40/80/120/160 四档（默认 80）；字符集三档（精简/标准/半调，默认标准）；反色开关（默认关）；彩色模式开关（默认关，灰度）；行高 0.5 压缩。
+- 输出区：`<pre>` 等宽字体展示（font-family monospace 预置，14px 可调字号±）；复制到剪贴板＋导出 .txt（UTF-8，文件名 `ascii-art-YYYYMMDD-HHmmss.txt`）；彩色模式逐字 span 着色、复制/导出时转为灰度字符画。
+- 注册：ID `ascii_art_generator`、Name「ASCII 字符画生成器」、Path `/tools/ascii-art-generator`、Category 图片处理、Icon 建议 text_fields/art_track 类、New: true；中英文描述＋SEO keywords（ASCII、字符画、ascii art、图片转字符画、签名档、代码注释、本地处理）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐（canonical 形如 https://www.johnkingzcq123.xyz/tools/ascii-art-generator）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `ascii_art_generator`、Path `/tools/ascii-art-generator` 注册完整（Category 图片处理），注册总数 155→156 Path。
+2. 上传图片后正确生成字符画：灰度模式下亮区用稀疏字符、暗区用密集字符（反色开关反转映射）；字符宽度 4 档切换输出列数对应变化（±2 容差）；彩色模式逐字有颜色、导出 .txt 为纯字符灰度。
+3. 复制到剪贴板成功且内容与展示一致；导出 .txt 可下载、UTF-8 编码、文件名带时间戳。
+4. JS 源码自检零 fetch/XHR；文案如实（「图片只在本机浏览器处理，不上传任何服务器」声明完整）。
+5. node 测试 40+ 断言全过（亮度→字符映射纯函数、字符集密度单调性、宽度档输出列数、反色映射、导出文本格式、模板静态检查；DOM/canvas 部分可 mock）。
+6. 页面无报错；移动端布局不错位；输出区长文本横向可滚动不撑破布局。
+
+**预计改动文件**：
+- `templates/ascii_art_generator.html`（新增；含 SEO 面板按家族标准＋上传区/参数区/输出区 UI 样式）
+- `static/js/ascii_art_generator.js`（新增；canvas 解码＋降采样＋亮度映射＋彩色模式＋复制/导出；双模式导出供 node 测试）
+- `tests/ascii_art_generator.test.js`（新增；亮度映射、字符集密度、宽度档、反色、导出格式、模板静态检查）
+- `tools/categories.go`（图片处理品类注册：ID ascii_art_generator、Path /tools/ascii-art-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 71df4b9（kanban_board 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常，origin/muse/dev-20260929 与本地一致；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 155 Path；Top3 候选零重叠本轮复核（ascii_art/字符画、http_status/状态码速查、llm_hardware 全路零命中）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 05:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。本地看板任务管理已交付闭环（`git log` 头部 71df4b9：评审问题修复「一键清空已完成列」只清已完成列＋4 条建议；6035bc2 新增工具：kanban_board 三列看板＋HTML5 DnD＋移动端降级＋localStorage 版本化持久化＋导出导入；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **155 Path**，ID kanban_board、Path /tools/kanban-board 已注册，实用工具品类；origin/muse/dev-20260929 已同步；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:00 凌晨轮次，P1 池已空，P2 可晋升，优先小难度纯前端。
+
+**本轮三件事**（05:00 全网调研，通用方向）：
+1. kanban_board 交付确认：`git log` 头部 71df4b9（6035bc2 新增＋评审修复）；全量 155 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮首次 fetch 因 VM 换机 known_hosts 丢失报 Host key verification failed，重带 env 后 github.com ED25519 key 自动入库恢复正常——与 10-23/10-24 惯例一致）；候选池划出。
+2. 新信号扫描：
+   - **internettoolbox.it（60 工具站）**：热门推荐 Video Frame Extractor → **实锤自有** video_frame_extractor（templates/video_frame_extractor.html＋static/js/video_frame_extractor.js＋categories.go 均注册），不立；"weeks between dates"/"ms converter" → 自有日期/时间戳工具复现，不立；
+   - **dev.to Varkido（29 天前，170+ 浏览器工具）**：Image blur with region selection → **实锤自有** img_mosaic（框选区域马赛克/高斯模糊），不立；**Sprite generator → 全路零命中**，新晋 niche P2「CSS Sprite 雪碧图生成器」（多图上传→自动拼合→导出 PNG＋CSS 定位代码，纯前端小难度；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；其余压缩/取色/调色板/SVG 优化/meta 标签/robots.txt/正则/JWT/UUID 全自有复现；
+   - **dev.to KRUMB.DEV（88 天前，47 dev 工具）**：HTTP status reference → 池内 P2「HTTP 状态码速查」**形态验证补强**；webhook tester/DNS lookup/SSL checker/IP lookup → 需后端/网络能力，不立；IBAN validator → 过 niche，不立；
+   - **dev.to DevTrove（10-13，22 dev 工具）**：JSON Schema validator → **实锤自有** json_schema_validator，不立；JWT encoder/verifier → 实锤自有 jwt_signer_verifier，不立；cron explainer → 实锤自有 cron_parser，不立；
+   - **dev.to UniversalTools.org（59+ 工具）**："HTTP Status Codes Reference" → 池内「HTTP 状态码速查」**第二次形态验证补强**（继 81 轮 Site Tools Box、83 轮 KRUMB.DEV）；
+   - **dev.to BlanzaTools（10-11，14 工具）**：Age/BMI/Percentage/Unit/Tip 计算器 → 10-18 方向修正边界（泛生活计算器），不立；
+   - **Reddit**：本轮返回 SEO 营销内容与旧帖，无可消化需求帖 → 本轮空；stillworks.today 77~82 轮已消化，榜单未更新不重复扫描。
+3. 候选池变动：本地看板任务管理已交付划出（6035bc2/71df4b9，155 Path）；**新晋 niche P2 1 个**（CSS Sprite 雪碧图生成器）；**形态补强 1 项**（HTTP 状态码速查：KRUMB.DEV＋UniversalTools.org 双验证）；自有实锤消解 9 项（video_frame_extractor、img_mosaic、json_schema_validator、jwt_signer_verifier、cron_parser 等）；需后端/方向边界/过 niche 不立 9 项；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，05:00 凌晨轮优先小难度纯前端）：
+
+1. **ASCII 字符画生成器** — 新晋 P2（82 轮；首席推荐；HN「Animated ASCII Art for Web Pages」466 pts＋Show HN Toolcraft「ASCII/pixel/halftone effects」用例双重形态验证；痛点：想把图片转成字符画发论坛/签名/代码注释，现有站要么广告多要么上传图片；纯前端小难度：上传图片→canvas 本地降采样→亮度映射 ASCII 字符集（宽度/字符集/反色/彩色模式可调）→复制＋导出 .txt，零上传；`字符画|ascii.{0,5}(art|artwork)` templates 全路**零命中实锤**；建议 ID ascii_art_generator、Path /tools/ascii-art-generator）。
+2. **HTTP 状态码速查** — P2（23:45 新晋；本轮双重形态验证补强：KRUMB.DEV「HTTP status reference」＋UniversalTools.org「HTTP Status Codes Reference」；累计三度验证；痛点：联调时查 429/418/502 含义要翻 MDN 英文文档；纯前端小难度：可搜索＋按类别筛选的 1xx–5xx 中文参考＋常见场景＋排查建议；tools/categories.go 零命中，templates 仅 postman.html 一处工具内文案提及（postman 为 HTTP 客户端工具，非独立状态码参考），**无独立工具实锤**；建议 ID http_status_reference、Path /tools/http-status-reference）。
+3. **本地 LLM 硬件检测器** — P2（77 轮新晋；多轮留池顺位；四次形态验证：Show HN「What LLM fits my GPU?」/llmspeed/Hotfix Flint；痛点：想本地跑 LLM 不知道自己显卡能不能带、该下什么量化版本；纯前端小难度：选显卡型号→显存/算力对照表→可跑模型量化版本推荐；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）。
+
+其余 P2 留池：CSS Sprite 雪碧图生成器（本轮新晋，niche；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；死链检查器（78 轮新晋；中难度 Go 后端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/SERP 片段预览/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十三轮：本地看板任务管理已交付划出（6035bc2 新增＋71df4b9 评审修复：三列看板＋HTML5 DnD＋移动端「移到」降级＋localStorage 版本化持久化＋导出导入；ID kanban_board、Path /tools/kanban-board 已注册，实用工具品类；全量 155 Path）；**新晋 niche P2：CSS Sprite 雪碧图生成器**（dev.to Varkido 170+ 工具清单「Sprite generator」；痛点：小项目做雪碧图靠手动拼或上传在线站；纯前端小难度：多图上传→自动拼合→导出 PNG＋CSS background-position 代码，零上传；`sprite|雪碧图` 三路全路零命中实锤；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；形态补强 1 项（HTTP 状态码速查：KRUMB.DEV＋UniversalTools.org 双重验证，累计三度）；自有实锤消解 9 项（internettoolbox Video Frame Extractor→video_frame_extractor；Varkido 区域模糊→img_mosaic；DevTrove JSON Schema→json_schema_validator、JWT 编解码/验签→jwt_signer_verifier、cron→cron_parser；其余压缩/取色/SVG/meta/robots.txt/正则/UUID/时间戳全自有）；需后端不立 4 项（webhook tester/DNS/SSL/IP lookup）；方向边界不立 5 项（BlanzaTools Age/BMI/Percentage/Unit/Tip 计算器）；Reddit 本轮空；全量 155 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS Sprite 雪碧图生成器 | 新晋 niche P2（83 轮；dev.to Varkido 170+ 工具清单「Sprite generator」；痛点：小项目做雪碧图靠手动拼或上传在线站；纯前端小难度：多图上传→自动拼合→导出 PNG＋CSS background-position 代码，零上传；`sprite\|雪碧图` 三路全路零命中实锤；建议 ID css_sprite_generator、Path /tools/css-sprite-generator） | 小 | P2 |
+| kanban_board | 已交付划出（6035bc2 新增＋71df4b9 评审修复：三列看板＋HTML5 DnD＋移动端「移到」降级＋localStorage 版本化持久化＋导出导入；ID kanban_board、Path /tools/kanban-board 已注册，实用工具品类；全量 155 Path；候选池划出） | — | 已实现 |
+| HTTP 状态码速查 | 形态补强（83 轮；dev.to KRUMB.DEV「HTTP status reference」＋UniversalTools.org「HTTP Status Codes Reference」双重验证；累计三度形态验证；23:45 新晋 P2；建议 ID http_status_reference、Path /tools/http-status-reference） | 小 | P2 |
+| 自有实锤消解 | 不立（internettoolbox.it Video Frame Extractor→实锤自有 video_frame_extractor；Varkido 区域模糊→实锤自有 img_mosaic（框选区域马赛克/高斯模糊）；DevTrove JSON Schema validator→实锤自有 json_schema_validator；JWT encoder/verifier→实锤自有 jwt_signer_verifier；cron explainer→实锤自有 cron_parser；其余图片压缩/取色/调色板/SVG 优化/meta 标签/robots.txt/正则/Base64/UUID/时间戳全自有复现） | — | 不立 |
+| 需后端/方向边界 | 不立（KRUMB.DEV webhook tester/DNS lookup/SSL checker/IP lookup→需后端或网络能力；BlanzaTools Age/BMI/Percentage/Unit/Tip→10-18 方向修正泛生活计算器边界；IBAN validator→过 niche；Reddit→本轮空） | — | 不立 |
+
+**归档说明**：本轮为 10-24 通用调研第八十三轮——本地看板任务管理交付闭环（6035bc2/71df4b9，`/tools/kanban-board` 已注册，实用工具品类，全量 155 Path），候选池划出；**新晋 niche P2 CSS Sprite 雪碧图生成器**（Varkido 清单验证，纯前端小难度，零命中实锤）；HTTP 状态码速查获 KRUMB.DEV＋UniversalTools.org 双重形态补强（累计三度验证）；9 项自有实锤消解；需后端/方向边界 9 项不立；Reddit 本轮空；WPS 候选表保持冻结归档；仓库 155 注册工具全量核对无重叠（Top3 建议 ID ascii_art_generator / http_status_reference / llm_hardware_checker；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮首次 fetch 因 VM 换机 known_hosts 丢失报 Host key verification failed，重带 env 后 github.com ED25519 key 自动入库恢复正常，与 10-23/10-24 惯例一致）；`git log` 头部 71df4b9（kanban_board 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 155 Path；本地当前分支 muse/dev-20260929；origin/muse/dev-20260929 与本地 HEAD 一致；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 03:50 · 前端开发轮 ✅）
 
 **交付：本地看板任务管理（kanban_board）** — 本轮唯一任务（新工具），开发完成已提交推送：

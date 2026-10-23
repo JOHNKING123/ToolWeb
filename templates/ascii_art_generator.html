@@ -1,0 +1,204 @@
+{{define "ascii_art_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII 字符画生成器 - 图片转字符画在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 ASCII 字符画生成器：上传 PNG / JPG / GIF / WebP 图片一键转字符画，字符宽度 40/80/120/160 四档、精简/标准/半调三档字符集、反色与彩色模式可调，一键复制或下载 .txt。图片只在本机浏览器处理，不上传任何服务器。ASCII art generator online: convert images to ASCII art locally, copy or download as .txt, 100% client-side.">
+    <meta name="keywords" content="ASCII,字符画,ascii art,图片转字符画,字符画生成器,签名档,代码注释,本地处理,ascii art generator,image to ascii">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ascii-art-generator">
+    <meta property="og:title" content="ASCII 字符画生成器 - 图片转字符画">
+    <meta property="og:description" content="上传图片一键生成 ASCII 字符画：宽度/字符集/反色/彩色可调，复制或下载 .txt。图片只在本机浏览器处理，不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/ascii-art-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ASCII 字符画生成器","description":"在线 ASCII 字符画生成器：上传 PNG/JPG/GIF/WebP 图片一键转字符画，字符宽度四档、字符集三档、反色与彩色模式可调，一键复制或下载 .txt；图片只在本机浏览器处理，不上传任何服务器。","url":"https://www.johnkingzcq123.xyz/tools/ascii-art-generator","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .aag-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .aag-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .aag-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .aag-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .aag-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .aag-dropzone{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2.2rem 1rem;
+            text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+        .aag-dropzone:hover,.aag-dropzone.aag-drag{border-color:#2563eb;background:#eff6ff}
+        .aag-dropzone .material-icons{font-size:2.6rem;color:#60a5fa;display:block;margin-bottom:.5rem}
+        .aag-dz-hint{font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:.3rem}
+        .aag-dz-sub{font-size:.85rem;color:#64748b}
+        .aag-modes{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0;align-items:center}
+        .aag-mode-label{font-size:.9rem;color:#6b7280;font-weight:600;width:100%}
+        .aag-mode{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;color:#374151;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .9rem;background:#f9fafb}
+        .aag-mode input{accent-color:#2563eb}
+        .aag-mode:has(input:checked){border-color:#2563eb;background:#eff6ff;color:#1d4ed8;font-weight:600}
+        .aag-switch{display:inline-flex;align-items:center;gap:.45rem;font-size:.92rem;color:#374151;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .9rem;background:#f9fafb}
+        .aag-switch input{accent-color:#2563eb;width:1rem;height:1rem}
+        .aag-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+        .aag-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .aag-btn .material-icons{font-size:1.1rem}
+        .aag-btn-primary{background:#2563eb;color:#fff}
+        .aag-btn-primary:hover{background:#1d4ed8}
+        .aag-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .aag-btn-secondary:hover{background:#e5e7eb}
+        .aag-btn-icon{background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:.5rem;
+            padding:.4rem .6rem;cursor:pointer;display:inline-flex;align-items:center}
+        .aag-btn-icon:hover{border-color:#2563eb;color:#2563eb}
+        .aag-btn-icon .material-icons{font-size:1.1rem}
+        .aag-meta{font-size:.88rem;color:#4b5563;font-weight:600;width:100%}
+        .aag-output-wrap{border:1px solid #e5e7eb;border-radius:.6rem;background:#0f172a;max-height:70vh;
+            overflow:auto;margin-top:.8rem}
+        .aag-output{margin:0;padding:1rem;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+            font-size:14px;line-height:1;white-space:pre;overflow-x:auto;letter-spacing:0}
+        .aag-output span{line-height:1}
+        .aag-empty{color:#94a3b8;text-align:center;padding:2.2rem 1rem;font-size:.95rem}
+        .aag-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .aag-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .aag-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .aag-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .aag-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .aag-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #aag-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #aag-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .aag-btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">text_fields</i> ASCII 字符画生成器</h1>
+            <p>上传图片一键转成 ASCII 字符画：字符宽度、字符集、反色、彩色模式随心调，复制粘贴到论坛签名、代码注释，或者下载 .txt 存档。想把照片变成「字」画，就这么简单。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="aag-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>图片只在本机浏览器处理，不上传任何服务器。图片解码与字符映射全部在你的浏览器本地完成，不发起任何后端请求，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+
+            <div class="aag-panel">
+                <h3><i class="material-icons">upload_file</i> ① 选择图片</h3>
+                <div class="aag-dropzone" id="aag-dropzone">
+                    <i class="material-icons">cloud_upload</i>
+                    <div class="aag-dz-hint">把图片拖到这里，或点击选择</div>
+                    <div class="aag-dz-sub">PNG / JPG / GIF（取静态帧）/ WebP</div>
+                    <div style="margin-top:.9rem;">
+                        <button type="button" class="aag-btn aag-btn-secondary" id="aag-pick-btn">
+                            <i class="material-icons">folder_open</i> 选择图片
+                        </button>
+                    </div>
+                    <input type="file" id="aag-file-input" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">
+                </div>
+            </div>
+
+            <div class="aag-panel">
+                <h3><i class="material-icons">tune</i> ② 转换参数</h3>
+                <div class="aag-modes">
+                    <span class="aag-mode-label">字符宽度：</span>
+                    <label class="aag-mode"><input type="radio" name="aag-width" value="40"> 40</label>
+                    <label class="aag-mode"><input type="radio" name="aag-width" value="80" checked> 80</label>
+                    <label class="aag-mode"><input type="radio" name="aag-width" value="120"> 120</label>
+                    <label class="aag-mode"><input type="radio" name="aag-width" value="160"> 160</label>
+                </div>
+                <div class="aag-modes">
+                    <span class="aag-mode-label">字符集：</span>
+                    <label class="aag-mode"><input type="radio" name="aag-ramp" value="simple"> 精简 <code>@#S%?*+;:,. </code></label>
+                    <label class="aag-mode"><input type="radio" name="aag-ramp" value="standard" checked> 标准（70 级经典）</label>
+                    <label class="aag-mode"><input type="radio" name="aag-ramp" value="halftone"> 半调 <code>.:-=+*#%@</code></label>
+                </div>
+                <div class="aag-modes">
+                    <span class="aag-mode-label">效果开关：</span>
+                    <label class="aag-switch"><input type="checkbox" id="aag-invert"> 反色</label>
+                    <label class="aag-switch"><input type="checkbox" id="aag-color"> 彩色模式（逐字着色）</label>
+                </div>
+                <div class="aag-tip">参数即时生效：改完自动用同一张图重新生成。行高已按 0.5 纵横比压缩，字符画不会被横向拉长；大图先缩放到最长边 ≤480px 再采样。</div>
+            </div>
+
+            <div class="aag-panel" id="aag-result-panel" style="display:none;">
+                <h3><i class="material-icons">preview</i> ③ 字符画</h3>
+                <div class="aag-actions">
+                    <button type="button" class="aag-btn aag-btn-primary" id="aag-copy-btn">
+                        <i class="material-icons">content_copy</i> 复制到剪贴板
+                    </button>
+                    <button type="button" class="aag-btn aag-btn-secondary" id="aag-dl-btn">
+                        <i class="material-icons">download</i> 下载 .txt
+                    </button>
+                    <button type="button" class="aag-btn-icon" id="aag-font-dec" title="减小字号">A−</button>
+                    <button type="button" class="aag-btn-icon" id="aag-font-inc" title="增大字号">A＋</button>
+                    <button type="button" class="aag-btn aag-btn-secondary" id="aag-repick-btn">
+                        <i class="material-icons">refresh</i> 换一张图
+                    </button>
+                    <div class="aag-meta" id="aag-meta"></div>
+                </div>
+                <div class="aag-output-wrap">
+                    <pre class="aag-output" id="aag-output"></pre>
+                </div>
+                <div class="aag-tip" style="margin-top:.6rem;">复制与下载均为灰度字符画（彩色模式仅影响页面展示，导出时自动降级）。长文本可横向滚动查看。</div>
+            </div>
+            <div class="aag-panel" id="aag-empty">
+                <div class="aag-empty">上传图片后，字符画会显示在这里</div>
+            </div>
+
+            <div class="aag-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="aag-tip">
+                    <b>怎么用：</b>把图片拖进上方虚线框（或点「选择图片」），字符画立即生成；调字符宽度、字符集、反色、彩色开关会实时重新生成。<br>
+                    <b>字符宽度：</b>40 / 80 / 120 / 160 四档，数字越大细节越多、文本越长；160 宽配彩色模式字符量大，若页面卡顿建议降到 80/120 档。<br>
+                    <b>字符集：</b>精简（11 级，线条利落）、标准（70 级经典 ramp，灰阶最细腻）、半调（10 级，报纸印刷风）；暗部用密集字符、亮部用稀疏字符。<br>
+                    <b>反色：</b>翻转亮度映射，适合深色背景展示（比如黑色终端里贴字符画）。<br>
+                    <b>彩色模式：</b>每个字符按原图采样点颜色着色显示；复制到剪贴板和下载 .txt 时自动降级为灰度字符（纯文本）。<br>
+                    <b>导出：</b>「复制到剪贴板」一键复制全文；「下载 .txt」保存为 UTF-8 文本文件，文件名形如 <code>ascii-art-20261024-054523.txt</code>。<br>
+                    <b>隐私：</b>图片只在本机浏览器处理，不上传任何服务器；大图先缩放到最长边 ≤480px 再采样，内存可控。
+                </div>
+            </div>
+
+            <div class="aag-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="aag-faq">
+                    <dt>图片会被上传到服务器吗？</dt>
+                    <dd>不会。图片只在本机浏览器处理，不上传任何服务器：解码、降采样、亮度映射全部走本地 canvas，不发起任何后端请求，你可以在开发者工具 Network 面板验证。</dd>
+                    <dt>生成的字符画为什么看起来被压扁/拉长？</dt>
+                    <dd>等宽字符本身高约是宽的 2 倍，直接按像素行列映射会被横向拉长。本工具已按行高 0.5 纵横比压缩行数，还原接近原图的比例。</dd>
+                    <dt>三种字符集怎么选？</dt>
+                    <dd>标准（70 级）灰阶最细腻，适合人像风景；精简（11 级）对比强烈、线条利落，适合 Logo 图标；半调（10 级）有报纸印刷颗粒感。都可试，切换即时生效。</dd>
+                    <dt>彩色模式导出的 .txt 为什么是黑白的？</dt>
+                    <dd>.txt 是纯文本，存不下颜色信息，所以复制与下载时自动降级为灰度字符画并提示；彩色效果仅在页面上展示。</dd>
+                    <dt>160 宽彩色模式有点卡怎么办？</dt>
+                    <dd>160 宽彩色要渲染上万个 span，低端设备可能卡顿。页面会提示你降到 80/120 档；灰度模式字符量相同但无 span，流畅得多。</dd>
+                    <dt>GIF 动图能转吗？</dt>
+                    <dd>取 GIF 的第一帧（静态帧）转换，动画帧不保留。</dd>
+                </dl>
+            </div>
+
+            <div class="aag-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="aag-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">ASCII 字符画生成器（当前）</span>
+                    <a href="/tools/pixel-art-converter" class="btn btn-secondary" style="font-size:.9rem;">图片转像素画</a>
+                    <a href="/tools/img-mosaic" class="btn btn-secondary" style="font-size:.9rem;">图片打码</a>
+                    <a href="/tools/img-resize" class="btn btn-secondary" style="font-size:.9rem;">图片尺寸调整</a>
+                    <a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="aag-toast"></div>
+    <script src="/tools/static/js/ascii_art_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
