@@ -1,3 +1,131 @@
+## 今日任务（2026-10-23 23:53 · 前端开发轮 ✅）
+
+**交付：证件照裁剪排版（id_photo_maker）** — 本轮唯一任务（新工具），开发完成已提交推送：
+- **改动文件**：`templates/id_photo_maker.html`（新增；SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）、`static/js/id_photo_maker.js`（新增；预设表＋裁剪交互＋容差换底＋相纸排版＋JPG 导出；纯函数经 module.exports 双模式导出供 node 测试）、`tests/id_photo_maker.test.js`（新增；124 断言全过）、`tools/categories.go`（实用工具品类注册 ID id_photo_maker、Path /tools/id-photo-maker、Icon badge、New: true）、`BACKLOG.md`（本条）。
+- **验收核对**：① `grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **153**（152→153 ✓）；② 五预设宽高比锁定、导出像素精确（1寸 295×413 / 2寸 413×579 / 小2寸 390×567 / 美签 600×600 / 护照 390×567 @300dpi；51mm 公式值 602 按冲印惯例硬编码 600）；③ 点取取样＋容差滑块（0-100→距离阈值）实时预览，红/白/蓝切换；④ 5寸纸（1500×1050）1寸 8 张（4×2 横版）/ 2寸 4 张（2×2 竖版）自动排版（margin 60px≈5mm 白边、gap 30px），相纸 JPG 可导出；⑤ JS 源码自检零 fetch/XHR/WebSocket/sendBeacon/外部 URL，文案如实（复杂背景效果有限、不做智能抠图有明确提示）；⑥ node 测试 **124 断言全过**（≥40 ✓）；⑦ 本地起服务 curl /tools/id-photo-maker 200，全部 DOM id 存在且唯一（修掉一处 ipm-pick-btn 重复 id），移动端媒体查询已配。
+- **实现要点**：裁剪框宽高比锁定（拖四角蓝点只改大小）、照片拖拽平移＋滚轮缩放（移动端用放大/缩小按钮）、绿色虚线头部参考椭圆＋三等分线；取色走离屏缩小 canvas（坐标按缩放系数换回）；成品单张 canvas 即导出源（所见即所得）；相纸横/竖双向试算取张数最多（张数相同默认横版）。
+- **提交**：`git log` 见本轮中文提交（muse/dev-20260929，已 push origin）；`toolWeb.bak-prev` 未入库（沿用 PM 轮要求，仅提醒）。
+- **待后续轮次**：评审轮 UI 走查＋测试轮黑盒 QA；部署走 ~/workspace/deploy/toolweb/deploy.sh（授权仅 /tool-web）。
+
+---
+
+## 今日任务（2026-10-23 23:51 · 产品经理排期轮）
+
+**选定：证件照裁剪排版（id_photo_maker）** — 本轮唯一任务（新工具）：
+- **顺位**：23:45 研究复核轮 Top3 首席推荐；着陆页评分检查器已交付闭环（fcb3e23，152 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 152 Path，ID landing_page_grader、Path /tools/landing-page-grader 已注册）后顺位递进生效，依惯例「无硬伤不跳过」。未选：本地看板任务管理（P2；纯前端小难度无硬伤，留池顺位递进）、本地 LLM 硬件检测器（P2；第四次形态验证补强无硬伤，留池）、HTTP 状态码速查（P2 本轮新晋；留池）。
+- **选定理由（本轮晚轮）**：① **全场唯一 P1**——P1 池此前已空，23:45 轮新晋「证件照裁剪排版」为唯一 P1，按惯例优先晋升交付；② **痛点最硬**——证件照是最不愿上传的照片品类之一：办证/考试/入职/签证刚需，照相馆 30-50 元、手机 App 要会员/带水印/上传隐私；③ **纯前端小难度一轮可高质量交付**——上传→裁剪→换底→排版→导出，全链路 canvas 本地完成，真正可宣称「照片不出浏览器」零上传（不像听写工具那样依赖浏览器云端通道）；④ **零重叠实锤**——本轮实测 `grep -rniE 'id_photo|id-photo|passport_photo|证件照裁剪'` 在 tools/categories.go、static/js/、templates/ 三路均为零命中（「证件照」仅出现在 img_target_kb 描述与 images_to_pdf 文案，均非独立工具），全量 152 Path 无同类工具。
+- **形态验证**：CapyToolkit passport photo cropper（dev.to，45+ 免费浏览器工具）形态对标。
+- **PM 真限制交代（与调研假设不同，开发轮必须处理）**：① **不做智能抠图/人脸检测**——纯前端无 CV 模型 vendor，背景换色只做「点取背景色取样＋容差滑块」的纯色背景替换；复杂花哨背景必须在页面文案里如实告知换色效果有限，不能夸大；② **尺寸像素口径固定 300dpi**：1 寸 25×35mm=295×413px、2 寸 35×49mm=413×579px、小 2 寸 33×48mm=390×567px、美国签证 51×51mm=600×600px；③ 排版相纸默认 5 寸（127×89mm=1500×1050px @300dpi）：1 寸排 8 张、2 寸排 4 张；④ 裁剪框固定宽高比锁定（用户拖拽/缩放/平移图片适配框），不做自由比例；⑤ 页面可如实宣称「照片不出浏览器」，脚本零 fetch/XHR。
+- **品类归位**：注册到「实用工具」品类（沿用研究轮建议）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 尺寸预设：中国 1 寸（25×35mm）、2 寸（35×49mm）、小 2 寸（33×48mm）、美国签证（51×51mm）、护照（33×48mm）；输出统一 300dpi JPG。
+- 四步流程：① 上传照片（本地 FileReader 读取，零上传）→ ② 尺寸预设选择＋固定比例裁剪框（拖拽框/缩放/平移图片，宽高比锁定）→ ③ 背景换色（点取背景色取样器＋容差滑块实时预览，红/白/蓝/浅蓝底切换）→ ④ 排版预览（5 寸/6 寸相纸多张排版，张数自动计算，间距留白）→ 导出（单张证件照 JPG＋整张相纸排版 JPG，文件名按尺寸命名）。
+- 交互：裁剪区 canvas 拖拽＋滚轮缩放；取色器点击照片任意点取样背景色；容差滑块（0-100）实时预览替换效果；排版区所见即所得缩略图；导出前显示最终像素尺寸确认。
+- 注册：新增工具 ID `id_photo_maker`、Name「证件照裁剪排版」、Path `/tools/id-photo-maker`（New: true，沿用研究轮建议；Icon 建议 badge），中英文描述＋SEO keywords（证件照、证件照制作、1寸照片、2寸照片、证件照换底色、证件照排版、passport photo、ID photo）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐（canonical 形如 https://www.johnkingzcq123.xyz/tools/id-photo-maker）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `id_photo_maker`、Path `/tools/id-photo-maker` 注册完整（Category 实用工具），注册总数 152→153 Path。
+2. 上传照片→选预设（1 寸/2 寸/小 2 寸/美签）→裁剪框按正确宽高比锁定、可拖拽缩放平移→导出单张 JPG 像素尺寸正确（1 寸 295×413、2 寸 413×579、小 2 寸 390×567、美签 600×600，均 @300dpi）。
+3. 背景换色：点取取样＋容差滑块实时预览；红/白/蓝底切换正确；纯色背景照片换底干净。
+4. 排版：5 寸相纸（1500×1050 @300dpi）自动排版正确（1 寸 8 张、2 寸 4 张）；整张相纸 JPG 可导出。
+5. 脚本零 fetch/XHR、零上传；页面文案如实（「照片不出浏览器」成立；复杂背景换色效果有限有提示；不做智能抠图不夸大）。
+6. node 测试 40+ 断言全过（尺寸预设像素换算表、容差替换纯函数、排版张数计算、导出命名规则；canvas/DOM 部分可 mock）。
+7. 页面无报错；移动端布局不错位。
+
+**预计改动文件**：
+- `templates/id_photo_maker.html`（新增；含 SEO 面板按家族标准＋上传/裁剪/换底/排版/导出四步 UI 样式）
+- `static/js/id_photo_maker.js`（新增；尺寸预设表＋裁剪框交互＋容差换底算法＋相纸排版＋JPG 导出；双模式导出供 node 测试）
+- `tests/id_photo_maker.test.js`（新增；尺寸换算、换底纯函数、排版张数、导出命名）
+- `tools/categories.go`（实用工具品类注册：ID id_photo_maker、Path /tools/id-photo-maker、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD fcb3e23（landing_page_grader 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮首次未带 env 报 publickey 失败，重带后正常（沿用 10-23 惯例，VM 换机 known_hosts 已入库）；origin/muse/dev-20260929 存在；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 152 Path；Top3 候选三路零重叠本轮复核（id_photo_maker/kanban_board/llm_hardware_checker 递归 grep 均为零命中）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 23:45 · 产品调研员复核轮 ✅）
+
+**交付状态**：10-23 通用调研第 80 轮的 23:45 增量复核（顶部 23:00 80 轮条目已先行记录；本复核只扫描 23:00 后的新信号＋候选池增量维护，不重复 23:00 全量扫描，不动排期定序——定序权归 PM 决策轮）。用户方向修正 2026-10-18 持续有效（聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）；WPS 特别方向 10-09~10-15 已结束。仓库 152 Path 无变化（HEAD fcb3e23，着陆页评分检查器交付闭环）。
+
+**本轮新信号**（23:00→23:45 增量）：
+- **dev.to CapyToolkit**（45+ 免费浏览器工具，约 33 天前发布）：passport photo cropper → 三路核查确认**无独立证件照制作工具**（`id_photo|id-photo|passport_photo|证件照裁剪` 零命中；`证件照` 仅出现在 img_target_kb 描述「证件照压缩必备」与 images_to_pdf 文案「证件照拼页」，均非独立工具）→ **新晋 P1「证件照裁剪排版」**（建议 ID id_photo_maker、Path /tools/id-photo-maker）；MIME and HTTP status references → 三路 `http_status|http-status|状态码速查` **零命中**（postman.html 仅文案提及状态码展示）→ **新晋 P2「HTTP 状态码速查」**（建议 ID http_status_reference、Path /tools/http-status-reference）；contrast checker → **实锤自有** color_converter（WCAG 对比度检查，模板 20 处命中），不立；subnet calculator → **实锤自有** templates/subnet_calculator.html，不立；receipt splitter → 财务类，10-18 方向修正边界，不立；phone-scan deskew → 需 CV 透视校正复杂，不立。
+- **Hotfix Daily #2（10-22）**：Recursive Flint（40B MoE 笔记本本地 125 tok/s，Apache 2.0，Ollama/LM Studio 可用）→ 本地跑模型硬件选型需求持续升温 → 池内 P2「本地 LLM 硬件检测器」**第四次形态验证补强**（23:00 轮三次：Show HN「What LLM fits my GPU?」＋79 轮 llmspeed＋80 轮三次）。
+- **Show HN**：SubmitYourProduct.to（发布平台目录，目录产品非单工具形态，不立）；Index Rusher（SEO 索引入库工具，需后端 API 调用，不立）；launch 指南帖（非工具）。
+- **V2EX**：Iterlay（10-17，开源无限画布＋Coding Agent 配图/改图，agent 生态非单页 web 工具，不立）；FluxDown 插件系统（10-22，Rust 多协议下载器的桌面/NAS/移动端插件体系，非 web 工具，不立）；workskill.tools（10-23，coding agent 技能商店，79 轮已判不立）；Paint Board（10-19，池内「在线创意画板」已覆盖）。
+- **dev.to 其余**：SuperToolKit（10-16，100+ 工具，WASM/Web Audio/Web Workers 本地处理，音频/PDF/文件转换）→ 工具全自有复现（音频/图片/PDF 家族覆盖），无新立；ToolVerse USA（100+ 工具）→ SERP 预览实锤自有 serp_snippet_preview，其余自有/计算器类边界，无新立。
+- **stillworks.today 10-23 日榜**：与 77/78/79/80 轮同榜（EasyFunnel/GateKeeperAI/Camera.wedding/CtrlOps/FolioSort/Ignition/XPacts/Renomee/Kiwi/AutoMEP/Fastio/BankStatement2PDF/Stagerize/Orkyo/IconCraft），已消化，无变化。
+
+**候选池变动**：**新晋 P1 1 个**（证件照裁剪排版）、**新晋 P2 1 个**（HTTP 状态码速查）；形态补强 1 项（本地 LLM 硬件检测器第四次验证）；其余候选无变化。全量 152 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；23:45 复核）：
+1. **证件照裁剪排版** — 新晋 P1（CapyToolkit passport photo cropper 形态验证；痛点：办证/考试/入职/签证要证件照，照相馆 30-50 元、手机 App 要会员/带水印/上传隐私；纯前端小难度：上传照片→固定比例裁剪框（1 寸 25×35mm/2 寸 35×49mm/小二寸 33×48mm/护照等预设）→纯色背景容差换底色（红/白/蓝）→5 寸相纸多张排版打印→导出 JPG，零上传；证件照是最不愿上传的照片品类之一，本地处理正中隐私痛点；建议 ID id_photo_maker、Path /tools/id-photo-maker）。
+2. **本地看板任务管理** — P2（23:00 轮首席推荐；复核三路零命中仍有效；痛点：轻量看板都要注册/付费（Trello 注册墙、Notion 臃肿）；纯前端小难度：看板列＋卡片拖拽＋localStorage 持久化，零上传；建议 ID kanban_board、Path /tools/kanban-board）。
+3. **本地 LLM 硬件检测器** — P2（本轮 Flint 第四次形态验证；痛点：本地跑模型前显卡够不够、选多大参数量全靠查帖子拼凑；纯前端小/中难度：内置主流开源模型（7B/13B/70B × fp16/q8/q4）VRAM 数据集＋显存估算公式（参数量×精度字节×1.2 开销）＋用户显卡选择→可跑模型推荐＋量化档建议，零上传；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）。
+
+其余 P1 留池：无（本轮新晋证件照裁剪排版为唯一 P1）。
+其余 P2 留池：死链检查器（中难度 Go 后端并发抓取，晚轮时间预算紧张留池；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；HTTP 状态码速查（本轮新晋；建议 ID http_status_reference、Path /tools/http-status-reference）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载/打字速度测试/SERP 片段预览/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第 80 轮 23:45 复核：新晋 P1 证件照裁剪排版、新晋 P2 HTTP 状态码速查；本地 LLM 硬件检测器第四次验证补强；Show HN/V2EX/dev.to/stillworks 新信号均已消化；全量 152 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 证件照裁剪排版 | 新晋 P1（23:45 复核；CapyToolkit passport photo cropper 形态验证：上传照片→固定比例裁剪（1 寸 25×35mm/2 寸 35×49mm/小二寸 33×48mm/护照等预设）→纯色背景容差换底色（红/白/蓝）→5 寸相纸多张排版→导出 JPG；痛点：办证/考试/入职/签证要证件照，照相馆 30-50 元、App 会员/水印/上传隐私；纯前端小难度，零上传；三路 `id_photo|id-photo|passport_photo|证件照裁剪` 零命中实锤——`证件照`仅出现在 img_target_kb 描述「证件照压缩必备」与 images_to_pdf 文案「证件照拼页」，均非独立工具；建议 ID id_photo_maker、Path /tools/id-photo-maker） | 小 | P1 |
+| HTTP 状态码速查 | 新晋 P2（23:45 复核；CapyToolkit HTTP status references 形态验证：可搜索＋按类别筛选的 1xx–5xx 状态码中文参考＋常见场景＋排查建议；痛点：联调时查 429/418/502 含义要翻 MDN 英文文档；纯前端小难度；三路 `http_status|http-status|状态码速查` 零命中实锤（postman.html 仅文案提及状态码展示）；建议 ID http_status_reference、Path /tools/http-status-reference） | 小 | P2 |
+| 本地 LLM 硬件检测器 | 形态补强（23:45 复核：Hotfix Daily #2 Flint——40B MoE 笔记本本地 125 tok/s、Apache 2.0，本地跑模型硬件选型需求持续升温；第四次形态验证） | 小/中 | P2 |
+| Show HN 信号 | 不立（SubmitYourProduct.to 发布平台目录→目录产品非单工具；Index Rusher SEO 索引→需后端 API；launch 指南帖→非工具） | — | 不立 |
+| V2EX 信号 | 不立（Iterlay 10-17 AI agent 无限画布→agent 生态非单页工具；FluxDown 插件系统 10-22→桌面/NAS 下载器非 web 工具；workskill.tools 10-23→79 轮已判技能商店不立；Paint Board 10-19→池内在线创意画板已覆盖） | — | 不立 |
+| dev.to 信号 | 部分立项/不立（CapyToolkit→上两项新晋；contrast checker→实锤自有 color_converter；subnet calculator→实锤自有 subnet_calculator.html；receipt splitter→财务类方向边界；phone-scan deskew→需 CV 不立；SuperToolKit 10-16 全自有复现；ToolVerse SERP→自有 serp_snippet_preview，其余自有/计算器边界） | — | 立项/不立 |
+| stillworks.today 10-23 日榜 | 本轮无新立（与 77/78/79/80 轮同榜，已消化） | — | 不立 |
+
+**归档说明**：本复核为 23:00 第 80 轮研究轮的 23:45 增量复核——只扫描 23:00 后新信号，不重复全量扫描；**新晋 P1 证件照裁剪排版**（高频民生痛点＋纯前端小难度＋零上传隐私正中）、新晋 P2 HTTP 状态码速查；池内 P2 本地 LLM 硬件检测器第四次形态验证（Flint 本地模型升温）；Show HN/V2EX/dev.to/stillworks 信号均已消化；WPS 候选表保持冻结归档；仓库 152 注册工具全量核对无重叠（Top3 建议 ID id_photo_maker / kanban_board / llm_hardware_checker；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 fcb3e23（landing_page_grader 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 152 Path；本地 HEAD fcb3e23 与 origin/muse/dev-20260929 一致；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；文件末尾约 10258 行起的 19:00 重复条目（80 轮已记录为疑似误追加）本轮未动，仍建议后续轮次清理去重；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第八十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。着陆页评分检查器已交付闭环（`git log` 头部 fcb3e23：26 条确定性规则引擎＋DOMParser 本地解析＋打分/等级＋Markdown 报告，node 测试 245 断言全过，实用工具品类，151→152 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **152 Path**，ID landing_page_grader、Path /tools/landing-page-grader 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 晚轮次，P1 池已空，P2 可晋升。
+
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. landing_page_grader 交付确认：`git log` 头部 fcb3e23；全量 152 Path（ID landing_page_grader、Path /tools/landing-page-grader 已注册，实用工具品类）；origin/muse/dev-20260929 与本地 HEAD 一致；候选池划出。
+2. 新信号扫描：
+   - **Show HN 10-23**："What LLM fits my GPU?"（117 个模型真机 VRAM 实测＋显存计算器，当天上榜）→ 池内 P2「本地 LLM 硬件检测器」**第三次形态验证补强**（79 轮 llmspeed 二次验证→本轮三次；本地跑模型装机前选型是持续升温的开发者高频痛点）；Pristine（AI UI 评审 agent skill）→ AI skill 非单页 web 工具形态，不立；CATT 0.2.1（AI agent CI 测试）→ 开发者 CI 工具非 web 工具，不立；Sphinx（git hook quiz AI 代码）→ npm 包非 web 工具，不立；Death Plan Switch（自托管 dead man's switch）→ 需后端定时任务/邮件推送，不立；
+   - **V2EX**：Paint Board 创意画板（10-19：开源免费 web 画板，多种画笔/涂鸦图形/文字图片，无需登录）→ 池内 P2「在线创意画板」形态验证补强（建议 ID doodle_board、Path /tools/doodle-board）；takodown 下载器（10-23：跨平台原生 UI＋Chrome 插件，多线程 HTTP/BT/Magnet/FTP/SFTP/HLS/DASH＋yt-dl）→ 原生 App＋浏览器扩展，非单页 web 工具，不立；神念 AI 链接代问（10-13）→ AI agent 技能生态，非单工具形态，不立；Mynah 实时数字人（10-13）→ 需 GPU 私有化部署，非 web 工具，不立；AI 出海赚社群/变现节点帖 → 非工具形态，不立；
+   - **dev.to**：BlanzaTools 14 免费浏览器工具（10-11：图片压缩/尺寸/字数统计/大小写转换/Lorem/Age/BMI/百分比/单位换算/密码/二维码/取色/JSON/倒计时）→ 图片/文本/密码/二维码/取色/JSON/倒计时/单位换算全自有实锤复现；Age/BMI/百分比计算器→10-18 方向修正边界（不扩计算器类），观察不立；DevTrove 22 开发者工具（10-13：JWT/YAML/CSV/正则/cron/时间戳/哈希/密码/Base64）→ JWT（含 jwt_signer_verifier）/YAML/CSV（csvjson）/正则/cron/时间戳/哈希/密码/Base64 全自有实锤复现（YAML **实锤自有** json2yaml「JSON/YAML 转换」、Path /tools/json-yaml-converter）；「I Replaced My Productivity Apps」10 工具（10-13：Image Annotator→实锤自有 image_annotator；Speech to Text/Text to Speech→实锤自有 realtime_dictation＋语音朗读；Notepad/Planner/Markdown→自有复现）；Etemora（RDAP 域名生成器→池内 P2 域名创意生成器已覆盖；发票生成器→财务类方向边界不立；SERP 预览→实锤自有 serp_snippet_preview；浏览器 PDF 工具→自有 PDF 家族覆盖）；
+   - **Medium/Reddit/知乎**：Siloshan 10 月 7 工具榜（Medium）→ 79 轮已消化同榜单，无变化；Reddit 本轮返回 SEO 营销内容，无可消化需求帖 → 本轮空；知乎本轮返回 SEO 灰产软文，无可消化需求帖 → 本轮空；
+   - **stillworks.today 10-23 日榜**：与 77/78/79 轮同榜（EasyFunnel/GateKeeperAI/Camera.wedding/CtrlOps/FolioSort/Ignition/XPacts/Renomee/Kiwi/AutoMEP/Fastio/BankStatement2PDF/Stagerize/Orkyo/IconCraft）→ 78/79 轮已消化，无新立。
+3. 候选池变动：着陆页评分检查器已交付划出（fcb3e23，152 Path）；**形态补强 2 项**（本地 LLM 硬件检测器：Show HN 10-23「What LLM fits my GPU?」三次验证；在线创意画板：V2EX Paint Board 验证）；**无新晋 P1/P2/P3**（DevTrove YAML→实锤自有 json2yaml 不立；其余信号全自有实锤/不立/已消化）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，P2 可晋升；23:00 晚轮次，优先小难度纯前端）：
+
+1. **本地看板任务管理** — P2（77 轮新晋；dev.to mou1z localStorage 拖拽看板形态验证；痛点：轻量看板都要注册/付费（Trello 注册墙、Notion 臃肿）；纯前端小难度：看板列＋卡片拖拽＋localStorage 持久化，零上传；`kanban|kanban_board` 在 tools/categories.go、static/js/、templates/ 三路**零命中实锤**；23:00 晚轮时间预算紧张，纯前端小工具节奏最稳；建议 ID kanban_board、Path /tools/kanban-board）。
+2. **本地 LLM 硬件检测器** — P2（本轮 Show HN「What LLM fits my GPU?」**第三次形态验证**：117 模型真机 VRAM 实测＋显存计算器当天上榜；79 轮 llmspeed 二次验证；痛点：本地跑模型前显卡够不够、选多大参数量全靠查帖子拼凑；纯前端小/中难度：内置主流开源模型（7B/13B/70B × fp16/q8/q4）VRAM 数据集＋显存估算公式（参数量×精度字节×1.2 开销）＋用户显卡选择→可跑模型推荐＋量化档建议，零上传；`vram|gpu_estimator|显存|llm_hardware|模型硬件` 全路**零命中实锤**；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）。
+3. **死链检查器** — P2（78 轮新晋；79 轮 FreeHub 每周自动复验外链二次形态验证；痛点：站点改版后手工逐个点链接耗时；中难度：粘贴 URL 列表→Go 后端并发抓取（避 CORS）→状态码/重定向链/超时逐项报告＋CSV 导出；建议 ID broken_link_checker、Path /tools/broken-link-checker；21:00 轮曾因晚轮时间预算紧张留池，23:00 同理排三席）。
+
+其余 P1 留池：无。
+其余 P2 留池：HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋，本轮 V2EX Paint Board 形态验证补强；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器（本轮三次验证补强；二席推荐）/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；SyncWhen 形态验证；需 Go 后端＋持久化存储，纯前端单页架构外，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十轮：着陆页评分检查器已交付划出（fcb3e23，152 Path）；**形态补强 2 项**（本地 LLM 硬件检测器：Show HN 10-23「What LLM fits my GPU?」三次验证；在线创意画板：V2EX Paint Board 验证）；**无新晋 P1/P2/P3**（DevTrove YAML→实锤自有 json2yaml；其余信号全自有实锤/不立/已消化）；全量 152 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 着陆页评分检查器 | 已交付划出（fcb3e23 交付闭环：26 条确定性规则引擎＋DOMParser 本地解析＋打分/等级＋Markdown 报告，node 测试 245 断言全过；ID landing_page_grader、Path /tools/landing-page-grader 已注册，实用工具品类；全量 152 Path；候选池划出） | — | 已实现 |
+| Show HN 10-23 | 部分补强（What LLM fits my GPU?：117 模型真机 VRAM 实测＋显存计算器当天上榜→池内 P2「本地 LLM 硬件检测器」第三次形态验证补强；Pristine AI UI 评审 skill→AI 类不立；CATT 0.2.1 AI agent CI 测试→非 web 工具不立；Sphinx git hook quiz→npm 包不立；Death Plan Switch→需后端定时/邮件不立） | — | 补强/不立 |
+| V2EX 信号 | 部分补强（Paint Board 10-19 开源免费 web 创意画板→池内 P2「在线创意画板」形态验证补强；takodown 下载器 10-23→原生 App＋Chrome 扩展，非单页 web 工具不立；神念 AI 链接代问/Mynah 数字人/AI 出海赚社群帖→非单工具形态不立） | — | 补强/不立 |
+| dev.to 信号 | 全自有实锤/不立（BlanzaTools 14 工具：图片/文本/密码/二维码/取色/JSON/倒计时/单位换算全自有复现，Age/BMI/百分比计算器→10-18 方向修正边界不立；DevTrove 22 工具：JWT/YAML/CSV/正则/cron/时间戳/哈希/密码/Base64 全自有实锤——YAML 实锤自有 json2yaml「JSON/YAML 转换」/tools/json-yaml-converter；「I Replaced My Productivity Apps」：Image Annotator→自有 image_annotator、语音→自有 realtime_dictation＋语音朗读、其余自有复现；Etemora：RDAP 域名生成器→池内域名创意生成器已覆盖、发票生成器→财务类边界不立、SERP 预览→自有 serp_snippet_preview） | — | 不立 |
+| Medium/Reddit/知乎 | 本轮空（Siloshan 10 月榜 79 轮已消化；Reddit 返回 SEO 营销内容；知乎返回灰产软文；均无可消化需求帖） | — | 观察 |
+| stillworks.today 10-23 日榜 | 本轮无新立（与 77/78/79 轮同榜，78/79 轮已消化） | — | 不立 |
+
+**归档说明**：本轮为 10-23 通用调研第八十轮——着陆页评分检查器交付闭环（fcb3e23，`/tools/landing-page-grader` 已注册，实用工具品类，全量 152 Path），候选池划出；新信号扫描（Show HN：What LLM fits my GPU?→池内 P2 本地 LLM 硬件检测器第三次形态验证、Pristine/CATT/Sphinx/Death Plan Switch 不立；V2EX：Paint Board→池内 P2 在线创意画板补强、takodown/神念/Mynah/变现帖不立；dev.to：BlanzaTools 全自有＋计算器边界、DevTrove 全自有（YAML 实锤自有 json2yaml）、Productivity 10 工具全自有、Etemora 部分覆盖部分边界；Medium/Reddit/知乎本轮空；stillworks 同日榜不重复）均已消化；无新晋 P1/P2/P3；P1 池已空（屏幕常亮、浏览器实时听写均已交付），P2 可晋升；WPS 候选表保持冻结归档；仓库 152 注册工具全量核对无重叠（Top3 建议 ID kanban_board / llm_hardware_checker / broken_link_checker；零命中逐项可复现），核稿反馈持续闭环。**异常记录**：BACKLOG.md 文件末尾（约 10258 行起）存在一份「2026-10-23 19:00 · 产品调研员研究轮」重复条目，自称第七十九轮、按 150 Path/screen_keeper 时代口径新晋 3 个 P2（网站安全头检查器/Gzip Base64 解码器/Git 命令生成器），与顶部权威时间线（21:00 研究轮为第 79 轮、PM 已按其排期交付至 152 Path；3 个 ID 在 tools/categories.go 零注册、从未被排期采用；19:00 PM 轮已将 Gzip 明确为留池观察）直接冲突，疑为某轮次误追加到文件末尾的重复条目，建议后续轮次清理去重，本轮未动其内容。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（github.com host key 已入库）；`git log` 头部 fcb3e23（landing_page_grader 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 152 Path；本地当前分支 muse/dev-20260929；origin/muse/dev-20260929 与本地 HEAD 一致；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-23 21:00 · 前端开发轮）
 
 **交付：着陆页评分检查器（landing_page_grader）** — 本轮唯一任务（新工具）：

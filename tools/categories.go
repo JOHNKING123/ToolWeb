@@ -1037,6 +1037,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "id_photo_maker",
+					Name:        "证件照裁剪排版",
+					Description: "免费在线证件照制作：上传照片→1寸/2寸/小2寸/美国签证/护照尺寸预设、固定比例裁剪框拖拽缩放平移、点取背景色＋容差滑块换底（红/白/蓝）、5寸/6寸相纸自动排版，单张证件照与整张相纸 JPG 一键导出（300dpi 精确像素）；纯前端本地处理，照片不出浏览器，脚本零 fetch/XHR · ID photo maker: crop to 1 inch / 2 inch / US visa size, background color replace, 5 inch / 6 inch photo paper layout, 100% client-side",
+					Path:        "/tools/id-photo-maker",
+					Icon:        "badge",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{
