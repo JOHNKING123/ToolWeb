@@ -1,0 +1,244 @@
+{{define "svg_to_font"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 转字体图标生成器 - 在线把 SVG 做成 TTF/OTF 图标字体（纯前端）| 程序员工具箱</title>
+    <meta name="description" content="免费在线 SVG 转字体图标生成器：拖拽/多选/粘贴 SVG，本地解析 path 与基本形状并归一化到 1024 em，U+E000 起分配私有码点，浏览器内组装下载 TTF（主）/OTF（次），@font-face 字形网格实时预览，一键复制 CSS 使用代码。纯前端零上传。SVG to icon font online: build TTF/OTF icon fonts from SVGs entirely in the browser, 100% client-side.">
+    <meta name="keywords" content="svg to font,图标字体生成,iconfont,svg 转 ttf,webfont,svg 生成字体,ttf 生成器,otf 生成器,字体图标,icon font generator,svg 转字体,图标字体制作">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/svg-to-font">
+    <meta property="og:title" content="SVG 转字体图标生成器 - 在线把 SVG 做成 TTF/OTF 图标字体">
+    <meta property="og:description" content="拖拽/粘贴 SVG，纯前端解析 path＋形状、归一化 1024 em、U+E000 起分配码点，本地组装 TTF/OTF 下载，字形网格预览＋一键复制 CSS，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/svg-to-font">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"SVG 转字体图标生成器","description":"在线 SVG 转字体图标生成器：拖拽/多选/粘贴 SVG，本地解析 path 与基本形状并归一化到 1024 em 方框，U+E000 起分配 Private Use Area 码点，浏览器内组装下载 TTF（主）/OTF（次），@font-face 字形网格实时预览，一键复制 CSS 使用代码；纯前端本地处理，内容零上传。","url":"https://www.johnkingzcq123.xyz/tools/svg-to-font","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .s2f-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .s2f-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .s2f-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .s2f-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .s2f-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .s2f-dropzone{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2rem 1rem;
+            text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+        .s2f-dropzone:hover,.s2f-dropzone.s2f-drag{border-color:#2563eb;background:#eff6ff}
+        .s2f-dropzone .material-icons{font-size:2.6rem;color:#60a5fa;display:block;margin-bottom:.5rem}
+        .s2f-dz-hint{font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:.3rem}
+        .s2f-dz-sub{font-size:.85rem;color:#64748b}
+        .s2f-paste{box-sizing:border-box;width:100%;min-height:110px;resize:vertical;margin-top:1rem;
+            padding:.7rem .9rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.85rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace;color:#1f2937;background:#fbfdff}
+        .s2f-paste:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .s2f-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+        .s2f-summary{font-size:.9rem;color:#4b5563;font-weight:600;width:100%}
+        .s2f-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .s2f-btn .material-icons{font-size:1.1rem}
+        .s2f-btn-primary{background:#2563eb;color:#fff}
+        .s2f-btn-primary:hover{background:#1d4ed8}
+        .s2f-btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .s2f-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .s2f-btn-secondary:hover{background:#e5e7eb}
+        .s2f-btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        .s2f-empty{color:#94a3b8;text-align:center;padding:2.2rem 1rem;font-size:.95rem}
+        .s2f-row{border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem;margin-bottom:.9rem;background:#fff}
+        .s2f-row.s2f-done{border-color:#a7f3d0;background:#f0fdf4}
+        .s2f-row.s2f-error{border-color:#fecaca;background:#fef2f2}
+        .s2f-row-head{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.4rem}
+        .s2f-name{flex:1;display:flex;align-items:center;gap:.45rem;min-width:140px;font-weight:600;color:#111827;font-size:.93rem}
+        .s2f-name .material-icons{color:#60a5fa;font-size:1.2rem;flex:none}
+        .s2f-row.s2f-error .s2f-name .material-icons{color:#f87171}
+        .s2f-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .s2f-chip{flex:none;font-size:.8rem;border-radius:.35rem;padding:.18rem .6rem;font-weight:600}
+        .s2f-chip-ok{background:#d1fae5;color:#065f46}
+        .s2f-chip-bad{background:#fee2e2;color:#991b1b}
+        .s2f-chip-cp{background:#dbeafe;color:#1d4ed8;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .s2f-chip-warn{background:#fef3c7;color:#92400e;cursor:help}
+        .s2f-icon-btn{flex:none;border:none;background:transparent;color:#9ca3af;cursor:pointer;border-radius:.4rem;
+            padding:.25rem;display:inline-flex}
+        .s2f-icon-btn:hover{color:#dc2626;background:#fef2f2}
+        .s2f-icon-btn .material-icons{font-size:1.15rem}
+        .s2f-errmsg{display:flex;gap:.45rem;align-items:flex-start;color:#991b1b;font-size:.88rem;line-height:1.7;
+            background:#fee2e2;border-radius:.45rem;padding:.55rem .8rem}
+        .s2f-errmsg .material-icons{font-size:1.1rem;flex:none;margin-top:.15rem}
+        .s2f-glyphname{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:#4b5563;margin-top:.4rem}
+        .s2f-glyphname input{flex:1;max-width:320px;padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.45rem;
+            font-size:.88rem;font-family:ui-monospace,Menlo,Consolas,monospace;color:#1f2937}
+        .s2f-glyphname input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .s2f-field{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.92rem;color:#374151;margin:.5rem 0}
+        .s2f-field input[type=text]{padding:.55rem .8rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.92rem;
+            min-width:220px;color:#1f2937}
+        .s2f-field input[type=text]:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .s2f-field small{color:#6b7280;font-size:.82rem}
+        .s2f-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:.8rem;margin:.6rem 0}
+        .s2f-cell{border:1px solid #e5e7eb;border-radius:.6rem;background:#fff;padding:.8rem .4rem;text-align:center}
+        .s2f-big{font-size:3rem;line-height:1.4;color:#111827;min-height:4.2rem;display:flex;align-items:center;justify-content:center}
+        .s2f-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;color:#1d4ed8;font-weight:600;margin-top:.3rem}
+        .s2f-gname{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;color:#6b7280;margin-top:.15rem;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .s2f-css{box-sizing:border-box;width:100%;min-height:220px;max-height:420px;overflow:auto;white-space:pre;
+            padding:.8rem 1rem;border:1px solid #e5e7eb;border-radius:.5rem;background:#0f172a;color:#e2e8f0;
+            font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.7;margin-top:.6rem}
+        .s2f-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .s2f-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .s2f-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .s2f-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .s2f-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .s2f-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #s2f-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #s2f-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        #s2f-fontface-style{display:none}
+        @media (max-width:640px){
+            .s2f-btn{flex:1;justify-content:center}
+            .s2f-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">font_download</i> SVG 转字体图标生成器</h1>
+            <p>把 SVG 做成真正的 TTF / OTF 图标字体，全程在浏览器本地完成：拖拽或粘贴 SVG，自动解析 path 与基本形状并归一化到 1024 em 方框，按 U+E000 起分配私有码点，一键下载字体文件、复制 CSS 即用。icomoon / fontello 的零上传替代品。</p>
+        </div>
+        <div class="tool-content" style="max-width:1040px;margin:auto;">
+            <div class="s2f-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>SVG 解析、字体组装（opentype.js 2.0.0 已随页面静态加载，无 CDN）、预览与下载全部在浏览器本地完成，SVG 内容不出你的电脑，可在开发者工具 Network 面板验证零上传请求。</div>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">upload_file</i> ① 输入 SVG</h3>
+                <div class="s2f-dropzone" id="s2f-dropzone">
+                    <i class="material-icons">cloud_upload</i>
+                    <div class="s2f-dz-hint">把 .svg 文件拖到这里，或点击选择</div>
+                    <div class="s2f-dz-sub">支持批量多文件加入队列 · 也可以在下方直接粘贴 SVG 代码</div>
+                    <div style="margin-top:.9rem;">
+                        <button type="button" class="s2f-btn s2f-btn-secondary" id="s2f-pick-btn">
+                            <i class="material-icons">folder_open</i> 选择 SVG 文件
+                        </button>
+                    </div>
+                    <input type="file" id="s2f-file-input" accept=".svg,image/svg+xml" multiple style="display:none;">
+                </div>
+                <textarea class="s2f-paste" id="s2f-paste" placeholder="或把 SVG 代码粘贴到这里（支持 Illustrator / Inkscape / Figma 导出的代码）"></textarea>
+                <div class="s2f-actions">
+                    <button type="button" class="s2f-btn s2f-btn-secondary" id="s2f-add-paste-btn">
+                        <i class="material-icons">playlist_add</i> 加入队列
+                    </button>
+                    <button type="button" class="s2f-btn s2f-btn-secondary" id="s2f-sample-btn">
+                        <i class="material-icons">science</i> 填入示例 SVG
+                    </button>
+                </div>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">tune</i> ② 字体设置</h3>
+                <div class="s2f-field">
+                    <span>字体族名（font-family）：</span>
+                    <input type="text" id="s2f-family" value="IconFont" maxlength="60" placeholder="IconFont">
+                    <small>将写入字体名称表与 CSS；建议用英文避免兼容问题</small>
+                </div>
+                <div class="s2f-field">
+                    <small>规格：unitsPerEm 1024 · ascender 880 / descender -144 · 码点自 U+E000 起顺序分配 · 字形名由文件名清洗为合法 PostScript 名</small>
+                </div>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">list_alt</i> ③ 字形队列</h3>
+                <div id="s2f-list"></div>
+                <div class="s2f-actions">
+                    <button type="button" class="s2f-btn s2f-btn-primary" id="s2f-gen-btn" disabled>
+                        <i class="material-icons">play_arrow</i> 开始生成字体
+                    </button>
+                    <button type="button" class="s2f-btn s2f-btn-secondary" id="s2f-clear-btn">
+                        <i class="material-icons">clear</i> 清空队列
+                    </button>
+                    <div class="s2f-summary" id="s2f-summary"></div>
+                </div>
+            </div>
+
+            <div class="s2f-panel" id="s2f-preview-panel">
+                <h3><i class="material-icons">grid_view</i> ④ 字形预览</h3>
+                <div id="s2f-grid"></div>
+                <style id="s2f-fontface-style"></style>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">download</i> ⑤ 下载与使用代码</h3>
+                <div class="s2f-actions">
+                    <button type="button" class="s2f-btn s2f-btn-primary" id="s2f-dl-ttf" disabled>
+                        <i class="material-icons">download</i> 下载 TTF（主）
+                    </button>
+                    <button type="button" class="s2f-btn s2f-btn-secondary" id="s2f-dl-otf" disabled>
+                        <i class="material-icons">download</i> 下载 OTF（次）
+                    </button>
+                    <button type="button" class="s2f-btn s2f-btn-secondary" id="s2f-copy-css" disabled>
+                        <i class="material-icons">content_copy</i> 复制 CSS 使用代码
+                    </button>
+                </div>
+                <pre class="s2f-css" id="s2f-css"></pre>
+                <div class="s2f-tip" style="margin-top:.6rem;">用法：把下载的 <code>.ttf</code> 与复制的 CSS 放到项目里，<code>&lt;i class="icon icon-star"&gt;&lt;/i&gt;</code> 即可显示对应图标（类名由字形名生成，如 <code>.icon-star</code>）。</div>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="s2f-tip">
+                    <b>流程：</b>把 .svg 文件拖进虚线框（可多选批量）或粘贴 SVG 代码点「加入队列」→ 在「字形队列」里确认/修改每个字形的名称 → 填好字体族名点「开始生成字体」→ 在字形网格里检查渲染效果 → 下载 TTF/OTF、复制 CSS 用到项目里。<br>
+                    <b>解析范围：</b>提取 <code>&lt;path&gt;</code> 的 <code>d</code> 属性（单个文件内多 path 合并为一个字形）；基本形状 <code>rect/circle/ellipse/line/polyline/polygon</code> 自动转 path；支持全部 path 命令（含 <code>A</code> 圆弧转三次贝塞尔）；<code>transform</code> 仅支持 <code>translate/scale</code>（不支持的会提示并忽略）；渐变/滤镜/遮罩等非轮廓元素会被忽略并提示。<br>
+                    <b>归一化：</b>按 <code>viewBox</code>（无则取 width/height）缩放到 1024 em 方框，并做 Y 轴翻转（SVG y-down → 字体 y-up），保证字形正立。<br>
+                    <b>码点与字形名：</b>自 <code>U+E000</code> 起按队列顺序分配 Private Use Area 码点；字形名由文件名清洗（非法字符转下划线、数字开头加 <code>icon_</code> 前缀、重名自动加后缀）。<br>
+                    <b>两种字体：</b>TTF 为真正的 TrueType 轮廓（glyf 表，页面内建组装器生成）；OTF 为 CFF 轮廓（opentype.js 2.0.0 组装，随页面静态加载、无 CDN）。两者内容一致，按需选用。<br>
+                    <b>注意：</b>字体只保留「填充轮廓」，描边（stroke）粗细不会被转换——描边图标请先在设计软件里执行「描边转轮廓/扩展外观」。<br>
+                    <b>坏文件处理：</b>解析失败的文件会标红并给出原因（如「未找到可转换的矢量轮廓」），不影响队列里其他文件。<br>
+                    <b>隐私：</b>全部在浏览器本地完成，SVG 内容不会上传到任何服务器；预览用的 blob 链接在重新生成时自动回收。
+                </div>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="s2f-faq">
+                    <dt>SVG 会被上传到服务器吗？</dt>
+                    <dd>不会。解析、字体组装、预览、下载全部在浏览器本地执行，Network 面板里没有任何上传请求。opentype.js 2.0.0 是随页面一起静态加载的本地文件（<code>/tools/static/vendor/opentype.min.js</code>），不是运行时从 CDN 拉的。</dd>
+                    <dt>生成的 TTF 和 OTF 有什么区别？</dt>
+                    <dd>两者字形内容一致：TTF 是 TrueType 轮廓（glyf 表，兼容性最广，为主下载项）；OTF 是 CFF 轮廓（opentype.js 2.0.0 组装）。日常 Web 使用选 TTF 即可；需要 PostScript 轮廓流程（如特定印刷/设计软件）时选 OTF。</dd>
+                    <dt>为什么我的图标在字体里显示为实心块或缺了一块？</dt>
+                    <dd>多半是原 SVG 用了描边（stroke）表现线条——字体只保留填充轮廓，描边会被丢弃。请先在 Illustrator / Figma / Inkscape 里把描边「扩展为轮廓」（Outline Stroke）再导入。</dd>
+                    <dt>支持哪些 SVG 特性？</dt>
+                    <dd>支持全部 path 命令（含圆弧 A）、rect/circle/ellipse/line/polyline/polygon、translate/scale 变换、嵌套分组。不支持：渐变/滤镜/遮罩/裁剪（忽略并提示）、rotate/skew/matrix 变换（忽略并提示）、&lt;text&gt; 文本（请先转曲）。</dd>
+                    <dt>码点可以自己指定吗？</dt>
+                    <dd>当前版本按 U+E000 起顺序自动分配，保证不冲突。如需自定义码点，可下载后用 FontForge 等工具再调整。</dd>
+                    <dt>一次能转多少个图标？</dt>
+                    <dd>数量不限，队列逐个顺序解析。几十个常规图标一般在 1 秒内完成组装；单个超大 SVG（几 MB 级复杂路径）会慢一些。</dd>
+                </dl>
+            </div>
+
+            <div class="s2f-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="s2f-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">SVG 转字体图标生成器（当前）</span>
+                    <a href="/tools/svg-compressor" class="btn btn-secondary" style="font-size:.9rem;">SVG 压缩优化器</a>
+                    <a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩</a>
+                    <a href="/tools/favicon-generator" class="btn btn-secondary" style="font-size:.9rem;">favicon 生成器</a>
+                    <a href="/tools/img-convert" class="btn btn-secondary" style="font-size:.9rem;">图片格式转换</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="s2f-toast"></div>
+    <script src="/tools/static/vendor/opentype.min.js"></script>
+    <script src="/tools/static/js/svg_to_font.js?v=1"></script>
+</body>
+</html>
+{{end}}

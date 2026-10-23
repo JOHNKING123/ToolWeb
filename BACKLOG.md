@@ -1,3 +1,89 @@
+## 开发交付（2026-10-23 14:0x · 前端开发轮）
+
+**交付：SVG 转字体图标生成器（svg_to_font）** — 本轮唯一任务闭环：
+- 新增 `templates/svg_to_font.html`（SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）、`static/js/svg_to_font.js`（纯前端，脚本内零 fetch/XHR）、`static/vendor/opentype.min.js`（npm `opentype.js@2.0.0` dist 拉取 vendor，SHA256 `b39d7bf9661481cec5c118a0d92b02951171d99c30d4d11252a72ecb0285439e`，来源可复现：`npm pack opentype.js@2.0.0`）、`tests/svg_to_font.test.js`；`tools/categories.go` 图片处理品类注册（ID svg_to_font、Path /tools/svg-to-font、New: true），Path 总数 147→148。
+- 功能：拖拽/多选/粘贴导入 SVG → 解析 `<path>` d 全命令（M/L/H/V/C/S/Q/T/A/Z，A 圆弧转三次贝塞尔）＋基本形状转 path（rect/circle/ellipse/line/polyline/polygon，圆角 rect 用 kappa 圆弧）＋transform 仅 translate/scale（不支持的提示并忽略）→ viewBox 归一化 1024 em＋Y 翻转 → U+E000 起分配 PUA 码点＋文件名清洗为合法 PostScript 字形名（去重加后缀）→ TTF 下载（主）＋OTF 下载（次）→ @font-face blob URL 字形网格预览（大字＋码点＋字形名）→ 一键复制 CSS（@font-face＋.icon-xxx::before content 转义）；非法文件标红定位、不中断队列。
+- **关键实测结论（与排期假设不同）**：opentype.js 2.0.0 的 `toArrayBuffer()` 只写 CFF 轮廓（OTTO 签名），已无 TrueType glyf 写入能力。为保「.ttf」名副其实，TTF 由本文件内建最小 TrueType 构建器生成（cubic→quadratic 递归细分 tol=1.0、glyf/loca/cmap format4/name/post2.0/OS/2 等 10 张表、checksum B1B0AFBA），OTF 走 vendor opentype.js 2.0.0 组装；两者均经 vendor opentype 重新 parse 做 round-trip 自测（glyph 数/码点/advanceWidth 一致）。
+- 自测：`go build ./...` 通过；本地 18099 起服 `/tools/svg-to-font` 200（title/vendor/JS 引用正常，首页列表含 svg-to-font）；`node tests/svg_to_font.test.js` **179/179 全过**（path 全命令、圆弧转贝塞尔、形状转换、Y 翻转归一化、字形名清洗去重、码点分配、TTF/OTF round-trip、CSS 生成、非法输入不中断、零 fetch/XHR）。开发中修了一个真问题：path tokenizer 曾静默吞掉未知命令字母（如 X），现预检残留字符直接报错。
+- 备注：仓库根未跟踪的 `toolWeb.bak-prev`（20MB 构建残留二进制）已移入回收站清理，未入库；`go run main.go` 单文件编译缺 mount.go 符号，本地验证改用 `TOOLWEB_ADDR=127.0.0.1:18099 go run .`；pkill 按 AGENTS.md 教训分两步杀测试服务。
+
+## 今日任务（2026-10-23 13:37 · 产品经理排期轮）
+
+**选定：SVG 转字体图标生成器（svg_to_font）** — 本轮唯一任务（新工具）：
+- **顺位**：13:00 研究轮（76 轮）Top3 首席推荐；annual_lottery 交付闭环（c6d217f，147 Path）后顺位递进生效，依惯例「无硬伤不跳过」。未选：白噪音发生器（P1 留池二席；纯前端小难度、WebAudio 本地合成零音频文件，无时令压力，留池）、屏幕常亮（P1 留池三席；Wake Lock API＋降级 trick，留池）。
+- **选定理由（本轮午后轮）**：① **研究轮首席推荐＋双轮形态验证**——59 轮新晋、73 轮 DevOmniTools SVG to Font Converter 形态验证二次确认（客户端矢量编译→TrueType 字形表零上传可行）；② **之前三轮「留待更从容轮次」的是验证成本担忧、非硬伤**——本轮已实测：npm registry 可达、opentype.js 2.0.0 可 vendor、node v24.22.1 可用，vendor 路径无阻塞；午后轮即「从容轮次」，不再往后推；③ **SVG 工具小家族扩展**——现有仅 svg_compressor（/tools/svg-compressor），新工具归位「图片处理」品类为邻；④ **痛点明确**——icomoon.io/fontello 做图标字体要上传全套 SVG，纯前端零上传正中隐私/内网场景痛点；⑤ **中难度一轮可高质量交付**——上午轮 MBOX（中）77 断言已验证节奏；规格收紧范围（path 全命令＋基本形状转换、TTF 主＋OTF 次、vendor 本地化）控制风险。
+- **形态验证**：SVG 导入（拖拽多选/粘贴）→ path 解析＋形状转换 → U+E000 起分配码点＋字形名 → opentype.js vendor 化组装 TTF/OTF → @font-face blob 预览字形网格 → 本地下载＋CSS 使用代码复制。
+- **品类归位**：注册到「图片处理」品类（与 svg_compressor 为邻）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- SVG 导入：拖拽/多选 .svg 文件＋粘贴 SVG 代码，批量队列展示（文件名/字形名/状态）；非法文件报错定位不中断队列。
+- 解析：提取 `<path>` d 属性（单文件多 path 合并为一个字形）；基本形状转 path：rect/circle/ellipse/line/polyline/polygon；支持全部 path 命令（含 A 圆弧转三次贝塞尔）；viewBox 归一化缩放到 em 方框（unitsPerEm 1024）＋Y 轴翻转（SVG y-down → 字体 y-up）；transform 仅支持 translate/scale，渐变/滤镜等非轮廓元素忽略并提示。
+- 码点分配：Private Use Area U+E000 起顺序分配；字形名由文件名清洗为合法 PostScript 名（非法字符转下划线、数字开头加前缀、重名自动加后缀）。
+- 组装：vendor 化 opentype.js 2.0.0（static/vendor/opentype.min.js，构建期从 npm 拉取，运行时零 CDN/零 fetch）；Font 构造（familyName 可自定义、unitsPerEm 1024、ascender 880/descender -144）；输出 TTF 下载（主）＋OTF 下载（次）；@font-face blob URL 实时预览字形网格（大字＋码点 U+E00X＋字形名）；一键复制 CSS 使用代码（@font-face＋.icon-xxx::before content 转义）。
+- JS 双模式：浏览器全局＋Node module.exports，node 可 require 跑纯逻辑测试（沿用家族测试惯例）。
+- 注册：新增工具 ID `svg_to_font`、Name「SVG 转字体图标生成器」、Path `/tools/svg-to-font`（New: true），中英文描述＋SEO keywords（svg to font、图标字体生成、iconfont、svg 转 ttf、webfont）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `svg_to_font`、Path `/tools/svg-to-font` 注册完整（Category 图片处理），注册总数 147→148 Path。
+2. 上传 3 个测试 SVG（纯 path 元素 / rect＋circle 形状 / 多 path 合并各一）→ 分配 U+E000/E001/E002、字形名合法 → 预览网格经 @font-face blob 正确渲染出对应字形。
+3. 下载 TTF → node 用 vendor opentype 重新 parse：glyph 数＝3、码点与 advanceWidth 一致；OTF 下载同理可 parse。
+4. 脚本内零 fetch/XHR；opentype.min.js 为 npm opentype.js@2.0.0 本地 vendor（来源可复现），运行时零 CDN。
+5. node 测试 50+ 断言全过：path 全命令解析（含圆弧转贝塞尔）、形状转换、Y 翻转＋归一化缩放、字形名清洗去重、码点分配、字体组装 round-trip、CSS 代码生成、非法输入不中断。
+6. 非法 SVG（无 path/空 d/非法 XML）给出明确错误提示且不中断队列中其他文件。
+
+**预计改动文件**：
+- `templates/svg_to_font.html`（新增；含 SEO 面板按家族标准＋字形网格预览样式）
+- `static/js/svg_to_font.js`（新增；SVG 解析/形状转换/码点分配/字体组装/预览/CSS 生成；双模式导出供 node 测试）
+- `static/vendor/opentype.min.js`（新增；opentype.js@2.0.0 npm 拉取 vendor，运行时零 CDN）
+- `tests/svg_to_font.test.js`（新增；解析/转换/组装 round-trip/CSS 生成/非法输入）
+- `tools/categories.go`（图片处理品类注册：ID svg_to_font、Path /tools/svg-to-font、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD c6d217f（annual_lottery 交付闭环）；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮重试正常；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 147 Path；三候选零重叠本轮复核（`svg_to_font|svg-to-font` 仅 cross_stitch_pattern.js 一处无关注释命中、非工具；白噪音/屏幕常亮全零命中）；npm registry 可达、opentype.js 2.0.0 可 vendor（本轮实测）；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 13:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。年会大屏抽奖已交付闭环（`git log` 头部 c6d217f；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **147 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:00 午后轮次，P1 可排。
+
+**本轮三件事**（13:00 全网调研，通用方向）：
+1. annual_lottery 交付确认：`git log` 头部 c6d217f（名单粘贴导入＋自动去重计数、奖项配置、crypto.getRandomValues 预抽＋跑马灯滚动 easeOutQuart 缓动定格、中奖公示一键复制/下载 txt、全屏大屏模式、localStorage 持久化、零第三方库零 fetch/XHR；注册实用工具品类，146→147 Path；node 测试 89 断言全过）；`grep tools/categories.go` 全量 147 Path（ID annual_lottery、Path /tools/annual-lottery 已注册）；候选池划出。
+2. 新信号扫描：
+   - **Show HN 本周**（showhn.buzzing.cc 实时列表）：**PrintPixel Tool**（printpixeltool.com：客户端图片打印尺寸/质量计算器→纯前端单页形态）→ `grep -cinE '打印尺寸|print.size|print_size|dpi计算|DPI'` **零命中实锤** → **新晋 P2「图片打印尺寸计算器」**（痛点：摄影/电商/淘宝卖家打印照片要反复换算像素↔厘米；输入像素尺寸→按 72/150/300 DPI 算 cm/inch 打印尺寸＋打印质量评级（模糊警告），纯前端小难度；建议 ID print_size_calculator、Path /tools/print-size-calculator）；**RigCheck**（GPU/跑 LLM 本地模型硬件检测→池内 P2「本地 LLM 硬件检测器」形态验证补强）；**Whistle** 16.9MB 设备端语音转文本（→池内 P1 浏览器实时听写形态验证补强）；**Murmur** push-to-talk dictation（同理→实时听写补强）；**Sudoku, Wordle and Lights Out solvers**（谜题提示器→游戏 toy，非工具形态）不立；**Bun.ink** 浏览器 Markdown 编辑器（→自有 markdown-preview/markdown-to-word 系列实锤复现）不立；**entry.fyi**（AI 生成主页→需 AI 后端）不立；**Thok** 机械键盘音效（toy）、**CATT** AI 测试类、**Taveo** 方向排除、**Kino Transcode** RAW 转码需后端→不立；
+   - **V2EX**：Paint Board（10-19，网页端开源创意画板：多种画笔/涂鸦图形/文字图片素材，songlh.top/paint-board）→ `grep '"[^"]*创意画板[^"]*"'` **零命中实锤** → **新晋 P2「在线创意画板」**（痛点：随手涂鸦/画流程草图要开软件；多种画笔＋图形＋文字＋贴图＋撤销/重做＋PNG 导出，纯前端小难度；建议 ID doodle_board、Path /tools/doodle-board）；PHP2Shell 重帖（69/71/72/73/74/75 轮已消化）不立；ProtoHub（原型交付托管→需后端）不立；Calends 订阅账本（开源自部署→方向修正排除：财务/记账类）不立；Builderoom 导航站（非工具形态）不立；
+   - **dev.to 工具合集轮**（Tooltri 10-08/ToolVerse 100+/FreeToolsy 90+/pyfile-toolkit 13/SiteIndex 70+）：JSON/Token/Base64/JWT/UUID/正则/哈希/颜色/密码/SERP 预览类目 → 全部自有实锤复现 → 不立；Tooltri 的 Duplicate Word Finder（重复词查找→文本工具 niche）→ 观察；
+   - **知乎需求帖**：本轮返回均为 SEO 垃圾内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：年会大屏抽奖已交付划出（c6d217f，147 Path）；**新晋 2 个 P2**（图片打印尺寸计算器、在线创意画板）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；annual_lottery 交付闭环后按顺位递进）：
+
+1. **SVG 转字体图标生成器** — P1（59 轮新晋；73 轮 DevOmniTools SVG to Font Converter 形态验证二次确认：客户端 WASM 矢量编译器→TrueType 字形表零上传可行；痛点：设计师/前端做图标字体要走 icomoon.io/fontello 上传全套 SVG；纯前端小-中难度：SVG path 解析→opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→预览＋本地下载；SVG 赛道小家族扩展；`svg_to_font|svg-to-font` 零命中实锤；建议 ID svg_to_font、Path /tools/svg-to-font）。
+2. **白噪音发生器** — P1（74 轮新晋；36氪 myNoise 形态验证：可 DIY 白噪音/环境声；痛点：专注/睡眠要可自定义白噪音，现有站点多为在线音频流或 App 内购；纯前端小难度：WebAudio 本地合成白/粉/棕噪声＋雨声/雷声/风声滤波混音＋定时关闭＋混合音量滑杆，零音频文件、零 fetch/XHR、可离线播；`白噪音|white.noise|whitenoise` 零命中实锤；建议 ID white_noise_generator、Path /tools/white-noise-generator）。
+3. **屏幕常亮** — P1（留池；痛点：手机/平板看菜谱/演示时屏幕自动熄灭，现有方案要装 App 或改系统设置；纯前端小难度：Wake Lock API＋降级方案（隐藏视频循环播放 trick），零上传；建议 ID screen_keeper、Path /tools/screen-keeper）。
+
+其余 P1 留池：浏览器实时听写（本轮 Whistle 944pts＋Murmur push-to-talk 双补强）。
+其余 P2 留池：图片打印尺寸计算器（本轮新晋；PrintPixel 形态验证；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（本轮新晋；V2EX Paint Board 形态验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器（本轮 RigCheck 形态验证补强）/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十六轮：年会大屏抽奖已交付划出（c6d217f，147 Path）；**新晋 P2 图片打印尺寸计算器**（Show HN PrintPixel Tool 形态验证：客户端打印尺寸/质量计算；输入像素→72/150/300 DPI 打印 cm/inch＋质量评级；零命中实锤；建议 ID print_size_calculator、Path /tools/print-size-calculator）；**新晋 P2 在线创意画板**（V2EX Paint Board 10-19 形态验证：多种画笔/图形/文字/贴图＋PNG 导出；零命中实锤；建议 ID doodle_board、Path /tools/doodle-board）；Show HN 其余（RigCheck/Whistle/Murmur→实时听写或 LLM 硬件检测器形态补强；谜题求解器/Bun.ink/entry.fyi/Thok/CATT/Taveo/Kino 不立）；V2EX（PHP2Shell 重帖已消化、ProtoHub 需后端、Calends 方向排除、Builderoom 非工具）；dev.to 合集轮全自有实锤（Duplicate Word Finder 观察）；知乎需求帖本轮空；全量 147 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片打印尺寸计算器 | 新晋（76 轮；Show HN PrintPixel Tool 形态验证：客户端图片打印尺寸/质量计算器；痛点：摄影/电商/淘宝卖家打印照片要反复换算像素↔厘米；输入像素尺寸→按 72/150/300 DPI 算 cm/inch 打印尺寸＋打印质量评级（模糊警告），纯前端小难度；`打印尺寸\|print.size\|dpi计算\|DPI` 零命中实锤；建议 ID print_size_calculator、Path /tools/print-size-calculator） | 小 | P2 |
+| 在线创意画板 | 新晋（76 轮；V2EX Paint Board（10-19）形态验证：网页端开源创意画板；痛点：随手涂鸦/画流程草图要开桌面软件；多种画笔＋涂鸦图形＋文字＋贴图素材＋撤销/重做＋PNG 导出，纯前端小难度；零命中实锤；建议 ID doodle_board、Path /tools/doodle-board） | 小 | P2 |
+| annual_lottery | 已交付划出（c6d217f 交付闭环；ID annual_lottery、Path /tools/annual-lottery 已注册；实用工具品类；全量 147 Path；候选池划出） | — | 已实现 |
+| Show HN 其余 | 本轮不立（RigCheck→池内 P2 本地 LLM 硬件检测器形态验证补强；Whistle 设备端语音转写→池内 P1 浏览器实时听写形态验证补强；Murmur push-to-talk→同理补强；Sudoku/Wordle/Lights Out 谜题提示器游戏 toy；Bun.ink 浏览器 MD 编辑器＝自有 markdown-preview 系列实锤复现；entry.fyi AI 主页需 AI 后端；Thok 键盘音效 toy；CATT AI 测试类；Taveo 方向排除；Kino Transcode RAW 需后端） | — | 不立/观察 |
+| V2EX 信号 | 本轮不新立（PHP2Shell 重帖 69/71/72/73/74/75 轮已消化；ProtoHub 原型交付/静态托管需后端；Calends 订阅账本自部署→财务记账类，10-18 方向修正排除；Builderoom 导航站非工具形态） | — | 不立/观察 |
+| dev.to 工具合集轮 | 本轮不新立（Tooltri 10-08/ToolVerse 100+/FreeToolsy 90+/pyfile-toolkit 13/SiteIndex 70+：JSON/Token/Base64/JWT/UUID/正则/哈希/颜色/密码/SERP 预览类目全部自有实锤复现；Duplicate Word Finder 重复词查找→文本 niche 观察） | — | 观察 |
+| 知乎需求帖 | 本轮空（"知乎 有没有什么在线工具 希望 有一个 网站 能" 返回均为 SEO 垃圾内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十六轮——年会大屏抽奖交付闭环（c6d217f，`/tools/annual-lottery` 已注册，实用工具品类，全量 147 Path），候选池划出；新信号扫描（Show HN 本周：**PrintPixel Tool→新晋 P2 图片打印尺寸计算器**、RigCheck/Whistle/Murmur 形态验证补强、其余需后端或 toy 不立；V2EX：**Paint Board（10-19）→新晋 P2 在线创意画板**、PHP2Shell 重帖已消化、ProtoHub 需后端、Calends 方向排除、Builderoom 非工具；dev.to 合集轮全自有实锤；知乎需求帖本轮空）均已消化；WPS 候选表保持冻结归档；仓库 147 注册工具全量核对无重叠（Top3 建议 ID svg_to_font / white_noise_generator / screen_keeper；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 c6d217f（annual_lottery 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 147 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-23 11:41 · 产品经理排期轮）
 
 **选定：年会大屏抽奖（annual_lottery）** — 本轮唯一任务（新工具）：
