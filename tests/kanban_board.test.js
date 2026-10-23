@@ -1,8 +1,8 @@
 /* 本地看板任务管理（kanban_board）纯逻辑单元测试（零依赖）：
  * node tests/kanban_board.test.js
- * 覆盖：常量与默认看板、列 CRUD（上限 8 列/调序）、卡片 CRUD、
- * 移动与插入索引、localStorage 读写降级、标签解析、过期判断、
- * 筛选搜索、导出导入、模板关键元素与隐私文案、脚本零 fetch/XHR。
+ * 覆盖：常量与默认看板、列 CRUD（上限 8 列/调序/找到已完成列/只清已完成语义）、卡片 CRUD、
+ * 移动与插入索引（可见索引→真实下标映射）、localStorage 读写降级、标签解析、过期判断与 due 格式校验、
+ * 筛选搜索、导出导入（含 done 标记透传）、模板关键元素与隐私文案、脚本零 fetch/XHR。
  */
 "use strict";
 var fs = require("fs");
@@ -88,6 +88,32 @@ KB.addCard(b4, b4.columns[0].id, { title: "卡2" });
 ok(KB.clearColumn(b4, b4.columns[0].id), "清空列成功");
 eq(b4.columns[0].cards.length, 0, "清空后卡片数为 0");
 ok(!KB.clearColumn(b4, "no-such"), "清空不存在的列失败");
+/* 找到已完成列（「只清已完成列」的语义基础） */
+var bd0 = KB.defaultBoard();
+var done0 = KB.findDoneColumn(bd0);
+ok(done0 && done0.column.title === "已完成" && done0.column.done === true, "默认板 findDoneColumn 命中 done:true 列");
+KB.renameColumn(bd0, done0.column.id, "搞定");
+var done1 = KB.findDoneColumn(bd0);
+ok(done1 && done1.column.id === done0.column.id, "列重命名后 done 标记仍可找到");
+KB.removeColumn(bd0, done0.column.id);
+ok(KB.findDoneColumn(bd0) === null, "删除 done 列后找不到");
+/* 退化匹配：无 done 标记（旧版备份）但标题为「已完成」 */
+var bf0 = KB.defaultBoard();
+bf0.columns.forEach(function (c) { delete c.done; });
+var done2 = KB.findDoneColumn(bf0);
+ok(done2 && done2.column.title === "已完成", "无 done 标记时退化按标题「已完成」匹配");
+bf0.columns.forEach(function (c) { c.title = "列" + c.id; });
+ok(KB.findDoneColumn(bf0) === null, "既无标记又无该标题返回 null");
+/* 一键清空已完成：只有 done 列卡片被清，其它列保留 */
+var bc0 = KB.defaultBoard();
+KB.addCard(bc0, bc0.columns[0].id, { title: "待办卡" });
+KB.addCard(bc0, bc0.columns[2].id, { title: "完成卡1" });
+KB.addCard(bc0, bc0.columns[2].id, { title: "完成卡2" });
+var dc0 = KB.findDoneColumn(bc0);
+ok(KB.clearColumn(bc0, dc0.column.id), "清空已完成列成功");
+eq(bc0.columns[2].cards.length, 0, "已完成列卡片为 0");
+eq(bc0.columns[0].cards.length, 1, "待办列卡片保留");
+eq(bc0.columns[0].cards[0].title, "待办卡", "保留的卡片数据完整");
 
 /* ---------- 2. 卡片 CRUD ---------- */
 var b5 = KB.defaultBoard();
@@ -138,6 +164,36 @@ eq(KB.calcInsertIndex([100, 200, 300], 150), 1, "指针在两卡之间→1");
 eq(KB.calcInsertIndex([100, 200, 300], 350), 3, "指针在末卡下方→列尾");
 eq(KB.calcInsertIndex([], 999), 0, "空列→0");
 eq(KB.calcInsertIndex([100, 200, 300], 100), 1, "恰在中点上按严格小于→下一位");
+/* 可见索引→真实下标（筛选拖拽时插入线与落点一致） */
+var b6m = KB.defaultBoard();
+var mCol = b6m.columns[0].id;
+var mx = KB.addCard(b6m, mCol, { title: "X" });
+var my = KB.addCard(b6m, mCol, { title: "Y" });
+var mz = KB.addCard(b6m, mCol, { title: "Z" });
+/* 同列拖拽 Y：DOM 排除被拖卡片后可见 [X, Z] */
+eq(KB.mapDropIndex(b6m, my.id, mCol, [mx.id, mz.id], 0), 0, "同列：插入线在 X 前→真实下标 0");
+eq(KB.mapDropIndex(b6m, my.id, mCol, [mx.id, mz.id], 1), 1, "同列：插入线在 X 后 Z 前→真实下标 1");
+eq(KB.mapDropIndex(b6m, my.id, mCol, [mx.id, mz.id], 2), 2, "同列：插入线在 Z 后→真实下标 2");
+/* 跨列拖拽：目标列 A,B,C 全可见，被拖卡片 D 来自其它列 */
+var b6x = KB.defaultBoard();
+var xA = b6x.columns[0].id, xB = b6x.columns[1].id;
+var xa = KB.addCard(b6x, xB, { title: "A" });
+var xb = KB.addCard(b6x, xB, { title: "B" });
+var xc = KB.addCard(b6x, xB, { title: "C" });
+var xd = KB.addCard(b6x, xA, { title: "D" });
+eq(KB.mapDropIndex(b6x, xd.id, xB, [xa.id, xb.id, xc.id], 2), 2, "跨列：插入线在 B 后 C 前→真实下标 2");
+eq(KB.mapDropIndex(b6x, xd.id, xB, [xa.id, xb.id, xc.id], 3), 3, "跨列：插入线在 C 后→真实下标 3");
+eq(KB.mapDropIndex(b6x, xd.id, xB, [], 0), 0, "目标列全被过滤→插入顶部");
+eq(KB.mapDropIndex(b6x, xd.id, "no-such", [xa.id], 0), 0, "目标列不存在返回 0");
+/* 端到端：映射下标传给 moveCard，落点与插入线一致 */
+var b6e = KB.defaultBoard();
+var eCol = b6e.columns[0].id;
+var ex = KB.addCard(b6e, eCol, { title: "X" });
+var ey = KB.addCard(b6e, eCol, { title: "Y" });
+var ez = KB.addCard(b6e, eCol, { title: "Z" });
+var eat = KB.mapDropIndex(b6e, ey.id, eCol, [ex.id, ez.id], 1);
+KB.moveCard(b6e, ey.id, eCol, eat);
+deepEq(b6e.columns[0].cards.map(function (c) { return c.title; }), ["X", "Y", "Z"], "映射后移动落点与插入线一致");
 
 /* ---------- 4. 持久化与降级 ---------- */
 var s1 = memStore();
@@ -187,6 +243,23 @@ ok(!KB.isOverdue("2099-12-31"), "未来日期未过期");
 ok(!KB.isOverdue(""), "空日期不算过期");
 ok(!KB.isOverdue(null), "null 日期不算过期");
 eq(KB.todayStr(new Date(2026, 9, 24)), "2026-10-24", "todayStr 格式化");
+/* due 格式校验（yyyy-mm-dd）：非法格式拒绝/置空，不误判过期 */
+ok(KB.isValidCard({ id: "k1", title: "t", due: "2026-10-24" }), "合法 due 校验通过");
+ok(!KB.isValidCard({ id: "k1", title: "t", due: "明天" }), "中文 due 校验失败");
+ok(!KB.isValidCard({ id: "k1", title: "t", due: "2026-1-1" }), "非零填充 due 校验失败");
+ok(!KB.isOverdue("明天"), "非法格式 due 不算过期");
+ok(!KB.isOverdue("2026-13-99"), "月份非法 due 不算过期");
+var bdu = KB.defaultBoard();
+var ill = KB.addCard(bdu, bdu.columns[0].id, { title: "非法卡", due: "明天" });
+eq(ill.due, "", "新增卡片非法 due 置空");
+var upd2 = KB.addCard(bdu, bdu.columns[0].id, { title: "更新卡" });
+KB.updateCard(bdu, upd2.id, { due: "not-a-date" });
+eq(upd2.due, "", "更新卡片非法 due 置空");
+var impBad = KB.importJSON(JSON.stringify({ version: 1, columns: [{ id: "c1", title: "t", cards: [{ id: "k1", title: "x", due: "明天" }] }] }));
+ok(!impBad.ok && impBad.error === "invalid-structure", "含非法 due 的备份导入被拒绝");
+var bd4 = KB.defaultBoard();
+var impDone = KB.importJSON(KB.exportJSON(bd4));
+ok(impDone.ok && KB.findDoneColumn(impDone.board) !== null, "done 标记导出导入透传保留");
 
 /* ---------- 6. 筛选与搜索 ---------- */
 var b7 = KB.defaultBoard();
@@ -252,6 +325,14 @@ ok(TPL.indexOf("不会同步") >= 0, "模板明示不暗示同步");
 ok(SRC.indexOf("dragstart") >= 0 && SRC.indexOf("kb-insert-line") >= 0, "脚本实现拖拽＋插入线");
 ok(SRC.indexOf("kb-move-menu") >= 0, "脚本实现「移到某列」菜单");
 ok(SRC.indexOf("confirm(") >= 0, "脚本有二次确认");
+ok(SRC.indexOf("findDoneColumn") >= 0, "脚本实现 findDoneColumn");
+ok(SRC.indexOf("mapDropIndex") >= 0, "脚本实现可见索引→真实下标映射");
+ok(SRC.indexOf("if (!dst) { closeMoveMenu(); return; }") >= 0, "移到菜单确定处理有空值保护");
+ok(SRC.indexOf("data-vis-ids") >= 0, "拖拽记录可见卡片 id 供落点映射");
+ok(TPL.indexOf("清空已完成") >= 0, "模板按钮文案为「清空已完成」");
+ok(TPL.indexOf("清空<b>所有列</b>") < 0, "FAQ 不再写清空所有列");
+ok(TPL.indexOf("一键清空已完成") >= 0, "模板 SEO 描述为一键清空已完成");
+ok(TPL.indexOf(".kb-touch .kb-card") >= 0, "触屏 .kb-touch 有对应 CSS 规则");
 
 console.log("\n通过 " + pass + "，失败 " + fail + "，共 " + (pass + fail) + " 个断言");
 process.exit(fail ? 1 : 0);

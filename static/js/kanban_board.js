@@ -3,8 +3,9 @@
  * 浏览器端：window.KanbanBoard 全局 + DOM 装配（本文件末尾）。
  *
  * 设计说明（规格见 BACKLOG 2026-10-24 03:40 排期条目）：
- * - 数据模型：{version:1, columns:[{id,title,cards:[{id,title,description,priority,due,tags:[],createdAt}]}]}
+ * - 数据模型：{version:1, columns:[{id,title,done?,cards:[{id,title,description,priority,due,tags:[],createdAt}]}]}
  *   localStorage key = tw_kanban_board_v1，版本化；损坏降级重建。
+ *   默认「已完成」列带 done:true 标记（重命名/调序不影响），「一键清空已完成」只清该列。
  * - 列：默认 待办/进行中/已完成；重命名＋增删（上限 8 列），左右箭头调序。
  * - 卡片：标题（必填）＋描述＋优先级（高/中/低三色）＋截止日期（过期标红）＋标签。
  * - 拖拽：桌面端 HTML5 DnD 跨列移动＋列内指定位置插入（插入线指示）；
@@ -50,10 +51,13 @@ function todayStr(now) {
     return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + "-" + (day.length < 2 ? "0" + day : day);
 }
 
-/* 截止日期是否过期：due 为空不算过期 */
+/* 截止日期是否过期：空或非法格式不算过期 */
+var DUE_RE = /^\d{4}-\d{2}-\d{2}$/;
 function isOverdue(due, now) {
     if (!isNonEmptyString(due)) return false;
-    return due < todayStr(now);
+    var t = due.trim();
+    if (!DUE_RE.test(t)) return false;
+    return t < todayStr(now);
 }
 
 /* 标签输入 → 去重数组 */
@@ -76,12 +80,13 @@ function makeColumn(title) {
 
 function makeCard(fields) {
     fields = fields || {};
+    var d = isNonEmptyString(fields.due) ? fields.due.trim() : "";
     return {
         id: uid("card"),
         title: String(fields.title || "").trim(),
         description: String(fields.description || ""),
         priority: PRIORITIES.indexOf(fields.priority) >= 0 ? fields.priority : "medium",
-        due: isNonEmptyString(fields.due) ? fields.due.trim() : "",
+        due: (d === "" || DUE_RE.test(d)) ? d : "",
         tags: parseTags(fields.tags),
         createdAt: new Date().toISOString()
     };
@@ -93,7 +98,7 @@ function defaultBoard() {
         columns: [
             { id: uid("col"), title: "待办", cards: [] },
             { id: uid("col"), title: "进行中", cards: [] },
-            { id: uid("col"), title: "已完成", cards: [] }
+            { id: uid("col"), title: "已完成", done: true, cards: [] }
         ]
     };
 }
@@ -102,6 +107,7 @@ function isValidCard(c) {
     if (!c || typeof c !== "object") return false;
     if (!isNonEmptyString(c.id) || !isNonEmptyString(c.title)) return false;
     if (c.priority && PRIORITIES.indexOf(c.priority) < 0) return false;
+    if (c.due && !DUE_RE.test(c.due)) return false;
     if (c.tags && !Array.isArray(c.tags)) return false;
     return true;
 }
@@ -171,6 +177,19 @@ function saveBoard(store, board) {
 }
 
 /* ================= 4. 列操作 ================= */
+
+/* 找到「已完成」列：优先 done:true 标记（重命名/调序不影响）；
+ * 无标记时退化按标题「已完成」匹配；都没有返回 null。 */
+function findDoneColumn(board) {
+    var i;
+    for (i = 0; i < board.columns.length; i++) {
+        if (board.columns[i].done === true) return { column: board.columns[i], index: i };
+    }
+    for (i = 0; i < board.columns.length; i++) {
+        if (board.columns[i].title === "已完成") return { column: board.columns[i], index: i };
+    }
+    return null;
+}
 
 function findColumn(board, colId) {
     for (var i = 0; i < board.columns.length; i++) {
@@ -258,7 +277,8 @@ function updateCard(board, cardId, fields) {
         f.card.priority = fields.priority;
     }
     if (fields.due !== undefined) {
-        f.card.due = isNonEmptyString(fields.due) ? fields.due.trim() : "";
+        var dd = isNonEmptyString(fields.due) ? fields.due.trim() : "";
+        f.card.due = (dd === "" || DUE_RE.test(dd)) ? dd : "";
     }
     if (fields.tags !== undefined) f.card.tags = parseTags(fields.tags);
     return true;
@@ -295,6 +315,31 @@ function calcInsertIndex(midpoints, y) {
         if (y < midpoints[i]) return i;
     }
     return midpoints.length;
+}
+
+/* 可见索引 → 真实下标：筛选时 DOM 只渲染可见卡片，dragover 按可见卡片算出的
+ * visIdx 相对完整数组会错位。本函数把「排除被拖卡片的可见卡片 id 列表
+ * （DOM 顺序）＋相对插入位置」映射回 moveCard 可用的真实下标：
+ * 插入点在 visibleIds[visIdx] 之前（或 visIdx 越界时插到最后一张可见卡之后）。 */
+function mapDropIndex(board, cardId, targetColId, visibleIds, visIdx) {
+    var f = findColumn(board, targetColId);
+    if (!f) return 0;
+    var remaining = [];
+    f.column.cards.forEach(function (c) { if (c.id !== cardId) remaining.push(c); });
+    function realOf(id) {
+        for (var i = 0; i < remaining.length; i++) {
+            if (remaining[i].id === id) return i;
+        }
+        return -1;
+    }
+    visibleIds = visibleIds || [];
+    if (visIdx >= visibleIds.length) {
+        if (visibleIds.length === 0) return 0;
+        var last = realOf(visibleIds[visibleIds.length - 1]);
+        return last < 0 ? remaining.length : last + 1;
+    }
+    var at = realOf(visibleIds[visIdx]);
+    return at < 0 ? remaining.length : at;
 }
 
 /* ================= 7. 筛选与搜索 ================= */
@@ -371,11 +416,11 @@ var api = {
     makeColumn: makeColumn, makeCard: makeCard, defaultBoard: defaultBoard,
     isValidCard: isValidCard, isValidColumn: isValidColumn, validateBoard: validateBoard,
     loadBoard: loadBoard, saveBoard: saveBoard,
-    findColumn: findColumn, findCard: findCard,
+    findColumn: findColumn, findCard: findCard, findDoneColumn: findDoneColumn,
     addColumn: addColumn, renameColumn: renameColumn, removeColumn: removeColumn,
     moveColumn: moveColumn, clearColumn: clearColumn,
     addCard: addCard, updateCard: updateCard, deleteCard: deleteCard, moveCard: moveCard,
-    calcInsertIndex: calcInsertIndex,
+    calcInsertIndex: calcInsertIndex, mapDropIndex: mapDropIndex,
     allTags: allTags, visibleCards: visibleCards, countVisible: countVisible,
     exportJSON: exportJSON, importJSON: importJSON
 };
@@ -594,6 +639,7 @@ function openMoveMenu(cardId, anchorBtn) {
         var targetCol = $("kb-move-col").value;
         var pos = $("kb-move-pos").value;
         var dst = KB.findColumn(board, targetCol);
+        if (!dst) { closeMoveMenu(); return; }
         var idx = pos === "top" ? 0 : dst.column.cards.length;
         KB.moveCard(board, cardId, targetCol, idx);
         persist();
@@ -753,23 +799,24 @@ function wireDnD() {
             list.classList.add("kb-drop-target");
 
             var mids = [];
+            var others = [];
             list.querySelectorAll(".kb-card").forEach(function (c) {
                 if (c.getAttribute("data-card-id") === dragCardId) return;
                 var r = c.getBoundingClientRect();
                 mids.push(r.top + r.height / 2);
+                others.push(c);
             });
             var idx = KB.calcInsertIndex(mids, e.clientY);
             var line = ensureInsertLine();
-            var others = [];
-            list.querySelectorAll(".kb-card").forEach(function (c) {
-                if (c.getAttribute("data-card-id") !== dragCardId) others.push(c);
-            });
             if (idx >= others.length) {
                 list.appendChild(line);
             } else {
                 list.insertBefore(line, others[idx]);
             }
             list.setAttribute("data-insert-idx", String(idx));
+            list.setAttribute("data-vis-ids", JSON.stringify(others.map(function (c) {
+                return c.getAttribute("data-card-id");
+            })));
         });
 
         list.addEventListener("dragleave", function (e) {
@@ -783,10 +830,14 @@ function wireDnD() {
             e.preventDefault();
             var cardId = dragCardId;
             var idx = parseInt(list.getAttribute("data-insert-idx") || "-1", 10);
+            var visIds = [];
+            try { visIds = JSON.parse(list.getAttribute("data-vis-ids") || "[]"); } catch (err) {}
             clearInsertLine();
             if (!cardId) return;
             var dst = KB.findColumn(board, colId);
-            var at = idx < 0 ? dst.column.cards.length : idx;
+            if (!dst) { dragCardId = null; return; }
+            /* 筛选时可见索引需映射回真实下标（否则插入线与落点错位） */
+            var at = idx < 0 ? dst.column.cards.length : KB.mapDropIndex(board, cardId, colId, visIds, idx);
             if (KB.moveCard(board, cardId, colId, at)) {
                 persist();
                 render();
@@ -849,14 +900,15 @@ function wireToolbar() {
     var clearDone = $("kb-clear-done");
     if (clearDone) {
         clearDone.addEventListener("click", function () {
-            var doneCols = board.columns.filter(function (c) { return c.cards.length > 0; });
-            if (doneCols.length === 0) { toast("没有可清空的卡片"); return; }
-            var total = doneCols.reduce(function (n, c) { return n + c.cards.length; }, 0);
-            if (confirm("确定清空所有列的 " + total + " 张卡片吗？此操作不可撤销。")) {
-                board.columns.forEach(function (c) { c.cards = []; });
+            var dc = KB.findDoneColumn(board);
+            if (!dc) { toast("未找到「已完成」列"); return; }
+            var n = dc.column.cards.length;
+            if (n === 0) { toast("「已完成」列已经是空的"); return; }
+            if (confirm("确定清空「已完成」列的 " + n + " 张卡片吗？此操作不可撤销。")) {
+                dc.column.cards = [];
                 persist();
                 render();
-                toast("已清空全部卡片");
+                toast("已清空「已完成」列");
             }
         });
     }

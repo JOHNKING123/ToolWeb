@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>本地看板任务管理 - 免注册拖拽看板（浏览器本地保存） | 程序员工具箱</title>
-<meta name="description" content="免费在线本地看板任务管理：默认待办/进行中/已完成三列，列可重命名增删（上限8列），卡片支持标题/描述/高-中-低三色优先级/截止日期（过期标红）/多标签；桌面端 HTML5 拖拽跨列移动＋列内指定位置插入，移动端「移到某列」菜单降级；优先级/标签筛选＋全文搜索，一键清空、JSON 导出导入备份。数据只保存在本浏览器 localStorage，免注册、零上传。Free local kanban board: drag & drop columns and cards, priorities, due dates, tags, filters, JSON backup, 100% client-side.">
+<meta name="description" content="免费在线本地看板任务管理：默认待办/进行中/已完成三列，列可重命名增删（上限8列），卡片支持标题/描述/高-中-低三色优先级/截止日期（过期标红）/多标签；桌面端 HTML5 拖拽跨列移动＋列内指定位置插入，移动端「移到某列」菜单降级；优先级/标签筛选＋全文搜索，一键清空已完成、JSON 导出导入备份。数据只保存在本浏览器 localStorage，免注册、零上传。Free local kanban board: drag & drop columns and cards, priorities, due dates, tags, filters, JSON backup, 100% client-side.">
 <meta name="keywords" content="看板,任务看板,kanban,任务管理,待办事项,todolist,本地看板,免注册看板,拖拽看板,任务清单,本地任务管理,kanban board">
 <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/kanban-board">
 <meta property="og:title" content="本地看板任务管理 - 免注册拖拽看板，数据只保存在本浏览器">
@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="/tools/static/css/tools.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"本地看板任务管理","alternateName":"kanban_board","description":"免费在线本地看板任务管理：默认待办/进行中/已完成三列，列可重命名增删（上限8列），卡片含标题/描述/高-中-低三色优先级/截止日期（过期标红）/多标签；桌面端 HTML5 拖拽跨列移动＋列内指定位置插入，移动端「移到某列」菜单降级；优先级/标签筛选＋全文搜索，一键清空、JSON 导出导入备份；数据只保存在本浏览器 localStorage，免注册、脚本零 fetch/XHR、零上传。","url":"https://www.johnkingzcq123.xyz/tools/kanban-board","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"本地看板任务管理","alternateName":"kanban_board","description":"免费在线本地看板任务管理：默认待办/进行中/已完成三列，列可重命名增删（上限8列），卡片含标题/描述/高-中-低三色优先级/截止日期（过期标红）/多标签；桌面端 HTML5 拖拽跨列移动＋列内指定位置插入，移动端「移到某列」菜单降级；优先级/标签筛选＋全文搜索，一键清空已完成、JSON 导出导入备份；数据只保存在本浏览器 localStorage，免注册、脚本零 fetch/XHR、零上传。","url":"https://www.johnkingzcq123.xyz/tools/kanban-board","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
 </script>
 <style>
 .kb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
@@ -52,6 +52,7 @@
 .kb-card{background:#fff;border:1px solid #e5e7eb;border-radius:.55rem;padding:.65rem .75rem;cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .kb-card:hover{border-color:#93c5fd}
 .kb-card.kb-dragging{opacity:.4;cursor:grabbing}
+.kb-touch .kb-card{cursor:default}
 .kb-card:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
 .kb-card-top{display:flex;align-items:flex-start;gap:.5rem}
 .kb-card-title{flex:1;margin:0;font-size:.9rem;font-weight:600;color:#111827;line-height:1.5;word-break:break-word}
@@ -111,7 +112,7 @@
 <div class="container">
 <div class="tool-header">
 <h1><i class="material-icons">dashboard</i> 本地看板任务管理</h1>
-<p>免注册的<b>本地拖拽看板</b>：默认<b>待办 / 进行中 / 已完成</b>三列，列可<b>重命名、增删（上限 8 列）</b>、左右调序；卡片有<b>标题</b>（必填）＋<b>描述</b>＋<b>高 / 中 / 低三色优先级</b>＋<b>截止日期</b>（过期标红）＋<b>多标签</b>。桌面端<b>拖拽跨列移动、列内插入指定位置</b>（插入线指示）；手机/平板用卡片「<b>移到某列</b>」菜单降级操作。<b>优先级 / 标签筛选＋全文搜索</b>、一键清空、<b>JSON 导出 / 导入备份</b>一应俱全。</p>
+<p>免注册的<b>本地拖拽看板</b>：默认<b>待办 / 进行中 / 已完成</b>三列，列可<b>重命名、增删（上限 8 列）</b>、左右调序；卡片有<b>标题</b>（必填）＋<b>描述</b>＋<b>高 / 中 / 低三色优先级</b>＋<b>截止日期</b>（过期标红）＋<b>多标签</b>。桌面端<b>拖拽跨列移动、列内插入指定位置</b>（插入线指示）；手机/平板用卡片「<b>移到某列</b>」菜单降级操作。<b>优先级 / 标签筛选＋全文搜索</b>、一键清空已完成、<b>JSON 导出 / 导入备份</b>一应俱全。</p>
 </div>
 <div class="tool-content" style="max-width:1280px;margin:auto;">
 
@@ -135,7 +136,7 @@
 <button type="button" class="kb-btn" id="kb-export"><i class="material-icons">download</i>导出</button>
 <button type="button" class="kb-btn" id="kb-import"><i class="material-icons">upload</i>导入</button>
 <input type="file" id="kb-import-file" accept="application/json,.json" style="display:none">
-<button type="button" class="kb-btn kb-btn-danger" id="kb-clear-done"><i class="material-icons">delete_sweep</i>清空卡片</button>
+<button type="button" class="kb-btn kb-btn-danger" id="kb-clear-done"><i class="material-icons">delete_sweep</i>清空已完成</button>
 <span class="kb-stat" id="kb-stat"></span>
 </div>
 
@@ -156,8 +157,8 @@
 <dd>如果本地数据损坏（如被其它程序改写），页面不会白屏，会<b>自动重建空白看板并弹出提示</b>。坏数据无法挽回，所以建议定期导出备份。</dd>
 <dt>标签怎么写？</dt>
 <dd>新建/编辑卡片时在「标签」栏用<b>中文逗号或英文逗号</b>分隔多个标签，如 <code>工作，紧急</code>。标签会出现在顶部筛选下拉框里，可按标签过滤。</dd>
-<dt>「清空卡片」会删掉什么？</dt>
-<dd>清空<b>所有列</b>的全部卡片（列本身保留），执行前会<b>二次确认</b>，且不可撤销。如只想清空某一列，可删除该列或逐张删除卡片。清空前建议先导出备份。</dd>
+<dt>「清空已完成」会删掉什么？</dt>
+<dd>只清空<b>「已完成」列</b>的全部卡片（列本身保留，<b>其它列不受影响</b>），执行前会<b>二次确认</b>，且不可撤销。如想清空其它列，可删除该列或逐张删除卡片。清空前建议先导出备份。</dd>
 <dt>脚本会联网吗？</dt>
 <dd>不会。页面脚本不发起任何 <code>fetch</code> / <code>XMLHttpRequest</code> 请求，导入导出都是本地文件读写，你可以断网后验证。</dd>
 </dl>
