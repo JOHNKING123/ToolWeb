@@ -983,6 +983,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "annual_lottery",
+					Name:        "年会大屏抽奖",
+					Description: "免费在线年会抽奖大屏：名单粘贴导入（每行一人，支持姓名-工号，自动去重计数）、奖项配置（一/二/三等奖＋自定义奖项，奖项名＋名额）、crypto.getRandomValues 安全随机均匀抽取、姓名跑马灯滚动＋easeOutQuart 缓动减速定格、中奖公示一键复制/下载 txt、全屏大屏模式（深色高对比超大字体，Esc 退出）；已中奖者自动移出候选池（防重复默认开），localStorage 持久化名单/奖项/中奖记录/开关，刷新不丢，纯前端零上传 · Annual party lottery draw: name import with dedup, prize config, secure random draw, marquee settle animation, fullscreen big-screen mode, 100% client-side",
+					Path:        "/tools/annual-lottery",
+					Icon:        "celebration",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{

@@ -1,0 +1,265 @@
+{{define "annual_lottery"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>年会大屏抽奖 - 免费在线年会抽奖软件，大屏滚动抽奖 | 程序员工具箱</title>
+<meta name="description" content="免费在线年会大屏抽奖：名单粘贴导入（自动去重）、奖项配置（一/二/三等奖＋自定义）、crypto 安全随机抽取、姓名跑马灯滚动＋缓动减速定格、中奖公示一键复制/下载、全屏大屏模式（深色高对比超大字体）；已中奖自动移出候选池防重复，localStorage 持久化刷新不丢，纯前端零上传。Free annual party lottery draw, 100% client-side.">
+<meta name="keywords" content="年会抽奖,大屏抽奖,抽奖软件,年会摇奖,年会活动工具,抽奖大屏,晚会抽奖,lottery draw,annual party lottery,年会抽奖程序">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/annual-lottery">
+<meta property="og:title" content="年会大屏抽奖 - 免费在线抽奖大屏，零上传">
+<meta property="og:description" content="年会/晚会抽奖大屏：名单导入、奖项配置、安全随机抽取、滚动定格动画、中奖公示、全屏大屏模式。数据只在本地，不上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/annual-lottery">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"年会大屏抽奖","alternateName":"annual_lottery","description":"免费在线年会大屏抽奖：名单导入自动去重、奖项配置、crypto 安全随机抽取、跑马灯滚动缓动定格、中奖公示复制下载、全屏大屏模式，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/annual-lottery","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.al-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.al-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.al-panel h3 .material-icons{font-size:1.15rem;color:#b45309}
+.al-panel h3 .al-step{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;
+border-radius:50%;background:#fef3c7;color:#b45309;font-size:.8rem;font-weight:800}
+.al-privacy{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdf4;border:1px solid #bbf7d0;
+border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#166534;line-height:1.7}
+.al-privacy .material-icons{color:#16a34a;font-size:1.3rem;flex:none;margin-top:.1rem}
+.al-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;border:1px solid #fcd34d;background:#fffbeb;color:#92400e;transition:all .15s}
+.al-btn:hover{background:#fef3c7}
+.al-btn:disabled{opacity:.45;cursor:not-allowed}
+.al-btn .material-icons{font-size:1.05rem}
+.al-btn-sm{padding:.3rem .7rem;font-size:.8rem}
+.al-btn-primary{background:#b45309;border-color:#b45309;color:#fff}
+.al-btn-primary:hover{background:#92400e}
+.al-btn-danger{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.al-btn-danger:hover{background:#fee2e2}
+.al-btn-blue{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+.al-btn-blue:hover{background:#dbeafe}
+.al-textarea{width:100%;min-height:150px;padding:.7rem .9rem;border:1px solid #d1d5db;border-radius:.5rem;
+font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box;font-family:inherit}
+.al-textarea:focus{outline:none;border-color:#f59e0b;box-shadow:0 0 0 3px #fef3c7}
+.al-toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:.8rem 0}
+.al-status{font-size:.85rem;color:#6b7280;min-height:1.4em}
+.al-stat{font-size:.88rem;color:#374151;background:#fffbeb;border:1px solid #fde68a;border-radius:.5rem;
+padding:.55rem .9rem;margin-bottom:.8rem}
+.al-pool-list{display:flex;flex-wrap:wrap;gap:.4rem;max-height:150px;overflow-y:auto;
+background:#f8fafc;border:1px solid #eef2f7;border-radius:.5rem;padding:.6rem}
+.al-chip{display:inline-flex;align-items:center;gap:.25rem;background:#fff;border:1px solid #e5e7eb;
+border-radius:2rem;padding:.2rem .7rem;font-size:.82rem;color:#374151}
+.al-chip small{color:#9ca3af;font-size:.72rem}
+.al-chip.al-more{border-style:dashed;color:#9ca3af}
+.al-empty{padding:1.6rem 1rem;text-align:center;color:#9ca3af;font-size:.9rem;line-height:1.8}
+.al-awardrow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.5rem .6rem;
+border:1px solid #f1f5f9;border-radius:.5rem;margin-bottom:.5rem;background:#fcfcfc}
+.al-awardrow.al-cur{border-color:#f59e0b;background:#fffbeb}
+.al-awardname{flex:1;min-width:120px;padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.9rem}
+.al-awardcount{width:80px;padding:.45rem .5rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.9rem}
+.al-awardunit{font-size:.85rem;color:#6b7280}
+.al-done{display:inline-block;background:#dcfce7;color:#166534;border-radius:.4rem;font-size:.72rem;
+padding:.1rem .5rem;font-weight:700}
+/* 抽奖舞台 */
+.al-stage{background:radial-gradient(ellipse at center,#16213e 0%,#0b1020 70%);border-radius:.8rem;
+padding:2.2rem 1rem;text-align:center;position:relative;overflow:hidden;margin-bottom:.9rem}
+.al-stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(245,158,11,.05) 46px 48px)}
+.al-round-title{color:#fcd34d;font-size:1.05rem;font-weight:800;letter-spacing:.15em;margin-bottom:.6rem}
+.al-stage-name{color:#fff;font-weight:900;font-size:clamp(2.6rem,9vw,6rem);line-height:1.25;
+min-height:1.6em;letter-spacing:.06em;text-shadow:0 0 32px rgba(245,158,11,.45);word-break:break-all}
+.al-stage-sub{color:#fcd34d;font-size:1rem;min-height:1.5em;margin-top:.2rem}
+.al-stage-sub{color:#fcd34d;font-size:1rem;min-height:1.5em;margin-top:.3rem}
+.al-flash{animation:alflash .5s ease}
+@keyframes alflash{0%{box-shadow:inset 0 0 0 4px #f59e0b}100%{box-shadow:inset 0 0 0 0 transparent}}
+.al-round-status{color:#cbd5e1;font-size:.88rem;min-height:1.5em;margin:.6rem 0}
+.al-round-winners{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-top:.6rem;min-height:1em}
+.al-hit{display:inline-flex;align-items:center;gap:.45rem;background:linear-gradient(180deg,#fbbf24,#f59e0b);
+color:#451a03;font-weight:800;font-size:1.25rem;border-radius:.6rem;padding:.5rem 1.1rem;
+box-shadow:0 4px 18px rgba(245,158,11,.5);animation:alpop .45s cubic-bezier(.2,1.6,.4,1)}
+.al-hit b{display:inline-flex;align-items:center;justify-content:center;width:1.6rem;height:1.6rem;
+border-radius:50%;background:#451a03;color:#fcd34d;font-size:.85rem}
+.al-hit small{font-size:.8rem;font-weight:600;opacity:.75}
+@keyframes alpop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+/* 中奖公示 */
+.al-wgroup{border:1px solid #fde68a;background:#fffdf5;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:.8rem}
+.al-whead{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem;flex-wrap:wrap}
+.al-whead b{color:#92400e;font-size:1rem}
+.al-wcount{background:#b45309;color:#fff;border-radius:2rem;font-size:.75rem;padding:.1rem .6rem;font-weight:700}
+.al-wlist{display:flex;flex-wrap:wrap;gap:.45rem}
+.al-wchip{display:inline-flex;align-items:center;gap:.3rem;background:#fff;border:1.5px solid #f59e0b;
+border-radius:.5rem;padding:.4rem .9rem;font-size:1rem;font-weight:700;color:#451a03}
+.al-wchip small{color:#b45309;font-size:.75rem;font-weight:600}
+.al-setting{display:flex;align-items:center;gap:.6rem;padding:.55rem 0;font-size:.92rem;color:#374151;flex-wrap:wrap}
+.al-setting input[type=checkbox]{width:1.05rem;height:1.05rem;accent-color:#b45309}
+.al-setting .al-desc{font-size:.8rem;color:#9ca3af}
+.al-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.al-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.al-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem;
+font-family:"SF Mono","Cascadia Code",Consolas,monospace;color:#b45309}
+.al-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.al-quick{border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:2rem;padding:.35rem .95rem;
+font-size:.85rem;font-weight:600}
+a.al-quick{text-decoration:none}
+a.al-quick:hover{background:#fef3c7}
+.al-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);background:#111827;color:#fff;
+padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;z-index:10001;display:none;
+box-shadow:0 8px 30px rgba(0,0,0,.35);max-width:90vw}
+/* 全屏大屏模式 */
+.al-fs{position:fixed;inset:0;z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;
+background:radial-gradient(ellipse at center,#141d33 0%,#05070f 75%);padding:2rem;text-align:center}
+.al-fs::before{content:"";position:absolute;inset:0;pointer-events:none;
+background:repeating-linear-gradient(115deg,transparent 0 90px,rgba(245,158,11,.06) 90px 93px)}
+.al-fs-award{color:#fcd34d;font-weight:800;letter-spacing:.2em;font-size:clamp(1.4rem,4vw,3rem);margin-bottom:1rem}
+.al-fs-name{color:#fff;font-weight:900;font-size:clamp(4rem,17vw,15rem);line-height:1.2;letter-spacing:.05em;
+text-shadow:0 0 60px rgba(245,158,11,.5);word-break:break-all;max-width:95vw}
+.al-fs-sub{color:#fcd34d;font-size:clamp(1rem,3vw,2rem);min-height:1.6em;margin-top:.6rem}
+.al-fs-hint{color:#94a3b8;font-size:clamp(.85rem,2vw,1.2rem);margin:1rem 0;min-height:1.6em}
+.al-fs-winners{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin:.8rem 0;max-width:95vw}
+.al-fs-winners .al-hit{font-size:clamp(1.4rem,4vw,2.6rem);padding:.7rem 1.6rem}
+.al-fs-btns{display:flex;gap:1rem;margin-top:1.2rem;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.al-fs-btns .al-btn{font-size:1.05rem;padding:.8rem 2rem}
+.al-fs-exitnote{color:#64748b;font-size:.85rem;margin-top:1.4rem}
+@media (max-width:640px){.al-awardrow{gap:.4rem}.al-awardname{min-width:100px}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">celebration</i> 年会大屏抽奖</h1>
+<p>年会 / 晚会 / 团建抽奖大屏：<b>名单粘贴导入</b>（每行一人，自动去重）→ <b>奖项配置</b>（一 / 二 / 三等奖＋自定义）→ <b>滚动抽奖</b>（姓名跑马灯高速滚动，点击停止后缓动减速定格）→ <b>中奖公示</b>（一键复制 / 下载 txt）→ <b>全屏大屏模式</b>（深色高对比超大字，Esc 退出）。抽奖用 <code>crypto.getRandomValues</code> 安全随机，开始瞬间即确定结果；已中奖者自动移出候选池（防重复默认开）；名单 / 奖项 / 中奖记录 / 开关全部 <b>localStorage 持久化</b>，刷新不丢。零广告、零水印、零登录，纯前端零上传，断网也能用。</p>
+</div>
+<div class="tool-content" style="max-width:1100px;margin:auto;">
+
+<div class="al-privacy">
+<i class="material-icons">lock</i>
+<div><b>名单只在本地处理，不上传到任何服务器。</b>脚本内无 <code>fetch</code> / <code>XMLHttpRequest</code>，可在开发者工具 Network 面板验证；抽奖随机数来自浏览器 <code>crypto.getRandomValues</code>，公平不可预测。</div>
+</div>
+
+<div class="al-panel">
+<h3><span class="al-step">1</span> <i class="material-icons">group_add</i> 名单导入</h3>
+<textarea class="al-textarea" id="al-input" placeholder="每行一人，粘贴名单，例如：&#10;张三&#10;李四-001&#10;王五-A102&#10;&#10;支持「姓名-工号」格式（- / ：/ | 分隔），导入时自动去重"></textarea>
+<div class="al-toolbar">
+<button class="al-btn al-btn-primary" id="al-import"><i class="material-icons">file_upload</i> 导入名单（替换）</button>
+<button class="al-btn" id="al-append"><i class="material-icons">add</i> 追加导入</button>
+<button class="al-btn al-btn-blue" id="al-sample"><i class="material-icons">science</i> 载入示例名单（50 人）</button>
+</div>
+<div class="al-status" id="al-import-stat"></div>
+<div class="al-stat" id="al-pool-stat">候选池 0 人</div>
+<div class="al-pool-list" id="al-pool-list"><div class="al-empty">候选池为空，请先导入名单</div></div>
+</div>
+
+<div class="al-panel">
+<h3><span class="al-step">2</span> <i class="material-icons">emoji_events</i> 奖项配置</h3>
+<div id="al-awards"></div>
+<div class="al-toolbar">
+<button class="al-btn" id="al-add-award"><i class="material-icons">add_circle</i> 添加自定义奖项</button>
+</div>
+<div class="al-status">点击「设为当前」选择本轮要抽的奖项；奖项名与名额可直接修改，自动保存。</div>
+</div>
+
+<div class="al-panel">
+<h3><span class="al-step">3</span> <i class="material-icons">casino</i> 抽奖</h3>
+<div class="al-stage" id="al-stage">
+<div class="al-round-title" id="al-round-title">未选择奖项</div>
+<div class="al-stage-name" id="al-stage-name">待抽奖</div>
+<div class="al-stage-sub" id="al-stage-sub"></div>
+<div class="al-round-status" id="al-round-status"></div>
+<div class="al-round-winners" id="al-round-winners"></div>
+</div>
+<div class="al-toolbar" style="justify-content:center">
+<button class="al-btn al-btn-primary" id="al-start" style="font-size:1.05rem;padding:.7rem 2.2rem"><i class="material-icons">play_arrow</i> 开始抽奖</button>
+<button class="al-btn" id="al-stop" style="font-size:1.05rem;padding:.7rem 2.2rem" disabled><i class="material-icons">stop</i> 停止</button>
+<button class="al-btn al-btn-danger" id="al-cancel" style="display:none"><i class="material-icons">close</i> 取消本轮</button>
+<button class="al-btn al-btn-blue" id="al-fullscreen"><i class="material-icons">fullscreen</i> 全屏大屏模式</button>
+</div>
+<div class="al-status" style="text-align:center">大屏模式下可按空格键开始 / 停止，Esc 退出全屏</div>
+</div>
+
+<div class="al-panel">
+<h3><span class="al-step">4</span> <i class="material-icons">campaign</i> 中奖公示</h3>
+<div id="al-winners"><div class="al-empty">暂无中奖记录，抽奖后将在此公示</div></div>
+<div class="al-toolbar">
+<button class="al-btn" id="al-copy"><i class="material-icons">content_copy</i> 复制中奖名单</button>
+<button class="al-btn" id="al-download"><i class="material-icons">download</i> 下载 txt</button>
+</div>
+</div>
+
+<div class="al-panel">
+<h3><i class="material-icons">settings</i> 设置与数据</h3>
+<label class="al-setting">
+<input type="checkbox" id="al-norepeat" checked>
+<b>防重复抽奖（默认开启）</b>
+<span class="al-desc">已中奖者自动移出候选池，下一轮抽不到；关闭后允许重复中奖</span>
+</label>
+<div class="al-toolbar">
+<button class="al-btn al-btn-blue" id="al-reset-round"><i class="material-icons">restart_alt</i> 重置本轮</button>
+<button class="al-btn al-btn-danger" id="al-clear-all"><i class="material-icons">delete_forever</i> 全部清空</button>
+</div>
+<div class="al-status">「重置本轮」清空全部中奖记录，中奖者放回候选池；「全部清空」恢复空白初始状态（含默认奖项）。所有数据保存在本机浏览器 localStorage。</div>
+</div>
+
+<div class="al-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="al-faq">
+<dt>名单格式怎么写？</dt>
+<dd>大文本框里每行一个人，直接粘贴即可，空行自动跳过。支持「姓名-工号」格式（如 <code>张三-001</code>，也可用 <code>：</code> / <code>|</code> 分隔），公示与导出会带上工号。导入时按整行去重并报告「输入 X 行 · 去重 Y 人 · 实得 Z 人」。</dd>
+<dt>抽奖公平吗？能作弊吗？</dt>
+<dd>点击「开始抽奖」的瞬间，即用浏览器 <code>crypto.getRandomValues</code> 从候选池中<b>不放回均匀抽取</b>全部中奖名额；之后的滚动与减速动画只是展示，「停止」按得早晚不影响结果，主持人无法操控。</dd>
+<dt>滚动动画是怎么定格的？</dt>
+<dd>开始后姓名以约 80ms 间隔高速跑马灯滚动；点击「停止」进入减速阶段，用 <code>easeOutQuart</code> 缓动把换名间隔从 70ms 拉长到 900ms，约 3.2 秒后定格。多名额奖项逐位揭晓，每定格一位可再点「停止」揭晓下一位。</dd>
+<dt>防重复是什么意思？</dt>
+<dd>默认开启：已中奖者自动移出候选池，下一轮不会再被抽中。如需「人人可重复中奖」（如阳光普照奖），关闭开关即可。</dd>
+<dt>刷新页面数据会丢吗？</dt>
+<dd>不会。名单、奖项配置、中奖记录、防重复开关、当前奖项全部保存在本机 <code>localStorage</code>，刷新自动恢复。「重置本轮」只清空中奖记录（人回候选池），「全部清空」恢复初始状态。</dd>
+<dt>大屏模式怎么用？</dt>
+<dd>点「全屏大屏模式」进入深色高对比大字界面（尽量接大屏/投影仪），里面可直接开始 / 停止抽奖；按 <code>Esc</code> 或点「退出大屏」返回，大屏下按空格键也可开始 / 停止。</dd>
+<dt>中奖名单怎么导出？</dt>
+<dd>公示区点「复制中奖名单」粘贴到微信/文档，或「下载 txt」（UTF-8，含 BOM，记事本打开中文不乱码），内容按奖项分组：奖项名（人数）＋ 序号. 姓名（工号）。</dd>
+<dt>候选人不够抽怎么办？</dt>
+<dd>开始抽奖时若候选池人数少于本奖项名额，会提示并拒绝开始；可补充导入名单、调小名额，或关闭防重复开关。</dd>
+<dt>隐私与网络</dt>
+<dd>纯前端、零后端、零上传：脚本内无 <code>fetch</code> / <code>XMLHttpRequest</code>，可在 Network 面板验证；现场网络不稳定甚至断网都不影响使用（页面打开后即可）。</dd>
+<dt>已知限制</dt>
+<dd>数据只存在当前浏览器（换浏览器/清缓存会丢，建议抽奖前先下载 txt 备份）；「姓名-工号」按第一个分隔符切分，姓名本身含 <code>-</code> 的请改用无分隔写法。</dd>
+</dl>
+</div>
+
+<div class="al-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="al-related">
+<span class="al-quick" style="cursor:default">实用工具：</span>
+<a class="al-quick" href="/tools/random-decision">随机决策器</a>
+<a class="al-quick" href="/tools/wedding-seating-chart">婚宴座位表生成器</a>
+<a class="al-quick" href="/tools/countdown-timer">在线倒计时</a>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- 全屏大屏模式 -->
+<div class="al-fs" id="al-fs" role="dialog" aria-label="大屏抽奖模式">
+<div class="al-fs-award" id="al-fs-award">未选择奖项</div>
+<div class="al-fs-name" id="al-fs-name">待抽奖</div>
+<div class="al-fs-sub" id="al-fs-sub"></div>
+<div class="al-fs-hint" id="al-fs-hint"></div>
+<div class="al-fs-winners" id="al-fs-winners"></div>
+<div class="al-fs-btns">
+<button class="al-btn al-btn-primary" id="al-fs-start"><i class="material-icons">play_arrow</i> 开始抽奖</button>
+<button class="al-btn" id="al-fs-stop" disabled><i class="material-icons">stop</i> 停止</button>
+<button class="al-btn al-btn-blue" id="al-fs-exit"><i class="material-icons">fullscreen_exit</i> 退出大屏</button>
+</div>
+<div class="al-fs-exitnote">按 Esc 或点击「退出大屏」返回 · 空格键 开始/停止</div>
+</div>
+
+<div class="al-toast" id="al-toast"></div>
+
+<script src="/tools/static/js/annual_lottery.js?v=1"></script>
+</body>
+</html>
+{{end}}

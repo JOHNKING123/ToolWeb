@@ -1,3 +1,82 @@
+## 今日任务（2026-10-23 11:41 · 产品经理排期轮）
+
+**选定：年会大屏抽奖（annual_lottery）** — 本轮唯一任务（新工具）：
+- **顺位**：10-23 11:38 研究轮（75 轮）Top3 二席推荐；MBOX 邮件存档查看器（d7cff95）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选：SVG 转字体图标生成器（P1；59 轮新晋；73 轮 DevOmniTools 形态验证二次确认；opentype.js vendor 化组装 TTF/OTF 验证成本高，07:40/09:39/11:38 三轮均决议「留待更从容轮次」，不赶；留池）、白噪音发生器（P1；74 轮新晋，36氪 myNoise 形态验证；无时令压力，留池）。
+- **选定理由（本轮午间轮）**：① **时令窗口正当时**——10-23 距 12 月年会季约 1 个多月，企业年会筹备窗口现在打开；现在交付能吃到 11 月筹备期的搜索与使用流量，越往后价值越打折；② **小难度一轮可高质量交付**——上午轮刚交付了中难度的 MBOX，本轮接小工具更稳，SVG（中）留待后续更从容的整轮；③ **零重叠实锤**——`grep -cinE 'annual_lottery|annual-lottery|年会|抽奖|lottery|raffle' tools/categories.go` 零命中（本轮实测），全量 146 Path 无同类工具；④ **痛点明确**——年会抽奖要干净无广告的大屏滚动抽奖页，现有方案多为收费 SaaS/Excel 插件，纯前端零上传正中大屏现场网络不稳定的痛点。
+- **形态验证**：59/74 轮双链——年会抽奖页形态共识（名单导入→奖项配置→滚动抽奖→防重复→大屏模式），大屏场景字体超大＋深色高对比＋防误触。
+- **品类归位**：注册到「实用工具」品类（与年会/活动场景工具为邻；评审轮按家族归位习惯定）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 核心流程：名单导入（大文本框粘贴，每行一名单，支持「姓名-工号」格式；导入时自动去重并报告去重计数）→ 奖项配置（预设一/二/三等奖＋自定义奖项，每项奖项名＋名额；支持增删改奖项）→ 抽奖轮次（按奖项逐轮抽；大屏滚动动画：姓名跑马灯高速滚动→缓动减速→定格）→ 中奖名单公示区（本轮中奖者展示，可一键复制/下载 txt）→ 全屏大屏模式（深色高对比、超大字体 clamp/vw、Esc 退出）。
+- 核心逻辑：抽奖用 `crypto.getRandomValues` 均匀抽取，不可被预测；已中奖者自动移出候选池（防重复），防重复开关默认开启；localStorage 持久化（候选名单/已中奖/奖项配置/设置），刷新不丢；「重置本轮」清空中奖记录回候选池，「全部清空」恢复初始。
+- 大屏体验：当前抽奖姓名展示区字体极大（现场 3 米外可读），动画用 requestAnimationFrame 缓动（easeOutQuart 减速 3–5 秒后定格）；页面零广告、零水印、零登录。
+- 注册：新增工具 ID `annual_lottery`、Name「年会大屏抽奖」、Path `/tools/annual-lottery`（New: true），中英文描述＋SEO keywords（年会抽奖、大屏抽奖、抽奖软件、年会摇奖、lottery draw、年会活动工具）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `annual_lottery`、Path `/tools/annual-lottery` 注册完整（Category 实用工具），注册总数 146→147 Path。
+2. 粘贴 50 人名单导入 → 候选池显示 50 人且重复姓名被去重（提示去重数量）；配置一等奖 1 名、二等奖 2 名 → 逐轮抽奖，动画减速后定格，中奖者从候选池移除、进入中奖公示区。
+3. 防重复：第一轮抽完后第二轮候选池不含已中奖者；关闭防重复开关后才允许重复中奖。
+4. 中奖名单一键复制/下载 txt，内容与抽出结果一致（含奖项＋姓名）。
+5. localStorage 持久化：刷新页面后名单/奖项/中奖记录/防重复开关全部恢复；「全部清空」恢复空白初始态。
+6. 脚本内零 fetch/XHR；node 测试 40+ 断言全过（名单解析/去重、奖项配置校验、抽奖不重复逻辑、导出文本格式、localStorage 序列化）。
+
+**预计改动文件**：
+- `templates/annual_lottery.html`（新增；含 SEO 面板按家族标准＋大屏全屏模式样式）
+- `static/js/annual_lottery.js`（新增；名单导入/去重、奖项配置、crypto 抽奖引擎、滚动动画、中奖公示/导出、localStorage 持久化）
+- `tests/annual_lottery.test.js`（新增；名单解析、去重计数、抽奖不重复、导出格式）
+- `tools/categories.go`（实用工具品类注册：ID annual_lottery、Path /tools/annual-lottery、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD d7cff95（MBOX 邮件存档查看器交付闭环）；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮首次直连报 access rights、重试正常（瞬时抖动，沿用 10-23 惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 146 Path；零重叠 grep 本轮复核三候选全零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 11:38 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。MBOX 邮件存档查看器已交付闭环（`git log` 头部 d7cff95；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **146 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:38 午间轮次，P1 可排。
+
+**本轮三件事**（11:38 全网调研，通用方向）：
+1. mbox_viewer 交付确认：`git log` 头部 d7cff95（浏览器本地解析 .mbox：邮件列表＋排序、全文搜索、正文安全渲染、附件清单聚合下载；自写 RFC 5322/MIME 解析零第三方库；新建「实用工具」品类，145→146 Path，New:true；node 测试 77 断言全过）；`grep tools/categories.go` 全量 146 Path（ID mbox_viewer、Path /tools/mbox-viewer 已注册）；候选池划出。
+2. 新信号扫描：
+   - **Medium Siloshan「10 月 7 个免费浏览器工具」（5 天前更新）**：SyncWhen（免注册会议投票→投票收集需后端，不立）；SortaSeat（婚礼/活动座位表→自有 `wedding_seating_chart`（/tools/wedding-seating-chart：自动分桌＋拖拽调桌＋打印级海报）**实锤复现**）；OldRoll（复古胶片滤镜→自有 `img_retro_filter`（/tools/img-retro-filter）**实锤复现**）；StitchCraft（照片转十字绣→自有 `cross_stitch_pattern`（/tools/cross-stitch-pattern：DMC 色卡量化＋针数估算）**实锤复现**）；urPiano（浏览器弹钢琴→池内「在线钢琴」形态验证补强）；Calcy（units+ranges 草稿计算→71/73/74 轮形态验证链，unit_calc_notepad 已交付闭环）；llmspeed（本地 LLM 速度预估→池内 P2「本地 LLM 硬件检测器」形态验证补强）→ 均不新立；
+   - **dev.to BoardScout（3 天前）**：极简搜索路由器（Reddit/HN/Stack Exchange/Quora 一键直达、去 AI 垃圾、OpenSearch 地址栏）→ 自有 `search_router`（/tools/search-router：去 AI 垃圾搜索路由＋Google site: 双路由＋OpenSearch）**实锤复现** → 不立；
+   - **dev.to TaskKit（10-14）/VelnoxLabs（9-27）/VantorKit/TheTextKit**：JSON 格式化、QR 码、字数统计、图片压缩、PDF 合并/拆分 → 全部自有实锤（`pdf_merge_split`（/tools/pdf-merge-split）等 PDF 工具家族、`json`/`qrcode`/字数统计/图片压缩 6 命中）；文本提取邮箱/URL → 池内 P2「联系信息提取器」形态验证补强 → 均不立；
+   - **dev.to tonytoolbox local-first web stack**：GIF 压缩（→池内 P2「GIF 压缩器」形态验证补强）、视频抽帧（→自有 `video_frame_extractor`（/tools/video-frame-extractor：等间隔抽帧/精确抓帧/差异扫描）**实锤复现**）、像素风转换（→自有像素风工具**实锤复现**）、SRT/VTT/ASS 字幕修复（→自有 `subtitle_editor`（/tools/subtitle-editor：条目编辑＋全局平移＋SRT↔VTT 互转）**实锤复现**）→ 均不新立；
+   - **V2EX**：HangDry（10-14，macOS 临时文件归档桌面应用→非 web 形态）不立；vaneform（10-13，网站流量/收入榜单查询→需 dataforseo 等后端数据源）不立；md2chat 重帖（自有 `md_to_chat` 实锤，多轮已消化）不立；toolora（10-12，杂交网页：番茄钟＝自有 countdown_timer 实锤、虚拟钢琴＝池内在线钢琴形态补强、喝水提醒＝倒计时变体、坐姿检测＝摄像头姿态估计 niche＋模型 vendor）→ 观察；
+   - **Show HN 本周**（showhn.buzzing.cc）：免费星盘/塔罗免注册 → `grep -cinE 'tarot|塔罗|占卜|星座|八字'` **零命中实锤** → **新晋 P2「免费塔罗占卜」**（痛点：免费塔罗站多广告/App 内购；纯前端小难度：78 张牌义库＋正逆位＋三张牌阵洗牌抽牌，零上传；建议 ID tarot_reading、Path /tools/tarot-reading）；Rivinci（OpenAPI→MCP 需后端）、Track AI trends（需后端）、fence planner（围栏布局/材料估算，建筑 niche）、Lectura（RSS 阅读器需后端抓取）、其余 CLI/AI 类/教育玩具 → 不立；
+   - **XDA 5 browser tools**（10-13）：Online Convert 等泛文件转换 → 自有文档/图片/音视频转换赛道覆盖 → 不立。
+3. 候选池变动：MBOX 邮件存档查看器已交付划出（d7cff95，146 Path）；**新晋 1 个**（免费塔罗占卜 P2）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；mbox_viewer 交付闭环后按顺位递进）：
+
+1. **SVG 转字体图标生成器** — P1（59 轮新晋；73 轮 DevOmniTools SVG to Font Converter 形态验证二次确认：客户端 WASM 矢量编译器→TrueType 字形表零上传可行；09:39 PM 轮留池二席；痛点：设计师/前端做图标字体要走 icomoon.io/fontello 上传全套 SVG；纯前端小-中难度：SVG path 解析→opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→预览＋本地下载；SVG 赛道小家族扩展；`svg_to_font|svg-to-font` 零命中实锤；建议 ID svg_to_font、Path /tools/svg-to-font）。
+2. **年会大屏抽奖** — P1（时令：10-23 距 12 月年会季约 1 个多月，企业年会筹备窗口；09:39 PM 轮留池三席；痛点：年会抽奖要干净无广告的大屏滚动抽奖页，现有方案多为收费 SaaS/Excel 插件；名单导入（txt/Excel 粘贴）＋滚动抽奖＋奖项配置＋防重复＋全屏大屏模式，纯前端小难度；`年会|抽奖|lottery|raffle` 零命中实锤；建议 ID annual_lottery、Path /tools/annual-lottery）。
+3. **白噪音发生器** — P1（74 轮新晋；09:39 PM 轮留池四席；痛点：专注/睡眠要可自定义白噪音，现有站点多为在线音频流或 App 内购；纯前端小难度：WebAudio 本地合成白/粉/棕噪声＋雨声/雷声/风声滤波混音＋定时关闭＋混合音量滑杆，零音频文件、零 fetch/XHR、可离线播；`白噪音|white.noise|whitenoise` 零命中实锤；建议 ID white_noise_generator、Path /tools/white-noise-generator）。
+
+其余 P1 留池：屏幕常亮/浏览器实时听写（留池）。
+其余 P2 留池：免费塔罗占卜（本轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋；本轮 TheTextKit 文本提取形态验证补强）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察；本轮 urPiano 形态验证补强）；本地 LLM 硬件检测器/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器（本轮 tonytoolbox 形态验证补强）/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十五轮：MBOX 邮件存档查看器已交付划出（d7cff95，146 Path）；**新晋 P2 免费塔罗占卜**（Show HN 免费星盘/塔罗免注册信号；零命中实锤；建议 ID tarot_reading、Path /tools/tarot-reading）；Siloshan 十月 7 工具（座位表/复古滤镜/十字绣＝自有实锤、会议投票需后端不立、钢琴/Calcy/llmspeed 形态验证补强）；BoardScout＝自有 search_router 实锤；TaskKit/Velnox/VantorKit/TheTextKit 全自有实锤；tonytoolbox（GIF 压缩器形态补强、抽帧/像素风/字幕修复＝自有实锤）；V2EX HangDry 非 web/vaneform 需后端/md2chat 已消化/toolora 坐姿检测观察；Show HN 其余需后端或 niche 不立；XDA 泛转换自有覆盖；全量 146 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 免费塔罗占卜 | 新晋（75 轮；Show HN 免费星盘/塔罗免注册信号：痛点为免费塔罗站多广告/App 内购；纯前端小难度：78 张牌义库＋正逆位＋三张牌阵（过去/现在/未来）洗牌抽牌，零上传；`tarot\|塔罗\|占卜\|星座\|八字` 零命中实锤；建议 ID tarot_reading、Path /tools/tarot-reading） | 小 | P2 |
+| mbox_viewer | 已交付划出（d7cff95 交付闭环；ID mbox_viewer、Path /tools/mbox-viewer 已注册；新建「实用工具」品类；全量 146 Path；候选池划出） | — | 已实现 |
+| Siloshan 十月 7 工具 | 本轮不新立（Medium，5 天前更新；SyncWhen 会议投票需后端不立；SortaSeat＝自有 wedding_seating_chart（/tools/wedding-seating-chart）实锤；OldRoll＝自有 img_retro_filter 实锤；StitchCraft＝自有 cross_stitch_pattern 实锤；urPiano＝池内在线钢琴形态验证补强；Calcy＝unit_calc_notepad 形态验证链已交付；llmspeed＝池内本地 LLM 硬件检测器形态验证补强） | — | 观察 |
+| BoardScout 搜索路由器 | 本轮不立（dev.to，3 天前；Reddit/HN/SE/Quora 一键直达＋去 AI 垃圾＋OpenSearch；＝自有 search_router（/tools/search-router）实锤复现） | — | 不立 |
+| TaskKit / VelnoxLabs / VantorKit / TheTextKit | 本轮不立（dev.to；JSON/QR/字数统计/图片压缩/PDF 合并拆分全自有实锤：pdf_merge_split（/tools/pdf-merge-split）等 PDF 工具家族；文本提取＝池内联系信息提取器形态验证补强） | — | 不立 |
+| tonytoolbox local-first stack | 本轮不新立（dev.to；GIF 压缩＝池内 P2 GIF 压缩器形态验证补强；视频抽帧＝自有 video_frame_extractor 实锤；像素风＝自有实锤；SRT/VTT/ASS 字幕修复＝自有 subtitle_editor（/tools/subtitle-editor）实锤） | — | 观察 |
+| V2EX HangDry / vaneform / md2chat / toolora | 本轮不立（HangDry macOS 桌面应用非 web；vaneform 流量榜单需后端数据源；md2chat＝自有 md_to_chat 实锤多轮已消化；toolora 杂交网页：番茄钟＝自有 countdown_timer 实锤、虚拟钢琴＝在线钢琴形态补强、坐姿检测摄像头姿态 niche＋模型 vendor → 观察） | — | 不立/观察 |
+| Show HN 其余 | 本轮不立（Rivinci OpenAPI→MCP 需后端；Track AI trends 需后端；fence planner 建筑估算 niche；Lectura RSS 需后端抓取；其余 CLI/AI 类/教育玩具无单页工具形态） | — | 不立 |
+| XDA 5 browser tools | 本轮不立（10-13；Online Convert 等泛文件转换；自有文档/图片/音视频转换赛道覆盖） | — | 不立 |
+
+**归档说明**：本轮为 10-23 通用调研第七十五轮——MBOX 邮件存档查看器交付闭环（d7cff95，`/tools/mbox-viewer` 已注册，新建「实用工具」品类，全量 146 Path），候选池划出；新信号扫描（Siloshan 十月 7 工具：座位表/复古滤镜/十字绣＝自有实锤、会议投票需后端不立、钢琴/Calcy/llmspeed 形态验证补强；BoardScout＝自有 search_router 实锤；TaskKit/Velnox/VantorKit/TheTextKit 全自有实锤；tonytoolbox：GIF 压缩器形态补强、抽帧/像素风/字幕修复＝自有实锤；V2EX HangDry 非 web/vaneform 需后端/md2chat 已消化/toolora 坐姿检测观察；Show HN 免费星盘/塔罗→**新晋 P2 免费塔罗占卜**、其余需后端或 niche 不立；XDA 泛转换自有覆盖）均已消化；WPS 候选表保持冻结归档；仓库 146 注册工具全量核对无重叠（Top3 建议 ID svg_to_font / annual_lottery / white_noise_generator；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮首次直连报 access rights（Permission denied publickey）、重试正常（瞬时抖动，沿用 10-22/10-23 惯例）；`git log` 头部 d7cff95（mbox_viewer 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 146 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-23 09:39 · 产品经理排期轮）
 
 **选定：MBOX 邮件存档查看器（mbox_viewer）** — 本轮唯一任务（新工具）：
@@ -9724,3 +9803,52 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 **归档说明**：本轮为 10-23 通用调研第七十一轮——社区搜索聚合器交付闭环（a689ca3，`/tools/search-router` 已注册，开发工具品类，全量 141 Path），候选池划出；新信号扫描（dev.to README-Glassfolio→**新晋 P2 GitHub 主页 README 生成器**（github/readme 零命中）；dev.to Antigravity 59 工具→PII/Token/JWT/RSA 均为自有实锤复现；byte-kit.dev→EXIF 自有实锤；Medium 十月 7 工具→OldRoll/StitchCraft 自有实锤、Calcy 补单位感知记事本计算器形态验证；V2EX md2chat→自有 md_to_chat 实锤复现、Open Resume/NASDrop/Folkbench/HangDry/数字人需后端或非 web 不立；HN 10-22 安全新闻无工具形态；Reddit 需求帖 SEO 垃圾本轮空）均已消化；WPS 候选表保持冻结归档；仓库 141 注册工具全量核对无重叠（Top3 建议 ID meeting_invite_generator / countdown_timer / nat_type_detector；中文名+ID 片段双核＋零命中逐项可复现），核稿反馈持续闭环。
 
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 a689ca3（search_router 交付闭环）；`grep tools/categories.go` 全量 141 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（疑似构建产物/备份，21:00 PM 轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
+## 今日任务（2026-10-23 11:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。MBOX 邮件存档查看器已交付闭环（`git log` 头部 d7cff95；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **146 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:36 午间轮次，P1 可排。
+
+**本轮三件事**（11:36 全网调研，通用方向）：
+1. mbox_viewer 交付确认：`git log` 头部 d7cff95（浏览器本地解析 .mbox：邮件列表＋发件人/主题/日期排序、全文搜索（主题/正文/发件人/附件名）、正文安全渲染、附件清单聚合下载；自写 RFC 5322/MIME 解析（From 切分、折叠行、encoded-word、quoted-printable/base64、multipart 附件抽取），零第三方库、零 fetch/XHR；损坏块跳过计数不中断；新建「实用工具」品类（与文档转换为邻，145→146 Path，New:true）；内置 3 封测试邮件一键体验；node 测试 77 断言全过）；`grep tools/categories.go` 全量 146 Path（ID mbox_viewer、Path /tools/mbox-viewer 已注册）；候选池划出。
+2. 新信号扫描：
+   - **V2EX Paint Board（2026-10-19，1249863）**：开源免费网页端创意画板（多种画笔、涂鸦图形、文字图片，无需登录，MIT：github.com/LHRUN/paint-board）→ `paint|画板|drawing|涂鸦|doodle` 仅命中一处 Icon 字面量，**仓库无画板类工具实锤**（现有 image-annotator 为截图标注、思维导图/mermaid 为图表类，均不同形态）→ **新晋 P1「在线创意画板」**（痛点：随手涂鸦/做示意图要干净无注册无广告的 web 画板；纯前端小-中难度：canvas 自由绘制＋多画笔/图形/文字/图片插入＋撤销重做＋PNG 导出，零上传；建议 ID paint_board、Path /tools/paint-board；V2EX 10-19 帖形态验证）；
+   - **V2EX toolora.stream（10-12）**：番茄钟/虚拟钢琴/喝水提醒等杂交工具页 → 番茄钟＝自有 countdown_timer 实锤复现；虚拟钢琴＝池内 P2 在线钢琴形态验证补强 → 不立新；
+   - **V2EX Antumi（10-21）**：多 Agent 桌面工作台（桌面端，非 web 形态）→ 不立；
+   - **V2EX vaneform（10-13）**：免费网站流量/榜单查询（数据依赖 similarweb 等后端采集）→ 不立；
+   - **V2EX Open Resume（10-20 重帖）**：67 轮已消化（需 Node/SQLite 自部署）→ 不立；
+   - **dev.to ToolVerse USA（17 天前，100+ 工具）**：Money calculators（房租/房贷/小费，方向修正排除）；浏览器工具均为自有实锤（JSON/CSV/Base64/Unit Converter/图片压缩/密码生成/字数统计/QR/颜色/SERP＝池内 P2 留池观察）→ 不立新；
+   - **dev.to BlanzaTools（2026-10-11，14 工具）**：Image Compressor/Resizer、Word/Case、密码/QR/颜色/JSON/倒计时均为自有实锤；Lorem Ipsum（文本工具但痛点弱，多轮未见需求信号）；BMI/百分比计算器（生活计算器类，方向修正排除）；Age Calculator→自有 age 工具族（46 处 age 命中复核）→ 不立新；
+   - **dev.to ZeroApiTools/ToolkitOnline**：67+/155 工具类目（JWT/正则/Base64/Hash/颜色/cron/SERP）→ 自有实锤复现或已留池 → 不立；其流量复盘（finance 工具流量最高）与方向修正冲突，仅作记录；
+   - **Link Preview Checker（OG 跨平台渲染预览）**：需抓取任意 URL 解析 OG 标签，纯前端受 CORS 限制 → 不立（需后端）；
+   - **Show HN UCP Store Checker（ucphub.ai）**：AI 商务协议合规检查，需后端抓取目标站点（CORS）→ 不立；思路记录：AI 可发现性检测属新兴方向，待后端能力解冻再议；
+   - **Show HN ImgExtender / AI Upscaler / Seisei AI / AI Try-On / Screenshot AI Rename**：全部 AI 模型类需后端 → 不立；
+   - **Reddit「I wish there was a website」**：本轮返回均为调研方法论/营销内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：MBOX 邮件存档查看器已交付划出（d7cff95，146 Path）；**新晋 1 个**（在线创意画板 P1）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；mbox_viewer 交付闭环后按顺位递进）：
+
+1. **SVG 转字体图标生成器** — P1（59 轮新晋；73 轮 DevOmniTools SVG to Font Converter 形态验证二次确认：客户端 WASM 矢量编译器→TrueType 零上传可行；痛点：设计师/前端做图标字体要走 icomoon.io/fontello 上传全套 SVG；纯前端小-中难度：SVG path 解析→opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→预览＋本地下载；SVG 赛道小家族扩展；`svg_to_font|svg-to-font` 零命中实锤；建议 ID svg_to_font、Path /tools/svg-to-font）。
+2. **年会大屏抽奖** — P1（时令：10-23 距 12 月年会季约 1 个月，企业年会筹备启动窗口；痛点：年会抽奖要干净无广告的大屏滚动抽奖页，现有方案多为收费 SaaS/Excel 插件；名单导入（txt/Excel 粘贴）＋滚动抽奖＋奖项配置＋防重复＋全屏大屏模式，纯前端小难度；`年会|抽奖|lottery|raffle` 零命中实锤；建议 ID annual_lottery、Path /tools/annual-lottery）。
+3. **在线创意画板** — P1（本轮新晋；V2EX 10-19 Paint Board 形态验证：开源免费 web 创意画板多种画笔/涂鸦图形/文字图片免登录；痛点：随手涂鸦/做示意图要干净无注册无广告的 web 画板；纯前端小-中难度：canvas 自由绘制＋画笔/图形/文字/图片＋撤销重做＋PNG 导出，零上传；`paint|画板|drawing|涂鸦|doodle` 零工具命中实锤（现有 image-annotator 为截图标注、mermaid/思维导图为图表类，不同形态）；建议 ID paint_board、Path /tools/paint-board）。
+
+其余 P1 留池：白噪音发生器（74 轮新晋；WebAudio 本地合成，零音频文件零上传；建议 ID white_noise_generator、Path /tools/white-noise-generator；留池四席）；屏幕常亮/浏览器实时听写（留池）。
+其余 P2 留池：涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察；本轮 V2EX toolora 虚拟钢琴形态补强）；本地 LLM 硬件检测器/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十五轮：MBOX 邮件存档查看器已交付划出（d7cff95，146 Path）；新晋在线创意画板 P1（V2EX 10-19 Paint Board 形态验证；canvas 纯前端，零工具命中实锤；建议 ID paint_board、Path /tools/paint-board）；V2EX Antumi 桌面非 web/vaneform 需后端不立；Open Resume 重帖已消化；V2EX toolora→番茄钟自有实锤、虚拟钢琴补 P2 池形态验证；dev.to ToolVerse/BlanzaTools/ZeroApiTools/ToolkitOnline 类目全部自有实锤或留池观察（Link Preview Checker 需后端不立，BMI/百分比/房租房贷类方向修正排除）；Show HN UCP Store Checker 需后端不立（AI 可发现性方向记录）；ImgExtender/AI Upscaler/Seisei AI/Try-On/Screenshot AI Rename AI 类不立；Reddit 需求帖本轮空；全量 146 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 在线创意画板 | 新晋（75 轮；V2EX 10-19 Paint Board 形态验证：开源免费 web 创意画板，多种画笔/涂鸦图形/文字图片免登录；痛点：随手涂鸦/做示意图要干净无注册无广告的 web 画板；纯前端小-中难度：canvas 自由绘制＋多画笔/图形/文字/图片插入＋撤销重做＋PNG 导出，零上传；`paint\|画板\|drawing\|涂鸦\|doodle` 零工具命中实锤（image-annotator 为截图标注、mermaid/思维导图为图表类，不同形态）；建议 ID paint_board、Path /tools/paint-board） | 小-中 | P1 |
+| mbox_viewer | 已交付划出（d7cff95 交付闭环；ID mbox_viewer、Path /tools/mbox-viewer 已注册，新建实用工具品类；全量 146 Path；候选池划出） | — | 已实现 |
+| V2EX Antumi / vaneform / Open Resume | 本轮不立（Antumi 多 Agent 桌面工作台非 web；vaneform 流量/榜单查询需后端数据采集；Open Resume 重帖，67 轮已消化需 Node/SQLite 自部署） | — | 不立 |
+| V2EX toolora.stream 观察 | 本轮不新立（番茄钟/虚拟钢琴/喝水提醒杂交页；番茄钟→自有 countdown_timer 实锤复现；虚拟钢琴→池内 P2 在线钢琴形态验证补强） | — | 观察 |
+| dev.to ToolVerse/BlanzaTools/ZeroApiTools/ToolkitOnline 观察 | 本轮不新立（100+/14/67+/155 工具类目；JSON/Base64/正则/Hash/颜色/cron/图片压缩/QR/倒计时全部自有实锤；SERP 预览→池内 P2 留池；Lorem/BMI/百分比→痛点弱或方向修正排除；Money calculators→方向修正排除；ToolkitOnline finance 流量复盘与方向修正冲突，仅记录） | — | 观察 |
+| Link Preview Checker（OG 渲染预览） | 本轮不立（抓取任意 URL 解析 OG 标签，纯前端受 CORS 限制，需后端） | — | 不立 |
+| Show HN UCP Store Checker / AI 图像类 | 本轮不立（UCP 需后端抓取目标站点，AI 可发现性方向记录待后端能力解冻；ImgExtender/AI Upscaler/Seisei AI/AI Try-On/Screenshot AI Rename 全部 AI 模型类需后端） | — | 不立 |
+| Reddit 需求帖 | 本轮空（"I wish there was a website" 返回均为调研方法论/营销内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十五轮——MBOX 邮件存档查看器交付闭环（d7cff95，`/tools/mbox-viewer` 已注册，新建实用工具品类，全量 146 Path），候选池划出；新信号扫描（V2EX 10-19 Paint Board→**新晋 P1 在线创意画板**（canvas 纯前端、零工具命中实锤）；V2EX Antumi 非 web/vaneform 需后端不立；Open Resume 重帖已消化；V2EX toolora 番茄钟自有实锤、虚拟钢琴补 P2 在线钢琴形态验证；dev.to ToolVerse/BlanzaTools/ZeroApiTools/ToolkitOnline 类目全部自有实锤或留池观察，Link Preview Checker 需后端不立，BMI/百分比/房租房贷类方向修正排除；Show HN UCP Store Checker 需后端不立（AI 可发现性方向记录）；ImgExtender/AI Upscaler/Seisei AI/Try-On/AI 重命名 AI 类不立；Reddit 需求帖本轮空）均已消化；WPS 候选表保持冻结归档；仓库 146 注册工具全量核对无重叠（Top3 建议 ID svg_to_font / annual_lottery / paint_board；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 d7cff95（mbox_viewer 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 146 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮记录，疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
