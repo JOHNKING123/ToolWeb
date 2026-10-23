@@ -1,3 +1,95 @@
+## 今日任务（2026-10-24 01:45 · 产品经理排期轮）
+
+**选定：网站无障碍检查器（accessibility_scanner）** — 本轮唯一任务（新工具）：
+- **顺位**：01:00 研究轮（81 轮）Top3 首席推荐；证件照裁剪排版已交付闭环（58353a4，153 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 153 Path，ID id_photo_maker、Path /tools/id-photo-maker 已注册，实用工具品类）后顺位递进生效，依惯例「无硬伤不跳过」。未选：本地看板任务管理（P2；纯前端小难度无硬伤，留池顺位递进）、HTTP 状态码速查（P2 本轮新晋、Site Tools Box 形态验证补强；纯前端小难度无硬伤，留池顺位递进）。
+- **选定理由（本轮深夜轮）**：① **研究轮首席推荐**——81 轮新晋 P2，dev.to Curbcut 免费 AI 无障碍扫描器（粘贴 URL→无障碍报告、免注册）形态验证，10-20 有更新；② **纯前端小/中难度一轮可高质量交付**——01:45 深夜轮时间预算紧张，粘贴 HTML→确定性无障碍规则→打分＋中文修复报告形态与本周交付的 landing_page_grader 同架构，管线已验证（245 断言），节奏最稳；③ **零重叠实锤**——本轮实测 `grep -rniE 'accessibility_scanner|accessibility-scanner|a11y|无障碍'` 在 tools/categories.go、static/js/、templates/ 三路仅命中 landing_page_grader.js 一处修复建议文案，无同类工具，全量 153 Path；④ **痛点明确**——出海/独立站要过 WCAG 合规，现有方案要么付费（axe Pro/按次扫描）要么 AI 注册墙；零上传静态自查正中隐私痛点。
+- **品类归位**：注册到「实用工具」品类（与 landing_page_grader 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（与调研假设不同，开发轮必须处理）**：① **是「无障碍自查工具」，不是「WCAG 合规审计/认证」**——纯前端静态 HTML 规则只能覆盖可判定项，键盘焦点陷阱、JS 渲染后内容、动态 ARIA 状态、屏幕阅读器真实行为一律测不到，页面文案必须如实告知能力边界，不能声称「过 WCAG 认证」；② **对比度规则保守**：只做明确可判定（内联/简单解析的前景色＋背景色对比度），CSS 变量/图片背景/渐变/透明度层叠判不准的只给「手动核对」警告，不给失败；③ **输入是「粘贴 HTML 源码 / 上传 .html 文件」**，不做任意 URL 抓取（零上传、避 CORS）；④ 表单 label 规则要覆盖「显式 for＋id 关联」与「控件被 label 包裹」两种合法写法，避免误报；⑤ 空 alt 用于装饰图是合法写法，不得误判为失败（应通过＋提示文案）。
+- **ID/Path**：`accessibility_scanner`、`/tools/accessibility-scanner`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 输入：textarea 粘贴 HTML 源码（支持拖拽/选择上传 .html 文件）＋「分析示例页」一键载入演示 HTML；DOMParser 本地解析，零上传。
+- 规则引擎（约 12 条确定性规则，按检查维度分组）：
+  1. 图片 alt：无 alt→失败；alt 为空且图片有 src→通过（装饰图合法，附提示文案）；图片链接（a 包 img）无 alt/文本→失败。
+  2. 表单 label：input/textarea/select（不含 hidden/submit/button 类型）缺可访问名（显式 for+id 或 label 包裹或 aria-label/aria-labelledby）→失败。
+  3. 按钮可访问名：button/input[type=submit/button] 既无文本又无 aria-label→失败（图标按钮高危项）。
+  4. 标题层级：h1 缺失→失败；h1 多个→警告；跳级（h2 后直接 h4）→失败。
+  5. html lang：缺失→失败（i18n/SR 必备）。
+  6. tabindex>0→失败（键盘顺序陷阱）；tabindex=0 使用量过大（>10）→警告。
+  7. 重复 id→失败。
+  8. document.title 空白→失败。
+  9. a 链接无文本且无 aria-label→失败。
+  10. video 无 track 字幕→警告；audio 无文字稿提示→警告。
+  11. aria-* 属性引用了不存在的 id（aria-labelledby/aria-describedby/aria-controls）→失败。
+  12. 内联样式文字对比度 < 4.5:1（仅明确可判定）→失败；疑似图片/渐变背景→警告「手动核对」。
+- 输出：总分 0-100＋等级（优秀≥85/良好≥60/待改进<60，沿用 landing_page_grader 口径：通过=100/警告=50/失败=0 取均值四舍五入）→ 按分组的三色清单＋每项失败给中文修复建议（附 WCAG 2.2 对应条款号如 1.1.1/2.4.6）→ 一键复制 Markdown 报告；按状态筛选（全部/失败/警告/通过）、单项展开详情。
+- 注册：ID `accessibility_scanner`、Name「网站无障碍检查器」、Path `/tools/accessibility-scanner`、Category 实用工具、Icon 建议 accessibility/fact_check 类、New: true；中英文描述＋SEO keywords（无障碍、网站无障碍检查、WCAG、a11y、alt 缺失、aria、键盘可访问性）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐（canonical 形如 https://www.johnkingzcq123.xyz/tools/accessibility-scanner）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `accessibility_scanner`、Path `/tools/accessibility-scanner` 注册完整（Category 实用工具），注册总数 153→154 Path。
+2. 粘贴缺 alt 图片/无 label 表单/跳级标题/缺 lang 的缺陷页→低分待改进，每条失败有中文修复建议（含 WCAG 条款号）；规范示例页→高分优秀。
+3. 误报控制：装饰图空 alt 不误判失败；label 包裹控件不误判；对比度只对可判定项打分。
+4. 脚本零 fetch/XHR、零上传；页面文案如实（能力边界声明完整：自查工具非合规认证）。
+5. node 测试 40+ 断言全过（规则纯函数、打分口径、Markdown 报告生成；DOMParser 部分可 mock）。
+6. 页面无报错；移动端布局不错位；报告复制按钮可用。
+
+**预计改动文件**：
+- `templates/accessibility_scanner.html`（新增；含 SEO 面板按家族标准＋输入区/规则分组清单/打分仪表/报告区 UI 样式）
+- `static/js/accessibility_scanner.js`（新增；12 条规则引擎＋DOMParser 解析＋打分/等级＋Markdown 报告＋示例页/上传 .html/筛选/展开；双模式导出供 node 测试）
+- `tests/accessibility_scanner.test.js`（新增；规则纯函数、打分口径、误报用例、报告生成）
+- `tools/categories.go`（实用工具品类注册：ID accessibility_scanner、Path /tools/accessibility-scanner、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 58353a4（id_photo_maker 交付闭环）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 153 Path；Top3 候选三路零重叠本轮复核（accessibility_scanner 仅 landing_page_grader.js 修复文案提及，无工具；kanban_board/http_status_reference 全路零命中）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；文件末尾约 10258 行起的 19:00 重复条目（多轮已记录疑似误追加）本轮未动，仍建议后续轮次清理去重；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。证件照裁剪排版已交付闭环（`git log` 头部 58353a4：五预设宽高比锁定裁剪＋点取容差换底＋5 寸相纸排版＋JPG 导出，node 测试 124 断言全过，实用工具品类，152→153 Path，origin/muse/dev-20260929 已同步；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **153 Path**，ID id_photo_maker、Path /tools/id-photo-maker 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 深夜轮次，P1 池已空，P2 可晋升，优先小难度纯前端。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. id_photo_maker 交付确认：`git log` 头部 58353a4；全量 153 Path（ID id_photo_maker、Path /tools/id-photo-maker 已注册，实用工具品类）；origin/muse/dev-20260929 与本地 HEAD 一致；候选池划出。
+2. 新信号扫描：
+   - **dev.to Curbcut（10-11，10-20 更新）**：免费 AI 无障碍扫描器，粘贴 URL→无障碍报告，免注册 → 出海/独立站 WCAG 合规检查需求实锤 → **新晋 P2「网站无障碍检查器」**（建议 ID accessibility_scanner、Path /tools/accessibility-scanner）：粘贴 HTML→确定性无障碍规则（图片 alt 缺失/空 alt 误用、表单控件缺 label、按钮无可访问名、标题层级跳级、缺 html lang、tabindex>0、重复 id、纯图标按钮缺 aria-label）→打分＋中文修复建议报告，纯前端小/中难度，零上传；与本周刚交付的 landing_page_grader 同架构（粘贴源码→规则引擎→打分→报告），管线已验证；三路 `无障碍|accessibility|a11y` **零命中实锤**（仅 landing_page_grader.js 一处修复建议文案提及"无障碍"）；
+   - **Medium Site Tools Box（约 5 天前）**："verify an HTTP status code" 被列为免注册工具箱的核心痛点示例（"just need to quickly…verify an HTTP status code"）→ 池内 P2「HTTP 状态码速查」**形态验证补强**（23:45 新晋）；
+   - **HN Front Page Roundup 10-15**：Tiny Little Office（643 pts，浏览器办公套件，"document is the link"——内容 percent-encoded 进 URL fragment，免账号免服务端）→ **实锤自有** url_note_share（URL 即文档·文本分享链接生成器：DEFLATE＋base64url→URL fragment，零上传，templates/url_note_share.html＋static/js/url_note_share.js 俱全）→ 池内 P2 长尾「URL 即文档文本分享链接」**划为已实现**，不再占位；
+   - **dev.to Zovixia（10-09，100+ 工具）**：AI Background Remover（local canvas matrix color keying 纯色抠图）→ 与刚交付的 id_photo_maker 容差换底能力重叠，不立；其余 PDF/图片/文本/计算器全自有复现或方向边界；
+   - **dev.to Toolslay（4 天前，200+ 工具）**：首周 Search Console 数据——"robots.txt generator" 等长尾词带来 4K 曝光 → `robots_txt_generator` **实锤自有**（templates/robots_txt_generator.html＋static/js/robots_txt_generator.js），不立；
+   - **dev.to Tooltri（30+ 工具）**：ChatGPT Text Cleaner（去 AI 文本隐藏字符）→ **实锤自有** ai_text_cleaner（templates/ai_text_cleaner.html＋static/js/ai-text-cleaner.js），不立；其余 JSON/JWT/Base64/二维码/颜色全自有复现；
+   - **dev.to TaskKit（1 天前）**：Text Analyzer 带 Flesch-Kincaid 可读性评分 → 英文可读性公式对中文不适用，池内「阅读时长计算器」观察项不因此立项；
+   - **dev.to 45 tiny tools（9 天前）**：triangle geometry / cut lists（板材切割）→ 工程计算器类，10-18 方向修正边界，观察不立；
+   - **dev.to Code Specimen（17 天前）**：悬停取网站字体/颜色/CSS 的浏览器扩展 → 扩展形态非单页 web 工具，不立；
+   - **Reddit/知乎**：本轮返回 SEO 营销内容与旧帖，无可消化需求帖 → 本轮空；stillworks.today 与 23:45 轮同榜（榜单未更新），不重复扫描。
+3. 候选池变动：证件照裁剪排版已交付划出（58353a4，153 Path）；**URL 即文档文本分享链接划为已实现**（实锤自有 url_note_share，从 P2 长尾移除）；**新晋 P2 1 个**（网站无障碍检查器）；**形态补强 1 项**（HTTP 状态码速查：Site Tools Box 痛点示例验证）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，01:00 深夜轮优先小难度纯前端）：
+
+1. **网站无障碍检查器** — 新晋 P2（本轮首席推荐；dev.to Curbcut 免费 AI 无障碍扫描器形态验证：粘贴 URL→报告、免注册；痛点：出海/独立站要过 WCAG 合规，现有方案要么付费（axe Pro/按次扫描）要么 AI 注册墙；纯前端小/中难度：粘贴 HTML→确定性无障碍规则（图片 alt、表单 label、按钮可访问名、标题层级、html lang、键盘焦点顺序、重复 id、aria）→打分＋中文修复建议＋Markdown 报告，零上传；与本周交付的 landing_page_grader 同架构，管线已验证；`无障碍|accessibility|a11y` 三路**零命中实锤**；建议 ID accessibility_scanner、Path /tools/accessibility-scanner）。
+2. **本地看板任务管理** — P2（77 轮新晋；多轮留池顺位；痛点：轻量看板都要注册/付费（Trello 注册墙、Notion 臃肿）；纯前端小难度：看板列＋卡片拖拽＋localStorage 持久化，零上传；`kanban` 三路**零命中实锤**；建议 ID kanban_board、Path /tools/kanban-board）。
+3. **HTTP 状态码速查** — P2（23:45 新晋；本轮 Site Tools Box 把"verify an HTTP status code"列为免注册工具核心痛点示例，形态验证补强；痛点：联调时查 429/418/502 含义要翻 MDN 英文文档；纯前端小难度：可搜索＋按类别筛选的 1xx–5xx 中文参考＋常见场景＋排查建议；tools/categories.go `状态码`**零命中实锤**；建议 ID http_status_reference、Path /tools/http-status-reference）。
+
+其余 P1 留池：无（证件照裁剪排版已交付）。
+其余 P2 留池：本地 LLM 硬件检测器（四次形态验证：Show HN「What LLM fits my GPU?」/llmspeed/Hotfix Flint；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）；死链检查器（78 轮新晋；中难度 Go 后端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/SERP 片段预览/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十一轮：证件照裁剪排版已交付划出（58353a4，153 Path）；**URL 即文档文本分享链接划为已实现**（实锤自有 url_note_share：DEFLATE＋base64url→URL fragment，零上传）；**新晋 P2：网站无障碍检查器**（dev.to Curbcut 免费 AI 无障碍扫描器形态验证：粘贴 URL→报告免注册；痛点：出海/独立站 WCAG 合规检查靠付费或 AI 注册墙；纯前端小/中难度：粘贴 HTML→确定性无障碍规则→打分＋中文修复报告，零上传；与 landing_page_grader 同架构；三路零命中实锤；建议 ID accessibility_scanner、Path /tools/accessibility-scanner）；形态补强 1 项（HTTP 状态码速查：Medium Site Tools Box 痛点示例"verify an HTTP status code"验证）；Zovixia AI 抠图→与 id_photo_maker 容差换底重叠不立；Toolslay robots.txt→实锤自有 robots_txt_generator 不立；Tooltri AI 文本清洗→实锤自有 ai_text_cleaner 不立；TaskKit Flesch→中文不适用不立；45 tiny tools 几何/切割→方向边界不立；Code Specimen→浏览器扩展形态不立；Reddit/知乎本轮空；全量 153 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 网站无障碍检查器 | 新晋 P2（81 轮；dev.to Curbcut 免费 AI 无障碍扫描器形态验证：粘贴 URL→无障碍报告、免注册；痛点：出海/独立站 WCAG 合规检查靠付费工具或 AI 注册墙；纯前端小/中难度：粘贴 HTML→确定性无障碍规则（图片 alt、表单 label、按钮可访问名、标题层级、html lang、键盘焦点、重复 id、aria）→打分＋中文修复建议＋Markdown 报告，零上传；与 landing_page_grader 同架构管线已验证；`无障碍\|accessibility\|a11y` 三路零命中实锤；建议 ID accessibility_scanner、Path /tools/accessibility-scanner） | 小/中 | P2 |
+| URL 即文档文本分享链接 | 划为已实现（81 轮；实锤自有 url_note_share：DEFLATE＋base64url→URL fragment 文本分享链接生成器，零上传；HN 10-15 Tiny Little Office 643pts "document is the link" 为同构形态验证；从 P2 长尾移除） | — | 已实现 |
+| id_photo_maker | 已交付划出（58353a4 交付闭环：五预设裁剪＋容差换底＋相纸排版，node 测试 124 断言全过；ID id_photo_maker、Path /tools/id-photo-maker 已注册，实用工具品类；全量 153 Path；候选池划出） | — | 已实现 |
+| HTTP 状态码速查 | 形态补强（81 轮；Medium Site Tools Box 把"verify an HTTP status code"列为免注册工具箱核心痛点示例；23:45 新晋 P2；建议 ID http_status_reference、Path /tools/http-status-reference） | 小 | P2 |
+| 本轮不立信号 | Zovixia AI 背景移除→与 id_photo_maker 容差换底重叠；Toolslay robots.txt→实锤自有 robots_txt_generator；Tooltri AI 文本清洗→实锤自有 ai_text_cleaner；TaskKit Flesch-Kincaid→英文公式中文不适用；45 tiny tools 三角几何/板材切割→10-18 方向修正边界；Code Specimen→浏览器扩展非单页 web 工具形态；Reddit/知乎→本轮空 | — | 不立 |
+
+**归档说明**：本轮为 10-24 通用调研第八十一轮——证件照裁剪排版交付闭环（58353a4，`/tools/id-photo-maker` 已注册，实用工具品类，全量 153 Path），候选池划出；池内 P2 长尾「URL 即文档文本分享链接」实锤已实现（url_note_share）同步划出；新信号扫描（dev.to：Curbcut→新晋 P2 网站无障碍检查器、Zovixia→抠图重叠不立、Toolslay→robots.txt 自有不立、Tooltri→AI 文本清洗自有不立、TaskKit→Flesch 中文不适用不立、45 tiny tools→方向边界不立、Code Specimen→扩展形态不立；Medium Site Tools Box→HTTP 状态码速查形态补强；HN 10-15 Tiny Little Office→自有 url_note_share 同构验证；Reddit/知乎本轮空）均已消化；P1 池已空，P2 可晋升；WPS 候选表保持冻结归档；仓库 153 注册工具全量核对无重叠（Top3 建议 ID accessibility_scanner / kanban_board / http_status_reference；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（github.com host key 已入库）；`git log` 头部 58353a4（id_photo_maker 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 153 Path；本地当前分支 muse/dev-20260929；origin/muse/dev-20260929 与本地 HEAD 一致；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-23 23:53 · 前端开发轮 ✅）
 
 **交付：证件照裁剪排版（id_photo_maker）** — 本轮唯一任务（新工具），开发完成已提交推送：

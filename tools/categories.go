@@ -1046,6 +1046,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "accessibility_scanner",
+					Name:        "网站无障碍检查器",
+					Description: "免费在线网站无障碍检查器：粘贴网页 HTML 源码，12 条确定性无障碍规则在浏览器本地检查（图片 alt/表单 label/按钮可访问名/标题层级/html lang/tabindex/重复 id/链接文本/媒体字幕/ARIA 引用/文字对比度），总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议（含 WCAG 2.2 条款号），一键复制 Markdown 报告；说明：本工具为自查工具，不是 WCAG 合规认证；DOMParser 本地解析，脚本零 fetch/XHR、源码不出浏览器 · Accessibility scanner: paste HTML, 12 deterministic a11y rules scored locally, 0-100 with WCAG-referenced fix suggestions and Markdown report, 100% client-side",
+					Path:        "/tools/accessibility-scanner",
+					Icon:        "accessibility",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{

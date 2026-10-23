@@ -1,0 +1,217 @@
+{{define "accessibility_scanner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站无障碍检查器 - 免费在线 a11y 自查打分（粘贴源码本地检查） | 程序员工具箱</title>
+<meta name="description" content="免费在线网站无障碍检查器：粘贴网页 HTML 源码，12 条确定性无障碍规则在浏览器本地检查（图片 alt/表单 label/按钮可访问名/标题层级/html lang/tabindex/重复 id/链接文本/媒体字幕/ARIA 引用/文字对比度），总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议（含 WCAG 2.2 条款号），一键复制 Markdown 报告。说明：本工具为自查工具，不是 WCAG 合规认证。DOMParser 本地解析，源码不出浏览器。Free accessibility scanner: paste HTML, 12 deterministic a11y rules, 0-100 score, WCAG-referenced fix suggestions, Markdown report, 100% client-side.">
+<meta name="keywords" content="无障碍,网站无障碍检查,WCAG,a11y,alt 缺失,aria,键盘可访问性,对比度检查,无障碍自查,accessibility scanner,无障碍打分">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/accessibility-scanner">
+<meta property="og:title" content="网站无障碍检查器 - 粘贴源码，12 条无障碍规则本地自查打分">
+<meta property="og:description" content="粘贴网页 HTML 源码，12 条确定性无障碍规则本地检查：图片 alt/表单 label/按钮可访问名/标题层级/键盘/ARIA/对比度，总分 0-100＋中文修复建议（含 WCAG 2.2 条款号）＋Markdown 报告，源码不出浏览器。自查工具，非 WCAG 合规认证。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/accessibility-scanner">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"网站无障碍检查器","alternateName":"accessibility_scanner","description":"免费在线网站无障碍检查器：粘贴网页 HTML 源码，12 条确定性无障碍规则在浏览器本地检查（图片 alt/表单 label/按钮可访问名/标题层级/html lang/tabindex/重复 id/链接文本/媒体字幕/ARIA 引用/文字对比度），总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议（含 WCAG 2.2 条款号），一键复制 Markdown 报告；本工具为自查工具，不是 WCAG 合规认证；DOMParser 本地解析，脚本零 fetch/XHR，源码不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/accessibility-scanner","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.asc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.asc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.asc-panel h3 .material-icons{font-size:1.15rem;color:#0d9488}
+.asc-local-note{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdfa;border:1px solid #99f6e4;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#115e59;line-height:1.7}
+.asc-local-note .material-icons{color:#0d9488;font-size:1.3rem;flex:none;margin-top:.1rem}
+.asc-scope-note{display:flex;gap:.6rem;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#92400e;line-height:1.7}
+.asc-scope-note .material-icons{color:#d97706;font-size:1.3rem;flex:none;margin-top:.1rem}
+.asc-drop{border:2px dashed #d1d5db;border-radius:.6rem;padding:.9rem;transition:all .15s;background:#fafafa}
+.asc-drop.asc-dragover{border-color:#0d9488;background:#f0fdfa}
+.asc-drop textarea{width:100%;min-height:220px;border:1px solid #e5e7eb;border-radius:.5rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.6;color:#111827;background:#fff;resize:vertical;box-sizing:border-box}
+.asc-drop-hint{font-size:.8rem;color:#9ca3af;margin-top:.5rem;text-align:center}
+.asc-charcount{font-size:.8rem;color:#6b7280;margin:.5rem 0 .8rem}
+.asc-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.asc-btn{padding:.55rem 1.2rem;border-radius:.5rem;border:1px solid #0d9488;background:#0d9488;color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+.asc-btn .material-icons{font-size:1.05rem}
+.asc-btn:hover{background:#0f766e}
+.asc-btn.asc-secondary{background:#fff;color:#0d9488}
+.asc-btn.asc-secondary:hover{background:#f0fdfa}
+.asc-score-wrap{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.asc-ring{position:relative;width:150px;height:150px;flex:none}
+.asc-ring svg{transform:rotate(-90deg)}
+.asc-ring-bg{fill:none;stroke:#e5e7eb;stroke-width:12}
+.asc-ring-fg{fill:none;stroke:#16a34a;stroke-width:12;stroke-linecap:round;stroke-dasharray:364.42;stroke-dashoffset:364.42;transition:stroke-dashoffset .8s ease,stroke .3s}
+.asc-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.asc-score-num{font-size:2.4rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.asc-score-level{font-size:.95rem;font-weight:700;margin-top:.25rem}
+.asc-score-meta{flex:1;min-width:200px}
+.asc-counts{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+.asc-count{flex:1;min-width:90px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.5rem .3rem;font-size:.82rem;color:#6b7280}
+.asc-count b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.asc-count.asc-c-pass b{color:#16a34a}
+.asc-count.asc-c-warn b{color:#d97706}
+.asc-count.asc-c-fail b{color:#dc2626}
+.asc-filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;align-items:center}
+.asc-filters button{padding:.4rem 1rem;border-radius:2rem;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:.85rem;font-weight:600;cursor:pointer}
+.asc-filters button.asc-f-active{background:#0d9488;border-color:#0d9488;color:#fff}
+.asc-toggle-all{margin-left:auto;font-size:.82rem;color:#0d9488;background:none;border:none;cursor:pointer;font-weight:600}
+.asc-group{margin-bottom:1rem}
+.asc-group-title{font-size:.92rem;color:#111827;margin:0 0 .5rem;display:flex;align-items:center;gap:.5rem}
+.asc-group-meta{font-size:.76rem;color:#9ca3af;font-weight:400}
+.asc-item{border:1px solid #e5e7eb;border-radius:.55rem;margin-bottom:.45rem;overflow:hidden;background:#fff}
+.asc-item-head{width:100%;display:flex;align-items:center;gap:.6rem;padding:.6rem .8rem;background:none;border:none;cursor:pointer;text-align:left;font-size:.9rem}
+.asc-item-head:hover{background:#f9fafb}
+.asc-badge{flex:none;width:1.4rem;height:1.4rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#fff}
+.asc-b-pass{background:#16a34a}
+.asc-b-warn{background:#d97706}
+.asc-b-fail{background:#dc2626}
+.asc-item-title{flex:1;color:#111827;font-weight:600}
+.asc-tag{flex:none;font-size:.72rem;font-weight:700;border-radius:.35rem;padding:.12rem .55rem}
+.asc-t-pass{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.asc-t-warn{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+.asc-t-fail{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5}
+.asc-item-arrow{color:#9ca3af;font-size:.8rem;transition:transform .15s}
+.asc-item.asc-open .asc-item-arrow{transform:rotate(180deg)}
+.asc-item-body{display:none;padding:.2rem .9rem .8rem 2.8rem;font-size:.86rem;color:#4b5563;line-height:1.8}
+.asc-item.asc-open .asc-item-body{display:block}
+.asc-item-body p{margin:.3rem 0}
+.asc-item-body b{color:#111827}
+.asc-st-fail{border-left:3px solid #dc2626}
+.asc-st-warn{border-left:3px solid #d97706}
+.asc-st-pass{border-left:3px solid #16a34a}
+.asc-empty{text-align:center;color:#9ca3af;font-size:.9rem;padding:1.4rem 0}
+.asc-report{width:100%;min-height:180px;border:1px solid #e5e7eb;border-radius:.5rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.7;color:#374151;background:#f9fafb;resize:vertical;box-sizing:border-box}
+.asc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.asc-faq dd{margin:0;line-height:1.9;font-size:.92rem;color:#4b5563}
+.asc-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem}
+.asc-related{display:flex;flex-wrap:wrap;gap:.5rem}
+.asc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+.asc-toast.asc-show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){
+.asc-score-wrap{gap:1rem}
+.asc-ring{width:120px;height:120px}
+.asc-ring svg{width:120px;height:120px}
+.asc-score-num{font-size:2rem}
+.asc-item-body{padding-left:.9rem}
+.asc-drop textarea{min-height:180px}
+}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">accessibility</i> 网站无障碍检查器</h1>
+<p>上线前给网页做一次<b>无障碍自查</b>：粘贴 HTML 源码，<b>12 条确定性规则</b>逐项检查（图片 alt / 表单 label / 按钮可访问名 / 标题层级 / 页面语言 / 焦点顺序 / 重复 id / 链接文本 / 媒体字幕 / ARIA 引用 / 文字对比度），打出 <b>0–100 总分</b>与优秀 / 良好 / 待改进等级，每条失败附<b>中文修复建议（含 WCAG 2.2 条款号）</b>，一键复制 <b>Markdown 报告</b>。浏览器本地 DOMParser 解析，<b>源码不出浏览器</b>。</p>
+</div>
+<div class="tool-content" style="max-width:960px;margin:auto;">
+
+<div class="asc-local-note">
+<i class="material-icons">lock</i>
+<div><b>隐私说明：</b>你粘贴的 HTML 源码只在<b>本机浏览器</b>内用 DOMParser 解析打分，页面脚本<b>零 fetch / XHR 请求、零上传</b>。可放心粘贴未上线的页面源码。</div>
+</div>
+
+<div class="asc-scope-note">
+<i class="material-icons">info</i>
+<div><b>能力边界（请先读）：</b>本工具是<b>无障碍自查工具，不是 WCAG 合规认证</b>。它只能检查静态 HTML 里可判定的问题；键盘焦点陷阱、JS 渲染后的内容、动态 ARIA 状态、屏幕阅读器的真实朗读行为，一律测不到，需要人工或专业工具（如 axe / Lighthouse）复核。对比度只对内联样式中前后景色都明确的文字打分，背景是图片/渐变的一律只给「手动核对」警告。</div>
+</div>
+
+<div class="asc-panel">
+<h3><i class="material-icons">code</i> 粘贴 HTML 源码</h3>
+<div class="asc-drop" id="asc-drop">
+<textarea id="asc-input" placeholder="在此粘贴网页 HTML 源码…&#10;&#10;获取方式：浏览器打开页面 → 右键「查看网页源代码」→ 全选复制 → 粘贴到这里。&#10;也可以把 .html 文件直接拖进来（本地读取，不上传）。" spellcheck="false"></textarea>
+<div class="asc-drop-hint">支持把 .html 文件拖入此区域（本地 FileReader 读取，不上传）· 超过 2MB 的源码会自动截断前 2MB 检查</div>
+</div>
+<div class="asc-charcount" id="asc-charcount">已粘贴 0 字符</div>
+<div class="asc-actions">
+<button class="asc-btn" id="asc-grade"><i class="material-icons">play_arrow</i> 开始检查</button>
+<button class="asc-btn asc-secondary" id="asc-sample"><i class="material-icons">description</i> 载入示例</button>
+<button class="asc-btn asc-secondary" id="asc-clear"><i class="material-icons">clear</i> 清空</button>
+</div>
+</div>
+
+<div class="asc-panel" id="asc-result" style="display:none">
+<h3><i class="material-icons">assessment</i> 检查结果</h3>
+<div class="asc-score-wrap">
+<div class="asc-ring">
+<svg viewBox="0 0 140 140" width="150" height="150">
+<circle cx="70" cy="70" r="58" class="asc-ring-bg"></circle>
+<circle cx="70" cy="70" r="58" class="asc-ring-fg" id="asc-ring-fg"></circle>
+</svg>
+<div class="asc-ring-center">
+<div class="asc-score-num" id="asc-score-num">0</div>
+<div class="asc-score-level" id="asc-score-level">—</div>
+</div>
+</div>
+<div class="asc-score-meta">
+<div style="font-size:.88rem;color:#6b7280;line-height:1.8">12 条规则逐项检查：通过 100 分 / 警告 50 分 / 失败 0 分，总分取均值。<br>等级：<b>优秀</b> ≥85，<b>良好</b> ≥60，<b>待改进</b> &lt;60。</div>
+<div class="asc-counts">
+<div class="asc-count asc-c-pass"><b id="asc-count-pass">0</b>通过</div>
+<div class="asc-count asc-c-warn"><b id="asc-count-warn">0</b>警告</div>
+<div class="asc-count asc-c-fail"><b id="asc-count-fail">0</b>失败</div>
+</div>
+</div>
+</div>
+<div class="asc-filters" id="asc-filters">
+<button data-filter="all" class="asc-f-active">全部</button>
+<button data-filter="pass">通过</button>
+<button data-filter="warn">警告</button>
+<button data-filter="fail">失败</button>
+<button class="asc-toggle-all" id="asc-toggle-all" type="button">全部展开</button>
+</div>
+<div id="asc-groups"></div>
+</div>
+
+<div class="asc-panel" id="asc-report-panel" style="display:none">
+<h3><i class="material-icons">content_copy</i> Markdown 报告</h3>
+<textarea class="asc-report" id="asc-report" readonly></textarea>
+<div class="asc-actions" style="margin-top:.8rem">
+<button class="asc-btn" id="asc-copy-report"><i class="material-icons">content_copy</i> 复制 Markdown 报告</button>
+</div>
+</div>
+
+<div class="asc-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="asc-faq">
+<dt>这 12 条规则都检查什么？</dt>
+<dd>五组：<b>图片与替代文本</b>（图片 alt，空 alt 装饰图合法不误报）、<b>表单与交互控件</b>（表单 label、按钮可访问名、链接文本）、<b>标题与文档结构</b>（标题层级、html lang、页面标题）、<b>键盘与 ARIA</b>（tabindex、重复 id、ARIA 引用完整性）、<b>媒体与对比度</b>（视频字幕/音频文字稿、文字对比度）。全部是确定性规则，无 AI、无猜测。</dd>
+<dt>分数是怎么算的？</dt>
+<dd>每条规则：通过 100 分、警告 50 分、失败 0 分，总分 = 12 项均值四舍五入。等级：优秀 ≥85、良好 ≥60、待改进 &lt;60。警告不致命但值得优化，失败项建议上线前修掉。</dd>
+<dt>为什么说这是「自查工具」，不是 WCAG 合规认证？</dt>
+<dd>真正的无障碍合规需要真人键盘操作测试、屏幕阅读器实测、动态交互验证，这些纯前端静态规则都做不到。本工具帮你低成本发现「低级硬伤」（缺 alt、无 label、跳级标题等），但<b>高分不等于通过 WCAG 认证</b>，上线前重要页面仍建议用 axe / Lighthouse 或人工复核。</dd>
+<dt>空 alt 的图片会被判失败吗？</dt>
+<dd>不会。<code>alt=""</code> 是装饰图的合法写法，工具会识别为装饰图并通过（文案里会注明）。只有<b>完全缺少 alt 属性</b>的内容图片，或<b>图片链接</b>（a 包裹 img）的 alt 为空，才会判失败——后者会让整个链接失去可访问名。</dd>
+<dt>表单 label 有哪几种合法写法？</dt>
+<dd>三种都认：① 显式关联 <code>&lt;label for="控件id"&gt;</code>；② label 直接包裹控件；③ <code>aria-label</code> / <code>aria-labelledby</code>。注意 <code>placeholder</code> 不能替代 label。三种都不满足才判失败，不会误报。</dd>
+<dt>对比度是怎么判的？为什么有时候只给警告？</dt>
+<dd>只对<b>内联样式里前景色＋背景色都明确</b>的文字计算对比度（正文要求 ≥4.5:1，大字 ≥3:1）。背景是图片、渐变、半透明或写在外部 CSS 里的，工具看不到真实渲染效果，只能给「手动核对」警告——这是保守设计，避免误判。</dd>
+<dt>为什么粘贴源码，而不是输入网址？</dt>
+<dd>浏览器跨域限制下，前端无法直接抓取任意网址的源码。粘贴源码的方式零后端、零等待，而且<b>源码不出浏览器</b>，未上线的页面也能放心检查。</dd>
+<dt>我的 HTML 会被上传吗？</dt>
+<dd>不会。解析（DOMParser）与打分全在本地完成，页面脚本不发起任何网络请求（零 <code>fetch</code> / <code>XMLHttpRequest</code>）。你可以断网后使用验证。</dd>
+<dt>报告里的修复建议可以直接照着改吗？</dt>
+<dd>可以。每条失败/警告都附了中文修复建议（含 WCAG 2.2 条款号与示例代码），按建议修改后重新粘贴检查，看分数变化即是最直接的验证。</dd>
+</dl>
+</div>
+
+<div class="asc-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="asc-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">网站无障碍检查器（当前）</span>
+<a href="/tools/landing-page-grader" class="btn btn-secondary" style="font-size:.9rem;">着陆页评分检查器</a>
+<a href="/tools/color-converter" class="btn btn-secondary" style="font-size:.9rem;">颜色转换器</a>
+<a href="/tools/html-entities" class="btn btn-secondary" style="font-size:.9rem;">HTML 实体编解码</a>
+<a href="/tools/og-card-preview" class="btn btn-secondary" style="font-size:.9rem;">OG 社交卡片预览</a>
+</div>
+</div>
+
+</div>
+</div>
+<div class="asc-toast" id="asc-toast"></div>
+<script src="/tools/static/js/accessibility_scanner.js?v=1"></script>
+</body>
+</html>
+{{end}}
