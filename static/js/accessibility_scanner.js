@@ -366,7 +366,7 @@ var RULES = [
             "有 " + positive.length + " 个 tabindex 为正值（" + sampleList(positive.map(String)) + "），" +
             "会打乱键盘 Tab 顺序，形成焦点陷阱。",
             "删除正值 tabindex，让焦点按 DOM 自然顺序走；需要跳过某元素才用 tabindex=\"-1\"；" +
-            "确实要参与 Tab 顺序的用 tabindex=\"0」即可。" +
+            "确实要参与 Tab 顺序的用 tabindex=\"0\"即可。" +
             "（" + this.wcag + "）");
         var zeros = tis.filter(function (t) { return t === 0; }).length;
         if (zeros > 10) return mkResult(this.id, this.group, this.title, this.wcag, ST_WARN,
