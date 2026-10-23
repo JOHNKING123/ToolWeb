@@ -1,3 +1,96 @@
+## 今日任务（2026-10-24 03:50 · 前端开发轮 ✅）
+
+**交付：本地看板任务管理（kanban_board）** — 本轮唯一任务（新工具），开发完成已提交推送：
+- **改动文件**：`templates/kanban_board.html`（新增；SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具＋「数据只保存在本浏览器」隐私声明）、`static/js/kanban_board.js`（新增；看板状态机＋HTML5 DnD＋移动端「移到某列」菜单降级＋localStorage 版本化持久化/损坏降级＋导出导入＋筛选搜索；纯函数经 module.exports 双模式导出供 node 测试）、`tests/kanban_board.test.js`（新增；132 断言全过）、`tools/categories.go`（实用工具品类注册 ID kanban_board、Path /tools/kanban-board、Icon dashboard、New: true）、`BACKLOG.md`（本条）。
+- **验收核对**：① `grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **155**（154→155 ✓）；② 桌面端卡片跨列拖拽＋列内指定位置插入（dragover 按卡片中点算插入索引＋蓝色插入线指示），列可增删改名（上限 8 列生效）、列头 ‹ › 箭头调序（桌面/移动通用）；移动端「移到某列」菜单（选目标列＋顶部/底部）可用；③ localStorage key `tw_kanban_board_v1` 版本化，刷新后完整恢复，手工破坏数据→不白屏、自动重建空看板＋toast 提示，quota 写满有提示；④ 卡片字段完整（标题必填/描述/优先级高-中-低三色/截止日期过期标红/逗号分隔多标签），优先级＋标签筛选＋全文搜索三条件联动，清空卡片有二次确认；⑤ 导出 JSON 可下载、导入可恢复（导入前二次确认），JS 源码自检零 fetch/XHR，文案如实「数据只保存在本浏览器」「不会同步」；⑥ node 测试 **132 断言全过**（≥40 ✓：列/卡片 CRUD、插入索引、持久化降级、筛选搜索、导出导入、模板静态检查）；⑦ 本地起服务 curl /tools/kanban-board 200、JS 200、title/canonical 正确，移动端媒体查询已配（列横向滚动不挤压错位）。
+- **实现要点**：纯函数核心（calcInsertIndex 按中点算位、validateBoard 严格校验、loadBoard 损坏降级）与 DOM 装配分离；拖拽时排除被拖卡片自身参与中点计算；卡片内容渲染全走 escHtml 防 XSS；列删除前二次确认（含卡片数提示）。
+- **提交**：`git log` 见本轮中文提交（muse/dev-20260929，已 push origin）；`toolWeb.bak-prev` 未入库（沿用 PM 轮要求，仅提醒）。
+- **待后续轮次**：评审轮 UI 走查＋测试轮黑盒 QA；部署走 ~/workspace/deploy/toolweb/deploy.sh（授权仅 /tool-web）。
+
+---
+
+## 今日任务（2026-10-24 03:40 · 产品经理排期轮）
+
+**选定：本地看板任务管理（kanban_board）** — 本轮唯一任务（新工具）：
+- **顺位**：03:00 研究轮（82 轮）Top3 首席推荐；网站无障碍检查器已交付闭环（cde8ffc 评审修复＋b8b21bf 新增，154 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 154 Path，ID accessibility_scanner、Path /tools/accessibility-scanner 已注册，实用工具品类）后顺位递进生效，依惯例「无硬伤不跳过」。未选：ASCII 字符画生成器（新晋 P2；HN 466pts＋Toolcraft 双重验证，无硬伤，留池顺位递进）、HTTP 状态码速查（P2；Site Tools Box 形态验证补强，无硬伤，留池顺位递进）。
+- **选定理由（本轮深夜轮）**：① **研究轮首席推荐**——03:00 轮 Top3 之首，dev.to mou1z「5 Free Developer Tools」Kanban Board（localStorage 拖拽看板）形态验证补强；77 轮新晋、多轮留池顺位，无硬伤不跳过；② **纯前端小难度一轮可高质量交付**——03:40 深夜轮时间预算紧张，看板列＋卡片拖拽＋localStorage 持久化形态稳定，零上传、零第三方库，节奏最稳；③ **零重叠复核**——本轮实测 `grep -rniE 'kanban|kanban_board|kanban-board'` 在 tools/categories.go、templates/ 零命中，static/js/ 仅 resume_checker.js 技能列表文案一处提及 Kanban（非独立工具），全量 154 Path 无同类工具；④ **痛点明确**——轻量看板都要注册/付费（Trello 注册墙、Notion 臃肿）；本地浏览器看板正中「不想注册、数据不出浏览器」的隐私痛点。
+- **品类归位**：注册到「实用工具」品类（与 accessibility_scanner、id_photo_maker 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（与调研假设不同，开发轮必须处理）**：① **移动端拖拽不能只靠 HTML5 DnD**——纯 HTML5 drag & drop 在触屏上不可用；桌面端用 dragstart/drop 实现拖拽，移动端必须提供降级方案（卡片「移到某列」下拉菜单或左右箭头按钮）；不能只做桌面拖拽就宣称全端可用；② **localStorage 必须有损坏降级**——存储加版本号，JSON.parse 失败或结构不符自动丢弃坏数据重建空看板（不能白屏），quota 写满要有提示而非静默丢失；③ **列自定义范围克制**——默认 待办/进行中/已完成 三列，允许重命名＋增删列（上限 8 列）；列顺序桌面拖拽/移动端箭头调整；子任务/评论/附件一律不做；④ **卡片字段收敛**——标题（必填）＋描述（可选）＋优先级（高/中/低三色）＋截止日期（过期标红）＋标签（逗号分隔）；指派人/评论/附件不做；⑤ **数据归属文案如实**——localStorage 只在本浏览器本机有效，页面必须如实写「数据只保存在本浏览器」，不得暗示多设备同步；导出/导入 JSON 备份为加分项（一轮内能做则做）；⑥ **列内拖拽排序必须精确**——拖放要能插入到指定位置（dragover 计算插入索引＋插入线指示），不能只能追加列尾，否则「看板」体验打折。
+- **ID/Path**：`kanban_board`、`/tools/kanban-board`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 看板区：默认三列（待办/进行中/已完成），列可重命名＋增删（上限 8 列），列顺序桌面拖拽/移动端箭头调整；列头显示卡片计数。
+- 卡片：标题（必填）＋描述（可选多行）＋优先级（高/中/低三色标签）＋截止日期（过期标红）＋标签（逗号分隔多标签）；卡片点击展开编辑弹窗，Esc/点击遮罩关闭。
+- 拖拽：桌面端 HTML5 DnD 跨列移动＋列内指定位置插入（插入线指示）；移动端卡片「移到」下拉菜单（选目标列＋位置顶部/底部）。
+- 持久化：localStorage（key `tw_kanban_board_v1`，带版本号），所有变更即时落盘；损坏数据降级重建；导出/导入 JSON 备份（一键下载＋文件导入）。
+- 筛选/搜索：按优先级筛选、按标签筛选、标题/描述全文搜索；一键清空已完成列（二次确认）。
+- 注册：ID `kanban_board`、Name「本地看板任务管理」、Path `/tools/kanban-board`、Category 实用工具、Icon 建议 kanban/dashboard 类、New: true；中英文描述＋SEO keywords（看板、任务看板、kanban、任务管理、待办事项、todolist、本地看板、免注册看板）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐（canonical 形如 https://www.johnkingzcq123.xyz/tools/kanban-board）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `kanban_board`、Path `/tools/kanban-board` 注册完整（Category 实用工具），注册总数 154→155 Path。
+2. 桌面端：卡片可跨列拖拽、列内可插入指定位置（插入线指示正确）；列可增删改名（上限 8 列生效）；移动端「移到某列」降级可用。
+3. 刷新页面后看板状态完整恢复（localStorage 落盘）；手工破坏 localStorage 数据→页面不白屏、自动重建空看板并提示。
+4. 卡片字段完整：标题/描述/优先级三色/截止日期过期标红/多标签；筛选（优先级＋标签）＋搜索联动正确；清空已完成列有二次确认。
+5. 导出 JSON 可下载、导入可恢复；脚本零 fetch/XHR、零上传；文案如实（「数据只保存在本浏览器」声明完整，不暗示同步）。
+6. node 测试 40+ 断言全过（列/卡片 CRUD 纯函数、拖拽插入索引计算、localStorage 读写降级、筛选搜索逻辑、导出导入格式；DOM 部分可 mock）。
+7. 页面无报错；移动端布局不错位。
+
+**预计改动文件**：
+- `templates/kanban_board.html`（新增；含 SEO 面板按家族标准＋看板列/卡片/编辑弹窗/筛选栏 UI 样式）
+- `static/js/kanban_board.js`（新增；看板状态机＋HTML5 DnD＋移动端降级＋localStorage 持久化（版本化/降级）＋导出导入＋筛选搜索；双模式导出供 node 测试）
+- `tests/kanban_board.test.js`（新增；CRUD 纯函数、插入索引、持久化降级、筛选搜索、导入导出）
+- `tools/categories.go`（实用工具品类注册：ID kanban_board、Path /tools/kanban-board、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD cde8ffc（accessibility_scanner 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮带 env 正常（origin/muse/dev-20260929 与本地一致）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 154 Path；Top3 候选三路零重叠本轮复核（kanban：categories.go/templates 零命中、static/js 仅 resume_checker.js 技能文案提及；ascii_art/字符画、http_status/状态码速查全路零命中）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 03:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。网站无障碍检查器已交付闭环（`git log` 头部 cde8ffc：tabindex 修复建议引号修复；b8b21bf 新增工具：12 条确定性规则＋DOMParser 本地解析＋打分/等级＋Markdown 报告；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **154 Path**，ID accessibility_scanner、Path /tools/accessibility-scanner 已注册；`grep -n accessibility_scanner tools/categories.go` 1050 行命中；templates/static/tests 三件套齐备；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 深夜轮次，P1 池已空，P2 可晋升，优先小难度纯前端。
+
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. accessibility_scanner 交付确认：`git log` 头部 cde8ffc（b8b21bf 新增＋评审修复）；全量 154 Path（ID accessibility_scanner、Path /tools/accessibility-scanner 已注册）；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮首次 fetch 因 VM 换机丢 known_hosts 报 Host key verification failed，重带 env 后自动入库恢复正常——与 10-23 惯例一致）；候选池划出。
+2. 新信号扫描：
+   - **HN Front Page Roundup 10-10（duklee.net）**："Animated ASCII Art for Web Pages"（444→466 pts）→ 三路核查确认**无独立 ASCII 字符画工具**（`ascii` 仅命中 barcode_generator/curl_to_requests/project_to_txt/mbox_viewer 等偶发字符集上下文；`字符画|ascii.{0,5}(art|artwork)` templates 全路零命中；pixel_art_converter 仅像素风转换）→ **新晋 P2「ASCII 字符画生成器」**（建议 ID ascii_art_generator、Path /tools/ascii-art-generator）：上传图片→canvas 本地降采样→亮度映射 ASCII 字符集（可调宽度/字符集/反色/彩色模式）→复制/导出 .txt，纯前端小难度，零上传；
+   - **Show HN Toolcraft（newsoftoday，约 19 小时前）**：开源 AI 设计应用脚手架，列举用例含 "Image stylization, ASCII, pixel, halftone, and glitch effects" → ASCII/像素/半调特效需求侧写验证，池内新晋 ASCII 字符画生成器**形态验证补强**（产品本身为 starter kit，非单工具形态，不立项）；
+   - **V2EX md2chat（10-20）**：Markdown→聊天图文（微信/钉钉/飞书/企微适配）→ **实锤自有 md_to_chat**（templates/md_to_chat.html＋static/js/md_to_chat.js＋tools/categories.go 均注册），不立；
+   - **dev.to Antigravity Tools（4 天前，59 个免费浏览器工具）**：PII Masker（脱敏）→ **实锤自有 text_privacy_masker**，不立；JWT Inspector/RSA-ECC 密钥生成/Hash→全自有；AI Token Counter/System Prompt Builder→自有 ai_token_counter 等复现；AI Text Humanizer→AI 类不立；
+   - **dev.to mou1z「5 Free Developer Tools」（24 天前）**：Kanban Board（localStorage 拖拽看板）→ 池内 P2「本地看板任务管理」**形态验证补强**；Pomodoro Timer→自有 countdown_timer；CSS Gradient Generator→自有 css_gradient_generator；JSON Formatter→自有；Regex Tester→自有 regex_tester；
+   - **HN 10-10 其余**：Bigwords.page（677→717 pts，屏幕变大字标牌）→ **实锤自有 big_sign_display**，不立；Lofi Cities（304 pts，浏览器氛围应用）→ 非单工具形态不立；Sphinx（git hook AI quiz，npm 包）→ 非 web 工具不立；
+   - **Product Hunt 10 月周榜（Medium）**：Retriever AI（浏览器 agent）/Fina→非单页 web 工具形态，不立；
+   - **stillworks.today 10-24**：本轮 browser.open 抓取失败（upstream fetch 失败，按规则不重试），77~81 轮连续五轮同榜（EasyFunnel/GateKeeperAI/Camera.wedding/CtrlOps/FolioSort/Ignition/XPacts/Renomee/Kiwi/AutoMEP/Fastio/BankStatement2PDF/Stagerize/Orkyo/IconCraft）已消化，本轮按无变化处理。
+3. 候选池变动：网站无障碍检查器已交付划出（cde8ffc/b8b21bf，154 Path）；**新晋 P2 1 个**（ASCII 字符画生成器）；**形态补强 2 项**（本地看板任务管理：mou1z Kanban Board；ASCII 字符画生成器：Toolcraft ASCII 特效用例）；自有实锤消解 6 项（md_to_chat、text_privacy_masker、countdown_timer、css_gradient_generator、regex_tester、big_sign_display）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，03:00 深夜轮优先小难度纯前端）：
+
+1. **本地看板任务管理** — P2（77 轮新晋；多轮留池顺位；本轮 dev.to mou1z Kanban Board 形态验证补强；痛点：轻量看板都要注册/付费（Trello 注册墙、Notion 臃肿）；纯前端小难度：看板列＋卡片拖拽＋localStorage 持久化，零上传；`kanban|kanban_board` 在 tools/categories.go、static/js/、templates/ 三路**零命中实锤**；深夜轮时间预算紧张，纯前端小工具节奏最稳；建议 ID kanban_board、Path /tools/kanban-board）。
+2. **ASCII 字符画生成器** — 新晋 P2（本轮首席新晋；HN「Animated ASCII Art for Web Pages」466 pts＋Show HN Toolcraft ASCII 特效用例双重形态验证；痛点：想把图片转成字符画发论坛/签名/代码注释，现有站要么广告多要么上传图片；纯前端小难度：上传图片→canvas 本地降采样→亮度映射字符集（宽度/字符集/反色/彩色模式可调）→复制＋导出 .txt，零上传；`字符画|ascii.{0,5}(art|artwork)` templates 全路**零命中实锤**；建议 ID ascii_art_generator、Path /tools/ascii-art-generator）。
+3. **HTTP 状态码速查** — P2（23:45 新晋；81 轮 Site Tools Box 把"verify an HTTP status code"列为免注册工具核心痛点示例，形态验证；痛点：联调时查 429/418/502 含义要翻 MDN 英文文档；纯前端小难度：可搜索＋按类别筛选的 1xx–5xx 中文参考＋常见场景＋排查建议；tools/categories.go `状态码`**零命中实锤**；建议 ID http_status_reference、Path /tools/http-status-reference）。
+
+其余 P1 留池：无（网站无障碍检查器已交付）。
+其余 P2 留池：本地 LLM 硬件检测器（四次形态验证：Show HN「What LLM fits my GPU?」/llmspeed/Hotfix Flint；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）；死链检查器（78 轮新晋；中难度 Go 后端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/SERP 片段预览/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十二轮：网站无障碍检查器已交付划出（cde8ffc/b8b21bf，154 Path）；**新晋 P2：ASCII 字符画生成器**（HN Animated ASCII Art 466 pts＋Toolcraft ASCII 特效用例形态验证；上传图片→canvas 降采样→亮度映射字符集→复制/导出 .txt，纯前端小难度零上传；`字符画|ascii.{0,5}(art|artwork)` 全路零命中实锤；建议 ID ascii_art_generator、Path /tools/ascii-art-generator）；形态补强 2 项（本地看板任务管理：mou1z Kanban Board；ASCII 字符画生成器：Toolcraft）；自有实锤消解 6 项不立（md2chat→md_to_chat、Antigravity PII Masker→text_privacy_masker、Pomodoro→countdown_timer、CSS Gradient→css_gradient_generator、Regex→regex_tester、Bigwords.page→big_sign_display）；Lofi Cities/Sphinx/Toolcraft 本体/Retriever AI→非单页 web 工具形态不立；stillworks.today 本轮抓取失败按无变化处理；全量 154 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| ASCII 字符画生成器 | 新晋 P2（82 轮；HN Front Page Roundup 10-10「Animated ASCII Art for Web Pages」466 pts＋Show HN Toolcraft「ASCII/pixel/halftone effects」用例双重形态验证；痛点：图片转字符画发论坛/签名/代码注释，现有站点广告多或要上传图片；纯前端小难度：上传图片→canvas 本地降采样→亮度映射 ASCII 字符集（宽度/字符集/反色/彩色模式可调）→复制＋导出 .txt，零上传；`字符画\|ascii.{0,5}(art\|artwork)` templates 全路零命中实锤（`ascii`仅偶发字符集上下文；pixel_art_converter 仅像素风）；建议 ID ascii_art_generator、Path /tools/ascii-art-generator） | 小 | P2 |
+| 网站无障碍检查器 | 已交付划出（cde8ffc 评审修复＋b8b21bf 新增：12 条确定性规则引擎＋DOMParser 本地解析＋打分/等级＋中文修复建议＋Markdown 报告；ID accessibility_scanner、Path /tools/accessibility-scanner 已注册，实用工具品类；全量 154 Path；候选池划出） | — | 已实现 |
+| 本地看板任务管理 | 形态补强（82 轮；dev.to mou1z「5 Free Developer Tools」Kanban Board：localStorage 拖拽看板，免注册；与池内候选同构验证） | 小 | P2 |
+| 自有实锤消解 | 不立（V2EX md2chat→实锤自有 md_to_chat；Antigravity PII Masker→实锤自有 text_privacy_masker；mou1z Pomodoro→自有 countdown_timer；CSS Gradient→自有 css_gradient_generator；Regex Tester→自有 regex_tester；HN Bigwords.page→实锤自有 big_sign_display） | — | 不立 |
+| 非工具形态 | 不立（Show HN Lofi Cities→浏览器氛围应用；Sphinx→npm 包；Toolcraft→设计应用脚手架 starter kit；Product Hunt Retriever AI→浏览器 agent；Calends 类订阅账本→需后端/AI） | — | 不立 |
+| stillworks.today 10-24 | 本轮抓取失败（browser.open upstream fetch 失败，按规则不重试），77~81 轮连续五轮同榜已消化，按无变化处理 | — | 不立 |
+
+**归档说明**：本轮为 10-24 通用调研第八十二轮——网站无障碍检查器交付闭环（cde8ffc/b8b21bf，`/tools/accessibility-scanner` 已注册，实用工具品类，全量 154 Path），候选池划出；**新晋 P2 ASCII 字符画生成器**（HN 466 pts＋Toolcraft 双重验证，纯前端小难度，零命中实锤）；本地看板任务管理获 mou1z Kanban 形态补强；6 项自有实锤消解；Show HN/V2EX/dev.to/Product Hunt 信号均已消化；WPS 候选表保持冻结归档；仓库 154 注册工具全量核对无重叠（Top3 建议 ID kanban_board / ascii_art_generator / http_status_reference；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮首次 fetch 因 VM 换机 known_hosts 丢失报 Host key verification failed，重带 env 后 github.com ED25519 key 自动入库恢复正常，与 10-23 惯例一致）；`git log` 头部 cde8ffc（accessibility_scanner 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 154 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 01:45 · 产品经理排期轮）
 
 **选定：网站无障碍检查器（accessibility_scanner）** — 本轮唯一任务（新工具）：

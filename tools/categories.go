@@ -1055,6 +1055,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "kanban_board",
+					Name:        "本地看板任务管理",
+					Description: "免费在线本地看板任务管理：默认待办/进行中/已完成三列，列可重命名增删（上限8列）左右调序；卡片含标题/描述/高-中-低三色优先级/截止日期（过期标红）/多标签；桌面端HTML5拖拽跨列移动＋列内指定位置插入（插入线指示），移动端「移到某列」菜单降级；优先级/标签筛选＋全文搜索，一键清空、JSON导出导入备份；数据只保存在本浏览器localStorage，免注册、脚本零fetch/XHR零上传 · Local kanban board: drag & drop columns and cards, priorities, due dates, tags, filters, JSON backup, 100% client-side",
+					Path:        "/tools/kanban-board",
+					Icon:        "dashboard",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{
