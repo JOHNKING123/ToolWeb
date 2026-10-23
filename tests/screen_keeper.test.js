@@ -35,6 +35,10 @@ function eq(a, b, name) { ok(a === b, name + "（期望 " + JSON.stringify(b) + 
     eq(sk.nextState(ST.LOST, "REACQUIRE_FAIL"), ST.DEGRADED, "lost+REACQUIRE_FAIL→degraded（重锁失败降级）");
     eq(sk.nextState(ST.LOST, "START"), ST.LOCKING, "lost+START→locking（手动重启）");
     eq(sk.nextState(ST.LOST, "STOP"), ST.IDLE, "lost+STOP→idle");
+    /* 评审复测#1 补充断言：重锁事件必须让 locking 离开 */
+    eq(sk.nextState(ST.LOCKING, "REACQUIRE_OK"), ST.LOCKED, "locking+REACQUIRE_OK→locked（重锁成功灯变绿）");
+    eq(sk.nextState(ST.LOCKING, "REACQUIRE_FAIL"), ST.DEGRADED, "locking+REACQUIRE_FAIL→degraded（重锁失败降级徽标出现）");
+    eq(sk.nextState(ST.DEGRADED, "VIDEO_STARTED"), ST.DEGRADED, "degraded+VIDEO_STARTED 保持 degraded");
     eq(sk.nextState("bogus", "START"), ST.IDLE, "非法状态回退 idle");
 })();
 
@@ -131,8 +135,28 @@ function eq(a, b, name) { ok(a === b, name + "（期望 " + JSON.stringify(b) + 
             k3.start();
             eq(k3.state, sk.ST.LOST, "无 API 且无 DOM → 降级失败 → lost");
 
-            Object.defineProperty(global, "navigator", { value: undefined, configurable: true, writable: true });
-            finish();
+            /* 评审复测#2：start→请求还在路上→stop→兑现，必须无活锁、无幽灵计时器 */
+            var deferred = {};
+            var sentinel2 = { releaseCount: 0, release: function () { this.releaseCount++; }, addEventListener: function () {} };
+            Object.defineProperty(global, "navigator", { value: { wakeLock: { request: function () {
+                return new Promise(function (res, rej) { deferred.resolve = res; deferred.reject = rej; });
+            } } }, configurable: true, writable: true });
+            Object.defineProperty(global, "document", { value: { visibilityState: "visible", addEventListener: function () {}, removeEventListener: function () {} }, configurable: true, writable: true });
+            var k4 = new sk.WakeKeeper({});
+            k4.start();
+            eq(k4.state, sk.ST.LOCKING, "k4 请求未兑现时 → locking");
+            k4.stop();
+            eq(k4.state, sk.ST.IDLE, "k4 停止后 → idle");
+            deferred.resolve(sentinel2);
+            setTimeout(function () {
+                eq(k4.state, sk.ST.IDLE, "兑现后 state 仍为 idle（无状态漂移）");
+                eq(k4.lock, null, "兑现后 k4.lock 为 null（延迟兑现的锁就地释放）");
+                eq(k4.timerId, null, "兑现后计时器仍为 null（无幽灵计时器）");
+                eq(sentinel2.releaseCount, 1, "延迟兑现的锁被立即释放，无活锁");
+
+                Object.defineProperty(global, "navigator", { value: undefined, configurable: true, writable: true });
+                finish();
+            }, 30);
         }, 30);
     }, 30);
 })();

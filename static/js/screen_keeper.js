@@ -44,6 +44,10 @@ function nextState(state, event) {
         case ST.LOCKING:
             if (event === "WAKE_GRANTED") return ST.LOCKED;
             if (event === "WAKE_DENIED" || event === "WAKE_UNAVAILABLE") return ST.DEGRADED;
+            /* 评审复测#1 修复：重锁成功/失败必须离开 locking，
+             * 否则重锁成功后状态灯卡死红色、文案停在"正在请求屏幕锁…" */
+            if (event === "REACQUIRE_OK") return ST.LOCKED;
+            if (event === "REACQUIRE_FAIL") return ST.DEGRADED;
             if (event === "VIDEO_FAILED") return ST.LOST; /* 无 API 直接走降级但 DOM 不可用 */
             if (event === "STOP") return ST.IDLE;
             return ST.LOCKING;
@@ -247,6 +251,12 @@ WakeKeeper.prototype._acquireWakeLock = function (isReacquire) {
         return;
     }
     p.then(function (sentinel) {
+        /* 评审复测#2 修复：请求还在路上时若用户已点停止（state=idle），
+         * 不能把兑现的锁变成永远释放不掉的活锁，也不能起幽灵计时器 */
+        if (self.state === ST.IDLE) {
+            try { sentinel.release(); } catch (e) {}
+            return;
+        }
         self.lock = sentinel;
         try {
             sentinel.addEventListener("release", self._onLockRelease);
@@ -254,6 +264,8 @@ WakeKeeper.prototype._acquireWakeLock = function (isReacquire) {
         self._emit(isReacquire ? "REACQUIRE_OK" : "WAKE_GRANTED");
         self._startTimer();
     }, function (err) {
+        /* 已停止后拒绝回调也不应再触发降级/视频 */
+        if (self.state === ST.IDLE) return;
         /* 被拒绝（NotAllowedError 等）→ 降级视频模式 */
         self._emit(isReacquire ? "REACQUIRE_FAIL" : "WAKE_DENIED",
             { error: String(err && err.message || err) });
