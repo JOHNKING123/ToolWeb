@@ -1,3 +1,92 @@
+## 开发交付（2026-10-23 17:50 · 前端开发第1轮：屏幕常亮）
+
+**交付：屏幕常亮（screen_keeper）** — 本轮唯一任务闭环：
+- 新增 `templates/screen_keeper.html`（SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具；大开关＋三色状态灯＋mm:ss 累计计时＋降级徽标＋iOS 手势提示＋锁丢失红色横幅＋模式偏好下拉）、`static/js/screen_keeper.js`（纯前端：Wake Lock 主路径＋visibilitychange 自动重锁＋release 事件丢失提示＋视频降级 trick；双模式导出供 node 测试）、`tests/screen_keeper.test.js`；`tools/categories.go` 实用工具品类注册（ID screen_keeper、Path /tools/screen-keeper、New: true），Path 总数 149→150。
+- 功能：开始常亮→`navigator.wakeLock.request('screen')`（用户手势上下文）→状态灯绿＋toast＋计时；切后台/锁屏后 `release` 事件或 `visibilitychange` 触发自动重锁（重锁失败→降级视频）；Wake Lock 不可用/被拒绝→自动降级「视频保亮模式」（1x1 隐藏 video 循环播放 canvas.captureStream() 实时流，零 fetch/XHR、零外部资源），UI 明确标注降级徽标；停止→立即释放锁/停视频，灯回灰、计时清零；偏好 `sk:prefs` localStorage 持久化；`?mode=video` 强制降级演示。
+- 自测：`go build -o toolWeb .` 通过；本地 18099 起服 `/tools/screen-keeper` 200（JS/CSS 引用正常，首页列表含 screen-keeper）；`node tests/screen_keeper.test.js` **70/70 全过**（状态机五态转换 17 断言、灯色/文案、环境检测、模式决策、重锁决策、mm:ss 格式化、偏好序列化、WakeKeeper mock 生命周期、源码零 fetch/XHR＋关键 API 存在）。
+- 开发中修了一个真问题：状态机 `LOCKING` 态未处理 `VIDEO_FAILED` 事件（无 API 环境直接走降级但 DOM 不可用时状态卡死），已补 `LOCKING+VIDEO_FAILED→LOST`。
+- 备注：仓库根未跟踪的 `toolWeb.bak-prev`（20MB 构建残留二进制）仍未入库；`go run main.go` 单文件编译缺 mount.go 符号，本地验证改用 `TOOLWEB_ADDR=127.0.0.1:18099 ./toolWeb` 起服。
+
+---
+
+## 今日任务（2026-10-23 17:00 · 产品经理排期轮）
+
+**选定：屏幕常亮（screen_keeper）** — 本轮唯一任务（新工具）：
+- **顺位**：17:36 研究轮（78 轮）Top3 首席推荐；white_noise_generator 交付闭环（0e615c0，149 Path）后顺位递进生效，依惯例「无硬伤不跳过」。未选：浏览器实时听写（P1 留池二席；Web Speech API，留池）、着陆页评分检查器（P2 本轮新晋；26 条确定性规则打分，留池）。
+- **选定理由（本轮晚轮）**：① **研究轮首席推荐**——留池多轮的 P1 候选，顺位居前；② **小难度一轮可高质量交付**——晚轮时间预算紧张，接纯前端小工具节奏最稳；③ **零重叠实锤**——本轮实测 `grep -cniE '屏幕常亮|screen_keeper|Wake\.Lock|wakeLock'` 在 tools/categories.go、static/js/、templates/ 三路均为零命中，全量 149 Path 无同类工具；④ **痛点明确**——手机/平板看菜谱或演示时屏幕自动熄灭，现有方案要装 App 或改系统设置；Wake Lock API＋降级 trick（隐藏视频循环播放）纯前端零上传正中痛点。
+- **形态验证**：一键「保持常亮」→ Wake Lock API 请求屏幕锁＋状态指示（已锁定/锁定丢失/不支持）→ 后备方案（Wake Lock 不支持/被拒绝时自动降级为隐藏 <video> 循环播放 trick）→ 状态持久与用户手势说明。
+- **品类归位**：注册到「实用工具」品类；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 核心开关：大按钮「开始常亮/停止」；状态灯（绿色＝锁定生效、红色＝锁定丢失/失败、灰色＝未启动）。
+- Wake Lock 主路径：`navigator.wakeLock.request('screen')`；监听 `visibilitychange`（切回前台自动重锁）与 lock 的 `release` 事件（被系统释放时自动重锁或提示）；锁定生效/丢失的醒目反馈。
+- 降级 trick：Wake Lock API 不存在或被拒绝时自动切换「视频保亮模式」（1×1 隐藏 video 元素循环播放静音 WebM/data URI 或 canvas 捕获流，阻止屏幕休眠）；UI 明确标注当前生效的是降级模式。
+- 配套：保亮时长显示（本次已保亮 mm:ss 累计）、「再点一次以释放」的二次确认语义、localStorage 记住上次模式偏好；移动端（iOS 需用户手势＋Chrome/Safari 行为差异）有明确提示文案；页面关闭/刷新时提示保亮会失效（不宣称后台能力）。
+- 注册：新增工具 ID `screen_keeper`、Name「屏幕常亮」、Path `/tools/screen-keeper`（New: true），中英文描述＋SEO keywords（屏幕常亮、screen keep awake、屏幕不熄灭、wake lock、演示保亮）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `screen_keeper`、Path `/tools/screen-keeper` 注册完整（Category 实用工具），注册总数 149→150 Path。
+2. 点击「开始常亮」→ Wake Lock 请求成功时状态灯变绿并显示已保亮时长；手动锁屏或切后台再回来后自动重锁（无人工干预续锁）。
+3. 在 Wake Lock 不可用环境（如 HTTP/不支持的浏览器，可用参数强制模拟）→ 自动降级视频保亮模式，UI 明确标注降级状态且计时照常。
+4. 点击「停止」→ 立即释放锁/暂停视频，状态灯回灰，累计时长清零；锁定意外丢失（release 事件）有红色醒目提示。
+5. 脚本内零 fetch/XHR；node 测试 30+ 断言全过（状态机纯逻辑可测：启动/锁定中/丢失/已释放四态转换、visibilitychange 重锁逻辑、降级判定、时长格式化、localStorage 序列化）。
+6. 移动端：iOS Safari 有「需保持页面在前台」的手势与行为提示；页面无报错。
+
+**预计改动文件**：
+- `templates/screen_keeper.html`（新增；含 SEO 面板按家族标准＋大开关/状态灯/时长显示 UI 样式）
+- `static/js/screen_keeper.js`（新增；Wake Lock 主路径＋visibilitychange/重锁＋视频降级 trick＋状态机＋时长计时；双模式导出供 node 测试）
+- `tests/screen_keeper.test.js`（新增；状态机转换、降级判定、时长格式化、持久化序列化）
+- `tools/categories.go`（实用工具品类注册：ID screen_keeper、Path /tools/screen-keeper、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 0e615c0（white_noise_generator 交付闭环）；本地当前分支 muse/dev-20260929；`git fetch` 本轮首次报 access rights（沿用 10-23 惯例：77 轮同为首次抖动、重试正常，本轮分支/HEAD 核对无误，未强行重试，开发轮执行时再重试）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 149 Path；三候选零重叠本轮复核（屏幕常亮/实时听写/着陆页评分器三路零命中）；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 17:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。白噪音发生器已交付闭环（`git log` 头部 0e615c0：WebAudio 本地合成白/粉/棕噪声＋雨/雷/风环境声混音、预设/定时器/localStorage 持久化，实用工具品类，148→149 Path，node 测试 5119 断言全过；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **149 Path**，ID white_noise_generator、Path /tools/white-noise-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 晚轮次，P1 可排。
+
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. white_noise_generator 交付确认：`git log` 头部 0e615c0；全量 149 Path（ID white_noise_generator、Path /tools/white-noise-generator 已注册，实用工具品类）；候选池划出。
+2. 新信号扫描：
+   - **dev.to 着陆页评分器**（mattbusel 10-17：免费、无 AI 的 landing page grader，实测跑完 2079 个 Show HN 页面；抓取页面 HTML→26 条确定性规则逐项检查（title/meta description/OG 图/headline/移动 viewport/售价信息/lorem ipsum/buzzword 墙等）→总分＋逐项修复建议；纯前端单页形态）→ `grep -cinE 'grader|着陆页|landing.page|网页评分|网页体检'` **零命中实锤**（仅 html-entities 命中 page 字样，非同类工具）→ **新晋 P2「着陆页评分检查器」**（痛点：独立站/个人页上线前不知道 SEO 卫生做到位没，现有 SaaS 要注册或按次收费；纯前端小难度：粘贴网页 HTML 源码→26 条规则打分＋通过/警告/失败三色清单＋修复建议，零上传；建议 ID landing_page_grader、Path /tools/landing-page-grader）；
+   - **Show HN bigwords.page**（URL 即 app：把文案拼到 URL 里，屏幕渲染巨型字牌）→ `grep '"big-sign-display"'` **实锤自有**（ID big_sign_display「大字标牌展示器」，生活工具品类，翻页/全屏/镜像/高对比主题全有）→ 不立；
+   - **V2EX**：vaneform 网站流量查询（10-13；数据依赖 similarweb/dataforseo 有固定成本，免费版阉割）→ 需后端数据，不立；微诗 App 重写帖（诗词 App 内购，非 web 工具）不立；Claude 帖（账号话题）不立；AI 活动海报帖（提示词讨论，无单工具形态）不立；
+   - **dev.to 工具合集轮**（Napizo 15 浏览器工具 10-14：PDF 转图/合并/压缩/图转 PDF/图片压缩/背景移除/二维码/字数统计等 → 全自有实锤复现；KeptTools：JSON/SQL/JWT/Base64/正则/UUID/大小写转换/PNG→WebP/裁剪/Image→SVG/背景更换 → 全自有实锤复现，大小写转换已有文本工具覆盖；md_shohan 10-13 十个生产力工具：Image Annotator 截图标注器 → `grep ID` **实锤自有**（image_annotator）；SERP snippet preview → **实锤自有**（serp_snippet_preview）；其余番茄/倒计时/时区/日期计算＝自有实锤复现；Etemora RDAP 工具 → 池内 P2 域名创意生成器已覆盖；mou1z Kanban/Pomodoro/Gradient/JSON/Regex/QR → 全自有实锤复现；muhammad_alamgirsaeed 52 工具：**Broken Link Checker 死链检查** → `grep -cinE '死链|broken.link|dead.link'` **零命中实锤** → **新晋 P2「死链检查器」**（痛点：站点改版后手工逐个点链接耗时；中难度：粘贴 URL 列表→服务端并发抓取（Go 后端，避 CORS）→状态码/重定向/超时逐项报告，纯前端录入＋Go 接口；建议 ID broken_link_checker、Path /tools/broken-link-checker）；Domain Age Checker → 自有 domain-check 覆盖，Bulk Domain Authority → 需后端 API 不立；其余全自有实锤）；
+   - **stillworks.dev 10-23 日榜**：与 10-22 榜单同（EasyFunnel/GateKeeperAI/Camera.wedding/CtrlOps/FolioSort/Ignition/XPacts/Renomee/Kiwi/AutoMEP/Fastio/BankStatement2PDF/Stagerize/Orkyo/IconCraft）→ 77 轮已消化，无新立；
+   - **Reddit/知乎**：本轮返回均为 SEO 营销内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：白噪音发生器已交付划出（0e615c0，149 Path）；**新晋 2 个 P2**（着陆页评分检查器、死链检查器）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；white_noise_generator 交付闭环后按顺位递进）：
+
+1. **屏幕常亮** — P1（留池；痛点：手机/平板看菜谱/演示时屏幕自动熄灭，现有方案要装 App 或改系统设置；纯前端小难度：Wake Lock API＋降级方案（隐藏视频循环播放 trick），零上传；`屏幕常亮|screen_keeper|Wake.Lock` 零命中实锤；建议 ID screen_keeper、Path /tools/screen-keeper）。
+2. **浏览器实时听写** — P1（留池；76 轮 Whistle 设备端语音转写＋Murmur push-to-talk 双形态验证补强；痛点：免打字语音转文字，现有方案要 App 或云端上传录音；纯前端小难度：Web Speech API/本地模型＋push-to-talk＋实时字幕，零上传；建议 ID realtime_dictation、Path /tools/realtime-dictation）。
+3. **着陆页评分检查器** — P2（本轮新晋；dev.to mattbusel 10-17 免费无 AI landing page grader 形态验证（2079 个 Show HN 页面实测跑通）；痛点：独立站/个人页上线前 SEO 卫生无从检验，Woorank 等按次收费；纯前端小难度：粘贴 HTML→26 条确定性规则打分＋三色清单＋修复建议，零上传；`grader|着陆页|landing.page` 零命中实锤；建议 ID landing_page_grader、Path /tools/landing-page-grader）。
+
+其余 P1 留池：无。
+其余 P2 留池：死链检查器（本轮新晋；52-tools Broken Link Checker 形态验证；中难度：服务端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；本地看板任务管理（77 轮新晋；建议 ID kanban_board、Path /tools/kanban-board）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十八轮：白噪音发生器已交付划出（0e615c0，149 Path）；**新晋 P2 着陆页评分检查器**（dev.to mattbusel 10-17 landing page grader 形态验证：抓取 HTML→26 条确定性规则→总分＋逐项修复建议；粘贴 HTML 源码纯前端单页可行，零命中实锤；建议 ID landing_page_grader、Path /tools/landing-page-grader）；**新晋 P2 死链检查器**（52-tools Broken Link Checker 形态验证：粘贴 URL 列表→Go 后端并发抓取→状态码/重定向/超时报告；零命中实锤；建议 ID broken_link_checker、Path /tools/broken-link-checker）；Show HN bigwords.page→实锤自有大字标牌展示器（big_sign_display）；V2EX（vaneform 需后端数据成本、微诗 App 非 web、Claude 帖、海报帖无工具形态）不立；dev.to 合集轮（Napizo 15 工具/KeptTools/mou1z/muhammad_alamgirsaeed→全自有实锤复现，仅死链检查器新立；Image Annotator 实锤自有 image_annotator；SERP 预览实锤自有 serp_snippet_preview；Etemora RDAP→池内域名创意生成器已覆盖）；stillworks 10-23 日榜与 77 轮同榜无新立；Reddit/知乎本轮空；全量 149 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 着陆页评分检查器 | 新晋（78 轮；dev.to mattbusel 10-17 免费无 AI landing page grader 形态验证（2079 个 Show HN 页面实测）；痛点：独立站/个人页上线前 SEO 卫生无从检验，Woorank 按次收费；纯前端小难度：粘贴 HTML 源码→26 条确定性规则（title/meta/OG/viewport/单 H1/正文深度/图片 alt/内链外链/HTTPS/mobile）逐项打分＋三色清单＋修复建议，零上传；`grader\|着陆页\|landing.page\|网页评分\|网页体检` 零命中实锤；建议 ID landing_page_grader、Path /tools/landing-page-grader） | 小 | P2 |
+| 死链检查器 | 新晋（78 轮；dev.to 52-tools Broken Link Checker 形态验证；痛点：站点改版后手工逐个点链接耗时；中难度：粘贴 URL 列表→Go 后端并发抓取（避 CORS）→状态码/重定向链/超时逐项报告＋CSV 导出；`死链\|broken.link\|dead.link` 零命中实锤；建议 ID broken_link_checker、Path /tools/broken-link-checker） | 中 | P2 |
+| white_noise_generator | 已交付划出（0e615c0 交付闭环：WebAudio 本地合成白/粉/棕噪声＋雨/雷/风环境声混音＋预设/睡眠定时器/localStorage 持久化，node 测试 5119 断言全过；ID white_noise_generator、Path /tools/white-noise-generator 已注册，实用工具品类；全量 149 Path；候选池划出） | — | 已实现 |
+| Show HN 其余 | 本轮不立（bigwords.page 巨型字牌→实锤自有「大字标牌展示器」（big_sign_display，生活工具品类）；其余 AI/安全报告/博客类无单页工具形态） | — | 不立 |
+| V2EX 信号 | 本轮不立（vaneform 网站流量查询：similarweb/dataforseo 数据固定成本→需后端数据；微诗诗词 App：iOS 内购非 web；Claude 党政机关帖：账号话题；AI 活动海报帖：提示词讨论无工具形态） | — | 不立 |
+| dev.to 合集轮 | 部分立项（Napizo 15 浏览器工具 10-14/KeptTools/mou1z Kanban+5 工具合集→全自有实锤复现；Image Annotator 截图标注→实锤自有 image_annotator；SERP snippet preview→实锤自有 serp_snippet_preview；Etemora RDAP 工具→池内 P2 域名创意生成器已覆盖；muhammad_alamgirsaeed 52 工具：死链检查器新立（见上），Domain Age Checker＝自有 domain-check 覆盖，Bulk Domain Authority 需后端 API 不立） | — | 立项/不立 |
+| stillworks 10-23 日榜 | 本轮无新立（与 10-22 榜单同组，77 轮已消化） | — | 不立 |
+| Reddit/知乎需求帖 | 本轮空（返回均为 SEO 营销内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十八轮——白噪音发生器交付闭环（0e615c0，`/tools/white-noise-generator` 已注册，实用工具品类，全量 149 Path），候选池划出；新信号扫描（dev.to 着陆页评分器→**新晋 P2 着陆页评分检查器**、52-tools→**新晋 P2 死链检查器**、bigwords.page→实锤自有大字标牌展示器、V2EX vaneform/微诗/Claude/海报帖不立、dev.to 合集轮全自有实锤复现、stillworks 10-23 同榜无新立、Reddit/知乎本轮空）均已消化；WPS 候选表保持冻结归档；仓库 149 注册工具全量核对无重叠（Top3 建议 ID screen_keeper / realtime_dictation / landing_page_grader；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 0e615c0（white_noise_generator 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 149 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-23 15:38 · 产品经理排期轮）
 
 **选定：白噪音发生器（white_noise_generator）** — 本轮唯一任务（新工具）：

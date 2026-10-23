@@ -1,0 +1,143 @@
+{{define "screen_keeper"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>屏幕常亮 - 一键防止手机/平板屏幕自动熄灭 | 程序员工具箱</title>
+<meta name="description" content="免费在线屏幕常亮工具：一键请求 Wake Lock 屏幕锁，看菜谱、做演示、读文档时防止手机/平板自动熄屏；切后台回来自动重锁，丢失红色提醒；Wake Lock 不可用时自动降级视频保亮模式；保亮时长 mm:ss 累计、模式偏好 localStorage 记忆，纯前端零上传。Free screen keep-awake tool: one-click Wake Lock, auto relock, video fallback, 100% client-side.">
+<meta name="keywords" content="屏幕常亮,屏幕不熄灭,手机屏幕常亮,平板屏幕常亮,screen keep awake,wake lock,keep screen on,演示保亮,看菜谱不熄屏,防止自动锁屏,屏幕常亮工具">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/screen-keeper">
+<meta property="og:title" content="屏幕常亮 - 一键防止手机/平板屏幕自动熄灭">
+<meta property="og:description" content="一键请求 Wake Lock 屏幕锁：看菜谱、做演示时屏幕保持常亮，切后台自动重锁，丢失红色提醒，不可用时自动降级视频保亮模式，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/screen-keeper">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"屏幕常亮","alternateName":"screen_keeper","description":"免费在线屏幕常亮工具：一键请求 Wake Lock 屏幕锁防止手机/平板自动熄屏，切后台回前台自动重锁，锁丢失红色醒目提示；Wake Lock 不可用/被拒绝时自动降级视频保亮模式并明确标注；保亮时长 mm:ss 累计，模式偏好 localStorage 持久化，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/screen-keeper","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.sk-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.sk-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.sk-panel h3 .material-icons{font-size:1.15rem;color:#0d9488}
+.sk-privacy{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdfa;border:1px solid #99f6e4;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#115e59;line-height:1.7}
+.sk-privacy .material-icons{color:#0d9488;font-size:1.3rem;flex:none;margin-top:.1rem}
+.sk-privacy code{background:#ccfbf1;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem}
+.sk-ios-hint{display:none;gap:.6rem;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#92400e;line-height:1.7}
+.sk-ios-hint .material-icons{color:#f59e0b;font-size:1.3rem;flex:none;margin-top:.1rem}
+.sk-lost-banner{display:none;gap:.6rem;align-items:flex-start;background:#fef2f2;border:1px solid #fca5a5;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#991b1b;line-height:1.7}
+.sk-lost-banner .material-icons{color:#dc2626;font-size:1.3rem;flex:none;margin-top:.1rem}
+.sk-hero{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1.6rem 1rem 1.4rem;text-align:center}
+.sk-lamp-row{display:flex;align-items:center;gap:.7rem;font-size:1rem;color:#374151;font-weight:600}
+.sk-lamp{width:26px;height:26px;border-radius:50%;background:#d1d5db;box-shadow:inset 0 1px 3px rgba(0,0,0,.2);transition:all .2s;flex:none}
+.sk-lamp-gray{background:#d1d5db}
+.sk-lamp-green{background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.8)}
+.sk-lamp-red{background:#ef4444;box-shadow:0 0 12px rgba(239,68,68,.8);animation:sk-blink 1s infinite}
+@keyframes sk-blink{0%,100%{opacity:1}50%{opacity:.45}}
+.sk-toggle{display:inline-flex;align-items:center;gap:.6rem;padding:1rem 3rem;border-radius:3rem;font-size:1.15rem;font-weight:700;cursor:pointer;border:1px solid #0d9488;background:#0d9488;color:#fff;transition:all .15s;min-width:260px;justify-content:center}
+.sk-toggle:hover{background:#0f766e}
+.sk-toggle .material-icons{font-size:1.6rem}
+.sk-toggle.sk-active{background:#fff;color:#0f766e}
+.sk-elapsed-row{display:flex;align-items:center;gap:.6rem;font-size:1.05rem;color:#374151}
+.sk-elapsed-row .material-icons{font-size:1.3rem;color:#0d9488}
+.sk-elapsed{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.5rem;color:#0f766e;letter-spacing:.05em}
+.sk-mode-badge{display:none;align-items:center;gap:.35rem;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:2rem;padding:.35rem 1rem;font-size:.85rem;font-weight:700}
+.sk-mode-badge .material-icons{font-size:1rem}
+.sk-state-note{font-size:.85rem;color:#6b7280;line-height:1.7;max-width:560px}
+.sk-pref-row{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:center;font-size:.9rem;color:#374151}
+.sk-pref-row select{padding:.5rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.9rem;color:#374151;background:#fff}
+.sk-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.sk-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.sk-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem}
+.sk-related{display:flex;flex-wrap:wrap;gap:.5rem}
+.sk-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+.sk-toast.sk-show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){.sk-toggle{min-width:220px;padding:.9rem 2rem}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">screen_lock_portrait</i> 屏幕常亮</h1>
+<p>看菜谱、做演示、读长文档时<b>一键保持屏幕常亮</b>，不用装 App、不用改系统设置：主路径请求浏览器 <b>Wake Lock 屏幕锁</b>（<code>navigator.wakeLock.request('screen')</code>）；切后台、锁屏后再回来<b>自动重锁</b>，锁被系统收回时<b>红色醒目提示</b>；浏览器不支持或拒绝时<b>自动降级视频保亮模式</b>并明确标注。本次已保亮时长 <b>mm:ss</b> 累计，模式偏好 <b>localStorage</b> 记住。纯前端，零上传。</p>
+</div>
+<div class="tool-content" style="max-width:900px;margin:auto;">
+
+<div class="sk-privacy">
+<i class="material-icons">lock</i>
+<div><b>全部在浏览器本地完成，不上传任何数据。</b>脚本内无 <code>fetch</code> / <code>XMLHttpRequest</code>、无外部媒体文件（降级视频用页面内 <code>canvas.captureStream()</code> 实时生成流），可在开发者工具 Network 面板验证。</div>
+</div>
+
+<div class="sk-ios-hint" id="sk-ios-hint">
+<i class="material-icons">touch_app</i>
+<div><b>iOS / 移动端提示：</b>① 请直接点页面里的「开始常亮」（浏览器要求用户手势才能请求屏幕锁）；② iOS Safari <b>必须保持本页面在前台</b>——切到别的 App 或锁屏后，系统会收回屏幕锁，回来后本工具会自动重锁；③ 若看到「降级模式」字样，说明当前浏览器不支持 Wake Lock，效果弱于标准模式，请尽量不要切后台。</div>
+</div>
+
+<div class="sk-lost-banner" id="sk-lost-banner">
+<i class="material-icons">warning</i>
+<div><b>屏幕锁已丢失</b>（可能切了后台 / 锁了屏 / 系统省电策略收回）。本工具正在尝试自动重锁；若长时间仍是红色，请点「停止」后再点「开始常亮」手动重建。</div>
+</div>
+
+<div class="sk-panel">
+<div class="sk-hero">
+<div class="sk-lamp-row"><span class="sk-lamp sk-lamp-gray" id="sk-lamp"></span><span id="sk-state">未启动</span></div>
+<button class="sk-toggle" id="sk-toggle"><i class="material-icons" id="sk-toggle-icon">play_arrow</i><span id="sk-toggle-text">开始常亮</span></button>
+<div class="sk-elapsed-row"><i class="material-icons">timer</i> 本次已保亮 <span class="sk-elapsed" id="sk-elapsed">00:00</span></div>
+<div class="sk-mode-badge" id="sk-mode-badge"><i class="material-icons">info</i> 降级模式：视频保亮（非 Wake Lock）</div>
+<div class="sk-state-note">状态灯：<b style="color:#16a34a">绿</b>＝保亮生效中 · <b style="color:#dc2626">红</b>＝请求中 / 锁已丢失 · <b style="color:#9ca3af">灰</b>＝未启动。点「停止常亮」立即释放屏幕锁并清零计时。</div>
+</div>
+</div>
+
+<div class="sk-panel">
+<h3><i class="material-icons">tune</i> 模式偏好</h3>
+<div class="sk-pref-row">
+<label for="sk-mode-pref">启动时优先使用</label>
+<select id="sk-mode-pref">
+<option value="auto">自动（支持 Wake Lock 就用它）</option>
+<option value="wake">只用 Wake Lock（不支持则提示降级）</option>
+<option value="video">只用视频保亮模式</option>
+</select>
+<span style="color:#6b7280;font-size:.85rem">偏好保存在本机浏览器（localStorage），刷新不丢。</span>
+</div>
+</div>
+
+<div class="sk-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="sk-faq">
+<dt>点「开始常亮」之后会发生什么？</dt>
+<dd>页面会调用 <code>navigator.wakeLock.request('screen')</code> 向浏览器请求屏幕锁；成功后状态灯变绿、开始累计保亮时长。只要锁有效，屏幕就不会按系统超时自动熄灭。</dd>
+<dt>切到微信回个消息，回来还要重开吗？</dt>
+<dd>不用。页面监听 <code>visibilitychange</code>：切回前台会自动重新请求屏幕锁；锁被系统收回时会收到 <code>release</code> 事件，状态灯变红提示并尝试重锁，全程无需手动干预。</dd>
+<dt>什么情况下会降级为「视频保亮模式」？</dt>
+<dd>三种情况：① 浏览器不支持 Wake Lock API（如旧版浏览器、部分 WebView）；② 当前是 HTTP 而非 HTTPS（Wake Lock 要求安全上下文）；③ 浏览器拒绝了请求。降级时页面用 1×1 隐藏 <code>&lt;video&gt;</code> 循环播放 <code>canvas.captureStream()</code> 生成的实时流来阻止熄屏，UI 会明确打出「降级模式」徽标并 toast 提示，计时照常累计。</dd>
+<dt>关掉页面 / 锁屏睡觉，保亮还生效吗？</dt>
+<dd>不生效。这是浏览器的硬限制：页面关闭、浏览器被杀掉后，屏幕锁自动失效；手机手动按电源键锁屏也会收回锁（回来自动重锁）。本工具不宣称任何后台能力。</dd>
+<dt>我的偏好存在哪里？</dt>
+<dd>只存在本机浏览器 localStorage（键名 <code>sk:prefs</code>）：启动模式偏好与上次实际生效的模式。清浏览器数据即清除，不上传服务器。</dd>
+<dt>测试 / 演示想强制看降级模式？</dt>
+<dd>在地址后面加参数 <code>?mode=video</code> 打开，页面会跳过 Wake Lock 直接进入视频保亮模式。</dd>
+</dl>
+</div>
+
+<div class="sk-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="sk-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">屏幕常亮（当前）</span>
+<a href="/tools/countdown-timer" class="btn btn-secondary" style="font-size:.9rem;">倒计时</a>
+<a href="/tools/white-noise-generator" class="btn btn-secondary" style="font-size:.9rem;">白噪音发生器</a>
+<a href="/tools/annual-lottery" class="btn btn-secondary" style="font-size:.9rem;">年会大屏抽奖</a>
+</div>
+</div>
+
+</div>
+</div>
+<div class="sk-toast" id="sk-toast"></div>
+<script src="/tools/static/js/screen_keeper.js?v=1"></script>
+</body>
+</html>
+{{end}}

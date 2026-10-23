@@ -1010,6 +1010,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "screen_keeper",
+					Name:        "屏幕常亮",
+					Description: "免费在线屏幕常亮工具：一键请求 Wake Lock 屏幕锁，看菜谱/演示/读文档时防止手机平板自动熄屏；切后台回前台自动重锁，锁被系统收回红色醒目提示并尝试重锁；Wake Lock 不可用或被拒绝时自动降级视频保亮模式（1x1 隐藏 video 循环播放 canvas 捕获流）并明确标注；保亮时长 mm:ss 累计，模式偏好 localStorage 持久化，iOS 手势/前台提示，纯前端零上传 · Screen keep-awake: one-click Wake Lock, auto relock on visibility change, red lost alert, video fallback with explicit badge, 100% client-side",
+					Path:        "/tools/screen-keeper",
+					Icon:        "screen_lock_portrait",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{
