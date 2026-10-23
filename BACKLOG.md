@@ -1,3 +1,51 @@
+## 今日任务（2026-10-23 19:00 · 产品经理排期轮）
+
+**选定：浏览器实时听写（realtime_dictation）** — 本轮唯一任务（新工具）：
+- **顺位**：17:36 研究轮（78 轮）Top3 二席；screen_keeper 交付闭环（7f69b83，150 Path；评审复测 2 个 bug 已修）后顺位递进生效，依惯例「无硬伤不跳过」。未选：着陆页评分检查器（P2 本轮新晋；26 条确定性规则打分，留池二席）、Gzip Base64 解码器（dev 向小众加法：现有 base64 工具无 gzip 解压，但属小众调试场景加法功能，留池观察）。
+- **选定理由（本轮晚轮）**：① **研究轮 Top3 二席＋双轮形态验证**——76 轮新晋，76 轮 Show HN Whistle 设备端语音转写＋Murmur push-to-talk 形态验证补强，留池多轮无硬伤，按惯例顺位递进；② **小难度纯前端一轮可高质量交付**——19:00 晚轮时间预算紧张，接纯前端小工具节奏最稳；③ **零重叠实锤**——本轮实测 `grep -cniE 'realtime_dictation|实时听写|SpeechRecognition|webkitSpeech'` 在 tools/categories.go、static/js/、templates/ 三路均为零命中，全量 150 Path 无同类工具；④ **痛点明确**——免打字语音转文字，现有方案要装 App 或上传录音文件到云端。
+- **PM 真限制交代（与调研假设不同，开发轮必须处理）**：Web Speech API 的 SpeechRecognition 在 Chrome/Edge 桌面版是**浏览器内置但云端转写**——音频会发往 Google 服务器，并非离线、并非零上传；Firefox 与 iOS Safari 目前不支持该 API。规格与页面文案必须如实标注隐私说明，不能宣称「零上传」。页面 JS 自身零 fetch/XHR（语音通道由浏览器原生 API 承载）。
+- **形态验证**：push-to-talk（按住说话/松开结束＋点击切换两种模式）→ 实时字幕（interim 中间结果）→ 最终结果入历史列表（时间戳＋分段）→ 复制单条/全文＋清空 → localStorage 持久化历史与语言偏好；不支持浏览器明确提示换 Chrome/Edge 桌面版。
+- **品类归位**：注册到「实用工具」品类；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 识别引擎：`SpeechRecognition || webkitSpeechRecognition` 特性探测；`interimResults=true` 显示实时字幕；`continuous=false` 配 push-to-talk 手动启停（按住开始/松开结束、点击切换开始/停止两种模式可切换）；`onend` 后按语义自动重启处理长语音断开（no-speech/network/audio-capture 等错误码映射为中文提示）；语言选择：zh-CN（默认）/en-US/yue-HK 等，localStorage 持久化。
+- 交互：大麦克风按钮（按住态/录制态视觉区分）＋实时字幕区（中间结果灰色、确认结果白色）＋历史转写列表（每条带相对时间戳、可复制、可删除）＋一键复制全文＋一键清空（二次确认）。
+- 隐私/环境文案（必须如实）：页面顶部醒目提示「本工具使用浏览器内置语音识别：Chrome/Edge 会将语音发送到云端服务转写，并非离线；敏感内容请斟酌」；不支持 API 的浏览器（Firefox、iOS Safari）显示「当前浏览器不支持，请使用桌面版 Chrome/Edge」明确提示，不伪装可用。
+- 配套：页面不宣称后台/离线能力；麦克风权限被拒绝时给系统设置引导文案；移动端仅做可用性提示。
+- 注册：新增工具 ID `realtime_dictation`、Name「浏览器实时听写」、Path `/tools/realtime-dictation`（New: true，沿用研究轮建议），中英文描述＋SEO keywords（语音转文字、实时听写、speech to text、听写、语音输入、push to talk）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `realtime_dictation`、Path `/tools/realtime-dictation` 注册完整（Category 实用工具），注册总数 150→151 Path。
+2. push-to-talk 两种模式可用：按住开始/松开结束、点击切换开始/停止（mock 环境下状态机可测）。
+3. 实时字幕显示 interim 中间结果，最终结果入历史列表（带时间戳）；复制全文/单条可用；localStorage 刷新后历史与语言偏好恢复。
+4. 错误码映射：no-speech/network/audio-capture/not-allowed 有中文明确提示；不支持 API 的环境显示换浏览器提示，页面不报错不崩。
+5. 隐私说明文案完整准确（Chrome 云端转写提示到位，无「零上传」不实宣称）；脚本内零 fetch/XHR。
+6. node 测试 30+ 断言全过（状态机纯逻辑可测：启停/录制中/错误/不支持四态、结果分段拼接、历史持久化序列化、错误码映射、语言选项合法性）。
+7. 页面无报错。
+
+**预计改动文件**：
+- `templates/realtime_dictation.html`（新增；含 SEO 面板按家族标准＋麦克风按钮/实时字幕/历史列表 UI 样式＋隐私提示文案）
+- `static/js/realtime_dictation.js`（新增；SpeechRecognition 封装＋push-to-talk 两种模式＋实时字幕＋历史管理＋持久化＋错误码映射；双模式导出供 node 测试）
+- `tests/realtime_dictation.test.js`（新增；状态机转换、结果拼接、历史持久化、错误码映射）
+- `tools/categories.go`（实用工具品类注册：ID realtime_dictation、Path /tools/realtime-dictation、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 7f69b83（screen_keeper 评审复测 bug 修复已闭环）；`git fetch` 本轮首次报 access rights、重试正常（沿用 10-23 惯例）；origin/muse/dev-20260929 与本地 HEAD 一致；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 150 Path；三候选零重叠本轮复核（realtime_dictation 三路零命中；landing_page_grader 三路零命中；gzip 增量为 base64 工具加法功能不立新）；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 开发交付（2026-10-23 19:00 · 前端开发第1轮：浏览器实时听写）
+
+**交付：浏览器实时听写（realtime_dictation）** — 本轮唯一任务闭环：
+- 新增 `templates/realtime_dictation.html`（SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具；大麦克风按钮/实时字幕/历史列表 UI；顶部云端转写醒目提示＋localStorage 说明＋不支持浏览器横幅）、`static/js/realtime_dictation.js`（纯前端：SpeechRecognition/webkitSpeechRecognition 封装，hold 按住说话/松开结束＋toggle 点击切换两种模式，interimResults 实时字幕，final 入历史（时间戳/复制/删除/localStorage 上限 200 条），语言偏好 zh-CN/yue-HK/zh-TW/en-US/ja-JP 持久化，错误码中文映射，toggle 模式 onend 自动续听；双模式导出供 node 测试）、`tests/realtime_dictation.test.js`；`tools/categories.go` 实用工具品类注册（ID realtime_dictation、Path /tools/realtime-dictation、New: true），Path 总数 150→151。
+- 隐私如实标注（PM 真限制已落实）：页面顶部明确写「Chrome/Edge 为云端转写、音频发往云端（Google）、并非离线」；模板与 JS 源码经测试断言无「零上传」宣称；脚本零 fetch/XHR（语音通道由浏览器原生 API 承载）。
+- 自测：`go build -o toolWeb .` 通过；`node tests/realtime_dictation.test.js` 126/126 全过（状态机三态、能力探测、错误码映射 7 码、fatal 判定、结果拼接、历史增删/序列化/上限、偏好/语言合法性、时间格式化、Dictation mock 生命周期、源码与模板约束）。
+- 开发中修了一个真问题：`parseHistory` 里一句 `!toString.call(arr) === ...` 死代码（永远为 false），已删；另把自测中断言关键字「零上传/XMLHttpRequest」从 JS 头部注释改写（注释提及即误命中）。
+- 备注：仓库根未跟踪的 `toolWeb.bak-prev`（20MB 构建残留二进制）仍未入库；待评审轮确认后 commit＋push。
+
+---
+
 ## 开发交付（2026-10-23 17:50 · 前端开发第1轮：屏幕常亮）
 
 **交付：屏幕常亮（screen_keeper）** — 本轮唯一任务闭环：
@@ -10116,3 +10164,47 @@ PDF 电子签名列顺位第四（P1，顺位递进：PdfWord 2026-10-12 PH eSig
 **归档说明**：本轮为 10-23 通用调研第七十五轮——MBOX 邮件存档查看器交付闭环（d7cff95，`/tools/mbox-viewer` 已注册，新建实用工具品类，全量 146 Path），候选池划出；新信号扫描（V2EX 10-19 Paint Board→**新晋 P1 在线创意画板**（canvas 纯前端、零工具命中实锤）；V2EX Antumi 非 web/vaneform 需后端不立；Open Resume 重帖已消化；V2EX toolora 番茄钟自有实锤、虚拟钢琴补 P2 在线钢琴形态验证；dev.to ToolVerse/BlanzaTools/ZeroApiTools/ToolkitOnline 类目全部自有实锤或留池观察，Link Preview Checker 需后端不立，BMI/百分比/房租房贷类方向修正排除；Show HN UCP Store Checker 需后端不立（AI 可发现性方向记录）；ImgExtender/AI Upscaler/Seisei AI/Try-On/AI 重命名 AI 类不立；Reddit 需求帖本轮空）均已消化；WPS 候选表保持冻结归档；仓库 146 注册工具全量核对无重叠（Top3 建议 ID svg_to_font / annual_lottery / paint_board；零命中逐项可复现），核稿反馈持续闭环。
 
 **交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 d7cff95（mbox_viewer 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 146 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮记录，疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
+## 今日任务（2026-10-23 19:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。屏幕常亮已交付闭环（`git log` 头部 7f69b83：screen_keeper 新增（3ecdd85）＋评审第 1 轮 2 个 bug 修复（重锁状态机卡死红色灯、停止后请求兑现锁泄漏＋幽灵计时器）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **150 Path**，ID screen_keeper、Path /tools/screen-keeper 已注册，实用工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 晚轮次，P1/P2 可排（晚轮时间预算紧张，小难度优先）。
+
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. screen_keeper 交付确认：`git log` 头部 7f69b83；全量 150 Path（ID screen_keeper、Path /tools/screen-keeper 已注册，实用工具品类）；候选池划出。
+2. 新信号扫描：
+   - **V2EX PHP2Shell（10-22，t/1251012）**：应急网站形态验证——输入公开域名→查看响应头是否暴露 PHP 版本/Server 指纹/Cloudflare 等 CDN 标记→给出 php.ini/Nginx/Apache/WAF 配置引导；**边界意识好**（公开响应头、HEAD 请求优先）→ `grep -cinE '安全头|响应头|security.header|x-frame-options'` **零命中实锤** → **新晋 P2「网站安全头检查器」**（痛点：站长/开发者上线后不知道响应头是否暴露版本信息、安全头（HSTS/X-Frame-Options/CSP/X-Content-Type-Options）是否缺失，securityheaders.com 为英文且单功能；中难度：粘贴域名→Go 后端并发抓取响应头（避 CORS）→版本暴露/安全头缺失逐项评分＋中文修复配置引导，零上传；建议 ID security_headers_checker、Path /tools/security-headers-checker）；
+   - **dev.to 10 Free Developer Tools（muhammad_rizwan，13 天前）**：**Gzip Base64 Decoder**（解码压缩 API payload）→ `grep -cinE 'gzip|Gzip'` **零命中实锤** → **新晋 P2「Gzip Base64 解码器」**（痛点：调试 gzip+base64 编码的压缩响应体要手写脚本；纯前端小难度：粘贴文本→base64 解码→DecompressionStream('gzip') 解压→文本/JSON 预览，零上传；建议 ID gzip_base64_decoder、Path /tools/gzip-base64-decoder）；**Git Command Generator**（描述需求→给 git 命令）→ `grep -cinE 'git.命令|git.command'` **零命中实锤** → **新晋 P2「Git 命令生成器」**（痛点：rebase 变基/合并回退/储藏等命令记不住，git 文档晦涩；纯前端小难度：场景选择器→命令＋参数解释＋可复制，零上传；建议 ID git_command_generator、Path /tools/git-command-generator）；File Size Calculator（拖文件看大小→`文件大小|file.size.calculator` 零命中但单功能过于 trivial，可合入文件信息工具未来考虑）不立；JSON Escape/Unescape＝自有 JSON 工具覆盖实锤（4 命中）；图片压缩/转换/二维码/JSON/SQL 格式化→全自有实锤复现；
+   - **V2EX Open Resume（10-20，t/1250292）**：开源自部署简历工具（156 模板、PDF/PNG/Word 导出免费）→ `grep -cinE '简历|resume' tools/categories.go` **9 命中实锤**（resume_checker、resume_builder 皆有）→ 不立；
+   - **V2EX Rim（10-22，t/1251087）**：git 与 agent 之间的版本管理中间层（CLI/基础设施，非 web 单页工具形态）→ 不立；
+   - **Show HN ainews247（10-23 实时）**：Pristine（AI UI 评审 agent skill，AI 类）不立；What LLM fits my GPU（117 模型 VRAM 真机实测）→ **池内 P2「本地 LLM 硬件检测器」形态验证再补强**（10-23 ainews247 独立报道二次确认）；HN Sieve（AI 打分的 Show HN 聚合→需后端 AI）不立；
+   - **Reddit「I wish there was a website」/知乎/少数派**：本轮返回均为营销/指南 SEO 内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：屏幕常亮已交付划出（7f69b83，150 Path）；**新晋 3 个 P2**（网站安全头检查器、Gzip Base64 解码器、Git 命令生成器）；**池内形态补强 1 项**（本地 LLM 硬件检测器：Show HN LLM/GPU VRAM 实测 10-23 二次报道）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；screen_keeper 交付闭环后按顺位递进；19:00 晚轮次时间预算紧张，小难度纯前端优先）：
+
+1. **浏览器实时听写** — P1（留池多轮；74~78 轮持续形态验证（Whistle 设备端转写/Murmur push-to-talk）；痛点：免打字语音转文字，现有方案要装 App 或云端上传录音；纯前端小难度：Web Speech API＋push-to-talk＋实时字幕＋导出 txt，零上传；`听写|speechrecognition|webkitSpeechRecognition` 零命中实锤；建议 ID realtime_dictation、Path /tools/realtime-dictation）。
+2. **着陆页评分检查器** — P2（78 轮 Top3#3；dev.to mattbusel 10-17 免费无 AI landing page grader 形态验证（2079 个 Show HN 页面实测）；痛点：独立站/个人页上线前 SEO 卫生无从检验，Woorank 等按次收费；纯前端小难度：粘贴 HTML 源码→26 条确定性规则打分＋三色清单＋修复建议，零上传；`grader|着陆页|landing.page` 零命中实锤；建议 ID landing_page_grader、Path /tools/landing-page-grader）。
+3. **Gzip Base64 解码器** — P2（本轮新晋；dev.to 10 Free Developer Tools Gzip Base64 Decoder 形态验证；痛点：调试压缩 API payload（gzip+base64 编码响应体）要手写脚本；纯前端小难度：粘贴文本→base64 解码→DecompressionStream('gzip') 解压→文本/JSON 预览，零上传；`gzip|Gzip` 零命中实锤；建议 ID gzip_base64_decoder、Path /tools/gzip-base64-decoder）。
+
+其余 P1 留池：无。
+其余 P2 留池：网站安全头检查器（本轮新晋；V2EX PHP2Shell 形态验证；中难度 Go 后端；建议 ID security_headers_checker、Path /tools/security-headers-checker）；Git 命令生成器（本轮新晋；dev.to 形态验证；小难度纯前端；建议 ID git_command_generator、Path /tools/git-command-generator）；死链检查器（78 轮新晋；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；本地看板任务管理（77 轮新晋；建议 ID kanban_board、Path /tools/kanban-board）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器（本轮 ainews247 二次报道补强）/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十九轮：屏幕常亮已交付划出（7f69b83，150 Path）；**新晋 P2 网站安全头检查器**（V2EX PHP2Shell 10-22 形态验证：公开域名→响应头版本暴露/PHP-Server 指纹/CDN 标记→配置引导；`安全头|响应头|security.header` 零命中实锤；中难度 Go 后端抓取避 CORS；建议 ID security_headers_checker、Path /tools/security-headers-checker）；**新晋 P2 Gzip Base64 解码器**（dev.to 10 Free Developer Tools Gzip Base64 Decoder 形态验证；`gzip|Gzip` 零命中实锤；小难度纯前端 DecompressionStream('gzip')；建议 ID gzip_base64_decoder、Path /tools/gzip-base64-decoder）；**新晋 P2 Git 命令生成器**（dev.to Git Command Generator 形态验证；`git.命令|git.command` 零命中实锤；小难度纯前端场景规则引擎；建议 ID git_command_generator、Path /tools/git-command-generator）；池内补强（本地 LLM 硬件检测器：Show HN LLM/GPU VRAM ainews247 10-23 二次报道）；V2EX Open Resume→自有简历工具 9 命中实锤不立；Rim CLI 非 web 不立；dev.to 其余合集（文件大小计算器 trivial 不立、JSON 转义＝自有 4 命中、图片/二维码/JSON/SQL 全自有实锤）；Show HN 其余（Pristine AI 类、HN Sieve 需后端 AI）不立；Reddit/知乎/少数派本轮空；全量 150 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 网站安全头检查器 | 新晋（79 轮；V2EX PHP2Shell 10-22 应急网站形态验证：输入公开域名→响应头是否暴露 PHP 版本/Server 指纹/CDN 标记→中文配置修复引导；痛点：站长不知道响应头是否暴露版本信息、安全头（HSTS/X-Frame-Options/CSP）是否缺失，securityheaders.com 英文且单功能；中难度：域名→Go 后端并发抓取响应头（避 CORS）→版本暴露/安全头缺失逐项评分＋修复引导，零上传；`安全头\|响应头\|security.header\|x-frame-options` 零命中实锤；建议 ID security_headers_checker、Path /tools/security-headers-checker） | 中 | P2 |
+| Gzip Base64 解码器 | 新晋（79 轮；dev.to 10 Free Developer Tools Gzip Base64 Decoder 形态验证；痛点：调试 gzip+base64 编码的压缩 API payload 要手写脚本；纯前端小难度：粘贴文本→base64 解码→DecompressionStream('gzip') 解压→文本/JSON 预览，零上传；`gzip\|Gzip` 零命中实锤；建议 ID gzip_base64_decoder、Path /tools/gzip-base64-decoder） | 小 | P2 |
+| Git 命令生成器 | 新晋（79 轮；dev.to 10 Free Developer Tools Git Command Generator 形态验证；痛点：rebase 变基/合并回退/储藏等命令记不住，git 文档晦涩；纯前端小难度：场景选择器（撤销/变基/分支/储藏/远程同步）→生成命令＋参数中文解释＋一键复制，零上传；`git.命令\|git.command` 零命中实锤；建议 ID git_command_generator、Path /tools/git-command-generator） | 小 | P2 |
+| screen_keeper | 已交付划出（7f69b83 交付闭环：3ecdd85 新增＋评审第 1 轮 2 个 bug 修复（重锁状态机卡死红色灯、停止后请求兑现锁泄漏＋幽灵计时器）；ID screen_keeper、Path /tools/screen-keeper 已注册，实用工具品类；全量 150 Path；候选池划出） | — | 已实现 |
+| V2EX Open Resume | 本轮不立（开源自部署简历工具 156 模板→自有 resume_checker/resume_builder 实锤（tools/categories.go 9 命中），形态重叠） | — | 不立 |
+| V2EX Rim | 本轮不立（git 与 agent 之间的版本管理中间层，CLI/基础设施，非 web 单页工具形态） | — | 不立 |
+| dev.to 工具合集轮 | 部分立项（Gzip Base64 Decoder→新晋 P2；Git Command Generator→新晋 P2；File Size Calculator：零命中但单功能过于 trivial，可合入未来文件信息工具；JSON 转义＝自有 JSON 工具覆盖 4 命中；图片压缩/转换/二维码/JSON/SQL 格式化→全自有实锤复现） | — | 立项/不立 |
+| Show HN 10-23 实时 | 部分补强（Pristine AI UI 评审 skill→AI 类不立；What LLM fits my GPU→池内 P2 本地 LLM 硬件检测器 ainews247 10-23 二次报道补强；HN Sieve AI 打分聚合→需后端 AI 不立） | — | 补强/不立 |
+| Reddit/知乎/少数派 | 本轮空（"I wish there was a website" 返回营销/指南 SEO 内容；少数派/导航站返回 SEO 软文；无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十九轮——屏幕常亮交付闭环（7f69b83，`/tools/screen-keeper` 已注册，实用工具品类，全量 150 Path），候选池划出；新信号扫描（V2EX PHP2Shell→**新晋 P2 网站安全头检查器**、V2EX Open Resume→自有简历工具 9 命中不立、V2EX Rim CLI 非 web 不立、dev.to 10 Free Developer Tools→**新晋 P2 Gzip Base64 解码器**、**新晋 P2 Git 命令生成器**（文件大小计算器 trivial 不立、JSON 转义自有覆盖、其余全自有实锤）、Show HN ainews247：本地 LLM 硬件检测器二次报道补强/Pristine 与 HN Sieve 不立、Reddit/知乎/少数派本轮空）均已消化；WPS 候选表保持冻结归档；仓库 150 注册工具全量核对无重叠（Top3 建议 ID realtime_dictation / landing_page_grader / gzip_base64_decoder；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（首次警告 github.com host key 已加入 known_hosts，属 VM 换机后首次连接正常行为）；`git log` 头部 7f69b83（screen_keeper 交付闭环＋评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 150 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。

@@ -1019,6 +1019,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "realtime_dictation",
+					Name:        "浏览器实时听写",
+					Description: "免费在线浏览器实时听写：按住说话/松开结束（push-to-talk）与点击切换两种模式，Web Speech API 实时语音转文字，interim 实时字幕滚动显示，最终结果入带时间戳的历史列表（可复制/删除，一键复制全文，localStorage 持久化），普通话/粤语/英语/日语多语言可选；说明：Chrome/Edge 为云端转写（音频发往云端服务，并非离线），Firefox 与 iOS Safari 不支持请用桌面版 Chrome/Edge，页面脚本零 fetch/XHR · Realtime dictation: push-to-talk speech to text with live interim captions, timestamped history, multi-language, cloud transcription on Chrome/Edge",
+					Path:        "/tools/realtime-dictation",
+					Icon:        "mic",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{

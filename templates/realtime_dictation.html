@@ -1,0 +1,184 @@
+{{define "realtime_dictation"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浏览器实时听写 - 免费在线语音转文字（按住说话） | 程序员工具箱</title>
+<meta name="description" content="免费在线浏览器实时听写：按住说话/松开结束或点击切换两种模式，Web Speech API 实时语音转文字，interim 实时字幕，最终结果入历史列表（时间戳、可复制、可删除，localStorage 持久化）；多语言（普通话/粤语/英语/日语）。注意：Chrome/Edge 转写为云端服务，语音会发送到云端，并非离线。Free realtime dictation: push-to-talk speech to text with live interim captions, history, language options.">
+<meta name="keywords" content="语音转文字,实时听写,听写,语音输入,speech to text,听写工具,在线语音识别,浏览器听写,实时字幕,push to talk,语音转写,麦克风转文字">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/realtime-dictation">
+<meta property="og:title" content="浏览器实时听写 - 按住说话，实时语音转文字">
+<meta property="og:description" content="纯前端语音转文字：按住说话/松开结束、点击切换两种模式，实时字幕，历史列表带时间戳可复制可删除，多语言可选。注意 Chrome/Edge 为云端转写。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/realtime-dictation">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"浏览器实时听写","alternateName":"realtime_dictation","description":"免费在线浏览器实时听写：按住说话/松开结束与点击切换两种模式，Web Speech API 实时语音转文字，interim 实时字幕，最终结果入带时间戳的历史列表（可复制/删除，localStorage 持久化）；普通话/粤语/英语/日语可选。说明：Chrome/Edge 的语音识别为云端转写，语音数据会发送到云端服务，并非离线识别。","url":"https://www.johnkingzcq123.xyz/tools/realtime-dictation","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.rd-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.rd-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.rd-panel h3 .material-icons{font-size:1.15rem;color:#0d9488}
+.rd-cloud-note{display:flex;gap:.6rem;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#92400e;line-height:1.7}
+.rd-cloud-note .material-icons{color:#f59e0b;font-size:1.3rem;flex:none;margin-top:.1rem}
+.rd-local-note{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdfa;border:1px solid #99f6e4;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#115e59;line-height:1.7}
+.rd-local-note .material-icons{color:#0d9488;font-size:1.3rem;flex:none;margin-top:.1rem}
+.rd-unsupported{display:none;gap:.6rem;align-items:flex-start;background:#fef2f2;border:1px solid #fca5a5;border-radius:.6rem;padding:.9rem 1rem;margin-bottom:1.2rem;font-size:.95rem;color:#991b1b;line-height:1.7}
+.rd-unsupported .material-icons{color:#dc2626;font-size:1.4rem;flex:none;margin-top:.1rem}
+.rd-error{display:none;gap:.6rem;align-items:flex-start;background:#fef2f2;border:1px solid #fca5a5;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#991b1b;line-height:1.7}
+.rd-error .material-icons{color:#dc2626;font-size:1.3rem;flex:none;margin-top:.1rem}
+.rd-hero{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1.2rem 1rem 1rem;text-align:center}
+.rd-mic{width:120px;height:120px;border-radius:50%;border:3px solid #0d9488;background:#fff;color:#0d9488;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;transition:all .15s;touch-action:none;user-select:none;-webkit-user-select:none}
+.rd-mic .material-icons{font-size:3rem}
+.rd-mic:hover{background:#f0fdfa}
+.rd-mic:active{transform:scale(.96)}
+.rd-mic.rd-recording{background:#dc2626;border-color:#dc2626;color:#fff;animation:rd-pulse 1.2s infinite}
+@keyframes rd-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 14px rgba(220,38,38,0)}}
+.rd-mic-label{font-size:.9rem;font-weight:700;color:#374151}
+.rd-mode-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
+.rd-mode-btn{padding:.5rem 1.2rem;border-radius:2rem;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s}
+.rd-mode-btn.rd-mode-active{background:#0d9488;border-color:#0d9488;color:#fff}
+.rd-caption{min-height:5.5rem;background:#f9fafb;border:1px dashed #d1d5db;border-radius:.6rem;padding:1rem 1.2rem;font-size:1.15rem;line-height:1.9;color:#111827;text-align:center}
+.rd-caption.rd-active{border-style:solid;border-color:#0d9488;background:#f0fdfa}
+.rd-caption-interim{color:#9ca3af}
+.rd-caption-hint{font-size:.82rem;color:#9ca3af;margin-top:.6rem;text-align:center}
+.rd-toolbar{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.rd-toolbar select{padding:.5rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.9rem;color:#374151;background:#fff}
+.rd-count{margin-left:auto;font-size:.85rem;color:#6b7280}
+.rd-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.rd-btn{padding:.55rem 1.1rem;border-radius:.5rem;border:1px solid #0d9488;background:#0d9488;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+.rd-btn .material-icons{font-size:1.05rem}
+.rd-btn:hover{background:#0f766e}
+.rd-btn.rd-secondary{background:#fff;color:#0d9488}
+.rd-btn.rd-secondary:hover{background:#f0fdfa}
+.rd-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7rem}
+.rd-item{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .9rem}
+.rd-item-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem}
+.rd-item-ts{font-size:.78rem;color:#9ca3af;font-variant-numeric:tabular-nums}
+.rd-item-btns{margin-left:auto;display:flex;gap:.4rem}
+.rd-mini-btn{padding:.25rem .7rem;border-radius:.4rem;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:.78rem;cursor:pointer}
+.rd-mini-btn:hover{border-color:#0d9488;color:#0d9488}
+.rd-mini-btn.rd-danger:hover{border-color:#dc2626;color:#dc2626}
+.rd-item-text{font-size:.95rem;color:#111827;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.rd-empty{text-align:center;color:#9ca3af;font-size:.9rem;padding:1.6rem 0}
+.rd-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.rd-faq dd{margin:0;line-height:1.9;font-size:.92rem;color:#4b5563}
+.rd-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem}
+.rd-related{display:flex;flex-wrap:wrap;gap:.5rem}
+.rd-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+.rd-toast.rd-show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){.rd-mic{width:100px;height:100px}.rd-mic .material-icons{font-size:2.4rem}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">mic</i> 浏览器实时听写</h1>
+<p>不用打字、不用装 App：<b>按住麦克风说话、松开结束</b>（push-to-talk），或<b>点击切换开始/停止</b>，语音实时转成文字。说话时<b>实时字幕</b>滚动显示，说完一段自动入<b>历史列表</b>（带时间戳、可复制、可删除），历史与语言偏好保存在本机浏览器。基于浏览器内置 <b>Web Speech API</b>，纯前端页面。</p>
+</div>
+<div class="tool-content" style="max-width:900px;margin:auto;">
+
+<div class="rd-cloud-note">
+<i class="material-icons">cloud</i>
+<div><b>重要说明（请先读）：</b>本工具调用的是浏览器内置语音识别。在 <b>Chrome / Edge 桌面版</b>上，转写由<b>云端服务</b>完成——麦克风音频会被发送到云端（Google）进行识别，<b>并非离线识别</b>。敏感内容请斟酌使用。页面自身脚本不做任何网络请求（零 <code>fetch</code>/<code>XMLHttpRequest</code>），语音通道由浏览器原生 API 承载。</div>
+</div>
+
+<div class="rd-unsupported" id="rd-unsupported">
+<i class="material-icons">error_outline</i>
+<div><b>当前浏览器不支持语音识别。</b>Web Speech API 在 Firefox、iOS Safari 上不可用。请使用<b>桌面版 Chrome 或 Edge</b> 打开本页面（需允许麦克风权限）。页面其他内容不受影响。</div>
+</div>
+
+<div class="rd-error" id="rd-error">
+<i class="material-icons">warning</i>
+<div><span></span></div>
+</div>
+
+<div class="rd-panel">
+<div class="rd-hero">
+<button class="rd-mic" id="rd-mic" aria-pressed="false" title="按住说话 / 点击切换">
+<i class="material-icons">mic</i>
+</button>
+<div class="rd-mic-label" id="rd-mic-label">按住说话</div>
+<div class="rd-mode-row">
+<button class="rd-mode-btn" id="rd-mode-hold">按住说话 / 松开结束</button>
+<button class="rd-mode-btn" id="rd-mode-toggle">点击切换开始 / 停止</button>
+</div>
+</div>
+</div>
+
+<div class="rd-panel">
+<h3><i class="material-icons">subtitles</i> 实时字幕</h3>
+<div class="rd-caption" id="rd-caption"><span class="rd-caption-interim" id="rd-caption-interim"></span></div>
+<div class="rd-caption-hint">灰色为识别中的中间结果（可能变化），确认后自动写入下方历史列表。</div>
+</div>
+
+<div class="rd-panel">
+<h3><i class="material-icons">history</i> 转写历史</h3>
+<div class="rd-toolbar" style="margin-bottom:.8rem">
+<label for="rd-lang" style="font-size:.88rem;color:#374151">识别语言</label>
+<select id="rd-lang">
+<option value="zh-CN">普通话（简体）</option>
+<option value="yue-HK">粤语</option>
+<option value="zh-TW">国语（繁体）</option>
+<option value="en-US">英语（美国）</option>
+<option value="ja-JP">日语</option>
+</select>
+<span class="rd-count" id="rd-count">0 条</span>
+</div>
+<div class="rd-actions" style="margin-bottom:.9rem">
+<button class="rd-btn" id="rd-copy-all"><i class="material-icons">content_copy</i> 复制全文</button>
+<button class="rd-btn rd-secondary" id="rd-clear"><i class="material-icons">delete_sweep</i> 清空历史</button>
+</div>
+<div class="rd-empty" id="rd-empty">还没有转写内容 —— 按住上方麦克风开始说话</div>
+<ul class="rd-list" id="rd-list"></ul>
+</div>
+
+<div class="rd-local-note">
+<i class="material-icons">lock</i>
+<div><b>数据保存在哪里：</b>转写历史与语言/模式偏好只存放在本机浏览器 <code>localStorage</code>（键 <code>rd:history</code>、<code>rd:prefs</code>），页面自身不向任何服务器发送请求；但注意上方的云端转写说明——识别这一步的音频由浏览器发往云端服务。</div>
+</div>
+
+<div class="rd-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="rd-faq">
+<dt>两种模式有什么区别？</dt>
+<dd>「按住说话 / 松开结束」：按住麦克风按钮开始识别，松开立即结束，适合逐句听写；「点击切换」：点一下开始、再点一下停止，适合长段连续说话（识别器在语音停顿后可能自动断开，本工具会自动续听）。模式偏好会自动记住。</dd>
+<dt>为什么提示「没有检测到语音」？</dt>
+<dd>浏览器在一段时间内没收到有效语音会报 <code>no-speech</code>。请靠近麦克风、提高音量再说一遍；环境太安静或麦克风被独占也可能触发。</dd>
+<dt>麦克风权限被拒绝了怎么办？</dt>
+<dd>点击浏览器地址栏左侧的锁形 / 摄像头图标，把「麦克风」设为「允许」，然后刷新页面重试。首次使用时浏览器会弹窗请求权限，请务必点「允许」。</dd>
+<dt>哪些浏览器能用？</dt>
+<dd>需要支持 Web Speech API 的浏览器：<b>桌面版 Chrome、Edge</b>。Firefox 与 iOS Safari 目前不支持，会显示明确提示。移动端 Chrome 部分可用，但体验不如桌面版。</dd>
+<dt>我的语音会被上传吗？</dt>
+<dd>会——这是必须如实说明的：Chrome/Edge 的语音识别是<b>云端转写</b>，麦克风音频会发送到云端服务（Google）进行识别，并非离线。页面自身脚本零网络请求，但识别通道由浏览器控制。敏感内容请斟酌。</dd>
+<dt>历史存在哪里？会丢吗？</dt>
+<dd>只存在本机浏览器 <code>localStorage</code>（<code>rd:history</code>，最多 200 条），刷新不丢；清除浏览器数据会一并清除。单条可复制/删除，可一键复制全文、二次确认后清空。</dd>
+<dt>识别准确率不高怎么办？</dt>
+<dd>确认识别语言选对了（普通话/粤语/英语/日语），靠近麦克风、语速放慢、减少背景噪音。云端转写对标准发音效果最好，方言请选对应语言。</dd>
+</dl>
+</div>
+
+<div class="rd-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="rd-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">浏览器实时听写（当前）</span>
+<a href="/tools/teleprompter" class="btn btn-secondary" style="font-size:.9rem;">提词器</a>
+<a href="/tools/subtitle-editor" class="btn btn-secondary" style="font-size:.9rem;">字幕编辑器</a>
+<a href="/tools/white-noise-generator" class="btn btn-secondary" style="font-size:.9rem;">白噪音发生器</a>
+<a href="/tools/countdown-timer" class="btn btn-secondary" style="font-size:.9rem;">倒计时</a>
+</div>
+</div>
+
+</div>
+</div>
+<div class="rd-toast" id="rd-toast"></div>
+<script src="/tools/static/js/realtime_dictation.js?v=1"></script>
+</body>
+</html>
+{{end}}
