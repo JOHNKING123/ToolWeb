@@ -228,15 +228,17 @@ function arcToCubics(x1, y1, rx, ry, phiDeg, largeArc, sweep, x2, y2) {
         var a1 = th1 + dth * i / n, a2 = th1 + dth * (i + 1) / n;
         var alpha = 4 / 3 * Math.tan((a2 - a1) / 4);
         function pt(a) {
+            /* 旋转椭圆参数方程：x=cx+rx·cosφ·cos a−ry·sinφ·sin a，
+               y=cy+rx·sinφ·cos a+ry·cosφ·sin a（rx/ry 必须交叉使用） */
             return {
-                x: cx + rx * (cosPhi * Math.cos(a) - sinPhi * Math.sin(a)),
-                y: cy + ry * (sinPhi * Math.cos(a) + cosPhi * Math.sin(a))
+                x: cx + rx * cosPhi * Math.cos(a) - ry * sinPhi * Math.sin(a),
+                y: cy + rx * sinPhi * Math.cos(a) + ry * cosPhi * Math.sin(a)
             };
         }
         function dpt(a) {
             return {
-                x: rx * (-cosPhi * Math.sin(a) - sinPhi * Math.cos(a)),
-                y: ry * (-sinPhi * Math.sin(a) + cosPhi * Math.cos(a))
+                x: -rx * cosPhi * Math.sin(a) - ry * sinPhi * Math.cos(a),
+                y: -rx * sinPhi * Math.sin(a) + ry * cosPhi * Math.cos(a)
             };
         }
         var p1 = pt(a1), p2 = pt(a2), d1 = dpt(a1), d2 = dpt(a2);
@@ -910,9 +912,9 @@ function buildTTF(glyphs, opts) {
     maxpW.u16(0); maxpW.u16(0); maxpW.u16(1); maxpW.u16(0); maxpW.u16(0);
     maxpW.u16(0); maxpW.u16(0); maxpW.u16(0); maxpW.u16(0); maxpW.u16(0); maxpW.u16(0);
 
-    /* OS/2 v0 */
+    /* OS/2 v1（86 字节，各字段严格按规范偏移） */
     var os2W = new BW();
-    os2W.u16(0);
+    os2W.u16(1);
     os2W.i16(avgAdv);
     os2W.u16(400); os2W.u16(5); os2W.u16(0);
     os2W.i16(650); os2W.i16(700); os2W.i16(0); os2W.i16(140);
@@ -921,10 +923,14 @@ function buildTTF(glyphs, opts) {
     os2W.i16(0);
     for (var p = 0; p < 10; p++) os2W.u8(0);
     os2W.u32(0); os2W.u32(0x10000000); os2W.u32(0); os2W.u32(0); /* ulUnicodeRange：bit60 = PUA plane 0 */
-    os2W.u32(0); os2W.u32(0);
+    os2W.u32(0); /* achVendID（规范为 4 字节） */
+    os2W.u16(0); /* fsSelection */
+    os2W.u16(PUA_START); /* usFirstCharIndex */
+    os2W.u16(all[all.length - 1].codepoint); /* usLastCharIndex：all 末字形码点 */
     os2W.i16(ASCENDER); os2W.i16(DESCENDER); os2W.i16(0);
     os2W.u16(ASCENDER); os2W.u16(-DESCENDER);
-    os2W.i16(0); os2W.i16(0); os2W.u16(0); os2W.u16(0x20); os2W.u16(0);
+    /* ulCodePageRange1/2；原末尾多余的 u16(0) 为 v2 字段 sxHeight 占位（其余 v2 字段未写），v1 下移除使表长恰为 86 */
+    os2W.i16(0); os2W.i16(0); os2W.u16(0); os2W.u16(0x20);
 
     /* cmap */
     var pairs = [];

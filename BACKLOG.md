@@ -1,3 +1,11 @@
+## 开发交付（2026-10-23 14:06 · 前端开发第2轮：评审反馈修复）
+
+**交付：SVG 转字体图标生成器（svg_to_font）评审第1轮（37bfa7d）2 个必改 bug 修复**：
+- 必改1（`static/js/svg_to_font.js` arcToCubics pt/dpt）：旋转椭圆参数方程中 rx/ry 混用，`pt(a)`/`dpt(a)` 改为半径交叉形式（x=cx+rx·cosφ·cos a−ry·sinφ·sin a，y=cy+rx·sinφ·cos a+ry·cosφ·sin a，导数同理）；实测 `arcToCubics(0,0,30,10,45,0,1,20,10)` 末段终点由 (33.66,13.66) 回到 (20,10)。
+- 必改2（OS/2 表字段错位）：achVendID 由 8 字节改为规范 4 字节；补 `fsSelection`/`usFirstCharIndex`(U+E000)/`usLastCharIndex`（取 `all[all.length-1].codepoint` 即末字形实际码点；评审原文公式 `0xE000+all.length-1` 因 all[0] 为无码点的 .notdef 会偏大 1，按括号内"取末字形码点"说明实现）；version 0→1；另移除末尾 v2 字段 sxHeight 的占位 `u16(0)`（其余 v2 字段均未写；评审原文"此时表长恰为 86"按字面改法实为 88=86−4+6，移除后恰为 86=v1 尺寸）。按规范偏移重 parse：sTypoAscender=880、sTypoDescender=-144、sTypoLineGap=0、usWinAscent=880、usWinDescent=144（修复前错位读出 -144/0/880/144/0）。
+- 回归测试：`tests/svg_to_font.test.js` 新增 13 个断言（旋转椭圆弧末段终点≈(20,10) 容差 1e-6＋每段端点按 SVG 规范独立求中心验椭圆方程；OS/2 经表目录定位后按规范偏移断言 version/表长/首末码点/typo 与 win 指标），`node tests/svg_to_font.test.js` **192/192 全过**；`go build ./...` 通过；JS 内零 fetch/XHR；vendor opentype.min.js 未动（SHA256 与 npm 2.0.0 一致）。
+- 可选 nits（①"5." 数字正则 ②parseTransform NaN 兜底 ③cssClassName 空名 ④`<defs>`/`<use>` 提示 ⑤零面积轮廓提示）本轮未动，留待后续轮次。
+
 ## 开发交付（2026-10-23 14:0x · 前端开发轮）
 
 **交付：SVG 转字体图标生成器（svg_to_font）** — 本轮唯一任务闭环：

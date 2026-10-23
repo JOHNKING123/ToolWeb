@@ -118,6 +118,37 @@ var IDENT = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
     var cz = SF.arcToCubics(5, 5, 10, 10, 0, 0, 1, 5, 5);
     eq(cz.length, 0, "起点终点重合的圆弧返回空");
 })();
+/* ---------- 3b. 旋转椭圆弧回归（rx≠ry 且 φ≠0）：pt/dpt 半径交叉 ---------- */
+(function () {
+    /* 修复前 arcToCubics(0,0, 30,10, 45, 0,1, 20,10) 末段终点为 (33.66,13.66)；
+       修复后必须恰为弧终点 (20,10) */
+    var segs = SF.arcToCubics(0, 0, 30, 10, 45, 0, 1, 20, 10);
+    ok(segs.length > 0, "旋转椭圆弧有输出");
+    var last = segs[segs.length - 1];
+    approx(last.x, 20, 1e-6, "旋转椭圆弧末段终点 x=20");
+    approx(last.y, 10, 1e-6, "旋转椭圆弧末段终点 y=10");
+    /* 按 SVG 规范独立求中心与缩放后半径，验每段端点落在椭圆方程 (X/rx)²+(Y/ry)²=1 上 */
+    var rx0 = 30, ry0 = 10, phiDeg = 45, x1 = 0, y1 = 0, x2 = 20, y2 = 10;
+    var phi = phiDeg * Math.PI / 180, cp = Math.cos(phi), sp = Math.sin(phi);
+    var rx = Math.abs(rx0), ry = Math.abs(ry0);
+    var dx = (x1 - x2) / 2, dy = (y1 - y2) / 2;
+    var x1p = cp * dx + sp * dy, y1p = -sp * dx + cp * dy;
+    var lam = x1p * x1p / (rx * rx) + y1p * y1p / (ry * ry);
+    if (lam > 1) { var s = Math.sqrt(lam); rx *= s; ry *= s; }
+    var num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
+    var den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
+    var co = den === 0 ? 0 : Math.sqrt(Math.max(0, num / den));
+    /* largeArc=0、sweep=1：两者不等，不取反 */
+    var cxp = co * rx * y1p / ry, cyp = -co * ry * x1p / rx;
+    var cx = cp * cxp - sp * cyp + (x1 + x2) / 2;
+    var cy = sp * cxp + cp * cyp + (y1 + y2) / 2;
+    var allOn = segs.every(function (sg) {
+        var X = cp * (sg.x - cx) + sp * (sg.y - cy);
+        var Y = -sp * (sg.x - cx) + cp * (sg.y - cy);
+        return Math.abs(X * X / (rx * rx) + Y * Y / (ry * ry) - 1) < 1e-9;
+    });
+    ok(allOn, "旋转椭圆弧每段端点落在椭圆方程上");
+})();
 
 /* ---------- 4. 基本形状转换 ---------- */
 function shape(el, attrs, mat) { return { el: el, attrs: attrs, mat: mat || IDENT }; }
@@ -327,6 +358,29 @@ var GLYPHS = (function () {
     ok(g1.path.commands.length > 0, "TTF 字形 1 有轮廓命令");
     ok(g2.path.commands.length > 0, "TTF 字形 2 有轮廓命令");
     eq(p.glyphs.get(0).name, ".notdef", "TTF 首字形为 .notdef");
+    /* 必改2 回归：OS/2 表按规范偏移解析，字段不再错位（修复前 version=0、
+       achVendID 占 8 字节且缺 fsSelection/usFirstCharIndex/usLastCharIndex，
+       按规范偏移读出 sTypoAscender=-144、usWinAscent=144 等错位值） */
+    var os2tab = (function () {
+        var dv = new DataView(ttf.buffer, ttf.byteOffset, ttf.byteLength);
+        var nt = dv.getUint16(4);
+        for (var i = 0; i < nt; i++) {
+            var o = 12 + i * 16;
+            var tag = String.fromCharCode(dv.getUint8(o), dv.getUint8(o + 1), dv.getUint8(o + 2), dv.getUint8(o + 3));
+            if (tag === "OS/2") return { off: dv.getUint32(o + 8), len: dv.getUint32(o + 12) };
+        }
+        return null;
+    })();
+    ok(!!os2tab, "TTF 含 OS/2 表");
+    eq(os2tab.len, 86, "OS/2 表长 86（v1）");
+    var odv = new DataView(ttf.buffer, ttf.byteOffset + os2tab.off, os2tab.len);
+    eq(odv.getUint16(0), 1, "OS/2 version=1");
+    eq(odv.getUint16(64), 0xE000, "OS/2 usFirstCharIndex=U+E000");
+    eq(odv.getUint16(66), 0xE002, "OS/2 usLastCharIndex=U+E002");
+    eq(odv.getInt16(68), 880, "OS/2 sTypoAscender=880");
+    eq(odv.getInt16(70), -144, "OS/2 sTypoDescender=-144");
+    eq(odv.getUint16(74), 880, "OS/2 usWinAscent=880");
+    eq(odv.getUint16(76), 144, "OS/2 usWinDescent=144");
 })();
 
 /* ---------- 14. OTF 组装 round-trip ---------- */
