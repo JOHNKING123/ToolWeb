@@ -1,3 +1,91 @@
+## 今日任务（2026-10-23 21:00 · 前端开发轮）
+
+**交付：着陆页评分检查器（landing_page_grader）** — 本轮唯一任务（新工具）：
+- **实现**：`templates/landing_page_grader.html`（新增；SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明 FAQ/相关工具）、`static/js/landing_page_grader.js`（新增；26 条规则引擎＋DOMParser 本地解析＋打分/等级＋Markdown 报告＋示例页/拖入 .html/三色清单/按状态筛选/展开详情；双模式导出供 node 测试）、`tests/landing_page_grader.test.js`（新增；245 断言全过）、`tools/categories.go`（实用工具品类注册：ID landing_page_grader、Path /tools/landing-page-grader、Icon fact_check、New: true）。
+- **规则口径**：PM 规格枚举 28 项，其中「外链 rel/HTTPS」与「canonical/robots 索引控制」各合并为 1 条，实际 26 条（七组 5/4/4/1/3/5/4）；打分 通过=100/警告=50/失败=0 取均值四舍五入；等级 优秀≥85/良好≥60/待改进<60；内链口径文档化（相对路径/#锚点=内链，http(s):// 或 // 开头=外链，含同域绝对地址）。
+- **验证**：node 测试 245 断言全过；jsdom 端到端实测 extractModel→gradePage：示例页（6.9KB）94 分优秀（3 个预期警告：favicon/twitter:card/图片缺 height），缺陷页 33 分待改进（10 失败含 lorem ipsum/无 H1/无 viewport/占位链接/重复 id；缺 og:image→警告、图片无 alt→警告；每条失败有中文修复建议）；脚本零 fetch/XHR、零上传；`go build` 通过；注册总数 151→152 Path。
+- **交付核对**：分支 muse/dev-20260929（HEAD 265c856 起步）；仓库根目录未跟踪的 `toolWeb.bak-prev`（20MB 陈旧构建产物，多轮已记录）本轮已清理，未入库；铁律：不碰 master、不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh（本轮为开发轮，部署交由后续管线轮次执行）。
+
+---
+
+## 今日任务（2026-10-23 21:00 · 产品经理排期轮）
+
+**选定：着陆页评分检查器（landing_page_grader）** — 本轮唯一任务（新工具）：
+- **顺位**：21:00 研究轮（79 轮）Top3 首席推荐；浏览器实时听写已交付闭环（265c856，151 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 151 Path，ID realtime_dictation、Path /tools/realtime-dictation 已注册，实用工具品类；node 测试 126 断言全过）后顺位递进生效，依惯例「无硬伤不跳过」。未选：死链检查器（P2 本轮新晋；中难度 Go 后端并发抓取——21:00 晚轮时间预算紧张，接中难度工具节奏不稳，留池）、本地看板任务管理（P2 本轮新晋；纯前端小难度但研究轮顺位居三，留池）。
+- **选定理由（本轮晚轮）**：① **研究轮首席推荐**——78 轮新晋，dev.to mattbusel 10-17 免费无 AI landing page grader 形态验证（2079 个 Show HN 页面实测跑通），79 轮无新晋 P1/P2，顺位居前无硬伤；② **小难度纯前端一轮可高质量交付**——21:00 晚轮时间预算紧张，粘贴 HTML→26 条确定性规则打分纯前端形态节奏最稳；③ **零重叠实锤**——本轮实测 `grep -cniE 'landing_page_grader|landing-page-grader|着陆页评分|grader'` 在 tools/categories.go、static/js/、templates/ 三路均为零命中，全量 151 Path 无同类工具；④ **痛点明确**——独立站/个人页上线前 SEO 卫生无从检验，Woorank 等按次收费；粘贴源码本地打分零上传正中隐私痛点。
+- **形态验证**：粘贴网页 HTML 源码 → 26 条确定性规则逐项检查（SEO 基础/社交分享/内容结构/移动友好/链接/文案质量/技术性能七组）→ 总分 0-100＋等级（优秀/良好/待改进）→ 通过/警告/失败三色清单＋每项失败给中文修复建议 → 一键复制 Markdown 报告。
+- **品类归位**：注册到「实用工具」品类（沿用研究轮建议）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 规则引擎（26 条，确定性、零 AI）：① SEO 基础：title 存在且 30-60 字符、meta description 50-160 字符、canonical 存在、html lang 属性、robots 无 noindex、favicon 存在；② 社交分享：og:title、og:description、og:image、twitter card；③ 内容结构：恰好 1 个 H1 且非空、标题层级不跳级（h1→h2…）、正文字数≥300、图片 alt 缺失率<10%；④ 移动友好：viewport meta；⑤ 链接：至少 1 内链、外链有 rel 属性、HTTPS、无 href="#" 占位；⑥ 文案质量：无 lorem ipsum 占位文、无 buzzword 墙（超级词密度）、有价格信息、有 CTA 按钮/链接、有联系方式（mailto/tel/表单）；⑦ 技术：图片有 width/height（防 CLS）、JSON-LD 结构化数据、页面标签数/体积性能提示、无重复 id。
+- 交互：大文本域粘贴 HTML（支持拖入 .html 文件本地读取）→ 一键「开始检查」→ 总分仪表盘（圆环/数字＋等级）→ 三色规则清单（可按组筛选：全部/失败/警告）→ 每条展开看详情＋修复建议 → 一键复制 Markdown 报告（分数＋失败项＋建议）。
+- 技术：DOMParser 本地解析 HTML，脚本零 fetch/XHR、零上传（页面文案可明示「源码不出浏览器」）；规则引擎纯函数＋双模式导出（browser/node）供 node 测试；大 HTML（>1MB）给出性能提示。
+- 注册：新增工具 ID `landing_page_grader`、Name「着陆页评分检查器」、Path `/tools/landing-page-grader`（New: true，沿用研究轮建议；Icon 建议 fact_check），中英文描述＋SEO keywords（着陆页评分、landing page grader、SEO 检查、网页体检、网页 SEO 诊断、landing page audit）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐（canonical 形如 https://www.johnkingzcq123.xyz/tools/landing-page-grader）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `landing_page_grader`、Path `/tools/landing-page-grader` 注册完整（Category 实用工具），注册总数 151→152 Path。
+2. 粘贴典型着陆页 HTML（≥5KB，含 title/meta/OG/H1/图片/链接/CTA）→ 26 条规则全跑完，总分 0-100，等级（优秀≥85/良好≥60/待改进<60）正确。
+3. 三色清单：通过/警告/失败分类准确；每条失败项有中文修复建议；可按组筛选（全部/失败/警告）可用。
+4. 典型缺陷检出：lorem ipsum 占位文→失败；缺 og:image→警告/失败；无 H1→失败；图片无 alt→警告；无 viewport→失败。
+5. 脚本零 fetch/XHR、零上传；node 测试 40+ 断言全过（规则逐项命中、打分求和、严重级别映射、占位文/buzzword 检测、报告 Markdown 序列化）。
+6. 复制 Markdown 报告可用；页面无报错；移动端布局不错位。
+
+**预计改动文件**：
+- `templates/landing_page_grader.html`（新增；含 SEO 面板按家族标准＋粘贴区/总分仪表盘/三色清单/报告复制 UI 样式）
+- `static/js/landing_page_grader.js`（新增；26 条规则引擎＋DOMParser 解析＋打分/等级＋报告生成；双模式导出供 node 测试）
+- `tests/landing_page_grader.test.js`（新增；规则命中、打分求和、级别映射、占位文检测、报告序列化）
+- `tools/categories.go`（实用工具品类注册：ID landing_page_grader、Path /tools/landing-page-grader、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 265c856（realtime_dictation 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮首次报 access rights、分支列表随后正常（沿用 10-23 惯例）；origin/muse/dev-20260929 存在；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 151 Path；三候选零重叠本轮复核（landing_page_grader/broken_link_checker/kanban_board 三路零命中）；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+
+**交付状态**：10-23 通用调研第七十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。浏览器实时听写已交付闭环（`git log` 头部 265c856：Web Speech API push-to-talk 实时听写＋实时字幕＋历史列表/localStorage 持久化，实用工具品类，150→151 Path，node 测试 126 断言全过；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **151 Path**，ID realtime_dictation、Path /tools/realtime-dictation 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 晚轮次，P1 池已空，P2 可晋升。
+
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. realtime_dictation 交付确认：`git log` 头部 265c856；全量 151 Path（ID realtime_dictation、Path /tools/realtime-dictation 已注册，实用工具品类）；候选池划出。
+2. 新信号扫描：
+   - **Show HN 本周**：BetterWispr（10-12，200 pts：免费开源 macOS 本地听写 App，设备端模型＋push-to-talk）→ 本地听写赛道持续热点，刚交付的 realtime_dictation 形态验证补强；Linkit（10-21，AI 书签管理器，开源）→ 需 AI/后端，非单页前端，不立；
+   - **Medium 7 Free Browser Tools（Siloshan，Oct 2026）**：SyncWhen（免注册会议时间投票）→ `grep -cniE '投票|poll' tools/categories.go static/js/ templates/` **零命中实锤**，但投票结果需多端同步持久化、当前纯前端单页架构装不下 → **新晋 P3「免注册会议时间投票」观察**（建议 ID meeting_time_poll、Path /tools/meeting-time-poll；需 Go 后端＋存储，低优先）；SortaSeat（婚礼座位表）→ **实锤自有** wedding_seating_chart；OldRoll（复古照片滤镜）→ **实锤自有** img_retro_filter；StitchCraft（照片转十字绣）→ **实锤自有** cross_stitch_pattern；urPiano（浏览器钢琴）→ 池内观察「在线钢琴」形态验证补强；Calcy（带单位/范围的表达式计算器）→ 10-18 方向修正（不扩计算器类）边界，观察；llmspeed（本地 AI 模型跑分/购机前测速）→ 池内 P2「本地 LLM 硬件检测器」二次形态验证补强；
+   - **V2EX**：md2chat（10-20：Markdown→聊天图文，开源 web 工具）→ **实锤自有**（ID md_to_chat、Path /tools/md-to-chat，templates/md_to_chat.html＋static/js/md_to_chat.js 俱全），不立；Open Resume（10-20：156 模板简历工具）→ 需后端/Docker 部署，非单页，不立；NASDrop（10-18：群晖下载）→ 需 NAS 硬件＋Chrome 扩展，非 web 工具，不立；PHP2Shell（10-22：PHP 应急响应头检查）→ niche＋需后端发请求，不立；workskill.tools（10-23：coding agent 技能商店）→ 非单工具形态，不立；protohub（10-21：原型托管）→ 需后端存储，不立；
+   - **dev.to**：Antigravity 59 工具（10-19）：PII Masker → **实锤自有**（AI 提示词脱敏器 prompt_sanitizer＋文本隐私脱敏 text_privacy_masker）；AI Token Counter → **实锤自有** ai_token_counter；Prompt Cost Trimmer → AI 类不立；其余合集全自有实锤；FreeHub（10-8：免费资源目录，每周自动复验全部外链）→ 目录产品非单工具，但「每周自动复验链接有效性」→ 池内 P2「死链检查器」形态验证补强；
+   - **Reddit/知乎**：本轮返回均为 SEO 营销内容，无可消化需求帖 → 本轮空；
+   - **stillworks.today 10-23 日榜**：78 轮（17:36）已消化同日榜单，无变化 → 本轮不重复。
+3. 候选池变动：浏览器实时听写已交付划出（265c856，151 Path）；**新晋 1 个 P3 观察**（免注册会议时间投票：需后端持久化，低优先）；**形态补强 4 项**（本地 LLM 硬件检测器：llmspeed；在线钢琴：urPiano；死链检查器：FreeHub 每周复验；听写赛道：BetterWispr）；无新晋 P1/P2；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，本轮 P2 可晋升）：
+
+1. **着陆页评分检查器** — P2（78 轮新晋；dev.to mattbusel 10-17 免费无 AI landing page grader 形态验证（2079 个 Show HN 页面实测）；痛点：独立站/个人页上线前 SEO 卫生无从检验，Woorank 按次收费；纯前端小难度：粘贴 HTML→26 条确定性规则打分＋三色清单＋修复建议，零上传；建议 ID landing_page_grader、Path /tools/landing-page-grader）。
+2. **死链检查器** — P2（78 轮新晋；本轮 FreeHub 每周自动复验外链二次形态验证；痛点：站点改版后手工逐个点链接耗时；中难度：粘贴 URL 列表→Go 后端并发抓取（避 CORS）→状态码/重定向链/超时逐项报告；建议 ID broken_link_checker、Path /tools/broken-link-checker）。
+3. **本地看板任务管理** — P2（77 轮新晋；dev.to mou1z localStorage 拖拽看板形态验证；痛点：轻量看板都要注册/付费；纯前端小难度：看板列＋卡片拖拽＋localStorage 持久化，零上传；建议 ID kanban_board、Path /tools/kanban-board）。
+
+其余 P1 留池：无（屏幕常亮、浏览器实时听写均已交付）。
+其余 P2 留池：HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（本轮 urPiano 形态验证补强；方向边界观察）；本地 LLM 硬件检测器（本轮 llmspeed 二次形态验证补强）/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+其余 P3 观察：免注册会议时间投票（本轮新晋；SyncWhen 形态验证；需 Go 后端＋持久化存储，纯前端单页架构外，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第七十九轮：浏览器实时听写已交付划出（265c856，151 Path）；**新晋 P3 观察：免注册会议时间投票**（Medium 10 月榜单 SyncWhen 形态验证：发起人填候选时间→分享链接→参与者投票；痛点：约会议时间来回拉群投票，Doodle 要注册；`投票|poll` 零命中实锤；但投票结果需多端同步持久化，当前纯前端单页架构装不下，需 Go 后端＋存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）；形态补强 4 项（本地 LLM 硬件检测器：Medium llmspeed 本地模型跑分二次验证；在线钢琴：Medium urPiano 验证；死链检查器：dev.to FreeHub 每周自动复验外链验证；听写赛道：Show HN BetterWispr 200pts 本地听写热点）；SortaSeat→实锤自有 wedding_seating_chart；OldRoll→实锤自有 img_retro_filter；StitchCraft→实锤自有 cross_stitch_pattern；V2EX md2chat→实锤自有 md_to_chat（ID md_to_chat、Path /tools/md-to-chat）；Antigravity PII Masker→实锤自有 prompt_sanitizer＋text_privacy_masker；Antigravity AI Token Counter→实锤自有 ai_token_counter；Show HN Linkit（AI 书签管理器）/V2EX Open Resume（需后端）/NASDrop（需硬件）/PHP2Shell（niche＋后端）/workskill.tools（技能商店）/protohub（原型托管）不立；Calcy 表达式计算器方向边界观察；Reddit/知乎本轮空；stillworks 10-23 榜 78 轮已消化；全量 151 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 免注册会议时间投票 | 新晋 P3 观察（79 轮；Medium 10 月榜单 SyncWhen 形态验证：发起人填候选时间→分享链接→参与者投票选时间；痛点：约会议时间来回拉群投票，Doodle 要注册；`投票\|poll` 零命中实锤；但投票结果需多端同步持久化，当前纯前端单页架构装不下，需 Go 后端＋存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll） | 大 | P3 观察 |
+| realtime_dictation | 已交付划出（265c856 交付闭环：Web Speech API push-to-talk 实时听写＋实时字幕＋历史列表/localStorage 持久化，node 测试 126 断言全过；ID realtime_dictation、Path /tools/realtime-dictation 已注册，实用工具品类；全量 151 Path；候选池划出） | — | 已实现 |
+| Show HN 本周 | 部分补强（BetterWispr 10-12 200pts 本地听写→听写赛道形态验证（realtime_dictation 已交付）；Linkit AI 书签管理器→需 AI/后端，非单页前端，不立） | — | 补强/不立 |
+| Medium 10 月浏览器工具榜 | 部分立项（SyncWhen 免注册会议投票→新晋 P3 观察（见上）；SortaSeat→实锤自有 wedding_seating_chart；OldRoll→实锤自有 img_retro_filter；StitchCraft→实锤自有 cross_stitch_pattern；urPiano→池内「在线钢琴」形态验证补强；Calcy 带单位表达式计算器→10-18 方向修正边界，观察；llmspeed 本地模型跑分→池内 P2「本地 LLM 硬件检测器」二次形态验证补强） | — | 立项/补强/不立 |
+| V2EX 信号 | 本轮不立（md2chat 10-20→实锤自有 md_to_chat（ID md_to_chat、Path /tools/md-to-chat）；Open Resume 156 模板简历→需后端/Docker，非单页；NASDrop→需 NAS 硬件＋Chrome 扩展，非 web 工具；PHP2Shell 应急响应头检查→niche＋需后端发请求；workskill.tools 技能商店→非单工具；protohub 原型托管→需后端存储） | — | 不立 |
+| dev.to 信号 | 部分补强（Antigravity 59 工具：PII Masker→实锤自有 prompt_sanitizer＋text_privacy_masker；AI Token Counter→实锤自有 ai_token_counter；Prompt Cost Trimmer→AI 类不立；其余合集全自有实锤；FreeHub 免费资源目录→目录产品非单工具，但「每周自动复验外链」→池内 P2 死链检查器形态验证补强） | — | 补强/不立 |
+| Reddit/知乎需求帖 | 本轮空（返回均为 SEO 营销内容，无可消化需求帖） | — | 观察 |
+| stillworks.today 10-23 日榜 | 本轮无新立（78 轮 17:36 已消化同日榜单，无变化） | — | 不立 |
+
+**归档说明**：本轮为 10-23 通用调研第七十九轮——浏览器实时听写交付闭环（265c856，`/tools/realtime-dictation` 已注册，实用工具品类，全量 151 Path），候选池划出；新信号扫描（Show HN：BetterWispr 听写赛道验证、Linkit 不立；Medium 10 月榜：SyncWhen→**新晋 P3 免注册会议时间投票观察**、SortaSeat/OldRoll/StitchCraft→三实锤自有、urPiano→在线钢琴补强、Calcy→方向边界观察、llmspeed→LLM 硬件检测器二次补强；V2EX：md2chat→实锤自有 md_to_chat、Open Resume/NASDrop/PHP2Shell/workskill/protohub 不立；dev.to：PII Masker 与 Token Counter 实锤自有、FreeHub→死链检查器补强；Reddit/知乎本轮空；stillworks 同日榜不重复）均已消化；P1 池已空（屏幕常亮、浏览器实时听写均已交付），P2 可晋升；WPS 候选表保持冻结归档；仓库 151 注册工具全量核对无重叠（Top3 建议 ID landing_page_grader / broken_link_checker / kanban_board；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮首次报 Host key verification failed（VM 换机清 known_hosts 惯例），重试后正常（github.com ED25519 重新入库）；`git log` 头部 265c856（realtime_dictation 交付闭环），与 origin/muse/dev-20260929 一致；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 151 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-23 19:00 · 产品经理排期轮）
 
 **选定：浏览器实时听写（realtime_dictation）** — 本轮唯一任务（新工具）：

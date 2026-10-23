@@ -1,0 +1,206 @@
+{{define "landing_page_grader"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>着陆页评分检查器 - 免费在线网页 SEO 体检打分（粘贴源码本地检查） | 程序员工具箱</title>
+<meta name="description" content="免费在线着陆页评分检查器：粘贴网页 HTML 源码，26 条确定性规则本地打分（SEO 基础/社交分享/内容结构/移动友好/链接/文案质量/技术性能七组），总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议，一键复制 Markdown 报告。DOMParser 本地解析，源码不出浏览器。Free landing page grader: paste HTML, 26 deterministic rules, 0-100 score, fix suggestions, Markdown report, 100% client-side.">
+<meta name="keywords" content="着陆页评分,landing page grader,SEO 检查,网页体检,网页 SEO 诊断,landing page audit,着陆页优化,SEO 体检,网页打分,og 检查,标题检查">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/landing-page-grader">
+<meta property="og:title" content="着陆页评分检查器 - 粘贴源码，26 条规则本地体检打分">
+<meta property="og:description" content="粘贴网页 HTML 源码，26 条确定性规则本地打分：SEO 基础/社交分享/内容结构/移动友好/链接/文案质量/技术性能，总分 0-100＋中文修复建议＋Markdown 报告，源码不出浏览器。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/landing-page-grader">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"着陆页评分检查器","alternateName":"landing_page_grader","description":"免费在线着陆页评分检查器：粘贴网页 HTML 源码，26 条确定性规则（SEO 基础/社交分享/内容结构/移动友好/链接/文案质量/技术性能七组）在浏览器本地打分，总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议，一键复制 Markdown 报告；DOMParser 本地解析，脚本零网络请求，源码不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/landing-page-grader","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.lpg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.lpg-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.lpg-panel h3 .material-icons{font-size:1.15rem;color:#0d9488}
+.lpg-local-note{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdfa;border:1px solid #99f6e4;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#115e59;line-height:1.7}
+.lpg-local-note .material-icons{color:#0d9488;font-size:1.3rem;flex:none;margin-top:.1rem}
+.lpg-drop{border:2px dashed #d1d5db;border-radius:.6rem;padding:.9rem;transition:all .15s;background:#fafafa}
+.lpg-drop.lpg-dragover{border-color:#0d9488;background:#f0fdfa}
+.lpg-drop textarea{width:100%;min-height:220px;border:1px solid #e5e7eb;border-radius:.5rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.6;color:#111827;background:#fff;resize:vertical;box-sizing:border-box}
+.lpg-drop-hint{font-size:.8rem;color:#9ca3af;margin-top:.5rem;text-align:center}
+.lpg-charcount{font-size:.8rem;color:#6b7280;margin:.5rem 0 .8rem}
+.lpg-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.lpg-btn{padding:.55rem 1.2rem;border-radius:.5rem;border:1px solid #0d9488;background:#0d9488;color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+.lpg-btn .material-icons{font-size:1.05rem}
+.lpg-btn:hover{background:#0f766e}
+.lpg-btn.lpg-secondary{background:#fff;color:#0d9488}
+.lpg-btn.lpg-secondary:hover{background:#f0fdfa}
+.lpg-score-wrap{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.lpg-ring{position:relative;width:150px;height:150px;flex:none}
+.lpg-ring svg{transform:rotate(-90deg)}
+.lpg-ring-bg{fill:none;stroke:#e5e7eb;stroke-width:12}
+.lpg-ring-fg{fill:none;stroke:#16a34a;stroke-width:12;stroke-linecap:round;stroke-dasharray:364.42;stroke-dashoffset:364.42;transition:stroke-dashoffset .8s ease,stroke .3s}
+.lpg-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.lpg-score-num{font-size:2.4rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.lpg-score-level{font-size:.95rem;font-weight:700;margin-top:.25rem}
+.lpg-score-meta{flex:1;min-width:200px}
+.lpg-counts{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+.lpg-count{flex:1;min-width:90px;text-align:center;border:1px solid #e5e7eb;border-radius:.5rem;padding:.5rem .3rem;font-size:.82rem;color:#6b7280}
+.lpg-count b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.lpg-count.lpg-c-pass b{color:#16a34a}
+.lpg-count.lpg-c-warn b{color:#d97706}
+.lpg-count.lpg-c-fail b{color:#dc2626}
+.lpg-filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;align-items:center}
+.lpg-filters button{padding:.4rem 1rem;border-radius:2rem;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:.85rem;font-weight:600;cursor:pointer}
+.lpg-filters button.lpg-f-active{background:#0d9488;border-color:#0d9488;color:#fff}
+.lpg-toggle-all{margin-left:auto;font-size:.82rem;color:#0d9488;background:none;border:none;cursor:pointer;font-weight:600}
+.lpg-group{margin-bottom:1rem}
+.lpg-group-title{font-size:.92rem;color:#111827;margin:0 0 .5rem;display:flex;align-items:center;gap:.5rem}
+.lpg-group-meta{font-size:.76rem;color:#9ca3af;font-weight:400}
+.lpg-item{border:1px solid #e5e7eb;border-radius:.55rem;margin-bottom:.45rem;overflow:hidden;background:#fff}
+.lpg-item-head{width:100%;display:flex;align-items:center;gap:.6rem;padding:.6rem .8rem;background:none;border:none;cursor:pointer;text-align:left;font-size:.9rem}
+.lpg-item-head:hover{background:#f9fafb}
+.lpg-badge{flex:none;width:1.4rem;height:1.4rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#fff}
+.lpg-b-pass{background:#16a34a}
+.lpg-b-warn{background:#d97706}
+.lpg-b-fail{background:#dc2626}
+.lpg-item-title{flex:1;color:#111827;font-weight:600}
+.lpg-tag{flex:none;font-size:.72rem;font-weight:700;border-radius:.35rem;padding:.12rem .55rem}
+.lpg-t-pass{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.lpg-t-warn{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+.lpg-t-fail{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5}
+.lpg-item-arrow{color:#9ca3af;font-size:.8rem;transition:transform .15s}
+.lpg-item.lpg-open .lpg-item-arrow{transform:rotate(180deg)}
+.lpg-item-body{display:none;padding:.2rem .9rem .8rem 2.8rem;font-size:.86rem;color:#4b5563;line-height:1.8}
+.lpg-item.lpg-open .lpg-item-body{display:block}
+.lpg-item-body p{margin:.3rem 0}
+.lpg-item-body b{color:#111827}
+.lpg-st-fail{border-left:3px solid #dc2626}
+.lpg-st-warn{border-left:3px solid #d97706}
+.lpg-st-pass{border-left:3px solid #16a34a}
+.lpg-empty{text-align:center;color:#9ca3af;font-size:.9rem;padding:1.4rem 0}
+.lpg-report{width:100%;min-height:180px;border:1px solid #e5e7eb;border-radius:.5rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.7;color:#374151;background:#f9fafb;resize:vertical;box-sizing:border-box}
+.lpg-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.lpg-faq dd{margin:0;line-height:1.9;font-size:.92rem;color:#4b5563}
+.lpg-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem}
+.lpg-related{display:flex;flex-wrap:wrap;gap:.5rem}
+.lpg-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+.lpg-toast.lpg-show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){
+.lpg-score-wrap{gap:1rem}
+.lpg-ring{width:120px;height:120px}
+.lpg-ring svg{width:120px;height:120px}
+.lpg-score-num{font-size:2rem}
+.lpg-item-body{padding-left:.9rem}
+.lpg-drop textarea{min-height:180px}
+}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">fact_check</i> 着陆页评分检查器</h1>
+<p>上线前给网页做一次<b>本地体检</b>：粘贴 HTML 源码，<b>26 条确定性规则</b>逐项检查（SEO 基础 / 社交分享 / 内容结构 / 移动友好 / 链接 / 文案质量 / 技术性能七组），打出 <b>0–100 总分</b>与优秀 / 良好 / 待改进等级，每条失败附<b>中文修复建议</b>，一键复制 <b>Markdown 报告</b>。浏览器本地 DOMParser 解析，<b>源码不出浏览器</b>。</p>
+</div>
+<div class="tool-content" style="max-width:960px;margin:auto;">
+
+<div class="lpg-local-note">
+<i class="material-icons">lock</i>
+<div><b>隐私说明：</b>你粘贴的 HTML 源码只在<b>本机浏览器</b>内用 DOMParser 解析打分，页面脚本<b>零 fetch / XHR 请求、零上传</b>。可放心粘贴未上线的页面源码。</div>
+</div>
+
+<div class="lpg-panel">
+<h3><i class="material-icons">code</i> 粘贴 HTML 源码</h3>
+<div class="lpg-drop" id="lpg-drop">
+<textarea id="lpg-input" placeholder="在此粘贴网页 HTML 源码…&#10;&#10;获取方式：浏览器打开页面 → 右键「查看网页源代码」→ 全选复制 → 粘贴到这里。&#10;也可以把 .html 文件直接拖进来（本地读取，不上传）。" spellcheck="false"></textarea>
+<div class="lpg-drop-hint">支持把 .html 文件拖入此区域（本地 FileReader 读取，不上传）· 超过 1MB 的源码会给出性能提示</div>
+</div>
+<div class="lpg-charcount" id="lpg-charcount">已粘贴 0 字符</div>
+<div class="lpg-actions">
+<button class="lpg-btn" id="lpg-grade"><i class="material-icons">play_arrow</i> 开始检查</button>
+<button class="lpg-btn lpg-secondary" id="lpg-sample"><i class="material-icons">description</i> 载入示例</button>
+<button class="lpg-btn lpg-secondary" id="lpg-clear"><i class="material-icons">clear</i> 清空</button>
+</div>
+</div>
+
+<div class="lpg-panel" id="lpg-result" style="display:none">
+<h3><i class="material-icons">assessment</i> 检查结果</h3>
+<div class="lpg-score-wrap">
+<div class="lpg-ring">
+<svg viewBox="0 0 140 140" width="150" height="150">
+<circle cx="70" cy="70" r="58" class="lpg-ring-bg"></circle>
+<circle cx="70" cy="70" r="58" class="lpg-ring-fg" id="lpg-ring-fg"></circle>
+</svg>
+<div class="lpg-ring-center">
+<div class="lpg-score-num" id="lpg-score-num">0</div>
+<div class="lpg-score-level" id="lpg-score-level">—</div>
+</div>
+</div>
+<div class="lpg-score-meta">
+<div style="font-size:.88rem;color:#6b7280;line-height:1.8">26 条规则逐项检查：通过 100 分 / 警告 50 分 / 失败 0 分，总分取均值。<br>等级：<b>优秀</b> ≥85，<b>良好</b> ≥60，<b>待改进</b> &lt;60。</div>
+<div class="lpg-counts">
+<div class="lpg-count lpg-c-pass"><b id="lpg-count-pass">0</b>通过</div>
+<div class="lpg-count lpg-c-warn"><b id="lpg-count-warn">0</b>警告</div>
+<div class="lpg-count lpg-c-fail"><b id="lpg-count-fail">0</b>失败</div>
+</div>
+</div>
+</div>
+<div class="lpg-filters" id="lpg-filters">
+<button data-filter="all" class="lpg-f-active">全部</button>
+<button data-filter="pass">通过</button>
+<button data-filter="warn">警告</button>
+<button data-filter="fail">失败</button>
+<button class="lpg-toggle-all" id="lpg-toggle-all" type="button">全部展开</button>
+</div>
+<div id="lpg-groups"></div>
+</div>
+
+<div class="lpg-panel" id="lpg-report-panel" style="display:none">
+<h3><i class="material-icons">content_copy</i> Markdown 报告</h3>
+<textarea class="lpg-report" id="lpg-report" readonly></textarea>
+<div class="lpg-actions" style="margin-top:.8rem">
+<button class="lpg-btn" id="lpg-copy-report"><i class="material-icons">content_copy</i> 复制 Markdown 报告</button>
+</div>
+</div>
+
+<div class="lpg-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="lpg-faq">
+<dt>这 26 条规则都检查什么？</dt>
+<dd>七组：<b>SEO 基础</b>（title 长度、meta description、canonical+robots、html lang、favicon）、<b>社交分享</b>（og:title/description/image、twitter:card）、<b>内容结构</b>（H1 唯一、标题不跳级、正文≥300 字、图片 alt）、<b>移动友好</b>（viewport）、<b>链接</b>（内链、外链 rel/HTTPS、无占位链接）、<b>文案质量</b>（无 lorem ipsum、超级词密度、价格信息、CTA、联系方式）、<b>技术性能</b>（图片宽高防 CLS、JSON-LD、体积/标签数、重复 id）。全部是确定性规则，无 AI、无猜测。</dd>
+<dt>分数是怎么算的？</dt>
+<dd>每条规则：通过 100 分、警告 50 分、失败 0 分，总分 = 26 项均值四舍五入。等级：优秀 ≥85、良好 ≥60、待改进 &lt;60。警告不致命但值得优化，失败项建议上线前修掉。</dd>
+<dt>为什么粘贴源码，而不是输入网址？</dt>
+<dd>浏览器跨域限制下，前端无法直接抓取任意网址的源码。粘贴源码的方式零后端、零等待，而且<b>源码不出浏览器</b>，未上线的页面也能放心检查。</dd>
+<dt>我的 HTML 会被上传吗？</dt>
+<dd>不会。解析（DOMParser）与打分全在本地完成，页面脚本不发起任何网络请求（零 <code>fetch</code> / <code>XMLHttpRequest</code>）。你可以断网后使用验证。</dd>
+<dt>内链/外链是怎么判定的？</dt>
+<dd>以 <code>/</code>、<code>./</code>、<code>#锚点</code>、相对路径开头的视为内链；以 <code>http(s)://</code> 或 <code>//</code> 开头的视为外链（含同域名的绝对地址，报告中已注明此口径）。</dd>
+<dt>检查超大页面有什么提示？</dt>
+<dd>源码超过 1MB 会在「页面体积与标签数」一项判失败并提示压缩；超过 2MB 时页面会自动截断前 2MB 检查，避免浏览器卡死。</dd>
+<dt>报告里的修复建议可以直接照着改吗？</dt>
+<dd>可以。每条失败/警告都附了中文修复建议（含示例代码片段），按建议修改后重新粘贴检查，看分数变化即是最直接的验证。</dd>
+</dl>
+</div>
+
+<div class="lpg-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="lpg-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">着陆页评分检查器（当前）</span>
+<a href="/tools/og-card-preview" class="btn btn-secondary" style="font-size:.9rem;">OG 社交卡片预览</a>
+<a href="/tools/robots-txt-generator" class="btn btn-secondary" style="font-size:.9rem;">robots.txt 生成器</a>
+<a href="/tools/html-entities" class="btn btn-secondary" style="font-size:.9rem;">HTML 实体编解码</a>
+<a href="/tools/url-tracker-cleaner" class="btn btn-secondary" style="font-size:.9rem;">URL 追踪参数清理</a>
+</div>
+</div>
+
+</div>
+</div>
+<div class="lpg-toast" id="lpg-toast"></div>
+<script src="/tools/static/js/landing_page_grader.js?v=1"></script>
+</body>
+</html>
+{{end}}

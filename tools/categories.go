@@ -1028,6 +1028,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "landing_page_grader",
+					Name:        "着陆页评分检查器",
+					Description: "免费在线着陆页评分检查器：粘贴网页 HTML 源码，26 条确定性规则在浏览器本地打分（SEO 基础/社交分享/内容结构/移动友好/链接/文案质量/技术性能七组），总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议，一键复制 Markdown 报告；DOMParser 本地解析，脚本零 fetch/XHR、源码不出浏览器 · Landing page grader: paste HTML source, 26 deterministic rules scored locally, 0-100 with fix suggestions and Markdown report, 100% client-side",
+					Path:        "/tools/landing-page-grader",
+					Icon:        "fact_check",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{
