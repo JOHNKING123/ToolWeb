@@ -1,3 +1,84 @@
+## 今日任务（2026-10-23 15:38 · 产品经理排期轮）
+
+**选定：白噪音发生器（white_noise_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：15:00 研究轮（77 轮）Top3 首席推荐；SVG 转字体图标生成器（6886795，148 Path）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选：屏幕常亮（P1 留池二席；Wake Lock API＋降级 trick，留池）、浏览器实时听写（P1 留池三席；Web Speech API，留池）。
+- **选定理由（本轮午后轮）**：① **研究轮首席推荐＋双轮形态验证**——74 轮新晋、36氪 myNoise 形态验证（可 DIY 白噪音/环境声）；② **小难度一轮可高质量交付**——午前两轮连续交付中难度工具（MBOX、SVG→字体），本轮接小工具节奏最稳；③ **零重叠实锤**——`grep -cniE '白噪音|white.noise|whitenoise|white_noise|white-noise' tools/categories.go static/js/ templates/` 三路零命中（本轮实测），全量 148 Path 无同类工具；④ **痛点明确**——专注/睡眠要可自定义白噪音，现有站点多为在线音频流或 App 内购；纯前端 WebAudio 本地合成（零音频文件、零 fetch/XHR、可离线播）正中隐私/弱网痛点。
+- **形态验证**：噪声类型选择（白/粉/棕噪声本地合成）→ 环境声叠加（雨声/雷声/风声等滤波混音＋各通道音量滑杆）→ 定时关闭（睡眠定时器 15/30/60 分钟＋自定义）→ 主音量＋播放/暂停一键。
+- **品类归位**：注册到「实用工具」品类（按家族归位习惯）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 声音引擎：WebAudio 本地合成，无音频文件、无 fetch/XHR、可离线；噪声源：白噪声（均匀随机）、粉噪声（Voss-McCartney 算法）、棕噪声（积分滤波）；环境声层：雨声（滤波白噪声＋滴落调制）、雷声（低频轰隆包络）、风声（缓变滤波扫频）——每种可单独开关＋独立音量滑杆，可多层混合。
+- 预设：专注工作（粉噪为主＋轻微雨声）、深度睡眠（棕噪＋风声）、雨夜（雨声＋远雷）、自定义（滑杆随意配）；预设一键切换＋「保存我的混音」localStorage 持久化（混音配置＋定时设置）。
+- 定时关闭：睡眠定时器（15/30/60/90 分钟＋自定义分钟数），到期自动淡出停止；倒计时显示。
+- 交互：主音量滑杆、播放/暂停大按钮、后台播放提示（切后台保持播放说明）；移动端适配，iOS 需用户手势启动（WebAudio 解锁提示）。
+- 注册：新增工具 ID `white_noise_generator`、Name「白噪音发生器」、Path `/tools/white-noise-generator`（New: true），中英文描述＋SEO keywords（白噪音、white noise、专注白噪音、睡眠白噪音、环境声、助眠）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `white_noise_generator`、Path `/tools/white-noise-generator` 注册完整（Category 实用工具），注册总数 148→149 Path。
+2. 三种噪声（白/粉/棕）＋三种环境声（雨/雷/风）可单独开关、独立音量滑杆，多层混合无爆音/卡顿（各层增益求和≤1 防削波）。
+3. 预设一键切换（专注工作/深度睡眠/雨夜/自定义），自定义混音可保存并经 localStorage 持久化（刷新恢复）。
+4. 睡眠定时器：设置 1 分钟测试→到期前 10 秒开始淡出→自动停止，倒计时显示准确。
+5. 脚本内零 fetch/XHR、零外部音频资源；node 测试 40+ 断言全过（噪声生成算法纯逻辑可测：粉噪谱斜率近似、棕噪积分连续性、混音增益求和、定时器倒计时逻辑、localStorage 序列化）。
+6. iOS/移动端：首次播放需用户手势解锁 AudioContext，有明确提示；页面无报错。
+
+**预计改动文件**：
+- `templates/white_noise_generator.html`（新增；含 SEO 面板按家族标准＋混音台/预设/定时器 UI 样式）
+- `static/js/white_noise_generator.js`（新增；WebAudio 噪声合成引擎/环境声滤波混音/预设/定时器/持久化；双模式导出供 node 测试）
+- `tests/white_noise_generator.test.js`（新增；噪声算法、混音增益、定时器逻辑、持久化序列化）
+- `tools/categories.go`（实用工具品类注册：ID white_noise_generator、Path /tools/white-noise-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 6886795（svg_to_font 交付闭环）；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 148 Path；三候选零重叠本轮复核（白噪音三路零命中；`screen_keeper|screen-keeper|Wake.Lock`、`realtime_dictation|realtime-dictation` 留池候选本轮未复核，排期时复核）；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 15:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。SVG 转字体图标生成器已交付闭环（`git log` 头部 6886795：37bfa7d 本轮交付＋评审第 1 轮 2 个必改 bug 修复；`grep tools/categories.go` 全量 **148 Path**，ID svg_to_font、Path /tools/svg-to-font 已注册，图片处理品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 午后轮次，P1 可排。
+
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. svg_to_font 交付确认：`git log` 头部 6886795（TTF 纯前端组装最小 TrueType 构建器＋OTF 走 vendor opentype.js 2.0.0、旋转椭圆弧与 OS/2 字段 2 个必改 bug 已修，node 192 断言全过）；`grep tools/categories.go` 全量 148 Path（ID svg_to_font、Path /tools/svg-to-font 已注册，图片处理品类）；候选池划出。
+2. 新信号扫描：
+   - **Show HN 本周**（ainews247 聚合 10-23 实时）：**What LLM fits my GPU?**（117 个模型真机实测 VRAM→GPU 兼容性查询器）→ **池内 P2「本地 LLM 硬件检测器」形态验证强补强**（数据表驱动：模型 VRAM/量化需求＋浏览器端 WebGL GPU 识别，纯前端可行）；**HackerNewsWorthy**（免费 HN 投稿分析器：标题长度/大小写/发帖规范启发式打分＋改进建议）→ `grep '"[^"]*(hn|hackernews)[^"]*"'` 仅 search_router 搜索路由命中、**内容打分零命中实锤** → **新晋 P2「HN 投稿优化分析器」**（痛点：发帖人想提高 HN 投稿通过率/流量，现有方案多为 AI 付费服务；纯前端小难度：标题长度/大小写/字数/规范项逐项打分＋建议，零上传；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；Pristine（AI UI 评审 agent skill，AI/开发类）不立；Toolcraft（设计应用脚手架非单工具）不立；AI Prompt Chain Builder（AI 类）不立；Tessa Newslink（AI 健康新闻核查需后端）不立；
+   - **stillworks.today 10-23 日榜**：Camera.wedding（婚礼 QR 照片收集→需后端存储）不立；FolioSort（桌面照片整理→非 web）不立；BankStatement2PDF（银行账单 PDF→Excel→财务类，10-18 方向修正排除＋需后端）不立；IconCraft（Mac 应用重命名→非 web）不立；其余 AI/SaaS 类不立；
+   - **V2EX**：Yir.AI（10-17，AI 生图视频渠道比价/路由平台→需后端）不立，但其内建**纯前端 C2PA 签名检测小工具**（c2pa-viewer）为可用形态 → `grep -cinE 'c2pa|AI图片检测|ai.image.detect'` **零命中实锤**（自有 exif_strip 仅看 EXIF、非 C2PA JUMBF provenance）→ **新晋 P2「AI 图片 C2PA 签名检测器」**（痛点：渠道渠道纯度/超分伪造质疑；纯前端解析 JPEG APP11/PNG 的 C2PA JUMBF manifest→签发者/模型/是否被修改放大，中难度；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；PHP2Shell 重帖（69~76 轮已消化）不立；FluxDown 插件系统（下载器平台非单工具）不立；《识别真假外星人》网页小游戏（toy）不立；
+   - **dev.to Etemora（10-10）**：Domain Name Generator（关键词→域名创意＋DNS/RDAP 实时可用性，RDAP 纯浏览器 fetch 可行）→ `grep -cinE '域名生成|domain.name.generator|domain.generator'` **零命中实锤**（现有 domain-check 为单域名查询工具，未解决 RDAP 直查，此为生成＋批量查，形态不同）→ **新晋 P2「域名创意生成器」**（痛点：起域名要逐个查可用性；关键词组合生成＋RDAP/DNS 批量可用性检查，纯前端中难度；建议 ID domain_name_generator、Path /tools/domain-name-generator）；
+   - **dev.to 5 Free Developer Tools（mou1z）**：Kanban Board（localStorage 拖拽看板）→ `grep -cinE 'kanban|看板|todo|待办'` **零命中实锤** → **新晋 P2「本地看板任务管理」**（痛点：轻量看板都要注册/付费；看板列＋卡片拖拽＋localStorage 持久化，纯前端小难度；建议 ID kanban_board、Path /tools/kanban-board）；Pomodoro＝自有实锤（2 命中）；CSS Gradient＝自有实锤（5 命中）；JSON Formatter/Regex Tester 全自有实锤；
+   - **dev.to 其余**：BlanzaTools 14 工具（图片压缩/改字/密码/二维码/颜色/JSON/倒计时→全自有实锤）不立；pyfile-toolkit（JSON Schema/UUID/Base64/批量改图/Cron→全自有实锤）不立；liujinshui_ai 8 工具（LivePhotoKit HEIC 转换＝自有 4 命中实锤；iWorkViewer .pages 解析 niche＋难；PlantingCalendar 美区 USDA；PupVax 狗疫苗 niche；ZonePlan 时区＝自有 6 命中实锤；InvoicePad 发票→财务类方向排除）不立；DevTrove 22 开发工具（JWT/YAML/regex/cron 全自有实锤）不立；tonytoolbox（75 轮已消化）不立；
+   - **Reddit「I wish there was a website」**：本轮返回均为营销/方法论 SEO 内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：SVG 转字体图标生成器已交付划出（6886795，148 Path）；**新晋 4 个 P2**（HN 投稿优化分析器、AI 图片 C2PA 签名检测器、域名创意生成器、本地看板任务管理）；**池内形态补强 1 项**（本地 LLM 硬件检测器：Show HN LLM/GPU VRAM 实测工具形态验证）；浏览器实时听写首次补建议 ID `realtime_dictation`、Path `/tools/realtime-dictation`（本轮 Whistle 设备端转写＋Murmur push-to-talk 形态验证补强）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；svg_to_font 交付闭环后按顺位递进）：
+
+1. **白噪音发生器** — P1（74 轮新晋；36氪 myNoise 形态验证：可 DIY 白噪音/环境声；痛点：专注/睡眠要可自定义白噪音，现有站点多为在线音频流或 App 内购；纯前端小难度：WebAudio 本地合成白/粉/棕噪声＋雨声/雷声/风声滤波混音＋定时关闭＋混合音量滑杆，零音频文件、零 fetch/XHR、可离线播；`白噪音|white.noise|whitenoise` 零命中实锤；建议 ID white_noise_generator、Path /tools/white-noise-generator）。
+2. **屏幕常亮** — P1（留池；痛点：手机/平板看菜谱/演示时屏幕自动熄灭，现有方案要装 App 或改系统设置；纯前端小难度：Wake Lock API＋降级方案（隐藏视频循环播放 trick），零上传；`屏幕常亮|screen_keeper|Wake.Lock` 零命中实锤；建议 ID screen_keeper、Path /tools/screen-keeper）。
+3. **浏览器实时听写** — P1（留池；本轮 Show HN Whistle 16.9MB 设备端语音转写＋Murmur push-to-talk 双形态验证补强；痛点：免打字语音转文字，现有方案要 App 或云端上传录音；纯前端小难度：Web Speech API/本地模型＋push-to-talk＋实时字幕，零上传；建议 ID realtime_dictation、Path /tools/realtime-dictation）。
+
+其余 P1 留池：无。
+其余 P2 留池：HN 投稿优化分析器（本轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（本轮新晋；Yir.AI c2pa-viewer 形态验证；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（本轮新晋；dev.to Etemora RDAP 可用性形态验证；建议 ID domain_name_generator、Path /tools/domain-name-generator）；本地看板任务管理（本轮新晋；localStorage 拖拽看板；建议 ID kanban_board、Path /tools/kanban-board）；图片打印尺寸计算器（76 轮新晋；PrintPixel 形态验证；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 形态验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器（本轮 Show HN LLM/GPU VRAM 实测形态验证强补强）/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十七轮：SVG 转字体图标生成器已交付划出（6886795，148 Path）；**新晋 P2 HN 投稿优化分析器**（Show HN HackerNewsWorthy 形态验证：标题/规范启发式打分；零命中实锤；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；**新晋 P2 AI 图片 C2PA 签名检测器**（V2EX Yir.AI c2pa-viewer 形态验证：JUMBF provenance 签发者/模型/篡改检测；与 exif_strip 无重叠，零命中实锤；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；**新晋 P2 域名创意生成器**（dev.to Etemora RDAP 实时可用性形态验证；零命中实锤；建议 ID domain_name_generator、Path /tools/domain-name-generator）；**新晋 P2 本地看板任务管理**（dev.to mou1z localStorage 拖拽看板形态验证；零命中实锤；建议 ID kanban_board、Path /tools/kanban-board）；池内补强（本地 LLM 硬件检测器：Show HN LLM/GPU VRAM 实测；浏览器实时听写：Whistle/Murmur；本轮补实时听写建议 ID realtime_dictation）；Show HN 其余（Pristine/Toolcraft/AI Prompt Chain/Tessa Newslink→AI 类或非单工具）不立；stillworks 10-23 日榜（Camera.wedding 需后端、FolioSort 非 web、BankStatement2PDF 财务类排除、IconCraft 非 web、其余 AI/SaaS）不立；V2EX（PHP2Shell 重帖已消化、FluxDown 非单工具、外星人游戏 toy）不立；dev.to 合集轮（BlanzaTools/pyfile-toolkit 全自有实锤、liujinshui_ai 8 工具仅域名生成/看板立项、DevTrove 全自有实锤、tonytoolbox 已消化）部分立项；Reddit 本轮空；全量 148 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HN 投稿优化分析器 | 新晋（77 轮；Show HN HackerNewsWorthy 形态验证：免费 HN 投稿分析器；痛点：想提高 HN 投稿通过率/流量，现有方案多为 AI 付费服务；纯前端小难度：标题长度/大小写/字数/规范项启发式逐项打分＋改进建议，零上传；内容打分零命中实锤（search_router 仅为搜索路由）；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer） | 小 | P2 |
+| AI 图片 C2PA 签名检测器 | 新晋（77 轮；V2EX Yir.AI c2pa-viewer 纯前端形态验证；痛点：AI 图渠道纯度/超分伪造质疑；纯前端解析 JPEG APP11/PNG 的 C2PA JUMBF manifest→签发者/模型/是否被修改放大，中难度；与自有 exif_strip 无重叠；`c2pa\|AI图片检测\|ai.image.detect` 零命中实锤；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker） | 中 | P2 |
+| 域名创意生成器 | 新晋（77 轮；dev.to Etemora Domain Name Generator 形态验证：关键词→域名创意＋DNS/RDAP 实时可用性（RDAP 纯浏览器 fetch 可行）；痛点：起域名要逐个查可用性；纯前端中难度：组合生成＋批量可用性检查，零上传；`域名生成\|domain.name.generator` 零命中实锤（现有 domain-check 为单域名查询，形态不同）；建议 ID domain_name_generator、Path /tools/domain-name-generator） | 中 | P2 |
+| 本地看板任务管理 | 新晋（77 轮；dev.to mou1z localStorage 拖拽看板形态验证；痛点：轻量看板都要注册/付费；纯前端小难度：看板列＋卡片拖拽＋localStorage 持久化，零上传；`kanban\|看板\|todo\|待办` 零命中实锤；建议 ID kanban_board、Path /tools/kanban-board） | 小 | P2 |
+| svg_to_font | 已交付划出（6886795 交付闭环：37bfa7d 新增＋评审第 1 轮 2 个必改 bug 修复（旋转椭圆弧半径交叉、OS/2 字段错位），node 192 断言全过；ID svg_to_font、Path /tools/svg-to-font 已注册，图片处理品类；全量 148 Path；候选池划出） | — | 已实现 |
+| Show HN 本周 | 部分补强（What LLM fits my GPU?→池内 P2 本地 LLM 硬件检测器形态验证强补强；HackerNewsWorthy→新晋 P2 HN 投稿优化分析器；Pristine AI UI 评审 skill、Toolcraft 设计脚手架、AI Prompt Chain Builder、Tessa Newslink→AI 类或非单工具，不立） | — | 补强/不立 |
+| stillworks.today 10-23 日榜 | 本轮不立（Camera.wedding 婚礼 QR 照片收集需后端；FolioSort 桌面整理非 web；BankStatement2PDF 银行账单→Excel→财务类（10-18 方向修正排除）＋需后端；IconCraft Mac 应用非 web；其余 AI/SaaS 类无单页工具形态） | — | 不立 |
+| V2EX 信号 | 部分立项（Yir.AI 纯前端 C2PA 签名检测小工具→新晋 P2 AI 图片 C2PA 签名检测器；PHP2Shell 重帖 69~76 轮已消化；FluxDown 插件系统非单工具；外星人网页小游戏 toy→不立） | — | 立项/不立 |
+| dev.to 合集轮 | 部分立项（BlanzaTools 14 工具全自有实锤；pyfile-toolkit 全自有实锤；liujinshui_ai 8 工具：域名生成器/看板立项（见上）、HEIC＝自有实锤、iWorkViewer niche、PlantingCalendar 美区、PupVax niche、ZonePlan＝自有实锤、InvoicePad 财务类排除；Etemora 域名生成器立项；mou1z 看板立项、番茄/渐变/JSON/正则＝自有实锤；DevTrove 全自有实锤；tonytoolbox 75 轮已消化） | — | 立项/不立 |
+| Reddit 需求帖 | 本轮空（"reddit I wish there was a website" 返回均为营销/方法论 SEO 内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十七轮——SVG 转字体图标生成器交付闭环（6886795，`/tools/svg-to-font` 已注册，图片处理品类，全量 148 Path），候选池划出；新信号扫描（Show HN 本周：LLM/GPU VRAM 实测→本地 LLM 硬件检测器强补强、HackerNewsWorthy→**新晋 P2 HN 投稿优化分析器**、其余 AI 类/非单工具不立；stillworks 10-23 日榜全不立（需后端/非 web/财务类排除/AI SaaS）；V2EX：Yir.AI 纯前端 C2PA 检测→**新晋 P2 AI 图片 C2PA 签名检测器**、PHP2Shell 重帖已消化、其余不立；dev.to：Etemora RDAP 域名生成器→**新晋 P2 域名创意生成器**、mou1z localStorage 看板→**新晋 P2 本地看板任务管理**、其余合集全自有实锤或方向排除；Reddit 本轮空）均已消化；WPS 候选表保持冻结归档；仓库 148 注册工具全量核对无重叠（Top3 建议 ID white_noise_generator / screen_keeper / realtime_dictation；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮首次直连报 access rights（Permission denied publickey）、重试正常（瞬时抖动，沿用 10-23 惯例）；`git log` 头部 6886795（svg_to_font 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 148 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 开发交付（2026-10-23 14:06 · 前端开发第2轮：评审反馈修复）
 
 **交付：SVG 转字体图标生成器（svg_to_font）评审第1轮（37bfa7d）2 个必改 bug 修复**：

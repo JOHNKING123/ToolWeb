@@ -1,0 +1,228 @@
+{{define "white_noise_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>白噪音发生器 - 免费在线白噪音/粉噪音/棕噪音+雨声雷声风声混音 | 程序员工具箱</title>
+<meta name="description" content="免费在线白噪音发生器：WebAudio 本地合成白/粉/棕噪声（Voss-McCartney、积分滤波）＋雨声/雷声/风声环境声滤波混音，每层独立开关与音量滑杆（增益求和防削波）；预设一键切换：专注工作/深度睡眠/雨夜/自定义，混音配置 localStorage 持久化；睡眠定时器（15/30/60/90/自定义分钟）到期前10秒淡出自动停止。零音频文件、零 fetch/XHR、可离线播放。Free white noise generator: brown/pink/white noise + rain/thunder/wind, 100% client-side.">
+<meta name="keywords" content="白噪音,white noise,专注白噪音,睡眠白噪音,助眠,粉噪音,棕噪音,环境声,雨声,雷声,风声,混音,睡眠定时器,white noise generator,pink noise,brown noise,rain sounds">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/white-noise-generator">
+<meta property="og:title" content="白噪音发生器 - 免费在线白/粉/棕噪音＋雨雷风环境声混音">
+<meta property="og:description" content="WebAudio 本地合成，零音频文件、零上传：白/粉/棕噪声＋雨/雷/风环境声，每层独立音量，预设一键切换，睡眠定时器自动淡出停止。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/white-noise-generator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"白噪音发生器","alternateName":"white_noise_generator","description":"免费在线白噪音发生器：WebAudio 本地合成白/粉/棕噪声＋雨/雷/风环境声滤波混音，各层独立音量滑杆（增益求和防削波）；预设一键切换、混音配置 localStorage 持久化；睡眠定时器到期前10秒淡出自动停止，零音频文件、零上传。","url":"https://www.johnkingzcq123.xyz/tools/white-noise-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.wn-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.wn-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.wn-panel h3 .material-icons{font-size:1.15rem;color:#0d9488}
+.wn-panel h3 .wn-step{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;background:#ccfbf1;color:#0f766e;font-size:.8rem;font-weight:800}
+.wn-privacy{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdfa;border:1px solid #99f6e4;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#115e59;line-height:1.7}
+.wn-privacy .material-icons{color:#0d9488;font-size:1.3rem;flex:none;margin-top:.1rem}
+.wn-hint{display:none;gap:.6rem;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#92400e;line-height:1.7}
+.wn-hint .material-icons{color:#f59e0b;font-size:1.3rem;flex:none;margin-top:.1rem}
+.wn-transport{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+.wn-play{display:inline-flex;align-items:center;gap:.5rem;padding:.8rem 2.2rem;border-radius:3rem;font-size:1.05rem;font-weight:700;cursor:pointer;border:1px solid #0d9488;background:#0d9488;color:#fff;transition:all .15s}
+.wn-play:hover{background:#0f766e}
+.wn-play .material-icons{font-size:1.4rem}
+.wn-play.wn-playing{background:#fff;color:#0f766e}
+.wn-status{font-size:.88rem;color:#6b7280}
+.wn-master{display:flex;align-items:center;gap:.7rem;flex:1;min-width:220px}
+.wn-master label{font-size:.88rem;color:#374151;white-space:nowrap}
+.wn-master input[type=range]{flex:1}
+.wn-master-val{font-size:.85rem;color:#0f766e;font-weight:700;min-width:3em;text-align:right}
+input[type=range].wn-range{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:#e5e7eb;outline:none}
+input[type=range].wn-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:#0d9488;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+input[type=range].wn-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#0d9488;cursor:pointer;border:2px solid #fff}
+.wn-layer{display:flex;align-items:center;gap:.8rem;padding:.7rem .6rem;border:1px solid #f1f5f9;border-radius:.6rem;margin-bottom:.6rem;background:#fcfcfc}
+.wn-layer .wn-ico{display:inline-flex;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;border-radius:.6rem;background:#ccfbf1;color:#0f766e;flex:none}
+.wn-layer .wn-ico .material-icons{font-size:1.3rem}
+.wn-layer .wn-name{width:4.2em;flex:none;font-size:.92rem;font-weight:600;color:#1f2937}
+.wn-layer input[type=range]{flex:1;min-width:80px}
+.wn-layer .wn-val{width:3.2em;flex:none;font-size:.85rem;color:#0f766e;font-weight:700;text-align:right}
+.wn-switch{position:relative;width:44px;height:24px;flex:none;cursor:pointer}
+.wn-switch input{opacity:0;width:0;height:0}
+.wn-switch .wn-track{position:absolute;inset:0;background:#d1d5db;border-radius:24px;transition:background .15s}
+.wn-switch .wn-track::before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.wn-switch input:checked + .wn-track{background:#0d9488}
+.wn-switch input:checked + .wn-track::before{transform:translateX(20px)}
+.wn-presets{display:flex;flex-wrap:wrap;gap:.6rem}
+.wn-preset{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:.5rem;font-size:.9rem;font-weight:600;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#374151;transition:all .15s}
+.wn-preset:hover{border-color:#0d9488;color:#0f766e}
+.wn-preset.wn-active{background:#0d9488;border-color:#0d9488;color:#fff}
+.wn-preset .material-icons{font-size:1.05rem}
+.wn-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:.5rem;font-size:.9rem;font-weight:600;cursor:pointer;border:1px solid #99f6e4;background:#f0fdfa;color:#0f766e;transition:all .15s}
+.wn-btn:hover{background:#ccfbf1}
+.wn-btn:disabled{opacity:.45;cursor:not-allowed}
+.wn-btn .material-icons{font-size:1.05rem}
+.wn-timerrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:.8rem}
+.wn-timer{display:inline-flex;align-items:center;gap:.3rem;padding:.5rem 1rem;border-radius:2rem;font-size:.88rem;font-weight:600;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#374151;transition:all .15s}
+.wn-timer:hover{border-color:#0d9488;color:#0f766e}
+.wn-timer .material-icons{font-size:1rem}
+.wn-timer-custom{display:flex;align-items:center;gap:.4rem;font-size:.88rem;color:#374151}
+.wn-timer-custom input{width:70px;padding:.45rem .5rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.88rem}
+.wn-timer-count{font-size:.92rem;color:#0f766e;font-weight:700;background:#f0fdfa;border:1px solid #99f6e4;border-radius:.5rem;padding:.55rem .9rem;display:inline-block}
+.wn-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.wn-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.wn-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem}
+.wn-related{display:flex;flex-wrap:wrap;gap:.5rem}
+.wn-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+.wn-toast.wn-show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){.wn-layer .wn-name{width:3.4em}.wn-transport{gap:.7rem}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">waves</i> 白噪音发生器</h1>
+<p>专注 / 助眠 / 放松的<b>白噪音·粉噪音·棕噪音</b>发生器：<b>WebAudio 本地合成</b>（白噪声均匀随机、粉噪声 Voss-McCartney 算法、棕噪声积分滤波）＋<b>雨声 / 雷声 / 风声</b>环境声滤波混音；每层独立开关与音量滑杆（增益求和防削波，无爆音）；预设一键切换（<b>专注工作 / 深度睡眠 / 雨夜 / 自定义</b>），混音配置 <b>localStorage 持久化</b>刷新自动恢复；<b>睡眠定时器</b>（15/30/60/90/自定义分钟）到期前 10 秒淡出自动停止。零音频文件、零 fetch / XHR，断网也能播。</p>
+</div>
+<div class="tool-content" style="max-width:900px;margin:auto;">
+
+<div class="wn-privacy">
+<i class="material-icons">lock</i>
+<div><b>声音全部在浏览器本地合成，不下载、不上传。</b>脚本内无 <code>fetch</code> / <code>XMLHttpRequest</code>，无任何音频文件请求，可在开发者工具 Network 面板验证；断网离线也能正常播放。</div>
+</div>
+
+<div class="wn-hint" id="wn-ios-hint">
+<i class="material-icons">touch_app</i>
+<div><b>iOS / 移动端提示：</b>浏览器要求用户手势才能启动音频。请直接点击下方「开始播放」按钮（页面内点击即算手势），音频随即解锁；若仍无声，请检查手机是否开了静音开关。</div>
+</div>
+
+<div class="wn-panel">
+<h3><span class="wn-step">1</span> <i class="material-icons">play_circle</i> 播放控制</h3>
+<div class="wn-transport">
+<button class="wn-play" id="wn-play"><i class="material-icons">play_arrow</i> 开始播放</button>
+<div class="wn-master">
+<label for="wn-master"><i class="material-icons" style="vertical-align:-4px;font-size:1.1rem">volume_up</i> 主音量</label>
+<input type="range" class="wn-range" id="wn-master" min="0" max="100" value="80">
+<span class="wn-master-val" id="wn-master-val">80%</span>
+</div>
+</div>
+<div class="wn-status" id="wn-status" style="margin-top:.6rem">已停止</div>
+</div>
+
+<div class="wn-panel">
+<h3><span class="wn-step">2</span> <i class="material-icons">graphic_eq</i> 噪声层（本地合成）</h3>
+<div class="wn-layer">
+<span class="wn-ico"><i class="material-icons">equalizer</i></span>
+<span class="wn-name">白噪声</span>
+<label class="wn-switch"><input type="checkbox" id="wn-sw-white"><span class="wn-track"></span></label>
+<input type="range" class="wn-range" id="wn-vol-white" min="0" max="100" value="0">
+<span class="wn-val" id="wn-val-white">0%</span>
+</div>
+<div class="wn-layer">
+<span class="wn-ico"><i class="material-icons">equalizer</i></span>
+<span class="wn-name">粉噪声</span>
+<label class="wn-switch"><input type="checkbox" id="wn-sw-pink"><span class="wn-track"></span></label>
+<input type="range" class="wn-range" id="wn-vol-pink" min="0" max="100" value="0">
+<span class="wn-val" id="wn-val-pink">0%</span>
+</div>
+<div class="wn-layer">
+<span class="wn-ico"><i class="material-icons">equalizer</i></span>
+<span class="wn-name">棕噪声</span>
+<label class="wn-switch"><input type="checkbox" id="wn-sw-brown"><span class="wn-track"></span></label>
+<input type="range" class="wn-range" id="wn-vol-brown" min="0" max="100" value="0">
+<span class="wn-val" id="wn-val-brown">0%</span>
+</div>
+</div>
+
+<div class="wn-panel">
+<h3><span class="wn-step">3</span> <i class="material-icons">cloud</i> 环境声层（滤波混音）</h3>
+<div class="wn-layer">
+<span class="wn-ico"><i class="material-icons">grain</i></span>
+<span class="wn-name">雨声</span>
+<label class="wn-switch"><input type="checkbox" id="wn-sw-rain"><span class="wn-track"></span></label>
+<input type="range" class="wn-range" id="wn-vol-rain" min="0" max="100" value="0">
+<span class="wn-val" id="wn-val-rain">0%</span>
+</div>
+<div class="wn-layer">
+<span class="wn-ico"><i class="material-icons">flash_on</i></span>
+<span class="wn-name">雷声</span>
+<label class="wn-switch"><input type="checkbox" id="wn-sw-thunder"><span class="wn-track"></span></label>
+<input type="range" class="wn-range" id="wn-vol-thunder" min="0" max="100" value="0">
+<span class="wn-val" id="wn-val-thunder">0%</span>
+</div>
+<div class="wn-layer">
+<span class="wn-ico"><i class="material-icons">air</i></span>
+<span class="wn-name">风声</span>
+<label class="wn-switch"><input type="checkbox" id="wn-sw-wind"><span class="wn-track"></span></label>
+<input type="range" class="wn-range" id="wn-vol-wind" min="0" max="100" value="0">
+<span class="wn-val" id="wn-val-wind">0%</span>
+</div>
+</div>
+
+<div class="wn-panel">
+<h3><span class="wn-step">4</span> <i class="material-icons">tune</i> 预设混音</h3>
+<div class="wn-presets">
+<button class="wn-preset" data-preset="focus"><i class="material-icons">work</i> 专注工作</button>
+<button class="wn-preset" data-preset="sleep"><i class="material-icons">bedtime</i> 深度睡眠</button>
+<button class="wn-preset" data-preset="rainy"><i class="material-icons">umbrella</i> 雨夜</button>
+<button class="wn-preset wn-active" data-preset="custom"><i class="material-icons">edit</i> 自定义</button>
+</div>
+<div style="margin-top:.8rem">
+<button class="wn-btn" id="wn-save-mix"><i class="material-icons">save</i> 保存我的混音</button>
+<span class="wn-status" style="margin-left:.6rem">混音自动保存到本机，刷新页面自动恢复。</span>
+</div>
+</div>
+
+<div class="wn-panel">
+<h3><span class="wn-step">5</span> <i class="material-icons">timer</i> 睡眠定时器</h3>
+<div class="wn-timerrow">
+<button class="wn-timer" data-min="15"><i class="material-icons">timer</i> 15 分钟</button>
+<button class="wn-timer" data-min="30"><i class="material-icons">timer</i> 30 分钟</button>
+<button class="wn-timer" data-min="60"><i class="material-icons">timer</i> 60 分钟</button>
+<button class="wn-timer" data-min="90"><i class="material-icons">timer</i> 90 分钟</button>
+<span class="wn-timer-custom"><input type="number" id="wn-timer-custom" min="1" max="480" placeholder="自定义"> 分钟
+<button class="wn-btn" id="wn-timer-custom-go"><i class="material-icons">check</i> 设置</button></span>
+<button class="wn-btn" id="wn-timer-cancel" disabled><i class="material-icons">close</i> 取消定时</button>
+</div>
+<div><span class="wn-timer-count" id="wn-timer-count">未设置</span></div>
+<div class="wn-status" style="margin-top:.6rem">到期前 10 秒自动淡出并停止播放，不会被突然静音惊醒。切换到后台标签页会继续播放。</div>
+</div>
+
+<div class="wn-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="wn-faq">
+<dt>白 / 粉 / 棕噪声有什么区别？</dt>
+<dd><b>白噪声</b>能量均匀分布，听感偏「嘶」适合屏蔽突发噪音；<b>粉噪声</b>高频衰减、听感更柔和，适合专注工作；<b>棕噪声</b>低频为主、深沉轰鸣，适合睡眠。预设已按场景配好，也可自己调。</dd>
+<dt>声音是从哪里来的？会消耗流量吗？</dt>
+<dd>全部由页面内的 WebAudio 代码实时合成：没有音频文件、没有网络请求，Network 面板里看不到任何媒体下载，断网离线也能用。</dd>
+<dt>多层同时开会爆音吗？</dt>
+<dd>不会。所有层的增益求和超过 0.85 时会自动按比例缩放（混音归一化），总输出永远在安全范围内；每层循环缓冲首尾做了交叉淡化，无接缝咔哒声。</dd>
+<dt>混音配置会保存吗？</dt>
+<dd>会。滑杆、开关、主音量、预设、定时器设置都会自动存入浏览器 localStorage（键名 <code>white_noise_generator:mix:v1</code>），刷新页面自动恢复，不上传服务器。</dd>
+<dt>手机上点了播放没声音？</dt>
+<dd>iOS / 部分安卓浏览器要求「用户手势」才能解锁音频：直接点击页面里的「开始播放」按钮即可（这一次点击就是手势）。另外检查手机静音开关与媒体音量。</dd>
+<dt>睡眠定时器怎么工作？</dt>
+<dd>选择时长后开始倒计时；到期前 10 秒主音量线性淡出到 0，然后自动停止播放。取消请点「取消定时」。</dd>
+</dl>
+</div>
+
+<div class="wn-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="wn-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">白噪音发生器（当前）</span>
+<a href="/tools/countdown-timer" class="btn btn-secondary" style="font-size:.9rem;">倒计时</a>
+<a href="/tools/audio-merger" class="btn btn-secondary" style="font-size:.9rem;">音频合并</a>
+<a href="/tools/audio-trimmer" class="btn btn-secondary" style="font-size:.9rem;">音频裁剪</a>
+<a href="/tools/annual-lottery" class="btn btn-secondary" style="font-size:.9rem;">年会大屏抽奖</a>
+</div>
+</div>
+
+</div>
+</div>
+<div class="wn-toast" id="wn-toast"></div>
+<script src="/tools/static/js/white_noise_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

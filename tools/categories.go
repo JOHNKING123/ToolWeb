@@ -1001,6 +1001,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "white_noise_generator",
+					Name:        "白噪音发生器",
+					Description: "免费在线白噪音发生器：WebAudio 本地合成白/粉/棕噪声（Voss-McCartney、积分滤波）＋雨声/雷声/风声环境声滤波混音，每层独立开关与音量滑杆（增益求和防削波）；预设一键切换（专注工作/深度睡眠/雨夜/自定义），混音配置 localStorage 持久化刷新自动恢复；睡眠定时器（15/30/60/90/自定义分钟）到期前 10 秒淡出自动停止，零音频文件、零 fetch/XHR、可离线播放 · White noise generator: brown/pink/white noise + rain/thunder/wind synthesized locally with WebAudio, per-layer volume, presets, sleep timer, 100% client-side",
+					Path:        "/tools/white-noise-generator",
+					Icon:        "waves",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{
