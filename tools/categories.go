@@ -969,6 +969,23 @@ func GetCategories() []Category {
 			},
 		},
 		{
+			ID:          "utils",
+			Name:        "实用工具",
+			Description: "日常实用的小工具合集",
+			Icon:        "handyman",
+			Tools: []Tool{
+				{
+					ID:          "mbox_viewer",
+					Name:        "MBOX 邮件存档查看器",
+					Description: "本地解析 .mbox 邮件存档（Thunderbird / Gmail Takeout 导出）：邮件列表＋发件人/主题/日期排序、全文搜索（主题/正文/发件人/附件名）、正文安全渲染、附件清单聚合下载；自写 RFC 5322/MIME 解析（From 切分、折叠行、encoded-word、quoted-printable/base64、multipart 附件抽取），零第三方库，纯前端零上传 · MBOX email archive viewer: parse .mbox locally in browser, mail list with sorting, full-text search, safe body rendering, attachment download list, 100% client-side",
+					Path:        "/tools/mbox-viewer",
+					Icon:        "mail",
+					New:         true,
+					Category:    "实用工具",
+				},
+			},
+		},
+		{
 			ID:          "nettools",
 			Name:        "网络工具",
 			Description: "常用网络查询工具",

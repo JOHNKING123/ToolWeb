@@ -1,3 +1,79 @@
+## 今日任务（2026-10-23 09:39 · 产品经理排期轮）
+
+**选定：MBOX 邮件存档查看器（mbox_viewer）** — 本轮唯一任务（新工具）：
+- **顺位**：10-23 09:36 研究轮（74 轮）Top1 推荐；单位感知记事本计算器（217fa42）交付闭环后顺位递进生效，依惯例「无硬伤不跳过」。未选：SVG 转字体图标生成器（P1；59 轮新晋；73 轮 DevOmniTools 形态验证二次确认；opentype.js vendor 化组装 TTF/OTF 验证成本高，留待更从容轮次；留池二席）、年会大屏抽奖（P1；小难度；时令：距 12 月年会季约 1 个多月，企业筹备窗口；但本轮 Top1 MBOX 顺位优先，按惯例不跳过；留池三席）、白噪音发生器（P1；74 轮新晋，36氪 myNoise 形态验证；留池四席）。
+- **形态验证**：58 轮新晋；DevOmniTools/通用工具站 MBOX 查看器类形态共识——浏览器本地解析 MBOX→邮件列表＋全文搜索＋附件清单，零上传。
+- **痛点**：MBOX 导出邮件（Thunderbird/Gmail Takeout 导出）只能用 Thunderbird 或文本编辑器打开；浏览器本地解析出邮件列表＋全文搜索＋附件清单，纯前端零上传。
+- **零重叠实锤**：本轮复核——`grep -cinE 'mbox_viewer|mbox-viewer|MBOX|邮件存档' tools/categories.go` 零命中；全量 145 Path 中无同类工具；建议 ID `mbox_viewer`、Path `/tools/mbox-viewer` 未被占用。
+- **品类归位**：注册到「效率工具」→ 不存在；按 22/23 日 PM 轮惯例，实用工具品类（或开发工具类；评审轮按家族归位习惯定；New: true）。——定：实用工具品类（与文件类工具为邻）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- 核心流程：本地选择 .mbox 文件（FileReader 分块读取，大文件提示）→ 纯前端解析 `From ` 分隔的邮件块 → 邮件列表（发件人/主题/日期，可排序）→ 点击邮件看正文（multipart/alternative 取 text/html 优先渲染文本版，HTML 版做转义后安全渲染或仅文本）→ 全文搜索（主题/正文/发件人/附件名）→ 附件清单（按邮件聚合，可单附件下载）。
+- 解析要点：自写解析，不引第三方库——`From ` 行切分；RFC 5322 头部解析（折叠行展开）；encoded-word（=?UTF-8?B?...?= / =?gbk?Q?...?=）解码；quoted-printable/base64 正文解码；multipart/mixed 附件抽取（Content-Disposition filename、base64 解码→Blob 下载）。
+- 隐私：纯前端、零后端、零上传（脚本内零 fetch/XHR），页面显著提示「文件只在本地解析，不上传」；大文件（>200MB）给出内存提示与分块提示。
+- 注册：实用工具品类，新增工具 ID `mbox_viewer`、Name「MBOX 邮件存档查看器」、Path `/tools/mbox-viewer`（New: true），中英文描述＋SEO keywords（MBOX 查看器、邮件存档、mbox viewer、Thunderbird 导出、Gmail 导出邮件查看）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `mbox_viewer`、Path `/tools/mbox-viewer` 注册完整（Category 实用工具），注册总数 145→146 Path。
+2. 载入一个 3 封邮件的测试 MBOX（含 multipart/alternative＋base64 附件）→ 列表正确显示 3 封的发件人/主题/日期；点击第 2 封正文可读；附件清单聚合 1 个附件，可点击下载且内容与源一致。
+3. 全文搜索输入主题关键词 → 列表过滤到对应邮件；搜索附件名 → 定位到含该附件的邮件。
+4. encoded-word 主题（如 `=?UTF-8?B?...?=`）解码显示正常，不出现乱码。
+5. 损坏邮件块（如缺头部）跳过并计数提示，不中断其余邮件解析。
+6. 脚本内零 fetch/XHR；node 测试 40+ 断言全过（`From ` 切分、折叠行、encoded-word 解码、quoted-printable/base64 解码、multipart 附件抽取、搜索过滤）。
+
+**预计改动文件**：
+- `templates/mbox_viewer.html`（新增；含 SEO 面板按家族标准）
+- `static/js/mbox_viewer.js`（新增；MBOX 解析器/列表/搜索/附件清单/下载）
+- `tests/mbox_viewer.test.js`（新增；切分/头部/解码/附件/搜索）
+- `tools/categories.go`（实用工具品类注册：ID mbox_viewer、Path /tools/mbox-viewer、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 217fa42（单位感知记事本计算器交付闭环）；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 145 Path；零重叠 grep 本轮复核全零命中；工作树 BACKLOG.md 改动待提交（随开发轮次提交，沿用惯例）；仓库根目录残留未跟踪 `toolWeb.bak-prev`（多轮已记录，疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-23 09:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-23 通用调研第七十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。单位感知记事本计算器已交付闭环（`git log` 头部 217fa42；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **145 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 晨间轮次，P1 可排。
+
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. unit_calc_notepad 交付确认：`git log` 头部 217fa42（记事本式逐行算式＋单位感知（长度/重量/体积/时间/温度℃↔℉/货币前缀）、行间变量、百分比、sum(a1..a3)范围汇总、行内即时结果＋底部分组汇总，自写词法零 eval、非法行标红、零 fetch/XHR；内置快递打包/装修量房示例；注册开发工具品类（ID unit_calc_notepad，New:true），工具总数 144→145；node 测试 100 断言全过；蒙特卡洛留二期）；`grep tools/categories.go` 全量 145 Path（ID unit_calc_notepad、Path /tools/unit-calc-notepad 已注册）；候选池划出。
+2. 新信号扫描：
+   - **dev.to Tooltri（2026-10-08，30+ 浏览器工具）**：Token Counter（GPT/Claude/Gemini/Llama/DeepSeek token 数＋上下文窗占用）→ 自有 `ai_token_counter`（/tools/ai-token-counter「AI Token 计数器」：GPT/Claude/Gemini 等 token 数、上下文窗占用、API 费用估算）**实锤复现**；ChatGPT Text Cleaner（清除 AI 文本隐形字符/格式残留）→ 自有 `ai_text_cleaner`（/tools/ai-text-cleaner：扫描清除零宽字符/BOM/非断空格等不可见隐藏字符、可视化标记一键清理）**实锤复现**；SQLite DB Viewer → 池内 P2「SQLite 数据库查看器」已留池 → 均不立；
+   - **36氪「10个好用的免费工具型网站」（1 天前抓取）**：myNoise（可 DIY 的白噪音/环境声：雨声/办公室/街道）→ 自有无白噪音工具（`白噪音|white.noise|whitenoise` 零命中实锤）→ **新晋 P1「白噪音发生器」**（痛点：专注/睡眠要可自定义白噪音，现有站点多为在线音频流或 App 内购；纯前端小难度：WebAudio 本地合成白/粉/棕噪声＋雨声/雷声/风声滤波混音＋定时关闭＋混合音量滑杆，零音频文件、零 fetch/XHR、可离线播；建议 ID white_noise_generator、Path /tools/white-noise-generator）；
+   - **Show HN 本周**：Taveo（AA 账单分摊免注册→生活计算器类，方向修正排除）；hnterminal（终端 HN 客户端，pip CLI→非 web）；whytime（time(1) CLI→非 web）；Mandelbrot/Julia WebGPU explorer（玩具）；MarketMee（GitHub push→AI 产品视频，AI 类）；CATT（Muse/Instinct 测试，AI 类）；其余均无单页 web 工具形态 → 不立；
+   - **V2EX**：Qovia（10-22，20+ 社媒平台统一数据 API＋MCP→需后端服务/计费，非单页工具）→ 不立；独立开发出海情报站（10-18，pgvector 语义折叠＋Telegram 分发→需后端，非工具形态）→ 不立；PHP2Shell 重帖（69/71/72/73 轮已消化）→ 不立；
+   - **Reddit「I wish there was a website」**：本轮返回均为营销/方法论 SEO 内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：单位感知记事本计算器已交付划出（217fa42，145 Path）；**新晋 1 个**（白噪音发生器 P1）；**纠偏 1 项**：池内「CSS 转 Tailwind 转换器」留池记录已过期——`grep -inE 'tailwind' tools/categories.go` 实锤 `css_to_tailwind`（/tools/css-to-tailwind，v3/v4 切换、任意值兜底、媒体查询变体）**已交付**，候选池划出；Tooltri token/文本净化＝自有 ai_token_counter/ai_text_cleaner 实锤复现不立；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；unit_calc_notepad 交付闭环后按顺位递进）：
+
+1. **MBOX 邮件存档查看器** — P1（58 轮新晋；痛点：MBOX 导出邮件只能用 Thunderbird/文本编辑器打开；浏览器本地解析邮件列表＋全文搜索＋附件清单，纯前端；中难度；`mbox_viewer|mbox-viewer` 零命中实锤；建议 ID mbox_viewer、Path /tools/mbox-viewer）。
+2. **SVG 转字体图标生成器** — P1（59 轮新晋；73 轮 DevOmniTools SVG to Font Converter 形态验证二次确认：客户端 WASM 矢量编译器→TrueType 字形表零上传可行；痛点：设计师/前端做图标字体要走 icomoon.io/fontello 上传全套 SVG；纯前端小-中难度：SVG path 解析→opentype.js vendor 化组装 TTF/OTF（分配 Unicode 码点＋字形名）→预览＋本地下载；SVG 赛道小家族扩展；`svg_to_font|svg-to-font` 零命中实锤；建议 ID svg_to_font、Path /tools/svg-to-font）。
+3. **年会大屏抽奖** — P1（时令：10-23 距 12 月年会季约 1 个多月，企业年会筹备启动窗口；痛点：年会抽奖要干净无广告的大屏滚动抽奖页，现有方案多为收费 SaaS/Excel 插件；名单导入（txt/Excel 粘贴）＋滚动抽奖＋奖项配置＋防重复＋全屏大屏模式，纯前端小难度；`年会|抽奖|lottery|raffle` 零命中实锤；建议 ID annual_lottery、Path /tools/annual-lottery）。
+
+其余 P1 留池：白噪音发生器（本轮新晋；WebAudio 本地合成白/粉/棕噪声＋环境声混音，零音频文件零上传；建议 ID white_noise_generator、Path /tools/white-noise-generator）；屏幕常亮/浏览器实时听写（留池）。
+其余 P2 留池：涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；打字速度测试/SERP 片段预览/阅读时长计算器（49 轮新晋观察）；在线钢琴（方向边界观察）；本地 LLM 硬件检测器/应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/URL 即文档文本分享链接/项目打包下载（P2 留池）。
+
+**通用候选表增量**（第七十四轮：单位感知记事本计算器已交付划出（217fa42，145 Path）；新晋白噪音发生器 P1（36氪 myNoise 形态验证；WebAudio 本地合成，零音频文件零上传；建议 ID white_noise_generator、Path /tools/white-noise-generator）；纠偏：css_to_tailwind 已交付实锤（/tools/css-to-tailwind），留池记录划出；Tooltri Token Counter＝自有 ai_token_counter 实锤、Text Cleaner＝自有 ai_text_cleaner 实锤、SQLite Viewer＝池内 P2 留池；Show HN 本周（Taveo AA 分摊方向排除、hnterminal/whytime CLI、Mandelbrot 玩具、MarketMee/CATT AI 类）不立；V2EX Qovia 需后端/出海情报站非工具/PHP2Shell 已消化不立；Reddit 需求帖本轮空；全量 145 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 白噪音发生器 | 新晋（74 轮；36氪 10 工具站 myNoise 形态验证：可 DIY 白噪音/环境声；痛点：专注/睡眠要可自定义白噪音，现有站点多为在线流或 App 内购；纯前端小难度：WebAudio 本地合成白/粉/棕噪声＋雨/雷/风滤波混音＋定时关闭，零音频文件零 fetch/XHR；`白噪音\|white.noise\|whitenoise` 零命中实锤；建议 ID white_noise_generator、Path /tools/white-noise-generator） | 小 | P1 |
+| unit_calc_notepad | 已交付划出（217fa42 交付闭环；ID unit_calc_notepad、Path /tools/unit-calc-notepad 已注册；全量 145 Path；候选池划出） | — | 已实现 |
+| css_to_tailwind 纠偏 | 候选池划出（留池记录过期纠正：`grep -inE 'tailwind' tools/categories.go` 实锤已交付——ID css_to_tailwind、Path /tools/css-to-tailwind，v3/v4 切换＋任意值兜底＋媒体查询变体） | — | 已实现 |
+| Tooltri 观察 | 本轮不新立（dev.to 2026-10-08，30+ 浏览器工具；Token Counter→自有 ai_token_counter（/tools/ai-token-counter）实锤复现；ChatGPT Text Cleaner→自有 ai_text_cleaner（/tools/ai-text-cleaner：零宽字符/BOM/非断空格清理）实锤复现；SQLite DB Viewer→池内 P2 SQLite 数据库查看器留池） | — | 观察 |
+| Show HN 本周 | 本轮不立（Taveo AA 分摊：生活计算器类，10-18 方向修正排除；hnterminal/whytime：CLI 非 web；Mandelbrot/Julia WebGPU：玩具；MarketMee/CATT：AI 类） | — | 不立 |
+| V2EX Qovia / 出海情报站 / PHP2Shell | 本轮不立（Qovia 20+ 平台数据 API＋MCP 需后端计费；出海情报站 pgvector 语义折叠需后端，非工具形态；PHP2Shell 69/71/72/73 轮已消化） | — | 不立 |
+| Reddit 需求帖 | 本轮空（"I wish there was a website" 返回均为营销/方法论 SEO 内容，无可消化需求帖） | — | 观察 |
+
+**归档说明**：本轮为 10-23 通用调研第七十四轮——单位感知记事本计算器交付闭环（217fa42，`/tools/unit-calc-notepad` 已注册，开发工具品类，全量 145 Path），候选池划出；新信号扫描（dev.to Tooltri 10-08：Token Counter＝自有 ai_token_counter 实锤、Text Cleaner＝自有 ai_text_cleaner 实锤、SQLite Viewer＝池内 P2 留池；36氪 10 工具站→**新晋 P1 白噪音发生器**（WebAudio 本地合成零上传）；Show HN 本周无单页工具形态；V2EX Qovia 需后端/出海情报站非工具/PHP2Shell 已消化；Reddit 需求帖本轮空）均已消化；纠偏：css_to_tailwind 已交付实锤（/tools/css-to-tailwind），候选池划出；WPS 候选表保持冻结归档；仓库 145 注册工具全量核对无重叠（Top3 建议 ID mbox_viewer / svg_to_font / annual_lottery；零命中逐项可复现），核稿反馈持续闭环。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 217fa42（unit_calc_notepad 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 145 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（07:40 PM 轮已记录，多轮曾清理、疑似构建/部署重建又出现，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push。
+
+---
+
 ## 今日任务（2026-10-23 07:40 · 产品经理排期轮）
 
 **选定：单位感知记事本计算器（unit_calc_notepad）** — 本轮唯一任务（新工具）：

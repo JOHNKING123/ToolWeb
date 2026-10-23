@@ -1,0 +1,175 @@
+{{define "mbox_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBOX 邮件存档查看器 - 本地解析 Thunderbird/Gmail 导出邮件 | 程序员工具箱</title>
+<meta name="description" content="免费在线 MBOX 邮件存档查看器：浏览器本地解析 .mbox 文件（Thunderbird / Gmail Takeout 导出），邮件列表＋发件人/主题/日期排序、全文搜索、附件清单聚合下载；自写 RFC 5322/MIME 解析，零第三方库，纯前端零上传。Free MBOX email archive viewer, 100% client-side.">
+<meta name="keywords" content="MBOX 查看器,邮件存档,mbox viewer,Thunderbird 导出,Gmail 导出邮件查看,mbox 解析,邮件附件提取,eml 查看,本地解析,零上传">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mbox-viewer">
+<meta property="og:title" content="MBOX 邮件存档查看器 - 本地解析，零上传">
+<meta property="og:description" content="Thunderbird / Gmail 导出的 .mbox 文件，直接在浏览器里看：邮件列表、全文搜索、附件一键下载。文件只在本地解析，不上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/mbox-viewer">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MBOX 邮件存档查看器","alternateName":"mbox_viewer","description":"免费在线 MBOX 邮件存档查看器：浏览器本地解析 .mbox 邮件存档（Thunderbird/Gmail 导出），邮件列表、全文搜索、附件清单聚合下载，自写 MIME 解析，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/mbox-viewer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.mv-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.mv-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.mv-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.mv-privacy{display:flex;gap:.6rem;align-items:flex-start;background:#f0fdf4;border:1px solid #bbf7d0;
+border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.9rem;color:#166534;line-height:1.7}
+.mv-privacy .material-icons{color:#16a34a;font-size:1.3rem;flex:none;margin-top:.1rem}
+.mv-drop{border:2px dashed #bfdbfe;border-radius:.7rem;background:#f8fbff;padding:2rem 1rem;text-align:center;
+cursor:pointer;transition:all .15s;color:#1e40af}
+.mv-drop:hover,.mv-dragover{border-color:#3b82f6;background:#eff6ff}
+.mv-drop .material-icons{font-size:2.2rem;color:#3b82f6}
+.mv-toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:.9rem 0}
+.mv-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;transition:all .15s}
+.mv-btn:hover{background:#dbeafe}
+.mv-btn .material-icons{font-size:1.05rem}
+.mv-btn-sm{padding:.3rem .7rem;font-size:.8rem}
+.mv-status{font-size:.85rem;color:#6b7280;min-height:1.4em;margin-top:.6rem}
+.mv-stat{font-size:.88rem;color:#374151;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.5rem;
+padding:.55rem .9rem;margin-bottom:.8rem}
+.mv-searchrow{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem}
+.mv-searchrow input[type=text]{flex:1;min-width:200px;padding:.55rem .9rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.9rem}
+.mv-searchrow input[type=text]:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px #dbeafe}
+.mv-searchrow select{padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.9rem;color:#374151;background:#fff}
+.mv-workspace{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:0;border:1px solid #d1d5db;
+border-radius:.6rem;overflow:hidden;background:#fff;min-height:420px}
+.mv-list{border-right:1px solid #e5e7eb;overflow-y:auto;max-height:560px}
+.mv-item{padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.mv-item:hover{background:#f8fafc}
+.mv-item.mv-active{background:#eff6ff;border-left:3px solid #3b82f6}
+.mv-subj{font-size:.92rem;font-weight:600;color:#111827;margin-bottom:.25rem;word-break:break-all}
+.mv-meta{display:flex;justify-content:space-between;gap:.6rem;font-size:.78rem;color:#6b7280}
+.mv-badge{display:inline-block;background:#fef3c7;color:#92400e;border-radius:.4rem;font-size:.72rem;
+padding:.05rem .4rem;margin-left:.4rem;font-weight:700}
+.mv-view{padding:1rem 1.2rem;overflow-y:auto;max-height:560px}
+.mv-viewsubj{margin:.1rem 0 .7rem;font-size:1.05rem;color:#111827;word-break:break-all}
+.mv-viewhead{font-size:.85rem;color:#4b5563;line-height:1.9;background:#f8fafc;border:1px solid #eef2f7;
+border-radius:.5rem;padding:.6rem .9rem;margin-bottom:.8rem;word-break:break-all}
+.mv-viewhead b{color:#374151}
+.mv-body{white-space:pre-wrap;word-break:break-word;font-size:.92rem;line-height:1.8;color:#1f2937;
+font-family:inherit;margin:0}
+.mv-note{font-size:.8rem;color:#92400e;background:#fefce8;border:1px solid #fde68b;border-radius:.4rem;
+padding:.4rem .7rem;margin-bottom:.6rem}
+.mv-viewatts{margin-bottom:.8rem}
+.mv-attrow{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.45rem 0;border-bottom:1px dashed #f1f5f9;font-size:.87rem}
+.mv-attname{color:#1d4ed8;font-weight:600;word-break:break-all}
+.mv-attsize{color:#6b7280;font-size:.78rem}
+.mv-attsrc{color:#9ca3af;font-size:.78rem}
+.mv-atttotal{display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem;font-size:.9rem;font-weight:700;color:#111827}
+.mv-empty{padding:2.4rem 1rem;text-align:center;color:#9ca3af;font-size:.9rem;line-height:1.8}
+.mv-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.mv-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.mv-faq code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-size:.82rem;
+font-family:"SF Mono","Cascadia Code",Consolas,monospace;color:#1d4ed8}
+.mv-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.mv-quick{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:2rem;padding:.35rem .95rem;
+font-size:.85rem;font-weight:600}
+a.mv-quick{text-decoration:none}
+a.mv-quick:hover{background:#dbeafe}
+@media (max-width:860px){.mv-workspace{grid-template-columns:1fr}.mv-list{border-right:none;border-bottom:1px solid #e5e7eb;max-height:320px}}
+</style>
+</head>
+<body>
+{{template "nav".}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">mail</i> MBOX 邮件存档查看器</h1>
+<p>Thunderbird / Gmail Takeout 导出的 <code>.mbox</code> 邮件存档，不用装 Thunderbird 也能看：浏览器<b>本地解析</b>出邮件列表（发件人 / 主题 / 日期可排序）、<b>全文搜索</b>（主题 / 正文 / 发件人 / 附件名）、正文安全渲染、<b>附件清单</b>聚合下载。自写 RFC 5322 / MIME 解析（From 切分、折叠行、encoded-word、quoted-printable / base64、multipart 附件抽取），零第三方库。</p>
+</div>
+<div class="tool-content" style="max-width:1100px;margin:auto;">
+
+<div class="mv-privacy">
+<i class="material-icons">lock</i>
+<div><b>文件只在本地解析，不上传到任何服务器。</b>选择文件后，所有解析都在你的浏览器里完成，脚本不发起任何网络请求（可在开发者工具 Network 面板验证，也可断网使用）。超过 200MB 的大文件会先提示内存风险，由你确认后再解析。</div>
+</div>
+
+<div class="mv-panel">
+<h3><i class="material-icons">folder_open</i> 选择 .mbox 文件</h3>
+<div class="mv-drop" id="mv-drop">
+<i class="material-icons">cloud_upload</i>
+<div style="font-weight:700;margin:.4rem 0">点击选择或拖拽 .mbox 文件到这里</div>
+<div style="font-size:.82rem;color:#6b7280">Thunderbird 配置文件 / Gmail Takeout 导出的 .mbox；&gt;200MB 会提示确认</div>
+<input type="file" id="mv-file" accept=".mbox,.mbx,.txt,text/plain" style="display:none">
+</div>
+<div class="mv-toolbar">
+<button class="mv-btn" id="mv-sample"><i class="material-icons">science</i> 载入内置测试邮件（3 封）</button>
+</div>
+<div class="mv-status" id="mv-status"></div>
+</div>
+
+<div class="mv-panel">
+<h3><i class="material-icons">inbox</i> 邮件列表</h3>
+<div class="mv-stat" id="mv-stat">尚未载入邮件</div>
+<div class="mv-searchrow">
+<input type="text" id="mv-search" placeholder="全文搜索：主题 / 正文 / 发件人 / 附件名…">
+<select id="mv-sort">
+<option value="date_desc">日期 ↓（新到旧）</option>
+<option value="date_asc">日期 ↑（旧到新）</option>
+<option value="from">按发件人</option>
+<option value="subject">按主题</option>
+</select>
+</div>
+<div class="mv-workspace">
+<div class="mv-list" id="mv-list"><div class="mv-empty">尚未载入邮件</div></div>
+<div class="mv-view" id="mv-view"><div class="mv-empty">点击左侧邮件查看正文</div></div>
+</div>
+</div>
+
+<div class="mv-panel">
+<h3><i class="material-icons">attachment</i> 附件清单（全部邮件聚合）</h3>
+<div id="mv-attach"><div class="mv-empty">暂无附件</div></div>
+</div>
+
+<div class="mv-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<dl class="mv-faq">
+<dt>支持哪些文件？</dt>
+<dd>标准 mbox 格式（每封邮件以 <code>From </code> 行分隔）：Thunderbird 本地文件夹导出的无扩展名/mbox 文件、Gmail Takeout 导出的 <code>.mbox</code>。文件按 UTF-8 读取；正文按邮件头声明的 charset 解码（UTF-8 / GBK / ISO-8859-1 等，TextDecoder 支持）。</dd>
+<dt>邮件列表与排序</dt>
+<dd>解析后显示发件人、主题、日期；可按日期倒序/正序、发件人、主题排序。📎 角标表示该邮件含附件。</dd>
+<dt>正文怎么显示？</dt>
+<dd><code>multipart/alternative</code> 优先取纯文本版；只有 HTML 版时转为纯文本安全显示（不执行任何脚本与外部资源）。正文统一做 HTML 转义后渲染。</dd>
+<dt>全文搜索搜什么？</dt>
+<dd>主题、发件人、收件人、正文、附件文件名，不区分大小写，输入即过滤。</dd>
+<dt>附件下载</dt>
+<dd>附件清单按全部邮件聚合：单个下载，或点「全部下载」逐个触发（浏览器可能逐个弹出确认）。文件名按 <code>Content-Disposition filename</code> / <code>Content-Type name</code> 提取并做 encoded-word 解码。</dd>
+<dt>损坏邮件块</dt>
+<dd>缺失邮件头、空块等损坏块会被跳过并计数提示（如“跳过损坏块 1 个（缺失邮件头×1）”），不中断其余邮件解析。</dd>
+<dt>隐私与大文件</dt>
+<dd>纯前端、零后端、零上传：脚本内无 <code>fetch</code> / <code>XMLHttpRequest</code>，可在 Network 面板验证。超过 200MB 的文件会先弹确认框提示内存风险；解析是大文件建议关闭其他标签页。</dd>
+<dt>已知限制</dt>
+<dd>8bit 原始非 UTF-8 正文（如直接 GBK 明文）依赖浏览器按 UTF-8 读取，可能显示异常——实务中 Thunderbird / Gmail 导出的非 ASCII 正文均为 quoted-printable / base64，不受影响；PGP/MIME 加密邮件只显示密文，不做解密。</dd>
+</dl>
+</div>
+
+<div class="mv-panel">
+<h3><i class="material-icons">extension</i> 相关工具</h3>
+<div class="mv-related">
+<span class="mv-quick" style="cursor:default">实用工具：</span>
+<a class="mv-quick" href="/tools/file-checksum">文件校验和计算器</a>
+<a class="mv-quick" href="/tools/text-diff">文本比较</a>
+<a class="mv-quick" href="/tools/base64">Base64 编码/解码</a>
+<a class="mv-quick" href="/tools/batch-rename-helper">批量重命名助手</a>
+</div>
+</div>
+
+</div>
+</div>
+
+<script src="/tools/static/js/mbox_viewer.js?v=1"></script>
+</body>
+</html>
+{{end}}
