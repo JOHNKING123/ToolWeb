@@ -1,3 +1,83 @@
+## 今日任务（2026-10-24 23:00 · 产品经理排期轮）
+
+**选定：布尔搜索语句生成器（boolean_search_builder）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（92 轮）Top3 **首席推荐**（90 轮新晋；91／92 轮复核仍未交付；21:00 PM 轮选了文本朗读器后，本轮按「无硬伤不跳过、留池顺位递进」惯例递进生效——布尔搜索语句生成器是 90 轮 Top3 第二顺位、92 轮 Top3 首席，顺位最老且无硬伤）。
+- **未选**：CSS clamp 流体尺寸计算器（91 轮新晋 P2，92 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因布尔搜索语句生成器顺位更老、首席推荐在先而让位，下轮优先递进）；信封打印助手（92 轮新晋 P2，Top3 第三顺位，无硬伤，留池顺位递进——同样让位于更老顺位；真限制打印机边距与进纸方向不一可在页面明示先打测试页，不构成跳过理由）；摩斯码翻译器（91 轮新晋 P2，纯前端小难度，无硬伤，留池顺位递进）；滚动字幕生成器（92 轮由 89 轮观察晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，均为中难度，本轮深夜轮优先小难度，故后置）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与上午交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -rniE 'boolean_search_builder|boolean-search-builder|布尔搜索'`、`grep -rniE 'css_clamp|css-clamp|流体尺寸'`、`grep -rniE 'envelope_printer|envelope-printer|信封打印'` 三路在 tools/categories.go、templates/、static/js/、tests/ 全零命中；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 164 Path；templates/ 无 boolean/clamp/envelope 文件。自有近邻辨析：社区搜索聚合器（search_router）为关键词路由跳转——只生成 site: 过滤与站内搜索链接、不构建布尔语句，语义不重叠；正则测试器为正则表达式校验，不做检索式构建。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——分组树→查询串纯函数＋一键复制，零上传零 fetch，完美契合 ToolWeb 纯前端离线标准；② **痛点明确**——手写布尔检索式常错括号与引号，招聘寻访与学术／求职检索反复试错，改一处括号全式重查；③ **天然可测**——分组嵌套序列化、引号短语、排除词、字段限定、空组与括号平衡均可 node 断言；④ **无硬伤**——运算符跨引擎差异属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「开发工具」品类（与社区搜索聚合器同品类、便于互链；求职工具品类过窄——本工具同时服务招聘寻访与学术检索，不只求职）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **各搜索引擎运算符支持不一**——页面顶部一句话明示「Google／Bing／百度对 site:/intitle:/filetype: 等运算符的支持程度不同，百度部分运算符有限，请以目标搜索引擎为准」，不承诺任一引擎全量支持；② **检索结果质量取决于搜索引擎**——本工具只生成查询串，不承诺召回率与排序，文案中不得出现「精准找到」类承诺；③ **引号短语与排除词的边界**——含空格的术语自动加引号、已含引号的不重复加，排除词统一渲染为 `-term` 前缀，生成预览中可见；④ **文本不出浏览器**——全部构建在本地完成，零 fetch/XHR，隐私文案页面可见；⑤ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/boolean-search-builder）。
+
+**规格**（开发轮按此执行）：
+- 分组编辑器：术语组可增删，组内术语以 AND／OR 连接；组间以 AND／OR／NOT 连接；支持一层嵌套分组（组内再建子组）；每组可设「全部／任一／排除」语义，排除组渲染为 NOT (...)。
+- 字段限定：每术语可选字段限定 site:／intitle:／inurl:／filetype:／author:（不限为空）；字段值为空时不输出限定符；术语含空格自动加英文双引号，已含引号的不重复加。
+- 三组常用模板（一键载入，可再编辑）：① 招聘寻访（sourcing：职位＋技能＋site:linkedin.com／github.com 组合示例）；② 学术检索（主题＋filetype:pdf＋排除商业词示例）；③ 求职检索（职位＋城市＋intitle: 组合示例）。模板仅为示例起点，文案注明「请按需改写」。
+- 生成区：实时查询串预览（等宽字体显示）；「一键复制」按钮（复制失败有明确降级提示）；「在 Google 中搜索」按钮（新标签页打开 google.com/search?q=<编码后查询串>，仅跳转、不上传本站数据）；括号平衡自检提示（空组／空术语组生成时给出明确提示、不输出畸形串）。
+- 构建算法（纯函数，双模式导出供 node 测试）：输入为分组树（组：{op, terms:[{text, field, exclude}], children:[组]}），输出为查询串；序列化规则：子组加括号、顶层组不加多余括号、排除术语前缀 `-`、空术语与空组丢弃、字段限定紧贴术语；引号处理与字段拼接均在纯函数内完成。
+- 注册：ID `boolean_search_builder`、Name「布尔搜索语句生成器」、Path `/tools/boolean-search-builder`、Category 开发工具、Icon 建议 search、New: true；中英文描述＋SEO keywords（布尔搜索、布尔检索式、Boolean search、招聘寻访、sourcing、学术检索、site 搜索、引号短语、检索式生成器）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐，相关工具互链社区搜索聚合器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `boolean_search_builder`、Path `/tools/boolean-search-builder` 注册完整（Category 开发工具），注册总数 164→165 Path。
+2. 构建正确：单组 AND／OR、组间 AND／OR／NOT、一层嵌套、字段限定、引号短语、排除词七类用例的输出与手工推导一致；空术语与空组被丢弃、不输出畸形串与多余括号。
+3. 模板闭环：三组模板一键载入后生成区有内容、且载入后可编辑再生成；「请按需改写」提示可见。
+4. 复制与跳转：复制按钮可用（失败有降级提示）；Google 搜索按钮打开的新标签页 q 参数与预览串一致（URL 编码正确）。
+5. 真限制可见：页面可见「各引擎运算符支持不一、请以目标搜索引擎为准」与「文本不出浏览器」两句文案；无任何「精准找到」类承诺文案；零 fetch/XHR（源码自检无外部请求，Google 跳转链接除外）。
+6. node 测试 40+ 断言全过（分组序列化、嵌套括号、字段限定、引号处理、排除词、空组丢弃、模板静态检查）。
+7. 页面无报错；移动端布局不错位；长查询串小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/boolean_search_builder.html`（新增；含 SEO 面板按家族标准＋分组编辑器／字段限定／模板／生成预览 UI）
+- `static/js/boolean_search_builder.js`（新增；分组树构建算法＋模板载入＋复制／跳转；双模式导出供 node 测试）
+- `tests/boolean_search_builder.test.js`（新增；序列化、嵌套、字段、引号、排除、空组、模板静态检查）
+- `tools/categories.go`（开发工具品类注册：ID boolean_search_builder、Path /tools/boolean-search-builder、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin 与本地一致，HEAD 2197aff）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 164 Path；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 search_router 为路由跳转、regex_tester 为正则校验，均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 23:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第九十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。文本朗读器已交付闭环（e16ad1f 新增＋2197aff 评审反馈修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **164 Path**，ID text_reader_aloud、Path /tools/text-reader-aloud 已注册，文本工具品类；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常，origin 与本地一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 深夜轮，优先小难度纯前端。
+
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. 文本朗读器交付确认：`git log` 头部 2197aff（评审反馈修复）／e16ad1f（新增）；全量 164 Path；templates/text_reader_aloud.html＋static/js/text_reader_aloud.js＋tests/text_reader_aloud.test.js＋tools/categories.go 注册均存在；本地当前分支 muse/dev-20260929；origin 与本地一致；候选池划出。布尔搜索语句生成器、CSS clamp 流体尺寸计算器、摩斯码翻译器复核仍未交付（`grep -c 'boolean_search_builder|css_clamp_calculator|morse_code' tools/categories.go` = 0；templates/ 无 boolean/clamp/morse/envelope 文件）。
+2. 新信号扫描：
+   - **HN Show HN: ToEnvelope（浏览器本地信封打印）＋信封打印全网验证**：痛点实锤——Google Docs 无内置信封工具（须自定义页面尺寸＋文本框硬摆）、Word 信封路径同样折腾、现有独立工具多要装软件或走订阅邮寄系统；ToEnvelope 以 WYSIWYG＋本地 PDF 生成＋多尺寸（#10/#9/A2/A6/A7）＋手动进纸防卷边提示为卖点 → 仓库**全路零命中**（`grep -rniE 'envelope|信封' tools/categories.go templates/ static/js/ tests/` 零命中），**新晋 P2「信封打印助手」**（建议 ID envelope_printer、Path /tools/envelope-printer）：收件人／寄件人／邮编输入＋所见即所得信封预览＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义宽高）＋字体字号＋打印样式表（@page 精确尺寸）＋测试页／偏移微调／手动进纸提示，纯前端小难度，零上传；痛点：一年寄不了几次信、每次为调 Word 边距折腾半小时，不想装软件；真限制：各打印机边距与进纸方向不一，页面必须明示「先打测试页、再调偏移」，不承诺一次对齐；
+   - **HN Show HN: 滚动文字生成器（倾斜片头 crawl＋竖排字幕 roll＋横向 ticker，透明底可叠加到视频）**→ **89 轮观察项「滚动字幕生成器」晋升 P2**：仓库近邻辨析——在线提词器为演讲者看的纵向提词滚动、年会抽奖跑马灯为姓名定格动画、大字标牌为静态展示，均非「给视频做片头／片尾／横幅叠加层」的输出向工具；**新晋 P2「滚动字幕生成器」**（建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator）：三模式（倾斜透视 crawl／竖排字幕 roll／横向 ticker）＋字体／字号／颜色／速度／透明底实时预览＋Canvas MediaRecorder 导出 webm，纯前端小难度（中偏小：导出走 MediaRecorder），零上传；痛点：剪视频要个片头滚动字或直播横幅，不想开 PR/AE；真限制：透明底 webm 的 alpha 支持因浏览器而异，须明示并给纯色底兜底；
+   - **HN Show HN: 批量图片模糊工具（本地批量＋高斯／像素化／动态／径向／噪点多模式）**→ **自有实锤消解＋优化项，不单独立项**：img_mosaic（框选马赛克／高斯模糊打码）＋截图批注马赛克已覆盖单图打码语义；HN 工具的残余新颖点（多文件整图批量模糊＋多模糊模式＋批量导出）记 img_mosaic **优化项**（批量模式），避免与已交付打码工具串味（参照截图美化器防串味先例）；
+   - **dev.to Utility Tools Lab 效率工具榜（番茄钟／专注计时／艾森豪威尔任务分级／待办／目标追踪）**→ **自有实锤消解＋优化项**：在线倒计时／番茄钟（倒计时＋秒表＋番茄钟四轮轮转＋闹钟四模式）已覆盖番茄／专注计时；本地看板任务管理（三列＋优先级＋截止＋标签＋JSON 备份）已覆盖待办／任务管理语义；残余新颖点（艾森豪威尔四象限视图：紧急／重要矩阵）记本地看板 **优化项**，不单独立项；
+   - **dev.to Linkit／HN Rocus／FavBox 书签管理器、Eatmydata 本地 SQL 仪表盘、Remove Background Noise AI 降噪**→ **不立**：均需 AI／后端同步／桌面端／模型，越过单页纯前端标准（Linkit／Rocus 前两轮已记不立，本轮三次验证一致）；
+   - **Medium 10 月开发者工具榜（Rill Agent 浏览器、Inferock Serverless LLM 推理等）**→ **不立**：均为 Agent／浏览器／后端产品形态，非单页小工具；
+   - **Velnox 51／Prestofiles／SuperToolKit 100+／DevTrove 22 工具重扫**：JSON／Base64／JWT／Cron／UUID／二维码／图片压缩／PDF 合并拆分等 → **自有实锤消解**：json_parser／jwt_signer_verifier／cron／uuid／qr／img_compress／pdf 族已全覆盖，无新缺口。
+3. 候选池变动：文本朗读器已交付划出（e16ad1f＋2197aff，164 Path）；**新晋 P2 2 个**（信封打印助手：HN ToEnvelope＋Google Docs 缺口双重验证，纯前端小难度，零命中实锤，附打印机差异真限制；滚动字幕生成器：89 轮观察晋升，HN 三模式形态验证，纯前端小难度，附透明 webm 真限制）；自有实锤消解 4 项（批量模糊→img_mosaic；效率榜→countdown_timer＋kanban；书签／SQL／AI 降噪→需后端或 AI；10 月榜 Agent／后端产品→非单页形态；工具站全量→json/jwt/cron/uuid/qr/img/pdf 族）；优化项 2 条（img_mosaic：批量模糊模式；本地看板：艾森豪威尔四象限视图）；全量 164 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；23:00 深夜轮优先小难度纯前端）：
+
+1. **布尔搜索语句生成器** — P2 留池顺位递进（90 轮新晋；91／92 轮复核仍未交付；HN Show HN local-first Boolean builder 形态验证：可视化分组＋字段限定＋引号短语；痛点：手写布尔式常错括号/引号，招聘寻访与学术/求职检索反复试错；纯前端小难度：分组编辑器＋字段限定＋三组常用模板＋一键复制查询串，零上传；零命中实锤（community_search_router 仅路由跳转、不构建语句）；建议 ID boolean_search_builder、Path /tools/boolean-search-builder）。
+2. **CSS clamp 流体尺寸计算器** — P2 留池顺位递进（91 轮新晋；92 轮复核仍未交付；DevsTools 251 榜＋clampgen/WPDean/cssportal 多站同形态验证：最小/最大视口＋尺寸→斜率/截距→clamp() 输出；痛点：响应式字号/间距手写 clamp 公式常算错 vw 系数，改断点全页重算；纯前端小难度：双视口＋双尺寸输入→rem/px 双单位输出＋8 组预设＋断点取值表＋实时预览验证，零上传；零命中实锤（css_gradient/color_converter/css_to_tailwind 均非 clamp 公式工具）；建议 ID css_clamp_calculator、Path /tools/css-clamp-calculator）。
+3. **信封打印助手** — 新晋 P2（本轮；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证：WYSIWYG 预览＋多尺寸＋打印样式表；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；纯前端小难度：收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋打印样式表＋测试页／偏移微调，零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：各打印机边距与进纸方向不一，须明示先打测试页再调偏移）。
+
+其余 P2 留池：摩斯码翻译器（91 轮新晋；顺位上为 Top3 之后第一顺位——本轮信封打印助手因受众面更广（寄信／寄发票的办公室场景 vs 解谜／业余无线电 niche）而晋升第三，摩斯码仍为下轮递进首选；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：WebAudio 播放受浏览器自动播放策略影响）；滚动字幕生成器（本轮由 89 轮观察晋升；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器（90 轮新晋；建议 ID color_blind_simulator、Path /tools/color-blind-simulator）；MP3 标签编辑器（90 轮新晋；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件）；截图美化器（通用）（88 轮新晋；防串味延后，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；CSP 安全头生成器（84 轮新晋；建议 ID csp_builder、Path /tools/csp-builder）；一键人脸模糊（64 轮新晋，88 轮 HN BlurFaces 二次验证补强；模型 vendor 风险）；浏览器录屏工具（84 轮新晋；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；联系信息提取器（64 轮新晋；91 轮 BulkTextKit 提取邮箱/URL 语义二次验证，仍未交付，继续留池）；壁纸生成器/词云生成器（87 轮 P2 观察）；CSS Sprite 雪碧图生成器（83 轮新晋，niche）；SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）；USB 设备识别器/摄像头签名数字化/和弦探索器（88 轮观察，niche）；英文写作风格检查（89 轮观察）；Hashtag 生成器/GIF→Live Photo/llmspeed 跑分（90 轮观察）；LLM Token 估算器/Docker Compose→K8s/画廊墙面规划器（91 轮观察）；批量图片模糊（本轮 HN 验证，记 img_mosaic 优化项，不单独立项）；艾森豪威尔四象限视图（本轮效率榜验证，记本地看板优化项，不单独立项）；书签管理器（Linkit/Rocus/FavBox 三次验证，需 AI/后端同步，不立）；Agent 浏览器／Serverless LLM 推理（本轮 10 月榜，非单页形态，不立）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第九十二轮：文本朗读器已交付划出（e16ad1f 新增＋2197aff 评审修复；ID text_reader_aloud、Path /tools/text-reader-aloud 已注册，文本工具品类；全量 164 Path；候选池划出）；**新晋 P2 2 个：信封打印助手**（HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证；收件人／寄件人／邮编＋尺寸预设＋WYSIWYG 预览＋打印样式表＋测试页／偏移微调，纯前端小难度零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：打印机边距与进纸方向不一，须明示先打测试页）、**滚动字幕生成器**（89 轮观察晋升；HN 三模式形态验证：倾斜 crawl／竖排 roll／横向 ticker＋透明底实时预览＋MediaRecorder 导出 webm，纯前端小难度零上传；近邻提词器／抽奖跑马灯／大字标牌均非视频叠加层语义；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm alpha 支持因浏览器而异）；自有实锤消解 4 项（批量模糊→img_mosaic＋截图批注；效率榜→countdown_timer＋本地看板；书签／SQL／AI 降噪→需后端或 AI；10 月 Agent／后端榜→非单页形态；工具站全量→json/jwt/cron/uuid/qr/img/pdf 族）；优化项 2 条（img_mosaic：批量模糊模式；本地看板：艾森豪威尔四象限视图）；全量 164 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文本朗读器 | 已交付划出（e16ad1f 新增＋2197aff 评审修复；ID text_reader_aloud、Path /tools/text-reader-aloud 已注册，文本工具品类；全量 164 Path；候选池划出） | — | 已实现 |
+| 信封打印助手 | 新晋 P2（92 轮；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋WYSIWYG 预览＋打印样式表＋测试页／偏移微调，纯前端小难度零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：打印机边距与进纸方向不一，须明示先打测试页） | 小 | P2（92 轮新晋） |
+| 滚动字幕生成器 | 89 轮观察晋升 P2（92 轮；HN 三模式形态验证：倾斜 crawl／竖排 roll／横向 ticker＋透明底实时预览＋MediaRecorder 导出 webm；痛点：剪视频要片头滚动字或直播横幅，不想开 PR/AE；纯前端小难度零上传；近邻提词器／抽奖跑马灯／大字标牌均非视频叠加层语义；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm alpha 支持因浏览器而异，须给纯色底兜底） | 小 | P2（92 轮晋升） |
+| 自有实锤消解 | 不立（批量模糊→img_mosaic＋截图批注已覆盖单图打码；效率榜番茄／专注／待办→countdown_timer＋本地看板；书签／SQL／AI 降噪→需后端或 AI；10 月 Agent／后端榜→非单页形态；Velnox／Prestofiles／SuperToolKit／DevTrove 全量→json/jwt/cron/uuid/qr/img/pdf 族全自有） | — | 不立 |
+| 优化项 | img_mosaic：批量模糊模式（多文件整图批量＋多模糊模式＋批量导出）；本地看板：艾森豪威尔四象限视图（紧急／重要矩阵） | — | 优化项 |
+
+**归档说明**：本轮为 10-24 通用调研第九十二轮——文本朗读器交付闭环（e16ad1f＋2197aff，`/tools/text-reader-aloud` 已注册，文本工具品类，全量 164 Path），候选池划出；**新晋 P2 2 个**（信封打印助手：HN＋Google Docs 缺口双重验证，纯前端小难度，零命中实锤，附打印机差异真限制；滚动字幕生成器：89 轮观察晋升，HN 三模式验证，纯前端小难度，附透明 webm 真限制）；4 项自有实锤消解（批量模糊／效率榜／书签-SQL-AI／10 月 Agent 榜／工具站全量）；2 条优化项；WPS 候选表保持冻结归档；仓库 164 注册工具全量核对无重叠（Top3 建议 ID boolean_search_builder / css_clamp_calculator / envelope_printer；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地 2197aff 一致）；`git log` 头部 2197aff（文本朗读器评审修复）／e16ad1f（新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **164**；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；本轮 `git status` 未见 `toolweb` ELF 构建产物（此前多轮记录的未跟踪项已不在，疑已清理）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 21:00 · 产品经理排期轮）
 
 **选定：文本朗读器（text_reader_aloud）** — 本轮唯一任务（新工具）：

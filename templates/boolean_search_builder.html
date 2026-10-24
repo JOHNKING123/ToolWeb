@@ -1,0 +1,147 @@
+{{define "boolean_search_builder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>布尔搜索语句生成器 - 分组 AND/OR/NOT、字段限定、引号短语一键生成检索式（纯前端）</title>
+    <meta name="description" content="免费在线布尔搜索语句生成器：术语组内 AND/OR、组间 AND/OR/NOT、一层嵌套、排除组渲染为 NOT (...)，site:/intitle:/inurl:/filetype:/author: 字段限定，含空格术语自动加引号，招聘寻访/学术检索/求职检索三组模板，实时预览、一键复制、Google 搜索跳转，纯前端零上传。Boolean search query builder: groups, field operators, quoted phrases, templates, 100% client-side.">
+    <meta name="keywords" content="布尔搜索,布尔检索式,Boolean search,招聘寻访,sourcing,学术检索,site 搜索,引号短语,检索式生成器,布尔运算符,AND OR NOT">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/boolean-search-builder">
+    <meta property="og:title" content="布尔搜索语句生成器 - 分组构建检索式，字段限定、引号短语、模板一键载入">
+    <meta property="og:description" content="术语组内 AND/OR、组间 AND/OR/NOT、一层嵌套、排除组 NOT (...)，site:/intitle:/filetype: 等字段限定，实时预览、一键复制、Google 跳转；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/boolean-search-builder">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"布尔搜索语句生成器","description":"分组构建布尔检索式：组内 AND/OR、组间 AND/OR/NOT、一层嵌套、排除组 NOT (...)，site:/intitle:/inurl:/filetype:/author: 字段限定，含空格术语自动加引号，实时预览、一键复制、Google 跳转，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/boolean-search-builder","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bsb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .bsb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .bsb-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .bsb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .bsb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .bsb-group{border:1px solid #dbeafe;background:#f8fbff;border-radius:.6rem;padding:.9rem;margin-bottom:.9rem}
+        .bsb-child{border:1px dashed #93c5fd;background:#fff;border-radius:.6rem;padding:.8rem;margin-top:.8rem}
+        .bsb-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem}
+        .bsb-term{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.5rem}
+        .bsb-input{flex:1 1 200px;min-width:0;padding:.5rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:inherit;font-size:.92rem;box-sizing:border-box}
+        .bsb-select{padding:.5rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:inherit;font-size:.88rem;background:#fff}
+        .bsb-check{font-size:.88rem;color:#374151;display:inline-flex;gap:.3rem;align-items:center}
+        .bsb-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.45rem .8rem;font-size:.85rem;cursor:pointer;font-family:inherit}
+        .bsb-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .bsb-btn:disabled{opacity:.5;cursor:not-allowed}
+        .bsb-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .bsb-preview{overflow-x:auto;white-space:nowrap;background:#111827;color:#e5e7eb;border-radius:.6rem;padding:.9rem 1rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;line-height:1.7;min-height:1.7em}
+        .bsb-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .bsb-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        .bsb-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .bsb-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .bsb-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .bsb-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .bsb-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .bsb-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .bsb-note b{color:#374151}
+        @media (max-width:640px){
+            .bsb-input{flex-basis:100%}
+            .bsb-preview{font-size:.88rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">search</i> 布尔搜索语句生成器</h1>
+            <p>分组拼检索式：组内 AND/OR、组间 AND/OR/NOT、一层嵌套，字段限定与引号短语自动处理</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="bsb-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>检索式全部在本机构建，本页面不发起任何网络请求、不上传任何文本（Google 搜索按钮只是打开一条跳转链接）。</div>
+            </div>
+            <div class="bsb-warn">
+                <b>各搜索引擎运算符支持不一，请以目标搜索引擎为准：</b>Google、Bing、百度对 site:、intitle:、filetype: 等运算符的支持程度不同，百度部分运算符有限。本工具只生成查询串，不承诺召回率与排序结果。
+            </div>
+            <div class="bsb-panel">
+                <h3>一键模板（仅为示例起点，请按需改写）</h3>
+                <div class="bsb-row">
+                    <button class="bsb-btn" type="button" data-template="sourcing">招聘寻访</button>
+                    <button class="bsb-btn" type="button" data-template="academic">学术检索</button>
+                    <button class="bsb-btn" type="button" data-template="jobseek">求职检索</button>
+                    <button class="bsb-btn" type="button" id="bsb-clear">清空重填</button>
+                </div>
+                <p class="bsb-hint">模板载入后仍可自由增删术语、改连接词与字段限定，再生成新的查询串；模板仅为示例起点，请按需改写。</p>
+            </div>
+            <div class="bsb-panel">
+                <h3>分组编辑器</h3>
+                <div class="bsb-row">
+                    <label class="bsb-check">组间连接词
+                        <select class="bsb-select" id="bsb-between">
+                            <option value="AND">AND（组间全部）</option>
+                            <option value="OR">OR（组间任一）</option>
+                            <option value="NOT">NOT（后续组取反）</option>
+                        </select>
+                    </label>
+                    <button class="bsb-btn" type="button" id="bsb-add-group">＋ 术语组</button>
+                </div>
+                <div id="bsb-groups"></div>
+                <p class="bsb-hint">规则：每组可选「组内全部（AND）／组内任一（OR）／排除组（NOT (...)）」；子组只嵌套一层，渲染时自动加括号，顶层组不加多余括号；字段值为空时不输出限定符；含空格的术语自动加英文双引号，已含引号的不重复加；排除术语渲染为 - 前缀。</p>
+            </div>
+            <div class="bsb-panel">
+                <h3>实时查询串预览</h3>
+                <div class="bsb-preview" id="bsb-preview">（尚未生成：请添加至少一个非空术语）</div>
+                <p class="bsb-hint" id="bsb-hint">空组与空术语会被丢弃，不输出畸形串；请填写术语后查看预览。</p>
+                <div class="bsb-row" style="margin-top:.9rem;">
+                    <button class="bsb-btn bsb-btn-primary" type="button" id="bsb-copy">一键复制</button>
+                    <button class="bsb-btn bsb-btn-primary" type="button" id="bsb-google">在 Google 中搜索</button>
+                </div>
+                <p class="bsb-hint">「在 Google 中搜索」会在新标签页打开 google.com/search?q=编码后的查询串；复制失败时会有明确降级提示，请手动选中预览区的查询串复制。</p>
+            </div>
+            <div class="bsb-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>在术语组里填术语：含空格的词组（如 software engineer）会自动加双引号；需要限定来源时选 site:、intitle:、inurl:、filetype:、author:，字段值为空时不输出限定符。</li>
+                    <li>组内选「全部」用 AND 连接、选「任一」用 OR 连接；勾选「排除」可把单个术语渲染为 -term，把整组渲染为 NOT (...)。</li>
+                    <li>点「＋ 子组」在一组内再建一层嵌套子组，子组渲染时自动加括号；组间连接词在编辑器顶部切换 AND／OR／NOT。</li>
+                    <li>预览区实时显示查询串，长串在小屏幕上可横向滚动，不会撑破布局；空组与空术语会被丢弃，生成时若无有效术语会明确提示。</li>
+                    <li>点「一键复制」复制查询串到剪贴板；点「在 Google 中搜索」在新标签页打开 Google 搜索（q 参数与预览串一致、经 URL 编码）。</li>
+                </ol>
+            </div>
+            <div class="bsb-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="bsb-faq">
+                    <dt>为什么在百度上有的运算符没效果？</dt>
+                    <dd>各搜索引擎运算符支持不一，百度部分运算符有限，请以目标搜索引擎为准；本工具只生成查询串，不承诺任何引擎的召回率与排序。</dd>
+                    <dt>引号短语和排除词是怎么渲染的？</dt>
+                    <dd>含空格的术语自动加英文双引号，已含引号的不重复加；排除术语统一渲染为 - 前缀（如 -tutorial），排除组渲染为 NOT (...)，生成预览中可直接看到。</dd>
+                    <dt>空组或空术语会怎样？</dt>
+                    <dd>会被丢弃，不输出畸形串与多余括号；全部为空时预览区会明确提示「尚未生成」，复制与搜索按钮同时禁用。</dd>
+                    <dt>我的检索词会被上传吗？</dt>
+                    <dd>不会。全部构建在本地完成，本页面零网络请求；Google 搜索按钮只是打开一条跳转链接，不经过本站服务器。</dd>
+                    <dt>一层嵌套是什么意思？</dt>
+                    <dd>术语组内可以再建子组，但子组内不能再建孙组；子组渲染时自动加括号，例如 (Python OR Go) AND "software engineer"。</dd>
+                </dl>
+            </div>
+            <div class="bsb-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="bsb-links">
+                    <a href="/tools/search-router"><i class="material-icons">forum</i> 社区搜索聚合器</a>
+                    <a href="/tools/regex-tester"><i class="material-icons">regex</i> 正则表达式测试</a>
+                </div>
+            </div>
+            <div class="bsb-note">
+                <b>实现说明：</b>分组树→查询串为纯函数（分组序列化、嵌套括号、字段限定、引号处理、排除词、空组丢弃、括号平衡自检），双模式导出供 node 单元测试；本页源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="bsb-toast" id="bsb-toast"></div>
+    <script src="/tools/static/js/boolean_search_builder.js?v=1"></script>
+</body>
+</html>
+{{end}}

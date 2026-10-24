@@ -436,6 +436,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "boolean_search_builder",
+					Name:        "布尔搜索语句生成器",
+					Description: "分组构建布尔检索式：术语组内 AND/OR、组间 AND/OR/NOT、一层嵌套、排除组渲染为 NOT (...)，site:/intitle:/inurl:/filetype:/author: 字段限定，含空格术语自动加引号，招聘寻访/学术检索/求职检索三组模板，实时预览、一键复制、Google 搜索跳转，纯前端零上传 · Boolean search query builder: grouped AND/OR/NOT, one-level nesting, field operators, quoted phrases, templates, copy & Google search, 100% client-side",
+					Path:        "/tools/boolean-search-builder",
+					Icon:        "search",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "unit_calc_notepad",
 					Name:        "单位感知记事本计算器",
 					Description: "记事本式逐行算式＋单位感知：长度/重量/体积/时间/温度（℃↔℉）/货币单位自动换算，加减归一化到首单位；行间变量、百分比、sum(a1..a3) 范围汇总，行内即时结果＋底部分组求和/平均/最大/最小/计数，非法行标红不中断，自写解析零 eval，纯前端零上传 · Unit-aware notepad calculator: line-by-line expressions with unit conversion, variables, range summary and inline results, 100% client-side",
