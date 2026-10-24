@@ -1,3 +1,96 @@
+## 今日任务（2026-10-24 16:30 · 前端开发轮 ✅）
+
+**交付：头像生成器（avatar_generator）** — 本轮唯一任务（新工具），开发完成已提交推送：
+- **改动文件**：`templates/avatar_generator.html`（新增；SEO 面板按家族标准：title/description/keywords/canonical=`https://www.johnkingzcq123.xyz/tools/avatar-generator`/OG/JSON-LD/使用说明/FAQ/相关工具＋零上传隐私声明＋引擎说明；9 宫格/精调/导出区 UI，ag- 前缀控件，860px 媒体查询）、`static/js/avatar_generator.js`（新增；自研 SVG 图层部件库 8 层：背景 8/肤色 6/脸型 4/发型 8/发色 6/眼睛 8/眉毛 6/嘴巴 8/配饰 6，共 60 变体；mulberry32 确定性引擎，种子↔短 JSON 双向还原；SVG→Image→canvas 二次绘制，预览与导出同一链路；纯函数经 module.exports 双模式导出供 node 测试）、`tests/avatar_generator.test.js`（新增；183 断言全过）、`tools/categories.go`（图片处理品类注册 ID avatar_generator、Path /tools/avatar-generator、Icon face、New: true）、`BACKLOG.md`（本条）。
+- **验收核对**：① `grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **161**（160→161 ✓）；② 各图层变体数达标（背景 8 含 2 渐变/肤色 6/脸型 4/发型 8/发色 6/眼睛 8/眉毛 6/嘴巴 8/配饰 6 含无），9 宫格模拟 9 格互异、每层出现 4–8 种变体 ✓；③ 同一种子 100 次 buildSVG 逐字节一致，JSON 复制→清空→还原往返一致 ✓；④ 四档导出文件名 `avatar-<种子>-<尺寸>px.png`，透明底开关生效（透明 SVG 不含背景矩形），复制 PNG 走 ClipboardItem＋明确降级提示，JS 源码自检零 fetch/XHR（单测断言）✓；⑤ node 测试 **183 断言全过**（≥40 ✓：PRNG 确定性、seedFromString、描述子范围/往返、图层表 id 唯一、颜色表、尺寸表、SVG 确定性/良构、文件名、模板静态检查、零网络、clampIndex）；另抽 100 个 SVG（20 种子×透明/不透明＋全图层变体全覆盖）经 Python XML 解析全部良构 ✓；⑥ 本地 18099 起服 `/tools/avatar-generator` 200（title/canonical/JS 引用正常，首页列表含 avatar-generator）；移动端媒体查询已配（≤860px 精调单列、9 宫格自适应）。
+- **实现要点**：图层全部手写 SVG 路径（零 vendor、零外部请求）；SVG 根带显式 width/height＋viewBox、无 `<text>`、无外部引用，跨浏览器光栅化一致；配饰首项为「无」避免遮挡；种子输入框接受纯数字/任意文本/短 JSON 三种形态。
+- **提交**：本轮中文提交（muse/dev-20260929，已 push origin）；`toolWeb.bak-prev` 与 `toolweb` 构建产物未入库（沿用 PM 轮要求，仅提醒）。
+- **待后续轮次**：评审轮 UI 走查＋测试轮黑盒 QA；部署走 ~/workspace/deploy/toolweb/deploy.sh（授权仅 /tool-web）。
+
+---
+
+## 今日任务（2026-10-24 16:00 · 产品经理排期轮）
+
+**选定：头像生成器（avatar_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（88 轮）Top3 **第二顺位**（HN Show HN SquareFaceIcon 形态验证：确定性头像协议、固定方形画布＋离散图层、短 JSON 描述渲染、导出 64–512px 透明 PNG、纯 HTML5/JS 无后端；四路**零命中实锤**，本轮 PM `grep -rniE 'avatar_generator|avatar-generator|头像生成器' templates static/js tools tests` 实测全零命中；pixel_art 为图片转换、语义不同）。
+- **未选**：在线电台收听器（研究轮首席推荐；**有硬伤→跳过**：Radio Browser API 为外部 fetch 依赖（ToolWeb 纯前端零 fetch 标准冲突），http 流在 https 下混合内容、国内连通性需降级方案，首版在国内稳定体验需要后端代理决策或内置列表维护，超出「一轮高质量」预期，且「无硬伤不跳过」惯例反例不成立——PM 实测判定该限制是真硬伤，留池等后端代理方案成熟再立）；截图美化器（通用）（P2 新晋，无硬伤但**防串味**：本轮上午刚交付代码截图美化器，同「截图美化」族且名称仅一字之差（"代码截图美化器" vs "截图美化器"），用户端混淆风险高，PM 主动延后，留池顺位递进）。
+- **PM 零重叠实测复核**：头像生成器三路全零命中；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 160 Path。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——SVG/Canvas 自研图层部件（背景/脸型肤色/发型/眼睛/眉毛/嘴巴/配饰），随机生成＋图层自定义＋一键导出 PNG，零上传零 fetch，完美契合 ToolWeb 纯前端离线标准；② **痛点明确**——小项目/社区/游戏需要统一风格头像，不想处理上传/审核/CDN（类似 dicebear 自托管形态，但纯前端零上传）；③ **确定性协议天然可测**——种子→短 JSON 描述→渲染链路可断言，node 测试易写足断言；④ **无真限制**——不像电台那样依赖外部网络/API，也不像截图美化那样有命名冲突。
+- **品类归位**：注册到「图片处理」品类；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **零 vendor 全自研图层**——仓库 static/vendor 无图形库，效 code_minifier/favicons 自研引擎先例，纯 SVG 路径/Canvas 矢量绘制图层部件（每图层至少 6–8 款变体；发型/眼睛/嘴巴等以路径数组参数化）；② **确定性渲染协议**——随机种子（mulberry32 或等价）→短 JSON 描述（{bg, face, hair, eyes, brows, mouth, accessory}）→渲染链路可逆：「复制头像描述 JSON」＋「从 JSON/种子还原」双按钮，种子/JSON 互转可测；③ **导出 PNG 多尺寸**——64/128/256/512 四档，透明背景开关（PNG32 透明底），canvas 本地渲染（SVG→Image→canvas 二次绘制保证跨浏览器一致），文件名 `avatar-<种子>-<尺寸>px.png`；④ **零 fetch/XHR**——源码自检无外部请求；⑤ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/avatar-generator）；⑥ **随机不重复体验**——「换一组」按钮＋批量生成（一次 9 宫格预览，点击选中单个精调）提升首屏趣味；配饰层可选空（none）避免遮挡。
+- **ID/Path**：`avatar_generator`、`/tools/avatar-generator`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 输入区：图层自定义面板（背景色/渐变选择、肤色 6 档、脸型 3 档、发型 8+、眼睛 8+、眉毛 6+、嘴巴 8+、配饰：眼镜/耳环/帽子/无）；「随机生成」「换一组」按钮；种子输入＋「复制头像描述 JSON」「从 JSON/种子还原」。
+- 预览区：9 宫格批量预览（点击选中）＋大图精调预览；透明背景开关；尺寸选择 64/128/256/512。
+- 导出区：「下载 PNG」「复制 PNG」按钮；文件名带种子＋尺寸；本地渲染不出浏览器。
+- 注册：ID `avatar_generator`、Name「头像生成器」、Path `/tools/avatar-generator`、Category 图片处理、Icon 建议 face/emoji_emotions 类、New: true；中英文描述＋SEO keywords（头像生成器、avatar generator、随机头像、卡通头像、SVG 头像、头像设计、社区头像、游戏头像、确定性头像）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `avatar_generator`、Path `/tools/avatar-generator` 注册完整（Category 图片处理），注册总数 160→161 Path。
+2. 每图层变体数达标（背景 8+/肤色 6/脸型 3+/发型 8+/眼睛 8+/眉毛 6+/嘴巴 8+/配饰 4+ 含无）；随机生成每次产出可视差异头像。
+3. 确定性：同一 JSON/种子两次渲染像素一致（node 测试断言描述→图层参数映射稳定）；「复制 JSON→清空→还原」闭环可用。
+4. 导出 PNG 本地生成：四档尺寸下载文件名含种子＋尺寸；透明底开关生效（像素 alpha 抽查）；复制 PNG 到剪贴板在 Chromium 系可用，不支持时有明确降级提示；零 fetch/XHR（源码自检无外部请求）。
+5. node 测试 40+ 断言全过（种子 PRNG 确定性、图层参数表覆盖、描述 JSON 序列化/反序列化往返、导出尺寸表、颜色表有效性、模板静态检查）。
+6. 页面无报错；移动端布局不错位；9 宫格小屏自适应。
+
+**预计改动文件**：
+- `templates/avatar_generator.html`（新增；含 SEO 面板按家族标准＋图层面板/9 宫格预览/导出区 UI）
+- `static/js/avatar_generator.js`（新增；自研图层部件库＋mulberry32 确定性引擎＋SVG/Canvas 渲染＋导出/复制 PNG；双模式导出供 node 测试）
+- `tests/avatar_generator.test.js`（新增；PRNG 确定性、图层表、JSON 往返、尺寸/颜色表、模板静态检查）
+- `tools/categories.go`（图片处理品类注册：ID avatar_generator、Path /tools/avatar-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 160 Path；Top3 候选重叠复核（头像生成器/电台三路全零命中，通用截图美化仅上午交付的代码截图美化器同族一条；详选定理由）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 15:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。代码截图美化器已交付闭环（3539b08 新增＋63dcd13 修复评审反馈按钮空输入卡死 bug＋文案措辞；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **160 Path**，ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier 已注册，开发工具品类；`git fetch` 正常，origin/muse/dev-20260929 与本地 63dcd13 一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 午后轮，优先小难度纯前端。
+
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. code_screenshot_beautifier 交付确认：`git log` 头部 63dcd13（2026-10-24 午后开发轮交付＋评审反馈修复：按钮空输入卡死 bug＋文案措辞；13:00 PM 轮选定任务交付闭环）；全量 160 Path；templates/code_screenshot_beautifier.html＋static/js/code_screenshot_beautifier.js＋tests/code_screenshot_beautifier.test.js＋tools/categories.go 注册均存在；本地当前分支 muse/dev-20260929；origin 与本地一致；候选池划出。
+2. 新信号扫描：
+   - **V2EX t/1251233（10-23）随声 / Tune Roam 网页电台**：「电台数据来自 Radio Browser（radio-browser.info 免费公开 API，无需 key），可以按国家转盘随机找台」→ 仓库 ID/Path/中文名/描述关键词**全路零命中**（「radio」命中全为 `<input type="radio">` 误命中），**新晋 P2「在线电台收听器」**（建议 ID radio_station_player、Path /tools/radio-station-player）：按国家/语言/标签浏览全球网络电台→一键在线播放→收藏 localStorage，纯前端小难度（HTML5 audio 直接播流；注意 http 流在 https 页面下混合内容问题：开发轮须决策后端加代理端点或只选 https 流），痛点：想听全球电台/练听力/白噪音伴睡，不想装 App（国内现有网页电台多广告弹窗或需客户端）；注意 V2EX 原贴提到"国内网络适配"（内置常用电台列表＋不可播自动跳相似台），开发轮须处理连通性降级；
+   - **HN Show HN: SquareFaceIcon（3 天前，squarefaceicon.top）**：确定性头像"协议"（固定方形画布＋离散图层：肤色/发型/眼睛/嘴巴/配饰/背景；短 JSON 描述渲染；导出 64–512px 透明 PNG；纯 HTML5/JS 无后端）→ 仓库**全路零命中**（pixel_art「像素风头像」为图片转换、pet_weight_tracker「头像 emoji」为宠物字段，语义不同），**新晋 P2「头像生成器」**（建议 ID avatar_generator、Path /tools/avatar-generator）：随机生成＋图层自定义＋一键导出 PNG，纯前端小难度（SVG/Canvas 自研图层部件），痛点：小项目/社区/游戏需要统一风格头像，不想处理上传/审核/CDN（类似 dicebear 自托管形态，但纯前端零上传）；
+   - **HN Show HN: Snap Shot（截图美化，padding/背景/阴影/等比→无水印导出，纯本地）**→ 仓库语义无覆盖（code_screenshot_beautifier 输入是**代码文本**→渲染窗口框；「截图批注」是标注工具；Snap Shot 输入是**图片**→padding/背景/圆角/阴影包装），**新晋 P2「截图美化器（通用）」**（建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）：上传截图→内边距/背景/圆角/阴影→导出 PNG，纯前端小难度；标注与代码美化器同"截图美化"族，PM 定序时注意防串味；
+   - **HN Show HN: BlurFaces（一键人脸模糊，浏览器内运行无上传）**→ 池内「一键人脸模糊」（64 轮新晋，模型 vendor 风险）**二次形态验证，P2 补强**；
+   - **HN Show HN: Video Frame Extractor（视频抽帧）**→ **自有实锤消解**：video_frame_extractor（ID、Name「视频帧提取器」、Path /tools/video-frame-extractor）早已注册实现（等间隔/精确时间点/差异度扫描抽帧），不立；
+   - **V2EX 其余（10-21~10-24）**：danceaigenerator（AI 照片跳舞视频）→ 需 AI 后端，低优先不立；Smart Wrong Notebook（AI 错题本）→ 需 AI＋后端，不立；Mac 本地跑大模型实测（M1 Pro＋Qwen2.5-3B 54 tok/s）→ 非工具形态，记 llm_hardware_checker 优化项（对照表可补 3B 级任务型模型例）；Pixsolo 更新（t/1251210）→ 87 轮已消化；
+   - **HN 其余**：USB Device Identifier（WebUSB 查 VID/PID）→ 需用户插硬件＋浏览器授权，niche 开发者硬件工具，观察不立；Signature Capture（摄像头手写签名数字化）→ 需摄像头＋边缘检测，niche 办公场景，观察不立；Interactive Chord Finder（和弦/音阶探索器）→ 音乐乐理，niche，方向边界观察（池内在线钢琴同观察）；
+   - **dev.to（10-23~10-24 重扫）**：pyfiletoolkit 13 tools / mou1z 5 tools / anurag_bhattarai 开发者工具文 / velnoxlabs 51 tools / devplaybook 对比 → 全自有或已消化（Color Palette→池内配色方案生成器；其余 JSON/Base64/UUID/QR/CSS Minify/MD/Regex/Cron→自有族），无新增可立项；360doc 6 网站文（VocalRemover→AI 后端；Convertio→需后端；MyColorSpace→配色方案生成器已在池）无新增；365lab 40+ 工具清单（10-08）重扫无新增；
+   - **Reddit**：本轮无可直接转单页工具的新鲜痛点信号（pain point finder 类皆为 SaaS 形态）。
+3. 候选池变动：代码截图美化器已交付划出（3539b08＋63dcd13，160 Path）；**新晋 P2 3 个**（在线电台收听器：V2EX tune-roam 原贴形态验证，Radio Browser 免费公开 API，纯前端小难度，四路零命中实锤；头像生成器：HN SquareFaceIcon 形态验证，确定性 SVG/Canvas 头像协议，纯前端小难度，四路零命中实锤；截图美化器（通用）：HN Snap Shot 形态验证，与代码美化器/截图批注语义不同，纯前端小难度）；**一键人脸模糊 P2 补强**（HN BlurFaces 二次形态验证：浏览器内一键模糊人脸）；自有实锤消解 1 项（HN Video Frame Extractor→video_frame_extractor 已注册）；llm_hardware_checker 优化项 1 条（3B 级任务型模型例）；niche/需后端/方向边界不立 9 项（AI 跳舞视频/错题本→AI＋后端低优先；WebUSB 设备识别器→niche 硬件观察；摄像头签名数字化→niche 观察；和弦探索器→音乐 niche 观察；360doc/365lab/dev.to 重扫→全消解）；全量 160 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；15:00 午后轮优先小难度纯前端）：
+
+1. **在线电台收听器** — 新晋 P2（本轮首席新晋；V2EX t/1251233「随声/Tune Roam 网页电台」形态验证；痛点：想听全球电台/练听力/白噪音伴睡，不想装 App，国内网页电台多广告弹窗或需客户端；纯前端小难度：Radio Browser 免费公开 API（免 key）按国家/语言/标签浏览→HTML5 audio 一键播放→收藏 localStorage；四路**零命中实锤**；建议 ID radio_station_player、Path /tools/radio-station-player；真限制：http 流在 https 下混合内容需开发轮决策（后端代理端点或只收 https 流），国内连通性需降级方案（内置常用台列表）。
+2. **头像生成器** — 新晋 P2（本轮；HN Show HN SquareFaceIcon 形态验证：确定性头像协议、纯前端、无后端；痛点：小项目/社区/游戏要统一风格头像，不想处理上传/审核/CDN；纯前端小难度：随机生成＋图层自定义（肤色/发型/眼睛/嘴巴/配饰/背景）＋导出 PNG，零上传；四路**零命中实锤**（pixel_art 为图片转换、语义不同）；建议 ID avatar_generator、Path /tools/avatar-generator）。
+3. **截图美化器（通用）** — 新晋 P2（本轮；HN Show HN Snap Shot 形态验证：padding/背景/阴影/无水印导出、纯本地；痛点：分享截图给客户/发社交媒体时原图太素，Figma 太重、在线站点多水印；纯前端小难度：上传截图→内边距/背景/圆角/阴影→导出 PNG，零上传；四路**零命中实锤**，与 code_screenshot_beautifier（代码→渲染）/截图批注（标注）语义不同但同族，PM 定序时注意；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）。
+
+其余 P2 留池：配色方案生成器（87 轮新晋；dev.to 13 tools 形态验证；建议 ID color_palette_generator、Path /tools/color-palette-generator）；应用商店截图生成器（87 轮补强晋升；V2EX Pixsolo 二次验证；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；CSP 安全头生成器（84 轮新晋；建议 ID csp_builder、Path /tools/csp-builder）；一键人脸模糊（64 轮新晋，本轮 HN BlurFaces 二次形态验证补强）；浏览器录屏工具（84 轮新晋；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；联系信息提取器（64 轮新晋）；壁纸生成器/词云生成器（87 轮 P2 观察）；CSS Sprite 雪碧图生成器（83 轮新晋，niche）；SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）；USB 设备识别器/摄像头签名数字化/和弦探索器（本轮新晋观察，niche）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十八轮：代码截图美化器已交付划出（3539b08 新增＋63dcd13 修复评审反馈按钮空输入卡死 bug＋文案措辞；ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier 已注册，开发工具品类；全量 160 Path；候选池划出）；**新晋 P2 3 个：在线电台收听器**（V2EX t/1251233 tune-roam 形态验证；Radio Browser 免费公开 API 免 key；按国家/语言/标签浏览→HTML5 audio 播放→收藏 localStorage；纯前端小难度；四路零命中实锤；建议 ID radio_station_player、Path /tools/radio-station-player；真限制：http 流混合内容需开发轮决策、国内连通性降级）、**头像生成器**（HN Show HN SquareFaceIcon 形态验证；确定性头像协议＋离散图层；随机生成＋自定义＋导出 PNG；纯前端小难度零上传；四路零命中实锤；建议 ID avatar_generator、Path /tools/avatar-generator）、**截图美化器（通用）**（HN Show HN Snap Shot 形态验证；上传截图→内边距/背景/圆角/阴影→导出 PNG；纯前端小难度零上传；四路零命中实锤，与代码美化器/截图批注语义不同但同族；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；**一键人脸模糊 P2 补强**（HN BlurFaces 二次形态验证：浏览器内一键模糊人脸无上传）；自有实锤消解 1 项（HN Video Frame Extractor→video_frame_extractor 已注册实现）；llm_hardware_checker 优化项 1 条（3B 级任务型模型对照例）；niche/需后端/方向边界不立或观察 9 项（AI 照片跳舞视频/AI 错题本→AI＋后端低优先；WebUSB 设备识别器→niche 硬件观察；摄像头手写签名数字化→niche 观察；和弦探索器→音乐 niche 观察；360doc/365lab/dev.to 重扫→全消解）；全量 160 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 在线电台收听器 | 新晋 P2（88 轮；V2EX t/1251233 tune-roam 形态验证；痛点：想听全球电台/练听力/白噪音伴睡，不想装 App；纯前端小难度：Radio Browser 免费公开 API（免 key）按国家/语言/标签浏览→HTML5 audio 播放→收藏 localStorage；四路零命中实锤；建议 ID radio_station_player、Path /tools/radio-station-player；真限制：http 流混合内容需开发轮决策、国内连通性降级方案） | 小 | P2（88 轮新晋） |
+| 头像生成器 | 新晋 P2（88 轮；HN Show HN SquareFaceIcon 形态验证：确定性头像协议、纯前端无后端；痛点：小项目/社区/游戏要统一风格头像，不想处理上传/审核/CDN；纯前端小难度：随机生成＋图层自定义（肤色/发型/眼睛/嘴巴/配饰/背景）＋导出 PNG，零上传；四路零命中实锤（pixel_art 为图片转换语义不同）；建议 ID avatar_generator、Path /tools/avatar-generator） | 小 | P2（88 轮新晋） |
+| 截图美化器（通用） | 新晋 P2（88 轮；HN Show HN Snap Shot 形态验证：padding/背景/阴影/无水印导出、纯本地；痛点：分享截图给客户/发社交媒体原图太素，Figma 太重、在线站点多水印；纯前端小难度：上传截图→内边距/背景/圆角/阴影→导出 PNG，零上传；四路零命中实锤，与代码美化器（代码→渲染）/截图批注（标注）语义不同但同族，PM 定序注意；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier） | 小 | P2（88 轮新晋） |
+| 一键人脸模糊 | P2 补强（64 轮新晋；本轮 HN BlurFaces 二次形态验证：浏览器内一键模糊人脸无上传；模型 vendor 风险仍存，低优先） | 中 | P2（补强） |
+| 代码截图美化器 | 已交付划出（3539b08 新增＋63dcd13 修复评审反馈；ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier 已注册，开发工具品类；全量 160 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（HN Video Frame Extractor→video_frame_extractor（ID、Name「视频帧提取器」、Path /tools/video-frame-extractor）已注册实现） | — | 不立 |
+| 优化项 | llm_hardware_checker：对照表可补 3B 级任务型模型例（V2EX Mac 本地跑大模型实测：M1 Pro＋Qwen2.5-3B 54 tok/s） | — | 优化项 |
+| niche/需后端/方向边界 | 不立或观察（AI 照片跳舞视频 danceaigenerator→需 AI 后端低优先；AI 错题本→需 AI＋后端；WebUSB 设备识别器→niche 硬件观察；摄像头手写签名数字化→niche 观察；和弦/音阶探索器→音乐 niche，方向边界观察（在线钢琴同观察）；dev.to/360doc/365lab 重扫→全自有或已消化；Reddit→本轮无可立项新鲜信号） | — | 不立/观察 |
+
+**归档说明**：本轮为 10-24 通用调研第八十八轮——代码截图美化器交付闭环（3539b08＋63dcd13，`/tools/code-screenshot-beautifier` 已注册，开发工具品类，全量 160 Path），候选池划出；**新晋 P2 3 个**（在线电台收听器：V2EX tune-roam 形态验证，Radio Browser 免 key API，纯前端小难度，四路零命中实锤，附混合内容/连通性真限制；头像生成器：HN SquareFaceIcon 形态验证，纯前端小难度，四路零命中实锤；截图美化器（通用）：HN Snap Shot 形态验证，纯前端小难度，与代码美化器同族标注）；**一键人脸模糊 P2 补强**（HN BlurFaces 二次形态验证）；自有实锤消解 1 项（video_frame_extractor）；llm_hardware_checker 优化项 1 条；9 项 niche/需后端/方向边界不立或观察；WPS 候选表保持冻结归档；仓库 160 注册工具全量核对无重叠（Top3 建议 ID radio_station_player / avatar_generator / screenshot_beautifier；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地 63dcd13 一致）；`git log` 头部 63dcd13（code_screenshot_beautifier 交付＋评审反馈修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 160 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-24 13:00 · 产品经理排期轮）
 
 **选定：代码截图美化器（code_screenshot_beautifier）** — 本轮唯一任务（新工具）：

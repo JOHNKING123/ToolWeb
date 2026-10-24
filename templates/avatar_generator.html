@@ -1,0 +1,197 @@
+{{define "avatar_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>头像生成器 - 随机卡通头像/自研 SVG 图层/确定性种子/PNG 导出（纯前端）</title>
+    <meta name="description" content="免费在线头像生成器：自研 SVG 图层部件（背景/肤色/脸型/发型/眼睛/眉毛/嘴巴/配饰 8 层 50+ 变体），mulberry32 确定性引擎（种子↔短 JSON 描述双向还原），9 宫格批量预览，64/128/256/512 四档 PNG 导出（含透明底），下载/复制 PNG，零上传零请求。Avatar generator: deterministic SVG avatar layers, seed-based, export PNG, 100% client-side.">
+    <meta name="keywords" content="头像生成器,avatar generator,随机头像,卡通头像,SVG 头像,头像设计,社区头像,游戏头像,确定性头像,头像 PNG 导出,透明背景头像,种子头像">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/avatar-generator">
+    <meta property="og:title" content="头像生成器 - 随机卡通头像/确定性种子/PNG 导出">
+    <meta property="og:description" content="自研 SVG 图层头像引擎：8 层 50+ 变体自由组合，种子↔JSON 双向还原，9 宫格批量预览，64–512px PNG 导出（含透明底），纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/avatar-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"头像生成器","description":"自研 SVG 图层头像引擎：背景/肤色/脸型/发型/眼睛/眉毛/嘴巴/配饰 8 层 50+ 变体，mulberry32 确定性种子↔短 JSON 描述双向还原，9 宫格批量预览，64/128/256/512 四档 PNG 导出（含透明底），下载/复制 PNG，纯前端零上传零请求。","url":"https://www.johnkingzcq123.xyz/tools/avatar-generator","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ag-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ag-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ag-privacy b{color:#047857}
+        .ag-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ag-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .ag-panel h3 .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .ag-toolbar{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-bottom:.9rem}
+        .ag-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .95rem;font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-family:inherit}
+        .ag-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ag-btn .material-icons{font-size:1.05rem}
+        .ag-btn-primary{background:var(--primary-color);border-color:var(--primary-color);color:#fff}
+        .ag-btn-primary:hover{color:#fff;filter:brightness(1.08)}
+        .ag-seed-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .ag-seed-row input[type="text"]{flex:1;min-width:200px;border:1px solid #d1d5db;border-radius:.55rem;padding:.5rem .7rem;font-size:.88rem;font-family:ui-monospace,Menlo,Consolas,monospace;box-sizing:border-box}
+        .ag-seed-label{font-size:.85rem;color:#6b7280;font-variant-numeric:tabular-nums}
+        .ag-json-view{display:none;width:100%;box-sizing:border-box;margin-top:.6rem;border:1px solid #d1d5db;border-radius:.55rem;padding:.5rem .7rem;font-size:.82rem;font-family:ui-monospace,Menlo,Consolas,monospace;background:#f9fafb;color:#374151}
+        .ag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+        .ag-cell{position:relative;border:2px solid #e5e7eb;border-radius:.7rem;background:#f8fafc;padding:.5rem;cursor:pointer;transition:border-color .15s,transform .15s}
+        .ag-cell:hover{border-color:#93c5fd;transform:translateY(-2px)}
+        .ag-cell-sel{border-color:var(--primary-color);box-shadow:0 0 0 2px color-mix(in srgb,var(--primary-color) 30%,transparent)}
+        .ag-cell-cv{width:100%;height:auto;display:block;border-radius:.45rem}
+        .ag-cell-seed{position:absolute;left:.55rem;bottom:.55rem;font-size:.68rem;color:#6b7280;background:rgba(255,255,255,.85);border-radius:.3rem;padding:.05rem .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .ag-tune{display:grid;grid-template-columns:300px 1fr;gap:1.2rem;align-items:start}
+        .ag-main-wrap{text-align:center}
+        .ag-main-wrap canvas{width:100%;max-width:300px;height:auto;border:1px solid #e5e7eb;border-radius:.8rem;background:repeating-conic-gradient(#f3f4f6 0 25%,#fff 0 50%) 0 0/24px 24px}
+        .ag-layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
+        .ag-field{display:flex;flex-direction:column;gap:.3rem;font-size:.85rem;color:#374151}
+        .ag-field select{border:1px solid #d1d5db;border-radius:.55rem;padding:.45rem .55rem;font-size:.88rem;background:#fff;color:#1f2937;font-family:inherit;max-width:100%}
+        .ag-check{display:flex;gap:.45rem;align-items:center;font-size:.88rem;color:#374151;cursor:pointer}
+        .ag-export{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .ag-export .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ag-sizes{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;font-size:.88rem;color:#374151}
+        .ag-sizes label{display:inline-flex;gap:.3rem;align-items:center;border:1px solid #e5e7eb;border-radius:.55rem;padding:.35rem .7rem;cursor:pointer}
+        .ag-sizes input{accent-color:var(--primary-color)}
+        .ag-status{font-size:.9rem;min-height:1.4em}
+        .ag-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .ag-note b{color:#374151}
+        .ag-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .ag-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .ag-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.3rem;padding:.05rem .35rem;font-size:.85em}
+        .ag-steps{margin:0;padding-left:1.2rem;color:#4b5563;line-height:2;font-size:.92rem}
+        .ag-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .ag-links a{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;border-radius:.6rem;padding:.5rem .9rem;font-size:.88rem;color:#1f2937;text-decoration:none;background:#fff}
+        .ag-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ag-links .material-icons{font-size:1.05rem}
+        @media (max-width:860px){
+            .ag-tune{grid-template-columns:1fr}
+            .ag-main-wrap canvas{max-width:240px}
+            .ag-grid{gap:.5rem}
+            .ag-export .btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">face</i> 头像生成器</h1>
+            <p>自研 SVG 图层头像引擎：背景/肤色/脸型/发型/眼睛/眉毛/嘴巴/配饰 8 层 50+ 变体自由组合 → mulberry32 确定性种子↔短 JSON 双向还原 → 9 宫格批量预览 → 64–512px PNG 导出，全部本地完成。</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="ag-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：一切都在浏览器本地完成。</b>头像生成、预览渲染与 PNG 导出全部在当前页面本地进行，不上传到任何服务器，不做任何存储与记录。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">casino</i> 生成</h3>
+                <div class="ag-toolbar">
+                    <button type="button" class="ag-btn ag-btn-primary" id="ag-random"><i class="material-icons">casino</i> 随机生成</button>
+                    <button type="button" class="ag-btn" id="ag-shuffle"><i class="material-icons">refresh</i> 换一组</button>
+                    <span class="ag-seed-label" id="ag-seed-label" aria-live="polite"></span>
+                </div>
+                <div class="ag-seed-row">
+                    <input type="text" id="ag-seed-input" placeholder="粘贴种子或头像描述 JSON，回车还原…" aria-label="种子或头像描述 JSON" spellcheck="false">
+                    <button type="button" class="ag-btn" id="ag-restore"><i class="material-icons">history</i> 从种子/JSON 还原</button>
+                    <button type="button" class="ag-btn" id="ag-copy-json"><i class="material-icons">content_copy</i> 复制头像描述 JSON</button>
+                </div>
+                <textarea class="ag-json-view" id="ag-json-view" rows="3" readonly aria-label="头像描述 JSON"></textarea>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">grid_view</i> 批量预览（点击选中精调）</h3>
+                <div class="ag-grid" id="ag-grid"></div>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">tune</i> 精调图层</h3>
+                <div class="ag-tune">
+                    <div class="ag-main-wrap">
+                        <canvas id="ag-main-canvas" width="256" height="256" aria-label="头像大图预览"></canvas>
+                    </div>
+                    <div>
+                        <div class="ag-layers">
+                            <div class="ag-field">背景<select id="ag-bg" aria-label="背景"></select></div>
+                            <div class="ag-field">肤色<select id="ag-skin" aria-label="肤色"></select></div>
+                            <div class="ag-field">脸型<select id="ag-face" aria-label="脸型"></select></div>
+                            <div class="ag-field">发型<select id="ag-hair" aria-label="发型"></select></div>
+                            <div class="ag-field">发色<select id="ag-hc" aria-label="发色"></select></div>
+                            <div class="ag-field">眼睛<select id="ag-eyes" aria-label="眼睛"></select></div>
+                            <div class="ag-field">眉毛<select id="ag-brows" aria-label="眉毛"></select></div>
+                            <div class="ag-field">嘴巴<select id="ag-mouth" aria-label="嘴巴"></select></div>
+                            <div class="ag-field">配饰<select id="ag-acc" aria-label="配饰"></select></div>
+                        </div>
+                        <div style="margin-top:.9rem;">
+                            <label class="ag-check"><input type="checkbox" id="ag-transparent"> 透明背景（导出 PNG 透明底，不画背景层）</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">ios_share</i> 导出</h3>
+                <div class="ag-export">
+                    <div class="ag-sizes" role="radiogroup" aria-label="导出尺寸">
+                        <span>尺寸</span>
+                        <label><input type="radio" name="ag-size" value="64"> 64px</label>
+                        <label><input type="radio" name="ag-size" value="128"> 128px</label>
+                        <label><input type="radio" name="ag-size" value="256" checked> 256px</label>
+                        <label><input type="radio" name="ag-size" value="512"> 512px</label>
+                    </div>
+                    <button class="btn btn-primary" id="ag-download"><i class="material-icons">download</i> 下载 PNG</button>
+                    <button class="btn btn-primary" id="ag-copy"><i class="material-icons">content_copy</i> 复制 PNG</button>
+                    <span class="ag-status" id="ag-status" aria-live="polite"></span>
+                </div>
+                <div class="ag-note" style="margin-top:.8rem;">
+                    下载文件名为 <b>avatar-&lt;种子&gt;-&lt;尺寸&gt;px.png</b>（如 avatar-20261024-256px.png）；「复制 PNG」依赖浏览器剪贴板图片写入能力（Chromium 系可用），不支持时会提示改用下载。
+                </div>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <ol class="ag-steps">
+                    <li>点「随机生成」得到一张头像，或点「换一组」在 9 宫格里挑一张点击选中。</li>
+                    <li>在「精调图层」里逐层更换背景、肤色、脸型、发型、发色、眼睛、眉毛、嘴巴、配饰，大图实时预览。</li>
+                    <li>需要复现同一张头像时：点「复制头像描述 JSON」保存短描述；之后粘贴到种子输入框点「从种子/JSON 还原」即可精确还原（同一 JSON 渲染像素完全一致）。</li>
+                    <li>勾选「透明背景」可导出透明底 PNG；选择 64/128/256/512 尺寸后点「下载 PNG」或「复制 PNG」。</li>
+                </ol>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="ag-faq">
+                    <dt>头像会上传到服务器吗？</dt>
+                    <dd>不会。生成、渲染与导出全部在浏览器本地完成，本页面不发起任何网络请求，可用 DevTools 的 Network 面板验证。</dd>
+                    <dt>什么是「确定性种子」？</dt>
+                    <dd>每个头像背后是一个数字种子，经 mulberry32 伪随机数发生器映射到各图层变体。同一份短 JSON 描述在任何浏览器渲染出的像素完全一致，适合做社区/游戏的统一风格头像。</dd>
+                    <dt>有哪些图层可以调？</dt>
+                    <dd>背景 8 款（含 2 款渐变）、肤色 6 档、脸型 4 款、发型 8 款、发色 6 档、眼睛 8 款、眉毛 6 款、嘴巴 8 款、配饰 6 款（含无），共 50+ 变体自由组合。</dd>
+                    <dt>导出的 PNG 有多大？</dt>
+                    <dd>64 / 128 / 256 / 512 四档可选，文件名自动带上种子与尺寸（如 <code>avatar-20261024-256px.png</code>），方便归档与去重。</dd>
+                    <dt>「复制 PNG」按钮没反应？</dt>
+                    <dd>复制图片到剪贴板需要浏览器支持 <code>ClipboardItem</code> 图片写入（Chrome / Edge 可用）；Safari / Firefox 等不支持时会给出明确提示，请改用「下载 PNG」。</dd>
+                </dl>
+            </div>
+
+            <div class="ag-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="ag-links">
+                    <a href="/tools/pixel-art-converter"><i class="material-icons">grid_on</i> 图片转像素画</a>
+                    <a href="/tools/img-retro-filter"><i class="material-icons">filter_vintage</i> 图片复古做旧</a>
+                    <a href="/tools/ascii-art-generator"><i class="material-icons">text_fields</i> ASCII 字符画生成器</a>
+                </div>
+            </div>
+
+            <div class="ag-note">
+                <b>引擎说明：</b>图层部件为全自研手写 SVG 路径（零第三方图形库、零 vendor）：每种发型/眼睛/嘴巴等均为参数化路径函数；渲染走 <b>SVG→Image→canvas 二次绘制</b>（预览与导出同一链路，所见即所得），SVG 内无文本、无外部引用，跨浏览器光栅化一致；随机数用 mulberry32，种子↔JSON 双向可还原。
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/avatar_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -778,6 +778,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "avatar_generator",
+					Name:        "头像生成器",
+					Description: "自研 SVG 图层头像引擎：背景/肤色/脸型/发型/眼睛/眉毛/嘴巴/配饰 8 层 50+ 变体自由组合，mulberry32 确定性种子↔短 JSON 描述双向还原，9 宫格批量预览，64/128/256/512 四档 PNG 导出（含透明底），下载/复制 PNG，纯前端零上传 · Deterministic avatar generator: SVG layers, seed-based, export PNG, 100% client-side",
+					Path:        "/tools/avatar-generator",
+					Icon:        "face",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{
