@@ -1,0 +1,143 @@
+{{define "focus_writer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简专注写作 - 标题＋单写作面＋自动保存＋全屏专注，写完复制走人（纯前端）</title>
+    <meta name="description" content="免费在线极简专注写作：标题加一个大写作面，无格式按钮、无工具栏干扰，边写边自动保存到本机浏览器，全屏专注模式只留标题和写作面，写完一键复制全文或下载 .md/.txt，纯前端零上传。Focus writer: distraction-free writing, local autosave, fullscreen, copy & download, 100% client-side.">
+    <meta name="keywords" content="极简写作,专注写作,无干扰写作,在线记事本,草稿写作,focus writer,distraction free writing,本地保存,写作工具,全屏写作">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/focus-writer">
+    <meta property="og:title" content="极简专注写作 - 打开即写，写完复制走人">
+    <meta property="og:description" content="标题加一个大写作面，无工具栏干扰，自动保存到本机浏览器，全屏专注只留标题和写作面，一键复制或下载 .md/.txt，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/focus-writer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"极简专注写作","description":"标题加一个大写作面，无格式按钮、无工具栏干扰，边写边自动保存到本机浏览器，全屏专注模式只留标题和写作面，写完一键复制全文或下载 .md/.txt，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/focus-writer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fw-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .fw-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .fw-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .fw-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .fw-title{width:100%;box-sizing:border-box;padding:.6rem .8rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:1.05rem;font-family:inherit}
+        .fw-body{width:100%;box-sizing:border-box;min-height:420px;padding:.9rem 1rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:1rem;line-height:1.9;font-family:inherit;resize:vertical}
+        .fw-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .fw-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .95rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .fw-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .fw-btn-danger:hover{border-color:#dc2626;color:#dc2626}
+        .fw-save{font-size:.88rem;color:#6b7280}
+        .fw-stats{font-size:.9rem;color:#374151;line-height:1.8;margin-top:.9rem}
+        .fw-exit{display:none}
+        .fw-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        .fw-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .fw-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .fw-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .fw-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .fw-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .fw-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .fw-note b{color:#374151}
+        /* 全屏专注：只留标题＋写作面＋退出按钮，其余面板与导航全部隐藏 */
+        body.fw-fullscreen nav,body.fw-fullscreen .tool-header,body.fw-fullscreen .fw-privacy,body.fw-fullscreen .fw-hide-in-full{display:none!important}
+        body.fw-fullscreen .fw-editor{position:fixed;inset:0;z-index:9990;margin:0;border:none;border-radius:0;max-width:none;padding:1rem;background:#fff;overflow:auto}
+        body.fw-fullscreen .fw-body{min-height:calc(100vh - 190px)}
+        body.fw-fullscreen .fw-fullscreen-btn{display:none!important}
+        body.fw-fullscreen .fw-editor h3,body.fw-fullscreen .fw-meta-row,body.fw-fullscreen #fw-stats{display:none!important}
+        body.fw-fullscreen .fw-exit{display:inline-block!important}
+        @media (max-width:640px){
+            .fw-body{min-height:320px;font-size:.98rem}
+            body.fw-fullscreen .fw-editor{padding:.8rem}
+            body.fw-fullscreen .fw-body{min-height:calc(100vh - 180px)}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">edit_note</i> 极简专注写作</h1>
+            <p>标题加一个大写作面，没有工具栏干扰，写完复制走人</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="fw-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>草稿只存在这台设备的浏览器里：</b>自动保存用的是本机 localStorage，不上传、不云同步；换设备、换浏览器或清缓存后草稿即丢失，重要文章请下载备份。</div>
+            </div>
+            <div class="fw-panel fw-editor">
+                <h3>写作面</h3>
+                <label style="display:block;margin-bottom:.7rem;">标题
+                    <input class="fw-title" id="fw-title" type="text" placeholder="给这篇文章起个标题（可空）" maxlength="200" style="margin-top:.35rem;">
+                </label>
+                <label style="display:block;">正文
+                    <textarea class="fw-body" id="fw-body" placeholder="打开即写：想到什么写什么，没有格式按钮打扰你……" style="margin-top:.35rem;"></textarea>
+                </label>
+                <div class="fw-row fw-meta-row">
+                    <button class="fw-btn fw-fullscreen-btn" id="fw-fullscreen"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">fullscreen</i> 全屏专注</button>
+                    <span class="fw-save" id="fw-save">尚未保存</span>
+                </div>
+                <div class="fw-row">
+                    <button class="fw-btn fw-exit" id="fw-exit-fullscreen"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">fullscreen_exit</i> 退出全屏（Esc 也可退出）</button>
+                </div>
+                <div class="fw-row fw-meta-row">
+                    <label style="font-size:.9rem;color:#374151;"><input type="checkbox" id="fw-stats-toggle"> 显示字数统计（默认关闭，不打扰写作）</label>
+                </div>
+                <div class="fw-stats" id="fw-stats" style="display:none;"><span id="fw-stats-text"></span></div>
+            </div>
+            <div class="fw-panel fw-hide-in-full">
+                <h3>导出</h3>
+                <div class="fw-row" style="margin-top:0;">
+                    <button class="fw-btn" id="fw-copy"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">content_copy</i> 复制全文</button>
+                    <button class="fw-btn" id="fw-download-md"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">download</i> 下载 .md</button>
+                    <button class="fw-btn" id="fw-download-txt"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">download</i> 下载 .txt</button>
+                    <button class="fw-btn fw-btn-danger" id="fw-clear"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">delete</i> 清空草稿</button>
+                </div>
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:.8rem 0 0;">导出内容为标题＋正文原样（.md 的标题行加 # 前缀，.txt 标题行原样）；文件名是 focus-writer-标题-日期.md/.txt，标题里的非法文件名字符会自动清洗。复制被浏览器拒绝时会自动降级，仍失败会明确提示手动全选复制。</p>
+            </div>
+            <div class="fw-panel fw-hide-in-full">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>在标题框写标题，在大写作面写正文；没有格式按钮、没有工具栏，打开即写。</li>
+                    <li>边写边自动保存：输入后约半秒写入本机浏览器，状态区显示「已保存 HH:MM」；刷新页面后标题和正文原样恢复。</li>
+                    <li>点「全屏专注」只留标题、写作面和退出按钮，按 Esc 或点退出按钮返回；小屏下写作面自动收窄，不会撑破页面。</li>
+                    <li>写完点「复制全文」粘贴到别处，或下载 .md/.txt 备份；「清空草稿」会二次确认，确认后本机草稿键清除、页面清空。</li>
+                    <li>字数统计默认关闭：需要时勾选「显示字数统计」，显示字数与字符数；仅统计正文，不含标题。</li>
+                </ol>
+            </div>
+            <div class="fw-panel fw-hide-in-full">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="fw-faq">
+                    <dt>我的文章会上传到服务器吗？</dt>
+                    <dd>不会。标题和正文只存在这台设备浏览器的 localStorage 里，本页面不发起任何网络请求；换设备、换浏览器或清缓存后草稿即丢失，重要文章请下载备份。</dd>
+                    <dt>字数是怎么算的？</dt>
+                    <dd>只统计正文，不含标题。字数按「每个汉字计 1 个字，每个连续英文字母/数字串计 1 个词」计算；字符数是正文字符总数（含空格与标点，不含换行符）。例如「你好 world 123」字数为 4、字符数为 12。</dd>
+                    <dt>全屏专注里怎么退出？</dt>
+                    <dd>点「退出全屏」按钮，或按键盘 Escape（Esc）键；两种方式都会回到正常页面，草稿不受影响。</dd>
+                    <dt>复制按钮没反应怎么办？</dt>
+                    <dd>浏览器拒绝剪贴板权限时会自动降级为选中复制；仍失败会明确提示你手动操作：点进写作面按 Ctrl+A（Mac 为 Cmd+A）全选，再按 Ctrl+C 复制。</dd>
+                    <dt>下载的文件名里的标题乱码/非法字符怎么办？</dt>
+                    <dd>标题里的 / \ : * ? " &lt; &gt; | 等非法文件名字符会自动换成横线，超长标题截断到 50 字；无标题时用 untitled，文件名形如 focus-writer-标题-2026-10-24.md。</dd>
+                </dl>
+            </div>
+            <div class="fw-panel fw-hide-in-full">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="fw-links">
+                    <a href="/tools/markdown-preview"><i class="material-icons">article</i> Markdown 预览</a>
+                    <a href="/tools/text-tools"><i class="material-icons">notes</i> 文本工具集</a>
+                    <a href="/tools/unit-calc-notepad"><i class="material-icons">calculate</i> 单位感知记事本计算器</a>
+                </div>
+            </div>
+            <div class="fw-note fw-hide-in-full">
+                <b>实现说明：</b>自动保存键名固定为 focus_writer_draft_v1，值是标题＋正文＋保存时间戳的 JSON；字数统计、文件名清洗、导出内容组装均为纯函数，node 单元测试全覆盖；本页源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="fw-toast" id="fw-toast"></div>
+    <script src="/tools/static/js/focus_writer.js?v=1"></script>
+</body>
+</html>
+{{end}}

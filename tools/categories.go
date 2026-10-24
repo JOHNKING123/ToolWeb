@@ -480,6 +480,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "focus_writer",
+					Name:        "极简专注写作",
+					Description: "标题加一个大写作面，无格式按钮、无工具栏干扰，边写边自动保存到本机浏览器，全屏专注只留标题和写作面，写完一键复制全文或下载 .md/.txt，纯前端零上传 · Focus writer: distraction-free writing, local autosave, fullscreen, copy & download, 100% client-side",
+					Path:        "/tools/focus-writer",
+					Icon:        "edit_note",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "texttools",
 					Name:        "文本工具集",
 					Description: "字数统计、行去重、排序、大小写转换、全半角、盘古空格",

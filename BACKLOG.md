@@ -1,3 +1,82 @@
+## 今日任务（2026-10-24 19:00 · 产品经理排期轮）
+
+**选定：极简专注写作（focus_writer）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（90 轮）Top3 **首席推荐**（89 轮新晋；90 轮复核仍未交付；17:30 PM 轮选了配色方案生成器后，本轮按「无硬伤不跳过、留池顺位递进」惯例递进生效）。
+- **未选**：文本朗读器（90 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因极简专注写作顺位更老、首席推荐在先而让位；真限制 speechSynthesis 无音频导出可在页面明示，不构成跳过理由）；布尔搜索语句生成器（90 轮新晋 P2，无硬伤，留池顺位递进——同样让位于更老顺位）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，均为中难度，本轮晚间轮优先小难度，故后置）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与上午交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -rniE 'focus_writer|focus-writer|极简专注写作|专注写作'`、`grep -rniE 'text_reader_aloud|text-reader-aloud|文本朗读器|朗读器'`、`grep -rniE 'boolean_search_builder|boolean-search-builder|布尔搜索'` 三路在 templates/static/js/tools/tests 全零命中；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 162 Path。自有近邻辨析：markdown/markdown_preview 为渲染预览、unit_calc_notepad 为算式记事本、url_note_share 为 URL 分享文档，均非「标题＋单写作面＋自动保存＋写完复制走人」的专注写作面，语义不重叠；text_tools（字数统计等）为事后统计工具，不做写作面。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——标题＋textarea 写作面＋localStorage＋复制/下载，零上传零 fetch，完美契合 ToolWeb 纯前端离线标准；② **痛点明确**——写草稿时被 Notion/Word 功能面板分心，想要打开即写、写完复制走人；③ **天然可测**——字数统计、自动保存键名、下载文件名、导出内容往返均可 node 断言；④ **无真限制**——不依赖外部网络/API/浏览器实验特性（localStorage 与下载均为稳定 API），仅需处理隐私边界（见真限制交代）。
+- **品类归位**：注册到「文本工具」品类（与 Markdown 预览同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **localStorage 是本机草稿箱，不是云同步**——页面顶部一句话明示「草稿只存在这台设备的浏览器里，换设备/清缓存即丢失，重要文章请下载备份」，不做任何「云端保存」暗示；② **默认不显示字数干扰**——字数统计默认隐藏、仅在用户点开「字数」开关后显示，守住 Featureless「无干扰」本义；③ **自动保存必须可验证**——保存键名固定（如 `focus_writer_draft_v1`，含标题＋正文＋保存时间戳），刷新后自动恢复，附「上次保存于 HH:MM」提示与「清空草稿」二次确认；④ **零 fetch/XHR**——纯本地渲染与存储，源码自检无外部请求；⑤ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/focus-writer）；⑥ **导出不丢格式**——下载 .md 为标题＋正文原样，下载 .txt 同理，文件名 `focus-writer-<标题或untitled>-<日期>.md/.txt`，标题含非法文件名字符时做清洗。
+
+**规格**（开发轮按此执行）：
+- 输入区：标题输入框（单行）＋单写作面（大 textarea，占据主视觉，无格式按钮、无工具栏）；「全屏专注」按钮（进入后仅留标题＋写作面＋退出按钮，Esc 亦可退出）。
+- 状态区：自动保存提示（「已保存 HH:MM」／「正在保存…」）；字数统计开关（默认关，开启后显示字数＋字符数，不含标题或含标题须在文案中说明，二选一固定）。
+- 导出区：「复制全文」「下载 .md」「下载 .txt」「清空草稿」四个按钮；复制失败有明确降级提示（走 document.execCommand 兜底或提示手动全选复制）。
+- 注册：ID `focus_writer`、Name「极简专注写作」、Path `/tools/focus-writer`、Category 文本工具、Icon 建议 edit_note、New: true；中英文描述＋SEO keywords（极简写作、专注写作、无干扰写作、在线记事本、草稿写作、focus writer、distraction free writing、本地保存）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `focus_writer`、Path `/tools/focus-writer` 注册完整（Category 文本工具），注册总数 162→163 Path。
+2. 自动保存闭环：输入标题＋正文后刷新页面，内容原样恢复；保存提示显示时间；「清空草稿」二次确认后 localStorage 键清除、页面清空。
+3. 全屏专注：进入后仅标题＋写作面＋退出按钮可见，无其他面板；Esc 或退出按钮可返回；小屏不撑破。
+4. 导出可用：复制全文与下载 .md/.txt 均可用，下载文件内容＝标题＋正文原样、文件名含清洗后标题＋日期；不支持复制时有明确降级提示；零 fetch/XHR（源码自检无外部请求）。
+5. 字数统计：开关默认关闭；开启后字数与字符数与手工计数一致（至少抽查中英混排一段）；开关关闭后统计区隐藏。
+6. node 测试 40+ 断言全过（字数/字符统计算法、localStorage 键名与序列化往返、文件名清洗、下载内容组装、模板静态检查）。
+7. 页面无报错；移动端布局不错位；隐私文案（仅本机保存、换设备即失）页面可见。
+
+**预计改动文件**：
+- `templates/focus_writer.html`（新增；含 SEO 面板按家族标准＋标题/写作面/全屏专注/保存提示/导出区 UI）
+- `static/js/focus_writer.js`（新增；自动保存＋恢复、字数统计、复制/下载、文件名清洗；双模式导出供 node 测试）
+- `tests/focus_writer.test.js`（新增；字数统计、键名与往返、文件名清洗、内容组装、模板静态检查）
+- `tools/categories.go`（文本工具品类注册：ID focus_writer、Path /tools/focus-writer、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin 与本地一致，HEAD c4cc34e）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 162 Path；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 markdown/unit_calc_notepad/url_note_share/text_tools 已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 19:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第九十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。配色方案生成器已交付闭环（c4cc34e 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **162 Path**，ID color_palette_generator、Path /tools/color-palette-generator 已注册，开发工具品类；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常，origin 与本地一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 晚间轮，优先小难度纯前端。
+
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. 配色方案生成器交付确认：`git log` 头部 c4cc34e（2026-10-24 晚间开发轮交付；17:30 PM 轮选定任务交付闭环）；全量 162 Path；templates/color_palette_generator.html＋static/js/color_palette_generator.js＋tests/color_palette_generator.test.js＋tools/categories.go 注册均存在；本地当前分支 muse/dev-20260929；origin 与本地一致；候选池划出。极简专注写作与文本朗读器复核仍未交付（`ls templates/ | grep -iE 'focus|text_reader'` 零命中，`grep -c 'focus_writer|text_reader_aloud' tools/categories.go` = 0）。
+2. 新信号扫描：
+   - **Medium「7 Free Browser Tools Worth Bookmarking This October」（10 月新工具榜）**：SyncWhen（免注册会议时间投票）→ 自有 P3 观察项 meeting_time_poll 同形态，需 Go 后端＋持久化，低优先不立；SortaSeat（婚宴座位表）→ **自有实锤消解**：wedding_seating_chart（婚宴座位表生成器）已注册实现；OldRoll（复古胶片滤镜）→ **自有实锤消解**：img_retro_filter（图片复古做旧）已覆盖；StitchCraft（照片转十字绣）→ **自有实锤消解**：cross-stitch-pattern（照片转十字绣图案生成器）已覆盖；urPiano（浏览器钢琴）→ 在线钢琴方向边界观察（88 轮前已记，niche 娱乐向，不立）；Calcy（带单位/范围的草稿计算）→ **自有实锤消解**：unit_calc_notepad（单位感知记事本计算器：行间变量、范围汇总）已覆盖核心形态；llmspeed（本地 LLM 跑分选硬件）→ 自有「本地 LLM 硬件检测器」近似形态，残余跑分模型需实测数据支撑，观察不立；
+   - **dev.to 近期工具站重扫（Blanza 14 tools / DevTrove 22 tools / Velnox 51 tools / Prestofiles / Tooleek / SiteIndex / Uwarp 500+）**：JSON Schema→json_schema_validator 自有；JWT 编解码/签发→jwt＋jwt_signer_verifier 自有；cURL→Python→curl_to_requests 自有；SERP 片段预览→serp_snippet_preview 自有；字数/大小写/文本工具集→自有文本工具集；JSON 语义对比→json_semantic_diff 自有；网站评分审计（外站抓取）→ 需外部 fetch＋CORS，低优先，且粘贴 HTML 本地打分已有着陆页评分检查器覆盖无 fetch 形态，不立；**Uwarp MP3 Cover Adder（浏览器内 MP3 封面＋ID3 标签编辑）→ 新缺口**：自有音频三件套（audio_trimmer 裁剪／audio_merger 合并／slowed+reverb 变速混响）只做波形与编码，`grep -iE 'id3|音频标签|专辑信息' tools/categories.go` 零命中，**新晋 P2「MP3 标签编辑器」**（建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor）：本地读 MP3 的 ID3v2（标题/艺术家/专辑/年份/流派/封面图）＋改写回写＋多文件批量，纯前端中难度（ID3 二进制解析/回写需自研，禁 vendor 依赖，须防标签损坏原文件、导出为新文件不覆盖原文件）；Uwarp GIF→Live Photo（.mov 编码）→ 移动端格式 niche＋编码成本，观察不立；
+   - **HN Show HN: local-first Boolean search builder（招聘布尔搜索构建器，无后端纯前端）**→ 仓库**全路零命中**（`grep -iE 'boolean|布尔搜索' tools/categories.go` 零命中；community_search_router 只是关键词路由跳转，不做语句构建），**新晋 P2「布尔搜索语句生成器」**（建议 ID boolean_search_builder、Path /tools/boolean-search-builder）：可视化分组（AND/OR/NOT 括号嵌套）＋字段限定（site:/intitle:/filetype:/after: 等）＋引号精确短语＋一键生成可复制查询串＋常用模板（招聘寻访/学术检索/求职搜岗三组预设），纯前端小难度，零上传；痛点：招聘 HR/求职者/研究者手写布尔式常错括号与引号，搜 LinkedIn/Google/站内时反复试错；
+   - **HN Bigwords.page（URL 即大字标牌：消息放 # fragment，分享链接即标牌）**→ **自有实锤消解**：big_sign_display（大字标牌展示器）已覆盖全屏大字形态；残余新颖点（URL fragment 编码标牌内容、链接可分享可收藏）记 big_sign_display **优化项**，不单独立项；
+   - **FormatStudio 创作者工具榜（Hashtag 生成器／各平台字数上限条）**：Hashtag 生成器无 AI/无后端只能拼 canned 词表，价值弱，观察不立；各平台字数上限条（X 280/IG 2200/LinkedIn 3000）→ 自有文本工具集（字数统计）优化项，不单独立项；
+   - **方向边界再确认**：Camp Power Calc（露营用电）、Room Paint Calc（刷漆用量）等生活计算器形态，按 2026-10-18 方向修正明确不立，不入池。
+3. 候选池变动：配色方案生成器已交付划出（c4cc34e，162 Path）；**新晋 P2 3 个**（布尔搜索语句生成器：HN Show HN 本地优先形态验证，纯前端小难度，零命中实锤；色盲模拟检查器：见下，纯前端中难度，零命中实锤；MP3 标签编辑器：Uwarp ID3 形态验证，纯前端中难度，零命中实锤，附不覆盖原文件真限制）；自有实锤消解 6 项（SortaSeat／OldRoll／StitchCraft／Calcy／Blanza-DevTrove-Velnox-Prestofiles-Tooleek-SiteIndex 全量／Bigwords）；优化项 2 条（big_sign_display：URL fragment 分享标牌；文本工具集：各平台字数上限条）；niche/需后端/方向边界不立或观察 5 项（会议投票→需后端 P3 观察；在线钢琴→娱乐 niche 观察；GIF→Live Photo→编码 niche 观察；Hashtag 生成器→无 AI 价值弱观察；露营/刷漆等生活计算器→方向边界不立；llmspeed→需实测数据观察）；全量 162 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；19:00 晚间轮优先小难度纯前端）：
+
+1. **极简专注写作** — P2 留池顺位递进（89 轮新晋；90 轮复核仍未交付；HN Show HN Featureless 形态验证：标题＋单写作面＋自动保存、无格式按钮、无字数干扰；痛点：写草稿时被 Notion/Word 功能面板分心，想要打开即写、写完复制走人的页面；纯前端小难度：标题＋写作面＋localStorage 自动保存＋全屏专注＋一键复制/下载 .md/.txt，零上传；零命中实锤；建议 ID focus_writer、Path /tools/focus-writer）。
+2. **文本朗读器** — P2 留池顺位递进（89 轮新晋；90 轮复核仍未交付；dev.to 28 写作工具 Text to Speech 形态验证：浏览器 speechSynthesis 本地发声、语速/音调可调、逐句高亮；痛点：校对长文眼睛漏错、听一遍最易发现语病，不想装 App/不想上传文本到 TTS 站；纯前端小难度：粘贴文本→朗读＋语速/音调＋当前句高亮＋暂停/继续，零上传；零命中实锤（realtime_dictation 为反向）；建议 ID text_reader_aloud、Path /tools/text-reader-aloud；真限制：speechSynthesis 无音频导出，须明示）。
+3. **布尔搜索语句生成器** — 新晋 P2（本轮；HN Show HN local-first Boolean builder 形态验证：可视化分组＋字段限定＋引号短语；痛点：手写布尔式常错括号/引号，招聘寻访与学术/求职检索反复试错；纯前端小难度：分组编辑器＋字段限定＋三组常用模板＋一键复制查询串，零上传；零命中实锤（community_search_router 仅路由跳转、不构建语句）；建议 ID boolean_search_builder、Path /tools/boolean-search-builder）。
+
+其余 P2 留池：色盲模拟检查器（本轮新晋；建议 ID color_blind_simulator、Path /tools/color-blind-simulator：上传图片或输入色板→protanopia/deuteranopia/tritanopia/achromatopsia 四种模拟＋原图并排对比＋色板无障碍提示，与刚交付的配色方案生成器成套，纯前端中难度：SVG feColorMatrix／Canvas 像素矩阵变换，零上传）；MP3 标签编辑器（本轮新晋；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件）；截图美化器（通用）（88 轮新晋；防串味延后，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；CSP 安全头生成器（84 轮新晋；建议 ID csp_builder、Path /tools/csp-builder）；一键人脸模糊（64 轮新晋，88 轮 HN BlurFaces 二次验证补强；模型 vendor 风险）；浏览器录屏工具（84 轮新晋；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；联系信息提取器（64 轮新晋）；壁纸生成器/词云生成器（87 轮 P2 观察）；CSS Sprite 雪碧图生成器（83 轮新晋，niche）；SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）；USB 设备识别器/摄像头签名数字化/和弦探索器（88 轮观察，niche）；英文写作风格检查/滚动字幕生成器（89 轮观察）；Hashtag 生成器/GIF→Live Photo/llmspeed 跑分（本轮新晋观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第九十轮：配色方案生成器已交付划出（c4cc34e 新增；ID color_palette_generator、Path /tools/color-palette-generator 已注册，开发工具品类；全量 162 Path；候选池划出）；**新晋 P2 3 个：布尔搜索语句生成器**（HN Show HN local-first 形态验证；可视化分组＋字段限定＋三组模板＋一键复制，纯前端小难度零上传；零命中实锤；建议 ID boolean_search_builder、Path /tools/boolean-search-builder）、**色盲模拟检查器**（图片/色板→四种色盲模拟并排对比＋无障碍提示，与配色方案生成器成套，纯前端中难度零上传；零命中实锤；建议 ID color_blind_simulator、Path /tools/color-blind-simulator）、**MP3 标签编辑器**（Uwarp ID3 形态验证；ID3v2 读改写＋封面＋批量，纯前端中难度零上传；零命中实锤；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件不覆盖原文件）；自有实锤消解 6 项（SortaSeat→wedding_seating_chart；OldRoll→img_retro_filter；StitchCraft→cross-stitch-pattern；Calcy→unit_calc_notepad；Blanza/DevTrove/Velnox/Prestofiles/Tooleek/SiteIndex→json_schema_validator/jwt_signer_verifier/curl_to_requests/serp_snippet_preview/json_semantic_diff/文本工具集；Bigwords→big_sign_display）；优化项 2 条（big_sign_display：URL fragment 分享标牌；文本工具集：各平台字数上限条）；niche/需后端/方向边界不立或观察 5 项（会议投票→需后端 P3；在线钢琴→娱乐 niche；GIF→Live Photo→编码 niche；Hashtag→无 AI 价值弱；露营/刷漆生活计算器→方向边界不立；llmspeed→需实测数据）；全量 162 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 配色方案生成器 | 已交付划出（c4cc34e 新增；ID color_palette_generator、Path /tools/color-palette-generator 已注册，开发工具品类；全量 162 Path；候选池划出） | — | 已实现 |
+| 布尔搜索语句生成器 | 新晋 P2（90 轮；HN Show HN local-first Boolean builder 形态验证；痛点：手写布尔式常错括号/引号，招聘寻访与学术/求职检索反复试错；可视化分组＋字段限定＋三组模板＋一键复制，纯前端小难度零上传；零命中实锤；建议 ID boolean_search_builder、Path /tools/boolean-search-builder） | 小 | P2（90 轮新晋） |
+| 色盲模拟检查器 | 新晋 P2（90 轮；设计师/开发者验 UI 配色对色盲用户是否可读；图片或色板→protanopia/deuteranopia/tritanopia/achromatopsia 四种模拟并排对比＋无障碍提示，与配色方案生成器成套；SVG feColorMatrix／Canvas 像素矩阵变换，纯前端中难度零上传；零命中实锤；建议 ID color_blind_simulator、Path /tools/color-blind-simulator） | 中 | P2（90 轮新晋） |
+| MP3 标签编辑器 | 新晋 P2（90 轮；Uwarp MP3 Cover Adder 形态验证；痛点：本地 MP3 标题/艺术家/专辑/封面错乱，想不装软件不上传改标签；ID3v2 读改写＋封面＋批量，纯前端中难度零上传；零命中实锤（自有音频三件套只做波形编码）；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件） | 中 | P2（90 轮新晋） |
+| 自有实锤消解 | 不立（SortaSeat→wedding_seating_chart 已注册实现；OldRoll→img_retro_filter；StitchCraft→cross-stitch-pattern；Calcy→unit_calc_notepad；Blanza/DevTrove/Velnox/Prestofiles/Tooleek/SiteIndex→json_schema_validator/jwt_signer_verifier/curl_to_requests/serp_snippet_preview/json_semantic_diff/文本工具集全自有；Bigwords→big_sign_display） | — | 不立 |
+| 优化项 | big_sign_display：URL fragment 编码标牌内容、链接可分享可收藏（Bigwords 形态）；文本工具集：各平台字数上限条（X 280/IG 2200/LinkedIn 3000） | — | 优化项 |
+| niche/需后端/方向边界 | 不立或观察（会议投票→需 Go 后端＋持久化 P3 观察；在线钢琴→娱乐 niche 观察；GIF→Live Photo→编码 niche 观察；Hashtag 生成器→无 AI 只能拼 canned 词表观察；露营用电/刷漆用量等生活计算器→方向边界不立；llmspeed→需实测数据观察） | — | 不立/观察 |
+
+**归档说明**：本轮为 10-24 通用调研第九十轮——配色方案生成器交付闭环（c4cc34e，`/tools/color-palette-generator` 已注册，开发工具品类，全量 162 Path），候选池划出；**新晋 P2 3 个**（布尔搜索语句生成器：HN Show HN 形态验证，纯前端小难度，零命中实锤；色盲模拟检查器：与配色方案生成器成套，纯前端中难度，零命中实锤；MP3 标签编辑器：Uwarp ID3 形态验证，纯前端中难度，零命中实锤，附不覆盖原文件真限制）；6 项自有实锤消解（SortaSeat／OldRoll／StitchCraft／Calcy／工具站全量／Bigwords）；2 条优化项；5 项 niche/需后端/方向边界不立或观察；WPS 候选表保持冻结归档；仓库 162 注册工具全量核对无重叠（Top3 建议 ID focus_writer / text_reader_aloud / boolean_search_builder；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地 c4cc34e 一致）；`git log` 头部 c4cc34e（color_palette_generator 交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **162**；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 17:30 · 产品经理排期轮）
 
 **选定：配色方案生成器（color_palette_generator）** — 本轮唯一任务（新工具）：
