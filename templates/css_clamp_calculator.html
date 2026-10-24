@@ -1,0 +1,191 @@
+{{define "css_clamp_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS clamp 流体尺寸计算器 - 双视口双尺寸算 vw 系数与截距，px/rem 两条公式一键复制（纯前端）</title>
+    <meta name="description" content="免费在线 CSS clamp 流体尺寸计算器：填最小/最大视口与最小/最大尺寸，自动算斜率 vw 系数与截距，输出 px 版与 rem 版两条 clamp() 公式，8 组常用预设一键载入，320/375/768/1024/1440 断点取值表，实时预览随视口缩放，纯前端零上传。CSS clamp calculator: fluid typography, vw slope, intercept, px/rem clamp formulas, presets, breakpoint table, live preview, 100% client-side.">
+    <meta name="keywords" content="CSS clamp,流体尺寸,clamp 计算器,响应式字号,fluid typography,vw 系数,断点,clamp 公式,px rem 换算,响应式排版">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-clamp-calculator">
+    <meta property="og:title" content="CSS clamp 流体尺寸计算器 - 双视口双尺寸，px/rem 两条公式一键复制">
+    <meta property="og:description" content="填两组视口与尺寸，自动算斜率 vw 系数与截距，输出 px 版与 rem 版 clamp() 公式，8 组预设、断点取值表、实时预览；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-clamp-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS clamp 流体尺寸计算器","description":"填最小/最大视口与最小/最大尺寸，自动算斜率 vw 系数与截距，输出 px 版与 rem 版两条 clamp() 公式，8 组常用预设一键载入，320/375/768/1024/1440 断点取值表，实时预览随视口缩放，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/css-clamp-calculator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ccc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ccc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ccc-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .ccc-warn b{display:block;margin-bottom:.2rem}
+        .ccc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ccc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .ccc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
+        .ccc-field label{display:block;font-size:.88rem;color:#374151;margin-bottom:.3rem}
+        .ccc-input{width:100%;min-width:0;padding:.5rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:inherit;font-size:.92rem;box-sizing:border-box}
+        .ccc-select{width:100%;padding:.5rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:inherit;font-size:.88rem;background:#fff;box-sizing:border-box}
+        .ccc-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem}
+        .ccc-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.45rem .8rem;font-size:.85rem;cursor:pointer;font-family:inherit}
+        .ccc-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ccc-btn:disabled{opacity:.5;cursor:not-allowed}
+        .ccc-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .ccc-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-bottom:.9rem}
+        .ccc-formula{overflow-x:auto;white-space:nowrap;background:#111827;color:#e5e7eb;border-radius:.6rem;padding:.9rem 1rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;line-height:1.7}
+        .ccc-mid{font-size:.95rem;color:#111827;line-height:1.9}
+        .ccc-mid b{color:#111827}
+        .ccc-table{width:100%;border-collapse:collapse;font-size:.92rem;color:#374151}
+        .ccc-table th,.ccc-table td{border:1px solid #e5e7eb;padding:.55rem .7rem;text-align:left}
+        .ccc-table th{background:#f9fafb;color:#111827}
+        .ccc-table-wrap{overflow-x:auto}
+        .ccc-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .ccc-preview-box{border:1px dashed #d1d5db;border-radius:.6rem;padding:1rem;overflow-x:auto;background:#f9fafb}
+        .ccc-preview-bar{height:18px;background:#3b82f6;border-radius:4px;max-width:100%}
+        .ccc-slider{width:100%}
+        .ccc-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        .ccc-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .ccc-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .ccc-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .ccc-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .ccc-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ccc-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .ccc-note b{color:#374151}
+        @media (max-width:640px){
+            .ccc-grid{grid-template-columns:1fr}
+            .ccc-formula{font-size:.88rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">format_size</i> CSS clamp 流体尺寸计算器</h1>
+            <p>双视口＋双尺寸 → 斜率 vw 系数与截距，px 版与 rem 版两条 clamp() 公式一次算清</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ccc-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>全部计算都在本机完成，本页面不发起任何网络请求、不上传任何输入（零 fetch / XHR）。</div>
+            </div>
+            <div class="ccc-warn">
+                <b>三句真限制，请先看清再用：</b>
+                <p style="margin:0;">1. 公式只在两断点间线性插值，断点外钳制：小于最小视口取最小值，大于最大视口取最大值，不按斜率继续延伸。</p>
+                <p style="margin:0;">2. rem 换算依赖根字号：默认 1rem = 16px，根字号可调，换算结果随之变化。</p>
+                <p style="margin:0;">3. 不同浏览器 vw 是否含滚动条宽度有差异，极端窄屏下以实时预览为准，不承诺与所有浏览器像素级一致。</p>
+            </div>
+            <div class="ccc-panel">
+                <h3>8 组常用预设（一键载入，可再编辑）</h3>
+                <div class="ccc-row">
+                    <button class="ccc-btn" type="button" data-preset="0">H1 标题</button>
+                    <button class="ccc-btn" type="button" data-preset="1">H2 标题</button>
+                    <button class="ccc-btn" type="button" data-preset="2">正文</button>
+                    <button class="ccc-btn" type="button" data-preset="3">按钮内边距</button>
+                    <button class="ccc-btn" type="button" data-preset="4">区块间距</button>
+                    <button class="ccc-btn" type="button" data-preset="5">卡片间距</button>
+                    <button class="ccc-btn" type="button" data-preset="6">容器最大宽度</button>
+                    <button class="ccc-btn" type="button" data-preset="7">段落行高</button>
+                </div>
+                <p class="ccc-hint">预设仅为示例起点，请按需改写：载入后仍可自由改视口、尺寸与单位，公式与取值表会实时重算。预设数值：H1 标题 28→56px、H2 标题 24→40px、正文 16→18px、按钮内边距 12→16px、区块间距 24→64px、卡片间距 16→32px、容器最大宽度 320→1200px、段落行高 24→32px（视口区间见载入后的输入框）。</p>
+            </div>
+            <div class="ccc-panel">
+                <h3>输入</h3>
+                <div class="ccc-errors" id="ccc-errors"></div>
+                <div class="ccc-grid">
+                    <div class="ccc-field"><label for="ccc-min-vp">最小视口（px）</label><input class="ccc-input" id="ccc-min-vp" type="number" min="1" step="1" value="320"></div>
+                    <div class="ccc-field"><label for="ccc-max-vp">最大视口（px）</label><input class="ccc-input" id="ccc-max-vp" type="number" min="1" step="1" value="1440"></div>
+                    <div class="ccc-field"><label for="ccc-min-size">最小尺寸</label><input class="ccc-input" id="ccc-min-size" type="number" min="0" step="any" value="16"></div>
+                    <div class="ccc-field"><label for="ccc-max-size">最大尺寸</label><input class="ccc-input" id="ccc-max-size" type="number" min="0" step="any" value="24"></div>
+                    <div class="ccc-field"><label for="ccc-unit">尺寸单位</label>
+                        <select class="ccc-select" id="ccc-unit"><option value="px">px</option><option value="rem">rem</option></select>
+                    </div>
+                    <div class="ccc-field"><label for="ccc-root">根字号（px，1rem = ?px，默认 16）</label><input class="ccc-input" id="ccc-root" type="number" min="1" step="any" value="16"></div>
+                </div>
+                <p class="ccc-hint">校验规则：最大视口须大于最小视口，最大尺寸须大于最小尺寸；非法输入会明确提示，且不输出畸形公式。公式：斜率 vw 系数 = (最大尺寸 − 最小尺寸) / (最大视口 − 最小视口) × 100；截距 = 最小尺寸 − 斜率 × 最小视口 / 100。</p>
+            </div>
+            <div class="ccc-panel">
+                <h3>中间值与公式输出</h3>
+                <p class="ccc-mid">斜率 vw 系数：<b id="ccc-slope">—</b><br>截距：<b id="ccc-intercept">—</b></p>
+                <p style="font-size:.9rem;color:#374151;margin:.6rem 0 .3rem;">px 版</p>
+                <div class="ccc-formula" id="ccc-out-px">（请先输入合法数值）</div>
+                <p style="font-size:.9rem;color:#374151;margin:.6rem 0 .3rem;">rem 版（按当前根字号换算）</p>
+                <div class="ccc-formula" id="ccc-out-rem">（请先输入合法数值）</div>
+                <div class="ccc-row" style="margin-top:.9rem;">
+                    <button class="ccc-btn ccc-btn-primary" type="button" id="ccc-copy">一键复制两条公式</button>
+                </div>
+                <p class="ccc-hint">复制内容为 px 版与 rem 版两条公式（各一行）；复制失败时会有明确降级提示，请手动选中输出区的公式复制。建议配合 CSS 变量使用，例如 :root { --fluid: clamp(...); }，在代码中引用变量而非到处粘贴公式。</p>
+            </div>
+            <div class="ccc-panel">
+                <h3>断点取值表</h3>
+                <div class="ccc-table-wrap">
+                    <table class="ccc-table">
+                        <thead><tr><th>视口</th><th>取值（px）</th><th>取值（rem）</th><th>状态</th></tr></thead>
+                        <tbody id="ccc-table-body"></tbody>
+                    </table>
+                </div>
+                <p class="ccc-hint">断点外钳制为最小值/最大值：小于最小视口的行标注「钳制为最小值」，大于最大视口的行标注「钳制为最大值」，区间内的行按线性插值计算，与上方公式一致。</p>
+            </div>
+            <div class="ccc-panel">
+                <h3>实时预览</h3>
+                <div class="ccc-row">
+                    <label style="font-size:.9rem;color:#374151;flex:1 1 200px;">视口滑杆（320–1440px）：<input class="ccc-slider" id="ccc-slider" type="range" min="320" max="1440" step="1" value="768"></label>
+                    <span style="font-size:.9rem;color:#111827;">当前视口：<b id="ccc-slider-val">768px</b></span>
+                    <button class="ccc-btn" type="button" id="ccc-use-window">使用当前窗口宽度</button>
+                </div>
+                <p style="font-size:.95rem;color:#111827;">当前值：<b id="ccc-preview-val">—</b></p>
+                <div class="ccc-preview-box">
+                    <div id="ccc-preview-title" style="font-weight:700;line-height:1.3;">流体尺寸预览标题</div>
+                    <p style="color:#374151;line-height:1.8;margin:.6rem 0;">这段示例正文与上方标题随视口滑杆缩放：标题字号即当前计算值，下方色条宽度也是当前计算值（px），直观看到两端钳制与中间插值。</p>
+                    <div id="ccc-preview-bar" class="ccc-preview-bar"></div>
+                </div>
+                <p class="ccc-hint">滑杆拖到两端之外的值会被钳制：预览值在最小视口以下恒为最小值、在最大视口以上恒为最大值，与取值表两端标注一致。</p>
+            </div>
+            <div class="ccc-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>填最小/最大视口（px）与最小/最大尺寸：尺寸单位可在 px 与 rem 间切换，rem 输入会先按根字号换算为 px 再计算。</li>
+                    <li>看中间值复算：斜率与截距直接展示，可拿计算器手工验算；公式区同时给出 px 版与 rem 版两条 clamp()。</li>
+                    <li>点预设一键载入常用尺寸，载入后仍可改任意输入，公式、取值表与预览实时重算；预设仅为示例起点，请按需改写。</li>
+                    <li>断点取值表按 320/375/768/1024/1440 列出各视口取值，两端钳制行有明确标注。</li>
+                    <li>拖视口滑杆或点「使用当前窗口宽度」看实时预览：当前视口与当前值始终可见，两端钳制行为一目了然。</li>
+                    <li>点「一键复制两条公式」把 px 版与 rem 版一起复制进剪贴板；复制失败时按降级提示手动选中复制。</li>
+                </ol>
+            </div>
+            <div class="ccc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="ccc-faq">
+                    <dt>clamp() 里的三个值分别是什么意思？</dt>
+                    <dd>clamp(最小值, 首选值, 最大值)：浏览器先算首选值（截距 + 斜率vw），再钳制到最小值与最大值之间；小于最小视口时取最小值，大于最大视口时取最大值。</dd>
+                    <dt>斜率与截距是怎么算出来的？</dt>
+                    <dd>斜率 vw 系数 = (最大尺寸 − 最小尺寸) / (最大视口 − 最小视口) × 100；截距 = 最小尺寸 − 斜率 × 最小视口 / 100；两者都在输出区上方展示，可手工复算。</dd>
+                    <dt>rem 版与 px 版有什么区别？</dt>
+                    <dd>数值等价，只是单位不同：rem 版把 px 值除以根字号（默认 16px）换算；改根字号后 rem 版随之变化，px 版不变。</dd>
+                    <dt>为什么断点外不再继续变大/变小？</dt>
+                    <dd>因为 clamp() 本身会钳制：这正是流体尺寸的设计——只在两断点间线性插值，断点外固定为最小值或最大值，不按斜率无限延伸。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求；复制也只写本地剪贴板。</dd>
+                </dl>
+            </div>
+            <div class="ccc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="ccc-links">
+                    <a href="/tools/css-gradient-generator"><i class="material-icons">gradient</i> CSS 渐变生成器</a>
+                    <a href="/tools/css-to-tailwind"><i class="material-icons">code</i> CSS 转 Tailwind 转换器</a>
+                </div>
+            </div>
+            <div class="ccc-note">
+                <b>实现说明：</b>斜率／截距／钳制取值为纯函数（px/rem 换算、断点取值、边界钳制、非法输入校验），双模式导出供 node 单元测试；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="ccc-toast" id="ccc-toast"></div>
+    <script src="/tools/static/js/css_clamp_calculator.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,81 @@
+## 今日任务（2026-10-25 01:00 · 产品经理排期轮）
+
+**选定：CSS clamp 流体尺寸计算器（css_clamp_calculator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（93 轮）Top3 **首席推荐**（91 轮新晋；92／93 轮复核仍未交付；10-24 23:00 PM 轮选了布尔搜索语句生成器后，本轮按「无硬伤不跳过、留池顺位递进」惯例递进生效——布尔搜索语句生成器已交付划出（96f7893，165 Path），CSS clamp 是 Top3 中顺位最老且无硬伤的一项）。
+- **未选**：URL 解析器（93 轮新晋 P2，Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位比 CSS clamp 年轻两轮而让位，下轮优先递进）；信封打印助手（92 轮新晋 P2，Top3 第三顺位，无硬伤，留池顺位递进——同样让位于更老顺位；真限制打印机边距与进纸方向不一可在页面明示先打测试页，不构成跳过理由）；摩斯码翻译器（91 轮新晋 P2，纯前端小难度，无硬伤，留池顺位递进；注意与 CSS clamp 同为 91 轮新晋，但研究轮 Top3 明确把 CSS clamp 列为首席、摩斯码列为 Top3 之后，本轮从 Top3 顺序递进）；滚动字幕生成器（92 轮由 89 轮观察晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，均为中难度，本轮深夜轮优先小难度，故后置）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'css_clamp|url_parser|envelope_printer' tools/categories.go` = 0；templates/ 无 clamp／url_parser／envelope 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **165 Path**；`git log` 头部 96f7893（布尔搜索语句生成器新增）。自有近邻辨析：CSS 渐变生成器（css_gradient_generator）做渐变色标、CSS 转 Tailwind 转换器（css_to_tailwind）做声明映射、颜色转换器做色值换算，均不做「双视口＋双尺寸→clamp() 公式」计算，语义不重叠；URL 编码器（url-codec）仅做编解码、URL 追踪参数清除器仅清追踪参数，与本轮未选的 URL 解析器亦不重叠（与本工具无关，仅作 Top3 复核旁证）。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——斜率／截距纯函数＋取值表＋实时预览，零上传零 fetch，契合 ToolWeb 纯前端离线标准；② **痛点明确**——手写 clamp 公式常算错 vw 系数，改一处断点全页重算；③ **天然可测**——斜率、截距、px／rem 换算、断点取值、边界钳制均可 node 断言，手工可复算；④ **无硬伤**——线性插值只在两断点间成立、rem 依赖根字号，均属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「开发工具」品类（与 CSS 渐变生成器、CSS 转 Tailwind 转换器同品类、便于互链）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只在两断点间线性插值**——断点外由 min／max 钳制，页面明示「小于最小视口取最小值、大于最大视口取最大值」，不承诺断点外仍按斜率延伸；② **rem 换算依赖根字号**——默认 1rem = 16px，用户可改根字号，换算结果随之变，页面注明默认值与可调项；③ **vw 含滚动条口径差异**——不同浏览器 vw 是否含滚动条宽度有差异，极端窄屏下以实时预览为准，不承诺与所有浏览器像素级一致；④ **文本不出浏览器**——全部计算在本地完成，零 fetch／XHR，隐私文案页面可见；⑤ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/css-clamp-calculator）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：最小视口／最大视口（px）、最小尺寸／最大尺寸（px，可切换 px／rem 输入），根字号（默认 16px，可调）；输入校验：最大视口须大于最小视口、最大尺寸须大于最小尺寸，否则给出明确错误提示、不输出畸形公式。
+- 公式计算（纯函数，双模式导出供 node 测试）：斜率 vw 系数 = (maxSize − minSize) / (maxViewport − minViewport) × 100；截距 = minSize − 斜率 × minViewport / 100（即 clamp(min, 截距 + 斜率vw, max)）；输出 px 版与 rem 版两条 clamp()（rem 版按根字号换算，保留合理小数位、去尾零），并同时展示斜率、截距中间值，方便用户手工复算。
+- 8 组常用预设（一键载入，可再编辑）：H1 标题、H2 标题、正文、按钮内边距、区块间距、卡片间距、容器最大宽度、行高／字距类尺寸各至少一组示例，预设名＋数值可见，文案注明「请按需改写」。
+- 断点取值表：按 320／375／768／1024／1440 等常用视口列出公式在该视口的计算值，并标注「断点外钳制为 min／max」，让用户一眼看到两端行为。
+- 实时预览：一段示例标题＋正文随视口滑杆（或当前窗口宽度）缩放，预览区展示当前视口与当前计算值；「一键复制」按钮（复制 px 版与 rem 版两条公式，复制失败有明确降级提示）；「在代码中引用」提示文案（建议配合 CSS 变量使用，非强制）。
+- 注册：ID `css_clamp_calculator`、Name「CSS clamp 流体尺寸计算器」、Path `/tools/css-clamp-calculator`、Category 开发工具、Icon 建议 format_size、New: true；中英文描述＋SEO keywords（CSS clamp、流体尺寸、clamp 计算器、响应式字号、fluid typography、vw 系数、断点）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 CSS 渐变生成器与 CSS 转 Tailwind 转换器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_clamp_calculator`、Path `/tools/css-clamp-calculator` 注册完整（Category 开发工具），注册总数 165→166 Path。
+2. 公式正确：至少三组手工复算用例（整数视口、含小数斜率、rem 换算）斜率、截距、clamp() 输出与手工推导一致；断点外取值被钳制为 min／max；非法输入（最大视口≤最小视口、最大尺寸≤最小尺寸）有明确提示、不输出畸形公式。
+3. 预设闭环：8 组预设一键载入后输入区与输出区均有内容、且载入后可编辑再计算；「请按需改写」提示可见。
+4. 取值表与预览：断点取值表数值与公式一致（含两端钳制标注）；预览文字随滑杆／窗口宽度变化，当前视口与当前值可见。
+5. 复制：复制按钮可用（失败有降级提示），复制内容含 px 版与 rem 版两条公式。
+6. 真限制可见：页面可见「只在两断点间线性插值、断点外钳制」与「rem 换算依赖根字号（默认 16px）」与「文本不出浏览器」三句文案；零 fetch／XHR（源码自检无外部请求）。
+7. node 测试 40+ 断言全过（斜率／截距、px／rem 换算、断点取值、边界钳制、非法输入、预设静态检查）。
+8. 页面无报错；移动端布局不错位；长公式小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/css_clamp_calculator.html`（新增；含 SEO 面板按家族标准＋双视口／双尺寸输入／预设／取值表／实时预览 UI）
+- `static/js/css_clamp_calculator.js`（新增；斜率／截距纯函数＋预设载入＋复制；双模式导出供 node 测试）
+- `tests/css_clamp_calculator.test.js`（新增；公式、换算、取值、钳制、非法输入、预设静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_clamp_calculator、Path /tools/css-clamp-calculator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常——此前研究轮记录的 Host key 报错未复现，known_hosts 已含 github.com）；`git log` 头部 96f7893（布尔搜索语句生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **165**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 css_gradient／css_to_tailwind／color_converter 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发／评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 01:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。布尔搜索语句生成器已交付闭环（96f7893 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **165 Path**，ID boolean_search_builder、Path /tools/boolean-search-builder 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 深夜轮，优先小难度纯前端。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 布尔搜索语句生成器交付确认：`git log` 头部 96f7893（新增）；全量 165 Path；templates/boolean_search_builder.html＋static/js/boolean_search_builder.js＋tests/boolean_search_builder.test.js＋tools/categories.go 注册均存在；本地当前分支 muse/dev-20260929；CSS clamp／摩斯码／信封打印／滚动字幕复核仍未交付（`grep -c 'css_clamp|morse_code|envelope_printer|scrolling_text' tools/categories.go` = 0；templates/ 无 clamp/morse/envelope/scrolling 文件）。注意：本轮 `git fetch` 报错 Host key verification failed（未改动任何远程状态；本地分支与 HEAD 可用，疑为 VM 换机 known_hosts 旧症，交 PM/开发轮复核，勿因此动 master 或 force-push）。
+2. 新信号扫描：
+   - **2026 开发者工具榜重扫（KovaCore 12 款／dev.to 13 款／DevToolKit／Toolbox 对比）**：JSON／JWT／Base64／UUID／URL 编码／CSV⇄JSON／代码压缩／JSON Schema／HTTP 状态码／HTML 实体／批量图片缩放／SVG 压缩 → **自有实锤消解**：json_parser／jwt／base64／uuid／url-codec／csvjson／code_minifier／json_schema_validator／http_status_reference／html-entities／bulk_image_resizer／svg-compressor 已全覆盖；残余唯一缺口见下 URL 解析器；
+   - **URL 解析器（FindUtils／ToolAdda／OpenVibe／CodeShack 多站同形态）**→ 仓库**全路零命中**（`grep -rniE 'url_parser|url-parser|URL解析|链接解析' tools/categories.go templates/ static/js/ tests/` 仅命中 url_note_share.js 与 url_tracker_cleaner.js 内部的“链接解析失败／解析成功”文案，无独立工具；url-codec 仅做编解码、url-tracker-cleaner 仅清追踪参数，均不做分段拆解与参数表编辑），**新晋 P2「URL 解析器」**（建议 ID url_parser、Path /tools/url-parser）：粘贴长链接→协议／用户名／主机／端口／路径／查询／片段八段拆解（浏览器 URL 原语解析，所见即浏览器所请求）＋查询参数键值表（重复键分行保留、空值可见）＋改表后重组回链接＋JSON 结构一键复制＋安全提示（@ 前不是真正主机、默认端口消隐、+ 转空格），纯前端小难度，零上传；痛点：调回调／重定向／带参分享链接时，肉眼拆长 URL 常看错主机与参数，复制粘贴还容易丢一个 &；真限制：相对 URL 须先补协议头，页面明示不做网络请求验证；
+   - **Epoch／时间戳批量与日志标注榜（toolgenie／brighttoolstudio／toolbox-kit 等）**→ **自有实锤消解＋优化项，不单独立项**：timestamp（秒／毫秒、本地时区与 UTC 互转）已覆盖单值转换语义；残余新颖点（批量粘贴多行时间戳、日志行内时间戳原地标注、秒／毫秒／微秒自动识别）记 timestamp **优化项**，不与单值工具串味；
+   - **密码生成器／强度检测榜（PassGini／folge／toolbox-kit／mypasswordchecker 等）**→ **自有实锤消解**：password-generator 描述已含“显示密码强度”，随机密码＋强度语义已覆盖；独立“密码强度检测器”不单独立项（且用户真实密码不宜鼓励粘贴进任何页面，安全口径上也不宜单独立项）；
+   - **CSV→JPG 表格成图（jpg.now 等）**→ **不立**：表格转图片属小众分享形态，且长表分页后可读性差，不如现有 csvjson＋截图工具链，niche。
+3. 候选池变动：布尔搜索语句生成器已交付划出（96f7893，165 Path）；**新晋 P2 1 个**（URL 解析器：多站同形态验证，纯前端小难度，零命中实锤，附相对 URL 真限制）；自有实锤消解 3 项（2026 开发者榜全量→json/jwt/base64/uuid/url/csv/minifier/schema/http/html/svg/img 族；Epoch 批量→timestamp 优化项；密码强度→password-generator）；优化项 1 条（timestamp：批量时间戳＋日志行内标注）；niche 不立 1 项（CSV→JPG）；全量 165 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；01:00 深夜轮优先小难度纯前端）：
+
+1. **CSS clamp 流体尺寸计算器** — P2 留池顺位递进（91 轮新晋；92／93 轮复核仍未交付；顺位最老且无硬伤，理应首席；DevsTools 251 榜＋clampgen/WPDean/cssportal 多站同形态验证：最小/最大视口＋尺寸→斜率/截距→clamp() 输出；痛点：响应式字号/间距手写 clamp 公式常算错 vw 系数，改断点全页重算；纯前端小难度：双视口＋双尺寸输入→rem/px 双单位输出＋8 组预设＋断点取值表＋实时预览验证，零上传；零命中实锤；建议 ID css_clamp_calculator、Path /tools/css-clamp-calculator）。
+2. **URL 解析器** — 新晋 P2（本轮；FindUtils／ToolAdda／OpenVibe／CodeShack 多站同形态验证：八段拆解＋查询参数表＋重组＋JSON 复制；痛点：调回调／重定向／带参链接时肉眼拆长 URL 常看错主机与参数；纯前端小难度：浏览器 URL 原语解析＋参数表编辑＋重组，零上传；零命中实锤（url-codec 仅编解码、tracker-cleaner 仅清参，均非拆解工具）；建议 ID url_parser、Path /tools/url-parser；真限制：相对 URL 须补协议头、不做网络请求验证）。
+3. **信封打印助手** — P2 留池顺位递进（92 轮新晋；93 轮复核仍未交付；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证：WYSIWYG 预览＋多尺寸＋打印样式表；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；纯前端小难度：收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋打印样式表＋测试页／偏移微调，零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：各打印机边距与进纸方向不一，须明示先打测试页再调偏移）。
+
+其余 P2 留池（顺位在 Top3 之后）：摩斯码翻译器（91 轮新晋；本轮因 URL 解析器受众更广、调试场景更高频而暂列 Top3 之后，仍为下轮递进首选；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器（90 轮新晋；建议 ID color_blind_simulator、Path /tools/color-blind-simulator）；MP3 标签编辑器（90 轮新晋；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件）；截图美化器（通用）（88 轮新晋；防串味延后，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；其余 92 轮及之前留池项（CSP 安全头生成器、一键人脸模糊、浏览器录屏工具、死链检查器、HN 投稿优化分析器、AI 图片 C2PA 签名检测器、域名创意生成器、图片打印尺寸计算器、在线创意画板、免费塔罗占卜、涂鸦字体工作室、GitHub 主页 README 生成器、TOTP 动态口令生成器、联系信息提取器、壁纸生成器/词云生成器、CSS Sprite 雪碧图生成器、SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴、USB 设备识别器/摄像头签名数字化/和弦探索器、英文写作风格检查、Hashtag 生成器/GIF→Live Photo/llmspeed 跑分、LLM Token 估算器/Docker Compose→K8s/画廊墙面规划器）均保持留池／观察原状，详见 92 轮及之前记录。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第九十三轮：布尔搜索语句生成器已交付划出（96f7893 新增；ID boolean_search_builder、Path /tools/boolean-search-builder 已注册，开发工具品类；全量 165 Path；候选池划出）；**新晋 P2 1 个：URL 解析器**（FindUtils／ToolAdda／OpenVibe／CodeShack 多站同形态验证；八段拆解＋查询参数表＋重组＋JSON 复制，纯前端小难度零上传；零命中实锤；建议 ID url_parser、Path /tools/url-parser；真限制：相对 URL 须补协议头）；自有实锤消解 3 项（2026 开发者榜全量→json/jwt/base64/uuid/url/csv/minifier/schema/http/html/svg/img 族；Epoch 批量→timestamp 优化项；密码强度→password-generator）；优化项 1 条（timestamp：批量时间戳＋日志行内标注）；niche 不立 1 项（CSV→JPG）；全量 165 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 布尔搜索语句生成器 | 已交付划出（96f7893 新增；ID boolean_search_builder、Path /tools/boolean-search-builder 已注册，开发工具品类；全量 165 Path；候选池划出） | — | 已实现 |
+| URL 解析器 | 新晋 P2（93 轮；FindUtils／ToolAdda／OpenVibe／CodeShack 多站同形态验证；痛点：调回调／重定向／带参链接时肉眼拆长 URL 常看错主机与参数；八段拆解＋查询参数表（重复键分行）＋改表重组＋JSON 复制，纯前端小难度零上传；零命中实锤；建议 ID url_parser、Path /tools/url-parser；真限制：相对 URL 须补协议头，不做网络请求验证） | 小 | P2（93 轮新晋） |
+| 自有实锤消解 | 不立（2026 开发者榜全量→json/jwt/base64/uuid/url-codec/csvjson/code_minifier/json_schema_validator/http_status_reference/html-entities/bulk_image_resizer/svg-compressor 全自有；Epoch 批量→timestamp 优化项；密码强度→password-generator 已含强度显示；CSV→JPG→niche 不立） | — | 不立 |
+| 优化项 | timestamp：批量时间戳转换＋日志行内时间戳原地标注（秒／毫秒／微秒自动识别） | — | 优化项 |
+
+**归档说明**：本轮为 10-25 通用调研第九十三轮——布尔搜索语句生成器交付闭环（96f7893，`/tools/boolean-search-builder` 已注册，开发工具品类，全量 165 Path），候选池划出；**新晋 P2 1 个**（URL 解析器：多站同形态验证，纯前端小难度，零命中实锤，附相对 URL 真限制）；3 项自有实锤消解（2026 开发者榜／Epoch 批量／密码强度）；1 条优化项；1 项 niche 不立；WPS 候选表保持冻结归档；仓库 165 注册工具全量核对无重叠（Top3 建议 ID css_clamp_calculator / url_parser / envelope_printer；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 96f7893（布尔搜索语句生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **165**；本轮 `git fetch` 报错 Host key verification failed（未改动远程状态，交 PM/开发轮复核 known_hosts，勿动 master、勿 force-push）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 23:00 · 产品经理排期轮）
 
 **选定：布尔搜索语句生成器（boolean_search_builder）** — 本轮唯一任务（新工具）：

@@ -445,6 +445,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_clamp_calculator",
+					Name:        "CSS clamp 流体尺寸计算器",
+					Description: "双视口＋双尺寸算流体尺寸：斜率 vw 系数与截距中间值可见，输出 px 版与 rem 版两条 clamp() 公式，8 组常用预设一键载入，320/375/768/1024/1440 断点取值表含两端钳制标注，实时预览随视口缩放，一键复制两条公式，纯前端零上传 · CSS clamp calculator: fluid typography, vw slope and intercept, px/rem clamp formulas, presets, breakpoint table, live preview, 100% client-side",
+					Path:        "/tools/css-clamp-calculator",
+					Icon:        "format_size",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "unit_calc_notepad",
 					Name:        "单位感知记事本计算器",
 					Description: "记事本式逐行算式＋单位感知：长度/重量/体积/时间/温度（℃↔℉）/货币单位自动换算，加减归一化到首单位；行间变量、百分比、sum(a1..a3) 范围汇总，行内即时结果＋底部分组求和/平均/最大/最小/计数，非法行标红不中断，自写解析零 eval，纯前端零上传 · Unit-aware notepad calculator: line-by-line expressions with unit conversion, variables, range summary and inline results, 100% client-side",
