@@ -90,6 +90,18 @@ var G = M.parseUrl("http://example.com:8080/a");
 eq(G.port, "8080", "用例 G 非默认端口保留");
 eq(G.isDefaultPort, false, "用例 G 非默认端口不标注");
 eq(G.rebuilt, "http://example.com:8080/a", "用例 G 重组保留 8080");
+var FTPD = M.parseUrl("ftp://files.example.com:21/pub");
+eq(FTPD.isDefaultPort, true, "ftp 21 识别为默认端口");
+eq(FTPD.portNote, "默认端口", "ftp 21 端口标注默认端口");
+eq(FTPD.rebuilt, "ftp://files.example.com/pub", "ftp 重组消隐 21");
+var WSD = M.parseUrl("ws://example.com:80/x");
+eq(WSD.isDefaultPort, true, "ws 80 识别为默认端口");
+eq(WSD.portNote, "默认端口", "ws 80 端口标注默认端口");
+eq(WSD.rebuilt, "ws://example.com/x", "ws 重组消隐 80");
+var WSSD = M.parseUrl("wss://example.com:443/x");
+eq(WSSD.isDefaultPort, true, "wss 443 识别为默认端口");
+eq(WSSD.portNote, "默认端口", "wss 443 端口标注默认端口");
+eq(WSSD.rebuilt, "wss://example.com/x", "wss 重组消隐 443");
 
 /* ---------- 6. 协议补齐 ---------- */
 var H = M.parseUrl("example.com/path?a=b&c=d");

@@ -8,7 +8,7 @@
 'use strict';
 
 var KNOWN_SCHEMES = ['http', 'https', 'ftp', 'ws', 'wss'];
-var DEFAULT_PORTS = { 'http:': '80', 'https:': '443' };
+var DEFAULT_PORTS = { 'http:': '80', 'https:': '443', 'ftp:': '21', 'ws:': '80', 'wss:': '443' };
 
 /* 安全解码：% 编码非法时原样返回，不抛错。 */
 function safeDecode(v) {
@@ -294,6 +294,7 @@ if (typeof module !== 'undefined' && module.exports) {
       return params;
     }
 
+    /* 返回重组是否成功：参数表含非法键时不改写旧重组链接，调用方不得再用旧值 toast 或导出。 */
     function refreshRebuilt(showParamErrors) {
       var params = readParamsFromDom();
       var q = buildQuery(params);
@@ -302,7 +303,7 @@ if (typeof module !== 'undefined' && module.exports) {
           paramHintEl.textContent = q.errors.join('；');
           paramHintEl.style.color = '#991b1b';
         }
-        return;
+        return false;
       }
       paramHintEl.textContent = '提示：键不能包含空格、&、=、#、?、/；空值行重组为 key=，无值行重组为只有 key。';
       paramHintEl.style.color = '';
@@ -310,6 +311,7 @@ if (typeof module !== 'undefined' && module.exports) {
       rebuiltEl.value = r.url;
       current.params = params;
       current.rebuilt = r.url;
+      return true;
     }
 
     function renderParams() {
@@ -418,16 +420,17 @@ if (typeof module !== 'undefined' && module.exports) {
     });
     $('up-rebuild').addEventListener('click', function () {
       if (!current) { toast('请先解析一个链接。'); return; }
-      refreshRebuilt(true);
-      if (rebuiltEl.value) toast('已按当前参数表重组链接。');
+      if (refreshRebuilt(true)) toast('已按当前参数表重组链接。');
     });
     $('up-copy-link').addEventListener('click', function () {
+      if (!current) { toast('请先解析一个链接。'); return; }
+      if (!refreshRebuilt(true)) return;
       if (!rebuiltEl.value) { toast('暂无可复制的链接，请先解析。'); return; }
       copyText(rebuiltEl.value, '已复制重组后的链接。');
     });
     $('up-copy-json').addEventListener('click', function () {
       if (!current) { toast('请先解析一个链接。'); return; }
-      refreshRebuilt(false);
+      if (!refreshRebuilt(true)) return;
       var obj = toJsonObject(current.parts, rebuiltEl.value);
       obj.queryParams = current.params.map(function (p) { return { key: p.key, value: p.value, hasValue: p.hasValue }; });
       obj.search = buildQuery(current.params).search;
