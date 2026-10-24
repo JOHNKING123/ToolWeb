@@ -142,6 +142,29 @@ func (w *toolWebRewriteWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+// Flush 实现 http.Flusher：gin 的 responseWriter.Flush 会对底层 writer
+// 做无检查的类型断言，缺少此方法会导致调用 Flush 的 handler（如网速测试的
+// 流式下载）直接 panic、响应中断。
+// 非缓冲（透传）模式：先完成首包决策把响应头写出去，再把 Flush 转发到底层。
+// 缓冲（文本改写）模式：直接转发到底层（响应头会提前提交、后续正文改写后
+// 以 chunked 写出）；目前没有文本类 handler 调用 Flush，此分支仅为语义完备。
+func (w *toolWebRewriteWriter) Flush() {
+	if !w.wroteHeader {
+		w.WriteHeader(http.StatusOK)
+	}
+	if !w.decided {
+		w.decided = true
+		w.buffering = isTextualContentType(w.Header().Get("Content-Type"))
+		if !w.buffering {
+			w.rewriteLocationHeader()
+			w.ResponseWriter.WriteHeader(w.status)
+		}
+	}
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 func (w *toolWebRewriteWriter) flush() {
 	if !w.wroteHeader {
 		w.WriteHeader(http.StatusOK)
