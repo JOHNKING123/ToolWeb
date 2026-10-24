@@ -210,6 +210,9 @@ function speakSentence(idx) {
   utter.onerror = function () {
     if (!speaking) return;
     speaking = false;
+    currentIndex = -1;
+    clearHighlight();
+    refreshProgress();
     setStatus('朗读出错，已停止');
   };
   window.speechSynthesis.speak(utter);
@@ -294,7 +297,10 @@ function init() {
     buildSentences();
     setStatus('已填入示例短文');
   });
-  bind('tra-speak', function () { startFrom(0); });
+  bind('tra-speak', function () {
+    if (!buildSentences()) { setStatus('请先粘贴文本'); toast('请先粘贴文本再朗读'); return; }
+    startFrom(0);
+  });
   bind('tra-pause', function () {
     if (speaking) { window.speechSynthesis.pause(); setStatus('已暂停'); }
   });

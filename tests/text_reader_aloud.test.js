@@ -125,5 +125,16 @@ ok(regBlock.indexOf("New:") !== -1 && regBlock.indexOf("true") !== -1, "注册 N
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).length;
 eq(pathCount, 164, "注册总数 163→164 Path");
 
+/* ---------- 9. 评审回归：朗读按钮先重建再起读；出错清高亮 ---------- */
+/* 换文本后直接点「朗读」必须读新文本：tra-speak 绑定先 buildSentences() 再 startFrom(0)，
+ * 而不是沿用 init() 时的旧 sentences 快照。 */
+ok(/bind\('tra-speak', function \(\) \{\s*\n?\s*if \(!buildSentences\(\)\)/.test(JS_SRC),
+  "回归：朗读按钮先 buildSentences() 再起读（换文本直接朗读读新文本）");
+ok(/bind\('tra-speak'[\s\S]*?startFrom\(0\)/.test(JS_SRC), "回归：朗读按钮重建后仍从第 0 句起读");
+var errBranch = JS_SRC.slice(JS_SRC.indexOf("utter.onerror"), JS_SRC.indexOf("window.speechSynthesis.speak(utter)"));
+ok(errBranch.indexOf("currentIndex = -1") !== -1, "回归：朗读出错分支重置 currentIndex");
+ok(errBranch.indexOf("clearHighlight()") !== -1, "回归：朗读出错分支清除高亮");
+ok(errBranch.indexOf("refreshProgress()") !== -1, "回归：朗读出错分支刷新进度");
+
 console.log("text_reader_aloud: " + pass + " passed, " + fail + " failed");
 if (fail > 0) process.exit(1);
