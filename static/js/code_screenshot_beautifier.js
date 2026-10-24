@@ -667,7 +667,7 @@ function renderToCanvas(canvas, code, opts) {
     }
     if (w > contentW) contentW = w;
   }
-  if (!code.trim()) contentW = meas.measureText("请在左侧粘贴代码，右侧实时预览…").width;
+  if (!code.trim()) contentW = meas.measureText("请在上方输入区粘贴代码，下方实时预览…").width;
   var lineNoW = 0;
   if (showLineNo) {
     lineNoW = meas.measureText(new Array(String(lineCount).length + 1).join("8")).width + 18;
@@ -741,7 +741,7 @@ function renderToCanvas(canvas, code, opts) {
 
   if (!code.trim()) {
     ctx.fillStyle = theme.lineNo;
-    ctx.fillText("请在左侧粘贴代码，右侧实时预览…", codeX, y0);
+    ctx.fillText("请在上方输入区粘贴代码，下方实时预览…", codeX, y0);
   } else {
     for (li = 0; li < tokenLines.length; li++) {
       var y = y0 + li * L.lineH;
@@ -926,6 +926,7 @@ function init() {
 
   $("csb-download").addEventListener("click", function () {
     var btn = this;
+    if (!$("csb-input").value.trim()) { setStatus("请先粘贴代码再导出。", true); return; }
     btn.disabled = true;
     exportCanvas(function (blob) {
       var filename = buildExportFilename(new Date());
@@ -938,6 +939,7 @@ function init() {
 
   $("csb-copy").addEventListener("click", function () {
     var btn = this;
+    if (!$("csb-input").value.trim()) { setStatus("请先粘贴代码再复制。", true); return; }
     btn.disabled = true;
     if (!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write)) {
       setStatus("当前浏览器不支持直接复制 PNG，请使用「下载 PNG」。", true);
