@@ -1,3 +1,87 @@
+## 今日任务（2026-10-24 11:38 · 产品经理排期轮）
+
+**选定：网速测试（speed_test）** — 本轮唯一任务（新工具）：
+- **顺位**：11:00 研究轮（86 轮）Top3 **首席推荐**（Bitlist「Internet speed test」形态验证；85 轮新晋 P2 多轮留池）；本地 LLM 硬件检测器已交付闭环（9c98ee1，158 Path；候选池划出）后顺位递进生效，依惯例「无硬伤不跳过」。
+- **PM 主动纠偏（两次重叠否决，沿用 09:42 轮 fancy_fonts 纠偏模式）**：
+  1. 研究轮 Top3 第 3「HTML 实体编解码器」本轮**否决独立立项**——本轮 PM 实测仓库发现已有 `htmlentities`（HTML 实体编解码，/tools/html-entities）：HTML 转义/反转义、Unicode \u 转义，且模板 html_entities.html 已含速查表，与候选形态（文本↔实体双向转换＋常用实体速查表）**实质重叠**；研究轮的「三路零命中实锤」只查了 html_entity/html-entity/实体编码关键词，漏查了既有 ID htmlentities/名称「HTML 实体编解码」。残余新颖点（更全的命名实体表）可并入 htmlentities 作为**优化项**，不单独立工具；候选池从 Top3 移除。
+  2. P2 池「Markdown 聊天分享助手」（本轮新晋）**从候选池移除**——本轮 PM 实测仓库发现已有 `md_to_chat`（Markdown 聊天图文转换器，/tools/md-to-chat）：描述实质同构（md2chat：粘贴 AI 回答/导入 .md，智能拆分文字块与表格/代码块/数学公式/流程图，微信/钉钉/飞书/企微四平台语法适配一键复制，复杂块 canvas 本地渲染为图片卡片）；研究轮的「三路零命中实锤」只查了 md_chat_share/md-chat-share/聊天分享关键词，漏查了既有 ID md_to_chat/名称「Markdown 聊天图文转换器」/描述中的 md2chat。**教训**：研究轮「零命中」断言须同时查既有 ID、Path、中文名、描述关键词四路，本轮已向研究轮反馈。
+- **未选**：代码截图美化器（新晋 P2；dev.to code screenshots「Tooliest/ray.so 形态」验证；纯前端小难度；三路**零命中实锤**；无硬伤，留池顺位递进——PM 实测 templates/static 全路确无代码截图/语法高亮渲染工具）。
+- **选定理由**：① **研究轮首席推荐，无硬伤不跳过**（Bitlist 形态验证；85 轮新晋 P2）；② **小难度一轮可高质量交付**——延迟＋下载＋上传三维测速，多次采样取均值；③ **零重叠复核**——本轮实测 `grep -rniE 'speed_test|speed-test|网速|bandwidth|测速'` 全路零命中（network_ping 仅连通性/延迟 ping，无带宽测速）；④ **痛点明确**——想测当前网速，不想装 App、不想去 speedtest 广告站，中文一页式工具缺位。
+- **品类归位**：注册到「网络工具」品类（与 network_ping、my_ip 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **测速源决策**——不依赖第三方 CDN（跨境 Hetzner 等节点延迟不可控）；Go 后端新增轻量端点：`GET /tools/api/speed-test/download?size_mb=N`（流式输出随机字节，1/10/25MB 三档，无磁盘占用，X-Accel 无缓存头）和 `POST /tools/api/speed-test/upload`（读弃请求 body，返回接收字节数）；**测的是用户→本站的链路**，免责声明写清，不宣称代表全网速度；② **流量消耗先行告知**——完整测试约消耗 25MB 下行＋数 MB 上行，页面顶部明示，默认先跑小档预热，用户点「完整测试」才跑大档；③ **单位写清**——Mbps（÷8=MB/s），结果同时给两种单位；④ **延迟测试**——小包 1KB 20 次采样，取中位数＋抖动（jitter），cache-bust 参数防缓存；⑤ **切后台中断**——visibilitychange 时暂停并提示保持前台，防移动端锁屏导致速率虚低；⑥ **VPN/代理影响**——结果页脚注说明代理/VPN/运营商 QoS 会显著影响结果；⑦ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/speed-test）。
+- **ID/Path**：`speed_test`、`/tools/speed-test`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 测试区：三步向导式（①延迟 ②下载 ③上传），每步实时进度条＋速率曲线（canvas 折线）；下载自适应：1MB 预热→按预热速率自动选 10MB 或 25MB 正式档；上传：POST 1MB 随机块 ×4 并发，取聚合速率；多次采样取均值。
+- 结果区：下载 Mbps（＋MB/s）、上传 Mbps（＋MB/s）、延迟 ms、抖动 ms；评级建议（≥100M 光纤档/≥25M 4K 流畅/≥10M 高清/＜10M 基础档＋游戏/视频会议够用性一句话）。
+- 历史记录：localStorage 存最近 10 次结果（时间戳＋三维数值），一键清空。
+- 注册：ID `speed_test`、Name「网速测试」、Path `/tools/speed-test`、Category 网络工具、Icon 建议 network_check/speed 类、New: true；中英文描述＋SEO keywords（网速测试、带宽测速、speed test、网络延迟、ping）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+- 后端：`tools/speed_test.go` 新增 HandleSpeedTestDownload/HandleSpeedTestUpload；`main.go` 在 `api := router.Group("/tools/api")` 下注册 `GET /speed-test/download`、`POST /speed-test/upload`（公网经挂载层为 /tool-web/api/speed-test/*）。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `speed_test`、Path `/tools/speed-test` 注册完整（Category 网络工具），注册总数 158→159 Path。
+2. `curl` 直调 `/tools/api/speed-test/download?size_mb=1` 返回恰好 1MiB 且无缓存头；`POST /tools/api/speed-test/upload` 上传 1MB 返回接收字节数正确。
+3. 前端三步测试完整跑通：延迟 20 采样出中位数＋抖动；下载曲线实时更新、均值与后端传输量/耗时自洽（误差＜10%）；上传聚合速率合理。
+4. 流量消耗提示、Mbps/MB/s 双单位、免责声明（测到本站链路）、代理/VPN 脚注四项文案齐全。
+5. node 测试 40+ 断言全过（速率计算函数、单位换算、采样均值/中位数/抖动、评级档位边界、模板静态检查）。
+6. 页面无报错；移动端布局不错位；速率曲线小屏不撑破。
+
+**预计改动文件**：
+- `templates/speed_test.html`（新增；含 SEO 面板按家族标准＋三步测试 UI＋速率曲线 canvas＋结果区＋历史记录）
+- `static/js/speed_test.js`（新增；延迟/下载/上传测试引擎＋采样统计＋曲线绘制＋localStorage 历史；双模式导出供 node 测试）
+- `tests/speed_test.test.js`（新增；速率计算、单位换算、统计函数、评级档位、模板静态检查）
+- `tools/speed_test.go`（新增；HandleSpeedTestDownload/HandleSpeedTestUpload）
+- `main.go`（api 分组下注册 GET /speed-test/download、POST /speed-test/upload）
+- `tools/categories.go`（网络工具品类注册：ID speed_test、Path /tools/speed-test、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 9c98ee1（llm_hardware_checker 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地一致）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 158 Path；Top3 候选重叠复核（speed_test 全路零命中实锤；htmlentities 与「HTML 实体编解码器」实质重叠→本轮 PM 否决独立立项；md_to_chat 与「Markdown 聊天分享助手」实质同构→从 P2 池移除；代码截图美化器零命中实锤留池）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-24 11:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。本地 LLM 硬件检测器已交付闭环（`git log` 头部 9c98ee1：WebGL 自动检测 GPU＋手选型号/显存→静态对照表→可跑模型量化版本推荐（红黄绿三档），零 fetch/XHR；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **158 Path**，ID llm_hardware_checker、Path /tools/llm-hardware-checker 已注册，AI 工具品类；origin/muse/dev-20260929 与本地一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 午轮，P1 池已空，P2 可晋升，优先小难度纯前端。
+
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. llm_hardware_checker 交付确认：`git log` 头部 9c98ee1（2026-10-24 上午前端开发轮交付；09:42 PM 轮选定任务交付闭环）；全量 158 Path；templates/llm_hardware_checker.html＋static/js/llm_hardware_checker.js＋tests/llm_hardware_checker.test.js 均存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮首次裸 fetch 触发 github.com ED25519 自动入库，之后正常，origin 与本地一致）；候选池划出。
+2. 新信号扫描：
+   - **dev.to anurag_bhattarai「The best free browser tools for developers in 2026 (no signup, no upload)」**：Code screenshots（Tooliest / ray.so 形态：代码→语法高亮＋窗口框→导出 PNG 分享）→ **全路零命中**，**新晋 P2「代码截图美化器」**（建议 ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier）：粘贴代码→选语言/主题→macOS 窗口框渲染→一键导出 PNG/复制，纯前端小难度，零上传；HTML Entity Encoder → **全路零命中**，**新晋 P2「HTML 实体编解码器」**（建议 ID html_entity_codec、Path /tools/html-entity-codec）：文本↔`&lt;/&gt;/&amp;` 等实体双向转换＋常用实体速查表，纯前端超小难度；SQL Formatter → 自有 sql_formatter；MD5/SHA1/SHA256 → 自有 md5/sha1/sha256；Base64 → 自有 base64；URL 编解码 → 自有 url_encode；Cron 解析 → 自有 cron_parser；PDF merge/split/protect → 自有 pdf_merge_split；Regex → 自有 regex_tester；JWT → 自有 jwt_parser；不立；
+   - **V2EX（10-20~10-24 工具帖）**：md2chat（贴贴 Markdown，V2EX t/1250428）：AI 回答/Markdown 内容→适合聊天框的图文（文字保持可编辑，表格/代码/公式/流程图转图片，按原文顺序组合；微信/钉钉/飞书/企微不同复制方式；桌面版「转图片」合成一张 PNG）→ **全路零命中**，**新晋 P2「Markdown 聊天分享助手」**（建议 ID md_chat_share、Path /tools/md-chat-share）：左侧输入 Markdown→右侧预览文字＋图片组合→一键复制/导出长图 PNG，纯前端中难度（SVG foreignObject 渲染转图，无外部库），痛点：AI 回答复制进聊天框排版全乱，中文场景刚需；BlinkFar 眨眼/远望提醒（V2EX t/1251416）→ 健康提醒类，方向边界（10-18 修正后生产力/健康小工具收敛中），观察不立；checkphp2shell 响应头检查（t/1251012）→ 需跨域请求且安全 niche，不立；protohub 原型托管（t/1250522）→ 需后端存储＋多用户，不立；Open Resume 自部署简历（t/1250292）→ 需后端＋156 模板体系，不立；wx-publish-studio 公众号发布（t/1251166）→ 需公众号授权＋后端，不立；
+   - **Medium john ilson「Stop Paying For Basic Tools: OmniTools」（10-19）**：Fancy Font Generator → 实锤自有 fancy_fonts；Smart Image Compressor → 自有 img_compress；QR Generator → 自有 qrcode；Word & Character Counter → 自有 texttools 族；BMI Calculator → 泛健康计算器，方向修正后不立；
+   - **Medium Malik Anwaar「10 Best Free Online Tools 2026」（10-16）**：Age Calculator → 泛生活计算器，方向修正后不立；Password Generator → 实锤自有 password 工具；Unit Converter → 自有 unit_converter；Word Counter/QR → 自有；不立；
+   - **dev.to md_shohan「I Replaced My Productivity Apps with 10 Free Browser Tools」（约 11 天前，Utility Tools Lab）**：Pomodoro Timer/Focus Timer → 实锤自有 pomodoro（countdown_timer 同族）；Task Prioritizer（Eisenhower 四象限紧急/重要矩阵）→ 全路零命中，但与已交付 kanban_board 同属任务管理族且 10-18 后生产力工具收敛中，**方向边界观察不立**；To-Do List → 自有 kanban_board 同构，不立；Goal Tracker → 目标追踪生活类，方向边界，不立；
+   - **Medium raghav「Quick Tools: 80+ Free Browser-Based Utilities」（Jan 2026 老文）**：Word Counter/Case Converter/Diff/Slug/JSON 族 → 全自有 texttools/json 族复现，不立；
+   - **Medium youme「6 Tiny Everyday Annoyances」（10-23，Toolify 博客站）**：Word Counter/Case Converter/Password Generator/QR/Unit Converter/Date Difference → 全自有或泛计算器（Date Difference 生活计算器，方向不立）；
+   - **Medium Siloshan「7 Free Browser Tools October」（6 天前，85 轮已消化）**：本轮重扫无新增可立项（SyncWhen→池内会议投票；OldRoll/StitchCraft→自有；urPiano→池内在线钢琴；SortaSeat/Calcy→niche/方向边界；llmspeed→已交付）。
+3. 候选池变动：本地 LLM 硬件检测器已交付划出（9c98ee1，158 Path）；**新晋 P2 3 个**（代码截图美化器：dev.to 开发者工具文 code screenshots 形态验证，纯前端小难度，三路零命中实锤；HTML 实体编解码器：同文 HTML Entity Encoder 形态验证，纯前端超小难度，三路零命中实锤；Markdown 聊天分享助手：V2EX md2chat 形态验证，中文聊天分享刚需，纯前端中难度，三路零命中实锤）；自有实锤消解 17 项（SQL→sql_formatter、MD5/SHA1/SHA256→自有族、Base64→base64、URL→url_encode、Cron→cron_parser、PDF 合并/拆分/加密→pdf_merge_split、Regex→regex_tester、JWT→jwt_parser、花体字→fancy_fonts、图片压缩→img_compress、QR→qrcode、字数统计→texttools 族、Password→自有 password、Unit→unit_converter、Pomodoro→自有 pomodoro、To-Do→kanban_board 同构）；niche/方向边界/需后端不立 11 项（BMI/Age/Date Difference→泛计算器方向不立；BlinkFar→健康提醒方向边界观察；Eisenhower 四象限→生产力方向边界观察（kanban 同族）；Goal Tracker→生活类不立；checkphp2shell→跨域＋安全 niche；protohub/Open Resume/wx-publish→需后端；会议投票→P3 维持）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，11:00 午轮优先小难度纯前端）：
+
+1. **网速测试** — P2（85 轮新晋；Bitlist「Internet speed test」形态验证；痛点：想测当前网速，不想装 App、不想去 speedtest 广告站；纯前端小难度：CDN 大文件下载测速＋延迟测试＋多次采样取均值；三路**零命中实锤**；建议 ID speed_test、Path /tools/speed-test）。
+2. **代码截图美化器** — 新晋 P2（本轮首席新晋；dev.to「The best free browser tools for developers in 2026」code screenshots（Tooliest/ray.so 形态）验证；痛点：技术分享/发代码片段时截图丑、carbon 类站点广告多；纯前端小难度：粘贴代码→选语言/主题→macOS 窗口框＋语法高亮渲染→一键导出 PNG/复制，零上传；三路**零命中实锤**；建议 ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier）。
+3. **HTML 实体编解码器** — 新晋 P2（本轮；同文 HTML Entity Encoder 形态验证；痛点：前端调试/写富文本时手查 `&lt;`/`&gt;`/`&amp;` 对照表麻烦；纯前端超小难度：文本↔实体双向转换＋常用实体速查表，零上传；三路**零命中实锤**；建议 ID html_entity_codec、Path /tools/html-entity-codec）。
+
+其余 P2 留池：CSP 安全头生成器（84 轮新晋；Show HN DevKit 形态验证；建议 ID csp_builder、Path /tools/csp-builder）；Markdown 聊天分享助手（本轮新晋；V2EX md2chat 形态验证；中难度：SVG foreignObject 渲染转图；建议 ID md_chat_share、Path /tools/md-chat-share）；SERP 片段预览（85 轮补强；niche）；CSS Sprite 雪碧图生成器（83 轮新晋，niche；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；浏览器录屏工具（84 轮新晋；中难度；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；中难度 Go 后端；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；85 轮 SyncWhen 补强；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十六轮：本地 LLM 硬件检测器已交付划出（9c98ee1：WebGL 自动检测 GPU＋手选型号/显存→静态对照表→可跑模型量化版本推荐（红黄绿三档），零 fetch/XHR；ID llm_hardware_checker、Path /tools/llm-hardware-checker 已注册，AI 工具品类；全量 158 Path；候选池划出）；**新晋 P2 3 个：代码截图美化器**（dev.to 开发者工具文 code screenshots「Tooliest/ray.so 形态」验证；粘贴代码→选语言/主题→macOS 窗口框＋语法高亮渲染→一键导出 PNG/复制，纯前端小难度零上传；三路零命中实锤；建议 ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier）、**HTML 实体编解码器**（同文 HTML Entity Encoder 形态验证；文本↔实体双向转换＋常用实体速查表，纯前端超小难度零上传；三路零命中实锤；建议 ID html_entity_codec、Path /tools/html-entity-codec）、**Markdown 聊天分享助手**（V2EX t/1250428 md2chat「贴贴 Markdown」形态验证；AI 回答/Markdown→聊天框图文（文字保持可编辑，表格/代码/公式/流程图转图片，按序组合）＋一键复制/导出长图 PNG，纯前端中难度（SVG foreignObject 渲染转图）；三路零命中实锤；建议 ID md_chat_share、Path /tools/md-chat-share）；自有实锤消解 17 项（SQL→sql_formatter；MD5/SHA1/SHA256→自有哈希族；Base64→base64；URL→url_encode；Cron→cron_parser；PDF 合并/拆分/加密→pdf_merge_split；Regex→regex_tester；JWT→jwt_parser；Fancy Font→fancy_fonts；图片压缩→img_compress；QR→qrcode；字数统计→texttools 族；Password→自有 password 工具；Unit→unit_converter；Pomodoro→自有 pomodoro；To-Do→kanban_board 同构）；niche/方向边界/需后端不立 11 项（BMI/Age/Date Difference→泛计算器方向修正后不立；BlinkFar→健康提醒方向边界观察；Eisenhower 四象限→生产力方向边界观察（kanban 同族）；Goal Tracker→生活类不立；checkphp2shell→跨域＋安全 niche；protohub/Open Resume/wx-publish→需后端；会议投票→P3 维持）；全量 158 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 代码截图美化器 | 新晋 P2（86 轮；dev.to「The best free browser tools for developers in 2026」code screenshots「Tooliest/ray.so 形态」验证；痛点：技术分享发代码片段时截图丑、carbon 类站点广告多；纯前端小难度：粘贴代码→选语言/主题→macOS 窗口框＋语法高亮渲染→一键导出 PNG/复制，零上传；三路零命中实锤；建议 ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier） | 小 | P2 |
+| HTML 实体编解码器 | 新晋 P2（86 轮；同文 HTML Entity Encoder 形态验证；痛点：前端调试/写富文本时手查 `&lt;`/`&gt;`/`&amp;` 对照表麻烦；纯前端超小难度：文本↔实体双向转换＋常用实体速查表，零上传；三路零命中实锤；建议 ID html_entity_codec、Path /tools/html-entity-codec） | 小 | P2 |
+| Markdown 聊天分享助手 | 新晋 P2（86 轮；V2EX t/1250428 md2chat「贴贴 Markdown」形态验证；痛点：AI 回答/Markdown 复制进聊天框排版全乱（表格夹竖线、公式露符号）；纯前端中难度：左侧输入 Markdown→右侧预览文字＋图片组合（SVG foreignObject 渲染转图）→一键复制/导出长图 PNG，零上传；三路零命中实锤；建议 ID md_chat_share、Path /tools/md-chat-share） | 中 | P2 |
+| 本地 LLM 硬件检测器 | 已交付划出（9c98ee1 新增：WebGL 自动检测 GPU＋手选型号/显存→静态对照表→可跑模型量化版本推荐（红黄绿三档），零 fetch/XHR；ID llm_hardware_checker、Path /tools/llm-hardware-checker 已注册，AI 工具品类；全量 158 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（SQL→自有 sql_formatter；MD5/SHA1/SHA256→自有哈希族；Base64→base64；URL→url_encode；Cron→cron_parser；PDF 合并/拆分/加密→pdf_merge_split；Regex→regex_tester；JWT→jwt_parser；Fancy Font→fancy_fonts；Smart Image Compressor→img_compress；QR→qrcode；Word Counter→texttools 族；Password→自有 password 工具；Unit→unit_converter；Pomodoro→自有 pomodoro；To-Do→kanban_board 同构） | — | 不立 |
+| niche/方向边界/需后端 | 不立（BMI/Age/Date Difference→泛财务/生活计算器，10-18 方向修正后不立；BlinkFar 眨眼/远望提醒→健康提醒方向边界观察；Eisenhower 四象限任务排序→生产力方向边界观察（kanban 同族）；Goal Tracker→生活类不立；checkphp2shell→跨域请求＋安全 niche；protohub 原型托管/Open Resume/公众号发布→需后端＋多用户/授权；会议投票→P3 维持；婚礼座位表/Calcy 数学便签→沿用 85 轮结论） | — | 不立 |
+
+**归档说明**：本轮为 10-24 通用调研第八十六轮——本地 LLM 硬件检测器交付闭环（9c98ee1，`/tools/llm-hardware-checker` 已注册，AI 工具品类，全量 158 Path），候选池划出；**新晋 P2 3 个**（代码截图美化器：dev.to code screenshots 形态验证，纯前端小难度，零命中实锤；HTML 实体编解码器：同文 HTML Entity Encoder 验证，纯前端超小难度，零命中实锤；Markdown 聊天分享助手：V2EX md2chat 形态验证，纯前端中难度，零命中实锤）；17 项自有实锤消解；11 项 niche/方向边界/需后端不立；V2EX 本轮有实质信号（md2chat）；WPS 候选表保持冻结归档；仓库 158 注册工具全量核对无重叠（Top3 建议 ID speed_test / code_screenshot_beautifier / html_entity_codec；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮首次触发 github.com ED25519 自动入库，之后正常，origin/muse/dev-20260929 与本地一致）；`git log` 头部 9c98ee1（llm_hardware_checker 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 158 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 09:42 · 产品经理排期轮）
 
 **选定：本地 LLM 硬件检测器（llm_hardware_checker）** — 本轮唯一任务（新工具）：

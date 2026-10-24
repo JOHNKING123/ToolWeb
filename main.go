@@ -1426,6 +1426,9 @@ func main() {
 		api.GET("/my-ip", tools.HandleMyIPAPI)
 		api.GET("/port-scan", tools.HandlePortScanAPI)
 		api.GET("/ping", tools.HandlePingAPI)
+		api.GET("/speed-test/download", tools.HandleSpeedTestDownload)
+		api.HEAD("/speed-test/download", tools.HandleSpeedTestDownload) // 延迟测试用 HEAD，零流量
+		api.POST("/speed-test/upload", tools.HandleSpeedTestUpload)
 		api.GET("/dns-lookup", tools.HandleDNSLookupAPI)
 		api.GET("/ssl-check", tools.HandleSSLCheckAPI)
 

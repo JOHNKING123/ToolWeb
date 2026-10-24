@@ -1,0 +1,236 @@
+{{define "speed_test"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网速测试 - 测延迟/下载/上传，免安装一键测速 | 程序员工具箱</title>
+    <meta name="description" content="网速测试：一键测延迟、下载速度、上传速度。延迟 20 次采样取中位数＋抖动；下载 1MB 预热后自动选 10MB/25MB 正式档并绘制实时速率曲线；上传 4 并发聚合测速。结果含 Mbps/MB/s 双单位与档位评级建议。测的是你的设备到本站的链路，免安装、打开即用。Speed test: ping, download and upload speed in your browser, no install.">
+    <meta name="keywords" content="网速测试,带宽测速,speed test,网络延迟,ping,下载速度,上传速度,抖动,jitter,Mbps,宽带测速,测网速">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/speed-test">
+    <meta property="og:title" content="网速测试 - 测延迟/下载/上传，免安装一键测速">
+    <meta property="og:description" content="一键测延迟、下载、上传三维网速：20 采样延迟中位数＋抖动、自适应档下载测速、4 并发上传测速，实时速率曲线＋档位评级，测到本站链路。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/speed-test">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"网速测试","description":"一键测延迟、下载、上传三维网速：延迟 20 次采样取中位数＋抖动；下载 1MB 预热后自动选 10MB/25MB 正式档并绘制实时速率曲线；上传 4 并发聚合测速。结果含 Mbps/MB/s 双单位与档位评级建议，测的是设备到本站的链路。","url":"https://www.johnkingzcq123.xyz/tools/speed-test","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .st-disclaimer{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .st-disclaimer .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .st-linknote{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #93c5fd;background:#eff6ff;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#1e40af}
+        .st-linknote .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .st-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .st-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .st-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .st-steps{display:flex;gap:.7rem;margin-bottom:1rem}
+        .st-step{flex:1;border:1px solid #e5e7eb;border-radius:.7rem;padding:.8rem;text-align:center;background:#f9fafb}
+        .st-step .st-badge{display:inline-block;font-size:.78rem;font-weight:700;border-radius:999px;
+            padding:.2rem .8rem;background:#e5e7eb;color:#6b7280;margin-bottom:.4rem}
+        .st-step.st-doing{border-color:#2563eb;background:#eff6ff}
+        .st-step.st-doing .st-badge{background:#2563eb;color:#fff}
+        .st-step.st-done{border-color:#10b981;background:#ecfdf5}
+        .st-step.st-done .st-badge{background:#10b981;color:#fff}
+        .st-step-name{font-weight:700;font-size:.95rem;color:#111827}
+        .st-big{font-size:1.4rem;font-weight:800;color:#1d4ed8;margin-top:.3rem;font-variant-numeric:tabular-nums}
+        .st-progress{height:.6rem;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:.6rem 0 .3rem}
+        .st-progress>div{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#2563eb);
+            border-radius:999px;transition:width .25s ease}
+        .st-label{font-size:.85rem;color:#4b5563;min-height:1.4em;font-variant-numeric:tabular-nums}
+        .st-curve{width:100%;border:1px solid #e5e7eb;border-radius:.6rem;background:#fbfcfe}
+        .st-msg{display:none;gap:.6rem;align-items:flex-start;margin-top:.7rem;font-size:.9rem;line-height:1.8;
+            color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:.6rem;padding:.7rem .9rem}
+        .st-msg .material-icons{flex:none;font-size:1.3rem;color:#f59e0b}
+        .st-start{display:inline-flex;align-items:center;gap:.5rem;padding:.85rem 2.2rem;font-size:1.05rem;font-weight:700;
+            color:#fff;background:#2563eb;border:none;border-radius:.7rem;cursor:pointer}
+        .st-start:hover:not(:disabled){background:#1d4ed8}
+        .st-start:disabled{opacity:.6;cursor:not-allowed}
+        .st-start .material-icons{font-size:1.3rem}
+        .st-result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin:.6rem 0}
+        .st-card{border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem;text-align:center;background:#f9fafb}
+        .st-card .st-k{font-size:.85rem;color:#6b7280;margin-bottom:.3rem}
+        .st-card .st-v{font-size:1.5rem;font-weight:800;color:#111827;font-variant-numeric:tabular-nums}
+        .st-card .st-v small{font-size:.85rem;font-weight:600;color:#6b7280}
+        .st-tier{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #a5b4fc;background:#eef2ff;
+            border-radius:.7rem;padding:.9rem 1rem;margin-top:.8rem;font-size:.95rem;line-height:1.9;color:#312e81}
+        .st-tier .material-icons{color:#4f46e5;flex:none;font-size:1.6rem}
+        .st-hist-list{list-style:none;margin:.6rem 0 0;padding:0}
+        .st-hist-item{display:flex;gap:1rem;flex-wrap:wrap;font-size:.88rem;color:#374151;
+            border-bottom:1px dashed #e5e7eb;padding:.55rem .2rem;font-variant-numeric:tabular-nums}
+        .st-hist-time{color:#6b7280}
+        .st-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .st-btn:hover{border-color:#2563eb;color:#2563eb}
+        .st-tip{font-size:.9rem;color:#4b5563;line-height:1.95}
+        .st-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .st-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .st-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .st-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .st-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        .st-footnote{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1rem}
+        @media (max-width:640px){
+            .st-steps{flex-direction:column}
+            .st-big{font-size:1.2rem}
+            .st-start{width:100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">speed</i> 网速测试</h1>
+            <p>免安装，一键测出延迟、下载速度、上传速度：延迟经 20 次采样取中位数＋抖动；下载先 1MB 预热再按速率自动选 10MB / 25MB 正式档，实时绘制速率曲线；上传 4 并发聚合测速。结果给出 Mbps / MB/s 双单位与档位评级建议。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="st-disclaimer">
+                <i class="material-icons">warning</i>
+                <div><b>流量消耗提示：</b>一次完整测试约消耗 <b>25MB 下行</b>流量（正式档按需 10MB 或 25MB）＋ <b>4MB 上行</b>流量，延迟测试几乎不耗流量。手机流量用户请注意，测试前请确认流量充足；测试时<b>请保持本页面在前台</b>，切后台/锁屏会暂停测试。</div>
+            </div>
+            <div class="st-linknote">
+                <i class="material-icons">info</i>
+                <div><b>测的是什么：</b>本页测的是<b>你的设备到本站服务器</b>这一段链路的速率与延迟，不依赖第三方 CDN；结果<b>不代表</b>访问其它网站、玩其它游戏时的速度，仅供参考当前线路质量。</div>
+            </div>
+
+            <div class="st-panel">
+                <h3><i class="material-icons">play_circle</i> 开始测试</h3>
+                <div class="st-steps">
+                    <div class="st-step st-todo" id="st-step1">
+                        <div><span class="st-badge">待测</span></div>
+                        <div class="st-step-name">① 延迟</div>
+                        <div class="st-big" id="st-big1">—</div>
+                        <div class="st-progress"><div id="st-bar1"></div></div>
+                        <div class="st-label" id="st-label1"></div>
+                    </div>
+                    <div class="st-step st-todo" id="st-step2">
+                        <div><span class="st-badge">待测</span></div>
+                        <div class="st-step-name">② 下载</div>
+                        <div class="st-big" id="st-big2">—</div>
+                        <div class="st-progress"><div id="st-bar2"></div></div>
+                        <div class="st-label" id="st-label2"></div>
+                    </div>
+                    <div class="st-step st-todo" id="st-step3">
+                        <div><span class="st-badge">待测</span></div>
+                        <div class="st-step-name">③ 上传</div>
+                        <div class="st-big" id="st-big3">—</div>
+                        <div class="st-progress"><div id="st-bar3"></div></div>
+                        <div class="st-label" id="st-label3"></div>
+                    </div>
+                </div>
+                <div class="st-msg" id="st-msg1"><i class="material-icons">warning</i><span></span></div>
+                <div class="st-msg" id="st-msg2"><i class="material-icons">warning</i><span></span></div>
+                <div class="st-msg" id="st-msg3"><i class="material-icons">warning</i><span></span></div>
+                <div class="st-msg" id="st-msg4"><i class="material-icons">warning</i><span></span></div>
+                <div style="margin-top:1rem;text-align:center;">
+                    <button type="button" class="st-start" id="st-start">
+                        <i class="material-icons">bolt</i> 开始完整测试
+                    </button>
+                </div>
+                <div class="st-tip" style="margin-top:1rem;">测试顺序为 ①延迟 → ②下载 → ③上传，全自动完成；每步的实时进度条与下方速率曲线会同步更新。想单独看某一维，直接等对应步骤完成即可。</div>
+            </div>
+
+            <div class="st-panel">
+                <h3><i class="material-icons">show_chart</i> 实时速率曲线</h3>
+                <div class="st-label" style="margin-bottom:.4rem;"><b>下载速率</b>（Mbps，250ms 采样）</div>
+                <canvas class="st-curve" id="st-curve-dl"></canvas>
+                <div class="st-label" style="margin:.8rem 0 .4rem;"><b>上传速率</b>（Mbps，250ms 采样）</div>
+                <canvas class="st-curve" id="st-curve-ul"></canvas>
+            </div>
+
+            <div class="st-panel" id="st-result" style="display:none;">
+                <h3><i class="material-icons">assessment</i> 测试结果</h3>
+                <div class="st-result-grid">
+                    <div class="st-card">
+                        <div class="st-k">下载速度</div>
+                        <div class="st-v"><span id="st-r-dl">—</span> <small>Mbps</small></div>
+                        <div class="st-k">≈ <span id="st-r-dl-mbs">—</span> MB/s</div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-k">上传速度</div>
+                        <div class="st-v"><span id="st-r-ul">—</span> <small>Mbps</small></div>
+                        <div class="st-k">≈ <span id="st-r-ul-mbs">—</span> MB/s</div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-k">延迟（中位数）</div>
+                        <div class="st-v"><span id="st-r-lat">—</span> <small>ms</small></div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-k">抖动</div>
+                        <div class="st-v"><span id="st-r-jit">—</span> <small>ms</small></div>
+                    </div>
+                </div>
+                <div class="st-tier">
+                    <i class="material-icons">grade</i>
+                    <div><b>档位评级：<span id="st-r-tier">—</span></b><br><span id="st-r-advice"></span></div>
+                </div>
+            </div>
+
+            <div class="st-panel">
+                <h3><i class="material-icons">history</i> 历史记录</h3>
+                <div class="st-tip">最近 10 次测试结果保存在浏览器本地（localStorage），不上传服务器。</div>
+                <ul class="st-hist-list" id="st-history-list"></ul>
+                <div class="st-tip" id="st-history-empty" style="margin-top:.6rem;">暂无历史记录，测一次试试。</div>
+                <div style="margin-top:.8rem;">
+                    <button type="button" class="st-btn" id="st-clear-history">
+                        <i class="material-icons">delete</i> 一键清空
+                    </button>
+                </div>
+            </div>
+
+            <div class="st-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="st-tip">
+                    <b>延迟：</b>发 20 次轻量请求（cache-bust 防缓存），取中位数并计算抖动（相邻采样差值均值）。延迟低、抖动小 → 视频会议、云游戏更稳。<br>
+                    <b>下载：</b>先用 1MB 预热探路；预热速率 ≥ 20 Mbps 则跑 25MB 正式档（大文件测得更准），否则跑 10MB 档（慢线路不至于等太久）。速率 = 实际传输字节 ÷ 耗时。<br>
+                    <b>上传：</b>4 个并发 POST 各推 1MB 随机块（防压缩），聚合字节 ÷ 总耗时即上行速率。<br>
+                    <b>单位：</b>Mbps 是运营商口径（1 Mbps = 100 万 bit/秒）；MB/s 是下载软件常见口径，MB/s ≈ Mbps ÷ 8。<br>
+                    <b>档位评级：</b>≥100 Mbps 光纤档；≥25 Mbps 4K 流畅档；≥10 Mbps 高清档；＜10 Mbps 基础档，附一句话建议。
+                </div>
+                <div class="st-footnote">脚注：① 开了代理/VPN、开了广告拦截/流量压缩、运营商 QoS 限速或 Wi-Fi 信号差，都会让测得值明显低于线路真实能力——想测「裸线」速度请先关闭代理/VPN 并靠近路由器；② 高峰期（晚间）运营商拥塞也会拉低结果，可换时段再测对比；③ 浏览器切后台/锁屏会暂停测试，计时不准，须保持前台。</div>
+            </div>
+
+            <div class="st-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="st-faq">
+                    <dt>为什么测出来比运营商说的带宽低？</dt>
+                    <dd>运营商标称的是「到运营商机房」的理论上限；本页测的是到本站服务器的实际可用速率，中间经过的每一跳（Wi-Fi、光猫、运营商骨干、跨网）都会打折。先排除代理/VPN 与 Wi-Fi 信号问题，换有线或靠近路由器再测一次对比。</dd>
+                    <dt>Mbps 和 MB/s 怎么换算？</dt>
+                    <dd><code>MB/s ≈ Mbps ÷ 8</code>（1 字节 = 8 bit）。比如 100 Mbps 宽带，下载软件里显示约 12.5 MB/s 就是跑满了。页面结果同时给出两种单位，直接看就行。</dd>
+                    <dt>延迟和抖动哪个更重要？</dt>
+                    <dd>都看：延迟决定「反应快慢」，抖动决定「稳不稳」。视频会议/云游戏里，抖动大（忽高忽低）比延迟稍高更难受——抖动 &lt; 10ms 算稳定，&gt; 30ms 建议排查线路。</dd>
+                    <dt>测试会消耗多少流量？</dt>
+                    <dd>完整一次约 25MB 下行＋4MB 上行（慢线路自动用 10MB 档则更少），延迟测试几乎零流量。页面顶部已明示，手机流量用户请留意。</dd>
+                    <dt>为什么提示「测的是到本站的链路」？</dt>
+                    <dd>测速源是本站自己的服务器，不经过第三方 CDN。结果反映你到本站点的线路质量，不代表访问其它网站、其它游戏服务器时的速度——不同目标走的线路可能完全不同。</dd>
+                    <dt>测试中途切后台会怎样？</dt>
+                    <dd>页面监听 <code>visibilitychange</code>：检测到切后台/锁屏会立刻暂停并提示，因为后台计时被浏览器节流、速率会虚低。请保持本页在前台，点「重新测试」再跑一次。</dd>
+                    <dt>历史记录存在哪？</dt>
+                    <dd>只存在你浏览器本地的 localStorage（最近 10 次），不上传服务器；点「一键清空」即删，清浏览器数据也会一并清除。</dd>
+                </dl>
+            </div>
+
+            <div class="st-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="st-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">网速测试（当前）</span>
+                    <a href="/tools/ping" class="btn btn-secondary" style="font-size:.9rem;">Ping测试</a>
+                    <a href="/tools/my-ip" class="btn btn-secondary" style="font-size:.9rem;">我的IP</a>
+                    <a href="/tools/dns-lookup" class="btn btn-secondary" style="font-size:.9rem;">DNS解析查询</a>
+                    <a href="/tools/ip-lookup" class="btn btn-secondary" style="font-size:.9rem;">IP查询</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/speed_test.js?v=1"></script>
+</body>
+</html>
+{{end}}

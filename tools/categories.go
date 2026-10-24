@@ -1157,6 +1157,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "网络工具",
 				},
+				{
+					ID:          "speed_test",
+					Name:        "网速测试",
+					Description: "测延迟、下载、上传三维网速：延迟 20 采样取中位数＋抖动，自适应档下载测速，多并发上传测速，带档位评级",
+					Path:        "/tools/speed-test",
+					Icon:        "speed",
+					New:         true,
+					Category:    "网络工具",
+				},
 			},
 		},
 		{
