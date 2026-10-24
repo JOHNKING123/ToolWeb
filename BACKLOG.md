@@ -1,3 +1,89 @@
+## 今日任务（2026-10-24 07:47 · 前端开发轮 ✅）
+
+**交付：HTTP 状态码速查（http_status_reference）** — 本轮唯一任务（新工具），开发完成已提交推送：
+- **改动文件**：`templates/http_status_reference.html`（新增；SEO 面板按家族标准：title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具＋「中文释义仅供参考，规范语义以 RFC/MDN 为准」声明条＋零上传隐私声明）、`static/js/http_status_reference.js`（新增；62 条状态码静态数据＋搜索/筛选/展开渲染；纯函数经 module.exports 双模式导出供 node 测试）、`tests/http_status_reference.test.js`（新增；66 断言全过）、`tools/categories.go`（开发工具品类注册 ID http_status_reference、Path /tools/http-status-reference、Icon http、New: true）、`BACKLOG.md`（本条）。
+- **验收核对**：① `grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **157**（156→157 ✓）；② 62 条状态码（1xx×3、2xx×10、3xx×9、4xx×29、5xx×11），逐条七字段齐全无空，码号唯一升序，类别归属与 IANA/MDN 一致（418/451 归 4xx、103 归 1xx ✓）；③ 搜索「429」命中 429、「teapot」命中 418、「网关」命中 502/504、拼音首字母「cg」命中 200；类别 tab 过滤正确；卡片点击展开/收起（含键盘 Enter/空格）；④ JS 源码自检零 fetch/XHR，声明文案完整，418/451 冷知识备注存在（另附 306/413）；⑤ node 测试 **66 断言全过**（≥40 ✓：数据完整性、字段齐全、类别合法、码号唯一升序、搜索逻辑、双条件组合、渲染防 XSS、模板静态检查）；⑥ 本地构建通过，curl /tools/http-status-reference 与 JS 均为 200，title/canonical/声明正确；移动端媒体查询已配（≤640px 卡片单列不撑破）。
+- **实现要点**：中文释义全部自有改写、非 MDN 照搬；数据与渲染逻辑分离（searchStatus/filterByCategory/queryStatus/getStatusByCode 纯函数）；卡片渲染全走 escHtml 防 XSS；搜索匹配码号/英文原名/中文名称/拼音首字母/含义/场景/排查建议全文。
+- **提交**：`git log` 见本轮中文提交（muse/dev-20260929，已 push origin）；`toolWeb.bak-prev` 与 `toolweb` 构建产物未入库（沿用 PM 轮要求，仅提醒）。
+- **待后续轮次**：评审轮 UI 走查＋测试轮黑盒 QA；部署走 ~/workspace/deploy/toolweb/deploy.sh（授权仅 /tool-web）。
+
+---
+
+## 今日任务（2026-10-24 07:44 · 产品经理排期轮）
+
+**选定：HTTP 状态码速查（http_status_reference）** — 本轮唯一任务（新工具）：
+- **顺位**：07:36 研究轮（84 轮）Top3 **首席推荐**；05:41 PM 轮选定的 ASCII 字符画生成器已交付闭环（1927b3f，156 Path；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 156 Path，ID ascii_art_generator、Path /tools/ascii-art-generator 已注册，图片处理品类；候选池划出）后顺位递进生效，依惯例「无硬伤不跳过」。未选：本地 LLM 硬件检测器（P2；四次形态验证多轮留池，无硬伤，留池顺位递进）、CSP 安全头生成器（本轮新晋 P2；Show HN DevKit 形态验证，无硬伤，留池）、浏览器录屏工具（中难度；纯前端，留池备选）、CSS Sprite 雪碧图生成器（niche P2，留池）。
+- **选定理由**：① **研究轮首席推荐，无硬伤不跳过**——累计三度形态验证（Site Tools Box 81 轮＋dev.to KRUMB.DEV＋UniversalTools.org 83 轮）；② **纯前端小难度一轮可高质量交付**——静态数据＋搜索＋类别筛选，可搜索的 1xx–5xx 中文参考（中文含义＋常见场景＋排查建议），零上传、零第三方库、零 fetch/XHR；③ **零重叠复核**——本轮实测 `grep -rniE 'http_status_reference|http-status-reference|状态码速查'` 在 tools/categories.go、templates/、static/js/ **全路零命中实锤**（`状态码` 仅 postman.html 工具内文案一处提及，postman 为 HTTP 客户端工具，非独立状态码参考）；④ **痛点明确**——联调时查 429/418/502 含义要翻 MDN 英文文档，中文速查＋排查建议直击日常调试刚需。
+- **品类归位**：注册到「开发工具」品类（与 curl_to_requests 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **数据覆盖必须完整**——1xx–5xx 五类至少 60+ 常用码全覆盖（100/101/103；200/201/202/204/206；301/302/303/304/307/308；400/401/402/403/404/405/406/408/409/410/411/412/413/414/415/416/417/418/421/422/425/426/428/429/431/451；500/501/502/503/504/505/507/508 等），每码四字段：中文名称＋中文含义＋常见场景＋排查建议；② **中文释义为自有改写**——不得逐字照搬 MDN 英文翻译，页面显著位置注明「中文释义仅供参考，规范语义以 RFC/MDN 为准」；③ **搜索＋筛选双通道**——关键字搜索（数字/中英文/拼音首字母可查）、按类别筛选（1xx 信息响应/2xx 成功/3xx 重定向/4xx 客户端错误/5xx 服务端错误五类），点击卡片展开详情；④ **零 fetch/XHR 文案如实**——纯静态数据无网络请求，脚本自检零 fetch/XHR；⑤ **趣味码保留原味**——418 I'm a teapot、451 因法律原因不可用等加「冷知识」备注，提升传播点；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/http-status-reference）。
+- **ID/Path**：`http_status_reference`、`/tools/http-status-reference`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 数据层：JS 静态数组（数据与渲染逻辑分离、可被 node require 测试）；每条 `{code, name_en, name_cn, category, meaning_cn, scenario, fix}` 七字段。
+- UI：顶部搜索框（实时过滤）＋类别筛选 tab（全部/1xx/2xx/3xx/4xx/5xx）＋状态码卡片网格（码号大字＋中文名称＋类别色条）；点击卡片展开：英文原名、中文含义、常见场景、排查建议、冷知识（如有）。
+- 注册：ID `http_status_reference`、Name「HTTP 状态码速查」、Path `/tools/http-status-reference`、Category 开发工具、Icon 建议 http/policy 类、New: true；中英文描述＋SEO keywords（HTTP 状态码、status code、429、502、排查、联调、http status reference）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `http_status_reference`、Path `/tools/http-status-reference` 注册完整（Category 开发工具），注册总数 156→157 Path。
+2. 五类状态码总数 ≥60，逐条七字段齐全（无空字段）；类别分布与 IANA/MDN 一致（无错类，如 418 归 4xx、451 归 4xx、103 归 1xx）。
+3. 搜索「429」「teapot」「网关」均能命中对应条目；类别 tab 切换过滤正确；点击卡片展开/收起正常。
+4. JS 源码自检零 fetch/XHR；「中文释义仅供参考，规范语义以 RFC/MDN 为准」声明完整；418/451 冷知识备注存在。
+5. node 测试 40+ 断言全过（数据完整性：七字段齐全、类别枚举合法、码号唯一且升序、搜索函数逻辑、模板静态检查）。
+6. 页面无报错；移动端布局不错位；卡片网格在小屏下单列不撑破。
+
+**预计改动文件**：
+- `templates/http_status_reference.html`（新增；含 SEO 面板按家族标准＋搜索框/筛选 tab/卡片网格 UI 样式）
+- `static/js/http_status_reference.js`（新增；静态状态码数据＋搜索/筛选/展开渲染；数据与逻辑分离供 node 测试）
+- `tests/http_status_reference.test.js`（新增；数据完整性、字段齐全性、类别合法性、搜索逻辑、模板静态检查）
+- `tools/categories.go`（开发工具品类注册：ID http_status_reference、Path /tools/http-status-reference、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD 1927b3f（ascii_art_generator 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常，origin/muse/dev-20260929 与本地一致；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 156 Path；Top3 候选零重叠本轮复核（http_status/状态码速查、llm_hardware/LLM硬件、CSP安全头 全路零命中）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 07:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。ASCII 字符画生成器已交付闭环（`git log` 头部 1927b3f：上传图片→canvas 本地降采样→亮度映射 ASCII 字符集（宽度/字符集/反色/彩色模式可调）→复制＋导出 .txt，零上传；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **156 Path**，ID ascii_art_generator、Path /tools/ascii-art-generator 已注册，图片处理品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 早轮，P1 池已空，P2 可晋升，优先小难度纯前端。
+
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. ascii_art_generator 交付确认：`git log` 头部 1927b3f（2026-10-23 21:59 UTC＝10-24 05:59 CST；05:41 PM 轮选定任务交付闭环）；全量 156 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin 与本地一致）；候选池划出。
+2. 新信号扫描：
+   - **Show HN DevKit（80 browser-based dev tools, no signup, all client-side；约 17 天前）**：Generate 类列出 **CSP**、.gitignore、ASCII Art 等 → CSP 三路全路零命中 → **新晋 P2「CSP 安全头生成器」**（建议 ID csp_builder、Path /tools/csp-builder）：指令勾选→生成 Content-Security-Policy 头＋meta 标签＋一键复制，纯前端小难度，零上传；gitignore_generator → 实锤自有，不立；chmod → 实锤自有（Chmod 权限计算器），不立；ASCII Art → 本轮刚交付 ascii_art_generator，形态呼应；Color Contrast → 实锤自有（color 工具「HEX/RGB/HSL 互转，实时预览，WCAG 对比度检查」），不独立立；密码强度 → 实锤自有（password 工具「显示密码强度」），不独立立；Keccak/Merkle/ABI/wallet → blockchain niche，不立；其余 JSON/SQL/Base64/JWT/Cron/正则/UUID/时间戳全自有；
+   - **Show HN Dev Tools 24（HN 46293088；约 78 天前）**：JSON/CSV↔JSON/SQL/正则/Base64/Hash/UUID/JWT/Cron/时间戳/Diff → 全自有复现，不立；
+   - **dev.to shohan（10-13，10 free browser tools）**：Time Zone Converter → 实锤自有 timezone_converter，不立；Image Annotator（截图箭头/图形/文字标注→导出 PNG/JPEG）→ 实锤自有 image_annotator，不立；Speech to Text/Text to Speech → 浏览器 speech API 形态非单页工具，不立；Date Add/Subtract（含 ISO week＋ISO 8601 stamp）→ 10-18 方向修正边界（生活计算器），观察不立；
+   - **dev.to Zovixia（10-09，100+ tools）**：**Client-Side Screen Recorder（WebRTC 录屏，零水印零时长限制）** → 三路全路零命中 → **新晋 P2「浏览器录屏工具」**（建议 ID screen_recorder、Path /tools/screen-recorder）：getDisplayMedia＋MediaRecorder→webm 下载（麦克风可选），零上传；纯前端中难度（编码格式/权限/移动端降级需处理），早轮备选；AI Background Remover → 池内 P2「人像背景一键虚化」部分同构观察，不重复立；PDF Suite（pdf-lib 合并/拆分/压缩/加水印）→ 自有 pdf 工具族复现，不立；SIP/EMI/GST 计算器 → 方向边界，不立；
+   - **dev.to Tooltri（30+ tools）**：ChatGPT Text Cleaner（去 AI 文本隐藏字符）→ 实锤自有 ai_text_cleaner，不立；SQLite DB Viewer → 池内已有，不立；YouTube Thumbnail Downloader → 版权灰色＋需网络，不立；其余 JSON/JWT/Base64/UUID/Hash/URL/时间戳全自有；
+   - **dev.to DevTrove（10-13，22 tools）/VelnoxLabs（09-27，51 tools）**：JSON/Schema/diff/YAML/CSV/JWT/Base64/正则/Cron/时间戳 → 全自有；Invoice Generator → 财务方向边界，不立；cURL→Python → 实锤自有 curl_to_requests，不立；
+   - **V2EX/Reddit**：本轮返回 SEO 营销内容与旧帖，无可消化需求帖 → 本轮空。
+3. 候选池变动：ASCII 字符画生成器已交付划出（1927b3f，156 Path）；**新晋 P2 2 个**（CSP 安全头生成器：Show HN DevKit 形态验证，纯前端小难度；浏览器录屏工具：Zovixia WebRTC 零水印录屏形态验证，纯前端中难度）；**形态补强 0 项**（Top3 均已有多轮验证）；自有实锤消解 14 项（gitignore/chmod/颜色对比度/密码强度/image_annotator/timezone_converter/ai_text_cleaner/curl_to_requests 等＋DevTrove/VelnoxLabs/Dev Tools 24 全自有复现）；方向边界/过 niche/版权灰色不立 7 项（Invoice、Date Add/Subtract、YouTube 缩略图下载、Keccak/Merkle/ABI/wallet、Speech API）；V2EX/Reddit 本轮空；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，07:36 早轮优先小难度纯前端）：
+
+1. **HTTP 状态码速查** — P2（83 轮新晋；累计三度形态验证：Site Tools Box 81 轮＋KRUMB.DEV＋UniversalTools.org 83 轮；痛点：联调时查 429/418/502 含义要翻 MDN 英文文档；纯前端小难度：可搜索＋按类别筛选的 1xx–5xx 中文参考＋常见场景＋排查建议；三路**零命中实锤**（`http_status_reference|http-status-reference|状态码速查` 在 categories.go/templates/static/js 均为 0 文件命中；`状态码` 仅 postman.html 工具内文案一处提及，postman 为 HTTP 客户端非独立参考工具）；建议 ID http_status_reference、Path /tools/http-status-reference）。
+2. **本地 LLM 硬件检测器** — P2（77 轮新晋；多轮留池顺位；四次形态验证：Show HN「What LLM fits my GPU?」/llmspeed/Hotfix Flint；痛点：想本地跑 LLM 不知道自己显卡能不能带、该下什么量化版本；纯前端小难度：选显卡型号→显存/算力对照表→可跑模型量化版本推荐；三路**零命中实锤**；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）。
+3. **CSP 安全头生成器** — 新晋 P2（本轮首席新晋；Show HN DevKit「80 browser-based developer tools, no signup, all client-side」Generate 类列出 CSP 形态验证；痛点：手写 Content-Security-Policy 头容易出错、漏指令导致整站白屏，现有在线生成器广告多；纯前端小难度：指令勾选（default-src/script-src/style-src/img-src/connect-src/frame-ancestors 等）＋常用预设（宽松/严格/兼容）→生成 Header 值＋`<meta http-equiv>` 标签＋一键复制；零上传；三路**零命中实锤**；建议 ID csp_builder、Path /tools/csp-builder）。
+
+其余 P2 留池：CSS Sprite 雪碧图生成器（83 轮新晋，niche；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；浏览器录屏工具（本轮新晋；中难度：getDisplayMedia＋MediaRecorder→webm 下载；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；中难度 Go 后端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/SERP 片段预览/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十四轮：ASCII 字符画生成器已交付划出（1927b3f，10-24 05:59 CST，156 Path；05:41 PM 轮选定任务交付闭环）；**新晋 P2 2 个：CSP 安全头生成器**（Show HN DevKit 80 工具 Generate 类形态验证；指令勾选→CSP 头＋meta 标签＋复制，纯前端小难度零上传；三路零命中实锤；建议 ID csp_builder、Path /tools/csp-builder）、**浏览器录屏工具**（dev.to Zovixia 100 工具「Client-Side Screen Recorder：WebRTC 录屏零水印零时长限制」形态验证；getDisplayMedia＋MediaRecorder→webm 下载，零上传；纯前端中难度；三路零命中实锤；建议 ID screen_recorder、Path /tools/screen-recorder）；形态补强 0 项；自有实锤消解 14 项（DevKit：gitignore_generator→自有、chmod→自有 Chmod 权限计算器、Color Contrast→自有 color 工具「WCAG 对比度检查」、密码强度→自有 password 工具「显示密码强度」；shohan：Image Annotator→自有 image_annotator、Time Zone→自有 timezone_converter；Tooltri：ChatGPT Text Cleaner→自有 ai_text_cleaner；VelnoxLabs：cURL→Python→自有 curl_to_requests；DevTrove 22 工具/Show HN Dev Tools 24/JWT/正则/Cron/时间戳/UUID/Base64 全自有复现）；方向边界/过 niche/版权灰色不立 7 项（Invoice Generator、Date Add/Subtract、YouTube Thumbnail Downloader、Keccak/Merkle/ABI/wallet、Speech to Text）；V2EX/Reddit 本轮空；全量 156 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSP 安全头生成器 | 新晋 P2（84 轮；Show HN DevKit「80 browser-based developer tools, no signup, all client-side」Generate 类列出 CSP 形态验证；痛点：手写 Content-Security-Policy 头易出错、漏指令致整站白屏，现有在线生成器广告多；纯前端小难度：指令勾选＋常用预设→生成 Header 值＋meta 标签＋一键复制，零上传；三路零命中实锤；建议 ID csp_builder、Path /tools/csp-builder） | 小 | P2 |
+| 浏览器录屏工具 | 新晋 P2（84 轮；dev.to Zovixia 100 工具「Client-Side Screen Recorder：WebRTC 录屏零水印零时长限制」形态验证；痛点：免费录屏软件带水印/限时长，OBS 笨重；纯前端中难度：getDisplayMedia＋MediaRecorder→webm 下载（麦克风可选），零上传；三路零命中实锤；建议 ID screen_recorder、Path /tools/screen-recorder） | 中 | P2 |
+| ASCII 字符画生成器 | 已交付划出（1927b3f 新增：上传图片→canvas 本地降采样→亮度映射 ASCII 字符集（宽度/字符集/反色/彩色模式可调）→复制＋导出 .txt，零上传；ID ascii_art_generator、Path /tools/ascii-art-generator 已注册，图片处理品类；全量 156 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（DevKit：gitignore_generator→实锤自有；chmod→实锤自有（Chmod 权限计算器）；Color Contrast→实锤自有（color 工具描述「WCAG 对比度检查」）；密码强度→实锤自有（password 工具「显示密码强度」）；shohan：Image Annotator→实锤自有 image_annotator；Time Zone Converter→实锤自有 timezone_converter；Tooltri：ChatGPT Text Cleaner→实锤自有 ai_text_cleaner；VelnoxLabs：cURL→Python→实锤自有 curl_to_requests；DevTrove 22 工具/Show HN Dev Tools 24/JWT/正则/Cron/时间戳/UUID/Base64 全自有复现） | — | 不立 |
+| 方向边界/过 niche/版权灰色 | 不立（VelnoxLabs Invoice Generator→财务方向边界；shohan Date Add/Subtract→10-18 方向修正生活计算器边界；Tooltri YouTube Thumbnail Downloader→版权灰色＋需网络；DevKit Keccak/Merkle/ABI/wallet validator→blockchain niche；Speech to Text/Text to Speech→浏览器 speech API 形态非单页工具；V2EX/Reddit→本轮空） | — | 不立 |
+
+**归档说明**：本轮为 10-24 通用调研第八十四轮——ASCII 字符画生成器交付闭环（1927b3f，`/tools/ascii-art-generator` 已注册，图片处理品类，全量 156 Path），候选池划出；**新晋 P2 2 个**（CSP 安全头生成器：Show HN DevKit 形态验证，纯前端小难度，零命中实锤；浏览器录屏工具：Zovixia WebRTC 零水印录屏形态验证，纯前端中难度，早轮备选）；14 项自有实锤消解；7 项方向边界/过 niche/版权灰色不立；V2EX/Reddit 本轮空；WPS 候选表保持冻结归档；仓库 156 注册工具全量核对无重叠（Top3 建议 ID http_status_reference / llm_hardware_checker / csp_builder；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮正常，origin/muse/dev-20260929 与本地一致）；`git log` 头部 1927b3f（ascii_art_generator 交付闭环，2026-10-23 21:59 UTC）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 156 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 05:41 · 产品经理排期轮）
 
 **选定：ASCII 字符画生成器（ascii_art_generator）** — 本轮唯一任务（新工具）：

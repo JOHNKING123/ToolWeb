@@ -1,0 +1,174 @@
+{{define "http_status_reference"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP 状态码速查 - 1xx~5xx 中文含义与排查指南 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 HTTP 状态码速查手册：1xx~5xx 共 62 个常用状态码，每条含中文名称、中文含义、常见场景、排查建议，支持码号/中英文/拼音首字母实时搜索与五类筛选（信息响应/成功/重定向/客户端错误/服务端错误），418 茶壶/451 法律原因等冷知识备注，纯前端本地运行零上传。HTTP status code reference in Chinese: search by code, English/Chinese name or pinyin initials, filter by category, 100% client-side.">
+    <meta name="keywords" content="HTTP 状态码,状态码速查,http status code,429,502,418,451,状态码含义,状态码排查,联调,http status reference,状态码中文">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/http-status-reference">
+    <meta property="og:title" content="HTTP 状态码速查 - 中文含义与排查指南">
+    <meta property="og:description" content="62 个常用 HTTP 状态码中文速查：码号/中英文/拼音首字母实时搜索，五类筛选，点击卡片展开中文含义、常见场景与排查建议。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/http-status-reference">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HTTP 状态码速查","description":"在线 HTTP 状态码中文速查手册：1xx~5xx 共 62 个常用码，每条含中文名称、中文含义、常见场景、排查建议；支持码号/中英文/拼音首字母实时搜索与五类筛选；纯前端本地运行，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/http-status-reference","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hsr-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .hsr-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .hsr-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .hsr-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .hsr-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .hsr-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .hsr-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .hsr-search-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .hsr-search-wrap{flex:1;min-width:220px;position:relative}
+        .hsr-search-wrap .material-icons{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);
+            color:#9ca3af;font-size:1.25rem;pointer-events:none}
+        #hsr-search{width:100%;box-sizing:border-box;padding:.7rem .9rem .7rem 2.6rem;font-size:1rem;
+            border:1px solid #d1d5db;border-radius:.6rem;outline:none}
+        #hsr-search:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .hsr-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .hsr-btn:hover{border-color:#2563eb;color:#2563eb}
+        .hsr-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem}
+        .hsr-tab{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;font-weight:600;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:999px;padding:.45rem 1rem;background:#f9fafb;color:#4b5563}
+        .hsr-tab:hover{border-color:#2563eb;color:#2563eb}
+        .hsr-tab.active{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+        .hsr-count{font-size:.88rem;color:#6b7280;margin-top:.7rem}
+        #hsr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.9rem;margin-top:1rem}
+        .hsr-card{background:#fff;border:1px solid #e5e7eb;border-top:4px solid #9ca3af;border-radius:.7rem;
+            padding:.9rem 1rem;cursor:pointer;transition:box-shadow .15s,border-color .15s}
+        .hsr-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);border-color:#c7d2fe}
+        .hsr-card:focus{outline:2px solid #2563eb;outline-offset:2px}
+        .hsr-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem}
+        .hsr-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.7rem;
+            font-weight:800;color:#111827;letter-spacing:.02em}
+        .hsr-cat-badge{font-size:.75rem;font-weight:700;border-radius:999px;padding:.15rem .6rem;color:#fff;background:#9ca3af}
+        .hsr-cat-1xx{border-top-color:#0ea5e9}.hsr-cat-1xx .hsr-cat-badge{background:#0ea5e9}
+        .hsr-cat-2xx{border-top-color:#10b981}.hsr-cat-2xx .hsr-cat-badge{background:#10b981}
+        .hsr-cat-3xx{border-top-color:#f59e0b}.hsr-cat-3xx .hsr-cat-badge{background:#f59e0b}
+        .hsr-cat-4xx{border-top-color:#ef4444}.hsr-cat-4xx .hsr-cat-badge{background:#ef4444}
+        .hsr-cat-5xx{border-top-color:#8b5cf6}.hsr-cat-5xx .hsr-cat-badge{background:#8b5cf6}
+        .hsr-name-cn{font-size:1.02rem;font-weight:700;color:#1f2937}
+        .hsr-name-en{font-size:.85rem;color:#6b7280;margin-top:.15rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .hsr-detail{display:none;margin-top:.8rem;border-top:1px dashed #e5e7eb;padding-top:.8rem}
+        .hsr-card.hsr-open .hsr-detail{display:block}
+        .hsr-detail dl{margin:0}
+        .hsr-detail dt{font-weight:700;color:#1d4ed8;font-size:.88rem;margin:.55rem 0 .2rem}
+        .hsr-detail dt:first-child{margin-top:0}
+        .hsr-detail dd{margin:0;color:#4b5563;line-height:1.85;font-size:.9rem}
+        .hsr-detail .hsr-note{color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.5rem;
+            padding:.5rem .7rem}
+        .hsr-detail .hsr-disclaimer{font-size:.8rem;color:#9ca3af;margin:.7rem 0 0}
+        .hsr-empty{grid-column:1/-1;text-align:center;color:#6b7280;padding:2.5rem 1rem;font-size:.95rem;
+            border:1px dashed #d1d5db;border-radius:.7rem;background:#f9fafb}
+        .hsr-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .hsr-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .hsr-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .hsr-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .hsr-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .hsr-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            #hsr-grid{grid-template-columns:1fr}
+            .hsr-search-row .hsr-btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">http</i> HTTP 状态码速查</h1>
+            <p>联调时看到 429 / 418 / 502 发懵？这里有 1xx~5xx 共 62 个常用状态码的中文速查：中文名称、中文含义、常见场景、排查建议一次讲清，支持码号 / 中英文 / 拼音首字母实时搜索，五类一键筛选，点击卡片展开详情。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="hsr-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>释义声明：</b>中文释义仅供参考，规范语义以 RFC/MDN 为准。本页中文名称、含义与排查建议均为自有改写，遇到争议请以 RFC 规范文档或 MDN 英文原文为准。</div>
+            </div>
+            <div class="hsr-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>全部 62 条状态码数据内置在页面脚本里，不发起任何网络请求，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+
+            <div class="hsr-panel">
+                <h3><i class="material-icons">search</i> 搜索与筛选</h3>
+                <div class="hsr-search-row">
+                    <div class="hsr-search-wrap">
+                        <i class="material-icons">search</i>
+                        <input type="search" id="hsr-search" placeholder="搜码号 / 英文原名 / 中文名称 / 拼音首字母，如 429、teapot、网关、cg" autocomplete="off">
+                    </div>
+                    <button type="button" class="hsr-btn" id="hsr-clear">
+                        <i class="material-icons">backspace</i> 清空
+                    </button>
+                </div>
+                <div class="hsr-tabs" role="tablist" aria-label="状态码类别筛选">
+                    <button type="button" class="hsr-tab active" data-cat="all" role="tab">全部</button>
+                    <button type="button" class="hsr-tab" data-cat="1xx" role="tab">1xx 信息响应</button>
+                    <button type="button" class="hsr-tab" data-cat="2xx" role="tab">2xx 成功</button>
+                    <button type="button" class="hsr-tab" data-cat="3xx" role="tab">3xx 重定向</button>
+                    <button type="button" class="hsr-tab" data-cat="4xx" role="tab">4xx 客户端错误</button>
+                    <button type="button" class="hsr-tab" data-cat="5xx" role="tab">5xx 服务端错误</button>
+                </div>
+                <div class="hsr-count" id="hsr-count"></div>
+                <div id="hsr-grid"></div>
+            </div>
+
+            <div class="hsr-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="hsr-tip">
+                    <b>怎么查：</b>在搜索框输入码号（如 <code>429</code>）、英文原名（如 <code>teapot</code>）、中文名称或关键词（如 <code>网关</code>）、拼音首字母（如 <code>cg</code> 查「成功」），结果实时过滤；也可以点上方类别 tab 按 1xx~5xx 筛选。<br>
+                    <b>看详情：</b>点击任意卡片展开：英文原名、中文含义、常见场景、排查建议逐项列出，部分趣味状态码（如 418、451）还附有「冷知识」。<br>
+                    <b>五类速记：</b>1xx 信息响应（还没完事）、2xx 成功（成了）、3xx 重定向（去别处）、4xx 客户端错误（你的锅）、5xx 服务端错误（它的锅）。<br>
+                    <b>联调技巧：</b>先看首位数字定大类，再看具体码号；429/503 注意 <code>Retry-After</code> 头，401/403 先分清「没认出你」还是「不让你进」。<br>
+                    <b>隐私：</b>全部数据内置在页面脚本中，不发起任何网络请求，不上传任何数据。
+                </div>
+            </div>
+
+            <div class="hsr-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="hsr-faq">
+                    <dt>这里的中文释义权威吗？</dt>
+                    <dd>中文释义仅供参考，规范语义以 RFC/MDN 为准。本页中文名称、含义与排查建议均为自有改写、便于快速理解，遇到语义争议请查阅 RFC 规范文档或 MDN 英文原文。</dd>
+                    <dt>搜索支持哪些方式？</dt>
+                    <dd>四种：① 码号（如 <code>429</code>）；② 英文原名（如 <code>teapot</code> 会命中 418 I'm a teapot）；③ 中文名称或正文关键词（如 <code>网关</code> 会命中 502 网关错误、504 网关超时）；④ 中文名称拼音首字母（如 <code>cg</code> 命中 200 成功）。</dd>
+                    <dt>418 I'm a teapot 是真的状态码吗？</dt>
+                    <dd>是 IANA 注册表里的真实条目，出自 1998 年愚人节 RFC 2324《超文本咖啡壶控制协议》。2017 年曾有人提议删除它，遭到开发者强烈反对而保留。生产环境里看到它，多半是 API 彩蛋或反爬逻辑被触发了。</dd>
+                    <dt>接口返回 429 被限流了怎么办？</dt>
+                    <dd>先看响应里的 <code>Retry-After</code> 头，按指示退避重试（建议指数退避）；长期看要降低请求频率、加缓存、合并请求，或向服务方申请更高配额。压测时被 429 拦下是正常保护机制。</dd>
+                    <dt>401 和 403 到底有什么区别？</dt>
+                    <dd>401 是「没认出你」——没带凭证或凭证过期，去登录/刷新 token；403 是「认出你但不让你进」——权限不足或被规则拦截，重新登录通常没用，要去查权限配置或 WAF 规则。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。62 条状态码数据全部内置在页面脚本里，搜索、筛选、展开都在浏览器本地完成，零 fetch/XHR，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+
+            <div class="hsr-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="hsr-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">HTTP 状态码速查（当前）</span>
+                    <a href="/tools/regex-tester" class="btn btn-secondary" style="font-size:.9rem;">正则表达式测试</a>
+                    <a href="/tools/cron-parser" class="btn btn-secondary" style="font-size:.9rem;">Cron 表达式解析</a>
+                    <a href="/tools/jwt-parser" class="btn btn-secondary" style="font-size:.9rem;">JWT 解析器</a>
+                    <a href="/tools/project-to-txt" class="btn btn-secondary" style="font-size:.9rem;">代码打包给 LLM</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/http_status_reference.js?v=1"></script>
+</body>
+</html>
+{{end}}

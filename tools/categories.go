@@ -175,6 +175,15 @@ func GetCategories() []Category {
 				// 	Category:    "开发工具",
 				// },
 				{
+					ID:          "http_status_reference",
+					Name:        "HTTP 状态码速查",
+					Description: "HTTP 状态码中文速查手册：1xx–5xx 共 62 个常用码，每条含中文名称/中文含义/常见场景/排查建议七字段，支持码号/中英文/拼音首字母实时搜索与五类筛选，点击卡片展开详情，418 茶壶/451 法律原因等冷知识备注，中文释义仅供参考、规范语义以 RFC/MDN 为准，纯前端零上传 · HTTP status code reference in Chinese: search by code, English/Chinese name or pinyin initials, filter by category, 100% client-side",
+					Path:        "/tools/http-status-reference",
+					Icon:        "http",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "project_to_txt",
 					Name:        "代码打包给 LLM",
 					Description: "拖拽项目文件夹一键打包成单个 TXT 喂给 LLM：浏览器本地遍历文件树，node_modules/.git/dist 等默认智能忽略，二进制文件（扩展名+魔数+NUL 三重识别）自动跳过标注，文件树复选框全选/逐项剔除，单文件 1MB 上限保护，扩展名白名单可选，带路径分隔头合并＋文件数/字符数/预估 Token 统计，一键复制或下载，纯前端零上传 · Pack project source into one TXT for LLMs: folder drag & drop, smart ignores, binary auto-skip, checkbox file tree, per-file 1MB cap, path-separated merge with file/char/token stats, 100% client-side",
