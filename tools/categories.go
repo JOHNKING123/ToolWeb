@@ -587,6 +587,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "html_to_markdown",
+					Name:        "HTML→Markdown 转换器",
+					Description: "粘贴 HTML 片段即转 GFM：标题、粗斜体、删除线、链接、图片、嵌套列表 2 空格缩进、引用、行内与围栏代码、pipe 表格（含对齐与 | 转义）全映射，script/style/表单控件进丢弃清单（去重计数、不执行、不进正文），合并单元格拆格展开并提示，4 组示例一键载入，输出只读区一键复制与下载 converted.md；只转语义不转样式、不抓取网页、图片只引用不下载、文本不出浏览器 · HTML to Markdown converter: convert HTML to GFM locally, 100% client-side",
+					Path:        "/tools/html-to-markdown",
+					Icon:        "code",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{

@@ -1,0 +1,164 @@
+{{define "html_to_markdown"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML→Markdown 转换器 - 粘贴 HTML 片段转 GFM，表格嵌套列表一键转换（纯前端）</title>
+    <meta name="description" content="免费在线 HTML 转 Markdown 工具：粘贴 HTML 片段即转 GFM，标题、粗斜体、删除线、链接、图片、嵌套列表、引用、代码块、pipe 表格（含对齐与 | 转义）全映射，脚本样式表单进丢弃清单，合并单元格拆格展开，4 组示例一键载入，纯前端零上传。HTML to Markdown converter: convert HTML to GFM locally, 100% client-side.">
+    <meta name="keywords" content="HTML转Markdown,HTML to Markdown,HTML转MD,GFM,Markdown转换,富文本转Markdown,表格转Markdown,HTML片段转换,CMS转Markdown">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/html-to-markdown">
+    <meta property="og:title" content="HTML→Markdown 转换器 - 粘贴 HTML 片段转 GFM">
+    <meta property="og:description" content="粘贴 HTML 片段即转 GFM：标题、粗斜体、链接、图片、嵌套列表、引用、代码、pipe 表格全映射，脚本样式表单进丢弃清单；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/html-to-markdown">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HTML→Markdown 转换器","description":"粘贴 HTML 片段即转 GFM：标题、粗斜体、删除线、链接、图片、嵌套列表、引用、行内与围栏代码、pipe 表格（含对齐与 | 转义）全映射，脚本样式表单进丢弃清单，合并单元格拆格展开，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/html-to-markdown","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hm-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .hm-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .hm-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .hm-warn b{display:block;margin-bottom:.2rem}
+        .hm-warn p{margin:0}
+        .hm-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .hm-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .hm-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .hm-input{width:100%;min-width:0;min-height:180px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .hm-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .hm-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .hm-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .hm-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .hm-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .hm-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem}
+        .hm-scroll{overflow-x:auto}
+        .hm-out{width:100%;min-width:0;min-height:180px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box;background:#f9fafb;white-space:pre;overflow-x:auto}
+        .hm-stats{font-size:.9rem;color:#374151;line-height:1.7;margin:0 0 .9rem}
+        .hm-meta{font-size:.92rem;color:#374151;line-height:1.9;margin:0}
+        .hm-meta b{color:#111827}
+        .hm-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .hm-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .hm-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .hm-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .hm-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .hm-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .hm-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .hm-note b{color:#374151}
+        .hm-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        @media (max-width:640px){
+            .hm-panel{padding:1rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> HTML→Markdown 转换器</h1>
+            <p>粘贴 HTML 片段，DOMParser 本地遍历映射为 GFM，表格与嵌套列表也不丢项</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="hm-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>全部转换都在本机完成，本页面不发起任何网络请求、不上传任何输入（零 fetch / XHR），粘贴的 HTML 只留在当前页面。</div>
+            </div>
+            <div class="hm-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 只转语义结构不转样式：class、内联样式、字体颜色字号没有 Markdown 等价物，一律丢弃（样式不单独列入丢弃清单）。</p>
+                <p>2. 不抓取网页、只转粘贴的 HTML：本工具不输入网址、不发请求拉取网页，网页内容请先复制 HTML 源码再粘贴。</p>
+                <p>3. 图片只引用不下载：图片转成 ![alt](src) 原样引用地址，不下载、不转 base64，外链图片会随源站失效而失效。</p>
+                <p>4. 表格只转 pipe table：合并单元格（colspan / rowspan）没有 GFM 等价物，按拆格展开并在提示区说明，不静默合并。</p>
+                <p>5. 脚本与样式不执行：script / style 内容不执行、不进正文，只进丢弃清单计数。</p>
+            </div>
+            <div class="hm-panel">
+                <h3><i class="material-icons">input</i> 粘贴 HTML 片段</h3>
+                <textarea class="hm-input" id="hm-input" placeholder="例如：&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;这是&lt;strong&gt;粗体&lt;/strong&gt;段落。&lt;/p&gt;"></textarea>
+                <div class="hm-row">
+                    <button class="hm-btn hm-btn-primary" type="button" id="hm-convert">转换为 Markdown</button>
+                    <button class="hm-btn" type="button" id="hm-reset">重置回初始输入</button>
+                </div>
+                <p class="hm-hint">支持 Ctrl+Enter 快速转换；完整 HTML 文档只取 body 内容；纯文本输入按段落原样输出，不报错；空输入会给出明确错误提示，不输出空 Markdown。</p>
+                <div class="hm-row" style="margin-top:.6rem;">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再转换）：</span>
+                    <button class="hm-btn" type="button" data-example="0">CMS 文章</button>
+                    <button class="hm-btn" type="button" data-example="1">表格 + 嵌套列表</button>
+                    <button class="hm-btn" type="button" data-example="2">代码 + 引用 + 图片</button>
+                    <button class="hm-btn" type="button" data-example="3">脏 HTML</button>
+                </div>
+            </div>
+            <div class="hm-errors" id="hm-errors"></div>
+            <div id="hm-result" style="display:none;">
+                <div class="hm-panel">
+                    <h3><i class="material-icons">article</i> Markdown 输出（只读）</h3>
+                    <p class="hm-stats" id="hm-stats"></p>
+                    <div class="hm-scroll">
+                        <textarea class="hm-out" id="hm-output" readonly wrap="off" placeholder="转换后这里显示 Markdown"></textarea>
+                    </div>
+                    <div class="hm-row">
+                        <button class="hm-btn hm-btn-primary" type="button" id="hm-copy">复制 Markdown</button>
+                        <button class="hm-btn" type="button" id="hm-download">下载 converted.md</button>
+                    </div>
+                    <p class="hm-hint">复制失败时会有明确降级提示，请手动选中输出框内容复制。长内容可横向滚动，不会撑破页面。</p>
+                </div>
+                <div class="hm-panel">
+                    <h3><i class="material-icons">delete_sweep</i> 已丢弃（无等价物标签，按标签名去重计数）</h3>
+                    <p class="hm-meta"><b>丢弃清单：</b><span id="hm-dropped">无丢弃标签</span></p>
+                    <p class="hm-meta" style="margin-top:.4rem;"><b>样式说明：</b>class / 内联 style 已丢弃，不单独列出；脚本与样式文本不执行、不进正文。</p>
+                </div>
+                <div class="hm-panel">
+                    <h3><i class="material-icons">info</i> 提示</h3>
+                    <p class="hm-meta" id="hm-warnings">无合并单元格提示。</p>
+                </div>
+            </div>
+            <div class="hm-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>把 HTML 片段粘贴到输入框，点「转换为 Markdown」：标题、粗斜体、删除线、链接、图片、嵌套列表、引用、代码、表格按 GFM 映射输出。</li>
+                    <li>嵌套列表每级缩进 2 个空格；有序列表序号按同级顺序递增；换行 br 转成行尾两个空格的硬换行。</li>
+                    <li>表格转成 pipe table：表头行 + 分隔行，对齐按 th / td 的 align 属性或 style text-align 取左 / 中 / 右，单元格里的 | 转义为 \|，&lt;br&gt; 转为空格。</li>
+                    <li>围栏代码的语言取 code 的 class（如 language-js 的后缀），没有则不写语言；行内代码用反引号包裹。</li>
+                    <li>看「已丢弃」清单核对：script / style / 表单控件等无等价物标签按标签名计数列出，脚本样式文本不会混进正文。</li>
+                    <li>表格含合并单元格时，提示区会说明已按拆格展开：合并格内容保留在左上角，展开的空格留空。</li>
+                    <li>点「复制 Markdown」或「下载 converted.md」导出；点示例一键载入 4 组典型片段（请按需改写），载入后仍可编辑再转换；点「重置回初始输入」回到本次转换的原始输入。</li>
+                </ol>
+            </div>
+            <div class="hm-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="hm-faq">
+                    <dt>为什么样式转过去不见了？</dt>
+                    <dd>因为 Markdown 只有语义没有样式：颜色、字号、class 都没有对应的 Markdown 写法，只能丢弃；需要样式请用转 Word 或公众号排版工具再排。</dd>
+                    <dt>能直接输入网址抓取网页转换吗？</dt>
+                    <dd>不能。本工具不抓取网页（会碰到跨域与混合内容限制），请先在浏览器里复制网页的 HTML 源码，再粘贴进来转换。</dd>
+                    <dt>图片会被下载下来吗？</dt>
+                    <dd>不会。图片只转成 ![alt](src) 引用原地址，不下载、不转 base64；原图下线后 Markdown 里的图也会失效。</dd>
+                    <dt>合并单元格怎么处理？</dt>
+                    <dd>按拆格展开：合并格的内容保留在左上角那一格，rowspan / colspan 展开出来的空格留空，并在提示区说明展开了几处，不会静默把两格拼成一格。</dd>
+                    <dt>script 里写的内容会跑出来吗？</dt>
+                    <dd>不会。DOMParser 解析出的脚本不执行，转换时脚本与样式整棵跳过，只在丢弃清单里计数，文本不会混进正文。</dd>
+                    <dt>我的 HTML 会被上传吗？</dt>
+                    <dd>不会。全部转换在浏览器本地完成，零网络请求，输入只留在当前页面。</dd>
+                </dl>
+            </div>
+            <div class="hm-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="hm-links">
+                    <a href="/tools/markdown-preview"><i class="material-icons">article</i> Markdown 预览</a>
+                    <a href="/tools/markdown-to-word"><i class="material-icons">description</i> Markdown 转 Word</a>
+                    <a href="/tools/markdown-to-excel"><i class="material-icons">table_chart</i> Markdown 表格转 Excel</a>
+                </div>
+            </div>
+            <div class="hm-note">
+                <b>实现说明：</b>HTML 解析、GFM 映射、丢弃计数、合并单元格拆格均为纯函数（标题/粗斜体/链接/图片/嵌套缩进/引用/围栏语言/表格对齐与转义），浏览器里走 DOMParser、node 测试走同文件内置解析器；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="hm-toast" id="hm-toast"></div>
+    <script src="/tools/static/js/html_to_markdown.js?v=1"></script>
+</body>
+</html>
+{{end}}

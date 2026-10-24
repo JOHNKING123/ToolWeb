@@ -1,3 +1,83 @@
+## 今日任务（2026-10-25 07:40 · 产品经理排期轮）
+
+**选定：HTML→Markdown 转换器（html_to_markdown）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（96 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。05:00 PM 轮选了 Docker run→Compose 转换器时已明言：HTML→Markdown 仅因顺位在 Docker 之后而后置、「下轮首席递进」；Docker 已交付划出（cb2a7b4，168 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过。
+- **未选**：信封打印助手（92 轮新晋 P2，96 轮 Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在 HTML 之后而后置，下轮首席递进；真限制打印机边距与进纸方向不一可在页面明示先打测试页，不构成跳过理由）；CSS 阴影与圆角生成器（95 轮新晋 P2，96 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制预览以当前浏览器渲染为准）；WCAG 颜色对比度检查器（96 轮新晋 P2，Top3 之后，留池顺位递进；真限制按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'html_to_markdown\|envelope_printer\|css_shadow' tools/categories.go` = 0；templates/ 无 html_to_markdown／envelope／css_shadow 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **168 Path**；`git log` 头部 cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）／ff67ee9（URL 解析器新增）。自有近邻辨析：markdown_preview 仅做 Markdown→HTML 渲染（反向）；markdown_to_word／markdown_to_excel 均为 Markdown 出发方向（Markdown→Word／Excel），与 HTML 出发的本工具方向相反，不重叠；markdown_publish_formatter 为 Markdown 发布排版，不解析 HTML。仅映射思路可借鉴，不可复用方向。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——DOMParser 遍历映射为 GFM＋实体解码，全部本地计算，零上传零 fetch，契合 ToolWeb 纯前端离线标准；② **痛点明确且可验证**——CMS／富文本／网页内容进 README／文档站／wiki 时手写 Markdown 逐项改标签费时易漏，表格与嵌套列表最易错，映射关系逐项可断言；③ **天然可测**——标题／粗斜体／链接／图片／嵌套列表／引用／代码／表格对齐／丢弃标签均可 node 断言，手工可复算；④ **无硬伤**——只转语义结构不转样式、不做 URL 抓取，均属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「文本工具」品类（与 Markdown 转 Word 同品类、便于互链；格式转换品类是格式互转语义，本工具是内容结构转换，归文本工具更贴切）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只转语义结构不转样式**——class／内联样式／字体颜色字号无 Markdown 等价物，一律丢弃并进「已丢弃」清单，不静默编造；② **不做 URL 抓取**——只转粘贴的 HTML 片段，不 fetch 网页（避 CORS 与混合内容），页面明示；③ **脚本／表单控件无等价物**——script／style／form／input／select／textarea／button 等内容不转、不执行，进丢弃清单；④ **图片只转引用不下载**——`![alt](src)` 原样引用图片地址，不下载、不转 base64，页面明示外链图片随源站失效而失效；⑤ **表格只转 pipe table**——合并单元格（colspan／rowspan）无 GFM 等价物，按拆格展开并在提示中说明，不静默合并；⑥ **文本不出浏览器**——全部转换在本地完成，零 fetch／XHR，隐私文案页面可见；⑦ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/html-to-markdown）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：HTML 片段粘贴框（支持完整文档与片段；完整文档时只取 body 内容）；输入校验：空输入给出明确错误提示、不输出空 Markdown；纯文本输入按段落原样输出，不报错。
+- GFM 映射（纯函数，双模式导出供 node 测试）：标题 h1–h6→`#`–`######`；段落按空行分隔；粗体 b／strong→`**`、斜体 i／em→`*`、删除线 s／strike／del→`~~`、行内代码 code→反引号；链接 a→`[文本](href)`（href 为空时只输出文本）；图片 img→`![alt](src)`（src 为空时只输出 alt）；无序列表 ul→`- `、有序列表 ol→`1. ` 序号按同级顺序递增、嵌套每级缩进 2 空格；引用 blockquote→每行加 `> `；围栏代码 pre→` ```语言 `（语言取 code 的 class 如 `language-js` 的后缀，无则不写语言）；分割线 hr→`---`；表格 table→pipe table（表头行＋分隔行，对齐按 th／td 的 align 属性或 style text-align 取 left／center／right，单元格内 `|` 转义为 `\|`、`<br>` 转为空格）；换行 br→行尾两个空格或换行后空行（全页统一一种写法，测试锁定）；HTML 实体经 DOMParser 解码。
+- 丢弃与提示：script／style／form／input／select／textarea／button／iframe／video／audio／canvas 等无等价物标签进「已丢弃」清单（按标签名去重计数展示，如 `script ×2`），不执行、不输出其文本（script／style 文本不进正文）；class／style 属性丢弃不单独列出，页面以一句话说明「样式已丢弃」即可；合并单元格拆格展开时在提示区说明。
+- 输出与导出：Markdown 输出区为只读代码区，含「一键复制」与「下载 .md」（复制失败有明确降级提示，下载文件名为 `converted.md`）；「重置」一键回到初始输入；转换统计行（输入字符数、输出行数、丢弃标签种类数）可见。
+- 示例一键载入（至少 4 组，可再编辑）：① CMS 文章片段（标题＋段落＋粗斜体＋链接）；② 表格＋嵌套列表（对齐列＋两级嵌套）；③ 代码块＋引用＋图片；④ 含样式／脚本／表单的脏 HTML（触发丢弃清单与合并单元格提示）。示例文案注明「请按需改写」。
+- 转换算法（纯函数，双模式导出供 node 测试）：输入为原始 HTML 字符串，输出为 `{markdown, dropped: [{tag, count}], warnings: [string]}`；空输入返回错误而非空字符串；嵌套列表缩进、表格对齐、单元格转义均在测试中锁定。
+- 注册：ID `html_to_markdown`、Name「HTML→Markdown 转换器」、Path `/tools/html-to-markdown`、Category 文本工具、Icon 建议 code、New: true；中英文描述＋SEO keywords（HTML转Markdown、HTML to Markdown、HTML转MD、GFM、Markdown转换、富文本转Markdown、表格转Markdown）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 Markdown 预览、Markdown 转 Word 与 Markdown 表格转 Excel。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `html_to_markdown`、Path `/tools/html-to-markdown` 注册完整（Category 文本工具），注册总数 168→169 Path。
+2. 映射闭环：至少四组手工复算用例（CMS 文章／表格＋嵌套列表／代码＋引用＋图片／脏 HTML）标题、粗斜体、链接、图片、嵌套列表缩进、引用、围栏代码语言、表格对齐与单元格 `|` 转义输出与预期一致。
+3. 丢弃不丢项：script／style／表单控件逐项进丢弃清单（按标签去重计数），脚本样式文本不进正文；合并单元格拆格展开且有提示；样式丢弃有页面说明。
+4. 复制与示例：复制 Markdown 与下载 .md 按钮可用（失败有降级提示），下载文件名为 converted.md；4 组示例一键载入后输出区与丢弃区均有内容、且载入后可编辑再转换；「请按需改写」提示可见。
+5. 真限制可见：页面可见「只转语义结构不转样式」「不抓取网页、只转粘贴的 HTML」「图片只引用不下载」「文本不出浏览器」文案；零 fetch／XHR（源码自检无外部请求）。
+6. node 测试 40+ 断言全过（标题／粗斜体／删除线／链接／图片／嵌套列表／引用／行内与围栏代码／表格对齐与转义／实体解码／丢弃清单／合并单元格／空输入／示例静态检查）。
+7. 页面无报错；移动端布局不错位；长 HTML 与长 Markdown 小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/html_to_markdown.html`（新增；含 SEO 面板按家族标准＋HTML 输入／Markdown 输出／丢弃清单／示例 UI）
+- `static/js/html_to_markdown.js`（新增；DOMParser 遍历映射 GFM＋实体解码＋复制／下载；双模式导出供 node 测试）
+- `tests/html_to_markdown.test.js`（新增；标题、粗斜体、链接、图片、嵌套列表、引用、代码、表格、实体、丢弃、合并单元格、空输入、示例静态检查）
+- `tools/categories.go`（文本工具品类注册：ID html_to_markdown、Path /tools/html-to-markdown、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）／ff67ee9（URL 解析器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **168**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 markdown_preview／markdown_to_word／markdown_to_excel 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 07:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。Docker run→Compose 转换器已交付闭环（cb2a7b4 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **168 Path**，ID docker_run_to_compose、Path /tools/docker-run-to-compose 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 早间轮，优先小难度纯前端。
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. Docker 交付确认：`git log` 头部 cb2a7b4（新增）／43366d1（URL 解析器评审修复）／ff67ee9（URL 解析器新增）；全量 168 Path；templates/docker_run_to_compose.html 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常，93／95 轮记录的 Host key 报错未复现。HTML→Markdown／信封打印助手／CSS 阴影与圆角／摩斯码／滚动字幕复核仍未交付（`grep -c 'html_to_markdown|envelope_printer|css_shadow|morse|scrolling_text' tools/categories.go` = 0；templates/ 无对应文件）。
+2. 新信号扫描：
+   - **WCAG 颜色对比度检查器（Uwarp 500+ 工具榜 Colour Contrast Checker／MyToolster 颜色族同形态）**→ 仓库**无独立工具**（`grep -oi contrast tools/categories.go` 仅命中 color_palette_generator 描述中「每色附白底/黑底 WCAG 对比度与 AA 标识」——那是配色方案的附带标注，不是「任意前景/背景对」的检查器；accessibility_scanner 为页面扫描语义，非双色对检查），**新晋 P2「WCAG 颜色对比度检查器」**（建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker）：双色取色器＋HEX/RGB 输入→实时预览样例文本＋对比度数值＋AA/AAA（正常/大号字）判定＋一键「调亮/调暗至刚好通过」修正建议，纯前端小难度，零上传；痛点：写页面/做 PPT 配色时凭感觉选色，事后才发现正文对比度不达标、无障碍审查被打回，手工算相对亮度公式繁琐易错；真限制：判定按 WCAG 2.x 相对亮度公式，不承诺覆盖 APCA 等新标准，须明示口径；
+   - **字数/字符统计器（Format Studio 榜 Character Counter：分平台字数上限）**→ **自有实锤消解，不单独立项**：text_tools 模板已含「字数」「字符数」统计语义，分平台上限提示记 text_tools **优化项**；
+   - **色阶生成器 Tints and Shades（Uwarp 榜）**→ **优化项，不单独立项**：color_palette_generator 已有单色 HSL 方案（含单色系），按比例生成明暗色阶记该工具 **优化项**，不与配色族串味单立；
+   - **PDF 合并/页面重排（sqmagazine 2026 浏览器 PDF 榜）**→ **自有实锤消解**：pdf_merge_split（合并/拆分）＋pdf_manage（页面管理）已覆盖合并与重排语义；
+   - **视频转 SRT 字幕（MyToolster 榜 Video to SRT）**→ **不立**：语音识别需 AI/后端或浏览器 Speech API（识别质量与语言覆盖不可控），非纯前端单页可稳定交付，低优先；
+   - **话题标签生成器（Format Studio 榜 Hashtag Generator）**→ **不立**：无 AI/实时热度数据时只能出规则化固定标签组合，价值薄，且偏社媒营销场景，与 ToolWeb 工具定位贴合度低；
+   - **JSON→TOON 转换（MyToolster 数据族）**→ **观察、不晋升 P2**：TOON 为小众 LLM 友好格式，需求频次低，json_parser/json2yaml 族已覆盖主流格式互转；
+   - **年龄/单位换算等通用计算器（Medium 2026 榜）**→ **不立**：仓库已有 age/unit 语义命中，通用计算器族高度重合，本轮不重复立项。
+3. 候选池变动：Docker 已交付划出（cb2a7b4，168 Path）；**新晋 P2 1 个**（WCAG 颜色对比度检查器：Uwarp/MyToolster 双榜验证，独立工具零命中实锤，纯前端小难度）；自有实锤消解 2 项（字数统计→text_tools、PDF 合并重排→pdf_merge_split/pdf_manage）；优化项 2 条（text_tools：分平台字数上限提示；color_palette_generator：明暗色阶生成）；不立 3 项（视频转 SRT、话题标签生成、通用计算器重复）；观察 1 项（JSON→TOON）；全量 168 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；07:36 早间轮优先小难度纯前端）：
+
+1. **HTML→Markdown 转换器** — P2 留池顺位递进（95 轮新晋；96 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；MicroToolStack／iotools／Chemicloud 多站同形态验证：HTML→GFM＋表格＋复制／下载 .md；痛点：CMS／富文本／网页内容进 README／文档站时手写 Markdown 逐项改标签费时易漏，表格与嵌套列表最易错；纯前端小难度：DOMParser 遍历映射＋实体解码，零上传；零命中实锤（markdown_preview 仅反向渲染，md→word／md→excel 均为 Markdown 出发方向）；建议 ID html_to_markdown、Path /tools/html-to-markdown；真限制：只转语义结构不转样式、不做 URL 抓取）。
+2. **信封打印助手** — P2 留池顺位递进（92 轮新晋；96 轮复核仍未交付；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证：WYSIWYG 预览＋多尺寸＋打印样式表；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；纯前端小难度：收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋打印样式表＋测试页／偏移微调，零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：各打印机边距与进纸方向不一，须明示先打测试页再调偏移）。
+3. **CSS 阴影与圆角生成器** — P2 留池顺位递进（95 轮新晋；96 轮复核仍未交付；DevPlaybook／101 工具榜 CSS generators 族验证；痛点：手写阴影数值要反复改数刷新看效果，四角不等圆角语法更易写错；纯前端小难度：滑杆调偏移／模糊／扩散／颜色／透明度＋四角圆角（支持椭圆双值）→实时预览＋box-shadow／border-radius 代码一键复制，零上传；零命中实锤（CSS 族仅 css_gradient_generator／css_to_tailwind／css_clamp_calculator，无 box-shadow／border-radius 可视化生成器）；建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator；真限制：预览以当前浏览器渲染为准，不承诺与所有浏览器像素级一致）。
+
+其余 P2 留池（顺位在 Top3 之后）：WCAG 颜色对比度检查器（96 轮新晋；建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker；真限制：按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）；摩斯码翻译器（91 轮新晋；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器（90 轮新晋；建议 ID color_blind_simulator、Path /tools/color-blind-simulator）；MP3 标签编辑器（90 轮新晋；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件）；截图美化器（通用）（88 轮新晋；防串味延后，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；其余 92 轮及之前留池项均保持留池／观察原状，详见 95 轮及之前记录。
+其余 P3 观察：JSON→TOON 转换（96 轮观察；小众格式低频）；免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）；宽高比／分辨率计算器（94 轮观察；图片尺寸调整已覆盖实际图片处理，纯数字换算低频薄形态）；LLM API 价格对比（95 轮观察；价格表易过期，ai_token_counter 已覆盖计数语义）。
+
+**通用候选表增量**（第九十六轮：Docker 已交付划出（cb2a7b4 新增；ID docker_run_to_compose、Path /tools/docker-run-to-compose 已注册，开发工具品类；全量 168 Path；候选池划出）；**新晋 P2 1 个：WCAG 颜色对比度检查器**（Uwarp／MyToolster 双榜验证；双色对→对比度数值＋AA/AAA 判定＋修正建议，纯前端小难度零上传；独立工具零命中实锤，配色生成器的 WCAG 标注仅为附带功能；建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker；真限制：按 WCAG 2.x 相对亮度公式，不承诺 APCA 口径）；自有实锤消解 2 项（字数统计→text_tools；PDF 合并重排→pdf_merge_split/pdf_manage）；优化项 2 条（text_tools：分平台字数上限提示；color_palette_generator：明暗色阶生成）；不立 3 项（视频转 SRT、话题标签生成、通用计算器重复）；观察 1 项（JSON→TOON）；全量 168 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Docker run→Compose 转换器 | 已交付划出（cb2a7b4 新增；ID docker_run_to_compose、Path /tools/docker-run-to-compose 已注册，开发工具品类；全量 168 Path；候选池划出） | — | 已实现 |
+| WCAG 颜色对比度检查器 | 新晋 P2（96 轮；Uwarp／MyToolster 双榜验证；痛点：凭感觉选色事后才发现正文对比度不达标、无障碍审查被打回，手工算相对亮度公式繁琐易错；双色对→对比度数值＋AA/AAA 判定＋调亮/调暗修正建议，纯前端小难度零上传；独立工具零命中实锤；建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker；真限制：按 WCAG 2.x 相对亮度公式，不承诺 APCA 口径） | 小 | P2（96 轮新晋） |
+| 自有实锤消解 | 不立（字数统计→text_tools 已含字数/字符数语义；PDF 合并重排→pdf_merge_split/pdf_manage 已覆盖；色阶生成→color_palette_generator 优化项；视频转 SRT→需 AI/后端不立；话题标签→规则化价值薄不立；通用计算器→age/unit 已有不立） | — | 不立 |
+| 优化项 | text_tools：分平台字数上限提示（微博/X/微信等）；color_palette_generator：按比例生成明暗色阶（Tints and Shades） | — | 优化项 |
+
+**归档说明**：本轮为 10-25 通用调研第九十六轮——Docker 交付闭环（cb2a7b4，`/tools/docker-run-to-compose` 已注册，开发工具品类，全量 168 Path），候选池划出；**新晋 P2 1 个**（WCAG 颜色对比度检查器：双榜验证，纯前端小难度，独立工具零命中实锤，附 WCAG 2.x 口径真限制）；2 项自有实锤消解；2 条优化项；3 项不立；1 项观察；WPS 候选表保持冻结归档；仓库 168 注册工具全量核对无重叠（Top3 建议 ID html_to_markdown / envelope_printer / css_shadow_radius_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）／ff67ee9（URL 解析器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **168**；`git fetch` 本轮正常（93／95 轮 Host key 报错未复现）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 05:00 · 产品经理排期轮）
 
 **选定：Docker run→Compose 转换器（docker_run_to_compose）** — 本轮唯一任务（新工具）：
