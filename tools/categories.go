@@ -489,6 +489,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "text_reader_aloud",
+					Name:        "文本朗读器",
+					Description: "粘贴文本浏览器本地朗读：speechSynthesis 本地发声，语速音调可调，发音人可选，逐句高亮推进，点击任一句从该句起读，只在线朗读无音频导出，文本不出浏览器 · Text reader aloud: local browser text to speech, rate/pitch control, sentence highlight, 100% client-side",
+					Path:        "/tools/text-reader-aloud",
+					Icon:        "volume_up",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "texttools",
 					Name:        "文本工具集",
 					Description: "字数统计、行去重、排序、大小写转换、全半角、盘古空格",

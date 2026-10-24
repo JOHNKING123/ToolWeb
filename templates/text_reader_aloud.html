@@ -1,0 +1,154 @@
+{{define "text_reader_aloud"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本朗读器 - 粘贴文本浏览器本地朗读，语速音调可调、逐句高亮（纯前端）</title>
+    <meta name="description" content="免费在线文本朗读器：粘贴文本，浏览器 speechSynthesis 本地发声，语速 0.5–2.0、音调 0.5–2.0 可调，发音人可选，逐句高亮推进，点击任一句从该句起读，校对长文听一遍最易发现语病，纯前端零上传。Text reader aloud: local browser text to speech, rate/pitch control, sentence highlight, 100% client-side.">
+    <meta name="keywords" content="文本朗读,在线朗读,文字转语音,TTS,校对朗读,听文章,text to speech,speech synthesis,浏览器朗读,逐句朗读">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-reader-aloud">
+    <meta property="og:title" content="文本朗读器 - 粘贴文本，浏览器本地朗读、逐句高亮">
+    <meta property="og:description" content="浏览器 speechSynthesis 本地发声，语速音调可调，逐句高亮推进，点击任一句从该句起读；只在线朗读、无音频导出，文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/text-reader-aloud">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文本朗读器","description":"粘贴文本，浏览器 speechSynthesis 本地发声，语速音调可调，逐句高亮推进，点击任一句从该句起读；只在线朗读、无音频导出，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/text-reader-aloud","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tra-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .tra-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .tra-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .tra-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .tra-body{width:100%;box-sizing:border-box;min-height:220px;padding:.9rem 1rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:1rem;line-height:1.9;font-family:inherit;resize:vertical}
+        .tra-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .tra-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .95rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .tra-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .tra-btn:disabled{opacity:.5;cursor:not-allowed}
+        .tra-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .tra-slider{width:100%;box-sizing:border-box;max-width:320px}
+        .tra-control{flex:1 1 220px;min-width:0}
+        .tra-control label{font-size:.9rem;color:#374151}
+        .tra-control select{width:100%;box-sizing:border-box;padding:.5rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:inherit;margin-top:.3rem}
+        .tra-progress{font-size:.92rem;color:#374151;line-height:1.8;margin-top:.9rem}
+        .tra-status{font-size:.9rem;color:#6b7280;margin-top:.4rem}
+        .tra-sent{margin:0 0 .7rem;padding:.7rem .9rem;border:1px solid #e5e7eb;border-radius:.55rem;line-height:1.9;color:#374151;cursor:pointer;word-break:break-word}
+        .tra-sent:hover{border-color:var(--primary-color)}
+        .tra-sent.tra-active{background:#eff6ff;border-color:var(--primary-color);color:#111827;font-weight:600}
+        .tra-unsupported{display:none;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .tra-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        .tra-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .tra-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .tra-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .tra-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .tra-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .tra-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .tra-note b{color:#374151}
+        @media (max-width:640px){
+            .tra-body{min-height:180px;font-size:.98rem}
+            .tra-control{flex-basis:100%}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">volume_up</i> 文本朗读器</h1>
+            <p>粘贴文本，浏览器本地朗读、逐句高亮，校对长文听一遍最易发现语病</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tra-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>粘贴的文本仅在本机分句与朗读，本页面不发起任何网络请求、不上传文本。<b>本工具只在线朗读、无音频导出：</b>不生成、不提供音频文件下载。</div>
+            </div>
+            <div class="tra-unsupported" id="tra-unsupported">
+                <b>当前浏览器不支持本地朗读：</b>本工具依赖浏览器 speechSynthesis，请用桌面版 Chrome/Edge 打开本页。
+            </div>
+            <div class="tra-panel">
+                <h3>粘贴文本</h3>
+                <textarea class="tra-body" id="tra-text" placeholder="把要朗读的文章粘贴到这里……">校对长文时，眼睛最容易漏错。把文章听一遍，语病和错别字往往自己跳出来。This tool reads aloud locally in your browser. No audio file is exported, and your text never leaves this page.</textarea>
+                <div class="tra-row">
+                    <button class="tra-btn tra-btn-primary" id="tra-speak"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">play_arrow</i> 朗读</button>
+                    <button class="tra-btn" id="tra-pause"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">pause</i> 暂停</button>
+                    <button class="tra-btn" id="tra-resume"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">play_circle</i> 继续</button>
+                    <button class="tra-btn" id="tra-stop"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">stop</i> 停止</button>
+                    <button class="tra-btn" id="tra-split">分句</button>
+                    <button class="tra-btn" id="tra-sample">填入示例</button>
+                    <button class="tra-btn" id="tra-clear">清空</button>
+                </div>
+                <div class="tra-row">
+                    <div class="tra-control">
+                        <label>语速（0.5–2.0，改动在下一句生效）<span id="tra-rate-val">1.0×</span>
+                            <input class="tra-slider" id="tra-rate" type="range" min="0.5" max="2" step="0.1" value="1">
+                        </label>
+                    </div>
+                    <div class="tra-control">
+                        <label>音调（0.5–2.0，改动在下一句生效）<span id="tra-pitch-val">1.0</span>
+                            <input class="tra-slider" id="tra-pitch" type="range" min="0.5" max="2" step="0.1" value="1">
+                        </label>
+                    </div>
+                    <div class="tra-control">
+                        <label>发音人
+                            <select id="tra-voice">
+                                <option value="">系统默认发音人（正在加载语音列表…）</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <p class="tra-note" style="margin-top:.9rem;">发音人列表来自本机 speechSynthesis，不同浏览器与操作系统的可用发音人不同；首选含 zh 的发音人，缺失时回退到默认发音人。语音列表异步加载：页面打开后会自动补填（监听 voiceschanged 事件）。分句为启发式：英文缩写（如 Dr.、Mr.）与小数点（如 v1.2）不误切，连续标点视为同一句的句末。</p>
+                <div class="tra-progress" id="tra-progress"></div>
+                <div class="tra-status" id="tra-status"></div>
+            </div>
+            <div class="tra-panel">
+                <h3>逐句列表（点击任一句，从该句开始朗读）</h3>
+                <div id="tra-sentences"></div>
+            </div>
+            <div class="tra-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>把文章粘贴到输入区，点「分句」按句末标点切成句子列表；也可以直接点「朗读」从第一句开始。</li>
+                    <li>朗读时当前句高亮并滚动到可见位置，读完一句自动推进下一句；读完全部句子提示「朗读完成」并清除高亮。</li>
+                    <li>点句子列表里的任一句，即从该句开始朗读；「暂停」暂停当前朗读，「继续」恢复，「停止」取消朗读并清除高亮与进度。</li>
+                    <li>语速、音调滑杆改动后在下一句朗读时生效，范围钳制在 0.5–2.0；发音人下拉框缺省为中文发音人，缺失时回退默认发音人。</li>
+                    <li>空文本点朗读或分句会明确提示「请先粘贴文本」，不会报错；不支持 speechSynthesis 的浏览器会整区禁用并提示换用桌面版 Chrome/Edge。</li>
+                </ol>
+            </div>
+            <div class="tra-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="tra-faq">
+                    <dt>能把朗读导出成 MP3 吗？</dt>
+                    <dd>不能。本工具只在线朗读、不生成音频文件，没有任何导出音频的按钮；浏览器 speechSynthesis 本身也不提供录音导出。</dd>
+                    <dt>我的文本会被上传吗？</dt>
+                    <dd>不会。文本仅在本机分句与朗读，本页面不发起任何网络请求，关闭页面后文本即消失。</dd>
+                    <dt>发音人下拉框是空的怎么办？</dt>
+                    <dd>语音列表由浏览器异步加载，页面打开后会自动补填；仍为空时朗读会回退到系统默认发音人，不会崩溃。不同浏览器与操作系统的可用发音人不同，中文发音人缺失属正常现象。</dd>
+                    <dt>点「暂停」后再点「继续」没反应？</dt>
+                    <dd>请确认朗读正在进行中：只有朗读进行时「暂停／继续」才有效；已停止的朗读请点「朗读」或点句子列表里的句子重新开始。</dd>
+                    <dt>分句切错了怎么办？</dt>
+                    <dd>分句是启发式规则：按中英句末标点与换行切分，英文缩写与小数点不误切，连续标点视为同一句句末；极个别特殊写法（如无标点长句）会整段作为一句朗读，可手动在该处补一个句号再分句。</dd>
+                </dl>
+            </div>
+            <div class="tra-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="tra-links">
+                    <a href="/tools/realtime-dictation"><i class="material-icons">mic</i> 实时听写</a>
+                    <a href="/tools/text-tools"><i class="material-icons">notes</i> 文本工具集</a>
+                    <a href="/tools/focus-writer"><i class="material-icons">edit_note</i> 极简专注写作</a>
+                </div>
+            </div>
+            <div class="tra-note">
+                <b>实现说明：</b>每句一个 utterance 的队列实现逐句高亮推进（不用单 utterance＋onboundary，因各浏览器 boundary 事件支持不一）；分句、语速/音调钳制、发音人回退链、队列推进均为纯函数，node 单元测试全覆盖；本页源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="tra-toast" id="tra-toast"></div>
+    <script src="/tools/static/js/text_reader_aloud.js?v=1"></script>
+</body>
+</html>
+{{end}}
