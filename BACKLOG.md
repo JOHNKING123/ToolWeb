@@ -1,3 +1,81 @@
+## 今日任务（2026-10-24 17:30 · 产品经理排期轮）
+
+**选定：配色方案生成器（color_palette_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（89 轮）Top3 **首席推荐**（87 轮新晋；88 轮 Top3 外留池；16:00 PM 轮未选但无硬伤；dev.to 13 tools Color Palette Generator 形态验证；依「无硬伤不跳过、留池顺位递进」惯例，本轮递进生效）。
+- **未选**：极简专注写作（89 轮新晋 P2，HN Featureless 形态验证，无硬伤，留池顺位递进——仅因配色方案顺位更老、首席推荐在先而让位）；文本朗读器（89 轮新晋 P2，dev.to TTS 形态验证，无硬伤，留池顺位递进——真限制 speechSynthesis 无音频导出可在页面明示，不构成跳过理由，但同样让位于更老顺位）；在线电台收听器（88 轮首席新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与上午交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）。
+- **PM 零重叠实测复核**：`grep -rniE 'color_palette|color-palette|配色方案|palette_generator'`、`grep -rniE 'focus_writer|focus-writer|极简专注写作|专注写作'`、`grep -rniE 'text_reader_aloud|text-reader-aloud|文本朗读器|朗读器'` 三路全零命中；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 161 Path；自有「颜色转换」（ID color、Path /tools/color-converter）仅 HEX/RGB/HSL 互转＋WCAG 对比度检查，无方案生成，实质不重叠。另注：css_gradient_generator 描述含「随机和谐配色」，但那是渐变色标预设（linear/radial/conic 渐变编辑器语义），与本工具「基色→6 种和谐方案＋逐色复制 HEX」语义不同，不构成重叠，开发轮无需规避、评审轮可据此核查。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——HSL 色轮角度数学＋色板渲染＋复制，零上传零 fetch，完美契合 ToolWeb 纯前端离线标准；② **痛点明确**——做页面/海报配色靠感觉试错，自有工具只有互转与对比度、无方案生成；③ **天然可测**——6 种和谐方案的色相角偏移可逐项断言，node 测试易写足断言；④ **无真限制**——不依赖外部网络/API、无命名冲突、无需明示降级的功能缺口。
+- **品类归位**：注册到「开发工具」品类（与颜色转换同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **色相角数学必须精确**——以 HSL 色轮为准：互补 ＋180°、类比 ±30°、三角色 ＋120°/＋240°、分裂互补 ＋150°/＋210°、四方形 ＋90°/＋180°/＋270°、单色为同色相明度阶梯（至少 5 档），边界处色相取模 360，HEX 输出统一大写或小写一种格式；② **零 fetch/XHR**——纯本地计算与渲染，源码自检无外部请求；③ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/color-palette-generator）；④ **复制体验**——单色点击复制 HEX、整方案一键复制（HEX 列表＋CSS 变量两种格式二选一或并列），复制失败有明确降级提示；⑤ **WCAG 提示不夸大**——每色给出与白/黑底的对比度数值与 AA 通过与否，不做「可直接商用」类绝对承诺。
+
+**规格**（开发轮按此执行）：
+- 输入区：基色选择器（color input＋HEX 文本输入双向同步）＋「随机基色」按钮；方案类型切换（6 种：互补/类比/三角色/分裂互补/四方形/单色，默认互补或全部展开二选一，推荐 6 方案同屏对比展示）。
+- 展示区：每方案一排色板（色块＋HEX＋色名/角色标注如「基色/互补色」）；点击单色复制 HEX；每方案附「复制整方案」按钮（HEX 列表与 CSS 变量格式）。
+- 提示区：每色与白/黑底的 WCAG 对比度数值＋AA 通过标识；页面顶部一句话说明「本地计算、颜色不出浏览器」。
+- 注册：ID `color_palette_generator`、Name「配色方案生成器」、Path `/tools/color-palette-generator`、Category 开发工具、Icon 建议 color_lens、New: true；中英文描述＋SEO keywords（配色方案、color palette、配色生成器、和谐配色、互补色、类比色、三角色配色、海报配色）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `color_palette_generator`、Path `/tools/color-palette-generator` 注册完整（Category 开发工具），注册总数 161→162 Path。
+2. 6 种方案色相角正确：以同一基色实测，互补 ＋180°、类比 ±30°、三角色 ＋120°/＋240°、分裂互补 ＋150°/＋210°、四方形 ＋90°/＋180°/＋270°、单色同色相多明度（node 测试断言角度与 HEX 有效性）。
+3. 复制可用：单色复制 HEX、整方案复制 HEX 列表/CSS 变量；不支持时有明确降级提示；零 fetch/XHR（源码自检无外部请求）。
+4. WCAG 对比度数值与 AA 标识与手工计算一致（至少抽查黑白两底各一色）。
+5. node 测试 40+ 断言全过（HSL↔HEX 换算、6 种方案角度、边界取模、HEX 格式、对比度计算、模板静态检查）。
+6. 页面无报错；移动端布局不错位；色板小屏横向滚动不撑破。
+
+**预计改动文件**：
+- `templates/color_palette_generator.html`（新增；含 SEO 面板按家族标准＋基色输入/6 方案色板/复制与对比度提示 UI）
+- `static/js/color_palette_generator.js`（新增；HSL 色轮 6 种和谐方案算法＋渲染＋复制；双模式导出供 node 测试）
+- `tests/color_palette_generator.test.js`（新增；换算、角度、边界、对比度、模板静态检查）
+- `tools/categories.go`（开发工具品类注册：ID color_palette_generator、Path /tools/color-palette-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin 与本地一致，HEAD 7368935）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 161 Path；Top3 候选重叠复核（三路全零命中实锤，详上；css_gradient_generator「随机和谐配色」为渐变预设语义、已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 17:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。头像生成器已交付闭环（7368935 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **161 Path**，ID avatar_generator、Path /tools/avatar-generator 已注册，图片处理品类；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常，origin/muse/dev-20260929 与本地 7368935 一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 晚间轮，优先小难度纯前端。
+
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. avatar_generator 交付确认：`git log` 头部 7368935（2026-10-24 16:30 开发轮交付；16:00 PM 轮选定任务交付闭环）；全量 161 Path；templates/avatar_generator.html＋static/js/avatar_generator.js＋tests/avatar_generator.test.js＋tools/categories.go 注册均存在；本地当前分支 muse/dev-20260929；origin 与本地一致；候选池划出。
+2. 新信号扫描：
+   - **HN Show HN: Featureless（单页无干扰写作）**：标题栏＋一块写作面＋自动保存，无文件夹/格式按钮/字数统计，写完复制走人 → 仓库**全路零命中**（markdown/markdown_preview 为渲染预览、unit_calc_notepad 为算式记事本、url_note_share 为 URL 分享文档，均非专注写作面），**新晋 P2「极简专注写作」**（建议 ID focus_writer、Path /tools/focus-writer）：标题＋单写作面＋localStorage 自动保存＋字数隐藏/可选显示＋一键复制/下载 .md/.txt＋全屏专注模式，纯前端小难度，零上传；痛点：写草稿/文章时被 Notion/Word 的功能面板分心，想要一个打开即写、写完即走的页面；
+   - **dev.to「28 Free Browser-Based Writing & Editing Tools」（10-18 前后，Utility Tools Lab 写作类）**：Text to Speech（浏览器自带语音合成朗读、语速/音调/音量可调、逐词高亮，本地发声不上传）→ 仓库**全路零命中**（realtime_dictation 为反向语音→文字，且注明 Chrome/Edge 云端转写；teleprompter 为提词滚动非朗读），**新晋 P2「文本朗读器」**（建议 ID text_reader_aloud、Path /tools/text-reader-aloud）：粘贴文本→浏览器 speechSynthesis 朗读＋语速/音调调节＋当前句高亮＋暂停/继续/导出？不导出音频（speechSynthesis 无离线音频导出，开发轮须明示此限），纯前端小难度，零上传；痛点：校对长文时眼睛漏错、朗读一遍最容易发现语病，不想装 App/不想上传文本到 TTS 站；同文 Style Checker（被动语态/填充词/超长句标色）、Passive→Active、Typo Fixer（500+ 英文拼写）→ 均为英文写作场景，中文用户群 niche，观察不立；Speech to Text → 自有 realtime_dictation，不立；
+   - **HN Show HN: Wirier（浏览器端 URL 追踪参数清除，210+ 参数＋跳转解包）**→ **自有实锤消解**：url_tracker_cleaner（ID、Name「URL 追踪参数清除器」、Path /tools/url-tracker-cleaner）已注册实现（utm_/fbclid/spm 批量净化＋短链展开）；残余新颖点（招聘 ATS 追踪参数 60+、Facebook/Twitter/Google AMP/YouTube/LinkedIn 跳转解包）记 url_tracker_cleaner **优化项**，不单独立项；
+   - **HN Show HN: NICH（浏览器端 AI 对话匿名化：人名/邮箱/地址一键替换＋回答还原）**→ **自有实锤消解**：ai_prompt_sanitizer（喂 LLM 前脱敏：API Key/JWT/PEM/连接串占位替换＋还原）＋text_privacy_masker（手机号/身份证/银行卡/邮箱/IPv4/车牌遮盖）两工具已覆盖核心形态；残余新颖点（人名/地址实体替换＋映射还原）记 ai_prompt_sanitizer **优化项**，不单独立项；
+   - **HN Show HN: PDF redaction tool（浏览器内手动涂黑 PDF/图片，AI 自动识别需付费）**→ **自有实锤消解**：pdf_annotate（Name「PDF 批注打码」、Path /tools/pdf-annotate，含涂抹打码工具）已覆盖手动打码形态；AI 自动识别部分需 OCR＋后端，低优先不立；
+   - **HN Show HN: Scrolling Text Generator（倾斜滚动字幕/片尾字幕/横向 ticker，透明底导出）**→ 与 teleprompter（提词滚动）＋big_sign_display（大字标牌）部分重叠、导出视频/动图需编码成本，niche 观察不立；
+   - **dev.to 其余（10-23~10-24 重扫）**：mou1z 5 tools / TaskKit / Prestofiles / 10 tools 文 → 全自有或已消化（Kanban→kanban_board；Pomodoro→countdown_timer；CSS 渐变→css_gradient_generator；JSON→json_parser 族；Regex→regex_tester；图片压缩/格式转换→img_compress 族；PDF 压缩/合并拆分/水印→pdf_compress/pdf_merge_split/pdf_watermark 族；JSON↔CSV→自有族；Hash→hash 族；证件照尺寸→id_photo_maker 族；JWT 解码→自有族；SQL 格式化→自有族），无新增可立项；V2EX 10-21~10-24 其余无新鲜单页工具信号（去追踪链接脚本类→自有 url_tracker_cleaner 族）。
+3. 候选池变动：头像生成器已交付划出（7368935，161 Path）；**新晋 P2 2 个**（极简专注写作：HN Featureless 形态验证，纯前端小难度，四路零命中实锤；文本朗读器：dev.to 写作类 TTS 形态验证，浏览器 speechSynthesis 本地发声，纯前端小难度，四路零命中实锤，附无音频导出真限制）；自有实锤消解 3 项（Wirier→url_tracker_cleaner；NICH→ai_prompt_sanitizer＋text_privacy_masker；PDF redaction→pdf_annotate）；优化项 2 条（url_tracker_cleaner：ATS 参数＋跳转解包；ai_prompt_sanitizer：人名/地址实体替换）；niche/需后端/方向边界不立或观察 4 项（英文风格检查/被动改主动/英文拼写修复→英文 niche 观察；滚动字幕生成器→与提词器/大字标牌重叠 niche 观察；PDF AI 自动打码→需 OCR＋后端低优先；dev.to/V2EX 重扫→全消解）；全量 161 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；17:00 晚间轮优先小难度纯前端）：
+
+1. **配色方案生成器** — P2 留池顺位递进（87 轮新晋；88 轮 Top3 外留池；16:00 PM 轮未选但无硬伤；dev.to 13 tools Color Palette Generator 形态验证；痛点：做页面/海报配色靠感觉试错，自有 color 仅 HEX/RGB/HSL 互转＋对比度、无方案生成；纯前端小难度：基色→互补/类比/三角色/分裂互补/四方形/单色 6 种和谐方案＋一键复制 HEX＋WCAG 对比度提示，零上传；四路**零命中实锤**（87 轮已验，本轮复核仍无覆盖）；建议 ID color_palette_generator、Path /tools/color-palette-generator）。
+2. **极简专注写作** — 新晋 P2（本轮；HN Show HN Featureless 形态验证：标题＋单写作面＋自动保存、无格式按钮、无字数干扰；痛点：写草稿时被 Notion/Word 功能面板分心，想要打开即写、写完复制走人的页面；纯前端小难度：标题＋写作面＋localStorage 自动保存＋全屏专注＋一键复制/下载 .md/.txt，零上传；四路**零命中实锤**；建议 ID focus_writer、Path /tools/focus-writer）。
+3. **文本朗读器** — 新晋 P2（本轮；dev.to 28 写作工具 Text to Speech 形态验证：浏览器自带语音合成、语速/音调可调、逐词高亮、本地发声不上传；痛点：校对长文眼睛漏错、听一遍最容易发现语病，不想装 App/不想把文本上传到 TTS 站；纯前端小难度：粘贴文本→speechSynthesis 朗读＋语速/音调＋当前句高亮＋暂停/继续，零上传；四路**零命中实锤**（realtime_dictation 为反向，语义不同）；建议 ID text_reader_aloud、Path /tools/text-reader-aloud；真限制：speechSynthesis 不支持导出音频文件，开发轮须明示）。
+
+其余 P2 留池：截图美化器（通用）（88 轮新晋；16:00 PM 轮主动延后防与代码截图美化器串味，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；16:00 PM 轮判定硬伤跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；CSP 安全头生成器（84 轮新晋；建议 ID csp_builder、Path /tools/csp-builder）；一键人脸模糊（64 轮新晋，88 轮 HN BlurFaces 二次验证补强；模型 vendor 风险）；浏览器录屏工具（84 轮新晋；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；联系信息提取器（64 轮新晋）；壁纸生成器/词云生成器（87 轮 P2 观察）；CSS Sprite 雪碧图生成器（83 轮新晋，niche）；SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）；USB 设备识别器/摄像头签名数字化/和弦探索器（88 轮观察，niche）；英文写作风格检查/滚动字幕生成器（本轮新晋观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十九轮：头像生成器已交付划出（7368935 新增；ID avatar_generator、Path /tools/avatar-generator 已注册，图片处理品类；全量 161 Path；候选池划出）；**新晋 P2 2 个：极简专注写作**（HN Featureless 形态验证；标题＋单写作面＋localStorage 自动保存＋全屏专注＋复制/下载，纯前端小难度零上传；四路零命中实锤；建议 ID focus_writer、Path /tools/focus-writer）、**文本朗读器**（dev.to 28 写作工具 TTS 形态验证；浏览器 speechSynthesis 本地发声＋语速/音调＋逐句高亮，纯前端小难度零上传；四路零命中实锤，realtime_dictation 为反向语义不同；建议 ID text_reader_aloud、Path /tools/text-reader-aloud；真限制：无音频导出）；自有实锤消解 3 项（Wirier→url_tracker_cleaner；NICH→ai_prompt_sanitizer＋text_privacy_masker；PDF redaction→pdf_annotate）；优化项 2 条（url_tracker_cleaner：ATS 参数＋跳转解包；ai_prompt_sanitizer：人名/地址实体替换）；niche/需后端/方向边界不立或观察 4 项（英文风格检查/拼写修复→英文 niche 观察；滚动字幕生成器→与提词器/大字标牌重叠观察；PDF AI 自动打码→需 OCR＋后端低优先；dev.to/V2EX 重扫→全自有或已消化）；全量 161 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 头像生成器 | 已交付划出（7368935 新增；ID avatar_generator、Path /tools/avatar-generator 已注册，图片处理品类；全量 161 Path；候选池划出） | — | 已实现 |
+| 极简专注写作 | 新晋 P2（89 轮；HN Show HN Featureless 形态验证：标题＋单写作面＋自动保存、无格式按钮/字数干扰；痛点：写草稿被 Notion/Word 功能面板分心，想要打开即写、写完复制走人；纯前端小难度：标题＋写作面＋localStorage 自动保存＋全屏专注＋一键复制/下载 .md/.txt，零上传；四路零命中实锤；建议 ID focus_writer、Path /tools/focus-writer） | 小 | P2（89 轮新晋） |
+| 文本朗读器 | 新晋 P2（89 轮；dev.to 28 写作工具 Text to Speech 形态验证：浏览器 speechSynthesis 本地发声、语速/音调可调、逐句高亮；痛点：校对长文眼睛漏错、听一遍最易发现语病，不想装 App/不想上传文本到 TTS 站；纯前端小难度：粘贴文本→朗读＋语速/音调＋当前句高亮＋暂停/继续，零上传；四路零命中实锤（realtime_dictation 为反向）；建议 ID text_reader_aloud、Path /tools/text-reader-aloud；真限制：speechSynthesis 无音频导出，须明示） | 小 | P2（89 轮新晋） |
+| 自有实锤消解 | 不立（HN Wirier→url_tracker_cleaner 已注册实现；HN NICH→ai_prompt_sanitizer＋text_privacy_masker 已覆盖；HN PDF redaction→pdf_annotate 涂抹打码已覆盖；dev.to mou1z/TaskKit/Prestofiles/10 tools→kanban_board/countdown_timer/css_gradient_generator/json_parser/regex_tester/img_compress/pdf_merge_split/pdf_watermark/hash/id_photo_maker 全自有） | — | 不立 |
+| 优化项 | url_tracker_cleaner：补 ATS 招聘追踪参数＋社媒跳转解包（Wirier 形态）；ai_prompt_sanitizer：补人名/地址实体替换＋映射还原（NICH 形态） | — | 优化项 |
+| niche/需后端/方向边界 | 不立或观察（英文风格检查/被动改主动/英文拼写修复→英文写作 niche 观察；滚动字幕生成器→与 teleprompter/big_sign_display 重叠 niche 观察；PDF AI 自动打码→需 OCR＋后端低优先；V2EX 去追踪脚本类→自有 url_tracker_cleaner 族） | — | 不立/观察 |
+
+**归档说明**：本轮为 10-24 通用调研第八十九轮——头像生成器交付闭环（7368935，`/tools/avatar-generator` 已注册，图片处理品类，全量 161 Path），候选池划出；**新晋 P2 2 个**（极简专注写作：HN Featureless 形态验证，纯前端小难度，四路零命中实锤；文本朗读器：dev.to 写作类 TTS 形态验证，纯前端小难度，四路零命中实锤，附无音频导出真限制）；3 项自有实锤消解（Wirier/NICH/PDF redaction）；2 条优化项；4 项 niche/需后端/方向边界不立或观察；WPS 候选表保持冻结归档；仓库 161 注册工具全量核对无重叠（Top3 建议 ID color_palette_generator / focus_writer / text_reader_aloud；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地 7368935 一致）；`git log` 头部 7368935（avatar_generator 交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 161 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 16:30 · 前端开发轮 ✅）
 
 **交付：头像生成器（avatar_generator）** — 本轮唯一任务（新工具），开发完成已提交推送：

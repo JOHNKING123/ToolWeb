@@ -1,0 +1,121 @@
+{{define "color_palette_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配色方案生成器 - 基色一键生成互补/类比/三角色/分裂互补/四方形/单色 6 种和谐配色（纯前端）</title>
+    <meta name="description" content="免费在线配色方案生成器：输入一个基色，HSL 色轮一键生成互补、类比、三角色、分裂互补、四方形、单色 6 种和谐配色，色板点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端本地计算零上传。Color palette generator: 6 harmonious schemes from one base color, copy HEX & CSS variables, WCAG contrast, 100% client-side.">
+    <meta name="keywords" content="配色方案,配色生成器,color palette,配色,和谐配色,互补色,类比色,三角色配色,分裂互补,四方形配色,单色配色,海报配色,网页配色,WCAG 对比度,CSS 变量">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/color-palette-generator">
+    <meta property="og:title" content="配色方案生成器 - 一个基色生成 6 种和谐配色">
+    <meta property="og:description" content="输入基色，HSL 色轮生成互补/类比/三角色/分裂互补/四方形/单色 6 种方案，点击复制 HEX，整方案复制 CSS 变量，每色附 WCAG 对比度，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/color-palette-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"配色方案生成器","description":"输入一个基色，HSL 色轮一键生成互补、类比、三角色、分裂互补、四方形、单色 6 种和谐配色，点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端本地计算零上传。","url":"https://www.johnkingzcq123.xyz/tools/color-palette-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cp-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .cp-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .cp-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .cp-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .cp-hint{color:#9ca3af;font-size:.85rem;font-weight:400}
+        .cp-base{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center}
+        .cp-base-preview{width:64px;height:64px;border-radius:.6rem;border:1px solid #e5e7eb;flex:none}
+        .cp-base input[type=color]{width:52px;height:40px;border:1px solid #d1d5db;border-radius:.45rem;padding:2px;background:#fff;cursor:pointer}
+        .cp-hex{width:110px;padding:.45rem .6rem;border:1px solid #d1d5db;border-radius:.45rem;font-size:.92rem;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;box-sizing:border-box}
+        .cp-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .95rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .cp-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .cp-hsl{font-size:.88rem;color:#6b7280;font-variant-numeric:tabular-nums}
+        .cp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem}
+        .cp-swatch{border:1px solid #e5e7eb;border-radius:.6rem;overflow:hidden;cursor:pointer;background:#fff;transition:transform .12s,box-shadow .12s;min-width:0}
+        .cp-swatch:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+        .cp-block{height:72px}
+        .cp-sw-hex{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:.88rem;color:#111827;padding:.45rem .6rem 0;word-break:break-all}
+        .cp-role{font-size:.82rem;color:#6b7280;padding:.15rem .6rem}
+        .cp-ct{font-size:.78rem;color:#6b7280;line-height:1.7;padding:0 .6rem .55rem;font-variant-numeric:tabular-nums}
+        .cp-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .cp-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .cp-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .cp-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .cp-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .cp-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .cp-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .cp-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .cp-note b{color:#374151}
+        @media (max-width:640px){
+            .cp-grid{grid-template-columns:repeat(2,1fr)}
+            .cp-block{height:56px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">color_lens</i> 配色方案生成器</h1>
+            <p>一个基色，HSL 色轮生成 6 种和谐配色，点击色板复制 HEX，整方案复制 CSS 变量</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="cp-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>本地计算、颜色不出浏览器：</b>基色输入、方案生成、对比度计算全部在浏览器本地完成，本页面不上传颜色、不发起网络请求。</div>
+            </div>
+            <div class="cp-panel">
+                <h3>基色输入</h3>
+                <div class="cp-base">
+                    <div class="cp-base-preview" id="cp-base-preview"></div>
+                    <label>取色器 <input type="color" id="cp-picker" value="#2563EB"></label>
+                    <label>HEX <input class="cp-hex" id="cp-hex" value="#2563EB" maxlength="7" spellcheck="false" placeholder="#RRGGBB"></label>
+                    <button class="cp-btn" id="cp-random"><i class="material-icons" style="font-size:1rem;vertical-align:-2px;">autorenew</i> 随机基色</button>
+                    <span class="cp-hsl" id="cp-base-hsl"></span>
+                </div>
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:.8rem 0 0;">取色器与 HEX 文本双向同步：改一边另一边跟着变；HEX 支持 3 位简写（如 #25E）与 6 位全写，无效输入会被忽略、保留上一个有效基色。</p>
+            </div>
+            <div id="cp-schemes"></div>
+            <div class="cp-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>用取色器选基色，或直接输入 HEX（如 #2563EB），或点「随机基色」碰运气。</li>
+                    <li>6 种方案同时展开对照：互补（+180°）、类比（±30°）、三角色（+120°/+240°）、分裂互补（+150°/+210°）、四方形（+90°/+180°/+270°）、单色（同色相 6 档明度阶梯）。</li>
+                    <li>点击任意色板复制该色 HEX；每方案下方可一键复制整方案 HEX 列表或 CSS 变量（<code>:root { --palette-1: … }</code>），直接粘贴进样式表。</li>
+                    <li>每色下方标注与白底、黑底的 WCAG 对比度数值与 AA 标识：AA 要求普通文本 ≥ 4.5:1，AAA ≥ 7:1，3:1–4.5:1 仅大文本可用。</li>
+                </ol>
+            </div>
+            <div class="cp-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="cp-faq">
+                    <dt>6 种方案的角度是怎么定的？</dt>
+                    <dd>以 HSL 色轮为准：互补取对面 180°，类比取左右 ±30°，三角色互隔 120°，分裂互补取互补色两侧 ±30°（即 +150°/+210°），四方形互隔 90°，单色不换色相、只拉明度阶梯。色相超出 0–360° 时按取模回绕。</dd>
+                    <dt>为什么有的方案颜色看起来很接近？</dt>
+                    <dd>基色饱和度低（接近灰）时，换色相也看不出差别；单色方案本就是同色相阶梯。想要拉开差距，先把基色饱和度调高，或换一个更鲜艳的基色。</dd>
+                    <dt>对比度数值准吗？</dt>
+                    <dd>按 WCAG 相对亮度公式计算（sRGB 线性化后 0.2126/0.7152/0.0722 加权），与手工计算一致；AA 标识只看数值是否 ≥ 4.5:1，不做「可直接商用」之类的绝对承诺。</dd>
+                    <dt>复制按钮没反应怎么办？</dt>
+                    <dd>一键复制需要浏览器剪贴板权限；被拒绝或不支持时会自动降级为选中复制，仍失败会明确提示手动复制，HEX 文本本身就在色板上可见。</dd>
+                    <dt>我的基色会上传吗？</dt>
+                    <dd>不会。所有计算在浏览器本地完成，本页面不发起网络请求，可用 DevTools 的 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="cp-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="cp-links">
+                    <a href="/tools/color-converter"><i class="material-icons">palette</i> 颜色转换</a>
+                    <a href="/tools/css-gradient-generator"><i class="material-icons">gradient</i> CSS 渐变生成器</a>
+                </div>
+            </div>
+            <div class="cp-note">
+                <b>算法说明：</b>HEX↔HSL 换算与 WCAG 对比度均为自研纯函数（与颜色转换工具同款公式）；方案生成只做色相偏移与明度阶梯，不引入任何外部色板数据，同一基色在任何浏览器生成结果一致。
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/color_palette_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
