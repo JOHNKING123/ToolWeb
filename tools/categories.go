@@ -382,6 +382,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "code_screenshot_beautifier",
+					Name:        "代码截图美化器",
+					Description: "粘贴代码一键生成 macOS 风精美截图：自研零依赖 11 语言语法高亮 tokenizer（JS/TS/Python/Go/Java/HTML/CSS/JSON/SQL/Shell/Markdown＋自动检测，关键字/字符串/注释/数字四色着色），4 档主题＋纯色/渐变/透明背景，红绿灯窗口框＋圆角阴影 canvas 本地手工排版渲染，一键下载时间戳命名 PNG / 复制 PNG 到剪贴板，大代码限渲染保护，纯前端零上传 · Code screenshot beautifier: paste code, macOS window frame, syntax highlight, export PNG locally, 100% client-side",
+					Path:        "/tools/code-screenshot-beautifier",
+					Icon:        "photo_camera",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "curl_to_requests",
 					Name:        "cURL → Python Requests 转换器",
 					Description: "粘贴 DevTools 复制的 cURL 命令即生成可运行的 Python requests 代码：自研 shell 词法切分（单双引号/转义/续行）＋参数映射（-X/--request、--url、-H、-d/--data*、--compressed、-u、-b、-A、-k、-F、--max-time）；JSON 自动用 json=、表单用 data=、文件上传用 files=、-k 生成 verify=False 并附中文安全警告，GET 带 data 提示改用 params=，未知参数进入诊断列表不静默丢弃；结构化解析展示＋一键复制＋下载 .py，纯前端本地转换不出浏览器 · curl to requests converter: convert curl command to Python requests code online, 100% client-side",

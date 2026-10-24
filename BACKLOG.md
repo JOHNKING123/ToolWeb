@@ -1,3 +1,86 @@
+## 今日任务（2026-10-24 13:00 · 产品经理排期轮）
+
+**选定：代码截图美化器（code_screenshot_beautifier）** — 本轮唯一任务（新工具）：
+- **顺位**：13:00 研究轮（87 轮）Top3 **首席推荐**（86 轮新晋；11:38 PM 轮确认「无硬伤，留池顺位递进」；dev.to「The best free browser tools for developers in 2026」code screenshots「Tooliest/ray.so 形态」验证）；网速测试已交付闭环（c66ae18，159 Path；候选池划出）后顺位递进生效，依惯例「无硬伤不跳过」。
+- **未选**：应用商店截图生成器（P2 补强晋升；V2EX Pixsolo t/1251210 二次形态验证；纯前端中难度，无硬伤，留池顺位递进——PM 实测 templates/static 全路确无截图包装/设备框渲染工具）；配色方案生成器（87 轮新晋 P2；dev.to 13 tools 形态验证；纯前端小难度，留池——PM 实测自有 color 仅 HEX/RGB/HSL 互转＋WCAG 对比度，无方案生成，实质不重叠）。
+- **PM 零重叠实测复核**：`grep -rniE 'screenshot_beautif|screenshot-beautif|代码截图|美化.*代码'`、`grep -rniE 'app_store_screenshot|app-store-screenshot|应用商店.*截图|商店截图生成'`、`grep -rniE 'color_palette|color-palette|配色方案|palette_generator'` 三路全零命中；仓库 159 Path 全量；与 speed_test 轮的既有自研渲染族（canvas 折线、SVG foreignObject、图片裁剪换底）语义无重叠（代码→窗口框→PNG 导出无任何覆盖）。
+- **选定理由**：① **研究轮首席推荐，无硬伤不跳过**——dev.to 形态验证＋留池顺位递进；② **纯前端小难度一轮可高质量交付**——粘贴代码→选语言/主题→macOS 窗口框＋语法高亮→导出 PNG，零上传零 fetch/XHR；③ **痛点明确**——技术分享/发代码片段时截图丑，carbon 类站点广告多，中文一页式无广告工具缺位。
+- **品类归位**：注册到「开发工具」品类（与 code_minifier、curl_to_requests、color 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **语法高亮零 vendor**——仓库 static/vendor 无 highlight.js/prism，现网 carbon/ray.so 用 CDN 库，但 ToolWeb 纯前端离线标准要求自研轻量 tokenizer（效 code_minifier 自研引擎先例），首版至少覆盖 JS/TS、Python、Go、Java、HTML、CSS、JSON、SQL、Shell、Markdown 10 种语言的关键字/字符串/注释/数字/类名着色，行内正则防 ReDoS（regex_tester 已有 Web Worker＋3 秒熔断先例，本轮纯前端渲染不阻塞主线程即可）；② **导出 PNG 必须 canvas 本地渲染**——文本用 canvas measureText 手工排版（不依赖 foreignObject，绕开跨浏览器字体渲染不一致），文件名 `code-screenshot-<时间戳>.png`，另给「复制 PNG 到剪贴板」按钮（ClipboardItem 写法，降级提示手动下载）；③ **窗口框还原 macOS 质感**——三颗红绿灯按钮＋圆角阴影＋可选窗口标题/文件名显示，主题至少 4 档（深色系：One Dark/Dracula；浅色系：GitHub Light/Solarized Light），背景可选纯色/渐变/透明，字体候选 Menlo/SFMono/JetBrains Mono/等宽系统栈，防 CJK 等宽排版错位；④ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/code-screenshot-beautifier）；⑤ **大代码保护**——行数超 300 行或字符超 5 万时给出「建议分段」提示并限渲染（防 canvas 超限）。
+- **ID/Path**：`code_screenshot_beautifier`、`/tools/code-screenshot-beautifier`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 输入区：代码粘贴 textarea＋语言下拉（10 种语言＋自动检测）＋示例按钮（载入示例代码）；字号/行号开关/窗口标题输入/内边距滑块等样式控制。
+- 预览区：macOS 窗口框实时渲染（语法高亮＋行号＋圆角阴影）；主题切换（4 档）、背景选择（纯色/渐变/透明）。
+- 导出区：「下载 PNG」＋「复制 PNG」按钮；文件名带时间戳；本地渲染不出浏览器。
+- 注册：ID `code_screenshot_beautifier`、Name「代码截图美化器」、Path `/tools/code-screenshot-beautifier`、Category 开发工具、Icon 建议 photo_camera/image 类、New: true；中英文描述＋SEO keywords（代码截图、code screenshot、代码美化、carbon、ray.so、语法高亮、代码分享）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `code_screenshot_beautifier`、Path `/tools/code-screenshot-beautifier` 注册完整（Category 开发工具），注册总数 159→160 Path。
+2. 10 种语言均有可见的语法高亮着色（关键字/字符串/注释/数字四类至少区分三色）；行号开关生效。
+3. 导出 PNG 本地生成：下载文件名含时间戳；canvas 绘制的窗口框含红绿灯＋圆角阴影；大代码（300 行＋/5 万字符＋）触发提示且不卡死。
+4. 复制 PNG 到剪贴板在 Chromium 系可用，不支持时有明确降级提示；零 fetch/XHR（源码自检无外部请求）。
+5. node 测试 40+ 断言全过（tokenizer 四类着色、语言关键词表覆盖、单位换算/尺寸计算、颜色主题表、模板静态检查）。
+6. 页面无报错；移动端布局不错位；预览区小屏横向滚动不撑破。
+
+**预计改动文件**：
+- `templates/code_screenshot_beautifier.html`（新增；含 SEO 面板按家族标准＋输入区/预览区/导出区 UI）
+- `static/js/code_screenshot_beautifier.js`（新增；10 语言轻量 tokenizer＋canvas 本地渲染＋导出/复制 PNG；双模式导出供 node 测试）
+- `tests/code_screenshot_beautifier.test.js`（新增；tokenizer 着色、关键词覆盖、主题表、模板静态检查）
+- `tools/categories.go`（开发工具品类注册：ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD c66ae18（speed_test 交付＋流式下载 hotfix）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地一致）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 159 Path；Top3 候选重叠复核（三路全零命中实锤，详上）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库；本轮 `git status` 已确认无新增 `toolweb` 构建产物）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-24 13:00 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。网速测试已交付闭环（32b83ed 新增＋c66ae18 修复 mount 层 ResponseWriter http.Flusher、解决 /tool-web 下流式下载 panic 致 64KB 截断；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **159 Path**，ID speed_test、Path /tools/speed-test 已注册，网络工具品类；origin/muse/dev-20260929 与本地一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:00 午后轮，优先小难度纯前端。
+
+**本轮三件事**（13:00 全网调研，通用方向）：
+1. speed_test 交付确认：`git log` 头部 c66ae18（2026-10-24 中午开发轮交付＋流式下载 hotfix；11:38 PM 轮选定任务交付闭环）；全量 159 Path；templates/speed_test.html＋static/js/speed_test.js＋tests/speed_test.test.js＋tools/speed_test.go 均存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮正常，origin 与本地一致）；候选池划出。
+2. 新信号扫描：
+   - **V2EX t/1251210（10-23）Pixsolo 应用商店截图美化工具**：应用商店截图包装工具（折叠屏iPhone 展开/折叠态边框、Apple Watch 全系列、MacBook 样机；完全免费）→ 池内「应用商店截图生成器」（65 轮新晋，launchshots.app 首次形态验证）**二次形态验证**，**P2 补强晋升**（建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）：上传截图→选设备框→套多尺寸模板→导出 PNG，纯前端中难度，零上传；四路（ID/Path/中文名/描述关键词）**零命中实锤**；
+   - **dev.to pyfiletoolkit「13 Free Browser Tools Every Developer Needs in 2026」**：Color Palette Generator（基色→5 种和谐配色方案）→ 自有 color 仅 HEX/RGB/HSL 互转＋WCAG 对比度，**无方案生成功能**，**新晋 P2「配色方案生成器」**（建议 ID color_palette_generator、Path /tools/color-palette-generator）：输入基色→互补/类比/三角色/分裂互补/四方形/单色 6 种方案＋一键复制 HEX＋对比度提示，纯前端小难度，零上传；四路**零命中实锤**（pixel_art 的「调色板」为像素画量化调色板，语义不同）；其余 12 项全自有（JSON 格式化/校验→json_parser 族；Text Diff→text_diff；Base64→base64；URL→url_encode；HTML Entity→htmlentities；UUID→uuid_generator；QR→qrcode；CSS/JS Minifier→code_minifier；Markdown 预览→markdown_preview；JSON Schema→json_schema_validator；Kanban→kanban_board；Pomodoro→countdown_timer；CSS 渐变→css_gradient_generator；批量改图→bulk_image_resizer），不立；
+   - **PulseTools「Free Web Utilities」（10-24 前后）**：Schema.org JSON-LD Builder → 自有 schema_org_generator，不立；Robots & Ads.txt Validator → robots.txt 校验记 **robots_txt_generator 优化项**（不单独立项），ads.txt niche 不立；SERP & Meta Previewer → 自有 serp_snippet_preview＋og_card_preview，不立；
+   - **HN「bigwords.page — turn any screen into a sign」**（aiominiu 10 AI Projects Vol.26.13 引 Show HN）：URL 附文字→巨型全屏文字牌 → **自有 big_sign_display（大字标牌展示器）实质同构**（多屏分页/高对比主题/镜像/全屏），自有实锤消解，不立；
+   - **Medium Stanley「The Best Developer Tools of October 2026」（10-23）**：Rill Browser（浏览器产品）、Inferock（Serverless LLM 推理 SaaS）、视频类 agent 工具 → 均非单页工具形态，不立；
+   - **Medium Siloshan「7 Free Browser Tools Worth Bookmarking This October」（10-18，新文重扫）**：SyncWhen → P3 会议投票维持；**SortaSeat（婚礼座位表）→ 自有 wedding_seating_chart 同构**（85 轮判 niche/方向边界有误，本轮纠偏为自有实锤）；OldRoll → 自有 img_retro_filter；StitchCraft → 自有 cross_stitch_pattern；**Calcy（单位记事本计算器）→ 自有 unit_calc_notepad 同构**（同上纠偏）；urPiano → 池内在线钢琴（方向边界观察）；llmspeed → 已交付 llm_hardware_checker；
+   - **V2EX 其余（10-20~10-24）**：Linkit AI 书签管理器（桌面应用＋AI 摘要/语义搜索）→ 非网页单页＋需 AI，不立；划懂划词解释插件（浏览器插件）→ 非网页工具，不立；FrameCut（Mac 原生剪辑 App）→ 非网页，不立；ProxyLane（桌面透明代理）→ 非网页，不立；remox.ai 图片擦除/去背景（需 AI 后端＋积分制）→ 需后端/AI，低优先不立；神念 AI 分享链接（AI agent 基础设施）→ 非工具形态，不立；
+   - **BP 导航「免费实用工具 TOP11」（bpdh.cn，10-05 前后）**：临时邮箱（10 分钟邮箱/Guerrilla/Temp Mail）→ 需后端收件基础设施（域名＋邮件服务器），纯前端做不了，不立；图床（SM.MS/路过/ImgURL）→ 需后端存储，不立；TinyPNG → 自有 img_compress；草料二维码 → 自有 qrcode；Tool.lu/万能命令 → 工具箱导航，ToolWeb 本体即工具箱，不立；
+   - **365lab「2026 免费在线工具推荐」（10-08）**：背景图/壁纸生成器 → 无覆盖但 niche，记 P2 观察；词云生成器 → 中文分词需词典 vendor 成本，记 P2 观察；OFD 转 PDF → ofd 版式解析大难度＋vendor 风险，观察不立；算术题/网名生成器 → 教育/娱乐 niche，方向边界不立；其余（证件照/PDF/发票/拼图/重命名/白噪音/WiFi 二维码）全自有，不立；
+   - **dev.to VelnoxLabs「51 free browser tools」（09-27）**：cURL 转 Requests → 自有 curl_to_requests；Invoice → 自有 invoice_generator；其余全自有/泛计算器，不立；
+   - **ToolSlash 工具站上线（10-12，PR 稿）**：平台级发布（目标上万工具配置化引擎），无单工具形态信号，不立。
+3. 候选池变动：网速测试已交付划出（32b83ed＋c66ae18，159 Path）；**SERP 片段预览已实现划出**（本轮发现 86 轮误留池：serp_snippet_preview、Name「SERP 搜索结果片段预览」、Path /tools/serp-snippet-preview 早已注册）；Markdown 聊天分享助手/HTML 实体编解码器已由 11:38 PM 轮移除（分别与 md_to_chat / htmlentities 重叠）；**应用商店截图生成器 P2 补强晋升**（65 轮新晋；本轮 V2EX Pixsolo t/1251210 二次形态验证；四路零命中实锤；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；**配色方案生成器 P2 新晋**（dev.to 13 tools Color Palette Generator 形态验证；与自有 color 互补零重叠；纯前端小难度；四路零命中实锤；建议 ID color_palette_generator、Path /tools/color-palette-generator）；自有实锤消解 5 项（bigwords.page→big_sign_display；SortaSeat→wedding_seating_chart；Calcy→unit_calc_notepad；Schema.org JSON-LD→schema_org_generator；SERP/Meta Previewer→serp_snippet_preview＋og_card_preview）；robots.txt validator 记 robots_txt_generator 优化项；niche/需后端/非单页/方向边界不立 12 项（临时邮箱→需后端收件；图床→需后端存储；图片去背景→需 AI 后端；ads.txt→niche；Rill Browser/Inferock/视频 agent→非单页形态；Linkit/划懂/FrameCut/ProxyLane→桌面/插件/原生应用；OFD 转 PDF→大难度观察；壁纸/词云→P2 观察；表情包/网名/算术题→niche/方向边界）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；13:00 午后轮优先小难度纯前端）：
+
+1. **代码截图美化器** — P2（86 轮新晋；11:38 PM 轮确认「无硬伤，留池顺位递进」；dev.to「The best free browser tools for developers in 2026」code screenshots「Tooliest/ray.so 形态」验证；痛点：技术分享发代码片段时截图丑、carbon 类站点广告多；纯前端小难度：粘贴代码→选语言/主题→macOS 窗口框＋语法高亮渲染→一键导出 PNG/复制，零上传；四路**零命中实锤**（本轮复核仍无覆盖）；建议 ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier）。
+2. **应用商店截图生成器** — P2 补强晋升（65 轮新晋；本轮 V2EX t/1251210 Pixsolo **二次形态验证**：免费、折叠屏iPhone/Apple Watch/Mac 边框、独立开发者反响积极；痛点：独立开发者上架 App Store/Play 截图要设计工具、现有方案（Pixsolo/launchshots）有账号或模板限制；纯前端中难度：上传截图→选设备框→套多尺寸模板→导出 PNG，零上传；四路**零命中实锤**；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）。
+3. **配色方案生成器** — 新晋 P2（本轮；dev.to「13 Free Browser Tools」Color Palette Generator 形态验证；痛点：做页面/海报配色靠感觉试错，自有 color 工具只有 HEX/RGB/HSL 互转＋对比度、无方案生成；纯前端小难度：输入基色→互补/类比/三角色/分裂互补/四方形/单色 6 种和谐方案＋一键复制 HEX＋WCAG 对比度提示，零上传；四路**零命中实锤**；建议 ID color_palette_generator、Path /tools/color-palette-generator）。
+
+其余 P2 留池：CSP 安全头生成器（84 轮新晋；Show HN DevKit 形态验证；建议 ID csp_builder、Path /tools/csp-builder）；CSS Sprite 雪碧图生成器（83 轮新晋，niche；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；浏览器录屏工具（84 轮新晋；中难度：getDisplayMedia＋MediaRecorder→webm 下载；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；中难度 Go 后端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；壁纸生成器/词云生成器（本轮新晋 P2 观察：niche/中文分词 vendor 成本）；SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；SyncWhen 持续补强；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十七轮：网速测试已交付划出（32b83ed 新增＋c66ae18 修复 mount 层 Flusher 解决流式下载 64KB 截断；ID speed_test、Path /tools/speed-test 已注册，网络工具品类；全量 159 Path；候选池划出）；**SERP 片段预览已实现划出**（本轮发现 86 轮误留池：serp_snippet_preview「SERP 搜索结果片段预览」、Path /tools/serp-snippet-preview 早已注册）；Markdown 聊天分享助手/HTML 实体编解码器已由 11:38 PM 轮移除（md_to_chat / htmlentities 重叠）；**应用商店截图生成器 P2 补强晋升**（65 轮新晋；本轮 V2EX t/1251210 Pixsolo 二次形态验证：免费、折叠屏iPhone/Watch/Mac 边框；纯前端中难度；四路零命中实锤；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；**配色方案生成器 P2 新晋**（dev.to 13 tools Color Palette Generator 形态验证；与自有 color 互补；纯前端小难度；四路零命中实锤；建议 ID color_palette_generator、Path /tools/color-palette-generator）；自有实锤消解 5 项（bigwords.page→big_sign_display；SortaSeat→wedding_seating_chart；Calcy→unit_calc_notepad；Schema.org JSON-LD→schema_org_generator；SERP/Meta Previewer→自有族）；robots.txt validator 记 robots_txt_generator 优化项；niche/需后端/非单页/方向边界不立 12 项（临时邮箱/图床/图片去背景→需后端或 AI；ads.txt→niche；Rill Browser/Inferock/视频 agent→非单页形态；Linkit/划懂/FrameCut/ProxyLane→桌面/插件/原生应用；OFD 转 PDF→大难度观察；壁纸/词云→P2 观察；表情包/网名/算术题→niche/方向边界）；全量 159 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 代码截图美化器 | P2（86 轮新晋；11:38 PM 轮确认留池顺位递进；dev.to code screenshots「Tooliest/ray.so 形态」验证；痛点：技术分享发代码片段截图丑、carbon 类站点广告多；纯前端小难度：粘贴代码→选语言/主题→macOS 窗口框＋语法高亮渲染→一键导出 PNG/复制，零上传；本轮四路零命中复核仍无覆盖；建议 ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier） | 小 | P2 |
+| 应用商店截图生成器 | 本轮 P2 补强晋升（65 轮新晋，launchshots.app 首次形态验证；本轮 V2EX t/1251210 Pixsolo 二次验证：免费、折叠屏iPhone/Apple Watch/Mac 边框；痛点：独立开发者上架 App Store/Play 截图要设计工具；纯前端中难度：上传截图→选设备框→套多尺寸模板→导出 PNG，零上传；四路零命中实锤；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator） | 中 | P2（补强晋升） |
+| 配色方案生成器 | 本轮 P2 新晋（dev.to「13 Free Browser Tools」Color Palette Generator 形态验证；痛点：做页面/海报配色靠感觉试错，自有 color 仅 HEX/RGB/HSL 互转＋对比度、无方案生成；纯前端小难度：基色→互补/类比/三角色/分裂互补/四方形/单色 6 种和谐方案＋一键复制 HEX＋WCAG 对比度提示，零上传；四路零命中实锤；建议 ID color_palette_generator、Path /tools/color-palette-generator） | 小 | P2（87 轮新晋） |
+| 网速测试 | 已交付划出（32b83ed 新增＋c66ae18 修复 mount 层 Flusher 解决流式下载 64KB 截断；ID speed_test、Path /tools/speed-test 已注册，网络工具品类；全量 159 Path；候选池划出） | — | 已实现 |
+| SERP 片段预览 | 已实现划出（本轮发现 86 轮误留池：serp_snippet_preview「SERP 搜索结果片段预览」、Path /tools/serp-snippet-preview 早已注册；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（HN bigwords.page→big_sign_display 同构；Siloshan Oct 文 SortaSeat→wedding_seating_chart 同构；Calcy→unit_calc_notepad 同构；PulseTools Schema.org JSON-LD→schema_org_generator；SERP/Meta Previewer→serp_snippet_preview＋og_card_preview；dev.to 13 tools 其余 12 项→json/parser/text_diff/base64/url_encode/htmlentities/uuid/qrcode/code_minifier/markdown_preview/json_schema_validator/kanban_board/countdown_timer/css_gradient_generator/bulk_image_resizer 全自有；365lab 证件照/PDF/发票/拼图/重命名/白噪音/WiFi 二维码→全自有） | — | 不立 |
+| 优化项 | robots.txt validator（PulseTools 形态）→ 并入 robots_txt_generator 作为校验增强，不单独立项 | — | 优化项 |
+| niche/需后端/非单页/方向边界 | 不立或观察（临时邮箱→需后端收件基础设施；图床→需后端存储；remox.ai 图片去背景→需 AI 后端；ads.txt validator→niche；Stanley Oct-2026（Rill Browser/Inferock/视频 agent 工具）→非单页工具形态；Linkit/划懂/FrameCut/ProxyLane→桌面应用/浏览器插件/原生 App；OFD 转 PDF→ofd 版式解析大难度＋vendor 风险，观察；壁纸生成器→niche，P2 观察；词云生成器→中文分词词典 vendor 成本，P2 观察；表情包/网名/算术题→niche/方向边界） | — | 不立/观察 |
+
+**归档说明**：本轮为 10-24 通用调研第八十七轮——网速测试交付闭环（32b83ed＋c66ae18，`/tools/speed-test` 已注册，网络工具品类，全量 159 Path），候选池划出；**SERP 片段预览已实现划出**（86 轮误留池纠偏）；**应用商店截图生成器 P2 补强晋升**（V2EX Pixsolo t/1251210 二次形态验证）；**配色方案生成器 P2 新晋**（dev.to 13 tools 形态验证，与自有 color 互补）；5 项自有实锤消解（含 SortaSeat/Calcy 两处 85 轮误判纠偏）；robots.txt validator 记优化项；12 项 niche/需后端/非单页/方向边界不立或观察；V2EX 本轮有实质信号（Pixsolo）；WPS 候选表保持冻结归档；仓库 159 注册工具全量核对无重叠（Top3 建议 ID code_screenshot_beautifier / app_store_screenshot_generator / color_palette_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin/muse/dev-20260929 与本地一致）；`git log` 头部 c66ae18（speed_test 交付＋流式下载 hotfix）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 159 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-24 11:38 · 产品经理排期轮）
 
 **选定：网速测试（speed_test）** — 本轮唯一任务（新工具）：

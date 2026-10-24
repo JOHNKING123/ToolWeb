@@ -1,0 +1,198 @@
+{{define "code_screenshot_beautifier"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码截图美化器 - 代码片段截图美化/语法高亮/PNG 导出（纯前端）</title>
+    <meta name="description" content="免费在线代码截图美化器：粘贴代码一键生成 macOS 风精美截图。自研零依赖语法高亮引擎（JS/TS/Python/Go/Java/HTML/CSS/JSON/SQL/Shell/Markdown 11 种语言＋自动检测），4 档主题＋纯色/渐变/透明背景，红绿灯窗口框＋圆角阴影，canvas 本地渲染一键下载 PNG / 复制 PNG 到剪贴板，代码不出浏览器。Code screenshot beautifier: paste code, macOS window frame, syntax highlight, export PNG, 100% client-side.">
+    <meta name="keywords" content="代码截图,代码美化,code screenshot,代码截图美化器,语法高亮,carbon,ray.so,代码分享,代码片段截图,PNG 导出,macOS 窗口,代码截图工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/code-screenshot-beautifier">
+    <meta property="og:title" content="代码截图美化器 - 代码片段截图美化/语法高亮/PNG 导出">
+    <meta property="og:description" content="粘贴代码一键生成 macOS 风精美截图：自研 11 语言语法高亮、4 档主题、纯色/渐变/透明背景，canvas 本地渲染下载 PNG，代码不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/code-screenshot-beautifier">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"代码截图美化器","description":"粘贴代码一键生成 macOS 风精美截图：自研零依赖 11 语言语法高亮 tokenizer（关键字/字符串/注释/数字着色，自动检测语言），4 档主题＋纯色/渐变/透明背景，红绿灯窗口框＋圆角阴影 canvas 本地手工排版渲染，一键下载时间戳命名 PNG / 复制 PNG 到剪贴板，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/code-screenshot-beautifier","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .csb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .csb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .csb-privacy b{color:#047857}
+        .csb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .csb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .csb-panel h3 .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .csb-toolbar{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-bottom:.9rem}
+        .csb-toolbar label{font-size:.88rem;color:#374151;display:inline-flex;align-items:center;gap:.35rem}
+        .csb-select{border:1px solid #d1d5db;border-radius:.55rem;padding:.45rem .6rem;font-size:.88rem;background:#fff;color:#1f2937;font-family:inherit;max-width:100%}
+        .csb-actions{margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap}
+        .csb-btn-sm{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.45rem .85rem;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-family:inherit}
+        .csb-btn-sm:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .csb-btn-sm .material-icons{font-size:1.05rem}
+        .csb-input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;min-height:16rem;max-height:30rem;overflow:auto;background:#fff;color:#111827;width:100%;box-sizing:border-box;resize:vertical}
+        .csb-input:focus{outline:none;border-color:var(--primary-color)}
+        .csb-style-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;align-items:end}
+        .csb-field{display:flex;flex-direction:column;gap:.35rem;font-size:.88rem;color:#374151}
+        .csb-field input[type="text"]{border:1px solid #d1d5db;border-radius:.55rem;padding:.45rem .6rem;font-size:.88rem;font-family:inherit;width:100%;box-sizing:border-box}
+        .csb-field input[type="text"]:disabled{background:#f3f4f6;color:#9ca3af}
+        .csb-check{display:flex;gap:.45rem;align-items:center;font-size:.88rem;color:#374151;cursor:pointer}
+        .csb-range-row{display:flex;gap:.6rem;align-items:center}
+        .csb-range-row input[type="range"]{flex:1;min-width:0}
+        .csb-range-val{font-size:.85rem;color:#6b7280;min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+        .csb-warn{display:none;gap:.6rem;align-items:flex-start;margin-bottom:.8rem;font-size:.88rem;line-height:1.7;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:.6rem;padding:.7rem .9rem}
+        .csb-warn .material-icons{flex:none;font-size:1.3rem;color:#f59e0b}
+        .csb-preview-scroll{overflow-x:auto;border:1px solid #e5e7eb;border-radius:.7rem;background:#f8fafc;padding:1rem}
+        .csb-preview-scroll canvas{display:block;margin:0 auto}
+        .csb-stats{font-size:.85rem;color:#6b7280;margin-top:.7rem;font-variant-numeric:tabular-nums}
+        .csb-export{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .csb-export .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .csb-status{font-size:.9rem;min-height:1.4em}
+        .csb-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .csb-note b{color:#374151}
+        .csb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .csb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .csb-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.3rem;padding:.05rem .35rem;font-size:.85em}
+        .csb-steps{margin:0;padding-left:1.2rem;color:#4b5563;line-height:2;font-size:.92rem}
+        .csb-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .csb-links a{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;border-radius:.6rem;padding:.5rem .9rem;font-size:.88rem;color:#1f2937;text-decoration:none;background:#fff}
+        .csb-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .csb-links .material-icons{font-size:1.05rem}
+        @media (max-width:860px){
+            .csb-actions{margin-left:0}
+            .csb-export .btn{flex:1;justify-content:center}
+            .csb-input{min-height:12rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">photo_camera</i> 代码截图美化器</h1>
+            <p>粘贴代码，一键生成 macOS 风精美截图：自研零依赖语法高亮（11 种语言＋自动检测）→ 红绿灯窗口框＋圆角阴影 → canvas 本地渲染导出 PNG，代码不出浏览器。</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="csb-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：代码不出浏览器。</b>语法高亮与 PNG 渲染全部在当前页面本地完成，不上传到任何服务器，不做任何存储与记录。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">input</i> 输入代码</h3>
+                <div class="csb-toolbar">
+                    <label>语言
+                        <select class="csb-select" id="csb-lang" aria-label="编程语言"></select>
+                    </label>
+                    <div class="csb-actions">
+                        <button type="button" class="csb-btn-sm" id="csb-sample"><i class="material-icons">auto_awesome</i> 载入示例</button>
+                        <button type="button" class="csb-btn-sm" id="csb-clear"><i class="material-icons">delete_sweep</i> 清空</button>
+                    </div>
+                </div>
+                <textarea class="csb-input" id="csb-input" placeholder="在此粘贴代码，右侧实时预览美化效果…" spellcheck="false"></textarea>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">palette</i> 样式设置</h3>
+                <div class="csb-style-grid">
+                    <div class="csb-field">主题
+                        <select class="csb-select" id="csb-theme" aria-label="代码主题"></select>
+                    </div>
+                    <div class="csb-field">背景
+                        <select class="csb-select" id="csb-bg" aria-label="截图背景"></select>
+                    </div>
+                    <div class="csb-field">字号
+                        <select class="csb-select" id="csb-fontsize" aria-label="代码字号">
+                            <option value="12">12 px</option>
+                            <option value="14" selected>14 px</option>
+                            <option value="16">16 px</option>
+                            <option value="18">18 px</option>
+                        </select>
+                    </div>
+                    <div class="csb-field">窗口内边距
+                        <div class="csb-range-row">
+                            <input type="range" id="csb-pad" min="16" max="48" step="4" value="24" aria-label="窗口内边距">
+                            <span class="csb-range-val" id="csb-pad-val">24 px</span>
+                        </div>
+                    </div>
+                    <div class="csb-field">
+                        <label class="csb-check"><input type="checkbox" id="csb-lineno" checked> 显示行号</label>
+                        <label class="csb-check"><input type="checkbox" id="csb-showtitle"> 显示窗口标题</label>
+                    </div>
+                    <div class="csb-field">窗口标题
+                        <input type="text" id="csb-title" placeholder="如：fib.js（留空显示语言名）" disabled maxlength="60">
+                    </div>
+                </div>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">preview</i> 预览</h3>
+                <div class="csb-warn" id="csb-warn" role="alert">
+                    <i class="material-icons">warning</i><span></span>
+                </div>
+                <div class="csb-preview-scroll">
+                    <canvas id="csb-canvas" aria-label="代码截图预览"></canvas>
+                </div>
+                <div class="csb-stats" id="csb-stats" aria-live="polite"></div>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">ios_share</i> 导出</h3>
+                <div class="csb-export">
+                    <button class="btn btn-primary" id="csb-download"><i class="material-icons">download</i> 下载 PNG</button>
+                    <button class="btn btn-primary" id="csb-copy"><i class="material-icons">content_copy</i> 复制 PNG</button>
+                    <span class="csb-status" id="csb-status" aria-live="polite"></span>
+                </div>
+                <div class="csb-note" style="margin-top:.8rem;">
+                    下载文件名为 <b>code-screenshot-YYYYMMDD-HHmmss.png</b>（2 倍清晰度渲染）；「复制 PNG」依赖浏览器剪贴板图片写入能力（Chromium 系可用），不支持时会提示改用下载。
+                </div>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <ol class="csb-steps">
+                    <li>在输入区粘贴代码（语言默认自动检测，也可手动指定）。</li>
+                    <li>在样式区挑选主题（One Dark / Dracula / GitHub Light / Solarized Light）、背景（渐变 / 纯色 / 透明）、字号、行号与窗口标题。</li>
+                    <li>预览区实时渲染 macOS 风窗口截图：红绿灯按钮、圆角阴影、语法高亮。</li>
+                    <li>点「下载 PNG」保存图片，或点「复制 PNG」直接粘贴到文档/聊天中。</li>
+                </ol>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="csb-faq">
+                    <dt>代码会上传到服务器吗？</dt>
+                    <dd>不会。语法高亮与图片渲染全部在浏览器本地完成，本页面不发起任何网络请求，可用 DevTools 的 Network 面板验证。</dd>
+                    <dt>支持哪些语言的高亮？</dt>
+                    <dd>JavaScript、TypeScript、Python、Go、Java、HTML、CSS、JSON、SQL、Shell、Markdown 共 11 种，另有自动检测。关键字、字符串、注释、数字分别着色。</dd>
+                    <dt>导出的 PNG 清晰度如何？</dt>
+                    <dd>以 2 倍像素密度渲染，文字边缘清晰，适合直接用于文章、PPT 与社交媒体分享。</dd>
+                    <dt>代码很长怎么办？</dt>
+                    <dd>超过 300 行或 5 万字符时会自动截断仅渲染前 300 行并给出提示，建议分段截图以保证清晰度与性能。</dd>
+                    <dt>「复制 PNG」按钮没反应？</dt>
+                    <dd>复制图片到剪贴板需要浏览器支持 <code>ClipboardItem</code> 图片写入（Chrome / Edge 可用）；Safari / Firefox 等不支持时会给出明确提示，请改用「下载 PNG」。</dd>
+                </dl>
+            </div>
+
+            <div class="csb-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="csb-links">
+                    <a href="/tools/code-minifier"><i class="material-icons">compress</i> 代码压缩器</a>
+                    <a href="/tools/json-parser"><i class="material-icons">data_object</i> JSON 解析器</a>
+                    <a href="/tools/base64"><i class="material-icons">transform</i> Base64 编码/解码</a>
+                </div>
+            </div>
+
+            <div class="csb-note">
+                <b>引擎说明：</b>语法高亮为自研单遍扫描 tokenizer（零第三方库）：行注释/块注释（含跨行）→ 转义感知的字符串 → Shell 变量 → 数字 → 关键字，线性时间、无回溯；渲染用 canvas <b>measureText</b> 手工排版（等宽字体栈 Menlo / SFMono / JetBrains Mono），不依赖 foreignObject，各浏览器效果一致。
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/code_screenshot_beautifier.js?v=1"></script>
+</body>
+</html>
+{{end}}
