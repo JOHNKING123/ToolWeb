@@ -1,3 +1,83 @@
+## 今日任务（2026-10-24 09:42 · 产品经理排期轮）
+
+**选定：本地 LLM 硬件检测器（llm_hardware_checker）** — 本轮唯一任务（新工具）：
+- **顺位**：09:36 研究轮（85 轮）Top3 **首席推荐**（第 5 次形态验证：Medium Oct-2026「llmspeed — checking how fast a local AI model will run before buying hardware」；77 轮新晋 P2 多轮留池）；HTTP 状态码速查已交付闭环（b07cc50，157 Path；候选池划出）后顺位递进生效，依惯例「无硬伤不跳过」。
+- **PM 主动纠偏**：研究轮 Top2「花式文本生成器」本轮**否决独立立项**——本轮 PM 实测仓库发现已有 `fancy_fonts`（花体字生成器，/tools/fancy-fonts）：粗体/斜体/哥特/手写花体/气泡/方框/删除线/smallcaps 等 18 种风格＋一键复制，与候选形态（删除线/小型大写/unicode 样式→一键复制）**实质重叠**；研究轮的「三路零命中实锤」只查了 fancy_text/fancy-text/花式文本关键词，漏查了既有 ID fancy_fonts/名称「花体字生成器」。zalgo/隐形文本/wingdings 剩余新颖档位可并入 fancy_fonts 作为**优化项**（增样式档位），不单独立工具；候选池从 Top3 移除。未选：网速测试（新晋 P2；Bitlist 形态验证；Ping 测试仅覆盖连通性/延迟、带宽测速确无工具，无硬伤，留池顺位递进）。
+- **选定理由**：① **研究轮首席推荐，无硬伤不跳过**——累计五度形态验证（Show HN「What LLM fits my GPU?」/llmspeed/Hotfix Flint/Medium Oct-2026）；② **纯前端小难度一轮可高质量交付**——WebGL 自动检测 GPU 型号（WEBGL_debug_renderer_info）＋手选显卡/显存档位→静态对照表→可跑模型＋量化版本推荐；零上传、零 fetch/XHR；③ **零重叠复核**——本轮实测 `grep -rniE 'llm_hardware|llm-hardware|LLM硬件|硬件检测器'` 全路零命中（ai_token_counter 为 token 计数工具，非硬件）；④ **痛点明确**——想本地跑 LLM 不知道自己显卡能不能带、该下什么量化版本，买硬件前先评估；现有对照多为英文论坛零散帖子，中文一页式工具缺位。
+- **品类归位**：注册到「AI 工具」品类（与 ai_token_counter 同品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务/生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **WebGL 检测须优雅降级**——浏览器禁用 WebGL/无独立显卡（如纯核显）时检测不到或读不到型号，必须给出明确的手选路径，不许卡死；② **显存数据必须准确**——主流显卡显存档位逐条核对（NVIDIA RTX 30/40/50 系、AMD RX 6000/7000、Intel Arc A 系列、Apple Silicon M1/M2/M3/M4 统一内存、常见笔记本核显），不确定的写「约」＋备注；③ **量化推荐要保守**——7B/13B/30B/70B 主流开源模型（Llama/Qwen/DeepSeek/Mistral/Mixtral/Gemma/Phi 等）在 Q8/Q4_K_M/Q2 下的显存需求按「模型权重＋上下文开销」给推荐档，给出红黄绿三档（流畅/能跑但慢/带不动），不夸大；④ **Apple Silicon 与核显单独说明**——统一内存架构下可用内存≠全部可分配，给出折算提示；⑤ **不做性能预测承诺**——tokens/s 只给区间参考并注明「因后端/上下文长度差异很大」，免责声明写清；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/llm-hardware-checker）。
+- **ID/Path**：`llm_hardware_checker`、`/tools/llm-hardware-checker`（沿用研究轮建议）。
+
+**规格**（开发轮按此执行）：
+- 检测区：WebGL 自动读取 GPU renderer 字符串并展示（一键重检按钮）；检测失败/无 WebGL 时提示「未检测到，请手动选择」。
+- 手选区：显卡型号下拉（按品牌分组：NVIDIA/AMD/Intel/Apple/其他）＋显存档位（8/12/16/20/24/32/48/64/96/128GB＋不确定）；选型号后显存自动预填、可手动改。
+- 推荐引擎：静态数据表（GPU→显存档位；模型→参数量→各量化版本显存需求＋tokens/s 区间参考）；输入显存 X → 输出可跑模型列表（按量化版本分组，红黄绿三档标注）；另附「买前评估」提示（想跑 70B Q4 至少需要多少显存的反向查询）。
+- 注册：ID `llm_hardware_checker`、Name「本地 LLM 硬件检测器」、Path `/tools/llm-hardware-checker`、Category AI 工具、Icon 建议 memory/videogame_asset 类、New: true；中英文描述＋SEO keywords（LLM 硬件、本地大模型、显卡、显存、量化、ollama、llama.cpp、llm hardware checker）；SEO 面板（title/description/keywords/canonical/OG/JSON-LD/使用说明/FAQ/相关工具）按家族标准配齐。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `llm_hardware_checker`、Path `/tools/llm-hardware-checker` 注册完整（Category AI 工具），注册总数 157→158 Path。
+2. 有 WebGL 的浏览器自动检出 GPU 型号并展示；禁用 WebGL 时降级为手选路径、不报错不卡死。
+3. 手选典型用例正确：8GB 显存→7B Q4_K_M 绿灯、70B Q4 红灯；24GB→70B Q4 黄灯/绿灯；128GB 统一内存（M 系列）→70B Q8 可跑。推荐档位与静态数据表一致，无自相矛盾。
+4. 显存数据抽查准确：RTX 4090=24GB、RTX 4060 Ti=8/16GB 双版本、RX 7900 XTX=24GB 等关键型号无错；Apple Silicon 统一内存有折算提示。
+5. JS 源码自检零 fetch/XHR；「tokens/s 仅为区间参考」免责声明完整。
+6. node 测试 40+ 断言全过（数据表完整性、推荐引擎逻辑、三档判定边界、WebGL 解析函数、模板静态检查）。
+7. 页面无报错；移动端布局不错位；推荐结果列表小屏不撑破。
+
+**预计改动文件**：
+- `templates/llm_hardware_checker.html`（新增；含 SEO 面板按家族标准＋检测区/手选区/推荐结果区 UI 样式）
+- `static/js/llm_hardware_checker.js`（新增；WebGL 检测＋GPU/模型静态数据表＋推荐引擎；双模式导出供 node 测试）
+- `tests/llm_hardware_checker.test.js`（新增；数据完整性、推荐引擎、三档判定、WebGL 解析、模板静态检查）
+- `tools/categories.go`（AI 工具品类注册：ID llm_hardware_checker、Path /tools/llm-hardware-checker、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地 HEAD b07cc50（http_status_reference 交付闭环）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮首次裸 fetch 报 access rights，加密钥 env 后 github.com ED25519 key 自动入库恢复正常，origin/muse/dev-20260929 与本地一致；VM 换机丢 known_hosts 老问题）；本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 157 Path；Top3 候选重叠复核（llm_hardware 全路零命中实锤；fancy_text 与既有 fancy_fonts 重叠→本轮 PM 否决独立立项；speed_test 零命中、ping 仅延迟无带宽测速）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-24 09:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-24 通用调研第八十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。HTTP 状态码速查已交付闭环（`git log` 头部 b07cc50：62 条状态码静态数据＋搜索/筛选/展开渲染，零 fetch/XHR；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **157 Path**，ID http_status_reference、Path /tools/http-status-reference 已注册，开发工具品类；origin/muse/dev-20260929 与本地一致；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 上午轮，P1 池已空，P2 可晋升，优先小难度纯前端。
+
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. http_status_reference 交付确认：`git log` 头部 b07cc50（2026-10-24 07:47 CST 前端开发轮交付；07:44 PM 轮选定任务交付闭环）；全量 157 Path；templates/http_status_reference.html＋static/js/http_status_reference.js＋tests/http_status_reference.test.js 均存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常，origin 与本地一致）；候选池划出。
+2. 新信号扫描：
+   - **Medium「7 Free Browser Tools Worth Bookmarking This October」（Oct 2026，约 6 天前）**：llmspeed（checking how fast a local AI model will run before buying hardware）→ 池内 P2「本地 LLM 硬件检测器」**第 5 次形态验证补强**（痛点同构：买硬件前先看本地能不能跑 LLM）；SyncWhen（no-signup meeting poll）→ P3「免注册会议时间投票」形态验证补强（需 Go 后端＋持久化，仍低优先）；OldRoll（retro film/digicam photo effects）→ 实锤自有「图片复古做旧」，不立；StitchCraft（photo→cross-stitch pattern）→ 实锤自有 cross_stitch_pattern（照片转十字绣图案生成器），不立；urPiano（browser piano）→ 池内「在线钢琴」（方向边界观察），自证不重复立；SortaSeat（wedding seating chart maker）→ 过 niche，观察不立；Calcy（back-of-the-envelope maths with units and ranges，类 Soulver 数学便签）→ 方向边界（计算器类收敛中），观察不立；
+   - **PulseTools「Free Web Utilities」（3 browser tools, no signup, browser-only）**：SERP & Meta Previewer（Google SERP pixel-width 截断预览：标题约 600px＋X/LinkedIn social card 预览）→ 池内 niche P2「SERP 片段预览」形态验证补强（像素宽度截断逻辑＋社交卡片双通道为新增形态细节）；Robots & Ads.txt Validator → 自有 robots_txt_generator 已含基础校验（空 User-agent、路径缺前导 / 提示），validator 形态部分同构，不重复立；Schema.org JSON-LD Builder → 实锤自有 schema_org_generator，不立；
+   - **dev.to brynbyron（18 free text tools, no server no sign-up）**：strikethrough/small caps/big text/zalgo/cursed/invisible text/wingdings 花式文本生成器 → **全路零命中**，**新晋 P2「花式文本生成器」**（建议 ID fancy_text_generator、Path /tools/fancy-text-generator）：输入文本→unicode 样式多档（删除线/小型大写/粗体花体/空心体/zalgo/隐形文本）→一键复制，纯前端小难度，零上传；其余大小写转换/凯撒密码/二进制翻译/HTML 查看 → 自有 texttools/文本工具族复现，不立；
+   - **Bitlist（Show HN simple browser tools）**：Internet speed test / WebRTC leak test → **全路零命中**，**新晋 P2「网速测试」**（建议 ID speed_test、Path /tools/speed-test）：CDN 大文件下载测速＋延迟测试＋多次采样取均值，纯前端小难度；痛点：想测当前网速，不想装 App、不想去 speedtest 广告站；JSON formatter/validator、PDF merge、QR、Base64/UUID → 全自有复现，不立；
+   - **dev.to pyfiletoolkit（13 tools）/BlanzaTools（10-11，14 tools）/mou1z（5 tools）/geekskai（26 tools）/nologin.tools**：CSS/JS Minifier → 自有 code_minifier；Bulk Image Resizer → 自有 bulk_image_resizer；Countdown Timer → 自有 countdown_timer（在线倒计时/番茄钟）；CSS Gradient → 自有 css_gradient_generator；JSON→TS/Go → 自有 json_to_types；Mermaid → 自有 mermaid_diagram_renderer；Markdown Previewer → 自有 markdown 工具族；Kanban → 本轮前已交付 kanban_board；Pomodoro → 自有 countdown_timer 同构，不立；regex101/JWT.io/CyberChef/Hoppscotch → 品类自有或需后端，不立；
+   - **V2EX**：本轮返回 Shopify SEO 垃圾页，无可消化需求帖 → 本轮空。
+3. 候选池变动：HTTP 状态码速查已交付划出（b07cc50，157 Path）；**新晋 P2 2 个**（花式文本生成器：brynbyron 18 文本工具形态验证，纯前端小难度，零命中实锤；网速测试：Bitlist speed test 形态验证，纯前端小难度，零命中实锤）；**形态补强 3 项**（本地 LLM 硬件检测器：第 5 次验证 llmspeed；SERP 片段预览：PulseTools pixel-width 截断＋社交卡片；免注册会议时间投票：SyncWhen）；自有实锤消解 12 项（OldRoll→图片复古做旧、StitchCraft→cross_stitch_pattern、Minifier→code_minifier、Bulk Resizer→bulk_image_resizer、Countdown→countdown_timer、Gradient→css_gradient_generator、JSON→TS/Go→json_to_types、Mermaid→mermaid_diagram_renderer、Schema.org→schema_org_generator、robots 校验→robots_txt_generator 同构、凯撒/大小写/二进制→texttools 族、urPiano→池内在线钢琴）；niche/方向边界不立 4 项（SortaSeat 婚礼座位表、Calcy 带单位数学便签、webhook/DNS 类需后端、V2EX 本轮空）；其余候选无变化。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；P1 池已空，09:36 上午轮优先小难度纯前端）：
+
+1. **本地 LLM 硬件检测器** — P2（77 轮新晋；多轮留池顺位；本轮第 5 次形态验证：Medium Oct-2026「llmspeed — checking how fast a local AI model will run before buying hardware」；痛点：想本地跑 LLM 不知道自己显卡能不能带、该下什么量化版本；纯前端小难度：选显卡型号→显存/算力对照表→可跑模型量化版本推荐；三路**零命中实锤**；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker）。
+2. **花式文本生成器** — 新晋 P2（本轮首席新晋；dev.to brynbyron「18 free text tools, no server, no sign-up」形态验证；痛点：社交媒体昵称/签名想搞个性化样式文本，现有站广告多；纯前端小难度：输入文本→多档 unicode 样式（删除线/小型大写/粗体花体/空心体/zalgo/隐形文本/wingdings）→一键复制，零上传；三路**零命中实锤**；建议 ID fancy_text_generator、Path /tools/fancy-text-generator）。
+3. **网速测试** — 新晋 P2（Bitlist「Internet speed test」形态验证；痛点：想测当前网络速度，不想装 App、不想去 speedtest 广告站；纯前端小难度：CDN 大文件下载测速＋延迟测试＋多次采样均值；三路**零命中实锤**；建议 ID speed_test、Path /tools/speed-test）。
+
+其余 P2 留池：CSP 安全头生成器（84 轮新晋；Show HN DevKit 形态验证；建议 ID csp_builder、Path /tools/csp-builder）；SERP 片段预览（本轮 PulseTools pixel-width 截断＋社交卡片形态补强；niche）；CSS Sprite 雪碧图生成器（83 轮新晋，niche；建议 ID css_sprite_generator、Path /tools/css-sprite-generator）；浏览器录屏工具（84 轮新晋；中难度：getDisplayMedia＋MediaRecorder→webm 下载；建议 ID screen_recorder、Path /tools/screen-recorder）；死链检查器（78 轮新晋；中难度 Go 后端并发抓取；建议 ID broken_link_checker、Path /tools/broken-link-checker）；HN 投稿优化分析器（77 轮新晋；建议 ID hn_post_analyzer、Path /tools/hn-post-analyzer）；AI 图片 C2PA 签名检测器（77 轮新晋；建议 ID ai_image_c2pa_checker、Path /tools/ai-image-c2pa-checker）；域名创意生成器（77 轮新晋；建议 ID domain_name_generator、Path /tools/domain-name-generator）；图片打印尺寸计算器（76 轮新晋；建议 ID print_size_calculator、Path /tools/print-size-calculator）；在线创意画板（76 轮新晋；V2EX Paint Board 验证；建议 ID doodle_board、Path /tools/doodle-board）；免费塔罗占卜（75 轮新晋）；涂鸦字体工作室（71 轮新晋，niche）；GitHub 主页 README 生成器（71 轮新晋）；TOTP 动态口令生成器（70 轮新晋；安全敏感）；一键人脸模糊（64 轮新晋；模型 vendor 风险）；联系信息提取器（64 轮新晋）；应用商店截图生成器/SQLite 数据库查看器/SEO 日志分析器/8D 环绕声/BPM 调性检测器/System Prompt 构建器/打卡习惯追踪器/人像背景一键虚化/AHP 层次分析法决策工具/GIF 压缩器/社交媒体文案长度检查器/项目打包下载/打字速度测试/阅读时长计算器/在线钢琴（方向边界观察）。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；本轮 SyncWhen 形态补强；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）。
+
+**通用候选表增量**（第八十五轮：HTTP 状态码速查已交付划出（b07cc50：62 条状态码静态数据＋搜索/筛选/展开渲染，零 fetch/XHR；ID http_status_reference、Path /tools/http-status-reference 已注册，开发工具品类；全量 157 Path；候选池划出）；**新晋 P2 2 个：花式文本生成器**（dev.to brynbyron 18 文本工具「strikethrough/small caps/big text/zalgo/invisible/wingdings」形态验证；unicode 多档样式→一键复制，纯前端小难度零上传；三路零命中实锤；建议 ID fancy_text_generator、Path /tools/fancy-text-generator）、**网速测试**（Bitlist「Internet speed test」形态验证；CDN 下载测速＋延迟＋多次采样均值，纯前端小难度；三路零命中实锤；建议 ID speed_test、Path /tools/speed-test）；形态补强 3 项（本地 LLM 硬件检测器：第 5 次验证 Medium llmspeed；SERP 片段预览：PulseTools pixel-width 600px 截断＋X/LinkedIn 社交卡片；免注册会议时间投票：SyncWhen）；自有实锤消解 12 项（OldRoll→图片复古做旧；StitchCraft→cross_stitch_pattern；Minifier→code_minifier；Bulk Resizer→bulk_image_resizer；Countdown→countdown_timer；Gradient→css_gradient_generator；JSON→TS/Go→json_to_types；Mermaid→mermaid_diagram_renderer；Schema.org→schema_org_generator；robots 校验→robots_txt_generator 同构；凯撒/大小写/二进制→texttools 族；urPiano→池内在线钢琴）；niche/方向边界不立 4 项（SortaSeat 婚礼座位表；Calcy 带单位数学便签；webhook/DNS 需后端；V2EX 本轮空）；全量 157 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 花式文本生成器 | 新晋 P2（85 轮；dev.to brynbyron「18 free text tools, no server, no sign-up」形态验证；痛点：社交媒体昵称/签名想搞个性化样式文本，现有站广告多；纯前端小难度：输入文本→unicode 多档样式（删除线/小型大写/粗体花体/空心体/zalgo/隐形文本/wingdings）→一键复制，零上传；三路零命中实锤；建议 ID fancy_text_generator、Path /tools/fancy-text-generator） | 小 | P2 |
+| 网速测试 | 新晋 P2（85 轮；Bitlist「Internet speed test」形态验证；痛点：想测当前网络速度，不想装 App、不想去 speedtest 广告站；纯前端小难度：CDN 大文件下载测速＋延迟测试＋多次采样均值；三路零命中实锤；建议 ID speed_test、Path /tools/speed-test） | 小 | P2 |
+| HTTP 状态码速查 | 已交付划出（b07cc50 新增：62 条状态码静态数据＋搜索/筛选/展开渲染（搜索支持码号/中英文/拼音首字母），零 fetch/XHR；ID http_status_reference、Path /tools/http-status-reference 已注册，开发工具品类；全量 157 Path；候选池划出） | — | 已实现 |
+| 本地 LLM 硬件检测器 | 形态补强（85 轮；Medium Oct-2026「llmspeed — checking how fast a local AI model will run before buying hardware」第 5 次验证；77 轮新晋 P2；建议 ID llm_hardware_checker、Path /tools/llm-hardware-checker） | 小 | P2 |
+| SERP 片段预览 | 形态补强（85 轮；PulseTools「SERP & Meta Previewer」：Google SERP pixel-width 截断预览（标题约 600px）＋X/LinkedIn 社交卡片预览；niche P2 留池） | 小 | P2 |
+| 免注册会议时间投票 | 形态补强（85 轮；Medium「SyncWhen — no-signup meeting poll」；79 轮新晋 P3；需 Go 后端＋持久化，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll） | 中 | P3 |
+| 自有实锤消解 | 不立（OldRoll→实锤自有「图片复古做旧」；StitchCraft→实锤自有 cross_stitch_pattern；Minifier→自有 code_minifier；Bulk Resizer→自有 bulk_image_resizer；Countdown Timer→自有 countdown_timer（在线倒计时/番茄钟）；Gradient→自有 css_gradient_generator；JSON→TS/Go→自有 json_to_types；Mermaid→自有 mermaid_diagram_renderer；Schema.org JSON-LD→自有 schema_org_generator；robots 校验→自有 robots_txt_generator 已含基础校验同构；凯撒/大小写/二进制/HTML 查看→自有 texttools 族；urPiano→池内在线钢琴方向边界观察） | — | 不立 |
+| niche/方向边界 | 不立（SortaSeat 婚礼座位表→过 niche；Calcy 带单位数学便签→10-18 方向修正计算器类收敛中，观察不立；webhook/DNS/SSL/IP lookup→需后端；V2EX→本轮空） | — | 不立 |
+
+**归档说明**：本轮为 10-24 通用调研第八十五轮——HTTP 状态码速查交付闭环（b07cc50，`/tools/http-status-reference` 已注册，开发工具品类，全量 157 Path），候选池划出；**新晋 P2 2 个**（花式文本生成器：brynbyron 18 文本工具形态验证，纯前端小难度，零命中实锤；网速测试：Bitlist speed test 形态验证，纯前端小难度，零命中实锤）；形态补强 3 项（本地 LLM 硬件检测器第 5 次验证、SERP 片段预览、免注册会议时间投票）；12 项自有实锤消解；4 项 niche/方向边界不立；V2EX 本轮空；WPS 候选表保持冻结归档；仓库 157 注册工具全量核对无重叠（Top3 建议 ID llm_hardware_checker / fancy_text_generator / speed_test；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；本轮正常，origin/muse/dev-20260929 与本地一致）；`git log` 头部 b07cc50（http_status_reference 交付闭环）；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 157 Path；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-24 07:47 · 前端开发轮 ✅）
 
 **交付：HTTP 状态码速查（http_status_reference）** — 本轮唯一任务（新工具），开发完成已提交推送：

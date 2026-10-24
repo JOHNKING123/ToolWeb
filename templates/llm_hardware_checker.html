@@ -1,0 +1,243 @@
+{{define "llm_hardware_checker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地 LLM 硬件检测器 - 我的显卡能跑多大的本地大模型？| 程序员工具箱</title>
+    <meta name="description" content="本地 LLM 硬件检测器：WebGL 自动检测你的显卡型号，或手动选择显卡与显存档位，对照静态数据表告诉你能跑多大的本地大模型——7B/14B/32B/70B 各量化版本显存需求，红黄绿三档标注（流畅/能跑但慢/带不动），附 tokens/s 区间参考与反向查询（想跑 70B Q4 要多少显存），Apple Silicon 统一内存折算提示。纯前端本地运行，零上传。LLM hardware checker: detect your GPU via WebGL, check which open-source models and quantizations fit your VRAM, 100% client-side.">
+    <meta name="keywords" content="LLM 硬件,本地大模型,显卡,显存,量化,ollama,llama.cpp,llm hardware checker,WebGL 检测显卡,70B 显存,本地部署大模型,我的显卡能跑什么模型">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/llm-hardware-checker">
+    <meta property="og:title" content="本地 LLM 硬件检测器 - 我的显卡能跑多大的本地大模型？">
+    <meta property="og:description" content="WebGL 自动检测显卡型号＋手选显存档位，对照数据表输出可跑的开源模型与量化版本（7B/14B/32B/70B），红黄绿三档标注，附 tokens/s 区间参考与反向查询。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/llm-hardware-checker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"本地 LLM 硬件检测器","description":"WebGL 自动检测 GPU 型号，或手动选择显卡与显存档位，对照静态数据表输出可跑的开源模型与量化版本（7B/14B/32B/70B），红黄绿三档标注（流畅/能跑但慢/带不动），附 tokens/s 区间参考与反向查询，Apple Silicon 统一内存折算提示；纯前端本地运行，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/llm-hardware-checker","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .lhw-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .lhw-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .lhw-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .lhw-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .lhw-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .lhw-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .lhw-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .lhw-detect{display:flex;gap:.7rem;align-items:flex-start;border-radius:.7rem;padding:.9rem 1rem;
+            font-size:.92rem;line-height:1.85;background:#f9fafb;border:1px solid #e5e7eb;color:#374151}
+        .lhw-detect .material-icons{flex:none;font-size:1.5rem}
+        .lhw-detect-ok{border-color:#6ee7b7;background:#ecfdf5;color:#065f46}
+        .lhw-detect-ok .material-icons{color:#10b981}
+        .lhw-detect-warn{border-color:#fcd34d;background:#fffbeb;color:#92400e}
+        .lhw-detect-warn .material-icons{color:#f59e0b}
+        .lhw-renderer-raw{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;color:#6b7280;
+            word-break:break-all}
+        .lhw-redetect{margin-top:.8rem}
+        .lhw-form-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem}
+        .lhw-field label{display:block;font-size:.88rem;font-weight:700;color:#374151;margin-bottom:.35rem}
+        .lhw-field select{width:100%;box-sizing:border-box;padding:.7rem .8rem;font-size:.95rem;
+            border:1px solid #d1d5db;border-radius:.6rem;background:#fff;outline:none;color:#111827}
+        .lhw-field select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .lhw-field select:disabled{background:#f3f4f6;color:#9ca3af}
+        .lhw-effective{display:flex;gap:.7rem;align-items:flex-start;border-radius:.7rem;padding:.9rem 1rem;
+            margin-top:.9rem;font-size:.92rem;line-height:1.85;background:#f9fafb;border:1px solid #e5e7eb;color:#374151}
+        .lhw-effective .material-icons{flex:none;font-size:1.5rem;color:#9ca3af}
+        .lhw-effective-ok{border-color:#6ee7b7;background:#ecfdf5;color:#065f46}
+        .lhw-effective-ok .material-icons{color:#10b981}
+        .lhw-effective-warn{border-color:#fcd34d;background:#fffbeb;color:#92400e}
+        .lhw-effective-warn .material-icons{color:#f59e0b}
+        .lhw-effective code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;
+            border:1px solid #e5e7eb;border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .lhw-note{display:none;gap:.6rem;align-items:flex-start;margin-top:.8rem;font-size:.88rem;line-height:1.85;
+            color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem .9rem}
+        .lhw-note .material-icons{flex:none;font-size:1.3rem;color:#2563eb}
+        .lhw-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:.9rem 0 .2rem}
+        .lhw-tab{display:inline-flex;align-items:center;gap:.35rem;font-size:.9rem;font-weight:600;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:999px;padding:.45rem 1rem;background:#f9fafb;color:#4b5563}
+        .lhw-tab:hover{border-color:#2563eb;color:#2563eb}
+        .lhw-tab.active{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+        .lhw-count{font-size:.88rem;color:#6b7280;margin:.6rem 0 .2rem}
+        .lhw-size-title{grid-column:1/-1;font-weight:800;color:#111827;font-size:.95rem;margin:.9rem 0 -.2rem;
+            padding-left:.2rem;border-left:4px solid #2563eb;padding-left:.6rem}
+        #lhw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem;margin-top:.6rem}
+        .lhw-card{background:#fff;border:1px solid #e5e7eb;border-left:5px solid #9ca3af;border-radius:.6rem;
+            padding:.8rem .95rem}
+        .lhw-tier-green{border-left-color:#10b981}
+        .lhw-tier-yellow{border-left-color:#f59e0b}
+        .lhw-tier-red{border-left-color:#ef4444}
+        .lhw-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
+        .lhw-quant{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;font-size:1.05rem;color:#111827}
+        .lhw-badge{font-size:.75rem;font-weight:700;border-radius:999px;padding:.18rem .65rem;color:#fff}
+        .lhw-green{background:#10b981}
+        .lhw-yellow{background:#f59e0b}
+        .lhw-red{background:#ef4444}
+        .lhw-need{font-size:.9rem;color:#374151}
+        .lhw-need b{color:#1d4ed8}
+        .lhw-tps{font-size:.85rem;color:#6b7280;margin-top:.15rem}
+        .lhw-tier-desc{font-size:.82rem;color:#6b7280;margin-top:.4rem;line-height:1.7}
+        .lhw-empty{grid-column:1/-1;text-align:center;color:#6b7280;padding:2.2rem 1rem;font-size:.95rem;
+            border:1px dashed #d1d5db;border-radius:.7rem;background:#f9fafb}
+        .lhw-rev-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end}
+        .lhw-rev-row .lhw-field{flex:1;min-width:240px}
+        .lhw-rev-head{display:flex;gap:.7rem;align-items:flex-start;font-size:.95rem;line-height:1.9;color:#111827;
+            background:#eff6ff;border:1px solid #bfdbfe;border-radius:.7rem;padding:.9rem 1rem;margin-top:.9rem}
+        .lhw-rev-head .material-icons{color:#2563eb;flex:none;font-size:1.5rem}
+        .lhw-rev-list-title{font-weight:700;font-size:.92rem;color:#374151;margin:1rem 0 .5rem}
+        .lhw-rev-list{display:flex;gap:.5rem;flex-wrap:wrap}
+        .lhw-rev-chip{font-size:.85rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;
+            padding:.3rem .8rem;color:#374151}
+        .lhw-rev-note{font-size:.85rem;color:#6b7280;margin-top:.8rem;line-height:1.8}
+        .lhw-tip{font-size:.9rem;color:#4b5563;line-height:1.95}
+        .lhw-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .lhw-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .lhw-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .lhw-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .lhw-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        .lhw-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .lhw-btn:hover{border-color:#2563eb;color:#2563eb}
+        @media (max-width:640px){
+            .lhw-form-row{grid-template-columns:1fr}
+            #lhw-grid{grid-template-columns:1fr}
+            .lhw-size-title{margin-top:.4rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">memory</i> 本地 LLM 硬件检测器</h1>
+            <p>想在本地跑大模型，不知道显卡带不带得动、该下哪个量化版本？本页自动检测你的 GPU 型号（或手动选择显卡＋显存档位），对照数据表告诉你 7B / 14B / 32B / 70B 各量化版本能不能跑：绿灯流畅、红灯带不动，另附 tokens/s 区间参考与「想跑 70B Q4 要多少显存」的反向查询。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="lhw-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>估算声明：</b>显存需求为估算值（含模型权重＋常规 2k–4k 上下文开销），tokens/s 仅为区间参考——实际速度因显卡代际、量化版本、上下文长度、推理框架（llama.cpp / Ollama / vLLM）差异很大，<b>不构成性能承诺</b>，仅供横向比较与买前评估。</div>
+            </div>
+            <div class="lhw-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>GPU 检测只读浏览器本地的 WebGL 渲染器字符串，显卡/模型数据全部内置在页面脚本里，不发起任何网络请求，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">videogame_asset</i> 第一步：检测你的显卡</h3>
+                <div class="lhw-detect" id="lhw-detect-status">
+                    <i class="material-icons">hourglass_empty</i>
+                    <div>正在检测…</div>
+                </div>
+                <button type="button" class="lhw-btn lhw-redetect" id="lhw-redetect">
+                    <i class="material-icons">refresh</i> 重新检测
+                </button>
+                <div class="lhw-tip" style="margin-top:.8rem;">说明：检测通过 <code>WEBGL_debug_renderer_info</code> 读取渲染器字符串（如 "NVIDIA GeForce RTX 4060"）来识别型号；<b>WebGL 读不到显存容量</b>，检测成功后显存仍需在下方按实际档位确认。部分浏览器（隐私模式/企业策略）会屏蔽该信息，此时请直接手动选择。</div>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">tune</i> 第二步：确认显卡与显存</h3>
+                <div class="lhw-form-row">
+                    <div class="lhw-field">
+                        <label for="lhw-brand">显卡品牌</label>
+                        <select id="lhw-brand"></select>
+                    </div>
+                    <div class="lhw-field">
+                        <label for="lhw-model">显卡型号</label>
+                        <select id="lhw-model"></select>
+                    </div>
+                    <div class="lhw-field">
+                        <label for="lhw-vram">显存 / 内存档位</label>
+                        <select id="lhw-vram"></select>
+                    </div>
+                </div>
+                <div class="lhw-effective" id="lhw-effective"></div>
+                <div class="lhw-note" id="lhw-apple-note">
+                    <i class="material-icons">info</i>
+                    <div><b>Apple Silicon 统一内存折算：</b>Mac 的 CPU/GPU 共享同一内存池，可用作模型的内存按<b>统一内存 × 70%</b> 折算（系统与其他应用会占用一部分，70% 为保守经验值）。统一内存越大可跑的模型越大，但实际速度仍受芯片代际与内存带宽影响。</div>
+                </div>
+                <div class="lhw-note" id="lhw-igpu-note">
+                    <i class="material-icons">info</i>
+                    <div><b>核显提示：</b>核显没有独立显存，占用的是系统内存的一部分。请按系统内存约一半保守估算，或在上方显存档位里选一个保守值；核显跑 7B Q4 级别通常偏慢，仅适合体验。</div>
+                </div>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">assessment</i> 第三步：看推荐结果</h3>
+                <div class="lhw-tabs" role="tablist" aria-label="推荐档位筛选">
+                    <button type="button" class="lhw-tab active" data-tier="all" role="tab">全部</button>
+                    <button type="button" class="lhw-tab" data-tier="green" role="tab">🟢 流畅运行</button>
+                    <button type="button" class="lhw-tab" data-tier="yellow" role="tab">🟡 能跑但慢</button>
+                    <button type="button" class="lhw-tab" data-tier="red" role="tab">🔴 带不动</button>
+                </div>
+                <div class="lhw-count" id="lhw-count"></div>
+                <div id="lhw-grid"></div>
+                <div class="lhw-tip" style="margin-top:.9rem;"><b>三档含义：</b>🟢 需求 ≤ 可用显存 × 85%，权重＋常规上下文可全量进显存；🟡 刚好装下（建议小上下文/低并发）或需部分层 offload 到内存（会很慢）；🔴 显存远不够。量化版本数字越小文件越小、速度越快，但精度损失越大：日常用 <code>Q4_K_M</code> 是平衡点，显存紧张试 <code>Q3/Q2</code>，显存充裕上 <code>Q5/Q6/Q8</code>。</div>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">shopping_cart</i> 买前评估：反向查询</h3>
+                <div class="lhw-tip" style="margin-bottom:.8rem;">还没买硬件？先选你想跑的模型＋量化版本，反查需要多少显存、哪些显卡能流畅带动。</div>
+                <div class="lhw-rev-row">
+                    <div class="lhw-field">
+                        <label for="lhw-rev-model">目标模型＋量化版本</label>
+                        <select id="lhw-rev-model"></select>
+                    </div>
+                </div>
+                <div id="lhw-rev-result"></div>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="lhw-tip">
+                    <b>流程：</b>页面加载会自动检测 GPU（走 WebGL，不上传）→ 在第二步确认型号与显存档位（选型号会自动预填显存，可手动改；不知道型号可直接按显存估算）→ 第三步看各模型档位的红黄绿推荐。<br>
+                    <b>怎么选量化：</b><code>Q4_K_M</code> 是最常用的平衡点；<code>Q8/Q6/Q5</code> 精度更高但更吃显存；<code>Q3/Q2</code> 能把大模型塞进小显存，但回答质量下降明显，只建议显存实在不够时尝试。<br>
+                    <b>显存构成：</b>本页「约需显存」= 模型权重＋常规 2k–4k 上下文开销；开长上下文、多并发或大 batch 会显著增加占用，KV 缓存量化也能省一部分。<br>
+                    <b>24GB 想跑 70B？</b>70B Q4 全量进显存约需 41GB，24GB 单卡只能把部分层 offload 到内存（黄灯「能跑但慢」，约几 tokens/s）；想流畅跑 70B Q4，建议可用显存 ≥ 48GB（多卡、工作站卡或 96GB+ 统一内存的 Mac）。<br>
+                    <b>AMD / Intel 显卡：</b>llama.cpp 与 Ollama 对 AMD（ROCm/Vulkan）与 Intel Arc 的支持在持续完善中，同显存下实际体验可能弱于 NVIDIA，推荐结果按显存口径给出，驱动与框架版本请保持最新。<br>
+                    <b>隐私：</b>全部数据内置在页面脚本中，检测与计算都在浏览器本地完成，零 fetch/XHR，不上传任何数据。
+                </div>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="lhw-faq">
+                    <dt>WebGL 检测的原理是什么？会上传我的硬件信息吗？</dt>
+                    <dd>通过 <code>WEBGL_debug_renderer_info</code> 扩展读取浏览器的渲染器字符串（如 "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060…)"），在本地对照显卡表匹配型号。整个过程不发起任何网络请求、不上传，Network 面板可验证。注意 WebGL <b>读不到显存容量</b>，显存档位需要你手动确认。</dd>
+                    <dt>浏览器禁用了 WebGL / 检测不到怎么办？</dt>
+                    <dd>页面会自动降级：检测区提示手动选择，你在第二步选品牌→型号→显存（或直接按显存估算），推荐引擎不受影响，不会报错或卡死。</dd>
+                    <dt>为什么 Apple Silicon 要按 70% 折算？</dt>
+                    <dd>Mac 是统一内存架构，CPU/GPU/系统与其他应用共享同一内存池，并非全部内存都能分给模型。按统一内存 × 70% 折算是保守经验值：比如 16GB 统一内存的 Mac 按约 11.2GB 可用显存评估，跑 7B Q4_K_M（需 4.5GB）是绿灯。</dd>
+                    <dt>tokens/s 区间准吗？</dt>
+                    <dd>仅供横向比较。<b>不构成性能承诺</b>：实际速度因显卡代际、量化版本、上下文长度、推理框架（llama.cpp / Ollama / vLLM）与采样设置差异很大。区间上限取自较新高端显卡、较低上下文的常见报道，下限偏保守；RTX 30 系用户建议按下限看，40/50 系可往上限看。</dd>
+                    <dt>8GB 显存（如 RTX 4060）能跑什么？</dt>
+                    <dd>7B 的 Q4/Q5 量化是绿灯（流畅）；14B Q4（需约 9GB）是黄灯「能跑偏慢」；70B 全红灯。这是本页推荐引擎按三档规则算出的结论，你可以直接在上方选 8GB 验证。</dd>
+                    <dt>量化版本 Q4_K_M / Q8 / Q2_K 有什么区别？</dt>
+                    <dd>数字越小压缩越狠：Q8 接近原始精度但文件大、吃显存；Q4_K_M 是社区最常用的平衡点；Q2/Q3 能把 70B 塞进 24GB 级显存（配合 offload），但精度损失明显。同一规模下显存不够就降量化，显存充裕就升量化。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。显卡表、模型表、推荐逻辑全部内置在页面脚本里，检测与计算都在浏览器本地完成，零 fetch/XHR，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+
+            <div class="lhw-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="lhw-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">本地 LLM 硬件检测器（当前）</span>
+                    <a href="/tools/ai-token-counter" class="btn btn-secondary" style="font-size:.9rem;">AI Token 计数器</a>
+                    <a href="/tools/ai-text-cleaner" class="btn btn-secondary" style="font-size:.9rem;">AI 文本清洁器</a>
+                    <a href="/tools/project-to-txt" class="btn btn-secondary" style="font-size:.9rem;">代码打包给 LLM</a>
+                    <a href="/tools/prompt-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">AI 提示词脱敏器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/llm_hardware_checker.js?v=1"></script>
+</body>
+</html>
+{{end}}

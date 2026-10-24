@@ -1257,6 +1257,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "AI 工具",
 				},
+				{
+					ID:          "llm_hardware_checker",
+					Name:        "本地 LLM 硬件检测器",
+					Description: "WebGL 自动检测 GPU 型号＋手选显卡/显存档位，对照静态数据表输出可跑的开源模型与量化版本（7B/14B/32B/70B），红黄绿三档标注（流畅/能跑但慢/带不动），附 tokens/s 区间参考与反向查询（想跑 70B Q4 需多少显存），Apple Silicon 统一内存折算提示，纯前端零上传 · LLM hardware checker: detect your GPU via WebGL, check which open-source models & quantizations fit your VRAM, 100% client-side",
+					Path:        "/tools/llm-hardware-checker",
+					Icon:        "memory",
+					New:         true,
+					Category:    "AI 工具",
+				},
 			},
 		},
 		{
