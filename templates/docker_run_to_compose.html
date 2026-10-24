@@ -1,0 +1,167 @@
+{{define "docker_run_to_compose"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker run 转 Compose 在线转换器 - 粘贴 docker run 命令生成 docker-compose.yml（纯前端）</title>
+    <meta name="description" content="免费在线 Docker run 转 Compose 转换器：粘贴 docker run 命令，shell 词法切分后映射为 docker-compose.yml 服务段，端口/挂载/环境变量/重启/网络/启动命令逐项对照，超出子集的旗标进诊断列表不静默丢弃，$ 自动转 $$，一键复制、下载 docker-compose.yml，纯前端本地转换不出浏览器。docker run to compose converter online, 100% client-side.">
+    <meta name="keywords" content="Docker run,docker-compose,compose 转换,run 转 compose,容器编排,YAML 生成,docker run to compose,docker run 转换器,compose 生成器,docker 命令转换">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/docker-run-to-compose">
+    <meta property="og:title" content="Docker run → Compose 转换器 - 粘贴 run 命令生成 docker-compose.yml">
+    <meta property="og:description" content="粘贴 docker run 命令即生成 docker-compose.yml：端口/挂载/环境变量/重启/网络逐项对照，不支持的旗标进诊断列表不丢弃，$ 自动转 $$；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/docker-run-to-compose">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Docker run→Compose 转换器","description":"粘贴 docker run 命令，shell 词法切分后映射为 docker-compose.yml 服务段：端口/挂载/环境变量/重启/网络/启动命令逐项对照，超出子集的旗标进诊断列表不静默丢弃，-d/--rm 记为已忽略，环境变量值含 $ 时转 $$，一键复制与下载 docker-compose.yml，纯前端本地转换不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/docker-run-to-compose","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .drc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .drc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .drc-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .drc-warn b{display:block;margin-bottom:.2rem}
+        .drc-warn p{margin:0}
+        .drc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .drc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .drc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .drc-input{width:100%;min-width:0;min-height:110px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box;overflow-x:auto;white-space:pre}
+        .drc-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .drc-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .drc-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .drc-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .drc-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .drc-parsed{border:1px solid #e5e7eb;border-radius:.7rem;background:#f8fafc;padding:.9rem 1rem;font-size:.9rem;line-height:1.9;min-height:4rem;overflow-x:auto}
+        .drc-kv{display:flex;gap:.7rem;align-items:flex-start;padding:.3rem 0;border-bottom:1px dashed #e5e7eb;flex-wrap:wrap}
+        .drc-kv:last-child{border-bottom:none}
+        .drc-k{flex:none;width:5rem;font-weight:700;color:#374151}
+        .drc-mono{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;color:#1d4ed8}
+        .drc-sub{color:#6b7280;font-size:.82rem}
+        .drc-none{color:#9ca3af}
+        .drc-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+        .drc-chip{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;padding:.15rem .6rem;font-size:.82rem;font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+        .drc-diag{border-radius:.6rem;padding:.6rem .9rem;margin-top:.7rem;font-size:.85rem;line-height:1.8}
+        .drc-diag ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .drc-diag code{background:rgba(0,0,0,.06);border-radius:.3rem;padding:.05rem .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .drc-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+        .drc-unhandled{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+        .drc-warnbox{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+        .drc-empty{color:#6b7280}
+        .drc-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;min-height:16rem;max-height:32rem;overflow:auto;background:#111827;color:#e5e7eb;white-space:pre;word-break:normal;margin:0;box-sizing:border-box;width:100%}
+        .drc-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .drc-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .drc-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .drc-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .drc-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .drc-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .drc-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .drc-note b{color:#374151}
+        .drc-note code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .drc-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+        .drc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .drc-k{width:4rem}
+            .drc-input{min-height:9rem}
+            .drc-code{min-height:12rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">terminal</i> Docker run → Compose 转换器</h1>
+            <p>粘贴调通的 docker run 命令，一键沉淀为 docker-compose.yml 服务段，不用再逐项手抄旗标</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="drc-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>词法切分、旗标映射与 YAML 生成全部在当前页面本地计算，零 fetch / XHR，不上传、不存储你的命令；不连 Docker、不验证镜像是否存在、不验证端口是否被占用。</div>
+            </div>
+            <div class="drc-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 仅覆盖常用旗标子集：--name、-p/--publish、-v/--volume、-e/--env、--restart、--network/--net、-i/-t、--entrypoint、-w/--workdir、--user、--hostname、--expose、--label 单值；--privileged、--cap-add、--device、--dns、--add-host、--health-*、--link 等一律进「不支持」诊断列表，不静默丢弃、不编造 compose 字段。</p>
+                <p>2. -d / --rm 在 compose 里没有等价字段：compose 默认即后台语义（docker compose up -d），解析时记为「已忽略」而非报错。</p>
+                <p>3. 输出不含 version 字段：现代 Compose 已废弃 version，写它反而会误导。</p>
+                <p>4. 环境变量值含 $ 时已转义为 $$：compose 会把 $ 当作变量插值，不转义会把你的值替换掉；诊断列表里会逐项提示，请确认这就是你想要的。</p>
+                <p>5. 端口 / 挂载 / 环境变量值一律加引号输出，避免 8080:80、含 : 或 # 的值被 YAML 误读。</p>
+            </div>
+            <div class="drc-panel">
+                <h3><i class="material-icons">input</i> 粘贴 docker run 命令</h3>
+                <textarea class="drc-input" id="drc-input" placeholder="例如：docker run -d --name web -p 8080:80 nginx:1.25" spellcheck="false">docker run -d --name web -p 8080:80 nginx:1.25</textarea>
+                <div class="drc-row">
+                    <button class="drc-btn drc-btn-primary" type="button" id="drc-convert">立即转换</button>
+                    <button class="drc-btn" type="button" id="drc-reset">重置回初始输入</button>
+                </div>
+                <p class="drc-hint">支持多行 \ 续行、单双引号、转义、组合短旗标（如 -it、-dp）；可加 sudo 前缀；镜像后的剩余部分全部视为启动命令。输入即自动解析。</p>
+                <div class="drc-row" style="margin-top:.6rem;">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再转换）：</span>
+                    <button class="drc-btn" type="button" data-sample="0">nginx 端口映射</button>
+                    <button class="drc-btn" type="button" data-sample="1">postgres 全套</button>
+                    <button class="drc-btn" type="button" data-sample="2">自定义命令</button>
+                    <button class="drc-btn" type="button" data-sample="3">引号＋只读＋不支持旗标</button>
+                </div>
+            </div>
+            <div class="drc-panel">
+                <h3><i class="material-icons">fact_check</i> 结构化解析（确认解析无误）</h3>
+                <div class="drc-parsed" id="drc-parsed" aria-live="polite">
+                    <div class="drc-empty">在上方粘贴 docker run 命令后，解析结果会显示在这里。</div>
+                </div>
+            </div>
+            <div class="drc-panel">
+                <h3><i class="material-icons">code</i> docker-compose.yml（只读）</h3>
+                <pre class="drc-code" id="drc-code"># 在上方粘贴 docker run 命令，生成的 docker-compose.yml 会显示在这里。</pre>
+                <div class="drc-row">
+                    <button class="drc-btn drc-btn-primary" type="button" id="drc-copy">复制 YAML</button>
+                    <button class="drc-btn drc-btn-primary" type="button" id="drc-download">下载 docker-compose.yml</button>
+                </div>
+                <p class="drc-hint">复制失败时会有明确降级提示，请手动选中 YAML 输出区内容复制；下载文件名为 docker-compose.yml。长命令与长 YAML 在小屏下可横向滚动，不会撑破页面。</p>
+            </div>
+            <div class="drc-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>粘贴 docker run 命令（支持多行 \ 续行、单双引号、组合短旗标），解析表会逐项列出服务名、镜像、容器名、端口、挂载、环境变量、重启策略、网络与启动命令。</li>
+                    <li>先看诊断列表：不支持的旗标逐项列出（请在 compose 中手动对应），已忽略的旗标（-d / --rm）与 $ 转 $$ 提示也逐项列出，没有一项是静默丢弃的。</li>
+                    <li>服务名优先取 --name，否则取镜像去掉仓库前缀与 :tag / @digest 后的 basename 并清洗（小写、非法字符转 -）；--name 原值保留为 container_name，两者在解析表中对照展示。</li>
+                    <li>确认无误后点「复制 YAML」或「下载 docker-compose.yml」，保存后按需改写再 docker compose up。</li>
+                    <li>点示例一键载入 4 组典型命令（请按需改写），载入后仍可编辑再转换；点「重置回初始输入」回到本次的初始命令。</li>
+                </ol>
+            </div>
+            <div class="drc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="drc-faq">
+                    <dt>为什么 --privileged 没进 YAML？</dt>
+                    <dd>因为它不在本工具承诺的常用旗标子集内。直接编造一个 compose 字段很容易编错语义，所以它进了「不支持」诊断列表并逐项列出，你可以在 compose 中按官方文档手动对应 privileged: true，而不是拿到一份看似完整实则不对的配置。</dd>
+                    <dt>-d 和 --rm 为什么被忽略了？</dt>
+                    <dd>compose 默认即后台语义（docker compose up -d），不需要 detach 字段；--rm 在 compose 里也没有等价字段，容器随服务启停管理。所以两者记为「已忽略」而不是报错，更不是静默丢弃。</dd>
+                    <dt>环境变量里的 $ 为什么变成了 $$？</dt>
+                    <dd>compose 会把 $ 当作变量插值：写 PRICE=$5 会被解析成变量引用，值就变了。转成 $$ 后 compose 才会原样输出 $，诊断列表里会逐项提示，请确认这就是你想要的。</dd>
+                    <dt>输出里为什么没有 version 字段？</dt>
+                    <dd>现代 Compose 已废弃 version 字段，写它没有意义还可能误导旧教程读者，所以输出从 services: 直接开始。</dd>
+                    <dt>服务名是怎么推出来的？</dt>
+                    <dd>优先取 --name；没有 --name 时取镜像名去掉仓库前缀与 :tag / @digest 后的 basename，再做小写与非法字符转 - 的清洗；--name 原值保留为 container_name，解析表里两者对照展示。</dd>
+                    <dt>我的命令会被上传或验证吗？</dt>
+                    <dd>不会。全部转换在浏览器本地完成，零网络请求；不连 Docker、不验证镜像是否存在、不验证端口是否被占用，生成的只是文本配置。</dd>
+                </dl>
+            </div>
+            <div class="drc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="drc-links">
+                    <a href="/tools/curl-to-requests"><i class="material-icons">terminal</i> cURL → Python Requests 转换器</a>
+                    <a href="/tools/json-yaml-converter"><i class="material-icons">compare_arrows</i> JSON/YAML 转换</a>
+                </div>
+            </div>
+            <div class="drc-note">
+                <b>实现说明：</b>shell 词法切分、旗标映射、服务名推导与 YAML 生成均为纯函数，双模式导出供 node 单元测试（109 断言）；本页 JS 源码无任何网络请求调用（零 fetch / XHR）。
+            </div>
+        </div>
+    </div>
+    <div class="drc-toast" id="drc-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/docker_run_to_compose.js?v=1"></script>
+</body>
+</html>
+{{end}}

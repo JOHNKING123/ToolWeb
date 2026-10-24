@@ -418,6 +418,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "docker_run_to_compose",
+					Name:        "Docker run→Compose 转换器",
+					Description: "粘贴 docker run 命令即生成 docker-compose.yml 服务段：自研 shell 词法切分（单双引号/转义/续行/组合短旗标）＋旗标映射子集（--name、-p/--publish、-v/--volume、-e/--env、--restart、--network、-i/-t、--entrypoint、-w/--workdir、--user、--hostname、--expose、--label），镜像后剩余 token 为启动命令，服务名优先 --name 否则镜像 basename 清洗；--privileged/--cap-add/--device/--dns/--add-host/--health-*/--link 等超出子集一律进诊断列表不静默丢弃，-d/--rm 记为已忽略，输出不含 version 字段，端口/挂载/环境变量值加引号、环境变量值含 $ 时转 $$，结构化解析表＋一键复制＋下载 docker-compose.yml，纯前端本地转换不出浏览器 · Docker run to compose converter: convert docker run command to docker-compose.yml online, 100% client-side",
+					Path:        "/tools/docker-run-to-compose",
+					Icon:        "terminal",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "folder_compare",
 					Name:        "文件夹对比",
 					Description: "拖拽或选择两个文件夹做递归差异对比：相对路径归一化，新增/删除/修改/相同四态分类高亮，统计差异数量与字节数，过滤搜索+按目录分组折叠，导出 Markdown / CSV 差异报告；只读文件名、大小、修改时间，不读内容，纯前端本地运行不出浏览器 · Folder compare: recursive diff of two folders, added/removed/modified/same highlight, stats, MD/CSV export, 100% client-side",

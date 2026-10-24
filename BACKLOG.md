@@ -1,3 +1,86 @@
+## 今日任务（2026-10-25 05:00 · 产品经理排期轮）
+
+**选定：Docker run→Compose 转换器（docker_run_to_compose）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（95 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。03:40 PM 轮已明言：Docker 仅因深夜轮优先小难度而后置、「下轮优先递进」；95 轮研究轮亦明言：虽为清晨轮优先小难度，Docker 仍为 Top3 中顺位最老且无硬伤的一项、「理应首席」。本轮不再以「小难度优先」为由二次跳过。
+- **未选**：HTML→Markdown 转换器（95 轮新晋 P2，Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在 Docker 之后而后置，下轮首席递进；真限制只转语义结构不转样式、不做 URL 抓取）；信封打印助手（92 轮新晋 P2，Top3 第三顺位，无硬伤，留池顺位递进——让位于顺位在先的 Docker；真限制打印机边距与进纸方向不一可在页面明示先打测试页，不构成跳过理由）；CSS 阴影与圆角生成器（95 轮新晋 P2，Top3 之后，无硬伤，留池顺位递进；真限制预览以当前浏览器渲染为准）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'docker_run_to_compose\|html_to_markdown\|envelope_printer' tools/categories.go` = 0；`grep -oi 'docker' tools/categories.go` = 0；templates/ 与 static/js/ 无 docker 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **167 Path**；`git log` 头部 43366d1（URL 解析器评审反馈修复）／ff67ee9（URL 解析器新增）。自有近邻辨析：json2yaml（格式转换品类）仅做 JSON/YAML 格式互转，不解析 docker run 旗标；curl_to_requests（开发工具品类）虽同为 shell 词法切分＋旗标映射，但语义是 cURL→Python requests，与 docker run→compose 旗标集与输出物均不同，不重叠（仅词法思路可借鉴，不可复用旗标映射表）。
+- **选定理由**：① **中难度但一轮可高质量交付，前提是旗标子集收口**——本规格只承诺常用旗标子集（见下），超出部分进诊断列表、不静默丢弃，收口后工作量与 URL 解析器同量级；② **痛点明确且可验证**——手写 compose 逐项抄旗标易漏易错，调通的 run 命令无法一键沉淀；解析→YAML 的映射关系逐项可断言；③ **纯前端零上传**——shell 词法切分＋旗标映射＋YAML 生成全部本地计算，契合 ToolWeb 纯前端离线标准；④ **无硬伤**——旗标子集、YAML 转义、compose 版本语义均属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「开发工具」品类（与 cURL→Python Requests 转换器同品类、便于互链；格式转换品类是格式互转语义，本工具是命令语义转换，归开发工具更贴切）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **仅覆盖常用旗标子集**——--privileged／--cap-add／--device／--dns／--add-host／--health-*／--link 等特殊旗标不在子集内，一律进「不支持／未转换」诊断列表并逐项列出，不静默丢弃、不原样编造 compose 字段；② **-d／--detach 无 compose 等价字段**——compose 默认即后台语义（`docker compose up -d`），解析时记为「已忽略：compose 无需该字段」而非报错；--rm 同理记为「compose 无直接等价字段，已忽略」；③ **compose 不写 version 字段**——现代 Compose 已废弃 version，输出不含 version，避免过时模板误导；④ **环境变量 $ 须转义**——compose 中 $ 会被当作变量插值，环境变量值含 $ 时输出 $$ 并在诊断／提示中说明，不静默改值；⑤ **不做守护进程校验**——只做字符串到 YAML 的转换，不连 Docker、不验证镜像是否存在、不验证端口是否被占用，页面明示；⑥ **YAML 引号规则**——端口／挂载／环境变量值一律加引号输出，避免 `8080:80`、含 `:`／`#` 的值被 YAML 误读；⑦ **文本不出浏览器**——全部转换在本地完成，零 fetch／XHR，隐私文案页面可见；⑧ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/docker-run-to-compose）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：`docker run` 命令粘贴框（支持多行 `\` 续行、单双引号、转义）；输入校验：空输入、非 `docker run` 开头（含可选 `sudo` 前缀）、缺镜像、无闭合引号均给出明确错误提示、不输出畸形 YAML；`docker run` 后的旗标与镜像、镜像后的启动命令须分段识别。
+- Shell 词法切分（纯函数，双模式导出供 node 测试）：输入为原始命令字符串，输出为 token 数组；支持单引号（内无转义）、双引号（内 `\"`／`\\`／`\$` 转义）、反斜杠续行与行内转义；未闭合引号返回错误而非猜测补齐。
+- 旗标映射子集（超出即诊断，不静默丢弃）：--name／--name=（→container_name＋服务名来源）；-p／--publish（含 `-p 8080:80`、`-p=8080:80`、`--publish 127.0.0.1:8080:80`、`8080:80/tcp`／`/udp` 后缀，→ports 引号字符串列表）；-v／--volume（`宿主:容器`、`命名卷:容器`、`:ro`／`:rw` 后缀，→volumes 引号字符串列表）；-e／--env（`KEY=VAL` 形式，→environment `KEY=VAL` 引号字符串列表；裸 KEY 无值时进诊断并保留为 `KEY` 警示，不编造值）；--restart（no／always／on-failure／on-failure:N／unless-stopped，→restart 原样）；--network／--net（非 bridge／host／none 时 →networks 列表；host／none 进诊断说明语义特殊、仍输出 network_mode 并提示）；-d／--detach、--rm（按真限制记为已忽略诊断）；-i／-t／-it 组合短旗标（→stdin_open／tty）；--entrypoint、-w／--workdir、--user、--hostname、--expose（分别 →entrypoint／working_dir／user／hostname／expose 列表）；--label 仅支持 `KEY=VAL` 单值形式（→labels 列表，超出一律诊断）。组合短旗标须拆分处理（如 `-it`、`-dp 8080:80` 中的 `-d` 忽略＋`-p` 取值）。
+- 镜像与启动命令：第一个非旗标 token 为镜像；镜像后剩余 token 全为启动命令（→command 字符串，保留引号还原后的原值拼接；无命令则不输出 command 字段）；服务名推导：优先 --name，否则取镜像去掉仓库前缀与 `:tag`／`@digest` 后的 basename，再做小写＋非法字符转 `-` 的清洗；--name 与服务名不一致时 container_name 保留 --name 原值、服务名用清洗后值，并在解析表中对照展示。
+- 解析结果展示：结构化解析表（服务名／镜像／容器名／端口／挂载／环境变量／重启策略／网络／启动命令逐项列出）＋诊断列表（不支持旗标逐项、已忽略旗标逐项、$ 转义提示逐项）；YAML 输出区为只读代码区，含「一键复制」与「下载 docker-compose.yml」（复制失败有明确降级提示）；「重置」一键回到初始输入。
+- 示例一键载入（至少 4 组，可再编辑）：① nginx 简单端口映射；② postgres（环境变量＋命名卷＋端口＋unless-stopped）；③ 含启动命令与工作目录的自定义镜像；④ 含引号环境变量值、只读挂载与不支持旗标（触发诊断列表）。示例文案注明「请按需改写」。
+- 解析算法（纯函数，双模式导出供 node 测试）：输入为原始命令字符串，输出为 {service, image, containerName, ports, volumes, environment, restart, networks, networkMode, command, stdinOpen, tty, workingDir, user, hostname, entrypoint, labels, expose, diagnostics: [{kind: 'unsupported'|'ignored'|'warning', flag, message}], yaml}；重复端口／挂载按出现顺序保留不合并去重；YAML 生成时端口／挂载／环境变量值加引号、环境变量值含 $ 时转 $$。
+- 注册：ID `docker_run_to_compose`、Name「Docker run→Compose 转换器」、Path `/tools/docker-run-to-compose`、Category 开发工具、Icon 建议 terminal、New: true；中英文描述＋SEO keywords（Docker run、docker-compose、compose 转换、run 转 compose、容器编排、YAML 生成、docker run to compose）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 cURL→Python Requests 转换器与 JSON/YAML 转换。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `docker_run_to_compose`、Path `/tools/docker-run-to-compose` 注册完整（Category 开发工具），注册总数 167→168 Path。
+2. 词法正确：单双引号、转义、`\` 续行、组合短旗标（-it、-dp）解析与预期一致；未闭合引号、缺镜像、非 docker run 输入有明确提示、不输出畸形 YAML。
+3. 映射闭环：至少四组手工复算用例（nginx／postgres／自定义命令／引号＋只读挂载＋不支持旗标）端口、挂载、环境变量、重启策略、网络、启动命令输出与预期一致；服务名推导（--name 优先、镜像 basename 清洗）正确；重复端口／挂载按序保留。
+4. 诊断不丢项：--privileged／--cap-add 等特殊旗标逐项进诊断列表；-d／--rm 记为已忽略而非报错；环境变量 $ 转 $$ 且有提示；compose 输出不含 version 字段。
+5. 复制与示例：复制 YAML 与下载 docker-compose.yml 按钮可用（失败有降级提示），下载文件名为 docker-compose.yml；4 组示例一键载入后解析表、诊断区、YAML 区均有内容、且载入后可编辑再转换；「请按需改写」提示可见。
+6. 真限制可见：页面可见「仅覆盖常用旗标子集」「不连 Docker、不验证镜像与端口」「$ 已转义 $$」「文本不出浏览器」文案；零 fetch／XHR（源码自检无外部请求）。
+7. node 测试 40+ 断言全过（词法切分、旗标映射、端口／挂载／环境变量、重启策略、网络模式、服务名推导、启动命令、诊断列表、YAML 引号与 $ 转义、非法输入、示例静态检查）。
+8. 页面无报错；移动端布局不错位；长命令与长 YAML 小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/docker_run_to_compose.html`（新增；含 SEO 面板按家族标准＋命令输入／解析表／诊断列表／YAML 输出／示例 UI）
+- `static/js/docker_run_to_compose.js`（新增；shell 词法切分＋旗标映射＋YAML 生成＋复制／下载；双模式导出供 node 测试）
+- `tests/docker_run_to_compose.test.js`（新增；词法、旗标映射、端口／挂载／环境变量、重启策略、网络、服务名推导、诊断、YAML 引号与 $ 转义、非法输入、示例静态检查）
+- `tools/categories.go`（开发工具品类注册：ID docker_run_to_compose、Path /tools/docker-run-to-compose、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；95 轮记录的 Host key 报错本轮未复现——fetch 正常返回）；`git log` 头部 43366d1（URL 解析器评审反馈修复）／ff67ee9（URL 解析器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **167**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 json2yaml／curl_to_requests 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 05:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。URL 解析器已交付闭环（ff67ee9 新增＋43366d1 评审反馈修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **167 Path**，ID url_parser、Path /tools/url-parser 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:36 清晨轮，优先小难度纯前端。
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. URL 解析器交付确认：`git log` 头部 43366d1（评审反馈修复）／ff67ee9（新增）；全量 167 Path；templates/url_parser.html 已存在；本地当前分支 muse/dev-20260929。注意：本轮 `git fetch` 再次报错 Host key verification failed（93 轮旧症复现，未改动任何远程状态；本地分支与 HEAD 可用，交 PM/开发轮复核 known_hosts，勿因此动 master 或 force-push）。
+2. 新信号扫描：
+   - **HTML→Markdown 转换器（MicroToolStack／iotools／Chemicloud／Geekskai HTML to Markdown 多站同形态）**→ 仓库**全路零命中**（`grep -rni 'html.to.markdown|html_to_markdown|HTML转Markdown' tools/categories.go templates/ static/js/ tests/` 零命中；markdown_preview 仅做 Markdown→HTML 渲染、markdown_to_word／markdown_to_excel 均为 Markdown 出发方向，反向 HTML→Markdown 无覆盖），**新晋 P2「HTML→Markdown 转换器」**（建议 ID html_to_markdown、Path /tools/html-to-markdown）：粘贴 HTML 片段→DOMParser 遍历映射为 GFM（标题／粗斜体／链接／图片／列表嵌套／引用／行内与围栏代码／表格→pipe table／删除线／分割线）＋实体解码＋一键复制／下载 .md，纯前端小难度，零上传；痛点：从 CMS／富文本编辑器／网页复制的内容要进 README／文档站／wiki 时，手写 Markdown 逐项改标签费时易漏，表格与嵌套列表最易错；真限制：只转语义结构不转样式（class／内联样式／脚本／表单控件无 Markdown 等价物，须明示丢弃），不做 URL 抓取（只转粘贴的 HTML，不 fetch 网页，避 CORS 与混合内容）；
+   - **CSS 阴影与圆角生成器（DevPlaybook／101 工具榜 CSS generators 族）**→ 仓库**全路零命中**（CSS 族仅 css_gradient_generator／css_to_tailwind／css_clamp_calculator，无 box-shadow／border-radius 可视化生成器），**新晋 P2「CSS 阴影与圆角生成器」**（建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator）：滑杆调偏移／模糊／扩散／颜色／透明度＋四角圆角（支持椭圆双值）→实时预览＋box-shadow／border-radius 代码一键复制，纯前端小难度，零上传；痛点：手写阴影数值要反复改数刷新看效果，四角不等圆角语法更易写错；真限制：预览以当前浏览器渲染为准，不承诺与所有浏览器像素级一致；本轮因顺位年轻列 Top3 之后，留池递进；
+   - **cURL 多语言转换（SamToolkit／TestMu／tech4dream 等多站）**→ **自有实锤消解＋优化项，不单独立项**：curl_to_requests 已覆盖 cURL→Python requests 全语义（shell 词法切分＋-X／-H／-d／-u／-F 等＋诊断列表）；残余新颖点（同命令再出 fetch／axios／PHP 代码）记 curl_to_requests **优化项**；
+   - **JSON→表格视图（Geekskai JSON to Table）**→ **优化项，不单独立项**：json_parser 仅格式化＋高亮，数组对象转行列浏览记 json_parser **优化项**，不与解析器串味单立；
+   - **色盲模拟检查器补强信号**：dev.to 101 工具榜 Staff Picks 明确列 Color Blind Sim（8 类色盲模拟），与 90 轮 P2 留池项 color_blind_simulator 同形态，**补强验证、不重复立项**；
+   - **Bcrypt 生成器（KovaCore 12 款榜）**→ **不立**：password-generator 已覆盖随机密码＋强度显示；bcrypt 哈希需引入外部算法库（浏览器无原生实现），且属种子脚本小众场景，性价比低；
+   - **LLM API 价格对比／Prompt 成本计算器（101 工具榜 LLM Price：28+ 模型价格表）**→ **不立／观察**：价格表需持续维护、易过期，且 ai_token_counter 已覆盖 token 计数语义，价格口径一变即失真；
+   - **Shopify 批量编辑器榜**→ **不立**：电商后台批量改价／改标签属店铺 SaaS 场景，非单页纯前端工具，且与用户方向修正（不扩泛生活／经营类）不合。
+3. 候选池变动：URL 解析器已交付划出（ff67ee9＋43366d1，167 Path）；**新晋 P2 2 个**（HTML→Markdown 转换器：多站同形态验证，纯前端小难度，零命中实锤，附只转语义不转样式真限制；CSS 阴影与圆角生成器：CSS 族缺口验证，纯前端小难度，零命中实锤）；自有实锤消解 2 项（cURL 多语言→curl_to_requests 优化项；JSON→表格→json_parser 优化项）；补强验证 1 项（色盲模拟）；不立 3 项（Bcrypt、LLM 价格对比、Shopify 批量编辑）；全量 167 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；05:36 清晨轮优先小难度纯前端）：
+
+1. **Docker run→Compose 转换器** — P2 留池顺位递进（94 轮新晋；95 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；dev.to 2026 纯前端榜验证：run 命令→compose 服务段；痛点：手写 compose 逐项抄旗标易漏易错，调通的 run 命令无法一键沉淀；纯前端小-中难度：旗标解析＋YAML 生成＋复制／下载，零上传；零命中实锤（categories docker 为 0、templates 无 docker 文件；json2yaml 仅格式互转，不解析旗标）；建议 ID docker_run_to_compose、Path /tools/docker-run-to-compose；真限制：仅覆盖常用旗标子集，特殊旗标须明示不支持或告警）。
+2. **HTML→Markdown 转换器** — 新晋 P2（本轮；MicroToolStack／iotools／Chemicloud 多站同形态验证：HTML→GFM＋表格＋复制／下载 .md；痛点：CMS／富文本／网页内容进 README／文档站时手写 Markdown 逐项改标签费时易漏，表格与嵌套列表最易错；纯前端小难度：DOMParser 遍历映射＋实体解码，零上传；零命中实锤（markdown_preview 仅反向渲染，md→word／md→excel 均为 Markdown 出发方向）；建议 ID html_to_markdown、Path /tools/html-to-markdown；真限制：只转语义结构不转样式、不做 URL 抓取）。
+3. **信封打印助手** — P2 留池顺位递进（92 轮新晋；95 轮复核仍未交付；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证：WYSIWYG 预览＋多尺寸＋打印样式表；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；纯前端小难度：收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋打印样式表＋测试页／偏移微调，零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：各打印机边距与进纸方向不一，须明示先打测试页再调偏移）。
+
+其余 P2 留池（顺位在 Top3 之后）：CSS 阴影与圆角生成器（95 轮新晋；建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator；真限制：预览以当前浏览器渲染为准）；摩斯码翻译器（91 轮新晋；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器（90 轮新晋；本轮 dev.to 101 榜 Staff Picks 补强验证；建议 ID color_blind_simulator、Path /tools/color-blind-simulator）；MP3 标签编辑器（90 轮新晋；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件）；截图美化器（通用）（88 轮新晋；防串味延后，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；其余 92 轮及之前留池项均保持留池／观察原状，详见 94 轮及之前记录。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）；宽高比／分辨率计算器（94 轮观察；图片尺寸调整已覆盖实际图片处理，纯数字换算低频薄形态）；LLM API 价格对比（95 轮观察；价格表易过期，ai_token_counter 已覆盖计数语义）。
+
+**通用候选表增量**（第九十五轮：URL 解析器已交付划出（ff67ee9 新增＋43366d1 评审修复；ID url_parser、Path /tools/url-parser 已注册；全量 167 Path；候选池划出）；**新晋 P2 2 个：HTML→Markdown 转换器**（多站同形态验证；HTML→GFM＋表格＋复制／下载 .md，纯前端小难度零上传；零命中实锤；建议 ID html_to_markdown、Path /tools/html-to-markdown；真限制：只转语义不转样式、不做 URL 抓取）**与 CSS 阴影与圆角生成器**（CSS 族缺口验证；滑杆调阴影＋四角圆角→实时预览＋代码复制，纯前端小难度零上传；零命中实锤；建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator）；自有实锤消解 2 项（cURL 多语言→curl_to_requests 优化项；JSON→表格→json_parser 优化项）；补强验证 1 项（色盲模拟→90 轮留池）；不立 3 项（Bcrypt、LLM 价格对比、Shopify 批量编辑）；全量 167 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| URL 解析器 | 已交付划出（ff67ee9 新增＋43366d1 评审修复；ID url_parser、Path /tools/url-parser 已注册；全量 167 Path；候选池划出） | — | 已实现 |
+| HTML→Markdown 转换器 | 新晋 P2（95 轮；多站同形态验证；痛点：CMS／富文本／网页内容进 README／文档站时手写 Markdown 逐项改标签费时易漏，表格与嵌套列表最易错；DOMParser 遍历映射 GFM＋实体解码＋复制／下载 .md，纯前端小难度零上传；零命中实锤；建议 ID html_to_markdown、Path /tools/html-to-markdown；真限制：只转语义不转样式、不做 URL 抓取） | 小 | P2（95 轮新晋） |
+| CSS 阴影与圆角生成器 | 新晋 P2（95 轮；CSS 族缺口验证；痛点：手写阴影数值反复改数刷新看效果，四角不等圆角语法易错；滑杆调阴影＋四角圆角→实时预览＋代码复制，纯前端小难度零上传；零命中实锤；建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator；真限制：预览以当前浏览器渲染为准） | 小 | P2（95 轮新晋） |
+| 自有实锤消解 | 不立（cURL 多语言→curl_to_requests 优化项；JSON→表格→json_parser 优化项；色盲模拟→90 轮留池补强验证；Bcrypt／LLM 价格对比／Shopify 批量编辑→不立） | — | 不立 |
+| 优化项 | curl_to_requests：同命令再出 fetch／axios／PHP 代码；json_parser：数组对象转行列浏览（JSON→表格视图） | — | 优化项 |
+
+**归档说明**：本轮为 10-25 通用调研第九十五轮——URL 解析器交付闭环（ff67ee9＋43366d1，`/tools/url-parser` 已注册，全量 167 Path），候选池划出；**新晋 P2 2 个**（HTML→Markdown 转换器：多站同形态验证，纯前端小难度，零命中实锤，附只转语义真限制；CSS 阴影与圆角生成器：CSS 族缺口验证，纯前端小难度，零命中实锤）；2 项自有实锤消解转优化项；1 项补强验证；3 项不立；WPS 候选表保持冻结归档；仓库 167 注册工具全量核对无重叠（Top3 建议 ID docker_run_to_compose / html_to_markdown / envelope_printer；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 43366d1（URL 解析器评审反馈修复）／ff67ee9（新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **167**；本轮 `git fetch` 报错 Host key verification failed（93 轮旧症复现，未改动远程状态，交 PM/开发轮复核 known_hosts，勿动 master、勿 force-push）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 03:40 · 产品经理排期轮）
 
 **选定：URL 解析器（url_parser）** — 本轮唯一任务（新工具）：
