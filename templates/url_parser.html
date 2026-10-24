@@ -1,0 +1,190 @@
+{{define "url_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 解析器 - 长链接八段拆解，查询参数表可编辑重组，JSON 一键复制（纯前端）</title>
+    <meta name="description" content="免费在线 URL 解析器：粘贴长链接，按浏览器 URL 原语拆解协议/用户名/密码/主机/端口/路径/查询/片段八段，查询参数键值表可编辑/新增/删除并重组链接，结构化 JSON 一键复制，4 组示例一键载入，纯前端零上传。URL parser: split URL into 8 parts, editable query table, rebuild link, copy JSON, 100% client-side.">
+    <meta name="keywords" content="URL 解析器,URL parser,链接拆解,查询参数,query string,URL 解码,回调链接,重定向参数,URL 结构,参数表,链接重组">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/url-parser">
+    <meta property="og:title" content="URL 解析器 - 长链接八段拆解，参数表可编辑重组">
+    <meta property="og:description" content="粘贴长链接即拆协议/用户名/密码/主机/端口/路径/查询/片段八段，参数表可编辑重组，JSON 一键复制；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/url-parser">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"URL 解析器","description":"粘贴长链接，按浏览器 URL 原语拆解协议/用户名/密码/主机/端口/路径/查询/片段八段，查询参数键值表可编辑/新增/删除并重组链接，结构化 JSON 一键复制，4 组示例一键载入，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/url-parser","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .up-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .up-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .up-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .up-warn b{display:block;margin-bottom:.2rem}
+        .up-warn p{margin:0}
+        .up-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .up-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .up-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .up-input{width:100%;min-width:0;min-height:96px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .up-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .up-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .up-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .up-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .up-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .up-btn-danger{color:#991b1b}
+        .up-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem}
+        .up-notice{display:none;border:2px solid #2563eb;background:#eff6ff;border-radius:.6rem;padding:.7rem 1rem;color:#1e40af;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem}
+        .up-scroll{overflow-x:auto}
+        .up-seg{width:100%;border-collapse:collapse;font-size:.92rem;color:#374151;min-width:520px}
+        .up-seg th,.up-seg td{border:1px solid #e5e7eb;padding:.55rem .7rem;text-align:left;vertical-align:top}
+        .up-seg th{background:#f9fafb;color:#111827;width:88px;white-space:nowrap}
+        .up-cell{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+        .up-decoded{font-size:.85rem;color:#6b7280;margin-top:.25rem;word-break:break-all}
+        .up-table{width:100%;border-collapse:collapse;font-size:.92rem;color:#374151;min-width:560px}
+        .up-table th,.up-table td{border:1px solid #e5e7eb;padding:.5rem .6rem;text-align:left}
+        .up-table th{background:#f9fafb;color:#111827;white-space:nowrap}
+        .up-pkey,.up-pval{width:100%;min-width:120px;padding:.45rem .6rem;border:1px solid #d1d5db;border-radius:.45rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;box-sizing:border-box}
+        .up-pkey:disabled,.up-pval:disabled{background:#f3f4f6;color:#9ca3af}
+        .up-kind{display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:.4rem;padding:.1rem .5rem;font-size:.82rem;white-space:nowrap}
+        .up-out{width:100%;min-width:0;min-height:96px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box;background:#f9fafb}
+        .up-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .up-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .up-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .up-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .up-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .up-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .up-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .up-note b{color:#374151}
+        .up-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        @media (max-width:640px){
+            .up-seg,.up-table{min-width:0}
+            .up-seg th{width:64px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">link</i> URL 解析器</h1>
+            <p>长链接按浏览器 URL 原语拆成八段，参数表改完直接重组链接</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="up-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>全部解析都在本机完成，本页面不发起任何网络请求、不上传任何输入（零 fetch / XHR），粘贴的链接只留在当前页面。</div>
+            </div>
+            <div class="up-warn">
+                <b>安全提示区（请先看清再用）：</b>
+                <p>1. @ 之前不是真正主机：含用户名/密码的链接里，@ 之前只是用户信息，真正主机在 @ 之后，谨防钓鱼链接把假主机写在 @ 前面。</p>
+                <p>2. 默认端口消隐：http 的 80 端口与 https 的 443 端口是默认端口，解析时标注为「默认端口」，重组时消隐不写出。</p>
+                <p>3. 查询值中 + 在表单语义下表示空格：参数表按表单语义解码 + 为空格，重组时空格写成 %20，语义不变。</p>
+                <p>4. 本工具不验证链接可达性、不展开短链：只解析字符串本身，不发请求验证链接是否能打开，短链的目标地址不会被展开。</p>
+                <p>5. 含密码链接勿外传：密码段默认掩码显示，含密码的链接不要截图外发、不要粘进聊天记录。</p>
+                <p>6. 相对 URL 补协议头：无协议输入默认按 https:// 补齐并在结果区明示，不静默改写你的输入。</p>
+            </div>
+            <div class="up-panel">
+                <h3><i class="material-icons">input</i> 粘贴长链接</h3>
+                <textarea class="up-input" id="up-input" placeholder="例如：https://app.example.com/oauth/callback?code=AbC123xyz&state=9f8e7d6c"></textarea>
+                <div class="up-row">
+                    <button class="up-btn up-btn-primary" type="button" id="up-parse">解析链接</button>
+                    <button class="up-btn" type="button" id="up-reset">重置回初始输入</button>
+                </div>
+                <p class="up-hint">支持 Ctrl+Enter 快速解析；无协议输入（如 example.com/path?a=b）默认按 https:// 补齐并在结果区明示；链接中不能包含空格或换行，折行的链接请先拼成一行。</p>
+                <div class="up-row" style="margin-top:.6rem;">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再重组）：</span>
+                    <button class="up-btn" type="button" data-example="0">回调链接</button>
+                    <button class="up-btn" type="button" data-example="1">带 utm 的分享链接</button>
+                    <button class="up-btn" type="button" data-example="2">含用户名 / 端口 / 片段</button>
+                    <button class="up-btn" type="button" data-example="3">重复键与空值</button>
+                </div>
+            </div>
+            <div class="up-errors" id="up-errors"></div>
+            <div id="up-result" style="display:none;">
+                <div class="up-notice" id="up-notice"></div>
+                <div class="up-panel">
+                    <h3><i class="material-icons">account_tree</i> 八段拆解（与浏览器 URL 原语一致）</h3>
+                    <div class="up-scroll">
+                        <table class="up-seg">
+                            <tbody id="up-seg-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="up-row">
+                        <button class="up-btn" type="button" id="up-pw-toggle" style="display:none;">显示明文</button>
+                    </div>
+                    <p class="up-hint">每段下方如出现「解码后」对照，说明该段含 % 编码，解码值与原始值不同；端口为空时明示「未指定」，显式写出的默认端口标注为「默认端口」。</p>
+                </div>
+                <div class="up-panel">
+                    <h3><i class="material-icons">table_chart</i> 查询参数表（按出现顺序，重复键分行保留）</h3>
+                    <div class="up-scroll">
+                        <table class="up-table">
+                            <thead><tr><th>键</th><th>值</th><th>类型</th><th>操作</th></tr></thead>
+                            <tbody id="up-param-body"></tbody>
+                        </table>
+                    </div>
+                    <p class="up-hint" id="up-param-hint">提示：键不能包含空格、&、=、#、?、/；空值行重组为 key=，无值行重组为只有 key。</p>
+                    <p class="up-hint">类型说明：勾选「有等号」表示该行带 =（值为空时即「空值」）；取消勾选表示该行无等号（即「无值」），值输入框随之禁用。改表后重组预览实时更新。</p>
+                    <div class="up-row">
+                        <button class="up-btn" type="button" id="up-add-param">新增参数</button>
+                        <button class="up-btn up-btn-primary" type="button" id="up-rebuild">重组链接</button>
+                    </div>
+                </div>
+                <div class="up-panel">
+                    <h3><i class="material-icons">link</i> 重组链接与结构化 JSON</h3>
+                    <textarea class="up-out" id="up-rebuilt" readonly placeholder="解析后这里显示重组链接"></textarea>
+                    <div class="up-row">
+                        <button class="up-btn up-btn-primary" type="button" id="up-copy-link">复制链接</button>
+                        <button class="up-btn" type="button" id="up-copy-json">复制 JSON</button>
+                    </div>
+                    <p class="up-hint">复制失败时会有明确降级提示，请手动选中输出框内容复制。JSON 含八段 + 参数数组 + 原始输入 + 是否补齐协议标记；含密码的 JSON 不要外发。</p>
+                </div>
+            </div>
+            <div class="up-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>粘贴长链接点「解析链接」：八段拆解区按浏览器 URL 原语展示协议、用户名、密码、主机、端口、路径、查询、片段。</li>
+                    <li>密码默认掩码：点「显示明文」可切换查看，含密码的链接不要截图外发。</li>
+                    <li>在参数表里直接改键与值：重复键分行保留不合并，空值（key=）与无值（只有 key）用类型徽标区分，勾选「有等号」可切换两者。</li>
+                    <li>点「新增参数」加一行、点「删除」去掉一行，改表后重组预览实时更新，点「重组链接」确认最终结果。</li>
+                    <li>点「复制链接」或「复制 JSON」导出：JSON 含八段、参数数组、原始输入与是否补齐协议标记。</li>
+                    <li>点示例一键载入 4 组典型链接（请按需改写），载入后仍可编辑再重组；点「重置回初始输入」回到本次解析的原始输入。</li>
+                </ol>
+            </div>
+            <div class="up-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="up-faq">
+                    <dt>为什么 @ 前面的主机不能信？</dt>
+                    <dd>因为 @ 之前只是用户信息：https://bank.example.com@evil.example.com/ 的真正主机是 @ 之后的 evil.example.com，@ 前的 bank.example.com 只是用户名，最容易被钓鱼链接利用。</dd>
+                    <dt>无协议输入会怎么处理？</dt>
+                    <dd>默认按 https:// 补齐，并在结果区明示「已自动补齐 https://」，不静默改写；// 开头的协议相对链接补 https:。</dd>
+                    <dt>默认端口为什么重组后不见了？</dt>
+                    <dd>http 的 80 与 https 的 443 是默认端口，浏览器本身也会消隐它们；解析时标注为「默认端口」，重组时按规范省略，非默认端口（如 8443）会保留。</dd>
+                    <dt>空值和无值有什么区别？</dt>
+                    <dd>coupon= 是空值（有等号、值为空），promo 是无值（连等号都没有）；有些后端对两者处理不同，所以参数表把两者分行、分类型保留，重组时也原样区分。</dd>
+                    <dt>为什么 + 会变成空格？</dt>
+                    <dd>查询串按表单语义解析：+ 表示空格；重组时空格写成 %20，与 + 的语义相同，再解析回来的参数值不变。</dd>
+                    <dt>我的链接会被上传或验证吗？</dt>
+                    <dd>不会。全部解析在浏览器本地完成，零网络请求；不验证链接是否可达，也不展开短链。</dd>
+                </dl>
+            </div>
+            <div class="up-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="up-links">
+                    <a href="/tools/url-codec"><i class="material-icons">link</i> URL 编码/解码</a>
+                    <a href="/tools/url-tracker-cleaner"><i class="material-icons">cleaning_services</i> URL 追踪参数清除器</a>
+                </div>
+            </div>
+            <div class="up-note">
+                <b>实现说明：</b>八段拆解、参数表解析、重组与 JSON 导出均为纯函数（无协议补齐、默认端口消隐、重复键保留、空值/无值区分、非法输入校验），双模式导出供 node 单元测试；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="up-toast" id="up-toast"></div>
+    <script src="/tools/static/js/url_parser.js?v=1"></script>
+</body>
+</html>
+{{end}}

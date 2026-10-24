@@ -1,3 +1,84 @@
+## 今日任务（2026-10-25 03:40 · 产品经理排期轮）
+
+**选定：URL 解析器（url_parser）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（94 轮）Top3 **首席推荐**（93 轮新晋；94 轮复核仍未交付；01:00 PM 轮选了 CSS clamp 后，本轮按「无硬伤不跳过、研究轮 Top3 顺位递进」惯例递进生效——93 轮 Top3 顺序为 CSS clamp→URL 解析器→信封打印助手，CSS clamp 已交付划出（4a0f4ea，166 Path），URL 解析器顺位递进为首席）。
+- **未选**：Docker run→Compose 转换器（94 轮新晋 P2，Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因本轮 03:40 深夜轮优先小难度、而该项为中难度而后置，下轮优先递进；真限制仅覆盖常用旗标子集，特殊旗标须明示不支持或告警）；信封打印助手（92 轮新晋 P2，Top3 第三顺位，无硬伤，留池顺位递进——让位于 Top3 顺位在先的 URL 解析器；真限制打印机边距与进纸方向不一可在页面明示先打测试页，不构成跳过理由）；摩斯码翻译器（91 轮新晋 P2，纯前端小难度，无硬伤，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮由 89 轮观察晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，均为中难度，本轮深夜轮优先小难度，故后置）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'url_parser\|docker_run_to_compose\|envelope_printer' tools/categories.go` = 0；templates/ 无 url_parser／docker／envelope 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **166 Path**；`git log` 头部 4a0f4ea（CSS clamp 流体尺寸计算器新增）。自有近邻辨析：URL 编码/解码（url-codec）仅做编解码、URL 追踪参数清除器（url_tracker_cleaner）仅清追踪参数、URL 笔记分享（url_note_share）仅做链接分享，均不做「八段拆解＋参数表编辑＋重组」；json2yaml 仅做 JSON/YAML 格式互转，与未选的 Docker 转换器亦不重叠（与本工具无关，仅作 Top3 复核旁证）。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——浏览器 URL 原语解析＋参数表编辑＋重组，全部本地计算，零上传零 fetch，契合 ToolWeb 纯前端离线标准；② **痛点明确且高频**——调回调、重定向、带参分享链接时，肉眼拆长 URL 常看错主机与参数，复制粘贴还容易丢一个 &；③ **天然可测**——八段拆解、重复键、空值、默认端口消隐、重组往返、JSON 结构均可 node 断言，手工可复算；④ **无硬伤**——相对 URL 须补协议头、不做网络请求验证，均属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「编码转换」品类（与 URL 编码/解码、URL 追踪参数清除器同品类、便于互链；开发工具品类过泛——本工具是 URL 族工具，归编码转换更贴切）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **相对 URL 须补协议头**——输入无协议时默认按 https:// 补齐，并在结果区明示「已自动补齐 https://」，不静默改写；② **不做网络请求验证**——只解析字符串本身，不发请求验证链接是否可达、不展开短链，页面明示；③ **@ 前不是真正主机**——含用户名/密码的链接须在安全提示中说明「@ 之前只是用户信息，真正主机在 @ 之后」，防钓鱼误读；④ **默认端口消隐**——http:80／https:443 在解析结果中标注为默认端口、重组时消隐，不承诺与所有浏览器显示逐字一致；⑤ **含密码链接勿外传**——密码段默认掩码显示、可切换明文查看，并提示含密码的链接不要截图外发；⑥ **文本不出浏览器**——全部解析在本地完成，零 fetch／XHR，隐私文案页面可见；⑦ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/url-parser）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：长 URL 粘贴框；输入校验：空输入与无法解析的输入给出明确错误提示、不输出畸形拆解；无协议输入按 https:// 补齐并明示。
+- 八段拆解（浏览器 URL 原语解析，所见即浏览器所请求）：协议（scheme）、用户名（username）、密码（password，默认掩码＋可切换明文）、主机（hostname）、端口（port，默认端口标注「默认端口」）、路径（pathname）、查询（search）、片段（hash）；每段同时展示解码后值与原始值有差异时的对照（如 % 编码段），端口为空时明示「未指定」。
+- 查询参数键值表：按出现顺序分行列出，重复键分行保留不合并，空值行可见（值为空与无等号两种情形区分标注，如「空值」与「无值」）；每行可编辑键与值、可新增行、可删除行；改表后「重组链接」按钮生成新链接；编辑时键/值改动实时反映到重组预览，非法键（如含空格）给出明确提示。
+- 重组与导出：「重组链接」输出完整 URL（一键复制，复制失败有明确降级提示）；「复制 JSON」输出八段＋参数数组的结构化 JSON（含原始输入与是否补齐协议标记）；「重置」一键回到初始输入。
+- 示例一键载入（至少 4 组，可再编辑）：① 回调链接（含 code/state 参数）；② 带 utm 追踪参数的分享链接；③ 含用户名/端口/片段的完整链接；④ 含重复键与空值的链接。示例文案注明「请按需改写」。
+- 安全提示区（页面常驻可见）：「@ 之前不是真正主机」「默认端口（http:80／https:443）重组时消隐」「查询值中 + 在表单语义下表示空格」「本工具不验证链接可达性、不展开短链」四句。
+- 解析算法（纯函数，双模式导出供 node 测试）：输入为原始字符串，输出为 {protocol, username, password, hostname, port, pathname, search, hash, queryParams: [{key, value, hasValue}], rebuilt, protocolPrepended}；重复键保留顺序、空值区分 hasValue；重组时按 URL 规范拼接（默认端口消隐、用户名/密码按需还原、空查询不留尾随 ?、无片段不留 #）。
+- 注册：ID `url_parser`、Name「URL 解析器」、Path `/tools/url-parser`、Category 编码转换、Icon 建议 link、New: true；中英文描述＋SEO keywords（URL 解析器、URL parser、链接拆解、查询参数、query string、URL 解码、回调链接、重定向参数）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 URL 编码/解码与 URL 追踪参数清除器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `url_parser`、Path `/tools/url-parser` 注册完整（Category 编码转换），注册总数 166→167 Path。
+2. 拆解正确：至少四组手工复算用例（回调链接、分享链接、含用户名/端口/片段链接、重复键与空值链接）八段输出与浏览器 URL 原语一致；默认端口标注正确；无协议输入补齐 https:// 并明示；非法输入有明确提示、不输出畸形拆解。
+3. 参数表闭环：重复键分行保留、空值与无值区分可见；编辑键/值、新增、删除后重组链接与预期一致；重组往返（解析→重组→再解析）八段与参数表不变（默认端口消隐、空查询/片段规则除外，均须在测试中注明）。
+4. 复制与示例：复制链接与复制 JSON 按钮可用（失败有降级提示），JSON 含八段＋参数数组＋补齐标记；4 组示例一键载入后拆解区与参数表均有内容、且载入后可编辑再重组；「请按需改写」提示可见。
+5. 真限制可见：页面可见「相对 URL 补协议头」「不验证可达性、不展开短链」「@ 前不是真正主机」「默认端口消隐」「含密码链接勿外传」与「文本不出浏览器」文案；密码段默认掩码；零 fetch／XHR（源码自检无外部请求）。
+6. node 测试 40+ 断言全过（八段拆解、重复键、空值/无值、默认端口、重组往返、JSON 结构、非法输入、协议补齐、示例静态检查）。
+7. 页面无报错；移动端布局不错位；长 URL 与长参数表小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/url_parser.html`（新增；含 SEO 面板按家族标准＋URL 输入／八段拆解／参数表／重组导出／安全提示 UI）
+- `static/js/url_parser.js`（新增；URL 原语解析＋参数表编辑＋重组＋复制；双模式导出供 node 测试）
+- `tests/url_parser.test.js`（新增；拆解、重复键、空值、默认端口、重组往返、JSON、非法输入、协议补齐、示例静态检查）
+- `tools/categories.go`（编码转换品类注册：ID url_parser、Path /tools/url-parser、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，本轮正常）；`git log` 头部 4a0f4ea（CSS clamp 流体尺寸计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **166**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 url-codec／url_tracker_cleaner／url_note_share 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 03:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。CSS clamp 流体尺寸计算器已交付闭环（4a0f4ea 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **166 Path**，ID css_clamp_calculator、Path /tools/css-clamp-calculator 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:36 深夜轮，优先小难度纯前端。
+**本轮三件事**（03:36 全网调研，通用方向）：
+1. CSS clamp 交付确认：`git log` 头部 4a0f4ea（新增）；全量 166 Path；templates/css_clamp_calculator.html 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常，93 轮记录的 Host key 报错未复现。URL 解析器／信封打印助手／摩斯码／滚动字幕复核仍未交付（`grep -c` 在 tools/categories.go 中 url_parser／envelope_printer／morse／scrolling_text 均为 0；templates/ 无对应文件）。
+2. 新信号扫描：
+   - **dev.to「10 Essential Free Developer Tools That Run 100% In-Browser」榜**：Docker Run→Compose 转换器 → 仓库**全路零命中**（tools/categories.go 中 docker 为 0、templates/ 无 docker 文件；json2yaml 仅做 JSON/YAML 格式互转，不解析 docker run 旗标，语义不重叠），**新晋 P2「Docker run→Compose 转换器」**（建议 ID docker_run_to_compose、Path /tools/docker-run-to-compose）：粘贴 `docker run` 命令→解析 --name／-p／-v／-e／--restart／--network／镜像／启动命令→生成 docker-compose.yml 服务段＋一键复制／下载＋不支持旗标明确告警，纯前端小-中难度，零上传；痛点：手写 compose 时端口／挂载／环境变量逐项抄旗标易漏易错，调试过的 run 命令无法一键沉淀为可复用文件；真限制：仅覆盖常用旗标子集，--privileged／--cap-add 等特殊旗标须明示不支持或原样透传告警，不承诺与所有 docker 版本语义一致；
+   - **同榜其余项 → 自有实锤消解**：Cron 可视化生成器→cron（Cron 表达式解析，已有解析＋未来执行时间语义；可视化建串方向记 cron **优化项**，不单独立项）；Mock 数据生成器→mock_data_generator 已覆盖（含 JSON/CSV/SQL 导出）；Chmod 计算器→chmod 已覆盖；IPv4 CIDR 子网计算器→subnet 已覆盖；文本 Diff→text-diff＋json_semantic_diff 已覆盖；JSON→TypeScript→json_to_types 已覆盖；
+   - **CSV→SQL INSERT 生成器（同榜）**→ **不单独立项**：csvjson（CSV⇄JSON）＋mock_data_generator 的 SQL 导出＋sql_formatter 已覆盖数据导出与 SQL 处理族，CSV→INSERT 属同一族内的又一导出形态，记 csvjson **优化项**，不与现有工具串味；
+   - **宽高比／分辨率计算器（同榜）**→ **观察、不晋升 P2**：图片尺寸调整已覆盖实际图片缩放／裁剪，纯数字 GCD 换算＋等比缩放表属低频薄形态，留作观察，不进 P2 池；
+   - **批量二维码生成（QR Batch／QRKit 等）**→ **优化项，不单独立项**：qrcode＋wifi_qr_generator 已覆盖单码生成，批量（多行文本→多码＋打包下载）记 qrcode **优化项**；
+   - **IP／DNS 测速与多节点 Ping（Control D／站长工具／52ce 等）**→ **不立**：多节点延迟／丢包／DNS 解析须后端节点或外部 API，纯前端单页只能测本机到个别 DoH 端点，语义缩水且与 ToolWeb 纯前端离线标准冲突，低优先；
+   - **365Lab 2026 免费工具 40+ 清单**→ 未提炼出新的零命中单页工具：证件照／PDF／拼图／Markdown／批量重命名／配色／白噪音等均为通用形态，与自有族高度重合，本轮不重复立项；
+   - **V2EX 近期信号（Linkit 本地优先 AI 书签／二手转售 AI 描述生成）**→ **不立**：均依赖 AI 摘要／生成或后端同步，非纯前端单页可实现，低优先。
+3. 候选池变动：CSS clamp 已交付划出（4a0f4ea，166 Path）；**新晋 P2 1 个**（Docker run→Compose 转换器：dev.to 纯前端榜验证，零命中实锤，附旗标子集真限制）；自有实锤消解 6 项（Cron／Mock／Chmod／Subnet／Diff／JSON→TS）；优化项 3 条（cron：可视化建串；csvjson：CSV→INSERT 导出；qrcode：批量生成）；观察 1 项（宽高比计算器）；不立 3 项（IP/DNS 多节点测速、V2EX AI 书签、二手 AI 描述）；全量 166 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；03:36 深夜轮优先小难度纯前端）：
+
+1. **URL 解析器** — P2 留池顺位递进（93 轮新晋；94 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；FindUtils／ToolAdda／OpenVibe／CodeShack 多站同形态验证：八段拆解＋查询参数表＋重组＋JSON 复制；痛点：调回调／重定向／带参链接时肉眼拆长 URL 常看错主机与参数；纯前端小难度：浏览器 URL 原语解析＋参数表编辑＋重组，零上传；零命中实锤（url-codec 仅编解码、tracker-cleaner 仅清参，均非拆解工具）；建议 ID url_parser、Path /tools/url-parser；真限制：相对 URL 须补协议头、不做网络请求验证）。
+2. **Docker run→Compose 转换器** — 新晋 P2（本轮；dev.to 2026 纯前端榜验证：run 命令→compose 服务段；痛点：手写 compose 逐项抄旗标易漏易错，调通的 run 命令无法一键沉淀；纯前端小-中难度：旗标解析＋YAML 生成＋复制／下载，零上传；零命中实锤（categories docker 为 0、templates 无 docker 文件；json2yaml 仅格式互转，不解析旗标）；建议 ID docker_run_to_compose、Path /tools/docker-run-to-compose；真限制：仅覆盖常用旗标子集，特殊旗标须明示不支持或告警）。
+3. **信封打印助手** — P2 留池顺位递进（92 轮新晋；94 轮复核仍未交付；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证：WYSIWYG 预览＋多尺寸＋打印样式表；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；纯前端小难度：收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋打印样式表＋测试页／偏移微调，零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：各打印机边距与进纸方向不一，须明示先打测试页再调偏移）。
+
+其余 P2 留池（顺位在 Top3 之后）：摩斯码翻译器（91 轮新晋；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；建议 ID scrolling_text_generator、Path /tools/scrolling-text-generator；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器（90 轮新晋；建议 ID color_blind_simulator、Path /tools/color-blind-simulator）；MP3 标签编辑器（90 轮新晋；建议 ID mp3_tag_editor、Path /tools/mp3-tag-editor；真限制：只导出新文件、不覆盖原文件）；截图美化器（通用）（88 轮新晋；防串味延后，待 PM 解命名冲突后递进；建议 ID screenshot_beautifier、Path /tools/screenshot-beautifier）；应用商店截图生成器（87 轮补强晋升；建议 ID app_store_screenshot_generator、Path /tools/app-store-screenshot-generator）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立；建议 ID radio_station_player、Path /tools/radio-station-player）；其余 92 轮及之前留池项均保持留池／观察原状，详见 93 轮及之前记录。
+其余 P3 观察：免注册会议时间投票（79 轮新晋；需 Go 后端＋持久化存储，低优先；建议 ID meeting_time_poll、Path /tools/meeting-time-poll）；宽高比／分辨率计算器（94 轮观察；图片尺寸调整已覆盖实际图片处理，纯数字换算低频薄形态）。
+
+**通用候选表增量**（第九十四轮：CSS clamp 已交付划出（4a0f4ea 新增；ID css_clamp_calculator、Path /tools/css-clamp-calculator 已注册，开发工具品类；全量 166 Path；候选池划出）；**新晋 P2 1 个：Docker run→Compose 转换器**（dev.to 纯前端榜验证；run 命令→compose 服务段＋复制／下载，纯前端小-中难度零上传；零命中实锤；建议 ID docker_run_to_compose、Path /tools/docker-run-to-compose；真限制：仅覆盖常用旗标子集）；自有实锤消解 6 项（Cron→cron、Mock→mock_data_generator、Chmod→chmod、Subnet→subnet、Diff→text-diff/json_semantic_diff、JSON→TS→json_to_types）；优化项 3 条（cron：可视化建串；csvjson：CSV→INSERT 导出；qrcode：批量生成）；观察 1 项（宽高比计算器）；不立 3 项（IP/DNS 多节点测速、V2EX AI 书签、二手 AI 描述）；全量 166 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS clamp 流体尺寸计算器 | 已交付划出（4a0f4ea 新增；ID css_clamp_calculator、Path /tools/css-clamp-calculator 已注册，开发工具品类；全量 166 Path；候选池划出） | — | 已实现 |
+| Docker run→Compose 转换器 | 新晋 P2（94 轮；dev.to 2026 纯前端榜验证；痛点：手写 compose 逐项抄旗标易漏易错，调通的 run 命令无法一键沉淀；run 命令→compose 服务段＋复制／下载，纯前端小-中难度零上传；零命中实锤；建议 ID docker_run_to_compose、Path /tools/docker-run-to-compose；真限制：仅覆盖常用旗标子集，特殊旗标须明示不支持或告警） | 中 | P2（94 轮新晋） |
+| 自有实锤消解 | 不立（Cron→cron、Mock→mock_data_generator、Chmod→chmod、Subnet→subnet、Diff→text-diff/json_semantic_diff、JSON→TS→json_to_types 全自有；CSV→SQL→csvjson 优化项；宽高比→观察；IP/DNS 多节点测速／V2EX AI 书签／二手 AI 描述→非纯前端单页，不立） | — | 不立 |
+| 优化项 | cron：可视化建串（反向生成表达式）；csvjson：CSV→INSERT 导出；qrcode：批量生成（多行文本→多码＋打包下载） | — | 优化项 |
+
+**归档说明**：本轮为 10-25 通用调研第九十四轮——CSS clamp 交付闭环（4a0f4ea，`/tools/css-clamp-calculator` 已注册，开发工具品类，全量 166 Path），候选池划出；**新晋 P2 1 个**（Docker run→Compose 转换器：dev.to 纯前端榜验证，纯前端小-中难度，零命中实锤，附旗标子集真限制）；6 项自有实锤消解；3 条优化项；1 项观察；3 项不立；WPS 候选表保持冻结归档；仓库 166 注册工具全量核对无重叠（Top3 建议 ID url_parser / docker_run_to_compose / envelope_printer；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 4a0f4ea（CSS clamp 流体尺寸计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **166**；`git fetch` 本轮正常（93 轮 Host key 报错未复现）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）＋未跟踪 `toolweb`（ELF 构建产物，勿入库勿提交）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 01:00 · 产品经理排期轮）
 
 **选定：CSS clamp 流体尺寸计算器（css_clamp_calculator）** — 本轮唯一任务（新工具）：
