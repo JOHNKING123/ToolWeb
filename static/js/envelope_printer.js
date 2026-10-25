@@ -187,7 +187,7 @@ var EXAMPLES = [
     recipient: { name: '深圳市星辰科技有限公司', address: '广东省深圳市宝安区西乡大道456号星辰大厦8楼', postcode: '518102' },
     sender: { name: '深圳市晨光贸易有限公司 行政部', address: '广东省深圳市龙岗区坂田街道吉华路78号', postcode: '518129' },
     globalOffset: { x: 0, y: 0 }, recipientOffset: { x: 0, y: 0 } },
-  { name: '自定义小尺寸＋偏移（A6）', preset: 'A6',
+  { name: '小尺寸＋偏移（A6）', preset: 'A6',
     recipient: { name: '陈晨', address: '广东省广州市天河区中山大道西55号', postcode: '510630' },
     sender: { name: '林涛', address: '广东省广州市越秀区东风中路300号', postcode: '510030' },
     globalOffset: { x: 2, y: -1.5 }, recipientOffset: { x: 1, y: 2 } }

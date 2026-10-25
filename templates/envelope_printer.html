@@ -44,7 +44,7 @@
         .ep-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
         .ep-info{font-size:.9rem;color:#374151;line-height:1.8;margin:0 0 .9rem}
         .ep-scroll{overflow-x:auto;padding:.5rem 0}
-        .ep-envelope{position:relative;background:#fff;border:calc(var(--pxmm,2px)*0.4) solid #111827;margin:0 auto;overflow:hidden;box-sizing:content-box}
+        .ep-envelope{position:relative;background:#fff;border:calc(var(--pxmm,2px)*0.4) solid #111827;margin:0 auto;overflow:hidden;box-sizing:border-box;width:calc(var(--ew,110)*var(--pxmm,2px));height:calc(var(--eh,220)*var(--pxmm,2px))}
         .ep-zone{position:absolute;left:calc(var(--zx)*var(--pxmm));top:calc(var(--zy)*var(--pxmm));width:calc(var(--zw)*var(--pxmm));height:calc(var(--zh)*var(--pxmm));overflow:hidden;line-height:1.6;color:#111827;font-size:calc(var(--pxmm)*3.8)}
         .ep-zone-name{font-size:calc(var(--pxmm)*5);font-weight:600;line-height:1.5}
         .ep-zone-stamp{border:calc(var(--pxmm)*0.4) dashed #6b7280;color:#6b7280;display:flex;align-items:center;justify-content:center;font-size:calc(var(--pxmm)*3.5)}
@@ -181,7 +181,7 @@
                     <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再预览）：</span>
                     <button class="ep-btn" type="button" data-example="0">个人寄信（DL）</button>
                     <button class="ep-btn" type="button" data-example="1">企业寄件（C5）</button>
-                    <button class="ep-btn" type="button" data-example="2">自定义小尺寸＋偏移（A6）</button>
+                    <button class="ep-btn" type="button" data-example="2">小尺寸＋偏移（A6）</button>
                 </div>
             </div>
             <div class="ep-errors" id="ep-errors"></div>
