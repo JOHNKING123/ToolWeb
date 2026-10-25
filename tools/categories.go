@@ -283,6 +283,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "htaccess_generator",
+					Name:        ".htaccess 生成器",
+					Description: "分组开关生成 Apache .htaccess 配置：HTTPS 强制跳转、www 归一（二选一互斥）、301 多行重定向、自定义错误页、缓存与压缩、安全头、防盗链、敏感文件保护，输出顺序固定 HTTPS→www→301→错误页→缓存压缩→安全头→防盗链→敏感保护，Minimal/WordPress/Security/Performance 4 组预设，实时预览，一键复制或下载 .htaccess，纯前端零上传 · .htaccess generator: HTTPS redirect, www canonicalization, 301 redirects, error pages, caching, security headers, hotlink protection, Apache 2.4 only, 100% client-side",
+					Path:        "/tools/htaccess-generator",
+					Icon:        "settings",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "calendar",
 					Name:        "在线日历",
 					Description: "查看日历、农历和节假日信息",

@@ -1,3 +1,86 @@
+## 今日任务（2026-10-25 23:38 · 产品经理排期轮）
+
+**选定：.htaccess 生成器（htaccess_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（104 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。21:38 PM 轮选 User-Agent 解析器时已明言：.htaccess 生成器仅因顺位在 User-Agent 解析器之后而后置、「下轮首席递进」；User-Agent 解析器已交付划出（f8d419b，176 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——104 轮新晋的 RSS／Atom 订阅源生成器／文本信息提取器／Prettier 配置生成器虽同为小难度纯前端，均不插队。
+- **未选**：Cron 表达式生成器（100 轮新晋 P2，104 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 .htaccess 生成器之后而后置，下轮首席递进；真限制标准五段式口径、不承诺 Quartz 等方言；注意与已交付的 Cron 表达式解析（ID cron、Path /tools/cron-parser）方向互补不重叠——解析是「读表达式说人话」，生成器是「可视化拼表达式」，两者语义不同）；匿名抽签生成器（100 轮新晋 P2，104 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制保密仅限单设备单会话、无服务端私密链接；近邻辨析：已注册的「在线抽签」是随机抽决定，与本工具的匿名互赠配对语义不同，不重叠）；RSS／Atom 订阅源生成器／文本信息提取器／Prettier 配置生成器（104 轮新晋 P2，留池顺位递进；真限制各见研究轮记录）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -ci 'htaccess|cron_generator|secret_santa' tools/categories.go` = 0；templates/ 与 static/js/ 无 htaccess／cron_gen／secret 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **176 Path**；`git log` 头部 f8d419b（User-Agent 解析器新增）／0797909（HMAC 生成器新增）／c7ea3a8（robots.txt 校验器新增）。自有近邻辨析：① 已注册的 .gitignore 生成器是「版本控制忽略规则」，与本工具的「Apache 服务器配置」语义不同，不重叠；② robots.txt 校验器是「爬虫放行规则校验」，与本工具的改写／跳转／安全头规则不重叠；③ url_parser 只拆 URL 结构、不生成服务器配置——本工具是「分组开关→mod_rewrite／mod_headers／mod_expires 规则文本」的生成器，互补不重叠。无可复用业务代码，仅可借鉴 User-Agent 解析器轮的纯前端双模式导出（window＋module.exports）与 node 测试模式。
+- **选定理由**：① **痛点尖锐且后果可见**——手写 mod_rewrite 写错一行整站 500，分组开关＋实时预览把「背语法」变成「打勾」，价值一眼可验证；② **一轮可高质量交付**——纯文本模板拼接、无依赖、无需后端，规则分组天然可断言；③ **无硬伤**——「仅 Apache 2.4、不适用 Nginx、AllowOverride 未开启不生效」属可明示的真限制，不构成跳过理由；④ **站长工具组成组价值**——与 robots.txt 校验器／sitemap 类工具同属站长运维旅程，虚拟主机用户粘贴即用。
+- **品类归位**：注册到「开发工具」品类（与 robots.txt 校验器、.gitignore 生成器同品类，便于站长／开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **仅 Apache 2.4 语法、不适用 Nginx**——页面首屏明示，Nginx 用户不要照搬；② **AllowOverride 未开启不生效**——虚拟主机需确认主配置 AllowOverride All，否则规则被静默忽略，页面明示排查点；③ **生成前提示备份原文件**——覆盖前必须先备份现有 .htaccess，页面提供醒目备份提示（本工具只生成文本、不直接写用户服务器文件）；④ **规则顺序有讲究**——HTTPS 强制跳转与 www 归一须在其它改写规则之前，生成器按正确顺序输出、不许用户拖乱顺序致循环重定向；⑤ **不做线上验证**——本工具只生成文本，不在线检测目标站、不抓取、不做漏洞扫描结论。
+
+**规格**（开发轮按此执行）：
+- 规则分组（每组独立开关，勾选即实时生成）：HTTPS 强制跳转（HTTP→HTTPS 301）；www 归一（二选一：统一 www 或统一去 www，互斥单选）；301 重定向（旧路径→新路径，多行可增删，每行「源路径＋目标 URL」）；自定义错误页（404／403／500 各一行「状态码＋路径」）；缓存与压缩（Expires／Cache-Control 静态资源缓存＋mod_deflate gzip 压缩开关）；安全头（X-Content-Type-Options nosniff、X-Frame-Options、Referrer-Policy，可选）；防盗链（图片／媒体扩展名防盗，允许空 Referer 选项＋白名单域名一行）；敏感文件保护（禁止访问 .git／.env／备份文件等常见敏感路径，固定规则组）。
+- 预设：至少 4 组一键预设（Minimal 最小集、WordPress、Security 安全优先、Performance 性能优先），预设载入后可再改开关；预设与手动开关互通（载入后开关状态同步显示）。
+- 输出与操作：实时生成 .htaccess 文本（输入／开关变化即更新，无需点按钮也可看结果，并保留「生成」按钮供明确触发）；一键复制（文本版）与下载 .htaccess 文件；复制失败有明确降级提示（手动复制指引）；「重置」回到默认空状态；规则计数与行数显示为宜。
+- 顺序与正确性：输出顺序固定为 HTTPS→www 归一→301 重定向→错误页→缓存压缩→安全头→防盗链→敏感文件保护；www 归一互斥（选统一 www 时不输出去 www 规则，反之亦然）；空分组不输出空段、不输出残留注释占位。
+- 技术路线：纯前端、无依赖（手写模板拼接，不引入构建依赖）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，规则生成／互斥／顺序／转义等纯函数均可 node 断言）。
+- 注册：ID `htaccess_generator`、Name「.htaccess 生成器」、Path `/tools/htaccess-generator`、Category 开发工具、Icon 建议 settings、New: true；中英文描述＋SEO keywords（.htaccess、Apache、mod_rewrite、HTTPS 强制跳转、www 归一、301 重定向、防盗链、htaccess generator）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/htaccess-generator，相关工具互链开发工具品类内站长类工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `htaccess_generator`、Path `/tools/htaccess-generator` 注册完整（Category 开发工具），注册总数 176→177 Path。
+2. 分组闭环：仅开 HTTPS 组时输出含 RewriteCond %{HTTPS} off 与 301 跳转规则、不含其它分组规则；仅开 www 归一组时统一 www 与去 www 互斥（各只输出对应一条规则）。
+3. 顺序闭环：全开时 HTTPS 规则出现在 www 规则之前，www 规则出现在 301 重定向之前；空分组不输出空段。
+4. 多行闭环：301 重定向 2 行以上均输出且顺序与输入一致；错误页 404／403 各一行均输出对应 ErrorDocument 行；防盗链白名单域名输出到规则中。
+5. 预设闭环：4 组预设一键载入后开关状态与输出文本同步、且载入后可改开关再生成；重置后回到默认空状态。
+6. 复制下载闭环：复制结果可用；下载文件名为 .htaccess、内容与页面输出一致；复制失败有降级提示。
+7. 真限制可见：页面可见「仅 Apache 2.4、不适用 Nginx」「AllowOverride 未开启不生效」「生成前请备份原文件」「不直接写服务器文件」文案；零 fetch／XHR、零 CDN（源码自检无外部 URL）。
+8. node 测试 25+ 断言全过（分组开关、www 互斥、输出顺序、多行重定向、错误页、防盗链白名单、敏感文件保护、预设载入、重置、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；长规则文本小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/htaccess_generator.html`（新增；含 SEO 面板按家族标准＋分组开关／预设／输出区 UI）
+- `static/js/htaccess_generator.js`（新增；规则模板拼接／互斥／顺序／复制下载逻辑；双模式导出供 node 测试）
+- `tests/htaccess_generator.test.js`（新增；分组、互斥、顺序、多行、预设、重置、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID htaccess_generator、Path /tools/htaccess-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 f8d419b（User-Agent 解析器新增）／0797909（HMAC 生成器新增）／c7ea3a8（robots.txt 校验器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **176**；Top3 候选重叠复核（htaccess_generator／cron_generator／secret_santa_generator 三路零命中实锤；已注册 .gitignore 生成器与 robots.txt 校验器语义互补不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 23:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第一百零四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。User-Agent 解析器已交付闭环（f8d419b 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **176 Path**，ID user_agent_parser、Path /tools/user-agent-parser 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:36 深夜轮，优先小难度纯前端。
+**本轮三件事**（23:36 全网调研，通用方向）：
+1. UA 交付确认：`git log` 头部 f8d419b（User-Agent 解析器新增）／0797909（HMAC 生成器新增）／c7ea3a8（robots 校验器新增）；全量 176 Path；templates/user_agent_parser.html 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功，无报错。.htaccess／Cron 生成器／匿名抽签／Lorem／bezier／TOTP／HTTP 响应头／JSON 字符串转义器复核仍未交付（`grep -c 'secret_santa|lorem|bezier|cubic'` = 0；上一轮组合 grep 仅命中 user_agent 一项）。
+2. 新信号扫描：
+   - **dev.to 13 工具榜＋devtoolkit／geekskai 26 榜＋1024toolkit 45 小工具帖**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Base64、哈希、Bcrypt、UUID、时间戳、URL 解析、HTTP 状态码、Markdown 预览、cron、时区、子网、SQL 格式化 → **全部自有实锤消解**（时区对应已注册时区转换器；子网对应已注册「IP 子网计算器」；cron 解析对应 cron-parser；其余均为 103 轮及之前已核对的注册工具）；
+   - **JSONCraft／PayloadTools／json-util 榜单**：JSON／YAML／CSV／TOML 转换、JSON Diff、JSONPath、YAML 校验 → **基本消解**（JSON 语义化对比器 json_semantic_diff＋文本对比 text_diff 已覆盖 JSON 对比主场景；JSONPath 测试器已在 P2 留池；YAML↔JSON 转换已注册 json2yaml；唯 YAML／XML 独立对比器未覆盖，记观察项，不新立——需 YAML 解析器 vendoring，投入大于边际价值）；
+   - **iotools.cloud 目录（1629 工具）＋iotools.net 文本工具页**：.gitattributes／.htaccess／.npmrc 配置生成器、RSS／Atom 订阅源生成器、Markdown 链接图片提取器、Excel 转 CSV、Prettier 配置生成器、ISBN 校验器、JMESPath 测试器、三向文本对比、Access Log 格式化 → 逐项核对后：
+     - **RSS／Atom 订阅源生成器** → `grep -i 'rss|atom.*feed|feed gener'` **0 实锤**、无模板 → **新晋 P2「RSS／Atom 订阅源生成器」**（痛点：给博客／播客手写 RSS 2.0／Atom XML 要逐项查规范，转义与日期格式（RFC 822／RFC 3339）一错订阅器就拒读；纯前端小难度：频道元数据表单（标题／链接／描述／语言／作者）＋条目列表增减（标题／链接／摘要／发布时间）→实时生成规范 XML＋XML 转义＋一键复制／下载 .xml，零上传；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML 文本，不发布、不托管、不验证订阅源可达性（不做 fetch）；不做播客 enclosure 进阶字段以外的播客托管）；
+     - **文本信息提取器** → `grep -i 'extract.*email|extract.*url|email.*extract'` **0 实锤**（仅命中视频帧提取器，语义无关）→ **新晋 P2「文本信息提取器」**（痛点：从一长段聊天记录／日志／文章里抠邮箱、URL、手机号、IP 地址要逐条肉眼找，复制粘贴易漏；纯前端小难度：粘贴文本→按类别分组提取（邮箱／URL／手机号／IPv4）＋去重计数＋分类一键复制，零上传；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似提取，复杂 URL／国际号码可能漏提或误提，不做真实性验证——提取到≠真实存在）；
+     - **Prettier 配置生成器** → `grep -i 'prettier|npmrc|editorconfig'` **0 实锤**；自有 .gitignore 生成器已注册（配置生成器家族同族不同语义，不重叠）→ **新晋 P2「Prettier 配置生成器」**（痛点：新项目配 Prettier 要翻文档逐项确认选项名与取值（semi／singleQuote／tabWidth／trailingComma／printWidth 等），手写容易拼错键名；纯前端小难度：常用选项表单勾选＋实时生成 .prettierrc.json／.prettierrc.yaml／package.json 内 "prettier" 键三种格式＋一键复制／下载，零上传；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：只覆盖常用核心选项子集，不承诺全部插件选项；不读取／解析用户现有配置文件）；
+     - **观察项新记**：ISBN 校验器（`isbn` 零命中；ISBN-10／13 校验位＋互转纯前端极小，但受众窄，记观察项）；JMESPath 测试器（`jmespath` 零命中；与 P2 留池的 JSONPath 测试器同族，防一族两工具并行，记观察项）；.npmrc／.gitattributes 配置生成器（零命中；比 Prettier 更小众，记观察项，待配置生成器家族验证后再议）；文本↔二进制／ASCII 转换器（`二进制`零命中；进制转换器只做数字进制，不做文本字节串转换，记观察项）；YAML／XML 独立对比器（见上，记观察项）；
+     - **消解不立**：.htaccess 生成器／测试器（生成器已在 P2 留池，测试器暂不单立）；行排序／去重／大小写转换（已注册文本工具含「行去重、排序、大小写转换、全半角」）；URL 查询串解析（url_parser 已含可编辑查询参数表＋重组链接）；Excel 转 CSV（需 SheetJS 级解析器 vendoring，中难度且与 CSV⇄JSON 家族边际重叠，暂不立）；三向文本对比（text_diff 双向已覆盖主场景，暂不立）；Access Log 格式化（日志解析口径杂、价值低于本轮三新晋，暂不立）；.gitignore 生成器（已注册，勿重复立项）；
+   - **中文搜索（V2EX／希望有一个网站能…）**本轮返回均为旧帖／无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：User-Agent 解析器已交付划出（f8d419b，176 Path）；**新晋 P2 3 个**（RSS／Atom 订阅源生成器、文本信息提取器、Prettier 配置生成器：均为多榜验证、零命中实锤、纯前端小难度）；自有实锤消解 15+ 项（含易误判点：box-shadow／border-radius 对应已注册 css_shadow_radius_generator——描述用连字符 box-shadow 而非下划线，grep 须用连字符；DNS 对应 dns-lookup；Mermaid 对应 mermaid_diagram_renderer；IP 子网／时区／.gitignore／行处理／查询串／时间戳均已注册）；观察项新增 5 条；全量 176 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；UA 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，103 轮 Top3 第二、三顺位依次递进，第三顺位取 100 轮新晋中最老且无硬伤的匿名抽签）：
+
+1. **.htaccess 生成器** — P2 留池顺位递进（100 轮新晋；104 轮复核仍未交付；webutil 榜＋六源验证；iotools.cloud 目录本轮再现 .htaccess 族需求；痛点：虚拟主机／Apache 站点改 HTTPS 强制跳转、www 归一、301 迁移、缓存与压缩、安全头、防盗链、敏感文件保护都要手写 mod_rewrite 语法，写错一行整站 500；纯前端小难度：分组开关＋WordPress／Security／Performance／Minimal 预设→实时生成 .htaccess 文本＋一键复制／下载，零上传；零命中实锤；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效，生成前提示备份原文件）。
+2. **Cron 表达式生成器** — P2 留池顺位递进（100 轮新晋；104 轮复核仍未交付；webutil／datatoolbase／toolsforcode 多榜再现，1024toolkit 帖本轮再现 cron 需求；痛点：手写 cron 五段式（分时日月周）顺序易错、特殊符号（*／,／-／L／W／#）语义靠背；纯前端小难度：可视化分段选择（分钟／小时／日／月／周）＋特殊符号说明→实时生成标准五段式表达式＋下次执行时间预览＋一键复制，零上传；零命中实锤；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 等方言；解析方向（读表达式说人话）另记观察项，不与本工具混同）。
+3. **匿名抽签生成器** — P2 留池顺位递进（100 轮新晋；104 轮复核仍未交付；`secret_santa` 零命中实锤；痛点：圣诞／年会互赠礼物抽签要保密配对，群里公开抽签失去惊喜、人工配对又怕抽到自己或互抽；纯前端小难度：名单粘贴＋排除互抽／自抽规则＋安全随机配对＋每人独立结果查看（单设备轮流查看、不在同一屏全量展示）＋一键复制单人结果，零上传；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接；近邻辨析：已注册的「在线抽签」是随机抽决定（吃什么／抛硬币），与本工具的匿名互赠配对语义不同，不重叠）。
+
+其余 P2 留池（顺位在 Top3 之后）：Lorem Ipsum 生成器（101 轮新晋；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义）；CSS 缓动曲线生成器（101 轮新晋；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅输出 cubic-bezier()）；CRC 校验和计算器（102 轮新晋；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只检错不防篡改、CRC-16 变体须标明口径）；JSONPath 测试器（102 轮观察项晋升；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）；TOML 格式化器（102 轮观察项晋升；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：注释与原始排版可能不完全保留、不做 TOML⇄JSON 互转）；TOTP 一次性密码生成器（103 轮新晋；建议 ID totp_generator、Path /tools/totp-generator；真限制：仅调试用勿贴真实 2FA 密钥、时钟偏差致码无效）；HTTP 响应头分析器（103 轮新晋；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只分析粘贴文本不在线抓取、不做漏洞扫描结论）；JSON 字符串转义器（103 轮新晋；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：非合法 JSON 先报错、不静默输出）；RSS／Atom 订阅源生成器（104 轮新晋；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML、不发布不验证可达性）；文本信息提取器（104 轮新晋；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似、不做真实性验证）；Prettier 配置生成器（104 轮新晋；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）；词云生成器／文本定宽换行器（99 轮新晋；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Cron 表达式解析器／密码强度独立检测器／证书解码器／颜色阶梯生成器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮新记观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 103 轮及之前记录。
+
+**通用候选表增量**（第一百零四轮：User-Agent 解析器已交付划出（f8d419b 新增；ID user_agent_parser、Path /tools/user-agent-parser 已注册，开发工具品类；全量 176 Path；候选池划出）；**新晋 P2 3 个：RSS／Atom 订阅源生成器**（iotools.cloud 目录源；痛点：手写 RSS／Atom XML 规范与日期格式易错致订阅器拒读；频道表单＋条目列表→规范 XML＋复制／下载，纯前端小难度；`rss|atom feed` 零命中实锤；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML、不发布不验证可达性）、**文本信息提取器**（iotools.net 文本工具页源；痛点：长文本里抠邮箱／URL／手机号／IP 靠肉眼易漏；分组提取＋去重计数＋分类复制，纯前端小难度；`extract email/url` 零命中实锤；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似、不做真实性验证）、**Prettier 配置生成器**（iotools.cloud 目录源；痛点：配 Prettier 要翻文档确认选项名与取值；表单→.prettierrc.json／yaml／package.json 键三格式，纯前端小难度；`prettier` 零命中实锤；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）；自有实锤消解 15+ 项（dev.to／devtoolkit／geekskai／1024toolkit／JSONCraft／PayloadTools 各榜：JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳／URL 解析／HTTP 状态码／Markdown 预览／cron／时区／子网／SQL 格式化／box-shadow／border-radius css_shadow_radius_generator／DNS dns-lookup／Mermaid／.gitignore／行处理／查询串／JSON 对比）；观察项新增 5 条（ISBN／JMESPath／.npmrc／.gitattributes／文本↔二进制／YAML／XML 对比器）；中文搜索无可消化需求帖；全量 176 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| User-Agent 解析器 | 已交付划出（f8d419b 新增；ID user_agent_parser、Path /tools/user-agent-parser 已注册，开发工具品类；全量 176 Path；候选池划出） | — | 已实现 |
+| RSS／Atom 订阅源生成器 | 新晋 P2（104 轮；iotools.cloud 目录源；痛点：手写 RSS／Atom XML 规范与日期格式易错致订阅器拒读；频道表单＋条目列表→规范 XML＋复制／下载，零上传；`rss|atom feed` 零命中实锤；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML、不发布不验证可达性） | 小 | P2（104 轮新晋） |
+| 文本信息提取器 | 新晋 P2（104 轮；iotools.net 文本工具页源；痛点：长文本里抠邮箱／URL／手机号／IP 靠肉眼易漏；分组提取＋去重计数＋分类复制，零上传；`extract email/url` 零命中实锤；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似、不做真实性验证） | 小 | P2（104 轮新晋） |
+| Prettier 配置生成器 | 新晋 P2（104 轮；iotools.cloud 目录源；痛点：配 Prettier 要翻文档确认选项名与取值；表单→.prettierrc.json／yaml／package.json 键三格式，零上传；`prettier` 零命中实锤；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置） | 小 | P2（104 轮新晋） |
+| 自有实锤消解 | 不立（JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳 timestamp／URL 解析／HTTP 状态码／Markdown 预览／cron 解析 cron-parser／时区／IP 子网／SQL 格式化／box-shadow css_shadow_radius_generator／DNS dns-lookup／Mermaid／.gitignore／行处理／查询串 url_parser／JSON 对比 json_semantic_diff 均已注册） | — | 不立 |
+| 观察项 | ISBN 校验器（104 轮新记；受众窄）；JMESPath 测试器（104 轮新记；与 JSONPath 同族防并行）；.npmrc／.gitattributes 配置生成器（104 轮新记；比 Prettier 更小众）；文本↔二进制／ASCII 转换器（104 轮新记；进制转换器只做数字进制）；YAML／XML 独立对比器（104 轮新记；需 YAML 解析器 vendoring，投入大于边际价值）；Cron 表达式解析器（103 轮续留；与 cron_generator 正反两面）；密码强度／证书解码器／颜色阶梯／Slug／Meta 标签／ads.txt（100-101 轮续留） | — | 观察 |
+
+**归档说明**：本轮为 10-25 通用调研第一百零四轮——User-Agent 解析器交付闭环（f8d419b，`/tools/user-agent-parser` 已注册，开发工具品类，全量 176 Path），候选池划出；**新晋 P2 3 个**（RSS／Atom 订阅源生成器、文本信息提取器、Prettier 配置生成器：多榜验证，纯前端小难度，零命中实锤各附真限制）；15+ 项自有实锤消解（含 box-shadow 连字符 grep 易误判点与 IP 子网／时区／.gitignore 三处中文名已覆盖项）；5 条观察项新记；WPS 候选表保持冻结归档；仓库 176 注册工具全量核对无重叠（Top3 建议 ID htaccess_generator / cron_generator / secret_santa_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 f8d419b（User-Agent 解析器新增）／0797909（HMAC 生成器新增）／c7ea3a8（robots 校验器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **176**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 21:38 · 产品经理排期轮）
 
 **选定：User-Agent 解析器（user_agent_parser）** — 本轮唯一任务（新工具）：
