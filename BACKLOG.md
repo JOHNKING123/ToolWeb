@@ -1,3 +1,83 @@
+## 今日任务（2026-10-26 07:37 · 产品经理排期轮）
+
+**选定：RSS／Atom 订阅源生成器（rss_feed_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（108 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。05:38 PM 轮选 HTML／SVG→JSX 转换器时已明言：RSS／Atom 订阅源生成器仅因顺位在 HTML／SVG→JSX 转换器之后而后置、「下轮首席递进」；HTML／SVG→JSX 转换器已交付划出（c358ab4 新增，全量 180 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——文本信息提取器与 CSV 表格查看器虽同为小难度纯前端，均不插队。
+- **未选**：文本信息提取器（104 轮新晋 P2，108 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 RSS／Atom 订阅源生成器之后而后置，下轮首席递进；真限制正则近似提取、不做真实性验证、不承诺 100% 召回）；CSV 表格查看器（107 轮新晋 P2，108 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只查看／排序／筛选、不做格式转换与文件编辑，超大文件只做前端分页渲染）；Prettier 配置生成器（104 轮新晋 P2，留池顺位递进）；CSV→Markdown 表格生成器／Conventional Commit 提交信息生成器（105 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -ci 'rss_feed|text_info_extractor|csv_table_viewer|csv_viewer' tools/categories.go` = 0；`grep -n 'rss|RSS|feed' tools/categories.go` 零命中；templates／static/js／tests 三路 `rss_feed` 亦 0；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **180 Path**；`git log` 头部 c358ab4（HTML／SVG→JSX 新增）／76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）。自有近邻辨析：① 已注册的 XML 格式化器（ID xml、Path /tools/xml-formatter）是「美化已有 XML」，本工具是「从频道＋条目表单生成订阅源 XML」，语义不同，不重叠；② 已注册的 robots.txt 生成器（Path /tools/robots-txt-generator）是「爬虫规则文本」，本工具是「订阅源 XML」，语义不同，不重叠；③ 站内页脚的 /sitemap.xml 链接是本站站点地图入口，不是工具，不重叠。无可复用业务代码，仅可借鉴 HTML／SVG→JSX 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式、robots.txt 生成器的表单→实时预览→复制／Blob 下载模式。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——手写 RSS 2.0／Atom 要逐项查规范，XML 转义漏一处、日期格式（RFC 822／RFC 3339）错一位，订阅器就拒读，报错还不定位到行，表单生成恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，转义、日期换算、两种格式串联均可 node 断言；④ **受众与站内互补**——博客／播客作者是 ToolWeb 已有站长类工具（robots.txt 生成器、OG 卡片预览）的同批用户，成组发现顺畅。
+- **品类归位**：注册到「开发工具」品类（与 HTML／SVG→JSX 转换器、Cron 表达式生成器同品类，便于博客／播客开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成静态 XML 文本**——不发布、不托管、不验证订阅源可达性，页面须明示「生成后请自行把 .xml 放到你的网站可公开访问地址，再把该地址提交给订阅平台」；② **不验证链接真实存在**——只做 URL 格式提示（缺协议、含空格等），不发请求验活，不承诺订阅器一定收录；③ **日期按浏览器本地时区换算**——datetime-local 无时区，换算结果以浏览器本地时区为准，页面须明示，跨时区发布前请自查；④ **内容不做 HTML 清洗**——条目描述／内容原样进 CDATA（内含 `]]>` 时分段转义不断串），不消毒、不改写 HTML，页面须明示；⑤ **不做订阅器兼容实测**——只按 RSS 2.0／Atom 1.0 规范字面生成，不承诺特定订阅器／播客平台的解析结果。
+
+**规格**（开发轮按此执行）：
+- 频道元数据表单：标题（必填）、链接（必填，完整 URL）、描述（必填）、语言（默认 zh-CN，可改）、版权（可选）、管理邮箱（可选）、频道图片 URL（可选）；必填缺失或链接格式非法时中文提示且不输出误导性结果。
+- 条目列表：增／删／上移／下移／清空；每条字段：标题（必填）、链接（必填）、描述／内容（可选，多行）、作者（可选）、分类（可选）、发布时间（可选，datetime-local，空则不输出日期元素）、guid（可选，默认取条目链接，isPermaLink 随 guid 是否等于链接自动判定）、enclosure（播客可选三件套：音频 URL＋长度字节数＋MIME 类型，三者填其一则三者均须填齐，否则中文提示）。
+- 格式切换：RSS 2.0／Atom 1.0 二选一切换，切换后输出实时重算；RSS 2.0 输出 `<?xml version="1.0" encoding="UTF-8"?>`＋`<rss version="2.0">`＋channel＋item，pubDate 用 RFC 822（如 `Mon, 26 Oct 2026 07:37:00 +0800`），enclosure 与 guid 按规范输出；Atom 1.0 输出 `<feed xmlns="http://www.w3.org/2005/Atom">`，`<id>` 默认取频道链接、`<updated>` 取最新条目时间或当前时间，updated／published 用 RFC 3339（如 `2026-10-26T07:37:00+08:00`），条目用 `<entry>`＋`<link href>`＋`<summary>`／`<content type="html">`。
+- 转义规则：标题／链接／作者／分类等纯文本字段做 XML 转义（& → `&amp;`、< → `&lt;`、> → `&gt;`、" → `&quot;`、' → `&apos;`）；描述／内容进 CDATA，内容内含 `]]>` 时拆分为 `]]]]><![CDATA[>` 续写，不截断；属性值（href／url）同样转义，引号内不破串。
+- 输出与操作：输入变化即实时生成（无需点生成按钮）；结果一键复制；结果一键下载 .xml（RSS 模式默认 feed.xml，Atom 模式默认 atom.xml）；复制失败有明确降级提示（手动复制指引）；2 组一键示例（博客频道 3 条、播客频道 2 条带 enclosure），示例载入后可再改再生成；支持「清空频道＋条目」。
+- 相关工具互链：与 XML 格式化器（/tools/xml-formatter）互链（文案区分生成与美化：「已有 XML 要美化去格式化器」），与 robots.txt 生成器（/tools/robots-txt-generator）互链（站长工具成组），与 sitemap.xml 独立生成器不互链（仅为观察项、未交付，不硬凑）。
+- 技术路线：纯前端、无依赖（手写转义／日期换算／XML 串联，不引入 XML 库，不用 innerHTML 拼 XML）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，转义、RFC 822／RFC 3339 换算、RSS／Atom 串联、guid 判定、CDATA 分段、必填校验等纯函数均可 node 断言）。
+- 注册：ID `rss_feed_generator`、Name「RSS／Atom 订阅源生成器」、Path `/tools/rss-feed-generator`、Category 开发工具、Icon 建议 rss_feed、New: true；中英文描述＋SEO keywords（RSS生成器、Atom生成器、订阅源生成器、播客RSS、RSS feed generator、Atom feed、podcast rss）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/rss-feed-generator，相关工具互链 XML 格式化器与 robots.txt 生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `rss_feed_generator`、Path `/tools/rss-feed-generator` 注册完整（Category 开发工具），注册总数 180→181 Path。
+2. RSS 闭环：频道＋3 条示例条目生成合法 RSS 2.0（XML 声明、rss／channel／item 结构齐全）；pubDate 符合 RFC 822（英文星期／月份缩写＋四位年＋时区偏移）；enclosure 三件套齐全输出；guid 等于链接时 isPermaLink="true"，自定义 guid 时为 "false"。
+3. Atom 闭环：同批输入切 Atom 模式后输出合法 Atom 1.0（feed 命名空间、id、updated、entry／link／summary 结构齐全）；updated／published 符合 RFC 3339（含时区偏移）；频道链接与条目链接分别进 feed 级与 entry 级 link。
+4. 转义闭环：标题含 `A&B <C>` 输出 `A&amp;B &lt;C&gt;`；描述含 HTML 与 `]]>` 时 CDATA 不破串、内容不截断；属性值含 `&` 时转义后引号不破串。
+5. 校验闭环：频道标题／链接／描述任一缺失时中文提示且不输出旧结果冒充新结果；链接缺协议或含空格时中文提示；条目标题或链接缺失时定位到该条提示；enclosure 只填其一时提示三者须填齐；非法日期不输出错误日期元素。
+6. 示例与操作闭环：2 组示例一键载入后频道、条目、输出三者同步；切换 RSS／Atom 后输出实时重算；复制结果与页面输出一致；下载 .xml 内容与页面输出一致且文件名分模式默认正确；复制失败有降级提示；相关工具互链含 XML 格式化器与 robots.txt 生成器。
+7. 真限制可见：页面可见「只生成静态 XML 文本、不发布、不托管、不验证可达性」「日期按浏览器本地时区换算」「内容不做 HTML 清洗」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（XML 转义表、CDATA 分段、RFC 822 换算、RFC 3339 换算、RSS 串联、Atom 串联、guid 判定、enclosure 校验、必填校验、格式切换、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；频道表单与条目列表小屏可操作、不撑破。
+
+**预计改动文件**：
+- `templates/rss_feed_generator.html`（新增；含 SEO 面板按家族标准＋频道表单／条目列表增删移位／RSS-Atom 切换／输出 UI）
+- `static/js/rss_feed_generator.js`（新增；转义／日期换算／RSS 与 Atom 串联／guid 判定／CDATA 分段／校验逻辑；双模式导出供 node 测试）
+- `tests/rss_feed_generator.test.js`（新增；转义、CDATA、RFC 822／RFC 3339、RSS／Atom 串联、guid、enclosure、校验、切换、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID rss_feed_generator、Path /tools/rss-feed-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 c358ab4（HTML／SVG→JSX 新增）／76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **180**；Top3 候选重叠复核（rss_feed_generator／text_info_extractor／csv_table_viewer 三路零命中实锤；XML 格式化器／robots.txt 生成器／站内 sitemap.xml 语义辨析见上）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 07:36 · 通用调研第一百零八轮）
+
+**交付状态**：10-26 通用调研第一百零八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**HTML／SVG→JSX 转换器已交付闭环**（c358ab4 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **180 Path**，ID html_jsx_converter、Path /tools/html-jsx-converter 已注册，templates/html_jsx_converter.html 已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 晨轮，优先小难度纯前端。
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. HTML／JSX 交付确认：`git log` 头部 c358ab4（HTML／SVG→JSX 新增）／76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）；全量 180 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功，无报错。RSS／文本提取／CSV 表格查看器／Prettier／CSV→Markdown／Conventional Commit 复核仍未交付（`grep -ci 'rss_feed|text_info_extractor|csv_table_viewer'` = 0，组合复核唯一命中为已交付的 html_jsx_converter）。
+2. 新信号扫描：
+   - **kovacore 12 工具榜＋devtoolkit／dev.to 13 工具榜重现**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Base64、哈希、Bcrypt、UUID、时间戳、URL 解析、HTTP 状态码、CSS／JS 压缩、QR 码、调色板、Markdown 预览、批量图片缩放 → **全部自有实锤消解**（106／107 轮已核对的注册工具；批量图片缩放仍暂不立，见 105 轮）；
+   - **CSS 生成器家族四源同现（openutilitytools／ToolFlow 84 工具／DevPlaybook／dev.to 32 工具）**：CSS Box Shadow、Border Radius、clamp()、渐变、CSS→Tailwind、Grid／Flex → **全部自有实锤消解**（已注册 CSS 阴影与圆角生成器 css_shadow_radius_generator（阴影＋圆角合一）、CSS clamp 流体尺寸计算器、CSS 渐变生成器、CSS 转 Tailwind 转换器、子网计算器；`box_shadow`／`border_radius` 0 命中是因合一工具命名所致，非缺失；CSS 缓动曲线已在 101 轮留池 P2，不重复立）；
+   - **Cron 家族再现（openutilitytools 的 Crontab Explainer／Recipe Generator）** → **消解**：已注册 Cron 表达式生成器（正向生成）与 Cron 表达式解析（cron-parser，反向解析＋未来执行时间），正反向均已覆盖，不另立；
+   - **中文搜索（V2EX／希望有一个网站能…）**本轮返回均为游戏伴侣站／原型托管／AI 跳舞视频／AI 拍照等无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：HTML／SVG→JSX 转换器已交付划出（c358ab4，180 Path）；**本轮新晋 P2 0 个**（全部信号消解或落观察项）；**观察项新增 4 条**（CSR 生成器与校验器、内容安全策略 CSP 头解析器、CSS 特异性计算器、SVG→CSS 背景 data URI 转换器；定性见下）；自有实锤消解 10+ 项；全量 180 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；HTML／JSX 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，107 轮 Top3 第二、三顺位依次递进，第三顺位取留池中最新的 107 轮新晋项）：
+
+1. **RSS／Atom 订阅源生成器** — P2 留池顺位递进（104 轮新晋；108 轮复核仍未交付；107 轮 Top3 第二顺位递进为首席；痛点：给博客／播客手写 RSS 2.0／Atom XML 要逐项查规范，转义与日期格式（RFC 822／RFC 3339）一错订阅器就拒读；纯前端小难度：频道元数据表单＋条目列表增减→实时生成规范 XML＋XML 转义＋一键复制／下载 .xml，零上传；`rss_feed` 零命中实锤；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML 文本，不发布、不托管、不验证订阅源可达性）。
+2. **文本信息提取器** — P2 留池顺位递进（104 轮新晋；108 轮复核仍未交付；107 轮 Top3 第三顺位递进；痛点：从一堆聊天记录／日志／网页粘贴文本里抠邮箱／电话／链接／日期／金额要逐条肉眼找，正则手写门槛高；纯前端小难度：内置提取规则多选＋自定义正则→高亮命中＋一键复制／导出清单，零上传；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似提取、不做真实性验证、不承诺 100% 召回）。
+3. **CSV 表格查看器** — P2 留池顺位递进（107 轮新晋；108 轮复核仍未交付；留池中最新的新晋项顺位递进；痛点：粘贴／上传 CSV 即成可排序／筛选／搜索的表格，不用开 Excel、不用先转格式；纯前端小难度：粘贴／上传 CSV→表格渲染＋排序／筛选／搜索，零上传；`csv_viewer` 零命中实锤；建议 ID csv_table_viewer、Path /tools/csv-table-viewer；真限制：只查看／排序／筛选、不做格式转换与文件编辑，超大文件只做前端分页渲染）。
+
+其余 P2 留池（顺位在 Top3 之后）：Prettier 配置生成器（104 轮新晋；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）；CSV→Markdown 表格生成器（105 轮新晋；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：只生成表格文本、不解析 Excel 文件）；Conventional Commit 提交信息生成器（105 轮新晋；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本、不执行 git）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮新记观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 107 轮及之前记录。
+
+**通用候选表增量**（第一百零八轮：HTML／SVG→JSX 转换器已交付划出（c358ab4 新增；ID html_jsx_converter、Path /tools/html-jsx-converter 已注册；全量 180 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 4 条**（CSR 生成器与校验器、内容安全策略 CSP 头解析器、CSS 特异性计算器、SVG→CSS 背景转换器，定性见上）；自有实锤消解 10+ 项（CSS 阴影与圆角／clamp／渐变／转 Tailwind／子网计算器／Cron 生成器与解析器均已注册；批量图片缩放仍暂不立）；中文搜索无可消化需求帖；全量 180 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HTML／SVG→JSX 转换器 | 已交付划出（c358ab4 新增；ID html_jsx_converter、Path /tools/html-jsx-converter 已注册；全量 180 Path；候选池划出） | — | 已实现 |
+| CSR 生成器与校验器（观察项） | 不新立（108 轮；openutilitytools 单源；`csr` 0 实锤；浏览器 WebCrypto 可生成密钥对＋PKCS#10，但私钥口径敏感、受众窄（面向运维／证书申请），单源弱信号；建议 ID 占位 csr_generator、Path /tools/csr-generator） | 中 | 观察 |
+| 内容安全策略 CSP 头解析器（观察项） | 不新立（108 轮；openutilitytools 单源；`csp` 0 实锤；纯前端解析 CSP 头字符串＋标记弱指令可做，但受众窄（面向安全配置排查），单源弱信号；建议 ID 占位 csp_header_parser、Path /tools/csp-header-parser） | 小 | 观察 |
+| CSS 特异性计算器（观察项） | 不新立（108 轮；ToolFlow 单源；`css_specificity` 0 实锤；纯前端计算选择器 (a,b,c) 可做，但与已注册 CSS 家族边际重叠、单源弱信号；建议 ID 占位 css_specificity_calculator、Path /tools/css-specificity-calculator） | 小 | 观察 |
+| SVG→CSS 背景转换器（观察项） | 不新立（108 轮；dev.to 32 工具单源；`svg_to_css` 0 实锤；SVG 转 data URI 背景可做，但与已注册 SVG 压缩器／SVG 转字体同族、单源弱信号；建议 ID 占位 svg_to_css_converter、Path /tools/svg-to-css-converter） | 小 | 观察 |
+| 自有实锤消解 | 不立（CSS 阴影与圆角生成器／clamp／渐变／转 Tailwind／子网计算器／Cron 生成器与解析器均已注册；kovacore／devtoolkit／dev.to 榜单余项均为 107 轮及之前已核对的注册工具；批量图片缩放仍暂不立） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百零八轮——HTML／SVG→JSX 转换器交付闭环（c358ab4，`/tools/html-jsx-converter` 已注册，全量 180 Path），候选池划出；**新晋 P2 0 个**（CSS 生成器家族四源信号全部自有实锤消解；Cron 家族正反向均已覆盖）；观察项新增 4 条；中文搜索无可消化需求帖；仓库 180 注册工具全量核对无重叠（Top3 建议 ID rss_feed_generator / text_info_extractor / csv_table_viewer；ID＋Path＋关键词零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 c358ab4（HTML／SVG→JSX 新增）／76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **180**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 05:38 · 产品经理排期轮）
 
 **选定：HTML／SVG→JSX 转换器（html_jsx_converter）** — 本轮唯一任务（新工具）：

@@ -1,0 +1,176 @@
+{{define "rss_feed_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS／Atom 订阅源生成器 - 频道＋条目表单实时生成 RSS 2.0 / Atom 1.0，纯前端</title>
+    <meta name="description" content="免费在线 RSS 生成器与 Atom 生成器：频道元数据表单＋条目列表增删移位，实时生成 RSS 2.0 / Atom 1.0 订阅源 XML，XML 转义、CDATA 分段、RFC 822 / RFC 3339 日期换算，复制或下载 .xml；博客与播客 2 组示例，纯前端零上传。RSS feed generator & Atom feed generator: build RSS 2.0 / Atom 1.0 feeds locally, 100% client-side.">
+    <meta name="keywords" content="RSS生成器,Atom生成器,订阅源生成器,播客RSS,RSS feed generator,Atom feed,podcast rss,feed.xml,atom.xml,RSS 2.0,Atom 1.0">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/rss-feed-generator">
+    <meta property="og:title" content="RSS／Atom 订阅源生成器 - 表单实时生成 RSS 2.0 / Atom 1.0">
+    <meta property="og:description" content="频道表单＋条目列表，实时生成 RSS 2.0 / Atom 1.0 订阅源 XML：转义、CDATA、日期换算一次到位，复制或下载 .xml，文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/rss-feed-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"RSS／Atom 订阅源生成器","description":"频道元数据表单＋条目列表增删移位，实时生成 RSS 2.0 / Atom 1.0 订阅源 XML：纯文本字段 XML 转义、描述进 CDATA（含 ]]> 分段续写）、pubDate 用 RFC 822、updated／published 用 RFC 3339（按浏览器本地时区换算），复制或下载 .xml，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/rss-feed-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rf-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .rf-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .rf-warn b{display:block;margin-bottom:.2rem}
+        .rf-warn p{margin:0}
+        .rf-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .rf-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .rf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.8rem}
+        .rf-field{display:flex;flex-direction:column;gap:.3rem;font-size:.92rem;color:#374151}
+        .rf-field>span{font-size:.9rem;color:#374151}
+        .rf-input{width:100%;min-width:0;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box}
+        .rf-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        textarea.rf-input{font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.7;resize:vertical}
+        .rf-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .rf-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .rf-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .rf-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .rf-btn-sm{padding:.3rem .6rem;font-size:.82rem}
+        .rf-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem;white-space:pre-line}
+        .rf-item{border:1px solid #e5e7eb;border-radius:.7rem;padding:1rem;margin-bottom:.9rem;background:#fbfbfd}
+        .rf-item-head{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem}
+        .rf-item-head b{margin-right:auto;color:#111827}
+        .rf-item .rf-field{margin-bottom:.7rem}
+        .rf-enc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem}
+        .rf-out{width:100%;min-width:0;min-height:280px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;resize:vertical;box-sizing:border-box;background:#f9fafb;white-space:pre;overflow-x:auto}
+        .rf-scroll{overflow-x:auto}
+        .rf-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .rf-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .rf-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .rf-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .rf-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .rf-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .rf-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .rf-note b{color:#374151}
+        .rf-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        .rf-format label{font-size:.92rem;color:#374151;cursor:pointer}
+        @media (max-width:640px){
+            .rf-panel{padding:1rem}
+            .rf-item{padding:.8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>RSS／Atom 订阅源生成器</h1>
+            <p>频道表单＋条目列表，实时生成 RSS 2.0 / Atom 1.0 订阅源 XML：转义、CDATA、日期换算一次到位</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="rf-privacy">
+                <div><b>文本不出浏览器：</b>全部生成都在本机完成，本页面不发起任何网络请求、不上传任何输入（零 fetch / XHR），频道与条目内容只留在当前页面。</div>
+            </div>
+            <div class="rf-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 只生成静态 XML 文本，不发布、不托管：生成后请自行把 .xml 放到你的网站可公开访问地址，再把该地址提交给订阅平台；本工具不替你发布，也不提供托管地址。</p>
+                <p>2. 不验证订阅源可达性与链接真实存在：只做 URL 格式提示（缺协议、含空格等），不发请求验活，不承诺订阅器一定收录；链接是否真实存在请自行核对。</p>
+                <p>3. 日期按浏览器本地时区换算：发布时间（datetime-local）本身无时区，换算结果以浏览器本地时区为准；跨时区发布前请自查时区偏移是否符合预期。</p>
+                <p>4. 内容不做 HTML 清洗：条目描述／内容原样进 CDATA（内含 ]]&gt; 时分段续写不断串），不消毒、不改写 HTML；粘贴前请自行确认内容可公开。</p>
+                <p>5. 不做订阅器兼容实测：只按 RSS 2.0／Atom 1.0 规范字面生成，不承诺特定订阅器／播客平台的解析结果，发布前请在目标平台实测一次。</p>
+            </div>
+            <div class="rf-panel">
+                <h3>频道元数据（标题／链接／描述必填）</h3>
+                <div class="rf-grid">
+                    <label class="rf-field"><span>标题 *</span><input class="rf-input" id="rf-ch-title" type="text" placeholder="例如：示例博客"></label>
+                    <label class="rf-field"><span>链接 *（完整 URL）</span><input class="rf-input" id="rf-ch-link" type="url" placeholder="https://example.com"></label>
+                    <label class="rf-field"><span>语言（默认 zh-CN）</span><input class="rf-input" id="rf-ch-lang" type="text" value="zh-CN" placeholder="zh-CN"></label>
+                    <label class="rf-field"><span>版权（可选）</span><input class="rf-input" id="rf-ch-copy" type="text" placeholder="© 2026 示例博客"></label>
+                    <label class="rf-field"><span>管理邮箱（可选）</span><input class="rf-input" id="rf-ch-email" type="email" placeholder="name@example.com"></label>
+                    <label class="rf-field"><span>频道图片 URL（可选）</span><input class="rf-input" id="rf-ch-image" type="url" placeholder="https://example.com/cover.jpg"></label>
+                </div>
+                <label class="rf-field" style="margin-top:.8rem;"><span>描述 *（多行，将进 CDATA）</span><textarea class="rf-input" id="rf-ch-desc" rows="3" placeholder="频道描述，例如：每周分享开发笔记。"></textarea></label>
+                <div class="rf-row">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（载入后仍可编辑再生成）：</span>
+                    <button class="rf-btn" type="button" data-example="0">博客频道（3 条）</button>
+                    <button class="rf-btn" type="button" data-example="1">播客频道（2 条，带 enclosure）</button>
+                    <button class="rf-btn" type="button" id="rf-clear-all">清空频道＋条目</button>
+                </div>
+            </div>
+            <div class="rf-panel">
+                <h3>条目列表（每条标题／链接必填，可增删移位）</h3>
+                <div id="rf-items"></div>
+                <div class="rf-row">
+                    <button class="rf-btn rf-btn-primary" type="button" id="rf-add-item">＋ 添加条目</button>
+                    <button class="rf-btn" type="button" id="rf-clear-items">清空条目</button>
+                </div>
+                <p class="rf-hint">guid 空着默认取条目链接（isPermaLink=true）；填自定义 guid 则 isPermaLink=false。播客 enclosure 三件套（音频 URL、长度字节数、MIME 类型）填其一则须填齐，否则会中文提示且不输出。</p>
+            </div>
+            <div class="rf-panel">
+                <h3>输出格式（二选一，切换后实时重算）</h3>
+                <div class="rf-row rf-format" style="margin-top:0;">
+                    <label><input type="radio" name="rf-format" id="rf-format-rss" checked> RSS 2.0（下载默认 feed.xml，pubDate 用 RFC 822）</label>
+                    <label><input type="radio" name="rf-format" id="rf-format-atom"> Atom 1.0（下载默认 atom.xml，updated／published 用 RFC 3339）</label>
+                </div>
+            </div>
+            <div class="rf-errors" id="rf-errors"></div>
+            <div class="rf-panel">
+                <h3>生成结果（实时输出，只读）</h3>
+                <div class="rf-scroll">
+                    <textarea class="rf-out" id="rf-output" readonly wrap="off" placeholder="请填写频道信息与条目，输出将实时生成；校验未通过时这里不输出旧结果。"></textarea>
+                </div>
+                <p class="rf-hint" id="rf-meta">请填写频道信息与条目，输出将实时生成。</p>
+                <div class="rf-row">
+                    <button class="rf-btn rf-btn-primary" type="button" id="rf-copy">复制 XML</button>
+                    <button class="rf-btn" type="button" id="rf-download">下载 .xml 文件</button>
+                </div>
+                <p class="rf-hint">复制失败时会有明确降级提示，请手动选中输出框内容复制。下载文件名随格式变化：RSS 模式为 feed.xml，Atom 模式为 atom.xml；下载内容与页面输出一致。</p>
+            </div>
+            <div class="rf-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先填频道：标题、链接、描述必填，链接须以 http:// 或 https:// 开头且不含空格；语言默认 zh-CN，可改；版权、管理邮箱、频道图片 URL 可选。</li>
+                    <li>再填条目：点「添加条目」新增，每条标题与链接必填；描述、作者、分类、发布时间、guid 可选；发布时间空着则不输出日期元素。</li>
+                    <li>播客音频：enclosure 三件套（音频 URL、长度字节数、MIME 类型如 audio/mpeg）填其一则须填齐，否则会中文提示且不输出。</li>
+                    <li>转义规则：标题、链接、作者、分类等纯文本字段做 XML 转义（&amp;、&lt;、&gt;、&quot;、&apos;）；描述／内容进 CDATA，内含 ]]&gt; 时分段续写，不截断。</li>
+                    <li>日期规则：RSS 的 pubDate 用 RFC 822（如 Mon, 26 Oct 2026 07:37:00 +0800）；Atom 的 updated／published 用 RFC 3339（如 2026-10-26T07:37:00+08:00）；均按浏览器本地时区换算。</li>
+                    <li>格式切换：RSS 2.0 与 Atom 1.0 二选一，切换后输出实时重算；Atom 的 id 默认取频道链接，updated 取最新条目时间或当前时间。</li>
+                    <li>导出：点「复制 XML」或「下载 .xml 文件」；复制结果与下载内容均与页面输出一致；复制失败时按降级提示手动复制。</li>
+                    <li>示例：点「博客频道（3 条）」或「播客频道（2 条，带 enclosure）」一键载入，载入后频道、条目、输出三者同步，仍可再改再生成。</li>
+                </ol>
+            </div>
+            <div class="rf-panel">
+                <h3>常见问题</h3>
+                <dl class="rf-faq">
+                    <dt>生成后订阅器就能读到我的频道吗？</dt>
+                    <dd>不能直接读到。本工具只生成静态 XML 文本，不发布、不托管；你需要把 .xml 放到自己网站的可公开访问地址，再把该地址提交给订阅平台，平台收录情况以平台为准。</dd>
+                    <dt>链接填错了会怎样？</dt>
+                    <dd>只做格式提示：缺协议或含空格会中文提示且不输出；但本工具不发请求验活，不验证链接是否真实存在，发布前请自行点开核对。</dd>
+                    <dt>描述里的 HTML 会被清洗掉吗？</dt>
+                    <dd>不会。描述／内容原样进 CDATA，不消毒、不改写；内含 ]]&gt; 时分段续写，保证 XML 不破串、内容不截断。</dd>
+                    <dt>为什么日期有时区偏移？</dt>
+                    <dd>因为发布时间输入（datetime-local）本身无时区，本工具按浏览器本地时区换算并写出偏移；跨时区发布前请核对偏移是否符合预期。</dd>
+                    <dt>guid 和链接有什么关系？</dt>
+                    <dd>guid 空着默认取条目链接，此时 isPermaLink=true；填自定义 guid 则 isPermaLink=false；同一条目换链接后请同步检查 guid 是否仍唯一。</dd>
+                    <dt>我的频道内容会被上传吗？</dt>
+                    <dd>不会。全部生成在浏览器本地完成，零网络请求，输入只留在当前页面。</dd>
+                </dl>
+            </div>
+            <div class="rf-panel">
+                <h3>相关工具</h3>
+                <div class="rf-links">
+                    <a href="/tools/xml-formatter">XML 格式化器（已有 XML 要美化去这里）</a>
+                    <a href="/tools/robots-txt-generator">robots.txt 生成器（站长工具成组）</a>
+                </div>
+            </div>
+            <div class="rf-note">
+                <b>实现说明：</b>XML 转义、CDATA 分段、RFC 822／RFC 3339 换算、RSS／Atom 串联、guid 判定与校验均为纯函数（手写串联，不用 innerHTML 拼 XML，浏览器与 node 测试共用同一文件）；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="rf-toast" id="rf-toast"></div>
+    <script src="/tools/static/js/rss_feed_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

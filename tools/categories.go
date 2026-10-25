@@ -552,6 +552,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "rss_feed_generator",
+					Name:        "RSS／Atom 订阅源生成器",
+					Description: "免费在线 RSS 生成器与 Atom 生成器：频道元数据表单＋条目列表增删移位，实时生成 RSS 2.0 / Atom 1.0 订阅源 XML，纯文本字段 XML 转义、描述进 CDATA（含 ]]> 分段续写）、pubDate 用 RFC 822、updated／published 用 RFC 3339（按浏览器本地时区换算），博客与播客 2 组示例，复制或下载 .xml；只生成静态 XML 文本，不发布、不托管、不验证可达性，纯前端零上传 · RSS feed generator & Atom feed generator: build RSS 2.0 / Atom 1.0 feeds locally, 100% client-side",
+					Path:        "/tools/rss-feed-generator",
+					Icon:        "rss_feed",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
