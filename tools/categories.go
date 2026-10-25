@@ -481,6 +481,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "wcag_contrast_checker",
+					Name:        "WCAG 颜色对比度检查器",
+					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",
+					Path:        "/tools/wcag-contrast-checker",
+					Icon:        "contrast",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "unit_calc_notepad",
 					Name:        "单位感知记事本计算器",
 					Description: "记事本式逐行算式＋单位感知：长度/重量/体积/时间/温度（℃↔℉）/货币单位自动换算，加减归一化到首单位；行间变量、百分比、sum(a1..a3) 范围汇总，行内即时结果＋底部分组求和/平均/最大/最小/计数，非法行标红不中断，自写解析零 eval，纯前端零上传 · Unit-aware notepad calculator: line-by-line expressions with unit conversion, variables, range summary and inline results, 100% client-side",

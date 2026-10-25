@@ -1,3 +1,84 @@
+## 今日任务（2026-10-25 13:40 · 产品经理排期轮）
+
+**选定：WCAG 颜色对比度检查器（wcag_contrast_checker）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（99 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。11:38 PM 轮选了 CSS 阴影与圆角时已明言：WCAG 仅因顺位在 CSS 之后而后置、「下轮首席递进」；CSS 已交付划出（354674c，171 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——99 轮新晋的 robots.txt 校验与测试器虽同为小难度，亦不插队。
+- **未选**：Bcrypt 生成与验证器（97 轮新晋 P2，99 轮 Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在 WCAG 之后而后置，下轮首席递进；真限制仅测试／演示／迁移校验，生产哈希应在服务端做，勿贴真实生产口令）；robots.txt 校验与测试器（99 轮新晋 P2，99 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制 robots.txt 只是君子协定非访问控制、Google 规范近似解析、CORS 下粘贴模式为主）；HMAC 生成器（97 轮新晋 P2，留池顺位递进；真限制仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋 P2，留池顺位递进；真限制 UA 可伪造、仅供参考）；词云生成器／文本定宽换行器（99 轮新晋 P2，留池顺位递进；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋 P2，留池顺位递进）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）；ads.txt 校验器（99 轮观察项，受众窄、sellers.json 交叉校验需联网，暂不晋 P2）。
+- **PM 零重叠实测复核**：`grep -c 'wcag_contrast|bcrypt_generator|robots_txt_validator' tools/categories.go` = 0；templates/ 与 static/js/ 无 wcag／bcrypt 文件；`grep -c 'robots_txt' tools/categories.go` = 1，仅 robots_txt_generator（拼装生成）一行，无 validator／tester 语义；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **171 Path**；`git log` 头部 354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）／5a90cc4（信封新增）。自有近邻辨析：color_palette_generator 每色仅附白底／黑底对比度与 AA 标识，是调色板方案的附带标注，不是「任意前景／背景对」的检查器；css_gradient_generator 只做渐变色标，不做对比度判定；三者语义均不重叠。仅双色输入＋实时预览＋一键复制的家族交互模式可借鉴，无可复用代码。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——相对亮度公式与四档判定全部本地计算，零上传零 fetch，契合 ToolWeb 纯前端离线标准；② **痛点明确且可验证**——凭感觉选色事后被无障碍审查打回，手工算相对亮度公式繁琐易错，数值与判定逐项可断言；③ **天然可测**——黑白 21.00、同色 1.00、#767676／#777777 白底 AA 边界对均可 node 断言；④ **无硬伤**——WCAG 2.x 口径、不承诺 APCA 属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「开发工具」品类（与 CSS 渐变生成器、CSS 阴影与圆角生成器、配色方案生成器同品类、便于发现；非图片处理语义，不归图片品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径**——页面首屏明示；② **判定只针对所输颜色对**——不保证整站无障碍合规，页面明示；③ **大号字按 WCAG 定义**——≥18pt 或 14pt 加粗，页面明示换算口径，不含糊称「大字」；④ **修正建议只调前景色明暗**——改动后需复核品牌色，页面明示建议色仅供参考；⑤ **文本不出浏览器**——全部计算本地完成，零 fetch／XHR，隐私文案页面可见；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/wcag-contrast-checker）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：前景色与背景色双取色器＋ HEX／RGB 文本输入（支持 #RGB、#RRGGBB、rgb() 三种写法，文本与取色器双向同步）＋前景／背景「互换」按钮＋正常／大号字切换（默认正常）；非法颜色输入明确报错、不静默回退旧值；任一输入变化即实时更新预览、数值与判定。
+- 计算（纯函数，双模式导出供 node 测试）：输入为 {前景色, 背景色}，输出为 {相对亮度 L1/L2、对比度、AA 正常／AA 大号／AAA 正常／AAA 大号四档判定}；相对亮度按 WCAG 2.x：sRGB 通道归一化后 ≤0.03928 除以 12.92、否则 ((c＋0.055)/1.055)^2.4，系数 0.2126／0.7152／0.0722；对比度＝(较亮亮度＋0.05)/(较暗亮度＋0.05)，显示保留两位小数；判定阈值 AA 正常 ≥4.5、AA 大号 ≥3.0、AAA 正常 ≥7.0、AAA 大号 ≥4.5；互换前景／背景后比值不变。
+- 实时预览：预览区含样例文本（大标题＋正文段落＋按钮示例）以所选颜色对渲染；四档判定以通过／未通过徽章分档展示，不只给一个总分；预览背景与页面背景区分，避免所选背景色与页面底色混淆。
+- 修正建议：任一档未达标时，给出调亮／调暗前景色的最近达标色——沿 HSL 明度方向以 1% 步进双向搜索，取步数较少者，输出建议 HEX 与达标后比值；默认目标档为 AA 正常，用户切到 AAA 时建议目标随之切换；建议色一键采纳回填前景色，采纳后判定即时刷新。
+- 预设色对一键载入（至少 4 组，可再编辑）：① 黑字白底（满分示例）；② #767676 白底（AA 正常过线示例）；③ #777777 白底（AA 正常未过线＋修正建议演示）；④ 品牌蓝 #1A73E8 白底（AA 正常过线、AAA 未过线示例）。示例文案注明「请按需改写」。
+- 输出与导出：对比度数值与四档判定「一键复制」结果摘要（文本含两色 HEX、比值、四档判定）；「重置」一键回到默认黑字白底正常字；复制失败有明确降级提示。
+- 注册：ID `wcag_contrast_checker`、Name「WCAG 颜色对比度检查器」、Path `/tools/wcag-contrast-checker`、Category 开发工具、Icon 建议 contrast、New: true；中英文描述＋SEO keywords（WCAG、颜色对比度、对比度检查、无障碍、AA、AAA、contrast ratio、color contrast checker）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链配色方案生成器、CSS 渐变生成器与 CSS 阴影与圆角生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `wcag_contrast_checker`、Path `/tools/wcag-contrast-checker` 注册完整（Category 开发工具），注册总数 171→172 Path。
+2. 计算闭环：黑／白比值 21.00、同色比值 1.00、#767676 白底 4.54 通过 AA 正常但不通过 AAA 正常、#777777 白底 4.48 不通过 AA 正常、#595959 白底 7.00 通过 AAA 正常；互换前景／背景后比值不变。
+3. 输入闭环：HEX 文本、RGB 文本、取色器三路双向同步；非法输入明确报错且不静默改值；正常／大号字切换后 AA／AAA 阈值按定义切换（同一颜色对在大号字下判定可变）。
+4. 预览与判定闭环：任一输入变化，样例文本颜色、四档徽章、比值同步变化；预览背景与页面底色可区分。
+5. 修正建议闭环：#777777 白底未达标时给出建议色，建议色与白底比值 ≥4.5（AA 正常目标下），且为双向搜索中步数较少者；建议色一键采纳后前景色与判定即时刷新。
+6. 预设与导出：4 组预设一键载入后预览与数值均有内容、且载入后可编辑再预览；复制结果摘要可用（失败有降级提示）；「请按需改写」提示可见。
+7. 真限制可见：页面可见「按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径」「判定只针对所输颜色对」「大号字 ≥18pt 或 14pt 加粗」「修正建议只调前景色明暗」「文本不出浏览器」文案；零 fetch／XHR（源码自检无外部请求）。
+8. node 测试 40+ 断言全过（相对亮度线性化、黑白／同色／边界色对比值、四档阈值、互换不变性、HEX／RGB 解析与非法输入、修正建议达标性与方向选择、预设静态检查、空值默认）。
+9. 页面无报错；移动端布局不错位；样例文本与判定徽章小屏可读、不撑破。
+
+**预计改动文件**：
+- `templates/wcag_contrast_checker.html`（新增；含 SEO 面板按家族标准＋双色输入／互换／字号切换／样例预览／四档判定／修正建议 UI）
+- `static/js/wcag_contrast_checker.js`（新增；相对亮度／对比度／四档判定／修正建议搜索＋预览渲染＋复制；双模式导出供 node 测试）
+- `tests/wcag_contrast_checker.test.js`（新增；线性化、对比值、阈值、互换不变性、解析与非法输入、修正建议、预设静态检查）
+- `tools/categories.go`（开发工具品类注册：ID wcag_contrast_checker、Path /tools/wcag-contrast-checker、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）／5a90cc4（信封新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **171**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 color_palette_generator／css_gradient_generator 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 13:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。CSS 阴影与圆角生成器已交付闭环（354674c 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **171 Path**，ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:36 下午轮，优先小难度纯前端。
+**本轮三件事**（13:36 全网调研，通用方向）：
+1. CSS 阴影与圆角交付确认：`git log` 头部 354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）／5a90cc4（信封新增）；全量 171 Path；templates/css_shadow_radius_generator.html 与 static/js/css_shadow_radius_generator.js 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（照例先报 Host key verification failed，带 StrictHostKeyChecking=no 后补录 github.com 主机密钥、fetch 正常）。WCAG 对比度／Bcrypt／HMAC／User-Agent／骨架屏／ULID／NanoID／.env 复核仍未交付（`grep -c 'wcag_contrast|bcrypt' tools/categories.go` = 0；`grep -c 'css_shadow_radius'` 已命中即本轮交付项）。
+2. 新信号扫描：
+   - **PulseTools「3 个纯浏览器工具」＋SERP／robots 多榜**：SERP 预览 → **自有实锤消解**（templates/serp_snippet_preview.html 已存在，ID serp_snippet_preview）；Schema.org JSON-LD 生成器 → **自有实锤消解**（templates/schema_org_generator.html 已存在，ID schema_org_generator）；robots.txt 生成器 → **自有但语义不同**（ID robots_txt_generator 已注册，仅做「拼装生成」，不做「校验＋URL 匹配测试」）；
+   - **robots.txt 校验与测试器（BigToolSite／clxon／Meev／Growtika／SE Ranking 多榜验证）** → `grep -c 'robots_txt'` = 1 仅生成器一行，无 validator／tester 语义 → **新晋 P2「robots.txt 校验与测试器」**（痛点：一行写错的 Disallow 就可能把整站挡在搜索引擎与 AI 爬虫之外，生成器只管拼、不能验，站长只能凭肉眼或等 Search Console 报错；纯前端小难度：粘贴现有 robots.txt→逐行语法校验（缺 User-agent 组、无冒号、路径缺前导 /、Sitemap 非 URL、未知指令告警）＋按组解析＋URL 允许／禁止测试（最长匹配规则）＋AI 爬虫矩阵（GPTBot／ClaudeBot／PerplexityBot／Google-Extended／Googlebot／Bingbot 各自放行与否）＋修正后文件一键复制／下载，零上传；与 robots_txt_generator（拼装生成）语义互补不重叠；建议 ID robots_txt_validator、Path /tools/robots-txt-validator；真限制：robots.txt 只是爬虫君子协定、不等于访问控制；解析按 Google 规范近似实现，不承诺与每个爬虫逐字一致；在线拉取目标站 robots.txt 可能被 CORS 拦截，粘贴模式为主）；
+   - **词云生成器（NexaTools 48 文本工具榜／WordCloud+／inventivehq／Quillbot 多源验证）** → `grep -c 'word_cloud|wordcloud'` = **0 实锤** → **新晋 P2「词云生成器」**（痛点：读一堆开放式问卷／用户反馈／讲稿想一眼看出主题，只能逐段读或另装 Python 词云库；纯前端小-中难度：粘贴文本→词频统计＋停用词过滤（中英常用停用词表）＋Canvas 词云渲染（字号按词频缩放、配色主题）＋词频表＋PNG 导出，零上传；建议 ID word_cloud_generator、Path /tools/word-cloud-generator；真限制：英文／空格分词文本效果最好，中文无空格分词、仅按字／词典切分近似处理，须明示中文词云为近似结果、不承诺专业分词精度；词云是主题速览不是精确统计）；
+   - **文本定宽换行器（textify／i2TEXT／3schools／infyways 多源验证）** → `grep -c 'text_wrap|wrap_text'` = **0 实锤** → **新晋 P2「文本定宽换行器」**（痛点：纯文本邮件／终端／代码注释要求每行固定宽度，手工断行费时且换行位置不统一；纯前端小难度：粘贴文本＋宽度滑杆（10–500，预设 40／50／72／80／100）＋保词边界／超长词截断开关＋保留段落开关→逐行输出＋行长统计＋一键复制／下载 .txt，零上传；与 text_tools（综合文本处理包）语义不同、单功能可独立成项；建议 ID text_wrapper、Path /tools/text-wrapper；真限制：按字符数而非显示像素宽度换行，含宽字符（中文／emoji）时视觉列宽与字符数不一致，页面明示以字符计）；
+   - **ads.txt 校验器（Clickio／AdsTxt Inspector／Google Ad Manager 文档验证）** → `grep -c 'ads' tools/categories.go` = 0，但受众仅限有程序化广告收入的站长、且 sellers.json 交叉校验需联网 → **观察项不晋 P2**（语义可立：粘贴 ads.txt→行格式校验（字段数／DIRECT／RESELLER／认证机构 ID）＋重复行告警；待站长类需求信号再出现时再晋升）；
+   - **中文搜索（V2EX／希望有一个网站能…）**：本轮返回均为应用／方法论内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：CSS 阴影与圆角生成器已交付划出（354674c，171 Path）；**新晋 P2 3 个**（robots.txt 校验与测试器、词云生成器、文本定宽换行器：均为多源验证、零命中实锤、纯前端小／小-中难度）；自有实锤消解 2 项（SERP 预览、Schema.org 生成器）＋语义辨析 1 项（robots 生成器≠校验器）；观察项 1 条（ads.txt 校验器）；不立若干（AI 文本生成器、AI 爬虫基础设施、平台型重服务）；全量 171 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 交付闭环后按顺位递进；下午轮优先小难度纯前端）：
+
+1. **WCAG 颜色对比度检查器** — P2 留池顺位递进（96 轮新晋；99 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；Uwarp／MyToolster 双榜验证；痛点：凭感觉选色事后才发现正文对比度不达标、无障碍审查被打回，手工算相对亮度公式繁琐易错；纯前端小难度：双色取色器＋HEX/RGB 输入→实时预览样例文本＋对比度数值＋AA/AAA（正常/大号字）判定＋调亮/调暗修正建议，零上传；零命中实锤；建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker；真限制：按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）。
+2. **Bcrypt 生成与验证器** — P2 留池顺位递进（97 轮新晋；99 轮复核仍未交付；Kovacore／dev.to 双榜验证；痛点：给测试数据库/演示账号造 bcrypt 哈希、或验证已有哈希与口令是否匹配，要装脚本或把口令贴到可疑在线站；纯前端小-中难度：vendor 化 bcryptjs（MIT）本地生成 $2b$ 哈希＋验证＋成本因子滑杆（4–15）＋耗时展示＋哈希结构拆解（版本/成本/盐），零上传；零命中实锤；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅供测试/演示/迁移校验，生产口令哈希应在服务端做，页面明示勿贴真实生产口令）。
+3. **robots.txt 校验与测试器** — P2 本轮新晋（99 轮；BigToolSite／clxon／Meev／Growtika 多榜验证；痛点：一行写错的 Disallow 就可能把整站挡在搜索引擎与 AI 爬虫之外，现有 robots_txt_generator 只管拼装生成、不能校验已有文件；纯前端小难度：粘贴 robots.txt→语法校验＋分组解析＋URL 允许／禁止测试＋AI 爬虫放行矩阵＋修正文件导出，零上传；生成器语义外零命中实锤；建议 ID robots_txt_validator、Path /tools/robots-txt-validator；真限制：robots.txt 只是爬虫君子协定、不等于访问控制；解析按 Google 规范近似实现，不承诺与每个爬虫逐字一致；在线拉取可能被 CORS 拦截，粘贴模式为主）。
+
+其余 P2 留池（顺位在 Top3 之后）：HMAC 生成器（97 轮新晋；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）；词云生成器（99 轮新晋；建议 ID word_cloud_generator、Path /tools/word-cloud-generator；真限制：中文分词为近似处理）；文本定宽换行器（99 轮新晋；建议 ID text_wrapper、Path /tools/text-wrapper；真限制：按字符数换行、非显示像素宽度）；骨架屏加载占位生成器（98 轮新晋；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：按预设拼装占位结构，不自动还原真实页面布局）；ULID／NanoID 生成器（98 轮新晋；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：毫秒精度、不承诺单调递增）；.env 解析与校验器（98 轮新晋；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅语法层校验、不校验变量语义，勿贴真实生产密钥）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ads.txt 校验器（99 轮观察项；受众窄、sellers.json 交叉校验需联网，暂不晋 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 98 轮及之前记录。
+
+**通用候选表增量**（第九十九轮：CSS 阴影与圆角生成器已交付划出（354674c 新增；ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator 已注册，开发工具品类；全量 171 Path；候选池划出）；**新晋 P2 3 个：robots.txt 校验与测试器**（BigToolSite／clxon／Meev／Growtika 多榜验证；痛点：一行写错的 Disallow 挡整站于搜索引擎与 AI 爬虫之外，生成器只管拼不能验；粘贴 robots.txt→语法校验＋分组解析＋URL 允许／禁止测试＋AI 爬虫放行矩阵＋修正文件导出，纯前端小难度；生成器外 `validator|tester` 语义零命中实锤；建议 ID robots_txt_validator、Path /tools/robots-txt-validator；真限制：君子协定非访问控制、Google 规范近似解析、CORS 下粘贴模式为主）、**词云生成器**（NexaTools／WordCloud+／inventivehq／Quillbot 多源验证；痛点：问卷／反馈／讲稿主题只能逐段读或另装词云库；词频统计＋停用词过滤＋Canvas 渲染＋词频表＋PNG 导出，纯前端小-中难度；`word_cloud|wordcloud` 零命中实锤；建议 ID word_cloud_generator、Path /tools/word-cloud-generator；真限制：中文分词近似、词云是速览非精确统计）、**文本定宽换行器**（textify／i2TEXT／3schools／infyways 多源验证；痛点：纯文本邮件／终端／代码注释要求固定行宽、手工断行不统一；宽度滑杆＋保词边界／超长词截断＋保留段落→逐行输出＋行长统计，纯前端小难度；`text_wrap|wrap_text` 零命中实锤；建议 ID text_wrapper、Path /tools/text-wrapper；真限制：按字符数换行非显示像素宽度）；自有实锤消解 2 项（SERP 预览 serp_snippet_preview、Schema.org 生成器 schema_org_generator）；观察项 1 条（ads.txt 校验器：受众窄、sellers.json 交叉校验需联网）；不立若干（AI 文本生成器、AI 爬虫基础设施、平台型重服务）；中文搜索无可消化需求帖；全量 171 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 阴影与圆角生成器 | 已交付划出（354674c 新增；ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator 已注册，开发工具品类；全量 171 Path；候选池划出） | — | 已实现 |
+| robots.txt 校验与测试器 | 新晋 P2（99 轮；BigToolSite／clxon／Meev／Growtika 多榜验证；痛点：一行写错的 Disallow 挡整站于搜索引擎与 AI 爬虫之外，生成器只管拼不能验；粘贴 robots.txt→语法校验＋分组解析＋URL 允许／禁止测试＋AI 爬虫放行矩阵＋修正文件导出，零上传；生成器外 validator／tester 语义零命中实锤；建议 ID robots_txt_validator、Path /tools/robots-txt-validator；真限制：君子协定非访问控制、Google 规范近似解析、CORS 下粘贴模式为主） | 小 | P2（99 轮新晋） |
+| 词云生成器 | 新晋 P2（99 轮；NexaTools／WordCloud+／inventivehq／Quillbot 多源验证；痛点：问卷／反馈／讲稿主题只能逐段读或另装词云库；词频统计＋停用词过滤＋Canvas 渲染＋词频表＋PNG 导出，零上传；`word_cloud|wordcloud` 零命中实锤；建议 ID word_cloud_generator、Path /tools/word-cloud-generator；真限制：中文分词近似、词云是速览非精确统计） | 小-中 | P2（99 轮新晋） |
+| 文本定宽换行器 | 新晋 P2（99 轮；textify／i2TEXT／3schools／infyways 多源验证；痛点：纯文本邮件／终端／代码注释要求固定行宽、手工断行不统一；宽度滑杆＋保词边界／超长词截断＋保留段落→逐行输出＋行长统计，零上传；`text_wrap|wrap_text` 零命中实锤；建议 ID text_wrapper、Path /tools/text-wrapper；真限制：按字符数换行非显示像素宽度） | 小 | P2（99 轮新晋） |
+| 自有实锤消解 | 不立（SERP 预览 serp_snippet_preview、Schema.org 生成器 schema_org_generator 已注册；robots 生成器与校验器语义互补、已辨析不重叠） | — | 不立 |
+| 观察项 | ads.txt 校验器（99 轮；受众仅限有程序化广告收入的站长、sellers.json 交叉校验需联网，暂不晋 P2） | — | 观察 |
+
+**归档说明**：本轮为 10-25 通用调研第九十九轮——CSS 阴影与圆角生成器交付闭环（354674c，`/tools/css-shadow-radius-generator` 已注册，开发工具品类，全量 171 Path），候选池划出；**新晋 P2 3 个**（robots.txt 校验与测试器、词云生成器、文本定宽换行器：多源验证，纯前端小／小-中难度，零命中实锤各附真限制）；2 项自有实锤消解；1 条观察项；若干 AI／平台型类不立；WPS 候选表保持冻结归档；仓库 171 注册工具全量核对无重叠（Top3 建议 ID wcag_contrast_checker / bcrypt_generator / robots_txt_validator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）／5a90cc4（信封新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **171**；`git fetch` 本轮成功（裸 fetch 先报 Host key verification failed，带 GIT_SSH_COMMAND＋StrictHostKeyChecking=no 后补录主机密钥、fetch 正常）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮又出现（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 11:38 · 产品经理排期轮）
 
 **选定：CSS 阴影与圆角生成器（css_shadow_radius_generator）** — 本轮唯一任务（新工具）：

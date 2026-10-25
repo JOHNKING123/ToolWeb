@@ -1,0 +1,209 @@
+{{define "wcag_contrast_checker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCAG 颜色对比度检查器 - 前景/背景对比度与 AA/AAA 判定在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 WCAG 颜色对比度检查器：前景/背景双取色器与 HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标给出最近达标前景色建议。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="WCAG,颜色对比度,对比度检查,无障碍,AA,AAA,contrast ratio,color contrast checker,相对亮度,大号字">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/wcag-contrast-checker">
+    <meta property="og:title" content="WCAG 颜色对比度检查器 - 对比度与 AA/AAA 判定">
+    <meta property="og:description" content="双色输入实时算 WCAG 对比度，四档 AA/AAA 判定，样例文本预览，未达标给出最近达标色建议。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/wcag-contrast-checker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"WCAG 颜色对比度检查器","description":"免费在线 WCAG 颜色对比度检查器：按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA 四档判定，样例文本预览与修正建议，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/wcag-contrast-checker","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .wcc-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .wcc-wrap .navbar .material-icons { display: none; }
+        .wcc-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .wcc-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .wcc-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .wcc-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .wcc-row label { font-size:.92rem; color:#374151; min-width:4.5em; }
+        .wcc-row input[type=color] { width:44px; height:34px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .wcc-row input[type=text] { flex:1; min-width:130px; max-width:220px; padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .wcc-error { color:#dc2626; font-size:.88rem; min-height:1.2em; margin:.2rem 0 .4rem; }
+        .wcc-check { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:#374151; cursor:pointer; }
+        .wcc-stage-wrap { background:#e5e7eb; border:1px solid #d1d5db; border-radius:.7rem; padding:1rem; overflow-x:auto; }
+        .wcc-preview { min-width:280px; border-radius:.5rem; padding:1.2rem 1.4rem; border:1px solid rgba(0,0,0,.15); }
+        .wcc-preview h2 { margin:0 0 .6rem; font-size:1.6rem; line-height:1.3; }
+        .wcc-preview p { margin:0 0 .9rem; font-size:1rem; line-height:1.7; }
+        .wcc-preview button { padding:.5rem 1.1rem; border-radius:.5rem; border:1px solid; cursor:pointer; font-size:.95rem; }
+        .wcc-ratio { font-size:2rem; font-weight:700; color:#111827; }
+        .wcc-badge { display:inline-block; padding:.25rem .7rem; border-radius:999px; font-size:.88rem; font-weight:600; }
+        .wcc-pass { background:#dcfce7; color:#166534; }
+        .wcc-fail { background:#fee2e2; color:#991b1b; }
+        .wcc-badges { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:.7rem; }
+        .wcc-badge-row { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .9rem; font-size:.92rem; color:#374151; }
+        .wcc-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .wcc-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .wcc-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .wcc-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .wcc-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .wcc-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .wcc-tip a { color:var(--primary-color); }
+        .wcc-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .wcc-links a { color:var(--primary-color); font-size:.93rem; }
+        .wcc-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        .wcc-select { padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; background:#fff; }
+        @media (max-width:640px) {
+            .wcc-preview h2 { font-size:1.3rem; }
+            .wcc-ratio { font-size:1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="wcc-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>◐ WCAG 颜色对比度检查器</h1>
+            <p>前景/背景双色输入，实时算 WCAG 对比度，四档 AA/AAA 判定，样例文本即时预览</p>
+        </div>
+        <div class="tool-content" id="wcc-form">
+            <div class="wcc-card">
+                <h3>颜色输入 <span class="wcc-hint">（取色器、HEX 文本、RGB 文本三路双向同步；非法输入会明确报错，不静默改值）</span></h3>
+                <div class="wcc-row">
+                    <label>前景色</label>
+                    <input type="color" id="wcc-fg-picker" value="#000000">
+                    <input type="text" id="wcc-fg-hex" value="#000000" placeholder="#RRGGBB 或 #RGB">
+                    <input type="text" id="wcc-fg-rgb" value="rgb(0, 0, 0)" placeholder="rgb(r, g, b)">
+                </div>
+                <p class="wcc-error" id="wcc-fg-error"></p>
+                <div class="wcc-row">
+                    <label>背景色</label>
+                    <input type="color" id="wcc-bg-picker" value="#FFFFFF">
+                    <input type="text" id="wcc-bg-hex" value="#FFFFFF" placeholder="#RRGGBB 或 #RGB">
+                    <input type="text" id="wcc-bg-rgb" value="rgb(255, 255, 255)" placeholder="rgb(r, g, b)">
+                </div>
+                <p class="wcc-error" id="wcc-bg-error"></p>
+                <div class="wcc-row">
+                    <button class="btn btn-secondary" id="wcc-swap" type="button">⇄ 互换前景 / 背景</button>
+                    <span class="wcc-hint">互换后对比度比值不变。</span>
+                </div>
+            </div>
+
+            <div class="wcc-card">
+                <h3>字号与建议目标</h3>
+                <div class="wcc-row">
+                    <label class="wcc-check"><input type="radio" name="wcc-size" id="wcc-size-normal" checked> 正常字</label>
+                    <label class="wcc-check"><input type="radio" name="wcc-size" id="wcc-size-large"> 大号字（≥18pt 或 14pt 加粗）</label>
+                </div>
+                <div class="wcc-row">
+                    <label>修正建议目标档</label>
+                    <select class="wcc-select" id="wcc-target">
+                        <option value="aaNormal" selected>AA 正常（≥4.5）</option>
+                        <option value="aaLarge">AA 大号（≥3.0）</option>
+                        <option value="aaaNormal">AAA 正常（≥7.0）</option>
+                        <option value="aaaLarge">AAA 大号（≥4.5）</option>
+                    </select>
+                    <span class="wcc-hint">默认目标 AA 正常；切到 AAA 时建议目标随之切换。</span>
+                </div>
+                <p class="wcc-tip" id="wcc-primary" style="margin:.4rem 0 0;"></p>
+            </div>
+
+            <div class="wcc-card">
+                <h3>实时预览 <span class="wcc-hint">（外层浅灰底为页面底色，内层为所选背景色，两者可区分）</span></h3>
+                <div class="wcc-stage-wrap">
+                    <div class="wcc-preview" id="wcc-preview">
+                        <h2 id="wcc-preview-title">大标题样例：对比度够吗？</h2>
+                        <p id="wcc-preview-body">这是一段正文样例。好的对比度让长文在各种屏幕与光线下都可读；凭感觉选色，事后常被无障碍审查打回。</p>
+                        <button id="wcc-preview-btn" type="button">按钮示例</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wcc-card">
+                <h3>对比度与判定</h3>
+                <div class="wcc-row">
+                    <span class="wcc-ratio" id="wcc-ratio">21.00:1</span>
+                    <span class="wcc-hint" id="wcc-lums"></span>
+                </div>
+                <div class="wcc-badges">
+                    <div class="wcc-badge-row">AA 正常（≥4.5） <span class="wcc-badge" id="wcc-badge-aa-normal"></span></div>
+                    <div class="wcc-badge-row">AA 大号（≥3.0） <span class="wcc-badge" id="wcc-badge-aa-large"></span></div>
+                    <div class="wcc-badge-row">AAA 正常（≥7.0） <span class="wcc-badge" id="wcc-badge-aaa-normal"></span></div>
+                    <div class="wcc-badge-row">AAA 大号（≥4.5） <span class="wcc-badge" id="wcc-badge-aaa-large"></span></div>
+                </div>
+            </div>
+
+            <div class="wcc-card">
+                <h3>修正建议 <span class="wcc-hint">（只调前景色明暗，沿 HSL 明度 1% 步进双向搜索最近达标色）</span></h3>
+                <p class="wcc-tip" id="wcc-suggestion"></p>
+            </div>
+
+            <div class="wcc-card">
+                <h3>常用预设 <span class="wcc-hint">（点击载入，载入后仍可编辑再预览；预设仅为示例起点，请按需改写）</span></h3>
+                <div class="wcc-presets">
+                    <button class="wcc-preset" id="wcc-preset-0" type="button">黑字白底<br><span class="wcc-hint">满分示例 21.00</span></button>
+                    <button class="wcc-preset" id="wcc-preset-1" type="button">#767676 白底<br><span class="wcc-hint">AA 正常过线 4.54</span></button>
+                    <button class="wcc-preset" id="wcc-preset-2" type="button">#777777 白底<br><span class="wcc-hint">AA 正常未过线 4.48</span></button>
+                    <button class="wcc-preset" id="wcc-preset-3" type="button">品牌蓝 #1A73E8 白底<br><span class="wcc-hint">AA 过线、AAA 未过线</span></button>
+                </div>
+            </div>
+
+            <div class="wcc-card">
+                <h3>结果摘要</h3>
+                <div class="wcc-code" id="wcc-summary"></div>
+                <div class="wcc-actions">
+                    <button class="btn btn-primary" id="wcc-copy" type="button">📋 一键复制结果摘要</button>
+                    <button class="btn btn-secondary" id="wcc-reset" type="button">↺ 重置</button>
+                </div>
+                <p class="wcc-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中摘要内容复制。</p>
+            </div>
+
+            <div class="wcc-card">
+                <h3>使用说明</h3>
+                <ol class="wcc-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>取色器、HEX 文本、RGB 文本任一路改动都会同步另两路并实时重算；非法颜色会明确报错，不静默改值。</li>
+                    <li>点「互换前景 / 背景」交换两色，对比度比值不变。</li>
+                    <li>正常字与大号字切换后，主判定阈值按 WCAG 定义切换：大号字为 ≥18pt 或 14pt 加粗。</li>
+                    <li>目标档未达标时，修正建议沿 HSL 明度 1% 步进双向搜索最近达标前景色，点「一键采纳」回填前景色并刷新判定。</li>
+                    <li>点预设一键载入，载入后仍可改任意输入，预览与判定实时重算；预设仅为示例起点，请按需改写。</li>
+                    <li>点「一键复制结果摘要」把两色 HEX、比值与四档判定复制为文本。</li>
+                </ol>
+            </div>
+
+            <div class="wcc-card">
+                <h3>常见问题</h3>
+                <dl class="wcc-tip">
+                    <dt><b>对比度是怎么算的？</b></dt>
+                    <dd>按 WCAG 2.x 相对亮度公式：sRGB 通道归一化后 ≤0.03928 除以 12.92，否则 ((c＋0.055)/1.055)^2.4，系数 0.2126 / 0.7152 / 0.0722；对比度＝(较亮亮度＋0.05)/(较暗亮度＋0.05)，显示保留两位小数。</dd>
+                    <dt><b>大号字到底多大？</b></dt>
+                    <dd>按 WCAG 定义：≥18pt，或 14pt 加粗；低于此的都按正常字判定。</dd>
+                    <dt><b>修正建议为什么只调前景色？</b></dt>
+                    <dd>建议只调前景色明暗（色相、饱和度不变），改动后请复核品牌色；背景色不动，需要时请手动改背景色再验。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="wcc-card">
+                <h3>相关工具</h3>
+                <div class="wcc-links">
+                    <a href="/tools/color-palette-generator">配色方案生成器</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器</a>
+                </div>
+            </div>
+
+            <div class="wcc-card">
+                <h3>真限制说明</h3>
+                <div class="wcc-tip">
+                    <b>按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径</b>，APCA 结果可能不同；<b>判定只针对所输颜色对</b>，不保证整站无障碍合规；<b>大号字 ≥18pt 或 14pt 加粗</b>，按此口径换算，不含糊称「大字」；<b>修正建议只调前景色明暗</b>，建议色仅供参考，改动后需复核品牌色；<b>文本不出浏览器</b>，本页面零 fetch / XHR，全部计算本地完成。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="wcc-toast" id="wcc-toast"></div>
+    <script src="/tools/static/js/wcag_contrast_checker.js?v=1"></script>
+</body>
+</html>
+{{end}}
