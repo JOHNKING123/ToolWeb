@@ -1,0 +1,236 @@
+{{define "css_shadow_radius_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 阴影与圆角生成器 - box-shadow/border-radius 在线可视化生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 阴影与圆角生成器：滑杆调 box-shadow 水平/垂直偏移、模糊、扩散、颜色、透明度与 inset 内阴影，四角滑杆调 border-radius，支持联动/独立与椭圆斜杠语法，实时预览，一键复制 CSS 或下载 shadow-radius.css。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS阴影,box-shadow,border-radius,圆角生成器,阴影生成器,CSS generator,盒子阴影,椭圆圆角,inset内阴影">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-shadow-radius-generator">
+    <meta property="og:title" content="CSS 阴影与圆角生成器 - box-shadow/border-radius 在线可视化生成">
+    <meta property="og:description" content="滑杆调阴影四参数与四角圆角，支持 inset 与椭圆斜杠语法，实时预览，一键复制 CSS。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-shadow-radius-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 阴影与圆角生成器","description":"免费在线 CSS 阴影与圆角生成器：滑杆调 box-shadow 与 border-radius，支持 inset 内阴影、联动/独立四角与椭圆斜杠语法，实时预览，一键复制 CSS，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-shadow-radius-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .csr-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .csr-wrap .navbar .material-icons { display: none; }
+        .csr-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .csr-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .csr-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .csr-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .csr-row label { font-size:.92rem; color:#374151; min-width:4.5em; }
+        .csr-row input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        .csr-val { display:inline-block; min-width:4.5em; font-weight:600; color:var(--primary-color); font-size:.92rem; }
+        .csr-row input[type=color] { width:44px; height:34px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .csr-check { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:#374151; cursor:pointer; }
+        .csr-stage-wrap { overflow-x:auto; padding:2.5rem 1rem; border-radius:.7rem; border:1px solid #e5e7eb; }
+        .csr-stage { min-width:320px; display:flex; justify-content:center; }
+        .csr-box { width:240px; height:160px; display:flex; align-items:center; justify-content:center; color:#374151; font-size:.95rem; background:#fff; flex-shrink:0; }
+        .csr-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .csr-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .csr-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .csr-btn:hover { background:#f3f4f6; }
+        .csr-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .csr-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .csr-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .csr-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .csr-tip a { color:var(--primary-color); }
+        .csr-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .csr-links a { color:var(--primary-color); font-size:.93rem; }
+        .csr-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .csr-box { width:200px; height:140px; }
+            .csr-stage-wrap { padding:2rem .5rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="csr-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🌑 CSS 阴影与圆角生成器</h1>
+            <p>滑杆调 box-shadow 与 border-radius，实时预览，一键复制 CSS 代码</p>
+        </div>
+        <div class="tool-content" id="csr-form">
+            <div class="csr-card">
+                <h3>阴影参数 <span class="csr-hint">（任一输入变化，预览与代码实时同步）</span></h3>
+                <div class="csr-row">
+                    <label>水平偏移</label>
+                    <input type="range" id="csr-ox" min="-100" max="100" step="1" value="0">
+                    <span class="csr-val" id="csr-ox-val">0px</span>
+                    <label>垂直偏移</label>
+                    <input type="range" id="csr-oy" min="-100" max="100" step="1" value="8">
+                    <span class="csr-val" id="csr-oy-val">8px</span>
+                </div>
+                <div class="csr-row">
+                    <label>模糊半径</label>
+                    <input type="range" id="csr-blur" min="0" max="100" step="1" value="24">
+                    <span class="csr-val" id="csr-blur-val">24px</span>
+                    <label>扩散半径</label>
+                    <input type="range" id="csr-spread" min="-50" max="100" step="1" value="0">
+                    <span class="csr-val" id="csr-spread-val">0px</span>
+                </div>
+                <div class="csr-row">
+                    <label>阴影颜色</label>
+                    <input type="color" id="csr-color" value="#000000">
+                    <label>透明度</label>
+                    <input type="range" id="csr-opacity" min="0" max="100" step="1" value="15">
+                    <span class="csr-val" id="csr-opacity-val">15%</span>
+                    <label class="csr-check"><input type="checkbox" id="csr-inset"> inset 内阴影</label>
+                </div>
+            </div>
+
+            <div class="csr-card">
+                <h3>圆角参数</h3>
+                <div class="csr-row">
+                    <label class="csr-check"><input type="radio" name="csr-mode" id="csr-linked" checked> 联动（一个滑杆改四角）</label>
+                    <label class="csr-check"><input type="radio" name="csr-mode" id="csr-independent"> 独立（四角分别调）</label>
+                    <label class="csr-check"><input type="checkbox" id="csr-ellipse"> 椭圆模式（每角另有垂直半径，输出斜杠语法）</label>
+                </div>
+                <div class="csr-row">
+                    <label>联动圆角</label>
+                    <input type="range" id="csr-h-all" min="0" max="150" step="1" value="12">
+                    <span class="csr-val" id="csr-h-all-val">12px</span>
+                    <label>联动垂直</label>
+                    <input type="range" id="csr-v-all" min="0" max="150" step="1" value="12">
+                    <span class="csr-val" id="csr-v-all-val">12px</span>
+                </div>
+                <div id="csr-radius-independent" style="display:none;">
+                    <div class="csr-row">
+                        <label>左上</label>
+                        <input type="range" id="csr-h-tl" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-h-tl-val">12px</span>
+                        <label>右上</label>
+                        <input type="range" id="csr-h-tr" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-h-tr-val">12px</span>
+                    </div>
+                    <div class="csr-row">
+                        <label>右下</label>
+                        <input type="range" id="csr-h-br" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-h-br-val">12px</span>
+                        <label>左下</label>
+                        <input type="range" id="csr-h-bl" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-h-bl-val">12px</span>
+                    </div>
+                </div>
+                <div id="csr-radius-vertical" style="display:none;">
+                    <div class="csr-row">
+                        <label>垂直左上</label>
+                        <input type="range" id="csr-v-tl" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-v-tl-val">12px</span>
+                        <label>垂直右上</label>
+                        <input type="range" id="csr-v-tr" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-v-tr-val">12px</span>
+                    </div>
+                    <div class="csr-row">
+                        <label>垂直右下</label>
+                        <input type="range" id="csr-v-br" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-v-br-val">12px</span>
+                        <label>垂直左下</label>
+                        <input type="range" id="csr-v-bl" min="0" max="150" step="1" value="12">
+                        <span class="csr-val" id="csr-v-bl-val">12px</span>
+                    </div>
+                </div>
+                <div class="csr-row">
+                    <label>预览盒背景</label>
+                    <input type="color" id="csr-box-bg" value="#ffffff">
+                    <label>页面背景</label>
+                    <input type="color" id="csr-page-bg" value="#f3f4f6">
+                </div>
+            </div>
+
+            <div class="csr-card">
+                <h3>实时预览</h3>
+                <div class="csr-stage-wrap" id="csr-preview-stage">
+                    <div class="csr-stage">
+                        <div class="csr-box" id="csr-preview-box">预览盒</div>
+                    </div>
+                </div>
+                <p class="csr-hint" style="margin-top:.6rem;">预览盒尺寸固定（不随滑杆缩放）；大圆角 / 大扩散时预览区可横向滚动，不会撑破页面。</p>
+            </div>
+
+            <div class="csr-card">
+                <h3>CSS 代码输出</h3>
+                <div class="csr-code" id="csr-code-shadow"></div>
+                <div class="csr-actions">
+                    <button class="btn btn-primary" id="csr-copy-shadow" type="button">📋 复制 box-shadow</button>
+                </div>
+                <div class="csr-code" id="csr-code-radius"></div>
+                <div class="csr-actions">
+                    <button class="btn btn-primary" id="csr-copy-radius" type="button">📋 复制 border-radius</button>
+                </div>
+                <div class="csr-code" id="csr-code-all"></div>
+                <div class="csr-actions">
+                    <button class="btn btn-primary" id="csr-copy-all" type="button">📋 合并复制</button>
+                    <button class="btn btn-secondary" id="csr-download" type="button">⬇ 下载 shadow-radius.css</button>
+                    <button class="btn btn-secondary" id="csr-reset" type="button">↺ 重置</button>
+                </div>
+                <p class="csr-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="csr-card">
+                <h3>常用预设 <span class="csr-hint">（点击载入，载入后仍可编辑再预览；预设仅为示例起点，请按需改写）</span></h3>
+                <div class="csr-presets">
+                    <button class="csr-preset" id="csr-preset-0" type="button">柔和卡片</button>
+                    <button class="csr-preset" id="csr-preset-1" type="button">悬浮抬升</button>
+                    <button class="csr-preset" id="csr-preset-2" type="button">内阴影凹陷</button>
+                    <button class="csr-preset" id="csr-preset-3" type="button">不等圆角椭圆</button>
+                </div>
+            </div>
+
+            <div class="csr-card">
+                <h3>使用说明</h3>
+                <ol class="csr-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>拖阴影四根滑杆调偏移、模糊与扩散，取色器选颜色、透明度滑杆调不透明度，勾选 inset 切换内阴影。</li>
+                    <li>圆角默认联动：一根滑杆改四角；切独立后四角分别调，输出按左上→右上→右下→左下顺时针四值。</li>
+                    <li>勾选椭圆模式后每角另有垂直半径：水平与垂直不等时输出「水平四值 / 垂直四值」斜杠语法，相等时不写斜杠。</li>
+                    <li>点预设一键载入，载入后仍可改任意输入，预览与代码实时重算；预设仅为示例起点，请按需改写。</li>
+                    <li>各自复制、合并复制或下载 shadow-radius.css，把代码粘贴到样式表即用。</li>
+                </ol>
+            </div>
+
+            <div class="csr-card">
+                <h3>常见问题</h3>
+                <dl class="csr-tip">
+                    <dt><b>box-shadow 的四个长度值分别是什么？</b></dt>
+                    <dd>依次是水平偏移、垂直偏移、模糊半径、扩散半径；偏移可为负（阴影向反方向），扩散可为负（阴影收缩）；为 0 时也完整输出，不省略。</dd>
+                    <dt><b>椭圆圆角的斜杠语法怎么读？</b></dt>
+                    <dd>斜杠前是四个角的水平半径，斜杠后是四个角的垂直半径；水平与垂直相等时只写一组值，不写斜杠。</dd>
+                    <dt><b>inset 内阴影和外阴影能同时用吗？</b></dt>
+                    <dd>本工具一次只生成一条阴影；需要内外叠加时可把两条 box-shadow 用逗号拼在一起，本工具输出的单条可直接作为其中一条。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="csr-card">
+                <h3>相关工具</h3>
+                <div class="csr-links">
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/css-to-tailwind">CSS 转 Tailwind 转换器</a>
+                    <a href="/tools/color-palette-generator">配色方案生成器</a>
+                </div>
+            </div>
+
+            <div class="csr-card">
+                <h3>真限制说明</h3>
+                <div class="csr-tip">
+                    <b>预览以当前浏览器渲染为准</b>，不承诺与所有浏览器像素级一致；<b>仅生成静态 CSS，不做动画</b>，不产 transition / @keyframes；<b>颜色只出 rgba() 形式</b>，不出 hex8 / hsla；<b>不做浏览器前缀补全</b>，现代浏览器 box-shadow / border-radius 无需前缀；<b>文本不出浏览器</b>，本页面零 fetch / XHR，全部计算本地完成。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="csr-toast" id="csr-toast"></div>
+    <script src="/tools/static/js/css_shadow_radius_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

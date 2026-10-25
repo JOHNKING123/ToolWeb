@@ -1,3 +1,80 @@
+## 今日任务（2026-10-25 11:38 · 产品经理排期轮）
+
+**选定：CSS 阴影与圆角生成器（css_shadow_radius_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（98 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。09:38 PM 轮选了信封打印助手时已明言：CSS 阴影与圆角仅因顺位在信封之后而后置、「下轮首席递进」；信封已交付划出（fc29aa0 预览修复，170 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过。
+- **未选**：WCAG 颜色对比度检查器（96 轮新晋 P2，98 轮 Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在 CSS 之后而后置，下轮首席递进；真限制按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）；Bcrypt 生成与验证器（97 轮新晋 P2，98 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制仅测试／演示／迁移校验，生产哈希应在服务端做）；HMAC 生成器（97 轮新晋 P2，留池顺位递进；真限制仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋 P2，留池顺位递进；真限制 UA 可伪造、仅供参考）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋 P2，留池顺位递进）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'css_shadow\|wcag_contrast\|bcrypt' tools/categories.go` = 0；templates/ 与 static/js/ 无 css_shadow／wcag／bcrypt 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **170 Path**；`git log` 头部 fc29aa0（信封预览修复）／5a90cc4（信封新增）／01fdae8（HTML→Markdown 新增）。自有近邻辨析：css_gradient_generator 只做渐变（linear／radial／conic 色标），不产 box-shadow／border-radius；css_to_tailwind 是 CSS→Tailwind 声明映射转换器（输入已有 CSS），非滑杆生成器；css_clamp_calculator 只算 clamp() 字号；color_palette_generator 描述中的 WCAG 标注仅为调色板每色附白底／黑底对比度，与「任意前景／背景对」的检查器语义不同（WCAG 工具另行留池）。仅滑杆＋实时预览＋一键复制的家族交互模式可借鉴，无可复用代码。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——滑杆数值→CSS 字符串→预览盒全部本地计算，零上传零 fetch，契合 ToolWeb 纯前端离线标准；② **痛点明确且可验证**——四角不等圆角与椭圆双值语法手写易错，阴影四参数反复改数刷新，输出字符串逐项可断言；③ **天然可测**——box-shadow 拼接、border-radius 四角／椭圆斜杠语法、rgba 合成、预设值、联动／独立模式均可 node 断言；④ **无硬伤**——预览以当前浏览器渲染为准属可明示的真限制，不构成跳过理由。
+- **品类归位**：注册到「开发工具」品类（与 CSS 渐变生成器、CSS→Tailwind、CSS clamp 计算器同品类、便于发现；非图片处理语义，不归图片品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **预览以当前浏览器渲染为准**——页面首屏明示，不承诺与所有浏览器像素级一致；② **仅生成静态 CSS，不做动画**——不产 transition／@keyframes，页面明示；③ **颜色只出 rgba() 形式**——透明度滑杆与颜色合成 rgba，不出 hex8／hsla，避免口径歧义；④ **不做浏览器前缀补全**——现代浏览器 box-shadow／border-radius 无需前缀，不产 -webkit- 冗余；⑤ **文本不出浏览器**——全部计算本地完成，零 fetch／XHR，隐私文案页面可见；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/css-shadow-radius-generator）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：阴影四滑杆（水平偏移 −100–100px、垂直偏移 −100–100px、模糊 0–100px、扩散 −50–100px，步进 1px）＋颜色取色器＋透明度滑杆（0–100%）＋内阴影 inset 开关；圆角四角滑杆（左上／右上／右下／左下，0–150px，步进 1px）＋联动／独立切换（联动时一杆改四角）＋椭圆模式开关（开启后每角另有垂直半径滑杆，输出斜杠语法）；预览盒背景色与页面背景色两取色器；任一输入变化即实时更新预览与代码。
+- 代码生成（纯函数，双模式导出供 node 测试）：输入为 {阴影参数, 圆角参数}，输出为 {boxShadow, borderRadius, cssText}；box-shadow 形如 `box-shadow: [inset ]Xpx Ypx Blpx Spx rgba(r, g, b, a);`（inset 在前、偏移可为负、透明度合成 rgba 小数两位内）；border-radius 联动／四角相等时出单值，`TL TR BR BL` 四值按顺时针输出，椭圆模式且任一角水平≠垂直时出 `水平四值 / 垂直四值` 斜杠语法，水平＝垂直时不写斜杠；偏移／模糊／扩散为 0 时仍按完整四值输出，不省略（保证复制即用、测试可锁定）。
+- 预设一键载入（至少 4 组，可再编辑）：① 柔和卡片（小模糊外阴影＋8px 圆角）；② 悬浮抬升（大模糊＋低透明度）；③ 内阴影凹陷（inset＋圆角 16px）；④ 不等圆角椭圆（四角不等＋椭圆斜杠示例）。示例文案注明「请按需改写」。
+- 实时预览：预览区含阴影盒（应用当前 box-shadow＋border-radius＋背景色）与代码区并排／上下布局；预览盒尺寸固定可视（不随滑杆缩放）；移动端预览不撑破、可横向滚动；复制失败有明确降级提示。
+- 输出与导出：box-shadow 与 border-radius 各自「一键复制」＋合并 CSS 代码块「一键复制」与「下载 .css」（文件名为 `shadow-radius.css`）；「重置」一键回到默认参数。
+- 注册：ID `css_shadow_radius_generator`、Name「CSS 阴影与圆角生成器」、Path `/tools/css-shadow-radius-generator`、Category 开发工具、Icon 建议 blur_on、New: true；中英文描述＋SEO keywords（CSS阴影、box-shadow、border-radius、圆角生成器、阴影生成器、CSS generator、盒子阴影）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 CSS 渐变生成器、CSS→Tailwind 与配色方案生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_shadow_radius_generator`、Path `/tools/css-shadow-radius-generator` 注册完整（Category 开发工具），注册总数 170→171 Path。
+2. 阴影闭环：四滑杆＋颜色＋透明度＋inset 任一变化，预览盒阴影与代码字符串同步变化；rgba 合成小数两位内；inset 在前；负偏移正确输出。
+3. 圆角闭环：联动模式一杆改四角出单值；独立模式四角不等按顺时针四值输出；椭圆模式水平≠垂直时出斜杠语法、相等时不写斜杠。
+4. 预设与导出：4 组预设一键载入后预览与代码均有内容、且载入后可编辑再预览；各自复制＋合并复制＋下载 .css 可用（失败有降级提示），下载文件名为 shadow-radius.css；「请按需改写」提示可见。
+5. 真限制可见：页面可见「预览以当前浏览器渲染为准」「仅生成静态 CSS，不做动画」「颜色只出 rgba()」「不做浏览器前缀补全」「文本不出浏览器」文案；零 fetch／XHR（源码自检无外部请求）。
+6. node 测试 40+ 断言全过（box-shadow 拼接、inset 位置、rgba 合成、border-radius 单值／四值／斜杠、联动／独立模式、预设静态检查、空值默认）。
+7. 页面无报错；移动端布局不错位；大圆角与大扩散小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/css_shadow_radius_generator.html`（新增；含 SEO 面板按家族标准＋阴影滑杆／圆角滑杆／预设／预览／代码 UI）
+- `static/js/css_shadow_radius_generator.js`（新增；box-shadow／border-radius 生成＋预览渲染＋复制／下载；双模式导出供 node 测试）
+- `tests/css_shadow_radius_generator.test.js`（新增；阴影拼接、inset、rgba、圆角单值／四值／斜杠、联动／独立、预设静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 fc29aa0（信封预览修复）／5a90cc4（信封新增）／01fdae8（HTML→Markdown 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **170**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 css_gradient_generator／css_to_tailwind／css_clamp_calculator／color_palette_generator 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 11:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。信封打印助手已交付闭环（5a90cc4 新增＋fc29aa0 预览塌陷修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **170 Path**，ID envelope_printer、Path /tools/envelope-printer 已注册，生活工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:36 上午轮，优先小难度纯前端。
+**本轮三件事**（11:36 全网调研，通用方向）：
+1. 信封交付确认：`git log` 头部 fc29aa0（信封预览修复）／5a90cc4（信封新增）／01fdae8（HTML→Markdown 新增）；全量 170 Path；templates/envelope_printer.html 与 static/js/envelope_printer.js 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功——裸 fetch 先报 Host key verification failed（VM 换机丢 known_hosts 老问题，见 TOOLS.md），带 StrictHostKeyChecking=no 后自动补录 github.com 主机密钥、fetch 正常；工作树干净（此前多轮记录的未跟踪 toolWeb.bak-prev 与 toolweb ELF 构建产物已不在，疑为后续轮次清理）。CSS 阴影与圆角／WCAG 对比度／Bcrypt／HMAC／User-Agent／摩斯码／滚动字幕／色盲模拟／MP3 标签／应用商店截图复核仍未交付（`grep -c 'envelope_printer|css_shadow|wcag_contrast|bcrypt|hmac|user_agent|morse|scrolling_text'` = 1，仅 envelope_printer 一行命中；`grep -c 'color_blind|mp3_tag|app_store_screenshot'` = 0）。
+2. 新信号扫描：
+   - **dev.to 13 浏览器工具榜（2026）＋FastMinify 165+ 工具榜**：JSON Schema 验证器／代码压缩器（JS/CSS）／图片批量缩放器／子网计算器／favicon 生成器／SVG 压缩器 → **全部自有实锤消解**（json_schema_validator、code_minifier、bulk_image_resizer、subnet、favicon_generator、svg_compressor 均已注册；code_minifier 描述已含 JS/CSS 双引擎与压缩率统计，CSS/JS Minifier 不单独立项）；
+   - **骨架屏加载占位生成器（CSSPortal Skeleton Loader Generator／jQueryScript 2026 骨架屏榜／dev.to「I wish」骨架屏需求帖三重验证）** → `grep -c 'skeleton'` = **0 实锤** → **新晋 P2「骨架屏加载占位生成器」**（痛点：给异步页面手写骨架屏要逐个量宽高、调闪光动画与圆角，复制的 CSS 片段还常与主题色脱节；纯前端小难度：卡片／动态／个人资料／文章四类预设＋闪光／脉冲两种动画＋底色／高光色／圆角／速度滑杆→实时预览＋自包含 HTML+CSS 一键复制，零上传；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：生成的是占位静态结构，不读取真实页面布局，须明示按预设拼装而非自动还原页面）；
+   - **ULID／NanoID 生成器（FastMinify 榜 UUID/ULID/Nanoid 族验证）** → `grep -c 'ulid|nanoid'` = **0 实锤** → **新晋 P2「ULID／NanoID 生成器」**（痛点：分布式场景要时间可排序或短链接友好的 ID，现有 uuid 生成器只给 v1/v4，开发者只好另装库或贴到在线站；纯前端小难度：零依赖手写 ULID（Crockford base32＋毫秒时间戳）与 NanoID（URL 安全字母表＋长度可调）双生成器＋批量生成＋前缀选项＋一键复制，零上传；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：ULID 时间戳精度为毫秒级，不承诺单调递增去重，批量同毫秒内须明示随机部分保障唯一性边界）；
+   - **.env 解析与校验器（FastMinify validate 族＋.env 日常痛点验证）** → `grep -c 'dotenv|env_parser'` = **0 实锤** → **新晋 P2「.env 解析与校验器」**（痛点：.env 配错（重复键、空值、含空格未加引号、行内注释被当成值）导致服务起不来，只能逐行肉眼排查；纯前端小难度：粘贴 .env→键值表格＋JSON 导出＋逐行告警（重复键／空值／未加引号含空格／引号不闭合／行内注释歧义），零上传；与 prompt_sanitizer（仅对 .env 做脱敏、不解析结构）语义不同；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅做语法层校验，不校验键值语义与目标服务是否认该变量，页面明示勿贴真实生产密钥）；
+   - **中文搜索（希望有一个网站能…／电商免费工具／表单工具）**：表单搭建、聚合打单、店铺数据分析均为平台型重服务（需账号／后端／平台授权），**不立**；其余结果为方法论与营销内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：信封打印助手已交付划出（5a90cc4＋fc29aa0，170 Path）；**新晋 P2 3 个**（骨架屏加载占位生成器、ULID／NanoID 生成器、.env 解析与校验器：均为多榜验证、零命中实锤、纯前端小难度）；自有实锤消解 6 项（JSON Schema 验证器、代码压缩器、图片批量缩放器、子网计算器、favicon 生成器、SVG 压缩器）；不立若干（平台型表单／打单／数据分析、重型／AI／后端类）；全量 170 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；信封交付闭环后按顺位递进；上午轮优先小难度纯前端）：
+
+1. **CSS 阴影与圆角生成器** — P2 留池顺位递进（95 轮新晋；98 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；DevPlaybook／101 工具榜 CSS generators 族验证；痛点：手写阴影数值要反复改数刷新看效果，四角不等圆角语法更易写错；纯前端小难度：滑杆调偏移／模糊／扩散／颜色／透明度＋四角圆角（支持椭圆双值）→实时预览＋box-shadow／border-radius 代码一键复制，零上传；零命中实锤；建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator；真限制：预览以当前浏览器渲染为准，不承诺与所有浏览器像素级一致）。
+2. **WCAG 颜色对比度检查器** — P2 留池顺位递进（96 轮新晋；98 轮复核仍未交付；Uwarp／MyToolster 双榜验证；痛点：凭感觉选色事后才发现正文对比度不达标、无障碍审查被打回，手工算相对亮度公式繁琐易错；纯前端小难度：双色取色器＋HEX/RGB 输入→实时预览样例文本＋对比度数值＋AA/AAA（正常/大号字）判定＋调亮/调暗修正建议，零上传；零命中实锤；建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker；真限制：按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）。
+3. **Bcrypt 生成与验证器** — P2 留池顺位递进（97 轮新晋；98 轮复核仍未交付；Kovacore／dev.to 双榜验证；痛点：给测试数据库/演示账号造 bcrypt 哈希、或验证已有哈希与口令是否匹配，要装脚本或把口令贴到可疑在线站；纯前端小-中难度：vendor 化 bcryptjs（MIT）本地生成 $2b$ 哈希＋验证＋成本因子滑杆（4–15）＋耗时展示＋哈希结构拆解（版本/成本/盐），零上传；零命中实锤；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅供测试/演示/迁移校验，生产口令哈希应在服务端做，页面明示勿贴真实生产口令）。
+
+其余 P2 留池（顺位在 Top3 之后）：HMAC 生成器（97 轮新晋；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）；骨架屏加载占位生成器（98 轮新晋；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：按预设拼装占位结构，不自动还原真实页面布局）；ULID／NanoID 生成器（98 轮新晋；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：毫秒精度、不承诺单调递增）；.env 解析与校验器（98 轮新晋；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅语法层校验、不校验变量语义，勿贴真实生产密钥）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；应用商店截图生成器（87 轮补强晋升）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 97 轮及之前记录。
+
+**通用候选表增量**（第九十八轮：信封打印助手已交付划出（5a90cc4 新增＋fc29aa0 修复；ID envelope_printer、Path /tools/envelope-printer 已注册，生活工具品类；全量 170 Path；候选池划出）；**新晋 P2 3 个：骨架屏加载占位生成器**（CSSPortal／jQueryScript 2026 榜／dev.to 需求帖三重验证；skeleton 零命中实锤；四类预设＋闪光／脉冲动画＋颜色／圆角／速度→实时预览＋HTML+CSS 导出，纯前端小难度；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：按预设拼装、不自动还原页面）、**ULID／NanoID 生成器**（FastMinify 榜验证；ulid/nanoid 零命中实锤；uuid 仅 v1/v4；零依赖双生成器＋批量＋前缀，纯前端小难度；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：毫秒精度、不承诺单调递增）、**.env 解析与校验器**（FastMinify validate 族验证；dotenv/env_parser 零命中实锤；.env→键值表＋JSON 导出＋逐行告警，纯前端小难度；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅语法层校验、勿贴真实生产密钥）；自有实锤消解 6 项（JSON Schema 验证器、代码压缩器 JS/CSS、图片批量缩放器、子网计算器、favicon 生成器、SVG 压缩器）；不立若干（平台型表单／打单／数据分析、重型／AI／后端类）；中文搜索无可消化需求帖；全量 170 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 信封打印助手 | 已交付划出（5a90cc4 新增＋fc29aa0 修复；ID envelope_printer、Path /tools/envelope-printer 已注册，生活工具品类；全量 170 Path；候选池划出） | — | 已实现 |
+| 骨架屏加载占位生成器 | 新晋 P2（98 轮；CSSPortal／jQueryScript 2026 榜／dev.to 需求帖三重验证；痛点：手写骨架屏逐个量宽高、调闪光动画与圆角，复制的 CSS 还常与主题色脱节；卡片／动态／个人资料／文章预设＋闪光／脉冲动画＋颜色／圆角／速度→实时预览＋自包含 HTML+CSS 一键复制，零上传；`skeleton` 零命中实锤；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：按预设拼装占位结构，不自动还原真实页面布局） | 小 | P2（98 轮新晋） |
+| ULID／NanoID 生成器 | 新晋 P2（98 轮；FastMinify 榜验证；痛点：分布式场景要时间可排序或短链接友好的 ID，现有 uuid 生成器只给 v1/v4；零依赖 ULID（Crockford base32＋毫秒时间戳）与 NanoID（URL 安全字母表＋长度可调）双生成器＋批量＋前缀，零上传；`ulid\|nanoid` 零命中实锤；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：毫秒精度、不承诺单调递增） | 小 | P2（98 轮新晋） |
+| .env 解析与校验器 | 新晋 P2（98 轮；FastMinify validate 族验证；痛点：.env 配错（重复键、空值、含空格未加引号、行内注释歧义）导致服务起不来，只能逐行肉眼排查；.env→键值表格＋JSON 导出＋逐行告警（重复键／空值／未加引号含空格／引号不闭合），零上传；与 prompt_sanitizer（仅脱敏不解析）语义不同；`dotenv\|env_parser` 零命中实锤；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅语法层校验、不校验变量语义，勿贴真实生产密钥） | 小 | P2（98 轮新晋） |
+| 自有实锤消解 | 不立（JSON Schema 验证器、代码压缩器 JS/CSS、图片批量缩放器、子网计算器、favicon 生成器、SVG 压缩器均已注册；CSS/JS Minifier 归入代码压缩器语义） | — | 不立 |
+| 不立 | 平台型重服务（表单搭建、聚合打单、店铺数据分析：需账号／后端／平台授权）；重型／AI／后端类 | — | 不立 |
+
+**归档说明**：本轮为 10-25 通用调研第九十八轮——信封打印助手交付闭环（5a90cc4＋fc29aa0，`/tools/envelope-printer` 已注册，生活工具品类，全量 170 Path），候选池划出；**新晋 P2 3 个**（骨架屏加载占位生成器、ULID／NanoID 生成器、.env 解析与校验器：多榜验证，纯前端小难度，零命中实锤各附真限制）；6 项自有实锤消解；若干平台型／重型类不立；WPS 候选表保持冻结归档；仓库 170 注册工具全量核对无重叠（Top3 建议 ID css_shadow_radius_generator / wcag_contrast_checker / bcrypt_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 fc29aa0（信封预览修复）／5a90cc4（信封新增）／01fdae8（HTML→Markdown 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **170**；`git fetch` 本轮成功（裸 fetch 先报 Host key verification failed，带 GIT_SSH_COMMAND＋StrictHostKeyChecking=no 后补录主机密钥、fetch 正常）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；工作树干净；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 09:38 · 产品经理排期轮）
 
 **选定：信封打印助手（envelope_printer）** — 本轮唯一任务（新工具）：
