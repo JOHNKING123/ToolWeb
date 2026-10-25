@@ -1173,6 +1173,15 @@ func GetCategories() []Category {
 					Category:    "实用工具",
 				},
 				{
+					ID:          "secret_santa_generator",
+					Name:        "匿名抽签生成器",
+					Description: "免费在线匿名抽签生成器：名单粘贴导入（每行一人，支持姓名-备注，自动去空去重计数、重名阻止生成）、错位排列＋禁自抽＋禁互抽（默认开）＋自定义排除对生成 N 人互赠配对、crypto.getRandomValues 安全随机拒绝采样（到上限无解明确报错并给松绑建议，不静默放宽）；生成后默认不展示全量配对表，只给计数校验报告，轮流点选一人一次只显示单条结果，切人自动遮罩，单人结果一键复制；结果与名单仅内存会话，不写 localStorage/sessionStorage/URL 参数，刷新即失，纯前端零上传 · Secret Santa generator: derangement pairing with no-self/no-mutual/exclusion constraints, private one-by-one reveal, 100% client-side",
+					Path:        "/tools/secret-santa-generator",
+					Icon:        "card_giftcard",
+					New:         true,
+					Category:    "实用工具",
+				},
+				{
 					ID:          "white_noise_generator",
 					Name:        "白噪音发生器",
 					Description: "免费在线白噪音发生器：WebAudio 本地合成白/粉/棕噪声（Voss-McCartney、积分滤波）＋雨声/雷声/风声环境声滤波混音，每层独立开关与音量滑杆（增益求和防削波）；预设一键切换（专注工作/深度睡眠/雨夜/自定义），混音配置 localStorage 持久化刷新自动恢复；睡眠定时器（15/30/60/90/自定义分钟）到期前 10 秒淡出自动停止，零音频文件、零 fetch/XHR、可离线播放 · White noise generator: brown/pink/white noise + rain/thunder/wind synthesized locally with WebAudio, per-layer volume, presets, sleep timer, 100% client-side",

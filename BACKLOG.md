@@ -1,3 +1,86 @@
+## 今日任务（2026-10-26 03:38 · 产品经理排期轮）
+
+**选定：匿名抽签生成器（secret_santa_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（106 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。01:37 PM 轮选 Cron 生成器时已明言：匿名抽签仅因顺位在 Cron 生成器之后而后置、「下轮首席递进」；Cron 生成器已交付划出（94d266f 新增，178 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——105 轮新晋的 HTML／SVG→JSX 转换器虽同为小难度纯前端，均不插队。
+- **未选**：HTML／SVG→JSX 转换器（105 轮新晋 P2，106 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在匿名抽签之后而后置，下轮首席递进；真限制只做词法级转换、不做 JSX 语义校验、不承诺自定义属性全覆盖）；RSS／Atom 订阅源生成器（104 轮新晋 P2，106 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只生成静态 XML 文本、不发布、不托管、不验证订阅源可达性）；文本信息提取器／Prettier 配置生成器（104 轮新晋 P2，留池顺位递进）；CSV→Markdown 表格生成器／Conventional Commit 提交信息生成器（105 轮新晋 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -ci 'secret_santa|html_jsx|rss_feed' tools/categories.go` = 0；templates／static/js 亦零命中；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **178 Path**；`git log` 头部 94d266f（Cron 生成器新增）／b8fb578（.htaccess 防盗链守卫修复）／b3b0370（.htaccess 新增）。自有近邻辨析：① 已注册的年会大屏抽奖（ID annual_lottery、Path /tools/annual-lottery）是「公开抽奖、中奖公示、全屏大屏」，本工具是「保密配对、单人轮流查看、默认不公示」，语义正相反，不重叠；② 已注册的随机决策器（ID random_decision、Path /tools/random-decision）是「随机抽一个决定（吃什么／Yes-No）」，本工具是「N 人互赠配对（每人恰抽 1 人、恰被抽 1 次）」，语义不同，不重叠。无可复用业务代码，仅可借鉴年会大屏抽奖的名单粘贴导入与去重计数、Cron 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式——但**不借鉴其 localStorage 持久化**（见真限制④）。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **时令窗口正好**——10 月底上线，组织者有约两个月时间在圣诞／年会前用它做互赠抽签，错过本季就等一年；③ **保密是真痛点不是噱头**——群里公开抽签失去惊喜、人工配对又怕抽到自己或互抽，「错位排列＋禁互抽＋单人轮流查看」三件套恰好对症；④ **一轮可高质量交付**——纯前端、无依赖，配对正确性（无自抽／无互抽／双射）均可 node 断言，保密行为（不展示全量、不持久化）均可静态检查。
+- **品类归位**：注册到「实用工具」品类（与年会大屏抽奖同品类，便于节庆场景成组发现；随机决策器在生活工具，语义不同不跟随）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **保密仅限单设备单会话**——本工具不生成私密链接、不发邮件／短信、不做服务端分发；页面须明示「想让每人私下看到结果，请主持人在同一台设备上轮流展示，或用单人复制结果私发」，不许用「匿名」「私密链接」等词暗示跨设备私密送达；② **禁互抽默认开且有代价**——n=2 时禁互抽下唯一错位排列就是互抽，故无解：人数不足 3 人或约束无解时必须明确报错并给出松绑建议（关闭禁互抽或删减排除对、增加人数），不许静默退化成「允许互抽」出结果；③ **重名无法区分**——轮流查看靠姓名认人，重名时必须提示加区分标识（如工号／部门后缀）后才能生成，不许用重名名单直接生成（否则 A 会看到 B 的结果）；④ **结果不进任何持久化**——配对结果仅内存会话，刷新／关闭即失，不写 localStorage／sessionStorage／URL 参数（URL 带结果等于可转发泄露）；名单本身亦不持久化；⑤ **不做线上验证**——不上传名单、不校验参与人身份、不托管抽签过程，抽签公正性只来自本地安全随机与可复核的校验报告。
+
+**规格**（开发轮按此执行）：
+- 名单输入：粘贴文本框，每行一人（支持「姓名」或「姓名-备注」形式，备注仅作区分显示）；自动去空行、去重并实时计数；重名即时提示并阻止生成（见真限制③）；人数下限 3 人（禁互抽默认开时 n=2 无解）、上限建议 200 人（超限提示分批）；支持「清空名单」。
+- 配对规则（生成前可调，生成后锁定，改规则需重新生成）：禁自抽必开不可关；禁互抽默认开（可关，关闭时页面明示「可能出现互抽」）；自定义排除对可选（成对输入 A≠B，如夫妻／同组互不抽，输入时校验两人均在名单内）；生成按钮文案须含人数与规则摘要（如「为 12 人生成配对（禁自抽＋禁互抽）」）。
+- 配对算法：crypto.getRandomValues 驱动的安全随机（不用 Math.random 做配对）；错位排列＋约束拒绝采样（洗牌后校验自抽／互抽／排除对，不合格重抽，设尝试上限，到上限仍无解则明确报「约束无解」并给出松绑建议，不许无限循环、不许静默放宽约束）；生成结果须满足双射（每人恰抽 1 人、恰被抽 1 次）。
+- 保密查看（本工具核心，默认状态）：生成后**不展示全量配对表**；主持人先看到「已生成 N 对配对」确认与校验报告（只给计数结论：自抽 0 对、互抽 0 对、排除对命中 0 对、每人恰被抽 1 次——不给具体配对明细）；轮流查看：从名单下拉／点选一人，一次只显示单条结果（如「XXX 的互赠对象是 YYY」），查看后可标记「已看」；上一人结果在切人时自动遮罩／清空，不许两条结果同屏并存；每条单人结果旁有「复制单人结果」按钮（复制内容只含该单人一条，形如「XXX，你的互赠对象是 YYY」）；提供「清空结果／重新抽签」按钮，操作前二次确认（会销毁当前结果）。
+- 操作：单人结果一键复制；复制失败有明确降级提示（手动复制指引）；与年会大屏抽奖（/tools/annual-lottery）互链（文案区分公开抽奖与保密配对：「要公开抽奖去大屏」入口），与随机决策器不互链（语义无关，不硬凑）。
+- 技术路线：纯前端、无依赖（手写洗牌／校验／去重，不引入随机库）；页面源码自检无外部请求、无 fetch／XHR、无 localStorage／sessionStorage 写入（含结果与名单）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，洗牌、约束校验、去重、重名检测、单人结果文本、不可行判定等纯函数均可 node 断言；随机性测试用可注入的随机源，不测随机本身、测约束不变式）。
+- 注册：ID `secret_santa_generator`、Name「匿名抽签生成器」、Path `/tools/secret-santa-generator`、Category 实用工具、Icon 建议 card_giftcard、New: true；中英文描述＋SEO keywords（匿名抽签、互赠礼物、圣诞抽签、年会抽签、secret santa、gift exchange、derangement）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/secret-santa-generator，相关工具互链年会大屏抽奖与实用工具品类内节庆／抽签类工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `secret_santa_generator`、Path `/tools/secret-santa-generator` 注册完整（Category 实用工具），注册总数 178→179 Path。
+2. 配对闭环：5 人、12 人、50 人三档生成均满足无自抽、禁互抽开时无互抽、每人恰抽 1 人且恰被抽 1 次；自定义排除对（如 A≠B）生效（A 不抽 B 且 B 不抽 A）；禁互抽关闭时允许互抽但仍无自抽。
+3. 不可行闭环：2 人名单、禁互抽下 2 人、过度排除对导致无解时明确报错并给出松绑建议，且不输出任何配对结果；不出现无限循环或静默放宽约束。
+4. 名单闭环：粘贴含空行／重复行时去空去重后计数正确；重名名单阻止生成并提示加区分标识；清空名单后计数归零。
+5. 保密闭环：生成后页面默认无全量配对表；轮流查看一次只显示单人一条，切人后上一条自动遮罩／清空；校验报告只含计数结论、无配对明细；复制内容只含单人一条；清空／重新抽签需二次确认；源码自检无 localStorage／sessionStorage 写入、无 fetch／XHR、无外部 URL，刷新后结果消失。
+6. 随机闭环：配对随机源为 crypto.getRandomValues，源码自检配对路径无 Math.random。
+7. 真限制可见：页面可见「仅单设备单会话保密、无私密链接、不上传名单」「禁互抽下 2 人无解」「重名需加区分标识」「结果刷新即失」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（错位排列、禁互抽、排除对、双射、不可行判定、去重、重名检测、单人结果文本、切人遮罩状态、注册与零网络／零持久化静态检查）。
+9. 页面无报错；移动端布局不错位；名单与轮流查看控件小屏可操作、不撑破。
+
+**预计改动文件**：
+- `templates/secret_santa_generator.html`（新增；含 SEO 面板按家族标准＋名单输入／规则开关／保密查看／校验报告 UI）
+- `static/js/secret_santa_generator.js`（新增；洗牌／约束校验／去重／轮流查看／单人复制逻辑；双模式导出供 node 测试）
+- `tests/secret_santa_generator.test.js`（新增；错位排列、禁互抽、排除对、双射、不可行、去重、重名、单人文本、遮罩状态、注册与零网络／零持久化静态检查）
+- `tools/categories.go`（实用工具品类注册：ID secret_santa_generator、Path /tools/secret-santa-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 94d266f（Cron 生成器新增）／b8fb578（.htaccess 防盗链守卫修复）／b3b0370（.htaccess 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **178**；Top3 候选重叠复核（secret_santa_generator／html_jsx_converter／rss_feed_generator 三路零命中实锤；年会大屏抽奖／随机决策器语义辨析见上）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+
+**交付状态**：10-26 通用调研第一百零六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Cron 表达式生成器已交付闭环**（94d266f 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **178 Path**，ID cron_generator、Path /tools/cron-generator 已注册，templates/cron_generator.html 与 static/js/cron_generator.js 已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:36 深夜轮，优先小难度纯前端。
+**本轮三件事**（03:36 全网调研，通用方向）：
+1. Cron 交付确认：`git log` 头部 94d266f（Cron 生成器新增）／b8fb578（.htaccess 防盗链守卫修复）／b3b0370（.htaccess 新增）；全量 178 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功，无报错。匿名抽签／HTML→JSX／RSS／文本提取／Prettier／CSV→Markdown／Conventional Commit 复核仍未交付（`grep -ci 'secret_santa|html_jsx|jsx|rss_feed|text_info_extractor|prettier_config|csv_markdown|conventional_commit'` = 0）。
+2. 新信号扫描：
+   - **kovacore 12 工具榜＋devtoolkit／dev.to 13 工具榜**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Bcrypt、UUID、时间戳、URL 解析、HTTP 状态码、Base64、HTML 实体、Markdown 预览、CSS／JS 压缩、QR 码、调色板、批量图片缩放 → **全部自有实锤消解**（Bcrypt 对应已注册 bcrypt_generator；HTTP 状态码对应已注册 http_status_reference；其余均为 105 轮及之前已核对的注册工具；批量图片缩放仍暂不立，见 105 轮）；
+   - **ToolsMonk／devbitkit／axonixtools 三源同现 JSON→TypeScript 转换器＋SQL 格式化器＋cURL builder** → JSON→TypeScript **消解**（已注册「JSON 转 TypeScript / Go 结构体」，Path /tools/json-to-typescript 系）；SQL 格式化 **消解**（已注册 sql-formatter）；cURL builder（表单拼 curl 命令）与已注册的 cURL→Python Requests 转换器方向互反，单源提及、边际价值有限，**记观察项**，不新立——待 API 工具家族验证后再议；
+   - **IT-Tools 80+ 工具清单（webnestify 盘点）**：JWT／哈希／HMAC／Bcrypt／UUID／ULID／QR／WiFi QR／正则／Lorem／Slug／Diff／大小写／URL 解析／UA 解析／HTTP 状态码 → **基本消解**（WiFi QR 对应已注册 wifi_qr_generator；JWT 签名生成对应已注册 jwt_signer_verifier；ULID／Slug 均已在留池／观察项；其余均为 105 轮及之前已核对的注册工具）；清单中未覆盖的三项逐项定性：
+     - **MIME 类型查询**（扩展名↔MIME 双向查表）→ `mime` 仅命中 mbox 解析器描述（语义无关），独立查询工具确未注册；但单源提及、纯查表价值低，**记观察项**，不新立；
+     - **Open Graph meta 检查器** → 需在线抓取目标页，浏览器端受 CORS 阻断、纯前端单页做不实，**硬伤→不立**；
+     - **BIP39 助记词生成器／RSA 密钥对生成器** → `bip39|mnemonic`、`rsa.*key|keypair` 均为 0 实锤，但前者需 2048 词表 vendoring 且涉资产密钥安全口径、后者与已注册的密钥／证书家族边际重叠，**均记观察项**，不新立；
+   - **中文搜索（V2EX／希望有一个网站能…）**本轮返回均为旧帖／无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：Cron 表达式生成器已交付划出（94d266f，178 Path）；**本轮新晋 P2 0 个**（全部信号消解或落观察项）；**观察项新增 4 条**（cURL 命令生成器、MIME 类型查询、BIP39 助记词生成器、RSA 密钥对生成器；另 sitemap.xml 独立生成器：`sitemap_generator|sitemap_xml` 0 实锤，自有仅 robots.txt 生成器／校验器内的 Sitemap 列表行，语义不同，记观察项——单源弱信号，暂不立）；自有实锤消解 10+ 项；全量 178 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Cron 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，105 轮 Top3 第二、三顺位依次递进，第三顺位取留池中最老的 104 轮新晋项）：
+
+1. **匿名抽签生成器** — P2 留池顺位递进（100 轮新晋；106 轮复核仍未交付；`secret_santa` 零命中实锤；痛点：圣诞／年会互赠礼物抽签要保密配对，群里公开抽签失去惊喜、人工配对又怕抽到自己或互抽；纯前端小难度：名单粘贴＋排除互抽／自抽规则＋安全随机配对＋每人独立结果查看（单设备轮流查看、不在同一屏全量展示）＋一键复制单人结果，零上传；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接；近邻辨析：已注册的「在线抽签」是随机抽决定，与本工具的匿名互赠配对语义不同，不重叠）。
+2. **HTML／SVG→JSX 转换器** — P2 留池顺位递进（105 轮新晋；106 轮复核仍未交付；五源同现；痛点：HTML／SVG 粘贴进 React 要逐项改 className／htmlFor／void 自闭合／style 对象化／SVG camelCase，手改易漏；纯前端小难度：属性映射＋自闭合＋style 对象化＋组件／片段输出＋复制／下载 .jsx，零上传；`jsx` 零命中实锤；建议 ID html_jsx_converter、Path /tools/html-jsx-converter；真限制：只做词法级转换、不做 JSX 语义校验、不承诺自定义属性全覆盖，转换后需项目编译验证）。
+3. **RSS／Atom 订阅源生成器** — P2 留池顺位递进（104 轮新晋；106 轮复核仍未交付；iotools.cloud 目录源；痛点：给博客／播客手写 RSS 2.0／Atom XML 要逐项查规范，转义与日期格式（RFC 822／RFC 3339）一错订阅器就拒读；纯前端小难度：频道元数据表单＋条目列表增减→实时生成规范 XML＋XML 转义＋一键复制／下载 .xml，零上传；`rss_feed` 零命中实锤；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML 文本，不发布、不托管、不验证订阅源可达性）。
+
+其余 P2 留池（顺位在 Top3 之后）：文本信息提取器（104 轮新晋；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似、不做真实性验证）；Prettier 配置生成器（104 轮新晋；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）；CSV→Markdown 表格生成器（105 轮新晋；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：只生成表格文本、不解析 Excel 文件）；Conventional Commit 提交信息生成器（105 轮新晋；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本、不执行 git）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮新记观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 105 轮及之前记录。
+
+**通用候选表增量**（第一百零六轮：Cron 表达式生成器已交付划出（94d266f 新增；ID cron_generator、Path /tools/cron-generator 已注册；全量 178 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 5 条**（cURL 命令生成器、MIME 类型查询、BIP39 助记词生成器、RSA 密钥对生成器、sitemap.xml 独立生成器，定性见上）；自有实锤消解 10+ 项（bcrypt_generator／http_status_reference／wifi_qr_generator／jwt_signer_verifier／JSON 转 TypeScript／Go 结构体／sql-formatter／favicon_generator 均已注册；Open Graph 检查器因 CORS 硬伤不立；API 在线请求测试器因 CORS／需后端不立）；中文搜索无可消化需求帖；全量 178 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Cron 表达式生成器 | 已交付划出（94d266f 新增；ID cron_generator、Path /tools/cron-generator 已注册；全量 178 Path；候选池划出） | — | 已实现 |
+| cURL 命令生成器（观察项） | 不新立（106 轮；ToolsMonk 单源；与已注册 curl_to_requests 方向互反，边际价值有限，待 API 工具家族验证后再议；建议 ID 占位 curl_command_builder、Path /tools/curl-command-builder） | 小 | 观察 |
+| MIME 类型查询（观察项） | 不新立（106 轮；IT-Tools 清单单源；纯查表价值低；建议 ID 占位 mime_type_lookup、Path /tools/mime-type-lookup） | 小 | 观察 |
+| BIP39 助记词生成器（观察项） | 不新立（106 轮；需 2048 词表 vendoring 且涉资产密钥安全口径；建议 ID 占位 bip39_generator、Path /tools/bip39-generator） | 中 | 观察 |
+| RSA 密钥对生成器（观察项） | 不新立（106 轮；与密钥／证书家族边际重叠；建议 ID 占位 rsa_keypair_generator、Path /tools/rsa-keypair-generator） | 小 | 观察 |
+| sitemap.xml 独立生成器（观察项） | 不新立（106 轮；`sitemap_generator|sitemap_xml` 0 实锤，自有仅 robots.txt 生成器／校验器内的 Sitemap 列表行；单源弱信号；建议 ID 占位 sitemap_generator、Path /tools/sitemap-generator） | 小 | 观察 |
+| 自有实锤消解 | 不立（bcrypt_generator／http_status_reference／wifi_qr_generator／jwt_signer_verifier／JSON 转 TypeScript／Go／sql-formatter／favicon_generator 均已注册；Open Graph 检查器 CORS 硬伤不立；API 在线请求测试器不立） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百零六轮——Cron 表达式生成器交付闭环（94d266f，`/tools/cron-generator` 已注册，全量 178 Path），候选池划出；**新晋 P2 0 个**（kovacore／devtoolkit／ToolsMonk／devbitkit／axonixtools／IT-Tools 六源信号全部消解或落观察项）；观察项新增 5 条；中文搜索无可消化需求帖；仓库 178 注册工具全量核对无重叠（Top3 建议 ID secret_santa_generator / html_jsx_converter / rss_feed_generator；ID＋Path＋关键词零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 94d266f（Cron 生成器新增）／b8fb578（.htaccess 防盗链守卫修复）／b3b0370（.htaccess 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **178**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 01:37 · 产品经理排期轮）
 
 **选定：Cron 表达式生成器（cron_generator）** — 本轮唯一任务（新工具）：
