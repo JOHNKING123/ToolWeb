@@ -1,0 +1,186 @@
+{{define "robots_txt_validator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>robots.txt 校验与测试器 - 粘贴解析/逐行校验/URL允许测试/AI爬虫放行矩阵 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 robots.txt 校验与测试器：粘贴已有 robots.txt 做分组解析（User-agent 组＋Allow/Disallow 规则行＋行号，Sitemap 单列），逐行中文化语法校验（错误与警告分级），按 Google 规范做 URL 允许/禁止测试（最长匹配获胜、等长 Allow 优先），六 AI 爬虫（GPTBot/ClaudeBot/CCBot/PerplexityBot/Google-Extended/Applebot-Extended）放行矩阵，2 组示例与复制/下载/重置导出。纯前端本地解析，内容不出浏览器。Robots.txt validator: parse, validate, URL allow/block test, AI crawler matrix, 100% client-side.">
+    <meta name="keywords" content="robots.txt,robots校验,robots.txt校验,爬虫规则,Allow,Disallow,User-agent,Sitemap,AI爬虫,GPTBot,ClaudeBot,robots.txt validator,robots.txt tester,SEO工具,营销工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/robots-txt-validator">
+    <meta property="og:title" content="robots.txt 校验与测试器 - 分组解析/逐行校验/URL 测试/AI 爬虫矩阵">
+    <meta property="og:description" content="粘贴 robots.txt 即分组解析与逐行校验，按 Google 规范测 URL 允许/禁止，六 AI 爬虫放行矩阵一目了然。纯前端本地解析，内容不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/robots-txt-validator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"robots.txt 校验与测试器","description":"粘贴已有 robots.txt 做分组解析与逐行中文化校验，按 Google 规范做 URL 允许/禁止测试，六 AI 爬虫放行矩阵，示例与复制/下载导出，纯前端本地解析不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/robots-txt-validator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rtv-wrap .container{max-width:960px;margin:0 auto;padding:1.2rem}
+        .rtv-wrap .navbar .material-icons{display:none}
+        .rtv-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1.1rem}
+        .rtv-card h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .rtv-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .rtv-privacy b{color:#047857}
+        .rtv-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .rtv-input{width:100%;min-height:13rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.65;white-space:pre;overflow:auto}
+        .rtv-input:focus{outline:none;border-color:var(--primary-color)}
+        .rtv-group{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem 1rem;margin-bottom:.7rem;background:#f8fafc}
+        .rtv-group-head{font-size:.9rem;font-weight:700;color:#111827;margin-bottom:.5rem;word-break:break-all}
+        .rtv-rule{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.35rem;font-size:.9rem}
+        .rtv-rule code{word-break:break-all;white-space:pre-wrap}
+        .rtv-kind{flex:none;font-size:.78rem;font-weight:700;border-radius:.4rem;padding:.2rem .5rem;background:#f3f4f6;color:#374151}
+        .rtv-kind.allow{background:#ecfdf5;color:#047857}
+        .rtv-kind.disallow{background:#fef2f2;color:#b91c1c}
+        .rtv-kind.sitemap{background:#eef2ff;color:#4f46e5}
+        .rtv-line{font-size:.82rem;color:#6b7280}
+        .rtv-empty{font-size:.9rem;color:#6b7280;line-height:1.7}
+        .rtv-summary{border-radius:.6rem;padding:.7rem .9rem;font-size:.92rem;line-height:1.7;margin-bottom:.6rem}
+        .rtv-summary.good{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+        .rtv-summary.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+        .rtv-summary.bad{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+        .rtv-issues{margin:0;padding-left:1.2rem;font-size:.9rem;line-height:1.9;color:#374151}
+        .rtv-issues li.err{color:#b91c1c}
+        .rtv-issues li.warn{color:#92400e}
+        .rtv-test-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.7rem}
+        .rtv-test-row label{font-size:.9rem;color:#374151}
+        .rtv-test-row input{border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .7rem;font-size:.92rem;font-family:inherit;min-width:0}
+        .rtv-test-row input.rtv-path{flex:1;min-width:12rem}
+        .rtv-test-row input.rtv-agent{width:9rem}
+        .rtv-agent-btns{display:flex;gap:.4rem;flex-wrap:wrap}
+        .rtv-agent-btns button{border:1px solid #d1d5db;background:#fff;border-radius:.5rem;padding:.35rem .7rem;font-size:.85rem;cursor:pointer}
+        .rtv-agent-btns button:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .rtv-verdict{display:inline-block;font-size:1.1rem;font-weight:700;border-radius:.5rem;padding:.4rem 1rem;margin-bottom:.5rem}
+        .rtv-verdict.good{background:#dcfce7;color:#166534}
+        .rtv-verdict.bad{background:#fecaca;color:#991b1b}
+        .rtv-test-result p{font-size:.9rem;line-height:1.8;color:#374151;word-break:break-all}
+        .rtv-test-result code{word-break:break-all;white-space:pre-wrap}
+        .rtv-matrix-wrap{overflow-x:auto}
+        .rtv-matrix{border-collapse:collapse;width:100%;min-width:34rem;font-size:.9rem}
+        .rtv-matrix th,.rtv-matrix td{border:1px solid #e5e7eb;padding:.55rem .7rem;text-align:left;line-height:1.6}
+        .rtv-matrix th{background:#f8fafc;color:#111827;white-space:nowrap}
+        .rtv-matrix td{word-break:break-all}
+        .rtv-badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.85rem;font-weight:700;white-space:nowrap}
+        .rtv-badge.good{background:#dcfce7;color:#166534}
+        .rtv-badge.bad{background:#fecaca;color:#991b1b}
+        .rtv-badge.na{background:#f3f4f6;color:#6b7280}
+        .rtv-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .rtv-actions .btn{cursor:pointer}
+        .rtv-limits{font-size:.9rem;line-height:1.9;color:#374151}
+        .rtv-limits li{margin-bottom:.3rem}
+        @media (max-width:720px){.rtv-actions .btn{flex:1;justify-content:center}}
+    </style>
+</head>
+<body>
+    <div class="rtv-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>robots.txt 校验与测试器</h1>
+            <p>粘贴已有 robots.txt：分组解析（User-agent 组＋规则行＋行号，Sitemap 单列）、逐行中文化语法校验、URL 允许/禁止测试、六 AI 爬虫放行矩阵。写对没有，贴进来一测便知。</p>
+        </div>
+        <div class="tool-content">
+            <div class="rtv-privacy" role="note">
+                <div><b>隐私声明：内容不出浏览器。</b>粘贴的 robots.txt 只在当前浏览器本地解析与判定，不上传到任何服务器，不做任何存储与记录。本页面无后端调用、无外部请求，粘贴模式为主、不在线拉取（在线拉取会被 CORS 拦截，索性不做）。</div>
+            </div>
+
+            <div class="rtv-card">
+                <h3>粘贴 robots.txt</h3>
+                <textarea id="rtv-input" class="rtv-input" placeholder="在此粘贴 robots.txt 内容，例如：&#10;User-agent: *&#10;Disallow: /admin/&#10;Sitemap: https://example.com/sitemap.xml" aria-label="robots.txt 内容粘贴区"></textarea>
+                <p class="rtv-note" style="margin-top:.6rem;">输入变化即实时重解析，无需点按钮。从 <a href="/tools/robots-txt-generator" style="color:#1a0dab;">robots.txt 生成器</a>复制来的文本可直接粘贴到这里校验。注释行（#）与空行保留定位、不计入规则、不报错。</p>
+                <div class="rtv-actions" style="margin-top:.8rem;">
+                    <button type="button" class="btn btn-primary" id="rtv-ex-typical">载入示例一：典型站点文件</button>
+                    <button type="button" class="btn btn-primary" id="rtv-ex-aiblock">载入示例二：屏蔽 AI 爬虫</button>
+                    <button type="button" class="btn btn-primary" id="rtv-copy">复制原文</button>
+                    <button type="button" class="btn btn-primary" id="rtv-download">下载 robots.txt</button>
+                    <button type="button" class="btn" id="rtv-reset">重置为空</button>
+                </div>
+                <p class="rtv-note" style="margin-top:.6rem;">导出为原文原样：本工具只校验与测试，不自动改写规则；复制失败时有降级提示（手动全选复制）。重置后回到默认空状态。</p>
+            </div>
+
+            <div class="rtv-card">
+                <h3>分组解析</h3>
+                <div id="rtv-groups"></div>
+            </div>
+
+            <div class="rtv-card">
+                <h3>语法校验（逐行中文化）</h3>
+                <div id="rtv-check"></div>
+                <p class="rtv-note">错误级：规则行出现在任何 User-agent 组之前、User-agent 为空、Allow / Disallow 路径缺前导 /、Sitemap 非绝对 URL。警告级：空 Disallow、未知指令、Crawl-delay、同一组内重复规则、指令名大小写混写。</p>
+            </div>
+
+            <div class="rtv-card">
+                <h3>URL 允许 / 禁止测试</h3>
+                <div class="rtv-test-row">
+                    <label for="rtv-url">测试路径</label>
+                    <input type="text" id="rtv-url" class="rtv-path" placeholder="/private/page.html?x=1" autocomplete="off">
+                    <label for="rtv-agent">爬虫</label>
+                    <input type="text" id="rtv-agent" class="rtv-agent" value="*" autocomplete="off">
+                </div>
+                <div class="rtv-agent-btns" style="margin-bottom:.7rem;">
+                    <button type="button" data-agent="Googlebot">Googlebot</button>
+                    <button type="button" data-agent="Bingbot">Bingbot</button>
+                    <button type="button" data-agent="GPTBot">GPTBot</button>
+                    <button type="button" data-agent="ClaudeBot">ClaudeBot</button>
+                    <button type="button" data-agent="*">*</button>
+                </div>
+                <div id="rtv-test-result" class="rtv-test-result"></div>
+                <p class="rtv-note">判定口径（Google 规范）：同组内最长匹配规则获胜；Allow 与 Disallow 长度相等时 Allow 优先；无匹配规则时默认允许；有专属组时用专属组，否则回落到 * 组；既无专属组又无 * 组时无匹配组、默认允许。</p>
+            </div>
+
+            <div class="rtv-card">
+                <h3>AI 爬虫放行矩阵</h3>
+                <div class="rtv-matrix-wrap" id="rtv-matrix"></div>
+                <p class="rtv-note">判定口径与 URL 测试一致：有该爬虫专属组时用专属组，否则用 * 组；专属组优先于 * 组。</p>
+            </div>
+
+            <div class="rtv-card">
+                <h3>使用说明</h3>
+                <div class="rtv-note">
+                    1. 把线上或本地的 robots.txt 全文粘贴到上方输入框，分组解析与校验即时出现。<br>
+                    2. 先看校验区：错误必须修，警告逐条确认语义（空 Disallow 不是禁止、Crawl-delay 不被 Google 采纳）。<br>
+                    3. 在 URL 测试区输入要验证的路径与爬虫名，看命中规则与判定依据，确认关键路径没有被误挡。<br>
+                    4. 在 AI 矩阵里确认六个 AI 爬虫对首页的放行状态；具体路径再用 URL 测试逐个核对。<br>
+                    5. 确认无误后复制或下载，覆盖到网站根目录的 robots.txt；写新文件请先去 <a href="/tools/robots-txt-generator" style="color:#1a0dab;">robots.txt 生成器</a>拼装，再贴回这里校验。
+                </div>
+            </div>
+
+            <div class="rtv-card">
+                <h3>常见问题</h3>
+                <div class="rtv-note">
+                    <b>Disallow: / 是什么意思？</b>禁止该组爬虫抓取全站；想允许全部应写空 Disallow（Disallow: 后面什么都不写），两者正好相反，别写反。<br>
+                    <b>为什么 Allow 和 Disallow 冲突时 Allow 赢？</b>按 Google 规范，等长冲突时 Allow 优先；不等长时最长的那条赢，与书写顺序无关。<br>
+                    <b>写了规则，AI 爬虫就一定不来吗？</b>不一定。robots.txt 只是君子协定，是否遵守取决于各厂商声明；恶意爬虫根本不会看它。<br>
+                    <b>Sitemap 行写在哪里？</b>与组无关，文件任何位置都可写，但必须是完整 URL；本工具把它单列展示。<br>
+                    <b>路径区分大小写吗？</b>区分。/Admin/ 与 /admin/ 是两条不同路径；指令名（User-agent、Allow 等）不区分大小写。
+                </div>
+            </div>
+
+            <div class="rtv-card">
+                <h3>相关工具</h3>
+                <div class="rtv-note">
+                    <a href="/tools/robots-txt-generator" style="color:#1a0dab;">robots.txt 生成器</a>（写新文件：多规则组拼装＋Sitemap＋复制下载） ·
+                    <a href="/tools/url-parser" style="color:#1a0dab;">URL 解析器</a>（拆解测试 URL 的路径与查询串，再贴回这里测试）
+                </div>
+            </div>
+
+            <div class="rtv-card">
+                <h3>真限制说明</h3>
+                <ul class="rtv-limits">
+                    <li><b>君子协定，不等于访问控制：</b>robots.txt 只是爬虫君子协定、不等于访问控制，恶意爬虫与攻击者不会遵守；真正敏感的路径请用密码保护或 IP 白名单。</li>
+                    <li><b>Google 规范近似实现：</b>解析与判定按 Google 规范近似实现，不承诺与每个爬虫逐字一致，个别爬虫的扩展指令可能有差异。</li>
+                    <li><b>粘贴模式为主，不在线拉取：</b>本工具粘贴模式为主、不在线拉取，浏览器跨域限制会拦截对别人网站 robots.txt 的直接读取。</li>
+                    <li><b>内容不出浏览器：</b>全部解析与判定在本地完成，零 fetch/XHR、零 CDN，文件内容不出浏览器。</li>
+                    <li><b>Crawl-delay 效力因爬虫而异：</b>Crawl-delay 是非标准指令，Google 已忽略，Crawl-delay 效力因爬虫而异，仅作礼貌声明。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/robots_txt_validator.js?v=1"></script>
+</body>
+</html>
+{{end}}

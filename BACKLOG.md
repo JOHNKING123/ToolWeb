@@ -1,3 +1,81 @@
+## 今日任务（2026-10-25 17:45 · 产品经理排期轮）
+
+**选定：robots.txt 校验与测试器（robots_txt_validator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（101 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。15:40 PM 轮选 Bcrypt 时已明言：robots.txt 校验器仅因顺位在 Bcrypt 之后而后置、「下轮首席递进」；Bcrypt 已交付划出（348053c，173 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——101 轮新晋的 Lorem Ipsum 生成器／CSS 缓动曲线生成器虽同为小难度纯前端，亦不插队。
+- **未选**：HMAC 生成器（97 轮新晋 P2，101 轮 Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在 robots.txt 校验器之后而后置，下轮首席递进；真限制仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋 P2，101 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制 UA 可伪造、仅供参考）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进；真限制中文占位文仅视觉占位无语义／预览为示意仅输出 cubic-bezier()）；.htaccess 生成器／Cron 表达式生成器／匿名抽签生成器（100 轮新晋 P2，留池顺位递进；真限制各见研究轮记录）；词云生成器／文本定宽换行器（99 轮新晋 P2，留池顺位递进；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋 P2，留池顺位递进）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'robots_txt_validator\|hmac_generator\|user_agent_parser' tools/categories.go` = 0；templates/ 与 static/js/ 无 robots_txt_validator／hmac／user_agent 文件，仅 robots_txt_generator（拼装生成）一对文件，无 validator／tester 语义；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **173 Path**；`git log` 头部 348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）。自有近邻辨析：robots_txt_generator 只做「表单拼装→文本输出」、附带中文化基础校验（空 User-agent、路径缺前导 /、Sitemap 非 URL 三项提示），不做已有文件解析、不做 URL 允许／禁止测试、不做 AI 爬虫放行矩阵、不做逐行错误定位；本工具是「粘贴已有文件→解析＋校验＋测试」的反向语义，互补不重叠。仅「一键复制＋下载 robots.txt」的家族交互模式可借鉴，无可复用代码。
+- **选定理由**：① **痛点明确且后果严重**——一行写错的 Disallow 就可能把整站挡在搜索引擎与 AI 爬虫之外，事后才发现时收录已掉；② **一轮可高质量交付**——纯前端解析＋规则匹配，Google 规范的 longest-match 语义天然可断言；③ **无硬伤**——「君子协定非访问控制、近似解析、粘贴模式为主」属可明示的真限制，不构成跳过理由；④ **与生成器成对闭环**——生成器管「写出来」，校验器管「写对没有」，同一用户旅程的两端，互链价值高。
+- **品类归位**：注册到「营销工具」品类（与 robots_txt_generator 同品类、注册位置紧邻生成器，便于成对发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **robots.txt 只是爬虫君子协定、不等于访问控制**——页面首屏明示，恶意爬虫不会遵守；② **解析按 Google 规范近似实现**——不承诺与每个爬虫逐字一致，页面明示；③ **粘贴模式为主、不做在线拉取**——在线拉取必被 CORS 拦截，索性不做 fetch，页面明示；④ **文件内容不出浏览器**——全部解析本地完成，零 fetch／XHR，隐私文案页面可见；⑤ **Crawl-delay 等非标准指令只作提示**——Google 已忽略 Crawl-delay，页面明示其效力因爬虫而异；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/robots-txt-validator）。
+
+**规格**（开发轮按此执行）：
+- 粘贴与解析：robots.txt 文本粘贴区（支持从生成器页复制来的文本直接粘贴）＋「解析」实时进行（输入变化即重解析，无需点按钮也可看结果）；解析输出分组结构：每组含 User-agent 列表＋Allow／Disallow 规则行＋行号；注释行（#）与空行在解析视图中保留定位；Sitemap 行单列展示；未知指令行标为「未识别指令」警告、不静默丢弃。
+- 语法校验（逐项中文化、带行号定位）：错误级——规则行出现在任何 User-agent 组之前、User-agent 为空、Allow／Disallow 路径缺前导 /、Sitemap 非绝对 URL；警告级——空 Disallow（等于允许全部，提示其语义）、未知指令、Crawl-delay（提示 Google 已忽略）、同一组内重复规则、大小写混写指令名（提示指令名不区分大小写但路径区分）；校验结果分「错误／警告／通过」三档汇总展示，无问题时明确显示「未发现问题」而不是空白。
+- URL 允许／禁止测试：测试 URL 输入（路径＋可选查询串，如 /private/page.html?x=1）＋爬虫选择（手动输入 User-agent 名，默认 *，附常用爬虫快捷选择：Googlebot／Bingbot／GPTBot／ClaudeBot）；判定按 Google 规范：同组内最长匹配规则获胜，Allow 与 Disallow 长度相等时 Allow 获胜，无匹配规则时默认允许；结果只给「允许／禁止」二值结论＋命中的规则行（组名＋规则＋行号）＋一句话判定依据；无任何组匹配所选爬虫时明示「回落到 * 组」或「无匹配组、默认允许」。
+- AI 爬虫放行矩阵：固定列出 GPTBot／ClaudeBot／CCBot／PerplexityBot／Google-Extended／Applebot-Extended 六个 AI 爬虫，对当前文件逐个判定「允许／禁止／未明确（无匹配组）」；判定口径与 URL 测试一致（最具体组优先：有该爬虫专属组时用专属组，否则用 * 组）；矩阵每格附命中规则简述；附一行说明「AI 爬虫是否遵守 robots.txt 取决于各厂商声明」。
+- 示例与导出：至少 2 组示例（① 典型站点文件：允许全部、屏蔽 /admin/ 与 /private/、含 Sitemap；② 屏蔽 AI 爬虫示例：* 组允许常规抓取、GPTBot／ClaudeBot 组 Disallow /）；示例一键载入后可编辑再解析／测试；「复制修正后文件」与「下载 robots.txt」可用（复制失败有明确降级提示）；「重置」一键回到默认空状态；修正导出仅为原文原样（本工具不自动改写规则，只校验与测试——如开发轮认为「一键修正」有价值，须先说明修正项清单再执行，不得静默改写原文）。
+- 技术路线：纯前端、无依赖（手写解析器，不引入 npm 包）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，解析／匹配／矩阵三类函数均可 node 断言，不只测字符串拼接）。
+- 注册：ID `robots_txt_validator`、Name「robots.txt 校验与测试器」、Path `/tools/robots-txt-validator`、Category 营销工具、Icon 建议 shield-check、New: true；中英文描述＋SEO keywords（robots.txt、robots 校验、爬虫规则、Allow、Disallow、AI 爬虫、GPTBot、robots.txt validator）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 robots.txt 生成器、Sitemap 相关工具与 URL 解析器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `robots_txt_validator`、Path `/tools/robots-txt-validator` 注册完整（Category 营销工具、紧邻 robots_txt_generator），注册总数 173→174 Path。
+2. 解析闭环：示例①解析出正确的组数与规则行数，每条规则带行号；注释行与空行不计入规则、不报错；Sitemap 行单列展示。
+3. 校验闭环：规则行在 User-agent 组之前、空 User-agent、路径缺前导 /、Sitemap 非 URL 四类错误均被检出且带行号；空 Disallow 与未知指令只报警告不报错误；无问题文件明确显示「未发现问题」。
+4. URL 测试闭环：最长匹配获胜（如 Disallow /private/ 与 Allow /private/public/ 并存时测 /private/public/page.html 得允许）；等长 Allow／Disallow 冲突时 Allow 获胜；无匹配规则时默认允许；命中规则行（组＋规则＋行号）与判定依据均展示；无匹配组时明示回落逻辑。
+5. AI 矩阵闭环：示例②中 GPTBot／ClaudeBot 判禁止、其余未明确或允许的格子与规则一致；专属组优先于 * 组的口径可断言（专属组 Allow 时即使 * 组 Disallow 也判允许）。
+6. 示例与导出：2 组示例一键载入后均有内容、且载入后可编辑再解析／测试；复制与下载可用（失败有降级提示）；重置后回到默认空状态。
+7. 真限制可见：页面可见「君子协定、不等于访问控制」「Google 规范近似实现」「粘贴模式为主、不在线拉取」「内容不出浏览器」「Crawl-delay 效力因爬虫而异」文案；零 fetch／XHR、零 CDN（源码自检无外部 URL）。
+8. node 测试 40+ 断言全过（分组解析与行号、注释／空行处理、四类错误与两类警告、最长匹配与等长 Allow 优先、默认允许、专属组优先、AI 矩阵六格、Sitemap 校验、示例载入、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；长规则行小屏可横向滚动、不撑破；矩阵小屏可横向滚动。
+
+**预计改动文件**：
+- `templates/robots_txt_validator.html`（新增；含 SEO 面板按家族标准＋粘贴解析区／校验结果区／URL 测试区／AI 矩阵／示例与导出 UI）
+- `static/js/robots_txt_validator.js`（新增；分组解析／校验／最长匹配判定／AI 矩阵／复制下载逻辑；双模式导出供 node 测试）
+- `tests/robots_txt_validator.test.js`（新增；解析、校验、匹配、矩阵、注册与零网络静态检查）
+- `tools/categories.go`（营销工具品类注册：ID robots_txt_validator、Path /tools/robots-txt-validator、紧邻 robots_txt_generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **173**；Top3 候选重叠复核（robots_txt_validator／hmac_generator／user_agent_parser 三路零命中实锤，详上；近邻 robots_txt_generator 已辨析为反向互补语义不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 17:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第一百零一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。Bcrypt 生成与验证器已交付闭环（348053c 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **173 Path**，ID bcrypt_generator、Path /tools/bcrypt-generator 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 晚轮，优先小难度纯前端。
+**本轮三件事**（17:36 全网调研，通用方向）：
+1. Bcrypt 交付确认：`git log` 头部 348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）；全量 173 Path；templates/bcrypt_generator.html 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（无报错）。HMAC／User-Agent／robots 校验器／骨架屏／ULID／.env／词云／定宽换行／.htaccess／Cron 生成器／匿名抽签复核仍未交付。
+2. 新信号扫描：
+   - **dev.to 9 工具／35 工具／FreeToolsy 90+ 工具三榜＋DevToolsCave 全站总表**：JSON 格式化／Schema 验证、正则、Base64、JWT、Cron 生成器（100 轮新晋 P2）、Epoch 时间戳（timestamp 已注册）、Markdown 转 HTML（markdown／markdown_preview 已注册）、文本对比、子网计算（subnet_calculator 已注册）、UUID（uuid_generator 已注册）、二维码、CSS／JS 压缩、配色、批量缩放、密码生成器、文件校验和（MD5／SHA）、密码强度 → **多数自有实锤消解**；其中密码强度一路由 password_generator 模板内「密码强度＋熵值」显示覆盖（生成密码的强度评估已有），独立「粘贴任意密码测强度」与生成器同族、贴得太近，防串味暂不单独立项，记观察项；
+   - **Lorem Ipsum 生成器（DevToolsCave Generators 榜＋LocalFirstTools／FreeToolsy 榜单源）** → `grep -c 'lorem'` = **0 实锤**、templates 无 lorem 文件 → **新晋 P2「Lorem Ipsum 生成器」**（痛点：排版／占位文案要手写假文或另找英文假文站，段落数／词数不可控、中文占位无现成工具；纯前端小难度：段落／句子／词数三档数量控制＋英文经典 Lorem 文本＋中文占位文（「山川湖海」式无意义中文段落）双语种＋种子可复现＋一键复制，零上传；与 fake_data（中文测试假数据：姓名／手机号／地址等结构化假数据）语义不同——后者是字段型假数据，前者是无意义占位文，不重叠；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅为视觉占位、无语义，不承诺可读性；英文文本为经典 Lorem Ipsum 公共文本）；
+   - **CSS 缓动曲线生成器 cubic-bezier（DevToolsCave Web & Markup 榜单源）** → `grep -c 'bezier'` = **0 实锤**、CSS 家族现有 gradient／shadow-radius／clamp／css-to-tailwind 均无缓动语义 → **新晋 P2「CSS 缓动曲线生成器」**（痛点：调 transition／animation 缓动只能凭感觉写 cubic-bezier(0.42,0,0.58,1) 四个数、改一次就得刷新看效果，预设 ease／ease-in-out 之间没有中间态；纯前端小难度：可视化贝塞尔曲线编辑（拖动两个控制点）＋动画小球实时预览（时长可调）＋ease／ease-in／ease-out／ease-in-out／linear 预设＋cubic-bezier() 与 transition 代码一键复制，零上传；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览动画为示意（浏览器实际渲染以目标页面为准）；仅输出 cubic-bezier() 函数，不做 steps()／spring 物理缓动）；
+   - **观察项**：JSONPath 测试器（JSON Formatter Kit／DevToolsCave 榜单源；`grep jsonpath` 仅命中 json-semantic-diff 描述里的「JSONPath 可点击跳转定位」一句，无独立测试器语义；需手写 JSONPath 求值器、难度高于纯拼接，暂不晋 P2）；证书解码器（DevToolsCave Security 榜单源；PEM／DER 解析＋链展示需手写解析、且用户多直接用 openssl，暂不晋 P2）；颜色阶梯生成器（DevToolsCave Color 榜单源；与 color_palette_generator 的配色方案贴得太近，防串味暂不立）；CSV 转 Markdown 表格（榜单源；csvjson 已含 CSV⇄JSON 互转，表格转 Markdown 可作其扩展语义、暂不单独立项）；中文搜索（V2EX／希望有一个网站能…）本轮返回均为旧帖／方法论内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：Bcrypt 生成与验证器已交付划出（348053c，173 Path）；**新晋 P2 2 个**（Lorem Ipsum 生成器、CSS 缓动曲线生成器：均为多榜验证、零命中实锤、纯前端小难度）；自有实锤消解 15+ 项（JSON／正则／Base64／JWT／Cron 生成器／时间戳／Markdown／文本对比／子网／UUID／二维码／压缩／配色／批量缩放／密码生成／校验和／URL 解析器 url_parser／SSL 检查 ssl-check）；观察项 4 条（密码强度独立检测器、JSONPath 测试器、证书解码器、颜色阶梯生成器）；不立若干（平台型重服务、浏览器自动化工具）；全量 173 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Bcrypt 交付闭环后按 PM 15:40 轮既定顺位递进；晚轮优先小难度纯前端）：
+
+1. **robots.txt 校验与测试器** — P2 留池顺位递进（99 轮新晋；101 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；BigToolSite／clxon／Meev／Growtika 多榜验证；痛点：一行写错的 Disallow 就可能把整站挡在搜索引擎与 AI 爬虫之外，现有 robots_txt_generator 只管拼装生成、不能校验已有文件；纯前端小难度：粘贴 robots.txt→语法校验＋分组解析＋URL 允许／禁止测试＋AI 爬虫放行矩阵＋修正文件导出，零上传；生成器语义外零命中实锤；建议 ID robots_txt_validator、Path /tools/robots-txt-validator；真限制：robots.txt 只是爬虫君子协定、不等于访问控制；解析按 Google 规范近似实现，不承诺与每个爬虫逐字一致；在线拉取可能被 CORS 拦截，粘贴模式为主）。
+2. **HMAC 生成器** — P2 留池顺位递进（97 轮新晋；101 轮复核仍未交付；Kovacore／dev.to 双榜验证；痛点：调试 Webhook 签名／API 签名要本地算 HMAC，命令行敲 openssl 参数易错、在线站又不敢贴密钥；纯前端小难度：WebCrypto 本地算 HMAC-SHA256/384/512＋密钥与消息输入＋十六进制／Base64 双输出＋一键复制，零上传；零命中实锤；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）。
+3. **User-Agent 解析器** — P2 留池顺位递进（97 轮新晋；101 轮复核仍未交付；痛点：日志里一长串 UA 看不出浏览器／系统／设备，手工拆结构易错；纯前端小难度：粘贴 UA→浏览器／版本／操作系统／设备类型／引擎拆解＋常用 UA 预设，零上传；零命中实锤；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）。
+
+其余 P2 留池（顺位在 Top3 之后）：.htaccess 生成器（100 轮新晋；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效）；Cron 表达式生成器（100 轮新晋；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 等方言）；匿名抽签生成器（100 轮新晋；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接）；词云生成器（99 轮新晋；建议 ID word_cloud_generator、Path /tools/word-cloud-generator；真限制：中文分词为近似处理）；文本定宽换行器（99 轮新晋；建议 ID text_wrapper、Path /tools/text-wrapper；真限制：按字符数换行、非显示像素宽度）；骨架屏加载占位生成器（98 轮新晋；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：按预设拼装占位结构，不自动还原真实页面布局）；ULID／NanoID 生成器（98 轮新晋；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：毫秒精度、不承诺单调递增）；.env 解析与校验器（98 轮新晋；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅语法层校验、不校验变量语义，勿贴真实生产密钥）；Lorem Ipsum 生成器（101 轮新晋；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义）；CSS 缓动曲线生成器（101 轮新晋；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅输出 cubic-bezier()）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；密码强度独立检测器／JSONPath 测试器／证书解码器／颜色阶梯生成器／TOML 格式化器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 100 轮及之前记录。
+
+**通用候选表增量**（第一百零一轮：Bcrypt 生成与验证器已交付划出（348053c 新增；ID bcrypt_generator、Path /tools/bcrypt-generator 已注册，开发工具品类；全量 173 Path；候选池划出）；**新晋 P2 2 个：Lorem Ipsum 生成器**（DevToolsCave／LocalFirstTools／FreeToolsy 榜单源；痛点：排版占位文手写假文或另找英文假文站、数量不可控、中文占位无现成工具；段落／句子／词数控制＋中英双语种＋种子可复现，纯前端小难度；`lorem` 零命中实锤、fake_data 为字段型假数据语义不同；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义）、**CSS 缓动曲线生成器**（DevToolsCave 榜单源；痛点：cubic-bezier 四个数凭感觉写、改一次刷新看效果、预设之间无中间态；可视化拖动控制点＋动画预览＋预设＋代码复制，纯前端小难度；`bezier` 零命中实锤、CSS 家族 gradient／shadow-radius／clamp 均无缓动语义；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅 cubic-bezier()）；自有实锤消解 15+ 项（JSON／正则／Base64／JWT／Cron 生成器／时间戳／Markdown／文本对比／子网／UUID／二维码／压缩／配色／批量缩放／密码生成／校验和／URL 解析器／SSL 检查）；观察项 4 条（密码强度独立检测器：password_generator 已含强度＋熵值显示、同族防串味；JSONPath 测试器：仅 json-semantic-diff 描述提及、无独立语义、需手写求值器；证书解码器：需 PEM／DER 解析；颜色阶梯生成器：与配色方案贴太近）；不立若干（平台型重服务、浏览器自动化）；中文搜索无可消化需求帖；全量 173 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Bcrypt 生成与验证器 | 已交付划出（348053c 新增；ID bcrypt_generator、Path /tools/bcrypt-generator 已注册，开发工具品类；全量 173 Path；候选池划出） | — | 已实现 |
+| Lorem Ipsum 生成器 | 新晋 P2（101 轮；DevToolsCave／LocalFirstTools／FreeToolsy 榜单源；痛点：排版占位文手写假文或另找英文假文站、数量不可控、中文占位无现成工具；段落／句子／词数控制＋中英双语种＋种子可复现＋一键复制，零上传；`lorem` 零命中实锤、fake_data 为字段型假数据语义不同；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义） | 小 | P2（101 轮新晋） |
+| CSS 缓动曲线生成器 | 新晋 P2（101 轮；DevToolsCave 榜单源；痛点：cubic-bezier 四个数凭感觉写、改一次刷新看效果、预设之间无中间态；可视化拖动控制点＋动画小球预览＋预设＋代码复制，零上传；`bezier` 零命中实锤、CSS 家族均无缓动语义；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅 cubic-bezier()） | 小 | P2（101 轮新晋） |
+| 自有实锤消解 | 不立（JSON／正则／Base64／JWT／Cron 生成器／时间戳 timestamp／Markdown／文本对比／子网 subnet_calculator／UUID／二维码／压缩／配色／批量缩放／密码生成／校验和／URL 解析器 url_parser／SSL 检查 ssl-check 均已注册；密码强度已由 password_generator 模板内强度＋熵值显示覆盖） | — | 不立 |
+| 观察项 | 密码强度独立检测器（101 轮；与 password_generator 同族防串味）；JSONPath 测试器（101 轮；仅 json-semantic-diff 描述提及、无独立语义、需手写求值器）；证书解码器（101 轮；需 PEM／DER 解析）；颜色阶梯生成器（101 轮；与 color_palette_generator 贴太近）；TOML 格式化器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（100 轮及之前观察项，续留） | — | 观察 |
+
+**归档说明**：本轮为 10-25 通用调研第一百零一轮——Bcrypt 生成与验证器交付闭环（348053c，`/tools/bcrypt-generator` 已注册，开发工具品类，全量 173 Path），候选池划出；**新晋 P2 2 个**（Lorem Ipsum 生成器、CSS 缓动曲线生成器：多榜验证，纯前端小难度，零命中实锤各附真限制）；15+ 项自有实锤消解；4 条观察项；WPS 候选表保持冻结归档；仓库 173 注册工具全量核对无重叠（Top3 建议 ID robots_txt_validator / hmac_generator / user_agent_parser；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **173**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 15:40 · 产品经理排期轮）
 
 **选定：Bcrypt 生成与验证器（bcrypt_generator）** — 本轮唯一任务（新工具）：
