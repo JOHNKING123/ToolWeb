@@ -1,3 +1,82 @@
+## 今日任务（2026-10-26 01:37 · 产品经理排期轮）
+
+**选定：Cron 表达式生成器（cron_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（105 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。23:38 PM 轮选 .htaccess 生成器时已明言：Cron 生成器仅因顺位在 .htaccess 生成器之后而后置、「下轮首席递进」；.htaccess 生成器已交付划出（b3b0370 新增＋b8fb578 防盗链守卫修复，177 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——105 轮新晋的 HTML／SVG→JSX 转换器虽同为小难度纯前端，均不插队。
+- **未选**：匿名抽签生成器（100 轮新晋 P2，105 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 Cron 生成器之后而后置，下轮首席递进；真限制保密仅限单设备单会话、无服务端私密链接；近邻辨析：已注册的「在线抽签」是随机抽决定，与本工具的匿名互赠配对语义不同，不重叠）；HTML／SVG→JSX 转换器（105 轮新晋 P2，105 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做词法级转换、不做 JSX 语义校验、不承诺自定义属性全覆盖）；RSS／Atom 订阅源生成器／文本信息提取器／Prettier 配置生成器（104 轮新晋 P2，留池顺位递进）；CSV→Markdown 表格生成器／Conventional Commit 提交信息生成器（105 轮新晋 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -ci 'cron_generator|secret_santa|html_jsx|jsx' tools/categories.go` = 0；templates/ 仅有已交付的 cron_parser.html，static/js/ 无 cron_* 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **177 Path**；`git log` 头部 b8fb578（.htaccess 防盗链守卫修复）／b3b0370（.htaccess 新增）／f8d419b（User-Agent 解析器新增）。自有近邻辨析：① 已注册的 Cron 表达式解析（ID cron、Path /tools/cron-parser）是「读表达式说人话＋未来执行时间」，本工具是「可视化分段选择拼表达式＋下次执行时间预览」，方向互补不重叠，两者应在页面互链而非合并；② 无其它定时／调度类生成工具与本工具同语义。无可复用业务代码，仅可借鉴 .htaccess 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式。
+- **选定理由**：① **痛点高频且错了代价可见**——五段顺序（分时日月周）写反、步长与范围混用，定时任务要么不跑要么狂跑，可视化分段选择＋中文说人话＋下次时间预览三重校验把「背语法」变成「点一点、看一眼」；② **一轮可高质量交付**——纯前端、无依赖，字段取值范围与下次执行时间均可断言；③ **无硬伤**——「标准五段式口径、不承诺 Quartz 方言」属可明示的真限制，不构成跳过理由；④ **与解析器组成组价值**——生成与解析一正一反，开发者在同一品类内闭环「拼→读→验」。
+- **品类归位**：注册到「开发工具」品类（与 Cron 表达式解析、robots.txt 校验器、.gitignore 生成器同品类，便于开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做标准 Unix 五段式（分 时 日 月 周），不承诺 Quartz 等方言**——L／W／# 是 Quartz 扩展语法，本工具不生成、不解释为可用符号，页面须明示「如需 L／W／# 请用 Quartz 工具」，不许假装五段式支持它们；② **日与周同时受限时按 crontab 语义取并集（OR）**——如「每月 1 号且周一」指两者任一满足即执行，不是交集，预览与中文描述必须按 OR 口径，不许按直觉写成交集；③ **周日 0 与 7 等价**——生成统一输出 0（或在界面注明 7 即周日），不许同一表达式里混出两个周日写法；④ **不存在的日期组合要告警而非静默**——如 2 月 30 日、4 月 31 日，预览须明确提示「该组合在任何年份都不会执行」，不许只给空预览；⑤ **不做线上验证**——本工具只生成文本与本地推算的下次时间，不探测用户服务器、不读取用户 crontab、不做定时任务托管。
+
+**规格**（开发轮按此执行）：
+- 五段可视化选择（每段独立控件，变化即实时生成，无需点按钮也可看结果，并保留「生成」按钮供明确触发）：分钟（0–59）、小时（0–23）、日（1–31）、月（1–12）、周（0–7，界面以周一–周日＋周日呈现，值域映射见真限制③）；每段至少支持四种模式：每单位（*）、每 N 单位（*/N，N 在合法步长范围内）、指定值（多选 chips）、范围（起–止）；列表（逗号多值）可作为指定值多选的自然输出，不必单独立模式；非法输入（越界、起＞止、步长为 0）即时报错且不输出误导性表达式。
+- 常用预设：至少 6 组一键载入（每分钟、每 5 分钟、每小时整点、每天 09:30、每周一 09:30、每月 1 号 09:30，另加工作日 09:00 为宜）；预设载入后各段控件状态与表达式同步显示，载入后可再改控件重新生成。
+- 输出三件套：标准五段式表达式（顺序固定分 时 日 月 周）；中文说人话描述（如「每天 09:30 执行」「每 5 分钟执行一次」「每月 1 号和每周一 09:30 执行（任一满足即执行）」）；下次执行时间预览（至少未来 5 次，基于本地时间推算，标注时区为浏览器本地时区；推算必须按真限制②的 OR 口径，且须处理月末／闰年边界）。
+- 符号说明区：逐项说明 *（每单位）、,（列表）、-（范围）、/（步长）的语义与示例，并单列一行说明 L／W／# 为 Quartz 方言、本工具不支持（见真限制①）。
+- 操作：表达式一键复制；「重置」回到默认状态（建议默认：每分钟 `* * * * *`，或每天 09:30，开发轮二选一并在测试中锁定）；复制失败有明确降级提示（手动复制指引）；与 Cron 表达式解析（/tools/cron-parser）互链（「已有表达式？去解析」入口）。
+- 技术路线：纯前端、无依赖（手写字段校验与下次时间推算，不引入 cron 解析库）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，表达式拼接、字段校验、中文描述、下次时间推算、预设载入、重置等纯函数均可 node 断言）。
+- 注册：ID `cron_generator`、Name「Cron 表达式生成器」、Path `/tools/cron-generator`、Category 开发工具、Icon 建议 alarm、New: true；中英文描述＋SEO keywords（cron、crontab、定时任务、表达式生成器、cron generator、schedule）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/cron-generator，相关工具互链 Cron 表达式解析与开发工具品类内定时／配置类工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `cron_generator`、Path `/tools/cron-generator` 注册完整（Category 开发工具），注册总数 177→178 Path。
+2. 字段闭环：每段四种模式均可生成正确表达式——`*/15 * * * *`（每 15 分钟）、`30 9 * * 1`（每周一 09:30）、`0 9 1 * *`（每月 1 号 09:30）、`0 9 * * 1-5`（工作日 09:00）；非法输入（分钟 60、起＞止、步长 0）报错且不输出错误表达式。
+3. 描述与预览闭环：`30 9 * * 1` 的中文描述含「每周一 09:30」；`*/15 * * * *` 的下次 5 次为 15 分钟步进且均在当前时间之后；日与周同时受限（如 `30 9 1 * 1`）的描述与预览均按 OR 口径（每月 1 号或周一任一满足即执行），不写成交集。
+4. 边界闭环：2 月 30 日组合（`0 0 30 2 *`）预览明确提示永不执行；周日 0 与 7 生成结果一致（统一输出 0）；闰年 2 月 29 日组合可推算出下次执行时间。
+5. 预设闭环：6 组预设一键载入后控件状态、表达式、中文描述、下次预览四者同步，且载入后可改控件再生成；重置后回到开发轮锁定的默认状态。
+6. 复制闭环：复制结果与页面表达式一致；复制失败有降级提示；相关工具互链含 Cron 表达式解析。
+7. 真限制可见：页面可见「仅标准五段式、不支持 Quartz 的 L／W／#」「日与周同时受限取并集」「周日 0 与 7 等价」「不存在日期组合会告警」文案；零 fetch／XHR、零 CDN（源码自检无外部 URL）。
+8. node 测试 25+ 断言全过（四种字段模式、非法输入、中文描述、OR 口径下次推算、步长／范围／列表、边界日期、预设载入、重置、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；五段控件小屏可操作、不撑破。
+
+**预计改动文件**：
+- `templates/cron_generator.html`（新增；含 SEO 面板按家族标准＋五段选择／预设／符号说明／输出三件套 UI）
+- `static/js/cron_generator.js`（新增；字段校验／表达式拼接／中文描述／下次时间推算／预设／复制逻辑；双模式导出供 node 测试）
+- `tests/cron_generator.test.js`（新增；字段模式、非法输入、中文描述、OR 推算、边界日期、预设、重置、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID cron_generator、Path /tools/cron-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 b8fb578（.htaccess 防盗链守卫修复）／b3b0370（.htaccess 新增）／f8d419b（User-Agent 解析器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **177**；Top3 候选重叠复核（cron_generator／secret_santa_generator／html_jsx_converter 三路零命中实锤；已注册 Cron 表达式解析语义互补不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 01:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-26 通用调研第一百零五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**htaccess 生成器已交付闭环**（b3b0370 新增＋b8fb578 防盗链守卫修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **177 Path**，ID htaccess_generator、Path /tools/htaccess-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:36 深夜轮，优先小难度纯前端。
+**本轮三件事**（01:36 全网调研，通用方向）：
+1. htaccess 交付确认：`git log` 头部 b8fb578（防盗链守卫修复）／b3b0370（htaccess 新增）／f8d419b（User-Agent 解析器新增）；全量 177 Path；templates/htaccess_generator.html 与 static/js/htaccess_generator.js 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功，无报错。Cron 生成器／匿名抽签／RSS／文本提取／Prettier 复核仍未交付（`grep -ci 'cron_generator|secret_santa|rss_feed|text_info|prettier'` = 0）。
+2. 新信号扫描：
+   - **dev.to 13 工具榜＋devtoolkit／DevPlaybook 榜**：JSON 格式化／验证、Base64、UUID、URL 编解码、HTML 实体、Markdown 预览、CSS／JS 压缩、QR 码、调色板、批量图片缩放 → **基本消解**（HTML 实体对应已注册 /tools/html-entities；JSON Schema 校验对应已注册 /tools/json-schema-validator；代码压缩对应已注册 code-minifier；其余均为 103 轮及之前已核对的注册工具；批量图片缩放需 Canvas 批量处理且与图片类工具边际重叠，暂不立）；
+   - **hexbench／freetoolkit／devformatters／testmuai／webdevworker 五源同现 HTML→JSX／SVG→JSX 转换器** → `grep -ci 'jsx'` **0 实锤**、自有仅 svg-compressor（压缩）与 svg-to-font（转字体），语义均不同 → **新晋 P2「HTML／SVG→JSX 转换器」**（痛点：从设计稿／旧页面复制 HTML 或 SVG 图标粘贴进 React 组件要逐项改 class→className、for→htmlFor、void 标签自闭合、内联 style 转对象、SVG 属性 camelCase（stroke-width→strokeWidth），手改易漏且报错定位慢；纯前端小难度：粘贴 HTML／SVG→属性映射表＋void 自闭合＋style 对象化＋组件／片段两种输出＋一键复制／下载 .jsx，零上传；建议 ID html_jsx_converter、Path /tools/html-jsx-converter；真限制：只做词法级属性与结构转换，不做 JSX 语义校验、不解析 JS 表达式、不承诺 100% 覆盖自定义组件属性——转换后仍需在项目里编译验证；不读取用户项目文件）；
+   - **hexbench MD Table（CSV／TSV→Markdown 表格）＋jsonxmleditor CSV 转换器** → `grep -i 'markdown.*table|md_table'` **0 实锤**、自有 markdown-preview／markdown-publish-formatter／markdown-to-excel／markdown-to-word 均不含「表格生成」语义 → **新晋 P2「CSV→Markdown 表格生成器」**（痛点：把 Excel／CSV 数据贴进 README／Issue／Notion 要手动补 | 与对齐行，列一多就错位；纯前端小难度：粘贴 CSV／TSV→解析分隔符与引号→对齐方式（左／中／右）选择→实时生成 GFM 表格＋一键复制，零上传；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：单元格内换行与 | 需转义处理、超宽表格不做自动截断；只生成表格文本，不做 Excel 文件解析）；
+   - **DevPlaybook 榜 Git Commit Generator（Conventional Commits）** → `grep -ci 'conventional|commit_message|git_commit'` **0 实锤**、自有仅 gitignore-generator（忽略规则，同族不同语义）→ **新晋 P2「Conventional Commit 提交信息生成器」**（痛点：手写 feat／fix／docs 等规范提交信息要背 type 取值与 scope／breaking 写法，团队格式不统一致 changelog 难生成；纯前端小难度：type 下拉＋scope＋简短描述＋body／footer／BREAKING CHANGE 选项→实时生成规范提交信息＋一键复制，零上传；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本、不执行 git、不校验仓库状态；描述长度与用词规范由团队自定，不做语义判定）；
+   - **中文搜索（V2EX／希望有一个网站能…）**本轮返回均为旧帖／无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：htaccess 生成器已交付划出（b3b0370＋b8fb578，177 Path）；**新晋 P2 3 个**（HTML／SVG→JSX 转换器、CSV→Markdown 表格生成器、Conventional Commit 提交信息生成器：均为多榜验证、零命中实锤、纯前端小难度）；自有实锤消解 6 项（html-entities／json-schema-validator／code-minifier／svg-compressor／svg-to-font／css-to-tailwind 均已注册，语义辨析见上）；全量 177 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；htaccess 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，104 轮 Top3 第二、三顺位依次递进，第三顺位取本轮多源验证最强的新晋项）：
+
+1. **Cron 表达式生成器** — P2 留池顺位递进（100 轮新晋；105 轮复核仍未交付；webutil／datatoolbase／toolsforcode 多榜再现，1024toolkit 帖再现 cron 需求；痛点：手写 cron 五段式（分时日月周）顺序易错、特殊符号（*／,／-／L／W／#）语义靠背；纯前端小难度：可视化分段选择（分钟／小时／日／月／周）＋特殊符号说明→实时生成标准五段式表达式＋下次执行时间预览＋一键复制，零上传；零命中实锤；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 等方言；注意与已交付的 Cron 表达式解析（ID cron、Path /tools/cron-parser）方向互补不重叠——解析是「读表达式说人话」，生成器是「可视化拼表达式」，两者语义不同）。
+2. **匿名抽签生成器** — P2 留池顺位递进（100 轮新晋；105 轮复核仍未交付；`secret_santa` 零命中实锤；痛点：圣诞／年会互赠礼物抽签要保密配对，群里公开抽签失去惊喜、人工配对又怕抽到自己或互抽；纯前端小难度：名单粘贴＋排除互抽／自抽规则＋安全随机配对＋每人独立结果查看（单设备轮流查看、不在同一屏全量展示）＋一键复制单人结果，零上传；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接；近邻辨析：已注册的「在线抽签」是随机抽决定，与本工具的匿名互赠配对语义不同，不重叠）。
+3. **HTML／SVG→JSX 转换器** — 本轮新晋 P2（105 轮；hexbench／freetoolkit／devformatters／testmuai／webdevworker 五源同现；痛点：HTML／SVG 粘贴进 React 要逐项改 className／htmlFor／void 自闭合／style 对象化／SVG camelCase，手改易漏；纯前端小难度：属性映射＋自闭合＋style 对象化＋组件／片段输出＋复制／下载 .jsx，零上传；`jsx` 零命中实锤；建议 ID html_jsx_converter、Path /tools/html-jsx-converter；真限制：只做词法级转换、不做 JSX 语义校验、不承诺自定义属性全覆盖，转换后需项目编译验证）。
+
+其余 P2 留池（顺位在 Top3 之后）：RSS／Atom 订阅源生成器（104 轮新晋；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML、不发布不验证可达性）；文本信息提取器（104 轮新晋；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似、不做真实性验证）；Prettier 配置生成器（104 轮新晋；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）；CSV→Markdown 表格生成器（105 轮新晋；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：单元格换行与 | 转义处理、只生成表格文本不解析 Excel 文件）；Conventional Commit 提交信息生成器（105 轮新晋；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本不执行 git）；Lorem Ipsum 生成器（101 轮新晋；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义）；CSS 缓动曲线生成器（101 轮新晋；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅输出 cubic-bezier()）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 104 轮及之前记录。
+
+**通用候选表增量**（第一百零五轮：htaccess 生成器已交付划出（b3b0370 新增＋b8fb578 修复；ID htaccess_generator、Path /tools/htaccess-generator 已注册；全量 177 Path；候选池划出）；**新晋 P2 3 个：HTML／SVG→JSX 转换器**（五源同现；痛点：HTML／SVG 进 React 逐项手改属性易漏；属性映射＋自闭合＋style 对象化＋组件／片段输出，纯前端小难度；`jsx` 零命中实锤；建议 ID html_jsx_converter、Path /tools/html-jsx-converter；真限制：词法级转换、不做语义校验）、**CSV→Markdown 表格生成器**（hexbench／jsonxmleditor 源；痛点：CSV 贴进 README 手动补 | 与对齐行易错位；CSV／TSV 解析＋对齐选择→GFM 表格，纯前端小难度；`markdown table` 零命中实锤；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：只生成表格文本、不解析 Excel 文件）、**Conventional Commit 提交信息生成器**（DevPlaybook 榜源；痛点：规范提交信息 type／scope／breaking 写法靠背、团队格式不统一；表单→规范提交信息，纯前端小难度；`conventional|git_commit` 零命中实锤；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本、不执行 git）；自有实锤消解 6 项（html-entities／json-schema-validator／code-minifier／svg-compressor／svg-to-font／css-to-tailwind 均已注册）；中文搜索无可消化需求帖；全量 177 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| .htaccess 生成器 | 已交付划出（b3b0370 新增＋b8fb578 修复；ID htaccess_generator、Path /tools/htaccess-generator 已注册；全量 177 Path；候选池划出） | — | 已实现 |
+| HTML／SVG→JSX 转换器 | 新晋 P2（105 轮；五源同现；痛点：HTML／SVG 进 React 逐项手改属性易漏；属性映射＋自闭合＋style 对象化＋组件／片段输出，零上传；`jsx` 零命中实锤；建议 ID html_jsx_converter、Path /tools/html-jsx-converter；真限制：词法级转换、不做语义校验） | 小 | P2（105 轮新晋） |
+| CSV→Markdown 表格生成器 | 新晋 P2（105 轮；hexbench／jsonxmleditor 源；痛点：CSV 贴进 README 手动对齐易错位；CSV／TSV 解析＋对齐选择→GFM 表格，零上传；`markdown table` 零命中实锤；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：只生成表格文本、不解析 Excel 文件） | 小 | P2（105 轮新晋） |
+| Conventional Commit 提交信息生成器 | 新晋 P2（105 轮；DevPlaybook 榜源；痛点：规范提交信息写法靠背、团队格式不统一；表单→规范提交信息，零上传；`conventional|git_commit` 零命中实锤；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本、不执行 git） | 小 | P2（105 轮新晋） |
+| 自有实锤消解 | 不立（html-entities／json-schema-validator／code-minifier／svg-compressor／svg-to-font／css-to-tailwind 均已注册；批量图片缩放暂不立，见上） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百零五轮——htaccess 生成器交付闭环（b3b0370＋b8fb578，`/tools/htaccess-generator` 已注册，全量 177 Path），候选池划出；**新晋 P2 3 个**（HTML／SVG→JSX 转换器、CSV→Markdown 表格生成器、Conventional Commit 提交信息生成器：多榜验证，纯前端小难度，零命中实锤各附真限制）；6 项自有实锤消解；中文搜索无可消化需求帖；仓库 177 注册工具全量核对无重叠（Top3 建议 ID cron_generator / secret_santa_generator / html_jsx_converter；ID＋Path＋关键词零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 b8fb578（htaccess 防盗链守卫修复）／b3b0370（htaccess 新增）／f8d419b（User-Agent 解析器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **177**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 23:38 · 产品经理排期轮）
 
 **选定：.htaccess 生成器（htaccess_generator）** — 本轮唯一任务（新工具）：

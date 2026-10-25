@@ -292,6 +292,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "cron_generator",
+					Name:        "Cron 表达式生成器",
+					Description: "分钟、小时、日、月、周五段可视化选择拼标准 crontab 表达式：每单位、步长、指定值多选、范围四种模式，中文说人话描述与未来 5 次执行时间预览，每分钟、每 5 分钟、每小时整点、每天 09:30、每周一 09:30、每月 1 号 09:30、工作日 09:00 共 7 组预设，日与周同时受限取并集，周日 0 与 7 等价，不支持 Quartz 的 L/W/#，纯前端零上传 · Cron expression generator: visual 5-field crontab builder, plain-language description, next 5 runs preview, 100% client-side",
+					Path:        "/tools/cron-generator",
+					Icon:        "alarm",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "calendar",
 					Name:        "在线日历",
 					Description: "查看日历、农历和节假日信息",

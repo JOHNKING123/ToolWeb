@@ -1,0 +1,238 @@
+{{define "cron_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cron 表达式生成器 - 可视化五段选择拼 crontab 定时任务 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Cron 表达式生成器：分钟、小时、日、月、周五段可视化选择，支持每单位、步长、指定值多选、范围四种模式，实时生成标准五段式 crontab 表达式、中文说人话描述与未来 5 次执行时间预览，7 组常用预设一键载入，纯前端本地运行零上传。">
+    <meta name="keywords" content="cron 表达式生成器,cron generator,crontab,定时任务,表达式生成器,五段式,cron 在线生成">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/cron-generator">
+    <meta property="og:title" content="Cron 表达式生成器 - 点一点拼出 crontab">
+    <meta property="og:description" content="五段可视化选择拼标准 crontab 表达式：中文描述＋未来 5 次执行时间预览，7 组预设一键载入，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/cron-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Cron 表达式生成器","description":"在线 Cron 表达式生成器：五段可视化选择拼标准 crontab 表达式，中文描述与未来 5 次执行时间预览，7 组预设，纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/cron-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cg-warn{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.92rem;line-height:1.9;color:#92400e}
+        .cg-warn b{color:#78350f}
+        .cg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .cg-panel h3{margin:0 0 .7rem;font-size:1rem;color:#111827}
+        .cg-presets{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;align-items:center}
+        .cg-presets .cg-preset-label{font-size:.85rem;color:#6b7280}
+        .cg-mini{border:1px solid #d1d5db;background:#f9fafb;border-radius:.4rem;padding:.25rem .7rem;
+            font-size:.82rem;cursor:pointer;color:#374151}
+        .cg-mini:hover{border-color:#2563eb;color:#2563eb}
+        .cg-field{border:1px solid #e5e7eb;border-radius:.6rem;padding:.9rem 1rem;margin-bottom:.8rem}
+        .cg-field-head{display:flex;align-items:center;gap:.5rem;font-weight:700;color:#111827;font-size:.95rem;flex-wrap:wrap}
+        .cg-field-head .cg-range{font-weight:400;font-size:.85rem;color:#6b7280}
+        .cg-modes{display:flex;gap:1rem;flex-wrap:wrap;margin:.7rem 0}
+        .cg-modes label{font-size:.9rem;color:#374151;display:flex;align-items:center;gap:.35rem;cursor:pointer}
+        .cg-modes input{accent-color:#2563eb}
+        .cg-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.9rem;color:#374151}
+        .cg-row input[type="number"]{box-sizing:border-box;padding:.45rem .6rem;border:1px solid #d1d5db;
+            border-radius:.4rem;font-size:.9rem;width:5.5rem}
+        .cg-row input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .cg-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+        .cg-chip{border:1px solid #d1d5db;background:#f9fafb;border-radius:.4rem;padding:.2rem .6rem;
+            font-size:.85rem;cursor:pointer;color:#374151;min-width:2.2rem}
+        .cg-chip.on{background:#2563eb;border-color:#2563eb;color:#fff}
+        .cg-errors{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;
+            border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1rem;font-size:.92rem;line-height:1.8}
+        .cg-expr{background:#0f172a;border-radius:.6rem;padding:1rem;overflow-x:auto;
+            font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.05rem;line-height:1.7;color:#e2e8f0;
+            white-space:pre;margin:0 0 1rem}
+        .cg-desc{font-size:1rem;line-height:1.9;color:#111827;background:#eff6ff;border:1px solid #bfdbfe;
+            border-radius:.6rem;padding:.8rem 1rem;margin-bottom:1rem}
+        .cg-next{list-style:none;padding:0;margin:0}
+        .cg-next li{padding:.5rem 0;border-bottom:1px solid #e5e7eb;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem}
+        .cg-next li:last-child{border-bottom:none}
+        .cg-next .cg-never{color:#b91c1c;font-family:system-ui,sans-serif}
+        .cg-actions{display:flex;flex-wrap:wrap;gap:.6rem}
+        .cg-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.3rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer}
+        .cg-btn-primary{background:#2563eb;color:#fff}
+        .cg-btn-primary:hover{background:#1d4ed8}
+        .cg-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .cg-btn-secondary:hover{background:#e5e7eb}
+        .cg-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .cg-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .cg-table{width:100%;border-collapse:collapse;margin:.5rem 0;font-size:.9rem}
+        .cg-table th,.cg-table td{border:1px solid #e5e7eb;padding:.5rem;text-align:left;line-height:1.7}
+        .cg-table th{background:#f3f4f6}
+        .cg-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .cg-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .cg-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        #cg-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+            color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:9999;max-width:90vw;text-align:center}
+        #cg-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .cg-field{padding:.8rem}
+            .cg-btn{flex:1;justify-content:center}
+            .cg-expr{font-size:.95rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Cron 表达式生成器</h1>
+            <p>五段可视化选择拼标准 crontab 表达式：中文描述＋未来 5 次执行时间预览，纯前端零上传</p>
+        </div>
+        <div class="tool-content">
+            <div class="cg-warn">
+                <span>⚠️</span>
+                <div>
+                    <b>真限制先说清：</b>本工具只生成<b>标准 Unix 五段式</b>（分 时 日 月 周），<b>不支持 Quartz 方言的 L／W／#</b>（如需 L／W／# 请用 Quartz 工具）；
+                    <b>日与周同时受限时取并集</b>（任一满足即执行，不是交集）；
+                    <b>周日 0 与 7 等价</b>，生成统一输出 0；
+                    <b>不存在的日期组合（如 2 月 30 日）会明确告警永不执行</b>；
+                    本工具不探测服务器、不读取你的 crontab、不托管定时任务。
+                </div>
+            </div>
+
+            <div class="cg-panel">
+                <h3>常用预设</h3>
+                <div class="cg-presets">
+                    <span class="cg-preset-label">一键载入（载入后可再改）：</span>
+                    <button type="button" class="cg-mini" data-cg-preset="every_minute">每分钟</button>
+                    <button type="button" class="cg-mini" data-cg-preset="every_5_min">每 5 分钟</button>
+                    <button type="button" class="cg-mini" data-cg-preset="hourly">每小时整点</button>
+                    <button type="button" class="cg-mini" data-cg-preset="daily_0930">每天 09:30</button>
+                    <button type="button" class="cg-mini" data-cg-preset="weekly_mon_0930">每周一 09:30</button>
+                    <button type="button" class="cg-mini" data-cg-preset="monthly_1_0930">每月 1 号 09:30</button>
+                    <button type="button" class="cg-mini" data-cg-preset="weekday_0900">工作日 09:00</button>
+                </div>
+                <p class="cg-tip">顺序固定为<b>分 时 日 月 周</b>。改动任一控件即实时重新生成，无需点按钮。</p>
+            </div>
+
+            <div class="cg-panel">
+                <h3>五段选择</h3>
+                <div class="cg-field">
+                    <div class="cg-field-head">分钟 <span class="cg-range">0–59</span></div>
+                    <div class="cg-modes">
+                        <label><input type="radio" name="cg-mode-minute" value="every" checked> 每分钟（*）</label>
+                        <label><input type="radio" name="cg-mode-minute" value="step"> 每 N 分钟（*/N）</label>
+                        <label><input type="radio" name="cg-mode-minute" value="list"> 指定值多选</label>
+                        <label><input type="radio" name="cg-mode-minute" value="range"> 范围</label>
+                    </div>
+                    <div class="cg-row">步长 N：<input type="number" id="cg-step-minute" min="1" max="59" value="1"> 范围：<input type="number" id="cg-from-minute" min="0" max="59" value="0"> – <input type="number" id="cg-to-minute" min="0" max="59" value="59"></div>
+                    <div class="cg-chips" id="cg-chips-minute"></div>
+                </div>
+                <div class="cg-field">
+                    <div class="cg-field-head">小时 <span class="cg-range">0–23</span></div>
+                    <div class="cg-modes">
+                        <label><input type="radio" name="cg-mode-hour" value="every" checked> 每小时（*）</label>
+                        <label><input type="radio" name="cg-mode-hour" value="step"> 每 N 小时（*/N）</label>
+                        <label><input type="radio" name="cg-mode-hour" value="list"> 指定值多选</label>
+                        <label><input type="radio" name="cg-mode-hour" value="range"> 范围</label>
+                    </div>
+                    <div class="cg-row">步长 N：<input type="number" id="cg-step-hour" min="1" max="23" value="1"> 范围：<input type="number" id="cg-from-hour" min="0" max="23" value="0"> – <input type="number" id="cg-to-hour" min="0" max="23" value="23"></div>
+                    <div class="cg-chips" id="cg-chips-hour"></div>
+                </div>
+                <div class="cg-field">
+                    <div class="cg-field-head">日 <span class="cg-range">1–31</span></div>
+                    <div class="cg-modes">
+                        <label><input type="radio" name="cg-mode-dom" value="every" checked> 每天（*）</label>
+                        <label><input type="radio" name="cg-mode-dom" value="step"> 每 N 天（*/N）</label>
+                        <label><input type="radio" name="cg-mode-dom" value="list"> 指定值多选</label>
+                        <label><input type="radio" name="cg-mode-dom" value="range"> 范围</label>
+                    </div>
+                    <div class="cg-row">步长 N：<input type="number" id="cg-step-dom" min="1" max="31" value="1"> 范围：<input type="number" id="cg-from-dom" min="1" max="31" value="1"> – <input type="number" id="cg-to-dom" min="1" max="31" value="31"></div>
+                    <div class="cg-chips" id="cg-chips-dom"></div>
+                </div>
+                <div class="cg-field">
+                    <div class="cg-field-head">月 <span class="cg-range">1–12</span></div>
+                    <div class="cg-modes">
+                        <label><input type="radio" name="cg-mode-month" value="every" checked> 每月（*）</label>
+                        <label><input type="radio" name="cg-mode-month" value="step"> 每 N 个月（*/N）</label>
+                        <label><input type="radio" name="cg-mode-month" value="list"> 指定值多选</label>
+                        <label><input type="radio" name="cg-mode-month" value="range"> 范围</label>
+                    </div>
+                    <div class="cg-row">步长 N：<input type="number" id="cg-step-month" min="1" max="12" value="1"> 范围：<input type="number" id="cg-from-month" min="1" max="12" value="1"> – <input type="number" id="cg-to-month" min="1" max="12" value="12"></div>
+                    <div class="cg-chips" id="cg-chips-month"></div>
+                </div>
+                <div class="cg-field">
+                    <div class="cg-field-head">周 <span class="cg-range">0–7（周日 0 与 7 等价，生成统一输出 0）</span></div>
+                    <div class="cg-modes">
+                        <label><input type="radio" name="cg-mode-dow" value="every" checked> 每天（*）</label>
+                        <label><input type="radio" name="cg-mode-dow" value="step"> 每 N 天（*/N）</label>
+                        <label><input type="radio" name="cg-mode-dow" value="list"> 指定值多选</label>
+                        <label><input type="radio" name="cg-mode-dow" value="range"> 范围</label>
+                    </div>
+                    <div class="cg-row">步长 N：<input type="number" id="cg-step-dow" min="1" max="7" value="1"> 范围：<input type="number" id="cg-from-dow" min="0" max="7" value="0"> – <input type="number" id="cg-to-dow" min="0" max="7" value="6"></div>
+                    <div class="cg-chips" id="cg-chips-dow"></div>
+                </div>
+            </div>
+
+            <div class="cg-panel">
+                <h3>生成结果</h3>
+                <div class="cg-errors" id="cg-errors"></div>
+                <pre class="cg-expr" id="cg-expr">* * * * *</pre>
+                <div class="cg-desc" id="cg-desc">每分钟执行</div>
+                <p class="cg-tip">未来 5 次执行时间（浏览器本地时区，日与周同时受限按并集推算）：</p>
+                <ul class="cg-next" id="cg-next"></ul>
+                <div class="cg-actions" style="margin-top:1rem">
+                    <button type="button" class="cg-btn cg-btn-primary" id="cg-copy">一键复制表达式</button>
+                    <button type="button" class="cg-btn cg-btn-secondary" id="cg-reset">重置</button>
+                    <a href="/tools/cron-parser" class="cg-btn cg-btn-secondary" style="text-decoration:none">已有表达式？去解析 →</a>
+                </div>
+                <p class="cg-tip" style="margin-top:.8rem">复制失败时页面会提示降级办法：手动选中上方表达式，按 Ctrl+C 复制。</p>
+            </div>
+
+            <div class="cg-panel">
+                <h3>符号说明</h3>
+                <table class="cg-table">
+                    <tr><th>符号</th><th>语义</th><th>示例</th></tr>
+                    <tr><td><code>*</code></td><td>每单位（该段所有合法值）</td><td><code>* * * * *</code> 每分钟执行</td></tr>
+                    <tr><td><code>,</code></td><td>列表（多个指定值）</td><td><code>0,30 * * * *</code> 每小时 0 分和 30 分执行</td></tr>
+                    <tr><td><code>-</code></td><td>范围（起–止，含两端）</td><td><code>0 9 * * 1-5</code> 周一至周五 09:00 执行</td></tr>
+                    <tr><td><code>/</code></td><td>步长（从起点起每 N 单位）</td><td><code>*/15 * * * *</code> 每 15 分钟执行一次</td></tr>
+                    <tr><td><code>L / W / #</code></td><td><b>Quartz 方言，本工具不支持</b>：L（最后一天）、W（最近工作日）、#（第几个周几）只在 Quartz 等扩展实现里有意义，标准五段式 crontab 不认它们；如需请用 Quartz 工具，不要把它们贴进系统 crontab。</td><td>—</td></tr>
+                </table>
+                <p class="cg-tip">并集口径示例：<code>30 9 1 * 1</code> 表示“每月 1 号<b>和</b>每周一 09:30 执行（任一满足即执行）”——1 号是周二时照样在 1 号执行，周一不是 1 号时照样在周一执行，两者不是交集。</p>
+            </div>
+
+            <div class="cg-panel">
+                <h3>使用说明</h3>
+                <p class="cg-tip">1）先选预设或逐段点选：每段四种模式（每单位／步长／指定值多选／范围）可独立切换；2）对照中文描述和未来 5 次时间确认无误后再复制；3）把表达式粘贴进系统 crontab（<code>crontab -e</code>）或定时任务配置里；4）非法输入（越界、起＞止、步长为 0）会即时报错且不输出错误表达式；5）不存在的日期组合（如 2 月 30 日）会在预览区明确提示永不执行。</p>
+                <dl class="cg-faq">
+                    <dt>为什么日和周同时受限不是“既是 1 号又是周一”？</dt>
+                    <dd>这是 crontab 的标准语义：日与周同时受限时取并集（OR），任一满足即执行。很多直觉以为是交集，本工具的描述与预览都按 OR 口径，不会把你带偏。</dd>
+                    <dt>周日写 0 还是 7？</dt>
+                    <dd>两者等价。本工具界面以周一–周日呈现，生成时统一输出 0，不会在同一表达式里混用两种周日写法。</dd>
+                    <dt>2 月 29 日能用吗？</dt>
+                    <dd>能。闰年 2 月 29 日会正常推算出下次时间；但 2 月 30 日、4 月 31 日这类在任何年份都不存在的组合，预览会明确提示永不执行。</dd>
+                    <dt>生成器和 Cron 表达式解析有什么区别？</dt>
+                    <dd>生成器是“点一点拼表达式”，解析器是“粘贴表达式说人话＋看未来时间”，一正一反。已有表达式想验证含义时点上方「已有表达式？去解析」。</dd>
+                    <dt>复制失败怎么办？</dt>
+                    <dd>浏览器剪贴板权限被拒时页面会弹出降级提示：手动选中上方输出文本，按 Ctrl+C 复制即可。</dd>
+                </dl>
+            </div>
+
+            <div class="cg-panel">
+                <h3>相关工具</h3>
+                <div class="cg-related">
+                    <span class="cg-btn cg-btn-secondary" style="cursor:default">Cron 表达式生成器（当前）</span>
+                    <a href="/tools/cron-parser" class="cg-btn cg-btn-secondary" style="text-decoration:none">Cron 表达式解析</a>
+                    <a href="/tools/timestamp" class="cg-btn cg-btn-secondary" style="text-decoration:none">时间戳转换</a>
+                    <a href="/tools/gitignore-generator" class="cg-btn cg-btn-secondary" style="text-decoration:none">.gitignore 生成器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="cg-toast"></div>
+    <script src="/tools/static/js/cron_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
