@@ -274,6 +274,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "user_agent_parser",
+					Name:        "User-Agent 解析器",
+					Description: "粘贴单条 UA 文本，实时解析浏览器（名＋版本）、操作系统（名＋版本）、设备类型（桌面/手机/平板/机器人·爬虫）、渲染引擎（Blink/WebKit/Gecko/Trident），附原始 UA 回显、一键复制与重置，Chrome/Edge/Safari macOS/Safari iPhone/Chrome Android/Firefox Linux/Googlebot/curl 8 组预设，纯前端零上传 · User agent parser: parse browser, OS, device type and engine locally, 100% client-side",
+					Path:        "/tools/user-agent-parser",
+					Icon:        "devices",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "calendar",
 					Name:        "在线日历",
 					Description: "查看日历、农历和节假日信息",

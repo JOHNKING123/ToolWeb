@@ -1,0 +1,160 @@
+{{define "user_agent_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User-Agent 解析器 - 粘贴 UA 看浏览器/系统/设备/引擎 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 User-Agent 解析器：粘贴单条 UA 文本，实时解析浏览器（名＋版本）、操作系统（名＋版本）、设备类型（桌面/手机/平板/机器人·爬虫）、渲染引擎（Blink/WebKit/Gecko/Trident），附 Chrome/Edge/Safari/Firefox/Googlebot/curl 常用预设，结果一键复制。纯前端零上传，内容不出浏览器。User agent parser: parse browser, OS, device type and engine locally, 100% client-side.">
+    <meta name="keywords" content="User-Agent,UA 解析,浏览器检测,操作系统识别,设备类型,渲染引擎,Blink,WebKit,Gecko,user agent parser,ua parser,Googlebot,开发工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/user-agent-parser">
+    <meta property="og:title" content="User-Agent 解析器 - 浏览器/系统/设备/引擎一键解析">
+    <meta property="og:description" content="粘贴单条 UA 文本，实时解析浏览器、操作系统、设备类型与渲染引擎，附 8 组常用预设与一键复制。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/user-agent-parser">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"User-Agent 解析器","description":"粘贴单条 UA 文本，实时解析浏览器（名＋版本）、操作系统（名＋版本）、设备类型（桌面/手机/平板/机器人·爬虫）、渲染引擎（Blink/WebKit/Gecko/Trident），附常用预设与一键复制，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/user-agent-parser","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .uap-wrap .container{max-width:960px;margin:0 auto;padding:1.2rem}
+        .uap-wrap .navbar .material-icons{display:none}
+        .uap-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1.1rem}
+        .uap-card h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .uap-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .uap-privacy b{color:#b45309}
+        .uap-privacy ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .uap-privacy li{margin-bottom:.2rem}
+        .uap-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .uap-label{font-size:.92rem;font-weight:700;color:#111827;display:block;margin-bottom:.4rem}
+        .uap-textarea{width:100%;min-height:6rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.65;white-space:pre-wrap;overflow:auto}
+        .uap-textarea:focus{outline:none;border-color:var(--primary-color)}
+        .uap-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .uap-actions .btn{cursor:pointer}
+        .uap-presets{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+        .uap-preset{background:#f8f9fa;border:1px solid #dee2e6;border-radius:2rem;padding:.4rem .9rem;font-size:.88rem;color:#333;cursor:pointer}
+        .uap-preset:hover{background:#e9ecef;border-color:#ced4da}
+        .uap-result{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem}
+        .uap-field{border:1px solid #e5e7eb;border-radius:.6rem;background:#f8fafc;padding:.7rem 1rem;min-width:0}
+        .uap-field .uap-field-label{font-size:.82rem;color:#6b7280;margin-bottom:.2rem}
+        .uap-field .uap-field-value{font-size:1rem;font-weight:700;color:#111827;word-break:break-all}
+        .uap-field-full{grid-column:1/-1}
+        .uap-raw{overflow-x:auto}
+        .uap-raw code{display:block;font-size:.88rem;line-height:1.7;word-break:break-all;white-space:pre-wrap}
+        .uap-empty{border:1px dashed #d1d5db;border-radius:.6rem;padding:1rem;color:#6b7280;font-size:.92rem;line-height:1.8}
+        .uap-limits{font-size:.9rem;line-height:1.9;color:#374151}
+        .uap-limits li{margin-bottom:.3rem}
+        @media (max-width:720px){.uap-result{grid-template-columns:1fr}.uap-actions .btn{flex:1;justify-content:center}}
+    </style>
+</head>
+<body>
+    <div class="uap-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>User-Agent 解析器</h1>
+            <p>粘贴单条 UA 文本，实时解析浏览器（名＋版本）、操作系统（名＋版本）、设备类型（桌面／手机／平板／机器人·爬虫）、渲染引擎（Blink／WebKit／Gecko／Trident），附原始 UA 回显与一键复制。调接口、看日志、排障时，先把 UA 拆开看清楚。</p>
+        </div>
+        <div class="tool-content">
+            <div class="uap-privacy" role="note">
+                <div><b>先说清四项真限制，再用：</b>
+                    <ul>
+                        <li><b>UA 可伪造，仅供参考：</b>UA 是客户端自报的字符串，任何人都能改写，解析结果不能当作身份或设备证明。</li>
+                        <li><b>Win10 / 11 无法区分：</b>两者都报 Windows NT 10.0，本页一律标为“Windows 10 / 11”，不假装能分清。</li>
+                        <li><b>iOS 引擎一律 WebKit：</b>iOS 强制所有浏览器用 WebKit，Chrome（CriOS）／Firefox（FxiOS）在 iPhone 上引擎也是 WebKit，不是 Blink／Gecko。</li>
+                        <li><b>不做指纹识别：</b>本页只拆你粘贴的这一串字符，不采集、不推断、不追踪用户身份。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="uap-card">
+                <h3>粘贴 User-Agent</h3>
+                <label class="uap-label" for="uap-input">User-Agent 字符串（单条）</label>
+                <textarea id="uap-input" class="uap-textarea" placeholder="例如：Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" spellcheck="false" aria-label="User-Agent 字符串"></textarea>
+                <p class="uap-note" style="margin-top:.5rem;">输入变化即实时解析，也可点“解析”手动触发。全部解析在当前浏览器本地完成，零上传、零后端调用。</p>
+                <div class="uap-actions" style="margin-top:.8rem;">
+                    <button type="button" class="btn btn-primary" id="uap-parse">解析</button>
+                    <button type="button" class="btn btn-primary" id="uap-current">填入当前浏览器 UA</button>
+                    <button type="button" class="btn btn-primary" id="uap-copy">复制解析结果</button>
+                    <button type="button" class="btn" id="uap-reset">重置</button>
+                </div>
+                <p class="uap-note" id="uap-copy-msg" style="margin-top:.6rem;"></p>
+                <div class="uap-presets" aria-label="常用 UA 预设">
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36">Chrome / Windows</button>
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.2903.86">Edge / Windows</button>
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15">Safari / macOS</button>
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1">Safari / iPhone</button>
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.87 Mobile Safari/537.36">Chrome / Android</button>
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0">Firefox / Linux</button>
+                    <button type="button" class="uap-preset" data-uap-preset="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)">Googlebot</button>
+                    <button type="button" class="uap-preset" data-uap-preset="curl/8.5.0">curl</button>
+                </div>
+                <p class="uap-note" style="margin-top:.6rem;">预设载入后可直接编辑再解析；重置后回到默认空状态。</p>
+            </div>
+
+            <div class="uap-card">
+                <h3>解析结果</h3>
+                <div id="uap-empty" class="uap-empty">在上方粘贴一条 UA 后，这里实时显示浏览器、操作系统、设备类型与渲染引擎。空输入时这里保持空态，不输出占位结论。</div>
+                <div id="uap-result" class="uap-result" style="display:none;">
+                    <div class="uap-field"><div class="uap-field-label">浏览器</div><div class="uap-field-value" id="uap-browser">—</div></div>
+                    <div class="uap-field"><div class="uap-field-label">浏览器版本</div><div class="uap-field-value" id="uap-browser-version">—</div></div>
+                    <div class="uap-field"><div class="uap-field-label">操作系统</div><div class="uap-field-value" id="uap-os">—</div></div>
+                    <div class="uap-field"><div class="uap-field-label">设备类型</div><div class="uap-field-value" id="uap-device">—</div></div>
+                    <div class="uap-field"><div class="uap-field-label">渲染引擎</div><div class="uap-field-value" id="uap-engine">—</div></div>
+                    <div class="uap-field uap-field-full uap-raw"><div class="uap-field-label">原始 UA（长串在小屏可横向滚动）</div><code id="uap-raw">—</code></div>
+                </div>
+            </div>
+
+            <div class="uap-card">
+                <h3>使用说明</h3>
+                <div class="uap-note">
+                    1. 粘贴单条 UA（从浏览器开发者工具、服务端日志或 curl -A 里抄来的都行），结果即时出现。<br>
+                    2. 检测顺序是写死的：机器人优先 → Edge 在 Chrome 前 → Opera 在 Chrome 前 → 三星浏览器 → Chrome（含 iOS CriOS）→ Firefox（含 iOS FxiOS）→ Safari → IE → 未知——因为 Edge／Opera 的 UA 里本身就含 Chrome token，不按这个顺序会误判成 Chrome。<br>
+                    3. 无意义输入（如随手打的几个词）各字段显示“未知”，不报错、不猜测；空输入显示空态。<br>
+                    4. 点“填入当前浏览器 UA”可直接看自己浏览器的 UA 拆解；预设载入后可编辑再解析。<br>
+                    5. 想查 URL 参数请去 <a href="/tools/url-parser" style="color:#1a0dab;">URL 解析器</a>；想查状态码语义请去 <a href="/tools/http-status-reference" style="color:#1a0dab;">HTTP 状态码参考</a>；本工具只拆 UA 字符串。
+                </div>
+            </div>
+
+            <div class="uap-card">
+                <h3>常见问题</h3>
+                <div class="uap-note">
+                    <b>为什么 Edge 会被认成 Chrome？</b>不会——Edge 的 UA 里确实含 Chrome token，但本页先判 Edg token，所以 Edg 一律判 Edge，不会落到 Chrome 分支；Opera（OPR）同理。<br>
+                    <b>为什么 iPhone 上的 Chrome 引擎是 WebKit 不是 Blink？</b>iOS 强制所有浏览器用系统 WebKit，CriOS 只是 Chrome 的壳，引擎仍是 WebKit；这是系统限制，不是解析错误。<br>
+                    <b>为什么 Windows 只显示“10 / 11”不写死一个？</b>Win10 与 Win11 的 UA 都是 Windows NT 10.0，UA 里没有区分信息，写死任何一个都是编造，所以标“10 / 11”并明说无法区分。<br>
+                    <b>Linux 为什么不显示发行版？</b>多数 Linux UA 只有 Linux token、没有发行版信息；无发行版 token 时本页只写 Linux，不猜 Ubuntu／Debian；UA 里字面带发行版 token（如 Ubuntu）时才显示它。<br>
+                    <b>UA 解析能用来识别用户吗？</b>不能。UA 可伪造、且大量设备 UA 完全相同，本页不做指纹识别、不做身份推断，只做字符串结构拆解。
+                </div>
+            </div>
+
+            <div class="uap-card">
+                <h3>相关工具</h3>
+                <div class="uap-note">
+                    <a href="/tools/url-parser" style="color:#1a0dab;">URL 解析器</a>（拆 URL 结构） ·
+                    <a href="/tools/http-status-reference" style="color:#1a0dab;">HTTP 状态码参考</a>（查状态码语义） ·
+                    <a href="/tools/cron-parser" style="color:#1a0dab;">Cron 表达式解析器</a>（同为“解析方向”的纯前端工具） ·
+                    <a href="/tools/hmac-generator" style="color:#1a0dab;">HMAC 生成器</a>（调试 Webhook 签名）
+                </div>
+            </div>
+
+            <div class="uap-card">
+                <h3>真限制说明</h3>
+                <ul class="uap-limits">
+                    <li><b>UA 可伪造，仅供参考：</b>UA 是客户端自报字符串，可任意改写；解析结果不能当作身份、设备或访问者证明，风控判断请结合服务端其它信号。</li>
+                    <li><b>Win10 / 11 无法区分：</b>两者 UA 均为 Windows NT 10.0，本页一律标为“Windows 10 / 11”，不假装能分清。</li>
+                    <li><b>iOS 引擎一律 WebKit：</b>iOS 强制所有浏览器使用系统 WebKit；CriOS／FxiOS／EdgiOS 在 iOS 上引擎均为 WebKit，与桌面版不同。</li>
+                    <li><b>不做指纹识别：</b>本页只拆解你主动粘贴的单条 UA，不采集设备信息、不做跨站追踪、不推断用户身份。</li>
+                    <li><b>Linux 无发行版 token 时不编造发行版：</b>只有 UA 里字面出现发行版 token 才显示，否则只写 Linux。</li>
+                    <li><b>识别不出给未知，不猜测：</b>无意义输入各字段为“未知”、不报错；空输入为空态，不输出占位结论。</li>
+                    <li><b>内容不出浏览器：</b>全部解析在本地完成，零 fetch／XHR、零 CDN，粘贴的 UA 不上传到任何服务器。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/user_agent_parser.js?v=1"></script>
+</body>
+</html>
+{{end}}

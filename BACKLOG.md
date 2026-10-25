@@ -1,3 +1,89 @@
+## 今日任务（2026-10-25 21:38 · 产品经理排期轮）
+
+**选定：User-Agent 解析器（user_agent_parser）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（103 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。19:40 PM 轮选 HMAC 生成器时已明言：User-Agent 解析器仅因顺位在 HMAC 之后而后置、「下轮首席递进」；HMAC 生成器已交付划出（0797909，175 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——103 轮新晋的 TOTP／HTTP 响应头／JSON 字符串转义器虽同为小难度纯前端，均不插队。
+- **未选**：.htaccess 生成器（100 轮新晋 P2，103 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 User-Agent 解析器之后而后置，下轮首席递进；真限制仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效，生成前提示备份原文件）；Cron 表达式生成器（100 轮新晋 P2，103 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制标准五段式口径、不承诺 Quartz 等方言；注意与已交付的 Cron 表达式解析（ID cron、Path /tools/cron-parser）方向互补不重叠——解析是「读表达式说人话」，本轮未选的生成器是「可视化拼表达式」，两者语义不同）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进；真限制各见研究轮记录）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；Cron 表达式解析器方向已交付（cron-parser），不再作为观察项单独立项，观察项中该条划出；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -ci 'user_agent|htaccess|cron_generator' tools/categories.go` = 0；templates/ 与 static/js/ 无 user_agent／htaccess 文件（仅有已交付的 cron_parser 方向文件，与三者均不同）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **175 Path**；`git log` 头部 0797909（HMAC 生成器新增）／c7ea3a8（robots.txt 校验器新增）／348053c（Bcrypt 新增）。自有近邻辨析：① 无浏览器／设备检测类工具（`grep -i 'apache|nginx|htaccess'` 零命中；UA／操作系统检测类描述零命中）；② url_parser 只拆 URL 结构、http-status-reference 只查状态码语义，均不解析 UA 字符串；③ 日志脱敏类工具（prompt_sanitizer）只做敏感信息替换、不做 UA 结构拆解——本工具是「UA 字符串→浏览器／版本／操作系统／设备类型／引擎」的结构化解析，互补不重叠。无可复用业务代码，仅可借鉴 HMAC 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式。
+- **选定理由**：① **痛点直观且高频**——日志、埋点、客服工单里一长串 UA 肉眼拆结构易错，粘贴即出结论是最直接的解法；② **一轮可高质量交付**——纯字符串规则解析、无依赖、无需手写复杂算法，检测顺序与边界用例天然可断言；③ **无硬伤**——「UA 可伪造、仅供参考」属可明示的真限制，不构成跳过理由；④ **调试工具组成组价值**——与 HMAC／JWT／Bcrypt 同属开发调试旅程，开发者粘贴日志排障时顺手可用。
+- **品类归位**：注册到「开发工具」品类（与 hmac_generator、jwt_signer_verifier 同品类，便于调试工具成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **UA 可伪造、仅供参考**——页面首屏明示，解析结果不能作为身份认证、风控判定或精确统计依据；② **Windows 10／11 无法区分**——Windows NT 10.0 同时对应 Win10 与 Win11，必须显示为「Windows 10 / 11（NT 10.0 无法区分）」，不许假装精确；③ **iOS 浏览器引擎一律 WebKit**——iOS 上所有浏览器（含 Chrome CriOS、Edge EdgiOS、Firefox FxiOS）均受 Apple 限制使用 WebKit，引擎栏必须标 WebKit、不许按桌面规则标 Blink／Gecko；④ **识别不出时给「未知」不猜测**——无匹配 token 时各字段显示未知、不崩溃、不硬套默认值；⑤ **不做指纹识别**——本工具只解析用户主动粘贴的单条 UA 文本，不读取访问者自身 navigator.userAgent 做画像、不做跨站追踪判定，页面明示边界。
+
+**规格**（开发轮按此执行）：
+- 核心解析：粘贴单条 UA 文本→结构化输出五项：浏览器（名称＋版本）、操作系统（名称＋版本）、设备类型（桌面／手机／平板／机器人·爬虫）、渲染引擎（Blink／WebKit／Gecko／Trident／未知）、原始 UA 回显；输入变化即实时解析（无需点按钮也可看结果），并保留「解析」按钮供明确触发。
+- 检测顺序（防误标，开发轮必须按此顺序实现并用例覆盖）：机器人／爬虫特征（bot／crawler／spider 及 Googlebot／Bingbot 等知名爬虫名）优先；Edge（Edg／EdgA／EdgiOS）在 Chrome 之前；Opera（OPR）在 Chrome 之前；三星浏览器在 Chrome 之前；Chrome（含 CriOS）；Firefox（含 FxiOS）；Safari（Version／＋Safari 且不含 Chrome 系 token）；IE（MSIE／Trident＋rv:）；其余→未知。
+- 操作系统规则：Windows NT 版本映射表（6.1→Win7、6.3→Win8.1、10.0→Win10／11 标注法见真限制）；macOS 下划线版本号转点分（10_15_7→10.15.7）；iOS（CPU iPhone／iPad OS）；Android（Android 后版本号）；Linux（无发行版 token 时标「Linux（发行版未标明）」，不编造发行版）。
+- 设备规则：含 Mobile→手机；iPad 或 Android 且无 Mobile→平板；机器人特征→机器人·爬虫；其余桌面端 token→桌面；无法判定→未知。
+- 预设与操作：至少 6 组常用 UA 预设一键载入（Chrome Windows、Edge Windows、Safari macOS、Safari iPhone、Chrome Android、Firefox Linux，另加 Googlebot 与 curl 各 1 组为宜）；预设载入后可编辑再解析；解析结果附一键复制（文本版）与「重置」回到默认空状态；复制失败有明确降级提示（手动复制指引）。
+- 技术路线：纯前端、无依赖（手写规则解析，不引入 UA 解析库）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，检测顺序／版本提取／系统映射／设备判定／引擎映射等纯函数均可 node 断言）。
+- 注册：ID `user_agent_parser`、Name「User-Agent 解析器」、Path `/tools/user-agent-parser`、Category 开发工具、Icon 建议 devices、New: true；中英文描述＋SEO keywords（User-Agent、UA 解析、浏览器检测、操作系统识别、设备类型、user agent parser）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/user-agent-parser，相关工具互链开发工具品类内调试类工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `user_agent_parser`、Path `/tools/user-agent-parser` 注册完整（Category 开发工具），注册总数 175→176 Path。
+2. 浏览器闭环：Chrome Windows UA 判 Chrome 131（见下向量 1）；Edge UA 判 Edge 而非 Chrome（向量 5）；Safari iPhone UA 判 Safari 17.2（向量 2）；Firefox Linux UA 判 Firefox 133（向量 3）；Chrome iOS（CriOS）判 Chrome 且引擎为 WebKit（向量 6）。
+3. 系统与设备闭环：向量 1 判 Windows 10 / 11（NT 10.0 标注法）＋桌面＋Blink；向量 2 判 iOS 17.2＋手机＋WebKit；向量 4（Googlebot）判机器人·爬虫、不硬标浏览器版本。
+4. 容错闭环：输入无意义文本（如 `hello`）时各字段为未知、页面不报错、不崩溃；空输入时结果区为空态提示、不输出假结论。
+5. 预设与复制闭环：6 组以上预设一键载入后均有内容、且载入后可编辑再解析；复制结果可用；重置后回到默认空状态。
+6. 真限制可见：页面可见「UA 可伪造、仅供参考」「Windows 10／11 无法区分」「iOS 引擎一律 WebKit」「不做指纹识别」文案；零 fetch／XHR、零 CDN（源码自检无外部 URL）。
+7. node 测试 25+ 断言全过（检测顺序、版本提取、系统映射、设备判定、引擎映射、机器人识别、未知容错、预设载入、注册与零网络请求静态检查）。
+8. 页面无报错；移动端布局不错位；长 UA 小屏可横向滚动、不撑破。
+9. 验收向量（开发轮测试必须覆盖，版本号以 token 为准）：
+   - ① `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36` → Chrome 131／Windows 10 / 11／桌面／Blink；
+   - ② `Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1` → Safari 17.2／iOS 17.2／手机／WebKit；
+   - ③ `Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0` → Firefox 133／Linux／桌面／Gecko；
+   - ④ `Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)` → 机器人·爬虫／Googlebot；
+   - ⑤ `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0` → Edge 131（非 Chrome）；
+   - ⑥ `Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/131.0.0.0 Mobile/15E148 Safari/604.1` → Chrome／iOS／手机／WebKit。
+
+**预计改动文件**：
+- `templates/user_agent_parser.html`（新增；含 SEO 面板按家族标准＋UA 输入区／结构化结果区／预设与重置 UI）
+- `static/js/user_agent_parser.js`（新增；检测顺序／版本提取／系统映射／设备判定／引擎映射／复制逻辑；双模式导出供 node 测试）
+- `tests/user_agent_parser.test.js`（新增；顺序、版本、系统、设备、引擎、机器人、容错、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID user_agent_parser、Path /tools/user-agent-parser、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 0797909（HMAC 生成器新增）／c7ea3a8（robots.txt 校验器新增）／348053c（Bcrypt 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **175**；Top3 候选重叠复核（user_agent_parser／htaccess_generator／cron_generator 三路零命中实锤；已交付 cron-parser 为解析方向、与生成器语义互补不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 21:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第一百零三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。HMAC 生成器已交付闭环（0797909 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **175 Path**，ID hmac_generator、Path /tools/hmac-generator 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:36 晚轮，优先小难度纯前端。
+**本轮三件事**（21:36 全网调研，通用方向）：
+1. HMAC 交付确认：`git log` 头部 0797909（HMAC 生成器新增）／c7ea3a8（robots 校验器新增）／348053c（Bcrypt 新增）；全量 175 Path；templates/hmac_generator.html 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（补入 github.com host key 后静默成功，无报错）。User-Agent／.htaccess／Cron 生成器／匿名抽签／Lorem／bezier／骨架屏／ULID／.env／词云／定宽换行／CRC／JSONPath／TOML 复核仍未交付（`grep -c 'user_agent|htaccess|cron_generator'` = 0）。
+2. 新信号扫描：
+   - **webutil／dev.openvibe／datatoolbase／toolsforcode／utilshed／utilify 六榜＋dev.to 13 工具榜**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Base64、哈希、Bcrypt、UUID、时间戳、URL 解析、HTTP 状态码、Markdown 预览 → **全部自有实锤消解**（JSON Schema 验证对应已注册 json_schema_validator；HTML 实体编解码对应已注册 htmlentities，ID 易误判为缺失、实为已覆盖；CSS／JS 压缩对应已注册 code_minifier「代码压缩器」自研 JS/CSS 压缩引擎；Chmod 对应已注册 chmod「Chmod 权限计算器」；进制转换对应已注册 base_converter；图片转 Base64 对应已注册 img2base64；Favicon 对应已注册 favicon_generator；cURL 转代码对应已注册 curl_to_requests，语义为 cURL→Python Requests）；
+   - **TOTP 一次性密码生成器（toolsforcode 50 工具榜单源）** → `grep -ci 'otp|authenticator|two.factor'` = **0 实锤**、无模板 → **新晋 P2「TOTP 一次性密码生成器」**（痛点：对接／调试带 2FA 的登录流程时，要反复在手机验证器 App 与测试账号之间来回抄 6 位码，测试账号换密钥就要重新扫码绑定；纯前端小难度：Base32 密钥或 otpauth:// 链接输入＋WebCrypto HMAC-SHA1/256/512 本地算码＋6/8 位切换＋30 秒有效期倒计时＋当前码一键复制＋时间步偏移说明，零上传；建议 ID totp_generator、Path /tools/totp-generator；真限制：仅调试用、勿贴真实生产账号 2FA 密钥；设备时钟与服务器偏差过大会导致码无效，页面明示对时；不做扫码绑定、不替代验证器 App）；
+   - **HTTP 响应头分析器（webutil 开发者工具榜单源）** → `grep -ci 'header_analy|security.?header|http.?header'` = **0 实锤**、无模板；自有 url_parser 只拆 URL 结构、http-status-reference 只查状态码语义，均无响应头语义 → **新晋 P2「HTTP 响应头分析器」**（痛点：抓包或 curl -i 拿到一串原始响应头，看不出缺了哪些安全头、缓存与 CORS 头各自在说什么，只能逐条去查文档；纯前端小难度：粘贴原始响应头文本→结构化表格（名／值／中文说明）＋安全头缺失检查清单（Content-Security-Policy／Strict-Transport-Security／X-Frame-Options／X-Content-Type-Options／Referrer-Policy／Permissions-Policy）＋缓存头（Cache-Control／ETag）与 CORS 头（Access-Control-Allow-*）分组说明＋一键复制表格，零上传；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只分析粘贴文本、不在线抓取目标站（CORS 拦截故不做 fetch）；只做头缺失提示、不做漏洞扫描结论）；
+   - **JSON 字符串转义器（dev.openvibe 榜单源）** → `grep -ci 'json_string'` = **0 实锤**、无模板；自有 json 格式化器只做美化／压缩、不做转义字面量输出 → **新晋 P2「JSON 字符串转义器」**（痛点：把一段 JSON 塞进代码字符串、日志或 curl 请求体时，引号与换行要手工转义，漏一个反斜杠就解析失败；纯前端小难度：JSON 文本↔转义字符串字面量双向互转（\"／\\／\n／\t／\uXXXX）＋一键复制＋转义前后长度对照，零上传；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：仅做转义层处理，输入非合法 JSON 时先报解析错误、不静默输出）；
+   - **观察项续留**：Cron 表达式解析器（datatoolbase／toolsforcode／devkit 三源再现；与留池的 cron_generator（100 轮，生成方向）为正反两面——解析方向是「读现有表达式→说人话＋下次执行时间」，生成方向是「可视化拼表达式」，语义互补但同属 Cron 一族，为防一族两工具并行、暂记观察项，待 cron_generator 交付后视情况合并或单立）；密码强度独立检测器／证书解码器／颜色阶梯生成器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（100-101 轮观察项，续留）；中文搜索（V2EX／希望有一个网站能…）本轮返回均为旧帖／无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：HMAC 生成器已交付划出（0797909，175 Path）；**新晋 P2 3 个**（TOTP 一次性密码生成器、HTTP 响应头分析器、JSON 字符串转义器：均为多榜验证、零命中实锤、纯前端小难度）；自有实锤消解 15+ 项（JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳／URL 解析／HTTP 状态码／Markdown 预览／JSON Schema／HTML 实体／代码压缩／Chmod／进制转换／图片转 Base64／Favicon／cURL 转 Requests）；观察项续留 7 条；全量 175 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；HMAC 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，102 轮 Top3 第二、三顺位依次递进，第三顺位取 100 轮新晋中最老且无硬伤的 Cron 生成器）：
+
+1. **User-Agent 解析器** — P2 留池顺位递进（97 轮新晋；103 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；痛点：日志里一长串 UA 看不出浏览器／系统／设备，手工拆结构易错；纯前端小难度：粘贴 UA→浏览器／版本／操作系统／设备类型／引擎拆解＋常用 UA 预设，零上传；零命中实锤；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）。
+2. **.htaccess 生成器** — P2 留池顺位递进（100 轮新晋；103 轮复核仍未交付；webutil 榜＋六源验证；痛点：虚拟主机／Apache 站点改 HTTPS 强制跳转、www 归一、301 迁移、缓存与压缩、安全头、防盗链、敏感文件保护都要手写 mod_rewrite 语法，写错一行整站 500；纯前端小难度：分组开关＋WordPress／Security／Performance／Minimal 预设→实时生成 .htaccess 文本＋一键复制／下载，零上传；零命中实锤；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效，生成前提示备份原文件）。
+3. **Cron 表达式生成器** — P2 留池顺位递进（100 轮新晋；103 轮复核仍未交付；webutil／datatoolbase／toolsforcode 多榜再现；痛点：手写 cron 五段式（分时日月周）顺序易错、特殊符号（*／,／-／L／W／#）语义靠背；纯前端小难度：可视化分段选择（分钟／小时／日／月／周）＋特殊符号说明→实时生成标准五段式表达式＋下次执行时间预览＋一键复制，零上传；零命中实锤；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 等方言；解析方向（读表达式说人话）另记观察项，不与本工具混同）。
+
+其余 P2 留池（顺位在 Top3 之后）：匿名抽签生成器（100 轮新晋；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接）；Lorem Ipsum 生成器（101 轮新晋；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义）；CSS 缓动曲线生成器（101 轮新晋；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅输出 cubic-bezier()）；CRC 校验和计算器（102 轮新晋；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只检错不防篡改、CRC-16 变体须标明口径）；JSONPath 测试器（102 轮观察项晋升；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）；TOML 格式化器（102 轮观察项晋升；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：注释与排版可能不完全保留、不做 TOML⇄JSON 互转）；TOTP 一次性密码生成器（103 轮新晋；建议 ID totp_generator、Path /tools/totp-generator；真限制：仅调试用勿贴真实 2FA 密钥、时钟偏差致码无效）；HTTP 响应头分析器（103 轮新晋；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只分析粘贴文本不在线抓取、不做漏洞扫描结论）；JSON 字符串转义器（103 轮新晋；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：非合法 JSON 先报错、不静默输出）；词云生成器／文本定宽换行器（99 轮新晋；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Cron 表达式解析器／密码强度独立检测器／证书解码器／颜色阶梯生成器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 102 轮及之前记录。
+
+**通用候选表增量**（第一百零三轮：HMAC 生成器已交付划出（0797909 新增；ID hmac_generator、Path /tools/hmac-generator 已注册，开发工具品类；全量 175 Path；候选池划出）；**新晋 P2 3 个：TOTP 一次性密码生成器**（toolsforcode 榜单源；痛点：调试带 2FA 的登录流程要在验证器 App 与测试账号间来回抄码；Base32／otpauth 输入＋WebCrypto 本地算码＋倒计时＋一键复制，纯前端小难度；`otp|authenticator` 零命中实锤；建议 ID totp_generator、Path /tools/totp-generator；真限制：仅调试用勿贴真实 2FA 密钥、时钟偏差致码无效）、**HTTP 响应头分析器**（webutil 榜单源；痛点：curl -i 拿到的原始响应头看不出缺哪些安全头、缓存与 CORS 头语义靠查文档；结构化表格＋安全头缺失清单＋分组说明，纯前端小难度；`header_analy` 零命中实锤；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只分析粘贴文本不在线抓取、不做漏洞扫描结论）、**JSON 字符串转义器**（dev.openvibe 榜单源；痛点：JSON 塞进代码字符串／日志时引号换行需手工转义；双向互转＋长度对照，纯前端小难度；`json_string` 零命中实锤；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：非合法 JSON 先报错）；自有实锤消解 15+ 项（JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳／URL 解析／HTTP 状态码／Markdown 预览／JSON Schema／HTML 实体 htmlentities／代码压缩 code_minifier／Chmod／进制转换／图片转 Base64 img2base64／Favicon／cURL 转 Requests）；观察项续留 7 条（Cron 表达式解析器新记＋密码强度／证书解码器／颜色阶梯／Slug／Meta 标签／ads.txt）；中文搜索无可消化需求帖；全量 175 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HMAC 生成器 | 已交付划出（0797909 新增；ID hmac_generator、Path /tools/hmac-generator 已注册，开发工具品类；全量 175 Path；候选池划出） | — | 已实现 |
+| TOTP 一次性密码生成器 | 新晋 P2（103 轮；toolsforcode 榜单源；痛点：调试带 2FA 的登录流程要在验证器 App 与测试账号间来回抄码；Base32／otpauth 输入＋WebCrypto 本地算码＋30 秒倒计时＋一键复制，零上传；`otp|authenticator` 零命中实锤；建议 ID totp_generator、Path /tools/totp-generator；真限制：仅调试用勿贴真实 2FA 密钥、时钟偏差致码无效） | 小 | P2（103 轮新晋） |
+| HTTP 响应头分析器 | 新晋 P2（103 轮；webutil 榜单源；痛点：curl -i 的原始响应头看不出缺哪些安全头、缓存与 CORS 头语义靠查文档；结构化表格＋安全头缺失清单＋分组说明，零上传；`header_analy` 零命中实锤；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只分析粘贴文本不在线抓取、不做漏洞扫描结论） | 小 | P2（103 轮新晋） |
+| JSON 字符串转义器 | 新晋 P2（103 轮；dev.openvibe 榜单源；痛点：JSON 塞进代码字符串／日志时引号换行需手工转义；双向互转＋长度对照，零上传；`json_string` 零命中实锤；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：非合法 JSON 先报错） | 小 | P2（103 轮新晋） |
+| 自有实锤消解 | 不立（JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳／URL 解析／HTTP 状态码／Markdown 预览／JSON Schema json_schema_validator／HTML 实体 htmlentities／代码压缩 code_minifier／Chmod／进制转换 base_converter／图片转 Base64 img2base64／Favicon／cURL 转 Requests 均已注册） | — | 不立 |
+| 观察项 | Cron 表达式解析器（103 轮新记；与留池 cron_generator 正反两面，待生成器交付后视情况合并或单立）；密码强度独立检测器（101 轮续留；与 password_generator 同族防串味）；证书解码器（101 轮续留；需 PEM／DER 解析）；颜色阶梯生成器（101 轮续留；与 color_palette_generator 贴太近）；Slug 生成器（100 轮续留；中文标题需拼音词典）；Meta 标签生成器（100 轮续留；与 og_card_preview 贴太近）；ads.txt 校验器（100 轮及之前观察项，续留） | — | 观察 |
+
+**归档说明**：本轮为 10-25 通用调研第一百零三轮——HMAC 生成器交付闭环（0797909，`/tools/hmac-generator` 已注册，开发工具品类，全量 175 Path），候选池划出；**新晋 P2 3 个**（TOTP 一次性密码生成器、HTTP 响应头分析器、JSON 字符串转义器：多榜验证，纯前端小难度，零命中实锤各附真限制）；15+ 项自有实锤消解（含 htmlentities／code_minifier 两处易误判为缺失的已覆盖项）；7 条观察项续留；WPS 候选表保持冻结归档；仓库 175 注册工具全量核对无重叠（Top3 建议 ID user_agent_parser / htaccess_generator / cron_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 0797909（HMAC 生成器新增）／c7ea3a8（robots 校验器新增）／348053c（Bcrypt 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **175**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；补入 github.com host key 后静默成功）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 19:40 · 产品经理排期轮）
 
 **选定：HMAC 生成器（hmac_generator）** — 本轮唯一任务（新工具）：
