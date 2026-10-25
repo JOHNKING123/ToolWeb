@@ -1,0 +1,197 @@
+{{define "bcrypt_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bcrypt 生成与验证器 - $2b$ 密码哈希生成、验证与结构拆解在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Bcrypt 生成与验证器：成本因子 4–15 可调生成 $2b$ 哈希（60 字符），随机盐与固定盐复现，口令与哈希二值验证，哈希结构四段拆解。纯前端本地运行，口令与哈希不出浏览器。">
+    <meta name="keywords" content="bcrypt,bcrypt 生成器,密码哈希,哈希验证,$2b$,password hash,bcrypt generator,bcrypt verify,成本因子,盐">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bcrypt-generator">
+    <meta property="og:title" content="Bcrypt 生成与验证器 - $2b$ 哈希生成、验证与拆解">
+    <meta property="og:description" content="成本可调生成 $2b$ 哈希，随机盐与固定盐复现，二值验证，结构四段拆解。纯前端本地运行，口令不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bcrypt-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Bcrypt 生成与验证器","description":"免费在线 Bcrypt 生成与验证器：成本因子可调生成 $2b$ 哈希，随机盐与固定盐复现，二值验证与哈希结构拆解，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/bcrypt-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bg-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .bg-wrap .navbar .material-icons { display: none; }
+        .bg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .bg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .bg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .bg-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .bg-row label { font-size:.92rem; color:#374151; min-width:4.5em; }
+        .bg-row input[type=password], .bg-row input[type=text] { flex:1; min-width:180px; max-width:520px; padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .bg-row input[type=range] { flex:1; min-width:160px; max-width:360px; }
+        .bg-cost-val { font-size:1.1rem; font-weight:700; color:#111827; min-width:2em; text-align:center; }
+        .bg-error { color:#dc2626; font-size:.88rem; min-height:1.2em; margin:.2rem 0 .4rem; }
+        .bg-status { color:#374151; font-size:.88rem; min-height:1.2em; margin:.2rem 0 .4rem; }
+        .bg-check { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:#374151; cursor:pointer; }
+        .bg-hash { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; overflow-x:auto; }
+        .bg-hash:empty { display:none; }
+        .bg-meta { color:#374151; font-size:.9rem; margin:.3rem 0; }
+        .bg-badge { display:inline-block; padding:.25rem .9rem; border-radius:999px; font-size:1rem; font-weight:700; }
+        .bg-badge:empty { display:none; }
+        .bg-match { background:#dcfce7; color:#166534; }
+        .bg-nomatch { background:#fee2e2; color:#991b1b; }
+        .bg-part-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:baseline; margin:.45rem 0; font-size:.92rem; }
+        .bg-part-key { color:#374151; min-width:7em; }
+        .bg-part-val { background:#f3f4f6; border-radius:.4rem; padding:.15rem .5rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; word-break:break-all; overflow-x:auto; }
+        .bg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .bg-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; overflow-x:auto; }
+        .bg-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .bg-tip a { color:var(--primary-color); }
+        .bg-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .bg-links a { color:var(--primary-color); font-size:.93rem; }
+        .bg-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        .bg-warn { background:#fef3c7; border:1px solid #f59e0b; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; color:#92400e; line-height:1.9; font-size:.93rem; }
+        .bg-warn b { color:#78350f; }
+        .bg-examples { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:.7rem; }
+        .bg-example { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem; cursor:pointer; background:#fff; text-align:left; font-size:.9rem; color:#374151; }
+        .bg-example:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        @media (max-width:640px) {
+            .bg-row input[type=password], .bg-row input[type=text] { max-width:100%; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="bg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔒 Bcrypt 生成与验证器</h1>
+            <p>成本可调生成 $2b$ 哈希，随机盐与固定盐复现，二值验证，哈希结构四段拆解</p>
+        </div>
+        <div class="tool-content" id="bg-form">
+            <div class="bg-warn">
+                <b>真限制（请先读）：</b>本工具仅供测试、演示与迁移校验，生产口令哈希应在服务端做；<b>勿贴真实生产口令</b>；只做 <b>$2b$</b> 口径，不承诺 $2a$ / $2y$ 变体互通细节；<b>bcrypt 不可逆</b>，拆解只展示结构、不能反推口令；口令与哈希只在浏览器本地计算，<b>不出浏览器</b>，本页面零网络请求。
+            </div>
+
+            <div class="bg-card">
+                <h3>生成模式 <span class="bg-hint">（口令＋成本滑杆＋可选固定盐，生成 60 字符 $2b$ 哈希）</span></h3>
+                <div class="bg-row">
+                    <label>口令</label>
+                    <input type="password" id="bg-gen-password" placeholder="输入要哈希的口令（仅测试用，勿贴真实生产口令）" autocomplete="off">
+                    <label class="bg-check"><input type="checkbox" id="bg-gen-show"> 显示口令</label>
+                </div>
+                <div class="bg-row">
+                    <label>成本因子</label>
+                    <input type="range" id="bg-cost" min="4" max="15" step="1" value="10">
+                    <span class="bg-cost-val" id="bg-cost-val">10</span>
+                    <span class="bg-hint">成本每 +1，耗时约翻倍；成本 15 在低端设备上可达数秒。</span>
+                </div>
+                <div class="bg-row">
+                    <label>固定盐（可选）</label>
+                    <input type="text" id="bg-gen-salt" placeholder="留空 = 随机盐；填 22 字符 bcrypt Base64 可复现同一哈希" autocomplete="off">
+                </div>
+                <p class="bg-error" id="bg-gen-error"></p>
+                <p class="bg-status" id="bg-gen-status"></p>
+                <div class="bg-actions">
+                    <button class="btn btn-primary" id="bg-generate" type="button">生成哈希</button>
+                    <button class="btn btn-secondary" id="bg-gen-copy" type="button">📋 复制哈希</button>
+                </div>
+                <div class="bg-hash" id="bg-gen-hash"></div>
+                <p class="bg-meta" id="bg-gen-meta"></p>
+                <div id="bg-gen-parts"></div>
+                <p class="bg-hint">复制失败时会有明确降级提示，请手动选中哈希复制。空口令不生成；固定盐非法会明确报错。</p>
+            </div>
+
+            <div class="bg-card">
+                <h3>验证模式 <span class="bg-hint">（只给匹配 / 不匹配二值结论，不回显口令、不输出新哈希）</span></h3>
+                <div class="bg-row">
+                    <label>口令</label>
+                    <input type="password" id="bg-verify-password" placeholder="输入待验证的口令" autocomplete="off">
+                    <label class="bg-check"><input type="checkbox" id="bg-verify-show"> 显示口令</label>
+                </div>
+                <div class="bg-row">
+                    <label>已有哈希</label>
+                    <input type="text" id="bg-verify-hash" placeholder="粘贴 60 字符 $2b$ 哈希" autocomplete="off">
+                </div>
+                <p class="bg-error" id="bg-verify-error"></p>
+                <p class="bg-status" id="bg-verify-status"></p>
+                <div class="bg-actions">
+                    <button class="btn btn-primary" id="bg-verify" type="button">验证</button>
+                    <span class="bg-badge" id="bg-verify-result"></span>
+                </div>
+                <p class="bg-meta" id="bg-verify-meta"></p>
+                <div id="bg-verify-parts"></div>
+                <p class="bg-hint">非法哈希（非 $2b$、长度不足、成本段非法、字符非法）会明确报错，不会静默判为不匹配；空口令不验证。</p>
+            </div>
+
+            <div class="bg-card">
+                <h3>示例 <span class="bg-hint">（点击载入，载入后仍可编辑再操作；示例仅为起点，请按需改写）</span></h3>
+                <div class="bg-examples">
+                    <button class="bg-example" id="bg-example-1" type="button"><b>示例 1：生成演示</b><br><span class="bg-hint">口令 demo1234、成本 10；每次随机盐结果不同，请以实测为准</span></button>
+                    <button class="bg-example" id="bg-example-2" type="button"><b>示例 2：验证演示</b><br><span class="bg-hint">已知口令 demo-verify 与 $2b$ 哈希对，验证应得“匹配”</span></button>
+                </div>
+            </div>
+
+            <div class="bg-card">
+                <h3>哈希结构拆解 <span class="bg-hint">（合法哈希拆为四段：版本 / 成本 / 22 字符盐 / 31 字符哈希体，四段拼接还原等于原哈希）</span></h3>
+                <p class="bg-tip">盐与哈希体均使用 bcrypt Base64 字母表（./A-Za-z0-9，注意顺序与标准 Base64 不同）；拆解只做展示，bcrypt 不可逆，不能从哈希反推口令。生成或验证成功后，四段会自动显示在各自结果区下方；非法哈希拆解会明确报错、不展示残段。</p>
+            </div>
+
+            <div class="bg-card">
+                <h3>结果摘要</h3>
+                <div class="bg-code" id="bg-summary"></div>
+                <div class="bg-actions">
+                    <button class="btn btn-primary" id="bg-summary-copy" type="button">📋 一键复制结果摘要</button>
+                    <button class="btn btn-secondary" id="bg-reset" type="button">↺ 重置</button>
+                </div>
+                <p class="bg-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中摘要内容复制。</p>
+            </div>
+
+            <div class="bg-card">
+                <h3>使用说明</h3>
+                <ol class="bg-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>生成：输入口令，拖动成本滑杆（4–15，默认 10），点「生成哈希」；留空固定盐用随机盐，填 22 字符固定盐可复现同一哈希。</li>
+                    <li>验证：输入口令并粘贴已有 $2b$ 哈希，点「验证」，只看匹配 / 不匹配二值结论。</li>
+                    <li>成本越高越慢：成本每 +1 耗时约翻倍，生成中按钮不可重复提交，耗时显示为实测毫秒数。</li>
+                    <li>点示例一键载入，载入后仍可改任意输入再生成 / 验证；示例仅为起点，请按需改写。</li>
+                    <li>点「一键复制结果摘要」把生成哈希、成本、耗时或验证结论复制为文本；点「重置」回到默认状态。</li>
+                </ol>
+            </div>
+
+            <div class="bg-card">
+                <h3>常见问题</h3>
+                <dl class="bg-tip">
+                    <dt><b>为什么只做 $2b$ 口径？</b></dt>
+                    <dd>$2b$ 是当前主流 bcrypt 实现的默认口径，跨实现互通；$2a$ / $2y$ 的变体细节本工具不承诺，粘贴非 $2b$ 哈希会明确报错。</dd>
+                    <dt><b>同口令两次生成为什么不一样？</b></dt>
+                    <dd>默认随机盐：每次生成换一个随机盐，哈希随之不同，这是 bcrypt 的正常设计；用同一固定盐＋同一成本＋同一口令，生成结果逐字相同。</dd>
+                    <dt><b>能从哈希反推口令吗？</b></dt>
+                    <dd>不能。bcrypt 不可逆，拆解只展示版本、成本、盐与哈希体四段结构，不做任何反推。</dd>
+                    <dt><b>我的口令会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，口令与哈希不出浏览器；但仍请勿粘贴真实生产口令。</dd>
+                </dl>
+            </div>
+
+            <div class="bg-card">
+                <h3>相关工具</h3>
+                <div class="bg-links">
+                    <a href="/tools/password-generator">随机密码生成器</a>
+                    <a href="/tools/jwt-signer-verifier">JWT 签名生成器/验证器</a>
+                    <a href="/tools/file-checksum">文件校验和计算器</a>
+                </div>
+            </div>
+
+            <div class="bg-card">
+                <h3>真限制说明</h3>
+                <div class="bg-tip">
+                    <b>仅供测试、演示与迁移校验，生产口令哈希应在服务端做</b>，勿贴真实生产口令；<b>只做 $2b$ 口径</b>，不承诺 $2a$ / $2y$ 变体互通细节；<b>bcrypt 不可逆</b>，拆解只做展示、不反推口令；<b>成本越高越慢</b>，高成本在低端设备上耗时可达数秒，耗时展示为实测值；<b>口令与哈希不出浏览器</b>，本页面零 fetch / XHR，全部计算本地完成。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="bg-toast" id="bg-toast"></div>
+    <script src="/tools/static/vendor/bcrypt.min.js?v=1"></script>
+    <script src="/tools/static/js/bcrypt_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,84 @@
+## 今日任务（2026-10-25 15:40 · 产品经理排期轮）
+
+**选定：Bcrypt 生成与验证器（bcrypt_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（100 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。13:40 PM 轮选 WCAG 时已明言：Bcrypt 仅因顺位在 WCAG 之后而后置、「下轮首席递进」；WCAG 已交付划出（bd1ace3，172 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——100 轮新晋的 .htaccess／Cron 表达式／匿名抽签三项虽同为小难度纯前端，亦不插队。
+- **未选**：robots.txt 校验与测试器（99 轮新晋 P2，100 轮 Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在 Bcrypt 之后而后置，下轮首席递进；真限制 robots.txt 只是君子协定非访问控制、Google 规范近似解析、CORS 下粘贴模式为主）；HMAC 生成器（97 轮新晋 P2，100 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋 P2，留池顺位递进；真限制 UA 可伪造、仅供参考）；.htaccess 生成器／Cron 表达式生成器／匿名抽签生成器（100 轮新晋 P2，留池顺位递进；真限制各见研究轮记录）；词云生成器／文本定宽换行器（99 轮新晋 P2，留池顺位递进；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋 P2，留池顺位递进）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'bcrypt|hmac_generator|robots_txt_validator' tools/categories.go` = 0；templates/ 与 static/js/ 无 bcrypt／hmac 文件，仅 robots_txt_generator（拼装生成）一行，无 validator 语义；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **172 Path**；`git log` 头部 bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）。自有近邻辨析：password_generator 只做随机口令生成、不做哈希；file_checksum 做文件 MD5/SHA 摘要、不做口令哈希与验证；jwt 工具做令牌解析／签发验证、不碰 bcrypt；三者语义均不重叠。仅「一键复制＋结果摘要」的家族交互模式可借鉴，无可复用代码。
+- **选定理由**：① **痛点明确且高频**——给测试库／演示账号造哈希或校验已有哈希，现有路线要么本地装脚本、要么把口令贴到可疑在线站，两条路都不体面；② **一轮可高质量交付**——bcryptjs 成熟、纯前端、零上传，成本因子可调、耗时可测、哈希结构可拆解，天然可断言；③ **无硬伤**——「仅测试／演示／迁移校验、勿贴真实生产口令」属可明示的真限制，不构成跳过理由；④ **难度小-中但边界清晰**——不做服务端、不做在线拉取、不承诺与各语言 bcrypt 实现逐字节一致之外的事（$2b$ 口径本身即跨实现互通，页面明示即可）。
+- **品类归位**：注册到「开发工具」品类（与 WCAG 对比度检查器、JWT 工具、密码生成器同品类、便于发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **仅供测试／演示／迁移校验，生产口令哈希应在服务端做**——页面首屏明示，勿贴真实生产口令；② **口令与哈希不出浏览器**——全部计算本地完成，零 fetch／XHR，隐私文案页面可见；③ **只做 $2b$ 口径**——不承诺 $2a$／$2y$ 变体互通细节，页面明示；④ **成本因子越高越慢**——高成本（如 15）在低端设备上耗时可达数秒，页面须给进度状态、生成过程不可点重复提交，耗时展示为实测值；⑤ **哈希结构拆解只做展示**——不反推口令，页面明示 bcrypt 不可逆；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/bcrypt-generator）。
+
+**规格**（开发轮按此执行）：
+- 生成模式：口令输入（密码框＋显示／隐藏切换）＋成本因子滑杆（4–15，默认 10，滑杆旁实时显示数值与「成本每 +1 耗时约翻倍」提示）＋「生成哈希」按钮；生成中显示进行状态、按钮防重复提交；结果区输出完整 $2b$ 哈希（60 字符）＋耗时（毫秒）＋一键复制；空口令明确报错、不生成空哈希。
+- 验证模式：口令输入＋已有哈希粘贴输入＋「验证」按钮；结果只给「匹配／不匹配」二值结论（不回显口令、不输出新哈希）；非法哈希格式（非 $2b$／长度不足／成本段非法）明确报错、不静默判不匹配；验证耗时同样展示。
+- 哈希结构拆解：对生成或粘贴的合法哈希，拆解展示版本（$2b$）＋成本因子＋22 字符盐＋31 字符哈希体四段，附一行口径说明（盐与哈希体均为 bcrypt Base64 字母表）；拆解失败时明确报错、不展示残段。
+- 随机盐：每次生成默认用随机盐（bcryptjs 内置 genSalt）；另提供「固定盐」可选输入框（22 字符 bcrypt Base64），用于迁移校验复现同一哈希，非法固定盐明确报错；默认路径不预填固定盐。
+- 示例与导出：至少 2 组示例（① 口令 `demo1234` 成本 10 生成示例哈希，注明每次随机盐结果不同、请以实测为准；② 一组已知口令＋哈希对用于验证演示，注明「请按需改写」）；结果摘要一键复制（文本含哈希、成本、耗时或验证结论）；「重置」一键回到默认状态；复制失败有明确降级提示。
+- 技术路线：bcryptjs（MIT）**本地 vendor 化、禁止 CDN**——vendor 文件随页面静态加载（参照 opentype.min.js 的 static/vendor/ 前例，加载路径以构建后实测可访问为准）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，且 node 测试须能加载 vendor 文件做真实生成／验证断言，不只测字符串拼接）。
+- 注册：ID `bcrypt_generator`、Name「Bcrypt 生成与验证器」、Path `/tools/bcrypt-generator`、Category 开发工具、Icon 建议 lock、New: true；中英文描述＋SEO keywords（bcrypt、bcrypt 生成器、密码哈希、哈希验证、$2b$、password hash、bcrypt generator）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链密码生成器、JWT 工具与文件校验和工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `bcrypt_generator`、Path `/tools/bcrypt-generator` 注册完整（Category 开发工具），注册总数 172→173 Path。
+2. 生成闭环：口令 `demo1234` 成本 10 生成的哈希以 `$2b$10$` 开头、总长 60 字符；同口令两次生成因随机盐结果不同；固定盐复现时同口令＋同盐＋同成本生成结果逐字相同。
+3. 验证闭环：用生成出的哈希验证原口令得「匹配」；改一字口令得「不匹配」；非法哈希格式明确报错、不判不匹配；空口令不生成、不验证。
+4. 成本与耗时闭环：滑杆 4–15 可调且生成哈希的成本段与所选一致；耗时展示为实测毫秒数；生成中按钮不可重复提交。
+5. 拆解闭环：合法哈希拆出版本／成本／盐（22 字符）／哈希体（31 字符）四段且拼接还原等于原哈希；非法哈希拆解明确报错。
+6. 示例与导出：2 组示例一键载入后均有内容、且载入后可编辑再生成／验证；复制结果摘要可用（失败有降级提示）；「请按需改写」提示可见。
+7. 真限制可见：页面可见「仅供测试／演示／迁移校验，生产口令哈希应在服务端做」「勿贴真实生产口令」「只做 $2b$ 口径」「bcrypt 不可逆」「口令与哈希不出浏览器」文案；零 fetch／XHR、零 CDN（源码自检无外部 URL）。
+8. node 测试 40+ 断言全过（生成格式与长度、随机盐差异性、固定盐复现性、验证匹配／不匹配、非法输入、成本段一致性、拆解四段与拼接还原、空值默认、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；哈希长串小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/bcrypt_generator.html`（新增；含 SEO 面板按家族标准＋生成／验证双模式／成本滑杆／拆解展示／示例 UI）
+- `static/js/bcrypt_generator.js`（新增；生成／验证／拆解／复制逻辑；双模式导出供 node 测试）
+- `static/vendor/bcrypt.min.js`（新增；bcryptjs 本地 vendor 化，MIT，禁止 CDN；加载路径以构建后实测为准）
+- `tests/bcrypt_generator.test.js`（新增；生成格式、随机盐差异、固定盐复现、验证匹配／不匹配、非法输入、拆解还原、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID bcrypt_generator、Path /tools/bcrypt-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **172**；Top3 候选重叠复核（bcrypt／hmac／robots_txt_validator 三路零命中实锤，详上；近邻密码生成器／文件校验和／JWT 均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 15:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第一百轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。WCAG 颜色对比度检查器已交付闭环（bd1ace3 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **172 Path**，ID wcag_contrast_checker、Path /tools/wcag-contrast-checker 已注册，开发工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:36 下午轮，优先小难度纯前端。
+**本轮三件事**（15:36 全网调研，通用方向）：
+1. WCAG 交付确认：`git log` 头部 bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）；全量 172 Path；templates/wcag_contrast_checker.html、static/js/wcag_contrast_checker.js、tests/wcag_contrast_checker.test.js 齐全；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（裸 fetch 照例先报 publickey 失败，带环境变量后静默成功，无报错）。Bcrypt／HMAC／User-Agent／robots 校验器／骨架屏／ULID／.env／词云／定宽换行复核仍未交付（`grep -c 'wcag_contrast|bcrypt|hmac|user_agent|skeleton|ulid|dotenv|robots_txt_validator|word_cloud|text_wrap'` = 1，仅 wcag 一行命中）。
+2. 新信号扫描：
+   - **dev.to 13／15 浏览器工具榜＋webutil／codeutil／utilshed／devutilixy／utilkit／allio 六站工具总表**：JSON 格式化／Schema 验证、文本对比（text_diff 已注册）、Base64、URL 编解码、UUID、二维码、JS/CSS 压缩、Markdown 预览、配色方案、图片批量缩放、JWT 解析／签发验证、密码生成器、文件校验和（MD5/SHA）、Cron 解析（cron_parser 仅解析说明）、番茄钟（countdown_timer 四模式已含）、进制转换、SQL 格式化、XML 格式化、YAML↔JSON、chmod 计算器、OG 卡片预览 → **全部自有实锤消解**；HTML 实体编解码亦自有（ID 是 `htmlentities` 无下划线，`grep entity` 会漏命中——以后复核须按 ID `htmlentities`／Path /tools/html-entities 查，勿凭 entity 子串判缺失）；字符串分割＋去重＋排序已由文本工具集 texttools 覆盖（字数统计、行去重、排序、大小写、全半角、盘古空格），不单独立项；
+   - **.htaccess 生成器（webutil 榜＋Kwebby／ToolAdda／TestMu／Toolsana／FreeWebTools／SoftwareTestTips 六源验证）** → `grep -c 'htaccess'` = **0 实锤**、无模板 → **新晋 P2「.htaccess 生成器」**（痛点：虚拟主机／Apache 站点改 HTTPS 强制跳转、www 归一、301 迁移、缓存与压缩、安全头、防盗链、敏感文件保护都要手写 mod_rewrite 语法，写错一行整站 500；纯前端小难度：分组开关（HTTPS／www／自定义 301-302／Gzip／浏览器缓存／安全头／目录浏览关闭／.env 等敏感文件屏蔽／防盗链／自定义错误页）＋WordPress／Security／Performance／Minimal 预设→实时生成 .htaccess 文本＋一键复制／下载 .htaccess，零上传；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4 语法、不适用 Nginx；部分主机 AllowOverride 未开启时规则不生效；生成前提示备份原文件、HSTS 一旦开启难快速撤销）；
+   - **Cron 表达式生成器（可视化）（webutil／codeutil／utilshed／devutilixy 四榜验证）** → cron_parser 仅做「解析＋说明＋未来执行时间」（模板 0 个 `<select>`，分钟／小时／星期／月份字样只出现在说明文本），无「表单→表达式」生成语义 → **新晋 P2「Cron 表达式生成器」**（痛点：写 cron 要背五段位顺序与 */,/− 语法，改一次就得重算；纯前端小难度：分／时／日／月／星期五组可视化选择（每组支持每隔／指定值／范围／列表）→实时拼出表达式＋下 5 次执行时间预览＋一键复制，零上传；与 cron_parser（表达式→说明）语义互补不重叠；建议 ID cron_generator、Path /tools/cron-generator；真限制：按标准五段式 cron 口径，不承诺 Quartz 秒级／@yearly 等方言，页面明示所用方言）；
+   - **匿名抽签生成器（Secret Santa）（webutil 榜＋Wishpile／secret-santa-generator.org／Elfster／Santa's Sack／Wichtlify／dev.to 六源验证）** → `grep -c 'secret_santa'` = **0 实锤**；年会抽奖 annual_lottery 只做公开抽奖、无互斥规则与保密揭示（模板无排除／互斥字样） → **新晋 P2「匿名抽签生成器」**（痛点：家庭／同事圣诞互送礼物手写纸条抽签，夫妻互抽、同事抽到自己年年翻车，组织者看完全局自己就没惊喜；纯前端小难度：名单粘贴＋互斥对设置（夫妻／同住者互不抽中）＋防自抽的均匀随机派生（无解时明示放宽哪条规则）＋逐人保密揭示（组织者亦看不到全表）＋结果一键复制／下载，零上传；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话内揭示，不做服务端私密链接分发，换设备后结果不可恢复，页面明示）；
+   - **观察项**：TOML 格式化器（codeutil 榜单源；`grep toml` = 0、无模板，格式化家族 JSON／YAML／XML／SQL 齐全唯缺 TOML；需 vendor 或手写 TOML 解析器、难度高于纯拼接，暂不晋 P2，待格式化家族需求信号再出现时再晋升）；Slug 生成器（utilkit 榜单源；`grep slug` = 0，但中文标题转 slug 需拼音词典、无拼音则中文标题会被清空，价值受限，暂不晋 P2）；Meta 标签生成器（webutil 榜单源；但 og_card_preview 已含 og:/twitter: 标签一键复制，整块 head 生成与之贴得太近，防串味暂不立）；HTTP 头分析器（webutil 榜单源；目标站 fetch 必被 CORS 拦截，需后端代理，硬伤未解不立）；中文搜索（希望有一个网站能…）本轮返回均为表单／建站方法论内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：WCAG 颜色对比度检查器已交付划出（bd1ace3，172 Path）；**新晋 P2 3 个**（.htaccess 生成器、Cron 表达式生成器、匿名抽签生成器：均为多榜验证、零命中实锤、纯前端小难度）；自有实锤消解 20+ 项（含 htmlentities 的 ID 拼写陷阱纠正）；观察项 3 条（TOML 格式化器、Slug 生成器、Meta 标签生成器）；不立 2 项（HTTP 头分析器、平台型重服务）；全量 172 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；WCAG 交付闭环后按 PM 13:40 轮既定顺位递进；下午轮优先小难度纯前端）：
+
+1. **Bcrypt 生成与验证器** — P2 留池顺位递进（97 轮新晋；100 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；Kovacore／dev.to 双榜验证；痛点：给测试数据库/演示账号造 bcrypt 哈希、或验证已有哈希与口令是否匹配，要装脚本或把口令贴到可疑在线站；纯前端小-中难度：vendor 化 bcryptjs（MIT）本地生成 $2b$ 哈希＋验证＋成本因子滑杆（4–15）＋耗时展示＋哈希结构拆解（版本/成本/盐），零上传；零命中实锤；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅供测试/演示/迁移校验，生产口令哈希应在服务端做，页面明示勿贴真实生产口令）。
+2. **robots.txt 校验与测试器** — P2 留池顺位递进（99 轮新晋；100 轮复核仍未交付；BigToolSite／clxon／Meev／Growtika 多榜验证；痛点：一行写错的 Disallow 就可能把整站挡在搜索引擎与 AI 爬虫之外，现有 robots_txt_generator 只管拼装生成、不能校验已有文件；纯前端小难度：粘贴 robots.txt→语法校验＋分组解析＋URL 允许／禁止测试＋AI 爬虫放行矩阵＋修正文件导出，零上传；生成器语义外零命中实锤；建议 ID robots_txt_validator、Path /tools/robots-txt-validator；真限制：robots.txt 只是爬虫君子协定、不等于访问控制；解析按 Google 规范近似实现，不承诺与每个爬虫逐字一致；在线拉取可能被 CORS 拦截，粘贴模式为主）。
+3. **HMAC 生成器** — P2 留池顺位递进（97 轮新晋；100 轮复核仍未交付；Kovacore／dev.to 双榜验证；痛点：调试 Webhook 签名／API 签名要本地算 HMAC，命令行敲 openssl 参数易错、在线站又不敢贴密钥；纯前端小难度：WebCrypto 本地算 HMAC-SHA256/384/512＋密钥与消息输入＋十六进制／Base64 双输出＋一键复制，零上传；零命中实锤；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）。
+
+其余 P2 留池（顺位在 Top3 之后）：User-Agent 解析器（97 轮新晋；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）；.htaccess 生成器（100 轮新晋；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效）；Cron 表达式生成器（100 轮新晋；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 等方言）；匿名抽签生成器（100 轮新晋；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接）；词云生成器（99 轮新晋；建议 ID word_cloud_generator、Path /tools/word-cloud-generator；真限制：中文分词为近似处理）；文本定宽换行器（99 轮新晋；建议 ID text_wrapper、Path /tools/text-wrapper；真限制：按字符数换行、非显示像素宽度）；骨架屏加载占位生成器（98 轮新晋；建议 ID skeleton_loader_generator、Path /tools/skeleton-loader-generator；真限制：按预设拼装占位结构，不自动还原真实页面布局）；ULID／NanoID 生成器（98 轮新晋；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：毫秒精度、不承诺单调递增）；.env 解析与校验器（98 轮新晋；建议 ID dotenv_parser、Path /tools/dotenv-parser；真限制：仅语法层校验、不校验变量语义，勿贴真实生产密钥）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；TOML 格式化器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 99 轮及之前记录。
+
+**通用候选表增量**（第一百轮：WCAG 颜色对比度检查器已交付划出（bd1ace3 新增；ID wcag_contrast_checker、Path /tools/wcag-contrast-checker 已注册，开发工具品类；全量 172 Path；候选池划出）；**新晋 P2 3 个：.htaccess 生成器**（webutil 榜＋Kwebby／ToolAdda／TestMu／Toolsana／FreeWebTools／SoftwareTestTips 六源验证；痛点：Apache 站点 HTTPS／www／301／缓存／安全头手写 mod_rewrite 易错、错一行整站 500；分组开关＋WordPress／Security／Performance／Minimal 预设→实时生成＋复制／下载 .htaccess，纯前端小难度；`htaccess` 零命中实锤；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4、不适用 Nginx、AllowOverride 未开启不生效、改前备份、HSTS 难撤销）、**Cron 表达式生成器**（webutil／codeutil／utilshed／devutilixy 四榜验证；痛点：背五段位顺序与 */,/− 语法易错；五组可视化选择→表达式＋下 5 次执行时间预览，纯前端小难度；cron_parser 仅解析说明、模板 0 个 select，生成语义零命中实锤；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 方言）、**匿名抽签生成器**（webutil 榜＋Wishpile／secret-santa-generator.org／Elfster／Santa's Sack／Wichtlify／dev.to 六源验证；痛点：手写纸条抽签夫妻互抽、抽到自己、组织者看完全局没惊喜；名单＋互斥对＋防自抽均匀派生＋逐人保密揭示，纯前端小难度；`secret_santa` 零命中实锤、annual_lottery 无互斥与保密揭示；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接）；自有实锤消解 20+ 项（JSON／Schema／文本对比／Base64／URL／UUID／二维码／压缩／Markdown 预览／配色／批量缩放／JWT／密码生成／校验和／Cron 解析／番茄钟／进制／SQL／XML／YAML／chmod／OG 预览／HTML 实体编解码——ID `htmlentities` 无下划线致 `grep entity` 漏命中，已纠正）；观察项 3 条（TOML 格式化器：格式化家族唯缺 TOML、需解析器 vendor；Slug 生成器：中文标题需拼音词典；Meta 标签生成器：与 og_card_preview 的标签复制贴太近）；不立 2 项（HTTP 头分析器：CORS 硬伤；平台型重服务）；中文搜索无可消化需求帖；全量 172 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| WCAG 颜色对比度检查器 | 已交付划出（bd1ace3 新增；ID wcag_contrast_checker、Path /tools/wcag-contrast-checker 已注册，开发工具品类；全量 172 Path；候选池划出） | — | 已实现 |
+| .htaccess 生成器 | 新晋 P2（100 轮；webutil 榜＋Kwebby／ToolAdda／TestMu／Toolsana／FreeWebTools／SoftwareTestTips 六源验证；痛点：Apache 站点 HTTPS／www／301／缓存／安全头手写 mod_rewrite 易错、错一行整站 500；分组开关＋WordPress／Security／Performance／Minimal 预设→实时生成＋复制／下载 .htaccess，零上传；`htaccess` 零命中实锤；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4、不适用 Nginx、AllowOverride 未开启不生效、改前备份、HSTS 难撤销） | 小 | P2（100 轮新晋） |
+| Cron 表达式生成器 | 新晋 P2（100 轮；webutil／codeutil／utilshed／devutilixy 四榜验证；痛点：背五段位顺序与 */,/− 语法易错；五组可视化选择→表达式＋下 5 次执行时间预览，零上传；cron_parser 仅解析说明、模板 0 个 select，生成语义零命中实锤；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 方言） | 小 | P2（100 轮新晋） |
+| 匿名抽签生成器 | 新晋 P2（100 轮；webutil 榜＋Wishpile／secret-santa-generator.org／Elfster／Santa's Sack／Wichtlify／dev.to 六源验证；痛点：手写纸条抽签夫妻互抽、抽到自己、组织者看完全局没惊喜；名单＋互斥对＋防自抽均匀派生＋逐人保密揭示，零上传；`secret_santa` 零命中实锤、annual_lottery 无互斥与保密揭示；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接） | 小 | P2（100 轮新晋） |
+| 自有实锤消解 | 不立（JSON／Schema／文本对比／Base64／URL／UUID／二维码／压缩／Markdown 预览／配色／批量缩放／JWT／密码生成／校验和／Cron 解析／番茄钟／进制／SQL／XML／YAML／chmod／OG 预览／HTML 实体编解码 htmlentities、文本工具集 texttools 的去重排序均已注册；字符串分割＋去重已由 texttools 覆盖） | — | 不立 |
+| 观察项 | TOML 格式化器（100 轮；格式化家族唯缺 TOML、需解析器 vendor）；Slug 生成器（100 轮；中文标题需拼音词典）；Meta 标签生成器（100 轮；与 og_card_preview 的标签复制贴太近，防串味暂不立）；ads.txt 校验器（99 轮观察项，续留） | — | 观察 |
+
+**归档说明**：本轮为 10-25 通用调研第一百轮——WCAG 颜色对比度检查器交付闭环（bd1ace3，`/tools/wcag-contrast-checker` 已注册，开发工具品类，全量 172 Path），候选池划出；**新晋 P2 3 个**（.htaccess 生成器、Cron 表达式生成器、匿名抽签生成器：多榜验证，纯前端小难度，零命中实锤各附真限制）；20+ 项自有实锤消解（含 htmlentities 拼写陷阱纠正）；3 条观察项；2 项不立；WPS 候选表保持冻结归档；仓库 172 注册工具全量核对无重叠（Top3 建议 ID bcrypt_generator / robots_txt_validator / hmac_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 bd1ace3（WCAG 新增）／354674c（CSS 阴影与圆角新增）／fc29aa0（信封预览修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **172**；`git fetch` 本轮成功（裸 fetch 先报 publickey 失败，带 GIT_SSH_COMMAND＋StrictHostKeyChecking=no 后静默成功）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 13:40 · 产品经理排期轮）
 
 **选定：WCAG 颜色对比度检查器（wcag_contrast_checker）** — 本轮唯一任务（新工具）：

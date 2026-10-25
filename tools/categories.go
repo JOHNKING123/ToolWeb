@@ -490,6 +490,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "bcrypt_generator",
+					Name:        "Bcrypt 生成与验证器",
+					Description: "成本因子 4–15 可调生成 $2b$ 哈希（60 字符），随机盐与 22 字符固定盐复现，口令与哈希二值验证，哈希结构四段拆解，纯前端零上传 · Bcrypt hash generator & verifier: adjustable cost, random/fixed salt, $2b$ verify, hash structure breakdown, 100% client-side",
+					Path:        "/tools/bcrypt-generator",
+					Icon:        "lock",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "unit_calc_notepad",
 					Name:        "单位感知记事本计算器",
 					Description: "记事本式逐行算式＋单位感知：长度/重量/体积/时间/温度（℃↔℉）/货币单位自动换算，加减归一化到首单位；行间变量、百分比、sum(a1..a3) 范围汇总，行内即时结果＋底部分组求和/平均/最大/最小/计数，非法行标红不中断，自写解析零 eval，纯前端零上传 · Unit-aware notepad calculator: line-by-line expressions with unit conversion, variables, range summary and inline results, 100% client-side",
