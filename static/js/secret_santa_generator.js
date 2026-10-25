@@ -208,7 +208,7 @@ function generatePairing(entries, options, randUint32) {
     var n = entries.length;
     if (options.noMutual && n === 2) {
         return { ok: false, error: '禁互抽开启时 2 人无解：2 人错位排列只有互抽一种可能。',
-            suggestion: '增加人数到 3 人及以上，或关闭「禁互抽」再生成。' };
+            suggestion: '增加人数到 3 人及以上再生成。' };
     }
     if (n < MIN_PEOPLE) {
         return { ok: false, error: '人数不足：当前 ' + n + ' 人，至少需要 3 人才能抽签。',
