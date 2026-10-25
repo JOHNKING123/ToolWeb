@@ -1,3 +1,82 @@
+## 今日任务（2026-10-25 19:40 · 产品经理排期轮）
+
+**选定：HMAC 生成器（hmac_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（102 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。17:45 PM 轮选 robots.txt 校验器时已明言：HMAC 仅因顺位在 robots.txt 校验器之后而后置、「下轮首席递进」；robots.txt 校验器已交付划出（c7ea3a8，174 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——102 轮新晋的 CRC 校验和计算器虽同为小难度纯前端、101 轮新晋的 Lorem Ipsum 生成器／CSS 缓动曲线生成器亦然，均不插队。
+- **未选**：User-Agent 解析器（97 轮新晋 P2，102 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 HMAC 之后而后置，下轮首席递进；真限制 UA 可伪造、仅供参考）；.htaccess 生成器（100 轮新晋 P2，102 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效，生成前提示备份原文件）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进；真限制各见研究轮记录）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进；真限制中文占位文仅视觉占位无语义／预览为示意仅输出 cubic-bezier()）；Cron 表达式生成器／匿名抽签生成器（100 轮新晋 P2，留池顺位递进；真限制标准五段式口径／保密仅限单设备单会话）；词云生成器／文本定宽换行器（99 轮新晋 P2，留池顺位递进；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋 P2，留池顺位递进；真限制 .env 仅语法层校验、勿贴真实生产密钥）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'hmac\|user_agent\|htaccess' tools/categories.go` = 0；templates/ 与 static/js/ 无 hmac／user_agent／htaccess 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **174 Path**；`git log` 头部 c7ea3a8（robots.txt 校验器新增）／348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）。自有近邻辨析（本轮 PM 重点核查项）：① jwt_signer_verifier 内部确实用 WebCrypto HMAC 算 HS256/384/512，但语义是「JWT 结构签发／验证」（header.payload 签名、Base64URL 三段式），不能算任意 Webhook 负载的原始 HMAC、不能输出十六进制、不能比对用户粘贴的期望签名字符串——本工具是「任意密钥＋任意消息→原始摘要」的通用语义，互补不重叠，复用 WebCrypto 原语不等于复用功能；② file_checksum 只做文件无密钥 SHA-256/SHA-512/SHA-1，无密钥概念、无文本消息输入；③ bcrypt_generator 是口令哈希（盐＋成本因子、无消息输入、不可指定消息），与带密钥的消息认证码语义不同。仅 WebCrypto `crypto.subtle.sign('HMAC', …)` 调用模式可借鉴 jwt_signer_verifier，无可复用业务代码。
+- **选定理由**：① **痛点高频且出错代价直观**——调 Webhook／API 签名时 openssl 命令行参数一错就得反复试，在线 HMAC 站又不敢贴密钥，本地算是最直接的解法；② **一轮可高质量交付**——WebCrypto 原生支持 HMAC-SHA256/384/512，无需引入依赖、无需手写哈希算法，RFC 4231 向量天然可断言；③ **无硬伤**——「仅调试用、勿贴真实生产密钥」「文本按 UTF-8 编码、十六进制密钥按字节解析」属可明示的真限制，不构成跳过理由；④ **与家族成对闭环**——JWT 签名器管「令牌」，本工具管「原始签名」，同一调试旅程的两端，互链价值高。
+- **品类归位**：注册到「开发工具」品类（与 bcrypt_generator、jwt_signer_verifier 同品类，便于调试工具成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **仅调试用，勿贴真实生产密钥**——页面首屏明示，密钥一旦粘贴即视为已暴露、事后应轮换；② **HMAC 是认证码不是加密**——签名本身不保密消息，密钥泄露即任何人可伪造签名；③ **编码口径必须明示**——消息文本按 UTF-8 编码；密钥支持「文本（UTF-8）／十六进制／Base64」三种输入口径并在结果旁标明当前口径，十六进制输入须校验偶数位与合法字符；④ **空密钥明确报错**——WebCrypto 不接受空密钥，空密钥时给出中文报错、不静默输出；⑤ **本轮不做文件 HMAC**——文件摘要已有 file_checksum，本工具只做文本消息，页面明示边界，避免范围蔓延；⑥ **WebCrypto 需安全上下文**——页面注明需在 HTTPS 或 localhost 下使用（/tool-web 为 HTTPS，满足条件）；⑦ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/hmac-generator）。
+
+**规格**（开发轮按此执行）：
+- 核心计算：密钥输入（文本／十六进制／Base64 三档口径切换）＋消息输入（多行文本）＋算法选择（HMAC-SHA256／HMAC-SHA384／HMAC-SHA512）→ WebCrypto `crypto.subtle.sign('HMAC', …)` 本地计算，零上传、零 fetch／XHR；输入变化即实时重算（无需点按钮也可看结果），并保留「重新计算」按钮供明确触发。
+- 输出：十六进制与 Base64 双输出并排展示（SHA-256 十六进制 64 字符、SHA-384 为 96 字符、SHA-512 为 128 字符）；每种输出附一键复制；另附「复制带 sha256= 前缀」快捷复制（Webhook 验签常见格式，前缀随所选算法变化：sha256=／sha384=／sha512=）。
+- 签名比对：期望签名粘贴区（接受十六进制或 Base64，十六进制大小写不敏感，允许带 sha256=／sha384=／sha512= 前缀，粘贴时自动剥离前缀并识别口径）→ 比对结果只给「一致／不一致」二值结论＋归一化后的双方摘要对照；不一致时不猜测原因、不自动「修正」期望签名。
+- 示例与重置：至少 2 组示例（① Webhook 调试示例：密钥为文本口令、消息为一段 JSON 负载；② RFC 4231 测试向量示例：密钥为 20 字节 0x0b 十六进制、消息为 Hi There，用于自检）；示例一键载入后可编辑再计算；「重置」一键回到默认空状态；复制失败有明确降级提示（手动复制指引）。
+- 技术路线：纯前端、无依赖（WebCrypto 原生，不引入 npm 包）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，编码转换／口径解析／前缀剥离／输出格式化等纯函数均可 node 断言；HMAC 计算函数为 async，node 侧经 globalThis.crypto.subtle 断言 RFC 向量）。
+- 注册：ID `hmac_generator`、Name「HMAC 生成器」、Path `/tools/hmac-generator`、Category 开发工具、Icon 建议 vpn_key、New: true；中英文描述＋SEO keywords（HMAC、HMAC-SHA256、Webhook 签名、API 签名、消息认证码、hmac generator）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链 JWT 签名生成器／验证器、Bcrypt 生成与验证器、文件校验和。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `hmac_generator`、Path `/tools/hmac-generator` 注册完整（Category 开发工具），注册总数 174→175 Path。
+2. 计算闭环：RFC 4231 测试向量（密钥 20 字节 0x0b、消息 Hi There）HMAC-SHA256 输出为 b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7；SHA-384／SHA-512 输出长度分别为 96／128 十六进制字符，且同输入同输出、改密钥或改消息输出变化。
+3. 编码闭环：密钥三种口径（文本／十六进制／Base64）切换后计算结果与口径标注一致；非法十六进制（奇数位／非法字符）给出中文报错、不输出错误摘要；空密钥明确报错。
+4. 输出闭环：十六进制与 Base64 双输出内容一致（互转可验）；「复制带 sha256= 前缀」的前缀随算法变化；复制失败有降级提示。
+5. 比对闭环：粘贴正确签名（含 sha256= 前缀、大小写混合的十六进制）判一致；改一位字符判不一致；双方归一化摘要均展示。
+6. 示例与重置：2 组示例一键载入后均有内容、且载入后可编辑再计算；重置后回到默认空状态。
+7. 真限制可见：页面可见「仅调试用、勿贴真实生产密钥」「HMAC 不是加密」「编码口径」「不做文件 HMAC」「需安全上下文」文案；零 fetch／XHR、零 CDN（源码自检无外部 URL）。
+8. node 测试 30+ 断言全过（RFC 4231 SHA-256 向量、SHA-384/512 长度与确定性、密钥／消息敏感性、三种密钥口径解析、非法十六进制与空密钥报错、前缀剥离与大小写归一化、Hex⇄Base64 互转、示例载入、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；长摘要小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/hmac_generator.html`（新增；含 SEO 面板按家族标准＋密钥／消息／算法输入区／双输出区／签名比对区／示例与重置 UI）
+- `static/js/hmac_generator.js`（新增；WebCrypto HMAC 计算／密钥口径解析／Hex-Base64 转换／前缀剥离与比对／复制逻辑；双模式导出供 node 测试）
+- `tests/hmac_generator.test.js`（新增；向量、口径、报错、比对、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID hmac_generator、Path /tools/hmac-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 c7ea3a8（robots.txt 校验器新增）／348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **174**；Top3 候选重叠复核（hmac_generator／user_agent_parser／htaccess_generator 三路零命中实锤，详上；近邻 jwt_signer_verifier／file_checksum／bcrypt_generator 已辨析为互补语义不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 19:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第一百零二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。robots.txt 校验与测试器已交付闭环（c7ea3a8 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **174 Path**，ID robots_txt_validator、Path /tools/robots-txt-validator 已注册，营销工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:36 晚轮，优先小难度纯前端。
+**本轮三件事**（19:36 全网调研，通用方向）：
+1. robots 交付确认：`git log` 头部 c7ea3a8（robots 校验器新增）／348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）；全量 174 Path；templates/robots_txt_validator.html 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（先报一次 host key，后补入 known_hosts 后静默成功，无报错）。HMAC／User-Agent／.htaccess／Cron 生成器／匿名抽签／Lorem／bezier／骨架屏／ULID／.env／词云／定宽换行复核仍未交付（`grep -c 'hmac|user_agent|htaccess|cron_generator|secret_santa|lorem|bezier|skeleton|ulid|dotenv|word_cloud'` = 0，templates 无对应文件）。
+2. 新信号扫描：
+   - **Kovacore 12 工具榜＋devtoolkit／dev.to 榜单**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Base64、MD5/SHA 哈希、Bcrypt、UUID、Epoch 时间戳、URL 解析、HTTP 状态码 → **全部自有实锤消解**（Bcrypt 本轮前已交付；HTTP 状态码对应已注册 http-status-reference，`grep http_status` 命中 1 行即该工具；其余均为 100 轮及之前已核对的注册工具）；
+   - **CRC 校验和计算器（tinytask.tools 榜单源＋parseformat Hash Tools 分类佐证）** → `grep -c 'crc'` = **0 实锤**；自有 file_checksum 只做文件 SHA-256/SHA-512/SHA-1（分片流式＋Web Worker），不做 CRC/Adler、不做文本与十六进制字节输入 → **新晋 P2「CRC 校验和计算器」**（痛点：串口／固件／Modbus／文件传输对账要算 CRC-32／CRC-16／Adler-32，现有站多只给文件 SHA，文本与 hex 字节算 CRC 要另找工具或写脚本；纯前端小难度：文本与 hex 输入双模式＋CRC-32／CRC-16（Modbus／CCITT／XMODEM）／Adler-32 多算法＋十六进制／十进制双输出＋期望值比对＋一键复制，零上传；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：CRC 只检错不防篡改、不替代密码学哈希，页面明示；CRC-16 多变体须标明多项式与初值口径）；
+   - **JSONPath 测试器（JSONCraft／parseformat 双榜单源，100 轮观察项条件再现）** → `grep jsonpath` 仅命中 json-semantic-diff 描述里「JSONPath 可点击跳转定位」一句，无独立测试器语义；json_to_types（JSON 转 TypeScript／Go 结构体）已注册，语义不同不重叠 → **观察项晋升 P2「JSONPath 测试器」**（痛点：从大 JSON 里取嵌套字段要手写层层取值或写一次性脚本，表达式写错只能靠猜；纯前端中难度：手写 JSONPath 子集求值器（$／.／[]／*／.. 递归下降＋简单过滤）＋JSON 粘贴＋表达式输入＋匹配结果高亮定位＋常用表达式预设，零上传；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：只实现常用子集，不承诺完整 JSONPath 规范与全部过滤语法，页面明示所支持的语法表）；
+   - **TOML 格式化器（config.oezcan／JSONCraft／tinytask 三源再现，100 轮观察项晋升条件已满足：格式化家族需求信号再次出现）** → `grep -c 'toml'` = **0 实锤**、无模板；格式化家族 JSON／YAML／XML／SQL 齐全唯缺 TOML → **观察项晋升 P2「TOML 格式化器」**（痛点：Cargo.toml／pyproject.toml 手写改乱后缩进与表头层级难读，现有格式化家族没有 TOML 一站；纯前端中难度：本地 vendor 化 TOML 解析器（MIT，禁止 CDN，参照 bcryptjs 前例）或手写核心子集＋格式化／压缩／语法错误行定位＋一键复制，零上传；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：注释与原始排版在格式化后可能不完全保留，页面明示；不做 TOML⇄JSON 互转，那是另一语义）；
+   - **观察项续留**：密码强度独立检测器（101 轮；与 password_generator 同族防串味）；证书解码器（101 轮；需 PEM／DER 解析）；颜色阶梯生成器（101 轮；与 color_palette_generator 贴太近）；Slug 生成器（100 轮；中文标题转 slug 需拼音词典，价值受限）；Meta 标签生成器（100 轮；与 og_card_preview 贴太近）；ads.txt 校验器（100 轮及之前观察项，续留）；中文搜索（V2EX／希望有一个网站能…）本轮返回均为旧帖／无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：robots.txt 校验与测试器已交付划出（c7ea3a8，174 Path）；**新晋 P2 3 个**（CRC 校验和计算器、JSONPath 测试器、TOML 格式化器：均为多榜验证、零命中实锤、纯前端小-中难度，其中后两项为观察项按既定条件晋升）；自有实锤消解 11+ 项（Kovacore／devtoolkit／dev.to 三榜：JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳／URL 解析／HTTP 状态码）；观察项续留 6 条；全量 174 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；robots 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，101 轮 Top3 第二、三顺位依次递进，第三顺位取 100 轮新晋中最老且无硬伤的 .htaccess）：
+
+1. **HMAC 生成器** — P2 留池顺位递进（97 轮新晋；102 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；Kovacore／dev.to 双榜验证；痛点：调试 Webhook 签名／API 签名要本地算 HMAC，命令行敲 openssl 参数易错、在线站又不敢贴密钥；纯前端小难度：WebCrypto 本地算 HMAC-SHA256/384/512＋密钥与消息输入＋十六进制／Base64 双输出＋一键复制，零上传；零命中实锤；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）。
+2. **User-Agent 解析器** — P2 留池顺位递进（97 轮新晋；102 轮复核仍未交付；痛点：日志里一长串 UA 看不出浏览器／系统／设备，手工拆结构易错；纯前端小难度：粘贴 UA→浏览器／版本／操作系统／设备类型／引擎拆解＋常用 UA 预设，零上传；零命中实锤；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）。
+3. **.htaccess 生成器** — P2 留池顺位递进（100 轮新晋；102 轮复核仍未交付；webutil 榜＋六源验证；痛点：虚拟主机／Apache 站点改 HTTPS 强制跳转、www 归一、301 迁移、缓存与压缩、安全头、防盗链、敏感文件保护都要手写 mod_rewrite 语法，写错一行整站 500；纯前端小难度：分组开关＋WordPress／Security／Performance／Minimal 预设→实时生成 .htaccess 文本＋一键复制／下载，零上传；零命中实锤；建议 ID htaccess_generator、Path /tools/htaccess-generator；真限制：仅 Apache 2.4 语法、不适用 Nginx、AllowOverride 未开启不生效，生成前提示备份原文件）。
+
+其余 P2 留池（顺位在 Top3 之后）：Cron 表达式生成器（100 轮新晋；建议 ID cron_generator、Path /tools/cron-generator；真限制：标准五段式口径、不承诺 Quartz 等方言）；匿名抽签生成器（100 轮新晋；建议 ID secret_santa_generator、Path /tools/secret-santa-generator；真限制：保密仅限单设备单会话、无服务端私密链接）；Lorem Ipsum 生成器（101 轮新晋；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：中文占位文仅视觉占位、无语义）；CSS 缓动曲线生成器（101 轮新晋；建议 ID cubic_bezier_generator、Path /tools/cubic-bezier-generator；真限制：预览为示意、仅输出 cubic-bezier()）；CRC 校验和计算器（102 轮新晋；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只检错不防篡改、CRC-16 变体须标明口径）；JSONPath 测试器（102 轮观察项晋升；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）；TOML 格式化器（102 轮观察项晋升；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：注释与原始排版可能不完全保留、不做 TOML⇄JSON 互转）；词云生成器／文本定宽换行器（99 轮新晋；真限制中文分词近似／按字符数换行非显示像素宽度）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；密码强度独立检测器／证书解码器／颜色阶梯生成器／Slug 生成器／Meta 标签生成器／ads.txt 校验器（观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 101 轮及之前记录。
+
+**通用候选表增量**（第一百零二轮：robots.txt 校验与测试器已交付划出（c7ea3a8 新增；ID robots_txt_validator、Path /tools/robots-txt-validator 已注册，营销工具品类；全量 174 Path；候选池划出）；**新晋 P2 3 个：CRC 校验和计算器**（tinytask／parseformat 榜单源；痛点：串口／固件／Modbus 对账要算 CRC，现有 file_checksum 只做文件 SHA、无 CRC/Adler、无文本与 hex 输入；文本与 hex 双模式＋CRC-32／CRC-16 多变体／Adler-32＋期望值比对，纯前端小难度；`crc` 零命中实锤；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只检错不防篡改、CRC-16 变体须标明口径）、**JSONPath 测试器**（JSONCraft／parseformat 双榜单源，观察项晋升；痛点：大 JSON 取嵌套字段靠手写层层取值；手写子集求值器＋结果高亮定位，纯前端中难度；仅 json-semantic-diff 描述提及、无独立语义；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）、**TOML 格式化器**（config.oezcan／JSONCraft／tinytask 三源再现，100 轮观察项晋升条件已满足；痛点：Cargo.toml／pyproject.toml 改乱后难读、格式化家族唯缺 TOML；本地 vendor 解析器＋格式化／压缩／错误行定位，纯前端中难度；`toml` 零命中实锤；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：注释与排版可能不完全保留、不做 TOML⇄JSON 互转）；自有实锤消解 11+ 项（JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳／URL 解析／HTTP 状态码 http-status-reference；JSON 转 TypeScript／Go 已有 json_to_types）；观察项续留 6 条（密码强度／证书解码器／颜色阶梯／Slug／Meta 标签／ads.txt）；中文搜索无可消化需求帖；全量 174 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| robots.txt 校验与测试器 | 已交付划出（c7ea3a8 新增；ID robots_txt_validator、Path /tools/robots-txt-validator 已注册，营销工具品类；全量 174 Path；候选池划出） | — | 已实现 |
+| CRC 校验和计算器 | 新晋 P2（102 轮；tinytask／parseformat 榜单源；痛点：串口／固件／Modbus 对账要算 CRC，现有 file_checksum 只做文件 SHA、无 CRC/Adler、无文本与 hex 输入；文本与 hex 双模式＋CRC-32／CRC-16 多变体／Adler-32＋期望值比对＋一键复制，零上传；`crc` 零命中实锤、file_checksum 语义不同；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只检错不防篡改、CRC-16 变体须标明口径） | 小 | P2（102 轮新晋） |
+| JSONPath 测试器 | 观察项晋升 P2（102 轮；JSONCraft／parseformat 双榜单源；痛点：大 JSON 取嵌套字段靠手写层层取值、表达式写错靠猜；手写子集求值器＋结果高亮定位＋常用预设，零上传；仅 json-semantic-diff 描述提及、无独立语义；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范） | 中 | P2（102 轮晋升） |
+| TOML 格式化器 | 观察项晋升 P2（102 轮；config.oezcan／JSONCraft／tinytask 三源再现，100 轮晋升条件已满足；痛点：Cargo.toml／pyproject.toml 改乱后难读、格式化家族唯缺 TOML；本地 vendor 解析器＋格式化／压缩／错误行定位，零上传；`toml` 零命中实锤；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：注释与排版可能不完全保留、不做 TOML⇄JSON 互转） | 中 | P2（102 轮晋升） |
+| 自有实锤消解 | 不立（JSON／CSV／正则／JWT／Base64／哈希／Bcrypt／UUID／时间戳 timestamp／URL 解析／HTTP 状态码 http-status-reference 均已注册；JSON 转 TypeScript／Go 已有 json_to_types） | — | 不立 |
+| 观察项 | 密码强度独立检测器（101 轮续留；与 password_generator 同族防串味）；证书解码器（101 轮续留；需 PEM／DER 解析）；颜色阶梯生成器（101 轮续留；与 color_palette_generator 贴太近）；Slug 生成器（100 轮续留；中文标题需拼音词典）；Meta 标签生成器（100 轮续留；与 og_card_preview 贴太近）；ads.txt 校验器（100 轮及之前观察项，续留） | — | 观察 |
+
+**归档说明**：本轮为 10-25 通用调研第一百零二轮——robots.txt 校验与测试器交付闭环（c7ea3a8，`/tools/robots-txt-validator` 已注册，营销工具品类，全量 174 Path），候选池划出；**新晋 P2 3 个**（CRC 校验和计算器、JSONPath 测试器、TOML 格式化器：多榜验证，纯前端小-中难度，零命中实锤各附真限制，后两项为观察项按既定条件晋升）；11+ 项自有实锤消解；6 条观察项续留；WPS 候选表保持冻结归档；仓库 174 注册工具全量核对无重叠（Top3 建议 ID hmac_generator / user_agent_parser / htaccess_generator；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 c7ea3a8（robots 校验器新增）／348053c（Bcrypt 新增）／bd1ace3（WCAG 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **174**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；先报 host key、补入 known_hosts 后静默成功）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 17:45 · 产品经理排期轮）
 
 **选定：robots.txt 校验与测试器（robots_txt_validator）** — 本轮唯一任务（新工具）：

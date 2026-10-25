@@ -1,0 +1,179 @@
+{{define "hmac_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMAC 生成器 - 本地算 HMAC-SHA256/384/512/Webhook 签名比对 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 HMAC 生成器：密钥（文本/十六进制/Base64 三档口径）＋消息文本，经浏览器 WebCrypto 本地算 HMAC-SHA256/384/512，十六进制与 Base64 双输出、sha256= 前缀快捷复制、期望签名比对（自动剥离前缀、大小写不敏感）。纯前端零上传，内容不出浏览器。HMAC generator: compute & verify HMAC-SHA256/384/512 locally, 100% client-side.">
+    <meta name="keywords" content="HMAC,HMAC-SHA256,HMAC-SHA384,HMAC-SHA512,Webhook 签名,API 签名,消息认证码,hmac generator,hmac calculator,sha256=,签名比对,开发工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/hmac-generator">
+    <meta property="og:title" content="HMAC 生成器 - 本地算 HMAC-SHA256/384/512 与签名比对">
+    <meta property="og:description" content="密钥三档口径＋消息文本，浏览器本地算 HMAC-SHA256/384/512，十六进制与 Base64 双输出、带前缀快捷复制、期望签名一致性比对。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/hmac-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HMAC 生成器","description":"密钥（文本/十六进制/Base64）＋消息文本，浏览器 WebCrypto 本地算 HMAC-SHA256/384/512，十六进制与 Base64 双输出、带前缀快捷复制、期望签名比对，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/hmac-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hmg-wrap .container{max-width:960px;margin:0 auto;padding:1.2rem}
+        .hmg-wrap .navbar .material-icons{display:none}
+        .hmg-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1.1rem}
+        .hmg-card h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .hmg-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .hmg-privacy b{color:#b45309}
+        .hmg-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .hmg-label{font-size:.92rem;font-weight:700;color:#111827;display:block;margin-bottom:.4rem}
+        .hmg-input{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .8rem;font-size:.92rem;font-family:inherit}
+        .hmg-input:focus{outline:none;border-color:var(--primary-color)}
+        .hmg-textarea{width:100%;min-height:8rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.65;white-space:pre-wrap;overflow:auto}
+        .hmg-textarea:focus{outline:none;border-color:var(--primary-color)}
+        .hmg-modes{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.7rem;font-size:.92rem;color:#374151}
+        .hmg-modes label{cursor:pointer}
+        .hmg-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.7rem}
+        .hmg-row select{border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .7rem;font-size:.92rem;font-family:inherit}
+        .hmg-error{border-radius:.6rem;padding:.7rem .9rem;font-size:.92rem;line-height:1.7;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;margin-bottom:.6rem}
+        .hmg-error:empty{display:none}
+        .hmg-out{border:1px solid #e5e7eb;border-radius:.6rem;background:#f8fafc;padding:.8rem 1rem;margin-bottom:.7rem;overflow-x:auto}
+        .hmg-out code{display:block;font-size:.88rem;line-height:1.7;word-break:break-all;white-space:pre-wrap}
+        .hmg-out .hmg-out-label{font-size:.85rem;font-weight:700;color:#374151;margin-bottom:.3rem}
+        .hmg-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .hmg-actions .btn{cursor:pointer}
+        .hmg-verdict{display:inline-block;font-size:1.05rem;font-weight:700;border-radius:.5rem;padding:.4rem 1rem;margin-bottom:.5rem}
+        .hmg-verdict.good{background:#dcfce7;color:#166534}
+        .hmg-verdict.bad{background:#fecaca;color:#991b1b}
+        .hmg-compare p{font-size:.9rem;line-height:1.8;color:#374151;word-break:break-all}
+        .hmg-compare code{word-break:break-all;white-space:pre-wrap}
+        .hmg-limits{font-size:.9rem;line-height:1.9;color:#374151}
+        .hmg-limits li{margin-bottom:.3rem}
+        @media (max-width:720px){.hmg-actions .btn{flex:1;justify-content:center}}
+    </style>
+</head>
+<body>
+    <div class="hmg-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>HMAC 生成器</h1>
+            <p>密钥（文本／十六进制／Base64）＋消息文本，浏览器本地算 HMAC-SHA256／384／512：十六进制与 Base64 双输出、带 sha256= 前缀快捷复制、期望签名一致性比对。调 Webhook 与 API 签名时，先在这里把签名算对。</p>
+        </div>
+        <div class="tool-content">
+            <div class="hmg-privacy" role="note">
+                <div><b>仅调试用，勿贴真实生产密钥。</b>密钥一旦粘贴到任何在线页面（包括本页）即应视为已暴露，事后请轮换。计算全部在当前浏览器本地完成（WebCrypto），不上传到任何服务器、不做任何存储；本页面无后端调用、无外部请求。HMAC 不是加密：签名本身不保密消息，密钥泄露即任何人可伪造签名。</div>
+            </div>
+
+            <div class="hmg-card">
+                <h3>密钥与消息</h3>
+                <label class="hmg-label" for="hmg-key">密钥</label>
+                <div class="hmg-modes" role="radiogroup" aria-label="密钥输入口径">
+                    <label><input type="radio" name="hmg-key-mode" value="text" checked> 文本（UTF-8）</label>
+                    <label><input type="radio" name="hmg-key-mode" value="hex"> 十六进制</label>
+                    <label><input type="radio" name="hmg-key-mode" value="base64"> Base64</label>
+                </div>
+                <input type="text" id="hmg-key" class="hmg-input" placeholder="文本口令（如 whsec_test_secret_123），或十六进制（如 0b0b…），或 Base64" autocomplete="off" spellcheck="false" aria-label="密钥">
+                <p class="hmg-note" id="hmg-mode-note" style="margin-top:.5rem;">当前密钥口径：文本（UTF-8）；消息文本按 UTF-8 编码。</p>
+                <label class="hmg-label" for="hmg-message" style="margin-top:.8rem;">消息（多行文本）</label>
+                <textarea id="hmg-message" class="hmg-textarea" placeholder="在此输入要签名的消息，例如一段 JSON 负载" aria-label="消息文本"></textarea>
+                <div class="hmg-row" style="margin-top:.8rem;">
+                    <label class="hmg-label" for="hmg-algo" style="margin:0;">算法</label>
+                    <select id="hmg-algo" aria-label="HMAC 算法">
+                        <option value="SHA-256" selected>HMAC-SHA256（十六进制 64 字符）</option>
+                        <option value="SHA-384">HMAC-SHA384（十六进制 96 字符）</option>
+                        <option value="SHA-512">HMAC-SHA512（十六进制 128 字符）</option>
+                    </select>
+                    <button type="button" class="btn btn-primary" id="hmg-recompute">重新计算</button>
+                </div>
+                <p class="hmg-note">输入变化即实时重算，无需点按钮也可看结果。空密钥会明确报错（WebCrypto 不接受空密钥），不静默输出。</p>
+            </div>
+
+            <div class="hmg-card">
+                <h3>签名输出</h3>
+                <div id="hmg-error" class="hmg-error"></div>
+                <div class="hmg-out">
+                    <div class="hmg-out-label">十六进制</div>
+                    <code id="hmg-hex">—</code>
+                </div>
+                <div class="hmg-out">
+                    <div class="hmg-out-label">Base64</div>
+                    <code id="hmg-base64">—</code>
+                </div>
+                <div class="hmg-actions">
+                    <button type="button" class="btn btn-primary" id="hmg-copy-hex">复制十六进制</button>
+                    <button type="button" class="btn btn-primary" id="hmg-copy-base64">复制 Base64</button>
+                    <button type="button" class="btn btn-primary" id="hmg-copy-prefixed">复制带 sha256= 前缀</button>
+                </div>
+                <p class="hmg-note" id="hmg-copy-msg" style="margin-top:.6rem;">带前缀复制为 Webhook 验签常见格式，前缀随所选算法变化：sha256=／sha384=／sha512=。复制失败时有降级提示（手动全选复制）。</p>
+            </div>
+
+            <div class="hmg-card">
+                <h3>期望签名比对</h3>
+                <label class="hmg-label" for="hmg-expected">期望签名（对方给你的签名）</label>
+                <input type="text" id="hmg-expected" class="hmg-input" placeholder="粘贴期望签名：十六进制或 Base64，可带 sha256=/sha384=/sha512= 前缀" autocomplete="off" spellcheck="false" aria-label="期望签名">
+                <p class="hmg-note" style="margin-top:.5rem;">粘贴时自动剥离前缀并识别口径；十六进制大小写不敏感。结论只给一致／不一致二值，不一致时不猜测原因、不自动修正期望签名。</p>
+                <div id="hmg-compare-result" class="hmg-compare" style="margin-top:.7rem;">
+                    <p class="hmg-note">在上方粘贴期望签名后，这里给出一致／不一致结论。</p>
+                </div>
+            </div>
+
+            <div class="hmg-card">
+                <h3>示例与重置</h3>
+                <div class="hmg-actions">
+                    <button type="button" class="btn btn-primary" id="hmg-ex-webhook">载入示例一：Webhook JSON 负载</button>
+                    <button type="button" class="btn btn-primary" id="hmg-ex-rfc">载入示例二：RFC 4231 测试向量</button>
+                    <button type="button" class="btn" id="hmg-reset">重置为空</button>
+                </div>
+                <p class="hmg-note" style="margin-top:.6rem;">示例一：密钥为文本口令、消息为一段 JSON 负载（模拟 Webhook 调试）。示例二：密钥为 20 字节 0x0b 十六进制、消息为 Hi There，HMAC-SHA256 应为 b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7，可用于自检。示例载入后可编辑再计算；重置后回到默认空状态。</p>
+            </div>
+
+            <div class="hmg-card">
+                <h3>使用说明</h3>
+                <div class="hmg-note">
+                    1. 选密钥口径（文本／十六进制／Base64），填密钥与消息，选算法，签名即实时算出。<br>
+                    2. 十六进制密钥须为偶数位、只含 0-9／a-f／A-F；非法输入会中文报错，不输出错误摘要。<br>
+                    3. 把算出的签名或带 sha256= 前缀的版本发给对方验签；收到对方签名后贴到比对区，看一致／不一致结论与归一化对照。<br>
+                    4. 核对时先确认三点一致：密钥口径、算法、消息原文（包括换行与尾部空格）——三者任一不同，签名必然不同。<br>
+                    5. 调 JWT 令牌请去 <a href="/tools/jwt-signer-verifier" style="color:#1a0dab;">JWT 签名生成器/验证器</a>（三段式签发／验证）；算文件摘要请去 <a href="/tools/file-checksum" style="color:#1a0dab;">文件校验和</a>；本工具只做文本消息。
+                </div>
+            </div>
+
+            <div class="hmg-card">
+                <h3>常见问题</h3>
+                <div class="hmg-note">
+                    <b>为什么对方算出的签名和我算的不一样？</b>先核对密钥口径（文本口令与它的十六进制形式是两组不同字节）、算法（SHA-256／384／512）与消息原文（换行、尾部空格、JSON 空格都会改变签名）。<br>
+                    <b>sha256= 前缀是什么意思？</b>Webhook 验签常见格式，如 GitHub 的 X-Hub-Signature-256；前缀只说明算法，不参与签名计算，比对时会自动剥离。<br>
+                    <b>HMAC 能加密消息吗？</b>不能。HMAC 是消息认证码：证明消息没被改过、且持有密钥的人签过；消息本身仍是明文，保密要靠加密。<br>
+                    <b>十六进制密钥与文本密钥有什么区别？</b>文本密钥按 UTF-8 逐字编码；十六进制密钥按字节解析（两位一位字节）。同一串字符按两种口径算，结果不同。<br>
+                    <b>能算文件的 HMAC 吗？</b>本轮不做文件 HMAC：文件摘要请用文件校验和工具；本工具只做文本消息，避免范围蔓延。
+                </div>
+            </div>
+
+            <div class="hmg-card">
+                <h3>相关工具</h3>
+                <div class="hmg-note">
+                    <a href="/tools/jwt-signer-verifier" style="color:#1a0dab;">JWT 签名生成器/验证器</a>（令牌三段式签发／验证，内部亦用 HMAC） ·
+                    <a href="/tools/bcrypt-generator" style="color:#1a0dab;">Bcrypt 生成与验证器</a>（口令哈希，无消息输入） ·
+                    <a href="/tools/file-checksum" style="color:#1a0dab;">文件校验和</a>（文件无密钥摘要）
+                </div>
+            </div>
+
+            <div class="hmg-card">
+                <h3>真限制说明</h3>
+                <ul class="hmg-limits">
+                    <li><b>仅调试用，勿贴真实生产密钥：</b>密钥一旦粘贴即视为已暴露，调试结束后请轮换；生产密钥请只在受控的服务端或 CI 密钥库里使用。</li>
+                    <li><b>HMAC 不是加密：</b>签名本身不保密消息，密钥泄露即任何人可伪造签名；需要保密请另做加密。</li>
+                    <li><b>编码口径：</b>消息文本按 UTF-8 编码；密钥支持文本（UTF-8）／十六进制／Base64 三种口径，结果旁标明当前口径；十六进制须偶数位与合法字符，否则中文报错。</li>
+                    <li><b>不做文件 HMAC：</b>本工具只做文本消息，不做文件 HMAC；文件摘要已有文件校验和工具。</li>
+                    <li><b>需安全上下文：</b>WebCrypto 需在 HTTPS 或 localhost 下使用（/tool-web 为 HTTPS，满足条件）；非安全上下文会明确报错，不静默失败。</li>
+                    <li><b>内容不出浏览器：</b>全部计算在本地完成，零 fetch／XHR、零 CDN，密钥与消息不出浏览器。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/hmac_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

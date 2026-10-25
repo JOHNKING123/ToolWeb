@@ -265,6 +265,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "hmac_generator",
+					Name:        "HMAC 生成器",
+					Description: "密钥（文本/十六进制/Base64 三档口径）＋消息文本，浏览器 WebCrypto 本地算 HMAC-SHA256/384/512，十六进制与 Base64 双输出、sha256=/sha384=/sha512= 前缀快捷复制、期望签名比对（自动剥离前缀、大小写不敏感），Webhook JSON 与 RFC 4231 向量 2 组示例，纯前端零上传 · HMAC generator: compute & verify HMAC-SHA256/384/512 locally, hex & Base64 output, prefix copy, signature compare, 100% client-side",
+					Path:        "/tools/hmac-generator",
+					Icon:        "vpn_key",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "calendar",
 					Name:        "在线日历",
 					Description: "查看日历、农历和节假日信息",
