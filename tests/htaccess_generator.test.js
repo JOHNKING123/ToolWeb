@@ -115,6 +115,33 @@ t = M.buildHtaccess(s);
 ok(t.indexOf("RewriteCond %{HTTP_REFERER} !^$") === -1, "防盗链：允许空 Referer 时不输出 !^$ 条件");
 eq(M.escapeDomain("a.b-c.com"), "a\\.b-c\\.com", "转义：域名点号转义、连字符不动");
 
+/* ---------- 8b. 防盗链守卫（评审阻塞项修复）：空白名单绝不输出无条件 [F] ---------- */
+s = M.defaultState();
+s.hotlink = { enabled: true, allowEmpty: true, whitelist: [] };
+t = M.buildHtaccess(s);
+ok(t.indexOf("- [F]") === -1, "防盗链守卫：开启但 whitelist=[] 时不输出无条件媒体 [F] 行");
+ok(t.indexOf("防盗链") === -1, "防盗链守卫：开启但 whitelist=[] 时整块跳过、无残留段");
+s.hotlink = { enabled: true, allowEmpty: true, whitelist: ["", "  "] };
+t = M.buildHtaccess(s);
+ok(t.indexOf("- [F]") === -1, "防盗链守卫：仅空白字符串的白名单同样视为为空、不输出 [F]");
+["security", "performance"].forEach(function (name) {
+    var pt = M.buildHtaccess(M.applyPreset(name));
+    ok(pt.indexOf("- [F]") === -1 || pt.indexOf("RewriteCond %{HTTP_REFERER}") !== -1,
+        "防盗链守卫：预设 " + name + " 输出若含 [F] 则必含 RewriteCond（实测应无 [F]，因预设不再默认开启）");
+    var hi = pt.indexOf("防盗链");
+    ok(hi === -1 || pt.slice(hi).indexOf("RewriteCond %{HTTP_REFERER}") !== -1,
+        "防盗链守卫：预设 " + name + " 的防盗链块若存在则必含至少一条 RewriteCond");
+});
+var secGuard = M.applyPreset("security");
+ok(!secGuard.hotlink.enabled, "防盗链守卫：Security 预设不再默认开启防盗链");
+var perfGuard = M.applyPreset("performance");
+ok(!perfGuard.hotlink.enabled, "防盗链守卫：Performance 预设不再默认开启防盗链");
+/* 守卫不误伤正常白名单：有白名单时仍输出带 RewriteCond 的 [F] 块 */
+s = M.defaultState();
+s.hotlink = { enabled: true, allowEmpty: true, whitelist: ["example.com"] };
+t = M.buildHtaccess(s);
+ok(t.indexOf("- [F]") !== -1 && t.indexOf("RewriteCond %{HTTP_REFERER}") !== -1, "防盗链守卫：有白名单时正常输出带 RewriteCond 的 [F] 块");
+
 /* ---------- 9. 缓存压缩与安全头：子开关独立 ---------- */
 s = M.defaultState(); s.cache = true;
 t = M.buildHtaccess(s);
@@ -145,7 +172,7 @@ ok(M.buildHtaccess(wp).indexOf("ExpiresActive On") !== -1, "预设 WordPress：�
 wp.cache = false;
 ok(M.buildHtaccess(wp).indexOf("ExpiresActive On") === -1, "预设：载入后可再改开关");
 var sec = M.applyPreset("security");
-ok(sec.headers.frame && sec.hotlink.enabled && sec.www === "nonwww", "预设 Security：安全头/防盗链/去 www 同步");
+ok(sec.headers.frame && !sec.hotlink.enabled && sec.www === "nonwww", "预设 Security：安全头/去 www 同步，防盗链不默认开启（空白名单）");
 var perf = M.applyPreset("performance");
 ok(perf.cache && perf.compress, "预设 Performance：缓存压缩同步");
 eq(M.buildHtaccess(M.defaultState()), "", "重置：默认状态回空");

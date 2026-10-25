@@ -45,13 +45,16 @@ var HA_PRESETS = {
         state: { https: true, www: 'nonwww',
             errors: { e404: true, path404: '/404.html', e403: true, path403: '/403.html' },
             headers: { nosniff: true, frame: true, referrer: true },
-            hotlink: { enabled: true, allowEmpty: true, whitelist: [] }, sensitive: true }
+            sensitive: true }
+        /* 注意：防盗链不在此默认开启——白名单为空时开启会无条件拦截本站图片，
+           须用户填入本站域名后再手动开启，见 buildHtaccess 防盗链守卫。 */
     },
     performance: {
         label: 'Performance 性能优先',
         state: { https: true, cache: true, compress: true,
             headers: { nosniff: true },
-            hotlink: { enabled: true, allowEmpty: true, whitelist: [] }, sensitive: true }
+            sensitive: true }
+        /* 同上：防盗链不默认开启，白名单为空时绝不输出无条件 [F] 规则。 */
     }
 };
 
@@ -167,9 +170,13 @@ function buildHtaccess(s) {
         blocks.push('# 安全头\n<IfModule mod_headers.c>\n' + headLines.join('\n') + '\n</IfModule>');
     }
 
-    /* --- 防盗链 --- */
+    /* --- 防盗链：守卫——白名单为空时绝不输出无条件 [F] 规则 ---
+       无 RewriteCond 的 RewriteRule 媒体 [F] 会连本站自己的图片/媒体一起 403，
+       故白名单为空时整块跳过（不输出注释占位、不输出 [F] 行）。 */
     if (s.hotlink && s.hotlink.enabled) {
         var wl = (s.hotlink.whitelist || []).map(cleanLine).filter(function (d) { return d !== ''; });
+        if (!wl.length) { /* 空白名单：跳过防盗链块，见上 */ }
+        else {
         var hl = ['# 防盗链'];
         hl.push('<IfModule mod_rewrite.c>');
         hl.push('RewriteEngine On');
@@ -180,6 +187,7 @@ function buildHtaccess(s) {
         hl.push('RewriteRule \\.(jpg|jpeg|png|gif|webp|svg|mp4|mp3)$ - [F]');
         hl.push('</IfModule>');
         blocks.push(hl.join('\n'));
+        }
     }
 
     /* --- 敏感文件保护（固定规则组，Apache 2.4 语法） --- */
