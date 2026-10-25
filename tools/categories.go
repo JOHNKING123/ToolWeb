@@ -1473,6 +1473,15 @@ func GetCategories() []Category {
 					Category:    "生活工具",
 				},
 				{
+					ID:          "envelope_printer",
+					Name:        "信封打印助手",
+					Description: "信封打印在线排版：#10/DL/C5/C6/A2/A6/A7 七种信封尺寸预设＋自定义尺寸（宽 80–400mm、高 60–300mm），收件人/寄件人/邮票框按毫米坐标排版（寄件人区左 12mm/上 10mm、收件人区左＝宽×0.45/上＝高×0.50、邮票框右上 25×20mm 虚线框），全局偏移＋收件人独立偏移（步进 0.5mm、−20–+20mm）叠加微调，WYSIWYG 等比预览＋测试页（10mm 网格＋四角裁切标记＋中心十字）量偏差再打印，3 组示例一键载入，先打测试页再调偏移、打印对话框选无边距/实际大小、屏幕预览仅示意、不校验地址与邮编、文本不出浏览器 · Envelope printing: preset envelope sizes, mm-precise layout, offset tuning, test page, 100% client-side",
+					Path:        "/tools/envelope-printer",
+					Icon:        "mail",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "countdown_timer",
 					Name:        "在线倒计时/番茄钟",
 					Description: "在线倒计时/番茄钟：倒计时（时/分/秒＋1/5/10/15/25/30/45/60 分钟快捷预设）/秒表（计次圈速＋最快/最慢标色）/番茄钟（专注/短休息/长休息可调、四轮后长休息、自动轮转、轮次＋今日完成数持久化）/在线闹钟（HH:MM 设定＋每日/工作日/仅一次、准点响铃）四模式单页；全屏大字数字（F 键）、WebAudio 本地合成结束音效、标题栏实时剩余时间、localStorage 命名预设（倒计时/番茄各 5 组），Date.now() 锚点抗漂移，纯前端零上传 · Countdown timer, stopwatch, pomodoro & alarm clock: fullscreen big digits, WebAudio alarm, title countdown, presets, 100% client-side",

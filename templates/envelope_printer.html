@@ -1,0 +1,249 @@
+{{define "envelope_printer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信封打印助手 - DL/C5信封尺寸排版，毫米坐标预览打印，附测试页调偏移（纯前端）</title>
+    <meta name="description" content="免费在线信封打印工具：#10/DL/C5/C6/A2/A6/A7 七种信封尺寸预设＋自定义尺寸，收件人/寄件人/邮票框按毫米坐标排版，全局偏移＋收件人独立偏移叠加微调，WYSIWYG 等比预览，测试页 10mm 网格量偏差再打印，纯前端零上传。Envelope printing helper: preset envelope sizes, mm-precise layout, offset tuning, test page, 100% client-side.">
+    <meta name="keywords" content="信封打印,信封尺寸,信封模板,DL信封,C5信封,信封排版,打印信封,envelope printing">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/envelope-printer">
+    <meta property="og:title" content="信封打印助手 - 毫米坐标排版，测试页调偏移再打印">
+    <meta property="og:description" content="七种信封尺寸预设＋自定义尺寸，收件人/寄件人/邮票框毫米坐标排版，全局＋收件人双偏移微调，测试页量偏差再正式打印；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/envelope-printer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"信封打印助手","description":"七种信封尺寸预设＋自定义尺寸，收件人/寄件人/邮票框按毫米坐标排版，全局偏移＋收件人独立偏移叠加微调，WYSIWYG 等比预览，测试页 10mm 网格量偏差再打印，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/envelope-printer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style id="ep-page-style"></style>
+    <style>
+        .ep-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ep-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ep-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .ep-warn b{display:block;margin-bottom:.2rem}
+        .ep-warn p{margin:.3rem 0}
+        .ep-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ep-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .ep-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .ep-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .ep-field label{display:block;font-size:.9rem;color:#374151;margin-bottom:.35rem;font-weight:600}
+        .ep-input{width:100%;min-width:0;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;line-height:1.7;box-sizing:border-box;font-family:inherit}
+        .ep-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        textarea.ep-input{min-height:96px;resize:vertical}
+        .ep-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .ep-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .ep-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ep-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .ep-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem}
+        .ep-warnings{display:none;border:2px solid #f59e0b;background:#fffbeb;border-radius:.6rem;padding:.7rem 1rem;color:#92400e;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem}
+        .ep-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .ep-info{font-size:.9rem;color:#374151;line-height:1.8;margin:0 0 .9rem}
+        .ep-scroll{overflow-x:auto;padding:.5rem 0}
+        .ep-envelope{position:relative;background:#fff;border:calc(var(--pxmm,2px)*0.4) solid #111827;margin:0 auto;overflow:hidden;box-sizing:content-box}
+        .ep-zone{position:absolute;left:calc(var(--zx)*var(--pxmm));top:calc(var(--zy)*var(--pxmm));width:calc(var(--zw)*var(--pxmm));height:calc(var(--zh)*var(--pxmm));overflow:hidden;line-height:1.6;color:#111827;font-size:calc(var(--pxmm)*3.8)}
+        .ep-zone-name{font-size:calc(var(--pxmm)*5);font-weight:600;line-height:1.5}
+        .ep-zone-stamp{border:calc(var(--pxmm)*0.4) dashed #6b7280;color:#6b7280;display:flex;align-items:center;justify-content:center;font-size:calc(var(--pxmm)*3.5)}
+        .ep-test-svg{width:100%;height:100%;display:block}
+        .ep-grid-line{stroke:#d1d5db;stroke-width:.3}
+        .ep-crop-line{stroke:#111827;stroke-width:.5}
+        .ep-cross-line{stroke:#dc2626;stroke-width:.5}
+        .ep-test-note{font-size:5px;fill:#374151}
+        .ep-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .ep-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .ep-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .ep-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .ep-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ep-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .ep-note b{color:#374151}
+        @media (max-width:640px){
+            .ep-grid{grid-template-columns:1fr}
+            .ep-panel{padding:1rem}
+        }
+        @media print{
+            body{margin:0 !important;background:#fff !important}
+            body *{visibility:hidden}
+            #ep-print-area,#ep-print-area *{visibility:visible}
+            #ep-print-area{position:absolute !important;left:0 !important;top:0 !important;margin:0 !important;padding:0 !important}
+            #ep-print-area .ep-scroll{overflow:visible;padding:0}
+            #ep-print-area .ep-envelope{--pxmm:1mm;margin:0}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">mail</i> 信封打印助手</h1>
+            <p>七种信封尺寸预设＋自定义尺寸，收件人 / 寄件人 / 邮票框按毫米坐标排版，先打测试页量偏差再正式打印</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ep-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>收件人／寄件人信息全部本地渲染，本页面不发起任何网络请求（零 fetch / XHR），不上传、不留存。</div>
+            </div>
+            <div class="ep-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 先打测试页、量取偏差、填入偏移再正式打印：各打印机边距与进纸方向不一，本工具不承诺一次打印即对齐。</p>
+                <p>2. 打印对话框仍需人工确认：请在打印对话框中选「无边距／实际大小（100%）」，并按打印机要求选手动进纸／信封进纸；@page 尺寸仅为建议。</p>
+                <p>3. 屏幕预览仅示意：屏幕按比例缩放只示意位置关系，毫米数值以打印样式与测试页为准，不承诺屏幕像素与实物 1:1。</p>
+                <p>4. 不校验地址与邮编：本工具只做排版呈现，不校验地址真实性与邮编正确性，请自行核对。</p>
+                <p>5. 文本不出浏览器：收件人／寄件人信息只留在当前页面，零 fetch / XHR，不上传。</p>
+            </div>
+            <div class="ep-panel">
+                <h3><i class="material-icons">person</i> 收件人（必填）与寄件人（可空）</h3>
+                <div class="ep-grid">
+                    <div>
+                        <div class="ep-field" style="margin-bottom:.8rem;">
+                            <label for="ep-r-name">收件人姓名 *</label>
+                            <input class="ep-input" id="ep-r-name" type="text" placeholder="例如：王小明">
+                        </div>
+                        <div class="ep-field" style="margin-bottom:.8rem;">
+                            <label for="ep-r-addr">收件人地址（多行，每行一个地址行）*</label>
+                            <textarea class="ep-input" id="ep-r-addr" placeholder="例如：广东省深圳市南山区科技园科苑路88号&#10;科兴科学园A栋1201室"></textarea>
+                        </div>
+                        <div class="ep-field">
+                            <label for="ep-r-post">收件人邮编（单独成行）</label>
+                            <input class="ep-input" id="ep-r-post" type="text" placeholder="例如：518057">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="ep-field" style="margin-bottom:.8rem;">
+                            <label for="ep-s-name">寄件人姓名（可空）</label>
+                            <input class="ep-input" id="ep-s-name" type="text" placeholder="例如：李华">
+                        </div>
+                        <div class="ep-field" style="margin-bottom:.8rem;">
+                            <label for="ep-s-addr">寄件人地址（多行，可空）</label>
+                            <textarea class="ep-input" id="ep-s-addr" placeholder="例如：广东省深圳市福田区福华路123号"></textarea>
+                        </div>
+                        <div class="ep-field">
+                            <label for="ep-s-post">寄件人邮编（可空）</label>
+                            <input class="ep-input" id="ep-s-post" type="text" placeholder="例如：518000">
+                        </div>
+                    </div>
+                </div>
+                <p class="ep-hint">收件人姓名与地址均为空时无法输出信封，会给出明确错误提示；姓名超过 50 字、地址单行超过 100 字仅提示不拦截。</p>
+            </div>
+            <div class="ep-panel">
+                <h3><i class="material-icons">crop_free</i> 信封尺寸与偏移微调</h3>
+                <div class="ep-grid">
+                    <div class="ep-field">
+                        <label for="ep-preset">尺寸预设（宽 × 高，毫米）</label>
+                        <select class="ep-input" id="ep-preset">
+                            <option value="#10">#10（105 × 241mm）</option>
+                            <option value="DL" selected>DL（110 × 220mm）</option>
+                            <option value="C5">C5（162 × 229mm）</option>
+                            <option value="C6">C6（114 × 162mm）</option>
+                            <option value="A2">A2（111 × 146mm）</option>
+                            <option value="A6">A6（121 × 165mm）</option>
+                            <option value="A7">A7（133 × 184mm）</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    <div id="ep-custom-box" style="display:none;">
+                        <div class="ep-grid">
+                            <div class="ep-field">
+                                <label for="ep-cw">自定义宽（80–400mm）</label>
+                                <input class="ep-input" id="ep-cw" type="number" min="80" max="400" step="1" value="121">
+                            </div>
+                            <div class="ep-field">
+                                <label for="ep-ch">自定义高（60–300mm）</label>
+                                <input class="ep-input" id="ep-ch" type="number" min="60" max="300" step="1" value="165">
+                            </div>
+                        </div>
+                        <p class="ep-hint">自定义尺寸超出范围会报错；宽小于高时给「竖版信封」提示但不拦截。</p>
+                    </div>
+                </div>
+                <div class="ep-grid" style="margin-top:1rem;">
+                    <div class="ep-field">
+                        <label for="ep-gx">全局偏移 X（mm，步进 0.5，−20–+20）</label>
+                        <input class="ep-input" id="ep-gx" type="number" min="-20" max="20" step="0.5" value="0">
+                    </div>
+                    <div class="ep-field">
+                        <label for="ep-gy">全局偏移 Y（mm，步进 0.5，−20–+20）</label>
+                        <input class="ep-input" id="ep-gy" type="number" min="-20" max="20" step="0.5" value="0">
+                    </div>
+                    <div class="ep-field">
+                        <label for="ep-rx">收件人独立偏移 X（mm，步进 0.5，−20–+20）</label>
+                        <input class="ep-input" id="ep-rx" type="number" min="-20" max="20" step="0.5" value="0">
+                    </div>
+                    <div class="ep-field">
+                        <label for="ep-ry">收件人独立偏移 Y（mm，步进 0.5，−20–+20）</label>
+                        <input class="ep-input" id="ep-ry" type="number" min="-20" max="20" step="0.5" value="0">
+                    </div>
+                </div>
+                <p class="ep-hint">全局偏移与收件人独立偏移叠加后同时作用于预览与打印；偏移为 0 时不写多余样式。布局规则：寄件人区左 12mm／上 10mm；收件人区左＝宽×0.45／上＝高×0.50；邮票框右上（右距 10mm／上 10mm／25×20mm 虚线框）；三区超出边界自动收敛并提示。</p>
+                <div class="ep-row">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再预览）：</span>
+                    <button class="ep-btn" type="button" data-example="0">个人寄信（DL）</button>
+                    <button class="ep-btn" type="button" data-example="1">企业寄件（C5）</button>
+                    <button class="ep-btn" type="button" data-example="2">自定义小尺寸＋偏移（A6）</button>
+                </div>
+            </div>
+            <div class="ep-errors" id="ep-errors"></div>
+            <div class="ep-warnings" id="ep-warnings"></div>
+            <div class="ep-panel">
+                <h3><i class="material-icons">preview</i> 信封预览 / 测试页</h3>
+                <p class="ep-info" id="ep-info"></p>
+                <div class="ep-row" style="margin-top:0;margin-bottom:.9rem;">
+                    <button class="ep-btn ep-btn-primary" type="button" id="ep-mode-preview">预览</button>
+                    <button class="ep-btn" type="button" id="ep-mode-test">测试页</button>
+                    <button class="ep-btn ep-btn-primary" type="button" id="ep-print">打印信封 / 测试页</button>
+                </div>
+                <p class="ep-hint" id="ep-mode-note"></p>
+                <div id="ep-print-area">
+                    <div class="ep-scroll" id="ep-preview-wrap">
+                        <div class="ep-envelope" id="ep-envelope" style="display:none;"></div>
+                    </div>
+                </div>
+                <p class="ep-hint">测试页与信封同尺寸：方框＋10mm 网格＋四角裁切标记＋中心十字。先打测试页，量取横／纵偏差后填入上方偏移，再正式打印。长地址与大尺寸信封在小屏上可横向滚动，不会撑破页面。</p>
+            </div>
+            <div class="ep-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>填收件人（姓名、地址多行、邮编，必填）与寄件人（可空）；收件人姓名与地址均为空时不输出空白信封。</li>
+                    <li>选尺寸预设（#10／DL／C5／C6／A2／A6／A7）或自定义（宽 80–400mm、高 60–300mm）；宽小于高时有「竖版信封」提示，请确认进纸方向。</li>
+                    <li>看预览：寄件人区左上、收件人区中右、邮票框右上虚线框；输入、尺寸、偏移任一变化即实时更新。</li>
+                    <li>切到「测试页」打印一张：按 10mm 网格量出实际打印位置与目标位置的横／纵偏差，把偏差填入全局偏移（或收件人独立偏移只调收件人区）。</li>
+                    <li>点「打印信封／测试页」：打印前校验未通过时不弹打印对话框；打印对话框中选「无边距／实际大小（100%）」，并按打印机要求选手动进纸／信封进纸。</li>
+                    <li>点示例一键载入 3 组典型信封（请按需改写），载入后仍可编辑再预览；偏移为 0 时不写多余样式。</li>
+                </ol>
+            </div>
+            <div class="ep-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="ep-faq">
+                    <dt>为什么第一次打印位置总偏一点？</dt>
+                    <dd>各打印机边距与进纸方向不一，@page 尺寸只是建议。正确流程是先打测试页、按 10mm 网格量出偏差、把偏差填入偏移，再正式打印。</dd>
+                    <dt>打印对话框里要选什么？</dt>
+                    <dd>选「无边距」和「实际大小（100%）」，不要选「适合页面／缩放」；并按打印机要求选手动进纸或信封进纸，否则尺寸会被缩放。</dd>
+                    <dt>屏幕上看着对，印出来会一样吗？</dt>
+                    <dd>不一定。屏幕预览按比例缩放仅示意位置关系，毫米数值以打印样式与测试页为准；屏幕像素与实物不是 1:1。</dd>
+                    <dt>竖版信封是什么意思？</dt>
+                    <dd>宽小于高时给出的提示，不拦截：请确认打印机进纸方向与信封摆放方向一致，必要时调换宽高或旋转信封。</dd>
+                    <dt>地址写错了会校验出来吗？</dt>
+                    <dd>不会。本工具只做排版呈现，不校验地址真实性与邮编正确性，寄出前请自行核对。</dd>
+                    <dt>我的收寄信息会被上传吗？</dt>
+                    <dd>不会。全部渲染在浏览器本地完成，零 fetch / XHR，信息只留在当前页面。</dd>
+                </dl>
+            </div>
+            <div class="ep-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="ep-links">
+                    <a href="/tools/big-sign-display"><i class="material-icons">signpost</i> 大字标牌展示器</a>
+                    <a href="/tools/nine-grid"><i class="material-icons">grid_on</i> 九宫格切图</a>
+                    <a href="/tools/unit-converter"><i class="material-icons">straighten</i> 单位换算器</a>
+                </div>
+            </div>
+            <div class="ep-note">
+                <b>实现说明：</b>尺寸预设表、毫米坐标布局、偏移叠加、边界收敛、@page 打印样式与测试页网格均为纯函数（static/js/envelope_printer.js，双模式导出供 node 测试）；预览与打印共用同一组毫米坐标（CSS 变量 --pxmm：屏幕为像素／毫米、打印时为 1mm）；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/envelope_printer.js?v=1"></script>
+</body>
+</html>
+{{end}}

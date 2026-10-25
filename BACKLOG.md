@@ -1,3 +1,87 @@
+## 今日任务（2026-10-25 09:38 · 产品经理排期轮）
+
+**选定：信封打印助手（envelope_printer）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（97 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。07:40 PM 轮选了 HTML→Markdown 时已明言：信封打印助手仅因顺位在 HTML 之后而后置、「下轮首席递进」；HTML→Markdown 已交付划出（01fdae8，169 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过。
+- **未选**：CSS 阴影与圆角生成器（95 轮新晋 P2，97 轮 Top3 第二顺位，无硬伤，零命中实锤，留池顺位递进——仅因顺位在信封之后而后置，下轮首席递进；真限制预览以当前浏览器渲染为准）；WCAG 颜色对比度检查器（96 轮新晋 P2，97 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）；Bcrypt 生成与验证器（97 轮新晋 P2，留池顺位递进；真限制仅测试／演示／迁移校验，生产哈希应在服务端做）；HMAC 生成器（97 轮新晋 P2，留池顺位递进；真限制仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋 P2，留池顺位递进；真限制 UA 可伪造、仅供参考）；摩斯码翻译器（91 轮新晋 P2，留池顺位递进；WebAudio 自动播放策略真限制须处理）；滚动字幕生成器（92 轮晋升 P2，透明底 webm 真限制须给纯色底兜底，留池顺位递进）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同「截图美化」族、名称仅一字之差，用户端混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：Radio Browser 外部 fetch＋https 混合内容＋国内连通性，需后端代理方案成熟再立）。
+- **PM 零重叠实测复核**：`grep -c 'envelope_printer\|css_shadow\|wcag_contrast' tools/categories.go` = 0；templates/ 与 static/js/ 无 envelope／css_shadow／wcag 文件；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **169 Path**；`git log` 头部 01fdae8（HTML→Markdown 新增）／cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）。自有近邻辨析：`grep -oi 'contrast' tools/categories.go` 仅命中 color_palette_generator 描述中的附带 WCAG 标注与 big_sign_display 的高对比主题，均非「任意前景／背景对」的检查器，与本工具无关；仓库无信封／打印布局类工具（无 envelope／mail 语义命中），不重叠。仅 WYSIWYG 预览思路可借鉴，无可复用代码。
+- **选定理由**：① **纯前端小难度、一轮可高质量交付**——尺寸预设＋毫米坐标布局＋打印样式表全部本地计算，零上传零 fetch，契合 ToolWeb 纯前端离线标准；② **痛点明确且可验证**——一年寄几次信、每次为 Word 边距折腾半小时，尺寸／位置／偏移均可毫米级断言，测试页量取偏差后填偏移的闭环可手工复算；③ **天然可测**——预设尺寸表、毫米坐标换算、偏移叠加、打印样式字符串、输入校验均可 node 断言；④ **无硬伤**——各打印机边距与进纸方向不一属可明示的真限制（先打测试页再调偏移），不构成跳过理由。
+- **品类归位**：注册到「生活工具」品类（寄信是生活场景，与大字标牌展示器等同品类、便于发现；非文档转换语义，不归文档／格式转换品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **各打印机边距与进纸方向不一**——页面首屏明示「先打测试页、量取偏差、填入偏移再正式打印」，不承诺一次打印即对齐；② **浏览器打印对话框仍需人工确认**——@page 尺寸仅为建议，须提示用户在打印对话框中选「无边距／实际大小（100%）」、并按打印机要求选手动进纸／信封进纸；③ **预览比例≠实物**——屏幕预览按比例缩放仅示意位置关系，毫米数值以打印样式与测试页为准，不承诺屏幕像素与实物 1:1；④ **不做地址校验与邮编库**——只做排版呈现，不校验地址真实性与邮编正确性，页面明示；⑤ **文本不出浏览器**——收件人／寄件人信息全部本地渲染，零 fetch／XHR，隐私文案页面可见；⑥ **SEO 面板按家族标准配齐**（canonical 形如 https://www.johnkingzcq123.xyz/tools/envelope-printer）。
+
+**规格**（开发轮按此执行）：
+- 核心输入：收件人（姓名、地址多行、邮编）、寄件人（姓名、地址多行、邮编，寄件人可空、收件人必填）；输入校验：收件人姓名与地址均空时给出明确错误提示、不输出空白信封；单项超长（姓名＞50 字、地址单行＞100 字）给提示但不拦截。
+- 尺寸预设（宽×高，毫米，开发轮以此表为准）：#10＝105×241、DL＝110×220、C5＝162×229、C6＝114×162、A2＝111×146、A6＝121×165、A7＝133×184，另加「自定义」；自定义校验：宽 80–400mm、高 60–300mm，超出报错；宽＜高时给「竖版信封」提示但不拦截。
+- 布局（毫米坐标系，纯函数，双模式导出供 node 测试）：寄件人区默认左 12mm、上 10mm；收件人区默认左＝宽×0.45、上＝高×0.50；邮票框（虚线框＋「贴邮票处」文字）默认右上：右距 10mm、上 10mm、框 25×20mm；三区均不超出信封边界，超出时自动收敛到边界内并在提示区说明。收件人姓名行字号大于地址行；邮编单独成行。
+- 偏移微调：全局打印偏移 X／Y（毫米，步进 0.5，范围 −20–+20）＋收件人区独立偏移 X／Y（同范围步进），叠加后同时作用于预览与打印；偏移为 0 时不写多余样式。
+- WYSIWYG 预览：按信封宽高比等比缩放的信封轮廓，内含寄件人区、收件人区、邮票框三区实时渲染；输入、尺寸、偏移任一变化即实时更新预览；移动端预览不撑破、可横向滚动。
+- 打印样式表：`@media print` 隐藏表单与操作区、只打印信封；`@page { size: <宽>mm <高>mm; margin: 0 }`；信封打印区精确为宽×高毫米；「打印」按钮调用 window.print()；打印前校验未通过时不弹打印对话框、先给错误提示。
+- 测试页模式：预览／测试页切换；测试页为与信封同尺寸的方框＋10mm 网格＋四角裁切标记＋中心十字＋「先打测试页，量取横／纵偏差后填入偏移」说明文字；测试页同样走打印样式表打印。
+- 示例一键载入（至少 3 组，可再编辑）：① 个人寄信（DL＋收件人／寄件人完整信息）；② 企业寄件（C5＋公司名收件人）；③ 自定义小尺寸（A6＋偏移示例值，触发偏移生效可见）。示例文案注明「请按需改写」。
+- 布局算法（纯函数，双模式导出供 node 测试）：输入为 {尺寸, 收件人, 寄件人, 全局偏移, 收件人偏移}，输出为 {三区毫米坐标, 打印样式字符串, warnings: [string]}；空收件人返回错误而非空白布局；坐标收敛与宽＜高提示均在测试中锁定。
+- 注册：ID `envelope_printer`、Name「信封打印助手」、Path `/tools/envelope-printer`、Category 生活工具、Icon 建议 mail、New: true；中英文描述＋SEO keywords（信封打印、信封尺寸、信封模板、DL信封、C5信封、信封排版、打印信封、envelope printing）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，相关工具互链大字标牌展示器与九宫格切图等生活工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `envelope_printer`、Path `/tools/envelope-printer` 注册完整（Category 生活工具），注册总数 169→170 Path。
+2. 预设与布局闭环：7 个预设尺寸与自定义尺寸输出的毫米坐标与预期一致；寄件人／收件人／邮票框三区位置符合默认规则；超边界坐标收敛且有提示；宽＜高时有竖版提示。
+3. 偏移闭环：全局偏移与收件人独立偏移叠加后预览与打印样式同步变化；偏移 0 时无多余样式；测试页网格与裁切标记随尺寸变化。
+4. 校验与示例：收件人全空时有明确错误、不弹打印对话框；自定义尺寸超范围报错；3 组示例一键载入后预览与三区均有内容、且载入后可编辑再预览；「请按需改写」提示可见。
+5. 真限制可见：页面可见「先打测试页再调偏移」「打印对话框选无边距／实际大小」「屏幕预览仅示意、毫米数值为准」「不校验地址与邮编」「文本不出浏览器」文案；零 fetch／XHR（源码自检无外部请求）。
+6. node 测试 40+ 断言全过（预设尺寸表、自定义校验、毫米坐标、偏移叠加、边界收敛、竖版提示、打印样式字符串、空收件人、示例静态检查）。
+7. 页面无报错；移动端布局不错位；长地址与大尺寸信封小屏可横向滚动、不撑破。
+
+**预计改动文件**：
+- `templates/envelope_printer.html`（新增；含 SEO 面板按家族标准＋收件人／寄件人输入／尺寸预设／偏移微调／预览／测试页／打印 UI）
+- `static/js/envelope_printer.js`（新增；毫米坐标布局＋打印样式生成＋预览／测试页渲染＋打印调用；双模式导出供 node 测试）
+- `tests/envelope_printer.test.js`（新增；预设尺寸、自定义校验、毫米坐标、偏移叠加、边界收敛、打印样式、空收件人、示例静态检查）
+- `tools/categories.go`（生活工具品类注册：ID envelope_printer、Path /tools/envelope-printer、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（沿用 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；fetch 未报错）；`git log` 头部 01fdae8（HTML→Markdown 新增）／cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **169**；Top3 候选重叠复核（三路全零命中实锤，详上；近邻 color_palette_generator 附带标注与 big_sign_display 高对比主题均已辨析不重叠）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-25 09:36 · 产品调研员研究轮 ✅）
+
+**交付状态**：10-25 通用调研第九十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务/生活计算器）。HTML→Markdown 转换器已交付闭环（01fdae8 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **169 Path**，ID html_to_markdown、Path /tools/html-to-markdown 已注册，文本工具品类；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 上午轮，优先小难度纯前端。
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. HTML→Markdown 交付确认：`git log` 头部 01fdae8（新增）／cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）；全量 169 Path；templates/html_to_markdown.html 与 static/js/html_to_markdown.js 已存在；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常。信封打印助手／CSS 阴影与圆角／WCAG 对比度／摩斯码／滚动字幕复核仍未交付（`grep -c 'envelope_printer|css_shadow|wcag_contrast|morse|scrolling_text' tools/categories.go` = 0）。
+2. 新信号扫描：
+   - **Kovacore 12 开发者工具榜（2026-08-17）＋dev.to 35 纯浏览器工具榜（2026-10-10）**：JSON／JWT／Cron／正则／CSV⇌JSON／Base64／UUID／时间戳／HTTP 状态码／密码生成／图片压缩转换／QR／SQL 格式化／Diff／URL 解析 → **全部自有实锤复现**（uuid-generator、timestamp、http_status_reference、password-generator、img_compress、img_convert、qrcode、sql_formatter、text_diff、url_parser 均已注册）；**Bcrypt 生成器** → `grep -c 'bcrypt' tools/categories.go` = **0 实锤** → **新晋 P2「Bcrypt 生成与验证器」**（痛点：给测试数据库/演示账号造 bcrypt 哈希、或验证已有哈希与口令是否匹配，要装脚本或把口令贴到可疑在线站；纯前端小-中难度：vendor 化 bcryptjs（MIT）本地生成 $2b$ 哈希＋验证＋成本因子滑杆（4–15）＋耗时展示＋哈希结构拆解（版本/成本/盐），零上传；与 password-generator（随机口令）与 md5/sha1/sha256（快速无盐摘要）语义均不同；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅供测试/演示/迁移校验，生产口令哈希应在服务端做，页面明示勿贴真实生产口令）；
+   - **HMAC 生成器（同榜「HMAC generator」）** → `grep -oiE 'hmac' tools/categories.go` **零命中实锤** → **新晋 P2「HMAC 生成器」**（痛点：对接 webhook/API 签名调试时要手写脚本算 HMAC，现有 md5/sha 工具均为无密钥摘要；纯前端小难度：WebCrypto HMAC-SHA-256/384/512，密钥＋消息→hex/base64 输出＋常见 webhook 签名格式对照，零上传；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）；
+   - **User-Agent 解析器（同榜「user-agent parser」）** → `grep -oiE 'user.agent|useragent' tools/categories.go` **零命中实锤** → **新晋 P2「User-Agent 解析器」**（痛点：日志里一长串 UA 看不出浏览器/系统/设备，逐条查规则表费时；纯前端小难度：粘贴 UA→浏览器＋版本／操作系统／设备类型（桌面/移动/平板/爬虫）＋引擎规则表展示，附「当前浏览器 UA 一键填入」，零上传；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、解析结果仅供参考，新冷门 UA 回落「未知」不硬猜）；
+   - **HTML 实体编解码（同榜）** → **自有实锤消解，不单独立项**：categories.go 已有「HTML 实体编解码」语义命中；
+   - **CSV→Markdown（同榜）** → **自有实锤消解**：csv-json 族已覆盖 CSV 互转语义，纯表格转 Markdown 记 csv-json **优化项**；
+   - **Techtippr／TheTechBasket 2026 榜**：Photopea／Remove.bg／PDF24／iLovePDF／TinyPNG／VirusTotal／Have I Been Pwned／TinEye → 均为重型编辑器、AI 模型或需后端 API/密钥服务，**不立**；Radio Garden（在线电台）→ 池内 88 轮在线电台收听器硬伤未解，继续跳过；
+   - **Show HN Latch（WebMCP，10-24）／Pay-per-Crawl（10-17）／Linkit（AI 书签，10-21）**：均为 AI agent 基础设施或需后端/AI，**不立**；
+   - **Reddit「I wish there was a website」**：本轮返回均为方法论/营销内容，无可消化需求帖 → 本轮空。
+3. 候选池变动：HTML→Markdown 已交付划出（01fdae8，169 Path）；**新晋 P2 3 个**（Bcrypt 生成与验证器、HMAC 生成器、User-Agent 解析器：均为 dev.to 双榜验证、零命中实锤、纯前端小/小-中难度）；自有实锤消解 2 项（HTML 实体编解码、CSV→Markdown）；优化项 1 条（csv-json：CSV→Markdown 表格导出）；不立若干（重型/AI/后端类）；全量 169 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；HTML→Markdown 交付闭环后按顺位递进；上午轮优先小难度纯前端）：
+
+1. **信封打印助手** — P2 留池顺位递进（92 轮新晋；97 轮复核仍未交付；现为 Top3 中顺位最老且无硬伤的一项，理应首席；HN ToEnvelope 形态验证＋Google Docs 无内置信封工具缺口验证：WYSIWYG 预览＋多尺寸＋打印样式表；痛点：一年寄几次信、每次为 Word 边距折腾半小时，不想装软件；纯前端小难度：收件人／寄件人／邮编＋尺寸预设（#10/DL/C5/C6/A2/A6/A7＋自定义）＋打印样式表＋测试页／偏移微调，零上传；零命中实锤；建议 ID envelope_printer、Path /tools/envelope-printer；真限制：各打印机边距与进纸方向不一，须明示先打测试页再调偏移）。
+2. **CSS 阴影与圆角生成器** — P2 留池顺位递进（95 轮新晋；97 轮复核仍未交付；DevPlaybook／101 工具榜 CSS generators 族验证；痛点：手写阴影数值要反复改数刷新看效果，四角不等圆角语法更易写错；纯前端小难度：滑杆调偏移／模糊／扩散／颜色／透明度＋四角圆角（支持椭圆双值）→实时预览＋box-shadow／border-radius 代码一键复制，零上传；零命中实锤；建议 ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator；真限制：预览以当前浏览器渲染为准，不承诺与所有浏览器像素级一致）。
+3. **WCAG 颜色对比度检查器** — P2 留池顺位递进（96 轮新晋；97 轮复核仍未交付；Uwarp／MyToolster 双榜验证；痛点：凭感觉选色事后才发现正文对比度不达标、无障碍审查被打回，手工算相对亮度公式繁琐易错；纯前端小难度：双色取色器＋HEX/RGB 输入→实时预览样例文本＋对比度数值＋AA/AAA（正常/大号字）判定＋调亮/调暗修正建议，零上传；零命中实锤；建议 ID wcag_contrast_checker、Path /tools/wcag-contrast-checker；真限制：按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径）。
+
+其余 P2 留池（顺位在 Top3 之后）：Bcrypt 生成与验证器（97 轮新晋；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅测试/演示/迁移校验，生产哈希应在服务端做）；HMAC 生成器（97 轮新晋；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥）；User-Agent 解析器（97 轮新晋；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考）；摩斯码翻译器（91 轮新晋；真限制：WebAudio 受自动播放策略影响）；滚动字幕生成器（92 轮晋升；真限制：透明底 webm 的 alpha 支持因浏览器而异，须给纯色底兜底）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 96 轮及之前记录。
+
+**通用候选表增量**（第九十七轮：HTML→Markdown 已交付划出（01fdae8 新增；ID html_to_markdown、Path /tools/html-to-markdown 已注册，文本工具品类；全量 169 Path；候选池划出）；**新晋 P2 3 个：Bcrypt 生成与验证器**（Kovacore／dev.to 榜验证；bcrypt 零命中实锤；vendor 化 bcryptjs 本地生成＋验证＋成本因子，纯前端小-中难度；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅测试/演示/迁移校验）、**HMAC 生成器**（同榜验证；hmac 零命中实锤；WebCrypto HMAC-SHA-256/384/512，纯前端小难度；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用）、**User-Agent 解析器**（同榜验证；user-agent 零命中实锤；规则表解析浏览器/系统/设备，纯前端小难度；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造仅供参考）；自有实锤消解 2 项（HTML 实体编解码已覆盖；CSV→Markdown→csv-json 优化项）；不立若干（Photopea/Remove.bg/PDF/AI/后端类、Show HN AI 基础设施类）；Reddit 需求帖本轮空；全量 169 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HTML→Markdown 转换器 | 已交付划出（01fdae8 新增；ID html_to_markdown、Path /tools/html-to-markdown 已注册，文本工具品类；全量 169 Path；候选池划出） | — | 已实现 |
+| Bcrypt 生成与验证器 | 新晋 P2（97 轮；Kovacore／dev.to 双榜验证；痛点：给测试账号造 bcrypt 哈希或验证已有哈希与口令是否匹配，要装脚本或把口令贴到可疑在线站；vendor 化 bcryptjs 本地生成 $2b$ 哈希＋验证＋成本因子滑杆＋耗时与哈希结构拆解，零上传；与 password-generator（随机口令）、md5/sha（快速无盐摘要）语义均不同；`bcrypt` 零命中实锤；建议 ID bcrypt_generator、Path /tools/bcrypt-generator；真限制：仅测试/演示/迁移校验，生产哈希应在服务端做，勿贴真实生产口令） | 小-中 | P2（97 轮新晋） |
+| HMAC 生成器 | 新晋 P2（97 轮；dev.to 35 纯浏览器工具榜验证；痛点：对接 webhook/API 签名调试要手写脚本算 HMAC，现有 md5/sha 均为无密钥摘要；WebCrypto HMAC-SHA-256/384/512，密钥＋消息→hex/base64，零上传；`hmac` 零命中实锤；建议 ID hmac_generator、Path /tools/hmac-generator；真限制：仅调试用，勿贴真实生产密钥） | 小 | P2（97 轮新晋） |
+| User-Agent 解析器 | 新晋 P2（97 轮；dev.to 35 纯浏览器工具榜验证；痛点：日志里一长串 UA 看不出浏览器/系统/设备；规则表解析浏览器＋版本／操作系统／设备类型／引擎＋当前浏览器 UA 一键填入，零上传；`user.agent\|useragent` 零命中实锤；建议 ID user_agent_parser、Path /tools/user-agent-parser；真限制：UA 可伪造、仅供参考，新冷门 UA 回落未知不硬猜） | 小 | P2（97 轮新晋） |
+| 自有实锤消解 | 不立（HTML 实体编解码已覆盖；CSV→Markdown→csv-json 优化项；JSON/JWT/Cron/正则/CSV⇌JSON/Base64/UUID/时间戳/HTTP 状态码/密码生成/图片压缩转换/QR/SQL/Diff/URL 解析全部自有实锤） | — | 不立 |
+| 优化项 | csv-json：CSV→Markdown 表格导出 | — | 优化项 |
+
+**归档说明**：本轮为 10-25 通用调研第九十七轮——HTML→Markdown 交付闭环（01fdae8，`/tools/html-to-markdown` 已注册，文本工具品类，全量 169 Path），候选池划出；**新晋 P2 3 个**（Bcrypt 生成与验证器、HMAC 生成器、User-Agent 解析器：dev.to 双榜验证，纯前端小/小-中难度，零命中实锤各附真限制）；2 项自有实锤消解；1 条优化项；若干重型/AI/后端类不立；Reddit 需求帖本轮空；WPS 候选表保持冻结归档；仓库 169 注册工具全量核对无重叠（Top3 建议 ID envelope_printer / css_shadow_radius_generator / wcag_contrast_checker；ID＋Path＋中文名＋描述关键词四路零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 01fdae8（HTML→Markdown 新增）／cb2a7b4（Docker 新增）／43366d1（URL 解析器评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **169**；`git fetch` 本轮正常；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录仍有未跟踪 `toolWeb.bak-prev`（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-25 07:40 · 产品经理排期轮）
 
 **选定：HTML→Markdown 转换器（html_to_markdown）** — 本轮唯一任务（新工具）：
