@@ -1,3 +1,84 @@
+## 今日任务（2026-10-26 05:38 · 产品经理排期轮）
+
+**选定：HTML／SVG→JSX 转换器（html_jsx_converter）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（107 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。03:38 PM 轮选匿名抽签生成器时已明言：HTML／SVG→JSX 转换器仅因顺位在匿名抽签之后而后置、「下轮首席递进」；匿名抽签生成器已交付划出（155b1fe 新增＋76d744b 2 人文案与行为修复，179 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——RSS／Atom 订阅源生成器与文本信息提取器虽同为小难度纯前端，均不插队。
+- **未选**：RSS／Atom 订阅源生成器（104 轮新晋 P2，107 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 HTML／SVG→JSX 转换器之后而后置，下轮首席递进；真限制只生成静态 XML 文本、不发布、不托管、不验证订阅源可达性）；文本信息提取器（104 轮新晋 P2，107 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制正则近似提取、不做真实性验证、不承诺 100% 召回）；CSV 表格查看器（107 轮新晋 P2，留池顺位递进；真限制只查看／排序／筛选、不做格式转换与文件编辑）；Prettier 配置生成器（104 轮新晋 P2，留池顺位递进）；CSV→Markdown 表格生成器／Conventional Commit 提交信息生成器（105 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -ci 'html_jsx|jsx' tools/categories.go` = 0；templates／static/js／tests 三路 `jsx` 亦 0；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **179 Path**；`git log` 头部 76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）／94d266f（Cron 生成器新增）。自有近邻辨析：① 已注册的 SVG 压缩器（ID svg_compressor、Path /tools/svg-compressor）是「压缩 SVG 体积」，SVG 转字体（ID svg_to_font、Path /tools/svg-to-font）是「转字体文件」，本工具是「HTML／SVG 源码→JSX 源码词法转换」，语义均不同，不重叠；② 已注册的 HTML 实体（/tools/html-entities）是「实体编解码」，HTML 转 Markdown（/tools/html-to-markdown）是「转 Markdown」，均非 JSX 转换，不重叠。无可复用业务代码，仅可借鉴 Cron／匿名抽签轮的纯前端双模式导出（window＋module.exports）与 node 测试模式。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **外部再现印证**——107 轮 designmodo 榜单 SVGR（SVG→React 组件）再现，说明「从设计稿／旧页面复制源码粘贴进 React」是真实高频动作；③ **痛点逐项可数**——class→className、for→htmlFor、void 标签自闭合、内联 style 转对象、SVG 属性 camelCase（stroke-width→strokeWidth、clip-path→clipPath 等），手改逐项易漏且报错定位慢；④ **一轮可高质量交付**——纯前端、无依赖，属性映射与结构转换均可 node 断言。
+- **品类归位**：注册到「开发工具」品类（与 Cron 表达式生成器、.htaccess 生成器同品类，便于开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做词法级转换**——属性名映射、自闭合、style 对象化、注释转换，不做 JSX 语义校验、不解析 JS 表达式（如 {onClick} 内的表达式原样保留、不改写）、不承诺自定义组件属性全覆盖，转换后仍需在项目里编译验证，页面须明示；② **未知属性原样保留并提示**——映射表外的属性（如 data-*、aria-* 按 JSX 规则直通，aria-* 保留连字符）不静默丢弃，转换报告须列出「未映射／原样保留」清单；③ **不读取用户项目文件**——只转换粘贴／上传的单段源码文本，不扫项目、不改用户代码；④ **style 对象化只做字面转换**——CSS 声明转驼峰键＋字符串值，不计算、不补单位、不展开简写（如 margin: 10px 不展开为四边），数值加不加 px 一律保留原字符串；⑤ **不做线上验证**——不上传源码、不联网校验、不承诺转换结果在特定 React 版本可用。
+
+**规格**（开发轮按此执行）：
+- 输入：粘贴 HTML／SVG 源码文本框（支持多行、支持整段含 <svg> 的片段）；支持「清空输入」；输入为空时不输出误导性结果；另提供 3 组一键示例（普通 HTML 片段、SVG 图标、带内联 style 的表单片段），示例载入后可再改再转。
+- 转换规则（默认全开，逐项可开关，开关状态实时影响输出）：① 属性映射：class→className、for→htmlFor、tabindex→tabIndex、readonly→readOnly、maxlength→maxLength、colspan→colSpan、rowspan→rowSpan、crossorigin→crossOrigin、datetime→dateTime、hreflang→hrefLang 等 HTML 属性表；SVG 属性 camelCase：stroke-width→strokeWidth、stroke-linecap→strokeLinecap、stroke-linejoin→strokeLinejoin、stroke-dasharray→strokeDasharray、clip-path→clipPath、fill-rule→fillRule、clip-rule→clipRule、text-anchor→textAnchor、font-size→fontSize、xlink:href→xlinkHref（并提示 xlink 在现代 React 中可用 href 替代）；② void 标签自闭合：area／base／br／col／embed／hr／img／input／link／meta／param／source／track／wbr 未闭合时补 ` />`；③ 内联 style 转对象：`style="color: red; font-size: 14px"` → `style={{color: 'red', fontSize: '14px'}}`（键驼峰化、值保留原字符串单引号包裹，值内含单引号时转双引号）；④ HTML 注释 `<!-- ... -->` → JSX 注释 `{/* ... */}`；⑤ 布尔属性（如 disabled／checked 无值）保留无值形式；⑥ 自定义属性与 data-*／aria-* 原样保留并计入报告。
+- 输出两种模式（二选一切换，默认片段模式）：片段模式（直接输出 JSX 片段，可粘进现有组件）；组件模式（包一层 `export default function ConvertedComponent() { return ( ... ); }`，组件名可改，默认 ConvertedComponent，须为合法标识符否则报错）。
+- 转换报告：输出下方给出计数结论（属性映射 N 处、自闭合 N 处、style 对象化 N 处、注释转换 N 处、原样保留 M 处并列出属性名），不只给结果不给依据；原样保留清单为空时明示「无原样保留属性」。
+- 操作：结果一键复制；结果一键下载 .jsx（文件名默认 converted.jsx，组件模式与片段模式均可下载）；复制失败有明确降级提示（手动复制指引）；与 SVG 压缩器（/tools/svg-compressor）互链（文案区分压缩与转换：「要压缩 SVG 体积去压缩器」），与 HTML 转 Markdown 不互链（语义无关，不硬凑）。
+- 技术路线：纯前端、无依赖（手写词法级解析：标签／属性／文本分词，不引入 HTML 解析库，不用 innerHTML 做转换——避免浏览器自动补全改写源码）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，属性映射、自闭合、style 对象化、注释转换、原样保留清单、组件包装、标识符校验等纯函数均可 node 断言）。
+- 注册：ID `html_jsx_converter`、Name「HTML／SVG→JSX 转换器」、Path `/tools/html-jsx-converter`、Category 开发工具、Icon 建议 code、New: true；中英文描述＋SEO keywords（HTML转JSX、SVG转JSX、JSX转换器、React、className、html to jsx、svg to jsx、SVGR）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/html-jsx-converter，相关工具互链 SVG 压缩器与开发工具品类内代码转换类工具。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `html_jsx_converter`、Path `/tools/html-jsx-converter` 注册完整（Category 开发工具），注册总数 179→180 Path。
+2. 属性闭环：`<div class="a" for="x">` → 含 className 与 htmlFor；SVG `<svg stroke-width="2" clip-path="url(#c)" fill-rule="evenodd">` → strokeWidth／clipPath／fillRule；tabindex／readonly／colspan 等常用映射至少 10 项逐项正确；data-foo／aria-label 原样保留并计入报告。
+3. 结构闭环：`<br><img src="a.png"><input type="text">` 均自闭合；`style="color: red; font-size: 14px"` → `style={{color: 'red', fontSize: '14px'}}`；`<!-- hi -->` → `{/* hi */}`；布尔属性 disabled／checked 保留无值形式。
+4. 模式闭环：片段模式不包组件壳；组件模式包 `export default function <名>() { return ( ... ); }`，非法组件名（如 `123abc`、含连字符）报错且不输出；组件名可改后输出同步。
+5. 报告闭环：转换报告计数与实际改动逐项对得上（含原样保留清单）；开关关闭某项规则后输出与报告同步变化（如关闭 style 对象化则 style 原样保留并计入报告）。
+6. 示例与操作闭环：3 组示例一键载入后输入、输出、报告三者同步；复制结果与页面输出一致；下载 .jsx 内容与页面输出一致；复制失败有降级提示；相关工具互链含 SVG 压缩器。
+7. 真限制可见：页面可见「只做词法级转换、不做语义校验、转换后请在项目里编译验证」「未知属性原样保留」「不读取项目文件」「style 只做字面转换」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（属性映射表、SVG camelCase、自闭合、style 对象化、注释转换、布尔属性、原样保留清单、组件包装与标识符校验、开关同步、注册与零网络请求静态检查）。
+9. 页面无报错；移动端布局不错位；输入与输出框小屏可操作、不撑破。
+
+**预计改动文件**：
+- `templates/html_jsx_converter.html`（新增；含 SEO 面板按家族标准＋输入／规则开关／示例／片段-组件切换／输出／转换报告 UI）
+- `static/js/html_jsx_converter.js`（新增；词法分词／属性映射／自闭合／style 对象化／注释转换／组件包装逻辑；双模式导出供 node 测试）
+- `tests/html_jsx_converter.test.js`（新增；属性映射、SVG camelCase、自闭合、style 对象化、注释转换、布尔属性、原样保留、组件包装、开关同步、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID html_jsx_converter、Path /tools/html-jsx-converter、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）／94d266f（Cron 生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **179**；Top3 候选重叠复核（html_jsx_converter／rss_feed_generator／text_info_extractor 三路零命中实锤；SVG 压缩器／SVG 转字体／HTML 实体／HTML 转 Markdown 语义辨析见上）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+**交付状态**：10-26 通用调研第一百零七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**匿名抽签生成器已交付闭环**（155b1fe 新增＋76d744b 2 人文案与行为修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **179 Path**，ID secret_santa_generator、Path /tools/secret-santa-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:36 深夜轮，优先小难度纯前端。
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. 匿名抽签交付确认：`git log` 头部 76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）／94d266f（Cron 生成器新增）；全量 179 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功，无报错。HTML→JSX／RSS／文本提取／Prettier／CSV→Markdown／Conventional Commit 复核仍未交付（`grep -ci 'html_jsx|rss_feed|text_info_extractor|prettier_config|csv_markdown|conventional_commit'` = 0，组合复核唯一命中为已交付的 secret_santa）。
+2. 新信号扫描：
+   - **LocalFirstTools 28 工具清单＋datatoolbase／SimpleDevTools／DebuggAI 四源**：JSON 格式化／Minifier、CSV⇄JSON、JWT、Base64、UUID、时间戳、URL 解析、正则、Diff、哈希、调色板、密码、Markdown 预览 → **基本消解**（JSON Minifier 为 JSON 解析器子集；JSON Diff 对应已注册 json_semantic_diff；密码对应已注册 password；其余均为 106 轮及之前已核对的注册工具；花体字对应已交付 fancy_fonts.html，消解）；
+   - **CSV 表格查看器（CSV Viewer）双源同现**（LocalFirstTools＋datatoolbase）：粘贴／上传 CSV 即成可排序／筛选／搜索的表格，不做格式转换 → 与已注册的 CSV⇄JSON 互转（转换语义）、表格合并（合并语义）、在线图表生成器（出图语义）均不同义，独立查看语义确未注册（`csv_viewer` 0 实锤），纯前端小难度，**新晋 P2**；
+   - **Query↔JSON（查询字符串↔JSON）** → **消解**：已注册 URL 解析器（url_parser）已含查询参数键值表可编辑／重组＋结构化 JSON 一键复制，逆向 JSON→查询串只是其一小步，不独立立项；
+   - **十六进制文本转换** → **消解**：已注册进制转换器（base_converter，2/8/10/16/32 含十六进制）＋HMAC 十六进制输出覆盖数字口径，文本↔十六进制与 104 轮观察项「文本↔二进制／ASCII 转换器」同族，不重复立；
+   - **网站是否宕机检查器（is-down checker）** → **硬伤→不立**：需在线抓取目标站，浏览器端受 CORS 阻断，与 106 轮 Open Graph 检查器同类硬伤；
+   - **SVGR（SVG→React 组件）再现**（designmodo 榜单）→ **强化 105 轮 HTML／SVG→JSX 转换器**：SVG→JSX 本就是该候选的既定子集，外部独立工具印证需求真实，不另立；
+   - **中文搜索（V2EX／希望有一个网站能…）**本轮返回均为旧帖／无关内容，无可消化需求帖 → 本轮中文侧空。
+3. 候选池变动：匿名抽签生成器已交付划出（155b1fe＋76d744b，179 Path）；**本轮新晋 P2 1 个**（CSV 表格查看器）；**观察项新增 4 条**（CSV→SQL 生成器、JSON↔XML 转换器、Discord 时间戳生成器、JSON Schema 样本推断生成器；定性见下）；自有实锤消解 10+ 项；全量 179 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；匿名抽签交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，106 轮 Top3 第二、三顺位依次递进，第三顺位取留池中最老的 104 轮新晋项）：
+
+1. **HTML／SVG→JSX 转换器** — P2 留池顺位递进（105 轮新晋；107 轮复核仍未交付；106 轮 Top3 第二顺位递进为首席；本轮 designmodo 榜单 SVGR 再现印证需求；痛点：HTML／SVG 粘贴进 React 要逐项改 className／htmlFor／void 自闭合／style 对象化／SVG camelCase，手改易漏；纯前端小难度：属性映射＋自闭合＋style 对象化＋组件／片段输出＋复制／下载 .jsx，零上传；`jsx` 零命中实锤；建议 ID html_jsx_converter、Path /tools/html-jsx-converter；真限制：只做词法级转换、不做 JSX 语义校验、不承诺自定义属性全覆盖，转换后需项目编译验证）。
+2. **RSS／Atom 订阅源生成器** — P2 留池顺位递进（104 轮新晋；107 轮复核仍未交付；106 轮 Top3 第三顺位递进；痛点：给博客／播客手写 RSS 2.0／Atom XML 要逐项查规范，转义与日期格式（RFC 822／RFC 3339）一错订阅器就拒读；纯前端小难度：频道元数据表单＋条目列表增减→实时生成规范 XML＋XML 转义＋一键复制／下载 .xml，零上传；`rss_feed` 零命中实锤；建议 ID rss_feed_generator、Path /tools/rss-feed-generator；真限制：只生成静态 XML 文本，不发布、不托管、不验证订阅源可达性）。
+3. **文本信息提取器** — P2 留池顺位递进（104 轮新晋；107 轮复核仍未交付；留池中最老的 104 轮新晋项顺位递进；痛点：从一堆聊天记录／日志／网页粘贴文本里抠邮箱／电话／链接／日期／金额要逐条肉眼找，正则手写门槛高；纯前端小难度：内置提取规则多选＋自定义正则→高亮命中＋一键复制／导出清单，零上传；建议 ID text_info_extractor、Path /tools/text-info-extractor；真限制：正则近似提取、不做真实性验证、不承诺 100% 召回）。
+
+其余 P2 留池（顺位在 Top3 之后）：CSV 表格查看器（107 轮新晋；建议 ID csv_table_viewer、Path /tools/csv-table-viewer；真限制：只查看／排序／筛选、不做格式转换与文件编辑，超大文件只做前端分页渲染）；Prettier 配置生成器（104 轮新晋；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）；CSV→Markdown 表格生成器（105 轮新晋；建议 ID csv_markdown_table_generator、Path /tools/csv-markdown-table-generator；真限制：只生成表格文本、不解析 Excel 文件）；Conventional Commit 提交信息生成器（105 轮新晋；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成文本、不执行 git）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮新记观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 106 轮及之前记录。
+
+**通用候选表增量**（第一百零七轮：匿名抽签生成器已交付划出（155b1fe 新增＋76d744b 修复；ID secret_santa_generator、Path /tools/secret-santa-generator 已注册；全量 179 Path；候选池划出）；**新晋 P2 1 个**（CSV 表格查看器）；**观察项新增 4 条**（CSV→SQL 生成器、JSON↔XML 转换器、Discord 时间戳生成器、JSON Schema 样本推断生成器，定性见上）；自有实锤消解 10+ 项（json_semantic_diff／password／fancy_fonts／base_converter／url_parser 均已注册或已交付；网站宕机检查器因 CORS 硬伤不立；Query↔JSON 与十六进制文本转换因与已注册工具重叠消解）；中文搜索无可消化需求帖；全量 179 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 匿名抽签生成器 | 已交付划出（155b1fe 新增＋76d744b 修复；ID secret_santa_generator、Path /tools/secret-santa-generator 已注册；全量 179 Path；候选池划出） | — | 已实现 |
+| CSV 表格查看器 | 粘贴／上传 CSV 即成可排序／筛选／搜索的表格，不用开 Excel、不用先转格式；与 CSV⇄JSON 互转／表格合并／图表生成器语义均不同（`csv_viewer` 0 实锤；LocalFirstTools＋datatoolbase 双源；建议 ID csv_table_viewer、Path /tools/csv-table-viewer；真限制：只查看／排序／筛选、不做格式转换与文件编辑，超大文件只做前端分页渲染） | 小 | P2 |
+| CSV→SQL 生成器（观察项） | 不新立（107 轮；datatoolbase 单源；与已注册 mock_data_generator 的 SQL 导出、CSV⇄JSON 互转边际重叠，单源弱信号；建议 ID 占位 csv_to_sql_generator、Path /tools/csv-to-sql-generator） | 小 | 观察 |
+| JSON↔XML 转换器（观察项） | 不新立（107 轮；LocalFirstTools 单源；与已注册 JSON⇄YAML 互转、XML 格式化同族，单源弱信号；建议 ID 占位 json_xml_converter、Path /tools/json-xml-converter） | 小 | 观察 |
+| Discord 时间戳生成器（观察项） | 不新立（107 轮；LocalFirstTools 单源；单平台小众（Discord `<t:…>` 语法），中文用户相关性低；建议 ID 占位 discord_timestamp_generator、Path /tools/discord-timestamp-generator） | 小 | 观察 |
+| JSON Schema 样本推断生成器（观察项） | 不新立（107 轮；DebuggAI 单源；与已注册 JSON Schema 验证器方向互反（验 vs 生成），单源弱信号；建议 ID 占位 json_schema_generator、Path /tools/json-schema-generator） | 小 | 观察 |
+| 自有实锤消解 | 不立（json_semantic_diff／password／fancy_fonts／base_converter／url_parser 均已注册或已交付；网站宕机检查器 CORS 硬伤不立；Query↔JSON 与十六进制文本转换因与已注册工具重叠消解） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百零七轮——匿名抽签生成器交付闭环（155b1fe＋76d744b，`/tools/secret-santa-generator` 已注册，全量 179 Path），候选池划出；**新晋 P2 1 个**（CSV 表格查看器，双源）；观察项新增 4 条；中文搜索无可消化需求帖；仓库 179 注册工具全量核对无重叠（Top3 建议 ID html_jsx_converter / rss_feed_generator / text_info_extractor；ID＋Path＋关键词零命中逐项可复现）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 76d744b（匿名抽签 2 人文案修复）／155b1fe（匿名抽签新增）／94d266f（Cron 生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **179**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 03:38 · 产品经理排期轮）
 
 **选定：匿名抽签生成器（secret_santa_generator）** — 本轮唯一任务（新工具）：

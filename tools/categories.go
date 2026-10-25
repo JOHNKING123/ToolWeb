@@ -543,6 +543,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "html_jsx_converter",
+					Name:        "HTML/SVG→JSX 转换器",
+					Description: "免费在线 HTML/SVG 转 JSX 工具：粘贴 HTML/SVG 源码即转 React JSX，class→className、for→htmlFor、SVG stroke-width→strokeWidth 等属性映射，void 标签自闭合，内联 style 转对象（style={{color:'red',fontSize:'14px'}}），HTML 注释转 {/* */}，布尔属性无值保留；5 项规则逐项可开关，片段与组件双模式输出，转换报告逐项计数（映射/自闭合/style/注释/原样保留），3 组示例一键载入，复制或下载 .jsx；只做词法级转换，不做语义校验、不解析 JS 表达式，未知属性原样保留并列清单，纯前端零上传 · HTML/SVG to JSX converter: attribute mapping, void self-closing, style objectification, comment conversion, per-rule toggles, fragment/component modes, conversion report, 100% client-side",
+					Path:        "/tools/html-jsx-converter",
+					Icon:        "code",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

@@ -1,0 +1,174 @@
+{{define "html_jsx_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML/SVG→JSX 转换器 - 粘贴 HTML 转 React JSX，属性映射与 style 对象化（纯前端）</title>
+    <meta name="description" content="免费在线 HTML 转 JSX 工具：粘贴 HTML/SVG 源码即转 React JSX，class→className、for→htmlFor、SVG stroke-width→strokeWidth 等属性映射，void 标签自闭合，内联 style 转对象，HTML 注释转 {/* */}，布尔属性无值保留；规则逐项可开关，片段与组件双模式输出，转换报告逐项计数，纯前端零上传。HTML to JSX converter: convert HTML/SVG to React JSX locally, 100% client-side.">
+    <meta name="keywords" content="HTML转JSX,HTML to JSX,SVG转JSX,React JSX转换,className转换,JSX转换器,HTML转React,SVG转React,jsx converter">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/html-jsx-converter">
+    <meta property="og:title" content="HTML/SVG→JSX 转换器 - 粘贴 HTML 转 React JSX">
+    <meta property="og:description" content="粘贴 HTML/SVG 源码即转 JSX：属性映射、void 自闭合、style 对象化、注释转换、布尔属性保留，规则可开关，片段与组件双模式，文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/html-jsx-converter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HTML/SVG→JSX 转换器","description":"粘贴 HTML/SVG 源码即转 React JSX：class→className、for→htmlFor、SVG camelCase 属性映射，void 标签自闭合，内联 style 对象化，HTML 注释转 JSX 注释，布尔属性无值保留，规则逐项可开关，片段与组件双模式输出，文本不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/html-jsx-converter","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jx-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .jx-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .jx-warn b{display:block;margin-bottom:.2rem}
+        .jx-warn p{margin:0}
+        .jx-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .jx-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .jx-input{width:100%;min-width:0;min-height:200px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .jx-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .jx-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .jx-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .jx-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .jx-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .jx-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem}
+        .jx-scroll{overflow-x:auto}
+        .jx-out{width:100%;min-width:0;min-height:200px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box;background:#f9fafb;white-space:pre;overflow-x:auto}
+        .jx-report{font-size:.92rem;color:#374151;line-height:1.9;margin:0;white-space:pre-line}
+        .jx-rules label{display:flex;gap:.5rem;align-items:flex-start;font-size:.92rem;color:#374151;line-height:1.8;cursor:pointer}
+        .jx-rules input{accent-color:#2563eb;margin-top:.3rem;flex:none}
+        .jx-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.4rem 1rem}
+        .jx-name{padding:.5rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;box-sizing:border-box}
+        .jx-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .jx-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .jx-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .jx-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .jx-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .jx-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .jx-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .jx-note b{color:#374151}
+        .jx-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        @media (max-width:640px){
+            .jx-panel{padding:1rem}
+            .jx-name{width:100%}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>HTML/SVG→JSX 转换器</h1>
+            <p>粘贴 HTML/SVG 源码，词法级转成 React JSX：属性映射、自闭合、style 对象化一次到位</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="jx-privacy">
+                <div><b>文本不出浏览器：</b>全部转换都在本机完成，本页面不发起任何网络请求、不上传任何输入（零 fetch / XHR），粘贴的源码只留在当前页面。</div>
+            </div>
+            <div class="jx-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 只做词法级转换，不做语义校验：本工具只按字面改写标签与属性，不检查标签是否配对合理、不校验 JSX 语义，转换结果需在你的项目里编译验证，报错请按编译器提示修正。</p>
+                <p>2. 不解析 JS 表达式：事件属性（如 onclick）与花括号表达式不做转换，原样保留并列入报告；需要 onClick 请在项目里手工改写。</p>
+                <p>3. 不承诺自定义属性全覆盖：映射表只覆盖常用属性与 SVG camelCase，未知属性原样保留并列清单，请核对报告再决定是否手工改名。</p>
+                <p>4. style 只做字面转换，不补单位、不展开简写：style="color: red; font-size: 14px" 转成 style={ {color: 'red', fontSize: '14px'} }，不补 px、不把 margin 简写拆成四边，简写请在项目里自行展开。</p>
+                <p>5. 不读用户项目文件：本工具只转粘贴进来的源码，不读取、不扫描你本地项目里的任何文件，组件名与导入请自行补齐。</p>
+                <p>6. 不处理服务端渲染与样式文件：class 名只改写属性名，不改 CSS 文件、不生成 CSS Modules 映射，样式文件请自行对应。</p>
+            </div>
+            <div class="jx-panel">
+                <h3>粘贴 HTML / SVG 源码</h3>
+                <textarea class="jx-input" id="jx-input" placeholder="例如：&lt;div class=&quot;card&quot;&gt;&lt;p style=&quot;color: red;&quot;&gt;你好&lt;/p&gt;&lt;br&gt;&lt;/div&gt;"></textarea>
+                <div class="jx-rules" style="margin-top:.9rem;">
+                    <label><input type="checkbox" id="jx-rule-map" checked> 属性映射（class→className、for→htmlFor、SVG camelCase）</label>
+                    <label><input type="checkbox" id="jx-rule-void" checked> void 标签自闭合（br / img / input 等）</label>
+                    <label><input type="checkbox" id="jx-rule-style" checked> 内联 style 对象化（style={ {…} }）</label>
+                    <label><input type="checkbox" id="jx-rule-comment" checked> HTML 注释转 JSX 注释（{/* */}）</label>
+                    <label><input type="checkbox" id="jx-rule-boolean" checked> 布尔属性保留无值（checked、disabled）</label>
+                </div>
+                <p class="jx-hint">规则逐项可开关：关闭某项后，该项输出保持原样、报告计数同步归零；data-* / aria-* 与未知属性始终原样保留并列入报告。</p>
+                <div class="jx-row">
+                    <label style="font-size:.92rem;color:#374151;"><input type="radio" name="jx-mode" id="jx-mode-fragment" checked> 片段模式（只输出 JSX 片段）</label>
+                    <label style="font-size:.92rem;color:#374151;"><input type="radio" name="jx-mode" id="jx-mode-component"> 组件模式（包 export default function）</label>
+                </div>
+                <div class="jx-row" id="jx-name-row" style="display:none;">
+                    <label style="font-size:.92rem;color:#374151;">组件名：<input class="jx-name" id="jx-component-name" value="MyComponent" placeholder="MyComponent"></label>
+                    <span style="font-size:.9rem;color:#6b7280;">须为合法标识符且首字母大写，否则报错不输出。</span>
+                </div>
+                <div class="jx-row">
+                    <button class="jx-btn jx-btn-primary" type="button" id="jx-convert">转换为 JSX</button>
+                </div>
+                <p class="jx-hint">支持 Ctrl+Enter 快速转换；空输入会给出明确错误提示。</p>
+                <div class="jx-row" style="margin-top:.6rem;">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再转换）：</span>
+                    <button class="jx-btn" type="button" data-example="0">HTML 卡片</button>
+                    <button class="jx-btn" type="button" data-example="1">SVG 图标</button>
+                    <button class="jx-btn" type="button" data-example="2">表单</button>
+                </div>
+            </div>
+            <div class="jx-errors" id="jx-errors"></div>
+            <div id="jx-result" style="display:none;">
+                <div class="jx-panel">
+                    <h3>JSX 输出（只读）</h3>
+                    <div class="jx-scroll">
+                        <textarea class="jx-out" id="jx-output" readonly wrap="off" placeholder="转换后这里显示 JSX"></textarea>
+                    </div>
+                    <div class="jx-row">
+                        <button class="jx-btn jx-btn-primary" type="button" id="jx-copy">复制 JSX</button>
+                        <button class="jx-btn" type="button" id="jx-download">下载 .jsx 文件</button>
+                    </div>
+                    <p class="jx-hint">复制失败时会有明确降级提示，请手动选中输出框内容复制。组件模式下载文件名为“组件名.jsx”，片段模式为 converted.jsx。</p>
+                </div>
+                <div class="jx-panel">
+                    <h3>转换报告（计数与实际改动逐项对应）</h3>
+                    <p class="jx-report" id="jx-report"></p>
+                    <p class="jx-hint">请逐项核对：映射清单、原样保留清单里的属性名如需改名，请在项目里手工处理；报告计数只统计本次转换实际发生的改动。</p>
+                </div>
+            </div>
+            <div class="jx-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>把 HTML 或 SVG 源码粘贴到输入框，按需开关 5 项规则，点「转换为 JSX」。</li>
+                    <li>属性映射：class→className、for→htmlFor、tabindex→tabIndex、colspan→colSpan、stroke-width→strokeWidth、fill-rule→fillRule、clip-path→clipPath、xlink:href→xlinkHref 等常用映射一次改写。</li>
+                    <li>结构处理：br / img / input 等 void 标签自动自闭合；未闭合的 SVG 形状（如 path）无子节点时也自动自闭合，否则 JSX 无法编译。</li>
+                    <li>内联样式：style="color: red; font-size: 14px" 转成 style={ {color: 'red', fontSize: '14px'} }，只做字面转换，不补单位、不展开简写。</li>
+                    <li>注释与布尔属性：HTML 注释转成 {/* */}；checked、disabled 等布尔属性保留无值形式。</li>
+                    <li>输出模式：片段模式只输出 JSX 片段；组件模式包一层 export default function 组件名()，组件名须为合法标识符且首字母大写，非法会报错。</li>
+                    <li>看「转换报告」核对：映射、自闭合、style、注释、原样保留五项计数与清单，开关关闭后对应项同步归零。</li>
+                    <li>点「复制 JSX」或「下载 .jsx 文件」导出；点示例一键载入 3 组典型源码（请按需改写），载入后仍可编辑再转换。</li>
+                </ol>
+            </div>
+            <div class="jx-panel">
+                <h3>常见问题</h3>
+                <dl class="jx-faq">
+                    <dt>转换完直接粘进项目就能跑吗？</dt>
+                    <dd>不一定。本工具只做词法级转换，不做语义校验，转换结果需在你的项目里编译验证；编译器报错（如未闭合标签、表达式问题）请按提示修正。</dd>
+                    <dt>为什么我的 onclick 没有变成 onClick？</dt>
+                    <dd>因为事件属性的值是 JS 表达式，本工具不解析 JS 表达式，故原样保留并列入报告；需要 onClick 请在项目里把字符串改成花括号表达式。</dd>
+                    <dt>自定义属性为什么没改名？</dt>
+                    <dd>映射表只覆盖常用属性与 SVG camelCase，不承诺自定义属性全覆盖；未知属性原样保留并列在报告清单里，请核对后手工改名。</dd>
+                    <dt>style 里的 margin 简写为什么没展开？</dt>
+                    <dd>style 只做字面转换，不补单位、不展开简写；简写属性在 React 内联样式里同样是简写，需要展开请在项目里自行处理。</dd>
+                    <dt>组件名为什么报错？</dt>
+                    <dd>组件模式要求组件名是合法标识符且首字母大写：数字开头、含连字符、小写开头都会报错；改成如 MyCard 后再转换。</dd>
+                    <dt>我的源码会被上传吗？</dt>
+                    <dd>不会。全部转换在浏览器本地完成，零网络请求，输入只留在当前页面；本工具也不读用户项目文件。</dd>
+                </dl>
+            </div>
+            <div class="jx-panel">
+                <h3>相关工具</h3>
+                <div class="jx-links">
+                    <a href="/tools/svg-compressor">SVG 压缩优化器</a>
+                    <a href="/tools/html-to-markdown">HTML→Markdown 转换器</a>
+                    <a href="/tools/svg-to-font">SVG 转字体图标生成器</a>
+                </div>
+            </div>
+            <div class="jx-note">
+                <b>实现说明：</b>HTML/SVG 解析、属性映射、void 自闭合、style 对象化、注释与布尔属性处理均为纯函数（手写分词/解析器，不用 innerHTML 做转换，浏览器与 node 测试共用同一文件）；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    <div class="jx-toast" id="jx-toast"></div>
+    <script src="/tools/static/js/html_jsx_converter.js?v=1"></script>
+</body>
+</html>
+{{end}}
