@@ -1483,6 +1483,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "加密解密",
 				},
+				{
+					ID:          "crc_checksum_calculator",
+					Name:        "CRC 校验和计算器",
+					Description: "文本或本地文件二选一，实时并排算出 CRC32、CRC32C、CRC16/MODBUS、CRC16/CCITT-FALSE、CRC16/XMODEM、CRC16/ARC 共 6 组校验值，十六进制与十进制双输出、期望值逐组比对，纯前端零上传 · CRC checksum calculator: CRC32/CRC32C/CRC16 variants side by side, expected-value compare, 100% client-side",
+					Path:        "/tools/crc-checksum-calculator",
+					Icon:        "shield-check",
+					New:         true,
+					Category:    "加密解密",
+				},
 			},
 		},
 		{

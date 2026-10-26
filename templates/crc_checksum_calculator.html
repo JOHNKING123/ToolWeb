@@ -1,0 +1,221 @@
+{{define "crc_checksum_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRC 校验和计算器 - CRC32/CRC32C/CRC16 多变体并排计算 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CRC 校验和计算器：文本或本地文件二选一，实时并排算出 CRC32、CRC32C、CRC16/MODBUS、CRC16/CCITT-FALSE、CRC16/XMODEM、CRC16/ARC 共 6 组校验值，十六进制与十进制双输出，期望值逐组比对，一键复制或下载 crc-checksum.txt。纯前端本地计算，零上传。">
+    <meta name="keywords" content="CRC 校验和,CRC32,CRC32C,CRC16,MODBUS,CCITT,校验码,checksum,文件完整性校验,串口校验,固件校验">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/crc-checksum-calculator">
+    <meta property="og:title" content="CRC 校验和计算器 - 6 组 CRC 变体并排计算">
+    <meta property="og:description" content="文本或文件算 CRC32、CRC32C 与 4 组 CRC16 变体，期望值逐组比对，纯前端本地计算零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/crc-checksum-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CRC 校验和计算器","description":"文本或本地文件并排算出 CRC32、CRC32C、CRC16/MODBUS、CRC16/CCITT-FALSE、CRC16/XMODEM、CRC16/ARC 共 6 组校验值，期望值逐组比对，纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/crc-checksum-calculator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .crc-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .crc-wrap .navbar .material-icons { display: none; }
+        .crc-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .crc-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .crc-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .crc-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .crc-row label { font-size:.92rem; color:#374151; }
+        .crc-textarea { width:100%; min-height:110px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.95rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+        .crc-drop { border:1.5px dashed #d1d5db; border-radius:.7rem; padding:1.2rem .8rem; text-align:center; color:#6b7280; font-size:.92rem; }
+        .crc-drop input[type=file] { display:block; margin:.7rem auto 0; max-width:100%; }
+        .crc-table-wrap { overflow-x:auto; }
+        .crc-table { width:100%; border-collapse:collapse; font-size:.92rem; min-width:620px; }
+        .crc-table th, .crc-table td { border:1px solid #e5e7eb; padding:.55rem .6rem; text-align:left; vertical-align:top; }
+        .crc-table th { background:#f9fafb; color:#374151; white-space:nowrap; }
+        .crc-table td.crc-hex { font-family:ui-monospace,Menlo,Consolas,monospace; font-weight:700; color:#111827; white-space:nowrap; }
+        .crc-table td.crc-dec { font-family:ui-monospace,Menlo,Consolas,monospace; color:#374151; white-space:nowrap; }
+        .crc-table .crc-params { color:#6b7280; font-size:.82rem; line-height:1.5; }
+        .crc-exp { width:9em; max-width:100%; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.9rem; font-family:ui-monospace,Menlo,Consolas,monospace; box-sizing:border-box; }
+        .crc-status { white-space:nowrap; font-size:.9rem; }
+        .crc-status.crc-match { color:#059669; font-weight:700; }
+        .crc-status.crc-mismatch { color:#dc2626; font-weight:700; }
+        .crc-status.crc-invalid { color:#b45309; }
+        .crc-btn { padding:.4rem .8rem; border-radius:.5rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.88rem; white-space:nowrap; }
+        .crc-btn:hover { background:#f3f4f6; }
+        .crc-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .crc-msg { color:#b45309; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .crc-info { color:#374151; font-size:.9rem; margin:.4rem 0 0; word-break:break-all; }
+        .crc-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .crc-tip a { color:var(--primary-color); }
+        .crc-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .crc-links a { color:var(--primary-color); font-size:.93rem; }
+        .crc-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .crc-table { min-width:0; font-size:.85rem; }
+            .crc-table .crc-params { display:none; }
+            .crc-exp { width:7em; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="crc-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🛡️ CRC 校验和计算器</h1>
+            <p>文本或本地文件二选一，实时并排算出 6 组 CRC 校验值，期望值逐组比对</p>
+        </div>
+        <div class="tool-content" id="crc-form">
+            <div class="crc-card">
+                <h3>输入模式 <span class="crc-hint">（二选一；切换后结果区同步重算）</span></h3>
+                <div class="crc-row">
+                    <label><input type="radio" name="crc-mode" id="crc-mode-text" value="text" checked> 文本输入</label>
+                    <label><input type="radio" name="crc-mode" id="crc-mode-file" value="file"> 文件输入</label>
+                </div>
+                <div class="crc-actions">
+                    <button class="btn btn-primary" id="crc-example" type="button">填入标准示例 123456789</button>
+                    <button class="btn btn-secondary" id="crc-clear" type="button">↺ 清空</button>
+                </div>
+                <p class="crc-msg" id="crc-msg"></p>
+                <p class="crc-info" id="crc-source-info"></p>
+            </div>
+
+            <div class="crc-card" id="crc-text-card">
+                <h3>文本输入 <span class="crc-hint">（文本按UTF-8编码计算；输入即实时重算）</span></h3>
+                <textarea class="crc-textarea" id="crc-text" placeholder="在此粘贴文本，例如 123456789">123456789</textarea>
+                <p class="crc-hint" style="margin-top:.5rem;">中文文本的校验值随编码而变：本工具统一按 UTF-8 编码计算，文件输入则按原始字节计算、不做编码转换。</p>
+            </div>
+
+            <div class="crc-card" id="crc-file-card" style="display:none;">
+                <h3>文件输入 <span class="crc-hint">（按原始字节计算；分片增量读取，大文件不一次性读入内存）</span></h3>
+                <div class="crc-drop" id="crc-drop">
+                    把文件拖到此处，或点选文件
+                    <input type="file" id="crc-file">
+                </div>
+                <p class="crc-info" id="crc-file-info"></p>
+                <p class="crc-info" id="crc-file-progress"></p>
+                <p class="crc-hint" style="margin-top:.5rem;">文件不离开本机：全部计算在浏览器本地完成，不上传、不发请求。</p>
+            </div>
+
+            <div class="crc-card">
+                <h3>校验结果 <span class="crc-hint">（十六进制为大写：CRC32 为 8 位、CRC16 为 4 位；复制内容不带 0x 前缀）</span></h3>
+                <div class="crc-table-wrap">
+                <table class="crc-table">
+                    <thead>
+                        <tr><th>变体</th><th>十六进制</th><th>十进制</th><th>期望值（可填 0x 前缀，大小写不限）</th><th>比对</th><th>操作</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CRC32（IEEE 802.3）<div class="crc-params">多项式 0x04C11DB7（反射 0xEDB88320）· 初值 0xFFFFFFFF · 异或输出 0xFFFFFFFF · 输入/输出均反射</div></td>
+                            <td class="crc-hex" id="crc-hex-crc32">—</td>
+                            <td class="crc-dec" id="crc-dec-crc32">—</td>
+                            <td><input class="crc-exp" id="crc-exp-crc32" placeholder="如 CBF43926" aria-label="CRC32 期望值"></td>
+                            <td><span class="crc-status" id="crc-status-crc32">—</span></td>
+                            <td><button class="crc-btn" id="crc-copy-crc32" type="button">📋 复制</button></td>
+                        </tr>
+                        <tr>
+                            <td>CRC32C（Castagnoli）<div class="crc-params">多项式 0x1EDC6F41（反射 0x82F63B78）· 初值 0xFFFFFFFF · 异或输出 0xFFFFFFFF · 输入/输出均反射</div></td>
+                            <td class="crc-hex" id="crc-hex-crc32c">—</td>
+                            <td class="crc-dec" id="crc-dec-crc32c">—</td>
+                            <td><input class="crc-exp" id="crc-exp-crc32c" placeholder="如 E3069283" aria-label="CRC32C 期望值"></td>
+                            <td><span class="crc-status" id="crc-status-crc32c">—</span></td>
+                            <td><button class="crc-btn" id="crc-copy-crc32c" type="button">📋 复制</button></td>
+                        </tr>
+                        <tr>
+                            <td>CRC16/MODBUS<div class="crc-params">多项式 0x8005（反射 0xA001）· 初值 0xFFFF · 异或输出 0x0000 · 输入/输出均反射</div></td>
+                            <td class="crc-hex" id="crc-hex-crc16-modbus">—</td>
+                            <td class="crc-dec" id="crc-dec-crc16-modbus">—</td>
+                            <td><input class="crc-exp" id="crc-exp-crc16-modbus" placeholder="如 4B37" aria-label="CRC16/MODBUS 期望值"></td>
+                            <td><span class="crc-status" id="crc-status-crc16-modbus">—</span></td>
+                            <td><button class="crc-btn" id="crc-copy-crc16-modbus" type="button">📋 复制</button></td>
+                        </tr>
+                        <tr>
+                            <td>CRC16/CCITT-FALSE<div class="crc-params">多项式 0x1021 · 初值 0xFFFF · 异或输出 0x0000 · 输入/输出均不反射</div></td>
+                            <td class="crc-hex" id="crc-hex-crc16-ccitt-false">—</td>
+                            <td class="crc-dec" id="crc-dec-crc16-ccitt-false">—</td>
+                            <td><input class="crc-exp" id="crc-exp-crc16-ccitt-false" placeholder="如 29B1" aria-label="CRC16/CCITT-FALSE 期望值"></td>
+                            <td><span class="crc-status" id="crc-status-crc16-ccitt-false">—</span></td>
+                            <td><button class="crc-btn" id="crc-copy-crc16-ccitt-false" type="button">📋 复制</button></td>
+                        </tr>
+                        <tr>
+                            <td>CRC16/XMODEM<div class="crc-params">多项式 0x1021 · 初值 0x0000 · 异或输出 0x0000 · 输入/输出均不反射</div></td>
+                            <td class="crc-hex" id="crc-hex-crc16-xmodem">—</td>
+                            <td class="crc-dec" id="crc-dec-crc16-xmodem">—</td>
+                            <td><input class="crc-exp" id="crc-exp-crc16-xmodem" placeholder="如 31C3" aria-label="CRC16/XMODEM 期望值"></td>
+                            <td><span class="crc-status" id="crc-status-crc16-xmodem">—</span></td>
+                            <td><button class="crc-btn" id="crc-copy-crc16-xmodem" type="button">📋 复制</button></td>
+                        </tr>
+                        <tr>
+                            <td>CRC16/ARC<div class="crc-params">多项式 0x8005（反射 0xA001）· 初值 0x0000 · 异或输出 0x0000 · 输入/输出均反射</div></td>
+                            <td class="crc-hex" id="crc-hex-crc16-arc">—</td>
+                            <td class="crc-dec" id="crc-dec-crc16-arc">—</td>
+                            <td><input class="crc-exp" id="crc-exp-crc16-arc" placeholder="如 BB3D" aria-label="CRC16/ARC 期望值"></td>
+                            <td><span class="crc-status" id="crc-status-crc16-arc">—</span></td>
+                            <td><button class="crc-btn" id="crc-copy-crc16-arc" type="button">📋 复制</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="crc-actions" style="margin-top:.8rem;">
+                    <button class="btn btn-primary" id="crc-copy-all" type="button">📋 复制全部结果</button>
+                    <button class="btn btn-secondary" id="crc-download" type="button">⬇ 下载 crc-checksum.txt</button>
+                </div>
+                <p class="crc-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中结果内容复制。下载文件内容与页面输出一致。</p>
+                <p class="crc-hint" style="margin-top:.4rem;">标准校验向量：输入 123456789 时，CRC32=CBF43926、CRC32C=E3069283、CRC16/MODBUS=4B37、CRC16/CCITT-FALSE=29B1、CRC16/XMODEM=31C3、CRC16/ARC=BB3D。</p>
+            </div>
+
+            <div class="crc-card">
+                <h3>使用说明</h3>
+                <ol class="crc-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>文本模式下粘贴字符串即实时算出 6 组结果；文件模式下点选或拖入单个文件，分片增量读取后算出结果。</li>
+                    <li>对方给的期望校验值填到对应变体行的期望值框里：自动剥离 0x 前缀、大小写不敏感，逐组显示一致或不一致。</li>
+                    <li>期望值格式非法时该行会显示“期望值格式非法”，请检查是否为十六进制字符。</li>
+                    <li>比对不一致时只报不一致，不修文件、不判定文件是否损坏到不可用。</li>
+                    <li>点单组复制取该组十六进制值，点复制全部或下载 crc-checksum.txt 取 6 组完整结果。</li>
+                    <li>要算 SHA-256 文件摘要去文件校验和计算器；要算文本的 SHA256 摘要去 SHA256 摘要工具——SHA 属于加密哈希家族，CRC 属于校验码家族，两者不可互换。</li>
+                </ol>
+            </div>
+
+            <div class="crc-card">
+                <h3>常见问题</h3>
+                <dl class="crc-tip">
+                    <dt><b>为什么同一串内容在不同工具里 CRC16 结果不一样？</b></dt>
+                    <dd>因为 CRC16 有多个变体：MODBUS、CCITT-FALSE、XMODEM、ARC 的多项式与初值不同，结果互不通用。核对时必须先确认对方用的是哪一个变体，再填对应行的期望值。</dd>
+                    <dt><b>CRC 能用来防篡改吗？</b></dt>
+                    <dd>不能。CRC不是加密哈希、不防篡改：CRC 值可以被刻意构造碰撞，不用于口令、签名、防伪场景。需要防篡改请用 SHA256 等加密哈希。</dd>
+                    <dt><b>中文文本为什么换个工具算出来不一样？</b></dt>
+                    <dd>多半是编码口径不同：本工具文本统一按 UTF-8 编码计算，文件则按原始字节计算、不做编码转换。核对前请确认双方编码一致。</dd>
+                    <dt><b>比对不一致说明文件坏了吗？</b></dt>
+                    <dd>不一定。本工具只算校验值、不做文件修复与完整性判定：不一致只表示算出的值与期望值不同，可能是变体选错、编码不同或内容确实有差异，请先核对变体与编码。</dd>
+                    <dt><b>我的文本或文件会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本与文件不出本机。</dd>
+                </dl>
+            </div>
+
+            <div class="crc-card">
+                <h3>相关工具</h3>
+                <div class="crc-links">
+                    <a href="/tools/file-checksum">文件校验和计算器（SHA-256/SHA-512/SHA-1 文件摘要）</a>
+                    <a href="/tools/sha256">SHA256 摘要（加密哈希）</a>
+                </div>
+            </div>
+
+            <div class="crc-card">
+                <h3>真限制说明</h3>
+                <div class="crc-tip">
+                    <b>只算校验值、不做文件修复</b>：本工具只算校验值、不修文件、不判定文件可用性；比对不一致时只报不一致。<br>
+                    <b>CRC不是加密哈希、不防篡改</b>：CRC 可被刻意构造碰撞，不用于口令、签名、防伪场景；需要防篡改请用 SHA256 等加密哈希。<br>
+                    <b>变体结果不可混用</b>：CRC16 各变体（MODBUS／CCITT-FALSE／XMODEM／ARC）多项式与初值不同，结果互不通用；CRC32 与 CRC32C 亦不可互换。<br>
+                    <b>文本按UTF-8编码计算</b>：文本输入统一按 UTF-8 编码计算；文件输入按原始字节计算、不做编码转换。<br>
+                    <b>零上传</b>：本页面零 fetch / XHR、零 CDN，全部计算在浏览器本地完成，文本与文件不出本机。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="crc-toast" id="crc-toast"></div>
+    <script src="/tools/static/js/crc_checksum_calculator.js?v=1"></script>
+</body>
+</html>
+{{end}}

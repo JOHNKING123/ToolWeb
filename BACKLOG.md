@@ -1,3 +1,78 @@
+## 今日任务（2026-10-26 23:40 · 产品经理排期轮）
+
+**选定：CRC 校验和计算器（crc_checksum_calculator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（116 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。21:38 PM 轮选 CSS 缓动曲线生成器时已明言：CRC 校验和计算器仅因顺位在 CSS 缓动曲线生成器之后而后置、「下轮首席递进」；CSS 缓动曲线生成器已交付划出（b57585e 新增，全量 188 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——TOML 格式化器虽同为小难度纯前端，亦不插队；JSONPath 测试器为中难度，亦不插队。
+- **未选**：JSONPath 测试器（102 轮观察项晋升 P2，116 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 CRC 校验和计算器之后而后置，下轮首席递进；真限制常用子集、不承诺完整规范）；TOML 格式化器（102 轮新晋／晋升 P2，116 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做格式化与语法校验、不做语义配置推荐）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **188 Path**；`git log` 头部 b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）。逐项复核：`crc_checksum`、`crc-checksum` 在 tools/categories.go、templates、static/js、tests 四路均为 0 命中；`crc` 在 categories.go 为 0 命中；`toml`、`jsonpath` 在 categories.go 亦为 0 命中（`jsonpath` 仅出现在 JSON 语义对比工具描述中一条定位标注，非独立测试器）。自有近邻辨析：① 已注册的文件校验和计算器（ID file_checksum，/tools/file-checksum）是「拖拽多文件算 SHA-256／SHA-512／SHA-1」，本工具是「文本＋文件算 CRC32／CRC16 多变体」，一个是加密哈希摘要家族、一个是非加密校验码家族，算法与输出位宽（32／16 位）均不同，不重叠；② 已注册的 MD5／SHA1／SHA256 摘要工具是「算加密哈希摘要」，CRC 不是哈希、不可用于防篡改与口令场景，页面须明示此区分，不重叠；③ 站内其余 `crc` 命中均为实现内细节、非用户可用的独立工具：exif-strip.js 内的 CRC32 表驱动函数只为重算 PNG 文本块校验（用户不可输入任意内容算 CRC），图片隐写工具描述中提到的 CRC16 校验只是其内部提取校验步骤，vendor docx  bundle 中的 Crc32Probe 只是打包库内部构件——三者均无独立 CRC 计算入口，不构成重叠；④ JSONPath 测试器与 TOML 格式化器均未交付，本轮不与之互链、不硬凑。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——对固件、串口协议、Modbus 报文、下载文件做完整性核对时，对方给的往往就是 CRC32 或 CRC16/MODBUS 一串十六进制值，手写脚本或找命令行现算既麻烦又容易把变体搞混（MODBUS 与 CCITT-FALSE 同为 CRC16 但结果不同），一次并排算出多变体＋期望值比对恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，表驱动 CRC 算法全部可用标准校验向量（"123456789"）做 node 断言，文本与文件两种输入走同一增量计算核；④ **受众与站内互补**——与文件校验和计算器、MD5／SHA 摘要同属校验家族，用户拿到 SHA 摘要后下一步自然是核对对方给的 CRC 值，成组发现。
+- **品类归位**：注册到「加密解密」品类（与文件校验和计算器、MD5／SHA1／SHA256 摘要同品类，便于校验场景成组发现）；New: true。注：品类名沿用站内现有命名（校验家族现挂于此品类），不新开品类。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只算校验值，不做文件修复与完整性判定**——算出值与期望值不一致时只报「不一致」，不修文件、不判定文件「是否损坏到不可用」，页面须明示；② **CRC 不是加密哈希，不防篡改**——CRC 可被刻意构造碰撞，不用于口令、签名、防伪场景，页面须明示并与 SHA 家族区分；③ **变体结果不可混用**——CRC16 各变体（MODBUS／CCITT-FALSE／XMODEM／ARC）多项式与初值不同，结果互不通用，页面须在结果旁标注变体全名与多项式／初值关键参数；④ **文本按 UTF-8 编码计算**——中文文本的 CRC 值随编码而变，页面须明示编码口径，文件输入则按原始字节计算、不做编码转换；⑤ **零上传**——文本与文件全部在浏览器内计算，不发请求，零 fetch／XHR、零 CDN，文件不离开本机。
+
+**规格**（开发轮按此执行）：
+- 输入：文本输入框（粘贴字符串，实时计算）；文件输入（单文件，支持点选与拖拽，显示文件名与字节数；分片增量读取、进度提示，大文件不一次性读入内存）；输入模式二选一（文本／文件），切换后结果区同步重算；另提供「清空」一键回到空输入。
+- 生成：随输入变化实时生成；算法 6 组并排输出——CRC32（IEEE 802.3）、CRC32C（Castagnoli）、CRC16/MODBUS、CRC16/CCITT-FALSE、CRC16/XMODEM、CRC16/ARC；每组输出十六进制（CRC32 为 8 位大写、CRC16 为 4 位大写，前缀 0x 可选显示但复制内容不带前缀）与十进制两档；每组附变体关键参数小字（多项式／初值／异或输出值）；期望值比对：用户粘贴期望十六进制值（自动剥离 0x 前缀、大小写不敏感），逐组显示「一致／不一致」状态，期望值格式非法时中文提示（不静默失败）。
+- 校验：空输入时结果区显示标准空输入值并中文提示「当前为空输入，请输入文本或选择文件」（空输入仍按标准算法定义输出，不留空白误导）；文件读取失败时中文报错并保留上一次有效结果说明；期望值非法时指明是哪一组比对无法进行；所有提示均中文、指明对象。
+- 操作：一键复制单组十六进制值、一键复制全部结果（含算法名与十六进制值）、一键下载 `crc-checksum.txt`（内容与页面输出一致）；复制失败有明确降级提示（手动复制指引）；与文件校验和计算器（/tools/file-checksum）互链（文案区分 SHA 摘要家族与 CRC 校验码家族：「要算 SHA-256 文件摘要去文件校验和计算器」），与 SHA256 摘要（/tools/sha256）互链（文案区分加密哈希与校验码）；不与未交付的 JSONPath 测试器、TOML 格式化器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（表驱动 CRC32／CRC32C、按位／查表 CRC16，文本用 TextEncoder 按 UTF-8 编码，文件用 Blob.slice 分片＋增量更新 CRC 状态；用户输入用 textContent 或转义后插值，杜绝注入）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，6 组算法、空输入、期望值比对、十六进制格式化等纯函数均可 node 断言）。
+- 注册：ID `crc_checksum_calculator`、Name「CRC 校验和计算器」、Path `/tools/crc-checksum-calculator`、Category 加密解密、Icon 建议 shield-check（图标库无此名则用 verified 兜底，仍无则用 tune）、New: true；中英文描述＋SEO keywords（CRC 校验和、CRC32、CRC16、MODBUS、CCITT、校验码、checksum、文件完整性校验）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/crc-checksum-calculator，相关工具互链文件校验和计算器与 SHA256 摘要。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `crc_checksum_calculator`、Path `/tools/crc-checksum-calculator` 注册完整（Category 加密解密），注册总数 188→189 Path。
+2. 生成闭环：文本改动后 6 组结果同步变化；文件选择后结果与同一内容文本输入（UTF-8 文本文件情形）一致；切换文本／文件模式后结果同步重算。
+3. 标准向量闭环：输入 "123456789" 时 6 组结果分别为 CRC32=CBF43926、CRC32C=E3069283、CRC16/MODBUS=4B37、CRC16/CCITT-FALSE=29B1、CRC16/XMODEM=31C3、CRC16/ARC=BB3D（十六进制大写），任一不符即不通过。
+4. 校验与比对闭环：空输入显示标准空输入值并中文提示；期望值粘贴后逐组一致／不一致状态正确（含 0x 前缀剥离与大小写不敏感）；期望值非法有中文提示；文件读取失败有中文报错。
+5. 操作与互链闭环：单组复制与复制全部内容与页面输出一致；下载 `crc-checksum.txt` 内容与页面输出一致；复制失败有降级提示；相关工具互链含文件校验和计算器与 SHA256 摘要；不含未交付工具的硬凑互链。
+6. 真限制可见：页面可见「只算校验值、不做文件修复」「CRC 不是加密哈希、不防篡改」「变体结果不可混用」「文本按 UTF-8 编码计算」文案；零 fetch／XHR、零 CDN。
+7. node 测试 25+ 断言全过（6 组标准向量、空输入、文本与文件字节一致性、十六进制格式化、期望值比对正反例、注册与零网络请求静态检查）。
+8. 页面无报错；移动端输入框、结果表与复制按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/crc_checksum_calculator.html`（新增；含 SEO 面板按家族标准＋文本／文件双输入／6 组结果表／期望值比对／复制下载 UI）
+- `static/js/crc_checksum_calculator.js`（新增；表驱动 CRC32／CRC32C、CRC16 各变体、增量更新、十六进制格式化、期望值比对逻辑；双模式导出供 node 测试）
+- `tests/crc_checksum_calculator.test.js`（新增；标准向量、空输入、一致性、格式化、比对、注册与零网络静态检查）
+- `tools/categories.go`（加密解密品类注册：ID crc_checksum_calculator、Path /tools/crc-checksum-calculator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **188**；Top3 候选重叠复核（crc_checksum／crc-checksum／toml／jsonpath 在 categories.go 均为 0 命中；`crc` 其余命中仅为 exif-strip 内部函数、隐写工具内部校验描述与 vendor 打包库构件，均非独立工具；近邻文件校验和计算器／MD5／SHA 语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 23:36 · 通用调研第一百一十六轮）
+
+**交付状态**：10-26 通用调研第一百一十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 缓动曲线生成器已交付闭环**（b57585e 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **188 Path**，ID css_easing_generator、Path /tools/css-easing-generator 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:36 夜轮，优先小难度纯前端。
+**本轮三件事**（23:36 全网调研，通用方向）：
+1. CSS 缓动曲线交付确认：`git log` 头部 b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）；全量 188 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **前端工具榜（SpaceTech／Atak／Intuz／Cloudester 2026 榜）**：VS Code／WebStorm／TypeScript／Node／Vite／Webpack／Tailwind／ESLint／Prettier／Lighthouse → **不立**（编辑器／语言／构建链／桌面与平台级产品，非单页网页工具；Prettier 配置生成器已注册）；
+   - **rahulwebdev 每周工具榜**：OG 预览、Favicon 生成器 → **全部自有实锤消解**（已注册 og-card-preview、favicon-generator）；Tesseract.js 纯前端 OCR → **不立为独立新工具**（OCR 已有 ocr-image-text／ocr_batch 两路注册，属同族复现）；nginx 文档 → **不立**（文档本身，非工具）；
+   - **HN Show HN（Toolbit／Dev Tools 24 工具集）**：JSON 格式化／验证、Base64、JWT、Markdown 预览、HTML／CSS／JS 压缩、词数统计、Diff、UUID、Cron 解析、时间戳转换、CSV→JSON／SQL → **全部自有实锤消解**（已注册工具；CSV→SQL 为 107 轮观察项，单榜复现不足以晋升）；
+   - **dev.to／HackerNoon 30 纯前端工具文（ToolkitLoop，2026-10-25）**：JPG→WebP 转换、JSON 格式化、二维码生成、字符计数、百分比／单位／货币换算、小费分账、Diff、正则、条码／Favicon 生成、大小写转换 → **多已自有实锤消解**（图片转换／二维码／条码／Favicon／Diff／正则均已注册；百分比／小费分账／货币换算为泛生活／需实时汇率，方向修正下不立）；**二维码扫描器 → 新记观察项**（见下）；Core Web Vitals 检查器（查 CrUX API）→ **不立**（需第三方 API 与 key，非零上传纯前端单页）；
+   - **V2EX／中文搜索**：DTO／V2HOT／BestXTools 周刊 → **不立**（社区与周刊本身，非单页工具）；小微企业数据看板／BI 选型 → **不立**（平台级产品与选型方法论，非单页工具）。
+3. 候选池变动：CSS 缓动曲线生成器已交付划出（b57585e，188 Path）；**本轮新晋 P2 0 个**（榜单信号全部自有实锤消解、不立或仅复现旧观察项）；**观察项新增 1 条**（二维码扫描器）；自有实锤消解 10+ 项；全量 188 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 缓动曲线交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，115 轮 Top3 第二、三顺位依次递进，第三顺位取 102 轮晋升 P2 对中的首项）：
+
+1. **CRC 校验和计算器** — P2 留池顺位递进（102 轮新晋／晋升 P2；116 轮复核仍未交付；115 轮 Top3 第二顺位递进为首席；痛点：校验字符串或文件完整性要算 CRC32／CRC16 等，手写脚本或找命令行都麻烦；纯前端小难度：粘贴文本或本地读文件→实时算出 CRC32／CRC16 等多算法校验值＋复制，零上传；`crc` 全库零命中实锤；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只算校验值、不做文件修复与完整性判定）。
+2. **JSONPath 测试器** — P2 留池顺位递进（102 轮观察项晋升 P2；116 轮复核仍未交付；115 轮 Top3 第三顺位递进；痛点：从嵌套 JSON 里抠字段要手写路径、试错成本高；纯前端中难度：粘贴 JSON＋写 JSONPath 表达式→实时命中结果高亮＋复制，零上传；`jsonpath` 仅出现在 JSON 语义对比工具描述中一条定位标注（categories.go 第 54 行「每条差异标注 JSONPath 可点击跳转定位」），非独立测试器，不重叠；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）。
+3. **TOML 格式化器** — P2 留池顺位递进（102 轮新晋／晋升 P2，与 JSONPath 同对；116 轮复核仍未交付；痛点：TOML 配置手写易错、格式不统一，改配置前想先格式化校验；纯前端小难度：粘贴 TOML→格式化／校验＋错误定位＋复制，零上传；`toml` 全库零命中实锤；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：只做格式化与语法校验、不做语义配置推荐）。
+
+其余 P2 留池（顺位在 Top3 之后）：TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮新记观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 115 轮及之前记录。
+
+**通用候选表增量**（第一百一十六轮：CSS 缓动曲线生成器已交付划出（b57585e 新增；ID css_easing_generator、Path /tools/css-easing-generator 已注册；全量 188 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 1 条**（二维码扫描器）；自有实锤消解 10+ 项（2026 前端工具榜／HN 工具集／30 纯前端工具文余项均为已注册工具、平台级产品、泛生活计算器或需第三方 API；V2EX 周刊与 BI 看板均为集合／平台本身）；全量 188 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 缓动曲线生成器 | 已交付划出（b57585e 新增；ID css_easing_generator、Path /tools/css-easing-generator 已注册；全量 188 Path；候选池划出） | — | 已实现 |
+| 二维码扫描器 | 新记观察项（116 轮；站内仅二维码／条码生成器与 ocr 工具，`qr_code_scanner` 仅为条码生成器图标名、无独立扫描工具；上传图片或摄像头扫码本地解码纯前端可行，但真限制：原生 BarcodeDetector 浏览器覆盖有限、纯手写解码需引入解码库，与站内零 CDN 口径冲突待解，记观察不晋升） | 中 | 观察 |
+| 自有实锤消解 | 不立（2026 前端工具榜／HN 工具集／30 纯前端工具文余项均为已注册工具、平台级产品、泛生活计算器或需第三方 API；V2EX 周刊与 BI 看板均为集合／平台本身；OCR 为已有工具同族复现） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百一十六轮——CSS 缓动曲线生成器交付闭环（b57585e，`/tools/css-easing-generator` 已注册，全量 188 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解、不立或仅复现旧观察项）；观察项新增 1 条（二维码扫描器）；仓库 188 注册工具全量核对无重叠（Top3 建议 ID crc_checksum_calculator / jsonpath_tester / toml_formatter；`crc` 与 `toml` 全库零命中，`jsonpath` 仅 JSON 语义对比工具内定位标注一条）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **188**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 21:38 · 产品经理排期轮）
 
 **选定：CSS 缓动曲线生成器（css_easing_generator）** — 本轮唯一任务（新工具）：
