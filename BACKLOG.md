@@ -1,3 +1,78 @@
+## 今日任务（2026-10-27 03:38 · 产品经理排期轮）
+
+**选定：TOML 格式化器（toml_formatter）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（118 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。01:39 PM 轮选 JSONPath 测试器时已明言：TOML 格式化器仅因顺位在 JSONPath 测试器之后而后置、「下轮首席递进」；JSONPath 测试器已交付划出（ef86f70 新增，全量 190 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——TOTP 一次性密码生成器与 HTTP 响应头分析器虽同为小难度纯前端，均不插队。
+- **未选**：TOTP 一次性密码生成器（103 轮新晋 P2，118 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 TOML 格式化器之后而后置，下轮首席递进；真限制只做本地算码、不存密钥、不做账号绑定与扫码）；HTTP 响应头分析器（103 轮新晋 P2，118 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只解析用户粘贴的文本、不主动抓取任何 URL）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **190 Path**；`git log` 头部 ef86f70（JSONPath 测试器新增）／c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）。逐项复核：`toml_formatter`、`toml-formatter` 在 tools/categories.go、templates、static/js、tests 四路均为 0 命中；小写 `toml` 全库仅出现在 static/js/gitignore_generator.js 第 140 行一条示例文件名（".pdm.toml"），非独立工具；`totp` 全库仅出现在 tests/jsonpath_tester.test.js 第 146 行一条互链否定断言（「互链不含未交付 TOML/TOTP」），非独立工具；`http_header_analyzer`／`http-header-analyzer`／`header_analyzer` 全库 0 命中。自有近邻辨析：① 已注册的 JSON 解析器（ID json，/tools/json-parser）是「格式化与验证 JSON」，本工具是「格式化与验证 TOML」，格式不同，不重叠；② 已注册的 JSON/YAML 转换器（ID json2yaml，/tools/json-yaml-converter）是「JSON 与 YAML 互转」，本工具不做格式转换，只格式化 TOML 本身，不重叠；③ 已注册的 .env 解析与校验器（98 轮新晋 P2，留池未交付）是「键值对环境变量文件」，TOML 有表、数组、内联表与多行字符串等结构，语法与格式化规则均不同，不重叠；④ 118 轮复现信号中的 JSON→TOML 转换与本工具同族但不同工种（转换 vs 格式化），本轮不做转换、不硬凑。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——TOML 配置手写易错（表头漏括号、字符串未闭合、键重复、数组尾逗号位置），改配置前想先格式化校验、统一风格，粘贴 TOML→格式化／校验＋错误定位到行列恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，手写 TOML 分词＋解析＋序列化，标准用例与错误用例均可 node 断言；④ **受众与站内互补**——与 JSON／XML／SQL 格式化同属格式化工具品类，用户格式化完 JSON 下一步自然是整理 TOML 配置，成组发现。
+- **品类归位**：注册到「格式化工具」品类（与 JSON 解析器、JSON Schema 验证器、JSONPath 测试器、XML／SQL 格式化同品类，便于格式化用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做格式化与语法校验，不做语义配置推荐**——不提示「该配什么值」、不按应用（如 Cargo／PyPI）校验键名语义，页面须明示；② **不排序、不删键、不丢注释**——格式化只规范空白与缩进，键顺序、表顺序、注释（行注释与行尾注释）原样保留，压缩模式除外（压缩模式明示会去掉注释与空行）；③ **只做常用 TOML 语法子集，不承诺完整 TOML v1.0**——支持的语法见规格「语法子集」，超出（如超复杂多行字符串转义组合）时中文提示不支持并指明行列，不静默丢弃内容；④ **格式化失败不覆盖原文**——校验不通过时输出区保留上一次有效结果或空状态，并中文定位错误，绝不把半截输出当结果；⑤ **零上传**——TOML 全部在浏览器内解析与序列化，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：TOML 输入框（粘贴 TOML，实时解析；非法时中文提示并指明行列，不静默失败）；「载入示例」「清空」两个操作；格式化选项：缩进 2／4 空格（用于多行数组与内联表展开）、数组模式（紧凑单行／多行展开二选一）、压缩模式开关（去注释与空行、数组单行，需二次确认文案提示「压缩会去掉注释」）。
+- 语法子集（超出即中文提示不支持并指明行列）：键值对 `key = value`（裸键、单双引号键、点分隔键）；表 `[a.b]` 与表数组 `[[a.b]]`；字符串（基本字符串、字面字符串、单行与多行两种，含常用转义）；整数（十／十六／八／二进制，下划线分隔）、浮点数（含 inf／nan）、布尔值、日期时间（按原文本保留，不做时区换算）；数组（含嵌套数组与尾逗号）、内联表；注释（`#` 行注释与行尾注释）。不支持：非法键字符、未闭合表头／字符串／数组／内联表以外的扩展语法，一律按语法错误中文定位。
+- 生成：输入或选项任一变化即实时重算；格式化输出区展示规范化结果（规范口径：`=` 两边各一空格、表头内外无多余空格、行尾注释前一空格、多行数组每项独立一行并按缩进对齐、连续空行压缩为至多一行）；校验结果区：通过时显示「校验通过，共 N 个键、M 张表」（N／M 按解析结果计数）；不通过时逐条列出错误（行列＋中文原因），并在输入框对应行高亮首个错误。
+- 示例数据（页面内置，与验收向量同一份）：`title = "示例配置"\n[server]\nhost = "localhost"\nport = 8080\n[server.tls]\nenabled = true\ntags = ["a", "b"]\n[database]\nports = [8000, 8001]\n`（故意保留一处可规范化的写法供演示，如 `host="localhost"` 无空格形式由开发轮在示例中体现为格式化前后对比）。
+- 校验：空输入时提示「请输入 TOML」；非法 TOML、重复键、未闭合字符串／数组／表头三种状态文案区分，不混用；所有提示均中文、指明行列。
+- 操作：一键复制格式化结果、一键下载 `formatted.toml`（内容与输出区一致）；复制失败有明确降级提示（手动复制指引）；与 JSON 解析器（/tools/json-parser）互链（文案区分 JSON 与 TOML 格式化：「要格式化 JSON 去 JSON 解析器」），与 JSON/YAML 转换器（/tools/json-yaml-converter）互链（文案区分格式化与格式转换：「要把 JSON 转 YAML 去 JSON/YAML 转换」）；不与未交付的 TOTP 一次性密码生成器、HTTP 响应头分析器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写 TOML 分词＋解析＋序列化，不引入 TOML 库；用户输入与结果用 textContent 或转义后插值，杜绝注入）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，解析、序列化、错误定位、数组模式、压缩模式等纯函数均可 node 断言）。
+- 注册：ID `toml_formatter`、Name「TOML 格式化器」、Path `/tools/toml-formatter`、Category 格式化工具、Icon 建议 article（图标库无此名则用 code 兜底）、New: true；中英文描述＋SEO keywords（TOML、TOML 格式化、TOML 校验、TOML 在线格式化、TOML 配置）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/toml-formatter，相关工具互链 JSON 解析器与 JSON/YAML 转换器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `toml_formatter`、Path `/tools/toml-formatter` 注册完整（Category 格式化工具），注册总数 190→191 Path。
+2. 生成闭环：输入或选项改动后格式化输出同步变化；空输入时有中文提示，不出现空白误导。
+3. 标准向量闭环（以规格示例数据为准）：`host="localhost"` 规范化为 `host = "localhost"`；表头与键顺序不变；多行数组模式下 `ports` 数组每项独立一行并按所选缩进对齐；紧凑模式下数组恢复单行；压缩模式去掉注释与空行后仍为合法 TOML；任一不符即不通过。
+4. 校验与错误定位闭环：重复键（如两行 `a = 1`）报错并指明第二处行列；未闭合字符串（如 `a = "abc`）报错并指明行列；未闭合数组／表头报错并指明行列；错误时输出区不出现半截结果。
+5. 操作与互链闭环：复制内容与输出区一致；下载 `formatted.toml` 内容与输出区一致；复制失败有降级提示；相关工具互链含 JSON 解析器与 JSON/YAML 转换器；不含未交付工具的硬凑互链。
+6. 真限制可见：页面可见「只做格式化与语法校验、不做语义配置推荐」「不排序、不删键、不丢注释」「格式化失败不覆盖原文」文案；零 fetch／XHR、零 CDN。
+7. node 测试 25+ 断言全过（标准向量、表与表数组、点分隔键、字符串与多行字符串、整数多进制、浮点与日期时间原样保留、数组两种模式、内联表、注释保留、压缩模式、重复键、未闭合错误定位、注册与零网络请求静态检查）。
+8. 页面无报错；移动端输入框、输出区与复制按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/toml_formatter.html`（新增；含 SEO 面板按家族标准＋TOML 输入／格式化输出／校验结果区／选项与复制下载 UI）
+- `static/js/toml_formatter.js`（新增；TOML 分词＋解析＋序列化、错误定位、数组模式与压缩模式逻辑、复制下载逻辑；双模式导出供 node 测试）
+- `tests/toml_formatter.test.js`（新增；标准向量、语法子集、注释保留、数组模式、压缩模式、错误定位、注册与零网络静态检查）
+- `tools/categories.go`（格式化工具品类注册：ID toml_formatter、Path /tools/toml-formatter、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 ef86f70（JSONPath 测试器新增）／c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **190**；Top3 候选重叠复核（toml_formatter／toml-formatter／http_header_analyzer 全库 0 命中；`toml` 仅 gitignore 生成器示例文件名一条；`totp` 仅 JSONPath 测试互链否定断言一条；近邻 JSON 解析器／JSON-YAML 转换器／.env 解析器语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 03:36 · 通用调研第一百一十八轮）
+
+**交付状态**：10-27 通用调研第一百一十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**JSONPath 测试器已交付闭环**（ef86f70 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **190 Path**，ID jsonpath_tester、Path /tools/jsonpath-tester 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:36 夜轮，优先小难度纯前端。
+**本轮三件事**（03:36 全网调研，通用方向）：
+1. JSONPath 测试器交付确认：`git log` 头部 ef86f70（JSONPath 测试器新增）／c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）；全量 190 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **JSONCraft／竞品 23 工具榜**：JSON／YAML／CSV／TOML 转换、JSONPath 测试 → **JSONPath 已交付闭环；TOML 格式化器为 102 轮留池 P2，本轮信号仅复现、不新立**（JSON→TOML 转换与 TOML 格式化同族，单榜复现不足以另立新项）；
+   - **HN Show HN（Dailydev 隐私工具集）**：cURL 转代码、JSON 格式化／验证、Base64／URL／JWT → **全部自有实锤消解**（cURL→Python Requests 转换器已注册，ID curl_to_requests、Path /tools/curl-to-requests；JSON／编码／JWT 均已注册）；
+   - **HN Show HN 近期榜**：Nodewise SVG 优化器、Offline PDF Desk（离线 PDF 涂黑／合并）→ **全部自有实锤消解**（SVG 压缩优化器已注册，ID svg_compressor；PDF 合并／拆分已注册，ID pdf_merge_split）；
+   - **V2EX（10-20~10-26 帖）**：ProtoHub 原型托管站、yolo-ai CLI 权限前缀、Rim git 版本管理、Open Resume 自部署简历 → **不立**（托管平台／命令行工具／版本管理基础设施／多用户应用，均非单页网页工具）；PHP2Shell 应急辅助（远程响应头检查）→ **不立为远程检查工具**（远程抓取需后端与跨域，非零上传纯前端单页；其「粘贴响应头本地解析」子项即 103 轮留池 P2 HTTP 响应头分析器，本轮仅复现、不新立）。
+3. 候选池变动：JSONPath 测试器已交付划出（ef86f70，190 Path）；**本轮新晋 P2 0 个**（榜单信号全部自有实锤消解、复现旧留池项或不立）；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 190 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；JSONPath 测试器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，117 轮 Top3 第二、三顺位依次递进，第三顺位取 103 轮晋升 P2 对中的首项）：
+
+1. **TOML 格式化器** — P2 留池顺位递进（102 轮新晋／晋升 P2；118 轮复核仍未交付；117 轮 Top3 第二顺位递进为首席；痛点：TOML 配置手写易错、格式不统一，改配置前想先格式化校验；纯前端小难度：粘贴 TOML→格式化／校验＋错误定位＋复制，零上传；`toml` 全库零命中实锤；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：只做格式化与语法校验、不做语义配置推荐）。
+2. **TOTP 一次性密码生成器** — P2 留池顺位递进（103 轮新晋 P2；118 轮复核仍未交付；117 轮 Top3 第三顺位递进；痛点：配 TOTP 双因素时想离线验算动态码、或在不方便掏手机时快速核对当前码；纯前端小难度：粘贴 Base32 密钥→按 TOTP 算法本地算出当前 6 位码＋剩余有效秒倒计时＋复制，零上传、不存密钥；`totp` 全库零命中实锤；建议 ID totp_generator、Path /tools/totp-generator；真限制：只做本地算码、不存密钥、不做账号绑定与扫码，密钥只留当前会话内存）。
+3. **HTTP 响应头分析器** — P2 留池顺位递进（103 轮新晋 P2，与 TOTP 同批、顺位居后；118 轮复核仍未交付；痛点：排障时拿到一堆原始响应头，想逐项看含义、安全头缺失与否；纯前端小难度：粘贴原始响应头文本→逐项解析＋中文释义＋安全头缺失提示＋复制，零上传；`header_analyzer`／响应头解析类 ID 全库零命中实锤（仅 .htaccess 生成器描述中提及安全头一词，非独立工具）；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只解析用户粘贴的文本、不主动抓取任何 URL——远程检查需后端与跨域，不属本工具）。
+
+其余 P2 留池（顺位在 Top3 之后）：JSON 字符串转义器（103 轮新晋 P2，与 HTTP 响应头分析器同批、顺位居后）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 117 轮及之前记录。
+
+**通用候选表增量**（第一百一十八轮：JSONPath 测试器已交付划出（ef86f70 新增；ID jsonpath_tester、Path /tools/jsonpath-tester 已注册；全量 190 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（JSONCraft／HN 工具集／V2EX 帖余项均为已注册工具、复现旧留池项、平台／CLI 产品或需后端抓取）；全量 190 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| JSONPath 测试器 | 已交付划出（ef86f70 新增；ID jsonpath_tester、Path /tools/jsonpath-tester 已注册；全量 190 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（JSONCraft／HN 工具集／V2EX 帖余项均为已注册工具、复现旧留池项、平台／CLI 产品或需后端抓取；PHP2Shell 远程检查不立，其粘贴解析子项即留池 HTTP 响应头分析器） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百一十八轮——JSONPath 测试器交付闭环（ef86f70，`/tools/jsonpath-tester` 已注册，全量 190 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解、复现旧留池项或不立）；观察项新增 0 条；仓库 190 注册工具全量核对无重叠（Top3 建议 ID toml_formatter / totp_generator / http_header_analyzer；`toml` 与 `totp` 全库零命中，响应头解析类 ID 零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 ef86f70（JSONPath 测试器新增）／c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **190**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 01:39 · 产品经理排期轮）
 
 **选定：JSONPath 测试器（jsonpath_tester）** — 本轮唯一任务（新工具）：

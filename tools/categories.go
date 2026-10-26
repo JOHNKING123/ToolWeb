@@ -67,6 +67,15 @@ func GetCategories() []Category {
 					Category:    "格式化工具",
 				},
 				{
+					ID:          "toml_formatter",
+					Name:        "TOML 格式化器",
+					Description: "粘贴 TOML，格式化与语法校验、错误定位到行列：缩进 2/4 空格、数组紧凑与多行展开、压缩模式，复制结果与下载 formatted.toml，不排序不删键不丢注释，纯前端本地解析零上传 · TOML formatter: format and validate TOML in your browser, error location by line and column, 100% client-side",
+					Path:        "/tools/toml-formatter",
+					Icon:        "article",
+					New:         true,
+					Category:    "格式化工具",
+				},
+				{
 					ID:          "xml",
 					Name:        "XML 格式化",
 					Description: "格式化和验证 XML 数据",

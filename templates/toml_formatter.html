@@ -1,0 +1,160 @@
+{{define "toml_formatter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOML 格式化器 - 粘贴 TOML 格式化校验定位到行列 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 TOML 格式化器：粘贴 TOML，格式化与语法校验、错误定位到行列，支持缩进 2/4 空格、数组紧凑与多行展开、压缩模式，复制结果与下载 formatted.toml。纯前端本地解析，零上传。">
+    <meta name="keywords" content="TOML,TOML 格式化,TOML 校验,TOML 在线格式化,TOML 配置,TOML 格式化器,格式化 TOML">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/toml-formatter">
+    <meta property="og:title" content="TOML 格式化器 - 粘贴 TOML 格式化校验定位到行列">
+    <meta property="og:description" content="粘贴 TOML，格式化与语法校验、错误定位到行列，支持缩进、数组模式与压缩模式，复制结果与下载 formatted.toml，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/toml-formatter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"TOML 格式化器","description":"粘贴 TOML，格式化与语法校验、错误定位到行列，支持缩进、数组模式与压缩模式，纯前端本地解析。","url":"https://www.johnkingzcq123.xyz/tools/toml-formatter","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tf-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .tf-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .tf-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .tf-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .tf-textarea { width:100%; min-height:220px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+        .tf-row { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .tf-btn { padding:.4rem .8rem; border-radius:.5rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.88rem; white-space:nowrap; }
+        .tf-btn:hover { background:#f3f4f6; }
+        .tf-msg { color:#b45309; font-size:.92rem; min-height:1.4em; margin:.4rem 0 0; word-break:break-all; }
+        .tf-msg.tf-ok { color:#047857; }
+        .tf-msg.tf-err { color:#b91c1c; }
+        .tf-fieldset { border:1px solid #e5e7eb; border-radius:.5rem; padding:.5rem .8rem; margin:0; }
+        .tf-fieldset legend { font-size:.88rem; color:#374151; padding:0 .3rem; }
+        .tf-fieldset label { font-size:.9rem; color:#374151; margin-right:.8rem; white-space:nowrap; }
+        .tf-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .tf-tip a { color:var(--primary-color); }
+        .tf-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .tf-links a { color:var(--primary-color); font-size:.93rem; }
+        .tf-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        .tf-table-wrap { overflow-x:auto; }
+        .tf-table { width:100%; border-collapse:collapse; font-size:.9rem; min-width:520px; }
+        .tf-table th, .tf-table td { border:1px solid #e5e7eb; padding:.5rem .6rem; text-align:left; vertical-align:top; }
+        .tf-table th { background:#f9fafb; color:#374151; }
+        .tf-table td code { font-family:ui-monospace,Menlo,Consolas,monospace; word-break:break-all; }
+        @media (max-width:640px) {
+            .tf-table { min-width:0; font-size:.85rem; }
+            .tf-textarea { min-height:170px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="tf-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>📄 TOML 格式化器</h1>
+            <p>粘贴 TOML，格式化与语法校验、错误定位到行列；只做格式化与语法校验，不做语义配置推荐</p>
+        </div>
+        <div class="tool-content">
+            <div class="tf-card">
+                <h3>TOML 输入 <span class="tf-hint">（粘贴 TOML，输入即实时格式化与校验；非法时中文提示并指明行列）</span></h3>
+                <textarea id="tf-input" class="tf-textarea" placeholder="在此粘贴 TOML，例如 title = &quot;示例配置&quot;"></textarea>
+                <div class="tf-row">
+                    <button class="btn btn-primary" id="tf-sample" type="button">载入示例</button>
+                    <button class="btn btn-secondary" id="tf-clear" type="button">↺ 清空</button>
+                </div>
+                <div class="tf-row">
+                    <fieldset class="tf-fieldset">
+                        <legend>缩进（多行数组与内联表展开用）</legend>
+                        <label><input type="radio" name="tf-indent" value="2" checked> 2 空格</label>
+                        <label><input type="radio" name="tf-indent" value="4"> 4 空格</label>
+                    </fieldset>
+                    <fieldset class="tf-fieldset">
+                        <legend>数组模式</legend>
+                        <label><input type="radio" name="tf-array" value="compact" checked> 紧凑单行</label>
+                        <label><input type="radio" name="tf-array" value="multiline"> 多行展开</label>
+                    </fieldset>
+                    <label><input type="checkbox" id="tf-compress"> 压缩模式（去掉注释与空行，数组单行；开启时二次确认）</label>
+                </div>
+                <p class="tf-msg" id="tf-result"></p>
+            </div>
+
+            <div class="tf-card">
+                <h3>格式化结果 <span class="tf-hint">（规范口径：= 两边各一空格、表头无多余空格、行尾注释前一空格、连续空行至多一行）</span></h3>
+                <div class="tf-row">
+                    <button class="tf-btn" id="tf-copy" type="button">复制格式化结果</button>
+                    <button class="tf-btn" id="tf-download" type="button">下载 formatted.toml</button>
+                </div>
+                <textarea id="tf-output" class="tf-textarea" readonly placeholder="格式化结果将显示在这里"></textarea>
+            </div>
+
+            <div class="tf-card">
+                <h3>支持的语法子集</h3>
+                <div class="tf-table-wrap">
+                <table class="tf-table">
+                    <thead><tr><th>写法</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>key = value</code></td><td>裸键、单双引号键、点分隔键</td></tr>
+                        <tr><td><code>[a.b]</code> / <code>[[a.b]]</code></td><td>表与表数组</td></tr>
+                        <tr><td><code>"..."</code> / <code>'...'</code> / 多行</td><td>基本、字面、单行与多行字符串，含常用转义</td></tr>
+                        <tr><td><code>0xFF / 0o17 / 0b101</code></td><td>十六／八／二进制整数，下划线分隔</td></tr>
+                        <tr><td><code>inf / nan</code>、布尔、日期时间</td><td>浮点特殊值、布尔值、日期时间按原文本保留，不做时区换算</td></tr>
+                        <tr><td><code>[1, 2,]</code> / <code>{a = 1}</code></td><td>数组（含嵌套与尾逗号）、内联表</td></tr>
+                        <tr><td><code># 注释</code></td><td>行注释与行尾注释原样保留（压缩模式除外）</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <div class="tf-card">
+                <h3>使用说明</h3>
+                <div class="tf-tip">
+                    1. 粘贴 TOML 到上方输入框（或点「载入示例」）；输入或选项任一变化即实时重算。<br>
+                    2. 校验通过时显示「校验通过，共 N 个键、M 张表」；不通过时逐条中文提示并指明行列，输出区保留上一次有效结果。<br>
+                    3. 点「复制格式化结果」复制输出区内容；「下载 formatted.toml」下载内容与输出区一致；复制失败时页面会提示手动复制指引。<br>
+                    4. 压缩模式会去掉全部注释与空行、数组强制单行，开启时需二次确认；关闭后注释与空行即恢复。
+                </div>
+            </div>
+
+            <div class="tf-card">
+                <h3>常见问题</h3>
+                <dl class="tf-tip">
+                    <dt><b>为什么提示重复的键？</b></dt>
+                    <dd>同一表内同一键出现两次即报错并指明第二处行列；点分隔键的中间段已作表时，再把该段定义为值也会报错。</dd>
+                    <dt><b>为什么字符串／数组／表头未闭合会报错？</b></dt>
+                    <dd>单行字符串换行前未闭合、数组缺 ]、表头缺 ] 或 ]] 时，均按起始位置中文定位，不输出半截结果。</dd>
+                    <dt><b>格式化会改我的键顺序或删注释吗？</b></dt>
+                    <dd>不会。本工具不排序、不删键、不丢注释，只规范空白与缩进；只有压缩模式会去掉注释与空行，开启时有二次确认。</dd>
+                    <dt><b>我的 TOML 会上传吗？</b></dt>
+                    <dd>不会。TOML 全部在浏览器内解析与序列化，本页面零网络请求，数据不出本机。</dd>
+                </dl>
+            </div>
+
+            <div class="tf-card">
+                <h3>相关工具</h3>
+                <div class="tf-links">
+                    <a href="/tools/json-parser">JSON 解析器（要格式化 JSON 去 JSON 解析器；本工具只格式化 TOML）</a>
+                    <a href="/tools/json-yaml-converter">JSON/YAML 转换器（要把 JSON 转 YAML 去 JSON/YAML 转换器；本工具不做格式转换）</a>
+                </div>
+            </div>
+
+            <div class="tf-card">
+                <h3>真限制说明</h3>
+                <div class="tf-tip">
+                    <b>只做格式化与语法校验、不做语义配置推荐</b>：不提示「该配什么值」、不按应用校验键名语义。<br>
+                    <b>不排序、不删键、不丢注释</b>：格式化只规范空白与缩进，键顺序、表顺序、注释原样保留；压缩模式除外（压缩模式明示会去掉注释与空行）。<br>
+                    <b>格式化失败不覆盖原文</b>：校验不通过时输出区保留上一次有效结果，绝不把半截输出当结果；空输入时提示「请输入 TOML」。<br>
+                    <b>只做常用 TOML 语法子集、不承诺完整 TOML v1.0</b>：超出子集时中文提示并指明行列，不静默丢弃内容。<br>
+                    <b>零上传</b>：本页面零 fetch／XHR、零 CDN，全部解析与序列化在浏览器本地完成，TOML 不出本机。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="tf-toast" id="tf-toast"></div>
+    <script src="/tools/static/js/toml_formatter.js?v=1"></script>
+</body>
+</html>
+{{end}}
