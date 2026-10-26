@@ -624,6 +624,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "lorem_ipsum_generator",
+					Name:        "Lorem Ipsum 生成器",
+					Description: "免费在线 Lorem Ipsum 生成器：英文经典 Lorem ipsum 与中文占位文本二选，段落数 1–20、每段句子数 1–10、经典开头／随机开头／自定义首词，纯文本或 HTML <p> 输出，实时生成＋字数统计，一键复制或下载 lorem-ipsum.txt／lorem-ipsum.html，纯前端零上传 · Lorem Ipsum generator: generate English or Chinese placeholder text locally, 100% client-side",
+					Path:        "/tools/lorem-ipsum-generator",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "focus_writer",
 					Name:        "极简专注写作",
 					Description: "标题加一个大写作面，无格式按钮、无工具栏干扰，边写边自动保存到本机浏览器，全屏专注只留标题和写作面，写完一键复制全文或下载 .md/.txt，纯前端零上传 · Focus writer: distraction-free writing, local autosave, fullscreen, copy & download, 100% client-side",

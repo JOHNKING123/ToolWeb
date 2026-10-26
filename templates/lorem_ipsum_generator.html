@@ -1,0 +1,167 @@
+{{define "lorem_ipsum_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lorem Ipsum 生成器 - 英文经典占位文本与中文占位文本实时生成</title>
+    <meta name="description" content="免费在线 Lorem Ipsum 生成器：英文经典 Lorem ipsum 与中文占位文本二选，段落数 1–20、每段句子数 1–10、经典开头／随机开头／自定义首词，纯文本或 HTML <p> 输出，实时生成＋字数统计，一键复制或下载 lorem-ipsum.txt／lorem-ipsum.html，纯前端不上传。Lorem Ipsum generator: generate English or Chinese placeholder text locally, 100% client-side.">
+    <meta name="keywords" content="Lorem Ipsum,占位文本生成器,lorem ipsum generator,中文占位文本,排版占位,placeholder text,假文生成,占位段落">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/lorem-ipsum-generator">
+    <meta property="og:title" content="Lorem Ipsum 生成器 - 英文经典占位文本与中文占位文本实时生成">
+    <meta property="og:description" content="英文经典 Lorem ipsum 与中文占位文本二选，段落数、每段句子数、起始方式可调，纯文本或 HTML 输出，一键复制或下载，数据不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/lorem-ipsum-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Lorem Ipsum 生成器","description":"英文经典 Lorem ipsum 与中文占位文本二选，段落数、每段句子数、起始方式可调，纯文本或 HTML 输出，一键复制或下载，纯前端不上传。","url":"https://www.johnkingzcq123.xyz/tools/lorem-ipsum-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .lig-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .lig-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none;white-space:pre-line}
+        .lig-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .lig-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .lig-field{margin-bottom:.9rem}
+        .lig-field label{display:block;font-size:.92rem;color:#374151;margin-bottom:.35rem}
+        .lig-input,.lig-output{width:100%;min-width:0;padding:.6rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box;background:#fff}
+        .lig-output{min-height:220px;font-family:inherit;line-height:1.8;resize:vertical;background:#f9fafb}
+        .lig-input:focus,.lig-output:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .lig-range{width:100%;min-width:0;box-sizing:border-box}
+        .lig-radio{display:flex;gap:1rem;flex-wrap:wrap;font-size:.92rem;color:#374151}
+        .lig-radio label{display:flex;gap:.35rem;align-items:center;cursor:pointer}
+        .lig-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .lig-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .lig-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .lig-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .lig-btn:disabled{opacity:.45;cursor:default;color:#9ca3af}
+        .lig-btn:disabled:hover{border-color:#d1d5db;color:#9ca3af}
+        .lig-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        .lig-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .lig-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .lig-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .lig-links a{color:#2563eb}
+        @media (max-width:640px){.lig-panel{padding:.9rem}.lig-output{min-height:180px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Lorem Ipsum 生成器</h1>
+            <p>英文经典 Lorem ipsum 与中文占位文本二选，段落数、句子数、起始方式可调，实时生成占位段落：一键复制或下载，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="lig-note">
+                <span>本工具只生成占位文本，不做真实文案撰写：英文为经典 Lorem ipsum 语料，中文为通用占位句，不产营销文案、不润色改写；中文占位句无实际语义，仅用于占位与排版预览，不可直接当正文发布；随机组合不可复现同一批次，每次生成与点「重新生成」都会换一批组合；不做排版设计：不调字体、字号、行距与版式，只出文本。</span>
+            </div>
+            <div class="lig-panel">
+                <h3>生成设置</h3>
+                <div class="lig-field">
+                    <label>语言</label>
+                    <div class="lig-radio">
+                        <label><input type="radio" name="lig-lang" value="en" checked> 英文经典 Lorem ipsum</label>
+                        <label><input type="radio" name="lig-lang" value="zh"> 中文占位文本</label>
+                    </div>
+                </div>
+                <div class="lig-field">
+                    <label for="lig-paragraphs">段落数（1–20，默认 3）</label>
+                    <input id="lig-paragraphs" class="lig-input" type="number" min="1" max="20" step="1" value="3">
+                    <input id="lig-paragraphs-range" class="lig-range" type="range" min="1" max="20" step="1" value="3">
+                    <p class="lig-hint">超出 1–20 时自动钳制到边界并中文提示是哪一项。</p>
+                </div>
+                <div class="lig-field">
+                    <label for="lig-sentences">每段句子数（1–10，默认 5）</label>
+                    <input id="lig-sentences" class="lig-input" type="number" min="1" max="10" step="1" value="5">
+                    <input id="lig-sentences-range" class="lig-range" type="range" min="1" max="10" step="1" value="5">
+                    <p class="lig-hint">超出 1–10 时自动钳制到边界并中文提示是哪一项。</p>
+                </div>
+                <div class="lig-field">
+                    <label>起始方式（默认经典开头）</label>
+                    <div class="lig-radio">
+                        <label><input type="radio" name="lig-start" value="classic" checked> 经典开头</label>
+                        <label><input type="radio" name="lig-start" value="random"> 随机开头</label>
+                        <label><input type="radio" name="lig-start" value="custom"> 自定义首词</label>
+                    </div>
+                </div>
+                <div class="lig-field">
+                    <label for="lig-custom-word">自定义首词（仅起始方式选「自定义首词」时生效；留空时按随机开头处理并中文提示）</label>
+                    <input id="lig-custom-word" class="lig-input" type="text" placeholder="例如：Hello world 或 示例首词（换行会自动展平为空格）" spellcheck="false">
+                    <p class="lig-hint">英文首词首字母自动大写、句末补句号；中文首词直接拼接、句末补句号；首词里的 HTML 只显示为文本，不会被执行。</p>
+                </div>
+                <div class="lig-field">
+                    <label>输出格式（默认纯文本）</label>
+                    <div class="lig-radio">
+                        <label><input type="radio" name="lig-format" value="text" checked> 纯文本（段落间空行分隔）</label>
+                        <label><input type="radio" name="lig-format" value="html"> HTML（每段包一层 &lt;p&gt;）</label>
+                    </div>
+                </div>
+                <div class="lig-row">
+                    <button class="lig-btn lig-btn-primary" type="button" id="lig-sample-en">示例：英文 3 段经典开头</button>
+                    <button class="lig-btn" type="button" id="lig-sample-zh">示例：中文 2 段随机开头</button>
+                    <button class="lig-btn" type="button" id="lig-reset">恢复默认</button>
+                </div>
+                <p class="lig-hint">输入变化时占位文本实时重生成；示例载入后仍可再改再生成；「恢复默认」回到英文、3 段、每段 5 句、经典开头、纯文本。</p>
+            </div>
+            <div class="lig-warn" id="lig-warn"></div>
+            <div class="lig-panel">
+                <h3>生成的占位文本</h3>
+                <textarea id="lig-output" class="lig-output" readonly placeholder="生成的占位文本会出现在这里，可直接复制或下载。"></textarea>
+                <p class="lig-hint" id="lig-stats">段落数：3　总句子数：15　总词数：0</p>
+                <div class="lig-row">
+                    <button class="lig-btn lig-btn-primary" type="button" id="lig-copy">一键复制</button>
+                    <button class="lig-btn" type="button" id="lig-download">下载 lorem-ipsum.txt</button>
+                    <button class="lig-btn" type="button" id="lig-regen">重新生成</button>
+                    <span class="lig-hint" id="lig-copy-hint" style="margin:0;"></span>
+                </div>
+                <p class="lig-hint">复制与下载的内容与上方输出框完全一致（纯文本格式下载 lorem-ipsum.txt，HTML 格式下载 lorem-ipsum.html）；复制失败时会提示手动全选复制的降级办法；「重新生成」换一批随机组合。</p>
+            </div>
+            <div class="lig-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先选语言：英文为经典 Lorem ipsum 语料，中文为 20 句以上的通用占位句；切换后语料与统计单位同步切换（英文计词数，中文计字数）。</li>
+                    <li>再定数量：段落数 1–20（默认 3）、每段句子数 1–10（默认 5），数字框与滑杆联动；非数字或超范围时钳制到边界并中文提示是哪一项。</li>
+                    <li>起始方式：经典开头时英文首段首句固定为标准首句 Lorem ipsum dolor sit amet, consectetur adipiscing elit.；中文没有经典 Lorem 首句，经典开头在中文下等同随机开头；随机开头时首句不固定；自定义首词时首段首句以该词开头。</li>
+                    <li>输出格式：纯文本段落间空行分隔；HTML 格式每段包一层 &lt;p&gt; 且句内文本做转义，输出框里显示的是标记文本本身。</li>
+                    <li>复制与下载：一键复制把输出放进剪贴板；一键下载按当前格式保存为 lorem-ipsum.txt 或 lorem-ipsum.html；两者内容与输出框一致。</li>
+                    <li>示例与恢复：点两组示例一键载入（英文 3 段经典开头、中文 2 段随机开头），载入后仍可再改；「恢复默认」回到默认值；「重新生成」换一批随机组合，不承诺复现同一批次。</li>
+                    <li>互链：要结构化假数据去假数据／Mock 生成器；生成的段落要看渲染效果去 Markdown 预览；本工具只生成占位段落，不生成结构化数据、不渲染预览。</li>
+                </ol>
+            </div>
+            <div class="lig-panel">
+                <h3>常见问题</h3>
+                <dl class="lig-faq">
+                    <dt>生成的文本能直接当文章正文发布吗？</dt>
+                    <dd>不能。英文是无意义的经典占位语料，中文占位句也没有实际语义，两者都只用于占位与排版预览，正式发布前必须替换为真实撰写的内容。</dd>
+                    <dt>经典开头和随机开头有什么区别？</dt>
+                    <dd>经典开头时英文首段首句固定为标准首句；随机开头时首句由语料随机组合，不固定。中文没有经典 Lorem 首句，经典开头在中文下等同随机开头。</dd>
+                    <dt>自定义首词留空会怎样？</dt>
+                    <dd>按随机开头处理，并中文提示「自定义首词为空，已按随机开头处理。」；填了首词时首段首句以该词开头，英文首字母大写、句末补句号，中文直接拼接、句末补句号。</dd>
+                    <dt>段落数或句子数填超了会被拦住吗？</dt>
+                    <dd>不会被拦住：超出范围时自动钳制到边界（段落数 1–20、每段句子数 1–10），并中文提示是哪一项被钳制；非数字时按默认值处理并提示。</dd>
+                    <dt>点「重新生成」会得到和上次一样的结果吗？</dt>
+                    <dd>不一定。随机组合不可复现同一批次，每次生成与点「重新生成」都会换一批组合，本工具不提供固定种子复现。</dd>
+                    <dt>HTML 格式输出后会被浏览器执行吗？</dt>
+                    <dd>不会。输出框里显示的是转义后的标记文本，自定义首词里的 HTML 也只显示为文本；下载的 lorem-ipsum.html 才是可直接用的 HTML 片段。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。全部在浏览器内生成，零网络请求，零 CDN，本页 JS 源码无任何 fetch／XHR 调用。</dd>
+                </dl>
+            </div>
+            <div class="lig-panel">
+                <h3>相关工具</h3>
+                <div class="lig-links">
+                    <a href="/tools/mock-data-generator">假数据／Mock 生成器（要结构化假数据去 Mock 生成器，本工具只生成占位段落）</a>
+                    <a href="/tools/markdown-preview">Markdown 预览（生成的段落要看渲染效果去预览，本工具只生成文本、不渲染）</a>
+                </div>
+            </div>
+            <div class="lig-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>语料切片、句子组合、首词处理、HTML 转义、范围钳制与统计均为手写纯函数（浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/lorem_ipsum_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

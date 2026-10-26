@@ -1,3 +1,74 @@
+## 今日任务（2026-10-26 19:37 · 产品经理排期轮）
+
+**选定：Lorem Ipsum 生成器（lorem_ipsum_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（114 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。17:40 PM 轮选 Conventional Commit 提交信息生成器时已明言：Lorem Ipsum 生成器仅因顺位在 Conventional Commit 提交信息生成器之后而后置、「下轮首席递进」；Conventional Commit 提交信息生成器已交付划出（1f565a5 新增，全量 186 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——CSS 缓动曲线生成器与 CRC 校验和计算器虽同为小难度纯前端，均不插队。
+- **未选**：CSS 缓动曲线生成器（101 轮新晋 P2，114 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 Lorem Ipsum 生成器之后而后置，下轮首席递进；真限制只做曲线预览与代码生成、不做整页动效编排）；CRC 校验和计算器（102 轮新晋／晋升 P2，114 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只算校验值、不做文件修复与完整性判定）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -cE 'lorem|css_easing|easing|crc_checksum' tools/categories.go` = 0；templates／static/js／tests 三路 `lorem`、`easing`、`crc` 亦 0；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **186 Path**；`git log` 头部 1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）。自有近邻辨析：① 已注册的假数据／Mock 生成器（ID mock_data_generator）是「按字段结构生成结构化假数据」，本工具是「生成无意义占位段落文本」，一个结构化、一个纯文本段落，不重叠；② 已注册的文本比较／文本信息提取器／文本隐私脱敏是「处理已有文本」，本工具是「从无到有生成占位文本」，不重叠；③ 已注册的 Markdown 预览（ID markdown）是「渲染 Markdown 文本看效果」，本工具只产占位文本、不渲染预览，不重叠；④ 已注册的 CSS 渐变／阴影与圆角／clamp 生成器是「CSS 数值与样式代码生成」，本工具不产 CSS（那是留池的 CSS 缓动曲线生成器方向），不重叠。无可复用业务代码，仅可借鉴 Conventional Commit 轮与 CSV→Markdown 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式、「表单→实时预览文本→复制／下载」口径。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——排版占位要随手可得的占位文本，复制现成段落怕带格式、怕混进真实文案，段落数／句子数／起始词可调、纯文本输出恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，段落数、每段句子数、经典开头开关、自定义首词、英／中切换、HTML 包裹均可 node 断言；④ **受众与站内互补**——与文本工具品类的文本比较、文本信息提取器同品类，排版、写稿、做原型的人拿到占位文本后下一步自然是处理或预览文本。
+- **品类归位**：注册到「文本工具」品类（与文本比较、文本信息提取器同品类，便于排版占位用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成占位文本，不做真实文案撰写**——英文为经典 Lorem ipsum 语料、中文为通用占位句，不产营销文案、不润色改写，页面须明示；② **中文占位句无实际语义**——仅用于占位与排版预览，不可直接当正文发布，页面须明示；③ **随机组合不可复现同一批次**——每次生成／点「重新生成」换一批组合，不承诺固定种子复现，页面须明示；④ **不做排版设计**——不调字体、字号、行距与版式，只出文本，页面须明示；⑤ **零上传**——全部在浏览器内生成，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：语言二选（英文经典 Lorem ipsum／中文占位文本，默认英文）；段落数（数字输入＋滑杆，1–20，默认 3，超出钳制并中文提示）；每段句子数（数字输入＋滑杆，1–10，默认 5，超出钳制并中文提示）；起始方式三选（经典开头／随机开头／自定义首词，默认经典开头；自定义首词为单行文本框，留空时按随机开头处理并中文提示）；输出格式二选（纯文本段落，空行分隔／HTML `<p>` 包裹，默认纯文本）；另提供 2 组一键示例（英文 3 段经典开头、中文 2 段随机开头），示例载入后可再改再生成；表单「恢复默认」一键回到默认值（英文、3 段、每段 5 句、经典开头、纯文本）。
+- 生成：随输入变化实时生成；英文语料为内置经典 Lorem ipsum 段落（公共领域标准文本，多段循环取段），经典开头时首段首句固定为标准首句 `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`；中文语料为内置 20+ 句通用占位句，段内句子不重复、段间可复用；自定义首词非空时首段首句以该词开头（英文首字母大写、句末补句号；中文直接拼接）；纯文本输出段间空行分隔，HTML 输出每段包一层 `<p>` 且句内文本做转义；输出区下方实时显示段落数、总句子数、总词数／字数统计。
+- 校验：段落数／句子数非数字或超出范围时钳制到边界并中文提示（不静默丢弃用户输入，提示须指明是哪一项）；自定义首词含换行时展平为空格；生成结果为空时不输出误导性结果（输出区置空并标注原因）；随机组合逻辑须可注入随机源供 node 测试确定性断言（UI 用 Math.random，测试用固定序列）。
+- 操作：一键复制、一键下载（纯文本格式下载 `lorem-ipsum.txt`，HTML 格式下载 `lorem-ipsum.html`，内容与页面输出一致）；一键「重新生成」换一批随机组合；复制失败有明确降级提示（手动复制指引）；与假数据／Mock 生成器（/tools/mock-data-generator）互链（文案区分生成占位段落与生成结构化假数据：「要结构化假数据去 Mock 生成器」）、与 Markdown 预览（/tools/markdown-preview）互链（文案区分生成与预览：「生成的段落要看渲染效果去预览」），与未交付的 CSS 缓动曲线生成器、截图美化器（通用）不互链（未交付或防串味延后，不硬凑）。
+- 技术路线：纯前端、无依赖（手写语料切片、句子组合、首词处理、HTML 转义逻辑；生成结果用 textContent 或转义后插值，杜绝自定义首词 HTML 被执行）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，段落数、每段句子数、经典开头开关、自定义首词、英／中切换、HTML 包裹、范围钳制、统计等纯函数均可 node 断言）。
+- 注册：ID `lorem_ipsum_generator`、Name「Lorem Ipsum 生成器」、Path `/tools/lorem-ipsum-generator`、Category 文本工具、Icon 建议 text_fields（图标库无此名则用 description 兜底）、New: true；中英文描述＋SEO keywords（Lorem Ipsum、占位文本生成器、lorem ipsum generator、中文占位文本、排版占位、placeholder text）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/lorem-ipsum-generator，相关工具互链假数据／Mock 生成器与 Markdown 预览。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `lorem_ipsum_generator`、Path `/tools/lorem-ipsum-generator` 注册完整（Category 文本工具），注册总数 186→187 Path。
+2. 生成闭环：段落数 1／3／20 切换后输出段落数同步；每段句子数 1／5／10 切换后每段句子数同步；经典开头时首句为标准首句、随机开头时首句不固定为标准首句；自定义首词非空时首段首句以该词开头；英／中切换后语料同步切换；纯文本与 HTML 两种输出格式结构正确。
+3. 校验闭环：段落数／句子数超范围钳制到边界并中文提示；自定义首词换行展平为空格；统计（段落数、总句子数、总词数／字数）与输出一致；2 组示例一键载入后表单与输出同步；「恢复默认」回到默认值；「重新生成」换一批组合。
+4. 操作与互链闭环：复制与下载（`lorem-ipsum.txt`／`lorem-ipsum.html`）内容与页面输出一致；复制失败有降级提示；相关工具互链含假数据／Mock 生成器与 Markdown 预览；不含未交付工具的硬凑互链。
+5. 真限制可见：页面可见「只生成占位文本、不做真实文案撰写」「中文占位句无实际语义、不可直接当正文发布」「随机组合不可复现同一批次」文案；零 fetch／XHR、零 CDN。
+6. node 测试 25+ 断言全过（段落数、每段句子数、经典开头开关、自定义首词、英／中切换、HTML 包裹与转义、范围钳制正反例、统计、示例、注册与零网络请求静态检查）。
+7. 页面无报错；移动端表单与输出区小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/lorem_ipsum_generator.html`（新增；含 SEO 面板按家族标准＋语言／段落数／句子数／起始方式／输出格式选择／2 组示例／实时输出／复制下载／重新生成 UI）
+- `static/js/lorem_ipsum_generator.js`（新增；语料切片、句子组合、首词处理、HTML 转义、范围钳制、统计逻辑；双模式导出供 node 测试）
+- `tests/lorem_ipsum_generator.test.js`（新增；段落数、句子数、开头方式、首词、语言切换、HTML 包裹、钳制、统计、示例、注册与零网络静态检查）
+- `tools/categories.go`（文本工具品类注册：ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **186**；Top3 候选重叠复核（lorem／easing／crc 三路零命中实锤；Mock 生成器／文本处理工具／Markdown 预览／CSS 生成器语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 19:36 · 通用调研第一百一十四轮）
+
+**交付状态**：10-26 通用调研第一百一十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Conventional Commit 提交信息生成器已交付闭环**（1f565a5 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **186 Path**，ID conventional_commit_generator、Path /tools/conventional-commit-generator 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:36 晚轮，优先小难度纯前端。
+**本轮三件事**（19:36 全网调研，通用方向）：
+1. Conventional Commit 交付确认：`git log` 头部 1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）；全量 186 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首轮直连曾报 Host key verification failed，加 StrictHostKeyChecking=no 后通过）。
+2. 新信号扫描：
+   - **devtoolkit 2026 榜＋dev.to 13 浏览器工具榜重现**：JSON 格式化／验证、正则、Base64、URL 编解码、UUID、二维码、CSS／JS 压缩、Markdown 预览、色板、批量图片缩放、文本对比、HTML 实体编解码、JSON Schema 验证 → **全部自有实锤消解**（已注册工具；HTML 实体对应已注册 /tools/html-entities，JSON Schema 验证器对应已注册 /tools/json-schema-validator，其余均为已注册工具）；
+   - **dev.to 轻量工具榜（Excalidraw／Polypane／Insomnia／Obsidian／uTools 等）** → **不立**（画布白板、多视口测试、API 客户端、笔记应用、桌面启动器，均为独立应用或桌面工具，非单页网页工具）；
+   - **HN Show HN 重现（ToolHop 200+ 工具集合站、Sphinx git 钩子 AI 代码测验、Plasmic 可视化页面搭建、hn-client 终端客户端）** → **不立**（集合站本身、需 AI 与 git 钩子的 CLI、可视化建站器、终端 TUI，均非单页纯前端工具；ToolHop 所列单项均为已注册工具类别）。
+3. 候选池变动：Conventional Commit 提交信息生成器已交付划出（1f565a5，186 Path）；**本轮新晋 P2 0 个**（全部信号消解或不立）；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 186 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Conventional Commit 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，113 轮 Top3 第二、三顺位依次递进，第三顺位取 102 轮新晋 P2）：
+
+1. **Lorem Ipsum 生成器** — P2 留池顺位递进（101 轮新晋；114 轮复核仍未交付；113 轮 Top3 第二顺位递进为首席；痛点：排版占位要随手可得的英文／中文占位文本，复制现成段落又怕带格式；纯前端小难度：段落数／句子数／起止词可选→实时生成占位文本＋复制，零上传；`lorem_ipsum` 零命中实锤；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：只生成占位文本、不做真实文案撰写）。
+2. **CSS 缓动曲线生成器** — P2 留池顺位递进（101 轮新晋；114 轮复核仍未交付；113 轮 Top3 第三顺位递进；痛点：调 cubic-bezier 只能凭感觉改四个数字、看不到曲线与动效预览；纯前端小难度：拖动控制点／选预设曲线→实时预览动画＋输出 cubic-bezier() 与 CSS transition 代码＋复制，零上传；`css_easing`／`easing` 零命中实锤；建议 ID css_easing_generator、Path /tools/css-easing-generator；真限制：只做曲线预览与代码生成、不做整页动效编排）。
+3. **CRC 校验和计算器** — P2 留池顺位递进（102 轮新晋／晋升 P2；114 轮复核仍未交付；痛点：校验字符串或文件完整性要算 CRC32／CRC16 等，手写脚本或找命令行都麻烦；纯前端小难度：粘贴文本或本地读文件→实时算出 CRC32／CRC16 等多算法校验值＋复制，零上传；`crc` 零命中实锤；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只算校验值、不做文件修复与完整性判定）。
+
+其余 P2 留池（顺位在 Top3 之后）：JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进；JSONPath 仅为已注册 JSON 语义对比工具内的定位标注，非独立测试器，不重叠）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 113 轮及之前记录。
+
+**通用候选表增量**（第一百一十四轮：Conventional Commit 提交信息生成器已交付划出（1f565a5 新增；ID conventional_commit_generator、Path /tools/conventional-commit-generator 已注册；全量 186 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（devtoolkit／dev.to 榜单余项均为已注册工具，含 HTML 实体／JSON Schema 验证器；轻量工具榜与 HN 帖均为独立应用／桌面／CLI 或集合站本身）；全量 186 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Conventional Commit 提交信息生成器 | 已交付划出（1f565a5 新增；ID conventional_commit_generator、Path /tools/conventional-commit-generator 已注册；全量 186 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（devtoolkit／dev.to 榜单余项均为已注册工具；轻量工具榜与 HN 帖均为独立应用／桌面／CLI 或集合站本身） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百一十四轮——Conventional Commit 提交信息生成器交付闭环（1f565a5，`/tools/conventional-commit-generator` 已注册，全量 186 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解；HN／轻量工具榜无可消化新需求）；观察项新增 0 条；仓库 186 注册工具全量核对无重叠（Top3 建议 ID lorem_ipsum_generator / css_easing_generator / crc_checksum_calculator；ID＋Path＋关键词用 grep 逐项复核 0 命中，JSONPath 仅为语义对比工具内标注、非独立测试器）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **186**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 17:40 · 产品经理排期轮）
 
 **选定：Conventional Commit 提交信息生成器（conventional_commit_generator）** — 本轮唯一任务（新工具）：
