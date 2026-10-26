@@ -193,6 +193,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "prettier_config_generator",
+					Name:        "Prettier 配置生成器",
+					Description: "可视化勾选/填写 14 项 Prettier 3 口径核心选项（printWidth、tabWidth、semi、singleQuote、trailingComma 等），3 组一键预设，实时生成标准 JSON（2 空格缩进），一键复制、下载 .prettierrc.json，数值非法中文提示，纯前端零上传 · Prettier config generator: build .prettierrc.json from 14 core options, presets, copy & download, 100% client-side",
+					Path:        "/tools/prettier-config-generator",
+					Icon:        "code",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "project_to_txt",
 					Name:        "代码打包给 LLM",
 					Description: "拖拽项目文件夹一键打包成单个 TXT 喂给 LLM：浏览器本地遍历文件树，node_modules/.git/dist 等默认智能忽略，二进制文件（扩展名+魔数+NUL 三重识别）自动跳过标注，文件树复选框全选/逐项剔除，单文件 1MB 上限保护，扩展名白名单可选，带路径分隔头合并＋文件数/字符数/预估 Token 统计，一键复制或下载，纯前端零上传 · Pack project source into one TXT for LLMs: folder drag & drop, smart ignores, binary auto-skip, checkbox file tree, per-file 1MB cap, path-separated merge with file/char/token stats, 100% client-side",

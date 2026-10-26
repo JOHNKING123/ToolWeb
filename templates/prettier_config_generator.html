@@ -1,0 +1,146 @@
+{{define "prettier_config_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prettier 配置生成器 - 勾选 14 项核心选项实时生成 .prettierrc.json，纯前端</title>
+    <meta name="description" content="免费在线 Prettier 配置生成器：可视化勾选/填写 14 项 Prettier 3 口径核心选项（printWidth、tabWidth、semi、singleQuote、trailingComma 等），3 组一键预设，实时生成标准 JSON（2 空格缩进），一键复制、下载 .prettierrc.json，数值非法中文提示，纯前端本地生成不上传。Prettier config generator: build .prettierrc.json from 14 core options, presets, copy & download, 100% client-side.">
+    <meta name="keywords" content="Prettier配置,prettierrc生成器,代码格式化配置,prettier config generator,prettierrc json,code formatter config,prettier选项,prettier配置生成">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/prettier-config-generator">
+    <meta property="og:title" content="Prettier 配置生成器 - 勾选选项实时生成 .prettierrc.json">
+    <meta property="og:description" content="14 项 Prettier 3 核心选项可视化勾选，3 组预设一键载入，实时生成 .prettierrc.json，复制下载即用，数据不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/prettier-config-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Prettier 配置生成器","description":"可视化勾选/填写 14 项 Prettier 3 口径核心选项，3 组一键预设，实时生成标准 JSON（2 空格缩进），一键复制、下载 .prettierrc.json，数值非法中文提示，纯前端本地生成不上传。","url":"https://www.johnkingzcq123.xyz/tools/prettier-config-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pcg-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .pcg-note b{color:#047857}
+        .pcg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .pcg-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .pcg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem 1.2rem}
+        .pcg-field{display:flex;flex-direction:column;gap:.3rem;font-size:.92rem;color:#374151;min-width:0}
+        .pcg-field code{color:#111827;font-weight:700}
+        .pcg-field .pcg-desc{font-size:.82rem;color:#6b7280;line-height:1.6}
+        .pcg-input{width:100%;min-width:0;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box;background:#fff}
+        .pcg-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .pcg-check{display:flex;gap:.5rem;align-items:flex-start;cursor:pointer}
+        .pcg-check input{margin-top:.2rem;flex:none;width:1.05rem;height:1.05rem;accent-color:#2563eb}
+        .pcg-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .pcg-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .pcg-btn:hover{border-color:#2563eb;color:#2563eb}
+        .pcg-btn-primary{border-color:#2563eb;background:#2563eb;color:#fff}
+        .pcg-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .pcg-errors{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem .85rem 2rem;margin:0 0 1.2rem;font-size:.92rem;line-height:1.8;color:#92400e;display:none}
+        .pcg-output{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;background:#111827;color:#e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;white-space:pre-wrap;word-break:break-all;min-height:16rem;max-height:34rem;overflow-y:auto;margin:0}
+        .pcg-output:empty::before{content:"{ 尚未生成：请先修正数值错误，或直接使用默认值 }";color:#6b7280}
+        .pcg-status{font-size:.9rem;color:#374151;line-height:1.7;margin:.7rem 0 0}
+        .pcg-faq dt{font-weight:700;color:#111827;margin:.7rem 0 .25rem}
+        .pcg-faq dd{margin:0;color:#374151;line-height:1.8;font-size:.93rem}
+        .pcg-links a{color:#1a0dab}
+        @media (max-width:720px){.pcg-grid{grid-template-columns:1fr}.pcg-row .pcg-btn{flex:1;justify-content:center;text-align:center}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Prettier 配置生成器</h1>
+            <p>勾选 14 项 Prettier 3 核心选项，实时生成 .prettierrc.json：3 组预设一键载入，复制、下载即用，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="pcg-note" role="note">
+                <div><b>范围说明（请先读）：</b>本工具只覆盖 14 项常用核心选项子集，不覆盖全部 Prettier 选项与 overrides／插件配置，完整选项请查 Prettier 官方文档；只生成配置、不格式化代码；不读取、不解析现有配置（粘贴旧 .prettierrc 回填表单不在本轮范围）；选项取值按 Prettier 3 口径（如 trailingComma 默认 all、bracketSameLine 为 Prettier 3 命名）。所有生成均在浏览器本地完成，不上传服务器、无外部请求。</div>
+            </div>
+
+            <div class="pcg-panel">
+                <h3>一键预设</h3>
+                <div class="pcg-row">
+                    <button class="pcg-btn" type="button" id="pcg-preset-default">Prettier 默认</button>
+                    <button class="pcg-btn" type="button" id="pcg-preset-single">单引号＋无分号</button>
+                    <button class="pcg-btn" type="button" id="pcg-preset-tabs">Tab 缩进</button>
+                    <button class="pcg-btn" type="button" id="pcg-reset">恢复默认</button>
+                </div>
+                <p style="font-size:.88rem;color:#6b7280;line-height:1.8;margin:.7rem 0 0;">预设说明：Prettier 默认即全部默认值；单引号＋无分号仅开启 singleQuote、关闭 semi，其余保持默认；Tab 缩进仅开启 useTabs，其余保持默认。载入预设后仍可再改任意单项，输出同步跟随。</p>
+            </div>
+
+            <div class="pcg-panel">
+                <h3>14 项核心选项（Prettier 3 口径）</h3>
+                <div class="pcg-grid">
+                    <label class="pcg-field" for="pcg-printWidth"><span><code>printWidth</code>（默认 80）</span><input class="pcg-input" id="pcg-printWidth" type="number" min="1" step="1" value="80"><span class="pcg-desc">单行最大字符数，超出则换行；必须是正整数。</span></label>
+                    <label class="pcg-field" for="pcg-tabWidth"><span><code>tabWidth</code>（默认 2）</span><input class="pcg-input" id="pcg-tabWidth" type="number" min="1" max="8" step="1" value="2"><span class="pcg-desc">一个缩进占几个空格（或 Tab 的显示宽度）；必须是 1–8 的整数。</span></label>
+                    <label class="pcg-field"><span><code>useTabs</code>（默认关）</span><label class="pcg-check"><input id="pcg-useTabs" type="checkbox"><span>用 Tab 缩进（关闭则用空格）</span></label></label>
+                    <label class="pcg-field"><span><code>semi</code>（默认开）</span><label class="pcg-check"><input id="pcg-semi" type="checkbox" checked><span>语句末尾加分号</span></label></label>
+                    <label class="pcg-field"><span><code>singleQuote</code>（默认关）</span><label class="pcg-check"><input id="pcg-singleQuote" type="checkbox"><span>字符串用单引号（关闭则用双引号）</span></label></label>
+                    <label class="pcg-field" for="pcg-quoteProps"><span><code>quoteProps</code>（默认 as-needed）</span><select class="pcg-input" id="pcg-quoteProps"><option value="as-needed" selected>as-needed（仅必要时加引号）</option><option value="consistent">consistent（任一需引号则全部加）</option><option value="preserve">preserve（保持原样）</option></select></label>
+                    <label class="pcg-field"><span><code>jsxSingleQuote</code>（默认关）</span><label class="pcg-check"><input id="pcg-jsxSingleQuote" type="checkbox"><span>JSX 属性用单引号</span></label></label>
+                    <label class="pcg-field" for="pcg-trailingComma"><span><code>trailingComma</code>（默认 all）</span><select class="pcg-input" id="pcg-trailingComma"><option value="all" selected>all（所有可加处都加尾逗号）</option><option value="es5">es5（ES5 合法处加尾逗号）</option><option value="none">none（不加尾逗号）</option></select></label>
+                    <label class="pcg-field"><span><code>bracketSpacing</code>（默认开）</span><label class="pcg-check"><input id="pcg-bracketSpacing" type="checkbox" checked><span>对象括号内侧加空格，如 { foo }</span></label></label>
+                    <label class="pcg-field"><span><code>bracketSameLine</code>（默认关）</span><label class="pcg-check"><input id="pcg-bracketSameLine" type="checkbox"><span>多行 JSX／HTML 元素的 &gt; 不换行（Prettier 3 命名）</span></label></label>
+                    <label class="pcg-field" for="pcg-arrowParens"><span><code>arrowParens</code>（默认 always）</span><select class="pcg-input" id="pcg-arrowParens"><option value="always" selected>always（单参数箭头函数也加括号）</option><option value="avoid">avoid（单参数时省略括号）</option></select></label>
+                    <label class="pcg-field" for="pcg-endOfLine"><span><code>endOfLine</code>（默认 lf）</span><select class="pcg-input" id="pcg-endOfLine"><option value="lf" selected>lf（Unix 换行）</option><option value="crlf">crlf（Windows 换行）</option><option value="cr">cr（旧 Mac 换行）</option><option value="auto">auto（保持首行换行符）</option></select></label>
+                    <label class="pcg-field" for="pcg-proseWrap"><span><code>proseWrap</code>（默认 preserve）</span><select class="pcg-input" id="pcg-proseWrap"><option value="preserve" selected>preserve（Markdown 换行保持原样）</option><option value="always">always（超出 printWidth 即换行）</option><option value="never">never（不换行）</option></select></label>
+                    <label class="pcg-field" for="pcg-embeddedLanguageFormatting"><span><code>embeddedLanguageFormatting</code>（默认 auto）</span><select class="pcg-input" id="pcg-embeddedLanguageFormatting"><option value="auto" selected>auto（格式化嵌入代码）</option><option value="off">off（不格式化嵌入代码）</option></select></label>
+                </div>
+            </div>
+
+            <div class="pcg-panel">
+                <h3>.prettierrc.json 实时输出（标准 JSON，2 空格缩进）</h3>
+                <ul class="pcg-errors" id="pcg-errors" role="alert"></ul>
+                <pre class="pcg-output" id="pcg-output" aria-live="polite"></pre>
+                <div class="pcg-row" style="margin-top:.9rem;">
+                    <button class="pcg-btn pcg-btn-primary" type="button" id="pcg-copy">复制 .prettierrc.json</button>
+                    <button class="pcg-btn pcg-btn-primary" type="button" id="pcg-download">下载 .prettierrc.json</button>
+                </div>
+                <p class="pcg-status" id="pcg-status"></p>
+                <p style="font-size:.88rem;color:#6b7280;line-height:1.8;margin:.5rem 0 0;">数值非法时（如 printWidth 非正整数、tabWidth 超出 1–8）上方会中文提示，且不输出误导性配置，修正后自动恢复生成。复制失败时会有手动复制指引。</p>
+            </div>
+
+            <div class="pcg-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>改选项：逐项勾选、填写或下拉选择，右侧输出实时同步；默认值与 Prettier 默认一致（printWidth 80、tabWidth 2、semi 开启、singleQuote 关闭、trailingComma all、endOfLine lf 等）。</li>
+                    <li>用预设：点「Prettier 默认」「单引号＋无分号」「Tab 缩进」一键载入，载入后仍可再改单项；点「恢复默认」回到全部默认值。</li>
+                    <li>拿配置：点「复制 .prettierrc.json」或「下载 .prettierrc.json」，把内容保存为项目根目录的 .prettierrc.json 即可生效。</li>
+                    <li>数值校验：printWidth 必须是正整数，tabWidth 必须是 1–8 的整数；非法时中文提示且不输出错误配置。</li>
+                    <li>互链：生成的 JSON 想再校验格式，去 JSON 解析器；本工具不格式化代码、不读取现有配置。</li>
+                </ol>
+            </div>
+            <div class="pcg-panel">
+                <h3>常见问题</h3>
+                <dl class="pcg-faq">
+                    <dt>生成的 JSON 能直接用吗？</dt>
+                    <dd>能。输出是标准 JSON（2 空格缩进），保存为项目根目录的 .prettierrc.json 后，编辑器与 Prettier 命令行即可按此配置格式化。</dd>
+                    <dt>为什么只有 14 项，没有 overrides、插件配置？</dt>
+                    <dd>本工具只覆盖常用核心选项子集；overrides（按文件类型覆盖）与插件配置不在本轮范围，完整选项请查 Prettier 官方文档。</dd>
+                    <dt>能把已有的 .prettierrc 粘贴进来回填表单吗？</dt>
+                    <dd>不能。本轮不读取、不解析现有配置；需要迁移旧配置时请对照 14 项手动勾选。</dd>
+                    <dt>trailingComma 的 all／es5／none 有什么区别？</dt>
+                    <dd>all 在所有可加尾逗号的地方都加（含函数参数）；es5 只在 ES5 语法合法的地方加（对象、数组等）；none 全不加。Prettier 3 默认 all。</dd>
+                    <dt>bracketSameLine 和旧版的 jsxBracketSameLine 是同一个吗？</dt>
+                    <dd>是同一个选项的 Prettier 3 命名：旧版叫 jsxBracketSameLine，Prettier 3 起改名 bracketSameLine 并适用于 HTML 等更多场景，本工具按 Prettier 3 口径输出。</dd>
+                    <dt>我的配置会被上传吗？</dt>
+                    <dd>不会。选项到 JSON 的生成全在浏览器本地完成，零网络请求，零 CDN，本页 JS 源码无任何 fetch／XHR 调用。</dd>
+                </dl>
+            </div>
+            <div class="pcg-panel">
+                <h3>相关工具</h3>
+                <div class="pcg-links">
+                    <a href="/tools/json-parser">JSON 解析器（生成的 JSON 要再校验格式，去这里）</a>
+                </div>
+            </div>
+            <div class="pcg-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>选项默认值、预设、枚举取值、数值校验与 JSON 生成均为手写纯函数（不引入 Prettier 本体，浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输出里的字符只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/prettier_config_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
