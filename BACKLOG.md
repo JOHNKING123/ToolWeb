@@ -1,3 +1,75 @@
+## 今日任务（2026-10-26 17:40 · 产品经理排期轮）
+
+**选定：Conventional Commit 提交信息生成器（conventional_commit_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（113 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。15:37 PM 轮选 CSV→Markdown 表格生成器时已明言：Conventional Commit 提交信息生成器仅因顺位在 CSV→Markdown 表格生成器之后而后置、「下轮首席递进」；CSV→Markdown 表格生成器已交付划出（50ce0c5 新增，全量 185 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——Lorem Ipsum 生成器与 CSS 缓动曲线生成器虽同为小难度纯前端，均不插队。
+- **未选**：Lorem Ipsum 生成器（101 轮新晋 P2，113 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 Conventional Commit 提交信息生成器之后而后置，下轮首席递进；真限制只生成占位文本、不做真实文案撰写）；CSS 缓动曲线生成器（101 轮新晋 P2，113 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做曲线预览与代码生成、不做整页动效编排）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -cE 'conventional_commit|lorem|easing|css_easing' tools/categories.go` = 0；templates／static/js／tests 三路 `conventional_commit`、`lorem_ipsum`、`css_easing` 亦 0；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **185 Path**；`git log` 头部 50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）／405cb58（CSV 查看器修复）。自有近邻辨析：① 已注册的 .gitignore 生成器（ID gitignore_generator、Path /tools/gitignore-generator）是「勾选语言／框架拼装 .gitignore 文本」，本工具是「选 type／scope、填描述与 breaking 生成单条提交信息文本」，一个是仓库忽略文件、一个是提交信息，不重叠；② 已注册的 Prettier 配置生成器（ID prettier_config_generator）是「勾选选项生成 .prettierrc.json」，本工具不产配置文件、不含选项体系，不重叠；③ 已注册的 CSS 渐变／阴影与圆角／clamp 生成器是「CSS 数值与样式代码生成」，本工具不产 CSS、不做曲线预览（那是留池的 CSS 缓动曲线生成器），不重叠；④ 已注册的文本信息提取器是「从自由文本抠字段」，不拼提交信息结构，不重叠。无可复用业务代码，仅可借鉴 CSV→Markdown 轮与 Prettier 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式、「表单→实时预览文本→复制／下载」口径。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——写提交信息要记 11 个 type 的适用边界、scope 有没有括号、breaking 是加 `!` 还是写 footer，团队内格式不统一，表单选填实时生成恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，type／scope／描述／breaking 组合、非法输入提示均可 node 断言；④ **受众与站内互补**——与 .gitignore 生成器、Prettier 配置生成器同属开发工具品类，开发者落项目配置与写提交信息是同一工作流的相邻动作。
+- **品类归位**：注册到「开发工具」品类（与 .gitignore 生成器、Prettier 配置生成器同品类，便于开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成单条提交信息，不做 git 操作**——不执行 commit、不读写仓库、不校验分支与历史，页面须明示；② **不校验提交规范之外的团队约定**——不检查 issue 号格式、不强制 scope 白名单、不做提交历史 lint，页面须明示；③ **breaking 只按 Conventional Commits 标准表达**——标题 `!`＋`BREAKING CHANGE:` footer 两种写法，不扩展自定义 footer 体系，页面须明示；④ **不做英文翻译与文案润色**——描述按用户原意输出（仅去首尾空格），不改写措辞，页面须明示；⑤ **零上传**——全部在浏览器内生成，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：type 下拉／单选 11 项（feat／fix／docs／style／refactor／perf／test／build／ci／chore／revert，每项附中文适用说明，默认 feat）；scope 文本框（可选，留空则不生成括号）；description 文本框（必填，单行）；body 多行文本框（可选，正文）；breaking 开关＋破坏性说明文本框（可选，单行）；另提供 3 组一键示例（feat 含 scope＋breaking、fix 无 scope、docs 无 scope），示例载入后可再改再生成；表单「恢复默认」一键回到默认值（feat、无 scope、空描述／正文／breaking、breaking 关）。
+- 生成：随输入变化实时生成，结构为「标题行＋（空行＋正文）＋（空行＋BREAKING CHANGE footer）」；标题格式：无 scope 为 `type: 描述`，有 scope 为 `type(scope): 描述`；breaking 开启时标题 type／scope 后加 `!`（如 `feat(api)!: 重构鉴权接口`），且有说明时追加 footer 行 `BREAKING CHANGE: 说明`，说明为空时只加 `!`、不生成空 footer，并中文提示「建议填写破坏性说明」；正文与 breaking 说明中的换行统一转为空格（提交信息单段表达），不保留多行结构。
+- 校验：description 为空时中文提示且不输出误导性结果（输出区置空并标注原因）；scope 非空时只允许小写字母／数字／连字符／下划线（先去首尾空格，含空格或非法字符时中文提示且不输出误导性结果）；description 超过 72 字符时仅软提示「建议精简」（仍生成，不阻塞）；数值与格式校验均不静默丢弃用户输入，提示文案须指明是哪一项错。
+- 操作：一键复制、一键下载 `commit-message.txt`；复制失败有明确降级提示（手动复制指引）；与 .gitignore 生成器（/tools/gitignore-generator）互链（文案区分生成提交信息与生成忽略文件：「要生成 .gitignore 去忽略文件生成器」），与未交付的 .npmrc／.gitattributes 配置生成器不互链（未交付，不硬凑）。
+- 技术路线：纯前端、无依赖（手写 type／scope／标题／footer 生成与校验逻辑；生成结果用 textContent 或转义后插值，杜绝输入 HTML 被执行）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，标题生成三态、breaking 组合、scope 校验、描述校验、换行展平、示例等纯函数均可 node 断言）。
+- 注册：ID `conventional_commit_generator`、Name「Conventional Commit 提交信息生成器」、Path `/tools/conventional-commit-generator`、Category 开发工具、Icon 建议 commit（图标库无此名则用 code 兜底）、New: true；中英文描述＋SEO keywords（Conventional Commits、提交信息生成器、git提交规范、commit message generator、conventional commit、feat fix、breaking change）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/conventional-commit-generator，相关工具互链 .gitignore 生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `conventional_commit_generator`、Path `/tools/conventional-commit-generator` 注册完整（Category 开发工具），注册总数 185→186 Path。
+2. 生成闭环：11 个 type 逐项切换后标题 type 同步变化；scope 有／无时括号正确出现／消失；breaking 开启时标题加 `!`，有说明时 footer 行正确追加、无说明时不生成空 footer；正文有／无时空行结构正确；3 组示例一键载入后表单与输出同步。
+3. 校验闭环：description 为空中文提示且不输出误导性结果；scope 含空格／非法字符中文提示且不输出误导性结果；description 超 72 字符仅软提示且仍生成；正文与 breaking 说明换行转空格。
+4. 操作与互链闭环：复制与下载 `commit-message.txt` 内容与页面输出一致；复制失败有降级提示；「恢复默认」回到默认值；相关工具互链含 .gitignore 生成器；不含未交付工具的硬凑互链。
+5. 真限制可见：页面可见「只生成单条提交信息、不做 git 操作」「不校验团队约定」「不做翻译与润色」文案；零 fetch／XHR、零 CDN。
+6. node 测试 25+ 断言全过（11 个 type、scope 有／无、breaking 四组合、描述空／超长、scope 校验正反例、换行展平、示例、注册与零网络请求静态检查）。
+7. 页面无报错；移动端表单与输出区小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/conventional_commit_generator.html`（新增；含 SEO 面板按家族标准＋type 选择／scope／描述／正文／breaking 开关／3 组示例／实时输出／复制下载 UI）
+- `static/js/conventional_commit_generator.js`（新增；标题／footer 生成、scope 与描述校验、换行展平逻辑；双模式导出供 node 测试）
+- `tests/conventional_commit_generator.test.js`（新增；标题生成、breaking 组合、校验、展平、示例、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID conventional_commit_generator、Path /tools/conventional-commit-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）／405cb58（CSV 查看器修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **185**；Top3 候选重叠复核（conventional_commit／lorem／easing 三路零命中实锤；.gitignore／Prettier／CSS 生成器／文本提取器语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 17:36 · 通用调研第一百一十三轮）
+
+**交付状态**：10-26 通用调研第一百一十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSV→Markdown 表格生成器已交付闭环**（50ce0c5 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **185 Path**，ID csv_to_markdown、Path /tools/csv-to-markdown 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 晚轮，优先小难度纯前端。
+**本轮三件事**（17:36 全网调研，通用方向）：
+1. CSV→Markdown 交付确认：`git log` 头部 50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）／405cb58（CSV 查看器修复）；全量 185 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **devtoolkit／kovacore 2026 榜重现**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Base64、哈希、Bcrypt、UUID、时间戳、URL 解析、HTTP 状态码 → **全部自有实锤消解**（已注册工具）；
+   - **dev.to 45 个单页小工具复盘（1024toolkit）**：开发类 cron／正则／时间戳／时区／子网／SQL 格式化／Mock 数据 → **全部自有实锤消解**（已注册 Cron 解析与生成器、正则测试器、时间戳、timezone-converter、subnet-calculator、SQL 格式化、mock-data-generator）；财经类（复利、折扣、期权收益）／健康类（BMI、BMR、TDEE）／工程类（混凝土体积、切割清单、三角几何） → **方向排除不立**（10-18 方向修正：不扩展泛财务／生活计算器，工程量算亦非 ToolWeb 工具本身）；
+   - **V2EX 近期帖（10-13~10-26）**：AION 2 在线人数追踪站、原型托管站、AI 跳舞视频站、流量／收入榜单站、免费算力社区、AI 视频去物工具 → **不立**（游戏数据／原型托管需后端与账号、AI 视频生成与去物需 AI 成本、榜单站需第三方数据采购成本，均不符合 ToolWeb 纯前端单页架构）；
+   - **HN Ask HN／Show HN 自建工具帖**：CLI 工具、防火墙、状态机库、200+ 工具集合站 ToolHop 等 → **不立**（桌面／CLI／库或集合站本身，非单页网页工具；ToolHop 所列单项均为已注册工具类别）。
+3. 候选池变动：CSV→Markdown 表格生成器已交付划出（50ce0c5，185 Path）；**本轮新晋 P2 0 个**（全部信号消解、方向排除或不立）；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 185 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSV→Markdown 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，112 轮 Top3 第二、三顺位依次递进，第三顺位取 101 轮新晋 P2）：
+
+1. **Conventional Commit 提交信息生成器** — P2 留池顺位递进（105 轮新晋；113 轮复核仍未交付；112 轮 Top3 第二顺位递进为首席；痛点：写符合 Conventional Commits 规范的提交信息要记 type／scope／breaking 写法，团队内格式不统一；纯前端小难度：表单选 type／scope、填描述与 breaking→实时生成提交信息＋复制，零上传；`conventional_commit` 零命中实锤；建议 ID conventional_commit_generator、Path /tools/conventional-commit-generator；真限制：只生成单条提交信息、不做 git 操作、不校验仓库历史）。
+2. **Lorem Ipsum 生成器** — P2 留池顺位递进（101 轮新晋；113 轮复核仍未交付；112 轮 Top3 第三顺位递进；痛点：排版占位要随手可得的英文／中文占位文本，复制现成段落又怕带格式；纯前端小难度：段落数／句子数／起止词可选→实时生成占位文本＋复制，零上传；`lorem` 零命中实锤；建议 ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator；真限制：只生成占位文本、不做真实文案撰写）。
+3. **CSS 缓动曲线生成器** — P2 留池顺位递进（101 轮新晋；113 轮复核仍未交付；痛点：调 cubic-bezier 只能凭感觉改四个数字、看不到曲线与动效预览；纯前端小难度：拖动控制点／选预设曲线→实时预览动画＋输出 cubic-bezier() 与 CSS transition 代码＋复制，零上传；`easing`／`cubic-bezier` 零命中实锤；建议 ID css_easing_generator、Path /tools/css-easing-generator；真限制：只做曲线预览与代码生成、不做整页动效编排）。
+
+其余 P2 留池（顺位在 Top3 之后）：CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 112 轮及之前记录。
+
+**通用候选表增量**（第一百一十三轮：CSV→Markdown 表格生成器已交付划出（50ce0c5 新增；ID csv_to_markdown、Path /tools/csv-to-markdown 已注册；全量 185 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（devtoolkit／kovacore 榜单余项均为已注册工具；dev.to 45 工具开发类余项对应已注册 Cron／正则／时间戳／时区／子网／SQL／Mock 数据，财经／健康／工程类方向排除；V2EX 近期帖需后端／账号／AI 成本或第三方数据；HN 自建工具帖多为非网页工具或集合站）；全量 185 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSV→Markdown 表格生成器 | 已交付划出（50ce0c5 新增；ID csv_to_markdown、Path /tools/csv-to-markdown 已注册；全量 185 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（devtoolkit／kovacore／dev.to 榜单余项均为已注册工具；dev.to 财经／健康／工程类方向排除；V2EX 近期帖需后端／账号／AI 成本或第三方数据；HN 自建工具帖多为非网页工具或集合站） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百一十三轮——CSV→Markdown 表格生成器交付闭环（50ce0c5，`/tools/csv-to-markdown` 已注册，全量 185 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解或方向排除；V2EX／HN 无可消化新需求）；观察项新增 0 条；仓库 185 注册工具全量核对无重叠（Top3 建议 ID conventional_commit_generator / lorem_ipsum_generator / css_easing_generator；ID＋Path＋关键词用 grep 逐项复核 0 命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 50ce0c5（CSV→Markdown 表格生成器新增）／db248b4（Prettier 配置生成器新增）／405cb58（CSV 查看器修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **185**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 15:37 · 产品经理排期轮）
 
 **选定：CSV→Markdown 表格生成器（csv_to_markdown）** — 本轮唯一任务（新工具）：

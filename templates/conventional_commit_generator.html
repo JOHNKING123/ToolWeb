@@ -1,0 +1,166 @@
+{{define "conventional_commit_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conventional Commit 提交信息生成器 - 选 type 填描述实时生成规范提交信息</title>
+    <meta name="description" content="免费在线 Conventional Commit 提交信息生成器：选 11 种 type、填 scope 与描述，实时生成 type(scope): 描述格式的规范提交信息，breaking 自动加 ! 与 BREAKING CHANGE footer，一键复制或下载 commit-message.txt，纯前端不上传。Conventional commit message generator: build type(scope) commit messages locally, 100% client-side.">
+    <meta name="keywords" content="Conventional Commits,提交信息生成器,git提交规范,commit message generator,conventional commit,feat fix,breaking change,提交信息格式">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/conventional-commit-generator">
+    <meta property="og:title" content="Conventional Commit 提交信息生成器 - 选 type 填描述实时生成规范提交信息">
+    <meta property="og:description" content="选 type、填 scope 与描述，实时生成规范提交信息，breaking 自动加 ! 与 BREAKING CHANGE footer，一键复制或下载 commit-message.txt，数据不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/conventional-commit-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Conventional Commit 提交信息生成器","description":"选 11 种 type、填 scope 与描述，实时生成规范提交信息，breaking 自动加 ! 与 BREAKING CHANGE footer，一键复制或下载 commit-message.txt，纯前端不上传。","url":"https://www.johnkingzcq123.xyz/tools/conventional-commit-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ccg-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ccg-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none;white-space:pre-line}
+        .ccg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ccg-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .ccg-field{margin-bottom:.9rem}
+        .ccg-field label{display:block;font-size:.92rem;color:#374151;margin-bottom:.35rem}
+        .ccg-input,.ccg-output{width:100%;min-width:0;padding:.6rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box;background:#fff}
+        .ccg-output{min-height:160px;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.7;resize:vertical;background:#f9fafb}
+        .ccg-body{min-height:90px;resize:vertical;font-family:inherit}
+        .ccg-input:focus,.ccg-output:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ccg-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .ccg-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .ccg-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ccg-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .ccg-btn:disabled{opacity:.45;cursor:default;color:#9ca3af}
+        .ccg-btn:disabled:hover{border-color:#d1d5db;color:#9ca3af}
+        .ccg-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        .ccg-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .ccg-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .ccg-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .ccg-links a{color:#2563eb}
+        @media (max-width:640px){.ccg-panel{padding:.9rem}.ccg-output{min-height:140px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Conventional Commit 提交信息生成器</h1>
+            <p>选 type、填 scope 与描述，实时生成规范提交信息：一键复制或下载 commit-message.txt，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ccg-note">
+                <span>本工具只生成单条提交信息，不做 git 操作：不执行 commit、不读写仓库、不校验分支与历史；不校验团队约定：不检查 issue 号格式、不强制 scope 白名单、不做提交历史 lint；不做翻译与润色：描述按你的原意输出（仅去首尾空格），不改写措辞；breaking 只按 Conventional Commits 标准表达：标题 ! 加 BREAKING CHANGE: footer，不扩展自定义 footer 体系。</span>
+            </div>
+            <div class="ccg-panel">
+                <h3>填写提交信息</h3>
+                <div class="ccg-field">
+                    <label for="ccg-type">类型 type（必填，默认 feat）</label>
+                    <select id="ccg-type" class="ccg-input">
+                        <option value="feat" selected>feat — 新功能</option>
+                        <option value="fix">fix — 修复缺陷</option>
+                        <option value="docs">docs — 文档</option>
+                        <option value="style">style — 格式（不影响代码含义）</option>
+                        <option value="refactor">refactor — 重构</option>
+                        <option value="perf">perf — 性能优化</option>
+                        <option value="test">test — 测试</option>
+                        <option value="build">build — 构建系统／依赖</option>
+                        <option value="ci">ci — 持续集成配置</option>
+                        <option value="chore">chore — 杂项</option>
+                        <option value="revert">revert — 回滚</option>
+                    </select>
+                    <p class="ccg-hint" id="ccg-type-hint">新功能：向用户交付的新特性</p>
+                </div>
+                <div class="ccg-field">
+                    <label for="ccg-scope">作用域 scope（可选，留空则不生成括号）</label>
+                    <input id="ccg-scope" class="ccg-input" type="text" placeholder="例如：api、auth、ui（只允许小写字母、数字、连字符、下划线）" spellcheck="false">
+                    <p class="ccg-hint">scope 只允许小写字母、数字、连字符（-）和下划线（_）；含空格、大写字母或中文时会有中文提示且不输出误导性结果。</p>
+                </div>
+                <div class="ccg-field">
+                    <label for="ccg-description">描述 description（必填，单行，写本次提交做了什么）</label>
+                    <input id="ccg-description" class="ccg-input" type="text" placeholder="例如：重构鉴权接口" spellcheck="false">
+                    <p class="ccg-hint">描述为空时会有中文提示且不输出；超过 72 字符时仅提示「建议精简」，仍正常生成，不阻塞。</p>
+                </div>
+                <div class="ccg-field">
+                    <label for="ccg-body">正文 body（可选，多行）</label>
+                    <textarea id="ccg-body" class="ccg-input ccg-body" placeholder="补充说明这次改动的原因或细节（可选）" spellcheck="false"></textarea>
+                    <p class="ccg-hint">正文里的换行会统一转为空格（提交信息单段表达），不保留多行结构。</p>
+                </div>
+                <div class="ccg-field">
+                    <label><input id="ccg-breaking" type="checkbox"> 破坏性变更 breaking（开启后标题加 !）</label>
+                </div>
+                <div class="ccg-field">
+                    <label for="ccg-breaking-desc">破坏性说明（可选，单行；开启 breaking 且有说明时追加 BREAKING CHANGE: 说明 footer）</label>
+                    <input id="ccg-breaking-desc" class="ccg-input" type="text" placeholder="例如：旧鉴权接口不再接受明文 token，请改用 Bearer 方案" spellcheck="false">
+                    <p class="ccg-hint">breaking 开启但说明为空时，标题只加 !，不生成空 footer，并提示建议填写破坏性说明；说明里的换行同样转为空格。</p>
+                </div>
+                <div class="ccg-row">
+                    <button class="ccg-btn ccg-btn-primary" type="button" id="ccg-sample-feat">示例：feat 含 scope＋breaking</button>
+                    <button class="ccg-btn" type="button" id="ccg-sample-fix">示例：fix 无 scope</button>
+                    <button class="ccg-btn" type="button" id="ccg-sample-docs">示例：docs 无 scope</button>
+                    <button class="ccg-btn" type="button" id="ccg-reset">恢复默认</button>
+                </div>
+                <p class="ccg-hint">输入变化时提交信息实时重生成；示例载入后仍可再改再生成；「恢复默认」回到 feat、无 scope、空描述／正文／breaking、breaking 关闭。</p>
+            </div>
+            <div class="ccg-warn" id="ccg-warn"></div>
+            <div class="ccg-panel">
+                <h3>生成的提交信息</h3>
+                <textarea id="ccg-output" class="ccg-output" readonly placeholder="生成的单条提交信息会出现在这里，可直接复制或下载 commit-message.txt。"></textarea>
+                <p class="ccg-hint" id="ccg-hint">暂无可复制的提交信息：请先按提示修正输入。</p>
+                <div class="ccg-row">
+                    <button class="ccg-btn ccg-btn-primary" type="button" id="ccg-copy">一键复制</button>
+                    <button class="ccg-btn" type="button" id="ccg-download">下载 commit-message.txt</button>
+                    <span class="ccg-hint" id="ccg-copy-hint" style="margin:0;"></span>
+                </div>
+                <p class="ccg-hint">复制与下载的内容与上方输出框完全一致；复制失败时会提示手动全选复制的降级办法。</p>
+            </div>
+            <div class="ccg-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先选 type：11 项（feat／fix／docs／style／refactor／perf／test／build／ci／chore／revert），默认 feat，每项下拉下方有中文适用说明。</li>
+                    <li>再填 scope（可选）：留空则标题不带括号，如 feat: 描述；填 api 则为 feat(api): 描述；只允许小写字母、数字、连字符、下划线。</li>
+                    <li>描述必填：单行写本次提交做了什么；为空时中文提示且不输出；超 72 字符仅提示建议精简，仍生成。</li>
+                    <li>正文可选：多行文本框，换行统一转为空格；有正文时标题与正文之间空一行。</li>
+                    <li>breaking 开关：开启后标题 type／scope 后加 !，如 feat(api)!: 描述；有说明时再空一行追加 BREAKING CHANGE: 说明 footer，无说明时不生成空 footer。</li>
+                    <li>复制与下载：一键复制把提交信息放进剪贴板；一键下载保存为 commit-message.txt；两者内容与输出框一致。</li>
+                    <li>示例与恢复：点三组示例一键载入（feat 含 scope＋breaking、fix 无 scope、docs 无 scope），载入后仍可再改；「恢复默认」回到初始值。</li>
+                    <li>互链：要生成 .gitignore 去忽略文件生成器；本工具只生成提交信息文本，不生成忽略文件。</li>
+                </ol>
+            </div>
+            <div class="ccg-panel">
+                <h3>常见问题</h3>
+                <dl class="ccg-faq">
+                    <dt>标题格式到底是怎样的？</dt>
+                    <dd>无 scope：type: 描述；有 scope：type(scope): 描述；breaking 开启：type(scope)!: 描述。scope 留空时不出现空括号。</dd>
+                    <dt>breaking 的 ! 和 BREAKING CHANGE 有什么区别？</dt>
+                    <dd>两者是同一破坏性变更的两种标准表达：标题加 ! 是简写，有说明时再追加 BREAKING CHANGE: 说明 footer 写清影响；说明为空时只加 !，不生成空 footer。</dd>
+                    <dt>描述为空或 scope 非法时为什么没有输出？</dt>
+                    <dd>这是有意的：空描述或非法 scope 生成的结果会误导复制粘贴，所以输出区置空并中文提示是哪一项错，改对后立刻重新生成。</dd>
+                    <dt>描述超过 72 字符会被拦住吗？</dt>
+                    <dd>不会。只提示「建议精简」，仍正常生成；72 字符是 Conventional Commits 常见的标题长度建议，不是硬上限。</dd>
+                    <dt>正文里的换行去哪了？</dt>
+                    <dd>转为空格了：本工具只生成单条提交信息，正文与破坏性说明按单段表达，不保留多行结构。</dd>
+                    <dt>点复制后能直接 git commit 吗？</dt>
+                    <dd>能粘贴使用，但本工具本身不做 git 操作：不执行 commit、不读写仓库、不校验分支与历史，粘贴后的提交由你自己在终端执行。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。全部在浏览器内生成，零网络请求，零 CDN，本页 JS 源码无任何 fetch／XHR 调用。</dd>
+                </dl>
+            </div>
+            <div class="ccg-panel">
+                <h3>相关工具</h3>
+                <div class="ccg-links">
+                    <a href="/tools/gitignore-generator">.gitignore 生成器（要生成 .gitignore 去忽略文件生成器）</a>
+                </div>
+            </div>
+            <div class="ccg-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>type／scope／标题／footer 生成与校验均为手写纯函数（浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/conventional_commit_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

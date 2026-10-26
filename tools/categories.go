@@ -490,6 +490,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "conventional_commit_generator",
+					Name:        "Conventional Commit 提交信息生成器",
+					Description: "Conventional Commit 提交信息一键生成：选 11 种 type、填 scope 与描述，实时生成 type(scope): 描述格式的规范提交信息，breaking 自动加 ! 与 BREAKING CHANGE footer，3 组示例、恢复默认，一键复制/下载 commit-message.txt，纯前端零上传 · Conventional commit message generator: build type(scope) commit messages with breaking change footer, copy/download, 100% client-side",
+					Path:        "/tools/conventional-commit-generator",
+					Icon:        "code",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "search_router",
 					Name:        "社区搜索聚合器",
 					Description: "去 AI 垃圾搜索路由：关键词一键直达 Reddit/Hacker News/Stack Exchange/Quora/V2EX/知乎真实技术讨论，Google site: 过滤+官方站内搜索双路由，时间范围过滤、一键全开、OpenSearch 地址栏自定义搜索，纯前端零上传 · community search router: route keywords to real discussions on Reddit/HN/StackExchange/Quora/V2EX/Zhihu, Google site: filters + in-site search, time ranges, open-all, OpenSearch, 100% client-side",
