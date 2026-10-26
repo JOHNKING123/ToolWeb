@@ -378,13 +378,13 @@ function dotted(segs) {
 function formatValue(node, opts, depth) {
   if (node.kind === "array") {
     if (node.items.length === 0) return "[]";
-    var multiline = opts.arrayMode === "multiline" || (opts.arrayMode === "compact" && node.comments.length > 0);
-    /* 含内部注释的数组强制多行展开，避免丢注释（压缩模式除外，见 formatDocument） */
+    var multiline = !opts.compress && (opts.arrayMode === "multiline" || (opts.arrayMode === "compact" && node.comments.length > 0));
+    /* 含内部注释的数组强制多行展开，避免丢注释；压缩模式恒为单行且去注释 */
     if (multiline) {
       var pad = new Array(depth + 1 + 1).join(opts.indent);
       var closePad = new Array(depth + 1).join(opts.indent);
       var parts = node.items.map(function (it) { return pad + formatValue(it, opts, depth + 1); });
-      node.comments.forEach(function (cm) { parts.push(pad + cm); });
+      if (!opts.compress) node.comments.forEach(function (cm) { parts.push(pad + cm); });
       return "[\n" + parts.join(",\n") + ",\n" + closePad + "]";
     }
     return "[" + node.items.map(function (it) { return formatValue(it, opts, depth); }).join(", ") + "]";

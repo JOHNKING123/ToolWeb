@@ -83,6 +83,10 @@ var compValid = M.validateTOML(comp, {});
 eq(compValid.ok, true, "压缩模式：压缩后仍为合法 TOML");
 eq(M.formatTOML("# hi\nports = [\n1,\n2,\n]\n", { compress: true }).output,
   "ports = [1, 2]\n", "压缩模式：多行数组强制单行");
+eq(M.formatTOML("ports = [\n1, # one\n2,\n]\n", { compress: true }).output,
+  "ports = [1, 2]\n", "压缩模式：含行内注释的多行数组输出单行且不含注释");
+eq(M.formatTOML("ports = [\n1, # one\n2,\n]\n", {}).output,
+  "ports = [\n  1,\n  2,\n  # one,\n]\n", "非压缩模式：含行内注释的数组仍多行保留注释");
 
 /* ---------- 8. 错误定位 ---------- */
 throws(function () { M.formatTOML("a = 1\na = 2\n"); }, "第2行第1列", "重复键：报错指明第二处行列");
