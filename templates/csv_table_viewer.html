@@ -1,0 +1,162 @@
+{{define "csv_table_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV 表格查看器 - 粘贴 CSV 即看表格，排序筛选分页，纯前端</title>
+    <meta name="description" content="免费在线 CSV 表格查看器：粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，表头点击排序、全局搜索与每列筛选叠加、分页渲染，纯本地运行不上传。CSV table viewer: view, sort, filter and paginate CSV locally, 100% client-side.">
+    <meta name="keywords" content="CSV查看器,CSV表格,CSV在线查看,CSV排序筛选,csv viewer,view csv online,csv table viewer,csv sort filter">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/csv-table-viewer">
+    <meta property="og:title" content="CSV 表格查看器 - 粘贴 CSV 即看表格，排序筛选分页">
+    <meta property="og:description" content="粘贴 CSV 或本地读取 .csv，首行作表头、引号字段正确解析，表头三态排序、全局搜索与列筛选叠加、分页渲染，数据不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/csv-table-viewer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSV 表格查看器","description":"粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，表头点击排序、全局搜索与每列筛选叠加、分页渲染，纯本地运行不上传。","url":"https://www.johnkingzcq123.xyz/tools/csv-table-viewer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ctv-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ctv-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none}
+        .ctv-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ctv-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .ctv-input{width:100%;min-width:0;min-height:180px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .ctv-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ctv-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .ctv-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .ctv-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ctv-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .ctv-btn:disabled{opacity:.45;cursor:default;color:#9ca3af}
+        .ctv-btn:disabled:hover{border-color:#d1d5db;color:#9ca3af}
+        .ctv-field{display:flex;flex-direction:column;gap:.3rem;font-size:.92rem;color:#374151;flex:1;min-width:200px}
+        .ctv-text{width:100%;min-width:0;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box}
+        .ctv-text:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ctv-radio{display:inline-flex;gap:.35rem;align-items:center;font-size:.92rem;color:#374151;margin-right:1rem}
+        .ctv-scroll{overflow-x:auto;width:100%}
+        .ctv-table{border-collapse:collapse;width:100%;font-size:.9rem;white-space:nowrap}
+        .ctv-table th,.ctv-table td{border:1px solid #e5e7eb;padding:.5rem .7rem;text-align:left}
+        .ctv-th{cursor:pointer;background:#f9fafb;color:#111827;user-select:none}
+        .ctv-th:hover{background:#eff6ff}
+        .ctv-filter-th{background:#fff;padding:.3rem}
+        .ctv-col-filter{width:100%;min-width:90px;padding:.35rem .5rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.85rem;box-sizing:border-box;font-family:inherit}
+        .ctv-col-filter:focus{outline:none;border-color:#2563eb}
+        .ctv-stats{font-size:.92rem;color:#374151;margin:.6rem 0 0}
+        .ctv-empty{color:#6b7280;font-size:.92rem;margin:.8rem 0 0;white-space:normal}
+        .ctv-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .ctv-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .ctv-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .ctv-links a{color:#2563eb}
+        .ctv-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        @media (max-width:640px){.ctv-panel{padding:.9rem}.ctv-input{min-height:150px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>CSV 表格查看器</h1>
+            <p>粘贴 CSV 即看表格：表头排序、全局搜索、列筛选、分页渲染，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ctv-note">
+                <span>本工具只查看、排序、筛选：不编辑单元格，不转换格式，不保存、不导出文件。要改数据请用 Excel；要转成 JSON 请去 CSV⇄JSON 互转。分隔符仅支持逗号／分号／制表符三选；超大文件建议先在本地拆分再查看；日期、金额只按文本或数字排序，不验合法性、不算合计。</span>
+            </div>
+            <div class="ctv-panel">
+                <h3>输入 CSV</h3>
+                <textarea id="ctv-input" class="ctv-input" placeholder="粘贴 CSV，例如：&#10;姓名,部门,月薪&#10;张伟,研发,18500&#10;李娜,产品,16200" spellcheck="false"></textarea>
+                <div class="ctv-row">
+                    <span style="font-size:.92rem;color:#374151;">分隔符：</span>
+                    <label class="ctv-radio"><input type="radio" name="ctv-delim" value="," checked> 逗号</label>
+                    <label class="ctv-radio"><input type="radio" name="ctv-delim" value=";"> 分号</label>
+                    <label class="ctv-radio"><input type="radio" name="ctv-delim" value="tab"> 制表符</label>
+                    <label class="ctv-radio"><input type="checkbox" id="ctv-no-header"> 首行不是表头（自动生成列1、列2…）</label>
+                </div>
+                <div class="ctv-row">
+                    <label for="ctv-file" style="font-size:.92rem;color:#374151;">或读取本地 .csv 文件（只在本机读，不上传）：</label>
+                    <input id="ctv-file" type="file" accept=".csv,.tsv,.txt">
+                </div>
+                <div class="ctv-row">
+                    <button class="ctv-btn ctv-btn-primary" type="button" id="ctv-sample-employees">示例：员工表</button>
+                    <button class="ctv-btn" type="button" id="ctv-sample-orders">示例：订单表</button>
+                    <button class="ctv-btn" type="button" id="ctv-clear">清空输入</button>
+                    <button class="ctv-btn" type="button" id="ctv-reset">重置筛选与排序</button>
+                </div>
+                <p class="ctv-hint">输入、分隔符、表头开关变化时表格实时重解析；输入为空时不输出误导性结果。</p>
+            </div>
+            <div class="ctv-warn" id="ctv-warn"></div>
+            <div class="ctv-panel">
+                <h3>表格</h3>
+                <div class="ctv-field" style="margin-bottom:.6rem;">
+                    <label for="ctv-search">全局搜索（命中任意列即保留该行）</label>
+                    <input id="ctv-search" class="ctv-text" type="text" placeholder="例如：研发 或 张伟">
+                </div>
+                <div class="ctv-scroll" id="ctv-table-wrap">暂无表格：请先粘贴 CSV 或载入示例。</div>
+                <p class="ctv-stats" id="ctv-stats">共 0 行，筛选后 0 行，第 1 / 1 页</p>
+                <div class="ctv-row">
+                    <label style="font-size:.92rem;color:#374151;">每页行数：
+                        <select id="ctv-page-size" class="ctv-text" style="width:auto;display:inline-block;">
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                    </label>
+                    <button class="ctv-btn" type="button" id="ctv-prev">上一页</button>
+                    <span id="ctv-page-info" style="font-size:.92rem;color:#374151;">第 1 / 1 页</span>
+                    <button class="ctv-btn" type="button" id="ctv-next">下一页</button>
+                    <label style="font-size:.92rem;color:#374151;">跳到第
+                        <input id="ctv-page-jump" class="ctv-text" type="number" min="1" value="1" style="width:4.5em;display:inline-block;">
+                        页
+                    </label>
+                    <button class="ctv-btn" type="button" id="ctv-page-go">跳转</button>
+                </div>
+                <p class="ctv-hint">点击表头排序：升序 → 降序 → 取消；数字列按数值排、文本列按字符串排，空值恒置末尾。每列列头下的筛选框与全局搜索叠加生效；分页只渲染当前页，不一次性渲染全部行。</p>
+            </div>
+            <div class="ctv-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先粘贴 CSV：或点「读取本地 .csv 文件」在本机读文件（FileReader，不上传）；输入为空时不输出结果。</li>
+                    <li>再选分隔符：逗号默认，分号、制表符三选，切换后实时重解析；其他分隔符（如竖线）本轮不支持。</li>
+                    <li>表头开关：首行默认作表头；取消勾选后自动生成「列1、列2…」，原首行也计入数据行。</li>
+                    <li>排序：点击表头在升序、降序、取消三态切换；数字列按数值排、文本列按字符串排，空值恒置末尾。</li>
+                    <li>筛选：全局搜索命中任意列即保留该行；每列列头下的筛选框为文本包含匹配，与全局搜索叠加生效；行数统计与分页同步变化。</li>
+                    <li>分页：每页 50／100／200 行可选，上一页、下一页、页码跳转均可用；大数据量下只渲染当前页。</li>
+                    <li>示例：点「员工表」或「订单表」一键载入，载入后输入、表格、行数统计三者同步，仍可再改再看。</li>
+                    <li>互链：要转成 JSON 去 CSV⇄JSON 互转；本工具不做格式转换，不生成 Markdown 表格。</li>
+                </ol>
+            </div>
+            <div class="ctv-panel">
+                <h3>常见问题</h3>
+                <dl class="ctv-faq">
+                    <dt>引号里的逗号、换行会不会把行切错？</dt>
+                    <dd>不会。引号包字段内的逗号、转义双引号（""）与字段内换行都按 CSV 规则正确解析；引号未闭合时会中文告警并按已读内容尽力渲染，不谎称结果完整。</dd>
+                    <dt>为什么有的行比表头短？</dt>
+                    <dd>行列数不一致时短行自动补空，不丢行；空尾行不计入行数。</dd>
+                    <dt>排序时空值为什么总在最后？</dt>
+                    <dd>这是有意为之：空值恒置末尾，与升序、降序无关，避免缺失值混进数值或文本顺序里误导判断。</dd>
+                    <dt>能直接改表格里的数据吗？</dt>
+                    <dd>不能。本工具只查看、排序、筛选，不编辑、不保存、不导出；要改数据请用 Excel 打开原文件修改。</dd>
+                    <dt>文件很大打开会卡吗？</dt>
+                    <dd>分页只渲染当前页，但解析仍在浏览器内一次完成；行数极大时仍可能卡顿，超大文件建议先在本地拆分再查看。</dd>
+                    <dt>我的 CSV 会被上传吗？</dt>
+                    <dd>不会。粘贴与本地文件读取均只在浏览器内处理，零网络请求，零 CDN，本页 JS 源码无任何 fetch／XHR 调用。</dd>
+                </dl>
+            </div>
+            <div class="ctv-panel">
+                <h3>相关工具</h3>
+                <div class="ctv-links">
+                    <a href="/tools/csv-json">CSV⇄JSON 互转（要转成 JSON 去这里）</a>
+                </div>
+            </div>
+            <div class="ctv-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>CSV 解析、排序、筛选、分页均为手写纯函数（不引入表格库，浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/csv_table_viewer.js?v=1"></script>
+</body>
+</html>
+{{end}}

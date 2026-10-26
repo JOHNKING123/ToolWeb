@@ -1,3 +1,78 @@
+## 今日任务（2026-10-26 11:38 · 产品经理排期轮）
+
+**选定：CSV 表格查看器（csv_table_viewer）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（110 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。09:40 PM 轮选文本信息提取器时已明言：CSV 表格查看器仅因顺位在文本信息提取器之后而后置、「下轮首席递进」；文本信息提取器已交付划出（35e84a6 新增＋70431fa 修复，全量 182 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——Prettier 配置生成器与 CSV→Markdown 表格生成器虽同为小难度纯前端，均不插队。
+- **未选**：Prettier 配置生成器（104 轮新晋 P2，110 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 CSV 表格查看器之后而后置，下轮首席递进；真限制常用核心选项子集、不读现有配置）；CSV→Markdown 表格生成器（105 轮新晋 P2，110 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做表格文本生成、不做表格编辑与格式转换回写）；Conventional Commit 提交信息生成器（105 轮新晋 P2，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -cE 'csv_table_viewer|prettier_config|csv_to_markdown' tools/categories.go` = 0；templates／static/js／tests 三路 `csv_table_viewer`、`prettier_config`、`csv_to_markdown` 亦 0（templates 仅有已交付的 `csv_json.html`，即 CSV⇄JSON 互转，见下辨析）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **182 Path**；`git log` 头部 70431fa（文本提取器 .txt 导出修复）／35e84a6（文本提取器新增）／459d594（RSS／Atom 新增）。自有近邻辨析：① 已注册的 CSV⇄JSON 互转（ID csvjson、Path /tools/csv-json）是「表格数据与 JSON 数组互转」，本工具是「CSV 粘贴即表格查看＋排序／筛选／搜索」，不做格式转换，不重叠；② 已注册的文本信息提取器（ID text_info_extractor）是「从自由文本抠字段」，不读表格、不渲染表格，不重叠；③ 已注册的 Markdown 相关工具是「Markdown 文本处理」，本工具不生成 Markdown 表格（那是留池的 CSV→Markdown 工具），不重叠。无可复用业务代码，仅可借鉴文本提取器轮的纯前端双模式导出（window＋module.exports）与 node 测试模式、CSV⇄JSON 轮的分隔符处理口径。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——拿到一份 CSV 要先看一眼内容、排个序、筛几行，却得先开 Excel 或先转格式，粘贴即看恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，引号包字段、转义引号、换行与 BOM、排序、筛选、分页均可 node 断言；④ **受众与站内互补**——与 CSV⇄JSON 互转成组（先看后转），拿到表格数据的用户下一动作自然衔接。
+- **品类归位**：注册到「格式转换」品类（与 CSV⇄JSON 互转同品类，便于拿到表格数据的用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只查看／排序／筛选，不编辑、不转换、不保存**——单元格不可改写，不导出文件，不回写 CSV，页面须明示「要改数据请用 Excel，要转格式去 CSV⇄JSON 互转」；② **分隔符只支持逗号／分号／制表符三选**——其他分隔符（如竖线）不在本轮支持范围，页面须明示；③ **不做语义校验**——日期、金额只按文本或数字排序，不验日期合法性、不算金额合计；④ **超大文件只做前端分页渲染**——行数极大时浏览器仍可能卡顿，页面须明示「超大文件建议先在本地拆分」，不承诺服务端式性能；⑤ **零上传**——粘贴与本地文件读取均只在浏览器内处理，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：多行文本框粘贴 CSV；支持本地 .csv 文件读取（FileReader 本地读，不上传）；支持「清空输入」；输入为空时不输出误导性结果；另提供 2 组一键示例（员工表、订单表），示例载入后可再改再看。
+- 解析：首行默认作表头（可取消勾选，取消后自动生成「列1、列2…」）；UTF-8 BOM 自动剥离；CRLF／LF 均可；引号包字段内的逗号、转义双引号（`""`）、字段内换行均正确解析；引号未闭合时中文提示并标注「解析告警」，仍按已读内容尽力渲染，不输出误导性完整结果；行列数不一致时短行自动补空，不丢行；分隔符三选（逗号默认／分号／制表符），切换后实时重解析。
+- 表格与交互：表头点击排序（升序／降序／取消三态切换），数字列按数值排、文本列按字符串排，空值恒置末尾；全局搜索框（命中任意列即保留该行）；每列列头下设筛选框（文本包含匹配，与全局搜索叠加生效）；筛选与排序后实时显示「共 N 行，筛选后 M 行」；分页渲染（每页 50／100／200 行可选，含上一页／下一页／页码跳转），大数据量下不一次性渲染全部行。
+- 操作：筛选／排序状态下「重置筛选与排序」一键恢复；复制失败有明确降级提示（本工具无导出按钮，不硬凑导出）；与 CSV⇄JSON 互转（/tools/csv-json）互链（文案区分查看与转换：「要转成 JSON 去互转」），与留池未交付的 CSV→Markdown 表格生成器不互链（未交付，不硬凑）。
+- 技术路线：纯前端、无依赖（手写 CSV 解析／排序／筛选／分页逻辑，不引入表格库；渲染用 textContent 或转义后插值，杜绝输入 HTML 被执行）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，解析、排序、筛选、分页等纯函数均可 node 断言）。
+- 注册：ID `csv_table_viewer`、Name「CSV 表格查看器」、Path `/tools/csv-table-viewer`、Category 格式转换、Icon 建议 table_view、New: true；中英文描述＋SEO keywords（CSV查看器、CSV表格、CSV在线查看、CSV排序筛选、csv viewer、view csv online、csv table viewer）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/csv-table-viewer，相关工具互链 CSV⇄JSON 互转。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `csv_table_viewer`、Path `/tools/csv-table-viewer` 注册完整（Category 格式转换），注册总数 182→183 Path。
+2. 解析闭环：引号内逗号、转义双引号、字段内换行、 CRLF、UTF-8 BOM、空尾行、短行补空各有正例正确解析；引号未闭合中文告警且不输出误导性完整结果；分隔符三选切换后实时重解析。
+3. 排序闭环：数字列按数值升／降序、文本列按字符串升／降序、空值恒置末尾；表头三态切换可用；排序后分页与行数统计同步。
+4. 筛选与搜索闭环：全局搜索命中任意列即保留该行；列筛选与全局搜索叠加生效；筛选后行数统计与分页同步；「重置筛选与排序」恢复初始视图。
+5. 分页闭环：每页 50／100／200 切换后页数与当前页内容同步；上一页／下一页／页码跳转可用；大数据量下不一次性渲染全部行。
+6. 示例与互链闭环：2 组示例一键载入后输入、表格、行数统计三者同步；相关工具互链含 CSV⇄JSON 互转；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只查看／排序／筛选，不编辑、不转换、不保存」「分隔符仅支持逗号／分号／制表符」「超大文件建议先在本地拆分」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（解析正例与告警、数字／文本排序与空值置末、全局搜索与列筛选叠加、分页切片与页数、首行表头开关、注册与零网络请求静态检查）。
+9. 页面无报错；移动端表格横向可滚动、不撑破布局；输入框与表格区小屏可操作。
+
+**预计改动文件**：
+- `templates/csv_table_viewer.html`（新增；含 SEO 面板按家族标准＋输入／分隔符选择／首行表头开关／搜索／表格／分页 UI）
+- `static/js/csv_table_viewer.js`（新增；CSV 解析／排序／筛选／分页逻辑；双模式导出供 node 测试）
+- `tests/csv_table_viewer.test.js`（新增；解析、排序、筛选、分页、注册与零网络静态检查）
+- `tools/categories.go`（格式转换品类注册：ID csv_table_viewer、Path /tools/csv-table-viewer、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 70431fa（文本提取器修复）／35e84a6（文本提取器新增）／459d594（RSS／Atom 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **182**；Top3 候选重叠复核（csv_table_viewer／prettier_config／csv_to_markdown 三路零命中实锤；CSV⇄JSON／文本信息提取器／Markdown 语义辨析见上）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 11:36 · 通用调研第一百一十轮）
+
+**交付状态**：10-26 通用调研第一百一十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**文本信息提取器已交付闭环**（35e84a6 新增＋70431fa 修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **182 Path**，ID text_info_extractor、Path /tools/text-info-extractor 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:36 午轮，优先小难度纯前端。
+**本轮三件事**（11:36 全网调研，通用方向）：
+1. 文本提取交付确认：`git log` 头部 70431fa（文本提取器 .txt 导出修复）／35e84a6（文本提取器新增）／459d594（RSS／Atom 新增）；全量 182 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首试未带该环境变量曾报 Host key verification failed，带上后成功并补登 github 主机密钥，与 109 轮同法）。
+2. 新信号扫描：
+   - **kovacore 12 工具榜重现＋dev.to 13 浏览器工具榜／10 工具榜＋beyourtools 10 工具榜**：JSON 格式化／验证、CSV⇄JSON、正则、JWT、Base64、哈希、Bcrypt、UUID、时间戳、URL 解析、HTTP 状态码、图片压缩／转换、二维码、Markdown 预览、CSS／JS 压缩、SQL 格式化 → **全部自有实锤消解**（已注册工具；JSON Diff 对应已注册 json_semantic_diff 结构感知对比；JSON 转 TypeScript 对应已注册 JSON 转 TypeScript／Go 结构体；JSON Schema 样本推断仍为 107 轮观察项，验证器已注册 json_schema_validator；HTML 实体对应已注册 HTML 实体编解码；批量图片缩放仍暂不立，见 105 轮）；
+   - **V2EX 新帖（10-20~10-22）**：PHP2Shell 公开响应头检查 → **不立**（活体域名检测需后端发请求，纯前端 fetch 受 CORS 阻断；粘贴式响应头解析是 103 轮留池 HTTP 响应头分析器的子集，不另立）；网站流量／域名榜单查询 → **不立**（需第三方数据 API 与成本，非纯前端）；原型托管 → **不立**（需后端存储与账号体系）；md2chat Markdown 转聊天图文 → **消解**（已注册 Markdown 聊天图文转换器 md2chat：文字按微信／钉钉／飞书／企微适配＋复杂块 canvas 渲染为图片卡片）；
+   - **dev.to living list 旧源**：文本对齐列→ASCII 表格 → **观察项**（见下；单源弱信号，与 105 轮留池 CSV→Markdown 部分语义相近但输入是空格对齐纯文本而非 CSV，暂不晋 P2）；
+   - **中文导航榜重现**：短链生成／思维导图／问卷等 → **不立**（需后端或非工具）。
+3. 候选池变动：文本信息提取器已交付划出（35e84a6＋70431fa，182 Path）；**本轮新晋 P2 0 个**（全部信号消解、不立或落观察项）；**观察项新增 1 条**（文本对齐列→表格转换器；定性见下）；自有实锤消解 10+ 项；全量 182 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文本提取器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，109 轮 Top3 第二、三顺位依次递进，第三顺位取 105 轮新晋 P2）：
+
+1. **CSV 表格查看器** — P2 留池顺位递进（107 轮新晋；110 轮复核仍未交付；109 轮 Top3 第二顺位递进为首席；痛点：粘贴／上传 CSV 即成可排序／筛选／搜索的表格，不用开 Excel、不用先转格式；纯前端小难度：粘贴／上传 CSV→表格渲染＋排序／筛选／搜索，零上传；`csv_table_viewer` 零命中实锤；建议 ID csv_table_viewer、Path /tools/csv-table-viewer；真限制：只查看／排序／筛选、不做格式转换与文件编辑，超大文件只做前端分页渲染）。
+2. **Prettier 配置生成器** — P2 留池顺位递进（104 轮新晋；110 轮复核仍未交付；109 轮 Top3 第三顺位递进；痛点：手写 .prettierrc 要逐项查选项名与取值，复制旧配置又怕带错；纯前端小难度：可视化勾选常用选项→实时生成 .prettierrc.json＋复制／下载，零上传；`prettier_config` 零命中实锤；建议 ID prettier_config_generator、Path /tools/prettier-config-generator；真限制：常用核心选项子集、不读现有配置）。
+3. **CSV→Markdown 表格生成器** — P2 留池顺位递进（105 轮新晋；110 轮复核仍未交付；痛点：把 Excel／CSV 里的数据贴到 Markdown 文档、README、GitHub issue 里要逐格补 `|` 与对齐线，手写易错列；纯前端小难度：粘贴 CSV→实时生成 GFM 表格＋对齐方式选择＋复制／下载 .md，零上传；`csv_to_markdown` 零命中实锤；建议 ID csv_to_markdown、Path /tools/csv-to-markdown；真限制：只做表格文本生成、不做表格编辑与格式转换回写，合并单元格与多行单元格只做展平提示）。
+
+其余 P2 留池（顺位在 Top3 之后）：Conventional Commit 提交信息生成器（105 轮新晋 P2，留池顺位递进）；Lorem Ipsum 生成器／CSS 缓动曲线生成器（101 轮新晋 P2，留池顺位递进）；CRC 校验和计算器／JSONPath 测试器／TOML 格式化器（102 轮新晋／晋升 P2，留池顺位递进）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮新记观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 109 轮及之前记录。
+
+**通用候选表增量**（第一百一十轮：文本信息提取器已交付划出（35e84a6 新增＋70431fa 修复；ID text_info_extractor、Path /tools/text-info-extractor 已注册；全量 182 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 1 条**（文本对齐列→表格转换器，定性见下）；自有实锤消解 10+ 项（kovacore／dev.to／beyourtools 榜单余项均为已注册工具；V2EX 新帖或需后端、或为留池子集、或已注册 md2chat；中文导航榜重现项需后端或非工具）；全量 182 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文本信息提取器 | 已交付划出（35e84a6 新增＋70431fa 修复；ID text_info_extractor、Path /tools/text-info-extractor 已注册；全量 182 Path；候选池划出） | — | 已实现 |
+| 文本对齐列→表格转换器（观察项） | 不新立（110 轮；dev.to living list 旧源单源；`ascii_table`／`text_table` 0 实锤；空格对齐纯文本列→Markdown／CSV 表格纯前端可做，但与 105 轮留池 CSV→Markdown 语义相近、受众窄（日志／终端输出列转换）、单源弱信号；建议 ID 占位 text_table_converter、Path /tools/text-table-converter） | 小 | 观察 |
+| 自有实锤消解 | 不立（kovacore／dev.to／beyourtools 榜单余项均为已注册工具；V2EX PHP 响应头检查需后端且为留池 HTTP 响应头分析器子集、流量榜单与原型托管需后端、md2chat 已注册；中文导航榜重现项需后端或非工具） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百一十轮——文本信息提取器交付闭环（35e84a6＋70431fa，`/tools/text-info-extractor` 已注册，全量 182 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解；V2EX 新帖信号或需后端、或为留池子集、或已注册）；观察项新增 1 条；仓库 182 注册工具全量核对无重叠（Top3 建议 ID csv_table_viewer / prettier_config_generator / csv_to_markdown；ID＋Path＋关键词用 grep 逐项复核 0 命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 70431fa（文本提取器修复）／35e84a6（文本提取器新增）／459d594（RSS／Atom 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **182**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 09:40 · 产品经理排期轮·独立复核）
 
 **选定：文本信息提取器（text_info_extractor）** — 本轮唯一任务（新工具）：

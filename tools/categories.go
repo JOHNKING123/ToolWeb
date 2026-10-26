@@ -730,6 +730,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "csv_table_viewer",
+					Name:        "CSV 表格查看器",
+					Description: "免费在线 CSV 表格查看器：粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，表头点击排序、全局搜索与每列筛选叠加、分页渲染，纯前端零上传 · CSV table viewer: view, sort, filter and paginate CSV locally, 100% client-side",
+					Path:        "/tools/csv-table-viewer",
+					Icon:        "table_view",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "json_to_types",
 					Name:        "JSON 转 TypeScript / Go 结构体",
 					Description: "粘贴 JSON 自动生成 TS interface 与 Go struct，嵌套拆分、可选字段与联合类型推断",
