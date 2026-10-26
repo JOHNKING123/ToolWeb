@@ -579,6 +579,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "text_info_extractor",
+					Name:        "文本信息提取器",
+					Description: "免费在线文本信息提取器：粘贴聊天记录或服务器日志，一键提取邮箱、手机号、固定电话、链接、日期、时间、IPv4 与金额，自定义正则可增删，按规则分组清单、高亮定位、复制或下载 .txt/.csv，纯前端零上传 · Text info extractor: extract emails, phones, URLs, dates, times, IPv4 and amounts from pasted text locally, 100% client-side",
+					Path:        "/tools/text-info-extractor",
+					Icon:        "search",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "text_privacy_masker",
 					Name:        "文本隐私脱敏",
 					Description: "粘贴文本自动识别手机号/身份证号/银行卡号/邮箱/IPv4/车牌号，高亮标注逐条确认，三种遮盖方式一键脱敏，纯前端本地处理不出浏览器 · Text privacy masker: auto-detect PII (phone/ID/bank card/email/IPv4/plate), per-item confirm, 3 masking modes, 100% client-side",

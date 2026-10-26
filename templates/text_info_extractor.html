@@ -1,0 +1,180 @@
+{{define "text_info_extractor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本信息提取器 - 粘贴文本一键提取邮箱／电话／链接／日期／金额，纯前端</title>
+    <meta name="description" content="免费在线文本信息提取器：粘贴聊天记录或服务器日志，一键提取邮箱、手机号、固定电话、链接、日期、时间、IPv4 与金额，自定义正则可增删，按规则分组清单、高亮定位、复制或下载 .txt/.csv，纯前端零上传。Text info extractor: extract emails, phones, URLs, dates, times, IPv4 and amounts from pasted text locally, 100% client-side.">
+    <meta name="keywords" content="文本提取,邮箱提取,电话提取,链接提取,信息提取器,聊天记录提取,日志提取,text extractor,extract emails,extract urls,regex extractor">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-info-extractor">
+    <meta property="og:title" content="文本信息提取器 - 粘贴文本一键提取邮箱／电话／链接／日期／金额">
+    <meta property="og:description" content="聊天记录、日志、网页粘贴文本里的邮箱、电话、链接、日期、金额一键抠出：内置 8 条规则多选＋自定义正则，分组清单、高亮定位、复制或下载 .txt/.csv，文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/text-info-extractor">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文本信息提取器","description":"粘贴聊天记录或服务器日志，一键提取邮箱、手机号、固定电话、链接、日期、时间、IPv4 与金额，自定义正则可增删，按规则分组清单、高亮定位、复制或下载 .txt/.csv，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/text-info-extractor","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tie-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .tie-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .tie-warn b{display:block;margin-bottom:.2rem}
+        .tie-warn p{margin:.3rem 0 0}
+        .tie-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .tie-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .tie-input{width:100%;min-width:0;min-height:180px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .tie-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .tie-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .tie-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .tie-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .tie-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .tie-btn-sm{padding:.3rem .6rem;font-size:.82rem}
+        .tie-field{display:flex;flex-direction:column;gap:.3rem;font-size:.92rem;color:#374151;flex:1;min-width:200px}
+        .tie-text{width:100%;min-width:0;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box}
+        .tie-text:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .tie-rule{display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-start;padding:.55rem 0;border-bottom:1px solid #f3f4f6;font-size:.92rem;color:#374151}
+        .tie-rule:last-child{border-bottom:none}
+        .tie-rule-name{border:none;background:none;padding:0;font-size:.92rem;font-weight:600;color:#2563eb;cursor:pointer;font-family:inherit;text-decoration:underline}
+        .tie-rule-desc{color:#6b7280;line-height:1.7}
+        .tie-custom{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;padding:.5rem 0;border-bottom:1px solid #f3f4f6}
+        .tie-custom code{background:#f3f4f6;border-radius:.4rem;padding:.2rem .5rem;font-size:.88rem;word-break:break-all}
+        .tie-errors{display:none;border:2px solid #ef4444;background:#fef2f2;border-radius:.6rem;padding:.7rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7;margin-top:.9rem;white-space:pre-line}
+        .tie-group{border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;margin-bottom:.9rem;background:#fbfbfd}
+        .tie-group-head{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.5rem}
+        .tie-group-head span{color:#6b7280;font-size:.88rem;margin-right:auto}
+        .tie-items{margin:.3rem 0 0;padding-left:1.3rem;color:#111827;line-height:1.9;font-size:.92rem;word-break:break-all}
+        .tie-count{color:#2563eb;font-weight:600}
+        .tie-highlight{white-space:pre-wrap;word-break:break-all;border:1px solid #e5e7eb;border-radius:.55rem;padding:.9rem;background:#f9fafb;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.9;min-height:120px}
+        .tie-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .tie-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .tie-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .tie-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .tie-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .tie-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .tie-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .tie-note b{color:#374151}
+        .tie-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;display:none}
+        .tie-check{font-size:.92rem;color:#374151;cursor:pointer}
+        @media (max-width:640px){
+            .tie-panel{padding:1rem}
+            .tie-field{min-width:100%}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>文本信息提取器</h1>
+            <p>粘贴一段杂文本，邮箱、电话、链接、日期、金额一键抠出分组清单</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tie-privacy">
+                <div><b>文本不出浏览器：</b>全部提取都在本机完成，本页面不发起任何网络请求、不上传任何输入（零 fetch / XHR），粘贴的文本只留在当前页面。</div>
+            </div>
+            <div class="tie-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 正则近似提取、命中≠真实有效：邮箱只验格式不验域名是否真实存在，手机号只验号段格式不验归属运营商，链接不验是否可打开；命中只代表格式像，不代表真实有效。</p>
+                <p>2. 不承诺 100% 召回：非常规写法可能漏提，例如空格分隔的手机号、图片里的文字、无协议的裸域名；漏提时请用自定义正则补一条规则再提一次。</p>
+                <p>3. 不提取身份证号、银行卡号：内置规则不含身份证号、银行卡号等敏感证件字段，自定义正则也不做此类预设引导；只处理你主动粘贴的文本，含他人隐私的文本请勿粘贴。</p>
+                <p>4. 清单与高亮口径不同：清单里各规则独立列出（同一值可出现在多组）；高亮里同一字符区间只归属顺序在先的规则（例如链接里的日期只高亮为链接），两处计数可能不一致是正常现象。</p>
+                <p>5. 不做线上验证：不发请求验邮箱、验链接、验电话，零 fetch／XHR、零 CDN；提取结果请自行核对后再使用。</p>
+            </div>
+            <div class="tie-panel">
+                <h3>输入文本（粘贴、读取本地 .txt，或载入示例）</h3>
+                <textarea class="tie-input" id="tie-input" placeholder="请粘贴聊天记录、服务器日志或网页文本，例如：联系我 wang@example.com，手机 13812345678，详情见 https://example.com/order/2026-10-26"></textarea>
+                <div class="tie-row">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（载入后仍可编辑再提）：</span>
+                    <button class="tie-btn" type="button" data-example="0">聊天记录</button>
+                    <button class="tie-btn" type="button" data-example="1">服务器日志</button>
+                    <button class="tie-btn" type="button" id="tie-clear">清空输入</button>
+                    <label class="tie-btn" style="cursor:pointer;">读取本地 .txt<input type="file" id="tie-file" accept=".txt,text/plain" hidden></label>
+                </div>
+                <p class="tie-hint">本地 .txt 只用 FileReader 在本机读取，不上传。输入为空时不输出误导性结果。</p>
+            </div>
+            <div class="tie-panel">
+                <h3>内置提取规则（多选，默认全开；开关实时影响清单与高亮）</h3>
+                <div id="tie-rules"></div>
+                <div class="tie-row">
+                    <label class="tie-check"><input type="checkbox" id="tie-dedupe" checked> 去重：同组相同值只列一次并附出现次数（关闭则按出现顺序全列）</label>
+                    <button class="tie-btn tie-btn-sm" type="button" id="tie-clear-filter">清除筛选</button>
+                </div>
+                <p class="tie-hint" id="tie-filter-note">点击任意规则名可只看该组清单与高亮，再点一次恢复全部。</p>
+            </div>
+            <div class="tie-panel">
+                <h3>自定义正则（可增删，与内置规则同等参与清单、高亮与导出）</h3>
+                <div class="tie-row" style="margin-top:0;">
+                    <label class="tie-field"><span>规则名称 *</span><input class="tie-text" id="tie-custom-name" type="text" placeholder="例如：订单号"></label>
+                    <label class="tie-field"><span>正则表达式 *（不含分隔符，默认全局匹配）</span><input class="tie-text" id="tie-custom-pattern" type="text" placeholder="例如：订单号：[A-Z0-9]+"></label>
+                    <button class="tie-btn tie-btn-primary" type="button" id="tie-custom-add">＋ 添加规则</button>
+                </div>
+                <div class="tie-errors" id="tie-custom-error"></div>
+                <div id="tie-custom-list" style="margin-top:.6rem;"></div>
+                <p class="tie-hint">表达式非法时会中文定位报错，且不中断内置规则的提取；删除规则后清单与高亮同步消失。不提供身份证号、银行卡号等敏感字段的预设写法。</p>
+            </div>
+            <div class="tie-panel">
+                <h3>提取清单（按规则分组）</h3>
+                <div id="tie-list"></div>
+                <div class="tie-row">
+                    <button class="tie-btn tie-btn-primary" type="button" id="tie-copy-all">复制全部清单</button>
+                    <button class="tie-btn" type="button" id="tie-download-txt">下载清单 .txt（按规则分组）</button>
+                    <button class="tie-btn" type="button" id="tie-download-csv">下载清单 .csv（规则、值、出现次数三列）</button>
+                </div>
+                <p class="tie-hint">复制失败时会有明确降级提示，请按提示手动选中清单内容复制。下载内容与页面清单一致（去重与筛选口径相同）。</p>
+            </div>
+            <div class="tie-panel">
+                <h3>高亮视图（原文定位，含 &lt;script&gt; 的输入只显示为文本）</h3>
+                <div class="tie-highlight" id="tie-highlight">暂无高亮：请先输入文本。</div>
+                <p class="tie-hint">高亮先对原文做 HTML 转义再插标记，输入里的 HTML 标签不会被执行；同一区间只归属顺序在先的规则，鼠标悬停标记可看到规则名。</p>
+            </div>
+            <div class="tie-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先粘贴文本：聊天记录、服务器日志、网页文本均可；或点「读取本地 .txt」在本机读文件（不上传）；输入为空时不输出结果。</li>
+                    <li>再选规则：8 条内置规则默认全开，逐项可开关，开关实时影响清单与高亮；每条规则附中文说明与正例，点规则名可只看该组。</li>
+                    <li>自定义正则：名称与表达式必填，不含分隔符、默认全局匹配；非法时中文报错且内置规则照常工作；删除后清单与高亮同步消失。</li>
+                    <li>去重开关：默认开启，同组相同值只列一次并附出现次数（×N）；关闭后按出现顺序全列，导出与复制口径与页面一致。</li>
+                    <li>清单与高亮：清单按规则分组，每组含计数与命中值；高亮对原文转义后按规则颜色标注，同一区间只归属顺序在先的规则（链接里的日期只高亮为链接）。</li>
+                    <li>导出：按组复制、全部复制、下载 .txt（按规则分组）与 .csv（规则、值、出现次数三列）；复制失败时按降级提示手动选中复制。</li>
+                    <li>示例：点「聊天记录」或「服务器日志」一键载入，载入后输入、清单、高亮三者同步，仍可再改再提。</li>
+                    <li>互链：单条正则要调试去正则表达式测试；提取前后的文本要比对去文本比较；本工具不做 CSV⇄JSON 格式转换，不与之互链。</li>
+                </ol>
+            </div>
+            <div class="tie-panel">
+                <h3>常见问题</h3>
+                <dl class="tie-faq">
+                    <dt>提取到的邮箱一定真实存在吗？</dt>
+                    <dd>不一定。正则只验格式不验域名是否真实存在，命中只代表格式像；是否真实存在、能否联系上请自行核对，本工具不发请求验证。</dd>
+                    <dt>为什么有些号码没提出来？</dt>
+                    <dd>因为不承诺 100% 召回：空格分隔的手机号、图片里的文字、无协议的裸域名等非常规写法可能漏提；请用自定义正则补一条规则再提一次。</dd>
+                    <dt>能提取身份证号、银行卡号吗？</dt>
+                    <dd>不能。内置规则不含此类敏感证件字段，自定义正则也不做预设引导；含他人隐私的文本请勿粘贴。</dd>
+                    <dt>为什么清单里有、但高亮里没标出来？</dt>
+                    <dd>这是清单与高亮的口径差异：清单里各规则独立列出，高亮里同一区间只归属顺序在先的规则（例如链接里的日期只高亮为链接）；计数不一致是正常现象。</dd>
+                    <dt>我的文本会被上传吗？</dt>
+                    <dd>不会。全部提取在浏览器本地完成，零网络请求，本地 .txt 也只用 FileReader 在本机读取。</dd>
+                    <dt>复制失败怎么办？</dt>
+                    <dd>页面会给出明确降级提示：请手动选中清单内容按 Ctrl+C 复制；或改用下载 .txt／.csv，内容与页面清单一致。</dd>
+                </dl>
+            </div>
+            <div class="tie-panel">
+                <h3>相关工具</h3>
+                <div class="tie-links">
+                    <a href="/tools/regex-tester">正则表达式测试（单条正则要调试去这里）</a>
+                    <a href="/tools/text-diff">文本比较（提取前后的文本比对去这里）</a>
+                </div>
+            </div>
+            <div class="tie-note">
+                <b>实现说明：</b>8 条内置规则、自定义正则校验、去重、清单／CSV 导出拼装、高亮转义与重叠归属均为纯函数（手写正则与区间归属，不用提取库，浏览器与 node 测试共用同一文件）；本页 JS 源码无任何网络请求调用；高亮一律先转义原文再插 mark。
+            </div>
+        </div>
+    </div>
+    <div class="tie-toast" id="tie-toast"></div>
+    <script src="/tools/static/js/text_info_extractor.js?v=1"></script>
+</body>
+</html>
+{{end}}
