@@ -1493,6 +1493,15 @@ func GetCategories() []Category {
 					Category:    "加密解密",
 				},
 				{
+					ID:          "totp_generator",
+					Name:        "TOTP 一次性密码生成器",
+					Description: "粘贴 Base32 密钥，按 RFC 6238（HMAC-SHA1、30 秒周期）在浏览器本地算出当前 6/8 位动态码，附剩余有效秒倒计时与一键复制，纯前端零上传、不保存密钥 · TOTP generator: compute current time-based one-time password from a Base32 secret in your browser, RFC 6238 HMAC-SHA1 30s period, 100% client-side",
+					Path:        "/tools/totp-generator",
+					Icon:        "key",
+					New:         true,
+					Category:    "加密解密",
+				},
+				{
 					ID:          "file_checksum",
 					Name:        "文件校验和计算器",
 					Description: "拖拽多文件批量计算 SHA-256/SHA-512/SHA-1 校验和，4MB 分片流式＋Web Worker 本地增量计算，进度条实时显示，官方哈希一键比对，纯前端零上传 · File checksum: batch SHA-256/SHA-512/SHA-1 hashing of local files, chunked streaming in a Web Worker, official hash one-click compare, 100% client-side",

@@ -1,3 +1,80 @@
+## 今日任务（2026-10-27 05:38 · 产品经理排期轮）
+
+**选定：TOTP 一次性密码生成器（totp_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（119 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。03:38 PM 轮选 TOML 格式化器时已明言：TOTP 一次性密码生成器仅因顺位在 TOML 格式化器之后而后置、「下轮首席递进」；TOML 格式化器已交付划出（c7f6f48 新增＋552f5ee 压缩模式修复，全量 191 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——HTTP 响应头分析器与 JSON 字符串转义器虽同为小难度纯前端，均不插队。
+- **未选**：HTTP 响应头分析器（103 轮新晋 P2，119 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 TOTP 一次性密码生成器之后而后置，下轮首席递进；真限制只解析用户粘贴的文本、不主动抓取任何 URL）；JSON 字符串转义器（103 轮新晋 P2，119 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **191 Path**；`git log` 头部 552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）／ef86f70（JSONPath 测试器新增）。逐项复核：`totp_generator`、`totp-generator` 在 tools/categories.go、templates、static/js、tests 四路均为 0 命中；小写 `totp` 全库仅出现在 tests/jsonpath_tester.test.js 第 146 行与 tests/toml_formatter.test.js 第 125 行两条互链否定断言（「互链不含未交付 TOML/TOTP」），非独立工具；`http_header_analyzer`／`http-header-analyzer`、`json_string_escaper`／`json-string-escaper` 全库 0 命中；`authenticator`／`hotp`／`one-time` 全库 0 命中；templates／static/js／tests 下无 otp／totp／auth 相关文件。自有近邻辨析：① 已注册的随机密码生成器（ID password、Path /tools/password-generator、加密解密品类）是「生成一个新密码」，本工具是「对已有账号的 Base32 密钥算当前动态码」，一个生成、一个算码，不重叠；② 已注册的 Base64／哈希／AES／RSA 等加密解密工具均不产生时间步进的一次性码，算法（RFC 6238 计时＋动态截断）与输出物（6/8 位限时码＋剩余秒倒计时）均不同，不重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——配 TOTP 双因素时想离线验算动态码、或在不方便掏手机时快速核对当前码，粘贴 Base32 密钥→本地算出当前 6 位码＋剩余有效秒倒计时＋复制恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，Base32 解码、计数器、动态截断均有 RFC 6238 公开向量可断言，倒计时公式可单测；④ **受众与站内互补**——与随机密码生成器同属加密解密品类，用户生成密码、配双因素是同一条安全操作链，成组发现。
+- **品类归位**：注册到「加密解密」品类（与随机密码生成器、MD5／SHA／AES／RSA 同品类，便于安全操作用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做本地算码，不存密钥、不做账号绑定与扫码**——密钥只留当前会话内存，绝不写 localStorage／sessionStorage／cookie，刷新页面即失，页面须明示；② **仅支持 HMAC-SHA1 与 30 秒周期**——不做 SHA256／SHA512 算法选择、不做自定义周期（绝大多数服务默认即此组合），页面须明示；③ **设备时间不准则码不对**——本工具按本机时钟算码，码与手机对不上时先校准设备时间，不承诺服务端校验；④ **示例密钥是公开测试向量**——页面内置示例密钥为 RFC 6238 公开测试向量，不对应任何真实账号，须明示勿当作真实密钥使用；⑤ **零上传**——密钥与动态码全部在浏览器内计算，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：Base32 密钥输入框（password 型＋显示／隐藏切换；粘贴时自动去空格与连字符、转大写；粘贴 `otpauth://totp/...?secret=...` 链接时自动提取 secret 参数并提示「已从链接中提取密钥」）；位数 6／8 位二选一（默认 6 位）；周期固定 30 秒（页面明示，不做自定义）；「载入示例」「清空」两个操作；「清除密钥」一键清空输入框与内存、不残留旧码。
+- 算法（RFC 6238，HMAC-SHA1）：Base32 解码（RFC 4648，大写 A-Z2-7，填充 `=` 可有可无，解码前去空格与连字符）；计数器＝floor(当前 Unix 秒／30)；HMAC-SHA1 后动态截断取 31 位，再对 10^位数取模，不足位数前补 0。
+- 生成：输入或位数任一变化即实时重算；每秒刷新：当前码大字展示＋剩余有效秒倒计时（数字＋进度条，剩余秒＝30－(当前 Unix 秒 mod 30)）；周期切换瞬间码同步切换，不出现旧码残留；另显本机当前时间（用于时间不对时自查）。
+- 示例数据（页面内置，与验收向量同一份）：密钥 `GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ`（RFC 6238 公开测试向量，即 ASCII `12345678901234567890` 的 Base32 形式；页面明示仅供演示核对算法）。
+- 校验：空输入时提示「请输入 Base32 密钥」；非法字符（如 0／1／8 等 Base32 字符集外字符）中文报错并指明首个非法字符及其位置；解码结果为空时中文报错；三种状态文案区分，不混用；所有提示均中文。
+- 操作：一键复制当前码；复制失败有明确降级提示（手动复制指引）；与随机密码生成器（/tools/password-generator）互链（文案区分生成与算码：「要生成一个新密码去随机密码生成器，本工具只算已有账号的动态码」）；不与未交付的 HTTP 响应头分析器、JSON 字符串转义器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（浏览器用 WebCrypto SubtleCrypto 做 HMAC-SHA1；JS 逻辑双模式导出供 node 测试——浏览器用 window 挂载、node 用 module.exports，Base32 解码、计数器、动态截断、倒计时公式、RFC 向量均可 node 断言，HMAC 步骤以可注入适配方式处理，node 侧用 crypto 模块）；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR、无 localStorage／sessionStorage 写入。
+- 注册：ID `totp_generator`、Name「TOTP 一次性密码生成器」、Path `/tools/totp-generator`、Category 加密解密、Icon 建议 key（图标库无此名则用 lock 兜底）、New: true；中英文描述＋SEO keywords（TOTP、一次性密码、动态验证码、双因素认证、Google Authenticator、TOTP 生成器、TOTP 在线计算）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/totp-generator，相关工具互链随机密码生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `totp_generator`、Path `/tools/totp-generator` 注册完整（Category 加密解密），注册总数 191→192 Path。
+2. 生成闭环：密钥或位数改动后当前码同步变化；空输入时有中文提示，不出现空白误导。
+3. RFC 6238 标准向量闭环（以规格示例密钥为准，8 位／6 位双位数）：T=59 时 94287082／287082；T=1111111109 时 07081804／081804；T=1111111111 时 14050471／050471；T=1234567890 时 89005924／005924；T=2000000000 时 69279037／279037；T=20000000000 时 65353130／353130；任一不符即不通过。
+4. 倒计时闭环：剩余秒＝30－(当前 Unix 秒 mod 30)，每秒递减，归零时码同步切换为下一周期码；进度条与数字一致。
+5. 校验与输入便利闭环：非法字符（如含 `1`）报错并指明首个非法字符及其位置；小写密钥、带空格／连字符的密钥、带填充 `=` 的密钥均能正常解码算码；粘贴 otpauth 链接能提取 secret 并提示；「清除密钥」后码区回到空状态、不残留旧码。
+6. 操作与互链闭环：复制内容与当前码一致；复制失败有降级提示；相关工具互链含随机密码生成器；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只做本地算码、不存密钥、不做账号绑定与扫码」「仅支持 HMAC-SHA1 与 30 秒周期」「设备时间不准则码不对」文案；零 fetch／XHR、零 CDN、零 localStorage／sessionStorage 写入（静态检查）。
+8. node 测试 25+ 断言全过（RFC 向量 6 组×双位数、Base32 解码大小写／空格／连字符／填充、非法字符定位、计数器与动态截断、倒计时公式、otpauth 提取、注册与零网络／零存储静态检查）。
+9. 页面无报错；移动端大字码、倒计时与复制按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/totp_generator.html`（新增；含 SEO 面板按家族标准＋密钥输入／位数选择／大字当前码／倒计时进度条／复制清除 UI）
+- `static/js/totp_generator.js`（新增；Base32 解码、RFC 6238 算码、倒计时刷新、复制清除逻辑；双模式导出供 node 测试）
+- `tests/totp_generator.test.js`（新增；RFC 向量、Base32 解码、非法字符定位、倒计时公式、otpauth 提取、注册与零网络／零存储静态检查）
+- `tools/categories.go`（加密解密品类注册：ID totp_generator、Path /tools/totp-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）／ef86f70（JSONPath 测试器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **191**；Top3 候选重叠复核（totp_generator／totp-generator／http_header_analyzer／json_string_escaper 全库 0 命中；`totp` 仅两条测试文件互链否定断言；近邻随机密码生成器／加密解密工具语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 05:36 · 通用调研第一百一十九轮）
+
+**交付状态**：10-27 通用调研第一百一十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**TOML 格式化器已交付闭环**（c7f6f48 新增＋552f5ee 压缩模式数组注释残留修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **191 Path**，ID toml_formatter、Path /tools/toml-formatter 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:36 夜轮，优先小难度纯前端。
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. TOML 格式化器交付确认：`git log` 头部 552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）／ef86f70（JSONPath 测试器新增）；全量 191 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **Kova Core 12 工具榜／DevToolKit／CodeUtil／Openware／PayloadTools／FormatCraft／DevToolKit 榜单**：JSON 格式化／验证、CSV⇌JSON、正则、JWT、Base64、哈希、UUID、时间戳、URL 解析、HTTP 状态码、密码生成、色板、二维码、Markdown 预览、文本对比、SQL／XML 格式化 → **全部自有实锤消解**（已注册工具；JWT 签名生成器／验证器 ID jwt_signer_verifier 已覆盖 JWT 编码签发子项；User-Agent 解析器 ID user_agent_parser 已注册；端口扫描 ID port-scan 是「检测主机端口开放状态」，与下述端口速查语义不同，见观察项）；
+   - **FormatCraft／jwtsecrets 的 JSON Escape（JSON 字符串转义）**：→ **复现旧留池项、不新立**（即 103 轮新晋 P2 JSON 字符串转义器，本轮仅复现，顺位递进见 Top3 第三顺位）；
+   - **HN Show HN（ToolMateX／PDFClear／Image0.dev／ilovellm／Apex Agent／Testronaut／Flopper）**：ToolMateX 格式化／转换／验证／图片／密码／二维码全系 → **自有实锤消解**；PDFClear（浏览器 PDF＋本地 AI 语义搜索／摘要）→ **不立**（需 WASM＋Transformers 本地模型加载成本与模型缓存，非一轮纯前端单页；其合并／拆分／压缩纯前端子项站内均已有对应工具）；Image0.dev（批量压缩／尺寸／格式转换／EXIF 去除）→ **自有实锤消解**（图片压缩／尺寸／格式转换与 EXIF 处理站内均有）；ilovellm／Apex Agent／Testronaut → **不立**（浏览器内 LLM 游乐场／MCP 浏览器控制／AI 测试框架，均需模型或外部服务，非单页工具）；Flopper 德州扑克模拟 → **不立**（游戏模拟器，非工具站品类）；
+   - **FreeToolset 榜单 Port Lookup（端口号速查）**：→ **观察项新增 1 条**（见下；端口号→服务名／协议静态速查，与已注册的「端口扫描」检测开放状态语义不同，不重叠；单榜单信号、未见高频痛点佐证，故只进观察项、不晋升 P2）。
+3. 候选池变动：TOML 格式化器已交付划出（c7f6f48＋552f5ee，191 Path）；**本轮新晋 P2 0 个**（榜单信号全部自有实锤消解、复现旧留池项或不立）；**观察项新增 1 条**（常用端口号速查）；自有实锤消解 10+ 项；全量 191 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；TOML 格式化器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，118 轮 Top3 第二、三顺位依次递进，第三顺位取 103 轮晋升 P2 对中顺位居后的首项）：
+
+1. **TOTP 一次性密码生成器** — P2 留池顺位递进（103 轮新晋 P2；119 轮复核仍未交付；118 轮 Top3 第二顺位递进为首席；痛点：配 TOTP 双因素时想离线验算动态码、或在不方便掏手机时快速核对当前码；纯前端小难度：粘贴 Base32 密钥→按 TOTP 算法本地算出当前 6 位码＋剩余有效秒倒计时＋复制，零上传、不存密钥；`totp` 全库仅出现在 JSONPath／TOML 测试文件的互链否定断言中，非独立工具，零命中实锤；建议 ID totp_generator、Path /tools/totp-generator；真限制：只做本地算码、不存密钥、不做账号绑定与扫码，密钥只留当前会话内存）。
+2. **HTTP 响应头分析器** — P2 留池顺位递进（103 轮新晋 P2，与 TOTP 同批、顺位居后；119 轮复核仍未交付；118 轮 Top3 第三顺位递进；痛点：排障时拿到一堆原始响应头，想逐项看含义、安全头缺失与否；纯前端小难度：粘贴原始响应头文本→逐项解析＋中文释义＋安全头缺失提示＋复制，零上传；`http_header_analyzer`／`http-header-analyzer` 全库 0 命中实锤；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只解析用户粘贴的文本、不主动抓取任何 URL——远程检查需后端与跨域，不属本工具）。
+3. **JSON 字符串转义器** — P2 留池顺位递进（103 轮新晋 P2，与 HTTP 响应头分析器同批、顺位居后；119 轮复核仍未交付；本轮 FormatCraft／jwtsecrets 榜单复现信号；痛点：把一段含引号换行的文本塞进 JSON 字符串或代码里时，转义手写易错、反向还原也麻烦；纯前端小难度：粘贴文本→JSON 转义／反转义双向＋复制，零上传；`json_string_escaper`／`json_escape` 全库 0 命中实锤；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验——格式化走 JSON 解析器）。
+
+其余 P2 留池（顺位在 Top3 之后）：词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 118 轮及之前记录。
+
+**通用候选表增量**（第一百一十九轮：TOML 格式化器已交付划出（c7f6f48＋552f5ee 新增；ID toml_formatter、Path /tools/toml-formatter 已注册；全量 191 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 1 条**（常用端口号速查）；自有实锤消解 10+ 项（Kova／DevToolKit／CodeUtil／Openware／PayloadTools／FormatCraft／ToolMateX／Image0 榜单余项均为已注册工具，含 JWT 签发器与 User-Agent 解析器；PDFClear 本地 AI、ilovellm、Apex、Testronaut、Flopper 均为平台／需模型／游戏类，不立；JSON 转义仅复现 103 轮留池项）；全量 191 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| TOML 格式化器 | 已交付划出（c7f6f48 新增＋552f5ee 修复；ID toml_formatter、Path /tools/toml-formatter 已注册；全量 191 Path；候选池划出） | — | 已实现 |
+| 常用端口号速查 | 查某个端口号对应什么服务／协议时要翻 IANA 表或搜索引擎，输入端口号→服务名＋协议＋常见用途静态速查即可，零上传 | 小 | 观察项 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具；PDFClear 本地 AI、ilovellm、Apex、Testronaut、Flopper 为平台／需模型／游戏类；JSON 转义仅复现 103 轮留池项） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百一十九轮——TOML 格式化器交付闭环（c7f6f48＋552f5ee，`/tools/toml-formatter` 已注册，全量 191 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解、复现旧留池项或不立）；观察项新增 1 条（常用端口号速查）；仓库 191 注册工具全量核对无重叠（Top3 建议 ID totp_generator / http_header_analyzer / json_string_escaper；`totp` 仅测试文件互链否定断言，`http_header_analyzer` 与 `json_string_escaper` 全库零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）／ef86f70（JSONPath 测试器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **191**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 03:38 · 产品经理排期轮）
 
 **选定：TOML 格式化器（toml_formatter）** — 本轮唯一任务（新工具）：
