@@ -1,0 +1,149 @@
+{{define "http_header_analyzer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP 响应头分析器 - 粘贴响应头逐项解析与安全头缺失判定 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 HTTP 响应头分析器：粘贴从浏览器开发者工具或 curl 复制的原始响应头，自动识别状态行、逐项解析头名与值、中文释义与分类，并判定 HSTS、CSP、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy 六项安全头 Present/Missing，一键复制解析报告。纯前端本地解析零上传。HTTP response header analyzer in Chinese: paste raw headers, parse each header, explain in Chinese, check six security headers, 100% client-side.">
+    <meta name="keywords" content="HTTP 响应头,响应头分析,安全头,Security Headers,HSTS,CSP,HTTP 头解析,响应头解析器,http header analyzer,Strict-Transport-Security,X-Frame-Options,Referrer-Policy,Permissions-Policy">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/http-header-analyzer">
+    <meta property="og:title" content="HTTP 响应头分析器 - 粘贴响应头逐项解析与安全头缺失判定">
+    <meta property="og:description" content="粘贴原始响应头，状态行识别、逐项中文释义与分类、六项安全头 Present/Missing 判定、一键复制解析报告。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/http-header-analyzer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HTTP 响应头分析器","description":"粘贴原始 HTTP 响应头文本，状态行识别、逐项解析头名与值、中文释义与分类、六项安全头 Present/Missing 判定、一键复制解析报告；纯前端本地解析，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/http-header-analyzer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hha-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .hha-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .hha-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .hha-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .hha-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .hha-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .hha-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        #hha-input{width:100%;box-sizing:border-box;min-height:220px;padding:.8rem 1rem;font-size:.95rem;line-height:1.7;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #d1d5db;border-radius:.6rem;
+            outline:none;resize:vertical;overflow-wrap:anywhere}
+        #hha-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .hha-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .hha-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .hha-btn:hover{border-color:#2563eb;color:#2563eb}
+        .hha-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .hha-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .hha-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .hha-msg-ok{color:#065f46}
+        .hha-msg-error{color:#b91c1c}
+        .hha-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .hha-status-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.3rem;font-weight:800;color:#111827}
+        .hha-status-name{font-weight:700;color:#1d4ed8}
+        .hha-table{width:100%;border-collapse:collapse;font-size:.92rem;line-height:1.8;overflow-wrap:anywhere}
+        .hha-table th,.hha-table td{border:1px solid #e5e7eb;padding:.55rem .7rem;text-align:left;vertical-align:top}
+        .hha-table th{background:#f9fafb;color:#374151;white-space:nowrap}
+        .hha-mono{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+        .hha-empty{color:#b91c1c;font-weight:700}
+        .hha-badge{display:inline-block;font-size:.78rem;font-weight:700;border-radius:999px;padding:.15rem .65rem;color:#fff}
+        .hha-badge-ok{background:#10b981}
+        .hha-badge-miss{background:#ef4444}
+        .hha-summary{font-weight:700;color:#111827;margin:.8rem 0 0}
+        .hha-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .hha-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .hha-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .hha-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .hha-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .hha-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .hha-btn-row .hha-btn{flex:1;justify-content:center}
+            .hha-table{display:block;overflow-x:auto}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">http</i> HTTP 响应头分析器</h1>
+            <p>从浏览器开发者工具或 curl 拿到一堆原始响应头？粘贴进来：状态行自动识别，每条头逐项解析出中文释义与分类，HSTS、CSP 等六项安全头逐项判定 Present / Missing，一键复制成解析报告。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="hha-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>粘贴的响应头全部在浏览器内解析，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="hha-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>真限制说明：</b>本工具只解析用户粘贴的文本、不主动抓取任何 URL；不做安全评分、不承诺合规结论，只给 Present / Missing 判定与中文释义；释义仅供参考、规范语义以 RFC/MDN 为准；非标准头只原样列出。</div>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">content_paste</i> 粘贴原始响应头</h3>
+                <textarea id="hha-input" placeholder="粘贴从开发者工具或 curl 复制的响应头，例如：&#10;HTTP/1.1 200 OK&#10;Content-Type: text/html; charset=utf-8&#10;Cache-Control: max-age=3600"></textarea>
+                <div class="hha-btn-row">
+                    <button type="button" class="hha-btn hha-btn-primary" id="hha-copy"><i class="material-icons">content_copy</i> 复制解析报告</button>
+                    <button type="button" class="hha-btn" id="hha-sample"><i class="material-icons">auto_fix_high</i> 载入示例</button>
+                    <button type="button" class="hha-btn" id="hha-clear"><i class="material-icons">backspace</i> 清空</button>
+                </div>
+                <div class="hha-msg" id="hha-msg">请粘贴响应头文本</div>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">tag</i> 状态行</h3>
+                <div id="hha-status"><span class="hha-muted">粘贴含状态行的整段响应头后，这里会展示协议版本与状态码。</span></div>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">list_alt</i> 逐项解析</h3>
+                <div id="hha-table"><span class="hha-muted">暂无解析结果。</span></div>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">shield</i> 安全头判定（六项）</h3>
+                <div id="hha-security"><span class="hha-muted">暂无安全头判定。</span></div>
+                <p class="hha-tip" style="margin-top:.8rem;">本区只做 Present / Missing 判定，不打安全分数、不下「安全 / 不安全」结论；是否合规请以你方的安全基线与规范原文为准。</p>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="hha-tip">
+                    <b>怎么粘：</b>在浏览器开发者工具 Network 面板点一条请求、复制响应头，或用 <code>curl -i</code> 拿到响应头，整段粘贴进来；含状态行 <code>HTTP/1.1 200 OK</code> 的整段也能直接粘，状态行会单独识别、不当作头。<br>
+                    <b>解析规则：</b>头名大小写不敏感，统一归一化为规范大小写（如 <code>content-type</code> → <code>Content-Type</code>）；以空格或制表符开头的行是折行续行，会并入上一头的值；多个 <code>Set-Cookie</code> 分别列出、不合并丢弃；没有冒号的行会报错并指明行号；值为空的头照常列出并标注「值为空」；空行自动忽略。<br>
+                    <b>分类：</b>每条头归入安全、缓存、内容、其他四类之一，便于排障时按关注面扫读。<br>
+                    <b>复制报告：</b>点「复制解析报告」得到纯文本报告：状态行、逐项「头名: 值 —— 中文释义」、六项安全头判定汇总与「缺失 N 项」；复制失败时会提示手动复制指引。<br>
+                    <b>隐私：</b>全部解析在浏览器本地完成，不发起网络请求，不上传粘贴内容。
+                </div>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="hha-faq">
+                    <dt>能直接输入网址让工具去抓响应头吗？</dt>
+                    <dd>不能。本工具只解析用户粘贴的文本、不主动抓取任何 URL——远程抓取需要后端与跨域支持，不属本工具；要抓包请用浏览器开发者工具或 <code>curl -i 网址</code>，再把结果粘贴进来。</dd>
+                    <dt>安全头判定 Missing 是不是代表网站不安全？</dt>
+                    <dd>不是。本工具不做安全评分、不承诺合规结论：Missing 只表示「未在粘贴文本中出现」这一项，是否合规要结合你的安全基线、部署架构（如 CDN 是否剥离头）综合判断。</dd>
+                    <dt>这里的中文释义权威吗？</dt>
+                    <dd>中文释义仅供参考，规范语义以 RFC/MDN 为准。释义为自有改写、便于快速理解，遇到语义争议请查阅 RFC 规范文档或 MDN 英文原文。</dd>
+                    <dt>为什么有的头没有中文释义？</dt>
+                    <dd>非标准／自定义头（尤其是 <code>X-</code> 开头的自定义头）只原样列出、不给标准释义；较少见的标准头若未收录，也会原样列出并提示以 RFC/MDN 为准。</dd>
+                    <dt>重复的 Set-Cookie 为什么不合并？</dt>
+                    <dd>因为每条 <code>Set-Cookie</code> 都是独立的一条指令，合并会丢信息、改语义；本工具按原样分别列出，复制报告里也是逐条出现。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。解析、释义、判定、报告生成全部在浏览器本地完成，JS 不含 fetch/XHR 调用，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="hha-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="hha-related">
+                    <a href="/tools/http-status-reference" class="btn btn-secondary" style="font-size:.9rem;">HTTP 状态码速查（要查单个状态码含义去 HTTP 状态码速查；本工具是解析一整组响应头）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/http_header_analyzer.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -211,6 +211,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "http_header_analyzer",
+					Name:        "HTTP 响应头分析器",
+					Description: "粘贴原始响应头文本逐项解析：状态行识别、头名归一化、折行合并、重复头分别列出，每条头中文释义与安全/缓存/内容/其他分类，HSTS、CSP、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy 六项安全头 Present/Missing 判定与缺失汇总，一键复制解析报告，只解析粘贴文本、不主动抓取任何 URL、不做安全评分，释义仅供参考、规范语义以 RFC/MDN 为准，纯前端零上传 · HTTP response header analyzer in Chinese: paste raw headers, parse each header, explain in Chinese, check six security headers, 100% client-side",
+					Path:        "/tools/http-header-analyzer",
+					Icon:        "http",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prettier_config_generator",
 					Name:        "Prettier 配置生成器",
 					Description: "可视化勾选/填写 14 项 Prettier 3 口径核心选项（printWidth、tabWidth、semi、singleQuote、trailingComma 等），3 组一键预设，实时生成标准 JSON（2 空格缩进），一键复制、下载 .prettierrc.json，数值非法中文提示，纯前端零上传 · Prettier config generator: build .prettierrc.json from 14 core options, presets, copy & download, 100% client-side",

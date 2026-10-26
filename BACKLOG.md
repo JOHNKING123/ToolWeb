@@ -1,3 +1,78 @@
+## 今日任务（2026-10-27 07:38 · 产品经理排期轮）
+
+**选定：HTTP 响应头分析器（http_header_analyzer）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（120 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。05:38 PM 轮选 TOTP 一次性密码生成器时已明言：HTTP 响应头分析器仅因顺位在 TOTP 一次性密码生成器之后而后置、「下轮首席递进」；TOTP 一次性密码生成器已交付划出（55040e3 新增，全量 192 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——JSON 字符串转义器与词云生成器虽同为小难度纯前端，均不插队。
+- **未选**：JSON 字符串转义器（103 轮新晋 P2，120 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 HTTP 响应头分析器之后而后置，下轮首席递进；真限制只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验）；词云生成器（99 轮新晋 P2，120 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果，布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **192 Path**；`git log` 头部 55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）。逐项复核：`http_header_analyzer`、`http-header-analyzer` 在 tools/categories.go、templates、static/js 三路均为 0 命中，仅出现在 tests/totp_generator.test.js 第 157 行一条互链否定断言（「互链：不含未交付 HTTP 响应头分析器」），非独立工具；`json_string_escaper`／`json-string-escaper` 同样仅 TOTP 测试文件第 158 行互链否定断言；`wordcloud` 全库 0 命中。自有近邻辨析：① 已注册的 HTTP 状态码速查（ID http_status_reference、Path /tools/http-status-reference、开发工具品类）是「查状态码含义」，本工具是「解析用户粘贴的一组响应头、逐项释义并判定安全头缺失」，对象不同（单个码 vs 一组头）、工种不同（速查 vs 解析诊断），不重叠；② 已注册的 .htaccess 生成器描述中提及「安全头」一词，是「生成 Apache 安全头配置」，本工具是「诊断已有响应头」，生成 vs 诊断，不重叠；③ 108 轮观察项 CSP 头解析器是「只解析 Content-Security-Policy 一个头的值」，本工具是「全量响应头逐项解析＋六项安全头缺失判定」，前者是后者的一个子项，CSP 解析器留池观察原状、本轮不做单头深挖，不重叠；④ 已注册的 User-Agent 解析器（ID user_agent_parser）是「解析请求头 User-Agent 一个值」，本工具解析的是响应头全量，方向不同，不重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——排障时从浏览器开发者工具或 curl 拿到一堆原始响应头，想逐项看含义、六项安全头缺了哪几项，粘贴文本→逐项解析＋中文释义＋缺失提示＋复制恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，头名大小写不敏感、折行续行、重复头合并均有明确规则可断言，安全头判定表（六项）固定可单测；④ **受众与站内互补**——与 HTTP 状态码速查同属开发工具品类，用户查完状态码下一步自然是看响应头，成组发现；⑤ **外部双佐证已就位**——120 轮 utilityhive 与 dev.to 两处实现均走「粘贴文本本地解析」路线，与本工具真限制完全一致，需求真实性已验证。
+- **品类归位**：注册到「开发工具」品类（与 HTTP 状态码速查同品类，便于排障用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只解析用户粘贴的文本，不主动抓取任何 URL**——远程检查需后端与跨域，不属本工具，页面须明示（120 轮外部佐证的两处实现均走此路线）；② **不做安全评分、不承诺合规结论**——只给「Present／Missing」判定与中文释义，不打 0–100 分、不说「安全／不安全」（外部 dev.to 实现有评分，本工具不跟，避免误导）；③ **释义仅供参考、规范语义以 RFC／MDN 为准**——常见头中文释义可能随规范演进，页面须明示；④ **只认标准头名拼写**——非标准／自定义头（X- 自定义）只原样列出、不给释义、不判缺失；⑤ **零上传**——响应头全部在浏览器内解析，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：原始响应头文本输入框（粘贴从开发者工具／curl 复制的响应头，支持含状态行 `HTTP/1.1 200 OK` 的整段粘贴——状态行单独识别展示、不当作头；支持 `key: value` 形式；空行自动忽略）；「载入示例」「清空」两个操作。
+- 解析规则：头名大小写不敏感（统一归一化展示为规范大小写，如 `content-type` → `Content-Type`）；折行续行（以空格／制表符开头的行并入上一头的值）；重复头（如多个 `Set-Cookie`）分别列出、不合并丢弃；无冒号的行中文报错并指明行号；值为空的头照常列出并标注「值为空」。
+- 生成：输入变化即实时重算；结果分三区：① 状态行区（若粘贴含状态行，展示协议版本与状态码，状态码旁附中文名称——复用站内 HTTP 状态码速查的中文释义口径，不另造）；② 逐项解析表（每行：头名／值／中文释义／分类：安全／缓存／内容／其他）；③ 安全头缺失区：六项安全头判定表——Strict-Transport-Security、Content-Security-Policy、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy——每项 Present（附当前值）／Missing（附中文说明「未在粘贴文本中出现」）二态，缺失项汇总一句「缺失 N 项」。
+- 示例数据（页面内置，与验收向量同一份）：`HTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\nCache-Control: max-age=3600\nStrict-Transport-Security: max-age=31536000; includeSubDomains\nX-Content-Type-Options: nosniff\nSet-Cookie: a=1; Path=/\nSet-Cookie: b=2; Path=/`（覆盖状态行、六项中 2 项 Present／4 项 Missing、重复 Set-Cookie、缓存头与内容头分类）。
+- 校验：空输入时提示「请粘贴响应头文本」；无冒号行中文报错并指明行号；所有提示均中文。
+- 操作：一键复制解析报告（纯文本：逐项「头名: 值 —— 中文释义」＋安全头判定汇总）；复制失败有明确降级提示（手动复制指引）；与 HTTP 状态码速查（/tools/http-status-reference）互链（文案区分查码与析头：「要查单个状态码含义去 HTTP 状态码速查」）；不与未交付的 JSON 字符串转义器、词云生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写头解析：状态行识别、折行合并、重复头保留、头名归一化；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，解析、折行、重复头、归一化、安全头判定、报告文本均可 node 断言）。
+- 注册：ID `http_header_analyzer`、Name「HTTP 响应头分析器」、Path `/tools/http-header-analyzer`、Category 开发工具、Icon 建议 http（图标库无此名则用 code 兜底）、New: true；中英文描述＋SEO keywords（HTTP 响应头、响应头分析、安全头、Security Headers、HSTS、CSP、HTTP 头解析）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/http-header-analyzer，相关工具互链 HTTP 状态码速查。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `http_header_analyzer`、Path `/tools/http-header-analyzer` 注册完整（Category 开发工具），注册总数 192→193 Path。
+2. 生成闭环：输入改动后解析表与安全头判定同步变化；空输入时有中文提示，不出现空白误导。
+3. 标准向量闭环（以规格示例数据为准）：状态行识别为 HTTP/1.1 200；解析出 6 个头（含 2 个 Set-Cookie 分别列出）；六项安全头判定为 Strict-Transport-Security 与 X-Content-Type-Options Present、其余 4 项 Missing，汇总「缺失 4 项」；任一不符即不通过。
+4. 解析规则闭环：小写头名归一化为规范大小写；折行续行并入上一头；重复头不合并丢弃；无冒号行报错并指明行号；值为空的头标注「值为空」。
+5. 操作与互链闭环：复制报告内容与解析结果一致（含安全头判定汇总）；复制失败有降级提示；相关工具互链含 HTTP 状态码速查；不含未交付工具的硬凑互链。
+6. 真限制可见：页面可见「只解析用户粘贴的文本、不主动抓取任何 URL」「不做安全评分、不承诺合规结论」「释义仅供参考、规范语义以 RFC／MDN 为准」文案；零 fetch／XHR、零 CDN。
+7. node 测试 25+ 断言全过（状态行识别、头名归一化、折行合并、重复头保留、无冒号行定位、空值标注、六项安全头 Present／Missing 判定、报告文本、注册与零网络请求静态检查）。
+8. 页面无报错；移动端输入框、解析表与复制按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/http_header_analyzer.html`（新增；含 SEO 面板按家族标准＋响应头输入／状态行区／逐项解析表／安全头判定区／复制 UI）
+- `static/js/http_header_analyzer.js`（新增；头解析、归一化、折行合并、安全头判定、报告文本生成、复制逻辑；双模式导出供 node 测试）
+- `tests/http_header_analyzer.test.js`（新增；解析规则、安全头判定、报告文本、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID http_header_analyzer、Path /tools/http-header-analyzer、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（首轮裸 fetch 仍报权限错误，带 GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no 重跑后成功、无报错）；`git log` 头部 55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **192**；Top3 候选重叠复核（http_header_analyzer／http-header-analyzer 仅 TOTP 测试互链否定断言一条；json_string_escaper 同样仅否定断言一条；wordcloud 全库 0 命中；近邻 HTTP 状态码速查／.htaccess 安全头／CSP 头解析器／User-Agent 解析器语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 07:36 · 通用调研第一百二十轮）
+
+**交付状态**：10-27 通用调研第一百二十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**TOTP 一次性密码生成器已交付闭环**（55040e3 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **192 Path**，ID totp_generator、Path /tools/totp-generator 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 早轮，优先小难度纯前端。
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. TOTP 交付确认：`git log` 头部 55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）；全量 192 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首轮裸 fetch 报 Host key verification failed，系 known_hosts 缺 github.com 主机密钥，带环境变量重跑后成功并自动补录主机密钥）。
+2. 新信号扫描：
+   - **DevToolKit 2026 榜／dev.to 2026 开发者工具清单**：JSON 格式化、正则、Base64、UUID、URL 编码、哈希、时间戳、JWT、密码生成、色板、二维码 → **全部自有实锤消解**（已注册工具；其余为编辑器／AI 编程助手／CI 平台／部署服务，非单页网页工具）；
+   - **HN Show HN（Dev Tools 24 工具集／ToolMateX／ToolsAid／JW Tool Box）**：JSON／CSV／SQL 转换、正则、Base64、哈希、UUID、Cron、JWT、Diff、图片压缩 → **全部自有实锤消解**（CSV→SQL 转换即 107 轮观察项复现，不新立；其余均已注册；桌面应用／API 平台类不立）；
+   - **HTTP 响应头分析器外部佐证**：utilityhive Security Headers Analyzer（粘贴响应头→六项安全头 Present／Missing 判定，明确「不联网抓站、只验粘贴文本」）与 dev.to《Browser-Only HTTP Header Analyzer》（粘贴头→安全评分 0–100＋缺失警告＋分类＋值评估，147 测试，零依赖零服务端）→ **复现旧留池项、不新立**（即 103 轮新晋 P2 HTTP 响应头分析器；两处外部实现均走「粘贴文本本地解析」路线，与留池项真限制完全一致，本轮仅佐证、顺位递进见 Top3 首席）；
+   - **词云外部佐证**：wordcloud.app（粘贴文本→词云图，800+ 形状／90+ 字体，免费版限 20 张、Pro 付费）→ **复现旧留池项、不新立**（即 99 轮新晋 P2 词云生成器；外部同类有免费额度上限与付费墙，ToolWeb 纯前端零上传免费版可作差异点；本轮仅佐证、顺位递进见 Top3 第三顺位）。
+3. 候选池变动：TOTP 一次性密码生成器已交付划出（55040e3，192 Path）；**本轮新晋 P2 0 个**（榜单信号全部自有实锤消解、复现旧留池项或不立）；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 192 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；TOTP 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，119 轮 Top3 第二、三顺位依次递进，第三顺位取 99 轮晋升 P2 对中的首项）：
+
+1. **HTTP 响应头分析器** — P2 留池顺位递进（103 轮新晋 P2；120 轮复核仍未交付；119 轮 Top3 第二顺位递进为首席；痛点：排障时拿到一堆原始响应头，想逐项看含义、安全头缺失与否；纯前端小难度：粘贴原始响应头文本→逐项解析＋中文释义＋安全头缺失提示＋复制，零上传；`http_header_analyzer`／`http-header-analyzer` 全库仅出现在 TOTP 测试文件的互链否定断言中，非独立工具，零命中实锤；本轮 utilityhive 与 dev.to 浏览器内实现双佐证，且均走粘贴文本路线；建议 ID http_header_analyzer、Path /tools/http-header-analyzer；真限制：只解析用户粘贴的文本、不主动抓取任何 URL——远程检查需后端与跨域，不属本工具）。
+2. **JSON 字符串转义器** — P2 留池顺位递进（103 轮新晋 P2，与 HTTP 响应头分析器同批、顺位居后；120 轮复核仍未交付；119 轮 Top3 第三顺位递进；痛点：把一段含引号换行的文本塞进 JSON 字符串或代码里时，转义手写易错、反向还原也麻烦；纯前端小难度：粘贴文本→JSON 转义／反转义双向＋复制，零上传；`json_string_escaper`／`json-string-escaper` 全库仅出现在 TOTP 测试文件的互链否定断言中，非独立工具，零命中实锤；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验——格式化走 JSON 解析器）。
+3. **词云生成器** — P2 留池顺位递进（99 轮新晋 P2；120 轮复核仍未交付；痛点：做汇报／分享时想把一段文本的高频词可视化成词云图，外部同类免费版限量、Pro 付费；纯前端小难度：粘贴文本→词频统计→Canvas 布局渲染词云＋PNG 下载，零上传；`wordcloud`／`word_cloud`／`词云` 全库 0 命中实锤；本轮 wordcloud.app 佐证需求真实、且其免费额度上限构成 ToolWeb 免费版差异点；建议 ID wordcloud_generator、Path /tools/wordcloud-generator；真限制：中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果，页面须明示；布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩）。
+
+其余 P2 留池（顺位在 Top3 之后）：文本定宽换行器（99 轮新晋，与词云生成器同批、顺位居后）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 119 轮及之前记录。
+
+**通用候选表增量**（第一百二十轮：TOTP 一次性密码生成器已交付划出（55040e3 新增；ID totp_generator、Path /tools/totp-generator 已注册；全量 192 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（DevToolKit／dev.to／HN 四组工具集余项均为已注册工具、平台／桌面应用或复现旧留池项；HTTP 响应头分析器与词云生成器各获外部实现双佐证／单佐证，仅复现不新立）；全量 192 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| TOTP 一次性密码生成器 | 已交付划出（55040e3 新增；ID totp_generator、Path /tools/totp-generator 已注册；全量 192 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、平台／桌面应用或复现旧留池项；HTTP 响应头分析器与词云生成器仅获外部佐证、不新立） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十轮——TOTP 一次性密码生成器交付闭环（55040e3，`/tools/totp-generator` 已注册，全量 192 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解、复现旧留池项或不立）；观察项新增 0 条；仓库 192 注册工具全量核对无重叠（Top3 建议 ID http_header_analyzer / json_string_escaper / wordcloud_generator；前两者仅 TOTP 测试互链否定断言，词云全库零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）／c7f6f48（TOML 格式化器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **192**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，裸 fetch 主机密钥缺失已补录）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 05:38 · 产品经理排期轮）
 
 **选定：TOTP 一次性密码生成器（totp_generator）** — 本轮唯一任务（新工具）：
