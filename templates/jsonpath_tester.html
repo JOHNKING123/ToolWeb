@@ -1,0 +1,171 @@
+{{define "jsonpath_tester"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONPath 测试器 - 粘贴 JSON 写表达式实时取字段 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSONPath 测试器：粘贴 JSON、写 JSONPath 表达式，实时列出每条命中路径与值，支持通配、递归、切片、并集与负下标，单条/全部复制与下载结果。纯前端本地求值，零上传。">
+    <meta name="keywords" content="JSONPath,JSON 查询,JSONPath 测试器,JSON 提取字段,JSONPath 在线测试,JSON 路径,JSON 取值">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/jsonpath-tester">
+    <meta property="og:title" content="JSONPath 测试器 - 粘贴 JSON 写表达式实时取字段">
+    <meta property="og:description" content="粘贴 JSON、写 JSONPath 表达式，实时列出每条命中路径与值，支持通配、递归、切片、并集与负下标，纯前端本地求值零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/jsonpath-tester">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSONPath 测试器","description":"粘贴 JSON、写 JSONPath 表达式，实时列出每条命中路径与值，支持通配、递归、切片、并集与负下标，纯前端本地求值。","url":"https://www.johnkingzcq123.xyz/tools/jsonpath-tester","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jp-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .jp-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .jp-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .jp-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .jp-textarea { width:100%; min-height:200px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+        .jp-expr { width:100%; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.95rem; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .jp-row { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .jp-btn { padding:.4rem .8rem; border-radius:.5rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.88rem; white-space:nowrap; }
+        .jp-btn:hover { background:#f3f4f6; }
+        .jp-preset { padding:.3rem .6rem; border-radius:2rem; border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; cursor:pointer; font-size:.85rem; font-family:ui-monospace,Menlo,Consolas,monospace; word-break:break-all; }
+        .jp-preset:hover { background:#dbeafe; }
+        .jp-msg { color:#b45309; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; word-break:break-all; }
+        .jp-count { font-size:.92rem; color:#374151; font-weight:600; }
+        .jp-empty { color:#6b7280; font-size:.92rem; padding:.8rem 0; line-height:1.8; }
+        .jp-result-row { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .8rem; margin-bottom:.7rem; }
+        .jp-row-head { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
+        .jp-path { padding:.15rem .4rem; border:none; background:#eff6ff; color:#1d4ed8; cursor:pointer; font-size:.88rem; font-family:ui-monospace,Menlo,Consolas,monospace; border-radius:.35rem; word-break:break-all; text-align:left; }
+        .jp-path:hover { text-decoration:underline; }
+        .jp-badge { font-size:.78rem; color:#fff; background:#6b7280; border-radius:.8rem; padding:.1rem .55rem; white-space:nowrap; }
+        .jp-value { margin-top:.5rem; font-size:.9rem; color:#111827; font-family:ui-monospace,Menlo,Consolas,monospace; word-break:break-all; white-space:pre-wrap; }
+        .jp-value pre { white-space:pre-wrap; word-break:break-all; font-size:.85rem; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.4rem; padding:.5rem; overflow-x:auto; }
+        .jp-pretty { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:.7rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; line-height:1.7; overflow-x:auto; white-space:pre; }
+        .jp-line { white-space:pre; }
+        .jp-line.jp-hl { background:#fef08a; }
+        .jp-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .jp-tip a { color:var(--primary-color); }
+        .jp-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .jp-links a { color:var(--primary-color); font-size:.93rem; }
+        .jp-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        .jp-table-wrap { overflow-x:auto; }
+        .jp-table { width:100%; border-collapse:collapse; font-size:.9rem; min-width:560px; }
+        .jp-table th, .jp-table td { border:1px solid #e5e7eb; padding:.5rem .6rem; text-align:left; vertical-align:top; }
+        .jp-table th { background:#f9fafb; color:#374151; }
+        .jp-table td code { font-family:ui-monospace,Menlo,Consolas,monospace; word-break:break-all; }
+        @media (max-width:640px) {
+            .jp-table { min-width:0; font-size:.85rem; }
+            .jp-textarea { min-height:160px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="jp-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔍 JSONPath 测试器</h1>
+            <p>粘贴 JSON、写 JSONPath 表达式，实时列出每条命中路径与值，点击路径可在下方格式化视图中高亮</p>
+        </div>
+        <div class="tool-content">
+            <div class="jp-card">
+                <h3>JSON 输入 <span class="jp-hint">（粘贴 JSON，实时解析；非法 JSON 会中文提示问题）</span></h3>
+                <textarea id="jp-json" class="jp-textarea" placeholder="在此粘贴 JSON，例如 {&quot;store&quot;: {&quot;book&quot;: [...]}}"></textarea>
+                <div class="jp-row">
+                    <button class="btn btn-primary" id="jp-sample" type="button">载入书店示例</button>
+                    <button class="btn btn-secondary" id="jp-clear" type="button">↺ 清空</button>
+                </div>
+            </div>
+
+            <div class="jp-card">
+                <h3>JSONPath 表达式 <span class="jp-hint">（须以 $ 开头；输入即实时重算）</span></h3>
+                <input id="jp-expr" class="jp-expr" type="text" placeholder="例如 $.store.book[*].author" autocomplete="off" spellcheck="false">
+                <p class="jp-msg" id="jp-msg"></p>
+                <div class="jp-row" id="jp-presets"></div>
+                <p class="jp-hint">6 组预设：点击任意一组即可填入表达式并重算。含中文或特殊字符的键请用括号记法，如 $['中文键']。</p>
+            </div>
+
+            <div class="jp-card">
+                <h3>命中结果 <span class="jp-hint">（点击路径在下方格式化视图中高亮；字符串复制原文，其余复制 JSON 文本）</span></h3>
+                <div class="jp-row">
+                    <span class="jp-count" id="jp-count">共命中 0 条</span>
+                    <button class="jp-btn" id="jp-copy-all" type="button">复制全部结果</button>
+                    <button class="jp-btn" id="jp-download" type="button">下载 jsonpath-result.json</button>
+                </div>
+                <div id="jp-results"></div>
+            </div>
+
+            <div class="jp-card">
+                <h3>格式化 JSON 视图 <span class="jp-hint">（点击上方某条结果的路径，对应行会高亮）</span></h3>
+                <div class="jp-pretty" id="jp-pretty"></div>
+            </div>
+
+            <div class="jp-card">
+                <h3>支持的表达式子集</h3>
+                <div class="jp-table-wrap">
+                <table class="jp-table">
+                    <thead><tr><th>写法</th><th>含义</th><th>示例</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>$</code></td><td>根节点</td><td><code>$</code></td></tr>
+                        <tr><td><code>.name</code> / <code>['name']</code></td><td>子节点</td><td><code>$.store.book</code></td></tr>
+                        <tr><td><code>[n]</code></td><td>数组下标，负数表示倒数</td><td><code>$.store.book[-1]</code></td></tr>
+                        <tr><td><code>[start:end:step]</code></td><td>切片，缺省按常规语义补齐，越界截断不报错</td><td><code>$.store.book[0:2]</code></td></tr>
+                        <tr><td><code>['a','b']</code> / <code>[0,2]</code></td><td>并集</td><td><code>$.store.book[0]['title','author']</code></td></tr>
+                        <tr><td><code>.*</code> / <code>[*]</code></td><td>通配：全部子节点或全部元素</td><td><code>$.store.book[*].author</code></td></tr>
+                        <tr><td><code>..name</code> / <code>..[*]</code></td><td>递归：任意深度的匹配项（文档顺序）</td><td><code>$..author</code></td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <p class="jp-tip" style="margin-top:.8rem;">规范路径口径：点记法优先，如 <code>$.store.book[0].author</code>；含特殊字符的键用 <code>['...']</code>，数组用 <code>[n]</code>。缺失键会被跳过、只返回实际命中的条目；表达式合法但无匹配时显示「无命中」而非报错。</p>
+            </div>
+
+            <div class="jp-card">
+                <h3>使用说明</h3>
+                <div class="jp-tip">
+                    1. 粘贴 JSON 到上方输入框（或点「载入书店示例」）。<br>
+                    2. 在表达式框写以 $ 开头的表达式，或点一组预设填入；JSON 或表达式任一变化即实时重算。<br>
+                    3. 结果逐条含规范路径、类型徽标与值预览；对象／数组值可展开看完整值；点击路径可在下方格式化视图中高亮对应行。<br>
+                    4. 点「复制此条」复制单条命中值（字符串复制原文，其余复制 JSON 文本）；「复制全部结果」复制 <code>[{path, value}]</code> 文本；下载的 jsonpath-result.json 内容与复制全部一致。<br>
+                    5. 复制失败时页面会提示手动复制指引（浏览器未授予剪贴板权限时常见）。
+                </div>
+            </div>
+
+            <div class="jp-card">
+                <h3>常见问题</h3>
+                <dl class="jp-tip">
+                    <dt><b>为什么表达式合法却显示「无命中」？</b></dt>
+                    <dd>说明当前 JSON 里确实没有匹配项：键名拼错、层级少一级或下标越界时都会如此；缺失键会被跳过、不报错，请对照规范路径逐级排查。</dd>
+                    <dt><b>过滤表达式为什么报错？</b></dt>
+                    <dd>本工具只做常用子集，不支持过滤表达式 <code>[?(...)]</code>、脚本表达式与函数式扩展；遇见时会中文提示不支持并指明位置，不会静默返回空结果。</dd>
+                    <dt><b>我的 JSON 会上传吗？</b></dt>
+                    <dd>不会。JSON 与表达式全部在浏览器内解析与求值，本页面零网络请求，数据不出本机。</dd>
+                </dl>
+            </div>
+
+            <div class="jp-card">
+                <h3>相关工具</h3>
+                <div class="jp-links">
+                    <a href="/tools/json-parser">JSON 解析器（要格式化或验证 JSON 去 JSON 解析器）</a>
+                    <a href="/tools/json-semantic-diff">JSON 语义化对比器（两份 JSON 做结构感知对比；本工具只做单份查询）</a>
+                    <a href="/tools/json-schema-validator">JSON Schema 验证器（校验实例是否符合 Schema；本工具只做查询命中）</a>
+                </div>
+            </div>
+
+            <div class="jp-card">
+                <h3>真限制说明</h3>
+                <div class="jp-tip">
+                    <b>只做常用子集、不承诺完整规范</b>：仅支持上表子集；不支持过滤／脚本表达式与函数式扩展，遇见时中文提示不支持并指明位置。<br>
+                    <b>只做查询命中、不做 Schema 校验与语义对比</b>：不输出实例是否符合 Schema、不对比两份 JSON；要格式化或验证 JSON 去 JSON 解析器，要对比去 JSON 语义化对比器，要校验 Schema 去 JSON Schema 验证器。<br>
+                    <b>命中值原样展示</b>：字符串、数字、布尔、空值、对象、数组均按原值展示，不做类型转换；复制时字符串复制原文、其余复制 JSON 文本。<br>
+                    <b>缺失键跳过、不报错</b>：通配或递归命中时个别对象缺失该键时跳过该分支、只返回实际命中的条目。<br>
+                    <b>零上传</b>：本页面零 fetch／XHR、零 CDN，全部解析与求值在浏览器本地完成，JSON 与表达式不出本机。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="jp-toast" id="jp-toast"></div>
+    <script src="/tools/static/js/jsonpath_tester.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -58,6 +58,15 @@ func GetCategories() []Category {
 					Category:    "格式化工具",
 				},
 				{
+					ID:          "jsonpath_tester",
+					Name:        "JSONPath 测试器",
+					Description: "粘贴 JSON、写 JSONPath 表达式，实时列出每条命中路径与值：起点 $、子节点、数组下标（含负数倒数）、切片、并集、通配与递归常用子集，规范路径点记法优先，点击结果在格式化 JSON 视图中高亮，单条/全部复制与下载结果，非法与不支持表达式中文定位提示，纯前端本地求值零上传 · JSONPath tester: query JSON with JSONPath expressions, wildcard/recursive/slice/union, click-to-locate highlight, 100% client-side",
+					Path:        "/tools/jsonpath-tester",
+					Icon:        "search",
+					New:         true,
+					Category:    "格式化工具",
+				},
+				{
 					ID:          "xml",
 					Name:        "XML 格式化",
 					Description: "格式化和验证 XML 数据",

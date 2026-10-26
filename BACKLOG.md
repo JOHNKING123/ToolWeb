@@ -1,3 +1,79 @@
+## 今日任务（2026-10-27 01:39 · 产品经理排期轮）
+
+**选定：JSONPath 测试器（jsonpath_tester）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（117 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。23:40 PM 轮选 CRC 校验和计算器时已明言：JSONPath 测试器仅因顺位在 CRC 校验和计算器之后而后置、「下轮首席递进」；CRC 校验和计算器已交付划出（c468f54 新增，全量 189 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——TOML 格式化器与 TOTP 一次性密码生成器虽同为小难度纯前端，均不插队。
+- **未选**：TOML 格式化器（102 轮新晋／晋升 P2，117 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 JSONPath 测试器之后而后置，下轮首席递进；真限制只做格式化与语法校验、不做语义配置推荐）；TOTP 一次性密码生成器（103 轮新晋 P2，117 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做本地算码、不存密钥、不做账号绑定与扫码）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **189 Path**；`git log` 头部 c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）。逐项复核：`jsonpath_tester`、`jsonpath-tester` 全库 0 命中；小写 `jsonpath` 在 tools/categories.go 为 0 命中，大写 `JSONPath` 仅出现在 JSON 语义化对比器描述中一条定位标注（「每条差异标注 JSONPath 可点击跳转定位」），非独立测试器；`totp` 全库 0 命中；`toml` 仅出现在 static/js/gitignore_generator.js 第 140 行一条示例文件名（".pdm.toml"），非独立工具。自有近邻辨析：① 已注册的 JSON 解析器（ID json，/tools/json-parser）是「格式化与验证 JSON、语法高亮」，本工具是「对一份已合法 JSON 写查询表达式取命中值」，一个做呈现与校验、一个做查询，不重叠；② 已注册的 JSON Schema 验证器是「校验实例是否符合 Schema」，本工具不校验 Schema、不输出是否符合，只返回命中值，不重叠；③ 已注册的 JSON 语义化对比器是「左右两份 JSON 做结构感知对比、差异标注 JSONPath 定位」，本工具是「单份 JSON 的查询测试台」，输入份数与输出物均不同，不重叠；④ 已注册的 JSON→类型、JSON-YAML 转换器是「格式转换」，本工具不转换格式，只查询，不重叠；⑤ 104 轮观察项 JMESPath 测试器是另一种查询语言（JMESPath 语法），与 JSONPath 语法不同，本轮不与之互链、不硬凑。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——从嵌套 JSON 里抠字段只能手写路径、改一次表达式就要重新跑脚本或在控制台试，表达式写错（键名拼错、层级少一级、数组下标越界）时往往只得到 undefined、不知道错在哪，粘贴 JSON＋写表达式→实时列出每条命中路径与值、错表达式中文定位，恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，表达式解析与求值、规范路径生成、切片与递归均可 node 断言，标准示例数据有公认期望结果；④ **受众与站内互补**——与 JSON 解析器、JSON Schema 验证器、JSON 语义化对比器同属 JSON 家族，用户格式化／校验完 JSON 下一步自然是写表达式取字段，成组发现。
+- **品类归位**：注册到「格式化工具」品类（与 JSON 解析器、JSON Schema 验证器、JSON 语义化对比器同品类，便于 JSON 用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做常用子集，不承诺完整 JSONPath 规范**——支持的语法见规格「表达式子集」，不支持过滤表达式、脚本表达式与函数式扩展，遇到时中文提示不支持并指明位置，不静默返回空结果；② **只做查询命中，不做 Schema 校验与语义对比**——不输出实例是否符合 Schema、不对比两份 JSON，页面须明示；③ **命中值原样展示，不做类型转换**——字符串、数字、布尔、null、对象、数组均按原值展示，复制时字符串复制原文、其余复制 JSON 文本；④ **缺失键跳过、不报错**——通配或递归命中时个别对象缺失该键时跳过该分支、只返回实际命中的条目，空结果明确显示「无命中」而非报错；⑤ **零上传**——JSON 与表达式全部在浏览器内解析与求值，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：JSON 输入框（粘贴 JSON，实时解析；非法 JSON 时中文提示并指明问题，不静默失败）；JSONPath 表达式输入框（须以 `$` 开头，否则中文提示）；「载入示例」「清空」两个操作；6 组预设表达式一键填入（`$.store.book[*].author`、`$.store.book[2].title`、`$..author`、`$.store.book[-1].title`、`$.store.book[0:2]`、`$.store.bicycle.color`）。
+- 表达式子集（超出即中文提示不支持并指明位置）：起点 `$`；子节点 `.name`（name 为 `[A-Za-z_$][A-Za-z0-9_$]*`，含中文或特殊字符的键须用括号记法）与 `['name']`／`["name"]`；数组下标 `[n]`（整数，负数表示倒数）；切片 `[start:end]`／`[start:end:step]`（缺省按常规语义补齐，越界截断不报错）；并集 `['a','b']`／`[0,2]`；通配 `.*`／`[*]`；递归 `..name`／`..[*]`。不支持：过滤 `[?(...)]`、脚本 `[(...)]`、函数式扩展。
+- 生成：JSON 与表达式任一变化即实时重算；结果区逐条列出命中项，每条含规范路径、类型徽标、值预览（对象／数组展示紧凑 JSON 并可展开看完整值）；规范路径口径：点记法优先，含特殊字符的键用 `['...']`，数组用 `[n]`，例如 `$.store.book[0].author`；命中计数汇总显示（「共命中 N 条」）；点击某条结果时在下方格式化 JSON 视图中对应路径行高亮（以路径为锚）。
+- 示例数据（页面内置，与验收向量同一份）：`{"store":{"book":[{"category":"reference","author":"Nigel Rees","title":"Sayings of the Century","price":8.95},{"category":"fiction","author":"Evelyn Waugh","title":"Sword of Honour","price":12.99},{"category":"fiction","author":"Herman Melville","title":"Moby Dick","isbn":"0-553-21311-3","price":8.99},{"category":"fiction","author":"J. R. R. Tolkien","title":"The Lord of the Rings","isbn":"0-395-19395-8","price":22.99}],"bicycle":{"color":"red","price":19.95}}}`。
+- 校验：空 JSON 输入时提示「请输入 JSON」；空表达式时提示「请输入以 $ 开头的表达式」；非法 JSON、非法表达式、无命中三种状态文案区分，不混用；所有提示均中文、指明对象。
+- 操作：一键复制单条命中值、一键复制全部结果（内容为 `[{path, value}]` 的 JSON 数组文本，与页面输出一致）、一键下载 `jsonpath-result.json`（内容与复制全部一致）；复制失败有明确降级提示（手动复制指引）；与 JSON 解析器（/tools/json-parser）互链（文案区分格式化校验与查询取字段：「要格式化或验证 JSON 去 JSON 解析器」），与 JSON 语义化对比器（/tools/json-semantic-diff）互链（文案区分单份查询与两份对比），与 JSON Schema 验证器（/tools/json-schema-validator）互链（文案区分查询命中与 Schema 校验）；不与未交付的 TOML 格式化器、TOTP 一次性密码生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写表达式分词＋求值器，不引入 JSONPath 库；用户输入与结果值用 textContent 或转义后插值，杜绝注入）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，表达式解析、求值、规范路径生成、切片、递归、非法与不支持表达式报错等纯函数均可 node 断言）。
+- 注册：ID `jsonpath_tester`、Name「JSONPath 测试器」、Path `/tools/jsonpath-tester`、Category 格式化工具、Icon 建议 search（图标库无此名则用 data_object 兜底）、New: true；中英文描述＋SEO keywords（JSONPath、JSON 查询、JSONPath 测试器、JSON 提取字段、JSONPath 在线测试）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/jsonpath-tester，相关工具互链 JSON 解析器、JSON 语义化对比器与 JSON Schema 验证器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `jsonpath_tester`、Path `/tools/jsonpath-tester` 注册完整（Category 格式化工具），注册总数 189→190 Path。
+2. 生成闭环：JSON 或表达式改动后命中列表同步变化；表达式为空、JSON 为空时分别有中文提示，不出现空白误导。
+3. 标准向量闭环（以规格示例数据为准）：`$.store.book[*].author` 命中 4 条（Nigel Rees、Evelyn Waugh、Herman Melville、J. R. R. Tolkien，路径依次为 `$.store.book[0].author` 至 `$.store.book[3].author`）；`$.store.book[2].title` 命中 Moby Dick；`$..author` 命中上述 4 位作者（按文档顺序）；`$.store.book[-1].title` 命中 The Lord of the Rings；`$.store.book[0:2]` 命中前 2 本书；`$.store.bicycle.color` 命中 red；`$.store.book[*].isbn` 命中 2 条（只有后两本有 isbn，缺失键跳过不报错）；任一不符即不通过。
+4. 校验与不支持闭环：无命中表达式（如 `$.store.book[*].publisher`）显示「无命中」而非报错；非法 JSON 有中文提示；不以 `$` 开头的表达式有中文提示；过滤表达式（如 `$.store.book[?(@.price>10)]`）有中文「不支持过滤表达式」提示并指明位置，不静默返回空。
+5. 操作与互链闭环：单条复制与复制全部内容与页面输出一致（字符串复制原文、其余复制 JSON 文本，复制全部为 `[{path, value}]` 文本）；下载 `jsonpath-result.json` 内容与复制全部一致；复制失败有降级提示；相关工具互链含 JSON 解析器、JSON 语义化对比器与 JSON Schema 验证器；不含未交付工具的硬凑互链。
+6. 真限制可见：页面可见「只做常用子集、不承诺完整规范」「不支持过滤／脚本表达式」「只做查询命中、不做 Schema 校验与语义对比」「命中值原样展示」文案；零 fetch／XHR、零 CDN。
+7. node 测试 25+ 断言全过（标准向量、通配、递归、负下标、切片、并集、规范路径生成、缺失键跳过、无命中、非法 JSON、非法表达式、不支持表达式、注册与零网络请求静态检查）。
+8. 页面无报错；移动端输入框、结果列表与复制按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/jsonpath_tester.html`（新增；含 SEO 面板按家族标准＋JSON／表达式双输入／6 组预设／命中结果列表／格式化 JSON 高亮视图／复制下载 UI）
+- `static/js/jsonpath_tester.js`（新增；表达式分词＋求值器、规范路径生成、切片／递归／并集逻辑、复制下载逻辑；双模式导出供 node 测试）
+- `tests/jsonpath_tester.test.js`（新增；标准向量、通配、递归、负下标、切片、并集、路径、缺失键、无命中、非法与不支持、注册与零网络静态检查）
+- `tools/categories.go`（格式化工具品类注册：ID jsonpath_tester、Path /tools/jsonpath-tester、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **189**；Top3 候选重叠复核（jsonpath_tester／jsonpath-tester／totp 全库 0 命中；`toml` 仅 gitignore 生成器示例文件名一条；大写 `JSONPath` 仅 JSON 语义化对比器描述中定位标注一条，非独立工具；近邻 JSON 解析器／Schema 验证器／语义化对比器／转换器语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 01:37 · 通用调研第一百一十七轮）
+
+**交付状态**：10-27 通用调研第一百一十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CRC 校验和计算器已交付闭环**（c468f54 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **189 Path**，ID crc_checksum_calculator、Path /tools/crc-checksum-calculator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:37 夜轮，优先小难度纯前端。
+**本轮三件事**（01:37 全网调研，通用方向）：
+1. CRC 校验和交付确认：`git log` 头部 c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）；全量 189 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **Kova Core 12 开发者工具榜（2026-08）**：JSON 格式化／验证、CSV⇌JSON、正则、JWT、Base64、哈希、UUID、时间戳转换、URL 解析 → **全部自有实锤消解**（已注册工具；URL 解析器 Path /tools/url-parser、bcrypt 生成器均已注册）；Bcrypt 生成器 → **已注册消解**（templates/bcrypt_generator.html 已存在）；HTTP 状态码参考 → **已注册消解**（categories.go 已有 http_status 项）；
+   - **dev.to 13 浏览器工具榜（pyfile，2026）**：JSON 格式化／Schema 验证、Base64、URL 编解码、HTML 实体、UUID、二维码、CSS／JS 压缩、Markdown 预览、色板、批量图片缩放、文本对比 → **全部自有实锤消解**（已注册工具；115 轮同榜已核过一次，本轮再确认）；
+   - **dev.to 23 工具自述（maxxmini）**：密码／哈希／Base64／UUID、JSON／正则／HTML 实体／URL 编解码、Diff、CSS 压缩、色板／渐变／阴影、SVG→PNG、番茄钟、Markdown 编辑、词数统计、Lorem Ipsum、二维码 → **全部自有实锤消解**（番茄钟已并入倒计时／秒表／番茄钟／闹钟四模式单页工具，categories.go 第 1649 行实锤；Lorem Ipsum 本轮前已交付）；
+   - **V2EX／中文搜索**：V2EX 客户端、BestXTools 周刊、油猴脚本 → **不立**（客户端／周刊／脚本本身，非单页网页工具）；
+   - **HN 帖**：Morph 零构建全栈库、Deco.cx 实时 TS 编辑器、ImgExtender AI 图像工具 → **不立**（框架／平台级产品或需 AI 成本，非纯前端单页工具；ImgExtender 的裁剪／压缩／转 PDF 等纯前端子项站内均已有对应工具）。
+3. 候选池变动：CRC 校验和计算器已交付划出（c468f54，189 Path）；**本轮新晋 P2 0 个**（榜单信号全部自有实锤消解或不立）；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 189 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CRC 校验和交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，116 轮 Top3 第二、三顺位依次递进，第三顺位取 103 轮晋升 P2 对中的首项）：
+
+1. **JSONPath 测试器** — P2 留池顺位递进（102 轮观察项晋升 P2；117 轮复核仍未交付；116 轮 Top3 第二顺位递进为首席；痛点：从嵌套 JSON 里抠字段要手写路径、试错成本高；纯前端中难度：粘贴 JSON＋写 JSONPath 表达式→实时命中结果高亮＋复制，零上传；`jsonpath` 仅出现在 JSON 语义对比工具描述中一条定位标注（categories.go 第 54 行「每条差异标注 JSONPath 可点击跳转定位」），非独立测试器，不重叠；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）。
+2. **TOML 格式化器** — P2 留池顺位递进（102 轮新晋／晋升 P2，与 JSONPath 同对；117 轮复核仍未交付；116 轮 Top3 第三顺位递进；痛点：TOML 配置手写易错、格式不统一，改配置前想先格式化校验；纯前端小难度：粘贴 TOML→格式化／校验＋错误定位＋复制，零上传；`toml` 全库零命中实锤；建议 ID toml_formatter、Path /tools/toml-formatter；真限制：只做格式化与语法校验、不做语义配置推荐）。
+3. **TOTP 一次性密码生成器** — P2 留池顺位递进（103 轮新晋 P2；117 轮复核仍未交付；痛点：配 TOTP 双因素时想离线验算动态码、或在不方便掏手机时快速核对当前码；纯前端小难度：粘贴 Base32 密钥→按 TOTP 算法本地算出当前 6 位码＋剩余有效秒倒计时＋复制，零上传、不存密钥；`totp` 全库零命中实锤；建议 ID totp_generator、Path /tools/totp-generator；真限制：只做本地算码、不存密钥、不做账号绑定与扫码，密钥只留当前会话内存）。
+
+其余 P2 留池（顺位在 Top3 之后）：HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，与 TOTP 同批、顺位居后）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 116 轮及之前记录。
+
+**通用候选表增量**（第一百一十七轮：CRC 校验和计算器已交付划出（c468f54 新增；ID crc_checksum_calculator、Path /tools/crc-checksum-calculator 已注册；全量 189 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（Kova Core 榜／13 工具榜／23 工具自述余项均为已注册工具，含 URL 解析器、bcrypt 生成器、番茄钟四模式工具；V2EX 周刊与 HN 帖均为集合／平台／需 AI 成本）；全量 189 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CRC 校验和计算器 | 已交付划出（c468f54 新增；ID crc_checksum_calculator、Path /tools/crc-checksum-calculator 已注册；全量 189 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（Kova Core 榜／13 工具榜／23 工具自述余项均为已注册工具；V2EX 周刊与 HN 帖均为集合、平台或需 AI 成本） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百一十七轮——CRC 校验和计算器交付闭环（c468f54，`/tools/crc-checksum-calculator` 已注册，全量 189 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解或不立）；观察项新增 0 条；仓库 189 注册工具全量核对无重叠（Top3 建议 ID jsonpath_tester / toml_formatter / totp_generator；`toml` 与 `totp` 全库零命中，`jsonpath` 仅 JSON 语义对比工具内定位标注一条）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 c468f54（CRC 校验和计算器新增）／b57585e（CSS 缓动曲线生成器新增）／87d90a5（Lorem Ipsum 生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **189**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 23:40 · 产品经理排期轮）
 
 **选定：CRC 校验和计算器（crc_checksum_calculator）** — 本轮唯一任务（新工具）：
