@@ -106,5 +106,14 @@ has(TPL_SRC, "csv-table-viewer", "模板：canonical 与标识含 csv-table-view
 has(TPL_SRC, "csv_table_viewer.js", "模板：JS 文件引用");
 has(JS_SRC, "textContent", "渲染：用 textContent 防 HTML 执行");
 
+/* ---------- 8. 评审修复：列筛选焦点与示例残留 ---------- */
+has(JS_SRC, "prevFilters", "修复1：重建前先快照列筛选值（旧 input 销毁后查不到）");
+has(JS_SRC, "prevFilters[idx]", "修复1：新筛选框用快照恢复值而非重建中途重查");
+has(JS_SRC, "document.activeElement", "修复1：重建前记录焦点所在列筛选框");
+has(JS_SRC, "setSelectionRange", "修复1：重建后恢复光标位置");
+has(JS_SRC, "restored.focus()", "修复1：重建后把焦点交还同列新输入框");
+has(JS_SRC, "clearColFilters", "修复2：示例载入与清空共用列筛选清零");
+has(JS_SRC, "clearColFilters();\nrenderAll();", "修复2：清零列筛选后才重渲染");
+
 console.log("csv_table_viewer: pass=" + pass + " fail=" + fail);
 if (fail > 0) process.exit(1);

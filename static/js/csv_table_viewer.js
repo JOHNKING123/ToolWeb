@@ -262,6 +262,15 @@ return out;
 }
 
 function renderAll() {
+var prevFilters = getColFilters();
+var activeCol = null;
+var selStart = null;
+var selEnd = null;
+if (document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('ctv-col-filter')) {
+activeCol = document.activeElement.getAttribute('data-col');
+selStart = document.activeElement.selectionStart;
+selEnd = document.activeElement.selectionEnd;
+}
 readInput();
 var query = $('ctv-search') ? $('ctv-search').value : '';
 var filtered = filterRows(state.body, query, getColFilters());
@@ -329,7 +338,7 @@ input.className = 'ctv-col-filter';
 input.setAttribute('data-col', String(idx));
 input.placeholder = '筛选' + h;
 input.setAttribute('aria-label', '筛选列' + h);
-var keep = getColFilters()[idx];
+var keep = prevFilters[idx];
 if (keep) input.value = keep;
 input.addEventListener('input', function () { state.page = 1; renderAll(); });
 input.addEventListener('click', function (e) { e.stopPropagation(); });
@@ -355,6 +364,17 @@ var empty = document.createElement('p');
 empty.className = 'ctv-empty';
 empty.textContent = state.totalRows === 0 ? '暂无数据：请粘贴 CSV 或载入示例。' : '筛选后无匹配行：请放宽搜索或列筛选条件。';
 tableWrap.appendChild(empty);
+}
+/* 焦点恢复：列筛选输入触发的重建会销毁旧 input，须把焦点与光标
+* 交还同列新 input，否则每敲一字就丢焦点、无法连续输入。 */
+if (activeCol !== null) {
+var restored = tableWrap.querySelector('.ctv-col-filter[data-col="' + activeCol + '"]');
+if (restored) {
+restored.focus();
+if (selStart !== null) {
+try { restored.setSelectionRange(selStart, selEnd); } catch (e) { /* 旧浏览器忽略光标恢复 */ }
+}
+}
 }
 }
 
@@ -383,10 +403,15 @@ renderAll();
 };
 reader.readAsText(f);
 });
+function clearColFilters() {
+var inputs = document.querySelectorAll('.ctv-col-filter');
+for (var i = 0; i < inputs.length; i++) inputs[i].value = '';
+}
 function loadSample(text) {
 if (inputEl) inputEl.value = text;
 state.sortCol = -1; state.sortDir = null; state.page = 1;
 if (searchEl) searchEl.value = '';
+clearColFilters();
 renderAll();
 }
 var s1 = $('ctv-sample-employees');
@@ -398,6 +423,7 @@ if (clearBtn) clearBtn.addEventListener('click', function () {
 if (inputEl) inputEl.value = '';
 state.sortCol = -1; state.sortDir = null; state.page = 1;
 if (searchEl) searchEl.value = '';
+clearColFilters();
 renderAll();
 });
 var resetBtn = $('ctv-reset');
