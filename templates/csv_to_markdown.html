@@ -1,0 +1,150 @@
+{{define "csv_to_markdown"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV→Markdown 表格生成器 - 粘贴 CSV 生成 GFM 表格，复制下载 table.md</title>
+    <meta name="description" content="免费在线 CSV 转 Markdown 表格生成器：粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，每列可选左／居中／右对齐，实时生成标准 GFM 表格，一键复制或下载 table.md，纯本地运行不上传。CSV to markdown table generator: convert CSV to GitHub markdown table locally, 100% client-side.">
+    <meta name="keywords" content="CSV转Markdown,CSV表格生成器,Markdown表格,csv to markdown,markdown table generator,github markdown table,csv转md表格">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/csv-to-markdown">
+    <meta property="og:title" content="CSV→Markdown 表格生成器 - 粘贴 CSV 生成 GFM 表格">
+    <meta property="og:description" content="粘贴 CSV 或本地读取 .csv，首行作表头、引号字段正确解析，每列可选对齐，实时生成标准 GFM 表格，一键复制或下载 table.md，数据不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/csv-to-markdown">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSV→Markdown 表格生成器","description":"粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，每列可选左／居中／右对齐，实时生成标准 GFM 表格，一键复制或下载 table.md，纯本地运行不上传。","url":"https://www.johnkingzcq123.xyz/tools/csv-to-markdown","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ctm-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ctm-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none}
+        .ctm-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ctm-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .ctm-input,.ctm-output{width:100%;min-width:0;min-height:180px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .ctm-input:focus,.ctm-output:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ctm-output{background:#f9fafb}
+        .ctm-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .ctm-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .ctm-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ctm-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .ctm-btn:disabled{opacity:.45;cursor:default;color:#9ca3af}
+        .ctm-btn:disabled:hover{border-color:#d1d5db;color:#9ca3af}
+        .ctm-radio{display:inline-flex;gap:.35rem;align-items:center;font-size:.92rem;color:#374151;margin-right:1rem}
+        .ctm-select{padding:.45rem .6rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.88rem;font-family:inherit;background:#fff;box-sizing:border-box}
+        .ctm-align-label{display:inline-flex;gap:.35rem;align-items:center;font-size:.88rem;color:#374151;margin-right:.8rem;margin-bottom:.4rem}
+        .ctm-align-wrap{display:flex;flex-wrap:wrap;gap:.2rem;align-items:center}
+        .ctm-stats{font-size:.92rem;color:#374151;margin:.6rem 0 0}
+        .ctm-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        .ctm-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .ctm-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .ctm-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .ctm-links a{color:#2563eb}
+        @media (max-width:640px){.ctm-panel{padding:.9rem}.ctm-input,.ctm-output{min-height:150px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>CSV→Markdown 表格生成器</h1>
+            <p>粘贴 CSV 即生成标准 GFM 表格：每列可选对齐，一键复制或下载 table.md，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ctm-note">
+                <span>本工具只做表格文本生成：生成结果是 Markdown 文本，不回写 CSV，不转 JSON／Excel；合并／多行单元格只做展平提示，不保留多行结构；分隔符仅支持逗号／分号／制表符三选；日期、金额只按原文本输出，不验合法性、不算合计。</span>
+            </div>
+            <div class="ctm-panel">
+                <h3>输入 CSV</h3>
+                <textarea id="ctm-input" class="ctm-input" placeholder="粘贴 CSV，例如：&#10;姓名,部门,月薪&#10;张伟,研发,18500&#10;李娜,产品,16200" spellcheck="false"></textarea>
+                <div class="ctm-row">
+                    <span style="font-size:.92rem;color:#374151;">分隔符：</span>
+                    <label class="ctm-radio"><input type="radio" name="ctm-delim" value="," checked> 逗号</label>
+                    <label class="ctm-radio"><input type="radio" name="ctm-delim" value=";"> 分号</label>
+                    <label class="ctm-radio"><input type="radio" name="ctm-delim" value="tab"> 制表符</label>
+                    <label class="ctm-radio"><input type="checkbox" id="ctm-no-header"> 首行不是表头（自动生成列1、列2…）</label>
+                </div>
+                <div class="ctm-row">
+                    <label for="ctm-file" style="font-size:.92rem;color:#374151;">或读取本地 .csv 文件（只在本机读，不上传）：</label>
+                    <input id="ctm-file" type="file" accept=".csv,.tsv,.txt">
+                </div>
+                <div class="ctm-row">
+                    <button class="ctm-btn ctm-btn-primary" type="button" id="ctm-sample-employees">示例：员工表</button>
+                    <button class="ctm-btn" type="button" id="ctm-sample-orders">示例：订单表</button>
+                    <button class="ctm-btn" type="button" id="ctm-clear">清空输入</button>
+                </div>
+                <p class="ctm-hint">输入、分隔符、表头开关、对齐变化时表格实时重生成；输入为空时不输出误导性表格。</p>
+            </div>
+            <div class="ctm-warn" id="ctm-warn"></div>
+            <div class="ctm-panel">
+                <h3>每列对齐（默认左对齐）</h3>
+                <div class="ctm-align-wrap" id="ctm-align-wrap">暂无列：请先粘贴 CSV 或载入示例。</div>
+                <div class="ctm-row">
+                    <button class="ctm-btn" type="button" data-ctm-all-align="left">全部左对齐</button>
+                    <button class="ctm-btn" type="button" data-ctm-all-align="center">全部居中</button>
+                    <button class="ctm-btn" type="button" data-ctm-all-align="right">全部右对齐</button>
+                </div>
+                <p class="ctm-hint">对齐行按 GFM 写法生成：左对齐 :---、居中 :---:、右对齐 ---:；每列单独改只影响该列，全部对齐一键同步所有列。</p>
+            </div>
+            <div class="ctm-panel">
+                <h3>生成的 Markdown 表格</h3>
+                <textarea id="ctm-output" class="ctm-output" readonly placeholder="生成的 GFM 表格会出现在这里，可直接复制或下载 table.md。"></textarea>
+                <p class="ctm-stats" id="ctm-stats">暂无表格：请先粘贴 CSV 或载入示例。</p>
+                <p class="ctm-stats" id="ctm-flat">单元格内无换行需要展平。</p>
+                <div class="ctm-row">
+                    <button class="ctm-btn ctm-btn-primary" type="button" id="ctm-copy">一键复制</button>
+                    <button class="ctm-btn" type="button" id="ctm-download">下载 table.md</button>
+                    <span class="ctm-hint" id="ctm-copy-hint" style="margin:0;"></span>
+                </div>
+                <p class="ctm-hint">复制与下载的内容与上方输出框完全一致；复制失败时会提示手动全选复制的降级办法。</p>
+            </div>
+            <div class="ctm-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先粘贴 CSV：或点「读取本地 .csv 文件」在本机读文件（FileReader，不上传）；输入为空时不输出表格。</li>
+                    <li>再选分隔符：逗号默认，分号、制表符三选，切换后实时重生成；其他分隔符（如竖线）本轮不支持。</li>
+                    <li>表头开关：首行默认作表头；取消勾选后自动生成「列1、列2…」，原首行也计入数据行；表头为空的列用「列 N」占位。</li>
+                    <li>对齐：每列下拉框单独选左对齐／居中／右对齐，默认左对齐；「全部对齐」三个按钮一键同步所有列。</li>
+                    <li>转义与展平：单元格里的竖线 | 会转义为 \|，不破坏列结构；单元格内换行展平为空格，并在输出下方提示已展平的处数。</li>
+                    <li>复制与下载：一键复制把表格文本放进剪贴板；一键下载保存为 table.md；两者内容与输出框一致。</li>
+                    <li>示例：点「员工表」或「订单表」一键载入，载入后输入、输出、列数统计三者同步，仍可再改再生成。</li>
+                    <li>互链：要先看表格去 CSV 表格查看器；要转成 JSON 去 CSV⇄JSON 互转；生成的表格要看渲染效果去 Markdown 预览。</li>
+                </ol>
+            </div>
+            <div class="ctm-panel">
+                <h3>常见问题</h3>
+                <dl class="ctm-faq">
+                    <dt>引号里的逗号、换行会不会把行切错？</dt>
+                    <dd>不会。引号包字段内的逗号、转义双引号（""）与字段内换行都按 CSV 规则正确解析；引号未闭合时会中文告警并标注「解析告警」，按已读内容尽力生成，不谎称结果完整。</dd>
+                    <dt>为什么有的行比表头短？</dt>
+                    <dd>行列数不一致时短行自动补空，不丢行；空尾行不计入行数。</dd>
+                    <dt>单元格里有竖线怎么办？</dt>
+                    <dd>竖线会转义为 \|，Markdown 渲染时仍显示为竖线，不会把一列劈成两列。</dd>
+                    <dt>单元格里的换行去哪了？</dt>
+                    <dd>展平为空格了：GFM 表格一行就是一行，无法保留多行单元格；输出下方会提示「已把 N 处单元格内换行展平为空格」。</dd>
+                    <dt>能把生成的表格改回去存成 CSV 吗？</dt>
+                    <dd>不能。本工具只做表格文本生成，不回写 CSV、不转 JSON／Excel；要改数据请用 Excel 打开原文件修改。</dd>
+                    <dt>我的 CSV 会被上传吗？</dt>
+                    <dd>不会。粘贴与本地文件读取均只在浏览器内处理，零网络请求，零 CDN，本页 JS 源码无任何 fetch／XHR 调用。</dd>
+                </dl>
+            </div>
+            <div class="ctm-panel">
+                <h3>相关工具</h3>
+                <div class="ctm-links">
+                    <a href="/tools/csv-table-viewer">CSV 表格查看器（要先看表格去这里）</a>
+                    <a href="/tools/csv-json">CSV⇄JSON 互转（要转成 JSON 去这里）</a>
+                    <a href="/tools/markdown-preview">Markdown 预览（生成的表格要看渲染效果去这里）</a>
+                </div>
+            </div>
+            <div class="ctm-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>CSV 解析、GFM 生成、对齐、转义、展平均为手写纯函数（不引入表格库，浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/csv_to_markdown.js?v=1"></script>
+</body>
+</html>
+{{end}}
