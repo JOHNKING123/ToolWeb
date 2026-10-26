@@ -1,3 +1,78 @@
+## 今日任务（2026-10-26 21:38 · 产品经理排期轮）
+
+**选定：CSS 缓动曲线生成器（css_easing_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（115 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。19:37 PM 轮选 Lorem Ipsum 生成器时已明言：CSS 缓动曲线生成器仅因顺位在 Lorem Ipsum 生成器之后而后置、「下轮首席递进」；Lorem Ipsum 生成器已交付划出（87d90a5 新增，全量 187 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——CRC 校验和计算器虽同为小难度纯前端，均不插队；JSONPath 测试器为中难度，亦不插队。
+- **未选**：CRC 校验和计算器（102 轮新晋／晋升 P2，115 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 CSS 缓动曲线生成器之后而后置，下轮首席递进；真限制只算校验值、不做文件修复与完整性判定）；JSONPath 测试器（102 轮观察项晋升 P2，115 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制常用子集、不承诺完整规范）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -cE 'css_easing|easing|crc_checksum|jsonpath' tools/categories.go` = 0；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **187 Path**；`git log` 头部 87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）。逐项复核：`css_easing` 全库 0 命中；`easing` 仅出现在 tests/lorem_ipsum_generator.test.js 第 167 行一条否定断言（「互链：不含未交付 CSS 缓动曲线生成器」），不是实现；`crc_checksum`、`jsonpath` 全库 0 命中。自有近邻辨析：① 已注册的 CSS 渐变生成器（ID css_gradient_generator）是「拖色标拼渐变色值」，CSS 阴影与圆角生成器（ID css_shadow_radius_generator）是「滑杆调阴影与圆角数值」，本工具是「拖控制点调 cubic-bezier 时间曲线＋动效预览」，一个调颜色／静态样式数值、一个调时间曲线，不重叠；② 已注册的 CSS→Tailwind（css-to-tailwind）是「CSS 代码转 Tailwind 类名」，本工具不转类名、只出 cubic-bezier 与 transition 代码，不重叠；③ 已注册的 CSS clamp 计算器是「算响应式数值区间」，不涉及时间曲线，不重叠。无可复用业务代码，仅可借鉴 Lorem Ipsum 轮与 Conventional Commit 轮的纯前端双模式导出（window＋module.exports）与 node 测试模式、「表单／拖动→实时预览→复制／下载」口径，以及 CSS 生成器家族的 SEO 面板与互链口径。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——调 cubic-bezier 只能凭感觉改四个数字，改完不知道曲线长什么样、动效是先快后慢还是回弹，拖控制点＋实时动画预览恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，控制点、预设、时长、输出代码均可 node 断言，SVG 曲线与动画预览不依赖外部库；④ **受众与站内互补**——与 CSS 渐变、阴影与圆角生成器同属 CSS 生成器家族，写样式的人调完颜色／阴影下一步自然是调动效曲线。
+- **品类归位**：注册到「开发工具」品类（与 CSS 渐变生成器、CSS 阴影与圆角生成器同品类，便于 CSS 开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做曲线预览与代码生成，不做整页动效编排**——不编排多元素时间轴、不做关键帧动画编辑，页面须明示；② **只出 cubic-bezier 时间曲线，不评估动效好坏**——不给「这条曲线好不好」的主观评分，页面须明示；③ **预览动画仅示意**——预览方块沿直线位移演示时间曲线，不代表真实业务元素的动效效果，页面须明示；④ **y 值超出 0–1 为合法回弹区间**——y1／y2 允许 -1–2（CSS 规范允许 y 超出区间产生回弹感），x1／x2 必须在 0–1 内，页面须明示此规则；⑤ **零上传**——全部在浏览器内计算与渲染，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：控制点四值（x1、y1、x2、y2，数字输入＋滑杆，步长 0.01；x1／x2 范围 0–1，y1／y2 范围 -1–2，超出钳制并中文提示，指明是哪一项）；曲线画布（SVG 贝塞尔曲线＋网格＋起点／终点／两控制点，控制点可指针拖动，拖动与数字输入双向同步）；预设 10 组一键切换（linear、ease、ease-in、ease-out、ease-in-out 及 easeInQuad、easeOutQuad、easeInOutQuad、easeInCubic、easeOutCubic，各附固定四值，切换后表单与画布同步）；动画时长（数字输入＋滑杆，0.2–3 秒，默认 1 秒，超出钳制并中文提示）；预览区（方块沿水平轨道位移动画，播放／重播按钮，动画用当前曲线与时长实时生效）；另提供「恢复默认」一键回到默认值（ease、1 秒）。
+- 生成：随输入变化实时生成；输出代码三段（`cubic-bezier(x1, y1, x2, y2)`、 `transition: all 1s cubic-bezier(...);`（时长随动画时长同步）、`transition-timing-function: cubic-bezier(...);`），数值统一保留 2 位小数；画布按 y∈[-1,2] 映射绘制并标出 0–1 主区间，控制点拖动超出画布映射范围时钳制到 y∈[-1,2]。
+- 校验：x1／x2 非数字或超出 0–1 时钳制到边界并中文提示；y1／y2 非数字或超出 -1–2 时钳制到边界并中文提示；时长非数字或超出范围时钳制到边界并中文提示；校验均不静默丢弃用户输入，提示须指明是哪一项；预设切换后四值与画布、输出代码三方同步。
+- 操作：一键复制 cubic-bezier()、一键复制全部代码、一键下载 `easing.css`（内容与页面输出一致）；复制失败有明确降级提示（手动复制指引）；与 CSS 渐变生成器（/tools/css-gradient-generator）互链（文案区分调颜色与调时间曲线：「要调渐变颜色去渐变生成器」）、与 CSS 阴影与圆角生成器（/tools/css-shadow-radius-generator）互链（文案区分调静态样式数值与调时间曲线），与未交付的截图美化器（通用）不互链（防串味延后，不硬凑）。
+- 技术路线：纯前端、无依赖（手写贝塞尔值计算、钳制、代码生成逻辑；SVG 曲线用 path 绘制，控制点用 pointer 事件拖动；用户输入用 textContent 或转义后插值，杜绝注入）；页面源码自检无外部请求、无 fetch／XHR；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，钳制、预设四值、代码生成、时长同步等纯函数均可 node 断言）。
+- 注册：ID `css_easing_generator`、Name「CSS 缓动曲线生成器」、Path `/tools/css-easing-generator`、Category 开发工具、Icon 建议 timeline（图标库无此名则用 animation 兜底，仍无则用 tune）、New: true；中英文描述＋SEO keywords（CSS 缓动曲线、cubic-bezier、easing generator、缓动函数、transition timing function、贝塞尔曲线、CSS 动画）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-easing-generator，相关工具互链 CSS 渐变生成器与 CSS 阴影与圆角生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_easing_generator`、Path `/tools/css-easing-generator` 注册完整（Category 开发工具），注册总数 187→188 Path。
+2. 生成闭环：四值改动后画布曲线、输出三段代码同步变化；10 组预设逐项切换后四值、画布、代码三方同步；时长改动后 transition 代码时长同步、预览动画时长同步。
+3. 校验闭环：x1／x2 超出 0–1 钳制并中文提示；y1／y2 超出 -1–2 钳制并中文提示；时长超出 0.2–3 秒钳制并中文提示；「恢复默认」回到 ease、1 秒；拖动控制点后数字输入同步。
+4. 操作与互链闭环：复制 cubic-bezier() 与复制全部代码内容与页面输出一致；下载 `easing.css` 内容与页面输出一致；复制失败有降级提示；相关工具互链含 CSS 渐变生成器与 CSS 阴影与圆角生成器；不含未交付工具的硬凑互链。
+5. 真限制可见：页面可见「只做曲线预览与代码生成、不做整页动效编排」「预览动画仅示意」「y 超出 0–1 为合法回弹区间」文案；零 fetch／XHR、零 CDN。
+6. node 测试 25+ 断言全过（四值钳制正反例、10 组预设四值、代码生成三段、时长同步、注册与零网络请求静态检查）。
+7. 页面无报错；移动端画布、滑杆与预览区小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_easing_generator.html`（新增；含 SEO 面板按家族标准＋控制点输入／SVG 画布拖动／10 组预设／时长／预览动画／代码输出／复制下载 UI）
+- `static/js/css_easing_generator.js`（新增；贝塞尔值计算、拖动同步、钳制、代码生成逻辑；双模式导出供 node 测试）
+- `tests/css_easing_generator.test.js`（新增；钳制、预设、代码生成、时长同步、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_easing_generator、Path /tools/css-easing-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，未报错）；`git log` 头部 87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **187**；Top3 候选重叠复核（css_easing／crc／jsonpath 三路零命中实锤；`easing` 仅 Lorem 轮测试否定断言一条；CSS 渐变／阴影与圆角／CSS→Tailwind／clamp 语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-26 21:00 · 通用调研第一百一十五轮）
+
+**交付状态**：10-26 通用调研第一百一十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Lorem Ipsum 生成器已交付闭环**（87d90a5 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **187 Path**，ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 晚轮，优先小难度纯前端。
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. Lorem Ipsum 交付确认：`git log` 头部 87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）；全量 187 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **dev.to 101 工具榜（yurukusa，单文件零依赖）**：JSON／正则／SQL／JWT／UUID、CSS 渐变／阴影／圆角／clamp、CSS→Tailwind、色盲模拟、子网、Favicon、OG 预览 → **全部自有实锤消解**（已注册 css-to-tailwind、favicon-generator、og-card-preview、CSS 生成器家族；色盲模拟检查器为 90 轮留池 P2）；LLM 比价／AI 模型选择／npm 对比／GitHub 统计／DNS／SSL／Headers 在线检查 → **不立**（需实时价格数据、第三方 API 或在线抓取，非纯前端单页）；
+   - **ConvertLinx 20+ 工具榜**：图片压缩／缩放／裁剪／转换、文字计数／大小写、Lorem Ipsum、JSON／Base64／正则、二维码／密码／单位换算 → **全部自有实锤消解**（已注册工具；Lorem 本轮刚交付）；Text to Slug、Meta 标签生成器 → **非新发现**（100–101 轮已记观察项，本轮仅再确认，单榜复现不足以晋升 P2，继续观察）；WhatsApp 链接生成器 → **新记观察项**（`whatsapp`／`wa.me` 全库零命中；手机号＋预填文本拼 wa.me 链接纯前端极小，但受众偏出海营销、窄于站内开发／文本主线，记观察）；llms.txt 生成器 → **新记观察项**（`llms.txt` 全库零命中，BACKLOG 既往 59 处 `llms` 均为 llmspeed 跑分、非本文件；真限制：浏览器受 CORS 所限无法任意爬站，只能做“手动贴链接＋描述→生成 llms.txt 文本”模式，价值依赖站长手动填描述，记观察）；
+   - **dev.to 13 浏览器工具榜（pyfile）**：JSON 格式化／Schema 验证、Base64、URL 编解码、HTML 实体、UUID、二维码、CSS／JS 压缩、Markdown 预览、色板、批量图片缩放、文本对比 → **全部自有实锤消解**（已注册工具）；
+   - **V2EX 近期帖（10-21~10-22）**：Builderoom 导航站本身、FlipListerAI 二手描述（需 AI 生成）、pimg.ai 图片增强（需 AI 成本）、Linkit 书签管理器（Go＋Wails 桌面应用） → **不立**（集合站本身、需 AI 成本或桌面形态，非单页网页工具）；
+   - **HN 帖**：Featureless 极简写作（需账号＋自动保存后端）、ToolHop 200+ 工具集合站本身、低代码栈（Hasura／Forest Admin／Metabase 均为平台级产品） → **不立**（需后端／账号或平台本身，非单页纯前端工具）。
+3. 候选池变动：Lorem Ipsum 生成器已交付划出（87d90a5，187 Path）；**本轮新晋 P2 0 个**（榜单信号全部自有实锤消解、不立或仅复现旧观察项）；**观察项新增 2 条**（WhatsApp 链接生成器、llms.txt 生成器）；Slug／Meta 标签生成器维持观察原状（不晋升）；自有实锤消解 10+ 项；全量 187 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Lorem Ipsum 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，114 轮 Top3 第二、三顺位依次递进，第三顺位取 102 轮晋升 P2 对中的首项）：
+
+1. **CSS 缓动曲线生成器** — P2 留池顺位递进（101 轮新晋；115 轮复核仍未交付；114 轮 Top3 第二顺位递进为首席；痛点：调 cubic-bezier 只能凭感觉改四个数字、看不到曲线与动效预览；纯前端小难度：拖动控制点／选预设曲线→实时预览动画＋输出 cubic-bezier() 与 CSS transition 代码＋复制，零上传；`css_easing`／`easing` 零命中实锤；建议 ID css_easing_generator、Path /tools/css-easing-generator；真限制：只做曲线预览与代码生成、不做整页动效编排）。
+2. **CRC 校验和计算器** — P2 留池顺位递进（102 轮新晋／晋升 P2；115 轮复核仍未交付；114 轮 Top3 第三顺位递进；痛点：校验字符串或文件完整性要算 CRC32／CRC16 等，手写脚本或找命令行都麻烦；纯前端小难度：粘贴文本或本地读文件→实时算出 CRC32／CRC16 等多算法校验值＋复制，零上传；`crc` 零命中实锤；建议 ID crc_checksum_calculator、Path /tools/crc-checksum-calculator；真限制：只算校验值、不做文件修复与完整性判定）。
+3. **JSONPath 测试器** — P2 留池顺位递进（102 轮观察项晋升 P2；115 轮复核仍未交付；痛点：从嵌套 JSON 里抠字段要手写路径、试错成本高；纯前端中难度：粘贴 JSON＋写 JSONPath 表达式→实时命中结果高亮＋复制，零上传；`jsonpath` 零命中实锤，JSON 语义对比工具内的定位标注仅为标注、非独立测试器，不重叠；建议 ID jsonpath_tester、Path /tools/jsonpath-tester；真限制：常用子集、不承诺完整规范）。
+
+其余 P2 留池（顺位在 Top3 之后）：TOML 格式化器（102 轮晋升 P2，与 JSONPath 同对、顺位居后）；TOTP 一次性密码生成器／HTTP 响应头分析器／JSON 字符串转义器（103 轮新晋 P2，留池顺位递进）；词云生成器／文本定宽换行器（99 轮新晋）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项，本轮 ConvertLinx 榜再确认，仍观察、不晋升）；WhatsApp 链接生成器／llms.txt 生成器（115 轮新记观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；其余 92 轮及之前留池项均保持留池／观察原状，详见 114 轮及之前记录。
+
+**通用候选表增量**（第一百一十五轮：Lorem Ipsum 生成器已交付划出（87d90a5 新增；ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator 已注册；全量 187 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 2 条**（WhatsApp 链接生成器、llms.txt 生成器）；Slug／Meta 标签生成器维持观察（ConvertLinx 榜复现、非新发现）；自有实锤消解 10+ 项（101 工具榜／ConvertLinx／13 工具榜余项均为已注册工具，含 css-to-tailwind、favicon-generator、og-card-preview；V2EX／HN 帖均为集合站、需 AI／后端或桌面形态）；全量 187 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Lorem Ipsum 生成器 | 已交付划出（87d90a5 新增；ID lorem_ipsum_generator、Path /tools/lorem-ipsum-generator 已注册；全量 187 Path；候选池划出） | — | 已实现 |
+| WhatsApp 链接生成器 | 新记观察项（115 轮；wa.me 全库零命中；手机号＋预填文本拼链接纯前端极小，但受众偏出海营销、窄于站内主线） | 小 | 观察 |
+| llms.txt 生成器 | 新记观察项（115 轮；llms.txt 全库零命中；真限制：CORS 下无法任意爬站、仅手动贴链接＋描述模式） | 小 | 观察 |
+| 自有实锤消解 | 不立（101 工具榜／ConvertLinx／13 工具榜余项均为已注册工具；V2EX／HN 帖均为集合站、需 AI／后端或桌面形态；Slug／Meta 标签为旧观察项复现、不晋升） | — | 不立 |
+
+**归档说明**：本轮为 10-26 通用调研第一百一十五轮——Lorem Ipsum 生成器交付闭环（87d90a5，`/tools/lorem-ipsum-generator` 已注册，全量 187 Path），候选池划出；**新晋 P2 0 个**（榜单信号全部自有实锤消解、不立或仅复现旧观察项）；观察项新增 2 条（WhatsApp 链接生成器、llms.txt 生成器）；仓库 187 注册工具全量核对无重叠（Top3 建议 ID css_easing_generator / crc_checksum_calculator / jsonpath_tester；ID＋Path＋关键词用 grep 逐项复核 0 命中，JSONPath 仅为语义对比工具内标注、非独立测试器）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 87d90a5（Lorem Ipsum 生成器新增）／1f565a5（Conventional Commit 提交信息生成器新增）／50ce0c5（CSV→Markdown 表格生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **187**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 本轮仍在（多轮已记录，请开发/评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-26 19:37 · 产品经理排期轮）
 
 **选定：Lorem Ipsum 生成器（lorem_ipsum_generator）** — 本轮唯一任务（新工具）：

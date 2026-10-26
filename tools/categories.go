@@ -535,6 +535,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_easing_generator",
+					Name:        "CSS 缓动曲线生成器",
+					Description: "拖动控制点或输入 x1/y1/x2/y2 调 cubic-bezier 曲线：10 组预设一键切换，动画时长 0.2–3 秒，实时预览方块位移动画，输出 cubic-bezier()、transition 与 transition-timing-function 三段代码，复制或下载 easing.css，纯前端零上传 · CSS easing generator: cubic-bezier curve editor, draggable control points, 10 presets, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-easing-generator",
+					Icon:        "timeline",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",

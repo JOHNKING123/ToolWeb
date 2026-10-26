@@ -1,0 +1,210 @@
+{{define "css_easing_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 缓动曲线生成器 - cubic-bezier 可视化生成 transition 代码 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 缓动曲线生成器：拖动控制点或输入 x1/y1/x2/y2 调 cubic-bezier 曲线，10 组预设一键切换，动画时长 0.2–3 秒，实时预览方块位移动画，一键复制 cubic-bezier()、transition 代码或下载 easing.css。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 缓动曲线,cubic-bezier,easing generator,缓动函数,transition timing function,贝塞尔曲线,CSS 动画,动画曲线生成器">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-easing-generator">
+    <meta property="og:title" content="CSS 缓动曲线生成器 - cubic-bezier 可视化生成">
+    <meta property="og:description" content="拖控制点调 cubic-bezier 曲线，10 组预设，实时动画预览，一键复制 transition 代码。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-easing-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 缓动曲线生成器","description":"免费在线 CSS 缓动曲线生成器：拖动控制点调 cubic-bezier 曲线，10 组预设，动画时长可调，实时预览，一键复制代码，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-easing-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ceg-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .ceg-wrap .navbar .material-icons { display: none; }
+        .ceg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .ceg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .ceg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .ceg-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .ceg-row label { font-size:.92rem; color:#374151; min-width:2.5em; }
+        .ceg-row input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        .ceg-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .ceg-svg-wrap { overflow-x:auto; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem; background:#fafafa; }
+        .ceg-svg { width:100%; max-width:560px; height:auto; display:block; touch-action:none; }
+        .ceg-cp { cursor:grab; touch-action:none; }
+        .ceg-cp:active { cursor:grabbing; }
+        .ceg-track { position:relative; height:72px; border:1px solid #e5e7eb; border-radius:.7rem; background:#f9fafb; overflow:hidden; }
+        .ceg-box { position:absolute; left:8px; top:16px; width:40px; height:40px; border-radius:.5rem; background:var(--primary-color, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+        .ceg-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .ceg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .ceg-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .ceg-btn:hover { background:#f3f4f6; }
+        .ceg-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .ceg-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .ceg-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .ceg-msg { color:#b45309; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .ceg-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .ceg-tip a { color:var(--primary-color); }
+        .ceg-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .ceg-links a { color:var(--primary-color); font-size:.93rem; }
+        .ceg-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .ceg-svg-wrap { padding:.4rem; }
+            .ceg-row input[type=range] { min-width:110px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="ceg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>〰️ CSS 缓动曲线生成器</h1>
+            <p>拖控制点调 cubic-bezier 曲线，实时预览动画，一键复制 transition 代码</p>
+        </div>
+        <div class="tool-content" id="ceg-form">
+            <div class="ceg-card">
+                <h3>控制点 <span class="ceg-hint">（数字输入、滑杆与画布拖动三方同步；x 限 0–1，y 限 -1–2，超限钳制并提示）</span></h3>
+                <div class="ceg-row">
+                    <label for="ceg-x1">x1</label>
+                    <input type="number" id="ceg-x1" min="0" max="1" step="0.01" value="0.25">
+                    <input type="range" id="ceg-x1-range" min="0" max="1" step="0.01" value="0.25">
+                    <label for="ceg-y1">y1</label>
+                    <input type="number" id="ceg-y1" min="-1" max="2" step="0.01" value="0.10">
+                    <input type="range" id="ceg-y1-range" min="-1" max="2" step="0.01" value="0.10">
+                </div>
+                <div class="ceg-row">
+                    <label for="ceg-x2">x2</label>
+                    <input type="number" id="ceg-x2" min="0" max="1" step="0.01" value="0.25">
+                    <input type="range" id="ceg-x2-range" min="0" max="1" step="0.01" value="0.25">
+                    <label for="ceg-y2">y2</label>
+                    <input type="number" id="ceg-y2" min="-1" max="2" step="0.01" value="1.00">
+                    <input type="range" id="ceg-y2-range" min="-1" max="2" step="0.01" value="1.00">
+                </div>
+                <div class="ceg-row">
+                    <label for="ceg-duration">时长</label>
+                    <input type="number" id="ceg-duration" min="0.2" max="3" step="0.1" value="1.00">
+                    <input type="range" id="ceg-duration-range" min="0.2" max="3" step="0.1" value="1">
+                    <span class="ceg-hint">秒（0.2–3 秒，默认 1 秒；时长同步到 transition 代码与预览动画）</span>
+                </div>
+                <p class="ceg-msg" id="ceg-msg"></p>
+            </div>
+
+            <div class="ceg-card">
+                <h3>曲线画布 <span class="ceg-hint">（拖动两个实心控制点；浅色带为 0–1 主区间，超出部分为回弹区间）</span></h3>
+                <div class="ceg-svg-wrap">
+                    <svg class="ceg-svg" id="ceg-svg" viewBox="0 0 300 300" role="img" aria-label="缓动曲线画布">
+                        <rect x="0" y="100" width="300" height="100" fill="#eff6ff"></rect>
+                        <g stroke="#e5e7eb" stroke-width="1">
+                            <line x1="0" y1="0" x2="300" y2="0"></line>
+                            <line x1="0" y1="100" x2="300" y2="100"></line>
+                            <line x1="0" y1="200" x2="300" y2="200"></line>
+                            <line x1="0" y1="300" x2="300" y2="300"></line>
+                            <line x1="0" y1="0" x2="0" y2="300"></line>
+                            <line x1="75" y1="0" x2="75" y2="300"></line>
+                            <line x1="150" y1="0" x2="150" y2="300"></line>
+                            <line x1="225" y1="0" x2="225" y2="300"></line>
+                            <line x1="300" y1="0" x2="300" y2="300"></line>
+                        </g>
+                        <line x1="0" y1="200" x2="300" y2="100" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4 4"></line>
+                        <line id="ceg-line1" x1="0" y1="200" x2="75" y2="190" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 4"></line>
+                        <line id="ceg-line2" x1="300" y1="100" x2="75" y2="100" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 4"></line>
+                        <path id="ceg-curve" d="M 0 200 C 75 190, 75 100, 300 100" fill="none" stroke="#2563eb" stroke-width="2.5"></path>
+                        <circle cx="0" cy="200" r="5" fill="#111827"></circle>
+                        <circle cx="300" cy="100" r="5" fill="#111827"></circle>
+                        <circle class="ceg-cp" id="ceg-cp1" cx="75" cy="190" r="10" fill="#2563eb"></circle>
+                        <circle class="ceg-cp" id="ceg-cp2" cx="75" cy="100" r="10" fill="#059669"></circle>
+                    </svg>
+                </div>
+                <p class="ceg-hint" style="margin-top:.6rem;">y 超出 0–1 为合法回弹区间：y1/y2 允许 -1–2，曲线超出浅色带即表示回弹；x1/x2 必须在 0–1 内。</p>
+            </div>
+
+            <div class="ceg-card">
+                <h3>动画预览 <span class="ceg-hint">（预览动画仅示意：方块沿直线位移演示时间曲线，不代表真实业务元素的动效效果）</span></h3>
+                <div class="ceg-track" id="ceg-track">
+                    <div class="ceg-box" id="ceg-preview-box">▶</div>
+                </div>
+                <div class="ceg-actions" style="margin-top:.8rem;">
+                    <button class="btn btn-primary" id="ceg-play" type="button">▶ 播放 / 重播</button>
+                    <button class="btn btn-secondary" id="ceg-reset" type="button">↺ 恢复默认（ease、1 秒）</button>
+                </div>
+            </div>
+
+            <div class="ceg-card">
+                <h3>CSS 代码输出 <span class="ceg-hint">（随输入实时生成，数值保留 2 位小数）</span></h3>
+                <div class="ceg-code" id="ceg-code-bezier"></div>
+                <div class="ceg-actions">
+                    <button class="btn btn-primary" id="ceg-copy-bezier" type="button">📋 复制 cubic-bezier()</button>
+                </div>
+                <div class="ceg-code" id="ceg-code-transition"></div>
+                <div class="ceg-code" id="ceg-code-timing"></div>
+                <div class="ceg-code" id="ceg-code-all"></div>
+                <div class="ceg-actions">
+                    <button class="btn btn-primary" id="ceg-copy-all" type="button">📋 复制全部代码</button>
+                    <button class="btn btn-secondary" id="ceg-download" type="button">⬇ 下载 easing.css</button>
+                </div>
+                <p class="ceg-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="ceg-card">
+                <h3>常用预设 <span class="ceg-hint">（点击载入，载入后仍可编辑；预设仅为示例起点）</span></h3>
+                <div class="ceg-presets">
+                    <button class="ceg-preset" id="ceg-preset-linear" type="button">linear</button>
+                    <button class="ceg-preset" id="ceg-preset-ease" type="button">ease</button>
+                    <button class="ceg-preset" id="ceg-preset-ease-in" type="button">ease-in</button>
+                    <button class="ceg-preset" id="ceg-preset-ease-out" type="button">ease-out</button>
+                    <button class="ceg-preset" id="ceg-preset-ease-in-out" type="button">ease-in-out</button>
+                    <button class="ceg-preset" id="ceg-preset-easeInQuad" type="button">easeInQuad</button>
+                    <button class="ceg-preset" id="ceg-preset-easeOutQuad" type="button">easeOutQuad</button>
+                    <button class="ceg-preset" id="ceg-preset-easeInOutQuad" type="button">easeInOutQuad</button>
+                    <button class="ceg-preset" id="ceg-preset-easeInCubic" type="button">easeInCubic</button>
+                    <button class="ceg-preset" id="ceg-preset-easeOutCubic" type="button">easeOutCubic</button>
+                </div>
+            </div>
+
+            <div class="ceg-card">
+                <h3>使用说明</h3>
+                <ol class="ceg-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>改数字、拖滑杆或直接拖画布上的两个控制点，四值、曲线与代码实时同步。</li>
+                    <li>点预设一键切换曲线，切换后表单、画布与代码三方同步。</li>
+                    <li>改时长后 transition 代码里的秒数与预览动画时长同步变化。</li>
+                    <li>复制单条或全部代码，或下载 easing.css 粘贴到样式表即用。</li>
+                    <li>要调渐变颜色去渐变生成器；要调静态阴影与圆角数值去阴影与圆角生成器；本工具只调时间曲线。</li>
+                </ol>
+            </div>
+
+            <div class="ceg-card">
+                <h3>常见问题</h3>
+                <dl class="ceg-tip">
+                    <dt><b>cubic-bezier() 的四个数字是什么意思？</b></dt>
+                    <dd>两个控制点的坐标 (x1, y1, x2, y2)：x 是时间进度，必须在 0–1 内；y 是动画进度，超出 0–1 即回弹。</dd>
+                    <dt><b>y 超出 0–1 会报错吗？</b></dt>
+                    <dd>不会。y 超出 0–1 为合法回弹区间，本工具允许 y1/y2 在 -1–2 内，预览方块会先冲过终点再回落。</dd>
+                    <dt><b>预设和手调有什么区别？</b></dt>
+                    <dd>没有区别：预设只是把固定四值填进来，载入后仍可任意改动，代码随改动实时重算。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="ceg-card">
+                <h3>相关工具</h3>
+                <div class="ceg-links">
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器</a>
+                </div>
+            </div>
+
+            <div class="ceg-card">
+                <h3>真限制说明</h3>
+                <div class="ceg-tip">
+                    <b>只做曲线预览与代码生成、不做整页动效编排</b>：不编排多元素时间轴、不做关键帧动画编辑，也不评估动效好坏、不给曲线优劣评分；<b>预览动画仅示意</b>：预览方块沿直线位移演示时间曲线，不代表真实业务元素的动效效果；<b>y 超出 0–1 为合法回弹区间</b>，x 必须在 0–1 内；<b>文本不出浏览器</b>，本页面零 fetch / XHR，全部计算本地完成。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="ceg-toast" id="ceg-toast"></div>
+    <script src="/tools/static/js/css_easing_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
