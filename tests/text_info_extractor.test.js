@@ -77,6 +77,7 @@ eq(valuesOf("地址 8.8.8.8", "ipv4").length, 1, "IPv4：公网地址正例命�
 eq(valuesOf("地址 999.1.1.1", "ipv4").length, 0, "IPv4：999 段不命中");
 eq(valuesOf("地址 256.0.0.1", "ipv4").length, 0, "IPv4：256 段不命中");
 eq(valuesOf("地址 192.168.1", "ipv4").length, 0, "IPv4：三段不命中");
+eq(valuesOf("地址 192.168.1.1.1", "ipv4").length, 0, "IPv4：五段不退格匹配后四段");
 
 /* ---------- 8. 金额 ---------- */
 eq(valuesOf("金额 ¥1,234.56", "amount").length, 1, "金额：¥ 千分位正例命中");
@@ -109,6 +110,8 @@ ok(!noCustom.some(function (g) { return g.id === "custom:订单号";}), "自定�
 ok(!M.validateCustom("", "abc").ok && /名称/.test(M.validateCustom("", "abc").error), "自定义：名称必填报错");
 ok(!M.validateCustom("x", "").ok && /正则表达式/.test(M.validateCustom("x", "").error), "自定义：表达式必填报错");
 ok(M.validateCustom("订单号", "订单号：[A-Z0-9]+").ok, "自定义：合法表达式校验通过");
+var dupName = M.validateCustom("订单号", "订单号：[A-Z0-9]+", ["订单号"]);
+ok(!dupName.ok && /已有同名/.test(dupName.error), "自定义：同名规则中文报错不撞 id");
 
 /* ---------- 11. 去重开关 ---------- */
 var dupGroups = M.extractAll("13812345678 13812345678", null, []);
@@ -144,8 +147,21 @@ has(fHtml, "13812345678", "筛选：高亮为手机号");
 /* ---------- 14. 导出拼装 ---------- */
 var exGroups = M.extractAll("wang@example.com 13812345678 13812345678 ¥1,234.56", null, []);
 var txt = M.buildListText(exGroups, true, null);
-has(txt, "", "导出 txt：按规则分组标题");
+has(txt, "邮箱（共1条）", "导出 txt：分组标题带规则名（邮箱）");
+has(txt, "手机号（共1条）", "导出 txt：分组标题带规则名（手机号）");
+has(txt, "金额（共1条）", "导出 txt：分组标题带规则名（金额）");
+notHas(txt, "（共0条）", "导出 txt：无筛选时空组不输出无名空标题");
 has(txt, "13812345678 ×2", "导出 txt：去重次数附在值后");
+/* 全部复制场景（评审复现文本）：多组标题均带规则名，无无名空标题。 */
+var allTxt = M.buildListText(M.extractAll("见 https://example.com/2026-10-26 和 2026-10-26", null, []), true, null);
+has(allTxt, "链接（共1条）", "导出 txt：全部复制时链接组标题带规则名");
+has(allTxt, "日期（共1条）", "导出 txt：全部复制时日期组标题带规则名");
+notHas(allTxt, "（共0条）", "导出 txt：全部复制时无无名空标题");
+/* 单组筛选且该组为空：保留标题并提示无命中，与页面清单口径一致。 */
+var emptyFilterTxt = M.buildListText(M.extractAll("13812345678", null, []), true, "email");
+has(emptyFilterTxt, "邮箱（共0条）", "导出 txt：单组筛选空组保留带规则名标题");
+has(emptyFilterTxt, "本组无命中", "导出 txt：单组筛选空组提示无命中");
+notHas(emptyFilterTxt, "13812345678", "导出 txt：单组筛选空组不混入其他组");
 var csv = M.buildCsv(exGroups, true, null);
 eq(csv.split("\n")[0], "规则,值,出现次数", "导出 csv：三列齐全表头");
 has(csv, "邮箱,wang@example.com,1", "导出 csv：邮箱行三列齐全");

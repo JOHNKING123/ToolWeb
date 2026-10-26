@@ -108,7 +108,7 @@ return h <= 23 && mi <= 59 && s <= 59;
 desc: '四段点分十进制地址，每段 0–255。',
 example: '192.168.1.1',
 extract: function (text) {
-return collect(/(?<!\d)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?!\d)(?!\.\d)/g, text, function (it) {
+return collect(/(?<!\d)(?<!\d\.)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?!\d)(?!\.\d)/g, text, function (it) {
 return it.groups.every(function (g) { return +g <= 255;});
 });
 }},
@@ -129,8 +129,9 @@ return out;
 function overlaps(a, b) { return a.start < b.end && b.start < a.end;}
 
 /* 自定义正则：不含分隔符，默认全局匹配；非法时返回中文报错，不抛异常。 */
-function validateCustom(name, pattern) {
+function validateCustom(name, pattern, existingNames) {
 if (!name ||!String(name).trim()) return { ok: false, error: '请填写自定义规则名称'};
+if (existingNames && existingNames.indexOf(String(name).trim())!== -1) return { ok: false, error: '已有同名自定义规则，请换一个名称'};
 if (!pattern ||!String(pattern).trim()) return { ok: false, error: '请填写正则表达式'};
 try {
 new RegExp(pattern, 'g');
@@ -205,7 +206,17 @@ function buildListText(groups, dedupe, filterId) {
 var lines = [];
 visibleGroups(groups, filterId).forEach(function (g) {
 var items = groupItems(g.matches, dedupe);
-lines.push('（共' + items.length + '条）');
+if (items.length === 0) {
+/* 无筛选时跳过空组，避免导出一串无名空标题；单组筛选时保留标题并
+* 提示无命中，与页面清单里该组的「本组无命中」口径一致。 */
+if (filterId) {
+lines.push(g.name + '（共0条）');
+lines.push('本组无命中');
+lines.push('');
+}
+return;
+}
+lines.push(g.name + '（共' + items.length + '条）');
 items.forEach(function (it) {
 lines.push(it.count > 1? it.value + ' ×' + it.count: it.value);
 });
@@ -488,7 +499,7 @@ if (addBtn) addBtn.addEventListener('click', function () {
 var nameEl = $('tie-custom-name');
 var patEl = $('tie-custom-pattern');
 var errEl = $('tie-custom-error');
-var v = validateCustom(nameEl? nameEl.value: '', patEl? patEl.value: '');
+var v = validateCustom(nameEl? nameEl.value: '', patEl? patEl.value: '', customs.map(function (c) { return c.name;}));
 if (!v.ok) {
 if (errEl) { errEl.textContent = v.error; errEl.style.display = 'block';}
 else toast(v.error);
