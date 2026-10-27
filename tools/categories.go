@@ -1979,6 +1979,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "音频处理",
 				},
+				{
+					ID:          "mp3_tag_editor",
+					Name:        "MP3 标签编辑器",
+					Description: "上传 MP3 本地解析 ID3v2 标签，标题/歌手/专辑/年份/音轨/流派/注释七字段编辑，封面预览/更换/删除，重写为 ID3v2.3 UTF-16 标签导出，音频段与 ID3v1 尾标原样保留，只改标签不改波形，纯前端零上传 · MP3 tag editor: edit ID3v2 metadata and cover locally, export tagged MP3 without upload",
+					Path:        "/tools/mp3-tag-editor",
+					Icon:        "music_note",
+					New:         true,
+					Category:    "音频处理",
+				},
 			},
 		},
 	}

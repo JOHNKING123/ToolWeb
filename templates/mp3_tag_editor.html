@@ -1,0 +1,175 @@
+{{define "mp3_tag_editor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MP3 标签编辑器 - MP3 标签编辑/ID3 编辑/MP3 封面更换（mp3 tag editor）| 程序员工具箱</title>
+<meta name="description" content="免费 MP3 标签编辑器（MP3 Tag Editor）：本地上传 MP3，解析并编辑 ID3v2 标题/歌手/专辑/年份/音轨/流派/注释七字段，更换或删除封面，重写为 ID3v2.3 标签导出，音频段与 ID3v1 尾标原样保留，只改标签不改波形，纯前端零上传。">
+<meta name="keywords" content="MP3 标签编辑,ID3 编辑,MP3 元数据修改,MP3 封面更换,mp3 tag editor,ID3 editor,MP3 metadata editor,ID3v2,MP3 标签">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mp3-tag-editor">
+<meta property="og:title" content="MP3 标签编辑器 - 本地改 ID3 标签与封面，不改波形">
+<meta property="og:description" content="上传 MP3，改标题/歌手/专辑/封面等 ID3v2 标签，导出改后文件，音频原样保留，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/mp3-tag-editor">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MP3 标签编辑器","alternateName":"mp3_tag_editor","description":"本地上传 MP3，解析并编辑 ID3v2 标题/歌手/专辑/年份/音轨/流派/注释与封面，重写为 ID3v2.3 标签导出，音频段与 ID3v1 尾标原样保留，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/mp3-tag-editor","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.mp3-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.mp3-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.mp3-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+.mp3-drop{border:2px dashed #9ca3af;border-radius:.8rem;padding:1.6rem 1rem;text-align:center;cursor:pointer;color:#4b5563;line-height:1.9}
+.mp3-drop:hover{border-color:#1d4ed8;background:#eff6ff}
+.mp3-drop b{color:#111827}
+.mp3-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.mp3-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.mp3-field input[type="text"],.mp3-field textarea{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.92rem;background:#fff;color:#1f2937;width:100%;box-sizing:border-box;font-family:inherit}
+.mp3-field input:focus,.mp3-field textarea:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.mp3-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 .9rem}
+.mp3-grid .mp3-wide{grid-column:1/-1}
+.mp3-error{font-size:.88rem;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:.5rem;padding:.55rem .8rem;margin-bottom:.7rem}
+.mp3-error:empty{display:none}
+.mp3-info{font-size:.9rem;color:#374151;line-height:1.9;word-break:break-all}
+.mp3-status{font-size:.9rem;color:#065f46;line-height:1.9;word-break:break-all}
+.mp3-status:empty{display:none}
+.mp3-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.mp3-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;font-size:.9rem;font-weight:600;cursor:pointer}
+.mp3-btn-primary{background:#1d4ed8;color:#fff}
+.mp3-btn-primary:hover{background:#1e40af}
+.mp3-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.mp3-btn-secondary:hover{background:#e5e7eb}
+.mp3-btn-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.mp3-cover-box{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap}
+.mp3-cover-box img{max-width:220px;max-height:220px;border:1px solid #e5e7eb;border-radius:.6rem;display:none}
+.mp3-cover-none{width:220px;height:220px;border:1px dashed #d1d5db;border-radius:.6rem;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:.9rem}
+.mp3-limits{font-size:.9rem;color:#4b5563;line-height:1.9}
+.mp3-limits b{color:#111827}
+.mp3-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.mp3-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.mp3-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+@media (max-width:640px){.mp3-grid{grid-template-columns:1fr}.mp3-actions .mp3-btn{flex:1;justify-content:center}.mp3-cover-box img,.mp3-cover-none{width:100%;max-width:100%;height:auto;min-height:160px}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1>MP3 标签编辑器</h1>
+<p>本工具只改 ID3v2 标签、不碰波形：读文件头的标题、歌手、专辑、封面等元数据，改完重写标签导出，声音本身一个字节都不动。区别于改波形的三件音频工具——音频裁剪器（截取片段）、音频合并器（拼接多段）、变速混响器（变速加混响）动的是声音；本工具动的是标签。</p>
+</div>
+<div class="tool-content" style="max-width:1200px;margin:auto;">
+<div class="mp3-privacy">
+<div><b>纯前端运行，零上传：</b>MP3 文件只在浏览器本地解析与重写，不上传到任何服务器，无后端调用。可打开开发者工具 Network 面板验证：本页面无 fetch/XHR、零 CDN。</div>
+</div>
+
+<div class="mp3-panel">
+<h3>1️⃣ 上传 MP3</h3>
+<div class="mp3-drop" id="mp3-drop">
+<b>点击选择或拖拽 MP3 文件到这里</b><br>
+<span>仅接受 .mp3 文件；非 MP3 文件会被明确拒绝</span>
+</div>
+<input type="file" id="mp3-file" accept=".mp3,audio/mpeg" style="display:none">
+<div id="mp3-error" class="mp3-error"></div>
+<p class="mp3-info" id="mp3-info">尚未上传文件。</p>
+<div class="mp3-actions">
+<button type="button" class="mp3-btn mp3-btn-secondary" id="mp3-demo">载入示例（合成标签演示）</button>
+<button type="button" class="mp3-btn mp3-btn-secondary" id="mp3-reupload">重新上传</button>
+</div>
+<p class="mp3-info">示例文件用内置合成 ID3 标签＋占位音频段演示解析与导出流程，仅用于演示解析，不可当真 MP3 播放。</p>
+</div>
+
+<div class="mp3-panel">
+<h3>2️⃣ 编辑标签字段</h3>
+<div class="mp3-grid">
+<div class="mp3-field"><label for="mp3-title">标题（TIT2）</label><input type="text" id="mp3-title" spellcheck="false"></div>
+<div class="mp3-field"><label for="mp3-artist">歌手（TPE1）</label><input type="text" id="mp3-artist" spellcheck="false"></div>
+<div class="mp3-field"><label for="mp3-album">专辑（TALB）</label><input type="text" id="mp3-album" spellcheck="false"></div>
+<div class="mp3-field"><label for="mp3-year">年份（TYER）</label><input type="text" id="mp3-year" spellcheck="false" placeholder="如 2024"></div>
+<div class="mp3-field"><label for="mp3-track">音轨（TRCK）</label><input type="text" id="mp3-track" spellcheck="false" placeholder="如 3 或 3/12"></div>
+<div class="mp3-field"><label for="mp3-genre">流派（TCON）</label><input type="text" id="mp3-genre" spellcheck="false"></div>
+<div class="mp3-field mp3-wide"><label for="mp3-comment">注释（COMM）</label><textarea id="mp3-comment" rows="3" spellcheck="false"></textarea></div>
+</div>
+<div id="mp3-track-error" class="mp3-error"></div>
+<p class="mp3-info">上传后字段自动填入解析值，无值留空；清空某个字段后导出，该字段的帧不再写入（等效删除）。</p>
+<div class="mp3-actions">
+<button type="button" class="mp3-btn mp3-btn-secondary" id="mp3-clear">清空字段</button>
+</div>
+</div>
+
+<div class="mp3-panel">
+<h3>3️⃣ 封面</h3>
+<div class="mp3-cover-box">
+<img id="mp3-cover-img" alt="MP3 封面预览">
+<div class="mp3-cover-none" id="mp3-cover-none">无封面</div>
+<div>
+<p class="mp3-info" id="mp3-cover-info">无封面</p>
+<div class="mp3-actions">
+<button type="button" class="mp3-btn mp3-btn-secondary" id="mp3-cover-change">更换封面（JPG / PNG）</button>
+<button type="button" class="mp3-btn mp3-btn-danger" id="mp3-cover-delete">删除封面</button>
+</div>
+</div>
+</div>
+<input type="file" id="mp3-cover-file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" style="display:none">
+</div>
+
+<div class="mp3-panel">
+<h3>4️⃣ 导出改后 MP3</h3>
+<p class="mp3-info">导出文件名自动为「原文件名-tagged.mp3」（如 song.mp3 → song-tagged.mp3）。重写统一为 ID3v2.3 UTF-16 标签；未知帧（含歌词帧）字节原样带回，音频段与 ID3v1 尾标原样保留。</p>
+<div class="mp3-actions">
+<button type="button" class="mp3-btn mp3-btn-primary" id="mp3-export">⬇️ 导出改后 MP3</button>
+</div>
+<p class="mp3-status" id="mp3-export-status"></p>
+<p class="mp3-info">导出后请在常用播放器里核对一次：不同播放器对 v2.3 标签、封面与编码的兼容性有差异。</p>
+</div>
+
+<div class="mp3-panel">
+<h3>真限制（使用前请知晓）</h3>
+<div class="mp3-limits">
+<b>只改 ID3v2 元数据、不做音频转码与音质处理：</b>不解码、不重编码、不改时长与波形。<br>
+<b>只支持 MP3：</b>WAV、OGG、M4A 等不含 ID3v2 标签的文件不在本工具范围，非 MP3 上传会被拒绝。<br>
+<b>ID3v1 尾标原样保留：</b>文件尾的 ID3v1 尾标（如有）不改写；如播放器优先读 v1，仍可能显示旧信息，一般播放器优先读 v2。<br>
+<b>未知帧原样保留、但无法保证所有播放器行为一致：</b>重写时未知帧字节原样带回，但不同播放器对 v2.3、封面与编码的兼容性有差异，导出后请在常用播放器里核对一次。<br>
+<b>不收集、不上传任何内容：</b>文件只在浏览器本地解析与重写。
+</div>
+</div>
+
+<div class="mp3-panel">
+<h3>使用说明</h3>
+<div class="mp3-limits">
+<b>解析：</b>手写 ID3v2.3 / v2.4 解析：按头 10 字节读版本与同步安全尺寸，逐帧读帧头（v2.3 尺寸大端、v2.4 尺寸同步安全）；文本帧支持 ISO-8859-1、UTF-16（含 BOM）、UTF-16BE、UTF-8 四种编码；年份在 v2.3 读 TYER、在 v2.4 读 TDRC，统一归入年份字段；注释取首个 COMM 帧，封面取首个 APIC 帧。<br>
+<b>重写：</b>新标签统一写 ID3v2.3，文本帧用 UTF-16LE＋BOM 编码，年份写 TYER，封面写 APIC（图片类型 0x03 封面）；空字段不写帧；未知帧按原字节拼在已知帧之后；原文件从旧标签末尾起的全部字节原样拼接在新标签之后。<br>
+<b>音轨格式：</b>只接受数字或“数字/总数”，如 3 或 3/12；其他格式红字提示，修正后方可导出。<br>
+<b>隐私：</b>全程无网络请求——上传、解析、改写、导出都在你的浏览器里完成。
+</div>
+<dl class="mp3-faq">
+<dt>改完标签后音质会变吗？</dt>
+<dd>不会。本工具只重写文件头的 ID3v2 标签，音频数据逐字节原样保留，不解码、不转码。</dd>
+<dt>为什么有的播放器仍显示旧标题？</dt>
+<dd>可能是该播放器优先读文件尾的 ID3v1 尾标（本工具原样保留、不改写），或缓存了旧元数据。先确认播放器读的是 ID3v2，再重新导入一次。</dd>
+<dt>歌词会丢吗？</dt>
+<dd>不会。未知帧（含 USLT 歌词帧）字节原样带回新标签，不解码也不删除。</dd>
+<dt>导出文件能在所有播放器打开吗？</dt>
+<dd>ID3v2.3 是兼容性最广的版本，但不同播放器对封面与编码仍有差异，导出后请在常用播放器里核对一次。</dd>
+</dl>
+</div>
+
+<div class="mp3-panel">
+<h3>相关工具</h3>
+<div class="mp3-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">MP3 标签编辑器（当前）</span>
+<a href="/tools/audio-trimmer" class="btn btn-secondary" style="font-size:.9rem;">音频裁剪器（要改波形、截取片段去裁剪器）</a>
+<a href="/tools/audio-merger" class="btn btn-secondary" style="font-size:.9rem;">音频合并器（要改波形、拼接多段去合并器）</a>
+<a href="/tools/slowed-reverb" class="btn btn-secondary" style="font-size:.9rem;">音频变速混响生成器（要改波形、变速加混响去变速混响器）</a>
+</div>
+</div>
+
+</div>
+</div>
+<script src="/tools/static/js/mp3_tag_editor.js?v=1"></script>
+</body>
+</html>
+{{end}}
