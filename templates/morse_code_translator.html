@@ -1,0 +1,169 @@
+{{define "morse_code_translator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>摩斯码翻译器 - 文本与标准国际摩斯码双向转换，非法字符定位 | 程序员工具箱</title>
+<meta name="description" content="免费在线摩斯码翻译器：文本与标准国际摩斯码双向转换，字母数字标点完整对照表，非法字符与无法识别码元按位置定位提示，实时转换一键复制。纯前端本地转换，零上传。morse code translator and decoder, 100% client-side.">
+<meta name="keywords" content="摩斯码,摩斯密码,电码,摩斯码翻译器,电报码,摩斯码解码,摩斯码转换,morse code,morse code translator,morse decoder">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/morse-code-translator">
+<meta property="og:title" content="摩斯码翻译器 - 文本与标准国际摩斯码双向转换">
+<meta property="og:description" content="粘贴文本即转标准国际摩斯码，也可反向解码；非法字符按位置定位，字母数字标点对照表齐全，纯前端本地转换零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/morse-code-translator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"摩斯码翻译器","alternateName":"morse code translator","description":"文本与标准国际摩斯码双向转换，非法字符按位置定位，字母数字标点对照表齐全，浏览器本地转换，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/morse-code-translator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.mc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.mc-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.mc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.mc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.mc-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.mc-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.88rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.mc-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.mc-area.out{background:#f0fdf4}
+.mc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.mc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.mc-btn .material-icons{font-size:1.1rem}
+.mc-btn-primary{background:#1d4ed8;color:#fff}
+.mc-btn-primary:hover{background:#1e40af}
+.mc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.mc-btn-secondary:hover{background:#e5e7eb}
+.mc-stats{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:0 0 .7rem;line-height:1.9}
+.mc-stats b{color:#111827}
+.mc-issue{display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline;border-radius:.5rem;
+padding:.5rem .8rem;font-size:.88rem;line-height:1.7;margin-bottom:.45rem}
+.mc-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.mc-line{font-weight:700;white-space:nowrap}
+.mc-kind{border-radius:.3rem;padding:.05rem .5rem;font-size:.75rem;font-weight:700;white-space:nowrap;background:rgba(255,255,255,.6)}
+.mc-empty{font-size:.9rem;color:#6b7280;line-height:1.8;padding:.4rem 0}
+.mc-tables{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.mc-table-wrap{overflow-x:auto}
+table.mc-table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:140px}
+table.mc-table th,table.mc-table td{border:1px solid #e5e7eb;padding:.5rem .7rem;text-align:left;vertical-align:top}
+table.mc-table th{background:#f9fafb;color:#374151;white-space:nowrap}
+table.mc-table td{word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace}
+table.mc-table td.mc-char{font-weight:700;color:#111827;white-space:nowrap}
+.mc-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.mc-note b{color:#4b5563}
+.mc-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.mc-copy-ok{color:#047857}.mc-copy-fail{color:#b91c1c}
+.mc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.mc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.mc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.mc-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.mc-combo a{color:#1d4ed8;font-weight:600}
+@media (max-width:768px){.mc-panel{padding:1rem .8rem}.mc-btn{padding:.55rem .9rem}.mc-tables{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">graphic_eq</i> 摩斯码翻译器</h1>
+<p>文本与标准国际摩斯码双向转换 —— 对照表查表慢、易错，粘贴即转，非法字符按位置定位。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="mc-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>本工具<b>只做标准国际摩斯码编解码、不做音频发报与无线电实操</b>（不生成蜂鸣音频、不做发报练习、不涉无线电操作）；<b>摩斯码不是加密</b>（码表公开、可逆对照，不承诺任何保密性）；<b>只认标准国际摩斯码表</b>（美式摩斯码等非标准变体不在口径内）；粘贴内容<b>只在浏览器本地转换、不上传</b>。</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">swap_horiz</i> 转换方向</h3>
+<div class="mc-actions" style="margin-top:0;">
+<button type="button" class="mc-btn mc-btn-primary" id="mc-dir-text" aria-pressed="true"><i class="material-icons">text_fields</i> 文本 → 摩斯码</button>
+<button type="button" class="mc-btn mc-btn-secondary" id="mc-dir-morse" aria-pressed="false"><i class="material-icons">graphic_eq</i> 摩斯码 → 文本</button>
+</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">input</i> <span id="mc-input-label">输入文本</span>（输入即实时转换）</h3>
+<textarea class="mc-area" id="mc-input" rows="8" placeholder="在此输入文本，例如：HELLO WORLD&#10;小写会自动转大写，空格与换行均为词分隔。"></textarea>
+<div class="mc-actions">
+<button type="button" class="mc-btn mc-btn-primary" id="mc-convert"><i class="material-icons">autorenew</i> 转换</button>
+<button type="button" class="mc-btn mc-btn-secondary" id="mc-sample"><i class="material-icons">auto_awesome</i> 载入示例</button>
+<button type="button" class="mc-btn mc-btn-secondary" id="mc-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+<div class="mc-note">编码口径：小写先转大写再查表；字母间单空格分隔；任意连续空白（含换行）为词分隔，编码为 <code> / </code>；行首行尾空白忽略；码表外字符记非法字符（含字符与第 N 个字符位置）并跳过，不静默丢弃。解码口径：按 <code>/</code> 切词，词内按空白切码；非法字符与查表不到的点划串记问题并定位词序号＋码序号，其余继续解码。</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">fact_check</i> 统计与问题清单</h3>
+<div class="mc-stats" id="mc-stats"></div>
+<div id="mc-issues"></div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">content_copy</i> <span id="mc-output-label">摩斯码输出</span></h3>
+<textarea class="mc-area out" id="mc-output" rows="8" readonly></textarea>
+<div class="mc-actions">
+<button type="button" class="mc-btn mc-btn-primary" id="mc-copy"><i class="material-icons">content_copy</i> 复制输出</button>
+</div>
+<div class="mc-copy-tip" id="mc-copy-tip"></div>
+<div class="mc-note">复制内容与输出区文本逐字一致；复制失败时页面会给出降级提示，请手动选中输出区内容复制。</div>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">table_rows</i> 标准国际摩斯码对照表</h3>
+<div class="mc-tables">
+<div><h4 style="margin:0 0 .6rem;font-size:.95rem;">字母（26 个）</h4><div class="mc-table-wrap" id="mc-table-letters"></div></div>
+<div><h4 style="margin:0 0 .6rem;font-size:.95rem;">数字（10 个）</h4><div class="mc-table-wrap" id="mc-table-digits"></div></div>
+<div><h4 style="margin:0 0 .6rem;font-size:.95rem;">标点（18 个）</h4><div class="mc-table-wrap" id="mc-table-puncts"></div></div>
+</div>
+<div class="mc-note">对照表与编码表同源：同一张码表驱动编码、解码与本表展示，逐项一致。</div>
+</div>
+
+<div class="mc-combo">
+<b>二进制编码与点划编码的区分：</b>要把二进制数据编成可传输文本，请去 <a href="/tools/base64">Base64 编码/解码</a>；要把文本编成点划信号对照码，请用本工具摩斯码翻译器。两者编码对象与码表不同，不要混用。
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="mc-faq">
+<dt>小写字母怎么处理？</dt>
+<dd>编码时小写先转大写再查表，<code>sos</code> 与 <code>SOS</code> 编码结果一致；解码输出一律为大写。</dd>
+<dt>空格和换行怎么编码？</dt>
+<dd>任意连续空白（含换行）都视为词分隔，编码为 <code> / </code>；行首行尾空白忽略，不产生空词。合法文本编码后再解码，可还原（小写转大写、空白归一）。</dd>
+<dt>含中文或 emoji 时会怎样？</dt>
+<dd>码表外字符记为非法字符，问题清单会标出该字符与原输入中第 N 个字符位置，非法字符跳过不进入输出，其余字符正常编码，不整体失败。</dd>
+<dt>解码时遇到无法识别的点划串怎么办？</dt>
+<dd>记为无法识别的问题，定位到词序号＋码序号并跳过该码元，其余码元照常解码。</dd>
+<dt>摩斯码能用来加密吗？</dt>
+<dd>不能。摩斯码不是加密：码表公开、人人可查、可逆对照，任何人拿到摩斯码都能按表还原原文，不要把它当作保密手段。</dd>
+<dt>本工具会发报或播放声音吗？</dt>
+<dd>不会。本工具只做标准国际摩斯码编解码，不做音频发报与无线电实操。</dd>
+<dt>文本会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行，转换、复制全在浏览器本地 JavaScript 里完成，脚本中没有任何 fetch / XHR 上传逻辑，也不用 CDN。可断网使用（首次加载页面除外）。</dd>
+<dt>和 Base64 编码/解码有什么区别？</dt>
+<dd>Base64 是二进制编码：把二进制数据编成 ASCII 文本；摩斯码是点划编码：把文本字符编成点划对照码。编码对象与码表不同，互链文案按此区分。</dd>
+</dl>
+</div>
+
+<div class="mc-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="mc-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">摩斯码翻译器（当前）</span>
+<a href="/tools/base64" class="btn btn-secondary" style="font-size:.9rem;">Base64 编码/解码</a>
+</div>
+</div>
+
+</div>
+</div>
+<script src="/tools/static/js/morse_code_translator.js?v=1"></script>
+</body>
+</html>
+{{end}}

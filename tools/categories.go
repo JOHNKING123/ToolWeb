@@ -120,6 +120,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "morse_code_translator",
+					Name:        "摩斯码翻译器",
+					Description: "文本与标准国际摩斯码双向转换，字母数字标点完整对照表，非法字符按位置定位，纯前端本地转换零上传 · Morse code translator and decoder: text to standard International Morse code and back, illegal character location, 100% client-side",
+					Path:        "/tools/morse-code-translator",
+					Icon:        "graphic_eq",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "url",
 					Name:        "URL 编码/解码",
 					Description: "URL 编码和解码转换",
