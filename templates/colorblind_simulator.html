@@ -1,0 +1,197 @@
+{{define "colorblind_simulator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>色盲模拟检查器 - 红绿色盲模拟/色盲配色检查/模拟后对比度（colorblind simulator）| 程序员工具箱</title>
+<meta name="description" content="免费色盲模拟检查器（Colorblind Simulator）：输入单个颜色或粘贴配色，用 Machado 2009 矩阵模拟红色盲、绿色盲、蓝色盲眼里的呈现，并对前景/背景色对算模拟后 WCAG 对比度与 AA 判定，找出色盲用户眼里撞成一色的配色，纯前端零上传。">
+<meta name="keywords" content="色盲模拟,色盲检查,红绿色盲模拟,色盲配色检查,色盲模拟器,color blindness simulator,colorblind simulator,protanopia,deuteranopia,tritanopia,色盲对比度">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/colorblind-simulator">
+<meta property="og:title" content="色盲模拟检查器 - 色盲眼里的颜色呈现与模拟后对比度">
+<meta property="og:description" content="输入颜色或配色，看红色盲、绿色盲、蓝色盲眼里的呈现与模拟后对比度，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/colorblind-simulator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"色盲模拟检查器","alternateName":"colorblind_simulator","description":"输入颜色或配色，用 Machado 2009 矩阵模拟红色盲、绿色盲、蓝色盲眼里的呈现，并对前景/背景色对算模拟后 WCAG 对比度与 AA 判定，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/colorblind-simulator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.cb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.cb-work{display:grid;grid-template-columns:1fr;gap:1.2rem;align-items:start}
+.cb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.cb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+.cb-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.cb-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.cb-field textarea,.cb-field input[type="text"]{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.92rem;background:#fff;color:#1f2937;width:100%;box-sizing:border-box;font-family:inherit}
+.cb-field textarea:focus,.cb-field input[type="text"]:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.cb-row-input{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.cb-row-input input[type="color"]{width:2.6rem;height:2.2rem;padding:0;border:1px solid #d1d5db;border-radius:.4rem;background:#fff;cursor:pointer;flex:none}
+.cb-row-input input[type="text"]{flex:1;min-width:9rem}
+.cb-error{font-size:.88rem;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:.5rem;padding:.55rem .8rem;margin-bottom:.7rem}
+.cb-error:empty{display:none}
+.cb-cards{display:flex;gap:.7rem;flex-wrap:wrap}
+.cb-chip{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .7rem;background:#fff;cursor:pointer;font-size:.88rem}
+.cb-chip:hover{border-color:#1d4ed8}
+.cb-chip i{display:inline-block;width:1.6rem;height:1.6rem;border-radius:.3rem;border:1px solid rgba(0,0,0,.15);flex:none}
+.cb-chip b{color:#374151;font-weight:600}
+.cb-chip code{color:#111827;font-size:.82rem}
+.cb-strip{display:flex;gap:.5rem;flex-wrap:wrap;margin:.4rem 0}
+.cb-row{margin-bottom:1rem}
+.cb-row-head{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.cb-row-head b{font-size:.92rem;color:#111827;min-width:5em}
+.cb-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.cb-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;font-size:.9rem;font-weight:600;cursor:pointer}
+.cb-btn-primary{background:#1d4ed8;color:#fff}
+.cb-btn-primary:hover{background:#1e40af}
+.cb-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.cb-btn-secondary:hover{background:#e5e7eb}
+.cb-note{font-size:.88rem;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;margin-bottom:.7rem}
+.cb-note:empty{display:none}
+.cb-warn{font-size:.88rem;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:.5rem;padding:.55rem .8rem;margin:.4rem 0}
+.cb-empty{font-size:.9rem;color:#9ca3af;line-height:1.8}
+.cb-table{width:100%;border-collapse:collapse;font-size:.88rem;overflow-x:auto}
+.cb-table th,.cb-table td{border:1px solid #e5e7eb;padding:.55rem .6rem;text-align:left;white-space:nowrap}
+.cb-table th{background:#f9fafb;color:#374151}
+.cb-table tr.cb-fallen td{background:#fef2f2}
+.cb-pass{color:#065f46;background:#d1fae5;border-radius:.3rem;padding:.1rem .45rem;font-weight:600}
+.cb-fail{color:#dc2626;background:#fee2e2;border-radius:.3rem;padding:.1rem .45rem;font-weight:600}
+.cb-fallen-text{color:#dc2626;font-weight:700}
+.cb-preview{border:1px solid #e5e7eb;border-radius:.6rem;padding:1rem;margin-bottom:.8rem;line-height:1.9}
+.cb-summary{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.6;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;width:100%;box-sizing:border-box;min-height:9rem;color:#111827;background:#f8fafc;resize:vertical}
+.cb-limits{font-size:.9rem;color:#4b5563;line-height:1.9}
+.cb-limits b{color:#111827}
+.cb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.cb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.cb-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.cb-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+.cb-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cb-scroll-x{overflow-x:auto}
+@media (max-width:900px){.cb-actions .cb-btn{flex:1;justify-content:center}.cb-table th,.cb-table td{white-space:normal}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1>色盲模拟检查器</h1>
+<p>本工具回答的是「色盲眼里什么样」：输入颜色或配色，看红色盲、绿色盲、蓝色盲眼里的呈现，并对前景/背景色对算模拟后的对比度，找出色盲用户眼里分不清、对比不够的颜色。区别于配色方案生成器（配什么色）、WCAG 颜色对比度检查器（正常视觉下数值够不够）、网站无障碍检查器（HTML 查规则）。</p>
+</div>
+<div class="tool-content" style="max-width:1200px;margin:auto;">
+<div class="cb-privacy">
+<div><b>纯前端运行，零上传：</b>颜色与配色只在浏览器本地计算，不上传到任何服务器，无后端调用。可打开开发者工具 Network 面板验证：本页面无 fetch/XHR、零 CDN。</div>
+</div>
+
+<div class="cb-work">
+<div class="cb-panel">
+<h3>单色模拟</h3>
+<div class="cb-field">
+<label for="cb-single-text">颜色（6 位 HEX，支持 #FF0000 或 FF0000，不支持 #f00 缩写）</label>
+<div class="cb-row-input">
+<input type="color" id="cb-single-picker" value="#FF0000">
+<input type="text" id="cb-single-text" value="#FF0000" spellcheck="false">
+</div>
+</div>
+<div id="cb-single-error" class="cb-error"></div>
+<div id="cb-single-cards"></div>
+<p class="cb-empty">色块点击即可复制该 HEX。原色与三类型模拟色块一一对应，模拟值即界面显示值。</p>
+</div>
+
+<div class="cb-panel">
+<h3>配色模拟</h3>
+<div class="cb-field">
+<label for="cb-palette-text">粘贴配色（6 位 HEX，以逗号、分号、空格或换行分隔，最多取前 12 个）</label>
+<textarea id="cb-palette-text" rows="3" spellcheck="false">#E53935, #43A047, #1E88E5, #FDD835</textarea>
+</div>
+<div id="cb-palette-note" class="cb-note"></div>
+<div id="cb-palette-out"></div>
+<div class="cb-actions">
+<button type="button" class="cb-btn cb-btn-secondary" id="cb-palette-sample">载入示例（红绿状态色等）</button>
+<button type="button" class="cb-btn cb-btn-secondary" id="cb-palette-clear">清空</button>
+</div>
+<p class="cb-empty">示例配色含红绿状态色 #E53935 / #43A047：先看它们在三类型模拟下是否还分得清。</p>
+</div>
+
+<div class="cb-panel">
+<h3>对比度模拟</h3>
+<div class="cb-field">
+<label for="cb-fg-text">前景色</label>
+<div class="cb-row-input">
+<input type="color" id="cb-fg-picker" value="#FF0000">
+<input type="text" id="cb-fg-text" value="#FF0000" spellcheck="false">
+</div>
+</div>
+<div class="cb-field">
+<label for="cb-bg-text">背景色</label>
+<div class="cb-row-input">
+<input type="color" id="cb-bg-picker" value="#FFFFFF">
+<input type="text" id="cb-bg-text" value="#FFFFFF" spellcheck="false">
+</div>
+</div>
+<div id="cb-contrast-preview"></div>
+<div class="cb-scroll-x"><div id="cb-contrast-out"></div></div>
+<div class="cb-field" style="margin-top:.8rem;">
+<label for="cb-contrast-summary">对比度摘要（与上表逐字一致）</label>
+<textarea id="cb-contrast-summary" class="cb-summary" readonly spellcheck="false"></textarea>
+</div>
+<div class="cb-actions">
+<button type="button" class="cb-btn cb-btn-secondary" id="cb-contrast-sample">载入示例（红字白底）</button>
+<button type="button" class="cb-btn cb-btn-primary" id="cb-contrast-copy">复制对比度摘要</button>
+</div>
+<p class="cb-empty">判定档：正常字 AA ≥ 4.5，大号字 AA ≥ 3.0（另附 AAA 参考：正常字 ≥ 7.0、大号字 ≥ 4.5）。原色达标、模拟后不达标的行会整行标红并单独提示。</p>
+</div>
+</div>
+
+<div class="cb-panel">
+<h3>真限制，请先了解</h3>
+<div class="cb-limits">
+<p>1）<b>只做模拟示意、不做医学诊断</b>：本工具不判断使用者本人是否色盲，不做任何色觉检查与诊断。</p>
+<p>2）<b>不是无障碍合规认证</b>：模拟结果与对比度提示只是设计参考，不等于 WCAG 合规结论。</p>
+<p>3）<b>只覆盖三种常见类型</b>：红色盲（Protanopia）、绿色盲（Deuteranopia）、蓝色盲（Tritanopia）三种全色盲模拟，不覆盖红/绿/蓝色弱等弱视类型与个体差异。</p>
+<p>4）<b>sRGB 简化模拟</b>：矩阵直接作用于 sRGB 三通道，是个体差异之外的近似示意，不是光谱级精确还原。</p>
+<p>5）<b>不收集、不上传任何内容</b>：颜色与配色只在浏览器本地计算。</p>
+</div>
+</div>
+
+<div class="cb-panel">
+<h3>使用说明</h3>
+<div class="cb-limits">
+<p>1）单色区：改取色器或 HEX 文本框，四张色卡实时更新；非法 HEX 红字提示且不更新结果；色块点击复制单个 HEX。2）配色区：粘贴配色即实时解析，兼「载入示例」「清空」操作；每行色带后有「复制该行 HEX 列表」按钮；某类型下两色模拟值完全相等时该行下方出现警告。3）对比度区：前景/背景双取色器＋HEX 文本框，原色样例文本实时预览；原色与三类型模拟对比度表含比值与正常字/大号字 AA 通过徽标；「复制对比度摘要」内容与表格逐字一致。</p>
+</div>
+</div>
+
+<div class="cb-panel">
+<h3>常见问题</h3>
+<dl class="cb-faq">
+<dt>模拟是怎么算的？</dt>
+<dd>用 Machado 等 2009 年的模拟矩阵直接作用于 sRGB 三通道，逐通道 Math.round 并 clamp 到 0–255。例如纯红 #FF0000 在红色盲下为 #918E00、绿色盲下为 #9FB300、蓝色盲下为 #F20000；纯黑纯白在三类型下不变。</dd>
+<dt>「完全相同」警告是什么意思？</dt>
+<dd>配色中两色在某类型模拟后 HEX 完全相等，意味着该类型用户眼里这两色分不出来。本工具只认完全相等，不自造「接近」判定；模拟值不相等时不警告。</dd>
+<dt>对比度是怎么算的？跌落提示是什么意思？</dt>
+<dd>按 WCAG 2.x 相对亮度公式算前景/背景对比度，保留 2 位小数。例如红字白底原色 4.00，红色盲模拟后 3.46、绿色盲模拟后 2.35、蓝色盲模拟后 4.40。「原色达标、模拟后不达标」指原色对正常字 AA 通过、模拟后不通过的类型，单独标红；原色本身不通过时不谎称跌落。</dd>
+<dt>和配色方案生成器、WCAG 对比度检查器、网站无障碍检查器有什么区别？</dt>
+<dd>配色方案生成器是配什么色：一个基色生成和谐方案，不管色盲用户眼里如何；WCAG 对比度检查器是数值够不够：算正常视觉下的对比度与 AA/AAA 判定，不模拟色觉；网站无障碍检查器是 HTML 查规则：粘贴 HTML 源码查 12 条规则，不模拟颜色。本工具是色盲眼里什么样：模拟呈现＋模拟后对比度。</dd>
+<dt>颜色会上传吗？</dt>
+<dd>不会上传，全部本地计算。页面无 fetch/XHR、零 CDN，可用开发者工具 Network 面板验证。</dd>
+</dl>
+</div>
+
+<div class="cb-panel">
+<h3>相关工具</h3>
+<div class="cb-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">色盲模拟检查器（当前）</span>
+<a href="/tools/color-palette-generator" class="btn btn-secondary" style="font-size:.9rem;">配色方案生成器（要配什么色去配色生成器）</a>
+<a href="/tools/wcag-contrast-checker" class="btn btn-secondary" style="font-size:.9rem;">WCAG 颜色对比度检查器（要正常视觉下数值够不够去对比度检查器）</a>
+<a href="/tools/accessibility-scanner" class="btn btn-secondary" style="font-size:.9rem;">网站无障碍检查器（要 HTML 查规则去无障碍检查器）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="cb-toast" class="cb-toast"></div>
+<script src="/tools/static/js/colorblind_simulator.js?v=1"></script>
+</body>
+</html>
+{{end}}

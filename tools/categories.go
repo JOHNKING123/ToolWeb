@@ -669,6 +669,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "colorblind_simulator",
+					Name:        "色盲模拟检查器",
+					Description: "色盲眼里什么样：输入单个颜色或粘贴配色，用 Machado 2009 矩阵模拟红色盲 Protanopia、绿色盲 Deuteranopia、蓝色盲 Tritanopia 下的呈现（sRGB 直接变换），并对前景/背景色对算原色与模拟后 WCAG 对比度及正常字/大号字 AA 判定，模拟后 HEX 完全相等的颜色对单独警告、原色达标模拟后不达标单独标红，纯前端零上传 · Colorblind simulator: Machado 2009 protanopia/deuteranopia/tritanopia simulation, simulated WCAG contrast, confusable-color warnings, 100% client-side",
+					Path:        "/tools/colorblind-simulator",
+					Icon:        "visibility",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
