@@ -256,6 +256,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "skeleton_screen_generator",
+					Name:        "骨架屏加载占位生成器",
+					Description: "按占位块布局生成骨架屏 HTML/CSS：头像、图片、文本行、矩形四种占位块增删移序，文章详情、列表项×3、个人资料卡片三组预设，底色四档与扫过、呼吸、无三档动效可调，块间距 8–32px，实时预览所见即所得，一键复制 HTML/CSS 或下载 skeleton.html，只生成静态占位样式、不接入真实数据加载、不提供组件库版本、动效仅 CSS，纯前端零上传 · Skeleton screen generator: build loading placeholders, skeleton loader HTML CSS, 100% client-side",
+					Path:        "/tools/skeleton-screen-generator",
+					Icon:        "web_asset",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prompt_sanitizer",
 					Name:        "AI 提示词脱敏器",
 					Description: "喂 LLM 前先脱敏：粘贴代码/日志或上传 .txt/.log/.env/.md，浏览器本地正则识别 API Key（sk-/ghp_/AKIA/xoxb- 等）、JWT、PEM 私钥、Bearer Token、数据库连接串（postgres/mongodb/mysql），逐条确认后替换为占位符（__API_KEY_1__ 等）一键复制发问；粘贴 LLM 答案一键本地还原。映射表只存本标签页 sessionStorage，关闭即销毁，纯前端零上传 · Prompt sanitizer: detect & mask API keys, JWT, PEM keys, DB connection strings locally with reversible placeholders, restore LLM answers in-browser, 100% client-side",

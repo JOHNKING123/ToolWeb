@@ -1,3 +1,82 @@
+## 今日任务（2026-10-27 17:00 · 产品经理排期轮，接 125 轮调研）
+
+**选定：骨架屏加载占位生成器（skeleton_screen_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（125 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。15:00 PM 轮选 Bug 报告生成器时已明言：骨架屏仅因顺位在 Bug 报告生成器之后而后置、「下轮首席递进」；Bug 报告生成器已交付划出（891775e 新增，全量 197 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——ULID／NanoID 生成器与 .env 解析与校验器虽同为小难度纯前端，均不插队。
+- **未选**：ULID／NanoID 生成器（98 轮新晋 P2，125 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在骨架屏之后而后置，下轮首席递进；真限制只生成随机／时间排序标识、不做分布式 ID 唯一性保证）；.env 解析与校验器（98 轮新晋 P2，125 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做格式解析与校验、不读取真实运行环境变量）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **197 Path**；`git log` 头部 891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）／b6908ce（词云清空修复）。逐项复核：`skeleton`／`skeleton_screen_generator`／`skeleton-screen-generator`、`ULID`／`ulid`／`NanoID`／`nanoid`、`env_parser`／`env-parser` 在 tools／templates／static/js 三路均为 0 命中（`nanoid` 唯一命中仍为第三方打包文件 `static/js/vendor/docx-9.5.1.umd.js` 内部的通用 ID 辅助函数名，非独立工具、无页面、无注册，不构成重叠）；categories.go 无三者相关 ID；`骨架屏` 在 tools／templates／static/js／tests 四路仅有的 2 处命中均为旧测试里的否定断言（tests/text_fixed_width_wrapper.test.js 第 125 行、tests/bug_report_generator.test.js 第 133 行，均为「互链：不含未交付骨架屏工具」），恰为未交付的反向实锤。自有近邻辨析：① 已注册的 CSS 阴影与圆角生成器（ID css_shadow_radius_generator、Path /tools/css-shadow-radius-generator）是「调真实元素的 box-shadow 与 border-radius」，本工具是「按占位块布局生成整段骨架屏 HTML／CSS」，调样式 vs 生成占位结构，不重叠；② 已注册的 CSS 渐变生成器（ID css_gradient_generator）是「调渐变色标出 CSS」，本工具的扫过动效只内嵌一段固定渐变、不做渐变编辑，不重叠；③ 已注册的头像生成器（ID avatar_generator）是「生成可用的真实头像图」，本工具的圆形头像块只是灰色占位圆、不出图，不重叠；④ 已注册的 Lorem Ipsum 生成器是「生成占位文本内容」，本工具只生成占位块样式、不出文本内容，不重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——做加载占位图时手写 CSS 占位块繁琐、尺寸配比靠猜，选布局预设＋调块尺寸→生成骨架屏 HTML／CSS＋实时预览＋复制恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，区块模型为确定性数据结构，HTML／CSS 均为模板拼接，预设块表、尺寸钳制、动效开关均可写成精确向量供 node 断言，无布局随机性；④ **受众与站内互补**——与 CSS 系生成器同属开发工具品类，前端开发者调完样式下一步就是做加载占位，成组发现；⑤ **外部佐证已就位**——98 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 阴影与圆角生成器、CSS 渐变生成器同品类，便于前端开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成静态占位 HTML／CSS、不接入真实数据加载**——不生成 JS 加载逻辑、不做数据请求占位切换，页面须明示；② **不提供组件库版本**——只输出原生 HTML／CSS，不出 React／Vue／小程序组件，页面须明示；③ **动效仅 CSS**——呼吸与扫过均为纯 CSS 动画，不依赖 JS 动画库，页面须明示；④ **不收集、不上传任何配置**——零上传，见下。
+
+**规格**（开发轮按此执行）：
+- 区块模型（全部中文标签与占位提示；块表顺序即 DOM 顺序）：类型 4 种——头像 avatar（圆形占位）、图片 image（矩形占位）、文本行 text（细矩形行）、矩形 rect（通用块）；每块字段：类型、宽度、高度、圆角。宽度口径：文本行／图片／矩形为百分比（10–100，默认文本行 100、图片 100、矩形 100），头像为像素直径（24–96，默认 48）；高度口径：文本行 12–24（默认 16）、图片／矩形 40–320（默认图片 180、矩形 120）、头像恒等于直径；圆角口径：文本行／图片／矩形 0–24 px（默认 6），头像固定 50%（不受圆角输入影响）。超范围输入钳制到边界并中文提示。
+- 块表操作：添加区块（选类型→按默认值追加到末尾）；删除任一块；上移／下移任一块；改任一块的宽度／高度／圆角；块数上限 12，超限中文提示并拒绝添加；「载入示例」「清空」两个操作（清空后块表为空，见验收第 3 条）。
+- 布局预设 3 组（点预设即替换整张块表，块表内容精确如下，开发轮照此实现、测试轮照此断言）：文章详情（6 块：avatar 48＋text 60% 16px＋text 100% 16px＋image 100% 180px＋text 100% 16px＋text 80% 16px）；列表项×3（9 块：每组 avatar 40＋text 70% 16px＋text 50% 16px，共 3 组）；个人资料卡片（4 块：avatar 64＋text 40% 16px＋text 70% 16px＋rect 100% 120px）。默认进入即文章详情预设。
+- 全局选项：占位底色 4 档单选（默认浅灰 #e5e7eb；另中灰 #d1d5db、深灰 #9ca3af、暖灰 #e7e5e4）；动效 3 档单选（默认扫过 shimmer；另呼吸 pulse、无 none）；块间距 gap（8–32 px，默认 16，超范围钳制并中文提示）。
+- 生成规则（确定性模板拼接，函数 `buildSkeleton(blocks, opts)` 返回 `{html, css, standalone}` 供 node 断言）：HTML 首行为 `<div class="skeleton">`、末行为 `</div>`，中间每块一行 `<div class="skeleton-block skeleton-{type}" style="width:{w};height:{h}px;border-radius:{r}"></div>`——头像的 `{w}` 为 `{直径}px`、`{r}` 为 `50%`，其余 `{w}` 为 `{百分比}%`、`{r}` 为 `{圆角}px`；CSS 固定模板：`.skeleton{display:flex;flex-direction:column;gap:{gap}px}`、`.skeleton-block{background:{底色}}`，动效 none 时无 animation 与 @keyframes，pulse 时块样式追加 `animation:skeleton-pulse 1.5s ease-in-out infinite` 并含 `@keyframes skeleton-pulse`（opacity 0.6↔1），shimmer 时块背景改为 `linear-gradient(90deg,{底色},#f3f4f6,{底色})` 加 `background-size:200% 100%` 与 `animation:skeleton-shimmer 1.5s linear infinite` 并含 `@keyframes skeleton-shimmer`（background-position 平移）；standalone 为自包含 HTML 文档（`<!DOCTYPE html>`＋`<style>{css}</style>`＋`{html}`），与下载文件逐字一致。
+- 预览与生成：块表、底色、动效或间距任一变化即实时重算；预览区直接注入生成的 CSS＋HTML，所见即所得（预览样式与输出代码同一来源，不另写一套预览样式）；代码区 HTML 与 CSS 分区展示（等宽字体、可复制）；空块表时结果区不输出有效代码、中文提示「请添加至少一个占位块」；所有提示均中文。
+- 操作：一键复制 HTML；一键复制 CSS；下载 skeleton.html（内容与 standalone 逐字一致）；复制失败有明确降级提示（手动复制指引）；与 CSS 阴影与圆角生成器（/tools/css-shadow-radius-generator）互链（文案区分调样式与生成占位：「要调真实元素的阴影圆角去 CSS 阴影与圆角生成器，本工具只生成加载占位样式」）；不与未交付的 ULID／NanoID 生成器、.env 解析与校验器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写区块模型、模板拼接与钳制逻辑；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，预设块表、模板拼接、动效开关、钳制、空块表提示均可 node 断言）。
+- 注册：ID `skeleton_screen_generator`、Name「骨架屏加载占位生成器」、Path `/tools/skeleton-screen-generator`、Category 开发工具、Icon 建议 web_asset（图标库无此名则用 dashboard 兜底）、New: true；中英文描述＋SEO keywords（骨架屏、加载占位、骨架屏生成器、skeleton screen、skeleton loader、loading placeholder、骨架屏 HTML CSS）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/skeleton-screen-generator，相关工具互链 CSS 阴影与圆角生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `skeleton_screen_generator`、Path `/tools/skeleton-screen-generator` 注册完整（Category 开发工具），注册总数 197→198 Path。
+2. 生成闭环：块表、底色、动效或间距任一改动后预览与代码同步变化；空块表时有「请添加至少一个占位块」中文提示且不输出有效代码。
+3. 预设向量闭环（精确比对块表）：文章详情 6 块、列表项×3 共 9 块、个人资料卡片 4 块，类型／宽度／高度与上文预设表逐项一致；默认进入即文章详情预设；任一不符即不通过。
+4. 模板向量闭环（精确字符串比对）：块表 [avatar 48、text 80% 16px、text 60% 16px]、底色 #e5e7eb、动效 none、间距 16 → HTML 为 3 个 skeleton-block div 且顺序／类型／内联样式与块表一致（头像 `width:48px;height:48px;border-radius:50%`，文本行 `width:80%;height:16px;border-radius:6px` 与 `width:60%;height:16px;border-radius:6px`），CSS 含 `background:#e5e7eb` 与 `gap:16px` 且不含任何 @keyframes；动效切 shimmer 后 CSS 含 `skeleton-shimmer` 与 linear-gradient，切 pulse 后含 `skeleton-pulse`；任一不符即不通过。
+5. 钳制与上限闭环：文本行宽度输入 5 被钳制到 10 并中文提示、输入 300 被钳制到 100 并中文提示；头像直径输入 10 被钳制到 24、输入 200 被钳制到 96；块间距输入 2 被钳制到 8、输入 100 被钳制到 32；第 13 块添加被拒绝并中文提示；块数 12 以内正常添加。
+6. 操作闭环：复制的 HTML／CSS 分别与代码区对应分区逐字一致；下载 skeleton.html 内容与 standalone 逐字一致；复制失败有降级提示；相关工具互链含 CSS 阴影与圆角生成器；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只生成静态占位 HTML／CSS、不接入真实数据加载」「不提供组件库版本」「动效仅 CSS」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（预设块表三组、模板精确拼接、动效三档、底色四档、钳制与上限、空块表提示、块表增删移序、注册与零网络请求静态检查）。
+9. 页面无报错；移动端块表编辑、预设切换、单选与复制／下载按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/skeleton_screen_generator.html`（新增；含 SEO 面板按家族标准＋预设切换／块表编辑／底色与动效单选／间距／实时预览／HTML 与 CSS 代码区／复制与下载 UI）
+- `static/js/skeleton_screen_generator.js`（新增；区块模型、预设块表、模板拼接、钳制、复制与下载逻辑；双模式导出供 node 测试）
+- `tests/skeleton_screen_generator.test.js`（新增；预设向量、模板向量、动效、钳制与上限、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID skeleton_screen_generator、Path /tools/skeleton-screen-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）／b6908ce（词云清空修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **197**；Top3 候选重叠复核（skeleton／skeleton_screen_generator／skeleton-screen-generator、ULID／ulid／NanoID／nanoid、env_parser／env-parser 在 tools／templates／static/js 三路均为 0 命中，nanoid 唯一命中为第三方 vendor 打包文件内部函数名、非工具；骨架屏仅有的 2 处命中为旧测试否定断言、系未交付反向实锤；近邻 CSS 阴影与圆角生成器／CSS 渐变生成器／头像生成器／Lorem Ipsum 生成语义辨析见上；注意 CSS 阴影与圆角生成器真实 Path 为 /tools/css-shadow-radius-generator，本轮互链以此为准）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 17:00 · 通用调研第一百二十五轮）
+
+**交付状态**：10-27 通用调研第一百二十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Bug 报告生成器已交付闭环**（891775e 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **197 Path**，ID bug_report_generator、Path /tools/bug-report-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 轮，优先小难度纯前端。
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. Bug 报告生成器交付确认：`git log` 头部 891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）／b6908ce（词云清空修复）；全量 197 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首轮未带该变量报主机密钥校验失败，补变量后成功并补录 github.com 主机密钥，与 124 轮同一教训）。
+2. 新信号扫描：
+   - **365Lab 2026 免费在线工具 40+ 清单（2026-10-08）**：证件照／PDF 工具箱／发票助手／拼图／Markdown 编辑器／文件重命名／背景图壁纸／配色／白噪音／密码生成器／词云 → **全部自有实锤消解**（id_photo_maker、PDF 系、发票系、拼图系、Markdown 预览／编辑系、batch_rename_helper、配色方案生成器、white_noise_generator、密码生成器、wordcloud_generator 均已注册；壁纸类属图片生成口径，站内图片工具已覆盖，不另立）；
+   - **PulseTools 3 款浏览器工具（SERP & Meta 预览／robots & ads.txt 校验／JSON-LD 构建）**：**除 ads.txt 一处观察项外全部自有实锤消解**（OG 社交卡片预览＋SERP 片段预览已覆盖 Meta 口径；robots_txt_generator 与 robots_txt_validator 均已注册；Schema.org JSON-LD 构建器已注册，12 类表单向导＋@graph 堆叠；ads.txt 校验只记观察项，见下，不独立成 P2）；
+   - **HN Show HN SquareFaceIcon（方形头像协议＋纯前端头像生成器，200+ 部件、PNG 导出）**：**自有实锤消解**（即已注册的 avatar_generator：SVG 8 层 50+ 变体、确定性种子↔短 JSON 双向还原、64–512 四档 PNG 导出，口径已覆盖，不新立）；
+   - **V2EX 近期工具帖（网站流量查询 vaneform、AI 照片增强 MyEnhancer、原型托管 protohub、分页文档编辑器 QuireKit、LLM 部署平台 LLMPod）**：**均不立**（流量查询需 Similarweb／dataforseo 等第三方数据接口且有固定成本；照片增强／老照片修复／上色需 AI 图像模型推理；原型托管需上传存储与版本托管；分页编辑器与 LLM 部署平台均为重型产品而非单页小工具；均非纯前端单页可实现）；
+   - **124 轮留池复核**：骨架屏／ULID／NanoID／摩斯码／.env 解析五项三路 0 命中实锤仍未交付（`dotenv`／`.env` 命中仅为 Postman 环境变量、AI 提示词脱敏器 .env 文件读取支持、gitignore 模板提及，均非独立 .env 解析工具；`envelope_printer` 为信封打印器，与 env 无关）。
+3. 候选池变动：Bug 报告生成器已交付划出（891775e 新增；ID bug_report_generator、Path /tools/bug-report-generator 已注册；全量 197 Path）；**本轮新晋 P2 0 个**；**观察项新增 1 条**（ads.txt 校验器，见下）；自有实锤消解 10+ 项；全量 197 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Bug 报告生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，124 轮 Top3 第二、三顺位依次递进，第三顺位取 98 轮晋升 P2 对中顺位居后的首项）：
+
+1. **骨架屏加载占位生成器** — P2 留池顺位递进（98 轮新晋 P2；125 轮复核仍未交付；124 轮 Top3 第二顺位递进为首席；痛点：做加载占位图／骨架屏样式时手写 CSS 占位块繁琐、尺寸配比靠猜；纯前端小难度：设占位块布局与尺寸→生成骨架屏 HTML／CSS＋实时预览＋复制，零上传；`skeleton` 在 tools／templates／static/js 三路 0 命中、categories.go 无 skeleton 相关 ID 实锤；建议 ID skeleton_screen_generator、Path /tools/skeleton-screen-generator；真限制：只生成静态占位样式代码、不接入真实数据加载与动画框架，页面须明示）。
+2. **ULID／NanoID 生成器** — P2 留池顺位递进（98 轮新晋 P2；125 轮复核仍未交付；124 轮 Top3 第三顺位递进；痛点：只要 UUID 不够用时——ULID 自带时间可排序、NanoID 短且 URL 安全，手写或现翻文档都慢；纯前端小难度：选格式与长度→批量生成＋复制，零上传；`ULID`／`NanoID`／`ulid`／`nanoid` 在 tools／templates／static/js 三路 0 命中实锤；与已注册的 UUID 生成器不重叠（UUID 只是三种 ID 格式之一）；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：只生成随机／时间排序标识、不做分布式 ID 唯一性保证，页面须明示）。
+3. **.env 解析与校验器** — P2 留池顺位递进（98 轮新晋 P2；125 轮复核仍未交付；124 轮 Top3 之后顺位首项；痛点：手写 .env 时 KEY＝VALUE 格式、引号、注释、空值、重复键易错，贴到部署环境才发现；纯前端小难度：粘贴 .env 文本→逐行解析校验（非法行、重复键、空值定位提示）→输出规整后的键值表＋复制／下载，零上传；`env_parser`／独立 .env 解析工具在 tools／templates／static/js 三路 0 命中实锤（既有命中均为 Postman 环境、脱敏器文件读取、gitignore 提及，非独立工具）；建议 ID env_parser、Path /tools/env-parser；真限制：只做格式解析与校验、不读取真实运行环境变量、不做密钥有效性验证，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项）；位运算计算器／批量图片模糊打码器（122 轮观察项）；Gzip Base64 解码器（123 轮观察项）；ads.txt 校验器（125 轮观察项新增：纯前端可解析 ads.txt 行格式并校验字段／SELLER 关系，但受众窄于 robots.txt 校验器，仅作观察项，不晋升 P2）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 124 轮及之前记录。
+
+**通用候选表增量**（第一百二十五轮：Bug 报告生成器已交付划出（891775e 新增；ID bug_report_generator、Path /tools/bug-report-generator 已注册；全量 197 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 1 条**（ads.txt 校验器：纯前端可实现但受众窄，仅观察）；自有实锤消解 10+ 项（365Lab 40+ 清单、PulseTools 三工具其二、HN 方形头像生成器均为已注册工具；V2EX 流量查询／AI 照片增强／原型托管／分页编辑器／LLM 部署平台均需后端接口、AI 推理或重型产品，非纯前端单页可实现）；全量 197 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Bug 报告生成器 | 已交付划出（891775e 新增；ID bug_report_generator、Path /tools/bug-report-generator 已注册；全量 197 Path；候选池划出） | — | 已实现 |
+| ads.txt 校验器 | 观察项新增（125 轮）：粘贴 ads.txt 文本可逐行校验字段格式与 SELLER 关系，但受众窄于已注册的 robots.txt 校验器，仅作观察，不晋升 P2 | 小 | 观察 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具；V2EX 近期工具帖均需后端接口、AI 推理或重型产品，非纯前端单页可实现） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十五轮——Bug 报告生成器交付闭环（891775e，`/tools/bug-report-generator` 已注册，全量 197 Path），候选池划出；**新晋 P2 0 个**；观察项新增 1 条（ads.txt 校验器）；仓库 197 注册工具全量核对无重叠（Top3 建议 ID skeleton_screen_generator / ulid_nanoid_generator / env_parser；三者全库零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）／b6908ce（词云清空修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **197**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 15:00 · 产品经理排期轮，接 124 轮调研）
 
 **选定：Bug 报告生成器（bug_report_generator）** — 本轮唯一任务（新工具）：

@@ -1,0 +1,205 @@
+{{define "skeleton_screen_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>骨架屏加载占位生成器 - 按块布局生成骨架屏 HTML/CSS，实时预览复制下载 | 程序员工具箱</title>
+    <meta name="description" content="免费在线骨架屏加载占位生成器：头像、图片、文本行、矩形四种占位块自由增删移序，文章详情、列表项、个人资料卡片三组预设，底色与扫过、呼吸动效可调，实时预览并生成骨架屏 HTML/CSS，一键复制或下载 skeleton.html，纯前端本地处理零上传。skeleton screen generator: build loading placeholders, skeleton loader HTML CSS, 100% client-side.">
+    <meta name="keywords" content="骨架屏,加载占位,骨架屏生成器,skeleton screen,skeleton loader,loading placeholder,骨架屏 HTML CSS,占位图生成器">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/skeleton-screen-generator">
+    <meta property="og:title" content="骨架屏加载占位生成器 - 按块布局生成骨架屏 HTML/CSS">
+    <meta property="og:description" content="头像、图片、文本行、矩形四种占位块自由组合，三组布局预设，实时预览并生成骨架屏 HTML/CSS，复制或下载 skeleton.html，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/skeleton-screen-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"骨架屏加载占位生成器","description":"按占位块布局生成骨架屏 HTML/CSS：头像、图片、文本行、矩形四种块，预设、底色与动效可调，实时预览，复制或下载 skeleton.html，纯前端本地处理，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/skeleton-screen-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sk-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .sk-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .sk-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .sk-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .sk-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:1.2rem}
+        .sk-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem;font-size:.92rem;color:#374151}
+        .sk-field input[type="number"],.sk-field select{width:100%;box-sizing:border-box;padding:.6rem .8rem;
+            font-size:.95rem;line-height:1.7;border:1px solid #d1d5db;border-radius:.6rem;outline:none;background:#fff;
+            font-family:inherit}
+        .sk-field input:focus,.sk-field select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .sk-radio-row{display:flex;gap:1rem;flex-wrap:wrap;font-size:.92rem;color:#374151}
+        .sk-radio-row label{display:flex;align-items:center;gap:.35rem;cursor:pointer}
+        .sk-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .sk-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .sk-btn:hover{border-color:#2563eb;color:#2563eb}
+        .sk-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .sk-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .sk-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .sk-msg-ok{color:#065f46}
+        .sk-msg-error{color:#b91c1c}
+        .sk-code{width:100%;box-sizing:border-box;min-height:200px;max-height:420px;overflow-y:auto;white-space:pre-wrap;
+            word-break:break-all;padding:.8rem 1rem;font-size:.92rem;line-height:1.7;margin:0;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb;color:#111827}
+        .sk-preview-box{background:#fff;border:1px dashed #d1d5db;border-radius:.6rem;padding:1rem;min-height:120px;box-sizing:border-box}
+        .sk-preview-box .skeleton{max-width:100%}
+        .sk-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;margin-bottom:.5rem;
+            border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb;font-size:.9rem;color:#374151}
+        .sk-row-label{min-width:5.5rem;font-weight:600;color:#111827}
+        .sk-mini{display:flex;align-items:center;gap:.3rem;font-size:.88rem;color:#4b5563}
+        .sk-mini input{width:4.5rem;padding:.35rem .5rem;font-size:.9rem;border:1px solid #d1d5db;border-radius:.4rem;box-sizing:border-box}
+        .sk-mini input:disabled{background:#f3f4f6;color:#9ca3af}
+        .sk-fixed{color:#6b7280}
+        .sk-mini-btn{padding:.4rem .7rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.88rem;cursor:pointer;background:#fff;color:#374151}
+        .sk-mini-btn:hover{border-color:#2563eb;color:#2563eb}
+        .sk-count{font-size:.9rem;color:#6b7280}
+        .sk-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .sk-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .sk-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .sk-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .sk-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .sk-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .sk-grid{grid-template-columns:1fr}
+            .sk-btn-row .sk-btn{flex:1;justify-content:center}
+            .sk-code{min-height:160px}
+            .sk-row-label{min-width:4.5rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>骨架屏加载占位生成器</h1>
+            <p>做加载占位图时不用再手写 CSS 占位块、靠猜配尺寸：选一块布局预设，增删移序调好每块的宽度、高度与圆角，立刻得到一段骨架屏 HTML/CSS，预览所见即所得，复制或下载后直接用到页面里。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="sk-privacy">
+                <div><b>纯前端运行，零上传：</b>所有配置只在浏览器内处理，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="sk-disclaimer-bar">
+                <div><b>真限制说明：</b>本工具只生成静态占位 HTML/CSS、不接入真实数据加载，不生成数据请求与加载切换逻辑；不提供组件库版本，只输出原生 HTML/CSS，不出 React、Vue 或小程序组件；动效仅 CSS，呼吸与扫过均为纯 CSS 动画，不依赖 JS 动画库。</div>
+            </div>
+            <div class="sk-grid">
+                <div class="sk-panel">
+                    <h3>布局预设</h3>
+                    <div class="sk-btn-row" style="margin-top:0;">
+                        <button type="button" class="sk-btn" id="sk-preset-article">文章详情（6 块）</button>
+                        <button type="button" class="sk-btn" id="sk-preset-list">列表项×3（9 块）</button>
+                        <button type="button" class="sk-btn" id="sk-preset-profile">个人资料卡片（4 块）</button>
+                    </div>
+                    <div class="sk-muted" style="margin-top:.7rem;">点预设即替换整张块表。默认进入即文章详情预设：头像 48px、文本行 60%、文本行 100%、图片 100%×180px、文本行 100%、文本行 80%。</div>
+                    <h3 style="margin-top:1.2rem;">占位块表（顺序即 DOM 顺序）</h3>
+                    <div id="sk-blocks"></div>
+                    <div class="sk-count" id="sk-count">当前 6 / 12 块</div>
+                    <div class="sk-field" style="margin-top:.8rem;">添加区块类型
+                        <select id="sk-add-type">
+                            <option value="avatar">头像（圆形占位）</option>
+                            <option value="image">图片（矩形占位）</option>
+                            <option value="text" selected>文本行（细矩形行）</option>
+                            <option value="rect">矩形（通用块）</option>
+                        </select>
+                    </div>
+                    <div class="sk-btn-row">
+                        <button type="button" class="sk-btn sk-btn-primary" id="sk-add">添加区块</button>
+                        <button type="button" class="sk-btn" id="sk-sample">载入示例</button>
+                        <button type="button" class="sk-btn" id="sk-clear">清空</button>
+                    </div>
+                    <div class="sk-muted" style="margin-top:.7rem;">块数上限 12，第 13 块添加会被拒绝并中文提示。宽度百分比 10–100（头像像素直径 24–96）、高度按类型分档、圆角 0–24px（头像固定 50%），超范围输入钳制到边界并中文提示。</div>
+                </div>
+                <div>
+                    <div class="sk-panel">
+                        <h3>全局选项</h3>
+                        <div class="sk-field">占位底色
+                            <div class="sk-radio-row">
+                                <label><input type="radio" name="sk-color" value="#e5e7eb" checked> 浅灰 #e5e7eb</label>
+                                <label><input type="radio" name="sk-color" value="#d1d5db"> 中灰 #d1d5db</label>
+                                <label><input type="radio" name="sk-color" value="#9ca3af"> 深灰 #9ca3af</label>
+                                <label><input type="radio" name="sk-color" value="#e7e5e4"> 暖灰 #e7e5e4</label>
+                            </div>
+                        </div>
+                        <div class="sk-field">动效
+                            <div class="sk-radio-row">
+                                <label><input type="radio" name="sk-animation" value="shimmer" checked> 扫过</label>
+                                <label><input type="radio" name="sk-animation" value="pulse"> 呼吸</label>
+                                <label><input type="radio" name="sk-animation" value="none"> 无</label>
+                            </div>
+                        </div>
+                        <div class="sk-field">块间距（px，8–32，默认 16）
+                            <input type="number" id="sk-gap" value="16" min="8" max="32">
+                        </div>
+                        <div class="sk-muted">块表、底色、动效或间距任一变化即实时重算，预览与代码同步变化。</div>
+                    </div>
+                    <div class="sk-panel">
+                        <h3>实时预览（所见即所得，预览样式与输出代码同一来源）</h3>
+                        <style id="sk-preview-style"></style>
+                        <div class="sk-preview-box" id="sk-preview-box"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sk-panel">
+                <h3>生成代码</h3>
+                <div class="sk-field">HTML
+                    <pre id="sk-html-code" class="sk-code"></pre>
+                </div>
+                <div class="sk-field">CSS
+                    <pre id="sk-css-code" class="sk-code"></pre>
+                </div>
+                <div class="sk-btn-row">
+                    <button type="button" class="sk-btn sk-btn-primary" id="sk-copy-html">复制 HTML</button>
+                    <button type="button" class="sk-btn" id="sk-copy-css">复制 CSS</button>
+                    <button type="button" class="sk-btn" id="sk-download">下载 skeleton.html</button>
+                </div>
+                <div class="sk-msg" id="sk-msg">已生成骨架屏代码，可复制或下载 skeleton.html</div>
+            </div>
+            <div class="sk-panel">
+                <h3>使用说明</h3>
+                <div class="sk-tip">
+                    <b>区块模型：</b>4 种类型——头像 avatar（圆形占位，直径即宽度与高度，圆角固定 50%）、图片 image（矩形占位）、文本行 text（细矩形行）、矩形 rect（通用块）；每块含类型、宽度、高度、圆角，块表顺序即 DOM 顺序。<br>
+                    <b>尺寸口径：</b>文本行／图片／矩形宽度为百分比 10–100，头像为像素直径 24–96；高度：文本行 12–24px、图片／矩形 40–320px，头像恒等于直径；圆角 0–24px，头像不受圆角输入影响。<br>
+                    <b>预设：</b>文章详情 6 块、列表项×3 共 9 块（每组头像 40px＋文本行 70%＋文本行 50%）、个人资料卡片 4 块（头像 64px＋文本行 40%＋文本行 70%＋矩形 100%×120px）；默认进入即文章详情。<br>
+                    <b>生成规则：</b>HTML 首行为 <code>&lt;div class="skeleton"&gt;</code>、末行为 <code>&lt;/div&gt;</code>，中间每块一行内联样式 div；CSS 固定模板按动效开关含／不含 @keyframes；下载的 skeleton.html 为自包含文档，与 standalone 逐字一致。<br>
+                    <b>空块表：</b>清空后块表为空时提示「请添加至少一个占位块」且不输出有效代码，复制与下载同样给出该提示。<br>
+                    <b>钳制与上限：</b>超范围输入钳制到边界并中文提示；块数上限 12，第 13 块拒绝并中文提示。<br>
+                    <b>真限制：</b>只生成静态占位 HTML/CSS、不接入真实数据加载；不提供组件库版本；动效仅 CSS。<br>
+                    <b>隐私：</b>全部处理在浏览器本地完成，不发起网络请求，不上传配置。
+                </div>
+            </div>
+            <div class="sk-panel">
+                <h3>常见问题</h3>
+                <dl class="sk-faq">
+                    <dt>生成的占位图能直接接真实数据吗？</dt>
+                    <dd>不能。本工具只生成静态占位 HTML/CSS、不接入真实数据加载，不生成数据请求与加载切换逻辑，数据回来后请自行用真实内容替换这段占位代码。</dd>
+                    <dt>能导出 React、Vue 组件吗？</dt>
+                    <dd>不能。本工具不提供组件库版本，只输出原生 HTML/CSS，复制后可自行封装进你所用的组件。</dd>
+                    <dt>扫过与呼吸动效是怎么实现的？</dt>
+                    <dd>动效仅 CSS：扫过是 linear-gradient 背景加 background-position 平移动画，呼吸是 opacity 在 0.6 与 1 之间变化的纯 CSS 动画，不依赖 JS 动画库；选「无」时 CSS 里不含任何 @keyframes。</dd>
+                    <dt>头像块的圆角为什么改不了？</dt>
+                    <dd>头像是圆形占位，圆角固定 50%，不受圆角输入影响；改直径时高度自动跟随直径变化。</dd>
+                    <dt>宽度、高度或间距填超了会怎样？</dt>
+                    <dd>超范围输入会被钳制到边界并中文提示，例如文本行宽度填 5 会钳制到 10%，填 300 会钳制到 100%，不会静默丢弃或报错中断。</dd>
+                    <dt>复制失败怎么办？</dt>
+                    <dd>页面会先尝试剪贴板写入，失败时自动回落到选中复制；仍失败时会明确提示「复制失败：浏览器未授权剪贴板，请手动全选代码区复制」。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。生成、预览、复制、下载全部在浏览器本地完成，脚本不含网络请求调用，页面不引用任何外部资源，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="sk-panel">
+                <h3>相关工具</h3>
+                <div class="sk-related">
+                    <a href="/tools/css-shadow-radius-generator" class="btn btn-secondary" style="font-size:.9rem;">CSS 阴影与圆角生成器（要调真实元素的阴影圆角去 CSS 阴影与圆角生成器，本工具只生成加载占位样式）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/skeleton_screen_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
