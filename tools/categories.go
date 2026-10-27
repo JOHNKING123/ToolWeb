@@ -247,6 +247,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "bug_report_generator",
+					Name:        "Bug 报告生成器",
+					Description: "填表生成规范 Markdown 缺陷报告：缺陷标题必填、环境三项可选、复现步骤必填且每行一步自动编号、预期／实际可选、四档严重度默认一般、补充信息可选，空项渲染为未填写／无，空行步骤跳过重编号，一键复制或下载 bug-report.md，只生成报告文本、不提交到任何 issue 系统、不验证缺陷真实性，纯前端零上传 · Bug report generator: fill in a bug template and export Markdown, 100% client-side",
+					Path:        "/tools/bug-report-generator",
+					Icon:        "bug_report",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prompt_sanitizer",
 					Name:        "AI 提示词脱敏器",
 					Description: "喂 LLM 前先脱敏：粘贴代码/日志或上传 .txt/.log/.env/.md，浏览器本地正则识别 API Key（sk-/ghp_/AKIA/xoxb- 等）、JWT、PEM 私钥、Bearer Token、数据库连接串（postgres/mongodb/mysql），逐条确认后替换为占位符（__API_KEY_1__ 等）一键复制发问；粘贴 LLM 答案一键本地还原。映射表只存本标签页 sessionStorage，关闭即销毁，纯前端零上传 · Prompt sanitizer: detect & mask API keys, JWT, PEM keys, DB connection strings locally with reversible placeholders, restore LLM answers in-browser, 100% client-side",

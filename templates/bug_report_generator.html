@@ -1,0 +1,173 @@
+{{define "bug_report_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug 报告生成器 - 填表生成规范 Markdown 缺陷报告，复制下载 bug-report.md | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Bug 报告生成器：填写缺陷标题、环境、复现步骤、预期与实际结果、严重度，实时生成规范 Markdown 缺陷报告，一键复制或下载 bug-report.md，纯前端本地处理零上传。bug report generator: fill in a bug report template and export Markdown, 100% client-side.">
+    <meta name="keywords" content="Bug 报告生成器,缺陷报告模板,issue 模板,bug report generator,bug report template,markdown bug report,缺陷报告,复现步骤模板">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bug-report-generator">
+    <meta property="og:title" content="Bug 报告生成器 - 填表生成规范 Markdown 缺陷报告">
+    <meta property="og:description" content="填写缺陷标题、环境、复现步骤、预期与实际结果、严重度，实时生成规范 Markdown 缺陷报告，复制或下载 bug-report.md，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bug-report-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Bug 报告生成器","description":"填写缺陷标题、环境、复现步骤、预期与实际结果、严重度，实时生成规范 Markdown 缺陷报告，一键复制或下载 bug-report.md，纯前端本地处理，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/bug-report-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .br-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .br-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .br-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .br-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .br-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:1.2rem}
+        .br-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem;font-size:.92rem;color:#374151}
+        .br-field input[type="text"],.br-field textarea{width:100%;box-sizing:border-box;padding:.6rem .8rem;
+            font-size:.95rem;line-height:1.7;border:1px solid #d1d5db;border-radius:.6rem;outline:none;background:#fff;
+            font-family:inherit}
+        .br-field textarea{min-height:90px;resize:vertical}
+        .br-field input:focus,.br-field textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .br-env{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem}
+        .br-severity{display:flex;gap:1rem;flex-wrap:wrap;font-size:.92rem;color:#374151}
+        .br-severity label{display:flex;align-items:center;gap:.35rem;cursor:pointer}
+        .br-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .br-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .br-btn:hover{border-color:#2563eb;color:#2563eb}
+        .br-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .br-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .br-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .br-msg-ok{color:#065f46}
+        .br-msg-error{color:#b91c1c}
+        .br-result{width:100%;box-sizing:border-box;min-height:380px;max-height:620px;overflow-y:auto;white-space:pre-wrap;
+            word-break:break-all;padding:.8rem 1rem;font-size:.95rem;line-height:1.7;margin:0;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb;color:#111827}
+        .br-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .br-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .br-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .br-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .br-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .br-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .br-grid{grid-template-columns:1fr}
+            .br-env{grid-template-columns:1fr}
+            .br-btn-row .br-btn{flex:1;justify-content:center}
+            .br-result{min-height:280px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Bug 报告生成器</h1>
+            <p>提 Bug 时不用再东拼西凑：填好标题、环境、复现步骤、预期与实际结果和严重度，立刻得到一份结构规范的 Markdown 缺陷报告，复制或下载后自行粘贴到你所用的缺陷跟踪工具里。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="br-privacy">
+                <div><b>纯前端运行，零上传：</b>所有填写内容只在浏览器内处理，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="br-disclaimer-bar">
+                <div><b>真限制说明：</b>本工具只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪，生成后请自行粘贴到所用跟踪工具；不验证缺陷真实性，不复现、不判定是否为真 Bug，只做格式规整；Markdown 仅为通用模板口径，各跟踪工具的字段名与模板细节可能不同，不承诺与某一跟踪工具模板逐字兼容。</div>
+            </div>
+            <div class="br-grid">
+                <div class="br-panel">
+                    <h3>缺陷信息填写</h3>
+                    <div class="br-field">缺陷标题（必填）
+                        <input type="text" id="br-title" placeholder="例如：登录页密码错误时错误提示不消失">
+                    </div>
+                    <div class="br-env">
+                        <div class="br-field">操作系统（可选）
+                            <input type="text" id="br-os" placeholder="例如：Windows 11">
+                        </div>
+                        <div class="br-field">浏览器／客户端（可选）
+                            <input type="text" id="br-browser" placeholder="例如：Chrome 130">
+                        </div>
+                        <div class="br-field">应用版本（可选）
+                            <input type="text" id="br-version" placeholder="例如：v2.4.1">
+                        </div>
+                    </div>
+                    <div class="br-field">复现步骤（必填，每行一步，自动编号，空行自动跳过）
+                        <textarea id="br-steps" placeholder="打开登录页&#10;输入错误密码点登录&#10;点击登录按钮"></textarea>
+                    </div>
+                    <div class="br-field">预期结果（可选）
+                        <textarea id="br-expected" placeholder="例如：显示一次错误提示，修正输入后提示消失"></textarea>
+                    </div>
+                    <div class="br-field">实际结果（可选）
+                        <textarea id="br-actual" placeholder="例如：提示一直残留，遮挡登录按钮"></textarea>
+                    </div>
+                    <div class="br-field">严重度
+                        <div class="br-severity">
+                            <label><input type="radio" name="br-severity" value="致命"> 致命</label>
+                            <label><input type="radio" name="br-severity" value="严重"> 严重</label>
+                            <label><input type="radio" name="br-severity" value="一般" checked> 一般</label>
+                            <label><input type="radio" name="br-severity" value="轻微"> 轻微</label>
+                        </div>
+                    </div>
+                    <div class="br-field">补充信息（可选：日志摘要、截图说明等）
+                        <textarea id="br-extra" placeholder="例如：仅在 Chrome 复现，Edge 未复现"></textarea>
+                    </div>
+                    <div class="br-muted">任一字段改动即实时重算；标题、环境、步骤等填写内容原样进入报告，不改写、不翻译。</div>
+                    <div class="br-btn-row">
+                        <button type="button" class="br-btn" id="br-sample">载入示例</button>
+                        <button type="button" class="br-btn" id="br-clear">清空</button>
+                    </div>
+                </div>
+                <div class="br-panel">
+                    <h3>缺陷报告（Markdown）</h3>
+                    <pre id="br-result" class="br-result"></pre>
+                    <div class="br-btn-row">
+                        <button type="button" class="br-btn br-btn-primary" id="br-copy">复制结果</button>
+                        <button type="button" class="br-btn" id="br-download">下载 bug-report.md</button>
+                    </div>
+                    <div class="br-msg" id="br-msg">请填写缺陷标题</div>
+                </div>
+            </div>
+            <div class="br-panel">
+                <h3>使用说明</h3>
+                <div class="br-tip">
+                    <b>报告结构：</b>依次为 <code># [Bug] 标题</code>、<code>## 环境</code>、<code>## 复现步骤</code>、<code>## 预期结果</code>、<code>## 实际结果</code>、<code>## 严重度</code>、<code>## 补充信息</code> 六节，节与节之间空一行。<br>
+                    <b>环境：</b>操作系统、浏览器／客户端、应用版本各一行，空项渲染为 <code>未填写</code>。<br>
+                    <b>复现步骤：</b>每行一步，空行自动跳过并重新编号，例如输入「打开登录页／空行／输入错误密码点登录」输出 <code>1. 打开登录页</code>、<code>2. 输入错误密码点登录</code>，不留空编号。<br>
+                    <b>缺省占位：</b>预期结果、实际结果空值渲染为 <code>未填写</code>；补充信息空值渲染为 <code>无</code>；严重度默认 <code>一般</code>，切换后即时同步。<br>
+                    <b>必填校验：</b>标题为空时提示「请填写缺陷标题」且不输出有效报告；标题非空但复现步骤为空（含全为空行的情况）时提示「请填写至少一步复现步骤」。<br>
+                    <b>真限制：</b>只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪；不验证缺陷真实性；Markdown 仅为通用模板口径。<br>
+                    <b>隐私：</b>全部处理在浏览器本地完成，不发起网络请求，不上传填写内容。
+                </div>
+            </div>
+            <div class="br-panel">
+                <h3>常见问题</h3>
+                <dl class="br-faq">
+                    <dt>生成报告后会自动提交到 GitHub／Jira 吗？</dt>
+                    <dd>不会。本工具只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪，没有提交按钮与接口调用，生成后请自行复制粘贴到你所用的跟踪工具。</dd>
+                    <dt>复现步骤里空行会怎样？</dt>
+                    <dd>空行自动跳过，剩余步骤重新编号。例如三行输入中间夹一空行，输出仍是 1、2 两步，不留空编号；步骤全为空行时视为空步骤并提示「请填写至少一步复现步骤」。</dd>
+                    <dt>环境、预期、实际、补充信息不填会怎样？</dt>
+                    <dd>环境三项与预期、实际空值渲染为「未填写」，补充信息空值渲染为「无」，报告结构保持完整，不会缺节。</dd>
+                    <dt>严重度有哪几档？默认是哪档？</dt>
+                    <dd>四档：致命、严重、一般、轻微，默认「一般」，切换后严重度一节即时同步。</dd>
+                    <dt>复制失败怎么办？</dt>
+                    <dd>页面会先尝试剪贴板写入，失败时自动回落到选中复制；仍失败时会明确提示「复制失败：浏览器未授权剪贴板，请手动全选结果区复制」。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。生成、复制、下载全部在浏览器本地完成，脚本不含网络请求调用，页面不引用任何外部资源，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="br-panel">
+                <h3>相关工具</h3>
+                <div class="br-related">
+                    <a href="/tools/project-to-txt" class="btn btn-secondary" style="font-size:.9rem;">代码打包给 LLM（要把现场代码打包发给协作者去代码打包给 LLM，本工具只生成缺陷报告文本）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/bug_report_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

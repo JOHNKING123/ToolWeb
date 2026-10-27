@@ -1,3 +1,79 @@
+## 今日任务（2026-10-27 15:00 · 产品经理排期轮，接 124 轮调研）
+
+**选定：Bug 报告生成器（bug_report_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（124 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。13:38 PM 轮选文本定宽换行器时已明言：Bug 报告生成器仅因顺位在文本定宽换行器之后而后置、「下轮首席递进」；文本定宽换行器已交付划出（30c0363 新增，全量 196 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——骨架屏加载占位生成器与 ULID／NanoID 生成器虽同为小难度纯前端，均不插队。
+- **未选**：骨架屏加载占位生成器（98 轮新晋 P2，124 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 Bug 报告生成器之后而后置，下轮首席递进；真限制只生成静态占位样式代码、不接入真实数据加载与动画框架）；ULID／NanoID 生成器（98 轮新晋 P2，124 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只生成随机／时间排序标识、不做分布式 ID 唯一性保证）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **196 Path**；`git log` 头部 30c0363（文本定宽换行器新增）／b6908ce（词云清空修复）／9e41d2f（词云生成器新增）。逐项复核：`bug_report_generator`／`bug-report-generator`、`skeleton`／`skeleton_screen_generator`／`skeleton-screen-generator`、`ULID`／`ulid`／`NanoID`／`nanoid` 在 tools／templates／static/js 三路均为 0 命中（唯一例外：`nanoid` 仅出现在第三方打包文件 `static/js/vendor/docx-9.5.1.umd.js` 内部的通用 ID 辅助函数名，非独立工具、无页面、无注册，不构成重叠）；categories.go 无三者相关 ID。另见 tests 侧既有否定断言一条（tests/text_fixed_width_wrapper.test.js 第 125 行「互链：不含未交付骨架屏工具」），印证骨架屏未交付。自有近邻辨析：① 已注册的 HTTP 响应头分析器（ID http_header_analyzer）是「粘贴响应头逐项解析与安全头判定」，本工具是「把缺陷现象填表生成规范 Markdown 报告」，定位问题 vs 撰写报告，不重叠；② 已注册的代码打包给 LLM（ID project_to_txt）是「把项目文件打包成 TXT 喂 LLM」，本工具不读文件树、不打包代码，只生成报告文本，不重叠；③ 已注册的文本工具集、各类格式化工具均不输出缺陷报告结构，不重叠；④ 站内无任何 issue 提交、缺陷跟踪类工具，本工具亦不做提交（见真限制）。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——提 Bug 时标题、环境、复现步骤、预期与实际、严重度东拼西凑，复制到 issue tracker 还得重排，填表→生成规范 Markdown→复制／下载恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，报告模板为确定性字符串拼接，空行跳过、自动编号、缺省占位均可写成精确向量供 node 断言，无布局随机性；④ **受众与站内互补**——与开发工具品类同类用户（定位问题后下一步就是写报告），成组发现；⑤ **外部佐证已就位**——121 轮新晋 P2 以来三轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 HTTP 响应头分析器、代码打包给 LLM 同品类，便于开发者用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪**——无 GitHub／GitLab／Jira 提交按钮与接口调用，页面须明示，生成后由用户自行粘贴到所用 tracker；② **不验证缺陷真实性**——不复现、不判定是否为真 Bug，只做格式规整，页面须明示；③ **不收集、不上传任何填写内容**——零上传，见下；④ **Markdown 仅为通用模板口径**——各 tracker 字段名与模板细节可能不同，生成文本以通用结构为准，不承诺与某一 tracker 模板逐字兼容，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 表单（全部中文标签与占位提示）：缺陷标题（单行，必填）；环境三项（均单行、可选：操作系统、浏览器／客户端、应用版本）；复现步骤（多行，必填，操作提示「每行一步，自动编号，空行自动跳过」）；预期结果（多行，可选）；实际结果（多行，可选）；严重度（四档单选，默认「一般」：致命／严重／一般／轻微）；补充信息（多行，可选：日志摘要、截图说明等）；「载入示例」「清空」两个操作。
+- 生成规则（确定性字符串拼接，函数 `buildBugReport(fields)` 供 node 断言）：标题行 `# [Bug] {标题}`（标题先去行首行尾空白）；随后依次为 `## 环境`（三项各一行 `- 操作系统：{值}`／`- 浏览器／客户端：{值}`／`- 应用版本：{值}`，空项渲染为 `未填写`）、`## 复现步骤`（步骤按行切分、每行去行首行尾空白、空行丢弃、剩余行按 1. 2. 3. 顺序编号）、`## 预期结果`、`## 实际结果`（空值渲染为 `未填写`）、`## 严重度`（所选档位单行）、`## 补充信息`（空值渲染为 `无`）；节与节之间空一行；全文不含行首／行尾空格；用户填写内容原样进入文本（不改写、不翻译、不做 Markdown 转义——报告文本即用户原话，插值用 textContent 或转义后插值，杜绝注入）。
+- 生成：标题、环境、步骤、预期、实际、严重度或补充信息任一变化即实时重算；结果区展示 Markdown 源码（等宽字体、可复制）；空标题时结果区不输出有效报告、中文提示「请填写缺陷标题」；标题非空但步骤为空时中文提示「请填写至少一步复现步骤」；所有提示均中文。
+- 示例数据（页面内置）：标题示例「登录页密码错误时错误提示不消失」；环境示例 Windows 11／Chrome 130／v2.4.1；复现步骤 4 步（含一步空行干扰行，验证空行跳过与重编号）；预期「显示一次错误提示，修正输入后提示消失」、实际「提示一直残留，遮挡登录按钮」；严重度「一般」；补充信息「仅在 Chrome 复现，Edge 未复现」；示例与验收向量分开，验收向量以小向量为准。
+- 操作：一键复制结果；下载 .md（文件名 bug-report.md，内容与结果区逐字一致）；复制失败有明确降级提示（手动复制指引）；与代码打包给 LLM（/tools/project-to-txt）互链（文案区分打包与写报告：「要把现场代码打包发给协作者去代码打包给 LLM，本工具只生成缺陷报告文本」）；不与未交付的骨架屏加载占位生成器、ULID／NanoID 生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写模板拼接与步骤编号逻辑；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，模板拼接、空行跳过与重编号、缺省占位、标题去空白、严重度档位均可 node 断言）。
+- 注册：ID `bug_report_generator`、Name「Bug 报告生成器」、Path `/tools/bug-report-generator`、Category 开发工具、Icon 建议 bug_report（图标库无此名则用 report 兜底）、New: true；中英文描述＋SEO keywords（Bug 报告生成器、缺陷报告模板、issue 模板、bug report generator、bug report template、markdown bug report）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/bug-report-generator，相关工具互链代码打包给 LLM。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `bug_report_generator`、Path `/tools/bug-report-generator` 注册完整（Category 开发工具），注册总数 196→197 Path。
+2. 生成闭环：表单任一字段改动后结果同步变化；空标题时有「请填写缺陷标题」中文提示且不输出有效报告；标题非空、步骤为空时有「请填写至少一步复现步骤」中文提示。
+3. 模板向量闭环（精确字符串比对）：标题 `登录失败`、环境三项全空、步骤 `打开登录页`／（空行）／`输入错误密码点登录`、预期 `提示错误`、实际 `无提示`、严重度 `严重`、补充信息空 → 输出 `# [Bug] 登录失败`，环境三项均为 `未填写`，步骤编号为 `1. 打开登录页`／`2. 输入错误密码点登录`（空行跳过、不留空编号），预期／实际与输入一致，严重度节为 `严重`，补充信息节为 `无`，节间空一行、全文无行首／行尾空格；任一不符即不通过。
+4. 规则向量闭环：标题含行首行尾空格时输出标题已去空白；严重度默认 `一般`、切换 `致命` 后严重度节同步为 `致命`；步骤全为空行时视为空步骤并中文提示；补充信息非空时原样输出。
+5. 操作闭环：复制内容与结果区一致；下载 bug-report.md 内容与结果区逐字一致；复制失败有降级提示；相关工具互链含代码打包给 LLM；不含未交付工具的硬凑互链。
+6. 真限制可见：页面可见「只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪」「不验证缺陷真实性」「Markdown 仅为通用模板口径」文案；零 fetch／XHR、零 CDN。
+7. node 测试 25+ 断言全过（模板精确拼接、空行跳过与重编号、缺省占位、标题去空白、四档严重度、空标题与空步骤提示、注册与零网络请求静态检查）。
+8. 页面无报错；移动端表单、严重度单选、复制／下载按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/bug_report_generator.html`（新增；含 SEO 面板按家族标准＋缺陷表单／严重度单选／Markdown 结果区／复制与下载 UI）
+- `static/js/bug_report_generator.js`（新增；模板拼接、步骤编号、复制与下载逻辑；双模式导出供 node 测试）
+- `tests/bug_report_generator.test.js`（新增；模板向量、空行与编号、缺省占位、严重度、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID bug_report_generator、Path /tools/bug-report-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 30c0363（文本定宽换行器新增）／b6908ce（词云清空修复）／9e41d2f（词云生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **196**；Top3 候选重叠复核（bug_report_generator／bug-report-generator、skeleton 三串在 tools／templates／static/js 三路均为 0 命中；ULID／NanoID 四串三路 0 命中，nanoid 唯一命中为第三方 vendor 打包文件内部函数名、非工具；近邻 HTTP 响应头分析器／代码打包给 LLM／文本工具集语义辨析见上；注意文本工具集真实 Path 为 /tools/text-tools，代码打包给 LLM 真实 Path 为 /tools/project-to-txt，本轮互链以此为准）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 15:00 · 通用调研第一百二十四轮）
+
+**交付状态**：10-27 通用调研第一百二十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**文本定宽换行器已交付闭环**（30c0363 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **196 Path**，ID text_fixed_width_wrapper、Path /tools/text-fixed-width-wrapper 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小难度纯前端。
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. 文本定宽换行器交付确认：`git log` 头部 30c0363（定宽换行器新增）／b6908ce（词云清空修复）／9e41d2f（词云生成器新增）；全量 196 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首轮未带该变量报主机密钥校验失败，补变量后成功并补录 github.com 主机密钥）。
+2. 新信号扫描：
+   - **dev.to 13 款免费浏览器工具榜（2026）**：JSON 格式化、JSON Schema 验证、文本 Diff、Base64、URL 编解码、HTML 实体、UUID、二维码、CSS／JS 压缩、Markdown 预览、配色生成、批量图片缩放 → **全部自有实锤消解**（JSON 解析器／JSON Schema 验证器／文本比较／Base64／URL 编解码／HTML 实体编解码／UUID／二维码工具／代码压缩器／Markdown 预览／配色方案生成器／图片批量缩放器均已注册；JS 压缩与 CSS 压缩同属代码压缩器一类，不另立）；
+   - **HN Show HN Project2txt／Source to Prompt（代码打包成单 TXT 喂 LLM，拖文件夹、忽略 node_modules／.git）**：**自有实锤消解**（即已注册的「代码打包给 LLM」project_to_txt、Path /tools/project-to-txt：拖拽文件夹、智能忽略、二进制跳过、文件树复选、Token 预估均已覆盖，不新立）；
+   - **HN Show HN ChartFromText（粘贴自由文本键值如 Apples: 50 即出饼／柱／折线图＋PNG 下载）**：**部分消解、不独立成工具**（在线图表生成器 chart_generator 已注册，柱／折／饼／环形＋PNG 导出齐全；差异仅在输入口径——自由文本键值解析 vs 表格粘贴，记作该工具的自由文本输入模式扩展备查，不另立工具）；
+   - **TinyKit 100 小工具站**：文本提取器（邮箱／链接／电话／IPv4／IPv6／#话题／@提及／MAC／十六进制颜色）、文本脱敏器、CSS 格式化、CSV 互转、cURL 转代码、HTML→Markdown、JSON Diff／JSON 查询／JSON 转代码、Meta 标签构建、测试数据生成、Word 解谜／Wordle 求解 → **除两处扩展备查外全部自有实锤消解**（文本信息提取器已覆盖邮箱／电话／链接／IPv4／日期／金额，文本隐私脱敏、JSON／SQL／XML 格式化、CSV 互转、HTML→Markdown、JSON 语义化对比器、JSONPath 测试器、JSON 转 TS／Go、OG 社交卡片预览＋SERP 片段预览已覆盖 Meta 标签口径、假数据／Mock 生成器均已注册；Word 解谜／Wordle 求解属游戏辅助，非 ToolWeb 开发工具主线，不立；两处扩展备查：① 文本提取器余项 IPv6／#话题／@提及／MAC／十六进制颜色可作文本信息提取器的规则扩展备查；② cURL 转代码多目标（fetch／Go／PowerShell／C#）可作现有 cURL→Python Requests 转换器的多目标输出扩展备查，均不独立成工具）；
+   - **品牌名／用户名多平台可用性检查器（一次查 Twitter／Flickr／LinkedIn 等＋域名）**：**不立**（需实时调各平台接口查可用性，非纯前端单页可实现，且各平台反爬与登录墙多，单页工具做不实）；
+   - **多语种视频／音频转文字（粤语／方言／外语批量转写）**：**不立**（需 ASR 模型推理或第三方转写服务，非纯前端小工具；站内浏览器实时听写属浏览器语音识别口径，不覆盖上传文件转写）。
+3. 候选池变动：文本定宽换行器已交付划出（30c0363，196 Path）；**本轮新晋 P2 0 个**；**观察项新增 0 条**（两处扩展备查只记叙事、不进池）；自有实锤消解 10+ 项；全量 196 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文本定宽换行器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，123 轮 Top3 第二、三顺位依次递进，第三顺位取 98 轮晋升 P2 对中顺位居后的首项）：
+
+1. **Bug 报告生成器** — P2 留池顺位递进（121 轮新晋 P2；124 轮复核仍未交付；123 轮 Top3 第二顺位递进为首席；痛点：提 Bug 时缺结构化模板：标题／环境／复现步骤／预期与实际／严重度东拼西凑，复制到 issue tracker 还得重排；纯前端小难度：填表→生成规范 Markdown 缺陷报告＋复制／下载，零上传；`bug_report_generator`／`bug-report-generator` 在 tools／templates／static/js 三路 0 命中实锤；建议 ID bug_report_generator、Path /tools/bug-report-generator；真限制：只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪）。
+2. **骨架屏加载占位生成器** — P2 留池顺位递进（98 轮新晋 P2；124 轮复核仍未交付；123 轮 Top3 第三顺位递进；痛点：做加载占位图／骨架屏样式时手写 CSS 占位块繁琐、尺寸配比靠猜；纯前端小难度：设占位块布局与尺寸→生成骨架屏 HTML／CSS＋实时预览＋复制，零上传；`skeleton` 在 tools／templates／static/js 三路 0 命中、categories.go 无 skeleton 相关 ID 实锤；建议 ID skeleton_screen_generator、Path /tools/skeleton-screen-generator；真限制：只生成静态占位样式代码、不接入真实数据加载与动画框架，页面须明示）。
+3. **ULID／NanoID 生成器** — P2 留池顺位递进（98 轮新晋 P2；124 轮复核仍未交付；123 轮其余 P2 留池顺位首项；痛点：只要 UUID 不够用时——ULID 自带时间可排序、NanoID 短且 URL 安全，手写或现翻文档都慢；纯前端小难度：选格式与长度→批量生成＋复制，零上传；`ULID`／`NanoID`／`ulid`／`nanoid` 在 tools／templates／static/js 三路 0 命中实锤；与已注册的 UUID 生成器不重叠（UUID 只是三种 ID 格式之一）；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：只生成随机／时间排序标识、不做分布式 ID 唯一性保证，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项）；位运算计算器／批量图片模糊打码器（122 轮观察项）；Gzip Base64 解码器（123 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 123 轮及之前记录。
+
+**通用候选表增量**（第一百二十四轮：文本定宽换行器已交付划出（30c0363 新增；ID text_fixed_width_wrapper、Path /tools/text-fixed-width-wrapper 已注册；全量 196 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**（ChartFromText 自由文本键值输入、TinyKit 文本提取余项规则、cURL 多目标输出三处只记扩展备查、不进池）；自有实锤消解 10+ 项（dev.to 13 款榜单、HN 代码打包、TinyKit 百工具站余项均为已注册工具、复现旧留池项、方向排除或非纯前端；品牌名多平台可用性检查需实时接口、视频转文字需 ASR，均不立）；全量 196 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文本定宽换行器 | 已交付划出（30c0363 新增；ID text_fixed_width_wrapper、Path /tools/text-fixed-width-wrapper 已注册；全量 196 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、复现旧留池项或方向排除；ChartFromText 与 TinyKit 两处差异只作既有工具的扩展备查；品牌名可用性检查需实时接口、视频转文字需 ASR，均非纯前端单页可实现） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十四轮——文本定宽换行器交付闭环（30c0363，`/tools/text-fixed-width-wrapper` 已注册，全量 196 Path），候选池划出；**新晋 P2 0 个**；观察项新增 0 条；仓库 196 注册工具全量核对无重叠（Top3 建议 ID bug_report_generator / skeleton_screen_generator / ulid_nanoid_generator；前两者全库零命中，ULID／NanoID 四串三路零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 30c0363（定宽换行器新增）／b6908ce（词云清空修复）／9e41d2f（词云生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **196**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 13:38 · 产品经理排期轮）
 
 **选定：文本定宽换行器（text_fixed_width_wrapper）** — 本轮唯一任务（新工具）：
