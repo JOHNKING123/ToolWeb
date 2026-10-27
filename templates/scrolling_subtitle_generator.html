@@ -1,0 +1,199 @@
+{{define "scrolling_subtitle_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>滚动字幕生成器 - 循环滚动字幕 HTML/CSS 代码免费生成/跑马灯/LED 滚动字幕（scrolling subtitle generator）| 程序员工具箱</title>
+<meta name="description" content="免费滚动字幕生成器（Scrolling Subtitle Generator）：输入文案，选方向（左/右/上/下）、速度、字号与颜色，实时预览循环滚动效果，一键生成可嵌入网页、直播叠加层、门店屏的 HTML/CSS 代码片段（无缝循环、无外部引用、无 JS），复制即用，纯前端零上传。Free scrolling subtitle generator: marquee / ticker code snippet, 100% client-side.">
+<meta name="keywords" content="滚动字幕,跑马灯,滚动字幕生成器,LED 滚动字幕,循环滚动字幕,滚动字幕代码,marquee,scrolling subtitle,scrolling text generator,ticker">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/scrolling-subtitle-generator">
+<meta property="og:title" content="滚动字幕生成器 - 循环滚动字幕 HTML/CSS 代码免费生成">
+<meta property="og:description" content="输入文案＋方向/速度/字号/颜色，实时预览循环滚动，一键生成可嵌入网页、直播叠加层、门店屏的 HTML/CSS 代码片段，纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/scrolling-subtitle-generator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"滚动字幕生成器","alternateName":"scrolling_subtitle_generator","description":"输入文案，选方向、速度、字号与颜色，实时预览循环滚动效果，生成可嵌入网页、直播叠加层、门店屏的 HTML/CSS 代码片段（无缝循环、无外部引用、无 JS），纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/scrolling-subtitle-generator","applicationCategory":"LifestyleApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ssg-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+.ssg-work{display:grid;grid-template-columns:minmax(340px,1fr) minmax(300px,1fr);gap:1.2rem;align-items:start}
+.ssg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ssg-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+.ssg-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.ssg-field label{font-size:.82rem;color:#6b7280;font-weight:600}
+.ssg-field textarea,.ssg-field input[type="text"]{border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;font-size:.92rem;background:#fff;color:#1f2937;width:100%;box-sizing:border-box;font-family:inherit}
+.ssg-field textarea:focus,.ssg-field input[type="text"]:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ssg-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.ssg-row input[type="range"]{flex:1;min-width:120px;accent-color:#1d4ed8}
+.ssg-row output{font-size:.85rem;color:#374151;min-width:5.5em}
+.ssg-dir{display:flex;gap:.5rem;flex-wrap:wrap}
+.ssg-dir label{display:inline-flex;align-items:center;gap:.35rem;font-size:.88rem;color:#374151;cursor:pointer;border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .8rem;background:#fff}
+.ssg-dir input{accent-color:#1d4ed8}
+.ssg-colorrow{display:flex;gap:.5rem;align-items:center}
+.ssg-colorrow input[type="color"]{width:2.6rem;height:2.2rem;padding:0;border:1px solid #d1d5db;border-radius:.4rem;background:#fff;cursor:pointer;flex:none}
+.ssg-colorrow input[type="text"]{flex:1;min-width:0}
+.ssg-check{display:flex;gap:1rem;flex-wrap:wrap;font-size:.88rem;color:#374151}
+.ssg-check label{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+.ssg-check input{accent-color:#1d4ed8;width:1.05rem;height:1.05rem}
+.ssg-stats{font-size:.85rem;color:#4b5563;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;padding:.55rem .8rem;margin:.2rem 0 .7rem;line-height:1.9}
+.ssg-hint{font-size:.88rem;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;margin-bottom:.7rem}
+.ssg-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+.ssg-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;font-size:.9rem;font-weight:600;cursor:pointer}
+.ssg-btn-primary{background:#1d4ed8;color:#fff}
+.ssg-btn-primary:hover{background:#1e40af}
+.ssg-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ssg-btn-secondary:hover{background:#e5e7eb}
+.ssg-btn:disabled{opacity:.45;cursor:not-allowed}
+.ssg-preview-box{border:1px solid #e5e7eb;border-radius:.6rem;overflow:hidden;background:#111111;min-height:3rem}
+.ssg-preview-empty{padding:1rem;color:#9ca3af;font-size:.9rem;line-height:1.8}
+.ssg-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.6;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;width:100%;box-sizing:border-box;min-height:13rem;color:#111827;background:#f8fafc;resize:vertical}
+.ssg-limits{font-size:.9rem;color:#4b5563;line-height:1.9}
+.ssg-limits b{color:#111827}
+.ssg-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ssg-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ssg-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ssg-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+.ssg-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:900px){.ssg-work{grid-template-columns:1fr}.ssg-actions .ssg-btn{flex:1;justify-content:center}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1>滚动字幕生成器</h1>
+<p>本工具是代码生成器：输入文案＋方向/速度/字号/颜色，实时预览循环滚动效果，生成可直接嵌入自己网页、直播叠加层或门店屏页面的 HTML/CSS 代码片段 —— 区别于在线提词器（朗读播放器）、大字标牌展示器（静态逐屏翻页）、SRT 字幕编辑器（时间轴编辑）。</p>
+</div>
+<div class="tool-content" style="max-width:1200px;margin:auto;">
+<div class="ssg-privacy">
+<div><b>纯前端运行，零上传：</b>文案与参数只在浏览器本地处理，不上传到任何服务器，无后端调用、无外部引用、无 JS 依赖的生成代码。可打开开发者工具 Network 面板验证：本页面无 fetch/XHR、零 CDN。</div>
+</div>
+
+<div class="ssg-work">
+<div>
+<div class="ssg-panel">
+<h3>文案输入</h3>
+<div class="ssg-field">
+<label for="ssg-text">滚动文案（水平方向：全部空白归一为单空格；垂直方向：按行保留、空行丢弃）</label>
+<textarea id="ssg-text" rows="5" placeholder="例如：欢迎光临 · 今日特价全场八折 · 新品上市"></textarea>
+</div>
+<div class="ssg-actions">
+<button type="button" class="ssg-btn ssg-btn-secondary" id="ssg-sample">载入示例</button>
+<button type="button" class="ssg-btn ssg-btn-secondary" id="ssg-clear">清空</button>
+<button type="button" class="ssg-btn ssg-btn-primary" id="ssg-generate">生成 / 刷新代码</button>
+</div>
+</div>
+
+<div class="ssg-panel">
+<h3>参数设置</h3>
+<div class="ssg-field">
+<label>滚动方向</label>
+<div class="ssg-dir">
+<label><input type="radio" name="ssg-direction" value="left" checked> 向左</label>
+<label><input type="radio" name="ssg-direction" value="right"> 向右</label>
+<label><input type="radio" name="ssg-direction" value="up"> 向上</label>
+<label><input type="radio" name="ssg-direction" value="down"> 向下</label>
+</div>
+</div>
+<div class="ssg-field">
+<label for="ssg-speed">滚动速度（20–500 px/s，默认 100）</label>
+<div class="ssg-row"><input type="range" id="ssg-speed" min="20" max="500" step="1" value="100"><output id="ssg-speed-val">100 px/s</output></div>
+</div>
+<div class="ssg-field">
+<label for="ssg-fontsize">字号（16–120 px，默认 48）</label>
+<div class="ssg-row"><input type="range" id="ssg-fontsize" min="16" max="120" step="1" value="48"><output id="ssg-fontsize-val">48 px</output></div>
+</div>
+<div class="ssg-field">
+<label>文字颜色（HEX，非法回落白字 #ffffff）</label>
+<div class="ssg-colorrow"><input type="color" id="ssg-textcolor" value="#ffffff"><input type="text" id="ssg-textcolor-text" value="#ffffff" spellcheck="false"></div>
+</div>
+<div class="ssg-field">
+<label>背景颜色（HEX，非法回落黑底 #111111）</label>
+<div class="ssg-colorrow"><input type="color" id="ssg-bgcolor" value="#111111"><input type="text" id="ssg-bgcolor-text" value="#111111" spellcheck="false"></div>
+</div>
+<div class="ssg-check">
+<label><input type="checkbox" id="ssg-bold" checked> 粗体</label>
+<label><input type="checkbox" id="ssg-pause" checked> 悬停暂停</label>
+</div>
+</div>
+</div>
+
+<div>
+<div class="ssg-panel">
+<h3>实时预览</h3>
+<div id="ssg-hint" class="ssg-hint" style="display:none;">请输入文案后才会生成代码（不生成空代码）。</div>
+<style id="ssg-preview-style"></style>
+<div class="ssg-preview-box" id="ssg-preview"></div>
+<div class="ssg-actions">
+<button type="button" class="ssg-btn ssg-btn-secondary" id="ssg-pause-btn" disabled>暂停</button>
+</div>
+<div class="ssg-stats" id="ssg-stats">尚未输入文案</div>
+<p style="font-size:.85rem;color:#6b7280;line-height:1.9;margin:0;">预览动画时长由 JS 实测内容像素尺寸除以速度得出，与生成代码的时长一致；换字体、字号或容器宽度后，改时长即可调速。</p>
+</div>
+
+<div class="ssg-panel">
+<h3>生成代码</h3>
+<p style="font-size:.88rem;color:#6b7280;line-height:1.8;margin:0 0 .7rem;">下方为 &lt;style&gt; + HTML 组合片段，两份相同内容无缝循环，无外部引用、无 JS，可直接粘贴进任意页面。</p>
+<textarea id="ssg-code" class="ssg-code" readonly placeholder="输入文案后，这里会显示生成的 HTML/CSS 代码片段。"></textarea>
+<div class="ssg-actions">
+<button type="button" class="ssg-btn ssg-btn-primary" id="ssg-copy" disabled>复制代码</button>
+<button type="button" class="ssg-btn ssg-btn-secondary" id="ssg-download" disabled>下载演示 HTML</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="ssg-panel">
+<h3>真限制说明</h3>
+<div class="ssg-limits">
+<p><b>只生成滚动展示代码、不做视频字幕烧录：</b>本工具不处理 SRT 时间轴、不把字幕烧进视频文件，需要带时间轴的字幕文件请用 SRT 字幕编辑器。</p>
+<p><b>不是提词器：</b>本工具不做朗读跟随、无逐行高亮、无朗读进度、无镜像提词模式，需要跟着读请用在线提词器。</p>
+<p><b>速度以当前预览实测尺寸换算：</b>生成代码的动画时长由当前预览实测的内容像素尺寸除以速度得出；换字体、字号或容器后实际速度会有偏差，改时长即可调速。</p>
+<p><b>不收集、不上传任何内容：</b>文案与参数只在浏览器本地处理。</p>
+</div>
+</div>
+
+<div class="ssg-panel">
+<h3>使用说明</h3>
+<div class="ssg-limits">
+<p>1）输入文案：水平滚动时多余空白会自动归一，垂直滚动时按行保留；2）选方向、拖速度与字号滑杆、改颜色、开关粗体与悬停暂停；3）预览区实时滚动，暂停/继续可随时切换；4）点「复制代码」把片段粘贴进自己的网页、直播叠加层或门店屏页面；点「下载演示 HTML」可离线打开一个完整演示页验证效果。</p>
+</div>
+</div>
+
+<div class="ssg-panel">
+<h3>常见问题</h3>
+<dl class="ssg-faq">
+<dt>生成的代码能直接用在我的网页里吗？</dt>
+<dd>可以。代码区是 &lt;style&gt; + HTML 的组合片段，无外部引用、无 JS，粘贴进任意页面的 &lt;body&gt; 里即可循环滚动；无缝循环靠两份相同内容实现，不要删掉其中一份。</dd>
+<dt>速度是怎么算的？为什么换个地方速度变了？</dt>
+<dd>动画时长 = 实测内容像素尺寸 ÷ 速度（例如 600px ÷ 100px/s = 6.0s）。时长写死在代码里，换字体、字号或容器宽度会改变内容尺寸，实际速度随之变化；想调速直接改代码里的秒数即可。</dd>
+<dt>悬停暂停有什么用？</dt>
+<dd>打开后鼠标移到字幕上即暂停，移开继续，适合门店屏前有人想细看文案的场景；关闭则一直滚动。</dd>
+<dt>和提词器、大字标牌、SRT 编辑器有什么区别？</dt>
+<dd>提词器是给演讲者跟着读的播放器；大字标牌是静态逐屏翻页的展示器；SRT 编辑器是编辑带时间轴字幕文件的工具。本工具输出的是可嵌入别处的滚动代码，本身不朗读、不翻页、不编辑时间轴。</dd>
+<dt>文案会上传吗？特殊字符安全吗？</dt>
+<dd>不会上传，全部本地处理。文案在生成代码前会转义（&lt;、&gt;、&amp;、引号均转为实体），不会把输入当成 HTML 标签执行。</dd>
+</dl>
+</div>
+
+<div class="ssg-panel">
+<h3>相关工具</h3>
+<div class="ssg-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">滚动字幕生成器（当前）</span>
+<a href="/tools/teleprompter" class="btn btn-secondary" style="font-size:.9rem;">在线提词器（要跟着读去提词器）</a>
+<a href="/tools/big-sign-display" class="btn btn-secondary" style="font-size:.9rem;">大字标牌展示器（要静态翻页大字去大字标牌）</a>
+<a href="/tools/subtitle-editor" class="btn btn-secondary" style="font-size:.9rem;">SRT 字幕编辑器（要带时间轴的字幕文件去 SRT 编辑器）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ssg-toast" class="ssg-toast"></div>
+<script src="/tools/static/js/scrolling_subtitle_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

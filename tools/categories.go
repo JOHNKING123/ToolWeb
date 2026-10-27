@@ -1743,6 +1743,15 @@ func GetCategories() []Category {
 					Category:    "生活工具",
 				},
 				{
+					ID:          "scrolling_subtitle_generator",
+					Name:        "滚动字幕生成器",
+					Description: "滚动字幕在线生成：输入文案，选方向（左/右/上/下）、速度 20–500px/s、字号 16–120px 与文字/背景颜色，实时预览循环滚动效果，一键生成可嵌入网页、直播叠加层、门店屏的 HTML/CSS 代码片段（两份内容无缝循环、转义插值、无外部引用、无 JS）＋复制代码＋下载演示 HTML，纯前端零上传 · Scrolling subtitle generator: marquee/ticker HTML/CSS code snippet, seamless loop, 100% client-side",
+					Path:        "/tools/scrolling-subtitle-generator",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "envelope_printer",
 					Name:        "信封打印助手",
 					Description: "信封打印在线排版：#10/DL/C5/C6/A2/A6/A7 七种信封尺寸预设＋自定义尺寸（宽 80–400mm、高 60–300mm），收件人/寄件人/邮票框按毫米坐标排版（寄件人区左 12mm/上 10mm、收件人区左＝宽×0.45/上＝高×0.50、邮票框右上 25×20mm 虚线框），全局偏移＋收件人独立偏移（步进 0.5mm、−20–+20mm）叠加微调，WYSIWYG 等比预览＋测试页（10mm 网格＋四角裁切标记＋中心十字）量偏差再打印，3 组示例一键载入，先打测试页再调偏移、打印对话框选无边距/实际大小、屏幕预览仅示意、不校验地址与邮编、文本不出浏览器 · Envelope printing: preset envelope sizes, mm-precise layout, offset tuning, test page, 100% client-side",

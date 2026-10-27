@@ -1,3 +1,85 @@
+## 今日任务（2026-10-28 01:00 · 产品经理排期轮，接 129 轮调研）
+
+**选定：滚动字幕生成器（scrolling_subtitle_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（129 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。23:00 PM 轮选摩斯码翻译器时已明言：滚动字幕生成器仅因顺位在摩斯码翻译器之后而后置、「下轮首席递进」；摩斯码翻译器已交付划出（3492e08 新增，全量 201 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——色盲模拟检查器与 MP3 标签编辑器虽同为候选，均不插队。
+- **未选**：色盲模拟检查器（90 轮新晋 P2，129 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在滚动字幕生成器之后而后置，下轮首席递进）；MP3 标签编辑器（90 轮新晋 P2，129 轮 Top3 第三顺位，无硬伤，留池顺位递进）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）；字体搭配预览器（129 轮观察项新增，未晋升 P2，且与站内配色／字体族口径重叠待界定，不插队）。
+- **PM 前置界定（129 轮留下的条件，本轮已写清，不再顺延）**：本工具与三件已注册近邻的区分以「输出物」划界——① **在线提词器**（ID teleprompter、Path /tools/teleprompter）是**播放器**：演讲者跟着大字滚动朗读，带速度倍率、暂停、进度跳转、当前行高亮、镜像与朗读时长，输出的是朗读过程本身；② **大字标牌展示器**（ID big_sign_display、Path /tools/big-sign-display）是**静态展示器**：文案按 `---` 分页、全屏巨字逐屏翻页，输出的是展示画面本身；③ **SRT 字幕编辑器**（ID subtitle_editor、Path /tools/subtitle-editor）是**时间轴编辑器**：编辑 .srt/.vtt 条目的起止时间与文本，输出的是带时间轴的字幕文件。④ **本工具是代码生成器**：输入文案＋方向／速度／字号颜色等参数，输出的是**可直接嵌入自己网页、直播叠加层或门店屏页面的 HTML/CSS 代码片段**，用户复制走、在别处用；本工具不做朗读跟随、不做逐屏翻页、不做时间轴编辑。页面须以一句话写清这条界线，并互链上述三者（文案按此区分，不硬凑）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **201 Path**；`git log` 头部 3492e08（摩斯码翻译器新增）／5b40104（.env 解析与校验器新增）／5180a7e（ULID／NanoID 新增）。逐项复核：`scrolling_subtitle_generator`／`scrolling-subtitle-generator`、`滚动字幕` 在 tools／templates／static/js 三路均为 0 命中；categories.go 无相关 ID。`marquee` 在 categories.go 唯一命中为年会抽奖大屏描述里的「姓名跑马灯滚动」动效词，非独立工具；`ID3` 命中仅为 project_to_txt 文件签名判定与第三方 vendor 脚本，非 MP3 标签工具（本轮不选 MP3，故仅作反向确认）。自有近邻辨析：① 提词器／大字标牌／SRT 编辑器语义辨析见上（输出物不同，不重叠）；② 配色方案生成器与 WCAG 对比度检查器是「配什么色、对比够不够」，本工具是「字幕怎么滚、代码怎么嵌」，颜色参数只是其中两项输入，不重叠；③ 音频裁剪／合并／变速是波形编辑，与滚动字幕无关。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——直播、门店、活动现场要一条循环滚动的字幕，逐行手写 CSS 动画、调方向速度、处理无缝循环接缝费事，输入文案＋参数→实时预览→复制可嵌入代码恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，归一化、转义、关键帧与时长换算均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与提词器、大字标牌、SRT 字幕编辑器同属「字幕／展示」需求簇，直播与门店用户成组发现；⑤ **外部佐证已就位**——92 轮晋升 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「生活工具」品类（与在线提词器、大字标牌展示器、SRT 字幕编辑器同品类，便于字幕／展示需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成滚动展示代码、不做视频字幕烧录**——不处理 SRT 时间轴、不把字幕烧进视频文件，页面须明示；② **不是提词器、不做朗读跟随**——无逐行高亮、无朗读进度、无镜像提词模式，需要提词去提词器，页面须明示；③ **速度以当前预览实测尺寸换算**——生成代码的动画时长由预览实测的内容像素尺寸除以速度得出，换字体／字号／容器后实际速度会有偏差，改时长即可调速，页面须明示；④ **不收集、不上传任何内容**——文案与参数只在浏览器本地处理，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports）：
+  - `normalizeText(text, direction)`：水平方向（向左／向右）→ 去首尾空白、全部空白（含换行）归一为单空格；垂直方向（向上／向下）→ 按行切分、每行去首尾空白、空行丢弃、其余行保留换行分隔；空输入返回空串。
+  - `escapeHtml(text)`：转义 `&` `<` `>` `"` `'`（依次为 `&amp;` `&lt;` `&gt;` `&quot;` `&#39;`），生成代码里的文案一律经此转义后插值，杜绝注入。
+  - `buildKeyframes(direction)`：向左 `translateX(0) → translateX(-50%)`；向右 `translateX(-50%) → translateX(0)`；向上 `translateY(0) → translateY(-50%)`；向下 `translateY(-50%) → translateY(0)`；动画名统一 `scroll-subtitle-marquee`，`linear infinite`。
+  - `buildSnippet(config, measuredPx)`：config 含文案（已归一化）、方向、速度（px/s，范围 20–500，默认 100）、字号（px，范围 16–120，默认 48）、文字颜色与背景颜色（HEX，`^#[0-9a-fA-F]{6}$`，非法则回落默认：文字 `#ffffff`、背景 `#111111`）、粗体开关（默认开）、悬停暂停开关（默认开）。时长 `durationSec = measuredPx / speed`，保留 1 位小数（如 600px ÷ 100px/s = 6.0s、800px ÷ 200px/s = 4.0s）。返回 `{html, css, full, durationSec}`：html 为外层容器＋两份相同内容（无缝循环用，水平用行内块、垂直用块级行）；css 含容器（overflow hidden、背景色、字号、颜色、粗体）与关键帧，悬停暂停开时含 `:hover { animation-play-state: paused; }`；full 为 `<style>`＋html 的组合片段，可直接粘贴进任意页面，无外部引用、无 JS。
+  - `buildDemoPage(snippet)`：把 full 包进完整 HTML 文档（`<!DOCTYPE html>`＋meta viewport＋body 背景与 snippet 一致），下载用，文档内含 snippet 全文。
+- 界面：文案输入区（输入变化即实时更新预览与代码，兼「生成／刷新代码」按钮）、参数区（方向四档：向左／向右／向上／向下；速度滑杆＋数值；字号滑杆＋数值；文字颜色与背景颜色取色器＋HEX 文本框；粗体、悬停暂停两开关）、实时预览区（水平高度随字号自适应、垂直固定高度 240px；暂停／继续按钮；预览动画时长由 JS 实测内容像素尺寸除以速度得出，与生成代码时长一致）、「载入示例」「清空」操作、生成代码区（full 全文展示）、复制代码、下载演示 HTML、统计条（归一化后字符数／行数、方向、速度、时长）；所有提示均中文。
+- 操作与互链：复制代码内容与代码区文本逐字一致；下载演示 HTML 内容含 snippet 全文；与在线提词器（/tools/teleprompter）、大字标牌展示器（/tools/big-sign-display）、SRT 字幕编辑器（/tools/subtitle-editor）互链（文案按输出物区分：「要跟着读去提词器，要静态翻页大字去大字标牌，要带时间轴的字幕文件去 SRT 编辑器」）；不与未交付的色盲模拟检查器、MP3 标签编辑器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写归一化、转义、关键帧与时长换算；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；预览动画用 CSS animation（与生成代码同一关键帧口径），时长由实测尺寸换算，暂停用 animation-play-state。
+- 注册：ID `scrolling_subtitle_generator`、Name「滚动字幕生成器」、Path `/tools/scrolling-subtitle-generator`、Category 生活工具、Icon 建议 move_horizontal（图标库无此名则用 text_fields 兜底）、New: true；中英文描述＋SEO keywords（滚动字幕、跑马灯、滚动字幕生成器、LED 滚动字幕、循环滚动字幕、marquee、scrolling subtitle、scrolling text generator、ticker）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/scrolling-subtitle-generator，相关工具互链提词器、大字标牌、SRT 字幕编辑器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `scrolling_subtitle_generator`、Path `/tools/scrolling-subtitle-generator` 注册完整（Category 生活工具），注册总数 201→202 Path。
+2. 归一化向量闭环（精确比对）：水平方向 `  Hello   World \n 新年快乐  ` → `Hello World 新年快乐`；垂直方向 `  第一行  \n\n  第二行  \n` → `第一行\n第二行`；空输入 → 空串且 UI 提示输入为空（不生成空代码）。
+3. 转义向量闭环：文案 `<b> & "test"` 生成代码里为 `&lt;b&gt; &amp; &quot;test&quot;`，不出现未转义的 `<b>` 标签。
+4. 关键帧向量闭环：四方向 from/to 与上条规格逐字一致（水平 -50% X 轴、垂直 -50% Y 轴、方向反向时起止互换），动画名 `scroll-subtitle-marquee`，`linear infinite`。
+5. 时长换算闭环：measuredPx 600、速度 100 → 6.0s；measuredPx 800、速度 200 → 4.0s；悬停暂停开时 CSS 含 `animation-play-state: paused`，关时不含。
+6. 预览一致闭环：预览动画方向、速度、字号、颜色与参数区一致；暂停／继续可切换；参数变化后预览与代码区同步更新（时长以实测尺寸换算为准）。
+7. 操作闭环：复制代码内容与代码区文本逐字一致；复制失败有降级提示；下载演示 HTML 内容含 snippet 全文；相关工具互链含提词器、大字标牌、SRT 字幕编辑器；不含未交付工具的硬凑互链。
+8. 真限制可见：页面可见「只生成滚动展示代码、不做视频字幕烧录」「不是提词器」「速度以当前预览实测尺寸换算」文案；零 fetch／XHR、零 CDN。
+9. node 测试 25+ 断言全过（归一化向量、转义向量、四方向关键帧、时长换算、颜色非法回落、复制与下载内容静态检查、注册与零网络请求静态检查）。
+10. 页面无报错；移动端文案输入区、参数滑杆、预览区、代码区、复制／下载按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/scrolling_subtitle_generator.html`（新增；含 SEO 面板按家族标准＋文案输入区／参数区／实时预览区／示例与清空／生成代码区／复制与下载 UI）
+- `static/js/scrolling_subtitle_generator.js`（新增；归一化、转义、关键帧、时长换算、生成代码、预览控制、复制与下载逻辑；双模式导出供 node 测试）
+- `tests/scrolling_subtitle_generator.test.js`（新增；归一化、转义、关键帧、时长换算、颜色回落、注册与零网络静态检查）
+- `tools/categories.go`（生活工具品类注册：ID scrolling_subtitle_generator、Path /tools/scrolling-subtitle-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 3492e08（摩斯码翻译器新增）／5b40104（.env 解析与校验器新增）／5180a7e（ULID／NanoID 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **201**；Top3 候选重叠复核（scrolling_subtitle_generator／scrolling-subtitle-generator、滚动字幕在 tools／templates／static/js 三路均为 0 命中；marquee 唯一命中为抽奖大屏动效描述词；近邻提词器／大字标牌／SRT 编辑器、配色族、音频族语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 01:00 · 通用调研第一百二十九轮）
+
+**交付状态**：10-28 通用调研第一百二十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**摩斯码翻译器已交付闭环**（3492e08 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **201 Path**，ID morse_code_translator、Path /tools/morse-code-translator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小难度纯前端。
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 摩斯码交付确认：`git log` 头部 3492e08（摩斯码翻译器新增）／5b40104（.env 解析与校验器新增）／5180a7e（ULID／NanoID 新增）；全量 201 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功。
+2. 新信号扫描：
+   - **YouTube 10 款免费浏览器工具榜**：Regex101／TypeLit 打字练习／Wormhole 文件分享／Invoice 发票生成／SMMRY 文本摘要／Coolors 配色／Fontjoy 字体搭配／AudioMass 音频编辑／Excalidraw 白板／PhotoRoom 去背景 → **除字体搭配外全部消解**（正则、发票生成器、配色、音频裁剪／合并、头像／像素画族均为已注册工具；打字练习为学习游戏而非单页工具形态，不立；文件分享需 P2P／中转后端、文本摘要与去背景需 AI／后端模型、Excalidraw 为重型白板产品，均非纯前端单页可实现，不立；字体搭配见观察项）；
+   - **Medium 10 月 7 款浏览器工具榜**：SyncWhen 会议约时间／SortaSeat 婚宴座位／OldRoll 复古照片／StitchCraft 十字绣图案／urPiano 在线钢琴／Calcy 口算／llmspeed 本地模型测速 → **全部消解**（婚宴座位表生成器已注册，ID wedding_seating_chart；会议约时间需多方协同后端、复古滤镜与十字绣图案属已注册图片处理／像素画族口径相近、钢琴为玩具形态、口算属方向排除的生活计算器、模型测速需本地硬件数据，均不立）；
+   - **dev.to 14 款纯前端工具榜（BlanzaTools）**：图片压缩／缩放、字数统计、大小写转换、Lorem、年龄／BMI／百分比／单位换算、密码生成、二维码、取色、JSON 格式化、倒计时 → **全部消解**（图片、文本、Lorem Ipsum 生成器、倒计时／番茄钟、密码／二维码、JSON、取色／配色均为已注册工具；年龄／BMI／百分比／单位换算属方向排除的生活计算器，不立）；
+   - **HN Show HN 近期工具帖**：Pooch PDF（Ctrl+P 去广告打印成 PDF）／SquareFaceIcon 方形头像协议／PTO 假期优化器（复现）→ **均不立**（Pooch 为浏览器扩展形态且站内 PDF 合并／拆分族已覆盖文章转 PDF 口径；方形头像协议属已注册头像生成器口径（SVG 图层＋种子还原），不另立；PTO 属 126 轮已消解复现，方向排除）；
+   - **V2EX 工具帖搜索**：本轮返回结果为创意画板（重型白板产品）、出海情报站（需后端抓取＋向量库）与看榜工具（需后端榜单数据），均非纯前端单页小工具，无有效新信号，不立。
+3. 候选池变动：摩斯码翻译器已交付划出（3492e08 新增；ID morse_code_translator、Path /tools/morse-code-translator 已注册；全量 201 Path）；**本轮新晋 P2 0 个**；**观察项新增 1 条**（字体搭配预览器，见下）；自有实锤消解 10+ 项；全量 201 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；摩斯码翻译器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，128 轮 Top3 第二、三顺位依次递进，第三顺位取 90 轮新晋 P2 对之后、顺位居后的首项）：
+
+1. **滚动字幕生成器** — P2 留池顺位递进（92 轮晋升 P2；129 轮复核仍未交付；128 轮 Top3 第二顺位递进为首席；痛点：直播／门店／活动现场要一条循环滚动的字幕，逐行写 CSS 动画与调速费事；纯前端小难度：输入文案→设滚动方向／速度／字号颜色→实时滚动预览＋生成可嵌入 HTML／CSS，零上传；`滚动字幕`独立工具在 tools／templates／static/js 三路无注册实锤；PM 前置界定：须先写清与已注册提词器（大字滚动提词）及大字标牌的区分——本工具输出的是可嵌入的循环滚动字幕代码而非提词播放器，界定不清则顺延色盲模拟检查器；真限制：只生成滚动字幕展示代码、不做视频字幕烧录，页面须明示）。
+2. **色盲模拟检查器** — P2 留池顺位递进（90 轮新晋 P2；129 轮复核仍未交付；128 轮 Top3 第三顺位递进；痛点：做页面配色时不知道色盲用户眼里是什么样，凭感觉调对比度不可靠；纯前端小难度：输入颜色或粘贴配色→模拟常见色盲类型下的呈现＋对比度提示，零上传；`色盲` 在 tools／templates／static/js 三路 0 命中实锤；真限制：只做常见色盲类型模拟示意、不做医学诊断与无障碍合规认证，页面须明示）。
+3. **MP3 标签编辑器** — P2 留池顺位递进（90 轮新晋 P2；129 轮复核仍未交付；128 轮 Top3 之后顺位首项；痛点：MP3 标题／歌手／专辑／封面等元数据错乱，装桌面软件改太重、在线改又要上传音频；纯前端小／中难度：本地上传 MP3→读取并编辑 ID3 元数据字段→导出改后文件，零上传；`标签编辑`／`ID3` 独立工具在 tools／templates／static/js 三路无注册实锤（ID3 唯一命中仅为 project_to_txt 的文件签名判定，非本工具；音频裁剪／合并／变速是波形编辑，与元数据编辑不重叠）；真限制：只改 ID3 元数据、不做音频转码与音质处理，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项）；位运算计算器／批量图片模糊打码器（122 轮观察项）；Gzip Base64 解码器（123 轮观察项）；ads.txt 校验器（125 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；**字体搭配预览器（129 轮观察项新增：YouTube 榜单 Fontjoy 形态，Google Fonts 字体两两搭配预览；站内已有配色／字体族，是否与取色／配色及花体字工具口径重叠待 PM 界定，需求信号仅榜单单次提及，未晋升 P2）**；其余 92 轮及之前留池项均保持留池／观察原状，详见 128 轮及之前记录。
+
+**通用候选表增量**（第一百二十九轮：摩斯码翻译器已交付划出（3492e08 新增；ID morse_code_translator、Path /tools/morse-code-translator 已注册；全量 201 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 1 条**（字体搭配预览器）；自有实锤消解 10+ 项（YouTube／Medium／dev.to 三榜余项均为已注册工具、方向排除、需后端／AI 或重型产品；HN 近期帖均为扩展形态、已注册口径或方向排除复现；V2EX 搜索无有效新信号）；全量 201 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 摩斯码翻译器 | 已交付划出（3492e08 新增；ID morse_code_translator、Path /tools/morse-code-translator 已注册；全量 201 Path；候选池划出） | — | 已实现 |
+| 字体搭配预览器 | 观察项新增（129 轮；Google Fonts 字体搭配预览，榜单单次提及，与站内配色／字体族口径重叠待 PM 界定，未晋升 P2） | 小 | 观察 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、观察项复现、方向排除、需后端／AI 或重型产品；HN 近期帖均为扩展形态、已注册口径或方向排除复现；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百二十九轮——摩斯码翻译器交付闭环（3492e08，`/tools/morse-code-translator` 已注册，全量 201 Path），候选池划出；**新晋 P2 0 个**；观察项新增 1 条（字体搭配预览器）；仓库 201 注册工具全量核对无重叠（Top3 建议滚动字幕生成器／色盲模拟检查器／MP3 标签编辑器；三者三路零命中实锤，首项 PM 须先界定与提词器的区分）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 3492e08（摩斯码翻译器新增）／5b40104（.env 解析与校验器新增）／5180a7e（ULID／NanoID 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **201**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 23:00 · 产品经理排期轮，接 128 轮调研）
 
 **选定：摩斯码翻译器（morse_code_translator）** — 本轮唯一任务（新工具）：
