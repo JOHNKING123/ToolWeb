@@ -104,6 +104,10 @@ function buildSnippet(config, measuredPx) {
   var durationSec = durationSecOf(measuredPx, speed);
   var duration = formatDuration(durationSec);
   var horizontal = isHorizontal(direction);
+  /* 垂直无缝循环关键：容器高度必须等于单份内容高度（measuredPx），否则容器高为两份
+  * 之和，动画到 -50% 时下半份为空白、回环跳变。measuredPx<=0 或非法时不写高度、保持旧行为。 */
+  var measuredVal = parseFloat(measuredPx);
+  var containerHeight = (!horizontal && isFinite(measuredVal) && measuredVal > 0) ? " height: " + measuredVal + "px;" : "";
   var kf = buildKeyframes(direction);
   var escaped = escapeHtml(text);
   var itemHtml;
@@ -117,7 +121,7 @@ function buildSnippet(config, measuredPx) {
   var itemStyle = horizontal ? "white-space:nowrap;" : "";
   var css = ".scroll-subtitle { overflow: hidden; background: " + bgColor + "; color: " + textColor +
     "; font-size: " + fontSize + "px; font-weight: " + (bold ? "700" : "400") +
-    "; line-height: 1.4; width: 100%; }\n" +
+    "; line-height: 1.4; width: 100%;" + containerHeight + " }\n" +
     ".scroll-subtitle-track { display: flex; flex-direction: " + trackDir +
     "; animation: " + ANIM_NAME + " " + duration + " linear infinite; will-change: transform; }\n" +
     ".scroll-subtitle-track > * { " + itemStyle + " flex: none; }\n" +
@@ -232,6 +236,10 @@ if (typeof document !== "undefined") {
       if (track && track.children.length > 0) {
         var first = track.children[0];
         measured = isHorizontal(cfg.direction) ? first.offsetWidth : first.offsetHeight;
+      }
+      /* 预览视口与生成代码视口一致：垂直方向外框高度改为实测单份高度，测不到时保留 240px 兜底。 */
+      if (!isHorizontal(cfg.direction)) {
+        previewEl.style.height = measured > 0 ? measured + "px" : "240px";
       }
       var snippet = buildSnippet(cfg, measured);
       currentSnippet = snippet;

@@ -119,5 +119,15 @@ has(tpl, "速度以当前预览实测尺寸换算", "模板含真限制：实测
 notHas(tpl, "色盲模拟", "模板不含未交付工具硬凑互链");
 notHas(tpl, "MP3 标签", "模板不含未交付工具硬凑互链");
 
+/* ---------- 9. 垂直无缝循环：容器高度等于单份内容高度 ---------- */
+var sVHeight = M.buildSnippet({ text: "第一行\n第二行", direction: "up", speed: 100 }, 600);
+has(sVHeight.css, "height: 600px", "垂直 up snippet 含与 measuredPx 一致的容器高度");
+var sVDown = M.buildSnippet({ text: "第一行\n第二行", direction: "down", speed: 100 }, 480);
+has(sVDown.css, "height: 480px", "垂直 down snippet 含与 measuredPx 一致的容器高度");
+var sVZero = M.buildSnippet({ text: "第一行\n第二行", direction: "up", speed: 100 }, 0);
+notHas(sVZero.css, " height:", "垂直 measuredPx<=0 时不写容器高度（line-height 除外）");
+notHas(sH.css, " height:", "水平 snippet 不含容器高度");
+has(sH.css, "line-height: 1.4", "水平 snippet 行高不受影响");
+
 console.log("通过 " + pass + " 项，失败 " + fail + " 项");
 process.exit(fail ? 1 : 0);
