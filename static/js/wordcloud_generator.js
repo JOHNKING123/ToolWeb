@@ -284,6 +284,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
         if (!res.ok) {
             if (msg) { msg.textContent = res.error; msg.className = "wc-msg wc-msg-error"; }
             if (skippedEl) skippedEl.textContent = "";
+            canvas._wcWords = [];
             return;
         }
         function measure(word, fontSize) {
