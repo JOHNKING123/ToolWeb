@@ -283,6 +283,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "env_parser",
+					Name:        ".env 解析与校验器",
+					Description: "粘贴 .env 文本即实时逐行解析校验：空行与 # 注释跳过、export 前缀、键名口径与引号解码（双引号解码转义、单引号原样、无引号以空格加 # 截断行内注释），非法行按行号定位、空值与重复键记警告，输出按首次顺序排键、值取最后一次的规整键值表，一键复制或下载 .env；只做格式解析校验、不读取真实运行环境变量、不验证密钥有效性，纯前端零上传 · .env parser and validator: parse and validate dotenv files line by line, normalize key-value pairs, 100% client-side",
+					Path:        "/tools/env-parser",
+					Icon:        "tune",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "mermaid_diagram_renderer",
 					Name:        "Mermaid 图表渲染与导出器",
 					Description: "粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：6 套模板一键插入、四套主题切换、中文错误提示，SVG 下载、PNG 高清导出（2x/3x，透明/白色背景），纯前端本地渲染，代码不出浏览器 · Paste Mermaid code for live flowchart/sequence/gantt/class/ER/state diagrams with SVG & high-res PNG export, 100% client-side",

@@ -1,0 +1,158 @@
+{{define "env_parser"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>.env 解析与校验器 - 逐行校验 KEY=VALUE、引号与重复键，输出规整 .env | 程序员工具箱</title>
+<meta name="description" content="免费在线 .env 解析与校验器：粘贴 .env 文本即实时逐行解析校验，识别非法行、空值、重复键与引号错误，输出规整键值表，一键复制或下载 .env。纯前端本地解析，零上传。dotenv parser and env validator, 100% client-side.">
+<meta name="keywords" content=".env 解析,.env 校验,dotenv,环境变量,env 解析器,dotenv parser,env validator,environment variables,KEY=VALUE 校验,重复键检查">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/env-parser">
+<meta property="og:title" content=".env 解析与校验器 - 粘贴即校验，输出规整 .env">
+<meta property="og:description" content="粘贴 .env 文本，实时逐行校验非法行、空值、重复键与引号错误，输出规整键值表，一键复制或下载。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/env-parser">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":".env 解析与校验器","alternateName":"env parser","description":"粘贴 .env 文本，浏览器本地逐行解析校验非法行、空值、重复键与引号错误，输出规整键值表，一键复制或下载 .env，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/env-parser","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ep-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.ep-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.ep-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ep-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ep-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ep-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.88rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.ep-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ep-area.out{background:#f0fdf4}
+.ep-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ep-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ep-btn .material-icons{font-size:1.1rem}
+.ep-btn-primary{background:#1d4ed8;color:#fff}
+.ep-btn-primary:hover{background:#1e40af}
+.ep-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ep-btn-secondary:hover{background:#e5e7eb}
+.ep-stats{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:0 0 .7rem;line-height:1.9}
+.ep-stats b{color:#111827}
+.ep-issue{display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline;border-radius:.5rem;
+padding:.5rem .8rem;font-size:.88rem;line-height:1.7;margin-bottom:.45rem}
+.ep-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.ep-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.ep-line{font-weight:700;white-space:nowrap}
+.ep-kind{border-radius:.3rem;padding:.05rem .5rem;font-size:.75rem;font-weight:700;white-space:nowrap;background:rgba(255,255,255,.6)}
+.ep-empty{font-size:.9rem;color:#6b7280;line-height:1.8;padding:.4rem 0}
+.ep-table-wrap{overflow-x:auto}
+table.ep-table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
+table.ep-table th,table.ep-table td{border:1px solid #e5e7eb;padding:.5rem .7rem;text-align:left;vertical-align:top}
+table.ep-table th{background:#f9fafb;color:#374151;white-space:nowrap}
+table.ep-table td{word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace}
+table.ep-table td.ep-key{font-weight:700;color:#111827;white-space:nowrap}
+.ep-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ep-note b{color:#4b5563}
+.ep-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.ep-copy-ok{color:#047857}.ep-copy-fail{color:#b91c1c}
+.ep-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ep-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ep-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ep-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.ep-combo a{color:#1d4ed8;font-weight:600}
+#ep-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#ep-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.ep-panel{padding:1rem .8rem}.ep-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">tune</i> .env 解析与校验器</h1>
+<p>粘贴 .env 文本，实时逐行校验格式 —— 非法行、空值、重复键、引号错误逐行定位，输出规整键值表。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ep-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>本工具<b>只做格式解析与校验、不读取真实运行环境变量</b>（浏览器无权也无意读取你本机或服务器的环境变量）；<b>不做密钥有效性验证</b>（格式对不等于密钥能用）；<b>单行解析口径</b>（双引号值不做多行展开，未闭合引号判非法行）；粘贴文本<b>只在浏览器本地解析、不上传</b>。建议用占位值演练，勿粘贴真实生产密钥。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">input</i> 粘贴 .env 文本（输入即实时解析）</h3>
+<textarea class="ep-area" id="ep-input" rows="10" placeholder="在此粘贴 .env 文本，例如：&#10;# 注释&#10;APP_NAME=MyApp&#10;PORT=3000&#10;export API_URL=&quot;https://example.com?a=1&amp;b=2&quot;"></textarea>
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-secondary" id="ep-sample"><i class="material-icons">auto_awesome</i> 载入示例</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ep-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+<div class="ep-note">解析口径：按行切分（兼容 CRLF），跳过空行与 <code>#</code> 注释行，支持 <code>export</code> 前缀；键名须为字母或下划线开头、仅含字母数字下划线；双引号值同行闭合并解码 <code>\" \\ \n \r \t</code>，单引号值原样，无引号值以“空格 + #”截断行内注释（值内无空白的 <code>#</code> 保留）。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">fact_check</i> 统计与问题清单</h3>
+<div class="ep-stats" id="ep-stats"></div>
+<div id="ep-issues"></div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">table_rows</i> 规整键值表</h3>
+<div class="ep-table-wrap" id="ep-table"></div>
+<div class="ep-note">规整表按首次出现顺序排键，重复键仅一行、值取最后一次。空值行仍计入有效键。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">content_copy</i> 规整结果</h3>
+<textarea class="ep-area out" id="ep-output" rows="10" readonly></textarea>
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-primary" id="ep-copy"><i class="material-icons">content_copy</i> 复制规整结果</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ep-download"><i class="material-icons">download</i> 下载 .env</button>
+</div>
+<div class="ep-copy-tip" id="ep-copy-tip"></div>
+<div class="ep-note">复制内容与下载 .env 内容均与上方规整文本逐字一致。规整规则：值含空白、双引号或为空时用双引号包裹并转义；其余原样（值内无空白的 <code>#</code> 不算注释，往返解析一致）。</div>
+</div>
+
+<div class="ep-combo">
+<b>格式校验与脱敏的区分：</b>本工具只解析校验格式，不判断密钥真假、不做脱敏；要把配置脱敏后再发给 LLM，请去 <a href="/tools/prompt-sanitizer">AI 提示词脱敏器</a> —— 先在这里把格式理顺，再去那里脱敏发问。
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ep-faq">
+<dt>哪些行会被判非法行？</dt>
+<dd>行内没有 <code>=</code>、键名非法（数字开头、含连字符或空格等）、双引号或单引号未闭合、引号闭合后还有残留字符（空白与 <code>#</code> 注释除外）。非法行不进入规整表与有效键数，问题清单会标出正确行号。</dd>
+<dt>重复键怎么处理？</dt>
+<dd>记一条警告（含首次出现行号与当前行号），规整表按首次出现顺序只保留一行，值取最后一次出现的值。</dd>
+<dt>空值算错误吗？</dt>
+<dd>不算错误，记一条警告、仍计入有效键。规整输出里空值写作 <code>KEY=</code> 的双引号形式 <code>KEY=""</code>。</dd>
+<dt>单引号和双引号值有什么区别？</dt>
+<dd>双引号值会解码 <code>\" \\ \n \r \t</code>；单引号值内容原样，不解码。无引号值遇到“空格 + #”即截断行内注释，值里无空白的 <code>#</code>（如 <code>a#b</code>）会保留。</dd>
+<dt>文本会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行，解析、规整、复制、下载全在浏览器本地 JavaScript 里完成，脚本中没有任何 fetch / XHR 上传逻辑，也不用 CDN。可断网使用（首次加载页面除外）。</dd>
+<dt>和「AI 提示词脱敏器」有什么区别？</dt>
+<dd>本工具只做格式解析校验：行对不对、键有没有重复、有没有空值。提示词脱敏器做的是密钥脱敏：把真实密钥替换成占位符再发给 LLM。格式理顺用这里，脱敏发问用那里。</dd>
+</dl>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ep-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">.env 解析与校验器（当前）</span>
+<a href="/tools/prompt-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">AI 提示词脱敏器</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ep-toast"></div>
+<script src="/tools/static/js/env_parser.js?v=1"></script>
+</body>
+</html>
+{{end}}

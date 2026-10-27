@@ -1,3 +1,79 @@
+## 今日任务（2026-10-27 21:00 · 产品经理排期轮，接 127 轮调研）
+
+**选定：.env 解析与校验器（env_parser）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（127 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。19:00 PM 轮选 ULID／NanoID 生成器时已明言：.env 解析与校验器仅因顺位在 ULID／NanoID 生成器之后而后置、「下轮首席递进」；ULID／NanoID 生成器已交付划出（5180a7e 新增，全量 199 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——摩斯码翻译器与滚动字幕生成器虽同为小难度纯前端，均不插队。
+- **未选**：摩斯码翻译器（91 轮新晋 P2，127 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 .env 解析与校验器之后而后置，下轮首席递进；真限制只做标准国际摩斯码编解码、不做音频发报）；滚动字幕生成器（92 轮晋升 P2，127 轮 Top3 第三顺位，无硬伤，留池顺位递进——其 PM 前置界定仍待其排期轮处理：须先写清与已注册提词器（大字滚动提词播放器）及大字标牌的区分——本工具输出的是可嵌入的循环滚动字幕代码而非提词播放器，界定不清则顺延色盲模拟检查器；本轮不选它，界定不阻塞本轮）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **199 Path**；`git log` 头部 5180a7e（ULID／NanoID 新增）／657407f（骨架屏新增）／891775e（Bug 报告生成器新增）。逐项复核：`env_parser`／`env-parser` 在 tools／templates／static/js 三路均为 0 命中（`env-parser` 仅有的 2 处命中均为旧测试里的否定断言：tests/skeleton_screen_generator.test.js 第 168 行、tests/ulid_nanoid_generator.test.js 第 113 行，均为「不含未交付 .env 工具」，恰为未交付的反向实锤）；`morse_code_translator`／`morse-code-translator`、`摩斯` 在 tools／templates／static/js 三路 0 命中；categories.go 无三者相关 ID。自有近邻辨析：① 已注册的 AI 提示词脱敏器（ID prompt_sanitizer、Path /tools/prompt-sanitizer）支持读取 .env 文件做密钥脱敏替换，是「脱敏后再发给 LLM」，本工具是「逐行解析校验格式并输出规整键值表」，脱敏 vs 格式校验，不重叠（互链文案按此区分）；② Postman 环境变量、gitignore 模板提及 .env 均非独立解析工具；③ 信封打印器（envelope_printer）与 env 无关。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——手写 .env 时 KEY=VALUE 格式、引号、注释、空值、重复键易错，贴到部署环境才发现，粘贴文本逐行解析校验并输出规整键值表恰好提前拦截；③ **一轮可高质量交付**——纯前端、无依赖，行解析与规整输出均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与提示词脱敏器、Postman 系同属开发工具品类，开发者配环境变量时成组发现；⑤ **外部佐证已就位**——98 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 ULID／NanoID 生成器、提示词脱敏器同品类，便于开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做格式解析与校验、不读取真实运行环境变量**——浏览器无权也无意读取用户本机或服务器的环境变量，页面须明示；② **不做密钥有效性验证与强度判定**——格式对不等于密钥能用，页面须明示；③ **单行解析口径**——双引号值不做多行展开，未闭合引号判非法行，页面须明示；④ **不收集、不上传任何配置**——粘贴文本只在浏览器本地解析，页面须明示并建议用占位值演练、勿粘贴真实生产密钥。
+
+**规格**（开发轮按此执行）：
+- 解析函数 `parseEnv(text)` 返回 `{entries, issues, stats}` 供 node 断言：按 `\n` 切分（兼容 `\r\n`，去行尾 `\r`），行号从 1 计。跳过行：空行（仅空白）与注释行（去前导空白后以 `#` 开头），计入 stats 跳过数。`export ` 前缀：去前导空白后以 `export`＋空白开头时剥离前缀再解析，剥离后仍无合法 KEY=VALUE 判非法行。
+- KEY 口径：`^[A-Za-z_][A-Za-z0-9_]*$`；行内无 `=`（以第一个 `=` 分隔键与值）或 KEY 非法 → issue 类型「非法行」（error），含行号与中文说明。值解析：① 双引号值：同一行内首尾双引号闭合，转义解码 `\"` `\\` `\n` `\r` `\t`；未闭合或闭合后除空白与 `#` 注释外有残留字符 → 非法行；② 单引号值：同一行内首尾单引号闭合、内容原样；未闭合或后有残留 → 非法行；③ 无引号值：去首尾空白，` #` 起的 inline 注释截断（`#` 前须有空白才算注释，值内无空白的 `#` 保留）；去注释后为空 → 空值警告（warning），仍计入有效条目。
+- 重复键：warning，含首次出现行号与当前行号；规整表按首次出现顺序排键、值取最后一次出现的值，重复键行标注「重复键，以最后一次为准」。
+- 规整输出函数 `formatEnv(entries)`：每行 `KEY=VALUE`；值含空白、双引号或为空时用双引号包裹并转义 `"` 与 `\`；其余原样（`=` 以第一个分隔、值内无空白的 `#` 不算注释，往返解析一致）。统计 stats：总行数、跳过行数、有效键数、非法行数、警告数（空值＋重复）。
+- 界面：粘贴区（输入变化即实时解析，兼「解析」按钮）、「载入示例」「清空」操作、问题清单（按行号排序，含行号＋类型＋中文说明）、规整键值表（KEY／值／首次行号／状态列）、统计条、复制规整结果、下载 .env（内容与规整文本逐字一致）、复制失败降级提示（手动复制指引）；所有提示均中文。
+- 操作与互链：复制规整结果内容与规整文本逐字一致；与 AI 提示词脱敏器（/tools/prompt-sanitizer）互链（文案区分格式校验与脱敏：「本工具只解析校验格式，要脱敏后再发给 LLM 去提示词脱敏器」）；不与未交付的摩斯码翻译器、滚动字幕生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写行解析、引号解码与规整输出；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，解析向量、规整输出、重复与空值、非法行、统计均可 node 断言）。
+- 注册：ID `env_parser`、Name「.env 解析与校验器」、Path `/tools/env-parser`、Category 开发工具、Icon 建议 tune（图标库无此名则用 list_alt 兜底）、New: true；中英文描述＋SEO keywords（.env 解析、.env 校验、dotenv、环境变量、env 解析器、dotenv parser、env validator、environment variables）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/env-parser，相关工具互链提示词脱敏器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `env_parser`、Path `/tools/env-parser` 注册完整（Category 开发工具），注册总数 199→200 Path。
+2. 解析向量闭环（精确比对）：`APP_NAME=MyApp\n# 注释\n\nPORT=3000\n` → 有效键 2（APP_NAME、PORT）、跳过 2 行、非法 0、警告 0；`export API_URL="https://example.com?a=1&b=2" # 注释` → 键 API_URL、值解码为原 URL；单引号 `SECRET='a$b#c'` → 值原样 `a$b#c`；无引号 `KEY=hello # comment` → 值 `hello`。
+3. 非法行闭环：`NO_EQUALS_LINE`、`1BAD=x`、双引号未闭合 `KEY="abc` 各自判非法行且问题清单含正确行号；非法行不进入规整表与有效键数。
+4. 空值与重复闭环：`EMPTY=` → 空值警告、仍计入有效键；`A=1\nA=2` → 重复警告（含首次与当前行号）、规整表 A 仅一行且值为 `2`、键顺序按首次出现。
+5. 规整输出闭环：值 `hello world` 输出为 `KEY="hello world"`；值 `a#b`（无空白 #）输出原样不加引号且往返解析一致；规整文本行数等于有效键数；下载 .env 内容与规整文本逐字一致。
+6. 操作闭环：复制规整结果内容与规整文本逐字一致；复制失败有降级提示；相关工具互链含提示词脱敏器；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只做格式解析与校验、不读取真实运行环境变量」「不做密钥有效性验证」「粘贴文本只在浏览器本地解析」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（解析向量、引号解码、inline 注释、空值与重复、非法行、规整输出与往返一致、统计、注册与零网络请求静态检查）。
+9. 页面无报错；移动端粘贴区、问题清单、规整表、复制／下载按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/env_parser.html`（新增；含 SEO 面板按家族标准＋粘贴区／示例与清空／问题清单／规整键值表／统计条／复制与下载 UI）
+- `static/js/env_parser.js`（新增；行解析、引号解码、重复与空值处理、规整输出、复制与下载逻辑；双模式导出供 node 测试）
+- `tests/env_parser.test.js`（新增；解析向量、引号与注释、空值与重复、非法行、规整输出、统计、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID env_parser、Path /tools/env-parser、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 5180a7e（ULID／NanoID 新增）／657407f（骨架屏新增）／891775e（Bug 报告生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **199**；Top3 候选重叠复核（env_parser／env-parser 在三路 0 命中、仅 2 处旧测试否定断言为未交付反向实锤；morse 三路 0 命中；近邻提示词脱敏器／Postman 环境变量／gitignore 提及语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 21:00 · 通用调研第一百二十七轮）
+
+**交付状态**：10-27 通用调研第一百二十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**ULID／NanoID 生成器已交付闭环**（5180a7e 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **199 Path**，ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 轮，优先小难度纯前端。
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. ULID／NanoID 交付确认：`git log` 头部 5180a7e（ULID／NanoID 新增）／657407f（骨架屏新增）／891775e（Bug 报告生成器新增）；全量 199 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首轮未带该变量报主机密钥校验失败，补变量后成功并补录 github.com 主机密钥，与 124–126 轮同一教训）。
+2. 新信号扫描：
+   - **dev.to 13 款免费浏览器工具榜（2026）**：JSON 格式化／Schema 验证／文本 Diff／Base64／URL 编解码／HTML 实体／UUID／二维码／CSS 与 JS 压缩／Markdown 预览／配色／批量图片缩放 → **全部自有实锤消解**（126 轮已覆盖同一榜单，复现，均为已注册工具）；
+   - **Geekskai 26 款免费开发者工具榜（2026）**：Regex／CyberChef 式链式转换／Webhook 调试／API 客户端／JSON 工具／Mermaid／crontab.guru／JWT／quicktype 式 JSON→类型 → **除暂缓项外全部消解**（正则、Base64、JWT 解析与签名、Cron 生成与解析、JSON→TypeScript／Go 结构体、JSON 格式化均已注册；Webhook 调试需实时收请求后端、API 客户端与 Mermaid 为重型产品形态，非单页小工具；其子项 JSON→表格属 111 轮 JSON→表格查看器观察项复现、HTML→Markdown 即已注册 html_to_markdown、PDF→Markdown 属 PM 已明确暂缓的文档转 Markdown，本轮不动不新立、随机 4 位数属随机密码／随机数族已覆盖，不另立）；
+   - **HN Show HN 近期工具帖**：Offline PDF Desk（单文件离线 PDF 涂黑与合并）／Sphinx Git Hook AI 出题／Heldkeys 凭据暴露面盘点／浏览器 CAD／Minecraft 客户端／LLM 负载均衡等 → **均不立**（Offline PDF Desk 的合并属已注册 pdf_merge_split，涂黑／脱敏属 PM 已明确暂缓的 PDF 涂黑安全检测，不动；Sphinx 需 AI 模型出题、Heldkeys 需读取本机环境变量与云 CLI 登录态，均非纯前端单页可实现，但 Heldkeys 的 .env 盘点形态从侧面印证 .env 类需求真实存在，留池首席不受影响；其余均为桌面／原生应用／Agent 桥／重型产品形态）；
+   - **V2EX 工具帖搜索**：本轮返回结果为节点分享视频，无有效新信号，不立。
+3. 候选池变动：ULID／NanoID 生成器已交付划出（5180a7e 新增；ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator 已注册；全量 199 Path）；**本轮新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 199 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；ULID／NanoID 生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，126 轮 Top3 第二、三顺位依次递进，第三顺位取 98 轮晋升 P2 对之后、顺位居后的首项）：
+
+1. **.env 解析与校验器** — P2 留池顺位递进（98 轮新晋 P2；127 轮复核仍未交付；126 轮 Top3 第二顺位递进为首席；痛点：手写 .env 时 KEY＝VALUE 格式、引号、注释、空值、重复键易错，贴到部署环境才发现；纯前端小难度：粘贴 .env 文本→逐行解析校验（非法行、重复键、空值定位提示）→输出规整后的键值表＋复制／下载，零上传；`env_parser`／`env-parser` 在 tools／templates／static/js 三路 0 命中实锤；建议 ID env_parser、Path /tools/env-parser；真限制：只做格式解析与校验、不读取真实运行环境变量、不做密钥有效性验证，页面须明示）。
+2. **摩斯码翻译器** — P2 留池顺位递进（91 轮新晋 P2；127 轮复核仍未交付；126 轮 Top3 第三顺位递进；痛点：文本与摩斯码互转要查表，字母数字标点对照表翻起来慢、易错；纯前端小难度：粘贴文本↔摩斯码双向转换（标准国际摩斯码对照、非法字符定位提示）＋复制，零上传；`morse`／`摩斯` 在 tools／templates／static/js 三路 0 命中、categories.go 无相关 ID 实锤；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：只做标准国际摩斯码编解码、不做音频发报与无线电实操，页面须明示）。
+3. **滚动字幕生成器** — P2 留池顺位递进（92 轮晋升 P2；127 轮复核仍未交付；126 轮 Top3 之后顺位首项；痛点：直播／门店／活动现场要一条循环滚动的字幕，逐行写 CSS 动画与调速费事；纯前端小难度：输入文案→设滚动方向／速度／字号颜色→实时滚动预览＋生成可嵌入 HTML／CSS，零上传；`滚动字幕`独立工具在 tools／templates／static/js 三路无注册实锤；PM 前置界定：须先写清与已注册提词器（大字滚动提词）及大字标牌的区分——本工具输出的是可嵌入的循环滚动字幕代码而非提词播放器，界定不清则顺延色盲模拟检查器；真限制：只生成滚动字幕展示代码、不做视频字幕烧录，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项）；位运算计算器／批量图片模糊打码器（122 轮观察项）；Gzip Base64 解码器（123 轮观察项）；ads.txt 校验器（125 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 126 轮及之前记录。
+
+**通用候选表增量**（第一百二十七轮：ULID／NanoID 生成器已交付划出（5180a7e 新增；ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator 已注册；全量 199 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（dev.to 榜单为 126 轮复现、Geekskai 榜单余项均为已注册工具、暂缓项或重型产品；HN 近期帖均为桌面／应用／AI 形态或暂缓项，不新立；V2EX 搜索无有效新信号）；全量 199 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| ULID／NanoID 生成器 | 已交付划出（5180a7e 新增；ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator 已注册；全量 199 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、复现旧留池项、PM 暂缓项或重型产品；HN 近期帖均为桌面／应用／AI 形态或需读取本机登录态，非纯前端单页可实现；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十七轮——ULID／NanoID 生成器交付闭环（5180a7e，`/tools/ulid-nanoid-generator` 已注册，全量 199 Path），候选池划出；**新晋 P2 0 个**；观察项新增 0 条；仓库 199 注册工具全量核对无重叠（Top3 建议 ID env_parser / morse_code_translator / 滚动字幕生成器；前两者三路零命中实锤，第三项 PM 须先界定与提词器的区分）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 5180a7e（ULID／NanoID 新增）／657407f（骨架屏新增）／891775e（Bug 报告生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **199**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 19:00 · 产品经理排期轮，接 126 轮调研）
 
 **选定：ULID／NanoID 生成器（ulid_nanoid_generator）** — 本轮唯一任务（新工具）：
