@@ -714,6 +714,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "text_fixed_width_wrapper",
+					Name:        "文本定宽换行器",
+					Description: "粘贴文本、设定列宽（默认 40，范围 10–200），空格优先或强制硬断两种模式按列宽自动换行：半角计 1 列、全角／CJK 计 2 列，逐原行独立处理不跨行合并，保留空行可开关，实时生成、一键复制或下载 wrapped.txt，纯前端零上传 · Fixed width text wrapper: wrap text by display width, 100% client-side",
+					Path:        "/tools/text-fixed-width-wrapper",
+					Icon:        "wrap_text",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "gbt7714_reference_generator",
 					Name:        "GB/T 7714 参考文献格式生成器",
 					Description: "按 GB/T 7714-2015 国标生成参考文献条目：[J][M][D][C][N][S][R][P][EB/OL][A] 十种文献类型表单录入，顺序编码制/著者-出版年制双制式切换，中文「等」/英文「et al」自动处理，多条目累积排序与导出，纯前端本地运行不出浏览器 · GB/T 7714 reference generator: 10 doc types, dual citation styles, 100% client-side",

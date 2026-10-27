@@ -1,0 +1,159 @@
+{{define "text_fixed_width_wrapper"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本定宽换行器 - 按列宽自动换行，半角1列全角2列，复制下载 | 程序员工具箱</title>
+    <meta name="description" content="免费在线文本定宽换行器：粘贴文本、设定列宽（默认40，范围10–200），空格优先或强制硬断两种模式按列宽自动换行，半角计1列、全角／CJK计2列，保留空行可开关，实时生成、一键复制或下载 wrapped.txt，纯前端本地处理零上传。fixed width text wrapper: wrap text by display width, 100% client-side.">
+    <meta name="keywords" content="文本定宽换行,按列宽换行,固定宽度换行,自动换行工具,text wrapper,fixed width wrap,wrap text by width,等宽换行,终端换行">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-fixed-width-wrapper">
+    <meta property="og:title" content="文本定宽换行器 - 按列宽自动换行">
+    <meta property="og:description" content="粘贴文本、设定列宽，空格优先或强制硬断两种模式自动换行，半角计1列、全角计2列，复制或下载 wrapped.txt，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/text-fixed-width-wrapper">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文本定宽换行器","description":"粘贴文本、设定列宽，空格优先或强制硬断两种模式按列宽自动换行，半角计1列、全角／CJK计2列，复制或下载 wrapped.txt，纯前端本地处理，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/text-fixed-width-wrapper","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fw-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .fw-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .fw-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .fw-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .fw-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:1.2rem}
+        .fw-input{width:100%;box-sizing:border-box;min-height:220px;padding:.8rem 1rem;font-size:.95rem;line-height:1.7;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #d1d5db;border-radius:.6rem;
+            outline:none;resize:vertical;overflow-wrap:anywhere}
+        .fw-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .fw-controls{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.9rem;font-size:.92rem;line-height:1.8}
+        .fw-controls label{display:flex;flex-direction:column;gap:.25rem;color:#374151}
+        .fw-controls input[type="number"]{width:100%;box-sizing:border-box;padding:.55rem .7rem;font-size:.92rem;
+            border:1px solid #d1d5db;border-radius:.5rem;outline:none;background:#fff}
+        .fw-controls input[type="number"]:focus{border-color:#2563eb}
+        .fw-radio-group{display:flex;flex-direction:column;gap:.35rem;color:#374151}
+        .fw-radio-group label{display:flex;flex-direction:row;align-items:center;gap:.45rem}
+        .fw-check{display:flex;align-items:center;gap:.45rem;color:#374151}
+        .fw-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .fw-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .fw-btn:hover{border-color:#2563eb;color:#2563eb}
+        .fw-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .fw-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .fw-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .fw-msg-ok{color:#065f46}
+        .fw-msg-error{color:#b91c1c}
+        .fw-clamp{font-size:.9rem;color:#92400e;margin-top:.4rem;line-height:1.8}
+        .fw-result{width:100%;box-sizing:border-box;min-height:220px;max-height:520px;overflow-y:auto;white-space:pre-wrap;
+            word-break:break-all;padding:.8rem 1rem;font-size:.95rem;line-height:1.7;margin:0;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb;color:#111827}
+        .fw-stats{font-size:.92rem;color:#065f46;margin-top:.8rem;line-height:1.8;font-weight:600}
+        .fw-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .fw-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .fw-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .fw-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .fw-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .fw-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .fw-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .fw-grid{grid-template-columns:1fr}
+            .fw-controls{grid-template-columns:1fr}
+            .fw-btn-row .fw-btn{flex:1;justify-content:center}
+            .fw-input,.fw-result{min-height:180px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>文本定宽换行器</h1>
+            <p>粘贴一段文本、设定列宽，立刻按列宽切成多行：空格优先不断词、超长词自动硬断，或强制硬断纯按列宽切分——贴进终端、等宽编辑器、表格或代码注释都不歪。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="fw-privacy">
+                <div><b>纯前端运行，零上传：</b>输入与换行全部在浏览器内处理，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="fw-disclaimer-bar">
+                <div><b>真限制说明：</b>本工具只做按列宽机械换行，不做语义断句与中文分词优化；列宽口径为机械规则（半角计 1、全角／CJK 计 2），不保证所有终端／字体等宽渲染一致；不合并、不改写原文内容，除按规则断行与行首行尾空白规整外，不增删词语、不改大小写、不做全半角转换。</div>
+            </div>
+            <div class="fw-grid">
+                <div class="fw-panel">
+                    <h3>原文本输入</h3>
+                    <textarea id="fw-input" class="fw-input" placeholder="粘贴任意文本（中英文均可），例如一段长注释、终端输出或表格文案……"></textarea>
+                    <div class="fw-controls">
+                        <label>列宽（10–200）
+                            <input type="number" id="fw-width" value="40" min="10" max="200">
+                        </label>
+                        <div class="fw-radio-group">换行模式
+                            <label><input type="radio" name="fw-mode" value="space" checked> 空格优先（空格处断行，超长词自动硬断）</label>
+                            <label><input type="radio" name="fw-mode" value="hard"> 强制硬断（不看空格，纯按列宽切分）</label>
+                        </div>
+                        <label class="fw-check"><input type="checkbox" id="fw-keep-blank" checked> 保留原文空行（关则丢弃空行）</label>
+                    </div>
+                    <div class="fw-muted">输入或任一控制项变化即实时重算（输入变化防抖 300ms 内）；列宽超出 10–200 时自动钳制到边界并中文提示。</div>
+                    <div class="fw-btn-row">
+                        <button type="button" class="fw-btn" id="fw-sample">载入示例</button>
+                        <button type="button" class="fw-btn" id="fw-clear">清空</button>
+                    </div>
+                    <div class="fw-clamp" id="fw-clamp"></div>
+                </div>
+                <div class="fw-panel">
+                    <h3>换行结果</h3>
+                    <pre id="fw-result" class="fw-result"></pre>
+                    <div class="fw-stats" id="fw-stats"></div>
+                    <div class="fw-btn-row">
+                        <button type="button" class="fw-btn fw-btn-primary" id="fw-copy">复制结果</button>
+                        <button type="button" class="fw-btn" id="fw-download">下载 wrapped.txt</button>
+                    </div>
+                    <div class="fw-msg" id="fw-msg">请粘贴或输入文本</div>
+                </div>
+            </div>
+            <div class="fw-panel">
+                <h3>使用说明</h3>
+                <div class="fw-tip">
+                    <b>列宽口径：</b>按码点计（不按 UTF-16 码元计）：半角字符计 1 列；全角／CJK 字符计 2 列（U+1100–U+115F、U+2E80–U+9FFF、U+AC00–U+D7A3、U+F900–U+FAFF、U+FE30–U+FE4F、U+FF00–U+FF60、U+FFE0–U+FFE6）；其余码点（含表情符号）计 1 列。例如 <code>Hello</code> 列宽 5，<code>世界</code> 列宽 4，<code>Hello世界</code> 列宽 9。<br>
+                    <b>空格优先模式：</b>把每原行按单个空格切为词贪心装行：当前行放得下就接空格＋词，放不下先输出当前行再起新行；单个词列宽大于列宽时按列宽单位硬切该词，余部继续参与贪心装行。<br>
+                    <b>强制硬断模式：</b>不看空格、纯按码点累积列宽切分，每满列宽输出一行；落在行首或行尾的空格直接丢弃，不产生空行头／行尾空格。<br>
+                    <b>原行与空行：</b>逐原行独立处理，绝不跨原行合并段落；原行先把制表符转为空格、行首行尾空白去掉、行内连续空白合并为单个空格；输出任一行列宽均不超过设定列宽、无行首／行尾空格；空行只来自原文空行（保留开关开时原样保留，关时丢弃）。<br>
+                    <b>示例：</b>点「载入示例」得到中英文混合两段：第一段含一个超长英文单词，列宽 40 默认下同时出现空格断行与超长词硬断两类输出行；第二段独立成行，不与第一段拼接。<br>
+                    <b>真限制：</b>只做按列宽机械换行，不做语义断句与中文分词优化；列宽口径为机械规则，不保证所有终端／字体等宽渲染一致；不合并、不改写原文内容。<br>
+                    <b>隐私：</b>全部处理在浏览器本地完成，不发起网络请求，不上传输入内容。
+                </div>
+            </div>
+            <div class="fw-panel">
+                <h3>常见问题</h3>
+                <dl class="fw-faq">
+                    <dt>为什么中文长句被切成了每行 5 个字？</dt>
+                    <dd>列宽 10 时一个汉字计 2 列，一行最多放 5 个汉字。这是机械口径：半角计 1、全角／CJK 计 2，不做语义断句与中文分词优化，想按语义断句请自行在句读处换行后再粘贴。</dd>
+                    <dt>空格优先和强制硬断有什么区别？</dt>
+                    <dd>空格优先不断词：优先在空格处断行，只有单个词本身超过列宽时才硬切该词；强制硬断不看空格，纯按列宽切分，单词可能从中间断开。英文段落一般用空格优先，固定宽度表格或终端对齐用强制硬断。</dd>
+                    <dt>为什么输出里有的行比列宽短很多？</dt>
+                    <dd>空格优先模式下，下一个词放不下时就提前换行，这是贪心装行的正常结果；想让每行都尽量填满列宽请用强制硬断模式。</dd>
+                    <dt>原文的空行去哪了？</dt>
+                    <dd>保留空行开关默认开，原文空行原样保留；关掉开关后空行会被丢弃。空行只来自原文空行，换行本身不会凭空产生空行。</dd>
+                    <dt>列宽填 5 或 300 会怎样？</dt>
+                    <dd>列宽范围是 10–200，填 5 会被钳制到 10、填 300 会被钳制到 200，并中文提示「列宽超出范围，已钳制到 10–200 内」。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。换行、复制、下载全部在浏览器本地完成，JS 不含 fetch／XHR 调用，页面不引用任何 CDN 资源，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="fw-panel">
+                <h3>相关工具</h3>
+                <div class="fw-related">
+                    <a href="/tools/text-tools" class="btn btn-secondary" style="font-size:.9rem;">文本工具集（要数词数、做文本清洗去文本工具集；本工具只按列宽换行）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/text_fixed_width_wrapper.js?v=1"></script>
+</body>
+</html>
+{{end}}

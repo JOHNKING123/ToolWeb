@@ -1,3 +1,84 @@
+## 今日任务（2026-10-27 13:38 · 产品经理排期轮）
+
+**选定：文本定宽换行器（text_fixed_width_wrapper）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（123 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。11:38 PM 轮选词云生成器时已明言：文本定宽换行器仅因顺位在词云生成器之后而后置、「下轮首席递进」；词云生成器已交付划出（9e41d2f 新增＋b6908ce 清空修复，全量 195 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——Bug 报告生成器与骨架屏加载占位生成器虽同为小难度纯前端，均不插队。
+- **未选**：Bug 报告生成器（121 轮新晋 P2，123 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在文本定宽换行器之后而后置，下轮首席递进；真限制只生成报告文本、不提交到任何 issue 系统）；骨架屏加载占位生成器（98 轮新晋 P2，123 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只生成静态占位样式代码、不接入真实数据加载与动画框架）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **195 Path**；`git log` 头部 b6908ce（词云清空修复）／9e41d2f（词云生成器新增）／2b3affc（JSON 字符串转义器新增）。逐项复核：`text_fixed_width_wrapper`／`text-fixed-width-wrapper`、`bug_report_generator`／`bug-report-generator`、`skeleton`／`skeleton_screen_generator`／`skeleton-screen-generator` 在 tools／templates／static/js 三路均为 0 命中（`skeleton` 亦无任何含该串的文件名与代码命中），非独立工具；前两者无测试文件互链否定断言残留。自有近邻辨析：① 已注册的文本工具集（ID texttools、Path /tools/text-tools，字数统计、行去重、排序、大小写转换、全半角、盘古空格）是「对文本做计数与清洗」，本工具是「按列宽把长行切成多行」，清洗 vs 换行，不重叠；② 已注册的词云生成器（ID wordcloud_generator）是「把词频画成图」，本工具不统计词频、不出图形，不重叠；③ 已注册的文本信息提取器、文本隐私脱敏均不对行宽做处理，不重叠；④ 已注册的各类格式化工具（JSON／SQL／Markdown 等）只格式化自身文档结构，不做通用文本按列宽硬换行，不重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——把长文本贴进固定宽度场景（终端、等宽编辑器、表格、代码注释）时手动断行易错、对不齐，粘贴文本＋设定列宽→自动换行＋复制／下载恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，列宽单位、空格优先与硬断两条规则均可写成确定性向量供 node 断言，无布局随机性；④ **受众与站内互补**——与文本工具集同属文本工具品类，用户清洗完文本下一步自然要按宽度排版，成组发现；⑤ **外部佐证已就位**——99 轮新晋 P2 以来三轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「文本工具」品类（与文本工具集、词云生成器同品类，便于文本处理用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做按列宽机械换行、不做语义断句与中文分词优化**——不断句、不改词序、不做标点级排版优化，页面须明示；② **列宽口径为机械规则、不保证所有终端／字体等宽渲染一致**——半角字符计 1、全角／CJK 字符计 2，其余码点计 1（表情符号等亦计 1），页面须明示口径；③ **不合并、不改写原文内容**——除按规则断行与行首行尾空白规整外，不增删词语、不改大小写、不做全半角转换；④ **零上传**——文本全部在浏览器内处理，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：原文本输入框（多行，粘贴任意文本，中英文均可）；控制项：列宽（单位，默认 40，范围 10–200，超范围钳制到边界并中文提示）、换行模式（二选一，默认「空格优先」：优先在空格处断行、超长单词自动硬断；另一档「强制硬断」：不看空格、纯按列宽切分）、保留空行开关（默认开：原文空行原样保留；关：丢弃空行）；「载入示例」「清空」两个操作。
+- 列宽计算：按码点遍历（`for...of`，不按 UTF-16 码元计）；半角字符计 1；全角／CJK 字符计 2（范围：U+1100–U+115F、U+2E80–U+9FFF、U+AC00–U+D7A3、U+F900–U+FAFF、U+FE30–U+FE4F、U+FF00–U+FF60、U+FFE0–U+FFE6）；其余码点计 1。
+- 换行规则（逐原行独立处理，绝不跨原行合并段落；原行先把制表符转为空格、行首行尾空白去掉、行内连续空白合并为单个空格；空原行按保留空行开关处理）：
+  - 空格优先模式：把行按单个空格切为词，贪心装行——当前行空时直接放词；非空时若「当前行列宽＋1（空格）＋词列宽 ≤ 列宽」则接空格＋词，否则先输出当前行、再起新行放词；单个词列宽＞列宽时按列宽单位硬切该词（切分点按码点累积列宽、不得超宽），余部继续按贪心装行。
+  - 强制硬断模式：把行按码点累积列宽切分，每满列宽输出一行；落在行首或行尾的空格直接丢弃，不产生空行头／行尾空格。
+  - 两模式共同保证：输出任一行列宽均 ≤ 列宽；输出行无行首／行尾空格；空行只来自原文空行（保留开关开时）。
+- 生成：输入、列宽、模式或开关任一变化即实时重算；结果区展示换行后文本（等宽字体、可复制），附统计对照（输入字符数→输出行数、输出最长行列宽）；空输入时提示「请粘贴或输入文本」，不出现空白误导。
+- 示例数据（页面内置）：中英文混合长段，含长句与一个超长英文单词（列宽 40 默认下须同时出现空格断行与超长词硬断两类输出行）；示例与验收向量分开，验收向量以小向量为准。
+- 校验：空输入中文提示；列宽超范围钳制到边界并中文提示；所有提示均中文。
+- 操作：一键复制结果；下载 .txt（文件名 wrapped.txt，内容与结果区逐字一致）；复制失败有明确降级提示（手动复制指引）；与文本工具集（/tools/text-tools）互链（文案区分清洗与换行：「要数词数、做文本清洗去文本工具集，本工具只按列宽换行」）；不与未交付的 Bug 报告生成器、骨架屏加载占位生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写列宽计算、贪心装行与硬切逻辑；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，列宽计算、空格优先、强制硬断、超长词切分、空行保留／丢弃、钳制均可 node 断言）。
+- 注册：ID `text_fixed_width_wrapper`、Name「文本定宽换行器」、Path `/tools/text-fixed-width-wrapper`、Category 文本工具、Icon 建议 wrap_text（图标库无此名则用 notes 兜底）、New: true；中英文描述＋SEO keywords（文本定宽换行、按列宽换行、固定宽度换行、自动换行工具、text wrapper、fixed width wrap、wrap text by width）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/text-fixed-width-wrapper，相关工具互链文本工具集。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `text_fixed_width_wrapper`、Path `/tools/text-fixed-width-wrapper` 注册完整（Category 文本工具），注册总数 195→196 Path。
+2. 生成闭环：输入、列宽、模式或开关改动后结果同步变化；空输入时有中文提示，不出现空白误导。
+3. 列宽向量闭环（半角计 1、全角／CJK 计 2）：`Hello` 列宽 5；`世界` 列宽 4；`Hello世界` 列宽 9；`你好世界` 列宽 8。
+4. 换行向量闭环（列宽 10）：空格优先 `aaaa bbbb cccc` → `aaaa bbbb`／`cccc` 两行；空格优先超长词 `abcdefghijklm` → `abcdefghij`／`klm` 两行；强制硬断 `abcdefghij klmnopqrst` → `abcdefghij`／`klmnopqrst` 两行（边界空格丢弃、不产生空行头）；中文 `这是一个很长的中文句子用于测试换行`（列宽 10、每行 5 字）→ `这是一个很`／`长的中文句`／`子用于测试`／`换行` 四行；混合 `Hello世界你好`（列宽 10）→ `Hello世界`／`你好` 两行；任一不符即不通过。
+5. 原行与空行闭环：多原行不跨行合并（`第一行很长需要换行内容` 与下一原行互不拼接）；原文空行在保留开关开时原样保留、关时丢弃；输出任一行列宽均 ≤ 设定列宽、无行首／行尾空格。
+6. 钳制与操作闭环：列宽输入 5 被钳制到 10 并中文提示、输入 300 被钳制到 200 并中文提示；复制内容与结果区一致；下载 .txt 内容与结果区逐字一致；复制失败有降级提示；相关工具互链含文本工具集；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只做按列宽机械换行、不做语义断句与中文分词优化」「半角计 1、全角／CJK 计 2」「不合并、不改写原文内容」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（列宽计算半角／全角／混合／码点、空格优先装行、超长词硬切、强制硬断边界空格、多原行隔离、空行保留／丢弃、列宽钳制、空输入、注册与零网络请求静态检查）。
+9. 页面无报错；移动端输入框、列宽输入、模式切换、开关与复制／下载按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/text_fixed_width_wrapper.html`（新增；含 SEO 面板按家族标准＋原文本输入／列宽／模式切换／保留空行开关／结果区／统计对照／复制与下载 UI）
+- `static/js/text_fixed_width_wrapper.js`（新增；列宽计算、贪心装行、硬切逻辑、复制与下载逻辑；双模式导出供 node 测试）
+- `tests/text_fixed_width_wrapper.test.js`（新增；列宽、换行向量、空行、钳制、注册与零网络静态检查）
+- `tools/categories.go`（文本工具品类注册：ID text_fixed_width_wrapper、Path /tools/text-fixed-width-wrapper、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 b6908ce（词云清空修复）／9e41d2f（词云生成器新增）／2b3affc（JSON 字符串转义器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **195**；Top3 候选重叠复核（text_fixed_width_wrapper／text-fixed-width-wrapper、bug_report_generator／bug-report-generator、skeleton／skeleton_screen_generator／skeleton-screen-generator 在 tools／templates／static/js 三路均为 0 命中；近邻文本工具集／词云生成器／文本信息提取器／文本隐私脱敏／格式化工具语义辨析见上；注意文本工具集真实 Path 为 /tools/text-tools，本轮互链以此为准，不沿用旧轮误写的 /tools/text-toolkit）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 13:36 · 通用调研第一百二十三轮）
+
+**交付状态**：10-27 通用调研第一百二十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**词云生成器已交付闭环**（9e41d2f 新增＋b6908ce 清空后复制旧词频表修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **195 Path**，ID wordcloud_generator、Path /tools/wordcloud-generator 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:36 轮，优先小难度纯前端。
+**本轮三件事**（13:36 全网调研，通用方向）：
+1. 词云生成器交付确认：`git log` 头部 b6908ce（词云清空修复）／9e41d2f（词云生成器新增）／2b3affc（JSON 字符串转义器新增）；全量 195 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（首轮未带该变量报主机密钥校验失败，补变量后成功并补录 github.com 主机密钥）。
+2. 新信号扫描：
+   - **dev.to 免费在线工具榜单（5 款／5 款微型／Top 10 三篇）**：Kanban 看板、CSS 渐变生成器、JSON 格式化、正则、JWT、UUID、密码强度、Cron、YAML、时间戳、Base64、Diff、Markdown 预览、JSON→Go Struct、JSON Escape → **除 Gzip Base64 解码器外全部自有实锤消解**（kanban_board、css_gradient_generator、fancy_fonts 均已注册；JSON 解析／正则／JWT／UUID／密码生成／Cron／YAML／时间戳／Base64／Diff 均为已注册工具；JSON Escape 即刚交付的 JSON 字符串转义器复现；JSON→Go Struct 即已注册的「粘贴 JSON 自动生成 TS interface 与 Go struct」工具复现；文件大小计算器过于单薄——操作系统与文件管理器自带显示，无独立成工具的痛点，不立）；
+   - **HN Show HN DevKit（80 工具集，5 天前重爬）**：**122 轮已覆盖复现**（除位运算计算器外全部已注册工具；位运算计算器已是 122 轮观察项，不重复立）；
+   - **HN Show HN InStudio（Instagram 创作者工具箱，单 HTML 纯前端）**：花式字体／拼贴／标签策略／简介生成／互动率计算／配色库 → **部分消解、余项不立**（fancy_fonts、video_frame_extractor、pdf_merge_split 均已注册；拼贴／标签／简介／互动率属社媒创作者细分，非 ToolWeb 开发工具主线，不立）；
+   - **HN Show HN Offline PDF Desk（单文件离线 PDF 涂黑合并）／Video to Image（浏览器端视频抽帧＋画质评分）**：**全部自有实锤消解或不立**（PDF 合并即 pdf_merge_split 已注册，涂黑修订属重型文档处理、不属单页小工具；视频抽帧即 video_frame_extractor 已注册，AI 画质评分需模型推理、不属纯前端小工具）。
+3. 候选池变动：词云生成器已交付划出（9e41d2f＋b6908ce，195 Path）；**本轮新晋 P2 0 个**；**观察项新增 1 条**（Gzip Base64 解码器，见下）；自有实锤消解 10+ 项；全量 195 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；词云生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，122 轮 Top3 第二、三顺位依次递进，第三顺位取 98 轮晋升 P2 对中顺位居后的首项）：
+
+1. **文本定宽换行器** — P2 留池顺位递进（99 轮新晋 P2；123 轮复核仍未交付；122 轮 Top3 第二顺位递进为首席；痛点：把长文本按指定列宽硬换行（如每行 N 字）贴进固定宽度场景，手动断行易错；纯前端小难度：粘贴文本＋设定列宽→按宽换行＋复制，零上传；全库无同名工具实锤；建议 ID text_fixed_width_wrapper、Path /tools/text-fixed-width-wrapper；真限制：只做按列宽机械换行、不做语义断句与中文分词优化，页面须明示）。
+2. **Bug 报告生成器** — P2 留池顺位递进（121 轮新晋 P2；123 轮复核仍未交付；122 轮 Top3 第三顺位递进；痛点：提 Bug 时缺结构化模板：标题／环境／复现步骤／预期与实际／严重度东拼西凑，复制到 issue tracker 还得重排；纯前端小难度：填表→生成规范 Markdown 缺陷报告＋复制／下载，零上传；`bug_report_generator`／`bug-report-generator` 在 tools／templates／static/js 三路 0 命中实锤；建议 ID bug_report_generator、Path /tools/bug-report-generator；真限制：只生成报告文本、不提交到任何 issue 系统、不做缺陷跟踪）。
+3. **骨架屏加载占位生成器** — P2 留池顺位递进（98 轮新晋 P2；123 轮复核仍未交付；痛点：做加载占位图／骨架屏样式时手写 CSS 占位块繁琐、尺寸配比靠猜；纯前端小难度：设占位块布局与尺寸→生成骨架屏 HTML／CSS＋实时预览＋复制，零上传；`skeleton` 在 tools／templates／static/js 三路 0 命中、categories.go 无 skeleton 相关 ID 实锤；建议 ID skeleton_screen_generator、Path /tools/skeleton-screen-generator；真限制：只生成静态占位样式代码、不接入真实数据加载与动画框架，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项）；位运算计算器／批量图片模糊打码器（122 轮观察项）；Gzip Base64 解码器（123 轮观察项新增）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 122 轮及之前记录。
+
+**通用候选表增量**（第一百二十三轮：词云生成器已交付划出（9e41d2f 新增＋b6908ce 修复；ID wordcloud_generator、Path /tools/wordcloud-generator 已注册；全量 195 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 1 条**（Gzip Base64 解码器）；自有实锤消解 10+ 项（dev.to 三榜与 HN 两组信号余项均为已注册工具、复现旧留池项、方向排除或过单薄／重型而不立）；全量 195 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 词云生成器 | 已交付划出（9e41d2f 新增＋b6908ce 修复；ID wordcloud_generator、Path /tools/wordcloud-generator 已注册；全量 195 Path；候选池划出） | — | 已实现 |
+| Gzip Base64 解码器 | 调试压缩 API 载荷时拿到一串 Base64，手动解码后还是 gzip 二进制、看不到明文；粘贴 Base64→解码→自动识别 gzip 魔数并用浏览器 DecompressionStream 解压→输出明文，纯前端零上传 | 小 | 观察 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、复现旧留池项或方向排除；文件大小计算器过单薄、系统自带；Offline PDF Desk 涂黑与 Video to Image 画质评分属重型／需模型推理，不属单页纯前端小工具） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十三轮——词云生成器交付闭环（9e41d2f＋b6908ce，`/tools/wordcloud-generator` 已注册，全量 195 Path），候选池划出；**新晋 P2 0 个**；观察项新增 1 条（Gzip Base64 解码器）；仓库 195 注册工具全量核对无重叠（Top3 建议 ID text_fixed_width_wrapper / bug_report_generator / skeleton_screen_generator；前两者全库零命中，骨架屏三路零命中且无 skeleton 相关 ID）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 b6908ce（词云清空修复）／9e41d2f（词云生成器新增）／2b3affc（JSON 字符串转义器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **195**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 11:38 · 产品经理排期轮）
 
 **选定：词云生成器（wordcloud_generator）** — 本轮唯一任务（新工具）：
