@@ -40,6 +40,15 @@ func GetCategories() []Category {
 					Category:    "格式化工具",
 				},
 				{
+					ID:          "json_string_escaper",
+					Name:        "JSON 字符串转义器",
+					Description: "输入任意普通文本，双向转义／反转义 JSON 字符串：默认与 JSON.stringify 一致（中文与斜杠默认不转义），非 ASCII 转 \\uXXXX 与斜杠转 \\/ 两个开关仅转义方向生效，反转义非法序列中文报错不输出半截结果，纯前端本地处理零上传 · JSON string escaper: escape/unescape JSON string literals locally, JSON.stringify-compatible, 100% client-side",
+					Path:        "/tools/json-string-escaper",
+					Icon:        "code",
+					New:         true,
+					Category:    "格式化工具",
+				},
+				{
 					ID:          "json_schema_validator",
 					Name:        "JSON Schema 验证器",
 					Description: "校验 JSON 实例是否符合 Schema（draft-07 核心子集）：type/properties/required/items/enum/pattern/format 全覆盖，错误定位到 JSON Path 与行列，输入即实时校验，纯浏览器本地验证零上传 · JSON Schema validator: validate JSON against schema locally in your browser",

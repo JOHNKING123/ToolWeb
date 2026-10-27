@@ -1,3 +1,83 @@
+## 今日任务（2026-10-27 09:42 · 产品经理排期轮）
+
+**选定：JSON 字符串转义器（json_string_escaper）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（121 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。07:38 PM 轮选 HTTP 响应头分析器时已明言：JSON 字符串转义器仅因顺位在 HTTP 响应头分析器之后而后置、「下轮首席递进」；HTTP 响应头分析器已交付划出（284a658 新增，全量 193 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——词云生成器与文本定宽换行器虽同为小难度纯前端，均不插队。
+- **未选**：词云生成器（99 轮新晋 P2，121 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 JSON 字符串转义器之后而后置，下轮首席递进；真限制中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果，布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩）；文本定宽换行器（99 轮新晋 P2，121 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做按列宽机械换行、不做语义断句与中文分词优化）；Bug 报告生成器（121 轮新晋 P2，顺位在 Top3 之后，留池）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **193 Path**；`git log` 头部 284a658（HTTP 响应头分析器新增）／55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）。逐项复核：`json_string_escaper`、`json-string-escaper` 在 tools/categories.go、templates、static/js 三路均为 0 命中，仅出现在 tests/totp_generator.test.js 第 158 行与 tests/http_header_analyzer.test.js 第 151 行两条互链否定断言（「互链：不含未交付 JSON 字符串转义器」），非独立工具；`wordcloud` 仅 HTTP 响应头分析器测试文件第 152 行互链否定断言；`text_fixed_width_wrapper`／`text-fixed-width-wrapper` 全库 0 命中。自有近邻辨析：① 已注册的 JSON 解析器（ID json、Path /tools/json-parser、格式化工具品类）是「格式化与验证整份 JSON 文档」，本工具是「只对一段普通文本做字符串层面的转义／反转义」，对象不同（整份文档 vs 一段字符串）、工种不同（格式化校验 vs 转义还原），不重叠；② 已注册的 JSON Schema 验证器、JSON 语义化对比器、JSONPath 测试器、JSON/YAML 转换均以「合法 JSON 文档」为输入／输出，本工具输入可以是任意普通文本（不必是合法 JSON），不重叠；③ 已注册的 URL 编码、Base64 等编码工具是「另一种编码体系」，JSON 字符串转义只处理 JSON 字符串转义序列（\"、\\、\n、\r、\t、\b、\f、\uXXXX），不重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——把一段含引号换行的文本塞进 JSON 字符串或代码里时，转义手写易错、反向还原也麻烦，粘贴文本→双向转义／反转义＋复制恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，转义表固定（JSON.stringify 语义）、反转义有 JSON.parse 语义可断言，非法转义报错规则明确可单测；④ **受众与站内互补**——与 JSON 解析器同属格式化工具品类，用户格式化整份 JSON 之前／之后自然需要处理单段字符串，成组发现；⑤ **外部佐证已就位**——119 轮 FormatCraft／jwtsecrets 的 JSON Escape 实现复现同一留池项，需求真实性已验证。
+- **品类归位**：注册到「格式化工具」品类（与 JSON 解析器同品类，便于 JSON 用户成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验**——想格式化整份 JSON 去 JSON 解析器，页面须明示；② **转义口径默认与 JSON.stringify 一致**——默认不转义非 ASCII 字符（中文原样保留）、不转义斜杠 `/`，两项各由一个显式开关控制（转义非 ASCII 为 \uXXXX、转义斜杠为 \/），默认均关闭，页面须说明默认值；③ **反转义只认 JSON 字符串转义序列**——不认单引号字符串、不做 HTML 实体解码、不做 URL 解码，非法转义（如行尾孤立反斜杠、未转义的裸引号）中文报错、不静默猜测；④ **零上传**——文本全部在浏览器内处理，不发请求，零 fetch／XHR、零 CDN。
+
+**规格**（开发轮按此执行）：
+- 输入：原文本输入框（多行，粘贴任意普通文本，不必是合法 JSON）；方向切换：转义／反转义二选一（默认转义）；两个显式开关：转义非 ASCII 为 \uXXXX（默认关）、转义斜杠为 \/（默认关，仅转义方向生效）；「载入示例」「清空」两个操作。
+- 转义规则（与 JSON.stringify 语义一致）：`"` → `\"`、反斜杠 → `\\`、换行 → `\n`、回车 → `\r`、制表符 → `\t`、退格 → `\b`、换页 → `\f`、其余控制字符（U+0000–U+001F）→ `\u00XX`；中文等非 ASCII 默认原样保留，开关开时转 `\uXXXX`（代理对按 UTF-16 码元逐个转义）；斜杠默认原样保留，开关开时转 `\/`。
+- 反转义规则：按 JSON 字符串转义序列还原（`\"`、`\\`、`\/`、`\n`、`\r`、`\t`、`\b`、`\f`、`\uXXXX`，含代理对组合还原）；实现上等价于对输入加双引号后 JSON.parse 的语义，但报错须中文且不透传引擎原文；非法情形（行尾孤立反斜杠、未转义的裸双引号、非法转义字母、截断的 \uXXXX）一律中文报错并清空结果区、不输出半截还原结果。
+- 生成：输入、方向或开关任一变化即实时重算；结果区展示转义／反转义后的文本（等宽字体、可复制），附字符数对照（输入 N 字 → 输出 M 字）；空输入时提示「请粘贴或输入文本」，不出现空白误导。
+- 示例数据（页面内置，与验收向量同一份）：转义示例 `他说："你好"
+路径：C:\temp\test.txt	完成`（含中文引号、真实换行、反斜杠路径、制表符；转义后引号、换行、反斜杠、制表符均被转义，中文原样保留）；反转义示例为该转义结果本身，双向往返后与原文一致。
+- 校验：空输入中文提示；反转义非法输入中文报错（不输出半截结果）；所有提示均中文。
+- 操作：一键复制结果；复制失败有明确降级提示（手动复制指引）；与 JSON 解析器（/tools/json-parser）互链（文案区分字符串层与文档层：「要格式化整份 JSON 文档去 JSON 解析器，本工具只转义一段字符串」）；不与未交付的词云生成器、文本定宽换行器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写转义表与反转义解析，不依赖 JSON.stringify 拼接以外的黑盒；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，转义、反转义、往返、开关、非法定位均可 node 断言）。
+- 注册：ID `json_string_escaper`、Name「JSON 字符串转义器」、Path `/tools/json-string-escaper`、Category 格式化工具、Icon 建议 code（图标库无此名则用 data_object 兜底）、New: true；中英文描述＋SEO keywords（JSON 字符串转义、JSON 转义、JSON 反转义、JSON escape、JSON unescape、JSON 字符串转义器）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/json-string-escaper，相关工具互链 JSON 解析器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `json_string_escaper`、Path `/tools/json-string-escaper` 注册完整（Category 格式化工具），注册总数 193→194 Path。
+2. 生成闭环：输入、方向或开关改动后结果同步变化；空输入时有中文提示，不出现空白误导。
+3. 转义向量闭环（以规格示例与下表为准）：`a"b` → `a\"b`；真实换行 → `\n`；真实制表符 → `\t`；`C:\temp` → `C:\\temp`；中文默认原样保留；任一不符即不通过。
+4. 反转义与往返闭环：`a\"b\nc`（字面转义序列）→ `a"b`＋真实换行＋`c`；规格示例转义结果反转义后与原文逐字一致；开关组合（非 ASCII 开／斜杠开）下的往返同样一致。
+5. 开关闭环：非 ASCII 开关开时 `你好` → `\u4f60\u597d`，关时原样保留；斜杠开关开时 `/` → `\/`，关时原样保留；开关只影响转义方向，反转义方向两种写法均能还原。
+6. 非法与操作闭环：反转义输入含行尾孤立反斜杠或裸双引号时中文报错且结果区无半截输出；复制内容与结果区一致；复制失败有降级提示；相关工具互链含 JSON 解析器；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验」「默认与 JSON.stringify 一致：中文与斜杠默认不转义」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（转义表全项、反转义全项、往返、双开关开／关组合、非法输入报错、空输入、注册与零网络请求静态检查）。
+9. 页面无报错；移动端输入框、方向切换、开关与复制按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/json_string_escaper.html`（新增；含 SEO 面板按家族标准＋原文本输入／方向切换／双开关／结果区／字符数对照／复制 UI）
+- `static/js/json_string_escaper.js`（新增；转义表、反转义解析、开关逻辑、往返、复制逻辑；双模式导出供 node 测试）
+- `tests/json_string_escaper.test.js`（新增；转义、反转义、往返、开关、非法输入、注册与零网络静态检查）
+- `tools/categories.go`（格式化工具品类注册：ID json_string_escaper、Path /tools/json-string-escaper、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 284a658（HTTP 响应头分析器新增）／55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **193**；Top3 候选重叠复核（json_string_escaper／json-string-escaper 仅两条测试文件互链否定断言；wordcloud 仅一条否定断言；text_fixed_width_wrapper 全库 0 命中；近邻 JSON 解析器／Schema 验证器／语义对比器／JSONPath／URL 编码／Base64 语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 09:36 · 通用调研第一百二十一轮）
+
+**交付状态**：10-27 通用调研第一百二十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**HTTP 响应头分析器已交付闭环**（284a658 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **193 Path**，ID http_header_analyzer、Path /tools/http-header-analyzer 已注册，templates／static/js／tests 三路均已存在；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 轮，优先小难度纯前端。
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. HTTP 响应头分析器交付确认：`git log` 头部 284a658（HTTP 响应头分析器新增）／55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）；全量 193 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（github.com 主机密钥已补录）。
+2. 新信号扫描：
+   - **HN Show HN 浏览器工具集（Dev Tools 24 工具集／Dailydev 隐私工具箱）**：JSON／CSV／SQL 转换、正则、Base64、哈希、UUID、Cron、JWT、Diff、cURL 转代码 → **全部自有实锤消解**（均为已注册工具；cURL 转代码即 106 轮观察项 cURL 命令生成器复现，不新立）；
+   - **HN Show HN defect.report（纯浏览器端 Bug 报告生成器）**：结构化字段填表→导出 Markdown／单 HTML／复制粘贴到 issue tracker，零后端零存储 → **新晋 P2**（即下文 Bug 报告生成器；与站内已注册的 Conventional Commit 生成器同属「填表→生成规范文本」家族但对象不同：提交信息 vs 缺陷报告，不重叠；全库 bug_report／defect 工具名 0 命中）；
+   - **HN Show HN TitleArt（1997 WordArt 复刻）**：怀旧文字特效 → **不立**（新奇向非高频痛点，且 HN 评论已指出无 CJK 支持，中文用户直接受限）；
+   - **2026 免费在线工具榜（techtippr／webdevworker／doitfree）**：PDF 合并压缩、图片编辑去背景、二维码、密码生成、大小写转换 → **全部自有实锤消解**（均为已注册工具或需后端／AI 的重型服务，非单页纯前端可做；临时邮箱类需后端收件箱，不立）。
+3. 候选池变动：HTTP 响应头分析器已交付划出（284a658，193 Path）；**本轮新晋 P2 1 个**（Bug 报告生成器）；**观察项新增 1 条**（粘贴文本邮箱提取器，见下）；自有实锤消解 10+ 项；全量 193 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；HTTP 响应头分析器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，120 轮 Top3 第二、三顺位依次递进，第三顺位取 99 轮晋升 P2 对中顺位居后的首项）：
+
+1. **JSON 字符串转义器** — P2 留池顺位递进（103 轮新晋 P2；121 轮复核仍未交付；120 轮 Top3 第二顺位递进为首席；痛点：把一段含引号换行的文本塞进 JSON 字符串或代码里时，转义手写易错、反向还原也麻烦；纯前端小难度：粘贴文本→JSON 转义／反转义双向＋复制，零上传；`json_string_escaper`／`json-string-escaper` 全库仅出现在既往测试文件的互链否定断言中，非独立工具，零命中实锤；建议 ID json_string_escaper、Path /tools/json-string-escaper；真限制：只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验——格式化走 JSON 解析器）。
+2. **词云生成器** — P2 留池顺位递进（99 轮新晋 P2；121 轮复核仍未交付；120 轮 Top3 第三顺位递进；痛点：做汇报／分享时想把一段文本的高频词可视化成词云图，外部同类免费版限量、Pro 付费；纯前端小难度：粘贴文本→词频统计→Canvas 布局渲染词云＋PNG 下载，零上传；`wordcloud` 全库仅出现在 HTTP 响应头分析器测试文件的互链否定断言中，非独立工具，零命中实锤；建议 ID wordcloud_generator、Path /tools/wordcloud-generator；真限制：中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果，页面须明示；布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩）。
+3. **文本定宽换行器** — P2 留池顺位递进（99 轮新晋 P2，与词云生成器同批、顺位居后；121 轮复核仍未交付；痛点：把长文本按指定列宽硬换行（如每行 N 字）贴进固定宽度场景，手动断行易错；纯前端小难度：粘贴文本＋设定列宽→按宽换行＋复制，零上传；全库无同名工具实锤；建议 ID text_fixed_width_wrapper、Path /tools/text-fixed-width-wrapper；真限制：只做按列宽机械换行、不做语义断句与中文分词优化，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：Bug 报告生成器（121 轮新晋 P2；见上）；骨架屏加载占位生成器／ULID／NanoID 生成器／.env 解析与校验器（98 轮新晋）；摩斯码翻译器（91 轮新晋）；滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项新增：粘贴文本→正则提取邮箱地址→去重排序→TXT／CSV 导出，纯前端小难度；真限制：只提取用户自己粘贴的文本、不爬取任何网页）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 120 轮及之前记录。
+
+**通用候选表增量**（第一百二十一轮：HTTP 响应头分析器已交付划出（284a658 新增；ID http_header_analyzer、Path /tools/http-header-analyzer 已注册；全量 193 Path；候选池划出）；**新晋 P2 1 个**（Bug 报告生成器）；**观察项新增 1 条**（粘贴文本邮箱提取器）；自有实锤消解 10+ 项（HN 两组工具集与 2026 榜单余项均为已注册工具、平台／重型服务或复现旧留池项；TitleArt 怀旧向不立）；全量 193 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HTTP 响应头分析器 | 已交付划出（284a658 新增；ID http_header_analyzer、Path /tools/http-header-analyzer 已注册；全量 193 Path；候选池划出） | — | 已实现 |
+| Bug 报告生成器 | 提 Bug 时缺结构化模板：标题／环境／复现步骤／预期与实际／严重度东拼西凑，复制到 issue tracker 还得重排；填表→生成规范 Markdown 缺陷报告＋复制／下载，零上传 | 小 | P2 |
+| 粘贴文本邮箱提取器 | 从一段粘贴文本里挑邮箱地址，手动找易漏易错；正则提取＋去重排序＋TXT／CSV 导出，零上传 | 小 | 观察 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、平台／重型服务或复现旧留池项；TitleArt 怀旧向且无 CJK 支持，不立） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十一轮——HTTP 响应头分析器交付闭环（284a658，`/tools/http-header-analyzer` 已注册，全量 193 Path），候选池划出；**新晋 P2 1 个**（Bug 报告生成器）；观察项新增 1 条（粘贴文本邮箱提取器）；仓库 193 注册工具全量核对无重叠（Top3 建议 ID json_string_escaper / wordcloud_generator / text_fixed_width_wrapper；前两者仅既往测试互链否定断言，定宽换行器全库零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 284a658（HTTP 响应头分析器新增）／55040e3（TOTP 新增）／552f5ee（TOML 压缩模式修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **193**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，github.com 主机密钥已补录）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 07:38 · 产品经理排期轮）
 
 **选定：HTTP 响应头分析器（http_header_analyzer）** — 本轮唯一任务（新工具）：

@@ -1,0 +1,151 @@
+{{define "json_string_escaper"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 字符串转义器 - 普通文本转义与反转义，JSON.stringify 口径 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSON 字符串转义器：输入任意普通文本，转义／反转义 JSON 字符串，默认与 JSON.stringify 一致（中文与斜杠默认不转义），非 ASCII 转 \uXXXX 与斜杠转 \/ 两个开关仅转义方向生效，反转义非法序列中文报错不输出半截结果，纯前端本地处理零上传。JSON string escaper: escape/unescape JSON string literals locally, JSON.stringify-compatible, 100% client-side.">
+    <meta name="keywords" content="JSON 字符串转义,JSON 转义,JSON 反转义,JSON escape,JSON unescape,JSON 字符串转义器,JSON.stringify 转义,json string escaper">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-string-escaper">
+    <meta property="og:title" content="JSON 字符串转义器 - 普通文本转义与反转义">
+    <meta property="og:description" content="输入任意普通文本，转义／反转义 JSON 字符串，默认与 JSON.stringify 一致，中文与斜杠默认不转义，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/json-string-escaper">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON 字符串转义器","description":"输入任意普通文本，转义／反转义 JSON 字符串，默认与 JSON.stringify 一致（中文与斜杠默认不转义），反转义非法序列中文报错，纯前端本地处理，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/json-string-escaper","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jse-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .jse-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .jse-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .jse-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .jse-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .jse-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .jse-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .jse-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+        .jse-input,.jse-result{width:100%;box-sizing:border-box;min-height:220px;padding:.8rem 1rem;font-size:.95rem;line-height:1.7;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #d1d5db;border-radius:.6rem;
+            outline:none;resize:vertical;overflow-wrap:anywhere}
+        .jse-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .jse-result{background:#f9fafb}
+        .jse-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .jse-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .jse-btn:hover{border-color:#2563eb;color:#2563eb}
+        .jse-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .jse-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .jse-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .jse-msg-ok{color:#065f46}
+        .jse-msg-error{color:#b91c1c}
+        .jse-counts{font-size:.92rem;color:#374151;margin-top:.6rem;font-weight:600}
+        .jse-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .jse-controls{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center;margin-top:.9rem;font-size:.92rem;line-height:1.8}
+        .jse-controls label{display:flex;align-items:center;gap:.4rem;cursor:pointer}
+        .jse-controls input[type="checkbox"]:disabled + span{color:#9ca3af}
+        .jse-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .jse-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .jse-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .jse-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .jse-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .jse-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .jse-grid{grid-template-columns:1fr}
+            .jse-btn-row .jse-btn{flex:1;justify-content:center}
+            .jse-input,.jse-result{min-height:180px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">code</i> JSON 字符串转义器</h1>
+            <p>把一段含引号、换行的普通文本塞进 JSON 字符串或代码里？粘贴进来：转义方向按 JSON.stringify 口径输出，反转义方向把转义序列还原回去，实时重算、一键复制。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="jse-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>输入与结果全部在浏览器内处理，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="jse-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>真限制说明：</b>本工具只做字符串层面的转义与反转义、不做整份 JSON 格式化与校验——要格式化整份 JSON 文档去 JSON 解析器；转义口径默认与 JSON.stringify 一致：中文与斜杠默认不转义；反转义只认 JSON 字符串转义序列，不认单引号字符串、不做 HTML 实体解码、不做 URL 解码。</div>
+            </div>
+            <div class="jse-grid">
+                <div class="jse-panel">
+                    <h3><i class="material-icons">content_paste</i> 原文本输入</h3>
+                    <textarea id="jse-input" class="jse-input" placeholder="粘贴任意普通文本（不必是合法 JSON），例如含引号、换行、反斜杠路径的文本……"></textarea>
+                    <div class="jse-controls">
+                        <span><b>方向：</b></span>
+                        <label><input type="radio" name="jse-direction" value="escape" checked> <span>转义</span></label>
+                        <label><input type="radio" name="jse-direction" value="unescape"> <span>反转义</span></label>
+                    </div>
+                    <div class="jse-controls">
+                        <label><input type="checkbox" id="jse-nonascii"> <span>转义非 ASCII 为 \uXXXX（如你好 → \u4f60\u597d）</span></label>
+                        <label><input type="checkbox" id="jse-slash"> <span>转义斜杠为 \/（如 / → \/）</span></label>
+                    </div>
+                    <div class="jse-muted" id="jse-switch-hint">两个开关仅转义方向生效：默认均关闭（中文与斜杠原样保留）。</div>
+                    <div class="jse-btn-row">
+                        <button type="button" class="jse-btn" id="jse-sample"><i class="material-icons">auto_fix_high</i> 载入示例</button>
+                        <button type="button" class="jse-btn" id="jse-clear"><i class="material-icons">backspace</i> 清空</button>
+                    </div>
+                </div>
+                <div class="jse-panel">
+                    <h3><i class="material-icons">output</i> 转义／反转义结果</h3>
+                    <textarea id="jse-result" class="jse-result" readonly placeholder="结果将实时显示在这里"></textarea>
+                    <div class="jse-counts" id="jse-counts">输入 0 字 → 输出 0 字</div>
+                    <div class="jse-btn-row">
+                        <button type="button" class="jse-btn jse-btn-primary" id="jse-copy"><i class="material-icons">content_copy</i> 一键复制</button>
+                    </div>
+                    <div class="jse-msg" id="jse-msg">请粘贴或输入文本</div>
+                </div>
+            </div>
+            <div class="jse-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="jse-tip">
+                    <b>转义口径（默认，与 JSON.stringify 一致）：</b>双引号 → <code>\"</code>、反斜杠加倍、换行 → <code>\n</code>、回车 → <code>\r</code>、制表符 → <code>\t</code>、退格 → <code>\b</code>、换页 → <code>\f</code>、其余控制字符 → <code>\u00XX</code>；中文等非 ASCII 与斜杠 <code>/</code> 默认原样保留。<br>
+                    <b>两个开关：</b>仅转义方向生效。开「转义非 ASCII」时 <code>你好</code> → <code>\u4f60\u597d</code>；开「转义斜杠」时 <code>/</code> → <code>\/</code>；关时原样保留。反转义方向两种写法均可还原，无须开开关。<br>
+                    <b>反转义：</b>只认 JSON 字符串转义序列。非法输入（行尾孤立反斜杠、未转义的裸双引号、非法转义字母、截断的 <code>\uXXXX</code>）会中文报错且结果区为空，不输出半截还原结果。<br>
+                    <b>示例：</b>点「载入示例」得到含中文引号、真实换行、反斜杠路径、制表符的一段文本；切到反转义方向再载入示例，可验证转义结果双向往返后与原文逐字一致。<br>
+                    <b>隐私：</b>全部处理在浏览器本地完成，不发起网络请求，不上传输入内容。
+                </div>
+            </div>
+            <div class="jse-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="jse-faq">
+                    <dt>这个工具和 JSON 解析器有什么区别？</dt>
+                    <dd>对象不同：JSON 解析器格式化与验证整份 JSON 文档；本工具只对一段普通文本做字符串层面的转义／反转义，输入不必是合法 JSON。想格式化整份 JSON 文档去 JSON 解析器。</dd>
+                    <dt>转义后中文为什么没变成 \uXXXX？</dt>
+                    <dd>这是默认口径：默认与 JSON.stringify 一致，中文等非 ASCII 原样保留。需要 \uXXXX 形式时打开「转义非 ASCII 为 \uXXXX」开关，<code>你好</code> 就会变成 <code>\u4f60\u597d</code>。</dd>
+                    <dt>斜杠 / 默认为什么不转义？</dt>
+                    <dd>同样是 JSON.stringify 默认口径：斜杠合法且无须转义。需要 <code>\/</code> 形式时打开「转义斜杠为 \/」开关。</dd>
+                    <dt>反转义报错「裸双引号」是什么意思？</dt>
+                    <dd>反转义的输入本身就是一段 JSON 字符串的内容：内容里的双引号必须写成 <code>\"</code>。直接粘贴带裸双引号的文本时请先确认方向——要转义普通文本请选「转义」方向。</dd>
+                    <dt>反转义能处理单引号字符串或 HTML 实体吗？</dt>
+                    <dd>不能。反转义只认 JSON 字符串转义序列，不认单引号字符串、不做 HTML 实体解码、不做 URL 解码，非法序列会中文报错而不是静默猜测。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。转义、反转义、开关、复制全部在浏览器本地完成，JS 不含 fetch/XHR 调用，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="jse-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="jse-related">
+                    <a href="/tools/json-parser" class="btn btn-secondary" style="font-size:.9rem;">JSON 解析器（要格式化整份 JSON 文档去 JSON 解析器；本工具只转义一段字符串）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/json_string_escaper.js?v=1"></script>
+</body>
+</html>
+{{end}}
