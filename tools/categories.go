@@ -265,6 +265,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "ulid_nanoid_generator",
+					Name:        "ULID／NanoID 生成器",
+					Description: "ULID 与 NanoID 批量生成：ULID 26 位 Crockford Base32 大写、48 位毫秒时间戳加 80 位随机、时间可排序、每行附注解码本地时间，时间戳来源当前时间或自定义时间；NanoID 长度 8–64 默认 21、字母表 URL 安全 64 字符集／纯数字／小写字母三档；批量 1–100 默认 10、每行一条加行内复制、复制全部与下载 ids.txt，超范围钳制并中文提示、超 48 位时间戳拒绝，只生成随机／时间排序标识、不做分布式唯一性保证、时间戳取自本机时钟、不存不查不上传，纯前端零上传 · ULID generator, NanoID generator, sortable id, url safe id, 100% client-side",
+					Path:        "/tools/ulid-nanoid-generator",
+					Icon:        "tag",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prompt_sanitizer",
 					Name:        "AI 提示词脱敏器",
 					Description: "喂 LLM 前先脱敏：粘贴代码/日志或上传 .txt/.log/.env/.md，浏览器本地正则识别 API Key（sk-/ghp_/AKIA/xoxb- 等）、JWT、PEM 私钥、Bearer Token、数据库连接串（postgres/mongodb/mysql），逐条确认后替换为占位符（__API_KEY_1__ 等）一键复制发问；粘贴 LLM 答案一键本地还原。映射表只存本标签页 sessionStorage，关闭即销毁，纯前端零上传 · Prompt sanitizer: detect & mask API keys, JWT, PEM keys, DB connection strings locally with reversible placeholders, restore LLM answers in-browser, 100% client-side",

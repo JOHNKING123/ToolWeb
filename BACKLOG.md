@@ -1,3 +1,80 @@
+## 今日任务（2026-10-27 19:00 · 产品经理排期轮，接 126 轮调研）
+
+**选定：ULID／NanoID 生成器（ulid_nanoid_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（126 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。17:00 PM 轮选骨架屏加载占位生成器时已明言：ULID／NanoID 生成器仅因顺位在骨架屏之后而后置、「下轮首席递进」；骨架屏已交付划出（657407f 新增，全量 198 Path），本轮顺位递进为首席，不再以「小难度优先」等理由二次跳过——.env 解析与校验器与摩斯码翻译器虽同为小难度纯前端，均不插队。
+- **未选**：.env 解析与校验器（98 轮新晋 P2，126 轮 Top3 第二顺位，无硬伤，留池顺位递进——仅因顺位在 ULID／NanoID 生成器之后而后置，下轮首席递进；真限制只做格式解析与校验、不读取真实运行环境变量）；摩斯码翻译器（91 轮新晋 P2，126 轮 Top3 第三顺位，无硬伤，留池顺位递进；真限制只做标准国际摩斯码编解码、不做音频发报）；截图美化器（通用）（88 轮新晋，**防串味继续延后**：与已交付的代码截图美化器同族混淆风险未解）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **198 Path**；`git log` 头部 657407f（骨架屏新增）／891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）。逐项复核：`ulid_nanoid_generator`／`ulid-nanoid-generator`、`env_parser`／`env-parser`、`morse_code_translator`／`morse-code-translator` 在 tools／templates／static/js 三路均为 0 命中；`ULID`／`NanoID` 在 tools／templates／static/js 三路 0 命中（`nanoid` 唯一历史命中仍为第三方 vendor 打包文件内部函数名、非工具，本轮三路 grep 已排除 vendor 后无命中）；categories.go 无三者相关 ID。自有近邻辨析：① 已注册的 UUID 生成器（ID uuid、Path /tools/uuid-generator）只出 UUID v1/v4，本工具出 ULID（时间可排序）与 NanoID（短、URL 安全），格式不同、不重叠，且页面互链须写清此区分；② 已注册的假数据／Mock 生成器内含 UUID 字段只是假数据行的一列，不是独立 ID 格式选择与批量生成，不重叠；③ JSON Schema 校验器内的 uuid 格式校验只是格式判定、不生成 ID，不重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——只要 UUID 不够用时（要时间排序用 ULID、要短且 URL 安全用 NanoID），手写实现或现翻文档都慢，选格式与长度→批量生成＋复制恰好对症；③ **一轮可高质量交付**——纯前端、无依赖，ULID 编码（48 位毫秒时间戳＋80 位随机，Crockford Base32）与 NanoID（指定字母表＋长度）均为确定性纯函数，可写成精确向量供 node 断言，无随机性以外的不确定性；④ **受众与站内互补**——与 UUID 生成器同属开发工具品类，开发者选 ID 格式时成组发现；⑤ **外部佐证已就位**——98 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 UUID 生成器同品类，便于开发者成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只生成随机／时间排序标识、不做分布式 ID 唯一性保证**——浏览器随机源碰撞概率极低但不为零，不承诺全局唯一，页面须明示；② **ULID 时间戳取自本机时钟**——自定义时间只是编码入参，不校验时钟准确性，页面须明示；③ **不做 ID 碰撞检测与后端存查**——不存、不查、不上传任何已生成 ID，页面须明示；④ **不收集、不上传任何配置**——零上传，见下。
+
+**规格**（开发轮按此执行）：
+- 格式选择 2 档单选（默认 ULID）：ULID（26 位 Crockford Base32，大写，字符集 `0123456789ABCDEFGHJKMNPQRSTVWXYZ`，不含 I／L／O／U）；NanoID（默认字母表 URL 安全 64 字符集 `_-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`）。
+- ULID 选项：时间戳来源 2 档单选（默认当前时间；另自定义时间，datetime-local 输入，空值或非法时中文提示并回落当前时间）；随机部分取自 `crypto.getRandomValues`（80 位），node 测试时以注入的随机字节为准。
+- NanoID 选项：长度输入（8–64，默认 21，超范围钳制到边界并中文提示）；字母表预设 3 档单选（默认 URL 安全 64 字符集；另纯数字 `0123456789`；另小写字母 `abcdefghijklmnopqrstuvwxyz`）。
+- 批量生成：数量输入（1–100，默认 10，超范围钳制到边界并中文提示）；「生成」按钮每次重新生成整批；「重新生成」同义操作不另设；结果列表每行一条 ID＋行内单个复制按钮；生成时间戳（ULID 解码出的时间）仅在 ULID 模式下每行附注显示（格式 `YYYY-MM-DD HH:mm:ss` 本地时间，由解码函数得出，不另存原始时间）。
+- 生成规则（确定性纯函数，供 node 断言）：`encodeULID(timestampMs, randomBytes16)`——timestampMs 为 48 位非负整数（超范围中文提示并拒绝生成），randomBytes16 为 16 字节（实际只取前 10 字节即 80 位）；`decodeULID(ulid)`——26 位且字符集合法时返回毫秒时间戳，否则返回 null；`generateNanoID(length, alphabet, randomBytes)`——逐字节取模映射到字母表，长度与字母表均按上文口径；批量函数 `generateBatch(format, opts, rand)` 返回字符串数组，长度与数量输入一致。
+- 操作：一键复制全部（每行一条，换行分隔）；下载 ids.txt（内容与结果列表逐字一致，换行分隔）；复制失败有明确降级提示（手动复制指引）；与 UUID 生成器（/tools/uuid-generator）互链（文案区分格式：「只要 UUID v1/v4 去 UUID 生成器，要时间可排序用本工具 ULID、要短且 URL 安全用本工具 NanoID」）；不与未交付的 .env 解析与校验器、摩斯码翻译器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写 Crockford Base32 编解码与 NanoID 映射；用户输入与结果用 textContent 或转义后插值，杜绝注入；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；JS 逻辑双模式导出供 node 测试（浏览器用 window 挂载、node 用 module.exports，编解码、字母表映射、钳制、批量长度均可 node 断言）。
+- 注册：ID `ulid_nanoid_generator`、Name「ULID／NanoID 生成器」、Path `/tools/ulid-nanoid-generator`、Category 开发工具、Icon 建议 tag（与 UUID 生成器同图标族，便于成组识别；图标库无此名则用 fingerprint 兜底）、New: true；中英文描述＋SEO keywords（ULID、NanoID、ULID 生成器、NanoID 生成器、时间可排序 ID、短 ID、ulid generator、nanoid generator、sortable id、url safe id）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/ulid-nanoid-generator，相关工具互链 UUID 生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `ulid_nanoid_generator`、Path `/tools/ulid-nanoid-generator` 注册完整（Category 开发工具），注册总数 198→199 Path。
+2. 生成闭环：格式、长度、数量任一改动后重新生成，结果与选项一致；ULID 结果每行附注解码时间与所选时间戳来源一致（自定义时间模式下附注时间即自定义时间，精确到秒）。
+3. 编码向量闭环（精确比对）：时间戳 0＋随机字节全 0 → ULID 为 26 个 `0`；`decodeULID(encodeULID(t, rand)) === t` 对多个时间戳（含 0、当前毫秒级时间戳）成立；26 位长度与 Crockford 字符集逐项成立；非法 ULID（长度非 26、含 I／L／O／U 或小写）解码返回 null。
+4. NanoID 向量闭环：长度 8／21／64 生成结果长度精确等于输入；字符逐项属于所选字母表；纯数字预设结果全为数字、小写预设结果全为小写字母；批量数量 1／10／100 生成行数精确等于数量。
+5. 钳制闭环：NanoID 长度输入 5 被钳制到 8 并中文提示、输入 100 被钳制到 64 并中文提示；批量数量输入 0 被钳制到 1、输入 200 被钳制到 100 并中文提示；ULID 时间戳超 48 位范围被拒绝并中文提示。
+6. 操作闭环：复制全部内容与结果列表逐字一致（换行分隔）；下载 ids.txt 内容与结果列表逐字一致；复制失败有降级提示；相关工具互链含 UUID 生成器；不含未交付工具的硬凑互链。
+7. 真限制可见：页面可见「只生成随机／时间排序标识、不做分布式 ID 唯一性保证」「ULID 时间戳取自本机时钟」「不存、不查、不上传任何已生成 ID」文案；零 fetch／XHR、零 CDN。
+8. node 测试 25+ 断言全过（ULID 编解码向量、NanoID 长度与字母表向量、批量行数、钳制、注册与零网络请求静态检查）。
+9. 页面无报错；移动端格式单选、长度与数量输入、复制／下载按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/ulid_nanoid_generator.html`（新增；含 SEO 面板按家族标准＋格式单选／时间戳来源／长度与字母表预设／数量／结果列表与行内复制／复制全部与下载 UI）
+- `static/js/ulid_nanoid_generator.js`（新增；Crockford Base32 编解码、NanoID 映射、批量生成、钳制、复制与下载逻辑；双模式导出供 node 测试）
+- `tests/ulid_nanoid_generator.test.js`（新增；编解码向量、长度与字母表向量、批量行数、钳制、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮已执行（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错）；`git log` 头部 657407f（骨架屏新增）／891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **198**；Top3 候选重叠复核（ulid_nanoid_generator／ulid-nanoid-generator、env_parser／env-parser、morse_code_translator／morse-code-translator、ULID／NanoID 在 tools／templates／static/js 三路均为 0 命中，vendor 排除后 nanoid 无命中；近邻 UUID 生成器／Mock 生成器／JSON Schema 校验器语义辨析见上）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-27 19:00 · 通用调研第一百二十六轮）
+
+**交付状态**：10-27 通用调研第一百二十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**骨架屏加载占位生成器已交付闭环**（657407f 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **198 Path**，ID skeleton_screen_generator、Path /tools/skeleton-screen-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 轮，优先小难度纯前端。
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. 骨架屏交付确认：`git log` 头部 657407f（骨架屏新增）／891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）；全量 198 Path；本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功（补录 github.com 主机密钥后通过，与 124–125 轮同一教训）。
+2. 新信号扫描：
+   - **dev.to 13 款免费浏览器工具榜（2026）**：JSON 格式化／Schema 验证／文本 Diff／Base64／URL 编解码／HTML 实体／UUID／二维码／CSS 与 JS 压缩／Markdown 预览／配色／批量图片缩放 → **全部自有实锤消解**（124 轮已覆盖同一榜单，复现，均为已注册工具；JS 与 CSS 压缩同属代码压缩器一类，不另立）；
+   - **Medium 10 款免费在线工具榜（2026-10-16）**：年龄计算器／密码生成器／单位换算／字数统计／二维码 → **除方向排除项外全部消解**（随机密码生成器、二维码工具、单位换算器均已注册；字数统计属文本工具集已有口径；年龄计算器属泛生活计算器，按 10-18 方向修正不立）；
+   - **nologin.tools Q1 2026 无登录浏览器工具榜**：RAWGraphs（粘贴 CSV 出 30+ 种图表）／Markmap（Markdown 大纲转可折叠思维导图）／Datasette Lite（浏览器内 WASM 跑 SQLite 查询）→ **均不新立**（Markmap 口径即已注册的思维导图工具 /tools/mind-map，消解；RAWGraphs 属重型数据可视化产品而非单页小工具；Datasette Lite 属 111 轮 SQLite 数据库查看器观察项复现，WASM 整库加载亦超单页小工具口径，不晋升）；
+   - **HN Show HN 近期工具帖**：PTO 假期优化器（年假＋公共假期拼最长连休）／Pooch PDF（去横幅广告后正文转干净 PDF）／SquareFaceIcon（方形头像协议）／HN 阅读器／浏览器终端桥／USB 设备标识器／Apex 浏览器 Agent → **均不立**（PTO 优化器需各国节假日数据集持续维护且属生活日历计算，方向排除；Pooch PDF 需跨站正文抓取、受 CORS 限制且本体为浏览器扩展形态，单页做不实；SquareFaceIcon 为 125 轮已消解项，即已注册的 avatar_generator；其余四项均为原生应用／扩展／Agent 桥形态，非单页小工具）；
+   - **V2EX 工具帖搜索**：本轮返回结果为 DeepWiki 词条与应用商店页，无有效新信号，不立。
+3. 候选池变动：骨架屏加载占位生成器已交付划出（657407f 新增；ID skeleton_screen_generator、Path /tools/skeleton-screen-generator 已注册；全量 198 Path）；**本轮新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项；全量 198 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；骨架屏交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，125 轮 Top3 第二、三顺位依次递进，第三顺位取 98 轮晋升 P2 对之后、顺位居后的首项）：
+
+1. **ULID／NanoID 生成器** — P2 留池顺位递进（98 轮新晋 P2；126 轮复核仍未交付；125 轮 Top3 第二顺位递进为首席；痛点：只要 UUID 不够用时——ULID 自带时间可排序、NanoID 短且 URL 安全，手写或现翻文档都慢；纯前端小难度：选格式与长度→批量生成＋复制，零上传；`ULID`／`NanoID`／`ulid`／`nanoid` 在 tools／templates／static/js 三路 0 命中实锤（nanoid 唯一命中仍为第三方 vendor 打包文件内部函数名、非工具）；与已注册的 UUID 生成器不重叠（UUID 只是三种 ID 格式之一）；建议 ID ulid_nanoid_generator、Path /tools/ulid-nanoid-generator；真限制：只生成随机／时间排序标识、不做分布式 ID 唯一性保证，页面须明示）。
+2. **.env 解析与校验器** — P2 留池顺位递进（98 轮新晋 P2；126 轮复核仍未交付；125 轮 Top3 第三顺位递进；痛点：手写 .env 时 KEY＝VALUE 格式、引号、注释、空值、重复键易错，贴到部署环境才发现；纯前端小难度：粘贴 .env 文本→逐行解析校验（非法行、重复键、空值定位提示）→输出规整后的键值表＋复制／下载，零上传；`env_parser`／`env-parser` 在 tools／templates／static/js 三路 0 命中实锤；建议 ID env_parser、Path /tools/env-parser；真限制：只做格式解析与校验、不读取真实运行环境变量、不做密钥有效性验证，页面须明示）。
+3. **摩斯码翻译器** — P2 留池顺位递进（91 轮新晋 P2；126 轮复核仍未交付；125 轮 Top3 之后顺位首项；痛点：文本与摩斯码互转要查表，字母数字标点对照表翻起来慢、易错；纯前端小难度：粘贴文本↔摩斯码双向转换（标准国际摩斯码对照、非法字符定位提示）＋复制，零上传；`morse`／`摩斯` 在 tools／templates／static/js 三路 0 命中、categories.go 无相关 ID 实锤；建议 ID morse_code_translator、Path /tools/morse-code-translator；真限制：只做标准国际摩斯码编解码、不做音频发报与无线电实操，页面须明示）。
+
+其余 P2 留池（顺位在 Top3 之后）：滚动字幕生成器（92 轮晋升）；色盲模拟检查器／MP3 标签编辑器（90 轮新晋）；截图美化器（通用）（88 轮新晋；防串味继续延后）；在线电台收听器（88 轮新晋；硬伤未解→继续跳过）；Slug 生成器／Meta 标签生成器（100–101 轮观察项）；WhatsApp 链接生成器／llms.txt 生成器（115 轮观察项）；二维码扫描器（116 轮观察项）；粘贴文本邮箱提取器（121 轮观察项）；位运算计算器／批量图片模糊打码器（122 轮观察项）；Gzip Base64 解码器（123 轮观察项）；ads.txt 校验器（125 轮观察项）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮观察项）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮观察项）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮观察项）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮观察项）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮观察项）；文本对齐列→表格转换器（110 轮观察项）；SQLite 数据库查看器／JSON→表格查看器（111 轮观察项）；常用端口号速查（119 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 125 轮及之前记录。
+
+**通用候选表增量**（第一百二十六轮：骨架屏加载占位生成器已交付划出（657407f 新增；ID skeleton_screen_generator、Path /tools/skeleton-screen-generator 已注册；全量 198 Path；候选池划出）；**新晋 P2 0 个**；**观察项新增 0 条**；自有实锤消解 10+ 项（dev.to 榜单为 124 轮复现、Medium 榜单与 nologin.tools 榜单余项均为已注册工具、方向排除或重型产品；HN 近期帖均为扩展／应用形态或需数据集／跨站抓取，非单页小工具；V2EX 搜索无有效新信号）；全量 198 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 骨架屏加载占位生成器 | 已交付划出（657407f 新增；ID skeleton_screen_generator、Path /tools/skeleton-screen-generator 已注册；全量 198 Path；候选池划出） | — | 已实现 |
+| 自有实锤消解 | 不立（榜单余项均为已注册工具、复现旧留池项、方向排除或重型产品；HN 近期帖均为扩展／应用形态或需数据集／跨站抓取，非纯前端单页可实现；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-27 通用调研第一百二十六轮——骨架屏加载占位生成器交付闭环（657407f，`/tools/skeleton-screen-generator` 已注册，全量 198 Path），候选池划出；**新晋 P2 0 个**；观察项新增 0 条；仓库 198 注册工具全量核对无重叠（Top3 建议 ID ulid_nanoid_generator / env_parser / morse_code_translator；三者全库零命中）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 657407f（骨架屏新增）／891775e（Bug 报告生成器新增）／30c0363（文本定宽换行器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **198**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-27 17:00 · 产品经理排期轮，接 125 轮调研）
 
 **选定：骨架屏加载占位生成器（skeleton_screen_generator）** — 本轮唯一任务（新工具）：

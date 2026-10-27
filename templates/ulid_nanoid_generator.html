@@ -1,0 +1,160 @@
+{{define "ulid_nanoid_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULID／NanoID 生成器 - 时间可排序 ID 与短 URL 安全 ID 批量生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 ULID／NanoID 生成器：ULID 26 位 Crockford Base32 时间可排序、NanoID 长度 8-64 短且 URL 安全，批量 1-100 条，行内复制、复制全部、下载 ids.txt，纯前端本地处理零上传。ulid generator, nanoid generator, sortable id, url safe id.">
+    <meta name="keywords" content="ULID, NanoID, ULID 生成器, NanoID 生成器, 时间可排序 ID, 短 ID, ulid generator, nanoid generator, sortable id, url safe id">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ulid-nanoid-generator">
+    <meta property="og:title" content="ULID／NanoID 生成器 - 时间可排序 ID 与短 URL 安全 ID">
+    <meta property="og:description" content="ULID 时间可排序、NanoID 短且 URL 安全，批量生成、行内复制、下载 ids.txt，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/ulid-nanoid-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ULID／NanoID 生成器","description":"ULID 26 位时间可排序 ID 与 NanoID 短 URL 安全 ID 批量生成，行内复制、复制全部、下载 ids.txt，纯前端本地处理，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/ulid-nanoid-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .un-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .un-disclaimer{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .un-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .un-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .un-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem;font-size:.92rem;color:#374151}
+        .un-field input[type="number"],.un-field input[type="datetime-local"]{width:100%;box-sizing:border-box;padding:.6rem .8rem;
+            font-size:.95rem;line-height:1.7;border:1px solid #d1d5db;border-radius:.6rem;outline:none;background:#fff;font-family:inherit}
+        .un-field input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .un-radio-row{display:flex;gap:1rem;flex-wrap:wrap;font-size:.92rem;color:#374151}
+        .un-radio-row label{display:flex;align-items:center;gap:.35rem;cursor:pointer}
+        .un-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .un-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .un-btn:hover{border-color:#2563eb;color:#2563eb}
+        .un-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .un-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .un-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .un-msg-ok{color:#065f46}
+        .un-msg-error{color:#b91c1c}
+        .un-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.55rem .7rem;margin-bottom:.5rem;
+            border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb}
+        .un-id{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92rem;color:#111827;word-break:break-all}
+        .un-note{font-size:.85rem;color:#6b7280}
+        .un-copy{margin-left:auto;padding:.35rem .7rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.85rem;cursor:pointer;background:#fff;color:#374151}
+        .un-copy:hover{border-color:#2563eb;color:#2563eb}
+        .un-empty{color:#6b7280;font-size:.92rem}
+        .un-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .un-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .un-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .un-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .un-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .un-btn-row .un-btn{flex:1;justify-content:center}
+            .un-copy{margin-left:0}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>ULID／NanoID 生成器</h1>
+            <p>要时间可排序用 ULID（26 位），要短且 URL 安全用 NanoID（长度 8–64）：选格式、批量生成、行内复制或一键导出。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="un-privacy">
+                <div><b>纯前端运行，零上传：</b>所有生成、复制、下载只在浏览器本地完成，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="un-disclaimer">
+                <div><b>真限制说明：</b>本工具只生成随机／时间排序标识，不做分布式 ID 唯一性保证——浏览器随机源碰撞概率极低但不为零，不承诺全局唯一；ULID 时间戳取自本机时钟，自定义时间只是编码入参，不校验时钟准确性；不存、不查、不上传任何已生成 ID，不做 ID 碰撞检测与后端存查。</div>
+            </div>
+            <div class="un-panel">
+                <h3>生成选项</h3>
+                <div class="un-field">
+                    <span>格式：</span>
+                    <div class="un-radio-row">
+                        <label><input type="radio" name="un-format" value="ulid" checked> ULID（26 位，时间可排序）</label>
+                        <label><input type="radio" name="un-format" value="nanoid"> NanoID（短，URL 安全）</label>
+                    </div>
+                </div>
+                <div id="un-ulid-opts">
+                    <div class="un-field">
+                        <span>时间戳来源：</span>
+                        <div class="un-radio-row">
+                            <label><input type="radio" name="un-ts-mode" value="now" checked> 当前时间</label>
+                            <label><input type="radio" name="un-ts-mode" value="custom"> 自定义时间</label>
+                        </div>
+                    </div>
+                    <div class="un-field">
+                        <label for="un-custom-time">自定义时间（自定义模式下使用，空值或非法时提示并回落当前时间）：</label>
+                        <input id="un-custom-time" type="datetime-local">
+                    </div>
+                    <p class="un-tip">ULID 结构：26 位 Crockford Base32 大写，前 10 位为 48 位毫秒时间戳，后 16 位为 80 位随机；字符集 <code>0123456789ABCDEFGHJKMNPQRSTVWXYZ</code>，不含 I／L／O／U。</p>
+                </div>
+                <div id="un-nanoid-opts" style="display:none;">
+                    <div class="un-field">
+                        <label for="un-length">长度（8–64，默认 21，超范围钳制到边界并提示）：</label>
+                        <input id="un-length" type="number" min="8" max="64" value="21">
+                    </div>
+                    <div class="un-field">
+                        <span>字母表：</span>
+                        <div class="un-radio-row">
+                            <label><input type="radio" name="un-alphabet" value="urlsafe" checked> URL 安全 64 字符集</label>
+                            <label><input type="radio" name="un-alphabet" value="digits"> 纯数字</label>
+                            <label><input type="radio" name="un-alphabet" value="lower"> 小写字母</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="un-field">
+                    <label for="un-count">批量数量（1–100，默认 10，超范围钳制到边界并提示）：</label>
+                    <input id="un-count" type="number" min="1" max="100" value="10">
+                </div>
+                <div class="un-btn-row">
+                    <button type="button" class="un-btn un-btn-primary" id="un-generate">生成</button>
+                    <button type="button" class="un-btn" id="un-copy-all">复制全部</button>
+                    <button type="button" class="un-btn" id="un-download">下载 ids.txt</button>
+                </div>
+                <div class="un-msg" id="un-msg">点「生成」开始生成 ID。</div>
+            </div>
+            <div class="un-panel">
+                <h3>生成结果</h3>
+                <div id="un-result"></div>
+                <p class="un-tip">ULID 模式下每行附注为解码出的本地时间（YYYY-MM-DD HH:mm:ss，由解码函数得出）；复制全部与下载 ids.txt 的内容均为结果列表本身、每行一条、换行分隔。</p>
+            </div>
+            <div class="un-panel">
+                <h3>格式区分与常见问题</h3>
+                <dl class="un-faq">
+                    <dt>ULID、NanoID 和 UUID 有什么区别？</dt>
+                    <dd>只要 UUID v1/v4 去 <a href="/tools/uuid-generator">UUID 生成器</a>；要时间可排序用本工具 ULID（前 10 位即时间戳，字典序即时间序）；要短且 URL 安全用本工具 NanoID（默认 21 位，可缩到 8 位或伸到 64 位）。三者格式不同、用途不同，不要混用。</dd>
+                    <dt>ULID 的时间附注是怎么来的？</dt>
+                    <dd>由解码函数从 ULID 前 10 位还原毫秒时间戳、再按本地时间格式化到秒；它不是另存的原始时间，自定义时间模式下附注时间即你填的自定义时间（精确到秒）。</dd>
+                    <dt>长度或数量填超了会怎样？</dt>
+                    <dd>超范围输入会被钳制到边界并中文提示，例如 NanoID 长度填 5 会钳制到 8、填 100 会钳制到 64；数量填 0 会钳制到 1、填 200 会钳制到 100，不会静默丢弃或报错中断。</dd>
+                    <dt>自定义时间填错或留空会怎样？</dt>
+                    <dd>会中文提示并回落到当前时间生成，不会用非法时间生成错误 ID；时间戳超出 48 位范围时则直接拒绝生成并提示。</dd>
+                    <dt>复制失败怎么办？</dt>
+                    <dd>页面先尝试剪贴板写入，失败时自动回落到选中复制；仍失败时会明确提示「复制失败：浏览器未授权剪贴板，请手动复制」，复制全部失败时请手动全选结果区复制。</dd>
+                    <dt>生成的 ID 能保证全局唯一吗？</dt>
+                    <dd>不能。本工具不做分布式 ID 唯一性保证、不做碰撞检测、不存不查已生成 ID；需要强唯一保证的场景请用带中心协调或数据库唯一约束的方案。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。生成、复制、下载全部在浏览器本地完成，脚本不含网络请求调用，页面不引用任何外部资源，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="un-panel">
+                <h3>相关工具</h3>
+                <div class="un-related">
+                    <a href="/tools/uuid-generator" class="un-btn" style="font-size:.9rem;">UUID 生成器（只要 UUID v1/v4 去这里，要时间可排序用本工具 ULID、要短且 URL 安全用本工具 NanoID）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/ulid_nanoid_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
