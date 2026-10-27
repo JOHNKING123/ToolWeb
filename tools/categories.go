@@ -705,6 +705,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "wordcloud_generator",
+					Name:        "词云生成器",
+					Description: "粘贴任意文本，分词与词频统计后在 Canvas 上渲染词云图：英文按字母数字序列切分并小写归一、60+ 停用词过滤，中文按空格切分词组计、无空格长串按单字计，词频→字号 16–96px 线性映射，矩形螺旋占位布局可注种，PNG 下载与词频表复制，纯前端零上传 · Word cloud generator: visualize text word frequency locally, 100% client-side",
+					Path:        "/tools/wordcloud-generator",
+					Icon:        "cloud",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "gbt7714_reference_generator",
 					Name:        "GB/T 7714 参考文献格式生成器",
 					Description: "按 GB/T 7714-2015 国标生成参考文献条目：[J][M][D][C][N][S][R][P][EB/OL][A] 十种文献类型表单录入，顺序编码制/著者-出版年制双制式切换，中文「等」/英文「et al」自动处理，多条目累积排序与导出，纯前端本地运行不出浏览器 · GB/T 7714 reference generator: 10 doc types, dual citation styles, 100% client-side",

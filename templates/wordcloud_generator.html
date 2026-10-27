@@ -1,0 +1,183 @@
+{{define "wordcloud_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词云生成器 - 粘贴文本生成词云图，词频统计可视化，PNG 下载 | 程序员工具箱</title>
+    <meta name="description" content="免费在线词云生成器：粘贴任意文本，分词与词频统计后在 Canvas 上渲染词云图，支持最大词数、最小词频、3 套配色与两种画布尺寸，词云图可下载 PNG，词频表可一键复制，纯前端本地处理零上传。word cloud generator: visualize text word frequency locally, 100% client-side.">
+    <meta name="keywords" content="词云生成器,词云图,在线词云,word cloud generator,文本词频可视化,词频统计图,词云 PNG 下载">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/wordcloud-generator">
+    <meta property="og:title" content="词云生成器 - 粘贴文本生成词云图">
+    <meta property="og:description" content="粘贴文本，分词与词频统计后渲染词云图，PNG 下载、词频表复制，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/wordcloud-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"词云生成器","description":"粘贴任意文本，分词与词频统计后在 Canvas 上渲染词云图，支持 PNG 下载与词频表复制，纯前端本地处理，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/wordcloud-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .wc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .wc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .wc-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .wc-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .wc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .wc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .wc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .wc-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:1.2rem}
+        .wc-input{width:100%;box-sizing:border-box;min-height:220px;padding:.8rem 1rem;font-size:.95rem;line-height:1.7;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #d1d5db;border-radius:.6rem;
+            outline:none;resize:vertical;overflow-wrap:anywhere}
+        .wc-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .wc-controls{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.9rem;font-size:.92rem;line-height:1.8}
+        .wc-controls label{display:flex;flex-direction:column;gap:.25rem;color:#374151}
+        .wc-controls input,.wc-controls select{width:100%;box-sizing:border-box;padding:.55rem .7rem;font-size:.92rem;
+            border:1px solid #d1d5db;border-radius:.5rem;outline:none;background:#fff}
+        .wc-controls input:focus,.wc-controls select:focus{border-color:#2563eb}
+        .wc-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .wc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .wc-btn:hover{border-color:#2563eb;color:#2563eb}
+        .wc-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .wc-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .wc-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .wc-msg-ok{color:#065f46}
+        .wc-msg-error{color:#b91c1c}
+        .wc-clamp{font-size:.9rem;color:#92400e;margin-top:.4rem;line-height:1.8}
+        .wc-skipped{font-size:.92rem;color:#b45309;margin-top:.4rem;line-height:1.8;font-weight:600}
+        .wc-canvas-wrap{width:100%;overflow:hidden;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff}
+        .wc-canvas-wrap canvas{display:block;width:100%;height:auto}
+        .wc-table{margin-top:.8rem;border:1px solid #e5e7eb;border-radius:.6rem;overflow:hidden;max-height:420px;overflow-y:auto}
+        .wc-row{display:flex;justify-content:space-between;gap:1rem;padding:.45rem .9rem;font-size:.92rem;line-height:1.8;border-bottom:1px solid #f3f4f6}
+        .wc-row:last-child{border-bottom:none}
+        .wc-word{overflow-wrap:anywhere;color:#111827}
+        .wc-count{font-weight:700;color:#2563eb;flex:none}
+        .wc-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .wc-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .wc-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .wc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .wc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .wc-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .wc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .wc-grid{grid-template-columns:1fr}
+            .wc-controls{grid-template-columns:1fr}
+            .wc-btn-row .wc-btn{flex:1;justify-content:center}
+            .wc-input{min-height:180px}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">cloud</i> 词云生成器</h1>
+            <p>粘贴一段文本：先做分词与词频统计，再把高频词按字号画成词云图——词越大出现次数越多，词云图可下载 PNG，词频表可一键复制。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="wc-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>输入与词云全部在浏览器内处理，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="wc-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>真限制说明：</b>中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果；布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩；只做可视化、不做语义分析。词语放不下时会计数提示，不静默丢词。</div>
+            </div>
+            <div class="wc-grid">
+                <div class="wc-panel">
+                    <h3><i class="material-icons">content_paste</i> 原文本输入</h3>
+                    <textarea id="wc-input" class="wc-input" placeholder="粘贴任意文本（中英文均可），例如一段汇报、读书笔记或文章段落……"></textarea>
+                    <div class="wc-controls">
+                        <label>最大词数（10–200）
+                            <input type="number" id="wc-max" value="50" min="10" max="200">
+                        </label>
+                        <label>最小词频（1–10）
+                            <input type="number" id="wc-min" value="2" min="1" max="10">
+                        </label>
+                        <label>配色方案
+                            <select id="wc-palette">
+                                <option value="classic" selected>经典多彩</option>
+                                <option value="blue">单色蓝</option>
+                                <option value="warm">暖色</option>
+                            </select>
+                        </label>
+                        <label>画布尺寸
+                            <select id="wc-size">
+                                <option value="800x500" selected>800 × 500</option>
+                                <option value="1200x750">1200 × 750</option>
+                            </select>
+                        </label>
+                        <label>布局种子（同种子同布局）
+                            <input type="number" id="wc-seed" value="42">
+                        </label>
+                    </div>
+                    <div class="wc-muted">输入或任一控制项变化即实时重算（输入变化防抖 300ms 内）；小屏下画布等比缩放显示，下载仍为所选尺寸。</div>
+                    <div class="wc-btn-row">
+                        <button type="button" class="wc-btn" id="wc-sample"><i class="material-icons">auto_fix_high</i> 载入示例</button>
+                        <button type="button" class="wc-btn" id="wc-clear"><i class="material-icons">backspace</i> 清空</button>
+                        <button type="button" class="wc-btn" id="wc-reshuffle"><i class="material-icons">shuffle</i> 重新布局</button>
+                    </div>
+                    <div class="wc-clamp" id="wc-clamp"></div>
+                </div>
+                <div class="wc-panel">
+                    <h3><i class="material-icons">cloud</i> 词云图与词频表</h3>
+                    <div class="wc-canvas-wrap">
+                        <canvas id="wc-canvas" width="800" height="500"></canvas>
+                    </div>
+                    <div class="wc-skipped" id="wc-skipped"></div>
+                    <div class="wc-btn-row">
+                        <button type="button" class="wc-btn wc-btn-primary" id="wc-download"><i class="material-icons">download</i> 下载 PNG</button>
+                        <button type="button" class="wc-btn" id="wc-copy"><i class="material-icons">content_copy</i> 复制词频表</button>
+                    </div>
+                    <div class="wc-msg" id="wc-msg">请粘贴或输入文本</div>
+                    <div class="wc-table" id="wc-table"></div>
+                </div>
+            </div>
+            <div class="wc-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="wc-tip">
+                    <b>分词规则：</b>英文／数字按字母数字序列切分并小写归一，<code>the</code>、<code>and</code>、<code>of</code> 等 60+ 常用停用词会被过滤；中文按空格切分：空格分隔的 1–2 字词组按词组计（如「开发 工具」计 开发、工具），无空格的较长连续中文按单字计（如「开发工具很棒」计 开、发、工、具、很、棒）；中英文同表统计、按频次统一排序；纯标点与空白不计入。<br>
+                    <b>字号映射：</b>取 Top N（N＝最大词数）且频次 ≥ 最小词频的词；字号按频次在该批最大值与最小值之间线性映射到 16–96px，频次全相等时全部取中值 56px。<br>
+                    <b>布局规则：</b>词语按频次降序依次放置，从画布中心起沿螺旋试探位置，以实测文字宽高做矩形碰撞检测；放不下的词会跳过并在画布下方提示「X 个词因空间不足未显示」，不静默丢词；布局种子相同则布局逐一一致，点「重新布局」会换一个随机种子。<br>
+                    <b>示例：</b>点「载入示例」得到一段中英文混合短文：词频表首位为「开发」5 次、<code>development</code> 3 次，<code>the</code>、<code>and</code> 已被停用词过滤、不在表中。<br>
+                    <b>真限制：</b>中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果；布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩（如圆形、图片轮廓）；只做可视化、不做语义分析（不做情感分析、关键词抽取与主题聚类）。<br>
+                    <b>隐私：</b>全部处理在浏览器本地完成，不发起网络请求，不上传输入内容。
+                </div>
+            </div>
+            <div class="wc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="wc-faq">
+                    <dt>为什么中文长句子被拆成了单字？</dt>
+                    <dd>这是本工具的既定规则：中文分词只做空格分词＋单字／常见词频统计、不承诺专业分词效果。想让某个词组整体计数，请在词组之间加空格分隔，例如把「开发工具」写成「开发 工具」。</dd>
+                    <dt>为什么 the、and 没有出现在词频表里？</dt>
+                    <dd>它们在内置英文停用词表里，统计时已被过滤。停用词表含 the、and、of、to、a、in 等 60+ 常用词。</dd>
+                    <dt>为什么有些词没有出现在词云图里，却在词频表里？</dt>
+                    <dd>画布空间有限时，放不下的词会被跳过，画布下方会提示「X 个词因空间不足未显示」。可以调大画布尺寸、调小最大词数或调高最小词频。</dd>
+                    <dt>换一个布局种子会发生什么？</dt>
+                    <dd>同种子同布局：同一批词、同一画布、同一种子，词语位置逐一一致；点「重新布局」换随机种子后，布局会重新洗牌。</dd>
+                    <dt>词云图能做成圆形或按图片轮廓排吗？</dt>
+                    <dd>不能。布局为 Canvas 矩形／螺旋占位、不承诺任意形状遮罩，只在矩形画布内排布。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。分词、词频统计、布局、PNG 导出、复制全部在浏览器本地完成，JS 不含 fetch/XHR 调用，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="wc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="wc-related">
+                    <a href="/tools/text-tools" class="btn btn-secondary" style="font-size:.9rem;">文本工具集（要数词数、做文本清洗去文本工具集；本工具把词频画成图）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/wordcloud_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
