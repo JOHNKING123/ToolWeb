@@ -1,0 +1,185 @@
+{{define "css_text_shadow_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 文字阴影生成器 - text-shadow 多层堆叠可视化生成霓虹/3D/长阴影 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 文字阴影生成器：图层增删、上移下移，每层调 X/Y 偏移、模糊、颜色、不透明度，霓虹辉光、3D 立体、复古、浮雕、长阴影五预设，大字实时预览，一键复制 text-shadow 或完整 CSS、下载 text-shadow.css 与演示 HTML。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 文字阴影生成器,text-shadow 生成器,霓虹文字,3D 立体字,长阴影,css text shadow generator,text shadow generator,neon text">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-text-shadow-generator">
+    <meta property="og:title" content="CSS 文字阴影生成器 - text-shadow 多层堆叠可视化生成">
+    <meta property="og:description" content="图层增删排序＋每层偏移/模糊/颜色/不透明度，五预设，大字实时预览，复制 text-shadow 或完整 CSS。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-text-shadow-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 文字阴影生成器","description":"免费在线 CSS 文字阴影生成器：图层增删排序，每层调偏移、模糊、颜色、不透明度，五预设，大字实时预览，复制 text-shadow 或完整 CSS，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-text-shadow-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ts-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .ts-wrap .navbar .material-icons { display: none; }
+        .ts-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .ts-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .ts-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .ts-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .ts-row label { font-size:.92rem; color:#374151; min-width:5.5em; }
+        .ts-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .ts-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .ts-row input[type=text] { padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; min-width:9em; }
+        .ts-row input[type=color] { width:2.6em; height:2em; padding:0; border:1px solid #d1d5db; border-radius:.4rem; cursor:pointer; }
+        .ts-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .ts-btn:hover { background:#f3f4f6; }
+        .ts-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .ts-btn-small { padding:.3rem .7rem; font-size:.85rem; }
+        .ts-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .ts-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .ts-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .ts-layer { border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem 1rem; margin-bottom:.8rem; background:#fafafa; }
+        .ts-layer-head { display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
+        .ts-layer-head b { font-size:.95rem; color:#111827; }
+        .ts-layer-actions { display:flex; gap:.4rem; flex-wrap:wrap; }
+        .ts-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .ts-stage { border:1px solid #e5e7eb; border-radius:.7rem; overflow:hidden; padding:2rem 1rem; text-align:center; }
+        .ts-preview-el { display:inline-block; font-weight:700; line-height:1.3; padding:.5rem 1rem; max-width:100%; word-break:break-all; }
+        .ts-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .ts-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .ts-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .ts-tip a { color:var(--primary-color); }
+        .ts-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .ts-links a { color:var(--primary-color); font-size:.93rem; }
+        .ts-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .ts-row input[type=range] { min-width:100px; }
+            .ts-row label { min-width:4.5em; }
+            .ts-stage { padding:1.2rem .5rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="ts-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>✨ CSS 文字阴影生成器</h1>
+            <p>图层增删排序＋每层偏移／模糊／颜色／不透明度，五预设，大字实时预览，一键复制 text-shadow 或完整 CSS</p>
+        </div>
+        <div class="tool-content" id="ts-form">
+            <div class="ts-card">
+                <h3>阴影预设 <span class="ts-hint">（点击载入，载入后仍可编辑；预设仅为示例起点）</span></h3>
+                <div class="ts-presets">
+                    <button class="ts-preset" type="button" data-preset="neon">neon 霓虹辉光（5 层）</button>
+                    <button class="ts-preset" type="button" data-preset="three-d">three-d 3D 立体（6 层）</button>
+                    <button class="ts-preset" type="button" data-preset="retro">retro 复古（2 层）</button>
+                    <button class="ts-preset" type="button" data-preset="emboss">emboss 浮雕（2 层）</button>
+                    <button class="ts-preset" type="button" data-preset="long-shadow">long-shadow 长阴影（10 层）</button>
+                </div>
+            </div>
+
+            <div class="ts-card">
+                <h3>图层编辑 <span class="ts-hint">（首层在最上层，上移／下移只改堆叠顺序不改数值；图层 1–10 层；每层 X／Y 偏移 −100–100px、模糊 0–100px、不透明度 0–1；颜色只认 #RGB／#RRGGBB）</span></h3>
+                <p class="ts-hint" id="ts-layer-count">5 / 10 层</p>
+                <div id="ts-layers"></div>
+                <div class="ts-actions">
+                    <button class="ts-btn" id="ts-add-layer" type="button">＋ 增加图层（加到最下层）</button>
+                </div>
+                <p class="ts-msg" id="ts-limit-hint"></p>
+                <p class="ts-msg" id="ts-msg"></p>
+            </div>
+
+            <div class="ts-card">
+                <h3>预览编辑 <span class="ts-hint">（预览文字 1–50 字，字号 16–200px 整数，文字颜色与背景颜色只认 #RGB／#RRGGBB；非法输入红字提示）</span></h3>
+                <div class="ts-row">
+                    <label for="ts-preview-text">预览文字</label>
+                    <input type="text" id="ts-preview-text" value="文字阴影">
+                </div>
+                <div class="ts-row">
+                    <label for="ts-font-size">字号</label>
+                    <input type="range" id="ts-font-size-range" min="16" max="200" step="1" value="72">
+                    <input type="number" id="ts-font-size" min="16" max="200" step="1" value="72">
+                    <span>px</span>
+                </div>
+                <div class="ts-row">
+                    <label for="ts-text-color">文字颜色</label>
+                    <input type="color" id="ts-text-color" value="#ffffff">
+                    <input type="text" id="ts-text-color-text" value="#ffffff" placeholder="#RGB 或 #RRGGBB">
+                </div>
+                <div class="ts-row">
+                    <label for="ts-bg-color">背景颜色</label>
+                    <input type="color" id="ts-bg-color" value="#111827">
+                    <input type="text" id="ts-bg-color-text" value="#111827" placeholder="#RGB 或 #RRGGBB">
+                </div>
+                <div class="ts-stage" id="ts-stage">
+                    <div class="ts-preview-el" id="ts-preview-el">文字阴影</div>
+                </div>
+            </div>
+
+            <div class="ts-card">
+                <h3>CSS 代码输出 <span class="ts-hint">（随输入实时生成；text-shadow 值与完整 CSS 两栏）</span></h3>
+                <div class="ts-code" id="ts-code-value"></div>
+                <div class="ts-actions">
+                    <button class="btn btn-primary" id="ts-copy-value" type="button">📋 复制 text-shadow</button>
+                </div>
+                <div class="ts-code" id="ts-code-css"></div>
+                <div class="ts-actions">
+                    <button class="btn btn-primary" id="ts-copy-css" type="button">📋 复制完整 CSS</button>
+                    <button class="btn btn-secondary" id="ts-download-css" type="button">⬇ 下载 .css</button>
+                    <button class="btn btn-secondary" id="ts-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="ts-load-example" type="button">↺ 载入示例（霓虹辉光）</button>
+                </div>
+                <p class="ts-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="ts-card">
+                <h3>使用说明</h3>
+                <ol class="ts-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>点预设一键切换阴影风格，切换后图层、预览与代码三方同步。</li>
+                    <li>在图层编辑区增层、删层、上移、下移，改每层的 X／Y 偏移、模糊、颜色、不透明度，预览与代码实时同步；图层顺序即堆叠顺序，首层在最上层。</li>
+                    <li>改预览文字、字号、文字颜色、背景颜色后，预览大字同步变化。</li>
+                    <li>复制 text-shadow 值或完整 CSS，或下载 text-shadow.css／text-shadow-demo.html 粘贴即用。</li>
+                    <li>点「载入示例」回到霓虹辉光起点，无需上传即可演示编辑→预览→导出全流程。</li>
+                    <li>要给盒子加阴影或描圆角去阴影与圆角生成器；要给文字换填充去渐变生成器；要让阴影动起来去动画关键帧生成器。</li>
+                </ol>
+            </div>
+
+            <div class="ts-card">
+                <h3>常见问题</h3>
+                <dl class="ts-tip">
+                    <dt><b>图层顺序是什么意思？</b></dt>
+                    <dd>text-shadow 里先写的图层画在最上层：本页图层 1 就是代码里的第一层，上移／下移只改顺序不改数值。</dd>
+                    <dt><b>颜色怎么写？</b></dt>
+                    <dd>只认 #RGB 或 #RRGGBB 十六进制，例如 #FFF、#00e5ff；颜色名、rgb() 等写法都会红字报错，不会静默转换。</dd>
+                    <dt><b>不透明度为 1 时代码里为什么是十六进制？</b></dt>
+                    <dd>不透明度为 1 时直接输出 #RRGGBB 本身，不转 rgba(…, 1)；小于 1 时才输出 rgba(r, g, b, opacity)。</dd>
+                    <dt><b>为什么图层不能超过 10 层、不能删到 0 层？</b></dt>
+                    <dd>图层数限定 1–10 层：超限或删空都返回失败、不静默截断，增层按钮到限时会禁用并红字提示。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文字与颜色不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="ts-card">
+                <h3>相关工具</h3>
+                <div class="ts-links">
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器（文字阴影 vs 盒阴影圆角；本页只做文字阴影，那边做盒子阴影与圆角）</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器（阴影 vs 填充；文字描边上色、背景填充去那边）</a>
+                    <a href="/tools/css-keyframe-generator">CSS 动画关键帧生成器（静态阴影 vs 关键帧动画；想让阴影动起来去那边）</a>
+                </div>
+            </div>
+
+            <div class="ts-card">
+                <h3>真限制说明</h3>
+                <div class="ts-tip">
+                    <b>只做 text-shadow、不做 box-shadow 与 filter: drop-shadow()</b>：本页只生成文字阴影声明，盒子阴影与滤镜阴影不在本页范围；<b>图层 1–10 层</b>：超限或删空返回失败，不静默截断；<b>首层在最上层</b>：上移／下移只改堆叠顺序不改数值；<b>颜色只认 #RGB／#RRGGBB</b>：其它写法返回失败；<b>不收集、不上传任何内容</b>：全部编辑与预览只在浏览器本地完成，本页面零 fetch / XHR，零 CDN。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="ts-toast" id="ts-toast"></div>
+    <script src="/tools/static/js/css_text_shadow_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

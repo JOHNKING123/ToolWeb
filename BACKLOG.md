@@ -1,3 +1,90 @@
+## 今日任务（2026-10-29 03:38 · 产品经理排期轮，接 141 轮调研）
+
+**选定：CSS 文字阴影生成器（css_text_shadow_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（141 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 动画关键帧生成器已交付划出（31cfca9 新增、01a87ea 修复，全量 213 Path），首席顺位自然递进至本项；不再以「滤镜／毛玻璃难度更小」等理由二次跳过——CSS 滤镜生成器、CSS 毛玻璃生成器均不插队。
+- **未选**：CSS 滤镜生成器（140 轮晋升 P2、141 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做 `filter:` 声明，与本项 text-shadow 口径不重叠）；CSS 毛玻璃生成器（141 轮新晋 P2、顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做 backdrop-filter 面板声明，与本项 text-shadow 口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **213 Path**；`git log` 头部 01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）／ae6182d（CSS Grid 可视化生成器新增）。逐项复核：`text_shadow`／`css_filter`／`glass`／`backdrop` 在 tools/categories.go 中均为 0 实现命中；templates／static/js／tests 下无 text_shadow／css_filter／glass 生成器文件（filter 唯一命中为图片复古做旧 img_retro_filter，其输出为处理后图片文件、非 CSS 声明）；CSS 阴影／圆角生成器模板内 `text-shadow` 命中为 0（只做 box-shadow 与圆角）。近邻再辨析：① **CSS 阴影／圆角生成器**（ID css_shadow_radius_generator）只产 box-shadow 与 border-radius，不产 text-shadow；② **CSS 渐变生成器**只做填充，不碰阴影；③ **CSS 动画关键帧生成器**只产 @keyframes／animation，不产静态 text-shadow；④ **图片复古做旧**（ID img_retro_filter）输出处理后图片文件，本项输出 text-shadow 声明，口径不重叠。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——霓虹辉光／3D 立体字常需 3–10 层 text-shadow 堆叠，手写多层逗号分隔值易错位、改一层就要重算整串，凭代码想象不出辉光与立体效果，图层增删＋每层偏移／模糊／颜色／不透明度滑杆＋预设＋实时预览＋复制 CSS 恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，颜色解析、图层校验、rgba 合成、预设配置均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 阴影／圆角／渐变／缓动／关键帧／clip-path 生成器同属「CSS 可视化生成」需求簇，文字阴影与盒阴影、渐变填充成组发现；⑤ **外部佐证已就位**——139 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 阴影／圆角生成器、CSS 渐变生成器、CSS 缓动生成器、CSS 动画关键帧生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 text-shadow 声明**——不做 box-shadow 与 filter: drop-shadow()，页面须明示；② **图层数 1–10**——超限返回失败不静默截断，页面须明示；③ **图层顺序即堆叠顺序**——首层在最上层，上移／下移只改顺序不改数值，页面须明示；④ **颜色只认 #RGB／#RRGGBB**——其它写法返回失败，页面须明示；⑤ **不收集、不上传任何内容**——全部编辑与预览只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - `parseHexColor(s)`：接受 #RGB／#RRGGBB（大小写不限，输出去尾零无关、统一小写 #RRGGBB）；其它写法（如颜色名、rgb()、空串）返回失败。
+  - `hexToRgba(hex, opacity)`：hex 经 parseHexColor 校验，opacity 为 0–1、最多 2 位小数；opacity 为 1 时返回小写 #RRGGBB 本身（不转 rgba(…,1)），opacity 小于 1 时返回 `rgba(r, g, b, opacity)`（opacity 去尾零规范化）。
+  - `validateLayer(layer)`：layer 含 offsetX／offsetY（−100–100 px，最多 2 位小数）、blur（0–100 px，最多 2 位小数）、color（经 parseHexColor 校验）、opacity（0–1，最多 2 位小数）；任一字段非法返回失败。
+  - `addLayer(layers, layer)`：先经 validateLayer 校验，返回新数组（不改原数组，追加至末尾即最下层）；图层数超 10 返回失败。
+  - `removeLayer(layers, index)`：删除该下标图层返回新数组；图层数将低于 1、下标越界返回失败。
+  - `moveLayer(layers, index, direction)`：direction 仅接受 `up`（向首层方向移一位）／`down`（向末层方向移一位），返回新数组（不改原数组，只改顺序不改数值）；已在端点、下标越界、非法 direction 返回失败。
+  - `buildTextShadowCss(layers)`：layers 经 validateLayer 逐层校验且层数 1–10，否则返回失败；每层输出 `<offsetX>px <offsetY>px <blur>px <颜色>`（数值去尾零规范化，颜色经 hexToRgba 合成），多层以 `, ` 连接；空数组返回失败。
+  - `buildCssSnippet(layers)`：先经 buildTextShadowCss 校验，输出 `.text-shadow {`＋`  text-shadow: <值>;`＋`}` 三行块；非法返回失败。
+  - `validatePreview(opts)`：opts 含 text（非空字符串，长度 1–50）、fontSize（16–200 px 整数）、textColor（经 parseHexColor 校验）、backgroundColor（经 parseHexColor 校验）；任一字段非法返回失败。
+  - `buildHtmlSnippet(layers, preview)`：先经 buildTextShadowCss 与 validatePreview 校验，返回演示 HTML 片段（含 `<style>` 内嵌生成的完整 CSS＋`<div class="text-shadow">` 预览元素，内容为转义后的预览文字；无额外脚本）；非法返回失败。
+  - `generatePreset(name)`：name 仅接受 neon／three-d／retro／emboss／long-shadow，返回 `{ name, layers, preview }`：neon 霓虹辉光（5 层同心辉光：0 0 5px #ffffff、0 0 10px #00e5ff、0 0 20px #00e5ff、0 0 40px #00e5ff、0 0 80px #00e5ff，不透明度依次 1／0.9／0.8／0.7／0.6，深色背景预览）；three-d 3D 立体（6 层等距递进：1px 1px 0 至 6px 6px 0，颜色 #999999→#444444 逐层加深）；retro 复古（2 层错位色块：3px 3px 0 #ff9f43、6px 6px 0 #ee5253）；emboss 浮雕（2 层明暗对冲：1px 1px 0 #ffffff 不透明度 0.9、−1px −1px 0 #000000 不透明度 0.4）；long-shadow 长阴影（10 层等距递进：1px 1px 0 至 10px 10px 0，同色 #2d3436）；预览文字默认「文字阴影」，字号默认 72px；未知 name 返回失败。
+  - `suggestExportName(kind)`：`css` → `text-shadow.css`，`html` → `text-shadow-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：预设区（neon／three-d／retro／emboss／long-shadow 五个预设按钮）；图层编辑区（图层列表：每层 X／Y 偏移／模糊滑杆＋数字输入、颜色拾取器、不透明度滑杆＋数字输入，上移／下移／删除按钮，增层按钮，层数 1–10，层数到限时增层按钮禁用并红字提示）；预览区（预览文字输入、字号滑杆＋数字输入、文字颜色与背景颜色拾取器，实时大字预览）；代码区（text-shadow 值与完整 CSS 两栏，实时同步，「复制 text-shadow」「复制完整 CSS」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 neon 预设、无需上传即可演示编辑→预览→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览只用解析校验后的样式值（<style> 内只注入 buildCssSnippet 产出的校验后 CSS），杜绝注入。
+- 操作与互链：与 CSS 阴影／圆角生成器（/tools/css-shadow-radius-generator，文案按「文字阴影 vs 盒阴影圆角」区分）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「阴影 vs 填充」区分）、CSS 动画关键帧生成器（/tools/css-keyframe-generator，文案按「静态阴影 vs 关键帧动画」区分）互链；不与未交付的 CSS 滤镜生成器、CSS 毛玻璃生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写颜色解析、图层校验、rgba 合成、预设配置，不引入任何 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；示例为页面内置预设，不依赖外链。
+- 注册：ID `css_text_shadow_generator`、Name「CSS 文字阴影生成器」、Path `/tools/css-text-shadow-generator`、Category 开发工具、Icon 建议 text_fields（图标库无此名则用 format_bold 兜底；勿与阴影／圆角生成器的 blur_on 在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（CSS 文字阴影生成器、text-shadow 生成器、霓虹文字、3D 立体字、css text shadow generator、text shadow generator、neon text）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-text-shadow-generator，相关工具互链 CSS 阴影／圆角生成器、CSS 渐变生成器、CSS 动画关键帧生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_text_shadow_generator`、Path `/tools/css-text-shadow-generator` 注册完整（Category 开发工具），注册总数 213→214 Path。
+2. 颜色与单层向量闭环（node 断言）：parseHexColor 已知值（#FFF→#ffffff、#00E5FF→#00e5ff）；颜色名、rgb()、空串判失败；hexToRgba 已知值（opacity 1 输出 hex 本身、opacity 0.5 输出 rgba 串）；validateLayer 已知值通过，偏移／模糊／不透明度越界、非法颜色判失败。
+3. 图层集合向量闭环（node 断言）：addLayer 超 10 层失败且不改原数组；removeLayer 删至低于 1 层失败、下标越界失败；moveLayer 端点移动失败、非法 direction 失败、只改顺序不改数值。
+4. 组合与预设向量闭环（node 断言）：buildTextShadowCss 已知值（多层逗号连接、数值去尾零、opacity 1 用 hex、opacity 小于 1 用 rgba）；空数组失败；generatePreset 五个预设层数与数值正确（neon 5 层、three-d 6 层、retro 2 层、emboss 2 层、long-shadow 10 层）且未知预设失败。
+5. 代码生成向量闭环（node 断言）：buildCssSnippet 含 `.text-shadow` 块与 text-shadow 行；buildHtmlSnippet 含 `<style>` 内嵌 CSS 与 class `text-shadow`，且无 `<script>`；validatePreview 非空文字／字号范围／颜色校验正确；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+6. 操作闭环（浏览器手工／测试复核）：切预设→预览阴影变化→增层改偏移／模糊／颜色／不透明度→预览与代码同步→上移／下移改堆叠顺序→复制 text-shadow／完整 CSS、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只做 text-shadow、不做 box-shadow 与 filter: drop-shadow()」「图层 1–10 层」「首层在最上层」「颜色只认 #RGB／#RRGGBB」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS 阴影／圆角生成器、CSS 渐变生成器、CSS 动画关键帧生成器；不含未交付工具的硬凑互链；非法颜色／偏移／模糊／不透明度／超限层数有红字降级提示。
+9. node 测试 25+ 断言全过（颜色与单层向量、图层集合向量、组合与预设向量、代码生成向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端图层列表、预设按钮组、预览块、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_text_shadow_generator.html`（新增；含 SEO 面板按家族标准＋预设区／图层编辑区／预览区／代码区／示例演示）
+- `static/js/css_text_shadow_generator.js`（新增；颜色解析、图层校验与排序、rgba 合成、五预设配置、text-shadow／完整 CSS／HTML 片段生成、导出命名；双模式导出供 node 测试）
+- `tests/css_text_shadow_generator.test.js`（新增；颜色与单层向量、图层集合向量、组合与预设向量、代码生成向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_text_shadow_generator、Path /tools/css-text-shadow-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功）；`git log` 头部 01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）／ae6182d（CSS Grid 可视化生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **213**；Top3 候选重叠复核（text_shadow／css_filter／glass／backdrop 在 categories.go 均为 0 实现命中；templates／static/js／tests 下无 text_shadow／css_filter／glass 生成器文件，filter 唯一命中为图片复古做旧（输出图片文件）；阴影／圆角只做 box-shadow、渐变只做填充、关键帧只做动画，辨析见上；CSS 滤镜生成器与 CSS 毛玻璃生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-29 03:00 · 通用调研第一百四十一轮）
+
+**交付状态**：10-29 通用调研第一百四十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 动画关键帧生成器已交付闭环**（31cfca9 新增，01a87ea 跟进修复全局 cubic-bezier 自定义值被丢弃；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **213 Path**，ID css_keyframe_generator、Path /tools/css-keyframe-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 轮，优先小／中难度纯前端。
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. CSS 动画关键帧生成器交付确认：`git log` 头部 01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）／ae6182d（CSS Grid 可视化生成器新增）；全量 213 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）。
+2. 留池复核仍未交付：CSS 文字阴影生成器、CSS 滤镜生成器在 tools/categories.go 中命中均为 0，templates／static/js／tests 下无 text_shadow／css_filter 生成器文件，139／140 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 毛玻璃（Glassmorphism）生成器**（everydaytools、lumisphere、iotools、uicookies、vanta、terrific 等多个独立工具：半透明 rgba 填充＋`backdrop-filter: blur() saturate()`＋细亮边框＋圆角＋柔和阴影，卡片／导航栏／登录框／弹窗预设，彩色背景上实时预览、复制 CSS；Apple iOS 26 Liquid Glass 回潮使该效果重新受关注）：**站内真缺口，新晋 P2**——categories.go 中 glass／backdrop 命中为 0；边界可界定：本项输出的是作用于面板本身的毛玻璃面板声明（`backdrop-filter` 模糊的是元素背后的内容），与 140 轮 P2 的 CSS 滤镜生成器（`filter:` 模糊元素自身，140 轮真限制已明确排除 backdrop-filter）口径不重叠；与 CSS 阴影／圆角生成器（只做 box-shadow 与圆角）亦不重叠——圆角／阴影只是毛玻璃面板的附属参数，核心是 backdrop-filter＋rgba 填充＋边框不透明度三者的组合；纯前端小难度：模糊／饱和度／填充色与不透明度／边框不透明度／圆角／阴影滑杆＋卡片／导航栏／登录框预设＋彩色渐变背景上实时预览＋复制 CSS，零上传；真限制：只做 `backdrop-filter` 毛玻璃面板声明，不做液态玻璃折射／位移贴图（vanta 式 Chromium 位移 refraction，属浏览器特有高级效果，不进单页工具）、不做图片处理（走图片工具）、不单做 box-shadow／圆角（已由阴影／圆角生成器覆盖），须明示；
+   - **其余信号全部消解，不立**：CSS 格式化／压缩榜单项（站内代码压缩器 ID code_minifier 已覆盖，140 轮已消解，本轮无新论证）／CodePen／JSFiddle／AI 建站（重型产品或需后端／AI）／V2EX 搜索（本轮无有效单页工具新信号）／CSS 下拉框生成器（表单控件外观组合，边界不清，且与渐变／阴影／圆角组合重叠，不立）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 动画关键帧生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，140 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS 文字阴影生成器** — P2 留池顺位首席（139 轮新晋 P2；141 轮复核仍未交付；痛点：霓虹辉光／3D 立体字常需 3–10 层 text-shadow 堆叠，手写多层逗号分隔值易错位、改一层就要重算整串，凭代码想象不出辉光与立体效果；纯前端小难度：图层增删＋每层 X／Y 偏移／模糊／颜色／不透明度滑杆＋霓虹／3D／复古／浮雕／长阴影预设＋预览文字／字号／字色／背景编辑＋复制 CSS，零上传；与 CSS 阴影／圆角生成器（只做 box-shadow 与圆角，模板内 text-shadow 命中为 0）、CSS 渐变生成器（只做填充）口径不重叠；真限制：只做 text-shadow 声明，不做 box-shadow 与 filter: drop-shadow()，须明示）。
+2. **CSS 滤镜生成器** — P2 留池顺位第二（140 轮由观察项晋升 P2；141 轮复核仍未交付；痛点：filter 九函数串联成一长串、函数顺序影响结果，手写要反复猜数值与顺序，凭代码想象不出叠加效果；纯前端小难度：九函数滑杆＋函数开关（默认项不输出）＋复古／暖调／冷调／黑白等预设＋示例图实时预览＋复制 filter 声明，零上传；与图片复古做旧（输出处理后图片文件）、CSS 阴影／圆角生成器（只做 box-shadow 与圆角）口径不重叠；真限制：只做 `filter:` 声明，不做 backdrop-filter（毛玻璃另立项，见本轮新晋 P2）、不输出处理后图片，须明示）。
+3. **CSS 毛玻璃生成器** — 新晋 P2（141 轮新晋；痛点：毛玻璃面板要同时调对 backdrop-filter 模糊／饱和度、rgba 填充不透明度与边框不透明度三组值，单值手写时面板要么糊成白板、要么透得看不清字，凭代码想象不出在真实彩色背景上的可读性；纯前端小难度：模糊／饱和度／填充色与不透明度／边框不透明度／圆角／阴影滑杆＋卡片／导航栏／登录框预设＋彩色渐变背景实时预览＋复制 CSS（含 -webkit- 前缀行），零上传；与 CSS 滤镜生成器（`filter:` 模糊元素自身）、CSS 阴影／圆角生成器（只做 box-shadow 与圆角）口径不重叠；真限制：只做 backdrop-filter 毛玻璃面板声明，不做液态玻璃折射／位移贴图、不做图片处理，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；141 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：CSS 特异性计算器（108 轮留池）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 140 轮及之前记录。
+
+**通用候选表增量**（第一百四十一轮：CSS 动画关键帧生成器已交付划出（31cfca9 新增、01a87ea 修复；ID css_keyframe_generator、Path /tools/css-keyframe-generator 已注册；全量 213 Path；候选池划出）；**CSS 毛玻璃生成器新晋 P2**；CSS 文字阴影生成器、CSS 滤镜生成器顺位递进；自有实锤消解 4+ 项（CSS 格式化／压缩为代码压缩器已覆盖；CodePen／JSFiddle／AI 建站属重型产品或需后端／AI；V2EX 搜索无有效新信号；下拉框生成器边界不清不立）；全量 213 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 动画关键帧生成器 | 已交付划出（31cfca9 新增、01a87ea 修复；ID css_keyframe_generator、Path /tools/css-keyframe-generator 已注册；全量 213 Path；候选池划出） | — | 已实现 |
+| CSS 毛玻璃生成器 | 毛玻璃三组值（backdrop-filter 模糊／饱和度、rgba 填充不透明度、边框不透明度）手写难一次调对可读性；滑杆＋卡片／导航栏／登录框预设＋彩色背景实时预览＋复制 CSS，纯前端零上传；与滤镜生成器（filter 模糊自身）口径不重叠 | 小 | P2（新晋） |
+| CSS 文字阴影生成器 | 复核仍未交付（139 轮 P2，顺位递进为首席）；多层 text-shadow 手写易错位、辉光与立体效果凭代码想象不出；图层编辑＋预设＋实时预览＋复制 CSS，纯前端零上传 | 小 | P2（留池） |
+| CSS 滤镜生成器 | 复核仍未交付（140 轮 P2，顺位递进为第二）；九函数串联手写要反复猜数值与顺序、叠加效果凭代码想象不出；九函数滑杆＋开关＋预设＋示例图实时预览＋复制 filter 声明，纯前端零上传 | 小 | P2（留池） |
+| 自有实锤消解 | 不立（CSS 格式化／压缩为代码压缩器已覆盖；CodePen／JSFiddle／AI 建站属重型产品或需后端／AI；V2EX 搜索无有效新信号；下拉框生成器边界不清不立） | — | 不立 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十一轮——CSS 动画关键帧生成器交付闭环（31cfca9，`/tools/css-keyframe-generator` 已注册，全量 213 Path），候选池划出；**CSS 毛玻璃生成器新晋 P2**；**CSS 文字阴影生成器、CSS 滤镜生成器顺位递进为 Top3 前两位**；仓库 213 注册工具全量核对无重叠（Top3 建议 CSS 文字阴影生成器／CSS 滤镜生成器／CSS 毛玻璃生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）／ae6182d（CSS Grid 可视化生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **213**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-29 01:38 · 产品经理排期轮，接 140 轮调研）
 
 **选定：CSS 动画关键帧生成器（css_keyframe_generator）** — 本轮唯一任务（新工具）：

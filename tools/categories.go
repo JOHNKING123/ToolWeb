@@ -670,6 +670,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_text_shadow_generator",
+					Name:        "CSS 文字阴影生成器",
+					Description: "图层增删／上移／下移 1–10 层，首层在最上层，每层 X／Y 偏移 −100–100px、模糊 0–100px、颜色 #RGB／#RRGGBB、不透明度 0–1 滑杆，霓虹辉光／3D 立体／复古／浮雕／长阴影五预设，预览文字／字号／字色／背景编辑，大字实时预览，复制 text-shadow 或完整 CSS、下载 text-shadow.css／text-shadow-demo.html，纯前端零上传 · CSS text shadow generator: layer editor, 5 presets, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-text-shadow-generator",
+					Icon:        "text_fields",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",
