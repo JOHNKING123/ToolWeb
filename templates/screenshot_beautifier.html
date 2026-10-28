@@ -1,0 +1,235 @@
+{{define "screenshot_beautifier"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>截图美化器 - 给截图加背景/圆角/阴影/PNG 导出（纯前端）</title>
+    <meta name="description" content="免费在线截图美化器：上传现成 PNG/JPEG/WebP 截图，只加背景、内边距、圆角、阴影与可选描边，不改图片内容一像素，canvas 本地渲染导出 PNG。纯前端零上传 · Screenshot beautifier: add background, padding, rounded corners and shadow to screenshots, export PNG, 100% client-side.">
+    <meta name="keywords" content="截图美化,截图加背景,截图圆角阴影,截图加边框,screenshot beautifier,screenshot frame,screenshot background,截图美化器">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/screenshot-beautifier">
+    <meta property="og:title" content="截图美化器 - 给截图加背景/圆角/阴影/PNG 导出">
+    <meta property="og:description" content="上传现成截图，只加背景、内边距、圆角、阴影与可选描边，不改图片内容一像素，本地导出 PNG，图片不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/screenshot-beautifier">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"截图美化器","description":"上传现成 PNG/JPEG/WebP 截图，只在图外加背景、内边距、圆角、阴影与可选描边，不改图片内容一像素，canvas 本地渲染导出 PNG，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/screenshot-beautifier","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .sb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .sb-privacy b{color:#047857}
+        .sb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .sb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .sb-panel h3 .material-icons{font-size:1.15rem;color:var(--primary-color)}
+        .sb-drop{border:2px dashed #d1d5db;border-radius:.7rem;padding:1.6rem 1rem;text-align:center;cursor:pointer;color:#4b5563;line-height:1.9}
+        .sb-drop:hover,.sb-drop.drag{border-color:var(--primary-color);color:var(--primary-color);background:#f8fafc}
+        .sb-drop .material-icons{font-size:2rem;display:block;margin:0 auto .3rem}
+        .sb-meta{font-size:.88rem;color:#374151;margin-top:.7rem;word-break:break-all}
+        .sb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;align-items:end}
+        .sb-field{display:flex;flex-direction:column;gap:.35rem;font-size:.88rem;color:#374151}
+        .sb-select,.sb-field input[type="text"]{border:1px solid #d1d5db;border-radius:.55rem;padding:.45rem .6rem;font-size:.88rem;background:#fff;color:#1f2937;font-family:inherit;max-width:100%;box-sizing:border-box}
+        .sb-check{display:flex;gap:.45rem;align-items:center;font-size:.88rem;color:#374151;cursor:pointer}
+        .sb-range-row{display:flex;gap:.6rem;align-items:center}
+        .sb-range-row input[type="range"]{flex:1;min-width:0}
+        .sb-range-val{font-size:.85rem;color:#6b7280;min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+        .sb-color-row{display:flex;gap:.6rem;align-items:center}
+        .sb-color-row input[type="color"]{width:3rem;height:2rem;border:1px solid #d1d5db;border-radius:.4rem;padding:0;background:#fff;cursor:pointer}
+        .sb-error{display:none;gap:.6rem;align-items:flex-start;margin-bottom:.8rem;font-size:.88rem;line-height:1.7;color:#991b1b;background:#fef2f2;border:1px solid #fca5a5;border-radius:.6rem;padding:.7rem .9rem}
+        .sb-error .material-icons{flex:none;font-size:1.3rem;color:#dc2626}
+        .sb-preview-scroll{overflow-x:auto;border:1px solid #e5e7eb;border-radius:.7rem;background:#f8fafc;padding:1rem}
+        .sb-preview-scroll canvas{display:block;margin:0 auto;max-width:100%;height:auto}
+        .sb-info{font-size:.85rem;color:#6b7280;margin-top:.7rem;font-variant-numeric:tabular-nums;word-break:break-all}
+        .sb-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .sb-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .sb-actions .btn:disabled{opacity:.5;cursor:not-allowed}
+        .sb-status{font-size:.9rem;min-height:1.4em}
+        .sb-btn-sm{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.45rem .85rem;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-family:inherit}
+        .sb-btn-sm:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .sb-btn-sm .material-icons{font-size:1.05rem}
+        .sb-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .sb-note b{color:#374151}
+        .sb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .sb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .sb-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.3rem;padding:.05rem .35rem;font-size:.85em}
+        .sb-steps{margin:0;padding-left:1.2rem;color:#4b5563;line-height:2;font-size:.92rem}
+        .sb-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .sb-links a{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;border-radius:.6rem;padding:.5rem .9rem;font-size:.88rem;color:#1f2937;text-decoration:none;background:#fff}
+        .sb-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .sb-links .material-icons{font-size:1.05rem}
+        @media (max-width:860px){
+            .sb-actions .btn{flex:1;justify-content:center}
+            .sb-drop{padding:1.2rem .8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">image</i> 截图美化器</h1>
+            <p>给现成截图加 presentation 画框：背景、内边距、圆角、阴影、可选描边 → canvas 本地渲染导出 PNG。只加画框，不改图片内容一像素。</p>
+        </div>
+        <div class="tool-content" style="max-width:1200px;margin:auto;">
+            <div class="sb-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：图片不出浏览器。</b>上传与渲染全部在当前页面本地完成，不上传到任何服务器。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求。<b>划界一句话：</b>本工具只给现成图片加画框——不做标注、不处理代码文本、不改图片内容一像素。</div>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">upload</i> 上传图片</h3>
+                <div class="sb-drop" id="sb-drop" tabindex="0" role="button" aria-label="上传图片">
+                    <i class="material-icons">cloud_upload</i>
+                    拖拽图片到此处，或点击选择文件
+                    <div style="font-size:.85rem;">仅支持 PNG / JPEG / WebP，单文件不超过 20MB</div>
+                </div>
+                <input type="file" id="sb-file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden>
+                <div class="sb-meta" id="sb-meta">未载入图片：请上传图片或载入示例。</div>
+                <div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button type="button" class="sb-btn-sm" id="sb-sample"><i class="material-icons">auto_awesome</i> 载入示例</button>
+                    <button type="button" class="sb-btn-sm" id="sb-reset"><i class="material-icons">delete_sweep</i> 重新上传</button>
+                </div>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">palette</i> 画框参数</h3>
+                <div class="sb-grid">
+                    <div class="sb-field">背景模式
+                        <select class="sb-select" id="sb-bg-mode" aria-label="背景模式">
+                            <option value="gradient" selected>135° 渐变（双色）</option>
+                            <option value="solid">纯色</option>
+                            <option value="transparent">透明</option>
+                        </select>
+                    </div>
+                    <div class="sb-field" id="sb-solid-row" style="display:none;">纯色
+                        <div class="sb-color-row"><input type="color" id="sb-color" value="#2563eb" aria-label="纯色背景颜色"><span>#2563EB</span></div>
+                    </div>
+                    <div class="sb-field" id="sb-gradient-row">渐变起止色
+                        <div class="sb-color-row">
+                            <input type="color" id="sb-color1" value="#2563eb" aria-label="渐变起始颜色">
+                            <input type="color" id="sb-color2" value="#f59e0b" aria-label="渐变结束颜色">
+                        </div>
+                    </div>
+                    <div class="sb-field">内边距
+                        <div class="sb-range-row">
+                            <input type="range" id="sb-padding" min="0" max="120" step="1" value="40" aria-label="内边距">
+                            <span class="sb-range-val" id="sb-padding-val">40 px</span>
+                        </div>
+                    </div>
+                    <div class="sb-field">圆角
+                        <div class="sb-range-row">
+                            <input type="range" id="sb-radius" min="0" max="100" step="1" value="24" aria-label="圆角">
+                            <span class="sb-range-val" id="sb-radius-val">24 px</span>
+                        </div>
+                        <div style="font-size:.82rem;color:#6b7280;">圆角自动钳制到原图较短边的一半，界面显示实际值。</div>
+                    </div>
+                    <div class="sb-field">
+                        <label class="sb-check"><input type="checkbox" id="sb-shadow" checked> 启用阴影</label>
+                    </div>
+                    <div class="sb-field">阴影模糊
+                        <div class="sb-range-row">
+                            <input type="range" id="sb-shadow-blur" min="0" max="60" step="1" value="24" aria-label="阴影模糊">
+                            <span class="sb-range-val" id="sb-shadow-blur-val">24 px</span>
+                        </div>
+                    </div>
+                    <div class="sb-field">阴影偏移 X
+                        <div class="sb-range-row">
+                            <input type="range" id="sb-shadow-x" min="-30" max="30" step="1" value="0" aria-label="阴影横向偏移">
+                            <span class="sb-range-val" id="sb-shadow-x-val">0 px</span>
+                        </div>
+                    </div>
+                    <div class="sb-field">阴影偏移 Y
+                        <div class="sb-range-row">
+                            <input type="range" id="sb-shadow-y" min="-30" max="30" step="1" value="8" aria-label="阴影纵向偏移">
+                            <span class="sb-range-val" id="sb-shadow-y-val">8 px</span>
+                        </div>
+                    </div>
+                    <div class="sb-field">阴影颜色
+                        <div class="sb-color-row"><input type="color" id="sb-shadow-color" value="#000000" aria-label="阴影颜色"></div>
+                    </div>
+                    <div class="sb-field">
+                        <label class="sb-check"><input type="checkbox" id="sb-stroke"> 可选描边</label>
+                    </div>
+                    <div class="sb-field">描边宽度
+                        <div class="sb-range-row">
+                            <input type="range" id="sb-stroke-width" min="0" max="8" step="1" value="0" aria-label="描边宽度">
+                            <span class="sb-range-val" id="sb-stroke-width-val">0 px</span>
+                        </div>
+                    </div>
+                    <div class="sb-field">描边颜色
+                        <div class="sb-color-row"><input type="color" id="sb-stroke-color" value="#111827" aria-label="描边颜色"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">preview</i> 预览</h3>
+                <div class="sb-error" id="sb-error" role="alert"><i class="material-icons">error</i><span></span></div>
+                <div class="sb-preview-scroll">
+                    <canvas id="sb-canvas" aria-label="截图美化预览"></canvas>
+                </div>
+                <div class="sb-info" id="sb-info"></div>
+                <div class="sb-note">透明背景在预览中以棋盘格示意，导出时仍为真透明；圆角与透明背景仅 PNG 保留。</div>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">ios_share</i> 导出</h3>
+                <div class="sb-actions">
+                    <button class="btn btn-primary" id="sb-download" disabled><i class="material-icons">download</i> 导出 PNG</button>
+                    <span class="sb-status" id="sb-status" aria-live="polite"></span>
+                </div>
+                <div class="sb-note" style="margin-top:.8rem;">
+                    导出文件名为原文件名去扩展名后加 <b>-beautified.png</b>（如 shot.png → shot-beautified.png）；导出 PNG 的宽高等于画布尺寸（原图＋2×内边距）。<b>只导出 PNG</b>：JPEG 会丢透明与圆角，故不提供 JPEG 导出。
+                </div>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <ol class="sb-steps">
+                    <li>上传一张现成截图（PNG / JPEG / WebP，不超过 20MB），或点「载入示例」直接演示。</li>
+                    <li>在画框参数区选背景（纯色 / 135° 渐变 / 透明）、调内边距（0–120px）、圆角（0–100px，自动钳制）、阴影与可选描边。</li>
+                    <li>预览区实时渲染画框效果，信息行显示原图尺寸、画布尺寸与实际圆角。</li>
+                    <li>点「导出 PNG」保存美化后的图片，图片内容本身一像素不动。</li>
+                </ol>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="sb-faq">
+                    <dt>会改动我原图的内容吗？</dt>
+                    <dd>不会。原图只按原样画到画布的 (内边距, 内边距) 处，不裁剪、不调色、不压缩、不改分辨率；加的只是外围背景、圆角、阴影与描边。</dd>
+                    <dt>想在图上画箭头、写文字、打码怎么办？</dt>
+                    <dd>那是图片标注的功能，本工具不做标注。请用<a href="/tools/image-annotator">图片标注</a>（箭头／文字／荧光笔／打码）。</dd>
+                    <dt>想把代码粘贴进来生成截图怎么办？</dt>
+                    <dd>那是代码截图美化器的功能，本工具不处理代码文本。请用<a href="/tools/code-screenshot-beautifier">代码截图美化器</a>（语法高亮渲染代码截图）。</dd>
+                    <dt>为什么只导出 PNG，不出 JPEG？</dt>
+                    <dd>圆角与透明背景只有 PNG 能保留，JPEG 导出会丢透明并把圆角填成方角，所以本工具只出 PNG。</dd>
+                    <dt>图片会上传到服务器吗？</dt>
+                    <dd>不会。上传、渲染与导出全部在浏览器本地完成，本页面不发起任何网络请求。</dd>
+                    <dt>透明背景导出后四角为什么是透明的？</dt>
+                    <dd>透明模式下画布背景不填充，圆角外的四角本来就是透明像素；预览里的棋盘格只是示意，不会进入导出文件。</dd>
+                </dl>
+            </div>
+
+            <div class="sb-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="sb-links">
+                    <a href="/tools/image-annotator"><i class="material-icons">draw</i> 图片标注</a>
+                    <a href="/tools/code-screenshot-beautifier"><i class="material-icons">photo_camera</i> 代码截图美化器</a>
+                </div>
+            </div>
+
+            <div class="sb-note">
+                <b>真限制：</b>只加画框、不改图片内容；不做标注（箭头／文字／打码请用图片标注）；不处理代码文本（请用代码截图美化器）；只导出 PNG；不压缩改尺寸、不加水印；图片不出浏览器。
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/screenshot_beautifier.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1111,6 +1111,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "screenshot_beautifier",
+					Name:        "截图美化器",
+					Description: "给现成截图加 presentation 画框：纯色/135°渐变/透明背景、内边距、圆角、阴影、可选描边，PNG 导出，不改图片内容一像素，不做标注、不处理代码文本，纯前端零上传 · Screenshot beautifier: add background, padding, rounded corners and shadow to screenshots, export PNG, 100% client-side",
+					Path:        "/tools/screenshot-beautifier",
+					Icon:        "image",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

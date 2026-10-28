@@ -1,3 +1,85 @@
+## 今日任务（2026-10-28 08:42 · 产品经理排期轮，接 132 轮调研）
+
+**选定：截图美化器（通用）（screenshot_beautifier）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（132 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。MP3 标签编辑器已交付划出（d7b0491，全量 204 Path），首席顺位自然递进至本项；不再以「小难度优先」等理由二次跳过——Gzip Base64 解码器与在线电台收听器均不插队。
+- **未选**：Gzip Base64 解码器（123 轮观察项、132 轮晋升 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；痛点与纯前端路线均已复核无重叠，见下）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 前置界定（132 轮留下的条件，本轮已写清，不再顺延）**：本工具与两件已注册近邻的区分以「输入是什么、动什么」划界，开发轮按此写页面文案，不许含糊——① **代码截图美化器**（ID code_screenshot_beautifier、Path /tools/code-screenshot-beautifier）是**代码文本进、渲染图出**：粘贴代码文本，用 11 语言语法高亮 tokenizer 着色排版，再套 macOS 风窗口框渲染成图，输入不是图片；② **图片标注**（ID image_annotator、Path /tools/image-annotator）是**在图上画批注**：箭头／直线／矩形／圆形／文字／荧光笔／马赛克打码，动的是图片内容本身；③ **本工具是给现成图片加 presentation 画框**：输入是已有的 PNG／JPEG／WebP 截图或照片，只在图外加背景、内边距、圆角、阴影、可选描边，**不改图片内容一像素**：不做语法高亮、不渲染代码、不画箭头文字、不打码、不压缩改尺寸、不加水印。原候选痛点里的「标注」一词归图片标注已有口径，本工具规格中删去标注功能、不重复造，以此消解重叠；需要批注的用户由互链导向图片标注。页面须以一句话写清这条界线，并互链上述两件工具（文案按此区分，不硬凑）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **204 Path**；`git log` 头部 d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）／df6c3a2（滚动字幕垂直循环修复）。逐项复核：`screenshot_beautifier`／`screenshot-beautifier` 在 tools／templates／static/js／tests 四路均为 0 命中（仅有的「截图美化器（通用）」命中是此前两轮测试文件里的「不硬凑未交付工具」断言，属待交付占位、非实现）；categories.go 无相关 ID；templates／static/js 下无通用截图美化文件。近邻再辨析：图片压缩／缩放／格式转换是改图片本身的体积尺寸格式，与只加画框不改内容不重叠；图片拼接是多图拼长图，与单图加框不重叠；图片打水印是在图上叠文字，与只加外框不重叠。
+- **选定理由**：① **顺位即理由**——首席递进项，界定条件由本轮 PM 亲手写清后已满足，不再空转顺延；② **痛点逐项可数**——发文章、做分享、贴文档时截图白底生硬、直角贴边不好看，本地上传→选背景／圆角／阴影→导出 PNG 恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，画框几何（画布尺寸、圆角钳制、阴影参数）均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与图片标注、代码截图美化器同属「截图好看」需求簇，截图用户成组发现；⑤ **外部佐证已就位**——88 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「图片处理」品类（与图片标注、图片压缩等同品类，便于图片类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只加画框、不改图片内容**——不修图、不调色、不裁剪、不压缩、不改分辨率，页面须明示；② **不做标注**——箭头／文字／打码请用图片标注，页面须明示并互链；③ **不处理代码文本**——粘贴代码请用代码截图美化器，页面须明示并互链；④ **只导出 PNG**——圆角与透明背景只有 PNG 能保留，JPEG 导出会丢透明与圆角，故本工具只出 PNG，页面须明示；⑤ **不收集、不上传任何内容**——图片只在浏览器本地 canvas 处理，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports）：
+  - `computeLayout(imgW, imgH, opts)`：opts 含 padding（内边距 px）、radius（圆角 px）、shadowBlur、shadowOffsetX、shadowOffsetY。返回 `{ canvasW, canvasH, imgX, imgY, radius, shadowBlur, shadowOffsetX, shadowOffsetY }`，其中 canvasW = imgW + 2×padding、canvasH = imgH + 2×padding、imgX = imgY = padding；radius 钳制到 [0, min(imgW, imgH)/2]；padding、shadowBlur、偏移量非法（负数、非数字、NaN）时返回失败（不静默钳制为 0 以外的值，界面红字提示）。向量示例：800×600、padding 40 → 画布 880×680、图位于 (40,40)；radius 999 在 800×600 图上钳制为 300。
+  - `parseBackground(mode, values)`：mode 为 `solid`（单 HEX，取色器值）、`gradient`（起止双 HEX，线性 135°）、`transparent`（透明底）。HEX 校验：带或不带 `#` 的 6 位 HEX（大小写不限），其余返回失败；gradient 起止相同色合法（等效纯色，不报错）。返回归一化描述供 canvas 渲染（渲染本身走 canvas API，不进 node 断言）。
+  - `validateImageFile(file)`：仅接受 MIME `image/png`、`image/jpeg`、`image/webp`（以 file.type 为准，type 为空时以后缀 png／jpg／jpeg／webp 兜底）；其余（含 gif、svg、非图片）返回无效并红字提示；单文件大小上限 20MB，超限红字提示（不静默降质）。
+  - `suggestExportName(originalName)`：去掉原扩展名后加 `-beautified.png`（如 `shot.png` → `shot-beautified.png`；无扩展名时直接加 `-beautified.png`）。
+  - `buildSampleImage()`（浏览器侧，node 侧可空实现）：用 canvas 程序化画一张 800×500 示例图（渐变底＋色块＋文字占位），不依赖任何外部图片资源，供「载入示例」演示画框效果。
+- 界面：上传区（拖拽＋选择文件，仅接受 png／jpg／webp，非法红字拒绝；显示文件名、尺寸、原图宽高）；画框区（背景模式三选：纯色取色器／渐变双取色器／透明；内边距滑杆 0–120px；圆角滑杆 0–100px（界面显示钳制后实际值）；阴影开关＋模糊滑杆 0–60px＋偏移 X／Y 滑杆 -30–30px＋阴影颜色取色器；可选描边开关＋宽度 0–8px＋颜色取色器）；预览区（canvas 实时渲染，透明背景用棋盘格底示意、导出时仍为真透明）；操作区（「导出 PNG」按钮，文件名为 suggestExportName 结果；「载入示例」「重新上传」按钮；导出后提示「圆角与透明背景仅 PNG 保留」）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与图片标注（/tools/image-annotator）、代码截图美化器（/tools/code-screenshot-beautifier）互链（文案按「画框 vs 画批注 vs 渲染代码」区分）；不与未交付的 Gzip Base64 解码器、在线电台收听器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写画框几何与 canvas 渲染，不引入 html2canvas 等第三方库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；文件读写用 File API ＋ canvas.toBlob 下载，不经过任何服务器。
+- 注册：ID `screenshot_beautifier`、Name「截图美化器」、Path `/tools/screenshot-beautifier`、Category 图片处理、Icon 建议 photo_camera（代码截图美化器已用此图标，图标库无合适区分时用 image 兜底，勿与代码截图美化器在列表中视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（截图美化、截图加背景、截图圆角阴影、截图加边框、screenshot beautifier、screenshot frame、screenshot background）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/screenshot-beautifier，相关工具互链图片标注、代码截图美化器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `screenshot_beautifier`、Path `/tools/screenshot-beautifier` 注册完整（Category 图片处理），注册总数 204→205 Path。
+2. 几何向量闭环（node 断言）：800×600、padding 40 → 画布 880×680、图位于 (40,40)；padding 0 → 画布等于原图尺寸；radius 999 在 800×600 图上钳制为 300、radius 0 不倒角；负 padding／负 shadowBlur 返回失败并有界面红字提示路径。
+3. 背景向量闭环：solid 单 HEX 归一化（含不带 `#`、小写输入）；gradient 双 HEX 归一化、起止同色合法；transparent 模式不依赖颜色值；非法 HEX（3 位缩写、非 HEX 字符、长度不对）判失败。
+4. 文件与命名向量闭环：png／jpeg／webp 接受，gif／svg／txt 拒绝；超 20MB 拒绝；`shot.png` → `shot-beautified.png`、无扩展名 → 直接加 `-beautified.png`。
+5. 操作闭环（浏览器手工／测试复核）：上传真实截图 → 调背景／内边距／圆角／阴影 → 预览与参数一致 → 导出 PNG，重新上传导出图宽高等于画布尺寸、圆角处透明（透明背景模式下四角透明可验证）；「载入示例」无需上传即可演示全套画框参数。
+6. 真限制可见：页面可见「只加画框、不改图片内容」「不做标注（箭头／文字／打码请用图片标注）」「不处理代码文本（请用代码截图美化器）」「只导出 PNG」文案；零 fetch／XHR、零 CDN。
+7. 操作闭环：相关工具互链含图片标注、代码截图美化器；不含未交付工具的硬凑互链；导出失败有降级提示。
+8. node 测试 25+ 断言全过（几何向量、背景向量、文件校验与命名向量、注册与零网络请求静态检查）。
+9. 页面无报错；移动端上传区、滑杆组、预览 canvas、导出按钮小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/screenshot_beautifier.html`（新增；含 SEO 面板按家族标准＋上传区／画框参数区／预览区／操作区／示例演示）
+- `static/js/screenshot_beautifier.js`（新增；画框几何、背景解析、文件校验、导出命名、canvas 渲染、示例图生成；双模式导出供 node 测试）
+- `tests/screenshot_beautifier.test.js`（新增；几何向量、背景向量、文件校验与命名向量、注册与零网络静态检查）
+- `tools/categories.go`（图片处理品类注册：ID screenshot_beautifier、Path /tools/screenshot-beautifier、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮失败（与 132 轮同症：GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，报错 Host key verification failed／权限仓库不存在；本地 log 与注册数核对无碍，但远端同步状态未确认，请开发轮复核网络与密钥后再推）；`git log` 头部 d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）／df6c3a2（滚动字幕垂直循环修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **204**；Top3 候选重叠复核（screenshot_beautifier／screenshot-beautifier 在 tools／templates／static/js／tests 四路 0 实现命中；代码截图美化器为代码文本渲染、图片标注为图上批注，两处界定见上；Gzip 解码器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 08:00 · 通用调研第一百三十二轮）
+
+**交付状态**：10-28 通用调研第一百三十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**MP3 标签编辑器已交付闭环**（d7b0491 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **204 Path**，ID mp3_tag_editor、Path /tools/mp3-tag-editor 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；08:00 轮，优先小难度纯前端。
+**本轮三件事**（08:00 全网调研，通用方向）：
+1. MP3 标签编辑器交付确认：`git log` 头部 d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）／df6c3a2（滚动字幕垂直循环修复）；全量 204 Path；本地当前分支 muse/dev-20260929；**注意：本轮 `git fetch` 失败**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，报错 "Please make sure you have the correct access rights and the repository exists"，与此前多轮成功不同；本地 log 与注册数核对无碍，但远端同步状态未确认，请 PM／开发轮复核网络与密钥后再推）。
+2. 新信号扫描：
+   - **英文 2026 榜单群复现**（DevToolKit 年度榜／Q1 无登录工具榜／doitfree 10 款榜／seedomake 16 款榜／grabcast 日常工具指南）：JSON／正则／Base64／UUID／URL 编解码、PDF 压缩／合并、密码生成、二维码、取色／配色／渐变、图片压缩／缩放／格式转换、字数统计、大小写转换、Markdown 转 HTML、Lorem Ipsum → **全部自有实锤消解**（均为已注册工具；Word／Excel 转 PDF 需 Office 文档解析重型实现、文件分享与 Temp-Mail 需后端中转、去背景与 AI 摘要需 AI／后端模型、RAWGraphs 多图表可视化与 Markmap 思维导图属重型产品形态，均非纯前端单页小工具，不立）；
+   - **密码强度检测器**（SmartToolGalaxy／NeftCal／FlashSoft 等 12 项检查＋熵值＋破解时长口径）：**自有口径消解，不另立**——随机密码生成器（/tools/password-generator）已含密码强度显示（强度条＋熵值），独立强度检测器与之口径重叠，仅检查项更细不构成独立工具；真限制亦同（不查泄露库、不做在线校验），不立；
+   - **网站图标／图片格式信号**（WebP／JPG 转 ICO、多尺寸 favicon 套装、HEIC／AVIF 解码、SVG 压缩优化）：**全部自有实锤消解**——网站图标生成器（ID favicon_generator）／图片格式转换／SVG 压缩优化器（ID svg_compressor）／EXIF 信息查看／清除（ID exif_strip）均已注册，不另立；
+   - **HN Show HN 近期工具帖**：Sphinx Git hook 代码理解测验（131 轮已消解复现，Node＋Git hook＋模型调用形态，不立）／TinyFn 500 确定性工具 API（MCP／REST 后端服务形态，非单页小工具，不立）／Buoy 状态栏本地 Web 服务器（macOS 桌面常驻服务形态，非单页工具，不立）→ **均不立**；
+   - **V2EX 工具帖搜索**：本轮返回结果为油猴脚本与 DeepWiki 旧文，无有效新信号，不立。
+3. 候选池变动：MP3 标签编辑器已交付划出（d7b0491 新增；ID mp3_tag_editor、Path /tools/mp3-tag-editor 已注册；全量 204 Path）；**二维码扫描器观察项实锤消解划出**（116 轮观察项；二维码工具 ID qrcode、Path /tools/qrcode 已含「识别二维码」上传图片解码能力，独立扫码器与之口径重叠，不另立）；**Gzip Base64 解码器观察项晋升 P2**（123 轮观察项；复核无重叠：Base64 编码／解码工具（/tools/base64）仅做裸编解码，全仓库非 vendor JS／模板无 gunzip／DecompressionStream 实现；纯前端小难度：Base64 解码后 gunzip 还原文本，DecompressionStream 本地解压、零上传；真限制：仅 gzip 格式、非 gzip 输入须明确报错、老浏览器无 DecompressionStream 时须明示不支持）；**本轮新晋 P2 1 个**（Gzip Base64 解码器）；**观察项净减 1 条**（二维码扫描器划出、Gzip 解码器晋升）；全量 204 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；MP3 标签编辑器交付闭环后 P2 池仅剩两项，本轮由观察项晋升一项补足 Top3）：
+
+1. **截图美化器（通用）** — P2 留池顺位首席（88 轮新晋 P2；132 轮复核仍未交付；痛点：通用截图要加背景、圆角、阴影、标注才好看，现有代码截图美化器只针对代码截图；纯前端小难度：本地上传图片→加背景／圆角／阴影／标注→导出美化图，零上传；**但防串味条件未解**：与已交付的代码截图美化器同族混淆风险仍在，PM 须先界定「通用图片美化 vs 代码截图高亮渲染」的区分，界定不清则顺延观察项，不硬上；真限制：只做通用图片美化、不做代码高亮渲染，页面须明示）。
+2. **Gzip Base64 解码器** — 观察项晋升 P2（123 轮观察项；132 轮晋升；痛点：接口调试与日志里常遇到 gzip 压过的 Base64 文本，裸 Base64 解码只能得到乱码二进制，装工具或写脚本解压太重；纯前端小难度：粘贴 Base64→解码→gunzip→输出原文，附 gzip 压缩反向演示更佳，零上传；`gzip`／`DecompressionStream` 在 tools／templates／static/js 非 vendor 三路无实现实锤；真限制：仅 gzip 格式、非 gzip 输入明确报错、老浏览器不支持时明示）。
+3. **在线电台收听器** — P2 留池末项（88 轮新晋；132 轮复核仍未交付；`电台`／独立电台工具在 tools／templates／static/js 三路无注册实锤；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选截图美化器与 Gzip 解码器之外的第三项，须先解硬伤或改从观察项递补，不硬上）。
+
+其余 P2 留池：无（P2 池本轮后仅剩上述三项，其中截图美化器须 PM 先界定、Gzip 解码器无硬伤可直接排期、电台硬伤未解）；观察项保持原状：Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮）；文本对齐列→表格转换器（110 轮）；SQLite 数据库查看器／JSON→表格查看器（111 轮）；常用端口号速查（119 轮）；字体搭配预览器（129 轮观察项新增；与站内配色／字体族口径重叠待 PM 界定，未晋升 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 131 轮及之前记录。
+
+**通用候选表增量**（第一百三十二轮：MP3 标签编辑器已交付划出（d7b0491 新增；ID mp3_tag_editor、Path /tools/mp3-tag-editor 已注册；全量 204 Path；候选池划出）；二维码扫描器观察项实锤消解划出（二维码工具 /tools/qrcode 已含上传图片识别解码）；**Gzip Base64 解码器观察项晋升 P2**；自有实锤消解 10+ 项（榜单群余项均为已注册工具、方向排除、需后端／AI 或重型产品；密码强度检测器为密码生成器内含口径；网站图标／EXIF／SVG 压缩均为已注册工具；HN 近期帖均为后端服务形态、桌面服务形态或已消解复现；V2EX 搜索无有效新信号）；全量 204 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| MP3 标签编辑器 | 已交付划出（d7b0491 新增；ID mp3_tag_editor、Path /tools/mp3-tag-editor 已注册；全量 204 Path；候选池划出） | — | 已实现 |
+| 二维码扫描器 | 观察项消解划出（二维码工具 /tools/qrcode 已含上传图片识别解码，口径重叠，不另立） | — | 不立 |
+| Gzip Base64 解码器 | 接口与日志里 gzip 压过的 Base64 文本，裸解码只得乱码二进制；粘贴→解码→gunzip→原文，纯前端零上传 | 小 | P2（观察项晋升） |
+| 自有实锤消解 | 不立（榜单群余项均为已注册工具、方向排除、需后端／AI 或重型产品；密码强度检测器为密码生成器内含口径；网站图标／EXIF／SVG 压缩均为已注册工具；HN 近期帖均为后端服务形态、桌面服务形态或已消解复现；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十二轮——MP3 标签编辑器交付闭环（d7b0491，`/tools/mp3-tag-editor` 已注册，全量 204 Path），候选池划出；二维码扫描器观察项实锤消解划出；**Gzip Base64 解码器观察项晋升 P2**；仓库 204 注册工具全量核对无重叠（Top3 建议截图美化器（通用）／Gzip Base64 解码器／在线电台收听器；第一项 PM 须先界定与代码截图美化器的区分，第二项无硬伤可直接排期，第三项硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）／df6c3a2（滚动字幕垂直循环修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **204**；**本轮 `git fetch` 失败**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，报错权限／仓库不存在，与此前多轮成功不同；请 PM／开发轮复核后再推）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 05:40 · 产品经理排期轮，接 131 轮调研）
 
 **选定：MP3 标签编辑器（mp3_tag_editor）** — 本轮唯一任务（新工具）：
