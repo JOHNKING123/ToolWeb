@@ -679,6 +679,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_filter_generator",
+					Name:        "CSS 滤镜生成器",
+					Description: "九函数开关＋滑杆＋上移下移排序：blur、brightness、contrast、grayscale、hue-rotate、invert、opacity、saturate、sepia（不含 drop-shadow），复古／暖调／冷调／黑白／鲜艳五预设，内置 SVG 示例图实时预览与原图对比，默认值与禁用项不输出、无有效项为 none，复制 filter 或完整 CSS、下载 filter.css／filter-demo.html，纯前端零上传 · CSS filter generator: 9 filter functions, order editing, 5 presets, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-filter-generator",
+					Icon:        "filter_alt",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",

@@ -1,0 +1,164 @@
+{{define "css_filter_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 滤镜生成器 - filter 九函数开关滑杆排序预设实时预览 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 滤镜生成器：blur、brightness、contrast、grayscale、hue-rotate、invert、opacity、saturate、sepia 九函数开关＋滑杆＋上移下移排序，复古／暖调／冷调／黑白／鲜艳五预设，内置 SVG 示例图实时预览与原图对比，复制 filter 或完整 CSS、下载 filter.css 与演示 HTML。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 滤镜生成器,filter 生成器,图片滤镜,复古滤镜,css filter generator,filter generator,backdrop-filter 区分">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-filter-generator">
+    <meta property="og:title" content="CSS 滤镜生成器 - filter 九函数可视化生成">
+    <meta property="og:description" content="九函数开关滑杆排序＋五预设，内置示例图实时预览，复制 filter 或完整 CSS。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-filter-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 滤镜生成器","description":"免费在线 CSS 滤镜生成器：九函数开关滑杆排序，五预设，内置示例图实时预览，复制 filter 或完整 CSS，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-filter-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cf-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .cf-wrap .navbar .material-icons { display: none; }
+        .cf-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .cf-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .cf-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .cf-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .cf-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .cf-row input[type=range]:disabled { opacity:.4; }
+        .cf-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .cf-row input[type=number]:disabled { opacity:.4; background:#f3f4f6; }
+        .cf-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .cf-btn:hover { background:#f3f4f6; }
+        .cf-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .cf-btn-small { padding:.3rem .7rem; font-size:.85rem; }
+        .cf-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .cf-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .cf-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .cf-fn { border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem 1rem; margin-bottom:.8rem; background:#fafafa; }
+        .cf-fn-head { display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
+        .cf-fn-head b { font-size:.95rem; color:#111827; }
+        .cf-fn-meta { font-size:.85rem; color:#6b7280; }
+        .cf-def-tag { color:#059669; font-weight:700; }
+        .cf-fn-actions { display:flex; gap:.4rem; flex-wrap:wrap; }
+        .cf-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .cf-stage { border:1px solid #e5e7eb; border-radius:.7rem; overflow:hidden; padding:1rem; text-align:center; background:#f9fafb; }
+        .cf-stage svg { max-width:100%; height:auto; display:block; margin:0 auto; }
+        .cf-mode { font-size:.9rem; color:#374151; margin:.6rem 0 0; }
+        .cf-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .cf-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .cf-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .cf-tip a { color:var(--primary-color); }
+        .cf-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .cf-links a { color:var(--primary-color); font-size:.93rem; }
+        .cf-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .cf-row input[type=range] { min-width:100px; }
+            .cf-stage { padding:.6rem .3rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="cf-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎛️ CSS 滤镜生成器</h1>
+            <p>九函数开关＋滑杆＋上移下移排序，五预设，内置示例图实时预览，一键复制 filter 或完整 CSS</p>
+        </div>
+        <div class="tool-content" id="cf-form">
+            <div class="cf-card">
+                <h3>滤镜预设 <span class="cf-hint">（点击载入，载入后仍可编辑；预设仅为示例起点）</span></h3>
+                <div class="cf-presets">
+                    <button class="cf-preset" type="button" data-preset="vintage">vintage 复古（亮度 110%／对比度 90%／饱和度 80%／褐色 60%）</button>
+                    <button class="cf-preset" type="button" data-preset="warm">warm 暖调（亮度 105%／色相 −10deg／饱和度 130%／褐色 30%）</button>
+                    <button class="cf-preset" type="button" data-preset="cool">cool 冷调（亮度 105%／对比度 105%／色相 15deg／饱和度 110%）</button>
+                    <button class="cf-preset" type="button" data-preset="black-white">black-white 黑白（对比度 110%／灰度 100%）</button>
+                    <button class="cf-preset" type="button" data-preset="vivid">vivid 鲜艳（亮度 105%／对比度 115%／饱和度 160%）</button>
+                </div>
+            </div>
+
+            <div class="cf-card">
+                <h3>函数编辑 <span class="cf-hint">（九函数：blur、brightness、contrast、grayscale、hue-rotate、invert、opacity、saturate、sepia，不含 drop-shadow；每项启用开关、滑杆＋数字输入、上移／下移只改顺序不改数值；禁用项滑杆置灰但保留数值；等于默认值的函数标注「默认不输出」）</span></h3>
+                <div id="cf-fns"></div>
+                <p class="cf-msg" id="cf-msg"></p>
+            </div>
+
+            <div class="cf-card">
+                <h3>实时预览 <span class="cf-hint">（页面内置 SVG 示例图，无需上传；原图／效果切换只在 none 与当前滤镜间切换，不改参数）</span></h3>
+                <div class="cf-stage" id="cf-preview-stage"></div>
+                <p class="cf-mode" id="cf-mode-label">当前显示：效果</p>
+                <div class="cf-actions" style="margin-top:.6rem;">
+                    <button class="cf-btn" id="cf-show-original" type="button">原图</button>
+                    <button class="cf-btn" id="cf-show-effect" type="button">效果</button>
+                </div>
+            </div>
+
+            <div class="cf-card">
+                <h3>CSS 代码输出 <span class="cf-hint">（随输入实时生成；filter 值与完整 CSS 两栏，顺序跟随函数列表顺序）</span></h3>
+                <div class="cf-code" id="cf-code-value"></div>
+                <div class="cf-actions">
+                    <button class="btn btn-primary" id="cf-copy-filter" type="button">📋 复制 filter</button>
+                </div>
+                <div class="cf-code" id="cf-code-css"></div>
+                <div class="cf-actions">
+                    <button class="btn btn-primary" id="cf-copy-css" type="button">📋 复制完整 CSS</button>
+                    <button class="btn btn-secondary" id="cf-download-css" type="button">⬇ 下载 .css</button>
+                    <button class="btn btn-secondary" id="cf-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="cf-load-example" type="button">↺ 载入示例（复古预设）</button>
+                </div>
+                <p class="cf-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="cf-card">
+                <h3>使用说明</h3>
+                <ol class="cf-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>点预设一键切换滤镜风格，切换后函数列表、预览与代码三方同步。</li>
+                    <li>在函数编辑区开关函数、拖滑杆或改数字、点上移／下移改顺序，预览与代码实时同步；函数顺序即输出顺序。</li>
+                    <li>点「原图」只看未滤镜的样子，点「效果」回到当前滤镜，切换不改任何参数。</li>
+                    <li>复制 filter 值或完整 CSS，或下载 filter.css／filter-demo.html 粘贴即用。</li>
+                    <li>点「载入示例」回到复古预设起点，无需上传即可演示编辑→预览→导出全流程。</li>
+                    <li>要给文字加阴影去文字阴影生成器；要给盒子加阴影或描圆角去阴影与圆角生成器；要直接出处理后的图片文件去图片复古做旧。</li>
+                </ol>
+            </div>
+
+            <div class="cf-card">
+                <h3>常见问题</h3>
+                <dl class="cf-tip">
+                    <dt><b>函数顺序会影响结果吗？</b></dt>
+                    <dd>会。filter 里的函数按书写顺序依次作用：本页列表顺序就是输出顺序，上移／下移只改顺序不改数值与启用状态。</dd>
+                    <dt><b>为什么有的函数没出现在代码里？</b></dt>
+                    <dd>未启用或等于默认值的函数不输出：例如亮度 100%、模糊 0px 都是默认值，写进代码没有意义；全部无有效函数时输出 filter: none;</dd>
+                    <dt><b>数值可以写几位小数？</b></dt>
+                    <dd>最多 2 位小数，例如亮度 110.5% 可以，110.555% 会红字报错，不会静默取整或钳制；超出范围同样报错。</dd>
+                    <dt><b>为什么没有 drop-shadow()？</b></dt>
+                    <dd>drop-shadow 与盒阴影／文字阴影口径重叠，本页九函数清单不含它；要加阴影请去阴影与圆角生成器或文字阴影生成器。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。示例图为页面内置 SVG，全部编辑与预览只在浏览器本地完成，本页面零网络请求，零上传。</dd>
+                </dl>
+            </div>
+
+            <div class="cf-card">
+                <h3>相关工具</h3>
+                <div class="cf-links">
+                    <a href="/tools/css-text-shadow-generator">CSS 文字阴影生成器（元素滤镜 vs 文字阴影；本页只做元素 filter，那边做文字 text-shadow）</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器（元素滤镜 vs 盒阴影圆角；本页只做元素 filter，那边做盒子 box-shadow 与 border-radius）</a>
+                    <a href="/tools/img-retro-filter">图片复古做旧（输出 filter 声明 vs 输出处理后图片文件；本页只出 CSS 声明，那边直接出处理后的图片）</a>
+                </div>
+            </div>
+
+            <div class="cf-card">
+                <h3>真限制说明</h3>
+                <div class="cf-tip">
+                    <b>只做 filter、不做 backdrop-filter 与图片处理</b>：本页只生成作用于元素自身的 filter: 声明，不生成毛玻璃 backdrop-filter，不处理、不输出图片文件；<b>九函数清单（不含 drop-shadow）</b>：blur、brightness、contrast、grayscale、hue-rotate、invert、opacity、saturate、sepia；<b>函数顺序即输出顺序</b>：上移／下移只改顺序不改数值；<b>默认值不输出、无有效函数时为 none</b>：未启用或等于默认值的函数不进入 filter 串，全部无有效函数时输出 filter: none;；<b>不收集、不上传任何内容</b>：示例图为页面内置 SVG，全部编辑与预览只在浏览器本地完成，本页面零 fetch / XHR，零 CDN。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="cf-toast" id="cf-toast"></div>
+    <script src="/tools/static/js/css_filter_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,88 @@
+## 今日任务（2026-10-29 05:39 · 产品经理排期轮，接 142 轮调研）
+
+**选定：CSS 滤镜生成器（css_filter_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（142 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 文字阴影生成器已交付划出（049cd66 新增，全量 214 Path），首席顺位自然递进至本项；不再以「毛玻璃／特异性难度更小」等理由二次跳过——CSS 毛玻璃生成器、CSS 特异性计算器均不插队。
+- **未选**：CSS 毛玻璃生成器（141 轮新晋 P2、142 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做 backdrop-filter 面板声明，与本项 `filter:` 滤镜口径不重叠）；CSS 特异性计算器（108 轮观察项、142 轮晋升 P2、顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做选择器权重计算，与本项滤镜声明口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **214 Path**；`git log` 头部 049cd66（文字阴影生成器新增）／01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）。逐项复核：`css_filter`／`glass`／`backdrop`／`specificity` 在 tools/categories.go 中均为 0 实现命中；templates／static/js／tests 下无 css_filter／glass／specificity 生成器文件（categories.go 中 filter 字面命中 8 处均为无关项：图片复古做旧 img_retro_filter、社区搜索路由与 CSV／看板描述中的 filter 一词，无 CSS 滤镜生成器实现）。近邻再辨析：① **图片复古做旧**（ID img_retro_filter）输出处理后图片文件，本项输出 `filter:` 声明，口径不重叠；② **CSS 阴影／圆角生成器**（ID css_shadow_radius_generator）只产 box-shadow 与 border-radius，不产 filter；③ **CSS 文字阴影生成器**（ID css_text_shadow_generator）只产 text-shadow，不产 filter；④ **CSS 渐变生成器**只做填充，不碰滤镜；⑤ **CSS 毛玻璃生成器**未交付，且其 backdrop-filter（模糊元素背后内容）与本项 `filter:`（模糊元素自身）在 140–142 轮真限制中已明确互斥，不重叠。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——filter 九函数串联成一长串、函数顺序影响结果，手写要反复猜数值与顺序，凭代码想象不出叠加效果，九函数开关＋滑杆＋顺序调整＋预设＋示例图实时预览＋复制 filter 声明恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，数值校验、默认值省略、顺序合成、预设配置均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 阴影／圆角／渐变／文字阴影／关键帧生成器同属「CSS 可视化生成」需求簇，滤镜与阴影、填充成组发现；⑤ **外部佐证已就位**——140 轮晋升 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 阴影／圆角生成器、CSS 渐变生成器、CSS 文字阴影生成器、CSS 动画关键帧生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 `filter:` 声明**——不做 backdrop-filter（毛玻璃另立项）、不做图片处理与输出图片文件，页面须明示；② **九函数不含 drop-shadow()**——drop-shadow 与盒阴影／文字阴影口径重叠，故九函数为 blur／brightness／contrast／grayscale／hue-rotate／invert／opacity／saturate／sepia，页面须明示函数清单；③ **函数顺序即输出顺序**——上移／下移只改顺序不改数值，页面须明示；④ **默认值不输出**——未启用或等于默认值的函数不进入 filter 串，全部无有效函数时输出 `filter: none;`，页面须明示；⑤ **不收集、不上传任何内容**——示例图为页面内置 SVG，全部编辑与预览只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - 九函数定义（单位／范围／默认值，数值最多 2 位小数）：blur（px，0–20，默认 0）、brightness（%，0–200，默认 100）、contrast（%，0–200，默认 100）、grayscale（%，0–100，默认 0）、hue-rotate（deg，−360–360，默认 0）、invert（%，0–100，默认 0）、opacity（%，0–100，默认 100）、saturate（%，0–200，默认 100）、sepia（%，0–100，默认 0）。默认顺序即上述典范顺序。
+  - `validateFilterItem(item)`：item 含 fn（仅接受上述九函数名）、enabled（布尔值）、value（数值，范围按上表、最多 2 位小数）；任一字段非法返回失败。
+  - `isDefaultValue(fn, value)`：value 经范围校验后与该函数默认值相等返回 true，否则 false；非法 fn 或越界 value 返回失败。
+  - `moveFilterItem(items, index, direction)`：direction 仅接受 `up`（向首方向移一位）／`down`（向末方向移一位），返回新数组（不改原数组，只改顺序不改数值与启用状态）；已在端点、下标越界、非法 direction 返回失败。
+  - `setFilterEnabled(items, index, enabled)`：返回新数组（不改原数组，只改该项 enabled）；下标越界、enabled 非布尔值返回失败。
+  - `buildFilterCss(items)`：items 逐项经 validateFilterItem 校验；取 enabled 且非默认值的项，按当前数组顺序输出 `<fn>(<数值><单位>)`（数值去尾零规范化），多项以单个空格连接；无有效项时返回 `none`（不判失败）；空数组返回失败。
+  - `buildCssSnippet(items)`：先经 buildFilterCss 校验，输出 `.filtered {`＋`  -webkit-filter: <值>;`＋`  filter: <值>;`＋`}` 四行块；非法返回失败。
+  - `buildHtmlSnippet(items)`：先经 buildFilterCss 校验，返回演示 HTML 片段（含 `<style>` 内嵌生成的完整 CSS＋`<div class="filtered">` 内嵌内置 SVG 示例图元素；无额外脚本）；非法返回失败。
+  - `generatePreset(name)`：name 仅接受 vintage／warm／cool／black-white／vivid，返回 `{ name, items }`（items 按典范顺序、仅含有效项，每项 enabled 为 true）：vintage 复古（brightness 110%、contrast 90%、saturate 80%、sepia 60%）；warm 暖调（brightness 105%、hue-rotate −10deg、saturate 130%、sepia 30%）；cool 冷调（brightness 105%、contrast 105%、hue-rotate 15deg、saturate 110%）；black-white 黑白（contrast 110%、grayscale 100%）；vivid 鲜艳（brightness 105%、contrast 115%、saturate 160%）；未知 name 返回失败。
+  - `suggestExportName(kind)`：`css` → `filter.css`，`html` → `filter-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：预设区（vintage／warm／cool／black-white／vivid 五个预设按钮）；函数编辑区（九函数列表：每项启用开关、滑杆＋数字输入、上移／下移按钮，默认值旁标注「默认不输出」，禁用项滑杆置灰但保留数值）；预览区（页面内置 SVG 示例图实时预览＋「原图／效果」对比切换，切换仅在 none 与当前滤镜间切换、不改参数）；代码区（filter 值与完整 CSS 两栏，实时同步，「复制 filter」「复制完整 CSS」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 vintage 预设、无需上传即可演示编辑→预览→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览只用解析校验后的样式值（`<style>` 内只注入 buildCssSnippet 产出的校验后 CSS），杜绝注入。
+- 操作与互链：与 CSS 文字阴影生成器（/tools/css-text-shadow-generator，文案按「元素滤镜 vs 文字阴影」区分）、CSS 阴影／圆角生成器（/tools/css-shadow-radius-generator，文案按「元素滤镜 vs 盒阴影圆角」区分）、图片复古做旧（/tools/img-retro-filter，文案按「输出 filter 声明 vs 输出处理后图片文件」区分）互链；不与未交付的 CSS 毛玻璃生成器、CSS 特异性计算器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写数值校验、默认值省略、顺序合成、预设配置，不引入任何 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；示例图为页面内置 SVG，不依赖外链。
+- 注册：ID `css_filter_generator`、Name「CSS 滤镜生成器」、Path `/tools/css-filter-generator`、Category 开发工具、Icon 建议 filter_alt（图标库无此名则用 tune 兜底；勿与图片复古做旧的 filter_vintage 在同站视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（CSS 滤镜生成器、filter 生成器、图片滤镜、复古滤镜、css filter generator、filter generator、backdrop-filter 区分）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-filter-generator，相关工具互链 CSS 文字阴影生成器、CSS 阴影／圆角生成器、图片复古做旧。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_filter_generator`、Path `/tools/css-filter-generator` 注册完整（Category 开发工具），注册总数 214→215 Path。
+2. 单项校验向量闭环（node 断言）：validateFilterItem 九函数边界值通过，非法函数名、非布尔 enabled、越界值、超 2 位小数判失败；isDefaultValue 已知值（blur 0、brightness 100、sepia 0 为默认，brightness 120 为非默认）正确，非法判失败。
+3. 集合与顺序向量闭环（node 断言）：moveFilterItem 端点移动失败、非法 direction 失败、只改顺序不改数值与启用状态且不改原数组；setFilterEnabled 越界／非布尔失败、不改原数组。
+4. 合成与预设向量闭环（node 断言）：buildFilterCss 已知值（多函数空格连接、数值去尾零、默认值省略、禁用项省略、顺序跟随数组顺序）；全部无有效项返回 `none`；空数组失败；generatePreset 五个预设函数与数值正确且未知预设失败。
+5. 代码生成向量闭环（node 断言）：buildCssSnippet 含 `.filtered` 块与 -webkit-filter／filter 两行；buildHtmlSnippet 含 `<style>` 内嵌 CSS 与 class `filtered`，且无 `<script>`；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+6. 操作闭环（浏览器手工／测试复核）：切预设→预览滤镜变化→开关函数／改数值／上移下移改顺序→预览与代码同步→原图／效果对比切换→复制 filter／完整 CSS、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只做 filter、不做 backdrop-filter 与图片处理」「九函数清单（不含 drop-shadow）」「函数顺序即输出顺序」「默认值不输出、无有效函数时为 none」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS 文字阴影生成器、CSS 阴影／圆角生成器、图片复古做旧；不含未交付工具的硬凑互链；非法数值／越界／非法预设有红字降级提示。
+9. node 测试 25+ 断言全过（单项校验向量、集合与顺序向量、合成与预设向量、代码生成向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端函数列表、预设按钮组、预览块、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_filter_generator.html`（新增；含 SEO 面板按家族标准＋预设区／函数编辑区／预览区／代码区／示例演示）
+- `static/js/css_filter_generator.js`（新增；九函数定义与数值校验、默认值省略、顺序合成、五预设配置、filter／完整 CSS／HTML 片段生成、导出命名；双模式导出供 node 测试）
+- `tests/css_filter_generator.test.js`（新增；单项校验向量、集合与顺序向量、合成与预设向量、代码生成向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_filter_generator、Path /tools/css-filter-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功）；`git log` 头部 049cd66（文字阴影生成器新增）／01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **214**；Top3 候选重叠复核（css_filter／glass／backdrop／specificity 在 categories.go 均为 0 实现命中；templates／static/js／tests 下无 css_filter／glass／specificity 生成器文件，filter 字面命中均为无关项；图片复古做旧输出图片文件、阴影／圆角只做 box-shadow、文字阴影只做 text-shadow、渐变只做填充，辨析见上；CSS 毛玻璃生成器与 CSS 特异性计算器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-29 05:00 · 通用调研第一百四十二轮）
+
+**交付状态**：10-29 通用调研第一百四十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 文字阴影生成器已交付闭环**（049cd66 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **214 Path**，ID css_text_shadow_generator、Path /tools/css-text-shadow-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:00 轮，优先小／中难度纯前端。
+**本轮三件事**（05:00 全网调研，通用方向）：
+1. CSS 文字阴影生成器交付确认：`git log` 头部 049cd66（文字阴影生成器新增）／01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）；全量 214 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）。
+2. 留池复核仍未交付：CSS 滤镜生成器、CSS 毛玻璃生成器在 tools/categories.go 中命中均为 0（text_shadow 唯一命中 1 为已交付的文字阴影生成器注册），templates／static/js／tests 下无 css_filter／glass 生成器文件，140／141 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 特异性计算器**（dev.to「10 Free CSS Tools Every Developer Should Bookmark」榜单第 5 项；108 轮观察项）：**由观察项晋升 P2**——108 轮留池时未展开边界，本轮边界已可界定：输入选择器串，输出 (a, b, c) 三元组与权重比较、胜负判定与逐段拆解说明；categories.go 中 specificity 命中为 0，站内无选择器权重类工具，不重叠；纯前端小难度：选择器输入＋逐段解析（ID／类／属性／伪类／元素／伪元素计数，:not()／:is()／:where() 特殊规则）＋多选择器对比排序＋胜负判定＋复制结果，零上传；真限制：只做特异性计算与比较，不做整张样式表解析、不做浏览器实际层叠模拟（!important／层叠层／来源顺序仅作文字说明），须明示；
+   - **其余信号全部消解，不立**：Tailwind→CSS 转换器（站内已有反向 CSS→Tailwind 转换器 ID css_to_tailwind；再做正向属同一映射对的另一半，单独立项价值低于特异性计算器，且双向映射口径易混，不立）／CSS 按钮生成器（渐变／阴影／圆角三件套已覆盖其全部参数，单独立项只剩组合预设，口径重叠，不立）／JWT／哈希／密码／颜色转换器（站内均已覆盖：jwt-parser、password-generator、文件校验和、color-converter）／V2EX／HN 搜索（本轮无有效单页工具新信号）／CodePen 等重型产品（需后端／账号体系，不立）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 文字阴影生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，141 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，观察项晋升 P2 补第三顺位）：
+
+1. **CSS 滤镜生成器** — P2 留池顺位首席（140 轮由观察项晋升 P2；142 轮复核仍未交付；痛点：filter 九函数串联成一长串、函数顺序影响结果，手写要反复猜数值与顺序，凭代码想象不出叠加效果；纯前端小难度：九函数滑杆＋函数开关（默认项不输出）＋复古／暖调／冷调／黑白等预设＋示例图实时预览＋复制 filter 声明，零上传；与图片复古做旧（输出处理后图片文件）、CSS 阴影／圆角生成器（只做 box-shadow 与圆角）口径不重叠；真限制：只做 `filter:` 声明，不做 backdrop-filter（毛玻璃另立项）、不输出处理后图片，须明示）。
+2. **CSS 毛玻璃生成器** — P2 留池顺位第二（141 轮新晋 P2；142 轮复核仍未交付；痛点：毛玻璃面板要同时调对 backdrop-filter 模糊／饱和度、rgba 填充不透明度与边框不透明度三组值，单值手写时面板要么糊成白板、要么透得看不清字，凭代码想象不出在真实彩色背景上的可读性；纯前端小难度：模糊／饱和度／填充色与不透明度／边框不透明度／圆角／阴影滑杆＋卡片／导航栏／登录框预设＋彩色渐变背景实时预览＋复制 CSS（含 -webkit- 前缀行），零上传；与 CSS 滤镜生成器（`filter:` 模糊元素自身）、CSS 阴影／圆角生成器（只做 box-shadow 与圆角）口径不重叠；真限制：只做 backdrop-filter 毛玻璃面板声明，不做液态玻璃折射／位移贴图、不做图片处理，须明示）。
+3. **CSS 特异性计算器** — 观察项晋升 P2（108 轮观察项；142 轮晋升；痛点：选择器权重靠心算，样式冲突时不知道谁赢，!important 满天飞就是没人敢算权重；纯前端小难度：选择器输入＋逐段解析计数＋(a, b, c) 三元组与权重比较＋多选择器排序＋胜负判定＋复制结果，零上传；与站内 CSS 生成类工具（渐变／阴影／圆角／关键帧／Grid／Flexbox 均只产样式声明）口径不重叠；真限制：只做特异性计算与比较，不做整张样式表解析、不做浏览器实际层叠模拟，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；142 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 141 轮及之前记录。
+
+**通用候选表增量**（第一百四十二轮：CSS 文字阴影生成器已交付划出（049cd66 新增；ID css_text_shadow_generator、Path /tools/css-text-shadow-generator 已注册；全量 214 Path；候选池划出）；**CSS 特异性计算器由观察项晋升 P2**；CSS 滤镜生成器、CSS 毛玻璃生成器顺位递进；自有实锤消解 5+ 项（Tailwind→CSS 为反向转换器已覆盖的映射对另一半；CSS 按钮生成器参数已被渐变／阴影／圆角覆盖；JWT／哈希／密码／颜色转换器站内均已覆盖；V2EX／HN 搜索无有效新信号）；全量 214 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 文字阴影生成器 | 已交付划出（049cd66 新增；ID css_text_shadow_generator、Path /tools/css-text-shadow-generator 已注册；全量 214 Path；候选池划出） | — | 已实现 |
+| CSS 特异性计算器 | 选择器权重靠心算、样式冲突时不知道谁赢；选择器输入＋逐段解析＋(a,b,c) 三元组比较＋多选择器排序＋胜负判定＋复制结果，纯前端零上传；站内 specificity 命中为 0，不重叠 | 小 | P2（观察项晋升） |
+| CSS 滤镜生成器 | 复核仍未交付（140 轮 P2，顺位递进为首席）；九函数串联手写要反复猜数值与顺序、叠加效果凭代码想象不出；九函数滑杆＋开关＋预设＋示例图实时预览＋复制 filter 声明，纯前端零上传 | 小 | P2（留池） |
+| CSS 毛玻璃生成器 | 复核仍未交付（141 轮 P2，顺位递进为第二）；毛玻璃三组值手写难一次调对可读性；滑杆＋卡片／导航栏／登录框预设＋彩色背景实时预览＋复制 CSS，纯前端零上传 | 小 | P2（留池） |
+| 自有实锤消解 | 不立（Tailwind→CSS 为反向转换器已覆盖的映射对另一半；CSS 按钮生成器参数已被渐变／阴影／圆角覆盖；JWT／哈希／密码／颜色转换器站内均已覆盖；V2EX／HN 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十二轮——CSS 文字阴影生成器交付闭环（049cd66，`/tools/css-text-shadow-generator` 已注册，全量 214 Path），候选池划出；**CSS 特异性计算器由观察项晋升 P2**；**CSS 滤镜生成器、CSS 毛玻璃生成器顺位递进为 Top3 前两位**；仓库 214 注册工具全量核对无重叠（Top3 建议 CSS 滤镜生成器／CSS 毛玻璃生成器／CSS 特异性计算器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 049cd66（文字阴影生成器新增）／01a87ea（关键帧生成器全局缓动修复）／31cfca9（关键帧生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **214**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-29 03:38 · 产品经理排期轮，接 141 轮调研）
 
 **选定：CSS 文字阴影生成器（css_text_shadow_generator）** — 本轮唯一任务（新工具）：
