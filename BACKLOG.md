@@ -1,3 +1,91 @@
+## 今日任务（2026-10-28 19:37 · 产品经理排期轮，接 137 轮调研）
+
+**选定：CSS clip-path 生成器（css_clip_path_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（137 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。SVG 换色器已交付划出（6711099 新增，全量 209 Path），首席顺位自然递进至本项；不再以「Flexbox 难度更小」等理由二次跳过——CSS Flexbox 可视化生成器、CSS Grid 可视化生成器均不插队。
+- **未选**：CSS Flexbox 可视化生成器（136 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；痛点与纯前端路线均已复核无重叠，见 137 轮记录）；CSS Grid 可视化生成器（137 轮新晋 P2，**无硬伤，留池顺位递进——同上，仅顺位后置**；136 轮已明示 Grid 另立工具、不混在 Flexbox 页，本项亦不混 Grid）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **209 Path**；`git log` 头部 6711099（SVG 换色器新增）／2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）。逐项复核：`clip_path`／`css_clip_path` 在 tools／templates／static/js／tests 四路均为 0 实现命中；`clip-path` 的 13 处命中全部为非生成器用法——CSS 转 Tailwind 的声明映射文案与任意值兜底（`[clip-path:circle(50%)]`）、图片隐写对比滑杆的内部样式、HTML/SVG 转 JSX 的属性名映射、SVG 换色器测试里「不链未交付工具」的断言，均非 clip-path 生成器实现；`flexbox` 唯一命中即上述 SVG 换色器测试断言。近邻再辨析：① **CSS 渐变生成器**（ID css_gradient_generator）只做渐变填充，不产裁剪形状；② **CSS 阴影／圆角生成器**（ID css_shadow_radius_generator）只做阴影与圆角，不产 clip-path；③ **CSS 转 Tailwind**（ID css_to_tailwind）只把已有 clip-path 声明映射为任意值工具类，不生成、不编辑形状；④ **CSS 缓动生成器／CSS clamp 计算器**各只做单类样式数值，不碰形状。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——手写 polygon 百分比坐标难调、改一处就要全量重算，设计软件出图又不能直接贴 CSS，画布拖拽顶点＋百分比坐标列表双向编辑＋预设＋实时预览＋复制 CSS／HTML 片段恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，坐标解析／预设生成／四类形状拼串均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 渐变／阴影／圆角／缓动／clamp 生成器同属「CSS 可视化生成」需求簇，裁剪后的色块可再叠渐变、描圆角，成组发现；⑤ **外部佐证已就位**——135 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 渐变生成器、CSS 阴影／圆角生成器、CSS 转 Tailwind 同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 polygon／circle／ellipse／inset**——不做 SVG path() 与新 shape() 函数，页面须明示；② **百分比坐标系**——polygon 顶点一律用百分比（相对元素盒子），不支持 px／em 混合坐标，页面须明示；③ **clip-path 裁剪不影响布局**——被裁掉的部分不占位但元素盒子仍在，页面须明示「裁剪≠隐藏元素、点击区域仍按盒子算」的简短说明；④ **inset 圆角写法固定**——只支持 `round <半径>` 单值写法，不做四角分别圆角，页面须明示；⑤ **不收集、不上传任何内容**——画布编辑与背景图（如上传）只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整）：
+  - `parsePolygon(text)`：解析 `"50% 0%, 100% 100%, 0% 100%"` 形文本 → `[{ x, y }]`（x／y 为 0–100 的数值，允许最多 2 位小数，`%` 号可省）；空串、点数＜3、坐标缺失／非数值／越界／分隔符错乱返回失败。
+  - `pointsToPolygon(points)`：`[{ x, y }]` → `"polygon(50% 0%, 100% 100%, 0% 100%)"`（数值输出时去尾零：整数不带小数、其余最多 2 位小数）；点数＜3、坐标非法返回失败。
+  - `parseClipPath(text)`：解析完整 clip-path 值，polygon／circle／ellipse／inset 四类各按自有语法解析，返回 `{ kind, points? | radius?, cx?, cy? | rx?, ry?, cx?, cy? | top?, right?, bottom?, left?, round? }`；其它函数名（path()／shape()／url() 等）与语法错误返回失败并明示「不支持的形状函数」。
+  - `buildCircle(radius, cx, cy)`：数值均为 0–100（radius＞0）→ `"circle(50% at 50% 50%)"` 形；非法返回失败。
+  - `buildEllipse(rx, ry, cx, cy)`：数值均为 0–100（rx／ry＞0）→ `"ellipse(50% 40% at 50% 50%)"` 形；非法返回失败。
+  - `buildInset(top, right, bottom, left, round)`：四边数值 0–100、round 可省（可省时不输出 round 段；有值时 0–50）→ `"inset(10% 20% 30% 40% round 10%)"` 形；非法返回失败。
+  - `buildClipCss(shape)`：shape 为上述任一解析结果 → `"clip-path: <值>;\n-webkit-clip-path: <值>;"` 两行（含 webkit 前缀行，顺序先标准后前缀）；非法 shape 返回失败。
+  - `buildHtmlSnippet(clipValue)`：返回演示 HTML 片段（一个带 class `clip-demo` 的 div，内联 style 含 clip-path 与宽高 300×200、渐变背景占位），clipValue 须经 parseClipPath 校验，非法返回失败。
+  - `generatePreset(name)`：name 仅接受 triangle／diamond／pentagon／hexagon／star／arrow-right／chevron／trapezoid／parallelogram，返回对应 polygon 点数组（star 为标准五角星 10 点，arrow-right 含 7 点，chevron 含 6 点，其余按常规几何）；未知 name 返回失败。
+  - `movePoint(points, index, x, y)`：返回新数组（不改原数组），index 越界、坐标越界返回失败。
+  - `addPoint(points, x, y)`／`removePoint(points, index)`：新增点追加到末尾、删除点后点数＜3 返回失败；其余非法返回失败。
+  - `suggestExportName(kind)`：`css` → `clip-path.css`，`html` → `clip-path-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：形状切换区（polygon／circle／ellipse／inset 四页签）；polygon 页含画布区（SVG 叠加层：预览块上画多边形轮廓＋可拖拽顶点圆点，拖拽即改坐标）＋坐标列表区（每行 x／y 百分比数字输入＋删除按钮＋「添加顶点」按钮，改输入即同步画布，双向编辑）＋预设区（triangle／diamond／pentagon／hexagon／star／arrow-right／chevron／trapezoid／parallelogram 九个预设按钮）；circle／ellipse／inset 页各含对应数值滑杆＋数字输入（circle：半径＋中心 x／y；ellipse：横纵半径＋中心 x／y；inset：四边＋可选 round）；预览区（300×200 渐变演示块，实时应用当前 clip-path；可选本地背景图上传≤5MB，仅 image/*，走 FileReader 本地读取，非法红字提示）；代码区（CSS 片段与 HTML 片段两栏，实时同步，「复制 CSS」「复制 HTML」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 star 预设、无需上传即可演示编辑→预览→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览只用解析校验后的 clip-path 值，杜绝注入。
+- 操作与互链：与 CSS 渐变生成器（/tools/css-gradient-generator，文案按「渐变填充 vs 裁剪形状」区分，裁剪块可用渐变做填充）、CSS 阴影／圆角生成器（/tools/css-shadow-radius-generator，文案按「阴影圆角 vs 裁剪形状」区分）、CSS 转 Tailwind（/tools/css-to-tailwind，文案按「生成形状 vs 映射已有声明为工具类」区分，生成的 clip-path 可再映射为任意值工具类）互链；不与未交付的 CSS Flexbox 可视化生成器、CSS Grid 可视化生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写坐标解析／预设几何／四类形状拼串，不引入任何图形或 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；背景图走 FileReader 本地读取，不经过任何服务器；示例为页面内置预设，不依赖外链。
+- 注册：ID `css_clip_path_generator`、Name「CSS clip-path 生成器」、Path `/tools/css-clip-path-generator`、Category 开发工具、Icon 建议 crop（图标库无此名则用 scissors 兜底；勿与 CSS 渐变的 gradient、CSS 阴影／圆角的图标在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（CSS clip-path 生成器、clip-path 可视化、polygon 生成器、css clip path generator、polygon clip-path、css shape generator、clip-path circle ellipse inset）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-clip-path-generator，相关工具互链 CSS 渐变生成器、CSS 阴影／圆角生成器、CSS 转 Tailwind。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_clip_path_generator`、Path `/tools/css-clip-path-generator` 注册完整（Category 开发工具），注册总数 209→210 Path。
+2. 坐标解析向量闭环（node 断言）：parsePolygon 已知值（`"50% 0%, 100% 100%, 0% 100%"` → 三点；无 `%` 号输入同值通过；小数 33.33 通过）；pointsToPolygon 往返一致（去尾零：50 不输出 50.00）；点数＜3、越界 101、非数值判失败。
+3. 四类形状向量闭环（node 断言）：buildCircle／buildEllipse／buildInset 已知值拼串正确；radius／rx／ry 为 0、越界、round 越界判失败；parseClipPath 四类往返一致，path()／shape()／url() 判失败并明示不支持。
+4. 预设与编辑向量闭环（node 断言）：generatePreset 九个预设点数与关键顶点正确（star 10 点、arrow-right 7 点、chevron 6 点）；未知预设失败；movePoint 不改原数组且新数组值正确；removePoint 删至＜3 点失败；addPoint 追加后点数＋1。
+5. 代码生成向量闭环（node 断言）：buildClipCss 输出标准行＋webkit 前缀行；buildHtmlSnippet 含 class `clip-demo` 与当前 clip-path 值；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+6. 操作闭环（浏览器手工／测试复核）：拖拽顶点→坐标列表同步变化→改列表输入→画布同步变化→切预设→形状页签切换（polygon／circle／ellipse／inset）→预览实时变化→复制 CSS／HTML、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只做 polygon／circle／ellipse／inset」「不做 SVG path() 与新 shape() 函数」「百分比坐标系」「裁剪不影响布局、点击区域仍按盒子算」「inset 圆角只支持单值 round」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS 渐变生成器、CSS 阴影／圆角生成器、CSS 转 Tailwind；不含未交付工具的硬凑互链；非法坐标／非法形状有红字降级提示。
+9. node 测试 25+ 断言全过（坐标解析与拼串向量、四类形状向量、预设与编辑向量、代码生成向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端画布、坐标列表、滑杆组、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_clip_path_generator.html`（新增；含 SEO 面板按家族标准＋形状页签／画布拖拽区／坐标列表区／预设区／数值控件区／预览区／代码区／示例演示）
+- `static/js/css_clip_path_generator.js`（新增；坐标解析与拼串、四类形状生成、九个预设几何、顶点增删改、CSS／HTML 片段生成、导出命名；双模式导出供 node 测试）
+- `tests/css_clip_path_generator.test.js`（新增；坐标解析与拼串向量、四类形状向量、预设与编辑向量、代码生成向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_clip_path_generator、Path /tools/css-clip-path-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功，请开发轮推送前仍常规复核）；`git log` 头部 6711099（SVG 换色器新增）／2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **209**；Top3 候选重叠复核（clip_path／css_clip_path 在四路 0 实现命中；clip-path 13 处命中均为非生成器用法——CSS 转 Tailwind 映射、图片隐写对比滑杆、JSX 属性映射、SVG 换色器测试断言；CSS 渐变只做渐变、阴影／圆角只做阴影圆角、CSS 转 Tailwind 只映射已有声明，辨析见上；CSS Flexbox 可视化生成器与 CSS Grid 可视化生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 19:00 · 通用调研第一百三十七轮）
+
+**交付状态**：10-28 通用调研第一百三十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**SVG 换色器已交付闭环**（6711099 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **209 Path**，ID svg_recolor、Path /tools/svg-recolor 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 轮，优先小／中难度纯前端。
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. SVG 换色器交付确认：`git log` 头部 6711099（SVG 换色器新增）／2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）；全量 209 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；仅 known_hosts 新增 github.com 主机密钥提示，属正常首次记录）。
+2. 留池复核仍未交付：CSS clip-path 生成器、CSS Flexbox 可视化生成器在 tools/categories.go 中命中均为 0，templates／static/js 下无 clip／flex 生成器文件（仅 nine_grid、quicksort 等无关命中），135／136 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS Grid 可视化生成器**（cssgridgenerator.io、Layoutit、markodenic 等多个独立工具：行列数＋fr／px／%／minmax 轨道尺寸、gap 滑杆、画布拖拽圈选命名区域 grid-template-areas、圣杯／仪表盘／三栏等预设、复制 CSS／HTML／Tailwind 片段）：**站内真缺口，晋升 P2**——categories.go 中 css_grid／grid_generator 命中为 0，templates／static/js 下无 Grid 生成器（grid 命中仅为九宫格与 CSS 转 Tailwind 的逐条映射）；CSS Flexbox 可视化生成器（留池 P2）只做单维布局、136 轮已明示「Grid 若立项另立工具、不混在一页」，本项正是该预留口；纯前端中难度：轨道编辑＋区域拖拽＋预设＋实时预览＋复制代码，零上传；真限制：只做单层显式网格，不做嵌套子网格／subgrid 与多断点批量导出（须明示）；
+   - **其余信号全部消解，不立**：英文榜单群余项（JSON／正则／Base64／UUID／URL 编码／HTML 实体／JSON Schema 校验／JS-CSS 压缩／密码生成／二维码／Markdown 预览／配色／批量图片缩放均为已注册工具；网站搭建器／Figma／Webflow／AI 去背景属重型产品或需后端／AI）／V2EX 搜索（本轮返回导航站 Builderoom、二手转售 AI 描述工具、dtool 数据流水线，均非单页工具新信号）／365Lab 文本批量处理信号中的行去重与排序（见观察项，不直接晋升 P2：AI 文本清洁器只清零宽字符／BOM 等不可见字符，不做行去重排序，缺口真实但与站内文本工具簇的边界待 PM 界定，先放观察项）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；SVG 换色器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，136 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS clip-path 生成器** — P2 留池顺位首席（135 轮新晋 P2；137 轮复核仍未交付；痛点：手写 polygon 百分比坐标难调、改一处就要全量重算，设计软件出图又不能直接贴 CSS；纯前端小／中难度：画布拖拽顶点＋百分比坐标列表双向编辑＋三角形／星形／箭头等预设＋circle／ellipse／inset 基础形状＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS 渐变生成器（只做渐变）、CSS 阴影／圆角生成器（只做阴影圆角）口径不重叠；真限制：只做 polygon／circle／ellipse／inset，不做 SVG path() 与新 shape() 函数须明示）。
+2. **CSS Flexbox 可视化生成器** — P2 留池顺位第二（136 轮新晋 P2；137 轮复核仍未交付；痛点：flex 十余属性分容器与条目两层、主轴／交叉轴随 direction 互换，新手凭属性表想象不出布局，调错一处就要反复改代码刷新看效果；纯前端小难度：容器方向／对齐／换行／gap 控件＋条目 grow／shrink／basis／order／align-self 控件＋导航栏／居中／卡片换行／侧边栏预设＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS 转 Tailwind（只做已有声明映射）、CSS 渐变／阴影／圆角／缓动／clamp 生成器（各只做单类样式）口径不重叠；真限制：只做单维 flex 布局、不做二维 Grid 区域布局与多断点批量导出，须明示——Grid 另立本轮第三项，不混页）。
+3. **CSS Grid 可视化生成器** — 新晋 P2（137 轮新晋；痛点：grid-template-columns／rows、轨道尺寸函数与 grid-template-areas 手写易错，区域跨行跨列全靠脑补坐标，改一处就要重算整张网格；纯前端中难度：行列数＋轨道尺寸编辑（fr／px／%／minmax）＋gap 滑杆＋画布拖拽圈选命名区域＋圣杯／仪表盘／三栏预设＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS Flexbox 可视化生成器（只做单维布局）、CSS 转 Tailwind（只做已有声明映射）、九宫格（只做图片九切）口径不重叠；真限制：只做单层显式网格，不做嵌套子网格／subgrid 与多断点批量导出，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；137 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：行去重与排序器（137 轮观察项新增；AI 文本清洁器只清不可见字符，不做行去重／排序，缺口真实但与文本工具簇边界待 PM 界定，未晋升 P2）；批量随机数生成器（133 轮观察项新增；未晋升 P2）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮）；文本对齐列→表格转换器（110 轮）；SQLite 数据库查看器／JSON→表格查看器（111 轮）；常用端口号速查（119 轮）；字体搭配预览器（129 轮观察项新增；与站内配色／字体族口径重叠待 PM 界定，未晋升 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 136 轮及之前记录。
+
+**通用候选表增量**（第一百三十七轮：SVG 换色器已交付划出（6711099 新增；ID svg_recolor、Path /tools/svg-recolor 已注册；全量 209 Path；候选池划出）；**CSS Grid 可视化生成器新晋 P2**；CSS clip-path 生成器、CSS Flexbox 可视化生成器顺位递进；行去重与排序器新增为观察项；自有实锤消解 10+ 项（JSON／正则／Base64／UUID／URL 编码／HTML 实体／JSON Schema 校验／JS-CSS 压缩／密码生成／二维码／Markdown 预览／批量图片缩放均为已注册工具；榜单群余项为重型产品或需后端／AI；V2EX 搜索无有效新信号）；全量 209 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SVG 换色器 | 已交付划出（6711099 新增；ID svg_recolor、Path /tools/svg-recolor 已注册；全量 209 Path；候选池划出） | — | 已实现 |
+| CSS Grid 可视化生成器 | 手写轨道尺寸与 grid-template-areas 易错、跨行跨列靠脑补坐标；轨道编辑＋拖拽圈选命名区域＋预设＋实时预览＋复制 CSS／HTML，纯前端零上传 | 中 | P2（新晋） |
+| CSS clip-path 生成器 | 复核仍未交付（135 轮 P2，顺位递进为首席）；手写 polygon 百分比坐标难调，画布拖拽顶点＋百分比列表双向编辑＋预设＋实时预览＋复制 CSS，纯前端零上传 | 中 | P2（留池） |
+| CSS Flexbox 可视化生成器 | 复核仍未交付（136 轮 P2，顺位递进为第二）；flex 属性分容器与条目两层、主轴／交叉轴随 direction 互换，容器与条目控件＋预设＋实时预览＋复制 CSS／HTML，纯前端零上传 | 小 | P2（留池） |
+| 行去重与排序器（观察项） | 合并的关键词／链接／日志列表常带重复行，手工清理易漏；粘贴文本→去重（大小写／空白选项）＋排序＋计数统计＋复制／下载，纯前端零上传；AI 文本清洁器只清不可见字符，不重叠，但与文本工具簇边界待 PM 界定 | 小 | 观察项 |
+| 自有实锤消解 | 不立（JSON／正则／Base64／UUID／URL 编码／HTML 实体／JSON Schema 校验／JS-CSS 压缩／密码生成／二维码／Markdown 预览／批量图片缩放均为已注册工具；榜单群余项为重型产品或需后端／AI；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十七轮——SVG 换色器交付闭环（6711099，`/tools/svg-recolor` 已注册，全量 209 Path），候选池划出；**CSS Grid 可视化生成器新晋 P2**；**CSS clip-path 生成器、CSS Flexbox 可视化生成器顺位递进为 Top3 前两位**；仓库 209 注册工具全量核对无重叠（Top3 建议 CSS clip-path 生成器／CSS Flexbox 可视化生成器／CSS Grid 可视化生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 6711099（SVG 换色器新增）／2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **209**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 17:38 · 产品经理排期轮，接 136 轮调研）
 
 **选定：SVG 换色器（svg_recolor）** — 本轮唯一任务（新工具）：

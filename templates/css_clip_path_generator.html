@@ -1,0 +1,260 @@
+{{define "css_clip_path_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS clip-path 生成器 - polygon/circle/ellipse/inset 可视化裁剪生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS clip-path 生成器：画布拖拽顶点＋百分比坐标列表双向编辑，三角形／菱形／五边形／六边形／五角星／右箭头／chevron／梯形／平行四边形九个预设，circle／ellipse／inset 基础形状，渐变演示块实时预览，一键复制 CSS／HTML 或下载 clip-path.css。纯前端本地运行，零上传。">
+    <meta name="keywords" content="CSS clip-path 生成器,clip-path 可视化,polygon 生成器,css clip path generator,polygon clip-path,css shape generator,clip-path circle ellipse inset">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-clip-path-generator">
+    <meta property="og:title" content="CSS clip-path 生成器 - polygon/circle/ellipse/inset 可视化裁剪生成">
+    <meta property="og:description" content="画布拖拽顶点＋百分比坐标列表双向编辑，九个预设，circle／ellipse／inset 基础形状，实时预览，一键复制 CSS／HTML。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-clip-path-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS clip-path 生成器","description":"免费在线 CSS clip-path 生成器：画布拖拽顶点＋百分比坐标列表双向编辑，九个预设，circle／ellipse／inset 基础形状，渐变演示块实时预览，一键复制 CSS／HTML，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-clip-path-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ccp-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .ccp-wrap .navbar .material-icons { display: none; }
+        .ccp-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .ccp-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .ccp-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .ccp-error { color:#dc2626; font-size:.9rem; min-height:1.3em; margin:.4rem 0; }
+        .ccp-tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+        .ccp-tab { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .ccp-tab.active { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .ccp-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .ccp-row label { font-size:.92rem; color:#374151; min-width:4.5em; }
+        .ccp-row input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        .ccp-val { display:inline-block; min-width:4.5em; font-weight:600; color:var(--primary-color); font-size:.92rem; }
+        .ccp-check { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:#374151; cursor:pointer; }
+        .ccp-stage-wrap { overflow-x:auto; padding:1.5rem 1rem; border-radius:.7rem; border:1px solid #e5e7eb; background:#f9fafb; }
+        .ccp-stage { min-width:320px; display:flex; justify-content:center; }
+        .ccp-canvas-box { position:relative; width:300px; height:200px; flex-shrink:0; }
+        .ccp-preview { position:absolute; inset:0; background:linear-gradient(135deg, #3b82f6, #a855f7); display:flex; align-items:center; justify-content:center; color:#fff; font-size:.95rem; }
+        .ccp-svg-wrap { position:absolute; inset:0; }
+        .ccp-svg-wrap svg { width:100%; height:100%; display:block; overflow:visible; }
+        .ccp-point-row { display:flex; gap:.5rem; align-items:center; margin:.45rem 0; flex-wrap:wrap; }
+        .ccp-point-label { font-size:.9rem; color:#374151; min-width:4em; }
+        .ccp-point-row input[type=number] { width:76px; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.9rem; }
+        .ccp-btn-small { padding:.3rem .7rem; border-radius:.4rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.85rem; }
+        .ccp-btn-small:hover { background:#f3f4f6; }
+        .ccp-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; min-height:2.6em; }
+        .ccp-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .ccp-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .ccp-btn:hover { background:#f3f4f6; }
+        .ccp-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:.7rem; }
+        .ccp-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .4rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .ccp-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .ccp-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .ccp-tip a { color:var(--primary-color); }
+        .ccp-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .ccp-links a { color:var(--primary-color); font-size:.93rem; }
+        .ccp-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .ccp-stage-wrap { padding:1rem .5rem; }
+            .ccp-point-row input[type=number] { width:64px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="ccp-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>✂️ CSS clip-path 生成器</h1>
+            <p>画布拖拽顶点＋百分比坐标双向编辑，实时预览裁剪效果，一键复制 CSS／HTML</p>
+        </div>
+        <div class="tool-content" id="ccp-form">
+            <div class="ccp-card">
+                <h3>形状类型</h3>
+                <div class="ccp-tabs" role="tablist">
+                    <button class="ccp-tab active" id="ccp-tab-polygon" type="button">polygon 多边形</button>
+                    <button class="ccp-tab" id="ccp-tab-circle" type="button">circle 圆形</button>
+                    <button class="ccp-tab" id="ccp-tab-ellipse" type="button">ellipse 椭圆</button>
+                    <button class="ccp-tab" id="ccp-tab-inset" type="button">inset 内缩矩形</button>
+                </div>
+                <p class="ccp-error" id="ccp-error" role="alert"></p>
+
+                <div id="ccp-panel-polygon">
+                    <h3 style="font-size:.95rem;">坐标列表 <span class="ccp-hint">（改数字即同步画布；拖拽画布顶点即同步列表）</span></h3>
+                    <div id="ccp-points"></div>
+                    <div class="ccp-actions">
+                        <button class="ccp-btn" id="ccp-add-point" type="button">＋ 添加顶点</button>
+                        <span class="ccp-hint">新顶点加在首尾连线中点，可再拖到目标位置；删除后不足 3 个顶点时会被阻止并红字提示。</span>
+                    </div>
+                    <h3 style="font-size:.95rem;margin-top:1rem;">九个预设 <span class="ccp-hint">（点击载入，载入后仍可编辑再预览）</span></h3>
+                    <div class="ccp-presets">
+                        <button class="ccp-preset" id="ccp-preset-triangle" type="button">三角形</button>
+                        <button class="ccp-preset" id="ccp-preset-diamond" type="button">菱形</button>
+                        <button class="ccp-preset" id="ccp-preset-pentagon" type="button">五边形</button>
+                        <button class="ccp-preset" id="ccp-preset-hexagon" type="button">六边形</button>
+                        <button class="ccp-preset" id="ccp-preset-star" type="button">五角星</button>
+                        <button class="ccp-preset" id="ccp-preset-arrow-right" type="button">右箭头</button>
+                        <button class="ccp-preset" id="ccp-preset-chevron" type="button">chevron</button>
+                        <button class="ccp-preset" id="ccp-preset-trapezoid" type="button">梯形</button>
+                        <button class="ccp-preset" id="ccp-preset-parallelogram" type="button">平行四边形</button>
+                    </div>
+                </div>
+
+                <div id="ccp-panel-circle" style="display:none;">
+                    <div class="ccp-row">
+                        <label>半径</label>
+                        <input type="range" id="ccp-circle-radius" min="1" max="100" step="1" value="50">
+                        <span class="ccp-val" id="ccp-circle-radius-val">50%</span>
+                        <span class="ccp-hint">半径须大于 0，最大 100%</span>
+                    </div>
+                    <div class="ccp-row">
+                        <label>中心横坐标</label>
+                        <input type="range" id="ccp-circle-cx" min="0" max="100" step="1" value="50">
+                        <span class="ccp-val" id="ccp-circle-cx-val">50%</span>
+                        <label>中心纵坐标</label>
+                        <input type="range" id="ccp-circle-cy" min="0" max="100" step="1" value="50">
+                        <span class="ccp-val" id="ccp-circle-cy-val">50%</span>
+                    </div>
+                </div>
+
+                <div id="ccp-panel-ellipse" style="display:none;">
+                    <div class="ccp-row">
+                        <label>横半径</label>
+                        <input type="range" id="ccp-ellipse-rx" min="1" max="100" step="1" value="50">
+                        <span class="ccp-val" id="ccp-ellipse-rx-val">50%</span>
+                        <label>纵半径</label>
+                        <input type="range" id="ccp-ellipse-ry" min="1" max="100" step="1" value="40">
+                        <span class="ccp-val" id="ccp-ellipse-ry-val">40%</span>
+                    </div>
+                    <div class="ccp-row">
+                        <label>中心横坐标</label>
+                        <input type="range" id="ccp-ellipse-cx" min="0" max="100" step="1" value="50">
+                        <span class="ccp-val" id="ccp-ellipse-cx-val">50%</span>
+                        <label>中心纵坐标</label>
+                        <input type="range" id="ccp-ellipse-cy" min="0" max="100" step="1" value="50">
+                        <span class="ccp-val" id="ccp-ellipse-cy-val">50%</span>
+                    </div>
+                </div>
+
+                <div id="ccp-panel-inset" style="display:none;">
+                    <div class="ccp-row">
+                        <label>上</label>
+                        <input type="range" id="ccp-inset-top" min="0" max="100" step="1" value="10">
+                        <span class="ccp-val" id="ccp-inset-top-val">10%</span>
+                        <label>右</label>
+                        <input type="range" id="ccp-inset-right" min="0" max="100" step="1" value="10">
+                        <span class="ccp-val" id="ccp-inset-right-val">10%</span>
+                    </div>
+                    <div class="ccp-row">
+                        <label>下</label>
+                        <input type="range" id="ccp-inset-bottom" min="0" max="100" step="1" value="10">
+                        <span class="ccp-val" id="ccp-inset-bottom-val">10%</span>
+                        <label>左</label>
+                        <input type="range" id="ccp-inset-left" min="0" max="100" step="1" value="10">
+                        <span class="ccp-val" id="ccp-inset-left-val">10%</span>
+                    </div>
+                    <div class="ccp-row">
+                        <label class="ccp-check"><input type="checkbox" id="ccp-inset-round-enabled"> 启用 round 圆角（单值）</label>
+                        <label>圆角</label>
+                        <input type="range" id="ccp-inset-round" min="0" max="50" step="1" value="10" disabled>
+                        <span class="ccp-val" id="ccp-inset-round-val">10%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ccp-card">
+                <h3>实时预览 <span class="ccp-hint">（300×200 渐变演示块；polygon 页签下可直接拖拽白色顶点）</span></h3>
+                <div class="ccp-stage-wrap">
+                    <div class="ccp-stage">
+                        <div class="ccp-canvas-box">
+                            <div class="ccp-preview" id="ccp-preview">演示块</div>
+                            <div class="ccp-svg-wrap" id="ccp-svg-wrap">
+                                <svg id="ccp-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="多边形顶点编辑画布"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ccp-row">
+                    <label>本地背景图</label>
+                    <input type="file" id="ccp-bg-file" accept="image/*">
+                    <button class="ccp-btn" id="ccp-bg-clear" type="button">清除背景图</button>
+                    <span class="ccp-hint">仅 image/*、≤ 5MB，走 FileReader 本地读取，不上传。</span>
+                </div>
+                <p class="ccp-hint" style="margin-top:.4rem;">注意：裁剪不影响布局——被裁掉的部分只是不显示，元素盒子仍在，点击区域仍按盒子算，裁剪≠隐藏元素。</p>
+            </div>
+
+            <div class="ccp-card">
+                <h3>代码输出</h3>
+                <p class="ccp-hint">CSS 片段含标准行与 -webkit- 前缀行；HTML 片段为带 class clip-demo 的演示块。</p>
+                <div class="ccp-code" id="ccp-code-css"></div>
+                <div class="ccp-actions">
+                    <button class="btn btn-primary" id="ccp-copy-css" type="button">📋 复制 CSS</button>
+                    <button class="btn btn-secondary" id="ccp-download-css" type="button">⬇ 下载 .css</button>
+                </div>
+                <div class="ccp-code" id="ccp-code-html"></div>
+                <div class="ccp-actions">
+                    <button class="btn btn-primary" id="ccp-copy-html" type="button">📋 复制 HTML</button>
+                    <button class="btn btn-secondary" id="ccp-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="ccp-load-example" type="button">⭐ 载入示例</button>
+                    <button class="btn btn-secondary" id="ccp-reset" type="button">↺ 重置</button>
+                </div>
+                <p class="ccp-hint" style="margin-top:.6rem;">「载入示例」载入五角星预设，无需上传即可演示编辑→预览→导出全流程；复制失败时请手动选中代码区内容复制。下载文件名为 clip-path.css／clip-path-demo.html。</p>
+            </div>
+
+            <div class="ccp-card">
+                <h3>使用说明</h3>
+                <ol class="ccp-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>polygon 页：拖拽画布上的白色顶点，或直接改坐标列表里的百分比数字，两边实时同步。</li>
+                    <li>点九个预设一键载入形状，载入后仍可拖拽或改坐标；「添加顶点」在首尾连线中点加一个点，「删除」逐个减点（不足 3 点时阻止）。</li>
+                    <li>circle／ellipse／inset 页：拖滑杆调数值，预览与代码实时重算；inset 勾选「启用 round 圆角」后才输出 round 段。</li>
+                    <li>预览块可换本地背景图（仅本地读取）；复制 CSS／HTML 或下载 clip-path.css／clip-path-demo.html，粘贴即用。</li>
+                </ol>
+            </div>
+
+            <div class="ccp-card">
+                <h3>常见问题</h3>
+                <dl class="ccp-tip">
+                    <dt><b>polygon 坐标为什么是百分比？</b></dt>
+                    <dd>百分比相对元素盒子计算，元素尺寸变化时形状等比跟随；本工具不支持 px／em 混合坐标。</dd>
+                    <dt><b>裁剪后元素还能点到吗？</b></dt>
+                    <dd>能。clip-path 只裁剪显示区域，不改变布局与盒子，点击区域仍按完整盒子算；想彻底隐藏元素请用 display: none。</dd>
+                    <dt><b>inset 的 round 能写四个角吗？</b></dt>
+                    <dd>本工具只支持单值 round 写法（如 round 10%），不做四角分别圆角；需要四角分别圆角请用 border-radius 配合裁剪。</dd>
+                    <dt><b>为什么没有 path()？</b></dt>
+                    <dd>本工具只做 polygon／circle／ellipse／inset 四类；SVG path() 与新 shape() 函数不在本工具范围内。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，背景图只走 FileReader 本地读取。</dd>
+                </dl>
+            </div>
+
+            <div class="ccp-card">
+                <h3>相关工具</h3>
+                <div class="ccp-links">
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器</a>
+                    <a href="/tools/css-to-tailwind">CSS 转 Tailwind 转换器</a>
+                </div>
+                <p class="ccp-tip" style="margin:.6rem 0 0;">渐变填充 vs 裁剪形状：渐变管「块里填什么颜色」，本工具管「块被裁成什么形状」，裁剪块可用渐变做填充；阴影圆角 vs 裁剪形状：阴影与圆角修饰盒子外观，不裁剪形状；生成形状 vs 映射已有声明为工具类：本工具生成 clip-path，本页生成的 clip-path 可再经 CSS 转 Tailwind 映射为任意值工具类。</p>
+            </div>
+
+            <div class="ccp-card">
+                <h3>真限制说明</h3>
+                <ul class="ccp-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>只做 polygon／circle／ellipse／inset 四类形状，不做 SVG path() 与新 shape() 函数。</li>
+                    <li>百分比坐标系：顶点一律用百分比（相对元素盒子），不支持 px／em 混合坐标。</li>
+                    <li>裁剪不影响布局：被裁掉的部分不占位但元素盒子仍在，点击区域仍按盒子算，裁剪≠隐藏元素。</li>
+                    <li>inset 圆角只支持单值 round 写法，不做四角分别圆角。</li>
+                    <li>不收集、不上传任何内容：画布编辑与背景图只在浏览器本地完成，本页面零 fetch／XHR、零 CDN。</li>
+                    <li>预览以当前浏览器渲染为准：clip-path 需现代浏览器，旧浏览器支持不一，不承诺与所有浏览器像素级一致。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="ccp-toast" id="ccp-toast"></div>
+    <script src="/tools/static/js/css_clip_path_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

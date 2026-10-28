@@ -634,6 +634,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_clip_path_generator",
+					Name:        "CSS clip-path 生成器",
+					Description: "画布拖拽顶点＋百分比坐标列表双向编辑：三角形／菱形／五边形／六边形／五角星／右箭头／chevron／梯形／平行四边形九个预设，circle／ellipse／inset 基础形状，300×200 渐变演示块实时预览，输出标准行＋-webkit- 前缀行 CSS 与 HTML 片段，复制或下载 clip-path.css／clip-path-demo.html，纯前端零上传 · CSS clip-path generator: polygon drag editor, 9 presets, circle ellipse inset, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-clip-path-generator",
+					Icon:        "crop",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",
