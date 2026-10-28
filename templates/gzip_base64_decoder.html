@@ -1,0 +1,153 @@
+{{define "gzip_base64_decoder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gzip Base64 解码器 - 粘贴 Base64 解压 gzip 还原文（纯前端）</title>
+    <meta name="description" content="免费在线 Gzip Base64 解码器：粘贴 gzip 压缩后的 Base64 文本，归一化（去空白、剥 data:;base64 前缀、url-safe 转回、补齐 =）→ 解码 → 校验 gzip 魔数 → 浏览器原生 DecompressionStream 解压 → 输出 UTF-8 原文，附反向演示（文本→gzip→Base64），不上传不收集。Gzip base64 decoder: gunzip base64 online, 100% client-side.">
+    <meta name="keywords" content="Gzip Base64 解码,gzip 解压,Base64 gunzip,gzip base64 decoder,gunzip online,base64 gzip decompress,gzip 解码器,压缩 Base64 还原">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/gzip-base64-decoder">
+    <meta property="og:title" content="Gzip Base64 解码器 - 粘贴 Base64 解压 gzip 还原文">
+    <meta property="og:description" content="粘贴 gzip 压缩后的 Base64，归一化→解码→校验魔数→原生解压→输出 UTF-8 原文，附反向演示，全部本地完成不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/gzip-base64-decoder">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Gzip Base64 解码器","description":"粘贴 gzip 压缩后的 Base64 文本，归一化（去空白、剥 data:;base64 前缀、url-safe 转回、补齐 =）→ 解码 → 校验 gzip 魔数 0x1F 0x8B → 浏览器原生 DecompressionStream('gzip') 解压 → 输出 UTF-8 原文，附反向演示（文本→gzip→Base64）、载入示例、复制原文与下载 gzip-decoded.txt，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/gzip-base64-decoder","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .gbd-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .gbd-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .gbd-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .gbd-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
+        .gbd-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .gbd-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .gbd-btn-primary{background:var(--primary-color);border-color:var(--primary-color);color:#fff}
+        .gbd-btn-primary:hover{opacity:.9;color:#fff}
+        .gbd-btn:disabled{opacity:.5;cursor:not-allowed}
+        .gbd-input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;min-height:8rem;max-height:24rem;overflow:auto;background:#fff;color:#111827;width:100%;box-sizing:border-box;resize:vertical;word-break:break-all}
+        .gbd-input:focus{outline:none;border-color:var(--primary-color)}
+        .gbd-error{display:none;font-size:.9rem;line-height:1.7;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;border-radius:.6rem;padding:.7rem .9rem;margin-bottom:.9rem}
+        .gbd-status{font-size:.9rem;min-height:1.4em;color:#374151}
+        .gbd-stats{font-size:.85rem;color:#6b7280;margin-top:.7rem;font-variant-numeric:tabular-nums;word-break:break-all}
+        .gbd-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .gbd-note b{color:#374151}
+        .gbd-steps{margin:0;padding-left:1.2rem;color:#4b5563;line-height:2;font-size:.92rem}
+        .gbd-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .gbd-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .gbd-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.3rem;padding:.05rem .35rem;font-size:.85em;word-break:break-all}
+        .gbd-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .gbd-links a{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #d1d5db;border-radius:.6rem;padding:.5rem .9rem;font-size:.88rem;color:#1f2937;text-decoration:none;background:#fff}
+        .gbd-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        @media (max-width:860px){
+            .gbd-toolbar .gbd-btn{flex:1;justify-content:center}
+            .gbd-input{min-height:7rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Gzip Base64 解码器</h1>
+            <p>粘贴 gzip 压缩后的 Base64 文本 → 归一化 → 解码 → 校验 gzip 魔数 → 原生解压 → 输出 UTF-8 原文。接口调试里常见的「裸解码只得乱码」问题，一贴即解。</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="gbd-privacy" role="note">
+                <div><b>隐私声明：内容不出浏览器。</b>归一化、解码、解压与反向压缩全部在当前页面本地完成，不上传到任何服务器，不做任何存储与记录。本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>输入：gzip 压缩后的 Base64</h3>
+                <div class="gbd-toolbar">
+                    <button type="button" class="gbd-btn gbd-btn-primary" id="gbd-decode">解码并解压</button>
+                    <button type="button" class="gbd-btn" id="gbd-sample">载入示例</button>
+                    <button type="button" class="gbd-btn" id="gbd-paste">粘贴</button>
+                    <button type="button" class="gbd-btn" id="gbd-clear">清空</button>
+                </div>
+                <textarea class="gbd-input" id="gbd-input" placeholder="在此粘贴 gzip 压缩后的 Base64 文本（可含换行、空格、data:;base64, 前缀或 url-safe 字符 - _，都会自动归一化）…" spellcheck="false"></textarea>
+                <div class="gbd-note">归一化会自动做：去空白（含换行）→ 剥离 <b>data:*;base64,</b> 前缀 → url-safe <b>- _</b> 转回 <b>+ /</b> → 按需补 <b>=</b> 至 4 的倍数。非法字符会按位置报错，不静默丢弃。</div>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>输出：解压后原文</h3>
+                <div class="gbd-error" id="gbd-error" role="alert"></div>
+                <textarea class="gbd-input" id="gbd-output" placeholder="解压后的 UTF-8 原文将显示在这里…" readonly spellcheck="false"></textarea>
+                <div class="gbd-toolbar" style="margin-top:.9rem;margin-bottom:0;">
+                    <button type="button" class="gbd-btn" id="gbd-copy">复制原文</button>
+                    <button type="button" class="gbd-btn" id="gbd-download">下载 gzip-decoded.txt</button>
+                    <span class="gbd-status" id="gbd-status" aria-live="polite"></span>
+                </div>
+                <div class="gbd-stats" id="gbd-stats" aria-live="polite"></div>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>反向演示：文本 → gzip → Base64</h3>
+                <p class="gbd-note" style="margin-top:0;">用浏览器原生 CompressionStream('gzip') 把文本压成 gzip 再转标准 Base64，可点「填入上方解码」验证往返。</p>
+                <textarea class="gbd-input" id="gbd-reverse-input" placeholder="在此输入要压缩演示的文本…" spellcheck="false"></textarea>
+                <div class="gbd-toolbar" style="margin-top:.9rem;">
+                    <button type="button" class="gbd-btn gbd-btn-primary" id="gbd-reverse">生成 gzip Base64</button>
+                    <button type="button" class="gbd-btn" id="gbd-reverse-sample">载入示例短文本</button>
+                    <button type="button" class="gbd-btn" id="gbd-reverse-fill">填入上方解码</button>
+                </div>
+                <textarea class="gbd-input" id="gbd-reverse-output" placeholder="生成的 gzip Base64 将显示在这里…" readonly spellcheck="false"></textarea>
+                <div class="gbd-status" id="gbd-reverse-status" aria-live="polite"></div>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>真限制（请先了解）</h3>
+                <ul class="gbd-steps">
+                    <li><b>仅 gzip 格式：</b>zlib、deflate、brotli、xz 等不在范围；魔数不是 0x1F 0x8B 的输入会明确报错。</li>
+                    <li><b>仅 UTF-8 文本输出：</b>解压后非有效 UTF-8（如二进制文件）不强行展示乱码，会报错并给出解压后字节数。</li>
+                    <li><b>老浏览器明示不支持：</b>没有 DecompressionStream('gzip') / CompressionStream('gzip') 的浏览器会直接提示不支持，不静默失败。</li>
+                    <li><b>容量上限 10MB：</b>gzip 字节或解压后文本字节超过 10MB 时拒绝处理，不静默截断。</li>
+                    <li><b>不上传、不收集：</b>所有处理只在浏览器本地完成。</li>
+                </ul>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>使用说明</h3>
+                <ol class="gbd-steps">
+                    <li>在输入区粘贴 gzip 压缩后的 Base64 文本（日志里带换行、带 data: 前缀、url-safe 形式均可）。</li>
+                    <li>点「解码并解压」，下方输出区显示 UTF-8 原文，并给出 Base64 字符数、gzip 字节数与原文字节数。</li>
+                    <li>点「复制原文」或「下载 gzip-decoded.txt」取用结果。</li>
+                    <li>不确定手头的 Base64 是不是 gzip？点「载入示例」载入固定向量 <code>H4sIAAAAAAAAA/NIzcnJ11EIyc/PCU9NUuQCAInvfO4QAAAA</code>，解出 <code>Hello, ToolWeb!</code> 即说明流程正常。</li>
+                    <li>反向演示区可把任意文本压成 gzip Base64，再填回上方验证往返。</li>
+                </ol>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>常见问题</h3>
+                <dl class="gbd-faq">
+                    <dt>裸 Base64 解码出来是乱码，怎么办？</dt>
+                    <dd>乱码往往说明原文先被 gzip 压过、再转 Base64：裸解码只能得到 gzip 二进制。本工具在解码后继续 gunzip，正好补上这一段。</dd>
+                    <dt>报错「不是 gzip 数据」是什么意思？</dt>
+                    <dd>解码后前两字节不是 gzip 魔数 0x1F 0x8B。请先用 Base64 编码／解码工具确认输入是不是裸 Base64，或确认压缩格式确实是 gzip（不是 zlib / deflate / brotli）。</dd>
+                    <dt>报错「gzip 数据损坏或不完整」怎么办？</dt>
+                    <dd>输入可能被截断、复制缺字符或混入了额外内容。请核对来源的完整 Base64，非法字符位置会在归一化阶段先报出来。</dd>
+                    <dt>解压后是二进制文件怎么办？</dt>
+                    <dd>本工具只输出 UTF-8 文本；二进制内容会报「不是有效的 UTF-8 文本」并给出字节数，不强行展示乱码。</dd>
+                    <dt>内容会上传到服务器吗？</dt>
+                    <dd>不会。解码与解压全部用浏览器原生能力在本地完成，本页面不发起任何网络请求。</dd>
+                    <dt>老浏览器打不开怎么办？</dt>
+                    <dd>需要支持 DecompressionStream('gzip') 的新版 Chrome / Edge / Firefox / Safari；不支持时页面会明示，不会静默失败。</dd>
+                </dl>
+            </div>
+
+            <div class="gbd-panel">
+                <h3>相关工具</h3>
+                <div class="gbd-links">
+                    <a href="/tools/base64">Base64 编码/解码</a>
+                </div>
+                <p class="gbd-note">区分：Base64 编码／解码只做裸编解码；本工具是「解码后再 gunzip」，专门处理 gzip 压过的 Base64 文本。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/gzip_base64_decoder.js?v=1"></script>
+</body>
+</html>
+{{end}}

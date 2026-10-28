@@ -1,3 +1,87 @@
+## 今日任务（2026-10-28 11:45 · 产品经理排期轮，接 133 轮调研）
+
+**选定：Gzip Base64 解码器（gzip_base64_decoder）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（133 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。08:42 PM 轮选截图美化器时已明言：Gzip Base64 解码器仅因顺位在截图美化器之后而后置、「下轮首席递进」；截图美化器已交付划出（d09f88d 新增，全量 205 Path），本轮顺位递进为首席，不再以「新晋 P2 更热」等理由二次跳过——两项 133 轮新晋 P2 均不插队。
+- **未选**：SVG 波形／斑点背景生成器（133 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；痛点与纯前端路线均已复核无重叠，见下）；图片取色器与主色提取（133 轮新晋 P2，**无硬伤，留池顺位递进——同上，仅顺位后置**）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **205 Path**；`git log` 头部 d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）。逐项复核：`gzip_base64_decoder`／`gzip-base64-decoder`／`Gzip Base64` 在 tools／templates／static/js／tests 四路均为 0 实现命中（仅有的一处「gzip」测试命中是截图美化器测试里的「不硬凑未交付 Gzip 解码器」断言，属待交付占位、非实现）。近邻再辨析：① **Base64 编码／解码**（ID base64、Path /tools/base64）只做裸编解码，解 gzip 压过的文本只能得到乱码二进制，本工具恰好补「解码后再 gunzip」这一段，不重复；② **URL 笔记分享**（static/js/url_note_share.js 的 DecompressionStream）用的是 `deflate-raw`，且只服务于它自己的 URL fragment 分享口径，不是 gzip、不是独立解码工具，语义不重叠；③ project_to_txt.js 的 GZIP 命中只是文件类型签名判定（魔数 0x1F 0x8B 识别），不解压；④ htaccess 生成器与 HTTP 响应头分析器的 gzip 命中只是文案／配置项，不做解压。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——接口调试与日志里常遇到 gzip 压过的 Base64 文本，裸解码只得乱码，装工具或写脚本解压太重，粘贴→解码→gunzip→输出原文恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，Base64 归一化与 gzip 魔数判定均为确定性纯函数，解压用浏览器原生 DecompressionStream('gzip')，固定测试向量（见规格）可供 node 断言往返，无随机性；④ **受众与站内互补**——与 Base64 编解码、URL 编解码、JSON 格式化等同属「接口调试」需求簇，调试用户成组发现；⑤ **外部佐证已就位**——123 轮观察项、132 轮晋升 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「编码转换」品类（与 Base64 编码／解码同品类，便于编码类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **仅 gzip 格式**——zlib／deflate／brotli／xz 等不在范围，非 gzip 输入（魔数非 0x1F 0x8B）须明确报错并提示「请先用 Base64 编码／解码确认是否为裸 Base64」；② **仅 UTF-8 文本输出**——解压后非有效 UTF-8 文本（如二进制）不强行展示乱码，须明确报错并给出解压后字节数；③ **老浏览器无 DecompressionStream('gzip') 时须明示不支持**，不静默失败；④ **不收集、不上传任何内容**——解码与解压只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数与异步管线（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；解压／压缩为 async，node 24 已实测支持 DecompressionStream／CompressionStream，可直接 await 断言）：
+  - `normalizeBase64(input)`：去空白（含换行／空格，日志里常带换行）；剥离 `data:*;base64,` 前缀；URL-safe 字符 `-`／`_`出现时整体按 url-safe 转回 `+`／`/`；按需补 `=` 至长度为 4 的倍数（最多补 2 个）；首个非法字符返回失败并给出位置（不静默丢弃）。
+  - `decodeBase64(input)`：经 normalizeBase64 后解码，返回 Uint8Array；空输入返回失败。
+  - `isGzip(bytes)`：长度 ≥ 2 且前两字节为 0x1F 0x8B 即为 true。
+  - `gunzipBytes(bytes)`（async）：非 gzip 返回失败；用 DecompressionStream('gzip') 解压；损坏／截断数据返回失败并明示「gzip 数据损坏或不完整」；浏览器无 DecompressionStream 时返回失败并明示不支持。
+  - `decodeGzipBase64(input)`（async，页面主入口）：normalize → decode → isGzip 校验 → gunzip → TextDecoder('utf-8', { fatal: true }) 解码。成功返回 `{ ok: true, text, base64Length, gzipByteLength, textByteLength }`；失败返回 `{ ok: false, stage, error }`，stage 取值 normalize／decode／gzip／utf8／unsupported 之一，界面按 stage 红字提示。
+  - `gzipBase64Encode(text)`（async，反向演示）：CompressionStream('gzip') 压缩 UTF-8 文本后转标准 Base64，供「反向演示：文本→gzip→Base64」与「载入示例」使用；空文本返回失败。
+  - `suggestExportName()`：导出解压文本时固定文件名为 `gzip-decoded.txt`（粘贴流无原文件名，不编造）。
+  - 容量上限常量：解码后 gzip 字节超过 10MB、或解压后文本字节超过 10MB 时返回失败并明示超限（不静默截断）。
+  - 固定测试向量：`H4sIAAAAAAAAA/NIzcnJ11EIyc/PCU9NUuQCAInvfO4QAAAA` 解压后文本为 `Hello, ToolWeb!\n`（node 24 实测往返通过）；另备 JSON 向量文本 `{"ok":true}` 类短文本由 gzipBase64Encode 现场生成往返断言，不硬编第二条固定向量。
+- 界面：输入区（粘贴 Base64 文本框，支持多行粘贴；「粘贴」「清空」按钮；显示 Base64 长度与解码后 gzip 字节数）；操作区（「解码并解压」主按钮；「反向演示」按钮：下方文本→gzip→Base64；「载入示例」按钮：载入固定测试向量并一键解出 `Hello, ToolWeb!`）；输出区（解压后原文文本框，只读展示；「复制原文」「下载 .txt（gzip-decoded.txt）」按钮；显示原文字符数与字节数）；错误区（按 stage 红字提示：非法 Base64 字符位置／非 gzip 魔数不符／gzip 损坏／非 UTF-8／浏览器不支持／超 10MB）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 Base64 编码／解码（/tools/base64）互链（文案按「裸编解码 vs 解码后再 gunzip」区分）；不与未交付的 SVG 波形／斑点背景生成器、图片取色器与主色提取、在线电台收听器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（浏览器原生 DecompressionStream／CompressionStream，不引入 pako 等第三方解压库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；文件读写用 Blob 下载，不经过任何服务器。
+- 注册：ID `gzip_base64_decoder`、Name「Gzip Base64 解码器」、Path `/tools/gzip-base64-decoder`、Category 编码转换、Icon 建议 unarchive（图标库无此名则用 archive 兜底，勿与 Base64 编码／解码的 swap_horiz 重复）、New: true；中英文描述＋SEO keywords（Gzip Base64 解码、gzip 解压、Base64 gunzip、gzip base64 decoder、gunzip online、base64 gzip decompress）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/gzip-base64-decoder，相关工具互链 Base64 编码／解码。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `gzip_base64_decoder`、Path `/tools/gzip-base64-decoder` 注册完整（Category 编码转换），注册总数 205→206 Path。
+2. 归一化与解码向量闭环（node 断言）：含换行／空格的 Base64 归一化成功；`data:text/plain;base64,` 前缀剥离成功；url-safe `-`／`_` 转回成功；缺 `=` 补齐成功；非法字符（如 `!`）失败并给出位置；空输入失败。
+3. gzip 向量闭环（node async 断言）：固定向量 `H4sIAAAAAAAAA/NIzcnJ11EIyc/PCU9NUuQCAInvfO4QAAAA` 解出 `Hello, ToolWeb!\n`；裸 Base64（如 `aGVsbG8=` 解出的 `hello`）走 isGzip 为 false、主入口失败且 stage 为 gzip；截断的 gzip 向量（去尾若干字符）失败且提示损坏或不完整；gzipBase64Encode 现场生成向量再 decodeGzipBase64 往返等于原文。
+4. 文本与容量向量闭环：解压后非 UTF-8 字节（如构造的 gzip 包裹 0xFF 字节）失败且 stage 为 utf8；超 10MB 上限常量分支有断言（以常量与构造长度判定，不实际构造 10MB 文本跑全量解压亦可，但须有上限常量断言）。
+5. 操作闭环（浏览器手工／测试复核）：粘贴固定示例向量 → 解出原文 → 复制与下载 .txt 可用；反向演示：输入短文本 → 生成 gzip Base64 → 再解回原文一致；「载入示例」无需粘贴即可演示全流程。
+6. 真限制可见：页面可见「仅 gzip 格式」「仅 UTF-8 文本输出」「老浏览器不支持时明示」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+7. 操作闭环：相关工具互链含 Base64 编码／解码；不含未交付工具的硬凑互链；解压失败有按 stage 的降级提示。
+8. node 测试 25+ 断言全过（归一化向量、解码向量、gzip 魔数向量、解压往返向量、失败 stage 向量、容量常量向量、注册与零网络请求静态检查）。
+9. 页面无报错；移动端输入框、按钮组、输出框小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/gzip_base64_decoder.html`（新增；含 SEO 面板按家族标准＋输入区／操作区／输出区／错误区／示例演示）
+- `static/js/gzip_base64_decoder.js`（新增；Base64 归一化与解码、gzip 魔数判定、DecompressionStream 解压、CompressionStream 反向压缩、导出命名；双模式导出供 node 测试）
+- `tests/gzip_base64_decoder.test.js`（新增；归一化向量、解码向量、gzip 往返向量、失败 stage 向量、容量常量向量、注册与零网络静态检查）
+- `tools/categories.go`（编码转换品类注册：ID gzip_base64_decoder、Path /tools/gzip-base64-decoder、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错，exit 0；与 132 轮／08:42 PM 轮失败不同，远端同步状态本轮已恢复，请开发轮推送前仍常规复核）；`git log` 头部 d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **205**；Top3 候选重叠复核（gzip_base64_decoder／gzip-base64-decoder 在 tools／templates／static/js／tests 四路 0 实现命中；Base64 裸编解码为近邻非重叠、url_note_share 的 deflate-raw 与本工具的 gzip 口径不同、project_to_txt 的 GZIP 仅为签名判定，辨析见上；SVG 波形／斑点背景生成器与图片取色器与主色提取无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 11:00 · 通用调研第一百三十三轮）
+
+**交付状态**：10-28 通用调研第一百三十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**截图美化器（通用）已交付闭环**（d09f88d 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **205 Path**，ID screenshot_beautifier、Path /tools/screenshot-beautifier 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 轮，优先小难度纯前端。
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. 截图美化器交付确认：`git log` 头部 d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）；全量 205 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；与 132 轮失败不同，远端同步状态本轮已恢复，请开发轮推送前仍常规复核）。
+2. 新信号扫描：
+   - **Haikei 式 SVG 背景生成器**（Haikei Generators 页：Blob／Wave／Blurry Gradient／Circle Scatter／Blob Scene／Layered Waves 等 15 个免费生成器；Get Waves／SVGwave／Shape Divider 等同类工具均以“波形分隔、英雄区背景、页脚边缘”为主场景，导出 SVG／PNG／CSS）：**站内真缺口，晋升 P2**——CSS 渐变生成器只做渐变、SVG 压缩优化器只压缩已有 SVG、骨架屏／头像生成器均非背景生成，`wave`／`blob`／波形背景在 tools／templates／static/js 三路 0 实现命中；纯前端小／中难度：正弦波形分层＋径向扰动有机斑点、种子可复现、导出 SVG／PNG／CSS 三形态，零上传；真限制：只做装饰背景几何、不做插画编辑、不做动画视频导出（WebGL 动画波形与 MP4／GIF 导出不在范围）；
+   - **图片取色器与主色提取**（ConversionTab／Ginifab／PhotoCut／ReadyTools 等多个独立工具：上传图片→点击像素取 HEX／RGB／HSL、放大镜精确定位、主色量化后导出 CSS 变量／JSON）：**站内真缺口，晋升 P2**——颜色转换器只做数值互转（无图片输入）、配色方案生成器只从单基色推方案、WCAG 对比度检查器只做双色对判定、色盲模拟检查器只做模拟，`取色`／主色提取／getImageData 在站内无图片取色实现命中（像素画转换器的中位切分只用于像素化输出图片、不输出色板，语义不重叠）；纯前端小难度：canvas getImageData 点取色＋中位切分主色提取、导出 HEX 列表／CSS 变量，零上传；真限制：只读本地上传图片（外链图片受 CORS 限制不做 URL 抓取）、取色精度受原图压缩与抗锯齿影响须明示；
+   - **其余信号全部消解，不立**：HTTP:COLON 式实时抓取响应头（需服务端抓取、浏览器直抓受 CORS 阻挡；站内粘贴版 HTTP 响应头分析器已注册，不另立）／AI 聊天与 AI 摘要／去背景（需模型或后端）／临时跨设备剪贴板（需后端中转）／Excalidraw 式白板与幻灯片（重型产品形态）／字符计数平台限量版（文本工具集已含字数统计，平台字数阈值只是阈值表、不构成独立工具）／英文榜单群余项（JSON／正则／Base64／UUID／URL／密码／二维码／取色数值转换／渐变／图片压缩缩放／字数统计／Markdown 均为已注册工具，年龄／单位换算属 10-18 方向修正排除，AI 摘要与文件分享需后端／模型）／V2EX 搜索（本轮返回油猴脚本与旧文复现，无有效新信号）。
+3. 候选池变动：截图美化器（通用）已交付划出（d09f88d 新增；ID screenshot_beautifier、Path /tools/screenshot-beautifier 已注册；全量 205 Path）；**本轮新晋 P2 2 个**（SVG 波形／斑点背景生成器、图片取色器与主色提取）；**观察项新增 1 条**（批量随机数生成器：FreeToolHub 榜单项；范围／数量／去重／排序／crypto 安全随机，纯前端小难度；未晋升 P2——随机决策器／随机密码生成器／ULID／NanoID 已覆盖邻近随机需求，独立成工具的价值较薄，留观察）；全量 205 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；截图美化器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，132 轮 Top3 第二顺位递进为首席，两项新晋 P2 依次补足）：
+
+1. **Gzip Base64 解码器** — P2 留池顺位首席（123 轮观察项、132 轮晋升 P2；133 轮复核仍未交付；痛点：接口调试与日志里常遇到 gzip 压过的 Base64 文本，裸 Base64 解码只能得到乱码二进制，装工具或写脚本解压太重；纯前端小难度：粘贴 Base64→解码→gunzip→输出原文，附 gzip 压缩反向演示更佳，零上传；`gzip`／`DecompressionStream` 在 tools／templates／static/js 非 vendor 三路无实现实锤；真限制：仅 gzip 格式、非 gzip 输入须明确报错、老浏览器无 DecompressionStream 时须明示）。
+2. **SVG 波形／斑点背景生成器** — 新晋 P2（133 轮新晋；痛点：做落地页、封面、海报时想要波形分隔与有机斑点背景，手写 SVG 路径数据太费事、Haikei 免费版功能与尺寸受限；纯前端小／中难度：波形分层（振幅／频率／层数／颜色／透明度）＋斑点（复杂度／圆润度／种子）双生成器、实时预览、导出 SVG／PNG／CSS，零上传；与 CSS 渐变生成器（只做渐变）、SVG 压缩优化器（只压已有 SVG）口径不重叠；真限制：只做装饰背景几何、不做插画编辑、不做动画视频导出）。
+3. **图片取色器与主色提取** — 新晋 P2（133 轮新晋；痛点：从 Logo、截图、参考图里抠品牌色只能凭肉眼估，设计软件取色太重、在线取色多要上传；纯前端小难度：上传图片→点击像素取色（HEX／RGB／HSL／CMYK）＋放大镜精确定位＋主色量化提取→导出 HEX 列表／CSS 变量，零上传；与颜色转换器（数值互转无图片输入）、配色方案生成器（单基色推方案）、WCAG 对比度检查器（双色对判定）口径不重叠；真限制：只读本地上传图片、不做 URL 抓取，取色精度受压缩与抗锯齿影响须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；133 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：批量随机数生成器（133 轮观察项新增；未晋升 P2，见上）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮）；文本对齐列→表格转换器（110 轮）；SQLite 数据库查看器／JSON→表格查看器（111 轮）；常用端口号速查（119 轮）；字体搭配预览器（129 轮观察项新增；与站内配色／字体族口径重叠待 PM 界定，未晋升 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 132 轮及之前记录。
+
+**通用候选表增量**（第一百三十三轮：截图美化器（通用）已交付划出（d09f88d 新增；ID screenshot_beautifier、Path /tools/screenshot-beautifier 已注册；全量 205 Path；候选池划出）；**SVG 波形／斑点背景生成器新晋 P2**；**图片取色器与主色提取新晋 P2**；**批量随机数生成器观察项新增**；自有实锤消解 10+ 项（HTTP 实时抓取为粘贴版已注册口径且需后端／CORS 受限；AI 聊天／摘要／去背景需模型或后端；临时剪贴板需后端中转；白板为重型产品；字符平台限量为文本工具集已含口径；榜单群余项均为已注册工具、方向排除或需后端／AI；V2EX 搜索无有效新信号）；全量 205 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 截图美化器（通用） | 已交付划出（d09f88d 新增；ID screenshot_beautifier、Path /tools/screenshot-beautifier 已注册；全量 205 Path；候选池划出） | — | 已实现 |
+| SVG 波形／斑点背景生成器 | 落地页／封面／海报要波形分隔与有机斑点背景，手写 SVG 路径太费事；波形分层＋斑点双生成器、种子可复现、导出 SVG／PNG／CSS，纯前端零上传 | 中 | P2（新晋） |
+| 图片取色器与主色提取 | 从 Logo／截图／参考图抠品牌色凭肉眼估不准；上传图片→点击像素取色＋主色量化→导出 HEX／CSS 变量，纯前端零上传 | 小 | P2（新晋） |
+| 批量随机数生成器 | 抽奖／分组／测试要批量随机数，写脚本太重；范围／数量／去重／排序／crypto 安全随机，纯前端零上传 | 小 | 观察项（新增，未晋升 P2） |
+| 自有实锤消解 | 不立（HTTP 实时抓取为粘贴版已注册口径且需后端／CORS 受限；AI 聊天／摘要／去背景需模型或后端；临时剪贴板需后端中转；白板为重型产品；字符平台限量为文本工具集已含口径；榜单群余项均为已注册工具、方向排除或需后端／AI；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十三轮——截图美化器（通用）交付闭环（d09f88d，`/tools/screenshot-beautifier` 已注册，全量 205 Path），候选池划出；**SVG 波形／斑点背景生成器与图片取色器与主色提取新晋 P2**；**批量随机数生成器观察项新增**；仓库 205 注册工具全量核对无重叠（Top3 建议 Gzip Base64 解码器／SVG 波形／斑点背景生成器／图片取色器与主色提取；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）／5e72930（色盲模拟检查器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **205**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，与 132 轮失败不同）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 08:42 · 产品经理排期轮，接 132 轮调研）
 
 **选定：截图美化器（通用）（screenshot_beautifier）** — 本轮唯一任务（新工具）：

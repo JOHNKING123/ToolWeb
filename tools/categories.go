@@ -120,6 +120,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "gzip_base64_decoder",
+					Name:        "Gzip Base64 解码器",
+					Description: "粘贴 gzip 压缩后的 Base64 文本：归一化（去空白、剥 data:;base64 前缀、url-safe 转回、补齐 =）→ 解码 → 校验 gzip 魔数 0x1F 0x8B → 浏览器原生 DecompressionStream('gzip') 解压 → 输出 UTF-8 原文，附反向演示（文本→gzip→Base64）、载入示例、复制原文与下载 gzip-decoded.txt，非法字符按位置报错、非 gzip／损坏／非 UTF-8／超 10MB 按 stage 红字提示，纯前端零上传 · Gzip base64 decoder: gunzip base64 online, normalize, verify magic, decompress locally, 100% client-side",
+					Path:        "/tools/gzip-base64-decoder",
+					Icon:        "unarchive",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "morse_code_translator",
 					Name:        "摩斯码翻译器",
 					Description: "文本与标准国际摩斯码双向转换，字母数字标点完整对照表，非法字符按位置定位，纯前端本地转换零上传 · Morse code translator and decoder: text to standard International Morse code and back, illegal character location, 100% client-side",
