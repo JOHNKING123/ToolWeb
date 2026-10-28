@@ -1,0 +1,245 @@
+{{define "css_flexbox_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Flexbox 可视化生成器 - 容器与条目属性可视化编辑 flex 布局 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS Flexbox 可视化生成器：容器 direction／wrap／justify-content／align-items／align-content 下拉＋gap 滑杆，条目 grow／shrink／basis／order／align-self 可调，navbar／center／cards-wrap／sidebar 四预设，点击条目选中编辑，实时预览与 CSS／HTML 双栏代码，一键复制或下载 flexbox.css。纯前端本地运行，零上传。">
+    <meta name="keywords" content="CSS Flexbox 可视化生成器,flexbox 生成器,flex 布局工具,css flexbox generator,flex layout generator,flex container item,justify-content align-items">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-flexbox-generator">
+    <meta property="og:title" content="CSS Flexbox 可视化生成器 - 容器与条目属性可视化编辑 flex 布局">
+    <meta property="og:description" content="容器与条目属性可视化编辑，navbar／center／cards-wrap／sidebar 四预设，实时预览，一键复制 CSS／HTML。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-flexbox-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS Flexbox 可视化生成器","description":"免费在线 CSS Flexbox 可视化生成器：容器与条目属性可视化编辑，四预设，实时预览，一键复制 CSS／HTML，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-flexbox-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cfb-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .cfb-wrap .navbar .material-icons { display: none; }
+        .cfb-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .cfb-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .cfb-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .cfb-error { color:#dc2626; font-size:.9rem; min-height:1.3em; margin:.4rem 0; }
+        .cfb-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .cfb-row label { font-size:.92rem; color:#374151; min-width:5.5em; }
+        .cfb-row select, .cfb-row input[type=number], .cfb-row input[type=text] { padding:.4rem .5rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.9rem; background:#fff; }
+        .cfb-row input[type=range] { flex:1; min-width:120px; max-width:280px; }
+        .cfb-row input[type=number] { width:72px; }
+        .cfb-row input[type=text] { width:120px; }
+        .cfb-stage-wrap { overflow-x:auto; padding:1rem; border-radius:.7rem; border:1px solid #e5e7eb; background:#f9fafb; }
+        .cfb-preview { min-height:180px; border:1px dashed #d1d5db; border-radius:.6rem; background:#fff; padding:.6rem; }
+        .cfb-item { min-width:56px; min-height:56px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; border-radius:.5rem; cursor:pointer; padding:.4rem .8rem; box-sizing:border-box; }
+        .cfb-item.selected { outline:3px solid #111827; outline-offset:2px; }
+        .cfb-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; min-height:2.6em; }
+        .cfb-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .cfb-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .cfb-btn:hover { background:#f3f4f6; }
+        .cfb-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:.7rem; }
+        .cfb-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .4rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .cfb-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .cfb-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .cfb-tip a { color:var(--primary-color); }
+        .cfb-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .cfb-links a { color:var(--primary-color); font-size:.93rem; }
+        .cfb-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .cfb-row input[type=range] { min-width:100px; }
+            .cfb-row input[type=text] { width:100px; }
+            .cfb-preview { min-height:150px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="cfb-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧱 CSS Flexbox 可视化生成器</h1>
+            <p>容器与条目属性可视化编辑，实时预览 flex 布局，一键复制 CSS／HTML</p>
+        </div>
+        <div class="tool-content" id="cfb-form">
+            <div class="cfb-card">
+                <h3>容器控件 <span class="cfb-hint">（改动即同步预览与代码）</span></h3>
+                <div class="cfb-row">
+                    <label>direction</label>
+                    <select id="cfb-direction">
+                        <option value="row">row（水平）</option>
+                        <option value="row-reverse">row-reverse（水平反向）</option>
+                        <option value="column">column（垂直）</option>
+                        <option value="column-reverse">column-reverse（垂直反向）</option>
+                    </select>
+                    <label>wrap</label>
+                    <select id="cfb-wrap">
+                        <option value="nowrap">nowrap（不换行）</option>
+                        <option value="wrap">wrap（换行）</option>
+                        <option value="wrap-reverse">wrap-reverse（反向换行）</option>
+                    </select>
+                </div>
+                <div class="cfb-row">
+                    <label>justify-content</label>
+                    <select id="cfb-justify">
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-around">space-around</option>
+                        <option value="space-evenly">space-evenly</option>
+                    </select>
+                    <label>align-items</label>
+                    <select id="cfb-align-items">
+                        <option value="stretch">stretch</option>
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="baseline">baseline</option>
+                    </select>
+                </div>
+                <div class="cfb-row">
+                    <label>align-content</label>
+                    <select id="cfb-align-content">
+                        <option value="stretch">stretch</option>
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-around">space-around</option>
+                    </select>
+                    <label>gap（px）</label>
+                    <input type="range" id="cfb-gap" min="0" max="64" step="1" value="16">
+                    <input type="number" id="cfb-gap-num" min="0" max="64" step="1" value="16">
+                </div>
+                <p class="cfb-hint" id="cfb-axis-hint">当前主轴为水平方向（justify-content 管水平、align-items 管垂直）</p>
+                <p class="cfb-error" id="cfb-error" role="alert"></p>
+            </div>
+
+            <div class="cfb-card">
+                <h3>条目控件 <span class="cfb-hint">（点击预览中的彩色编号块即可选中该条目编辑）</span></h3>
+                <div class="cfb-row">
+                    <label>条目数（1–12）</label>
+                    <input type="number" id="cfb-item-count" min="1" max="12" step="1" value="3">
+                    <label>当前条目</label>
+                    <select id="cfb-item-select"></select>
+                    <span class="cfb-hint">条目数减少时多余条目配置丢弃，新增条目取默认值（grow 0、shrink 1、basis auto、order 0、align-self auto）。</span>
+                </div>
+                <div class="cfb-row">
+                    <label>grow（0–10）</label>
+                    <input type="range" id="cfb-grow" min="0" max="10" step="1" value="0">
+                    <input type="number" id="cfb-grow-num" min="0" max="10" step="1" value="0">
+                    <label>shrink（0–10）</label>
+                    <input type="range" id="cfb-shrink" min="0" max="10" step="1" value="1">
+                    <input type="number" id="cfb-shrink-num" min="0" max="10" step="1" value="1">
+                </div>
+                <div class="cfb-row">
+                    <label>basis</label>
+                    <input type="text" id="cfb-basis" value="auto" placeholder="auto / 200px / 30%">
+                    <span class="cfb-hint">只认 auto、0、数值 px、数值 %（如 auto、200px、30%）；其它单位会被红字提示并拒绝。</span>
+                    <label>order（−10–10）</label>
+                    <input type="number" id="cfb-order" min="-10" max="10" step="1" value="0">
+                    <label>align-self</label>
+                    <select id="cfb-align-self">
+                        <option value="auto">auto</option>
+                        <option value="stretch">stretch</option>
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="baseline">baseline</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="cfb-card">
+                <h3>四个预设 <span class="cfb-hint">（点击载入，载入后仍可再编辑）</span></h3>
+                <div class="cfb-presets">
+                    <button class="cfb-preset" id="cfb-preset-navbar" type="button">navbar（导航栏）</button>
+                    <button class="cfb-preset" id="cfb-preset-center" type="button">center（居中）</button>
+                    <button class="cfb-preset" id="cfb-preset-cards-wrap" type="button">cards-wrap（卡片换行）</button>
+                    <button class="cfb-preset" id="cfb-preset-sidebar" type="button">sidebar（侧边栏）</button>
+                </div>
+                <p class="cfb-hint" style="margin-top:.6rem;">navbar：左右固定＋中间自适应（3 项）；center：单项居中（1 项）；cards-wrap：6 项等分换行卡片；sidebar：首项 200px 固定＋次项自适应（2 项）。</p>
+            </div>
+
+            <div class="cfb-card">
+                <h3>实时预览 <span class="cfb-hint">（彩色编号块即 flex 条目，点击选中编辑；黑框为当前选中条目）</span></h3>
+                <div class="cfb-stage-wrap">
+                    <div class="cfb-preview" id="cfb-preview"></div>
+                </div>
+            </div>
+
+            <div class="cfb-card">
+                <h3>代码输出</h3>
+                <p class="cfb-hint">CSS 片段为容器块＋各条目块；HTML 片段为 &lt;style&gt; 内嵌 CSS＋容器 div 与条目 div。</p>
+                <div class="cfb-code" id="cfb-code-css"></div>
+                <div class="cfb-actions">
+                    <button class="btn btn-primary" id="cfb-copy-css" type="button">📋 复制 CSS</button>
+                    <button class="btn btn-secondary" id="cfb-download-css" type="button">⬇ 下载 .css</button>
+                </div>
+                <div class="cfb-code" id="cfb-code-html"></div>
+                <div class="cfb-actions">
+                    <button class="btn btn-primary" id="cfb-copy-html" type="button">📋 复制 HTML</button>
+                    <button class="btn btn-secondary" id="cfb-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="cfb-load-example" type="button">⭐ 载入示例</button>
+                    <button class="btn btn-secondary" id="cfb-reset" type="button">↺ 重置</button>
+                </div>
+                <p class="cfb-hint" style="margin-top:.6rem;">「载入示例」载入 cards-wrap 预设，无需上传即可演示编辑→预览→导出全流程；复制失败时请手动选中代码区内容复制。下载文件名为 flexbox.css／flexbox-demo.html。</p>
+            </div>
+
+            <div class="cfb-card">
+                <h3>使用说明</h3>
+                <ol class="cfb-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>先在「容器控件」选 direction／wrap／主轴与交叉轴对齐方式，拖 gap 滑杆调间距，预览与代码实时同步。</li>
+                    <li>点击预览中的彩色编号块，或用「当前条目」下拉选中条目，再调 grow／shrink／basis／order／align-self，改动即同步预览与代码。</li>
+                    <li>点四个预设一键载入典型布局，载入后仍可改任意控件；条目数在 1–12 之间调整，新增条目取默认值。</li>
+                    <li>复制 CSS／HTML 或下载 flexbox.css／flexbox-demo.html，粘贴即用；生成的 flex CSS 如需映射为工具类，走 CSS 转 Tailwind 工具。</li>
+                </ol>
+            </div>
+
+            <div class="cfb-card">
+                <h3>常见问题</h3>
+                <dl class="cfb-tip">
+                    <dt><b>direction 切换后主轴／交叉轴怎么变？</b></dt>
+                    <dd>row／row-reverse 时主轴水平，justify-content 管水平、align-items 管垂直；column／column-reverse 时主轴垂直，两者互换，页面上方的示意文案会同步变化。</dd>
+                    <dt><b>basis 能写 em 或 rem 吗？</b></dt>
+                    <dd>不能。本工具 basis 只认 auto、0、数值 px、数值 %，其它单位会红字提示并拒绝，不静默转换。</dd>
+                    <dt><b>为什么没有断点变体？</b></dt>
+                    <dd>本工具只输出一组容器＋条目 CSS，不产 sm／md／lg 断点变体；多断点请在自己的样式表里用媒体查询包裹生成的代码。</dd>
+                    <dt><b>生成的 flex CSS 能直接变 Tailwind 类吗？</b></dt>
+                    <dd>本工具不直接生成 Tailwind 类；生成的 flex CSS 可再经 CSS 转 Tailwind 工具映射为工具类。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部编辑与预览只在浏览器本地完成，本页面零网络请求，不收集、不上传任何内容。</dd>
+                </dl>
+            </div>
+
+            <div class="cfb-card">
+                <h3>相关工具</h3>
+                <div class="cfb-links">
+                    <a href="/tools/css-to-tailwind">CSS 转 Tailwind 转换器</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器</a>
+                </div>
+                <p class="cfb-tip" style="margin:.6rem 0 0;">生成布局 vs 映射已有声明为工具类：本工具生成 flex 布局 CSS，生成的 CSS 可再经 CSS 转 Tailwind 映射为工具类；布局 vs 填充：本工具管容器与条目怎么排，条目可用渐变做填充；布局 vs 阴影圆角：本工具管排布，条目可再描圆角加阴影。</p>
+            </div>
+
+            <div class="cfb-card">
+                <h3>真限制说明</h3>
+                <ul class="cfb-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>只做单维 flex 布局、不做 Grid：不做二维 Grid 区域布局与 grid 属性，Grid 另立工具，不混页。</li>
+                    <li>不做多断点批量导出：只输出一组容器＋条目 CSS，不产 sm／md／lg 断点变体。</li>
+                    <li>条目数上限 12：预览与代码均按 1–12 个条目处理，超限返回失败，不静默截断。</li>
+                    <li>gap 只用 px、basis 只认 auto／px／%：gap 单位只用 px，basis 其它单位返回失败，不静默转换。</li>
+                    <li>不直接生成 Tailwind 类：生成的 flex CSS 如需映射为工具类，走 CSS 转 Tailwind 工具。</li>
+                    <li>不收集、不上传任何内容：全部编辑与预览只在浏览器本地完成，本页面零 fetch／XHR、零 CDN。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="cfb-toast" id="cfb-toast"></div>
+    <script src="/tools/static/js/css_flexbox_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

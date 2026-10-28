@@ -643,6 +643,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_flexbox_generator",
+					Name:        "CSS Flexbox 可视化生成器",
+					Description: "容器 direction／wrap／justify-content／align-items／align-content 下拉＋gap 滑杆，条目 grow／shrink／basis／order／align-self 可调，navbar／center／cards-wrap／sidebar 四预设，点击条目选中编辑，实时预览与 CSS／HTML 双栏代码，复制或下载 flexbox.css／flexbox-demo.html，纯前端零上传 · CSS flexbox generator: flex container & item visual editor, 4 presets, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-flexbox-generator",
+					Icon:        "view_column",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",
