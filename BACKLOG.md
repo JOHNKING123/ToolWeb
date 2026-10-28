@@ -1,3 +1,89 @@
+## 今日任务（2026-10-29 01:38 · 产品经理排期轮，接 140 轮调研）
+
+**选定：CSS 动画关键帧生成器（css_keyframe_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（140 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS Grid 可视化生成器已交付划出（ae6182d 新增，全量 212 Path），首席顺位自然递进至本项；不再以「文字阴影／滤镜难度更小」等理由二次跳过——CSS 文字阴影生成器、CSS 滤镜生成器均不插队。
+- **未选**：CSS 文字阴影生成器（139 轮新晋 P2、140 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做 text-shadow 声明，与本项 @keyframes 口径不重叠）；CSS 滤镜生成器（139 轮观察项、140 轮晋升 P2、顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做 `filter:` 声明，与本项关键帧动画口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **212 Path**；`git log` 头部 ae6182d（CSS Grid 可视化生成器新增）／c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）。逐项复核：`css_animation`／`keyframe`／`text_shadow`／`css_filter` 在 tools/categories.go 中均为 0 实现命中（categories.go 中 animation 唯一命中为年会抽奖大屏描述文案里的 marquee settle animation，非动画生成器）；templates／static/js／tests 下无 animation／keyframe／text_shadow 生成器文件（filter 唯一命中为图片复古做旧 img_retro_filter，其输出为处理后图片文件、非 CSS 声明）；CSS 阴影／圆角生成器模板内 `text-shadow` 命中为 0（只做 box-shadow 与圆角）。近邻再辨析：① **CSS 缓动生成器**（ID css_easing_generator）只产单条 cubic-bezier 曲线，不产 @keyframes；② **CSS 渐变／阴影／圆角／clamp 生成器**各只做单类样式数值，不碰关键帧与时间轴；③ **CSS Grid／Flexbox 可视化生成器**只做静态布局，不产动画；④ **图片复古做旧**（ID img_retro_filter）输出处理后图片文件，本项输出 `filter:` 之外的 @keyframes／animation 声明，口径不重叠。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——@keyframes 手写要同时算百分比停靠点、每帧属性与缓动曲线，改一处就要重看完整动画效果，凭代码想象不出动效节奏，预设＋关键帧时间轴增删＋每帧属性编辑＋时长／延迟／缓动／循环／方向／填充模式控件＋预览＋播放／暂停／重置＋复制 @keyframes 或完整 CSS 恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，停靠点解析、帧排序与去重校验、transform 合成顺序、预设配置均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 缓动／渐变／阴影／圆角／clamp／clip-path／Grid／Flexbox 生成器同属「CSS 可视化生成」需求簇，动画可叠渐变填充、阴影圆角，成组发现；⑤ **外部佐证已就位**——138 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS Grid／Flexbox 可视化生成器、CSS 渐变生成器、CSS 阴影／圆角生成器、CSS 缓动生成器、CSS clip-path 生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做单元素单动画**——不做多元素编排与时间轴联动，页面须明示；② **不做 JS 驱动动画**——预览用生成的 CSS animation 驱动，不产 JS 动画代码，页面须明示；③ **每帧属性集固定**——只做不透明度／位移／缩放／旋转／背景色五类属性，不做逐属性任意 CSS 声明编辑，页面须明示；④ **缓动只认关键字＋cubic-bezier**——不做 steps()，页面须明示；⑤ **关键帧数 2–10、须含 0% 与 100%**——缺首尾帧或超限返回失败不静默补帧，页面须明示；⑥ **动画名只认字母开头＋字母数字下划线连字符**——非法名返回失败，页面须明示；⑦ **不收集、不上传任何内容**——全部编辑与预览只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默补帧）：
+  - `parseStop(s)`：接受 `from`→0、`to`→100、`<数值>%`（0–100，最多 2 位小数，去尾零规范化为数值）；其它写法（如裸数字、em、负值、>100%、空串）返回失败。
+  - `validateFrame(frame)`：frame 含 stop（经 parseStop 校验）、opacity（0–1，最多 2 位小数）、translateX／translateY（−2000–2000 px，最多 2 位小数）、scale（0–10，最多 2 位小数）、rotate（−720–720 deg，最多 2 位小数）、backgroundColor（空串表示不输出，或 #RGB／#RRGGBB 十六进制）、easing（空串表示继承全局，或 ease／linear／ease-in／ease-out／ease-in-out／cubic-bezier(a,b,c,d)，其中 a、c 在 0–1，b、d 在 −2–2，各最多 2 位小数）；任一字段非法返回失败。
+  - `sortFrames(frames)`：返回按 stop 升序的新数组（不改原数组）；重复停靠点返回失败（err.field='frames'）。
+  - `addFrame(frames, frame)`：先经 validateFrame 校验，再经 sortFrames 排序返回新数组；帧数超 10、重复停靠点返回失败；不改原数组。
+  - `removeFrame(frames, stop)`：删除该停靠点的帧返回新数组；帧数将低于 2、或该停靠点不存在返回失败。
+  - `validateAnimation(opts)`：opts 含 duration（0.1–60 s，最多 2 位小数）、delay（0–60 s，最多 2 位小数）、iteration（正整数 1–100 或 `infinite`）、direction（normal／reverse／alternate／alternate-reverse）、fillMode（none／forwards／backwards／both）、timingFunction（与单帧 easing 相同枚举）；任一字段非法返回失败。
+  - `buildKeyframesCss(name, frames)`：name 须匹配 /^[a-zA-Z][a-zA-Z0-9_-]*$/；frames 经 sortFrames 校验且帧数 2–10、须含 0 与 100，否则返回失败；输出 `@keyframes <name> {` 块，每帧一行 `  <stop>% { <声明> }`，声明按 opacity→transform→background-color→animation-timing-function 顺序拼串，transform 按 translate→rotate→scale 固定顺序合成（translateX／translateY 均为 0 时省略 translate，scale 为 1 时省略 scale，rotate 为 0 时省略 rotate；全省略时该帧不输出 transform 行）；空 backgroundColor／空 easing 的帧不输出对应行。
+  - `buildAnimationCss(name, frames, opts)`：先经 buildKeyframesCss 与 validateAnimation 校验，输出关键帧块＋`.animated-element` 声明块（含 `animation: <name> <duration>s <timingFunction> <delay>s <iteration> <direction> <fillMode>;` 缩写行）；任一非法返回失败。
+  - `buildHtmlSnippet(name, frames, opts)`：先经 buildAnimationCss 校验，返回演示 HTML 片段（含 `<style>` 内嵌生成的完整 CSS＋`<div class="animated-element">` 预览元素，内容为动画名；无额外脚本）；非法返回失败。
+  - `generatePreset(name)`：name 仅接受 fade-in／slide-in-left／bounce／rotate／pulse，返回 `{ name, frames, opts }`：fade-in（0% opacity 0 → 100% opacity 1，1s ease）；slide-in-left（0% translateX −200px opacity 0 → 100% translateX 0 opacity 1，1s ease-out）；bounce（0% translateY 0 → 50% translateY −60px → 100% translateY 0，1s ease，iteration 2）；rotate（0% rotate 0deg → 100% rotate 360deg，2s linear，iteration infinite）；pulse（0% scale 1 → 50% scale 1.2 → 100% scale 1，1s ease-in-out，iteration infinite）；动画名默认与预设名相同（fadeIn／slideInLeft／bounce／rotate／pulse 的连字符转驼峰规则：首段小写、后续段首字母大写）；未知 name 返回失败。
+  - `suggestExportName(kind)`：`css` → `animation.css`，`html` → `animation-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：预设区（fade-in／slide-in-left／bounce／rotate／pulse 五个预设按钮）；关键帧时间轴区（帧列表：每帧停靠点滑杆＋数字输入、opacity／translateX／translateY／scale／rotate 滑杆＋数字输入、背景色拾取器、单帧 easing 下拉，增帧／删帧按钮，帧数 2–10，缺 0%／100% 时红字提示并禁用复制／下载直至补齐）；动画控件区（duration／delay 滑杆＋数字输入、全局 easing 下拉＋cubic-bezier 四值输入、iteration（数字或 infinite 开关）、direction／fillMode 下拉）；预览区（方块／圆形／文字三种预览元素切换，播放／暂停／重置按钮，重置即重新应用生成的 CSS 使动画从头播放）；代码区（@keyframes 片段与完整 CSS 两栏，实时同步，「复制 @keyframes」「复制完整 CSS」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 fade-in 预设、无需上传即可演示编辑→预览→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览只用解析校验后的样式值（<style> 内只注入 buildAnimationCss 产出的校验后 CSS），杜绝注入。
+- 操作与互链：与 CSS 缓动生成器（/tools/css-easing-generator，文案按「单条曲线 vs 完整关键帧动画」区分，缓动值可再精调）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「动画 vs 填充」区分，预览元素可用渐变做填充）、CSS 阴影／圆角生成器（/tools/css-shadow-radius-generator，文案按「动画 vs 阴影圆角」区分，预览元素可再描圆角加阴影）互链；不与未交付的 CSS 文字阴影生成器、CSS 滤镜生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写停靠点解析、帧排序校验、transform 合成、预设配置，不引入任何动画或 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；示例为页面内置预设，不依赖外链。
+- 注册：ID `css_keyframe_generator`、Name「CSS 动画关键帧生成器」、Path `/tools/css-keyframe-generator`、Category 开发工具、Icon 建议 animation（图标库无此名则用 play_circle 兜底；勿与 CSS 缓动的图标在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（CSS 动画关键帧生成器、keyframes 生成器、css 动画工具、css keyframes generator、animation generator、@keyframes、动画时间轴）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-keyframe-generator，相关工具互链 CSS 缓动生成器、CSS 渐变生成器、CSS 阴影／圆角生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_keyframe_generator`、Path `/tools/css-keyframe-generator` 注册完整（Category 开发工具），注册总数 212→213 Path。
+2. 停靠点与单帧向量闭环（node 断言）：parseStop 已知值（from→0、to→100、50%→50、33.50%→33.5）；裸数字、负值、>100%、空串判失败；validateFrame 已知值通过，opacity／scale／rotate／位移越界、非法颜色、非法 easing 判失败。
+3. 帧集合向量闭环（node 断言）：sortFrames 升序且不改原数组、重复停靠点失败；addFrame 超 10 帧失败；removeFrame 删至低于 2 帧失败、删不存在停靠点失败。
+4. 组合与预设向量闭环（node 断言）：buildKeyframesCss 已知值（帧声明顺序 opacity→transform→background-color→easing，transform 按 translate→rotate→scale 合成，默认值省略正确）；缺 0%／100% 判失败；非法动画名失败；validateAnimation 非法 duration／iteration／direction／fillMode 判失败；generatePreset 五个预设帧与参数正确（bounce 3 帧、rotate infinite、pulse 3 帧）且动画名驼峰化正确；未知预设失败。
+5. 代码生成向量闭环（node 断言）：buildAnimationCss 含关键帧块＋`.animated-element` 缩写行；buildHtmlSnippet 含 `<style>` 内嵌 CSS 与 class `animated-element`，且无 `<script>`；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+6. 操作闭环（浏览器手工／测试复核）：切预设→预览动效变化→增帧改停靠点与属性→预览与代码同步→改时长／缓动／循环→播放／暂停／重置可用→复制 @keyframes／完整 CSS、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只做单元素单动画、不做多元素编排」「不做 JS 驱动动画」「每帧只做五类属性」「缓动只认关键字＋cubic-bezier、不做 steps()」「关键帧 2–10 个、须含 0% 与 100%」「动画名规则」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS 缓动生成器、CSS 渐变生成器、CSS 阴影／圆角生成器；不含未交付工具的硬凑互链；非法停靠点／属性／动画名／缺首尾帧有红字降级提示。
+9. node 测试 25+ 断言全过（停靠点与单帧向量、帧集合向量、组合与预设向量、代码生成向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端时间轴帧列表、动画控件组、预览块、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_keyframe_generator.html`（新增；含 SEO 面板按家族标准＋预设区／关键帧时间轴区／动画控件区／预览区／代码区／示例演示）
+- `static/js/css_keyframe_generator.js`（新增；停靠点解析、帧排序与校验、transform 合成、五预设配置、@keyframes／完整 CSS／HTML 片段生成、导出命名；双模式导出供 node 测试）
+- `tests/css_keyframe_generator.test.js`（新增；停靠点与单帧向量、帧集合向量、组合与预设向量、代码生成向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_keyframe_generator、Path /tools/css-keyframe-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 ae6182d（CSS Grid 可视化生成器新增）／c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **212**；Top3 候选重叠复核（css_animation／keyframe／text_shadow／css_filter 在 categories.go 均为 0 实现命中；animation 唯一命中为年会抽奖描述文案，非生成器实现；templates／static/js／tests 下无 animation／keyframe／text_shadow 生成器文件，filter 唯一命中为图片复古做旧（输出图片文件）；缓动只产单条曲线、渐变／阴影／圆角／clamp 各只做单类样式、Grid／Flexbox 只做静态布局，辨析见上；CSS 文字阴影生成器与 CSS 滤镜生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-29 01:00 · 通用调研第一百四十轮）
+
+**交付状态**：10-29 通用调研第一百四十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS Grid 可视化生成器已交付闭环**（ae6182d 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **212 Path**，ID css_grid_generator、Path /tools/css-grid-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小／中难度纯前端。
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. CSS Grid 可视化生成器交付确认：`git log` 头部 ae6182d（CSS Grid 可视化生成器新增）／c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）；全量 212 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功）。
+2. 留池复核仍未交付：CSS 动画关键帧生成器、CSS 文字阴影生成器在 tools/categories.go 中命中均为 0，templates／static/js／tests 下无 animation／keyframe／text_shadow 生成器文件（animation 唯一命中为年会抽奖大屏描述文案里的 marquee settle animation，非动画生成器），138／139 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 滤镜生成器**（WebDevWorker、TestMu、codeshack、wpdean、toolsrail 等多个独立工具：blur／brightness／contrast／saturate／hue-rotate／grayscale／sepia／invert／opacity 九函数滑杆串联、函数顺序影响结果、Instagram 风预设、示例图实时预览、复制 filter 声明；codeshack 另有 backdrop-filter 开关与 drop-shadow）：**由观察项晋升 P2**——139 轮观察项时「与图片复古滤镜边界待 PM 界定」，本轮边界已可界定：本项输出的是 `filter:` 声明代码（作用于任意元素、可贴进样式表），图片复古做旧（ID img_retro_filter）输出的是处理后图片文件，两者输出物不同、口径不重叠；categories.go 中 css_filter 命中为 0，CSS 阴影／圆角生成器只做 box-shadow 与圆角、不产 filter；纯前端小难度：九函数滑杆＋函数开关（默认项不输出、代码保持简短）＋预设＋示例图实时预览＋复制 filter 声明，零上传；真限制：只做 `filter:` 声明，不做 backdrop-filter（毛玻璃另立项时再议）、不输出处理后图片（走图片复古做旧）、不做 drop-shadow 之外的阴影（box-shadow 已由阴影／圆角生成器覆盖），须明示；
+   - **其余信号全部消解，不立**：CSS 格式化／压缩榜单项（站内代码压缩器 ID code_minifier 已覆盖 JS／CSS 压缩，含 #fff 简写与 0px→0，单独立项只剩「展开格式化」一端、需求频次低于滤镜生成器，不立）／CodePen／JSFiddle／AI 建站（重型产品或需后端／AI）／V2EX 搜索（本轮无有效单页工具新信号）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS Grid 可视化生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，139 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，观察项晋升 P2 补第三顺位）：
+
+1. **CSS 动画关键帧生成器** — P2 留池顺位首席（138 轮新晋 P2；140 轮复核仍未交付；痛点：@keyframes 手写要同时算百分比停靠点、每帧属性与缓动曲线，改一处就要重看完整动画效果，凭代码想象不出动效节奏；纯前端中难度：淡入／滑动／弹跳／旋转／脉冲等预设＋关键帧时间轴增删拖拽＋每帧属性编辑＋时长／延迟／缓动／循环／方向／填充模式控件＋方块／圆形／文字预览＋播放／暂停／重置＋复制 @keyframes 或完整 CSS，零上传；与 CSS 缓动生成器（只产单条 cubic-bezier 曲线）、CSS 渐变／阴影／圆角／clamp 生成器（各只做单类样式）口径不重叠；真限制：只做单元素单动画，不做多元素编排与时间轴联动、不做 JS 驱动动画，须明示）。
+2. **CSS 文字阴影生成器** — P2 留池顺位第二（139 轮新晋 P2；140 轮复核仍未交付；痛点：霓虹辉光／3D 立体字常需 3–10 层 text-shadow 堆叠，手写多层逗号分隔值易错位、改一层就要重算整串，凭代码想象不出辉光与立体效果；纯前端小难度：图层增删＋每层 X／Y 偏移／模糊／颜色／不透明度滑杆＋霓虹／3D／复古／浮雕／长阴影预设＋预览文字／字号／字色／背景编辑＋复制 CSS，零上传；与 CSS 阴影／圆角生成器（只做 box-shadow 与圆角，模板内 text-shadow 命中为 0）、CSS 渐变生成器（只做填充）口径不重叠；真限制：只做 text-shadow 声明，不做 box-shadow 与 filter: drop-shadow()，须明示）。
+3. **CSS 滤镜生成器** — 观察项晋升 P2（139 轮观察项；140 轮晋升；痛点：filter 九函数串联成一长串、函数顺序影响结果，手写要反复猜数值与顺序，凭代码想象不出叠加效果；纯前端小难度：九函数滑杆＋函数开关（默认项不输出）＋复古／暖调／冷调／黑白等预设＋示例图实时预览＋复制 filter 声明，零上传；与图片复古做旧（输出处理后图片文件）、CSS 阴影／圆角生成器（只做 box-shadow 与圆角）口径不重叠；真限制：只做 `filter:` 声明，不做 backdrop-filter、不输出处理后图片，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；140 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：CSS 特异性计算器（108 轮留池）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 139 轮及之前记录。
+
+**通用候选表增量**（第一百四十轮：CSS Grid 可视化生成器已交付划出（ae6182d 新增；ID css_grid_generator、Path /tools/css-grid-generator 已注册；全量 212 Path；候选池划出）；**CSS 滤镜生成器由观察项晋升 P2**；CSS 动画关键帧生成器、CSS 文字阴影生成器顺位递进；自有实锤消解 5+ 项（CSS 格式化／压缩为代码压缩器已覆盖；CodePen／JSFiddle／AI 建站属重型产品或需后端／AI；V2EX 搜索无有效新信号）；全量 212 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS Grid 可视化生成器 | 已交付划出（ae6182d 新增；ID css_grid_generator、Path /tools/css-grid-generator 已注册；全量 212 Path；候选池划出） | — | 已实现 |
+| CSS 滤镜生成器 | 九函数串联手写要反复猜数值与顺序、叠加效果凭代码想象不出；九函数滑杆＋开关＋预设＋示例图实时预览＋复制 filter 声明，纯前端零上传；与图片复古做旧（输出图片文件）口径不重叠 | 小 | P2（观察项晋升） |
+| CSS 动画关键帧生成器 | 复核仍未交付（138 轮 P2，顺位递进为首席）；@keyframes 手写要同时算停靠点、每帧属性与缓动，凭代码想象不出动效节奏；预设＋时间轴编辑＋属性编辑＋实时预览＋复制 CSS，纯前端零上传 | 中 | P2（留池） |
+| CSS 文字阴影生成器 | 复核仍未交付（139 轮 P2，顺位递进为第二）；多层 text-shadow 手写易错位、辉光与立体效果凭代码想象不出；图层编辑＋预设＋实时预览＋复制 CSS，纯前端零上传 | 小 | P2（留池） |
+| 自有实锤消解 | 不立（CSS 格式化／压缩为代码压缩器已覆盖；CodePen／JSFiddle／AI 建站属重型产品或需后端／AI；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十轮——CSS Grid 可视化生成器交付闭环（ae6182d，`/tools/css-grid-generator` 已注册，全量 212 Path），候选池划出；**CSS 滤镜生成器由观察项晋升 P2**；**CSS 动画关键帧生成器、CSS 文字阴影生成器顺位递进为 Top3 前两位**；仓库 212 注册工具全量核对无重叠（Top3 建议 CSS 动画关键帧生成器／CSS 文字阴影生成器／CSS 滤镜生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 ae6182d（CSS Grid 可视化生成器新增）／c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **212**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 23:37 · 产品经理排期轮，接 139 轮调研）
 
 **选定：CSS Grid 可视化生成器（css_grid_generator）** — 本轮唯一任务（新工具）：

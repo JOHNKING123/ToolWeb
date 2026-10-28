@@ -661,6 +661,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_keyframe_generator",
+					Name:        "CSS 动画关键帧生成器",
+					Description: "预设＋关键帧时间轴增删改：不透明度／位移／缩放／旋转／背景色五类属性，时长／延迟／缓动／循环／方向／填充模式全控件，方块／圆形／文字实时预览，复制 @keyframes 或完整 CSS、下载 animation.css／animation-demo.html，纯前端零上传 · CSS keyframes generator: keyframe timeline editor, 5 presets, opacity transform background-color per frame, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-keyframe-generator",
+					Icon:        "animation",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",

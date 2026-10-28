@@ -1,0 +1,230 @@
+{{define "css_keyframe_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 动画关键帧生成器 - @keyframes 时间轴可视化生成动画代码 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 动画关键帧生成器：预设＋关键帧时间轴增删改，调不透明度、位移、缩放、旋转、背景色五类属性，时长、延迟、缓动、循环、方向、填充模式全控件，方块／圆形／文字实时预览，一键复制 @keyframes 或完整 CSS、下载 animation.css 与动画演示 HTML。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 动画关键帧生成器,keyframes 生成器,css 动画工具,css keyframes generator,animation generator,@keyframes,动画时间轴">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-keyframe-generator">
+    <meta property="og:title" content="CSS 动画关键帧生成器 - @keyframes 时间轴可视化生成">
+    <meta property="og:description" content="关键帧时间轴增删改，五类属性＋动画全控件，实时预览，一键复制 @keyframes 或完整 CSS。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-keyframe-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 动画关键帧生成器","description":"免费在线 CSS 动画关键帧生成器：关键帧时间轴增删改，五类属性与动画全控件，实时预览，复制 @keyframes 或完整 CSS，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-keyframe-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ckf-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .ckf-wrap .navbar .material-icons { display: none; }
+        .ckf-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .ckf-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .ckf-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .ckf-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .ckf-row label { font-size:.92rem; color:#374151; min-width:4.5em; }
+        .ckf-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .ckf-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .ckf-row input[type=text] { padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; min-width:9em; }
+        .ckf-row select { padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; background:#fff; max-width:100%; }
+        .ckf-row input[type=color] { width:2.6em; height:2em; padding:0; border:1px solid #d1d5db; border-radius:.4rem; cursor:pointer; }
+        .ckf-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .ckf-btn:hover { background:#f3f4f6; }
+        .ckf-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .ckf-btn-small { padding:.3rem .7rem; font-size:.85rem; }
+        .ckf-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .ckf-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .ckf-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .ckf-frame { border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem 1rem; margin-bottom:.8rem; background:#fafafa; }
+        .ckf-frame-head { display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
+        .ckf-frame-head b { font-size:.95rem; color:#111827; }
+        .ckf-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .ckf-stage { position:relative; height:150px; border:1px solid #e5e7eb; border-radius:.7rem; background:#f9fafb; overflow:hidden; }
+        .ckf-preview-el { position:absolute; left:16px; top:45px; width:60px; height:60px; background:var(--primary-color, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.85rem; border-radius:.5rem; }
+        .ckf-shape-circle { border-radius:50%; }
+        .ckf-shape-text { width:auto; min-width:60px; padding:0 1rem; border-radius:.5rem; }
+        .ckf-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .ckf-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .ckf-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .ckf-tip a { color:var(--primary-color); }
+        .ckf-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .ckf-links a { color:var(--primary-color); font-size:.93rem; }
+        .ckf-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .ckf-row input[type=range] { min-width:100px; }
+            .ckf-row label { min-width:4em; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="ckf-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎬 CSS 动画关键帧生成器</h1>
+            <p>关键帧时间轴增删改，五类属性＋动画全控件，实时预览，一键复制 @keyframes 或完整 CSS</p>
+        </div>
+        <div class="tool-content" id="ckf-form">
+            <div class="ckf-card">
+                <h3>动画预设 <span class="ckf-hint">（点击载入，载入后仍可编辑；预设仅为示例起点）</span></h3>
+                <div class="ckf-presets">
+                    <button class="ckf-preset" id="ckf-preset-fade-in" type="button">fade-in 淡入</button>
+                    <button class="ckf-preset" id="ckf-preset-slide-in-left" type="button">slide-in-left 左滑入</button>
+                    <button class="ckf-preset" id="ckf-preset-bounce" type="button">bounce 弹跳</button>
+                    <button class="ckf-preset" id="ckf-preset-rotate" type="button">rotate 旋转</button>
+                    <button class="ckf-preset" id="ckf-preset-pulse" type="button">pulse 脉冲</button>
+                </div>
+            </div>
+
+            <div class="ckf-card">
+                <h3>关键帧时间轴 <span class="ckf-hint">（每帧：停靠点＋不透明度／位移／缩放／旋转／背景色＋单帧缓动；帧数 2–10，须含 0% 与 100%，缺首尾帧时红字提示并禁用导出）</span></h3>
+                <div id="ckf-frames"></div>
+                <div class="ckf-actions">
+                    <button class="ckf-btn" id="ckf-add-frame" type="button">＋ 增加关键帧</button>
+                </div>
+                <p class="ckf-msg" id="ckf-msg"></p>
+            </div>
+
+            <div class="ckf-card">
+                <h3>动画控件 <span class="ckf-hint">（动画名须以字母开头，仅含字母、数字、下划线、连字符；非法时红字提示并禁用导出）</span></h3>
+                <div class="ckf-row">
+                    <label for="ckf-name">动画名</label>
+                    <input type="text" id="ckf-name" value="fadeIn">
+                </div>
+                <div class="ckf-row">
+                    <label for="ckf-duration">时长</label>
+                    <input type="number" id="ckf-duration" min="0.1" max="60" step="0.1" value="1">
+                    <input type="range" id="ckf-duration-range" min="0.1" max="10" step="0.1" value="1">
+                    <span class="ckf-hint">秒（0.1–60 秒，滑杆 0.1–10 秒，数字框可填到 60 秒）</span>
+                </div>
+                <div class="ckf-row">
+                    <label for="ckf-delay">延迟</label>
+                    <input type="number" id="ckf-delay" min="0" max="60" step="0.1" value="0">
+                    <input type="range" id="ckf-delay-range" min="0" max="10" step="0.1" value="0">
+                    <span class="ckf-hint">秒（0–60 秒）</span>
+                </div>
+                <div class="ckf-row">
+                    <label for="ckf-easing">全局缓动</label>
+                    <select id="ckf-easing">
+                        <option value="ease" selected>ease</option>
+                        <option value="linear">linear</option>
+                        <option value="ease-in">ease-in</option>
+                        <option value="ease-out">ease-out</option>
+                        <option value="ease-in-out">ease-in-out</option>
+                        <option value="cubic-bezier">cubic-bezier 自定义…</option>
+                    </select>
+                    <span id="ckf-cubic-wrap" style="display:none">
+                        <label>x1 <input type="number" id="ckf-cubic-x1" step="0.01" value="0.25"></label>
+                        <label>y1 <input type="number" id="ckf-cubic-y1" step="0.01" value="0.1"></label>
+                        <label>x2 <input type="number" id="ckf-cubic-x2" step="0.01" value="0.25"></label>
+                        <label>y2 <input type="number" id="ckf-cubic-y2" step="0.01" value="1"></label>
+                    </span>
+                </div>
+                <div class="ckf-row">
+                    <label for="ckf-iteration">循环次数</label>
+                    <input type="number" id="ckf-iteration" min="1" max="100" step="1" value="1">
+                    <label><input type="checkbox" id="ckf-iteration-inf"> 无限循环（infinite）</label>
+                </div>
+                <div class="ckf-row">
+                    <label for="ckf-direction">方向</label>
+                    <select id="ckf-direction">
+                        <option value="normal" selected>normal 正向</option>
+                        <option value="reverse">reverse 反向</option>
+                        <option value="alternate">alternate 交替</option>
+                        <option value="alternate-reverse">alternate-reverse 反向交替</option>
+                    </select>
+                    <label for="ckf-fill">填充模式</label>
+                    <select id="ckf-fill">
+                        <option value="none" selected>none</option>
+                        <option value="forwards">forwards</option>
+                        <option value="backwards">backwards</option>
+                        <option value="both">both</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ckf-card">
+                <h3>动画预览 <span class="ckf-hint">（预览用生成的 CSS animation 驱动，不产 JS 动画代码；预览元素仅示意，不代表真实业务元素的动效效果）</span></h3>
+                <div class="ckf-stage" id="ckf-stage">
+                    <div class="ckf-preview-el ckf-shape-square animated-element" id="ckf-preview-el"></div>
+                </div>
+                <div class="ckf-actions" style="margin-top:.8rem;">
+                    <button class="ckf-btn" id="ckf-shape-square" type="button">方块</button>
+                    <button class="ckf-btn" id="ckf-shape-circle" type="button">圆形</button>
+                    <button class="ckf-btn" id="ckf-shape-text" type="button">文字</button>
+                    <button class="btn btn-primary" id="ckf-play-pause" type="button">⏸ 暂停</button>
+                    <button class="btn btn-secondary" id="ckf-reset" type="button">↺ 重置（从头播放）</button>
+                </div>
+            </div>
+
+            <div class="ckf-card">
+                <h3>CSS 代码输出 <span class="ckf-hint">（随输入实时生成；@keyframes 片段与完整 CSS 两栏）</span></h3>
+                <div class="ckf-code" id="ckf-code-keyframes"></div>
+                <div class="ckf-actions">
+                    <button class="btn btn-primary" id="ckf-copy-keyframes" type="button">📋 复制 @keyframes</button>
+                </div>
+                <div class="ckf-code" id="ckf-code-all"></div>
+                <div class="ckf-actions">
+                    <button class="btn btn-primary" id="ckf-copy-all" type="button">📋 复制完整 CSS</button>
+                    <button class="btn btn-secondary" id="ckf-download-css" type="button">⬇ 下载 animation.css</button>
+                    <button class="btn btn-secondary" id="ckf-download-html" type="button">⬇ 下载 animation-demo.html</button>
+                    <button class="btn btn-secondary" id="ckf-load-example" type="button">↺ 载入示例（fade-in）</button>
+                </div>
+                <p class="ckf-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="ckf-card">
+                <h3>使用说明</h3>
+                <ol class="ckf-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>点预设一键切换动画，切换后时间轴、控件、预览与代码四方同步。</li>
+                    <li>在时间轴里增帧、删帧、改停靠点与五类属性，代码与预览实时同步；缺 0% 或 100% 时导出按钮禁用，补齐首尾帧后恢复。</li>
+                    <li>改时长、延迟、缓动、循环、方向、填充模式后，完整 CSS 的 animation 缩写行同步变化。</li>
+                    <li>播放／暂停／重置控制预览动画；方块／圆形／文字切换预览元素形态。</li>
+                    <li>复制 @keyframes 片段或完整 CSS，或下载 animation.css／animation-demo.html 粘贴即用。</li>
+                    <li>要精调单条缓动曲线去缓动曲线生成器；要给预览元素换填充去渐变生成器；要描圆角加阴影去阴影与圆角生成器。</li>
+                </ol>
+            </div>
+
+            <div class="ckf-card">
+                <h3>常见问题</h3>
+                <dl class="ckf-tip">
+                    <dt><b>停靠点怎么写？</b></dt>
+                    <dd>from 表示 0%，to 表示 100%，也可以直接写百分比（如 50%、33.5%），最多 2 位小数；裸数字、负值、超过 100% 都会报错。</dd>
+                    <dt><b>为什么缺 0% 或 100% 就不能导出？</b></dt>
+                    <dd>没有首尾帧的 @keyframes 动画起止状态不确定，本工具不静默补帧：请把一帧移到 0%、一帧移到 100%，或新增首尾帧后再导出。</dd>
+                    <dt><b>单帧缓动和全局缓动有什么区别？</b></dt>
+                    <dd>全局缓动作用于整段动画；单帧缓动只作用于该帧到下一帧的区间，单帧选「继承全局缓动」时跟随全局设置。</dd>
+                    <dt><b>动画名有什么规则？</b></dt>
+                    <dd>须以字母开头，仅含字母、数字、下划线、连字符，例如 fadeIn、slideInLeft；非法名会红字提示并禁用导出。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="ckf-card">
+                <h3>相关工具</h3>
+                <div class="ckf-links">
+                    <a href="/tools/css-easing-generator">CSS 缓动曲线生成器（单条曲线 vs 完整关键帧动画；本页的缓动值可去那边再精调）</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器（动画 vs 填充；预览元素可用渐变做填充）</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器（动画 vs 阴影圆角；预览元素可再描圆角加阴影）</a>
+                </div>
+            </div>
+
+            <div class="ckf-card">
+                <h3>真限制说明</h3>
+                <div class="ckf-tip">
+                    <b>只做单元素单动画</b>：不做多元素编排与时间轴联动；<b>不做 JS 驱动动画</b>：预览用生成的 CSS animation 驱动，不产 JS 动画代码；<b>每帧只做五类属性</b>：不透明度、位移、缩放、旋转、背景色，不做逐属性任意 CSS 声明编辑；<b>缓动只认关键字＋cubic-bezier</b>：不做 steps()；<b>关键帧 2–10 个、须含 0% 与 100%</b>：缺首尾帧或超限返回失败，不静默补帧；<b>动画名规则</b>：须以字母开头，仅含字母、数字、下划线、连字符；<b>不收集、不上传任何内容</b>：全部编辑与预览只在浏览器本地完成，本页面零 fetch / XHR，零 CDN。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="ckf-toast" id="ckf-toast"></div>
+    <style id="ckf-preview-style"></style>
+    <script src="/tools/static/js/css_keyframe_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
