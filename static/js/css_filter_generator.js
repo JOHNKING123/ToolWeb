@@ -355,8 +355,8 @@ function setValue(idx, value) {
         (state.items[idx].enabled ? '' : ' · 已禁用');
     }
   } catch (e) {
-    showMsg(e.message);
     renderFns();
+    showMsg(e.message);
   }
 }
 
@@ -365,11 +365,13 @@ function bindFnEvents() {
   if (!wrap) return;
   wrap.querySelectorAll('[data-role="fn-toggle"]').forEach(function (el) {
     el.addEventListener('change', function () {
+      var err = null;
       try {
         state.items = setFilterEnabled(state.items,
           Number(el.dataset.idx), el.checked);
-      } catch (e) { showMsg(e.message); }
+      } catch (e) { err = e; }
       renderFns();
+      if (err) showMsg(err.message);
     });
   });
   wrap.querySelectorAll('[data-role="fn-range"]').forEach(function (el) {
