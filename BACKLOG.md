@@ -1,3 +1,91 @@
+## 今日任务（2026-10-28 15:40 · 产品经理排期轮，接 135 轮调研）
+
+**选定：图片取色器与主色提取（image_color_picker）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（135 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。SVG 波形／斑点背景生成器已交付划出（a17a375 新增＋6a6bb7f 修复，全量 207 Path），首席顺位自然递进至本项；不再以「中难度更新颖」等理由二次跳过——SVG 换色器、CSS clip-path 生成器均不插队。
+- **未选**：SVG 换色器（134 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；痛点与纯前端路线均已复核无重叠，见下）；CSS clip-path 生成器（135 轮新晋 P2，**无硬伤，留池顺位递进——同上，仅顺位后置**）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **207 Path**；`git log` 头部 6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）／0c3d50c（Gzip Base64 解码器新增）。逐项复核：`image_color_picker`／`image-color-picker` 在 tools／templates／static/js／tests 四路均为 0 实现命中。近邻再辨析：① **颜色转换**（ID color、Path /tools/color-converter）只做 HEX／RGB／HSL 数值互转，无图片输入、无像素读取；② **配色方案生成器**（ID color_palette_generator）只从单基色推 6 种和谐方案，不读图、不取色；③ **WCAG 对比度检查器**（ID wcag_contrast_checker）只做双色对亮度比判定，不取色、不提取主色；④ **图片转像素画**（ID pixel_art_converter）的中位切分只用于像素化输出图片本身，不输出色板、不提供点击取色，语义不重叠；⑤ 截图美化器的点取背景色只服务于它自己的换底流程、取一色即用，不做色板与主色提取。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——从 Logo、截图、参考图里抠品牌色只能凭肉眼估，设计软件取色太重、在线取色多要上传，上传图片→点击像素取色→主色量化提取→导出 HEX 列表／CSS 变量恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，颜色格式互转与中位切分量化均为确定性纯函数（固定像素向量可供 node 断言，无随机性；量化采样用固定步长抽样，同一图片同一参数输出逐项一致）；④ **受众与站内互补**——与颜色转换、配色方案生成器、WCAG 对比度检查器同属「颜色」需求簇，取色后可再去转换数值、推配色、验对比度，成组发现；⑤ **外部佐证已就位**——133 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「图片处理」品类（与图片转像素画、截图美化器同品类，图片输入优先于颜色数值归类，便于读图类需求成组发现；颜色数值类工具仍在「开发工具」，以互链成组，不改品类）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只读本地上传图片**——不做 URL 抓取（外链图片受 CORS 限制，页面须明示「请下载后上传」）；② **取色精度受原图影响**——压缩失真与抗锯齿会让边缘像素偏离品牌标准色，页面须明示「边缘像素仅供参考，以纯色区域取色为准」；③ **透明像素取色说明**——alpha＜255 时同时显示 RGBA 值并提示「透明像素的 RGB 仅为底色混合参考」；④ **GIF 只取首帧**——动图不逐帧取色，页面须明示；⑤ **主色提取为量化近似**——中位切分结果是统计主色、非精确品牌色值，页面须明示；⑥ **不收集、不上传任何内容**——读图与取色只在浏览器本地完成（canvas getImageData），页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports）：
+  - `rgbToHex(r, g, b)`：整数 0–255 → 小写 `#rrggbb`；越界／非整数返回失败（不静默钳制）。
+  - `hexToRgb(hex)`：带或不带 `#` 的 6 位 HEX（大小写不限）→ `{ r, g, b }`；3 位缩写、非 HEX 字符、长度不对返回失败。
+  - `rgbToHsl(r, g, b)`：→ `{ h: 0–360 整数, s: 0–100 整数, l: 0–100 整数 }`（标准公式，四舍五入取整）；非法 RGB 返回失败。
+  - `rgbToCmyk(r, g, b)`：→ `{ c, m, y, k }` 百分比整数（标准公式，四舍五入取整；纯黑 r=g=b=0 时 k=100、c=m=y=0）；非法 RGB 返回失败。
+  - `formatColor(color)`：同一颜色一次输出四种格式 `{ hex, rgb: "rgb(r, g, b)", hsl: "hsl(h, s%, l%)", cmyk: "cmyk(c%, m%, y%, k%)" }`，四格式互算一致（HEX→RGB→HEX 往返逐字节一致）。
+  - `pickPixel(data, width, height, x, y)`：data 为 Uint8ClampedArray（RGBA 平铺），按 `(y×width+x)×4` 取像素 → `{ r, g, b, a }`；坐标越界／data 长度与 width×height×4 不符返回失败。
+  - `samplePixels(data, maxSamples)`：固定步长抽样（步长 = ceil(像素总数／maxSamples)，从第 0 个像素起等距取），返回抽样后的 RGB 三元组数组；同一输入同一 maxSamples 输出逐项一致；maxSamples 默认 10000、非法（＜100／非整数）返回失败。
+  - `quantizeColors(rgbArray, count)`：中位切分量化——每轮沿当前盒子中极差最大的通道、在中位数处切分，盒子按像素数降序、并列按首次出现顺序排列；返回 count 个主色（每色 `{ hex, rgb, count, percent }`，percent 为该盒像素占抽样总数百分比，保留 1 位小数）；count 整数 1–10，超出返回失败；空数组返回失败；纯色输入（全部同一 RGB）返回 1 色且 percent=100.0；红蓝各半输入返回红蓝两色且 percent 各约 50（±1 容差）；同一输入两次输出逐项一致。
+  - `buildCssVariables(colors, prefix)`：prefix 默认 `color`，输出 `--color-1: #rrggbb;` 起逐行 CSS 变量（行尾分号、换行分隔）；空数组返回失败；prefix 非法字符（非 `[a-z0-9-]`）返回失败。
+  - `buildHexList(colors)`：输出换行分隔的 HEX 列表（小写、无空行）；空数组返回失败。
+  - `suggestExportName(kind)`：`css` → `palette.css`，`hex` → `palette.txt`，其它 kind 返回失败（不编造其它文件名）。
+  - `validateImageMeta(type, sizeBytes)`：type 仅接受 `image/png`、`image/jpeg`、`image/webp`、`image/gif`、`image/bmp`，sizeBytes ≤ 20MB（20×1024×1024）；超限或类型不符返回失败并明示原因（不静默接受）。
+- 界面：上传区（拖拽＋点击上传，仅图片类型、≤20MB，非法红字提示；上传后图片在 canvas 绘制，原图按比例缩放显示）；取色区（点击图片取色：显示当前像素 HEX／RGB／HSL／CMYK 四格式＋色块预览＋坐标（x, y）与缩放比例；放大镜：跟随鼠标的 4 倍局部放大框＋十字准星，放大区域取自原图同位置裁剪放大、非 CSS 拉伸模糊）；主色区（主色数量滑杆 1–10，默认 6；「提取主色」按钮；色板按占比降序排列，每色含色块＋HEX＋占比，点击任一色块复制 HEX，整板「复制 HEX 列表」「复制 CSS 变量」按钮）；历史区（最近 8 次点击取色记录，点击回填当前色）；操作区（「载入示例」按钮：内置 4 色标准色块示例图（canvas 现场绘制红／绿／蓝／黄四块，无需上传）即可演示取色与主色提取全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与颜色转换（/tools/color-converter，文案按「数值互转 vs 图片取色」区分）、配色方案生成器（/tools/color-palette-generator，文案按「从图取色 vs 从单基色推方案」区分）、WCAG 对比度检查器（/tools/wcag-contrast-checker，文案按「取色 vs 双色对判定」区分）互链；不与未交付的 SVG 换色器、CSS clip-path 生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写颜色互转与中位切分，不引入任何取色或量化库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；读图走 FileReader＋Image＋canvas getImageData，不经过任何服务器；示例图用 canvas 现场绘制，不依赖外链图片。
+- 注册：ID `image_color_picker`、Name「图片取色器与主色提取」、Path `/tools/image-color-picker`、Category 图片处理、Icon 建议 colorize（图标库无此名则用 palette 兜底，勿与颜色转换的 palette 在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（图片取色器、主色提取、图片取色、HEX 取色、image color picker、dominant colors、color palette from image、eyedropper）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/image-color-picker，相关工具互链颜色转换、配色方案生成器、WCAG 对比度检查器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `image_color_picker`、Path `/tools/image-color-picker` 注册完整（Category 图片处理），注册总数 207→208 Path。
+2. 颜色格式向量闭环（node 断言）：rgbToHex／hexToRgb 往返逐字节一致（大写与不带 `#` 输入归一化）；rgbToHsl 已知值（纯红 0,100%,50%、纯白 0,0%,100%、纯黑 0,0%,0%）；rgbToCmyk 已知值（纯红 0%,100%,100%,0%、纯黑 k=100）；越界 RGB、3 位缩写、非法 HEX 字符判失败；formatColor 四格式互算一致。
+3. 像素读取向量闭环（node 断言）：构造 2×2 RGBA 数组，pickPixel 四角取值正确；越界坐标、data 长度不符判失败；透明像素（a＜255）原样返回 RGBA 不丢 alpha。
+4. 量化向量闭环（node 断言）：纯色输入返回 1 色 percent=100.0；红蓝各半输入返回红蓝两色 percent 各约 50（±1）；count 超出 1–10、空数组判失败；同一输入两次输出逐项一致；samplePixels 固定步长抽样逐项一致、maxSamples 非法判失败。
+5. 导出向量闭环（node 断言）：buildCssVariables 默认 prefix 输出 `--color-1:` 起逐行变量、非法 prefix 失败；buildHexList 换行分隔小写、无空行；suggestExportName 两 kind 文件名正确、其它 kind 失败；validateImageMeta 五种类型通过、其它类型与超 20MB 失败。
+6. 操作闭环（浏览器手工／测试复核）：上传图片→点击取色四格式与色块一致→放大镜跟随且准星对齐→主色提取色板按占比降序→点击色块复制 HEX→复制 HEX 列表与 CSS 变量可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只读本地上传图片、不做 URL 抓取」「精度受压缩与抗锯齿影响」「透明像素说明」「GIF 只取首帧」「主色为量化近似」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含颜色转换、配色方案生成器、WCAG 对比度检查器；不含未交付工具的硬凑互链；非法文件有红字降级提示。
+9. node 测试 25+ 断言全过（颜色格式向量、像素读取向量、量化向量、导出与文件校验向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端上传区、取色图、放大镜、色板、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/image_color_picker.html`（新增；含 SEO 面板按家族标准＋上传区／取色区／放大镜／主色区／历史区／操作区／示例演示）
+- `static/js/image_color_picker.js`（新增；颜色格式互转、像素读取、固定步长抽样、中位切分量化、CSS 变量与 HEX 列表导出、导出命名、文件类型与大小校验；双模式导出供 node 测试）
+- `tests/image_color_picker.test.js`（新增；颜色格式向量、像素读取向量、量化向量、导出与文件校验向量、注册与零网络静态检查）
+- `tools/categories.go`（图片处理品类注册：ID image_color_picker、Path /tools/image-color-picker、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功，请开发轮推送前仍常规复核）；`git log` 头部 6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）／0c3d50c（Gzip Base64 解码器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **207**；Top3 候选重叠复核（image_color_picker／image-color-picker 在 tools／templates／static/js／tests 四路 0 实现命中；颜色转换只做数值互转、配色方案只从单基色推方案、WCAG 只做双色对判定、像素画中位切分只用于输出图片、截图美化器点取色只服务换底，辨析见上；SVG 换色器与 CSS clip-path 生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 15:00 · 通用调研第一百三十五轮）
+
+**交付状态**：10-28 通用调研第一百三十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**SVG 波形／斑点背景生成器已交付闭环**（a17a375 新增＋6a6bb7f 画布高度与波形基线耦合修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **207 Path**，ID svg_background_generator、Path /tools/svg-background-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小难度纯前端。
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. SVG 波形／斑点背景生成器交付确认：`git log` 头部 6a6bb7f（画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）／0c3d50c（Gzip Base64 解码器新增）；全量 207 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；仅 known_hosts 新增 github.com 主机密钥提示，属正常首次记录）。
+2. 新信号扫描：
+   - **CSS clip-path 生成器（可视化多边形编辑器）**（Clippy／wpdean／iotools 等多个独立工具：拖拽顶点实时改 polygon、预设三角形／梯形／平行四边形／星形／箭头／聊天气泡、circle／ellipse／inset 基础形状、复制即用 `clip-path:` 声明）：**站内真缺口，晋升 P2**——站内 clip-path 命中仅为 CSS 转 Tailwind 提及的任意值兜底与图片对比滑块的 inset 用法，无独立生成器文件（templates／static/js 下无 clip-path 生成器）；CSS 阴影／圆角生成器只做阴影圆角、CSS 渐变生成器只做渐变，均不产 polygon；纯前端小／中难度：画布拖拽顶点（增／删／移）＋顶点坐标百分比列表双向编辑＋基础形状预设＋实时预览（图片／渐变背景双预览）＋复制 CSS／HTML 片段，零上传；真限制：只做 polygon／circle／ellipse／inset 四类，不做 SVG path() 与新 shape() 函数（须明示浏览器支持范围）、顶点少于 3 个不成形须提示；
+   - **图片取色器与主色提取、SVG 换色器复核仍未交付**：templates／static/js 下无取色／换色文件，categories.go 中 image_color_picker／svg_recolor／clip_path_generator 命中均为 0；134 轮晋升 P2 时的缺口论证（颜色转换器只做数值互转无图片输入、配色方案只从单基色推方案；SVG 压缩只压已有 SVG、SVG 转字体只转格式、HTML/SVG 转 JSX 只做词法映射不改色值）本轮仍成立，两项继续留池顺位递进；
+   - **其余信号全部消解，不立**：英文榜单群余项（年龄计算、单位换算属 10-18 方向修正排除；密码／二维码／条形码／Lorem Ipsum／字数统计／渐变／阴影圆角／图片压缩拼接九宫格／证件照／摩斯码／ASCII 字符画／JSON 转 TypeScript-Go 结构体／Cron 解析／番茄钟／文本朗读／EXIF 查看清除／图片转 PDF／PDF 压缩均为已注册工具；AI 摘要／去背景／AI 网站生成器需模型或后端；在线听写类 Chrome 系云端转写非纯本地，不另立）／V2EX 搜索（本轮返回 V2EX 用法指南聚合页，无有效新信号）／在线电台收听器（88 轮新晋；硬伤未解→继续跳过，见 Top3 后）。
+3. 候选池变动：SVG 波形／斑点背景生成器已交付划出（a17a375 新增＋6a6bb7f 修复；ID svg_background_generator、Path /tools/svg-background-generator 已注册；全量 207 Path）；**本轮新晋 P2 1 个**（CSS clip-path 生成器）；全量 207 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；SVG 波形／斑点背景生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，134 轮 Top3 第二顺位递进为首席，两项依次补足，新晋 P2 补第三顺位）：
+
+1. **图片取色器与主色提取** — P2 留池顺位首席（133 轮新晋 P2；135 轮复核仍未交付；痛点：从 Logo、截图、参考图里抠品牌色只能凭肉眼估，设计软件取色太重、在线取色多要上传；纯前端小难度：上传图片→点击像素取色（HEX／RGB／HSL／CMYK）＋放大镜精确定位＋主色量化提取→导出 HEX 列表／CSS 变量，零上传；与颜色转换器（数值互转无图片输入）、配色方案生成器（单基色推方案）、WCAG 对比度检查器（双色对判定）口径不重叠；真限制：只读本地上传图片、不做 URL 抓取，取色精度受压缩与抗锯齿影响须明示）。
+2. **SVG 换色器** — P2 留池顺位第二（134 轮新晋 P2；135 轮复核仍未交付；痛点：图标／插画换品牌色要逐行翻 fill／stroke 改代码，设计软件太重、在线换色多要上传；纯前端小／中难度：粘贴或上传 SVG→自动提取颜色成色板→逐色替换＋全局色调偏移→实时预览→导出 SVG／复制代码，零上传；与 SVG 压缩优化器（只压缩）、SVG 转字体（只转格式）、HTML/SVG 转 JSX（只做词法映射不改色值）口径不重叠；真限制：只改行内属性与内联 style 颜色，外部 CSS 与 currentColor 继承色不在范围须明示）。
+3. **CSS clip-path 生成器** — 新晋 P2（135 轮新晋；痛点：手写 polygon 百分比坐标难调、改一处就要全量重算，设计软件出图又不能直接贴 CSS；纯前端小／中难度：画布拖拽顶点＋百分比坐标列表双向编辑＋三角形／星形／箭头等预设＋circle／ellipse／inset 基础形状＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS 渐变生成器（只做渐变）、CSS 阴影／圆角生成器（只做阴影圆角）口径不重叠；真限制：只做 polygon／circle／ellipse／inset，不做 SVG path() 与新 shape() 函数须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；135 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：批量随机数生成器（133 轮观察项新增；未晋升 P2）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮）；文本对齐列→表格转换器（110 轮）；SQLite 数据库查看器／JSON→表格查看器（111 轮）；常用端口号速查（119 轮）；字体搭配预览器（129 轮观察项新增；与站内配色／字体族口径重叠待 PM 界定，未晋升 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 134 轮及之前记录。
+
+**通用候选表增量**（第一百三十五轮：SVG 波形／斑点背景生成器已交付划出（a17a375 新增＋6a6bb7f 修复；ID svg_background_generator、Path /tools/svg-background-generator 已注册；全量 207 Path；候选池划出）；**CSS clip-path 生成器新晋 P2**；图片取色器与主色提取、SVG 换色器复核仍未交付、顺位递进；自有实锤消解 10+ 项（榜单群余项均为已注册工具、方向排除或需后端／AI；V2EX 搜索无有效新信号）；全量 207 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SVG 波形／斑点背景生成器 | 已交付划出（a17a375 新增＋6a6bb7f 修复；ID svg_background_generator、Path /tools/svg-background-generator 已注册；全量 207 Path；候选池划出） | — | 已实现 |
+| CSS clip-path 生成器 | 手写 polygon 百分比坐标难调、改一处全量重算；画布拖拽顶点＋百分比列表双向编辑＋预设＋基础形状＋实时预览＋复制 CSS，纯前端零上传 | 中 | P2（新晋） |
+| 图片取色器与主色提取 | 复核仍未交付（133 轮 P2，顺位递进为首席）；从 Logo／截图抠品牌色凭肉眼估不准，上传图片→点击取色＋主色量化→导出 HEX／CSS 变量，纯前端零上传 | 小 | P2（留池） |
+| SVG 换色器 | 复核仍未交付（134 轮 P2，顺位递进为第二）；图标／插画换品牌色逐行翻 fill／stroke 太费事，粘贴或上传 SVG→提取色板→逐色替换→导出 SVG，纯前端零上传 | 中 | P2（留池） |
+| 自有实锤消解 | 不立（榜单群余项均为已注册工具、方向排除或需后端／AI；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十五轮——SVG 波形／斑点背景生成器交付闭环（a17a375，`/tools/svg-background-generator` 已注册，全量 207 Path），候选池划出；**CSS clip-path 生成器新晋 P2**；**图片取色器与主色提取、SVG 换色器顺位递进为 Top3 前两位**；仓库 207 注册工具全量核对无重叠（Top3 建议图片取色器与主色提取／SVG 换色器／CSS clip-path 生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）／0c3d50c（Gzip Base64 解码器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **207**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 13:37 · 产品经理排期轮，接 134 轮调研）
 
 **选定：SVG 波形／斑点背景生成器（svg_background_generator）** — 本轮唯一任务（新工具）：

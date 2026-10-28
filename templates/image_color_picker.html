@@ -1,0 +1,163 @@
+{{define "image_color_picker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片取色器与主色提取 - 上传图片点击取色、提取主色导出 HEX/CSS | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片取色器：上传本地图片，点击像素取色（HEX/RGB/HSL/CMYK 四格式），4 倍放大镜精确定位，中位切分提取主色并导出 HEX 列表或 CSS 变量。纯前端本地运行，不收集不上传。">
+    <meta name="keywords" content="图片取色器,主色提取,图片取色,HEX 取色,image color picker,dominant colors,color palette from image,eyedropper">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/image-color-picker">
+    <meta property="og:title" content="图片取色器与主色提取 - 点击取色与主色量化导出">
+    <meta property="og:description" content="上传本地图片→点击像素取色→4 倍放大镜定位→主色提取→导出 HEX 列表或 CSS 变量，全部本地完成不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/image-color-picker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片取色器与主色提取","description":"上传本地图片，点击像素取色（HEX/RGB/HSL/CMYK），4 倍放大镜精确定位，中位切分提取主色并导出 HEX 列表或 CSS 变量，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/image-color-picker","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .icp-wrap .container { max-width: 980px; margin: 0 auto; padding: 1.2rem; }
+        .icp-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .icp-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .icp-limits { border:2px solid #34d399; background:#ecfdf5; border-radius:.8rem; padding:.85rem 1rem; margin:0 0 1.2rem; font-size:.95rem; line-height:1.8; color:#065f46; }
+        .icp-drop { border:2px dashed #d1d5db; border-radius:.8rem; padding:2rem 1rem; text-align:center; cursor:pointer; color:#374151; }
+        .icp-drop.drag { border-color:var(--primary-color); background:#eff6ff; }
+        .icp-error { display:none; font-size:.9rem; line-height:1.7; color:#b91c1c; background:#fef2f2; border:1px solid #fca5a5; border-radius:.6rem; padding:.7rem .9rem; margin-bottom:.9rem; }
+        .icp-canvas-wrap { position:relative; overflow:auto; max-width:100%; border:1px solid #e5e7eb; border-radius:.6rem; background:#f9fafb; }
+        #icp-canvas { display:block; max-width:100%; height:auto; cursor:crosshair; }
+        #icp-mag { display:none; position:absolute; width:160px; height:160px; border:2px solid #111827; border-radius:.4rem; background:#fff; z-index:5; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,.25); }
+        .icp-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .icp-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .icp-btn:hover { background:#f3f4f6; }
+        .icp-btn.primary { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .icp-swatch { width:64px; height:64px; border:1px solid #d1d5db; border-radius:.5rem; background:#fff; flex:none; }
+        .icp-formats { line-height:1.9; font-size:.95rem; color:#111827; word-break:break-all; }
+        .icp-hist, .icp-pal { display:inline-flex; align-items:center; gap:.5rem; border:1px solid #d1d5db; border-radius:.6rem; padding:.4rem .7rem; background:#fff; cursor:pointer; font-size:.9rem; margin:.25rem; }
+        .icp-hist-sw, .icp-pal-sw { width:24px; height:24px; border:1px solid #d1d5db; border-radius:.3rem; display:inline-block; flex:none; }
+        .icp-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .icp-faq dt { font-weight:700; color:#111827; margin:.9rem 0 .3rem; font-size:.95rem; }
+        .icp-faq dd { margin:0; color:#4b5563; line-height:1.9; font-size:.92rem; }
+        .icp-links { display:flex; gap:.6rem; flex-wrap:wrap; }
+        .icp-links a { border:1px solid #d1d5db; border-radius:.6rem; padding:.5rem .9rem; font-size:.88rem; color:#1f2937; text-decoration:none; background:#fff; }
+        .icp-status { font-size:.9rem; min-height:1.4em; color:#374151; }
+        .icp-meta { font-size:.85rem; color:#6b7280; margin-top:.5rem; }
+        input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        @media (max-width:640px){
+            .icp-btn { flex:1; justify-content:center; text-align:center; }
+            #icp-mag { width:120px; height:120px; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container icp-wrap">
+        <div class="tool-header">
+            <h1>图片取色器与主色提取</h1>
+            <p>上传本地图片，点击任意像素取色；4 倍放大镜精确定位；一键提取主色，导出 HEX 列表或 CSS 变量。</p>
+        </div>
+        <div class="tool-content" style="max-width:980px;margin:auto;">
+            <div class="icp-limits" role="note">
+                <div><b>真限制，先说清楚：</b>① 只读本地上传图片，不做 URL 抓取——外链图片请先下载到本地再上传；② 取色精度受压缩与抗锯齿影响，边缘像素仅供参考，以纯色区域取色为准；③ 透明像素说明：alpha 小于 255 时会同时显示 RGBA 值，透明像素的 RGB 仅为底色混合参考；④ GIF 只取首帧，动图不逐帧取色；⑤ 主色提取为量化近似：中位切分结果是统计主色，不是精确的品牌标准色值；⑥ 不收集、不上传任何内容：读图与取色只在浏览器本地完成（canvas getImageData），本页面不发起任何网络请求。</div>
+            </div>
+
+            <div class="icp-card">
+                <h3>上传图片</h3>
+                <div class="icp-error" id="icp-error" role="alert"></div>
+                <div class="icp-drop" id="icp-drop" tabindex="0">点击上传或拖拽图片到这里<br><span style="color:#6b7280;font-size:.9rem;">仅支持 PNG、JPEG、WebP、GIF、BMP，单个文件不超过 20MB</span></div>
+                <input type="file" id="icp-file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" style="display:none;">
+                <div class="icp-row">
+                    <button type="button" class="icp-btn primary" id="icp-sample">载入示例</button>
+                    <span class="icp-tip">无需上传：示例图由 canvas 现场绘制红／绿／蓝／黄四色块，可直接演示取色与主色提取全流程。</span>
+                </div>
+            </div>
+
+            <div class="icp-card">
+                <h3>点击取色</h3>
+                <div class="icp-canvas-wrap" id="icp-canvas-wrap" style="display:none;">
+                    <canvas id="icp-canvas"></canvas>
+                    <canvas id="icp-mag" width="160" height="160"></canvas>
+                </div>
+                <div class="icp-meta" id="icp-meta">尚未载入图片：请上传图片或载入示例图。</div>
+                <div class="icp-row">
+                    <div class="icp-swatch" id="icp-swatch"></div>
+                    <div class="icp-formats">
+                        <div>HEX：<span id="icp-hex">—</span></div>
+                        <div>RGB：<span id="icp-rgb">—</span></div>
+                        <div>HSL：<span id="icp-hsl">—</span></div>
+                        <div>CMYK：<span id="icp-cmyk">—</span></div>
+                        <div>坐标：<span id="icp-coord">—</span></div>
+                        <div id="icp-alpha">点击图片上的任意像素取色。</div>
+                    </div>
+                </div>
+                <p class="icp-tip">放大镜：鼠标移到图片上时显示 4 倍局部放大框与十字准星，放大区域取自原图同位置裁剪放大，不是 CSS 拉伸模糊。</p>
+            </div>
+
+            <div class="icp-card">
+                <h3>主色提取</h3>
+                <div class="icp-row">
+                    <label>主色数量 <input type="range" id="icp-count" min="1" max="10" step="1" value="6"> <span id="icp-count-val">6</span></label>
+                    <button type="button" class="icp-btn primary" id="icp-extract">提取主色</button>
+                </div>
+                <div id="icp-palette"></div>
+                <div class="icp-row">
+                    <button type="button" class="icp-btn" id="icp-copy-hex">复制 HEX 列表</button>
+                    <button type="button" class="icp-btn" id="icp-copy-css">复制 CSS 变量</button>
+                    <button type="button" class="icp-btn" id="icp-dl-hex">下载 palette.txt</button>
+                    <button type="button" class="icp-btn" id="icp-dl-css">下载 palette.css</button>
+                </div>
+                <div class="icp-status" id="icp-status"></div>
+                <p class="icp-tip">色板按占比降序排列，点击任一色块复制该色 HEX；主色数量 1–10，默认 6。</p>
+            </div>
+
+            <div class="icp-card">
+                <h3>最近取色历史（最近 8 次）</h3>
+                <div id="icp-history"></div>
+                <p class="icp-tip">点击一条历史记录可回填为当前色。</p>
+            </div>
+
+            <div class="icp-card">
+                <h3>使用说明</h3>
+                <div class="icp-tip">
+                    <b>取色</b>：上传图片后直接点击图片，当前像素的 HEX／RGB／HSL／CMYK 与坐标会同步显示；鼠标悬停时放大镜帮助精确定位。<br>
+                    <b>主色</b>：用滑杆选 1–10 个主色，点「提取主色」，中位切分量化按像素占比降序给出色板。<br>
+                    <b>导出</b>：HEX 列表为换行分隔的小写 HEX；CSS 变量为 --color-1、--color-2……逐行变量，可复制或下载 palette.txt／palette.css。<br>
+                    <b>隐私</b>：所有读图、取色、量化、导出都在浏览器本地完成，不收集、不上传任何内容。
+                </div>
+            </div>
+
+            <div class="icp-card">
+                <h3>常见问题</h3>
+                <dl class="icp-faq">
+                    <dt>为什么不能粘贴图片链接取色？</dt>
+                    <dd>本工具只读本地上传图片，不做 URL 抓取——外链图片受跨域（CORS）限制，浏览器不允许直接读取像素。请先把图片下载到本地再上传。</dd>
+                    <dt>取到的颜色和品牌标准色有偏差怎么办？</dt>
+                    <dd>压缩失真与抗锯齿会让边缘像素偏离标准色，边缘像素仅供参考；请在纯色区域中心取色，并以主色提取的统计结果交叉核对。</dd>
+                    <dt>透明图片取色怎么看？</dt>
+                    <dd>alpha 小于 255 的像素会显示 alpha 值并提示：透明像素的 RGB 仅为底色混合参考，不能直接当作不透明色使用。</dd>
+                    <dt>GIF 动图取色取哪一帧？</dt>
+                    <dd>只取首帧，动图不逐帧取色。</dd>
+                    <dt>主色就是图片的精确品牌色吗？</dt>
+                    <dd>不是。主色提取为量化近似：中位切分是对抽样像素的统计归纳，适合快速得到配色方向，精确色值仍以纯色区域取色为准。</dd>
+                    <dt>图片会上传到服务器吗？</dt>
+                    <dd>不会。读图走 FileReader＋Image＋canvas getImageData，只在浏览器本地完成，不收集、不上传，本页面无后端调用、无外部请求。</dd>
+                </dl>
+            </div>
+
+            <div class="icp-card">
+                <h3>相关工具</h3>
+                <div class="icp-links">
+                    <a href="/tools/color-converter">颜色转换</a>
+                    <a href="/tools/color-palette-generator">配色方案生成器</a>
+                    <a href="/tools/wcag-contrast-checker">WCAG 对比度检查器</a>
+                </div>
+                <p class="icp-tip" style="margin-top:.8rem;">区分：颜色转换做的是数值互转（HEX／RGB／HSL 换算），本工具做的是从图片取色；配色方案生成器是从单基色推和谐方案，本工具是从图片提取主色；WCAG 对比度检查器做的是双色对判定，本工具只负责取色与主色提取，取到的颜色可再去验对比度。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/image_color_picker.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -997,6 +997,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "image_color_picker",
+					Name:        "图片取色器与主色提取",
+					Description: "上传本地图片，点击像素取色（HEX/RGB/HSL/CMYK 四格式＋色块＋坐标），4 倍放大镜十字准星精确定位，中位切分提取 1–10 个主色（按占比降序），导出 HEX 列表或 CSS 变量，附最近 8 次取色历史与 4 色示例图，纯前端零上传 · Image color picker: pick pixels from local images, 4x magnifier, median-cut dominant colors, export HEX list or CSS variables, 100% client-side",
+					Path:        "/tools/image-color-picker",
+					Icon:        "colorize",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "svg_to_font",
 					Name:        "SVG 转字体图标生成器",
 					Description: "纯前端 SVG 转图标字体：拖拽/多选/粘贴 SVG，解析 path 全命令＋基本形状转三次贝塞尔，viewBox 归一化到 1024 em 方框＋Y 轴翻转，U+E000 起分配私有码点，本地组装 TTF（主）/OTF（次）下载，@font-face 字形网格预览，一键复制 CSS，零上传 · SVG to icon font: parse SVG paths and shapes, normalize to 1024 em, assign PUA codepoints from U+E000, build TTF/OTF entirely in the browser, 100% client-side",
