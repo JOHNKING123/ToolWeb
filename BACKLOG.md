@@ -1,3 +1,87 @@
+## 今日任务（2026-10-28 13:37 · 产品经理排期轮，接 134 轮调研）
+
+**选定：SVG 波形／斑点背景生成器（svg_background_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（134 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。Gzip Base64 解码器已交付划出（0c3d50c，全量 206 Path），首席顺位自然递进至本项；不再以「小难度优先」等理由二次跳过——图片取色器与主色提取、SVG 换色器均不插队。
+- **未选**：图片取色器与主色提取（133 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；痛点与纯前端路线均已复核无重叠，见下）；SVG 换色器（134 轮新晋 P2，**无硬伤，留池顺位递进——同上，仅顺位后置**）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **206 Path**；`git log` 头部 0c3d50c（Gzip Base64 解码器新增）／d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）。逐项复核：`svg_background_generator`／`svg-background-generator` 在 tools／templates／static/js／tests 四路均为 0 实现命中（`wave`／`blob` 的零星命中均为无关语境，如其它工具文案与 JS 变量名，非背景生成实现；templates／static/js／tests 下无 wave／blob／background 生成器文件）。近邻再辨析：① **CSS 渐变生成器**（ID css_gradient_generator、Path /tools/css-gradient-generator）只做 linear／radial／conic 渐变，不生成任何 SVG 路径几何；② **SVG 压缩优化器**（ID svg_compressor）只压缩已有 SVG，不生成新图形；③ **SVG 转字体**（ID svg_to_font）只转字体格式；④ **HTML/SVG 转 JSX**（ID html_jsx_converter）只做词法级属性映射，不生成背景；⑤ 骨架屏／头像生成器均非背景生成。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——做落地页、封面、海报时想要波形分隔与有机斑点背景，手写 SVG 路径数据太费事、Haikei 免费版功能与尺寸受限，调参→实时预览→导出 SVG／PNG／CSS 恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，波形正弦采样与斑点径向扰动＋Catmull-Rom 平滑均为确定性纯函数，种子可复现，可写成精确向量供 node 断言，无随机性（种子固定时输出逐字节一致）；④ **受众与站内互补**——与 CSS 渐变生成器、SVG 压缩优化器同属「页面装饰素材」需求簇，导出 SVG 后可再用压缩器压体积，成组发现；⑤ **外部佐证已就位**——133 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「图片处理」品类（与 SVG 压缩优化器、SVG 转字体同品类，便于 SVG 类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做装饰背景几何**——不做插画编辑、不做动画视频导出（WebGL 动画波形与 MP4／GIF 导出不在范围）；② **波形只做正弦分层**——不做手绘路径编辑，导入已有 SVG 再编辑不在范围；③ **斑点形状由种子决定**——同一参数＋同一种子输出完全一致，换种子即换形状，页面须明示「种子可复现」；④ **PNG 导出为光栅化结果**——放大后不如 SVG 清晰，页面须明示「要无损缩放请用 SVG」；⑤ **不收集、不上传任何内容**——生成只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports）：
+  - `seededRandom(seed)`：mulberry32 实现，seed 为整数；同一 seed 返回的随机序列逐值一致，不同 seed 序列不同；seed 非整数／NaN 时返回失败（不静默取整）。
+  - `normalizeHex(input)`：带或不带 `#` 的 6 位 HEX（大小写不限），归一化为小写 `#rrggbb`；3 位缩写、非 HEX 字符、长度不对返回失败。
+  - `waveLayerPath(width, height, opts)`：opts 含 amplitude（振幅 px）、frequency（整幅宽内完整周期数，≥0.5）、phase（相位弧度）、baseline（基线距顶 px）。采样点数固定 N=120（不含闭合点）：x_i = width×i/(N-1)，y_i = baseline + amplitude×sin(2π×frequency×x_i/width + phase)；路径以 `M 0,baseline…` 起笔、沿采样点连线至右边缘后直线闭合到底边（`L width,height L 0,height Z`）。返回 `{ d }`；width／height／amplitude／frequency／baseline 非法（负数、非数字、NaN、frequency＜0.5、baseline 超出 [0,height]、amplitude＞height/2）时返回失败（不静默钳制）。
+  - `blobPath(opts)`：opts 含 cx、cy、radius、points（顶点数 6–20）、smoothness（扰动幅度 0–1）、seed。顶点角均匀分布，半径 r_i = radius×(1 + smoothness×(rand_i−0.5)×2)，rand_i 取自 seededRandom(seed) 序列；顶点间用 Catmull-Rom 转三次贝塞尔平滑闭合，返回闭合路径 `d`（首尾相接、含 Z）。同一 opts 输出逐字节一致；不同 seed 输出不同；points／smoothness／radius 超范围或非法时返回失败。
+  - `buildSvg(config)`：config 含 type（`wave`｜`blob`）、width、height（200–4000，整数）、background（normalizeHex 结果或 `transparent`）、wave 时 layers 数组（1–4 层，每层 color／opacity 0–1／amplitude／frequency／phase／baseline）、blob 时 blob 参数（color／opacity／points／smoothness／seed）。返回完整独立 SVG 字符串（含 xmlns、`viewBox="0 0 width height"`、width／height 属性）；非法 config 返回失败并给出字段名。
+  - `buildCssBackground(svg)`：返回 `background-image: url("data:image/svg+xml,${encodeURIComponent(svg)}");` 形式片段；解码后须与原 svg 逐字节一致（node 断言 decodeURIComponent 还原）。
+  - `suggestExportName(type)`：wave → `wave-background.svg`，blob → `blob-background.svg`（PNG 导出时扩展名换为 `.png`，不编造其它文件名）。
+  - `validateSize(width, height)`：整数且均在 [200,4000] 内，否则失败并明示范围（不静默钳制）。
+- 界面：模式切换（波形／斑点两 tab）；画布尺寸区（预设 1920×1080／1440×900／1200×630／自定义宽高，非法尺寸红字提示）；波形参数区（层数 1–4，每层颜色取色器＋透明度滑杆＋振幅／频率／基线滑杆；背景色取色器或透明）；斑点参数区（颜色取色器＋透明度滑杆＋顶点数／圆润度滑杆＋种子数字输入＋「换一个种子」随机种子按钮；背景色取色器或透明）；预览区（实时渲染当前 SVG，大图区＋棋盘格示意透明背景）；操作区（「复制 SVG 代码」「下载 .svg」「下载 .png（画布尺寸光栅化）」「复制 CSS 背景代码」「载入示例」按钮，示例为 3 层波形预设；切换 tab 时载入示例对应模式预设）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 CSS 渐变生成器（/tools/css-gradient-generator，文案按「渐变填充 vs 几何背景」区分）、SVG 压缩优化器（/tools/svg-compressor，文案按「生成背景 vs 压缩已有 SVG」区分，导出 SVG 后可再压缩）互链；不与未交付的图片取色器与主色提取、SVG 换色器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写正弦采样与 Catmull-Rom 平滑，不引入任何 SVG 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；PNG 导出走 canvas 光栅化＋toBlob 下载，不经过任何服务器。
+- 注册：ID `svg_background_generator`、Name「SVG 波形／斑点背景生成器」、Path `/tools/svg-background-generator`、Category 图片处理、Icon 建议 landscape（图标库无此名则用 image 兜底；waves 已被白噪音发生器占用，本工具不用 waves；勿与截图美化器的 image 在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（SVG 波形背景、SVG 斑点背景、波形分隔生成器、blob 背景、svg wave generator、svg blob generator、wave divider、organic blob background）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/svg-background-generator，相关工具互链 CSS 渐变生成器、SVG 压缩优化器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `svg_background_generator`、Path `/tools/svg-background-generator` 注册完整（Category 图片处理），注册总数 206→207 Path。
+2. 波形向量闭环（node 断言）：同参数两次输出逐字节一致；路径以 M 起笔、含 Z 闭合、采样点数恰为 120；amplitude=0 时波形退化为水平直线（所有 y 等于 baseline）；frequency 加倍时波峰数加倍（过零点计数断言）；非法参数（负振幅、frequency＜0.5、baseline 越界、amplitude＞height/2）返回失败。
+3. 斑点向量闭环（node 断言）：同 seed 两次输出逐字节一致；不同 seed 输出不同；路径闭合含 Z；smoothness=0 时所有顶点半径等于 radius（正多边形）；points 超出 6–20、smoothness 超出 0–1、seed 非整数返回失败。
+4. 组装与导出向量闭环：buildSvg 输出含 xmlns 与正确 viewBox／宽高；wave 层数 1 层与 4 层均合法、0 层与 5 层失败；buildCssBackground 经 decodeURIComponent 还原后与原 svg 逐字节一致；suggestExportName 两模式文件名正确；validateSize 越界（199／4001／非整数）失败。
+5. 颜色向量闭环：normalizeHex 含不带 `#`、大写输入归一化；3 位缩写、非 HEX 字符、长度不对判失败；opacity 超出 0–1 失败。
+6. 操作闭环（浏览器手工／测试复核）：调参后预览与参数一致（改颜色／振幅／种子后预览即时变化）；复制 SVG、下载 .svg、下载 .png（尺寸等于画布尺寸）、复制 CSS 代码可用；「载入示例」无需调参即可演示全流程；「换一个种子」后斑点形状变化。
+7. 真限制可见：页面可见「只做装饰背景几何」「不做动画视频导出」「种子可复现」「PNG 放大不如 SVG 清晰」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS 渐变生成器、SVG 压缩优化器；不含未交付工具的硬凑互链；非法参数有红字降级提示。
+9. node 测试 25+ 断言全过（波形向量、斑点向量、组装与导出向量、颜色与尺寸向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端参数滑杆组、预览区、导出按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/svg_background_generator.html`（新增；含 SEO 面板按家族标准＋模式切换／画布尺寸区／波形与斑点参数区／预览区／操作区／示例演示）
+- `static/js/svg_background_generator.js`（新增；种子随机、正弦波形采样、斑点径向扰动＋Catmull-Rom 平滑、SVG 组装、CSS 背景片段、导出命名；双模式导出供 node 测试）
+- `tests/svg_background_generator.test.js`（新增；波形向量、斑点向量、组装与导出向量、颜色与尺寸向量、注册与零网络静态检查）
+- `tools/categories.go`（图片处理品类注册：ID svg_background_generator、Path /tools/svg-background-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；首轮 fetch 曾报 publickey 被拒，复核时已恢复成功，属间歇性远端同步波动，请开发轮推送前仍常规复核）；`git log` 头部 0c3d50c（Gzip Base64 解码器新增）／d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **206**；Top3 候选重叠复核（svg_background_generator／svg-background-generator 在 tools／templates／static/js／tests 四路 0 实现命中；CSS 渐变只做渐变、SVG 压缩只压已有 SVG、SVG 转字体只转格式、HTML/SVG 转 JSX 只做词法映射，辨析见上；图片取色器与主色提取、SVG 换色器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 13:36 · 通用调研第一百三十四轮）
+
+**交付状态**：10-28 通用调研第一百三十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Gzip Base64 解码器已交付闭环**（0c3d50c 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **206 Path**，ID gzip_base64_decoder、Path /tools/gzip-base64-decoder 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:36 轮，优先小难度纯前端。
+**本轮三件事**（13:36 全网调研，通用方向）：
+1. Gzip Base64 解码器交付确认：`git log` 头部 0c3d50c（Gzip Base64 解码器新增）／d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）；全量 206 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；远端同步状态正常，请开发轮推送前仍常规复核）。
+2. 新信号扫描：
+   - **SVG 换色器（SVG Recolor）**（GetIllustrations SVG Color Editor／SVGMaker SVG Color Editor／FreeColorTool SVG Color Changer 等多个独立工具：上传 SVG→自动提取 fill／stroke／渐变色标→逐色替换→导出 SVG／PNG）：**站内真缺口，晋升 P2**——SVG 压缩优化器只压缩已有 SVG（不改色）、SVG 转字体只转字体格式、HTML/SVG 转 JSX 只做词法级属性映射（不改颜色值），`recolor`／换色在 categories.go 无实现命中，templates／static/js 下无换色文件；纯前端小／中难度：粘贴或上传 SVG 文本→正则＋DOM 解析提取颜色→色板逐色替换＋全局色调偏移→实时预览→导出改色后 SVG／复制代码，零上传；真限制：只改行内属性与内联 style 里的颜色，外部 CSS 文件控制的颜色与 currentColor 继承色不在范围（须明示）、复杂渐变与滤镜色标只做直替换不做语义重算；
+   - **SVG 波形／斑点背景生成器与图片取色器与主色提取复核仍未交付**：templates／static/js 下无 wave／blob／background 生成器文件、无 picker／eyedropper 取色文件；133 轮晋升 P2 时的缺口论证（渐变生成器只做渐变、SVG 压缩只压已有 SVG；颜色转换器只做数值互转无图片输入、配色方案只从单基色推方案）本轮仍成立，两项继续留池顺位递进；
+   - **其余信号全部消解，不立**：英文榜单群余项（年龄计算、单位换算属 10-18 方向修正排除；密码／二维码／JSON／正则／Base64／UUID／URL／图片压缩缩放／字数统计／Markdown／渐变／取色数值转换均为已注册工具；AI 摘要／去背景／视频编辑需模型或后端；去水印与 AI 换脸类不在 ToolWeb 口径内）／V2EX 搜索（本轮返回旧文与无关外包帖，无有效新信号）／在线电台收听器（88 轮新晋；硬伤未解→继续跳过，见 Top3 后）。
+3. 候选池变动：Gzip Base64 解码器已交付划出（0c3d50c 新增；ID gzip_base64_decoder、Path /tools/gzip-base64-decoder 已注册；全量 206 Path）；**本轮新晋 P2 1 个**（SVG 换色器）；全量 206 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Gzip Base64 解码器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，133 轮 Top3 第二顺位递进为首席，两项依次补足，新晋 P2 补第三顺位）：
+
+1. **SVG 波形／斑点背景生成器** — P2 留池顺位首席（133 轮新晋 P2；134 轮复核仍未交付；痛点：做落地页、封面、海报时想要波形分隔与有机斑点背景，手写 SVG 路径数据太费事、Haikei 免费版功能与尺寸受限；纯前端中难度：波形分层（振幅／频率／层数／颜色／透明度）＋斑点（复杂度／圆润度／种子）双生成器、实时预览、导出 SVG／PNG／CSS，零上传；与 CSS 渐变生成器（只做渐变）、SVG 压缩优化器（只压已有 SVG）口径不重叠；真限制：只做装饰背景几何、不做插画编辑、不做动画视频导出）。
+2. **图片取色器与主色提取** — P2 留池顺位第二（133 轮新晋 P2；134 轮复核仍未交付；痛点：从 Logo、截图、参考图里抠品牌色只能凭肉眼估，设计软件取色太重、在线取色多要上传；纯前端小难度：上传图片→点击像素取色（HEX／RGB／HSL／CMYK）＋放大镜精确定位＋主色量化提取→导出 HEX 列表／CSS 变量，零上传；与颜色转换器（数值互转无图片输入）、配色方案生成器（单基色推方案）、WCAG 对比度检查器（双色对判定）口径不重叠；真限制：只读本地上传图片、不做 URL 抓取，取色精度受压缩与抗锯齿影响须明示）。
+3. **SVG 换色器** — 新晋 P2（134 轮新晋；痛点：图标／插画换品牌色要逐行翻 fill／stroke 改代码，设计软件太重、在线换色多要上传；纯前端小／中难度：粘贴或上传 SVG→自动提取颜色成色板→逐色替换＋全局色调偏移→实时预览→导出 SVG／复制代码，零上传；与 SVG 压缩优化器（只压缩）、SVG 转字体（只转格式）、HTML/SVG 转 JSX（只做词法映射不改色值）口径不重叠；真限制：只改行内属性与内联 style 颜色，外部 CSS 与 currentColor 继承色不在范围须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；134 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：批量随机数生成器（133 轮观察项新增；未晋升 P2）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮）；文本对齐列→表格转换器（110 轮）；SQLite 数据库查看器／JSON→表格查看器（111 轮）；常用端口号速查（119 轮）；字体搭配预览器（129 轮观察项新增；与站内配色／字体族口径重叠待 PM 界定，未晋升 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 133 轮及之前记录。
+
+**通用候选表增量**（第一百三十四轮：Gzip Base64 解码器已交付划出（0c3d50c 新增；ID gzip_base64_decoder、Path /tools/gzip-base64-decoder 已注册；全量 206 Path；候选池划出）；**SVG 换色器新晋 P2**；SVG 波形／斑点背景生成器与图片取色器与主色提取复核仍未交付、顺位递进；自有实锤消解 10+ 项（榜单群余项均为已注册工具、方向排除或需后端／AI；V2EX 搜索无有效新信号）；全量 206 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Gzip Base64 解码器 | 已交付划出（0c3d50c 新增；ID gzip_base64_decoder、Path /tools/gzip-base64-decoder 已注册；全量 206 Path；候选池划出） | — | 已实现 |
+| SVG 换色器 | 图标／插画换品牌色逐行翻 fill／stroke 太费事；粘贴或上传 SVG→自动提取颜色成色板→逐色替换＋全局色调偏移→实时预览→导出 SVG，纯前端零上传 | 中 | P2（新晋） |
+| SVG 波形／斑点背景生成器 | 复核仍未交付（133 轮 P2，顺位递进为首席）；落地页／封面要波形分隔与有机斑点背景，手写 SVG 路径太费事 | 中 | P2（留池） |
+| 图片取色器与主色提取 | 复核仍未交付（133 轮 P2，顺位递进为第二）；从 Logo／截图抠品牌色凭肉眼估不准，上传图片→点击取色＋主色量化→导出 HEX／CSS 变量，纯前端零上传 | 小 | P2（留池） |
+| 自有实锤消解 | 不立（榜单群余项均为已注册工具、方向排除或需后端／AI；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十四轮——Gzip Base64 解码器交付闭环（0c3d50c，`/tools/gzip-base64-decoder` 已注册，全量 206 Path），候选池划出；**SVG 换色器新晋 P2**；**SVG 波形／斑点背景生成器与图片取色器与主色提取顺位递进为 Top3 前两位**；仓库 206 注册工具全量核对无重叠（Top3 建议 SVG 波形／斑点背景生成器／图片取色器与主色提取／SVG 换色器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 0c3d50c（Gzip Base64 解码器新增）／d09f88d（截图美化器新增）／d7b0491（MP3 标签编辑器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **206**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 11:45 · 产品经理排期轮，接 133 轮调研）
 
 **选定：Gzip Base64 解码器（gzip_base64_decoder）** — 本轮唯一任务（新工具）：

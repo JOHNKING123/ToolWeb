@@ -1,0 +1,193 @@
+{{define "svg_background_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 波形／斑点背景生成器 - 正弦分层波形与有机斑点背景在线生成导出 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 SVG 波形／斑点背景生成器：波形模式正弦分层（1–4 层，颜色/透明度/振幅/频率/基线可调，120 点采样）与斑点模式（径向扰动＋Catmull-Rom 平滑，种子可复现），实时预览，导出 SVG / PNG / CSS 背景代码。纯前端本地运行，零第三方依赖，不收集不上传。">
+    <meta name="keywords" content="SVG 波形背景,SVG 斑点背景,波形分隔生成器,blob 背景,svg wave generator,svg blob generator,wave divider,organic blob background,SVG 背景生成器,波形背景导出">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/svg-background-generator">
+    <meta property="og:title" content="SVG 波形／斑点背景生成器 - 波形分隔与有机斑点背景在线生成">
+    <meta property="og:description" content="调参→实时预览→导出 SVG / PNG / CSS 背景代码：正弦分层波形与种子可复现的有机斑点，全部本地完成不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/svg-background-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"SVG 波形／斑点背景生成器","description":"波形模式正弦分层（1–4 层，120 点采样闭合路径）与斑点模式（径向扰动＋Catmull-Rom 平滑闭合，mulberry32 种子可复现），画布 200–4000px，实时预览，导出 SVG / PNG / CSS 背景 data URI，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/svg-background-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sbg-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .sbg-wrap .navbar .material-icons { display: none; }
+        .sbg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .sbg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .sbg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .sbg-limits { display:flex; gap:.7rem; align-items:flex-start; border:2px solid #34d399; background:#ecfdf5; border-radius:.8rem; padding:.85rem 1rem; margin:0 0 1.2rem; font-size:.95rem; line-height:1.7; color:#065f46; }
+        .sbg-tabs { display:flex; gap:.5rem; margin-bottom:.9rem; flex-wrap:wrap; }
+        .sbg-tab { border:2px solid #e5e7eb; background:#fff; border-radius:.6rem; padding:.5rem 1.1rem; cursor:pointer; font-size:.92rem; color:#374151; }
+        .sbg-tab.active { border-color:var(--primary-color); color:var(--primary-color); font-weight:600; background:#eff6ff; }
+        .sbg-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .sbg-row label { font-size:.92rem; color:#374151; min-width:4.2em; }
+        .sbg-row input[type=number] { width:96px; padding:.42rem .55rem; border:1px solid #d1d5db; border-radius:.45rem; font-size:.92rem; }
+        .sbg-row input[type=color] { width:44px; height:34px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .sbg-row input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        .sbg-val { display:inline-block; min-width:3.5em; font-weight:600; color:var(--primary-color); font-size:.92rem; }
+        .sbg-row select { padding:.4rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; color:#374151; background:#fff; }
+        .sbg-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .sbg-btn:hover { background:#f3f4f6; }
+        .sbg-btn.primary { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .sbg-btn.primary:hover { opacity:.9; }
+        .sbg-layer { border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem 1rem; margin:.7rem 0; background:#f9fafb; display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; }
+        .sbg-layer-title { font-weight:700; color:#111827; font-size:.92rem; width:100%; }
+        .sbg-layer label { font-size:.9rem; color:#374151; display:inline-flex; align-items:center; gap:.35rem; }
+        .sbg-layer input[type=color] { width:40px; height:30px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .sbg-layer input[type=range] { width:120px; }
+        .sbg-layer span { min-width:3em; font-weight:600; color:var(--primary-color); font-size:.88rem; }
+        .sbg-checker { background-color:#fff; background-image:linear-gradient(45deg,#d1d5db 25%,transparent 25%,transparent 75%,#d1d5db 75%),linear-gradient(45deg,#d1d5db 25%,transparent 25%,transparent 75%,#d1d5db 75%); background-size:16px 16px; background-position:0 0,8px 8px; }
+        .sbg-preview { border:1px solid rgba(0,0,0,.12); border-radius:.7rem; overflow:hidden; line-height:0; }
+        .sbg-preview svg { width:100%; height:auto; display:block; }
+        .sbg-error { display:none; font-size:.9rem; line-height:1.7; color:#b91c1c; background:#fef2f2; border:1px solid #fca5a5; border-radius:.6rem; padding:.7rem .9rem; margin-bottom:.9rem; }
+        .sbg-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.82rem; line-height:1.6; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; width:100%; box-sizing:border-box; min-height:6rem; border:none; resize:vertical; }
+        .sbg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .sbg-status { font-size:.9rem; min-height:1.4em; color:#374151; }
+        .sbg-size-info { font-size:.85rem; color:#6b7280; margin-top:.5rem; }
+        .sbg-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .sbg-faq dt { font-weight:700; color:#111827; margin:.9rem 0 .3rem; font-size:.95rem; }
+        .sbg-faq dd { margin:0; color:#4b5563; line-height:1.9; font-size:.92rem; }
+        .sbg-links { display:flex; gap:.6rem; flex-wrap:wrap; }
+        .sbg-links a { display:inline-flex; align-items:center; gap:.35rem; border:1px solid #d1d5db; border-radius:.6rem; padding:.5rem .9rem; font-size:.88rem; color:#1f2937; text-decoration:none; background:#fff; }
+        .sbg-links a:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        @media (max-width:860px){
+            .sbg-actions .sbg-btn { flex:1; justify-content:center; text-align:center; }
+            .sbg-layer input[type=range] { width:100%; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container sbg-wrap">
+        <div class="tool-header">
+            <h1>SVG 波形／斑点背景生成器</h1>
+            <p>做落地页、封面、海报时想要波形分隔与有机斑点背景，不用手写 SVG 路径：调参→实时预览→导出 SVG / PNG / CSS 背景代码，一次成型。</p>
+        </div>
+        <div class="tool-content" style="max-width:1080px;margin:auto;">
+            <div class="sbg-limits" role="note">
+                <div><b>真限制，先说清楚：</b>本工具只做装饰背景几何，不做插画编辑，也不做动画视频导出；波形只做正弦分层，不做手绘路径编辑；斑点形状由种子决定，同一参数＋同一种子输出完全一致（种子可复现），换种子即换形状；PNG 导出为画布尺寸光栅化结果，PNG 放大不如 SVG 清晰，要无损缩放请用 SVG；生成只在浏览器本地完成，不收集、不上传任何内容。</div>
+            </div>
+
+            <div class="sbg-card">
+                <h3>模式</h3>
+                <div class="sbg-tabs" role="tablist">
+                    <button type="button" class="sbg-tab active" id="sbg-tab-wave">波形模式</button>
+                    <button type="button" class="sbg-tab" id="sbg-tab-blob">斑点模式</button>
+                </div>
+
+                <h3>画布尺寸 <span class="sbg-hint">（200–4000px 整数，非法尺寸会红字提示，不静默钳制）</span></h3>
+                <div class="sbg-row">
+                    <button type="button" class="sbg-btn" data-preset="1920x1080">1920×1080</button>
+                    <button type="button" class="sbg-btn" data-preset="1440x900">1440×900</button>
+                    <button type="button" class="sbg-btn" data-preset="1200x630">1200×630</button>
+                    <label>宽 <input type="number" id="sbg-width" value="1920" min="200" max="4000" step="1"></label>
+                    <label>高 <input type="number" id="sbg-height" value="1080" min="200" max="4000" step="1"></label>
+                </div>
+                <div class="sbg-row">
+                    <label>背景色 <input type="color" id="sbg-bg" value="#0f172a"></label>
+                    <label><input type="checkbox" id="sbg-bg-transparent"> 透明背景（棋盘格示意透明区域）</label>
+                </div>
+
+                <div id="sbg-wave-panel">
+                    <h3>波形参数 <span class="sbg-hint">（正弦分层：每层独立颜色／透明度／振幅／频率／相位／基线，120 点采样闭合路径）</span></h3>
+                    <div class="sbg-row">
+                        <label>层数
+                            <select id="sbg-layer-count">
+                                <option value="1">1 层</option>
+                                <option value="2">2 层</option>
+                                <option value="3" selected>3 层</option>
+                                <option value="4">4 层</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="sbg-layers"></div>
+                </div>
+
+                <div id="sbg-blob-panel" style="display:none;">
+                    <h3>斑点参数 <span class="sbg-hint">（径向扰动＋Catmull-Rom 平滑闭合；顶点数 6–20，圆润度 0–1）</span></h3>
+                    <div class="sbg-row">
+                        <label>颜色 <input type="color" id="sbg-blob-color" value="#6366f1"></label>
+                        <label>透明度 <input type="range" id="sbg-blob-opacity" min="0" max="1" step="0.05" value="0.9"> <span class="sbg-val" id="sbg-blob-opacity-val">0.9</span></label>
+                    </div>
+                    <div class="sbg-row">
+                        <label>顶点数 <input type="range" id="sbg-blob-points" min="6" max="20" step="1" value="12"> <span class="sbg-val" id="sbg-blob-points-val">12</span></label>
+                        <label>圆润度 <input type="range" id="sbg-blob-smooth" min="0" max="1" step="0.05" value="0.6"> <span class="sbg-val" id="sbg-blob-smooth-val">0.6</span></label>
+                    </div>
+                    <div class="sbg-row">
+                        <label>种子 <input type="number" id="sbg-blob-seed" value="42" step="1"></label>
+                        <button type="button" class="sbg-btn" id="sbg-blob-random-seed">🎲 换一个种子</button>
+                        <span class="sbg-hint">同一参数＋同一种子输出完全一致，可复现。</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sbg-card">
+                <h3>实时预览</h3>
+                <div class="sbg-error" id="sbg-error" role="alert"></div>
+                <div class="sbg-preview sbg-checker" id="sbg-preview"></div>
+                <div class="sbg-size-info" id="sbg-size-info"></div>
+            </div>
+
+            <div class="sbg-card">
+                <h3>SVG 代码与导出</h3>
+                <textarea class="sbg-code" id="sbg-code" readonly spellcheck="false" placeholder="生成的 SVG 代码将显示在这里…"></textarea>
+                <div class="sbg-actions">
+                    <button type="button" class="sbg-btn primary" id="sbg-copy">📋 复制 SVG 代码</button>
+                    <button type="button" class="sbg-btn" id="sbg-download-svg">⬇ 下载 .svg</button>
+                    <button type="button" class="sbg-btn" id="sbg-download-png">⬇ 下载 .png（画布尺寸）</button>
+                    <button type="button" class="sbg-btn" id="sbg-copy-css">📋 复制 CSS 背景代码</button>
+                    <button type="button" class="sbg-btn" id="sbg-sample">✨ 载入示例</button>
+                </div>
+                <div class="sbg-status" id="sbg-status"></div>
+            </div>
+
+            <div class="sbg-card">
+                <h3>使用说明</h3>
+                <div class="sbg-tip">
+                    <b>波形模式</b>：每层是一条正弦曲线向下闭合到底边的填充形状，层数 1–4 层，后画的层盖在前面层的上面；振幅越大起伏越大，频率是整幅宽内的完整周期数，基线是波形上下起伏的中心高度。<br>
+                    <b>斑点模式</b>：先按顶点数在圆周上均匀取点，再按圆润度做径向扰动（圆润度 0 时就是正多边形），最后用 Catmull-Rom 转三次贝塞尔平滑闭合，得到有机斑点；种子固定时形状固定，记下种子就能复现同一形状。<br>
+                    <b>导出</b>：SVG 是矢量，无损缩放；PNG 是按画布尺寸光栅化的位图，放大后不如 SVG 清晰；CSS 背景代码是 data URI 片段，粘贴到样式表的 background-image 即用。<br>
+                    <b>隐私</b>：所有生成、预览、导出都在浏览器本地完成，不收集、不上传任何内容，本页面不发起任何网络请求。
+                </div>
+            </div>
+
+            <div class="sbg-card">
+                <h3>常见问题</h3>
+                <dl class="sbg-faq">
+                    <dt>为什么改了参数预览没变，还出现红字？</dt>
+                    <dd>参数非法时页面会红字提示具体原因（如尺寸超出 200–4000、振幅超过高度一半、基线超出画布），且不静默改你的数值；按提示调回合法范围即可。</dd>
+                    <dt>斑点每次刷新都一样吗？</dt>
+                    <dd>只要参数和种子不变，输出就逐字节一致。点「换一个种子」会换一个新形状；记下种子数字，下次填回去就能复现。</dd>
+                    <dt>PNG 和 SVG 导出该选哪个？</dt>
+                    <dd>要无损缩放、继续编辑，选 SVG；要直接当图片用、尺寸就是画布尺寸，选 PNG。注意 PNG 放大不如 SVG 清晰。</dd>
+                    <dt>能做动画波形或视频导出吗？</dt>
+                    <dd>不能。本工具只做装饰背景几何，不做动画视频导出，也不支持导入已有 SVG 再编辑。</dd>
+                    <dt>内容会上传到服务器吗？</dt>
+                    <dd>不会。生成只在浏览器本地完成，不收集、不上传，本页面无后端调用、无外部请求。</dd>
+                </dl>
+            </div>
+
+            <div class="sbg-card">
+                <h3>相关工具</h3>
+                <div class="sbg-links">
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/svg-compressor">SVG 压缩优化器</a>
+                </div>
+                <p class="sbg-tip" style="margin-top:.8rem;">区分：CSS 渐变生成器做的是渐变填充（linear / radial / conic），本工具做的是几何背景（波形路径与斑点形状）；SVG 压缩优化器压缩的是已有 SVG，导出的背景 SVG 可以再拿去压缩体积。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/svg_background_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
