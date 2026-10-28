@@ -1,0 +1,167 @@
+{{define "css_glass_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 毛玻璃生成器 - backdrop-filter 面板滑杆预设实时预览 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 毛玻璃生成器：模糊／饱和度／填充与边框不透明度／圆角／阴影滑杆，卡片／导航栏／登录框三预设，四种内置背景实时预览，一键复制 backdrop-filter 或完整 CSS、下载 glass.css 与演示 HTML。只做 backdrop-filter，纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 毛玻璃生成器,backdrop-filter 生成器,毛玻璃面板,磨砂玻璃,css glass generator,glassmorphism generator,filter 区分">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-glass-generator">
+    <meta property="og:title" content="CSS 毛玻璃生成器 - backdrop-filter 面板可视化生成">
+    <meta property="og:description" content="模糊／饱和度／填充与边框不透明度／圆角／阴影滑杆，三预设，四种内置背景实时预览，复制 backdrop-filter 或完整 CSS。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-glass-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 毛玻璃生成器","description":"免费在线 CSS 毛玻璃生成器：模糊／饱和度／填充与边框不透明度／圆角／阴影滑杆，三预设，四种内置背景实时预览，复制 backdrop-filter 或完整 CSS，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-glass-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .gg-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .gg-wrap .navbar .material-icons { display: none; }
+        .gg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .gg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .gg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .gg-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .gg-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .gg-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .gg-row input[type=text] { width:8em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .gg-row input[type=color] { width:3em; height:2em; padding:0; border:1px solid #d1d5db; border-radius:.4rem; background:#fff; cursor:pointer; }
+        .gg-row-label { display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin-top:.7rem; }
+        .gg-row-label b { font-size:.95rem; color:#111827; }
+        .gg-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .gg-btn:hover { background:#f3f4f6; }
+        .gg-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .gg-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .gg-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .gg-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .gg-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .gg-stage { border:1px solid #e5e7eb; border-radius:.7rem; overflow:hidden; padding:3rem 1.5rem; text-align:center; }
+        .gg-panel { display:inline-block; max-width:92%; padding:1.6rem 1.8rem; text-align:left; }
+        .gg-panel h2 { margin:0 0 .5rem; font-size:1.25rem; }
+        .gg-panel p { margin:0; font-size:.95rem; line-height:1.8; }
+        .gg-bg-label { font-size:.9rem; color:#374151; margin:.6rem 0 0; }
+        .gg-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .gg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .gg-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .gg-tip a { color:var(--primary-color); }
+        .gg-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .gg-links a { color:var(--primary-color); font-size:.93rem; }
+        .gg-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .gg-row input[type=range] { min-width:100px; }
+            .gg-stage { padding:2rem .6rem; }
+            .gg-panel { padding:1.2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="gg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🪟 CSS 毛玻璃生成器</h1>
+            <p>模糊／饱和度／填充与边框不透明度／圆角／阴影滑杆，三预设，四种内置背景实时预览，一键复制 backdrop-filter 或完整 CSS</p>
+        </div>
+        <div class="tool-content" id="gg-form">
+            <div class="gg-card">
+                <h3>面板预设 <span class="gg-hint">（点击载入，载入后仍可编辑；预设同时带背景，载入后背景也可单独切换）</span></h3>
+                <div class="gg-presets">
+                    <button class="gg-preset" type="button" data-preset="card">card 卡片（模糊 12px／饱和度 150%／填充 0.25／边框 0.4／圆角 16px／阴影 32px，彩色渐变背景）</button>
+                    <button class="gg-preset" type="button" data-preset="navbar">navbar 导航栏（模糊 20px／饱和度 180%／填充 0.6／边框 0.5／圆角 0px／阴影 16px，彩色图案背景）</button>
+                    <button class="gg-preset" type="button" data-preset="login">login 登录框（模糊 10px／饱和度 130%／填充 0.2／边框 0.3／圆角 20px／阴影 40px，深色背景）</button>
+                </div>
+            </div>
+
+            <div class="gg-card">
+                <h3>面板编辑 <span class="gg-hint">（模糊 0–40px、饱和度 0–200%、填充与边框色 #RGB／#RRGGBB＋不透明度 0–1、圆角 0–40px、阴影模糊 0–60px＋不透明度 0–1；数值最多 2 位小数，越界或非法颜色红字报错，不静默钳制或取整；不透明度滑杆即对应 rgba 的 alpha；边框固定 1px 实线，阴影固定 0 8px 偏移）</span></h3>
+                <div id="gg-editor"></div>
+                <p class="gg-msg" id="gg-msg"></p>
+            </div>
+
+            <div class="gg-card">
+                <h3>实时预览 <span class="gg-hint">（面板内含示例标题与文字；背景切换只改预览背景，不改面板参数）</span></h3>
+                <div class="gg-stage" id="gg-preview-stage">
+                    <div class="gg-panel" id="gg-preview-panel">
+                        <h2>毛玻璃面板</h2>
+                        <p>这是一段示例文字：面板背后内容被模糊，面板本身保持半透明。</p>
+                    </div>
+                </div>
+                <p class="gg-bg-label" id="gg-bg-label">当前预览背景：彩色渐变（只改背景，不改面板参数）</p>
+                <div class="gg-actions" style="margin-top:.6rem;">
+                    <button class="gg-btn" type="button" data-bg="gradient">彩色渐变背景</button>
+                    <button class="gg-btn" type="button" data-bg="dark">深色背景</button>
+                    <button class="gg-btn" type="button" data-bg="light">浅色背景</button>
+                    <button class="gg-btn" type="button" data-bg="photo">彩色图案背景</button>
+                </div>
+            </div>
+
+            <div class="gg-card">
+                <h3>CSS 代码输出 <span class="gg-hint">（随输入实时生成；backdrop-filter 值与完整 CSS 两栏）</span></h3>
+                <div class="gg-code" id="gg-code-value"></div>
+                <div class="gg-actions">
+                    <button class="btn btn-primary" id="gg-copy-value" type="button">📋 复制 backdrop-filter</button>
+                </div>
+                <div class="gg-code" id="gg-code-css"></div>
+                <div class="gg-actions">
+                    <button class="btn btn-primary" id="gg-copy-css" type="button">📋 复制完整 CSS</button>
+                    <button class="btn btn-secondary" id="gg-download-css" type="button">⬇ 下载 .css</button>
+                    <button class="btn btn-secondary" id="gg-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="gg-load-example" type="button">↺ 载入示例（卡片预设）</button>
+                </div>
+                <p class="gg-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="gg-card">
+                <h3>使用说明</h3>
+                <ol class="gg-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>点预设一键切换面板风格，切换后编辑区、预览与代码三方同步。</li>
+                    <li>在面板编辑区拖滑杆或改数字、改填充／边框色，预览与代码实时同步；不透明度滑杆即对应 rgba 的 alpha 值。</li>
+                    <li>点四种背景按钮只切换预览背景，不改任何面板参数，方便在不同底色上检验可读性。</li>
+                    <li>复制 backdrop-filter 值或完整 CSS，或下载 glass.css／glass-demo.html 粘贴即用。</li>
+                    <li>点「载入示例」回到卡片预设起点，无需上传即可演示编辑→预览→导出全流程。</li>
+                    <li>要模糊元素自身去滤镜生成器；要给盒子加阴影或描圆角去阴影与圆角生成器；要做面板填充渐变去渐变生成器。</li>
+                </ol>
+            </div>
+
+            <div class="gg-card">
+                <h3>常见问题</h3>
+                <dl class="gg-tip">
+                    <dt><b>backdrop-filter 和 filter 有什么区别？</b></dt>
+                    <dd>backdrop-filter 模糊的是面板背后内容，filter 模糊的是元素自身。本页只做 backdrop-filter；要模糊元素自身请去 CSS 滤镜生成器。</dd>
+                    <dt><b>不透明度滑杆到底改的是什么？</b></dt>
+                    <dd>就是对应 rgba 的 alpha：填充不透明度改 background 里 rgba 的 alpha，边框不透明度改 border 里 rgba 的 alpha，阴影不透明度改 box-shadow 里 rgba 的 alpha。</dd>
+                    <dt><b>为什么面板在某些浏览器上不模糊？</b></dt>
+                    <dd>backdrop-filter 需要浏览器支持（现代 Chrome／Edge／Safari／Firefox 均已支持，老旧浏览器会直接显示半透明面板而不模糊）；代码里同时输出了 -webkit-backdrop-filter 做兼容。</dd>
+                    <dt><b>数值可以写几位小数？</b></dt>
+                    <dd>最多 2 位小数，例如模糊 12.5px 可以，12.555px 会红字报错，不会静默取整或钳制；超出范围、非法颜色同样报错。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。预览背景为页面内置渐变与图案，全部编辑与预览只在浏览器本地完成，本页面零网络请求，零上传。</dd>
+                </dl>
+            </div>
+
+            <div class="gg-card">
+                <h3>相关工具</h3>
+                <div class="gg-links">
+                    <a href="/tools/css-filter-generator">CSS 滤镜生成器（模糊背后内容 vs 模糊元素自身；本页只做背后内容的 backdrop-filter，那边做元素自身的 filter）</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器（毛玻璃面板 vs 盒阴影圆角；本页只做毛玻璃面板声明，那边做盒子 box-shadow 与 border-radius）</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器（面板声明 vs 填充渐变；本页只做毛玻璃面板声明，那边做填充渐变）</a>
+                </div>
+            </div>
+
+            <div class="gg-card">
+                <h3>真限制说明</h3>
+                <div class="gg-tip">
+                    <b>只做 backdrop-filter、不做 filter 与液态玻璃／图片处理</b>：本页只生成毛玻璃面板的 backdrop-filter 声明，不生成元素自身的 filter，不做液态玻璃折射／位移贴图，不处理、不输出图片文件；<b>背景切换只改预览背景</b>：四种内置背景切换不改任何面板参数；<b>不透明度即 rgba 的 alpha</b>：填充、边框、阴影的不透明度滑杆分别对应各自 rgba 的 alpha；<b>不收集、不上传任何内容</b>：预览背景为页面内置渐变与图案，全部编辑与预览只在浏览器本地完成，本页面零 fetch / XHR，零 CDN。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="gg-toast" id="gg-toast"></div>
+    <script src="/tools/static/js/css_glass_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

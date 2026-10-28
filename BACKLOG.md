@@ -1,3 +1,92 @@
+## 开发交付（2026-10-29 · 前端开发轮，接 07:40 PM 排期）
+
+**已交付：CSS 毛玻璃生成器（css_glass_generator）** — templates/css_glass_generator.html、static/js/css_glass_generator.js、tests/css_glass_generator.test.js 新增，tools/categories.go 开发工具品类注册（ID css_glass_generator、Path /tools/css-glass-generator、New: true，注册总数 215→216 Path）。node 测试 130 断言全过，go build／go vet／gofmt 均通过。两处按规格字面执行的偏离说明（供评审轮复核）：① PM 规格 buildCssSnippet 示例行写 `box-shadow: 0 8px 32px …`（固定 32px），但同规格 validatePanel 与三预设均定义 shadowBlur（32／16／40），固定值会使阴影模糊滑杆与预设失去意义，故实现为 `0 8px <shadowBlur>px rgba(0, 0, 0, <shadowAlpha>)`；② 注册 Icon 用 widgets：PM 首选 blur_on 已被同品类 CSS 阴影／圆角生成器占用，按 PM 兜底规则避让。仓库根未跟踪 `toolWeb.bak-prev` 与 `toolweb` 未入库（多轮已记录）。
+
+---
+
+## 今日任务（2026-10-29 07:40 · 产品经理排期轮，接 143 轮调研）
+
+**选定：CSS 毛玻璃生成器（css_glass_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（143 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 滤镜生成器已交付划出（50ed05d 新增、de7b156 修复，全量 215 Path），首席顺位自然递进至本项；不再以「特异性／滚动条难度更小」等理由二次跳过——CSS 特异性计算器、CSS 滚动条样式生成器均不插队。
+- **未选**：CSS 特异性计算器（142 轮晋升 P2、143 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做选择器权重计算，与本项 backdrop-filter 面板声明口径不重叠）；CSS 滚动条样式生成器（143 轮新晋 P2、顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做滚动条样式声明，与本项毛玻璃面板口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **215 Path**；`git log` 头部 de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）／049cd66（文字阴影生成器新增）。逐项复核：`glass`／`backdrop`／`specificity`／`scrollbar` 在 tools/categories.go 中均为 0 实现命中；templates／static/js／tests 下无 glass／specificity／scrollbar 生成器文件（css_filter 唯一命中 1 为已交付的滤镜生成器）。近邻再辨析：① **CSS 滤镜生成器**（ID css_filter_generator）只产 `filter:`（模糊元素自身），本项只产 `backdrop-filter:`（模糊面板背后内容），143 轮真限制中已明确互斥，不重叠；② **CSS 阴影／圆角生成器**（ID css_shadow_radius_generator）只产 box-shadow 与 border-radius，不产 backdrop-filter；③ **CSS 文字阴影生成器**（ID css_text_shadow_generator）只产 text-shadow；④ **CSS 渐变生成器**只做填充，本项的彩色渐变仅作预览背景、不产渐变声明。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——毛玻璃面板要同时调对 backdrop-filter 模糊／饱和度、rgba 填充不透明度与边框不透明度三组值，单值手写时面板要么糊成白板、要么透得看不清字，凭代码想象不出在真实彩色背景上的可读性，滑杆＋预设＋彩色背景实时预览＋复制 CSS 恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，颜色解析、rgba 合成、预设配置均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 滤镜／阴影／圆角／渐变／文字阴影／关键帧生成器同属「CSS 可视化生成」需求簇，毛玻璃与滤镜成组发现；⑤ **外部佐证已就位**——141 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 滤镜生成器、CSS 阴影／圆角生成器、CSS 渐变生成器、CSS 文字阴影生成器、CSS 动画关键帧生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 backdrop-filter 毛玻璃面板声明**——不做 `filter:`（滤镜生成器已交付）、不做液态玻璃折射／位移贴图、不做图片处理，页面须明示；② **背景切换只改预览背景**——不改面板参数，页面须明示；③ **不透明度滑杆即 rgba 的 alpha**——填充与边框各一套，页面须明示；④ **不收集、不上传任何内容**——预览背景为页面内置渐变／图案，全部编辑与预览只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - `parseHexColor(s)`：接受 #RGB／#RRGGBB（大小写不限，统一输出小写 #RRGGBB）；其它写法（如颜色名、rgb()、空串）返回失败。
+  - `hexToRgba(hex, alpha)`：hex 经 parseHexColor 校验，alpha 为 0–1、最多 2 位小数；返回 `rgba(r, g, b, alpha)`（alpha 去尾零规范化，alpha 为 1 时仍输出 rgba 串，保持与填充／边框语义一致）。
+  - `validatePanel(panel)`：panel 含 blur（0–40 px，最多 2 位小数）、saturate（0–200%，最多 2 位小数）、fillColor（经 parseHexColor 校验）、fillAlpha（0–1，最多 2 位小数）、borderColor（经 parseHexColor 校验）、borderAlpha（0–1，最多 2 位小数）、radius（0–40 px，最多 2 位小数）、shadowBlur（0–60 px，最多 2 位小数）、shadowAlpha（0–1，最多 2 位小数）；任一字段非法返回失败。
+  - `buildBackdropFilter(panel)`：先经 validatePanel 校验，输出 `blur(<blur>px) saturate(<saturate>%)`（数值去尾零规范化；blur 为 0 且 saturate 为 100 时仍输出两项，不省略——面板无模糊无饱和度变化时仍为有效声明）；非法返回失败。
+  - `buildCssSnippet(panel)`：先经 validatePanel 校验，输出 `.glass {`＋`  -webkit-backdrop-filter: <值>;`＋`  backdrop-filter: <值>;`＋`  background: <fillRgba>;`＋`  border: 1px solid <borderRgba>;`＋`  border-radius: <radius>px;`＋`  box-shadow: 0 8px 32px rgba(0, 0, 0, <shadowAlpha>);`＋`}` 八行块（数值去尾零规范化）；非法返回失败。
+  - `buildHtmlSnippet(panel, background)`：先经 validatePanel 校验，background 仅接受 gradient／dark／light／photo（内置渐变／深色／浅色／彩色图案四种预览背景，均为页面内置 CSS、无外链图片）；返回演示 HTML 片段（含 `<style>` 内嵌生成的完整 CSS＋预览背景样式＋`<div class="glass">` 面板元素，内含示例标题与一段示例文字；无额外脚本）；非法 background 或 panel 返回失败。
+  - `generatePreset(name)`：name 仅接受 card／navbar／login，返回 `{ name, panel, background }`：card 卡片（blur 12px、saturate 150%、填充 #ffffff alpha 0.25、边框 #ffffff alpha 0.4、圆角 16px、阴影模糊 32px alpha 0.15，背景 gradient）；navbar 导航栏（blur 20px、saturate 180%、填充 #ffffff alpha 0.6、边框 #ffffff alpha 0.5、圆角 0px、阴影模糊 16px alpha 0.1，背景 photo）；login 登录框（blur 10px、saturate 130%、填充 #ffffff alpha 0.2、边框 #ffffff alpha 0.3、圆角 20px、阴影模糊 40px alpha 0.2，背景 dark）；未知 name 返回失败。
+  - `suggestExportName(kind)`：`css` → `glass.css`，`html` → `glass-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：预设区（card／navbar／login 三个预设按钮）；面板编辑区（模糊／饱和度／填充色与不透明度／边框色与不透明度／圆角／阴影模糊与不透明度滑杆＋数字输入）；预览区（四种预览背景切换按钮＋毛玻璃面板实时预览，面板内含示例标题与文字，背景切换只改背景不改参数）；代码区（backdrop-filter 值与完整 CSS 两栏，实时同步，「复制 backdrop-filter」「复制完整 CSS」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 card 预设、无需上传即可演示编辑→预览→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览只用解析校验后的样式值（`<style>` 内只注入 buildCssSnippet 产出的校验后 CSS），杜绝注入。
+- 操作与互链：与 CSS 滤镜生成器（/tools/css-filter-generator，文案按「模糊背后内容 vs 模糊元素自身」区分）、CSS 阴影／圆角生成器（/tools/css-shadow-radius-generator，文案按「毛玻璃面板 vs 盒阴影圆角」区分）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「面板声明 vs 填充渐变」区分）互链；不与未交付的 CSS 特异性计算器、CSS 滚动条样式生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写颜色解析、rgba 合成、预设配置，不引入任何 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；预览背景为页面内置渐变／图案，不依赖外链图片。
+- 注册：ID `css_glass_generator`、Name「CSS 毛玻璃生成器」、Path `/tools/css-glass-generator`、Category 开发工具、Icon 建议 blur_on（图标库无此名则用 tune 兜底；勿与阴影／圆角生成器的 blur_on 在同品类视觉混淆——若冲突则改用 widgets 兜底并在开发轮注明）、New: true；中英文描述＋SEO keywords（CSS 毛玻璃生成器、backdrop-filter 生成器、毛玻璃面板、磨砂玻璃、css glass generator、glassmorphism generator、filter 区分）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-glass-generator，相关工具互链 CSS 滤镜生成器、CSS 阴影／圆角生成器、CSS 渐变生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_glass_generator`、Path `/tools/css-glass-generator` 注册完整（Category 开发工具），注册总数 215→216 Path。
+2. 颜色与单项向量闭环（node 断言）：parseHexColor 已知值（#FFF→#ffffff、#00E5FF→#00e5ff）；颜色名、rgb()、空串判失败；hexToRgba 已知值（#ffffff alpha 0.25→rgba(255, 255, 255, 0.25)）；validatePanel 已知值通过，模糊／饱和度／不透明度／圆角／阴影越界、非法颜色判失败。
+3. 合成与预设向量闭环（node 断言）：buildBackdropFilter 已知值（blur＋saturate 两项、数值去尾零）；buildCssSnippet 含 `.glass` 块与 -webkit-backdrop-filter／backdrop-filter／background／border／border-radius／box-shadow 七行；generatePreset 三个预设参数与背景正确且未知预设失败；buildHtmlSnippet 含 `<style>` 内嵌 CSS 与 class `glass`，且无 `<script>`；非法 background 失败；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+4. 操作闭环（浏览器手工／测试复核）：切预设→预览面板变化→改模糊／饱和度／填充与边框不透明度／圆角／阴影→预览与代码同步→切换四种预览背景（参数不变）→复制 backdrop-filter／完整 CSS、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+5. 真限制可见：页面可见「只做 backdrop-filter、不做 filter 与液态玻璃折射／图片处理」「背景切换只改预览背景」「不透明度即 rgba 的 alpha」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+6. 操作闭环：相关工具互链含 CSS 滤镜生成器、CSS 阴影／圆角生成器、CSS 渐变生成器；不含未交付工具的硬凑互链；非法颜色／越界数值／非法背景有红字降级提示。
+7. node 测试 25+ 断言全过（颜色与单项向量、合成与预设向量、代码生成向量、注册与零网络请求静态检查）。
+8. 页面无报错；移动端编辑区、预设按钮组、预览块、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_glass_generator.html`（新增；含 SEO 面板按家族标准＋预设区／面板编辑区／预览区／代码区／示例演示）
+- `static/js/css_glass_generator.js`（新增；颜色解析、rgba 合成、面板校验、backdrop-filter／完整 CSS／HTML 片段生成、三预设配置、导出命名；双模式导出供 node 测试）
+- `tests/css_glass_generator.test.js`（新增；颜色与单项向量、合成与预设向量、代码生成向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_glass_generator、Path /tools/css-glass-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功）；`git log` 头部 de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）／049cd66（文字阴影生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **215**；Top3 候选重叠复核（glass／backdrop／specificity／scrollbar 在 categories.go 均为 0 实现命中；templates／static/js／tests 下无 glass／specificity／scrollbar 生成器文件，css_filter 唯一命中为已交付滤镜生成器；滤镜只做 filter 自身、阴影／圆角只做 box-shadow、文字阴影只做 text-shadow、渐变只做填充，辨析见上；CSS 特异性计算器与 CSS 滚动条样式生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-29 07:00 · 通用调研第一百四十三轮）
+
+**交付状态**：10-29 通用调研第一百四十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 滤镜生成器已交付闭环**（50ed05d 新增，de7b156 跟进修复非法输入红字提示被重绘清除；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **215 Path**，ID css_filter_generator、Path /tools/css-filter-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:00 轮，优先小／中难度纯前端。
+**本轮三件事**（07:00 全网调研，通用方向）：
+1. CSS 滤镜生成器交付确认：`git log` 头部 de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）／049cd66（文字阴影生成器新增）；全量 215 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功）。
+2. 留池复核仍未交付：CSS 毛玻璃生成器、CSS 特异性计算器在 tools/categories.go 中 glass／backdrop／specificity 命中均为 0，templates／static/js／tests 下无 glass／specificity 生成器文件，141／142 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 滚动条样式生成器**（myprograming、codeshack 等独立工具：轨道／滑块颜色＋宽度＋圆角＋悬停色，6 预设，可滚动面板实时预览，一键输出 WebKit 伪元素＋Firefox 双轨 CSS；CSS Scrollbars Styling Module 标准化使跨浏览器写法成为 2026 年可落地的单页需求）：**站内真缺口，新晋 P2**——categories.go 中 scrollbar 命中为 0，templates／static/js 下无滚动条样式文件；站内「滚动字幕生成器」是跑马灯文字、「骨架屏加载占位生成器」是占位骨架，均与滚动条样式口径不重叠；纯前端小难度：轨道／滑块颜色与圆角／宽度／悬停色滑杆＋现代蓝／深色／极简／彩色／圆润／隐藏滚动条预设＋可滚动面板实时预览＋WebKit＋Firefox 双轨输出＋复制／下载 .css，零上传；真限制：只做滚动条样式声明，不做 JS 模拟滚动条库（SimpleBar 类）、不做滚动行为与滚动进度条（另有口径），Firefox 仅支持颜色与宽度、不支持圆角、移动端浏览器用原生滚动条不可覆盖，须明示；
+   - **观察项新增（未晋升 P2，口径待 PM 裁定）**：新拟态（Neumorphism）生成器（markodenic 50 工具榜单第 8 项：底色联动推导浅色／深色双阴影＋圆角＋内外阴影切换）——底色联动推导是新点，但双阴影参数本身已被 CSS 阴影／圆角生成器覆盖，是否单独立项存争议，暂留观察；CSS 脉冲动画生成器（同榜单第 7 项：ring／glow／scale／fade 四类脉冲预设＋颜色／尺寸／速度＋reduced-motion 安全）——脉冲只是关键帧的预设子集，通用关键帧生成器已覆盖其表达力，暂留观察；
+   - **其余信号全部消解，不立**：CSS clamp 流体尺寸计算器（站内已有 ID css_clamp_calculator）／WCAG 颜色对比度检查器（站内已有 wcag_contrast_checker）／EXIF 查看与清除（站内已有 exif_strip）／V2EX 图片工具箱的 AI 抠图与放大（需后端／AI 模型，不进纯前端单页）／dev.to 榜单其余项（渐变／Flexbox／盒阴影／Grid／格式化／压缩／关键帧／Tailwind→CSS／颜色转换站内均已覆盖）／V2EX 其余帖子（原型托管、邮件营销、技能商店均非单页工具信号）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 滤镜生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，142 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS 毛玻璃生成器** — P2 留池顺位首席（141 轮新晋 P2；143 轮复核仍未交付；痛点：毛玻璃面板要同时调对 backdrop-filter 模糊／饱和度、rgba 填充不透明度与边框不透明度三组值，单值手写时面板要么糊成白板、要么透得看不清字，凭代码想象不出在真实彩色背景上的可读性；纯前端小难度：模糊／饱和度／填充色与不透明度／边框不透明度／圆角／阴影滑杆＋卡片／导航栏／登录框预设＋彩色渐变背景实时预览＋复制 CSS（含 -webkit- 前缀行），零上传；与 CSS 滤镜生成器（`filter:` 模糊元素自身，已交付）、CSS 阴影／圆角生成器（只做 box-shadow 与圆角）口径不重叠；真限制：只做 backdrop-filter 毛玻璃面板声明，不做液态玻璃折射／位移贴图、不做图片处理，须明示）。
+2. **CSS 特异性计算器** — P2 留池顺位第二（142 轮由观察项晋升 P2；143 轮复核仍未交付；痛点：选择器权重靠心算，样式冲突时不知道谁赢，!important 满天飞就是没人敢算权重；纯前端小难度：选择器输入＋逐段解析计数＋(a, b, c) 三元组与权重比较＋多选择器排序＋胜负判定＋复制结果，零上传；与站内 CSS 生成类工具（渐变／阴影／圆角／关键帧／Grid／Flexbox 均只产样式声明）口径不重叠；真限制：只做特异性计算与比较，不做整张样式表解析、不做浏览器实际层叠模拟，须明示）。
+3. **CSS 滚动条样式生成器** — 新晋 P2（143 轮新晋；痛点：跨浏览器滚动条要同时写对 WebKit 一串伪元素（::-webkit-scrollbar／track／thumb／hover）与 Firefox 两条标准属性，手写时不是漏 hover 态、就是深色界面配了浅色默认条像 bug，凭代码想象不出滑块在真实滚动面板里的粗细与手感；纯前端小难度：轨道／滑块颜色与圆角／宽度／悬停色滑杆＋六预设＋可滚动面板实时预览＋WebKit＋Firefox 双轨输出＋复制／下载 .css，零上传；与站内滚动字幕生成器（跑马灯文字）、骨架屏加载占位生成器（占位骨架）口径不重叠；真限制：只做滚动条样式声明，不做 JS 模拟滚动条、不做滚动进度条，Firefox 不支持圆角、移动端不可覆盖，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；143 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 142 轮及之前记录。
+
+**通用候选表增量**（第一百四十三轮：CSS 滤镜生成器已交付划出（50ed05d 新增、de7b156 修复；ID css_filter_generator、Path /tools/css-filter-generator 已注册；全量 215 Path；候选池划出）；**CSS 滚动条样式生成器新晋 P2**；CSS 毛玻璃生成器、CSS 特异性计算器顺位递进；新拟态生成器／CSS 脉冲动画生成器入观察项（口径待裁定）；自有实锤消解 5+ 项（clamp／对比度／EXIF 站内均已覆盖；V2EX AI 抠图放大需后端／AI；dev.to 榜单其余项站内均已覆盖；V2EX 其余帖子非单页工具信号）；全量 215 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 滤镜生成器 | 已交付划出（50ed05d 新增、de7b156 修复；ID css_filter_generator、Path /tools/css-filter-generator 已注册；全量 215 Path；候选池划出） | — | 已实现 |
+| CSS 滚动条样式生成器 | 跨浏览器滚动条手写要同时写对 WebKit 伪元素串与 Firefox 标准属性、深色界面默认浅色条像 bug；轨道／滑块颜色与圆角／宽度／悬停色滑杆＋六预设＋可滚动面板实时预览＋双轨输出＋复制／下载，纯前端零上传；站内 scrollbar 命中为 0，不重叠 | 小 | P2（新晋） |
+| CSS 毛玻璃生成器 | 复核仍未交付（141 轮 P2，顺位递进为首席）；毛玻璃三组值手写难一次调对可读性；滑杆＋卡片／导航栏／登录框预设＋彩色背景实时预览＋复制 CSS，纯前端零上传 | 小 | P2（留池） |
+| CSS 特异性计算器 | 复核仍未交付（142 轮 P2，顺位递进为第二）；选择器权重靠心算、样式冲突时不知道谁赢；选择器输入＋逐段解析＋(a,b,c) 三元组比较＋多选择器排序＋胜负判定＋复制结果，纯前端零上传 | 小 | P2（留池） |
+| 新拟态生成器／CSS 脉冲动画生成器 | 观察项新增（口径待 PM 裁定：前者底色联动推导是新点但双阴影参数已被阴影／圆角生成器覆盖；后者只是关键帧生成器的预设子集） | — | 观察项 |
+| 自有实锤消解 | 不立（clamp／对比度／EXIF 站内均已覆盖；V2EX AI 抠图放大需后端／AI；dev.to 榜单其余项站内均已覆盖；V2EX 其余帖子非单页工具信号） | — | 不立 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十三轮——CSS 滤镜生成器交付闭环（50ed05d，`/tools/css-filter-generator` 已注册，全量 215 Path），候选池划出；**CSS 滚动条样式生成器新晋 P2**；**CSS 毛玻璃生成器、CSS 特异性计算器顺位递进为 Top3 前两位**；仓库 215 注册工具全量核对无重叠（Top3 建议 CSS 毛玻璃生成器／CSS 特异性计算器／CSS 滚动条样式生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）／049cd66（文字阴影生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **215**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-29 05:39 · 产品经理排期轮，接 142 轮调研）
 
 **选定：CSS 滤镜生成器（css_filter_generator）** — 本轮唯一任务（新工具）：
