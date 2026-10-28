@@ -1,0 +1,163 @@
+{{define "svg_recolor"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 换色器 - 粘贴 SVG 逐色替换、全局色调偏移、消毒导出 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 SVG 换色器：粘贴或上传 SVG，自动提取行内颜色成按数量降序色板，逐色替换＋全局色调偏移（-180–180°），消毒后原图／换色后并排预览，复制代码或下载 recolored.svg。纯前端本地运行，不收集不上传。">
+    <meta name="keywords" content="SVG 换色器,SVG 改颜色,图标换色,SVG 颜色替换,svg recolor,change svg color,svg color replacer,replace svg colors">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/svg-recolor">
+    <meta property="og:title" content="SVG 换色器 - 逐色替换与全局色调偏移">
+    <meta property="og:description" content="粘贴或上传 SVG→自动提取颜色成色板→逐色替换＋色调偏移→消毒后并排预览→复制或下载 SVG，全部本地完成不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/svg-recolor">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"SVG 换色器","description":"粘贴或上传 SVG，自动提取行内颜色成色板，逐色替换＋全局色调偏移，消毒后并排预览，复制代码或下载 SVG，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/svg-recolor","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .svgr-wrap .container { max-width: 980px; margin: 0 auto; padding: 1.2rem; }
+        .svgr-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .svgr-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .svgr-limits { border:2px solid #34d399; background:#ecfdf5; border-radius:.8rem; padding:.85rem 1rem; margin:0 0 1.2rem; font-size:.95rem; line-height:1.8; color:#065f46; }
+        .svgr-drop { border:2px dashed #d1d5db; border-radius:.8rem; padding:1.2rem 1rem; text-align:center; cursor:pointer; color:#374151; margin-bottom:.8rem; }
+        .svgr-drop.drag { border-color:var(--primary-color); background:#eff6ff; }
+        .svgr-error { display:none; font-size:.9rem; line-height:1.7; color:#b91c1c; background:#fef2f2; border:1px solid #fca5a5; border-radius:.6rem; padding:.7rem .9rem; margin-bottom:.9rem; }
+        #svgr-input { width:100%; min-height:180px; box-sizing:border-box; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.6; border:1px solid #d1d5db; border-radius:.6rem; padding:.8rem; }
+        .svgr-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .svgr-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .svgr-btn:hover { background:#f3f4f6; }
+        .svgr-btn.primary { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .svgr-sw { width:36px; height:36px; border:1px solid #d1d5db; border-radius:.4rem; display:inline-block; flex:none; background-image:linear-gradient(45deg,#e5e7eb 25%,transparent 25%),linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e7eb 75%),linear-gradient(-45deg,transparent 75%,#e5e7eb 75%); background-size:12px 12px; background-position:0 0,0 6px,6px -6px,-6px 0; }
+        .svgr-meta { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; color:#111827; min-width:130px; }
+        .svgr-hex { width:110px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; border:1px solid #d1d5db; border-radius:.4rem; padding:.4rem .5rem; }
+        .svgr-row-err { font-size:.85rem; color:#b91c1c; }
+        .svgr-prev-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+        .svgr-prev { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem; min-height:180px; display:flex; align-items:center; justify-content:center; overflow:auto;
+            background-image:linear-gradient(45deg,#f3f4f6 25%,transparent 25%),linear-gradient(-45deg,#f3f4f6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f3f4f6 75%),linear-gradient(-45deg,transparent 75%,#f3f4f6 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+        .svgr-prev svg { max-width:100%; height:auto; }
+        .svgr-empty { color:#6b7280; font-size:.9rem; text-align:center; }
+        .svgr-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .svgr-status { font-size:.9rem; min-height:1.4em; color:#374151; }
+        .svgr-faq dt { font-weight:700; color:#111827; margin:.9rem 0 .3rem; font-size:.95rem; }
+        .svgr-faq dd { margin:0; color:#4b5563; line-height:1.9; font-size:.92rem; }
+        .svgr-links { display:flex; gap:.6rem; flex-wrap:wrap; }
+        .svgr-links a { border:1px solid #d1d5db; border-radius:.6rem; padding:.5rem .9rem; font-size:.88rem; color:#1f2937; text-decoration:none; background:#fff; }
+        input[type=range] { flex:1; min-width:140px; max-width:320px; }
+        @media (max-width:640px){
+            .svgr-prev-grid { grid-template-columns:1fr; }
+            .svgr-btn { flex:1; justify-content:center; text-align:center; }
+            .svgr-hex { flex:1; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container svgr-wrap">
+        <div class="tool-header">
+            <h1>SVG 换色器</h1>
+            <p>粘贴或上传 SVG，自动提取颜色成色板；逐色替换或全局色调偏移，消毒后并排预览，复制代码或下载 recolored.svg。</p>
+        </div>
+        <div class="tool-content" style="max-width:980px;margin:auto;">
+            <div class="svgr-limits" role="note">
+                <div><b>真限制，先说清楚：</b>① 只改行内属性与内联 style 的颜色——外部 CSS（&lt;style&gt; 块与外链样式表）与 currentColor 继承色不在范围，提取报告会给出跳过数；② 渐变引用本身不动、只改色标：fill="url(#渐变)" 不改色，但渐变定义内行内的 stop-color 照常提取替换；③ 命名色只认 16 个 CSS 基础色＋transparent，其余命名色（如 rebeccapurple）不解析、不替换，计入跳过数；④ 预览与导出均先消毒：剥离 &lt;script&gt;、on* 事件属性，javascript: 链接改写为 #，导出结构与原稿一致、仅颜色与危险节点有变；⑤ 不收集、不上传任何内容：粘贴与上传的 SVG 只在浏览器本地解析，本页面不发起任何网络请求。</div>
+            </div>
+
+            <div class="svgr-card">
+                <h3>输入 SVG</h3>
+                <div class="svgr-error" id="svgr-error" role="alert"></div>
+                <div class="svgr-drop" id="svgr-drop" tabindex="0">点击上传或拖拽 .svg 文件到这里<br><span style="color:#6b7280;font-size:.9rem;">单个文件不超过 2MB，上传后代码回填下方文本框</span></div>
+                <input type="file" id="svgr-file" accept=".svg,image/svg+xml" style="display:none;">
+                <textarea id="svgr-input" placeholder="在此粘贴 SVG 代码，例如 &lt;svg …&gt;&lt;circle fill=&quot;#ff0000&quot;/&gt;&lt;/svg&gt;" aria-label="SVG 代码输入"></textarea>
+                <div class="svgr-row">
+                    <button type="button" class="svgr-btn primary" id="svgr-extract">提取颜色</button>
+                    <button type="button" class="svgr-btn" id="svgr-sample">载入示例</button>
+                    <span class="svgr-tip">示例为内置 3 色简单图标，无需上传即可演示提取→替换→导出全流程。</span>
+                </div>
+            </div>
+
+            <div class="svgr-card">
+                <h3>颜色色板（按出现次数降序）</h3>
+                <div id="svgr-palette"></div>
+                <p class="svgr-tip" id="svgr-report"></p>
+                <p class="svgr-tip">每行含原色块＋规范形 HEX＋出现次数＋替换色取色器＋HEX 文本输入；点「替换此色」或改动 HEX 回车即应用，非法替换色红字提示且不应用。带透明的颜色请用 HEX 文本输入（含 alpha 的 #rrggbbaa）。</p>
+            </div>
+
+            <div class="svgr-card">
+                <h3>全局色调偏移</h3>
+                <div class="svgr-row">
+                    <label>偏移角度 <input type="range" id="svgr-hue" min="-180" max="180" step="1" value="0"> <span id="svgr-hue-val">0°</span></label>
+                    <button type="button" class="svgr-btn primary" id="svgr-apply-hue">应用色调偏移</button>
+                    <button type="button" class="svgr-btn" id="svgr-restore">恢复原图</button>
+                </div>
+                <p class="svgr-tip">色调偏移按 HSL 色相加减角度（-180–180°，360° 回绕），饱和度／明度／透明度不变；灰色偏移后色值不变。偏移后色板同步刷新为新色值；「恢复原图」回到消毒后的原稿。</p>
+            </div>
+
+            <div class="svgr-card">
+                <h3>并排预览（均经消毒，透明背景用棋盘格示意）</h3>
+                <div class="svgr-prev-grid">
+                    <div>
+                        <p class="svgr-tip" style="margin-top:0;"><b>原图</b></p>
+                        <div class="svgr-prev" id="svgr-orig"></div>
+                    </div>
+                    <div>
+                        <p class="svgr-tip" style="margin-top:0;"><b>换色后</b></p>
+                        <div class="svgr-prev" id="svgr-new"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="svgr-card">
+                <h3>导出</h3>
+                <div class="svgr-row">
+                    <button type="button" class="svgr-btn primary" id="svgr-copy">复制换色后代码</button>
+                    <button type="button" class="svgr-btn" id="svgr-download">下载 recolored.svg</button>
+                </div>
+                <div class="svgr-status" id="svgr-status"></div>
+            </div>
+
+            <div class="svgr-card">
+                <h3>使用说明</h3>
+                <div class="svgr-tip">
+                    <b>提取</b>：粘贴代码点「提取颜色」，或上传 .svg 文件（≤2MB）自动回填并提取；色板按出现次数降序，并列按首次出现顺序。<br>
+                    <b>逐色替换</b>：在色板行里挑新颜色（取色器或 HEX 输入），点「替换此色」即对该色全部出现处替换；id、文本内容、注释、&lt;style&gt; 块、url(#…) 引用中的同形字符串原样保留。<br>
+                    <b>色调偏移</b>：滑杆选 -180–180°，点「应用色调偏移」对当前全部颜色一次性偏移；红 +120° 变绿，灰色不变，±180° 往返回到原色。<br>
+                    <b>导出</b>：复制换色后代码或下载 recolored.svg；预览与导出均先消毒再替换，顺序固定为消毒→替换。<br>
+                    <b>隐私</b>：所有解析、替换、偏移、导出都在浏览器本地完成，不收集、不上传任何内容。
+                </div>
+            </div>
+
+            <div class="svgr-card">
+                <h3>常见问题</h3>
+                <dl class="svgr-faq">
+                    <dt>为什么有些颜色没出现在色板里？</dt>
+                    <dd>本工具只改行内属性与内联 style 的颜色。写在 &lt;style&gt; 块或外链样式表里的颜色、currentColor 继承色、fill="url(#渐变)" 引用本身都不在范围，会计入提取报告的跳过数；渐变定义内行内的 stop-color 则照常提取。</dd>
+                    <dt>命名色都支持吗？</dt>
+                    <dd>只认 16 个 CSS 基础色（black／silver／gray／white／maroon／red／purple／fuchsia／green／lime／olive／yellow／navy／blue／teal／aqua，不区分大小写）与 transparent；其余命名色（如 rebeccapurple、grey）不解析、不替换，计入跳过数。</dd>
+                    <dt>替换会不会改坏 id 或文字？</dt>
+                    <dd>不会。替换只发生在行内颜色属性值与内联 style 声明内；id、文本内容、注释、&lt;style&gt; 块、url(#…) 引用中的同形字符串原样保留。</dd>
+                    <dt>导出的 SVG 安全吗？</dt>
+                    <dd>预览与导出均先消毒：剥离 &lt;script&gt; 块、on* 事件属性，javascript: 链接改写为 #；导出结构与原稿一致、仅颜色与危险节点有变。</dd>
+                    <dt>SVG 会上传到服务器吗？</dt>
+                    <dd>不会。粘贴与上传的 SVG 只在浏览器本地解析，上传走 FileReader 本地读取，不经过任何服务器，本页面无后端调用、无外部请求。</dd>
+                </dl>
+            </div>
+
+            <div class="svgr-card">
+                <h3>相关工具</h3>
+                <div class="svgr-links">
+                    <a href="/tools/svg-compressor">SVG 压缩优化器</a>
+                    <a href="/tools/svg-to-font">SVG 转字体图标生成器</a>
+                    <a href="/tools/image-color-picker">图片取色器与主色提取</a>
+                </div>
+                <p class="svgr-tip" style="margin-top:.8rem;">区分：SVG 压缩优化器只压缩已有 SVG、不改任何色值，换色后可再去压缩；SVG 转字体只把 SVG 转字体格式、不改色值，换色后可再去转字体；图片取色器是从位图像素取色、提主色，不读写 SVG 源码，取到的 HEX 可拿来换色——本工具做的是改矢量颜色。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/svg_recolor.js?v=1"></script>
+</body>
+</html>
+{{end}}

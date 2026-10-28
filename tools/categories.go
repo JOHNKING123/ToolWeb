@@ -1015,6 +1015,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "svg_recolor",
+					Name:        "SVG 换色器",
+					Description: "粘贴或上传 SVG，自动提取行内颜色成按数量降序色板，逐色替换＋全局色调偏移（-180–180°），消毒后原图／换色后并排预览，复制代码或下载 recolored.svg，纯前端零上传 · SVG recolor: extract inline colors into a palette, replace per color, shift hue globally, sanitized side-by-side preview, copy or download SVG, 100% client-side",
+					Path:        "/tools/svg-recolor",
+					Icon:        "format_color_fill",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img2base64",
 					Name:        "图片转Base64",
 					Description: "将图片文件转换为Base64字符串，支持多格式",

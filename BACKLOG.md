@@ -1,3 +1,90 @@
+## 今日任务（2026-10-28 17:38 · 产品经理排期轮，接 136 轮调研）
+
+**选定：SVG 换色器（svg_recolor）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（136 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。图片取色器与主色提取已交付划出（2325e38 新增，全量 208 Path），首席顺位自然递进至本项；不再以「Flexbox 难度更小」等理由二次跳过——CSS clip-path 生成器、CSS Flexbox 可视化生成器均不插队。
+- **未选**：CSS clip-path 生成器（135 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；痛点与纯前端路线均已复核无重叠，见 136 轮记录）；CSS Flexbox 可视化生成器（136 轮新晋 P2，**无硬伤，留池顺位递进——同上，仅顺位后置**）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **208 Path**；`git log` 头部 2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）。逐项复核：`svg_recolor`／`svg-recolor`／「换色」在 tools／templates／static/js／tests 四路均为 0 实现命中（仅有的「换色」命中为证件照制作器的换底文案与配色方案生成器的换色相说明，均非 SVG 换色实现）。近邻再辨析：① **SVG 压缩优化器**（ID svg_compressor）只压缩已有 SVG，不改任何色值；② **SVG 转字体**（ID svg_to_font）只把 SVG 转字体格式，不改色值；③ **HTML/SVG 转 JSX**（ID html_jsx_converter）只做词法级属性映射，不改色值；④ **图片取色器与主色提取**（ID image_color_picker）从位图像素取色、提主色，不读写 SVG 源码；⑤ **SVG 波形／斑点背景生成器**（ID svg_background_generator）只生成新背景几何，不改已有 SVG 颜色；⑥ 颜色转换、配色方案生成器只做数值互转／单基色推方案，无 SVG 输入。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——图标／插画换品牌色要逐行翻 fill／stroke 改代码，设计软件太重、在线换色多要上传，粘贴或上传 SVG→自动提取颜色成色板→逐色替换＋全局色调偏移→实时预览→导出 SVG／复制代码恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，颜色解析／归一化／色调偏移／上下文限定替换均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 SVG 压缩优化器、SVG 转字体、图片取色器同属「SVG／颜色」需求簇，换色后可再压缩、再转字体，取色后可拿 HEX 来换色，成组发现；⑤ **外部佐证已就位**——134 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「图片处理」品类（与 SVG 压缩优化器、SVG 转字体、SVG 背景生成器同品类，便于 SVG 类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只改行内属性与内联 style 颜色**——外部 CSS（`<style>` 块与外链样式表）与 currentColor 继承色不在范围，页面须明示并在提取报告中计入「跳过数」（currentColor／url(#渐变)／none／inherit 出现次数）；② **渐变／图案内部色标只改行内 stop-color**——`fill="url(#g)"` 本身不改色，但渐变定义内行内 `stop-color` 照常提取替换，页面须明示「渐变引用本身不动、只改色标」；③ **命名色只认 16 个 CSS 基础色＋transparent**——其余命名色（如 rebeccapurple）不解析、不替换，计入跳过数并明示；④ **预览与导出均先消毒**——剥离 `<script>`、on* 事件属性与 javascript: 链接后再渲染／导出，页面须明示「消毒后导出与原稿结构一致、仅颜色与危险节点有变」；⑤ **不收集、不上传任何内容**——粘贴与上传的 SVG 只在浏览器本地解析，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整）：
+  - `parseColor(value)`：接受 `#rgb`、`#rrggbb`、`#rrggbbaa`、`rgb(r,g,b)`、`rgba(r,g,b,a)`（r／g／b 整数 0–255，a 0–1）及 16 个 CSS 基础色（black／silver／gray／white／maroon／red／purple／fuchsia／green／lime／olive／yellow／navy／blue／teal／aqua，不区分大小写）与 `transparent`（视为 rgba(0,0,0,0)）；返回 `{ r, g, b, a }`；其它值（currentColor／url(…)／none／inherit／未知命名色／越界分量）返回失败。
+  - `toCanonical(color)`：`{ r, g, b, a }` → 不透明时小写 `#rrggbb`，带透明时小写 `#rrggbbaa`（a×255 四舍五入取整）；非法分量返回失败。
+  - `extractColors(svg)`：扫描行内 `fill`／`stroke`／`stop-color`／`flood-color`／`lighting-color` 属性值与内联 `style` 属性中的同名声明，收集可解析颜色；返回 `{ palette: [{ color（规范形）, count }], skipped }`，palette 按 count 降序、并列按首次出现顺序排列；skipped 为 currentColor／url(…)／none／inherit／未知命名色的出现次数合计；svg 非字符串或为空返回失败。注意：`<style>` 块、外链样式、注释、文本内容、id 与 data-* 属性中的同形字符串一律不计入。
+  - `replaceColors(svg, mapping)`：mapping 为规范形原色→规范形新色的对象（键与值均须经 parseColor＋toCanonical 校验，非法返回失败）；仅在上述行内属性值与内联 style 声明内做替换，同一色值出现在 id、文本内容、注释、`<style>` 块、url(#…) 引用中时原样保留；未出现在 mapping 中的颜色不动；返回替换后 SVG 字符串与替换次数 `{ svg, replaced }`；svg 为空返回失败。
+  - `rgbToHsl(r, g, b)`／`hslToRgb(h, s, l)`：标准公式，h 0–360、s／l 0–100，四舍五入取整；非法输入返回失败。
+  - `shiftHue(color, degrees)`：color 为任意 parseColor 可接受值，degrees 为整数 −180–180（非整数或越界返回失败）；色相加 degrees 后按 360 取模回绕，饱和度／明度／透明度不变，返回规范形新色；灰色（s=0）偏移后色值不变（须有向量断言）。
+  - `applyHueShift(svg, degrees)`：先 extractColors 再对 palette 逐色 shiftHue，用 replaceColors 一次替换，返回 `{ svg, mapping, replaced }`；degrees 非法返回失败。
+  - `sanitizeSvg(svg)`：字符串级消毒——删除 `<script…>…</script>` 块、删除所有 `on[a-z]+="…"`／`on[a-z]+='…'` 事件属性、把 `href="javascript:…"`／`xlink:href="javascript:…"` 改写为 `#`；返回消毒后字符串；svg 为空返回失败。预览与导出均须先过 sanitizeSvg 再做颜色替换（顺序：消毒→替换，替换结果不再引入危险节点）。
+  - `validateSvgInput(svg)`：svg 为非空字符串、含 `<svg` 标签、长度 ≤ 2MB（2×1024×1024 字符）；超限、无 `<svg` 标签、空串返回失败并明示原因。
+  - `suggestExportName()`：固定返回 `recolored.svg`（不编造其它文件名）。
+- 界面：输入区（粘贴 SVG 代码文本框＋拖拽／点击上传 .svg 文件≤2MB，非法红字提示；上传后代码回填文本框）；色板区（extractColors 结果按数量降序排列，每行含原色块＋规范形 HEX＋出现次数＋替换色取色器＋HEX 文本输入，非法替换色红字提示且不应用）；色调区（全局色调偏移滑杆 −180–180°＋「应用色调偏移」按钮＋「恢复原图」按钮，偏移后色板同步刷新为新色值）；预览区（原图与换色后并排渲染，均经 sanitizeSvg 消毒，透明背景用棋盘格示意；无有效 SVG 时显示占位提示）；操作区（「复制换色后代码」「下载 .svg」「载入示例」按钮，示例为内置 3 色简单图标 SVG 字符串、无需上传即可演示提取→替换→导出全流程）；提取报告区（提取色数、跳过数及跳过原因说明文案）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览渲染只用消毒后 SVG，杜绝注入。
+- 操作与互链：与 SVG 压缩优化器（/tools/svg-compressor，文案按「换色 vs 压缩已有 SVG」区分，换色后可再压缩）、SVG 转字体（/tools/svg-to-font，文案按「换色 vs 转字体格式」区分，换色后可转字体）、图片取色器与主色提取（/tools/image-color-picker，文案按「改矢量颜色 vs 从位图取色」区分，取到的 HEX 可拿来换色）互链；不与未交付的 CSS clip-path 生成器、CSS Flexbox 可视化生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写颜色解析／归一化／HSL 偏移／上下文限定替换，不引入任何 SVG 解析或换色库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；上传走 FileReader 本地读取，不经过任何服务器；示例 SVG 为页面内置字符串，不依赖外链。
+- 注册：ID `svg_recolor`、Name「SVG 换色器」、Path `/tools/svg-recolor`、Category 图片处理、Icon 建议 format_color_fill（图标库无此名则用 brush 兜底；勿与图片取色器的 colorize、配色方案生成器的 color_lens 在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（SVG 换色器、SVG 改颜色、图标换色、SVG 颜色替换、svg recolor、change svg color、svg color replacer、replace svg colors）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/svg-recolor，相关工具互链 SVG 压缩优化器、SVG 转字体、图片取色器与主色提取。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `svg_recolor`、Path `/tools/svg-recolor` 注册完整（Category 图片处理），注册总数 208→209 Path。
+2. 颜色解析向量闭环（node 断言）：parseColor 已知值（#f00→255,0,0,1；#ff000080→a≈0.5；rgb(255,0,0)；red；transparent→0,0,0,0）；toCanonical 往返一致（不透明 6 位、带透明 8 位小写）；越界分量、currentColor、url(#g)、none、未知命名色判失败。
+3. 提取向量闭环（node 断言）：构造含 fill／stroke／stop-color／内联 style 的 SVG，extractColors 计数与降序排列正确；id、文本内容、注释、`<style>` 块中的同形色值不计入；currentColor／url／none 计入 skipped。
+4. 替换向量闭环（node 断言）：replaceColors 只改行内属性与内联 style 声明内的色值，id／文本／注释／`<style>` 块／url 引用原样保留；mapping 外颜色不动；非法 mapping 键值判失败；replaced 计数与实际改动一致。
+5. 色调偏移向量闭环（node 断言）：shiftHue 已知值（纯红 +120°→纯绿、−120°→纯蓝；灰色偏移后不变；+180° 后再 +180° 回到原色）；degrees 非整数／越界判失败；applyHueShift 对 palette 全量替换且 mapping 与 replaced 一致。
+6. 消毒与校验向量闭环（node 断言）：sanitizeSvg 删除 script 块与 on* 属性、改写 javascript: 链接；validateSvgInput 空串／无 `<svg` 标签／超 2MB 判失败；suggestExportName 返回 `recolored.svg`。
+7. 操作闭环（浏览器手工／测试复核）：粘贴或上传 SVG→色板按数量降序→逐色替换后预览即时变化→色调偏移后色板同步刷新→复制换色后代码、下载 .svg 可用→「载入示例」无需上传即可演示全流程→「恢复原图」回到原色板。
+8. 真限制可见：页面可见「只改行内属性与内联 style 颜色」「外部 CSS 与 currentColor 不在范围」「渐变引用不动、只改色标」「命名色只认 16 基础色＋transparent」「预览与导出均消毒」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+9. 操作闭环：相关工具互链含 SVG 压缩优化器、SVG 转字体、图片取色器与主色提取；不含未交付工具的硬凑互链；非法 SVG／非法替换色有红字降级提示。
+10. node 测试 25+ 断言全过（颜色解析与归一化向量、提取向量、替换向量、色调偏移向量、消毒与校验向量、注册与零网络请求静态检查）。
+11. 页面无报错；移动端输入框、色板行、预览并排、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/svg_recolor.html`（新增；含 SEO 面板按家族标准＋输入区／色板区／色调区／预览区／操作区／提取报告区／示例演示）
+- `static/js/svg_recolor.js`（新增；颜色解析与归一化、HSL 色调偏移、上下文限定提取与替换、字符串级消毒、SVG 校验、导出命名；双模式导出供 node 测试）
+- `tests/svg_recolor.test.js`（新增；颜色解析与归一化向量、提取向量、替换向量、色调偏移向量、消毒与校验向量、注册与零网络静态检查）
+- `tools/categories.go`（图片处理品类注册：ID svg_recolor、Path /tools/svg-recolor、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；首轮未带 env 的 fetch 曾报 publickey 被拒，属未指定密钥所致、非远端问题，带 env 后即成功，请开发轮推送前仍常规复核）；`git log` 头部 2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **208**；Top3 候选重叠复核（svg_recolor／svg-recolor 在 tools／templates／static/js／tests 四路 0 实现命中；SVG 压缩只压已有 SVG、SVG 转字体只转格式、HTML/SVG 转 JSX 只做词法映射、图片取色器只从位图取色、SVG 背景生成器只生成新几何，辨析见上；CSS clip-path 生成器与 CSS Flexbox 可视化生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 17:00 · 通用调研第一百三十六轮）
+
+**交付状态**：10-28 通用调研第一百三十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**图片取色器与主色提取已交付闭环**（2325e38 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **208 Path**，ID image_color_picker、Path /tools/image-color-picker 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 轮，优先小难度纯前端。
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. 图片取色器与主色提取交付确认：`git log` 头部 2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）；全量 208 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，无报错；仅 known_hosts 新增 github.com 主机密钥提示，属正常首次记录）。
+2. 新信号扫描：
+   - **CSS Flexbox 可视化生成器**（toolskitplus／codeshack／markodenic 等多个独立工具：方向／主轴对齐／交叉轴对齐／换行／gap 下拉＋滑杆、实时编号色块预览、常用布局预设导航栏／居中／卡片换行／侧边栏＋自适应内容、复制容器与条目 CSS／HTML 片段）：**站内真缺口，晋升 P2**——站内 flex 命中仅为 CSS 转 Tailwind 的布局逐条映射与各工具页自身的布局样式，无独立 Flexbox 生成器文件（templates／static/js 下无 flexbox 生成器；categories.go 中 flexbox 命中为 0）；CSS 渐变生成器只做渐变、CSS 阴影／圆角生成器只做阴影圆角、CSS 缓动生成器只做 cubic-bezier、CSS clamp 计算器只做流体字号、CSS clip-path 生成器（留池 P2）只做裁剪形状，均不产 flex 布局；纯前端小难度：容器五属性控件＋条目数／grow／shrink／basis／order／align-self 控件＋预设＋实时预览＋复制 CSS／HTML 片段，零上传；真限制：只做单维 flex 布局，不做二维 Grid 区域布局（须明示，Grid 若立项另立工具、不混在一页）、不做响应式断点批量导出（只给单断点代码，须明示）；
+   - **SVG 换色器、CSS clip-path 生成器复核仍未交付**：templates／static/js 下无 recolor／换色文件、无 clip-path 生成器文件；categories.go 中 svg_recolor／clip_path_generator 命中均为 0；134／135 轮晋升 P2 时的缺口论证（SVG 压缩只压已有 SVG、SVG 转字体只转格式、HTML/SVG 转 JSX 只做词法映射不改色值；CSS 渐变只做渐变、阴影／圆角只做阴影圆角）本轮仍成立，两项继续留池顺位递进；
+   - **其余信号全部消解，不立**：英文榜单群余项（网站搭建器／Figma／Webflow／Framer 等属重型产品非单页工具；正则／配色／字体搭配／音频编辑／白板／AI 去背景属已注册工具、观察项或需后端／AI）／V2EX 搜索（本轮返回 2009 年旧文与 V2EX 用法指南聚合页，无有效新信号）／Favicon 生成器（已注册工具，ID favicon_generator、Path /tools/favicon-generator，六尺寸＋手工编码 ICO＋ZIP 打包已覆盖）／CSS 缓动生成器（已注册工具，ID css_easing_generator）／在线电台收听器（88 轮新晋；硬伤未解→继续跳过，见 Top3 后）。
+3. 候选池变动：图片取色器与主色提取已交付划出（2325e38 新增；ID image_color_picker、Path /tools/image-color-picker 已注册；全量 208 Path）；**本轮新晋 P2 1 个**（CSS Flexbox 可视化生成器）；全量 208 Path。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；图片取色器与主色提取交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，135 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **SVG 换色器** — P2 留池顺位首席（134 轮新晋 P2；136 轮复核仍未交付；痛点：图标／插画换品牌色要逐行翻 fill／stroke 改代码，设计软件太重、在线换色多要上传；纯前端小／中难度：粘贴或上传 SVG→自动提取颜色成色板→逐色替换＋全局色调偏移→实时预览→导出 SVG／复制代码，零上传；与 SVG 压缩优化器（只压缩）、SVG 转字体（只转格式）、HTML/SVG 转 JSX（只做词法映射不改色值）口径不重叠；真限制：只改行内属性与内联 style 颜色，外部 CSS 与 currentColor 继承色不在范围须明示）。
+2. **CSS clip-path 生成器** — P2 留池顺位第二（135 轮新晋 P2；136 轮复核仍未交付；痛点：手写 polygon 百分比坐标难调、改一处就要全量重算，设计软件出图又不能直接贴 CSS；纯前端小／中难度：画布拖拽顶点＋百分比坐标列表双向编辑＋三角形／星形／箭头等预设＋circle／ellipse／inset 基础形状＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS 渐变生成器（只做渐变）、CSS 阴影／圆角生成器（只做阴影圆角）口径不重叠；真限制：只做 polygon／circle／ellipse／inset，不做 SVG path() 与新 shape() 函数须明示）。
+3. **CSS Flexbox 可视化生成器** — 新晋 P2（136 轮新晋；痛点：flex 十余属性分容器与条目两层、主轴／交叉轴随 direction 互换，新手凭属性表想象不出布局，调错一处就要反复改代码刷新看效果；纯前端小难度：容器方向／对齐／换行／gap 控件＋条目 grow／shrink／basis／order／align-self 控件＋导航栏／居中／卡片换行／侧边栏预设＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS 转 Tailwind（只做已有声明映射）、CSS 渐变／阴影／圆角／缓动／clamp 生成器（各只做单类样式）口径不重叠；真限制：只做单维 flex 布局、不做二维 Grid 区域布局与多断点批量导出，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；136 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：批量随机数生成器（133 轮观察项新增；未晋升 P2）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；ISBN 校验器／JMESPath 测试器／.npmrc／.gitattributes 配置生成器／文本↔二进制／ASCII 转换器／YAML／XML 独立对比器（104 轮）；cURL 命令生成器／MIME 类型查询／BIP39 助记词生成器／RSA 密钥对生成器／sitemap.xml 独立生成器（106 轮）；CSV→SQL 生成器／JSON↔XML 转换器／Discord 时间戳生成器／JSON Schema 样本推断生成器（107 轮）；CSR 生成器与校验器／CSP 头解析器／CSS 特异性计算器／SVG→CSS 背景转换器（108 轮）；图片／PDF 角度测量器／浏览器十六进制编辑器（109 轮）；文本对齐列→表格转换器（110 轮）；SQLite 数据库查看器／JSON→表格查看器（111 轮）；常用端口号速查（119 轮）；字体搭配预览器（129 轮观察项新增；与站内配色／字体族口径重叠待 PM 界定，未晋升 P2）；其余 92 轮及之前留池项均保持留池／观察原状，详见 135 轮及之前记录。
+
+**通用候选表增量**（第一百三十六轮：图片取色器与主色提取已交付划出（2325e38 新增；ID image_color_picker、Path /tools/image-color-picker 已注册；全量 208 Path；候选池划出）；**CSS Flexbox 可视化生成器新晋 P2**；SVG 换色器、CSS clip-path 生成器复核仍未交付、顺位递进；自有实锤消解 5+ 项（Favicon 与 CSS 缓动均为已注册工具；榜单群余项为重型产品、已注册工具或需后端／AI；V2EX 搜索无有效新信号）；全量 208 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片取色器与主色提取 | 已交付划出（2325e38 新增；ID image_color_picker、Path /tools/image-color-picker 已注册；全量 208 Path；候选池划出） | — | 已实现 |
+| CSS Flexbox 可视化生成器 | flex 属性分容器与条目两层、主轴／交叉轴随 direction 互换，凭属性表难想象布局；容器五属性＋条目属性控件＋布局预设＋实时预览＋复制 CSS／HTML，纯前端零上传 | 小 | P2（新晋） |
+| SVG 换色器 | 复核仍未交付（134 轮 P2，顺位递进为首席）；图标／插画换品牌色逐行翻 fill／stroke 太费事，粘贴或上传 SVG→提取色板→逐色替换→导出 SVG，纯前端零上传 | 中 | P2（留池） |
+| CSS clip-path 生成器 | 复核仍未交付（135 轮 P2，顺位递进为第二）；手写 polygon 百分比坐标难调，画布拖拽顶点＋百分比列表双向编辑＋预设＋实时预览＋复制 CSS，纯前端零上传 | 中 | P2（留池） |
+| 自有实锤消解 | 不立（Favicon 与 CSS 缓动均为已注册工具；榜单群余项为重型产品、已注册工具或需后端／AI；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十六轮——图片取色器与主色提取交付闭环（2325e38，`/tools/image-color-picker` 已注册，全量 208 Path），候选池划出；**CSS Flexbox 可视化生成器新晋 P2**；**SVG 换色器、CSS clip-path 生成器顺位递进为 Top3 前两位**；仓库 208 注册工具全量核对无重叠（Top3 建议 SVG 换色器／CSS clip-path 生成器／CSS Flexbox 可视化生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 2325e38（图片取色器与主色提取新增）／6a6bb7f（SVG 背景生成器画布高度与基线耦合修复）／a17a375（SVG 波形／斑点背景生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **208**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 15:40 · 产品经理排期轮，接 135 轮调研）
 
 **选定：图片取色器与主色提取（image_color_picker）** — 本轮唯一任务（新工具）：
