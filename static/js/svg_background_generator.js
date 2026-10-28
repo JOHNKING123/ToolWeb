@@ -354,6 +354,32 @@ function syncFormFromState() {
   $("sbg-blob-seed").value = state.blob.seed;
 }
 
+/* 高度变更时维护波形层：基线按新高/旧高等比缩放（取整后钳制到 [0, 新高]），
+ * 振幅钳制到新高的一半以内。只改 UI 层状态，纯函数 waveLayerPath/buildSvg
+ * 的非法即抛错、不静默钳制约定保持不动。 */
+function rescaleLayersForHeight(oldHeight, newHeight) {
+  if (!oldHeight || oldHeight === newHeight) return;
+  var ratio = newHeight / oldHeight;
+  var maxAmp = Math.floor(newHeight / 2);
+  state.layers.forEach(function (layer) {
+    layer.baseline = Math.max(0, Math.min(newHeight, Math.round(layer.baseline * ratio)));
+    if (layer.amplitude > maxAmp) layer.amplitude = maxAmp;
+  });
+}
+
+/* 统一的画布尺寸变更入口：先做层状态维护，再重建层编辑器（基线滑杆 max
+ * 跟随新高度），最后 render()，避免预设/手动改高后停留在报错的旧 SVG。 */
+function applyCanvasSize(newWidth, newHeight) {
+  var oldHeight = state.height;
+  state.width = newWidth;
+  state.height = newHeight;
+  rescaleLayersForHeight(oldHeight, newHeight);
+  $("sbg-width").value = state.width;
+  $("sbg-height").value = state.height;
+  renderLayerEditors();
+  render();
+}
+
 function setMode(mode) {
   state.mode = mode;
   $("sbg-tab-wave").className = "sbg-tab" + (mode === "wave" ? " active" : "");
@@ -427,15 +453,19 @@ function init() {
   for (var p = 0; p < presets.length; p++) {
     presets[p].addEventListener("click", function () {
       var parts = this.getAttribute("data-preset").split("x");
-      state.width = parseInt(parts[0], 10);
-      state.height = parseInt(parts[1], 10);
-      $("sbg-width").value = state.width;
-      $("sbg-height").value = state.height;
-      render();
+      applyCanvasSize(parseInt(parts[0], 10), parseInt(parts[1], 10));
     });
   }
-  $("sbg-width").addEventListener("input", function () { state.width = intVal("sbg-width", state.width); render(); });
-  $("sbg-height").addEventListener("input", function () { state.height = intVal("sbg-height", state.height); render(); });
+  $("sbg-width").addEventListener("input", function () {
+    var w = intVal("sbg-width", state.width);
+    if (w >= MIN_SIZE && w <= MAX_SIZE) { applyCanvasSize(w, state.height); }
+    else { state.width = w; render(); }
+  });
+  $("sbg-height").addEventListener("input", function () {
+    var h = intVal("sbg-height", state.height);
+    if (h >= MIN_SIZE && h <= MAX_SIZE) { applyCanvasSize(state.width, h); }
+    else { state.height = h; render(); }
+  });
   $("sbg-bg").addEventListener("input", function () { state.background = $("sbg-bg").value; render(); });
   $("sbg-bg-transparent").addEventListener("change", function () {
     state.transparentBg = $("sbg-bg-transparent").checked;
@@ -444,7 +474,7 @@ function init() {
   $("sbg-layer-count").addEventListener("change", function () {
     var n = parseInt($("sbg-layer-count").value, 10);
     while (state.layers.length < n) {
-      state.layers.push({ color: "#818cf8", opacity: 0.7, amplitude: 60, frequency: 1, phase: 0, baseline: 700 });
+      state.layers.push({ color: "#818cf8", opacity: 0.7, amplitude: 60, frequency: 1, phase: 0, baseline: Math.round(state.height * 0.65) });
     }
     state.layers.length = n;
     renderLayerEditors();
