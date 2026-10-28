@@ -1,0 +1,219 @@
+{{define "css_grid_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid 可视化生成器 - 行列轨道与命名区域可视化编辑 grid 布局 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS Grid 可视化生成器：行列数 1–12＋轨道尺寸 fr／px／%／auto／minmax 编辑，column-gap／row-gap 滑杆，画布拖拽圈选命名区域，圣杯／仪表盘／三栏三预设，实时预览与 CSS／HTML 双栏代码，一键复制或下载 grid.css。纯前端本地运行，零上传。">
+    <meta name="keywords" content="CSS Grid 可视化生成器,grid 生成器,grid 布局工具,css grid generator,grid template areas,grid-template-columns,grid 区域布局">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-grid-generator">
+    <meta property="og:title" content="CSS Grid 可视化生成器 - 行列轨道与命名区域可视化编辑 grid 布局">
+    <meta property="og:description" content="行列轨道编辑＋画布拖拽圈选命名区域，圣杯／仪表盘／三栏三预设，实时预览，一键复制 CSS／HTML。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-grid-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS Grid 可视化生成器","description":"免费在线 CSS Grid 可视化生成器：行列轨道编辑，画布拖拽圈选命名区域，三预设，实时预览，一键复制 CSS／HTML，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-grid-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cgd-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .cgd-wrap .navbar .material-icons { display: none; }
+        .cgd-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .cgd-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .cgd-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .cgd-error { color:#dc2626; font-size:.9rem; min-height:1.3em; margin:.4rem 0; }
+        .cgd-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .cgd-row label { font-size:.92rem; color:#374151; min-width:4.5em; }
+        .cgd-row select, .cgd-row input[type=number], .cgd-row input[type=text] { padding:.4rem .5rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.9rem; background:#fff; }
+        .cgd-row input[type=range] { flex:1; min-width:120px; max-width:280px; }
+        .cgd-row input[type=number] { width:72px; }
+        .cgd-row input[type=text] { width:110px; }
+        .cgd-tracks { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin:.5rem 0; }
+        .cgd-tracks label { font-size:.9rem; color:#374151; }
+        .cgd-tracks input[type=text] { width:104px; padding:.4rem .5rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.9rem; background:#fff; }
+        .cgd-stage-wrap { overflow-x:auto; padding:1rem; border-radius:.7rem; border:1px solid #e5e7eb; background:#f9fafb; }
+        .cgd-canvas { min-width:320px; }
+        .cgd-cell { min-height:44px; display:flex; align-items:center; justify-content:center; border:1px dashed #d1d5db; border-radius:.4rem; background:#fff; color:#6b7280; font-size:.82rem; cursor:crosshair; user-select:none; box-sizing:border-box; padding:.2rem; word-break:break-all; text-align:center; }
+        .cgd-cell.named { color:#fff; font-weight:700; border-style:solid; }
+        .cgd-cell.pending { outline:3px solid #f59e0b; outline-offset:-3px; }
+        .cgd-cell.selected { outline:3px solid #111827; outline-offset:-3px; }
+        .cgd-preview { min-height:180px; border:1px dashed #d1d5db; border-radius:.6rem; background:#fff; padding:.6rem; }
+        .cgd-preview-area { display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; border-radius:.5rem; padding:.4rem; box-sizing:border-box; min-height:44px; }
+        .cgd-preview-empty { border:1px dashed #d1d5db; border-radius:.4rem; min-height:44px; box-sizing:border-box; }
+        .cgd-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; min-height:2.6em; }
+        .cgd-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .cgd-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .cgd-btn:hover { background:#f3f4f6; }
+        .cgd-btn:disabled { opacity:.5; cursor:not-allowed; }
+        .cgd-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:.7rem; }
+        .cgd-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .4rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .cgd-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .cgd-area-item { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .8rem; margin-bottom:.6rem; }
+        .cgd-area-item.selected { border-color:#111827; }
+        .cgd-area-title { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:.5rem; }
+        .cgd-dot { display:inline-block; width:12px; height:12px; border-radius:3px; }
+        .cgd-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .cgd-tip a { color:var(--primary-color); }
+        .cgd-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .cgd-links a { color:var(--primary-color); font-size:.93rem; }
+        .cgd-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .cgd-row input[type=range] { min-width:100px; }
+            .cgd-row input[type=text], .cgd-tracks input[type=text] { width:96px; }
+            .cgd-preview { min-height:150px; }
+            .cgd-cell { min-height:38px; font-size:.78rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="cgd-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>▦ CSS Grid 可视化生成器</h1>
+            <p>行列轨道编辑＋画布拖拽圈选命名区域，实时预览 grid 布局，一键复制 CSS／HTML</p>
+        </div>
+        <div class="tool-content" id="cgd-form">
+            <div class="cgd-card">
+                <h3>网格尺寸与间距 <span class="cgd-hint">（改动即同步画布、预览与代码）</span></h3>
+                <div class="cgd-row">
+                    <label>列数（1–12）</label>
+                    <input type="number" id="cgd-cols" min="1" max="12" step="1" value="3">
+                    <label>行数（1–12）</label>
+                    <input type="number" id="cgd-rows" min="1" max="12" step="1" value="3">
+                    <span class="cgd-hint">列数／行数变化时区域按新尺寸裁剪／补空，裁剪后非矩形区域会红字提示并禁用复制／下载直至修复。</span>
+                </div>
+                <div class="cgd-row">
+                    <label>column-gap（px）</label>
+                    <input type="range" id="cgd-col-gap" min="0" max="64" step="1" value="16">
+                    <input type="number" id="cgd-col-gap-num" min="0" max="64" step="1" value="16">
+                    <label>row-gap（px）</label>
+                    <input type="range" id="cgd-row-gap" min="0" max="64" step="1" value="16">
+                    <input type="number" id="cgd-row-gap-num" min="0" max="64" step="1" value="16">
+                </div>
+                <p class="cgd-error" id="cgd-error" role="alert"></p>
+            </div>
+
+            <div class="cgd-card">
+                <h3>轨道编辑 <span class="cgd-hint">（每轨道一个文本框，只认 fr／px／%／auto／minmax，如 1fr、200px、30%、auto、minmax(200px, 1fr)；数值最多 2 位小数）</span></h3>
+                <p class="cgd-hint" style="margin:.2rem 0;">列轨道（grid-template-columns）</p>
+                <div class="cgd-tracks" id="cgd-col-tracks"></div>
+                <p class="cgd-hint" style="margin:.2rem 0;">行轨道（grid-template-rows）</p>
+                <div class="cgd-tracks" id="cgd-row-tracks"></div>
+            </div>
+
+            <div class="cgd-card">
+                <h3>画布圈选 <span class="cgd-hint">（拖拽圈选矩形→输入区域名→生成区域；点击已命名单元格可选中该区域）</span></h3>
+                <div class="cgd-stage-wrap">
+                    <div class="cgd-canvas" id="cgd-canvas"></div>
+                </div>
+                <p class="cgd-hint" id="cgd-rect-info" style="margin:.7rem 0;">在画布上拖拽圈选矩形，再输入区域名生成区域；点击已命名单元格可选中该区域。</p>
+                <div class="cgd-row">
+                    <label>区域名</label>
+                    <input type="text" id="cgd-area-name" placeholder="如 header" style="width:160px;">
+                    <button class="cgd-btn" id="cgd-create-area" type="button">生成区域</button>
+                    <span class="cgd-hint">区域名须字母开头＋字母数字下划线连字符；每个区域须为完整矩形，圈选内已有其它区域名时生成失败。</span>
+                </div>
+            </div>
+
+            <div class="cgd-card">
+                <h3>区域侧栏 <span class="cgd-hint">（显示每个区域的行列起止与跨度，可改名或清除）</span></h3>
+                <div id="cgd-area-list"></div>
+            </div>
+
+            <div class="cgd-card">
+                <h3>三个预设 <span class="cgd-hint">（点击载入，载入后仍可再编辑）</span></h3>
+                <div class="cgd-presets">
+                    <button class="cgd-preset" id="cgd-preset-holy-grail" type="button">holy-grail（圣杯）</button>
+                    <button class="cgd-preset" id="cgd-preset-dashboard" type="button">dashboard（仪表盘）</button>
+                    <button class="cgd-preset" id="cgd-preset-three-column" type="button">three-column（三栏）</button>
+                </div>
+                <p class="cgd-hint" style="margin-top:.6rem;">holy-grail：列 200px 1fr 200px、行 60px 1fr 60px，header／footer 通栏、sidebar／main／aside 中行三栏；dashboard：列 220px 1fr 1fr、行 60px 1fr 1fr，sidebar 左列通占下两行；three-column：单行 1fr 三栏。三个预设 gap 均为 16px。</p>
+            </div>
+
+            <div class="cgd-card">
+                <h3>实时预览 <span class="cgd-hint">（彩色命名块即 grid 区域，虚线框为留空单元格）</span></h3>
+                <div class="cgd-stage-wrap">
+                    <div class="cgd-preview" id="cgd-preview"></div>
+                </div>
+            </div>
+
+            <div class="cgd-card">
+                <h3>代码输出</h3>
+                <p class="cgd-hint">CSS 片段为容器块＋各区域类块；HTML 片段为 &lt;style&gt; 内嵌 CSS＋容器 div 与各区域 div。</p>
+                <div class="cgd-code" id="cgd-code-css"></div>
+                <div class="cgd-actions">
+                    <button class="btn btn-primary" id="cgd-copy-css" type="button">📋 复制 CSS</button>
+                    <button class="btn btn-secondary" id="cgd-download-css" type="button">⬇ 下载 .css</button>
+                </div>
+                <div class="cgd-code" id="cgd-code-html"></div>
+                <div class="cgd-actions">
+                    <button class="btn btn-primary" id="cgd-copy-html" type="button">📋 复制 HTML</button>
+                    <button class="btn btn-secondary" id="cgd-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="cgd-load-example" type="button">⭐ 载入示例</button>
+                    <button class="btn btn-secondary" id="cgd-reset" type="button">↺ 重置</button>
+                </div>
+                <p class="cgd-hint" style="margin-top:.6rem;">「载入示例」载入 holy-grail 预设，无需上传即可演示编辑→预览→导出全流程；复制失败时请手动选中代码区内容复制。下载文件名为 grid.css／grid-demo.html。</p>
+            </div>
+
+            <div class="cgd-card">
+                <h3>使用说明</h3>
+                <ol class="cgd-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>先在「网格尺寸与间距」定列数／行数与两个 gap，再在「轨道编辑」逐条改轨道尺寸，画布与预览实时同步。</li>
+                    <li>在画布上拖拽圈选一个矩形，输入区域名点「生成区域」，区域即着色；点击已命名单元格可选中，再到区域侧栏改名或清除。</li>
+                    <li>点三个预设一键载入典型布局，载入后仍可改任意控件；列数／行数在 1–12 之间调整，新增行列补空、缩减裁剪。</li>
+                    <li>复制 CSS／HTML 或下载 grid.css／grid-demo.html，粘贴即用；生成的网格 CSS 如需映射为工具类，走 CSS 转 Tailwind 工具。</li>
+                </ol>
+            </div>
+
+            <div class="cgd-card">
+                <h3>常见问题</h3>
+                <dl class="cgd-tip">
+                    <dt><b>轨道能写 em 或 rem 吗？</b></dt>
+                    <dd>不能。本工具轨道只认 fr／px／%／auto／minmax，其它单位会红字提示并拒绝，不静默转换。</dd>
+                    <dt><b>区域名有什么规则？</b></dt>
+                    <dd>须字母开头＋字母数字下划线连字符（如 header、chart1、main-area）；数字开头、含空格或中文都会红字提示并拒绝。</dd>
+                    <dt><b>为什么 L 形区域生成失败？</b></dt>
+                    <dd>每个区域须为完整矩形：区域的单元格必须恰好填满它的最小外接矩形，缺角的 L 形会被判失败并红字提示区域名。</dd>
+                    <dt><b>为什么没有断点变体？</b></dt>
+                    <dd>本工具只输出一组网格 CSS，不产 sm／md／lg 断点变体；多断点请在自己的样式表里用媒体查询包裹生成的代码。</dd>
+                    <dt><b>能做嵌套网格吗？</b></dt>
+                    <dd>不能。本工具只做单层显式网格，不做嵌套子网格／subgrid；子区域请另建一个网格。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部编辑与预览只在浏览器本地完成，本页面零网络请求，不收集、不上传任何内容。</dd>
+                </dl>
+            </div>
+
+            <div class="cgd-card">
+                <h3>相关工具</h3>
+                <div class="cgd-links">
+                    <a href="/tools/css-flexbox-generator">CSS Flexbox 可视化生成器</a>
+                    <a href="/tools/css-to-tailwind">CSS 转 Tailwind 转换器</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器</a>
+                </div>
+                <p class="cgd-tip" style="margin:.6rem 0 0;">二维网格 vs 单维 flex：本工具做二维网格区域布局，单维条目排列走 Flexbox 工具；生成网格 vs 映射已有声明为工具类：本工具生成网格 CSS，生成的 CSS 可再经 CSS 转 Tailwind 映射为工具类；网格布局 vs 填充：本工具管网格怎么排，单元格可用渐变做填充；网格布局 vs 阴影圆角：本工具管排布，单元格可再描圆角加阴影。</p>
+            </div>
+
+            <div class="cgd-card">
+                <h3>真限制说明</h3>
+                <ul class="cgd-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>只做单层显式网格、不做嵌套子网格／subgrid：不做嵌套网格与 subgrid 声明，子区域请另建网格。</li>
+                    <li>不做多断点批量导出：只输出一组网格 CSS，不产 sm／md／lg 断点变体。</li>
+                    <li>列数／行数各上限 12：列数与行数均按 1–12 处理，超限返回失败，不静默截断。</li>
+                    <li>轨道只认 fr／px／%／auto／minmax：其它单位返回失败，不静默转换。</li>
+                    <li>区域名须字母开头＋字母数字下划线连字符、每个区域须为完整矩形：非矩形区域返回失败，不静默修补。</li>
+                    <li>不收集、不上传任何内容：全部编辑与预览只在浏览器本地完成，本页面零网络请求。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="cgd-toast" id="cgd-toast"></div>
+    <script src="/tools/static/js/css_grid_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

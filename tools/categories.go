@@ -652,6 +652,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_grid_generator",
+					Name:        "CSS Grid 可视化生成器",
+					Description: "行列数 1–12＋轨道尺寸 fr／px／%／auto／minmax 编辑，column-gap／row-gap 滑杆，画布拖拽圈选命名区域，圣杯／仪表盘／三栏三预设，实时预览与 CSS／HTML 双栏代码，复制或下载 grid.css／grid-demo.html，纯前端零上传 · CSS grid generator: track editor, drag-to-select named areas, 3 presets, live preview, copy/download, 100% client-side",
+					Path:        "/tools/css-grid-generator",
+					Icon:        "grid_view",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",

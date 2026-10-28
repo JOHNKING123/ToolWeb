@@ -1,3 +1,92 @@
+## 今日任务（2026-10-28 23:37 · 产品经理排期轮，接 139 轮调研）
+
+**选定：CSS Grid 可视化生成器（css_grid_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（139 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS Flexbox 可视化生成器已交付划出（c4bd08a 新增，全量 211 Path），首席顺位自然递进至本项；不再以「动画／文字阴影难度更小」等理由二次跳过——CSS 动画关键帧生成器、CSS 文字阴影生成器均不插队。
+- **未选**：CSS 动画关键帧生成器（138 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做单元素单动画，与本项二维网格口径不重叠）；CSS 文字阴影生成器（139 轮新晋 P2，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做 text-shadow 声明，与本项网格布局口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **211 Path**；`git log` 头部 c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）／6711099（SVG 换色器新增）。逐项复核：`css_grid`／`grid_generator` 在 tools／templates／static/js／tests 四路均为 0 实现命中（仅有的 grid 字样为九宫格 nine_grid 图片九切与既有模板内布局样式，均非 Grid 生成器实现）；`css_animation`／`keyframe_generator`／`text_shadow` 在四路亦为 0 实现命中（categories.go 中 animation 唯一命中为年会抽奖大屏描述文案里的 marquee settle animation，非动画生成器）。近邻再辨析：① **CSS Flexbox 可视化生成器**（ID css_flexbox_generator）只做单维 flex 布局，不产 grid-template-*；② **CSS 转 Tailwind**（ID css_to_tailwind）只把已有声明映射为工具类，不生成网格；③ **CSS 渐变／阴影／圆角／缓动／clamp 生成器**各只做单类样式数值，不碰网格轨道与区域；④ **九宫格**（nine_grid）只做图片九切，不碰 Grid 布局。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——grid-template-columns／rows、轨道尺寸函数与 grid-template-areas 手写易错，区域跨行跨列全靠脑补坐标，改一处就要重算整张网格，行列数＋轨道尺寸编辑＋gap 滑杆＋画布拖拽圈选命名区域＋预设＋实时预览＋复制 CSS／HTML 片段恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，轨道解析／区域矩形校验／预设配置均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 Flexbox／渐变／阴影／圆角／缓动／clamp／clip-path 生成器同属「CSS 可视化生成」需求簇，二维网格与单维 flex 成组发现；⑤ **外部佐证已就位**——137 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS Flexbox 可视化生成器、CSS 渐变生成器、CSS 阴影／圆角生成器、CSS 转 Tailwind、CSS clip-path 生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做单层显式网格**——不做嵌套子网格／subgrid，页面须明示；② **不做多断点批量导出**——只输出一组网格 CSS，不产 sm／md／lg 断点变体，页面须明示；③ **列数／行数各上限 12**——超限返回失败不静默截断，页面须明示；④ **轨道尺寸只认 fr／px／%／auto／minmax(...)**——其它单位返回失败，页面须明示；⑤ **区域名只认字母开头＋字母数字下划线连字符、每个区域须为完整矩形**——非矩形区域返回失败，页面须明示；⑥ **不收集、不上传任何内容**——全部编辑与预览只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整）：
+  - `parseTrackSize(s)`：单轨道：`<数值>fr`（>0–12）、`<数值>px`（0–1000）、`<数值>%`（0–100）、`auto`、`minmax(<a>,<b>)`（a／b 各为 auto／px／%／fr 且在各自范围，不嵌套 minmax）；数值最多 2 位小数，输出去尾零规范化串；其它单位（如 em）、越界、空串返回失败。
+  - `parseTrackList(text)`：minmax 括号内空格不切分，其余按空白切分，返回轨道数组（每项经 parseTrackSize 校验）；空串、任一轨道非法返回失败。
+  - `createEmptyAreas(cols, rows)`：返回 rows×cols 全 "." 数组；cols／rows 非整数或超出 1–12 返回失败。
+  - `setArea(areas, name, r1, c1, r2, c2)`：返回新数组（不改原数组），矩形行列下标 0 起、r1≤r2、c1≤c2 且在界内；name 须匹配 /^[a-zA-Z][a-zA-Z0-9_-]*$/；矩形内已有其它区域名时返回失败（同名或 "." 可覆盖）；任一非法返回失败。
+  - `clearArea(areas, name)`：返回新数组，该名全部单元格置 "."；未知名返回失败（不静默无操作）。
+  - `validateAreas(areas, cols, rows)`：尺寸须为 rows×cols；每个命名区域的单元格须恰好填满其最小外接矩形（非矩形返回失败，err.field='areas'）；"." 视为留空。
+  - `resizeAreas(areas, cols, rows)`：按新尺寸裁剪／补 "."（新增行列补 "."，缩减丢弃界外单元格）；裁剪后非矩形区域不自动修复，交 validateAreas 在导出时判失败并由界面红字提示区域名。
+  - `buildContainerCss(grid)`：grid 含 columns（1–12 项轨道数组）、rows（1–12 项）、columnGap／rowGap（整数 0–64，单位 px）、areas（可空；非空须经 validateAreas 校验）；输出 `.grid-container` 声明块（首行 `display: grid;`，继 columns／rows 行、column-gap／row-gap 行；有 areas 时输出 grid-template-areas 多行引号串）；任一字段非法返回失败。
+  - `buildAreasCss(areas)`：按首次出现顺序输出每个命名区域的 `.grid-area-<name> { grid-area: <name>; }` 块；areas 须经 validateAreas 校验；无命名区域返回空串（不报错）。
+  - `buildGridCss(grid)`：container 经 buildContainerCss 校验、areas 经 buildAreasCss 校验，输出容器块＋各区域块。
+  - `buildHtmlSnippet(grid)`：先经 buildGridCss 校验，返回演示 HTML 片段（含 `<style>` 内嵌生成的完整 CSS＋`<div class="grid-container">` 内每个命名区域一个 `<div class="grid-area grid-area-<name>">`，内容为区域名；无命名区域时容器内放 1 个占位 div）；非法返回失败。
+  - `generatePreset(name)`：name 仅接受 holy-grail／dashboard／three-column，返回 `{ columns, rows, columnGap, rowGap, areas }`：holy-grail（列 200px 1fr 200px、行 60px 1fr 60px，区域 header／sidebar／main／aside／footer，header 顶行通栏、footer 底行通栏）；dashboard（列 220px 1fr 1fr、行 60px 1fr 1fr，区域 header／sidebar／chart1／chart2／table，sidebar 左列下两行通占）；three-column（列 1fr 1fr 1fr、行 1fr，区域 left／center／right 单行三栏）；gap 默认 16；未知 name 返回失败。
+  - `suggestExportName(kind)`：`css` → `grid.css`，`html` → `grid-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：轨道编辑区（列数／行数选择 1–12＋每轨道尺寸文本输入，改动即同步画布与代码；列数／行数变化时 areas 按 resizeAreas 裁剪／补 "."，裁剪后非矩形区域红字提示区域名并禁用复制／下载直至修复）；画布区（按当前列／行渲染单元格，拖拽圈选矩形→命名框输入区域名→生成区域；点击已命名区域即选中，侧栏显示区域名与行列起止跨度，可改名——改名须经 setArea 矩形规则校验、可清除）；预设区（holy-grail／dashboard／three-column 三个预设按钮）；预览区（实时网格演示块，区域为彩色命名块，留空单元格显示虚线占位）；代码区（CSS 片段与 HTML 片段两栏，实时同步，「复制 CSS」「复制 HTML」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 holy-grail 预设、无需上传即可演示编辑→预览→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览只用解析校验后的样式值，杜绝注入。
+- 操作与互链：与 CSS Flexbox 可视化生成器（/tools/css-flexbox-generator，文案按「二维网格 vs 单维 flex」区分）、CSS 转 Tailwind（/tools/css-to-tailwind，文案按「生成网格 vs 映射已有声明为工具类」区分）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「网格布局 vs 填充」区分）、CSS 阴影／圆角生成器（/tools/css-shadow-radius-generator，文案按「网格布局 vs 阴影圆角」区分）互链；不与未交付的 CSS 动画关键帧生成器、CSS 文字阴影生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写轨道解析、区域矩形校验、预设配置，不引入任何布局或 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）；示例为页面内置预设，不依赖外链。
+- 注册：ID `css_grid_generator`、Name「CSS Grid 可视化生成器」、Path `/tools/css-grid-generator`、Category 开发工具、Icon 建议 grid_view（图标库无此名则用 dashboard 兜底；勿与 Flexbox 的 view_column、clip-path 的 crop 在同品类视觉混淆——名称已区分）、New: true；中英文描述＋SEO keywords（CSS Grid 可视化生成器、grid 生成器、grid 布局工具、css grid generator、grid template areas、grid-template-columns）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-grid-generator，相关工具互链 CSS Flexbox 可视化生成器、CSS 转 Tailwind、CSS 渐变生成器、CSS 阴影／圆角生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_grid_generator`、Path `/tools/css-grid-generator` 注册完整（Category 开发工具），注册总数 211→212 Path。
+2. 轨道解析向量闭环（node 断言）：parseTrackSize 已知值（1fr／200px／30%／auto／minmax(200px, 1fr) 规范化正确，去尾零）；em 单位、fr 为 0／越界、px 越界、嵌套 minmax、空串判失败；parseTrackList 含 minmax 的多轨道文本切分正确。
+3. 区域编辑向量闭环（node 断言）：createEmptyAreas 尺寸正确；setArea 新数组不改原数组、同名覆盖通过、覆盖其它区域名失败、下标越界／倒置失败、非法名失败；clearArea 未知名失败；validateAreas 非矩形区域（如 L 形）判失败；resizeAreas 裁剪／补 "." 正确。
+4. 组合与预设向量闭环（node 断言）：buildContainerCss 已知值（列 200px 1fr 200px、行 60px 1fr 60px、gap 16、areas 多行引号串正确，首行为 `display: grid;`）；列／行数 0／13、gap 非整数／越界判失败；generatePreset 三个预设列／行／区域配置正确（holy-grail 5 区域、dashboard 5 区域、three-column 3 区域）且各区域均为矩形；未知预设失败。
+5. 代码生成向量闭环（node 断言）：buildAreasCss 按首次出现顺序输出区域类；buildGridCss 含容器块＋区域块；buildHtmlSnippet 含 `<style>` 内嵌 CSS、class `grid-container` 与各区域 div；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+6. 操作闭环（浏览器手工／测试复核）：改轨道尺寸→画布与预览即时变化→拖拽圈选命名→区域着色→点选区域改名／清除→切预设→列数／行数增减→复制 CSS／HTML、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只做单层显式网格、不做嵌套子网格／subgrid」「不做多断点批量导出」「列数／行数各上限 12」「轨道只认 fr／px／%／auto／minmax」「区域名规则与须为完整矩形」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS Flexbox 可视化生成器、CSS 转 Tailwind、CSS 渐变生成器、CSS 阴影／圆角生成器；不含未交付工具的硬凑互链；非法轨道／区域名／非矩形区域有红字降级提示。
+9. node 测试 25+ 断言全过（轨道解析向量、区域编辑与矩形校验向量、组合与预设向量、代码生成向量、注册与零网络请求静态检查）。
+10. 页面无报错；移动端画布、轨道输入组、区域侧栏、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_grid_generator.html`（新增；含 SEO 面板按家族标准＋轨道编辑区／画布圈选区／区域侧栏／预设区／预览区／代码区／示例演示）
+- `static/js/css_grid_generator.js`（新增；轨道解析、区域增删改名与矩形校验、三预设配置、CSS／HTML 片段生成、导出命名；双模式导出供 node 测试）
+- `tests/css_grid_generator.test.js`（新增；轨道解析向量、区域编辑与矩形校验向量、组合与预设向量、代码生成向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_grid_generator、Path /tools/css-grid-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）／6711099（SVG 换色器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **211**；Top3 候选重叠复核（css_grid／grid_generator 在四路 0 实现命中；仅有的 grid 字样为九宫格文件名与既有模板布局样式，均非生成器实现；animation 唯一命中为年会抽奖描述文案，非生成器实现；Flexbox 只做单维布局、转 Tailwind 只映射已有声明、渐变／阴影／圆角／缓动／clamp 各只做单类样式、九宫格只做图片九切，辨析见上；CSS 动画关键帧生成器与 CSS 文字阴影生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-28 23:00 · 通用调研第一百三十九轮）
+
+**交付状态**：10-28 通用调研第一百三十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS Flexbox 可视化生成器已交付闭环**（c4bd08a 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **211 Path**，ID css_flexbox_generator、Path /tools/css-flexbox-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 轮，优先小／中难度纯前端。
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. CSS Flexbox 可视化生成器交付确认：`git log` 头部 c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）／6711099（SVG 换色器新增）；全量 211 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；仅 known_hosts 新增 github.com 主机密钥提示，属正常首次记录）。
+2. 留池复核仍未交付：CSS Grid 可视化生成器、CSS 动画关键帧生成器在 tools/categories.go 中命中均为 0，templates／static/js／tests 下无 grid／animation／keyframe 生成器文件（仅 nine_grid 图片九切无关命中），137／138 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 文字阴影生成器**（cssawwwards 2026 榜单、csstools.io、TestMu、wpdean、markodenic 等多个独立工具：多图层 text-shadow 堆叠、每层 X／Y 偏移＋模糊＋颜色＋不透明度、霓虹辉光／3D 立体／复古／浮雕／长阴影等预设、预览文字／字号／字色／背景可改、复制 CSS）：**站内真缺口，晋升 P2**——categories.go 中 css_filter／text_shadow 相关 ID 命中为 0，CSS 阴影／圆角生成器（ID css_shadow_radius_generator）模板内 `text-shadow` 命中为 0（只做 box-shadow 与圆角，不产 text-shadow）；纯前端小难度：图层增删＋滑杆编辑＋预设＋实时预览＋复制 CSS，零上传；真限制：只做 text-shadow 声明，不做 box-shadow（已由阴影／圆角生成器覆盖）与 filter: drop-shadow()，须明示；
+   - **其余信号全部消解，不立**：榜单群余项（CSS 渐变／阴影／Flexbox／Grid／clip-path／缓动／clamp 均为已注册工具或本轮留池／新晋 P2；CodePen／JSFiddle／AI 建站属重型产品或需后端／AI）／CSS 滤镜生成器（filter: blur／brightness／contrast 等九函数串联，站内 css_filter 命中为 0，缺口真实，但与图片复古滤镜（img_retro_filter，输出处理后图片而非 CSS 代码）的边界待 PM 界定，先放观察项，不直接晋升 P2）／CSS 按钮生成器（不立：按钮外观是渐变＋阴影＋圆角＋文字阴影的组合输出，与站内渐变／阴影／圆角／本轮文字阴影四工具高度重叠，单独立项边界不清）／CSS 加载动画生成器（暂缓：环形／圆点／波浪等加载器本质是预设 @keyframes，与留池的 CSS 动画关键帧生成器口径重叠，待动画工具定序后再界定是否另立，不重复立项）／V2EX 搜索（本轮无有效单页工具新信号）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS Flexbox 可视化生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，138 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS Grid 可视化生成器** — P2 留池顺位首席（137 轮新晋 P2；139 轮复核仍未交付；痛点：grid-template-columns／rows、轨道尺寸函数与 grid-template-areas 手写易错，区域跨行跨列全靠脑补坐标，改一处就要重算整张网格；纯前端中难度：行列数＋轨道尺寸编辑（fr／px／%／minmax）＋gap 滑杆＋画布拖拽圈选命名区域＋圣杯／仪表盘／三栏预设＋实时预览＋复制 CSS／HTML 片段，零上传；与 CSS Flexbox 可视化生成器（已交付，只做单维布局）、CSS 转 Tailwind（只做已有声明映射）、九宫格（只做图片九切）口径不重叠；真限制：只做单层显式网格，不做嵌套子网格／subgrid 与多断点批量导出，须明示）。
+2. **CSS 动画关键帧生成器** — P2 留池顺位第二（138 轮新晋 P2；139 轮复核仍未交付；痛点：@keyframes 手写要同时算百分比停靠点、每帧属性与缓动曲线，改一处就要重看完整动画效果，凭代码想象不出动效节奏；纯前端中难度：淡入／滑动／弹跳／旋转／脉冲等预设＋关键帧时间轴增删拖拽＋每帧属性编辑＋时长／延迟／缓动／循环／方向／填充模式控件＋方块／圆形／文字预览＋播放／暂停／重置＋复制 @keyframes 或完整 CSS，零上传；与 CSS 缓动生成器（只产单条 cubic-bezier 曲线）、CSS 渐变／阴影／圆角／clamp 生成器（各只做单类样式）口径不重叠；真限制：只做单元素单动画，不做多元素编排与时间轴联动、不做 JS 驱动动画，须明示）。
+3. **CSS 文字阴影生成器** — 新晋 P2（139 轮新晋；痛点：霓虹辉光／3D 立体字常需 3–10 层 text-shadow 堆叠，手写多层逗号分隔值易错位、改一层就要重算整串，凭代码想象不出辉光与立体效果；纯前端小难度：图层增删＋每层 X／Y 偏移／模糊／颜色／不透明度滑杆＋霓虹／3D／复古／浮雕／长阴影预设＋预览文字／字号／字色／背景编辑＋复制 CSS，零上传；与 CSS 阴影／圆角生成器（只做 box-shadow 与圆角，模板内 text-shadow 命中为 0）、CSS 渐变生成器（只做填充）口径不重叠；真限制：只做 text-shadow 声明，不做 box-shadow 与 filter: drop-shadow()，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；139 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：CSS 滤镜生成器（139 轮观察项新增；filter 九函数串联输出 CSS 代码，与图片复古滤镜的「输出处理后图片」口径不同，但边界待 PM 界定，未晋升 P2）；CSS 特异性计算器（108 轮留池）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 138 轮及之前记录。
+
+**通用候选表增量**（第一百三十九轮：CSS Flexbox 可视化生成器已交付划出（c4bd08a 新增；ID css_flexbox_generator、Path /tools/css-flexbox-generator 已注册；全量 211 Path；候选池划出）；**CSS 文字阴影生成器新晋 P2**；CSS Grid 可视化生成器、CSS 动画关键帧生成器顺位递进；CSS 滤镜生成器新增为观察项；自有实锤消解 10+ 项（榜单群余项为已注册工具、留池／新晋 P2 或重型产品；按钮生成器与站内四工具组合重叠；加载动画生成器与动画关键帧生成器口径重叠暂缓；V2EX 搜索无有效新信号）；全量 211 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS Flexbox 可视化生成器 | 已交付划出（c4bd08a 新增；ID css_flexbox_generator、Path /tools/css-flexbox-generator 已注册；全量 211 Path；候选池划出） | — | 已实现 |
+| CSS 文字阴影生成器 | 多层 text-shadow 手写易错位、辉光与立体效果凭代码想象不出；图层编辑＋预设＋实时预览＋复制 CSS，纯前端零上传 | 小 | P2（新晋） |
+| CSS Grid 可视化生成器 | 复核仍未交付（137 轮 P2，顺位递进为首席）；手写轨道尺寸与 grid-template-areas 易错、跨行跨列靠脑补坐标；轨道编辑＋拖拽圈选命名区域＋预设＋实时预览＋复制 CSS／HTML，纯前端零上传 | 中 | P2（留池） |
+| CSS 动画关键帧生成器 | 复核仍未交付（138 轮 P2，顺位递进为第二）；@keyframes 手写要同时算停靠点、每帧属性与缓动，凭代码想象不出动效节奏；预设＋时间轴编辑＋属性编辑＋实时预览＋复制 CSS，纯前端零上传 | 中 | P2（留池） |
+| CSS 滤镜生成器（观察项） | filter 九函数串联手写易错；滑杆串联＋图片实时预览＋复制 filter 声明，纯前端零上传；与图片复古滤镜边界待 PM 界定 | 小 | 观察项 |
+| 自有实锤消解 | 不立／暂缓（榜单群余项为已注册工具、留池／新晋 P2 或重型产品；按钮生成器与渐变／阴影／圆角／文字阴影组合重叠；加载动画生成器与动画关键帧生成器口径重叠暂缓；V2EX 搜索无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-28 通用调研第一百三十九轮——CSS Flexbox 可视化生成器交付闭环（c4bd08a，`/tools/css-flexbox-generator` 已注册，全量 211 Path），候选池划出；**CSS 文字阴影生成器新晋 P2**；**CSS Grid 可视化生成器、CSS 动画关键帧生成器顺位递进为 Top3 前两位**；仓库 211 注册工具全量核对无重叠（Top3 建议 CSS Grid 可视化生成器／CSS 动画关键帧生成器／CSS 文字阴影生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 c4bd08a（CSS Flexbox 可视化生成器新增）／7cb018a（CSS clip-path 生成器新增）／6711099（SVG 换色器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **211**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-28 21:37 · 产品经理排期轮，接 138 轮调研）
 
 **选定：CSS Flexbox 可视化生成器（css_flexbox_generator）** — 本轮唯一任务（新工具）：
