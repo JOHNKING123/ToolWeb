@@ -1,0 +1,214 @@
+{{define "css_unit_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 单位换算器 - px/rem/em/vw/vh 14 个 CSS 长度单位互转（纯前端）</title>
+    <meta name="description" content="免费在线 CSS 单位换算器：px、rem、em、vw、vh、vmin、vmax、%、pt、pc、in、cm、mm、Q 14 个 CSS 长度单位一键互转，五组上下文（根字号/父级字号/视口宽高/DPI）可调，14 行全单位对照表实时同步、逐行复制，支持复制结果文本与 .txt/.json 下载，纯前端零上传。CSS units converter: px rem em vw vh to all 14 CSS length units, context-aware conversion, 100% client-side.">
+    <meta name="keywords" content="CSS 单位换算器,px 转 rem,rem em vw 换算,CSS 长度单位,css units converter,px to rem,css px rem vw,vmin vmax 换算,pt px 换算,96dpi">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-unit-converter">
+    <meta property="og:title" content="CSS 单位换算器 - 14 个 CSS 长度单位一键互转">
+    <meta property="og:description" content="px/rem/em/vw/vh/vmin/vmax/%/pt/pc/in/cm/mm/Q 互转，根字号/父级字号/视口五组上下文可调，对照表实时同步、逐行复制，支持 .txt/.json 导出；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-unit-converter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 单位换算器","description":"px、rem、em、vw、vh、vmin、vmax、%、pt、pc、in、cm、mm、Q 14 个 CSS 长度单位一键互转，五组上下文（根字号/父级字号/视口宽高/DPI）可调，14 行全单位对照表实时同步、逐行复制，支持复制结果文本与 .txt/.json 下载，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/css-unit-converter","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cuc-wrap .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        .cuc-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .cuc-privacy .cuc-lock { font-size: 1.6rem; flex: none; }
+        .cuc-limits { border: 2px solid #f59e0b; background: #fffbeb; border-radius: .8rem;
+            padding: .9rem 1rem; margin: 0 0 1.2rem; font-size: .92rem; line-height: 1.9; color: #92400e; }
+        .cuc-limits b { display: block; margin-bottom: .15rem; }
+        .cuc-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+        .cuc-panel h3 { margin: 0 0 .8rem; font-size: 1rem; color: #111827; }
+        .cuc-form { display: grid; grid-template-columns: 1fr 1.2fr; gap: .7rem; align-items: end; }
+        .cuc-field label { display: block; font-size: .85rem; color: #6b7280; margin-bottom: .35rem; }
+        .cuc-input, .cuc-select { width: 100%; box-sizing: border-box; padding: .75rem .9rem; font-size: 1.05rem;
+            border: 1px solid #d1d5db; border-radius: .55rem; background: #fff; }
+        .cuc-input { font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .cuc-input:focus, .cuc-select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .cuc-input.cuc-invalid { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.12); }
+        .cuc-error { display: none; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: .55rem; padding: .6rem .9rem; font-size: .9rem; margin-top: .7rem; line-height: 1.7; }
+        .cuc-ctx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; }
+        .cuc-ctx-field label { display: block; font-size: .85rem; color: #374151; margin-bottom: .3rem; font-weight: 600; }
+        .cuc-ctx-field .cuc-basis { display: block; font-size: .78rem; color: #9ca3af; font-weight: 400; margin-top: .3rem; line-height: 1.5; }
+        .cuc-table-wrap { overflow-x: auto; }
+        .cuc-table { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 560px; }
+        .cuc-table th, .cuc-table td { border: 1px solid #e5e7eb; padding: .55rem .7rem; text-align: left; }
+        .cuc-table th { background: #f9fafb; color: #111827; font-weight: 600; white-space: nowrap; }
+        .cuc-table td.cuc-unit { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: #111827; white-space: nowrap; }
+        .cuc-table td.cuc-basis { color: #6b7280; font-size: .82rem; }
+        .cuc-table td.cuc-value { font-family: ui-monospace, Menlo, Consolas, monospace; color: #111827; word-break: break-all; }
+        .cuc-copy-btn { padding: .3rem .9rem; font-size: .82rem; border-radius: .45rem; border: 1px solid #d1d5db;
+            background: #fff; color: #374151; cursor: pointer; white-space: nowrap; }
+        .cuc-copy-btn:hover:not([disabled]) { border-color: var(--primary-color); color: var(--primary-color); }
+        .cuc-copy-btn[disabled] { opacity: .45; cursor: not-allowed; }
+        .cuc-btn { padding: .55rem 1.2rem; font-size: .9rem; border-radius: .55rem; cursor: pointer;
+            border: 1px solid var(--primary-color); background: #fff; color: var(--primary-color); }
+        .cuc-btn:hover:not([disabled]) { background: #eff6ff; }
+        .cuc-btn[disabled] { opacity: .45; cursor: not-allowed; border-color: #d1d5db; color: #9ca3af; }
+        .cuc-btn-primary { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+        .cuc-btn-primary:hover:not([disabled]) { background: #1d4ed8; color: #fff; }
+        .cuc-export-row { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; }
+        .cuc-note { font-size: .88rem; color: #6b7280; margin-top: .7rem; line-height: 1.8; }
+        .cuc-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .cuc-doc b { color: #111827; }
+        .cuc-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .cuc-doc a { color: var(--primary-color); text-decoration: none; }
+        .cuc-doc a:hover { text-decoration: underline; }
+        .cuc-faq dt { font-weight: 600; color: #111827; margin-top: .8rem; }
+        .cuc-faq dd { color: #374151; line-height: 1.9; margin: .3rem 0 0; }
+        .cuc-links { display: flex; gap: .8rem; flex-wrap: wrap; }
+        .cuc-links a { display: inline-block; padding: .5rem 1rem; border: 1px solid #d1d5db; border-radius: .55rem;
+            color: #374151; text-decoration: none; font-size: .9rem; background: #fff; }
+        .cuc-links a:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        @media (max-width: 640px) {
+            .cuc-wrap .container { padding: 1rem; }
+            .cuc-form { grid-template-columns: 1fr; }
+            .cuc-ctx-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cuc-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📐 CSS 单位换算器</h1>
+            <p>14 个 CSS 长度单位一键互转，五组上下文可调，对照表实时同步，纯前端本地计算</p>
+        </div>
+
+        <div class="cuc-privacy">
+            <span class="cuc-lock">🔒</span>
+            <div><b>隐私承诺：输入只在你的浏览器里换算，不收集、不上传。</b><br>
+            纯前端单页应用：单位换算、上下文校验、对照表渲染、复制与文件下载全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 输入任何数字都不会产生网络请求。断网也能用。</div>
+        </div>
+
+        <div class="cuc-limits">
+            <b>⚠️ 真限制（使用前请知悉）</b>
+            · 只做 CSS <b>长度单位</b>换算，不做 ch / ex（依赖具体字体度量）、不做颜色 / 时间 / 角度单位；<br>
+            · <b>vw / vh / vmin / vmax / em / %</b> 的换算结果<b>依赖所填上下文参数</b>（视口宽高、父级字号），换一组参数结果就变；<br>
+            · 绝对单位（pt / pc / in / cm / mm / Q）按 CSS 规范固定 <b>96dpi</b>（1in = 96px）换算，与设备实际 DPI 无关；<br>
+            · 本页零网络请求、零 CDN，输入与结果不出浏览器。
+        </div>
+
+        <div class="cuc-panel">
+            <h3>① 输入数值与源单位</h3>
+            <div class="cuc-form">
+                <div class="cuc-field">
+                    <label for="cuc-value">数值（不要带单位写法，如 16px）</label>
+                    <input id="cuc-value" class="cuc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                        placeholder="例如：16" aria-label="输入数值">
+                </div>
+                <div class="cuc-field">
+                    <label for="cuc-unit">源单位</label>
+                    <select id="cuc-unit" class="cuc-select" aria-label="源单位"></select>
+                </div>
+            </div>
+            <div id="cuc-err-value" class="cuc-error" role="alert"></div>
+        </div>
+
+        <div class="cuc-panel">
+            <h3>② 上下文参数（决定 rem / em / % / vw / vh 的换算基准）</h3>
+            <div class="cuc-ctx-grid">
+                <div class="cuc-ctx-field">
+                    <label for="cuc-ctx-root">根字号（px）</label>
+                    <input id="cuc-ctx-root" class="cuc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="16">
+                    <span class="cuc-basis">rem 的基准（默认 16，即浏览器默认根字号）</span>
+                </div>
+                <div class="cuc-ctx-field">
+                    <label for="cuc-ctx-parent">父级字号（px）</label>
+                    <input id="cuc-ctx-parent" class="cuc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="16">
+                    <span class="cuc-basis">em 与 % 的基准（默认 16，注意与 rem 的根基准不同）</span>
+                </div>
+                <div class="cuc-ctx-field">
+                    <label for="cuc-ctx-vw">视口宽（px）</label>
+                    <input id="cuc-ctx-vw" class="cuc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="1920">
+                    <span class="cuc-basis">vw 的基准（vmin / vmax 也用到）</span>
+                </div>
+                <div class="cuc-ctx-field">
+                    <label for="cuc-ctx-vh">视口高（px）</label>
+                    <input id="cuc-ctx-vh" class="cuc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="1080">
+                    <span class="cuc-basis">vh 的基准（vmin / vmax 也用到）</span>
+                </div>
+                <div class="cuc-ctx-field">
+                    <label for="cuc-ctx-dpi">DPI</label>
+                    <input id="cuc-ctx-dpi" class="cuc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="96">
+                    <span class="cuc-basis">CSS 规范固定 96dpi：绝对单位（pt/pc/in/cm/mm/Q）以此换算</span>
+                </div>
+            </div>
+            <div id="cuc-err-ctx" class="cuc-error" role="alert"></div>
+            <div class="cuc-note">修改任一上下文参数，对照表中 rem / em / vw / vh / vmin / vmax / % 各行即时重算；px 与绝对单位行不受影响。</div>
+        </div>
+
+        <div class="cuc-panel">
+            <h3>③ 14 行全单位对照表（逐行复制）</h3>
+            <div class="cuc-table-wrap">
+                <table class="cuc-table" aria-label="全单位对照表">
+                    <thead>
+                        <tr><th>单位</th><th>基准说明</th><th>换算值</th><th>复制</th></tr>
+                    </thead>
+                    <tbody id="cuc-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="cuc-panel">
+            <h3>④ 导出</h3>
+            <div class="cuc-export-row">
+                <button class="cuc-btn" id="cuc-copy-text" type="button" disabled>复制结果文本</button>
+                <button class="cuc-btn" id="cuc-dl-txt" type="button" disabled>下载 .txt</button>
+                <button class="cuc-btn" id="cuc-dl-json" type="button" disabled>下载 .json</button>
+                <button class="cuc-btn cuc-btn-primary" id="cuc-example" type="button">载入示例</button>
+            </div>
+            <div class="cuc-note" id="cuc-export-note">「载入示例」演示完整流程（16px = 1rem（根 16）= 0.8em（父级 20）= 0.8333vw（1920 视口），直观呈现 em 与 rem 基准不同），无需上传。文件名固定：css-units.txt / css-units.json。</div>
+        </div>
+
+        <div class="cuc-panel">
+            <h3>使用说明与常见问题</h3>
+            <div class="cuc-doc">
+                <dl class="cuc-faq">
+                    <dt>支持哪些单位？</dt>
+                    <dd>14 个 CSS 长度单位：px、rem、em、vw、vh、vmin、vmax、%、pt、pc、in、cm、mm、Q。ch / ex 依赖具体字体度量，本工具不做换算；颜色、时间、角度单位也不在范围内。</dd>
+                    <dt>em 和 rem 有什么区别？</dt>
+                    <dd>rem 的基准是根元素字号（上面「根字号」输入），em 与 % 的基准是父级字号（上面「父级字号」输入）。点「载入示例」看 16px = 1rem（根 16）= 0.8em（父级 20）= 0.8333vw（1920 视口），同一数值在三种基准下各不相同。</dd>
+                    <dt>为什么 vw / vh / em / % 的结果会变？</dt>
+                    <dd>它们是相对单位：vw = 视口宽的 1%，vh = 视口高的 1%，vmin / vmax 取视口两边的较小 / 较大值，em = 父级字号倍数，% = 父级字号的百分之一。改上下文参数，对照表对应行即时重算。</dd>
+                    <dt>绝对单位为什么是 96dpi？</dt>
+                    <dd>按 CSS 规范：绝对单位以 96px = 1in 为基准定义（1pt = 1/72in，1pc = 12pt，1cm = 96/2.54px，1mm = 96/25.4px，1Q = 1/4mm），与设备实际 DPI 无关。所以 16px = 12pt = 1pc 恒成立。</dd>
+                    <dt>结果保留几位小数？</dt>
+                    <dd>最多 4 位小数，四舍五入后去尾零（如 0.166666→0.1667，1.2000→1.2）。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求、零 CDN；复制只写本地剪贴板，下载只生成本地文件。</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="cuc-panel">
+            <h3>相关工具</h3>
+            <div class="cuc-links">
+                <a href="/tools/css-clamp-calculator">📏 CSS clamp 流体尺寸计算器（流体公式 vs 静态单位换算）</a>
+                <a href="/tools/unit-converter">⚖️ 通用单位换算器（绝对单位 vs CSS 相对单位）</a>
+                <a href="/tools/unit-calc-notepad">🧮 单位感知记事本计算器（逐行算式 vs 全单位对照表）</a>
+            </div>
+            <div class="cuc-doc" style="margin-top:.8rem;">
+                <b>实现说明：</b>换算因子、上下文校验、数值格式化均为纯函数（validateCtx / validateValue / toPx / fromPx / convertAll / formatNumber / formatUnitValue / generateExample / suggestExportName），双模式导出供 node 单元测试；非法参数抛错（err.field 给出字段名），不静默钳制；本页 JS 源码无任何网络请求调用。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/css_unit_converter.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,86 @@
+## 今日任务（2026-10-29 13:39 · 产品经理排期轮，接 146 轮调研）
+
+**选定：CSS 单位换算器（css_unit_converter）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（146 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 滚动条样式生成器已交付划出（b81dadb 新增，全量 218 Path），首席顺位自然递进至本项；不再以「按钮更直观／背景图案更新颖」等理由二次跳过——CSS 按钮生成器、CSS 背景图案生成器均不插队。
+- **未选**：CSS 按钮生成器（145 轮新晋 P2、146 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做单个按钮三态规则块，与本项长度单位换算口径不重叠）；CSS 背景图案生成器（145 轮观察项、146 轮晋升 P2 顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做纯 CSS 多渐变组合＋background-size 输出，与本项口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **218 Path**；`git log` 头部 b81dadb（滚动条样式生成器新增）／76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）；本轮 `git fetch` 成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，github.com 主机密钥已补记）。逐项复核：`css-unit` 在 tools/categories.go 中为 0 命中，`button` 为 0 命中，`background-pattern` 为 0 命中（`pattern` 命中 4 次均为已交付项的描述文本：十字绣图案、SVG 背景生成器相关，非路径注册）；templates／static/js／tests 下无 css 单位换算、无按钮生成器、无 CSS 背景图案生成器文件（unit 命中仅已交付的 unit_converter 与 unit_calc_notepad）。近邻再辨析：① **通用单位换算器**（unit_converter）只做绝对单位（px／pt／in／cm／mm 与重量温度数据存储），不含 rem／em／vw／vh／vmin／vmax 等 CSS 相对单位，更无上下文（根字号／父级字号／视口）概念；② **CSS clamp 计算器**（css_clamp_calculator）只出 clamp() 流体公式，不做静态单位换算；③ **单位感知记事本计算器**（unit_calc_notepad）是逐行算式工具，不产全单位对照表。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——px 转 rem／em／vw 全靠心算除 16、除视口宽，根字号一改或换个断点整站尺寸全错，改一处就要重算一串值，凭心算还容易把 em 的父级基准与 rem 的根基准混成一个数；数值＋源单位＋五组上下文＋14 单位对照表＋逐行复制恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，单位换算因子、上下文校验、归一化格式化均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS clamp／渐变／阴影／滚动条／特异性生成器同属「CSS 可视化生成」需求簇：别人产声明或算权重，本项管单位，成组发现时互相导流；⑤ **外部佐证已就位**——144 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 滚动条样式生成器、CSS 特异性计算器、CSS 毛玻璃生成器、CSS 滤镜生成器、CSS 阴影／圆角生成器、CSS 渐变生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 CSS 长度单位换算**——不做 ch／ex（依赖具体字体度量）、不做颜色／时间／角度单位，页面须明示；② **vw／vh／vmin／vmax／em／% 结果依赖所填上下文参数**——换一组根字号或视口结果就变，页面须明示；③ **不收集、不上传任何内容**——全部换算只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 支持单位（14 个，CSS 长度单位）：px、rem、em、vw、vh、vmin、vmax、%、pt、pc、in、cm、mm、Q；`SUPPORTED_UNITS` 按此顺序。
+- 上下文 ctx 字段（全部为正有限数，缺省时取默认值；非法抛 Error，err.field 为字段名）：rootFontSize（根字号，默认 16 px）→ rem 基准；parentFontSize（父级字号，默认 16 px）→ em 与 % 基准；viewportWidth（视口宽，默认 1920 px）→ vw 基准；viewportHeight（视口高，默认 1080 px）→ vh 基准；dpi（默认 96）→ 绝对单位因子。
+- 换算因子（→ px）：px=1；rem=rootFontSize；em=parentFontSize；%=parentFontSize/100；vw=viewportWidth/100；vh=viewportHeight/100；vmin=min(viewportWidth,viewportHeight)/100；vmax=max(viewportWidth,viewportHeight)/100；pt=96/72；pc=16；in=96；cm=96/2.54；mm=96/25.4；Q=96/254（dpi 固定 96 的 CSS 参考像素定义，页面须明示绝对单位按 CSS 规范 96dpi）。
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - `validateCtx(ctx)`：ctx 可缺省（全取默认）；任一已给字段非正有限数返回失败（err.field 为字段名）；返回归一化后的完整 ctx（5 个字段均有值）。
+  - `validateValue(value)`：接受数字或可解析为有限数的字符串（含首尾空白可 trim，如 "16"、"1.5"）；NaN／Infinity／空串／"16px" 等带单位写法返回失败（err.field 为 value；带单位写法明确拒绝，不做猜测解析）。
+  - `toPx(value, unit, ctx)`：先经 validateValue 与 validateCtx 校验，unit 须在 SUPPORTED_UNITS 内；返回 px 数值；非法返回失败。
+  - `fromPx(pxValue, unit, ctx)`：先经校验；返回目标单位数值；非法返回失败。
+  - `formatNumber(n, maxDecimals=4)`：n 有限数；四舍五入到最多 4 位小数，去尾零后返回数字（非字符串）；非法返回失败。
+  - `convertAll(value, unit, ctx)`：先经校验；返回 14 项数组，每项 `{ unit, value }`，value 为 formatNumber 格式化后的数字，顺序与 SUPPORTED_UNITS 一致；非法返回失败。
+  - `formatUnitValue(value, unit)`：value 经 formatNumber 格式化，返回如 `"1.5rem"` 的字符串；非法返回失败。
+  - `generateExample()`：返回固定示例 `{ value: 16, unit: "px", ctx: { rootFontSize: 16, parentFontSize: 20, viewportWidth: 1920, viewportHeight: 1080, dpi: 96 } }`（演示：16px = 1rem（根 16）= 0.8em（父级 20）= 0.8333vw（1920 视口），直观呈现 em 与 rem 基准不同）。
+  - `suggestExportName(kind)`：`txt` → `css-units.txt`，`json` → `css-units.json`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：输入区（数值输入框＋源单位下拉（14 个）＋上下文编辑区：根字号／父级字号／视口宽／视口高／DPI 五个数值输入，各带「基准说明」小字：rem→根字号、em/%→父级字号、vw/vh/vmin/vmax→视口）；对照表（14 行全单位对照：单位｜换算值｜「复制」按钮，输入即实时更新）；导出区（「复制结果文本」「下载 .txt」「下载 .json」「载入示例」按钮，示例无需上传即可演示输入→换算→对照→导出全流程）；非法数值／非法上下文在输入区以红字标出、不阻塞其它控件；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 CSS clamp 计算器（/tools/css-clamp-calculator，文案按「静态单位换算 vs 流体公式」区分）、通用单位换算器（/tools/unit-converter，文案按「CSS 相对单位 vs 绝对单位」区分）、单位感知记事本计算器（/tools/unit-calc-notepad，文案按「全单位对照表 vs 逐行算式」区分）互链；不与未交付的 CSS 按钮生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写换算因子、上下文校验、归一化格式化，不引入任何单位换算库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `css_unit_converter`、Name「CSS 单位换算器」、Path `/tools/css-unit-converter`、Category 开发工具、Icon 建议 straighten（图标库无此名则用 tune 兜底；勿与已用图标在同品类视觉混淆）、New: true；中英文描述＋SEO keywords（CSS 单位换算器、px 转 rem、rem em vw 换算、css units converter、px to rem、CSS 长度单位）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-unit-converter，相关工具互链 CSS clamp 计算器、通用单位换算器、单位感知记事本计算器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_unit_converter`、Path `/tools/css-unit-converter` 注册完整（Category 开发工具），注册总数 218→219 Path。
+2. 校验向量闭环（node 断言）：validateValue 已知值（"16"→16、" 1.5 "→1.5；"16px"、""、NaN 判失败）；validateCtx 已知值（缺省取默认五字段；rootFontSize 0／-1／NaN 判失败，err.field 正确）。
+3. 换算向量闭环（node 断言）：默认 ctx 下 convertAll(16,"px")：rem=1、pt=12、in=0.1667（4 位小数）；generateExample 示例 ctx 下：16px→rem 1、em 0.8、vw 0.8333（1920/100=19.2，16/19.2=0.8333）、% 80；fromPx 逆运算一致；formatNumber 已知值（1.2000→1.2、0.166666→0.1667）。
+4. 导出与示例向量闭环（node 断言）：generateExample 字段与上文规格字面一致；formatUnitValue(1.5,"rem")→"1.5rem"；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+5. 操作闭环（浏览器手工／测试复核）：输入数值＋选源单位→14 行对照表实时同步→改根字号／视口宽→rem／vw 行即时变化→逐行复制按钮可用→复制结果文本、下载 .txt／.json 可用→「载入示例」无需上传即可演示全流程。
+6. 真限制可见：页面可见「只做 CSS 长度单位换算，不做 ch／ex（依赖字体度量）」「vw／vh／em／% 结果依赖所填上下文参数」「绝对单位按 CSS 规范 96dpi」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+7. 操作闭环：相关工具互链含 CSS clamp 计算器、通用单位换算器、单位感知记事本计算器；不含未交付工具的硬凑互链；非法数值／非法上下文有红字降级提示。
+8. node 测试 25+ 断言全过（校验向量、换算向量、导出与示例向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+9. 页面无报错；移动端输入区、上下文编辑区、对照表、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_unit_converter.html`（新增；含 SEO 面板按家族标准＋输入区／上下文编辑区／14 行全单位对照表／导出区）
+- `static/js/css_unit_converter.js`（新增；14 单位换算因子、上下文校验、归一化格式化、全单位对照生成、示例配置、导出命名；双模式导出供 node 测试）
+- `tests/css_unit_converter.test.js`（新增；校验向量、换算向量、导出与示例向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_unit_converter、Path /tools/css-unit-converter、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，github.com 主机密钥已补记）；`git log` 头部 b81dadb（滚动条样式生成器新增）／76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **218**；Top3 候选重叠复核（css-unit／button／background-pattern 在 categories.go 均为 0 路径命中；pattern 命中 4 次均为已交付项描述文本，非路径；templates／static/js／tests 下无 css 单位换算与按钮生成器文件，unit 命中仅已交付的 unit_converter 与 unit_calc_notepad；通用单位换算器只做绝对单位、clamp 计算器只出流体公式、记事本计算器只做逐行算式，辨析见上；CSS 按钮生成器与 CSS 背景图案生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-29 13:00 · 通用调研第一百四十六轮）
+
+**交付状态**：10-29 通用调研第一百四十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 滚动条样式生成器已交付闭环**（b81dadb 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **218 Path**，ID css_scrollbar_generator、Path /tools/css-scrollbar-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:00 轮，优先小／中难度纯前端。
+**本轮三件事**（13:00 全网调研，通用方向）：
+1. CSS 滚动条样式生成器交付确认：`git log` 头部 b81dadb（滚动条生成器新增）／76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）；全量 218 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 已做**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）。
+2. 留池复核仍未交付：CSS 单位换算器、CSS 按钮生成器在 tools/categories.go 中 css-unit／css-button 路径命中均为 0，templates／static/js／tests 下无单位换算／按钮生成器文件（unit 命中仅已交付的 unit_converter 与 unit_calc_notepad），144／145 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 背景图案生成器**（145 轮观察项；cssawwwards 2026 年 25 款免费 CSS 工具榜单中的 CSS Background Pattern Generator 一项：条纹／圆点／网格／棋盘等多渐变组合＋scale／颜色／密度滑杆＋background-size 输出）：**口径核定，观察项晋升 P2**——站内 `svg-background-generator` 只产 SVG 背景代码（模板中仅命中 1 个「棋盘」，属 SVG 路线），`cross-stitch-pattern` 是十字绣刺绣网格（艺术刺绣口径），`css-gradient-generator` 只产单渐变填充声明；本项的新口径是**纯 CSS 多渐变组合＋background-size 输出＋图案平铺预览**，与三者均不重叠；纯前端小难度：图案类型选择（条纹／圆点／网格／棋盘／锯齿／斜线）＋颜色／尺寸／密度／角度滑杆＋平铺预览区＋`background-image`／`background-size` 代码复制／下载，零上传；真限制：只做纯 CSS 多渐变背景图案，不做 SVG 路线、不做单渐变填充（已有渐变生成器），须明示；
+   - **其余信号全部消解，不立**：V2EX md2chat 帖（2026-10-20，Markdown 转聊天图文）——站内**已交付**（categories.go 有「Markdown 聊天图文转换器（md2chat）」完整描述注册，文字版按微信／钉钉／飞书／企微四平台适配＋复杂块 canvas 本地渲染为图片卡片，纯前端零上传），本轮实锤消解；V2EX tubox 纯前端图片工具箱（2026-10-28，昨日新帖，13 工具）——纯前端 11 项站内均已覆盖（批量压缩／改尺寸／格式转换／水印／ZIP 下载＝img-compress／img-resize／img-convert 等；证件照冲印排版＝id_photo_maker 模板含「冲印」「排版」；拼图／长图／九宫格＝img-stitch；标注＝image_annotator；二维码已注册；EXIF 查看清除＝站内已注册；GIF／视频转 GIF 已注册），仅 AI 抠图／AI 高清放大／AI 换底需后端＋模型 → 低优先不立；HN Tiny Little Office 文档即 URL（2026-10-15，643 points，document is the link）——站内 `/tools/url-note-share` 已覆盖（DEFLATE＋base64url 进 URL fragment，可选 WebCrypto AES-GCM 口令加密，纯前端零上传），实锤消解；WallHop 付费墙绕过（12ft.io 替代，HN 头版）——付费墙绕过涉版权与法律灰色地带＋需后端抓取 → 不立；yolo-ai／xGoose／protohub 均为 CLI／浏览器插件／原型托管产品，非单页网页工具口径 → 不立；dev.to 13 工具榜单（2026）／25 工具榜单——站内全覆盖（HTML 实体＝/tools/html-entities；JSON Schema＝/tools/json-schema-validator；Markdown 预览＝/tools/markdown-preview；URL 编解码＝/tools/url-codec；其余 JSON／Base64／UUID／二维码／CSS 压缩等均已注册），实锤消解；V2EX 其余帖子本轮无有效新信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 滚动条样式生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，145 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，观察项晋升 P2 补第三顺位）：
+
+1. **CSS 单位换算器** — P2 留池顺位首席（144 轮新晋 P2；146 轮复核仍未交付；痛点：px 转 rem／em／vw 全靠心算除 16、除视口宽，根字号一改或换个断点整站尺寸全错，改一处就要重算一串值，凭心算还容易把 em 的父级基准与 rem 的根基准混成一个数；纯前端小难度：数值＋源单位＋根字号／父级字号／视口宽高／DPI 上下文＋全单位对照表＋复制单个值，零上传；与站内单位换算器（绝对单位）、CSS clamp 计算器（流体公式）、单位感知记事本计算器（逐行算式）口径不重叠；真限制：只做 CSS 长度单位换算，不做 ch／ex（依赖字体度量），vw／vh／em 结果依赖所填上下文参数，须明示）。
+2. **CSS 按钮生成器** — P2 留池顺位第二（145 轮新晋 P2；146 轮复核仍未交付；痛点：从零写一个按钮要配齐背景／边框／圆角／内边距／字体／阴影六组值，再给 hover／focus／active 各复制一遍改色改阴影，漏一个态线上就是半成品手感，凭代码想象不出按钮按下去的反馈；纯前端小难度：六组值滑杆＋三态切换编辑＋预设＋按钮实时预览（可悬停／聚焦实测）＋完整规则块复制／下载，零上传；与站内阴影／圆角生成器（只产 box-shadow 与圆角）、渐变生成器（只产填充声明）口径不重叠——本项的新口径是三态管理与完整规则块；真限制：只做单个按钮规则块，不做整套组件库、不做图标与动效库，须明示）。
+3. **CSS 背景图案生成器** — 观察项晋升 P2（145 轮观察项；146 轮口径核定：站内 SVG 背景生成器只产 SVG 代码、十字绣图案属刺绣网格、渐变生成器只产单填充声明，本项纯 CSS 多渐变组合＋background-size 输出是独立新口径；痛点：手写条纹／圆点／棋盘背景要反复调 repeating-gradient 的色标断点与 background-size，平铺接缝算不对就是一条条错位线，凭代码想象不出图案密度；纯前端小难度：六种图案类型＋颜色／尺寸／密度／角度滑杆＋平铺预览区＋`background-image`／`background-size` 代码复制／下载，零上传；真限制：只做纯 CSS 多渐变背景图案，不做 SVG 路线、不做单渐变填充，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；146 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 145 轮及之前记录。
+
+**通用候选表增量**（第一百四十六轮：CSS 滚动条样式生成器已交付划出（b81dadb 新增；ID css_scrollbar_generator、Path /tools/css-scrollbar-generator 已注册；全量 218 Path；候选池划出）；**CSS 背景图案生成器由观察项晋升 P2**；CSS 单位换算器、CSS 按钮生成器顺位递进；自有实锤消解 30+ 项（V2EX md2chat 帖：站内已交付；V2EX tubox 13 工具：纯前端 11 项站内均已覆盖，仅 AI 类需后端不立；HN Tiny Little Office 文档即 URL：站内 /tools/url-note-share 已覆盖；dev.to 13／25 工具榜单站内全覆盖；WallHop／yolo-ai／xGoose／protohub 口径不符或涉后端／版权不立）；全量 218 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 滚动条样式生成器 | 已交付划出（b81dadb 新增；ID css_scrollbar_generator、Path /tools/css-scrollbar-generator 已注册；全量 218 Path；候选池划出） | — | 已实现 |
+| CSS 背景图案生成器 | 手写条纹／圆点／棋盘背景要反复调 repeating-gradient 色标断点与 background-size，平铺接缝错位；六种图案类型＋颜色／尺寸／密度／角度滑杆＋平铺预览区＋background-image／background-size 代码复制／下载，纯前端零上传；站内 SVG 背景生成器（只产 SVG）、十字绣图案（刺绣网格）、渐变生成器（单填充声明）口径均不重叠 | 小 | P2（新晋） |
+| CSS 单位换算器 | 复核仍未交付（144 轮 P2，顺位递进为首席）；px 转 rem／em／vw 靠心算、根字号与父级基准易混；数值＋源单位＋四组上下文＋全单位对照表＋复制单个值，纯前端零上传 | 小 | P2（留池） |
+| CSS 按钮生成器 | 复核仍未交付（145 轮 P2，顺位递进为第二）；从零写按钮六组值＋三态各复制一遍、漏态即半成品手感；六组值滑杆＋三态切换编辑＋预设＋实时预览（可悬停／聚焦实测）＋完整规则块复制／下载，纯前端零上传 | 小 | P2（留池） |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十六轮——CSS 滚动条样式生成器交付闭环（b81dadb，`/tools/css-scrollbar-generator` 已注册，全量 218 Path），候选池划出；**CSS 背景图案生成器由 145 轮观察项晋升 P2**；**CSS 单位换算器、CSS 按钮生成器顺位递进为 Top3 前两位**；新信号扫描以 V2EX 昨日 tubox 帖、10-20 md2chat 帖、HN Tiny Little Office（10-15，643 points）、dev.to 13／25 工具榜单为主线，全部自有实锤消解或口径不符（消解 30+ 项；AI 抠图／放大需后端标低优先不立；WallHop 涉版权灰色不立）；Top3 建议 CSS 单位换算器／CSS 按钮生成器／CSS 背景图案生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 b81dadb（滚动条生成器新增）／76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **218**；`git fetch` 本轮已做（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-29 11:40 · 产品经理排期轮，接 145 轮调研）
 
 **选定：CSS 滚动条样式生成器（css_scrollbar_generator）** — 本轮唯一任务（新工具）：

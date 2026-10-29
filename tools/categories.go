@@ -616,6 +616,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_unit_converter",
+					Name:        "CSS 单位换算器",
+					Description: "14 个 CSS 长度单位（px/rem/em/vw/vh/vmin/vmax/%/pt/pc/in/cm/mm/Q）一键互转：五组上下文（根字号/父级字号/视口宽高/DPI）可调，14 行全单位对照表实时同步、逐行复制，复制结果文本与 .txt/.json 下载，纯前端零上传 · CSS units converter: px rem em vw vh to all 14 CSS length units, context-aware conversion, copy/download results, 100% client-side",
+					Path:        "/tools/css-unit-converter",
+					Icon:        "straighten",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "css_shadow_radius_generator",
 					Name:        "CSS 阴影与圆角生成器",
 					Description: "滑杆调 box-shadow 水平/垂直偏移、模糊、扩散、颜色、透明度与 inset 内阴影，四角滑杆调 border-radius，支持联动/独立与椭圆斜杠语法，实时预览，各自复制＋合并复制＋下载 shadow-radius.css，4 组预设请按需改写，纯前端零上传 · CSS shadow & radius generator: box-shadow sliders, inset toggle, border-radius linked/independent corners, elliptical slash syntax, live preview, copy/download, 100% client-side",
