@@ -199,8 +199,8 @@ function buildExportH(value, prefix) {
   lines.push(generateMacros(value, prefix));
   lines.push('');
   lines.push('/* 用法示例：');
-  lines.push(' * ' + p + '_SET_MASK |=' + ' 置位：REG |= ' + p + '_SET_MASK;   // 或 REG |= (' + p + '_BIT3 | ' + p + '_BIT7);');
-  lines.push(' * 清零：   REG &= ' + p + '_CLR_MASK;');
+  lines.push(' * ' + p + '_SET_MASK |=' + ' 置位：' + p + ' |= ' + p + '_SET_MASK;   // 或 ' + p + ' |= (' + p + '_BIT3 | ' + p + '_BIT7);');
+  lines.push(' * 清零：   ' + p + ' &= ' + p + '_CLR_MASK;');
   lines.push(' */');
   lines.push('#endif /* REGISTER_BITFIELD_H */');
   return lines.join('\n');
@@ -265,11 +265,6 @@ function downloadText(name, text) {
 }
 
 var currentValue = 0;   /* 寄存器当前值（0–4294967295） */
-
-function esc(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 function setText(id, text) {
   var el = $(id);
@@ -421,7 +416,8 @@ function init() {
       toast('下载失败：' + e.message);
     }
   });
-  render();
+  /* 首屏以输入框预填值初始化（当前预填 0xDEADBEEF，自动识别为 hex） */
+  refreshFromInputs();
 }
 
 /* syncInputFromValue：快捷按钮改值后，把输入框同步为 HEX 表达 */
