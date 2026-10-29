@@ -1,0 +1,164 @@
+{{define "css_background_pattern_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 背景图案生成器 - 条纹圆点棋盘网格斜线锯齿平铺图案 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 背景图案生成器：条纹／圆点／棋盘／网格／斜线／锯齿六种无缝平铺图案，底色＋图案色取色器，单元尺寸／色带占比／圆点直径／线宽／角度滑杆实时调参，大面积平铺预览，一键复制 background-color／background-image／background-size 三声明，下载 background-pattern.css 与演示页。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 背景图案生成器,平铺背景图案,repeating-gradient,css background pattern,条纹背景,圆点背景,棋盘格,网格背景,锯齿背景,background-size">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-background-pattern-generator">
+    <meta property="og:title" content="CSS 背景图案生成器 - 六种无缝平铺图案可视化生成">
+    <meta property="og:description" content="六种纯 CSS 多渐变平铺图案：条纹／圆点／棋盘／网格／斜线／锯齿，滑杆实时调参，大面积预览，一键复制三声明 CSS。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-background-pattern-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 背景图案生成器","description":"免费在线 CSS 背景图案生成器：六种无缝平铺图案可视化生成，一键复制 background-color／background-image／background-size 三声明，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-background-pattern-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cbp-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .cbp-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .cbp-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .cbp-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .cbp-err { color:#dc2626; font-size:.88rem; margin:.4rem 0 0; display:none; }
+        .cbp-tabs { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.6rem; }
+        .cbp-tab { padding:.6rem .7rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; text-align:left; }
+        .cbp-tab:hover { border-color:var(--primary-color); }
+        .cbp-tab-active { border-color:var(--primary-color); color:var(--primary-color); font-weight:600; background:#eff6ff; }
+        .cbp-tab b { display:block; font-size:.92rem; margin-bottom:.15rem; }
+        .cbp-tab span { font-size:.78rem; color:#9ca3af; font-weight:400; }
+        .cbp-colors { display:flex; gap:1.2rem; flex-wrap:wrap; margin-bottom:.6rem; }
+        .cbp-color-item { display:flex; gap:.5rem; align-items:center; }
+        .cbp-color-item label { font-size:.9rem; color:#374151; }
+        .cbp-color-item input[type=color] { width:44px; height:34px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .cbp-color-item input[type=text] { width:96px; padding:.35rem .5rem; border:1px solid #d1d5db; border-radius:.4rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; }
+        .cbp-row { display:flex; gap:.5rem; align-items:center; margin:.55rem 0; flex-wrap:wrap; }
+        .cbp-row label { font-size:.88rem; color:#374151; min-width:7em; }
+        .cbp-row input[type=range] { flex:1; min-width:110px; }
+        .cbp-row input[type=number] { width:64px; padding:.3rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.88rem; }
+        .cbp-row-off { opacity:.35; }
+        .cbp-unit { font-size:.85rem; color:#9ca3af; min-width:2em; }
+        .cbp-preview-wrap { border:1px solid #e5e7eb; border-radius:.7rem; overflow:hidden; }
+        .cbp-preview { min-height:340px; }
+        .cbp-summary { margin:.6rem 0 0; color:#6b7280; font-size:.88rem; }
+        .cbp-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; max-height:420px; overflow:auto; }
+        .cbp-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .cbp-btn { padding:.55rem 1.1rem; border-radius:.5rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .cbp-btn:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .cbp-btn-primary { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .cbp-btn-primary:hover { filter:brightness(.95); color:#fff; }
+        .cbp-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .cbp-tip a { color:var(--primary-color); }
+        .cbp-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .cbp-links a { color:var(--primary-color); font-size:.93rem; }
+        .cbp-link-note { font-size:.82rem; color:#9ca3af; margin-left:.4rem; }
+        .cbp-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .cbp-preview { min-height:220px; }
+            .cbp-row input[type=number] { width:56px; }
+            .cbp-row label { min-width:6em; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="cbp-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧱 CSS 背景图案生成器</h1>
+            <p>六种无缝平铺图案可视化生成：调参即时预览，一键复制三声明 CSS</p>
+        </div>
+        <div class="tool-content">
+            <div class="cbp-card">
+                <h3>选择图案 <span class="cbp-hint">（点击切换，预览区实时同步）</span></h3>
+                <div class="cbp-tabs" id="cbp-patterns"></div>
+            </div>
+
+            <div class="cbp-card">
+                <h3>参数 <span class="cbp-hint">（滑杆与数值框联动；与当前图案无关的参数自动置灰）</span></h3>
+                <div class="cbp-colors">
+                    <div class="cbp-color-item">
+                        <label for="cbp-bg-color">底色</label>
+                        <input type="color" id="cbp-bg-color" value="#ffffff">
+                        <input type="text" id="cbp-bg-text" value="#ffffff" spellcheck="false" aria-label="底色 HEX">
+                    </div>
+                    <div class="cbp-color-item">
+                        <label for="cbp-fg-color">图案色</label>
+                        <input type="color" id="cbp-fg-color" value="#2563eb">
+                        <input type="text" id="cbp-fg-text" value="#2563eb" spellcheck="false" aria-label="图案色 HEX">
+                    </div>
+                </div>
+                <div id="cbp-params"></div>
+                <p class="cbp-err" id="cbp-err"></p>
+            </div>
+
+            <div class="cbp-card">
+                <h3>平铺预览 <span class="cbp-hint">（大面积平铺，可检查接缝是否错位）</span></h3>
+                <div class="cbp-preview-wrap">
+                    <div class="cbp-preview" id="cbp-preview"></div>
+                </div>
+                <p class="cbp-summary" id="cbp-summary"></p>
+            </div>
+
+            <div class="cbp-card">
+                <h3>CSS 代码 <span class="cbp-hint">（三条声明，直接粘贴进样式表即用）</span></h3>
+                <pre class="cbp-code" id="cbp-code"></pre>
+                <div class="cbp-actions">
+                    <button class="cbp-btn cbp-btn-primary" id="cbp-copy" type="button">复制 CSS</button>
+                    <button class="cbp-btn" id="cbp-dl-css" type="button">下载 background-pattern.css</button>
+                    <button class="cbp-btn" id="cbp-dl-html" type="button">下载演示页</button>
+                    <button class="cbp-btn" id="cbp-example" type="button">载入示例</button>
+                </div>
+            </div>
+
+            <div class="cbp-card">
+                <h3>使用说明</h3>
+                <ol class="cbp-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>先选一种图案，再调底色／图案色与滑杆参数，预览区会实时平铺渲染，重点看单元边界有无接缝错位。</li>
+                    <li>滑杆与数值框双向联动，可直接输入精确数值；颜色可用取色器，也可直接输入 #RGB／#RRGGBB。</li>
+                    <li>与当前图案无关的参数会自动置灰（如棋盘格没有角度／线宽可调），避免调了没效果的困惑。</li>
+                    <li>点「载入示例」可一键看到棋盘格示例（底色 #ffffff、图案色 #e5e7eb、单元 40px），再按需改写；复制 CSS 或下载 background-pattern.css 后粘贴进样式表即用。</li>
+                    <li>「下载演示页」会生成内嵌当前图案的 background-pattern-demo.html，离线打开即可向他人演示平铺效果。</li>
+                    <li>斜线与条纹构造相同、默认角度与参数独立：条纹默认 90°（纵向），斜线默认 45°。</li>
+                </ol>
+            </div>
+
+            <div class="cbp-card">
+                <h3>常见问题</h3>
+                <dl class="cbp-tip">
+                    <dt><b>为什么锯齿图案的代码里中间那条是 background 简写，而不是 background-image？</b></dt>
+                    <dd>锯齿的四层渐变中有两层带半个单元的横向偏移（消除接缝用），而 background-image 声明依法不能携带位置信息——浏览器会整条丢弃。用 background 简写承载「四层图像＋位置」，输出仍是三条声明，粘贴即用。</dd>
+                    <dt><b>预览有细微接缝／锯齿边缘发虚怎么办？</b></dt>
+                    <dd>多为浏览器对渐变硬色标的抗锯齿渲染差异：圆点边缘有 1px 过渡是刻意留的；若条纹／棋盘边界出现 1px 亮线，试着把平铺单元调大（如 40px 以上）或换用偶数单元。</dd>
+                    <dt><b>输出的 CSS 能直接用在生产环境吗？</b></dt>
+                    <dd>可以。三条声明均为标准 CSS，无浏览器前缀、无实验特性；repeating-linear-gradient／conic-gradient／radial-gradient 均为现代浏览器广泛支持。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部生成在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="cbp-card">
+                <h3>相关工具</h3>
+                <div class="cbp-links">
+                    <a href="/tools/svg-background-generator">SVG 波形／斑点背景生成器</a><span class="cbp-link-note">（SVG 代码路线；本工具只做纯 CSS 多渐变平铺图案）</span>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器</a><span class="cbp-link-note">（单填充渐变声明；本工具做平铺组合图案）</span>
+                </div>
+            </div>
+
+            <div class="cbp-card">
+                <h3>真限制说明</h3>
+                <div class="cbp-tip">
+                    <b>只做纯 CSS 多渐变背景图案</b>——不做 SVG 路线、不做单渐变填充；<b>只输出 background-color／background-image／background-size 三声明</b>（锯齿图案的位置信息并入 background 简写，仍为三条），不拼选择器、不加浏览器前缀；<b>不收集、不上传</b>——全部生成只在浏览器本地完成，本页面零网络请求，文本不出浏览器。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="cbp-toast" id="cbp-toast"></div>
+    <script src="/tools/static/js/css_background_pattern_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

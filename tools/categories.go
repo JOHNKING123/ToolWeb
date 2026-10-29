@@ -490,6 +490,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_background_pattern_generator",
+					Name:        "CSS 背景图案生成器",
+					Description: "六种纯 CSS 多渐变无缝平铺背景图案：条纹／圆点／棋盘／网格／斜线／锯齿，底色＋图案色取色器，单元尺寸／色带占比／圆点直径／线宽／角度滑杆实时调参，大面积平铺预览，一键复制 background-color／background-image／background-size 三声明，下载 background-pattern.css 与演示页，纯前端零上传 · CSS background pattern generator: 6 seamless tiled patterns, live preview, copy CSS, 100% client-side",
+					Path:        "/tools/css-background-pattern-generator",
+					Icon:        "wallpaper",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color_palette_generator",
 					Name:        "配色方案生成器",
 					Description: "一个基色生成 6 种和谐配色：互补/类比/三角色/分裂互补/四方形/单色 HSL 色轮方案，色板点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端零上传 · Color palette generator: 6 harmonious schemes from one base color, copy HEX & CSS variables, WCAG contrast, 100% client-side",

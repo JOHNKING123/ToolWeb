@@ -1,3 +1,93 @@
+## 今日任务（2026-10-29 17:00 · 产品经理排期轮，接 148 轮调研）
+
+**选定：CSS 背景图案生成器（css_background_pattern_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（148 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 按钮生成器已交付划出（bcb877a 新增＋660b96a 评审修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **220 Path**），首席顺位自然递进至本项；不再以「Modbus 更新信号／寄存器位编辑器更新颖」等理由二次跳过——Modbus RTU 帧生成与校验器、寄存器位域查看与编辑器均不插队。
+- **未选**：Modbus RTU 帧生成与校验器（147 轮新晋 P2、148 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；完整 RTU 帧组装与解析口径，与本项 CSS 视觉生成完全不同赛道）；寄存器位域查看与编辑器（148 轮新信号新晋 P2，**无硬伤，留池顺位第三——同上，仅顺位后置**；32 位位图可视化点击置位/清零→HEX＋C 宏定义口径，与本项 CSS 背景口径不重叠；与 Modbus 同属嵌入式开发簇，成组时 Modbus 顺位优先）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`git fetch` 成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，github.com 主机密钥已补记）；本地当前分支 muse/dev-20260929，远端 origin/muse/dev-20260929 存在；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **220**；`git log` 头部 660b96a（评审修复）／bcb877a（按钮生成器新增）／d2b1f8d（单位换算器新增）。逐项复核：`background-pattern`／`bg_pattern` 在 tools/categories.go 中为 0 命中；`modbus` 为 0 命中（`crc` 命中仅已交付的 crc_checksum_calculator 裸校验和口径，不含帧组装）；`register`／位域为 0 命中；templates／static/js／tests 下无背景图案生成器／modbus 帧／寄存器位编辑器文件（`pattern` 命中仅已交付的 cross_stitch_pattern 十字绣图案与 svg_background_generator 相关）。近邻再辨析：① **SVG 背景生成器**（svg_background_generator）只产 SVG 代码，本项只产纯 CSS 多渐变 `background-image`＋`background-size` 声明，技术路线正交；② **CSS 渐变生成器**（css_gradient_generator）只产单个填充的 background 渐变声明，不做平铺 tile 尺寸与接缝，也不做棋盘／网格／圆点等六种组合图案；③ **照片转十字绣图案生成器**（cross_stitch_pattern）是刺绣网格，介质与口径不同；④ **CSS 阴影与圆角生成器**只产 box-shadow／border-radius，与背景图案无关。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——手写 repeating-gradient 色标断点与 background-size，平铺接缝算不对就是一条条错位线，凭代码想象不出图案密度；六种图案切换＋颜色／尺寸／密度／角度滑杆＋大面积平铺预览区＋`background-color`／`background-image`／`background-size` 复制／下载恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，图案参数校验、渐变函数拼接、平铺尺寸计算均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 渐变生成器、CSS 按钮生成器、SVG 背景生成器同属「CSS 视觉生成」需求簇：别人管单填充／按钮规则块／SVG 代码，本项管纯 CSS 平铺图案，成组发现时互相导流；⑤ **缺口已实锤**——148 轮复核站内 0 命中真缺口，至今未被消解。
+- **品类归位**：注册到「开发工具」品类（与 CSS 渐变生成器、CSS 按钮生成器、CSS 单位换算器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做纯 CSS 多渐变背景图案**——不做 SVG 路线、不做单渐变填充，页面须明示；② **只输出 background-color／background-image／background-size 三声明**——不做完整组件样式，页面须明示；③ **不收集、不上传任何内容**——全部生成只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 六种图案（`PATTERNS` 顺序）：stripes 条纹、dots 圆点、checkerboard 棋盘、grid 网格、diagonal 斜线、zigzag 锯齿。
+- config 结构：`{ pattern, bg（底色 hex), fg（图案色 hex), size（平铺单元 px，8–160), stripeWidthPct（条纹/斜线色带占比 10–90，默认 50), dotDiameterPct（圆点直径占比 10–90，默认 50), gridLinePx（网格线宽 1–8，默认 2), angle（条纹/斜线角度 0–90，stripes 默认 90，diagonal 默认 45) }`。
+- 无缝平铺构造（开发轮按此实现，node 断言锁死字面）：
+  - stripes：`repeating-linear-gradient({angle}deg, {fg} 0, {fg} {d}px, {bg} {d}px, {bg} {size}px)`，`background-size: {size}px {size}px`（d = size × stripeWidthPct / 100，四舍五入取整）
+  - dots：`background-color: {bg}`；`background-image: radial-gradient(circle, {fg} {r}px, transparent {r+1}px)`，`background-size: {size}px {size}px`（r = size × dotDiameterPct / 200，四舍五入取整）
+  - checkerboard：`background-color: {bg}`；`background-image: conic-gradient({fg} 0 25%, {bg} 0 50%, {fg} 0 75%, {bg} 0)`，`background-size: {size}px {size}px`
+  - grid：`background-color: {bg}`；`background-image: linear-gradient({fg} {w}px, transparent {w}px), linear-gradient(90deg, {fg} {w}px, transparent {w}px)`，`background-size: {size}px {size}px`（w = gridLinePx）
+  - diagonal：与 stripes 同构造，默认 angle=45（页面标注与条纹的区别：默认角不同＋参数独立）
+  - zigzag：经典四层锯齿——`background-image: linear-gradient(135deg, {fg} 25%, transparent 25%) -{size/2}px 0, linear-gradient(225deg, {fg} 25%, transparent 25%) -{size/2}px 0, linear-gradient(315deg, {fg} 25%, transparent 25%), linear-gradient(45deg, {fg} 25%, transparent 25%)`；`background-color: {bg}`；`background-size: {size}px {size}px`
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - `validateConfig(config)`：pattern 须在 PATTERNS 内；颜色须 #RGB/#RRGGBB；数值须有限数且在允许范围；返回归一化 config；非法抛 Error，err.field 形如 "size"／"bg"。
+  - `buildBackgroundCSS(config)`：返回 `{ backgroundColor, backgroundImage, backgroundSize }` 三个声明值字符串；非法抛 Error。
+  - `buildFullCSS(config)`：返回完整 CSS 声明文本（多行，每行 `  prop: value;`，含 background-color／background-image／background-size）；非法抛 Error。
+  - `buildDemoHTML(config)`：返回自包含演示页 HTML（预览块应用图案＋内嵌 CSS＋中文说明）；非法抛 Error。
+  - `PATTERNS`：6 项 `{ id, name, desc }`，可直接渲染图案切换器。
+  - `generateExample()`：返回固定示例 config（checkerboard 棋盘，bg #ffffff、fg #e5e7eb、size 40），演示平铺接缝无错位。
+  - `suggestExportName(kind)`：`css` → `background-pattern.css`，`html` → `background-pattern-demo.html`，其它 kind 返回失败。
+- 界面：图案切换器（六种按钮）；参数区（底色／图案色取色器＋size／stripeWidthPct／dotDiameterPct／gridLinePx／angle 滑杆与数值框联动，无关参数按当前图案灰显）；平铺预览区（大面积应用当前 background，实时同步）；代码输出区（完整三声明，语法高亮可选）；操作区（「复制 CSS」「下载 background-pattern.css」「下载演示页」「载入示例」；示例无需上传即可演示选图案→调参→预览→代码→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 SVG 背景生成器（/tools/svg-background-generator，文案按「纯 CSS 平铺图案 vs SVG 代码」区分）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「平铺组合图案 vs 单填充渐变声明」区分）互链；不与未交付工具互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写渐变拼接、参数校验、CSS 文本生成，不引入任何 CSS-in-JS 库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `css_background_pattern_generator`、Name「CSS 背景图案生成器」、Path `/tools/css-background-pattern-generator`、Category 开发工具、Icon 建议 wallpaper（图标库无此名则用 texture 兜底；勿与已用图标在同品类视觉混淆）、New: true；中英文描述＋SEO keywords（CSS 背景图案生成器、平铺背景图案、repeating-gradient、css background pattern、条纹 圆点 棋盘 网格）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-background-pattern-generator，相关工具互链 SVG 背景生成器、CSS 渐变生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_background_pattern_generator`、Path `/tools/css-background-pattern-generator` 注册完整（Category 开发工具），注册总数 220→221 Path。
+2. 校验向量闭环（node 断言）：validateConfig 非法颜色（"red"／"#12"）判失败 err.field 正确；size 越界（7／161）判失败；非法 pattern 判失败。
+3. 生成向量闭环（node 断言）：generateExample 示例 config 经 buildBackgroundCSS 输出 backgroundImage 含 `conic-gradient` 字面、backgroundSize 为 `40px 40px`；stripes 输出含 `repeating-linear-gradient` 与对应角度；dots 输出含 `radial-gradient`；zigzag 输出含 4 个 `linear-gradient(`；buildFullCSS 输出含 background-color／background-image／background-size 三声明行；suggestExportName 两 kind 文件名正确、其它 kind 失败；buildDemoHTML 输出含示例图案 CSS 与中文说明字面。
+4. 操作闭环（浏览器手工／测试复核）：切六种图案→平铺预览区实时同步、无接缝错位→调 size／密度／角度滑杆预览即时变化→复制 CSS、下载 background-pattern.css／background-pattern-demo.html 可用→「载入示例」无需上传即可演示全流程。
+5. 真限制可见：页面可见「只做纯 CSS 多渐变背景图案，不做 SVG 路线、不做单渐变填充」「只输出 background-color／background-image／background-size 三声明」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+6. 操作闭环：相关工具互链含 SVG 背景生成器、CSS 渐变生成器；不含未交付工具的硬凑互链。
+7. node 测试 25+ 断言全过（校验向量、生成向量、导出与示例向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+8. 页面无报错；移动端图案切换器、参数区、预览区、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_background_pattern_generator.html`（新增；含 SEO 面板按家族标准＋图案切换器／参数区／平铺预览区／代码输出区／操作区）
+- `static/js/css_background_pattern_generator.js`（新增；六种图案参数校验、渐变拼接、平铺尺寸计算、三声明 CSS 生成、演示页生成、示例配置、导出命名；双模式导出供 node 测试）
+- `tests/css_background_pattern_generator.test.js`（新增；校验向量、生成向量、导出与示例向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_background_pattern_generator、Path /tools/css-background-pattern-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，github.com 主机密钥已补记）；`git log` 头部 660b96a（评审修复）／bcb877a（按钮生成器新增）／d2b1f8d（单位换算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **220**；Top3 候选重叠复核（background-pattern／bg_pattern 0 命中；modbus 0 命中；register／位域 0 命中；crc 命中仅已交付的 crc_checksum_calculator 裸校验和口径；templates／static/js／tests 下无背景图案生成器／modbus 帧／寄存器位编辑器文件，pattern 命中仅已交付的 cross_stitch_pattern 与 svg_background_generator；Modbus／寄存器位编辑器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-29 17:36 · 通用调研第一百四十八轮）
+
+**交付状态**：10-29 通用调研第一百四十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 按钮生成器已交付闭环**（bcb877a 新增＋660b96a 评审反馈修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **220 Path**，ID css_button_generator、Path /tools/css-button-generator 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 轮，优先小／中难度纯前端。
+**本轮三件事**（17:36 全网调研，通用方向）：
+1. CSS 按钮生成器交付确认：`git log` 头部 660b96a（评审修复）／bcb877a（按钮生成器新增）／d2b1f8d（单位换算器新增）；全量 220 Path；ID `css_button_generator`、Path `/tools/css-button-generator` 双注册；本地当前分支 muse/dev-20260929。
+2. 留池复核仍未交付：CSS 背景图案生成器（`background-pattern` 路径 0 命中）、Modbus RTU 帧生成与校验器（`modbus` 路径 0 命中，crc 命中仅已交付的 crc_checksum_calculator 裸校验和口径）146／147 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；HEX ↔ C 数组互转器（147 轮观察项）站内仍无专用工具（hex 命中仅颜色/HMAC/进制描述文本），观察项保持。
+3. 新信号扫描（以 V2EX 今日 EmbedKit 嵌入式工具箱帖为主线，帖内 8 项功能逐项核口径）：
+   - **寄存器位域查看与编辑器**（EmbedKit 今日帖核心功能之一，站内 0 命中）：**站内真缺口，新晋 P2**——痛点：调寄存器时要对着手册数第几位是哪个使能位，写 `#define` 宏要手动算 `(1u << n)`，位一数错驱动就翻车；纯前端小／中难度：输入 32 位寄存器值→32 位位图可视化点击置位/清零→实时输出 HEX＋C 宏定义（`#define REG_x (1u << n)`／位域掩码），零上传；与站内位运算计算器（122 轮观察项，未交付，纯算式口径）不重叠（本项是可视化位编辑＋宏输出）；与 Modbus RTU 帧生成与校验器同属「嵌入式开发」需求簇，成组发现时互导；真限制：只做位级可视化编辑与宏生成，不做寄存器地址映射数据库（芯片型号太多），须明示；
+   - **MAP 文件内存分析器**（EmbedKit 同帖 MAP 文件内存分析）：观察项新增——linker MAP 文件粘贴→解析段/符号内存占用统计，纯前端文本解析可实现；但 MAP 格式因工具链而异（GCC／ARMCC／IAR 三家格式不同），首版口径待 PM 裁定（先做 GCC map 还是全覆盖），暂不晋 P2；
+   - **Markdown 转公众号／X 长文排版器**（weichen.ink X 运营工具箱帖推荐「烁皓的工具箱」）：观察项新增——Markdown→公众号编辑器可粘贴的内联样式 HTML／X 长文纯文本排版，一键复制，纯前端小难度；但站内 md2chat 已覆盖「Markdown→微信/钉钉/飞书/企微聊天图文」，本项口径是其近亲（排版转换 vs 聊天图文），口径待 PM 裁定：与 md2chat 合并或单独立项；
+   - **其余信号全部消解，不立**：EmbedKit 其余项——CRC／进制转换／HEX↔C 数组站内已有或已在观察项（147 轮结论延续）；Web Serial 串口监视器需硬件＋浏览器 API，非单页闭环（146 轮已判）；OneNET MQTT 参数生成平台特定、口径过窄＋规则随平台变，不立；xGoose 浏览器插件（口径不符，146 轮已判）；CSS 按钮生成器竞品再确认（buttongenerator.com、commoninja、terrific.tools、front-end-tools、forgetoolz 均为同类实现）——已交付项的外部佐证，非新口径；HN launch／营销渠道内容——无单页工具口径，消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 按钮生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，147 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS 背景图案生成器** — P2 留池顺位首席（146 轮新晋 P2；148 轮复核仍未交付；痛点：手写条纹／圆点／棋盘背景要反复调 repeating-gradient 的色标断点与 background-size，平铺接缝算不对就是一条条错位线，凭代码想象不出图案密度；纯前端小难度：六种图案类型＋颜色／尺寸／密度／角度滑杆＋平铺预览区＋`background-image`／`background-size` 代码复制／下载，零上传；与站内 SVG 背景生成器（只产 SVG 代码）、十字绣图案（刺绣网格）、渐变生成器（单填充声明）口径不重叠；真限制：只做纯 CSS 多渐变背景图案，不做 SVG 路线、不做单渐变填充，须明示）。
+2. **Modbus RTU 帧生成与校验器** — P2 留池顺位第二（147 轮新晋 P2；148 轮复核仍未交付；痛点：串口/TCP 调试 Modbus 设备时要手算 CRC16 查表、翻手册拼帧格式，发一帧收一帧都要在纸上验校验和，对不上还得逐字节排查是地址错还是字节序错；纯前端小／中难度：设备地址＋功能码（01/02/03/04/05/06/0F/10）＋寄存器地址／数量／数据→组装完整 RTU 帧 hex 并自动算 CRC16/MODBUS，粘贴收到的帧→验 CRC＋拆解各字段，零上传；站内 CRC 校验和计算器只做裸校验和计算，与本项「完整帧组装/解析」口径不重叠；真限制：只做 RTU 帧（不做 ASCII 编码）、不做实际串口收发（Web Serial 需硬件），须明示）。
+3. **寄存器位域查看与编辑器** — 新晋 P2（148 轮新信号；V2EX 今日 EmbedKit 帖；痛点：调寄存器时对着手册数位、手算 `(1u << n)` 宏，位数一错驱动翻车；纯前端小／中难度：32 位寄存器值输入→32 位位图可视化点击置位/清零→实时输出 HEX＋C 宏定义（`#define`／位域掩码），零上传；站内 0 命中真缺口；与 Modbus 帧生成与校验器同属嵌入式开发需求簇，成组互导；真限制：只做位级可视化编辑与宏生成，不做芯片寄存器地址映射数据库，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；148 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：HEX ↔ C 数组互转器（147 轮观察项新增，口径待 PM 裁定：与 Modbus 帧生成器合并为「嵌入式字节工具」或单独立项）；**MAP 文件内存分析器（148 轮观察项新增，口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC/ARMCC/IAR）**；**Markdown 转公众号／X 长文排版器（148 轮观察项新增，口径待 PM 裁定：与 md2chat 合并或单独立项）**；CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 147 轮及之前记录。
+
+**通用候选表增量**（第一百四十八轮：CSS 按钮生成器已交付划出（bcb877a 新增＋660b96a 评审修复；ID css_button_generator、Path /tools/css-button-generator 已注册；全量 220 Path；候选池划出）；**寄存器位域查看与编辑器新晋 P2**；CSS 背景图案生成器、Modbus RTU 帧生成与校验器顺位递进；MAP 文件内存分析器、Markdown 转公众号／X 长文排版器入观察项（口径待裁定）；自有实锤消解 8+ 项（EmbedKit：CRC／进制／HEX↔C 数组延续 147 轮结论、串口监视器需硬件、OneNET MQTT 平台特定不立；xGoose 插件口径不符；按钮生成器 5 家竞品为已交付项佐证非新口径；HN launch 营销内容无工具口径）；全量 220 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 按钮生成器 | 已交付划出（bcb877a 新增＋660b96a 评审修复；ID css_button_generator、Path /tools/css-button-generator 已注册；全量 220 Path；候选池划出） | — | 已实现 |
+| 寄存器位域查看与编辑器 | 调寄存器对着手册数位、手算 `(1u << n)` 宏，位数一错驱动翻车；32 位值输入→32 位位图可视化点击置位/清零→实时输出 HEX＋C 宏定义，纯前端零上传；站内 0 命中真缺口；与 Modbus 同属嵌入式开发簇 | 小/中 | P2（新晋） |
+| CSS 背景图案生成器 | 复核仍未交付（146 轮 P2，顺位递进为首席）；手写 repeating-gradient 色标断点＋background-size，平铺接缝错位；六种图案＋颜色／尺寸／密度／角度滑杆＋平铺预览＋background-image／background-size 代码复制／下载，纯前端零上传 | 小 | P2（留池） |
+| Modbus RTU 帧生成与校验器 | 复核仍未交付（147 轮 P2，顺位递进为第二）；调试 Modbus 设备手算 CRC16 查表、翻手册拼帧格式；帧组装＋自动 CRC16＋收帧验 CRC 拆字段，纯前端零上传 | 小/中 | P2（留池） |
+| MAP 文件内存分析器 | 观察项新增（口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC/ARMCC/IAR；linker MAP 粘贴→段/符号内存占用统计，纯前端文本解析） | — | 观察项 |
+| Markdown 转公众号／X 长文排版器 | 观察项新增（口径待 PM 裁定：与 md2chat 合并或单独立项；Markdown→公众号内联样式 HTML／X 长文排版一键复制，纯前端小难度） | — | 观察项 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十八轮——CSS 按钮生成器交付闭环（bcb877a，`/tools/css-button-generator` 已注册，全量 220 Path），候选池划出；**寄存器位域查看与编辑器新晋 P2**（V2EX 今日 EmbedKit 帖的新口径：32 位寄存器可视化位编辑→HEX/C 宏输出，站内真缺口）；**CSS 背景图案生成器、Modbus RTU 帧生成与校验器顺位递进为 Top3 前两位**；MAP 文件内存分析器、Markdown 转公众号／X 长文排版器入观察项（口径待裁定）；新信号扫描以 V2EX 今日 EmbedKit 帖（8 项功能逐项核口径）、weichen.ink X 运营工具箱帖、5 家 CSS 按钮生成器竞品为主线；Top3 建议 CSS 背景图案生成器／Modbus RTU 帧生成与校验器／寄存器位域查看与编辑器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 660b96a（评审修复）／bcb877a（按钮生成器新增）／d2b1f8d（单位换算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **220**；Top3 候选重叠复核（background-pattern／modbus 在 categories.go 均为 0 路径命中；register／位域／bitfield 0 命中；crc 命中仅已交付的 crc_checksum_calculator（裸校验和口径，不含帧组装）；templates／static/js／tests 下无背景图案生成器／modbus 帧／寄存器位编辑器文件；位运算计算器为 122 轮观察项未交付，与本项可视化位编辑＋宏输出口径不重叠；md2chat 已交付，Markdown 转公众号／X 长文排版器为其近亲观察项；CSS 按钮生成器与 CSS 背景图案生成器／Modbus 无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-29 15:00 · 产品经理排期轮，接 147 轮调研）
 
 **选定：CSS 按钮生成器（css_button_generator）** — 本轮唯一任务（新工具）：
