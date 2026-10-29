@@ -1,3 +1,101 @@
+## 今日任务（2026-10-30 01:00 · 产品经理排期轮，接 152 轮调研）
+
+**选定：示例生成正则表达式（grex 式）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（152 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。浏览器书签清理与分析器已交付划出（520deb4 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **224 Path**），首席顺位自然递进至本项；不再以「GIF 观察项晋升更新颖」等理由二次跳过——GIF／视频转 GIF 观察项本轮另行口径裁定（见下），不插队。
+- **未选**：在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）；GIF→GIF 轻量版（149 轮观察项，**本轮 PM 口径裁定：同意收窄为 GIF→GIF 轻量版**（逐帧压缩／尺寸缩放／帧率抽稀，纯前端不引 ffmpeg.wasm），**晋升 P2 留池、顺位第二**，下轮首席递进；tubox 帖评论区「gif maker」询问呼应持续，呼应度成立）；HEX ↔ C 数组互转器（147 轮观察项，口径仍待裁定→继续观察：单独立项或与 Modbus／寄存器位域合并为「嵌入式字节工具」，本轮不扩嵌入式簇，留待有空轮次论证）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **224**；`grex` 在 tools/categories.go、templates、static/js、tests 下 **0 命中**（仅 tests/bookmark_cleaner.test.js 一处「模板不含未交付工具硬凑互链」断言字面提及，非工具）；`regex_generator`／`regex-generator` 全站 0 命中；`regex` 命中仅已交付的 regex-tester（单条正则匹配调试口径）与 regex-explainer（逐段中文讲解口径），本项为**逆向口径**（示例→正则），不重叠。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——手写正则靠翻文档试错、问 AI 要正则又得上传示例；「贴多条示例字符串→确定性贪心算法生成覆盖全部示例的正则（字符类合并／交替分支），零上传」恰好对症；③ **一轮可高质量交付**——纯前端、确定性纯函数（trie 贪心、无随机性），可写成精确向量供 node 断言；④ **与站内正则工具簇成组**——与 regex-tester（生成完去调试）、regex-explainer（逐段中文讲解）互链，「生成→测试→讲解」闭环互相导流；⑤ **缺口已实锤**——152 轮复核 grex 全站 0 命中真缺口至今未被消解。
+- **品类归位**：注册到「开发工具」品类（与 regex-tester／regex-explainer 同品类，正则工具簇成组；书签清理上一轮已占实用工具，本项换品类避堆叠）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 口径裁定（本轮一并裁定）**：① **只做语法层合并**——算法按列贪心合并字符类／交替分支，不保证语义最优，页面须明示「生成的正则只保证匹配全部示例，不保证是最简或语义最优」；② **不做捕获组命名、不做多行语义分组**——示例按单行字符串处理，页面须明示；③ **不收集、不上传任何内容**——示例只在浏览器本地处理，页面须明示；④ 示例互相矛盾时（如长度不一）只做 trie 分支交替 `(a|b)`，不报错不猜测。
+
+**规格**（开发轮按此执行）：
+- 输入：多行文本框（每行一条示例字符串），示例数≥2（去空行、去重后仍<2 则抛 Error，err.field="examples"，页面中文提示）；选项：①「锚定 ^$」（默认开）；②「数字列合并为 \d」（默认关，示例列全为数字且开启时该列用 `\d`，否则用字符类如 `[12]`）；③「忽略大小写」（默认关，开则 flags="i"）。
+- 算法（确定性贪心，按列合并，开发轮严格执行）：
+  1. 去空行、去重；示例长度不一 → 按 trie 前缀分支，分支点用 `(alt1|alt2)` 交替（按字典序排分支保证确定性）。
+  2. 等长部分逐列扫描：该列字符全相同 → 字面字符（正则特殊字符转义）；该列全为数字且「数字列合并为 \d」开 → `\d`；否则按字符集合生成字符类 `charClassFromSet`（排序后合并连续区间为 `a-c`／`0-9` 形，如 `[cd]`、`[0-9]`、`[a-zA-Z]`）。
+  3. 相邻相同 token 合并量词：连续 n 个相同字符类 → `class{n}`（如 `[0-9]{3}`）；连续 n 个 `\d` → `\d{n}`；字面字符直接拼接不合并。
+  4. 锚定选项开 → 首尾加 `^`／`$`。
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `generateRegex(examples, options)`：返回正则字符串；示例不足 2 条抛 Error（err.field="examples"）。
+  - `charClassFromSet(chars)`：字符数组→字符类字符串（如 `['c','d']`→`[cd]`，`['0','1','2']`→`[0-9]`，`['a','c','b']`→`[a-c]`）。
+  - `escapeRegExpChar(ch)`：单个字符转义（如 `.`→`\.`）。
+  - `normalizeExamples(text)`：多行文本→去空行去重后的示例数组。
+  - `generateExample()`：返回固定示例数组（如 `["user_001","user_002","user_010"]`），「载入示例」一键演示输入→生成全流程。
+- 确定性向量（默认选项：锚定开、数字合并关、大小写敏感；开发轮必须逐字命中）：
+  - `generateRegex(["abc","abd"], defaults)` → `"^ab[cd]$"`
+  - `generateRegex(["file1.txt","file2.txt"], defaults)` → `"^file[12]\\.txt$"`
+  - `generateRegex(["file1.txt","file2.txt"], {digitMerge:true})` → `"^file\\d\\.txt$"`
+  - `generateRegex(["img001.png","img002.png","img010.png"], defaults)` → `"^img0[0-1][0-2]\\.png$"`
+  - `generateRegex(["cat","dog"], defaults)` → `"^(cat|dog)$"`
+  - `generateRegex(["cat","cats"], defaults)` → `"^(cat|cats)$"`
+  - `generateRegex(["2024-01-01","2024-12-31"], defaults)` → `"^2024-[01][12]-[03][01]$"`（逐列：`0/1`→`[01]`、`1/2`→`[12]`；相邻 token 不同不合并量词；同理日期部分）
+  - `generateRegex(["a"], defaults)` 抛 Error（err.field="examples"）；空字符串输入抛 Error（err.field="examples"）。
+- 不变式（node 断言）：对任意合法输入，生成的正则 `new RegExp(pattern)` 能匹配全部输入示例（flags 一致时）。
+- 界面：示例输入区（多行文本框＋「载入示例」＋示例条数统计）；选项区（锚定 ^$／数字列合并为 \d／忽略大小写三个复选框）；「生成正则」按钮；结果区（正则字符串代码块展示＋「复制」按钮＋「在正则测试器中打开」互链＋「去正则解释器逐段讲解」互链）；真限制提示区（三条明示文案）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 regex-tester（/tools/regex-tester，文案按「生成完去测试调试」区分）、regex-explainer（/tools/regex-explainer，文案按「逐段中文讲解刚生成的正则」区分）互链；不与未交付工具互链（GIF→GIF 轻量版下轮递进交付后再互链，不硬凑）。
+- 技术路线：纯前端、无依赖（手写 trie／逐列合并／字符类生成，不引入任何库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `regex_generator`、Name「示例生成正则表达式」、Path `/tools/regex-generator`、Category 开发工具、Icon 由开发轮从图标库选未占用者（勿与现有冲突）、New: true；中英文描述＋SEO keywords（正则生成、示例生成正则、grex、regex generator、从示例生成正则表达式）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/regex-generator，相关工具互链正则测试器、正则表达式解释器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `regex_generator`、Path `/tools/regex-generator` 注册完整（Category 开发工具），注册总数 224→225 Path。
+2. 生成向量闭环（node 断言，逐字命中）：`["abc","abd"]`→`^ab[cd]$`；`["file1.txt","file2.txt"]`→`^file[12]\.txt$`；digitMerge 开→`^file\d\.txt$`；`["img001.png","img002.png","img010.png"]`→`^img0[0-1][0-2]\.png$`；`["cat","dog"]`→`^(cat|dog)$`；`["cat","cats"]`→`^(cat|cats)$`；`["2024-01-01","2024-12-31"]`→`^2024-[01][12]-[03][01]$`。
+3. 失败向量闭环（node 断言）：单条示例／空输入抛 Error 且 err.field="examples"；`charClassFromSet(['c','d'])`=`[cd]`；`charClassFromSet(['0','1','2'])`=`[0-9]`；`charClassFromSet(['a','c','b'])`=`[a-c]`；`escapeRegExpChar('.')`=`\.`。
+4. 不变式闭环（node 断言）：对上述全部合法向量及 `generateExample()` 返回的示例，`new RegExp(生成结果)` 匹配每一条输入示例。
+5. 字符类工具函数向量：`normalizeExamples("a\n\nb\na\n")`→`["a","b"]`；`generateExample()` 返回数组长度≥3。
+6. 操作闭环（浏览器手工／测试复核）：载入示例→生成→复制→点击「在正则测试器中打开」与「去正则解释器逐段讲解」互链可达；改选项（关锚定／开数字合并／开忽略大小写）后重新生成结果符合预期。
+7. 真限制可见：页面可见「生成的正则只保证匹配全部示例，不保证是最简或语义最优」「不做捕获组命名、不做多行语义分组」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含正则测试器、正则表达式解释器；不含未交付工具的硬凑互链。
+9. node 测试 25+ 断言全过（生成向量、失败向量、不变式、字符类向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+10. 页面无报错；移动端输入区、选项区、结果代码块、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/regex_generator.html`（新增；含 SEO 面板按家族标准＋示例输入区／选项区／结果区／真限制提示区）
+- `static/js/regex_generator.js`（新增；逐列贪心合并、字符类生成、trie 分支交替、示例；双模式导出供 node 测试）
+- `tests/regex_generator.test.js`（新增；生成向量、失败向量、不变式、字符类向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID regex_generator、Path /tools/regex-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git status` 显示 BACKLOG.md 已修改（152 轮研究轮顶部追加，未提交，随本 PM 轮＋开发轮次提交，沿用惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **224**；Top3 候选重叠复核（grex／regex_generator／regex-generator 均为 0 命中；templates／static/js／tests 下无示例生成正则专用文件；regex 命中仅已交付的 regex-tester 与 regex-explainer，逆向口径不重叠；在线电台收听器硬伤未解跳过；GIF→GIF 轻量版本轮裁定晋升 P2 留池第二顺位；HEX ↔ C 数组互转器观察项保持）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-30 01:00 · 通用调研第一百五十二轮）
+
+**交付状态**：10-30 通用调研第一百五十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**浏览器书签清理与分析器已交付闭环**（520deb4 新增：导入 bookmarks.html 本地解析文件夹树→重复 URL（归一化去重）／重复标题／空文件夹／域名 Top20 分析→勾选删除→导出标准 NETSCAPE-Bookmark-file-1（bookmarks-cleaned.html），纯前端零上传零 CDN；node 74 断言全过；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **224 Path**，ID bookmark_cleaner、Path `/tools/bookmark-cleaner` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小／中难度纯前端。
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 书签清理交付确认：`git log` 头部 520deb4（书签清理新增）／607c3af（寄存器位编辑评审修复）／d40a39c（寄存器位编辑新增）；全量 224 Path；ID `bookmark_cleaner`、Path `/tools/bookmark-cleaner` 双注册；本地当前分支 muse/dev-20260929。
+2. 留池复核仍未交付：示例生成正则表达式（grex 式）（`grex` 在 tools/categories.go、templates、static/js、tests 均为 **0 命中**）151 轮晋升 P2 时的缺口论证本轮仍成立，顺位递进为首席；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；GIF／视频转 GIF（149 轮观察项）`gif` 4 命中仅已交付项（图片格式互转／转 ASCII 字符画）描述文本，无专用工具，观察项保持；HEX ↔ C 数组互转器（147 轮观察项）`hex2c`／`c_array` 0 命中，观察项保持。
+3. 新信号扫描（以 V2EX 10-25~10-29 新帖＋Reddit／HN 为主线）：全部消解，不立新 P2——
+   - tubox 图片工具箱 10-28 重发帖（t/1252552）：与 148／150／151 轮分析的同一帖，13 项工具清单无新口径（批量压缩等图片口径站内已有；AI 抠图／放大需模型下载；GIF／视频转 GIF 仍在观察项待 PM 裁定）；评论区仅问「是不是 gif maker」，呼应度持续但无新口径；
+   - SnapNeo（t/1250907）：Windows 桌面截图软件（Microsoft Store），非网页工具，其「本地 OCR 截图识别」口径为桌面端，消解；
+   - dtool v0.4.0（t/1252491）：AI Agent 本地 Excel 数据流水线 CLI，非网页工具，消解；
+   - wrong-notebook AI 错题本（t/1251464）：需大模型对接＋打印闭环，非单页纯前端，消解；
+   - MyEnhancer（t/1252069，AI 照片增强，需 AI 后端）／Meme Video Maker（t/1251658，付费 AI 视频）／xGoose（t/1252493，Chrome 插件＋AI 需后端，延续 146／150／151 轮结论）／ProtoHub（t/1250522，原型托管站，需后端＋账号）／Paint Board（t/1249863，整站形态网页画板，非单页工具）／md2chat（t/1250428，已纳入「Markdown 转公众号／X 长文排版器」观察项，10-20 新增快捷键／dsh 插件属其产品内部迭代，无新口径），全部消解；
+   - HN／Reddit 英文侧：均为方法论／榜单文（startup validation、dev tools 整站），无单页新口径。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；书签清理交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，151 轮 Top3 第二顺位递进为首席；本轮无新晋 P2、无观察项晋升，第二、三候选顺位缺位并给出观察项递补建议）：
+
+1. **示例生成正则表达式（grex 式）** — P2 留池顺位首席（151 轮新晋 P2；152 轮复核 grex 全站 0 命中仍未交付；痛点：手写正则靠翻文档试错，问 AI 要正则又得上传示例；纯前端小／中难度：贴多条示例字符串→确定性贪心算法生成覆盖全部示例的正则（字符类合并／交替分支），零上传；站内 regex-tester／regex-explainer 为「已有正则」口径，不重叠；真限制：算法只做语法层合并，不保证语义最优，须明示）。
+2. 顺位缺位（第二候选）：候选池剩余 P2 仅在线电台收听器（88 轮新晋；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。PM 若需第二候选，建议本轮裁定晋升观察项：优先「GIF／视频转 GIF」收窄口径——裁定为 **GIF→GIF 轻量版**（逐帧压缩／尺寸缩放／帧率抽稀，纯前端不引 ffmpeg.wasm，一轮可高质量交付；tubox 帖评论区「gif maker」询问呼应持续），裁定后可一轮立项。
+3. 顺位缺位（第三候选）：HEX ↔ C 数组互转器（147 轮观察项，`hex2c`／`c_array` 0 命中；口径待 PM 裁定：与 Modbus／寄存器位域合并为「嵌入式字节工具」或单独立项）。若 PM 本轮将 GIF→GIF 轻量版晋升为第二顺位，本项可自然递补第三顺位。
+
+其余 P2 留池：无；观察项保持原状：MAP 文件内存分析器（148 轮观察项新增，口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC/ARMCC/IAR）；Markdown 转公众号／X 长文排版器（148 轮观察项新增，口径待 PM 裁定：与 md2chat 合并或单独立项）；CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 151 轮及之前记录。
+
+**通用候选表增量**（第一百五十二轮：浏览器书签清理与分析器已交付划出（520deb4 新增；ID bookmark_cleaner、Path /tools/bookmark-cleaner 已注册；全量 224 Path；候选池划出）；**示例生成正则表达式（grex 式）顺位递进为首席**；自有实锤消解 12+ 项（tubox 重发帖无新口径；SnapNeo 桌面口径；dtool CLI；wrong-notebook 需 AI＋打印；MyEnhancer／Meme Video Maker／xGoose／ProtoHub／Paint Board 需后端或非单页；md2chat 延续观察项无新口径；HN／Reddit 方法论／榜单文无单页新口径）；本轮无新晋 P2；全量 224 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 浏览器书签清理与分析器 | 已交付划出（520deb4 新增；ID bookmark_cleaner、Path /tools/bookmark-cleaner 已注册；全量 224 Path；候选池划出） | — | 已实现 |
+| 示例生成正则表达式（grex 式） | 复核仍未交付（151 轮 P2，顺位递进为首席；grex 全站 0 命中）；手写正则试错成本高、问 AI 得上传示例；贴示例字符串→确定性贪心算法生成覆盖全部示例的正则，纯前端零上传；与 regex-tester／regex-explainer 口径不重叠 | 小/中 | P2（留池） |
+| GIF／视频转 GIF（GIF→GIF 轻量版收窄口径） | 观察项（149 轮；`gif` 4 命中仅已交付项描述文本，无专用工具；tubox 重发帖评论区「gif maker」询问呼应持续）；建议 PM 裁定收窄为 GIF→GIF 轻量版（逐帧压缩／缩放／抽帧），纯前端不引 ffmpeg.wasm，一轮可交付 | 小/中 | 观察（待裁定） |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十二轮——浏览器书签清理与分析器交付闭环（520deb4，`/tools/bookmark-cleaner` 已注册，全量 224 Path），候选池划出；**示例生成正则表达式（grex 式）顺位递进为首席**；**本轮无新晋 P2**（V2EX 10-25~10-29 新帖＋Reddit／HN 扫描 12+ 信号全部消解：tubox 重发无新口径；SnapNeo 桌面口径；dtool CLI；wrong-notebook／MyEnhancer／Meme Video Maker／xGoose／ProtoHub 需 AI／后端；Paint Board 整站形态；md2chat 延续观察项）；第二、三候选顺位缺位（仅剩电台一项 P2 且硬伤未解），PM 若需候补建议本轮裁定晋升 GIF→GIF 轻量版（收窄口径，一轮可交付）、HEX ↔ C 数组互转器顺位递补；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 520deb4（书签清理新增）／607c3af（寄存器位编辑评审修复）／d40a39c（寄存器位编辑新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **224**；Top3 候选重叠复核（bookmark_cleaner 在 categories.go 4 命中，为本轮已交付项；grex 在 categories.go、templates、static/js、tests 均为 0 命中；regex 命中仅已交付的 regex-tester（单条正则调试）与 regex-explainer（逐段中文讲解），与本轮首席「示例生成正则」逆向口径不重叠；`gif` 4 命中仅已交付项描述文本（图片格式互转／转 ASCII 字符画）＋图标名，无专用工具；`hex2c`／`c_array` 0 命中；在线电台收听器硬伤未解跳过；观察项 MAP 文件／md2chat 排版器／CSS 加载动画等口径待裁定不晋升）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-29 23:00 · 产品经理排期轮，接 151 轮调研）
 
 **选定：浏览器书签清理与分析器（bookmark_cleaner）** — 本轮唯一任务（新工具）：

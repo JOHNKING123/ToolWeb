@@ -337,6 +337,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "regex_generator",
+					Name:        "示例生成正则表达式",
+					Description: "粘贴多条示例字符串，确定性贪心算法一键生成覆盖全部示例的正则（grex 式）：等长逐列扫描合并字符类、数字列可合并为 \\d、长度不一按 trie 前缀分支交替、相邻相同 token 合并量词，与正则测试器/正则解释器互链成「生成→测试→讲解」闭环，纯前端零上传 · Generate regex from examples (grex-style): deterministic column merge, character classes, alternation branches, 100% client-side",
+					Path:        "/tools/regex-generator",
+					Icon:        "functions",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "cron",
 					Name:        "Cron 表达式解析",
 					Description: "解析和验证 Cron 表达式，查看未来执行时间",

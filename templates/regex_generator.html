@@ -1,0 +1,163 @@
+{{define "regex_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>示例生成正则表达式 - 多条示例一键生成正则（grex 式）| 程序员工具箱</title>
+    <meta name="description" content="免费在线示例生成正则表达式工具（grex 式）：粘贴多条示例字符串，确定性贪心算法自动生成覆盖全部示例的正则表达式——逐列合并字符类、数字列合并 \d、长度不一自动交替分支，生成完可去正则测试器调试、去正则解释器逐段讲解。纯前端零上传 · Generate regex from examples (grex-style): deterministic column merge, character classes, alternation branches, 100% client-side">
+    <meta name="keywords" content="正则生成,示例生成正则,grex,regex generator,从示例生成正则表达式,正则表达式生成器,字符类合并,正则交替分支,regex from examples">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/regex-generator">
+    <meta property="og:title" content="示例生成正则表达式 - 多条示例一键生成正则">
+    <meta property="og:description" content="粘贴多条示例字符串，确定性算法生成覆盖全部示例的正则：逐列合并字符类、数字列合并 \d、长度不一自动交替分支。纯前端零上传，可直达测试器调试与解释器讲解。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/regex-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"示例生成正则表达式","description":"粘贴多条示例字符串，确定性贪心算法生成覆盖全部示例的正则表达式：等长逐列扫描合并字符类、数字列可合并为 \\d、长度不一按 trie 前缀分支交替、相邻相同 token 合并量词。纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/regex-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rg-wrap .container { max-width: 960px; margin: 0 auto; padding: 1.2rem; }
+        .rg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .rg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .rg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .rg-privacy { display:flex; gap:.7rem; align-items:flex-start; border:2px solid #34d399; background:#ecfdf5;
+            border-radius:.8rem; padding:.9rem 1rem; margin:0 0 1.1rem; font-size:.92rem; line-height:1.9; color:#065f46; }
+        .rg-privacy b { color:#047857; }
+        .rg-textarea { width:100%; box-sizing:border-box; min-height:150px; padding:.7rem .9rem; border:1px solid #d1d5db;
+            border-radius:.55rem; font-size:.92rem; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; line-height:1.7; }
+        .rg-textarea:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.12); }
+        .rg-count { font-size:.85rem; margin:.5rem 0 0; color:#92400e; }
+        .rg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.9rem; }
+        .rg-error { display:none; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:.6rem;
+            padding:.7rem 1rem; margin-top:.9rem; font-size:.9rem; line-height:1.7; }
+        .rg-opts { display:flex; gap:.6rem; flex-wrap:wrap; }
+        .rg-opt { display:inline-flex; align-items:center; gap:.45rem; font-size:.92rem; color:#374151; cursor:pointer;
+            border:1px solid #d1d5db; border-radius:.5rem; padding:.5rem .9rem; background:#f9fafb; }
+        .rg-opt input { accent-color:#2563eb; width:1.05rem; height:1.05rem; }
+        .rg-opt code { font-family:ui-monospace,Menlo,Consolas,monospace; color:#7c3aed; }
+        .rg-opt.on { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; font-weight:600; }
+        .rg-result { display:none; }
+        .rg-pattern { background:#0f172a; color:#a5f3fc; border-radius:.6rem; padding:.9rem 1.1rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace; font-size:1rem; word-break:break-all;
+            white-space:pre-wrap; line-height:1.7; margin:.2rem 0 .6rem; }
+        .rg-flags { font-size:.85rem; color:#6b7280; margin:0 0 .8rem; }
+        .rg-links { display:flex; gap:.7rem; flex-wrap:wrap; }
+        .rg-steps { margin:.2rem 0; padding-left:1.3rem; color:#374151; font-size:.92rem; line-height:2; }
+        .rg-steps code { background:#f3f4f6; padding:.1rem .4rem; border-radius:.3rem; font-size:.82rem; color:#b91c1c; }
+        .rg-faq dt { font-weight:700; color:#111827; margin:.7rem 0 .25rem; font-size:.93rem; }
+        .rg-faq dd { margin:0 0 .4rem; color:#4b5563; font-size:.9rem; line-height:1.65; }
+        .rg-faq code { font-family:ui-monospace,Menlo,Consolas,monospace; background:#f3f4f6; border-radius:.3rem;
+            padding:.08rem .4rem; font-size:.85rem; }
+        .rg-limits { font-size:.92rem; line-height:2; color:#374151; }
+        .rg-limits b { color:#111827; }
+        .rg-related { display:flex; gap:.6rem; flex-wrap:wrap; }
+        .rg-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff;
+            padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .rg-actions .btn { flex:1 1 auto; text-align:center; }
+            .rg-pattern { font-size:.88rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="rg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>⚙️ 示例生成正则表达式</h1>
+            <p>贴多条示例字符串 → 确定性算法生成覆盖全部示例的正则（grex 式）：逐列合并字符类、数字列合并 \d、长度不一自动交替分支</p>
+        </div>
+
+        <div class="rg-privacy">
+            <div><b>隐私承诺：</b>本工具纯浏览器本地运行、<b>零依赖、无后端上传</b>；示例只在当前页面内存中处理，不发送到任何服务器。页面<b>零 fetch / XHR、零 CDN</b>，断网也能用。</div>
+        </div>
+
+        <div class="rg-card">
+            <h3>1. 输入示例 <span class="rg-hint">（每行一条，至少 2 条有效示例；空行自动忽略、重复自动去重）</span></h3>
+            <textarea class="rg-textarea" id="rg-input" spellcheck="false" placeholder="每行一条示例，例如：&#10;user_001&#10;user_002&#10;user_010"></textarea>
+            <p class="rg-count" id="rg-count">已识别 0 条有效示例（至少需要 2 条）</p>
+            <div class="rg-actions">
+                <button class="btn btn-secondary" id="rg-load-example" type="button">📦 载入示例（一键演示全流程）</button>
+                <button class="btn btn-secondary" id="rg-clear" type="button">清空</button>
+            </div>
+            <div class="rg-error" id="rg-error" role="alert"></div>
+        </div>
+
+        <div class="rg-card">
+            <h3>2. 生成选项</h3>
+            <div class="rg-opts">
+                <label class="rg-opt on"><input type="checkbox" id="rg-anchor" checked> 锚定 <code>^$</code>（整串匹配）</label>
+                <label class="rg-opt"><input type="checkbox" id="rg-digit"> 数字列合并为 <code>\d</code></label>
+                <label class="rg-opt"><input type="checkbox" id="rg-icase"> 忽略大小写 <code>/i</code></label>
+            </div>
+            <div class="rg-actions">
+                <button class="btn btn-primary" id="rg-generate" type="button" style="font-size:1rem;padding:.65rem 1.6rem;">⚙️ 生成正则</button>
+                <span class="rg-hint">快捷键：输入框内 Ctrl/⌘ + Enter</span>
+            </div>
+        </div>
+
+        <div class="rg-card rg-result" id="rg-result">
+            <h3>3. 生成结果</h3>
+            <div class="rg-pattern" id="rg-pattern"></div>
+            <p class="rg-flags" id="rg-flags">修饰符：无</p>
+            <div class="rg-links">
+                <button class="btn btn-primary" id="rg-copy" type="button">📋 复制正则</button>
+                <a class="btn btn-secondary" id="rg-open-tester" href="/tools/regex-tester" target="_blank" rel="noopener">🔍 在正则测试器中打开（生成完去测试调试）</a>
+                <a class="btn btn-secondary" id="rg-open-explainer" href="/tools/regex-explainer" target="_blank" rel="noopener">📖 去正则解释器逐段讲解</a>
+            </div>
+            <p class="rg-hint" style="margin:.7rem 0 0;">点击互链时会自动复制当前正则，在目标页粘贴即用。</p>
+        </div>
+
+        <div class="rg-card">
+            <h3>使用说明</h3>
+            <ol class="rg-steps">
+                <li>在文本框粘贴多条示例（每行一条），或点「载入示例」看 <code>user_001 / user_002 / user_010</code> 的完整演示。</li>
+                <li>按需调整选项：关掉「锚定」可做子串匹配；打开「数字列合并为 \d」让纯数字列更简洁；「忽略大小写」生成后请带 <code>i</code> 修饰符使用。</li>
+                <li>点「生成正则」，复制结果；经互链去<b>正则测试器</b>调试匹配、去<b>正则解释器</b>看逐段中文讲解。</li>
+                <li>算法是确定性的：同样输入与选项，永远得到同样的正则。</li>
+            </ol>
+        </div>
+
+        <div class="rg-card">
+            <h3>常见问题</h3>
+            <dl class="rg-faq">
+                <dt>生成的正则一定是最简的吗？</dt>
+                <dd>不一定。算法只做语法层的贪心合并（逐列字符类、交替分支、量词合并），<b>只保证匹配全部示例，不保证是最简或语义最优</b>。拿到结果后建议去正则测试器用反例收紧。</dd>
+                <dt>示例长度不一样会怎样？</dt>
+                <dd>不会报错。算法按 trie 前缀分支，把各示例作为交替分支 <code>(alt1|alt2)</code> 并列，分支按字典序排列保证每次结果一致。</dd>
+                <dt>为什么有的输入生成的是 <code>(a|b|c)</code> 而不是字符类？</dt>
+                <dd>当等长示例没有任何一列是固定字符时（如 <code>cat / dog</code>），逐列合并会过度泛化（如 <code>[cd][ao][gt]</code> 会误匹配 <code>cot</code>），此时退化为全串交替更精确。</dd>
+                <dt>「数字列合并为 \d」和字符类有什么区别？</dt>
+                <dd>默认关闭：数字列按实际出现的数字生成字符类（如 <code>[12]</code>），更精确；打开后整列直接用 <code>\d</code>，更简洁但匹配范围更宽（0-9 任意数字）。</dd>
+                <dt>我的示例会被上传吗？</dt>
+                <dd>不会。生成全过程在浏览器本地完成，不发起后端请求；你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+            </dl>
+        </div>
+
+        <div class="rg-card">
+            <h3>真限制说明</h3>
+            <div class="rg-limits">
+                <b>只保证匹配全部示例，不保证最简或语义最优</b>：生成的正则只保证匹配全部示例，不保证是最简或语义最优；算法只做语法层贪心合并，不理解示例背后的业务语义。<br>
+                <b>不做捕获组命名、不做多行语义分组</b>：示例按单行字符串处理，不生成命名捕获组，不解析多行文本的行语义；分支统一用普通捕获组 <code>(…|…)</code>。<br>
+                <b>不收集、不上传</b>：示例仅在浏览器本地处理，页面零 fetch／XHR、零 CDN，不收集、不上传任何内容。
+            </div>
+        </div>
+
+        <div class="rg-card">
+            <h3>相关工具</h3>
+            <div class="rg-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">示例生成正则表达式（当前）</span>
+                <a href="/tools/regex-tester" class="btn btn-secondary" style="font-size:.9rem;">正则表达式测试</a>
+                <a href="/tools/regex-explainer" class="btn btn-secondary" style="font-size:.9rem;">正则表达式解释器</a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="rg-toast" id="rg-toast"></div>
+    <script src="/tools/static/js/regex_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
