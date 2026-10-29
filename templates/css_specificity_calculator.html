@@ -1,0 +1,139 @@
+{{define "css_specificity_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 特异性计算器 - 选择器权重 (a,b,c) 计算与排序比较 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 特异性计算器：逐段解析选择器，输出 (a, b, c) 三元组权重，ID／类／属性／伪类／伪元素／类型拆解明细，多选择器字典序排序与胜负判定，复制结果、下载 .txt／.json、载入示例。纯前端本地运行，零上传。">
+    <meta name="keywords" content="CSS 特异性计算器,选择器权重计算器,CSS 权重,specificity calculator,css specificity,选择器优先级">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-specificity-calculator">
+    <meta property="og:title" content="CSS 特异性计算器 - 选择器权重 (a,b,c) 计算与比较">
+    <meta property="og:description" content="逐段解析选择器，输出 (a, b, c) 权重与拆解明细，多选择器排序与胜负判定，纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-specificity-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 特异性计算器","description":"免费在线 CSS 特异性计算器：逐段解析选择器，输出 (a, b, c) 权重与拆解明细，多选择器排序与胜负判定，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-specificity-calculator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .cs-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .cs-wrap .navbar .material-icons { display: none; }
+        .cs-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .cs-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .cs-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .cs-input { width:100%; box-sizing:border-box; min-height:9rem; padding:.7rem .8rem; border:1px solid #d1d5db; border-radius:.5rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.92rem; line-height:1.7; resize:vertical; }
+        .cs-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .cs-table-wrap { overflow-x:auto; }
+        .cs-table { width:100%; border-collapse:collapse; font-size:.9rem; min-width:560px; }
+        .cs-table th, .cs-table td { border:1px solid #e5e7eb; padding:.5rem .6rem; text-align:left; vertical-align:top; }
+        .cs-table th { background:#f9fafb; color:#374151; }
+        .cs-table td:nth-child(2) { white-space:nowrap; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .cs-ranking { margin:.2rem 0; padding-left:1.3rem; line-height:1.9; font-size:.93rem; color:#374151; }
+        .cs-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; min-height:3em; }
+        .cs-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .cs-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .cs-tip a { color:var(--primary-color); }
+        .cs-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .cs-links a { color:var(--primary-color); font-size:.93rem; }
+        .cs-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .cs-card { padding:.9rem .7rem; }
+            .cs-input { font-size:.88rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="cs-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🏆 CSS 特异性计算器</h1>
+            <p>逐段解析选择器，输出 (a, b, c) 权重与拆解明细，多选择器排序比出谁赢，输入即实时计算</p>
+        </div>
+        <div class="tool-content" id="cs-form">
+            <div class="cs-card">
+                <h3>输入选择器 <span class="cs-hint">（每行一个选择器，行内用顶层逗号分隔亦可；输入即实时计算）</span></h3>
+                <textarea class="cs-input" id="cs-input" placeholder="#header nav ul li a&#10;.menu li a&#10;ul#nav li.active a:hover" aria-label="选择器输入"></textarea>
+                <p class="cs-msg" id="cs-hint"></p>
+            </div>
+
+            <div class="cs-card">
+                <h3>结果表 <span class="cs-hint">（选择器｜(a, b, c)｜拆解明细｜胜负标记；胜出者标「胜出」，并列全部标「并列胜出」）</span></h3>
+                <div class="cs-table-wrap">
+                <table class="cs-table">
+                    <thead><tr><th>选择器</th><th>(a, b, c)</th><th>拆解明细</th><th>胜负标记</th></tr></thead>
+                    <tbody id="cs-results"></tbody>
+                </table>
+                </div>
+            </div>
+
+            <div class="cs-card">
+                <h3>排序榜 <span class="cs-hint">（按 (a, b, c) 降序排列，并列保持输入顺序并标注）</span></h3>
+                <ol class="cs-ranking" id="cs-ranking"></ol>
+            </div>
+
+            <div class="cs-card">
+                <h3>结果与导出 <span class="cs-hint">（文本报告随计算实时生成）</span></h3>
+                <div class="cs-code" id="cs-report"></div>
+                <div class="cs-actions">
+                    <button class="btn btn-primary" id="cs-copy" type="button">📋 复制结果</button>
+                    <button class="btn btn-secondary" id="cs-download-txt" type="button">⬇ 下载 .txt</button>
+                    <button class="btn btn-secondary" id="cs-download-json" type="button">⬇ 下载 .json</button>
+                    <button class="btn btn-secondary" id="cs-load-example" type="button">↺ 载入示例</button>
+                </div>
+                <p class="cs-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中结果区内容复制。</p>
+            </div>
+
+            <div class="cs-card">
+                <h3>使用说明</h3>
+                <ol class="cs-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>每行写一个选择器，也可以在一行里用逗号写多个；空行自动跳过，输入后结果表、排序榜与文本报告实时同步。</li>
+                    <li>权重读法：(a, b, c) 中 a 是 ID 数，b 是类＋属性＋伪类数，c 是类型＋伪元素数；比较时先比 a，再比 b，最后比 c，通用选择器 * 计 0。</li>
+                    <li>点「载入示例」可一键看到 #header nav ul li a（1, 0, 4）与 ul#nav li.active a:hover（1, 2, 3）的对决：同为 1 个 ID 时由 b 决定胜负，无需上传即可演示输入→计算→排序→导出全流程。</li>
+                    <li>非法行只会在结果表中红字标出该行错误，不阻塞其它行的计算；复制与下载只导出合法行的结果。</li>
+                    <li>要写渐变声明去渐变生成器；要给盒子加阴影或描圆角去阴影与圆角生成器；要调图片滤镜去滤镜生成器——那边产样式声明，本页只算选择器权重。</li>
+                </ol>
+            </div>
+
+            <div class="cs-card">
+                <h3>常见问题</h3>
+                <dl class="cs-tip">
+                    <dt><b>:not()、:is()、:has() 怎么算？</b></dt>
+                    <dd>取参数中字典序最大的那个三元组，不是把所有参数加起来；例如 div:not(.foo) 是 (0, 1, 1)，:has(&gt; .active) 是 (0, 1, 0)。</dd>
+                    <dt><b>:where() 为什么总是 0？</b></dt>
+                    <dd>:where() 本身及其参数一律计 (0, 0, 0)，这是规范口径：例如 :where(#a, .b) 仍是 (0, 0, 0)。</dd>
+                    <dt><b>:nth-child(2n of .item) 怎么算？</b></dt>
+                    <dd>伪类本身计 b＋1，再分量加上 of 列表中最大的三元组：li:nth-child(2n of .item) 是 (0, 2, 1)。</dd>
+                    <dt><b>单冒号 :before 算伪类还是伪元素？</b></dt>
+                    <dd>legacy 写法 :before、:after、:first-line、:first-letter 计 c（与双冒号写法一致），其余单冒号计 b。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部解析与比较只在浏览器本地完成，本页面零网络请求，零上传。</dd>
+                </dl>
+            </div>
+
+            <div class="cs-card">
+                <h3>相关工具</h3>
+                <div class="cs-links">
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器（算权重 vs 产渐变声明；本页只算选择器权重，那边产 gradient 声明）</a>
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器（算权重 vs 产盒阴影圆角声明；本页只算选择器权重，那边产 box-shadow 与 border-radius）</a>
+                    <a href="/tools/css-filter-generator">CSS 滤镜生成器（算权重 vs 产 filter 声明；本页只算选择器权重，那边产 filter 声明）</a>
+                </div>
+            </div>
+
+            <div class="cs-card">
+                <h3>真限制说明</h3>
+                <div class="cs-tip">
+                    <b>只做特异性计算与比较</b>：不做整张样式表解析，不做浏览器实际层叠模拟；<b>特异性胜出 ≠ 最终生效</b>：行内样式、!important、@layer 层叠层、源码顺序、继承均不计入本页的 (a, b, c)，胜负判定只论特异性；<b>:where 计 0、:is／:not／:has 取最具体参数</b>；<b>::slotted／::part 参数不另计</b>：只计伪元素本身 1 个 c；<b>不收集、不上传任何内容</b>：全部解析与比较只在浏览器本地完成，本页面零 fetch / XHR，零 CDN。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="cs-toast" id="cs-toast"></div>
+    <script src="/tools/static/js/css_specificity_calculator.js?v=1"></script>
+</body>
+</html>
+{{end}}

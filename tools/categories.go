@@ -697,6 +697,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_specificity_calculator",
+					Name:        "CSS 特异性计算器",
+					Description: "多行选择器逐段解析输出 (a, b, c) 三元组：ID／类＋属性＋伪类／类型＋伪元素拆解明细，字典序排序与胜负判定，:not／:is／:has 取最具体参数、:where 计 0、nth of 从句分量相加，复制结果、下载 specificity.txt／specificity.json、载入示例，非法行红字降级不阻塞其它行，纯前端零上传 · CSS specificity calculator: (a, b, c) weights, detail breakdown, stable ranking, winner marking, 100% client-side",
+					Path:        "/tools/css-specificity-calculator",
+					Icon:        "leaderboard",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",

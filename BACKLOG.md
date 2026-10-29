@@ -1,3 +1,87 @@
+## 今日任务（2026-10-29 09:38 · 产品经理排期轮，接 144 轮调研）
+
+**选定：CSS 特异性计算器（css_specificity_calculator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（144 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 毛玻璃生成器已交付划出（8fe26ed 新增，全量 216 Path），首席顺位自然递进至本项；不再以「滚动条／单位换算更直观」等理由二次跳过——CSS 滚动条样式生成器、CSS 单位换算器均不插队。
+- **未选**：CSS 滚动条样式生成器（143 轮新晋 P2、144 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做滚动条样式声明，与本项选择器权重计算口径不重叠）；CSS 单位换算器（144 轮新晋 P2、顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做 CSS 长度单位换算，与本项权重计算口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **216 Path**；`git log` 头部 8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）。逐项复核：`specificity`／`scrollbar`／`css-unit` 在 tools/categories.go 中均为 0 命中（`unit_converter` 唯一命中 1 为已交付的通用单位换算器，见下）；templates／static/js／tests 下无 specificity／scrollbar 生成器文件（unit 命中仅 unit_converter 与 unit_calc_notepad 两个已交付工具）。近邻再辨析：① **通用单位换算器**（ID unit_converter）只做绝对长度／重量／温度／数据存储，不含 rem／em／vw／vh 等相对单位，更不算选择器权重；② **CSS clamp 计算器**（ID css_clamp_calculator）只出 clamp() 流体公式；③ **CSS 渐变／阴影与圆角／文字阴影／滤镜／毛玻璃生成器**均只产样式声明，本项只算选择器权重、不产任何样式声明，口径互斥；④ **单位感知记事本计算器**是逐行算式工具，不做选择器解析。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——选择器权重靠心算，样式冲突时不知道谁赢，!important 满天飞就是没人敢算权重；逐段解析＋(a, b, c) 三元组＋多选择器排序＋胜负判定恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，选择器解析、(a, b, c) 计数、字典序比较、稳定排序均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 渐变／阴影／滤镜／毛玻璃生成器同属「CSS 可视化生成」需求簇：别人产声明，本项算权重，成组发现时互相导流；⑤ **外部佐证已就位**——142 轮由观察项晋升 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 滤镜生成器、CSS 毛玻璃生成器、CSS 阴影／圆角生成器、CSS 渐变生成器、CSS 文字阴影生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做特异性计算与比较**——不做整张样式表解析、不做浏览器实际层叠模拟，页面须明示；② **特异性胜出 ≠ 最终生效**——行内样式、!important、@layer 层叠层、源码顺序、继承均不计入本项的 (a, b, c)，胜负判定只论特异性，页面须明示；③ **:where() 计 0、:is()／:not()／:has() 取最具体参数**——按选择器规范，页面须明示；④ **函数型伪元素 ::slotted()／::part() 只计伪元素本身 1 个 c，参数不另计**——本项的明确简化口径，页面须明示；⑤ **不收集、不上传任何内容**——全部解析与比较只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - 计数规则（CSS 选择器规范 (a, b, c)）：a = ID 选择器个数；b = 类选择器＋属性选择器＋伪类个数；c = 类型选择器＋伪元素个数；通用选择器 `*` 计 0；命名空间前缀（如 `svg|a`、`*|a`）不另计，类型部分正常计 c。
+  - `parseSelector(selector)`：selector 为非空字符串，首尾空白可 trim；按组合子（空格／`>`／`+`／`~`，括号与方括号内不切分）拆为复合选择器段逐段扫描：段首类型／通用选择器，随后 `#id`、`.class`、`[attr]`（方括号须配对、引号内括号不干扰）、`::伪元素`或单冒号 legacy 伪元素（before／after／first-line／first-letter 计 c，其余单冒号计 b）；函数型伪类括号须配对：`:not()`／`:is()`／`:has()` 取参数列表（顶层逗号切分）中字典序最大的 (a, b, c)（非分量各自取大；参数可含前导组合子，解析前剥离）；`:where()` 一律计 (0, 0, 0)，参数不计；`:nth-child()`／`:nth-last-child()`／`:nth-of-type()`／`:nth-last-of-type()` 本身计 b＋1，若含 `of <选择器列表>` 则再按分量相加该列表字典序最大的 (a, b, c)；其它函数型伪类计 b＋1、参数不计；`::slotted()`／`::part()` 计 c＋1、参数不另计。返回 `{ selector, a, b, c, detail: { id, class, attr, pseudoClass, pseudoElement, type } }`，其中 a = detail.id，b = class＋attr＋pseudoClass，c = type＋pseudoElement。非法返回失败：空串、首尾／连续组合子致空段、`!`／`;`／`{`／`}` 等非法字符、括号／方括号／引号不配对、`:not()` 等参数列表为空。
+  - `formatSpecificity(t)`：t 为 {a, b, c} 非负整数，返回 `"(a, b, c)"`（如 `"(1, 2, 3)"`）；非法返回失败。
+  - `compareSpecificity(x, y)`：x、y 为 {a, b, c}，按 a→b→c 字典序比较，返回 1（x 胜）／0（平）／-1（y 胜）；非法返回失败。
+  - `splitInput(text)`：text 按行切分，空行跳过；每行再按顶层逗号（括号与方括号内不切分）切分并 trim；非空行切出空段返回失败（err.field 为 selector，消息含行号）；返回选择器字符串数组。
+  - `analyzeSelectors(selectors)`：selectors 为非空字符串数组；逐项经 parseSelector 解析，返回 `{ entries, sorted, max }`：entries 按输入顺序，每项含 selector、a、b、c、detail、index、isWinner（元组等于 max 者为 true，并列全部标 true）；sorted 为 entries 按 (a, b, c) 降序稳定排序（并列保持输入顺序）；max 为字典序最大的 (a, b, c)；空数组或任一选择器非法返回失败（开发轮注意：UI 层对非法行做红字降级展示时，逐行捕获 parseSelector 的失败，不阻塞其它行；纯函数本身仍抛错）。
+  - `buildTextReport(analyzed)`：analyzed 为 analyzeSelectors 的返回值，输出多行文本：每行 `选择器 (a, b, c)`，末行 `胜出：<选择器>`（并列时以顿号列出全部胜出选择器）；非法返回失败。
+  - `buildJsonReport(analyzed)`：输出 2 空格缩进 JSON，含 entries（每项 selector、a、b、c）与 winners（胜出选择器数组）；非法返回失败。
+  - `generateExample()`：返回固定示例数组 `["#header nav ul li a", ".menu li a", "nav a", "a", "ul#nav li.active a:hover"]`（对应 (1, 0, 4)／(0, 1, 2)／(0, 0, 2)／(0, 0, 1)／(1, 2, 3)，胜出为最后一项，演示「同为 1 个 ID 时由 b 决定胜负」）。
+  - `suggestExportName(kind)`：`txt` → `specificity.txt`，`json` → `specificity.json`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：输入区（多行文本框，每行一个选择器、行内逗号分隔亦可，输入即实时计算）；结果表（选择器｜(a, b, c)｜拆解明细如「ID 1 · 类 1 · 属性 0 · 伪类 1 · 伪元素 0 · 类型 2」｜胜负标记，胜出者标「胜出」，并列全部标「并列胜出」）；排序榜（按 (a, b, c) 降序名次，并列标注）；代码／导出区（「复制结果」「下载 .txt」「下载 .json」「载入示例」按钮，示例无需上传即可演示输入→计算→排序→导出全流程）；非法行在结果表中以红字标出该行错误信息、不阻塞其它行；空输入提示「请先输入选择器」；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 CSS 渐变生成器（/tools/css-gradient-generator，文案按「算权重 vs 产渐变声明」区分）、CSS 阴影与圆角生成器（/tools/css-shadow-radius-generator，文案按「算权重 vs 产盒阴影圆角声明」区分）、CSS 滤镜生成器（/tools/css-filter-generator，文案按「算权重 vs 产 filter 声明」区分）互链；不与未交付的 CSS 滚动条样式生成器、CSS 单位换算器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写选择器解析、(a, b, c) 计数、字典序比较、稳定排序，不引入任何选择器解析库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `css_specificity_calculator`、Name「CSS 特异性计算器」、Path `/tools/css-specificity-calculator`、Category 开发工具、Icon 建议 leaderboard（图标库无此名则用 tune 兜底；勿与已用图标在同品类视觉混淆——calculate 已被站内两个工具占用，故不选用）、New: true；中英文描述＋SEO keywords（CSS 特异性计算器、选择器权重计算器、CSS 权重、specificity calculator、css specificity、选择器优先级）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-specificity-calculator，相关工具互链 CSS 渐变生成器、CSS 阴影与圆角生成器、CSS 滤镜生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_specificity_calculator`、Path `/tools/css-specificity-calculator` 注册完整（Category 开发工具），注册总数 216→217 Path。
+2. 基础计数向量闭环（node 断言）：`#main .card p`→(1, 1, 1)；`div p`→(0, 0, 2)；`*`→(0, 0, 0)；`#id`→(1, 0, 0)；`.a.b`→(0, 2, 0)；`[data-x]`→(0, 1, 0)；`input[type="text"]:focus`→(0, 2, 1)；`a::after`→(0, 0, 2)；`p:before`（legacy 单冒号）→(0, 0, 2)；`svg|a`→(0, 0, 1)。
+3. 函数型伪类向量闭环（node 断言）：`:is(#a, .b)`→(1, 0, 0)；`:where(#a, .b)`→(0, 0, 0)；`div:not(.foo)`→(0, 1, 1)；`:has(> .active)`→(0, 1, 0)；`li:nth-child(2n of .item)`→(0, 2, 1)；`li:nth-child(2n)`→(0, 1, 1)。
+4. 比较与排序向量闭环（node 断言）：compareSpecificity 已知值（(1, 0, 4)＜(1, 2, 3)、(0, 1, 2)＞(0, 0, 9)、相等为 0）；analyzeSelectors 示例数组胜出唯一为 `ul#nav li.active a:hover`、并列时 isWinner 全标 true、sorted 稳定（并列保持输入顺序）；formatSpecificity 已知值 `(1, 2, 3)`。
+5. 非法与导出向量闭环（node 断言）：空串、`div >`、`div[`、`:not()`、`div !important` 判失败；splitInput 空行跳过、行内顶层逗号切分、非空行空段失败；buildTextReport 含各行 (a, b, c) 与胜出行、并列胜出全列出；buildJsonReport 可 JSON.parse 且 winners 正确；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+6. 操作闭环（浏览器手工／测试复核）：输入多行选择器→结果表与排序榜实时同步→胜出／并列标记正确→非法行红字提示且其它行照常计算→复制结果、下载 .txt／.json 可用→「载入示例」无需上传即可演示全流程。
+7. 真限制可见：页面可见「只做特异性计算与比较、不做整张样式表解析与浏览器实际层叠模拟」「特异性胜出 ≠ 最终生效（行内样式／!important／@layer／源码顺序／继承不计入）」「:where 计 0、:is／:not／:has 取最具体参数」「::slotted／::part 参数不另计」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 CSS 渐变生成器、CSS 阴影与圆角生成器、CSS 滤镜生成器；不含未交付工具的硬凑互链；非法选择器有红字降级提示。
+9. node 测试 25+ 断言全过（基础计数量向量、函数型伪类向量、比较与排序向量、非法与导出向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+10. 页面无报错；移动端输入框、结果表、排序榜、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_specificity_calculator.html`（新增；含 SEO 面板按家族标准＋输入区／结果表／排序榜／导出区／示例演示）
+- `static/js/css_specificity_calculator.js`（新增；选择器解析、(a, b, c) 计数、字典序比较、稳定排序、文本／JSON 报告生成、示例数组、导出命名；双模式导出供 node 测试）
+- `tests/css_specificity_calculator.test.js`（新增；基础计数量向量、函数型伪类向量、比较与排序向量、非法与导出向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_specificity_calculator、Path /tools/css-specificity-calculator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **216**；Top3 候选重叠复核（specificity／scrollbar／css-unit 在 categories.go 均为 0 实现命中；templates／static/js／tests 下无 specificity／scrollbar 生成器文件，unit 命中仅已交付的 unit_converter 与 unit_calc_notepad；通用单位换算器只做绝对单位、clamp 只出流体公式、渐变／阴影／滤镜／毛玻璃只产声明，辨析见上；CSS 滚动条样式生成器与 CSS 单位换算器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-29 09:36 · 通用调研第一百四十四轮）
+
+**交付状态**：10-29 通用调研第一百四十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 毛玻璃生成器已交付闭环**（8fe26ed 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **216 Path**，ID css_glass_generator、Path /tools/css-glass-generator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 轮，优先小／中难度纯前端。
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. CSS 毛玻璃生成器交付确认：`git log` 头部 8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）；全量 216 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）。
+2. 留池复核仍未交付：CSS 特异性计算器、CSS 滚动条样式生成器在 tools/categories.go 中 specificity／scrollbar 命中均为 0，templates／static/js／tests 下无 specificity／scrollbar 生成器文件，142／143 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描：
+   - **CSS 单位换算器**（cssawwwards 2026 年 25 款免费 CSS 工具榜单中的 CSS Units Converter 一项；syntaxtoolbox／convertiom／webdevworker 等独立换算器形态一致：px↔rem／em／vw／vh／%／pt 等双向换算＋根字号／父级字号／视口尺寸三组上下文参数）：**站内真缺口，新晋 P2**——categories.go 中 css 单位换算路径为 0，站内 12 条 /tools/css-* 路径无单位换算项；站内「单位换算器」（ID unit_converter）只做绝对长度／重量／温度／数据存储（mm／cm／m／km／英寸等），不含 rem／em／vw／vh 等相对单位；「CSS clamp 计算器」只出 clamp() 流体公式，不做单值换算；「单位感知记事本计算器」是逐行算式工具，不做单位对照表；三者口径均不重叠；纯前端小难度：数值＋源单位输入＋根字号／父级字号／视口宽高／DPI 四组上下文＋一键换算全单位对照表＋复制单个值，零上传；真限制：只做 CSS 长度单位换算（px／rem／em／%／vw／vh／vmin／vmax／pt／pc／in／cm／mm），不做通用单位换算（已有单位换算器）、不做 clamp 流体公式（已有 clamp 计算器）、不做 ch／ex（依赖具体字体度量，单页无法无歧义界定），vw／vh／vmin／vmax 结果依赖所填视口尺寸、em 依赖所填父级字号，须明示；
+   - **其余信号全部消解，不立**：CSS 格式化／压缩（站内已有 code-minifier 与各类 formatter，CSS 格式化只是又一种语言口径，单独立项价值低）／CSS 贝塞尔缓动可视化编辑（站内已有 CSS 缓动生成器 ID css-easing-generator，拖拽曲线手柄属其同一口径）／clip-path（站内已有 css-clip-path-generator）／渐变／Flexbox／Grid／关键帧／颜色转换（站内均已覆盖，见 css 路径清单）／V2EX／HN 搜索（本轮无有效单页工具新信号）／CodePen 类重型产品（需后端／账号体系，不立）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 毛玻璃生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，143 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS 特异性计算器** — P2 留池顺位首席（142 轮由观察项晋升 P2；144 轮复核仍未交付；痛点：选择器权重靠心算，样式冲突时不知道谁赢，!important 满天飞就是没人敢算权重；纯前端小难度：选择器输入＋逐段解析计数＋(a, b, c) 三元组与权重比较＋多选择器排序＋胜负判定＋复制结果，零上传；与站内 CSS 生成类工具（渐变／阴影／圆角／关键帧／Grid／Flexbox 均只产样式声明）口径不重叠；真限制：只做特异性计算与比较，不做整张样式表解析、不做浏览器实际层叠模拟，须明示）。
+2. **CSS 滚动条样式生成器** — P2 留池顺位第二（143 轮新晋 P2；144 轮复核仍未交付；痛点：跨浏览器滚动条要同时写对 WebKit 一串伪元素（::-webkit-scrollbar／track／thumb／hover）与 Firefox 两条标准属性，手写时不是漏 hover 态、就是深色界面配了浅色默认条像 bug，凭代码想象不出滑块在真实滚动面板里的粗细与手感；纯前端小难度：轨道／滑块颜色与圆角／宽度／悬停色滑杆＋六预设＋可滚动面板实时预览＋WebKit＋Firefox 双轨输出＋复制／下载 .css，零上传；与站内滚动字幕生成器（跑马灯文字）、骨架屏加载占位生成器（占位骨架）口径不重叠；真限制：只做滚动条样式声明，不做 JS 模拟滚动条、不做滚动进度条，Firefox 不支持圆角、移动端不可覆盖，须明示）。
+3. **CSS 单位换算器** — 新晋 P2（144 轮新晋；痛点：px 转 rem／em／vw 全靠心算除 16、除视口宽，根字号一改或换个断点整站尺寸全错，改一处就要重算一串值，凭心算还容易把 em 的父级基准与 rem 的根基准混成一个数；纯前端小难度：数值＋源单位＋根字号／父级字号／视口宽高／DPI 上下文＋全单位对照表＋复制单个值，零上传；与站内单位换算器（绝对单位）、CSS clamp 计算器（流体公式）、单位感知记事本计算器（逐行算式）口径不重叠；真限制：只做 CSS 长度单位换算，不做 ch／ex（依赖字体度量），vw／vh／em 结果依赖所填上下文参数，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；144 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 143 轮及之前记录。
+
+**通用候选表增量**（第一百四十四轮：CSS 毛玻璃生成器已交付划出（8fe26ed 新增；ID css_glass_generator、Path /tools/css-glass-generator 已注册；全量 216 Path；候选池划出）；**CSS 单位换算器新晋 P2**；CSS 特异性计算器、CSS 滚动条样式生成器顺位递进；自有实锤消解 5+ 项（CSS 格式化／压缩站内已有 minifier 与 formatter；贝塞尔可视化编辑属缓动生成器同一口径；clip-path／渐变／Flexbox／Grid／关键帧／颜色转换站内均已覆盖；V2EX／HN 本轮无有效新信号）；全量 216 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 毛玻璃生成器 | 已交付划出（8fe26ed 新增；ID css_glass_generator、Path /tools/css-glass-generator 已注册；全量 216 Path；候选池划出） | — | 已实现 |
+| CSS 单位换算器 | px 转 rem／em／vw 靠心算、根字号与父级基准易混；数值＋源单位＋根字号／父级字号／视口宽高／DPI 上下文＋全单位对照表＋复制单个值，纯前端零上传；站内无 css 单位换算路径，与通用单位换算器（绝对单位）／clamp 计算器（流体公式）不重叠 | 小 | P2（新晋） |
+| CSS 特异性计算器 | 复核仍未交付（142 轮 P2，顺位递进为首席）；选择器权重靠心算、样式冲突时不知道谁赢；选择器输入＋逐段解析＋(a,b,c) 三元组比较＋多选择器排序＋胜负判定＋复制结果，纯前端零上传 | 小 | P2（留池） |
+| CSS 滚动条样式生成器 | 复核仍未交付（143 轮 P2，顺位递进为第二）；跨浏览器滚动条手写要同时写对 WebKit 伪元素串与 Firefox 标准属性、深色界面默认浅色条像 bug；轨道／滑块颜色与圆角／宽度／悬停色滑杆＋六预设＋可滚动面板实时预览＋双轨输出＋复制／下载，纯前端零上传 | 小 | P2（留池） |
+| 自有实锤消解 | 不立（CSS 格式化／压缩站内已有 minifier 与 formatter；贝塞尔可视化编辑属缓动生成器同一口径；clip-path／渐变／Flexbox／Grid／关键帧／颜色转换站内均已覆盖；V2EX／HN 本轮无有效新信号） | — | 不立 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十四轮——CSS 毛玻璃生成器交付闭环（8fe26ed，`/tools/css-glass-generator` 已注册，全量 216 Path），候选池划出；**CSS 单位换算器新晋 P2**；**CSS 特异性计算器、CSS 滚动条样式生成器顺位递进为 Top3 前两位**；仓库 216 注册工具全量核对无重叠（Top3 建议 CSS 特异性计算器／CSS 滚动条样式生成器／CSS 单位换算器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）／50ed05d（滤镜生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **216**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 开发交付（2026-10-29 · 前端开发轮，接 07:40 PM 排期）
 
 **已交付：CSS 毛玻璃生成器（css_glass_generator）** — templates/css_glass_generator.html、static/js/css_glass_generator.js、tests/css_glass_generator.test.js 新增，tools/categories.go 开发工具品类注册（ID css_glass_generator、Path /tools/css-glass-generator、New: true，注册总数 215→216 Path）。node 测试 130 断言全过，go build／go vet／gofmt 均通过。两处按规格字面执行的偏离说明（供评审轮复核）：① PM 规格 buildCssSnippet 示例行写 `box-shadow: 0 8px 32px …`（固定 32px），但同规格 validatePanel 与三预设均定义 shadowBlur（32／16／40），固定值会使阴影模糊滑杆与预设失去意义，故实现为 `0 8px <shadowBlur>px rgba(0, 0, 0, <shadowAlpha>)`；② 注册 Icon 用 widgets：PM 首选 blur_on 已被同品类 CSS 阴影／圆角生成器占用，按 PM 兜底规则避让。仓库根未跟踪 `toolWeb.bak-prev` 与 `toolweb` 未入库（多轮已记录）。
