@@ -217,5 +217,23 @@ ok(TPL_SRC.indexOf("http://") < 0, "模板无外部 http 资源引用");
 ok(!/src="https?:\/\//.test(TPL_SRC) && !/href="https?:\/\//.test(TPL_SRC.replace(/https:\/\/www\.johnkingzcq123\.xyz/g, "")),
   "模板零 CDN（除 canonical/OG 自身域名外无外链）");
 
+/* ---------- 15. 预览区作用域隔离（评审反馈回归：live 注入限定 #cbg-preview-scope） ---------- */
+eq(M.scopeLiveSelector(".btn"), "#cbg-preview-scope .btn", "scopeLiveSelector 单选择器");
+eq(M.scopeLiveSelector(".btn, #go"), "#cbg-preview-scope .btn, #cbg-preview-scope #go", "scopeLiveSelector 逗号分组逐个前缀");
+eq(M.scopeLiveSelector(".btn:hover"), "#cbg-preview-scope .btn:hover", "scopeLiveSelector 保留伪类");
+ok(TPL_SRC.indexOf('id="cbg-preview-scope"') >= 0, "模板预览区容器带 id=\"cbg-preview-scope\"");
+ok(JS_SRC.indexOf("scopeLiveSelector(cfg.selector)") >= 0, "renderAll 的 live 注入走 scopeLiveSelector");
+ok(JS_SRC.indexOf("$('cbg-code').textContent = cssText;") >= 0, "代码区保持原选择器输出");
+var exCfg = JSON.parse(JSON.stringify(M.generateExample()));
+var plainCss = M.buildButtonCSS(exCfg);
+var liveCfgT = JSON.parse(JSON.stringify(exCfg));
+liveCfgT.selector = M.scopeLiveSelector(exCfg.selector);
+var scopedCss = M.buildButtonCSS(liveCfgT);
+ok(plainCss.indexOf("#cbg-preview-scope") < 0, "代码区 CSS 不含作用域前缀");
+var scopedHits = scopedCss.split("#cbg-preview-scope").length - 1;
+ok(scopedHits >= 4, "作用域 CSS 覆盖全部规则块（示例四规则块，实得 " + scopedHits + " 处前缀）");
+ok(scopedCss.indexOf("#cbg-preview-scope .btn:hover {") >= 0, "作用域 CSS 的 :hover 规则块被前缀");
+ok(!/^\.btn(:hover|:focus-visible|:active)? \{/m.test(scopedCss), "作用域 CSS 无行首的未前缀原选择器规则");
+
 console.log("PASS " + pass + " / FAIL " + fail);
 if (fail > 0) process.exit(1);

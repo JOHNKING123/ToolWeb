@@ -1,3 +1,81 @@
+## 今日任务（2026-10-29 15:00 · 产品经理排期轮，接 147 轮调研）
+
+**选定：CSS 按钮生成器（css_button_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（147 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 单位换算器已交付划出（d2b1f8d 新增，全量 219 Path），首席顺位自然递进至本项；不再以「背景图案更新颖／Modbus 更新信号」等理由二次跳过——CSS 背景图案生成器、Modbus RTU 帧生成与校验器均不插队。
+- **未选**：CSS 背景图案生成器（146 轮新晋 P2、147 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做纯 CSS 多渐变组合＋background-size 输出，与本项单个按钮规则块口径不重叠）；Modbus RTU 帧生成与校验器（147 轮新信号新晋 P2，**无硬伤，顺位第三留池**；完整 RTU 帧组装与解析，与本项 CSS 可视化生成口径完全不同赛道）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`git fetch` 成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no，github.com 主机密钥已补记）；本地当前分支 muse/dev-20260929，远端 origin/muse/dev-20260929 存在；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **219 Path**；`git log` 头部 d2b1f8d（单位换算器新增）／b81dadb（滚动条样式生成器新增）／76d488d（特异性计算器新增）。逐项复核：`button` 在 tools/categories.go 中为 0 命中，`background-pattern` 为 0 命中（`pattern` 命中均为已交付项的描述文本：十字绣图案、SVG 背景生成器相关，非路径注册）；`modbus` 命中仅已交付的 crc_checksum_calculator（裸校验和计算口径，不含帧组装）及 crc_checksum_calculator.html 描述；templates／static/js／tests 下无按钮生成器、无 CSS 背景图案生成器、无 modbus 帧文件（bg_pattern／background_pattern／css_button 均为 0 命中）。近邻再辨析：① **CSS 阴影与圆角生成器**（css_shadow_radius_generator）只产 box-shadow 与 border-radius 单声明，不产完整按钮规则块，更不管三态；② **CSS 渐变生成器**（css_gradient_generator）只产 background 填充声明，不含边框／内边距／字体／三态管理；③ **CSS 文本阴影生成器**（css_text_shadow_generator）只产 text-shadow，与按钮无关。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——从零写一个按钮要配齐背景／边框／圆角／内边距／字体／阴影六组值，再给 hover／focus／active 各复制一遍改色改阴影，漏一个态线上就是半成品手感，凭代码想象不出按钮按下去的反馈；六组值滑杆＋四态页签切换编辑＋预设＋真按钮实时预览（可悬停／聚焦／按下实测）＋完整规则块复制／下载恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，声明构建、配置校验、CSS 文本生成均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 阴影／圆角、渐变、单位换算器同属「CSS 可视化生成」需求簇：别人产单声明，本项管三态完整规则块，成组发现时互相导流；⑤ **外部佐证已就位**——147 轮以 uicookies.com 按钮生成器（全态＋对比度＋目标尺寸检查）、codeshack.io 按钮生成器（focus-visible＋WCAG＋禁用态）两轮竞品实锤需求，本轮复核仍未交付。
+- **品类归位**：注册到「开发工具」品类（与 CSS 阴影与圆角生成器、CSS 渐变生成器、CSS 单位换算器、CSS 滚动条样式生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做单个按钮的完整规则块**——不做整套组件库、不做图标库、不做动效库，页面须明示；② **只做三态（hover／focus／active）＋默认态**——不做禁用态／加载态／图标按钮，页面须明示；③ **不收集、不上传任何内容**——全部生成只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 配置结构 config：`{ selector, default: State, hover: State, focus: State, active: State }`；State 六组值：background（背景色 hex＋透明度）、border（宽度 px、样式 solid/dashed/dotted/none、颜色）、borderRadius（px，0–64）、padding（上下 px、左右 px）、font（字号 px、字重 400/500/600/700、颜色、字间距 px）、boxShadow（水平/垂直偏移、模糊、扩散、颜色、透明度、inset 开关）。
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - `validateState(s, field)`：六组值字段逐项校验（颜色须 #RGB/#RRGGBB、数值须有限数且在允许范围、样式须枚举内）；非法抛 Error，err.field 形如 "default.background"。
+  - `validateConfig(config)`：selector 非空字符串；四态逐项 validateState；返回归一化 config。
+  - `buildDeclarations(state)`：返回该态的 CSS 声明文本（多行，每行 `  prop: value;`），只含六组值对应的 background-color/border/border-radius/padding/font-size/font-weight/color/letter-spacing/box-shadow；非法抛 Error。
+  - `buildButtonCSS(config)`：返回完整规则块字符串：`{selector} {…}` ＋ `:hover`／`:focus-visible`／`:active` 三个态规则块；某态与默认态逐项一致时省略该规则块（不输出空规则）；非法抛 Error。
+  - `stateDiffers(a, b)`：两 State 逐项比较，返回是否不同（供省略规则块与界面「与默认一致」标注）。
+  - `PRESETS`：4 组预设（实心圆角、描边按钮、胶囊按钮、扁平深色），每项 `{ name, config }`，可直接载入。
+  - `generateExample()`：返回固定示例 config（蓝底白字圆角按钮，hover 加深＋阴影放大，focus 加 outline 偏移，active 下沉），演示四态差异。
+  - `suggestExportName(kind)`：`css` → `button.css`，`html` → `button-demo.html`，其它 kind 返回失败。
+- 界面：状态页签（默认／悬停 hover／聚焦 focus／按下 active）切换编辑，当前态与默认一致时页签标注「与默认一致」；六组值编辑区（颜色选择器＋滑杆＋数值框联动）；预设区（4 组预设一键载入）；实时预览区（真 `<button>` 元素应用当前 CSS，可悬停／Tab 聚焦／按下实测反馈）；代码输出区（完整规则块，语法高亮可选）；操作区（「复制 CSS」「下载 button.css」「下载演示页」「载入示例」；示例无需上传即可演示编辑→预览→代码→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 CSS 阴影与圆角生成器（/tools/css-shadow-radius-generator，文案按「完整按钮规则块 vs 阴影/圆角单声明细调」区分）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「纯色按钮背景 vs 渐变填充声明」区分）互链；不与未交付的 CSS 背景图案生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写声明构建、配置校验、CSS 文本生成，不引入任何 CSS-in-JS 库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `css_button_generator`、Name「CSS 按钮生成器」、Path `/tools/css-button-generator`、Category 开发工具、Icon 建议 smart_button（图标库无此名则用 ads_click 兜底；勿与已用图标在同品类视觉混淆）、New: true；中英文描述＋SEO keywords（CSS 按钮生成器、按钮样式生成、button hover focus active、css button generator、按钮三态样式）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-button-generator，相关工具互链 CSS 阴影与圆角生成器、CSS 渐变生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_button_generator`、Path `/tools/css-button-generator` 注册完整（Category 开发工具），注册总数 219→220 Path。
+2. 校验向量闭环（node 断言）：validateState 非法颜色（"red"／"#12"）判失败 err.field 正确；数值越界（圆角 -1／101）判失败；validateConfig 空 selector 判失败；stateDiffers 相同/不同判真假正确。
+3. 生成向量闭环（node 断言）：generateExample 示例 config 经 buildButtonCSS 输出含 `{selector}`、`:hover`、`:focus-visible`、`:active` 四个规则块字面；与默认一致的态被省略；buildDeclarations 已知 State 输出声明文本行数与属性名正确；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+4. 操作闭环（浏览器手工／测试复核）：切状态页签编辑→真按钮预览实时同步→悬停/Tab 聚焦/按下可实测反馈→与默认一致的态标注「与默认一致」→复制 CSS、下载 button.css／button-demo.html 可用→「载入示例」无需上传即可演示全流程。
+5. 真限制可见：页面可见「只做单个按钮的完整规则块，不做整套组件库」「只做 hover／focus／active 三态，不做禁用态／加载态」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+6. 操作闭环：相关工具互链含 CSS 阴影与圆角生成器、CSS 渐变生成器；不含未交付工具的硬凑互链。
+7. node 测试 25+ 断言全过（校验向量、生成向量、导出与示例向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+8. 页面无报错；移动端状态页签、六组值编辑区、预览区、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_button_generator.html`（新增；含 SEO 面板按家族标准＋状态页签／六组值编辑区／预设区／真按钮实时预览区／代码输出区／操作区）
+- `static/js/css_button_generator.js`（新增；六组值校验、声明构建、四态规则块生成、态差异比较、4 组预设、示例配置、导出命名；双模式导出供 node 测试）
+- `tests/css_button_generator.test.js`（新增；校验向量、生成向量、导出与示例向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_button_generator、Path /tools/css-button-generator、New: true）
+
+---
+## 今日任务（2026-10-29 15:00 · 通用调研第一百四十七轮）
+
+**交付状态**：10-29 通用调研第一百四十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 单位换算器已交付闭环**（d2b1f8d 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **219 Path**，ID css_unit_converter、Path /tools/css-unit-converter 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小／中难度纯前端。
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. CSS 单位换算器交付确认：`git log` 头部 d2b1f8d（单位换算器新增）／b81dadb（滚动条样式生成器新增）／76d488d（特异性计算器新增）；全量 219 Path；本地当前分支 muse/dev-20260929。
+2. 留池复核仍未交付：CSS 按钮生成器、CSS 背景图案生成器在 tools/categories.go 中 button／background-pattern 路径命中均为 0，templates／static/js／tests 下无按钮生成器／背景图案生成器文件，145／146 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描（以 V2EX 今日 EmbedKit 嵌入式工具箱帖为主线）：
+   - **Modbus RTU 帧生成与校验器**（V2EX 今日新帖，embedkit.ryanuo.cc 纯前端工具箱含 Modbus RTU/TCP 帧生成与校验一项）：**站内真缺口，新晋 P2**——站内 CRC 校验和计算器（crc_checksum_calculator）含 CRC16/MODBUS 算法，但那是裸校验和计算，本项的新口径是**完整 RTU 帧组装与解析**（设备地址＋功能码 01/02/03/04/05/06/0F/10＋寄存器地址／数量／数据＋自动 CRC16/MODBUS 校验，方向生成与校验：贴收到的帧→验 CRC＋拆字段；纯前端小／中难度，零上传；真限制：只做 RTU 帧（不做 ASCII 编码）、不做实际串口收发（Web Serial 需硬件），须明示；
+   - **HEX ↔ C 数组互转器**（EmbedKit 同帖含 HEX↔ASCII/C 数组一项）：口径核定——站内无专用工具（base converter 只做进制互转、HMAC 只输出 hex 字符串、JSON 字符串转义器不做字节数组），贴 hex 字符串（0x 前缀／空格分隔多种写法）↔ 生成 `const uint8_t data[] = {...}` C 数组双向互转是嵌入式开发的真痛点；纯前端小难度，零上传；**观察项新增**（口径待 PM 裁定：是否与 Modbus 帧生成器合并为「嵌入式字节工具」或单独立项）；
+   - **其余信号全部消解，不立**：EmbedKit 其余项站内均已覆盖（CRC 计算＝crc_checksum_calculator 已交付，含 CRC16/MODBUS；进制转换＝Base converter 已交付，BigInt 精确；Web Serial 串口监视器需硬件＋浏览器 API，纯前端可实现但非单页闭环→观察项）；Marko Denic 工具榜单（2026-10-26 更新 Gitignore 生成器）——站内 **.gitignore 生成器已交付**（/tools/gitignore-generator，官方模板离线拼接＋去重＋实时预览），实锤消解；榜单其余项站内均已覆盖（Grid／Text Shadow／Box Shadow／Gradient／Pulse Animation／Border Radius／Neumorphism／Glassmorphism／QR 均已注册）；uicookies.com 免费 CSS 工具（昨日爬取）——按钮生成器（全态＋对比度＋目标尺寸检查）与渐变／阴影／玻璃拟态／clip-path 均为竞品实现，**CSS 按钮生成器留池需求再确认**，非新口径；codeshack.io CSS Button Generator（focus-visible 细节＋WCAG 对比度＋禁用态）——同属按钮生成器外部佐证，非新口径；dev.to 负面评论聚类小工具（需 AI 聚类模型＋电商垂直场景）——需后端/AI 非纯前端确定性工具＋口径不符（非 ToolWeb 开发工具线），不立；dev.to 上线站点对比／TinyWebUI 自托管 AI 聊天／Mnml.page 建站——均为产品非单页工具，不立；V2EX xGoose 插件（浏览器插件）、AI 跳舞视频（需后端生成）、老黄历 APP（客户端＋泛生活）、QuireKit 分页编辑器框架（125 个 npm 包，重量级产品）——口径不符或需后端，不立。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 单位换算器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，146 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS 按钮生成器** — P2 留池顺位首席（145 轮新晋 P2；147 轮复核仍未交付；痛点：从零写一个按钮要配齐背景／边框／圆角／内边距／字体／阴影六组值，再给 hover／focus／active 各复制一遍改色改阴影，漏一个态线上就是半成品手感，凭代码想象不出按钮按下去的反馈；纯前端小难度：六组值滑杆＋三态切换编辑＋预设＋按钮实时预览（可悬停／聚焦实测）＋完整规则块复制／下载，零上传；与站内阴影／圆角生成器（只产 box-shadow 与圆角）、渐变生成器（只产填充声明）口径不重叠——本项的新口径是三态管理与完整规则块；本轮外部佐证再加强：uicookies.com 按钮生成器（全态＋对比度＋目标尺寸检查）、codeshack.io 按钮生成器（focus-visible＋WCAG＋禁用态）均为同类竞品；真限制：只做单个按钮规则块，不做整套组件库、不做图标与动效库，须明示）。
+2. **CSS 背景图案生成器** — P2 留池顺位第二（146 轮新晋 P2；147 轮复核仍未交付；痛点：手写条纹／圆点／棋盘背景要反复调 repeating-gradient 的色标断点与 background-size，平铺接缝算不对就是一条条错位线，凭代码想象不出图案密度；纯前端小难度：六种图案类型＋颜色／尺寸／密度／角度滑杆＋平铺预览区＋`background-image`／`background-size` 代码复制／下载，零上传；与站内 SVG 背景生成器（只产 SVG 代码）、十字绣图案（刺绣网格）、渐变生成器（单填充声明）口径不重叠；真限制：只做纯 CSS 多渐变背景图案，不做 SVG 路线、不做单渐变填充，须明示）。
+3. **Modbus RTU 帧生成与校验器** — 新晋 P2（147 轮新信号；V2EX 今日 EmbedKit 嵌入式工具箱帖；痛点：串口/TCP 调试 Modbus 设备时要手算 CRC16 查表、翻手册拼帧格式，发一帧收一帧都要在纸上验校验和，对不上还得逐字节排查是地址错还是字节序错；纯前端小／中难度：设备地址＋功能码（01/02/03/04/05/06/0F/10）＋寄存器地址／数量／数据→组装完整 RTU 帧 hex 并自动算 CRC16/MODBUS，粘贴收到的帧→验 CRC＋拆解各字段，零上传；站内 CRC 校验和计算器只做裸校验和计算，与本项「完整帧组装/解析」口径不重叠；真限制：只做 RTU 帧（不做 ASCII 编码）、不做实际串口收发（Web Serial 需硬件），须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；147 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：HEX ↔ C 数组互转器（147 轮观察项新增，口径待 PM 裁定：与 Modbus 帧生成器合并或单独立项）；CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 146 轮及之前记录。
+
+**通用候选表增量**（第一百四十七轮：CSS 单位换算器已交付划出（d2b1f8d 新增；ID css_unit_converter、Path /tools/css-unit-converter 已注册；全量 219 Path；候选池划出）；**Modbus RTU 帧生成与校验器新晋 P2**；CSS 按钮生成器、CSS 背景图案生成器顺位递进；HEX ↔ C 数组互转器入观察项（口径待裁定）；自有实锤消解 15+ 项（EmbedKit：CRC／进制已交付、串口监视器需硬件；Marko Denic 榜单：Gitignore 生成器已交付，其余均已注册；uicookies／codeshack 按钮生成器为留池项外部佐证非新口径；dev.to 聚类工具／TinyWebUI／Mnml.page 口径不符；xGoose 插件／AI 跳舞视频／老黄历 APP／QuireKit 口径不符或需后端）；全量 219 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 单位换算器 | 已交付划出（d2b1f8d 新增；ID css_unit_converter、Path /tools/css-unit-converter 已注册；全量 219 Path；候选池划出） | — | 已实现 |
+| Modbus RTU 帧生成与校验器 | 调试 Modbus 设备要手算 CRC16 查表、翻手册拼帧格式，校验和对不上逐字节排查；设备地址＋功能码＋寄存器＋数据→组装完整 RTU 帧并自动 CRC16，粘贴收帧→验 CRC＋拆字段，纯前端零上传；站内 CRC 校验和计算器只做裸校验和，口径不重叠 | 小/中 | P2（新晋） |
+| CSS 按钮生成器 | 复核仍未交付（145 轮 P2，顺位递进为首席）；从零写按钮六组值＋三态各复制一遍、漏态即半成品手感；六组值滑杆＋三态切换编辑＋预设＋实时预览（可悬停／聚焦实测）＋完整规则块复制／下载，纯前端零上传；本轮 uicookies／codeshack 同类竞品佐证需求 | 小 | P2（留池） |
+| CSS 背景图案生成器 | 复核仍未交付（146 轮 P2，顺位递进为第二）；手写 repeating-gradient 色标断点＋background-size，平铺接缝错位；六种图案＋颜色／尺寸／密度／角度滑杆＋平铺预览＋background-image／background-size 代码复制／下载，纯前端零上传 | 小 | P2（留池） |
+| HEX ↔ C 数组互转器 | 观察项新增（口径待 PM 裁定：与 Modbus 帧生成器合并为「嵌入式字节工具」或单独立项；站内无专用工具） | — | 观察项 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十七轮——CSS 单位换算器交付闭环（d2b1f8d，`/tools/css-unit-converter` 已注册，全量 219 Path），候选池划出；**Modbus RTU 帧生成与校验器新晋 P2**（V2EX 今日 EmbedKit 帖的新口径：完整 RTU 帧组装与解析，站内 CRC 校验和计算器只做裸校验和，口径不重叠）；**CSS 按钮生成器、CSS 背景图案生成器顺位递进为 Top3 前两位**；HEX ↔ C 数组互转器入观察项（口径待裁定）；新信号扫描以 V2EX 今日 EmbedKit 嵌入式工具箱、Marko Denic 工具榜单（10-26 更新）、uicookies.com 免费 CSS 工具为主线，自有实锤消解 15+ 项；Top3 建议 CSS 按钮生成器／CSS 背景图案生成器／Modbus RTU 帧生成与校验器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 d2b1f8d（单位换算器新增）／b81dadb（滚动条样式生成器新增）／76d488d（特异性计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **219**；Top3 候选重叠复核（button／background-pattern 在 categories.go 均为 0 路径命中；modbus／frame 0 命中，crc 命中仅已交付的 crc_checksum_calculator（裸校验和口径，不含帧组装）；templates／static/js／tests 下无按钮生成器／背景图案生成器／modbus 帧文件；hex 命中仅颜色/HMAC/进制/取色等描述文本，无 HEX↔C 数组专用工具；.gitignore 生成器已注册，Marko Denic 新榜单信号消解；CSS 按钮生成器与 CSS 背景图案生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-29 13:39 · 产品经理排期轮，接 146 轮调研）
 
 **选定：CSS 单位换算器（css_unit_converter）** — 本轮唯一任务（新工具）：

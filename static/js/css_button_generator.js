@@ -242,6 +242,16 @@ function buildButtonCSS(config) {
   return blocks.join('\n\n');
 }
 
+/* scopeLiveSelector(sel)：把选择器限定在预览区容器 #cbg-preview-scope 内。
+ * 逗号分组逐个前缀 "#cbg-preview-scope "。预览按钮在该容器里，仍被命中；
+ * 而页面自身的操作按钮（class="btn btn-primary"）在容器外，不再被用户
+ * 选择器（如 .btn）的同特异度规则重涂。纯函数，供 renderAll 的 live 注入用。 */
+function scopeLiveSelector(sel) {
+  return String(sel).split(',').map(function (part) {
+    return '#cbg-preview-scope ' + part.trim();
+  }).join(', ');
+}
+
 /* ---------- 默认配置 / 预设 / 示例 ---------- */
 
 /* 默认 State：蓝底白字圆角按钮。 */
@@ -428,7 +438,7 @@ if (typeof module !== 'undefined' && module.exports) {
     hexToRgb: hexToRgb, fmtAlpha: fmtAlpha,
     validateState: validateState, validateConfig: validateConfig,
     buildDeclarations: buildDeclarations, buildButtonCSS: buildButtonCSS,
-    stateDiffers: stateDiffers,
+    stateDiffers: stateDiffers, scopeLiveSelector: scopeLiveSelector,
     defaultState: defaultState, defaultConfig: defaultConfig,
     PRESETS: PRESETS, generateExample: generateExample,
     suggestExportName: suggestExportName, buildDemoPage: buildDemoPage,
@@ -572,8 +582,12 @@ function renderAll() {
     return;
   }
   var cssText = buildButtonCSS(cfg);
+  /* live 注入作用域隔离：克隆配置＋scope 选择器再生成，<style id="cbg-live">
+   * 的规则只影响预览区内的真按钮；代码区保持原选择器输出不变。 */
+  var liveCfg = clone(cfg);
+  liveCfg.selector = scopeLiveSelector(cfg.selector);
   $('cbg-code').textContent = cssText;
-  $('cbg-live').textContent = cssText;
+  $('cbg-live').textContent = buildButtonCSS(liveCfg);
 
   /* 页签「与默认一致」标注 */
   for (var i = 0; i < TABS.length; i++) {
