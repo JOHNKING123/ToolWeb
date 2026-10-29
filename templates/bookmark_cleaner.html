@@ -1,0 +1,217 @@
+{{define "bookmark_cleaner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器书签清理与分析器 - 导入 bookmarks.html 本地去重/分析/导出 | 程序员工具箱</title>
+    <meta name="description" content="免费在线浏览器书签清理与分析器：导入 Chrome/Edge/Firefox 导出的 bookmarks.html，本地解析文件夹树，检测重复 URL（归一化去重）、重复标题、空文件夹，域名分布 Top20 统计，勾选删除后导出清理版 bookmarks-cleaned.html 回浏览器导入；纯前端零上传 · Bookmark cleaner: import bookmarks.html, detect duplicate URLs/titles, empty folders, domain stats, export cleaned file, 100% client-side">
+    <meta name="keywords" content="书签清理,书签去重,bookmarks.html,重复书签,bookmark cleaner,duplicate bookmarks,书签管理,空文件夹检测,书签分析">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bookmark-cleaner">
+    <meta property="og:title" content="浏览器书签清理与分析器">
+    <meta property="og:description" content="导入 bookmarks.html → 本地解析文件夹树 → 重复 URL/标题检测、空文件夹检测、域名统计 → 勾选删除 → 导出清理版。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bookmark-cleaner">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"浏览器书签清理与分析器","description":"导入浏览器导出的 bookmarks.html，本地解析文件夹树，检测重复 URL（归一化去重）、重复标题、空文件夹，域名分布统计，勾选删除后导出清理版 bookmarks-cleaned.html。纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/bookmark-cleaner","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bc-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .bc-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .bc-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .bc-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .bc-privacy { display:flex; gap:.7rem; align-items:flex-start; border:2px solid #34d399; background:#ecfdf5;
+            border-radius:.8rem; padding:.9rem 1rem; margin:0 0 1.1rem; font-size:.92rem; line-height:1.9; color:#065f46; }
+        .bc-privacy b { color:#047857; }
+        .bc-drop { border:2px dashed #93c5fd; border-radius:.8rem; background:#f8fbff; padding:2rem 1rem; text-align:center;
+            cursor:pointer; transition:all .15s; color:#374151; }
+        .bc-drop:hover, .bc-drop.bc-dragover { border-color:#2563eb; background:#eff6ff; }
+        .bc-drop .bc-big { font-size:2rem; display:block; margin-bottom:.5rem; }
+        .bc-drop p { margin:.3rem 0; font-size:.92rem; }
+        .bc-drop .bc-sub { font-size:.82rem; color:#9ca3af; }
+        .bc-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.9rem; }
+        .bc-error { display:none; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:.6rem;
+            padding:.7rem 1rem; margin-top:.9rem; font-size:.9rem; line-height:1.7; }
+        .bc-overview { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.7rem; }
+        .bc-stat { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .5rem; text-align:center; }
+        .bc-stat-num { font-size:1.5rem; font-weight:800; color:#1d4ed8; }
+        .bc-stat-label { font-size:.82rem; color:#6b7280; margin-top:.2rem; }
+        .bc-file-info { font-size:.85rem; color:#6b7280; margin:.7rem 0 0; }
+        details.bc-card summary { cursor:pointer; font-size:1rem; font-weight:700; color:#111827; list-style:none; }
+        details.bc-card summary::-webkit-details-marker { display:none; }
+        details.bc-card summary::before { content:'▸ '; color:#2563eb; }
+        details.bc-card[open] summary::before { content:'▾ '; }
+        .bc-group { border:1px solid #e5e7eb; border-radius:.6rem; margin-bottom:.8rem; overflow:hidden; }
+        .bc-group-head { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; background:#f9fafb;
+            padding:.6rem .9rem; border-bottom:1px solid #e5e7eb; }
+        .bc-badge { font-size:.75rem; padding:.15rem .6rem; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-weight:700; }
+        .bc-badge-warn { background:#fef3c7; color:#92400e; }
+        .bc-group-key { font-size:.82rem; color:#374151; word-break:break-all; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .bc-group-hint { font-size:.78rem; color:#9ca3af; margin-left:auto; }
+        .bc-row { display:flex; gap:.7rem; align-items:flex-start; padding:.6rem .9rem; border-bottom:1px solid #f3f4f6; cursor:pointer; }
+        .bc-row:last-child { border-bottom:none; }
+        .bc-row:hover { background:#f8fafc; }
+        .bc-row input { margin-top:.25rem; flex:none; accent-color:#2563eb; width:1.05rem; height:1.05rem; }
+        .bc-row-info { flex:1; min-width:0; }
+        .bc-row-title { font-size:.9rem; color:#111827; font-weight:600; word-break:break-all; }
+        .bc-row-meta { font-size:.78rem; color:#9ca3af; margin-top:.15rem; display:flex; gap:1rem; flex-wrap:wrap; }
+        .bc-row-href { font-size:.78rem; color:#6b7280; word-break:break-all; margin-top:.15rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .bc-keep-tag { flex:none; font-size:.75rem; color:#1d4ed8; background:#eff6ff; border-radius:.35rem;
+            padding:.2rem .5rem; margin-top:.15rem; }
+        .bc-del-tag { color:#b91c1c; background:#fef2f2; }
+        .bc-sec-tip { font-size:.85rem; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:.5rem;
+            padding:.5rem .8rem; margin:0 0 .8rem; line-height:1.7; }
+        .bc-empty-note { font-size:.88rem; color:#9ca3af; margin:.2rem 0; }
+        .bc-dom-row { display:flex; align-items:center; gap:.7rem; padding:.35rem 0; border-bottom:1px solid #f3f4f6; }
+        .bc-dom-row:last-child { border-bottom:none; }
+        .bc-dom-name { flex:none; width:13rem; max-width:38vw; font-size:.85rem; color:#374151; overflow:hidden;
+            text-overflow:ellipsis; white-space:nowrap; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .bc-dom-barwrap { flex:1; background:#f3f4f6; border-radius:.3rem; height:.7rem; overflow:hidden; }
+        .bc-dom-bar { height:100%; background:linear-gradient(90deg,#60a5fa,#2563eb); border-radius:.3rem; }
+        .bc-dom-count { flex:none; font-size:.82rem; color:#6b7280; min-width:3.2em; text-align:right; }
+        .bc-verify { font-size:.88rem; margin-top:.7rem; line-height:1.7; color:#065f46; }
+        .bc-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .bc-tip a { color:var(--primary-color); }
+        .bc-tip code { background:#f3f4f6; padding:.1rem .4rem; border-radius:.3rem; font-size:.82rem; color:#b91c1c; }
+        .bc-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .bc-links a { color:var(--primary-color); font-size:.93rem; }
+        .bc-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .bc-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff;
+            padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        .bc-limits { font-size:.92rem; line-height:2; color:#374151; }
+        .bc-limits b { color:#111827; }
+        @media (max-width:640px) {
+            .bc-dom-name { width:8rem; }
+            .bc-group-hint { margin-left:0; width:100%; }
+            .bc-row { gap:.5rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="bc-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔖 浏览器书签清理与分析器</h1>
+            <p>导入 bookmarks.html → 本地解析文件夹树 → 重复去重/空文件夹/域名统计 → 勾选删除 → 导出清理版</p>
+        </div>
+
+        <div class="bc-privacy">
+            <div><b>隐私承诺：</b>本工具纯浏览器本地运行、<b>零依赖、无后端上传</b>；书签文件只在当前页面内存中解析与处理，不发送到任何服务器。页面<b>零 fetch / XHR、零 CDN</b>，断网也能用。</div>
+        </div>
+
+        <div class="bc-card">
+            <h3>导入书签文件 <span class="bc-hint">（Chrome / Edge / Firefox 书签管理器导出的 bookmarks.html）</span></h3>
+            <div class="bc-drop" id="bc-drop" role="button" tabindex="0" aria-label="点击选择或拖放书签文件">
+                <span class="bc-big">📥</span>
+                <p><b>点击选择文件</b>，或把 <b>bookmarks.html</b> 拖到这里</p>
+                <p class="bc-sub">FileReader 本地读取，不上传；非法文件会中文提示</p>
+            </div>
+            <input type="file" id="bc-file" accept=".html,.htm" style="display:none" aria-label="选择书签文件">
+            <div class="bc-actions">
+                <button class="btn btn-secondary" id="bc-example-btn" type="button">📦 载入内置示例（一键演示全流程）</button>
+            </div>
+            <div class="bc-error" id="bc-error" role="alert"></div>
+        </div>
+
+        <div class="bc-card">
+            <h3>分析概览</h3>
+            <div class="bc-overview" id="bc-overview">
+                <div class="bc-stat"><div class="bc-stat-num">–</div><div class="bc-stat-label">总链接</div></div>
+                <div class="bc-stat"><div class="bc-stat-num">–</div><div class="bc-stat-label">文件夹</div></div>
+                <div class="bc-stat"><div class="bc-stat-num">–</div><div class="bc-stat-label">重复 URL 组</div></div>
+                <div class="bc-stat"><div class="bc-stat-num">–</div><div class="bc-stat-label">重复标题组</div></div>
+                <div class="bc-stat"><div class="bc-stat-num">–</div><div class="bc-stat-label">空文件夹</div></div>
+            </div>
+            <p class="bc-file-info" id="bc-file-info">尚未导入：先导入 bookmarks.html 或载入内置示例。</p>
+        </div>
+
+        <details class="bc-card" open>
+            <summary>重复 URL <span class="bc-hint" id="bc-url-count"></span></summary>
+            <p class="bc-note" style="margin-bottom:.8rem">按归一化 URL 分组（host 小写、去默认端口/末尾斜杠/fragment，保留 query）。每组默认保留<b>最早收藏</b>的一条，可改选；点「应用删除」后其余条目将被删除。</p>
+            <div id="bc-url-groups"><p class="bc-empty-note">导入后自动检测。</p></div>
+        </details>
+
+        <details class="bc-card">
+            <summary>重复标题 <span class="bc-hint" id="bc-title-count"></span></summary>
+            <div id="bc-title-groups"><p class="bc-empty-note">导入后自动检测。</p></div>
+        </details>
+
+        <details class="bc-card">
+            <summary>域名分布 <span class="bc-hint" id="bc-domain-count"></span></summary>
+            <div id="bc-domain-list"><p class="bc-empty-note">导入后自动统计。</p></div>
+        </details>
+
+        <details class="bc-card">
+            <summary>空文件夹 <span class="bc-hint" id="bc-empty-count"></span></summary>
+            <div id="bc-empty-list"><p class="bc-empty-note">导入后自动检测。</p></div>
+        </details>
+
+        <div class="bc-card">
+            <h3>清理与导出</h3>
+            <div class="bc-actions">
+                <button class="btn btn-primary" id="bc-apply-btn" type="button" disabled>🗑 应用删除（按上方勾选）</button>
+                <button class="btn btn-secondary" id="bc-export-btn" type="button" disabled>⬇ 导出清理后的 bookmarks.html</button>
+                <button class="btn btn-secondary" id="bc-verify-btn" type="button" disabled>✓ 校验导出（重新解析）</button>
+                <button class="btn btn-secondary" id="bc-copy-btn" type="button" disabled>📋 复制统计摘要</button>
+                <button class="btn btn-secondary" id="bc-reset-btn" type="button" disabled>↺ 重置为导入时状态</button>
+            </div>
+            <p class="bc-note">导出文件名为 <code>bookmarks-cleaned.html</code>，标准 NETSCAPE-Bookmark-file-1 格式，可直接回浏览器书签管理器导入。</p>
+            <div class="bc-verify" id="bc-verify-result"></div>
+        </div>
+
+        <div class="bc-card">
+            <h3>使用说明</h3>
+            <ol class="bc-tip" style="margin:0;padding-left:1.3rem;">
+                <li>在浏览器书签管理器中选择「导出书签」，得到 <code>bookmarks.html</code>（Chrome / Edge / Firefox 均导出 Netscape 标准格式）。</li>
+                <li>把文件拖到上方导入区（或点「载入内置示例」直接体验）：页面即时给出总链接/文件夹数、重复 URL 组、重复标题组、域名 Top20、空文件夹。</li>
+                <li>重复 URL 组默认保留每组最早收藏的一条，可逐条改选保留项；重复标题组仅提示，需手动勾选；空文件夹默认勾选删除。</li>
+                <li>点「应用删除」即时刷新统计；「导出」下载 <code>bookmarks-cleaned.html</code>；「校验导出」会在内存里重新解析一次，确认格式合法再回浏览器导入。</li>
+                <li>误删了？点「重置为导入时状态」一键恢复（重置前记得先导出已清理的版本）。</li>
+            </ol>
+        </div>
+
+        <div class="bc-card">
+            <h3>常见问题</h3>
+            <dl class="bc-tip">
+                <dt><b>URL 归一化去重是什么口径？</b></dt>
+                <dd>host 转小写、去掉默认端口（:80/:443）与末尾斜杠（根路径除外）、去掉 #fragment 后比较；query 参数保留（<code>?x=1</code> 与无参数视为不同页面）。<code>https://Example.com/a/</code> 与 <code>https://example.com/a</code> 会被判为同一条。</dd>
+                <dt><b>重复标题为什么默认不删除？</b></dt>
+                <dd>同名可能是不同网站的不同页面（如都叫「首页」），误删风险高，所以只提示、由你逐条勾选确认。</dd>
+                <dt><b>导出的文件浏览器能直接导入吗？</b></dt>
+                <dd>能。导出的是标准 <code>NETSCAPE-Bookmark-file-1</code> 格式，保留原有文件夹结构、HREF / ADD_DATE / ICON 属性；「校验导出」按钮会先重新解析一遍确认合法。</dd>
+                <dt><b>能检测死链吗？</b></dt>
+                <dd>不能，首版不做死链检测（见真限制说明）。如需核验请分批手动打开链接。</dd>
+                <dt><b>我的书签会被上传吗？</b></dt>
+                <dd>不会。文件经 FileReader 在浏览器本地读取解析，页面零 fetch / XHR、零 CDN，书签内容不出本机。</dd>
+            </dl>
+        </div>
+
+        <div class="bc-card">
+            <h3>相关工具</h3>
+            <div class="bc-links">
+                <a href="/tools/url-tracker-cleaner">URL 追踪参数清除器（书签库整体去重清理 vs 单条 URL 追踪参数清除）</a>
+                <a href="/tools/url-parser">URL 解析器（书签库批量分析 vs 单条 URL 结构拆解）</a>
+            </div>
+            <p class="bc-note">分工：本工具治理整个书签库的重复与空文件夹；URL 追踪参数清除器负责单条链接的 utm_/fbclid/spm 等追踪参数清理；URL 解析器负责单条长链接的协议/主机/路径/参数结构拆解。</p>
+        </div>
+
+        <div class="bc-card">
+            <h3>真限制说明</h3>
+            <div class="bc-limits">
+                <b>只做本地导入→分析／去重／清理→导出</b>：不做跨设备同步，不做 AI 摘要／语义搜索。<br>
+                <b>首版不做死链检测</b>：纯前端 no-cors 探测拿不到真实 HTTP 状态码，大批量探测易被目标站限流、误报率高；如需核验请分批手动打开链接。<br>
+                <b>不收集、不上传</b>：书签文件只在浏览器本地解析与处理，页面零 fetch／XHR、零 CDN，不收集、不上传任何内容。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="bc-toast" id="bc-toast"></div>
+    <script src="/tools/static/js/bookmark_cleaner.js?v=1"></script>
+</body>
+</html>
+{{end}}

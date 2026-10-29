@@ -1,3 +1,98 @@
+## 今日任务（2026-10-29 23:00 · 产品经理排期轮，接 151 轮调研）
+
+**选定：浏览器书签清理与分析器（bookmark_cleaner）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（151 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。寄存器位域查看与编辑器已交付划出（d40a39c 新增＋607c3af 评审修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **223 Path**），首席顺位自然递进至本项；不再以「示例生成正则更新颖」等理由二次跳过——示例生成正则表达式（grex 式）不插队。
+- **未选**：示例生成正则表达式（grex 式）（151 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；贴多条示例字符串→确定性贪心算法生成覆盖全部示例的正则口径，与本项书签清理口径完全不同赛道）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）；GIF／视频转 GIF（149 轮观察项，**口径仍待 PM 裁定→不晋升**：ffmpeg.wasm 体积＋首屏下载等待与只做 GIF→GIF 轻量版二选一需单独一轮论证，本轮不并项）；HEX ↔ C 数组互转器／MAP 文件内存分析器／Markdown 转公众号排版器（观察项，口径待裁定，继续观察）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **223**；`bookmark` 在 tools/categories.go 中 **0 命中**，`grex` 0 命中；`bookmark` 在 templates／static/js／tests 下均 0 命中（无书签清理专用文件）；`url` 命中仅已交付的 URL 解析器（/tools/url-parser，URL 结构解析口径）与 URL 追踪参数清除器（/tools/url-tracker-cleaner，清除 utm_/fbclid 追踪参数口径），与本项「书签 HTML 导入→分析／去重／清理→导出」口径不重叠；`link` 命中均为描述文本／图标名，无书签管理口径。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——书签栏几千链接翻半天、同一文章多个 URL 重复收藏、「收藏从未停止、阅读从未开始」的信息坟场；「导入 bookmarks.html→本地解析文件夹树→重复 URL／标题检测＋域名分组统计＋空文件夹检测→勾选删除→导出清理后的 bookmarks.html 回浏览器导入」恰好对症，零上传；③ **一轮可高质量交付**——纯前端、无依赖，Netscape 书签 HTML 解析、URL 归一化、树遍历均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 URL 追踪参数清除器（口径：追踪参数清理）同属「链接治理」需求簇：别人管单条 URL 的追踪参数，本项管整个书签库的重复与腐烂，成组发现时互相导流；⑤ **缺口已实锤**——150 轮复核站内 bookmark 0 命中真缺口，151 轮复核至今未被消解。
+- **品类归位**：注册到「实用工具」品类（面向全体浏览器用户，受众面广；「开发工具」已连排三轮嵌入式工具，本项换品类避堆叠）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 口径裁定（151 轮留白的死链探测，本轮一并裁定）**：**首版不含死链探测**。理由：纯前端 no-cors 探测拿不到真实 HTTP 状态码（只能判域名不可达／DNS 失败），且大批量探测易被目标站限流、结果误报率高；页面须明示「首版不做死链检测，如需请分批手动打开核验」。观察项「GIF／视频转 GIF」口径裁定延后至有空轮次再议，本轮不并项。
+- **PM 真限制交代（开发轮必须处理）**：① **只做本地导入→分析／去重／清理→导出**——不做跨设备同步、不做 AI 摘要／语义搜索，页面须明示；② **首版不做死链检测**（见上裁定），页面须明示；③ **不收集、不上传任何内容**——书签文件只在浏览器本地解析与处理，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 导入：文件选择框＋拖放区，接受 `.html`（Chrome/Edge/Firefox 导出的 Netscape 书签格式 `NETSCAPE-Bookmark-file-1`）；FileReader 本地读取，不上传；非法文件（无 `<!DOCTYPE NETSCAPE-Bookmark-file-1>` 标识）抛 Error（err.field="file"），页面中文提示。
+- 解析：`parseBookmarksHtml(htmlStr)` 用 DOMParser（text/html）遍历 `DL>DT>H3` 文件夹与 `DL>DT>A` 链接，抽取每条链接的 `HREF`、`ADD_DATE`、`ICON`、标题文本与所属文件夹路径；返回 `{ folders, links, tree }`（tree 为嵌套节点数组：`{ type:"folder"|"link", name/title, href, addDate, icon, children }`）。
+- URL 归一化（去重依据）：`normalizeUrl(url)`——host 小写、去默认端口（:80/:443）、去末尾 `/`（根路径除外）、去 `#fragment`；保留 query（不同 query 视为不同页面）；非法 URL 返回 null，该条不参与去重但保留在列表中。
+- 分析面板（导入后即时渲染）：
+  - 概览：总链接数、文件夹数、重复 URL 组数、重复标题组数、空文件夹数。
+  - 重复 URL 组：按归一化 URL 分组（每组≥2 条），列出每条的标题、所属文件夹、原始 URL，默认全选仅保留第一条（最早 ADD_DATE），可逐条改选保留项。
+  - 重复标题组：标题完全相同的分组（URL 不同），仅提示、不默认勾选删除（可能是同名不同站）。
+  - 域名分组统计：按 host 分组计数，Top 20 列表＋条形可视化。
+  - 空文件夹：无链接（递归）的空文件夹列表，默认勾选删除。
+- 清理操作：`removeLinks(tree, ids)`／`removeFolders(tree, folderIds)` 返回新 tree；删除后即时刷新统计；提供「重置为导入时状态」按钮。
+- 导出：`exportBookmarksHtml(tree)` 生成标准 `<!DOCTYPE NETSCAPE-Bookmark-file-1>` 书签 HTML（含原有文件夹结构、HREF/ADD_DATE/ICON 属性）；下载文件名为 `bookmarks-cleaned.html`（`suggestExportName()` 返回该名）。
+- 示例：`generateExample()` 返回一段固定示例 bookmarks.html（含 3 文件夹、7 链接：2 条 URL 重复（末尾斜杠差异）、1 条标题重复、1 个空文件夹），「载入示例」无需上传演示导入→分析→勾选→导出全流程。
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `parseBookmarksHtml(htmlStr)`：非法格式抛 Error（err.field="file"）。
+  - `normalizeUrl(url)`：非法 URL 返回 null。
+  - `detectDuplicateUrls(links)`：返回归一化 URL 分组数组（仅组大小≥2）。
+  - `detectDuplicateTitles(links)`：返回标题分组数组（仅组大小≥2）。
+  - `findEmptyFolders(tree)`：返回空文件夹节点 id 列表。
+  - `domainStats(links, topN)`：返回 `[{domain, count}]` 降序。
+  - `removeLinks(tree, ids)`／`removeFolders(tree, folderIds)`：返回新 tree，不改原对象。
+  - `exportBookmarksHtml(tree)`：返回标准书签 HTML 字符串，含 `NETSCAPE-Bookmark-file-1` 标识。
+  - `generateExample()`：返回固定示例 HTML 字符串。
+  - `suggestExportName()`：返回 `bookmarks-cleaned.html`。
+- 界面：导入区（文件选择＋拖放＋「载入示例」）；分析概览卡片；重复 URL 组／重复标题组／域名统计／空文件夹四个区块（可折叠）；每条可删除项复选框；操作区（「导出清理后的 bookmarks.html」「重置」「复制统计摘要」）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 URL 追踪参数清除器（/tools/url-tracker-cleaner，文案按「整个书签库去重清理 vs 单条 URL 追踪参数清除」区分）、URL 解析器（/tools/url-parser，文案按「书签库分析 vs 单 URL 结构解析」区分）互链；不与未交付工具互链（示例生成正则表达式下轮递进交付后再互链，不硬凑）。
+- 技术路线：纯前端、无依赖（手写 Netscape HTML 解析、URL 归一化、树遍历，不引入任何库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `bookmark_cleaner`、Name「浏览器书签清理与分析器」、Path `/tools/bookmark-cleaner`、Category 实用工具、Icon `bookmark`（图标库未被占用，0 命中）、New: true；中英文描述＋SEO keywords（书签清理、书签去重、bookmarks.html、重复书签、bookmark cleaner、duplicate bookmarks、书签管理）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/bookmark-cleaner，相关工具互链 URL 追踪参数清除器、URL 解析器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `bookmark_cleaner`、Path `/tools/bookmark-cleaner` 注册完整（Category 实用工具），注册总数 223→224 Path。
+2. 解析向量闭环（node 断言）：parseBookmarksHtml(generateExample()) 得 folders=3、links=7；parseBookmarksHtml("<html>xxx</html>") 抛 Error err.field="file"；空字符串抛 Error err.field="file"。
+3. 归一化向量闭环（node 断言）：normalizeUrl("https://Example.com/a/")="https://example.com/a"；normalizeUrl("https://example.com/a")="https://example.com/a"（与上条同属一组）；normalizeUrl("https://example.com/a#frag") 同值；normalizeUrl("https://example.com:443/a") 同值；normalizeUrl("not a url")=null；query 保留：normalizeUrl("https://example.com/a?x=1") 含 "x=1"。
+4. 去重向量闭环（node 断言）：detectDuplicateUrls(示例 links) 得 1 组（2 条 URL 归一化相同）；detectDuplicateTitles(示例 links) 得 1 组（标题相同、URL 不同）；findEmptyFolders(示例 tree) 含空文件夹 id；domainStats(示例 links, 20)[0] 为示例主域名且 count 正确。
+5. 导出向量闭环（node 断言）：removeLinks 后 links 计数减少对应条数且原 tree 不变；exportBookmarksHtml(tree) 含 `NETSCAPE-Bookmark-file-1` 标识且删除后的链接不再出现；suggestExportName()="bookmarks-cleaned.html"。
+6. 操作闭环（浏览器手工／测试复核）：拖入示例→概览数字正确→重复 URL 组默认保留最早一条→改选保留项→删除空文件夹→导出 HTML 可下载→下载文件重新导入解析通过→「重置」恢复导入时状态。
+7. 真限制可见：页面可见「只做本地导入→分析／去重／清理→导出，不做跨设备同步、不做 AI 摘要／语义搜索」「首版不做死链检测」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含 URL 追踪参数清除器、URL 解析器；不含未交付工具的硬凑互链。
+9. node 测试 25+ 断言全过（解析向量、归一化向量、去重向量、导出向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+10. 页面无报错；移动端分析面板、分组列表、操作按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/bookmark_cleaner.html`（新增；含 SEO 面板按家族标准＋导入区／分析概览／重复 URL 组／重复标题组／域名统计／空文件夹／操作区）
+- `static/js/bookmark_cleaner.js`（新增；Netscape 书签 HTML 解析、URL 归一化、去重检测、空文件夹检测、域名统计、树删除、导出 HTML 生成、示例；双模式导出供 node 测试）
+- `tests/bookmark_cleaner.test.js`（新增；解析向量、归一化向量、去重向量、导出向量、注册与零网络静态检查）
+- `tools/categories.go`（实用工具品类注册：ID bookmark_cleaner、Path /tools/bookmark-cleaner、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **223**；Top3 候选重叠复核（bookmark／grex 均为 0 命中；templates／static/js／tests 下无 bookmark／grex 专用文件；url 命中仅已交付的 url-parser（URL 结构解析）与 url_tracker_cleaner（追踪参数清除），口径不重叠；寄存器位域编辑器本轮交付划出候选池；电台硬伤未解跳过；GIF/视频转 GIF 观察项口径待裁定不晋升；示例生成正则表达式留池顺位递进为下轮首席）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-29 23:00 · 通用调研第一百五十一轮）
+
+**交付状态**：10-29 通用调研第一百五十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**寄存器位域查看与编辑器已交付闭环**（d40a39c 新增＋607c3af 评审修复；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **223 Path**，ID register_bitfield_editor、Path `/tools/register-bitfield` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 轮，优先小／中难度纯前端。
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. 寄存器位域查看与编辑器交付确认：`git log` 头部 607c3af（寄存器位编辑评审修复）／d40a39c（寄存器位编辑新增）／a7344c6（Modbus 新增）；全量 223 Path；ID `register_bitfield_editor`、Path `/tools/register-bitfield` 双注册；本地当前分支 muse/dev-20260929。
+2. 留池复核仍未交付：浏览器书签清理与分析器（`bookmark` 在 tools/categories.go 0 命中；templates／static/js／tests 下无书签清理专用文件）150 轮新晋 P2 的缺口论证本轮仍成立，**顺位递进为首席**；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描（以 CSDN 9 款 CLI 榜单（10-21，grex 从示例生成正则）＋V2EX 分享创造新帖为主线）：
+   - **示例生成正则表达式（grex 式）**：**站内真缺口，新晋 P2**——CSDN CLI 榜单 10-21 提及 grex（从示例字符串生成正则）；站内 `regex-tester`（单条正则匹配调试）／`regex-explainer`（逐段中文讲解）均为「已有正则」口径，本项是**逆向口径**：「贴多条示例字符串→贪心字符类合并＋交替分支→生成能覆盖全部示例的最简正则」，确定性纯算法（trie 贪心，无随机性），纯前端小／中难度，零上传；交付后可与正则测试／解释器互链（「生成完去测试调试」），正则工具簇成组；真限制：示例互相矛盾时算法只做前缀 trie 合并＋`(a|b)` 交替，不保证语义最优（须明示）、多行语义分组与捕获组命名不做；
+   - 其余信号全部消解，不立：EmbedKit 今日重发帖（t/1252847，与 148／150 轮分析的同一帖，无新功能项——CRC／进制转换／HEX↔C 数组延续既有结论；Web Serial 串口监视器需硬件＋浏览器 API，146 轮已判；OneNET MQTT 平台特定不立）；tubox 图片工具箱帖 10-28 重发（t/1252552，13 项已在 149 轮逐项核口径，GIF／视频转 GIF 仍在观察项待 PM 裁定，无新口径）；Muralume（Mac 原生动态壁纸应用，非网页工具）；NyaTerm（桌面终端，非网页工具）；joLink（AI 编程代理运行框架，非单页工具）；FrameLoom 文档转动画视频（需 AI＋Remotion 本机渲染，非单页纯前端）；CheapBuddy／A6API（API 中转交易市场，需后端＋账号）；匿名举报系统架构帖（话题讨论，非工具口径）；HN 帖（ToolHop／ToolMateX 为整站形态、TinyFn 需后端 API、Floaty 为 mac 原生应用，均无单页新口径）；V2EX Builderoom 导航站帖（导航站产品讨论，非单页工具）；CSDN 榜单其余项（dnsglobe／croc／oxker／VisiData／llmfit／kondo／worktrunk 均为 CLI／桌面工具口径，非网页）；minglibiji AI 建站故事帖（无工具口径）；365Lab／aiwiki 工具清单站群文——已注册工具或需 AI，无新口径。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；寄存器位域查看与编辑器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，150 轮第二顺位递进为首席，新晋 P2 补第二顺位；本轮无观察项晋升）：
+
+1. **浏览器书签清理与分析器** — P2 留池顺位首席（150 轮新晋 P2；151 轮复核仍未交付；痛点：书签栏几千链接翻半天、同一文章多个 URL 重复收藏、「收藏从未停止、阅读从未开始」；纯前端小／中难度：导入 bookmarks.html→本地解析文件夹树→重复 URL／标题检测→域名分组统计→空文件夹检测→勾选删除→导出清理后的 bookmarks.html，零上传；站内 0 命中真缺口；真限制：只做本地导入分析／去重／清理／导出，不做跨设备同步、不做 AI 摘要／语义搜索；死链探测若做仅 no-cors 可达性探测，须明示，PM 可裁定首版是否含）。
+2. **示例生成正则表达式（grex 式）** — 新晋 P2（151 轮新信号；CSDN CLI 榜单 grex 口径；痛点：手写正则靠翻文档试错，问 AI 要正则又得上传示例；纯前端小／中难度：贴多条示例字符串→确定性贪心算法生成覆盖全部示例的正则（字符类合并／交替分支），零上传；站内 regex-tester／regex-explainer 为「已有正则」口径，不重叠；真限制：算法只做语法层合并，不保证语义最优，须明示）。
+3. 顺位缺位：候选池其余 P2 仅在线电台收听器（88 轮新晋；151 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）。PM 若需第三候选，可从观察项裁定晋升（建议优先「GIF／视频转 GIF」或「HEX ↔ C 数组互转器」，口径裁定后可一轮立项）。
+
+其余 P2 留池：无；观察项保持原状：GIF／视频转 GIF（149 轮观察项新增，口径待 PM 裁定：接受 ffmpeg.wasm 体积做视频→GIF，或收窄为 GIF→GIF 轻量版）；HEX ↔ C 数组互转器（147 轮观察项新增，口径待 PM 裁定：与 Modbus 帧生成器合并为「嵌入式字节工具」或单独立项）；MAP 文件内存分析器（148 轮观察项新增，口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC/ARMCC/IAR）；Markdown 转公众号／X 长文排版器（148 轮观察项新增，口径待 PM 裁定：与 md2chat 合并或单独立项）；CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 150 轮及之前记录。
+
+**通用候选表增量**（第一百五十一轮：寄存器位域查看与编辑器已交付划出（d40a39c 新增＋607c3af 评审修复；ID register_bitfield_editor、Path /tools/register-bitfield 已注册；全量 223 Path；候选池划出）；**示例生成正则表达式（grex 式）新晋 P2**；浏览器书签清理与分析器顺位递进为首席；自有实锤消解 12+ 项（EmbedKit 重发帖无新口径；tubox 重发帖 13 项延续 149 轮结论；Muralume／NyaTerm 桌面原生口径；joLink／FrameLoom／CheapBuddy／A6API 需后端或 AI；匿名举报帖／Builderoom／HN 整站帖／CSDN CLI 余项／365Lab／aiwiki 榜单文无单页新口径）；全量 223 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 寄存器位域查看与编辑器 | 已交付划出（d40a39c 新增＋607c3af 评审修复；ID register_bitfield_editor、Path /tools/register-bitfield 已注册；全量 223 Path；候选池划出） | — | 已实现 |
+| 浏览器书签清理与分析器 | 复核仍未交付（150 轮 P2，顺位递进为首席；bookmark 0 命中）；书签栏几千链接翻半天、重复收藏、信息坟场；导入 bookmarks.html→重复 URL/标题检测＋域名分组统计＋空文件夹检测→勾选删除→导出清理后 HTML；纯前端零上传 | 小/中 | P2（留池） |
+| 示例生成正则表达式（grex 式） | 新晋 P2（CSDN CLI 榜单 10-21 grex 口径；regex-tester／regex-explainer 为「已有正则」口径，0 重叠）；手写正则试错成本高、问 AI 得上传示例；贴示例字符串→确定性贪心算法生成覆盖全部示例的正则，纯前端零上传 | 小/中 | P2（新晋） |
+
+**归档说明**：本轮为 10-29 通用调研第一百五十一轮——寄存器位域查看与编辑器交付闭环（d40a39c，`/tools/register-bitfield` 已注册，全量 223 Path），候选池划出；**示例生成正则表达式（grex 式）新晋 P2**（CSDN CLI 榜单新口径：示例字符串→贪心算法生成正则，站内真缺口）；**浏览器书签清理与分析器顺位递进为首席**；新信号扫描以 CSDN CLI 榜单＋V2EX 分享创造新帖为主线；Top3 建议浏览器书签清理与分析器／示例生成正则表达式，第三顺位缺位（仅剩在线电台收听器一项 P2 且硬伤未解，PM 若需第三候选建议从观察项裁定晋升）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 607c3af（寄存器位编辑评审修复）／d40a39c（寄存器位编辑新增）／a7344c6（Modbus 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **223**；Top3 候选重叠复核（register_bitfield_editor 在 categories.go 1 注册命中，为本轮已交付项；bookmark／grex／示例生成正则在 categories.go、templates、static/js、tests 均为 0 命中；regex 命中仅已交付的 regex-tester（单条正则调试）与 regex-explainer（逐段中文讲解），与本轮新晋「示例生成正则」逆向口径不重叠；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库；`toolweb` 二进制本轮已不在根目录）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 开发轮交付（2026-10-29 21:00 · 前端开发，寄存器位域查看与编辑器）
 
 **交付状态**：本轮唯一任务已实现并自测通过，随开发分支提交（见本次 commit）。

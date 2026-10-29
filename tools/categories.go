@@ -1604,6 +1604,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "bookmark_cleaner",
+					Name:        "浏览器书签清理与分析器",
+					Description: "免费在线浏览器书签清理与分析器：导入 Chrome/Edge/Firefox 导出的 bookmarks.html，本地解析文件夹树，检测重复 URL（归一化去重）、重复标题、空文件夹，域名分布 Top20 统计，勾选删除后导出清理版 bookmarks-cleaned.html 回浏览器导入；纯前端零上传 · Bookmark cleaner: import bookmarks.html, detect duplicate URLs/titles, empty folders, domain stats, export cleaned file, 100% client-side",
+					Path:        "/tools/bookmark-cleaner",
+					Icon:        "bookmark",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{
