@@ -1,3 +1,87 @@
+## 今日任务（2026-10-29 19:37 · 产品经理排期轮，接 149 轮调研）
+
+**选定：Modbus RTU 帧生成与校验器（modbus_frame_tool）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（149 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 背景图案生成器已交付划出（9751a56 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **221 Path**），首席顺位自然递进至本项；不再以「寄存器位编辑器更新颖」等理由二次跳过——寄存器位域查看与编辑器不插队。
+- **未选**：寄存器位域查看与编辑器（148 轮新晋 P2、149 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；32 位位图可视化位编辑→HEX＋C 宏输出口径，与本项帧组装/解析口径不同；与 Modbus 同属嵌入式开发簇，成组发现时互导，成组时本项顺位优先）；GIF／视频转 GIF（149 轮观察项，**口径仍待 PM 裁定→不晋升**：ffmpeg.wasm 体积＋首屏下载等待与只做 GIF→GIF 轻量版二选一需单独一轮论证，本轮不并项）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）；MAP 文件内存分析器／Markdown 转公众号排版器／HEX ↔ C 数组互转器（观察项，口径待裁定，继续观察）。
+- **PM 零重叠实测复核**：`git fetch` 成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本地当前分支 muse/dev-20260929，与 origin/muse/dev-20260929 同步（头部同为 9751a56）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **221**；`grep -c` 在 tools/categories.go 中：modbus 为 0 命中、register／bitfield 均为 0 命中、`"/tools/css-background-pattern-generator"` 为 1 命中；templates／static/js／tests 下无 modbus／register／bitfield／gif 专用文件（background-pattern 命中 2 处为已交付的 CSS 背景图案生成器）；`crc` 命中仅已交付的 crc_checksum_calculator（裸校验和口径，只输出校验值，不做帧组装/解析，与本项不重叠）；近邻辨析：HEX ↔ C 数组互转器为 147 轮观察项（未交付），本项输出口径只做 RTU 帧 hex＋字段分解，不附带 C 数组格式导出，不提前并项。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——串口/TCP 调试时手算 CRC16 查表、翻手册拼帧格式，发一帧收一帧都要在纸上验校验和，对不上还得逐字节排查是地址错还是字节序错；「设备地址＋功能码＋寄存器地址/数量/数据→完整 RTU 帧 hex＋自动 CRC」「粘贴收帧→验 CRC＋拆解各字段」恰好对症，零上传；③ **一轮可高质量交付**——纯前端、无依赖，CRC16 查表查值、帧拼接、字段拆解均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CRC 校验和计算器（只算裸校验和）同属嵌入式调试需求簇：别人管裸校验和，本项管完整帧组装/解析，成组发现时互相导流；寄存器位域编辑器同簇，下轮递进后可互链；⑤ **缺口已实锤**——147 轮复核站内 modbus 0 命中真缺口，至今未被消解。
+- **品类归位**：注册到「开发工具」品类（与 CRC 校验和计算器、CSS 系列生成器同品类，便于调试工具成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 RTU 帧组装与解析**——不做 ASCII 编码、不做实际串口收发（Web Serial 需硬件），页面须明示；② **功能码范围 01/02/03/04/05/06/0F/10**——异常响应帧（0x80|功能码）可识别并拆解异常码，未知功能码仅标注不硬解，页面须明示；③ **不输出 C 数组格式**——HEX ↔ C 数组互转器为观察项，本项不提前并项，页面不承诺；④ **不收集、不上传任何内容**——全部计算只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 帧构造（config → 请求帧 hex）：`{ slaveAddr（1–247), function（01/02/03/04/05/06/0F/10), address（0–65535), quantity/value/dataBytes }`。
+  - 01/02/03/04 读：数量 01/02 为 1–2000，03/04 为 1–125；请求帧 = slave,func,addrHi,addrLo,qtyHi,qtyLo,CRC16/MODBUS（低字节在前）。
+  - 05 写单个线圈：value 只允许 0x0000／0xFF00；06 写单个寄存器：value 0–65535。
+  - 0F 写多个线圈：quantity 1–1968，dataBytes 长度自动算字节数；10 写多个寄存器：quantity 1–123，字节数 = 数量×2。
+- 帧解析（粘贴 hex → 字段分解）：输入容忍空格／换行／`0x` 前缀／逗号分隔；校验 CRC16，`crcOk` 明确给出；字段逐段拆解（从站地址／功能码／数据区／CRC 高低字节位置）；异常响应帧识别（功能码 & 0x80）并给出异常码含义表（01–04、05、06）；未知功能码标注「未知功能码，仅做字段切分」。
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `crc16Modbus(bytes: number[])`：返回 `{ lo, hi, hex }`（poly 0xA001、init 0xFFFF）。
+  - `buildReadFrame({slaveAddr,function,address,quantity})`：非法数量／地址抛 Error（err.field 如 "quantity"）。
+  - `buildWriteSingle({slaveAddr,function,address,value})`：05 仅 0x0000／0xFF00，06 为 0–65535。
+  - `buildWriteMultiple({slaveAddr,function,address,dataBytes})`：0F／10 自动字节数，数量上限校验。
+  - `parseFrame(hexStr)`：返回 `{ crcOk, slaveAddr, function, fields[], rawHex }`；CRC 错误时 crcOk=false 并标出期望 CRC 与实际 CRC；异常帧给出异常码说明。
+  - `formatHex(bytes, {spaced})`：紧凑／空格双格式。
+  - `generateExample()`：固定示例 config（slave=1，03 功能，addr=0x0000，qty=2）→ `01 03 00 00 00 02 C4 0B`。
+  - `suggestExportName(kind)`：`txt` → `modbus-frame.txt`，`json` → `modbus-frame.json`（字段分解 JSON），其它 kind 返回失败。
+- 界面：双模式标签（「组帧」／「解析」）；组帧：从站地址／功能码下拉／寄存器地址／数量／数据输入（十六进制字节输入框，按功能码联动显隐），生成后输出完整帧 hex（紧凑＋空格双格式）＋CRC 高低字节标注＋逐字节字段分解表；解析：粘贴区→验 CRC（通过／失败醒目）→字段分解表＋异常码说明；操作区（「复制请求帧」「下载帧说明 .txt」「下载字段分解 .json」「载入示例」）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 CRC 校验和计算器（/tools/crc-checksum-calculator，文案按「完整帧组装/解析 vs 裸校验和计算」区分）互链；不与未交付工具互链（寄存器位域编辑器下轮递进交付后再互链，不硬凑）。
+- 技术路线：纯前端、无依赖（手写 CRC16/MODBUS、帧拼接、hex 解析，不引入任何库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `modbus_frame_tool`、Name「Modbus RTU 帧生成与校验器」、Path `/tools/modbus-frame`、Category 开发工具、Icon 建议 plug（图标库无此名则用 code 兜底；勿与已用图标在同品类视觉混淆）、New: true；中英文描述＋SEO keywords（Modbus RTU、帧生成、CRC16、串口调试、modbus frame、modbus rtu crc）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/modbus-frame，相关工具互链 CRC 校验和计算器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `modbus_frame_tool`、Path `/tools/modbus-frame` 注册完整（Category 开发工具），注册总数 221→222 Path。
+2. 校验向量闭环（node 断言）：crc16Modbus([0x01,0x03,0x00,0x00,0x00,0x02]) 得 lo=0xC4、hi=0x0B；buildReadFrame 非法 slaveAddr（0／248）抛 Error err.field="slaveAddr"；05 写线圈 value=0x1234 抛 Error；0F 数量 1969 抛 Error。
+3. 生成向量闭环（node 断言）：generateExample 经 buildReadFrame 输出 `01 03 00 00 00 02 C4 0B`；buildWriteMultiple（10 功能）输出帧含正确字节数字段；formatHex 紧凑／空格双格式正确；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+4. 解析向量闭环（node 断言）：parseFrame("01 03 00 00 00 02 C4 0B") 得 crcOk=true、slaveAddr=1、function=0x03；CRC 改一位得 crcOk=false 且标出期望 CRC；异常帧 "01 83 02 C0 F1"（CRC 须算对）识别出功能码 0x83 与异常码 02 说明；未知功能码帧标注「未知功能码」。
+5. 操作闭环（浏览器手工／测试复核）：组帧→输入参数→生成帧 hex 与字段分解表→复制／下载 txt／json 可用→「载入示例」无需上传演示全流程→解析模式粘贴帧→CRC 通过／失败醒目→异常帧说明可见。
+6. 真限制可见：页面可见「只做 RTU 帧组装与解析，不做 ASCII 编码、不做实际串口收发」「功能码范围 01/02/03/04/05/06/0F/10」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+7. 操作闭环：相关工具互链含 CRC 校验和计算器；不含未交付工具的硬凑互链。
+8. node 测试 25+ 断言全过（校验向量、生成向量、解析向量、导出与示例向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+9. 页面无报错；移动端组帧表单、解析粘贴区、字段分解表小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/modbus_frame_tool.html`（新增；含 SEO 面板按家族标准＋组帧/解析双模式标签页＋帧输出＋字段分解表＋操作区）
+- `static/js/modbus_frame_tool.js`（新增；CRC16/MODBUS、帧组装、帧解析、异常码表、hex 格式化、示例、导出命名；双模式导出供 node 测试）
+- `tests/modbus_frame_tool.test.js`（新增；校验向量、生成向量、解析向量、导出与示例向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID modbus_frame_tool、Path /tools/modbus-frame、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 9751a56（背景图案新增）／660b96a（评审修复）／bcb877a（按钮生成器新增），与 origin/muse/dev-20260929 同步；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **221**；Top3 候选重叠复核（modbus／register／bitfield 0 命中；crc 命中仅已交付的 crc_checksum_calculator 裸校验和口径；templates／static/js／tests 下无 modbus／寄存器位编辑器文件；CSS 背景图案生成器交付划出候选池；电台硬伤未解跳过；GIF/视频转 GIF 观察项口径待裁定不晋升）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+**交付状态**：10-29 通用调研第一百四十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 背景图案生成器已交付闭环**（9751a56 新增六种无缝平铺图案＋三声明 CSS 复制/下载；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **221 Path**，ID css_background_pattern_generator、Path `/tools/css-background-pattern-generator` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 轮，优先小／中难度纯前端。
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. CSS 背景图案生成器交付确认：`git log` 头部 9751a56（背景图案新增）／660b96a（评审修复）／bcb877a（按钮生成器新增）；全量 221 Path；ID `css_background_pattern_generator`、Path `/tools/css-background-pattern-generator` 双注册；本地当前分支 muse/dev-20260929。
+2. 留池复核仍未交付：Modbus RTU 帧生成与校验器（`modbus` 路径 0 命中，crc 命中仅已交付的 crc_checksum_calculator 裸校验和口径）、寄存器位域查看与编辑器（`register`／位域 0 命中）147／148 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描（以 V2EX 今日 tubox 纯前端图片工具箱帖（10-28，13 项功能逐项核口径）为主线）：
+   - tubox 13 项逐项消解：EXIF 隐私查看与无损清除＝站内 **exif_strip 已交付**，实锤消解；九宫格＝nine_grid 已交付；拼图／长图＝img_stitch 已交付；批量压缩／改尺寸／格式转换／水印＝站内对应工具已交付；图片标注＝image_annotator 已交付；二维码生成＝qrcode 已交付；AI 抠图／2x-4x 放大／证件照 AI 换底＝需 AI 模型后端或 WASM 大模型，不立（纯前端确定性工具线不收）；
+   - **GIF／视频转 GIF**（tubox 同帖）：**观察项新增**——站内无专用工具（apng 0 命中，gif 命中仅已交付项的描述文本）；纯前端可用 ffmpeg.wasm 实现视频抽帧转 GIF（Web Worker 跑转码），或收窄为「GIF→GIF（调帧率／尺寸／播放时长）」免重型依赖；**口径待 PM 裁定**（接受 wasm 体积＋首屏下载等待，或只做 GIF→GIF 轻量版）；
+   - 其余信号全部消解，不立：protohub 原型托管（需上传存储＋账号＋版本历史，非单页纯前端）；wx-publish-studio 公众号一键发布（需微信 API＋后端服务，非纯前端）；paint-board 网页创意画板（产品非单页工具口径，站内图片标注口径更贴合 ToolWeb）；dtool v0.4.0（本地 CLI＋AI Agent 数据流水线，非网页工具）；xGoose AI Agent 插件（浏览器插件口径，147 轮已判）；HN 帖（RSS／Astro／htmz／Ask HN 均为话题非工具口径）；FineReport／投票小程序／口语 APP 推广文——无单页工具口径，消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 背景图案生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，148 轮 Top3 前两位递进为首席与第二；本轮无新晋 P2——候选池中仅余两项无硬伤 P2，在线电台收听器硬伤未解继续跳过，故 Top3 实为两个可排期项＋顺位缺位，PM 可直接在二者中选首席）：
+
+1. **Modbus RTU 帧生成与校验器** — P2 留池顺位首席（147 轮新晋 P2；149 轮复核仍未交付；痛点：串口/TCP 调试 Modbus 设备时要手算 CRC16 查表、翻手册拼帧格式，发一帧收一帧都要在纸上验校验和，对不上还得逐字节排查是地址错还是字节序错；纯前端小／中难度：设备地址＋功能码（01/02/03/04/05/06/0F/10）＋寄存器地址／数量／数据→组装完整 RTU 帧 hex 并自动算 CRC16/MODBUS，粘贴收到的帧→验 CRC＋拆解各字段，零上传；站内 CRC 校验和计算器只做裸校验和计算，与本项「完整帧组装/解析」口径不重叠；真限制：只做 RTU 帧（不做 ASCII 编码）、不做实际串口收发（Web Serial 需硬件），须明示）。
+2. **寄存器位域查看与编辑器** — P2 留池顺位第二（148 轮新晋 P2；149 轮复核仍未交付；痛点：调寄存器时对着手册数第几位是哪个使能位，写 `#define` 宏要手动算 `(1u << n)`，位一数错驱动就翻车；纯前端小／中难度：输入 32 位寄存器值→32 位位图可视化点击置位/清零→实时输出 HEX＋C 宏定义（`#define`／位域掩码），零上传；站内 0 命中真缺口；与 Modbus 帧生成与校验器同属「嵌入式开发」需求簇，成组发现时互导；真限制：只做位级可视化编辑与宏生成，不做寄存器地址映射数据库（芯片型号太多），须明示）。
+3. 顺位缺位：候选池其余 P2 仅在线电台收听器（88 轮新晋；149 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）。PM 若需第三候选，可从观察项裁定晋升（建议优先「GIF／视频转 GIF」，口径裁定后可一轮立项）。
+
+其余 P2 留池：无；观察项保持原状：**GIF／视频转 GIF（149 轮观察项新增，口径待 PM 裁定：接受 ffmpeg.wasm 体积做视频→GIF，或收窄为 GIF→GIF 轻量版）**；MAP 文件内存分析器（148 轮观察项新增，口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC/ARMCC/IAR）；Markdown 转公众号／X 长文排版器（148 轮观察项新增，口径待 PM 裁定：与 md2chat 合并或单独立项）；HEX ↔ C 数组互转器（147 轮观察项新增，口径待 PM 裁定：与 Modbus 帧生成器合并为「嵌入式字节工具」或单独立项）；CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 148 轮及之前记录。
+
+**通用候选表增量**（第一百四十九轮：CSS 背景图案生成器已交付划出（9751a56 新增；ID css_background_pattern_generator、Path /tools/css-background-pattern-generator 已注册；全量 221 Path；候选池划出）；无新晋 P2；Modbus RTU 帧生成与校验器、寄存器位域查看与编辑器顺位递进为可排期双项；GIF／视频转 GIF 入观察项（口径待裁定）；自有实锤消解 12+ 项（tubox：EXIF／九宫格／拼图长图／批量图片处理／标注／二维码均已交付，AI 抠图放大证件照需后端不立；protohub/wx-publish-studio/paint-board/dtool/xGoose 口径不符；HN／FineReport／投票／口语 APP 无工具口径）；全量 221 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 背景图案生成器 | 已交付划出（9751a56 新增；ID css_background_pattern_generator、Path /tools/css-background-pattern-generator 已注册；全量 221 Path；候选池划出） | — | 已实现 |
+| Modbus RTU 帧生成与校验器 | 复核仍未交付（147 轮 P2，顺位递进为首席）；调试 Modbus 设备手算 CRC16 查表、翻手册拼帧格式；帧组装＋自动 CRC16＋收帧验 CRC 拆字段，纯前端零上传 | 小/中 | P2（留池） |
+| 寄存器位域查看与编辑器 | 复核仍未交付（148 轮 P2，顺位递进为第二）；调寄存器对着手册数位、手算 `(1u << n)` 宏，位数一错驱动翻车；32 位可视化位编辑→HEX/C 宏输出，纯前端零上传 | 小/中 | P2（留池） |
+| GIF／视频转 GIF | 观察项新增（口径待 PM 裁定：ffmpeg.wasm 视频→GIF，或收窄 GIF→GIF 轻量版；站内无专用工具） | — | 观察项 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十九轮——CSS 背景图案生成器交付闭环（9751a56，`/tools/css-background-pattern-generator` 已注册，全量 221 Path），候选池划出；**无新晋 P2**；**Modbus RTU 帧生成与校验器、寄存器位域查看与编辑器顺位递进为 Top3 前两位（本轮可排期双项）**；GIF／视频转 GIF 入观察项（口径待裁定）；新信号扫描以 V2EX tubox 纯前端图片工具箱帖（10-28，13 项逐项核口径）为主线，自有实锤消解 12+ 项；Top3 实为两项（第三顺位缺位——仅剩在线电台收听器一项 P2 且硬伤未解，PM 若需第三候选建议从观察项裁定晋升）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 9751a56（背景图案新增）／660b96a（评审修复）／bcb877a（按钮生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **221**；Top3 候选重叠复核（modbus 在 categories.go 中为 0 路径命中；register／位域／bitfield 0 命中；crc 命中仅已交付的 crc_checksum_calculator（裸校验和口径，不含帧组装）；templates／static/js／tests 下无 modbus 帧／寄存器位编辑器文件；apng 0 命中，gif 命中仅已交付项描述文本，无 GIF/视频转 GIF 专用工具；CSS 背景图案生成器与 Modbus／寄存器位编辑器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-29 17:00 · 产品经理排期轮，接 148 轮调研）
 
 **选定：CSS 背景图案生成器（css_background_pattern_generator）** — 本轮唯一任务（新工具）：

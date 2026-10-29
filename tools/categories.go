@@ -499,6 +499,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "modbus_frame_tool",
+					Name:        "Modbus RTU 帧生成与校验器",
+					Description: "组帧：从站地址＋功能码（01/02/03/04/05/06/0F/10）＋寄存器地址/数量/数据→完整 RTU 帧 hex，自动算 CRC16/MODBUS（低字节在前）并逐字节分解；解析：粘贴 hex 验 CRC、拆解字段、识别异常响应帧（0x80|功能码）并给出异常码说明，一键复制、下载帧说明 txt / 字段分解 json，纯前端零上传 · Modbus RTU frame builder & checker: build request frames with CRC16/MODBUS, parse and verify pasted hex frames, exception response decoding, 100% client-side",
+					Path:        "/tools/modbus-frame",
+					Icon:        "plug",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color_palette_generator",
 					Name:        "配色方案生成器",
 					Description: "一个基色生成 6 种和谐配色：互补/类比/三角色/分裂互补/四方形/单色 HSL 色轮方案，色板点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端零上传 · Color palette generator: 6 harmonious schemes from one base color, copy HEX & CSS variables, WCAG contrast, 100% client-side",

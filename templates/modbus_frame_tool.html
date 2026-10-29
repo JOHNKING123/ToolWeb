@@ -1,0 +1,239 @@
+{{define "modbus_frame"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modbus RTU 帧生成与校验器 - 组帧/解析/CRC16校验 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Modbus RTU 帧生成与校验器：组帧模式按从站地址+功能码（01/02/03/04/05/06/0F/10）+寄存器地址生成完整 RTU 帧，自动算 CRC16/MODBUS（低字节在前）并逐字节分解；解析模式粘贴 hex 验 CRC、拆解字段、识别异常响应帧。一键复制、下载帧说明 txt / 字段分解 json。纯前端本地计算，零上传。">
+    <meta name="keywords" content="Modbus RTU,帧生成,CRC16,MODBUS,串口调试,modbus frame,modbus rtu crc,功能码,异常响应,校验和">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/modbus-frame">
+    <meta property="og:title" content="Modbus RTU 帧生成与校验器">
+    <meta property="og:description" content="组帧：地址+功能码+寄存器→完整 RTU 帧 hex，自动 CRC16/MODBUS 逐字节分解；解析：粘贴 hex 验 CRC、拆字段、识别异常响应。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/modbus-frame">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Modbus RTU 帧生成与校验器","description":"组帧模式按从站地址、功能码、寄存器地址生成完整 Modbus RTU 帧并自动计算 CRC16/MODBUS；解析模式粘贴 hex 校验 CRC 并逐字节分解字段、识别异常响应帧。纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/modbus-frame","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mb-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .mb-wrap .navbar .material-icons { display: none; }
+        .mb-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .mb-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .mb-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .mb-tabs { display:flex; gap:.6rem; margin-bottom:1.1rem; }
+        .mb-tab { padding:.5rem 1.4rem; border-radius:.6rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.95rem; }
+        .mb-tab-active { background:#1d4ed8; border-color:#1d4ed8; color:#fff; font-weight:700; }
+        .mb-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .mb-row label { font-size:.92rem; color:#374151; }
+        .mb-input, .mb-select { padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; font-family:ui-monospace,Menlo,Consolas,monospace; max-width:100%; box-sizing:border-box; }
+        .mb-input { width:10em; }
+        .mb-select { width:auto; }
+        .mb-textarea { width:100%; min-height:96px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.95rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+        .mb-frame { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:1.05rem; font-weight:700; color:#111827; word-break:break-all; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:.7rem .9rem; margin:.6rem 0; }
+        .mb-crc { color:#059669; font-size:.9rem; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .mb-table-wrap { overflow-x:auto; }
+        .mb-table { width:100%; border-collapse:collapse; font-size:.9rem; min-width:560px; }
+        .mb-table th, .mb-table td { border:1px solid #e5e7eb; padding:.5rem .6rem; text-align:left; vertical-align:top; }
+        .mb-table th { background:#f9fafb; color:#374151; white-space:nowrap; }
+        .mb-mono { font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .mb-bytes { font-weight:700; color:#111827; white-space:nowrap; }
+        .mb-badge { display:inline-block; padding:.35rem .9rem; border-radius:999px; font-weight:700; font-size:.92rem; margin:.4rem 0; }
+        .mb-ok { background:#d1fae5; color:#065f46; }
+        .mb-bad { background:#fee2e2; color:#991b1b; }
+        .mb-msg { color:#b45309; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .mb-info { color:#374151; font-size:.9rem; margin:.4rem 0 0; line-height:1.7; }
+        .mb-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .mb-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+        .mb-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .mb-tip a { color:var(--primary-color); }
+        .mb-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .mb-links a { color:var(--primary-color); font-size:.93rem; }
+        .mb-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        .mb-fieldset { border:0; padding:0; margin:0; }
+        @media (max-width:640px) {
+            .mb-table { min-width:0; font-size:.82rem; }
+            .mb-input { width:8em; }
+            .mb-frame { font-size:.92rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="mb-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔌 Modbus RTU 帧生成与校验器</h1>
+            <p>组帧：地址＋功能码＋寄存器 → 完整 RTU 帧，自动 CRC16/MODBUS；解析：粘贴 hex 验 CRC、逐字节拆解</p>
+        </div>
+
+        <div class="mb-tabs" role="tablist">
+            <button class="mb-tab mb-tab-active" id="mb-tab-build" type="button" role="tab">组帧</button>
+            <button class="mb-tab" id="mb-tab-parse" type="button" role="tab">解析</button>
+        </div>
+
+        <!-- 组帧面板 -->
+        <div id="mb-panel-build">
+            <div class="mb-card">
+                <h3>帧参数 <span class="mb-hint">（功能码 01/02/03/04/05/06/0F/10）</span></h3>
+                <fieldset class="mb-fieldset">
+                <div class="mb-row">
+                    <label>从站地址 <input class="mb-input" id="mb-slave" value="1" inputmode="numeric" aria-label="从站地址 1-247"></label>
+                    <span class="mb-hint">1–247（0 为广播，本工具不生成广播帧）</span>
+                </div>
+                <div class="mb-row">
+                    <label>功能码
+                        <select class="mb-select" id="mb-func">
+                            <option value="1">01 读线圈状态</option>
+                            <option value="2">02 读离散输入</option>
+                            <option value="3" selected>03 读保持寄存器</option>
+                            <option value="4">04 读输入寄存器</option>
+                            <option value="5">05 写单个线圈</option>
+                            <option value="6">06 写单个寄存器</option>
+                            <option value="15">0F 写多个线圈</option>
+                            <option value="16">10 写多个寄存器</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="mb-row">
+                    <label>寄存器起始地址 <input class="mb-input" id="mb-addr" value="0" inputmode="numeric" aria-label="寄存器起始地址"></label>
+                    <span class="mb-hint">0–65535（十进制）</span>
+                </div>
+                <div class="mb-row" id="mb-row-qty">
+                    <label>数量 <input class="mb-input" id="mb-qty" value="2" inputmode="numeric" aria-label="数量"></label>
+                    <span class="mb-hint">01/02：1–2000；03/04：1–125（十进制）</span>
+                </div>
+                <div class="mb-row" id="mb-row-value" style="display:none;">
+                    <label>写入值 <input class="mb-input" id="mb-value" value="FF00" aria-label="写入值十六进制"></label>
+                    <span class="mb-hint">十六进制。05：只允许 0000（断开）/ FF00（闭合）；06：0000–FFFF</span>
+                </div>
+                <div class="mb-row" id="mb-row-qty15" style="display:none;">
+                    <label>线圈数量 <input class="mb-input" id="mb-qty15" value="8" inputmode="numeric" aria-label="线圈数量"></label>
+                    <span class="mb-hint">1–1968（十进制）</span>
+                </div>
+                <div id="mb-row-data" style="display:none;">
+                    <div class="mb-row">
+                        <label for="mb-data">数据字节（十六进制）</label>
+                    </div>
+                    <textarea class="mb-textarea" id="mb-data" placeholder="例如：FF 00 AA">FF</textarea>
+                    <p class="mb-hint" id="mb-data-hint"></p>
+                </div>
+                </fieldset>
+                <div class="mb-actions">
+                    <button class="btn btn-primary" id="mb-build" type="button">生成 RTU 帧</button>
+                    <button class="btn btn-secondary" id="mb-example" type="button">载入示例</button>
+                </div>
+                <p class="mb-msg" id="mb-build-msg"></p>
+            </div>
+
+            <div class="mb-card" id="mb-build-out" style="display:none;">
+                <h3 id="mb-build-label">请求帧</h3>
+                <div class="mb-frame" id="mb-frame-spaced"></div>
+                <p class="mb-info">紧凑格式：<span class="mb-mono" id="mb-frame-compact"></span></p>
+                <p class="mb-crc" id="mb-crc-note"></p>
+                <h3 style="margin-top:1rem;">逐字节字段分解</h3>
+                <div class="mb-table-wrap">
+                <table class="mb-table">
+                    <thead><tr><th>字节偏移</th><th>字节</th><th>字段</th><th>说明</th></tr></thead>
+                    <tbody id="mb-build-fields"></tbody>
+                </table>
+                </div>
+                <div class="mb-actions">
+                    <button class="btn btn-primary" id="mb-copy-spaced" type="button">📋 复制请求帧（空格分隔）</button>
+                    <button class="btn btn-secondary" id="mb-copy-compact" type="button">📋 复制紧凑格式</button>
+                    <button class="btn btn-secondary" id="mb-download-txt" type="button">⬇ 下载帧说明 .txt</button>
+                    <button class="btn btn-secondary" id="mb-download-json" type="button">⬇ 下载字段分解 .json</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 解析面板 -->
+        <div id="mb-panel-parse" style="display:none;">
+            <div class="mb-card">
+                <h3>粘贴 RTU 帧 <span class="mb-hint">（容忍空格／换行／0x 前缀／逗号分隔）</span></h3>
+                <textarea class="mb-textarea" id="mb-hex" placeholder="例如：01 03 00 00 00 02 C4 0B"></textarea>
+                <div class="mb-actions">
+                    <button class="btn btn-primary" id="mb-parse-btn" type="button">校验并解析</button>
+                </div>
+                <p class="mb-msg" id="mb-parse-msg"></p>
+            </div>
+
+            <div class="mb-card" id="mb-parse-out" style="display:none;">
+                <h3>校验结果</h3>
+                <span class="mb-badge" id="mb-crc-badge"></span>
+                <p class="mb-info" id="mb-parse-info"></p>
+                <h3 style="margin-top:1rem;">逐字节字段分解</h3>
+                <div class="mb-table-wrap">
+                <table class="mb-table">
+                    <thead><tr><th>字节偏移</th><th>字节</th><th>字段</th><th>说明</th></tr></thead>
+                    <tbody id="mb-parse-fields"></tbody>
+                </table>
+                </div>
+                <p class="mb-note" id="mb-parse-note"></p>
+                <div class="mb-actions">
+                    <button class="btn btn-secondary" id="mb-download-json2" type="button">⬇ 下载字段分解 .json</button>
+                </div>
+            </div>
+
+            <div class="mb-card">
+                <h3>异常响应帧说明</h3>
+                <div class="mb-tip">
+                    从站出错时返回「功能码 | 0x80」＋异常码，例如请求 03 出错返回 <span class="mb-mono">01 83 02 …</span>（83 = 80|03）。
+                    异常码含义：01 非法功能码 · 02 非法数据地址 · 03 非法数据值 · 04 从站设备故障 · 05 确认 · 06 从站设备忙。
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-card">
+            <h3>使用说明</h3>
+            <ol class="mb-tip" style="margin:0;padding-left:1.3rem;">
+                <li>组帧：在「组帧」页填从站地址（1–247）、功能码、寄存器起始地址与数量/数据，点「生成 RTU 帧」得到完整帧 hex（低字节 CRC 在前）与逐字节字段分解表。</li>
+                <li>解析：在「解析」页粘贴抓到的 hex 帧（容忍空格、换行、0x 前缀、逗号），点「校验并解析」：CRC 通过/失败醒目提示，字段逐字节拆解，异常响应帧自动给出异常码说明。</li>
+                <li>点「载入示例」可一键演示全流程：生成 01 03 00 00 00 02 C4 0B，并把该帧填入解析区。</li>
+                <li>下载的字段分解 .json 可在解析页或组帧页使用（以当前有效结果为准）；帧说明 .txt 与字段分解 .json 内容与页面输出一致。</li>
+            </ol>
+        </div>
+
+        <div class="mb-card">
+            <h3>常见问题</h3>
+            <dl class="mb-tip">
+                <dt><b>为什么算出的 CRC 和设备手册对不上？</b></dt>
+                <dd>先确认三点：① 多项式是否为 CRC16/MODBUS（多项式 0x8005、初值 0xFFFF、输入输出均反射）；② CRC 在帧尾是否为低字节在前（…C4 0B 而非 …0B C4）；③ 校验范围是否只覆盖从站地址到数据区（不含 CRC 本身）。</dd>
+                <dt><b>05 写线圈为什么只能填 0000 或 FF00？</b></dt>
+                <dd>Modbus 协议规定：05 功能码的输出值只有 0x0000（断开）与 0xFF00（闭合）两种合法取值，其他值从站会返回异常码 03（非法数据值）。</dd>
+                <dt><b>解析时 CRC 失败一般是什么原因？</b></dt>
+                <dd>常见原因：字节序抄错（高低字节颠倒）、多抄或少抄了字节、串口抓包丢字节、对方用的是 CRC16 变体（如 CCITT）而非 MODBUS。页面会给出按帧前部算出的期望 CRC，可逐字节比对定位。</dd>
+                <dt><b>能发帧到串口或解析 ASCII 模式吗？</b></dt>
+                <dd>不能。本工具只做 RTU 帧组装与解析：不做 ASCII 编码、不做实际串口收发（浏览器发串口需要真实硬件与 Web Serial）。</dd>
+                <dt><b>我的输入会被上传吗？</b></dt>
+                <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，帧内容不出本机。</dd>
+            </dl>
+        </div>
+
+        <div class="mb-card">
+            <h3>相关工具</h3>
+            <div class="mb-links">
+                <a href="/tools/crc-checksum-calculator">CRC 校验和计算器（裸校验和计算：只算校验值，不做帧组装/解析）</a>
+            </div>
+            <p class="mb-note">分工：CRC 校验和计算器负责裸校验和计算；本工具负责完整 Modbus RTU 帧的组装与解析。</p>
+        </div>
+
+        <div class="mb-card">
+            <h3>真限制说明</h3>
+            <div class="mb-tip">
+                <b>只做 RTU 帧组装与解析</b>：不做 ASCII 编码、不做实际串口收发（需要真实硬件与 Web Serial）。<br>
+                <b>功能码范围 01/02/03/04/05/06/0F/10</b>：异常响应帧（0x80|功能码）可识别并给出异常码说明；未知功能码仅标注、不硬解。<br>
+                <b>不输出 C 数组格式</b>：本工具只输出 RTU 帧 hex（空格分隔／紧凑双格式）与字段分解，不附带 C 数组格式导出。<br>
+                <b>零上传</b>：本页面零 fetch / XHR、零 CDN，全部计算在浏览器本地完成，不收集、不上传任何内容。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="mb-toast" id="mb-toast"></div>
+    <script src="/tools/static/js/modbus_frame_tool.js?v=1"></script>
+</body>
+</html>
+{{end}}
