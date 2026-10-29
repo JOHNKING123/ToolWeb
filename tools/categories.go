@@ -508,6 +508,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "register_bitfield_editor",
+					Name:        "寄存器位域查看与编辑器",
+					Description: "32 位寄存器值输入（hex/dec/bin）→32 位位图可视化点击置位/清零→实时输出 HEX/DEC/BIN、置位位列表与 C 宏定义（#define REG_BITn (1u<<n) 降序、REG_VAL、REG_SET_MASK、REG_CLR_MASK，前缀可改），复制/下载 register-bitfield.h 与 .txt，示例 0xDEADBEEF 一键载入，纯前端零上传 · Register bitfield editor: 32-bit bitmap click-to-toggle bit editor, live HEX/DEC/BIN output and C macro generation, 100% client-side",
+					Path:        "/tools/register-bitfield",
+					Icon:        "code",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color_palette_generator",
 					Name:        "配色方案生成器",
 					Description: "一个基色生成 6 种和谐配色：互补/类比/三角色/分裂互补/四方形/单色 HSL 色轮方案，色板点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端零上传 · Color palette generator: 6 harmonious schemes from one base color, copy HEX & CSS variables, WCAG contrast, 100% client-side",

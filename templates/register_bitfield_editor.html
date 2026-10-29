@@ -1,0 +1,192 @@
+{{define "register_bitfield"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寄存器位域查看与编辑器 - 32位位图点击置位/清零,生成C宏定义 | 程序员工具箱</title>
+    <meta name="description" content="免费在线寄存器位域查看与编辑器：输入 32 位寄存器值（hex/dec/bin），32 位位图可视化点击置位/清零，实时输出 HEX/DEC/BIN、置位位列表与 C 宏定义（#define REG_BITn (1u<<n)、REG_VAL、REG_SET_MASK、REG_CLR_MASK），可复制宏、下载 register-bitfield.h 与 .txt。纯前端本地计算，零上传。">
+    <meta name="keywords" content="寄存器位域,位编辑器,嵌入式开发,define 宏,register bitfield,bit editor,寄存器查看,位域编辑,C宏生成">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/register-bitfield">
+    <meta property="og:title" content="寄存器位域查看与编辑器">
+    <meta property="og:description" content="32 位寄存器值输入（hex/dec/bin）→ 32 位位图点击置位/清零 → 实时输出 HEX/DEC/BIN 与 C 宏定义。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/register-bitfield">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"寄存器位域查看与编辑器","description":"输入 32 位寄存器值（hex/dec/bin），32 位位图可视化点击置位/清零，实时输出 HEX/DEC/BIN、置位位列表与 C 宏定义，可下载 register-bitfield.h。纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/register-bitfield","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rb-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .rb-wrap .navbar .material-icons { display: none; }
+        .rb-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .rb-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .rb-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .rb-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .rb-row label { font-size:.92rem; color:#374151; }
+        .rb-input, .rb-select { padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; font-family:ui-monospace,Menlo,Consolas,monospace; max-width:100%; box-sizing:border-box; }
+        .rb-input { width:20em; }
+        .rb-select { width:auto; }
+        .rb-input-narrow { width:10em; }
+        .rb-bitmap-scroll { overflow-x:auto; padding-bottom:.4rem; }
+        .rb-bitmap { display:inline-flex; gap:.35rem; min-width:max-content; padding:.4rem .2rem; }
+        .rb-nibble { display:flex; gap:.18rem; padding:.35rem .35rem; border-radius:.45rem; }
+        .rb-nib-a { background:#f3f4f6; }
+        .rb-nib-b { background:#eef2ff; }
+        .rb-bit { display:flex; flex-direction:column; align-items:center; justify-content:center; width:3.1rem; height:3.6rem; border:1px solid #d1d5db; border-radius:.45rem; background:#fff; cursor:pointer; padding:.15rem 0; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .rb-bit:hover { border-color:#1d4ed8; }
+        .rb-bitnum { font-size:.68rem; color:#6b7280; }
+        .rb-bitval { font-size:1.25rem; font-weight:700; color:#9ca3af; }
+        .rb-bit.rb-on { background:#1d4ed8; border-color:#1d4ed8; }
+        .rb-bit.rb-on .rb-bitnum { color:#bfdbfe; }
+        .rb-bit.rb-on .rb-bitval { color:#fff; }
+        .rb-out-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:.7rem; margin:.7rem 0; }
+        .rb-out-item { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:.6rem .8rem; }
+        .rb-out-label { font-size:.82rem; color:#6b7280; margin-bottom:.25rem; }
+        .rb-out-val { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:1rem; font-weight:700; color:#111827; word-break:break-all; }
+        .rb-macros { width:100%; box-sizing:border-box; min-height:220px; padding:.7rem .8rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.88rem; line-height:1.7; font-family:ui-monospace,Menlo,Consolas,monospace; background:#0f172a; color:#e2e8f0; resize:vertical; }
+        .rb-msg { color:#b45309; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .rb-info { color:#374151; font-size:.9rem; margin:.4rem 0 0; line-height:1.7; }
+        .rb-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .rb-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+        .rb-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .rb-tip a { color:var(--primary-color); }
+        .rb-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .rb-links a { color:var(--primary-color); font-size:.93rem; }
+        .rb-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .rb-bit { width:2.5rem; height:3.2rem; }
+            .rb-input { width:100%; }
+            .rb-out-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="rb-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔧 寄存器位域查看与编辑器</h1>
+            <p>32 位寄存器值输入（hex/dec/bin）→ 32 位位图点击置位/清零 → 实时输出 HEX/DEC/BIN 与 C 宏定义</p>
+        </div>
+
+        <div class="rb-card">
+            <h3>寄存器值输入 <span class="rb-hint">（三种格式，输入后即时解析）</span></h3>
+            <div class="rb-row">
+                <label>输入格式
+                    <select class="rb-select" id="rb-format">
+                        <option value="auto" selected>自动识别</option>
+                        <option value="hex">十六进制（hex）</option>
+                        <option value="dec">十进制（dec）</option>
+                        <option value="bin">二进制（bin）</option>
+                    </select>
+                </label>
+                <input class="rb-input" id="rb-input" value="0xDEADBEEF" placeholder="例如 0xDEADBEEF / 3735928559 / 0b101" aria-label="寄存器值">
+            </div>
+            <p class="rb-hint" style="margin:.2rem 0 0;">自动识别：0x/0X 开头为十六进制，0b/0B 开头为二进制，含 a–f 为裸十六进制，其余按十进制解析；范围 0–4294967295（32 位）。</p>
+            <p class="rb-msg" id="rb-msg"></p>
+        </div>
+
+        <div class="rb-card">
+            <h3>32 位位图 <span class="rb-hint">（bit31 … bit0 左到右降序，每 4 位一组，点击切换置位/清零）</span></h3>
+            <div class="rb-bitmap-scroll">
+                <div class="rb-bitmap" id="rb-bitmap"></div>
+            </div>
+            <div class="rb-actions">
+                <button class="btn btn-secondary" id="rb-set-all" type="button">全置 1</button>
+                <button class="btn btn-secondary" id="rb-clear-all" type="button">全清 0</button>
+                <button class="btn btn-secondary" id="rb-invert" type="button">按位取反</button>
+                <button class="btn btn-primary" id="rb-example" type="button">载入示例</button>
+            </div>
+        </div>
+
+        <div class="rb-card">
+            <h3>实时输出</h3>
+            <div class="rb-out-grid">
+                <div class="rb-out-item">
+                    <div class="rb-out-label">HEX（0x 前缀，8 位大写）</div>
+                    <div class="rb-out-val" id="rb-out-hex"></div>
+                </div>
+                <div class="rb-out-item">
+                    <div class="rb-out-label">DEC（无符号十进制）</div>
+                    <div class="rb-out-val" id="rb-out-dec"></div>
+                </div>
+                <div class="rb-out-item">
+                    <div class="rb-out-label">置位位列表（升序）</div>
+                    <div class="rb-out-val" id="rb-out-bits"></div>
+                </div>
+            </div>
+            <div class="rb-out-item">
+                <div class="rb-out-label">BIN（32 位，4 位分组）</div>
+                <div class="rb-out-val" id="rb-out-bin"></div>
+            </div>
+        </div>
+
+        <div class="rb-card">
+            <h3>C 宏定义 <span class="rb-hint">（置位位宏降序排列，掩码自动取反）</span></h3>
+            <div class="rb-row">
+                <label>宏前缀 <input class="rb-input rb-input-narrow" id="rb-prefix" value="REG" aria-label="宏前缀"></label>
+                <span class="rb-hint">只允许字母、数字、下划线，字母或下划线开头</span>
+            </div>
+            <p class="rb-msg" id="rb-prefix-msg"></p>
+            <textarea class="rb-macros" id="rb-macros" readonly aria-label="C 宏定义输出"></textarea>
+            <div class="rb-actions">
+                <button class="btn btn-primary" id="rb-copy-macros" type="button">📋 复制宏定义</button>
+                <button class="btn btn-secondary" id="rb-download-h" type="button">⬇ 下载 register-bitfield.h</button>
+                <button class="btn btn-secondary" id="rb-download-txt" type="button">⬇ 下载 register-bitfield.txt</button>
+            </div>
+        </div>
+
+        <div class="rb-card">
+            <h3>使用说明</h3>
+            <ol class="rb-tip" style="margin:0;padding-left:1.3rem;">
+                <li>在输入框填 32 位寄存器值：0xDEADBEEF（hex）、3735928559（dec）或 0b101（bin），输入即时解析并刷新位图。</li>
+                <li>点击位图中的任意位格，即可切换该位的置位/清零；置位位以蓝色高亮显示。</li>
+                <li>HEX / DEC / BIN / 置位位列表随操作实时更新，宏定义区同步输出 C 宏。</li>
+                <li>宏前缀默认 REG，可改（如 GPIOA→#define GPIOA_BITn），复制或下载 register-bitfield.h / register-bitfield.txt 即可带走代码。</li>
+                <li>点「载入示例」可一键演示全流程：输入 0xDEADBEEF → 位图点亮 → 切换任意位 → 复制/下载宏。</li>
+            </ol>
+        </div>
+
+        <div class="rb-card">
+            <h3>常见问题</h3>
+            <dl class="rb-tip">
+                <dt><b>REG_SET_MASK 和 REG_CLR_MASK 各是什么？</b></dt>
+                <dd>SET_MASK = 当前值本身（置位用：REG |= REG_SET_MASK）；CLR_MASK = 当前值按 32 位取反（清零用：REG &= REG_CLR_MASK）。先用宏算好掩码，代码里只做位运算，避免手算掩码写错。</dd>
+                <dt><b>宏里的 (1u << n) 为什么用 1u？</b></dt>
+                <dd>u 后缀表示无符号，避免有符号移位到 bit31 时的未定义行为与符号扩展。bit31 的宏写作 (1u << 31)，符合 C 语言位操作惯例。</dd>
+                <dt><b>裸 hex 和十进制怎么区分？</b></dt>
+                <dd>自动识别口径：含 0x 前缀或含 a–f 字母的一律按十六进制，其余按十进制。DEADBEEF（裸 hex）与 3735928559（十进制）都能正确识别；需要强制口径时用格式下拉框手动选择。</dd>
+                <dt><b>能做 8/16/64 位寄存器吗？</b></dt>
+                <dd>不能。本工具只做 32 位寄存器位级可视化编辑与宏生成（见真限制说明）。</dd>
+                <dt><b>我的输入会被上传吗？</b></dt>
+                <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，寄存器值不出本机。</dd>
+            </dl>
+        </div>
+
+        <div class="rb-card">
+            <h3>相关工具</h3>
+            <div class="rb-links">
+                <a href="/tools/modbus-frame">Modbus RTU 帧生成与校验器（寄存器位级编辑 vs 完整帧组装/解析）</a>
+                <a href="/tools/crc-checksum-calculator">CRC 校验和计算器（位宏生成 vs 裸校验和计算）</a>
+            </div>
+            <p class="rb-note">分工：Modbus 工具负责完整帧的组装与解析，CRC 工具负责裸校验和计算；本工具负责 32 位寄存器的位级可视化编辑与 C 宏生成。</p>
+        </div>
+
+        <div class="rb-card">
+            <h3>真限制说明</h3>
+            <div class="rb-tip">
+                <b>只做 32 位寄存器位级可视化编辑与宏生成</b>：不做 8/16/64 位多宽度切换，不做寄存器地址映射数据库（芯片型号太多）。<br>
+                <b>不做实际硬件读写</b>：只做离线位图编辑与代码生成，不做 Web Serial / JTAG / SWD 接入。<br>
+                <b>零上传</b>：本页面零 fetch / XHR、零 CDN，全部计算在浏览器本地完成，不收集、不上传任何内容。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="rb-toast" id="rb-toast"></div>
+    <script src="/tools/static/js/register_bitfield_editor.js?v=1"></script>
+</body>
+</html>
+{{end}}

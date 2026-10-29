@@ -1,3 +1,105 @@
+## 开发轮交付（2026-10-29 21:00 · 前端开发，寄存器位域查看与编辑器）
+
+**交付状态**：本轮唯一任务已实现并自测通过，随开发分支提交（见本次 commit）。
+- **新增文件**：`templates/register_bitfield_editor.html`（{{define "register_bitfield"}}，SEO 面板按家族标准：title/description/keywords/canonical=https://www.johnkingzcq123.xyz/tools/register-bitfield、OG、JSON-LD、使用说明、FAQ、相关工具、真限制三行）、`static/js/register_bitfield_editor.js`（纯函数＋DOM 双模式导出，零 fetch/XHR）、`tests/register_bitfield_editor.test.js`（node 62 断言全过）。
+- **注册**：`tools/categories.go` 在开发工具品类 modbus_frame_tool 条目后追加 ID `register_bitfield_editor`、Path `/tools/register-bitfield`、Icon `code`（tune 在同品类已被 env_parser 占用，按规格"勿与已用图标在同品类视觉混淆"用 code 兜底）、New: true；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **223**（222→223）。
+- **互链**：仅 Modbus RTU 帧生成与校验器（/tools/modbus-frame）与 CRC 校验和计算器（/tools/crc-checksum-calculator）两项已交付工具，无未交付硬凑。
+- **向量实测**：node 62 断言全过——parseRegisterInput('0xDEADBEEF')=3735928559、非法抛错 err.field='value'、超 32 位抛错；toggleBit(0,31)=2147483648、bit=32/-1 抛错 err.field='bit'；toHex(0xDEADBEEF)='0xDEADBEEF'、toBin(5)='0000 0000 0000 0000 0000 0000 0000 0101'、setBitsList(0xA5)=[0,2,5,7]、generateMacros(0x80000001,'REG') 含 REG_BIT31/REG_BIT0/REG_VAL/REG_SET_MASK/REG_CLR_MASK 五字面且位宏降序、generateExample()=0xDEADBEEF、suggestExportName txt/h 正确、其它 kind 抛错；`go build ./...` / `go vet ./tools/` 通过、`gofmt` 本轮文件干净、模板 text/template 解析通过。
+- **规格勘误（开发轮记录）**：PM 规格验收第 3 条"clearBit(0xFF,7)=0"存在笔误——0xFF 置位位 0–7，清 bit7 后为 0x7F=127（非 0）；已按正确位语义实现，测试断言改为 `clearBit(0x80,7)=0`（单置位位清零）＋`clearBit(0xFF,7)=0x7F`（其余位保持），请评审轮复核确认。
+- **页面**：32 位位图（bit31…bit0 降序、nibble 分组、点击切换）、全置 1/全清 0/取反快捷、示例一键载入 0xDEADBEEF 全流程、复制宏/下载 .h/.txt；移动端位图横向可滚动（.rb-bitmap-scroll overflow-x:auto），无外部脚本/样式引用。
+- **铁律**：仅 muse/dev-20260929 工作，不碰 master，不 force-push；部署仅经 ~/workspace/deploy/toolweb/deploy.sh 走 /tool-web（本开发轮未触发部署，留待测试/评审轮后统一部署）。
+
+---
+
+## 今日任务（2026-10-29 21:00 · 产品经理排期轮，接 150 轮调研）
+
+**选定：寄存器位域查看与编辑器（register_bitfield_editor）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（150 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。Modbus RTU 帧生成与校验器已交付划出（a7344c6 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **222 Path**），首席顺位自然递进至本项；不再以「书签清理器受众更广」等理由二次跳过——浏览器书签清理与分析器不插队。
+- **未选**：浏览器书签清理与分析器（150 轮新晋 P2，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；bookmarks.html 导入→重复 URL／标题检测＋域名分组统计＋空文件夹检测→勾选删除→导出清理后 HTML 口径，与本项寄存器位编辑口径完全不同赛道）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）；GIF／视频转 GIF（149 轮观察项，**口径仍待 PM 裁定→不晋升**：ffmpeg.wasm 体积＋首屏下载等待与只做 GIF→GIF 轻量版二选一需单独一轮论证，本轮不并项）；HEX ↔ C 数组互转器／MAP 文件内存分析器／Markdown 转公众号排版器（观察项，口径待裁定，继续观察）。
+- **PM 零重叠实测复核**：`git fetch` 成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本地当前分支 muse/dev-20260929，头部 a7344c6（Modbus 新增）／9751a56（背景图案新增）／660b96a（评审修复），与 origin/muse/dev-20260929 同步；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **222**；`register`／`bitfield`／`bookmark` 在 tools/categories.go 中均为 **0 命中**，`modbus_frame_tool` 为 1 命中（本轮已交付项，非候选）；templates／static/js／tests 下无 register／bitfield／bookmark 专用文件。近邻辨析：① **位运算计算器**为 122 轮观察项**未交付**，且为纯算式口径（输入表达式算结果），本项是 32 位位图可视化点击置位/清零＋宏输出，口径不重叠；② **CRC 校验和计算器**为裸校验和口径，只输出校验值，不做位级编辑；③ **Modbus 帧生成与校验器**做帧组装／解析，不做位级宏生成，与本项同属「嵌入式开发」需求簇、成组发现时互导（本项顺位递进在后，本轮可互链 Modbus 本项，因其已交付）；④ HEX ↔ C 数组互转器为观察项（未交付），本项输出的 C 宏定义是「寄存器位宏」口径（`#define REG_BITn (1u << n)`／掩码），不提前并项。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——调寄存器时对着手册数第几位是哪个使能位，写 `#define` 宏要手动算 `(1u << n)`，位一数错驱动就翻车；「输入 32 位值→32 位位图点击置位/清零→实时输出 HEX＋C 宏定义」恰好对症，零上传；③ **一轮可高质量交付**——纯前端、无依赖，位操作、hex 解析、宏字符串拼接均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 Modbus 帧生成与校验器（刚交付）、CRC 校验和计算器同属嵌入式调试需求簇：别人管裸校验和／完整帧，本项管寄存器位级编辑＋宏生成，成组发现时互相导流；⑤ **缺口已实锤**——148 轮复核站内 0 命中真缺口，至今未被消解。
+- **品类归位**：注册到「开发工具」品类（与 Modbus RTU 帧生成与校验器、CRC 校验和计算器同品类，便于嵌入式调试工具成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做 32 位寄存器位级可视化编辑与宏生成**——不做 8/16/64 位多宽度切换（首版固定 32 位），不做寄存器地址映射数据库（芯片型号太多），页面须明示；② **不做实际硬件读写**——只做离线位图编辑与代码生成，不做 Web Serial／JTAG／SWD 接入，页面须明示；③ **不收集、不上传任何内容**——全部计算只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 位图编辑：32 位位图（bit31…bit0 左到右降序），点击单元格置位/清零切换；按 4 位分组（nibble 间隔色带），每个单元格标注位号；提供「全置 1」「全清 0」「按位取反」快捷按钮。
+- 值输入：输入框支持 hex（`0x…` 前缀或裸 hex）、十进制、二进制（`0b…`）三种格式，解析后同步刷新位图；非法输入抛 Error（err.field="value"），页面中文提示。
+- 实时输出（node 断言锁死字面）：
+  - HEX：`0x` 前缀＋8 位大写，如 `0xDEADBEEF`
+  - DEC：无符号十进制，如 `3735928559`
+  - BIN：32 位分组（每 4 位空格分隔），如 `1101 1110 1010 1101 1011 1110 1110 1111`
+  - 置位位列表：`[0, 1, 2, 3, 5, ...]` 升序
+  - C 宏定义（prefix 参数，默认 `REG`）：
+    - 每个置位位一行：`#define REG_BIT31 (1u << 31)`（按位号降序排列）
+    - 值宏：`#define REG_VAL 0xDEADBEEFu`
+    - 置位掩码：`#define REG_SET_MASK 0xDEADBEEFu`
+    - 清零掩码（~值）：`#define REG_CLR_MASK 0x21524110u`
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `parseRegisterInput(str)`：hex/dec/bin 解析为 0–4294967295；非法抛 Error（err.field="value"）。
+  - `setBit(value, bit)`／`clearBit(value, bit)`／`toggleBit(value, bit)`：bit 须 0–31 整数，否则抛 Error（err.field="bit"）。
+  - `toHex(value)`：返回 `0x`＋8 位大写；`toDec(value)`：无符号十进制字符串；`toBin(value)`：32 位 4 位分组。
+  - `setBitsList(value)`：置位位号升序数组。
+  - `generateMacros(value, prefix)`：返回宏定义文本（多行，含置位位宏＋REG_VAL＋REG_SET_MASK＋REG_CLR_MASK；value=0 时不输出置位位宏行）；非法抛 Error。
+  - `generateExample()`：返回固定示例值 `0xDEADBEEF`（寄存器调测经典演示值）。
+  - `suggestExportName(kind)`：`txt` → `register-bitfield.txt`，`h` → `register-bitfield.h`（宏定义头文件），其它 kind 返回失败。
+- 界面：值输入区（格式选择 hex/dec/bin＋输入框＋校验提示）；32 位位图（点击切换，置位高亮，位号标注，nibble 分组）；实时输出区（HEX／DEC／BIN／置位位列表）；C 宏输出区（前缀输入框，默认 REG）；操作区（「复制宏定义」「下载 register-bitfield.h」「下载 register-bitfield.txt」「载入示例」「全置 1」「全清 0」「按位取反」；示例无需上传即可演示输入→点位→宏→导出全流程）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 Modbus RTU 帧生成与校验器（/tools/modbus-frame，文案按「寄存器位级编辑 vs 完整帧组装/解析」区分）、CRC 校验和计算器（/tools/crc-checksum-calculator，文案按「位宏生成 vs 裸校验和计算」区分）互链；不与未交付工具互链（浏览器书签清理与分析器下轮递进交付后再互链，不硬凑）。
+- 技术路线：纯前端、无依赖（手写位运算、hex 解析、宏拼接，不引入任何库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `register_bitfield_editor`、Name「寄存器位域查看与编辑器」、Path `/tools/register-bitfield`、Category 开发工具、Icon 建议 tune（图标库无此名则用 code 兜底；勿与已用图标在同品类视觉混淆）、New: true；中英文描述＋SEO keywords（寄存器位域、位编辑器、嵌入式开发、#define 宏、register bitfield、bit editor、寄存器查看）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/register-bitfield，相关工具互链 Modbus RTU 帧生成与校验器、CRC 校验和计算器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `register_bitfield_editor`、Path `/tools/register-bitfield` 注册完整（Category 开发工具），注册总数 222→223 Path。
+2. 解析向量闭环（node 断言）：parseRegisterInput("0xDEADBEEF")=3735928559；parseRegisterInput("3735928559") 同值；parseRegisterInput("0b101")=5；parseRegisterInput("xyz") 抛 Error err.field="value"；parseRegisterInput("0x100000000") 抛 Error（超 32 位）。
+3. 位操作向量闭环（node 断言）：toggleBit(0,31)=0x80000000；setBit(0,0)=1；clearBit(0xFF,7)=0；toggleBit(v,32) 抛 Error err.field="bit"；toggleBit(v,-1) 抛 Error。
+4. 输出向量闭环（node 断言）：toHex(0xDEADBEEF)="0xDEADBEEF"；toBin(5)="0000 0000 0000 0000 0000 0000 0000 0101"；setBitsList(0xA5)=[0,2,5,7]；generateMacros(0x80000001,"REG") 含 `#define REG_BIT31 (1u << 31)`、`#define REG_BIT0 (1u << 0)`、`#define REG_VAL 0x80000001u`、`#define REG_SET_MASK 0x80000001u`、`#define REG_CLR_MASK 0x7FFFFFFEu`；generateExample()=0xDEADBEEF；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+5. 操作闭环（浏览器手工／测试复核）：输入 0xDEADBEEF→位图正确点亮→点击 bit31 切换→HEX/DEC/BIN/宏实时更新→复制宏可用→下载 .h/.txt 可用→「载入示例」无需上传演示全流程→全置1/全清0/取反可用。
+6. 真限制可见：页面可见「只做 32 位寄存器位级可视化编辑与宏生成，不做寄存器地址映射数据库」「不做实际硬件读写」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+7. 操作闭环：相关工具互链含 Modbus RTU 帧生成与校验器、CRC 校验和计算器；不含未交付工具的硬凑互链。
+8. node 测试 25+ 断言全过（解析向量、位操作向量、输出向量、导出与示例向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+9. 页面无报错；移动端位图（32 单元格）小屏横向可滚动、不撑破布局，操作按钮组小屏可操作。
+
+**预计改动文件**：
+- `templates/register_bitfield_editor.html`（新增；含 SEO 面板按家族标准＋值输入区／32 位位图／实时输出区／C 宏输出区／操作区）
+- `static/js/register_bitfield_editor.js`（新增；32 位位运算、hex/dec/bin 解析、宏定义生成、示例值、导出命名；双模式导出供 node 测试）
+- `tests/register_bitfield_editor.test.js`（新增；解析向量、位操作向量、输出向量、导出与示例向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID register_bitfield_editor、Path /tools/register-bitfield、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 a7344c6（Modbus 新增）／9751a56（背景图案新增）／660b96a（评审修复），与 origin/muse/dev-20260929 同步；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **222**；Top3 候选重叠复核（register／bitfield／bookmark 均为 0 命中；modbus_frame_tool 1 命中为本轮已交付项；位运算计算器为 122 轮观察项未交付且纯算式口径；crc 命中仅已交付的 crc_checksum_calculator 裸校验和口径；templates／static/js／tests 下无 register／bitfield／bookmark 专用文件；Modbus 本轮交付划出候选池；电台硬伤未解跳过；GIF/视频转 GIF／HEX↔C 数组／MAP 文件观察项口径待裁定不晋升）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-29 21:00 · 通用调研第一百五十轮）
+
+**交付状态**：10-29 通用调研第一百五十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Modbus RTU 帧生成与校验器已交付闭环**（a7344c6 新增组帧 01/02/03/04/05/06/0F/10 自动 CRC16/MODBUS＋逐字节字段分解＋解析粘贴 hex 验 CRC＋异常响应帧识别；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **222 Path**，ID modbus_frame_tool、Path `/tools/modbus-frame` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 轮，优先小／中难度纯前端。
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. Modbus 交付确认：`git log` 头部 a7344c6（Modbus 新增）／9751a56（背景图案新增）／660b96a（评审修复）；全量 222 Path；ID `modbus_frame_tool`、Path `/tools/modbus-frame` 双注册；本地当前分支 muse/dev-20260929。
+2. 留池复核仍未交付：寄存器位域查看与编辑器（`register`／`bitfield`／位域 0 命中）148 轮晋升 P2 时的缺口论证本轮仍成立，顺位递进为首席；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；HEX ↔ C 数组互转器（147 轮观察项）`hex2c`／`c_array` 0 命中，观察项保持（Modbus 本轮交付输出口径仅 RTU 帧 hex＋字段分解，不附带 C 数组导出，149 轮 PM 规格已明示不提前并项）。
+3. 新信号扫描（以 Linkit 开源 AI 书签管理器痛点帖为主线，dev.to 10-21~10-26 三篇＋阿里云开发者社区 10-25）：
+   - **浏览器书签清理与分析器**（Linkit 系列帖核心痛点：书签栏几千链接层层叠叠找一个常用工具翻半天、「收藏从未停止、阅读从未开始」的信息坟场、同一文章多个 URL 存成多条重复书签、死链悄悄腐烂；站内 `bookmark` 0 命中）：**站内真缺口，新晋 P2**——单页口径：导入浏览器导出的 bookmarks.html（Netscape 标准格式，Chrome/Edge/Firefox 均可导出）→ 本地解析文件夹树 → 重复 URL／标题检测 → 域名分组统计 → 空文件夹检测 → 勾选删除 → 导出清理后的 bookmarks.html 回浏览器导入；纯前端小／中难度，零上传，确定性文本解析＋DOM 树渲染；与 Crumb 桌面书签启动器（桌面应用口径）、Linkit（桌面＋AI＋同步，需后端）口径不重叠；真限制：只做本地 HTML 导入→分析／去重／清理→导出，不做跨设备同步、不做 AI 摘要／语义搜索（需后端／AI）；死链检测若做只能用 no-cors 模式探测网络可达性（拿不到真实 HTTP 状态码，只能判域名不可达／DNS 失败），须明示，PM 可裁定首版是否含该探测；
+   - 其余信号全部消解，不立：EmbedKit 今日重发帖（t/1252847，与 148 轮分析的同一帖，无新功能项——Modbus 本轮已交付闭环，寄存器位域留池顺位首席；CRC／进制转换／HEX↔C／Web Serial／MAP／OneNET MQTT 延续既有结论）；FrameLoom 文档转动画视频（需 AI＋Remotion 本机渲染，非单页纯前端）；CheapBuddy／A6API（API 中转交易市场，需后端＋账号）；reawm（mac 原生窗口管理，非网页工具）；MyEnhancer（AI 照片增强，需 AI 后端）；Meme Video Maker（付费 AI 视频）；removeobjects.video（AI 视频去物，需 AI）；餐厅邮件营销小工具（垂直 AI 邮件生成，需 AI）；xGoose（浏览器插件口径，延续 146 轮结论）；selfhosting.sh 书签榜单（Linkding/Wallabag/Linkwarden 自托管应用，非单页工具）；知乎搜索返回站群 SEO 垃圾，无有效信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Modbus 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，149 轮 Top3 第二顺位递进为首席，新晋 P2 补第二顺位）：
+
+1. **寄存器位域查看与编辑器** — P2 留池顺位首席（148 轮新晋 P2；149 轮复核仍未交付；本轮 `register`／`bitfield` 0 命中复核仍未交付；痛点：调寄存器时对着手册数第几位是哪个使能位，写 `#define` 宏要手动算 `(1u << n)`，位一数错驱动就翻车；纯前端小／中难度：输入 32 位寄存器值→32 位位图可视化点击置位/清零→实时输出 HEX＋C 宏定义（`#define`／位域掩码），零上传；与 122 轮观察项位运算计算器（纯算式口径，未交付）不重叠（本项是可视化位编辑＋宏输出）；与 Modbus 帧生成与校验器同属「嵌入式开发」需求簇，成组发现时互导；真限制：只做位级可视化编辑与宏生成，不做寄存器地址映射数据库（芯片型号太多），须明示）。
+2. **浏览器书签清理与分析器** — 新晋 P2（150 轮新信号；Linkit 系列痛点帖；痛点：书签栏几千链接翻半天、同一文章多个 URL 重复收藏、「收藏从未停止、阅读从未开始」；纯前端小／中难度：导入 bookmarks.html→本地解析文件夹树→重复 URL／标题检测→域名分组统计→空文件夹检测→勾选删除→导出清理后的 bookmarks.html，零上传；站内 0 命中真缺口；真限制：只做本地导入分析／去重／清理／导出，不做跨设备同步、不做 AI 摘要／语义搜索；死链探测若做仅 no-cors 可达性探测，须明示，PM 可裁定首版是否含）。
+3. 顺位缺位：候选池其余 P2 仅在线电台收听器（88 轮新晋；150 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）。PM 若需第三候选，可从观察项裁定晋升（建议优先「GIF／视频转 GIF」或「HEX ↔ C 数组互转器」，口径裁定后可一轮立项）。
+
+其余 P2 留池：无；观察项保持原状：**GIF／视频转 GIF（149 轮观察项新增，口径待 PM 裁定：接受 ffmpeg.wasm 体积做视频→GIF，或收窄为 GIF→GIF 轻量版；站内 gif 命中仅已交付项描述文本，无专用工具）**；HEX ↔ C 数组互转器（147 轮观察项新增，`hex2c`／`c_array` 0 命中；口径待 PM 裁定：与 Modbus 帧生成器合并为「嵌入式字节工具」或单独立项；Modbus 本轮交付不附带 C 数组导出，不提前并项）；MAP 文件内存分析器（148 轮观察项新增，口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC/ARMCC/IAR）；Markdown 转公众号／X 长文排版器（148 轮观察项新增，口径待 PM 裁定：与 md2chat 合并或单独立项）；CSS 加载动画生成器（145 轮观察项新增，关键帧生成器的预设子集，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 149 轮及之前记录。
+
+**通用候选表增量**（第一百五十轮：Modbus RTU 帧生成与校验器已交付划出（a7344c6 新增；ID modbus_frame_tool、Path /tools/modbus-frame 已注册；全量 222 Path；候选池划出）；**浏览器书签清理与分析器新晋 P2**；寄存器位域查看与编辑器顺位递进为首席；自有实锤消解 10+ 项（EmbedKit 重发帖无新口径、FrameLoom 需 AI＋本机渲染、CheapBuddy/A6API 需后端、reawm 非网页、MyEnhancer/Meme Video Maker/removeobjects.video/餐厅邮件工具需 AI、xGoose 插件口径、selfhosting 书签榜单自托管口径、知乎站群垃圾）；全量 222 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Modbus RTU 帧生成与校验器 | 已交付划出（a7344c6 新增；ID modbus_frame_tool、Path /tools/modbus-frame 已注册；全量 222 Path；候选池划出） | — | 已实现 |
+| 寄存器位域查看与编辑器 | 复核仍未交付（148 轮 P2，顺位递进为首席；register/bitfield 0 命中）；调寄存器对着手册数位、手算 `(1u << n)` 宏，位数一错驱动翻车；32 位可视化位编辑→HEX/C 宏输出，纯前端零上传 | 小/中 | P2（留池） |
+| 浏览器书签清理与分析器 | 新晋 P2（Linkit 书签管理痛点帖 10-25~10-29 佐证：书签栏几千链接翻半天、重复收藏、信息坟场）；导入 bookmarks.html→重复 URL/标题检测＋域名分组统计＋空文件夹检测→勾选删除→导出清理后 HTML；纯前端零上传；站内 bookmark 0 命中真缺口 | 小/中 | P2（新晋） |
+
+**归档说明**：本轮为 10-29 通用调研第一百五十轮——Modbus RTU 帧生成与校验器交付闭环（a7344c6，`/tools/modbus-frame` 已注册，全量 222 Path），候选池划出；**浏览器书签清理与分析器新晋 P2**（Linkit 系列痛点帖的新口径：bookmarks.html 导入→分析／去重／清理→导出，站内真缺口）；**寄存器位域查看与编辑器顺位递进为首席**；新信号扫描以 Linkit 开源 AI 书签管理器痛点帖（dev.to 三篇＋阿里云 10-25）为主线；Top3 建议寄存器位域查看与编辑器／浏览器书签清理与分析器，第三顺位缺位（仅剩在线电台收听器一项 P2 且硬伤未解，PM 若需第三候选建议从观察项裁定晋升）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 a7344c6（Modbus 新增）／9751a56（背景图案新增）／660b96a（评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **222**；Top3 候选重叠复核（modbus_frame_tool 1 注册命中，为本轮已交付项；register／位域／bitfield 0 命中；bookmark 0 命中；hex2c／c_array 0 命中；gif 命中仅已交付项描述文本（json 转义器描述、图片格式转换描述、card_giftcard 图标名），无 GIF/视频转 GIF 专用工具；templates／static/js／tests 下无寄存器位编辑器／书签清理器文件；位运算计算器为 122 轮观察项未交付，与寄存器位编辑器可视化位编辑＋宏输出口径不重叠；寄存器位编辑器无硬伤顺位首席、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-29 19:37 · 产品经理排期轮，接 149 轮调研）
 
 **选定：Modbus RTU 帧生成与校验器（modbus_frame_tool）** — 本轮唯一任务（新工具）：
