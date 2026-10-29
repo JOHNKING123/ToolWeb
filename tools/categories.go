@@ -634,6 +634,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_button_generator",
+					Name:        "CSS 按钮生成器",
+					Description: "四态 CSS 按钮样式生成器：背景／边框／圆角／内边距／字体／阴影六组值滑杆＋取色器联动编辑，默认／hover／focus-visible／active 四态页签切换，与默认一致的态自动标注省略，真 button 元素实时预览可悬停／聚焦／按下实测，4 组预设一键载入，输出完整规则块，复制或下载 button.css 与演示页，纯前端零上传 · CSS button generator: 6 style groups, 4 states, live real-button preview, presets, copy/download CSS, 100% client-side",
+					Path:        "/tools/css-button-generator",
+					Icon:        "smart_button",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "css_easing_generator",
 					Name:        "CSS 缓动曲线生成器",
 					Description: "拖动控制点或输入 x1/y1/x2/y2 调 cubic-bezier 曲线：10 组预设一键切换，动画时长 0.2–3 秒，实时预览方块位移动画，输出 cubic-bezier()、transition 与 transition-timing-function 三段代码，复制或下载 easing.css，纯前端零上传 · CSS easing generator: cubic-bezier curve editor, draggable control points, 10 presets, live preview, copy/download, 100% client-side",
