@@ -1,0 +1,165 @@
+{{define "css_scrollbar_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 滚动条样式生成器 - 宽度颜色圆角滑杆六预设可滚动预览 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 滚动条样式生成器：宽度／轨道色与圆角／滑块色与圆角／悬停色滑杆，浅色／深色／细条／圆润／蓝色／高对比六预设，内置中文示例文字的可滚动面板实时预览，可真实滚动、可悬停滑块实测 hover 色，WebKit 与 Firefox 双轨输出，一键复制或下载 scrollbar.css 与演示 HTML。只做滚动条样式声明，纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 滚动条样式生成器,滚动条美化,webkit scrollbar,scrollbar-color,scrollbar generator,css scrollbar styler,滚动条颜色,滚动条宽度">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-scrollbar-generator">
+    <meta property="og:title" content="CSS 滚动条样式生成器 - 可滚动面板实时预览双轨输出">
+    <meta property="og:description" content="宽度／轨道与滑块颜色圆角／悬停色滑杆，六预设，可滚动面板实时预览，WebKit 与 Firefox 双轨输出，复制或下载即用。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-scrollbar-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 滚动条样式生成器","description":"免费在线 CSS 滚动条样式生成器：宽度／轨道色与圆角／滑块色与圆角／悬停色滑杆，六预设，可滚动面板实时预览，WebKit 与 Firefox 双轨输出，复制或下载即用，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-scrollbar-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sb-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .sb-wrap .navbar .material-icons { display: none; }
+        .sb-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .sb-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .sb-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .sb-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .sb-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .sb-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .sb-row input[type=text] { width:8em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .sb-row input[type=color] { width:3em; height:2em; padding:0; border:1px solid #d1d5db; border-radius:.4rem; background:#fff; cursor:pointer; }
+        .sb-row-label { display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin-top:.7rem; }
+        .sb-row-label b { font-size:.95rem; color:#111827; }
+        .sb-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .sb-btn:hover { background:#f3f4f6; }
+        .sb-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .sb-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .sb-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .sb-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .sb-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        #sb-preview-area { height:240px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:.7rem; padding:1rem 1.2rem; background:#fff; }
+        #sb-preview-area p { margin:0 0 .9rem; font-size:.95rem; line-height:1.8; color:#111827; }
+        .sb-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; }
+        .sb-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .sb-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .sb-tip a { color:var(--primary-color); }
+        .sb-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .sb-links a { color:var(--primary-color); font-size:.93rem; }
+        .sb-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .sb-row input[type=range] { min-width:100px; }
+            #sb-preview-area { padding:.8rem; }
+        }
+    </style>
+    <style id="sb-preview-style"></style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="sb-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>↕️ CSS 滚动条样式生成器</h1>
+            <p>宽度／轨道色与圆角／滑块色与圆角／悬停色滑杆，六预设，内置中文示例文字的可滚动面板实时预览，WebKit 与 Firefox 双轨输出</p>
+        </div>
+        <div class="tool-content" id="sb-form">
+            <div class="sb-card">
+                <h3>滚动条预设 <span class="sb-hint">（点击载入，载入后仍可编辑）</span></h3>
+                <div class="sb-presets">
+                    <button class="sb-preset" type="button" data-preset="light">浅色（宽度 12px／轨道 #f1f1f1 圆角 6px／滑块 #c1c1c1 圆角 6px／悬停 #a8a8a8）</button>
+                    <button class="sb-preset" type="button" data-preset="dark">深色（宽度 12px／轨道 #1e1e1e 圆角 6px／滑块 #4d4d4d 圆角 6px／悬停 #6e6e6e）</button>
+                    <button class="sb-preset" type="button" data-preset="thin">细条（宽度 6px／轨道 #f5f5f5 圆角 3px／滑块 #bdbdbd 圆角 3px／悬停 #9e9e9e）</button>
+                    <button class="sb-preset" type="button" data-preset="rounded">圆润（宽度 16px／轨道 #e8e8e8 圆角 8px／滑块 #888888 圆角 8px／悬停 #666666）</button>
+                    <button class="sb-preset" type="button" data-preset="blue">蓝色（宽度 10px／轨道 #e3f2fd 圆角 5px／滑块 #64b5f6 圆角 5px／悬停 #42a5f5）</button>
+                    <button class="sb-preset" type="button" data-preset="contrast">高对比（宽度 14px／轨道 #ffffff 圆角 0px／滑块 #000000 圆角 0px／悬停 #333333）</button>
+                </div>
+            </div>
+
+            <div class="sb-card">
+                <h3>滚动条编辑 <span class="sb-hint">（宽度 2–32px、轨道与滑块圆角 0–32px、颜色只接受 #RGB／#RRGGBB；数值最多 2 位小数，越界或非法颜色红字报错，不静默钳制或取整；颜色取色器与 HEX 文本框双向同步）</span></h3>
+                <div id="sb-editor"></div>
+                <p class="sb-msg" id="sb-msg"></p>
+            </div>
+
+            <div class="sb-card">
+                <h3>实时预览 <span class="sb-hint">（可真实滚动的面板，内置多段中文示例文字；拖动面板滚动条或把鼠标移到滑块上，可实测悬停色）</span></h3>
+                <div class="scroll-area" id="sb-preview-area">
+                    <p>滚动条是界面里最容易被忽视的细节：默认的浅灰色细条放在深色界面上会格外扎眼，放在浅色界面上又常常和内容混在一起。</p>
+                    <p>手写跨浏览器滚动条样式要同时写对两套声明：WebKit 系的一串伪元素，以及 Firefox 的两条标准属性，漏掉 hover 态是最常见的疏忽。</p>
+                    <p>先用预设找一个顺眼的起点：浅色适合大多数浅色页面，深色适合深色模式，细条适合紧凑布局，圆润适合圆角卡片风格。</p>
+                    <p>再微调宽度与颜色：宽度决定滑块的粗细与手感，轨道色决定它与背景的对比，滑块色决定它在页面里的存在感。</p>
+                    <p>圆角只在 WebKit 系浏览器里生效：轨道圆角与滑块圆角可以做出药丸形的滑块，但 Firefox 会直接忽略圆角，只认宽度档位与颜色。</p>
+                    <p>悬停色是给鼠标用户的反馈：把鼠标移到滑块上，颜色变深一点，用户就知道这条东西可以拖动，而不是页面上的一道装饰线。</p>
+                    <p>宽度小于等于 8px 时 Firefox 输出 thin，大于 8px 输出 auto：这是宽度到 scrollbar-width 档位的映射，不是像素宽度本身。</p>
+                    <p>复制完整 CSS 后，把 .scroll-area 换成你自己的容器类名，两套声明一起粘贴，就能在 Chrome、Edge、Safari 与 Firefox 里得到一致的滚动条。</p>
+                </div>
+            </div>
+
+            <div class="sb-card">
+                <h3>代码输出 <span class="sb-hint">（随输入实时生成；WebKit 代码与 Firefox 代码两栏）</span></h3>
+                <p class="sb-hint">WebKit 代码（Chrome／Edge／Safari）</p>
+                <div class="sb-code" id="sb-code-webkit"></div>
+                <div class="sb-actions">
+                    <button class="btn btn-primary" id="sb-copy-webkit" type="button">📋 复制 WebKit</button>
+                </div>
+                <p class="sb-hint">Firefox 代码（scrollbar-width 与 scrollbar-color）</p>
+                <div class="sb-code" id="sb-code-firefox"></div>
+                <div class="sb-actions">
+                    <button class="btn btn-primary" id="sb-copy-css" type="button">📋 复制完整 CSS</button>
+                    <button class="btn btn-secondary" id="sb-download-css" type="button">⬇ 下载 .css</button>
+                    <button class="btn btn-secondary" id="sb-download-html" type="button">⬇ 下载 HTML</button>
+                    <button class="btn btn-secondary" id="sb-load-example" type="button">↺ 载入示例（浅色预设）</button>
+                </div>
+                <p class="sb-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+            </div>
+
+            <div class="sb-card">
+                <h3>使用说明</h3>
+                <ol class="sb-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>点预设一键切换滚动条风格，切换后编辑区、预览与两栏代码三方同步。</li>
+                    <li>在编辑区拖滑杆或改数字、改轨道／滑块／悬停色，预览与代码实时同步；把鼠标移到预览面板的滑块上可实测悬停色。</li>
+                    <li>复制 WebKit 代码或完整 CSS，或下载 scrollbar.css／scrollbar-demo.html 粘贴即用；下载的 HTML 里 .scroll-area 换成自己的容器类名即可复用。</li>
+                    <li>点「载入示例」回到浅色预设起点，无需上传即可演示编辑→预览→导出全流程。</li>
+                    <li>要给盒子加阴影或描圆角去阴影与圆角生成器；要做填充渐变去渐变生成器；要做毛玻璃面板去毛玻璃生成器。</li>
+                </ol>
+            </div>
+
+            <div class="sb-card">
+                <h3>常见问题</h3>
+                <dl class="sb-tip">
+                    <dt><b>为什么 Firefox 代码里没有圆角和像素宽度？</b></dt>
+                    <dd>Firefox 不支持圆角与像素宽度：它只认 scrollbar-width 的 thin／auto 档位与 scrollbar-color 的颜色对，圆角只在 WebKit 轨生效。本页的 Firefox 代码因此绝不输出 border-radius。</dd>
+                    <dt><b>宽度 8px 是分界线吗？</b></dt>
+                    <dd>是本页的映射规则：宽度小于等于 8px 时 Firefox 输出 thin，大于 8px 输出 auto；WebKit 轨仍输出真实的像素宽度。</dd>
+                    <dt><b>移动端能看到这个滚动条吗？</b></dt>
+                    <dd>基本看不到：移动浏览器多为悬浮／细条系统滚动条，本样式在移动端基本不生效，桌面端 Chrome、Edge、Safari、Firefox 才是目标环境。</dd>
+                    <dt><b>数值可以写几位小数？</b></dt>
+                    <dd>最多 2 位小数，例如宽度 12.5px 可以，12.555px 会红字报错，不会静默取整或钳制；超出范围、非法颜色同样报错。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部编辑与预览只在浏览器本地完成，本页面零网络请求，零上传。</dd>
+                </dl>
+            </div>
+
+            <div class="sb-card">
+                <h3>相关工具</h3>
+                <div class="sb-links">
+                    <a href="/tools/css-shadow-radius-generator">CSS 阴影与圆角生成器（滚动条圆角 vs 盒阴影圆角；本页只做滚动条样式声明，那边做盒子 box-shadow 与 border-radius）</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器（滚动条纯色 vs 填充渐变；本页轨道与滑块只用纯色，不做渐变滑块，那边做填充渐变）</a>
+                    <a href="/tools/css-glass-generator">CSS 毛玻璃生成器（滚动条样式 vs 毛玻璃面板；本页只做滚动条样式声明，那边做毛玻璃面板）</a>
+                </div>
+            </div>
+
+            <div class="sb-card">
+                <h3>真限制说明</h3>
+                <div class="sb-tip">
+                    <b>只做滚动条样式声明，不做 JS 模拟滚动条、不做滚动进度条、不做渐变滑块</b>：本页只生成滚动条的样式声明，不用 JS 模拟滚动条，不生成滚动进度条，轨道与滑块均为纯色；<b>Firefox 不支持圆角与像素宽度（只用 thin／auto＋scrollbar-color）</b>：Firefox 输出只用 scrollbar-width（thin／auto）与 scrollbar-color，圆角只在 WebKit 轨生效；<b>移动端基本不生效</b>：移动浏览器多为悬浮／细条系统滚动条，本样式在移动端基本不生效；<b>不收集、不上传任何内容</b>：全部编辑与预览只在浏览器本地完成，本页面零 fetch / XHR，零外部资源。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="sb-toast" id="sb-toast"></div>
+    <script src="/tools/static/js/css_scrollbar_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

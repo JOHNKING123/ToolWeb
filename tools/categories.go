@@ -706,6 +706,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_scrollbar_generator",
+					Name:        "CSS 滚动条样式生成器",
+					Description: "宽度 2–32px／轨道色与圆角／滑块色与圆角／悬停色滑杆，浅色／深色／细条／圆润／蓝色／高对比六预设，内置中文示例文字的可滚动面板实时预览（可真实滚动、可悬停滑块实测 hover 色），WebKit 与 Firefox 双轨输出（width≤8→thin 否则 auto、Firefox 不输出圆角），复制 WebKit／完整 CSS、下载 scrollbar.css／scrollbar-demo.html，只做滚动条样式声明，纯前端零上传 · CSS scrollbar generator: width/color/radius sliders, 6 presets, live scrollable preview, WebKit + Firefox output, copy/download, 100% client-side",
+					Path:        "/tools/css-scrollbar-generator",
+					Icon:        "swap_vert",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "wcag_contrast_checker",
 					Name:        "WCAG 颜色对比度检查器",
 					Description: "前景/背景双取色器＋HEX/RGB 输入，按 WCAG 2.x 相对亮度公式实时算对比度，AA/AAA（正常/大号字）四档判定，样例文本实时预览，未达标沿 HSL 明度 1% 步进双向搜索最近达标前景色并可一键采纳，4 组预设请按需改写，纯前端零上传 · WCAG contrast checker: foreground/background pickers, HEX/RGB input, ratio, AA/AAA checks, live preview, nearest passing color suggestion, 100% client-side",

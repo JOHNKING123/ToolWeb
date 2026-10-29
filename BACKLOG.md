@@ -1,3 +1,84 @@
+## 今日任务（2026-10-29 11:40 · 产品经理排期轮，接 145 轮调研）
+
+**选定：CSS 滚动条样式生成器（css_scrollbar_generator）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（145 轮）Top3 **首席推荐**，按「无硬伤不跳过、Top3 顺位递进」惯例生效。CSS 特异性计算器已交付划出（76d488d 新增，全量 217 Path），首席顺位自然递进至本项；不再以「单位换算更常用／按钮更直观」等理由二次跳过——CSS 单位换算器、CSS 按钮生成器均不插队。
+- **未选**：CSS 单位换算器（144 轮新晋 P2、145 轮顺位第二，**无硬伤，留池顺位递进——仅因顺位在本项之后而后置，下轮首席递进**；只做 CSS 长度单位换算，与本项滚动条样式声明口径不重叠）；CSS 按钮生成器（145 轮新晋 P2、顺位第三，**无硬伤，留池顺位递进——同上，仅顺位后置**；只做单个按钮三态规则块，与本项滚动条声明口径不重叠）；在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）。
+- **PM 零重叠实测复核**：`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **217 Path**；`git log` 头部 76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）；本轮 `git fetch` 成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）。逐项复核：`scrollbar`／`button`／`css-unit` 在 tools/categories.go 中均为 0 命中（`specificity` 命中 3 为已交付的特异性计算器注册与描述）；templates／static/js／tests 下无 scrollbar 样式生成器、无 button 生成器文件（scroll 命中仅已交付的滚动字幕生成器 scrolling_subtitle_generator，见下；unit 命中仅 unit_converter 与 unit_calc_notepad 两个已交付工具）。近邻再辨析：① **滚动字幕生成器**（scrolling_subtitle）是跑马灯文字动画，不产滚动条样式声明；② **骨架屏加载占位生成器**是占位骨架，不产滚动条声明；③ **CSS 阴影／圆角生成器**只产 box-shadow 与 border-radius，不产 ::-webkit-scrollbar 系列与 scrollbar-color；④ **CSS 渐变生成器**只产填充渐变声明，本项轨道／滑块只用纯色（不做渐变滑块）；⑤ **通用单位换算器**只做绝对单位，不含滚动条宽度语义。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——跨浏览器滚动条要同时写对 WebKit 一串伪元素与 Firefox 两条标准属性，手写不是漏 hover 态、就是深色界面配了浅色默认条像 bug，凭代码想象不出滑块在真实滚动面板里的粗细与手感，滑杆＋六预设＋可滚动面板实时预览＋双轨输出恰好对症，且零上传；③ **一轮可高质量交付**——纯前端、无依赖，颜色解析、双轨 CSS 合成、宽度到 scrollbar-width 的映射、预设配置均为确定性纯函数，可写成精确向量供 node 断言，无随机性；④ **受众与站内互补**——与 CSS 渐变／阴影／圆角／滤镜／毛玻璃／特异性生成器同属「CSS 可视化生成」需求簇：别人产声明或算权重，本项管滚动条，成组发现时互相导流；⑤ **外部佐证已就位**——143 轮新晋 P2 以来多轮复核未交付、需求未被站内工具消解，留池顺位本身即持续有效的需求信号。
+- **品类归位**：注册到「开发工具」品类（与 CSS 特异性计算器、CSS 毛玻璃生成器、CSS 滤镜生成器、CSS 阴影／圆角生成器、CSS 渐变生成器同品类，便于 CSS 生成类需求成组发现）；New: true。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理）**：① **只做滚动条样式声明**——不做 JS 模拟滚动条、不做滚动进度条、不做渐变滑块（轨道／滑块均为纯色），页面须明示；② **Firefox 不支持圆角与像素宽度**——Firefox 输出只用 scrollbar-width（thin／auto）与 scrollbar-color，圆角只在 WebKit 轨生效，页面须明示；③ **移动端不可覆盖**——移动浏览器多为悬浮／细条系统滚动条，本样式在移动端基本不生效，页面须明示；④ **不收集、不上传任何内容**——全部编辑与预览只在浏览器本地完成，页面须明示。
+
+**规格**（开发轮按此执行）：
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制、不静默取整、不静默截断）：
+  - `parseHexColor(s)`：接受 #RGB／#RRGGBB（大小写不限，统一输出小写 #RRGGBB）；其它写法（如颜色名、rgb()、空串）返回失败。
+  - `validateScrollbar(cfg)`：cfg 含 width（2–32 px，最多 2 位小数）、trackColor（经 parseHexColor 校验）、trackRadius（0–32 px，最多 2 位小数）、thumbColor（经 parseHexColor 校验）、thumbHoverColor（经 parseHexColor 校验）、thumbRadius（0–32 px，最多 2 位小数）；任一字段非法返回失败；返回归一化后的 cfg（颜色小写、数值去尾零后仍为数字）。
+  - `buildWebkitCss(cfg)`：先经 validateScrollbar 校验，输出 4 行（选择器固定 `.scroll-area`，数值去尾零规范化）：`.scroll-area::-webkit-scrollbar { width: <width>px; height: <width>px; }`＋`.scroll-area::-webkit-scrollbar-track { background: <trackColor>; border-radius: <trackRadius>px; }`＋`.scroll-area::-webkit-scrollbar-thumb { background: <thumbColor>; border-radius: <thumbRadius>px; }`＋`.scroll-area::-webkit-scrollbar-thumb:hover { background: <thumbHoverColor>; }`；非法返回失败。
+  - `buildFirefoxCss(cfg)`：先经 validateScrollbar 校验，输出 4 行：`.scroll-area {`＋`  scrollbar-width: <thin|auto>;`＋`  scrollbar-color: <thumbColor> <trackColor>;`＋`}`；映射规则：width ≤ 8 → thin，否则 auto；**不输出任何 border-radius**（Firefox 不支持）；非法返回失败。
+  - `buildCssSnippet(cfg)`：先经 validateScrollbar 校验，输出 WebKit 4 行＋空行＋Firefox 4 行，共 9 行；非法返回失败。
+  - `buildHtmlSnippet(cfg)`：先经 validateScrollbar 校验，返回演示 HTML 片段（含 `<style>` 内嵌 buildCssSnippet 产出的完整 CSS＋预览区样式（`.scroll-area` 高 240px、overflow-y auto、内置边框）＋`<div class="scroll-area">` 内含多段内置中文示例文字，足以纵向滚动；无额外脚本）；非法返回失败。
+  - `generatePreset(name)`：name 仅接受 light／dark／thin／rounded／blue／contrast，返回 `{ name, cfg }`：light 浅色（width 12、track #f1f1f1 trackRadius 6、thumb #c1c1c1 thumbRadius 6、hover #a8a8a8）；dark 深色（width 12、track #1e1e1e trackRadius 6、thumb #4d4d4d thumbRadius 6、hover #6e6e6e）；thin 细条（width 6、track #f5f5f5 trackRadius 3、thumb #bdbdbd thumbRadius 3、hover #9e9e9e）；rounded 圆润粗条（width 16、track #e8e8e8 trackRadius 8、thumb #888888 thumbRadius 8、hover #666666）；blue 蓝色（width 10、track #e3f2fd trackRadius 5、thumb #64b5f6 thumbRadius 5、hover #42a5f5）；contrast 高对比（width 14、track #ffffff trackRadius 0、thumb #000000 thumbRadius 0、hover #333333）；未知 name 返回失败。
+  - `suggestExportName(kind)`：`css` → `scrollbar.css`，`html` → `scrollbar-demo.html`，其它 kind 返回失败（不编造其它文件名）。
+- 界面：预设区（light／dark／thin／rounded／blue／contrast 六个预设按钮，中文标签：浅色／深色／细条／圆润／蓝色／高对比）；编辑区（宽度滑杆＋数字输入、轨道色与圆角、滑块色与圆角、悬停色，颜色取色器＋HEX 文本框双向同步）；预览区（可滚动面板，内置多段中文示例文字，实时应用生成的滚动条样式，可真实滚动、可悬停滑块实测 hover 色）；代码区（WebKit 代码与 Firefox 代码两栏，实时同步，「复制 WebKit」「复制完整 CSS」「下载 .css」「下载 HTML」「载入示例」按钮，示例为 light 预设、无需上传即可演示编辑→预览→导出全流程）；非法颜色／越界数值在编辑区以红字标出、不阻塞其它控件；所有提示均中文；用户输入与结果用 textContent 或转义后插值，预览 `<style>` 内只注入 buildCssSnippet 产出的校验后 CSS，杜绝注入。
+- 操作与互链：与 CSS 阴影与圆角生成器（/tools/css-shadow-radius-generator，文案按「滚动条圆角 vs 盒阴影圆角」区分）、CSS 渐变生成器（/tools/css-gradient-generator，文案按「滚动条纯色 vs 填充渐变」区分）、CSS 毛玻璃生成器（/tools/css-glass-generator，文案按「滚动条样式 vs 毛玻璃面板」区分）互链；不与未交付的 CSS 单位换算器、CSS 按钮生成器互链（不硬凑）。
+- 技术路线：纯前端、无依赖（手写颜色解析、双轨 CSS 合成、宽度映射、预设配置，不引入任何 CSS 生成库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `css_scrollbar_generator`、Name「CSS 滚动条样式生成器」、Path `/tools/css-scrollbar-generator`、Category 开发工具、Icon 建议 swap_vert（图标库无此名则用 tune 兜底；同品类暂无滚动条类图标占用）、New: true；中英文描述＋SEO keywords（CSS 滚动条样式生成器、滚动条美化、webkit scrollbar、scrollbar-color、scrollbar generator、css scrollbar styler）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-scrollbar-generator，相关工具互链 CSS 阴影与圆角生成器、CSS 渐变生成器、CSS 毛玻璃生成器。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `css_scrollbar_generator`、Path `/tools/css-scrollbar-generator` 注册完整（Category 开发工具），注册总数 217→218 Path。
+2. 颜色与校验向量闭环（node 断言）：parseHexColor 已知值（#FFF→#ffffff、#00E5FF→#00e5ff）；颜色名、rgb()、空串判失败；validateScrollbar 已知值（light 预设）通过，width 1／33、radius -1／33、12.555 超 2 位小数、非法颜色、缺失 thumbHoverColor 判失败。
+3. 双轨合成向量闭环（node 断言）：light 预设 WebKit 4 行与上文规格字面一致（含 height 与 width 同值 12px、hover 行只含背景色）；Firefox 行 `scrollbar-width: auto;`＋`scrollbar-color: #c1c1c1 #f1f1f1;` 且无 border-radius；thin 预设（width 6）Firefox 为 thin；contrast 预设（radius 0）WebKit 两 radius 行均为 0px；buildCssSnippet 为 WebKit 4 行＋空行＋Firefox 4 行。
+4. 预设与导出向量闭环（node 断言）：generatePreset 六个预设参数与上文规格字面一致，未知预设失败；buildHtmlSnippet 含 `<style>` 内嵌 CSS 与 class `scroll-area`，且无 `<script>`；suggestExportName 两 kind 文件名正确、其它 kind 失败。
+5. 操作闭环（浏览器手工／测试复核）：切预设→预览面板滚动条变化→改宽度／颜色／圆角／悬停色→预览与两栏代码同步→真实滚动面板可滚动、悬停滑块变 hover 色→复制 WebKit／完整 CSS、下载 .css／HTML 可用→「载入示例」无需上传即可演示全流程。
+6. 真限制可见：页面可见「只做滚动条样式声明、不做 JS 模拟滚动条与滚动进度条」「Firefox 不支持圆角与像素宽度（只用 thin／auto＋scrollbar-color）」「移动端基本不生效」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+7. 操作闭环：相关工具互链含 CSS 阴影与圆角生成器、CSS 渐变生成器、CSS 毛玻璃生成器；不含未交付工具的硬凑互链；非法颜色／越界数值有红字降级提示。
+8. node 测试 25+ 断言全过（颜色与校验向量、双轨合成向量、预设与导出向量、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+9. 页面无报错；移动端编辑区、预设按钮组、预览面板、代码栏、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/css_scrollbar_generator.html`（新增；含 SEO 面板按家族标准＋预设区／编辑区／可滚动预览面板／WebKit 与 Firefox 双栏代码区／导出区）
+- `static/js/css_scrollbar_generator.js`（新增；颜色解析、滚动条校验、WebKit 与 Firefox 双轨合成、完整 CSS 与 HTML 片段生成、六预设配置、导出命名；双模式导出供 node 测试）
+- `tests/css_scrollbar_generator.test.js`（新增；颜色与校验向量、双轨合成向量、预设与导出向量、注册与零网络静态检查）
+- `tools/categories.go`（开发工具品类注册：ID css_scrollbar_generator、Path /tools/css-scrollbar-generator、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；`git log` 头部 76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **217**；Top3 候选重叠复核（scrollbar／button／css-unit 在 categories.go 均为 0 实现命中；templates／static/js／tests 下无 scrollbar 样式生成器与 button 生成器文件，scroll 命中仅已交付的滚动字幕生成器；阴影／圆角只产 box-shadow 与 border-radius、渐变只产填充声明、毛玻璃只产 backdrop-filter 面板，辨析见上；CSS 单位换算器与 CSS 按钮生成器无硬伤顺位后置、电台硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-29 11:00 · 通用调研第一百四十五轮）
+
+**交付状态**：10-29 通用调研第一百四十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 特异性计算器已交付闭环**（76d488d 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **217 Path**，ID css_specificity_calculator、Path /tools/css-specificity-calculator 已注册；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 轮，优先小／中难度纯前端。
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. CSS 特异性计算器交付确认：`git log` 头部 76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）；全量 217 Path；本地当前分支 muse/dev-20260929；**本轮 `git fetch` 成功**（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no；首轮未带 env 的 fetch 曾报 Host key verification failed，属已知_hosts 机制问题、带 env 后即成功并补记 github.com 主机密钥）。
+2. 留池复核仍未交付：CSS 滚动条样式生成器、CSS 单位换算器在 tools/categories.go 中 scrollbar／css-unit 路径命中均为 0，templates／static/js／tests 下无 scrollbar／css 单位换算文件（unit 命中仅已交付的 unit_converter 与 unit_calc_notepad），143／144 轮晋升 P2 时的缺口论证本轮仍成立，两项顺位递进；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描（以 cssawwwards 2026 年 25 款免费 CSS 工具榜单为主线，逐项核对站内覆盖）：
+   - **CSS 按钮生成器**（榜单八大生成器之一：背景／边框／圆角／内边距／字号／字重／文字色＋hover／focus／active 三态同步编辑＋渐变背景＋阴影＋过渡时长，一键导出完整多态按钮规则块）：**站内真缺口，新晋 P2**——categories.go 中 button 路径为 0，templates／static/js／tests 下无按钮生成器文件；站内「CSS 阴影／圆角生成器」只产 box-shadow 与 border-radius、「CSS 渐变生成器」只产填充声明，均不含状态管理与完整规则块，口径不重叠；纯前端小难度：背景／边框／圆角／内边距／字体／阴影滑杆＋三态切换编辑＋六预设＋按钮实时预览（可悬停／聚焦实测）＋复制／下载 .css，零上传；真限制：只做单个按钮规则块（含三态），不做整套组件库、不做图标与动效库，须明示；
+   - **观察项新增（未晋升 P2，口径待 PM 裁定）**：CSS 背景图案生成器（榜单八大生成器之一：条纹／圆点／网格／棋盘／锯齿等多渐变组合＋scale／颜色／密度滑杆＋background-size 输出；站内仅 cross-stitch-pattern 十字绣图案，与 CSS 背景图案口径无关）——多渐变组合＋background-size 是新点，但与渐变生成器相邻，是否单独立项存争议，暂留观察；CSS 加载动画生成器（榜单动画类：旋转圆环／脉冲圆点／弹跳条／轨道加载器＋颜色／尺寸／速度）——与 143 轮脉冲动画观察项同理，只是关键帧生成器的预设子集，暂留观察；
+   - **其余信号全部消解，不立**：榜单其余 20 项站内均已覆盖（渐变／阴影／圆角／文字阴影／滤镜／clip-path／Flexbox／Grid／缓动／对比度／调色板／clamp／特异性／毛玻璃均已交付；圆角并入阴影／圆角生成器；贝塞尔并入缓动生成器；transition 简写视觉配置属缓动生成器同一口径；流体字阶 custom properties 输出与 clamp 计算器口径相邻、增量有限）／dev.to 10 工具榜单（渐变／Flexbox／阴影／Grid／特异性／格式化／压缩／关键帧／Tailwind→CSS／颜色转换站内均已覆盖，css-to-tailwind 已注册）／dev.to 工具站路线图（CSV 解析转换／调色板／Lorem ipsum／SQL 格式化／Cron 生成站内均已注册：csv-json、color-palette-generator、lorem-ipsum-generator、sql_formatter、cron-generator）／HN Show HN 24 工具合集（JSON／CSV→JSON·SQL／正则／Base64／哈希／UUID／JWT／Cron／时间戳／Diff 站内均已覆盖）／V2EX／HN 其余帖子（本轮无有效单页工具新信号）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 特异性计算器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，144 轮 Top3 第二顺位递进为首席，第三顺位递进为第二，新晋 P2 补第三顺位）：
+
+1. **CSS 滚动条样式生成器** — P2 留池顺位首席（143 轮新晋 P2；145 轮复核仍未交付；痛点：跨浏览器滚动条要同时写对 WebKit 一串伪元素（::-webkit-scrollbar／track／thumb／hover）与 Firefox 两条标准属性，手写时不是漏 hover 态、就是深色界面配了浅色默认条像 bug，凭代码想象不出滑块在真实滚动面板里的粗细与手感；纯前端小难度：轨道／滑块颜色与圆角／宽度／悬停色滑杆＋六预设＋可滚动面板实时预览＋WebKit＋Firefox 双轨输出＋复制／下载 .css，零上传；与站内滚动字幕生成器（跑马灯文字）、骨架屏加载占位生成器（占位骨架）口径不重叠；真限制：只做滚动条样式声明，不做 JS 模拟滚动条、不做滚动进度条，Firefox 不支持圆角、移动端不可覆盖，须明示）。
+2. **CSS 单位换算器** — P2 留池顺位第二（144 轮新晋 P2；145 轮复核仍未交付；痛点：px 转 rem／em／vw 全靠心算除 16、除视口宽，根字号一改或换个断点整站尺寸全错，改一处就要重算一串值，凭心算还容易把 em 的父级基准与 rem 的根基准混成一个数；纯前端小难度：数值＋源单位＋根字号／父级字号／视口宽高／DPI 上下文＋全单位对照表＋复制单个值，零上传；与站内单位换算器（绝对单位）、CSS clamp 计算器（流体公式）、单位感知记事本计算器（逐行算式）口径不重叠；真限制：只做 CSS 长度单位换算，不做 ch／ex（依赖字体度量），vw／vh／em 结果依赖所填上下文参数，须明示）。
+3. **CSS 按钮生成器** — 新晋 P2（145 轮新晋；痛点：从零写一个按钮要配齐背景／边框／圆角／内边距／字体／阴影六组值，再给 hover／focus／active 各复制一遍改色改阴影，漏一个态线上就是半成品手感，凭代码想象不出按钮按下去的反馈；纯前端小难度：六组值滑杆＋三态切换编辑＋预设＋按钮实时预览（可悬停／聚焦实测）＋完整规则块复制／下载，零上传；与站内阴影／圆角生成器（只产 box-shadow 与圆角）、渐变生成器（只产填充声明）口径不重叠——本项的新口径是三态管理与完整规则块；真限制：只做单个按钮规则块，不做整套组件库、不做图标与动效库，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮新晋；145 轮复核仍未交付；**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环，PM 若选 Top3 之外的项，须先解硬伤或改从观察项递补，不硬上）；观察项保持原状：CSS 背景图案生成器／CSS 加载动画生成器（145 轮观察项新增，口径待 PM 裁定）；新拟态生成器／CSS 脉冲动画生成器（143 轮观察项新增，口径待 PM 裁定）；行去重与排序器（137 轮观察项新增）；批量随机数生成器（133 轮观察项新增）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮观察项新增）；其余 92 轮及之前留池项均保持留池／观察原状，详见 144 轮及之前记录。
+
+**通用候选表增量**（第一百四十五轮：CSS 特异性计算器已交付划出（76d488d 新增；ID css_specificity_calculator、Path /tools/css-specificity-calculator 已注册；全量 217 Path；候选池划出）；**CSS 按钮生成器新晋 P2**；CSS 滚动条样式生成器、CSS 单位换算器顺位递进；CSS 背景图案生成器／CSS 加载动画生成器入观察项（口径待裁定）；自有实锤消解 20+ 项（cssawwwards 25 榜单其余项站内均已覆盖；dev.to 榜单与工具站路线图、HN 24 工具合集站内均已覆盖；V2EX／HN 本轮无有效新信号）；全量 217 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 特异性计算器 | 已交付划出（76d488d 新增；ID css_specificity_calculator、Path /tools/css-specificity-calculator 已注册；全量 217 Path；候选池划出） | — | 已实现 |
+| CSS 按钮生成器 | 从零写按钮要配齐六组值再给三态各复制一遍、漏态即半成品手感；六组值滑杆＋三态切换编辑＋预设＋实时预览（可悬停／聚焦实测）＋完整规则块复制／下载，纯前端零上传；站内 button 路径为 0，与阴影／圆角（只产 box-shadow 与圆角）、渐变（只产填充）不重叠 | 小 | P2（新晋） |
+| CSS 滚动条样式生成器 | 复核仍未交付（143 轮 P2，顺位递进为首席）；跨浏览器滚动条手写要同时写对 WebKit 伪元素串与 Firefox 标准属性、深色界面默认浅色条像 bug；轨道／滑块颜色与圆角／宽度／悬停色滑杆＋六预设＋可滚动面板实时预览＋双轨输出＋复制／下载，纯前端零上传 | 小 | P2（留池） |
+| CSS 单位换算器 | 复核仍未交付（144 轮 P2，顺位递进为第二）；px 转 rem／em／vw 靠心算、根字号与父级基准易混；数值＋源单位＋根字号／父级字号／视口宽高／DPI 上下文＋全单位对照表＋复制单个值，纯前端零上传 | 小 | P2（留池） |
+| CSS 背景图案生成器／CSS 加载动画生成器 | 观察项新增（口径待 PM 裁定：前者多渐变组合＋background-size 是新点但与渐变生成器相邻，站内仅十字绣图案无关；后者只是关键帧生成器的预设子集，与 143 轮脉冲动画观察项同理） | — | 观察项 |
+
+**归档说明**：本轮为 10-29 通用调研第一百四十五轮——CSS 特异性计算器交付闭环（76d488d，`/tools/css-specificity-calculator` 已注册，全量 217 Path），候选池划出；**CSS 按钮生成器新晋 P2**；**CSS 滚动条样式生成器、CSS 单位换算器顺位递进为 Top3 前两位**；cssawwwards 25 榜单逐项核对无重叠（Top3 建议 CSS 滚动条样式生成器／CSS 单位换算器／CSS 按钮生成器；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 76d488d（特异性计算器新增）／8fe26ed（毛玻璃生成器新增）／de7b156（滤镜生成器红字提示修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **217**；`git fetch` 本轮成功（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-29 09:38 · 产品经理排期轮，接 144 轮调研）
 
 **选定：CSS 特异性计算器（css_specificity_calculator）** — 本轮唯一任务（新工具）：
