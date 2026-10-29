@@ -903,6 +903,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "text_to_pdf",
+					Name:        "文本转 PDF",
+					Description: "粘贴文本排版打印另存为 PDF：字号/行距/页边距/纸张方向/字体可调，页眉与段落防断裂可开关，打印预览后经浏览器打印对话框选「另存为 PDF」导出，纯前端本地排版零上传 · Text to PDF: paste text, adjust layout, print to PDF via browser dialog, 100% client-side",
+					Path:        "/tools/text-to-pdf",
+					Icon:        "text_snippet",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "texttools",
 					Name:        "文本工具集",
 					Description: "字数统计、行去重、排序、大小写转换、全半角、盘古空格",

@@ -1,3 +1,75 @@
+## 今日任务（2026-10-30 07:40 · 产品经理排期轮，接 155 轮调研）
+
+**选定：文本转 PDF** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（155 轮）Top3 **首席推荐**（154 轮新晋 P2，155 轮建议晋升首席；PM 05:45 轮已列第二顺位，HEX ↔ C 数组互转器交付闭环后自然递进），按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **未选**：
+  - MAP 文件内存分析器（148 轮观察项继续观察：口径待裁定——首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR；且难度中，今日优先小难度纯文本工具，不插队）。
+  - 行去重与排序器（137 轮观察项**不独立成项**：PM 实测发现功能已被「文本工具集」（ID `texttools`，Path `/tools/text-tools`，描述「字数统计、行去重、排序、大小写转换、全半角、盘古空格」）覆盖；独立成项会重复造轮子，候选池划出，记为「已由文本工具集覆盖」）。
+  - 在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+- **PM 零重叠实测复核**：`text-to-pdf`／`text_to_pdf` 全站 0 命中（templates／static/js／tools／tests 均无）；`tools/doc_to_pdf.go` 是服务端 DOC/DOCX **上传**转换（Path `/tools/doc-to-pdf`，走文件上传+服务端转码），与本工具「纯文本粘贴、零上传、纯前端」路线完全不同，反证真缺口而非重复。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——临时文本／会议纪要想存成 PDF 分享，在线站要上传或收费，隐私顾虑大；③ **一轮可高质量交付**——纯前端排版打印视图，核心为确定性纯函数（文本→转义排版 HTML），可写成精确向量供 node 断言；④ **文本簇补位**——与文本工具集／文本对比／字数统计互链，互相导流；⑤ **零上传、零依赖、零 CDN**——纯前端单页。
+- **品类归位**：注册到「文本工具」品类；New: true；Icon `text_snippet`（`picture_as_pdf` 已被 DOC 转 PDF 占用，实测确认）。
+- **PM 技术路线裁定**：采用**排版打印视图 → `window.print()` 另存为 PDF**（零依赖、零 CDN、零上传，符合家族惯例）；**不采用**自托管 jsPDF 一键下载（增加仓库体积、违背零依赖惯例）。**真限制必须页面明示**：出 PDF 依赖浏览器打印对话框选「另存为 PDF」／「Microsoft Print to PDF」，非一键直下——此为验收红线。
+- **方向合规**：文本工具开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- **输入**：文本 textarea（粘贴／载入示例／清空）；标题输入（可选，PDF 页眉+打印标题）；字数／字符数实时显示。
+- **排版选项**：字号（小／中／大）、行距（1.4／1.6／2.0）、页边距（窄／默认／宽）、纸张方向（纵向／横向）、字体（宋体衬线／黑体无衬线／等宽）、页眉开关（标题＋日期）、段落防断裂（`break-inside: avoid`）。
+- **打印视图**：`@media print` 隐藏工具 chrome，只显示排版文档；「打印／另存为 PDF」按钮调 `window.print()`；打印对话框使用说明（选「另存为 PDF」）页面内明示。
+- 纯函数（双模式导出供 node 测试；失败约定：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `buildPrintDoc({title, body, opts})` → string（转义后 HTML 文档片段；用户文本一律经转义／textContent 插入，杜绝注入；空 body 抛 Error err.field=\"input\"）。
+  - `countChars(text)` → `{chars, lines, words}`。
+  - `pageConfig(opts)` → `{fontSize, lineHeight, margin, orientation, fontFamily, header}` 归一化配置对象（非法值抛 Error err.field 定位）。
+- 确定性向量（开发轮必须逐字命中）：
+  - `buildPrintDoc({title:\"会议纪要\", body:\"第一项\\n第二项\", opts:{fontSize:\"m\", lineHeight:1.6, margin:\"normal\", orientation:\"portrait\", fontFamily:\"sans\", header:true}})` → 含转义标题 `<h1>` 与两段 `<p>`、含 `@page` 纵向声明的确定性 HTML（开发轮按实现快照）。
+  - `buildPrintDoc({title:\"<script>alert(1)</script>\", body:\"x\", opts: 默认})` → 输出中无裸 `<script>`（转义为 `&lt;script&gt;`）。
+  - `countChars(\"abc\\n你好\")` → `{chars: 6, lines: 2, words: 2}`（中英混排口径开发轮锁定并断言）。
+  - `pageConfig({orientation:\"sideways\"})` 抛 Error（err.field=\"orientation\"）。
+- 界面：输入区＋排版选项区＋打印预览区＋「打印／另存为 PDF」按钮＋信息栏（字符数／行数）＋真限制提示条（打印对话框选「另存为 PDF」，非一键直下）＋隐私声明（文本不出浏览器、零上传）；所有提示中文；用户输入与结果用 textContent 或转义后插值。
+- 操作与互链：与「DOC 转 PDF」（文案区分：上传文档转换 vs 纯文本排版零上传）、「文本工具集」、文本对比工具互链；不与未交付工具互链。
+- 技术路线：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `text_to_pdf`、Name「文本转 PDF」、Path `/tools/text-to-pdf`、Category 文本工具、New: true；中英文描述＋SEO keywords（文本转 PDF、text to pdf、在线打印 PDF、会议纪要转 PDF、text to pdf online）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/text-to-pdf，相关工具互链 DOC 转 PDF、文本工具集。
+- **预计改动文件**：`templates/text_to_pdf.html`（新）、`static/js/text_to_pdf.js`（新）、`tests/text_to_pdf.test.js`（新）、`tools/categories.go`（注册，Path 总数 227→228）；旧测试 Path 断言 227→228 同步：`tests/hex_c_array.test.js`、`tests/bookmark_cleaner.test.js`、`tests/gif_compress.test.js`、`tests/modbus_frame_tool.test.js`、`tests/regex_generator.test.js`、`tests/register_bitfield_editor.test.js`。
+
+---
+
+## 今日任务（2026-10-30 07:36 · 通用调研第一百五十五轮）
+
+**交付状态**：10-30 通用调研第一百五十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**HEX ↔ C 数组互转器已交付闭环**（acdb0b8 新增：HEX 文本／字节列表／C 数组双向互转，输出 C 数组（数组名／类型／行宽／0x 或 h／大小写可配）、HEX 三格式、字节列表、Base64；纯函数双模式导出，非法输入抛 Error（err.field），零依赖零上传；与 Modbus／寄存器位域／CRC 互链并明示只做格式互转不做帧语义解析；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **227 Path**，ID hex_c_array、Path `/tools/hex-c-array` 已注册；templates／static/js／tests 三件套在库；node 66 断言全过；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 轮，优先小／中难度纯前端。
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. HEX ↔ C 数组互转器交付确认：`git log` 头部 acdb0b8（HEX ↔ C 数组互转器新增）／c3b3ca4（GIF 压缩优化器新增）／d3222af（示例生成正则新增）；全量 227 Path；ID `hex_c_array`、Path `/tools/hex-c-array` 双注册；本地当前分支 muse/dev-20260929（`git fetch` 已通）。
+2. 留池复核：HEX ↔ C 数组互转器交付闭环，首席顺位空出；**文本转 PDF（154 轮新晋 P2；PM 05:45 轮列第二顺位，HEX 交付后自然递进，`text-to-pdf` 全站 0 命中）建议晋升 P2 顺位首席**；MAP 文件内存分析器（148 轮观察项；`map_file_analyzer`／`map-analyzer` 全站 0 命中；口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR）保持观察；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描（V2EX 10-28~10-30 新帖＋HN／Reddit＋dev.to 竞品榜单为主线）：**本轮无新晋 P2**——
+   - tubox 图片工具箱 10-28 第四轮重发帖（t/1252552）：13 项清单无新口径（148／150／151／152／153／154 轮已逐项分析），消解；
+   - MiniCPM OCR（t/1252701）：需大模型对接（MiniCPM-OCR-1.0 服务端），非纯前端，消解；
+   - xGoose（t/1252493）：Chrome 插件＋AI，延续 153／154 轮结论，消解；
+   - NASDrop（t/1249758）：群晖套件／Docker 服务＋配套 Chrome 扩展，非单页网页工具，消解；
+   - 在线简历生成器（t/1248172，10-12）：整站形态＋AI 辅助，且站内简历口径已有简历模板生成器／简历预检工具，消解；
+   - ProtoHub（t/1250522）：延续既有结论，消解；
+   - HN Show HN 近两日：单页阅读工具（内容站非工具痛点）／Software Bloat Calculator（调侃向计算器）／gas costs calculator（泛生活计算器，方向不合）／Earithmetic（记忆游戏，小众）／CI-Lifeboat／SelfClaw／Simulusion 均需后端或 AI，无单页新口径；
+   - dev.to 45 tiny tools 榜单（1024toolkit.com）：开发类逐项核对站内——cron（cron-parser/generator）／regex（regex-tester/explainer/generator）／timestamps（timestamp）／time zones（timezone-converter）／subnets（subnet-calculator）／SQL formatting（sql-formatter）／mock data（mock-data-generator）**全部已交付**；Finance／Health／工程类（concrete volume／triangle geometry）按 10-18 方向修正排除，无新口径；
+   - Reddit／selfhosted 榜单文：均为整站形态（Vaultwarden／Uptime Kuma／ConvertX／Hoppscotch CE 等）或方法论，无单页新口径。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；HEX ↔ C 数组互转器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮无新晋 P2、无观察项晋升，第三候选从观察项递补）：
+1. **文本转 PDF** — 154 轮新晋 P2，建议晋升 P2 顺位首席（PM 05:45 轮已列第二顺位；`text-to-pdf` 全站 0 命中真缺口；痛点：临时文本／会议纪要想存成 PDF 分享，在线站要上传或收费；纯前端小／中难度：文本→排版打印视图→`window.print()` 另存为 PDF（零依赖），或自托管 jsPDF 一键下载；真限制：打印路线依赖浏览器「另存为 PDF」对话框、非一键直下，须明示）。
+2. **MAP 文件内存分析器** — 148 轮观察项（`map_file_analyzer`／`map-analyzer` 全站 0 命中真缺口；嵌入式簇同源受众；纯前端解析 map 文本→段／符号／占用统计；口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR）。
+3. **行去重与排序器** — 137 轮观察项（高频通用文本小工具：粘贴文本→去重／排序／计数，纯前端小难度；站内文本簇补位，与文本对比／行统计等互链；真缺口：`dedup`／`line-sort` 全站 0 命中）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：CSS 加载动画生成器（145 轮）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 154 轮及之前记录。
+
+**通用候选表增量**（第一百五十五轮：HEX ↔ C 数组互转器已交付划出（acdb0b8 新增；ID hex_c_array、Path /tools/hex-c-array 已注册；全量 227 Path；候选池划出）；**文本转 PDF 建议晋升 P2 顺位首席**（154 轮新晋 P2，PM 05:45 轮第二顺位递进）；自有实锤消解 9 项（tubox 四发无新口径；MiniCPM OCR／xGoose／NASDrop／简历生成器／ProtoHub 非单页或已覆盖；HN Show HN 方法论／整站形态无新口径；dev.to 45 tiny tools 开发类全部已交付，泛财务／生活／工程类按方向修正排除；Reddit／selfhosted 整站形态无单页新口径）；本轮无新晋 P2；全量 227 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| HEX ↔ C 数组互转器 | 已交付划出（acdb0b8 新增；ID hex_c_array、Path /tools/hex-c-array 已注册；全量 227 Path；候选池划出） | — | 已实现 |
+| 文本转 PDF | 建议晋升 P2 顺位首席（154 轮新晋 P2；PM 05:45 轮第二顺位递进；text-to-pdf 全站 0 命中）；临时文本想存 PDF 分享，在线站要上传或收费；纯前端：排版打印视图→window.print 另存为 PDF（或自托管 jsPDF 一键下载）；真限制：打印路线非一键直下须明示 | 小/中 | P2（留池） |
+| 行去重与排序器 | 137 轮观察项递补第三候选；粘贴文本→去重／排序／计数，高频通用文本小工具，纯前端小难度；dedup／line-sort 全站 0 命中 | 小 | 观察（留池） |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十五轮——HEX ↔ C 数组互转器交付闭环（acdb0b8，`/tools/hex-c-array` 已注册，全量 227 Path），候选池划出；**文本转 PDF 建议晋升 P2 顺位首席**（154 轮新晋 P2，PM 05:45 轮第二顺位递进）；**本轮无新晋 P2**（V2EX 10-28~10-30 新帖＋HN／Reddit＋dev.to 榜单扫描 9 项信号全部消解；tubox 四发无新口径；AI／后端／整站形态类全部消解；dev.to 45 tiny tools 开发类逐项核对全部已交付，泛财务／生活／工程类按 10-18 方向修正排除）；第三候选从观察项递补：行去重与排序器（137 轮观察项，高频小难度）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（`git fetch` 已通）；`git log` 头部 acdb0b8（HEX ↔ C 数组互转器新增）／c3b3ca4（GIF 压缩优化器新增）／d3222af（示例生成正则新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **227**；Top3 候选重叠复核（hex_c_array 在 categories.go 1 注册命中，为本轮已交付项；`text-to-pdf` 0 命中；`map_file_analyzer`／`map-analyzer` 0 命中；`dedup`／`line-sort` 0 命中；在线电台收听器硬伤未解跳过；观察项 HEX／Markdown 排版器均已划出，不复列）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM／开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-30 05:45 · 产品经理排期轮，接 154 轮调研）
 
 **选定：HEX ↔ C 数组互转器** — 本轮唯一任务（新工具）：

@@ -1,0 +1,199 @@
+{{define "text_to_pdf"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本转 PDF - 粘贴文本排版打印另存为 PDF | 程序员工具箱</title>
+    <meta name="description" content="免费在线文本转 PDF：粘贴文本，调字号/行距/页边距/纸张方向/字体，一键打开浏览器打印对话框选「另存为 PDF」导出。纯前端排版，零上传零依赖。">
+    <meta name="keywords" content="文本转 PDF,text to pdf,在线打印 PDF,会议纪要转 PDF,text to pdf online,文本排版打印,txt 转 pdf">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-to-pdf">
+    <meta property="og:title" content="文本转 PDF">
+    <meta property="og:description" content="粘贴文本，排版后经浏览器打印对话框「另存为 PDF」：会议纪要、临时文本一键存档，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/text-to-pdf">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文本转 PDF","description":"粘贴文本，调字号/行距/页边距/纸张方向/字体，排版预览后经浏览器打印对话框「另存为 PDF」导出，纯前端本地排版，零上传。","url":"https://www.johnkingzcq123.xyz/tools/text-to-pdf","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .tp-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .tp-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .tp-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .tp-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .tp-limit { background:#fffbeb; border:1px solid #fcd34d; border-radius:.8rem; padding:.9rem 1.2rem; margin-bottom:1.1rem; color:#92400e; font-size:.93rem; line-height:1.8; }
+        .tp-limit b { color:#b45309; }
+        .tp-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .tp-row label { font-size:.92rem; color:#374151; display:flex; gap:.4rem; align-items:center; }
+        .tp-input, .tp-select { padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; max-width:100%; box-sizing:border-box; }
+        .tp-title-input { width:100%; }
+        .tp-textarea { width:100%; min-height:180px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.95rem; line-height:1.6; resize:vertical; }
+        .tp-count { color:#6b7280; font-size:.88rem; }
+        .tp-msg { color:#b91c1c; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .tp-info { color:#374151; font-size:.9rem; margin:.4rem 0 0; line-height:1.7; }
+        .tp-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .tp-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+        .tp-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .tp-tip a { color:var(--primary-color); }
+        .tp-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .tp-links a { color:var(--primary-color); font-size:.93rem; }
+        .tp-check { display:flex; gap:.4rem; align-items:center; font-size:.92rem; color:#374151; cursor:pointer; }
+        .tp-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        /* 排版预览纸张 */
+        .tp-preview-paper { background:#fff; border:1px solid #d1d5db; box-shadow:0 2px 12px rgba(0,0,0,.08); border-radius:.3rem; padding:20mm; max-width:210mm; margin:0 auto; box-sizing:border-box; overflow-wrap:break-word; }
+        .tp-preview-paper.tp-landscape { max-width:297mm; }
+        .tp-preview-empty { color:#9ca3af; text-align:center; padding:3rem 1rem; font-size:.92rem; }
+        .tp-doc-header { text-align:center; margin-bottom:1em; }
+        .tp-doc-title { font-size:1.6em; margin:0 0 .3em; }
+        .tp-doc-date { color:#6b7280; font-size:.85em; margin:0; }
+        .tp-doc-p { margin:.5em 0; text-align:justify; }
+        .tp-doc-empty { margin:.5em 0; }
+        .tp-doc-foot { margin-top:2em; padding-top:.6em; border-top:1px solid #e5e7eb; color:#9ca3af; font-size:.8em; text-align:center; }
+        @media (max-width:640px) {
+            .tp-preview-paper { padding:12mm; }
+        }
+        /* 打印：只显示排版文档，隐藏全部工具 chrome */
+        @media print {
+            body .tp-screen, body .tp-toast, body .navbar { display:none !important; }
+            .tp-wrap .container { max-width:none; padding:0; margin:0; }
+            .tp-card { border:none; padding:0; margin:0; border-radius:0; }
+            .tp-preview-paper { border:none; box-shadow:none; border-radius:0; padding:0; max-width:none; margin:0; }
+            .tp-doc-foot { color:#6b7280; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="tp-wrap">
+    <div class="container">
+        <div class="tool-header tp-screen">
+            <h1>📄 文本转 PDF</h1>
+            <p>粘贴文本 → 排版预览 → 浏览器打印对话框选「另存为 PDF」：会议纪要、临时文本一键存档分享</p>
+        </div>
+
+        <div class="tp-limit tp-screen">
+            <b>⚠ 真限制先说清楚：</b>本工具<b>不是一键直接下载 PDF</b>。出 PDF 依赖浏览器打印对话框——点「打印 / 另存为 PDF」后，在弹出的打印对话框里把目标打印机选为<b>「另存为 PDF」</b>（Chrome/Edge）或 <b>「Microsoft Print to PDF」</b>（Windows），再点保存。纸张尺寸、页眉页脚（网址/日期/页码）也在该对话框里设置。
+        </div>
+
+        <div class="tp-card tp-screen">
+            <h3>输入</h3>
+            <input class="tp-input tp-title-input" id="tp-title" placeholder="标题（可选，将作为 PDF 页眉标题）" maxlength="200" aria-label="标题">
+            <div style="height:.7rem"></div>
+            <textarea class="tp-textarea" id="tp-input" placeholder="在此粘贴或输入要转成 PDF 的文本……"></textarea>
+            <p class="tp-count" id="tp-count">字符 0 · 行 0 · 词 0</p>
+            <div class="tp-actions">
+                <button class="btn btn-secondary" id="tp-example" type="button">载入示例</button>
+                <button class="btn btn-secondary" id="tp-clear" type="button">清空</button>
+            </div>
+        </div>
+
+        <div class="tp-card tp-screen">
+            <h3>排版选项</h3>
+            <div class="tp-row">
+                <label>字号
+                    <select class="tp-select" id="tp-fontsize">
+                        <option value="s">小（14px）</option>
+                        <option value="m" selected>中（16px）</option>
+                        <option value="l">大（20px）</option>
+                    </select>
+                </label>
+                <label>行距
+                    <select class="tp-select" id="tp-lineheight">
+                        <option value="1.4">1.4</option>
+                        <option value="1.6" selected>1.6</option>
+                        <option value="2.0">2.0</option>
+                    </select>
+                </label>
+                <label>页边距
+                    <select class="tp-select" id="tp-margin">
+                        <option value="narrow">窄（10mm）</option>
+                        <option value="normal" selected>默认（20mm）</option>
+                        <option value="wide">宽（30mm）</option>
+                    </select>
+                </label>
+                <label>纸张方向
+                    <select class="tp-select" id="tp-orientation">
+                        <option value="portrait" selected>纵向（A4）</option>
+                        <option value="landscape">横向（A4）</option>
+                    </select>
+                </label>
+                <label>字体
+                    <select class="tp-select" id="tp-fontfamily">
+                        <option value="serif">宋体衬线</option>
+                        <option value="sans" selected>黑体无衬线</option>
+                        <option value="mono">等宽</option>
+                    </select>
+                </label>
+            </div>
+            <div class="tp-row">
+                <label class="tp-check"><input type="checkbox" id="tp-header" checked> 页眉（标题＋日期）</label>
+                <label class="tp-check"><input type="checkbox" id="tp-avoidbreak" checked> 段落防断裂（段落不跨页劈开）</label>
+            </div>
+        </div>
+
+        <div class="tp-card">
+            <h3 class="tp-screen">打印预览 <span class="tp-hint">（所见即打印效果；打印时只输出本文档，工具界面不会被打出来）</span></h3>
+            <div class="tp-preview-paper" id="tp-preview">
+                <div class="tp-preview-empty">在此粘贴文本，排版预览将显示在这里</div>
+            </div>
+            <div class="tp-actions tp-screen">
+                <button class="btn btn-primary" id="tp-print" type="button">🖨 打印 / 另存为 PDF</button>
+            </div>
+            <p class="tp-msg tp-screen" id="tp-msg"></p>
+            <p class="tp-info tp-screen">打印对话框使用说明：目标打印机选「另存为 PDF」→ 按需调纸张尺寸与边距 → 如不想在每页打出网址/日期，把「页眉和页脚」复选框关掉 → 点保存。</p>
+        </div>
+
+        <div class="tp-card tp-screen">
+            <h3>使用说明</h3>
+            <ol class="tp-tip" style="margin:0;padding-left:1.3rem;">
+                <li>在「输入」区粘贴文本（可选填标题，标题会显示在文档页眉）。</li>
+                <li>在「排版选项」区调整字号、行距、页边距、纸张方向、字体，预览区实时更新。</li>
+                <li>点「打印 / 另存为 PDF」，在浏览器打印对话框中把目标选为「另存为 PDF」，点保存即得 PDF。</li>
+                <li>段落按空行分段显示；勾选「段落防断裂」后单个段落不会被分页劈开。</li>
+                <li>输入框下方实时显示字符数、行数、词数。</li>
+            </ol>
+        </div>
+
+        <div class="tp-card tp-screen">
+            <h3>常见问题</h3>
+            <dl class="tp-tip">
+                <dt><b>为什么不是一键下载 PDF？</b></dt>
+                <dd>本工具走「排版打印视图 → 浏览器打印」路线，零依赖、零 CDN。要生成真正的 PDF 文件，必须经过浏览器打印对话框选「另存为 PDF」这一步——这是浏览器的能力边界，不是本工具的 bug，页面顶部已明示。</dd>
+                <dt><b>和「DOC 转 PDF」有什么区别？</b></dt>
+                <dd>「<a href="/tools/doc-to-pdf">DOC 转 PDF</a>」是上传 DOC/DOCX 文档、经服务端转换的工具；本工具是纯文本粘贴、纯前端排版、零上传，分工不同：手头是现成文档用前者，是临时文本/会议纪要用本工具。</dd>
+                <dt><b>打印出来的每页都有网址和日期，怎么去掉？</b></dt>
+                <dd>那是浏览器自动加的页眉页脚，在打印对话框里取消勾选「页眉和页脚」即可。本工具的「页眉（标题＋日期）」是文档内容的一部分，不受该开关影响。</dd>
+                <dt><b>我想打横向/调页边距，在哪里调？</b></dt>
+                <dd>纸张方向、页边距、字号、行距、字体都在本页「排版选项」里调，预览实时更新；纸张尺寸（A4/Letter 等）在浏览器打印对话框里选。</dd>
+                <dt><b>我的文本会被上传吗？</b></dt>
+                <dd>不会。排版全部在浏览器本地完成，本页面零网络请求，文本不出本机。</dd>
+            </dl>
+        </div>
+
+        <div class="tp-card tp-screen">
+            <h3>相关工具</h3>
+            <div class="tp-links">
+                <a href="/tools/doc-to-pdf">DOC 转 PDF（上传 DOC/DOCX 文档转换；本工具是纯文本排版、零上传）</a>
+                <a href="/tools/text-tools">文本工具集（字数统计、行去重、排序、大小写转换）</a>
+                <a href="/tools/text-diff">文本比较（对比两段文本的差异）</a>
+            </div>
+        </div>
+
+        <div class="tp-card tp-screen">
+            <h3>真限制说明</h3>
+            <div class="tp-tip">
+                <b>非一键直下</b>：出 PDF 必须经浏览器打印对话框选「另存为 PDF」/「Microsoft Print to PDF」，本工具不直接生成 PDF 文件下载。<br>
+                <b>纸张尺寸看浏览器</b>：A4/Letter 等纸张尺寸、份数、目标打印机均在打印对话框里设置，本页只管排版（字号/行距/边距/方向/字体）。<br>
+                <b>浏览器页眉页脚另算</b>：打印对话框「页眉和页脚」开关控制的是浏览器自动加的网址/日期/页码，与本工具的文档页眉（标题＋日期）是两回事。<br>
+                <b>零上传</b>：本页面零 fetch / XHR、零 CDN，全部排版在浏览器本地完成，不收集、不上传任何内容。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="tp-toast" id="tp-toast"></div>
+    <script src="/tools/static/js/text_to_pdf.js?v=1"></script>
+</body>
+</html>
+{{end}}
