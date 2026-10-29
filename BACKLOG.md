@@ -1,3 +1,110 @@
+## 今日任务（2026-10-30 03:30 · 产品经理排期轮，接 153 轮调研）
+
+**选定：GIF 压缩优化器（GIF→GIF 轻量版：逐帧压缩／尺寸缩放／帧率抽稀）** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（153 轮）Top3 **首席推荐**，P2 留池顺位首席（10-30 PM 轮口径裁定晋升：同意收窄为 GIF→GIF 轻量版，纯前端不引 ffmpeg.wasm），按「无硬伤不跳过、Top3 顺位递进」惯例生效。示例生成正则表达式（grex 式）已交付划出（d3222af 新增；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **225 Path**），首席顺位自然递进至本项；不再以「嵌入式工具更新颖」等理由二次跳过——HEX ↔ C 数组互转器／MAP 文件内存分析器均为观察项且口径待裁定，不插队。
+- **未选**：在线电台收听器（88 轮新晋，**硬伤未解→继续跳过**：电台流来源与版权、直播流稳定性依赖外部流服务，非纯前端单页可闭环）；HEX ↔ C 数组互转器（147 轮观察项，口径仍待裁定→继续观察：单独立项或与 Modbus／寄存器位域合并为「嵌入式字节工具」，本轮不扩嵌入式簇，留待有空轮次论证）；MAP 文件内存分析器（148 轮观察项，口径待裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR，继续观察）；Markdown 转公众号／X 长文排版器已勘误为已交付项（`/tools/markdown-publish-formatter`），不再是候选。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **225**；`gif` 在 tools/categories.go 仅 2 命中（`card_giftcard` 图标名字面＋JSON 转义描述文本中的偶然匹配），templates／static/js／tests 下无 GIF 专用工具文件；`gif_compress`／`gif-compress` 全站 0 命中；站内已交付的「图片压缩」（img-compress：JPG/PNG/WebP 通用压缩）与「图片格式转换」（img-convert：格式互转，GIF 仅为目标格式之一）均为**静态图片口径**，本项为**动画 GIF 逐帧处理口径**（帧解码→抽帧／缩放／调色板压缩→重编码），不重叠。综上，本工具无重叠、可直接排期。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点逐项可数**——表情包／录屏 GIF 体积过大发不出去，在线压缩站要么收费要么要求上传隐私文件；「本地上传 GIF→逐帧处理（抽帧／缩放／减色）→重新编码下载」恰好对症，零上传；③ **一轮可高质量交付**——纯前端、自研零依赖 GIF 解析＋LZW 编解码（不引 ffmpeg.wasm，首屏零等待），核心为确定性纯函数（像素缓冲→量化→编码），可写成精确向量供 node 断言；④ **与站内图片工具簇成组**——与图片压缩（静态图压缩）、图片格式转换（格式互转）互链，「静态压体积／转格式／动图压体积」闭环互相导流；⑤ **缺口已实锤**——149→153 轮复核站内 GIF 专用工具 0 命中真缺口至今未被消解，tubox 帖与 Meme Video Maker 评论区两轮「gif maker」询问呼应持续。
+- **品类归位**：注册到「图片处理」品类（与图片压缩／图片格式转换／图片精确体积压缩器同品类，动图口径补位；开发工具已连排多轮嵌入式工具，本项换品类避堆叠）；New: true；Icon `gif`（Material 图标库 `gif` 在 categories.go 0 占用）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 口径裁定（本轮一并裁定）**：① **纯前端自研 GIF 编解码**——不引 ffmpeg.wasm（体积＋首屏下载等待），不引任何第三方 GIF 库（手写 GIF89a 解析＋LZW 解压缩＋GIF 编码器，全部内联在自有 JS 内，零 CDN）；② **三档处理正交组合**——尺寸缩放（等比，预设 100%／75%／50%／25%＋自定义宽度）、帧率抽稀（保留全部／1/2／1/3／1/4 帧）、颜色数（256／128／64／32 调色板量化）三组选项可任意组合，一次处理一次编码；③ **静态 GIF 也受理**——单帧 GIF 走同一管线（抽帧选项对单帧无意义但不禁用，结果等价于缩放＋减色）；④ **不收集、不上传任何内容**——GIF 只在浏览器本地解码与处理，页面须明示。
+- **PM 真限制交代（开发轮必须处理）**：① **大 GIF 内存与耗时**——纯前端逐帧解码，大文件（建议阈值 >20MB 或 >200 帧）内存占用高、处理慢，页面须明示并给出「建议先拆小」提示，处理中显示进度条；② **256 色调色板上限**——GIF 格式单帧最多 256 色，渐变丰富的原图压缩后可能出现色带，页面须明示「减色档位越低体积越小、色带越明显」；③ **抽帧改变流畅度**——抽稀后动画变卡顿属预期行为，页面须明示；④ **首帧预览与结果体积实时可见**——处理前显示原体积／帧数／尺寸／总时长，处理后显示新体积／压缩率／节省字节。
+
+**规格**（开发轮按此执行）：
+- 输入：文件选择框＋拖放区，接受 `.gif`（校验魔数 `GIF87a`／`GIF89a`，非法抛 Error，err.field="file"，页面中文提示）；上限建议 20MB（超限中文警告但允许继续，页面明示风险）。
+- 解析：`parseGif(bytes)` → `{ width, height, loopCount, frames: [{ pixels: Uint8ClampedArray(RGBA), width, height, delayMs, left, top, disposal }] }`；按 disposal method 合成完整帧（disposal 2 背景色清、3 还原前帧；透明色索引正确处理）；NETSCAPE2.0 循环扩展解析循环次数（缺省为无限循环）。
+- 处理管线（纯函数，顺序执行）：
+  1. `dropFrames(frames, keepEvery)`：保留每第 N 帧（keepEvery=1 保留全部；2 保留 1/2 帧…）；被抽掉帧的 delay 累加到保留帧上（总时长不变，属预期行为，页面明示）。
+  2. `resizeFrames(frames, scale)`：最近邻重采样（nearest-neighbor，保证确定性、无模糊），新尺寸按等比 scale 取整（最小 1px）。
+  3. `quantizeFrames(frames, maxColors)`：自适应调色板（median-cut 或等效确定性算法，maxColors∈{256,128,64,32}），输出 `{ indices: Uint8Array, palette: [r,g,b][] }`；透明帧保留透明索引（palette[0] 为透明）。
+- 编码：`encodeGif(frames, { width, height, loopCount })` → `Uint8Array`（GIF89a：Header＋LSD＋NETSCAPE 循环扩展＋逐帧 GCE（delay 按 delayMs/10 取整，透明标志）＋局部调色板＋LZW 压缩图像数据＋Trailer）；LZW 编码器自研（clear code／EOI 规范实现）。
+- 示例：`generateExampleGif()` 返回固定小 GIF 字节（开发轮用 encodeGif 合成：如 4 帧 32×32 色块动画，loop 无限），「载入示例」无需上传演示上传→处理→下载全流程；另提供「下载示例 GIF」按钮方便用户拿到真文件测试拖放。
+- 纯函数（双模式导出供 node 测试，浏览器用 window 挂载、node 用 module.exports；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `parseGif(bytes)`：非 GIF 魔数抛 Error（err.field="file"）。
+  - `dropFrames(frames, keepEvery)`：返回新帧数组（delay 累加），不改原数组。
+  - `resizeFrames(frames, scale)`：返回新帧数组（RGBA 像素缓冲已缩放）。
+  - `quantizeFrames(frames, maxColors)`：返回 `{ indices, palette }`，palette 长度≤maxColors。
+  - `encodeGif(frames, meta)`：返回 Uint8Array，魔数为 GIF89a。
+  - `lzwDecode(minCodeSize, data)`／`lzwEncode(minCodeSize, indices)`：LZW 编解码对（供测试与编解码器内部使用）。
+  - `formatBytes(n)`：字节数→中文可读（B／KB／MB，保留 1 位小数）。
+  - `generateExampleGif()`：返回固定示例 GIF 的 Uint8Array。
+- 确定性向量（开发轮必须逐字命中）：
+  - `parseGif(generateExampleGif())` → frames.length=4、width=32、height=32、每帧 delayMs 一致（如 100）。
+  - `dropFrames(frames4, 2)` → 2 帧，且总时长（delay 求和）与原 4 帧一致。
+  - `resizeFrames(frames4, 0.5)` → 每帧 width=16、height=16、pixels.length=16*16*4。
+  - `quantizeFrames(frames4, 32)` → palette.length≤32。
+  - `encodeGif(处理后帧)` → 魔数 `GIF89a`；`parseGif(encodeGif(...))` 往返帧数一致（round-trip 不变式）。
+  - `lzwEncode`→`lzwDecode` 往返：任意索引序列往返一致。
+  - `parseGif(new Uint8Array([0x89,0x50,0x4E,0x47]))` 抛 Error（err.field="file"）；`formatBytes(1536)`=`"1.5 KB"`。
+- 不变式（node 断言）：对示例 GIF，任意合法选项组合（scale∈{1,0.75,0.5,0.25}、keepEvery∈{1,2,3,4}、maxColors∈{256,128,64,32}）处理后 `encodeGif` 输出可被 `parseGif` 正常解析且帧数＝dropFrames 结果帧数；输出体积随 maxColors 降低单调不增（同 scale／keepEvery 下）。
+- 界面：上传区（文件选择＋拖放＋「载入示例」＋「下载示例 GIF」）；原图信息卡（体积／尺寸／帧数／总时长／循环）；选项区（尺寸缩放 100%/75%/50%/25%＋自定义宽度输入；帧率抽稀 全部／1/2／1/3／1/4；颜色数 256／128／64／32）；「开始压缩」按钮＋进度条；结果区（原体积→新体积／压缩率／节省字节对照＋双预览 canvas：原图动画 vs 结果动画＋「下载 gif-compressed.gif」＋「复制体积报告」）；真限制提示区（四条明示文案）；所有提示均中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与图片压缩（/tools/img-compress，文案按「静态图压体积 vs 动图 GIF 压体积」区分）、图片格式转换（/tools/img-convert，文案按「格式互转 vs GIF 逐帧压缩」区分）互链；不与未交付工具互链。
+- 技术路线：纯前端、零依赖（自研 GIF89a 解析／LZW 编解码／GIF 编码器，不引入任何库；页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `gif_compress`、Name「GIF 压缩优化器」、Path `/tools/gif-compress`、Category 图片处理、Icon `gif`（0 占用）、New: true；中英文描述＋SEO keywords（GIF 压缩、GIF 体积压缩、动图压缩、gif compress、gif optimizer、GIF 抽帧、GIF 缩小）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/gif-compress，相关工具互链图片压缩、图片格式转换。
+
+**验收标准**：
+1. `grep tools/categories.go` 确认 ID `gif_compress`、Path `/tools/gif-compress` 注册完整（Category 图片处理），注册总数 225→226 Path。
+2. 解析向量闭环（node 断言，逐字命中）：`parseGif(generateExampleGif())` 得 frames.length=4、width=32、height=32；非法魔数抛 Error 且 err.field="file"。
+3. 处理向量闭环（node 断言）：`dropFrames(frames,2)` 得 2 帧且总时长不变；`resizeFrames(frames,0.5)` 得 16×16 且 pixels.length=1024；`quantizeFrames(frames,32)` 得 palette.length≤32；`lzwEncode`→`lzwDecode` 往返一致；`formatBytes(1536)`=`"1.5 KB"`。
+4. 编码向量闭环（node 断言）：`encodeGif(...)` 魔数为 `GIF89a`；`parseGif(encodeGif(x))` 往返帧数一致。
+5. 不变式闭环（node 断言）：全部 4×4×4=64 种选项组合下输出可解析且帧数正确；同 scale／keepEvery 下输出体积随 maxColors 降低单调不增。
+6. 操作闭环（浏览器手工／测试复核）：载入示例→改三组选项→开始压缩→进度条走完→体积对照正确→双预览动画播放→下载文件为有效 GIF（重新上传可解析）→复制体积报告。
+7. 真限制可见：页面可见「大文件内存占用高、建议先拆小」「256 色上限、减色可能出现色带」「抽帧后动画变卡顿属预期」「不收集、不上传」文案；零 fetch／XHR、零 CDN。
+8. 操作闭环：相关工具互链含图片压缩、图片格式转换；不含未交付工具的硬凑互链。
+9. node 测试 30+ 断言全过（解析向量、处理向量、编码向量、往返不变式、64 组合体积单调性、注册与零网络请求静态检查）；go build／go vet／gofmt 均通过。
+10. 页面无报错；移动端上传区、选项区、双预览、按钮组小屏可操作、不撑破布局。
+
+**预计改动文件**：
+- `templates/gif_compress.html`（新增；含 SEO 面板按家族标准＋上传区／原图信息卡／选项区／进度条／结果区／真限制提示区）
+- `static/js/gif_compress.js`（新增；GIF89a 解析、LZW 编解码、GIF 编码器、抽帧／缩放／量化纯函数、示例 GIF 合成；双模式导出供 node 测试）
+- `tests/gif_compress.test.js`（新增；解析向量、处理向量、编码向量、往返不变式、64 组合体积单调性、注册与零网络静态检查）
+- `tools/categories.go`（图片处理品类注册：ID gif_compress、Path /tools/gif-compress、New: true）
+- `BACKLOG.md`（本次 PM 轮追加＋开发轮次提交，沿用惯例）
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git status` 显示 BACKLOG.md 已修改（153 轮研究轮顶部追加，未提交，随本 PM 轮＋开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **225**；Top3 候选重叠复核（`gif` 在 categories.go 仅 2 命中：`card_giftcard` 图标名字面＋JSON 转义描述文本偶然匹配；templates／static/js／tests 下无 GIF 专用工具文件；`gif_compress`／`gif-compress` 全站 0 命中；`hex2c`／`c_array` 0 命中；`map_file_analyzer`／`map-analyzer` 0 命中；在线电台收听器硬伤未解跳过；观察项 HEX／MAP 口径待裁定不晋升；Markdown 排版器已勘误为已交付项）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库；上一轮 d3222af 已将其移出仓库跟踪但文件仍在根目录）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-30 03:00 · 通用调研第一百五十三轮）
+
+**交付状态**：10-30 通用调研第一百五十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**示例生成正则表达式（grex 式）已交付闭环**（d3222af 新增；node 61 断言全过；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **225 Path**，ID regex_generator、Path `/tools/regex-generator` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 轮，优先小／中难度纯前端。
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. 示例生成正则交付确认：`git log` 头部 d3222af（示例生成正则新增）／520deb4（书签清理新增）／607c3af（寄存器位编辑评审修复）；全量 225 Path；ID `regex_generator`、Path `/tools/regex-generator` 双注册；本地当前分支 muse/dev-20260929。
+2. 留池复核：**GIF→GIF 轻量版晋升 P2 顺位首席**（149 轮观察项→10-30 PM 轮口径裁定：收窄为 GIF→GIF 轻量版（逐帧压缩／尺寸缩放／帧率抽稀），纯前端不引 ffmpeg.wasm，一轮可高质量交付；`gif` 命中仅 giftcard／gify 图标名字面，无专用工具，缺口仍成立）；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；**观察项勘误**：「Markdown 转公众号／X 长文排版器」（148 轮观察项）实为已交付项——ID `markdown_publish_formatter`、Path `/tools/markdown-publish-formatter` 已注册（templates／static/js 三件套在库），本轮从观察项划出，不再作为候选。
+3. 新信号扫描（V2EX 10-28~10-30 新帖＋HN／Reddit 为主线）：全部消解，不立新 P2——
+   - tubox 图片工具箱 10-28 第三次重发帖（t/1252552）：13 项工具清单无新口径（148／150／151／152 轮已逐项分析：批量压缩等图片口径站内已有；AI 抠图／放大需模型下载；GIF／视频转 GIF 已由 PM 裁定收窄）；评论区「gif maker」询问呼应持续——**印证首席候选需求**；
+   - Meme Video Maker 评论区（t/1251658，10-26）：网友追问「是一个 gif maker 吗」——第二个独立评论区的 GIF maker 询问信号，与首席呼应；
+   - MiniCPM OCR（t/1252701）：需大模型对接（MiniCPM-OCR-1.0 服务端），非纯前端，消解；
+   - 400+ 节点网站测速平台（t/1252704）：需 400+ 拨测节点后端，非单页纯前端，消解；
+   - AI Tiny Desk（t/1252312）：AI 视频复刻，需 AI 后端，消解；
+   - AI 时代 SOP 流程帖（t/1252885）：方法论文，提及的 Quote Finder／植物识别等工具均需 AI／后端或整站形态，无单页新口径；
+   - 出海情报站（t/1249717）：需 pgvector＋后端数据流水线，消解；
+   - FrameLoom（t/1252576）：需 AI＋Remotion 本机渲染，消解；
+   - md2chat（t/1250428）：延续 148 轮观察项（现勘误已交付，见第 2 条），无新口径；
+   - ProtoHub（t/1250522）：需后端＋账号，消解；
+   - Paint Board（t/1249863）：整站形态网页画板，非单页工具，消解；
+   - HN／Reddit 英文侧：均为整站形态（ToolHop／EveryToolkit）／方法论／榜单文（dev.to 45 tiny tools 所列 cron／regex／timestamp 等站内多已覆盖），无单页新口径。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；grex 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，10-30 PM 轮已裁定 GIF→GIF 轻量版晋升 P2 顺位首席；本轮无新晋 P2、无观察项晋升，第二、三候选从观察项递补）：
+1. **GIF→GIF 轻量版（逐帧压缩／尺寸缩放／帧率抽稀）** — P2 首席（PM 轮口径裁定晋升；149 轮观察项收窄；痛点：表情包／录屏 GIF 体积过大发不出去，在线压缩站要么收费要么要求上传隐私文件；tubox 与 Meme Video Maker 评论区两轮「gif maker」询问呼应持续；纯前端小／中难度：Canvas 解码逐帧→压缩／缩放／抽帧→编码回 GIF，零上传不引 ffmpeg.wasm；真限制：纯前端 GIF 编码质量不如专用工具、大 GIF 解码内存占用高，须明示）。
+2. **HEX ↔ C 数组互转器**（147 轮观察项；口径待 PM 裁定：与 Modbus／寄存器位域合并为「嵌入式字节工具」或单独立项；与 Modbus RTU 帧生成器／寄存器位域编辑器／CRC 校验簇成组，下轮自然递补）。
+3. **MAP 文件内存分析器**（148 轮观察项；口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR；`map_file_analyzer`／`map-analyzer` 全站 0 命中真缺口；嵌入式簇同源受众）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：CSS 加载动画生成器（145 轮）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；行去重与排序器（137 轮）；批量随机数生成器（133 轮）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 152 轮及之前记录。
+
+**通用候选表增量**（第一百五十三轮：示例生成正则表达式（grex 式）已交付划出（d3222af 新增；ID regex_generator、Path /tools/regex-generator 已注册；全量 225 Path；候选池划出）；**GIF→GIF 轻量版晋升 P2 顺位首席**（10-30 PM 轮口径裁定收窄）；**观察项勘误：「Markdown 转公众号／X 长文排版器」实为已交付项**（ID markdown_publish_formatter、Path /tools/markdown-publish-formatter 已注册，三件套在库），本轮从观察项划出；自有实锤消解 12 项（tubox 三发无新口径；MiniCPM OCR／网站测速平台／AI Tiny Desk／Meme Video Maker／出海情报站需 AI 或后端；FrameLoom 需 AI＋本地渲染；md2chat／ProtoHub／Paint Board 延续既有结论；HN／Reddit 方法论／榜单文无单页新口径）；本轮无新晋 P2；全量 225 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 示例生成正则表达式（grex 式） | 已交付划出（d3222af 新增；ID regex_generator、Path /tools/regex-generator 已注册；全量 225 Path；候选池划出） | — | 已实现 |
+| GIF→GIF 轻量版（逐帧压缩／尺寸缩放／帧率抽稀） | PM 轮口径裁定晋升 P2 顺位首席（149 轮观察项收窄；gif 全站无专用工具真缺口）；表情包／录屏 GIF 体积过大发不出去，在线压缩站收费或要上传隐私文件；tubox 与 Meme Video Maker 评论区「gif maker」询问两轮呼应；纯前端 Canvas 逐帧处理，零上传不引 ffmpeg.wasm | 小/中 | P2（留池） |
+| Markdown 转公众号／X 长文排版器 | 观察项勘误：实为已交付项（ID markdown_publish_formatter、Path /tools/markdown-publish-formatter 已注册，三件套在库）；本轮从观察项划出，不再作为候选 | — | 已实现 |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十三轮——示例生成正则表达式（grex 式）交付闭环（d3222af，`/tools/regex-generator` 已注册，全量 225 Path），候选池划出；**GIF→GIF 轻量版晋升 P2 顺位首席**（10-30 PM 轮口径裁定收窄）；**观察项勘误：「Markdown 转公众号／X 长文排版器」实为已交付项**（`/tools/markdown-publish-formatter` 在库），从观察项划出——此后引用观察项时须剔除该项；**本轮无新晋 P2**（V2EX 10-28~10-30 新帖＋HN／Reddit 扫描 12 项信号全部消解；tubox 三发无新口径；AI／后端类全部消解）；第二、三候选顺位缺位（仅剩电台一项 P2 且硬伤未解），建议从观察项递补：优先 HEX ↔ C 数组互转器（口径裁定后一轮可立项，与 Modbus／寄存器位域簇成组），次选 MAP 文件内存分析器（嵌入式簇同源）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 d3222af（示例生成正则新增）／520deb4（书签清理新增）／607c3af（寄存器位编辑评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **225**；Top3 候选重叠复核（regex_generator 在 categories.go 1 注册命中，为本轮已交付项；`gif` 命中仅 giftcard／gify 图标名字面，无 GIF 专用工具；`hex2c`／`c_array` 0 命中；`map_file_analyzer`／`map-analyzer` 0 命中；markdown_publish_formatter 为已交付项（本轮勘误划出观察项）；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM／开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-30 01:00 · 产品经理排期轮，接 152 轮调研）
 
 **选定：示例生成正则表达式（grex 式）** — 本轮唯一任务（新工具）：

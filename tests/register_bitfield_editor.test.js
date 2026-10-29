@@ -98,7 +98,7 @@ ok(GO_SRC.slice(idx, idx + 900).indexOf("New:         true") >= 0, "注册 New �
 ok(GO_SRC.slice(idx, idx + 900).indexOf('Icon:        "code"') >= 0, "注册 Icon 为 code（tune 在同品类已用）");
 var pathCount = 0, m, re = /"\/tools\/[^"]+"/g, seen = {};
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 225, "注册 Path 总数 224→225");
+eq(pathCount, 226, "注册 Path 总数 225→226");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本/样式引用");
 ok(TPL_SRC.indexOf("只做 32 位寄存器位级可视化编辑与宏生成") >= 0, "模板含真限制：只做 32 位位级编辑");

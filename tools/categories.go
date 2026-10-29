@@ -1088,6 +1088,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "gif_compress",
+					Name:        "GIF 压缩优化器",
+					Description: "GIF 动画逐帧压缩：尺寸缩放＋帧率抽稀＋调色板减色三档正交组合，表情包／录屏 GIF 一键压小体积，纯前端自研 GIF89a 解析与 LZW 编解码、零上传 · Compress animated GIFs frame by frame: resize, frame decimation and palette reduction, 100% client-side",
+					Path:        "/tools/gif-compress",
+					Icon:        "gif",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img_target_kb",
 					Name:        "图片精确体积压缩器",
 					Description: "图片压缩到指定大小：上传 JPG/PNG/WebP，输入目标 KB，二分质量迭代+尺寸降级兜底，一次命中目标体积（偏差 ±5%），证件照压缩必备，纯浏览器本地处理 · Compress image to exact KB",

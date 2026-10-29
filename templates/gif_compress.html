@@ -1,0 +1,237 @@
+{{define "gif_compress"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF 压缩优化器 - 动画 GIF 逐帧压缩：缩放／抽帧／减色 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 GIF 压缩优化器：上传 GIF，逐帧压缩——尺寸缩放（100%/75%/50%/25%/自定义宽度）、帧率抽稀（1/2/1/3/1/4）、调色板减色（256/128/64/32）三档正交组合，表情包／录屏 GIF 一键压小体积。纯前端自研 GIF89a 解析与 LZW 编解码，零上传 · Compress animated GIFs frame by frame: resize, frame decimation, palette reduction, 100% client-side">
+    <meta name="keywords" content="GIF 压缩,GIF 体积压缩,动图压缩,gif compress,gif optimizer,GIF 抽帧,GIF 缩小,动图瘦身,GIF 减色,表情包压缩">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/gif-compress">
+    <meta property="og:title" content="GIF 压缩优化器 - 动画 GIF 逐帧压缩">
+    <meta property="og:description" content="上传 GIF 逐帧压缩：尺寸缩放、帧率抽稀、调色板减色三档正交组合，表情包／录屏 GIF 一键压小。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/gif-compress">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"GIF 压缩优化器","description":"GIF 动画逐帧压缩：尺寸缩放＋帧率抽稀＋调色板减色三档正交组合，表情包／录屏 GIF 一键压小体积，纯前端自研 GIF89a 解析与 LZW 编解码、零上传。","url":"https://www.johnkingzcq123.xyz/tools/gif-compress","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .gc-wrap .container { max-width: 960px; margin: 0 auto; padding: 1.2rem; }
+        .gc-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .gc-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .gc-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .gc-privacy { display:flex; gap:.7rem; align-items:flex-start; border:2px solid #34d399; background:#ecfdf5;
+            border-radius:.8rem; padding:.9rem 1rem; margin:0 0 1.1rem; font-size:.92rem; line-height:1.9; color:#065f46; }
+        .gc-privacy b { color:#047857; }
+        .gc-drop { border:2px dashed #93c5fd; border-radius:.8rem; background:#f8fbff; padding:2rem 1rem; text-align:center;
+            cursor:pointer; transition:border-color .15s, background .15s; }
+        .gc-drop:hover { border-color:#2563eb; background:#eff6ff; }
+        .gc-drop.gc-dragover { border-color:#2563eb; background:#dbeafe; }
+        .gc-drop .gc-big { font-size:2rem; margin-bottom:.4rem; }
+        .gc-drop p { margin:.3rem 0; color:#374151; font-size:.92rem; }
+        .gc-drop .gc-sub { color:#9ca3af; font-size:.82rem; }
+        .gc-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.9rem; }
+        .gc-error { display:none; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:.6rem;
+            padding:.7rem 1rem; margin-top:.9rem; font-size:.9rem; line-height:1.7; }
+        .gc-warn { display:none; background:#fffbeb; border:1px solid #fcd34d; color:#92400e; border-radius:.6rem;
+            padding:.7rem 1rem; margin-top:.9rem; font-size:.9rem; line-height:1.7; }
+        .gc-info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.6rem; }
+        .gc-info-item { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.55rem; padding:.6rem .8rem; }
+        .gc-info-item .k { font-size:.78rem; color:#9ca3af; }
+        .gc-info-item .v { font-size:1.02rem; color:#111827; font-weight:700; margin-top:.15rem; }
+        .gc-opt-group { margin-bottom:1rem; }
+        .gc-opt-group:last-child { margin-bottom:0; }
+        .gc-opt-title { font-size:.9rem; font-weight:700; color:#374151; margin-bottom:.5rem; }
+        .gc-opts { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
+        .gc-opt { display:inline-flex; align-items:center; gap:.45rem; font-size:.92rem; color:#374151; cursor:pointer;
+            border:1px solid #d1d5db; border-radius:.5rem; padding:.5rem .9rem; background:#f9fafb; }
+        .gc-opt input { accent-color:#2563eb; width:1.05rem; height:1.05rem; }
+        .gc-opt.on { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; font-weight:600; }
+        .gc-custom-w { width:7rem; padding:.5rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; }
+        .gc-progress-wrap { display:none; margin-top:.9rem; }
+        .gc-progress-track { height:.7rem; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+        .gc-progress-bar { height:100%; width:0; background:linear-gradient(90deg,#2563eb,#60a5fa); border-radius:999px;
+            transition:width .25s; }
+        .gc-progress-text { font-size:.85rem; color:#6b7280; margin-top:.4rem; }
+        .gc-result-compare { display:flex; gap:.8rem; flex-wrap:wrap; margin-bottom:1rem; }
+        .gc-compare-box { flex:1 1 200px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem 1rem; }
+        .gc-compare-box .k { font-size:.8rem; color:#9ca3af; }
+        .gc-compare-box .v { font-size:1.25rem; font-weight:800; color:#111827; margin-top:.2rem; }
+        .gc-compare-box.new .v { color:#047857; }
+        .gc-compare-detail { font-size:.88rem; color:#4b5563; margin-bottom:1rem; line-height:1.8; }
+        .gc-previews { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:1rem; }
+        .gc-preview { border:1px solid #e5e7eb; border-radius:.6rem; padding:.6rem; background:#f9fafb; text-align:center; }
+        .gc-preview .t { font-size:.85rem; color:#6b7280; margin-bottom:.4rem; }
+        .gc-preview canvas { max-width:100%; height:auto; border-radius:.4rem; background:
+            repeating-conic-gradient(#e5e7eb 0 25%, #fff 0 50%) 0 0/16px 16px; }
+        .gc-steps { margin:.2rem 0; padding-left:1.3rem; color:#374151; font-size:.92rem; line-height:2; }
+        .gc-steps code { background:#f3f4f6; padding:.1rem .4rem; border-radius:.3rem; font-size:.82rem; color:#b91c1c; }
+        .gc-faq dt { font-weight:700; color:#111827; margin:.7rem 0 .25rem; font-size:.93rem; }
+        .gc-faq dd { margin:0 0 .4rem; color:#4b5563; font-size:.9rem; line-height:1.65; }
+        .gc-faq code { font-family:ui-monospace,Menlo,Consolas,monospace; background:#f3f4f6; border-radius:.3rem;
+            padding:.08rem .4rem; font-size:.85rem; }
+        .gc-limits { font-size:.92rem; line-height:2; color:#374151; }
+        .gc-limits b { color:#111827; }
+        .gc-related { display:flex; gap:.6rem; flex-wrap:wrap; }
+        .gc-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff;
+            padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .gc-actions .btn { flex:1 1 auto; text-align:center; }
+            .gc-previews { grid-template-columns:1fr; }
+            .gc-result-compare { flex-direction:column; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="gc-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🖼️ GIF 压缩优化器</h1>
+            <p>动画 GIF 逐帧压缩：尺寸缩放 × 帧率抽稀 × 调色板减色三档正交组合，表情包／录屏 GIF 一键压小体积</p>
+        </div>
+
+        <div class="gc-privacy">
+            <div><b>隐私承诺：</b>本工具纯浏览器本地运行、<b>零依赖、无后端上传</b>；GIF 只在当前页面内存中解码与处理，不发送到任何服务器。页面<b>零 fetch / XHR、零 CDN</b>，断网也能用。</div>
+        </div>
+
+        <div class="gc-card">
+            <h3>1. 上传 GIF <span class="gc-hint">（点击选择或拖放 .gif 文件；也可直接载入内置示例）</span></h3>
+            <div class="gc-drop" id="gc-drop" role="button" tabindex="0" aria-label="上传 GIF 文件">
+                <div class="gc-big">📤</div>
+                <p><b>点击选择 GIF 文件</b>，或把文件拖到这里</p>
+                <p class="gc-sub">仅接受 .gif（校验 GIF87a / GIF89a 魔数）；建议 20MB 以内</p>
+            </div>
+            <input type="file" id="gc-file" accept=".gif,image/gif" style="display:none;">
+            <div class="gc-actions">
+                <button class="btn btn-secondary" id="gc-load-example" type="button">📦 载入示例（一键演示全流程）</button>
+                <button class="btn btn-secondary" id="gc-download-example" type="button">⬇️ 下载示例 GIF（测试拖放用）</button>
+            </div>
+            <div class="gc-warn" id="gc-warn" role="alert"></div>
+            <div class="gc-error" id="gc-error" role="alert"></div>
+        </div>
+
+        <div class="gc-card" id="gc-info" style="display:none;">
+            <h3>2. 原图信息</h3>
+            <div class="gc-info-grid">
+                <div class="gc-info-item"><div class="k">体积</div><div class="v" id="gc-info-size">-</div></div>
+                <div class="gc-info-item"><div class="k">尺寸</div><div class="v" id="gc-info-dims">-</div></div>
+                <div class="gc-info-item"><div class="k">帧数</div><div class="v" id="gc-info-frames">-</div></div>
+                <div class="gc-info-item"><div class="k">总时长</div><div class="v" id="gc-info-duration">-</div></div>
+                <div class="gc-info-item"><div class="k">循环</div><div class="v" id="gc-info-loop">-</div></div>
+            </div>
+        </div>
+
+        <div class="gc-card">
+            <h3>3. 压缩选项 <span class="gc-hint">（三档正交组合，可任意搭配）</span></h3>
+            <div class="gc-opt-group">
+                <div class="gc-opt-title">尺寸缩放（最近邻重采样，确定性、无模糊）</div>
+                <div class="gc-opts" id="gc-scale-opts">
+                    <label class="gc-opt on"><input type="radio" name="gc-scale" value="1" checked> 100%</label>
+                    <label class="gc-opt"><input type="radio" name="gc-scale" value="0.75"> 75%</label>
+                    <label class="gc-opt"><input type="radio" name="gc-scale" value="0.5"> 50%</label>
+                    <label class="gc-opt"><input type="radio" name="gc-scale" value="0.25"> 25%</label>
+                    <label class="gc-opt"><input type="radio" name="gc-scale" value="custom"> 自定义宽度
+                        <input type="number" class="gc-custom-w" id="gc-custom-w" min="1" placeholder="px"></label>
+                </div>
+            </div>
+            <div class="gc-opt-group">
+                <div class="gc-opt-title">帧率抽稀（被抽掉帧的时长累加到保留帧，总时长不变）</div>
+                <div class="gc-opts">
+                    <label class="gc-opt on"><input type="radio" name="gc-keep" value="1" checked> 保留全部</label>
+                    <label class="gc-opt"><input type="radio" name="gc-keep" value="2"> 1/2</label>
+                    <label class="gc-opt"><input type="radio" name="gc-keep" value="3"> 1/3</label>
+                    <label class="gc-opt"><input type="radio" name="gc-keep" value="4"> 1/4</label>
+                </div>
+            </div>
+            <div class="gc-opt-group">
+                <div class="gc-opt-title">颜色数（自适应调色板 median-cut，档位越低体积越小）</div>
+                <div class="gc-opts">
+                    <label class="gc-opt"><input type="radio" name="gc-colors" value="256" checked> 256 色</label>
+                    <label class="gc-opt"><input type="radio" name="gc-colors" value="128"> 128 色</label>
+                    <label class="gc-opt"><input type="radio" name="gc-colors" value="64"> 64 色</label>
+                    <label class="gc-opt"><input type="radio" name="gc-colors" value="32"> 32 色</label>
+                </div>
+            </div>
+            <div class="gc-actions">
+                <button class="btn btn-primary" id="gc-compress" type="button" style="font-size:1rem;padding:.65rem 1.6rem;">🗜️ 开始压缩</button>
+            </div>
+            <div class="gc-progress-wrap" id="gc-progress-wrap">
+                <div class="gc-progress-track"><div class="gc-progress-bar" id="gc-progress-bar"></div></div>
+                <div class="gc-progress-text" id="gc-progress-text">准备中…</div>
+            </div>
+        </div>
+
+        <div class="gc-card" id="gc-result" style="display:none;">
+            <h3>4. 压缩结果</h3>
+            <div class="gc-result-compare">
+                <div class="gc-compare-box"><div class="k">原体积</div><div class="v" id="gc-r-orig">-</div></div>
+                <div class="gc-compare-box new"><div class="k">压缩后</div><div class="v" id="gc-r-new">-</div></div>
+                <div class="gc-compare-box"><div class="k">压缩率</div><div class="v" id="gc-r-ratio" style="font-size:1rem;">-</div></div>
+                <div class="gc-compare-box"><div class="k">节省</div><div class="v" id="gc-r-saved" style="font-size:1rem;">-</div></div>
+            </div>
+            <p class="gc-compare-detail" id="gc-r-detail"></p>
+            <div class="gc-previews">
+                <div class="gc-preview"><div class="t">原图动画</div><canvas id="gc-prev-orig"></canvas></div>
+                <div class="gc-preview"><div class="t">压缩后动画</div><canvas id="gc-prev-new"></canvas></div>
+            </div>
+            <div class="gc-actions">
+                <button class="btn btn-primary" id="gc-download" type="button">⬇️ 下载 gif-compressed.gif</button>
+                <button class="btn btn-secondary" id="gc-copy-report" type="button">📋 复制体积报告</button>
+            </div>
+        </div>
+
+        <div class="gc-card">
+            <h3>使用说明</h3>
+            <ol class="gc-steps">
+                <li>上传 <code>.gif</code> 文件（点击／拖放），或点「载入示例」直接看 4 帧 32×32 内置示例的全流程演示。</li>
+                <li>按需搭配三档选项：尺寸缩放、帧率抽稀、颜色数；点「开始压缩」，进度条走完即出结果。</li>
+                <li>结果区对照体积与压缩率，双预览可直观对比动画效果；下载 <code>gif-compressed.gif</code>，或复制体积报告分享。</li>
+                <li>想验证下载的文件是否有效：把它重新拖回上传区，能正常解析即为有效 GIF。</li>
+            </ol>
+        </div>
+
+        <div class="gc-card">
+            <h3>常见问题</h3>
+            <dl class="gc-faq">
+                <dt>静态图片（JPG/PNG）能用这个工具压吗？</dt>
+                <dd>不建议。本工具是动画 GIF 逐帧处理口径；静态图请用<b>图片压缩</b>（通用压缩）或<b>图片格式转换</b>（格式互转），下方相关工具可直达。</dd>
+                <dt>抽帧后总时长会变短吗？</dt>
+                <dd>不会。被抽掉帧的时长会累加到保留帧上，总时长保持不变；但动画会变卡顿，属预期行为。</dd>
+                <dt>为什么压完体积反而大了？</dt>
+                <dd>若原图已是高度优化的小 GIF（如 2 色、尺寸很小），重编码的调色板与扩展块开销可能超过节省量；此时换更激进的档位（更小尺寸／更少颜色）再试。</dd>
+                <dt>支持透明背景的 GIF 吗？</dt>
+                <dd>支持。透明像素会保留透明索引，压缩后透明区域依然透明。</dd>
+                <dt>我的 GIF 会被上传吗？</dt>
+                <dd>不会。解码、处理、编码全程在浏览器本地完成，不发起后端请求；你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+            </dl>
+        </div>
+
+        <div class="gc-card">
+            <h3>真限制说明</h3>
+            <div class="gc-limits">
+                <b>大文件内存占用高、处理慢</b>：纯前端逐帧解码，超过 20MB 或 200 帧的 GIF 内存占用高、处理较慢，<b>建议先拆小</b>再压缩；处理中请耐心等待进度条。<br>
+                <b>256 色上限、减色可能出现色带</b>：GIF 单帧最多 256 色；颜色数档位越低体积越小，但渐变丰富的原图可能出现<b>色带</b>。<br>
+                <b>抽帧后动画变卡顿属预期</b>：帧率抽稀会降低流畅度（总时长保持不变），属预期行为；介意卡顿请选择「保留全部」。<br>
+                <b>不收集、不上传</b>：GIF 只在浏览器本地解码与处理，页面零 fetch／XHR、零 CDN，不收集、不上传任何内容。
+            </div>
+        </div>
+
+        <div class="gc-card">
+            <h3>相关工具</h3>
+            <div class="gc-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">GIF 压缩优化器（当前）</span>
+                <a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩（静态图压体积）</a>
+                <a href="/tools/img-convert" class="btn btn-secondary" style="font-size:.9rem;">图片格式转换（格式互转）</a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="gc-toast" id="gc-toast"></div>
+    <script src="/tools/static/js/gif_compress.js?v=1"></script>
+</body>
+</html>
+{{end}}
