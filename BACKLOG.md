@@ -1,3 +1,83 @@
+## 今日任务（2026-10-30 05:45 · 产品经理排期轮，接 154 轮调研）
+
+**选定：HEX ↔ C 数组互转器** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（154 轮）Top3 **首席推荐**（147 轮观察项晋升 P2 顺位首席），按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **未选**：文本转 PDF（154 轮新晋 P2 留池：打印路线依赖浏览器「另存为 PDF」对话框、非一键直下，体验弱于首席，排第二顺位待后轮；若走 jsPDF 需新增 vendor 自托管）；MAP 文件内存分析器（148 轮观察项继续观察：口径待裁定——首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR，不插队）；在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+- **PM 口径裁定：单独立项，不合并为「嵌入式字节工具」**——合并会把 Modbus／寄存器位域合并进同一轮，超出「一天高质量完成」的体量；且 Modbus 帧工具页明确声明「不输出 C 数组格式」，两个工具边界清晰（语义解析 vs 格式互转），独立成项互链即可。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **226**；`hex2c`／`c_array`／`C 数组` 全站 0 命中（templates／static/js／tools 均无）；站内「Modbus RTU 帧生成器」页明确声明不输出 C 数组格式，反证真缺口；与站内 hex 工具（若有）互链，边界为本工具只做字节↔文本双向互转、不做帧语义解析。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——嵌入式开发从串口／抓包拿到 hex 数据要贴进固件写成 C 数组，靠手写或 IDE 插件；③ **一轮可高质量交付**——纯前端双向互转，核心为确定性纯函数（hex 字符串→字节→C 数组字面量），可写成精确向量供 node 断言；④ **与站内嵌入式工具簇成组**——与 Modbus RTU 帧生成器／寄存器位域编辑器／CRC 校验互链（文案区分「格式互转 vs 帧语义解析」），互相导流；⑤ **零上传、零依赖**——纯前端单页。
+- **品类归位**：注册到「开发工具」品类（嵌入式簇补位）；New: true；Icon `code`（Material 图标库 `code`，若被占用则用 `data_object` 候选，开发轮实测占用后定夺）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+
+**规格**（开发轮按此执行）：
+- **输入三态互转**（Tab 切换，双向均可）：
+  1. **HEX 文本**：接受常见写法——连续 hex（`A1B2C3`）、空格/逗号/换行分隔（`A1 B2, C3`）、`0x` 前缀（`0xA1, 0xB2`）、大小写不敏感；非法字符报 Error（err.field="input"，页面中文定位到首个非法字符位置）。
+  2. **字节列表**：十进制逗号分隔（如 `161, 178, 195`，0–255 范围校验，超限抛 Error，err.field="input"）。
+  3. **C 数组**：解析 `const uint8_t data[] = { 0xA1, 0xB2 };`（容忍 `uint8_t`／`unsigned char`／`char`、有无 `const`、有无 `0x`、小数十进制混写）；返回字节数组＋数组名（若解析出）。
+- **输出四态**（一键切换＋复制）：
+  1. **C 数组**：`const uint8_t <name>[<len>] = { 0xXX, ... };`；选项：数组名输入（默认 `data`）、数据类型（`uint8_t`／`unsigned char`）、每行字节数（8／12／16）、十六进制前缀 `0x` 或后缀 `h`、大写／小写、行尾逗号规范。
+  2. **HEX 字符串**：连续大写／小写、空格分隔、`0x` 前缀逗号分隔三种格式。
+  3. **字节列表**：十进制逗号分隔。
+  4. **Base64**（附带：方便对比／嵌入配置）。
+- **信息栏**：字节数、行数估算、HEX 字符数实时显示。
+- 纯函数（双模式导出供 node 测试；失败约定：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `parseHex(text)` → `Uint8Array`（容忍上述全部写法；空输入抛 Error err.field="input"）。
+  - `parseByteList(text)` → `Uint8Array`（十进制，范围校验）。
+  - `parseCArray(text)` → `{ bytes: Uint8Array, name: string|null }`。
+  - `toCArray(bytes, opts)` → string（opts: {name, type, perLine, prefix, uppercase}）。
+  - `toHexString(bytes, opts)` → string（opts: {format: 'plain'|'spaced'|'0x', uppercase}）。
+  - `toByteList(bytes)` → string；`toBase64(bytes)` → string。
+  - `formatBytes(n)`：字节数→中文可读（沿用家族惯例，`formatBytes(1536)`=`"1.5 KB"`）。
+- 确定性向量（开发轮必须逐字命中）：
+  - `parseHex("A1 B2, 0xc3\nD4")` → [0xA1, 0xB2, 0xC3, 0xD4]。
+  - `parseHex("zz")` 抛 Error（err.field="input"）。
+  - `parseCArray("const uint8_t data[4] = { 0xA1, 0xB2, 195, 0xD4 };")` → bytes=[0xA1,0xB2,0xC3,0xD4]、name="data"。
+  - `toCArray(new Uint8Array([0xA1,0xB2,0xC3,0xD4]), {name:"buf", type:"uint8_t", perLine:8, prefix:"0x", uppercase:true})` → `"const uint8_t buf[4] = {\n    0xA1, 0xB2, 0xC3, 0xD4\n};"`。
+  - `toHexString` round-trip：`parseHex(toHexString(b, {format:'spaced', uppercase:true}))` 与原字节一致。
+  - `parseByteList("256")` 抛 Error（err.field="input"）。
+- 界面：三 Tab 输入区（HEX 文本／字节列表／C 数组，默认 HEX）＋输出格式选择（C 数组／HEX／字节列表／Base64）＋选项区（数组名、数据类型、每行字节数、前缀、大小写）＋「一键复制」＋信息栏（字节数等）；真限制明示：本工具只做格式互转、不做 Modbus 帧语义解析（文案指向 Modbus 工具）；所有提示中文；用户输入与结果用 textContent 或转义后插值，杜绝注入。
+- 操作与互链：与 Modbus RTU 帧生成器（文案按「帧语义解析 vs C 数组格式互转」区分）、寄存器位域编辑器（若存在）、CRC 校验（若存在）互链；不与未交付工具互链。
+- 技术路线：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- 注册：ID `hex_c_array`、Name「HEX ↔ C 数组互转器」、Path `/tools/hex-c-array`、Category 开发工具、New: true；中英文描述＋SEO keywords（HEX 转 C 数组、hex2c、C 数组互转、嵌入式字节工具、hex to c array、byte array converter）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/hex-c-array，相关工具互链 Modbus RTU 帧生成器、CRC 校验。
+
+---
+## 今日任务（2026-10-30 05:36 · 通用调研第一百五十四轮）
+
+**交付状态**：10-30 通用调研第一百五十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**GIF 压缩优化器已交付闭环**（c3b3ca4 新增：纯前端自研 GIF89a 解析（含 disposal 合成／NETSCAPE 循环扩展／隔行扫描）＋LZW 编解码＋GIF 编码器，尺寸缩放×帧率抽稀×调色板减色三档正交组合，零依赖零 CDN 零上传；node 203 断言全过；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **226 Path**，ID gif_compress、Path `/tools/gif-compress` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:36 轮，优先小／中难度纯前端。
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. GIF 压缩优化器交付确认：`git log` 头部 c3b3ca4（GIF 压缩优化器新增）／d3222af（示例生成正则新增）／520deb4（书签清理新增）；全量 226 Path；ID `gif_compress`、Path `/tools/gif-compress` 双注册；本地当前分支 muse/dev-20260929（`git fetch` 已通）。
+2. 留池复核：GIF 压缩优化器交付闭环，首席顺位空出；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；HEX ↔ C 数组互转器（147 轮观察项；`hex2c`／`c_array` 全站 0 命中；Modbus 帧工具页明确声明「不输出 C 数组格式」反证真缺口）建议晋升 P2 顺位首席，口径（单独立项 vs 合并为嵌入式字节工具）仍待 PM 裁定；MAP 文件内存分析器（148 轮观察项；`map_file_analyzer`／`map-analyzer` 全站 0 命中）观察项保持。
+3. 新信号扫描（V2EX 10-28~10-30 新帖＋dev.to 竞品榜单＋HN／Reddit 为主线）：**新晋 P2 一项——文本转 PDF**（见下）；其余全部消解，不立新 P2——
+   - dev.to ConvertLinx 20+ 工具榜单：逐项核对站内——花式文本生成器已交付（fancy_fonts）、HEIC／水印／YouTube 缩略图下载／EXIF 已覆盖、文本朗读器已交付（text_reader_aloud）；**文本转 PDF（text-to-pdf）全站 0 命中，真缺口**；OG 分享卡片预览器需后端抓取任意 URL 的 OG 标签（CORS），非纯前端可闭环，消解；
+   - Open Resume 自部署简历工具（t/1250292）：整站形态（Node 服务端＋SQLite＋Docker），非单页；且站内简历口径已有简历模板生成器／简历预检工具，消解；
+   - Netlink Mac 网络体检 App（t/1252633）：桌面 App 非网页工具，消解；
+   - aivault（t/1252684）CLI、Tervia（t/1250064）桌面终端、mPreview（t/1252409）Mac 本地预览：均非网页工具，消解；
+   - LLMPod（t/1252272）：LLM 推理平台，需 GPU＋后端，消解；
+   - tubox 图片工具箱 10-28 重发帖（t/1252552）：第四轮重发，13 项清单无新口径（148／150／151／152／153 轮已逐项分析），消解；
+   - MiniCPM OCR（t/1252701）／FrameLoom（t/1252576）／xGoose（t/1252493）／ProtoHub（t/1250522）／md2chat（t/1250428）：延续既有结论（需 AI／后端／已交付），消解；
+   - HN／Reddit 英文侧：方法论／AI 服务／榜单文，无单页新口径。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；GIF 压缩优化器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮新晋 P2 一项）：
+1. **HEX ↔ C 数组互转器** — 147 轮观察项，建议晋升 P2 顺位首席（`hex2c`／`c_array` 全站 0 命中真缺口；Modbus 帧工具页「不输出 C 数组格式」声明反证缺口；痛点：嵌入式开发从串口抓到 hex 数据要贴进固件成 C 数组，靠手写或 IDE 插件；纯前端小难度：hex↔字节↔C 数组双向互转＋行宽／前缀／大小写选项，零上传；与 Modbus RTU 帧生成器／寄存器位域编辑器／CRC 校验簇成组；真限制：仅做格式互转，不做语义解析，须明示；口径仍待 PM 裁定：单独立项或与 Modbus／寄存器位域合并为「嵌入式字节工具」）。
+2. **文本转 PDF** — 本轮新晋 P2（dev.to ConvertLinx 榜单信号；`text-to-pdf` 全站 0 命中真缺口；痛点：临时文本／会议纪要／歌词想存成 PDF 分享，在线站要上传或收费；纯前端小／中难度：文本→排版打印视图→`window.print()` 另存为 PDF（零依赖），或自托管 jsPDF 一键下载；真限制：打印路线依赖浏览器「另存为 PDF」对话框、不能真正一键直下，页面须明示；若走 jsPDF 需新增 vendor 自托管，不引 CDN）。
+3. **MAP 文件内存分析器** — 148 轮观察项（`map_file_analyzer`／`map-analyzer` 全站 0 命中真缺口；嵌入式簇同源受众；纯前端解析 map 文本→段／符号／占用统计；口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：CSS 加载动画生成器（145 轮）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；行去重与排序器（137 轮）；批量随机数生成器（133 轮）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；位运算计算器／批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 153 轮及之前记录。
+
+**通用候选表增量**（第一百五十四轮：GIF 压缩优化器已交付划出（c3b3ca4 新增；ID gif_compress、Path /tools/gif-compress 已注册；全量 226 Path；候选池划出）；**HEX ↔ C 数组互转器建议晋升 P2 顺位首席**（147 轮观察项；口径仍待 PM 裁定）；**文本转 PDF 新晋 P2**（本轮新信号；text-to-pdf 全站 0 命中）；自有实锤消解 10+ 项（ConvertLinx 榜单逐项核对：花式文本／HEIC／水印／YouTube 缩略图／EXIF／文本朗读器均已覆盖，OG 预览需后端；Open Resume 整站形态且简历口径已覆盖；Netlink／aivault／Tervia／mPreview 非网页；LLMPod 需 GPU；tubox 四发无新口径；MiniCPM／FrameLoom／xGoose／ProtoHub／md2chat 延续既有结论；HN／Reddit 无单页新口径）；全量 226 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| GIF 压缩优化器（GIF→GIF 轻量版） | 已交付划出（c3b3ca4 新增；ID gif_compress、Path /tools/gif-compress 已注册；全量 226 Path；候选池划出） | — | 已实现 |
+| HEX ↔ C 数组互转器 | 建议晋升 P2 顺位首席（147 轮观察项；hex2c／c_array 全站 0 命中；Modbus 页「不输出 C 数组格式」反证缺口；口径待 PM 裁定：单独立项或合并为嵌入式字节工具）；嵌入式 hex 数据→固件 C 数组，纯前端小难度，与 Modbus／位域／CRC 簇成组 | 小 | P2（留池） |
+| 文本转 PDF | 本轮新晋 P2（dev.to ConvertLinx 榜单信号；text-to-pdf 全站 0 命中真缺口）；临时文本想存 PDF 分享，在线站要上传或收费；纯前端：排版打印视图→window.print 另存为 PDF（或自托管 jsPDF 一键下载）；真限制：打印路线非一键直下须明示 | 小/中 | P2（留池） |
+| MAP 文件内存分析器 | 观察项（148 轮；map_file_analyzer／map-analyzer 全站 0 命中；嵌入式簇同源；口径待 PM 裁定：首版 GCC map 还是全覆盖） | 小/中 | 观察（待裁定） |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十四轮——GIF 压缩优化器交付闭环（c3b3ca4，`/tools/gif-compress` 已注册，全量 226 Path），候选池划出；**HEX ↔ C 数组互转器建议晋升 P2 顺位首席**（147 轮观察项，口径仍待 PM 裁定）；**文本转 PDF 新晋 P2**（本轮唯一新信号，dev.to ConvertLinx 榜单逐项核对出的真缺口）；第二、三候选顺位齐备（文本转 PDF／MAP 文件分析器）；首席无硬伤可直接排期（口径裁定后），在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（`git fetch` 已通）；`git log` 头部 c3b3ca4（GIF 压缩优化器新增）／d3222af（示例生成正则新增）／520deb4（书签清理新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **226**；Top3 候选重叠复核（gif_compress 在 categories.go 1 注册命中，为本轮已交付项；`hex2c`／`c_array` 0 命中；`text-to-pdf` 0 命中；`map_file_analyzer`／`map-analyzer` 0 命中；在线电台收听器硬伤未解跳过；Markdown 排版器已勘误为已交付项不复列）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM／开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-30 03:30 · 产品经理排期轮，接 153 轮调研）
 
 **选定：GIF 压缩优化器（GIF→GIF 轻量版：逐帧压缩／尺寸缩放／帧率抽稀）** — 本轮唯一任务（新工具）：

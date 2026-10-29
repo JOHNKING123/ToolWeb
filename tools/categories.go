@@ -526,6 +526,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "hex_c_array",
+					Name:        "HEX ↔ C 数组互转器",
+					Description: "HEX 文本（容忍连续/空格/逗号/0x/大小写混写）↔ 字节列表（十进制 0-255）↔ C 数组（解析 const uint8_t data[] = {...}）双向互转；输出 C 数组（数组名/数据类型/每行字节数/0x 或 h 后缀/大小写可配）、HEX 字符串三种格式、字节列表、Base64，嵌入式固件贴码必备，纯前端零上传 · HEX ↔ C array converter: hex text / byte list / C array bidirectional conversion for embedded firmware, 100% client-side",
+					Path:        "/tools/hex-c-array",
+					Icon:        "data_object",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color_palette_generator",
 					Name:        "配色方案生成器",
 					Description: "一个基色生成 6 种和谐配色：互补/类比/三角色/分裂互补/四方形/单色 HSL 色轮方案，色板点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端零上传 · Color palette generator: 6 harmonious schemes from one base color, copy HEX & CSS variables, WCAG contrast, 100% client-side",

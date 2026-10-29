@@ -1,0 +1,188 @@
+{{define "hex_c_array"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEX ↔ C 数组互转器 - 十六进制/字节列表/C数组双向转换 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 HEX ↔ C 数组互转器：HEX 文本（容忍连续/空格/逗号/0x/大小写混写）↔ 字节列表（十进制 0-255）↔ C 数组（解析 const uint8_t data[] = {...}）双向互转；输出 C 数组（数组名/数据类型/每行字节数/0x 或 h 后缀/大小写可配）、HEX 字符串三种格式、字节列表、Base64。纯前端本地计算，零上传。">
+    <meta name="keywords" content="HEX 转 C 数组,hex2c,C 数组互转,hex to c array,byte array converter,嵌入式字节工具,十六进制转换,C 数组生成,字节列表,hex 转字节">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/hex-c-array">
+    <meta property="og:title" content="HEX ↔ C 数组互转器">
+    <meta property="og:description" content="HEX 文本 ↔ 字节列表 ↔ C 数组双向互转：抓到的 hex 数据一键生成固件 C 数组，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/hex-c-array">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"HEX ↔ C 数组互转器","description":"HEX 文本（容忍连续/空格/逗号/0x/大小写混写）↔ 字节列表（十进制 0-255）↔ C 数组三向双向互转，输出 C 数组/HEX 字符串/字节列表/Base64 四种格式，纯前端本地计算，零上传。","url":"https://www.johnkingzcq123.xyz/tools/hex-c-array","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hx-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .hx-wrap .navbar .material-icons { display: none; }
+        .hx-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .hx-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .hx-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .hx-tabs { display:flex; gap:.6rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+        .hx-tab { padding:.5rem 1.4rem; border-radius:.6rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.95rem; }
+        .hx-tab-active { background:#1d4ed8; border-color:#1d4ed8; color:#fff; font-weight:700; }
+        .hx-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .hx-row label { font-size:.92rem; color:#374151; }
+        .hx-input, .hx-select { padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; font-family:ui-monospace,Menlo,Consolas,monospace; max-width:100%; box-sizing:border-box; }
+        .hx-input { width:10em; }
+        .hx-select { width:auto; }
+        .hx-textarea { width:100%; min-height:110px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.95rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+        .hx-radio { display:flex; gap:1rem; flex-wrap:wrap; }
+        .hx-radio label { display:flex; gap:.35rem; align-items:center; font-size:.92rem; color:#374151; cursor:pointer; }
+        .hx-result { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.95rem; color:#111827; word-break:break-all; white-space:pre-wrap; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:.7rem .9rem; margin:.6rem 0; }
+        .hx-msg { color:#b91c1c; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .hx-info { color:#374151; font-size:.9rem; margin:.4rem 0 0; line-height:1.7; }
+        .hx-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .hx-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+        .hx-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .hx-tip a { color:var(--primary-color); }
+        .hx-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .hx-links a { color:var(--primary-color); font-size:.93rem; }
+        .hx-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .hx-result { font-size:.85rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="hx-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔢 HEX ↔ C 数组互转器</h1>
+            <p>HEX 文本 ↔ 字节列表 ↔ C 数组双向互转：串口抓到的 hex 数据，一键生成可直接贴进固件的 C 数组</p>
+        </div>
+
+        <div class="hx-card">
+            <h3>输入 <span class="hx-hint">（只做格式互转，不做帧语义解析——需要解析 Modbus 帧字段请用「Modbus RTU 帧生成与校验器」）</span></h3>
+            <div class="hx-tabs" role="tablist">
+                <button class="hx-tab hx-tab-active" id="hx-tab-hex" type="button" role="tab">HEX 文本</button>
+                <button class="hx-tab" id="hx-tab-list" type="button" role="tab">字节列表</button>
+                <button class="hx-tab" id="hx-tab-carray" type="button" role="tab">C 数组</button>
+            </div>
+            <textarea class="hx-textarea" id="hx-input" placeholder="例如：A1 B2, 0xc3&#10;D4"></textarea>
+            <p class="hx-hint" id="hx-hint"></p>
+            <div class="hx-actions">
+                <button class="btn btn-primary" id="hx-convert" type="button">转换</button>
+                <button class="btn btn-secondary" id="hx-example" type="button">载入示例</button>
+                <button class="btn btn-secondary" id="hx-clear" type="button">清空</button>
+            </div>
+            <p class="hx-msg" id="hx-msg"></p>
+            <p class="hx-info" id="hx-info"></p>
+        </div>
+
+        <div class="hx-card">
+            <h3>输出格式</h3>
+            <div class="hx-radio" role="radiogroup">
+                <label><input type="radio" name="hx-output" value="carray" checked> C 数组</label>
+                <label><input type="radio" name="hx-output" value="hex"> HEX 字符串</label>
+                <label><input type="radio" name="hx-output" value="bytes"> 字节列表</label>
+                <label><input type="radio" name="hx-output" value="base64"> Base64</label>
+            </div>
+            <div class="hx-row" id="hx-row-copts">
+                <label>数组名 <input class="hx-input" id="hx-name" value="data" aria-label="数组名"></label>
+                <label>数据类型
+                    <select class="hx-select" id="hx-type">
+                        <option value="uint8_t" selected>uint8_t</option>
+                        <option value="unsigned char">unsigned char</option>
+                        <option value="char">char</option>
+                    </select>
+                </label>
+                <label>每行字节数
+                    <select class="hx-select" id="hx-perline">
+                        <option value="8" selected>8</option>
+                        <option value="12">12</option>
+                        <option value="16">16</option>
+                    </select>
+                </label>
+                <label>十六进制
+                    <select class="hx-select" id="hx-prefix">
+                        <option value="0x" selected>0x 前缀（0xA1）</option>
+                        <option value="h">h 后缀（A1h）</option>
+                    </select>
+                </label>
+                <label>大小写
+                    <select class="hx-select" id="hx-uppercase">
+                        <option value="upper" selected>大写（0xA1）</option>
+                        <option value="lower">小写（0xa1）</option>
+                    </select>
+                </label>
+            </div>
+            <div class="hx-row" id="hx-row-hexfmt" style="display:none;">
+                <label>HEX 格式
+                    <select class="hx-select" id="hx-hexfmt">
+                        <option value="spaced" selected>空格分隔（A1 B2）</option>
+                        <option value="plain">连续（A1B2）</option>
+                        <option value="0x">0x 逗号分隔（0xA1, 0xB2）</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="hx-card" id="hx-out-card" style="display:none;">
+            <h3>转换结果</h3>
+            <div class="hx-result" id="hx-result"></div>
+            <div class="hx-actions">
+                <button class="btn btn-primary" id="hx-copy" type="button">📋 一键复制</button>
+                <button class="btn btn-secondary" id="hx-download" type="button">⬇ 下载结果</button>
+            </div>
+        </div>
+
+        <div class="hx-card">
+            <h3>使用说明</h3>
+            <ol class="hx-tip" style="margin:0;padding-left:1.3rem;">
+                <li>在「输入」区顶部切换输入类型：HEX 文本（串口/抓包数据）、字节列表（十进制）、C 数组（已有代码）。</li>
+                <li>HEX 输入容忍连续 hex（A1B2C3）、空格/逗号/换行分隔、0x 前缀、大小写混写；非法字符会定位到具体位置并报错。</li>
+                <li>在「输出格式」区选择目标格式：C 数组（数组名/数据类型/每行字节数/0x 或 h 后缀/大小写可配）、HEX 字符串三种格式、字节列表、Base64。</li>
+                <li>点「转换」生成结果，可一键复制或下载（C 数组存为 .h 文件，可直接贴进固件工程）。</li>
+                <li>输入框下方的信息栏实时显示字节数、C 数组行数估算与输入字符数。</li>
+            </ol>
+        </div>
+
+        <div class="hx-card">
+            <h3>常见问题</h3>
+            <dl class="hx-tip">
+                <dt><b>能解析 Modbus 帧并拆解寄存器字段吗？</b></dt>
+                <dd>不能。本工具只做字节↔文本的格式互转，不做任何帧语义解析。需要按 Modbus 协议拆解字段、校验 CRC 请使用 <a href="/tools/modbus-frame">Modbus RTU 帧生成与校验器</a>（帧语义解析 vs C 数组格式互转，分工明确）。</dd>
+                <dt><b>为什么粘贴的 hex 报「非法字符」？</b></dt>
+                <dd>HEX 文本只允许十六进制数字（0-9、a-f、A-F）、0x 前缀、空格、逗号与换行分隔。冒号、分号、引号等都会报错并给出字符位置，请去掉再试。</dd>
+                <dt><b>C 数组解析支持哪些写法？</b></dt>
+                <dd>支持 <span class="hx-note">const uint8_t data[] = { 0xA1, 0xB2, 195 };</span> 形式：类型可为 uint8_t／unsigned char／char，可省略 const 与数组长度；元素可为 0x 前缀十六进制、十进制混写或 h 后缀十六进制（如 A1h）。</dd>
+                <dt><b>生成的 C 数组怎么用？</b></dt>
+                <dd>点「下载结果」存为 .h 文件，或一键复制后粘贴进固件工程；数组名/数据类型/每行字节数/前缀/大小写均可在输出区上方调整后再生成。</dd>
+                <dt><b>我的输入会被上传吗？</b></dt>
+                <dd>不会。全部转换在浏览器本地完成，本页面零网络请求，输入内容不出本机。</dd>
+            </dl>
+        </div>
+
+        <div class="hx-card">
+            <h3>相关工具</h3>
+            <div class="hx-links">
+                <a href="/tools/modbus-frame">Modbus RTU 帧生成与校验器（帧语义解析：组帧/验 CRC/拆字段；本工具只做格式互转）</a>
+                <a href="/tools/register-bitfield">寄存器位域查看与编辑器（32 位寄存器位图编辑 → C 宏定义）</a>
+                <a href="/tools/crc-checksum-calculator">CRC 校验和计算器（裸校验和计算：只算校验值）</a>
+            </div>
+            <p class="hx-note">分工：Modbus 工具负责帧语义解析（组帧、验 CRC、字段拆解）；本工具只负责字节↔文本的格式互转，不解读任何协议语义。</p>
+        </div>
+
+        <div class="hx-card">
+            <h3>真限制说明</h3>
+            <div class="hx-tip">
+                <b>只做格式互转、不做帧语义解析</b>：本工具在 HEX 文本、字节列表、C 数组、Base64 之间做无损双向转换，不解读任何协议字段语义；解析 Modbus 帧请使用 Modbus RTU 帧生成与校验器。<br>
+                <b>字节范围 0–255</b>：非法字符、超出范围的值均会明确报错（给出字符/元素位置），绝不静默钳制。<br>
+                <b>零上传</b>：本页面零 fetch / XHR、零 CDN，全部计算在浏览器本地完成，不收集、不上传任何内容。
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="hx-toast" id="hx-toast"></div>
+    <script src="/tools/static/js/hex_c_array.js?v=1"></script>
+</body>
+</html>
+{{end}}
