@@ -1,0 +1,190 @@
+{{define "bitwise_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位运算计算器 - AND/OR/XOR/NOT/移位/循环移位 8-64 位 | 程序员工具箱</title>
+    <meta name="description" content="免费在线位运算计算器：双操作数（hex/dec/bin 进制可选，0x/0b 前缀可带可不带）× 8/16/32/64 位宽 × AND/OR/XOR/NOT/左移/逻辑右移/循环左移 ROL/循环右移 ROR，结果 HEX/无符号十进制/有符号十进制（补码）/二进制四对照一键复制，64 位走 BigInt 精确计算，纯前端本地计算零上传。">
+    <meta name="keywords" content="位运算计算器,AND OR XOR,按位取反,左移,逻辑右移,循环移位,ROL ROR,BigInt,补码,嵌入式,bitwise calculator">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bitwise-calculator">
+    <meta property="og:title" content="位运算计算器 - 8/16/32/64 位 AND/OR/XOR/NOT/移位/循环移位">
+    <meta property="og:description" content="双操作数位运算，HEX/无符号/有符号（补码）/二进制四对照输出，64 位 BigInt 精确计算，纯前端本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bitwise-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"位运算计算器","description":"双操作数（hex/dec/bin）× 8/16/32/64 位宽 × AND/OR/XOR/NOT/左移/逻辑右移/ROL/ROR，结果 HEX/无符号十进制/有符号十进制（补码）/二进制四对照，64 位 BigInt 精确计算，纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/bitwise-calculator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bw-wrap .container { max-width: 980px; margin: 0 auto; padding: 1.2rem; }
+        .bw-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .bw-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .bw-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .bw-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .bw-field label { display:block; font-size:.9rem; color:#374151; margin-bottom:.35rem; }
+        .bw-ctl { display:flex; gap:.5rem; }
+        .bw-ctl input[type=text] { flex:1; min-width:0; padding:.5rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.95rem; font-family:ui-monospace,Menlo,Consolas,monospace; box-sizing:border-box; }
+        .bw-ctl input[type=text]:disabled { background:#f3f4f6; color:#9ca3af; }
+        .bw-ctl input.bw-err { border-color:#dc2626; background:#fef2f2; }
+        .bw-ctl select, .bw-row select { padding:.5rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; background:#fff; color:#374151; }
+        .bw-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.8rem 0; }
+        .bw-row label { font-size:.92rem; color:#374151; }
+        .bw-msg { color:#b45309; font-size:.9rem; margin:.5rem 0 0; display:none; }
+        .bw-expr { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:1.02rem; font-weight:700; color:#111827; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:.6rem .8rem; word-break:break-all; }
+        .bw-table { width:100%; border-collapse:collapse; font-size:.93rem; margin-top:.8rem; }
+        .bw-table th, .bw-table td { border:1px solid #e5e7eb; padding:.55rem .65rem; text-align:left; vertical-align:middle; }
+        .bw-table th { background:#f9fafb; color:#374151; white-space:nowrap; width:9em; }
+        .bw-table td.bw-val { font-family:ui-monospace,Menlo,Consolas,monospace; font-weight:700; color:#111827; word-break:break-all; }
+        .bw-btn { padding:.4rem .8rem; border-radius:.5rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.88rem; white-space:nowrap; }
+        .bw-btn:hover { background:#f3f4f6; }
+        .bw-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .bw-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .bw-tip a { color:var(--primary-color); }
+        .bw-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .bw-links a { color:var(--primary-color); font-size:.93rem; }
+        .bw-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .bw-grid { grid-template-columns:1fr; }
+            .bw-table th { width:6.5em; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="bw-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>⚙️ 位运算计算器</h1>
+            <p>双操作数 × 8/16/32/64 位宽 × AND/OR/XOR/NOT/移位/循环移位，结果四进制对照一键复制</p>
+        </div>
+        <div class="tool-content">
+            <div class="bw-card">
+                <h3>输入 <span class="bw-hint">（操作数 hex/dec/bin 可选，0x/0b 前缀可带可不带；NOT 时操作数 2 自动禁用）</span></h3>
+                <div class="bw-grid">
+                    <div class="bw-field">
+                        <label for="bw-op1">操作数 1</label>
+                        <div class="bw-ctl">
+                            <input type="text" id="bw-op1" placeholder="如 0xFF00" autocomplete="off" spellcheck="false">
+                            <select id="bw-base1" aria-label="操作数 1 进制">
+                                <option value="hex" selected>HEX</option>
+                                <option value="dec">DEC</option>
+                                <option value="bin">BIN</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bw-field">
+                        <label for="bw-op2">操作数 2 <span class="bw-hint" id="bw-op2-hint" style="display:none;">（NOT 不需要）</span></label>
+                        <div class="bw-ctl">
+                            <input type="text" id="bw-op2" placeholder="如 0x0F0F" autocomplete="off" spellcheck="false">
+                            <select id="bw-base2" aria-label="操作数 2 进制">
+                                <option value="hex" selected>HEX</option>
+                                <option value="dec">DEC</option>
+                                <option value="bin">BIN</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bw-row">
+                    <label>位宽
+                        <select id="bw-width" aria-label="位宽">
+                            <option value="8">8 位</option>
+                            <option value="16">16 位</option>
+                            <option value="32" selected>32 位</option>
+                            <option value="64">64 位</option>
+                        </select>
+                    </label>
+                    <label>运算符
+                        <select id="bw-op" aria-label="运算符">
+                            <option value="and" selected>按位与 AND</option>
+                            <option value="or">按位或 OR</option>
+                            <option value="xor">按位异或 XOR</option>
+                            <option value="not">按位取反 NOT</option>
+                            <option value="shl">左移 &lt;&lt;</option>
+                            <option value="shr">逻辑右移 &gt;&gt;</option>
+                            <option value="rol">循环左移 ROL</option>
+                            <option value="ror">循环右移 ROR</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="bw-actions">
+                    <button class="btn btn-primary" id="bw-calc" type="button">＝ 计算</button>
+                    <button class="btn btn-secondary" id="bw-example" type="button">填入示例 0xDEADBEEF &lt;&lt; 4</button>
+                    <button class="btn btn-secondary" id="bw-clear" type="button">↺ 清空</button>
+                </div>
+                <p class="bw-msg" id="bw-msg"></p>
+            </div>
+
+            <div class="bw-card">
+                <h3>结果 <span class="bw-hint">（表达式回显；每行可单独复制）</span></h3>
+                <div class="bw-expr" id="bw-expr">—</div>
+                <table class="bw-table">
+                    <tbody>
+                        <tr><th>HEX（十六进制）</th><td class="bw-val" id="bw-r-hex">—</td><td style="width:6em;"><button class="bw-btn" id="bw-copy-hex" type="button">📋 复制</button></td></tr>
+                        <tr><th>DEC（无符号）</th><td class="bw-val" id="bw-r-dec">—</td><td><button class="bw-btn" id="bw-copy-dec" type="button">📋 复制</button></td></tr>
+                        <tr><th>DEC（有符号）</th><td class="bw-val" id="bw-r-signed">—</td><td><button class="bw-btn" id="bw-copy-signed" type="button">📋 复制</button></td></tr>
+                        <tr><th>BIN（二进制）</th><td class="bw-val" id="bw-r-bin">—</td><td><button class="bw-btn" id="bw-copy-bin" type="button">📋 复制</button></td></tr>
+                    </tbody>
+                </table>
+                <div class="bw-actions" style="margin-top:.8rem;">
+                    <button class="btn btn-primary" id="bw-copy-expr" type="button">📋 复制表达式与四进制结果</button>
+                </div>
+                <p class="bw-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中结果内容复制。</p>
+            </div>
+
+            <div class="bw-card">
+                <h3>使用说明</h3>
+                <ol class="bw-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>两个操作数可分别选 HEX/DEC/BIN 进制：十六进制 0x 前缀、二进制 0b 前缀可带可不带，大小写不限；十进制可带正负号（负数按位宽补码归一化）。</li>
+                    <li>位宽决定掩码：8/16/32/64 位可选（默认 32），结果一律按位宽截断，例如 8 位下 0x81 &lt;&lt; 1 = 0x02（溢出的高位直接丢弃）。</li>
+                    <li>移位与循环移位：操作数 2 为移位量（同样按自身进制解析），移位量先做 n%w（w 为当前位宽）再运算；&gt;&gt; 为逻辑右移（高位补 0）。</li>
+                    <li>NOT 为单目运算：选择后操作数 2 自动禁用，结果为操作数 1 按位取反再按位宽截断。</li>
+                    <li>结果区四行对照：HEX（大写、按位宽补零）、无符号十进制、有符号十进制（补码换算，如 32 位 0xFFFFFFFF 显示为 -1）、二进制（0b 前缀、4 位一组空格分隔）。</li>
+                    <li>输入非法时报错信息会定位到操作数 1 / 操作数 2 / 运算符，不输出半截结果。</li>
+                </ol>
+            </div>
+
+            <div class="bw-card">
+                <h3>常见问题</h3>
+                <dl class="bw-tip">
+                    <dt><b>为什么 64 位运算不会丢精度？</b></dt>
+                    <dd>原生 JavaScript 的位运算符只到 32 位有符号整数。本工具 8/16/32/64 位统一用 BigInt 计算，64 位满值 0xFFFFFFFFFFFFFFFF 也能精确运算。</dd>
+                    <dt><b>移位量超过位宽会怎样？</b></dt>
+                    <dd>移位量按位宽取模：n 先做 n%w 再运算。例如 32 位下 1 &lt;&lt; 40 等价于 1 &lt;&lt; 8，结果为 0x00000100；不会出现未定义行为。</dd>
+                    <dt><b>有符号十进制是怎么算的？</b></dt>
+                    <dd>负数按补码显示：按当前位宽做补码换算，最高位为 1 即视为负数。例如 32 位下 0xFFFFFFFF 显示为 -1，0x80000000 显示为 -2147483648。</dd>
+                    <dt><b>左移溢出的高位去哪了？</b></dt>
+                    <dd>直接丢弃：结果一律按位宽掩码归一化。例如 8 位下 0x81 &lt;&lt; 1 = 0x02；想保留移出的位请改用循环左移 ROL（0x81 ROL 1 = 0x03）。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全程本地计算、零上传：本页面零 fetch / XHR、零 CDN，输入内容不出本机。</dd>
+                </dl>
+            </div>
+
+            <div class="bw-card">
+                <h3>相关工具</h3>
+                <div class="bw-links">
+                    <a href="/tools/register-bitfield">寄存器位域查看与编辑器（32 位寄存器位图编辑 → C 宏定义；本工具做双操作数位运算）</a>
+                    <a href="/tools/hex-c-array">HEX ↔ C 数组互转器（字节 ↔ 文本格式互转；本工具做数值位运算）</a>
+                    <a href="/tools/crc-checksum-calculator">CRC 校验和计算器（裸校验和计算；本工具做通用位运算）</a>
+                </div>
+            </div>
+
+            <div class="bw-card">
+                <h3>真限制说明</h3>
+                <div class="bw-tip">
+                    <b>64 位走 BigInt</b>：原生 Number 的位运算只到 32 位有符号整数，本工具 8/16/32/64 位统一用 BigInt 计算，64 位不丢精度；旧浏览器不支持 BigInt 时本工具无法运行。<br>
+                    <b>移位量按位宽取模</b>：&lt;&lt;、逻辑 &gt;&gt;、ROL、ROR 的移位量 n 先做 n%w（w 为当前位宽）再运算；移出位宽的位直接丢弃（ROL/ROR 除外，循环回低位/高位）。<br>
+                    <b>负数按补码显示</b>：有符号十进制按当前位宽做补码换算（最高位为 1 即负数），如 32 位 0xFFFFFFFF 显示为 -1；十进制输入可带负号，按补码归一化到当前位宽。<br>
+                    <b>全程本地计算、零上传</b>：本页面零 fetch / XHR、零 CDN，全部计算在浏览器本地完成，输入内容不出本机。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="bw-toast" id="bw-toast"></div>
+    <script src="/tools/static/js/bitwise_calculator.js?v=1"></script>
+</body>
+</html>
+{{end}}

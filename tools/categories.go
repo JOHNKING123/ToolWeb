@@ -535,6 +535,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "bitwise_calculator",
+					Name:        "位运算计算器",
+					Description: "双操作数位运算：AND/OR/XOR/NOT/左移/逻辑右移/循环左移 ROL/循环右移 ROR，8/16/32/64 位宽可选（默认 32），操作数 hex/dec/bin 进制可选（0x/0b 前缀可带可不带），结果 HEX/无符号十进制/有符号十进制（补码）/二进制四对照一键复制，表达式回显，64 位走 BigInt 精确计算，纯前端零上传 · Bitwise calculator: AND/OR/XOR/NOT/shifts/rotates with 8/16/32/64-bit width, hex/dec/bin operands, quad-format result, 100% client-side",
+					Path:        "/tools/bitwise-calculator",
+					Icon:        "engineering",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "map_memory_analyzer",
 					Name:        "MAP 文件内存分析器",
 					Description: "粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键解析内存区域占用（FLASH/RAM 使用条）、段汇总可排序表、对象文件 Top20、段内输入节明细，生成中文占用报告；.data 初始化段按 load address 同时计入 Flash 镜像与 RAM，纯前端零上传 · GCC linker map analyzer: parse -Map output to Flash/RAM usage, section summary, top object files, Chinese usage report, 100% client-side",
