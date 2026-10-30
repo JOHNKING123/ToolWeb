@@ -535,6 +535,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "map_memory_analyzer",
+					Name:        "MAP 文件内存分析器",
+					Description: "粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键解析内存区域占用（FLASH/RAM 使用条）、段汇总可排序表、对象文件 Top20、段内输入节明细，生成中文占用报告；.data 初始化段按 load address 同时计入 Flash 镜像与 RAM，纯前端零上传 · GCC linker map analyzer: parse -Map output to Flash/RAM usage, section summary, top object files, Chinese usage report, 100% client-side",
+					Path:        "/tools/map-memory-analyzer",
+					Icon:        "analytics",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color_palette_generator",
 					Name:        "配色方案生成器",
 					Description: "一个基色生成 6 种和谐配色：互补/类比/三角色/分裂互补/四方形/单色 HSL 色轮方案，色板点击复制 HEX，整方案复制 HEX 列表或 CSS 变量，每色附白底/黑底 WCAG 对比度与 AA 标识，纯前端零上传 · Color palette generator: 6 harmonious schemes from one base color, copy HEX & CSS variables, WCAG contrast, 100% client-side",

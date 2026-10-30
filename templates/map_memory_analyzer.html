@@ -1,0 +1,147 @@
+{{define "map_memory_analyzer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAP 文件内存分析器 - GCC ld 固件 Flash/RAM 占用一键解析 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 MAP 文件内存分析器：粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键解析内存区域（FLASH/RAM）、段大小、对象文件占用 Top20、段内输入节明细，生成中文占用报告；.data 初始化段按 load address 同时计入 Flash 镜像与 RAM。纯前端本地解析，零上传。">
+    <meta name="keywords" content="map 文件分析,gcc map 解析,固件内存占用,linker map analyzer,arm gcc map parser,flash ram usage,链接脚本内存,内存区域占用,.map 解析,嵌入式内存分析">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/map-memory-analyzer">
+    <meta property="og:title" content="MAP 文件内存分析器">
+    <meta property="og:description" content="GCC ld -Map 输出一键解析：Flash/RAM 占用总览、段汇总、对象文件 Top20、中文占用报告。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/map-memory-analyzer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"MAP 文件内存分析器","description":"粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键解析内存区域占用（FLASH/RAM）、段汇总、对象文件 Top20、段内输入节明细，生成中文占用报告；.data 初始化段按 load address 同时计入 Flash 镜像与 RAM；纯前端本地解析，零上传。","url":"https://www.johnkingzcq123.xyz/tools/map-memory-analyzer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mm-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .mm-wrap .navbar .material-icons { display: none; }
+        .mm-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .mm-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .mm-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .mm-textarea { width:100%; min-height:220px; box-sizing:border-box; padding:.6rem .7rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.85rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+        .mm-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+        .mm-msg { color:#b91c1c; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .mm-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .mm-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .mm-tip a { color:var(--primary-color); }
+        .mm-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .mm-links a { color:var(--primary-color); font-size:.93rem; }
+        .mm-region { border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .9rem; margin-bottom:.7rem; background:#f9fafb; }
+        .mm-region-name { font-weight:700; color:#111827; font-size:.95rem; margin-bottom:.5rem; }
+        .mm-bar { height:.7rem; background:#e5e7eb; border-radius:.35rem; overflow:hidden; }
+        .mm-bar-fill { height:100%; background:linear-gradient(90deg,#1d4ed8,#60a5fa); border-radius:.35rem; transition:width .4s; }
+        .mm-region-sub { color:#6b7280; font-size:.85rem; margin-top:.4rem; }
+        .mm-table { width:100%; border-collapse:collapse; font-size:.9rem; margin-top:.6rem; }
+        .mm-table th, .mm-table td { border:1px solid #e5e7eb; padding:.45rem .6rem; text-align:left; }
+        .mm-table th { background:#f3f4f6; color:#374151; }
+        .mm-table td.mm-num { font-family:ui-monospace,Menlo,Consolas,monospace; white-space:nowrap; }
+        .mm-table code { font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .mm-sortable { cursor:pointer; user-select:none; }
+        .mm-sortable:hover { background:#e5e7eb; }
+        .mm-detail { border:1px solid #e5e7eb; border-radius:.5rem; margin-bottom:.5rem; padding:.4rem .7rem; }
+        .mm-detail summary { cursor:pointer; font-size:.92rem; color:#111827; padding:.3rem 0; }
+        .mm-fill-tag { display:inline-block; background:#fef3c7; color:#92400e; border-radius:.3rem; padding:.1rem .5rem; font-size:.85rem; }
+        .mm-file-label { display:inline-block; padding:.5rem 1rem; border:1px solid #d1d5db; border-radius:.5rem; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .mm-file-label:hover { border-color:#1d4ed8; color:#1d4ed8; }
+        .mm-file-label input { display:none; }
+        .mm-limit { background:#fffbeb; border:1px solid #fcd34d; border-radius:.5rem; padding:.6rem .9rem; margin-bottom:.5rem; color:#92400e; font-size:.9rem; line-height:1.7; }
+        .mm-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        @media (max-width:640px) {
+            .mm-table { font-size:.8rem; }
+            .mm-textarea { font-size:.8rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="mm-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>📊 MAP 文件内存分析器</h1>
+            <p>粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键看清固件 Flash/RAM 占用：内存区域总览、段汇总、对象文件 Top20、中文占用报告</p>
+        </div>
+
+        <div class="mm-card">
+            <h3>输入 <span class="mm-hint">（仅支持 GCC ld -Map 输出：需含 Memory Configuration 与 Linker script and memory map 标记）</span></h3>
+            <textarea class="mm-textarea" id="mm-input" placeholder="将 arm-none-eabi-gcc -Wl,-Map=firmware.map 生成的 map 内容粘贴到这里，或点「读取本地文件」"></textarea>
+            <div class="mm-actions">
+                <button class="btn btn-primary" id="mm-parse" type="button">解析内存占用</button>
+                <button class="btn btn-secondary" id="mm-example" type="button">载入示例</button>
+                <label class="mm-file-label" for="mm-file">📂 读取本地文件（仅本地解析，零上传）<input type="file" id="mm-file" accept=".map,.txt,.log"></label>
+                <button class="btn btn-secondary" id="mm-clear" type="button">清空</button>
+            </div>
+            <p class="mm-msg" id="mm-msg"></p>
+            <p class="mm-note">编译时加上 <code>-Wl,-Map=firmware.map</code>（STM32CubeIDE／PlatformIO 可在链接选项里配）即可得到 map 文件。map 文本全程在浏览器本地解析，不上传、不出本机。</p>
+        </div>
+
+        <div class="mm-card" id="mm-result-card" style="display:none;">
+            <h3>解析结果</h3>
+            <h4 style="color:#374151;font-size:.95rem;margin:.9rem 0 .5rem;">内存占用总览</h4>
+            <div id="mm-overview"></div>
+            <h4 style="color:#374151;font-size:.95rem;margin:.9rem 0 .5rem;">段汇总 <span class="mm-hint">（点击表头可排序）</span></h4>
+            <table class="mm-table" id="mm-sec-table"></table>
+            <h4 style="color:#374151;font-size:.95rem;margin:.9rem 0 .5rem;">对象文件 Top20 <span class="mm-hint">（按完整路径聚合，填充字节不计入）</span></h4>
+            <table class="mm-table" id="mm-obj-table"></table>
+            <h4 style="color:#374151;font-size:.95rem;margin:.9rem 0 .5rem;">段内明细 <span class="mm-hint">（点击展开每段的输入节）</span></h4>
+            <div id="mm-details"></div>
+            <div class="mm-actions">
+                <button class="btn btn-primary" id="mm-copy" type="button">📋 复制中文占用报告</button>
+                <button class="btn btn-secondary" id="mm-download" type="button">⬇ 下载报告 .txt</button>
+            </div>
+        </div>
+
+        <div class="mm-card">
+            <h3>使用说明</h3>
+            <ol class="mm-tip" style="margin:0;padding-left:1.3rem;">
+                <li>用 <code>arm-none-eabi-gcc … -Wl,-Map=firmware.map</code> 生成 map 文件（或 STM32CubeIDE／PlatformIO 的链接选项里开启），把内容粘贴到输入区，或点「读取本地文件」直接读 .map（FileReader 本地读取，零上传）。</li>
+                <li>点「解析内存占用」：总览卡显示各内存区域（FLASH／RAM）的使用条、百分比、已用／剩余字节；段汇总表、对象文件 Top20 均可点击表头排序；每段可展开看输入节明细（含 *fill* 填充行标识）。</li>
+                <li>「复制中文占用报告」或「下载报告 .txt」可把分析结果带走贴进评审文档。</li>
+                <li>点「载入示例」可先看一个固定示例 map 的解析效果，再粘贴自己的文件。</li>
+            </ol>
+        </div>
+
+        <div class="mm-card">
+            <h3>常见问题</h3>
+            <dl class="mm-tip">
+                <dt><b>为什么只支持 GCC ld -Map？</b></dt>
+                <dd>ARMCC（armcc/armlink）与 IAR 的 map 结构与 GNU ld 完全不同（IAR 为模块汇总表风格），首版只做 GCC ld -Map 一套，保证解析质量；非 GCC 文件会明确报格式错误。ARMCC／IAR 支持记在 roadmap，不承诺日期。</dd>
+                <dt><b>能看到每个函数／变量各占多少字节吗？</b></dt>
+                <dd>不能。ld map 默认只列到输入节粒度（如 .text.main 级），没有单符号大小；要符号级统计请用 <code>nm --print-size</code> 或 <code>size</code>。这是真限制，不是 bug。</dd>
+                <dt><b>为什么 .data 在 Flash 和 RAM 里都占了？</b></dt>
+                <dd>这是口径说明，不是重复计算：.data 的初始值以镜像形式存放在 Flash（load address），运行时搬到 RAM。因此 Flash 占用含 .data 初始化镜像，RAM 占用含其运行地址，两边各计一次。</dd>
+                <dt><b>我的 map 会被上传吗？</b></dt>
+                <dd>不会。全部解析在浏览器本地完成，本页面零网络请求；「读取本地文件」用 FileReader 只读进内存，不上传。</dd>
+            </dl>
+        </div>
+
+        <div class="mm-card">
+            <h3>相关工具</h3>
+            <div class="mm-links">
+                <a href="/tools/hex-c-array">HEX ↔ C 数组互转器（分析完体积，hex 数据可转 C 数组贴固件）</a>
+                <a href="/tools/register-bitfield">寄存器位域查看与编辑器（32 位寄存器位图编辑 → C 宏定义）</a>
+                <a href="/tools/modbus-frame">Modbus RTU 帧生成与校验器（组帧／验 CRC／字段拆解）</a>
+                <a href="/tools/crc-checksum-calculator">CRC 校验和计算器（裸校验和计算）</a>
+            </div>
+            <p class="mm-note">嵌入式簇：本工具负责固件体积与内存占用分析，HEX 工具负责字节格式互转，Modbus／CRC 工具负责帧语义与校验，分工明确。</p>
+        </div>
+
+        <div class="mm-card">
+            <h3>真限制说明</h3>
+            <div class="mm-limit"><b>仅支持 GCC ld -Map 输出</b>：需含 Memory Configuration 与 Linker script and memory map 标记；ARMCC／IAR 的 map 结构完全不同，暂不支持（roadmap，不承诺日期），非 GCC 文件会明确报格式错误。</div>
+            <div class="mm-limit"><b>只有输入节粒度</b>：统计到 .text.main 级输入节，ld map 默认无单符号大小；要函数／变量级统计请用 nm／size，本工具给不出。</div>
+            <div class="mm-limit"><b>.data 初始化段同时占 Flash 与 RAM</b>：Flash 占用含 .data 的 load 镜像，RAM 占用含其运行地址，两边各计一次——这是口径说明，不是重复计算。</div>
+            <div class="mm-limit"><b>全程本地解析，零上传</b>：本页面零 fetch／XHR、零 CDN，map 文本不出浏览器，不收集、不上传任何内容。</div>
+        </div>
+    </div>
+    </div>
+    <div class="mm-toast" id="mm-toast"></div>
+    <script src="/tools/static/js/map_memory_analyzer.js?v=1"></script>
+</body>
+</html>
+{{end}}

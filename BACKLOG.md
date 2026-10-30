@@ -1,3 +1,90 @@
+## 今日任务（2026-10-30 08:20 · 产品经理排期轮，接 156 轮调研）
+
+**选定：MAP 文件内存分析器** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（156 轮）Top3 **首席推荐**（148 轮观察项建议晋升 P2 顺位首席；`map_file_analyzer`／`map-analyzer` 全站 0 命中真缺口），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **PM 口径裁定：首版只支持 GCC ld `-Map` 输出格式**——ARMCC／IAR 的 map 结构完全不同（IAR 为模块汇总表、ARMCC 自有格式），一轮做三套会稀释质量；目标受众（arm-none-eabi-gcc／STM32CubeIDE／PlatformIO 嵌入式开发）绝大多数用 GCC；页面明示仅支持 GCC，非 GCC 文件报格式错误（err.field="input"）；ARMCC／IAR 记 roadmap，不承诺日期。
+- **未选**：
+  - 位运算计算器（122 轮观察项，`bitwise`／位运算 全站 0 命中已实测确认；排第二顺位待后轮——首席无硬伤，不插队）。
+  - CSS 加载动画生成器（145 轮观察项，`css-loader`／加载动画生成器 全站 0 命中已实测确认；排第三顺位）。
+  - 在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+  - 记事本式计算器（156 轮新观察项；**PM 方向合规裁定：不踩 10-18 红线**——红线针对泛财务／生活计算器，Calcy 式开发者／科学记事本计算器（逐行算式＋不确定度传播）属工具口径，留观察低优先）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（`git fetch` 须配 GIT_SSH_COMMAND 显式密钥后已通）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **228**；`map_file_analyzer`／`map-analyzer`／`内存分析` 在 templates／static/js／tools／tests 全站 0 命中；嵌入式簇互链对象实测存在（`/tools/hex-c-array`、`/tools/modbus-frame`、`/tools/register-bitfield`、`/tools/crc-checksum-calculator`）。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——嵌入式开发查固件内存占用靠人眼读 map 文件，现有在线站要上传或收费，隐私顾虑大；③ **一轮可高质量交付**——纯前端解析 map 文本→段／对象文件／占用统计，核心为确定性纯函数，可写成精确向量供 node 断言（难度中，低于 GIF 编解码器体量）；④ **嵌入式簇补位**——与 HEX↔C 数组互转器／Modbus RTU 帧生成器／寄存器位域查看与编辑器／CRC 校验和计算器互链，「固件体积分析 vs 字节格式互转」边界清晰，互相导流；⑤ **零上传、零依赖、零 CDN**——纯前端单页。
+- **品类归位**：注册到「开发工具」品类（嵌入式簇补位；文本转 PDF 刚占文本工具品类，换品类避堆叠）；New: true；Icon `analytics`（`memory` 已被占用，实测确认；`analytics`／`pie_chart`／`storage`／`insights` 均 0 占用）。
+- **方向合规**：ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① **仅支持 GNU ld `-Map` 输出**（GCC／arm-none-eabi-gcc 等），ARMCC／IAR 暂不支持，非 GCC 文件报格式错误；② **只有输入节粒度**——ld map 默认列到 `.text.main` 级输入节，无单符号大小，要符号级请用 `nm`／`size`；③ **`.data` 类初始化段同时占 Flash（load 镜像）与 RAM**——统计已按 `load address` 归集到 Flash，页面须说明口径；④ **全程浏览器本地解析**，map 文本不出浏览器、零上传。
+
+**规格**（开发轮按此执行）：
+- **输入**：map 文本 textarea（粘贴／载入示例／清空）＋ 本地文件读取（FileReader，仅本地解析不上传）＋ `generateExampleMap()` 一键载入示例；空输入／无 GCC 标记（缺 `Memory Configuration`／`Linker script and memory map`）抛 Error（err.field="input"，页面中文提示）。
+- **解析**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `detectMapFormat(text)` → `'gcc'`｜`null`（两处标记缺一即 null）。
+  - `parseMemoryRegions(text)` → `[{name, origin, length, attrs}]`（解析 Memory Configuration 表；`*default*` 行跳过，不参与占用统计）。
+  - `parseMapSections(text)` → `[{name, vma, size, loadVma|null, entries:[{name, vma, size, file, isFill}]}]`；规则：段首行顶格三字段（名／0x 地址／0x 大小，容忍尾部 `load address 0x…`）；明细行缩进＋0x 地址＋0x 大小＋对象文件路径（末 token），`*fill*` 记 isFill=true；`Discarded input sections` 及之后整块跳过；`Archive member included` 等杂行跳过。
+  - `computeRegionUsage(regions, sections)` → `[{name, used, length, pct}]`（pct 保留两位小数）：段按 VMA 落入 region 区间计 used；若 loadVma 存在且与 VMA 不同 region，size 另计入 load 所在 region（Flash 占用含 `.data` 初始化镜像）。
+  - `topObjects(sections, n)` → `[[file, size]]` 降序（按完整路径聚合，fill 不计入文件；UI 另显示 basename）。
+  - `summarizeMap(text)` → `{regions, sections, regionUsage, topObjects, totals:{text,rodata,data,bss,fill}, sectionCount, objectCount}` 一站式供 UI 调用。
+  - `formatBytes(n)` → 中文可读（沿用家族惯例）；`generateExampleMap()` → 固定示例 map 文本（见确定性向量 SAMPLE）。
+- **确定性向量**（开发轮必须逐字命中；SAMPLE 为固定示例 map，含 FLASH 0x08000000/0x40000、RAM 0x20000000/0x8000，`.text`(0x120：startup.o 0x80＋main.o 0x40＋fill 0x4)／`.rodata`(0x20：main.o)／`.data`(0x10：main.o，load address 0x08000144)／`.bss`(0x30：main.o)）：
+  - `parseMemoryRegions(SAMPLE)` → `[{name:'FLASH',origin:0x08000000,length:0x40000,attrs:'xr'},{name:'RAM',origin:0x20000000,length:0x8000,attrs:'xrw'}]`。
+  - `parseMapSections(SAMPLE).length` = 4；`.text` 的 entries.length = 3，其中 fill 项 isFill=true；`.data` 的 loadVma = 0x08000144。
+  - `computeRegionUsage(...)` → FLASH `{used:0x150, length:0x40000}`（0x120＋0x20＋load 镜像 0x10）、RAM `{used:0x40, length:0x8000}`（0x10＋0x30）。
+  - `topObjects(sections, 2)` → `[['/build/main.o',0xA0],['/build/startup.o',0x80]]`。
+  - `parseMapSections('hello world')` 抛 Error（err.field="input"）；`detectMapFormat('Module Summary\nKind ...')`（IAR 风格）→ null。
+  - `summarizeMap(SAMPLE).totals` → `{text:0x120, rodata:0x20, data:0x10, bss:0x30, fill:0x4}`。
+- **界面**：输入区（textarea＋文件读取＋载入示例／清空）＋「解析」按钮＋结果区：① 内存占用总览卡（Flash／RAM 使用条＋百分比＋已用／剩余字节）；② 段汇总表（段名／地址／大小／占比，可点击排序）；③ 对象文件 Top20 表（文件／大小／占比，可排序）；④ 段内明细（每段可展开输入节明细，含 fill 行标识）；⑤ 「复制占用报告」（一键复制中文文本报告）＋「下载报告 .txt」；⑥ 真限制四条提示条＋隐私声明（map 不出浏览器、零上传）；所有提示中文；用户输入与结果用 textContent 或转义后插值。
+- **操作与互链**：与 HEX ↔ C 数组互转器（文案：分析完体积、hex 数据可转 C 数组贴固件）、寄存器位域查看与编辑器、Modbus RTU 帧生成器、CRC 校验和计算器互链（嵌入式簇）；不与未交付工具互链。
+- **技术路线**：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- **注册**：ID `map_memory_analyzer`、Name「MAP 文件内存分析器」、Path `/tools/map-memory-analyzer`、Category 开发工具、New: true、Icon `analytics`；中英文描述＋SEO keywords（map 文件分析、gcc map 解析、固件内存占用、链接脚本内存、linker map analyzer、arm gcc map parser、flash ram usage）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/map-memory-analyzer，相关工具互链 HEX↔C 数组互转器、寄存器位域查看与编辑器、Modbus RTU 帧生成器、CRC 校验和计算器。
+- **预计改动文件**：`templates/map_memory_analyzer.html`（新）、`static/js/map_memory_analyzer.js`（新）、`tests/map_memory_analyzer.test.js`（新）、`tools/categories.go`（注册，Path 总数 228→229）；旧测试 Path 断言 228→229 同步：`tests/bookmark_cleaner.test.js`、`tests/file_checksum.test.js`、`tests/gif_compress.test.js`、`tests/hex_c_array.test.js`、`tests/modbus_frame_tool.test.js`、`tests/regex_generator.test.js`、`tests/register_bitfield_editor.test.js`、`tests/svg_to_font.test.js`、`tests/text_to_pdf.test.js`。
+- **验收红线**：node 断言全过（上列确定性向量逐字命中）；`go build`／`go vet` 通过；Path 总数 228→229、ID／Path 双注册；真限制四条页面明示；零上传／零依赖／零 CDN 源码自检通过；与嵌入式簇四工具互链、不链未交付工具。
+
+**交付核对**：本地当前分支 muse/dev-20260929（`git fetch` 已通）；`git log` 头部 2dae438（文本转 PDF 新增）／acdb0b8（HEX ↔ C 数组互转器新增）／c3b3ca4（GIF 压缩优化器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **228**；Top3 候选重叠复核（text_to_pdf 在 categories.go 1 注册命中，为已交付项；`map_file_analyzer`／`map-analyzer`／`内存分析` 0 命中；`bitwise`／位运算 0 命中；`css-loader`／加载动画生成器 0 命中；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM／开发轮次提交，沿用研究轮惯例）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-30 08:11 · 通用调研第一百五十六轮）
+
+**交付状态**：10-30 通用调研第一百五十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**文本转 PDF 已交付闭环**（2dae438 新增：纯函数 buildPrintDoc／countChars／pageConfig 双模式导出，非法抛 Error（err.field），@media print 排版打印视图→window.print() 另存为 PDF，真限制页面明示；node 80 断言全过；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **228 Path**，ID text_to_pdf、Path `/tools/text-to-pdf` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；08:11 轮，优先小／中难度纯前端。
+**本轮三件事**（08:11 全网调研，通用方向）：
+1. 文本转 PDF 交付确认：`git log` 头部 2dae438（文本转 PDF 新增）／acdb0b8（HEX ↔ C 数组互转器新增）／c3b3ca4（GIF 压缩优化器新增）；全量 228 Path；ID `text_to_pdf`、Path `/tools/text-to-pdf` 双注册；本地当前分支 muse/dev-20260929（`git fetch` 须配 GIT_SSH_COMMAND 显式密钥后已通）。
+2. 留池复核：文本转 PDF 交付闭环，首席顺位空出；**MAP 文件内存分析器（148 轮观察项；`map_file_analyzer`／`map-analyzer` 全站 0 命中；口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR）建议晋升 P2 顺位首席**；行去重与排序器（137 轮观察项）PM 07:40 轮已实测功能被「文本工具集」覆盖（ID `texttools`、Path `/tools/text-tools`），候选池划出，不再复列；在线电台收听器（88 轮新晋）硬伤未解→继续跳过。
+3. 新信号扫描（V2EX 10-29~10-30 新帖＋HN／Reddit／dev.to／Medium 为主线）：**本轮无新晋 P2**——
+- Zipover 跨设备剪贴板（t/1252166，10-30）：桌面 App（Mac/Win/Linux 局域网配对），非网页工具，消解；
+- dtool v0.4.0（t/1252491）：给 AI Agent 用的本地 Excel 数据流水线 CLI，桌面工具非网页，消解；
+- LLMPod（t/1252272）／FrameLoom（t/1252576）／MiniCPM OCR（t/1252701）／xGoose（t/1252493）／A6API（t/1252632）：需 GPU／AI 模型／服务端中转，延续既有结论，消解；
+- word-atlas 雅思背词站（t/1251691）：整站学习型应用（词库+插画+配音+星图），非单页工具，消解；
+- DSH to Figma 插件（t/1251532）：Figma 插件，非网页工具，消解；
+- dousave 抖音/小红书/X 下载器（t/1251437）：服务端解析直链＋邀请码额度，依赖账号池与服务端，非纯前端可闭环，消解；
+- AI 时代 SOP 帖（t/1252885）：Quote Finder（AI 语录库）／植物识别（AI）／Bechdel Test／品牌 Logo 识别——均为 AI 模板站，非单页工具，消解；
+- dev.to「URL fragment 私密便签」单文件技巧：站内已有「文本分享链接生成器」（ID `url_note_share`、Path `/tools/url-note-share`，DEFLATE＋base64url＋WebCrypto AES-GCM 口令加密，0 上传）覆盖，消解；
+- Medium「10 月值得收藏的 7 个免费浏览器工具」（扫描 Show HN/BetaList/Product Hunt 近一周）：SyncWhen（免登录会议投票，投票收集需后端）／SortaSeat（婚礼座位表，生活类方向不合）／llmspeed（本地 AI 模型速度模拟，小众 AI 向）消解；OldRoll（复古胶片滤镜）站内「图片复古做旧」已覆盖，消解；urPiano（浏览器弹钢琴，娱乐非工具）消解；**新观察项两条（均为低优先）**：Calcy 式记事本计算器（逐行算式＋单位换算＋不确定度传播，纯前端可行，方向合规待 PM 确认——是否踩 10-18「泛计算器」红线）、bigwords 式 URL 大字报展示器（URL 即标语，大屏展示＋QR 码，小众）；
+- HN 近两日：Slim（micro-VM，非网页）／Pay-per-Crawl（AI 爬虫收费协议）／Ghostty 1.4（终端）／Tiny LLMs（浏览器 AI，需模型下载）均无单页新口径；
+- tubox 10-28 重发帖（t/1252552）：13 项清单逐项核对——批量压缩／改尺寸／格式转换／水印（站内已有）、AI 抠图／放大（需模型）、GIF/视频转 GIF（GIF 压缩已交付）、EXIF（站内已有）、证件照（站内「证件照裁剪排版」已覆盖）、拼图长图九宫格（站内已有）、图片标注＋二维码（站内「二维码工具」「WiFi 二维码生成器」已覆盖），无新口径，消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文本转 PDF 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮无新晋 P2、无观察项晋升，第二、三候选从观察项递补）：
+1. **MAP 文件内存分析器** — 148 轮观察项，建议晋升 P2 顺位首席（`map_file_analyzer`／`map-analyzer` 全站 0 命中真缺口；嵌入式簇同源受众（HEX↔C 数组／Modbus／寄存器位域互链）；纯前端小／中难度：map 文本→段／符号／占用统计；口径待 PM 裁定：首版先做 GCC map 还是全覆盖 GCC／ARMCC／IAR）。
+2. **位运算计算器** — 122 轮观察项（`bitwise`／位运算 全站 0 命中真缺口；与「寄存器位域编辑器」（位图置位＋C 宏生成）口径不重叠：本工具做表达式级 AND/OR/XOR/NOT/移位，支持 hex/dec/bin 互转输入与结果对照；嵌入式／算法题受众；纯前端小难度）。
+3. **CSS 加载动画生成器** — 145 轮观察项（纯前端小难度：spinner／skeleton／进度条等动画实时预览＋一键复制 CSS 代码；前端簇补位，与站内 CSS 工具互链）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：记事本式计算器（Calcy 式，方向合规待定）／URL 大字报展示器（bigwords 式，小众）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 155 轮及之前记录。
+
+**通用候选表增量**（第一百五十六轮：文本转 PDF 已交付划出（2dae438 新增；ID text_to_pdf、Path /tools/text-to-pdf 已注册；全量 228 Path；候选池划出）；行去重与排序器候选池划出（PM 07:40 轮实测被文本工具集覆盖）；**MAP 文件内存分析器建议晋升 P2 顺位首席**（148 轮观察项；口径仍待 PM 裁定）；自有实锤消解 13 项（Zipover／dtool 非网页；LLMPod／FrameLoom／MiniCPM／xGoose／A6API 延续既有结论；word-atlas 整站形态；DSH 插件非网页；dousave 需服务端；SOP 帖 AI 模板站；URL-fragment 便签站内已覆盖；Medium 榜单 SyncWhen 需后端／SortaSeat 生活类／OldRoll 已覆盖／urPiano 娱乐／llmspeed 小众；HN 无单页新口径；tubox 五发 13 项清单逐项核对无新口径）；新观察项两条低优先（记事本式计算器方向合规待定、URL 大字报小众）；全量 228 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文本转 PDF | 已交付划出（2dae438 新增；ID text_to_pdf、Path /tools/text-to-pdf 已注册；全量 228 Path；候选池划出） | — | 已实现 |
+| 行去重与排序器 | PM 07:40 轮实测被「文本工具集」覆盖（ID texttools、Path /tools/text-tools），候选池划出，不再复列 | — | 已覆盖 |
+| MAP 文件内存分析器 | 建议晋升 P2 顺位首席（148 轮观察项；map_file_analyzer／map-analyzer 全站 0 命中；嵌入式簇；口径待 PM 裁定：首版 GCC map 还是全覆盖 GCC／ARMCC／IAR） | 中 | P2（留池） |
+| 位运算计算器 | 122 轮观察项；bitwise／位运算 全站 0 命中；表达式级位运算（AND/OR/XOR/NOT/移位）＋进制互转，与寄存器位域编辑器口径不重叠；纯前端小难度 | 小 | 观察（留池） |
+| CSS 加载动画生成器 | 145 轮观察项；纯前端小难度：加载动画实时预览＋一键复制 CSS；前端簇补位 | 小 | 观察（留池） |
+| 记事本式计算器（Calcy 式） | 新观察项（低优先；Medium 榜单信号）；逐行算式＋单位换算＋不确定度传播，纯前端可行；方向合规待 PM 确认（是否踩 10-18 泛计算器红线） | 小/中 | 观察（待裁定） |
+| URL 大字报展示器 | 新观察项（低优先；bigwords 式）；URL 即标语，大屏展示＋QR 码，小众 | 小 | 观察（低） |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十六轮——文本转 PDF 交付闭环（2dae438，`/tools/text-to-pdf` 已注册，全量 228 Path），候选池划出；**MAP 文件内存分析器建议晋升 P2 顺位首席**（148 轮观察项，口径仍待 PM 裁定）；**本轮无新晋 P2**（V2EX 10-29~10-30 新帖＋HN／Reddit／dev.to／Medium 扫描 13 项信号全部消解；tubox 五发 13 项清单逐项核对无新口径；URL-fragment 便签／证件照／二维码／复古滤镜口径站内均已覆盖）；行去重与排序器按 PM 07:40 轮结论划出（被文本工具集覆盖）；第二、三候选从观察项递补：位运算计算器（122 轮，嵌入式簇配对）／CSS 加载动画生成器（145 轮，前端簇）；新观察项两条低优先（记事本式计算器方向合规待定、URL 大字报小众）；首席无硬伤可直接排期（口径裁定后），在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（`git fetch` 需 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后已通）；`git log` 头部 2dae438（文本转 PDF 新增）／acdb0b8（HEX ↔ C 数组互转器新增）／c3b3ca4（GIF 压缩优化器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **228**；Top3 候选重叠复核（text_to_pdf 在 categories.go 1 注册命中，为本轮已交付项；`map_file_analyzer`／`map-analyzer` 0 命中；`bitwise`／位运算 0 命中；在线电台收听器硬伤未解跳过；行去重与排序器已按 PM 轮结论划出，不复列；观察项 url-note-share／证件照裁剪排版／二维码工具／图片复古做旧均为已交付项，本轮消解时实测确认存在，不复列）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交，随 PM／开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-30 07:40 · 产品经理排期轮，接 155 轮调研）
 
 **选定：文本转 PDF** — 本轮唯一任务（新工具）：
