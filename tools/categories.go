@@ -1694,6 +1694,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "实用工具",
 				},
+				{
+					ID:          "signature_capture",
+					Name:        "手写签名数字化仪",
+					Description: "免费在线手写签名数字化：摄像头拍摄 / 上传白纸签名照片 / 手写签名板三路输入，灰度→Otsu 自动阈值（可手动微调）→亮色背景转透明→中值滤波去噪→连通边界框自动裁剪，一键下载/复制透明 PNG 签名图；纯前端 canvas 本地处理，图片零上传，脚本零 fetch/XHR · Signature capture: webcam / upload / draw signature → Otsu background removal → transparent PNG download & copy, 100% client-side",
+					Path:        "/tools/signature-capture",
+					Icon:        "gesture",
+					New:         true,
+					Category:    "实用工具",
+				},
 			},
 		},
 		{

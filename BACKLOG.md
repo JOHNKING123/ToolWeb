@@ -1,7 +1,79 @@
 
+## 今日任务（2026-10-30 17:22 · PM 排期决策轮）
+
+**选定：手写签名数字化仪** — 本轮唯一任务（新工具）。
+- **顺位**：研究轮（161 轮）Top3 **首席推荐**（159 轮新观察项→160 轮第二顺位；HN Signature Capture 信号；`signature_capture` 全站 0 命中真缺口；PM 本轮实测复核确认）；首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **PM 口径裁定：与 pdf_sign 边界**——`pdf_sign` 的「手写签名板」是把手绘签名**嵌入 PDF**；本工具口径是「webcam/上传纸面签名→去底→透明 PNG 下载」＋附赠手写签名板输入，**产出是独立图片文件**而非 PDF 嵌入，边界清晰可互链。另与 `mail_signature_generator`（邮件签名档文本）口径不重叠。
+- **PM 纠错**：161 轮研究推荐 Top3 中的「证件照制作器」**不作为候选**——PM 本轮实测发现 `id_photo_maker`（「证件照裁剪排版」，1寸/2寸/美签/护照尺寸＋拖拽裁剪＋换底＋5寸/6寸相纸排版）**已交付**（全量 233 Path 包含 `/tools/id-photo-maker`），该研究轮 0 命中结论失准。**证件照制作器从候选池划出**（已交付项，今后研究轮不得再复列）；Top3 顺位相应调整为：① 手写签名数字化仪 ② 文件十六进制查看器（160 轮新晋 P2，PM 实测 `hexdump`/`hex_viewer`/`hex-viewer`/`signature_capture` 全站 0 命中确认；与 hex_c_array「文本互转」口径为「查看 vs 互转」不重叠）③ 记事本式计算器仍按 08:20 轮裁定保持观察不列入（已被 unit_calc_notepad 覆盖，161 轮已划出）。
+- **未选**：文件十六进制查看器（晋升第二顺位待后轮；PM 预裁定口径：「查看 vs 互转 vs 运算」三位划分，与 hex_c_array/bitwise_calculator/base_converter 互链）；在线电台收听器（88 轮，硬伤未解→继续跳过）；Token 计数器／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器／SQLite 文件查看器（本轮新观察项，保持观察）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 仍裸跑报 `Permission denied (publickey)`——VM 换机后 root 默认 ssh 密钥不被 GitHub 接受；**按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 fetch 成功**，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`git log` 头部 baef297（断言同步）／9a9b22e（llms.txt 生成器新增）／cc8e828（截图 3D 样机渲染器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **233**；仓库为 Go 项目（go.mod，无 package.json）；未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+- **选定理由**：① 顺位即理由——无硬伤的首席递进项，不二次挑拣；② 痛点真实——签合同/申请表需要透明底电子签名图，现有路线是上传到随机网站或买扫描 App，隐私风险明确；③ 一轮可高质量交付——纯前端中难度：输入→灰度/Otsu 去底→透明 PNG 下载，全程浏览器本地；④ 图像处理簇补位——与图片压缩/格式转换/id_photo_maker 互链；⑤ 方向合规——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「实用工具」品类（与证件照裁剪排版同品类，互链顺手）；New: true；Icon `gesture`（实测 0 占用、贴签名书写主题；`draw`/`brush` 已多占，`fingerprint` 被 3 占用）。
+
+**规格**（开发轮按此执行）：
+- **三路输入页签**：① 摄像头拍摄（getUserMedia 实时取景→拍照抓帧）；② 上传照片文件（File API）；③ 手写签名板（canvas 手绘，附赠场景）。三路共用同一去底 pipeline。
+- **去底 pipeline（纯函数，确定性渲染）**：灰度化 → Otsu 自动阈值（允许手动阈值滑块微调）→ 亮色背景→透明 alpha → 孤立噪点中值滤波 → 连通边界框自动裁剪（边距滑块）→ 导出透明 PNG（原图/指定缩放；可选「加粗」增强）。
+- **UI**：左侧输入区／中间「原图 vs 去底后」对比预览／右侧参数面板（阈值自动/手动、边距、输出尺寸、加粗、背景色替换可选）＋「下载 PNG」＋「复制 PNG」。
+- **生成函数**（纯函数双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：`rgbToGray(data)`／`otsuThreshold(hist)`／`computeAlpha(imageData, threshold)`／`detectBBox(imageData)`／`cropToBBox(imageData, bbox, padding)`。浏览器侧 ImageData 适配，node 侧用等价像素数组向量。
+- **真限制（开发轮必须处理，页面明示）**：① webcam 需摄像头权限＋HTTPS 上下文（http://localhost 调试可例外）；② 建议白纸＋深色笔拍摄，复杂底纹/阴影去底效果有限；③ 无 AI 矢量化、导出栅格 PNG 非 SVG；④ 全程浏览器本地，零上传、零 fetch/XHR。
+
+**验收标准**：
+1. `go build` / `go vet` 通过；全量 Path **233→234**；所有旧测试 Path 总数断言同步（当前 10 个测试文件含 233 断言）。
+2. node 测试 ≥40 断言全过：Otsu 阈值／alpha 去底／bbox 检测／裁剪的确定性像素向量逐值命中；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/signature-capture` 200；无摄像头环境 webcam 页签优雅降级（禁用＋提示，不影响上传/手绘）。
+4. 与 `pdf_sign`／`mail_signature_generator` 互链（「签名嵌入 PDF vs 签名图下载」文案），不链未交付工具；categories.go Description 中英文双语。
+5. 真限制四条页面明示；零网络请求断言（页面脚本不发起 fetch/XHR）。
+
+**预计改动文件**：
+- `templates/signature_capture.html`（新增）
+- `static/js/signature_capture.js`（新增；纯函数＋DOM，零网络请求）
+- `tests/signature_capture.test.js`（新增；node 断言 ≥40）
+- `tools/categories.go`（注册：ID `signature_capture`／Name「手写签名数字化仪」／Path `/tools/signature-capture`／Icon `gesture`／Category「实用工具」／New: true）
+- 10 个旧测试文件的 Path 总数断言 233→234（同步更新）
+
 ---
 
-## 今日任务（2026-10-30 15:30 · PM 排期决策，接 160 轮调研）
+## 今日任务（2026-10-30 17:00 · 通用调研第一百六十一轮，接 15:30 PM 排期轮）
+
+**交付状态**：10-30 通用调研第一百六十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**llms.txt 生成器已交付闭环**（9a9b22e 新增：表单向导→标准 llms.txt 实时预览＋规范校验＋复制/下载，纯前端零上传；baef297 同步 wcag_contrast_checker 旧 Path 断言 232→233；全量 **233 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 轮，优先小／中难度纯前端。
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. llms.txt 生成器交付确认：`git log` 头部 baef297（测试断言同步）／9a9b22e（llms.txt 生成器新增）／cc8e828（截图 3D 样机渲染器）；全量 233 Path；本地当前分支 muse/dev-20260929（本轮 `git fetch` 裸跑报 `Permission denied (publickey)`——VM 换机后 root 默认 ssh 密钥不被 GitHub 接受；**按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 fetch 成功**，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. 留池复核：llms.txt 交付闭环，首席顺位空出；**手写签名数字化仪（159 轮新观察项→160 轮第二顺位；`signature_capture` 0 命中）建议晋升 P2 顺位首席**；**文件十六进制查看器（160 轮新晋 P2；`hexdump`／`hex_viewer` 0 命中）晋升第二顺位**；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；记事本式计算器（08:20 轮 PM 已裁定低优先）保持观察。
+3. 新信号扫描（HN Show 10-29~10-30＋PH 10-28~10-30＋dev.to 10-30 当日帖＋V2EX 10-29~10-30＋哎呦不错 10-30 为主线）：**新晋 P2 一项——证件照制作器**（见下）；新观察项五项——Token 计数器／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器／SQLite 文件查看器；其余全部消解或已覆盖——
+   - HN Show：Dictatus（浏览器语音听写，Web Speech API）→ 新观察项（语音听写输入器）；"A free 16-point check for how AI assistants see your website" → 新观察项（AI 可发现性自检器；与本轮已交付 llms.txt 生成器「生成 vs 检测」互补）；MiniToolDesk（35 工具全客户端工具箱，无新单页口径）；Audio-chat-box（需安装程序）；AgentEd（local-first Markdown 编辑器带 token 计数）→ 新观察项（Token 计数器）；Notedux（通用记事本，站内已有记事本类工具）；QuickRef（工具站本身）；其余 AI agent／桌面／SaaS 消解；
+   - PH：NiftyWebTools（47 免费浏览器工具：PDF／图片／开发；核心 HEIC 转 JPG）→ 新观察项（HEIC 照片转格式器；toolsdocks 167 工具帖再次列出 HEIC to JPG，双信号）；fastbrowse／Flatbread／Faylee（AI agent／桌面）——消解；
+   - dev.to 10-30 当日帖：OnDevice Desk 四工作室（护照／签证／证件照工作室、破坏性 PDF 涂黑、JFIF 300DPI 注入）→ **证件照制作器新晋 P2**（V2EX tubox 10-28 帖「30+ 规格证件照」为第二独立信号）；Tooltri（SQLite DB Viewer 纯前端打开 .db）→ 新观察项（SQLite 文件查看器；真限制：sql.js WASM 自托管体积大）；UCDREAMS Sheet Editor（XLSX 浏览器编辑器，WASM＋Worker 重实现，一轮难高质量交付）——消解；kitmul 发票／简历／求职信生成器（简历被站内 `resume_builder` 覆盖；发票属泛财务，10-18 方向修正不立项）——消解；Application Command Center（SOP／文书生成，需 AI）——消解；
+   - V2EX 10-29~10-30：t/1252885（AI 时代 SOP 帖；4 个 AI 语录／识别站全需 AI 或图像识别服务）／t/1252370（基金投资 agent，需后端）／t/1252552（tubox 图片工具箱重发，证件照信号已计入）——消解或已覆盖；
+   - 哎呦不错 10-30：send.wang（158 轮已消解）／NonsPlayer（桌面音乐播放器）——消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；llms.txt 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮新晋 P2 一项递补第三）：
+1. **手写签名数字化仪** — 159 轮新观察项→160 轮第二顺位，建议晋升 P2 顺位首席（HN Signature Capture 信号；`signature_capture` 全站 0 命中真缺口；痛点：签合同／申请表需要把手写签名变透明底电子图，现有路线是上传到随机网站或买扫描 App；webcam 拍摄→边缘检测去底→透明 PNG 下载，全程浏览器本地，纯前端中难度；真限制：需摄像头权限＋HTTPS 上下文；与站内「邮件签名生成器」（文本签名档）口径不重叠）。
+2. **文件十六进制查看器** — 160 轮新晋 P2，晋升第二顺位（dev.to 2026-10-30 当日帖 minitool.io 十二工具之一；`hexdump`／`hex_viewer`／「十六进制查看」全站 0 命中真缺口；痛点："这文件头到底是啥"——逆向／嵌入式／取证人群查二进制头靠 xxd 命令行或装 HxD，缺免装中文网页版；拖文件→偏移＋十六进制字节＋ASCII 三栏＋逐字节检查器（字节值／十进制／二进制／字符对照），纯前端小／中难度：File API＋DataView 确定性渲染，可写精确向量供 node 断言；嵌入式簇补位：与「HEX ↔ C 数组互转器」（文本互转）／「位运算计算器」互链，「查看 vs 互转 vs 运算」边界清晰；真限制：大文件（>256MB 级）须分片读取／仅预览头部，页面明示）。
+3. **证件照制作器** — 本轮新晋 P2（dev.to 2026-10-30 当日帖 OnDevice Desk「护照／签证／证件照工作室」＋V2EX 10-28 tubox「30+ 规格证件照」双独立信号；`id_photo`／`证件照`／`id-photo` 全站 0 命中真缺口；痛点：办证件／签证／入职要标准证件照，照相馆贵、免费网站要上传隐私照片；上传照片→手动框选人脸→规格裁剪（1寸／2寸／小2寸／护照／美签）→换底色（红／蓝／白）→下载，纯前端 canvas 全本地零上传，中难度；图片簇补位：与「图片压缩」／「图片格式转换」／「截图 3D 样机渲染器」互链；真限制：换底为简易色度键抠图、复杂背景效果有限，无 AI 自动抠图，页面明示）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：记事本式计算器（Calcy 式；08:20 轮 PM 已裁定低优先）；Markdown 表格转 CSV（160 轮；dev.to 信号；0 命中；小难度）；比例求解器（160 轮；dev.to 信号；0 命中；小难度）；恩尼格玛密码机模拟器（160 轮；dev.to 信号；0 命中；中难度；教学向）；打字练习（160 轮 36kr 信号；低）；JSON→Kotlin（`json_to_types` 仅 TS/Go，扩展备注）；URL 大字报展示器（156 轮，低）；Slug 生成器／Meta 标签生成器（100–101 轮；Meta 口径与站内「OG 卡片预览」相邻，独立成项待 PM 裁定）；WhatsApp 链接生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；**本轮新观察项五项**——Token 计数器（Show HN AgentEd 信号；0 命中；粘贴文本→按模型分词口径估算 token 数＋费用估算；小难度；与「代码打包给 LLM」／「提示词脱敏器」／「llms.txt 生成器」形成 LLM 工具簇互链；真限制：启发式估算非官方分词器精确值，须明示）／语音听写输入器（HN Dictatus 信号；0 命中；WPS 会员「音频转文字」免费平替口径：浏览器麦克风→实时转写→复制／下载 TXT；小难度；真限制：Web Speech API 仅 Chrome/Edge 支持且走云端识别，国内可用性待验证，须明示）／AI 可发现性自检器（HN "16-point check" 信号；0 命中；与 llms.txt 生成器「生成 vs 检测」互补：检查 llms.txt／robots.txt／sitemap／OG／结构化数据；真限制：跨站 fetch 受 CORS 限制，检测能力受限，须明示）／HEIC 照片转格式器（PH NiftyWebTools＋dev.to toolsdocks 双信号；0 命中；iPhone HEIC→JPG/PNG；中难度；真限制：需 WASM 解码器自托管体积大，或仅 Safari 原生支持，须明示）／SQLite 文件查看器（dev.to Tooltri 信号；0 命中；拖 .db→表浏览＋SQL 查询；中难度；真限制：sql.js WASM 自托管体积大，须明示）；其余 92 轮及之前留池项均保持留池／观察原状，详见 160 轮及之前记录。
+
+**通用候选表增量**（第一百六十一轮：llms.txt 生成器已交付划出（9a9b22e 新增＋baef297 断言同步；全量 233 Path；候选池划出）；**手写签名数字化仪建议晋升 P2 顺位首席**（159 轮观察项；signature_capture 0 命中）；**文件十六进制查看器晋升第二顺位**（160 轮 P2；hexdump／hex viewer 0 命中）；**证件照制作器新晋 P2**（dev.to 当日帖＋V2EX tubox 双信号；id_photo／证件照 0 命中）；新观察项五项：Token 计数器／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器／SQLite 文件查看器（均为本轮新信号，0 命中）；自有实锤消解 14 项（HN Show 6 项 AI／桌面／整站／记事本已覆盖；PH 3 项 AI agent；dev.to 4 项 WASM 重实现／泛财务／需 AI／已覆盖；V2EX 3 项 AI／重发；哎呦不错 2 项已消解／桌面）；全量 233 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| llms.txt 生成器 | 已交付划出（9a9b22e 新增＋baef297 断言同步；全量 233 Path；候选池划出） | — | 已实现 |
+| 手写签名数字化仪 | 建议晋升 P2 顺位首席（159 轮观察项→160 轮第二顺位；HN Signature Capture 信号；signature_capture 0 命中）；webcam 拍手写签名→去底→透明 PNG，本地处理；纯前端中难度；真限制：需摄像头权限＋HTTPS | 中 | P2（留池） |
+| 文件十六进制查看器 | 晋升第二顺位（160 轮新晋 P2；dev.to 2026-10-30 当日帖；hexdump／hex viewer 全站 0 命中）；拖文件→偏移＋十六进制＋ASCII 三栏＋逐字节检查器，零上传；纯前端小／中难度；嵌入式簇补位；真限制：大文件分片读取须明示 | 小/中 | P2（留池） |
+| 证件照制作器 | 本轮新晋 P2（dev.to 10-30 OnDevice Desk＋V2EX tubox 双信号；id_photo／证件照 0 命中）；上传照片→框选→规格裁剪（1寸／2寸／护照／美签）→换底色→下载，全本地零上传；纯前端中难度；图片簇补位；真限制：简易色度键抠图、无 AI 自动抠图须明示 | 中 | P2（留池） |
+| Token 计数器 | 本轮新观察项（Show HN AgentEd 信号；token_counter 0 命中）；粘贴文本→token 估算＋费用估算；纯前端小难度；LLM 工具簇补位（代码打包给 LLM／提示词脱敏器／llms.txt 生成器互链）；真限制：启发式估算非精确值须明示 | 小 | 观察（留池） |
+| 语音听写输入器 | 本轮新观察项（HN Dictatus 信号；speech_to_text 0 命中）；WPS 会员「音频转文字」免费平替口径；麦克风→实时转写→复制／下载；纯前端小难度；真限制：Web Speech API 仅 Chrome/Edge 且走云端识别、国内可用性待验证 | 小 | 观察（留池） |
+| AI 可发现性自检器 | 本轮新观察项（HN "16-point check" 信号；ai_visibility 0 命中）；与 llms.txt 生成器「生成 vs 检测」互补；真限制：跨站 fetch 受 CORS 限制 | 中 | 观察（留池） |
+| HEIC 照片转格式器 | 本轮新观察项（PH NiftyWebTools＋dev.to toolsdocks 双信号；heic 0 命中）；iPhone HEIC→JPG/PNG；中难度；真限制：需 WASM 解码器自托管体积大 | 中 | 观察（留池） |
+| SQLite 文件查看器 | 本轮新观察项（dev.to Tooltri 信号；sqlite 0 命中）；拖 .db→表浏览＋SQL 查询；中难度；真限制：sql.js WASM 自托管体积大 | 中 | 观察（留池） |
+
+**归档说明**：本轮为 10-30 通用调研第一百六十一轮——llms.txt 生成器交付闭环（9a9b22e＋baef297，`/tools/llms-txt-generator` 已注册，全量 233 Path），候选池划出；**手写签名数字化仪建议晋升 P2 顺位首席**（159 轮观察项；signature_capture 0 命中复测确认）；**文件十六进制查看器晋升第二顺位**（160 轮 P2；hexdump／hex viewer 0 命中复测确认）；**证件照制作器新晋 P2**（dev.to 当日帖 OnDevice Desk＋V2EX tubox 双独立信号；id_photo／证件照 0 命中）；新观察项五项（Token 计数器／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器／SQLite 文件查看器，0 命中，均有真限制须页面明示）；本轮消解 14 项（HN Show 6 项；PH 3 项 AI agent；dev.to 4 项；V2EX 3 项；哎呦不错 2 项）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 裸跑报 `Permission denied (publickey)`——VM 换机后 root 默认 ssh 密钥不被 GitHub 接受；**按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 fetch 成功**，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 baef297（测试断言同步 232→233）／9a9b22e（llms.txt 生成器新增）／cc8e828（截图 3D 样机渲染器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **233**；Top3 候选重叠复核（llms_txt_generator 在 categories.go 已注册，为本轮已交付项，划出；`signature_capture` 全站 0 命中，「签名」命中均为数字签名／JWT／哈希类非独立工具；`hexdump`／`hex_viewer`／「十六进制查看」0 命中，HEX ↔ C 数组互转器做文本互转、口径不重叠；`id_photo`／`证件照`／`id-photo` 0 命中，「图片裁剪」类工具做通用裁剪、无证件规格＋换底口径；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
 
 **选定：llms.txt 生成器** — 本轮唯一任务（新工具）：
 - **顺位**：研究轮（160 轮）Top3 **首席推荐**（115 轮观察项，本轮建议晋升 P2 顺位首席；`llms.txt` 全站 0 命中真缺口；AI 爬虫／Agent 浪潮持续：Perspecto 1/3 流量来自 AI 助手、PH 本周榜 Dedica「Check if AI agents can use your website」——站长需要向 AI 正确暴露网站内容，llms.txt 新兴标准手写门槛高），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。

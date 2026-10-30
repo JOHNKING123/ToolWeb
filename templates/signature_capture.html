@@ -1,0 +1,239 @@
+{{define "signature_capture"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手写签名数字化仪 - 拍照/上传/手绘签名一键去底转透明PNG | 程序员工具箱</title>
+    <meta name="description" content="免费在线手写签名数字化仪：摄像头拍摄、白纸签名照片上传、手写签名板三路输入，灰度→Otsu 自动阈值（可手动微调）→亮色背景转透明→中值滤波去噪→连通边界框自动裁剪，一键下载/复制透明 PNG 签名图。全程浏览器本地处理，图片零上传。Signature capture: webcam/upload/draw your handwritten signature, Otsu background removal, download transparent PNG, 100% client-side.">
+    <meta name="keywords" content="手写签名数字化,签名去底,签名透明背景,透明签名PNG,签名抠图,signature capture,remove signature background,transparent signature png,手写签名板">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/signature-capture">
+    <meta property="og:title" content="手写签名数字化仪 - 签名一键去底转透明 PNG">
+    <meta property="og:description" content="摄像头拍摄/上传照片/手写签名板三路输入，Otsu 自动去底生成透明 PNG 签名图，下载复制即用。纯前端本地运行，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/signature-capture">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"手写签名数字化仪","description":"免费在线手写签名数字化仪：摄像头拍摄/上传照片/手写签名板三路输入，Otsu 自动阈值去底生成透明 PNG 签名图，一键下载复制，纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/signature-capture","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sc-wrap .container { max-width: 1360px; margin: 0 auto; padding: 1.2rem; }
+        .sc-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .sc-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .sc-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .sc-privacy { display:flex; gap:.7rem; align-items:flex-start; border:2px solid #34d399; background:#ecfdf5; border-radius:.8rem; padding:.85rem 1rem; margin:0 0 1.1rem; font-size:.95rem; line-height:1.7; color:#065f46; }
+        .sc-workbench { display:grid; grid-template-columns:380px 1fr 300px; gap:1rem; align-items:start; }
+        @media (max-width:1100px) { .sc-workbench { grid-template-columns:1fr; } }
+        .sc-tabs { display:flex; gap:.4rem; margin-bottom:.8rem; }
+        .sc-tab { flex:1; border:2px solid #e5e7eb; background:#f8fafc; border-radius:.6rem; padding:.55rem .3rem; font-size:.9rem; font-weight:700; color:#4b5563; cursor:pointer; }
+        .sc-tab.on { border-color:var(--primary-color); background:#eef2ff; color:#4f46e5; }
+        .sc-tab:disabled { opacity:.5; cursor:not-allowed; }
+        .sc-video { width:100%; border-radius:.6rem; background:#111827; aspect-ratio:4/3; }
+        .sc-degrade { display:none; border:1px solid #fde68a; background:#fffbeb; color:#92400e; border-radius:.6rem; padding:.7rem .9rem; font-size:.88rem; line-height:1.8; margin-bottom:.7rem; }
+        .sc-error { display:none; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:.6rem; padding:.7rem .9rem; font-size:.88rem; line-height:1.8; margin-top:.7rem; }
+        .sc-drop { border:2px dashed #cbd5e1; border-radius:.7rem; padding:2rem 1rem; text-align:center; color:#6b7280; font-size:.92rem; cursor:pointer; line-height:2; }
+        .sc-drop.drag { border-color:var(--primary-color); background:#eef2ff; color:#4f46e5; }
+        .sc-pad { width:100%; border:2px solid #e5e7eb; border-radius:.6rem; touch-action:none; cursor:crosshair; background:#fff; display:block; }
+        .sc-row { display:flex; gap:.5rem; align-items:center; margin-top:.7rem; flex-wrap:wrap; }
+        .sc-field { margin-bottom:.9rem; }
+        .sc-field label { display:block; font-size:.88rem; font-weight:700; color:#374151; margin-bottom:.35rem; }
+        .sc-field input[type=range] { width:100%; }
+        .sc-val { font-size:.85rem; color:#4f46e5; font-weight:700; }
+        .sc-radio { display:flex; gap:.8rem; font-size:.9rem; color:#374151; margin-bottom:.4rem; }
+        .sc-radio label { display:flex; gap:.3rem; align-items:center; cursor:pointer; font-weight:400; }
+        .sc-select { width:100%; border:2px solid #e5e7eb; border-radius:.55rem; padding:.5rem .6rem; font-size:.9rem; font-family:inherit; }
+        .sc-check { display:flex; gap:.45rem; align-items:center; font-size:.9rem; color:#374151; margin-bottom:.5rem; cursor:pointer; }
+        .sc-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:.8rem; }
+        .sc-actions .btn:disabled { opacity:.45; cursor:not-allowed; }
+        .sc-preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
+        @media (max-width:640px) { .sc-preview-grid { grid-template-columns:1fr; } }
+        .sc-preview-box { border:1px solid #e5e7eb; border-radius:.6rem; padding:.6rem; }
+        .sc-preview-box h4 { margin:0 0 .5rem; font-size:.85rem; color:#6b7280; font-weight:700; }
+        .sc-preview-box canvas { width:100%; height:auto; display:block; border-radius:.4rem; }
+        .sc-checker { background-color:#fff; background-image:conic-gradient(#e5e7eb 0 25%, #ffffff 0 50%, #e5e7eb 0 75%, #ffffff 0); background-size:18px 18px; }
+        .sc-readout { font-size:.85rem; color:#4b5563; background:#f8fafc; border:1px solid #e5e7eb; border-radius:.55rem; padding:.55rem .8rem; margin-top:.7rem; line-height:1.8; min-height:2.6rem; }
+        .sc-empty { display:none; border:1px solid #fde68a; background:#fffbeb; color:#92400e; border-radius:.6rem; padding:.7rem .9rem; font-size:.9rem; line-height:1.8; margin-top:.7rem; }
+        .sc-tip { font-size:.92rem; color:#374151; line-height:1.9; }
+        .sc-tip dt { margin-top:.6rem; }
+        .sc-tip dd { margin:.2rem 0 0; color:#4b5563; }
+        .sc-links { display:flex; flex-direction:column; gap:.55rem; font-size:.92rem; }
+        .sc-links a { color:#1a0dab; }
+        .sc-link-note { color:#6b7280; font-size:.85rem; }
+        .sc-limit { background:#fffbeb; border:1px solid #fde68a; border-radius:.6rem; padding:.7rem 1rem; margin-bottom:.8rem; }
+        .sc-limit p { margin:.45rem 0; font-size:.92rem; color:#374151; line-height:1.8; }
+        .sc-privacy-sm { font-size:.88rem; color:#065f46; line-height:1.8; }
+        .sc-note { font-size:.85rem; color:#6b7280; line-height:1.8; }
+        @media (max-width:720px) { .sc-actions .btn { flex:1; justify-content:center; } }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="sc-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>✍️ 手写签名数字化仪</h1>
+            <p>摄像头拍摄 / 上传白纸签名照片 / 手写签名板三路输入，Otsu 自动阈值去底生成透明 PNG 签名图，一键下载、复制到剪贴板。全程浏览器本地处理，图片零上传。</p>
+        </div>
+        <div class="tool-content">
+            <div class="sc-privacy" role="note">
+                <div>🔒</div>
+                <div><b>隐私声明：签名图片不出浏览器。</b>拍摄、上传、绘制与去底全部在当前浏览器本地完成，不上传到任何服务器。您的手写签名只属于您自己。</div>
+            </div>
+
+            <div class="sc-workbench">
+                <div class="sc-card">
+                    <h3>📥 输入 <span class="sc-hint">（三选一）</span></h3>
+                    <div class="sc-tabs" role="tablist">
+                        <button type="button" class="sc-tab" id="sig-tab-cam" role="tab" aria-selected="false">📷 摄像头拍摄</button>
+                        <button type="button" class="sc-tab" id="sig-tab-upload" role="tab" aria-selected="true">🖼️ 上传照片</button>
+                        <button type="button" class="sc-tab" id="sig-tab-pad" role="tab" aria-selected="false">✍️ 手写签名板</button>
+                    </div>
+
+                    <div id="sig-panel-cam" style="display:none;">
+                        <div class="sc-degrade" id="sig-cam-degrade" role="note">⚠️ 当前环境不支持摄像头拍摄（需要 HTTPS 上下文与摄像头权限；http://localhost 本地调试可例外）。请改用「上传照片」或「手写签名板」，去底流程完全一致。</div>
+                        <button type="button" class="btn btn-primary" id="sig-cam-open" style="width:100%;justify-content:center;">📷 开启摄像头</button>
+                        <div id="sig-cam-live" style="display:none;margin-top:.7rem;">
+                            <video class="sc-video" id="sig-video" playsinline muted></video>
+                            <div class="sc-row">
+                                <button type="button" class="btn btn-primary" id="sig-cam-shot">📸 拍摄</button>
+                                <button type="button" class="btn btn-secondary" id="sig-cam-close">关闭摄像头</button>
+                            </div>
+                        </div>
+                        <div class="sc-error" id="sig-cam-error" role="alert"></div>
+                        <p class="sc-note" style="margin-top:.6rem;">拍摄建议：白纸平铺、光线均匀，签名占画面约 1/2，手机与纸面平行避免透视变形。</p>
+                    </div>
+
+                    <div id="sig-panel-upload" style="display:block;">
+                        <div class="sc-drop" id="sig-drop" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处">
+                            📁 点击选择图片，或把图片拖到这里<br>
+                            <span class="sc-hint">支持 PNG / JPG / WebP，≤20MB</span>
+                        </div>
+                        <input type="file" id="sig-file" accept="image/*" style="display:none;">
+                    </div>
+
+                    <div id="sig-panel-pad" style="display:none;">
+                        <canvas class="sc-pad" id="sig-pad" width="900" height="360"></canvas>
+                        <div class="sc-field" style="margin-top:.7rem;">
+                            <label for="sig-pen-width">笔粗 <span class="sc-val" id="sig-pen-width-val">5px</span></label>
+                            <input type="range" id="sig-pen-width" min="2" max="14" value="5">
+                        </div>
+                        <div class="sc-row" style="margin-top:0;">
+                            <button type="button" class="btn btn-secondary" id="sig-pad-clear">🧹 清空重写</button>
+                            <button type="button" class="btn btn-primary" id="sig-pad-use">✅ 使用此签名</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sc-card">
+                    <h3>👁️ 对比预览 <span class="sc-hint">（原图 vs 去底后）</span></h3>
+                    <div class="sc-preview-grid">
+                        <div class="sc-preview-box">
+                            <h4>原图</h4>
+                            <canvas id="sig-orig"></canvas>
+                        </div>
+                        <div class="sc-preview-box" id="sig-result-wrap">
+                            <h4>去底后（透明底）</h4>
+                            <canvas id="sig-result" class="sc-checker"></canvas>
+                        </div>
+                    </div>
+                    <div class="sc-empty" id="sig-empty" role="alert">未检测到签名笔迹：请调低阈值、关闭去噪重试，或换深色笔在白纸上重拍。</div>
+                    <div class="sc-readout" id="sig-thr-readout" aria-live="polite">尚未输入：拍摄、上传或绘制签名后自动去底。</div>
+                    <canvas id="sig-src" style="display:none;"></canvas>
+                </div>
+
+                <div class="sc-card">
+                    <h3>⚙️ 去底参数</h3>
+                    <div class="sc-field">
+                        <label>阈值模式</label>
+                        <div class="sc-radio">
+                            <label><input type="radio" name="sig-thr-mode" id="sig-thr-mode-auto" checked> 自动（Otsu）</label>
+                            <label><input type="radio" name="sig-thr-mode" id="sig-thr-mode-manual"> 手动</label>
+                        </div>
+                        <input type="range" id="sig-thr" min="0" max="255" value="160">
+                        <div><span class="sc-val" id="sig-thr-val">160</span> <span class="sc-hint">（越小保留越多，越大去得越干净）</span></div>
+                    </div>
+                    <div class="sc-field">
+                        <label for="sig-padsize">裁剪边距 <span class="sc-val" id="sig-padsize-val">12px</span></label>
+                        <input type="range" id="sig-padsize" min="0" max="100" value="12">
+                    </div>
+                    <div class="sc-field">
+                        <label for="sig-scale">输出尺寸</label>
+                        <select class="sc-select" id="sig-scale">
+                            <option value="1" selected>原尺寸</option>
+                            <option value="0.75">75%</option>
+                            <option value="0.5">50%</option>
+                            <option value="0.25">25%</option>
+                        </select>
+                    </div>
+                    <div class="sc-field">
+                        <label for="sig-bg">输出背景</label>
+                        <select class="sc-select" id="sig-bg">
+                            <option value="transparent" selected>透明</option>
+                            <option value="white">白色</option>
+                        </select>
+                    </div>
+                    <label class="sc-check"><input type="checkbox" id="sig-denoise" checked> 噪点过滤（中值滤波去孤立噪点）</label>
+                    <label class="sc-check"><input type="checkbox" id="sig-bold"> 笔画加粗（细笔签名增强一档）</label>
+                    <div class="sc-actions">
+                        <button type="button" class="btn btn-secondary" id="sig-process" style="width:100%;justify-content:center;">🔄 重新去底</button>
+                        <button type="button" class="btn btn-primary" id="sig-download" disabled>⬇ 下载 PNG</button>
+                        <button type="button" class="btn btn-secondary" id="sig-copy" disabled>📋 复制 PNG</button>
+                    </div>
+                    <p class="sc-note" style="margin-top:.6rem;">复制 PNG 需要浏览器剪贴板图片权限；若复制失败请改用下载。</p>
+                </div>
+            </div>
+
+            <div class="sc-card">
+                <h3>📖 使用说明</h3>
+                <ol class="sc-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>三路输入任选其一：<b>摄像头拍摄</b>（对准白纸签名拍照）、<b>上传照片</b>（点击或拖拽图片）、<b>手写签名板</b>（鼠标/触屏直接书写后点「使用此签名」）。</li>
+                    <li>输入后自动去底：灰度→Otsu 自动阈值→亮色背景转透明→中值滤波去噪→连通边界框自动裁剪，中间「去底后」实时预览（棋盘格为透明区域）。</li>
+                    <li>右侧微调：阈值自动/手动、裁剪边距、输出尺寸、笔画加粗、背景透明/白二选一，改动即时重新去底。</li>
+                    <li>点「下载 PNG」保存透明底签名图，或「复制 PNG」直接粘贴到 Word / 合同 / 邮件中使用。</li>
+                    <li>全程浏览器本地处理，签名图片不出浏览器；页面脚本零网络请求。</li>
+                </ol>
+            </div>
+
+            <div class="sc-card">
+                <h3>❓ 常见问题</h3>
+                <dl class="sc-tip">
+                    <dt><b>摄像头打不开怎么办？</b></dt>
+                    <dd>先确认三点：① 浏览器已授予摄像头权限（地址栏锁形图标处设为「允许」）；② 页面走 HTTPS（http://localhost 本地调试可例外）；③ 摄像头没被其他程序占用。仍不行可直接用「上传照片」或「手写签名板」，去底效果完全一致。</dd>
+                    <dt><b>为什么建议白纸＋深色笔？</b></dt>
+                    <dd>去底按「亮度」区分纸与笔迹：白纸深笔对比度最高，去得最干净。复杂底纹、阴影、纸面褶皱、浅色圆珠笔都会降低去底质量，这是亮度阈值方法的固有局限。</dd>
+                    <dt><b>能导出矢量 SVG 用在印刷品上吗？</b></dt>
+                    <dd>不能。本工具无 AI 矢量化，导出的是栅格 PNG（像素图），放大后会有锯齿。如需矢量签名，请用 Illustrator / Inkscape 对导出的 PNG 做图像描摹。</dd>
+                    <dt><b>我的签名会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，签名图片与数据不出浏览器、不经过任何服务器。</dd>
+                    <dt><b>「复制 PNG」失败怎么办？</b></dt>
+                    <dd>部分浏览器/非安全上下文不支持剪贴板图片写入，请改用「下载 PNG」再手动插入文档。</dd>
+                </dl>
+            </div>
+
+            <div class="sc-card">
+                <h3>🔗 相关工具</h3>
+                <div class="sc-links">
+                    <span><a href="/tools/pdf-sign">PDF 电子签名</a><span class="sc-link-note">（签名嵌入 PDF：在 PDF 指定位置放置签名并导出新文件；本工具产出签名图文件，pdf-sign 负责把签名嵌入 PDF——「签名图下载 vs 签名嵌入 PDF」）</span></span>
+                    <span><a href="/tools/mail-signature-generator">邮件签名生成器</a><span class="sc-link-note">（文本邮件签名档：姓名职位公司一键生成 HTML 签名；与本工具的手写图像签名口径不同）</span></span>
+                </div>
+            </div>
+
+            <div class="sc-card">
+                <h3>⚠️ 真限制说明</h3>
+                <div class="sc-limit">
+                    <p><b>① 摄像头拍摄需要摄像头权限与 HTTPS 上下文</b>（http://localhost 本地调试可例外）；无摄像头/拒绝权限时请用上传或手写板，页面会自动降级提示。</p>
+                    <p><b>② 建议白纸＋深色笔拍摄</b>：复杂底纹、阴影、纸面褶皱、浅色笔迹下去底效果有限，这是亮度阈值方法的固有局限。</p>
+                    <p><b>③ 无 AI 矢量化</b>：导出的是栅格 PNG，不是可无限放大的 SVG 矢量图，印刷级需求请后续做图像描摹。</p>
+                    <p><b>④ 全程浏览器本地处理</b>：图片与签名数据不出浏览器，零上传、零网络请求。</p>
+                </div>
+                <div class="sc-privacy-sm">🔒 <b>隐私声明</b>：本工具全部计算在您的浏览器本地完成，零网络请求、零第三方依赖、零 CDN。您的签名图片只存在于当前页面，不收集、不上传、不存储。</div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/signature_capture.js?v=1"></script>
+</body>
+</html>
+{{end}}
