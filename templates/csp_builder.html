@@ -1,0 +1,179 @@
+{{define "csp_builder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP 安全头生成器 - 可视化生成 Content-Security-Policy 响应头 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSP 安全头生成器：勾选 default-src、script-src、style-src、img-src 等 16 条常用指令，快捷关键字＋自定义源实时拼装，一键输出 Content-Security-Policy 响应头文本、<meta http-equiv> 片段与 Report-Only 测试模式，支持 report-uri / report-to 上报配置与 3 组一键预设。纯前端本地生成零上传。CSP header builder: checkboxes, presets, copy, 100% client-side.">
+    <meta name="keywords" content="CSP,Content-Security-Policy,安全头,响应头生成器,CSP 生成器,Report-Only,report-uri,内容安全策略,content security policy generator">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/csp-builder">
+    <meta property="og:title" content="CSP 安全头生成器 - 可视化生成 Content-Security-Policy">
+    <meta property="og:description" content="勾选指令＋关键字＋自定义源，实时生成 CSP 响应头文本、<meta> 片段与 Report-Only 测试模式，一键复制。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/csp-builder">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSP 安全头生成器","description":"可视化生成 Content-Security-Policy 响应头：勾选 16 条常用指令、快捷关键字＋自定义源，输出响应头文本、<meta http-equiv> 片段与 Report-Only 测试模式，一键复制；纯前端本地生成，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/csp-builder","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .csb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .csb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .csb-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .csb-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .csb-disclaimer-bar ol{margin:.2rem 0 0;padding-left:1.2rem}
+        .csb-disclaimer-bar li{margin:.25rem 0}
+        .csb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .csb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .csb-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .csb-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .csb-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .csb-btn:hover{border-color:#2563eb;color:#2563eb}
+        .csb-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .csb-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .csb-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .csb-msg-error{color:#b91c1c}
+        .csb-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .csb-out{background:#0f172a;color:#e2e8f0;border-radius:.6rem;padding:.9rem 1rem;font-size:.9rem;line-height:1.8;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all;
+            max-height:220px;overflow:auto;margin:.6rem 0 .2rem}
+        .csb-out-label{font-size:.88rem;font-weight:700;color:#374151;margin:.9rem 0 0;display:flex;align-items:center;
+            justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+        .csb-copy{padding:.4rem .8rem;font-size:.82rem;border:1px solid #d1d5db;border-radius:.45rem;background:#f9fafb;
+            color:#374151;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:.3rem}
+        .csb-copy:hover{border-color:#2563eb;color:#2563eb}
+        .csb-dir{border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .9rem;margin-bottom:.6rem;background:#fff}
+        .csb-dir-head{display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.95rem}
+        .csb-dir-check{width:1.05rem;height:1.05rem;accent-color:#2563eb;flex:none}
+        .csb-dir-name{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;color:#1d4ed8;font-size:.92rem}
+        .csb-dir-cn{color:#6b7280;font-size:.88rem}
+        .csb-kws{display:flex;gap:.4rem;flex-wrap:wrap;margin:.55rem 0 .1rem}
+        .csb-kw{padding:.28rem .7rem;font-size:.82rem;border:1px solid #d1d5db;border-radius:999px;background:#f9fafb;
+            color:#4b5563;cursor:pointer;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .csb-kw:hover{border-color:#2563eb;color:#2563eb}
+        .csb-kw.active{background:#2563eb;border-color:#2563eb;color:#fff}
+        .csb-custom{width:100%;box-sizing:border-box;margin-top:.5rem;padding:.55rem .8rem;font-size:.88rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace;border:1px solid #d1d5db;border-radius:.45rem;outline:none}
+        .csb-custom:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .csb-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.8rem}
+        .csb-field label{display:block;font-size:.88rem;font-weight:700;color:#374151;margin-bottom:.35rem}
+        .csb-field input[type="text"]{width:100%;box-sizing:border-box;padding:.6rem .8rem;font-size:.9rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace;border:1px solid #d1d5db;border-radius:.45rem;outline:none}
+        .csb-field input[type="text"]:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .csb-field .csb-hint{font-size:.8rem;color:#9ca3af;margin-top:.3rem;line-height:1.6}
+        .csb-switch{display:flex;align-items:center;gap:.6rem;margin-top:.9rem;font-size:.92rem;color:#374151;cursor:pointer}
+        .csb-switch input{width:1.05rem;height:1.05rem;accent-color:#2563eb}
+        .csb-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .csb-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .csb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .csb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .csb-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .csb-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .csb-report-grid{grid-template-columns:1fr}
+            .csb-out-label .csb-copy{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">policy</i> CSP 安全头生成器</h1>
+            <p>不用手写 Content-Security-Policy：勾选 16 条常用指令、点关键字、填自定义源，实时拼出响应头文本、&lt;meta http-equiv&gt; 片段与 Report-Only 测试模式，一键复制拿去配 Nginx / Apache / CDN。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="csb-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>所有拼装都在浏览器本地完成，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="csb-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li>本工具只产出配置文本，不验证策略是否真实生效：策略写错可能直接拦掉自家脚本，上线前请先用 Report-Only 模式观察上报。</li>
+                        <li>&lt;meta http-equiv&gt; 方式不支持 frame-ancestors、report-uri、sandbox 等部分指令，这些必须走 HTTP 响应头。</li>
+                        <li>report-uri 已趋向废弃，新项目建议优先使用 report-to（需配合 Reporting API）。</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="csb-panel">
+                <h3><i class="material-icons">auto_fix_high</i> 一键预设</h3>
+                <div class="csb-btn-row" id="csb-presets"></div>
+                <p class="csb-muted" style="margin:.7rem 0 0;">预设会覆盖当前勾选；「报告调试」预设会自动打开 Report-Only 测试模式。</p>
+            </div>
+            <div class="csb-panel">
+                <h3><i class="material-icons">checklist</i> 勾选指令</h3>
+                <div id="csb-dirs"></div>
+                <div class="csb-report-grid">
+                    <div class="csb-field">
+                        <label for="csb-report-uri">report-uri（上报地址）</label>
+                        <input type="text" id="csb-report-uri" placeholder="如 /csp-violation-report-endpoint">
+                        <div class="csb-hint">旧口径，简单直接但已趋向废弃。</div>
+                    </div>
+                    <div class="csb-field">
+                        <label for="csb-report-to">report-to（上报端点名）</label>
+                        <input type="text" id="csb-report-to" placeholder="如 csp-endpoint">
+                        <div class="csb-hint">新口径，需配合 Report-To / Reporting-Endpoints 响应头。</div>
+                    </div>
+                </div>
+                <label class="csb-switch"><input type="checkbox" id="csb-report-only"> <b>Report-Only 测试模式</b>（头名变为 Content-Security-Policy-Report-Only：只上报违规、不拦截资源）</label>
+                <div class="csb-msg" id="csb-msg">勾选左侧指令、点关键字或填写自定义源，即可实时生成。</div>
+            </div>
+            <div class="csb-panel">
+                <h3><i class="material-icons">terminal</i> 生成结果</h3>
+                <div class="csb-out-label">响应头全文
+                    <button type="button" class="csb-copy" id="csb-copy-header"><i class="material-icons" style="font-size:1rem;">content_copy</i> 复制响应头</button>
+                </div>
+                <div class="csb-out" id="csb-header-out">（尚未勾选任何指令）</div>
+                <div class="csb-out-label">&lt;meta http-equiv&gt; 片段
+                    <button type="button" class="csb-copy" id="csb-copy-meta"><i class="material-icons" style="font-size:1rem;">content_copy</i> 复制 &lt;meta&gt; 片段</button>
+                </div>
+                <div class="csb-out" id="csb-meta-out">（尚未勾选任何指令）</div>
+                <p class="csb-tip" style="margin-top:.8rem;">把「响应头全文」配到 Nginx（<code>add_header</code>）、Apache（<code>Header set</code>）或 CDN 的响应头改写里；<code>&lt;meta&gt;</code> 片段适合无法改服务器配置的静态页面，但注意上面真限制第 2 条。</p>
+            </div>
+            <div class="csb-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="csb-tip">
+                    <b>三步生成：</b>① 勾选要用的指令（不勾 default-src 时建议至少勾它作兜底）；② 点快捷关键字（如 <code>'self'</code>、<code>'unsafe-inline'</code>）或在输入框里填自定义源（多个源用空格、逗号或换行分隔，如 <code>https://cdn.example.com</code>）；③ 需要先观察效果就打开 Report-Only 测试模式，再点复制。<br>
+                    <b>源的写法：</b>关键字必须带单引号（<code>'self'</code>、<code>'none'</code>、<code>'unsafe-inline'</code>）；域名写完整 scheme（<code>https://cdn.example.com</code>）；<code>data:</code>、<code>blob:</code>、<code>https:</code> 这类 scheme 源直接填。<br>
+                    <b>已勾选但未填任何源的指令会被忽略</b>，不会输出空指令。<br>
+                    <b>隐私：</b>全部拼装在浏览器本地完成，不发起网络请求，不上传任何内容。
+                </div>
+            </div>
+            <div class="csb-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="csb-faq">
+                    <dt>生成的头直接配到 Nginx / Apache 就能生效吗？</dt>
+                    <dd>能。复制「响应头全文」，Nginx 用 <code>add_header Content-Security-Policy "...";</code>，Apache 用 <code>Header set Content-Security-Policy "..."</code>；怕配错先开 Report-Only 模式观察上报，确认无误再切正式头。</dd>
+                    <dt>为什么 <code>&lt;meta&gt;</code> 片段里有些指令不生效？</dt>
+                    <dd>这是规范限制：<code>&lt;meta http-equiv&gt;</code> 不支持 <code>frame-ancestors</code>、<code>report-uri</code>、<code>sandbox</code> 等部分指令，它们必须通过 HTTP 响应头下发——这也是本工具同时输出两种形式的原因。</dd>
+                    <dt>report-uri 和 report-to 该用哪个？</dt>
+                    <dd>report-uri 写上报地址即可，简单直接，但已趋向废弃；report-to 是新口径，需要额外配置 <code>Report-To</code> / <code>Reporting-Endpoints</code> 响应头声明端点。新项目建议优先 report-to。</dd>
+                    <dt><code>'unsafe-inline'</code> 是不是不安全？</dt>
+                    <dd>是的。它会放行页面内所有内联脚本和样式，基本抵消了 CSP 对 XSS 的防护价值；能改代码就优先用 nonce 或 hash，实在改不动再用它过渡。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。指令拼装、预设、复制全部在浏览器本地完成，JS 不含网络请求调用，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="csb-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="csb-related">
+                    <a href="/tools/http-header-analyzer" class="btn btn-secondary" style="font-size:.9rem;">HTTP 响应头分析器（生成 vs 检测：本工具生成 CSP 配置文本；上线后把线上响应头粘贴过去，检测 CSP 是否真实生效）</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/csp_builder.js?v=1"></script>
+</body>
+</html>
+{{end}}

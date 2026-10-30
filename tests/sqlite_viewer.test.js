@@ -135,7 +135,7 @@ ok(/https:\/\/www\.johnkingzcq123\.xyz\/tools\/sqlite-viewer/.test(TPL_SRC), "�
 ok(/"@type":"SoftwareApplication"/.test(TPL_SRC), "JSON-LD SoftwareApplication");
 ok(/<meta property="og:title"/.test(TPL_SRC), "OG 标签");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-ok(new Set(paths).size === 236, "全量 Path 数 236（实得 " + new Set(paths).size + "）");
+ok(new Set(paths).size === 237, "全量 Path 数 237（实得 " + new Set(paths).size + "）");
 
 /* ---------- 9. 互链（文件查看 vs 文本格式化 vs 字节查看） ---------- */
 ok(TPL_SRC.indexOf("/tools/csv-table-viewer") !== -1, "互链 CSV 表格查看器");

@@ -247,6 +247,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "csp_builder",
+					Name:        "CSP 安全头生成器",
+					Description: "可视化生成 Content-Security-Policy 响应头：勾选 default-src/script-src/style-src/img-src 等 16 条常用指令、快捷关键字＋自定义源，输出响应头文本、<meta http-equiv> 片段与 Report-Only 测试模式，report-uri/report-to 上报配置，3 组一键预设，一键复制，只产出配置文本不验证策略生效，纯前端零上传 · CSP security header generator: build Content-Security-Policy from 16 directive checkboxes, presets, Report-Only mode, copy, 100% client-side",
+					Path:        "/tools/csp-builder",
+					Icon:        "policy",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prettier_config_generator",
 					Name:        "Prettier 配置生成器",
 					Description: "可视化勾选/填写 14 项 Prettier 3 口径核心选项（printWidth、tabWidth、semi、singleQuote、trailingComma 等），3 组一键预设，实时生成标准 JSON（2 空格缩进），一键复制、下载 .prettierrc.json，数值非法中文提示，纯前端零上传 · Prettier config generator: build .prettierrc.json from 14 core options, presets, copy & download, 100% client-side",
