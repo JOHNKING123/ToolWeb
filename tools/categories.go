@@ -2155,6 +2155,15 @@ func GetCategories() []Category {
 					Category:    "营销工具",
 				},
 				{
+					ID:          "slug_generator",
+					Name:        "Slug 生成器",
+					Description: "文章标题一键转 URL slug：英文 NFKD 去重音规范化、中文转拼音（内置常用字表，首屏延迟加载），分隔符 -/_、最大长度单词边界截断、拼音开关，多行批量＋实时预览/复制/下载，纯前端本地生成 · URL slug generator: title to slug, diacritics normalization, Chinese to pinyin, separator & max-length options, batch mode, copy & download, 100% client-side",
+					Path:        "/tools/slug-generator",
+					Icon:        "short_text",
+					New:         true,
+					Category:    "营销工具",
+				},
+				{
 					ID:          "robots_txt_generator",
 					Name:        "robots.txt 生成器",
 					Description: "可视化拼装 robots.txt：多 User-agent 规则组编辑器（增删组、Allow/Disallow 行），Crawl-delay 抓取延迟，Sitemap 列表，四种常用模板一键加载，实时预览输出文本，中文化基础校验（空 User-agent、路径缺前导 /、Sitemap 非 URL 中文提示），一键复制、Blob 下载 robots.txt，纯前端本地生成不出浏览器 · Robots.txt generator: multi user-agent rule groups, crawl-delay, sitemap, templates, copy & download, 100% client-side",

@@ -138,7 +138,7 @@ ok(GO_SRC.indexOf('Icon:        "contrast"') >= 0, "注册 Icon contrast");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 239, "注册 Path 总数 238→239");
+eq(Object.keys(uniq).length, 240, "注册 Path 总数 239→240");
 ok(TPL_SRC.indexOf("wcag-contrast-checker") >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("请按需改写") >= 0, "模板含请按需改写提示");
 ok(TPL_SRC.indexOf("按 WCAG 2.x 相对亮度公式判定，不承诺 APCA 口径") >= 0, "真限制：不承诺 APCA");

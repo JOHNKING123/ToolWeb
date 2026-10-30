@@ -3,7 +3,7 @@
  * 覆盖：规格确定性向量逐值命中（parseLine 字段切分、大小写严格、注释/空行分类、
  * 缺字段/多余字段/重复记录/可疑 TAG-ID、非法参数抛 Error 的 err.field）、
  * 变量记录（1.1 已知/1.0 旧版/未知）、两组示例结构与统计、
- * categories.go 注册（Path 总数 238→239）与零网络请求静态检查、
+ * categories.go 注册（Path 总数 239→240）与零网络请求静态检查、
  * 模板真限制三条、与 robots.txt 生成器/校验与测试器双向互链（生成 vs 校验）、
  * Description 中英文双语、不链未交付工具。
  */
@@ -136,7 +136,7 @@ var robotsValIdx = GO_SRC.indexOf('"robots_txt_validator"');
 ok(robotsValIdx >= 0 && adsIdx > robotsValIdx, "注册紧邻 robots_txt_validator 之后（家族相邻）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 239, "注册 Path 总数 238→239");
+eq(pathCount, 240, "注册 Path 总数 239→240");
 
 /* ---------- 10. 模板：真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/ads-txt-validator", "模板 canonical 含新 Path");

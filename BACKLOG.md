@@ -1,3 +1,343 @@
+## 今日任务（2026-10-31 05:00 · PM 排期决策轮，接 05:00 通用调研第一百六十七轮）
+
+**选定：Slug 生成器** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（167 轮）Top3 **顺位首席**（166 轮建议第二顺位递补上来的 P2 顺位首席；100–101 轮观察项出身）→ **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例）。
+- **PM 独立零重叠实测（163 轮误判教训：必须 grep 模板＋static/js＋categories.go 三处＋横扫近义词）**：`slug` 三处 **0 命中**真缺口；横扫 `pinyin`／`拼音` 仅命中 `gbt7714_reference_generator`（引文作者姓拼音转写）、`landing_page_grader`（营销文案中「拼音首字母搜索」无关文本）、`http_status_reference`（0 条实质命中）——均为**无关文本**，与标题→URL slug 口径不重叠；比例求解器（`ratio_solver`／比例求解）三处 0 命中保持第二顺位待命；网站上线检查清单（`launch_checklist`／上线检查）三处 0 命中保持第三顺位待命（pdf_sign `.pgs-checklist` 为签名定位表、csp_builder `checklist` 为 material icon 名，均为无关文本）；一键图片去背景 ONNX ~40MB 硬伤未解继续低优先观察；视频转码/压缩器 ffmpeg.wasm ~30MB 硬伤未解继续低优先观察。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——博客/CMS 发文时 URL slug 手工转写麻烦，中文标题无法直接用，手工转写易出错；③ **一轮可高质量交付**——纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；④ **SEO 工具簇补位**——与「OG 社交卡片预览」同簇双向互链，与「URL 编码/解码」单向链入；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「营销工具」品类（与 og_card_preview 同品类，SEO 同簇互链顺手）；New: true；Icon `short_text`（实测 Icon 口径 **0 占用**；备选 `spellcheck` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **标题→slug 生成**：标题输入框（支持单行与多行批量：每行一个标题→逐行输出 slug）→ 英文规范化（NFKD 去重音、小写、非字母数字转连字符、连续连字符合并、首尾连字符裁剪）→ 中文转拼音（内置常用字拼音映射表；拼音模式可开关，关闭时非拉丁字符直接删除）→ 选项：分隔符（`-`/`_`）、最大长度（按单词边界截断、不留尾连字符）→ 实时预览 ＋ 一键复制/下载；附「批量模式每行一个标题」提示。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `slugify(text, options)` → string；options `{separator:'-'|'_'（默认'-'）, maxLength:number（默认0=不限）, pinyin:boolean（默认true）}`。
+  - 拼音表：开发轮内置常用字映射表并**逐字向量锁定**（中文向量必须与表逐字一致）。
+- **确定性向量**（开发轮必须逐字命中；中文向量以开发轮拼音表为准）：
+  - `slugify("Hello World")` → `"hello-world"`。
+  - `slugify("  Café — Résumé  ")` → `"cafe-resume"`（NFKD 去重音）。
+  - `slugify("a:b=c:d 换算", {pinyin:false})` → `"a-b-c-d"`。
+  - `slugify("工具网站")` → `"gong-ju-wang-zhan"`（按开发轮拼音表；开发轮必须用其表内向量逐字断言）。
+  - `slugify("Hello World", {separator:"_"})` → `"hello_world"`。
+  - `slugify(longText, {maxLength:50}).length <= 50` 且结果不以连字符结尾（单词边界截断）。
+  - `batchSlugs("Hello World\nCafé Latte")` → `["hello-world","cafe-latte"]`。
+  - `slugify(123)` 抛 Error（err.field="text"）；`slugify("ok", {separator:"*"})` 抛 Error（err.field="separator"）。
+- **界面**：标题输入区（单行/多行切换或自动识别）＋ 选项（分隔符、最大长度、拼音开关）＋ 实时预览 ＋ 示例一键填充（中英文各一组）＋ 一键复制/下载 ＋ 真限制提示条；所有提示中文。
+- **操作与互链**：与「OG 社交卡片预览」（文案：slug 定好了？用 OG 社交卡片预览看看分享出去的样子）双向互链；与「URL 编码/解码」单向链入（文案：slug 需要做 URL 编码？）；不与未交付工具（比例求解器／网站上线检查清单尚未交付）互链。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域；拼音表内置本地（首屏延迟加载，须明示）。
+- **注册**：ID `slug_generator`、Name「Slug 生成器」、Path `/tools/slug-generator`、Category 营销工具、New: true、Icon `short_text`（备选 `spellcheck`）；中英文描述＋SEO keywords（Slug 生成器、URL slug、中文转拼音、slug generator、pinyin slug、网址别名）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/slug-generator，相关工具互链 OG 社交卡片预览＋URL 编码/解码。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 拼音转换基于内置常用字映射表，生僻字／表外字会被删除，转换结果请人工复核；② 仅做 URL 路径片段规范化，不保证整 URL/域名可用；③ 全部本地生成，标题内容不出浏览器。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **239→240**；所有含 Path 总数断言的旧测试文件同步（以 `grep -n '239' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：slugify／batchSlugs 确定性向量逐值命中（英文规范化、去重音、拼音表逐字向量、分隔符选项、最大长度单词边界截断、批量）；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/slug-generator` 200；输入样例 → 预览与向量一致；一键复制/下载可用；两组示例一键填充正确；拼音表首屏延迟加载可验证。
+4. 与 OG 社交卡片预览双向互链（SEO 同簇文案），与 URL 编码/解码单向链入，不链未交付工具；categories.go Description 中英文双语。
+5. 真限制三条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+---
+
+## 今日任务（2026-10-31 05:00 · 通用调研第一百六十七轮，接 03:00 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百六十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**ads.txt 校验器已交付闭环**（dba1b0f 新增：粘贴 ads.txt 逐行解析（记录/注释/空行＋行号，域名/账号ID/账号类型/认证机构ID字段切分）＋IAB 1.1 中文化错误警告分级校验，2 组示例与复制/下载/重置导出，与 robots.txt 生成器/校验与测试器双向互链（生成 vs 校验）；旧测试 Path 总数断言 238→239 同步（12 处，含补齐 robots 轮遗漏的 174 旧断言）；全量 **239 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:00 轮，优先小／中难度纯前端。
+**本轮三件事**（05:00 全网调研，通用方向）：
+1. ads.txt 校验器交付确认：`git log` 头部 dba1b0f（ads.txt 新增）／a874a62（断言补齐 237→238）／72682d4（结构化提示词构建器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **239**；`ads_txt_validator` 已注册（/tools/ads-txt-validator），templates/ads_txt_validator.html＋static/js/ads_txt_validator.js＋tests/ads_txt_validator.test.js 三新增；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - `ads_txt`／`ads.txt`：已交付（dba1b0f）；命中仅新模板/JS/注册＋robots.txt 同家族互链——划出候选池。
+   - `slug`：三处 0 命中真缺口——**Slug 生成器递补 P2 顺位首席**。
+   - `ratio_solver`／比例求解／比例计算：三处 0 命中真缺口——**比例求解器（160 轮留池项）建议晋升第二顺位**。
+   - `ffmpeg`／视频转码：三处仅 static/js/http_status_reference.js 无关文本命中——**视频转码/压缩器保持低优先观察**（~30MB 硬伤未解）。
+   - `bg_remove`／去背景／背景移除：三处 0 命中——**一键图片去背景保持低优先观察**（ONNX ~40MB 硬伤未解）。
+   - `launch_checklist`／上线检查／检查清单：三处 0 命中（pdf_sign 的 `.pgs-checklist` 为签名定位表、csp_builder 的 checklist 为 material icon 名，均为无关文本）——**新观察项：网站上线检查清单**（下）。
+   - `whatsapp`：三处 0 命中——WhatsApp 链接生成器保持观察。
+3. 新信号扫描（V2EX 10-25~10-28＋HN Show HN＋dev.to 10-09~10-30＋Medium 10-25~10-30＋Reddit/中文全网 为本轮主线）：**新晋 P2 无；新观察项一项**——网站上线检查清单（双独立信号）；其余全部消解或被已交付覆盖——
+   - V2EX：t/1250428 md2chat（10-20；**站内 `md_to_chat`「Markdown 聊天图文转换器」已交付**（templates/md_to_chat.html＋static/js/md_to_chat.js，Path `/tools/md-to-chat`），信号被已交付覆盖，消解）／t/1251658 Meme Video Maker（10-25；付费 AI 视频 SaaS，短梗/趋势生成需 AI 后端，消解）／t/1252312 AI Tiny Desk（10-27；TikTok 视频复刻/乐队换人，AI 后端，消解）／t/1252552 tubox 重发（10-28；165 轮已处理，消解）／t/1250522 protohub 重发（10-21；165 轮已处理，SaaS 托管类，消解）；
+   - HN Show HN：VideoMentions（YouTube spoken words 搜索；serverless 后端抓字幕，消解）／MrScraper（可视化爬虫；注册墙 SaaS，消解）／Jesus quotes 单页阅读器（内容站非工具，消解）／Markdown page（markdown→网页发布，需托管/后端，消解）／Sphinx git hook（166 轮已消解，需本地 CLI 安装，消解）；
+   - dev.to：**Website launch checklist（10-09；browser-only，36 项＋localStorage 持久化＋MIT 开源→网站上线检查清单信号一）**／Daily Solutions（10-27；166 轮已拆出视频转码信号，其余图像/PDF 口径已覆盖，消解）／Fileora 149 tools（竞品整站；SEO 自曝最大查询组是单位换算器，战略级信息无新单工具信号，消解）／Small Home Tools（10-30；用户方向修正排除，166 轮已消解）／Byte-Kit 24 dev tools（10-10；竞品整站；JWT decoder 等单项站内已覆盖，消解）／DevOmniTools 79+（竞品整站，消解）／JUMP（macOS menu bar App 非网页口径，消解）；
+   - Medium：FindAIForMe（免费 AI 工具导航站 9364 个；导航类非单工具，消解）／淘龙 AI 指南（AI SaaS 软文，消解）；
+   - Reddit/中文全网：Reddit 搜索仅命中 idea-mining 方法论文章（无具体工具信号）；**suchatool.cn 速查在线工具箱「网站上线与运维」合集（crawl 10-30 fresh；其「网站上线检查清单」：域名可达性/HTTPS 安全/抓取索引/性能体验/内容合规与运维 54 项，权重评分＋必做阻断项→网站上线检查清单信号二，与 dev.to 10-09 独立互证）**；合集内其余单项（SPF/DNS 记录生成器、混合内容扫描清单、TLS 配置检查清单、Nginx 配置生成器、sitemap 拆分索引生成器）为观察备选，暂不立项。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；ads.txt 校验器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **Slug 生成器** — 递补 P2 顺位首席（166 轮建议第二顺位；100–101 轮观察项；`slug` 0 命中复测（本轮）；痛点：博客/CMS 发文时 URL slug 手工转写麻烦，中文标题无法直接用；输入标题→英文规范化（小写/连字符/去特殊字符）＋中文转拼音 slug＋长度截断＋预览，纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；SEO 工具簇补位（sitemap 生成器／OG 社交卡片预览互链）；真限制：拼音转换用内置常用字表（首屏延迟加载），生僻字回退原字符，须明示）。
+2. **比例求解器** — 建议晋升第二顺位（160 轮留池项；`ratio_solver`／比例求解三处 0 命中复测（本轮）；痛点：a:b=c:d 已知三求一、配方/图纸/模型缩放换算心算易错；输入已知三项→交叉相乘求解＋化简显示＋常用比例预设（16:9/4:3/A4），纯前端小难度：纯函数确定性计算，可写逐字向量；数学工具簇补位；真限制：仅线性比例，不做复合单位换算须明示）。
+3. **网站上线检查清单** — 新观察项→建议晋升第三顺位（本轮新观察项；dev.to 10-09 browser-only checklist（36 项＋localStorage）＋suchatool.cn 竞品「网站上线检查清单」（54 项＋权重评分＋必做阻断项）双独立信号互证；`launch_checklist`／上线检查三处 0 命中真缺口（pdf_sign/csp_builder 命中均为无关文本）；痛点：上线网站杂事多，漏一项就「能打开但搜不到」或「慢却查不出原因」；分类清单（域名可达性／HTTPS 安全／抓取索引／性能体验／内容合规与运维）＋逐项勾选＋权重就绪得分＋必做阻断项标红＋localStorage 进度持久＋导出/打印，纯前端小难度：评分纯函数可写逐字向量；网站站长/SEO 工具簇补位（robots.txt 生成器／ads.txt 校验器／CSP 安全头生成器／HTTP 响应头分析器互链）；真限制：清单为静态核对＋自评打分，不做真实联网检测（如 DNS/TLS 实测需后端），须明示）。
+
+其余观察项保持原状：**视频转码/压缩器（166 轮新观察项**，ffmpeg.wasm core ~30MB 硬伤，低优先）／**一键图片去背景（165 轮新观察项**，ONNX ~40MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察，markdown_to_excel 重叠硬伤）／P2P 文件传输器（164 轮新观察项，WebRTC 信令硬伤，低优先）／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器（硬伤未解）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮；whatsapp 0 命中复测）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（json_to_types 仅 TS/Go，扩展备注）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 166 轮及之前记录。
+
+**通用候选表增量**（第一百六十七轮：ads.txt 校验器已交付划出（dba1b0f 新增；全量 239 Path；候选池划出）；**Slug 生成器递补 P2 顺位首席**（166 轮建议第二顺位；`slug` 0 命中复测；小难度）；**比例求解器建议晋升第二顺位**（160 轮留池项；`ratio_solver` 0 命中复测；小难度）；**网站上线检查清单新观察项→建议晋升第三顺位**（dev.to 10-09＋suchatool.cn 竞品双信号；`launch_checklist`／上线检查 0 命中；小难度；SEO/站长工具簇补位；真限制：静态核对不做真实联网检测须明示）；本轮新信号 15 项全部消解或被已交付覆盖（V2EX 5 项：md2chat 被已交付 md_to_chat 覆盖／Meme Video Maker 需 AI 后端／AI Tiny Desk 需 AI 后端／tubox 重发已处理／protohub 重发已处理；HN Show HN 5 项：VideoMentions 需后端／MrScraper SaaS／Jesus quotes 内容站／Markdown page 需托管／Sphinx 需 CLI；dev.to 7 项：launch checklist 拆出新观察项／Daily Solutions 余口已覆盖／Fileora 竞品整站／Small Home Tools 方向排除／Byte-Kit 竞品整站／DevOmniTools 竞品整站／JUMP 非网页口径；Medium 2 项：FindAIForMe 导航类／淘龙 AI 软文；Reddit/中文：方法论文章无信号）；视频转码/压缩器／一键图片去背景／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 239 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| ads.txt 校验器 | 已交付划出（dba1b0f 新增；旧测试断言 238→239 同步 12 处；全量 239 Path；候选池划出） | — | 已实现 |
+| Slug 生成器 | 递补 P2 顺位首席（166 轮建议第二顺位；100–101 轮观察项；`slug` 0 命中复测；标题→URL slug（英文规范化＋中文转拼音）；纯前端小难度；SEO 工具簇补位；真限制：拼音内置常用字表、生僻字回退须明示） | 小 | P2（留池） |
+| 比例求解器 | 建议晋升第二顺位（160 轮留池项；`ratio_solver`／比例求解三处 0 命中复测；a:b=c:d 交叉相乘求解＋常用比例预设；纯前端小难度；真限制：仅线性比例须明示） | 小 | 观察→P2（建议） |
+| 网站上线检查清单 | 本轮新观察项→建议晋升第三顺位（dev.to 10-09 36 项＋localStorage＋suchatool.cn 竞品 54 项＋权重评分＋阻断项双信号；`launch_checklist`／上线检查 0 命中；分类勾选＋权重就绪得分＋阻断项标红＋localStorage 持久＋导出；纯前端小难度；SEO/站长工具簇补位；真限制：静态核对不做真实联网检测须明示） | 小 | 观察→P2（建议） |
+| 视频转码/压缩器 | 166 轮新观察项（dev.to Daily Solutions 信号；ffmpeg.wasm ~30MB 硬伤，低优先；与 video-frame-extractor 帧提取口径不重叠） | 大 | 观察（低优先） |
+| 一键图片去背景 | 165 轮新观察项（V2EX tubox＋Medium Toolwel 双信号；ONNX ~40MB 硬伤，低优先；与证件照换底口径不重叠） | 大 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百六十七轮——ads.txt 校验器交付闭环（dba1b0f，`/tools/ads-txt-validator` 已注册，全量 239 Path），候选池划出；**Slug 生成器递补 P2 顺位首席**（166 轮建议第二顺位；`slug` 0 命中复测确认）；**比例求解器建议晋升第二顺位**（160 轮留池项；`ratio_solver` 0 命中复测确认）；**网站上线检查清单**（本轮新观察项，dev.to 10-09 browser-only checklist＋suchatool.cn 竞品 54 项权重评分清单双独立信号互证，`launch_checklist`／上线检查 0 命中真缺口，小难度，建议晋升第三顺位）新晋观察项；本轮消解 15 项（V2EX 5 项：md2chat 被已交付 md_to_chat 覆盖（教训信号：调研复核时先查站内 ID 再立项）／Meme Video Maker 需 AI 后端／AI Tiny Desk 需 AI 后端／tubox 重发已处理／protohub 重发已处理；HN Show HN 5 项：VideoMentions 需 serverless 后端／MrScraper 注册墙 SaaS／Jesus quotes 内容站非工具／Markdown page 需托管后端／Sphinx 需本地 CLI 安装；dev.to 7 项：launch checklist 拆出新观察项／Daily Solutions 余口已覆盖／Fileora 竞品整站（附带战略信息：其 SEO 自曝最大查询组是单位换算器）／Small Home Tools 方向排除／Byte-Kit 竞品整站／DevOmniTools 竞品整站／JUMP macOS App 非网页口径；Medium 2 项：FindAIForMe AI 工具导航非单工具／淘龙 AI 软文；Reddit/中文：方法论文章无具体信号；suchatool.cn 合集内 SPF/DNS/混合内容/TLS/Nginx/sitemap 拆分 6 项暂列观察备选）；一键图片去背景（ONNX 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 dba1b0f（ads.txt 新增）／a874a62（断言补齐 237→238）／72682d4（结构化提示词构建器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **239**；Top3 候选重叠复核（`ads_txt_validator` 已交付划出；`slug` 三处 0 命中；`ratio_solver`／比例求解三处 0 命中；`launch_checklist`／上线检查／检查清单三处 0 命中（pdf_sign `.pgs-checklist` 为签名定位表、csp_builder `checklist` 为 material icon 名，均为无关文本）；`ffmpeg` 三处仅 http_status_reference.js 无关文本；`bg_remove` 三处 0 命中；`whatsapp` 三处 0 命中；md2chat 信号确认站内 `md_to_chat` 已交付（/tools/md-to-chat）消解；Markdown 表格转 CSV 保持观察（与 markdown_to_excel 重叠硬伤）；P2P 信令／语音听写／AI 可发现性／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 03:00 · PM 排期决策轮，接 03:00 通用调研第一百六十六轮）
+
+**选定：ads.txt 校验器** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（166 轮）Top3 **顺位首席**（165 轮建议第二顺位递补上来的 P2 顺位首席）→ **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例）。
+- **PM 独立零重叠实测（163 轮误判教训：必须 grep 模板＋static/js＋categories.go 三处＋横扫近义词 ID）**：`ads_txt`／`ads.txt` 三处 **0 命中**真缺口；横扫 `ads|advert|validator` 仅命中同家族 `robots_txt_generator`（robots.txt 生成器）、`robots_txt_validator`（robots.txt 校验与测试器）——均为「生成 vs 校验」同家族的**补位互链项**，不是重叠；Slug 生成器／比例求解器三处 0 命中保持第二/第三顺位待命；一键图片去背景 ONNX ~40MB 硬伤未解继续低优先观察；视频转码/压缩器 ffmpeg.wasm ~30MB 硬伤未解继续低优先观察。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——网站主 ads.txt 手写易错（字段缺失／账号类型写错），错一行丢广告收入，IAB 规范手工对麻烦；③ **一轮可高质量交付**——纯前端小难度：纯函数逐行解析，可写确定性向量供 node 断言；④ **SEO/营销工具簇补位**——与「robots.txt 生成器／robots.txt 校验与测试器」同家族「生成 vs 校验」双向互链；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「营销工具」品类（与 robots_txt_generator／robots_txt_validator 同品类，互链顺手）；New: true；Icon `ads_click`（实测 Icon 口径 **0 占用**，贴广告域主题；备选 `gpp_good` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **粘贴→逐行校验**：ads.txt 文本输入框（多行 textarea，支持示例一键填充）→ 逐行解析成记录行/注释行/空行/非法行 → 记录行字段切分（域名／发布商账号 ID／账号类型 DIRECT|RESELLER／认证机构 ID 可选／rel 关系可选，首尾空格自动裁剪）→ 输出错误/警告列表（带行号＋中文提示＋IAB 规范依据）＋ 字段明细表（行号／类型／域名／账号／账号类型／认证机构，错误行标红、警告行标黄）＋ 统计条（记录总数／错误数／警告数）＋ 一键复制结果／下载 `.txt`；附「仅语法规范校验、不验证卖方账号真实性」提示条。
+- **校验规则**（按 IAB Ads.txt 1.1 规范；失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - 错误（error）：字段数 <3（缺必要字段）；账号类型非 DIRECT/RESELLER（大小写严格，全小写也判错并提示须大写）；域名为空；记录行混入未知结构。
+  - 警告（warning）：字段数 >4（多余字段）；认证机构 ID 格式可疑（非 32 位 hex 且非 known CA id 词表时警告）；重复记录（同三字段组合出现两次）；contact=/subdomain= 等非记录行按说明行原样标注不报错。
+  - 行级函数 `parseLine(text, lineNo)` → `{lineNo, raw, kind: 'record'|'comment'|'blank'|'invalid', fields?, errors:[], warnings:[]}`。
+  - 整体函数 `validateAdsTxt(text)` → `{records, errors, warnings, stats}`（errors/warnings 为跨行汇总；非法 text 非字符串抛 Error，err.field="text"）。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `parseLine("google.com, pub-12345, DIRECT, f08c47fec0942fa0", 1)` → `{lineNo:1, kind:"record", fields:{domain:"google.com", accountId:"pub-12345", accountType:"DIRECT", certAuthorityId:"f08c47fec0942fa0"}, errors:[], warnings:[]}`。
+  - `parseLine("google.com, pub-12345, direct", 2).errors` 非空（账号类型须大写，提示「账号类型必须为 DIRECT 或 RESELLER（大写）」）。
+  - `parseLine("google.com, pub-12345", 3).errors` 非空（缺必要字段：账号类型）。
+  - `parseLine("# 这是注释", 4)` → `{lineNo:4, kind:"comment"}`；`parseLine("", 5)` → `{lineNo:5, kind:"blank"}`。
+  - `parseLine("google.com, pub-12345, DIRECT, f08c47fec0942fa0, extra", 6).warnings` 非空（多余字段被忽略）。
+  - `validateAdsTxt("google.com, pub-12345, DIRECT\ngoogle.com, pub-12345, DIRECT\n")` → `stats.records===2` 且 warnings 含重复记录提示。
+  - `validateAdsTxt(123)` 抛 Error（err.field="text"）。
+- **界面**：ads.txt 粘贴区 ＋ 示例一键填充（标准谷歌样例＋含错样例两组）＋ 校验按钮（输入即时校验，debounce）＋ 错误/警告列表（行号＋中文提示）＋ 字段明细表 ＋ 统计条 ＋ 一键复制/下载 ＋ 真限制提示条；所有提示中文。
+- **操作与互链**：与「robots.txt 校验与测试器」（文案：同为网站站长必备清单文件，也可用 robots.txt 校验与测试器检查爬虫规则）双向互链；与「robots.txt 生成器」单向链入（文案：生成好了 robots.txt？）；不与未交付工具（Slug 生成器／比例求解器尚未交付）互链。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `ads_txt_validator`、Name「ads.txt 校验器」、Path `/tools/ads-txt-validator`、Category 营销工具、New: true、Icon `ads_click`（备选 `gpp_good`）；中英文描述＋SEO keywords（ads.txt 校验器、ads.txt 验证、IAB 规范、Authorized Digital Sellers、广告卖方验证、ads txt checker）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/ads-txt-validator，相关工具互链 robots.txt 生成器＋robots.txt 校验与测试器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 仅做语法规范校验，不验证卖方账号真实性——账号是否为真实授权发布商需自行向 SSP/广告平台核实；② 按 IAB Ads.txt 1.1 版规范校验，旧版/实验性字段以警告而非错误处理；③ 全部本地校验，粘贴的 ads.txt 内容不出浏览器。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **238→239**；所有含 Path 总数断言的旧测试文件同步（`grep -n 'size === 238' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：parseLine／validateAdsTxt 的确定性向量逐值命中（字段切分、大小写严格、注释/空行分类、重复记录警告、多余字段警告）；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/ads-txt-validator` 200；粘贴样例 → 错误/警告列表与明细表与向量一致；一键复制/下载可用；两组示例一键填充正确。
+4. 与 robots.txt 生成器／robots.txt 校验与测试器双向互链（「生成 vs 校验」同家族文案），不链未交付工具；categories.go Description 中英文双语。
+5. 真限制三条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/ads_txt_validator.html`（新增）
+- `static/js/ads_txt_validator.js`（新增；纯函数＋DOM）
+- `tests/ads_txt_validator.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `tools/categories.go`（注册：ID `ads_txt_validator`／Name「ads.txt 校验器」／Path `/tools/ads-txt-validator`／Icon `ads_click`（备选 `gpp_good`）／Category「营销工具」／New: true）
+- 旧测试文件的 Path 总数断言 238→239（`grep -n 'size === 238' tests/*.test.js` 实测为准同步）
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`git log` 头部 a874a62（测试断言补齐 237→238）／72682d4（结构化提示词构建器新增）／b8d42b3（CSP 安全头生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **238**；Top3 候选重叠复核（**`ads_txt`／`ads.txt` 三处 0 命中真缺口**；横扫近义词仅 robots.txt 同家族生成/校验两项为补位互链非重叠；`slug` 三处 0 命中保持第二顺位；`ratio_solver`／比例求解三处 0 命中保持第三顺位；一键图片去背景 ONNX ~40MB 硬伤／视频转码 ffmpeg.wasm ~30MB 硬伤继续低优先观察；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 03:00 · 通用调研第一百六十六轮，接 01:00 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百六十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**结构化提示词构建器已交付闭环**（72682d4 新增：七节表单拼装 XML 系统提示词＋空节自动省略，一键复制/下载，3 组一键预设；a874a62 补齐 5 处旧测试 Path 总数断言 237→238；全量 **238 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 轮，优先小／中难度纯前端。
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. 结构化提示词构建器交付确认：`git log` 头部 a874a62（测试断言补齐 237→238）／72682d4（结构化提示词构建器新增）／b8d42b3（CSP 安全头生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **238**；`prompt_builder` 已注册（Path `/tools/prompt-builder`），templates/prompt_builder.html＋static/js/prompt_builder.js＋tests/prompt_builder.test.js 三新增；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（三轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - `ads_txt`／`ads.txt`：三处 0 命中真缺口——**ads.txt 校验器递补 P2 顺位首席**。
+   - `slug`：三处 0 命中真缺口——**Slug 生成器建议晋升第二顺位**。
+   - `ratio_solver`／比例求解／比例计算：三处 0 命中真缺口——**比例求解器（160 轮留池项）建议晋升第三顺位**。
+   - `ffmpeg`／视频转码：三处 0 命中（站内仅 video-frame-extractor 视频帧提取，口径不重叠）——**新观察项：视频转码/压缩器**（低优先，硬伤：ffmpeg.wasm core ~30MB 自托管体积，首屏延迟加载成本高）。
+   - BuildDiff 文件夹递归对比（dev.to 10-09）：站内 `folder_compare`（templates/folder_compare.html＋static/js/folder_compare.js）已覆盖口径——消解。
+   - `whatsapp`／wa.me：三处 0 命中；email 提取：`text_info_extractor` 口径疑似覆盖——WhatsApp 链接生成器／粘贴文本邮箱提取器保持观察原状（邮箱提取待 PM 裁定是否过时）。
+3. 新信号扫描（V2EX 10-29~10-30＋HN/新闻＋Medium 10-27~10-30＋dev.to 10-09~10-30 为本轮主线）：**新晋 P2 无；新观察项一项**——视频转码/压缩器（ffmpeg.wasm 硬伤）；其余全部消解或被已交付覆盖——
+   - V2EX：t/1253312 家庭试卷工作台 exam2pdf（10-30；小红书试卷图片采集→整理打印→A4 PDF；图片拼 PDF 口径被 `/tools/images-to-pdf` 覆盖；AI 批阅需后端；采集需浏览器脚本爬小红书，消解）／t/1252962 纯本地 PDF 工具站 pdf.iceai.cloud（10-29；合并/拆分/压缩/PDF↔图片/转 Word/加密全部被站内 PDF 工具簇覆盖，消解）／t/1252552 tubox 重发（10-28；165 轮已处理，消解）；
+   - HN：Sphinx git hook AI 出题（10-18；需本地安装 CLI，非单页网页口径，消解）／ChatGPT Sites（10-03；平台/托管类，消解）／my2cents agent 工具周报 10-17（agent/SaaS/CLI 类，消解）；
+   - Medium：plant 识草 App（10-30；需 AI 后端，消解）／Nextify Framer→Next.js（10-30；需抓取/打包后端，消解）；
+   - dev.to：Small Home Tools ×4（10-30；租房/搬家财务类，用户方向修正排除，消解）／1024toolkit 45 tiny tools（10-14；竞品整站：cron/regex/时间戳/时区/subnet/SQL 格式化/mock 数据单项全覆盖；财务/健康类方向排除，消解）／BuildDiff 文件夹对比（10-09；站内 folder_compare 已覆盖，消解）／Apify 20 tools（10-21；需后端抓取/排期/API，消解）／FetchDoge Permit+AgentReady（10-25；需后端/链上/扫描服务器，消解）／Daily Solutions browser-only 工具站（10-27；图像/PDF 口径已覆盖；视频 ffmpeg.wasm→**新观察项**）／DevOps 12 sites（10-28；榜单类；webhook.site 需后端，消解）／3 AI tools（10-18；Discord bot/登录模板需后端；JS 空格格式化小众，消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；结构化提示词构建器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **ads.txt 校验器** — 递补 P2 顺位首席（165 轮建议第二顺位；125 轮观察项；pulsetools.site fresh 信号；`ads.txt` 0 命中复测（本轮）；痛点：网站主 ads.txt 手写易错（字段缺失／账号类型写错），错一行丢广告收入，IAB 规范手工对麻烦；粘贴 ads.txt→逐行解析（域名／发布商账号／账号类型 DIRECT/RESELLER／认证机构）＋IAB 规范错误/警告中文提示＋复制/下载，纯前端小难度：纯函数逐行解析，可写确定性向量；SEO/营销工具簇补位（robots.txt 生成器／robots.txt 校验器同家族「生成 vs 校验」互链）；真限制：仅做语法规范校验，不验证卖方账号真实性，须明示）。
+2. **Slug 生成器** — 建议晋升第二顺位（165 轮建议第三顺位；100–101 轮观察项；`slug` 0 命中复测（本轮）；痛点：博客/CMS 发文时 URL slug 手工转写麻烦，中文标题无法直接用；输入标题→英文规范化（小写/连字符/去特殊字符）＋中文转拼音 slug＋长度截断＋预览，纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；SEO 工具簇补位（sitemap 生成器／OG 社交卡片预览互链）；真限制：拼音转换用内置常用字表（首屏延迟加载），生僻字回退原字符，须明示）。
+3. **比例求解器** — 建议晋升第三顺位（160 轮留池项；`ratio_solver`／比例求解三处 0 命中真缺口（本轮复测）；痛点：a:b=c:d 已知三求一、配方/图纸/模型缩放换算心算易错；输入已知三项→交叉相乘求解＋化简显示＋常用比例预设（16:9/4:3/A4），纯前端小难度：纯函数确定性计算，可写逐字向量；数学工具簇补位；真限制：仅线性比例，不做复合单位换算须明示）。
+
+其余观察项保持原状：**视频转码/压缩器（本轮新观察项**，dev.to Daily Solutions 10-27 信号；ffmpeg.wasm core ~30MB 自托管体积硬伤，首屏延迟加载成本高；低优先；与 video-frame-extractor 帧提取口径不重叠）／一键图片去背景（165 轮新观察项；ONNX ~40MB 硬伤，低优先）／Markdown 表格转 CSV（PM 降回观察，markdown_to_excel 重叠硬伤）／P2P 文件传输器（低优先，信令硬伤）／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器（硬伤未解）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮；whatsapp 0 命中复测）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（json_to_types 仅 TS/Go，扩展备注）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 165 轮及之前记录。
+
+**通用候选表增量**（第一百六十六轮：结构化提示词构建器已交付划出（72682d4 新增＋a874a62 断言补齐；全量 238 Path；候选池划出）；**ads.txt 校验器递补 P2 顺位首席**（165 轮建议第二顺位；`ads.txt` 0 命中复测；小难度）；**Slug 生成器建议晋升第二顺位**（165 轮建议第三顺位；`slug` 0 命中复测；小难度）；**比例求解器建议晋升第三顺位**（160 轮留池项；`ratio_solver` 0 命中复测；小难度）；**视频转码/压缩器新观察项**（dev.to Daily Solutions 10-27；ffmpeg.wasm ~30MB 硬伤，低优先）；本轮新信号 15 项全部消解或被已交付覆盖（V2EX 3 项；HN/新闻 3 项；Medium 2 项；dev.to 7 项）；全量 238 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 结构化提示词构建器 | 已交付划出（72682d4 新增；a874a62 补齐 5 处旧测试断言 237→238；全量 238 Path；候选池划出） | — | 已实现 |
+| ads.txt 校验器 | 递补 P2 顺位首席（165 轮建议第二顺位；125 轮观察项；pulsetools.site fresh 信号；`ads.txt` 0 命中复测；粘贴 ads.txt→IAB 规范逐行校验＋中文错误提示；纯前端小难度；与 robots.txt 校验器同家族互链；真限制：不验证卖方账号真实性须明示） | 小 | P2（留池） |
+| Slug 生成器 | 建议晋升第二顺位（165 轮建议第三顺位；100–101 轮观察项；`slug` 0 命中复测；标题→URL slug（英文规范化＋中文转拼音）；纯前端小难度；SEO 工具簇补位；真限制：拼音内置常用字表、生僻字回退须明示） | 小 | 观察→P2（建议） |
+| 比例求解器 | 建议晋升第三顺位（160 轮留池项；`ratio_solver`／比例求解三处 0 命中复测；a:b=c:d 交叉相乘求解＋常用比例预设；纯前端小难度；真限制：仅线性比例须明示） | 小 | 观察（留池） |
+| 视频转码/压缩器 | 本轮新观察项（dev.to Daily Solutions 10-27 信号；ffmpeg.wasm core ~30MB 自托管体积硬伤，首屏延迟加载成本高；低优先；与 video-frame-extractor 帧提取口径不重叠） | 大 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百六十六轮——结构化提示词构建器交付闭环（72682d4，`/tools/prompt-builder` 已注册＋a874a62 断言补齐，全量 238 Path），候选池划出；**ads.txt 校验器递补 P2 顺位首席**（165 轮建议第二顺位；`ads.txt` 0 命中复测确认）；**Slug 生成器建议晋升第二顺位**（165 轮建议第三顺位；`slug` 0 命中复测确认）；**比例求解器建议晋升第三顺位**（160 轮留池项；`ratio_solver` 0 命中复测确认）；**视频转码/压缩器**（本轮新观察项，dev.to Daily Solutions 10-27 信号，ffmpeg.wasm ~30MB 硬伤，低优先）新晋观察项；本轮消解 15 项（V2EX 3 项：exam2pdf 图片拼 PDF 被 images-to-pdf 覆盖＋AI 批阅需后端／纯本地 PDF 站全口径被覆盖／tubox 重发已处理；HN/新闻 3 项：Sphinx 需 CLI／ChatGPT Sites 平台类／agent 周报 SaaS 类；Medium 2 项：plant App 需 AI 后端／Nextify 需抓取后端；dev.to 7 项：Small Home Tools 方向排除／1024toolkit 竞品全覆盖／BuildDiff 被 folder_compare 覆盖／Apify 需后端／FetchDoge 需后端／Daily Solutions 拆出视频信号其余已覆盖／DevOps 榜单＋webhook 需后端／3 AI tools 需后端或小众）；一键图片去背景（ONNX 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 a874a62（测试断言补齐 237→238）／72682d4（结构化提示词构建器新增）／b8d42b3（CSP 安全头生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **238**；Top3 候选重叠复核（`prompt_builder` 已交付划出；`ads_txt`／`ads.txt` 三处 0 命中；`slug` 三处 0 命中；`ratio_solver`／比例求解三处 0 命中；`ffmpeg`／视频转码三处 0 命中（仅 video-frame-extractor 帧提取口径不重叠）；BuildDiff 文件夹对比被 folder_compare 覆盖；whatsapp 0 命中／email 提取 text_info_extractor 疑似覆盖保持观察；一键图片去背景 ONNX 硬伤／Markdown 表格转 CSV PM 硬伤／P2P 信令硬伤／语音听写／AI 可发现性／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 01:00 · PM 排期决策轮，接 01:00 调研第一百六十五轮）
+
+**选定：结构化提示词构建器** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（165 轮）Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例）。
+- **PM 独立零重叠实测（163 轮误判教训：必须 grep 模板＋static/js＋categories.go 三处＋横扫近义词 ID）**：`prompt_builder`／提示词构建三处 **0 命中**；全站 ID 横扫 `prompt|system|instruction|optimizer` 仅命中 `prompt_sanitizer`（AI 提示词脱敏器，/tools/prompt-sanitizer：喂 LLM 前脱敏→粘贴代码/日志→替换占位符→一键复制发问）、`llms_txt_generator`（llms.txt 表单向导）、`ai_token_counter`（AI Token 计数器）——均为「提示词生成」口径的**补位互链项**，不是重叠（脱敏是反向流程：先脱敏再发问；llms.txt 是网站 AI 索引；token 计数是长度估算）；`teleprompter`（提词器）口径不相关；ads.txt 校验器／Slug 生成器仍 0 命中保持原顺位；一键图片去背景硬伤（ONNX ~40MB）未解继续观察。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——AI 提示词缺结构、复用难；③ **一轮可高质量交付**——纯前端小难度：纯函数模板拼装，可写确定性向量供 node 断言；④ **LLM 工具簇补位**——提示词脱敏器／llms.txt 生成器／AI Token 计数器互链，簇内闭环；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「开发工具」品类（与 prompt_sanitizer／llms_txt_generator／ai_token_counter 同品类，互链顺手）；New: true；Icon `chat_bubble`（实测 Icon 口径 **0 占用**，贴提示词对话主题；备选 `text_fields` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **表单→XML 系统提示词输出**：表单区（角色／任务／上下文背景／约束条件（增删行）／输出格式／示例（增删行）／待处理输入）→ 输出 XML 结构化系统提示词（`<system_prompt><role>…</role><task>…</task><context>…</context><constraints><constraint>…</constraint></constraints><output_format>…</output_format><examples><example>…</example></examples><input>…</input></system_prompt>`，空节自动省略）；一键复制＋下载 `.txt`；三组一键预设（代码评审／英文翻译／小红书文案）；三输出下方「限制说明」提示条。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `escapeXml(text)` → XML 转义（`&`→`&amp;`、`<`→`&lt;`、`>`→`&gt;`；非字符串抛 Error，err.field="text"）。
+  - `buildSystemPrompt(sections)` → 系统提示词 XML 字符串（sections 为 `{role, task, context, constraints, outputFormat, examples, input}`；约束/示例可为字符串数组，逐条 `<constraint>`／`<example>`；空节（空字符串/空数组/缺省）自动省略；非法 sections（null/非对象）抛 Error，err.field="sections"）。
+  - `buildDownloadName()` → 默认文件名（如 `"structured-prompt.txt"`；供下载按钮复用，双模式导出）。
+  - 预设数据 `PRESETS`（数组：`{name, sections}` 三组），模板导出供 node 断言节结构。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `escapeXml("a<b>&\"c\"")` → `"a&lt;b&gt;&amp;\"c\""`。
+  - `buildSystemPrompt({role: "资深 Go 工程师"})` → `"<system_prompt>\n  <role>资深 Go 工程师</role>\n</system_prompt>"`。
+  - `buildSystemPrompt({role: "翻译", constraints: ["保留专有名词", "口语化"]})` → `"<system_prompt>\n  <role>翻译</role>\n  <constraints>\n    <constraint>保留专有名词</constraint>\n    <constraint>口语化</constraint>\n  </constraints>\n</system_prompt>"`。
+  - `buildSystemPrompt({})` → `"<system_prompt>\n</system_prompt>"`；`buildSystemPrompt(null)` 抛 Error（err.field="sections"）。
+- **界面**：表单七节输入区（约束/示例增删行）＋ XML 输出代码块（一键复制/下载） ＋ 三组预设一键填充 ＋ 真限制提示条；所有提示中文。
+- **操作与互链**：与「AI 提示词脱敏器」（文案：提示词里含密钥/敏感信息？先用 AI 提示词脱敏器脱敏再发问）互链；相关工具栏追加 llms.txt 生成器＋AI Token 计数器（「预估提示词 token 长度」）；不与未交付工具（ads.txt 校验器／Slug 生成器尚未交付）互链。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `prompt_builder`、Name「结构化提示词构建器」、Path `/tools/prompt-builder`、Category 开发工具、New: true、Icon `chat_bubble`（备选 `text_fields`）；中英文描述＋SEO keywords（结构化提示词、提示词构建器、系统提示词、AI 提示词模板、XML 提示词、structured prompt builder）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/prompt-builder，相关工具互链 AI 提示词脱敏器＋llms.txt 生成器＋AI Token 计数器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 模板拼装非 AI 优化——生成器只是把表单套进固定 XML 模板，不会像 ChatGPT 那样帮你改写优化提示词质量；② XML 只是社区流行的结构化惯例，不同模型遵循程度不同，效果因模型而异；③ 全部本地生成，表单内容不出浏览器（与脱敏器联动提示可顺手提）。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **237→238**；所有含 Path 总数断言的旧测试文件同步（`grep -n 'size === 237' tests/*.test.js` 实测为准，目前 hex_c_array／hex_viewer／map_memory_analyzer／sqlite_viewer／text_to_pdf 五处）。
+2. node 测试 ≥30 断言全过：escapeXml／buildSystemPrompt 的确定性向量逐值命中（空节省略规则、约束/示例多条渲染、XML 转义）；非法参数抛 Error（err.field）；PRESETS 三组节结构断言。
+3. 本地实测 `/tools/prompt-builder` 200；填表单 → XML 输出与向量一致；一键复制可用；三组预设一键填充正确；约束/示例增删行可用。
+4. 与 AI 提示词脱敏器互链（「脱敏再发问」文案）＋相关工具栏 llms.txt 生成器／AI Token 计数器；不链未交付工具；categories.go Description 中英文双语。
+5. 真限制三条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/prompt_builder.html`（新增）
+- `static/js/prompt_builder.js`（新增；纯函数＋DOM）
+- `tests/prompt_builder.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `tools/categories.go`（注册：ID `prompt_builder`／Name「结构化提示词构建器」／Path `/tools/prompt-builder`／Icon `chat_bubble`（备选 `text_fields`）／Category「开发工具」／New: true）
+- 旧测试文件的 Path 总数断言 237→238（`grep -n 'size === 237' tests/*.test.js` 实测为准同步）
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`git log` 头部 b8d42b3（CSP 安全头生成器新增）／4ba6d06（SQLite 分页叠加 bug 修复）／b33fe8f（SQLite 查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **237**；Top3 候选重叠复核（**`prompt_builder` 三处 0 命中**；全站 ID 横扫仅 prompt_sanitizer／llms_txt_generator／ai_token_counter 为补位互链项非重叠；`ads_txt`／`ads.txt` 三处 0 命中保持第二顺位；`slug` 三处 0 命中保持第三顺位；一键图片去背景 ONNX ~40MB 硬伤未解保持低优先观察；Meta 标签生成器判过时已划出；Markdown 表格转 CSV 保持观察）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 01:00 · 通用调研第一百六十五轮，接 10-30 23:45 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百六十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSP 安全头生成器已交付闭环**（b8d42b3 新增：勾选 16 条指令＋快捷关键字＋自定义源，输出响应头文本／<meta> 片段／Report-Only 模式，3 组一键预设，与 HTTP 响应头分析器双向互链；旧测试 Path 总数断言 236→237 同步；全量 **237 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小／中难度纯前端。
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. CSP 安全头生成器交付确认：`git log` 头部 b8d42b3（CSP 新增）／4ba6d06（SQLite 分页 bug 修复）／b33fe8f（SQLite 查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **237**；`csp_builder` 已注册（/tools/csp-builder），templates/csp_builder.html＋tests/csp_builder.test.js 双新增；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（三轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - `prompt_builder`／提示词构建：三处 0 命中（仅 prompt_sanitizer 脱敏口径）——**结构化提示词构建器仍为真缺口，递补 P2 顺位首席**。
+   - `ads_txt`／`ads-txt`／`ads.txt`：三处 0 命中真缺口——**ads.txt 校验器（125 轮观察项）建议晋升第二顺位**。
+   - `slug`：三处 0 命中真缺口——**Slug 生成器（100–101 轮观察项）建议晋升第三顺位**。
+   - `bg_remove`／去背景／背景移除：三处 0 命中真缺口，但 ONNX 模型 ~40MB 自托管体积硬伤——**新观察项：一键图片去背景**（低优先，硬伤待解）。
+   - Meta 标签生成器（100–101 轮观察项）：**判过时划出**——`og_card_preview`（OG 社交卡片预览）已含「一键复制 og:/twitter: meta 标签代码」，口径重叠。
+3. 新信号扫描（V2EX 10-21~10-28＋Medium 10-01~10-24＋dev.to 10-25~10-30＋HN/新闻＋SEO 工具站 pulsetools 为主线）：**新晋 P2 无；新观察项一项**——一键图片去背景（硬伤未解）；其余全部消解或被已交付覆盖——
+   - V2EX：t/1250522 protohub 原型托管站（10-21；SaaS 托管类，消解）／t/1250674 mockmock Mockup（10-21；站内「截图 3D 样机渲染器」已覆盖口径，消解）／t/1252552 tubox 重发（10-28；「AI 抠图、AI 放大都在浏览器内完成」→**新观察项**；证件照/压缩/EXIF 仍已覆盖）／t/1250690 Builderoom 导航站（10-21；导航类，消解）／DayMug 远程 AI 智能体（10-09；需后端订阅，消解）；
+   - Medium：Toolwel 10-24（@imgly/background-removal ONNX Runtime Web 浏览器本地去背景→与 tubox 双信号确认；Image to PDF／Split PDF／speed test／resize 均已覆盖，消解）／Rishi Banota 10 best client-side tools 10-01（ToolMint 竞品整站单项全覆盖；iLovePDF OCR 需后端；caniuse 参考类，消解）；
+   - dev.to：Application Command Center 10-30（求职文书模板，小众，消解）／Luz 10-30（Hacktoberfest 挑战作品，消解）／Small Home Tools ×4 10-30（搬家/租房财务类，用户方向修正排除，消解）／Cometflow Do 10-30（Android App，消解）／md.irfan Studio Extractor 10-25（需浏览器自动化，消解）／ToolkitLoop 30 tools 10-25（竞品整站，单项全覆盖，消解）／Devdevian 10-30（终端论坛，消解）；
+   - HN/新闻：Show HN agent 工具周报 10-17（agent/CLI/云类，消解）／Medium Best Developer Tools of October 10-18（agent browser/LLM 推理类，消解）／AbuseBox 10-28（自托管监控，消解）／thetoolnerd AI tools week 10-27（agent 类，消解）／stackwrite dev tools 10-13（Telemetry/Hourtick/Sitelemetry SaaS/MCP 类，消解）；
+   - SEO 工具站 pulsetools.site：Robots & Ads.txt Validator→**ads.txt 校验器 fresh signal**（robots 生成器＋校验器已覆盖；Schema.org JSON-LD Builder→schema_org_generator 已覆盖；SERP & Meta Previewer→og_card_preview 已覆盖口径）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSP 安全头生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **结构化提示词构建器** — 递补 P2 顺位首席（163 轮新观察项→164 轮第三顺位；dev.to Orikony 8-12 信号；`prompt_builder` 三处 0 命中复测（本轮；站内仅 prompt_sanitizer 脱敏口径）；痛点：AI 提示词缺结构、复用难；表单填写（角色/任务/约束/输出格式/示例）→输出 XML 结构化系统提示词＋复制，纯前端小难度：纯函数模板拼装，可写确定性向量供 node 断言；LLM 工具簇补位（提示词脱敏器／llms.txt 生成器／AI Token 计数器互链）；真限制：模板拼装非 AI 优化，须明示）。
+2. **ads.txt 校验器** — 观察项→建议晋升第二顺位（125 轮观察项；pulsetools.site（SEO 工具站，9–10 月）「Robots & Ads.txt Validator」fresh 独立信号；`ads_txt`／`ads.txt` 三处 0 命中真缺口（本轮复测）；痛点：网站主 ads.txt 手写易错（字段缺失／账号类型写错），错一行丢广告收入，IAB 规范手工对麻烦；粘贴 ads.txt→逐行解析（域名／发布商账号／账号类型 DIRECT/RESELLER／认证机构）＋IAB 规范错误/警告中文提示＋复制/下载，纯前端小难度：纯函数逐行解析，可写确定性向量；SEO/营销工具簇补位（robots.txt 生成器／robots.txt 校验器同家族「生成 vs 校验」互链）；真限制：仅做语法规范校验，不验证卖方账号真实性，须明示）。
+3. **Slug 生成器** — 观察项→建议晋升第三顺位（100–101 轮观察项；`slug` 三处 0 命中真缺口（本轮复测）；痛点：博客/CMS 发文时 URL slug 手工转写麻烦，中文标题无法直接用；输入标题→英文规范化（小写/连字符/去特殊字符）＋中文转拼音 slug＋长度截断＋预览，纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；SEO 工具簇补位（sitemap 生成器／OG 社交卡片预览互链）；真限制：拼音转换用内置常用字表（首屏延迟加载），生僻字回退原字符，须明示）。
+
+其余观察项保持原状：**一键图片去背景（本轮新观察项**，V2EX tubox 10-28「AI 抠图、AI 放大都在浏览器内完成」＋Medium Toolwel 10-24「@imgly/background-removal ONNX Runtime Web 浏览器本地去背景」双独立信号；`bg_remove`／去背景三处 0 命中真缺口；**硬伤：ONNX 模型 ~40MB 自托管体积大，首屏延迟加载策略成本高**（同 HEIC 观察项硬伤量级），低优先继续观察；与「证件照裁剪排版」的点取背景色换底口径不重叠——那是证件照专用换底色，本项是通用一键去背景透明 PNG）／Markdown 表格转 CSV（164 轮 PM 降回观察：与已交付 markdown_to_excel 输入流＋核心解析高度重叠，硬伤未解保持观察）／P2P 文件传输器（164 轮新观察项，WebRTC 信令服务器硬伤，低优先继续观察）／语音听写输入器（HN Dictatus 信号；Web Speech API 仅 Chrome/Edge 且走云端识别、国内可用性待验证，硬伤未解继续观察）／AI 可发现性自检器（CORS 限制硬伤，观察）／HEIC 照片转格式器（WASM 解码器自托管体积大，观察）／比例求解器（160 轮；小难度）／恩尼格玛密码机模拟器（160 轮；中难度；教学向）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（`json_to_types` 仅 TS/Go，扩展备注）；**Meta 标签生成器（100–101 轮）判过时划出**（og_card_preview 已含 og:/twitter: meta 标签一键复制，口径重叠）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 164 轮及之前记录。
+
+**通用候选表增量**（第一百六十五轮：CSP 安全头生成器已交付划出（b8d42b3 新增；全量 237 Path；候选池划出）；**结构化提示词构建器递补晋升 P2 顺位首席**（164 轮第三顺位；`prompt_builder` 0 命中复测；小难度）；**ads.txt 校验器建议晋升第二顺位**（125 轮观察项；pulsetools.site fresh 信号；`ads.txt` 0 命中复测；小难度）；**Slug 生成器建议晋升第三顺位**（100–101 轮观察项；`slug` 0 命中复测；小难度）；**一键图片去背景新观察项**（V2EX tubox＋Medium Toolwel 双信号；ONNX ~40MB 硬伤，低优先）；**Meta 标签生成器判过时划出**（og_card_preview 口径重叠）；本轮新信号 20 项全部消解或被已交付覆盖（V2EX 5 项；Medium 2 项；dev.to 7 项；HN/新闻 5 项；SEO 工具站 1 项拆出 ads.txt 信号）；全量 237 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSP 安全头生成器 | 已交付划出（b8d42b3 新增；全量 237 Path；候选池划出） | — | 已实现 |
+| 结构化提示词构建器 | 递补晋升 P2 顺位首席（164 轮第三顺位；dev.to Orikony 信号；`prompt_builder` 0 命中复测；表单→XML 结构化系统提示词输出；纯前端小难度；LLM 工具簇补位；真限制：模板拼装非 AI 优化须明示） | 小 | P2（留池） |
+| ads.txt 校验器 | 建议晋升第二顺位（125 轮观察项；pulsetools.site fresh 信号；`ads.txt` 0 命中复测；粘贴 ads.txt→IAB 规范逐行校验＋中文错误提示；纯前端小难度；与 robots.txt 校验器同家族互链；真限制：不验证卖方账号真实性须明示） | 小 | 观察→P2（建议） |
+| Slug 生成器 | 建议晋升第三顺位（100–101 轮观察项；`slug` 0 命中复测；标题→URL slug（英文规范化＋中文转拼音）；纯前端小难度；SEO 工具簇补位；真限制：拼音内置常用字表、生僻字回退须明示） | 小 | 观察（留池） |
+| 一键图片去背景 | 本轮新观察项（V2EX tubox 10-28＋Medium Toolwel 10-24 双信号；`bg_remove` 0 命中；硬伤：ONNX 模型 ~40MB 自托管体积大，首屏延迟加载策略成本高；低优先；与证件照换底口径不重叠） | 大 | 观察（低优先） |
+| Meta 标签生成器 | 判过时划出（100–101 轮观察项；og_card_preview 已含 og:/twitter: meta 标签一键复制，口径重叠） | — | 划出（过时） |
+
+**归档说明**：本轮为 10-31 通用调研第一百六十五轮——CSP 安全头生成器交付闭环（b8d42b3，`/tools/csp-builder` 已注册，全量 237 Path），候选池划出；**结构化提示词构建器递补晋升 P2 顺位首席**（164 轮第三顺位；`prompt_builder` 0 命中复测确认，真缺口）；**ads.txt 校验器建议晋升第二顺位**（125 轮观察项；pulsetools.site fresh 信号；`ads.txt` 0 命中复测确认）；**Slug 生成器建议晋升第三顺位**（100–101 轮观察项；`slug` 0 命中复测确认）；**一键图片去背景**（本轮新观察项，V2EX tubox＋Medium Toolwel 双独立信号，ONNX ~40MB 硬伤，低优先）新晋观察项；**Meta 标签生成器判过时划出**（og_card_preview 口径重叠）；本轮消解 20 项（V2EX 5 项：protohub SaaS／mockmock 已覆盖／tubox 拆出抠图信号／Builderoom 导航／DayMug 需后端；Medium 2 项：Toolwel 拆出去背景信号其余已覆盖／10 best 榜单竞品已覆盖；dev.to 7 项：挑战作品/小众/方向排除/App/需自动化/竞品整站/终端论坛；HN/新闻 5 项：agent/SaaS/监控类；SEO 工具站：robots/JSON-LD/meta previewer 均已覆盖）；Markdown 表格转 CSV（PM 降回观察，硬伤未解）／P2P 文件传输器（低优先）／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 b8d42b3（CSP 安全头生成器新增）／4ba6d06（SQLite 分页叠加 bug 修复）／b33fe8f（SQLite 查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **237**；Top3 候选重叠复核（`csp_builder` 已交付划出；`prompt_builder`／提示词构建三处 0 命中（仅 prompt_sanitizer 脱敏口径）；`ads_txt`／`ads.txt` 三处 0 命中；`slug` 三处 0 命中；`bg_remove`／去背景／背景移除三处 0 命中（证件照裁剪排版为点取换底色口径不重叠）；Meta 标签生成器判过时（og_card_preview 已含 og:/twitter: meta 标签一键复制）；Markdown 表格转 CSV 保持观察（与 markdown_to_excel 重叠硬伤）；P2P 文件传输器／语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-30 23:45 · PM 排期决策轮，接 23:00 调研第一百六十四轮）
+
+**选定：CSP 安全头生成器** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（164 轮）Top3 **第二顺位** → **首席因硬伤跳过，按「无硬伤不跳过、Top3 顺位递进」惯例递补**。
+- **PM 口径裁定：首席 Markdown 表格转 CSV 存在调研轮遗漏的硬伤**——`markdown_to_excel`（ID，Path `/tools/markdown-to-excel`，文档转换品类，6859282 交付）与候选「Markdown 表格转 CSV」**输入流完全相同**（粘贴 Markdown 表格→下载表格文件），核心解析逻辑（表头+分隔行识别、跳过 ``` 代码块内表格、**转义竖线 `\|` 不分割**）已交付实现；候选痛点原话「想进 Excel」已被 .xlsx 输出**更优覆盖**（CSV 在 Excel 里打开长数字会被科学计数法，而已交付工具专门处理了长 ID 防科学计数法＋千分位/百分比存真实数值）。差异仅输出格式（.csv vs .xlsx），功能高度重叠 → **硬伤，降回观察**，备注重叠原因（若后续出现 CSV 特有场景信号，如数据库导入/数据管道口径，再议）。调研轮零重叠复核只 grep 了 `markdown_to_csv`／`md_table`，漏掉了 `markdown_to_excel`，PM 独立复核补上。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`git log` 头部 4ba6d06（SQLite 分页叠加 bug 修复）／b33fe8f（SQLite 查看器新增）／fb5fb8c（十六进制查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **236**；`csp_builder`／CSP 生成器工具口径 **0 命中**（`http_header_analyzer.js` 命中为响应头中文释义＋六项安全头 Present/Missing 判定的「检测」口径，口径不重叠；`transfer_sessions.go` 为后端内部默认头，非工具）；`prompt_builder`／提示词构建 **0 命中**（仅 `prompt_sanitizer` 脱敏口径）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）。
+- **未选**：Markdown 表格转 CSV（降回观察，硬伤见上）；结构化提示词构建器（164 轮第三顺位，`prompt_builder` 0 命中真缺口，小难度纯前端，按递进惯例排后轮，保持第三顺位）；P2P 文件传输器（164 轮新观察项，WebRTC 信令服务器硬伤，低优先继续观察）；语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器（硬伤未解保持观察）；在线电台收听器（88 轮，硬伤未解继续跳过）。
+- **选定理由**：① **顺位即理由**——首席有硬伤跳过，次席无硬伤递补，不二次挑拣；② **痛点真实**——CSP 手写门槛高，配错就刷白；③ **一轮可高质量交付**——纯前端小难度：纯函数拼字符串，可写逐字向量供 node 断言；④ **网络/安全工具簇补位**——与「HTTP 响应头分析器」「生成 vs 检测」互补互链；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「开发工具」品类（与 http_header_analyzer 同品类，互链顺手）；New: true；Icon `policy`（实测 Icon 口径 **0 占用**，贴「策略生成」主题；备选 `gpp_good` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **勾选指令→三输出**：指令清单（default-src、script-src、style-src、img-src、font-src、connect-src、media-src、object-src、frame-src、frame-ancestors、form-action、base-uri、worker-src、upgrade-insecure-requests、block-all-mixed-content ＋ 自定义指令行）→ 每指令常用源 chips（'self'、'none'、'unsafe-inline'、'unsafe-eval'、data:、blob:、https:、自定义域名/URL 输入）→ 输出 `Content-Security-Policy` 响应头文本 ＋ `<meta http-equiv>` 片段 ＋ Report-Only 测试模式切换（`Content-Security-Policy-Report-Only` ＋ report-uri／report-to 输入）；一键复制三输出；三组一键预设（严格模式／常规站点／纯静态站）。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `buildCspValue(directives)` → 头值字符串（directives 为 `{name: [sources]}`；name 非字符串或 sources 非数组抛 Error，err.field="directives"；空 sources 数组跳过该指令；指令间 `"; "` 分隔）。
+  - `buildCspHeader(directives, {reportOnly})` → `{name, value}`（reportOnly 真 → name=`"Content-Security-Policy-Report-Only"`，否则 `"Content-Security-Policy"`）。
+  - `buildMetaTag(value)` → `<meta http-equiv="Content-Security-Policy" content="...">`（content 内双引号转义为 `&quot;`；非字符串抛 Error，err.field="value"）。
+  - `parseSourceList(text)` → 源数组（按空白／逗号／换行切分，trim，去空；非字符串抛 Error，err.field="text"）。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `buildCspValue({'default-src': ["'self'"], 'script-src': ["'self'", 'https://cdn.example.com']})` → `"default-src 'self'; script-src 'self' https://cdn.example.com"`。
+  - `buildCspHeader({'default-src': ["'self'"]}, {reportOnly: true})` → `{name: 'Content-Security-Policy-Report-Only', value: "default-src 'self'"}`。
+  - `buildMetaTag("default-src 'self'")` → `'<meta http-equiv="Content-Security-Policy" content="default-src \'self\'">'`。
+  - `parseSourceList("'self' https://a.com,\nhttps://b.com")` → `["'self'", 'https://a.com', 'https://b.com']`。
+  - `buildCspValue({'default-src': []})` → `''`；`buildCspValue(null)` 抛 Error（err.field="directives"）。
+- **界面**：指令勾选区 ＋ 每指令源 chips／自定义输入 ＋ report-uri／report-to 输入 ＋ Report-Only 切换 ＋ 三输出代码块（一键复制） ＋ 真限制提示条；所有提示中文。
+- **操作与互链**：与「HTTP 响应头分析器」（文案：生成好的策略想验证是否生效，用 HTTP 响应头分析器检查响应头是否携带）；不与未交付工具（结构化提示词构建器尚未交付）互链。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `csp_builder`、Name「CSP 安全头生成器」、Path `/tools/csp-builder`、Category 开发工具、New: true、Icon `policy`（备选 `gpp_good`）；中英文描述＋SEO keywords（CSP 生成器、Content-Security-Policy、安全头配置、CSP 在线生成、XSS 防护、csp header generator）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/csp-builder，相关工具互链 HTTP 响应头分析器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 生成器只产出配置文本，不验证部署后是否生效——部署验证需服务器侧配合，可用站内「HTTP 响应头分析器」检查响应头；② `<meta http-equiv>` 不支持 frame-ancestors／report-uri 等指令（浏览器会忽略），选 meta 输出时须提示；③ report-uri 已趋向废弃、推荐 report-to，两者均支持输入但提示差异。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **236→237**；所有含 Path 总数断言的旧测试文件同步（`grep -n 'size === 236' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：buildCspValue／buildCspHeader／buildMetaTag／parseSourceList 的确定性向量逐值命中；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/csp-builder` 200；勾选 default-src＋script-src 填源 → 响应头文本／meta 片段／Report-Only 三输出与向量一致；一键复制可用；三组预设一键填充正确。
+4. 与 http_header_analyzer 互链（「生成 vs 检测」文案），不链未交付工具；categories.go Description 中英文双语。
+5. 真限制三条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/csp_builder.html`（新增）
+- `static/js/csp_builder.js`（新增；纯函数＋DOM）
+- `tests/csp_builder.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `tools/categories.go`（注册：ID `csp_builder`／Name「CSP 安全头生成器」／Path `/tools/csp-builder`／Icon `policy`（备选 `gpp_good`）／Category「开发工具」／New: true）
+- 旧测试文件的 Path 总数断言 236→237（`grep -n 'size === 236' tests/*.test.js` 实测为准同步）
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`git log` 头部 4ba6d06（SQLite 分页叠加 bug 修复）／b33fe8f（SQLite 查看器新增）／fb5fb8c（十六进制查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **236**；Top3 候选重叠复核（**`markdown_to_excel`（/tools/markdown-to-excel）与首席候选输入流＋核心解析高度重叠，首席降回观察**；`csp_builder` 工具口径 0 命中（http_header_analyzer 为「检测」口径，生成 vs 检测互补）；`prompt_builder` 0 命中（仅 prompt_sanitizer 脱敏口径）；语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-30 23:00 · 通用调研第一百六十四轮，接 21:40 PM 排期轮）
+
+**交付状态**：10-30 通用调研第一百六十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**SQLite 文件查看器已交付闭环**（b33fe8f 新增：拖 .db→表浏览＋只读 SQL 查询＋导出 CSV，纯前端零上传；4ba6d06 修复分页叠加 bug；全量 **236 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 轮，优先小／中难度纯前端。
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. SQLite 文件查看器交付确认：`git log` 头部 4ba6d06（SQLite 分页叠加 bug 修复）／b33fe8f（SQLite 查看器新增）／fb5fb8c（十六进制查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **236**；`sqlite_viewer` 已注册，templates/sqlite_viewer.html＋tests/sqlite_viewer.test.js 双新增；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（三轮误判教训：观察项晋升前必须 grep 模板＋categories.go 双实测）**：
+   - `markdown_to_csv`／`md_table`：0 命中真缺口；与已交付 `csv_to_markdown`（CSV→Markdown 表格生成器）互为逆操作，「md→csv vs csv→md」边界清晰——**Markdown 表格转 CSV 按递补惯例晋升 P2 顺位首席**。
+   - `csp_builder`／CSP 生成器工具口径：0 命中真缺口（仅 http_header_analyzer 为「检测」口径）——**CSP 安全头生成器建议晋升 P2 第二顺位**。
+   - `prompt_builder`／提示词构建：0 命中（仅 prompt_sanitizer 脱敏口径）——**结构化提示词构建器建议晋升第三顺位**。
+3. 新信号扫描（V2EX 10-30 晚间新帖＋aiyoubucuo 10-30 每日分享＋dev.to 榜单帖＋HN/新闻为本轮主线）：**本轮无新晋 P2**；新信号全部消解或被已交付覆盖——
+   - V2EX：t/1253235 homecraft（10-30；个人网站 3D 世界，网站构建/游戏类，消解）／t/1253193 Me2Cloud（10-30；浏览器测 17 家云厂商延迟；站内 `/tools/speed-test`／`/tools/ping` 已覆盖口径＋全云端点跨站 fetch CORS 硬伤，消解）／t/1253251 CF Deploy Kit（10-30；Cloudflare Worker 订阅面板部署工具包，$29 付费 SaaS，消解）／t/1251490 餐厅邮件营销小工具（10-24；需 AI 后端，消解）／t/1252552 tubox 图片工具箱重发（10-28；证件照/图片压缩/EXIF 已覆盖）／t/1252576 FrameLoom（10-28；需 Agent＋Remotion 本机渲染，消解）；
+   - aiyoubucuo 10-30 每日分享：send.wang（P2P WebRTC 文件传输：房间码/二维码配对＋分片＋断点续传＋SHA-256 校验；`webrtc` 全站仅 nat_type_detector 命中（NAT 类型检测口径不重叠），transfer_sessions.go 为个人文件后端会话非公开 P2P 口径——**新观察项：P2P 文件传输器**，低优先，硬伤：需信令服务器，PeerJS cloud 免费信令或 Trystero 公共 broker 路线待验证）／NonsPlayer（桌面音乐 App，消解）；
+   - dev.to：karleeov 10-13~10-27 榜单帖 ×7（AI SDK/模型/Agent 榜单类，单页工具口径 0 命中，消解）；
+   - HN/新闻：OptimusDesk（AI 工作台 SaaS）／TerraMaster TOS 生态／Shopify Fall '26（均为 SaaS/新闻类，消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；SQLite 查看器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **Markdown 表格转 CSV** — 递补 P2 顺位首席（160 轮观察项→162 轮建议第二顺位→163 轮建议晋升第二顺位；dev.to 2026-10-30 minitool.io 信号；`markdown_to_csv`／`md_table` 全站 0 命中真缺口（本轮复测）；痛点：从文档／AI 回答里复制的 Markdown 表格想进 Excel，手动删竖线对齐行；粘贴 Markdown 表格→转义竖线处理＋对齐行剥离→CSV 下载，纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；与站内「CSV→Markdown 表格生成器」互为逆操作互链；真限制：仅处理标准 GFM 表格，嵌套表格／跨行单元格不支持须明示）。
+2. **CSP 安全头生成器** — 观察项，建议晋升 P2 第二顺位（163 轮新观察项；HN DevKit 80 工具＋dev.to aidevhub 10-18 双独立信号；`csp` 工具口径 0 命中真缺口（本轮复测）；痛点：CSP 手写门槛高，配错就刷白；勾选指令（default-src/script-src/style-src/img-src/connect-src…）→输出 `Content-Security-Policy` 响应头文本＋`<meta http-equiv>` 片段＋测试模式（Report-Only）切换，纯前端小难度：纯函数拼字符串，可写确定性向量；与站内「HTTP 头检测」（http_header_analyzer）「生成 vs 检测」互补互链；真限制：生成器只产出配置文本，不验证生效与否，须明示——部署验证仍需服务器侧配合）。
+3. **结构化提示词构建器** — 观察项，建议晋升第三顺位（163 轮新观察项；dev.to Orikony 8-12 信号；`prompt_builder` 0 命中真缺口（本轮复测；站内仅 prompt_sanitizer 脱敏口径）；痛点：AI 提示词缺结构、复用难；表单填写（角色/任务/约束/输出格式/示例）→输出 XML 结构化系统提示词＋复制，纯前端小难度；LLM 工具簇补位（提示词脱敏器／llms.txt 生成器／AI Token 计数器互链）；真限制：模板拼装非 AI 优化，须明示）。
+
+其余观察项保持原状：P2P 文件传输器（**本轮新观察项**，低优先；WebRTC 信令服务器硬伤，PeerJS cloud 免费信令或 Trystero 公共 broker 路线待验证）／语音听写输入器（HN Dictatus 信号；Web Speech API 仅 Chrome/Edge 且走云端识别、国内可用性待验证，硬伤未解继续观察）／AI 可发现性自检器（CORS 限制硬伤，观察）／HEIC 照片转格式器（WASM 解码器自托管体积大，观察）／比例求解器（160 轮；小难度）／恩尼格玛密码机模拟器（160 轮；中难度；教学向）／Slug 生成器／Meta 标签生成器（100–101 轮）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮）／ads.txt 校验器（125 轮）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（`json_to_types` 仅 TS/Go，扩展备注）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 163 轮及之前记录。
+
+**通用候选表增量**（第一百六十四轮：SQLite 文件查看器已交付划出（b33fe8f 新增＋4ba6d06 分页 bug 修复；全量 236 Path；候选池划出）；**Markdown 表格转 CSV 递补晋升 P2 顺位首席**（160 轮观察项；`markdown_to_csv` 0 命中复测；小难度）；**CSP 安全头生成器建议晋升 P2 第二顺位**（163 轮观察项；`csp` 工具口径 0 命中复测；小难度）；**结构化提示词构建器建议晋升第三顺位**（163 轮观察项；`prompt_builder` 0 命中复测；小难度）；**P2P 文件传输器新观察项**（aiyoubucuo 10-30 send.wang 信号；WebRTC 信令硬伤，低优先）；本轮新信号 13 项全部消解或被已交付覆盖（V2EX 6 项；aiyoubucuo 1 项桌面 App；dev.to 榜单帖 7 项；HN/新闻 3 项）；全量 236 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SQLite 文件查看器 | 已交付划出（b33fe8f 新增；4ba6d06 修复分页叠加 bug；全量 236 Path；候选池划出） | — | 已实现 |
+| Markdown 表格转 CSV | 递补晋升 P2 顺位首席（160 轮观察项；dev.to 2026-10-30 minitool.io 信号；`markdown_to_csv`／`md_table` 0 命中复测；粘贴 Markdown 表格→转义竖线处理＋对齐行剥离→CSV 下载；纯前端小难度；与 CSV→Markdown 逆操作互链；真限制：仅标准 GFM 表格须明示） | 小 | P2（留池） |
+| CSP 安全头生成器 | 建议晋升 P2 第二顺位（163 轮新观察项；HN DevKit＋dev.to aidevhub 双信号；`csp` 工具口径 0 命中复测）；勾选指令→输出 CSP 响应头文本＋meta 片段＋Report-Only 切换；纯前端小难度；与 HTTP 头检测「生成 vs 检测」互补；真限制：不验证生效须明示 | 小 | 观察→P2（建议） |
+| 结构化提示词构建器 | 建议晋升第三顺位（163 轮新观察项；dev.to Orikony 信号；`prompt_builder` 0 命中复测；站内仅提示词脱敏器）；表单→XML 结构化系统提示词输出；纯前端小难度；LLM 工具簇补位；真限制：模板拼装非 AI 优化须明示 | 小 | 观察（留池） |
+| P2P 文件传输器 | 本轮新观察项（aiyoubucuo 10-30 send.wang 信号；WebRTC 房间码/二维码配对＋分片＋断点续传＋SHA-256 校验；硬伤：需信令服务器，PeerJS cloud 免费信令或 Trystero 公共 broker 路线待验证；低优先） | 中 | 观察（低优先） |
+
+**归档说明**：本轮为 10-30 通用调研第一百六十四轮——SQLite 文件查看器交付闭环（b33fe8f，`/tools/sqlite-viewer` 已注册＋4ba6d06 分页 bug 修复，全量 236 Path），候选池划出；**Markdown 表格转 CSV 递补晋升 P2 顺位首席**（160 轮观察项；`markdown_to_csv`／`md_table` 0 命中复测确认）；**CSP 安全头生成器建议晋升 P2 第二顺位**（163 轮观察项；`csp` 工具口径 0 命中复测确认，与「HTTP 头检测」互补）；**结构化提示词构建器建议晋升第三顺位**（163 轮观察项；`prompt_builder` 0 命中复测确认）；**P2P 文件传输器新观察项**（aiyoubucuo 10-30 send.wang 信号；WebRTC 信令服务器硬伤，低优先）；本轮新信号 13 项全部消解或被已交付覆盖（V2EX 6 项：homecraft／Me2Cloud→站内 speed-test/ping 覆盖＋CORS／CF Deploy Kit 付费 SaaS／餐厅邮件营销需 AI／tubox 重发已覆盖／FrameLoom 需本机渲染；aiyoubucuo 1 项桌面 App；dev.to 榜单帖 7 项 AI/榜单类；HN/新闻 3 项 SaaS 类）；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 4ba6d06（SQLite 分页叠加 bug 修复）／b33fe8f（SQLite 查看器新增）／fb5fb8c（十六进制查看器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **236**；Top3 候选重叠复核（`sqlite_viewer` 已交付划出；`markdown_to_csv`／`md_table` 0 命中（`csv_to_markdown` 为逆操作口径不重叠）；`csp` 工具口径 0 命中（http_header_analyzer 为「检测」口径，生成 vs 检测互补）；`prompt_builder` 0 命中（仅 prompt_sanitizer 脱敏口径）；P2P/WebRTC 传输工具口径 0 命中（仅 nat_type_detector 含 webrtc 关键字，口径为 NAT 类型检测不重叠；transfer_sessions.go 为个人文件后端会话非公开口径）；语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-30 21:40 · PM 排期决策轮，接 21:36 调研第一百六十三轮）
 
 **选定：SQLite 文件查看器** — 本轮唯一任务（新工具）。
