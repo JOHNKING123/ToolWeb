@@ -140,7 +140,7 @@ ok(regBlock.indexOf("New:         true") !== -1, "categories.go 注册 New true"
 ok(regBlock.indexOf('Icon:        "gesture"') !== -1, "categories.go 注册 Icon gesture");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 234, "注册 Path 总数 233→234");
+eq(Object.keys(pathCount).length, 235, "注册 Path 总数 234→235");
 
 /* ---------- 8. 零网络请求静态检查 ---------- */
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,
@@ -167,7 +167,7 @@ while ((hm = hrefRe.exec(TPL_SRC)) !== null) {
   if (GO_SRC.indexOf('"' + hm[1] + '"') < 0) bad.push(hm[1]);
 }
 eq(bad.length, 0, "模板外链全部已注册（实得未注册：" + JSON.stringify(bad) + "）");
-ok(TPL_SRC.indexOf("十六进制查看器") === -1, "模板不链未交付工具（文件十六进制查看器）");
+/* 注：2026-10-30 文件十六进制查看器已交付，原「不链未交付工具」负向断言已删除。 */
 
 /* ---------- 11. webcam 优雅降级 ---------- */
 ok(TPL_SRC.indexOf('id="sig-cam-degrade"') !== -1, "模板含摄像头降级提示区");

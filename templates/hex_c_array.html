@@ -167,8 +167,9 @@
                 <a href="/tools/modbus-frame">Modbus RTU 帧生成与校验器（帧语义解析：组帧/验 CRC/拆字段；本工具只做格式互转）</a>
                 <a href="/tools/register-bitfield">寄存器位域查看与编辑器（32 位寄存器位图编辑 → C 宏定义）</a>
                 <a href="/tools/crc-checksum-calculator">CRC 校验和计算器（裸校验和计算：只算校验值）</a>
+                <a href="/tools/hex-viewer">文件十六进制查看器（查看文件原始字节：偏移＋HEX＋ASCII 三栏；本工具只做格式互转）</a>
             </div>
-            <p class="hx-note">分工：Modbus 工具负责帧语义解析（组帧、验 CRC、字段拆解）；本工具只负责字节↔文本的格式互转，不解读任何协议语义。</p>
+            <p class="hx-note">分工：查看 vs 互转 vs 运算——文件十六进制查看器负责把文件字节「看」清楚（只读查看）；Modbus 工具负责帧语义解析（组帧、验 CRC、字段拆解）；本工具只负责字节↔文本的格式互转，不解读任何协议语义。</p>
         </div>
 
         <div class="hx-card">

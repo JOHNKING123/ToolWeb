@@ -1,0 +1,162 @@
+{{define "hex_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件十六进制查看器 - 偏移/HEX/ASCII 三栏查看 · 逐字节检查 | 程序员工具箱</title>
+    <meta name="description" content="免费在线文件十六进制查看器：拖拽/选择本地文件→偏移列＋十六进制字节列（每行16字节大写 HEX）＋ASCII 列三栏查看；点击字节弹出逐字节检查器（偏移/HEX/十进制/二进制/字符五对照）；支持偏移跳转与 HEX/ASCII 字节序列搜索；大文件分片读取分页预览。纯前端本地查看，零上传。">
+    <meta name="keywords" content="十六进制查看器,hex viewer,hexdump,在线 hex 查看,字节查看器,二进制文件查看,偏移查看,hex dump online,byte inspector">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/hex-viewer">
+    <meta property="og:title" content="文件十六进制查看器">
+    <meta property="og:description" content="拖拽文件→偏移＋HEX＋ASCII 三栏查看，点击字节逐字节检查，偏移跳转＋字节序列搜索，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/hex-viewer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文件十六进制查看器","description":"拖拽/选择本地文件→偏移列＋十六进制字节列（每行16字节大写HEX）＋ASCII列三栏查看；点击字节弹出逐字节检查器（偏移/HEX/十进制/二进制/字符）；偏移跳转＋HEX/ASCII字节序列搜索；大文件分片读取分页预览，纯前端本地查看，零上传。","url":"https://www.johnkingzcq123.xyz/tools/hex-viewer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hv-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .hv-wrap .navbar .material-icons { display: none; }
+        .hv-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .hv-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .hv-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .hv-row { display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.7rem 0; }
+        .hv-row label { font-size:.92rem; color:#374151; }
+        .hv-input, .hv-select { padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.5rem; font-size:.92rem; font-family:ui-monospace,Menlo,Consolas,monospace; max-width:100%; box-sizing:border-box; }
+        .hv-select { width:auto; }
+        .hv-input { width:12em; }
+        .hv-radio { display:flex; gap:1rem; flex-wrap:wrap; }
+        .hv-radio label { display:flex; gap:.35rem; align-items:center; font-size:.92rem; color:#374151; cursor:pointer; }
+        .hv-msg { color:#b91c1c; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .hv-info { color:#374151; font-size:.9rem; margin:.4rem 0 0; line-height:1.7; }
+        .hv-note { color:#6b7280; font-size:.88rem; margin:.4rem 0 0; line-height:1.7; }
+        .hv-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+        .hv-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .hv-tip a { color:var(--primary-color); }
+        .hv-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .hv-links a { color:var(--primary-color); font-size:.93rem; }
+        .hv-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; text-align:center; }
+        .hv-drop { border:2px dashed #d1d5db; border-radius:.8rem; padding:2.2rem 1rem; text-align:center; color:#6b7280; font-size:.95rem; cursor:pointer; background:#f9fafb; transition:border-color .15s, background .15s; }
+        .hv-drop.hv-over { border-color:#1d4ed8; background:#eff6ff; color:#1d4ed8; }
+        .hv-grid { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; line-height:1.9; background:#0f172a; color:#e2e8f0; border-radius:.6rem; padding:.8rem 1rem; overflow-x:auto; margin:.6rem 0; }
+        .hv-grid .hv-row { display:flex; gap:1rem; margin:0; white-space:nowrap; }
+        .hv-off { color:#38bdf8; min-width:4.6em; }
+        .hv-hex { display:flex; flex-wrap:wrap; gap:.15rem; }
+        .hv-b { padding:.05rem .3rem; border-radius:.25rem; cursor:pointer; color:#e2e8f0; }
+        .hv-b:hover { background:#1e3a5f; }
+        .hv-b.hv-sel { background:#f59e0b; color:#0f172a; font-weight:700; }
+        .hv-b.hv-gap { margin-left:.9rem; }
+        .hv-asc { color:#a5b4fc; letter-spacing:.1em; }
+        .hv-insp { display:flex; gap:1.2rem; flex-wrap:wrap; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.92rem; background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:.7rem .9rem; margin:.6rem 0; }
+        .hv-insp .hv-kv b { color:#6b7280; font-weight:400; margin-right:.35rem; }
+        .hv-pager { display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; margin:.6rem 0; font-size:.9rem; color:#374151; }
+        .hv-pager button:disabled { opacity:.4; cursor:not-allowed; }
+        .hv-faq dt { font-weight:700; color:#111827; margin:.6rem 0 .2rem; font-size:.93rem; }
+        .hv-faq dd { margin:0 0 .4rem; color:#374151; font-size:.92rem; line-height:1.7; }
+        @media (max-width:640px) {
+            .hv-grid { font-size:.75rem; }
+            .hv-input { width:100%; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="hv-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔍 文件十六进制查看器</h1>
+            <p>拖拽文件进来：偏移列＋HEX 字节列＋ASCII 列三栏查看，点击任意字节逐字节检查——文件不离开你的浏览器</p>
+        </div>
+
+        <div class="hv-card">
+            <h3>选择文件 <span class="hv-hint">（拖拽到下方虚线框，或点击按钮选择；全程本地读取，零上传）</span></h3>
+            <div class="hv-drop" id="hv-drop">
+                <span id="hv-drop-hint">把文件拖到这里，或</span>
+                <button class="btn btn-primary" id="hv-pick" type="button">选择文件</button>
+                <button class="btn btn-secondary" id="hv-example" type="button">载入示例数据</button>
+                <input type="file" id="hv-file" style="display:none">
+            </div>
+            <p class="hv-info" id="hv-info">尚未载入文件。</p>
+        </div>
+
+        <div class="hv-card" id="hv-viewer" style="display:none">
+            <h3>HEX 三栏视图 <span class="hv-hint">（点击任意字节查看逐字节检查器）</span></h3>
+            <div class="hv-pager">
+                <button class="btn btn-secondary" id="hv-prev" type="button">上一页</button>
+                <button class="btn btn-secondary" id="hv-next" type="button">下一页</button>
+                <label>每页行数
+                    <select class="hv-select" id="hv-rpp">
+                        <option value="64">64 行</option>
+                        <option value="128">128 行</option>
+                        <option value="256" selected>256 行</option>
+                        <option value="512">512 行</option>
+                    </select>
+                </label>
+                <span id="hv-pageinfo"></span>
+            </div>
+            <div class="hv-grid" id="hv-rows"></div>
+            <h3 style="margin-top:1rem">逐字节检查器</h3>
+            <div class="hv-insp" id="hv-insp"><span class="hv-hint">点击上方任意字节，查看偏移 / HEX / 十进制 / 二进制 / 字符五对照。</span></div>
+        </div>
+
+        <div class="hv-card" id="hv-tools-card" style="display:none">
+            <h3>偏移跳转</h3>
+            <div class="hv-row">
+                <label>偏移 <input class="hv-input" id="hv-jump" placeholder="如 1024 / 0x400 / 400h"></label>
+                <button class="btn btn-primary" id="hv-jump-btn" type="button">跳转</button>
+            </div>
+            <h3>字节序列搜索</h3>
+            <div class="hv-radio">
+                <label><input type="radio" name="hv-smode" value="hex" checked> HEX（如 0x41, 42）</label>
+                <label><input type="radio" name="hv-smode" value="ascii"> ASCII 文本</label>
+            </div>
+            <div class="hv-row">
+                <input class="hv-input" id="hv-search" style="width:22em" placeholder="HEX：41 42 0x00 ｜ ASCII：直接输入文本">
+                <button class="btn btn-primary" id="hv-search-btn" type="button">搜索</button>
+                <button class="btn btn-secondary" id="hv-match-prev" type="button">上一处</button>
+                <button class="btn btn-secondary" id="hv-match-next" type="button">下一处</button>
+            </div>
+            <p class="hv-info" id="hv-search-info"></p>
+        </div>
+
+        <div class="hv-card">
+            <h3>真限制说明</h3>
+            <div class="hv-tip">
+                <b>大文件仅分片读取／分页预览</b>：文件按页分片从磁盘读取（slice 分片），不一次性载入全部字节；超过 256MB 的文件本工具拒绝打开（浏览器内存上限）。<br>
+                <b>只读查看、无编辑</b>：本工具只能查看字节内容，不能修改文件；需要生成/转换字节请用 HEX ↔ C 数组互转器。<br>
+                <b>ASCII 列按 Latin-1 判定</b>：ASCII 列只把 0x20–0x7E 判为可打印字符，其余显示为「.」；UTF-8 等多字节字符会显示为其字节序列（如中文显示为连续的「.」）。<br>
+                <b>全程本地、零上传</b>：本页面零 fetch / XHR、零 CDN，文件经浏览器 File API 本地读取，字节数据不出本机。
+            </div>
+        </div>
+
+        <div class="hv-card">
+            <h3>相关工具</h3>
+            <div class="hv-links">
+                <a href="/tools/hex-c-array">HEX ↔ C 数组互转器（字节 ↔ 文本格式互转；本工具只做查看）</a>
+                <a href="/tools/bitwise-calculator">位运算计算器（双操作数位运算；本工具只做查看）</a>
+            </div>
+            <p class="hv-note">分工：查看 vs 互转 vs 运算——本工具只负责把文件字节「看」清楚；要把字节转成 C 数组/文本格式请用 HEX ↔ C 数组互转器；要对数值做位运算请用位运算计算器。</p>
+        </div>
+
+        <div class="hv-card">
+            <h3>常见问题</h3>
+            <dl class="hv-faq">
+                <dt><b>我的文件会被上传到服务器吗？</b></dt>
+                <dd>不会。文件经浏览器 File API 在本地分片读取，本页面零 fetch / XHR、零 CDN，字节数据不出本机。</dd>
+                <dt><b>为什么中文在 ASCII 列显示为「.」？</b></dt>
+                <dd>ASCII 列按 Latin-1 只判定 0x20–0x7E 为可打印字符；UTF-8 中文是多字节序列，每个字节都不在可打印范围内，故显示为连续的「.」。这是真限制，非乱码。</dd>
+                <dt><b>支持多大的文件？</b></dt>
+                <dd>上限 256MB；大文件按页分片读取预览，搜索也按 1MB 分块扫描，不会一次性吃掉内存。</dd>
+            </dl>
+        </div>
+    </div>
+    </div>
+    <div class="hv-toast" id="hv-toast"></div>
+    <script src="/tools/static/js/hex_viewer.js?v=1"></script>
+</body>
+</html>
+{{end}}

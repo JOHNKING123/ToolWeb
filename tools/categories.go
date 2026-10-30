@@ -544,6 +544,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "hex_viewer",
+					Name:        "文件十六进制查看器",
+					Description: "拖拽/选择本地文件→偏移列＋十六进制字节列（每行16字节大写HEX）＋ASCII列三栏查看；点击字节弹出逐字节检查器（偏移/HEX/十进制/二进制/字符五对照）；偏移跳转＋HEX/ASCII字节序列搜索；大文件分片读取分页预览，纯前端本地查看零上传 · Hex viewer: drag & drop local file → offset + hex + ASCII tri-pane view, per-byte inspector (offset/hex/dec/bin/char), offset jump & byte-sequence search, chunked paging for large files, 100% client-side",
+					Path:        "/tools/hex-viewer",
+					Icon:        "binary_info",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "map_memory_analyzer",
 					Name:        "MAP 文件内存分析器",
 					Description: "粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键解析内存区域占用（FLASH/RAM 使用条）、段汇总可排序表、对象文件 Top20、段内输入节明细，生成中文占用报告；.data 初始化段按 load address 同时计入 Flash 镜像与 RAM，纯前端零上传 · GCC linker map analyzer: parse -Map output to Flash/RAM usage, section summary, top object files, Chinese usage report, 100% client-side",
