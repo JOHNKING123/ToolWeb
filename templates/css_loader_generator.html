@@ -1,0 +1,180 @@
+{{define "css_loader_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 加载动画生成器 - 7 种 loader 参数化预设＋实时预览 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 CSS 加载动画生成器：spinner 旋转圆环／点跳跃／柱条跳动／脉冲／格点／波浪条／不确定进度条 7 种参数化 loader 预设，尺寸／颜色／速度／数量可调，实时预览＋深浅背景切换，复制 CSS/HTML 或下载 loader.css。纯前端本地运行，零第三方依赖。">
+    <meta name="keywords" content="CSS 加载动画生成器,loading 动画生成器,spinner 生成器,css loader,loading spinner css,加载中动画代码,css animation loader,进度条动画,骨架屏 loading">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/css-loader-generator">
+    <meta property="og:title" content="CSS 加载动画生成器 - 7 种 loader 参数化预设">
+    <meta property="og:description" content="7 种 loader 参数化预设：旋转圆环／点跳跃／柱条跳动／脉冲／格点／波浪条／不确定进度条，实时预览，一键复制 CSS/HTML。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/css-loader-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSS 加载动画生成器","description":"免费在线 CSS 加载动画生成器：spinner 旋转圆环／点跳跃／柱条跳动／脉冲／格点／波浪条／不确定进度条 7 种参数化 loader 预设，尺寸／颜色／速度／数量可调，实时预览，一键复制 CSS/HTML，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/css-loader-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .clg-wrap .container { max-width: 1280px; margin: 0 auto; padding: 1.2rem; }
+        .clg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .clg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .clg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .clg-err { color:#dc2626; font-size:.88rem; margin:.4rem 0 0; display:none; }
+        .clg-workbench { display:grid; grid-template-columns:300px 1fr 380px; gap:1rem; align-items:start; }
+        @media (max-width:1024px) { .clg-workbench { grid-template-columns:1fr; } }
+        .clg-types { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
+        .clg-type { border:1px solid #e5e7eb; border-radius:.55rem; padding:.6rem .55rem; cursor:pointer; background:#fff; text-align:left; color:#374151; }
+        .clg-type:hover { border-color:var(--primary-color); }
+        .clg-type-active { border-color:var(--primary-color); background:#eff6ff; box-shadow:0 0 0 1px var(--primary-color); }
+        .clg-type b { display:block; font-size:.9rem; color:#111827; margin-bottom:.2rem; }
+        .clg-type span { font-size:.78rem; color:#9ca3af; line-height:1.5; }
+        .clg-row { display:flex; gap:.5rem; align-items:center; margin:.6rem 0; flex-wrap:wrap; }
+        .clg-row label { font-size:.88rem; color:#374151; min-width:4.4em; }
+        .clg-row input[type=range] { flex:1; min-width:90px; }
+        .clg-row input[type=number] { width:62px; padding:.3rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.88rem; }
+        .clg-unit { font-size:.85rem; color:#9ca3af; min-width:1.6em; }
+        .clg-row input[type=color] { width:44px; height:34px; border:1px solid #d1d5db; border-radius:.4rem; padding:2px; background:#fff; cursor:pointer; }
+        .clg-row input[type=text] { width:92px; padding:.3rem .45rem; border:1px solid #d1d5db; border-radius:.4rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88rem; }
+        .clg-stage-wrap { border-radius:.7rem; border:1px solid #e5e7eb; background:#f9fafb; min-height:340px; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; transition:background .2s; }
+        .clg-stage-dark { background:#111827; border-color:#374151; }
+        .clg-preview-bar { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; margin-bottom:.6rem; }
+        .clg-tabs { display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:.6rem; }
+        .clg-tab { padding:.45rem 1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.9rem; }
+        .clg-tab-active { border-color:var(--primary-color); color:var(--primary-color); font-weight:600; background:#eff6ff; }
+        .clg-code { background:#111827; color:#d1fae5; border-radius:.6rem; padding:.9rem 1rem; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.8rem; line-height:1.7; word-break:break-all; white-space:pre-wrap; margin:.6rem 0; max-height:380px; overflow:auto; }
+        .clg-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .clg-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .clg-tip a { color:var(--primary-color); }
+        .clg-links { display:flex; gap:1.2rem; flex-wrap:wrap; align-items:baseline; }
+        .clg-links a { color:var(--primary-color); font-size:.93rem; }
+        .clg-link-note { font-size:.82rem; color:#9ca3af; }
+        .clg-limit { background:#fffbeb; border:1px solid #fde68a; border-radius:.6rem; padding:.8rem 1rem; margin-bottom:.7rem; }
+        .clg-limit b { color:#92400e; }
+        .clg-limit p { margin:.3rem 0; color:#78350f; font-size:.9rem; line-height:1.8; }
+        .clg-privacy { background:#ecfdf5; border:1px solid #a7f3d0; border-radius:.6rem; padding:.8rem 1rem; color:#065f46; font-size:.9rem; line-height:1.8; }
+        .clg-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        .clg-col-head { font-size:.95rem; font-weight:600; color:#111827; margin:0 0 .7rem; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="clg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔄 CSS 加载动画生成器</h1>
+            <p>7 种参数化 loader 预设：旋转圆环／点跳跃／柱条跳动／脉冲／格点／波浪条／不确定进度条，尺寸／颜色／速度／数量可调，实时预览一键复制</p>
+        </div>
+        <div class="tool-content" id="clg-form">
+            <div class="clg-workbench">
+                <div class="clg-card">
+                    <h3 class="clg-col-head">动画类型</h3>
+                    <div class="clg-types" id="clg-types"></div>
+                    <h3 class="clg-col-head" style="margin-top:1rem;">参数 <span class="clg-hint">（滑杆与数值框双向联动）</span></h3>
+                    <div class="clg-row">
+                        <label for="clg-size">尺寸</label>
+                        <input type="range" id="clg-size" min="16" max="128" step="1" value="48">
+                        <input type="number" id="clg-size-num" min="16" max="128" step="1" value="48">
+                        <span class="clg-unit">px</span>
+                    </div>
+                    <div class="clg-row">
+                        <label for="clg-color">颜色</label>
+                        <input type="color" id="clg-color" value="#2563eb">
+                        <input type="text" id="clg-color-text" value="#2563eb" spellcheck="false" autocomplete="off">
+                    </div>
+                    <div class="clg-row">
+                        <label for="clg-duration">速度</label>
+                        <input type="range" id="clg-duration" min="0.4" max="3" step="0.1" value="1">
+                        <input type="number" id="clg-duration-num" min="0.4" max="3" step="0.1" value="1">
+                        <span class="clg-unit">s/圈</span>
+                    </div>
+                    <div class="clg-row" id="clg-count-row">
+                        <label for="clg-count">数量</label>
+                        <input type="range" id="clg-count" min="2" max="5" step="1" value="3">
+                        <input type="number" id="clg-count-num" min="2" max="5" step="1" value="3">
+                        <span class="clg-unit" id="clg-count-hint">（2–5 个）</span>
+                    </div>
+                    <p class="clg-err" id="clg-err"></p>
+                </div>
+
+                <div class="clg-card">
+                    <div class="clg-preview-bar">
+                        <h3 class="clg-col-head" style="margin:0;">实时预览</h3>
+                        <button class="btn btn-secondary" id="clg-bg-toggle" type="button" style="font-size:.85rem;padding:.35rem .8rem;">切换深色背景</button>
+                    </div>
+                    <div class="clg-stage-wrap" id="clg-stage-wrap">
+                        <div id="clg-stage"></div>
+                    </div>
+                    <p class="clg-hint" style="margin-top:.6rem;">预览为真 .loader 元素渲染，与导出代码完全一致；点切换可验证深色背景下的对比度。</p>
+                </div>
+
+                <div class="clg-card">
+                    <h3 class="clg-col-head">代码</h3>
+                    <div class="clg-tabs" role="tablist">
+                        <button class="clg-tab clg-tab-active" id="clg-tab-css" type="button" role="tab">CSS</button>
+                        <button class="clg-tab" id="clg-tab-html" type="button" role="tab">HTML</button>
+                    </div>
+                    <div class="clg-code" id="clg-code"></div>
+                    <div class="clg-actions">
+                        <button class="btn btn-primary" id="clg-copy" type="button">📋 复制当前代码</button>
+                        <button class="btn btn-secondary" id="clg-download" type="button">⬇ 下载 loader.css</button>
+                    </div>
+                    <p class="clg-hint" style="margin-top:.6rem;">复制失败时会有明确降级提示，请手动选中代码区内容复制。</p>
+                </div>
+            </div>
+
+            <div class="clg-card">
+                <h3>使用说明</h3>
+                <ol class="clg-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>左侧选动画类型（共 7 种 loader 预设），调尺寸（16–128px）、颜色（任意 6 位 hex）、速度（0.4–3s）、数量（点跳跃 2–5 个／柱条 3–8 条）。</li>
+                    <li>中央预览区实时渲染真 .loader 元素，可切换白／深两档背景验证对比度。</li>
+                    <li>右栏 CSS/HTML 页签切换代码：CSS 为 .loader 规则块＋@keyframes，HTML 为结构片段，复制后粘贴进项目即可用，零依赖。</li>
+                    <li>点「下载 loader.css」保存当前类型的独立样式文件；复制 HTML 片段时记得一并带上对应 CSS。</li>
+                    <li>所有生成逻辑在浏览器本地完成，非法参数（如非 6 位 hex）会以中文报错提示，绝不静默钳制。</li>
+                </ol>
+            </div>
+
+            <div class="clg-card">
+                <h3>常见问题</h3>
+                <dl class="clg-tip">
+                    <dt><b>导出的 CSS 需要配合 JS 才能动起来吗？</b></dt>
+                    <dd>不需要。所有 loader 都是纯 CSS @keyframes animation，把 CSS 和 HTML 片段放进页面就能动，零依赖、零 JS 库。</dd>
+                    <dt><b>动画只做视觉提示，那真实的加载状态怎么接管？</b></dt>
+                    <dd>本工具只生成视觉 loader 动画，不管理真实的异步请求状态。请求开始前显示 .loader、请求完成后隐藏，这部分逻辑需要开发者在自己的代码里接管。</dd>
+                    <dt><b>为什么速度是「秒/圈」，数量有类型限制？</b></dt>
+                    <dd>速度即动画时长，一圈／一周期多少秒；数量按类型限定（如点跳跃 2–5 个、柱条 3–8 条），超出会报中文错误而非静默截断。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="clg-card">
+                <h3>相关工具</h3>
+                <div class="clg-links">
+                    <span><a href="/tools/skeleton-screen-generator">骨架屏加载占位生成器</a><span class="clg-link-note">（要整页骨架屏占位布局去这边，本页只做纯 loader 动画）</span></span>
+                    <span><a href="/tools/css-keyframe-generator">CSS 动画关键帧生成器</a><span class="clg-link-note">（想从零手编任意 keyframe 动画去这边，本页只给一键可用的 loader 预设）</span></span>
+                    <span><a href="/tools/css-button-generator">CSS 按钮生成器</a><span class="clg-link-note">（前端簇：按钮四态样式可视化生成）</span></span>
+                </div>
+            </div>
+
+            <div class="clg-card">
+                <h3>真限制说明</h3>
+                <div class="clg-limit">
+                    <p><b>① 生成的是独立 CSS keyframes</b>——不依赖任何 JS 库／框架，复制即用。</p>
+                    <p><b>② 动画只做视觉 loading 提示，不管理真实异步状态</b>——请求前后切换显示／隐藏需开发者自行接管。</p>
+                    <p><b>③ 依赖 CSS3 animation</b>——IE9 及以下等老浏览器不支持。</p>
+                    <p><b>④ 全程浏览器本地生成</b>——零上传，文本不出浏览器。</p>
+                </div>
+                <div class="clg-privacy">🔒 <b>隐私声明</b>：本工具全部计算在您的浏览器本地完成，零网络请求、零第三方依赖、零 CDN。您输入的颜色、参数与生成的代码只存在于当前页面，不收集、不上传、不存储。</div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="clg-toast" id="clg-toast"></div>
+    <script src="/tools/static/js/css_loader_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

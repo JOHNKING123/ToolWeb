@@ -751,6 +751,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "css_loader_generator",
+					Name:        "CSS 加载动画生成器",
+					Description: "7 种参数化 loader 预设：spinner 旋转圆环／点跳跃／柱条跳动／脉冲／格点／波浪条／不确定进度条，尺寸 16–128px／任意 hex 颜色／速度 0.4–3s／数量滑杆可调，中央实时预览白/深背景切换，CSS/HTML 双页签复制＋下载 loader.css，纯前端零上传 · CSS loader generator: 7 animated spinners, params preview, copy/download, 100% client-side",
+					Path:        "/tools/css-loader-generator",
+					Icon:        "autorenew",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "css_text_shadow_generator",
 					Name:        "CSS 文字阴影生成器",
 					Description: "图层增删／上移／下移 1–10 层，首层在最上层，每层 X／Y 偏移 −100–100px、模糊 0–100px、颜色 #RGB／#RRGGBB、不透明度 0–1 滑杆，霓虹辉光／3D 立体／复古／浮雕／长阴影五预设，预览文字／字号／字色／背景编辑，大字实时预览，复制 text-shadow 或完整 CSS、下载 text-shadow.css／text-shadow-demo.html，纯前端零上传 · CSS text shadow generator: layer editor, 5 presets, live preview, copy/download, 100% client-side",

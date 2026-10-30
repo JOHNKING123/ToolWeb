@@ -1,3 +1,160 @@
+## 今日任务（2026-10-30 12:46 · 产品经理排期轮，接 158 轮调研）
+
+**选定：CSS 加载动画生成器** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（158 轮）Top3 **首席推荐**（145 轮观察项，本轮建议晋升 P2 顺位首席；`css-loader`／「加载动画」全站 0 命中真缺口），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **PM 口径裁定：与「骨架屏加载占位生成器」的边界划分**——已存在工具（ID `skeleton_screen_generator`、Path `/tools/skeleton-screen-generator`）做「占位块布局＋扫过／呼吸动效附加」，本工具**只做独立可复用的加载动画 keyframes**：spinner 旋转圆环、dots 点跳跃、bars 柱条跳动、pulse 脉冲、grid 格点、wave-bar 波浪条、progress-bar 进度条共 7 类，参数（尺寸／颜色／速度／数量）可调、实时预览、一键复制 CSS；**不做骨架屏占位布局块**，与之互链而非重叠（沿用 09:40 轮「位运算计算器 vs 寄存器位域编辑器」口径划分惯例）。
+- **PM 口径裁定：与「CSS 动画关键帧生成器」的边界划分（11:51 轮 PM 复核补记，修正 12:46 版遗漏）**——已存在工具（ID `css_keyframe_generator`、Path `/tools/css-keyframe-generator`、Icon `animation`）是**通用单元素 keyframe 时间轴编辑器**：预设仅 fade-in／slide-in-left／bounce／rotate／pulse 五个单元素动画，核心能力是不透明度／位移／缩放／旋转／背景色五类属性的逐帧增删改＋时长／延迟／缓动／循环全控件。本工具只做 **7 种参数化 loader 预设**：多元素交错延迟（dots/bars 按 count 生成元素、stagger = speed/6 逐项 animation-delay）、尺寸／颜色／速度／数量滑杆、一键复制现成 `.loader` HTML+CSS——这是关键帧编辑器**做不出来的形态**（它不做多元素、不断参数生成交错延迟）。一句话边界：**关键帧生成器是「从零手编任意动画」，本工具是「一键拿现成 loader」**，互链而非重叠；且因 Icon `animation` 已被其占用，本工具 Icon 改为 `autorenew`（实测 0 占用、贴 loader 主题；`refresh`／`hourglass_empty`／`timelapse` 等亦 0 占用）。
+- **未选**：
+  - 截图 3D 样机渲染器（157 轮新晋 P2，Perspecto 信号；`mockup`／样机 0 命中；排第二顺位待后轮——首席无硬伤，不插队）。
+  - llms.txt 生成器（115 轮观察项，`llms.txt` 0 命中；排第三顺位）。
+  - 在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+  - 记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，留观察低优先）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（`git fetch` 已通）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **230**；`css-loader`／`loading-animation`／`css_load`／`spinner-generator` 全站 0 命中；`skeleton` 命中 `skeleton_screen_generator`（骨架屏加载占位生成器——已按上条口径划分边界）；`llms` 全站仅命中 categories.go 另一工具描述中的 "for LLMs" 关键词（ID 为文件夹打包 TXT 喂 LLM 工具，口径完全不同）；`mockup`／`3d-mockup`／`perspecto`／「样机渲染」0 命中（3D 样机渲染器仍无重叠，排第二顺位）。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——前端开发做 loading 状态、骨架屏样式时反复手写 CSS 动画或去 CodePen 复制，缺「实时预览＋一键复制代码」的免费工具；③ **一轮可高质量交付**——纯前端小难度：动画类型×参数组合是确定性纯函数（参数→CSS 字符串），可写成精确向量供 node 断言；④ **前端簇补位**——与骨架屏加载占位生成器／CSS 按钮生成器互链，「loader 动画 vs 占位布局 vs 按钮样式」边界清晰；⑤ **零上传、零依赖、零 CDN**——纯前端单页；⑥ **方向合规**——ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **品类归位**：注册到「开发工具」品类（前端簇补位；骨架屏工具也在此品类，互链顺手）；New: true；Icon `autorenew`（11:51 轮 PM 复核修正：`animation` 已被 CSS 动画关键帧生成器占用，原「0 占用」为误判）。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① **生成的是独立 CSS keyframes**——不依赖任何 JS 库／框架，复制即用；② **动画只做视觉 loading 提示，不管理真实异步状态**——请求前后切换显示／隐藏需开发者自行接管；③ **依赖 CSS3 animation**——IE9 及以下等老浏览器不支持；④ **全程浏览器本地生成**，零上传。
+
+**规格**（开发轮按此执行）：
+- **动画库**：7 类 loader（spinner-ring 旋转圆环／spinner-dots 点跳跃／bars 柱条跳动／pulse 脉冲／grid 格点／wave-bar 波浪条／progress-bar 进度条），左栏卡片选择；每类参数滑杆＋颜色选择器：尺寸 16–128px、颜色（任意 hex）、速度 0.4–3s、数量（dots 2–5／bars 3–8 等，按类型限定），非法参数抛 Error（err.field="param"，页面中文提示）。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `loaderTypes()` → `['spinner-ring','spinner-dots','bars','pulse','grid','wave-bar','progress-bar']`。
+  - `defaultParams(type)` → 各类默认参数对象（含 size／color／speed／count）。
+  - `generateLoaderCSS(type, params)` → 完整 CSS 代码字符串（`.loader` 类名＋ `@keyframes`，注释标注复制即用）。
+  - `generateLoaderHTML(type, params)` → 对应 HTML 片段（`<div class="loader">…</div>`）。
+  - `generateLoaderPreview(type, params)` → 一站式供 UI 调用 `{css, html, label}`。
+- **确定性向量**（开发轮必须逐字命中；params 均取默认）：
+  - `loaderTypes()` → 7 项数组如上，顺序固定。
+  - `generateLoaderCSS('spinner-ring', defaultParams('spinner-ring'))` 包含 `'@keyframes spin'`、`'animation: spin 1s linear infinite'` 与 `'border-radius: 50%'`。
+  - `generateLoaderCSS('spinner-dots', {size:48, color:'#3b82f6', speed:0.9, count:3})` 含 3 个 dot 元素（按 count 生成）、`animation-delay` 逐项为 `0s`／`0.15s`／`0.3s`（stagger = speed/6 保留两位小数）。
+  - `generateLoaderCSS('bars', {size:48, color:'#000000', speed:1, count:5})` 含 5 条 bar、`@keyframes bar-bounce`。
+  - `generateLoaderCSS('progress-bar', defaultParams('progress-bar'))` 含 `@keyframes progress-indeterminate`（不确定进度条）。
+  - `generateLoaderHTML('spinner-dots', {count:3})` → 恰 3 个 `<span>` 的 div.loader。
+  - `generateLoaderCSS('unknown-type', {})` 抛 Error（err.field="type"）；`generateLoaderCSS('bars', {size:-1})` 抛 Error（err.field="param"）；颜色 `'red'`／`'zzz'` 等非 6 位 hex 抛 Error（err.field="param"）。
+- **界面**：左栏动画类型卡片（7 类小图标预览）＋参数面板（滑杆／颜色选择器／数字输入）＋ 中央大预览区（白／深两档背景切换）＋ 右栏代码区（CSS 标签页／HTML 标签页，「复制 CSS」「复制 HTML」「下载 .css」按钮）＋ 使用说明（复制到项目即可用、零依赖）＋ 真限制四条提示条＋隐私声明（全本地生成、零上传）；所有提示中文；用户输入与结果用 textContent 或转义后插值。
+- **操作与互链**：与骨架屏加载占位生成器互链（文案：要整页骨架屏占位布局去这边，本页只做纯 loader 动画）、CSS 按钮生成器互链（前端簇）、CSS 动画关键帧生成器互链（文案：想从零手编任意 keyframe 动画去这边，本页只给一键可用的 loader 预设）；不与未交付工具（截图 3D 样机渲染器／llms.txt 生成器）互链。
+- **技术路线**：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- **注册**：ID `css_loader_generator`、Name「CSS 加载动画生成器」、Path `/tools/css-loader-generator`、Category 开发工具、New: true、Icon `autorenew`（11:51 轮 PM 复核修正，原 `animation` 已被占用）；中英文描述＋SEO keywords（css 加载动画、loading 动画生成器、spinner 生成器、css loader、loading spinner css、加载中动画代码、css animation loader）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/css-loader-generator，相关工具互链骨架屏加载占位生成器、CSS 按钮生成器。
+- **预计改动文件**：`templates/css_loader_generator.html`（新）、`static/js/css_loader_generator.js`（新）、`tests/css_loader_generator.test.js`（新）、`tools/categories.go`（注册，Path 总数 230→231）；旧测试 Path 断言 230→231 同步：`tests/bitwise_calculator.test.js`、`tests/bookmark_cleaner.test.js`、`tests/gif_compress.test.js`、`tests/hex_c_array.test.js`、`tests/map_memory_analyzer.test.js`、`tests/modbus_frame_tool.test.js`、`tests/nat_type_detector.test.js`、`tests/regex_generator.test.js`、`tests/register_bitfield_editor.test.js`、`tests/subtitle_editor.test.js`、`tests/text_to_pdf.test.js`（11 个）。
+- **验收红线**：node 断言全过（上列确定性向量逐字命中）；`go build`／`go vet` 通过；Path 总数 230→231、ID／Path 双注册；真限制四条页面明示；零上传／零依赖／零 CDN 源码自检通过；与骨架屏加载占位生成器／CSS 按钮生成器／CSS 动画关键帧生成器互链、不链未交付工具；Icon 用 `autorenew`（`animation` 已被占用）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 已通；仅做读操作＋BACKLOG.md 顶部追加／修正，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 c52b3d3（位运算计算器新增）／d7e452c（MAP 文件内存分析器）／2dae438（文本转 PDF）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **230**；Top3 候选重叠复核（`css-loader`／「加载动画」0 命中；`skeleton` 命中为骨架屏占位生成器、已口径划分；`keyframe`／`css-keyframe-generator` 命中现有 CSS 动画关键帧生成器（通用单元素 keyframe 时间轴编辑器、五预设 fade-in/slide-in-left/bounce/rotate/pulse），11:51 轮 PM 已补口径划分：「一键拿现成 loader vs 从零手编任意动画」，互链不重叠；**Icon `animation` 实测被其占用，原 0 占用结论修正**，本工具 Icon 改 `autorenew`（`refresh`／`hourglass_empty`／`timelapse`／`loop`／`sync` 均 0 占用实测）；`llms` 命中为另一工具描述关键词非独立工具；`mockup`／样机／perspecto 0 命中；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+**交付状态**：10-30 通用调研第一百五十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**位运算计算器已交付闭环**（c52b3d3 新增：双操作数×8/16/32/64 位宽×AND/OR/XOR/NOT/移位/循环移位，64 位 BigInt 精确计算；`grep -oE '"/tools/[^"]+"' tools/categories.go` 全量 **230 Path**，ID bitwise_calculator、Path `/tools/bitwise-calculator` 已注册；templates／static/js／tests 三件套在库；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:36 轮，优先小／中难度纯前端。
+**本轮三件事**（11:36 全网调研，通用方向）：
+1. 位运算计算器交付确认：`git log` 头部 c52b3d3（位运算计算器新增）／d7e452c（MAP 文件内存分析器）／2dae438（文本转 PDF）；全量 230 Path；ID `bitwise_calculator`、Path `/tools/bitwise-calculator` 双注册（categories.go 1 注册命中）；本地当前分支 muse/dev-20260929（本轮 `git fetch` 无报错输出——仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. 留池复核：位运算计算器交付闭环，首席顺位空出；**CSS 加载动画生成器（145 轮观察项；`css-loader`／「加载动画」全站 0 命中实测确认真缺口）建议晋升 P2 顺位首席**；截图 3D 样机渲染器（157 轮新晋 P2，Perspecto 信号）保持；**批量图片模糊打码器（122 轮观察项）→ 按惯例被「图片打码」（ID `img_mosaic`、Path `/tools/img-mosaic`，描述「框选区域马赛克/高斯模糊打码，遮车牌人脸手机号，本地处理不上传」）覆盖，候选池划出，不再复列**；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，低优先）保持观察。
+3. 新信号扫描（V2EX 分享创造／分享发现节点 10-30 API 全量＋PH 10-29~10-30＋dev.to／英文侧＋哎呦不错网日榜为主线）：**本轮无新晋 P2，全部消解**——
+   - V2EX 分享创造（t/1253127 FoldGit：macOS 原生 Git 桌面客户端；t/1253094「Don't Touch My Mac」：Swift macOS 桌面 App，顺带 RoamDial 安卓 App；t/1253088 钱夹 Billfold：iOS 资产 App，泛财务＋移动端；t/1253084 悟空遥控：Kotlin Multiplatform＋ADB，移动端＋服务端运行时；t/1253063 Terry's Home：3D voxel 风格个人站，非单页工具；t/1253054 GetTokenSwitch：Codex 桌面配置工具；t/1253051 SoloEx 每日开源：社区栏目；t/1253050 会议室投屏（beam.3198.net）：需 WebSocket＋Redis 服务端＋PPTX 用 LibreOffice 转码，非纯前端可闭环；t/1253036 iOS 摄影学英语 App）——桌面 App／移动 App／需服务端／整站形态全部消解；
+   - V2EX 分享发现（t/1253119：AI 视频生成器广告帖，AI＋按次收费；t/1253114：表情包图片帖）——消解；
+   - t/1252576 FrameLoom（10-28：文档→动画视频，AI Agent＋Remotion 本地渲染，配音服务收费）——消解；
+   - t/1252552 tubox（10-28：第七轮重发帖，13 项清单无新口径）——消解；
+   - Product Hunt 10-29~10-30：AI-Atlas（AI 评估 GitHub 代码的 SaaS）／Radar（K8s AI 诊断）／HiveMind（Notion 模板）／/dev/null（开发者社交网络）／Spira Maxima（AI 视频生成模型）／Talanoa（邮件客户端，157 轮已消解）／Trigger.dev（AI agent 基础设施）／MetaHarness（CLI，agent harness 生成器）／Current（Mac 更新器 App）／Dedica＋BotGauge（AI agent 配套工具）——AI／后端／桌面 App／模板形态全部消解；Perspecto 作者 10-28 flop 复盘帖（PH 仅带来 1 个访客、1/3 会话来自 AI 助手；转向写指南＋Figma 插件）——验证截图 3D 样机需求真实性与免费网页版缺口，强化本轮 P2；
+   - dev.to／英文侧：BoardScout（10-20，搜索路由站，依赖 Google 搜索 API）／web.cyberwarex（按次付费的 agent 网页读取 API）——消解；HN Firebase vs Algolia 文——方法论文，非新工具；
+   - 哎呦不错网 10-30 日榜：send.wang（WebRTC P2P 文件传输，需信令服务端）——消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；位运算计算器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮无新晋 P2，第三候选从观察项递补）：
+1. **CSS 加载动画生成器** — 145 轮观察项，建议晋升 P2 顺位首席（`css-loader`／「加载动画」全站 0 命中真缺口；纯前端小难度：spinner／skeleton／进度条等动画实时预览＋一键复制 CSS 代码；前端簇补位，与站内 CSS 按钮／背景图案等工具互链）。
+2. **截图 3D 样机渲染器** — 157 轮新晋 P2（Perspecto 信号＋作者 10-28 flop 复盘验证：需求真实、收费墙下免费网页版有缺口；`mockup`／样机／perspecto 0 命中；纯前端小／中难度：上传截图→CSS 3D 透视倾斜→canvas 渲染→下载 PNG，零上传；设计／图片簇补位；真限制：机身框为自绘 CSS/canvas，非真实设备照片级还原，须明示）。
+3. **llms.txt 生成器** — 115 轮观察项（`llms.txt` 全站 0 命中真缺口；2026 AI 爬虫／Agent 浪潮：本轮 scan 里 cyberwarex 发 llms.txt、Perspecto 作者统计 1/3 流量来自 AI 助手——站长需要向 AI 正确暴露网站内容，llms.txt 新兴标准手写门槛高；表单向导→标准格式生成＋规范校验＋一键下载，纯前端小难度；开发工具簇补位）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：记事本式计算器（Calcy 式；08:20 轮 PM 已裁定不踩 10-18 红线，低优先）；URL 大字报展示器（156 轮，低）；Slug 生成器／Meta 标签生成器（100–101 轮；Meta 口径与站内「OG 卡片预览」相邻，独立成项待 PM 裁定）；WhatsApp 链接生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 157 轮及之前记录。
+
+**通用候选表增量**（第一百五十八轮：位运算计算器已交付划出（c52b3d3 新增；ID bitwise_calculator、Path /tools/bitwise-calculator 双注册；全量 230 Path；候选池划出）；**CSS 加载动画生成器建议晋升 P2 顺位首席**（145 轮观察项；css-loader／加载动画 0 命中）；截图 3D 样机渲染器保持 P2（157 轮；Perspecto flop 复盘验证）；llms.txt 生成器（115 轮观察项；llms.txt 0 命中；AI 浪潮单页新口径）；批量图片模糊打码器候选池划出（被「图片打码」img_mosaic 覆盖）；自有实锤消解 14 项（V2EX 分享创造 10 帖全部桌面 App／移动 App／需服务端／整站形态；分享发现 2 帖；FrameLoom；tubox 七发；PH 10 项 AI／后端／App／模板；dev.to 2 项；send.wang P2P 需信令服务端；Perspecto 复盘反向验证）；全量 230 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 位运算计算器 | 已交付划出（c52b3d3 新增；ID bitwise_calculator、Path /tools/bitwise-calculator 双注册；全量 230 Path；候选池划出） | — | 已实现 |
+| CSS 加载动画生成器 | 建议晋升 P2 顺位首席（145 轮观察项；css-loader／加载动画 0 命中；纯前端小难度：加载动画实时预览＋一键复制 CSS；前端簇补位） | 小 | P2（留池） |
+| 截图 3D 样机渲染器 | 157 轮 P2（Perspecto 信号＋10-28 flop 复盘验证；mockup／样机／perspecto 0 命中）；纯前端小／中难度：CSS 3D 透视＋canvas 渲染＋PNG 下载，零上传；真限制：机身框自绘、非照片级还原须明示 | 小/中 | P2（留池） |
+| llms.txt 生成器 | 115 轮观察项；llms.txt 全站 0 命中；2026 AI 爬虫／Agent 浪潮：表单→标准 llms.txt 生成＋校验＋下载；纯前端小难度；开发工具簇补位 | 小 | 观察（留池） |
+| 批量图片模糊打码器 | 按惯例被「图片打码」（ID img_mosaic、Path /tools/img-mosaic，框选区域马赛克/高斯模糊打码，本地处理不上传）覆盖，候选池划出，不再复列 | — | 已覆盖 |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十八轮——位运算计算器交付闭环（c52b3d3，`/tools/bitwise-calculator` 已注册，全量 230 Path），候选池划出；**CSS 加载动画生成器建议晋升 P2 顺位首席**（145 轮观察项，css-loader／加载动画 0 命中）；截图 3D 样机渲染器保持 P2（157 轮；Perspecto 作者 flop 复盘反向验证需求真实性）；llms.txt 生成器（115 轮观察项）本轮递补第三顺位（AI 浪潮新信号）；批量图片模糊打码器按 PM 惯例划出（被图片打码覆盖）；本轮消解 14 项（V2EX 两节点 12 帖全部非单页纯前端形态；FrameLoom；tubox 七发；PH 10 项 AI／后端／App／模板；dev.to 2 项；send.wang）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 无报错输出；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 c52b3d3（位运算计算器新增）／d7e452c（MAP 文件内存分析器）／2dae438（文本转 PDF）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **230**；Top3 候选重叠复核（bitwise_calculator 在 categories.go 1 注册命中，为本轮已交付项，3 件套在库；`css-loader`／「加载动画」0 命中；`mockup`／`3d-mockup`／`perspecto`／「样机渲染」0 命中；`llms.txt` 0 命中；在线电台收听器硬伤未解跳过；批量图片模糊打码器已按惯例划出；slug 唯一命中为 color_palette 测试断言里的模板变量名，非独立工具；Meta 口径站内「OG 卡片预览」存在，Slug／Meta 标签生成器保持观察）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-30 09:40 · 产品经理排期轮，接 157 轮调研）
+
+**选定：位运算计算器** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（157 轮）Top3 **首席推荐**（122 轮观察项，本轮建议晋升 P2 顺位首席；`bitwise` 全站 0 命中；「位运算」2 命中仅为寄存器位域编辑器 FAQ 文字与 file_checksum 代码注释，非独立工具），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **未选**：
+  - CSS 加载动画生成器（145 轮观察项，`css-loader`／加载动画生成器 0 命中已实测确认；排第二顺位待后轮——首席无硬伤，不插队）。
+  - 截图 3D 样机渲染器（本轮新晋 P2，Perspecto 信号；`mockup`／样机 0 命中；排第三顺位）。
+  - 在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+  - 记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，留观察低优先）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（`git fetch` 因 SSH 权限报错未通——仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发／评审轮次提交，沿用惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **229**；`bitwise`／`bitop`／`bit-wise` 在 templates／static/js／tools／tests 全站 0 命中；「位运算」2 命中为 FAQ 文案（register_bitfield_editor.html:157）与 file_checksum_core.js:189 注释，非独立工具；与「寄存器位域查看与编辑器」口径不重叠实测：该工具做 32 位单值的位图置位＋C 宏生成，本工具做双操作数表达式级 AND/OR/XOR/NOT/移位＋进制互转，互链而非重叠。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——嵌入式／算法题人群做表达式级位运算靠系统计算器或手写，`bitwise` 全站 0 命中是真缺口；③ **一轮可高质量交付**——纯前端小难度：位运算是确定性纯函数，可写成精确向量供 node 断言，难度低于 MAP 分析器一轮的体量；④ **嵌入式簇补位**——与寄存器位域编辑器／HEX↔C 数组／CRC 校验和计算器互链，「表达式运算 vs 位图编辑 vs 字节格式互转」边界清晰；⑤ **零上传、零依赖、零 CDN**——纯前端单页；⑥ **方向合规**——ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **品类归位**：注册到「开发工具」品类（嵌入式簇补位）；New: true；Icon `engineering`（`memory` 被占用、`calculate`／`code` 被占用，`engineering`／`toggle_on`／`pin` 均 0 占用实测；选 `engineering` 贴嵌入式受众）。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① **JS 位运算只有 32 位**——8/16/32 位用位运算实现，64 位用 BigInt 实现，页面须说明精度边界；② **移位按位宽掩码**——如 8 位 0x81<<1 = 0x02（溢出位丢弃），非无限精度整数；③ **负数按补码显示**——输入 -1（32 位）显示 HEX 0xFFFFFFFF，页面说明口径；④ **全程浏览器本地计算**，零上传。
+
+**规格**（开发轮按此执行）：
+- **输入**：两操作数输入框（各带进制选择 hex/dec/bin，前缀 0x／0b 可带可不带；非法输入抛 Error，err.field="op1"/"op2"，页面中文提示）＋ 位宽选择（8/16/32/64，默认 32）＋ 运算符选择（AND／OR／XOR／NOT（单操作数）／<<／逻辑 >>／循环左移 ROL／循环右移 ROR，默认 AND）＋「计算」按钮；NOT 时 op2 输入框禁用置灰。
+- **解析/计算**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `parseOperand(str, base)` → BigInt（按位宽归一化到 [0, 2^w)；空串／非法字符抛 Error）。
+  - `bitwiseAnd(a, b, w)`／`bitwiseOr`／`bitwiseXor`／`bitwiseNot(a, w)`／`shiftLeft(a, n, w)`／`shiftRightLogical(a, n, w)`／`rotateLeft(a, n, w)`／`rotateRight(a, n, w)` → 归一化结果 BigInt（移位量 n 先按 `n % w` 归一化；<< 结果按位宽掩码）。
+  - `formatHex(v, w)`（0x 前缀、大写、按位宽补齐位数）／`formatDec(v, w)`（无符号十进制）／`formatSigned(v, w)`（补码有符号）／`formatBin(v, w)`（0b 前缀、按位宽补齐，8 位一组空格分隔）——沿用家族 formatBytes 中文可读惯例（另给 `formatBytes` 风格的「n 位」说明）。
+  - `bitwiseSummary(a, b, op, w)` → `{a, b, result, hex, dec, signed, bin}` 一站式供 UI 调用。
+- **确定性向量**（开发轮必须逐字命中；w 为位宽）：
+  - `bitwiseSummary(0xFF00n, 0x0F0Fn, 'AND', 16).result` = 0x0F00n；`formatHex` → `'0x0F00'`。
+  - `bitwiseSummary(0xFF00n, 0x0F0Fn, 'XOR', 16).result` = 0xF00Fn。
+  - `bitwiseSummary(0x00n, null, 'NOT', 8).result` = 0xFFn。
+  - `shiftLeft(0xDEADBEEFn, 4n, 32)` = 0xEADBEEF0n（32 位掩码）。
+  - `shiftLeft(0x81n, 1n, 8)` = 0x02n（8 位溢出丢弃）。
+  - `rotateLeft(0x81n, 1n, 8)` = 0x03n（循环回绕）。
+  - `formatBin(0xA5n, 8)` → `'0b1010 0101'`；`formatSigned(0xFFFFFFFFn, 32)` → `'-1'`。
+  - `parseOperand('zz', 'hex')` 抛 Error（err.field="op"）；`parseOperand('', 'dec')` 抛 Error。
+- **界面**：输入区（双操作数＋进制＋位宽＋运算符＋计算按钮）＋ 结果区：① 结果三进制对照卡（HEX／DEC 无符号／DEC 有符号／BIN 四行，可逐行复制）；② 表达式回显（`0xFF00 AND 0x0F0F (16位) = 0x0F00`）＋「复制表达式」；③ 真限制三条提示条＋隐私声明（全本地计算、零上传）；所有提示中文；用户输入与结果用 textContent 或转义后插值。
+- **操作与互链**：与寄存器位域查看与编辑器（文案：算完表达式、单值位图编辑去位域编辑器微调）、HEX ↔ C 数组互转器、CRC 校验和计算器互链（嵌入式簇）；不与未交付工具（CSS 加载动画生成器／截图 3D 样机渲染器）互链。
+- **技术路线**：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- **注册**：ID `bitwise_calculator`、Name「位运算计算器」、Path `/tools/bitwise-calculator`、Category 开发工具、New: true、Icon `engineering`；中英文描述＋SEO keywords（位运算计算器、与或非异或、移位运算、进制转换、bitwise calculator、and or xor not、bit shift calculator、嵌入式位运算）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/bitwise-calculator，相关工具互链寄存器位域查看与编辑器、HEX ↔ C 数组互转器、CRC 校验和计算器。
+- **预计改动文件**：`templates/bitwise_calculator.html`（新）、`static/js/bitwise_calculator.js`（新）、`tests/bitwise_calculator.test.js`（新）、`tools/categories.go`（注册，Path 总数 229→230）；旧测试 Path 断言 229→230 同步：`tests/bookmark_cleaner.test.js`、`tests/file_checksum.test.js`、`tests/gif_compress.test.js`、`tests/hex_c_array.test.js`、`tests/map_memory_analyzer.test.js`、`tests/modbus_frame_tool.test.js`、`tests/regex_generator.test.js`、`tests/register_bitfield_editor.test.js`、`tests/svg_to_font.test.js`、`tests/text_to_pdf.test.js`。
+- **验收红线**：node 断言全过（上列确定性向量逐字命中）；`go build`／`go vet` 通过；Path 总数 229→230、ID／Path 双注册；真限制四条页面明示；零上传／零依赖／零 CDN 源码自检通过；与嵌入式簇三工具互链、不链未交付工具。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 因 SSH 权限报错未通；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发／评审轮次提交，沿用研究轮惯例）；`git log` 头部 2026-10-30 新增 MAP 文件内存分析器；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **229**；Top3 候选重叠复核（map_memory_analyzer 在 categories.go 1 注册命中，为本轮已交付项；`bitwise` 0 命中、「位运算」2 命中仅 FAQ／注释非独立工具；`css-loader`／加载动画生成器 0 命中；`mockup`／样机／perspecto 0 命中；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-30 09:36 · 通用调研第一百五十七轮）
+
+**交付状态**：10-30 通用调研第一百五十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**MAP 文件内存分析器已交付闭环**（git log 2026-10-30 头部新增：GCC ld -Map 输出→内存区域占用总览（Flash/RAM 使用条）／段汇总可排序表／对象文件 Top20／段内明细／中文占用报告复制+下载；纯函数双模式导出（detectMapFormat/parseMemoryRegions/parseMapSections/computeRegionUsage/topObjects/summarizeMap/formatBytes/generateExampleMap），node 78 断言全过；真限制四条页面明示；与嵌入式簇四工具互链；注册开发工具品类 Path 总数 228→229，ID map_memory_analyzer、Path /tools/map-memory-analyzer 双注册；7 旧测试 Path 断言同步；go build/vet 通过；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 轮，优先小／中难度纯前端。
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. MAP 文件内存分析器交付确认：`git log` 头部 2026-10-30 新增 MAP 文件内存分析器；全量 229 Path；ID map_memory_analyzer、Path /tools/map-memory-analyzer 双注册；本地当前分支 muse/dev-20260929（本轮 `git fetch` 因 SSH 权限报错未通——仅做读操作与 BACKLOG 维护，不提交不推送，随 PM 轮次处理，沿用研究轮惯例）。
+2. 留池复核：MAP 交付闭环，首席顺位空出；**位运算计算器（122 轮观察项；`bitwise` 全站 0 命中，「位运算」2 命中仅为寄存器位域编辑器 FAQ 文字与 file_checksum 代码注释，非独立工具）建议晋升 P2 顺位首席**；CSS 加载动画生成器（145 轮观察项；`css-loader`／加载动画生成器 0 命中）保持；**截图 3D 样机渲染器（Perspecto 信号）新晋 P2**；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，留观察低优先）保持。
+3. 新信号扫描（V2EX 10-29~10-30 新帖＋HN／PH／dev.to 中英文侧为主线）：**新晋 P2 一项——截图 3D 样机渲染器**（见下）；其余全部消解，不立新 P2——
+   - tubox 图片工具箱（t/1252552）：第六轮重发帖，13 项清单无新口径（前五轮已逐项分析），消解；
+   - xGoose AI 浏览器插件（t/1252493，10-28）：Chrome 插件形态，153/154/156 轮已消解，本轮重发无新口径，消解；
+   - OpenLux／NodeAI API 额度送帖（10-23／10-29）：模型 API 促销，非网页工具，消解；
+   - 基金投资 agent（10-27）：AI Agent 整站，非单页工具，消解；
+   - HN Show HN：单页阅读工具（内容站）／HN 新帖高亮书签脚本（脚本非工具站）／Mnml.page（Next.js+后端 SaaS）／Hob（桌面 App）均非单页纯前端工具，消解；
+   - Product Hunt 10-26~10-29：WebToolsKit（80+ 工具 all-in-one，定位验证站内隐私优先路线；其 PDF 合并／压缩口径站内已有 PDF 工具簇，逐项核对无新口径）、PDF Accessibility Checker（需 pdf.js 深度解析＋规则引擎，非一轮单页可高质量交付，消解）、Textfold（Mac 文本扩展 App）、ReSO（AI SEO 审计，需 AI）、Talanoa（邮件客户端整站）、N8N Chat UI（AI）、PulseDev（IDE 插件＋AI）均消解；
+   - Perspecto（10-28 PH＋Medium 博主复盘）：截图→3D 样机展示浏览器工具，单页纯前端可行（CSS 3D 透视＋canvas 渲染＋PNG 下载），**新晋 P2**；
+   - dev.to／91yun／daily.dev 榜单文：AI 编程助手／云服务免费档／AI 工具大全，均为 SaaS/AI/IDE 类，无单页新口径。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；MAP 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮新晋 P2 一项）：
+1. **位运算计算器** — 122 轮观察项，建议晋升 P2 顺位首席（`bitwise` 全站 0 命中真缺口；「位运算」2 命中仅 FAQ／代码注释，非独立工具；与「寄存器位域编辑器」（位图置位＋C 宏生成）口径不重叠：本工具做表达式级 AND/OR/XOR/NOT/移位，支持 hex/dec/bin 互转输入与结果对照；嵌入式／算法题受众；纯前端小难度）。
+2. **CSS 加载动画生成器** — 145 轮观察项（`css-loader`／加载动画生成器 全站 0 命中真缺口；纯前端小难度：spinner／skeleton／进度条等动画实时预览＋一键复制 CSS 代码；前端簇补位，与站内 CSS 按钮／背景图案等工具互链）。
+3. **截图 3D 样机渲染器** — 本轮新晋 P2（Perspecto 信号：截图→3D 样机展示，PH 10-26 榜单＋Medium 10-28 博主复盘；`mockup`／样机／perspecto 全站 0 命中真缺口；痛点：设计师／开发者想把截图做成精美 3D 展示图，现有路线是 Figma 插件或收费站；纯前端小／中难度：上传截图→CSS 3D 透视倾斜→canvas 渲染→下载 PNG，零上传；设计／图片簇补位；真限制：机身框为自绘 CSS/canvas，非真实设备照片级还原，须明示）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：记事本式计算器（Calcy 式；08:20 轮 PM 方向合规已裁定，低优先）；URL 大字报展示器（156 轮，低）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；Slug 生成器／Meta 标签生成器（100–101 轮）；WhatsApp 链接生成器／llms.txt 生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；批量图片模糊打码器（122 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 156 轮及之前记录。
+
+**通用候选表增量**（第一百五十七轮：MAP 文件内存分析器已交付划出（2026-10-30 新增；ID map_memory_analyzer、Path /tools/map-memory-analyzer 双注册；全量 229 Path；候选池划出）；**位运算计算器建议晋升 P2 顺位首席**（122 轮观察项；「位运算」2 命中仅 FAQ／注释，非独立工具）；**截图 3D 样机渲染器新晋 P2**（本轮新信号；mockup／样机 0 命中）；自有实锤消解 10 项（tubox 六发无新口径；xGoose 插件形态；OpenLux／NodeAI API 促销；基金 agent 整站；HN 阅读工具／书签脚本／Mnml SaaS／Hob 桌面；PH WebToolsKit 无新口径（PDF 工具簇已覆盖）／PDF Accessibility 需深度解析／Textfold Mac App／ReSO／Talanoa／N8N／PulseDev 需 AI 或非单页；dev.to／91yun／daily.dev 榜单 SaaS/AI 无单页新口径）；全量 229 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| MAP 文件内存分析器 | 已交付划出（2026-10-30 新增；ID map_memory_analyzer、Path /tools/map-memory-analyzer 双注册；全量 229 Path；候选池划出） | — | 已实现 |
+| 位运算计算器 | 建议晋升 P2 顺位首席（122 轮观察项；bitwise 0 命中；「位运算」2 命中仅 FAQ 文字与代码注释，非独立工具）；表达式级 AND/OR/XOR/NOT/移位＋hex/dec/bin 互转，与寄存器位域编辑器口径不重叠；纯前端小难度 | 小 | P2（留池） |
+| CSS 加载动画生成器 | 145 轮观察项；css-loader／加载动画生成器 0 命中；纯前端小难度：加载动画实时预览＋一键复制 CSS；前端簇补位 | 小 | 观察（留池） |
+| 截图 3D 样机渲染器 | 新晋 P2（本轮新信号；Perspecto 截图→3D 样机展示；mockup／样机 0 命中）；纯前端小／中难度：CSS 3D 透视＋canvas 渲染＋PNG 下载，零上传；真限制：机身框自绘、非照片级还原须明示 | 小/中 | P2（留池） |
+| 记事本式计算器（Calcy 式） | 观察项（低优先；08:20 轮 PM 已裁定不踩 10-18 红线）；逐行算式＋单位换算＋不确定度传播，纯前端可行 | 小/中 | 观察（低） |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十七轮——MAP 文件内存分析器交付闭环（2026-10-30 新增，`/tools/map-memory-analyzer` 已注册，全量 229 Path），候选池划出；**位运算计算器建议晋升 P2 顺位首席**（122 轮观察项，「位运算」2 命中为 FAQ／注释误命中，非独立工具）；**截图 3D 样机渲染器新晋 P2**（Perspecto 信号）；本轮消解 10 项信号（tubox 六发无新口径；AI／后端／整站／插件形态类全部消解；WebToolsKit 定位验证、PDF 工具簇已覆盖；dev.to／91yun／daily.dev 榜单无单页新口径）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 因 SSH 权限报错未通；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 2026-10-30 新增 MAP 文件内存分析器；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **229**；Top3 候选重叠复核（map_memory_analyzer 在 categories.go 1 注册命中，为本轮已交付项；`bitwise` 0 命中、「位运算」2 命中仅 FAQ／注释非独立工具；`css-loader`／加载动画生成器 0 命中；`mockup`／样机／perspecto 0 命中；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3）；仓库为 Go 项目（go.mod，无 package.json，任务书所列 package.json 不适用）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-30 08:20 · 产品经理排期轮，接 156 轮调研）
 
 **选定：MAP 文件内存分析器** — 本轮唯一任务（新工具）：

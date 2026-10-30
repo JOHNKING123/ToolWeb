@@ -225,7 +225,7 @@ ok(GO_SRC.slice(idx, idx + 1400).indexOf("New:         true") >= 0, "注册 New 
 ok(GO_SRC.slice(idx, idx + 1400).indexOf('Icon:        "gif"') >= 0, "注册 Icon 为 gif");
 var pathCount = 0, m, re2 = /"\/tools\/[^"]+"/g, seen = {};
 while ((m = re2.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 230, "注册 Path 总数 229→230");
+eq(pathCount, 231, "注册 Path 总数 230→231");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/<script[^>]+src="https?:\/\//.test(TPL_SRC), "模板无外部脚本引用（零 CDN）");
 ok(!/rel="stylesheet"[^>]+href="https?:\/\//.test(TPL_SRC), "模板无外部样式引用（零 CDN）");
