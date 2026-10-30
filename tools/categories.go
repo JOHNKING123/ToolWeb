@@ -553,6 +553,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "sqlite_viewer",
+					Name:        "SQLite 文件查看器",
+					Description: "拖拽/选择本地 .db 文件→左侧表列表＋表结构（列名/类型/主键）＋数据分页预览；只读 SQL 查询编辑器（仅 SELECT/WITH/PRAGMA/EXPLAIN，写入拦截）；结果一键导出 CSV 下载；sql.js WASM 自托管、首屏延迟加载，纯前端本地查看零上传 · SQLite viewer: drag & drop .db → table list + schema + paginated data preview, read-only SQL editor, export CSV, self-hosted sql.js WASM lazily loaded, 100% client-side",
+					Path:        "/tools/sqlite-viewer",
+					Icon:        "storage",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "map_memory_analyzer",
 					Name:        "MAP 文件内存分析器",
 					Description: "粘贴 GCC ld -Map 输出或读取本地 .map 文件，一键解析内存区域占用（FLASH/RAM 使用条）、段汇总可排序表、对象文件 Top20、段内输入节明细，生成中文占用报告；.data 初始化段按 load address 同时计入 Flash 镜像与 RAM，纯前端零上传 · GCC linker map analyzer: parse -Map output to Flash/RAM usage, section summary, top object files, Chinese usage report, 100% client-side",

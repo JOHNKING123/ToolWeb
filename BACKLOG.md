@@ -1,3 +1,174 @@
+## 今日任务（2026-10-30 21:40 · PM 排期决策轮，接 21:36 调研第一百六十三轮）
+
+**选定：SQLite 文件查看器** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（163 轮）Top3 **首席推荐**（160 轮新观察项→162 轮建议晋升 P2 第二顺位→163 轮递补首席；dev.to Tooltri 10-08「SQLite DB Viewer」＋160 轮同源重复确认，需求持续；PM 本轮实测复核确认）；首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **PM 口径裁定：与 sql／hex_viewer 边界划分**——`sql`（SQL 格式化）是**SQL 语句文本格式化**；`hex_viewer`（文件十六进制查看器）是**二进制文件字节查看**；本工具口径是「拖 .db→表浏览＋SQL 查询＋结果导出 CSV」的**数据库文件查看**，「文件查看 vs 文本格式化 vs 字节查看」三位划分边界清晰，可互链。互链文案：SQL 语句想格式化去 SQL 格式化／想看 .db 原始字节去文件十六进制查看器／导出的 CSV 想表格化查看去 CSV 表格查看器。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`git log` 头部 fb5fb8c（十六进制查看器新增）／57a9921（签名数字化仪）／baef297（断言同步）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **235**；`sqlite`／`SQLite` 全站命中均为 SQL 关键字误伤（templates/gitignore_generator.html:154 的 db.sqlite3 模板说明、static/js/gitignore_generator.js:372-373 的 db.sqlite3 规则名、static/js/resume_checker.js:111 的技能词表、static/js/project_to_txt.js:51 的语言表），**确认无 SQLite 查看器、真缺口**；`markdown_to_csv`／`md_table` 0 命中（`csv_to_markdown` 为逆操作口径不重叠）；`csp` 工具口径 0 命中（http_header_analyzer 为「检测」口径，生成 vs 检测互补）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）。
+- **未选**：Markdown 表格转 CSV（162→163 轮建议 P2 第二顺位；小难度纯前端，按首席递进惯例排后轮，保持第二顺位）；CSP 安全头生成器（163 轮新观察项，留池观察）；结构化提示词构建器（163 轮新观察项，留池观察）；在线电台收听器（88 轮，硬伤未解→继续跳过）；语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器（162→163 轮观察项，硬伤未解保持观察）。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——收到 .db 文件想快速看表结构／跑条 SQL，靠装 DB Browser 或 sqlite3 命令行，缺免装中文网页版；③ **一轮可高质量交付**——纯前端中难度：sql.js WASM 自托管＋纯函数层（只读校验／CSV 转义／建表语句解析）可写确定性向量供 node 断言；④ **开发工具簇补位**——与「CSV 表格查看器」／「JSON 格式化」／「SQL 格式化」互链；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正；⑥ 零上传——全程浏览器本地，文件不离开用户机器。
+- **品类归位**：注册到「开发工具」品类（与 csv_table_viewer／hex_viewer 同品类，互链顺手）；New: true；Icon `storage`（实测 Icon 口径 **0 占用**、贴数据库主题；`database` 已被 SQL 格式化占用、`table_view` 2 占用）。
+
+**规格**（开发轮按此执行）：
+- **拖 .db→三区查看**：拖拽／选择 .db 文件（File API 本地读取零上传；sql.js WASM 自托管加载）→ 左侧表列表（sqlite_master，过滤 sqlite_% 系统表）→ 点击表：表结构（列名／类型／主键）＋数据分页预览 → SQL 查询编辑器（只读模式）→ 结果表格 → 导出 CSV 下载；隐私声明（全本地读取、零上传）。
+- **只读口径**：仅允许 SELECT／WITH／PRAGMA／EXPLAIN；INSERT／UPDATE／DELETE／DROP／ALTER／CREATE／ATTACH 等一律拦截并中文提示「本工具为只读查看器，不支持写入」。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `isReadOnlyQuery(sql)` → bool（空串／非字符串抛 Error，err.field="sql"；大小写／前导注释容忍）。
+  - `extractTables(masterRows)` → 表名数组（过滤 sqlite_% 系统表；masterRows 为 sqlite_master 的 name/type 行）。
+  - `parseCreateTable(sqlText)` → `[{name, type, pk}]`（容忍换行／双引号／反引号／方括号包裹列名；主键识别 PRIMARY KEY；非法抛 Error，err.field="sqlText"）。
+  - `escapeCsvCell(v)` → RFC4180 转义（null/undefined→空串；含逗号／引号／换行加双引号包裹、引号双写）。
+  - `rowsToCsv(columns, rows)` → CSV 文本（\r\n 换行，尾行带换行）。
+  - `formatBytes(n)` → 人性化文件大小（如 1536→"1.5 KB"）。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `isReadOnlyQuery('SELECT * FROM users')` → true；`isReadOnlyQuery('DROP TABLE users')` → false；`isReadOnlyQuery('  with x as (select 1) select * from x')` → true；`isReadOnlyQuery('')` 抛 Error（err.field="sql"）。
+  - `rowsToCsv(['a','b'], [[1,'x,y'],[2,'say "hi"']])` → `'a,b\r\n1,"x,y"\r\n2,"say ""hi"""\r\n'`。
+  - `parseCreateTable('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL)')` → `[{name:'id',type:'INTEGER',pk:true},{name:'name',type:'TEXT',pk:false}]`。
+  - `escapeCsvCell(null)` → `''`；`escapeCsvCell('a"b')` → `'"a""b"'`。
+  - `formatBytes(1536)` → `'1.5 KB'`；`formatBytes(0)` → `'0 B'`。
+- **界面**：拖拽区（文件信息：文件名／大小／表数量）＋ 左侧表列表 ＋ 表结构＋数据分页预览 ＋ SQL 编辑器（示例语句按钮）＋ 结果表格 ＋ 导出 CSV 按钮 ＋ 真限制提示条 ＋ 隐私声明；所有提示中文；SQL 错误信息原样展示（textContent）。
+- **操作与互链**：与「CSV 表格查看器」（文案：导出的 CSV 想表格化查看去这边）／「SQL 格式化」（文案：SQL 语句想格式化去这边）／「文件十六进制查看器」（文案：想看 .db 原始字节去这边）／「JSON 格式化」互链；不与未交付工具（Markdown 表格转 CSV 尚未交付）互链。
+- **技术路线**：纯前端；sql.js WASM **自托管**（static/js/vendor/sqljs/ 下放 sql-wasm.js＋sql-wasm.wasm，版本与来源在文件头注释注明，禁止 CDN 引用）；**首屏延迟加载**——仅用户选择 .db 文件后才加载 WASM（~1MB+），加载中显示进度条；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `sqlite_viewer`、Name「SQLite 文件查看器」、Path `/tools/sqlite-viewer`、Category 开发工具、New: true、Icon `storage`（实测 0 占用）；中英文描述＋SEO keywords（SQLite 查看器、db 文件查看、sqlite 在线、sqlite viewer、sqlite browser online、数据库查看器、SQL 查询、表结构查看、sqlite database viewer）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/sqlite-viewer，相关工具互链 CSV 表格查看器、SQL 格式化、文件十六进制查看器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① sql.js WASM 自托管约 1MB+，首次加载需等待（进度条明示）；② 只读模式：仅 SELECT／WITH／PRAGMA／EXPLAIN，不支持写入（写回 .db 请用 DB Browser）；③ 大文件（>256MB 级）分页预览、分片读取，不整库加载进内存；④ 仅支持标准 SQLite 数据库文件格式，加密／损坏文件会报错；⑤ 全程浏览器本地，零上传。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **235→236**；所有含 Path 总数断言的旧测试文件同步（`grep -n 'size === 235' tests/*.test.js` 实测为准）。
+2. node 测试 ≥40 断言全过：isReadOnlyQuery／extractTables／parseCreateTable／escapeCsvCell／rowsToCsv／formatBytes 的确定性像素向量逐值命中；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/sqlite-viewer` 200；拖测试 .db（含 2 张表＋中文内容）全链路正确：表列表／表结构／分页预览／SELECT 查询／非法写入拦截／CSV 导出内容与向量一致。
+4. 与 csv_table_viewer／sql／hex_viewer／json_formatter 互链（「文件查看 vs 文本格式化 vs 字节查看」文案），不链未交付工具；categories.go Description 中英文双语。
+5. 真限制五条页面明示；零外部请求断言（sql-wasm.js／sql-wasm.wasm 同域自托管，页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/sqlite_viewer.html`（新增）
+- `static/js/sqlite_viewer.js`（新增；纯函数＋DOM；sql.js 经 vendor 同域加载）
+- `static/js/vendor/sqljs/sql-wasm.js`＋`sql-wasm.wasm`（新增；自托管，版本与来源文件头注明，禁 CDN）
+- `tests/sqlite_viewer.test.js`（新增；node 断言 ≥40；纯函数向量测试；若开发轮确认 node 可加载同版本 sql-wasm 则追加内存库端到端断言，否则在测试文件头明确说明）
+- `tools/categories.go`（注册：ID `sqlite_viewer`／Name「SQLite 文件查看器」／Path `/tools/sqlite-viewer`／Icon `storage`／Category「开发工具」／New: true）
+- 旧测试文件的 Path 总数断言 235→236（`grep -n 'size === 235' tests/*.test.js` 实测为准同步）
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 fb5fb8c（十六进制查看器新增）／57a9921（签名数字化仪）／baef297（断言同步）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **235**；Top3 候选重叠复核（`hex_viewer` 已交付划出；`sqlite`／`SQLite` 全为 SQL 关键字误伤（gitignore 模板 db.sqlite3／resume_checker 技能词表／project_to_txt 语言表），真缺口确认；`markdown_to_csv`／`md_table` 0 命中（`csv_to_markdown` 为逆操作口径不重叠）；`csp` 工具口径 0 命中（http_header_analyzer 为「检测」口径，生成 vs 检测互补）；语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-30 21:36 · 通用调研第一百六十三轮，接 21:00 PM 排期轮）
+
+**交付状态**：10-30 通用调研第一百六十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**文件十六进制查看器已交付闭环**（fb5fb8c 新增：拖文件→偏移/HEX/ASCII 三栏＋逐字节检查器，纯前端零上传；全量 **235 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:36 轮，优先小／中难度纯前端。
+**本轮三件事**（21:36 全网调研，通用方向）：
+1. 文件十六进制查看器交付确认：`git log` 头部 fb5fb8c（十六进制查看器新增）／57a9921（签名数字化仪）／baef297（断言同步）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **235**；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（三轮误判教训：观察项晋升前必须 grep 模板＋categories.go 双实测）**：
+   - `sqlite`／`SQLite`：templates/gitignore_generator.html 与 static/js/gitignore_generator.js、project_to_txt.js、resume_checker.js 命中均为 SQL 关键字/模板误伤——**SQLite 文件查看器仍为真缺口，建议晋升 P2 顺位首席**。
+   - `markdown_to_csv`／`md_table`：0 命中真缺口；与已交付 `csv_to_markdown`（CSV→Markdown 表格生成器）互为逆操作，「md→csv vs csv→md」边界清晰——**Markdown 表格转 CSV 第二顺位**。
+   - `csp_policy`／`csp-builder`／`security_headers` 工具口径：0 命中（仅 http_header_analyzer 为「检测」口径）——**新观察项：CSP 安全头生成器**（与「HTTP 头检测」互补「生成 vs 检测」）。
+   - `prompt_builder`／提示词构建：仅 `prompt_sanitizer`（AI 提示词脱敏器），无「表单→XML 结构化系统提示词」口径——**新观察项：结构化提示词构建器**。
+3. 新信号扫描（V2EX 10-23~10-28＋dev.to 10-08~10-23 当日/近两周帖＋HN Show＋Reddit/Medium 10-30 为主线）：**新晋 P2 无；新观察项两项**——CSP 安全头生成器／结构化提示词构建器；其余全部消解或被已交付覆盖——
+   - V2EX：t/1252701 MiniCPM OCR（10-28；图片/PDF→文字表格公式，需后端模型服务，消解）／t/1252016 yolo-ai（10-26；AI CLI 权限跳过 npm 包，CLI/桌面类，消解）／t/1252312 AI 视频复刻（10-27；需后端，消解）／t/1252576 FrameLoom（10-28；文档→动画视频，需 Agent＋本地 Remotion 渲染，消解）／t/1251252 照片转跳舞视频（10-23；AI 视频需后端，消解）；
+   - dev.to：aidevhub 8 devtools 10-18 帖（CSP/SRI policy builder→**新观察项**；CLI UX linter／prose flow linter／trace context validator／retry contract builder→CLI/契约类消解；CSV-to-endpoint builder→需后端消解；regex tester→站内已覆盖）／Site Tools Box 10-18 帖（DNS/Whois/RDAP→站内 `domain_check` 已覆盖；HTTP Status Checker→跨站 fetch CORS 硬伤消解；JSON/JWT/UUID/图片/二维码/密码→已覆盖）／Byte-Kit 10-10 帖（HEIC/AVIF 转换→HEIC 观察项已在池；EXIF 移除→`exif_strip` 已覆盖；Favicon 生成器→`favicon_generator` 已交付覆盖；图片压缩/JSON/JWT/正则→已覆盖）／Orikony 8-12 帖（cURL→代码→`curl_to_requests` 已交付覆盖；结构化提示词构建器→**新观察项**；JWT 生成→`JWT 签名生成器/验证器`已交付覆盖；打字测试/图片/WebP/SVG/二维码/密码→已覆盖）／Tooltri 10-08 帖（SQLite DB Viewer→与 160 轮同源**重复确认、非独立信号**；Token Counter→`ai_token_counter` 已覆盖；ChatGPT Text Cleaner→`ai_text_cleaner` 已覆盖；162 轮已消解）／toolsdocks 167 工具 10-23 帖（整站竞品，单项口径站内全覆盖，消解）；
+   - HN/PH：DevKit 80 工具 Show HN（CSP 生成器→**新观察项**；ASCII Art→`ascii_art_generator` 已交付覆盖；gitignore→已覆盖；Git/Docker/Bash cheatsheets→文档类消解；JWTs 生成→JWT 签名生成器已覆盖）／其余 Show HN（网站截图服务/视频通话/发票生成器/AI 闪卡→需后端或已覆盖，消解）；
+   - Reddit/Medium：localonly.dev Markdown 编辑器＋实时预览＋URL hash 加密分享（10-30 Medium 帖；站内「Markdown 预览」已交付，hash 加密分享为边际创新，消解）／HonestQR（静态 QR 无中介跳转；站内二维码工具已覆盖口径）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；文件十六进制查看器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **SQLite 文件查看器** — 建议晋升 P2 顺位首席（160 轮新观察项→162 轮建议 P2 第二顺位；dev.to Tooltri 10-08「SQLite DB Viewer: open .db files without uploading them anywhere」重复确认，需求持续；`sqlite`／`SQLite` 全站 0 命中真缺口（本轮复测：gitignore 模板／project_to_txt／resume_checker 命中均为 SQL 关键字误伤）；痛点：收到 .db 文件想快速看表结构／跑条 SQL，靠装 DB Browser 或 sqlite3 命令行；拖 .db→表浏览＋SQL 查询＋结果导出 CSV，纯前端中难度；开发工具簇补位：与「JSON 格式化」／「CSV 表格查看器」互链；真限制：sql.js WASM 自托管体积大（~1MB+），首屏加载策略须设计，页面明示）。
+2. **Markdown 表格转 CSV** — 观察项→建议晋升第二顺位（160 轮观察项；dev.to 2026-10-30 minitool.io 信号；`markdown_to_csv` 全站 0 命中真缺口（本轮复测）；痛点：从文档／AI 回答里复制的 Markdown 表格想进 Excel，手动删竖线对齐行；粘贴 Markdown 表格→转义竖线处理＋对齐行剥离→CSV 下载，纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；与站内「CSV→Markdown 表格生成器」互为逆操作互链，「md→csv vs csv→md」边界清晰；真限制：仅处理标准 GFM 表格，嵌套表格／跨行单元格不支持须明示）。
+3. **CSP 安全头生成器** — 本轮新观察项（HN DevKit 80 工具「Generate … CSP」＋dev.to aidevhub 10-18「CSP/SRI policy builder」双独立信号；`csp`／`security_headers` 工具口径全站 0 命中真缺口；痛点：CSP 手写门槛高，配错就刷白；勾选指令（default-src/script-src/style-src/img-src/connect-src…）→输出 `Content-Security-Policy` 响应头文本＋`<meta http-equiv>` 片段＋测试模式（Report-Only）切换，纯前端小难度：纯函数拼字符串，可写确定性向量；与站内「HTTP 头检测」（http_header_analyzer）「生成 vs 检测」互补互链；真限制：生成器只产出配置文本，不验证生效与否，须明示——部署验证仍需服务器侧配合）。
+
+其余观察项保持原状：语音听写输入器（HN Dictatus 信号；Web Speech API 仅 Chrome/Edge 且走云端识别、国内可用性待验证，硬伤未解继续观察）／AI 可发现性自检器（CORS 限制硬伤，观察）／HEIC 照片转格式器（WASM 解码器自托管体积大，观察）／比例求解器（160 轮；小难度）／恩尼格玛密码机模拟器（160 轮；中难度；教学向）／Slug 生成器／Meta 标签生成器（100–101 轮）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮）／ads.txt 校验器（125 轮）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（`json_to_types` 仅 TS/Go，扩展备注）；**本轮新观察项**——结构化提示词构建器（dev.to Orikony 8-12 信号；站内仅 `prompt_sanitizer`「AI 提示词脱敏器」，无构建器口径；表单填写（角色/任务/约束/输出格式/示例）→输出 XML 结构化系统提示词＋复制；纯前端小难度；LLM 工具簇补位（提示词脱敏器／llms.txt 生成器互链）；真限制：模板拼装非 AI 优化，须明示）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 162 轮及之前记录。
+
+**通用候选表增量**（第一百六十三轮：文件十六进制查看器已交付划出（fb5fb8c 新增；全量 235 Path；候选池划出）；**SQLite 文件查看器建议晋升 P2 顺位首席**（160 轮观察项；Tooltri 同源重复确认；`sqlite` 0 命中复测确认；真限制 sql.js WASM 体积）；**Markdown 表格转 CSV 建议晋升第二顺位**（160 轮观察项；dev.to minitool.io 信号；`markdown_to_csv` 0 命中复测确认；小难度）；**CSP 安全头生成器新观察项**（HN DevKit＋dev.to aidevhub 双信号；`csp` 工具口径 0 命中；与 HTTP 头检测互补）；**结构化提示词构建器新观察项**（dev.to Orikony 信号；站内无构建器口径；小难度）；本轮新信号 15 项全部消解或被已交付覆盖（V2EX 5 项 AI/CLI/视频；dev.to 6 项整站/覆盖；HN/PH 3 项；Reddit/Medium 1 项）；全量 235 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文件十六进制查看器 | 已交付划出（fb5fb8c 新增；全量 235 Path；候选池划出） | — | 已实现 |
+| SQLite 文件查看器 | 建议晋升 P2 顺位首席（160 轮观察项；dev.to Tooltri 10-08 重复确认；`sqlite` 0 命中复测；拖 .db→表浏览＋SQL 查询＋CSV 导出，零上传；纯前端中难度；真限制：sql.js WASM 自托管体积大须明示） | 中 | P2（建议） |
+| Markdown 表格转 CSV | 建议晋升第二顺位（160 轮观察项；dev.to minitool.io 信号；`markdown_to_csv` 0 命中复测；粘贴 Markdown 表格→CSV 下载；纯前端小难度；与 CSV→Markdown 逆操作互链；真限制：仅标准 GFM 表格须明示） | 小 | 观察→P2（建议） |
+| CSP 安全头生成器 | 本轮新观察项（HN DevKit＋dev.to aidevhub 双信号；`csp` 工具口径 0 命中）；勾选指令→输出 CSP 响应头＋meta 片段＋Report-Only 切换；纯前端小难度；与 HTTP 头检测「生成 vs 检测」互补；真限制：不验证生效须明示 | 小 | 观察（留池） |
+| 结构化提示词构建器 | 本轮新观察项（dev.to Orikony 信号；站内仅提示词脱敏器）；表单→XML 结构化系统提示词输出；纯前端小难度；LLM 工具簇补位；真限制：模板拼装非 AI 优化须明示 | 小 | 观察（留池） |
+
+**归档说明**：本轮为 10-30 通用调研第一百六十三轮——文件十六进制查看器交付闭环（fb5fb8c，`/tools/hex-viewer` 已注册，全量 235 Path），候选池划出；**SQLite 文件查看器建议晋升 P2 顺位首席**（160 轮观察项；`sqlite` 0 命中复测确认，真缺口）；**Markdown 表格转 CSV 建议晋升第二顺位**（160 轮观察项；`markdown_to_csv` 0 命中复测确认）；**CSP 安全头生成器**（本轮新观察项，双独立信号，`csp` 工具口径 0 命中，与「HTTP 头检测」互补）与**结构化提示词构建器**（本轮新观察项，站内无构建器口径）新晋观察项；本轮消解 15 项（V2EX 5 项 AI/CLI/视频需后端；dev.to 6 项整站竞品或已覆盖；HN/PH 3 项；Reddit/Medium 1 项）；在线电台收听器硬伤未解继续跳过；语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器保持观察。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 fb5fb8c（十六进制查看器新增）／57a9921（签名数字化仪）／baef297（断言同步）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **235**；Top3 候选重叠复核（`hex_viewer` 已交付划出；`sqlite` 0 命中（gitignore 模板/project_to_txt/resume_checker 为 SQL 关键字误伤）；`markdown_to_csv` 0 命中（`csv_to_markdown` 为逆操作口径不重叠）；`csp`／`security_headers` 工具口径 0 命中（http_header_analyzer 为「检测」口径，生成 vs 检测互补）；`prompt_builder` 0 命中（仅 prompt_sanitizer 脱敏口径）；语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-30 21:00 · PM 排期决策轮）
+
+**选定：文件十六进制查看器** — 本轮唯一任务（新工具）。
+- **顺位**：研究轮（162 轮）Top3 **首席推荐**（160 轮新晋 P2→161 轮第二顺位→162 轮递补首席；dev.to 2026-10-30 minitool.io 信号；「偏移＋十六进制＋ASCII 三栏＋逐字节检查器」口径），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **PM 口径裁定：与 hex_c_array／bitwise_calculator／base_converter 边界划分**——`hex_c_array`（HEX ↔ C 数组互转器）是**文本互转**（HEX 字符串↔C 数组）；`bitwise_calculator`（位运算计算器）是**位运算**；`base_converter` 是**进制转换**；本工具口径是「拖文件→偏移＋十六进制字节＋ASCII 三栏＋逐字节检查器」的**二进制文件查看**，「查看 vs 互转 vs 运算」三位划分边界清晰，可互链。互链文案：查看文件字节去这边（本页）／HEX 文本贴码去 hex-c-array／按位算去位运算计算器。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **234**（57a9921 手写签名数字化仪已交付）；`hexdump`／`hex_viewer`／`hex-viewer`／「十六进制」全站唯一命中为 tests/signature_capture.test.js:170 负向断言「模板不链未交付工具（文件十六进制查看器）」，**反证真缺口**（继证件照制作器、Token 计数器之后的研究轮误判类断言，这次反向确认缺口真实）；`sqlite`／`SQLite` 命中均为 SQL 关键字误伤（templates/gitignore_generator.html:154 的 db.sqlite3 模板说明、static/js/gitignore_generator.js:372-373 的 db.sqlite3 规则名、static/js/resume_checker.js:111 的技能词表、static/js/project_to_txt.js:51 的语言表），确认无 SQLite 查看器；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）。
+- **未选**：SQLite 文件查看器（162 轮观察项，建议晋升 P2 第二顺位；`sqlite` 0 命中复测确认；中难度＋sql.js WASM 体积大首屏策略成本高，排后轮）；Markdown 表格转 CSV（162 轮观察项，`markdown_to_csv` 0 命中；小难度，但与站内「CSV→Markdown 表格生成器」逆操作口径已有互链对，降优先级，保持观察）；在线电台收听器（88 轮，硬伤未解→继续跳过）；语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器（162 轮观察项，硬伤未解保持观察）；Markdown 表格转 CSV 降优先级不复列 Top3。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——"这文件头到底是啥"：逆向／嵌入式／取证人群查二进制文件头靠 xxd 命令行或装 HxD，缺免装中文网页版；③ **一轮可高质量交付**——纯前端小／中难度：File API＋DataView 确定性渲染，可写精确向量供 node 断言（字节→十六进制行渲染、偏移、ASCII 可打印判断均为纯函数）；④ **嵌入式簇补位**——与 hex_c_array／bitwise_calculator／base_converter 互链，「查看 vs 互转 vs 运算」边界清晰；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正；⑥ 零上传、零依赖、零 CDN——纯前端单页，全程浏览器本地。
+- **品类归位**：注册到「开发工具」品类（与 hex_c_array／bitwise_calculator 同品类，互链顺手）；New: true；Icon `binary_info`（实测 **0 占用**、贴二进制主题；`data_object` 已被 hex_c_array 占用、`memory` 被本地 LLM 硬件检测器占用、`terminal`／`search` 各 3 占用）。
+
+**规格**（开发轮按此执行）：
+- **拖文件→三栏查看**：拖拽／选择文件（File API，本地读取零上传）→ 偏移列（8 位 hex 偏移）＋十六进制字节列（每行 16 字节，大写 hex）＋ASCII 列（可打印字符原样、不可打印显示 `.`）；点击任意字节高亮→逐字节检查器（偏移／十六进制／十进制／二进制／ASCII 字符对照）；跳转到偏移输入框；搜索字节序列（hex 或 ASCII）。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `formatHexRow(bytes, offset)` → 一行渲染对象 `{offset: '00000000', hex: ['41','42',...], ascii: 'AB...'}`（hex 大写、每行 16 字节、ascii 不可打印为 `.`）。
+  - `isPrintable(byte)` → 0x20–0x7E 为 true，其余 false。
+  - `byteInspector(byte, offset)` → `{offsetHex, hex, decimal, binary, char}`（char：可打印返回字符，否则 `'.'`）。
+  - `parseHexSearch(query)` → 字节数组（容忍空格/逗号/0x 大小写混写；非法字符抛 Error，err.field="query"）。
+  - `findBytes(haystack, needle)` → 命中偏移数组。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `formatHexRow([0x41,0x42,0x00,0x7F], 0)` → `{offset:'00000000', hex:['41','42','00','7F'], ascii:'AB..'}`。
+  - `byteInspector(0x41, 16)` → `{offsetHex:'00000010', hex:'41', decimal:65, binary:'01000001', char:'A'}`；`byteInspector(0x00, 0).char === '.'`。
+  - `parseHexSearch('0x41, 42')` → `[0x41,0x42]`；`parseHexSearch('zz')` 抛 Error（err.field="query"）。
+  - `findBytes([0x41,0x42,0x41,0x42],[0x41,0x42])` → `[0,2]`。
+- **界面**：拖拽区（文件信息：文件名/大小/MIME）＋ 三栏查看区（虚拟滚动或分页，大文件分页加载）＋ 逐字节检查器面板（点击字节更新）＋ 偏移跳转＋字节序列搜索＋ 真限制提示条＋隐私声明（全本地读取、零上传）；所有提示中文；字节内容用 textContent 渲染（文件字节经转义后插入）。
+- **操作与互链**：与「HEX ↔ C 数组互转器」（文案：HEX 文本贴码互转去这边）／「位运算计算器」（文案：按位运算去这边）／「进制转换器」互链；不与未交付工具（SQLite 文件查看器）互链。
+- **技术路线**：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- **注册**：ID `hex_viewer`、Name「文件十六进制查看器」、Path `/tools/hex-viewer`、Category 开发工具、New: true、Icon `binary_info`（实测 0 占用）；中英文描述＋SEO keywords（文件十六进制查看器、hex 查看器、hexdump、十六进制编辑器、文件头查看、hex viewer、file hex viewer、binary file viewer、偏移查看、embedded firmware）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/hex-viewer，相关工具互链 HEX ↔ C 数组互转器、位运算计算器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 大文件（>256MB 级）仅分片读取／分页预览，不整文件加载进内存；② 只读查看、无编辑保存口径（如需编辑请下 HxD）；③ ASCII 列按 Latin-1 可打印判断，中日韩多字节字符显示为字节序列非还原文字；④ 全程浏览器本地，零上传。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **234→235**；所有含 Path 总数断言的旧测试文件同步（`grep -n 'size === 234' tests/*.test.js` 实测为准：当前 tests/hex_c_array.test.js:111、tests/map_memory_analyzer.test.js:117、tests/text_to_pdf.test.js:124 为 `new Set(paths).size === 234`；tests/signature_capture.test.js:143 为注册 Path 总数 234，另 signature_capture.test.js:170 的「不链未交付工具（文件十六进制查看器）」负向断言在本轮交付后**删除或改写**——本工具已交付，不再是未交付项）。
+2. node 测试 ≥40 断言全过：formatHexRow／isPrintable／byteInspector／parseHexSearch／findBytes 的确定性像素向量逐值命中；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/hex-viewer` 200；拖 1KB 测试文件三栏渲染正确、点击字节检查器对照无误。
+4. 与 hex_c_array／bitwise_calculator 互链（「查看 vs 互转 vs 运算」文案），不链未交付工具；categories.go Description 中英文双语。
+5. 真限制四条页面明示；零网络请求断言（页面脚本不发起 fetch/XHR）。
+
+**预计改动文件**：
+- `templates/hex_viewer.html`（新增）
+- `static/js/hex_viewer.js`（新增；纯函数＋DOM，零网络请求）
+- `tests/hex_viewer.test.js`（新增；node 断言 ≥40）
+- `tools/categories.go`（注册：ID `hex_viewer`／Name「文件十六进制查看器」／Path `/tools/hex-viewer`／Icon `binary_info`／Category「开发工具」／New: true）
+- 旧测试文件的 Path 总数断言 234→235（`grep -n 'size === 234' tests/*.test.js` 实测为准同步）＋ signature_capture.test.js:170 负向断言删除/改写
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部为 57a9921（手写签名数字化仪新增）及其断言同步提交；全量 **234 Path**；Top3 候选重叠复核（`hexdump`／`hex_viewer`／`hex-viewer`／「十六进制」0 命中，唯一命中为 signature_capture.test.js:170 负向断言；`sqlite` 全为 SQL 关键字误伤（gitignore 模板／技能词表／语言表）；`markdown_to_csv` 0 命中（Markdown 表格转 CSV 观察项，降优先级保持观察）；语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-30 20:00 · 通用调研第一百六十二轮，接 17:22 PM 排期轮）
+
+**交付状态**：10-30 通用调研第一百六十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**手写签名数字化仪已交付闭环**（57a9921 新增：三路输入→Otsu 去底→透明 PNG 下载/复制，纯前端零上传；`signature_capture.html`／`signature_capture.test.js` 双新增；全量 **234 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；20:00 轮，优先小／中难度纯前端。
+**本轮三件事**（20:00 全网调研，通用方向）：
+1. 手写签名数字化仪交付确认：`git log` 头部 57a9921（签名数字化仪新增）／baef297（测试断言同步）／9a9b22e（llms.txt 生成器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **234**；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **PM 级纠错（继 17:22 轮「证件照制作器」案例后的第二例）**：161 轮观察项「Token 计数器」标注「`token_counter` 0 命中」失准——**本轮实测 `ai_token_counter`（「AI Token 计数器」）已交付**：`templates/ai_token_counter.html` 存在、categories.go 已注册（Name「AI Token 计数器」、Description「计算 GPT/Claude/Gemini 等模型 token 数、上下文窗占用与 API 费用估算」、canonical `/tools/ai-token-counter`），模板 meta 显示支持 GPT-4o／Claude／Gemini／DeepSeek／通义千问等 13 模型 token 数＋上下文窗＋API 费用估算、纯本地处理——与观察项口径（Show HN AgentEd「粘贴文本→token 估算＋费用估算」）**完全重叠**。**Token 计数器从观察项划出（已交付项，今后研究轮不得再复列）**；Tooltri dev.to 10-08 帖列出的「Token Counter」同理被已交付项覆盖，视为市场需求确认信号而非候选信号。
+3. 新信号扫描（V2EX 10-28~10-30＋dev.to 10-24~10-30 当日帖＋HN/PH 10-29~10-30 为主线）：**本轮无新晋 P2**；全部信号消解或被已交付覆盖——
+   - V2EX：t/1252552 tubox（10-28 重发；证件照信号已计入；13 工具中批量压缩→站内图片压缩已覆盖、AI 抠图→需 AI 消解、EXIF 查看与清除→站内 `exif_strip`「EXIF 信息查看/清除」已覆盖、GIF/视频转 GIF→站内 gif 工具已覆盖）／t/1250428 md2chat（10-20；Markdown→微信/钉钉/飞书/企业微信聊天图文；被站内「Markdown 聊天图文转换器」覆盖）／t/1252493 xGoose（Chrome AI agent 插件，需后端＋API Key，消解）／t/1251715（独立站访客联系方案讨论，SaaS／插件类，消解）；
+   - dev.to：BulkTextKit 10-24 帖（15 纯前端文本工具；「Remove duplicate lines」被站内「文本工具集」`texttools`（字数统计、行去重、排序、大小写转换、全半角、盘古空格）覆盖；「Extract emails and URLs」为 121 轮观察项「粘贴文本邮箱提取器」已在池）／Tooltri 10-08 帖（「Token Counter」→已交付 `ai_token_counter` 覆盖；「SQLite DB Viewer」→与 160 轮同源（同一作者 codeofrelevancy）**重复确认、非独立双信号**；「ChatGPT Text Cleaner」→站内「AI 文本清洁器」`ai_text_cleaner`（零宽字符/BOM/非断空格可视化清除）已覆盖）／etemora 10-10 帖（域名生成器→RDAP 需后端、发票生成器→泛财务不立项、PDF 工具→站内已覆盖）／其余工具站帖（devhackes／Antigravity／everydaytoolz／BlanzaTools 均为整站竞品，单项口径 JSON/JWT/UUID/压缩/二维码站内全覆盖）——消解或已覆盖；
+   - HN/PH：Wellows AI Visibility Report（10-30；域名→AI 引擎品牌可见性报告，需 AI 后端＋4 分钟白标报告，大难度，低优先）／SnipToss（桌面 App，消解）／SingleFile（浏览器插件，消解）／WebToolsKit（80+ 工具整站，10-23；隐私优先纯前端路线与 ToolWeb 同构，竞品验证）／ToolHop（200+ 工具整站，消解）；其余 AI agent／浏览器／SEO 榜单——消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；signature_capture 交付闭环＋证件照制作器划出后，按「无硬伤不跳过、Top3 顺位递进」惯例，P2 顺位首席空出由文件十六进制查看器递补）：
+1. **文件十六进制查看器** — P2 顺位首席（160 轮新晋 P2→161 轮第二顺位→本轮递补首席；dev.to 2026-10-30 minitool.io 信号；`hexdump`／`hex_viewer`／「十六进制查看」全站 0 命中真缺口——唯一命中为 `signature_capture.test.js:170` 负向断言「模板不链未交付工具（文件十六进制查看器）」，反证其为已规划未交付项；痛点："这文件头到底是啥"——逆向／嵌入式／取证人群查二进制头靠 xxd 命令行或装 HxD，缺免装中文网页版；拖文件→偏移＋十六进制字节＋ASCII 三栏＋逐字节检查器（字节值／十进制／二进制／字符对照），纯前端小／中难度：File API＋DataView 确定性渲染，可写精确向量供 node 断言；嵌入式簇补位：与「HEX ↔ C 数组互转器」（文本互转）／「位运算计算器」（运算）互链，「查看 vs 互转 vs 运算」边界清晰；真限制：大文件（>256MB 级）须分片读取／仅预览头部，页面明示）。
+2. **SQLite 文件查看器** — 观察项，建议晋升 P2 第二顺位（160 轮新观察项；dev.to Tooltri 10-08「SQLite DB Viewer: open .db files without uploading them anywhere」与 160 轮同源重复确认，需求持续；`sqlite`／`SQLite` 全站 0 命中真缺口——`gitignore_generator`／`resume_checker` 命中均为 SQL 关键字误伤；痛点：收到 .db 文件想快速看表结构／跑条 SQL，靠装 DB Browser 或 sqlite3 命令行；拖 .db→表浏览＋SQL 查询＋结果导出 CSV，纯前端中难度；开发工具簇补位：与「JSON 格式化」／「CSV 表格查看器」互链；真限制：sql.js WASM 自托管体积大（~1MB+），首屏加载策略须设计，页面明示）。
+3. **Markdown 表格转 CSV** — 观察项（160 轮；dev.to 2026-10-30 minitool.io 信号；`md_table`／`markdown_to_csv`／`table_to_csv` 全站 0 命中真缺口；痛点：从文档／AI 回答里复制的 Markdown 表格想进 Excel，手动删竖线对齐行；粘贴 Markdown 表格→转义竖线处理＋对齐行剥离→CSV 下载，纯前端小难度：纯函数确定性转换，可写逐字向量供 node 断言；与站内「CSV→Markdown 表格生成器」互为逆操作互链，「md→csv vs csv→md」边界清晰；真限制：仅处理标准 GFM 表格，嵌套表格／跨行单元格不支持须明示）。
+
+其余 P2 留池：无（文件十六进制查看器为当前唯一 P2）。观察项保持原状：语音听写输入器（HN Dictatus 信号；Web Speech API 仅 Chrome/Edge 且走云端识别、国内可用性待验证，硬伤未解继续观察）／AI 可发现性自检器（CORS 限制硬伤，观察）／HEIC 照片转格式器（WASM 解码器自托管体积大，观察）／比例求解器（160 轮；小难度）／恩尼格玛密码机模拟器（160 轮；中难度；教学向）／Slug 生成器／Meta 标签生成器（100–101 轮）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮）／ads.txt 校验器（125 轮）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（`json_to_types` 仅 TS/Go，扩展备注）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 161 轮及之前记录。
+
+**通用候选表增量**（第一百六十二轮：手写签名数字化仪已交付划出（57a9921 新增；全量 234 Path；候选池划出）；**Token 计数器观察项划出**（本轮 PM 级纠错：`ai_token_counter`「AI Token 计数器」已交付，161 轮「0 命中」失准，继证件照制作器后的第二例研究轮误判；Tooltri Token Counter 信号转为市场需求确认）；**文件十六进制查看器晋升 P2 顺位首席**（160 轮 P2→161 轮第二顺位→本轮递补；`hexdump`／`hex_viewer` 0 命中，唯一命中为负向断言）；**SQLite 文件查看器建议晋升 P2 第二顺位**（160 轮观察项；Tooltri 同源重复确认；`sqlite` 0 命中；真限制 sql.js WASM 体积）；Markdown 表格转 CSV 保持观察（160 轮；`markdown_to_csv` 0 命中；小难度）；本轮新信号全部消解或被已交付覆盖 12 项（V2EX 4 项；dev.to 5 项；HN/PH 3 项）；全量 234 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 手写签名数字化仪 | 已交付划出（57a9921 新增；全量 234 Path；候选池划出） | — | 已实现 |
+| Token 计数器 | 本轮 PM 级纠错划出（`ai_token_counter`「AI Token 计数器」已交付：13 模型 token 数＋上下文窗＋API 费用估算；161 轮「0 命中」失准；今后研究轮不得再复列） | — | 已实现 |
+| 文件十六进制查看器 | 晋升 P2 顺位首席（160 轮新晋 P2→161 轮第二顺位；dev.to 2026-10-30 minitool.io；`hexdump`／`hex_viewer`／「十六进制查看」0 命中，唯一命中为负向断言；拖文件→偏移＋十六进制＋ASCII 三栏＋逐字节检查器，零上传；纯前端小／中难度；嵌入式簇补位；真限制：大文件分片读取须明示） | 小/中 | P2（留池） |
+| SQLite 文件查看器 | 建议晋升 P2 第二顺位（160 轮观察项；dev.to Tooltri 10-08 与 160 轮同源重复确认；`sqlite`／`SQLite` 0 命中；拖 .db→表浏览＋SQL 查询＋CSV 导出，零上传；纯前端中难度；开发工具簇补位；真限制：sql.js WASM 自托管体积大须明示） | 中 | 观察→P2（建议） |
+| Markdown 表格转 CSV | 保持观察（160 轮；dev.to 2026-10-30 minitool.io；`markdown_to_csv` 0 命中）；粘贴 Markdown 表格→转义竖线＋对齐行剥离→CSV 下载；纯前端小难度；与「CSV→Markdown 表格生成器」互为逆操作互链；真限制：仅标准 GFM 表格须明示 | 小 | 观察（留池） |
+
+**归档说明**：本轮为 10-30 通用调研第一百六十二轮——手写签名数字化仪交付闭环（57a9921，`/tools/signature-capture` 已注册，全量 234 Path），候选池划出；**Token 计数器观察项划出**（本轮实测 `ai_token_counter` 已交付，161 轮 0 命中失准——继 17:22 轮证件照制作器后的第二例研究轮误判案例，教训：观察项晋升前必须 grep 模板＋categories.go 双实测）；**文件十六进制查看器晋升 P2 顺位首席**（160 轮 P2；`hexdump`／`hex_viewer` 0 命中复测确认）；**SQLite 文件查看器建议晋升 P2 第二顺位**（160 轮观察项；Tooltri 同源重复确认）；Markdown 表格转 CSV 保持观察；本轮新信号 12 项全部消解或被已交付覆盖（V2EX tubox 重发／md2chat→Markdown 聊天图文转换器／xGoose AI 插件／独立站访客联系讨论；dev.to BulkTextKit 去重行→文本工具集／Tooltri 三项→已交付覆盖或同源确认／etemora 整站／工具站整站帖；HN/PH Wellows AI 可见性报告→需 AI 后端低优先／SnipToss 桌面 App／SingleFile 插件／WebToolsKit-ToolHop 整站竞品）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 57a9921（签名数字化仪新增）／baef297（断言同步）／9a9b22e（llms.txt 生成器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **234**；Top3 候选重叠复核（`signature_capture` 已交付划出；`ai_token_counter` 已交付，Token 计数器观察项划出；`hexdump`／`hex_viewer`／「十六进制查看」0 命中，唯一命中为 signature_capture.test.js:170 负向断言；`sqlite` 0 命中；`markdown_to_csv` 0 命中，`csv_to_markdown` 为逆操作口径不重叠；语音听写输入器／AI 可发现性自检器／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 
 ## 今日任务（2026-10-30 17:22 · PM 排期决策轮）
 

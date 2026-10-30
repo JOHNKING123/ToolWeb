@@ -123,7 +123,7 @@ ok(regBlock.indexOf("零上传") !== -1, "Description 含零上传声明");
 ok(/{{define "hex_viewer"}}/.test(TPL_SRC), "模板 define hex_viewer");
 ok(/https:\/\/www\.johnkingzcq123\.xyz\/tools\/hex-viewer/.test(TPL_SRC), "模板 canonical");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-ok(new Set(paths).size === 235, "全量 Path 数 235（实得 " + new Set(paths).size + "）");
+ok(new Set(paths).size === 236, "全量 Path 数 236（实得 " + new Set(paths).size + "）");
 
 /* ---------- 9. 互链（查看 vs 互转 vs 运算） ---------- */
 ok(TPL_SRC.indexOf("/tools/hex-c-array") !== -1, "hex_viewer 互链 HEX ↔ C 数组互转器");
