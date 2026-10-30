@@ -265,6 +265,7 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof document !== 'undefined') (function () {
   var SQL = null;          // sql.js 引擎（延迟加载）
   var wasmLoading = false; // WASM 加载中
+  var wasmQueue = [];      // WASM 加载期间排队的 ensureEngine 回调（加载完成后依次执行）
   var db = null;           // 当前打开的库
   var fileName = '';
   var tables = [];         // [{name, sql}]
@@ -308,7 +309,11 @@ if (typeof document !== 'undefined') (function () {
   /* ---------- WASM 延迟加载 ---------- */
   function ensureEngine(cb) {
     if (SQL) { cb(); return; }
-    if (wasmLoading) return;
+    if (wasmLoading) { // 加载期间：排队等加载完成再执行，避免第二次选文件被吞掉
+      wasmQueue.push(cb);
+      toast('SQLite 引擎加载中，请稍候…');
+      return;
+    }
     wasmLoading = true;
     $('sv-wasm').style.display = 'block';
     $('sv-wasm-msg').textContent = '正在加载 SQLite 引擎（sql.js WASM 约 700KB，仅首次打开 .db 时加载一次）…';
@@ -320,19 +325,24 @@ if (typeof document !== 'undefined') (function () {
           SQL = S;
           wasmLoading = false;
           $('sv-wasm').style.display = 'none';
+          var q = wasmQueue; wasmQueue = [];
           cb();
+          q.forEach(function (f) { try { f(); } catch (e) { /* 忽略单个排队回调异常 */ } });
         }, function (err) {
           wasmLoading = false;
+          wasmQueue = [];
           $('sv-wasm-msg').textContent = 'SQLite 引擎加载失败：' + (err && err.message || err);
           toast('SQLite 引擎加载失败，请刷新重试。');
         });
       } catch (e) {
         wasmLoading = false;
+        wasmQueue = [];
         $('sv-wasm-msg').textContent = 'SQLite 引擎初始化失败：' + e.message;
       }
     };
     s.onerror = function () {
       wasmLoading = false;
+      wasmQueue = [];
       $('sv-wasm-msg').textContent = 'SQLite 引擎脚本加载失败（同域 vendor 缺失？），请刷新重试。';
     };
     document.head.appendChild(s);
@@ -474,6 +484,7 @@ if (typeof document !== 'undefined') (function () {
     if (!res.length) {
       box.innerHTML = '<p class="sv-note">该表暂无数据。</p>';
     } else {
+      box.innerHTML = '';
       box.appendChild(buildResultTable(res[0].columns, res[0].values));
       lastResult = { columns: res[0].columns, values: res[0].values };
       lastResultLabel = curTable + '_p' + (curPage + 1);
