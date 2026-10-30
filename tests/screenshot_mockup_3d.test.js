@@ -5,7 +5,7 @@
  * 3. buildCanvasDrawPlan()：phone-frame 下 imgRect 宽高比与输入一致（误差<1%）；超大图降采样
  * 4. 非法向量：rotateX=99 → Error(err.field='param')；未知 scene → Error(err.field='scene')；imgW=0 → Error(err.field='param')
  * 5. defaultMockupParams / exportFileName / validateImageFile / normalizeHex
- * 6. 注册与零网络静态检查：232 Path、ID/Path 双注册、Icon view_in_ar、互链三件近邻、不链未交付工具
+ * 6. 注册与零网络静态检查：233 Path、ID/Path 双注册、Icon view_in_ar、互链三件近邻、不链未交付工具
  */
 "use strict";
 var fs = require("fs");
@@ -122,7 +122,7 @@ ok(GO_SRC.slice(idx, idx + 1200).indexOf('Icon:        "view_in_ar"') >= 0, "注
 var pathCount = 0, seen = {}, m;
 var re = /"\/tools\/[^"]+"/g;
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 232, "注册 Path 总数 231→232");
+eq(pathCount, 233, "注册 Path 总数 232→233");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本引用");
 ok(!/href="https?:\/\/(?!www\.johnkingzcq123\.xyz)/.test(TPL_SRC), "模板无外部超链接（canonical 除外）");

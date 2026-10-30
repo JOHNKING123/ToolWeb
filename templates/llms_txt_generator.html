@@ -1,0 +1,202 @@
+{{define "llms_txt_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>llms.txt 生成器 - 网站 AI 内容索引文件一键生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 llms.txt 生成器：表单向导填写网站标题/一句话摘要/网站根 URL/内容分节链接/细节文本，实时预览标准 llms.txt 文本，规范校验逐项中文定位，一键复制、Blob 下载 llms.txt。纯前端本地生成，不上传服务器、无外部请求。llms.txt generator for AI crawlers: form wizard, live preview, spec validation, copy & download, 100% client-side.">
+    <meta name="keywords" content="llms.txt 生成器,llms.txt 规范,ai 爬虫,网站 ai 可发现性,llms txt generator,ai content exposure,llmstxt.org,网站内容索引">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/llms-txt-generator">
+    <meta property="og:title" content="llms.txt 生成器 - 网站 AI 内容索引文件一键生成">
+    <meta property="og:description" content="表单向导生成标准 llms.txt：网站标题/摘要/分节链接实时预览，规范校验逐项中文定位，一键复制下载。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/llms-txt-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"llms.txt 生成器","description":"免费在线 llms.txt 生成器：表单向导填写网站标题/一句话摘要/根 URL/内容分节链接/细节文本，实时预览标准 llms.txt 文本，规范校验逐项中文定位，一键复制与 Blob 下载 llms.txt，纯前端本地运行。","url":"https://www.johnkingzcq123.xyz/tools/llms-txt-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .llg-wrap .container { max-width: 1280px; margin: 0 auto; padding: 1.2rem; }
+        .llg-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .llg-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .llg-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .llg-workbench { display:grid; grid-template-columns:340px 1fr 300px; gap:1rem; align-items:start; }
+        @media (max-width:1024px) { .llg-workbench { grid-template-columns:1fr; } }
+        .llg-privacy { display:flex; gap:.7rem; align-items:flex-start; border:2px solid #34d399; background:#ecfdf5; border-radius:.8rem; padding:.85rem 1rem; margin:0 0 1.1rem; font-size:.95rem; line-height:1.7; color:#065f46; }
+        .llg-field { margin-bottom:.9rem; }
+        .llg-field label { display:block; font-size:.88rem; font-weight:700; color:#374151; margin-bottom:.35rem; }
+        .llg-field label .req { color:#dc2626; }
+        .llg-field input[type=text], .llg-field textarea { width:100%; border:2px solid #e5e7eb; border-radius:.55rem; padding:.55rem .7rem; font-size:.92rem; font-family:inherit; box-sizing:border-box; }
+        .llg-field input:focus, .llg-field textarea:focus { outline:none; border-color:var(--primary-color); }
+        .llg-field textarea { min-height:4.2rem; resize:vertical; line-height:1.6; }
+        .llg-note { font-size:.85rem; color:#6b7280; line-height:1.8; }
+        .llg-section { border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem .9rem; margin-bottom:.7rem; background:#f8fafc; }
+        .llg-section-head { display:flex; gap:.5rem; align-items:center; margin-bottom:.6rem; flex-wrap:wrap; }
+        .llg-section-head .badge { background:#eef2ff; color:#4f46e5; font-size:.78rem; font-weight:700; border-radius:999px; padding:.15rem .6rem; flex:none; }
+        .llg-section-head input { flex:1; min-width:8rem; border:1.5px solid #e5e7eb; border-radius:.5rem; padding:.45rem .6rem; font-size:.9rem; font-family:inherit; }
+        .llg-section-head input:focus { outline:none; border-color:var(--primary-color); }
+        .llg-del { border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:.5rem; padding:.35rem .6rem; font-size:.82rem; cursor:pointer; flex:none; }
+        .llg-del:hover { background:#fee2e2; }
+        .llg-row { display:flex; gap:.45rem; align-items:center; margin-bottom:.45rem; }
+        .llg-row input { flex:1; min-width:0; border:1px solid #e5e7eb; border-radius:.5rem; padding:.45rem .6rem; font-size:.88rem; font-family:inherit; }
+        .llg-row input:focus { outline:none; border-color:var(--primary-color); }
+        .llg-rm { flex:none; border:none; background:none; color:#9ca3af; cursor:pointer; padding:.3rem .4rem; border-radius:.4rem; font-size:.95rem; }
+        .llg-rm:hover { color:#dc2626; background:#fef2f2; }
+        .llg-btn-sm { border:1px dashed #cbd5e1; background:#fff; color:#475569; border-radius:.5rem; padding:.35rem .8rem; font-size:.84rem; cursor:pointer; display:inline-flex; align-items:center; gap:.3rem; }
+        .llg-btn-sm:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .llg-warn { display:none; gap:.45rem; align-items:flex-start; margin-bottom:.7rem; font-size:.88rem; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:.6rem; padding:.6rem .8rem; line-height:1.7; }
+        .llg-warn.show { display:flex; }
+        .llg-warn ul { margin:0; padding-left:1.1rem; }
+        .llg-preview { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.88rem; line-height:1.65; background:#111827; color:#e5e7eb; border-radius:.7rem; padding:1rem 1.1rem; white-space:pre-wrap; word-break:break-all; min-height:16rem; max-height:34rem; overflow-y:auto; }
+        .llg-empty { color:#6b7280; }
+        .llg-actions { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:.8rem; }
+        .llg-issues { margin-top:.8rem; font-size:.88rem; line-height:1.8; background:#f8fafc; border:1px solid #e5e7eb; border-radius:.6rem; padding:.7rem .9rem; }
+        .llg-issues ul { margin:0; padding-left:1.2rem; }
+        .llg-issues.ok { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+        .llg-issues.ok ul { list-style:none; padding-left:0; }
+        .llg-issue-link { background:none; border:none; padding:0; color:inherit; font:inherit; text-align:left; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+        .llg-issue-link:hover { color:var(--primary-color); }
+        .llg-flash { outline:2px solid var(--primary-color); outline-offset:2px; border-radius:.4rem; }
+        .llg-tip { font-size:.92rem; color:#374151; line-height:1.9; }
+        .llg-tip dt { margin-top:.6rem; }
+        .llg-tip dd { margin:.2rem 0 0; color:#4b5563; }
+        .llg-links { display:flex; flex-direction:column; gap:.55rem; font-size:.92rem; }
+        .llg-links a { color:#1a0dab; }
+        .llg-link-note { color:#6b7280; font-size:.85rem; }
+        .llg-limit { background:#fffbeb; border:1px solid #fde68a; border-radius:.6rem; padding:.7rem 1rem; margin-bottom:.8rem; }
+        .llg-limit p { margin:.45rem 0; font-size:.92rem; color:#374151; line-height:1.8; }
+        .llg-privacy-sm { font-size:.88rem; color:#065f46; line-height:1.8; }
+        @media (max-width:720px) { .llg-actions .btn { flex:1; justify-content:center; } }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="llg-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>📄 llms.txt 生成器</h1>
+            <p>表单向导填写网站标题、一句话摘要、根 URL、内容分节链接与细节文本，实时生成符合 llmstxt.org 规范的 llms.txt 文本，规范校验逐项中文定位，一键复制、下载 llms.txt。纯前端本地生成，零上传。</p>
+        </div>
+        <div class="tool-content">
+            <div class="llg-privacy" role="note">
+                <div>🔒</div>
+                <div><b>隐私声明：输入内容不出浏览器。</b>所有网站信息、预览文本都在当前浏览器本地计算与拼接，不上传到任何服务器，不做任何存储与记录。可打开 DevTools 的 Network 面板验证：本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="llg-workbench">
+                <div class="llg-card">
+                    <h3>📝 表单向导</h3>
+                    <div class="llg-field">
+                        <label for="llg-title">网站标题 <span class="req">*</span> <span class="llg-hint">（llms.txt 首行「# 标题」，必填）</span></label>
+                        <input type="text" id="llg-title" placeholder="如：张三的博客" autocomplete="off">
+                    </div>
+                    <div class="llg-field">
+                        <label for="llg-summary">一句话摘要 <span class="llg-hint">（「&gt; 摘要」行，50–150 字讲清网站是干什么的）</span></label>
+                        <textarea id="llg-summary" placeholder="如：分享全栈开发实战经验的个人技术博客，覆盖 Go、前端与 AI 工程。"></textarea>
+                    </div>
+                    <div class="llg-field">
+                        <label for="llg-rooturl">网站根 URL <span class="llg-hint">（用于使用说明中的验证地址）</span></label>
+                        <input type="text" id="llg-rooturl" placeholder="如：https://example.com" autocomplete="off">
+                    </div>
+                    <div class="llg-field">
+                        <label for="llg-detail">细节文本（可选） <span class="llg-hint">（Markdown 短段，2–5 句补充说明）</span></label>
+                        <textarea id="llg-detail" placeholder="如：本站每周更新 2 篇原创教程，全部内容采用 CC BY-NC 4.0 协议。"></textarea>
+                    </div>
+                    <div class="llg-field">
+                        <label>内容分节 <span class="llg-hint">（按网站栏目划分，每节含若干链接）</span></label>
+                        <div id="llg-warn" class="llg-warn" role="alert"><div>⚠️</div><div><ul id="llg-warn-list"></ul></div></div>
+                        <div id="llg-sections"></div>
+                        <button type="button" class="llg-btn-sm" id="llg-add-section">＋ 新增分节</button>
+                    </div>
+                </div>
+
+                <div class="llg-card">
+                    <h3>👁️ 实时预览 <span class="llg-hint">（标准 llms.txt 文本）</span></h3>
+                    <div class="llg-preview" id="llg-preview" aria-live="polite"></div>
+                    <div class="llg-actions">
+                        <button class="btn btn-primary" id="llg-copy" type="button">📋 复制 llms.txt</button>
+                    </div>
+                    <p class="llg-note" style="margin-top:.6rem;">预览随左侧输入实时更新；复制失败时会有明确降级提示，请手动选中预览区内容复制。</p>
+                </div>
+
+                <div class="llg-card">
+                    <h3>✅ 规范校验与导出</h3>
+                    <div class="llg-actions" style="margin-top:0;">
+                        <button class="btn btn-secondary" id="llg-validate" type="button">🔍 规范校验</button>
+                        <button class="btn btn-primary" id="llg-download" type="button">⬇ 下载 llms.txt</button>
+                    </div>
+                    <div class="llg-issues" id="llg-issues">
+                        <ul id="llg-issues-list">
+                            <li class="llg-empty">尚未校验：点击「规范校验」，逐项中文报错会在此列出，点击可定位到对应字段。</li>
+                        </ul>
+                    </div>
+                    <p class="llg-note" style="margin-top:.6rem;">校验规则：首行须为「# 标题」格式；链接行须为「- [文本](URL)」形状；URL 须 http(s):// 开头。</p>
+                </div>
+            </div>
+
+            <div class="llg-card">
+                <h3>✍️ 写作提示</h3>
+                <div class="llg-tip">
+                    <p><b>摘要怎么写：</b>一句话讲清网站是干什么的、给谁用（50–150 字为宜）。这是 AI 对你网站的第一印象，写得越具体，AI 引用时越准确。</p>
+                    <p><b>节怎么分：</b>按网站主要栏目划分 3–8 个分节（如文档／博客／产品／关于），每节放 3–10 个核心页面链接，不要把全站几百个链接一股脑倒进来。</p>
+                    <p><b>链接文本写具体：</b>用页面真实标题做链接文本，避免「点击这里」「更多」「详情」这类无意义文本——AI 靠链接文本理解页面内容。</p>
+                    <p><b>细节文本：</b>可选，2–5 句补充说明（建站目标、内容特色、更新频率、授权协议），支持 Markdown 短段。</p>
+                </div>
+            </div>
+
+            <div class="llg-card">
+                <h3>📖 使用说明</h3>
+                <ol class="llg-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>左侧表单向导填写网站标题（一句话摘要、根 URL 建议一并填写，摘要决定 AI 对网站的第一印象）。</li>
+                    <li>按网站栏目新增分节，逐条添加核心页面链接（链接文本＋URL，可增删行；URL 须以 http(s):// 开头）。</li>
+                    <li>中央实时预览标准 llms.txt 文本；点「规范校验」，逐项中文报错会列出，点击报错可定位到对应字段。</li>
+                    <li>点「下载 llms.txt」，把文件放到网站根目录，浏览器访问 <b id="llg-step3-url">https://你的域名/llms.txt</b> 验证可访问。</li>
+                    <li>全程浏览器本地生成，文本不出浏览器；非法输入会给出中文提示，不静默丢弃。</li>
+                </ol>
+            </div>
+
+            <div class="llg-card">
+                <h3>❓ 常见问题</h3>
+                <dl class="llg-tip">
+                    <dt><b>llms.txt 是什么？</b></dt>
+                    <dd>社区新兴标准（llmstxt.org）：放在网站根目录、专门给 AI 模型／AI 爬虫看的网站内容结构化索引（标题＋摘要＋分节链接），帮助 AI 正确理解与引用你的网站内容。</dd>
+                    <dt><b>生成的文件应该放哪里？</b></dt>
+                    <dd>网站根目录，即 <b>https://你的域名/llms.txt</b> 能直接访问的位置。本工具只生成文件文本，不做上传部署，请用你自己的方式（FTP／主机面板／CI 流程）放到服务器上。</dd>
+                    <dt><b>各个 AI 爬虫都会读 llms.txt 吗？</b></dt>
+                    <dd>不一定。llms.txt 是社区新兴标准，各家 AI 爬虫支持程度不一；本工具只保证输出格式符合 llmstxt.org 规范，不保证某家爬虫必然采用。</dd>
+                    <dt><b>摘要和链接怎么写，AI 才理解得好？</b></dt>
+                    <dd>见上方「写作提示」：摘要一句话讲清网站定位与受众；链接文本用页面真实标题；分节按网站栏目划分，每节 3–10 个核心链接。</dd>
+                    <dt><b>我的输入会被上传吗？</b></dt>
+                    <dd>不会。全部计算在浏览器本地完成，本页面零网络请求，文本不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="llg-card">
+                <h3>🔗 相关工具</h3>
+                <div class="llg-links">
+                    <span><a href="/tools/robots-txt-generator">robots.txt 生成器</a><span class="llg-link-note">（配好抓取指令，再给 AI 整理一份内容索引：robots 做爬虫抓取指令，llms.txt 做内容结构化暴露）</span></span>
+                    <span><a href="/tools/robots-txt-validator">robots.txt 校验器</a><span class="llg-link-note">（检查已有 robots.txt 语法与 AI 爬虫放行情况）</span></span>
+                    <span><a href="/tools/project-to-txt">代码打包给 LLM</a><span class="llg-link-note">（个人项目代码喂给 LLM 去这边；本页是给网站站长生成 llms.txt，方向不同）</span></span>
+                </div>
+            </div>
+
+            <div class="llg-card">
+                <h3>⚠️ 真限制说明</h3>
+                <div class="llg-limit">
+                    <p><b>① llms.txt 是社区新兴标准</b>——各家 AI 爬虫支持程度不一，本工具只保证格式符合 llmstxt.org 规范，不保证某家爬虫必然采用。</p>
+                    <p><b>② 生成内容依赖用户输入质量</b>——摘要／链接文本写得差，AI 理解也差，填写时请参考上方写作提示。</p>
+                    <p><b>③ 文件需手动放到网站根目录</b>（https://域名/llms.txt）——本工具不做上传部署。</p>
+                    <p><b>④ 全程浏览器本地生成</b>——零上传，文本不出浏览器。</p>
+                </div>
+                <div class="llg-privacy-sm">🔒 <b>隐私声明</b>：本工具全部计算在您的浏览器本地完成，零网络请求、零第三方依赖、零 CDN。您输入的网站信息与生成的文本只存在于当前页面，不收集、不上传、不存储。</div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/llms_txt_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

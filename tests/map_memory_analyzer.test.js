@@ -114,7 +114,7 @@ ok(/ID:\s*"map_memory_analyzer"[\s\S]{0,800}?Icon:\s*"analytics"/.test(GO_SRC), 
 ok(/{{define "map_memory_analyzer"}}/.test(TPL_SRC), "模板 define map_memory_analyzer");
 ok(/https:\/\/www\.johnkingzcq123\.xyz\/tools\/map-memory-analyzer/.test(TPL_SRC), "模板 canonical");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-ok(new Set(paths).size === 232, "全量 Path 数 232（实得 " + new Set(paths).size + "）");
+ok(new Set(paths).size === 233, "全量 Path 数 233（实得 " + new Set(paths).size + "）");
 
 /* ---------- 10. 真限制四条页面明示 ---------- */
 ok(/仅支持 GCC ld -Map 输出/.test(TPL_SRC), "真限制①：仅 GCC ld -Map");

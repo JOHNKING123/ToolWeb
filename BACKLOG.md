@@ -1,3 +1,80 @@
+
+---
+
+## 今日任务（2026-10-30 15:30 · PM 排期决策，接 160 轮调研）
+
+**选定：llms.txt 生成器** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（160 轮）Top3 **首席推荐**（115 轮观察项，本轮建议晋升 P2 顺位首席；`llms.txt` 全站 0 命中真缺口；AI 爬虫／Agent 浪潮持续：Perspecto 1/3 流量来自 AI 助手、PH 本周榜 Dedica「Check if AI agents can use your website」——站长需要向 AI 正确暴露网站内容，llms.txt 新兴标准手写门槛高），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **PM 口径裁定：与「代码打包给 LLM」（project_to_txt）／「提示词脱敏器」（prompt_sanitizer）的边界划分**——`project_to_txt` 是开发者把自己项目代码打包成 TXT **喂给** LLM；`prompt_sanitizer` 是提问前本地脱敏隐私；本工具是**网站站长向** AI 爬虫正确暴露网站内容：生成 llms.txt 标准文件（标题／摘要／分节链接），放网站根目录。三个工具分属「开发→模型」与「网站→模型」两个方向，互链而非重叠（沿用「位运算计算器 vs 寄存器位域编辑器」口径划分惯例）。
+- **PM 口径裁定：与「robots.txt 生成器」（robots_txt_generator）边界划分**——robots.txt 做爬虫抓取指令（Allow/Disallow/User-agent），llms.txt 做**内容结构化暴露**（给 AI 模型的精炼内容索引），两者互补，可互链（文案：配好抓取指令再给 AI 整理内容）。
+- **未选**：
+  - 手写签名数字化仪（159 轮新观察项→160 轮建议晋升第二顺位；HN Signature Capture 信号；`signature_capture` 0 命中；排第二顺位待后轮——首席无硬伤，不插队。PM 口径预裁定：本轮实测 `pdf_sign` 已含「手写签名板」（手绘签名嵌入 PDF）；数字化仪口径为「webcam 拍摄纸面签名→去底→透明 PNG 下载」，产出是独立图片文件而非 PDF 嵌入，边界清晰可互链）。
+  - 文件十六进制查看器（160 轮新晋 P2；dev.to 2026-10-30 当日帖；`hexdump`／`hex_viewer`／「十六进制查看」0 命中；与「HEX ↔ C 数组互转器」（文本互转）口径不重叠：「查看 vs 互转」；排第三顺位待后轮）。
+  - 在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+  - 记事本式计算器（08:20 轮 PM 曾裁定留观察低优先；**本轮实测推翻：categories.go 第 826 行已有 ID `unit_calc_notepad`、Path `/tools/unit-calc-notepad` 的「单位感知记事本计算器」（记事本式逐行算式＋单位感知），Calcy 口径已覆盖，本观察项划出、不再复列**）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 失败：Host key verification failed——VM 换机丢 known_hosts，TOOLS.md 已有修复记录：`sudo ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts`，ssh 实际以 root 运行；开发轮 push 前须先修复并验证；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 cc8e828（截图 3D 样机渲染器新增）／57858d1（CSS 加载动画生成器）／c52b3d3（位运算计算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **232**；`llms.txt`／`llms-txt`／`llms_txt` 全站仅命中两测试文件负向断言（「不链未交付工具」css_loader_generator.test.js:147-148、screenshot_mockup_3d.test.js:141），非独立工具，真缺口；`signature_capture` 0 命中（「手写签名」仅命中 pdf_sign 内部，已口径划分）；`hexdump`／`hex_viewer`／「十六进制查看」0 命中；记事本式计算器如上已被 unit_calc_notepad 覆盖；在线电台收听器硬伤未解跳过；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——2026 AI 爬虫／Agent 浪潮下站长需要向 AI 正确暴露网站内容，llms.txt 新兴标准（llmstxt.org）手写门槛高（分节格式、Markdown 链接语法、摘要写法）；③ **一轮可高质量交付**——纯前端小难度：表单向导→标准格式生成（纯函数）＋规范校验＋一键下载；生成逻辑是确定性纯函数（input 对象→文本字符串），可写成精确向量供 node 断言；④ **开发工具簇补位**——与 robots.txt 生成器／robots.txt 校验器／OG 卡片预览／SEO 族工具互链，「爬虫指令 vs 内容暴露 vs 社交预览」边界清晰；⑤ **零上传、零依赖、零 CDN**——纯前端单页；⑥ **方向合规**——ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **品类归位**：注册到「开发工具」品类（与 robots.txt 生成器同品类，互链顺手）；New: true；Icon `article_notes`（实测 0 占用、贴文档规范主题；`smart_toy` 被本地 LLM 硬件检测器占用，`description`／`code` 等已多占）。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① **llms.txt 是社区新兴标准**——各家 AI 爬虫支持程度不一，本工具只保证格式符合 llmstxt.org 规范，不保证某家爬虫必然采用；② **生成内容依赖用户输入质量**——摘要／链接描述写得差，AI 理解也差，页面给出写作提示；③ **文件需手动放到网站根目录**（`https://域名/llms.txt`），本工具不做上传部署；④ **全程浏览器本地生成**，零上传。
+
+**规格**（开发轮按此执行）：
+- **表单向导**：网站标题、网站描述（一句话摘要）、网站根 URL、内容分节（节名＋链接清单：链接文本＋URL，可增删行）、可选细节文本（Markdown 短段）；实时生成区（标准 llms.txt 文本预览）＋「规范校验」按钮（逐项报错定位字段）＋「复制」＋「下载 llms.txt」。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `defaultLlmsInput()` → 默认输入对象 `{title, summary, detail, rootUrl, sections:[{name, links:[{text,url}]}]}`（sections 至少一个默认节）。
+  - `buildLlmsTxt(input)` → 标准 llms.txt 文本：首行 `# {title}`、空行、`> {summary}`、空行、（detail 非空时 `{detail}`＋空行）、每个 section `## {name}`、空行、每条 `- [{text}]({url})`，section 间空行分隔，末尾单个换行。
+  - `validateLlmsTxt(text)` → issues 数组（`{field, message}`）：首行非 `# ` 开头→`{field:'title'}`；链接行不符 `- [text](url)` 形状→`{field:'link'}`；URL 非 http(s):// 开头→`{field:'link'}`；text 非字符串抛 Error（err.field="input"）。
+  - `llmsFileName()` → `'llms.txt'`。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `buildLlmsTxt({title:'My Site', summary:'A site.', detail:'', rootUrl:'', sections:[{name:'Docs', links:[{text:'API', url:'https://x.com/api'}]}]})` 逐字等于 `'# My Site\n\n> A site.\n\n## Docs\n\n- [API](https://x.com/api)\n'`。
+  - `validateLlmsTxt` 对上述生成结果返回 `[]`（0 条 issues）。
+  - `validateLlmsTxt('')` → issues 非空且首条 `field==='title'`。
+  - `validateLlmsTxt('# T\n\n- [bad](not-a-url)\n')` → 至少 1 条 `field==='link'`。
+  - `buildLlmsTxt({})` 抛 Error（err.field="input"）；`buildLlmsTxt({title:'', summary:'s', sections:[{name:'D', links:[]}]})` 抛 Error（err.field="title"）；`validateLlmsTxt(123)` 抛 Error（err.field="input"）。
+- **界面**：左栏表单向导（标题／描述／根 URL／分节链接增删行／细节文本）＋ 中央实时预览（等宽文本区＋复制按钮）＋ 右栏操作（「规范校验」→逐项中文报错列表定位到字段、「下载 llms.txt」）＋ 写作提示（摘要怎么写、节怎么分）＋ 使用说明（下载→放网站根目录→访问 https://域名/llms.txt 验证，三步）＋ 真限制四条提示条＋隐私声明（全本地生成、零上传）；所有提示中文；用户输入与结果用 textContent 或转义后插值。
+- **操作与互链**：与「robots.txt 生成器」（文案：配好抓取指令再给 AI 整理内容）／「robots.txt 校验器」／「代码打包给 LLM」（文案：个人项目代码喂 LLM 去这边，本页是给网站站长做 llms.txt）互链；不与未交付工具（手写签名数字化仪／文件十六进制查看器）互链。
+- **技术路线**：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）。
+- **注册**：ID `llms_txt_generator`、Name「llms.txt 生成器」、Path `/tools/llms-txt-generator`、Category 开发工具、New: true、Icon `article_notes`（实测 0 占用）；中英文描述＋SEO keywords（llms.txt 生成器、llms.txt 规范、ai 爬虫、网站 ai 可发现性、llms txt generator、ai content exposure、llmstxt.org、网站内容索引）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/llms-txt-generator，相关工具互链 robots.txt 生成器、robots.txt 校验器。
+- **预计改动文件**：`templates/llms_txt_generator.html`（新）、`static/js/llms_txt_generator.js`（新）、`tests/llms_txt_generator.test.js`（新）、`tools/categories.go`（注册，Path 总数 232→233）；旧测试 Path 断言 232→233 同步：`tests/bitwise_calculator.test.js`、`tests/bookmark_cleaner.test.js`、`tests/css_loader_generator.test.js`、`tests/gif_compress.test.js`、`tests/hex_c_array.test.js`、`tests/http_status_reference.test.js`、`tests/map_memory_analyzer.test.js`、`tests/modbus_frame_tool.test.js`、`tests/regex_generator.test.js`、`tests/register_bitfield_editor.test.js`、`tests/screenshot_mockup_3d.test.js`、`tests/text_to_pdf.test.js`、`tests/wcag_contrast_checker.test.js`（13 个，grep 232 实测命中）。
+- **验收红线**：node 断言全过（上列确定性向量逐字命中）；`go build`／`go vet` 通过；Path 总数 232→233、ID／Path 双注册；真限制四条页面明示；零上传／零依赖／零 CDN 源码自检通过；与 robots.txt 生成器／robots.txt 校验器／代码打包给 LLM 互链、不链未交付工具；Icon 用 `article_notes`。
+
+**交付核对**：本地当前分支 muse/dev-20260929；**本轮 `git fetch` 失败：Host key verification failed（VM 换机丢 known_hosts，TOOLS.md 已有修复记录：`sudo ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts`，ssh 实际以 root 运行；开发轮 push 前须先修复并验证）**；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；`git log` 头部 cc8e828（截图 3D 样机渲染器新增）／57858d1（CSS 加载动画生成器）／c52b3d3（位运算计算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **232**；Top3 候选重叠复核（`llms.txt` 仅两测试文件负向断言；`signature_capture` 0 命中，「手写签名」仅命中 pdf_sign 内部已口径划分；`hexdump`／`hex_viewer`／「十六进制查看」0 命中；记事本式计算器被 unit_calc_notepad 覆盖已划出；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+## 今日任务（2026-10-30 15:00 · 通用调研第一百六十轮，接 13:00 PM 排期轮）
+
+**交付状态**：10-30 通用调研第一百六十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**截图 3D 样机渲染器已交付闭环**（cc8e828 新增：4 场景 CSS 3D 预览＋canvas 导出 PNG，纯前端零上传；ID `screenshot_mockup_3d`、Path `/tools/screenshot-3d-mockup` 双注册；全量 **232 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小／中难度纯前端。
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. 截图 3D 样机渲染器交付确认：`git log` 头部 cc8e828（截图 3D 样机渲染器新增）／57858d1（CSS 加载动画生成器）／c52b3d3（位运算计算器）；全量 232 Path；ID `screenshot_mockup_3d`、Path `/tools/screenshot-3d-mockup` 双注册；本地当前分支 muse/dev-20260929（**本轮 `git fetch` 先报 Host key verification failed（VM 换机丢 known_hosts），已按 TOOLS.md 用 `sudo ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复并验证通过**——仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. 留池复核：样机渲染器交付闭环，首席顺位空出；**llms.txt 生成器（115 轮观察项→159 轮 P2；`llms.txt` 全站 0 命中，测试文件两处仅为负向断言"不链未交付工具"、非独立工具）建议晋升 P2 顺位首席**；**手写签名数字化仪（159 轮新观察项；`signature_capture` 0 命中）建议晋升第二顺位**；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，低优先）保持观察。
+3. 新信号扫描（**dev.to 2026-10-30 当日 minitool.io 十二工具帖**＋V2EX 10-30＋哎呦不错 10-30＋PH／HN 为主线）：**新晋 P2 一项——文件十六进制查看器**（见下）；新观察项三项——Markdown 表格转 CSV／比例求解器／恩尼格玛密码机模拟器；其余全部消解或已覆盖——
+   - dev.to（2026-10-30 03:15 UTC 当日帖《I Ship 10 Free Browser Tools a Day. Here Are 12 I Actually Use.》）：TOTP Generator（站内 `totp_generator` 已覆盖）／JWT Signature Verifier（站内 `jwt-parser` 已覆盖）／CSS Grid Generator（站内 `css_grid_generator` 已覆盖）／白噪音（站内 `white_noise_generator` 已覆盖）／DCA Calculator（泛财务，10-18 方向修正不立项）／Running Pace Calculator（生活计算器，10-18 方向修正不立项）／Tap Tempo（音乐 BPM 极小众）／Wordle Solver（英文 Wordle 小众）——消解或已覆盖；**Hex Viewer（拖文件→偏移＋十六进制＋ASCII 三栏＋逐字节检查器，全站 0 命中）→ 新晋 P2**；Markdown Table to CSV（转义竖线＋对齐行剥离，0 命中）→ 新观察项；Ratio Calculator（缺项求解比例，0 命中）→ 新观察项；Enigma Simulator（AAAAA→BDZGO 确定性向量，0 命中，中难度）→ 新观察项；JSON to Kotlin（站内 `json_to_types` 仅到 TS/Go，Kotlin 为扩展备注）；
+   - V2EX 10-30：Zbox v0.5（Windows 桌面）／QuireKit（编辑器组件，非独立单页工具）／Agent 教学仓库／aivault（AI 工程工具链）／Open Resume（被站内 `resume_builder` 覆盖）／md2chat（被站内已注册 `md_to_chat` 覆盖）——消解或已覆盖；
+   - 哎呦不错 10-30：send.wang（158 轮已消解）／NonsPlayer（桌面音乐播放器）——消解；
+   - PH／HN 10-29~10-30：AVP／Dedica／OpenLLM／Trigger.dev（AI／SaaS）／WOML／Parley／Algeon（agent／SQL 引擎）／Blokkily（桌面 DAW）——消解；36kr 转载帖 TypeLit（书籍打字练习）→ 观察低（打字练习非工具刚需）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；样机渲染器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮新晋 P2 一项递补第三）：
+1. **llms.txt 生成器** — 115 轮观察项，建议晋升 P2 顺位首席（`llms.txt` 全站 0 命中真缺口；2026 AI 爬虫／Agent 浪潮持续：Perspecto 1/3 流量来自 AI 助手、本轮 PH 本周榜 Dedica「Check if AI agents can use your website」——站长需要向 AI 正确暴露网站内容，llms.txt 新兴标准手写门槛高；表单向导→标准格式生成＋规范校验＋一键下载，纯前端小难度；开发工具簇补位）。
+2. **手写签名数字化仪** — 159 轮新观察项，晋升第二顺位（HN Signature Capture 信号；`signature_capture` 0 命中；痛点：签合同／申请表需要把手写签名变透明底电子图，现有路线是上传到随机网站或买扫描 App；webcam 拍摄→边缘检测去底→透明 PNG 下载，全程浏览器本地，纯前端中难度；真限制：需摄像头权限＋HTTPS 上下文；与站内「邮件签名生成器」（文本签名档）口径不重叠）。
+3. **文件十六进制查看器** — 本轮新晋 P2（dev.to 2026-10-30 当日帖 minitool.io 十二工具之一；`hexdump`／`hex_viewer`／「十六进制查看」全站 0 命中真缺口；痛点："这文件头到底是啥"——逆向／嵌入式／取证人群查二进制头靠 xxd 命令行或装 HxD，缺免装中文网页版；拖文件→偏移＋十六进制字节＋ASCII 三栏＋逐字节检查器（字节值／十进制／二进制／字符对照），纯前端小／中难度：File API＋DataView 确定性渲染，可写精确向量供 node 断言；嵌入式簇补位：与「HEX ↔ C 数组互转器」（文本互转）／「位运算计算器」互链，「查看 vs 互转 vs 运算」边界清晰；真限制：大文件（>256MB 级）须分片读取／仅预览头部，页面明示）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：记事本式计算器（Calcy 式；08:20 轮 PM 已裁定不踩 10-18 红线，低优先）；Markdown 表格转 CSV（本轮新观察；0 命中；文档写作者刚需；小难度）；比例求解器（本轮新观察；0 命中；缺项求解比例／宽高比／配方缩放；小难度）；恩尼格玛密码机模拟器（本轮新观察；0 命中；AAAAA→BDZGO 确定性向量；中难度；教学向）；打字练习（本轮 36kr 信号；低）；JSON→Kotlin（`json_to_types` 仅 TS/Go，扩展备注）；URL 大字报展示器（156 轮，低）；Slug 生成器／Meta 标签生成器（100–101 轮；Meta 口径与站内「OG 卡片预览」相邻，独立成项待 PM 裁定）；WhatsApp 链接生成器（115 轮）；粘贴文本邮箱提取器（121 轮）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 159 轮及之前记录。
+
+**通用候选表增量**（第一百六十轮：截图 3D 样机渲染器已交付划出（cc8e828 新增；ID screenshot_mockup_3d、Path /tools/screenshot-3d-mockup 双注册；全量 232 Path；候选池划出）；**llms.txt 生成器建议晋升 P2 顺位首席**（115 轮观察项；llms.txt 0 命中；AI 浪潮信号＋PH Dedica 佐证）；**手写签名数字化仪晋升第二顺位**（159 轮；signature_capture 0 命中）；**文件十六进制查看器新晋 P2**（dev.to 2026-10-30 当日帖；hexdump／hex viewer 0 命中）；新观察项：Markdown 表格转 CSV／比例求解器／恩尼格玛模拟器（均为 dev.to 信号，0 命中）；自有实锤消解 15 项（dev.to 12 工具帖中 8 项已覆盖／方向不合／小众；V2EX 10-30 6 项桌面／组件／AI 工程／已覆盖；哎呦不错 2 项已消解／桌面；PH／HN 4 项 AI／SaaS／桌面）；全量 232 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 截图 3D 样机渲染器 | 已交付划出（cc8e828 新增；ID screenshot_mockup_3d、Path /tools/screenshot-3d-mockup 双注册；全量 232 Path；候选池划出） | — | 已实现 |
+| llms.txt 生成器 | 建议晋升 P2 顺位首席（115 轮观察项；llms.txt 0 命中；AI 爬虫／Agent 浪潮持续，PH Dedica 佐证）；表单→标准格式生成＋规范校验＋下载；纯前端小难度；开发工具簇补位 | 小 | P2（留池） |
+| 手写签名数字化仪 | 晋升第二顺位（159 轮新观察项；HN Signature Capture 信号；signature_capture 0 命中）；webcam 拍手写签名→去底→透明 PNG，本地处理；纯前端中难度；真限制：需摄像头权限 | 中 | P2（留池） |
+| 文件十六进制查看器 | 本轮新晋 P2（dev.to 2026-10-30 当日帖；hexdump／hex viewer 全站 0 命中）；拖文件→偏移＋十六进制＋ASCII 三栏＋逐字节检查器，零上传；纯前端小／中难度；嵌入式簇补位；真限制：大文件分片读取须明示 | 小/中 | P2（留池） |
+| Markdown 表格转 CSV | 本轮新观察项（dev.to 信号；0 命中）；文档表格→CSV，转义竖线＋对齐行剥离；纯前端小难度 | 小 | 观察（留池） |
+| 比例求解器 | 本轮新观察项（dev.to 信号；0 命中）；缺项求解比例（宽高比／配方缩放）；纯前端小难度 | 小 | 观察（留池） |
+| 恩尼格玛密码机模拟器 | 本轮新观察项（dev.to 信号；0 命中；AAAAA→BDZGO 确定性向量）；转子／反射器／接线板模拟；纯前端中难度；教学向 | 中 | 观察（留池） |
+
+**归档说明**：本轮为 10-30 通用调研第一百六十轮——截图 3D 样机渲染器交付闭环（cc8e828，`/tools/screenshot-3d-mockup` 已注册，全量 232 Path），候选池划出；**llms.txt 生成器建议晋升 P2 顺位首席**（115 轮观察项；llms.txt 0 命中；AI 浪潮＋PH Dedica 信号加温）；**手写签名数字化仪晋升第二顺位**（159 轮；signature_capture 0 命中）；**文件十六进制查看器新晋 P2**（dev.to 当日帖；hexdump／hex viewer 0 命中；嵌入式簇补位）；新观察项 Markdown 表格转 CSV／比例求解器／恩尼格玛模拟器（dev.to 当日帖，0 命中）；本轮消解 15 项（dev.to 帖 8 项已覆盖／方向不合／小众；V2EX 10-30 6 项；哎呦不错 2 项；PH／HN 4 项 AI／SaaS／桌面）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 先报 Host key verification failed（VM 换机丢 known_hosts），已按 TOOLS.md 用 `sudo ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复并验证通过；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 cc8e828（截图 3D 样机渲染器新增）／57858d1（CSS 加载动画生成器）／c52b3d3（位运算计算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **232**；Top3 候选重叠复核（screenshot_mockup_3d 在 categories.go 1 注册命中、/tools/screenshot-3d-mockup 1 命中，为本轮已交付项；`llms.txt` 全站仅命中两测试文件负向断言（不链未交付工具），非独立工具；`signature_capture`／「手写签名」0 命中；`hexdump`／`hex_viewer`／「十六进制查看」0 命中，HEX ↔ C 数组互转器做文本互转、口径不重叠；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3；DCA／跑步配速按 10-18 方向修正不立项）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-30 13:00 · PM 排期决策，接 159 轮调研）
 
 **选定：截图 3D 样机渲染器** — 本轮唯一任务（新工具）：

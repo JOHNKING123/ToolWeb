@@ -858,6 +858,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "llms_txt_generator",
+					Name:        "llms.txt 生成器",
+					Description: "表单向导生成标准 llms.txt 网站 AI 内容索引：网站标题/一句话摘要/根 URL/内容分节链接（增删行）/细节文本，实时预览标准文本、规范校验逐项中文定位、一键复制与 Blob 下载 llms.txt，附 llmstxt.org 写作提示与三步上线说明，纯前端本地生成零上传 · llms.txt generator: form wizard to standard llms.txt, live preview, spec validation, copy & download, 100% client-side",
+					Path:        "/tools/llms-txt-generator",
+					Icon:        "article_notes",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

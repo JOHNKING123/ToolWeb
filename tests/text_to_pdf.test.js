@@ -121,7 +121,7 @@ ok(/ID:\s*"text_to_pdf"[\s\S]{0,800}?Icon:\s*"text_snippet"/.test(GO_SRC), "text
 ok(/{{define "text_to_pdf"}}/.test(TPL_SRC), "模板 define text_to_pdf");
 ok(/https:\/\/www\.johnkingzcq123\.xyz\/tools\/text-to-pdf/.test(TPL_SRC), "模板 canonical");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-ok(new Set(paths).size === 232, "全量 Path 数 232（实得 " + new Set(paths).size + "）");
+ok(new Set(paths).size === 233, "全量 Path 数 233（实得 " + new Set(paths).size + "）");
 ok(new Set(paths.map(function (p) { return p; })).has('"/tools/text-to-pdf"'), "Path 集合含 /tools/text-to-pdf");
 
 /* ---------- 7. 零网络请求静态检查 ---------- */
