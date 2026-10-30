@@ -1,4 +1,80 @@
-## 今日任务（2026-10-30 12:46 · 产品经理排期轮，接 158 轮调研）
+## 今日任务（2026-10-30 13:00 · PM 排期决策，接 159 轮调研）
+
+**选定：截图 3D 样机渲染器** — 本轮唯一任务（新工具）：
+- **顺位**：研究轮（159 轮）Top3 **首席推荐**（157 轮 P2，159 轮建议晋升顺位首席；`mockup`／「样机渲染」全站 0 命中复测确认真缺口；Perspecto 作者 10-28 flop 复盘验证：需求真实、收费墙下免费网页版有缺口），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。
+- **未选**：
+  - llms.txt 生成器（115 轮观察项→159 轮建议晋升 P2；`llms.txt` 0 命中真缺口；AI 浪潮信号持续加温——FastUtil 全站生成 llms.txt、Perspecto 1/3 流量来自 AI 助手；排第二顺位待后轮——首席无硬伤，不插队）。
+  - 手写签名数字化仪（159 轮新观察项；HN Signature Capture 信号；`signature_capture` 0 命中；痛点：签合同／申请表需要手写签名变透明底电子图，现有路线是上传到随机网站或买扫描 App；webcam 拍摄→边缘检测去底→透明 PNG，全程浏览器本地；排第三顺位待后轮）。
+  - 在线电台收听器（88 轮新晋，硬伤未解→继续跳过）。
+  - 记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，留观察低优先）。
+- **PM 零重叠实测复核**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 报 Host key verification failed——VM 换机丢 known_hosts，详见文末；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 57858d1（CSS 加载动画生成器新增）／c52b3d3（位运算计算器）／d7e452c（MAP 文件内存分析器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **231**；`mockup`／`3d-mockup`／`perspecto`／「样机渲染」全站 0 命中；`llms` 全站仅命中 categories.go 第 261 行另一工具描述中的 "for LLMs" 关键词（文件夹打包 TXT 喂 LLM 工具，口径完全不同）；`signature_capture`／「手写签名」全站 0 命中；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3。
+- **选定理由**：① **顺位即理由**——无硬伤的首席递进项，不二次挑拣；② **痛点真实**——设计师／开发者想把截图做成精美 3D 展示图（投屏、作品集、教程封面），现有路线是 Figma 插件或收费站（Perspecto 收费墙），免费网页版有真缺口；③ **一轮可高质量交付**——纯前端小／中难度：上传截图→CSS 3D 透视实时预览→canvas 渲染→下载 PNG；变换数学是确定性纯函数（参数→CSS transform 字符串＋canvas 绘制计划），可写成精确向量供 node 断言；④ **设计／图片簇补位**——与「图片打码」／「图片压缩」／「图片格式转换」互链，「展示美化 vs 隐私遮蔽 vs 体积优化 vs 格式互转」边界清晰；⑤ **零上传、零依赖、零 CDN**——纯前端单页，截图不离浏览器；⑥ **方向合规**——ToolWeb 工具本身开发，非泛财务／生活计算器，符合用户 10-18 方向修正。
+- **品类归位**：注册到「图片处理」品类（设计／图片簇补位；图片打码／图片压缩都在此品类，互链顺手）；New: true；Icon `view_in_ar`（实测 0 占用，贴 3D 样机主题；备选 `screenshot_monitor`／`phone_iphone` 亦 0 占用，`devices`／`photo_library` 已被占用）。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① **机身框为自绘 CSS/canvas**——浏览器窗口栏／手机框均为程序绘制，非真实设备照片级还原；② **导出分辨率上限**——canvas 渲染受浏览器内存限制，超大截图（如 4K 整页）可能降采样，页面明示实际导出像素；③ **PNG 无损导出体积大**——不做 JPEG/WebP 压缩（保质路线）；④ **全程浏览器本地处理**，截图零上传。
+
+**规格**（开发轮按此执行）：
+- **样机场景**：4 类——browser-frame（自绘浏览器窗口框＋标签栏＋地址栏占位）、phone-frame（自绘手机机身框＋刘海／挖孔）、float-3d（悬浮 3D 透视卡片，无框）、flat-shadow（平面大阴影展示图）；左栏卡片选择，每类配小预览缩略。
+- **参数**（滑杆／选择器，实时预览）：透视 rotateX／rotateY（-30°～30°）、perspective 景深（400–1600px）、缩放 0.5–1.5、背景（纯色选择／深浅渐变二选一）、阴影强度 0–100%、反射开关（float-3d／flat-shadow 可选）、浏览器框主题色／手机框颜色（browser-frame／phone-frame 可选）。
+- **生成函数**（纯函数，双模式导出供 node 测试；失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制）：
+  - `mockupScenes()` → `['browser-frame','phone-frame','float-3d','flat-shadow']`。
+  - `defaultMockupParams(scene)` → 各类默认参数对象（含 rotateX/rotateY/perspective/scale/bg/shadow/reflection/frameColor）。
+  - `buildTransform(params)` → CSS transform 字符串，如 `'perspective(900px) rotateX(-12deg) rotateY(24deg) scale(0.9)'`（顺序固定：perspective→rotateX→rotateY→scale；角度保留整数、scale 保留两位小数）。
+  - `buildCanvasDrawPlan(params, imgW, imgH)` → 纯对象绘制计划（无 DOM）：`{outW, outH, framePad, imgRect:{x,y,w,h}, shadow:{blur, offsetY, opacity}, reflection:{height, opacity}}`，供 canvas 渲染与导出像素明示。
+  - `exportFileName(scene)` → 如 `'mockup-browser-frame.png'`。
+- **确定性向量**（开发轮必须逐字命中；params 均取默认除非另注）：
+  - `mockupScenes()` → 4 项数组如上，顺序固定。
+  - `buildTransform({rotateX:-12, rotateY:24, perspective:900, scale:0.9})` → 逐字等于 `'perspective(900px) rotateX(-12deg) rotateY(24deg) scale(0.9)'`。
+  - `buildTransform(defaultMockupParams('float-3d'))` 含 `'rotateX('`、`'rotateY('`、`'perspective('`。
+  - `buildCanvasDrawPlan(defaultMockupParams('phone-frame'), 1170, 2532)` → `framePad` 按机身比例为正数、`imgRect` 宽高比约等于 1170/2532（误差 <1%）。
+  - `exportFileName('browser-frame')` → `'mockup-browser-frame.png'`。
+  - `buildTransform({rotateX:99, rotateY:0, perspective:900, scale:1})` 抛 Error（err.field="param"）；`defaultMockupParams('unknown-scene')` 抛 Error（err.field="scene"）；`buildCanvasDrawPlan(defaultMockupParams('float-3d'), 0, 100)` 抛 Error（err.field="param"）。
+- **界面**：左栏场景卡片（4 类小预览）＋参数面板（滑杆／颜色选择器／开关）＋ 中央大预览区（CSS 3D transform 实时渲染上传截图，深浅背景切换）＋ 右栏导出区（导出尺寸选择 原图/2x 封顶说明、「下载 PNG」按钮、实际导出像素明示）＋ 使用说明（上传→调角度→下载，三步）＋ 真限制四条提示条＋隐私声明（全本地处理、截图零上传）；所有提示中文；用户输入与结果用 textContent 或转义后插值。
+- **操作与互链**：与「图片打码」（img_mosaic，文案：先给敏感信息打码再来做展示图）／「图片压缩」（文案：导出的 PNG 体积大可去压缩）／「图片格式转换」互链（图片簇）；不与未交付工具（llms.txt 生成器／手写签名数字化仪）互链。
+- **技术路线**：纯前端、零依赖（页面源码自检无外部请求、无 fetch／XHR、零 CDN）；预览用 CSS 3D transform，导出用 canvas 2D 按 buildCanvasDrawPlan 绘制计划逐项渲染（背景→阴影→机身框→截图→反射）。
+- **注册**：ID `screenshot_mockup_3d`、Name「截图 3D 样机渲染器」、Path `/tools/screenshot-3d-mockup`、Category 图片处理、New: true、Icon `view_in_ar`（实测 0 占用）；中英文描述＋SEO keywords（截图样机、3d mockup、样机渲染器、mockup generator、截图美化、app 截图展示图、screenshot mockup、3d screenshot）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/screenshot-3d-mockup，相关工具互链图片打码、图片压缩。
+- **预计改动文件**：`templates/screenshot_mockup_3d.html`（新）、`static/js/screenshot_mockup_3d.js`（新）、`tests/screenshot_mockup_3d.test.js`（新）、`tools/categories.go`（注册，Path 总数 231→232）；旧测试 Path 断言 231→232 同步：`tests/bitwise_calculator.test.js`、`tests/bookmark_cleaner.test.js`、`tests/css_loader_generator.test.js`、`tests/gif_compress.test.js`、`tests/hex_c_array.test.js`、`tests/map_memory_analyzer.test.js`、`tests/modbus_frame_tool.test.js`、`tests/regex_generator.test.js`、`tests/register_bitfield_editor.test.js`、`tests/text_to_pdf.test.js`（10 个，grep 231 实测命中；其余按开发轮实际命中补齐）。
+- **验收红线**：node 断言全过（上列确定性向量逐字命中）；`go build`／`go vet` 通过；Path 总数 231→232、ID／Path 双注册；真限制四条页面明示；零上传／零依赖／零 CDN 源码自检通过；与图片打码／图片压缩／图片格式转换互链、不链未交付工具；Icon 用 `view_in_ar`。
+
+**交付核对**：本地当前分支 muse/dev-20260929；**本轮 `git fetch` 失败：Host key verification failed（VM 换机丢 known_hosts，TOOLS.md 已有修复记录：`ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts`，ssh 实际以 root 运行；开发轮 push 前须先修复并验证）**；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；`git log` 头部 57858d1（CSS 加载动画生成器新增）／c52b3d3（位运算计算器）／d7e452c（MAP 文件内存分析器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **231**；Top3 候选重叠复核（`mockup`／「样机渲染」0 命中；`llms` 仅命中另一工具描述 "for LLMs" 关键词非独立工具；`signature_capture`／「手写签名」0 命中；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+## 今日任务（2026-10-30 13:00 · 通用调研第一百五十九轮，接 12:46 PM 排期轮）
+
+**交付状态**：10-30 通用调研第一百五十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**CSS 加载动画生成器已交付闭环**（git log 头部 57858d1 新增：7 种参数化 loader 预设×尺寸／颜色／速度／数量滑杆，白深双背景实时预览，CSS/HTML 双页签复制＋下载；node 69 断言全过；真限制四条页面明示；注册开发工具品类 Path 总数 230→231，ID css_loader_generator、Path /tools/css-loader-generator 双注册；9 旧测试 Path 断言同步；go build/vet 通过；本地实测 200；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:00 轮，优先小／中难度纯前端。
+**本轮三件事**（13:00 全网调研，通用方向）：
+1. CSS 加载动画生成器交付确认：`git log` 头部 57858d1（css_loader_generator 新增）／c52b3d3（位运算计算器）／d7e452c（MAP 文件内存分析器）；全量 231 Path；ID `css_loader_generator`、Path `/tools/css-loader-generator` 双注册；本地当前分支 muse/dev-20260929（本轮 `git fetch` 已通——仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. 留池复核：CSS 交付闭环，首席顺位空出；**截图 3D 样机渲染器（157 轮 P2，Perspecto 信号，`mockup`／样机渲染 0 命中本轮复测确认真缺口）建议晋升 P2 顺位首席**；**llms.txt 生成器（115 轮观察项，`llms.txt` 0 命中；本轮扫见 FastUtil 作者在全站生成 llms.txt 做 AI 可发现性，AI 浪潮信号持续加温）建议晋升 P2**；在线电台收听器（88 轮新晋）硬伤未解→继续跳过；记事本式计算器（08:20 轮 PM 已裁定不踩 10-18 红线，低优先）保持观察。
+3. 新信号扫描（V2EX 10-29~10-30 新帖＋HN／PH／dev.to／哎呦不错 10-30 为主线）：**新观察项一项——手写签名数字化仪**（见下）；其余全部消解——
+   - V2EX t/1253014 腾讯网盘发布（行业新闻，非工具）／t/1252726 tokenhub AI 公益站（AI 中转，需 token）／t/1252885（10-29）Quote Finder／What Plant Is This／Bechdel Test／what brand is this（AI 语录库／图像识别／Logo 识别，全部依赖 AI 或图片识别服务）／t/1252552 tubox 第七轮重发（13 项清单无新口径，157/158 轮已消解）／t/1248172 在线简历生成器（10-12：7 模板＋本地保存＋浏览器打印 PDF；核心口径被站内「简历生成器」`resume_builder` 覆盖，AI 优化部分需后端）——消解或已覆盖；
+   - 哎呦不错 10-30：send.wang（WebRTC P2P，需信令服务端，158 轮已消解）／NonsPlayer（桌面音乐播放器）——消解；
+   - PH 10-18~10-30／Medium 拆解：Inbox Zero（邮箱客户端）／MyLens AI（AI 简报 SaaS）／Pulse（AI IDE 桌面软件）／JSONexLab（7 个 B2B AI API，finance validators 部分纯算法但 VIES 级 VAT 真校验需 API，且属金融合规口径，与 10-18 方向修正倾向不合，不立项）——消解；
+   - HN：Embedding Explorer（需各家模型 API key）／Infectio（307 天前旧帖，WASM 恶意软件分析非一轮可高质量交付）／Axiom／Interval（SaaS／需托管后端）／Scribbler（87 天前旧帖）／ToolHop／ToolMateX（工具站本身）——消解；**Signature Capture（手写签名数字化：webcam 拍手写签名→边缘检测→透明 PNG，全浏览器本地，HN item 44440916）**——核心可纯前端闭环（getUserMedia＋canvas 边缘处理＋PNG 导出），**新观察项**；
+   - dev.to／英文侧：fastutil／toolkitloop／SwiftTooly 等「工具站建设心法」帖（无新单页口径；FastUtil 提到为全站生成 llms.txt 做 AI 可发现性，反向佐证 llms.txt 生成器信号）——消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；CSS 交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例，首席顺位空出；本轮无新晋 P2，第三候选从观察项递补）：
+1. **截图 3D 样机渲染器** — 157 轮 P2，建议晋升顺位首席（`mockup`／样机渲染 0 命中复测确认真缺口；Perspecto 作者 10-28 flop 复盘验证：需求真实、收费墙下免费网页版有缺口；纯前端小／中难度：上传截图→CSS 3D 透视倾斜→canvas 渲染→下载 PNG，零上传；设计／图片簇补位；真限制：机身框为自绘 CSS/canvas，非真实设备照片级还原，须明示）。
+2. **llms.txt 生成器** — 115 轮观察项，建议晋升 P2（`llms.txt` 全站 0 命中真缺口；2026 AI 爬虫／Agent 浪潮持续：本轮 FastUtil／tubox 发 llms.txt、Perspecto 1/3 流量来自 AI 助手——站长需要向 AI 正确暴露网站内容，llms.txt 新兴标准手写门槛高；表单向导→标准格式生成＋规范校验＋一键下载，纯前端小难度；开发工具簇补位）。
+3. **手写签名数字化仪** — 本轮新观察项（HN Signature Capture 信号；`signature_capture` 0 命中；痛点：签合同／申请表需要把手写签名变透明底电子图，现有路线是上传到随机网站或买扫描 App；webcam 拍摄→边缘检测去底→透明 PNG 下载，全程浏览器本地，纯前端中难度；真限制：需摄像头权限＋HTTPS 上下文；与站内「邮件签名生成器」（文本签名档）口径不重叠）。
+
+其余 P2 留池：在线电台收听器（88 轮；硬伤未解继续跳过）；观察项保持原状：记事本式计算器（Calcy 式；08:20 轮 PM 已裁定不踩 10-18 红线，低优先）；URL 大字报展示器（156 轮，低）；新拟态生成器／CSS 脉冲动画生成器（143 轮）；批量随机数生成器（133 轮）；Slug 生成器／Meta 标签生成器（100–101 轮；Meta 口径与站内「OG 卡片预览」相邻，独立成项待 PM 裁定）；WhatsApp 链接生成器（115 轮）；粘贴文本邮箱提取器（121 轮；站内 text_info_extractor 已覆盖部分口径，待 PM 裁定是否重叠）；ads.txt 校验器（125 轮）；字体搭配预览器（129 轮）；其余 92 轮及之前留池项均保持留池／观察原状，详见 158 轮及之前记录。
+
+**通用候选表增量**（第一百五十九轮：CSS 加载动画生成器已交付划出（57858d1 新增；ID css_loader_generator、Path /tools/css-loader-generator 双注册；全量 231 Path；候选池划出）；**截图 3D 样机渲染器建议晋升 P2 顺位首席**（157 轮；mockup／样机渲染 0 命中复测确认）；**llms.txt 生成器建议晋升 P2**（115 轮观察项；llms.txt 0 命中；FastUtil 发 llms.txt 反向佐证 AI 浪潮信号）；**手写签名数字化仪新观察项**（HN Signature Capture 信号；signature_capture 0 命中）；自有实锤消解 17 项（V2EX 10-29~30 六帖全部 AI／整站／新闻／重发／已覆盖；哎呦不错 2 项需服务端或桌面；PH／Medium 4 项客户端／SaaS／AI API；HN 5 项需 API key／旧帖／SaaS；dev.to 工具站心法帖无新单页口径；简历生成器被站内 resume_builder 覆盖）；全量 231 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| CSS 加载动画生成器 | 已交付划出（57858d1 新增；ID css_loader_generator、Path /tools/css-loader-generator 双注册；全量 231 Path；候选池划出） | — | 已实现 |
+| 截图 3D 样机渲染器 | 建议晋升 P2 顺位首席（157 轮；Perspecto 信号＋10-28 flop 复盘验证；mockup／样机渲染 0 命中复测确认）；纯前端小／中难度：CSS 3D 透视＋canvas 渲染＋PNG 下载，零上传；真限制：机身框自绘、非照片级还原须明示 | 小/中 | P2（留池） |
+| llms.txt 生成器 | 建议晋升 P2（115 轮观察项；llms.txt 0 命中；FastUtil 为全站生成 llms.txt 佐证 AI 可发现性浪潮）；表单→标准格式生成＋规范校验＋下载；纯前端小难度；开发工具簇补位 | 小 | P2（留池） |
+| 手写签名数字化仪 | 本轮新观察项（HN Signature Capture 信号；signature_capture 0 命中）；webcam 拍手写签名→去底→透明 PNG，本地处理；纯前端中难度；真限制：需摄像头权限 | 中 | 观察（留池） |
+
+**归档说明**：本轮为 10-30 通用调研第一百五十九轮——CSS 加载动画生成器交付闭环（57858d1，`/tools/css-loader-generator` 已注册，全量 231 Path），候选池划出；**截图 3D 样机渲染器建议晋升 P2 顺位首席**（157 轮；mockup／样机渲染 0 命中复测确认真缺口）；**llms.txt 生成器建议晋升 P2**（115 轮观察项；FastUtil llms.txt 信号加温）；**手写签名数字化仪新观察项**（HN Signature Capture，摄像头→透明 PNG，0 命中）；本轮消解 17 项（V2EX 两节点 6 帖 AI／整站／新闻／重发／已覆盖；哎呦不错 2 项；PH／Medium 4 项；HN 5 项；dev.to 工具站心法帖）；首席无硬伤可直接排期，在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 `git fetch` 已通；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 57858d1（CSS 加载动画生成器新增）／c52b3d3（位运算计算器）／d7e452c（MAP 文件内存分析器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **231**；Top3 候选重叠复核（css_loader_generator 在 categories.go 1 注册命中，为本轮已交付项，3 件套在库；`mockup`／「样机渲染」0 命中；`llms.txt` 0 命中；`signature_capture` 0 命中，「签名」8 命中均为数字签名／JWT／哈希类非独立工具；在线电台收听器硬伤未解跳过；记事本式计算器按 08:20 轮 PM 裁定保持观察低优先，不复列为 Top3；在线简历生成器 V2EX 信号被站内 resume_builder 覆盖）；仓库为 Go 项目（go.mod，无 package.json）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 
 **选定：CSS 加载动画生成器** — 本轮唯一任务（新工具）：
 - **顺位**：研究轮（158 轮）Top3 **首席推荐**（145 轮观察项，本轮建议晋升 P2 顺位首席；`css-loader`／「加载动画」全站 0 命中真缺口），首席无硬伤，按「无硬伤不跳过、Top3 顺位递进」惯例生效。

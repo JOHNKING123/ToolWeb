@@ -141,7 +141,7 @@ ok(GO_SRC.slice(idx, idx + 900).indexOf('Category:    "开发工具"') >= 0, "�
 ok(GO_SRC.slice(idx, idx + 900).indexOf("New:         true") >= 0, "注册 New 为 true");
 var pathCount = 0, m, re = /"\/tools\/[^"]+"/g, seen = {};
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 231, "注册 Path 总数 230→231");
+eq(pathCount, 232, "注册 Path 总数 231→232");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本/样式引用");
 ok(TPL_SRC.indexOf("只做 RTU 帧组装与解析") >= 0, "模板含真限制：只做 RTU 组装/解析");

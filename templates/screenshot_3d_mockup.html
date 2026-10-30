@@ -1,0 +1,176 @@
+{{define "screenshot_3d_mockup"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>截图 3D 样机渲染器 - 浏览器/手机框 3D 透视展示图在线生成</title>
+    <meta name="description" content="免费在线截图 3D 样机渲染器：上传截图，一键套用浏览器窗口框、手机机身框、悬浮 3D 卡片、平面阴影 4 种场景，CSS 3D 透视实时预览（旋转/透视/缩放可调），背景/阴影/反射/机身框颜色可调，canvas 导出 PNG，全程浏览器本地处理、图片零上传。">
+    <meta name="keywords" content="截图样机,3D样机渲染,手机框截图,浏览器框展示图,mockup生成器,截图美化,3D透视卡片">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/screenshot-3d-mockup">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"截图 3D 样机渲染器","description":"上传截图，一键套用浏览器窗口框、手机机身框、悬浮 3D 卡片、平面阴影 4 种场景，CSS 3D 透视实时预览，canvas 导出 PNG，全程浏览器本地处理、图片零上传。","url":"https://www.johnkingzcq123.xyz/tools/screenshot-3d-mockup","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .m3d-layout{display:grid;grid-template-columns:290px minmax(0,1fr) 270px;gap:1rem;align-items:start}
+        @media (max-width:1100px){.m3d-layout{grid-template-columns:1fr}}
+        .m3d-side h3,.m3d-export h3{margin:.2rem 0 .7rem;font-size:1rem}
+        .m3d-scene-card{display:block;width:100%;text-align:left;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.5rem;background:#fff;cursor:pointer;transition:border-color .15s,background .15s}
+        .m3d-scene-card:hover{border-color:#bfdbfe}
+        .m3d-scene-card.active{border-color:var(--primary-color);background:#eff6ff}
+        .m3d-scene-card b{display:block;font-size:.92rem;color:#111827}
+        .m3d-scene-card span{font-size:.76rem;color:#6b7280;line-height:1.5}
+        .m3d-ctl{margin-bottom:.7rem}
+        .m3d-ctl label{display:flex;justify-content:space-between;font-size:.85rem;color:#374151;margin-bottom:.25rem}
+        .m3d-ctl label b{color:#111827;font-weight:600}
+        .m3d-ctl input[type=range]{width:100%}
+        .m3d-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;font-size:.85rem;color:#374151}
+        .m3d-row input[type=color]{width:44px;height:30px;border:1px solid #d1d5db;border-radius:.35rem;padding:1px;background:#fff;cursor:pointer}
+        .m3d-seg{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem}
+        .m3d-seg label{font-size:.8rem;border:1px solid #d1d5db;border-radius:1rem;padding:.25rem .7rem;cursor:pointer;color:#4b5563;background:#fff}
+        .m3d-seg input{display:none}
+        .m3d-seg input:checked+span{font-weight:700}
+        .m3d-seg label:has(input:checked){border-color:var(--primary-color);background:#eff6ff;color:#1d4ed8}
+        .m3d-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:1.4rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280;font-size:.9rem;margin-bottom:.8rem}
+        .m3d-upload:hover,.m3d-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .m3d-stage{min-height:440px;border-radius:.8rem;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;padding:3rem 1rem;transition:background .2s;background:linear-gradient(135deg,#2563eb,#7c3aed)}
+        .m3d-scene{transform-style:preserve-3d}
+        .m3d-card{transform-style:preserve-3d}
+        .m3d-shot{display:block;max-width:none}
+        .m3d-browser{border-radius:10px;overflow:hidden;background:#fff}
+        .m3d-browser-bar{display:flex;align-items:center;gap:6px;padding:9px 12px}
+        .m3d-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+        .m3d-url{background:rgba(255,255,255,.16);border-radius:8px;padding:3px 12px;font-size:11px;color:#fff;flex:1;margin-left:6px;white-space:nowrap;overflow:hidden}
+        .m3d-phone{border-radius:32px;padding:10px;position:relative}
+        .m3d-notch{width:96px;height:20px;background:#0b0f16;border-radius:0 0 12px 12px;margin:0 auto 8px}
+        .m3d-phone .m3d-screen{border-radius:20px;overflow:hidden}
+        .m3d-homebar{width:88px;height:4px;border-radius:2px;background:rgba(255,255,255,.55);margin:9px auto 3px}
+        .m3d-float .m3d-shot{border-radius:14px}
+        .m3d-flat .m3d-shot{border-radius:6px}
+        .m3d-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:.95rem;text-align:center;padding:1rem;line-height:2}
+        .m3d-note{display:none;margin-top:.7rem;border-radius:.6rem;padding:.6rem .9rem;font-size:.88rem;line-height:1.7;background:#fef3c7;border:1px solid #fcd34d;color:#92400e}
+        .m3d-pxinfo{font-size:.85rem;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.5rem;padding:.5rem .7rem;margin:.6rem 0;line-height:1.7}
+        .m3d-pxinfo b{color:#111827}
+        .m3d-actions{display:flex;flex-direction:column;gap:.6rem;margin-top:.4rem}
+        .m3d-actions .btn{justify-content:center}
+        .m3d-tip{color:#374151;line-height:2;font-size:.92rem}
+        .m3d-tip b{color:#111827}
+        .m3d-tip ol{margin:.3rem 0 .3rem 1.2rem;padding:0}
+        .m3d-tip ul{margin:.3rem 0 .3rem 1.2rem;padding:0}
+        .m3d-tip a{color:#1d4ed8;font-weight:600}
+        @media (max-width:640px){.m3d-stage{min-height:320px;padding:2rem .5rem}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-4px;margin-right:.3rem" aria-hidden="true"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/><path d="M12 11L4 6.5M12 11l8-4.5M12 11v9"/></svg>截图 3D 样机渲染器</h1>
+            <p>上传截图 → CSS 3D 透视实时预览 → canvas 导出 PNG；全程浏览器本地处理，图片零上传</p>
+        </div>
+
+        <div class="m3d-layout">
+            <div class="tool-card m3d-side">
+                <h3>① 选择场景</h3>
+                <div id="m3d-scenes"></div>
+                <h3 style="margin-top:1rem">② 调整参数</h3>
+                <div class="m3d-ctl"><label>水平旋转 rotateX <b id="m3d-rotatex-v">-8°</b></label>
+                    <input type="range" id="m3d-rotatex" min="-30" max="30" step="1" value="-8"></div>
+                <div class="m3d-ctl"><label>垂直旋转 rotateY <b id="m3d-rotatey-v">14°</b></label>
+                    <input type="range" id="m3d-rotatey" min="-30" max="30" step="1" value="14"></div>
+                <div class="m3d-ctl"><label>透视距离 <b id="m3d-perspective-v">1000px</b></label>
+                    <input type="range" id="m3d-perspective" min="400" max="1600" step="10" value="1000"></div>
+                <div class="m3d-ctl"><label>缩放 <b id="m3d-scale-v">1×</b></label>
+                    <input type="range" id="m3d-scale" min="0.5" max="1.5" step="0.05" value="1"></div>
+                <div class="m3d-ctl"><label>阴影强度 <b id="m3d-shadow-v">70%</b></label>
+                    <input type="range" id="m3d-shadow" min="0" max="100" step="1" value="70"></div>
+                <div class="m3d-row">背景
+                    <span class="m3d-seg" style="margin:0">
+                        <label><input type="radio" name="m3d-bgmode" value="gradient" checked><span>渐变</span></label>
+                        <label><input type="radio" name="m3d-bgmode" value="solid"><span>纯色</span></label>
+                    </span>
+                </div>
+                <div class="m3d-row">背景色 <input type="color" id="m3d-bg1" value="#2563eb"> <input type="color" id="m3d-bg2" value="#7c3aed"></div>
+                <div class="m3d-row">机身框颜色 <input type="color" id="m3d-framecolor" value="#1f2937"></div>
+                <div class="m3d-row"><label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" id="m3d-reflection" checked> 倒影反射</label></div>
+            </div>
+
+            <div>
+                <div class="tool-card" style="margin-bottom:1rem">
+                    <div class="m3d-upload" id="m3d-drop" role="button" tabindex="0" aria-label="点击选择或拖拽截图到此处上传">
+                        <b>点击选择截图</b>（PNG / JPG / WebP，≤20MB）或直接拖拽到此处<br>
+                        <span style="font-size:.8rem">也可以 <button type="button" id="m3d-sample" style="background:none;border:none;padding:0;color:#1d4ed8;font-weight:600;cursor:pointer;font-size:.8rem;text-decoration:underline">载入示例截图</button> 先体验</span>
+                    </div>
+                    <input type="file" id="m3d-file" accept="image/png,image/jpeg,image/webp" style="display:none">
+                    <div class="m3d-row" style="margin-bottom:.6rem">预览背景
+                        <span class="m3d-seg" style="margin:0">
+                            <label><input type="radio" name="m3d-previewbg" value="follow" checked><span>跟随导出</span></label>
+                            <label><input type="radio" name="m3d-previewbg" value="dark"><span>深色</span></label>
+                            <label><input type="radio" name="m3d-previewbg" value="light"><span>浅色</span></label>
+                        </span>
+                    </div>
+                    <div class="m3d-stage" id="m3d-stage">
+                        <div class="m3d-scene" id="m3d-scene">
+                            <div class="m3d-card" id="m3d-card" style="display:none"></div>
+                        </div>
+                        <div class="m3d-empty" id="m3d-empty">先上传截图<br>即可在此实时预览 3D 样机效果</div>
+                    </div>
+                    <div class="m3d-note" id="m3d-note"></div>
+                </div>
+            </div>
+
+            <div class="tool-card m3d-export">
+                <h3>③ 导出 PNG</h3>
+                <div class="m3d-seg">
+                    <label><input type="radio" name="m3d-exsize" value="1x" checked><span>原图尺寸</span></label>
+                    <label><input type="radio" name="m3d-exsize" value="2x"><span>2x 高清</span></label>
+                    <label><input type="radio" name="m3d-exsize" value="1920"><span>长边 1920</span></label>
+                </div>
+                <div class="m3d-pxinfo" id="m3d-pxinfo">实际导出像素：—</div>
+                <div class="m3d-actions">
+                    <button class="btn btn-primary" id="m3d-download">下载 PNG</button>
+                </div>
+                <p style="font-size:.78rem;color:#6b7280;line-height:1.8;margin:.7rem 0 0">导出文件名为 mockup-&lt;场景&gt;.png；PNG 为无损格式，体积较大属正常。</p>
+            </div>
+        </div>
+
+        <div class="tool-card" style="margin-top:1rem">
+            <h3>使用说明</h3>
+            <div class="m3d-tip">
+                <ol>
+                    <li><b>上传截图：</b>点击上方虚线框选择 PNG / JPG / WebP（≤20MB），或直接拖拽进来；也可以点「载入示例截图」先体验。</li>
+                    <li><b>选场景调参数：</b>左侧选浏览器窗口框 / 手机机身框 / 悬浮 3D 卡片 / 平面阴影，拖动滑杆实时调整 3D 旋转角度、透视距离、缩放、背景、阴影强度、倒影与机身框颜色。</li>
+                    <li><b>导出：</b>右侧选导出尺寸（原图 / 2x 高清 / 长边 1920），确认「实际导出像素」后点「下载 PNG」。</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="tool-card" style="margin-top:1rem">
+            <h3>能力边界（真限制）</h3>
+            <div class="m3d-tip">
+                <ul>
+                    <li>机身框为自绘 CSS / canvas 绘制，<b>非真实设备照片级还原</b>，不做材质纹理与光影细节。</li>
+                    <li>导出分辨率上限：<b>长边 4096px</b>，超大截图会自动降采样，并如实明示实际导出像素。</li>
+                    <li>PNG 为<b>无损导出、体积较大</b>（不做 JPEG / WebP 有损压缩以保画质），体积敏感可去<a href="/tools/img-compress">图片压缩</a>再压。</li>
+                    <li><b>全程浏览器本地处理，图片零上传</b>：截图只在你的浏览器内存里流转，不会发送到任何服务器。</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tool-card" style="margin-top:1rem">
+            <h3>相关工具</h3>
+            <div class="m3d-tip">
+                <b>先打码再做展示图：</b>截图里有手机号、车牌、人脸等隐私？先用 <a href="/tools/img-mosaic">图片打码</a>（马赛克 / 高斯模糊框选打码）处理干净，再来套 3D 样机。<br>
+                <b>PNG 体积太大：</b>导出的 PNG 无损体积大，可去 <a href="/tools/img-compress">图片压缩</a> 无损 / 有损压小。<br>
+                <b>换格式：</b>需要 JPG / WebP 等格式，用 <a href="/tools/img-convert">图片格式转换</a>，PNG、JPG、WebP、BMP、GIF 互转。<br>
+                <b>隐私声明：</b>本工具纯前端实现：文件读取、3D 预览、canvas 渲染、PNG 编码全部在浏览器本地完成，不发起任何网络上传请求，可断网使用（页面本身除外）。
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/screenshot_mockup_3d.js"></script>
+</body>
+</html>
+{{end}}

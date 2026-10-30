@@ -1345,6 +1345,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "screenshot_mockup_3d",
+					Name:        "截图 3D 样机渲染器",
+					Description: "截图一键套 3D 样机：浏览器窗口框/手机机身框/悬浮 3D 卡片/平面阴影 4 场景，CSS 3D 透视实时预览（旋转/透视/缩放/背景/阴影/反射/机身框颜色可调），canvas 导出 PNG，全程浏览器本地处理零上传 · Screenshot 3D mockup renderer: browser/phone/float/shadow scenes, CSS 3D live preview, export PNG, 100% client-side",
+					Path:        "/tools/screenshot-3d-mockup",
+					Icon:        "view_in_ar",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{
