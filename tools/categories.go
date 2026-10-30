@@ -256,6 +256,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "prompt_builder",
+					Name:        "结构化提示词构建器",
+					Description: "七节表单拼装 XML 结构化系统提示词：角色/任务/上下文/约束（增删行）/输出格式/示例（增删行）/待处理输入，空节自动省略，XML 实体转义，一键复制与时间戳下载，3 组一键预设（代码评审/英文翻译/小红书文案），只做模板拼装不做 AI 优化，纯前端零上传 · Structured prompt builder: 7-section form to XML system prompt, empty sections auto-omitted, presets, copy & download, 100% client-side",
+					Path:        "/tools/prompt-builder",
+					Icon:        "chat_bubble",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prettier_config_generator",
 					Name:        "Prettier 配置生成器",
 					Description: "可视化勾选/填写 14 项 Prettier 3 口径核心选项（printWidth、tabWidth、semi、singleQuote、trailingComma 等），3 组一键预设，实时生成标准 JSON（2 空格缩进），一键复制、下载 .prettierrc.json，数值非法中文提示，纯前端零上传 · Prettier config generator: build .prettierrc.json from 14 core options, presets, copy & download, 100% client-side",

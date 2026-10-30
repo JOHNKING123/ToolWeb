@@ -1,0 +1,188 @@
+{{define "prompt_builder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>结构化提示词构建器 - 七节表单拼装 XML 系统提示词 | 程序员工具箱</title>
+    <meta name="description" content="免费在线结构化提示词构建器：角色/任务/上下文/约束/输出格式/示例/待处理输入七节表单，空节自动省略，一键生成 XML 结构化系统提示词，支持一键复制与下载，3 组一键预设（代码评审/英文翻译/小红书文案）。纯前端本地生成零上传。Structured prompt builder: 7-section form to XML system prompt, 100% client-side.">
+    <meta name="keywords" content="提示词构建器,结构化提示词,系统提示词,XML 提示词,prompt builder,system prompt,提示词模板,代码评审提示词,小红书文案提示词">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/prompt-builder">
+    <meta property="og:title" content="结构化提示词构建器 - 七节表单拼装 XML 系统提示词">
+    <meta property="og:description" content="角色/任务/上下文/约束/输出格式/示例/待处理输入七节表单，空节自动省略，一键生成 XML 结构化系统提示词，复制或下载，3 组一键预设。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/prompt-builder">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"结构化提示词构建器","description":"七节表单拼装 XML 结构化系统提示词：角色/任务/上下文/约束（增删行）/输出格式/示例（增删行）/待处理输入，空节自动省略，一键复制与下载，3 组一键预设；纯前端本地生成，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/prompt-builder","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .pb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .pb-disclaimer-bar{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+        .pb-disclaimer-bar .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .pb-disclaimer-bar ol{margin:.2rem 0 0;padding-left:1.2rem}
+        .pb-disclaimer-bar li{margin:.25rem 0}
+        .pb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .pb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .pb-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .pb-btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+        .pb-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .pb-btn:hover{border-color:#2563eb;color:#2563eb}
+        .pb-msg{font-size:.92rem;color:#6b7280;margin-top:.8rem;line-height:1.8;overflow-wrap:anywhere}
+        .pb-msg-error{color:#b91c1c}
+        .pb-muted{color:#6b7280;font-size:.92rem;line-height:1.8}
+        .pb-out{background:#0f172a;color:#e2e8f0;border-radius:.6rem;padding:.9rem 1rem;font-size:.9rem;line-height:1.8;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all;
+            max-height:320px;overflow:auto;margin:.6rem 0 .2rem}
+        .pb-field{margin-bottom:1rem}
+        .pb-field label{display:block;font-size:.92rem;font-weight:700;color:#374151;margin-bottom:.4rem}
+        .pb-field label .pb-tag{display:inline-block;font-size:.75rem;font-weight:600;color:#2563eb;background:#eff6ff;
+            border-radius:.3rem;padding:.05rem .45rem;margin-left:.4rem;vertical-align:middle}
+        .pb-field input[type="text"],.pb-field textarea{width:100%;box-sizing:border-box;padding:.6rem .8rem;font-size:.92rem;
+            border:1px solid #d1d5db;border-radius:.45rem;outline:none;line-height:1.7;font-family:inherit}
+        .pb-field textarea{resize:vertical;min-height:4.2rem}
+        .pb-field input[type="text"]:focus,.pb-field textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .pb-hint{font-size:.82rem;color:#9ca3af;margin-top:.3rem;line-height:1.6}
+        .pb-row{display:flex;gap:.5rem;margin-bottom:.5rem;align-items:flex-start}
+        .pb-row input[type="text"],.pb-row textarea{flex:1;box-sizing:border-box;padding:.55rem .8rem;font-size:.9rem;
+            border:1px solid #d1d5db;border-radius:.45rem;outline:none;line-height:1.7;font-family:inherit}
+        .pb-row textarea{resize:vertical;min-height:3.4rem}
+        .pb-row input[type="text"]:focus,.pb-row textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .pb-rm{flex:none;padding:.55rem .7rem;font-size:.85rem;border:1px solid #d1d5db;border-radius:.45rem;background:#f9fafb;
+            color:#9ca3af;cursor:pointer}
+        .pb-rm:hover{border-color:#dc2626;color:#dc2626}
+        .pb-add{padding:.5rem 1rem;font-size:.85rem;border:1px dashed #93c5fd;border-radius:.45rem;background:#eff6ff;
+            color:#2563eb;cursor:pointer;font-weight:600;margin-top:.2rem}
+        .pb-add:hover{background:#dbeafe}
+        .pb-sec-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem}
+        .pb-sec-num{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;
+            background:#2563eb;color:#fff;font-size:.8rem;font-weight:700;flex:none}
+        .pb-sec-title{font-size:.95rem;font-weight:700;color:#111827}
+        .pb-sec-opt{font-size:.78rem;color:#9ca3af;font-weight:400}
+        .pb-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .pb-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .pb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .pb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .pb-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .pb-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .pb-btn-row .pb-btn{flex:1;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">chat_bubble</i> 结构化提示词构建器</h1>
+            <p>把零散的想法装进七节表单，一键拼成 XML 结构化系统提示词：角色 / 任务 / 上下文 / 约束 / 输出格式 / 示例 / 待处理输入，空节自动省略，复制或下载后直接发给 AI。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="pb-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>所有拼装都在浏览器本地完成，不发起任何网络请求、不上传任何数据，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+            <div class="pb-disclaimer-bar">
+                <i class="material-icons">info</i>
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li>本工具只是模板拼装，不做 AI 优化：它把你填写的内容原样拼成 XML 结构，不会对提示词的措辞、质量做任何智能改写或优化，写得好不好取决于你填的内容。</li>
+                        <li>XML 标记的遵循程度因模型而异：不同大模型对 <code>&lt;role&gt;</code>、<code>&lt;task&gt;</code> 这类结构化标记的理解和遵循程度不同，建议换 2–3 个模型实测对比后再定稿。</li>
+                        <li>全部本地生成：拼装、复制、下载都在浏览器本地完成，不联网、不上传任何内容。</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="pb-panel">
+                <h3><i class="material-icons">auto_fix_high</i> 一键预设</h3>
+                <div class="pb-btn-row" id="pb-presets"></div>
+                <p class="pb-muted" style="margin:.7rem 0 0;">预设会覆盖当前表单；应用后可继续修改，输出实时重新生成。</p>
+            </div>
+            <div class="pb-panel">
+                <h3><i class="material-icons">edit_note</i> 七节表单</h3>
+                <div class="pb-field">
+                    <div class="pb-sec-head"><span class="pb-sec-num">1</span><span class="pb-sec-title">角色 <span class="pb-sec-opt">（你希望 AI 扮演谁）</span></span></div>
+                    <input type="text" id="pb-role" placeholder="如：你是一名资深代码评审专家，熟悉 Go 常见陷阱与最佳实践">
+                </div>
+                <div class="pb-field">
+                    <div class="pb-sec-head"><span class="pb-sec-num">2</span><span class="pb-sec-title">任务 <span class="pb-sec-opt">（让 AI 具体做什么）</span></span></div>
+                    <textarea id="pb-task" rows="2" placeholder="如：评审我给出的代码，从正确性、可读性、性能、安全性四个维度指出问题并给出修改建议"></textarea>
+                </div>
+                <div class="pb-field">
+                    <div class="pb-sec-head"><span class="pb-sec-num">3</span><span class="pb-sec-title">上下文 <span class="pb-sec-opt">（背景信息，选填）</span></span></div>
+                    <textarea id="pb-context" rows="2" placeholder="如：项目是一个 HTTP 服务，Go 1.22，目标读者是初级工程师"></textarea>
+                </div>
+                <div class="pb-field">
+                    <div class="pb-sec-head"><span class="pb-sec-num">4</span><span class="pb-sec-title">约束条件 <span class="pb-sec-opt">（可增删行，选填）</span></span></div>
+                    <div id="pb-constraints"></div>
+                    <button type="button" class="pb-add" id="pb-add-constraint">＋ 新增约束</button>
+                </div>
+                <div class="pb-field">
+                    <div class="pb-sec-head"><span class="pb-sec-num">5</span><span class="pb-sec-title">输出格式 <span class="pb-sec-opt">（选填）</span></span></div>
+                    <input type="text" id="pb-format" placeholder="如：Markdown 列表；或 JSON：{&quot;issues&quot;: [...]}">
+                    <div class="pb-hint">告诉 AI 用什么格式回答，如 Markdown 表格、JSON、纯文本分段等。</div>
+                </div>
+                <div class="pb-field">
+                    <div class="pb-sec-head"><span class="pb-sec-num">6</span><span class="pb-sec-title">示例 <span class="pb-sec-opt">（Few-Shot，可增删行，选填）</span></span></div>
+                    <div id="pb-examples"></div>
+                    <button type="button" class="pb-add" id="pb-add-example">＋ 新增示例</button>
+                </div>
+                <div class="pb-field" style="margin-bottom:0;">
+                    <div class="pb-sec-head"><span class="pb-sec-num">7</span><span class="pb-sec-title">待处理输入 <span class="pb-sec-opt">（这次要 AI 处理的具体内容）</span></span></div>
+                    <textarea id="pb-input" rows="4" placeholder="如：把下面这段代码粘贴进来……"></textarea>
+                </div>
+                <div class="pb-msg" id="pb-msg">七节表单：角色 / 任务 / 上下文 / 约束 / 输出格式 / 示例 / 待处理输入，填多少生成多少。</div>
+            </div>
+            <div class="pb-panel">
+                <h3><i class="material-icons">terminal</i> 生成结果</h3>
+                <div class="pb-out" id="pb-output">（请在上方表单填写至少一节，XML 系统提示词将在这里实时生成；留空的节会自动省略）</div>
+                <div class="pb-btn-row">
+                    <button type="button" class="pb-btn" id="pb-copy"><i class="material-icons" style="font-size:1rem;">content_copy</i> 一键复制</button>
+                    <button type="button" class="pb-btn" id="pb-download"><i class="material-icons" style="font-size:1rem;">download</i> 下载 .xml</button>
+                </div>
+            </div>
+            <div class="pb-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="pb-tip">
+                    <b>三步使用：</b>① 按七节表单填写（不会写的节直接留空，会被自动省略）；② 点一键预设可快速套用「代码评审 / 英文翻译 / 小红书文案」模板再改；③ 点「一键复制」粘贴给 AI，或「下载 .xml」存档复用。<br>
+                    <b>怎么写出好提示词：</b>角色越具体越好（别只写「你是专家」，写清领域和年限）；任务用动词开头、一次只交代一件事；约束写「不要什么」比写「要什么」更有效；给 1–2 条示例（Few-Shot）往往比长篇描述更管用。<br>
+                    <b>XML 结构说明：</b>输出为 <code>&lt;system-prompt&gt;</code> 根节点，内含 <code>&lt;role&gt;</code>、<code>&lt;task&gt;</code>、<code>&lt;context&gt;</code>、<code>&lt;constraints&gt;</code>、<code>&lt;output-format&gt;</code>、<code>&lt;examples&gt;</code>、<code>&lt;input&gt;</code>；<code>&amp; &lt; &gt;</code> 等特殊字符已自动转义为 XML 实体。<br>
+                    <b>隐私：</b>全部拼装在浏览器本地完成，不发起网络请求，不上传任何内容。
+                </div>
+            </div>
+            <div class="pb-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="pb-faq">
+                    <dt>生成的 XML 直接粘贴给 AI 就能用吗？</dt>
+                    <dd>能。主流大模型（GPT / Claude / Gemini / 国产模型）都能理解这种结构化标记；但各模型对标记的遵循程度不同（见真限制第 2 条），建议先小规模实测。</dd>
+                    <dt>留空的节会输出空标签吗？</dt>
+                    <dd>不会。留空（或只填空白字符）的节会被自动省略，约束和示例里填了空白的行也会被过滤掉。</dd>
+                    <dt>和「AI 提示词脱敏器」是什么关系？</dt>
+                    <dd>本工具负责把提示词搭成结构；搭好之后如果提示词里含 API Key、数据库连接串等敏感信息，先去「AI 提示词脱敏器」脱敏，再发问更安全。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。表单拼装、复制、下载全部在浏览器本地完成，JS 不含网络请求调用，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+            <div class="pb-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="pb-related">
+                    <a href="/tools/prompt-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">AI 提示词脱敏器（脱敏再发问：提示词搭好后，先把密钥/连接串本地替换成占位符再发给 AI）</a>
+                    <a href="/tools/llms-txt-generator" class="btn btn-secondary" style="font-size:.9rem;">llms.txt 生成器</a>
+                    <a href="/tools/ai-token-counter" class="btn btn-secondary" style="font-size:.9rem;">AI Token 计数器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/prompt_builder.js?v=1"></script>
+</body>
+</html>
+{{end}}

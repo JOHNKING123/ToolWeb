@@ -1,7 +1,7 @@
 /* CSP 安全头生成器（csp_builder）纯逻辑单元测试（零依赖）：
  * node tests/csp_builder.test.js
  * 覆盖：规格确定性向量逐字命中（6 条）、错误约定（err.field）、
- * 指令表与三组预设结构、categories.go 注册（Path 总数 236→237）与零网络请求静态检查、
+ * 指令表与三组预设结构、categories.go 注册（Path 总数 237→238）与零网络请求静态检查、
  * 模板真限制三条、与 http_header_analyzer 双向互链（生成 vs 检测）、
  * Description 中英文双语、不链未交付工具。
  */
@@ -130,7 +130,7 @@ var m;
 var re = /"\/tools\/[^"]+"/g;
 var seen = {};
 while ((m = re.exec(GO)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 237, "注册：去重 Path 总数 236→237");
+eq(pathCount, 238, "注册：去重 Path 总数 237→238");
 
 /* ---------- 6. 零网络请求静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");
