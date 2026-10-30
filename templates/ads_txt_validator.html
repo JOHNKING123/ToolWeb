@@ -1,0 +1,157 @@
+{{define "ads_txt_validator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ads.txt 校验器 - 粘贴解析/逐行校验/字段明细/复制下载 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 ads.txt 校验器：粘贴 ads.txt 文本，逐行解析成记录/注释/空行（行号＋域名/发布商账号ID/账号类型/认证机构ID字段切分），按 IAB Ads.txt 1.1 规范做中文化错误与警告分级校验，字段明细表＋统计条，一键复制/下载，2 组示例。纯前端本地校验，内容不出浏览器。Ads.txt validator: parse, validate per IAB Ads.txt 1.1, copy & download, 100% client-side.">
+    <meta name="keywords" content="ads.txt,ads.txt校验,ads.txt validator,广告授权声明,IAB,DIRECT,RESELLER,TAG-ID,发布商账号,程序化广告,营销工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ads-txt-validator">
+    <meta property="og:title" content="ads.txt 校验器 - 逐行解析/中文化校验/字段明细表">
+    <meta property="og:description" content="粘贴 ads.txt 即逐行解析与校验：字段切分、错误警告分级、明细表与统计条，一键复制下载。纯前端本地校验，内容不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/ads-txt-validator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"ads.txt 校验器","description":"粘贴 ads.txt 文本做逐行解析与中文化校验（IAB Ads.txt 1.1 规范），字段明细表与统计条，示例与复制/下载导出，纯前端本地校验不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/ads-txt-validator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .atv-wrap .container{max-width:960px;margin:0 auto;padding:1.2rem}
+        .atv-wrap .navbar .material-icons{display:none}
+        .atv-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1.1rem}
+        .atv-card h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .atv-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .atv-privacy b{color:#047857}
+        .atv-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .atv-input{width:100%;min-height:13rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.65;white-space:pre;overflow:auto}
+        .atv-input:focus{outline:none;border-color:var(--primary-color)}
+        .atv-stats{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem}
+        .atv-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #e5e7eb;background:#f8fafc;border-radius:999px;padding:.3rem .8rem;font-size:.88rem;color:#374151}
+        .atv-chip b{font-size:1.05rem;color:#111827}
+        .atv-chip.bad{background:#fef2f2;border-color:#fecaca}
+        .atv-chip.bad b{color:#b91c1c}
+        .atv-chip.warn{background:#fffbeb;border-color:#fde68a}
+        .atv-chip.warn b{color:#92400e}
+        .atv-summary{border-radius:.6rem;padding:.7rem .9rem;font-size:.92rem;line-height:1.7;margin-bottom:.6rem}
+        .atv-summary.good{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+        .atv-summary.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+        .atv-summary.bad{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+        .atv-issue-list{margin:0;padding-left:1.2rem;font-size:.9rem;line-height:1.9;color:#374151}
+        .atv-issue-list li.err{color:#b91c1c}
+        .atv-issue-list li.warn{color:#92400e}
+        .atv-table-wrap{overflow-x:auto}
+        .atv-table-el{border-collapse:collapse;width:100%;min-width:40rem;font-size:.88rem}
+        .atv-table-el th,.atv-table-el td{border:1px solid #e5e7eb;padding:.5rem .65rem;text-align:left;line-height:1.6;vertical-align:top}
+        .atv-table-el th{background:#f8fafc;color:#111827;white-space:nowrap}
+        .atv-table-el td{word-break:break-all}
+        .atv-lineno{color:#6b7280;white-space:nowrap;text-align:center}
+        .atv-kind{flex:none;font-size:.78rem;font-weight:700;border-radius:.4rem;padding:.2rem .5rem;background:#f3f4f6;color:#374151;white-space:nowrap}
+        .atv-kind.record{background:#eef2ff;color:#4f46e5}
+        .atv-kind.variable{background:#fdf4ff;color:#a21caf}
+        .atv-kind.comment{background:#f3f4f6;color:#6b7280}
+        .atv-kind.blank{background:#f9fafb;color:#9ca3af}
+        .atv-dim{color:#6b7280}
+        .atv-badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-size:.82rem;font-weight:700;white-space:nowrap}
+        .atv-badge.direct{background:#dcfce7;color:#166534}
+        .atv-badge.reseller{background:#e0f2fe;color:#075985}
+        .atv-badge.invalid{background:#fecaca;color:#991b1b}
+        .atv-empty{font-size:.9rem;color:#6b7280;line-height:1.7}
+        .atv-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+        .atv-actions .btn{cursor:pointer}
+        .atv-limits{font-size:.9rem;line-height:1.9;color:#374151}
+        .atv-limits li{margin-bottom:.3rem}
+        @media (max-width:720px){.atv-actions .btn{flex:1;justify-content:center}}
+    </style>
+</head>
+<body>
+    <div class="atv-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>ads.txt 校验器</h1>
+            <p>粘贴 ads.txt 文本：逐行解析成记录 / 注释 / 空行（行号＋字段切分），按 IAB Ads.txt 1.1 规范做中文化错误与警告分级校验，附字段明细表与统计条。文件写对没有，贴进来一测便知。</p>
+        </div>
+        <div class="tool-content">
+            <div class="atv-privacy" role="note">
+                <div><b>隐私声明：内容不出浏览器。</b>粘贴的 ads.txt 只在当前浏览器本地解析与判定，不上传到任何服务器，不做任何存储与记录。本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="atv-card">
+                <h3>粘贴 ads.txt</h3>
+                <textarea id="atv-input" class="atv-input" placeholder="在此粘贴 ads.txt 内容，例如：&#10;# 发布商授权声明&#10;google.com, pub-12345, DIRECT, f08c47fec0942fa0&#10;rubiconproject.com, 12345, RESELLER" aria-label="ads.txt 内容粘贴区"></textarea>
+                <p class="atv-note" style="margin-top:.6rem;">输入变化即实时重解析，无需点按钮。注释行（#）与空行保留定位、不计入记录、不报错；变量行（如 OWNERDOMAIN=）按 IAB 1.1 识别。</p>
+                <div class="atv-actions" style="margin-top:.8rem;">
+                    <button type="button" class="btn btn-primary" id="atv-ex-typical">载入示例一：典型发布商文件</button>
+                    <button type="button" class="btn btn-primary" id="atv-ex-problem">载入示例二：带问题的文件</button>
+                    <button type="button" class="btn btn-primary" id="atv-copy">复制原文</button>
+                    <button type="button" class="btn btn-primary" id="atv-download">下载 ads.txt</button>
+                    <button type="button" class="btn" id="atv-reset">重置为空</button>
+                </div>
+                <p class="atv-note" style="margin-top:.6rem;">导出为原文原样：本工具只校验不自动改写；复制失败时有降级提示（手动全选复制）。重置后回到默认空状态。</p>
+            </div>
+
+            <div class="atv-card">
+                <h3>统计</h3>
+                <div id="atv-stats"></div>
+            </div>
+
+            <div class="atv-card">
+                <h3>错误与警告（逐行中文化）</h3>
+                <div id="atv-issues"></div>
+                <p class="atv-note">错误级：字段数不足 3 个、必填字段为空、账号类型不是全大写 DIRECT / RESELLER。警告级：多余字段（第 5 个起）、重复记录、可疑认证机构 ID（非 16 位十六进制 TAG-ID）、1.0 旧版或未知变量。</p>
+            </div>
+
+            <div class="atv-card">
+                <h3>字段明细表</h3>
+                <div id="atv-table"></div>
+                <p class="atv-note">每条数据记录按「域名／发布商账号 ID／账号类型／认证机构 ID」切分展示；变量行与注释行整行展示。</p>
+            </div>
+
+            <div class="atv-card">
+                <h3>使用说明</h3>
+                <div class="atv-note">
+                    1. 把 ads.txt 全文粘贴到上方输入框，统计、校验、明细表即时出现。<br>
+                    2. 先看校验区：错误必须修（字段缺失、账号类型大小写），警告逐条确认（重复记录、多余字段、可疑 TAG-ID）。<br>
+                    3. 在字段明细表里核对每条记录的域名与账号 ID 是否与签约主体一致。<br>
+                    4. 确认无误后复制或下载，覆盖到网站根目录的 ads.txt（即 https://你的域名/ads.txt 能直接访问的位置）。<br>
+                    5. 同为网站根目录声明文件：先用 <a href="/tools/robots-txt-generator" style="color:#1a0dab;">robots.txt 生成器</a>拼好抓取规则，再用 <a href="/tools/robots-txt-validator" style="color:#1a0dab;">robots.txt 校验与测试器</a>校验（生成 vs 校验，一边写一边验）。
+                </div>
+            </div>
+
+            <div class="atv-card">
+                <h3>常见问题</h3>
+                <div class="atv-note">
+                    <b>DIRECT 和 RESELLER 有什么区别？</b>DIRECT 表示该账号是你直接与广告系统签约的；RESELLER 表示通过转售方合作。写错会导致买方按错误的结算链路理解，务必与合同核对。<br>
+                    <b>为什么 direct 小写不行？</b>IAB 规范要求账号类型严格全大写。买方解析器多按精确匹配实现，小写会被判为无效记录，等于这行白写。<br>
+                    <b>认证机构 ID 是什么？</b>通常是 TAG（可信广告责任组织）颁发的 TAG-ID，16 位十六进制。本工具只校验格式像不像，不验证它是否真实有效。<br>
+                    <b>OWNERDOMAIN 是什么？</b>IAB 1.1 新增的变量：声明该 ads.txt 文件的归属域名，防止文件被搬运到别的域名下冒用。<br>
+                    <b>ads.txt 放哪里？</b>网站根目录，即 https://你的域名/ads.txt 能直接访问的位置。本工具只校验文本，不做上传部署。
+                </div>
+            </div>
+
+            <div class="atv-card">
+                <h3>相关工具</h3>
+                <div class="atv-note">
+                    <a href="/tools/robots-txt-generator" style="color:#1a0dab;">robots.txt 生成器</a>（同为网站根目录声明文件：拼装爬虫抓取规则，生成 vs 校验） ·
+                    <a href="/tools/robots-txt-validator" style="color:#1a0dab;">robots.txt 校验与测试器</a>（同为网站根目录声明文件：校验已有 robots.txt 语法与 AI 爬虫放行情况）
+                </div>
+            </div>
+
+            <div class="atv-card">
+                <h3>真限制说明</h3>
+                <ul class="atv-limits">
+                    <li><b>仅语法规范校验，不验证卖方账号真实性：</b>本工具只检查格式是否符合 IAB 1.1 规范，不验证域名与账号 ID 是否真实存在、是否确为你的签约主体，请自行与广告系统核实。</li>
+                    <li><b>按 IAB 1.1 规范判定：</b>1.0 旧版字段（如 CONTACT、SUBDOMAIN）与未知实验性变量以警告处理，不直接判错；个别买方的私有扩展字段可能有差异。</li>
+                    <li><b>全部本地校验，内容不出浏览器：</b>解析与判定在当前浏览器完成，零 fetch/XHR、零 CDN，粘贴的账号信息不出浏览器。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/ads_txt_validator.js?v=1"></script>
+</body>
+</html>
+{{end}}

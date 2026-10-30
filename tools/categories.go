@@ -2173,6 +2173,15 @@ func GetCategories() []Category {
 					Category:    "营销工具",
 				},
 				{
+					ID:          "ads_txt_validator",
+					Name:        "ads.txt 校验器",
+					Description: "粘贴 ads.txt 文本做逐行解析（记录/注释/空行＋行号，域名/发布商账号ID/账号类型/认证机构ID字段切分）与中文化错误警告分级校验（IAB Ads.txt 1.1：字段不足/账号类型大小写严格判错，多余字段/重复记录/可疑TAG-ID判警告），字段明细表＋统计条，2 组示例与复制/下载/重置导出，纯前端本地校验不出浏览器 · Ads.txt validator: parse, validate per IAB Ads.txt 1.1, field table & stats, copy & download, 100% client-side",
+					Path:        "/tools/ads-txt-validator",
+					Icon:        "ads_click",
+					New:         true,
+					Category:    "营销工具",
+				},
+				{
 					ID:          "schema_org_generator",
 					Name:        "Schema.org 结构化数据生成器",
 					Description: "12 类 Schema 类型表单向导（文章/产品/菜谱/活动/FAQ/面包屑/组织/本地商家/招聘/软件/视频/网站搜索框）：必填红星逐字段校验内联定位，右侧 JSON-LD 实时高亮预览，一键复制、下载 .json、下载可直接粘贴进 head 的 HTML 片段，多类型 @graph 堆叠，纯前端零上传 · Schema.org structured data generator: JSON-LD builder with live preview, validation & @graph stacking, 100% client-side",
