@@ -2173,6 +2173,15 @@ func GetCategories() []Category {
 					Category:    "营销工具",
 				},
 				{
+					ID:          "forbidden_word_detector",
+					Name:        "违禁词检测器",
+					Description: "粘贴营销文案一键扫描：内置 6 分类 109 词条违禁词库（极限词/权威背书/医疗功效/金融承诺/导流诱导/互动诱导），风险高/中/低分级＋原文高亮定位＋白名单豁免，一键复制/下载脱敏版，纯前端本地扫描不出浏览器 · Forbidden word detector: 6-category 109-term ad compliance wordlist, risk levels, highlight, whitelist, masked copy & download, 100% client-side",
+					Path:        "/tools/forbidden-word-detector",
+					Icon:        "warning",
+					New:         true,
+					Category:    "营销工具",
+				},
+				{
 					ID:          "robots_txt_generator",
 					Name:        "robots.txt 生成器",
 					Description: "可视化拼装 robots.txt：多 User-agent 规则组编辑器（增删组、Allow/Disallow 行），Crawl-delay 抓取延迟，Sitemap 列表，四种常用模板一键加载，实时预览输出文本，中文化基础校验（空 User-agent、路径缺前导 /、Sitemap 非 URL 中文提示），一键复制、Blob 下载 robots.txt，纯前端本地生成不出浏览器 · Robots.txt generator: multi user-agent rule groups, crawl-delay, sitemap, templates, copy & download, 100% client-side",

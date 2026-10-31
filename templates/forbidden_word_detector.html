@@ -1,0 +1,164 @@
+{{define "forbidden_word_detector"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>违禁词检测器 - 营销文案极限词/功效承诺扫描/脱敏 | 程序员工具箱</title>
+    <meta name="description" content="免费在线违禁词检测器：粘贴营销文案，内置 6 分类 109 词条词库（极限词/权威背书/医疗功效/金融承诺/导流诱导/互动诱导）纯前端扫描，风险高/中/低分级＋原文高亮定位＋白名单豁免，一键复制/下载脱敏版。内容不出浏览器。Forbidden word detector: 6-category 109-term ad compliance wordlist, risk levels, highlight, whitelist, masked copy & download, 100% client-side.">
+    <meta name="keywords" content="违禁词检测,极限词查询,广告法违禁词,营销文案合规,敏感词检测,脱敏,营销工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/forbidden-word-detector">
+    <meta property="og:title" content="违禁词检测器 - 营销文案违禁词扫描与脱敏">
+    <meta property="og:description" content="粘贴文案一键扫描：6 分类 109 词条违禁词库，风险分级＋原文高亮＋白名单，一键复制/下载脱敏版。纯前端本地扫描。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/forbidden-word-detector">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"违禁词检测器","description":"粘贴营销文案一键扫描：内置 6 分类 109 词条违禁词库（极限词/权威背书/医疗功效/金融承诺/导流诱导/互动诱导），风险高/中/低分级，原文高亮定位，白名单豁免，一键复制与下载脱敏版，纯前端本地扫描不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/forbidden-word-detector","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fwd-wrap .container{max-width:960px;margin:0 auto;padding:1.2rem}
+        .fwd-wrap .navbar .material-icons{display:none}
+        .fwd-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1.1rem}
+        .fwd-card h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .fwd-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .fwd-privacy b{color:#047857}
+        .fwd-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .fwd-input{width:100%;min-height:8rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-size:1rem;line-height:1.7}
+        .fwd-input:focus{outline:none;border-color:var(--primary-color)}
+        .fwd-wl{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .8rem;font-size:.92rem;line-height:1.6;margin-top:.6rem}
+        .fwd-wl:focus{outline:none;border-color:var(--primary-color)}
+        .fwd-badge{display:inline-block;font-size:1.05rem;font-weight:700;border-radius:.6rem;padding:.35rem 1rem;margin-bottom:.5rem}
+        .fwd-b-high{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+        .fwd-b-medium{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+        .fwd-b-low{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+        .fwd-b-none{background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7}
+        .fwd-stat{font-size:.88rem;color:#6b7280;margin:.4rem 0;line-height:1.7}
+        .fwd-advice{font-size:.9rem;color:#374151;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .9rem;margin-top:.6rem;line-height:1.7}
+        .fwd-cats{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+        .fwd-cat{font-size:.82rem;border-radius:1rem;padding:.2rem .7rem;border:1px solid}
+        .fwd-h-high{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+        .fwd-h-medium{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+        .fwd-h-low{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+        .fwd-hits{display:flex;flex-direction:column;gap:.4rem;margin-top:.6rem}
+        .fwd-hitrow{display:flex;gap:.7rem;align-items:baseline;text-align:left;background:#fff;border:1px solid #e5e7eb;border-radius:.6rem;padding:.55rem .8rem;cursor:pointer;font-size:.9rem;width:100%;box-sizing:border-box}
+        .fwd-hitrow:hover{border-color:var(--primary-color)}
+        .fwd-hitword{flex:none;font-weight:700;border-radius:.4rem;padding:.1rem .5rem;border:1px solid}
+        .fwd-hitmeta{flex:1;color:#6b7280;font-size:.85rem;line-height:1.6}
+        .fwd-hitgo{flex:none;color:#1a0dab;font-size:.85rem}
+        .fwd-highlight{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem 1rem;background:#f8fafc;font-size:1rem;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:20rem;overflow:auto}
+        .fwd-mark{border-radius:.3rem;padding:.05rem .15rem;cursor:default}
+        .fwd-mark.fwd-h-high{background:#fecaca}
+        .fwd-mark.fwd-h-medium{background:#fde68a}
+        .fwd-mark.fwd-h-low{background:#bfdbfe}
+        .fwd-flash{outline:2px solid var(--primary-color);outline-offset:2px}
+        .fwd-masked{width:100%;min-height:7rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-size:1rem;line-height:1.7;background:#f8fafc;color:#111827}
+        .fwd-empty{font-size:.9rem;color:#6b7280;line-height:1.7;margin:0}
+        .fwd-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .fwd-actions .btn{cursor:pointer}
+        .fwd-limits{font-size:.9rem;line-height:1.9;color:#374151}
+        .fwd-limits li{margin-bottom:.3rem}
+        .fwd-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;font-size:.9rem;padding:.6rem 1.1rem;border-radius:.6rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99}
+        .fwd-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:720px){.fwd-actions .btn{flex:1;justify-content:center}}
+    </style>
+</head>
+<body>
+    <div class="fwd-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>违禁词检测器</h1>
+            <p>粘贴营销文案一键扫描：内置 6 分类 109 词条违禁词库，风险高/中/低分级，原文高亮定位，白名单豁免，一键复制/下载脱敏版。</p>
+        </div>
+        <div class="tool-content">
+            <div class="fwd-privacy" role="note">
+                <div><b>隐私声明：内容不出浏览器。</b>文案只在当前浏览器本地扫描，不上传到任何服务器，不做任何存储与记录。本页面无后端调用、无外部请求。</div>
+            </div>
+
+            <div class="fwd-card">
+                <h3>粘贴文案（实时扫描）</h3>
+                <textarea id="fwd-input" class="fwd-input" placeholder="在此粘贴营销文案，例如：&#10;全国第一！祖传秘方包治百病，稳赚不赔，加微信私聊我，一键三连求点赞！" aria-label="营销文案输入区"></textarea>
+                <input id="fwd-whitelist" class="fwd-wl" type="text" placeholder="白名单（可选）：确有依据、可合法使用的词条，多个用逗号/空格分隔，例如：全国第一" aria-label="白名单输入框" autocomplete="off">
+                <div class="fwd-actions">
+                    <button type="button" class="btn btn-primary" id="fwd-ex-risky">载入示例一：高风险文案</button>
+                    <button type="button" class="btn btn-primary" id="fwd-ex-promo">载入示例二：促销文案</button>
+                    <button type="button" class="btn" id="fwd-clear">清空文案</button>
+                    <button type="button" class="btn" id="fwd-wl-clear">清空白名单</button>
+                </div>
+                <p class="fwd-note" style="margin-top:.6rem;">白名单用于豁免确有依据、可合法使用的词条（如已获奖项的"销量冠军"）；白名单仅影响本次扫描，不做任何存储。</p>
+            </div>
+
+            <div class="fwd-card">
+                <h3>扫描结果</h3>
+                <div><span id="fwd-badge" class="fwd-badge fwd-b-none">无风险</span></div>
+                <p class="fwd-stat" id="fwd-stat">在上方粘贴文案，扫描结果实时显示。</p>
+                <div class="fwd-cats" id="fwd-cats"></div>
+                <div class="fwd-advice" id="fwd-advice"></div>
+                <div class="fwd-hits" id="fwd-hits"></div>
+            </div>
+
+            <div class="fwd-card">
+                <h3>原文高亮定位</h3>
+                <div class="fwd-highlight" id="fwd-highlight"><p class="fwd-empty">在上方粘贴文案，命中词条会在这里高亮标出。</p></div>
+                <p class="fwd-note" style="margin-top:.6rem;">红色＝高风险（极限词/医疗功效/金融承诺），黄色＝中风险（权威背书/导流诱导），蓝色＝低风险（互动诱导）。点击上方命中明细可定位到对应位置。</p>
+            </div>
+
+            <div class="fwd-card">
+                <h3>脱敏版（命中词条按字替换为 █）</h3>
+                <textarea id="fwd-masked" class="fwd-masked" readonly placeholder="脱敏版文案显示在这里" aria-label="脱敏版文案"></textarea>
+                <p class="fwd-stat" id="fwd-masked-stat">暂无脱敏版。</p>
+                <div class="fwd-actions">
+                    <button type="button" class="btn btn-primary" id="fwd-copy">复制脱敏版</button>
+                    <button type="button" class="btn btn-primary" id="fwd-download">下载脱敏版 .txt</button>
+                </div>
+                <p class="fwd-note" style="margin-top:.6rem;">复制失败时有降级提示（手动全选复制）。脱敏只是把命中词条遮掉，不代表剩余文案必然合规。</p>
+            </div>
+
+            <div class="fwd-card">
+                <h3>使用说明</h3>
+                <div class="fwd-note">
+                    1. 粘贴文案后即时扫描：命中词条按 6 分类统计（极限词 / 权威背书 / 医疗功效 / 金融承诺 / 导流诱导 / 互动诱导），风险按"高→中→低"取最高一级展示。<br>
+                    2. 重叠命中只保留最长者：如"全国第一"不会被重复计为"第一"，"稳赚不赔"不会被重复计为"稳赚"。<br>
+                    3. 确有依据、可合法使用的词条可加入白名单豁免；白名单仅影响本次扫描。<br>
+                    4. 文案定稿前建议再用 <a href="/tools/og-card-preview" style="color:#1a0dab;">OG 社交卡片预览</a> 看看同一文案分享到社交平台的卡片效果（文案合规 ↔ 社交分享卡片，营销工具双链路）；写小红书/短视频口播文案缺灵感时，可用 <a href="/tools/prompt-builder" style="color:#1a0dab;">结构化提示词构建器</a> 先搭好提示词框架再让 AI 起草（合规文案先过检测器再发布）。
+                </div>
+            </div>
+
+            <div class="fwd-card">
+                <h3>常见问题</h3>
+                <div class="fwd-note">
+                    <b>为什么"最"这种单字也会被标出来？</b>"最"是《广告法》第九条明示的绝对化用语之一，字面匹配会标出所有出现位置；确有依据的用法请加入白名单豁免，其余建议改写（如"更受欢迎"）。<br>
+                    <b>白名单里的词为什么原文高亮还标着？</b>不会。白名单词条在扫描、高亮、脱敏三个环节都会被整体跳过；如仍看到标红，请检查白名单输入是否有错别字或多余空格。<br>
+                    <b>没命中的文案就一定合规吗？</b>不一定。词库是 v1.0 静态版本、覆盖有限，且本工具只做字面匹配（如谐音、拆字、图片中的文字都查不到），未命中不等于合规。<br>
+                    <b>脱敏版可以直接发布吗？</b>脱敏版只是把命中词条遮掉的参考版本，遮掉后语句可能不通顺，请先改写通顺、人工复核后再发布。<br>
+                    <b>词库会更新吗？</b>当前为 v1.0 静态词库（109 词条），暂不随法规与平台规则自动更新；法规口径变化时以官方文本为准。
+                </div>
+            </div>
+
+            <div class="fwd-card">
+                <h3>相关工具</h3>
+                <div class="fwd-note">
+                    <a href="/tools/og-card-preview" style="color:#1a0dab;">OG 社交卡片预览</a>（同一文案分享到 Twitter / Facebook / LinkedIn / 微信的卡片渲染，文案合规 ↔ 社交分享卡片双向联动） ·
+                    <a href="/tools/prompt-builder" style="color:#1a0dab;">结构化提示词构建器</a>（七节表单拼装 XML 系统提示词，AI 起草营销文案前先搭好框架）
+                </div>
+            </div>
+
+            <div class="fwd-card">
+                <h3>真限制说明</h3>
+                <ul class="fwd-limits">
+                    <li><b>本工具不构成法律意见：</b>只做词条字面匹配，不做语义理解与个案判断；广告是否违法需结合上下文与执法口径认定，有疑问请咨询专业律师。</li>
+                    <li><b>词库版本 v1.0 滞后：</b>内置 109 词条为 v1.0 静态词库，覆盖有限且不随《广告法》修订与各平台规则更新自动同步；未命中不等于合规，谐音、拆字、图片内文字等形式查不到。</li>
+                    <li><b>合规责任由发布者承担：</b>最终发布内容的合规责任在发布者，请务必人工复核、改写后再发布；脱敏版仅为遮罩参考，不代表剩余文案必然合规。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="fwd-toast" id="fwd-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/forbidden_word_detector.js?v=1"></script>
+</body>
+</html>
+{{end}}

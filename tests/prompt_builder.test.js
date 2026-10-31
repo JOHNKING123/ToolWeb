@@ -1,7 +1,7 @@
 /* 结构化提示词构建器（prompt_builder）纯逻辑单元测试（零依赖）：
  * node tests/prompt_builder.test.js
  * 覆盖：规格确定性向量逐字命中（7 条）、错误约定（err.field）、
- * 三组一键预设结构、categories.go 注册（Path 总数 241→242）与零网络请求静态检查、
+ * 三组一键预设结构、categories.go 注册（Path 总数 243→243）与零网络请求静态检查、
  * 模板真限制三条、与 AI 提示词脱敏器双向互链（脱敏再发问）＋相关工具栏、
  * Description 中英文双语、不链未交付工具。
  */
@@ -135,7 +135,7 @@ var m;
 var re = /"\/tools\/[^"]+"/g;
 var seen = {};
 while ((m = re.exec(GO)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 242, "注册：去重 Path 总数 241→242");
+eq(pathCount, 243, "注册：去重 Path 总数 243→243");
 
 /* ---------- 6. 零网络请求静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");

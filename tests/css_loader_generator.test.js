@@ -136,7 +136,7 @@ ok(regBlock.indexOf("New:         true") !== -1, "categories.go 注册 New true"
 ok(regBlock.indexOf('Icon:        "autorenew"') !== -1, "categories.go 注册 Icon autorenew");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 242, "注册 Path 总数 241→242");
+eq(Object.keys(pathCount).length, 243, "注册 Path 总数 243→243");
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,
   "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本引用");
