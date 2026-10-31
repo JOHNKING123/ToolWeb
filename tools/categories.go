@@ -310,6 +310,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "placeholder_image_generator",
+					Name:        "占位图生成器",
+					Description: "任意尺寸占位图一键生成：宽高 1~4096 自由设定、自定义显示文字（留空自动显示 宽×高）与底色/文字色，canvas 浏览器本地渲染实时预览，字号 clamp(floor(min(宽,高)/6),12,200) 自动适配、超宽自动缩小，一键下载 placeholder-800x600.png、复制 Data URL 或 Markdown 图片引用；与骨架屏加载占位生成器双向互链（骨架屏→占位图一条龙），只生成静态占位图、无真实图片语义、中文字体依赖系统字体，纯前端零上传 · placeholder image generator: generate placeholder PNG of any size locally, 100% client-side",
+					Path:        "/tools/placeholder-image-generator",
+					Icon:        "image_aspect_ratio",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "ulid_nanoid_generator",
 					Name:        "ULID／NanoID 生成器",
 					Description: "ULID 与 NanoID 批量生成：ULID 26 位 Crockford Base32 大写、48 位毫秒时间戳加 80 位随机、时间可排序、每行附注解码本地时间，时间戳来源当前时间或自定义时间；NanoID 长度 8–64 默认 21、字母表 URL 安全 64 字符集／纯数字／小写字母三档；批量 1–100 默认 10、每行一条加行内复制、复制全部与下载 ids.txt，超范围钳制并中文提示、超 48 位时间戳拒绝，只生成随机／时间排序标识、不做分布式唯一性保证、时间戳取自本机时钟、不存不查不上传，纯前端零上传 · ULID generator, NanoID generator, sortable id, url safe id, 100% client-side",

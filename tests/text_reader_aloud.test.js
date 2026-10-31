@@ -123,7 +123,7 @@ ok(regBlock.indexOf('"文本工具"') !== -1, "注册 Category 为文本工具")
 ok(regBlock.indexOf('"volume_up"') !== -1, "注册 Icon 为 volume_up");
 ok(regBlock.indexOf("New:") !== -1 && regBlock.indexOf("true") !== -1, "注册 New 为 true");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).length;
-eq(pathCount, 252, "注册总数 252→252 Path");
+eq(pathCount, 253, "注册总数 252→253 Path");
 
 /* ---------- 9. 评审回归：朗读按钮先重建再起读；出错清高亮 ---------- */
 /* 换文本后直接点「朗读」必须读新文本：tra-speak 绑定先 buildSentences() 再 startFrom(0)，

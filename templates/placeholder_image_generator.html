@@ -1,0 +1,169 @@
+{{define "placeholder_image_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>占位图生成器 - 任意尺寸占位图在线生成，PNG 下载 Data URL 复制 | 程序员工具箱</title>
+<meta name="description" content="免费在线占位图生成器：宽度高度 1~4096 自由设定、自定义显示文字与底色/文字色，canvas 浏览器本地渲染实时预览，字号自动适配，一键下载 placeholder-800x600.png、复制 Data URL 或 Markdown 图片引用。纯前端零上传。placeholder image generator: generate placeholder PNG of any size, 100% client-side.">
+<meta name="keywords" content="占位图生成器,占位图,placeholder,在线占位图,placeholder image generator,占位图片,PNG 占位图,图片占位符,placehold">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/placeholder-image-generator">
+<meta property="og:title" content="占位图生成器 - 任意尺寸占位图在线生成">
+<meta property="og:description" content="宽高 1~4096 自由设定，自定义文字与底色/文字色，实时预览，一键下载 PNG、复制 Data URL 或 Markdown 引用。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/placeholder-image-generator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"占位图生成器","alternateName":"placeholder image generator","description":"任意尺寸占位图一键生成：宽高 1~4096 可调、自定义显示文字与底色/文字色，canvas 浏览器本地渲染实时预览，字号自动适配，一键下载 placeholder-WxH.png、复制 Data URL 或 Markdown 图片引用，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/placeholder-image-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ep-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.ep-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.ep-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ep-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ep-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ep-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ep-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ep-btn .material-icons{font-size:1.1rem}
+.ep-btn-primary{background:#1d4ed8;color:#fff}
+.ep-btn-primary:hover{background:#1e40af}
+.ep-btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.ep-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ep-btn-secondary:hover{background:#e5e7eb}
+.ep-btn-secondary:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+.ep-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ep-note b{color:#4b5563}
+.ep-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ep-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ep-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ep-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.ep-combo a{color:#1d4ed8;font-weight:600}
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.9rem}
+.ph-field{display:flex;flex-direction:column;gap:.35rem;font-size:.92rem;color:#1f2937}
+.ph-field label b{color:#1d4ed8}
+.ph-field input[type="number"],.ph-field input[type="text"]{padding:.55rem .7rem;border:1px solid #d1d5db;
+border-radius:.45rem;font-size:.95rem;width:100%;box-sizing:border-box}
+.ph-field input[type="color"]{width:100%;height:2.6rem;border:1px solid #d1d5db;border-radius:.45rem;
+padding:.2rem;cursor:pointer;background:#fff;box-sizing:border-box}
+.ph-color-row{display:flex;align-items:center;gap:.5rem}
+.ph-color-row code{font-size:.82rem;color:#6b7280}
+.ph-err{display:none;font-size:.85rem;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;
+border-radius:.45rem;padding:.45rem .7rem;margin-top:.7rem;line-height:1.7}
+.ph-preview-wrap{background:#e5e7eb;border-radius:.6rem;padding:1rem;text-align:center;min-height:200px;
+display:flex;align-items:center;justify-content:center;overflow:auto}
+#ph-canvas{max-width:100%;height:auto;display:none;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.ph-empty{color:#9ca3af;font-size:.92rem;line-height:2}
+.ph-empty .material-icons{font-size:2.2rem;display:block;margin-bottom:.4rem;color:#cbd5e1}
+.ph-info{font-size:.88rem;color:#4b5563;margin-top:.7rem;line-height:1.9}
+.ph-info b{color:#1f2937}
+.ph-warn{display:none;font-size:.85rem;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;
+border-radius:.45rem;padding:.45rem .7rem;margin-top:.5rem;line-height:1.7}
+#ph-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#ph-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.ep-panel{padding:1rem .8rem}.ep-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">image_aspect_ratio</i> 占位图生成器</h1>
+<p>做原型、写文档、调样式时，随手生成任意尺寸的占位图：宽高、文字、底色、文字色自由设定，浏览器本地 canvas 渲染。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ep-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① 本工具只生成<b>静态占位图</b>，<b>无真实图片语义</b>，不可替代真实图片（SEO、og:image 等场景请用真实图片）；② PNG 为<b>按像素位图</b>生成，<b>超大尺寸文件可能较大</b>，下载前请看预览下方的文件大小提示；③ 中文字体<b>依赖系统字体</b>，不同设备/浏览器渲染可能有差异。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">tune</i> 占位参数（改动即实时重渲染）</h3>
+<div class="ph-grid">
+<div class="ph-field">
+<label>宽度（像素，1~4096）</label>
+<input type="number" id="ph-width" min="1" max="4096" step="1" value="800">
+</div>
+<div class="ph-field">
+<label>高度（像素，1~4096）</label>
+<input type="number" id="ph-height" min="1" max="4096" step="1" value="600">
+</div>
+<div class="ph-field">
+<label>显示文字（留空自动显示 <b>宽×高</b>）</label>
+<input type="text" id="ph-text" placeholder="如：首页 Banner（留空则显示 800×600）" maxlength="60">
+</div>
+<div class="ph-field">
+<label>底色</label>
+<div class="ph-color-row"><input type="color" id="ph-bg" value="#cccccc" style="flex:1"><code id="ph-bg-val">#cccccc</code></div>
+</div>
+<div class="ph-field">
+<label>文字色</label>
+<div class="ph-color-row"><input type="color" id="ph-fg" value="#969696" style="flex:1"><code id="ph-fg-val">#969696</code></div>
+</div>
+</div>
+<div class="ph-err" id="ph-size-err"></div>
+<div class="ep-note">字号自动 = clamp(floor(min(宽,高)/6), 12, 200)：默认 800×600 时约 100px；文字超宽时自动缩小到适配。非法宽高<b>不静默钳制</b>，会红字提示并保留上次预览。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">preview</i> 实时预览</h3>
+<div class="ph-preview-wrap">
+<div class="ph-empty" id="ph-empty"><i class="material-icons">image_aspect_ratio</i>正在生成预览…</div>
+<canvas id="ph-canvas"></canvas>
+</div>
+<div class="ph-info" id="ph-info"></div>
+<div class="ph-warn" id="ph-warn"></div>
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-primary" id="ph-download" disabled><i class="material-icons">download</i> 下载 PNG</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ph-copy-url" disabled><i class="material-icons">link</i> 复制 Data URL</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ph-copy-md" disabled><i class="material-icons">code</i> 复制 Markdown 图片引用</button>
+</div>
+<div class="ep-note">下载文件名固定格式 <code>placeholder-WxH.png</code>（如 placeholder-800x600.png）；复制 Data URL 走剪贴板，失败时自动回落到选中复制；Markdown 引用形如 <code>![800×600](placeholder-800x600.png)</code>，<b>先下载 PNG 再粘贴引用</b>。</div>
+</div>
+
+<div class="ep-combo">
+<b>骨架屏 → 占位图一条龙：</b>页面加载占位的结构先用 <a href="/tools/skeleton-screen-generator">骨架屏加载占位生成器</a> 画出来，图片位置缺图时，用本工具按实际尺寸生成静态占位图顶上。
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ep-faq">
+<dt>占位图能代替真实图片用在网站上吗？</dt>
+<dd>不能。本工具只生成<b>静态占位图</b>，<b>无真实图片语义</b>，搜索引擎、社交分享（og:image）等场景请用真实图片 —— 顶部真限制第一条已明示。</dd>
+<dt>生成的 PNG 会有多大？</dt>
+<dd>取决于尺寸：位图按像素生成，4096×4096 的纯色图通常几百 KB 到几 MB。每次渲染后预览下方会显示<b>实时 PNG 大小</b>，超过 2MB 会黄条提醒，下载前请确认。</dd>
+<dt>为什么中文字在不同电脑上长得不一样？</dt>
+<dd>占位文字用的是<b>系统字体</b>渲染（不做字体嵌入），Windows/macOS/手机的默认中文字体各不相同，字形会有差异 —— 这是预期内的真限制第三条。</dd>
+<dt>复制的 Data URL 怎么用？</dt>
+<dd>直接贴进 <code>&lt;img src="data:image/png;base64,…"&gt;</code> 即可离线显示，适合原型演示；但它比文件下载大 ~33%，生产环境请下载 PNG 后引用文件。</dd>
+<dt>页面会联网或上传数据吗？</dt>
+<dd>不会。参数读取、canvas 渲染、复制、下载全部在浏览器本地完成，脚本中没有任何 fetch / XHR 上传逻辑。可断网使用（首次加载页面除外）。</dd>
+<dt>和「骨架屏加载占位生成器」有什么区别？</dt>
+<dd>骨架屏工具生成的是<b>加载占位的 HTML/CSS</b>（灰色块＋扫过动效）；本工具生成的是<b>任意尺寸的静态 PNG 图片</b>。两者双向互链，<a href="/tools/skeleton-screen-generator">骨架屏 → 占位图</a> 一条龙。</dd>
+</dl>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ep-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">占位图生成器（当前）</span>
+<a href="/tools/skeleton-screen-generator" class="btn btn-secondary" style="font-size:.9rem;">骨架屏加载占位生成器（骨架屏→占位图一条龙）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ph-toast"></div>
+<script src="/tools/static/js/placeholder_image_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

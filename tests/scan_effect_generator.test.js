@@ -4,7 +4,7 @@
  *  2. contrastOf 契约（确定性向量、因子/拉伸/clamp、非法参数 err.field='strength'/'v'）
  *  3. noiseOf 契约（mulberry32 确定性、种子隔离、非法参数 err.field='seed'/'xy'）
  *  4. buildScanName 契约（确定性向量、非法参数 err.field='dt'）
- *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 252
+ *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 253
  *  6. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket；上传走 FileReader）
  *  7. 模板：SEO 面板、真限制三条、互链（pdf_sign 双向、pdf_annotate 单向）
  */
@@ -118,7 +118,7 @@ function throwsField(fn, field, name) {
     contains(block.toLowerCase(), "scan effect", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
     while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-    eq(pathCount, 252, "注册 Path 总数 252→252");
+    eq(pathCount, 253, "注册 Path 总数 252→253");
 })();
 
 /* ================= 6. 零网络静态检查 ================= */
