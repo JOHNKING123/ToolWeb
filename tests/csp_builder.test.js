@@ -130,7 +130,7 @@ var m;
 var re = /"\/tools\/[^"]+"/g;
 var seen = {};
 while ((m = re.exec(GO)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 251, "注册：去重 Path 总数 250→251");
+eq(pathCount, 252, "注册：去重 Path 总数 252→252");
 
 /* ---------- 6. 零网络请求静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");

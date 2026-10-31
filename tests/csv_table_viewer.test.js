@@ -90,7 +90,7 @@ eq(ord.rows.length, 7, "示例：订单表示例 7 行含表头");
 has(GO_SRC, '"csv_table_viewer"', "注册：ID csv_table_viewer");
 has(GO_SRC, '"/tools/csv-table-viewer"', "注册：Path /tools/csv-table-viewer");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 251, "注册：Path 总数现为 251（250＋本轮新增 1）");
+eq(pathCount, 252, "注册：Path 总数现为 252（251＋本轮新增 1）");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");
 notHas(TPL_SRC, "fetch(", "零网络：模板无 fetch");

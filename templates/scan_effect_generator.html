@@ -1,0 +1,170 @@
+{{define "scan_effect_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扫描件效果生成器 - 图片一键做旧成扫描质感，灰度噪点倾斜可调 | 程序员工具箱</title>
+<meta name="description" content="免费在线扫描件效果生成器：上传 JPG/PNG/WebP 图片，扫描质感滑杆（噪点＋对比度）、倾斜角度滑杆（-3°~3°）、灰度/边缘阴影开关，canvas 本地渲染实时预览，一键下载 scanned-YYYYMMDD-HHmmss.png。纯前端本地处理，零上传。scan effect generator: turn photos into scanned-document look, 100% client-side.">
+<meta name="keywords" content="扫描件生成,扫描效果,图片做扫描件,扫描质感,scan effect,扫描件模拟,合同扫描件,凭证扫描件,lookscanned">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/scan-effect-generator">
+<meta property="og:title" content="扫描件效果生成器 - 图片一键做旧成扫描质感">
+<meta property="og:description" content="上传图片，质感/倾斜滑杆＋灰度/阴影开关，实时预览扫描效果，一键下载 PNG。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/scan-effect-generator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"扫描件效果生成器","alternateName":"scan effect generator","description":"上传 JPG/PNG/WebP 图片，浏览器本地做扫描质感处理：灰度＋对比度增强、种子随机纸张噪点、轻微倾斜、边缘阴影，实时预览并导出 scanned-YYYYMMDD-HHmmss.png，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/scan-effect-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ep-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.ep-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.ep-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ep-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ep-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ep-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ep-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ep-btn .material-icons{font-size:1.1rem}
+.ep-btn-primary{background:#1d4ed8;color:#fff}
+.ep-btn-primary:hover{background:#1e40af}
+.ep-btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.ep-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ep-btn-secondary:hover{background:#e5e7eb}
+.ep-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ep-note b{color:#4b5563}
+.ep-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ep-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ep-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ep-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.ep-combo a{color:#1d4ed8;font-weight:600}
+.sg-drop{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2.2rem 1rem;
+text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+.sg-drop:hover,.sg-dragover{border-color:#1d4ed8;background:#eff6ff}
+.sg-drop .material-icons{font-size:2.6rem;color:#1d4ed8;display:block;margin-bottom:.5rem}
+.sg-slider-row{display:grid;grid-template-columns:1fr;gap:.9rem;margin-bottom:.4rem}
+.sg-slider label{display:flex;justify-content:space-between;font-size:.92rem;color:#1f2937;margin-bottom:.35rem}
+.sg-slider label b{color:#1d4ed8}
+.sg-slider input[type="range"]{width:100%;accent-color:#1d4ed8}
+.sg-warn{display:none;font-size:.85rem;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;
+border-radius:.45rem;padding:.45rem .7rem;margin-top:.4rem;line-height:1.7}
+.sg-checks{display:flex;flex-wrap:wrap;gap:.4rem 1.6rem;margin-top:.9rem;font-size:.92rem;color:#1f2937}
+.sg-checks label{display:inline-flex;align-items:center;gap:.45rem;cursor:pointer}
+.sg-checks input[type="checkbox"]{accent-color:#1d4ed8;width:1rem;height:1rem}
+.sg-preview-wrap{background:#e5e7eb;border-radius:.6rem;padding:1rem;text-align:center;min-height:200px;
+display:flex;align-items:center;justify-content:center}
+#sg-canvas{max-width:100%;height:auto;display:none;box-shadow:0 2px 12px rgba(0,0,0,.18);background:transparent}
+.sg-empty{color:#9ca3af;font-size:.92rem;line-height:2}
+.sg-empty .material-icons{font-size:2.2rem;display:block;margin-bottom:.4rem;color:#cbd5e1}
+.sg-filename{font-size:.85rem;color:#6b7280;margin-top:.6rem}
+#sg-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#sg-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.ep-panel{padding:1rem .8rem}.ep-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">document_scanner</i> 扫描件效果生成器</h1>
+<p>上传图片，一键做出扫描仪扫出来的质感：灰度纸张、对比增强、纸张噪点、轻微倾斜、边缘阴影。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ep-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① 本工具只做<b>视觉模拟</b>，输出<b>无法替代真实扫描仪</b>的输出，公证、审计、银行面签等强合规场景请用真实扫描；② 加噪点＋灰度之后<b>不适合 OCR 识别场景</b>，要做文字识别请用原图或去 <a href="/tools/ocr-image-text" style="color:#92400e;font-weight:700;">OCR 图片文字识别</a>；③ <b>倾斜角度过大可能裁掉边缘内容</b>，下载前请先预览确认。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">upload_file</i> 上传图片（点击或拖拽，JPG / PNG / WebP）</h3>
+<div class="sg-drop" id="sg-drop">
+<i class="material-icons">cloud_upload</i>
+<div><b>点击选择图片</b>，或把图片拖到这里</div>
+<div style="font-size:.85rem;margin-top:.4rem;">文件通过浏览器 FileReader 在本地读取，<b>不上传到服务器</b></div>
+</div>
+<input type="file" id="sg-file" accept="image/jpeg,image/png,image/webp" style="display:none">
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-secondary" id="sg-sample"><i class="material-icons">auto_awesome</i> 载入演示样张</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="sg-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">tune</i> 扫描参数（改动即实时重渲染）</h3>
+<div class="sg-slider-row">
+<div class="sg-slider">
+<label>扫描质感强度（联动噪点密度＋对比度） <b><span id="sg-quality-val">60</span></b></label>
+<input type="range" id="sg-quality" min="0" max="100" step="1" value="60">
+</div>
+<div class="sg-slider">
+<label>倾斜角度 <b><span id="sg-tilt-val">0.8°</span></b></label>
+<input type="range" id="sg-tilt" min="-3" max="3" step="0.1" value="0.8">
+<div class="sg-warn" id="sg-tilt-warn">倾斜超过 ±2° 可能裁掉边缘文字/印章，下载前请在下方预览确认完整。</div>
+</div>
+</div>
+<div class="sg-checks">
+<label><input type="checkbox" id="sg-gray" checked> 灰度模式（扫描件经典黑白）</label>
+<label><input type="checkbox" id="sg-vig" checked> 边缘阴影（扫描仪压盖暗角）</label>
+</div>
+<div class="ep-note">质感强度 0 = 几乎原图（仅保留倾斜/阴影）；100 = 重噪点＋高对比，旧文件味最浓。噪点种子每张图固定，拖滑杆不会闪烁。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">preview</i> 实时预览</h3>
+<div class="sg-preview-wrap">
+<div class="sg-empty" id="sg-empty"><i class="material-icons">document_scanner</i>还没有图片<br>先上传一张，或点「载入演示样张」看看效果</div>
+<canvas id="sg-canvas"></canvas>
+</div>
+<div class="sg-filename" id="sg-filename"></div>
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-primary" id="sg-download" disabled><i class="material-icons">download</i> 下载扫描件 PNG</button>
+</div>
+<div class="ep-note">下载文件名固定格式 <code>scanned-YYYYMMDD-HHmmss.png</code>（如 scanned-20261101-054200.png），内容与预览逐字一致。渲染边长上限 1600px，大图会自动等比缩小以保证流畅。</div>
+</div>
+
+<div class="ep-combo">
+<b>签字 → 扫描件一条龙：</b>合同还没签字？先去 <a href="/tools/pdf-sign">PDF 电子签名</a> 把字签了，再回来一键做成扫描件效果。纸质合同想先扫成 PDF，用 <a href="/tools/images-to-pdf">图片批量转 PDF</a>。
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ep-faq">
+<dt>做出来的图能当真正的扫描件交差吗？</dt>
+<dd>看场景。报销凭证、入职材料、内部归档这类“要个扫描件样子”的场景通常够用；但<b>公证、审计、银行面签</b>等强合规场景要求真实扫描仪输出，请用真实扫描 —— 顶部真限制第一条已明示。</dd>
+<dt>为什么加了噪点后 OCR 识别变差了？</dt>
+<dd>这是预期内的 trade-off：纸张噪点＋灰度会干扰 OCR 引擎。要做文字识别请直接用原图，或去 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>。</dd>
+<dt>倾斜调大了边缘被裁掉怎么办？</dt>
+<dd>倾斜是旋转整图，画布按包络盒放大、透明补边，但角度过大时边缘内容仍可能出画。把滑杆调回 ±2° 以内，或下载前在预览里确认。</dd>
+<dt>图片会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行，读取（<code>FileReader</code>）、渲染（canvas）、下载全在浏览器本地完成，脚本中没有任何 fetch / XHR 上传逻辑。可断网使用（首次加载页面除外）。</dd>
+<dt>和「图片批量转 PDF」有什么区别？</dt>
+<dd>图片批量转 PDF 是把多张图原样拼成一个 PDF（适合先有纸质扫描图再合成）；本工具是给单张图加<b>扫描质感</b>（灰度/噪点/倾斜/暗角），做完再去转 PDF 也可以，两者单向链入、流程互补。</dd>
+</dl>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ep-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">扫描件效果生成器（当前）</span>
+<a href="/tools/pdf-sign" class="btn btn-secondary" style="font-size:.9rem;">PDF 电子签名（先签字再做扫描件）</a>
+<a href="/tools/pdf-annotate" class="btn btn-secondary" style="font-size:.9rem;">PDF 批注打码</a>
+<a href="/tools/images-to-pdf" class="btn btn-secondary" style="font-size:.9rem;">图片批量转 PDF</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="sg-toast"></div>
+<script src="/tools/static/js/scan_effect_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1507,6 +1507,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "scan_effect_generator",
+					Name:        "扫描件效果生成器",
+					Description: "上传 JPG/PNG/WebP 图片（FileReader 纯前端），扫描质感滑杆（联动噪点密度＋对比度）、倾斜角度滑杆（-3°~3°）、灰度/边缘阴影开关，canvas 本地渲染实时预览，一键下载 scanned-YYYYMMDD-HHmmss.png；与 PDF 电子签名双向互链（签完字→一键做扫描件）、单向链入 PDF 批注打码，纯前端零上传 · scan effect generator: turn photos into scanned-document look with grain, tilt and vignette, 100% client-side",
+					Path:        "/tools/scan-effect-generator",
+					Icon:        "document_scanner",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "ocr_image_text",
 					Name:        "OCR 图片文字识别",
 					Description: "截图/照片/扫描件转可编辑文字，中英文混排，框选区域识别，本地识别不上传、不限次",

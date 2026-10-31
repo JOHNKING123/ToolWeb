@@ -6,7 +6,7 @@
  *  4. sanitizeEnv 确定性向量（规格逐字命中）
  *  5. sanitizeEnv 非法参数（err.field='text'/'mode'/'placeholder'）与选项语义
  *  6. keepComments 开关与非法行 '# [跳过]' 标注
- *  7. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 251
+ *  7. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 252
  *  8. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket；上传走 FileReader）
  *  9. 模板：SEO 面板、真限制三条、互链（env_parser 双向、prompt_sanitizer 单向）
  */
@@ -168,7 +168,7 @@ function throwsField(fn, field, name) {
     contains(block.toLowerCase(), "env sanitizer", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
     while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-    eq(pathCount, 251, "注册 Path 总数 250→251");
+    eq(pathCount, 252, "注册 Path 总数 252→252");
 })();
 
 /* ================= 8. 零网络静态检查 ================= */
