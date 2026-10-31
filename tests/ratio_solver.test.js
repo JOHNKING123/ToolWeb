@@ -2,7 +2,7 @@
  * 覆盖：规格确定性向量逐字命中（四个求解方向交叉相乘、精度控制）、
  * simplifyRatio GCD 化简、parseRatio 解析正反例、PRESETS 常量表、
  * toFraction 分数约分、非法参数抛 Error（含 err.field）、
- * categories.go 注册（Path 总数 243→244）与零网络请求静态检查、
+ * categories.go 注册（Path 总数 244→245）与零网络请求静态检查、
  * 真限制三条明示、互链合规（算术题生成器双向、单位换算器单向链入）。 */
 "use strict";
 var fs = require("fs");
@@ -138,7 +138,7 @@ var m;
 var re = /"\/tools\/[^"]+"/g;
 var seen = {};
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 244, "注册 Path 总数 243→244");
+eq(pathCount, 245, "注册 Path 总数 244→245");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本/样式引用");
 ok(!/href="https?:\/\/(?!www\.johnkingzcq123\.xyz)/.test(TPL_SRC), "模板无外部超链接");

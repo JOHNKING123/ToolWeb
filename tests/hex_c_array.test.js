@@ -108,7 +108,7 @@ ok(/ID:\s*"hex_c_array"[\s\S]{0,800}?New:\s*true/.test(GO_SRC), "hex_c_array New
 ok(/{{define "hex_c_array"}}/.test(TPL_SRC), "模板 define hex_c_array");
 ok(/https:\/\/www\.johnkingzcq123\.xyz\/tools\/hex-c-array/.test(TPL_SRC), "模板 canonical");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-ok(new Set(paths).size === 244, "全量 Path 数 244（实得 " + new Set(paths).size + "）");
+ok(new Set(paths).size === 245, "全量 Path 数 245（实得 " + new Set(paths).size + "）");
 
 /* ---------- 9. 零网络请求静态检查 ---------- */
 ok(!/fetch\s*\(/.test(JS_SRC), "JS 无 fetch");

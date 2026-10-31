@@ -2,7 +2,7 @@
  * node tests/http_header_analyzer.test.js
  * 覆盖：规格示例向量闭环、头名归一化、折行合并、重复头保留、无冒号行定位、
  * 空值标注、分类、六项安全头 Present/Missing 判定、报告文本一致性、
- * categories.go 注册（243→244 Path）与零网络请求静态检查、模板真限制与互链。
+ * categories.go 注册（244→245 Path）与零网络请求静态检查、模板真限制与互链。
  */
 "use strict";
 var fs = require("fs");
@@ -130,7 +130,7 @@ has(GO, "HTTP 响应头分析器", "注册：categories.go 含名称 HTTP 响应
 var pathMatches = GO.match(/"\/tools\/[^"]+"/g) || [];
 var uniquePaths = {};
 pathMatches.forEach(function (p) { uniquePaths[p] = true; });
-eq(Object.keys(uniquePaths).length, 244, "注册：去重 Path 总数 243→244（实得 " + Object.keys(uniquePaths).length + "）");
+eq(Object.keys(uniquePaths).length, 245, "注册：去重 Path 总数 244→245（实得 " + Object.keys(uniquePaths).length + "）");
 
 /* ---------- 11. 零网络静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");

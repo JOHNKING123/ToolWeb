@@ -1382,6 +1382,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "screen_recorder",
+					Name:        "在线录屏工具",
+					Description: "浏览器内直接录屏：getDisplayMedia 原生选屏（屏幕/窗口/标签页）→录制前选项（麦克风音频/系统音频/视频比特率三档）→实时预览＋hh:mm:ss 计时＋暂停/继续/结束→回放＋一键下载 webm/mp4，零上传全在本地 · Online screen recorder: native browser getDisplayMedia (screen/window/tab), mic & system audio options, 3 bitrate levels, live preview with hh:mm:ss timer, pause/resume, one-click download, 100% client-side",
+					Path:        "/tools/screen-recorder",
+					Icon:        "screen_record",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "ascii_art_generator",
 					Name:        "ASCII 字符画生成器",
 					Description: "图片一键转 ASCII 字符画：PNG/JPG/GIF/WebP 拖拽上传，字符宽度 40/80/120/160 四档、精简/标准/半调三档字符集、反色与彩色模式可调，一键复制或下载 .txt，图片只在本机浏览器处理不上传 · Image to ASCII art: convert images to ASCII text locally, copy or download as .txt, 100% client-side",

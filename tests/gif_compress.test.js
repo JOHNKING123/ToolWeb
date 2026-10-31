@@ -225,7 +225,7 @@ ok(GO_SRC.slice(idx, idx + 1400).indexOf("New:         true") >= 0, "注册 New 
 ok(GO_SRC.slice(idx, idx + 1400).indexOf('Icon:        "gif"') >= 0, "注册 Icon 为 gif");
 var pathCount = 0, m, re2 = /"\/tools\/[^"]+"/g, seen = {};
 while ((m = re2.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 244, "注册 Path 总数 243→244");
+eq(pathCount, 245, "注册 Path 总数 244→245");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/<script[^>]+src="https?:\/\//.test(TPL_SRC), "模板无外部脚本引用（零 CDN）");
 ok(!/rel="stylesheet"[^>]+href="https?:\/\//.test(TPL_SRC), "模板无外部样式引用（零 CDN）");
@@ -239,13 +239,14 @@ ok(TPL_SRC.indexOf("抽帧") >= 0 && TPL_SRC.indexOf("卡顿") >= 0, "模板含�
 ok(TPL_SRC.indexOf("不收集、不上传") >= 0, "模板含真限制：不收集、不上传");
 ok(TPL_SRC.indexOf("/tools/img-compress") >= 0, "互链图片压缩");
 ok(TPL_SRC.indexOf("/tools/img-convert") >= 0, "互链图片格式转换");
+ok(TPL_SRC.indexOf("/tools/screen-recorder") >= 0, "双向互链：回链在线录屏工具");
 var hrefs = {}, hm, hre = /href="\/tools\/([a-z0-9-]+)"/g, badLinks = [];
 while ((hm = hre.exec(TPL_SRC)) !== null) {
   if (hm[1] === "static") continue;
-  if (hm[1] !== "img-compress" && hm[1] !== "img-convert") badLinks.push(hm[1]);
+  if (hm[1] !== "img-compress" && hm[1] !== "img-convert" && hm[1] !== "screen-recorder") badLinks.push(hm[1]);
   hrefs[hm[1]] = true;
 }
-eq(badLinks.length, 0, "互链仅含图片压缩与图片格式转换" + (badLinks.length ? "（多余：" + badLinks.join(",") + "）" : ""));
+eq(badLinks.length, 0, "互链仅含图片压缩、图片格式转换与在线录屏工具" + (badLinks.length ? "（多余：" + badLinks.join(",") + "）" : ""));
 ok(TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/gif-compress") >= 0, "模板含 canonical/OG 链接");
 ok(TPL_SRC.indexOf("载入示例") >= 0, "模板含载入示例入口");
 ok(TPL_SRC.indexOf("gif-compressed.gif") >= 0, "模板含下载文件名 gif-compressed.gif");

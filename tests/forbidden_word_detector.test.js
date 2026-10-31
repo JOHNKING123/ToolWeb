@@ -3,7 +3,7 @@
  * 覆盖：BANNED_WORDS 词库完整性（6 分类 109 词条、无重复、风险值合法）、
  * scanText 确定性向量逐值命中（含 positions 断言）、重叠命中取最长、
  * 白名单、非法参数抛 Error 的 err.field、riskSummary、maskText、
- * 两组示例、categories.go 注册（Path 总数 243→244）与零网络请求静态检查、
+ * 两组示例、categories.go 注册（Path 总数 244→245）与零网络请求静态检查、
  * 模板真限制三条、与 OG 社交卡片预览双向互链、单向链入结构化提示词构建器、
  * Description 中英文双语、不链未交付工具。
  */
@@ -167,7 +167,7 @@ var ogIdx = GO_SRC.indexOf('"og_card_preview"');
 ok(ogIdx >= 0 && fwdIdx > ogIdx, "注册在 og_card_preview 之后（营销工具互链家族相邻）");
 var pathRe = /"\/tools\/[^"]+"/g, seen2 = {}, m2, pathCount = 0;
 while ((m2 = pathRe.exec(GO_SRC)) !== null) { if (!seen2[m2[0]]) { seen2[m2[0]] = true; pathCount++; } }
-eq(pathCount, 244, "注册 Path 总数 243→244");
+eq(pathCount, 245, "注册 Path 总数 244→245");
 
 /* ---------- 10. 模板：真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/forbidden-word-detector", "模板 canonical 含新 Path");

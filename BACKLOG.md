@@ -1,3 +1,179 @@
+## 今日任务（2026-10-31 15:56 · PM 排期决策轮，接 15:51 通用调研第一百七十三轮）
+
+**选定：在线录屏工具** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（173 轮）Top3 推荐**顺位首席**（172 轮新观察项→建议第二顺位→173 轮递补 P2 建议首席；简繁互转 15:00 轮已选定进入开发，文件尚未落地，本轮候选池外）→ **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例）。
+- **PM 独立零重叠实测（163 轮误判教训：必须 grep 模板＋static/js＋categories.go 三处）**：`MediaRecorder`／`屏幕录制`／`在线录制` 三处 **0 命中**真缺口；`录屏` 三处命中仅 gif_compress（GIF 压缩优化器说明文字「录屏 GIF 一键压小」）——**PM 裁定：口径不重叠，不跳过**（新工具是「浏览器内直接录制屏幕/窗口/标签页」，GIF 压缩器是「压缩已有录屏 GIF」；「录屏」只是共享场景词，核心算法与数据流无交集；二者互为上下游，可互链）。`screen_recorder`／`screen-recorder` 全仓 **0 命中**。JSON→Kotlin 维持第二顺位；社媒标签生成器维持第三顺位。
+- **与 15:00 轮关系**：简繁互转 15:00 轮已选定进入开发（文件尚未落地，本轮 `ls templates/jianfan_converter.html` 确认不存在，git head 仍 a527bf4）；本轮选定在线录屏工具并行推进，开发轮注意 categories.go 合并冲突与 Path 基线（若简繁互转先落地，基线为 245）。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——临时录个操作演示/BUG 复现/教学片段，不想装 OBS/剪映等重型软件；③ **一轮可高质量交付**——纯前端中难度：getDisplayMedia＋MediaRecorder 全浏览器原生 API，权限/状态机/纯函数三件套可测；④ **图片处理簇补位**——与 GIF 压缩优化器上下游互链、与视频帧提取器同簇；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「图片处理」品类（与 GIF 压缩优化器／视频帧提取器同品类，录屏上下游场景贴合）；New: true；Icon `screen_record`（实测 Icon 口径 **0 占用**；备选 `videocam` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **录制源**：「🎥 开始录制」→ 浏览器原生 getDisplayMedia 弹窗（屏幕/窗口/标签页三选一由浏览器提供）；录制前选项：麦克风音频开/关（getUserMedia）、系统音频开/关（随 display stream 的 audio track；**不支持时页面明示**）、视频比特率三档（低/中/高）。
+- **录制中**：实时预览（`<video muted playsinline>`）＋计时器（hh:mm:ss，纯函数 formatDuration）＋状态徽标；暂停/继续（MediaRecorder.pause/resume）＋「⏹ 结束录制」。
+- **产出**：结束录制 → 合成 Blob → 页面内回放 ＋ 一键下载（文件名 `screen-record-<yyyyMMdd-HHmmss>.<ext>`，ext 随所选 mime：webm/mp4）＋文件大小显示；「重新录制」。
+- **降级路径**：① 用户拒绝授权 → toast 指引重试＋说明；② MediaRecorder 不支持／无可用 mime → 明确报错面板（不降级假装成功）；③ track 意外 ended（用户点了停止共享）→ 自动结束并提示。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `formatDuration(ms)` → `'hh:mm:ss'`（ms 非有限非负数抛 Error，err.field="ms"）。
+  - `pickMimeType(candidates, isSupported)` → 首个 isSupported 返回 true 的 mime；candidates 非数组抛 Error（err.field="candidates"）；isSupported 非函数抛 Error（err.field="isSupported"）；无可用 mime 抛 Error（err.field="mimeType"）。
+  - `buildDownloadName(date?, ext?)` → `screen-record-YYYYMMDD-HHmmss.<ext>`（ext 默认 'webm'；含非法字符抛 Error，err.field="ext"；date 非 Date 抛 Error，err.field="date"）。
+  - `extensionFor(mime)` → 'webm'/'mp4'（未知 mime 抛 Error，err.field="mime"）。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `formatDuration(0)` → `'00:00:00'`；`formatDuration(65_000)` → `'00:01:05'`；`formatDuration(3_661_000)` → `'01:01:01'`；`formatDuration(-1)` 抛 Error（err.field="ms"）。
+  - `pickMimeType(['video/webm;codecs=vp9','video/webm'], c=>c.includes('vp9'))` → `'video/webm;codecs=vp9'`；`pickMimeType(['a'], ()=>false)` 抛 Error（err.field="mimeType"）；`pickMimeType('x', ()=>true)` 抛 Error（err.field="candidates"）。
+  - `buildDownloadName(new Date(2026,9,31,15,0,0))` → `'screen-record-20261031-150000.webm'`；`buildDownloadName(d,'mp4')` → `'screen-record-20261031-150000.mp4'`；`buildDownloadName(d,'a/b')` 抛 Error（err.field="ext"）。
+  - `extensionFor('video/webm;codecs=vp9')` → `'webm'`；`extensionFor('video/mp4')` → `'mp4'`。
+- **互链**：与「GIF 压缩优化器」（/tools/gif-compress）**双向**互链（录屏上下游；文案示例：「录完想发群/做表情包？用 GIF 压缩优化器把 WebM 压成小体积 GIF」）；与「视频帧提取器」**单向链入**（本页→帧提取器；文案：「想从录屏里抠关键帧，用视频帧提取器」）；不链未交付工具（JSON→Kotlin／社媒标签生成器尚未交付）。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域；getDisplayMedia 需 HTTPS/localhost 上下文（家族工具页统一跑 HTTPS，天然满足）。
+- **注册**：ID `screen_recorder`、Name「在线录屏工具」、Path `/tools/screen-recorder`、Category 图片处理、New: true、Icon `screen_record`（备选 `videocam`）；中英文描述＋SEO keywords（在线录屏、浏览器录屏、屏幕录制、免安装录屏、录屏工具、webm 录屏、screen recorder online、browser screen recording、no install）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/screen-recorder，相关工具互链 GIF 压缩优化器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 录制必须经浏览器弹窗授权屏幕共享，拒绝授权无法录制；② 输出容器/编码取决于浏览器（Chrome/Edge 多为 webm vp9/vp8，Safari 为 mp4），页面检测后明示当前实际格式；③ 系统音频录制受限（通常仅共享「标签页」并勾选音频时可用，macOS 及部分浏览器不支持）；④ 共享屏幕时注意关闭隐私内容，本工具零上传、录制全在本地。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path 现有数 **+1**（以 `grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测为准；注意若 15:00 轮简繁互转先落地则基线为 245）；所有含 Path 总数断言的旧测试文件同步（以 `grep -n '<基线数>' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：formatDuration/pickMimeType/buildDownloadName/extensionFor 确定性向量逐值命中、非法参数抛 Error（err.field）；录制状态机转移表断言（空闲→录制→暂停→结束→空闲）。
+3. 本地实测 `/tools/screen-recorder` 200；Mock MediaRecorder/getDisplayMedia 下录制→结束→下载链路可跑通（或代码覆盖降级路径）。
+4. 与 GIF 压缩优化器双向互链、视频帧提取器单向链入；不链未交付工具；categories.go Description 中英文双语。
+5. 真限制四条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/screen_recorder.html`（新增）
+- `static/js/screen_recorder.js`（新增；formatDuration/pickMimeType/buildDownloadName/extensionFor 纯函数＋录制状态机＋DOM）
+- `tests/screen_recorder.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `tools/categories.go`（注册：ID `screen_recorder`／Name「在线录屏工具」／Path `/tools/screen-recorder`／Icon `screen_record`（备选 `videocam`）／Category「图片处理」／New: true）
+- 旧测试文件的 Path 总数断言基线 +1（`grep -n '<基线>' tests/*.test.js` 实测为准同步；注意简繁互转并行落地时的基线漂移）
+
+**顺位递补说明**：JSON→Kotlin（`kotlin` 三处 0 命中复测真缺口（173 轮；此前 resume_checker.js 技能标签命中已消失）；json_to_types 扩展口径）→ **P2 第二顺位**（若本轮开发中发现录制 API 在家族目标浏览器矩阵（Chrome/Edge/Firefox/Safari 近两版）存在交付级阻塞，则由 JSON→Kotlin 递补，本轮不重新挑拣）；社媒标签生成器（`hashtag`／`话题标签`／`标签生成` 0 命中复测；TinySEOTool 10-31 独立信号；营销工具簇补位）→ 第三顺位待命；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）继续低优先观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 a527bf4；**本轮仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用惯例**）；`git log` 头部 a527bf4（网址批量打开工具新增）／a4a1484（违禁词检测器新增）／48da6fe（上线检查清单新增）；`ls templates/jianfan_converter.html` **不存在**（15:00 轮简繁互转开发中，文件尚未落地；与本轮并行，开发轮注意 categories.go 合并与 Path 基线）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **244**；Top3 候选重叠复核（`screen_recorder`／`screen-recorder`／`MediaRecorder`／`屏幕录制`／`在线录制` 三处 **0 命中**；`录屏` 仅命中 gif_compress 说明文字（压缩已有录屏 GIF 口径，PM 裁定口径不重叠、不跳过）；`kotlin` 0 命中（第二顺位）；`hashtag`／`话题标签`／`标签生成` 0 命中（第三顺位；无关文本除外）；Icon `screen_record` 实测 0 占用（备选 `videocam` 0 占用）；一键图片去背景／视频转码硬伤未解低优先观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-31 15:51 · 通用调研第一百七十三轮，接 15:00 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百七十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**简繁互转已由 PM 15:00 轮选定进入开发**（与本轮并行，文件尚未落地：`ls templates/` 无 jianfan*，git head 仍为 a527bf4；**未确认交付前不划出候选池，本轮标记「开发中」移出 Top3**），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:51 轮，优先小／中难度纯前端。
+**本轮三件事**（15:51 全网调研，通用方向）：
+1. 简繁互转状态确认：PM 15:00 轮选定（规格见本文件顶部 PM 轮记录）；`git log` 头部仍为 a527bf4（网址批量打开工具新增，2026-10-31 05:53 UTC）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **244**；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 a527bf4；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - 在线录屏工具：`MediaRecorder`／`屏幕录制`／`在线录制` 三处 **0 命中**（本轮复测）——**递补建议首席**。
+   - JSON→Kotlin：`kotlin` 三处 **0 命中**（本轮复测；**此前 resume_checker.js:17 技能标签命中已消失**，真缺口更确凿）——**建议第二顺位**。
+   - 社媒标签生成器：`hashtag`／`话题标签`／`标签生成`／`youtube.*tag` 三处 **0 命中**（话题标签仅 prompt_builder.js 无关文本、标签生成仅 og_card_preview 无关文本；vendor 目录除外）——**新候选，建议第三顺位**。
+   - 域名创意生成器：`"Name".*域名` 0 命中；但实时可用性检查有出网/CORS 硬伤（domain-check 未完全解决先例）→ **新观察项（低优先，不含可用性检查）**。
+3. 新信号扫描（V2EX 10-28~10-31＋dev.to 10-06~10-31＋HN＋Reddit＋中文全网为本轮主线）：**新晋 P2 三项（在线录屏工具／JSON→Kotlin／社媒标签生成器），新观察项一项（域名创意生成器，低优先）**；其余全部消解或被已交付覆盖——
+   - V2EX：t/1250674 mockmock（10-21；设备 Mockup/宣传物料制作，免费免登录；**被 screenshot_3d_mockup「截图 3D 样机渲染器」（手机机身框场景）覆盖，消解**）／t/1252552 tubox（10-28；一键图片去背景第五独立信号维持，无新信息）／t/1253201 自媒体获客四工具（10-30；172 轮已消解：Chrome 插件＋付费）／global t/1246569 免费外链分享（10-10；SEO 外链站列表，非工具口径，消解）；
+   - dev.to：cyberscryb 9 工具（10-14；JSON/Regex/Base64/JWT/Cron/Markdown/Text diff/Subnet 计算器全被已交付覆盖）／313Automations 4 工具（10-20；AI 爬虫 robots 检查→**被 robots_txt_validator（GPTBot/ClaudeBot/PerplexityBot）覆盖**／llms.txt 生成器→**被 llms_txt_generator 覆盖**／2 个 ROI 计算器→10-18 方向修正消解）／Dev Hackes 10 工具（10-10；全覆盖）／BlanzaTools 14（10-11；全覆盖）／**Etemora 4（10-10；域名生成器→新观察项低优先（无可用性检查）／PDF 工具箱已覆盖／发票生成器→被 invoice_generator 覆盖／SERP 预览→被 serp_snippet_preview 覆盖）**／hysenlabs 35（10-10；URL parser/user-agent/HTML entity/颜色转换/CSV→Markdown/AES/HMAC 全被已交付覆盖）／Utility Tools Lab 28 写作工具（10-18；TTS→被 text_reader_aloud 覆盖／语音转写→观察项已有／在线记事本→被 focus_writer「极简专注写作」覆盖／Avro 孟加拉输入法非核心）／**TinySEOTool 100+（10-31 今日；plagiarism checker 需后端／article rewriter 需 AI／计算器类方向修正消解／hashtag＋YouTube 标签生成器→新候选）**／Curbcut 无障碍扫描（10-22；需后端抓取，消解）／Code Specimen（10-06；浏览器插件口径，消解）／bitearcade 14 计算器（10-01；MCP 配置校验器→**被 mcp_config_doctor 覆盖**／AI ROI 计算器方向修正消解）；
+   - HN：WallHop（10-12；付费墙绕过，合规风险，消解）／monolith（CLI 单文件存档，非单页网页工具，消解）／Latch（10-24；WebMCP 基础设施，非工具口径，消解）／Rocus（10-20；需本地 LLM 整理书签，消解）；
+   - 中文全网：「希望有一个网站能」搜索结果为阿里云/FineReport 软文，无干货，消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；简繁互转 PM 15:00 已选定开发中，本轮移出候选池）：
+1. **在线录屏工具** — 递补建议首席（172 轮新观察项→建议第二顺位→本轮递补；`MediaRecorder`／`屏幕录制`／`在线录制` 三处 0 命中复测（本轮）真缺口；痛点：临时录个操作演示/BUG 复现/教学片段，不想装 OBS/剪映等重型软件；浏览器 getDisplayMedia 选屏→MediaRecorder 录制→webm 本地下载，纯前端中难度：录制管线无纯函数但权限/状态机可测；多媒体工具簇补位（与 GIF 压缩优化器「录屏 GIF 一键压小」可互链；与 screenshot_3d_mockup 样机渲染口径不重叠）；真限制：须用户授权屏幕共享（浏览器弹窗）、各浏览器编码格式差异、系统音频录制受限，须明示）。
+2. **JSON→Kotlin** — 建议第二顺位（观察项晋升；minitool.io 10-30 日用 Top4 第二独立信号；站内 json_to_types 仅 TS/Go，`kotlin` 三处 0 命中复测（本轮；此前 resume_checker.js 技能标签命中已消失，真缺口更确凿）；痛点：Android/Kotlin 开发者粘贴 JSON 手写 data class 慢且易错；JSON→Kotlin data class（含 @SerializedName 注解选项、空安全可空类型推断），纯前端小难度：类型推断纯函数可写逐字向量；开发工具簇补位（json_to_types 扩展口径）；真限制：嵌套泛型/密封类等复杂结构需人工调整，须明示）。
+3. **社媒标签生成器** — 新候选建议第三顺位（本轮新信号：dev.to TinySEOTool 10-31（今日）独立信号；`hashtag`／`话题标签`／`标签生成` 三处 0 命中复测真缺口（话题标签仅 prompt_builder.js 无关文本、标签生成仅 og_card_preview 无关文本）；痛点：小红书/抖音/Instagram/YouTube 发帖时 hashtag 憋不出来、瞎堆标签没流量；输入关键词→按平台（小红书/抖音/IG/YouTube）生成标签组合＋热度分级＋一键复制，内置标签库纯前端小难度：组合策略纯函数可写逐字向量；营销工具簇补位（与违禁词检测器「发帖前先查违禁词」／OG 社交卡片预览双向互链）；真限制：标签热度为内置库快照非实时、平台算法规则变化快，须明示）。
+
+其余观察项保持原状：**域名创意生成器（173 轮新观察项**，Etemora 10-10 信号；`"Name".*域名` 0 命中；实时可用性检查有出网/CORS 硬伤（domain-check 未完全解决先例），仅关键词组合创意不含可用性检查，低优先）／退租验房照片配对 PDF（172 轮新观察项；**10-18 方向修正下 PM 已裁定：退租验房属个人生活场景，非 ToolWeb 工具能力口径，继续低优先观察**）／一键图片去背景（165 轮，tubox 第五独立信号＋ONNX 按需懒加载生产级缓解证据，低优先）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／社媒图片尺寸生成器／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 172 轮及之前记录。
+
+**通用候选表增量**（第一百七十三轮：简繁互转 PM 15:00 轮已选定开发中（与本轮并行，文件尚未落地，git head 仍 a527bf4；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3）；**在线录屏工具递补建议首席**（`MediaRecorder`／`屏幕录制` 0 命中复测；纯前端中难度）；**JSON→Kotlin 建议第二顺位**（`kotlin` 0 命中复测，此前 resume_checker.js 技能标签命中已消失；json_to_types 扩展；小难度）；**社媒标签生成器新候选建议第三顺位**（TinySEOTool 10-31 独立信号；`hashtag` 0 命中；纯前端小难度；营销工具簇补位）；**域名创意生成器新观察项**（Etemora 10-10；无可用性检查，出网/CORS 硬伤；低优先）；本轮新信号 ~30 项中：立项/晋升建议 4 项（在线录屏工具／JSON→Kotlin／社媒标签生成器／域名创意生成器），其余全部消解或被已交付覆盖（V2EX 4 项：mockmock 被 screenshot_3d_mockup 覆盖／tubox 维持／自媒体获客四工具 172 轮已消解／免费外链分享非工具口径；dev.to 12 组：cyberscryb 9 工具全覆盖／313Automations 4 工具（AI 爬虫 robots 被 robots_txt_validator 覆盖／llms.txt 被 llms_txt_generator 覆盖／2 ROI 计算器方向修正消解）／Dev Hackes 10 全覆盖／BlanzaTools 14 全覆盖／Etemora 4（域名→观察／PDF 覆盖／发票被 invoice_generator 覆盖／SERP 被 serp_snippet_preview 覆盖）／hysenlabs 35 全覆盖／Utility Tools Lab 28（TTS 被 text_reader_aloud 覆盖／记事本被 focus_writer 覆盖／语音转写观察项已有／Avro 非核心）／TinySEOTool（查重需后端／改写需 AI／计算器方向修正／标签生成器→新候选）／Curbcut 需后端／Code Specimen 插件口径／bitearcade（MCP 校验器被 mcp_config_doctor 覆盖／AI ROI 方向修正消解）；HN 4 项：WallHop 合规风险／monolith CLI／Latch 非工具口径／Rocus 需本地 LLM；中文全网软文无干货）；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 244 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 简繁互转 | PM 15:00 轮已选定开发中（与本轮并行，文件尚未落地，git head 仍 a527bf4；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 在线录屏工具 | 递补建议首席（172 轮新观察项；懒大王导航 10-27 独立信号；`MediaRecorder`／`屏幕录制` 0 命中复测；getDisplayMedia＋MediaRecorder 纯前端；多媒体簇补位；真限制：屏幕共享授权＋浏览器编码差异须明示） | 中 | P2（留池） |
+| JSON→Kotlin | 建议第二顺位（观察项晋升；minitool.io 10-30 第二独立信号；`kotlin` 0 命中复测（此前 resume_checker.js 技能标签命中已消失）；json_to_types 仅 TS/Go 扩展；纯前端小难度） | 小 | P2（留池） |
+| 社媒标签生成器 | 新候选建议第三顺位（TinySEOTool 10-31 独立信号；`hashtag`／`话题标签`／`标签生成` 0 命中复测（无关文本除外）；关键词→多平台标签组合＋热度分级；内置标签库纯前端小难度；营销工具簇补位，与违禁词检测器/OG 卡片预览互链） | 小 | P2（留池） |
+| 域名创意生成器 | 173 轮新观察项（Etemora 10-10 信号；`"Name".*域名` 0 命中；实时可用性检查有出网/CORS 硬伤（domain-check 未完全解决先例），仅关键词组合创意不含可用性检查） | 小 | 观察（低优先） |
+| 一键图片去背景 | 165 轮新观察项（tubox 第五独立信号＋ONNX 按需懒加载生产级缓解证据；模型托管与首屏体验仍需预研验证，低优先；与证件照换底口径不重叠） | 大 | 观察（低优先） |
+| 视频转码/压缩器 | 166 轮新观察项（ffmpeg.wasm ~30MB 硬伤，低优先；与 video-frame-extractor 帧提取口径不重叠） | 大 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十三轮——简繁互转 PM 15:00 轮已选定进入开发（与本轮并行，文件尚未落地：templates/jianfan_converter.html 不存在，git head 仍 a527bf4；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3）；**在线录屏工具递补建议首席**（`MediaRecorder`／`屏幕录制` 0 命中复测确认；getDisplayMedia＋MediaRecorder 纯前端中难度）；JSON→Kotlin 建议第二顺位（`kotlin` 0 命中复测，此前 resume_checker.js 技能标签命中已消失，真缺口更确凿）；**社媒标签生成器新候选建议第三顺位**（dev.to TinySEOTool 10-31（今日）独立信号；`hashtag` 0 命中复测确认；关键词→多平台标签组合，内置标签库纯前端小难度；营销工具簇补位）；**域名创意生成器新观察项**（Etemora 10-10；无可用性检查，出网/CORS 硬伤；低优先）；本轮消解 ~26 项（详见上文新信号扫描）；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 a527bf4；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 a527bf4（网址批量打开工具新增，2026-10-31 05:53 UTC）／a4a1484（违禁词检测器新增）／48da6fe（上线检查清单新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **244**；Top3 候选重叠复核（`简繁`／`繁简`：PM 15:00 已选定开发中，移出候选池；`MediaRecorder`／`屏幕录制`／`在线录制` 三处 0 命中；`kotlin` 三处 0 命中（此前 resume_checker.js 技能标签命中已消失）；`hashtag`／`话题标签`／`标签生成` 0 命中（无关文本除外；vendor 除外）；`"Name".*域名` 0 命中；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-31 15:00 · PM 排期决策轮，接 15:00 通用调研第一百七十二轮）
+
+**选定：简繁互转** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（172 轮）Top3 **顺位首席**（169 轮新观察项→170 轮建议第三顺位→171 轮递补 P2 第二顺位→172 轮递补 P2 首席；网址批量打开工具 a527bf4 交付闭环后按惯例递补）→ **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例）。
+- **PM 独立零重叠实测（163 轮误判教训：必须 grep 模板＋static/js＋categories.go 三处）**：`简繁`／`繁简` 三处 **0 命中**真缺口；`繁体` 三处命中仅 templates/realtime_dictation.html（实时听写输出语言选项无关文本）／static/js/font_license_check.js（字体授权检查说明文字）／static/js/realtime_dictation.js——均为无关口径，`jianfan_converter` 全仓 0 命中（ID/模板/JS 未用）。在线录屏工具（`MediaRecorder`／`屏幕录制`／`在线录制` 0 命中真缺口，懒大王导航 10-27 独立信号）维持**第二顺位**；JSON→Kotlin（`kotlin` 仅 static/js/resume_checker.js:17 技能标签无关命中；站内 json_to_types 仅 TS/Go）维持**观察晋升待命**；退租验房照片配对 PDF（`验房`／`退租` 0 命中；生活场景口径，**10-18 方向修正下 PM 裁定：退租验房属个人生活场景，非 ToolWeb 工具能力口径，继续低优先观察**）；一键图片去背景（tubox 第五独立信号＋ONNX 缓解证据）／视频转码（ffmpeg.wasm 硬伤）继续低优先观察；在线电台收听器硬伤未解继续跳过。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——对台/港业务文案、大陆网文转繁发布时手工转繁体慢且漏，机翻易改原意；③ **一轮可高质量交付**——纯前端小难度：词典映射纯函数可写逐字向量；④ **文本工具簇补位**——与「文本工具集」双向互链；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「文本工具」品类（与 text-tools「文本工具集」同品类）；New: true；Icon `translate`（实测 Icon 口径 **0 占用**；备选 `spellcheck` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **输入**：多行文本框粘贴/输入任意中文文本；方向切换（简体→繁体／繁体→简体，默认简→繁）；地区用词习惯选项（香港／台湾，简→繁时生效，如「软件」→「軟件」港／「軟體」台）。
+- **内置词典**：开发轮撰写定稿（常用字形映射＋常用词组映射；**禁止用任何外部词典文件/接口**；词典常量内置于 static/js/jianfan_converter.js）；长词优先匹配（避免「软件」→「軟件」拆成逐字）。
+- **实时转换**：输入即转（防抖）；输出区＋字数统计；操作栏：复制结果／下载 .txt／清空／示例载入；所有提示中文。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `S2T`/`T2S` 词典常量（对象字面量，供界面与向量断言）。
+  - `convertS2T(text, region?)` → string（region 可选 'hk'/'tw'，默认 'hk'；text 非字符串抛 Error，err.field="text"；region 非法值抛 Error，err.field="region"）。
+  - `convertT2S(text)` → string（text 非字符串抛 Error，err.field="text"）。
+- **确定性向量**（开发轮必须逐字命中，词典定稿后手算期望值写入）：
+  - `convertS2T('')` → `''`；`convertT2S('')` → `''`。
+  - `convertS2T('简体字')` → `簡體字`。
+  - `convertT2S('簡體字')` → `简体字`。
+  - `convertS2T('软件', 'tw')` → `軟體`；`convertS2T('软件', 'hk')` → `軟件`。
+  - `convertS2T(null)` 抛 Error（err.field="text"）。
+- **互链**：与「文本工具集」（/tools/text-tools）**双向**互链（文本工具同簇；文案示例：「写完文案先用文本工具集整理排版，要发台/港平台前用简繁互转转繁体」）；不链未交付工具（在线录屏工具／JSON→Kotlin 尚未交付）。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `jianfan_converter`、Name「简繁互转」、Path `/tools/jianfan-converter`、Category 文本工具、New: true、Icon `translate`（备选 `spellcheck`）；中英文描述＋SEO keywords（简繁转换、繁体转换、简体转繁体、繁体转简体、台湾用语、香港用语、traditional chinese converter、simplified to traditional）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/jianfan-converter，相关工具互链文本工具集。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 一字多音/语境异义（如「发」/「干」/「复」）仅做常用映射，**人名地名等专有名词请人工复核**；② 地区用词差异仅覆盖常用词，非全量术语表；③ 词典版本 v1.0（2026-10-31 整理），持续补全。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **244→245**；所有含 Path 总数断言的旧测试文件同步（以 `grep -n '244' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：S2T/T2S 词典映射确定性向量逐值命中（空串、逐字转换、港/台地区用词差异）、非法参数抛 Error（err.field）、长词优先匹配断言。
+3. 本地实测 `/tools/jianfan-converter` 200；粘贴文本→互转结果与向量一致；复制结果／下载可用。
+4. 与文本工具集双向互链；不链未交付工具；categories.go Description 中英文双语。
+5. 真限制三条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/jianfan_converter.html`（新增）
+- `static/js/jianfan_converter.js`（新增；S2T/T2S 词典常量＋纯函数＋DOM）
+- `tests/jianfan_converter.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `tools/categories.go`（注册：ID `jianfan_converter`／Name「简繁互转」／Path `/tools/jianfan-converter`／Icon `translate`（备选 `spellcheck`）／Category「文本工具」／New: true）
+- 旧测试文件的 Path 总数断言 244→245（`grep -n '244' tests/*.test.js` 实测为准同步）
+
+**顺位递补说明**：在线录屏工具（`MediaRecorder`／`屏幕录制` 0 命中真缺口；getDisplayMedia＋MediaRecorder 纯前端中难度；多媒体簇补位）→ **P2 第二顺位**（若本轮开发中发现词典量级失控超出一轮可交付，则由在线录屏工具递补，本轮不重新挑拣）；JSON→Kotlin（`kotlin` 仅 resume_checker.js 技能标签无关命中；站内 json_to_types 仅 TS/Go）→ 观察项晋升建议待命（json_to_types 扩展口径，次于独立新工具）；退租验房照片配对 PDF（172 轮新观察项；**生活场景口径，10-18 方向修正下继续低优先观察**）；一键图片去背景（ONNX 硬伤缓解证据未达交付线）／视频转码（ffmpeg.wasm 硬伤）继续低优先观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在且与本地同头 a527bf4；**本轮仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用惯例**）；`git log` 头部 a527bf4（网址批量打开工具新增）／a4a1484（违禁词检测器新增）／48da6fe（上线检查清单新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **244**；Top3 候选重叠复核（`jianfan_converter`／`简繁`／`繁简` 三处 0 命中真缺口（`繁体` 命中仅实时听写/字体授权无关文本）；`MediaRecorder`／`屏幕录制`／`在线录制` 三处 0 命中（第二顺位）；`kotlin` 仅 resume_checker.js:17 技能标签无关命中（观察晋升待命）；`验房`／`退租` 三处 0 命中（方向 caveat，已由 PM 裁定低优先观察）；Icon `translate` 实测 0 占用（备选 `spellcheck` 0 占用）；一键图片去背景／视频转码硬伤未解低优先观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 15:00 · 通用调研第一百七十二轮，接 13:00 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百七十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**网址批量打开工具已交付闭环**（a527bf4 新增：粘贴多行网址→逐行校验（缺 scheme 自动补 https://、行内 URL 抽取、无效行标行号+原因）→预览勾选+去重+统计→一键分批打开（每批 5 个、间隔 600ms；弹窗拦截降级复制链接+白名单指引；超 30 个确认）→复制/下载/清空/示例；纯函数契约 parseUrlList/dedupeUrls；ID `batch_url_opener`、Path `/tools/batch-url-opener`、Icon `open_in_new`；与社区搜索聚合器双向互链；node 测试 **72 断言**全过；Path 243→244，旧测试断言同步；全量 **244 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小／中难度纯前端。
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. 网址批量打开工具交付确认：`git log` 头部 a527bf4（批量打开工具新增）／a4a1484（违禁词检测器新增）／48da6fe（上线检查清单新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **244**；`batch_url_opener` 已注册（/tools/batch-url-opener）；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - `batch_url_opener`／批量打开：已交付（a527bf4，/tools/batch-url-opener）——划出候选池。
+   - 简繁互转：`简繁`／`繁简` 三处 **0 命中**（本轮复测，维持真缺口）——**递补 P2 顺位首席**。
+   - 在线录屏工具：`MediaRecorder`／`屏幕录制`／`在线录制` 三处 **0 命中**；`录屏` 仅命中 gif_compress（GIF 压缩器说明文字，压缩已有录屏 GIF 口径，与「浏览器内直接录屏」口径不重叠）——**新观察项，建议晋升第二顺位**。
+   - JSON→Kotlin：`kotlin` 三处仅命中 resume_checker.js 技能标签无关文本（169/171 轮已裁定）——维持观察项晋升建议待命。
+3. 新信号扫描（V2EX 10-28~10-31＋dev.to 10-30＋Medium 10-18＋中文全网 10-27 为本轮主线）：**新晋 P2 一项（在线录屏工具），新观察项一项（退租验房照片配对 PDF，附 10-18 方向修正 caveat）**；其余全部消解或被已交付覆盖——
+   - V2EX：t/1253201 自媒体获客四工具（10-30；EasyPost/小红书获客/快手互动/客自来：Chrome 插件＋Windows 客户端＋付费，非单页网页工具，消解）／t/1252166 Zipover（10-30；局域网跨平台剪贴板，桌面程序，消解）／t/1251490 餐厅邮件营销（10-24；AI 生成需后端，海外餐厅垂类，消解）／t/1250522 protohub（10-21；原型托管，需后端存储＋注册，消解）／t/1248477 OpenI（10-13；算力社区，消解）；
+   - dev.to（10-30，4 个纯浏览器工具）：TourLedger 看房打分表／StatementLens 账单分析／RoomProrate 账单分摊——**10-18 方向修正消解**（泛财务／生活计算器类不扩）／**MoveRecord**（入住/退租照片配对＋备注→A4 PDF 报告，浏览器内重绘去 EXIF；`验房`／`退租` 三处 0 命中；图像/文档簇但属生活场景，**新观察项，低优先，PM 裁定是否符合方向**）；
+   - Medium「7 Free Browser Tools」（10-18）：SyncWhen 免登录会议投票（需后端分享投票，消解）／SortaSeat 婚礼座位表（站内 wedding_seating_chart 已覆盖，消解）／OldRoll 复古胶片滤镜（站内 img_retro_filter 已覆盖，消解）／StitchCraft 照片转十字绣（站内 cross_stitch_pattern 已覆盖，消解）／urPiano 浏览器钢琴（非工具口径，消解）／llmspeed（趣味模拟，非核心，消解）；
+   - 中文全网（懒大王导航 10-27「6 个免费神仙网站」）：在线 PDF 工具箱／在线图片压缩／免费图表制作（站内 chart_generator 已覆盖）／文字转语音（站内 text_reader_aloud 已覆盖）均已覆盖；**在线录屏→新候选**（临时录屏需求，不想装 OBS；getDisplayMedia＋MediaRecorder 纯前端，零上传）；临时邮箱（需后端收发，消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；网址批量打开工具交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **简繁互转** — 递补 P2 顺位首席（169 轮新观察项→170 轮建议第三顺位→171 轮递补 P2 第二顺位→本轮递补首席；`简繁`／`繁简` 三处 0 命中复测（本轮）真缺口；痛点：对台/港业务文案、大陆网文转繁发布时手工转繁体慢且漏，机翻易改原意；简体↔繁体互转＋台湾/香港用词习惯差异选项（计算机 vs 電腦），内置词典纯前端小难度：词典映射纯函数可写逐字向量；文本工具簇补位；真限制：一字多音/地区惯用词差异仅做常用映射，专有名词请人工复核，须明示）。
+2. **在线录屏工具** — 新观察项→建议晋升第二顺位（本轮新信号：懒大王导航 10-27 独立信号；`MediaRecorder`／`屏幕录制`／`在线录制` 三处 0 命中复测真缺口（`录屏` 仅 gif_compress 说明文字，压缩口径不重叠）；痛点：临时录个操作演示/BUG 复现/教学片段，不想装 OBS/剪映等重型软件；浏览器 getDisplayMedia 选屏→MediaRecorder 录制→webm/mkv 本地下载，纯前端中难度：录制管线无纯函数但权限/状态机可测；多媒体工具簇补位（与 GIF 压缩优化器「录屏 GIF 一键压小」可互链）；真限制：须用户授权屏幕共享（浏览器弹窗）、各浏览器编码格式差异、系统音频录制受限，须明示）。
+3. **JSON→Kotlin** — 观察项晋升建议待命（minitool.io 10-30 日用 Top4 第二独立信号；站内 json_to_types 仅 TS/Go，`kotlin` 三处 0 命中复测（本轮；仅 resume_checker.js 技能标签无关命中）；痛点：Android/Kotlin 开发者粘贴 JSON 手写 data class 慢且易错；JSON→Kotlin data class（含 @SerializedName 注解选项、空安全可空类型推断），纯前端小难度：类型推断纯函数可写逐字向量；开发工具簇补位（json_to_types 扩展口径）；真限制：嵌套泛型/密封类等复杂结构需人工调整，须明示）。
+
+其余观察项保持原状：**退租验房照片配对 PDF（172 轮新观察项**，dev.to MoveRecord 信号；`验房`／`退租` 0 命中；浏览器内重绘去 EXIF＋A4 PDF 报告，中难度；**生活场景口径，10-18 方向修正下由 PM 裁定**，低优先）／一键图片去背景（165 轮，tubox 第五独立信号＋ONNX 按需懒加载生产级缓解证据，低优先）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／社媒图片尺寸生成器／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 171 轮及之前记录。
+
+**通用候选表增量**（第一百七十二轮：网址批量打开工具已交付划出（a527bf4 新增；node 测试 72 断言全过；旧测试断言 243→244 同步；全量 244 Path；候选池划出）；**简繁互转递补 P2 顺位首席**（`简繁`／`繁简` 0 命中复测；小难度）；**在线录屏工具新观察项→建议晋升第二顺位**（本轮新信号；`MediaRecorder`／`屏幕录制`／`在线录制` 0 命中；纯前端中难度；真限制：屏幕共享授权＋浏览器编码差异须明示）；JSON→Kotlin 观察项晋升建议待命（`kotlin` 0 命中复测；json_to_types 扩展；小难度）；**退租验房照片配对 PDF 新观察项**（dev.to MoveRecord；`验房`／`退租` 0 命中；方向 caveat 由 PM 裁定；低优先）；本轮新信号 ~17 项中：立项/晋升建议 3 项（简繁互转／在线录屏工具／JSON→Kotlin），其余全部消解或被已交付覆盖（V2EX 5 项：自媒体获客四工具 插件+付费／Zipover 桌面程序／餐厅邮件营销 需后端／protohub 需后端／OpenI 算力社区；dev.to：TourLedger/StatementLens/RoomProrate 按 10-18 方向修正消解；Medium：SyncWhen 需后端／SortaSeat/ OldRoll/StitchCraft 被已交付覆盖／urPiano 非工具口径／llmspeed 非核心；中文全网：懒大王 6 工具中 4 项已覆盖（PDF 工具箱／图片压缩／图表／文字转语音），临时邮箱需后端）；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 244 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 网址批量打开工具 | 已交付划出（a527bf4 新增；粘贴多行网址→逐行校验→预览勾选+去重→一键分批打开；node 测试 72 断言全过；旧测试断言 243→244 同步；全量 244 Path；候选池划出） | — | 已实现 |
+| 简繁互转 | 递补 P2 顺位首席（169 轮新观察项；`简繁`／`繁简` 0 命中复测；简体↔繁体＋台湾/香港用词差异；内置词典纯前端小难度；文本工具簇补位） | 小 | P2（留池） |
+| 在线录屏工具 | 新观察项→建议晋升第二顺位（懒大王导航 10-27 独立信号；`MediaRecorder`／`屏幕录制` 0 命中复测（`录屏` 仅 gif_compress 说明文字，口径不重叠）；getDisplayMedia＋MediaRecorder 纯前端；多媒体簇补位；真限制：屏幕共享授权＋浏览器编码差异须明示） | 中 | 观察→P2（建议） |
+| JSON→Kotlin | 观察项晋升建议待命（minitool.io 10-30 第二独立信号；`kotlin` 0 命中复测；json_to_types 仅 TS/Go 扩展；纯前端小难度） | 小 | 观察（待命） |
+| 退租验房照片配对 PDF | 172 轮新观察项（dev.to MoveRecord 信号；`验房`／`退租` 0 命中；浏览器内重绘去 EXIF＋A4 PDF 报告，中难度；**生活场景口径，10-18 方向修正下由 PM 裁定**） | 中 | 观察（低优先） |
+| 一键图片去背景 | 165 轮新观察项（tubox 第五独立信号＋ONNX 按需懒加载生产级缓解证据；模型托管与首屏体验仍需预研验证，低优先；与证件照换底口径不重叠） | 大 | 观察（低优先） |
+| 视频转码/压缩器 | 166 轮新观察项（ffmpeg.wasm ~30MB 硬伤，低优先；与 video-frame-extractor 帧提取口径不重叠） | 大 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十二轮——网址批量打开工具交付闭环（a527bf4，`/tools/batch-url-opener` 已注册，全量 244 Path），候选池划出；**简繁互转递补 P2 顺位首席**（169 轮新观察项；`简繁`／`繁简` 三处 0 命中复测确认；小难度）；**在线录屏工具**（懒大王导航 10-27 独立信号，`MediaRecorder`／`屏幕录制` 0 命中复测确认；getDisplayMedia＋MediaRecorder 纯前端中难度；建议晋升第二顺位）；JSON→Kotlin 观察项晋升建议待命（`kotlin` 0 命中复测）；**退租验房照片配对 PDF 新观察项**（dev.to MoveRecord；`验房`／`退租` 0 命中；方向 caveat 由 PM 裁定；低优先）；本轮消解 ~14 项（V2EX：自媒体获客四工具 插件+付费／Zipover 桌面程序／餐厅邮件营销 需后端／protohub 需后端／OpenI 算力社区；dev.to：TourLedger/StatementLens/RoomProrate 按 10-18 方向修正消解；Medium：SyncWhen 需后端／SortaSeat/OldRoll/StitchCraft 被已交付覆盖／urPiano 非工具口径／llmspeed 非核心；中文全网：懒大王 6 工具中 4 项已覆盖（PDF 工具箱／图片压缩／图表／文字转语音），临时邮箱需后端）；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 a527bf4（网址批量打开工具新增）／a4a1484（违禁词检测器新增）／48da6fe（上线检查清单新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **244**；Top3 候选重叠复核（`batch_url_opener` 已交付划出；`简繁`／`繁简` 三处 0 命中；`MediaRecorder`／`屏幕录制`／`在线录制` 三处 0 命中（`录屏` 仅 gif_compress 说明文字，口径不重叠）；`kotlin` 仅 resume_checker.js 技能标签无关命中；`验房`／`退租` 三处 0 命中；一键图片去背景 tubox 第五独立信号＋ONNX 缓解证据保持低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-31 13:00 · PM 排期决策轮，接 13:00 通用调研第一百七十一轮）
 
 **选定：网址批量打开工具** — 本轮唯一任务（新工具）。

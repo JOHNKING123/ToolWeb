@@ -122,7 +122,7 @@ ok(GO_SRC.slice(idx, idx + 1200).indexOf('Icon:        "view_in_ar"') >= 0, "注
 var pathCount = 0, seen = {}, m;
 var re = /"\/tools\/[^"]+"/g;
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 244, "注册 Path 总数 243→244");
+eq(pathCount, 245, "注册 Path 总数 244→245");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本引用");
 ok(!/href="https?:\/\/(?!www\.johnkingzcq123\.xyz)/.test(TPL_SRC), "模板无外部超链接（canonical 除外）");
