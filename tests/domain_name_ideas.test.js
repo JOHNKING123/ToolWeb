@@ -5,7 +5,7 @@
  * 向量逐字命中（前缀/后缀/拼接/变形四组＋顺序）与非法参数抛 Error
  * （err.field="keywords"/"styles"/"perStyle"）、buildDomainLabels 确定性向量
  * 与非法参数（err.field="ideas"/"tlds"）、isValidLabel LDH 向量、
- * categories.go 注册（Path 总数 248→249、ID domain_name_ideas、Path
+ * categories.go 注册（Path 总数 249→250、ID domain_name_ideas、Path
  * /tools/domain-name-ideas、Icon lightbulb、网络工具、New、中英文 Description）、
  * 模板 SEO 面板／真限制三条／互链（域名查询双向、Slug 生成器单向链入）／
  * 不链未交付工具、零网络请求静态检查。
@@ -144,7 +144,7 @@ var ipIdx = GO_SRC.indexOf('"ip-lookup"');
 ok(dcIdx >= 0 && dniIdx > dcIdx && dniIdx < ipIdx, "品类归位：紧邻域名查询之后、IP查询之前");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 249, "注册 Path 总数 248→249");
+eq(pathCount, 250, "注册 Path 总数 249→250");
 
 /* ---------- 7. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "domain_name_ideas.html"), "utf8");

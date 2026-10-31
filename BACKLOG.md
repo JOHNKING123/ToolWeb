@@ -1,3 +1,86 @@
+## 今日任务（2026-11-01 01:42 · PM 选定轮，接 179 轮通用调研）
+
+**选定：社媒标题/简介生成器（social_title_generator）** — 本轮唯一任务（新工具）。
+- **顺位**：179 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；打印机测试页生成器已交付 f225b10，候选池划出；简繁互转 `templates/jianfan_converter.html` 仍不存在、继续开发中，移出候选池）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`社媒标题`／`social_title` 三处 **0 命中**；`social_title_bio` 0 命中；`title_generator` 命中仅 scrolling_subtitle_generator（视频字幕口径，无关）；**ID `social_title_generator`、Path `/tools/social-title-generator`、Icon `title` 均无占用**（Icon `title` 精确值 0 占用；`fingerprint` 为 grep -i 误命中，已排除；语义贴合「标题」）。
+- **顺位递补（未硬伤）**：.env 脱敏生成器（`env 脱敏`／`env_example`／`dotenv 脱敏` 三处 0 命中复测，真缺口；env_parser 相邻口径非同一口径，178 轮已裁定）→ 第二顺位（开发中若遇交付级阻塞递补）；扫描件效果生成器（`扫描件生成`／`lookscanned`／`做扫描件`／`扫描质感` 0 命中复测，真缺口）→ 第三顺位待命。
+- **选定理由**：① **顺位即理由**——179 轮 Top3 首席，无硬伤递补；② **痛点真实**——发 YouTube/Instagram/小红书时标题简介憋不出来、瞎写没点击（FreeToolHub 04-25 单弱信号）；③ **一轮可高质量交付**——纯前端小难度：关键词＋品类→多平台标题/简介模板库组合输出＋一键复制/下载，纯函数可写逐字向量，无外部请求；④ **营销工具簇补位**——与 hashtag_generator（社媒标签生成器，e73d460）双向互链，形成「关键词→标题＋简介＋标签」一条龙（违禁词检测器/OG 社交卡片预览亦可单向链入）；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+- **品类归位**：注册到「营销工具」类目；New: true；ID `social_title_generator`、Path `/tools/social-title-generator`、Icon `title`。
+
+**规格**（开发轮按此执行）：
+- **输入**：关键词（1~3 个，必填）；目标平台多选（小红书／抖音／Instagram／YouTube，默认小红书）；语气风格单选（种草／干货／搞笑／正式，默认种草）。
+- **生成**：内置三层标题模板库（品类钩子＋平台话术＋关键词槽位），按 平台×语气 分组输出标题 3~5 条＋配套简介 1 段；每条独立一键复制；「全部复制」；下载 social-title-YYYYMMDD-HHmmss.txt。
+- **互链**：与 hashtag_generator 双向互链；单向链入 违禁词检测器、OG 社交卡片预览。
+- **真限制（页面明示）**：① 模板为通用句式组合，非爆款保证，点击率受内容质量与账号权重影响更大；② 各平台算法与限流规则变化快，模板定期可能失效；③ 简介字数按平台建议上限截断（小红书 1000 字／YouTube 5000 字等），不保证展示全量。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `normalizeKeywords(raw)` → string[]（切分/去空/去重，上限 3；空输入抛 Error，err.field="keywords"）。
+  - `pickTemplates(platform, tone)` → string[]（platform 仅 'xiaohongshu'/'douyin'/'instagram'/'youtube'，tone 仅 'plant'/'guide'/'fun'/'formal'；非法抛 Error，err.field="platform"/"tone"）。
+  - `renderTitle(tpl, keywords)` → string（槽位替换；缺槽位抛 Error，err.field="tpl"）。
+  - `buildDownloadName(dt)` → string（social-title-YYYYMMDD-HHmmss.txt 格式；非法日期抛 Error，err.field="dt"）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `normalizeKeywords(' 咖啡, 咖啡 ,拉花  ')` → `['咖啡','拉花']`。
+  - `pickTemplates('xiaohongshu','plant')` 非空数组且每条含 `{k1}` 槽位标记。
+  - `renderTitle('【{k1}】种草攻略','咖啡')` → `'【咖啡】种草攻略'`。
+  - `buildDownloadName(new Date(2026,10,1,1,42,0))` → `'social-title-20261101-014200.txt'`。
+
+**验收标准**：
+1. 关键词→平台×语气模板生成标题＋简介；每条/全部一键复制；下载 social-title-YYYYMMDD-HHmmss.txt。
+2. 纯函数契约 node 测试全过（normalizeKeywords/pickTemplates/renderTitle/buildDownloadName 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 249→250、ID/Path/Icon/Category）。
+3. 真限制在页面明示（三条：模板非爆款保证、算法变化快、简介字数截断）。
+4. `/tools/social-title-generator` 注册，「营销工具」类目，New: true；旧测试 Path 断言 249→250 同步。
+5. go build/vet 通过；本地 `/tools/social-title-generator` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与 hashtag_generator 双向互链。
+
+**预计改动文件**（5 项）：
+1. `templates/social_title_generator.html`（页面＋真限制＋平台/语气选择器＋SEO 面板）
+2. `static/js/social-title-generator.js`（标题/简介模板库＋纯函数＋复制/下载交互）
+3. `tests/social_title_generator.test.js`（node 纯逻辑测试）
+4. `tools/categories.go`（注册：ID `social_title_generator`、Path `/tools/social-title-generator`、Icon `title`、Category 营销工具、New: true）
+5. 旧测试 Path 总数断言 249→250 同步
+
+- **交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 与 FETCH_HEAD 同头 f225b10；**本轮仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例）；`ls templates/jianfan_converter.html` 不存在（简繁互转并行开发中，开发轮注意 categories.go 合并与 Path 基线 249→250 漂移）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-01 01:00 · 通用调研第一百七十九轮，接 10-31 PM 选定轮）
+
+**交付状态**：11-01 通用调研第一百七十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**打印机测试页生成器交付闭环**（f225b10 新增：A4/US Letter 双规格＋纵向/横向，canvas 按毫米精确绘制 CMYK 四通道 100% 色块＋10 级梯度条、20 级灰阶、中英文 6~18pt 文字行＋0.5/1/2pt 细线组、100mm 精确参考尺（10mm 刻度）＋整页边框对齐框＋四角定位十字；window.print() 直接打印（@media print 仅输出测试页，@page size 跟随规格）＋导出 PNG 下载；真限制三条页面明示；ID printer_test_page、Path /tools/printer-test-page、Icon print、New；纯前端零外部请求；node 测试 97 断言全过；Path **248→249**，39 个旧测试文件断言同步；go build/vet 通过，本地实测 200；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head f225b10），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：社媒标题/简介生成器→首席／.env 脱敏生成器→第二／**扫描件效果生成器→新候选晋升 P2 第三顺位**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小难度纯前端。
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 f225b10（打印机测试页生成器新增）／c455137（域名创意生成器）／e73d460（社媒标签生成器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **249**；`ls templates/printer_test_page.html` 存在；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中）；本地分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 与 FETCH_HEAD 同头 f225b10，github.com host key 已入 known_hosts；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - 打印机测试页生成器：已交付（/tools/printer-test-page，Path 248→249）——划出候选池。
+   - 社媒标题/简介生成器：`社媒标题`／`social_title` 三处 **0 命中**（本轮复测）——**递进首席**。
+   - .env 脱敏生成器：`env 脱敏`／`env_example`／`dotenv 脱敏` 三处 **0 命中**（本轮复测；env_parser 为相邻口径（解析校验 vs 脱敏生成），178 轮已裁定）——**递进第二顺位**。
+   - **扫描件效果生成器**：本轮晋升复核——`扫描件生成`／`lookscanned`／`做扫描件`／`扫描质感` 三处 **0 命中**；`扫描` 宽泛命中为 ocr_image_text（OCR 识别）、pdf_sign（签名）等无关口径；`做旧`/`老照片` 命中仅 img_retro_filter（复古照片滤镜，照片口径非文档口径）——**真缺口确凿，新候选→P2 第三顺位**（晋升理由：typefully 2026-10-31 当日发布小工具清单 curated 线索 lookscanned.io（「sign PDFs without printing and scanning」）；痛点真实：合同签字盖章页／报销凭证／入职材料要求交"扫描件"，只有电子版时打印-签字-扫描流程麻烦；纯前端小难度：图片→canvas 扫描质感（纸张噪点＋灰度对比＋轻微倾斜＋边缘阴影）→PNG 导出，纯函数可写逐字向量；办公/文档工具簇补位（pdf_sign/pdf_annotate 同簇联动「签字→做扫描件」）；真限制：视觉模拟非真实扫描、噪点图不适合 OCR 场景，须明示）。
+3. 新信号扫描（typefully 10-31 当日清单＋V2EX＋HN 为本轮主线）：**新候选 1 项（扫描件效果生成器），新消解 4 项，其余全部确认消解**——
+   - **typefully 小工具清单**（Yury Molodtsov，2026-10-31 发布，极新鲜）：Redacted（截图涂抹）→站内 img_mosaic（图片打码：框选马赛克/高斯模糊）＋image_annotator（图片标注：箭头/马赛克）已交付覆盖，消解；TweetPics（社交美图边框）→站内「截图美化」(screenshot beautifier：纯色/135°渐变背景＋内边距＋圆角＋阴影）已交付覆盖，消解；Quick Reviews（影评书评分享卡片）→121 轮观察项「文字转图片卡片」口径重合，观察保持；**Look Scanned→新候选「扫描件效果生成器」**；其余（Photopea 重型编辑器／iLovePDF 需后端／OnlineOCR 需服务端／FreeConvert 需后端／Tally 表单需后端／JustPaste 富文本发布需后端／Replier 需 AI／Adobe Color 已有覆盖／The.Rip 需 API／Hemingway 需 AI／ForwardEmail 需后端）均为非单页口径或已有覆盖，消解；
+   - V2EX：t/1253201 自媒体获客四工具（10-30；174 轮已消解，确认消解）／t/1252493 xGoose（~10-29；Chrome 插件＋需登录＋AI 额度，178 轮已消解，确认消解）／t/1250522 protohub（10-21；需注册＋后端，177 轮已消解，确认消解）／t/1252552 tubox（10-28；177 轮已消解，信号已转化，确认消解）／t/1246569 外链清单（~10-10；178 轮已消解，确认消解）／**t/1248172 在线简历生成器（10-12；新消解：`简历`/`resume` 三处命中 templates/resume_builder.html＋static/js/resume_builder.js＋categories.go 注册，站内已交付覆盖）**；
+   - HN Show HN：Sphinx（178 轮已消解：AI API＋npm 非单页口径，确认消解）／WebMex（浏览器分屏平铺；iframe 嵌入限制硬伤，非单页工具口径，消解）／Ledge.sh（需真实 shell/SSH 服务端，非单页口径，消解）／ToolMateX（工具站集合帖，非单工具信号，消解）；
+   - 英文榜单（techtippr/otechworld/doitfree/nexatools 2026 榜单）：PDF 压缩/合并/拆分、二维码、密码生成、大小写转换、Base64、Hash、JWT 解码——站内均已交付覆盖，消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **社媒标题/简介生成器** — 递进首席（FreeToolHub 04-25 单弱信号；本轮 `社媒标题`/`social_title` 三处 0 命中复测真缺口；痛点：发 YouTube/Instagram/小红书时标题简介憋不出来、瞎写没点击；关键词→平台化标题/简介模板＋一键复制，纯前端小难度；营销工具簇补位（hashtag_generator 已交付，同簇联动「关键词→标签＋标题＋简介」）；真限制：模板为通用句式非爆款保证、平台算法变化快，须明示）。
+2. **.env 脱敏生成器** — 递进第二顺位（DevsTools 榜单单信号；本轮 `env 脱敏`/`env_example` 三处 0 命中复测真缺口（env_parser 为相邻口径非同一口径，178 轮已裁定）；痛点：提交代码/写部署文档时需要把 .env 脱敏成 .env.example 分享，手动操作容易漏 key 或改错格式；逐行解析→KEY 保留、值清空/占位符→输出 .env.example＋一键复制/下载，纯前端小难度；开发工具簇补位（与 env_parser／prompt_sanitizer／project_to_txt 同簇）；真限制：无法判断密钥有效性、仅做格式脱敏，须明示）。
+3. **扫描件效果生成器** — 新候选晋升第三顺位（typefully 2026-10-31 当日清单 curated 线索 lookscanned.io；本轮 `扫描件生成`/`lookscanned`/`做扫描件` 三处 0 命中真缺口；痛点：合同签字盖章页／报销凭证／入职材料要求交"扫描件"，只有电子版时打印-签字-扫描流程麻烦；上传图片→扫描质感（纸张噪点＋灰度对比曲线＋轻微倾斜＋边缘阴影，可调强度）→PNG 导出，纯前端小难度（canvas 像素处理纯函数可写逐字向量）；办公/文档工具簇补位（与 pdf_sign「电子签名」／pdf_annotate 同簇联动「签完字→一键做扫描件」）；真限制：视觉模拟非真实扫描、加噪点后不适合 OCR 场景，须明示）。
+
+其余观察项保持原状：**高精度计算器 BigNumber（177 轮新弱观察**，DevsTools 榜单单信号；`bignumber`/`高精度` 0 命中真缺口；JS 浮点精度痛点如 0.1+0.2；本地 decimal 实现纯前端小难度；**用户 10-18 方向修正（不扩泛财务/计算器类）口径风险**，低优先保持）／AI 图片超分（177 轮新弱观察，tubox 10-28 单信号；ONNX 模型硬伤同类，低优先）／Docker Compose→K8s YAML（177 轮新弱观察，DevsTools 榜单单信号；docker_run_to_compose 相邻口径；低优先）／LLM Token 成本估算（177 轮新观察：ai_token_counter 增强备选；低优先）／一键图片去背景（165 轮；tubox 第八信号；ONNX 硬伤未解低优先保持）／浏览器 GPU 性能测试（175 轮观察项；受众偏窄，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片（121 轮；**本轮 Quick Reviews 信号口径重合**，观察保持）／负片图像还原（174 轮观察备选）／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百七十九轮：打印机测试页生成器交付闭环（f225b10；`/tools/printer-test-page` 已注册；Path 248→249；node 97 断言全过；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head f225b10），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：社媒标题/简介生成器→首席／.env 脱敏生成器→第二／**扫描件效果生成器→新候选晋升 P2 第三顺位**（本轮晋升复核真缺口确凿：`扫描件生成`/`lookscanned`/`做扫描件` 0 命中；`扫描` 宽泛命中为 OCR/签名无关口径；img_retro_filter 为照片复古滤镜非文档口径；typefully 10-31 当日清单 curated 线索 lookscanned.io；纯前端小难度；办公/文档簇补位）；**本轮 fetch 成功**（按铁律加 GIT_SSH_COMMAND 后成功，本地 HEAD 与 FETCH_HEAD 同头 f225b10）；新信号扫描：typefully 10-31 当日清单（Redacted→img_mosaic/image_annotator 已交付覆盖消解／TweetPics→站内截图美化已交付覆盖消解／Quick Reviews→文字转图片卡片口径重合观察保持／Look Scanned→新候选；其余非单页口径或已有覆盖）＋V2EX 6 项（自媒体获客/xGoose/protohub/tubox/外链清单确认消解＋**简历生成器 t/1248172 新消解**：resume_builder 已交付覆盖）＋HN 4 项（Sphinx 确认消解／WebMex iframe 硬伤／Ledge 需 shell 非单页／ToolMateX 非单工具信号）＋英文榜单（PDF/二维码/密码/Base64/Hash/JWT 均已交付覆盖）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过；全量 **249 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 打印机测试页生成器 | 已交付划出（f225b10 新增：A4/US Letter 双规格＋纵向/横向，canvas 按毫米精确绘制 CMYK 四通道 100% 色块＋10 级梯度条、20 级灰阶、中英文 6~18pt 文字行＋0.5/1/2pt 细线组、100mm 精确参考尺＋整页边框对齐框＋四角定位十字；window.print() 直接打印＋导出 PNG 下载；真限制三条页面明示；node 97 断言全过；`/tools/printer-test-page` 已注册；Path 248→249；39 个旧测试文件断言同步；go build/vet 通过；本地实测 200；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head f225b10；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 社媒标题/简介生成器 | 递进首席（FreeToolHub 04-25 单弱信号；本轮 `社媒标题`/`social_title` 0 命中复测真缺口；关键词→平台化标题/简介模板＋一键复制；纯前端小难度；营销工具簇补位（hashtag_generator 已交付，同簇联动）；真限制：模板非爆款保证须明示） | 小 | P2（留池） |
+| .env 脱敏生成器 | 递进第二顺位（DevsTools 榜单单信号；本轮 `env 脱敏`/`env_example` 0 命中复测真缺口；env_parser 为相邻口径（解析校验 vs 脱敏生成），178 轮已裁定；.env→.env.example（KEY 保留、值清空/占位符）＋一键复制/下载；纯前端小难度；开发工具簇补位（env_parser/prompt_sanitizer/project_to_txt）；真限制：无法判断密钥有效性须明示） | 小 | P2（留池） |
+| 扫描件效果生成器 | 179 轮新候选晋升 P2 第三顺位（typefully 2026-10-31 当日清单 curated 线索 lookscanned.io；本轮 `扫描件生成`/`lookscanned`/`做扫描件` 0 命中真缺口（`扫描` 宽泛命中为 OCR/签名无关口径；img_retro_filter 为照片滤镜非文档口径）；上传图片→扫描质感（纸张噪点＋灰度对比＋轻微倾斜＋边缘阴影，可调强度）→PNG 导出；纯前端小难度；办公/文档簇补位（pdf_sign/pdf_annotate 联动「签字→做扫描件」）；真限制：视觉模拟非真实扫描、加噪点不适合 OCR 须明示） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-01 通用调研第一百七十九轮——打印机测试页生成器交付闭环（f225b10，`/tools/printer-test-page` 已注册，全量 249 Path），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head f225b10），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：社媒标题/简介生成器→首席（`社媒标题`/`social_title` 0 命中复测）／.env 脱敏生成器→第二（`env 脱敏`/`env_example` 0 命中复测；env_parser 相邻口径已裁定）／**扫描件效果生成器→新候选晋升 P2 第三顺位**（晋升复核真缺口确凿；typefully 10-31 当日清单 curated 线索 lookscanned.io；纯前端小难度；办公/文档簇补位）；本轮 fetch 成功（按铁律加 GIT_SSH_COMMAND，本地 HEAD 与 FETCH_HEAD 同头 f225b10）；新信号扫描：typefully 10-31 当日清单（Redacted／TweetPics 被站内已交付覆盖消解；Quick Reviews 与文字转图片卡片口径重合观察保持；Look Scanned→新候选；其余非单页口径或已有覆盖）＋V2EX 6 项（5 项确认消解＋简历生成器 t/1248172 新消解：resume_builder 已交付覆盖）＋HN 4 项（Sphinx 确认消解；WebMex iframe 硬伤；Ledge 需 shell；ToolMateX 非单工具信号）＋英文榜单（PDF/二维码/密码/Base64/Hash/JWT 均已交付覆盖）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD f225b10 与 FETCH_HEAD 同头；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 f225b10（打印机测试页生成器新增）／c455137（域名创意生成器新增）／e73d460（社媒标签生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **249**；`ls templates/printer_test_page.html` 存在；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中）；Top3 候选重叠复核（`printer_test_page`／`printer-test-page` 已交付划出；`简繁`／`繁简`：仍开发中，移出候选池；`社媒标题`／`social_title` 三处 0 命中（`title_generator` 命中仅 scrolling_subtitle_generator 滚动字幕生成器，视频字幕口径，177 轮已裁定无关）；`env 脱敏`／`env_example` 三处 0 命中（`脱敏` 命中仅 text_privacy_masker／prompt_sanitizer 无关口径，178 轮已裁定；env_parser 相邻口径非同一口径）；**扫描件效果**：`扫描件生成`／`lookscanned`／`做扫描件`／`扫描质感` 三处 0 命中（`扫描` 宽泛命中为 ocr_image_text（OCR）／pdf_sign（签名）无关口径；img_retro_filter 为照片复古滤镜非文档口径），真缺口确凿；高精度计算器 `bignumber`/`高精度` 0 命中复测（方向修正口径风险，低优先保持）；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-31 23:38 · PM 选定轮，接 178 轮通用调研）
 
 **选定：打印机测试页生成器（printer_test_page）** — 本轮唯一任务（新工具）。

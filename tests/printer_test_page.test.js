@@ -7,7 +7,7 @@
  * buildScaleTicks 确定性向量（(100,10)→[0..100 step10] 逐字）与非法参数
  * （err.field="lengthMm"/"stepMm"）、pageSizeCss 向量与非法参数
  * （err.field="paperKey"/"orientation"）、pngFileName 向量与非法参数
- * （err.field="label"/"date"）、categories.go 注册（Path 总数 248→249、
+ * （err.field="label"/"date"）、categories.go 注册（Path 总数 249→250、
  * ID printer_test_page、Path /tools/printer-test-page、Icon print、
  * 生活工具、New、中英文 Description）、模板 SEO 面板／真限制三条／
  * @media print 仅输出测试页／@page 跟随规格／window.print()／PNG 下载命名／
@@ -133,7 +133,7 @@ var cdIdx = GO_SRC.indexOf('"countdown_timer"');
 ok(cdIdx >= 0 && ptpIdx > cdIdx, "品类归位：生活工具区 countdown-timer 之后");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 249, "注册 Path 总数 248→249");
+eq(pathCount, 250, "注册 Path 总数 249→250");
 
 /* ---------- 8. 模板：SEO／真限制／打印／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "printer_test_page.html"), "utf8");

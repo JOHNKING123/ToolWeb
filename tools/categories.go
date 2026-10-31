@@ -2236,6 +2236,15 @@ func GetCategories() []Category {
 					Category:    "营销工具",
 				},
 				{
+					ID:          "social_title_generator",
+					Name:        "社媒标题/简介生成器",
+					Description: "关键词生成社媒标题＋简介：小红书/抖音/Instagram/YouTube 四平台多选×种草/干货/搞笑/正式四语气，内置三层标题模板库（品类钩子＋平台话术＋关键词槽位），每平台 5 条标题＋1 段简介，每条独立一键复制、全部复制、下载 social-title-YYYYMMDD-HHmmss.txt，纯前端本地生成不出浏览器 · Social title generator: platform×tone title & bio templates for Xiaohongshu/Douyin/Instagram/YouTube, per-title copy, copy all & download, 100% client-side",
+					Path:        "/tools/social-title-generator",
+					Icon:        "title",
+					New:         true,
+					Category:    "营销工具",
+				},
+				{
 					ID:          "robots_txt_generator",
 					Name:        "robots.txt 生成器",
 					Description: "可视化拼装 robots.txt：多 User-agent 规则组编辑器（增删组、Allow/Disallow 行），Crawl-delay 抓取延迟，Sitemap 列表，四种常用模板一键加载，实时预览输出文本，中文化基础校验（空 User-agent、路径缺前导 /、Sitemap 非 URL 中文提示），一键复制、Blob 下载 robots.txt，纯前端本地生成不出浏览器 · Robots.txt generator: multi user-agent rule groups, crawl-delay, sitemap, templates, copy & download, 100% client-side",
