@@ -7,7 +7,7 @@
  * screen-record-20261031-150000.webm）与 ext/date 非法、extensionFor webm/mp4
  * 映射与未知 mime、formatFileSize 向量、recorderTransition 状态机转移表
  * （空闲→录制→暂停→结束→空闲）与非法转移、BITRATE_LEVELS/MIME_CANDIDATES
- * 常量、categories.go 注册（Path 总数 244→245、Icon screen_record、图片处理、
+ * 常量、categories.go 注册（Path 总数 244→245、Icon screen_share、图片处理、
  * New、中英文 Description）、模板 SEO 面板／真限制四条／互链
  * （GIF 压缩优化器双向、视频帧提取器单向链入）／不链未交付工具、
  * 零网络请求静态检查。
@@ -135,7 +135,7 @@ var GO_SRC = fs.readFileSync(path.join(ROOT, "tools", "categories.go"), "utf8");
 var srIdx = GO_SRC.indexOf('"screen_recorder"');
 ok(srIdx >= 0, "注册：categories.go 含 ID screen_recorder");
 ok(GO_SRC.indexOf('"/tools/screen-recorder"') >= 0, "注册 Path /tools/screen-recorder");
-ok(GO_SRC.slice(srIdx, srIdx + 1200).indexOf('Icon:        "screen_record"') >= 0, "注册 Icon screen_record");
+ok(GO_SRC.slice(srIdx, srIdx + 1200).indexOf('Icon:        "screen_share"') >= 0, "注册 Icon screen_share");
 ok(GO_SRC.slice(srIdx, srIdx + 1200).indexOf("New:         true") >= 0, "注册 New 为 true");
 ok(GO_SRC.slice(srIdx, srIdx + 1200).indexOf('Category:    "图片处理"') >= 0, "注册 Category 为图片处理");
 ok(GO_SRC.slice(srIdx, srIdx + 2000).indexOf("screen recorder") >= 0, "Description 中英文双语（含英文）");
