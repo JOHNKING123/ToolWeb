@@ -256,6 +256,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "launch_checklist",
+					Name:        "网站上线检查清单",
+					Description: "网站上线前逐项核对：域名可达性/HTTPS 与安全/抓取与索引/性能与体验/内容合规与运维五大分类 31 项，逐项勾选＋权重（1–3）＋6 项必做阻断项标红，权重就绪得分与 80 分就绪判定（阻断全完成且总分≥80），localStorage 版本化进度持久＋一键重置，复制 Markdown 报告/下载 .md/打印，静态核对不做真实联网检测，纯前端零上传 · Website go-live checklist: 31 weighted items in 5 categories, 6 blocking must-dos, readiness score, localStorage persistence, Markdown report export, 100% client-side",
+					Path:        "/tools/launch-checklist",
+					Icon:        "checklist",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "prompt_builder",
 					Name:        "结构化提示词构建器",
 					Description: "七节表单拼装 XML 结构化系统提示词：角色/任务/上下文/约束（增删行）/输出格式/示例（增删行）/待处理输入，空节自动省略，XML 实体转义，一键复制与时间戳下载，3 组一键预设（代码评审/英文翻译/小红书文案），只做模板拼装不做 AI 优化，纯前端零上传 · Structured prompt builder: 7-section form to XML system prompt, empty sections auto-omitted, presets, copy & download, 100% client-side",

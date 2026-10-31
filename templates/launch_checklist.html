@@ -1,0 +1,187 @@
+{{define "launch_checklist"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站上线检查清单 - 上线前逐项核对/权重就绪得分/阻断项提醒（本地免费）</title>
+    <meta name="description" content="免费在线网站上线检查清单：域名可达性/HTTPS与安全/抓取与索引/性能与体验/内容合规与运维五大分类 31 项逐项勾选，权重（1-3）就绪得分，6 项必做阻断项标红＋顶部横幅提醒，localStorage 进度持久＋一键重置，复制 Markdown 报告/下载 .md/打印，全本地计算不上传。Website go-live checklist: 31 weighted items, blocking must-dos, readiness score, 100% client-side.">
+    <meta name="keywords" content="网站上线检查清单,上线检查,网站发布检查,网站验收清单,上线前检查,网站上线流程,go-live checklist,website launch checklist,pre-launch checklist,上线核对表">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/launch-checklist">
+    <meta property="og:title" content="网站上线检查清单 - 31 项逐项核对＋权重就绪得分">
+    <meta property="og:description" content="上线网站杂事多，漏一项就「能打开但搜不到」或「慢却查不出原因」：五大分类 31 项逐项勾选，权重就绪得分，6 项必做阻断项标红提醒，纯前端本地核对。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/launch-checklist">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"网站上线检查清单","description":"网站上线前逐项核对：域名可达性/HTTPS与安全/抓取与索引/性能与体验/内容合规与运维五大分类 31 项，勾选＋权重（1-3）＋6 项必做阻断项标红，权重就绪得分与 80 分就绪判定，localStorage 进度持久，复制 Markdown 报告/下载/打印；纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/launch-checklist","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .lc-wrap .container{max-width:920px;margin:auto}
+        .lc-limits{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.93rem;line-height:1.9;color:#065f46}
+        .lc-limits b{color:#047857}
+        .lc-limits ol{margin:.2rem 0;padding-left:1.2rem}
+        .lc-banner{display:flex;gap:.7rem;align-items:center;background:#fef2f2;border:2px solid #fca5a5;border-radius:.8rem;padding:.85rem 1.1rem;margin:0 0 1.2rem;font-size:1rem;color:#991b1b;font-weight:700}
+        .lc-banner .n{font-size:1.5rem}
+        .lc-score{display:flex;gap:1.4rem;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1rem;flex-wrap:wrap}
+        .lc-ring{position:relative;width:128px;height:128px;flex:none}
+        .lc-ring svg{transform:rotate(-90deg)}
+        .lc-ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .lc-ring .num b{font-size:2rem;color:#111827;line-height:1}
+        .lc-ring .num small{font-size:.75rem;color:#6b7280}
+        .lc-ready{flex:1;min-width:220px;font-size:.95rem;line-height:1.9;color:#374151}
+        .lc-ready b{display:block;font-size:1.15rem}
+        .lc-ok{color:#059669}
+        .lc-bad{color:#dc2626}
+        .lc-warn{color:#d97706}
+        .lc-bars{flex-basis:100%;border-top:1px dashed #e5e7eb;padding-top:.8rem;display:grid;gap:.45rem}
+        .lc-bar-row{display:flex;align-items:center;gap:.7rem;font-size:.88rem;color:#374151}
+        .lc-bar-name{width:7.5em;flex:none;color:#111827}
+        .lc-bar-track{flex:1;height:.55rem;background:#f3f4f6;border-radius:99px;overflow:hidden}
+        .lc-bar-track i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#059669);border-radius:99px;transition:width .25s}
+        .lc-bar-val{width:10.5em;flex:none;text-align:right;color:#6b7280;font-variant-numeric:tabular-nums}
+        .lc-cat{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;margin-bottom:.8rem;overflow:hidden}
+        .lc-cat-head{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 1.1rem;background:#f9fafb}
+        .lc-cat-head::-webkit-details-marker{display:none}
+        .lc-cat-name{font-weight:700;color:#111827;font-size:1rem}
+        .lc-cat-name::before{content:"▸";color:#9ca3af;margin-right:.4rem}
+        .lc-cat[open] .lc-cat-name::before{content:"▾"}
+        .lc-cat-meta{display:flex;align-items:center;gap:.8rem}
+        .lc-cat-count{font-size:.85rem;color:#6b7280;white-space:nowrap}
+        .lc-bar{width:120px;height:.5rem;background:#e5e7eb;border-radius:99px;overflow:hidden;display:inline-block}
+        .lc-bar i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:99px;transition:width .25s}
+        .lc-items{list-style:none;margin:0;padding:.4rem 1.1rem 1rem;display:grid;gap:.15rem}
+        .lc-item{border-bottom:1px dashed #f3f4f6;padding:.55rem 0}
+        .lc-item:last-child{border-bottom:none}
+        .lc-item.is-blocker{background:#fef2f2;border:1px solid #fecaca;border-radius:.55rem;padding:.55rem .7rem;margin:.25rem 0}
+        .lc-check{display:flex;gap:.6rem;align-items:flex-start;cursor:pointer}
+        .lc-check input{width:1.15rem;height:1.15rem;margin-top:.15rem;flex:none;accent-color:#2563eb;cursor:pointer}
+        .lc-item.is-blocker .lc-check input{accent-color:#dc2626}
+        .lc-text{color:#111827;font-size:.95rem;line-height:1.6}
+        .lc-item.is-blocker .lc-text{font-weight:700;color:#991b1b}
+        .lc-badges{display:inline-flex;gap:.35rem;margin-left:.4rem;vertical-align:middle}
+        .lc-badge{font-size:.72rem;border:1px solid #d1d5db;color:#6b7280;border-radius:99px;padding:.05rem .5rem;white-space:nowrap}
+        .lc-badge-blocker{border-color:#fca5a5;background:#fee2e2;color:#b91c1c;font-weight:700}
+        .lc-hint{font-size:.82rem;color:#9ca3af;margin:.2rem 0 0 1.75rem;line-height:1.6}
+        .lc-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1rem}
+        .lc-btn{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.55rem 1.1rem;font-size:.92rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .lc-btn:hover{background:#f3f4f6}
+        .lc-btn.primary{background:var(--primary-color);border-color:var(--primary-color);color:#fff}
+        .lc-btn.primary:hover{filter:brightness(.95)}
+        .lc-btn.danger{border-color:#fca5a5;color:#b91c1c}
+        .lc-btn.danger:hover{background:#fef2f2}
+        .lc-status{font-size:.88rem;color:#059669}
+        .lc-doc{color:#374151;line-height:1.95;font-size:.93rem}
+        .lc-doc b{color:#111827}
+        .lc-faq{line-height:2;font-size:.93rem;color:#4b5563}
+        .lc-faq b{color:#111827}
+        .lc-links{display:flex;gap:1.2rem;flex-wrap:wrap}
+        .lc-links a{color:var(--primary-color);font-size:.93rem}
+        .lc-note{font-size:.88rem;color:#6b7280;line-height:1.9}
+        @media (max-width:640px){
+            .lc-bar-name{width:5.5em}
+            .lc-bar-val{width:8.5em}
+            .lc-bar{width:70px}
+        }
+        @media print{
+            .lc-actions,.lc-limits .lc-print-hide{display:none}
+            .lc-cat{break-inside:avoid}
+            .lc-check input{appearance:none;-webkit-appearance:none;width:.9rem;height:.9rem;border:2px solid #9ca3af;border-radius:.2rem;margin-top:.25rem}
+            .lc-check input:checked{background:#111827}
+        }
+    </style>
+</head>
+<body>
+    <div>{{template "nav" .}}</div>
+    <div class="container lc-wrap">
+        <div class="tool-header">
+            <h1>网站上线检查清单</h1>
+            <p>上线网站杂事多，漏一项就「能打开但搜不到」或「慢却查不出原因」：五大分类 31 项逐项勾选，权重就绪得分＋6 项必做阻断提醒，纯前端本地核对</p>
+        </div>
+        <div class="tool-content">
+            <div class="lc-limits">
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li><b>静态核对，不做真实联网检测：</b>本清单是逐项自查＋自评打分，不会真的去解析你的 DNS、握手 TLS 或实测加载速度——DNS 解析／TLS 握手／性能实测需要后端，当前版本不提供；</li>
+                        <li><b>权重与 80 分阈值为经验参考值：</b>权重（1–3）与「阻断全完成且 ≥80 分可上线」是我们定的经验口径，不是审计标准，关键业务请按自家规范复核；</li>
+                        <li><b>进度仅保存在当前浏览器：</b>勾选进度存在本浏览器的 localStorage 里，清缓存／换浏览器即丢失，重要节点建议导出 Markdown 报告存档。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="lc-banner" id="lc-banner" style="display:none;" role="alert">
+                <span class="n" id="lc-banner-n">0</span>
+                <span>项必做阻断未完成，不建议上线——先把标红的「必做·阻断」项逐项落实。</span>
+            </div>
+
+            <div class="lc-score">
+                <div class="lc-ring" aria-label="就绪得分">
+                    <svg width="128" height="128" viewBox="0 0 128 128">
+                        <circle cx="64" cy="64" r="54" fill="none" stroke="#f3f4f6" stroke-width="12"/>
+                        <circle id="lc-ring-fg" cx="64" cy="64" r="54" fill="none" stroke="#d97706" stroke-width="12"
+                            stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="339.292"/>
+                    </svg>
+                    <div class="num"><b id="lc-score-num">0</b><small>就绪得分 / 100</small></div>
+                </div>
+                <div class="lc-ready" id="lc-ready"></div>
+                <div class="lc-bars" id="lc-bars"></div>
+            </div>
+
+            <div id="lc-list"></div>
+
+            <div class="lc-actions">
+                <button class="lc-btn primary" id="lc-copy" type="button">复制 Markdown 报告</button>
+                <button class="lc-btn" id="lc-download" type="button">下载 .md</button>
+                <button class="lc-btn" id="lc-print" type="button">打印</button>
+                <button class="lc-btn danger" id="lc-reset" type="button">重置（清空全部勾选）</button>
+                <span class="lc-status" id="lc-status"></span>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="lc-doc">
+                    <b>怎么用：</b>按五大分类逐项核对，符合的打勾——标红「必做·阻断」的是上线前必须完成的 6 项；右上角大数字是权重就绪得分（Σ权重×已勾选／Σ权重×100），分类条同步显示各分类得分。<br>
+                    <b>就绪判定：</b>6 项阻断全部完成 <b>且</b> 总分 ≥ 80 分，页面显示「✅ 就绪：可以上线」；任一阻断未完成时顶部出现红色横幅。<br>
+                    <b>进度保存：</b>勾选自动存入本浏览器 localStorage（版本化存储），刷新不丢失；换浏览器或清缓存会丢，重要节点请用「复制 Markdown 报告」或「下载 .md」存档。<br>
+                    <b>重置：</b>「重置」按钮会清空全部勾选，点击后有二次确认，确认后不可撤销。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="lc-faq">
+                    <b>这个工具会真的去检测我的网站吗？</b>不会。本工具是静态核对＋自评打分：它不会解析你的 DNS、不会握手 TLS、不会实测加载速度——需要真实联网检测的项目（如 DNS 解析／TLS 握手／性能实测）需要后端支持，当前版本不提供，页面顶部真限制条已明示。<br>
+                    <b>80 分就能上线了吗？</b>80 分是我们的经验参考值，不是审计标准。就绪判定的硬门槛其实是 6 项阻断全完成；分数帮你看出哪一类拖了后腿，关键业务请按自家上线规范复核。<br>
+                    <b>权重是怎么定的？</b>1–3 的经验权重：3 分是「漏了会出大事」（如 HTTPS 强制、摘掉 noindex），2 分是「影响体验或收录」，1 分是「最好有」。权重本身也是经验值，仅供参考。<br>
+                    <b>进度存在哪里？</b>只存在当前浏览器的 localStorage（键 toolweb.launch_checklist.v1，版本化存储），不上传、不跨浏览器同步；清缓存即失，重要节点建议导出 Markdown 存档。<br>
+                    <b>能打印出来给老板签字吗？</b>可以。点「打印」会展开全部分类、隐藏操作按钮，得到一份干净的纸质核对表；也可以先「下载 .md」归档到项目文档里。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="lc-links">
+                    <a href="/tools/csp-builder">CSP 安全头生成器（安全响应头配好了吗？用它可视化生成 CSP 配置：生成 vs 检测）</a>
+                    <a href="/tools/http-header-analyzer">HTTP 响应头分析器（上线后把线上响应头粘贴过去，检测安全头是否真实生效：生成 vs 检测）</a>
+                    <a href="/tools/robots-txt-validator">robots.txt 校验与测试器（robots.txt 写对了吗？去实际测一遍）</a>
+                    <a href="/tools/ads-txt-validator">ads.txt 校验器（有广告变现？校验广告授权声明文件语法）</a>
+                </div>
+                <p class="lc-note" style="margin-top:.6rem">分工：本清单负责上线前「逐项核对＋自评打分」，不做真实联网检测；上面四个工具负责把清单里对应的单项「实际测一遍」——核对与实测配合用。</p>
+            </div>
+
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <div class="lc-doc">
+                    <b>静态核对，不做真实联网检测：</b>清单是逐项自查＋自评打分，不会真的解析 DNS、握手 TLS 或实测性能——DNS 解析／TLS 握手／性能实测需要后端，当前版本不提供。<br>
+                    <b>权重与 80 分阈值为经验参考值：</b>权重（1–3）与「阻断全完成且 ≥80 分可上线」是经验口径，非审计标准；关键业务请按自家规范复核。<br>
+                    <b>进度仅保存在当前浏览器：</b>勾选进度只存本浏览器 localStorage（toolweb.launch_checklist.v1），清缓存／换浏览器即丢失；重要节点请导出 Markdown 报告存档。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/launch_checklist.js?v=1"></script>
+</body>
+</html>
+{{end}}
