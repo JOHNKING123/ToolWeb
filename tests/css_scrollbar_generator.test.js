@@ -146,7 +146,7 @@ ok(regBlock.indexOf("New:         true") !== -1, "注册 New: true");
 ok(regBlock.indexOf('Category:    "开发工具"') !== -1, "注册块内 Category 开发工具");
 ok(regBlock.indexOf("swap_vert") !== -1, "注册 Icon swap_vert");
 var pathCount = (GO_SRC.match(/Path:/g) || []).length;
-eq(pathCount, 218, "注册总数 217→218 Path");
+eq(pathCount, 245, "注册总数→245 Path（历史遗留陈旧断言同步）");
 ok(JS_SRC.indexOf("fetch(") === -1, "JS 零 fetch");
 ok(JS_SRC.indexOf("XMLHttpRequest") === -1, "JS 零 XHR");
 ok(TPL_SRC.indexOf("src=\"http") === -1, "模板零外部脚本");

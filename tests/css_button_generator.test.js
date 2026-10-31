@@ -202,7 +202,7 @@ ok(GO_SRC.indexOf('Category:    "开发工具"') >= 0, "开发工具品类存在
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 220, "注册 Path 总数 219→220");
+eq(Object.keys(uniq).length, 245, "注册 Path 总数→245（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf("css-button-generator") >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("只做单个按钮的完整规则块，不做整套组件库") >= 0, "真限制：只做单个按钮规则块");
 ok(TPL_SRC.indexOf("只做 hover／focus／active 三态，不做禁用态／加载态") >= 0, "真限制：只做三态");

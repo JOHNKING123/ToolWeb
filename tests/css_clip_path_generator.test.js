@@ -127,7 +127,7 @@ ok(GO_SRC.indexOf('Category:    "开发工具"') >= 0, "开发工具品类存在
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 210, "注册 Path 总数 209→210");
+eq(Object.keys(uniq).length, 245, "注册 Path 总数→245（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf("css-clip-path-generator") >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("只做 polygon／circle／ellipse／inset 四类形状，不做 SVG path() 与新 shape() 函数") >= 0, "真限制 1：四类＋不做 path/shape");
 ok(TPL_SRC.indexOf("百分比坐标系") >= 0, "真限制 2：百分比坐标系");

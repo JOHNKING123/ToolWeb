@@ -116,7 +116,7 @@ ok(GO_SRC.indexOf('ID:          "css_background_pattern_generator"') !== -1, "ca
 ok(GO_SRC.indexOf('Path:        "/tools/css-background-pattern-generator"') !== -1, "categories.go 注册 Path");
 ok(GO_SRC.indexOf('Category:    "开发工具"') !== -1, "注册 Category 为开发工具");
 var pathCount = (GO_SRC.match(/Path:\s*"\/tools\//g) || []).length;
-eq(pathCount, 221, "注册总数 220→221 Path");
+eq(pathCount, 245, "注册总数→245 Path（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf("/tools/svg-background-generator") !== -1, "模板互链 SVG 背景生成器");
 ok(TPL_SRC.indexOf("/tools/css-gradient-generator") !== -1, "模板互链 CSS 渐变生成器");
 ok(TPL_SRC.indexOf("只做纯 CSS 多渐变背景图案") !== -1, "真限制文案①可见");
