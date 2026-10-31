@@ -1,0 +1,147 @@
+{{define "batch_url_opener"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网址批量打开工具 - 多行网址一键批量打开/批量开网页 | 程序员工具箱</title>
+    <meta name="description" content="免费在线网址批量打开工具：粘贴多行网址，逐行校验合法性（缺 scheme 自动补 https://、行内 URL 抽取、无效行标行号＋原因），预览勾选＋去重＋统计，一键分批打开（每批 5 个、间隔 600ms 防卡死；弹窗拦截自动降级复制链接），复制/下载/清空/示例。纯前端本地解析，内容不出浏览器。Batch URL opener: paste URL list, per-line validation, auto https://, dedupe, batched open-all with popup-block fallback, 100% client-side.">
+    <meta name="keywords" content="网址批量打开,批量打开网页,链接批量打开,URL 批量打开,批量打开链接,多标签页批量打开,batch open URLs,open multiple links,open multiple URLs at once">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/batch-url-opener">
+    <meta property="og:title" content="网址批量打开工具 - 多行网址一键批量打开">
+    <meta property="og:description" content="粘贴网址列表，逐行校验＋去重＋预览勾选，一键分批打开；弹窗拦截自动降级复制链接。纯前端本地解析。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/batch-url-opener">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"网址批量打开工具","description":"粘贴多行网址，逐行校验合法性（缺 scheme 自动补 https://、行内 URL 抽取、无效行标行号＋原因），预览勾选＋去重＋统计，一键分批打开（每批 5 个、间隔 600ms 防卡死；弹窗拦截自动降级复制链接），复制/下载/清空/示例，纯前端本地解析不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/batch-url-opener","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .buo-wrap .container{max-width:960px;margin:0 auto;padding:1.2rem}
+        .buo-wrap .navbar .material-icons{display:none}
+        .buo-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1.1rem}
+        .buo-card h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .buo-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .buo-privacy b{color:#047857}
+        .buo-note{font-size:.85rem;color:#6b7280;line-height:1.8}
+        .buo-input{width:100%;min-height:9rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.8rem;font-size:.95rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .buo-input:focus{outline:none;border-color:var(--primary-color)}
+        .buo-stat{font-size:.95rem;color:#374151;margin:.4rem 0 .8rem;line-height:1.7}
+        .buo-stat b{color:#111827}
+        .buo-list{display:flex;flex-direction:column;gap:.4rem;max-height:22rem;overflow:auto}
+        .buo-row{display:flex;gap:.7rem;align-items:baseline;text-align:left;background:#fff;border:1px solid #e5e7eb;border-radius:.6rem;padding:.55rem .8rem;font-size:.9rem;cursor:pointer;width:100%;box-sizing:border-box}
+        .buo-row:hover{border-color:var(--primary-color)}
+        .buo-row input{flex:none;margin-top:.25rem}
+        .buo-row.buo-dup{background:#fffbeb}
+        .buo-row.buo-bad{background:#fef2f2;cursor:default}
+        .buo-url{flex:1;color:#1a0dab;word-break:break-all;line-height:1.6}
+        .buo-raw{color:#6b7280}
+        .buo-meta{flex:none;color:#6b7280;font-size:.82rem;white-space:nowrap}
+        .buo-duptag{color:#92400e}
+        .buo-empty{font-size:.9rem;color:#6b7280;line-height:1.7;margin:0}
+        .buo-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .buo-actions .btn{cursor:pointer}
+        .buo-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+        .buo-limits{font-size:.9rem;line-height:1.9;color:#374151}
+        .buo-limits li{margin-bottom:.3rem}
+        .buo-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;font-size:.9rem;padding:.6rem 1.1rem;border-radius:.6rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99;max-width:90vw}
+        .buo-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:720px){.buo-actions .btn{flex:1;justify-content:center}.buo-meta{white-space:normal}}
+    </style>
+</head>
+<body>
+    <div class="buo-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>网址批量打开工具</h1>
+            <p>粘贴多行网址，逐行校验＋去重＋预览勾选，一键分批打开；弹窗拦截自动降级复制链接。</p>
+        </div>
+        <div class="tool-content">
+            <div class="buo-privacy" role="note">
+                <div><b>隐私声明：内容不出浏览器。</b>网址列表只在当前浏览器本地解析，不上传到任何服务器，不做任何存储与记录。本页面无后端调用、无外部请求（实际打开链接本身需要联网）。</div>
+            </div>
+
+            <div class="buo-card">
+                <h3>粘贴网址列表（每行一个，实时解析）</h3>
+                <textarea id="buo-input" class="buo-input" placeholder="每行粘贴一个网址，例如：&#10;https://github.com&#10;github.com/trending&#10;去 Hacker News 看看 https://news.ycombinator.com 再回来。" aria-label="网址列表输入区"></textarea>
+                <div class="buo-actions">
+                    <button type="button" class="btn btn-primary" id="buo-example">载入示例</button>
+                    <button type="button" class="btn" id="buo-clear">清空</button>
+                </div>
+                <p class="buo-note" style="margin-top:.6rem;">支持裸域名（如 example.com，会自动补 https://）；行内杂质会自动抽取首个 URL；空行自动忽略。</p>
+            </div>
+
+            <div class="buo-card">
+                <h3>解析结果</h3>
+                <p class="buo-stat" id="buo-stat">有效 <b>0</b>　无效 <b>0</b>　重复 <b>0</b></p>
+                <div class="buo-actions" style="margin:0 0 .8rem;">
+                    <button type="button" class="btn" id="buo-check-all">全选</button>
+                    <button type="button" class="btn" id="buo-uncheck-all">全不选</button>
+                </div>
+                <h3 style="font-size:.92rem;color:#374151;">有效网址（默认全选，重复行已标出且默认不勾选）</h3>
+                <div class="buo-list" id="buo-valid-list"><p class="buo-empty">暂无有效网址：在上方粘贴网址列表后自动解析。</p></div>
+                <h3 style="font-size:.92rem;color:#374151;margin-top:1rem;">无效行（单独分组，含行号与原因）</h3>
+                <div class="buo-list" id="buo-invalid-list"><p class="buo-empty">无无效行。</p></div>
+            </div>
+
+            <div class="buo-card">
+                <h3>一键打开</h3>
+                <div class="buo-actions" style="margin-top:0;">
+                    <button type="button" class="btn btn-primary" id="buo-open-all" disabled>⚡ 一键打开全部</button>
+                    <button type="button" class="btn btn-primary" id="buo-open-selected" disabled>打开选中</button>
+                    <button type="button" class="btn" id="buo-copy" disabled>复制全部有效链接</button>
+                    <button type="button" class="btn" id="buo-download" disabled>下载 .txt</button>
+                </div>
+                <p class="buo-note" style="margin-top:.6rem;">
+                    打开策略：每批 5 个标签、批次间隔 600ms，防止浏览器一次开太多标签卡死；超过 30 个会先弹确认。<br>
+                    弹窗白名单指引：若浏览器拦截了批量弹窗，本工具会自动降级为复制全部链接；也可以点击地址栏右侧的「弹窗被拦截」图标 → 选择「始终允许本站弹出窗口和重定向」，之后一键打开即可直达。
+                </p>
+            </div>
+
+            <div class="buo-card">
+                <h3>使用说明</h3>
+                <div class="buo-note">
+                    1. 粘贴网址列表后即时解析：有效网址逐行勾选（默认全选），无效行单独分组并标出行号与原因（不支持的协议／URL 构造失败）。<br>
+                    2. 去重：同一归一化 URL 只保留首次出现，重复行会标出「重复（与第 N 行相同）」且默认不勾选，避免打开重复标签。<br>
+                    3. 「⚡ 一键打开全部」打开去重后的全部有效网址；「打开选中」只打开勾选框选中的网址。<br>
+                    4. 关键词搜社区讨论用 <a href="/tools/search-router" style="color:#1a0dab;">社区搜索聚合器</a>；手头有一堆链接要逐个核对，用网址批量打开工具（一键全开动作家族双向联动）。
+                </div>
+            </div>
+
+            <div class="buo-card">
+                <h3>常见问题</h3>
+                <div class="buo-note">
+                    <b>裸域名没写 https:// 能打开吗？</b>能。解析时会自动补全为 https:// 并标注「已自动补全 https://」；极少数只支持 http 的老站点，打开后浏览器会自动处理。<br>
+                    <b>一行里混着文字和网址怎么办？</b>会自动抽取行内首个形如 https?://… 的 URL，行末多余的，。；：！？等标点会被剥离。<br>
+                    <b>一键打开没反应？</b>浏览器拦截了批量弹窗 —— 本工具会自动降级为复制全部链接到剪贴板并 toast 提示；也可以按上方「弹窗白名单指引」把本站加入白名单。<br>
+                    <b>为什么重复的网址默认不勾选？</b>同一 URL 只保留首次出现即可打开，重复行默认不勾选是为避免打开重复标签；需要的话可以手动勾上。<br>
+                    <b>我的网址列表会上传吗？</b>不会。解析、去重、打开全部在浏览器本地完成，无任何网络请求，可断网解析（实际打开链接本身需要联网）。
+                </div>
+            </div>
+
+            <div class="buo-card">
+                <h3>相关工具</h3>
+                <div class="buo-note">
+                    <a href="/tools/search-router" style="color:#1a0dab;">社区搜索聚合器</a>（关键词一键直达 Reddit/HN/V2EX/知乎真实讨论＋一键全开，「一键全开」动作家族双向联动）
+                </div>
+            </div>
+
+            <div class="buo-card">
+                <h3>真限制说明</h3>
+                <ul class="buo-limits">
+                    <li><b>弹窗拦截须手动允许：</b>浏览器默认拦截非用户直接点击触发的批量弹窗；首次被拦截时本工具自动降级为复制全部链接＋toast 提示，要恢复一键直达需按上方指引把本站加入弹窗白名单。</li>
+                    <li><b>一次打开太多标签会卡顿：</b>每个标签页都会占用内存与 CPU，同时打开几十个标签可能导致浏览器卡顿甚至无响应；建议一次不超过 30 个，超过 30 个会先弹确认，每批 5 个、间隔 600ms 已是防卡死的折中策略。</li>
+                    <li><b>钓鱼/恶意链接请自行甄别：</b>本工具只做 URL 格式合法性校验，不做安全评级、不查黑名单；打开陌生链接前请自行确认来源可信，谨防钓鱼网站仿冒登录页窃取账号。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="buo-toast" id="buo-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/batch_url_opener.js?v=1"></script>
+</body>
+</html>
+{{end}}

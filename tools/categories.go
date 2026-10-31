@@ -912,6 +912,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "batch_url_opener",
+					Name:        "网址批量打开工具",
+					Description: "多行网址一键批量打开：粘贴网址列表→逐行校验（缺 scheme 自动补 https://、行内 URL 抽取、无效行标行号＋原因）→预览勾选＋去重＋统计→分批打开（每批 5 个、间隔 600ms 防卡死，弹窗拦截自动降级复制链接），复制/下载/清空/示例，纯前端零上传 · Batch URL opener: paste URL list, per-line validation, auto https://, dedupe, batched open-all, popup-block fallback to copy, 100% client-side",
+					Path:        "/tools/batch-url-opener",
+					Icon:        "open_in_new",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
