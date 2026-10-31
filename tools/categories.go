@@ -1152,6 +1152,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "格式转换",
 				},
+				{
+					ID:          "json_to_kotlin",
+					Name:        "JSON 转 Kotlin data class",
+					Description: "粘贴 JSON 生成 Kotlin data class：嵌套对象自动拆分、数组转 List、大整数转 Long、可空类型与 @SerializedName 注解推断，纯前端零上传 · JSON to Kotlin data class generator: nested objects, List<T>, Long, nullable types and @SerializedName, 100% client-side",
+					Path:        "/tools/json-to-kotlin",
+					Icon:        "android",
+					New:         true,
+					Category:    "格式转换",
+				},
 			},
 		},
 		{

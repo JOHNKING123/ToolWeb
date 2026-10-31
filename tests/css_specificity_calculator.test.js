@@ -97,7 +97,7 @@ ok(GO_SRC.indexOf('"css_specificity_calculator"') >= 0, "categories.go 注册 ID
 ok(GO_SRC.indexOf('"/tools/css-specificity-calculator"') >= 0, "categories.go 注册 Path");
 ok(/ID:\s+"css_specificity_calculator"[\s\S]{0,600}?Path:\s+"\/tools\/css-specificity-calculator"/.test(GO_SRC), "注册 ID 与 Path 同条目");
 ok(/Icon:\s+"leaderboard"/.test(GO_SRC), "注册 Icon leaderboard");
-ok((GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length === 245, "注册 Path 总数→245（历史遗留陈旧断言同步）");
+ok((GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length === 246, "注册 Path 总数→246（历史遗留陈旧断言同步）");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(TPL_SRC.indexOf("http://") < 0 || TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/css-specificity-calculator") >= 0, "模板无外站引用（canonical 除外）");
 ok(TPL_SRC.indexOf("/tools/css-gradient-generator") >= 0, "互链 CSS 渐变生成器");

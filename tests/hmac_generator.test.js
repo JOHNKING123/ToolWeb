@@ -100,7 +100,7 @@ async function main() {
   ok(GO_SRC.indexOf('"/tools/hmac-generator"') >= 0, "注册：Path /tools/hmac-generator 已注册");
   ok(GO_SRC.indexOf('Category:    "开发工具"') >= 0, "注册：开发工具品类存在");
   var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-  eq(new Set(paths).size, 245, "注册：Path 总数→245（历史遗留陈旧断言同步）");
+  eq(new Set(paths).size, 246, "注册：Path 总数→246（历史遗留陈旧断言同步）");
   ok(TPL_SRC.indexOf("仅调试用") >= 0 && TPL_SRC.indexOf("勿贴真实生产密钥") >= 0, "真限制：仅调试用、勿贴真实生产密钥页面可见");
   ok(TPL_SRC.indexOf("HMAC 不是加密") >= 0, "真限制：HMAC 不是加密页面可见");
   ok(TPL_SRC.indexOf("不做文件 HMAC") >= 0, "真限制：不做文件 HMAC 页面可见");

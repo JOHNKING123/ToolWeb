@@ -99,7 +99,7 @@ ok(GO_SRC.indexOf('Category:    "开发工具"') >= 0, "开发工具品类存在
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 245, "注册 Path 总数→245（历史遗留陈旧断言同步）");
+eq(Object.keys(uniq).length, 246, "注册 Path 总数→246（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf('css-shadow-radius-generator') >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("请按需改写") >= 0, "模板含请按需改写提示");
 ok(TPL_SRC.indexOf("预览以当前浏览器渲染为准") >= 0, "真限制：预览以当前浏览器渲染为准");

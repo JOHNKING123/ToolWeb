@@ -2,7 +2,7 @@
  * node tests/slug_generator.test.js
  * 覆盖：规格确定性向量逐值命中（slugify 四向量、分隔符/maxLength/拼音开关选项、
  * batchSlugs 批量、非法参数抛 Error 的 err.field）、拼音字表首屏延迟加载、
- * 两组示例结构、categories.go 注册（Path 总数 244→245）与零网络请求静态检查、
+ * 两组示例结构、categories.go 注册（Path 总数 246→246）与零网络请求静态检查、
  * 模板真限制三条、与 OG 社交卡片预览双向互链、与 URL 编码/解码单向链入、
  * Description 中英文双语、不链未交付工具。
  */
@@ -107,7 +107,7 @@ ok(ogIdx >= 0 && slugIdx > ogIdx, "注册紧邻 og_card_preview 之后（互链�
 ok(GO_SRC.indexOf("URL slug generator") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 245, "注册 Path 总数 244→245");
+eq(pathCount, 246, "注册 Path 总数 246→246");
 
 /* ---------- 7. 模板：真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/slug-generator", "模板 canonical 含新 Path");

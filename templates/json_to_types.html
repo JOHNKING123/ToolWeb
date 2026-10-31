@@ -84,7 +84,8 @@
                 <div class="jtt-tip">
                     <b>怎么用：</b>把接口返回的 JSON 粘贴到左侧（或点「填充示例」），右侧即刻生成 TypeScript interface 与 Go struct，切换 Tab 查看，根类型名可自定义。<br>
                     <b>推断规则：</b>嵌套对象拆分为按路径 PascalCase 命名的独立类型（如 address → RootAddress）；对象数组合并全部元素取字段并集，部分元素缺失的字段推断为可选（TS <code>?</code> / Go <code>,omitempty</code>）；混合类型数组生成 TS 联合类型、Go <code>[]interface{}</code>；空数组为 <code>unknown[]</code> / <code>[]interface{}</code>；null 并入 TS 联合、Go 用 <code>interface{}</code>。<br>
-                    <b>隐私：</b>纯前端本地处理，JSON 只在你的浏览器里流转，不上传服务器。
+                    <b>隐私：</b>纯前端本地处理，JSON 只在你的浏览器里流转，不上传服务器。<br>
+                    需要 Kotlin data class？用 <a href="/tools/json-to-kotlin" style="color:#1a0dab;">JSON 转 Kotlin data class</a>（嵌套拆分、List/Long 推断、@SerializedName 注解、可空类型）。
                 </div>
             </div>
         </div>

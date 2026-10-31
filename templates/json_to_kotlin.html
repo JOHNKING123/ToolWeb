@@ -1,0 +1,121 @@
+{{define "json_to_kotlin"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 转 Kotlin data class - JSON 生成 Kotlin 在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSON 转 Kotlin data class 工具：粘贴 JSON 自动生成 Kotlin data class，嵌套对象自动拆分、数组转 List、大整数转 Long、可空类型与 @SerializedName 注解推断，纯前端本地处理不上传。JSON to Kotlin data class generator: nested objects, List types, Long, nullable types and @SerializedName, 100% client-side.">
+    <meta name="keywords" content="JSON转Kotlin,Kotlin data class生成,json to kotlin,kotlin data class generator,android开发工具,JSON生成Kotlin,SerializedName">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-to-kotlin">
+    <meta property="og:title" content="JSON 转 Kotlin data class - JSON 生成 Kotlin 在线工具">
+    <meta property="og:description" content="粘贴 JSON 一键生成 Kotlin data class：嵌套对象自动拆分、数组转 List、大整数转 Long、可空类型与 @SerializedName 注解推断，纯前端本地处理，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/json-to-kotlin">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON 转 Kotlin data class","description":"免费在线 JSON 转 Kotlin data class 工具：粘贴 JSON 自动生成 Kotlin data class，嵌套对象自动拆分、数组转 List、大整数转 Long、可空类型与 @SerializedName 注解推断，纯前端本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/json-to-kotlin","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .jk-layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+        .jk-pane h3{margin-bottom:.6rem}
+        .jk-textarea{width:100%;min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.6;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .jk-output{width:100%;min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.6;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;box-sizing:border-box;background:#0f172a;color:#e2e8f0;overflow:auto;white-space:pre;margin:0}
+        .jk-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0;align-items:center}
+        .jk-toolbar .btn .material-icons{font-size:1.05rem;vertical-align:-3px;margin-right:.2rem}
+        .jk-error{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:.5rem;padding:.6rem .9rem;font-size:.9rem;margin:.6rem 0;word-break:break-all}
+        .jk-opt-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin:.6rem 0 .2rem;font-size:.95rem;color:#374151}
+        .jk-root-input{padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.95rem;width:180px;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .jk-check{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+        .jk-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .jk-tip b{color:#111827}
+        .jk-note{color:#6b7280;font-size:.88rem;margin-top:.5rem;line-height:1.7}
+        .jk-limits{color:#374151;line-height:1.9;font-size:.95rem;margin:.2rem 0 0;padding-left:1.2rem}
+        .jk-limits b{color:#111827}
+        @media (max-width:768px){
+            .jk-layout{grid-template-columns:1fr}
+            .jk-textarea,.jk-output{min-height:240px}
+            .jk-toolbar .btn{flex:1 1 42%;justify-content:center}
+            .jk-root-input{flex:1;width:auto}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">android</i> JSON 转 Kotlin data class</h1>
+            <p>粘贴 JSON 自动生成 Kotlin data class（含 @SerializedName 注解与可空类型推断），JSON 仅在浏览器本地处理，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:1140px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="jk-opt-row">
+                    <label for="jk-root">根类名：</label>
+                    <input id="jk-root" class="jk-root-input" type="text" value="Root" spellcheck="false" aria-label="根类名">
+                    <label class="jk-check" for="jk-annot"><input type="checkbox" id="jk-annot" checked> @SerializedName 注解</label>
+                    <label class="jk-check" for="jk-nullable"><input type="checkbox" id="jk-nullable" checked> 可空类型推断</label>
+                </div>
+                <div class="jk-layout">
+                    <div class="jk-pane">
+                        <h3>JSON 输入</h3>
+                        <textarea id="jk-input" class="jk-textarea" placeholder="在此粘贴 JSON，例如：&#10;{&#10;  &quot;user_name&quot;: &quot;zhangsan&quot;,&#10;  &quot;age&quot;: 28&#10;}" spellcheck="false" aria-label="JSON 输入"></textarea>
+                        <div class="jk-error" id="jk-error" role="alert"></div>
+                        <div class="jk-toolbar">
+                            <button class="btn btn-primary" id="jk-sample"><i class="material-icons">data_object</i> 填充示例</button>
+                            <button class="btn btn-secondary" id="jk-format"><i class="material-icons">format_align_left</i> 格式化</button>
+                            <button class="btn btn-secondary" id="jk-clear"><i class="material-icons">clear</i> 清空</button>
+                        </div>
+                    </div>
+                    <div class="jk-pane">
+                        <h3>生成结果</h3>
+                        <pre class="jk-output" id="jk-output" aria-label="生成结果"></pre>
+                        <div class="jk-toolbar">
+                            <button class="btn btn-primary" id="jk-copy"><i class="material-icons">content_copy</i> 复制结果</button>
+                            <button class="btn btn-secondary" id="jk-download"><i class="material-icons">download</i> 下载 .kt 文件</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="jk-note">本地处理不上传：全部推断在你的浏览器内完成，JSON 不会发送到任何服务器。输入时实时生成（防抖），下载文件名为「根类名.kt」。还需要 TS/Go 版本？用 <a href="/tools/json-to-types" style="color:#1a0dab;">JSON 转 TypeScript / Go 结构体</a>。JSON 格式有疑问？先用 <a href="/tools/json-parser" style="color:#1a0dab;">JSON 解析器</a>校验格式化。</div>
+            </div>
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="jk-tip">
+                    <b>怎么用：</b>把接口返回的 JSON 粘贴到左侧（或点「填充示例」），右侧即刻生成 Kotlin data class；根类名可自定义，两个开关控制注解与可空推断。<br>
+                    <b>推断规则：</b>嵌套对象自动拆分为独立 data class（根类在前、按首次出现顺序；同名冲突依次追加 2、3…）；数组→<code>List&lt;T&gt;</code>；空数组→<code>List&lt;Any&gt;</code>；超出 Int 范围的整数→<code>Long</code>；浮点→<code>Double</code>；样本值为 null 的字段→<code>Any?</code>（关闭可空开关则为 <code>Any</code>）；属性名自动转 camelCase，<b>仅当 JSON key 与属性名不一致时才输出 <code>@SerializedName("key")</code></b>（key 相同时不冗余）；一旦用了注解会自动加上 <code>import com.google.gson.annotations.SerializedName</code>。<br>
+                    <b>隐私：</b>纯前端本地处理，JSON 只在你的浏览器里流转，不上传服务器。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="jk-tip">
+                    <b>生成的类名可以改吗？</b>可以，顶部「根类名」输入框改名后输出实时刷新；嵌套类名由其 JSON key 自动转 PascalCase。<br>
+                    <b>为什么 null 字段变成了 Any?？</b>样本驱动推断：样本里是 null 就无法知道真实类型，只能退为 <code>Any?</code>，请对照实际 API 文档把类型改具体（见下方真限制①）。<br>
+                    <b>注解开关有什么用？</b>默认开启：当 JSON key（如 <code>user_name</code>）与 camelCase 属性名不一致时自动加 <code>@SerializedName</code>，Gson 反序列化才能对上字段；关闭则只输出纯 data class。<br>
+                    <b>下载的文件名是什么？</b>「根类名.kt」，例如根类名 User 就下载 <code>User.kt</code>。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="jk-note">
+                    <a href="/tools/json-to-types" style="color:#1a0dab;">JSON 转 TypeScript / Go 结构体</a>（还需要 TS/Go 版本？双向互链）<br>
+                    <a href="/tools/json-parser" style="color:#1a0dab;">JSON 解析器</a>（JSON 格式有疑问？先校验格式化）
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <ul class="jk-limits">
+                    <li><b>样本驱动推断，请对照 API 文档校对：</b>样本中为 null 的字段只能退为 <code>Any?</code>、空数组只能退为 <code>List&lt;Any&gt;</code>，工具无法凭空知道真实类型，生成后请按实际接口文档把类型改具体。</li>
+                    <li><b>复杂结构需人工调整：</b>嵌套泛型、密封类（sealed class）、多态反序列化等超出样本推断能力的结构，生成结果仅作起点，需手动改写。</li>
+                    <li><b>@SerializedName 面向 Gson：</b>注解与 import 均按 Gson（com.google.gson）生成；使用 Moshi / kotlinx.serialization 的用户请自行替换为对应注解。</li>
+                    <li><b>零上传、全部本地：</b>推断与生成全在当前浏览器内完成，JSON 不上传任何服务器；本页面不发起任何外部网络请求。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/json-to-kotlin.js?v=1"></script>
+</body>
+</html>
+{{end}}
