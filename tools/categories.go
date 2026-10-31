@@ -2251,6 +2251,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "ratio_solver",
+					Name:        "比例求解器",
+					Description: "a:b=c:d 已知三项求一项：交叉相乘 ad=bc 任意求解方向，小数+约分分数双显示，GCD 化简最简整数比，16:9/4:3/1:1/3:2/A4/黄金比例一键预设，即时计算+一键复制，全本地计算 · Proportion solver (a:b=c:d): cross-multiplication solve, decimal + reduced fraction display, simplest integer ratio via GCD, common-ratio presets, 100% client-side",
+					Path:        "/tools/ratio-solver",
+					Icon:        "balance",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

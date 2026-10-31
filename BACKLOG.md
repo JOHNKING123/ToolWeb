@@ -1,3 +1,95 @@
+## 今日任务（2026-10-31 07:00 · PM 排期决策轮，接 07:36 通用调研第一百六十八轮）
+
+**选定：比例求解器** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（168 轮）Top3 **顺位首席**（167 轮建议第二顺位递补上来的 P2 顺位首席；160 轮留池项）→ **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例）。
+- **PM 独立零重叠实测（163 轮误判教训：必须 grep 模板＋static/js＋categories.go 三处）**：`ratio_solver`／`比例求解` 三处 **0 命中**真缺口；网站上线检查清单（`launch_checklist`／`上线检查`／`检查清单`）三处 0 命中维持第二顺位待命；网址批量打开工具（`批量打开` 三处仅命中 `search_router`「社区搜索聚合器」：搜索路由口径，与「粘贴任意网址一键打开」口径不重叠、但同为「一键全开」机制——PM 裁定：本轮按顺位递进不跳级，维持第三顺位待命，待 比例求解器 交付后按惯例递补）。一键图片去背景（ONNX ~40MB）／视频转码（ffmpeg.wasm ~30MB）硬伤未解继续低优先观察。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——a:b=c:d 已知三求一、配方/图纸/模型缩放换算心算易错；③ **一轮可高质量交付**——纯前端小难度：纯函数确定性计算，可写逐字向量供 node 断言；④ **数学工具簇补位**——与「算术题生成器」同学习工具品类簇内互链；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「学习工具」品类（与 math_worksheet_generator「算术题生成器」同品类，数学簇互链顺手）；New: true；Icon `balance`（实测 Icon 口径 **0 占用**；备选 `percent` 实测 0 占用）。
+
+**规格**（开发轮按此执行）：
+- **a:b=c:d 求解**：四项输入框（a、b、c、d），一键标记求解项（空一项）→ 交叉相乘求解（ad=bc，求解方向任意）→ 结果双显示（分数约分＋小数，可设精度）→ 比例化简（GCD 约分，显示最简整数比）→ 即时计算（debounce）＋ 一键复制结果；附「仅线性比例」真限制提示条。
+- **常用比例预设**：16:9／4:3／1:1／3:2／A4（1:√2）／黄金比例（1:1.618）——点预设填入 a:b，剩余两项由用户输入后自动求解。
+- **应用场景提示**：设计图缩放（已知宽高比+一侧尺寸）、配方配料、模型比例尺——界面给一句中文场景引导。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `solveRatio(a,b,c,d)` → `{a,b,c,d}` 完整四项（求解项允许传入 null/undefined，恰空一项；三项空/两项空/非数字/除零 抛 Error，err.field 指向缺失/非法字段名）。
+  - `simplifyRatio(a,b)` → `"x:y"` 最简整数比字符串（GCD 约分；a≤0 或 b≤0 抛 Error，err.field）。
+  - `parseRatio(text)` → `{a,b}`（解析 "16:9"／"16 : 9"；非法格式抛 Error，err.field="input"）。
+  - `PRESETS` 常量表（预设名→a:b，供界面按钮与向量断言）。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `solveRatio(3,4,null,8)` → d = 4×8/3 = 10.666…（精度默认 4 位小数 → `10.6667`）。
+  - `solveRatio(16,9,1080,null)` → d = 9×1080/16 = 607.5（16:9 已知宽 1080 求高）。
+  - `solveRatio(1920,null,16,9)` → b = 16×1920/9 ≈ 3413.3333。
+  - `simplifyRatio(1920,1080)` → `"16:9"`；`simplifyRatio(16,24)` → `"2:3"`；`simplifyRatio(0,5)` 抛 Error（err.field 指向参数）。
+  - `parseRatio("16:9")` → `{a:16,b:9}`；`parseRatio("abc")` 抛 Error（err.field="input"）。
+  - `solveRatio(null,null,16,9)` 抛 Error（err.field 非空）；`solveRatio(0,0,16,9)` 抛 Error（除零）。
+- **界面**：可视化 a:b=c:d 四项输入区（求解项一键标记）＋ 常用预设按钮组 ＋ 精度选项 ＋ 结果区（小数＋约分分数＋最简比三行）＋ 示例一键填充（配方/设计图各一组）＋ 一键复制 ＋ 真限制提示条；所有提示中文。
+- **操作与互链**：与「算术题生成器」（文案：学会了比例？去算术题生成器出题练手）**双向**互链；与「单位换算器」**单向链入**（文案：需要长度/重量等复合单位换算？）——同时作为真限制①的口径边界；不与未交付工具（网站上线检查清单／网址批量打开工具尚未交付）互链。
+- **技术路线**：纯前端；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `ratio_solver`、Name「比例求解器」、Path `/tools/ratio-solver`、Category 学习工具、New: true、Icon `balance`（备选 `percent`）；中英文描述＋SEO keywords（比例求解器、比例计算、a:b=c:d、交叉相乘、比例换算、ratio solver、proportion calculator、16:9 换算）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/ratio-solver，相关工具互链 算术题生成器＋单位换算器。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 仅处理线性比例关系 a:b=c:d，不做复合单位换算（米→英寸等请用单位换算器）；② 预设比例为近似值（A4 取 1:1.4142、黄金比例取 1.618），工程精确值请手动输入；③ 全部本地计算，输入内容不出浏览器。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path **240→241**；所有含 Path 总数断言的旧测试文件同步（以 `grep -n '240' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：solveRatio／simplifyRatio／parseRatio 确定性向量逐值命中（四个求解方向交叉相乘、分数约分、GCD 化简、预设常量表、精度控制）；非法参数抛 Error（err.field）。
+3. 本地实测 `/tools/ratio-solver` 200；输入样例 → 结果与向量一致（16:9 预设＋宽 1080 → 高 607.5；1920:1080 化简 16:9）；两组示例一键填充正确；一键复制可用。
+4. 与 算术题生成器 双向互链（学习工具数学簇文案），与 单位换算器 单向链入（真限制口径边界文案），不链未交付工具；categories.go Description 中英文双语。
+5. 真限制三条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/ratio_solver.html`（新增）
+- `static/js/ratio_solver.js`（新增；纯函数＋DOM）
+- `tests/ratio_solver.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `tools/categories.go`（注册：ID `ratio_solver`／Name「比例求解器」／Path `/tools/ratio-solver`／Icon `balance`（备选 `percent`）／Category「学习工具」／New: true）
+- 旧测试文件的 Path 总数断言 240→241（`grep -n '240' tests/*.test.js` 实测为准同步）
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在（f9838f5）；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用惯例）；`git log` 头部 f9838f5（Slug 生成器新增）／dba1b0f（ads.txt 校验器新增）／a874a62（断言补齐 237→238）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **240**；Top3 候选重叠复核（**`ratio_solver`／`比例求解` 三处 0 命中真缺口**；`launch_checklist`／`上线检查`／`检查清单` 三处 0 命中维持第二顺位；`批量打开` 三处仅命中 search_router 社区搜索聚合器（搜索路由口径、机制相近，维持第三顺位）；一键图片去背景 ONNX ~40MB 硬伤／视频转码 ffmpeg.wasm ~30MB 硬伤继续低优先观察；在线电台收听器硬伤未解跳过）；仓库为 Go 项目（go.mod，无 package.json）；Icon `balance` 实测 0 占用（备选 `percent` 0 占用）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 07:36 · 通用调研第一百六十八轮，接 05:00 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百六十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**Slug 生成器已交付闭环**（f9838f5 新增：标题→URL slug，英文 NFKD 去重音规范化＋中文转拼音（内置常用字表，首屏延迟加载）＋分隔符 -/_、最大长度单词边界截断、拼音开关＋多行批量＋实时预览/复制/下载，ID `slug_generator`、Path `/tools/slug-generator`、Icon `short_text`，与 OG 社交卡片预览双向互链、与 URL 编码/解码单向链入；旧测试 Path 总数断言 239→240 同步（13 处）；全量 **240 Path**；候选池划出），本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:36 轮，优先小／中难度纯前端。
+**本轮三件事**（07:36 全网调研，通用方向）：
+1. Slug 生成器交付确认：`git log` 头部 f9838f5（Slug 新增）／dba1b0f（ads.txt 新增）／a874a62（断言补齐 237→238）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **240**；`slug_generator` 已注册（/tools/slug-generator），templates/slug_generator.html＋static/js/slug_generator.js＋tests/slug_generator.test.js 三新增；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - `slug_generator`／Slug：已交付（f9838f5）——划出候选池。
+   - `ratio_solver`／比例求解：三处 0 命中真缺口——**比例求解器递补 P2 顺位首席**。
+   - `launch_checklist`／上线检查：三处 0 命中（pdf_sign `.pgs-checklist` 为签名定位表、csp_builder `checklist` 为 material icon 名，均为无关文本）——**网站上线检查清单建议晋升第二顺位**。
+   - 网址批量打开：`批量打开` 三处仅命中 `search_router`（社区搜索聚合器：关键词→生成搜索链接→一键全开，搜索路由口径）——与「粘贴任意网址一键打开」口径不重叠但机制相近（一键全开），**新观察项：网址批量打开工具**（供 PM 裁定是否过近）。
+   - `img_target_kb`／精确体积压缩：站内「图片精确体积压缩器」已交付——Daily Solutions "compress image to 50 KB" 信号消解。
+   - `bg_remove`／去背景：三处 0 命中——**一键图片去背景保持低优先观察**（ONNX ~40MB 硬伤未解；本轮 verystep BiRefNet-lite 构成第三独立信号）。
+3. 新信号扫描（V2EX 10-28~10-31＋dev.to 10-24~10-31＋HN/英文＋中文全网为本轮主线）：**新晋 P2 一项（网址批量打开工具），新观察备选一项（社媒图片尺寸生成器）**；其余全部消解或被已交付覆盖——
+   - V2EX：t/1252552 tubox 重发（10-28；165 轮已处理，消解）／t/1250428 md2chat 重发（10-20；**站内 `md_to_chat`「Markdown 聊天图文转换器」已交付**，信号被已交付覆盖，消解）／t/1251166 公众号一键发布（10-24；docker compose＋公众号 API，需后端，消解）／t/1252576 FrameLoom 文档变动画视频（10-28；需本地运行环境＋Agent/配音费用，消解）／t/1251715 独立站访客联系方案（10-25；IM 中继/信鸽需后端服务，消解）／t/1253312 exam2pdf 家庭试卷工作台（10-30；Electron 桌面应用＋浏览器脚本采集小红书，非单页网页口径，消解）／t/1252535 joLink（10-28；Java AI agent 本地 CLI/MCP，消解）／t/1252491 dtool v0.4.0（10-28；Excel 数据流水线本地 CLI，消解）／t/1252272 LLMPod（10-27；LLM 私有化部署需 GPU，消解）／t/1252493 xGoose（10-28；Chrome 插件 AI Agent，插件口径，消解）；
+   - dev.to：Small Home Tools（10-30；TourLedger/StatementLens/RoomProrate/MoveRecord，用户方向修正排除；MoveRecord 照片重绘去 GPS-EXIF 子信号被已交付 `exif_strip` 覆盖，消解）／Daily Solutions（10-27；竞品整站；"compress image to 50 KB" 被已交付 `img_target_kb`「图片精确体积压缩器」覆盖；其余 166 轮已处理，消解）／BulkTextKit 15 text tools（10-24；竞品整站，文本口径已覆盖，消解）／TimelyUps PDF tools（10-24；PDF 口径已覆盖，消解）／verystep.com（10-29；背景移除跑 BiRefNet-lite ONNX→**一键图片去背景第三独立信号**（165 轮 tubox＋Medium Toolwel＋本轮 verystep），硬伤未解保持低优先）／Devdevian（10-30；终端论坛，非网页口径，消解）／RecallLoop（AI 书签→学习卡片；需 AI 后端，消解）；
+   - HN/英文：ToolHop（308 天旧信号，消解）／Moli headless browser（非网页工具，消解）／LastBrowser（桌面浏览器，消解）／webXOS OpenWiki（非单工具，消解）；
+   - 中文全网：365Lab 文本工具指南（竞品整站，消解）／**网址批量打开工具（质速导航 10-06 收录文章 openurls.com.cn：粘贴多行网址一键全部弹出新标签页→新观察项）**／suchatool.cn 文件批处理指南（10-25；竞品整站：批量改名/列表比对/ZIP/Excel 列号/vCard/文档密码口径站内已覆盖，消解）／gallery.selfboot.cn（竞品整站；「社媒图片尺寸生成器」：一图→小红书/公众号封面/Twitter/YouTube/OG 多平台尺寸，单信号→**观察备选**，与 `bulk_image_resizer`「图片批量缩放器」通用口径不重叠，暂不立项）／哎呦不错网每日分享（P2P 文件传输工具侧面提及，信息过泛不构成新独立信号，P2P 观察项保持原状）；
+   - Medium：本轮无具体单工具信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；Slug 生成器交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补）：
+1. **比例求解器** — 递补 P2 顺位首席（167 轮建议第二顺位；160 轮留池项；`ratio_solver`／比例求解三处 0 命中复测（本轮）；痛点：a:b=c:d 已知三求一、配方/图纸/模型缩放换算心算易错；输入已知三项→交叉相乘求解＋化简显示＋常用比例预设（16:9/4:3/A4），纯前端小难度：纯函数确定性计算，可写逐字向量；数学工具簇补位；真限制：仅线性比例，不做复合单位换算须明示）。
+2. **网站上线检查清单** — 建议晋升第二顺位（167 轮建议第三顺位；`launch_checklist`／上线检查三处 0 命中复测（本轮）；痛点：上线网站杂事多，漏一项就「能打开但搜不到」或「慢却查不出原因」；分类清单（域名可达性／HTTPS 安全／抓取索引／性能体验／内容合规与运维）＋逐项勾选＋权重就绪得分＋必做阻断项标红＋localStorage 进度持久＋导出/打印，纯前端小难度：评分纯函数可写逐字向量；网站站长/SEO 工具簇补位（robots.txt 生成器／ads.txt 校验器／CSP 安全头生成器／HTTP 响应头分析器互链）；真限制：清单为静态核对＋自评打分，不做真实联网检测（如 DNS/TLS 实测需后端），须明示）。
+3. **网址批量打开工具** — 本轮新观察项→建议晋升第三顺位（质速导航 10-06 收录文章信号；三处 grep 确认与「社区搜索聚合器」search_router 口径不重叠但机制相近（搜索路由 vs 任意网址批量打开，同为一键全开；PM 可裁定是否过近）；痛点：竞品调研/核对链接时十几个网址一个个点开太费劲；粘贴多行网址→逐行 URL 合法性校验→一键全部弹出新标签页（分批打开防卡死），纯前端小难度：URL 校验纯函数可写逐字向量；效率工具簇补位（与社区搜索聚合器「一键全开」互链）；真限制：浏览器弹窗拦截须用户手动允许、一次开太多标签会卡，须明示）。
+
+其余观察项保持原状：**一键图片去背景（165 轮新观察项**，本轮 verystep BiRefNet-lite 构成第三独立信号，但 ONNX ~40MB 硬伤未解，低优先）／**视频转码/压缩器（166 轮新观察项**，ffmpeg.wasm ~30MB 硬伤，低优先）／社媒图片尺寸生成器（本轮观察备选，单信号暂不立项）／Markdown 表格转 CSV（164 轮 PM 降回观察，markdown_to_excel 重叠硬伤）／P2P 文件传输器（164 轮，WebRTC 信令硬伤，低优先）／语音听写输入器／AI 可发现性自检器／HEIC 照片转格式器（硬伤未解）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮；whatsapp 0 命中复测）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）／JSON→Kotlin（json_to_types 仅 TS/Go，扩展备注）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 167 轮及之前记录。
+
+**通用候选表增量**（第一百六十八轮：Slug 生成器已交付划出（f9838f5 新增；旧测试断言 239→240 同步 13 处；全量 240 Path；候选池划出）；**比例求解器递补 P2 顺位首席**（167 轮建议第二顺位；`ratio_solver` 0 命中复测；小难度）；**网站上线检查清单建议晋升第二顺位**（167 轮建议第三顺位；`launch_checklist` 0 命中复测；小难度）；**网址批量打开工具新观察项→建议晋升第三顺位**（质速导航 10-06 收录信号；与 search_router 口径不重叠但机制相近；小难度；真限制：弹窗拦截须用户手动允许）；社媒图片尺寸生成器新观察备选（单信号暂不立项）；本轮新信号 ~24 项全部消解或被已交付覆盖（V2EX 10 项：tubox 重发／md2chat 重发（被 md_to_chat 覆盖）／公众号一键发布需后端／FrameLoom 需本地环境／独立站 IM 中继需后端／exam2pdf Electron 桌面／joLink 本地 CLI／dtool 本地 CLI／LLMPod 需 GPU／xGoose 插件口径；dev.to 7 项：Small Home Tools 方向排除（EXIF 子信号被 exif_strip 覆盖）／Daily Solutions 竞品（50KB 压缩被 img_target_kb 覆盖）／BulkTextKit 竞品／TimelyUps PDF 覆盖／verystep→去背景第三信号（硬伤未解）／Devdevian 非网页／RecallLoop 需 AI 后端；HN/英文 4 项：ToolHop 旧信号／Moli 非网页／LastBrowser 桌面／webXOS 非单工具；中文全网 4 项：365Lab 竞品／suchatool.cn 竞品／gallery.selfboot.cn→社媒尺寸观察备选／哎呦不错网 P2P 侧面提及过泛）；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 240 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| Slug 生成器 | 已交付划出（f9838f5 新增；旧测试断言 239→240 同步 13 处；全量 240 Path；候选池划出） | — | 已实现 |
+| 比例求解器 | 递补 P2 顺位首席（167 轮建议第二顺位；160 轮留池项；`ratio_solver`／比例求解三处 0 命中复测；a:b=c:d 交叉相乘求解＋常用比例预设；纯前端小难度；真限制：仅线性比例须明示） | 小 | P2（留池） |
+| 网站上线检查清单 | 建议晋升第二顺位（167 轮建议第三顺位；`launch_checklist`／上线检查 0 命中复测；分类勾选＋权重就绪得分＋阻断项标红＋localStorage 持久＋导出；纯前端小难度；SEO/站长工具簇补位；真限制：静态核对不做真实联网检测须明示） | 小 | 观察→P2（建议） |
+| 网址批量打开工具 | 本轮新观察项→建议晋升第三顺位（质速导航 10-06 收录文章信号；与 search_router「社区搜索聚合器」口径不重叠但机制相近（PM 可裁定）；粘贴多行网址→逐行校验→一键全开新标签页；纯前端小难度；真限制：弹窗拦截须用户手动允许须明示） | 小 | 观察→P2（建议） |
+| 社媒图片尺寸生成器 | 本轮新观察备选（gallery.selfboot.cn 单信号；一图→小红书/公众号封面/Twitter/YouTube/OG 多平台预设尺寸；与 bulk_image_resizer 通用缩放口径不重叠；暂不立项） | 小 | 观察备选 |
+| 一键图片去背景 | 165 轮新观察项（本轮 verystep BiRefNet-lite ONNX 构成第三独立信号；但 ~40MB 硬伤未解，低优先；与证件照换底口径不重叠） | 大 | 观察（低优先） |
+| 视频转码/压缩器 | 166 轮新观察项（ffmpeg.wasm ~30MB 硬伤，低优先；与 video-frame-extractor 帧提取口径不重叠） | 大 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百六十八轮——Slug 生成器交付闭环（f9838f5，`/tools/slug-generator` 已注册，全量 240 Path），候选池划出；**比例求解器递补 P2 顺位首席**（167 轮建议第二顺位；`ratio_solver` 0 命中复测确认）；**网站上线检查清单建议晋升第二顺位**（167 轮建议第三顺位；`launch_checklist`／上线检查 0 命中复测确认）；**网址批量打开工具**（本轮新观察项，质速导航 10-06 收录文章信号；与 search_router 社区搜索聚合器口径不重叠但同为「一键全开」机制，已标注供 PM 裁定；小难度，建议晋升第三顺位）新晋观察项；**社媒图片尺寸生成器**（gallery.selfboot.cn 单信号，一图→多平台预设尺寸，与 bulk_image_resizer 不重叠）新晋观察备选暂不立项；本轮消解 ~24 项（V2EX 10 项：tubox 重发已处理／md2chat 重发被 md_to_chat 覆盖（教训信号：调研复核时先查站内 ID 再立项）／公众号一键发布需后端／FrameLoom 需本地环境＋配音费用／独立站访客 IM 中继需后端／exam2pdf Electron 桌面＋采集脚本／joLink 本地 CLI／dtool 本地 CLI／LLMPod 需 GPU／xGoose 插件口径；dev.to 7 项：Small Home Tools 方向排除（MoveRecord EXIF 子信号被 exif_strip 覆盖）／Daily Solutions 竞品整站（50KB 压缩被 img_target_kb 覆盖）／BulkTextKit 竞品整站／TimelyUps PDF 口径覆盖／verystep→去背景第三独立信号（硬伤未解）／Devdevian 非网页口径／RecallLoop 需 AI 后端；HN/英文 4 项：ToolHop 旧信号／Moli 非网页／LastBrowser 桌面浏览器／webXOS 非单工具；中文全网 4 项：365Lab 竞品／suchatool.cn 文件批处理指南竞品整站／哎呦不错网 P2P 侧面提及过泛／Medium 本轮无具体信号）；一键图片去背景（ONNX 硬伤）／视频转码/压缩器（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 文件传输器／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch` 成功，远程 muse/dev-20260929 存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 f9838f5（Slug 生成器新增）／dba1b0f（ads.txt 校验器新增）／a874a62（测试断言补齐 237→238）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **240**；Top3 候选重叠复核（`slug_generator` 已交付划出；`ratio_solver`／比例求解三处 0 命中；`launch_checklist`／上线检查三处 0 命中（pdf_sign `.pgs-checklist` 为签名定位表、csp_builder `checklist` 为 material icon 名，均为无关文本）；网址批量打开 `批量打开` 三处仅命中 search_router 社区搜索聚合器（搜索路由口径，与任意网址批量打开口径不重叠、机制相近，已标注供 PM 裁定）；社媒图片尺寸与 bulk_image_resizer 口径不重叠但单信号暂列观察备选；Daily Solutions 50KB 压缩信号确认站内 `img_target_kb` 已交付消解；MoveRecord EXIF 子信号确认站内 `exif_strip` 已交付消解；一键图片去背景 ONNX 硬伤／视频转码 ffmpeg.wasm 硬伤／Markdown 表格转 CSV PM 硬伤／P2P 信令硬伤／语音听写／AI 可发现性／HEIC 硬伤未解保持观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-31 05:00 · PM 排期决策轮，接 05:00 通用调研第一百六十七轮）
 
 **选定：Slug 生成器** — 本轮唯一任务（新工具）。

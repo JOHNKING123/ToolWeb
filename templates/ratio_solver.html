@@ -1,0 +1,193 @@
+{{define "ratio_solver"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>比例求解器 - a:b=c:d 交叉相乘求解/最简整数比/分数约分（本地免费）</title>
+    <meta name="description" content="免费在线比例求解器：a:b=c:d 已知三项求一项，交叉相乘 ad=bc 任意求解方向，小数+约分分数双显示，GCD 化简最简整数比；16:9/4:3/1:1/3:2/A4/黄金比例一键预设，即时计算+一键复制，全本地计算不上传。Proportion solver: solve a:b=c:d by cross-multiplication, decimal + reduced fraction, simplest integer ratio, common-ratio presets, 100% client-side.">
+    <meta name="keywords" content="比例求解器,比例计算,a:b=c:d,交叉相乘,比例换算,最简整数比,分数约分,16:9 换算,黄金比例计算,A4 比例,ratio solver,proportion calculator,cross multiplication,simplest ratio">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ratio-solver">
+    <meta property="og:title" content="比例求解器 - a:b=c:d 交叉相乘求解">
+    <meta property="og:description" content="已知三项求一项：交叉相乘 ad=bc，小数+约分分数双显示，GCD 最简整数比，16:9/4:3/A4/黄金比例一键预设，纯前端本地计算。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/ratio-solver">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"比例求解器","description":"a:b=c:d 已知三项求一项：交叉相乘 ad=bc 任意求解方向，小数+约分分数双显示，GCD 化简最简整数比；16:9/4:3/1:1/3:2/A4/黄金比例一键预设；纯前端本地计算。","url":"https://www.johnkingzcq123.xyz/tools/ratio-solver","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rs-wrap .container{max-width:920px;margin:auto}
+        .rs-limits{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.93rem;line-height:1.9;color:#065f46}
+        .rs-limits b{color:#047857}
+        .rs-limits ol{margin:.2rem 0;padding-left:1.2rem}
+        .rs-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1rem}
+        .rs-panel h3{margin:0 0 .8rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .rs-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+        .rs-preset{border:2px solid #e5e7eb;border-radius:.7rem;padding:.65rem .6rem;text-align:center;cursor:pointer;background:#fff;transition:border-color .15s,background .15s;font-size:.92rem;color:#374151;line-height:1.5}
+        .rs-preset:hover{border-color:#93c5fd;background:#f8fafc}
+        .rs-preset b{color:#111827}
+        .rs-preset small{display:block;font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .rs-ratio{display:flex;align-items:stretch;justify-content:center;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+        .rs-cell{display:flex;flex-direction:column;align-items:center;gap:.35rem}
+        .rs-cell input{width:7.2rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.65rem .7rem;font-size:1.15rem;text-align:center;color:#111827;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .rs-cell input:focus{outline:none;border-color:var(--primary-color)}
+        .rs-cell input.rs-solving{border-color:#f59e0b;background:#fffbeb}
+        .rs-cell .rs-tag{font-size:1.05rem;font-weight:700;color:#6b7280}
+        .rs-mark{border:1px solid #d1d5db;background:#fff;color:#6b7280;border-radius:.45rem;padding:.28rem .8rem;font-size:.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem}
+        .rs-mark.on{border-color:#f59e0b;background:#fffbeb;color:#b45309;font-weight:700}
+        .rs-sep{align-self:center;font-size:1.6rem;font-weight:700;color:#9ca3af;padding:0 .2rem}
+        .rs-sep-eq{padding-bottom:2.2rem}
+        .rs-opts{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin:.4rem 0 .2rem}
+        .rs-opts label{font-size:.9rem;color:#374151;display:flex;align-items:center;gap:.4rem}
+        .rs-opts select{border:2px solid #e5e7eb;border-radius:.5rem;padding:.4rem .6rem;font-size:.9rem;color:#111827}
+        .rs-result{background:#eff6ff;border:2px solid #bfdbfe;border-radius:.8rem;padding:1rem 1.2rem;margin-top:.9rem}
+        .rs-result .rs-rrow{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;font-size:1.02rem;line-height:2;color:#1e3a8a}
+        .rs-result .rs-rrow .k{font-size:.85rem;color:#3b82f6;min-width:4.5em}
+        .rs-result .rs-rrow .v{font-weight:700;font-size:1.15rem;font-family:ui-monospace,Menlo,Consolas,monospace;color:#1d4ed8}
+        .rs-result .rs-expr{font-size:.85rem;color:#64748b;margin-top:.3rem}
+        .rs-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.55rem;padding:.6rem .9rem;font-size:.9rem;margin-top:.7rem}
+        .rs-status{font-size:.88rem;min-height:1.4em;margin-top:.6rem;color:#059669}
+        .rs-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.6rem;align-items:center}
+        .rs-btn2{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.5rem 1rem;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
+        .rs-btn2:hover{background:#f3f4f6}
+        .rs-examples{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.5rem}
+        .rs-tip{font-size:.82rem;color:#9ca3af;margin-top:.35rem}
+        .rs-doc{color:#374151;line-height:1.95;font-size:.93rem}
+        .rs-doc b{color:#111827}
+        .rs-faq{line-height:2;font-size:.93rem;color:#4b5563}
+        .rs-faq b{color:#111827}
+        .rs-links{display:flex;gap:1.2rem;flex-wrap:wrap}
+        .rs-links a{color:var(--primary-color);font-size:.93rem}
+        .rs-note{font-size:.88rem;color:#6b7280;line-height:1.9}
+        @media (max-width:640px){
+            .rs-presets{grid-template-columns:repeat(2,1fr)}
+            .rs-cell input{width:5.6rem;font-size:1.05rem}
+            .rs-sep{padding:0 .05rem}
+        }
+    </style>
+</head>
+<body>
+    <div>{{template "nav" .}}</div>
+    <div class="container rs-wrap">
+        <div class="tool-header">
+            <h1>比例求解器</h1>
+            <p>a:b=c:d 已知三项求一项：交叉相乘 ad=bc，小数+约分分数双显示，GCD 化简最简整数比；纯前端本地计算</p>
+        </div>
+        <div class="tool-content">
+            <div class="rs-limits">
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li><b>仅线性比例：</b>本工具只处理 a:b=c:d 线性比例关系，不做复合单位换算（米→英寸等长度/重量单位换算请用<a href="/tools/unit-converter">单位换算器</a>）；</li>
+                        <li><b>预设为近似值：</b>A4 取 1:1.4142、黄金比例取 1:1.618，要工程精确值请手动输入；</li>
+                        <li><b>全本地计算：</b>求解、约分、化简全部在浏览器里完成，输入不出本机，零网络请求。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="rs-panel">
+                <h3>1 · 常用比例预设（点一下填入 a:b）</h3>
+                <div class="rs-presets" id="rs-presets"></div>
+            </div>
+
+            <div class="rs-panel">
+                <h3>2 · 填入三项，点「设为求解项」标记要求的一项</h3>
+                <div class="rs-ratio" id="rs-ratio">
+                    <div class="rs-cell">
+                        <span class="rs-tag">a</span>
+                        <input id="rs-a" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="输入 a">
+                        <button class="rs-mark" id="rs-ma" type="button" aria-pressed="false">设为求解项</button>
+                    </div>
+                    <div class="rs-sep">:</div>
+                    <div class="rs-cell">
+                        <span class="rs-tag">b</span>
+                        <input id="rs-b" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="输入 b">
+                        <button class="rs-mark" id="rs-mb" type="button" aria-pressed="false">设为求解项</button>
+                    </div>
+                    <div class="rs-sep rs-sep-eq">=</div>
+                    <div class="rs-cell">
+                        <span class="rs-tag">c</span>
+                        <input id="rs-c" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="输入 c">
+                        <button class="rs-mark" id="rs-mc" type="button" aria-pressed="false">设为求解项</button>
+                    </div>
+                    <div class="rs-sep">:</div>
+                    <div class="rs-cell">
+                        <span class="rs-tag">d</span>
+                        <input id="rs-d" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="输入 d">
+                        <button class="rs-mark" id="rs-md" type="button" aria-pressed="false">设为求解项</button>
+                    </div>
+                </div>
+                <div class="rs-opts">
+                    <label>小数精度
+                        <select id="rs-precision" aria-label="小数精度">
+                            <option value="2">2 位</option>
+                            <option value="4" selected>4 位</option>
+                            <option value="6">6 位</option>
+                        </select>
+                    </label>
+                    <span class="rs-tip">输入即实时计算（防抖 180ms）</span>
+                </div>
+                <div class="rs-examples">
+                    <button class="rs-btn2" id="rs-ex-a" type="button">示例：配方（面粉:糖=3:4，糖500g）</button>
+                    <button class="rs-btn2" id="rs-ex-b" type="button">示例：设计图（16:9，宽1080）</button>
+                </div>
+                <div class="rs-error" id="rs-error" role="alert"></div>
+                <div class="rs-result" id="rs-result" style="display:none;">
+                    <div class="rs-rrow"><span class="k">求解结果</span><span class="v" id="rs-r-dec">—</span></div>
+                    <div class="rs-rrow"><span class="k">约分分数</span><span class="v" id="rs-r-frac">—</span></div>
+                    <div class="rs-rrow"><span class="k">最简整数比</span><span class="v" id="rs-r-simple">—</span></div>
+                    <div class="rs-expr" id="rs-r-expr"></div>
+                </div>
+                <div class="rs-actions">
+                    <button class="btn btn-primary" id="rs-copy" type="button">一键复制结果</button>
+                    <span class="rs-status" id="rs-status"></span>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="rs-doc">
+                    <b>怎么用：</b>先点预设（如 16:9）填入 a:b，再点要求的那一项上的「设为求解项」，最后填入已知的第三项——结果实时算出。<br>
+                    <b>场景：</b>设计图缩放（已知宽高比 + 一侧尺寸，求另一侧）、配方配料（按比例增减原料）、模型比例尺（图上距离 ↔ 实际距离）。<br>
+                    <b>数学原理：</b>比例 a:b=c:d 恒有 ad=bc；求解就是把三项代入、交叉相乘再除以已知分母，例如 d=b×c÷a。<br>
+                    <b>双显示：</b>结果同时给小数（精度可选 2/4/6 位）和约分分数（如 607.5=1215/2）；最简整数比用 GCD 化简（1920:1080→16:9）。<br>
+                    <b>分母不能为 0：</b>交叉相乘时已知分母为 0 会直接报错，不会给出无意义的结果。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="rs-faq">
+                    <b>可以一次求两个未知数吗？</b>不可以。a:b=c:d 是一个方程，只能确定一个未知数；空出两项以上页面会提示只留一项求解。<br>
+                    <b>预设里的 A4 和黄金比例是精确值吗？</b>是近似值：A4 取 1:1.4142（√2≈1.41421…），黄金比例取 1:1.618（≈1.61803…）；工程精确值请手动输入。<br>
+                    <b>分数是怎么约分的？</b>小数按当前精度取整后与分母（10^精度）求 GCD 约分，例如 10.6667→106667/10000=10.6667；607.5→1215/2。<br>
+                    <b>能做单位换算吗（比如米换英寸）？</b>不能。本工具只做线性比例，需要长度/重量/温度等复合单位换算请用<a href="/tools/unit-converter">单位换算器</a>。<br>
+                    <b>输入会被上传吗？</b>不会。全程本地计算、零上传：本页面零 fetch / XHR、零 CDN，可在 DevTools Network 面板验证。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="rs-links">
+                    <a href="/tools/math-worksheet-generator">算术题生成器（学会了比例？去出题练手：年级预设+进退位开关，A4 练习纸+独立答案页）</a>
+                    <a href="/tools/unit-converter">单位换算器（需要长度/重量/温度等复合单位换算？本工具只做线性比例）</a>
+                </div>
+                <p class="rs-note" style="margin-top:.6rem">分工：比例求解器负责 a:b=c:d 纯比例关系；单位换算器负责米↔英寸、千克↔磅这类带单位的换算——两者口径不重叠。</p>
+            </div>
+
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <div class="rs-doc">
+                    <b>仅线性比例，不做复合单位换算：</b>a:b=c:d 是纯数值关系；米→英寸、千克→磅这类带单位口径的换算请用<a href="/tools/unit-converter">单位换算器</a>。<br>
+                    <b>预设为近似值：</b>A4 取 1:1.4142、黄金比例取 1:1.618；需要工程精确值时请手动输入精确数字。<br>
+                    <b>全本地计算：</b>求解、分数约分、GCD 化简全部在浏览器里完成；本页面零 fetch / XHR 请求，输入内容不出本机。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/ratio_solver.js?v=1"></script>
+</body>
+</html>
+{{end}}
