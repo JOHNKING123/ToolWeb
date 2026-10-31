@@ -140,7 +140,7 @@ has(GO_SRC, "TOTP 一次性密码生成器", "注册：categories.go 含名称 T
 has(GO_SRC, '"key"', "注册：图标 key 存在");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = paths.filter(function (p, i) { return paths.indexOf(p) === i; });
-eq(uniq.length, 246, "注册总数：→246 Path（历史遗留陈旧断言同步）");
+eq(uniq.length, 247, "注册总数：→247 Path（历史遗留陈旧断言同步）");
 var goEntry = GO_SRC.slice(GO_SRC.indexOf('"totp_generator"'), GO_SRC.indexOf('"totp_generator"') + 700);
 has(goEntry, "加密解密", "注册：totp_generator 归属加密解密品类");
 has(goEntry, "New:", "注册：totp_generator 标记 New");

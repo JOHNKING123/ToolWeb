@@ -3,7 +3,7 @@
  * computeReadiness 确定性向量逐值命中（全选 100、全空 0、单 blocker 未选 ready=false、
  * 分类得分、加权分数手算值）、非法 state 抛 Error（含 err.field）、
  * exportReport 内容断言、READY_THRESHOLD、
- * categories.go 注册（Path 总数 246→246）与零网络请求静态检查、
+ * categories.go 注册（Path 总数 247→247）与零网络请求静态检查、
  * 真限制三条明示、互链合规（CSP/HTTP 响应头分析器/robots.txt 校验与测试器/ads.txt 校验器双向）。 */
 "use strict";
 var fs = require("fs");
@@ -175,7 +175,7 @@ ok(/·\s*[A-Za-z]/.test(block), "注册 Description 中英文双语（· 分隔�
 var pathCount = 0, m;
 var re = /"\/tools\/[^"]+"/g, seen = {};
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 246, "注册 Path 总数 246→246");
+eq(pathCount, 247, "注册 Path 总数 247→247");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 notHas(TPL_SRC, 'src="http', "模板无外部脚本引用");
 ok(!/href="https?:\/\/(?!www\.johnkingzcq123\.xyz)/.test(TPL_SRC), "模板无外部超链接（站内 canonical 除外）");

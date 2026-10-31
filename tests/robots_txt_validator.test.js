@@ -119,7 +119,7 @@ ok(genIdx >= 0 && valIdx > genIdx, "注册紧邻 robots_txt_generator 之后");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 246, "注册 Path 总数 246→246");
+eq(Object.keys(uniq).length, 247, "注册 Path 总数 247→247");
 ok(TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/robots-txt-validator") >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("君子协定") >= 0 && TPL_SRC.indexOf("不等于访问控制") >= 0, "真限制：君子协定非访问控制");
 ok(TPL_SRC.indexOf("Google 规范近似实现") >= 0, "真限制：Google 规范近似实现");

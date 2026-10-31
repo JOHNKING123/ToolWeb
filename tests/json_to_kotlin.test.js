@@ -5,7 +5,7 @@
  * 向量逐字命中（两个规格向量）与非法参数抛 Error（err.field="json"/"rootName"）、
  * 选项开关（@SerializedName／可空推断）、嵌套类拆分与同名去重、空数组→List<Any>、
  * 大整数→Long、null→Any?、@SerializedName 条件输出、categories.go 注册
- * （Path 总数 245→246、ID json_to_kotlin、Icon android、格式转换、New、中英文
+ * （Path 总数 246→247、ID json_to_kotlin、Icon android、格式转换、New、中英文
  * Description）、模板 SEO 面板／真限制四条／互链（JSON 转 TS/Go 双向、JSON 解析器
  * 单向链入）／不链未交付工具、零网络请求静态检查。
  */
@@ -182,7 +182,7 @@ ok(GO_SRC.slice(ktIdx, ktIdx + 1200).indexOf('Category:    "格式转换"') >= 0
 ok(GO_SRC.slice(ktIdx, ktIdx + 2000).indexOf("data class generator") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 246, "注册 Path 总数 245→246");
+eq(pathCount, 247, "注册 Path 总数 246→247");
 
 /* ---------- 8. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "json_to_kotlin.html"), "utf8");

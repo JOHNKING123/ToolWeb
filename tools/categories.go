@@ -2209,6 +2209,15 @@ func GetCategories() []Category {
 					Category:    "营销工具",
 				},
 				{
+					ID:          "hashtag_generator",
+					Name:        "社媒标签生成器",
+					Description: "输入关键词一键生成社媒标签：小红书/抖音/Instagram/YouTube/通用五平台，数量档 5/10/15/20，内置 10 品类标签库（tag+alias+heat+适用平台），三层策略拼出核心/热门/长尾三组，每标签带热度徽章，零命中派生 #关键词 保底，一键复制/下载 hashtags-YYYYMMDD-HHmmss.txt，纯前端本地生成不出浏览器 · Hashtag generator: platform hashtags for Xiaohongshu/Douyin/Instagram/YouTube, core/trending/niche groups with heat badges, copy & download, 100% client-side",
+					Path:        "/tools/hashtag-generator",
+					Icon:        "local_offer",
+					New:         true,
+					Category:    "营销工具",
+				},
+				{
 					ID:          "robots_txt_generator",
 					Name:        "robots.txt 生成器",
 					Description: "可视化拼装 robots.txt：多 User-agent 规则组编辑器（增删组、Allow/Disallow 行），Crawl-delay 抓取延迟，Sitemap 列表，四种常用模板一键加载，实时预览输出文本，中文化基础校验（空 User-agent、路径缺前导 /、Sitemap 非 URL 中文提示），一键复制、Blob 下载 robots.txt，纯前端本地生成不出浏览器 · Robots.txt generator: multi user-agent rule groups, crawl-delay, sitemap, templates, copy & download, 100% client-side",

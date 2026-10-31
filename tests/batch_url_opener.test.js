@@ -3,7 +3,7 @@
  * 覆盖：打开策略常量（5/600ms/30 确认阈值）、parseUrlList 确定性向量逐值命中
  * （空串、裸域名补 scheme、重复合并、无效行 reason、行号正确）、行内抽取、
  * 末尾标点剥离、空行跳过、CRLF、不支持协议、dedupeUrls 去重与透传、
- * 非法参数抛 Error 的 err.field、categories.go 注册（Path 总数 246→246、
+ * 非法参数抛 Error 的 err.field、categories.go 注册（Path 总数 247→247、
  * Icon open_in_new、开发工具、New、中英文 Description）、模板真限制三条、
  * 与社区搜索聚合器双向互链、不链未交付工具、零网络请求静态检查。
  */
@@ -122,7 +122,7 @@ ok(GO_SRC.slice(buoIdx, buoIdx + 1200).indexOf('Category:    "开发工具"') >=
 ok(GO_SRC.slice(buoIdx, buoIdx + 2000).indexOf("Batch URL opener") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 246, "注册 Path 总数 246→246");
+eq(pathCount, 247, "注册 Path 总数 247→247");
 
 /* ---------- 10. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "batch_url_opener.html"), "utf8");

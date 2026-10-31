@@ -158,7 +158,7 @@ var regBlock = GO_SRC.slice(regIdx, regIdx + 800);
 ok(regBlock.indexOf("New:         true") !== -1, "注册 New: true");
 ok(regBlock.indexOf('Category:    "开发工具"') !== -1, "注册块内 Category 开发工具");
 var pathCount = (GO_SRC.match(/Path:/g) || []).length;
-eq(pathCount, 246, "注册总数→246 Path（历史遗留陈旧断言同步）");
+eq(pathCount, 247, "注册总数→247 Path（历史遗留陈旧断言同步）");
 ok(JS_SRC.indexOf("fetch(") === -1, "JS 零 fetch");
 ok(JS_SRC.indexOf("XMLHttpRequest") === -1, "JS 零 XHR");
 ok(TPL_SRC.indexOf("cdn") === -1 && TPL_SRC.indexOf("src=\"http") === -1, "模板零 CDN 外链脚本");

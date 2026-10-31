@@ -177,7 +177,7 @@ ok(GO_SRC.indexOf('Icon:        "format_color_fill"') >= 0, "categories.go Icon 
 ok(GO_SRC.indexOf('Category:    "图片处理"') >= 0, "categories.go 图片处理品类");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {}; paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 246, "注册总数→246 Path（历史遗留陈旧断言同步）");
+eq(Object.keys(uniq).length, 247, "注册总数→247 Path（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf('id="svgr-input"') >= 0, "模板含 SVG 输入框");
 ok(TPL_SRC.indexOf('id="svgr-drop"') >= 0, "模板含上传拖拽区");
 ok(TPL_SRC.indexOf('id="svgr-palette"') >= 0, "模板含色板区");

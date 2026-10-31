@@ -5,7 +5,7 @@
  * 3. 波形向量（逐字节一致、M 起笔 Z 闭合、恰 120 采样点、amplitude=0 退化直线、频率加倍波峰加倍、非法参数失败）
  * 4. 斑点向量（同 seed 一致、异 seed 不同、闭合、smoothness=0 为正多边形、越界/非整数 seed 失败）
  * 5. 组装与导出（xmlns 与 viewBox、层数 1/4 合法 0/5 失败、CSS 片段解码还原逐字节一致、两模式文件名、尺寸越界失败）
- * 6. 注册与静态检查（categories.go 注册完整、总数 206→207→246（历史遗留陈旧断言同步）、真限制文案可见、互链仅 CSS 渐变与 SVG 压缩、零 fetch/XHR）
+ * 6. 注册与静态检查（categories.go 注册完整、总数 206→207→247（历史遗留陈旧断言同步）、真限制文案可见、互链仅 CSS 渐变与 SVG 压缩、零 fetch/XHR）
  */
 "use strict";
 var fs = require("fs");
@@ -178,7 +178,7 @@ function main() {
   ok(entry.indexOf('Category:    "图片处理"') >= 0, "注册 Category 为图片处理");
   ok(entry.indexOf("New:         true") >= 0, "注册 New: true");
   var pathMatches = cats.match(/"\/tools\/[^"]+"/g) || [];
-  eq(new Set(pathMatches).size, 246, "注册 Path 总数→246（历史遗留陈旧断言同步）");
+  eq(new Set(pathMatches).size, 247, "注册 Path 总数→247（历史遗留陈旧断言同步）");
   var tpl = fs.readFileSync(path.join(repoRoot, "templates", "svg_background_generator.html"), "utf8");
   ["只做装饰背景几何", "不做动画视频导出", "种子可复现", "PNG 放大不如 SVG 清晰", "不收集、不上传"].forEach(function (phrase) {
     ok(tpl.indexOf(phrase) >= 0, "模板含真限制文案「" + phrase + "」");

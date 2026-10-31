@@ -1,7 +1,7 @@
 /* 信封打印助手纯逻辑单元测试（零依赖）：node tests/envelope_printer.test.js
  * 覆盖：7 个预设尺寸表、自定义校验边界、毫米坐标、偏移叠加与步进收敛、
  * 边界收敛、竖版提示、打印样式字符串、测试页网格、空收件人、超长提示、
- * 示例静态检查、注册总数 246→246、模板静态检查、零网络请求。 */
+ * 示例静态检查、注册总数 247→247、模板静态检查、零网络请求。 */
 "use strict";
 var fs = require("fs");
 var path = require("path");
@@ -173,7 +173,7 @@ has(GO_SRC, '"envelope_printer"', "注册 ID");
 has(GO_SRC, '"/tools/envelope-printer"', "注册 Path");
 ok(/ID:\s+"envelope_printer"[\s\S]{0,1500}?Category:\s+"生活工具"/.test(GO_SRC), "注册品类为生活工具");
 ok(/ID:\s+"envelope_printer"[\s\S]{0,1500}?New:\s+true/.test(GO_SRC), "注册 New: true");
-eq((GO_SRC.match(/Path:\s+"/g) || []).length, 246, "注册总数 246→246 Path");
+eq((GO_SRC.match(/Path:\s+"/g) || []).length, 247, "注册总数 247→247 Path");
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/envelope-printer", "模板 canonical");
 has(TPL_SRC, "application/ld+json", "模板 JSON-LD");
 has(TPL_SRC, "请按需改写", "模板含请按需改写提示");

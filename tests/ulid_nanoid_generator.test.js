@@ -2,7 +2,7 @@
  * node tests/ulid_nanoid_generator.test.js
  * 覆盖：ULID 编解码精确向量与往返、非法解码 null、NanoID 长度与字母表向量、
  * 批量行数、钳制与中文提示、超 48 位时间戳拒绝、复制／下载内容一致、
- * 注册（→246 Path，历史遗留陈旧断言同步）与零网络请求静态检查、真限制文案与互链
+ * 注册（→247 Path，历史遗留陈旧断言同步）与零网络请求静态检查、真限制文案与互链
  * （含 UUID 生成器，不含未交付的 .env 解析器、摩斯码翻译器）。
  */
 "use strict";
@@ -107,7 +107,7 @@ eq(U.buildIdsText(ids), "AAA\nBBB", "复制／下载：内容为结果列表换�
 /* ---------- 9. 注册与静态检查 ---------- */
 has(GO, '"ulid_nanoid_generator"', "注册：categories.go 含 ID ulid_nanoid_generator");
 has(GO, '"/tools/ulid-nanoid-generator"', "注册：categories.go 含 Path /tools/ulid-nanoid-generator");
-eq((GO.match(/Path:\s*"/g) || []).length, 246, "注册：Path 总数→246（历史遗留陈旧断言同步）");
+eq((GO.match(/Path:\s*"/g) || []).length, 247, "注册：Path 总数→247（历史遗留陈旧断言同步）");
 has(TPL, "/tools/uuid-generator", "互链：页面含 UUID 生成器互链");
 has(TPL, "要时间可排序用本工具 ULID", "互链：文案写清 ULID 与 UUID 格式区分");
 notHas(TPL, "env-parser", "无硬凑互链：页面不含未交付 .env 解析器");

@@ -1,0 +1,148 @@
+{{define "hashtag_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社媒标签生成器 - 小红书/抖音/Instagram/YouTube 标签在线生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线社媒标签生成器：输入关键词一键生成小红书、抖音、Instagram、YouTube 平台标签，内置 10 品类标签库，核心/热门/长尾三组输出，每标签带热度徽章，一键复制与下载，纯前端本地生成不上传。Hashtag generator: generate platform hashtags for Xiaohongshu, Douyin, Instagram, YouTube, 100% client-side.">
+    <meta name="keywords" content="社媒标签生成器,hashtag生成,小红书标签,抖音标签,instagram hashtags,youtube标签,话题标签生成,hashtag generator,社媒运营工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/hashtag-generator">
+    <meta property="og:title" content="社媒标签生成器 - 小红书/抖音/Instagram/YouTube 标签在线生成">
+    <meta property="og:description" content="输入关键词一键生成社媒标签：内置 10 品类标签库，核心/热门/长尾三组输出，每标签带热度徽章，一键复制与下载，纯前端本地生成，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/hashtag-generator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"社媒标签生成器","description":"免费在线社媒标签生成器：输入关键词一键生成小红书、抖音、Instagram、YouTube 平台标签，内置 10 品类标签库，核心/热门/长尾三组输出，每标签带热度徽章，一键复制与下载，纯前端本地生成不上传。","url":"https://www.johnkingzcq123.xyz/tools/hashtag-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .hg-layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+        .hg-pane h3{margin-bottom:.6rem}
+        .hg-textarea{width:100%;min-height:220px;font-size:.95rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .hg-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.5rem;padding:.6rem .8rem;margin:.6rem 0;font-size:.9rem}
+        .hg-tip-ok{display:none;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.5rem;padding:.6rem .8rem;margin:.6rem 0;font-size:.9rem}
+        .hg-opt-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin:.6rem 0;font-size:.95rem;color:#374151}
+        .hg-select{padding:.45rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.95rem;background:#fff}
+        .hg-radio{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+        .hg-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+        .hg-group{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem;margin-bottom:.8rem;background:#fafafa}
+        .hg-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+        .hg-group-head h4{margin:0;font-size:1rem;color:#111827}
+        .hg-chips{display:flex;flex-wrap:wrap;gap:.5rem}
+        .hg-chip{display:inline-flex;align-items:center;gap:.35rem;background:#fff;border:1px solid #d1d5db;border-radius:999px;padding:.3rem .7rem;font-size:.9rem}
+        .hg-tag{color:#1a0dab;font-weight:600}
+        .hg-badge{font-size:.75rem;color:#6b7280;background:#f3f4f6;border-radius:999px;padding:.1rem .45rem;white-space:nowrap}
+        .hg-meta{color:#6b7280;font-size:.88rem;margin-bottom:.8rem}
+        .hg-mini-btn{padding:.3rem .7rem;font-size:.82rem}
+        #hg-actions{display:none;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+        .hg-note{color:#6b7280;font-size:.88rem;margin-top:.5rem;line-height:1.7}
+        .hg-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .hg-tip b{color:#111827}
+        .hg-limits{color:#374151;line-height:1.9;font-size:.95rem;margin:.2rem 0 0;padding-left:1.2rem}
+        .hg-limits b{color:#111827}
+        @media (max-width:768px){
+            .hg-layout{grid-template-columns:1fr}
+            .hg-textarea{min-height:160px}
+            .hg-toolbar .btn{flex:1 1 42%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>社媒标签生成器</h1>
+            <p>输入关键词，一键生成小红书 / 抖音 / Instagram / YouTube 平台标签：核心 / 热门 / 长尾三组输出，每标签带热度徽章，全部在浏览器本地生成，不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:1140px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="hg-layout">
+                    <div class="hg-pane">
+                        <h3>关键词输入（每行一个，1~20 个）</h3>
+                        <textarea id="hg-input" class="hg-textarea" placeholder="每行一个关键词，例如：&#10;美妆&#10;旅行&#10;健身" spellcheck="false" aria-label="关键词输入"></textarea>
+                        <div class="hg-error" id="hg-error" role="alert"></div>
+                        <div class="hg-tip-ok" id="hg-tip" role="status"></div>
+                        <div class="hg-opt-row">
+                            <label for="hg-platform">平台：</label>
+                            <select id="hg-platform" class="hg-select" aria-label="平台选择">
+                                <option value="xiaohongshu" selected>小红书</option>
+                                <option value="douyin">抖音</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="general">通用</option>
+                            </select>
+                            <label for="hg-count">数量：</label>
+                            <select id="hg-count" class="hg-select" aria-label="数量选择">
+                                <option value="5">5 个</option>
+                                <option value="10" selected>10 个</option>
+                                <option value="15">15 个</option>
+                                <option value="20">20 个</option>
+                            </select>
+                        </div>
+                        <div class="hg-opt-row">
+                            <span>热度偏好：</span>
+                            <label class="hg-radio"><input type="radio" name="hg-heat" value="balanced" checked> 均衡</label>
+                            <label class="hg-radio"><input type="radio" name="hg-heat" value="hot"> 高热优先</label>
+                            <label class="hg-radio"><input type="radio" name="hg-heat" value="niche"> 长尾优先</label>
+                        </div>
+                        <div class="hg-toolbar">
+                            <button class="btn btn-primary" id="hg-generate">生成标签</button>
+                            <button class="btn btn-secondary" id="hg-sample">填充示例</button>
+                            <button class="btn btn-secondary" id="hg-clear">清空</button>
+                        </div>
+                    </div>
+                    <div class="hg-pane">
+                        <h3>生成结果</h3>
+                        <div id="hg-output-wrap" aria-label="生成结果"></div>
+                        <div id="hg-actions">
+                            <button class="btn btn-primary" id="hg-copy-all">复制全部</button>
+                            <button class="btn btn-secondary" id="hg-download">下载 .txt</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hg-note">本地处理不上传：全部匹配与生成在你的浏览器内完成，关键词不会发送到任何服务器。下载文件名为 <code>hashtags-YYYYMMDD-HHmmss.txt</code>。标签定稿前建议用 <a href="/tools/forbidden-word-detector" style="color:#1a0dab;">违禁词检测器</a>扫一遍极限词；要看看同一文案分享出去的卡片效果，用 <a href="/tools/og-card-preview" style="color:#1a0dab;">OG 社交卡片预览</a>（标签创意 ↔ 文案合规 ↔ 社交分享卡片，营销工具三链路）。</div>
+            </div>
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="hg-tip">
+                    <b>怎么用：</b>左侧每行输入一个关键词（中/英文均可，最多 20 个），选平台与数量档，点「生成标签」。<br>
+                    <b>三组输出：</b>核心标签（与关键词直接命中的标签）、热门标签（所选平台的高热度通用标签）、长尾标签（相关但相对小众的标签）；每标签带热度徽章：🔥爆款 / 📈热门 / 🌱潜力 / 💎长尾。<br>
+                    <b>三层策略：</b>① 别名命中——关键词命中标签别名直接进核心组；② 品类关联——命中标签的同品类标签进入热门/长尾候选；③ 平台热门补足——按所选平台补足高热度标签；关键词零命中时自动派生 <code>#关键词</code> 保底。<br>
+                    <b>数量档：</b>5 / 10 / 15 / 20 四档，切换平台会自动按平台默认建议同步（小红书 10、抖音 5、Instagram 15、YouTube 10、通用 10）。<br>
+                    <b>隐私：</b>纯前端本地生成，关键词只在你的浏览器里流转，不上传服务器。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="hg-tip">
+                    <b>为什么有的关键词没命中标签？</b>内置标签库是静态快照，覆盖有限；零命中时工具会自动把关键词本身派生成 <code>#关键词</code> 保底，保证核心组不为空。<br>
+                    <b>热度徽章准吗？</b>徽章来自内置标签库的静态热度快照（见下方真限制①），仅作相对参考，不是实时热度。<br>
+                    <b>下载的文件名是什么？</b><code>hashtags-YYYYMMDD-HHmmss.txt</code>，例如 <code>hashtags-20261031-193000.txt</code>，三组标签分节排列。<br>
+                    <b>英文关键词怎么处理？</b>英文不区分大小写匹配，输出统一小写（如 <code>#makeup</code>）；中文原样输出。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="hg-note">
+                    <a href="/tools/forbidden-word-detector" style="color:#1a0dab;">违禁词检测器</a>（标签/文案定稿前扫一遍极限词与功效承诺，标签创意 ↔ 文案合规双向联动）<br>
+                    <a href="/tools/og-card-preview" style="color:#1a0dab;">OG 社交卡片预览</a>（同一文案分享到各社交平台的卡片渲染，标签创意 ↔ 社交分享卡片双向联动）
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <ul class="hg-limits">
+                    <li><b>热度为内置快照，非实时：</b>标签热度来自内置标签库 v1.0 静态快照，不随平台实时热度更新；徽章仅作相对参考，发文前请以各平台站内搜索的实际热度为准。</li>
+                    <li><b>平台算法变化快：</b>各平台的推荐与标签权重算法经常调整，同一标签在不同时期的流量效果可能差异很大；标签库不随算法更新自动同步。</li>
+                    <li><b>仅辅助创意：</b>本工具只做标签拼装与创意辅助，不保证流量效果；最终选用哪些标签请结合你的内容定位人工决策。</li>
+                    <li><b>零上传、全部本地：</b>匹配与生成全在当前浏览器内完成，关键词不上传任何服务器；本页面不发起任何外部网络请求。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/hashtag-generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

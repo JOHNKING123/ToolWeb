@@ -7,7 +7,7 @@
  * screen-record-20261031-150000.webm）与 ext/date 非法、extensionFor webm/mp4
  * 映射与未知 mime、formatFileSize 向量、recorderTransition 状态机转移表
  * （空闲→录制→暂停→结束→空闲）与非法转移、BITRATE_LEVELS/MIME_CANDIDATES
- * 常量、categories.go 注册（Path 总数 246→246、Icon screen_share、图片处理、
+ * 常量、categories.go 注册（Path 总数 247→247、Icon screen_share、图片处理、
  * New、中英文 Description）、模板 SEO 面板／真限制四条／互链
  * （GIF 压缩优化器双向、视频帧提取器单向链入）／不链未交付工具、
  * 零网络请求静态检查。
@@ -141,7 +141,7 @@ ok(GO_SRC.slice(srIdx, srIdx + 1200).indexOf('Category:    "图片处理"') >= 0
 ok(GO_SRC.slice(srIdx, srIdx + 2000).indexOf("screen recorder") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 246, "注册 Path 总数 246→246");
+eq(pathCount, 247, "注册 Path 总数 247→247");
 
 /* ---------- 9. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "screen_recorder.html"), "utf8");
