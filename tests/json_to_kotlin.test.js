@@ -164,6 +164,13 @@ var KW = M.generateKotlin(JSON.parse('{"class":"x"}'),
   { rootName: "Root", serializedName: true, nullable: true });
 has(KW, "val `class`: String", "Kotlin 关键字属性名用反引号转义");
 
+/* ---------- 6b. 回归：去重后缀场景注解补齐（2026-10-31 评审反馈） ---------- */
+var DEDUP_ANNOT = M.generateKotlin(JSON.parse('{"user_name":"x","userName":"y"}'),
+  { rootName: "Root", serializedName: true, nullable: true });
+has(DEDUP_ANNOT, '@SerializedName("user_name")', "回归：去重场景 user_name→注解");
+has(DEDUP_ANNOT, '@SerializedName("userName")', "回归：去重场景 userName→注解（属性名 userName2≠key）");
+has(DEDUP_ANNOT, "val userName2: String", "回归：去重场景属性名为 userName2");
+
 /* ---------- 7. categories.go 注册 ---------- */
 var GO_SRC = fs.readFileSync(path.join(ROOT, "tools", "categories.go"), "utf8");
 var ktIdx = GO_SRC.indexOf('"json_to_kotlin"');

@@ -241,8 +241,8 @@ function generateKotlin(parsed, opts) {
     var usedProps = {};
     def.node.fields.forEach(function (f, idx) {
       var prop = propName(f.key, usedProps);
-      var raw = toCamelCase(f.key);
-      if (useAnnot && raw !== f.key) {
+      var semantic = prop.replace(/^`|`$/g, ''); // 去掉关键字反引号转义后的语义名
+      if (useAnnot && semantic !== f.key) {
         hasAnnot = true;
         lines.push('    @SerializedName("' + escapeKotlinString(f.key) + '")');
       }
