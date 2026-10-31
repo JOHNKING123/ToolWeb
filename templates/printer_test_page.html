@@ -1,0 +1,134 @@
+{{define "printer_test_page"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打印机测试页生成器 - A4/Letter 打印测试页在线生成 | 程序员工具箱</title>
+    <meta name="description" content="免费在线打印机测试页生成器：A4 / US Letter 纸张规格＋纵向/横向，canvas 按毫米精确绘制 CMYK 四通道 100% 色块＋10 级梯度条、20 级灰阶、中英文 6~18pt 文字行、0.5/1/2pt 细线组、100mm 精确参考尺、四角定位十字，一键打印或导出 PNG，纯前端本地生成不上传。Printer test page generator: mm-precise CMYK test page, A4/Letter, print & PNG export, 100% client-side.">
+    <meta name="keywords" content="打印机测试页,打印测试页,打印机校准,CMYK测试页,灰阶测试,打印测试,A4测试页,printer test page,print test page,CMYK test">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/printer-test-page">
+    <meta property="og:title" content="打印机测试页生成器 - A4/Letter 毫米精确打印测试页">
+    <meta property="og:description" content="canvas 按毫米精确绘制：CMYK 色块＋梯度条、20 级灰阶、文字行、细线组、100mm 参考尺、四角定位十字；一键打印或导出 PNG，纯前端本地生成。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/printer-test-page">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"打印机测试页生成器","description":"免费在线打印机测试页生成器：A4 / US Letter 纸张规格＋纵向/横向，canvas 按毫米精确绘制 CMYK 四通道 100% 色块＋10 级梯度条、20 级灰阶、中英文多字号文字行、细线组、100mm 精确参考尺与四角定位十字，一键打印或导出 PNG，纯前端本地生成不上传。","url":"https://www.johnkingzcq123.xyz/tools/printer-test-page","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style id="ptp-page-css">@page{size:A4 portrait;margin:0;}</style>
+    <style>
+        .ptp-layout{display:grid;grid-template-columns:280px 1fr;gap:1rem;align-items:start}
+        .ptp-panel h3{margin-bottom:.6rem}
+        .ptp-field{margin-bottom:.8rem}
+        .ptp-field label{display:block;font-weight:600;color:#111827;margin-bottom:.3rem;font-size:.92rem}
+        .ptp-select{width:100%;padding:.5rem .6rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.95rem;background:#fff;box-sizing:border-box}
+        .ptp-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+        .ptp-toolbar .btn{flex:1 1 100%;justify-content:center}
+        .ptp-msg{display:none;border:1px solid;border-radius:.5rem;padding:.6rem .8rem;margin-top:.8rem;font-size:.9rem}
+        .ptp-preview{background:#e5e7eb;border-radius:.6rem;padding:1.2rem;overflow:auto;max-height:78vh;text-align:center}
+        .ptp-preview canvas{background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+        .ptp-note{color:#6b7280;font-size:.88rem;margin-top:.8rem;line-height:1.7}
+        .ptp-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .ptp-tip b{color:#111827}
+        .ptp-limits{color:#374151;line-height:1.9;font-size:.95rem;margin:.2rem 0 0;padding-left:1.2rem}
+        .ptp-limits b{color:#111827}
+        .ptp-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .ptp-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        @media (max-width:900px){
+            .ptp-layout{grid-template-columns:1fr}
+            .ptp-preview{max-height:60vh}
+        }
+        @media print{
+            body{margin:0 !important;background:#fff !important}
+            body *{visibility:hidden}
+            #ptp-print,#ptp-print *{visibility:visible}
+            #ptp-print{position:absolute !important;left:0 !important;top:0 !important;margin:0 !important;padding:0 !important;max-height:none !important}
+            #ptp-print canvas{box-shadow:none !important}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">print</i> 打印机测试页生成器</h1>
+            <p>A4 / US Letter 纸张规格＋纵向 / 横向，canvas 按毫米精确绘制 CMYK 色块、灰阶、文字行、细线组与 100mm 参考尺，一键打印或导出 PNG，全部在浏览器本地完成</p>
+        </div>
+        <div class="tool-content" style="max-width:1240px;margin:auto;">
+            <div class="ptp-layout">
+                <div class="tool-card ptp-panel">
+                    <h3>纸张与输出</h3>
+                    <div class="ptp-field">
+                        <label for="ptp-paper">纸张规格</label>
+                        <select id="ptp-paper" class="ptp-select">
+                            <option value="a4" selected>A4（210 × 297mm）</option>
+                            <option value="letter">US Letter（215.9 × 279.4mm）</option>
+                        </select>
+                    </div>
+                    <div class="ptp-field">
+                        <label for="ptp-orient">方向</label>
+                        <select id="ptp-orient" class="ptp-select">
+                            <option value="portrait" selected>纵向</option>
+                            <option value="landscape">横向</option>
+                        </select>
+                    </div>
+                    <div class="ptp-toolbar">
+                        <button class="btn btn-secondary" id="ptp-redraw">重新生成</button>
+                        <button class="btn btn-primary" id="ptp-print-btn">打印测试页</button>
+                        <button class="btn btn-secondary" id="ptp-png-btn">导出 PNG</button>
+                    </div>
+                    <div class="ptp-msg" id="ptp-msg" role="status"></div>
+                    <div class="ptp-note">打印前请在打印对话框中选择「实际大小 / 100%」缩放（见真限制②）；导出文件名为 <code>printer-test-page-{A4|Letter}-YYYYMMDD-HHmmss.png</code>。</div>
+                </div>
+                <div class="tool-card">
+                    <h3>测试页预览（按所选规格毫米精确绘制）</h3>
+                    <div class="ptp-preview" id="ptp-print">
+                        <canvas id="ptp-canvas" aria-label="打印机测试页预览"></canvas>
+                    </div>
+                    <div class="ptp-note">预览与打印共用同一张 canvas：96dpi 下 1mm = 3.78px，@page 尺寸随所选规格自动切换（A4 / letter × 纵向/横向）。屏幕仅示意排布，毫米精度以打印后直尺实测 100mm 参考尺为准。</div>
+                </div>
+            </div>
+            <div class="tool-card" style="margin-top:1.2rem;">
+                <h3>使用说明</h3>
+                <div class="ptp-tip">
+                    <b>怎么用：</b>左侧选纸张规格（A4 / US Letter）与方向（纵向 / 横向），右侧即时预览；点「打印测试页」走浏览器打印（仅输出测试页本身），或点「导出 PNG」下载 2 倍清晰度位图。<br>
+                    <b>测试页内容：</b>CMYK 四通道 100% 色块（看各通道是否出墨）、每通道 10 级梯度条（10%→100%，看阶调是否断层）、20 级灰阶（K 0%→100%，看灰平衡是否偏色）、中英文 6/8/10/12/14/18pt 文字行（看小字是否清晰）、0.5/1/2pt 横/竖细线组（看细线是否断线）、100mm 精确参考尺（10mm 大刻度＋1mm 小刻度，打印后用直尺核验缩放是否准确）、整页边框对齐框＋四角定位十字（看页边距与歪斜）。<br>
+                    <b>毫米精确：</b>绘制坐标全部经 mmToPx（96dpi）换算，canvas CSS 尺寸与纸张物理尺寸 1:1 对应；打印时 @page size 跟随所选规格，缩放必须 100%。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <dl class="ptp-faq">
+                    <dt>打印出来的 100mm 尺子量出来不是 100mm？</dt>
+                    <dd>99% 是打印对话框缩放没选对：必须选「实际大小」或 100%，「适合页面 / 自适应」会整体缩放。请重打一次并核对对话框里的缩放选项。</dd>
+                    <dt>某个颜色通道完全不出墨怎么办？</dt>
+                    <dd>先看 CMYK 100% 色块区：缺哪个通道就是哪个墨盒/喷头的问题。清洗喷头、检查墨量后重打本页对比；本工具只呈现测试图案，不做硬件诊断（见真限制①）。</dd>
+                    <dt>导出 PNG 的清晰度够打印吗？</dt>
+                    <dd>导出为 2 倍背屏分辨率（A4 纵向约 1588×2245px），日常比对足够；要做出版级色彩校准请用专业 ICC 流程（见真限制③）。</dd>
+                    <dt>为什么页面是英文混排？</dt>
+                    <dd>文字行同时覆盖中英文与数字，方便一次看出中英文字体渲染与小字号清晰度差异。</dd>
+                </dl>
+            </div>
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="ptp-note">
+                    <a href="/tools/envelope-printer" style="color:#1a0dab;">信封打印助手</a>（信封按毫米排版打印：先用本页测试页确认打印机缩放与边距，再去排信封，打印链路）
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <ul class="ptp-limits">
+                    <li><b>不判断硬件故障：</b>本页只生成标准测试图案（色块/灰阶/文字/细线/标尺），帮你「看出问题在哪一通道」，不诊断卡纸、缺墨、喷头堵塞等硬件故障，硬件问题请按打印机厂商流程排查。</li>
+                    <li><b>打印缩放须 100% / 实际大小：</b>打印对话框中必须选「实际大小」或 100% 缩放；任何「适合页面」「自适应」缩放都会破坏毫米精度。标尺精度以打印后用直尺实测 100mm 参考尺为准，屏幕预览仅示意。</li>
+                    <li><b>屏显色≠打印色：</b>屏幕是 RGB 发光、打印机是 CMYK 着墨，色彩空间本就不同；本页色块仅供判断各通道是否出墨、有无偏色/断层，不做精确色彩校准，专业校色请走 ICC 流程。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/printer-test-page.js?v=1"></script>
+</body>
+</html>
+{{end}}

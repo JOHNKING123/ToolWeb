@@ -2129,6 +2129,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "printer_test_page",
+					Name:        "打印机测试页生成器",
+					Description: "打印机测试页在线生成：A4/US Letter 纸张规格＋纵向/横向，canvas 按毫米精确绘制 CMYK 四通道 100% 色块＋10 级梯度条、20 级灰阶、中英文 6~18pt 文字行、0.5/1/2pt 细线组、100mm 精确参考尺（10mm 刻度）、整页边框对齐框＋四角定位十字；window.print() 直接打印（@page 跟随规格）、一键导出 PNG，纯前端零上传 · Printer test page generator: mm-precise CMYK/grayscale/text/fine-line/scale test page, A4/Letter, print & PNG export, 100% client-side",
+					Path:        "/tools/printer-test-page",
+					Icon:        "print",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

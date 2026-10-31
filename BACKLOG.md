@@ -1,3 +1,91 @@
+## 今日任务（2026-10-31 23:38 · PM 选定轮，接 178 轮通用调研）
+
+**选定：打印机测试页生成器（printer_test_page）** — 本轮唯一任务（新工具）。
+- **顺位**：178 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转 `templates/jianfan_converter.html` 仍不存在、继续开发中，移出候选池；域名创意生成器已交付 c455137，社媒标签生成器已交付 e73d460）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`printpage`／`打印测试` 全仓 **0 命中**；`social_title_bio`／`社媒标题`／`简介生成器`／`bio_generator`／`social_title` 0 命中（第二顺位社媒标题/简介生成器）；`.env 脱敏` 口径复核——`脱敏` 命中仅 text_privacy_masker（文本隐私脱敏）／prompt_sanitizer（提示词占位符脱敏）／text_diff、project_to_txt、forbidden_word_detector 等正文引用，均为无关口径；`env_example`/`dotenv`/`env_sanit`/`env_mask` 命中仅 env_parser（ID/模板/JS，.env 解析校验**相邻口径非同一口径**）与 gitignore_generator.js 模板注释「dotenv 环境变量文件」（无关）；**无「.env→.env.example 生成」口径，真缺口确凿**（第三顺位 .env 脱敏生成器）——**三候选均无硬伤，顺位即理由，不跳过**。Icon `print` 精确值实测 0 占用（`fingerprint` 系 grep -i 误命中，已排除；语义贴合打印）。
+- **选定理由**：① **顺位即理由**——178 轮 Top3 首席，无硬伤递补；② **痛点真实**——打印机偏色/条纹/文字模糊/打印边距不对时，想快速打一张测试纸定位问题，不想装驱动工具（V2EX t/1251721 PrintPageCheck 10-25 单独立信号）；③ **一轮可高质量交付**——纯前端小难度：canvas 按毫米精确绘制测试图案，纯函数可写逐字向量（CMYK→RGB 换算、mm→px、纸张尺寸），无外部请求、无硬件硬伤；④ **簇补位**——生活工具簇补位；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+- **品类归位**：注册到「生活工具」类目（现有 14 工具）；New: true；ID `printer_test_page`、Path `/tools/printer-test-page`、Icon `print`。
+
+**规格**（开发轮按此执行）：
+- **输入**：纸张规格（A4 210×297mm／US Letter 215.9×279.4mm，默认 A4）；打印方向（纵向默认；横向按纸张旋转）；可选：显示标尺刻度开/关。
+- **生成**：canvas 按毫米精确绘制（96 CSS px/in 基准：1mm=3.77953px）——
+  - CMYK 色块：C/M/Y/K 各 100% 实色块 ＋ 每通道 0→100% 10 级梯度条（偏色/缺色一眼定位）；
+  - 灰阶渐变：0~100% 20 级灰阶（条纹/断墨检测）；
+  - 文字清晰度：中英文多字号文字行（6/8/10/12/14/18pt）＋细线组（0.5pt/1pt/2pt 横竖斜）；
+  - 参考线：横向 100mm 精确参考尺（附 10mm 刻度，验证打印缩放是否失真）＋整页边框对齐框（裁边/边距偏移检测）＋四角定位十字；
+  - 输出合法性：所有尺寸以 mm 为源单位换算，数值四舍五入到 2 位小数。
+- **产出**：`window.print()` 浏览器直接打印（`@media print` 隐藏页面 UI、仅输出测试页，`@page { size: A4/Letter }` 按规格切换）＋ 导出 PNG 下载（文件名 `printer-test-page-A4-YYYYMMDD-HHmmss.png`）。
+- **互链**：不链未交付工具；本轮不强求互链（无直接相邻已交付工具）。
+- **真限制（页面明示）**：① 只输出标准化测试图案，不诊断硬件故障，故障定位仍需按图案人工判断；② 打印前务必把打印机「缩放/适应页面」设为 100%/实际大小，否则标尺失准；③ 屏幕显示色与实际打印受驱动色彩管理影响，以纸上结果为准。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `mmToPx(mm)` → number（1mm=3.77953px；非正数/非数值抛 Error，err.field="mm"）。
+  - `cmykToRgb(c,m,y,k)` → `{r,g,b}`（0~100 整数；越界抛 Error，err.field="channel"）。
+  - `getPaperSize(spec)` → `{w:mm, h:mm, label}`（spec 仅 'a4'/'letter'；非法抛 Error，err.field="spec"）。
+  - `buildScaleTicks(lengthMm, stepMm)` → number[] 刻度位置数组（mm 单位）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `mmToPx(100)` → `377.95`（保留 2 位小数）。
+  - `cmykToRgb(0,100,100,0)` → `{r:255,g:0,b:0}`；`cmykToRgb(100,0,0,0)` → `{r:0,g:255,b:255}`。
+  - `getPaperSize('a4')` → `{w:210,h:297,label:'A4'}`；`getPaperSize('letter')` → `{w:215.9,h:279.4,label:'US Letter'}`。
+  - `buildScaleTicks(100,10)` → `[0,10,20,30,40,50,60,70,80,90,100]`。
+
+**验收标准**：
+1. 选 A4/Letter→canvas 精确绘制 CMYK 色块＋灰阶＋文字/细线＋100mm 标尺＋边框对齐框；打印按钮调 window.print()（@media print 仅输出测试页、@page size 跟随规格）；PNG 下载命名含规格与时间戳。
+2. 纯函数契约 node 测试全过（mmToPx/cmykToRgb/getPaperSize/buildScaleTicks 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 248→249、ID/Path/Icon/Category）。
+3. 真限制在页面明示（三条：不判硬件故障、打印缩放须 100%、屏显色≠打印色）。
+4. `/tools/printer-test-page` 注册，「生活工具」类目，New: true；旧测试 Path 断言 248→249 同步。
+5. go build/vet 通过；本地 `/tools/printer-test-page` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）。
+
+**预计改动文件**（5 项）：
+1. `templates/printer_test_page.html`（页面＋真限制＋@media print 样式＋SEO 面板）
+2. `static/js/printer-test-page.js`（canvas 绘制引擎＋纯函数＋打印/下载交互）
+3. `tests/printer_test_page.test.js`（node 纯逻辑测试）
+4. `tools/categories.go`（注册：ID `printer_test_page`、Path `/tools/printer-test-page`、Icon `print`、Category 生活工具、New: true）
+5. 旧测试 Path 总数断言 248→249 同步
+
+- **顺位递补**：社媒标题/简介生成器（`社媒标题` 0 命中真缺口；FreeToolHub 04-25 单弱信号；营销工具簇补位：标签＋标题/简介＋违禁词检测＋OG 卡片预览）→ 第二顺位（开发中若遇交付级阻塞递补）；.env 脱敏生成器（`脱敏` 命中均为无关口径已裁定；env_parser 相邻口径非同一口径；DevsTools 榜单单信号；开发工具簇补位「脱敏-解析-打包」）→ 第三顺位待命；高精度计算器（方向修正口径风险，低优先观察）保持不动。
+- **交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 与 FETCH_HEAD 同头 c455137；**本轮仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例）；`ls templates/jianfan_converter.html` 不存在（简繁互转并行开发中，开发轮注意 categories.go 合并与 Path 基线 248→249 漂移）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 23:00 · 通用调研第一百七十八轮，接 21:00 PM 选定轮）
+
+**交付状态**：10-31 通用调研第一百七十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**域名创意生成器交付闭环**（c455137 新增：关键词→前缀/后缀/拼接/创意变形四组域名创意，中文按内置字表转拼音，.com/.cn/.net/.io/.dev/.xyz TLD 多选，每条/全部一键复制＋下载 domain-ideas-YYYYMMDD-HHmmss.txt；与域名查询双向互链、单向链入 Slug 生成器；真限制三条页面明示；ID domain_name_ideas、Path /tools/domain-name-ideas、Icon lightbulb、New；纯前端零外部请求；node 测试 88 断言全过；Path **247→248**，38 个旧测试文件断言同步；go build/vet 通过，本地实测 200；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head c455137），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：打印机测试页生成器→首席／社媒标题/简介生成器→第二／**.env 脱敏生成器→观察备选晋升 P2 第三顺位**（本轮零重叠复核，「脱敏」命中均为无关口径已裁定；env_parser 为相邻口径非同一口径；DevsTools 榜单单信号；开发工具簇补位）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 轮，优先小难度纯前端。
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 c455137（域名创意生成器新增）／e73d460（社媒标签生成器）／827ff0f（JSON→Kotlin @SerializedName 修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **248**；`ls templates/domain_name_ideas.html` 存在；本地分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 与 FETCH_HEAD 同头 c455137；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - 域名创意生成器：已交付（/tools/domain-name-ideas，Path 247→248）——划出候选池。
+   - 打印机测试页生成器：`打印测试`／`printpage` 三处 **0 命中**（本轮复测）——**递进首席**。
+   - 社媒标题/简介生成器：`社媒标题`／`social_title_bio`／`简介生成器` 三处 **0 命中**（本轮复测）——**递进第二顺位**。
+   - **.env 脱敏生成器**：本轮晋升复核——`脱敏`／`env_example`／`dotenv` 三处命中仅「脱敏」字样：text_privacy_masker（文本隐私脱敏：手机号/身份证打码，无关口径）／prompt_sanitizer（提示词占位符脱敏：喂 LLM 前密钥占位符替换，无关口径）／text_diff、project_to_txt 均为正文互链/说明引用（无关）；**无「.env→.env.example 生成」口径**；env_parser（.env 解析与校验器，/tools/env-parser）为**相邻口径非同一口径**（解析校验 vs 脱敏生成）——**真缺口确凿，观察备选→P2 第三顺位**（晋升理由：DevsTools 榜单 177 轮单信号；开发工具簇补位（与 env_parser／prompt_sanitizer／project_to_txt 形成「脱敏-解析-打包」开发安全小闭环）；纯前端小难度：逐行解析→KEY 保留/值清空或占位符→输出 .env.example，一键复制/下载；真限制：无法判断密钥有效性、仅格式脱敏，须明示）。
+3. 新信号扫描（V2EX 10-26~10-31＋HN/英文为本轮主线）：**无新晋候选**，新信号 ~10 项全部消解或被已交付覆盖——
+   - V2EX：t/1253201 自媒体获客四工具（10-30；174 轮已消解：Chrome 插件×3＋Windows 客户端＋付费，确认消解）／t/1250428 md2chat（10-20；176 轮已消解：md_to_chat 已交付覆盖，确认消解）／t/1250292 Open Resume（10-20；176 轮已消解：需 Docker/Node 服务端，确认消解）／t/1253431 VS Code 扩展（10-31；177 轮已消解：非网页工具口径，确认消解）／t/1252576 FrameLoom（10-28；176 轮已消解：需本地环境＋Agent/配音费用，确认消解）／t/1251601 V2EX 评论上下文插件（10-26；Chrome 插件口径，非单页网页工具，消解）／t/1252493 xGoose（~10-28；Chrome 插件＋需登录＋AI 额度，非单页口径，消解）／t/1246569 免费外链 SEO 清单（~10-10；外链发布清单，非单页工具口径，消解）／t/1250858 资路资产管理（~10-23；需后端＋AI＋记账，非单页口径，消解）；
+   - HN/英文：Sphinx git hook quiz（需 AI API＋npm 安装，非单页口径，消解）／HN API 教程／Who is hiring 帖子 → 均无新单工具信号，消解。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **打印机测试页生成器** — 递进首席（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；本轮 `打印测试`/`printpage` 三处 0 命中复测真缺口；痛点：打印机偏色/条纹/文字模糊/打印边距不对时，想快速打一张测试纸定位问题，不想装驱动工具；CMYK 色块＋灰阶渐变＋文字/细线清晰度＋100mm 参考线＋A4/US Letter 双规格，window.print() 浏览器直接打印＋可选下载，纯前端小难度；生活/办公工具簇补位；真限制：只出标准化测试图案、不判硬件故障，须明示）。
+2. **社媒标题/简介生成器** — 递进第二顺位（FreeToolHub 04-25 单弱信号；本轮 `社媒标题`/`social_title_bio`/`简介生成器` 三处 0 命中复测真缺口；痛点：发 YouTube/Instagram/小红书时标题简介憋不出来、瞎写没点击；关键词→平台化标题/简介模板＋一键复制，纯前端小难度；营销工具簇补位（hashtag_generator 已交付，同簇联动「关键词→标签＋标题＋简介」）；真限制：模板为通用句式非爆款保证、平台算法变化快，须明示）。
+3. **.env 脱敏生成器** — 观察备选→P2 第三顺位晋升（DevsTools 榜单单信号；本轮晋升复核真缺口确凿（「脱敏」命中均为无关口径已裁定；env_parser 为相邻口径非同一口径）；痛点：提交代码/写部署文档时需要把 .env 脱敏成 .env.example 分享，手动操作容易漏 key 或改错格式；逐行解析→KEY 保留、值清空/占位符→输出 .env.example＋一键复制/下载，纯前端小难度；开发工具簇补位（与 env_parser／prompt_sanitizer／project_to_txt 同簇）；真限制：无法判断密钥有效性、仅做格式脱敏，须明示）。
+
+其余观察项保持原状：**高精度计算器 BigNumber（177 轮新弱观察**，DevsTools 榜单单信号；本轮 `bignumber`/`高精度` 三处 0 命中复测真缺口；JS 浮点精度痛点如 0.1+0.2；本地 decimal 实现纯前端小难度；**用户 10-18 方向修正（不扩泛财务/计算器类）口径风险**，低优先保持）／AI 图片超分（177 轮新弱观察，tubox 10-28 单信号；ONNX 模型硬伤同类，低优先）／Docker Compose→K8s YAML（177 轮新弱观察，DevsTools 榜单单信号；docker_run_to_compose 相邻口径；低优先）／LLM Token 成本估算（177 轮新观察：ai_token_counter 增强备选；低优先）／一键图片去背景（165 轮；tubox 第八信号；ONNX 硬伤未解低优先保持）／浏览器 GPU 性能测试（175 轮观察项；受众偏窄，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／负片图像还原（174 轮观察备选）／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百七十八轮：域名创意生成器交付闭环（c455137；`/tools/domain-name-ideas` 已注册；Path 247→248；node 88 断言全过；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head c455137），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：打印机测试页生成器→首席／社媒标题/简介生成器→第二／**.env 脱敏生成器→观察备选晋升 P2 第三顺位**（本轮晋升复核真缺口确凿：`脱敏` 命中均为无关口径（text_privacy_masker 文本隐私脱敏、prompt_sanitizer 提示词占位符脱敏）已裁定；env_parser 为相邻口径（解析校验 vs 脱敏生成）非同一口径；DevsTools 榜单单信号；开发工具簇补位；纯前端小难度）；**本轮 fetch 恢复成功**（按铁律加 GIT_SSH_COMMAND 后成功，本地 HEAD 与 FETCH_HEAD 同头 c455137）；新信号 ~10 项全部消解（V2EX 8 项：自媒体获客/md2chat/Open Resume/VS Code 扩展/FrameLoom 确认消解＋评论上下文插件/xGoose/外链清单/资路新消解；HN/英文：Sphinx git hook 需 AI API 非单页口径、HN API 教程、Who is hiring 帖子，均无新单工具信号）；高精度计算器（`bignumber`/`高精度` 0 命中复测真缺口）因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过；全量 **248 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 域名创意生成器 | 已交付划出（c455137 新增：关键词→前缀/后缀/拼接/创意变形四组域名创意，中文按内置字表转拼音，TLD 多选；每条/全部一键复制＋下载 domain-ideas-YYYYMMDD-HHmmss.txt；与域名查询双向互链、单向链入 Slug 生成器；真限制三条页面明示；node 88 断言全过；`/tools/domain-name-ideas` 已注册；Path 247→248；38 个旧测试文件断言同步；go build/vet 通过；本地实测 200；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head c455137；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 打印机测试页生成器 | 递进首席（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；本轮 `打印测试`/`printpage` 0 命中复测；CMYK＋灰阶＋文字/细线＋100mm 参考线＋A4/US Letter；window.print 纯前端小难度；真限制：只出标准化测试图案、不判硬件故障须明示） | 小 | P2（留池） |
+| 社媒标题/简介生成器 | 递进第二顺位（FreeToolHub 04-25 单弱信号；本轮 `社媒标题`/`social_title_bio`/`简介生成器` 0 命中复测真缺口；关键词→平台化标题/简介模板＋一键复制；纯前端小难度；营销工具簇补位（hashtag_generator 已交付，同簇联动）；真限制：模板非爆款保证须明示） | 小 | P2（留池） |
+| .env 脱敏生成器 | 观察备选→P2 第三顺位晋升（DevsTools 榜单单信号；本轮晋升复核真缺口确凿（`脱敏` 命中均为无关口径已裁定；env_parser 为相邻口径非同一口径）；.env→.env.example（KEY 保留、值清空/占位符）＋一键复制/下载；纯前端小难度；开发工具簇补位（env_parser/prompt_sanitizer/project_to_txt）；真限制：无法判断密钥有效性须明示） | 小 | P2（留池） |
+| 高精度计算器 | 177 轮新弱观察（DevsTools 榜单单信号；本轮 `bignumber`/`高精度` 0 命中复测真缺口；JS 浮点精度痛点如 0.1+0.2；本地 decimal 实现纯前端小难度；**用户 10-18 方向修正（不扩泛财务/计算器类）口径风险**，低优先保持） | 小 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十八轮——域名创意生成器交付闭环（c455137，`/tools/domain-name-ideas` 已注册，全量 248 Path），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head c455137），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：打印机测试页生成器→首席（`打印测试`/`printpage` 0 命中复测）／社媒标题/简介生成器→第二（`社媒标题`/`social_title_bio` 0 命中复测）／**.env 脱敏生成器→观察备选晋升 P2 第三顺位**（晋升复核真缺口确凿；开发工具簇补位；纯前端小难度）；本轮 fetch 恢复成功（按铁律加 GIT_SSH_COMMAND 后成功，本地与远程同头 c455137；github.com host key 已写入 known_hosts，后续轮次可先免 StrictHostKeyChecking=no 参数试一次）；新信号 ~10 项全部消解（V2EX 8 项：自媒体获客/md2chat/Open Resume/VS Code 扩展/FrameLoom 确认消解＋评论上下文插件/xGoose/外链清单/资路新消解；HN/英文：Sphinx git hook 需 AI API 非单页口径、HN API 教程、Who is hiring 帖子，均无新单工具信号）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD c455137 与 FETCH_HEAD 同头；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 c455137（域名创意生成器新增）／e73d460（社媒标签生成器新增）／827ff0f（JSON→Kotlin @SerializedName 修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **248**；`ls templates/domain_name_ideas.html` 存在；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中）；Top3 候选重叠复核（`domain_name_ideas`／`domain-name-ideas` 已交付划出；`简繁`／`繁简`：仍开发中，移出候选池；`打印测试`／`printpage` 三处 0 命中（vendor 除外）；`社媒标题`／`social_title_bio`／`简介生成器` 三处 0 命中（`title_generator` 命中仅 scrolling_subtitle_generator 滚动字幕生成器，视频字幕口径，177 轮已裁定无关）；`.env 脱敏` 晋升复核：`脱敏` 命中仅 text_privacy_masker（文本隐私脱敏）／prompt_sanitizer（提示词占位符脱敏）／text_diff、project_to_txt 正文引用，无 .env→.env.example 生成口径，env_parser 为相邻口径（解析校验 vs 脱敏生成），真缺口确凿；高精度计算器 `bignumber`/`高精度` 0 命中复测（方向修正口径风险，低优先保持）；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-10-31 21:00 · PM 选定轮，接 177 轮通用调研）
 
 **选定：域名创意生成器（domain_name_ideas）** — 本轮唯一任务（新工具）。
