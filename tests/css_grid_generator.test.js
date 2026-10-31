@@ -184,7 +184,7 @@ ok(GO_SRC.indexOf('Category:    "开发工具"') >= 0, "categories.go 含开发�
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 247, "注册 Path 总数→247（历史遗留陈旧断言同步）");
+eq(Object.keys(uniq).length, 248, "注册 Path 总数→248（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf("css-grid-generator") >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("只做单层显式网格、不做嵌套子网格／subgrid") >= 0, "真限制 1：单层显式网格、不做子网格");
 ok(TPL_SRC.indexOf("不做多断点批量导出") >= 0, "真限制 2：不做多断点批量导出");

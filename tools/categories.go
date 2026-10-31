@@ -1791,6 +1791,15 @@ func GetCategories() []Category {
 					Icon:        "language",
 				},
 				{
+					ID:          "domain_name_ideas",
+					Name:        "域名创意生成器",
+					Description: "关键词生成域名组合创意：前缀法/后缀法/拼接组合/创意变形四组输出，中文关键词按内置字表转拼音，.com/.cn/.net/.io/.dev/.xyz TLD 偏好多选，每条/全部一键复制＋下载 domain-ideas-YYYYMMDD-HHmmss.txt，纯前端本地生成不出浏览器 · Domain name ideas: keyword-based domain combos (prefix/suffix/concat/transform), Chinese→pinyin, TLD options, copy & download, 100% client-side",
+					Path:        "/tools/domain-name-ideas",
+					Icon:        "lightbulb",
+					New:         true,
+					Category:    "网络工具",
+				},
+				{
 					ID:          "ip-lookup",
 					Name:        "IP查询",
 					Description: "查询任意IP归属地信息",

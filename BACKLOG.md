@@ -1,3 +1,360 @@
+## 今日任务（2026-10-31 21:00 · PM 选定轮，接 177 轮通用调研）
+
+**选定：域名创意生成器（domain_name_ideas）** — 本轮唯一任务（新工具）。
+- **顺位**：177 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转 `templates/jianfan_converter.html` 仍不存在、继续开发中，移出候选池）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`域名创意`／`域名生成器`／`创意域名` 三处 **0 命中**；`打印测试`／`打印机测试`／`printpage` 0 命中（第二顺位打印机测试页生成器）；`社媒标题`／`标题生成器`／`简介生成器`／`bio_generator` 0 命中（第三顺位社媒标题/简介生成器；`title_generator` 命中仅滚动字幕生成器，177 轮已裁定无关）——**真缺口确凿，不跳过**。Icon `lightbulb` 实测 0 占用（语义贴合"创意"；`dns`/`language`/`public` 已被域名查询等既有工具占用；备选 `globe`/`explore` 均 0 占用）。
+- **选定理由**：① **顺位即理由**——177 轮 Top3 首席，无硬伤递补；② **痛点真实**——起名/找域名时组合思路枯竭、逐个查可用性耗时；③ **一轮可高质量交付**——纯前端小难度：组合生成纯函数可写逐字向量，无外部请求、无硬件硬伤；④ **簇补位**——与既有「域名查询」（/tools/domain-check）天然成对（创意→查可用性），可与域名查询双向互链；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+- **品类归位**：注册到「网络工具」类目（紧邻「域名查询」，ID `domain-check`），New: true；ID `domain_name_ideas`、Path `/tools/domain-name-ideas`。
+
+**规格**（开发轮按此执行）：
+- **输入**：核心关键词（逗号/空格/换行分隔，中或英文，1~3 个；非法/空输入 → 行内错误提示，不生成）；组合风格（多选：前缀法／后缀法／拼接组合／创意变形，默认全选）；TLD 偏好（多选：.com/.cn/.net/.io/.dev/.xyz，默认全选）；生成数量（每风格默认 10 条，总数上限 60）。
+- **生成**：纯函数组合引擎——
+  - 中文关键词先转拼音（借鉴 slug_generator 内置拼音字表方案，小写无声调；拼音字表覆盖有限→真限制明示）；
+  - 前缀库（固定顺序）：`get,my,go,try,pro,i,e,hey,top,neo` 等；后缀库（固定顺序）：`hub,lab,ly,io,fy,app,zone,works,studio,pro` 等；拼接：多关键词连写／短横连接；创意变形：去元音（如 cafe→cf）、双写字母（cooffee→coffeee）、常用替换（e→3、o→0、s→z）；
+  - 输出合法性过滤：LDH 规则（仅 a-z0-9-、不首尾连字符）、label ≤63 字符、全小写；
+  - 结果按「前缀创意／后缀创意／组合拼接／创意变形」四组展示，每条带完整 `label.tld`。
+- **产出**：每条一键复制 ＋ 全部一键复制 ＋ 下载 `.txt`（文件名 `domain-ideas-YYYYMMDD-HHmmss.txt`）。
+- **互链**：与「域名查询」（/tools/domain-check）**双向**互链（本页文案：「看中了哪个？去域名查询查注册状态」；域名查询页回链：「还没想好名字？用域名创意生成器」）；与「Slug 生成器」（/tools/slug-generator）**单向链入**（品牌名顺手转 slug）；不链未交付工具。
+- **真限制（页面明示）**：① 不含实时可用性检查——whois/RDAP 受浏览器出网与 CORS 限制，页面不做实时查询，查可用性请用站内域名查询工具；② 中文转拼音依赖内置常用字表，生僻字可能转写不准；③ 组合为创意辅助，不保证对应域名可注册。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `normalizeKeywords(input)` → string[]（去空、去重、截断 3；非法/空输入抛 Error，err.field="input"）。
+  - `toPinyin(word)` → string（中文转小写拼音；含非中文字母数字原样转小写）。
+  - `combineIdeas(keywords, opts)` → string[]（label 数组，按前缀→后缀→拼接→变形顺序；`opts.styles` 非法抛 Error，err.field="styles"）。
+  - `buildDomainLabels(ideas, tlds)` → `label.tld` 数组；`tlds` 非法抛 Error（err.field="tlds"）。
+  - `isValidLabel(label)` → boolean（LDH 校验）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `normalizeKeywords('咖啡,  咖啡 ,coffee')` → `['咖啡','coffee']`。
+  - `toPinyin('咖啡')` → `'kafei'`；`toPinyin('Hello World')` → `'hello world'`（小写原样）。
+  - `combineIdeas(['kafei'], {styles:['prefix'], perStyle:2})` → `['getkafei','mykafei']`（前缀库固定顺序逐字）。
+  - `isValidLabel('-bad')` → `false`；`isValidLabel('good-name')` → `true`；`isValidLabel('a'.repeat(64))` → `false`。
+  - `buildDomainLabels(['getkafei'], ['com','cn'])` → `['getkafei.com','getkafei.cn']`。
+
+**验收标准**：
+1. 输入关键词＋选风格/TLD→四组域名创意列表；每条一键复制、全部一键复制、下载 .txt；非法/空输入行内报错不生成。
+2. 纯函数契约 node 测试全过（normalizeKeywords/toPinyin/combineIdeas/buildDomainLabels/isValidLabel 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 247→248、ID/Path/Icon/Category）。
+3. 真限制在页面明示（不含实时可用性检查、拼音字表覆盖有限、创意不保证可注册）。
+4. `/tools/domain-name-ideas` 注册，「网络工具」类目，New: true；旧测试 Path 断言 247→248 同步。
+5. go build/vet 通过；本地 `/tools/domain-name-ideas` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）。
+
+**预计改动文件**（6 项）：
+1. `templates/domain_name_ideas.html`（页面＋真限制＋互链＋SEO 面板）
+2. `static/js/domain-name-ideas.js`（组合引擎＋拼音＋纯函数＋交互）
+3. `tests/domain_name_ideas.test.js`（node 纯逻辑测试）
+4. `templates/domain_check.html`（回链：域名查询→域名创意生成器「还没想好名字？」）
+5. `tools/categories.go`（注册：ID `domain_name_ideas`、Path `/tools/domain-name-ideas`、Icon `lightbulb`、Category 网络工具、New: true）
+6. 旧测试 Path 总数断言 247→248 同步
+
+- **顺位递补**：打印机测试页生成器（`打印测试`/`printpage` 0 命中真缺口；V2EX t/1251721 PrintPageCheck 10-25 单独立信号；真限制：只出标准化测试图案、不判硬件故障须明示）→ 第二顺位（开发中若遇交付级阻塞递补）；社媒标题/简介生成器（`社媒标题` 0 命中真缺口；FreeToolHub 04-25 单弱信号；营销工具簇补位：标签＋标题/简介＋违禁词检测＋OG 卡片预览）→ 第三顺位待命。
+- **交付核对**：本地当前分支 muse/dev-20260929（**本轮 `git fetch origin` 失败「access rights」**，21:00 研究轮同，仅用本地同头 e73d460 验证；本轮仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **247**（开发轮基线 247→248）；`ls templates/jianfan_converter.html` 不存在（简繁互转并行开发中，开发轮注意 categories.go 合并与基线漂移）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push（`GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"`）；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 21:00 · 通用调研第一百七十七轮，接 19:00 PM 选定轮）
+
+**交付状态**：10-31 通用调研第一百七十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**社媒标签生成器交付闭环**（e73d460 新增：关键词→小红书/抖音/Instagram/YouTube 三组标签，内置 10 品类标签库三层策略，热度徽章，一键复制/下载 hashtags-YYYYMMDD-HHmmss.txt；与违禁词检测器、OG 社交卡片预览双向互链；真限制四条页面明示；ID hashtag_generator、Path /tools/hashtag-generator、Icon local_offer、New；纯前端零外部请求；node 测试 79 断言全过；Path **246→247**，38 个旧测试文件断言同步；go build/vet 通过，本地实测 200；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head e73d460），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：域名创意生成器→首席／打印机测试页生成器→第二／社媒标题/简介生成器→观察备选晋升 P2 第三顺位。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 轮，优先小难度纯前端。
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 e73d460（社媒标签生成器新增）／827ff0f（JSON→Kotlin @SerializedName 修复）／22bc922（JSON→Kotlin 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **247**；`ls templates/hashtag_generator.html` 存在（12869 bytes）；`grep -c hashtag_generator tools/categories.go` = 1（注册确认）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中）；本地分支 muse/dev-20260929（**本轮 `git fetch origin` 失败「access rights」**，17:43 轮同，仅用本地同头 e73d460 验证；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - 社媒标签生成器：已交付（/tools/hashtag-generator，Path 246→247）——划出候选池。
+   - 域名创意生成器：175/176 轮已复测 `域名.*创意` 0 命中——**递进首席**。
+   - 打印机测试页生成器：175/176 轮已复测 `打印测试`/`printpage` 0 命中——**递进第二顺位**。
+   - **社媒标题/简介生成器**：本轮晋升复核——`社媒标题`／`标题生成器`／`简介生成器`／`bio_generator`／`YouTube标题`／`简介生成` 三处 **0 命中**；`title_generator` 命中仅 templates/scrolling_subtitle_generator.html（滚动字幕生成器，视频字幕口径，已裁定无关）——**真缺口确凿，观察备选→P2 第三顺位**（晋升理由：hashtag_generator 本轮刚交付，营销工具簇成型——违禁词检测器／OG 社交卡片预览／社媒标签生成器；标题/简介为簇内自然补位，可与标签生成器联动「同一批关键词→标签＋标题＋简介」；FreeToolHub 单弱信号＋簇协同，双重依据）。
+3. 新信号扫描（V2EX 10-28~10-31＋dev.to＋英文榜单为本轮主线）：**新晋弱观察 5 项（均为单信号＋低优先），其余全部消解或被已交付覆盖**——
+   - V2EX：t/1252552 tubox（10-28；纯前端图片工具箱 13 工具：批量压缩/改尺寸/格式转换/水印/ZIP 下载/AI 抠图/AI 2x/4x 放大；压缩/尺寸/格式/水印全被已交付覆盖；**AI 抠图→一键图片去背景第八独立信号**（模型按需加载＋自托管为新增缓解证据，但模型托管/首屏体验预研仍未达交付线，低优先保持）；**AI 2x/4x 放大→新弱观察「AI 图片超分」**（ONNX 硬伤同类，低优先））／t/1253201 自媒体获客四工具（10-30；Chrome 插件×3＋Windows 客户端＋付费，174 轮已消解，确认消解）／t/1253431 VS Code 扩展（10-31；非网页工具口径，消解）／t/1250522 protohub 原型托管（10-21；需注册＋后端，消解）／t/1250674 MockMock（10-21；截图套设备框＋宣传物料；**站内 screenshot_3d_mockup 已交付覆盖**（截图一键套 3D 样机：浏览器窗口框/手机机身框/悬浮 3D 卡片/平面阴影，canvas 导出 PNG），消解）；
+   - dev.to：**DevsTools 251 工具榜单**（hasandinho；Top10 逐项核对：LLM Token 计数=ai_token_counter 已交付／CSS→Tailwind=css_to_tailwind 已交付／JSON Schema=json_schema_validator 已交付／流式排版 Clamp=css_clamp_calculator 已交付／docker run→compose=docker_run_to_compose 已交付／webhook 签名≈hmac_generator 已交付覆盖→消解；**真缺口 4 项→新弱观察**：Docker Compose→K8s YAML（docker_run_to_compose 相邻口径，单榜单信号）／**高精度计算器 BigNumber**（`bignumber`/`高精度` 三处 0 命中真缺口；JS 浮点精度痛点；单榜单信号）／.env 脱敏→.env.example（env_parser 相邻口径，单榜单信号）／LLM Token 成本估算（ai_token_counter 增强备选：价格表＋成本试算，观察））；
+   - 其余：1024toolkit/hysenlabs/ToolHop 等榜单类 176 轮已消解，无新增。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **域名创意生成器** — 递进首席（Etemora 10-10 信号；`域名.*创意` 0 命中复测真缺口；痛点：起名/找域名时组合思路枯竭、逐个查可用性耗时；关键词→前缀/后缀/混搭组合创意＋TLD 建议，纯前端小难度：组合生成纯函数可写逐字向量；开发/营销工具簇补位；真限制：**不含实时可用性检查**，须明示）。
+2. **打印机测试页生成器** — 递进第二顺位（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；`打印测试`/`printpage` 0 命中复测真缺口；痛点：打印机偏色/条纹/文字模糊/打印边距不对时想快速打一张测试纸定位问题，不想装驱动工具；CMYK 色块＋灰阶渐变＋文字/细线清晰度＋100mm 参考线＋A4/US Letter 双规格，window.print() 浏览器直接打印＋可选下载，纯前端小难度；生活/办公工具簇补位；真限制：只出标准化测试图案、不判硬件故障，须明示）。
+3. **社媒标题/简介生成器** — 观察备选→P2 第三顺位晋升（FreeToolHub 04-25 单弱信号；本轮零重叠复测 `社媒标题`/`标题生成器`/`简介生成器` 0 命中（`title_generator` 命中仅滚动字幕生成器已裁定无关）真缺口；痛点：发 YouTube/Instagram/小红书时标题简介憋不出来、瞎写没点击；关键词→平台化标题/简介模板＋一键复制，纯前端小难度：模板组合纯函数可写逐字向量；**营销工具簇补位**（本轮 hashtag_generator 刚交付：标签＋标题/简介＋违禁词检测「发帖前先查」＋OG 卡片预览，同簇联动）；真限制：模板为通用句式非爆款保证、平台算法变化快，须明示）。
+
+其余观察项保持原状：**AI 图片超分（177 轮新弱观察**，tubox 10-28 单信号；AI 2x/4x 放大；ONNX 模型硬伤同类，低优先）／**高精度计算器 BigNumber（177 轮新弱观察**，DevsTools 榜单单信号；`bignumber`/`高精度` 0 命中真缺口；JS 浮点精度痛点；本地 decimal 实现纯前端小难度；低优先）／**Docker Compose→K8s YAML（177 轮新弱观察**，DevsTools 榜单单信号；docker_run_to_compose 相邻口径；纯前端中小难度；低优先）／.env 脱敏→.env.example（177 轮新弱观察，env_parser 相邻口径；低优先）／LLM Token 成本估算（177 轮新观察：ai_token_counter 增强备选，价格表＋成本试算；低优先）／一键图片去背景（165 轮；**本轮 tubox 构成第八独立信号**，模型按需加载＋自托管缓解证据新增，但模型托管/首屏体验预研仍未达交付线，低优先保持）／浏览器 GPU 性能测试（175 轮观察项；受众偏窄，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／负片图像还原（174 轮观察备选）／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百七十七轮：社媒标签生成器交付闭环（e73d460；`/tools/hashtag-generator` 已注册；Path 246→247；node 79 断言全过；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head e73d460），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：域名创意生成器→首席／打印机测试页生成器→第二／**社媒标题/简介生成器→观察备选晋升 P2 第三顺位**（本轮零重叠复测 0 命中；`title_generator` 命中仅滚动字幕生成器已裁定无关；营销簇联动为晋升依据）；新弱观察 5 项（AI 图片超分／高精度计算器／Docker Compose→K8s YAML／.env 脱敏／LLM Token 成本估算增强）；一键图片去背景第八信号（tubox 10-28；缓解证据新增但硬伤未解，低优先保持）；本轮消解 ~10 项（V2EX：自媒体获客 174 轮已消解确认／VS Code 扩展非网页口径／protohub 需后端／MockMock→screenshot_3d_mockup 已交付覆盖；dev.to DevsTools Top10：6 项被已交付覆盖（ai_token_counter/css_to_tailwind/json_schema_validator/css_clamp_calculator/docker_run_to_compose/hmac_generator）；其余榜单 176 轮已消解）；全量 **247 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒标签生成器 | 已交付划出（e73d460 新增：关键词→小红书/抖音/Instagram/YouTube 三组标签，内置 10 品类标签库三层策略，热度徽章，一键复制/下载 .txt；与违禁词检测器、OG 社交卡片预览双向互链；真限制四条页面明示；node 79 断言全过；`/tools/hashtag-generator` 已注册；Path 246→247；38 个旧测试文件断言同步；go build/vet 通过；本地实测 200；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head e73d460；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 域名创意生成器 | 递进首席（Etemora 10-10 信号；`域名.*创意` 0 命中复测真缺口；关键词→前缀/后缀/混搭组合＋TLD 建议；纯前端小难度；真限制：不含实时可用性检查须明示） | 小 | P2（留池） |
+| 打印机测试页生成器 | 递进第二顺位（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；`打印测试`/`printpage` 0 命中复测；CMYK＋灰阶＋文字/细线＋100mm 参考线＋A4/US Letter；window.print 纯前端小难度；真限制：只出测试图案不判硬件故障须明示） | 小 | P2（留池） |
+| 社媒标题/简介生成器 | 观察备选→P2 第三顺位晋升（FreeToolHub 04-25 单弱信号；本轮 `社媒标题`/`标题生成器`/`简介生成器` 0 命中复测真缺口；关键词→平台化标题/简介模板＋一键复制；纯前端小难度；营销工具簇补位（hashtag_generator 本轮刚交付，同簇联动）；真限制：模板非爆款保证须明示） | 小 | P2（留池） |
+| AI 图片超分 | 177 轮新弱观察（tubox 10-28 单信号；AI 2x/4x 放大；ONNX 模型硬伤同类（模型大/首屏慢），低优先） | 大 | 观察（低优先） |
+| 高精度计算器 | 177 轮新弱观察（DevsTools 榜单单信号；`bignumber`/`高精度` 三处 0 命中真缺口；JS 浮点精度痛点如 0.1+0.2；本地 decimal 实现纯前端小难度；低优先） | 小 | 观察（低优先） |
+| Docker Compose→K8s YAML | 177 轮新弱观察（DevsTools 榜单单信号；docker_run_to_compose 相邻口径（docker run→compose 已交付）；纯前端中小难度；低优先） | 小/中 | 观察（低优先） |
+| .env 脱敏生成器 | 177 轮新弱观察（DevsTools 榜单单信号；env_parser 相邻口径（.env 解析已交付）；.env→.env.example 脱敏；纯前端小难度；低优先） | 小 | 观察（低优先） |
+| LLM Token 成本估算 | 177 轮新观察（ai_token_counter 增强备选：已交付 token 计数；成本=价格表＋试算；单榜单信号；低优先） | 小 | 观察（低优先） |
+| 一键图片去背景 | 165 轮观察项（**本轮 tubox 10-28 构成第八独立信号**：纯前端图片工具箱，AI 抠图模型按需加载＋自托管为新增缓解证据；但模型托管/首屏体验预研仍未达交付线，低优先保持） | 大 | 观察（低优先） |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十七轮——社媒标签生成器交付闭环（e73d460，`/tools/hashtag-generator` 已注册，全量 247 Path），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head e73d460），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：域名创意生成器→首席／打印机测试页生成器→第二／**社媒标题/简介生成器→观察备选晋升 P2 第三顺位**（本轮零重叠复测 0 命中；营销簇联动为晋升依据）；新弱观察 5 项（AI 图片超分／高精度计算器／Docker Compose→K8s YAML／.env 脱敏／LLM Token 成本估算增强）；一键图片去背景第八信号（tubox；缓解证据新增但硬伤未解，低优先保持）；本轮消解 ~10 项（详见新信号扫描；其中 MockMock 被站内 screenshot_3d_mockup 已交付覆盖消解，DevsTools Top10 中 6 项被已交付覆盖）；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（**本轮 `git fetch origin` 失败「access rights」**，17:43 轮同，仅用本地同头 e73d460 验证；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 e73d460（社媒标签生成器新增）／827ff0f（JSON→Kotlin @SerializedName 修复）／22bc922（JSON→Kotlin 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **247**；`ls templates/hashtag_generator.html` 存在（12869 bytes）；`grep -c hashtag_generator tools/categories.go` = 1（注册确认）；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中）；Top3 候选重叠复核（`社媒标题`／`标题生成器`／`简介生成器`／`bio_generator` 0 命中；`title_generator` 命中仅 scrolling_subtitle_generator 已裁定无关；`域名.*创意` 175/176 轮已复测 0 命中；`打印测试`/`printpage` 175/176 轮已复测 0 命中；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push（`GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"`）；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-10-31 19:00 · PM 选定轮，接 176 轮通用调研）
+
+**选定：社媒标签生成器（hashtag_generator）** — 本轮唯一任务（新工具）。
+- **顺位**：176 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转 `templates/jianfan_converter.html` 仍不存在、继续开发中，移出候选池）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`hashtag`／`社媒标签` 全仓 **0 命中**（`话题标签` 命中仅 prompt_builder.js 种草文案模板文本，`标签生成` 命中仅 og_card_preview.html 的 OG meta，无关口径，176 轮已裁定）；`域名.*创意`／`创意.*域名` 0 命中（第二顺位域名创意生成器；`域名.*生成` 宽泛命中为 slug/htaccess/css_grid 等模板的「域名」正文说明，无关）；`打印测试`／`打印机测试`／`printpage`／`PrintPage` 0 命中（第三顺位打印机测试页生成器）——**真缺口确凿，不跳过**。Icon `local_offer` 实测 0 占用（语义贴合标签；`tag` 已被 ULID/UUID 两个生成器占用；备选 `sell`/`trending_up`）。
+- **选定理由**：① **顺位即理由**——176 轮 Top3 首席，无硬伤递补；② **痛点真实**——小红书/抖音/Instagram/YouTube 发帖时 hashtag 憋不出来、瞎堆标签没流量；③ **一轮可高质量交付**——纯前端小难度：标签库＋组合策略纯函数可写逐字向量，无外部请求、无硬件硬伤（对比一键去背景 ONNX 硬伤、电台收听器硬伤）；④ **营销工具簇补位**——与违禁词检测器（发帖前先查违禁词）／OG 社交卡片预览互链，与「社媒标题/简介生成器」弱观察项同簇可后续联动；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+- **品类归位**：注册到「营销工具」品类（与 og_card_preview／forbidden_word_detector 同类目）；New: true；ID `hashtag_generator`、Path `/tools/hashtag-generator`。
+
+**规格**（开发轮按此执行）：
+- **输入**：关键词（逗号/换行分隔，中文或英文，1~20 个，非法/空输入 → 行内错误提示，不生成）；平台选择（小红书／抖音／Instagram／YouTube／通用）；数量档（每平台 5/10/15/20，默认按平台建议：小红书≤20、抖音≤5、Instagram≤30、YouTube≤15）；可选：热度偏好（均衡／只看高热度／长尾优先）。
+- **生成**：内置标签库（static/js 内嵌，≥8 个品类：美食/旅行/美妆/穿搭/数码/健身/摄影/母婴……，每条含 tag 文本＋alias 关键词＋热度 high/mid/low＋适用平台）；纯函数按「关键词 alias 命中 → 品类关联 → 平台通用热门补足」三层策略拼出组合，分 **核心标签／热门标签／长尾标签** 三组展示，每标签带热度徽章；alias 零命中时从关键词本身派生 `#关键词` 保底，不空跑。
+- **产出**：每组一键复制 ＋ 全部一键复制 ＋ 下载 `.txt`（文件名 `hashtags-YYYYMMDD-HHmmss.txt`）。
+- **互链**：与 `forbidden_word_detector` 双向（「发帖前先查违禁词」）、与 `og_card_preview` 双向（营销工具簇）；不链未交付工具。
+- **真限制（页面明示）**：标签热度为内置库快照、非实时数据；各平台算法与标签规则变化快，效果不保证；仅辅助创意，不替代内容质量。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `normalizeKeywords(input)` → string[]（去空、去重、截断 20；非法输入抛 Error，err.field="input"）。
+  - `matchTags(keyword)` → 库中 alias 命中的条目数组（零命中返回空数组，不抛）。
+  - `generateHashtags(keywords, opts)` → `{core:[], trending:[], niche:[]}`，条目 `{tag, heat}`；platform 不在枚举抛 Error（err.field="platform"）；count 非正整数抛 Error（err.field="count")。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `normalizeKeywords('  美食,旅行,,美食 ')` → `['美食','旅行']`。
+  - `generateHashtags(['美食'], {platform:'xiaohongshu', count:5, preference:'balanced'})` → 三组非空、总数 ≤5、每条形如 `{tag:'#美食探店', heat:'high'}`（库快照决定具体条目，结构逐字）。
+  - `generateHashtags(['zzz_nonexistent_zzz'], {platform:'instagram', count:5})` → 至少一条派生 tag `#zzz_nonexistent_zzz`（保底策略逐字）。
+
+**验收标准**：
+1. 输入关键词＋选平台→核心/热门/长尾三组＋热度徽章；每组一键复制、全部一键复制、下载 .txt；非法/空输入行内报错不生成。
+2. 纯函数契约 node 测试全过（normalizeKeywords/matchTags/generateHashtags 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 246→247、ID/Path/Icon/Category）。
+3. 真限制在页面明示（热度快照非实时、算法变化、仅辅助创意）。
+4. `/tools/hashtag-generator` 注册，「营销工具」类目，New: true；旧测试 Path 断言 246→247 同步。
+5. go build/vet 通过；本地 `/tools/hashtag-generator` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）。
+
+**预计改动文件**（6 项）：
+1. `templates/hashtag_generator.html`（页面＋真限制＋互链＋SEO 面板）
+2. `static/js/hashtag-generator.js`（标签库＋纯函数＋交互）
+3. `tests/hashtag_generator.test.js`（node 纯逻辑测试）
+4. `templates/forbidden_word_detector.html`＋`templates/og_card_preview.html`（双向互链回链）
+5. `tools/categories.go`（注册：ID `hashtag_generator`、Path `/tools/hashtag-generator`、Icon `local_offer`、Category 营销工具、New: true）
+6. 旧测试 Path 总数断言 246→247 同步
+
+- **顺位递补**：域名创意生成器（`域名.*创意` 0 命中真缺口；Etemora 10-10 信号；真限制：不含实时可用性检查须明示）→ 第二顺位（开发中若遇交付级阻塞递补）；打印机测试页生成器（V2EX t/1251721 单信号；`打印测试`/`printpage` 0 命中真缺口；window.print 纯前端小难度）→ 第三顺位待命；浏览器 GPU 性能测试 → 观察项（受众偏窄低优先）。
+- **交付核对**：本地当前分支 muse/dev-20260929（`git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 827ff0f）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **246**（开发轮基线 246→247）；`ls templates/jianfan_converter.html` 不存在（简繁互转并行开发中，开发轮注意合并与基线漂移）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push（`GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"`）；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+
+**交付状态**：10-31 通用调研第一百七十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**JSON→Kotlin 交付闭环**（22bc922 新增：粘贴 JSON→生成 Kotlin data class，嵌套对象自动拆分独立类（同名冲突追加2/3…）、数组→List<T>、空数组→List<Any>、超Int整数→Long、浮点→Double、null样本→Any?、属性名camelCase、仅key≠属性名时输出@SerializedName（自动import Gson注解）；选项：根类名/注解开关/可空推断开关；一键复制＋下载${根类名}.kt；纯函数契约 toPascalCase/toCamelCase/kotlinScalarFor/generateKotlin；node测试96断言全过；827ff0f 修复 @SerializedName 条件（以最终属性名为准）；`/tools/json-to-kotlin` 已注册，Path **245→246**；36个旧测试文件49处断言同步；go build/vet通过；本地实测200；与JSON转TS/Go结构体双向互链、JSON解析器单向链入；真限制四条页面明示；纯前端零外部请求；候选池划出）。**简繁互转仍开发中**：`templates/jianfan_converter.html` 仍不存在（git head 827ff0f；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3）。**Top3 按「无硬伤不跳过、Top3顺位递进」惯例递进**：社媒标签生成器→首席／域名创意生成器→第二／打印机测试页生成器→第三（原第四顺位待命，本轮转正）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 轮，优先小难度纯前端。
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. 交付确认：`git log` 头部 827ff0f（@SerializedName 条件修复）／22bc922（JSON→Kotlin 新增）／fa4fe35（测试同步→245）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **246**；`ls templates/json_to_kotlin.html` 存在；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 827ff0f；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - JSON→Kotlin：已交付（`/tools/json-to-kotlin`）——划出候选池。
+   - 社媒标签生成器：`hashtag` 三处 **0 命中**（本轮复测）；`话题标签` 命中仅 static/js/prompt_builder.js:172-183 种草文案模板文本（已裁定无关）；`标签生成` 命中仅 templates/og_card_preview.html 的 og标签生成（Open Graph meta，无关口径，已裁定）——**递进首席**。
+   - 域名创意生成器：`域名.*创意`／`创意.*域名` 三处 **0 命中**（本轮复测；宽泛命中仅 tools/categories.go:1788 `Name: "域名查询"` 既有工具，无关）——**递进第二顺位**。
+   - 打印机测试页生成器：`打印测试`／`打印机测试`／`printpage`／`PrintPage` 三处 **0 命中**（本轮复测）——**第四顺位待命→递进第三顺位**（单独立信号 V2EX t/1251721 PrintPageCheck 10-25；纯前端小难度；真限制：只出标准化测试图案、不判硬件故障，须明示）。
+   - **md2chat 口径核对**：`md2chat`／`聊天图文` 三处命中 **templates/md_to_chat.html＋static/js/md_to_chat.js＋categories.go（ID `md_to_chat`、Path `/tools/md-to-chat`、Name「Markdown 聊天图文转换器」、New: true）**——**已交付覆盖**，V2EX t/1250428 md2chat（10-20）信号消解（md_to_chat 描述明示「粘贴 AI 回答…文字版按微信/钉钉/飞书/企微四平台语法适配一键复制，复杂块 canvas 本地渲染为图片卡片」，与 md2chat 产品定义逐项对应）。
+3. 新信号扫描（V2EX 10-28~10-31＋dev.to＋HN/英文＋中文全网为本轮主线）：**无新晋候选**，新信号 ~15 项全部消解或被已交付覆盖——
+   - V2EX：t/1250428 md2chat（10-20；Markdown→聊天图文：文字可编辑、表格/代码/公式/流程图转图片、微信/钉钉/飞书/企微/邮件多平台复制、整段转长图 → **站内 md_to_chat 已交付覆盖，消解**）／t/1252166 Zipover（10-30；跨 Mac/Windows/Linux 剪贴板同步，桌面应用口径，非单页网页工具，消解）／t/1252576 FrameLoom（10-28；文档转动画视频，需本地 Remotion 运行环境＋Agent/配音费用，非纯前端单页，消解）／t/1250292 Open Resume（10-20；156 款简历模板，编辑导出免费，但需 Docker/Node 服务端＋SQLite，自部署口径非单页，消解）／t/1253201 自媒体获客四工具（10-31；174 轮已消解：Chrome 插件＋后端）；
+   - dev.to：1024toolkit.com 45 tiny tools（10-14；cron 解析=站内 cron_parser 已交付／SQL 格式化=sql_formatter 已交付／mock data=mock_data_generator 已交付／subnet=subnet_calculator 已交付／复利/期权等财务类=用户 10-18 方向修正排除／混凝土体积/cut list 等工程类=受众小众，消解）；
+   - HN/英文：Show HN ToolHop（竞品整站 200+ 工具，无新单工具信号，消解）／Show HN NowPages（/now 页面生成器，需发布托管后端，非单页口径，消解）／fx0（AI 单文件 HTML 生成 agent，非工具口径，消解）；
+   - 中文全网：懒大王 6 免费神仙网站（10-27；在线PDF工具箱/在线图片压缩/免费图表制作/在线录屏/文字转语音/临时邮箱 → 全被已交付覆盖（PDF工具箱/图片压缩/录屏）或需后端（TTS 需 AI 语音、临时邮箱需邮件后端），消解）／FreeToolHub 10 免费工具（04-25；word counter/character counter/password/QR/BMI/随机数/tip calculator → 全被已交付覆盖或方向修正排除；**YouTube 标题生成器＋Instagram 简介生成器→新弱观察备选「社媒标题/简介生成器」（SEO 站单弱信号，低优先）**）／365Lab 40+ 工具推荐（10-08；175 轮已消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **社媒标签生成器** — 递进首席（dev.to TinySEOTool 10-31 独立信号；`hashtag` 三处 0 命中复测（本轮；`话题标签`/`标签生成` 命中均为无关口径已裁定）真缺口；痛点：小红书/抖音/Instagram/YouTube 发帖时 hashtag 憋不出来、瞎堆标签没流量；输入关键词→按平台生成标签组合＋热度分级＋一键复制，内置标签库纯前端小难度：组合策略纯函数可写逐字向量；营销工具簇补位（与违禁词检测器「发帖前先查违禁词」／OG 社交卡片预览双向互链；与「社媒标题/简介生成器」弱观察项同簇可后续联动）；真限制：标签热度为内置库快照非实时、平台算法规则变化快，须明示）。
+2. **域名创意生成器** — 递进第二顺位（Etemora 10-10 信号；`域名.*创意`/`创意.*域名` 三处 0 命中复测（本轮；宽泛命中仅 `域名查询` 既有工具）真缺口；痛点：起名/找域名时组合思路枯竭、逐个查可用性耗时；关键词→前缀/后缀/混搭组合创意＋TLD 建议，纯前端小难度：组合生成纯函数可写逐字向量；开发/营销工具簇补位；真限制：**不含实时可用性检查**（domain-check 未完全解决先例，出网/CORS 硬伤口径已排除），须明示）。
+3. **打印机测试页生成器** — 第四顺位待命→递进第三顺位（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；`打印测试`/`打印机测试`/`printpage` 三处 0 命中复测真缺口；痛点：打印机偏色/条纹/文字模糊/打印边距不对时，想快速打一张测试纸定位问题，不想装驱动工具；CMYK 色块测试＋灰阶渐变＋文字/细线清晰度＋页面边距/100mm 参考线＋A4/US Letter 双规格，window.print() 浏览器直接打印＋可选下载，纯前端小难度；生活/办公工具簇补位；真限制：打印效果仍受驱动/纸张/墨量影响，工具只负责标准化测试图案、不能读墨量/判硬件故障，须明示）。
+
+其余观察项保持原状：**社媒标题/简介生成器（176 轮新弱观察备选**，FreeToolHub 04-25 榜单单弱信号（SEO 站）；YouTube 标题生成器＋Instagram 简介生成器口径；关键词→平台化标题/简介模板＋一键复制，纯前端小难度；与社媒标签生成器同营销工具簇，可后续联动或合并评估；低优先观察）／浏览器 GPU 性能测试（175 轮观察项，V2EX t/1251670 WebGPUStress 10-25 单弱信号；受众偏窄，低优先）／一键图片去背景（165 轮；koutugou 第七信号；ONNX 硬伤未解低优先）／社媒图片尺寸生成器（168 轮观察备选，4 独立信号；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／负片图像还原（174 轮观察备选）／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 175 轮及之前记录。
+
+**通用候选表增量**（第一百七十六轮：JSON→Kotlin 交付闭环（22bc922 新增＋827ff0f 修复；`/tools/json-to-kotlin` 已注册；Path 245→246；node 96 断言全过；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 827ff0f；未确认交付前不划出候选池，继续标记「开发中」移出 Top3）；**Top3 按顺位递进**：社媒标签生成器→首席（`hashtag` 0 命中复测；无关命中已裁定；TinySEOTool 10-31 信号；纯前端小难度）／域名创意生成器→第二（`域名.*创意` 0 命中复测；Etemora 10-10 信号；真限制：不含实时可用性检查）／**打印机测试页生成器→第三**（第四顺位待命转正；`打印测试`/`printpage` 0 命中复测；PrintPageCheck 10-25 信号；window.print 纯前端小难度）；**新弱观察备选：社媒标题/简介生成器**（FreeToolHub 单弱信号；营销工具簇；低优先）；本轮新信号 ~15 项：除上述外全部消解或被已交付覆盖（V2EX：md2chat→md_to_chat 已交付覆盖／Zipover 桌面口径／FrameLoom 需本地环境+AI／Open Resume 自部署口径／自媒体获客 174 轮已消解；dev.to：1024toolkit 45 工具全覆盖/方向排除/小众；HN/英文：ToolHop 竞品无新信号／NowPages 需托管后端／fx0 非工具口径；中文全网：懒大王 6 工具全覆盖或需后端／365Lab 175 轮已消解）；一键图片去背景（第七信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 246 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| JSON→Kotlin | 已交付划出（22bc922 新增：粘贴 JSON→Kotlin data class，嵌套拆分/注解开关/可空推断/一键复制＋下载 .kt；827ff0f 修复 @SerializedName 条件；node 96 断言全过；`/tools/json-to-kotlin` 已注册；Path 245→246；36 个旧测试文件 49 处断言同步；go build/vet 通过；本地实测 200；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 827ff0f；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 社媒标签生成器 | 递进首席（TinySEOTool 10-31 独立信号；`hashtag` 0 命中复测（`话题标签`/`标签生成` 命中均为无关口径已裁定）；关键词→按平台标签组合＋热度分级＋一键复制；内置标签库纯前端小难度；营销工具簇（与违禁词检测器/OG 卡片预览互链）；真限制：热度快照非实时须明示） | 小 | P2（留池） |
+| 域名创意生成器 | 递进第二顺位（Etemora 10-10 信号；`域名.*创意`/`创意.*域名` 0 命中复测（宽泛命中仅 `域名查询` 既有工具）；关键词→前缀/后缀/混搭组合＋TLD 建议；纯前端小难度；真限制：不含实时可用性检查须明示） | 小 | P2（留池） |
+| 打印机测试页生成器 | 第四顺位待命→递进第三顺位（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；`打印测试`/`打印机测试`/`printpage` 0 命中复测；CMYK 色块＋灰阶＋文字/细线＋100mm 参考线＋A4/US Letter；window.print 纯前端小难度；真限制：只出标准化测试图案、不判硬件故障须明示） | 小 | P2（留池） |
+| 社媒标题/简介生成器 | 176 轮新弱观察备选（FreeToolHub 04-25 榜单单弱信号（SEO 站）；YouTube 标题＋Instagram 简介口径；关键词→平台化标题/简介模板＋一键复制；纯前端小难度；与社媒标签生成器同簇可联动；低优先） | 小 | 观察备选（低优先） |
+| Markdown 聊天图文转换器 | 已交付（ID `md_to_chat`、Path `/tools/md-to-chat`、New: true；V2EX t/1250428 md2chat 10-20 信号被覆盖，消解） | — | 已实现 |
+| 浏览器 GPU 性能测试 | 175 轮观察项（V2EX t/1251670 WebGPUStress 10-25 单弱信号；WebGL 压测＋FPS/1%Low/帧时间＋WebGPU 检测；受众偏窄） | 小/中 | 观察（低优先） |
+| 一键图片去背景 | 165 轮观察项（koutugou 第七信号；ONNX 按需懒加载缓解证据但模型托管/首屏体验预研未达交付线，低优先保持） | 大 | 观察（低优先） |
+| 社媒图片尺寸生成器 | 168 轮观察备选（4 独立信号；169 轮 PM 裁定「暂不立项」；继续观察备选；**建议 PM 重新评估**） | 小 | 观察备选（低优先） |
+| 负片图像还原 | 174 轮观察备选（suchatool.cn 单弱信号；`负片` 0 命中；纯前端 Canvas 一键反色；小众需求弱信号） | 小 | 观察备选 |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十六轮——JSON→Kotlin 交付闭环（22bc922＋827ff0f，`/tools/json-to-kotlin` 已注册，全量 246 Path），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 827ff0f），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：社媒标签生成器→首席（`hashtag` 0 命中复测，无关命中已裁定）／域名创意生成器→第二（`域名.*创意` 0 命中复测；宽泛命中仅 `域名查询` 既有工具）／**打印机测试页生成器→第三**（第四顺位待命转正；`打印测试`/`printpage` 0 命中复测）；**新弱观察备选：社媒标题/简介生成器**（FreeToolHub 单弱信号；营销工具簇；低优先）；本轮消解 ~14 项（详见上文新信号扫描；其中 V2EX t/1250428 md2chat 被站内已交付 md_to_chat 覆盖消解）；一键图片去背景（第七信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 827ff0f；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 827ff0f（@SerializedName 条件修复）／22bc922（JSON→Kotlin 新增）／fa4fe35（测试同步→245）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **246**；`ls templates/json_to_kotlin.html` 存在；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，文件尚未落地；与开发轮并行，开发轮注意 categories.go 合并与 Path 基线）；Top3 候选重叠复核（`json_to_kotlin`／`json-to-kotlin` 已交付划出；`简繁`／`繁简`：仍开发中，移出候选池；`hashtag` 三处 0 命中（`话题标签` 命中仅 prompt_builder.js 种草文案模板文本已裁定无关；`标签生成` 命中仅 og_card_preview.html 的 OG meta 无关口径；vendor 除外）；`域名.*创意`／`创意.*域名` 0 命中（宽泛命中仅 categories.go:1788 `域名查询` 既有工具）；`打印测试`／`打印机测试`／`printpage`／`PrintPage` 0 命中；`md2chat`／`聊天图文` 命中为已交付 md_to_chat（`/tools/md-to-chat`），V2EX 信号消解；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+**选定确认：JSON→Kotlin（JSON 转 Kotlin data class）** — 本轮唯一任务（新工具），维持 17:43 PM 决策轮选定不变（独立复核确认：无硬伤、不跳过、不二次挑拣）。
+- **PM 独立零重叠复测（163 轮误判教训；grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`kotlin` 三处命中仅 static/js/resume_checker.js 技能标签无关文本（173 轮起已裁定无关）；`json_to_kotlin`／`json-to-kotlin` 全仓 **0 命中**；`hashtag` 三处 **0 命中**（第二顺位社媒标签生成器）；`Name.*域名`／`域名.*创意` 命中仅 bookmark_cleaner／launch_checklist／ads_txt_validator 等既有口径（域名校验/检查项说明），**无域名创意生成口径**（第三顺位域名创意生成器）——真缺口确凿，首席无硬伤递补。
+- **现状复核**：分支 muse/dev-20260929（git log 头部 fa4fe35；`git fetch origin` 本轮失败「access rights」，未取到远程头，仅用本地同头 fa4fe35 复核；远程分支此前多轮已确认存在且同头）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **245**（开发轮基线 245→246；简繁互转 `templates/jianfan_converter.html` 仍未落地，并行开发中，注意合并与基线漂移）；Icon `android` 实测 0 占用（备选 `code`）。
+- **选定理由**：① 顺位即理由——175 轮 Top3 首席，无硬伤递补；② 痛点真实——Android/Kotlin 开发者粘贴 JSON 手写 data class 慢且易错，站内 json_to_types 仅 TS/Go；③ 一轮可高质量交付——纯前端小难度，类型推断纯函数逐字向量可写；④ JSON 工具矩阵同簇扩展（与 json_to_types 双向互链）；⑤ 方向合规（用户 10-18 方向修正：专注 ToolWeb 工具本身开发）。
+- **规格/验收/改动文件**：沿用 17:43 轮已确定的完整规格、验收标准 5 条、预计改动文件 6 项（templates/json_to_kotlin.html、static/js/json-to-kotlin.js、tests/json_to_kotlin.test.js、templates/json_to_types.html 回链、tools/categories.go 注册、旧测试 Path 断言 245→246），本轮不再重写，只做独立复核确认。
+- **顺位递补**：社媒标签生成器（`hashtag` 0 命中真缺口；TinySEOTool 10-31 信号；营销工具簇补位）→ 第二顺位（开发中若遇交付级阻塞递补）；域名创意生成器（Etemora 10-10 信号；真限制：不含实时可用性检查须明示）→ 第三顺位；打印机测试页生成器（175 轮新晋 P2，V2EX t/1251721 单信号）→ 第四顺位待命；浏览器 GPU 性能测试 → 新观察项（受众偏窄低优先）。
+- **铁律重申**：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push（`GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"`）；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+**选定：JSON→Kotlin（JSON 转 Kotlin data class）** — 本轮唯一任务（新工具）。
+- **顺位**：调研轮（174/175 轮）Top3 推荐**顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转 15:00 轮已选定开发中、`templates/jianfan_converter.html` 仍未落地，移出候选池）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋categories.go 三处）**：`kotlin` 三处命中仅 static/js/resume_checker.js:17 技能标签无关文本（173 轮起已裁定无关）；`json_to_kotlin`／`json-to-kotlin` 全仓 **0 命中**；`hashtag` 0 命中（第二顺位社媒标签生成器）；`"Name".*域名` 0 命中（第三顺位域名创意生成器；宽泛 `域名` 命中均为 dns_lookup/domain_check/ssl_check 既有口径）——**真缺口确凿，不跳过**。Icon `android` 实测 0 占用（经典 Material Icons 存在，语义贴合 Kotlin/Android 开发受众；备选 `code`）。
+- **选定理由**：① **顺位即理由**——P2 顺位首席无硬伤递补；② **痛点真实**——Android/Kotlin 开发者粘贴 JSON 手写 data class 慢且易错；站内 json_to_types 仅支持 TS/Go，Kotlin 为真缺口；③ **一轮可高质量交付**——纯前端小难度：类型推断纯函数可写逐字向量，可借鉴 static/js/json-to-types.js 的 infer() 设计；④ **同簇扩展口径**——与 JSON 转 TypeScript / Go 结构体互链成 JSON 工具矩阵；⑤ **方向合规**——ToolWeb 工具本身开发，符合用户 10-18 方向修正。
+- **品类归位**：注册到「格式转换」品类（与 json_to_types 同类目紧邻）；New: true。
+
+**规格**（开发轮按此执行）：
+- **输入**：粘贴 JSON（非法 JSON → 行内错误提示，不生成）；选项：根类名（默认 `Root`）、`@SerializedName` 注解开关（默认开）、可空推断开关（默认开）。
+- **生成**：Kotlin data class；嵌套对象自动拆分为独立 data class（按首次出现顺序排在根类之后；同名冲突依次追加 2、3…）；数组→`List<T>`；空数组→`List<Any>`；整数超 Int 范围→`Long`；浮点→`Double`；样本值为 null 的字段→`Any?`（可空开关关闭时→`Any`）；属性名 camelCase，**仅当 JSON key ≠ 属性名时输出 `@SerializedName("key")`**（key 相同时不冗余）；有注解时自动加 `import com.google.gson.annotations.SerializedName`。
+- **产出**：一键复制 ＋ 下载 `.kt` 文件（文件名 `${根类名}.kt`）。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `toPascalCase(s)` → PascalCase（`''`→`'Field'`；数字开头加 `N` 前缀）。
+  - `toCamelCase(s)` → camelCase。
+  - `kotlinScalarFor(node)` → `'String'`/`'Int'`/`'Long'`/`'Double'`/`'Boolean'`/`'Any?'`（null/unknown）/`'List<T>'`（数组）。
+  - `generateKotlin(parsed, opts)` → 完整 Kotlin 源码字符串；`parsed` 非对象/数组抛 Error（err.field="json"）；`opts.rootName` 非字符串或 trim 为空抛 Error（err.field="rootName"）。
+- **确定性向量**（开发轮必须逐字命中）：
+  - `toPascalCase('user_name')` → `'UserName'`；`toPascalCase('')` → `'Field'`；`toPascalCase('3d')` → `'N3d'`。
+  - `toCamelCase('user_name')` → `'userName'`；`toCamelCase('UserName')` → `'userName'`。
+  - `kotlinScalarFor({kind:'int'})` → `'Int'`；`({kind:'long'})` → `'Long'`；`({kind:'float'})` → `'Double'`；`({kind:'bool'})` → `'Boolean'`；`({kind:'null'})` → `'Any?'`；`({kind:'array',elem:{kind:'string'}})` → `'List<String>'`。
+  - `generateKotlin(JSON.parse('{"user_name":"zhang","age":28}'), {rootName:'Root', serializedName:true, nullable:true})` → 逐字：
+    ```
+    import com.google.gson.annotations.SerializedName
+
+    data class Root(
+        @SerializedName("user_name")
+        val userName: String,
+        val age: Int
+    )
+    ```
+  - `generateKotlin(JSON.parse('{"profile":{"city":"sz"},"tags":[],"score":3.5,"big":9223372036854775807,"nick":null}'), {rootName:'User', serializedName:true, nullable:true})` → 逐字：
+    ```
+    data class User(
+        val profile: Profile,
+        val tags: List<Any>,
+        val score: Double,
+        val big: Long,
+        val nick: Any?
+    )
+
+    data class Profile(
+        val city: String
+    )
+    ```
+  - `generateKotlin('not json', {})` 抛 Error（err.field="json"）；`generateKotlin({}, {rootName:''})` 抛 Error（err.field="rootName"）。
+- **互链**：与「JSON 转 TypeScript / Go 结构体」（/tools/json-to-types）**双向**互链（本页文案：「还需要 TS/Go 版本？用 JSON 转 TypeScript / Go 结构体」；回链加到 templates/json_to_types.html：「需要 Kotlin data class？用 JSON 转 Kotlin data class」）；与「JSON 解析器」（/tools/json-parser）**单向链入**（本页→解析器；文案：「JSON 格式有疑问？先用 JSON 解析器校验格式化」）；不链未交付工具（社媒标签生成器／域名创意生成器尚未交付）。
+- **技术路线**：纯前端；独立实现（不改动既有 json-to-types 逻辑，可借鉴其 infer() 设计）；页面源码自检无外部请求、无 fetch／XHR 到外部域。
+- **注册**：ID `json_to_kotlin`、Name「JSON 转 Kotlin data class」、Path `/tools/json-to-kotlin`、Category「格式转换」、New: true、Icon `android`（备选 `code`）；中英文描述＋SEO keywords（JSON转Kotlin、Kotlin data class生成、json to kotlin、kotlin data class generator、android开发工具）；SEO 面板（title／description／keywords／canonical／OG／JSON-LD／使用说明／FAQ／相关工具）按家族标准配齐，canonical 形如 https://www.johnkingzcq123.xyz/tools/json-to-kotlin，相关工具互链 JSON 转 TypeScript / Go 结构体。
+- **PM 真限制交代（开发轮必须处理，页面明示）**：① 样本驱动推断——样本中为 null／空数组的字段只能退为 `Any?`／`List<Any>`，请对照实际 API 文档校对；② 嵌套泛型／密封类／多态反序列化等复杂结构需人工调整；③ `@SerializedName` 面向 Gson，Moshi／kotlinx.serialization 用户请自行替换注解；④ 零上传、全部本地生成。
+
+**验收标准**：
+1. `go build`／`go vet` 通过；全量 Path 现有数 **+1**（以 `grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测为准；当前基线 245 → 246；注意简繁互转并行落地时的基线漂移）；所有含 Path 总数断言的旧测试文件同步（以 `grep -n '245' tests/*.test.js` 实测为准）。
+2. node 测试 ≥30 断言全过：toPascalCase/toCamelCase/kotlinScalarFor/generateKotlin 确定性向量逐字命中、非法参数抛 Error（err.field）；嵌套类拆分与去重、空数组→List<Any>、大整数→Long、null→Any?、@SerializedName 条件输出向量。
+3. 本地实测 `/tools/json-to-kotlin` 200；粘贴→生成→复制→下载 .kt 链路可跑通；非法 JSON 错误提示可触发。
+4. 与 JSON 转 TypeScript / Go 结构体双向互链、JSON 解析器单向链入；不链未交付工具；categories.go Description 中英文双语。
+5. 真限制四条页面明示；零外部请求断言（页面脚本不发起 fetch/XHR 到外部域）。
+
+**预计改动文件**：
+- `templates/json_to_kotlin.html`（新增）
+- `static/js/json-to-kotlin.js`（新增；toPascalCase/toCamelCase/kotlinScalarFor/generateKotlin 纯函数＋DOM）
+- `tests/json_to_kotlin.test.js`（新增；node 断言 ≥30；纯函数向量测试）
+- `templates/json_to_types.html`（修改：加回链到 /tools/json-to-kotlin）
+- `tools/categories.go`（注册：ID `json_to_kotlin`／Name「JSON 转 Kotlin data class」／Path `/tools/json-to-kotlin`／Icon `android`（备选 `code`）／Category「格式转换」／New: true）
+- 旧测试文件的 Path 总数断言基线 245→246（`grep -n '245' tests/*.test.js` 实测为准同步；注意简繁互转并行落地时的基线漂移）
+
+**顺位递补说明**：社媒标签生成器（`hashtag`／`话题标签`／`标签生成` 三处 0 命中复测（本轮；og_card_preview 的 og 标签生成／prompt_builder 的提示词话题标签均为无关口径）；dev.to TinySEOTool 10-31 独立信号；营销工具簇补位，与违禁词检测器／OG 社交卡片预览互链）→ **P2 第二顺位**（若本轮开发中发现交付级阻塞，则由社媒标签生成器递补，本轮不重新挑拣）；域名创意生成器（`"Name".*域名` 0 命中；Etemora 10-10 信号；真限制：不含实时可用性检查须明示）→ 第三顺位待命；一键图片去背景（ONNX 硬伤，第七信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）继续低优先观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 fa4fe35；**本轮仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用惯例**）；`git log` 头部 fa4fe35（测试同步→245）／1198657（图标修复）／e088e87（在线录屏新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **245**；`ls templates/ | grep jianfan` = **无**（简繁互转开发中，文件尚未落地；与开发轮并行，开发轮注意 categories.go 合并与 Path 基线）；Top3 候选重叠复核（`json_to_kotlin`／`json-to-kotlin` 全仓 0 命中；`kotlin` 三处仅 resume_checker.js 技能标签无关文本（已裁定）；`hashtag` 0 命中（无关文本除外；vendor 除外）；`"Name".*域名` 0 命中（宽泛 `域名` 命中均为 dns_lookup/domain_check/ssl_check 既有口径）；Icon `android` 实测 0 占用（备选 `code`）；一键图片去背景／视频转码硬伤未解低优先观察；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-31 17:46 · 通用调研第一百七十五轮，接 17:36 通用调研第一百七十四轮）
+
+**交付状态**：10-31 通用调研第一百七十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**在线录屏工具交付闭环**（e088e87＋1198657＋fa4fe35；`/tools/screen-recorder` 已注册；全量 **245 Path**；候选池划出）。**简繁互转仍开发中**：PM 15:00 轮已选定，但 `templates/jianfan_converter.html` 仍不存在（git head fa4fe35，与开发轮并行；未确认交付前不划出候选池，本轮标记「开发中」继续移出 Top3）。**Top3 维持 174 轮推荐**（JSON→Kotlin／社媒标签生成器／域名创意生成器，其中**域名创意生成器 174 轮「建议晋升」→本轮正式转正 P2 第三顺位**）；**新晋一项 P2 候选（打印机测试页生成器，第四顺位待命）＋一项新观察项（浏览器 GPU 性能测试）**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:46 轮，优先小难度纯前端。
+**本轮三件事**（17:46 全网调研，通用方向）：
+1. 交付确认：`git log` 头部 fa4fe35（测试同步→245）／1198657（图标修复）／e088e87（在线录屏新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **245**；`ls templates/ | grep jianfan` = **无**（简繁互转开发中，文件未落地）；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 fa4fe35；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - JSON→Kotlin：`kotlin` 三处命中仅 static/js/resume_checker.js:17 技能标签无关文本（173 轮起已裁定无关）——**维持首席**。
+   - 社媒标签生成器：`hashtag` 三处 **0 命中**（本轮复测）——**维持第二顺位**。
+   - 域名创意生成器：`"Name".*域名` 三处 **0 命中**（本轮复测；`域名` 宽泛命中均为 dns_lookup／domain_check／ssl_check 等既有口径工具，无关）——**174 轮建议晋升→本轮正式转正 P2 第三顺位**（纯前端关键词组合创意，不含实时可用性检查，真限制须明示）。
+   - **打印机测试页生成器**：新候选；`打印测试`／`打印机测试`／`printpage` 三处 **0 命中**（命中仅 envelope_printer「信封打印」／resume_builder／text_to_pdf 等打印输出口径，无测试页口径）——**新晋 P2 候选，第四顺位待命**（单独立信号 V2EX t/1251721 PrintPageCheck 10-25；待第二信号或 PM 裁定再晋升 Top3）。
+   - **浏览器 GPU 性能测试**：新观察项；`gpu` 三处命中仅 llm_hardware_checker（LLM 硬件配置检查口径，无渲染压测）／gif_compress（GIF 帧率说明文字无关）／gitignore_generator.js（无关文本）——**新观察项**（单弱信号 V2EX t/1251670 WebGPUStress 10-25；受众偏窄，待信号增强）。
+3. 新信号扫描（V2EX 10-25~10-31＋dev.to＋HN/英文＋中文全网为本轮主线）：**新晋 P2 候选一项（打印机测试页生成器），新观察项一项（浏览器 GPU 性能测试），其余全部消解或被已交付覆盖**——
+   - V2EX：**t/1251721 PrintPageCheck（10-25；在线打印机测试页：CMYK 色块/灰阶/文字细线/100mm 参考线/边距/A4+US Letter/浏览器打印或下载 PDF → 新晋 P2 候选）**／**t/1251670 WebGPUStress（10-25；浏览器 GPU 压测：WebGL 渲染负载/平均 FPS/1% Low/帧时间稳定性/Shader 测试/WebGPU 能力检测/结果本地保存 → 新观察项）**／t/1251601 V2EX 评论上下文插件（10-26；浏览器插件口径，消解）／t/1253350 send-to-dot（174 轮已消解）／t/1253201 自媒体获客四工具（172/173/174 轮已消解）／t/1252493 xGoose（173/174 轮已消解）／t/1251680 DealPage（173/174 轮已消解）；
+   - dev.to：TaskKit Tools（10-14；JSON/图片压缩/QR 全被已交付覆盖）／**Vamriko 91 工具（10-18；本轮实测首页：Image Resizer/Compressor/Watermark/Merge PDF/Split PDF/Image to PDF/JSON Formatter/JSON↔CSV/Remove Duplicates/Text Sorter 全被已交付覆盖，消解）**／hysenlabs 35（173 轮已消解）／Top Dev Tools 榜单类（Azure/AI 基础设施，无单工具信号，消解）；
+   - HN/英文：EMBRACE 安全研究（AI 编程工具内嵌浏览器漏洞，非工具口径）／Show HN ToolMateX（竞品整站，JSON/HTML/CSS/SQL formatter 全覆盖，无新单工具信号）／VB6 浏览器 IDE（非单页工具口径）；
+   - 中文全网：365Lab 2026 免费工具推荐（10-08；屏幕常亮=screen_keeper 已交付／提词器=teleprompter 已交付／显卡测试→归并到浏览器 GPU 性能测试新观察项／文件重命名/白噪音/网名生成器等全覆盖）／koutugou 抠图 SEO 软文（10-20 左右；在线 AI 抠图→一键图片去背景**第七独立信号**强化，但 ONNX 模型托管/首屏体验硬伤未解，低优先保持）／canxiaodou 字幕提取测评（10-08；视频字幕提取需 ASR 后端，消解；蚕小豆小程序九功能：提词器/图片压缩已交付，图片转文字→OCR 观察项已有，图片/视频去水印版权风险消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **JSON→Kotlin** — 维持首席（`kotlin` 三处 0 命中复测（本轮；resume_checker.js 技能标签命中已裁定无关）；minitool.io 10-30 第二独立信号；站内 json_to_types 仅 TS/Go，扩展口径；痛点：Android/Kotlin 开发者粘贴 JSON 手写 data class 慢且易错；JSON→Kotlin data class（含 @SerializedName 注解选项、空安全可空类型推断），纯前端小难度：类型推断纯函数可写逐字向量；开发工具簇补位；真限制：嵌套泛型/密封类等复杂结构需人工调整，须明示）。
+2. **社媒标签生成器** — 维持第二顺位（dev.to TinySEOTool 10-31 独立信号；`hashtag` 三处 0 命中复测（本轮）真缺口；痛点：小红书/抖音/Instagram/YouTube 发帖时 hashtag 憋不出来、瞎堆标签没流量；输入关键词→按平台生成标签组合＋热度分级＋一键复制，内置标签库纯前端小难度：组合策略纯函数可写逐字向量；营销工具簇补位（与违禁词检测器「发帖前先查违禁词」／OG 社交卡片预览双向互链）；真限制：标签热度为内置库快照非实时、平台算法规则变化快，须明示）。
+3. **域名创意生成器** — 174 轮建议晋升→本轮正式转正 P2 第三顺位（Etemora 10-10 信号；`"Name".*域名` 三处 0 命中复测（本轮；宽泛 `域名` 命中均为 dns_lookup/domain_check/ssl_check 既有口径）真缺口；痛点：起名/找域名时组合思路枯竭、逐个查可用性耗时；关键词→前缀/后缀/混搭组合创意＋TLD 建议，纯前端小难度：组合生成纯函数可写逐字向量；开发/营销工具簇补位；真限制：**不含实时可用性检查**（domain-check 未完全解决先例，出网/CORS 硬伤口径已排除），须明示）。
+
+**新晋候选（第四顺位待命，不占 Top3）**：
+- **打印机测试页生成器** — 新晋 P2 候选（V2EX t/1251721 PrintPageCheck 10-25 单独立信号；`打印测试`／`打印机测试`／`printpage` 三处 0 命中复测真缺口；痛点：打印机偏色/条纹/文字模糊/打印边距不对时，想快速打一张测试纸定位问题，不想装驱动工具；CMYK 色块测试＋灰阶渐变＋文字/细线清晰度＋页面边距/100mm 参考线＋A4/US Letter 双规格，window.print() 浏览器直接打印＋可选下载，纯前端小难度；生活/办公工具簇补位；真限制：打印效果仍受驱动/纸张/墨量影响，工具只负责标准化测试图案、不能读墨量/判硬件故障，须明示；待第二独立信号或 PM 裁定晋升 Top3）。
+
+其余观察项保持原状：**浏览器 GPU 性能测试（175 轮新观察项**，V2EX t/1251670 WebGPUStress 10-25 单弱信号；`gpu` 三处 0 命中（llm_hardware_checker 为 LLM 硬件配置检查口径无关）；WebGL 渲染负载＋平均 FPS/1% Low/帧时间＋Shader 测试＋WebGPU 能力检测＋结果本地保存；纯前端中小难度；受众偏窄（WebGL/图形开发），低优先观察）／一键图片去背景（165 轮，**本轮 koutugou 抠图指南构成第七独立信号**；ONNX 按需懒加载缓解证据但模型托管/首屏体验预研未达交付线，低优先保持）／社媒图片尺寸生成器（168 轮观察备选，4 独立信号；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／负片图像还原（174 轮观察备选）／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 174 轮及之前记录。
+
+**通用候选表增量**（第一百七十五轮：在线录屏工具交付闭环（e088e87＋1198657＋fa4fe35；`/tools/screen-recorder` 已注册；全量 245 Path；候选池划出）；简繁互转 PM 15:00 轮已选定开发中（templates/jianfan_converter.html 仍未落地，git head fa4fe35；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3）；**Top3 维持 174 轮推荐**：JSON→Kotlin 维持首席（`kotlin` 0 命中复测；minitool.io 10-30 第二独立信号；纯前端小难度）／社媒标签生成器维持第二（TinySEOTool 10-31 独立信号；`hashtag` 0 命中复测；营销工具簇补位）／**域名创意生成器 174 轮建议晋升→本轮正式转正 P2 第三顺位**（`"Name".*域名` 0 命中复测；纯前端小难度；真限制：不含实时可用性检查须明示）；**新晋 P2 候选：打印机测试页生成器**（V2EX 10-25 PrintPageCheck 单独立信号；`打印测试` 0 命中；CMYK/灰阶/文字细线/100mm 参考线/A4+Letter；window.print 纯前端小难度；真限制：只出标准化测试图案、不判硬件故障；第四顺位待命）；**新观察项：浏览器 GPU 性能测试**（V2EX 10-25 WebGPUStress 单弱信号；`gpu` 0 命中（既有 llm_hardware_checker 口径无关）；WebGL 压测＋FPS/1%Low/帧时间＋WebGPU 检测；受众偏窄低优先）；本轮新信号 ~18 项中：晋升/新晋 3 项（域名创意转正／打印机测试页／GPU 性能测试），其余全部消解或被已交付覆盖（V2EX：评论上下文插件口径／send-to-dot、xGoose、DealPage、自媒体获客 172~174 轮已消解；dev.to：TaskKit 全覆盖／Vamriko 本轮实测全覆盖／榜单类无单工具信号；HN/英文：EMBRACE 非工具口径／ToolMateX 竞品无新信号／VB6 IDE 非单页口径；中文全网：365Lab（屏幕常亮/提词器已交付、显卡测试归并 GPU 观察项、其余全覆盖）／koutugou→去背景第七信号（硬伤未解低优先）／canxiaodou（字幕提取需 ASR 后端消解、小程序九功能已交付/观察项已有/去水印版权风险））；一键图片去背景（第七信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 245 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 在线录屏工具 | 已交付划出（e088e87 新增＋1198657 图标修复＋fa4fe35 测试同步 2478 断言全过；`/tools/screen-recorder` 已注册；全量 245 Path；候选池划出） | — | 已实现 |
+| 简繁互转 | PM 15:00 轮已选定开发中（templates/jianfan_converter.html 仍未落地，git head fa4fe35；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| JSON→Kotlin | 维持首席（`kotlin` 0 命中复测（resume_checker.js 技能标签命中已裁定无关）；minitool.io 10-30 第二独立信号；json_to_types 仅 TS/Go 扩展；纯前端小难度；真限制：复杂结构须人工调整） | 小 | P2（留池） |
+| 社媒标签生成器 | 维持第二顺位（TinySEOTool 10-31 独立信号；`hashtag` 0 命中复测；营销工具簇补位，与违禁词检测器/OG 卡片预览互链；真限制：热度快照非实时） | 小 | P2（留池） |
+| 域名创意生成器 | 174 轮建议晋升→本轮正式转正 P2 第三顺位（Etemora 10-10 信号；`"Name".*域名` 0 命中复测（宽泛 `域名` 命中均为 dns_lookup/domain_check/ssl_check 既有口径）；关键词组合创意纯前端小难度；真限制：不含实时可用性检查须明示） | 小 | P2（留池） |
+| 打印机测试页生成器 | **175 轮新晋 P2 候选**（V2EX 10-25 PrintPageCheck 单独立信号；`打印测试`／`打印机测试`／`printpage` 0 命中复测；CMYK 色块＋灰阶＋文字/细线＋100mm 参考线＋A4/US Letter；window.print 纯前端小难度；真限制：只出标准化测试图案、不判硬件故障须明示；第四顺位待命） | 小 | P2（留池） |
+| 浏览器 GPU 性能测试 | 175 轮新观察项（V2EX 10-25 WebGPUStress 单弱信号；`gpu` 0 命中（llm_hardware_checker 口径无关）；WebGL 渲染负载＋平均 FPS/1% Low/帧时间＋Shader 测试＋WebGPU 能力检测＋结果本地保存；纯前端中小难度；受众偏窄） | 小/中 | 观察（低优先） |
+| 一键图片去背景 | 165 轮新观察项（**本轮 koutugou 抠图指南构成第七独立信号**；ONNX 按需懒加载缓解证据但模型托管/首屏体验预研未达交付线，低优先保持） | 大 | 观察（低优先） |
+| 社媒图片尺寸生成器 | 168 轮观察备选（4 独立信号；169 轮 PM 裁定「暂不立项」；继续观察备选；**建议 PM 重新评估**） | 小 | 观察备选（低优先） |
+| 负片图像还原 | 174 轮新观察备选（suchatool.cn 单弱信号；`负片` 0 命中；纯前端 Canvas 一键反色；小众需求弱信号） | 小 | 观察备选 |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十五轮——在线录屏工具交付闭环（e088e87＋1198657＋fa4fe35，`/tools/screen-recorder` 已注册，全量 245 Path），候选池划出；简繁互转 PM 15:00 轮已选定但文件仍未落地（git head fa4fe35），继续标记「开发中」移出 Top3；**Top3 维持 174 轮**：JSON→Kotlin 维持首席／社媒标签生成器维持第二／**域名创意生成器 174 轮建议晋升→本轮正式转正 P2 第三顺位**（`"Name".*域名` 0 命中复测）；**新晋 P2 候选：打印机测试页生成器**（V2EX 10-25 PrintPageCheck 单独立信号；`打印测试` 0 命中；CMYK/灰阶/文字细线/100mm 参考线/A4+Letter；window.print 纯前端小难度；第四顺位待命，待第二信号或 PM 裁定晋升 Top3）；**新观察项：浏览器 GPU 性能测试**（V2EX 10-25 WebGPUStress 单弱信号；`gpu` 0 命中；WebGL 压测＋FPS 指标＋WebGPU 检测；受众偏窄低优先）；本轮消解 ~15 项（详见上文新信号扫描）；一键图片去背景（第七信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在且与本地同头 fa4fe35；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 fa4fe35（测试同步→245）／1198657（图标修复）／e088e87（在线录屏新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **245**；`ls templates/ | grep jianfan` = **无**（简繁互转开发中，文件尚未落地；与开发轮并行，开发轮注意 categories.go 合并与 Path 基线）；Top3 候选重叠复核（`screen_recorder`／`screen-recorder` 已交付划出；`简繁`／`繁简`：PM 15:00 已选定开发中，移出候选池；`kotlin` 三处 0 命中（resume_checker.js 技能标签无关命中已裁定）；`hashtag` 三处 0 命中（无关文本除外；vendor 除外）；`"Name".*域名` 0 命中（宽泛 `域名` 命中均为 dns_lookup/domain_check/ssl_check 既有口径）；`打印测试`／`打印机测试`／`printpage` 0 命中（envelope_printer 等打印输出口径无关）；`gpu` 0 命中（llm_hardware_checker 口径无关）；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日任务（2026-10-31 17:36 · 通用调研第一百七十四轮，接 15:56 PM 排期轮）
+
+**交付状态**：10-31 通用调研第一百七十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩展泛财务／生活计算器）。**在线录屏工具已交付闭环**（e088e87 新增：getDisplayMedia 原生选屏→录制前选项（麦克风/系统音频/比特率三档）→实时预览＋hh:mm:ss 计时＋暂停/继续/结束→回放＋一键下载；node 测试 85 断言全过；Path 244→245；1198657 图标修复：screen_record→screen_share（经典 Material Icons 无 screen_record，卡片会渲染空白）；fa4fe35 测试同步 15 处历史遗留陈旧断言（→245），node 全量 **2478 断言**全过；全量 **245 Path**；候选池划出）。**简繁互转仍开发中**：PM 15:00 轮已选定，但 `templates/jianfan_converter.html` 仍不存在（git head fa4fe35，顶部三条均为录屏轮次提交）；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:36 轮，优先小难度纯前端。
+**本轮三件事**（17:36 全网调研，通用方向）：
+1. 交付确认：`git log` 头部 fa4fe35（测试同步→245）／1198657（图标修复）／e088e87（在线录屏新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **245**；`ls templates/screen_recorder.html` 存在；本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：观察项晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - `screen_recorder`／screen-recorder：已交付（e088e87，/tools/screen-recorder）——划出候选池。
+   - JSON→Kotlin：`kotlin` 三处 **0 命中**（本轮复测；此前 resume_checker.js 技能标签命中已消失）——**递补建议首席**。
+   - 社媒标签生成器：`hashtag`／`话题标签`／`标签生成` 三处 **0 命中**（本轮复测；无关文本除外）——**建议第二顺位**。
+   - 域名创意生成器：`"Name".*域名` 三处 **0 命中**（本轮复测；173 轮新观察项）——**建议晋升第三顺位**（纯前端关键词组合创意，无可用性检查，低优先转 P2 建议）。
+   - 一键图片去背景：本轮 tubox 帖（10-28）列 13 工具含 AI 抠图/AI 放大，构成**第六独立信号**；但 ONNX 模型托管/首屏体验预研仍未达交付线——**低优先保持，不晋升**。
+   - 社媒图片尺寸生成器（168 轮观察备选）：本轮新增 **365Lab 封面尺寸大全（10-22 更新）** ＋ **huiui.net 在线封面制作（10-25，六图层/16:9~9:16 预设/本地处理导出 PNG）** 两个独立信号，累计 4 信号；但 169 轮 PM 已裁定「暂不立项」（单工具站范畴）——**尊重既有裁定，继续观察备选，明确建议 PM 重新评估**（口径已从纯尺寸转换扩展到封面制作编辑器）。
+3. 新信号扫描（V2EX 10-28~10-31＋dev.to＋HN/英文＋中文全网为本轮主线）：**新晋 P2 一项（域名创意生成器观察项→建议晋升第三顺位），新观察备选一项（负片图像还原，suchatool.cn 单弱信号）**；其余全部消解或被已交付覆盖——
+   - V2EX：t/1253350 send-to-dot（10-31 今日；手机分享图片接回 ChatGPT 原对话；需自建 Mac 服务＋个人账号＋30 天授权续期，非单页网页工具，消解）／t/1253234 DealPage（10-25；商单/推荐码落地页；点击复制数据需后端统计，消解）／t/1252552 tubox（10-28；13 工具全前端图片工具箱：批量压缩/改尺寸/格式转换/水印/ZIP/证件照/拼图/长图/九宫格/EXIF 查看清除/图片标注/二维码生成——**站内全部已交付覆盖**（exif_strip／nine_grid／img_stitch／watermark／image_annotator／id_photo_maker／gif_compress 等）；AI 抠图/AI 放大→去背景第六独立信号（硬伤未解，低优先保持））／t/1252493 xGoose（10-28；Chrome 插件 AI Agent，插件口径，消解）／Browser Harbor（10-31；纯 Rust 浏览器便携化桌面工具，桌面口径，消解）／t/1251637 vibe 编程工具（10-27；非工具口径，消解）；
+   - dev.to：sparkspec（10-15；Hangar CLI／Tripwire 代理基础设施／Linkroll 需 git，非单页网页工具，消解）；
+   - HN/英文：WallHop（付费墙绕过，合规风险，173 轮已消解）；SaaSHub HN UI 榜单（产品目录，无单工具新信号，消解）；
+   - 中文全网：365Lab 封面尺寸大全（10-22 更新；公众号 900x383／小红书 1242x1660 3:4／B站 1146x717／YouTube 1280x720／抖音 1080x1920 9:16／视频号 1080x1230）＋huiui.net 在线封面制作（10-25；封面编辑器，免登录本地处理，模板＋标题文字＋安全区）＋leadwork 小红书封面指南（10-05；营销软文，无干货）→**社媒图片尺寸生成器观察备选累计 3、4 独立信号**，继续观察备选低优先，**建议 PM 重新评估 169 轮「暂不立项」裁定**（信号累计 4 个，口径已扩展到封面制作编辑器）；picwork.cn 微信小程序 13 图片工具（10-15；压缩/改尺寸/格式转换/裁剪/旋转翻转/证件照排版/水印/抠图换底全被已交付覆盖；图片去水印版权风险消解；老照片修复需 AI 消解）／suchatool.cn 31/64 图像工具（竞品整站：压缩/裁剪/调色/去背景/拼图/九宫格/长图/EXIF/镜像/Base64 互转全被已交付覆盖；**负片图像还原→新观察备选（单弱信号，`负片` 三处 0 命中；纯前端 Canvas 一键反色，极小难度；小众需求）**）／bpdh.cn 实用工具 TOP11（临时邮箱/图床需后端／万能命令导航站，消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；在线录屏工具交付闭环后按「无硬伤不跳过、Top3 顺位递进」惯例递补；简繁互转开发中移出候选池）：
+1. **JSON→Kotlin** — 递补建议首席（`kotlin` 三处 0 命中复测（本轮；此前 resume_checker.js 技能标签命中已消失，真缺口确凿）；minitool.io 10-30 第二独立信号；站内 json_to_types 仅 TS/Go，扩展口径；痛点：Android/Kotlin 开发者粘贴 JSON 手写 data class 慢且易错；JSON→Kotlin data class（含 @SerializedName 注解选项、空安全可空类型推断），纯前端小难度：类型推断纯函数可写逐字向量；开发工具簇补位；真限制：嵌套泛型/密封类等复杂结构需人工调整，须明示）。
+2. **社媒标签生成器** — 建议第二顺位（dev.to TinySEOTool 10-31 独立信号；`hashtag`／`话题标签`／`标签生成` 三处 0 命中复测真缺口；痛点：小红书/抖音/Instagram/YouTube 发帖时 hashtag 憋不出来、瞎堆标签没流量；输入关键词→按平台生成标签组合＋热度分级＋一键复制，内置标签库纯前端小难度：组合策略纯函数可写逐字向量；营销工具簇补位（与违禁词检测器「发帖前先查违禁词」／OG 社交卡片预览双向互链）；真限制：标签热度为内置库快照非实时、平台算法规则变化快，须明示）。
+3. **域名创意生成器** — 173 轮新观察项→建议晋升第三顺位（Etemora 10-10 信号；`"Name".*域名` 三处 0 命中复测真缺口；痛点：起名/找域名时组合思路枯竭、逐个查可用性耗时；关键词→前缀/后缀/混搭组合创意＋TLD 建议，纯前端小难度：组合生成纯函数可写逐字向量；开发/营销工具簇补位；真限制：**不含实时可用性检查**（domain-check 未完全解决先例，出网/CORS 硬伤口径已排除），须明示）。
+
+其余观察项保持原状：**社媒图片尺寸生成器（168 轮观察备选**，本轮 365Lab 10-22＋huiui.net 10-25 构成第 3、4 独立信号；169 轮 PM 裁定「暂不立项」（单工具站范畴）；继续观察备选低优先，**建议 PM 重新评估**）／一键图片去背景（165 轮，**本轮 tubox 构成第六独立信号**；ONNX 按需懒加载缓解证据但模型托管/首屏体验预研未达交付线，低优先保持）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／文字转图片卡片／**负片图像还原（174 轮新观察备选**，suchatool.cn 单弱信号；`负片` 0 命中；纯前端 Canvas 一键反色；小众需求）／数独求解器（观察备选）／恩尼格玛密码机模拟器（160 轮；中难度）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／字体搭配预览器（129 轮）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）／URL 大字报展示器（156 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状，详见 173 轮及之前记录。
+
+**通用候选表增量**（第一百七十四轮：在线录屏工具已交付划出（e088e87 新增＋1198657 图标修复 screen_record→screen_share＋fa4fe35 测试同步 2478 断言全过；Path 244→245；全量 245 Path；候选池划出）；简繁互转 PM 15:00 轮已选定开发中（templates/jianfan_converter.html 仍未落地，git head fa4fe35；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3）；**JSON→Kotlin 递补建议首席**（`kotlin` 0 命中复测；minitool.io 10-30 第二独立信号；json_to_types 仅 TS/Go 扩展；纯前端小难度）；**社媒标签生成器建议第二顺位**（TinySEOTool 10-31 独立信号；`hashtag` 0 命中复测；营销工具簇补位）；**域名创意生成器 173 轮新观察项→建议晋升第三顺位**（`"Name".*域名` 0 命中复测；关键词组合创意纯前端小难度；真限制：不含实时可用性检查须明示）；本轮新信号 ~20 项中：晋升/新观察 3 项（域名创意生成器／社媒图片尺寸 3、4 信号累计／负片图像还原观察备选），其余全部消解或被已交付覆盖（V2EX 7 项：send-to-dot 自建服务／DealPage 需后端／tubox 13 工具全被已交付覆盖（AI 抠图→去背景第六信号）／xGoose 插件口径／Browser Harbor 桌面口径／vibe 编程工具非工具口径／自媒体获客四工具 172 轮已消解；dev.to：sparkspec CLI/基础设施；HN/英文：WallHop 合规风险已消解／SaaSHub 榜单无单工具信号；中文全网：365Lab 封面尺寸＋huiui 封面制作→社媒尺寸 3、4 信号（169 轮暂不立项裁定保持，建议 PM 重估）／picwork 13 工具全覆盖（去水印版权风险／老照片修复需 AI）／suchatool 竞品整站全覆盖（负片还原→观察备选）／bpdh 榜单后端口径消解／leadwork 软文无干货）；一键图片去背景（ONNX 硬伤，第六信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过；全量 245 Path）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 在线录屏工具 | 已交付划出（e088e87 新增；getDisplayMedia 原生选屏→录制前选项→实时预览＋hh:mm:ss 计时＋暂停/继续→回放＋一键下载；node 85 断言全过；1198657 图标修复 screen_record→screen_share；fa4fe35 测试同步 2478 断言全过；Path 244→245；全量 245 Path；候选池划出） | — | 已实现 |
+| 简繁互转 | PM 15:00 轮已选定开发中（templates/jianfan_converter.html 仍未落地，git head fa4fe35；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| JSON→Kotlin | 递补建议首席（在线录屏已交付闭环；`kotlin` 0 命中复测（此前技能标签命中已消失）；minitool.io 10-30 第二独立信号；json_to_types 仅 TS/Go 扩展；纯前端小难度；真限制：复杂结构须人工调整） | 小 | P2（留池） |
+| 社媒标签生成器 | 建议第二顺位（TinySEOTool 10-31 独立信号；`hashtag`／`话题标签`／`标签生成` 0 命中复测；营销工具簇补位，与违禁词检测器/OG 卡片预览互链；真限制：热度快照非实时） | 小 | P2（留池） |
+| 域名创意生成器 | 173 轮新观察项→建议晋升第三顺位（Etemora 10-10 信号；`"Name".*域名` 0 命中复测；关键词组合创意纯前端小难度；真限制：不含实时可用性检查须明示） | 小 | 观察→P2（建议） |
+| 一键图片去背景 | 165 轮新观察项（**本轮 tubox 构成第六独立信号**；ONNX 按需懒加载缓解证据但模型托管/首屏体验预研未达交付线，低优先保持） | 大 | 观察（低优先） |
+| 社媒图片尺寸生成器 | 168 轮观察备选（本轮 365Lab 10-22＋huiui.net 10-25 构成第 3、4 独立信号；169 轮 PM 裁定「暂不立项」；继续观察备选；**建议 PM 重新评估**） | 小 | 观察备选（低优先） |
+| 负片图像还原 | 174 轮新观察备选（suchatool.cn 单弱信号；`负片` 0 命中；纯前端 Canvas 一键反色；小众需求弱信号） | 小 | 观察备选 |
+
+**归档说明**：本轮为 10-31 通用调研第一百七十四轮——在线录屏工具交付闭环（e088e87＋1198657＋fa4fe35，`/tools/screen-recorder` 已注册，全量 245 Path），候选池划出；简繁互转 PM 15:00 轮已选定但文件仍未落地（git head fa4fe35），继续标记「开发中」移出 Top3；**JSON→Kotlin 递补建议首席**（`kotlin` 0 命中复测确认；minitool.io 10-30 第二独立信号；小难度）；**社媒标签生成器建议第二顺位**（TinySEOTool 10-31 独立信号；`hashtag` 0 命中复测；营销工具簇补位）；**域名创意生成器 173 轮新观察项→建议晋升第三顺位**（`"Name".*域名` 0 命中复测；纯前端小难度；真限制：不含实时可用性检查）；社媒图片尺寸生成器观察备选累计第 3、4 独立信号（365Lab 10-22、huiui.net 10-25），169 轮 PM 裁定「暂不立项」继续有效，**建议 PM 重新评估**（信号累计 4 个，口径已扩展到封面制作编辑器）；**负片图像还原新观察备选**（suchatool.cn 单弱信号；`负片` 0 命中；纯前端 Canvas 极小难度）；本轮消解 ~17 项（V2EX：send-to-dot 自建服务／DealPage 需后端／tubox 13 工具全被已交付覆盖／xGoose 插件口径／Browser Harbor 桌面口径／vibe 编程工具非工具口径／自媒体获客四工具 172 轮已消解；dev.to：sparkspec CLI/基础设施；HN/英文：WallHop 合规风险已消解／SaaSHub 无单工具信号；中文全网：picwork 13 工具全覆盖／suchatool 竞品整站全覆盖／bpdh 榜单后端口径／leadwork 软文无干货）；一键图片去背景（第六信号仍低优先）／视频转码（ffmpeg.wasm 硬伤）／Markdown 表格转 CSV（PM 降回观察）／P2P 信令硬伤／语音听写／AI 可发现性／HEIC（硬伤未解）保持观察；在线电台收听器硬伤未解继续跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` 成功，远程分支存在；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；`git log` 头部 fa4fe35（测试同步→245）／1198657（图标修复）／e088e87（在线录屏新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **245**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，文件尚未落地；与开发轮并行，开发轮注意 categories.go 合并与 Path 基线）；Top3 候选重叠复核（`screen_recorder`／`screen-recorder` 已交付划出；`简繁`／`繁简`：PM 15:00 已选定开发中，移出候选池；`kotlin` 三处 0 命中；`hashtag`／`话题标签`／`标签生成` 0 命中（无关文本除外；vendor 除外）；`"Name".*域名` 0 命中；`负片` 0 命中；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
 ## 今日任务（2026-10-31 15:56 · PM 排期决策轮，接 15:51 通用调研第一百七十三轮）
 
 **选定：在线录屏工具** — 本轮唯一任务（新工具）。

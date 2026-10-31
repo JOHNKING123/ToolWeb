@@ -4,7 +4,7 @@
  * matchTags 确定性向量与非法参数（err.field="keyword"）、generateHashtags 确定性
  * 向量逐字命中（含零命中保底派生策略）与非法参数抛 Error（err.field="keywords"/
  * "platform"/"count"/"heatPref"）、badgeFor 分档、热度偏好排序、平台默认数量、
- * categories.go 注册（Path 总数 247→247、ID hashtag_generator、Path
+ * categories.go 注册（Path 总数 248→248、ID hashtag_generator、Path
  * /tools/hashtag-generator、Icon local_offer、营销工具、New、中英文 Description）、
  * 模板 SEO 面板／真限制三条／互链（违禁词检测器、OG 社交卡片预览双向）／
  * 不链未交付工具、零网络请求静态检查。
@@ -156,7 +156,7 @@ ok(GO_SRC.slice(hgIdx, hgIdx + 1400).indexOf('Category:    "营销工具"') >= 0
 ok(GO_SRC.slice(hgIdx, hgIdx + 2200).toLowerCase().indexOf("hashtag generator") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 247, "注册 Path 总数 247→247");
+eq(pathCount, 248, "注册 Path 总数 248→248");
 
 /* ---------- 6. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "hashtag_generator.html"), "utf8");

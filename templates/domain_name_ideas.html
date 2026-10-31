@@ -1,0 +1,140 @@
+{{define "domain_name_ideas"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>域名创意生成器 - 关键词生成域名组合创意 .com/.cn 在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线域名创意生成器：输入 1~3 个关键词，一键生成前缀法/后缀法/拼接组合/创意变形四组域名创意，中文关键词自动转拼音，.com/.cn/.net/.io/.dev/.xyz TLD 偏好多选，每条/全部一键复制与下载，纯前端本地生成不上传。Domain name ideas generator: keyword-based domain combinations with TLD options, 100% client-side.">
+    <meta name="keywords" content="域名创意生成器,域名组合,域名起名,品牌域名,域名灵感,domain name ideas,domain generator,域名转拼音,com域名创意,域名生成器">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/domain-name-ideas">
+    <meta property="og:title" content="域名创意生成器 - 关键词生成域名组合创意">
+    <meta property="og:description" content="输入关键词一键生成四组域名创意：前缀法/后缀法/拼接组合/创意变形，中文自动转拼音，TLD 偏好多选，一键复制与下载，纯前端本地生成，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/domain-name-ideas">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"域名创意生成器","description":"免费在线域名创意生成器：输入关键词一键生成前缀法/后缀法/拼接组合/创意变形四组域名创意，中文关键词自动转拼音，TLD 偏好多选，一键复制与下载，纯前端本地生成不上传。","url":"https://www.johnkingzcq123.xyz/tools/domain-name-ideas","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .dny-layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+        .dny-pane h3{margin-bottom:.6rem}
+        .dny-textarea{width:100%;min-height:120px;font-size:.95rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .dny-error{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.5rem;padding:.6rem .8rem;margin:.6rem 0;font-size:.9rem}
+        .dny-tip-ok{display:none;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.5rem;padding:.6rem .8rem;margin:.6rem 0;font-size:.9rem}
+        .dny-opt-row{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:.6rem 0;font-size:.95rem;color:#374151}
+        .dny-opt-label{color:#111827;font-weight:600}
+        .dny-check{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.4rem;padding:.25rem .6rem}
+        .dny-check input{margin:0}
+        .dny-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+        .dny-group{border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem;margin-bottom:.8rem;background:#fafafa}
+        .dny-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+        .dny-group-head h4{margin:0;font-size:1rem;color:#111827}
+        .dny-list{display:flex;flex-direction:column;gap:.35rem}
+        .dny-row{display:flex;align-items:center;justify-content:space-between;gap:.6rem;background:#fff;border:1px solid #e5e7eb;border-radius:.4rem;padding:.35rem .6rem}
+        .dny-domain{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;color:#1a0dab;word-break:break-all}
+        .dny-meta{color:#6b7280;font-size:.88rem;margin-bottom:.8rem}
+        .dny-mini-btn{padding:.25rem .6rem;font-size:.8rem;white-space:nowrap}
+        #dny-actions{display:none;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+        .dny-note{color:#6b7280;font-size:.88rem;margin-top:.5rem;line-height:1.7}
+        .dny-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .dny-tip b{color:#111827}
+        .dny-limits{color:#374151;line-height:1.9;font-size:.95rem;margin:.2rem 0 0;padding-left:1.2rem}
+        .dny-limits b{color:#111827}
+        @media (max-width:768px){
+            .dny-layout{grid-template-columns:1fr}
+            .dny-toolbar .btn{flex:1 1 42%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>域名创意生成器</h1>
+            <p>输入 1~3 个关键词，一键生成前缀法 / 后缀法 / 拼接组合 / 创意变形四组域名创意：中文关键词自动转拼音，TLD 偏好多选，全部在浏览器本地生成，不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:1140px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="dny-layout">
+                    <div class="dny-pane">
+                        <h3>关键词输入（1~3 个，逗号/空格/换行分隔）</h3>
+                        <textarea id="dny-input" class="dny-textarea" placeholder="每行/逗号/空格分隔，例如：&#10;咖啡&#10;奶茶" spellcheck="false" aria-label="关键词输入"></textarea>
+                        <div class="dny-error" id="dny-error" role="alert"></div>
+                        <div class="dny-tip-ok" id="dny-tip" role="status"></div>
+                        <div class="dny-opt-row">
+                            <span class="dny-opt-label">组合风格：</span>
+                            <label class="dny-check"><input type="checkbox" name="dny-style" value="prefix" checked> 前缀法</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-style" value="suffix" checked> 后缀法</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-style" value="concat" checked> 拼接组合</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-style" value="transform" checked> 创意变形</label>
+                        </div>
+                        <div class="dny-opt-row">
+                            <span class="dny-opt-label">TLD 偏好：</span>
+                            <label class="dny-check"><input type="checkbox" name="dny-tld" value="com" checked> .com</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-tld" value="cn" checked> .cn</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-tld" value="net" checked> .net</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-tld" value="io" checked> .io</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-tld" value="dev" checked> .dev</label>
+                            <label class="dny-check"><input type="checkbox" name="dny-tld" value="xyz" checked> .xyz</label>
+                        </div>
+                        <div class="dny-toolbar">
+                            <button class="btn btn-primary" id="dny-generate">生成创意</button>
+                            <button class="btn btn-secondary" id="dny-sample">填充示例</button>
+                            <button class="btn btn-secondary" id="dny-clear">清空</button>
+                        </div>
+                    </div>
+                    <div class="dny-pane">
+                        <h3>生成结果</h3>
+                        <div id="dny-output-wrap" aria-label="生成结果"></div>
+                        <div id="dny-actions">
+                            <button class="btn btn-primary" id="dny-copy-all">复制全部</button>
+                            <button class="btn btn-secondary" id="dny-download">下载 .txt</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="dny-note">本地处理不上传：组合生成与拼音转写全在你的浏览器内完成，关键词不会发送到任何服务器。下载文件名为 <code>domain-ideas-YYYYMMDD-HHmmss.txt</code>。看中了哪个？去 <a href="/tools/domain-check" style="color:#1a0dab;">域名查询</a> 查注册状态；品牌名定了想顺手转 URL slug，用 <a href="/tools/slug-generator" style="color:#1a0dab;">Slug 生成器</a>（域名创意 → 查可用性 → 品牌 slug，网络/营销工具链路）。</div>
+            </div>
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="dny-tip">
+                    <b>怎么用：</b>左侧输入 1~3 个关键词（中文或英文，逗号/空格/换行分隔），勾选组合风格与 TLD 偏好，点「生成创意」。<br>
+                    <b>四组输出：</b>前缀创意（get/my/go… 等前缀＋关键词）、后缀创意（关键词＋hub/lab/ly… 等后缀）、组合拼接（多关键词连写或短横连接）、创意变形（去元音如 cafe→cf、末字母双写如 coffee→coffeee、形近替换 e→3/o→0/s→z）；每条带完整 <code>label.tld</code>，点击「复制」单条拿走。<br>
+                    <b>中文处理：</b>中文关键词先按内置常用字表转小写拼音（如 咖啡→kafei）再参与组合；字表覆盖有限，生僻字转写可能不准（见真限制②）。<br>
+                    <b>合法性过滤：</b>输出自动按 LDH 规则过滤（仅 a-z0-9-、不首尾连字符、label 不超过 63 字符、全小写），非法组合直接丢弃。<br>
+                    <b>数量：</b>每风格默认生成 10 条 label，再乘以所选 TLD 数展开；总数上限 60。<br>
+                    <b>隐私：</b>纯前端本地生成，关键词只在你的浏览器里流转，不上传服务器。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="dny-tip">
+                    <b>为什么有的中文转出来是原字？</b>内置拼音字表是常用字快照，生僻字未收录时会原样保留以便你人工核对，这是有意为之的保守策略（见真限制②）。<br>
+                    <b>生成的域名一定能注册吗？</b>不一定。本工具只做创意组合，不做实时可用性检查；看中哪个请去 <a href="/tools/domain-check" style="color:#1a0dab;">域名查询</a> 查注册状态。<br>
+                    <b>下载的文件名是什么？</b><code>domain-ideas-YYYYMMDD-HHmmss.txt</code>，例如 <code>domain-ideas-20261031-213000.txt</code>，四组分节排列。<br>
+                    <b>英文关键词怎么处理？</b>统一转小写后参与组合；组合结果确定性固定（同输入同输出），前缀/后缀库为固定顺序。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="dny-note">
+                    <a href="/tools/domain-check" style="color:#1a0dab;">域名查询</a>（看中了哪个？去域名查询查注册状态，创意 ↔ 查可用性双向联动）<br>
+                    <a href="/tools/slug-generator" style="color:#1a0dab;">Slug 生成器</a>（品牌名顺手转 URL slug，域名创意单向链入）
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <ul class="dny-limits">
+                    <li><b>不含实时可用性检查：</b>whois/RDAP 受浏览器出网与 CORS 限制，本页面不做实时查询；查某个域名是否可注册，请用站内 <a href="/tools/domain-check" style="color:#1a0dab;">域名查询</a> 工具。</li>
+                    <li><b>拼音字表覆盖有限：</b>中文转拼音依赖内置常用字表（静态快照），生僻字可能转写不准或原样保留；重要品牌名请人工核对拼音。</li>
+                    <li><b>创意不保证可注册：</b>组合为创意辅助，不保证对应域名可注册、也不构成任何注册建议；最终能否注册以注册商查询结果为准。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/domain-name-ideas.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -107,7 +107,7 @@ ok(GO_SRC.indexOf('"/tools/css-flexbox-generator"') >= 0, "categories.go 注册 
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {};
 paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 247, "注册 Path 总数→247（历史遗留陈旧断言同步）");
+eq(Object.keys(uniq).length, 248, "注册 Path 总数→248（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf("css-flexbox-generator") >= 0, "模板 canonical 含新 Path");
 ok(TPL_SRC.indexOf("只做单维 flex 布局、不做 Grid") >= 0, "真限制 1：单维 flex、不做 Grid");
 ok(TPL_SRC.indexOf("不做多断点批量导出") >= 0, "真限制 2：不做多断点批量导出");

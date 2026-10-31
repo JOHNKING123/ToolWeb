@@ -104,7 +104,7 @@ ok(GO_SRC.indexOf('"/tools/image-color-picker"') >= 0, "categories.go 注册 Pat
 ok(GO_SRC.indexOf('Category:    "图片处理"') >= 0, "categories.go 图片处理品类");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = {}; paths.forEach(function (p) { uniq[p] = true; });
-eq(Object.keys(uniq).length, 247, "注册总数→247 Path（历史遗留陈旧断言同步）");
+eq(Object.keys(uniq).length, 248, "注册总数→248 Path（历史遗留陈旧断言同步）");
 ok(TPL_SRC.indexOf('id="icp-canvas"') >= 0, "模板含取色 canvas");
 ok(TPL_SRC.indexOf('id="icp-mag"') >= 0, "模板含放大镜");
 ok(TPL_SRC.indexOf('id="icp-count"') >= 0, "模板含主色数量滑杆");
