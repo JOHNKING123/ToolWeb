@@ -337,6 +337,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "env_sanitizer",
+					Name:        ".env 脱敏生成器",
+					Description: "粘贴 .env 文本或上传 .env/.txt 文件（FileReader 纯前端）：逐行按 dotenv 口径解析，export 前缀剥离、键名校验、双引号解码/单引号原样/无引号行内注释截断，非法行原样保留并标注 # [跳过]；KEY 保留、值按模式脱敏（清空为 KEY= 或占位符替换，自定义占位符，注释保留开关），实时预览 .env.example，一键复制或下载 .env.example；与 .env 解析与校验器双向互链、单向链入 AI 提示词脱敏器，纯前端零上传 · env sanitizer: mask sensitive .env values to empty or placeholder and generate .env.example, 100% client-side",
+					Path:        "/tools/env-sanitizer",
+					Icon:        "hide_source",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "mermaid_diagram_renderer",
 					Name:        "Mermaid 图表渲染与导出器",
 					Description: "粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：6 套模板一键插入、四套主题切换、中文错误提示，SVG 下载、PNG 高清导出（2x/3x，透明/白色背景），纯前端本地渲染，代码不出浏览器 · Paste Mermaid code for live flowchart/sequence/gantt/class/ER/state diagrams with SVG & high-res PNG export, 100% client-side",

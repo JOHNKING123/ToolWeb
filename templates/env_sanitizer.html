@@ -1,0 +1,155 @@
+{{define "env_sanitizer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>.env 脱敏生成器 - KEY 保留值脱敏，一键生成 .env.example | 程序员工具箱</title>
+<meta name="description" content="免费在线 .env 脱敏生成器：粘贴 .env 文本或上传 .env/.txt 文件，逐行解析后 KEY 保留、敏感值清空或替换为占位符（YOUR_VALUE_HERE，可自定义），实时生成 .env.example 预览，一键复制或下载。纯前端本地处理，零上传。env sanitizer: mask sensitive .env values and generate .env.example, 100% client-side.">
+<meta name="keywords" content=".env 脱敏,.env.example 生成,dotenv 脱敏,环境变量脱敏,env sanitizer,dotenv example,KEY 保留,密钥脱敏,占位符替换">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/env-sanitizer">
+<meta property="og:title" content=".env 脱敏生成器 - KEY 保留、值脱敏，一键生成 .env.example">
+<meta property="og:description" content="粘贴 .env 文本或上传文件，KEY 保留、敏感值清空或占位符替换，实时预览 .env.example，一键复制或下载。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/env-sanitizer">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":".env 脱敏生成器","alternateName":"env sanitizer","description":"粘贴 .env 文本或上传 .env/.txt 文件，浏览器本地逐行解析：KEY 保留、敏感值清空或占位符替换，实时生成 .env.example 预览，一键复制或下载，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/env-sanitizer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ep-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.ep-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.ep-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ep-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ep-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ep-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.88rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.ep-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ep-area.out{background:#f0fdf4}
+.ep-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ep-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ep-btn .material-icons{font-size:1.1rem}
+.ep-btn-primary{background:#1d4ed8;color:#fff}
+.ep-btn-primary:hover{background:#1e40af}
+.ep-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ep-btn-secondary:hover{background:#e5e7eb}
+.ep-stats{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:0 0 .7rem;line-height:1.9}
+.ep-stats b{color:#111827}
+.ep-opt-row{display:flex;flex-wrap:wrap;gap:.4rem 1.6rem;align-items:center;margin-bottom:.8rem;font-size:.92rem;color:#1f2937}
+.ep-opt-row label{display:inline-flex;align-items:center;gap:.45rem;cursor:pointer}
+.ep-opt-row input[type="radio"],.ep-opt-row input[type="checkbox"]{accent-color:#1d4ed8;width:1rem;height:1rem}
+.ep-placeholder{width:220px;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.5rem .65rem;
+font-size:.88rem;font-family:ui-monospace,Menlo,Consolas,monospace;color:#1f2937}
+.ep-placeholder:disabled{background:#f3f4f6;color:#9ca3af}
+.ep-placeholder:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ep-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ep-note b{color:#4b5563}
+.ep-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.ep-copy-ok{color:#047857}.ep-copy-fail{color:#b91c1c}
+.ep-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ep-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ep-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ep-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.ep-combo a{color:#1d4ed8;font-weight:600}
+#es-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#es-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.ep-panel{padding:1rem .8rem}.ep-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">hide_source</i> .env 脱敏生成器</h1>
+<p>粘贴 .env 文本或上传 .env/.txt 文件，KEY 保留、敏感值清空或占位符替换，实时生成可分享的 .env.example。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ep-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>本工具仅做格式脱敏，<b>无法判断密钥有效性</b>，也不验证值是否真为密钥；脱敏后的 .env.example 里 <b>KEY 命名仍暴露结构信息</b>（如 DB_HOST= 表明你用数据库），分享前请自行确认；<b>多行值可能处理不全</b>，复杂转义请核对输出。粘贴文本<b>只在浏览器本地处理、不上传</b>；建议用占位值演练，勿粘贴真实生产密钥。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">input</i> 粘贴 .env 文本或上传文件（输入即实时脱敏）</h3>
+<textarea class="ep-area" id="es-input" rows="10" placeholder="在此粘贴 .env 文本，例如：&#10;# 数据库配置&#10;DB_HOST=localhost&#10;DB_PASS=s3cr3t&#10;export API_KEY=&quot;sk-abc&quot;"></textarea>
+<input type="file" id="es-file" accept=".env,.txt" style="display:none">
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-secondary" id="es-upload"><i class="material-icons">upload_file</i> 上传 .env/.txt</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="es-sample"><i class="material-icons">auto_awesome</i> 载入示例</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="es-clear"><i class="material-icons">clear_all</i> 清空</button>
+</div>
+<div class="ep-note">文件通过浏览器 <code>FileReader</code> 在本地读取，<b>不上传到服务器</b>。解析口径：按行切分（兼容 CRLF），<code>export</code> 前缀剥离，键名须为字母或下划线开头、仅含字母数字下划线；双引号值解码转义、单引号值原样、无引号值以“空格 + #”截断行内注释；非法行原样保留并在行首标注 <code># [跳过]</code>，不丢数据。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">tune</i> 脱敏选项</h3>
+<div class="ep-opt-row">
+<label><input type="radio" name="es-mode" id="es-mode-empty" checked> 值清空（KEY=）</label>
+<label><input type="radio" name="es-mode" id="es-mode-placeholder"> 占位符替换</label>
+<input type="text" class="ep-placeholder" id="es-placeholder" value="YOUR_VALUE_HERE" disabled placeholder="自定义占位符">
+</div>
+<div class="ep-opt-row">
+<label><input type="checkbox" id="es-keep-comments" checked> 保留注释与空行</label>
+</div>
+<div class="ep-note">值清空模式：<code>DB_PASS=s3cr3t</code> → <code>DB_PASS=</code>；占位符模式：→ <code>DB_PASS=YOUR_VALUE_HERE</code>（占位符可自定义，仅占位符模式生效）。注释与空行默认原样保留，关闭后输出只剩 <code>KEY=…</code> 行与 <code># [跳过]</code> 标注行。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">preview</i> .env.example 实时预览</h3>
+<div class="ep-stats" id="es-stats"></div>
+<textarea class="ep-area out" id="es-output" rows="10" readonly></textarea>
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-primary" id="es-copy"><i class="material-icons">content_copy</i> 复制 .env.example</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="es-download"><i class="material-icons">download</i> 下载 .env.example</button>
+</div>
+<div class="ep-copy-tip" id="es-copy-tip"></div>
+<div class="ep-note">复制与下载内容均与上方预览逐字一致。下载文件名固定为 <code>.env.example</code>，你拿到后可直接改名使用。</div>
+</div>
+
+<div class="ep-combo">
+<b>解析校验 → 脱敏分享：</b>先去 <a href="/tools/env-parser">.env 解析与校验器</a> 把格式理顺、确认无非法行，再回来脱敏生成 <code>.env.example</code> 分享 —— 解析校验用那里，脱敏生成用这里。喂 LLM 前要把真实密钥替换掉，请去 <a href="/tools/prompt-sanitizer">AI 提示词脱敏器</a>。
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ep-faq">
+<dt>值清空和占位符替换怎么选？</dt>
+<dd>占位模板发给同事/写部署文档，两种都行：值清空得到最干净的 <code>KEY=</code> 骨架；占位符替换（<code>KEY=YOUR_VALUE_HERE</code>）更显眼，提醒填写者“这里要填值”。占位符可自定义，如 <code>&lt;FILL_ME&gt;</code>。</dd>
+<dt>非法行会丢失吗？</dt>
+<dd>不会。行内没有 <code>=</code>、键名非法、引号未闭合的行会原样保留，并在行首标注 <code># [跳过]</code>，你自己决定删还是修 —— 建议先去 <a href="/tools/env-parser">.env 解析与校验器</a> 看逐行定位的报错说明。</dd>
+<dt>脱敏后的 KEY 会泄露信息吗？</dt>
+<dd>会。<code>DB_HOST=</code> 这类键名本身就暴露了技术栈与结构信息，脱敏只隐藏值不隐藏键。分享前请确认键名列表可以公开。</dd>
+<dt>文本会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行，解析、脱敏、复制、下载全在浏览器本地 JavaScript 里完成（文件上传走 <code>FileReader</code> 本地读取），脚本中没有任何 fetch / XHR 上传逻辑。可断网使用（首次加载页面除外）。</dd>
+<dt>和「.env 解析与校验器」有什么区别？</dt>
+<dd>解析校验器做的是格式体检：非法行定位、重复键、空值警告，输出规整键值表。本工具做的是脱敏分享：KEY 保留、值清空或占位符替换，输出可直接分享的 <code>.env.example</code>。两者双向互链，流程一条龙。</dd>
+</dl>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ep-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">.env 脱敏生成器（当前）</span>
+<a href="/tools/env-parser" class="btn btn-secondary" style="font-size:.9rem;">.env 解析与校验器（先校验格式）</a>
+<a href="/tools/prompt-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">AI 提示词脱敏器（发问前脱敏密钥）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="es-toast"></div>
+<script src="/tools/static/js/env_sanitizer.js?v=1"></script>
+</body>
+</html>
+{{end}}
