@@ -13,6 +13,10 @@
 
 
 
+# 构建备份/临时二进制
+toolWeb.bak-prev
+*.bak-prev
+
 # Go workspace file
 go.work
 

@@ -306,7 +306,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function downsample() {
         var cfg = validatePindouConfig({
             gridSize: parseInt(gridEl.value, 10),
-            paletteSize: parseInt(palEl.value, 10),
+            /* 内置色板只有 60 色：滑杆上限 64 时在此钳制，避免生成链路被阻断 */
+            paletteSize: Math.min(parseInt(palEl.value, 10), PINDOU_PALETTE.length),
             beadSizeMm: beadSizeMm
         });
         lastCfg = cfg;
