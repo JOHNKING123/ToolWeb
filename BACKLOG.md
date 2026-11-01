@@ -1,3 +1,87 @@
+## 今日任务（2026-11-01 09:45 · PM 选定轮，接 183 轮通用调研）
+
+**选定：文字转图片卡片（text_to_card）** — 本轮唯一任务（新工具）。
+- **顺位**：183 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；占位图生成器已交付 eb2ca8b，候选池划出；简繁互转 `templates/jianfan_converter.html` 仍不存在、继续开发中，移出候选池）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`text_to_card`／`quote_card`／`金句`／`text2image`／`文字生成图片`／`海报生成`／`text-to-card` 七处 **全 0 命中**；**ID `text_to_card`、Path `/tools/text-to-card` 均无占用**；**Icon `style` 精确值 0 占用**（Material Icons 官方实存，语义贴合「模板/排版样式」；`photo_prints`／`view_agenda` 亦 0 占用，语义选 style）。
+- **顺位递补（未硬伤）**：恩尼格玛密码机模拟器（`enigma`／`rotors` 0 命中复测，真缺口；纯前端中难度）→ 第二顺位（开发中若遇交付级阻塞递补）；负片图像还原（`negative`／`负片`／`invert` 图片反色口径 0 命中，真缺口；纯前端小难度）→ 第三顺位待命。
+- **选定理由**：① **顺位即理由**——183 轮 Top3 首席，无硬伤递补；② **痛点真实**——读完书/看完电影想发朋友圈/小红书分享金句短评，自己排版难看，在线排版工具收费或带水印；③ **一轮可高质量交付**——纯前端小难度：输入文字→多套模板/配色/字号 canvas 排版→PNG 下载，纯函数可写逐字向量（文本分行、模板配色校验、文件名生成），无外部请求；④ **营销/社媒簇补位**——与 social_title_generator／hashtag_generator 同簇双向互链「关键词→标题＋简介＋标签→分享卡片」一条龙；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+- **品类归位**：注册到「营销工具」类目（social_title_generator／hashtag_generator 同类目）；New: true；ID `text_to_card`、Path `/tools/text-to-card`、Icon `style`。
+
+**规格**（开发轮按此执行）：
+- **输入**：主文本 textarea（必填，最多 500 字）；署名/出处文本框（选填）；模板选择（≥4 套：极简白／深色电影／报纸金句／渐变小清新等）；配色方案选择（每套模板≥3 配色）；字号档（大/中/小三档）；对齐方式（左/中/右）。
+- **处理（canvas，纯前端）**：按模板与字号建 canvas（标准 1080×1080 方图＋ 1080×1350 竖图双尺寸档可选）→ 背景/渐变绘制 → 纯函数分行（按 maxChars 自动断行＋手动换行保留）→ 文字居中/对齐绘制（measureText 超宽自动缩小）→ 参数变化即时重渲染实时预览。
+- **输出**：实时预览；下载 `card-YYYYMMDD-HHmmss.png`；一键复制 PNG Data URL（clipboard，降级 textarea+execCommand）。
+- **互链**：与 social_title_generator／hashtag_generator 双向互链（社媒工具页加回链，「关键词→标题＋简介＋标签→分享卡片」一条龙）。
+- **真限制（页面明示）**：① 仅静态卡片，**无复杂排版引擎**（无高级分行、竖排、字偶距控制）；② 中文字体依赖系统字体，不同设备/浏览器渲染可能有差异；③ 卡片为装饰性分享图，图片内文字不利于 SEO/无障碍，重要信息请同时保留文本版。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `wrapLines(text, maxChars)` → string[]（按 maxChars 自动断行，保留手动换行；text 非字符串抛 Error，err.field="text"；maxChars 非正整数抛 Error，err.field="maxChars"）。
+  - `pickTemplate(key)` → 模板对象（含 id/name/palettes；key 非法抛 Error，err.field="template"）。
+  - `cardSizeOf(ratio)` → {w,h}（ratio ∈ '1:1'/'4:5'；非法抛 Error，err.field="ratio"）。
+  - `buildCardName(date)` → `card-YYYYMMDD-HHmmss.png` 格式。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `wrapLines('你好世界', 2)` → `['你好','世界']`；`wrapLines('a\nb', 8)` → `['a','b']`；`wrapLines(123, 8)` 抛 Error 且 `err.field==='text'`；`wrapLines('ab', 0)` 抛 Error 且 `err.field==='maxChars'`。
+  - `pickTemplate('minimal')` → 含 `id:'minimal'`；`pickTemplate('nope')` 抛 Error 且 `err.field==='template'`。
+  - `cardSizeOf('1:1')` → `{w:1080,h:1080}`；`cardSizeOf('4:5')` → `{w:1080,h:1350}`；`cardSizeOf('16:9')` 抛 Error 且 `err.field==='ratio'`。
+  - `buildCardName(new Date(2026,10,1,9,45,0))` → `'card-20261101-094500.png'`。
+
+**验收标准**：
+1. 文字＋署名＋模板/配色/字号/对齐输入 → canvas 实时预览 ＋ 下载 `card-YYYYMMDD-HHmmss.png` ＋ 复制 PNG Data URL。
+2. 纯函数契约 node 测试全过（wrapLines/pickTemplate/cardSizeOf/buildCardName 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 253→254、ID/Path/Icon/Category）。
+3. 真限制在页面明示（三条：无复杂排版引擎、中文字体依赖系统字体、图片文字不利于 SEO/无障碍）。
+4. `/tools/text-to-card` 注册，「营销工具」类目，New: true；旧测试 Path 断言 253→254 同步。
+5. go build/vet 通过；本地 `/tools/text-to-card` 实测 200；零外部请求（纯 canvas，字体走系统）。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与 social_title_generator／hashtag_generator 双向互链。
+
+**预计改动文件**（6 项）：
+1. `templates/text_to_card.html`（页面＋真限制＋文字/署名/模板/配色/字号/对齐输入＋SEO 面板）
+2. `static/js/text_to_card.js`（分行/模板/尺寸/文件名纯函数＋canvas 管道＋下载/复制交互）
+3. `tests/text_to_card.test.js`（node 纯逻辑测试）
+4. `tools/categories.go`（注册：ID `text_to_card`、Path `/tools/text-to-card`、Icon `style`、Category 营销工具、New: true）
+5. 旧测试 Path 总数断言 253→254 同步
+6. `templates/social_title_generator.html`、`templates/hashtag_generator.html` 加回链（双向互链）
+
+---
+
+## 今日任务（2026-11-01 09:36 · 通用调研第一百八十三轮，接 07:40 PM 选定轮）
+
+**交付状态**：11-01 通用调研第一百八十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**占位图生成器交付闭环**（eb2ca8b 新增：宽高 1~4096 可调＋自定义显示文字（留空自动 宽×高）＋底色/文字色选择器，canvas 本地渲染实时预览（字号 clamp(floor(min(宽,高)/6),12,200)，超宽 measureText 自动缩小），下载 placeholder-WxH.png＋复制 Data URL（clipboard，降级 execCommand）＋复制 Markdown 图片引用；与 skeleton_screen_generator 双向互链（骨架屏→占位图一条龙）；真限制三条页面明示；ID placeholder_image_generator、Path /tools/placeholder-image-generator、Icon image_aspect_ratio、New；纯函数契约 parseSize/normalizeHex/displayTextOf/buildPlaceholderName（非法参数抛 Error，err.field 命名）；node 测试 93 断言全过（确定性向量逐字＋err.field＋注册断言）；旧测试 Path 断言 252→253 同步；go build/vet 通过，本地 /tools/placeholder-image-generator 实测 200；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head eb2ca8b），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：文字转图片卡片→首席／恩尼格玛密码机模拟器→第二／**负片图像还原→新候选晋升 P2 第三顺位**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:36 轮，优先小难度纯前端。
+**本轮三件事**（09:36 全网调研，通用方向）：
+1. 交付确认：git log 头部 eb2ca8b（占位图生成器新增，node 93 断言全过，Path 252→253）／a187de6（扫描件效果生成器）／ba97939（75 个旧测试文件 Path 断言同步到 251）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **253**；`ls templates/placeholder_image_generator.html` 存在；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中）；本地分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 与 FETCH_HEAD 同头 eb2ca8b；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - 占位图生成器：已交付（/tools/placeholder-image-generator，Path 252→253）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head eb2ca8b；categories.go 无 jianfan/简繁注册）——移出 Top3。
+   - 文字转图片卡片：`text_to_card`／`quote_card`／`金句` 三处 **0 命中**（本轮复测）——**递进首席**。
+   - 恩尼格玛密码机模拟器：`enigma`／`Enigma`／`恩尼格玛`／`rotors` 四处 **0 命中**（本轮复测；181/182 轮亦 0 命中）——**递进第二顺位**。
+   - **负片图像还原**：本轮晋升复核——`negative`／`负片`／`invert` 三处宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor 无关口径（ASCII 艺术／CSS 滤镜调试／寄存器位域编辑器），**图片反色/胶片负片还原口径 0 命中**——**真缺口确凿，新候选→P2 第三顺位**（晋升理由：174 轮观察备选；本轮「胶片负片转正片 在线工具」搜索证实痛点真实：imageonline.io／truepositivelabs.com／vayce.app／filewhisk.com／collage.recipes 五家专用工具，均为英文、广告/跳转多，中文站无同类纯本地工具；胶片老照片数字化场景持续有需求；纯前端小难度：上传 JPG/PNG/WebP（FileReader）→全色反转／彩色负片去橙色底／黑白负片三种模式 canvas 管道→PNG 下载，纯函数可写逐字向量（invertOf(v)=255−v、通道 percentile 拉伸）；图片工具簇补位（与 img_compress／img_resize／img_convert 同簇联动「图片处理一条龙」）；真限制：彩色负片去橙色底为启发式算法、非专业胶片扫描仪级，须明示）。
+3. 新信号扫描（V2EX＋HN＋dev.to 榜单为本轮主线）：**新候选 1 项（负片图像还原，观察池晋升），其余全部确认消解**——
+   - V2EX：t/1253201 自媒体获客四工具（10-30；174/180 轮已消解，确认消解）／t/1248172 在线简历生成器（10-12；resume_builder 已交付覆盖，消解）／t/1247697 ahahmm.ai（10-10；AI 获客 agent＋知识图谱，需 AI 后端＋登录，非单页口径，消解）／t/1246569 免费外链清单（10-10；SEO 外链列表非工具口径，消解）；
+   - HN/Show HN：AI agent 基建批（Radian／Mixdog／Brod／Widefleet／Faplex／Ghosthand iPhone 操控／Rystic 本地 API 模拟／Isoquant 推理 API／Boba 群聊助手／Otaku AI 番剧推荐／Proto AI 设计工具／HackerTube HN 精选视频站）——全部需后端/AI/云服务，非单页口径，消解；
+   - dev.to 2026 榜单 4 篇（101 工具帖 03-05、08-12 更新；best free browser tools 188 天前；20 Free Online Tools 213 天前；10 Free Online Developer Tools 128 天前）：JSON/Base64/正则/UUID/时间戳/颜色/JWT/URL 编码/Text Diff/PDF 合并拆分压缩/图片压缩/二维码/chmod/代码截图/SQL 格式化/进制转换/CSV 查看编辑/YAML↔JSON/TOML/子网/JSON→TS/Markdown 预览/渐变/Minifier/Hash/密码生成——站内均已交付覆盖，消解；AI 证件照/AI 翻译/AI 抠图需 AI 服务非单页口径，消解；npm compare/health、GitHub stats、DNS/SSL check 需外部 API/后端非单页口径，消解；**font pairing 类目→「字体搭配预览器」（129 轮观察）新信号**（fontpair.co／Fontjoy／Layz／pairandcompare.net 均为英文 Google Fonts 中心；中文站缺中文字体搭配预览，观察保持：预览加载 webfont 属外部请求，与家族零外部请求惯例冲突，口径待 PM 裁定）；
+   - 「希望有一个网站能」中文搜索：仍被英文 pain 词污染，无有效信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **文字转图片卡片** — 递进首席（121 轮观察项；179 轮 typefully Quick Reviews「影评书评分享卡片」信号口径重合；本轮 `text_to_card`/`quote_card`/`金句` 三处 0 命中复测真缺口（markdown_publish_formatter 为公众号文章 HTML 排版口径；og_card_preview 为 OG 预览口径；screenshot/code_screenshot_beautifier 为截图美化口径）；痛点：读完书/看完电影想发朋友圈/小红书分享金句短评，自己排版难看，在线排版工具收费或带水印；输入文字→多套模板/配色/字号 canvas 排版→PNG 下载，纯前端小难度（纯函数可写逐字向量：文本分行、模板配色、文件名生成）；营销/社媒簇补位（与 social_title_generator／hashtag_generator 同簇联动「关键词→标题＋简介＋标签→分享卡片」）；真限制：仅静态卡片、无复杂排版引擎，中文字体依赖系统字体，须明示）。
+2. **恩尼格玛密码机模拟器** — 递进第二顺位（160 轮观察备选；182 轮晋升 P2；本轮 `enigma`/`Enigma`/`恩尼格玛`/`rotors` 四处 0 命中复测真缺口（181/182 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同）；痛点：历史/密码学爱好者想亲手体验二战恩尼格玛机加密流程，在线模拟器多为英文、广告多、无中文，教学场景需要可视化转子 stepping 过程；转子（Walzen I~V 可选）＋反射器＋接线板＋环位/起始位设置，逐字符加密＋转子步进可视化，纯前端中难度（纯函数可写逐字向量：stepRotors/encryptChar/plugboardSwap，经典公开测试向量开发轮交叉验证）；密码/编码簇补位（morse_code_translator 同簇联动「古典密码一条龙」）；真限制：仅 Wehrmacht M3 标准三转子口径、不含海军四转子/Uhr 等变体，须明示）。
+3. **负片图像还原** — 新候选晋升第三顺位（174 轮观察备选；本轮「胶片负片转正片 在线工具」搜索：imageonline.io／truepositivelabs.com／vayce.app／filewhisk.com／collage.recipes 五家专用工具证实痛点真实（胶片老照片数字化、手机拍负片还原），均为英文、广告/跳转多，中文无同类纯本地工具；本轮 `negative`/`负片`/`invert` 三处宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor 无关口径，图片反色/胶片负片还原口径真缺口；上传 JPG/PNG/WebP（FileReader 纯前端）→全色反转／彩色负片去橙色底（通道 percentile 拉伸）／黑白负片三种模式→canvas 管道实时预览→PNG 下载，纯前端小难度（纯函数可写逐字向量：invertOf/channelStretch，非法参数 err.field）；图片工具簇补位（img_compress／img_resize／img_convert 同簇联动「图片处理一条龙」）；真限制：彩色负片去橙色底为启发式算法、非专业胶片扫描仪级，须明示）。
+
+其余观察项保持原状：**高精度计算器 BigNumber（177 轮新弱观察**，DevsTools 榜单单信号；`bignumber`/`高精度` 0 命中真缺口；JS 浮点精度痛点如 0.1+0.2；本地 decimal 实现纯前端小难度；**用户 10-18 方向修正（不扩泛财务/计算器类）口径风险**，低优先保持）／**字体搭配预览器（129 轮观察**，本轮 dev.to 101 工具帖「font pairing」类目新信号：fontpair.co／Fontjoy／Layz／pairandcompare.net 均为英文 Google Fonts 中心、中文站缺中文字体搭配预览；但预览加载 webfont 属外部请求、与家族零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（177 轮新弱观察，tubox 10-28 单信号；ONNX 模型硬伤同类，低优先）／Docker Compose→K8s YAML（177 轮新弱观察，DevsTools 榜单单信号；docker_run_to_compose 相邻口径；低优先）／LLM Token 成本估算（177 轮新观察：ai_token_counter 增强备选；低优先）／一键图片去背景（165 轮；tubox 第八信号；ONNX 硬伤未解低优先保持）／浏览器 GPU 性能测试（175 轮观察项；受众偏窄，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／数独求解器（观察备选）／WhatsApp 链接生成器（115 轮）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／新拟态生成器／CSS 脉冲动画生成器（143 轮）／批量随机数生成器（133 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百八十三轮：占位图生成器交付闭环（eb2ca8b；`/tools/placeholder-image-generator` 已注册；Path 252→253；node 93 断言全过；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head eb2ca8b；categories.go 未注册），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：文字转图片卡片→首席／恩尼格玛密码机模拟器→第二／**负片图像还原→新候选晋升 P2 第三顺位**（本轮晋升复核真缺口确凿：`negative`/`负片`/`invert` 宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor 无关口径；174 轮观察备选；胶片负片转正片五家国际专用工具证实痛点真实，中文无同类纯本地工具；纯前端小难度；图片工具簇补位）；**本轮 fetch 成功**（按铁律加 GIT_SSH_COMMAND，本地 HEAD 与 FETCH_HEAD 同头 eb2ca8b）；新信号扫描：V2EX 4 项（自媒体获客 t/1253201 确认消解／在线简历生成器 t/1248172：resume_builder 已交付／ahahmm.ai t/1247697：AI 获客需 AI 后端＋登录非单页口径／免费外链清单 t/1246569：SEO 列表非工具口径）＋HN/Show HN（AI agent 基建批：Radian/Mixdog/Brod/Widefleet/Faplex/Ghosthand/Rystic/Isoquant/Boba/Otaku AI/Proto/HackerTube 全部需后端/AI/云服务非单页口径，消解）＋dev.to 2026 榜单 4 篇（JSON/Base64/正则/UUID/时间戳/颜色/JWT/URL编码/Text Diff/PDF/图片压缩/二维码/chmod/代码截图/SQL格式化/进制转换/CSV查看/YAML↔JSON/TOML/子网/JSON→TS/Markdown预览/渐变/Minifier/Hash/密码生成均已交付覆盖；AI 证件照/AI 翻译/AI 抠图需 AI 服务非单页口径；npm compare/GitHub stats/DNS/SSL check 需外部 API 非单页口径；**font pairing→「字体搭配预览器」（129 轮）新信号，观察保持（webfont 外部请求口径待 PM 裁定）**）＋「希望有一个网站能」中文搜索（仍被英文 pain 词污染，无有效信号）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过；全量 **253 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 占位图生成器 | 已交付划出（eb2ca8b 新增：宽高 1~4096 可调＋自定义显示文字（留空自动 宽×高）＋底色/文字色选择器，canvas 本地渲染实时预览（字号 clamp(floor(min(宽,高)/6),12,200)，超宽 measureText 自动缩小），下载 placeholder-WxH.png＋复制 Data URL（clipboard，降级 execCommand）＋复制 Markdown 图片引用；与 skeleton_screen_generator 双向互链（骨架屏→占位图一条龙）；真限制三条页面明示（无真实图片语义／超大尺寸文件提醒／中文字体依赖系统字体）；ID placeholder_image_generator、Path /tools/placeholder-image-generator、Icon image_aspect_ratio、New；纯函数契约 parseSize/normalizeHex/displayTextOf/buildPlaceholderName（非法参数抛 Error，err.field 命名）；node 测试 93 断言全过；旧测试 Path 断言 252→253 同步；go build/vet 通过；本地 /tools/placeholder-image-generator 实测 200；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head eb2ca8b；categories.go 未注册；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 文字转图片卡片 | 递进首席（121 轮观察项；179 轮 typefully Quick Reviews「影评书评分享卡片」信号口径重合；本轮 `text_to_card`/`quote_card`/`金句` 三处 0 命中复测真缺口（markdown_publish_formatter 为公众号文章 HTML 排版口径；og_card_preview 为 OG 预览口径；screenshot/code_screenshot_beautifier 为截图美化口径）；输入文字→多套模板/配色/字号 canvas 排版→PNG 下载；纯前端小难度；营销/社媒簇补位（social_title_generator/hashtag_generator 同簇联动）；真限制：仅静态卡片、无复杂排版引擎，中文字体依赖系统字体须明示） | 小 | P2（留池） |
+| 恩尼格玛密码机模拟器 | 递进第二顺位（160 轮观察备选；182 轮晋升 P2；本轮 `enigma`/`Enigma`/`恩尼格玛`/`rotors` 四处 0 命中复测真缺口（181/182 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同）；转子（Walzen I~V 可选）＋反射器＋接线板＋环位/起始位设置，逐字符加密＋转子步进可视化；纯前端中难度；密码/编码簇补位（morse_code_translator 同簇联动）；真限制：仅 Wehrmacht M3 标准三转子口径、不含海军四转子等变体须明示） | 中 | P2（留池） |
+| 负片图像还原 | 183 轮新候选晋升 P2 第三顺位（174 轮观察备选；本轮「胶片负片转正片」搜索证实痛点真实：imageonline.io／truepositivelabs.com／vayce.app／filewhisk.com／collage.recipes 五家专用工具，均为英文、广告/跳转多，中文无同类纯本地工具；本轮 `negative`/`负片`/`invert` 三处宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor 无关口径，图片反色/胶片负片还原口径真缺口；上传 JPG/PNG/WebP（FileReader 纯前端）→全色反转／彩色负片去橙色底（通道 percentile 拉伸）／黑白负片三种模式→canvas 实时预览→PNG 下载；纯前端小难度（纯函数可写逐字向量：invertOf/channelStretch，非法参数 err.field）；图片工具簇补位（img_compress／img_resize／img_convert 同簇联动）；真限制：彩色负片去橙色底为启发式算法、非专业胶片扫描仪级，须明示） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-01 通用调研第一百八十三轮——占位图生成器交付闭环（eb2ca8b，`/tools/placeholder-image-generator` 已注册，全量 253 Path），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head eb2ca8b），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：文字转图片卡片→首席（`text_to_card`/`quote_card`/`金句` 0 命中复测）／恩尼格玛密码机模拟器→第二（`enigma`/`Enigma`/`恩尼格玛`/`rotors` 0 命中复测）／**负片图像还原→新候选晋升 P2 第三顺位**（晋升复核真缺口确凿；174 轮观察备选；五家国际专用工具证实痛点真实、中文无同类纯本地工具；纯前端小难度；图片工具簇补位）；本轮 fetch 成功（按铁律加 GIT_SSH_COMMAND，本地 HEAD 与 FETCH_HEAD 同头 eb2ca8b）；新信号扫描：V2EX 4 项（1 项确认消解＋3 项新消解）＋HN/Show HN（AI agent 基建批非单页口径全部消解）＋dev.to 2026 榜单 4 篇（全部已交付覆盖或非单页口径；**font pairing→「字体搭配预览器」新信号，观察保持**）＋「希望有一个网站能」中文搜索（仍被英文 pain 词污染）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD eb2ca8b 与 FETCH_HEAD 同头；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 eb2ca8b（占位图生成器新增，node 93 断言全过，Path 252→253）／a187de6（扫描件效果生成器）／ba97939（75 个旧测试文件 Path 断言同步到 251）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **253**；`ls templates/placeholder_image_generator.html` 存在；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中）；Top3 候选重叠复核（`placeholder_image_generator`／`/tools/placeholder-image-generator` 已交付划出；`简繁`／`繁简`：仍开发中，移出候选池；`text_to_card`／`quote_card`／`金句` 三处 0 命中（markdown_publish_formatter 为公众号 HTML 排版口径；og_card_preview 为 OG 预览口径；screenshot/code_screenshot_beautifier 为截图美化口径，均已裁定不同）；**恩尼格玛密码机模拟器**：`enigma`／`Enigma`／`恩尼格玛`／`rotors` 四处 0 命中（181/182 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同），真缺口确凿；**负片图像还原**：`negative`／`负片`／`invert` 三处宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor 无关口径（ASCII 艺术／CSS 滤镜调试／寄存器位域编辑器），图片反色/胶片负片还原口径真缺口确凿；高精度计算器 `bignumber`／`高精度` 低优先保持（方向修正口径风险）；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-01 07:40 · PM 选定轮，接 182 轮通用调研）
 
 **选定：占位图生成器（placeholder_image_generator）** — 本轮唯一任务（新工具）。

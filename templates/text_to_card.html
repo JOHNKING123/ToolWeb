@@ -1,0 +1,186 @@
+{{define "text_to_card"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文字转图片卡片 - 纯前端文字排版分享卡片生成器，一键下载 PNG | 程序员工具箱</title>
+<meta name="description" content="免费在线文字转图片卡片：输入文字（≤500字）＋署名/出处，4 套模板×每套 4 种配色，字号三档、对齐三选、1:1 与 4:5 两档尺寸，canvas 浏览器本地实时预览，一键下载 card-YYYYMMDD-HHmmss.png 或复制 PNG Data URL。纯前端零上传。text to image card: turn words into shareable quote cards, 100% client-side.">
+<meta name="keywords" content="文字转图片,文字转图片卡片,金句卡片,分享卡片生成器,语录卡片,文字图片生成,text to image card,quote card generator,金句生成器,朋友圈配图">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-to-card">
+<meta property="og:title" content="文字转图片卡片 - 纯前端文字排版分享卡片生成器">
+<meta property="og:description" content="输入文字＋署名，4 套模板、字号/对齐/尺寸可调，canvas 本地实时预览，一键下载 PNG 或复制 Data URL。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/text-to-card">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"文字转图片卡片","alternateName":"text to image card generator","description":"纯前端文字排版分享卡片生成器：输入文字（≤500字）＋署名/出处，4 套模板×每套 4 种配色，字号三档、对齐三选、1:1/4:5 两档尺寸，canvas 浏览器本地实时预览，一键下载 card-YYYYMMDD-HHmmss.png 或复制 PNG Data URL，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/text-to-card","applicationCategory":"BusinessApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.tc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.tc-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.tc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.tc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.tc-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.tc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.tc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.tc-btn .material-icons{font-size:1.1rem}
+.tc-btn-primary{background:#1d4ed8;color:#fff}
+.tc-btn-primary:hover{background:#1e40af}
+.tc-btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.tc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.tc-btn-secondary:hover{background:#e5e7eb}
+.tc-btn-secondary:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+.tc-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.tc-note b{color:#4b5563}
+.tc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.tc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.tc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.tc-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.tc-combo a{color:#1d4ed8;font-weight:600}
+.tc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.9rem}
+.tc-field{display:flex;flex-direction:column;gap:.35rem;font-size:.92rem;color:#1f2937}
+.tc-field label b{color:#1d4ed8}
+.tc-field textarea,.tc-field input[type="text"],.tc-field select{padding:.55rem .7rem;border:1px solid #d1d5db;
+border-radius:.45rem;font-size:.95rem;width:100%;box-sizing:border-box;font-family:inherit}
+.tc-field textarea{resize:vertical;min-height:7.5rem;line-height:1.7}
+.tc-count{font-size:.82rem;color:#6b7280;text-align:right}
+.tc-radio-row{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center;padding:.55rem 0}
+.tc-radio-row label{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;color:#1f2937;cursor:pointer}
+.tc-err{display:none;font-size:.85rem;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;
+border-radius:.45rem;padding:.45rem .7rem;margin-top:.7rem;line-height:1.7}
+.tc-preview-wrap{background:#e5e7eb;border-radius:.6rem;padding:1rem;text-align:center;min-height:200px;
+display:flex;align-items:center;justify-content:center;overflow:auto}
+#tc-canvas{max-width:100%;height:auto;display:none;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.tc-empty{color:#9ca3af;font-size:.92rem;line-height:2}
+.tc-empty .material-icons{font-size:2.2rem;display:block;margin-bottom:.4rem;color:#cbd5e1}
+.tc-info{font-size:.88rem;color:#4b5563;margin-top:.7rem;line-height:1.9}
+.tc-info b{color:#1f2937}
+#tc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#tc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.tc-panel{padding:1rem .8rem}.tc-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">style</i> 文字转图片卡片</h1>
+<p>把一句话、一段金句排成好看的分享卡片：输入文字＋选填署名，模板、配色、字号、对齐、尺寸随手调，浏览器本地 canvas 实时渲染。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="tc-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① 本工具是<b>纯文字排版</b>，<b>无复杂排版引擎</b>——只做自动分行与对齐，不支持富文本样式、图文混排、艺术字效；② 中文字体<b>依赖系统字体</b>，不同设备/浏览器渲染可能有差异；③ <b>图片内的文字不利于 SEO 与无障碍</b>——搜索引擎无法索引图片里的文字，读屏软件也读不到，发文时请同时保留文字版。</div>
+</div>
+
+<div class="tc-panel">
+<h3><i class="material-icons">tune</i> 卡片内容（改动即实时重渲染）</h3>
+<div class="tc-field" style="margin-bottom:.9rem">
+<label>主文本（<b>≤500 字</b>，换行请直接回车）</label>
+<textarea id="tc-text" maxlength="600" placeholder="在这里输入你想做成卡片的文字，例如：&#10;生活不是等待暴风雨过去，&#10;而是学会在雨中起舞。">生活不是等待暴风雨过去，&#10;而是学会在雨中起舞。</textarea>
+<div class="tc-count" id="tc-count">0 / 500</div>
+</div>
+<div class="tc-grid">
+<div class="tc-field">
+<label>署名／出处（选填）</label>
+<input type="text" id="tc-author" placeholder="如：佚名 / 《小王子》" maxlength="40">
+</div>
+<div class="tc-field">
+<label>模板（4 套）</label>
+<select id="tc-template"></select>
+</div>
+<div class="tc-field">
+<label>配色（每套 ≥3 种）</label>
+<select id="tc-palette"></select>
+</div>
+</div>
+<div class="tc-field" style="margin-top:.9rem">
+<label>字号</label>
+<div class="tc-radio-row">
+<label><input type="radio" name="tc-size" value="small"> 小</label>
+<label><input type="radio" name="tc-size" value="medium" checked> 中</label>
+<label><input type="radio" name="tc-size" value="large"> 大</label>
+</div>
+</div>
+<div class="tc-field">
+<label>对齐</label>
+<div class="tc-radio-row">
+<label><input type="radio" name="tc-align" value="left"> 左对齐</label>
+<label><input type="radio" name="tc-align" value="center" checked> 居中</label>
+<label><input type="radio" name="tc-align" value="right"> 右对齐</label>
+</div>
+</div>
+<div class="tc-field">
+<label>尺寸</label>
+<div class="tc-radio-row">
+<label><input type="radio" name="tc-ratio" value="1:1" checked> 1:1（1080×1080，正方形朋友圈/头像配图）</label>
+<label><input type="radio" name="tc-ratio" value="4:5"> 4:5（1080×1350，竖版小红书/朋友圈长图）</label>
+</div>
+</div>
+<div class="tc-err" id="tc-err"></div>
+<div class="tc-note">分行走纯函数 <b>wrapLines</b>（先按回车分段、再按字数切行）；单行超宽时用 <b>measureText</b> 自动缩小字号到适配。非法参数<b>不静默钳制</b>，会红字提示并保留上次预览。</div>
+</div>
+
+<div class="tc-panel">
+<h3><i class="material-icons">preview</i> 实时预览</h3>
+<div class="tc-preview-wrap">
+<div class="tc-empty" id="tc-empty"><i class="material-icons">style</i>正在生成预览…</div>
+<canvas id="tc-canvas"></canvas>
+</div>
+<div class="tc-info" id="tc-info"></div>
+<div class="tc-actions">
+<button type="button" class="tc-btn tc-btn-primary" id="tc-download" disabled><i class="material-icons">download</i> 下载 PNG</button>
+<button type="button" class="tc-btn tc-btn-secondary" id="tc-copy-url" disabled><i class="material-icons">link</i> 复制 PNG Data URL</button>
+</div>
+<div class="tc-note">下载文件名固定格式 <code>card-YYYYMMDD-HHmmss.png</code>（如 card-20261101-094500.png）；复制 Data URL 走剪贴板，失败时自动回落到选中复制，可直接贴进 <code>&lt;img src&gt;</code>。</div>
+</div>
+
+<div class="tc-combo">
+<b>关键词→标题＋简介＋标签→分享卡片一条龙：</b>先在 <a href="/tools/social-title-generator">社媒标题/简介生成器</a> 按关键词生成标题和简介，再到 <a href="/tools/hashtag-generator">社媒标签生成器</a> 配好标签，最后回到本工具把文案排成分享卡片 —— 一套内容，三件装备。
+</div>
+
+<div class="tc-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="tc-faq">
+<dt>卡片能做多行混排、加图片 Logo 吗？</dt>
+<dd>不能。本工具是<b>纯文字排版</b>，<b>无复杂排版引擎</b>——只支持自动分行、三种对齐与署名行，不支持图文混排、富文本样式或 Logo 叠加（顶部真限制第一条）。</dd>
+<dt>为什么在我的手机和电脑上字形不一样？</dt>
+<dd>卡片文字用<b>系统字体</b>渲染（不做字体嵌入），Windows/macOS/手机的默认中文字体各不相同 —— 这是预期内的真限制第二条，下载前请以本机预览为准。</dd>
+<dt>分享卡片里的文字会被搜索引擎收录吗？</dt>
+<dd>不会。<b>图片内的文字不利于 SEO 与无障碍</b>：搜索引擎无法索引图片里的文字，读屏软件也读不到。发朋友圈/小红书时，请同时在正文里保留文字版（真限制第三条）。</dd>
+<dt>复制的 PNG Data URL 怎么用？</dt>
+<dd>直接贴进 <code>&lt;img src="data:image/png;base64,…"&gt;</code> 即可离线显示；但它比文件下载大 ~33%，正式发布请下载 PNG 后引用文件。</dd>
+<dt>页面会联网或上传我的文字吗？</dt>
+<dd>不会。参数读取、canvas 渲染、复制、下载全部在浏览器本地完成，脚本中没有任何 fetch / XHR 上传逻辑。可断网使用（首次加载页面除外）。</dd>
+<dt>和「社媒标题/简介生成器」「社媒标签生成器」怎么配合？</dt>
+<dd>三者已双向互链：<a href="/tools/social-title-generator">标题＋简介</a> 负责文案，<a href="/tools/hashtag-generator">标签</a> 负责流量词，本工具负责把文案排成分享卡片 —— 关键词 → 标题＋简介＋标签 → 分享卡片一条龙。</dd>
+</dl>
+</div>
+
+<div class="tc-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="tc-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">文字转图片卡片（当前）</span>
+<a href="/tools/social-title-generator" class="btn btn-secondary" style="font-size:.9rem;">社媒标题/简介生成器（关键词→标题＋简介→分享卡片）</a>
+<a href="/tools/hashtag-generator" class="btn btn-secondary" style="font-size:.9rem;">社媒标签生成器（关键词→标签→分享卡片）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="tc-toast"></div>
+<script src="/tools/static/js/text_to_card.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -2307,6 +2307,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "营销工具",
 				},
+				{
+					ID:          "text_to_card",
+					Name:        "文字转图片卡片",
+					Description: "纯前端文字排版分享卡片生成器：输入主文本（≤500字）＋选填署名/出处，4 套模板（极简白/渐变流彩/墨夜/纸信）×每套 ≥3 配色，字号小/中/大三档、左/中/右三选对齐、1:1（1080×1080）/4:5（1080×1350）两档尺寸，canvas 浏览器本地实时预览（纯函数 wrapLines 分行、measureText 超宽自动缩小），一键下载 card-YYYYMMDD-HHmmss.png 或复制 PNG Data URL（clipboard，降级 execCommand）；与社媒标题/简介生成器、社媒标签生成器双向互链（关键词→标题＋简介＋标签→分享卡片一条龙），只做纯文字排版无复杂排版引擎、中文字体依赖系统字体、图片内文字不利于 SEO/无障碍，纯前端零上传 · Text to image card: turn words into shareable quote cards, 4 templates, live canvas preview, PNG download & Data URL copy, 100% client-side",
+					Path:        "/tools/text-to-card",
+					Icon:        "style",
+					New:         true,
+					Category:    "营销工具",
+				},
 			},
 		},
 		{
