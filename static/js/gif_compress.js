@@ -585,6 +585,9 @@ if (typeof module !== 'undefined' && module.exports) {
   window.GifCompress = api;
   document.addEventListener('DOMContentLoaded', function () {
     var $ = function (id) { return document.getElementById(id); };
+    /* 跨页复用：gif_maker 等页面引用本文件只用 window.GifCompress 编码器，
+     * 页面上没有 gc-* 元素时直接返回，避免对 null 绑定事件。 */
+    if (!$('gc-drop')) return;
     var dropEl = $('gc-drop'), fileEl = $('gc-file'),
         loadExEl = $('gc-load-example'), dlExEl = $('gc-download-example'),
         warnEl = $('gc-warn'), errEl = $('gc-error'),

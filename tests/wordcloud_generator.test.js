@@ -151,7 +151,7 @@ has(GO, '"文本工具"', "注册：categories.go 含文本工具品类");
 var pathMatches = GO.match(/"\/tools\/[^"]+"/g) || [];
 var uniquePaths = {};
 pathMatches.forEach(function (p) { uniquePaths[p] = true; });
-eq(Object.keys(uniquePaths).length, 262, "注册：去重 Path 总数 261→262（实得 " + Object.keys(uniquePaths).length + "）");
+eq(Object.keys(uniquePaths).length, 263, "注册：去重 Path 总数 262→263（实得 " + Object.keys(uniquePaths).length + "）");
 
 /* ---------- 11. 零网络静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");

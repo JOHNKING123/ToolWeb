@@ -1286,6 +1286,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "gif_maker",
+					Name:        "GIF 合成器",
+					Description: "多张图片合成 GIF 动图：上传／拖拽多图（最多 60 帧）、拖拽排序、逐帧时长 10~10000ms、循环开关（NETSCAPE2.0）、尺寸上限 64~1920px，canvas 统一尺寸后本地编码 GIF89a，逐帧预览播放，一键下载 .gif，复用 GIF 压缩优化器自研 LZW 编码、纯前端零上传 · Make animated GIFs from multiple images: drag to reorder, per-frame delay, loop toggle, local GIF89a encoding, 100% client-side",
+					Path:        "/tools/gif-maker",
+					Icon:        "gif_box",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img_target_kb",
 					Name:        "图片精确体积压缩器",
 					Description: "图片压缩到指定大小：上传 JPG/PNG/WebP，输入目标 KB，二分质量迭代+尺寸降级兜底，一次命中目标体积（偏差 ±5%），证件照压缩必备，纯浏览器本地处理 · Compress image to exact KB",
