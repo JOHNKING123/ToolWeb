@@ -1,0 +1,179 @@
+{{define "compose_to_k8s"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Compose→K8s YAML 转换器 - 粘贴 compose 生成 Deployment/Service（纯前端）</title>
+    <meta name="description" content="免费在线 Docker Compose 转 K8s YAML 转换器：粘贴 docker-compose.yml，手写 YAML 解析子集后按 service 生成 Deployment（apps/v1）＋ Service（v1）两份 YAML：端口 8080:80→containerPort 80＋NodePort、挂载→volumeMounts/hostPath、环境变量→env 列表一律加引号，depends_on 与超子集字段进诊断列表不静默丢弃，双标签页实时预览、逐份一键复制、逐份/合并下载，纯前端本地转换不出浏览器。docker compose to kubernetes yaml converter online, 100% client-side.">
+    <meta name="keywords" content="docker-compose 转 k8s,compose to kubernetes,docker compose 转 deployment,k8s yaml 生成,compose 转 yaml,deployment 生成器,service NodePort,容器编排,docker compose to k8s converter">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/compose-to-k8s">
+    <meta property="og:title" content="Docker Compose→K8s YAML 转换器 - 粘贴 compose 生成 Deployment/Service">
+    <meta property="og:description" content="粘贴 docker-compose.yml 即生成 Deployment＋Service 两份 K8s YAML：端口/挂载/环境变量逐项映射，超子集字段进诊断列表不丢弃；文本不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/compose-to-k8s">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Docker Compose→K8s YAML 转换器","description":"粘贴 docker-compose.yml，手写 YAML 解析子集后按 service 生成 Deployment（apps/v1）＋ Service（v1）两份 YAML：端口映射、挂载转 volumeMounts/hostPath、环境变量转 env 列表，depends_on 与 networks/build/secrets/configs/healthcheck/deploy 等超子集字段进诊断列表不静默丢弃，双标签页实时预览、逐份一键复制、逐份与合并下载，纯前端本地转换不出浏览器。","url":"https://www.johnkingzcq123.xyz/tools/compose-to-k8s","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .k8s-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .k8s-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .k8s-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .k8s-warn b{display:block;margin-bottom:.2rem}
+        .k8s-warn p{margin:.4rem 0 0}
+        .k8s-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .k8s-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .k8s-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .k8s-input{width:100%;min-width:0;min-height:12rem;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;resize:vertical;box-sizing:border-box;overflow-x:auto;white-space:pre}
+        .k8s-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .k8s-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .k8s-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .k8s-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .k8s-btn:disabled{opacity:.45;cursor:not-allowed}
+        .k8s-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .k8s-diag{border-radius:.6rem;padding:.6rem .9rem;margin-top:.7rem;font-size:.85rem;line-height:1.8}
+        .k8s-diag ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .k8s-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+        .k8s-warnbox{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+        .k8s-empty{color:#6b7280;font-size:.9rem}
+        .k8s-chips{display:flex;gap:.5rem;flex-wrap:wrap}
+        .k8s-chip{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:1rem;padding:.35rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .k8s-chip:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .k8s-chip-active{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:600}
+        .k8s-tabs{display:flex;gap:.4rem;margin-bottom:.8rem}
+        .k8s-tab{border:1px solid #d1d5db;border-bottom:none;background:#f3f4f6;color:#374151;border-radius:.55rem .55rem 0 0;padding:.5rem 1.1rem;font-size:.9rem;cursor:pointer;font-family:inherit}
+        .k8s-tab-active{background:#111827;color:#fff;border-color:#111827;font-weight:600}
+        .k8s-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.65;border:2px solid #e5e7eb;border-radius:0 .7rem .7rem .7rem;padding:.9rem 1rem;min-height:18rem;max-height:34rem;overflow:auto;background:#111827;color:#e5e7eb;white-space:pre;word-break:normal;margin:0;box-sizing:border-box;width:100%}
+        .k8s-hint{font-size:.9rem;color:#6b7280;margin-top:.5rem;line-height:1.7}
+        .k8s-faq dt{font-weight:600;color:#111827;margin-top:.8rem}
+        .k8s-faq dd{color:#374151;line-height:1.9;margin:.3rem 0 0}
+        .k8s-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .k8s-links a{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;color:#374151;text-decoration:none}
+        .k8s-links a:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .k8s-links .k8s-current{border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;pointer-events:none}
+        .k8s-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:1.2rem}
+        .k8s-note b{color:#374151}
+        .k8s-note code{background:#f3f4f6;border-radius:.3rem;padding:.05rem .35rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .k8s-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;z-index:9999;font-size:.9rem;max-width:86vw;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+        .k8s-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:640px){
+            .k8s-input{min-height:10rem}
+            .k8s-code{min-height:14rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">settings_applications</i> Docker Compose→K8s YAML 转换器</h1>
+            <p>粘贴调通的 docker-compose.yml，按 service 一键生成 Deployment＋Service 两份 K8s YAML，不用再逐项手抄</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="k8s-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>文本不出浏览器：</b>YAML 解析、字段映射与 Deployment/Service 生成全部在当前页面本地计算，零 fetch / XHR，不上传、不存储你的 compose 文件；不连 K8s 集群、不验证镜像是否存在、不验证端口是否被占用。</div>
+            </div>
+            <div class="k8s-warn">
+                <b>真限制（请先看清再用）：</b>
+                <p>1. 仅映射常用字段子集：image（必填）、ports、volumes、environment、depends_on；networks/build/secrets/configs/healthcheck/deploy 等复杂 compose 特性不保证 1:1，超子集字段一律进诊断列表逐项列出，不静默丢弃、不编造 K8s 字段。</p>
+                <p>2. 生成的是 baseline YAML：replicas 固定为 1、未设命名空间/资源限制/探针，生产使用前请按集群实际调整（kubectl apply 前务必人工复核）。</p>
+                <p>3. 数据 100% 浏览器本地处理，不上传任何服务器；本页 JS 无任何网络请求调用（零 fetch / XHR）。</p>
+            </div>
+            <div class="k8s-panel">
+                <h3><i class="material-icons">input</i> 粘贴 docker-compose.yml</h3>
+                <textarea class="k8s-input" id="k8s-input" placeholder="例如：&#10;services:&#10;  web:&#10;    image: nginx:alpine&#10;    ports:&#10;      - &quot;8080:80&quot;" spellcheck="false">services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_HOST=example.com
+      - NGINX_PORT=80</textarea>
+                <div class="k8s-row">
+                    <button class="k8s-btn k8s-btn-primary" type="button" id="k8s-convert">立即转换</button>
+                    <button class="k8s-btn" type="button" id="k8s-reset">重置回初始输入</button>
+                </div>
+                <p class="k8s-hint">支持 services 下多服务；environment 支持「- KEY=VAL」列表与「KEY: 值」映射两种写法；ports 支持 "8080:80" / "80" / "53:53/udp" 短语法。输入即自动解析。</p>
+                <div class="k8s-row" style="margin-top:.6rem;">
+                    <span style="font-size:.9rem;color:#374151;">示例一键载入（请按需改写，载入后仍可编辑再转换）：</span>
+                    <button class="k8s-btn" type="button" data-sample="0">nginx 单服务</button>
+                    <button class="k8s-btn" type="button" data-sample="1">多服务＋超子集字段</button>
+                </div>
+            </div>
+            <div class="k8s-panel">
+                <h3><i class="material-icons">fact_check</i> 诊断信息（先看这里，确认解析无误）</h3>
+                <div id="k8s-diag" aria-live="polite">
+                    <div class="k8s-empty">在上方粘贴 docker-compose.yml 文本后，诊断信息会显示在这里。</div>
+                </div>
+            </div>
+            <div class="k8s-panel">
+                <h3><i class="material-icons">code</i> K8s YAML（只读）</h3>
+                <div class="k8s-row" style="margin:0 0 .8rem;">
+                    <span style="font-size:.9rem;color:#374151;">选择服务：</span>
+                    <div class="k8s-chips" id="k8s-services"><span class="k8s-empty">暂无服务。</span></div>
+                </div>
+                <div class="k8s-tabs" role="tablist">
+                    <button class="k8s-tab k8s-tab-active" type="button" id="k8s-tab-deployment" role="tab">Deployment（apps/v1）</button>
+                    <button class="k8s-tab" type="button" id="k8s-tab-service" role="tab">Service（v1）</button>
+                </div>
+                <div id="k8s-pane-deployment"><pre class="k8s-code" id="k8s-deployment-code"># 在上方粘贴 docker-compose.yml，生成的 Deployment YAML 会显示在这里。</pre></div>
+                <div id="k8s-pane-service" style="display:none;"><pre class="k8s-code" id="k8s-service-code"># 在上方粘贴 docker-compose.yml，生成的 Service YAML 会显示在这里。</pre></div>
+                <div class="k8s-row">
+                    <button class="k8s-btn k8s-btn-primary" type="button" id="k8s-copy">复制当前标签页</button>
+                    <button class="k8s-btn k8s-btn-primary" type="button" id="k8s-download">下载当前标签页</button>
+                    <button class="k8s-btn" type="button" id="k8s-download-merge">合并下载全部（--- 分隔）</button>
+                </div>
+                <p class="k8s-hint">复制失败时会有明确降级提示，请手动选中 YAML 输出区内容复制；逐份下载文件名为 k8s_&lt;服务名&gt;_deployment|service_时间戳.yaml，合并下载为 k8s_all_时间戳.yaml。长 YAML 在小屏下可横向滚动，不会撑破页面。</p>
+            </div>
+            <div class="k8s-panel">
+                <h3><i class="material-icons">menu_book</i> 使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>粘贴 docker-compose.yml（含 services 段），诊断区会逐项列出解析错误与提示：缺 image 的服务会报错且不生成 YAML；超子集字段（build/networks/secrets 等）逐项列出，未静默丢弃。</li>
+                    <li>字段映射口径：「8080:80」→ Deployment containerPort 80，Service type NodePort（port/targetPort=80、nodePort=8080）；无 published 端口的服务 → Service type ClusterIP；挂载 → volumeMounts＋volumes hostPath 原样（生产请改 PVC）；环境变量 → env 列表、值一律加引号；depends_on 仅记录不生成 initContainer。</li>
+                    <li>多服务时点服务名 chip 切换，双标签页分别预览 Deployment 与 Service；「复制当前标签页」复制正在看的那份，「合并下载全部」把所有服务的两份 YAML 以 --- 分隔拼成一个文件。</li>
+                    <li>确认无误后按需下载，kubectl apply 前务必按集群实际调整命名空间、资源限制与探针。</li>
+                </ol>
+            </div>
+            <div class="k8s-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="k8s-faq">
+                    <dt>为什么我的 build / networks / healthcheck 没进 YAML？</dt>
+                    <dd>因为它们不在本工具承诺的常用字段子集内。直接编造 K8s 字段很容易编错语义，所以它们进了诊断列表并逐项列出，你可以在生成的 baseline 上按集群文档手动补，而不是拿到一份看似完整实则不对的配置。</dd>
+                    <dt>挂载为什么生成了 hostPath？生产能用吗？</dt>
+                    <dd>compose 的 bind 挂载（如 ./data:/app/data）在 K8s 里最接近的原语就是 hostPath，所以工具原样映射并明确提示：hostPath 仅适合单机/测试，生产环境请改用 PVC（PersistentVolumeClaim），每条挂载的诊断里都有这条提醒。</dd>
+                    <dt>depends_on 为什么没有生成启动顺序？</dt>
+                    <dd>K8s 不保证 Pod 启动顺序，depends_on 在 K8s 里没有 1:1 等价物。工具只做记录并提示，如需顺序请手动编排（initContainer/就绪探针），而不是生成一个看似管用实则不保证的配置。</dd>
+                    <dt>Service 什么时候是 NodePort、什么时候是 ClusterIP？</dt>
+                    <dd>服务只要有一条 published 端口（如 "8080:80"），Service 就是 NodePort（nodePort=8080）；只有容器端口（如 "3000" 无 published）时就是 ClusterIP，对内访问。</dd>
+                    <dt>生成的 YAML 能直接 kubectl apply 吗？</dt>
+                    <dd>能作为起点，但请先按集群调整：replicas 固定为 1、未设 namespace/资源限制/探针，诊断区与真限制里都写明了，apply 前人工复核一遍。</dd>
+                    <dt>我的 compose 文件会被上传或验证吗？</dt>
+                    <dd>不会。全部转换在浏览器本地完成，零网络请求；不连 K8s 集群、不验证镜像是否存在，生成的只是文本配置。</dd>
+                </dl>
+            </div>
+            <div class="k8s-panel">
+                <h3><i class="material-icons">link</i> 相关工具（容器编排一条龙）</h3>
+                <div class="k8s-links">
+                    <span class="k8s-links k8s-current" style="border:1px solid #e5e7eb;border-radius:.55rem;padding:.45rem .8rem;font-size:.88rem;display:inline-flex;align-items:center;gap:.3rem;"><i class="material-icons">settings_applications</i> Docker Compose→K8s YAML 转换器（当前）</span>
+                    <a href="/tools/docker-run-to-compose"><i class="material-icons">terminal</i> Docker run→Compose 转换器</a>
+                    <a href="/tools/json-yaml-converter"><i class="material-icons">compare_arrows</i> JSON/YAML 转换</a>
+                </div>
+            </div>
+            <div class="k8s-note">
+                <b>实现说明：</b>手写 YAML 解析子集、compose 字段映射、服务名清洗与 Deployment/Service 生成均为纯函数，双模式导出供 node 单元测试（本页 JS 源码无任何网络请求调用，零 fetch / XHR）。
+            </div>
+        </div>
+    </div>
+    <div class="k8s-toast" id="k8s-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/compose_to_k8s.js?v=1"></script>
+</body>
+</html>
+{{end}}

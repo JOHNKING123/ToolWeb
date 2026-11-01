@@ -103,7 +103,7 @@ has(cats, '"scrolling_subtitle_generator"', "categories.go 注册 ID");
 has(cats, '"/tools/scrolling-subtitle-generator"', "categories.go 注册 Path");
 var paths = cats.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = paths.filter(function (v, i, a) { return a.indexOf(v) === i; });
-eq(uniq.length, 259, "注册总数 259→259 Path");
+eq(uniq.length, 260, "注册总数 259→260 Path");
 var js = fs.readFileSync(__dirname + "/../static/js/scrolling_subtitle_generator.js", "utf8");
 notHas(js, "fetch(", "JS 无 fetch");
 notHas(js, "XMLHttpRequest", "JS 无 XHR");

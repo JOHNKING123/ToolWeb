@@ -706,6 +706,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "compose_to_k8s",
+					Name:        "Docker Compose→K8s YAML 转换器",
+					Description: "粘贴 docker-compose.yml 即生成 Deployment（apps/v1）＋Service（v1）两份 K8s YAML：手写 YAML 解析子集，image/ports/volumes/environment/depends_on 常用字段映射（8080:80→containerPort 80＋NodePort nodePort=8080、无 published→ClusterIP、挂载→volumeMounts/hostPath 原样、环境变量值一律加引号），networks/build/secrets/configs/healthcheck/deploy 等超子集字段进诊断列表不静默丢弃，双标签页实时预览、逐份一键复制、逐份/合并下载，纯前端本地转换不出浏览器 · Docker Compose to Kubernetes YAML converter: generate Deployment & Service YAML online, 100% client-side",
+					Path:        "/tools/compose-to-k8s",
+					Icon:        "settings_applications",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "folder_compare",
 					Name:        "文件夹对比",
 					Description: "拖拽或选择两个文件夹做递归差异对比：相对路径归一化，新增/删除/修改/相同四态分类高亮，统计差异数量与字节数，过滤搜索+按目录分组折叠，导出 Markdown / CSV 差异报告；只读文件名、大小、修改时间，不读内容，纯前端本地运行不出浏览器 · Folder compare: recursive diff of two folders, added/removed/modified/same highlight, stats, MD/CSV export, 100% client-side",
