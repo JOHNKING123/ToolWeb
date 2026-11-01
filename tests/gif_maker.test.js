@@ -5,7 +5,7 @@
  *  3. buildGifFileName 契约（固定时间逐字；文件名正则；err.field='now'）
  *  4. 编码集成：复用 gif_compress 自研编码（quantizeFrames→encodeGif 真实 LZW，
  *     node 无 canvas 但编码管线纯 JS 可跑），GIF89a 文件头逐字＋回解析验证
- *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 262→263
+ *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 263→264
  *  6. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket/EventSource；模板无外部 script CDN）
  *  7. 模板：SEO 面板、真限制四条、与 gif_compress 双向互链「GIF 一条龙」、
  *     表单字段边界（delay 10~10000／maxSize 64~1920／loop 开关）
@@ -136,7 +136,7 @@ function solidFrame(w, h, r, g, b, delayMs) {
     ok(GO_SRC.toLowerCase().indexOf("gif") !== -1 && GO_SRC.toLowerCase().indexOf("client-side") !== -1, "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 263, "注册 Path 总数 262→263");
+    eq(pathCount, 264, "注册 Path 总数 263→264");
 })();
 
 /* ================= 6. 零网络静态检查 ================= */

@@ -187,7 +187,7 @@ function entry(r, key) {
     var paths = cats.match(/"\/tools\/[^"]+"/g) || [];
     var uniq = {};
     paths.forEach(function (p) { uniq[p] = true; });
-    eq(Object.keys(uniq).length, 263, "注册总数 262→263 Path");
+    eq(Object.keys(uniq).length, 264, "注册总数 263→264 Path");
 })();
 
 /* ================= 9. 零网络静态检查 ================= */

@@ -1,0 +1,199 @@
+{{define "pindou_blueprint"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转拼豆施工图生成器 - 照片转拼豆图纸/色号符号图/购买清单 | 程序员工具箱</title>
+    <meta name="description" content="免费在线图片转拼豆施工图工具：上传照片一键生成拼豆图纸，格数 8–64 可调（默认 29×29 贴合标准拼豆板），内置 60 色拼豆色板就近匹配（色号+中文名+符号），带色号符号的网格施工图，每色豆数统计与购买清单，PNG 高清施工图导出、浏览器打印。纯浏览器本地处理，图片不上传服务器。">
+    <meta name="keywords" content="拼豆,拼豆图纸,图片转拼豆,拼豆施工图,perler beads,拼豆色号,拼豆购买清单,29x29拼豆板,照片转拼豆">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pindou-blueprint">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"图片转拼豆施工图生成器","description":"上传照片一键生成拼豆施工图：格数可调、内置 60 色拼豆色板最近邻量化、带色号符号的网格施工图、每色豆数统计与购买清单、PNG 导出/打印；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/pindou-blueprint","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pd-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .pd-wrap .navbar .material-icons { display: none; }
+        .pd-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .pd-privacy .pd-lock { font-size: 1.6rem; flex: none; }
+        .pd-privacy b { color: #047857; }
+        .pd-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .pd-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .pd-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .pd-upload:hover, .pd-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .pd-upload .pd-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .pd-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .pd-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; }
+        .pd-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .pd-row label { font-size: .92rem; color: #374151; }
+        .pd-row input[type=range] { flex: 1; min-width: 160px; max-width: 360px; }
+        .pd-val { display: inline-block; min-width: 4.5em; font-weight: 600; color: var(--primary-color); font-size: .92rem; }
+        .pd-tip { display: none; border-radius: .6rem; padding: .7rem 1rem; font-size: .92rem; line-height: 1.7; margin: .7rem 0;
+            background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .pd-check { display: inline-flex; align-items: center; gap: .4rem; font-size: .92rem; color: #374151; cursor: pointer; }
+        .pd-compare { display: flex; gap: 1rem; flex-wrap: wrap; margin: .5rem 0; }
+        .pd-view { flex: 1 1 300px; min-width: 0; }
+        .pd-view figcaption { font-size: .85rem; color: #6b7280; margin-bottom: .4rem; text-align: center; }
+        .pd-view canvas { display: block; max-width: 100%; height: auto; margin: 0 auto;
+            border: 1px solid #e5e7eb; border-radius: .5rem; background: #fff; image-rendering: pixelated; }
+        .pd-meta { font-size: .9rem; color: #374151; line-height: 1.9; background: #f9fafb; border-radius: .6rem; padding: .6rem .9rem; margin: .6rem 0; }
+        .pd-meta b { color: var(--primary-color); }
+        .pd-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.3rem; border: none;
+            border-radius: .5rem; background: var(--primary-color); color: #fff; cursor: pointer; font-size: .92rem; }
+        .pd-btn:hover:not(:disabled) { background: var(--primary-color-dark); }
+        .pd-btn-ghost { background: #f3f4f6; color: #374151; }
+        .pd-btn-ghost:hover { background: #e5e7eb; }
+        .pd-radio-group { display: inline-flex; gap: .5rem; flex-wrap: wrap; }
+        .pd-radio-group label { display: inline-flex; align-items: center; gap: .3rem; font-size: .92rem; color: #374151;
+            border: 1px solid #e5e7eb; border-radius: .5rem; padding: .4rem .8rem; cursor: pointer; background: #fff; }
+        .pd-radio-group label.on { border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; background: #eff6ff; }
+        .pd-radio-group input { display: none; }
+        .pd-table { width: 100%; border-collapse: collapse; font-size: .9rem; margin: .6rem 0; }
+        .pd-table th, .pd-table td { border: 1px solid #e5e7eb; padding: .45rem .6rem; text-align: center; }
+        .pd-table th { background: #f9fafb; color: #374151; }
+        .pd-table code { background: #f3f4f6; padding: .1rem .4rem; border-radius: .3rem; font-size: .85em; }
+        .pd-sym { display: inline-block; min-width: 1.7em; height: 1.7em; line-height: 1.7em; border-radius: .35rem;
+            font-weight: 700; font-size: .9em; border: 1px solid rgba(0,0,0,.15); }
+        .pd-limit { background: #fffbeb; border: 1px solid #fcd34d; border-radius: .8rem; padding: .9rem 1.1rem;
+            font-size: .92rem; line-height: 1.9; color: #92400e; margin-bottom: 1rem; }
+        .pd-limit b { color: #b45309; }
+        .pd-limit ol { margin: .4rem 0 0; padding-left: 1.3rem; }
+        .pd-combo { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: .8rem; padding: .9rem 1.1rem;
+            font-size: .92rem; line-height: 1.9; color: #0c4a6e; margin-bottom: 1rem; }
+        .pd-combo a { color: #1d4ed8; font-weight: 600; }
+        .pd-doc { color: #374151; line-height: 1.9; font-size: .93rem; }
+        .pd-doc b { color: #111827; }
+        .pd-doc code { background: #f3f4f6; padding: .1rem .4rem; border-radius: .3rem; font-size: .85em; }
+        @media print {
+            .pd-wrap .navbar, .pd-privacy, #pd-upload-wrap, #pd-controls,
+            .pd-combo, .pd-limit, .pd-doc-wrap, .pd-no-print { display: none !important; }
+            .pd-wrap .container { max-width: none; padding: 0; }
+            .pd-panel { border: none; padding: 0; margin: 0; }
+        }
+        @media (max-width:640px){ .pd-wrap .container{padding:1rem;} .pd-compare{flex-direction:column;} }
+    </style>
+</head>
+<body>
+    <div class="pd-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧩 图片转拼豆施工图生成器</h1>
+            <p>照片一键转拼豆图纸：格数可调（默认 29×29 标准板），内置 60 色拼豆色板就近匹配，带色号符号的网格施工图，每色豆数统计与购买清单</p>
+        </div>
+
+        <div class="pd-privacy">
+            <span class="pd-lock">🔒</span>
+            <div><b>隐私承诺：图片只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：下采样、色板量化、施工图渲染、豆数统计、PNG 导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 上传的图片不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="pd-panel" id="pd-upload-wrap">
+            <h3>1️⃣ 上传图片</h3>
+            <div class="pd-upload" id="pd-upload" role="button" tabindex="0" aria-label="点击选择或拖拽图片到此处上传">
+                <span class="pd-big">🖼️</span>
+                <div>点击选择图片，或把图片拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 PNG / JPG / JPEG / WebP；大图会自动分步下采样，手机浏览器也不卡顿</div>
+            </div>
+            <input type="file" id="pd-file" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <div class="pd-info" id="pd-srcinfo" style="display:none;"></div>
+            <div class="pd-status" id="pd-status"></div>
+            <div class="pd-tip" id="pd-tip"></div>
+        </div>
+
+        <div class="pd-panel" id="pd-controls" style="display:none;">
+            <h3>2️⃣ 调整施工图参数（实时预览）</h3>
+            <div class="pd-row">
+                <label>📐 网格格数（宽度）：</label>
+                <input type="range" id="pd-grid" min="8" max="64" step="1" value="29">
+                <span class="pd-val" id="pd-grid-val">29 格</span>
+                <span class="pd-info" style="margin:0;">29×29 为市面常见标准拼豆板；高度按原图比例自动计算</span>
+            </div>
+            <div class="pd-row">
+                <label>🎨 最多用色数：</label>
+                <input type="range" id="pd-palette" min="2" max="64" step="1" value="24">
+                <span class="pd-val" id="pd-palette-val">24 色</span>
+            </div>
+            <div class="pd-row">
+                <label>📏 豆子规格：</label>
+                <span class="pd-radio-group" id="pd-beadsize">
+                    <label class="on"><input type="radio" name="pdb" value="5" checked> 大豆 5mm（常规）</label>
+                    <label><input type="radio" name="pdb" value="2.6"> 小豆 2.6mm（迷你）</label>
+                </span>
+            </div>
+            <div class="pd-row">
+                <label>🖼️ 预览模式：</label>
+                <span class="pd-radio-group" id="pd-view">
+                    <label class="on"><input type="radio" name="pdv" value="symbol" checked> 符号 + 色块</label>
+                    <label><input type="radio" name="pdv" value="color"> 纯色块</label>
+                </span>
+                <label class="pd-check"><input type="checkbox" id="pd-gridline" checked> 🔲 网格线叠加（每 10 格加粗，方便数格）</label>
+            </div>
+        </div>
+
+        <div class="pd-panel" id="pd-result" style="display:none;">
+            <h3>3️⃣ 施工图与购买清单</h3>
+            <div class="pd-compare">
+                <figure class="pd-view">
+                    <figcaption>量化后色块预览</figcaption>
+                    <canvas id="pd-src-canvas"></canvas>
+                </figure>
+                <figure class="pd-view">
+                    <figcaption>拼豆施工图（符号与导出 PNG 一致）</figcaption>
+                    <canvas id="pd-bp-canvas"></canvas>
+                </figure>
+            </div>
+            <div class="pd-meta" id="pd-meta"></div>
+            <table class="pd-table">
+                <thead><tr><th>#</th><th>符号</th><th>色号</th><th>中文名</th><th>豆数</th><th>参考购买</th></tr></thead>
+                <tbody id="pd-list-body"></tbody>
+            </table>
+            <div class="pd-info" id="pd-total"></div>
+            <div class="pd-row pd-no-print" style="margin-top:.8rem;">
+                <button class="pd-btn" id="pd-export">⬇️ 导出 PNG 高清施工图</button>
+                <button class="pd-btn pd-btn-ghost" id="pd-print">🖨️ 打印施工图</button>
+                <button class="pd-btn pd-btn-ghost" id="pd-reupload">🔄 重新上传</button>
+            </div>
+            <div class="pd-info">PNG 为高清施工图（含标题、网格图纸、购买清单），可直接发去打印店；「打印」会打开浏览器打印对话框，选「另存为 PDF」即得图纸 PDF。</div>
+        </div>
+
+        <div class="pd-limit">
+            <b>⚠️ 真实限制（使用前请知悉）：</b>
+            <ol>
+                <li><b>屏幕色 ≠ 实物豆色：</b>屏幕显示的色板颜色是近似参考值，受显示器与光线影响，与实物拼豆存在色差；购买与拼搭请以实物豆的颜色为准。</li>
+                <li><b>色号为本工具内部编号，非官方全库：</b>内置 60 色为自研常用色参考色卡（色号如 PD-01 仅为本工具内部编号），不对应任何品牌的官方色号体系；购买时请带实物色卡比对或按中文名挑选相近色。</li>
+                <li><b>浏览器内存限制：</b>网格最高 64 格，超大图片会自动分步下采样；极端大图或老旧设备可能出现卡顿，此时可先用 <a href="/tools/img-compress">图片压缩</a> 缩小后再上传。</li>
+                <li><b>纯本地零上传：</b>图片只在你的浏览器里处理，不会上传到任何服务器；关闭页面后图片数据即释放，不做任何留存。</li>
+            </ol>
+        </div>
+
+        <div class="pd-combo">
+            <b>「像素一条龙」组合：</b>想先把照片转成像素风看看色块分布？先用 <a href="/tools/pixel-art-converter">图片转像素画</a>（GameBoy/PICO-8 复古调色板 + 自定义色数，像素宽度可调）预览整体效果 → 再回到本工具生成带色号符号的拼豆施工图与购买清单 —— 像素风预览 + 拼豆施工图，一套流程走完。
+        </div>
+
+        <div class="pd-panel pd-doc-wrap">
+            <h3>使用说明</h3>
+            <div class="pd-doc">
+                <b>原理：</b>先把图片分步下采样到「网格格数 × 按比例高度」的工作分辨率（区域平均，保留整体色调），再对每个格子在内置 60 色拼豆色板中做最近邻颜色匹配；超出「最多用色数」的尾部色彩会自动合并到最接近的保留色，最后为每色分配一个符号，渲染成带色号符号的网格施工图。<br>
+                <b>格数：</b>默认 29 格贴合市面常见 29×29 标准拼豆板；高度按原图宽高比自动计算（上限 64）。实物尺寸按所选豆子规格（大豆 5mm / 小豆 2.6mm）实时换算，超过一块标准板时会提示约需几块板拼接。<br>
+                <b>符号图：</b>预览与导出 PNG 的符号一一对应，每 10 格一条粗线方便数格；黑白打印时靠符号区分颜色。<br>
+                <b>购买清单：</b>按每色豆数降序排列，参考购买按常见 1000 颗/包估算（每色至少计 1 包余量）；实际购买请结合家里余豆与实物色卡调整。<br>
+                <b>导出：</b>PNG 高清施工图含标题、网格图纸与购买清单，可直接发去打印店；打印按钮调用浏览器打印，选「另存为 PDF」即得图纸 PDF。<br>
+                <b>隐私：</b>纯前端 canvas 处理，图片只在你的浏览器里流转，不会上传到任何服务器。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/pindou_blueprint.js?v=1"></script>
+</body>
+</html>
+{{end}}

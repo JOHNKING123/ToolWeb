@@ -4,7 +4,7 @@
  *  2. classifyFpsGrade 契约（档位逐字；非法参数 err.field='avgFps'）
  *  3. validateBenchmarkConfig 契约（归一化逐字；边界值；err.field 命名）
  *  4. buildFpsReportName 契约（固定时间逐字；文件名正则；err.field='now'）
- *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 262→263
+ *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 263→264
  *  6. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket/EventSource；模板无外部 script CDN）
  *  7. 模板：SEO 面板、真限制四条、与 llm_hardware_checker 单向出链「硬件一条龙」
  */
@@ -117,7 +117,7 @@ function frames100() {
     ok(GO_SRC.toLowerCase().indexOf("fps") !== -1 && GO_SRC.toLowerCase().indexOf("benchmark") !== -1, "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 263, "注册 Path 总数 262→263");
+    eq(pathCount, 264, "注册 Path 总数 263→264");
 })();
 
 /* ================= 6. 零网络静态检查 ================= */

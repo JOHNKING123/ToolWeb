@@ -1445,6 +1445,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "pindou_blueprint",
+					Name:        "图片转拼豆施工图生成器",
+					Description: "照片一键转拼豆图纸：格数 8-64 可调（默认 29×29 贴合标准板），内置 60 色拼豆色板就近匹配（色号+中文名+符号），带色号符号的网格施工图，每色豆数统计与购买清单，PNG 导出/打印，纯本地零上传 · Photo to perler bead blueprint",
+					Path:        "/tools/pindou-blueprint",
+					Icon:        "grain",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "img_retro_filter",
 					Name:        "图片复古做旧",
 					Description: "照片一键复古做旧：柯达/富士胶片调色、CCD 数码风、褪色老照片、黑白胶片、漏光叠加、暗角、胶片颗粒噪点可调，PNG/JPEG 本地导出，本地处理不上传 · Retro film filter",
