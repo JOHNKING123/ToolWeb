@@ -147,7 +147,7 @@ has(GO_SRC, '"lorem_ipsum_generator"', "注册：ID 存在");
 has(GO_SRC, '"/tools/lorem-ipsum-generator"', "注册：Path 存在");
 has(GO_SRC, 'Category:    "文本工具"', "注册：文本工具品类存在");
 var pathMatches = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-eq(new Set(pathMatches).size, 254, "注册总数：251→252 Path");
+eq(new Set(pathMatches).size, 255, "注册总数：251→252 Path");
 
 /* ---------- 12. 零网络请求静态检查 ---------- */
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");

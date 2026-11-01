@@ -107,7 +107,7 @@ eq(U.buildIdsText(ids), "AAA\nBBB", "复制／下载：内容为结果列表换�
 /* ---------- 9. 注册与静态检查 ---------- */
 has(GO, '"ulid_nanoid_generator"', "注册：categories.go 含 ID ulid_nanoid_generator");
 has(GO, '"/tools/ulid-nanoid-generator"', "注册：categories.go 含 Path /tools/ulid-nanoid-generator");
-eq((GO.match(/Path:\s*"/g) || []).length, 254, "注册：Path 总数→253（历史遗留陈旧断言同步）");
+eq((GO.match(/Path:\s*"/g) || []).length, 255, "注册：Path 总数→253（历史遗留陈旧断言同步）");
 has(TPL, "/tools/uuid-generator", "互链：页面含 UUID 生成器互链");
 has(TPL, "要时间可排序用本工具 ULID", "互链：文案写清 ULID 与 UUID 格式区分");
 notHas(TPL, "env-parser", "无硬凑互链：页面不含未交付 .env 解析器");

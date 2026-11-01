@@ -138,6 +138,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "enigma_simulator",
+					Name:        "恩尼格玛密码机模拟器",
+					Description: "Wehrmacht M3 标准三转子恩尼格玛密码机模拟：Walzen I~V 任选三枚、UKW-B/C 反射器、环位/起始位/接线板可调，明文 A–Z 逐字加密，转子步进与 double-stepping 实时可视化，密文一键复制，经典向量预设载入，纯前端本地运算零上传 · Enigma M3 simulator: three rotors I-V, UKW-B/C reflectors, ring/position/plugboard settings, per-character encryption with double-stepping visualization, 100% client-side",
+					Path:        "/tools/enigma-simulator",
+					Icon:        "rotate_right",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "url",
 					Name:        "URL 编码/解码",
 					Description: "URL 编码和解码转换",

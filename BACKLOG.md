@@ -1,3 +1,86 @@
+## 今日任务（2026-11-01 11:05 · PM 选定轮，接 184 轮通用调研）
+
+**选定：恩尼格玛密码机模拟器（enigma_simulator）** — 本轮唯一任务（新工具）。
+- **顺位**：184 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；文字转图片卡片已交付 025a40a＋5e0ec1c，候选池划出；简繁互转 `templates/jianfan_converter.html` 仍不存在、继续开发中，移出候选池；本轮 PM 定序权，184 轮「优先小难度」为研究轮排期建议，不凌驾首席递进）。
+- **PM 独立零重叠实测（163 轮误判教训：grep 模板＋static/js＋tools/categories.go 三处，本轮实测）**：`enigma`／`Enigma`／`恩尼格玛`／`rotors` 四处 **全 0 命中**（vendor 除外；密码簇邻居 morse_code_translator 为摩斯电码口径，180 轮已裁定不同）；**ID `enigma_simulator`、Path `/tools/enigma-simulator` 均无占用**；**Icon `rotate_right` 精确值 0 占用**（Material Icons 官方实存，语义贴合转子步进；`lock`／`vpn_key`／`security`／`key`／`shield`／`fingerprint` 均已被占用）。
+- **顺位递补（未硬伤）**：负片图像还原（`负片` 0 命中、`negative`/`invert` 宽泛命中仅 vendor＋已裁定无关口径，真缺口；纯前端小难度）→ 第二顺位（开发中若遇交付级阻塞递补）；WhatsApp 链接生成器（`whatsapp`/`wa.me` 0 命中真缺口；纯前端小难度；115 轮观察备选）→ 第三顺位待命。
+- **选定理由**：① **顺位即理由**——184 轮 Top3 首席，无硬伤递补；② **痛点真实**——历史/密码学爱好者想亲手体验二战恩尼格玛机加密流程，在线模拟器多为英文、广告多、无中文，教学场景需要可视化转子 stepping 过程；③ **一天可高质量交付**——纯前端中难度：M3 标准三转子＋接线板＋环位/起始位，纯函数可写逐字向量（stepRotors/encryptChar/plugboardSwap），经典公开测试向量（AAAAA→BDZGO）开发轮逐字交叉验证，无外部请求；④ **密码/编码簇补位**——与 morse_code_translator 同簇双向互链「古典密码一条龙」；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+- **品类归位**：注册到「编码转换」类目（morse_code_translator 同类目）；New: true；ID `enigma_simulator`、Path `/tools/enigma-simulator`、Icon `rotate_right`。
+
+**规格**（开发轮按此执行）：
+- **范围**：Wehrmacht M3 标准三转子恩尼格玛（1939/1940 陆军机型口径）；转子 Walzen I~V 任选三枚＋左/中/右位置；反射器 UKW-B/UKW-C 可选；环位（Ringstellung）与起始位（Grundstellung）逐转子设置；接线板（Steckerbrett）最多 10 对（如 `AB CD EF` 格式）。
+- **交互**：明文输入框（A–Z，不区分大小写自动大写）；逐字符加密＋转子步进实时可视化（右转子每键步进、中转子 notch 触发步进、双步进反常 double-stepping 明确标注）；密文输出框＋一键复制（clipboard，降级 textarea+execCommand）；一键重置（转子回起始位）；预设配置快捷按钮（经典 AAAAA→BDZGO 验证向量一键载入）。
+- **真限制（页面明示）**：① 仅 Wehrmacht M3 标准三转子口径，**不含海军 M4 四转子、Uhr、Denkrad 等变体**；② 非 A–Z 字符（数字/标点/中文/空格）原样保留、不参与加密；③ 教学演示工具，按历史真实 Enigma 算法实现，但不建议用于实际保密需求。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `buildEnigmaConfig({rotors, rings, starts, plugs, reflector})` → 配置对象（rotors 为 I~V 三枚不重复的标识数组，rings/starts 为三字母，plugs 为最多 10 对不重复字母对，reflector ∈ 'B'/'C'；非法抛 Error，err.field 命名：`rotors`/`rings`/`starts`/`plugs`/`reflector`）。
+  - `stepRotors(pos, rotorDefs)` → 新窗口位（含 notch 触发的 double-stepping；pos 非三字母抛 Error，err.field="pos"）。
+  - `encryptChar(ch, config)` → 密文字母（ch 非 A–Z 单字母抛 Error，err.field="ch"）。
+  - `plugboardSwap(ch, plugs)` → 交换后字母（非法对抛 Error，err.field="plugs"）。
+  - `enigmaEncrypt(text, config)` → 逐字加密（含步进），非字母字符原样保留。
+- **确定性向量（开发轮必须逐字命中）**：
+  - 经典公开向量（Crypto Museum 标准 M3）：rotors=[I,II,III]（左→右）、rings=AAA、starts=AAA、plugs=[]、reflector=B → `enigmaEncrypt('AAAAA', cfg)` → `'BDZGO'`；`enigmaEncrypt('HELLO', cfg)` → `'ILBDA'`。
+  - `plugboardSwap('A', [['A','B']])` → `'B'`；`plugboardSwap('A', [['A','B'],['A','C']])` 抛 Error 且 `err.field==='plugs'`。
+  - `buildEnigmaConfig` 非法参数：rotors 重复（如 ['I','I','II']）抛 Error 且 `err.field==='rotors'`；reflector='X' 抛 Error 且 `err.field==='reflector'`；plugs 超 10 对抛 Error 且 `err.field==='plugs'`。
+  - `encryptChar('1', cfg)` 抛 Error 且 `err.field==='ch'`。
+- **互链**：与 morse_code_translator 双向互链（密码/编码簇「古典密码一条龙」）。
+
+**验收标准**：
+1. 明文 A–Z 输入 → 逐字加密＋转子步进可视化（double-stepping 标注）＋密文输出＋一键复制＋一键重置。
+2. 纯函数契约 node 测试全过（buildEnigmaConfig/stepRotors/encryptChar/plugboardSwap/enigmaEncrypt 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 254→255、ID/Path/Icon/Category）。
+3. 真限制在页面明示（三条：仅 M3 标准三转子无变体、非 A–Z 原样保留、教学演示不建议实际保密）。
+4. `/tools/enigma-simulator` 注册，「编码转换」类目，New: true；旧测试 Path 断言 254→255 同步。
+5. go build/vet 通过；本地 `/tools/enigma-simulator` 实测 200；零外部请求（纯本地算法）。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与 morse_code_translator 双向互链。
+
+**预计改动文件**（6 项）：
+1. `templates/enigma_simulator.html`（页面＋真限制＋转子/反射器/接线板/环位起始位配置＋步进可视化＋SEO 面板）
+2. `static/js/enigma_simulator.js`（转子接线表常量＋buildEnigmaConfig/stepRotors/encryptChar/plugboardSwap/enigmaEncrypt 纯函数＋交互渲染）
+3. `tests/enigma_simulator.test.js`（node 纯逻辑测试，含 AAAAA→BDZGO 逐字向量）
+4. `tools/categories.go`（注册：ID `enigma_simulator`、Path `/tools/enigma-simulator`、Icon `rotate_right`、Category 编码转换、New: true）
+5. 旧测试 Path 总数断言 254→255 同步
+6. `templates/morse_code_translator.html` 加回链（双向互链「古典密码一条龙」）
+
+---
+
+## 今日任务（2026-11-01 11:00 · 通用调研第一百八十四轮，接 09:45 PM 选定轮）
+
+**交付状态**：11-01 通用调研第一百八十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**文字转图片卡片交付闭环**（025a40a 新增：输入主文本（≤500 字）＋选填署名/出处，4 套模板（极简白/渐变流彩/墨夜/纸信）×每套 4 配色，字号小/中/大三档、左/中/右三选对齐、1:1（1080×1080）/4:5（1080×1350）两档尺寸，canvas 浏览器本地实时预览（纯函数 wrapLines 分行、measureText 超宽自动缩小），下载 card-YYYYMMDD-HHmmss.png＋复制 PNG Data URL（clipboard，降级 execCommand）；与 social_title_generator/hashtag_generator 双向互链（关键词→标题＋简介＋标签→分享卡片一条龙）；真限制三条页面明示；ID text_to_card、Path /tools/text-to-card、Icon style、New；纯函数契约 wrapLines/pickTemplate/cardSizeOf/buildCardName（非法参数抛 Error，err.field 命名）；node 测试 92 断言全过；5e0ec1c 同步 43 个旧测试 Path 断言 253→254；go build/vet 通过，本地 /tools/text-to-card 实测 200；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head 5e0ec1c），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：恩尼格玛密码机模拟器→首席／负片图像还原→第二／**WhatsApp 链接生成器→新候选晋升 P2 第三顺位**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 轮，优先小难度纯前端。
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 5e0ec1c（43 个旧测试 Path 断言同步 253→254）／025a40a（文字转图片卡片新增，node 92 断言全过，Path 253→254）／eb2ca8b（占位图生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **254**；`ls templates/text_to_card.html` 存在；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中）；本地分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 与 FETCH_HEAD 同头 5e0ec1c；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：晋升前必须 grep 模板＋static/js＋categories.go 三处实测）**：
+   - 文字转图片卡片：已交付（/tools/text-to-card，Path 253→254）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head 5e0ec1c；categories.go 未注册）——移出 Top3。
+   - 恩尼格玛密码机模拟器：`enigma`／`Enigma`／`恩尼格玛`／`rotors` 四处 **0 命中**（本轮复测；181/182/183 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同）——**递进首席**。
+   - 负片图像还原：本轮晋升复核——`负片` 三处 **0 命中**；`negative` 宽泛命中仅 vendor 四文件（docx-9.5.1.umd.js／pptxgenjs-3.12.0.bundle.js／fontkit-1.1.1.umd.min.js／sql-wasm.wasm）＋base_converter.js（负数进制口径，已裁定不同）；`invert` 宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor（ASCII 艺术／CSS 滤镜调试／寄存器位域编辑器，已裁定无关口径）＋vendor 两文件——**图片反色/胶片负片还原口径真缺口确凿，递进第二顺位**。
+   - **WhatsApp 链接生成器**：本轮晋升复核——`whatsapp`／`wa.me` 三处 **0 命中**（vendor 除外）——**真缺口确凿，新候选→P2 第三顺位**（晋升理由：115 轮观察备选；痛点真实：外贸/跨境电商客服与出海运营需快速生成带预填消息的 wa.me 聊天链接（放网站/邮件签名/社媒主页），手动拼「国家码＋号码＋URL 编码消息」易错；纯前端小难度：国家码＋手机号＋预填消息→wa.me 链接＋一键复制＋二维码（qrcode 同簇联动）；营销/沟通簇补位；真限制：仅生成 wa.me 格式链接、不校验号码是否注册 WhatsApp，须明示）。
+3. 新信号扫描（V2EX＋HN＋dev.to 榜单为本轮主线）：**新候选 1 项（WhatsApp 链接生成器，观察池晋升），其余全部确认消解**——
+   - V2EX：t/1253492 Linkit（11-01；本地优先 AI 书签管理器桌面应用，Go+Wails+React，需 AI 接口密钥/本地模型，非单页口径，新消解）／t/1253490 VVAE（11-01；V2EX 原生客户端 App，发帖预览＋AI 排版，非单页口径，新消解）／t/1247382 DayMug（10-09；远程主机在线智能体，需 Claude/Codex 订阅，非单页口径，新消解）／t/1253201 自媒体获客四工具（10-30；174/180/183 轮已消解，确认消解）／t/1246569 免费外链清单（10-10；183 轮已消解，确认消解）／t/1251721 DealPage（10-25；182/183 轮已消解：需后端托管＋统计，确认消解）；
+   - HN/launch 圈：HackerTube（Karpathy 10-31 发布；HN 评论抓取 6454 视频聚合站，需数据抓取＋聚合后端，非单页口径，消解）／ZIPZAX（475 工具聚合站，Medium 10-26~11-01 周榜；聚合站非单页工具口径，消解）／OpenWiki＋THE FEED（dev.to 11-01；local-first 单页应用理念：IndexedDB＋纯公钥 API＋零账号，验证 ToolWeb 纯前端架构方向正确，理念信号记录，非具体工具口径）／Proto（AI 设计工具，YC F26；需后端＋云服务，非单页口径，消解）；
+   - dev.to 2026 榜单 5 篇（25 Essential 251 天前；10 Free Online 128 天前；Top 10 203 天前；10 Free Workflow 135 天前；best browser tools 188 天前）：JSON/Base64/正则/UUID/时间戳/颜色/JWT/URL 编码/二维码/图片压缩/Hash/密码生成/Cron/HTTP 状态码/SQL 格式化/YAML↔JSON/CSV 查看/渐变/Minifier/Markdown 预览/代码截图/Diff——站内均已交付覆盖，消解；PDF Suite（Tooliest 15 PDF 工具，pdf-lib 浏览器本地）→站内 PDF 已成体系（doc-to-pdf/images-to-pdf/pdf-annotate/pdf-compress/pdf-encrypt/pdf-form-maker/pdf-manage/pdf-merge-split/pdf-metadata-cleaner/pdf-sign/pdf-to-image/pdf-to-ppt/pdf-to-word/pdf-to-word-batch/pdf-watermark/text-to-pdf 共 16 项），口径消解；AI 证件照需 AI 服务非单页口径，消解；Code Beautifier/Diff Checker 为 DevToolsHub 自家 Coming Soon，非新信号，消解；UUID v4 vs v7 对比为榜单作者自家文章口径，站内已有 uuid-generator＋ulid_nanoid_generator，单信号弱，观察不晋升。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **恩尼格玛密码机模拟器** — 递进首席（160 轮观察备选；182 轮晋升 P2；本轮 `enigma`/`Enigma`/`恩尼格玛`/`rotors` 四处 0 命中复测真缺口（181/182/183 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同）；痛点：历史/密码学爱好者想亲手体验二战恩尼格玛机加密流程，在线模拟器多为英文、广告多、无中文，教学场景需要可视化转子 stepping 过程；转子（Walzen I~V 可选）＋反射器＋接线板＋环位/起始位设置，逐字符加密＋转子步进可视化，纯前端中难度（纯函数可写逐字向量：stepRotors/encryptChar/plugboardSwap，经典公开测试向量开发轮交叉验证）；密码/编码簇补位（morse_code_translator 同簇联动「古典密码一条龙」）；真限制：仅 Wehrmacht M3 标准三转子口径、不含海军四转子/Uhr 等变体，须明示）。
+2. **负片图像还原** — 递进第二顺位（174 轮观察备选；183 轮晋升 P2；本轮 `负片` 0 命中、`negative`/`invert` 宽泛命中仅 vendor 文件＋已裁定无关口径，图片反色/胶片负片还原口径真缺口确凿；183 轮「胶片负片转正片」搜索：imageonline.io／truepositivelabs.com／vayce.app／filewhisk.com／collage.recipes 五家专用工具证实痛点真实（胶片老照片数字化、手机拍负片还原），均为英文、广告/跳转多，中文无同类纯本地工具；上传 JPG/PNG/WebP（FileReader 纯前端）→全色反转／彩色负片去橙色底（通道 percentile 拉伸）／黑白负片三种模式→canvas 实时预览→PNG 下载，纯前端小难度（纯函数可写逐字向量：invertOf/channelStretch，非法参数 err.field）；图片工具簇补位（img_compress／img_resize／img_convert 同簇联动「图片处理一条龙」）；真限制：彩色负片去橙色底为启发式算法、非专业胶片扫描仪级，须明示）。
+3. **WhatsApp 链接生成器** — 新候选晋升第三顺位（115 轮观察备选；本轮 `whatsapp`/`wa.me` 三处 0 命中（vendor 除外）真缺口确凿；痛点：外贸/跨境电商客服与出海运营需快速生成带预填消息的 wa.me 聊天链接（放网站/邮件签名/社媒主页），手动拼「国家码＋号码＋URL 编码消息」易错；国家码＋手机号＋预填消息→wa.me 链接＋一键复制＋二维码（qrcode 同簇联动），纯前端小难度（纯函数可写逐字向量：buildWaLink/normalizePhone，非法参数 err.field）；营销/沟通簇补位；真限制：仅生成 wa.me 格式链接、不校验号码是否注册 WhatsApp，须明示）。
+
+其余观察项保持原状：**高精度计算器 BigNumber（177 轮新弱观察**，DevsTools 榜单单信号；`bignumber`/`高精度` 0 命中真缺口；JS 浮点精度痛点如 0.1+0.2；本地 decimal 实现纯前端小难度；**用户 10-18 方向修正（不扩泛财务/计算器类）口径风险**，低优先保持）／**字体搭配预览器（129 轮观察**，183 轮 dev.to 101 工具帖「font pairing」类目新信号：fontpair.co／Fontjoy／Layz／pairandcompare.net 均为英文 Google Fonts 中心、中文站缺中文字体搭配预览；但预览加载 webfont 属外部请求、与家族零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（177 轮新弱观察，tubox 10-28 单信号；ONNX 模型硬伤同类，低优先）／Docker Compose→K8s YAML（177 轮新弱观察，DevsTools 榜单单信号；docker_run_to_compose 相邻口径；`kubernetes` 0 命中真缺口（resume_checker.js 无关命中除外）；低优先）／LLM Token 成本估算（177 轮新观察：ai_token_counter 增强备选；低优先）／批量随机数生成器（133 轮观察备选；本轮 `批量随机数`/`batch_random` 0 命中真缺口；纯前端小难度；低优先保持）／一键图片去背景（165 轮；tubox 第八信号；ONNX 硬伤未解低优先保持）／浏览器 GPU 性能测试（175 轮观察项；受众偏窄，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写／AI 可发现性／HEIC（硬伤未解）／GIF 合成器／数独求解器（观察备选）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百八十四轮：文字转图片卡片交付闭环（025a40a 新增；5e0ec1c 同步 43 个旧测试 Path 断言 253→254；`/tools/text-to-card` 已注册；node 92 断言全过；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 5e0ec1c；categories.go 未注册），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：恩尼格玛密码机模拟器→首席（`enigma`/`Enigma`/`恩尼格玛`/`rotors` 0 命中复测）／负片图像还原→第二（`负片` 0 命中、`negative`/`invert` 宽泛命中仅 vendor＋已裁定无关口径，真缺口确凿）／**WhatsApp 链接生成器→新候选晋升 P2 第三顺位**（本轮晋升复核真缺口确凿：`whatsapp`/`wa.me` 0 命中（vendor 除外）；115 轮观察备选；外贸/跨境电商 wa.me 链接手动拼写痛点真实；纯前端小难度；qrcode 同簇联动）；**本轮 fetch 成功**（按铁律加 GIT_SSH_COMMAND，本地 HEAD 与 FETCH_HEAD 同头 5e0ec1c）；新信号扫描：V2EX 6 项（3 项新消解：t/1253492 Linkit 桌面应用＋AI 非单页口径／t/1253490 VVAE 客户端 App 非单页口径／t/1247382 DayMug 需 LLM 订阅非单页口径；3 项确认消解：t/1253201 自媒体获客／t/1246569 免费外链／t/1251721 DealPage）＋HN/launch 圈（HackerTube：数据抓取＋聚合后端非单页口径消解／ZIPZAX：聚合站非工具口径消解／OpenWiki＋THE FEED：local-first 理念信号记录，非具体工具口径／Proto：AI 设计工具需后端＋云服务消解）＋dev.to 2026 榜单 5 篇（JSON/Base64/正则/UUID/时间戳/颜色/JWT/URL编码/二维码/图片压缩/PDF/Cron/HTTP状态码/占位图/代码截图/Diff 均已交付覆盖；PDF Suite→站内 PDF 16 工具已成体系口径消解；AI 证件照需 AI 服务非单页口径；Code Beautifier/Diff Checker 为自家 Coming Soon 非新信号；UUID v4 vs v7 单信号弱不晋升）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过；全量 **254 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文字转图片卡片 | 已交付划出（025a40a 新增：输入主文本（≤500 字）＋选填署名/出处，4 套模板（极简白/渐变流彩/墨夜/纸信）×每套 4 配色，字号小/中/大三档、左/中/右三选对齐、1:1（1080×1080）/4:5（1080×1350）两档尺寸，canvas 浏览器本地实时预览（纯函数 wrapLines 分行、measureText 超宽自动缩小），下载 card-YYYYMMDD-HHmmss.png＋复制 PNG Data URL（clipboard，降级 execCommand）；与 social_title_generator/hashtag_generator 双向互链（关键词→标题＋简介＋标签→分享卡片一条龙）；真限制三条页面明示（无复杂排版引擎／中文字体依赖系统字体／图片内文字不利于 SEO/无障碍）；ID text_to_card、Path /tools/text-to-card、Icon style、New；纯函数契约 wrapLines/pickTemplate/cardSizeOf/buildCardName（非法参数抛 Error，err.field 命名）；node 测试 92 断言全过（确定性向量逐字＋err.field＋注册断言）；5e0ec1c 同步 43 个旧测试 Path 断言 253→254；go build/vet 通过；本地 /tools/text-to-card 实测 200；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 5e0ec1c；categories.go 未注册；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 恩尼格玛密码机模拟器 | 递进首席（160 轮观察备选；182 轮晋升 P2；本轮 `enigma`/`Enigma`/`恩尼格玛`/`rotors` 四处 0 命中复测真缺口（181/182/183 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同）；转子（Walzen I~V 可选）＋反射器＋接线板＋环位/起始位设置，逐字符加密＋转子步进可视化；纯前端中难度；密码/编码簇补位（morse_code_translator 同簇联动）；真限制：仅 Wehrmacht M3 标准三转子口径、不含海军四转子等变体须明示） | 中 | P2（留池） |
+| 负片图像还原 | 递进第二顺位（174 轮观察备选；183 轮晋升 P2；本轮 `负片` 0 命中、`negative` 宽泛命中仅 vendor 四文件（docx/pptxgenjs/fontkit/sql-wasm）＋base_converter.js（负数进制口径已裁定不同）、`invert` 宽泛命中仅 ascii_art_generator/css_filter_generator/register_bitfield_editor（已裁定无关口径）＋vendor 两文件，图片反色/胶片负片还原口径真缺口确凿；上传 JPG/PNG/WebP（FileReader 纯前端）→全色反转／彩色负片去橙色底（通道 percentile 拉伸）／黑白负片三种模式→canvas 实时预览→PNG 下载；纯前端小难度（纯函数可写逐字向量：invertOf/channelStretch，非法参数 err.field）；图片工具簇补位（img_compress／img_resize／img_convert 同簇联动）；真限制：彩色负片去橙色底为启发式算法、非专业胶片扫描仪级，须明示） | 小 | P2（留池） |
+| WhatsApp 链接生成器 | 184 轮新候选晋升 P2 第三顺位（115 轮观察备选；本轮 `whatsapp`/`wa.me` 三处 0 命中（vendor 除外）真缺口确凿；外贸/跨境电商客服与出海运营需快速生成带预填消息的 wa.me 聊天链接（放网站/邮件签名/社媒主页），手动拼「国家码＋号码＋URL 编码消息」易错；国家码＋手机号＋预填消息→wa.me 链接＋一键复制＋二维码（qrcode 同簇联动）；纯前端小难度（纯函数可写逐字向量：buildWaLink/normalizePhone，非法参数 err.field）；营销/沟通簇补位；真限制：仅生成 wa.me 格式链接、不校验号码是否注册 WhatsApp，须明示） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-01 通用调研第一百八十四轮——文字转图片卡片交付闭环（025a40a＋5e0ec1c，`/tools/text-to-card` 已注册，全量 254 Path），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 5e0ec1c），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：恩尼格玛密码机模拟器→首席（`enigma`/`Enigma`/`恩尼格玛`/`rotors` 0 命中复测）／负片图像还原→第二（`负片` 0 命中、`negative`/`invert` 宽泛命中仅 vendor＋已裁定无关口径，真缺口确凿）／**WhatsApp 链接生成器→新候选晋升 P2 第三顺位**（晋升复核真缺口确凿；115 轮观察备选；外贸/跨境电商 wa.me 链接手动拼写痛点真实；纯前端小难度；qrcode 同簇联动）；本轮 fetch 成功（按铁律加 GIT_SSH_COMMAND，本地 HEAD 与 FETCH_HEAD 同头 5e0ec1c）；新信号扫描：V2EX 6 项（3 项新消解＋3 项确认消解）＋HN/launch 圈（HackerTube/ZIPZAX/OpenWiki＋THE FEED/Proto 全部消解或理念信号记录）＋dev.to 2026 榜单 5 篇（全部已交付覆盖或非单页口径；PDF Suite→站内 PDF 16 工具已成体系口径消解；UUID v4 vs v7 单信号弱不晋升）；高精度计算器因用户 10-18 方向修正口径风险保持低优先观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律加 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 后 `git fetch origin muse/dev-20260929` **成功**，本地 HEAD 5e0ec1c 与 FETCH_HEAD 同头；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 5e0ec1c（43 个旧测试 Path 断言同步 253→254）／025a40a（文字转图片卡片新增，node 92 断言全过，Path 253→254）／eb2ca8b（占位图生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **254**；`ls templates/text_to_card.html` 存在；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中）；Top3 候选重叠复核（`text_to_card`／`/tools/text-to-card` 已交付划出；`简繁`／`繁简`：仍开发中，移出候选池；**恩尼格玛密码机模拟器**：`enigma`／`Enigma`／`恩尼格玛`／`rotors` 四处 0 命中（181/182/183 轮亦 0 命中；密码簇邻居仅 morse_code_translator 为摩斯电码口径，已裁定不同），真缺口确凿；**负片图像还原**：`负片` 0 命中、`negative` 宽泛命中仅 vendor 四文件（docx-9.5.1.umd.js／pptxgenjs-3.12.0.bundle.js／fontkit-1.1.1.umd.min.js／sql-wasm.wasm）＋base_converter.js（负数进制口径，已裁定不同）、`invert` 宽泛命中仅 ascii_art_generator／css_filter_generator／register_bitfield_editor（ASCII 艺术／CSS 滤镜调试／寄存器位域编辑器，已裁定无关口径）＋vendor 两文件，图片反色/胶片负片还原口径真缺口确凿；**WhatsApp 链接生成器**：`whatsapp`／`wa.me` 三处 0 命中（vendor 除外），真缺口确凿；高精度计算器 `bignumber`／`高精度` 低优先保持（方向修正口径风险）；一键图片去背景 ONNX 硬伤未解低优先；在线电台收听器硬伤未解跳过）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-01 09:45 · PM 选定轮，接 183 轮通用调研）
 
 **选定：文字转图片卡片（text_to_card）** — 本轮唯一任务（新工具）。

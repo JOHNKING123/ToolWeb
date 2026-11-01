@@ -1,0 +1,209 @@
+{{define "enigma_simulator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恩尼格玛密码机模拟器 - Wehrmacht M3 三转子逐字加密与步进可视化 | 程序员工具箱</title>
+<meta name="description" content="免费在线恩尼格玛密码机模拟器：Wehrmacht M3 标准三转子（Walzen I~V 任选、UKW-B/C 反射器、环位/起始位/接线板可调），明文 A–Z 逐字加密，转子步进含 double-stepping 实时可视化，密文一键复制，经典向量预设一键载入。纯前端本地运算，零上传。Enigma M3 simulator, 100% client-side.">
+<meta name="keywords" content="恩尼格玛,恩尼格玛密码机,Enigma,二战密码机,转子密码机,密码机模拟器,古典密码,enigma simulator,enigma machine,wehrmacht m3">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/enigma-simulator">
+<meta property="og:title" content="恩尼格玛密码机模拟器 - Wehrmacht M3 三转子逐字加密">
+<meta property="og:description" content="Walzen I~V 任选三枚、环位起始位接线板可调，明文逐字加密，转子步进与 double-stepping 实时可视化，纯前端本地运算零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/enigma-simulator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"恩尼格玛密码机模拟器","alternateName":"enigma machine simulator","description":"Wehrmacht M3 标准三转子恩尼格玛密码机模拟：转子/环位/起始位/接线板可调，逐字加密与 double-stepping 步进可视化，浏览器本地运算，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/enigma-simulator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.em-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.em-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.em-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.em-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.em-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.em-cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem}
+.em-field label{display:block;font-size:.82rem;color:#4b5563;margin-bottom:.3rem;font-weight:600}
+.em-field select,.em-field input[type=text]{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;
+padding:.55rem .6rem;font-size:.92rem;background:#fff;color:#1f2937;font-family:ui-monospace,Menlo,Consolas,monospace}
+.em-field select:focus,.em-field input[type=text]:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.em-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.92rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.em-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.em-area.out{background:#f0fdf4}
+.em-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.em-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.em-btn .material-icons{font-size:1.1rem}
+.em-btn-primary{background:#1d4ed8;color:#fff}
+.em-btn-primary:hover{background:#1e40af}
+.em-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.em-btn-secondary:hover{background:#e5e7eb}
+.em-cfg-err{display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:.5rem;
+padding:.6rem .9rem;font-size:.88rem;line-height:1.7;margin-top:.8rem}
+.em-wins{display:flex;gap:1rem;align-items:flex-end;justify-content:center;margin:.4rem 0 .2rem}
+.em-win{text-align:center}
+.em-win .em-dial{width:64px;height:64px;border-radius:.7rem;background:#111827;color:#f9fafb;display:flex;
+align-items:center;justify-content:center;font-size:1.9rem;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace;
+border:3px solid #374151;transition:border-color .2s,box-shadow .2s}
+.em-win .em-dial.stepped{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.35)}
+.em-win .em-cap{font-size:.8rem;color:#6b7280;margin-top:.3rem}
+.em-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.em-note b{color:#4b5563}
+.em-step-note{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:.6rem 0 0;line-height:1.9;min-height:1.2rem}
+.em-step-note b{color:#111827}
+.em-trace{width:100%;border-collapse:collapse;font-size:.86rem}
+.em-trace th,.em-trace td{border:1px solid #e5e7eb;padding:.45rem .6rem;text-align:center}
+.em-trace thead th{background:#f9fafb;color:#374151;white-space:nowrap}
+.em-trace td.em-ch{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700}
+.em-trace td.em-out{color:#047857}
+.em-trace td.em-pos{font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+.em-trace td.em-n{color:#6b7280}
+.em-trace tr.em-ds td{background:#fffbeb}
+.em-tag{display:inline-block;border-radius:.3rem;padding:.08rem .5rem;font-size:.75rem;font-weight:700;
+background:#e0e7ff;color:#3730a3;margin:.1rem;white-space:nowrap}
+.em-tag-ds{background:#fde68a;color:#92400e}
+.em-tag-pass{background:#f3f4f6;color:#6b7280}
+.em-trace-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+.em-empty{font-size:.9rem;color:#6b7280;line-height:1.8;padding:.6rem 0}
+.em-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.em-copy-ok{color:#047857}.em-copy-fail{color:#b91c1c}
+.em-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.em-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.em-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.em-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.em-combo a{color:#1d4ed8;font-weight:600}
+@media (max-width:768px){.em-panel{padding:1rem .8rem}.em-btn{padding:.55rem .9rem}.em-win .em-dial{width:52px;height:52px;font-size:1.5rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">rotate_right</i> 恩尼格玛密码机模拟器</h1>
+<p>Wehrmacht M3 标准三转子 —— 明文逐字加密，转子步进与 double-stepping 实时可视化。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="em-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>本工具<b>只模拟 Wehrmacht M3 标准三转子</b>（无四转子 M4、无 Uhr 接线钟等变体）；<b>非 A–Z 字符原样保留</b>（不加密、不触发转子步进）；<b>教学演示用途，不建议用于实际保密</b>（真实 Enigma 早已被破解，现代保密请用 AES 等现代算法）；运算<b>只在浏览器本地完成、不上传</b>。</div>
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">settings</i> 机器配置</h3>
+<div class="em-cfg">
+<div class="em-field"><label for="em-rotor-l">左转子</label><select id="em-rotor-l"></select></div>
+<div class="em-field"><label for="em-rotor-m">中转子</label><select id="em-rotor-m"></select></div>
+<div class="em-field"><label for="em-rotor-r">右转子</label><select id="em-rotor-r"></select></div>
+<div class="em-field"><label for="em-reflector">反射器</label><select id="em-reflector"></select></div>
+<div class="em-field"><label>环位（左/中/右，各 1 字母）</label>
+<div style="display:flex;gap:.35rem;">
+<input type="text" id="em-ring-l" value="A" maxlength="1" aria-label="左转子环位">
+<input type="text" id="em-ring-m" value="A" maxlength="1" aria-label="中转子环位">
+<input type="text" id="em-ring-r" value="A" maxlength="1" aria-label="右转子环位">
+</div></div>
+<div class="em-field"><label>起始位（左/中/右，各 1 字母）</label>
+<div style="display:flex;gap:.35rem;">
+<input type="text" id="em-pos-l" value="A" maxlength="1" aria-label="左转子起始位">
+<input type="text" id="em-pos-m" value="A" maxlength="1" aria-label="中转子起始位">
+<input type="text" id="em-pos-r" value="A" maxlength="1" aria-label="右转子起始位">
+</div></div>
+</div>
+<div class="em-field" style="margin-top:.9rem;"><label for="em-plugs">接线板（Stecker，最多 10 对，字母不重复，如 AB CD EF）</label>
+<input type="text" id="em-plugs" placeholder="AB CD EF" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.55rem .6rem;font-size:.92rem;font-family:ui-monospace,Menlo,Consolas,monospace;"></div>
+<div class="em-actions">
+<button type="button" class="em-btn em-btn-secondary" id="em-preset"><i class="material-icons">auto_awesome</i> 载入经典向量预设（I/II/III · AAA · 无接线 · UKW-B）</button>
+</div>
+<div class="em-cfg-err" id="em-cfg-error"></div>
+<div class="em-note">口径说明：转子 Walzen I~V 任选三枚且不重复；反射器 UKW-B / UKW-C 二选一；环位与起始位各为左/中/右三个 A–Z 字母；接线板每对为两个不同字母、同一字母不可出现在两对中，最多 10 对。非法配置会在上方红字提示（字段级报错）。</div>
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">dialpad</i> 转子窗口（当前位）</h3>
+<div class="em-wins">
+<div class="em-win"><div class="em-dial" id="em-win-l">A</div><div class="em-cap">左</div></div>
+<div class="em-win"><div class="em-dial" id="em-win-m">A</div><div class="em-cap">中</div></div>
+<div class="em-win"><div class="em-dial" id="em-win-r">A</div><div class="em-cap">右</div></div>
+</div>
+<div class="em-note">窗口显示每次按键<b>步进后</b>的转子位置；金色描边表示本次按键中该转子发生了步进；<b>double-stepping</b> 指中转子处于自身 notch 位时，连带左转子一起步进的著名反常步进行为（真实机器的机械特性，本模拟器如实复现）。</div>
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">input</i> 明文输入（A–Z，输入后点「加密」）</h3>
+<textarea class="em-area" id="em-input" rows="5" placeholder="在此输入明文，例如：HELLO&#10;小写会自动转大写；空格与标点原样保留、不触发步进。"></textarea>
+<div class="em-actions">
+<button type="button" class="em-btn em-btn-primary" id="em-encrypt"><i class="material-icons">lock</i> 加密</button>
+<button type="button" class="em-btn em-btn-secondary" id="em-demo"><i class="material-icons">play_arrow</i> 逐字演示</button>
+<button type="button" class="em-btn em-btn-secondary" id="em-reset"><i class="material-icons">restart_alt</i> 一键重置</button>
+</div>
+<div class="em-note">加密口径：每次按键先步进、再过电（接线板→右→中→左→反射器→左→中→右→接线板）；小写先转大写；非 A–Z 字符原样保留且不触发步进。解密＝用完全相同的配置再加密一次密文（Enigma 自反特性）。</div>
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">content_copy</i> 密文输出</h3>
+<textarea class="em-area out" id="em-output" rows="5" readonly></textarea>
+<div class="em-actions">
+<button type="button" class="em-btn em-btn-primary" id="em-copy"><i class="material-icons">content_copy</i> 一键复制</button>
+</div>
+<div class="em-copy-tip" id="em-copy-tip"></div>
+<div class="em-note">复制内容与密文输出区文本逐字一致；复制失败时页面会给出降级提示，请手动选中输出区内容复制。</div>
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">table_rows</i> 逐字加密明细（含步进标注）</h3>
+<div class="em-trace-wrap">
+<table class="em-trace">
+<thead><tr><th>序号</th><th>明文</th><th>密文</th><th>步进后位置（左/中/右）</th><th>步进标注</th></tr></thead>
+<tbody id="em-trace-body"></tbody>
+</table>
+<div class="em-empty" id="em-trace-empty">暂无加密记录：输入明文后点击「加密」或「逐字演示」。</div>
+</div>
+<div class="em-step-note" id="em-step-note"></div>
+</div>
+
+<div class="em-combo">
+<b>古典密码一条龙：</b>先用本工具把明文加密成恩尼格玛密文，再去 <a href="/tools/morse-code-translator">摩斯码翻译器</a> 把密文编成点划码 —— 转子加密 + 点划编码，古典密码两连击。
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="em-faq">
+<dt>经典测试向量是什么？</dt>
+<dd>转子 I/II/III、环位 AAA、起始位 AAA、无接线板、反射器 UKW-B 时，<code>AAAAA</code> → <code>BDZGO</code>，<code>HELLO</code> → <code>ILBDA</code>。点「载入经典向量预设」即可一键复现。</dd>
+<dt>怎么解密？</dt>
+<dd>Enigma 是自反的：用<b>完全相同</b>的配置（转子、环位、起始位、接线板、反射器）把密文再加密一次，就得到原文。注意起始位必须重置回加密前的初始位置。</dd>
+<dt>double-stepping 是什么？</dt>
+<dd>真实机器的机械反常现象：中转子处于自身 notch 位时，本次按键中转子与左转子会同时步进，导致中转子在连续两次按键中各步进一次。明细表与转子窗口会明确标注每一次 double-stepping。</dd>
+<dt>空格和标点会加密吗？</dt>
+<dd>不会。非 A–Z 字符原样保留，也不触发转子步进；小写字母会先转大写再加密。</dd>
+<dt>能用这个做真正的保密通信吗？</dt>
+<dd>不能。本工具是教学演示：真实 Enigma 在二战中就已被破解，且本工具只做 M3 标准三转子。需要保密请使用 AES 等现代加密算法。</dd>
+<dt>四转子 M4 / Uhr 接线钟支持吗？</dt>
+<dd>不支持。本工具只模拟 Wehrmacht M3 标准三转子，这是页面顶部的真限制之一。</dd>
+<dt>明文会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行，配置解析、步进、加密全在浏览器本地 JavaScript 里完成，脚本中没有任何 fetch / XHR 上传逻辑，也不用 CDN。可断网使用（首次加载页面除外）。</dd>
+</dl>
+</div>
+
+<div class="em-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="em-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">恩尼格玛密码机模拟器（当前）</span>
+<a href="/tools/morse-code-translator" class="btn btn-secondary" style="font-size:.9rem;">摩斯码翻译器</a>
+</div>
+</div>
+
+</div>
+</div>
+<script src="/tools/static/js/enigma_simulator.js?v=1"></script>
+</body>
+</html>
+{{end}}
