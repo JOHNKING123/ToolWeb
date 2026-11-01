@@ -2334,6 +2334,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "营销工具",
 				},
+				{
+					ID:          "whatsapp_link_generator",
+					Name:        "WhatsApp 链接生成器",
+					Description: "国家码＋手机号→标准 wa.me 点击聊天链接：国家码下拉常用＋自定义手动输入，手机号自动剔除空格/连字符/括号/首+ 并实时 normalize 回显，预填消息按 encodeURIComponent 编码拼 text 参数（空则不带），wa.me 链接实时预览＋一键复制（Clipboard API，降级 execCommand）＋内嵌二维码本地渲染（vendored qrcode-generator 1.4.4，零外部请求）＋一键在 WhatsApp 打开；与二维码工具双向互链（沟通一条龙），仅生成标准格式不校验号码是否已注册 WhatsApp，100% 浏览器本地处理零上传 · WhatsApp link generator: build wa.me click-to-chat links with pre-filled text, live preview, one-click copy, QR code rendered locally, open in WhatsApp, 100% client-side",
+					Path:        "/tools/whatsapp-link-generator",
+					Icon:        "sms",
+					New:         true,
+					Category:    "营销工具",
+				},
 			},
 		},
 		{
