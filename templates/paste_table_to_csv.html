@@ -1,0 +1,175 @@
+{{define "paste_table_to_csv"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网页表格粘贴转 CSV - TSV/制表符文本列数校验/RFC4180转义/复制/下载 | 程序员工具箱</title>
+<meta name="description" content="免费在线网页表格粘贴转 CSV：粘贴从网页、Excel、WPS 复制的制表符/逗号分隔原始文本，列数一致性校验（不一致拒绝转换、不静默截断），RFC4180 字段引号转义，表格实时预览，一键复制 CSV、下载 CSV（UTF-8 BOM，Excel 中文不乱码）。100% 浏览器本地处理，零上传。Paste TSV/table text to CSV: column check, RFC4180 escaping, preview, copy/download, 100% client-side.">
+<meta name="keywords" content="表格转CSV,粘贴表格转CSV,TSV转CSV,制表符转CSV,网页表格复制转CSV,Excel复制转CSV,RFC4180,列数校验,paste table to csv,tsv to csv converter">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/paste-table-to-csv">
+<meta property="og:title" content="网页表格粘贴转 CSV - 列数校验/RFC4180转义/复制/下载">
+<meta property="og:description" content="粘贴网页/Excel 复制的制表符或逗号分隔文本，列数校验（不一致不静默截断）＋RFC4180 转义，表格预览，一键复制/下载 CSV（UTF-8 BOM）。纯前端本地，零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/paste-table-to-csv">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"网页表格粘贴转 CSV","alternateName":"paste table to csv","description":"网页表格粘贴转 CSV：粘贴网页/Excel 复制的制表符/逗号分隔原始文本，列数一致性校验（不一致拒绝转换、不静默截断），RFC4180 字段引号转义，表格实时预览，一键复制 CSV、下载 CSV（UTF-8 BOM），100% 浏览器本地处理零上传。","url":"https://www.johnkingzcq123.xyz/tools/paste-table-to-csv","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ptc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.ptc-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.ptc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ptc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ptc-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+.ptc-field{display:flex;flex-direction:column;gap:.35rem;font-size:.92rem;color:#1f2937;margin-bottom:.9rem}
+.ptc-field label b{color:#2563eb}
+.ptc-field textarea,.ptc-field select{padding:.55rem .7rem;border:1px solid #d1d5db;
+border-radius:.45rem;font-size:.95rem;width:100%;box-sizing:border-box;font-family:inherit;background:#fff}
+.ptc-field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;min-height:9rem;resize:vertical;line-height:1.7}
+.ptc-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end}
+.ptc-row .ptc-field{flex:1;min-width:160px;margin-bottom:0}
+.ptc-err{display:none;font-size:.88rem;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;
+border-radius:.45rem;padding:.5rem .8rem;margin-top:.7rem;line-height:1.7}
+.ptc-warn{display:none;font-size:.9rem;color:#92400e;background:#fffbeb;border:2px solid #f59e0b;
+border-radius:.6rem;padding:.7rem 1rem;margin-top:.8rem;line-height:1.8;gap:.6rem;align-items:flex-start}
+.ptc-warn .material-icons{color:#d97706;flex:none}
+.ptc-count{font-size:.9rem;color:#2563eb;font-weight:600;margin-bottom:.5rem}
+.ptc-preview{overflow-x:auto;border:1px solid #e5e7eb;border-radius:.45rem;max-height:26rem;overflow-y:auto;background:#fff}
+.ptc-table{border-collapse:collapse;width:100%;font-size:.9rem}
+.ptc-table th,.ptc-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;text-align:left;white-space:pre-wrap;word-break:break-all;min-width:4rem}
+.ptc-table th{background:#eff6ff;color:#1d4ed8;position:sticky;top:0}
+.ptc-table tr:nth-child(even) td{background:#f8fafc}
+.ptc-empty{padding:1.2rem;color:#9ca3af;font-size:.9rem;text-align:center}
+.ptc-csv{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;
+border-radius:.45rem;padding:.7rem .9rem;font-size:.88rem;line-height:1.7;color:#111827;width:100%;
+box-sizing:border-box;min-height:8rem;resize:vertical}
+.ptc-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem;align-items:center}
+.ptc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none}
+.ptc-btn .material-icons{font-size:1.1rem}
+.ptc-btn-primary{background:#2563eb;color:#fff}
+.ptc-btn-primary:hover{background:#1d4ed8}
+.ptc-btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.ptc-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ptc-btn-secondary:hover{background:#e5e7eb}
+.ptc-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ptc-note b{color:#4b5563}
+.ptc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ptc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ptc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ptc-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1d4ed8;margin-top:1.2rem}
+.ptc-combo a{color:#2563eb;font-weight:600}
+.ptc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all .25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #2563eb}
+.ptc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ptc-toast.fail{border-color:#f87171}
+@media (max-width:768px){.ptc-panel{padding:1rem .8rem}.ptc-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">table</i> 网页表格粘贴转 CSV</h1>
+<p>粘贴从网页、Excel、WPS 复制的制表符／逗号分隔原始文本 → 列数一致性校验 → RFC4180 引号转义 → 表格预览 → 一键复制 CSV、下载 CSV。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ptc-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① <b>不直接解析 HTML DOM 表格复制</b> —— 从网页复制表格时浏览器只给出纯文本（制表符／逗号分隔），各浏览器复制行为差异大，本工具只处理你粘贴进来的原始文本；② <b>列数不一致不静默截断</b> —— 校验发现某行列数与首行不同时，<b>拒绝生成 CSV 并标出坏行号</b>，绝不悄悄截断或补齐；③ <b>100% 浏览器本地处理不上传</b> —— 解析、校验、转义、预览、复制、下载全在你的浏览器里完成，脚本零外部请求。</div>
+</div>
+
+<div class="ptc-panel">
+<h3><i class="material-icons">content_paste</i> 1. 粘贴表格文本</h3>
+<div class="ptc-field">
+<label>原始文本 <b>（从网页／Excel／WPS 复制表格后直接粘贴）</b></label>
+<textarea id="ptc-input" placeholder="示例（制表符分隔）：&#10;姓名&#9;年龄&#9;城市&#10;张三&#9;28&#9;深圳&#10;李四&#9;35&#9;广州" spellcheck="false"></textarea>
+</div>
+<div class="ptc-row">
+<div class="ptc-field">
+<label>列分隔符 <b>（复制来源决定：Excel/网页表格多为制表符）</b></label>
+<select id="ptc-delim">
+<option value="tab" selected>制表符 Tab（\t，Excel／网页表格默认）</option>
+<option value="comma">逗号 ,（CSV 文本）</option>
+<option value="semicolon">分号 ;（欧陆 CSV）</option>
+<option value="pipe">竖线 |</option>
+</select>
+</div>
+</div>
+<div class="ptc-err" id="ptc-err"></div>
+<div class="ptc-warn" id="ptc-warn"></div>
+<div class="ptc-actions">
+<button type="button" class="ptc-btn ptc-btn-primary" id="ptc-parse"><i class="material-icons">play_arrow</i> 解析预览</button>
+<button type="button" class="ptc-btn ptc-btn-secondary" id="ptc-sample"><i class="material-icons">auto_fix_high</i> 填入示例</button>
+<button type="button" class="ptc-btn ptc-btn-secondary" id="ptc-clear"><i class="material-icons">clear</i> 清空</button>
+</div>
+<div class="ptc-note">粘贴或切换分隔符后<b>自动重新解析</b>；空文本不解析；末尾多余空行自动忽略，中间空行保留为数据行。</div>
+</div>
+
+<div class="ptc-panel">
+<h3><i class="material-icons">table_chart</i> 2. 表格预览</h3>
+<div class="ptc-count" id="ptc-count">共 0 行 0 列</div>
+<div class="ptc-preview" id="ptc-preview"><div class="ptc-empty">粘贴内容后自动解析预览</div></div>
+<div class="ptc-note">预览首行按原样显示（<b>不</b>自动当表头处理）；单元格内容经转义渲染，HTML 只显示为文本。</div>
+</div>
+
+<div class="ptc-panel">
+<h3><i class="material-icons">description</i> 3. CSV 输出</h3>
+<div class="ptc-field">
+<label>生成的 CSV <b>（RFC4180：含逗号／引号／换行的字段已加引号转义）</b></label>
+<textarea id="ptc-csv" class="ptc-csv" readonly spellcheck="false" placeholder="列数校验通过后在此生成标准 CSV"></textarea>
+</div>
+<div class="ptc-actions">
+<button type="button" class="ptc-btn ptc-btn-primary" id="ptc-copy" disabled><i class="material-icons">content_copy</i> 一键复制 CSV</button>
+<button type="button" class="ptc-btn ptc-btn-primary" id="ptc-download" disabled><i class="material-icons">download</i> 下载 CSV</button>
+</div>
+<div class="ptc-note">复制走 Clipboard API，失败自动回落 <code>execCommand</code>；下载走 Blob，文件名 <code>table_YYYYMMDD_HHmmss.csv</code>，自带 <b>UTF-8 BOM</b>，Excel／WPS 双击打开中文不乱码，行分隔为标准 CRLF。</div>
+</div>
+<div class="ptc-combo">
+<b>📊 表格数据一条龙：</b>转好的 CSV 想可视化查看、排序筛选，用 <a href="/tools/csv-table-viewer">CSV 表格查看器</a>；要在 CSV 和 JSON 数组之间互转，用 <a href="/tools/csv-json">CSV⇄JSON 互转</a>；手里的 Markdown 表格想进 Excel，用 <a href="/tools/markdown-to-excel">Markdown 表格转 Excel</a> —— 粘贴、查看、互转、进表，一套流程。
+</div>
+
+<div class="ptc-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ptc-faq">
+<dt>从网页复制表格粘贴进来，列对不齐怎么办？</dt>
+<dd>先确认<b>列分隔符</b>选对了：Excel／WPS 和大多数网页表格复制出来是<b>制表符</b>分隔；源文本本身是逗号分隔的 CSV 就切到「逗号」档。分隔符选错时列数校验会直接报坏行，不会悄悄错位（真限制第二条）。</dd>
+<dt>为什么提示「列数不一致，已拒绝生成 CSV」？</dt>
+<dd>说明某行列数与首行不同（多一个分隔符、少一个单元格都算）。本工具<b>不静默截断、不自动补齐</b>，而是标出坏行号请你回源头修正 —— 悄悄截断的数据比报错更危险。</dd>
+<dt>单元格里有逗号、引号、换行，转 CSV 会错位吗？</dt>
+<dd>不会。输出严格按 <b>RFC4180</b> 转义：字段含逗号／双引号／回车／换行时整体加双引号、内部双引号翻倍（如 <code>他说"好"</code> → <code>"他说""好"""</code>），Excel／WPS／各语言 CSV 库都能正确读回。</dd>
+<dt>能直接从网页上「复制表格 HTML」粘贴吗？</dt>
+<dd>不能（真限制第一条）。浏览器复制表格只给纯文本，本工具只处理粘贴进来的原始文本，不读取网页 DOM；想转网页上的 HTML 表格请先全选复制为文本再粘贴。</dd>
+<dt>我的表格数据会被上传吗？</dt>
+<dd>不会。解析、校验、转义、预览、复制、下载全部在浏览器本地完成，脚本中没有任何 fetch／XHR 上传逻辑（真限制第三条），可断网使用（首次加载页面除外）。</dd>
+<dt>下载的 CSV 用 Excel 打开会乱码吗？</dt>
+<dd>不会。下载的 CSV 自带 <b>UTF-8 BOM</b>，Excel／WPS 双击即正常显示中文；行分隔为标准 CRLF，文件名形如 <code>table_20261101_193000.csv</code>。</dd>
+</dl>
+</div>
+
+<div class="ptc-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ptc-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">网页表格粘贴转 CSV（当前）</span>
+<a href="/tools/csv-table-viewer" class="btn btn-secondary" style="font-size:.9rem;">CSV 表格查看器（查看/排序/筛选）</a>
+<a href="/tools/csv-json" class="btn btn-secondary" style="font-size:.9rem;">CSV⇄JSON 互转</a>
+<a href="/tools/markdown-to-excel" class="btn btn-secondary" style="font-size:.9rem;">Markdown 表格转 Excel</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ptc-toast" class="ptc-toast"></div>
+<script src="/tools/static/js/paste_table_to_csv.js?v=1"></script>
+</body>
+</html>
+{{end}}

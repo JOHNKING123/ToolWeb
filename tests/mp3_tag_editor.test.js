@@ -223,7 +223,7 @@ has(cats, "\"/tools/mp3-tag-editor\"", "注册 Path /tools/mp3-tag-editor");
 has(cats, "MP3 标签编辑器", "注册名称 MP3 标签编辑器");
 var pathMatches = cats.match(/"\/tools\/[^"]+"/g) || [];
 var uniqPaths = pathMatches.filter(function (v, i, a) { return a.indexOf(v) === i; });
-eq(uniqPaths.length, 258, "注册 Path 总数 257→258");
+eq(uniqPaths.length, 259, "注册 Path 总数 259→259");
 var html = fs.readFileSync("templates/mp3_tag_editor.html", "utf8");
 has(html, "只改 ID3v2 元数据、不做音频转码与音质处理", "页面可见：只改标签不转码");
 has(html, "只支持 MP3", "页面可见：只支持 MP3");

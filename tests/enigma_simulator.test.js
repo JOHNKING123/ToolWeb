@@ -199,7 +199,7 @@ function stdConfig() {
     contains(block, "New:", "注册 New 标记");
     ok(/New:\s*true/.test(block), "注册 New 为 true");
     var paths = go.match(/"\/tools\/[^"]+"/g) || [];
-    eq(new Set(paths).size, 258, "注册总数 257→258 Path");
+    eq(new Set(paths).size, 259, "注册总数 259→259 Path");
 })();
 
 /* ================= 9. 零网络请求静态检查 ================= */

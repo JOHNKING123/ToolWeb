@@ -3,7 +3,7 @@
  *  1. normalizePhone 契约（确定性向量逐字；首+/空格/连字符/括号剔除；非法参数 err.field='phone'）
  *  2. buildWaLink 契约（确定性向量逐字；空消息不带 text；err.field='countryCode'/'phone'/'message'）
  *  3. 二维码引擎（vendored qrcode-generator 1.4.4 Node 可加载；矩阵定位符；中文消息链接可编码）
- *  4. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 258
+ *  4. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 259
  *  5. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket/EventSource；二维码走本地 vendor）
  *  6. 模板：SEO 面板、真限制三条、与 qrcode 双向互链「沟通一条龙」
  */
@@ -68,6 +68,21 @@ function throwsField(fn, field, name) {
     eq(T.buildWaLink("86", "13800000000", "hello world"),
         "https://wa.me/8613800000000?text=hello%20world",
         "空格按 encodeURIComponent 编为 %20");
+    eq(T.buildWaLink("86", "+86 138-0000 0000", "你好"),
+        "https://wa.me/8613800000000?text=%E4%BD%A0%E5%A5%BD",
+        "修复向量：手机号自带 +86 时国家码不重复拼入（国际写法去重）");
+    eq(T.buildWaLink("86", "008613800000000", ""),
+        "https://wa.me/8613800000000",
+        "修复向量：0086 国际冠码写法去重");
+    eq(T.buildWaLink("1", "+1 (415) 555-2671", "hi"),
+        "https://wa.me/14155552671?text=hi",
+        "修复向量：美国号 +1 去重");
+    eq(T.dedupeCountryCode("86", "13800000000"), "13800000000",
+        "本地直拨号（无国际前缀）不受去重影响");
+    eq(T.dedupeCountryCode("86", "+86 13800000000"), "13800000000",
+        "dedupeCountryCode：+86 前缀剥除一次");
+    eq(T.dedupeCountryCode("86", "8613800000000"), "8613800000000",
+        "无国际前缀标记时不误伤（无法判定是否为本地号，保持原样）");
     throwsField(function () { T.buildWaLink("xx", "13800000000", "hi"); }, "countryCode",
         "规格向量：buildWaLink('xx',...) 抛 Error（err.field=countryCode）");
     throwsField(function () { T.buildWaLink("", "13800000000", "hi"); }, "countryCode",
@@ -121,7 +136,7 @@ function throwsField(fn, field, name) {
     contains(GO_SRC.toLowerCase(), "whatsapp link generator", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 258, "注册 Path 总数 257→258");
+    eq(pathCount, 259, "注册 Path 总数 259→259");
 })();
 
 /* ================= 5. 零网络静态检查 ================= */

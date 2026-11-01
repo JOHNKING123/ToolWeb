@@ -3,7 +3,7 @@
  *  1. validateRange 契约（规范化返回；非法参数 err.field 命名：min/max/decimals/count）
  *  2. genBatch 契约（确定性向量逐字；注入 seq；整数/小数/去重/排序）
  *  3. formatBatch / buildCsvFileName / buildCsvContent 契约
- *  4. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 258
+ *  4. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 259
  *  5. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket/EventSource；模板无外部 script CDN）
  *  6. 模板：SEO 面板、真限制三条、与 random_decision／mock_data_generator 双向互链「随机一条龙」
  */
@@ -133,7 +133,7 @@ function seq(arr) { var i = 0; return function () { var v = arr[i % arr.length];
     contains(GO_SRC.toLowerCase(), "batch random number generator", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 258, "注册 Path 总数 257→258");
+    eq(pathCount, 259, "注册 Path 总数 259→259");
 })();
 
 /* ================= 5. 零网络静态检查 ================= */

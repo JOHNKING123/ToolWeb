@@ -4,7 +4,7 @@
  *  2. channelStretch 契约（0~100 百分位拉伸逐字向量；钳制；零宽度防除零；err.field='v'/'lo'/'hi'）
  *  3. invertAndStretch 契约（组合向量；err.field 透传）
  *  4. buildFileName 契约（negative-YYYYMMDD-HHmmss.png 日期向量；err.field='date'）
- *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 258
+ *  5. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 259
  *  6. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket；FileReader+canvas 纯本地）
  *  7. 模板：SEO 面板、真限制三条、与 img_compress/img_resize/img_convert 双向互链
  */
@@ -112,7 +112,7 @@ function throwsField(fn, field, name) {
     contains(GO_SRC.toLowerCase(), "negative film restorer", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 258, "注册 Path 总数 257→258");
+    eq(pathCount, 259, "注册 Path 总数 259→259");
 })();
 
 /* ================= 6. 零网络静态检查 ================= */

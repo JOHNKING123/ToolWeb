@@ -178,7 +178,7 @@ function main() {
   ok(entry.indexOf('Category:    "图片处理"') >= 0, "注册 Category 为图片处理");
   ok(entry.indexOf("New:         true") >= 0, "注册 New: true");
   var pathMatches = cats.match(/"\/tools\/[^"]+"/g) || [];
-  eq(new Set(pathMatches).size, 258, "注册 Path 总数257→258（历史遗留陈旧断言同步）");
+  eq(new Set(pathMatches).size, 259, "注册 Path 总数259→259（历史遗留陈旧断言同步）");
   var tpl = fs.readFileSync(path.join(repoRoot, "templates", "svg_background_generator.html"), "utf8");
   ["只做装饰背景几何", "不做动画视频导出", "种子可复现", "PNG 放大不如 SVG 清晰", "不收集、不上传"].forEach(function (phrase) {
     ok(tpl.indexOf(phrase) >= 0, "模板含真限制文案「" + phrase + "」");

@@ -1180,6 +1180,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "paste_table_to_csv",
+					Name:        "网页表格粘贴转 CSV",
+					Description: "免费在线网页表格粘贴转 CSV：粘贴网页/Excel/WPS 复制的制表符/逗号分隔原始文本，列数一致性校验（不一致拒绝转换、不静默截断），RFC4180 字段引号转义，表格实时预览，一键复制 CSV、下载 CSV（UTF-8 BOM，Excel 中文不乱码），纯前端零上传 · Paste table text to CSV: column consistency check, RFC4180 escaping, preview, copy/download, 100% client-side",
+					Path:        "/tools/paste-table-to-csv",
+					Icon:        "table",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "json_to_types",
 					Name:        "JSON 转 TypeScript / Go 结构体",
 					Description: "粘贴 JSON 自动生成 TS interface 与 Go struct，嵌套拆分、可选字段与联合类型推断",

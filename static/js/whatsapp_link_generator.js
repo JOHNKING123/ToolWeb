@@ -3,9 +3,12 @@
 * 纯函数契约（浏览器/Node 通用，非法参数抛 Error，err.field 给出字段名，不静默钳制）：
 * normalizePhone(raw) -> 纯数字串（剔除首 +、空格、连字符、圆括号；
 * raw 非字符串，或剔除后为空，或仍含其它非数字字符 → 抛 Error，err.field='phone'）
+* dedupeCountryCode(countryCode, phone)
+* -> 去重后的纯数字串（phone 为 "+86 138..." / "0086..." 这类国际写法且所带国家码与
+* countryCode 相同时剥除一次，避免国家码重复拼入；本地直拨号不动；非法透传 err.field='phone'）
 * buildWaLink(countryCode, phone, message)
 * -> 'https://wa.me/<国家码><纯数字手机号>[?text=<encodeURIComponent(消息)>]'
-* （countryCode 非纯数字串 → 抛 Error，err.field='countryCode'；
+* （phone 先经 dedupeCountryCode 去重；countryCode 非纯数字串 → 抛 Error，err.field='countryCode'；
 * phone 经 normalizePhone 非法 → 抛 Error，err.field='phone'；
 * message 非字符串 → 抛 Error，err.field='message'；
 * message 为空字符串时不带 text 参数）
@@ -76,10 +79,27 @@ throw err('countryCode', 'buildWaLink: 国家码必须为纯数字串（如 "86"
 return countryCode;
 }
 
-/* wa.me 链接构建；message 为空字符串时不带 text 参数 */
+/* wa.me 链接构建；message 为空字符串时不带 text 参数。
+ * 国家码去重：用户按界面提示输入了带国家码的国际写法（如 "+86 138-0000 0000"、
+ * "00861380000000"），而下拉选的又是同一国家码时，normalize 后的 digits 仍含
+ * 国家码前缀 —— 此时剥除一次，避免 wa.me/8686138... 的重复拼入。
+ * 本地直拨号（无首 +、无 00 冠码）即使恰以国家码数字开头也不动，不误伤。 */
+function dedupeCountryCode(countryCode, phone) {
+var digits = normalizePhone(phone); /* 非法时 err.field='phone'，直接透传 */
+var trimmed = String(phone).replace(/^\s+/, '');
+var intl = trimmed.charAt(0) === '+' || digits.indexOf('00') === 0;
+if (!intl) { return digits;}
+var s = digits;
+if (s.indexOf('00') === 0) { s = s.slice(2);} /* 00 国际冠码 */
+if (s.indexOf(countryCode) === 0 && s.length > countryCode.length) {
+s = s.slice(countryCode.length); /* 剥除用户自带的国家码前缀（一次） */
+}
+return s;
+}
+
 function buildWaLink(countryCode, phone, message) {
 assertCountryCode(countryCode);
-var digits = normalizePhone(phone); /* 非法时 err.field='phone'，直接透传 */
+var digits = dedupeCountryCode(countryCode, phone);
 if (typeof message!== 'string') {
 throw err('message', 'buildWaLink: message 必须为字符串（可为空字符串）');
 }
@@ -123,6 +143,7 @@ module.exports = {
 WA_BASE: WA_BASE,
 COUNTRY_CODES: COUNTRY_CODES,
 normalizePhone: normalizePhone,
+dedupeCountryCode: dedupeCountryCode,
 buildWaLink: buildWaLink,
 getQrEngine: getQrEngine,
 makeWaQrMatrix: makeWaQrMatrix
@@ -232,7 +253,7 @@ errBox.style.display = 'none';
 errBox.textContent = '';
 linkBox.value = link;
 try {
-normBox.textContent = '号码 normalize 结果：' + countryCode + ' ' + normalizePhone(phoneRaw);
+normBox.textContent = '号码 normalize 结果：' + countryCode + ' ' + dedupeCountryCode(countryCode, phoneRaw);
 } catch (e) { normBox.textContent = '';}
 
 /* 二维码 canvas 渲染（本地 vendored 引擎） */

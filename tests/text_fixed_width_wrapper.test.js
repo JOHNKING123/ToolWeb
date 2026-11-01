@@ -102,7 +102,7 @@ has(GO, '"text_fixed_width_wrapper"', "注册：ID text_fixed_width_wrapper");
 has(GO, '"/tools/text-fixed-width-wrapper"', "注册：Path /tools/text-fixed-width-wrapper");
 has(GO, 'Category:    "文本工具"', "注册：Category 文本工具（至少一处）");
 var pathCount = (GO.match(/"\/tools\/[^"]+"/g) || []).filter(function (p, i, arr) { return arr.indexOf(p) === i; }).length;
-eq(pathCount, 258, "注册：总数 257→258 Path");
+eq(pathCount, 259, "注册：总数 259→259 Path");
 
 /* ---------- 10. 零网络请求静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");
