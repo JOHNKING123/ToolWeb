@@ -1,3 +1,196 @@
+## 今日任务（2026-11-02 05:00 · PM 选定轮，接 193 轮通用调研）
+
+**选定：图片转拼豆施工图生成器** — 本轮唯一任务（新工具）。
+
+**顺位**：193 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；193 轮已把「GIF 合成器」交付闭环（dc26684，Path 262→263），候选池划出；简繁互转仍开发中，继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测）**：
+- `perler` 在 templates＋static/js＋tools/categories.go 三处 **0 命中**；CJK `拼豆` 由 193 轮以 `chr(0x...)` 构造检索词复测 0 命中，信任其复核结论，不重复跑展示层易变换的 CJK grep；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋PNG 导出，`色号`/`豆数`/`施工图` 三处 0 命中）——站内无「图片→拼豆施工图」工具，**真缺口确凿**。
+- **ID `pindou_blueprint`、Path `/tools/pindou-blueprint`、模板/js/测试文件名均无占用**（全库 0 命中，含连字符变体）；Icon：**`grain` 全库 0 命中**（本轮实测；`grid_on`(4) 被 pixel_art_converter 等占用，`texture`(1)/`handyman`(1) 已被占用；开发轮精确值复测锁定全库唯一）。
+- 全量 Path **263**；本地分支 muse/dev-20260929；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD dc26684 与 origin 同头为最新。**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例。
+
+**选定理由**：① **顺位即理由**——193 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——站内仅 pixel_art_converter（美学口径），无色号/豆数/施工图口径；③ **痛点真实**——V2EX t/1246493（10-05）痛点原文：很多图片转像素画工具只能生成一张像素图，但真正拿来拼豆时，还需要自己数格子、找颜色、算每种豆子要买多少；拼豆手工在抖音/小红书热度高；④ **一天可高质量交付**——纯前端小/中难度，纯函数可写逐字向量；⑤ **图片处理簇补位**——与 pixel_art_converter 双向互链「像素一条龙」（美学像素画→施工图）；⑥ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「图片处理」类目（pixel_art_converter 同簇出链锚点）；New: true；ID `pindou_blueprint`、Path `/tools/pindou-blueprint`、Icon `grain`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：上传/拖拽图片（png/jpg/webp）→ canvas 像素化（格数可调，贴合 29×29 标准拼豆板）→ 就近匹配内置拼豆色板（常用 5mm 拼豆色号＋中文名＋符号标记）→ 渲染带色号符号的网格施工图 → 每色豆数统计＋购买清单 → 施工图 PNG 导出/打印；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `validatePindouConfig(config)` → `{ok:true}`（gridSize 超出 [8, 64] 抛 Error err.field='gridSize'；paletteSize 超出 [2, 64] 抛 Error err.field='paletteSize'；beadSizeMm 非 2.6/5 抛 Error err.field='beadSizeMm'）。
+  - `quantizeToPalette(pixels, palette)` → 量化色号序列（pixels 空数组/非数组抛 Error err.field='pixels'；palette 空数组/非数组抛 Error err.field='palette'）。
+  - `countBeads(quantized)` → `{colorId: count}` 色号→豆数映射（quantized 非数组/含非法色号抛 Error err.field='quantized'）。
+  - `buildPindouFileName()` → `pindou_blueprint_YYYYMMDD_HHmmss.png`。
+  - 内置色板为纯数据（色号＋中文名＋RGB＋符号），测试断言色板非空、色号唯一、RGB 合法。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `buildPindouFileName()` 匹配 `/^pindou_blueprint_\d{8}_\d{6}\.png$/`。
+  - `validatePindouConfig({gridSize: 7})` 抛 Error 且 `err.field==='gridSize'`；`validatePindouConfig({gridSize: 32, paletteSize: 1})` 抛 Error 且 `err.field==='paletteSize'`；`validatePindouConfig({gridSize: 32, paletteSize: 24, beadSizeMm: 3})` 抛 Error 且 `err.field==='beadSizeMm'`。
+  - `quantizeToPalette` 确定性：固定像素数组＋固定色板→输出色号序列逐字固定（含欧氏距离最近色断言）。
+  - `countBeads` 确定性：已知量化序列→`{colorId: count}` 逐字（如 `['A01','A01','B02']`→`{A01:2,B02:1}`）。
+  - `quantizeToPalette([], palette)` 抛 Error 且 `err.field==='pixels'`；`countBeads('x')` 抛 Error 且 `err.field==='quantized'`。
+  - 真实像素化（canvas 取色）走浏览器集成验证（node 无 canvas），评审轮在 `/tools/pindou-blueprint` 实测图片→施工图端到端。
+- **真限制（页面明示）**：① 屏幕取色与实物豆子存在色差，仅供参考；② 色号体系为常用整理，非官方全库；③ 大尺寸板/高格数受浏览器内存限制；④ 纯本地处理，图片不上传。
+- **互链**：与 pixel_art_converter 双向互链「像素一条龙」（美学像素画→施工图）；施工图页提示「想先做像素风预览？」。
+
+**验收标准**：
+1. 上传/拖拽图片 → 格数可调像素化 → 带色号符号的网格施工图渲染 → 每色豆数统计＋购买清单 → PNG 导出/打印。
+2. 纯函数契约 node 测试全过（validatePindouConfig/quantizeToPalette/countBeads/buildPindouFileName 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 263→264、ID/Path/Icon/Category）。
+3. 真限制在页面明示（四条：色差提示／色号体系非官方全库／浏览器内存限制／纯本地零上传）。
+4. `/tools/pindou-blueprint` 注册，「图片处理」类目，New: true；旧测试 Path 断言 263→264 同步。
+5. go build/vet 通过；本地 `/tools/pindou-blueprint` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与 pixel_art_converter 双向互链「像素一条龙」。
+
+**预计改动文件**（5 项）：
+1. `templates/pindou_blueprint.html`（页面＋上传/参数面板＋施工图渲染＋豆数清单＋真限制＋SEO 面板）
+2. `static/js/pindou_blueprint.js`（validatePindouConfig/quantizeToPalette/countBeads/buildPindouFileName 纯函数＋内置色板数据＋canvas 像素化＋施工图渲染＋PNG 导出/打印交互）
+3. `tests/pindou_blueprint.test.js`（node 纯逻辑测试，含确定性向量逐字＋err.field＋注册断言）
+4. `tools/categories.go`（注册：ID `pindou_blueprint`、Path `/tools/pindou-blueprint`、Icon `grain`、Category 图片处理、New: true）
+5. 旧测试 Path 总数断言 263→264 同步
+
+**顺位递补**（无硬伤）：键盘按键测试 → 递补待命（193 轮晋升 P2 第二顺位；`键盘测试`/`keycode`/`keyboard_tester` 0 命中复测；`keydown` 全为快捷键监听误命中）；照片拼图合成器（照片墙） → 第三顺位待命（193 轮新候选晋升 P2；`collage`/`photo_wall`/`拼合`/`照片墙` 0 命中；`拼图` 仅命中 nine_grid（切分口径）与 img_stitch（长条拼接口径））。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究轮惯例；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 05:00 · 通用调研第一百九十三轮，接 03:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**GIF 合成器交付闭环**（dc26684 新增：上传/拖拽多图→拖拽排序→逐帧时长 10~10000ms＋循环开关（NETSCAPE2.0）＋尺寸上限 64~1920→canvas 统一尺寸→复用 gif_compress 自研编码器本地编码 GIF89a（模板取 window.GifCompress，顺手给 gif_compress.js DOMContentLoaded 加跨页守卫）→逐帧预览播放→下载 .gif；纯函数契约 validateGifConfig（frameCount[1,60]／frameDelayMs[10,10000]／maxSize[64,1920] err.field 命名）／normalizeGifFrames（空/非图片/非数组 err.field='frames'）／buildGifFileName（gif_maker_YYYYMMDD_HHmmss.gif），node 测试 99 断言全过（含确定性向量逐字＋quantizeFrames→encodeGif 真实 LZW 编码＋GIF89a 文件头逐字＋回解析验证）；真限制四条页面明示；ID gif_maker、Path /tools/gif-maker、Icon gif_box（全库唯一）、Category 图片处理、New: true；与 gif_compress 双向互链「GIF 一条龙」；旧测试 Path 断言 262→263 同步；全量 148 个 node 测试文件全绿；go build/vet 通过，本地 /tools/gif-maker 实测 200，零外部 script 请求；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head dc26684），categories.go 未注册，未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：图片转拼豆施工图生成器→首席／键盘按键测试→第二／**照片拼图合成器（照片墙）→新候选晋升 P2 第三顺位**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:00 轮，优先小难度纯前端。
+**本轮三件事**（05:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 dc26684（GIF 合成器新增，node 99 断言全过，Path 262→263，全量 148 个 node 测试文件全绿）／6d891a3（浏览器 FPS/GPU 性能速测）／6d3ab30（二维码扫描器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **263**；`ls templates/gif_maker.html static/js/gif_maker.js tests/gif_maker.test.js` 均存在（categories.go 已注册 gif_maker）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go 未注册）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（已知 hosts 已自动重记，无报错），本地 HEAD dc26684 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：晋升前必须 grep 模板＋static/js＋tools/categories.go 三处实测，「功能词＋ID 词」双模式交叉；CJK 检索词用 python `chr(0x...)` 运行时构造，命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - GIF 合成器：已交付（/tools/gif-maker，Path 262→263，HEAD dc26684）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head dc26684；categories.go 未注册）——移出 Top3。
+   - 图片转拼豆施工图生成器：`拼豆`／`perler` 三处 **0 命中**（本轮复测，`chr(0x...)` 构造检索词）；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋PNG 导出，无色号/豆数/施工图）——**递进首席**。
+   - 键盘按键测试：`键盘测试`／`keycode`／`key_code`／`keyboard_tester` 三处 **0 命中**（本轮复测）；`keydown` 命中全为各工具快捷键监听（抽查确认为误命中），无专用测试工具——**递进第二顺位**。
+   - **照片拼图合成器（照片墙）**：`collage`／`photo_wall`／`photomosaic` ASCII 三处 **0 命中**；CJK `拼合` 三处 **0 命中**；`拼图` 命中仅 nine_grid（**口径不同**：单图 3×3/2×2 切分下载）与 img_stitch（**口径不同**：多图纵向/横向拼成长条），`照片墙` **0 命中**——站内无「多图→布局模板拼合成一张」工具，**真缺口确凿**，新候选晋升 P2 第三顺位（晋升理由：真缺口确凿；外部信号：365lab 40+ 工具榜单「拼图 / 九宫格 / 照片墙」为其推荐工具之一；痛点真实——多张照片想拼成一张发朋友圈/做封面，手机 App 要下载/有水印，在线拼图站多为英文或要求上传；纯前端小难度：上传/拖拽多图→选择布局模板（2/3/4/6 宫格等）→拖拽换位/调间距/圆角/背景色→canvas 合成→下载 PNG，纯函数可写逐字向量 computeCollageLayout（布局坐标计算确定性）＋err.field；图片处理簇补位（img_stitch／nine_grid 同簇联动「拼图一条龙」：合成↔切分↔长拼）；真限制：输出分辨率受浏览器内存限制、大图多图合成可能卡顿、纯本地零上传，须明示；Icon `apps` 全库 0 占用（`dashboard`(1)／`photo_library`(1)／`grid_view`(1) 已被占用，开发轮精确值复测锁定全库唯一））。
+   - favicon 生成器：/tools/favicon-generator 已交付（ID favicon_generator；`favicon` 在各模板命中多为 `<link rel=icon>` 引用，`图标生成` CJK 0 命中证伪）——确认消解。
+   - Base64 图片编码：base64 工具模板已含「文本、图片Base64」——确认消解。
+   - CSS 渐变生成器：css_gradient_generator 已交付——确认消解；代码截图美化器：code_screenshot_beautifier 已交付——确认消解。
+   - 打印测试页：/tools/printer-test-page 已交付（ID printer_test_page；V2EX t/1251680 PrintPageCheck 信号→站内已覆盖，确认消解）。
+   - 网名生成器：`网名生成`／`随机名` 0 命中（`昵称` 命中仅 fancy_fonts 花体字口径）——真缺口但娱乐口径＋无外部需求信号，低优先观察，不晋升。
+   - 数独求解器：`sudoku` ASCII 三处 0 命中真缺口（192 轮 codepoint 实锤），游戏/娱乐口径且无外部信号，低优先保持。
+3. 新信号扫描（V2EX＋中文榜单＋HN 为本轮主线）：**新候选 1 项（照片拼图合成器，站内缺口实测＋365lab 榜单信号晋升），其余全部确认消解**——
+   - V2EX：t/1252552 tubox（10-28；**确认消解**）／t/1252069 MyEnhancer（10-26；AI＋付费积分，**AI/后端口径，新消解**）／**t/1251680 PrintPageCheck（10-25；在线打印机测试页，站内 printer_test_page 已覆盖，确认消解）**／t/1253201 自媒体获客四工具（10-30；**桌面/插件口径，确认消解**）／t/1250428 md2chat（10-20；站内 md_to_chat 已覆盖，**确认消解**）／t/1250522 protohub（10-21；**需后端托管服务口径，确认消解**）／t/1253518 搭手（11-01；**桌面 Electron 口径，确认消解**）／t/1247382 DayMug（10-09；远程 AI 智能体＋订阅，**需后端/AI 口径，新消解**）／**t/1253111 果农（10-30；iOS App＋App Store Connect API，移动应用口径，新消解）**／**t/1251045 sshtun（10-28；桌面隧道代理，桌面/网络口径，新消解）**／t/1248172 在线简历生成器（10-12；**站内 resume_builder 已覆盖，确认消解**）／t/1247740 OpenLux（10-31；AI API 额度活动，**AI 服务口径，新消解**）；
+   - 中文榜单（懒大王 6／bpdh TOP11／365lab 40+）：PDF/图片压缩/二维码/证件照/白噪音/批量重命名/算术题/屏幕常亮站内已交付覆盖；抠图/超分 ONNX 硬伤；视频转 GIF 为 ffmpeg.wasm 硬伤口径；临时邮箱/图床需后端硬伤；「拼图/九宫格/照片墙」→站内有切分（nine_grid）与长拼（img_stitch），缺「布局拼合」口径→**新候选信号**；确认消解；
+   - HN Show HN：Return Ledger（浏览器记账，**金融口径，用户 10-18 方向修正排除，新消解**）／Infectio（浏览器恶意软件分析，WASM 重量级＋安全敏感，**口径不符，新消解**）／ToolKuai（客户端媒体工具箱，ONNX 口径，**确认消解**）／BoardScout（搜索路由器，弱观察，**新消解**）／Highlighter Extension（浏览器插件口径，**新消解**）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **图片转拼豆施工图生成器** — 递进首席（191 轮新候选晋升 P2 第三顺位；192 轮递进第二；本轮 `拼豆`/`perler` 三处 0 命中复测；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋PNG 导出，`色号`/`豆数`/`施工图` 0 命中）；V2EX t/1246493（10-05）信号；痛点：像素图只能看不能拼，还需自己数格子、找颜色、算豆数；实现：上传图片→canvas 像素化（格数可调，贴合 29×29 标准板）→就近匹配内置拼豆色板→带色号符号的网格施工图→每色豆数统计＋购买清单→PNG 导出/打印；纯前端小/中难度；图片处理簇补位（pixel_art_converter 同簇联动「像素一条龙」）；真限制：屏幕取色与实物豆子存在色差、色号体系为常用整理非官方全库、大尺寸板受浏览器内存限制，须明示；Icon 注意 `grid_on` 已被 pixel_art_converter 占用，开发轮另选全库唯一值）。
+2. **键盘按键测试** — 递进第二顺位（192 轮新候选晋升 P2 第三顺位；本轮 `键盘测试`/`keycode`/`key_code`/`keyboard_tester` 三处 0 命中复测；`keydown` 命中全为快捷键监听误命中；痛点：新键盘验全键、按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；实现：可视化键盘布局→keydown/keyup 实时高亮＋已触发/未触发统计→连击检测→测试报告一键复制；纯前端小难度；真限制：浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、需手动切换布局（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（开发轮精确值复测锁定））。
+3. **照片拼图合成器（照片墙）** — 新候选晋升 P2 第三顺位（本轮站内缺口实测补位＋365lab 榜单信号；`collage`/`photo_wall`/`photomosaic` ASCII 三处 0 命中；`拼合`/`照片墙` CJK 0 命中；`拼图` 命中仅 nine_grid（切分口径）与 img_stitch（长条拼接口径），真缺口确凿；外部信号：365lab 40+ 榜单「拼图 / 九宫格 / 照片墙」为其推荐工具；痛点：多张照片想拼成一张发朋友圈/做封面，手机 App 要下载/有水印，在线拼图站多为英文或要求上传；实现：上传/拖拽多图→布局模板选择（2/3/4/6 宫格等）→拖拽换位＋间距/圆角/背景色可调→canvas 合成→下载 PNG；纯前端小难度（纯函数可写逐字向量：computeCollageLayout 布局坐标计算确定性＋err.field）；图片处理簇补位（img_stitch／nine_grid 同簇联动「拼图一条龙」：合成↔切分↔长拼）；真限制：输出分辨率受浏览器内存限制、大图多图合成可能卡顿、纯本地零上传，须明示；Icon `apps` 全库 0 占用（`dashboard`(1)／`photo_library`(1)／`grid_view`(1) 已被占用，开发轮精确值复测锁定全库唯一））。
+
+其余观察项保持原状：网名生成器（193 轮新观察；`网名生成`/`随机名` 0 命中真缺口，但娱乐口径无外部信号，低优先）／ReqForge 式 HTTP 请求→代码片段生成器（185 轮弱观察；curl_to_requests 口径已覆盖，多语言输出价值被稀释，低优先）／**OFD 转 PDF（186 轮弱观察**，排版引擎硬伤，低优先）／TTS 文字转语音文件导出（185 轮弱观察；speechSynthesis 硬伤，低优先）／**高精度计算器 BigNumber（177 轮弱观察**，用户 10-18 方向修正口径风险，低优先保持）／**字体搭配预览器（129 轮观察**，外部 webfont 请求与家族零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（177 轮弱观察；ONNX 硬伤，低优先）／LLM Token 成本估算（177 轮观察；低优先）／一键图片去背景（165 轮；ONNX 硬伤，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察；**注意：已交付的是「网页表格粘贴转 CSV」（TSV 原始文本输入），非 PM 降回的「Markdown 表格转 CSV」（Markdown 格式输入），口径不同，观察项保留**）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写（realtime_dictation 已交付口径相邻）／HEIC（硬伤未解）／数独求解器（观察备选；`sudoku` ASCII 三处 0 命中真缺口（192 轮 codepoint 实锤），游戏/娱乐口径且无外部需求信号，低优先保持）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十三轮：GIF 合成器交付闭环（dc26684 新增；`/tools/gif-maker` 已注册；旧测试 Path 断言 262→263 同步；全量 148 个 node 测试文件全绿；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head dc26684；categories.go 未注册），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：图片转拼豆施工图生成器→首席（`拼豆`/`perler` 0 命中复测；`pixel_art` 仅命中 pixel_art_converter 口径不同）／键盘按键测试→第二（`键盘测试`/`keycode`/`key_code`/`keyboard_tester` 0 命中复测；`keydown` 全为快捷键监听误命中）／**照片拼图合成器（照片墙）→新候选晋升 P2 第三顺位**（站内缺口实测＋365lab 榜单信号；`collage`/`photo_wall`/`photomosaic` ASCII 0 命中；`拼合`/`照片墙` CJK 0 命中；`拼图` 仅命中 nine_grid（切分）与 img_stitch（长条拼接），口径不同，真缺口确凿；Icon `apps` 0 占用）；本轮 fetch 一次成功，本地 HEAD dc26684 与 origin 同头为最新；新信号扫描：V2EX（t/1252552 tubox 确认消解／t/1252069 MyEnhancer AI/付费新消解／**t/1251680 PrintPageCheck→站内 printer_test_page 已覆盖，确认消解**／t/1253201 自媒体获客确认消解／t/1250428 md2chat 确认消解／t/1250522 protohub 确认消解／t/1253518 搭手确认消解／t/1247382 DayMug 需后端/AI 新消解／**t/1253111 果农 iOS 应用口径新消解**／**t/1251045 sshtun 桌面口径新消解**／t/1248172 简历确认消解／t/1247740 OpenLux AI 服务新消解）＋中文榜单（懒大王 6／bpdh TOP11／365lab 40+：已交付覆盖项消解，抠图/超分 ONNX 硬伤，视频转 GIF ffmpeg.wasm 硬伤，临时邮箱/图床需后端硬伤；「拼图/九宫格/照片墙」→站内缺布局拼合口径→**新候选信号**）＋HN Show HN（Return Ledger 金融口径方向修正排除新消解／Infectio WASM 重量级新消解／ToolKuai 确认消解／BoardScout 弱观察新消解／Highlighter 插件口径新消解）；网名生成器新观察（真缺口，娱乐口径无信号，低优先）；favicon/base64 图片/渐变/代码截图美化器口径复核确认已覆盖消解；ReqForge 维持观察；高精度计算器方向修正口径风险低优先保持；数独求解器真缺口但游戏口径无外部信号，低优先保持；OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／AI 图片超分／一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过；全量 **263 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| GIF 合成器（多图合成 GIF） | 已交付划出（dc26684 新增：上传/拖拽多图→拖拽排序→逐帧时长 10~10000ms＋循环开关（NETSCAPE2.0）＋尺寸上限 64~1920→canvas 统一尺寸→复用 gif_compress 自研编码器（window.GifCompress，顺手给其 DOMContentLoaded 加跨页守卫）本地编码 GIF89a→逐帧预览播放→下载 .gif；纯函数契约 validateGifConfig（frameCount[1,60]／frameDelayMs[10,10000]／maxSize[64,1920] err.field 命名）／normalizeGifFrames（空/非图片/非数组 err.field='frames'）／buildGifFileName（gif_maker_YYYYMMDD_HHmmss.gif），node 测试 99 断言全过（含确定性向量逐字＋真实 LZW 编码＋GIF89a 文件头逐字＋回解析验证）；真限制四条页面明示；ID gif_maker、Path /tools/gif-maker、Icon gif_box（全库唯一）、Category 图片处理、New: true；与 gif_compress 双向互链「GIF 一条龙」；旧测试 Path 断言 262→263 同步；全量 148 个 node 测试文件全绿；go build/vet 通过，本地 /tools/gif-maker 实测 200，零外部 script 请求；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head dc26684；categories.go 未注册；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 图片转拼豆施工图生成器 | 递进首席（191 轮新候选晋升 P2 第三顺位；192 轮递进第二；本轮 `拼豆`/`perler` 三处 0 命中复测（`chr(0x...)` 构造检索词）；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋PNG 导出，`色号`/`豆数`/`施工图` 0 命中）；V2EX t/1246493（10-05）信号；痛点：像素图只能看不能拼，还需自己数格子、找颜色、算豆数；实现：上传图片→canvas 像素化（格数可调，贴合 29×29 标准板）→就近匹配内置拼豆色板→带色号符号的网格施工图→每色豆数统计＋购买清单→PNG 导出/打印；纯前端小/中难度；图片处理簇补位（pixel_art_converter 同簇联动「像素一条龙」）；真限制：屏幕取色与实物豆子存在色差、色号体系为常用整理非官方全库、大尺寸板受浏览器内存限制，须明示；Icon 注意 `grid_on` 已被 pixel_art_converter 占用，开发轮另选全库唯一值） | 小/中 | P2（留池） |
+| 键盘按键测试 | 递进第二顺位（192 轮新候选晋升 P2 第三顺位；本轮 `键盘测试`/`keycode`/`key_code`/`keyboard_tester` 模板＋static/js＋tools/categories.go 三处 0 命中复测；`keydown` 命中全为各工具快捷键监听误命中；痛点：新键盘验全键、按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；实现：可视化键盘布局→keydown/keyup 实时高亮＋已触发/未触发统计→连击检测→测试报告一键复制；纯前端小难度；真限制：浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、需手动切换布局（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（开发轮精确值复测锁定）） | 小 | P2（留池） |
+| 照片拼图合成器（照片墙） | 193 轮新候选晋升 P2 第三顺位（站内缺口实测＋365lab 榜单信号；`collage`/`photo_wall`/`photomosaic` ASCII 三处 0 命中；`拼合`/`照片墙` CJK（`chr(0x...)` 构造）三处 0 命中；`拼图` 命中仅 nine_grid（单图切分口径）与 img_stitch（长条拼接口径），口径不同，真缺口确凿；外部信号：365lab 40+ 工具榜单「拼图 / 九宫格 / 照片墙」为其推荐工具；痛点：多张照片想拼成一张发朋友圈/做封面，手机 App 要下载/有水印，在线拼图站多为英文或要求上传；实现：上传/拖拽多图→布局模板选择（2/3/4/6 宫格等）→拖拽换位＋间距/圆角/背景色可调→canvas 合成→下载 PNG；纯前端小难度（纯函数可写逐字向量：computeCollageLayout 布局坐标计算确定性＋err.field）；图片处理簇补位（img_stitch／nine_grid 同簇联动「拼图一条龙」：合成↔切分↔长拼）；真限制：输出分辨率受浏览器内存限制、大图多图合成可能卡顿、纯本地零上传，须明示；Icon `apps` 全库 0 占用（`dashboard`(1)／`photo_library`(1)／`grid_view`(1) 已被占用，开发轮精确值复测锁定全库唯一）） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第一百九十三轮——GIF 合成器交付闭环（dc26684；`/tools/gif-maker` 已注册；旧测试 Path 断言 262→263 同步；全量 148 个 node 测试文件全绿；候选池划出），全量 **263 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head dc26684），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：图片转拼豆施工图生成器→首席（`拼豆`/`perler` 0 命中复测；`pixel_art` 仅命中 pixel_art_converter 口径不同）／键盘按键测试→第二（`键盘测试`/`keycode`/`keyboard_tester` 0 命中复测；`keydown` 全为快捷键监听误命中）／**照片拼图合成器（照片墙）→新候选晋升 P2 第三顺位**（站内缺口实测＋365lab 榜单信号；`collage`/`photo_wall`/`photomosaic` ASCII 0 命中；`拼合`/`照片墙` CJK 0 命中；`拼图` 仅命中 nine_grid（切分）与 img_stitch（长条拼接）口径不同；Icon `apps` 0 占用）；本轮 fetch 一次成功，本地 HEAD dc26684 与 origin 同头为最新；新信号扫描：V2EX（t/1252552 tubox 确认消解／t/1252069 MyEnhancer AI/付费新消解／**t/1251680 PrintPageCheck→站内 printer_test_page 已覆盖，确认消解**／t/1253201 自媒体获客确认消解／t/1250428 md2chat 确认消解／t/1250522 protohub 确认消解／t/1253518 搭手确认消解／t/1247382 DayMug 需后端/AI 新消解／**t/1253111 果农 iOS 应用口径新消解**／**t/1251045 sshtun 桌面口径新消解**／t/1248172 简历确认消解／t/1247740 OpenLux AI 服务新消解）＋中文榜单（懒大王 6／bpdh TOP11／365lab 40+：已交付覆盖项消解，抠图/超分 ONNX 硬伤，视频转 GIF ffmpeg.wasm 硬伤，临时邮箱/图床需后端硬伤；「拼图/九宫格/照片墙」→站内缺布局拼合口径→**新候选信号**）＋HN Show HN（Return Ledger 金融口径方向修正排除新消解／Infectio WASM 重量级新消解／ToolKuai 确认消解／BoardScout 弱观察新消解／Highlighter 插件口径新消解）；网名生成器新观察（真缺口，娱乐口径无信号，低优先）；favicon/base64 图片/渐变/代码截图美化器口径复核确认已覆盖消解；ReqForge 维持观察；高精度计算器方向修正口径风险低优先保持；数独求解器真缺口但游戏口径无外部信号，低优先保持；OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／AI 图片超分／一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（known_hosts 已自动重记，无报错），本地 HEAD dc26684 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 dc26684（GIF 合成器新增，node 99 断言全过，Path 262→263，全量 148 个 node 测试文件全绿）／6d891a3（浏览器 FPS/GPU 性能速测新增）／6d3ab30（二维码扫描器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **263**；`ls templates/gif_maker.html static/js/gif_maker.js tests/gif_maker.test.js` 均存在（categories.go 已注册 gif_maker）；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go 未注册）；Top3 候选重叠复核（`gif_maker` 已交付划出；**图片转拼豆施工图生成器**：`拼豆`/`perler` 三处 0 命中（`chr(0x...)` 构造检索词复测）；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋PNG 导出，`色号`/`豆数`/`施工图` 0 命中），真缺口确凿；**键盘按键测试**：`键盘测试`/`keycode`/`key_code`/`keyboard_tester` 三处 0 命中；`keydown` 命中全为快捷键监听误命中；真缺口确凿；**照片拼图合成器**：`collage`/`photo_wall`/`photomosaic` ASCII 三处 0 命中；`拼合`/`照片墙` CJK 三处 0 命中；`拼图` 仅命中 nine_grid（切分）与 img_stitch（长条拼接）；真缺口确凿；**favicon**：/tools/favicon-generator 已交付（模板命中多为 `<link rel=icon>` 引用，`图标生成` 0 命中证伪）；**打印测试页**：/tools/printer-test-page 已交付（V2EX t/1251680 信号消解）；**网名生成器**：`网名生成`/`随机名` 0 命中真缺口但娱乐口径无信号，低优先观察；**数独求解器**：`sudoku` ASCII 0 命中真缺口（192 轮 codepoint 实锤），游戏口径无外部信号，低优先保持）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 03:00 · PM 选定轮，接 192 轮通用调研）
+
+**选定：GIF 合成器（多图合成 GIF）** — 本轮唯一任务（新工具）。
+
+**顺位**：192 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；192 轮已把「浏览器 FPS/GPU 性能速测」交付闭环（6d891a3，Path 261→262），候选池划出；简繁互转仍开发中，继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测）**：
+- `gif_maker`／`gifmaker`／`gif_compose` 在 templates＋static/js＋tools/categories.go 三处 **0 命中**（vendor 除外）；CJK `gif合成`／`合成gif` 由 192 轮以 `chr(0x...)` 构造检索词复测 0 命中，信任其复核结论，不重复跑展示层易变换的 CJK grep。
+- categories.go 中 `"gif` 前缀仅命中 gif_compress（ID `gif_compress`、Icon `gif`，压缩口径）；`svg_compressor` 为 SVG 口径；站内无「多图→GIF 合成」工具，**真缺口确凿**。
+- **ID `gif_maker`、Path `/tools/gif-maker`、模板/js/测试文件名均无占用**；Icon：`gif`(1) 被 gif_compress 占用、`animation`(1) 被 css_keyframe_generator 占用；**`gif_box` 全库 0 命中**（本轮实测；开发轮精确值复测锁定）。附：categories.go 存在约 38 个 Icon 值多处复用（如 image/code/http），但新工具仍按惯例取全库唯一值。
+- 全量 Path **262**；本地分支 muse/dev-20260929；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 6d891a3 与 origin 同头为最新。**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例。
+
+**选定理由**：① **顺位即理由**——192 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——站内仅 gif_compress（压缩口径）与 svg_compressor（SVG 口径），无多图合成 GIF 工具；③ **痛点真实**——多张截图/照片想合成 GIF（连拍拼短动画、截图步骤演示、表情包），在线 GIF Maker 多为英文站、要注册/排队/带水印/上传图片（外部信号：lizecheng.net「Turn a set of images into one animated GIF, entirely in your browser…no account, no watermark, no queue」／imagic-ai 本地编码 60 帧上限／kapwing GIF collage）；④ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量；⑤ **图片处理簇补位**——与 gif_compress 双向互链「GIF 一条龙」（合成→压缩）；⑥ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「图片处理」类目（gif_compress 同簇出链锚点）；New: true；ID `gif_maker`、Path `/tools/gif-maker`、Icon `gif_box`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：上传/拖拽多张图片（png/jpg/webp）→ 拖拽排序帧 → 逐帧时长（默认 500ms，可调）＋循环开关（NETSCAPE2.0）＋输出尺寸上限 → canvas 统一尺寸绘制 → 本地编码 GIF89a → 逐帧预览（播放/暂停）→ 下载 .gif；纯前端零上传。
+- **编码方案**（开发轮二选一，评审轮锁定）：① 复用站内 gif_compress 自研 GIF89a 解析与 LZW 编解码模式自研编码器；② vendored gifenc MIT 单文件（本地 static/vendor，零外部请求，qrcode-generator-1.4.4 vendor 先例）。不引入 wasm/ffmpeg（视频输入口径为硬伤，本工具不做）。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `validateGifConfig(config)` → `{ok:true}`（frameCount 超出 [1, 60] 抛 Error err.field='frameCount'；frameDelayMs 超出 [10, 10000] 抛 Error err.field='frameDelayMs'；maxSize 超出 [64, 1920] 抛 Error err.field='maxSize'）。
+  - `normalizeGifFrames(filesMeta)` → 排序后帧元数组（空数组抛 Error err.field='frames'；非图片类型抛 Error err.field='frames'；非数组抛 Error err.field='frames'）。
+  - `buildGifFileName()` → `gif_maker_YYYYMMDD_HHmmss.gif`。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `buildGifFileName()` 匹配 `/^gif_maker_\d{8}_\d{6}\.gif$/`。
+  - `validateGifConfig({frameCount: 0})` 抛 Error 且 `err.field==='frameCount'`；`validateGifConfig({frameCount: 10, frameDelayMs: 5})` 抛 Error 且 `err.field==='frameDelayMs'`；`validateGifConfig({frameCount: 10, frameDelayMs: 500, maxSize: 4096})` 抛 Error 且 `err.field==='maxSize'`。
+  - `normalizeGifFrames([])` 抛 Error 且 `err.field==='frames'`；`normalizeGifFrames([{name:'a.txt', type:'text/plain'}])` 抛 Error 且 `err.field==='frames'`。
+  - 真实编码（canvas/LZW）走浏览器集成验证（node 无 canvas），评审轮在 `/tools/gif-maker` 实测多图→GIF 端到端并校验文件头 GIF89a。
+- **真限制（页面明示）**：① 大图/多帧受浏览器内存限制（建议总帧数≤60、单帧边长≤1920）；② GIF 仅 256 色，照片类渐变可能出现色带；③ 不支持视频输入（无视频转 GIF 口径）；④ 纯本地处理，图片不上传。
+- **互链**：与 gif_compress 双向互链「GIF 一条龙」（合成→压缩）；合成页提示「文件太大？去压缩一下」。
+
+**验收标准**：
+1. 上传/拖拽多图 → 拖拽排序 → 逐帧时长＋循环开关＋尺寸上限 → 逐帧预览（播放/暂停）→ 下载 .gif（文件头 GIF89a 可验）。
+2. 纯函数契约 node 测试全过（validateGifConfig/normalizeGifFrames/buildGifFileName 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 262→263、ID/Path/Icon/Category）。
+3. 真限制在页面明示（四条：内存限制／256 色色带／不支持视频输入／纯本地零上传）。
+4. `/tools/gif-maker` 注册，「图片处理」类目，New: true；旧测试 Path 断言 262→263 同步。
+5. go build/vet 通过；本地 `/tools/gif-maker` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与 gif_compress 双向互链「GIF 一条龙」。
+
+**预计改动文件**（5 项＋可选 vendor）：
+1. `templates/gif_maker.html`（页面＋上传/排序/参数面板＋预览播放＋真限制＋SEO 面板）
+2. `static/js/gif_maker.js`（validateGifConfig/normalizeGifFrames/buildGifFileName 纯函数＋canvas 帧绘制＋本地 GIF 编码＋拖拽排序＋下载交互）
+3. `tests/gif_maker.test.js`（node 纯逻辑测试，含确定性向量逐字＋err.field＋注册断言）
+4. `tools/categories.go`（注册：ID `gif_maker`、Path `/tools/gif-maker`、Icon `gif_box`、Category 图片处理、New: true）
+5. 旧测试 Path 总数断言 262→263 同步
+6. （可选）`static/vendor/gifenc*`（若开发轮选 vendored gifenc MIT 单文件方案；选自研复用则无此项）
+
+**顺位递补**（无硬伤）：图片转拼豆施工图生成器 → 递补待命（192 轮晋升 P2 第二顺位；`拼豆`/`perler` 0 命中复测；站内 pixel_art_converter 口径不同）；键盘按键测试 → 第三顺位待命（192 轮晋升 P2；`键盘测试`/`keycode`/`keyboard_tester` 0 命中；`keydown` 84 命中全为快捷键监听）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究轮惯例；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 03:00 · 通用调研第一百九十二轮，接 01:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**浏览器 FPS/GPU 性能速测交付闭环**（6d891a3 新增：WebGL 可调负载＋rAF 帧时间统计→成绩单（平均 FPS／1% Low／P95 帧时间／抖动 stddev／掉帧率）＋debug_renderer_info 读 GPU 型号→档位评级→实时 FPS 曲线→报告复制/下载；纯函数契约 aggregateFrameStats/classifyFpsGrade/validateBenchmarkConfig/buildFpsReportName，node 82 断言全过（确定性向量逐字）；真限制四条页面明示；ID fps_gpu_benchmark、Path /tools/fps-gpu-benchmark、Icon shutter_speed（全库唯一）、Category 开发工具、New；与 llm_hardware_checker 单向出链「硬件一条龙」；旧测试 Path 断言 261→262 同步；全量 147 个 node 测试文件全绿；go build/vet 通过，本地实测 200，零外部 script 请求；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head 6d891a3），categories.go 未注册，未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：GIF 合成器（多图合成 GIF）→首席／图片转拼豆施工图生成器→第二／**键盘按键测试→新候选晋升 P2 第三顺位**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 轮，优先小难度纯前端。
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 6d891a3（浏览器 FPS/GPU 性能速测新增，node 82 断言全过，Path 261→262，全量 147 个 node 测试文件全绿）／6d3ab30（二维码扫描器）／a4601f0（Docker Compose→K8s YAML 转换器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **262**；`ls templates/fps_gpu_benchmark.html static/js/fps_gpu_benchmark.js tests/fps_gpu_benchmark.test.js` 均存在（categories.go 已注册 fps_gpu_benchmark）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go 未注册）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（VM 换机又清空 known_hosts，报 Warning: Permanently added 'github.com' (ED25519)，StrictHostKeyChecking=no 自动重记，未再报 Host key verification failed），本地 HEAD 6d891a3 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训：晋升前必须 grep 模板＋static/js＋tools/categories.go 三处实测，「功能词＋ID 词」双模式交叉；本轮新增 CJK 管线教训见第 4 条）**：
+   - 浏览器 FPS/GPU 性能速测：已交付（/tools/fps-gpu-benchmark，Path 261→262，HEAD 6d891a3）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head 6d891a3；categories.go 未注册）——移出 Top3。
+   - GIF 合成器（多图合成 GIF）：`gif_maker`／`gif合成`／`合成gif`／`gif_compose` 三处 **0 命中**（本轮复测；vendor 除外）；站内仅 gif_compress（压缩口径）与 svg_compressor（SVG 口径），无「多图→GIF 合成」工具——**递进首席**。
+   - 图片转拼豆施工图生成器：`拼豆`／`perler` 三处 **0 命中**（本轮复测，`chr(0x...)` 运行时构造检索词规避管线 CJK 变换）；`pixel_art` 仅命中 pixel_art_converter（口径不同，无色号/豆数/施工图）——**递进第二顺位**。
+   - **键盘按键测试**：`键盘测试`／`keycode`／`key_code`／`keyboard_tester` 三处 **0 命中**（`chr(0x...)` 构造检索词复测）；`keydown` 命中 84 文件**全为各工具快捷键监听**（抽查 app_detail／img_resize／json_yaml_converter 均为 document.addEventListener('keydown'…) 快捷键，无测试口径）——**新候选晋升 P2 第三顺位**（晋升理由：真缺口确凿；痛点高频——新键盘到手验全键、个别按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；纯前端小难度：可视化键盘布局＋keydown/keyup 实时高亮＋已触发/未触发统计＋连击检测＋测试报告一键复制，纯函数可写逐字向量 normalizeKeyEvent/detectChatter＋err.field；真限制：浏览器拿不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、不同布局需手动切换（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（`key`(2)／`vpn_key`(4) 已被占用，开发轮精确值复测锁定）。
+   - 数独求解器：`sudoku` ASCII 三处 **0 命中**；`数独` 仅命中 css_background_pattern_generator 两处，经 codepoint 解码确认为文档「参数独立」中的子串误命中（非数独功能）——真缺口依然成立，但游戏/娱乐口径＋无外部需求信号，**低优先保持**，不晋升。
+3. 新信号扫描（V2EX＋中文榜单＋HN 为本轮主线）：**新候选 0 项（全部确认消解）；第三顺位由站内缺口实测补位（键盘按键测试），如实标注非外部信号晋升**——
+   - V2EX：t/1252069 MyEnhancer（10-26；AI 照片增强，第三方图像服务＋付费积分，**AI/后端口径，新消解**）／t/1253431 VS Code 扩展（10-31；**插件口径，新消解**）／t/1249758 NASDrop（10-18；群晖/NAS 下载工具，**桌面/NAS 口径，新消解**）／t/1252312 AI 视频复刻（10-27；**AI 视频生成＋后端口径，新消解**）／t/1253201 自媒体获客四工具（10-30；**桌面/插件口径，确认消解**）／t/1253566 TelunKey（11-01；macOS 快捷启动桌面软件，**桌面口径，新消解**）／t/1253624 OffRails（11-01；低价 AI 对话/做图服务，**AI 服务口径，新消解**）／t/1253416 xrhshui（10-31；浏览器游戏站，**游戏口径，新消解**；ToolWeb 为工具站）／t/1252552 tubox（10-28；**确认消解**）／t/1253518 搭手（11-01；**桌面 Electron 口径，确认消解**）；
+   - 中文榜单（懒大王 5／bpdh TOP11／365lab 40+）：图片压缩→img_compress 已覆盖／PDF 工具箱→站内 pdf 簇已覆盖／一键抠图→ONNX 硬伤／二维码→qrcode/qr_scanner 已覆盖／123apps 视频剪辑/视频转 GIF→**视频转 GIF 为 ffmpeg.wasm 硬伤口径**（侧面印证 GIF 创作需求，呼应 190 轮 Meme Video Maker 备注）／临时邮箱→**需后端收信硬伤**，确认消解；
+   - HN Show HN：Mii Maker（头像生成器，小众无需求信号，**新消解**）／ToolHop（200+ 工具箱合集，**合集口径，确认消解**）／TalkNow（浏览器通话，**WebRTC 信令硬伤，新消解**）／Enact（AI 演讲评分，**需 AI，新消解**）／Commentblocks（网站 QA SaaS，**需后端，新消解**）。
+4. **管线教训（已记入 AGENTS.md）**：exec 输出展示层可能变换 CJK（本轮实测：`grep -n "数独"` 命中的行在输出中显示为「斜线」；经 codepoint 解码实锤文件里是文档「参数独立」中的子串「数独」）。**CJK 零重叠复核必须 ASCII 模式打底**（sudoku／perler／keycode／keyboard_tester／gif_maker 等），CJK 检索词用 python `chr(0x...)` 运行时构造（避开 JSON `\u` 转义与管线变换），命中行用 codepoint（`[hex(ord(c)) for c in ctx]`）解码验真；勿凭展示文本断言。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **GIF 合成器（多图合成 GIF）** — 递进首席（190 轮新候选晋升 P2 第三顺位；191 轮递进第二；本轮 `gif_maker`/`gif合成`/`合成gif`/`gif_compose` 三处 0 命中（vendor 除外）复测；站内仅 gif_compress（压缩口径）与 svg_compressor（SVG 口径），无「多图→GIF 合成」工具，真缺口确凿；外部信号：lizecheng.net「Turn a set of images into one animated GIF, entirely in your browser…no account, no watermark, no queue」／imagic-ai（60 帧上限，逐帧时长/循环/尺寸可调，本地编码）／kapwing GIF collage；典型用途：连拍照片拼短动画、截图做步骤演示、反应 GIF/表情包；痛点：多张截图/照片想合成 GIF，在线 GIF Maker 多为英文站、要注册/排队/带水印/上传图片；上传/拖拽多张图片→拖拽排序→逐帧时长＋循环开关＋尺寸上限→canvas 绘制→复用站内 gif_compress 自研 GIF89a 解析与 LZW 编解码模式（或 vendored gifenc MIT 单文件，qrcode-generator-1.4.4 vendor 先例）本地编码→预览→下载 .gif；纯前端小难度（纯函数可写逐字向量：帧序列→GIF 字节流确定性 buildGifFrames，调色板量化函数确定性，非法参数 err.field）；图片处理簇补位（gif_compress 同簇联动「GIF 一条龙」：合成→压缩）；真限制：大图/多帧受浏览器内存限制、GIF 仅 256 色（照片类渐变可能出现色带）、不支持视频输入（ffmpeg.wasm 硬伤口径），须明示；Icon 注意 `gif`(1)/`animation`(1) 已被 gif_compress／css_keyframe_generator 占用，开发轮另选唯一值如 gif_box（须实测））。
+2. **图片转拼豆施工图生成器** — 递进第二顺位（191 轮新候选晋升 P2 第三顺位；本轮 `拼豆`/`perler` 三处 0 命中（`chr(0x...)` 构造检索词复测）；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋GameBoy/PICO-8 调色板＋PNG 导出，`色号`/`豆数`/`施工图` 0 命中）；V2EX t/1246493（10-05）信号「图片转拼豆图纸，支持色号、豆数统计和 PDF 施工图」；痛点原文：很多图片转像素画工具只能生成一张像素图，但真正拿来拼的时候，还需要自己数格子、找颜色、算每种豆子要买多少；拼豆手工在抖音/小红书热度高，需求真实；实现：上传图片→canvas 像素化（格数可调，贴合 29×29 标准拼豆板）→就近匹配内置拼豆色板（常见 5mm 拼豆色号＋中文名＋符号标记）→渲染带色号符号的网格施工图→每色豆数统计＋购买清单→施工图 PNG 导出/打印；纯前端小/中难度（纯函数可写逐字向量：像素量化确定性＋色号映射确定性＋err.field）；图片处理簇补位（pixel_art_converter 同簇联动「像素一条龙」：美学像素画→施工图）；真限制：屏幕取色与实物豆子存在色差、色号体系为常用整理非官方全库、大尺寸板受浏览器内存限制，须明示；Icon 注意 `grid_on` 已被 pixel_art_converter 占用，开发轮另选全库唯一值）。
+3. **键盘按键测试** — 新候选晋升 P2 第三顺位（本轮站内缺口实测补位，非外部信号晋升，如实标注；`键盘测试`/`keycode`/`key_code`/`keyboard_tester` 三处 0 命中；`keydown` 84 命中全为各工具快捷键监听（抽查 app_detail／img_resize／json_yaml_converter），无专用测试工具，真缺口确凿；痛点：新键盘到手想验证全键是否正常、个别按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；实现：可视化键盘布局→keydown/keyup 实时高亮＋已触发/未触发按键统计→连击检测（短时重复触发计数）→测试报告一键复制；纯前端小难度（纯函数可写逐字向量：normalizeKeyEvent 按键归一化确定性＋detectChatter 连击判定＋err.field）；真限制：浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、需手动切换键盘布局（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（`key`(2)/`vpn_key`(4) 已被占用，开发轮精确值复测锁定全库唯一））。
+
+其余观察项保持原状：ReqForge 式 HTTP 请求→代码片段生成器（185 轮弱观察；curl_to_requests 口径已覆盖，多语言输出价值被稀释，低优先）／**OFD 转 PDF（186 轮弱观察**，排版引擎硬伤，低优先）／TTS 文字转语音文件导出（185 轮弱观察；speechSynthesis 硬伤，低优先）／**高精度计算器 BigNumber（177 轮弱观察**，用户 10-18 方向修正口径风险，低优先保持）／**字体搭配预览器（129 轮观察**，外部 webfont 请求与家族零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（177 轮弱观察；ONNX 硬伤，低优先）／LLM Token 成本估算（177 轮观察；低优先）／一键图片去背景（165 轮；ONNX 硬伤，低优先）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／Markdown 表格转 CSV（164 轮 PM 降回观察；**注意：已交付的是「网页表格粘贴转 CSV」（TSV 原始文本输入），非 PM 降回的「Markdown 表格转 CSV」（Markdown 格式输入），口径不同，观察项保留**）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写（realtime_dictation 已交付口径相邻）／HEIC（硬伤未解）／数独求解器（观察备选；本轮复核：`sudoku` ASCII 三处 0 命中真缺口，`数独` 命中仅为 css_background_pattern_generator 文档「参数独立」子串误命中（codepoint 解码实锤），游戏/娱乐口径且无外部需求信号，低优先保持）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十二轮：浏览器 FPS/GPU 性能速测交付闭环（6d891a3 新增；`/tools/fps-gpu-benchmark` 已注册；旧测试 Path 断言 261→262 同步；全量 147 个 node 测试文件全绿；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 6d891a3；categories.go 未注册），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：GIF 合成器（多图合成 GIF）→首席（`gif_maker`/`gif合成`/`合成gif`/`gif_compose` 0 命中复测；站内仅 gif_compress（压缩）与 svg_compressor（SVG），无合成工具，真缺口确凿）／图片转拼豆施工图生成器→第二（`拼豆`/`perler` 0 命中复测（`chr(0x...)` 构造检索词）；`pixel_art` 仅命中 pixel_art_converter 口径不同）／**键盘按键测试→新候选晋升 P2 第三顺位**（本轮站内缺口实测补位，非外部信号晋升；`键盘测试`/`keycode`/`key_code`/`keyboard_tester` 0 命中；`keydown` 84 命中全为快捷键监听；可视化键盘＋实时高亮＋连击检测＋报告复制；纯前端小难度；真限制：系统级组合键捕获不到/Fn 键行为各异/需切换布局，须明示；Icon `keyboard` 0 占用）；本轮 fetch 一次成功（VM 换机又清空 known_hosts，StrictHostKeyChecking=no 自动重记 github.com ED25519，未再报 Host key verification failed），本地 HEAD 6d891a3 与 origin 同头为最新；新信号扫描：V2EX（t/1252069 MyEnhancer AI/付费积分新消解／t/1253431 VS Code 插件口径新消解／t/1249758 NASDrop NAS/桌面新消解／t/1252312 AI 视频复刻新消解／t/1253201 自媒体获客确认消解／t/1253566 TelunKey 桌面新消解／t/1253624 OffRails AI 服务新消解／t/1253416 浏览器游戏站游戏口径新消解／t/1252552 tubox 确认消解／t/1253518 搭手确认消解）＋中文榜单（懒大王 5／bpdh TOP11／365lab 40+：PDF/图片压缩/二维码站内已交付覆盖，抠图 ONNX 硬伤，视频转 GIF 为 ffmpeg.wasm 硬伤口径（侧面印证 GIF 创作需求），临时邮箱需后端收信硬伤，确认消解）＋HN Show HN（Mii Maker 小众新消解／ToolHop 合集口径确认消解／TalkNow WebRTC 信令硬伤新消解／Enact 需 AI 新消解／Commentblocks 需后端新消解）；**管线教训**：exec 输出 CJK 可能被展示层变换（本轮 `数独` 显示为「斜线」实锤；CJK 零重叠复核须 ASCII 模式打底＋`chr(0x...)` 构造检索词＋命中行 codepoint 解码验真，已记入 AGENTS.md）；ReqForge 维持观察；高精度计算器方向修正口径风险低优先保持；数独求解器本轮复核真缺口但游戏口径无外部信号，低优先保持；OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／AI 图片超分／一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过；全量 **262 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 浏览器 FPS/GPU 性能速测 | 已交付划出（6d891a3 新增：WebGL 可调负载（低/中/高/自定义：三角形数量、渲染分辨率倍数、抗锯齿/特效开关）＋requestAnimationFrame 帧时间统计→成绩单（平均 FPS、1% Low FPS、P95 帧时间、帧时间抖动 stddev、掉帧率>33.3ms 占比）＋WEBGL_debug_renderer_info 读 GPU 型号/供应商→档位评级（流畅≥55/良好≥30/卡顿）→实时 FPS 曲线→报告一键复制/下载；纯函数契约 aggregateFrameStats/classifyFpsGrade/validateBenchmarkConfig/buildFpsReportName（非法参数抛 Error，err.field 命名），node 测试 82 断言全过（确定性向量逐字）；真限制四条页面明示；ID fps_gpu_benchmark、Path /tools/fps-gpu-benchmark、Icon shutter_speed（全库唯一）、Category 开发工具、New: true；与 llm_hardware_checker 单向出链「硬件一条龙」；旧测试 Path 断言 261→262 同步；全量 147 个 node 测试文件全绿；go build/vet 通过，本地 /tools/fps-gpu-benchmark 实测 200，零外部 script 请求；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 6d891a3；categories.go 未注册；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| GIF 合成器（多图合成 GIF） | 递进首席（190 轮新候选晋升 P2 第三顺位；191 轮递进第二；本轮 `gif_maker`/`gif合成`/`合成gif`/`gif_compose` 三处 0 命中（vendor 除外）复测；站内仅 gif_compress（压缩口径）与 svg_compressor（SVG 口径），无「多图→GIF 合成」工具，真缺口确凿；外部信号：lizecheng.net「Turn a set of images into one animated GIF, entirely in your browser…no account, no watermark, no queue」／imagic-ai（60 帧上限，逐帧时长/循环/尺寸可调，本地编码）／kapwing GIF collage；典型用途：连拍照片拼短动画、截图做步骤演示、反应 GIF/表情包；痛点：多张截图/照片想合成 GIF，在线 GIF Maker 多为英文站、要注册/排队/带水印/上传图片；上传/拖拽多张图片→拖拽排序→逐帧时长＋循环开关＋尺寸上限→canvas 绘制→复用站内 gif_compress 自研 GIF89a 解析与 LZW 编解码模式（或 vendored gifenc MIT 单文件，qrcode-generator-1.4.4 vendor 先例）本地编码→预览→下载 .gif；纯前端小难度（纯函数可写逐字向量：帧序列→GIF 字节流确定性 buildGifFrames，调色板量化函数确定性，非法参数 err.field）；图片处理簇补位（gif_compress 同簇联动「GIF 一条龙」：合成→压缩）；真限制：大图/多帧受浏览器内存限制、GIF 仅 256 色（照片类渐变可能出现色带）、不支持视频输入（ffmpeg.wasm 硬伤口径），须明示；Icon 注意 `gif`(1)/`animation`(1) 已被 gif_compress／css_keyframe_generator 占用，开发轮另选唯一值如 gif_box（须实测）） | 小 | P2（留池） |
+| 图片转拼豆施工图生成器 | 递进第二顺位（191 轮新候选晋升 P2 第三顺位；本轮 `拼豆`/`perler` 三处 0 命中（`chr(0x...)` 构造检索词复测，规避管线 CJK 变换）；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋GameBoy/PICO-8 调色板＋PNG 导出，`色号`/`豆数`/`施工图` 0 命中）；V2EX t/1246493（10-05）信号「图片转拼豆图纸，支持色号、豆数统计和 PDF 施工图」；痛点原文：很多图片转像素画工具只能生成一张像素图，但真正拿来拼的时候，还需要自己数格子、找颜色、算每种豆子要买多少；拼豆手工在抖音/小红书热度高，需求真实；实现：上传图片→canvas 像素化（格数可调，贴合 29×29 标准拼豆板）→就近匹配内置拼豆色板（常见 5mm 拼豆色号＋中文名＋符号标记）→渲染带色号符号的网格施工图→每色豆数统计＋购买清单→施工图 PNG 导出/打印；纯前端小/中难度（纯函数可写逐字向量：像素量化确定性＋色号映射确定性＋err.field）；图片处理簇补位（pixel_art_converter 同簇联动「像素一条龙」：美学像素画→施工图）；真限制：屏幕取色与实物豆子存在色差、色号体系为常用整理非官方全库、大尺寸板受浏览器内存限制，须明示；Icon 注意 `grid_on` 已被 pixel_art_converter 占用，开发轮另选全库唯一值） | 小/中 | P2（留池） |
+| 键盘按键测试 | 192 轮新候选晋升 P2 第三顺位（本轮站内缺口实测补位，非外部信号晋升，如实标注；`键盘测试`/`keycode`/`key_code`/`keyboard_tester` 模板＋static/js＋tools/categories.go 三处 0 命中；`keydown` 命中 84 文件经抽查全为各工具快捷键监听（app_detail／img_resize／json_yaml_converter），无专用测试工具，真缺口确凿；痛点：新键盘到手想验证全键是否正常、个别按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；实现：可视化键盘布局→keydown/keyup 实时高亮＋已触发/未触发按键统计→连击检测（短时重复触发计数）→测试报告一键复制；纯前端小难度（纯函数可写逐字向量：normalizeKeyEvent 按键归一化确定性＋detectChatter 连击判定＋err.field）；真限制：浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、需手动切换键盘布局（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（`key`(2)/`vpn_key`(4) 已被占用，开发轮精确值复测锁定全库唯一）） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第一百九十二轮——浏览器 FPS/GPU 性能速测交付闭环（6d891a3；`/tools/fps-gpu-benchmark` 已注册；旧测试 Path 断言 261→262 同步；全量 147 个 node 测试文件全绿；候选池划出），全量 **262 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 6d891a3），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：GIF 合成器（多图合成 GIF）→首席（`gif_maker`/`gif合成`/`合成gif`/`gif_compose` 0 命中复测；站内仅 gif_compress（压缩）与 svg_compressor（SVG），无合成工具，真缺口确凿）／图片转拼豆施工图生成器→第二（`拼豆`/`perler` 0 命中复测；`pixel_art` 仅命中 pixel_art_converter 口径不同）／**键盘按键测试→新候选晋升 P2 第三顺位**（站内缺口实测补位，非外部信号晋升；`键盘测试`/`keycode`/`keyboard_tester` 0 命中；`keydown` 84 命中全为快捷键监听；可视化键盘＋实时高亮＋连击检测＋报告复制；纯前端小难度；真限制：系统级组合键捕获不到/Fn 键行为各异/需切换布局，须明示；Icon `keyboard` 0 占用）；本轮 fetch 一次成功（VM 换机又清空 known_hosts，StrictHostKeyChecking=no 自动重记 github.com ED25519，未再报 Host key verification failed），本地 HEAD 6d891a3 与 origin 同头为最新；新信号扫描：V2EX（t/1252069 MyEnhancer AI/付费积分新消解／t/1253431 VS Code 插件口径新消解／t/1249758 NASDrop NAS/桌面新消解／t/1252312 AI 视频复刻新消解／t/1253201 自媒体获客确认消解／t/1253566 TelunKey 桌面新消解／t/1253624 OffRails AI 服务新消解／t/1253416 浏览器游戏站游戏口径新消解／t/1252552 tubox 确认消解／t/1253518 搭手确认消解）＋中文榜单（懒大王 5／bpdh TOP11／365lab 40+：PDF/图片压缩/二维码站内已交付覆盖，抠图 ONNX 硬伤，视频转 GIF 为 ffmpeg.wasm 硬伤口径（侧面印证 GIF 创作需求），临时邮箱需后端收信硬伤，确认消解）＋HN Show HN（Mii Maker 小众新消解／ToolHop 合集口径确认消解／TalkNow WebRTC 信令硬伤新消解／Enact 需 AI 新消解／Commentblocks 需后端新消解）；**管线教训**：exec 输出 CJK 可能被展示层变换（本轮 `数独` 显示为「斜线」实锤；CJK 零重叠复核须 ASCII 模式打底＋`chr(0x...)` 构造检索词＋命中行 codepoint 解码验真，已记入 AGENTS.md）；ReqForge 维持观察；高精度计算器方向修正口径风险低优先保持；数独求解器本轮复核真缺口但游戏口径无外部信号，低优先保持；OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／AI 图片超分／一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／电台收听器（硬伤）保持跳过。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（VM 换机又清空 known_hosts，报 Warning: Permanently added 'github.com' (ED25519)，StrictHostKeyChecking=no 自动重记主机密钥，未再报 Host key verification failed），本地 HEAD 6d891a3 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 6d891a3（浏览器 FPS/GPU 性能速测新增，node 82 断言全过，Path 261→262，全量 147 个 node 测试文件全绿）／6d3ab30（二维码扫描器新增）／a4601f0（Docker Compose→K8s YAML 转换器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **262**；`ls templates/fps_gpu_benchmark.html static/js/fps_gpu_benchmark.js tests/fps_gpu_benchmark.test.js` 均存在（categories.go 已注册 fps_gpu_benchmark）；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go 未注册）；Top3 候选重叠复核（`fps_gpu_benchmark` 已交付划出；`简繁`／`繁简`：仍开发中，移出候选池；**GIF 合成器**：`gif_maker`/`gif合成`/`合成gif`/`gif_compose` 三处 0 命中（vendor 除外）；站内仅 gif_compress（压缩）与 svg_compressor（SVG），真缺口确凿；**图片转拼豆施工图生成器**：`拼豆`/`perler` 三处 0 命中（`chr(0x...)` 构造检索词复测）；`pixel_art` 仅命中 pixel_art_converter（口径不同：像素风美学＋PNG 导出，`色号`/`豆数`/`施工图` 0 命中），真缺口确凿；**键盘按键测试**：`键盘测试`/`keycode`/`key_code`/`keyboard_tester` 三处 0 命中；`keydown` 84 命中抽查全为快捷键监听；真缺口确凿；**数独求解器**：`sudoku` ASCII 三处 0 命中，`数独` 命中仅为 css_background_pattern_generator 文档「参数独立」子串（codepoint 解码实锤误命中），真缺口成立但游戏口径无外部信号，低优先保持）；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 01:00 · PM 选定轮，接 191 轮通用调研）
 
 **选定：浏览器 FPS/GPU 性能速测** — 本轮唯一任务（新工具）。
