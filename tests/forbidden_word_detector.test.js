@@ -167,7 +167,7 @@ var ogIdx = GO_SRC.indexOf('"og_card_preview"');
 ok(ogIdx >= 0 && fwdIdx > ogIdx, "注册在 og_card_preview 之后（营销工具互链家族相邻）");
 var pathRe = /"\/tools\/[^"]+"/g, seen2 = {}, m2, pathCount = 0;
 while ((m2 = pathRe.exec(GO_SRC)) !== null) { if (!seen2[m2[0]]) { seen2[m2[0]] = true; pathCount++; } }
-eq(pathCount, 257, "注册 Path 总数 256→257");
+eq(pathCount, 258, "注册 Path 总数 257→258");
 
 /* ---------- 10. 模板：真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/forbidden-word-detector", "模板 canonical 含新 Path");

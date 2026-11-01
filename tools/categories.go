@@ -517,6 +517,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "batch_random_generator",
+					Name:        "批量随机数生成器",
+					Description: "批量生成随机数：整数区间（最小值/最大值）＋小数位（0~6）＋数量（1~10000）＋去重开关＋升序/降序排序，结果列表实时展示，一键复制、CSV 下载（UTF-8 BOM，Excel 中文不乱码），crypto 随机源，纯前端零上传 · Batch random number generator: range, decimals, count, unique, sort, copy, CSV export, 100% client-side",
+					Path:        "/tools/batch-random-generator",
+					Icon:        "numbers",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "color",
 					Name:        "颜色转换",
 					Description: "HEX/RGB/HSL 互转，实时预览，WCAG 对比度检查",

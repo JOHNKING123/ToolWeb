@@ -79,7 +79,7 @@ var cats = fs.readFileSync("tools/categories.go", "utf8");
 has(cats, '"screenshot_beautifier"', "categories.go 注册 ID");
 has(cats, '"/tools/screenshot-beautifier"', "categories.go 注册 Path");
 var pathCount = (cats.match(/Path:\s+"\/tools\/[^"]+"/g) || []).length;
-eq(pathCount, 257, "注册 Path 总数 256→257");
+eq(pathCount, 258, "注册 Path 总数 257→258");
 var html = fs.readFileSync("templates/screenshot_beautifier.html", "utf8");
 has(html, "只加画框", "页面可见：只加画框");
 has(html, "不改图片内容一像素", "页面可见：不改图片内容一像素");

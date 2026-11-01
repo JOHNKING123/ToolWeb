@@ -3,7 +3,7 @@
  *  1. normalizePhone 契约（确定性向量逐字；首+/空格/连字符/括号剔除；非法参数 err.field='phone'）
  *  2. buildWaLink 契约（确定性向量逐字；空消息不带 text；err.field='countryCode'/'phone'/'message'）
  *  3. 二维码引擎（vendored qrcode-generator 1.4.4 Node 可加载；矩阵定位符；中文消息链接可编码）
- *  4. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 257
+ *  4. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 258
  *  5. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket/EventSource；二维码走本地 vendor）
  *  6. 模板：SEO 面板、真限制三条、与 qrcode 双向互链「沟通一条龙」
  */
@@ -121,7 +121,7 @@ function throwsField(fn, field, name) {
     contains(GO_SRC.toLowerCase(), "whatsapp link generator", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 257, "注册 Path 总数 256→257");
+    eq(pathCount, 258, "注册 Path 总数 257→258");
 })();
 
 /* ================= 5. 零网络静态检查 ================= */

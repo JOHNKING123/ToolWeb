@@ -1,0 +1,179 @@
+{{define "batch_random_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批量随机数生成器 - 区间/小数位/去重/排序/复制/CSV导出 | 程序员工具箱</title>
+<meta name="description" content="免费在线批量随机数生成器：设整数区间（最小值/最大值）＋小数位（0~6）＋数量（1~10000）＋去重开关＋升序/降序排序，结果列表实时展示，一键复制、CSV 下载（UTF-8 BOM，Excel 中文不乱码）。crypto 随机源，100% 浏览器本地处理，零上传。Batch random number generator: range, decimals, count, unique, sort, copy, CSV export, 100% client-side.">
+<meta name="keywords" content="随机数生成器,批量随机数,随机数区间,随机抽样,去重随机数,随机数排序,随机数 CSV 导出,random number generator,batch random numbers,unique random numbers">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/batch-random-generator">
+<meta property="og:title" content="批量随机数生成器 - 区间/小数位/去重/排序/复制/CSV">
+<meta property="og:description" content="整数区间＋小数位＋数量＋去重＋排序，结果实时列表，一键复制/CSV 下载（UTF-8 BOM）。纯前端本地，零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/batch-random-generator">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"批量随机数生成器","alternateName":"batch random number generator","description":"批量随机数生成器：整数区间（最小值/最大值）＋小数位（0~6）＋数量（1~10000）＋去重开关＋升序/降序排序，结果列表实时展示，一键复制、CSV 下载（UTF-8 BOM），crypto 随机源，100% 浏览器本地处理零上传。","url":"https://www.johnkingzcq123.xyz/tools/batch-random-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.brg-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.brg-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.brg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.brg-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.brg-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+.brg-field{display:flex;flex-direction:column;gap:.35rem;font-size:.92rem;color:#1f2937;margin-bottom:.9rem}
+.brg-field label b{color:#2563eb}
+.brg-field input[type="number"],.brg-field select{padding:.55rem .7rem;border:1px solid #d1d5db;
+border-radius:.45rem;font-size:.95rem;width:100%;box-sizing:border-box;font-family:inherit;background:#fff}
+.brg-row{display:flex;gap:.8rem;flex-wrap:wrap}
+.brg-row .brg-field{flex:1;min-width:140px}
+.brg-check{display:flex;align-items:center;gap:.5rem;font-size:.92rem;color:#1f2937;margin-bottom:.9rem;cursor:pointer}
+.brg-check input{width:1.1rem;height:1.1rem;accent-color:#2563eb}
+.brg-hint{font-size:.85rem;color:#6b7280;line-height:1.7}
+.brg-err{display:none;font-size:.88rem;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;
+border-radius:.45rem;padding:.5rem .8rem;margin-top:.7rem;line-height:1.7}
+.brg-count{font-size:.9rem;color:#2563eb;font-weight:600;margin-bottom:.5rem}
+.brg-list{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;
+border-radius:.45rem;padding:.7rem .9rem;font-size:.92rem;line-height:1.9;color:#111827;max-height:24rem;
+overflow-y:auto;white-space:pre-wrap;word-break:break-all;box-sizing:border-box}
+.brg-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem;align-items:center}
+.brg-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none}
+.brg-btn .material-icons{font-size:1.1rem}
+.brg-btn-primary{background:#2563eb;color:#fff}
+.brg-btn-primary:hover{background:#1d4ed8}
+.brg-btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.brg-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.brg-btn-secondary:hover{background:#e5e7eb}
+.brg-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.brg-note b{color:#4b5563}
+.brg-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.brg-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.brg-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.brg-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1d4ed8;margin-top:1.2rem}
+.brg-combo a{color:#2563eb;font-weight:600}
+.brg-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all .25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #2563eb}
+.brg-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.brg-toast.fail{border-color:#f87171}
+@media (max-width:768px){.brg-panel{padding:1rem .8rem}.brg-btn{padding:.55rem .9rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">numbers</i> 批量随机数生成器</h1>
+<p>整数区间（最小值／最大值）＋小数位（0~6）＋数量（1~10000）＋去重开关＋升序／降序排序 → 结果列表实时展示，一键复制、CSV 下载。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="brg-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① 本工具是<b>伪随机</b>（crypto 级随机源），<b>不适合抽奖公证、密钥生成等安全场景</b>；② 去重开启时数量上限为<b>区间容量</b>（整数模式：max−min＋1；小数模式：该精度下可表示的不同值个数），<b>超限直接拒绝生成、不静默截断</b>；③ <b>100% 浏览器本地处理不上传</b> —— 生成、复制、CSV 拼装全在你的浏览器里完成，脚本零外部请求。</div>
+</div>
+
+<div class="brg-panel">
+<h3><i class="material-icons">tune</i> 1. 参数设置</h3>
+<div class="brg-row">
+<div class="brg-field">
+<label>最小值 <b>（整数）</b></label>
+<input type="number" id="brg-min" value="1" step="1">
+</div>
+<div class="brg-field">
+<label>最大值 <b>（整数，≥最小值）</b></label>
+<input type="number" id="brg-max" value="100" step="1">
+</div>
+<div class="brg-field">
+<label>小数位 <b>（0=整数）</b></label>
+<select id="brg-decimals">
+<option value="0" selected>0（整数）</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+</select>
+</div>
+<div class="brg-field">
+<label>数量 <b>（1~10000）</b></label>
+<input type="number" id="brg-count-input" value="20" min="1" max="10000" step="1">
+</div>
+</div>
+<div class="brg-row">
+<div class="brg-field">
+<label>排序</label>
+<select id="brg-sort">
+<option value="none" selected>不排序（生成顺序）</option>
+<option value="asc">升序</option>
+<option value="desc">降序</option>
+</select>
+</div>
+<div class="brg-field" style="justify-content:flex-end;">
+<label class="brg-check" style="margin-bottom:0;"><input type="checkbox" id="brg-unique"> 去重（不重复抽取）</label>
+<div class="brg-hint">去重上限＝区间容量，超限拒绝生成</div>
+</div>
+</div>
+<div class="brg-err" id="brg-err"></div>
+<div class="brg-actions">
+<button type="button" class="brg-btn brg-btn-secondary" id="brg-sample"><i class="material-icons">auto_fix_high</i> 填入示例</button>
+</div>
+<div class="brg-note">改任何参数都会<b>实时重新生成</b>；随机源为浏览器 <code>crypto.getRandomValues</code>。</div>
+</div>
+
+<div class="brg-panel">
+<h3><i class="material-icons">format_list_numbered</i> 2. 生成结果</h3>
+<div class="brg-count" id="brg-count">共 0 个</div>
+<div class="brg-list" id="brg-list">调整参数后自动生成</div>
+<div class="brg-actions">
+<button type="button" class="brg-btn brg-btn-primary" id="brg-copy" disabled><i class="material-icons">content_copy</i> 一键复制</button>
+<button type="button" class="brg-btn brg-btn-primary" id="brg-csv" disabled><i class="material-icons">download</i> 下载 CSV</button>
+</div>
+<div class="brg-note">复制走 Clipboard API，失败自动回落 <code>execCommand</code>（一行一个）；CSV 自带 UTF-8 BOM，Excel／WPS 双击打开中文不乱码，文件名为 <code>random_numbers_YYYYMMDD_HHmmss.csv</code>。</div>
+</div>
+
+<div class="brg-combo">
+<b>🎲 随机一条龙：</b>要从一堆选项里随机抽一个做决定，用 <a href="/tools/random-decision">随机决策器</a>（今天吃什么／抛硬币／Yes-No）；要整行带姓名、手机号、地址的测试假数据，用 <a href="/tools/mock-data-generator">假数据/Mock 生成器</a>（seed 可复现，JSON/CSV/SQL 导出）—— 随机场景，一套流程。
+</div>
+
+<div class="brg-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="brg-faq">
+<dt>生成的随机数能用于抽奖公证吗？</dt>
+<dd>不能（真限制第一条）。本工具是伪随机（crypto 级随机源），适合测试数据、随机抽样、课堂点名等日常场景；<b>抽奖公证、密钥生成等安全场景请用专用密码学方案</b>。</dd>
+<dt>去重开了但提示数量超限怎么办？</dt>
+<dd>这是真限制第二条在起作用：去重数量上限为区间容量（如 1~100 整数最多 100 个不重复值），<b>超限直接拒绝、不静默截断</b>。请调大区间、减少数量，或关闭去重。</dd>
+<dt>我的参数和生成结果会被上传吗？</dt>
+<dd>不会。生成、复制、CSV 拼装全部在浏览器本地完成，脚本中没有任何 fetch / XHR 上传逻辑（真限制第三条），可断网使用（首次加载页面除外）。</dd>
+<dt>小数位是怎么算的？</dt>
+<dd>小数位为 0 时输出整数（均匀分布于 [min, max] 闭区间）；大于 0 时输出 <code>(min + rand × (max − min)).toFixed(小数位)</code>，如区间 0~1、小数位 2 可得 0.00~1.00。</dd>
+<dt>CSV 用 Excel 打开会乱码吗？</dt>
+<dd>不会。下载的 CSV 自带 <b>UTF-8 BOM</b>，Excel／WPS 双击即正常显示；行分隔为标准 CRLF，一行一个随机数。</dd>
+</dl>
+</div>
+
+<div class="brg-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="brg-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">批量随机数生成器（当前）</span>
+<a href="/tools/random-decision" class="btn btn-secondary" style="font-size:.9rem;">随机决策器（抽选项/抛硬币）</a>
+<a href="/tools/mock-data-generator" class="btn btn-secondary" style="font-size:.9rem;">假数据/Mock 生成器（整行测试数据）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="brg-toast" class="brg-toast"></div>
+<script src="/tools/static/js/batch_random_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}
