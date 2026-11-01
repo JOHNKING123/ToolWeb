@@ -1,0 +1,166 @@
+{{define "negative_film_restorer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>负片图像还原 - 胶片底片扫描件反转还原，纯前端本地处理 | 程序员工具箱</title>
+<meta name="description" content="免费在线负片图像还原：上传胶片底片扫描件（JPG/PNG/WebP），三种还原模式——全色反转、彩色负片去橙色底（反转＋通道百分位拉伸）、黑白负片，canvas 浏览器本地实时预览，原图/还原图对比，一键下载 PNG 或复制 Data URL。纯前端零上传。negative film restorer: invert scanned film negatives locally in your browser, 3 modes, 100% client-side.">
+<meta name="keywords" content="负片还原,底片扫描,胶片负片,负片转正片,去橙色底,底片反转,negative film restorer,invert negative,film negative to positive,胶片扫描,老照片修复">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/negative-film-restorer">
+<meta property="og:title" content="负片图像还原 - 胶片底片扫描件反转还原">
+<meta property="og:description" content="上传底片扫描件（JPG/PNG/WebP），全色反转／彩色负片去橙色底／黑白负片三模式，canvas 本地实时预览，一键下载 PNG。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/negative-film-restorer">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"负片图像还原","alternateName":"negative film restorer","description":"负片图像还原：上传胶片底片扫描件（JPG/PNG/WebP），三种还原模式——全色反转、彩色负片去橙色底（反转＋通道百分位拉伸）、黑白负片，原图/还原图对比预览，canvas 浏览器本地实时渲染，一键下载 PNG 或复制 Data URL，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/negative-film-restorer","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.nfr-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.nfr-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.nfr-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.nfr-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.nfr-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.nfr-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.nfr-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none}
+.nfr-btn .material-icons{font-size:1.1rem}
+.nfr-btn-primary{background:#1d4ed8;color:#fff}
+.nfr-btn-primary:hover{background:#1e40af}
+.nfr-btn-primary.disabled,.nfr-btn-primary:disabled{background:#9ca3af;cursor:not-allowed;pointer-events:none}
+.nfr-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.nfr-btn-secondary:hover{background:#e5e7eb}
+.nfr-btn-secondary:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+.nfr-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.nfr-note b{color:#4b5563}
+.nfr-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.nfr-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.nfr-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.nfr-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.nfr-combo a{color:#1d4ed8;font-weight:600}
+.nfr-field{display:flex;flex-direction:column;gap:.35rem;font-size:.92rem;color:#1f2937}
+.nfr-field label b{color:#1d4ed8}
+.nfr-field input[type="file"]{padding:.55rem .7rem;border:1px solid #d1d5db;
+border-radius:.45rem;font-size:.95rem;width:100%;box-sizing:border-box;font-family:inherit;background:#fff}
+.nfr-radio-row{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center;padding:.55rem 0}
+.nfr-radio-row label{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;color:#1f2937;cursor:pointer}
+.nfr-err{display:none;font-size:.85rem;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;
+border-radius:.45rem;padding:.45rem .7rem;margin-top:.7rem;line-height:1.7}
+.nfr-compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.nfr-compare figure{margin:0;background:#e5e7eb;border-radius:.6rem;padding:.8rem;text-align:center;min-height:160px;
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;overflow:auto}
+.nfr-compare figcaption{font-size:.85rem;color:#4b5563;font-weight:600}
+.nfr-compare canvas{max-width:100%;height:auto;display:none;box-shadow:0 2px 12px rgba(0,0,0,.18);background:#fff}
+.nfr-empty{color:#9ca3af;font-size:.92rem;line-height:2}
+.nfr-empty .material-icons{font-size:2.2rem;display:block;margin-bottom:.4rem;color:#cbd5e1}
+.nfr-info{font-size:.88rem;color:#4b5563;margin-top:.7rem;line-height:1.9}
+.nfr-info b{color:#1f2937}
+#nfr-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#nfr-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:768px){.nfr-panel{padding:1rem .8rem}.nfr-btn{padding:.55rem .9rem}.nfr-compare{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">invert_colors</i> 负片图像还原</h1>
+<p>把胶片底片的扫描件翻成正片：上传 JPG / PNG / WebP，三种还原模式随手切换，浏览器本地 canvas 实时渲染，原图与还原图左右对比。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="nfr-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① 本工具是<b>启发式算法</b>，<b>非扫描仪级</b>色彩校准 —— 彩色负片模式用「反转＋每通道 1%/99% 分位拉伸」去除橙色片基，还原效果受底片品牌、曝光、扫描质量影响，偏色严重的底片可能仍需手动调色；② <b>纯本地不上传</b> —— 图片只在你的浏览器里处理，不经过任何服务器；③ <b>&gt;20MP 大图降级导出</b> —— 超过 2000 万像素的图片会按比例降采样到 20MP 以内再还原导出，页面会明确提示（保证浏览器不卡死）。</div>
+</div>
+
+<div class="nfr-panel">
+<h3><i class="material-icons">upload_file</i> 1. 上传底片扫描件</h3>
+<div class="nfr-field">
+<label>选择图片（<b>JPG / PNG / WebP</b>，FileReader 本地读取）</label>
+<input type="file" id="nfr-file" accept="image/jpeg,image/png,image/webp">
+</div>
+<div class="nfr-err" id="nfr-err"></div>
+<div class="nfr-note">三种还原模式<b>实时切换</b>，切换后立即按新模式重渲染，无需重新上传。</div>
+</div>
+
+<div class="nfr-panel">
+<h3><i class="material-icons">tune</i> 2. 还原模式（切换即实时重渲染）</h3>
+<div class="nfr-radio-row">
+<label><input type="radio" name="nfr-mode" value="invert" checked> <b>全色反转</b>（255−v，逐通道直接反转）</label>
+<label><input type="radio" name="nfr-mode" value="color"> <b>彩色负片去橙色底</b>（反转＋每通道 1%/99% 分位拉伸）</label>
+<label><input type="radio" name="nfr-mode" value="bw"> <b>黑白负片</b>（反转后按人眼亮度取灰）</label>
+</div>
+<div class="nfr-note">算法走纯函数 <b>invertOf</b>（反转）／<b>channelStretch</b>（分位拉伸）／<b>invertAndStretch</b>（组合）；非法参数<b>不静默钳制</b>，Node 单元测试已覆盖确定性向量与 <code>err.field</code> 断言。</div>
+</div>
+
+<div class="nfr-panel">
+<h3><i class="material-icons">compare</i> 3. 原图 / 还原图对比预览</h3>
+<div class="nfr-compare">
+<figure>
+<figcaption>原图（底片）</figcaption>
+<canvas id="nfr-canvas-orig"></canvas>
+<div class="nfr-empty" id="nfr-empty-orig"><i class="material-icons">image</i>上传后显示原图</div>
+</figure>
+<figure>
+<figcaption>还原图（正片）</figcaption>
+<canvas id="nfr-canvas-restored"></canvas>
+<div class="nfr-empty" id="nfr-empty"><i class="material-icons">invert_colors</i>上传后显示还原结果</div>
+</figure>
+</div>
+<div class="nfr-info" id="nfr-info"></div>
+<div class="nfr-actions">
+<a class="nfr-btn nfr-btn-primary disabled" id="nfr-download" href="#" download><i class="material-icons">download</i> 下载 PNG</a>
+<button type="button" class="nfr-btn nfr-btn-secondary" id="nfr-copy-url" disabled><i class="material-icons">link</i> 复制 PNG Data URL</button>
+</div>
+<div class="nfr-note">下载文件名固定格式 <code>negative-YYYYMMDD-HHmmss.png</code>（如 negative-20261101-094500.png）；复制 Data URL 走剪贴板，失败时自动回落到选中复制，可直接贴进 <code>&lt;img src&gt;</code>。</div>
+</div>
+
+<div class="nfr-combo">
+<b>📷 图片处理一条龙：</b>先用 <a href="/tools/img-compress">图片压缩</a>／<a href="/tools/img-resize">图片尺寸调整</a>／<a href="/tools/img-convert">图片格式转换</a> 把底片扫描件整理好，再回到本工具还原成正片 —— 扫描、整理、还原，一套流程。
+</div>
+
+<div class="nfr-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="nfr-faq">
+<dt>彩色负片的橙色底是怎么去掉的？</dt>
+<dd>彩色胶片片基自带橙色 mask。本工具先做全色反转，再统计反转后每个通道的直方图，取 <b>1% / 99% 分位</b>作为该通道的黑白场，用 <b>channelStretch</b> 把每通道拉伸到 0–255 —— 这就是「去橙色底」的启发式做法（顶部真限制第一条：它是启发式算法，非扫描仪级校准）。</dd>
+<dt>为什么还原后还是偏色？</dt>
+<dd>偏色多半来自底片本身（过期、错误曝光、扫描仪白平衡）。启发式分位拉伸只能纠正片基的整体偏置，纠不过来时请用修图软件手动调白平衡 —— 本工具定位是「一键初还」，不是专业调色台。</dd>
+<dt>黑白负片和全色反转有什么区别？</dt>
+<dd>全色反转保留彩色信息（255−v 逐通道）；黑白负片在反转后按 <b>0.299R＋0.587G＋0.114B</b> 人眼亮度取灰，适合黑白胶片或想要复古黑白效果的彩色底片。</dd>
+<dt>20MP 以上的扫描件会怎样？</dt>
+<dd>为保证浏览器不卡死，超过 <b>20MP</b> 的图片会按比例降采样到 20MP 以内再还原导出，页面会用 toast 和图片信息栏<b>明确提示</b>（真限制第三条）。需要全分辨率请用桌面扫描软件。</dd>
+<dt>我的底片照片会上传到服务器吗？</dt>
+<dd>不会。FileReader 读取、canvas 渲染、下载、复制全部在浏览器本地完成，脚本中没有任何 fetch / XHR 上传逻辑。可断网使用（首次加载页面除外）。</dd>
+<dt>和「图片压缩／尺寸调整／格式转换」怎么配合？</dt>
+<dd>四者已双向互链：扫描件太大先 <a href="/tools/img-compress">压缩</a>，尺寸不对先 <a href="/tools/img-resize">调整</a>，格式不对先 <a href="/tools/img-convert">转换</a>，最后到本工具还原 —— 图片处理一条龙。</dd>
+</dl>
+</div>
+
+<div class="nfr-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="nfr-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">负片图像还原（当前）</span>
+<a href="/tools/img-compress" class="btn btn-secondary" style="font-size:.9rem;">图片压缩（扫描件先压小→还原）</a>
+<a href="/tools/img-resize" class="btn btn-secondary" style="font-size:.9rem;">图片尺寸调整（扫描件先改尺寸→还原）</a>
+<a href="/tools/img-convert" class="btn btn-secondary" style="font-size:.9rem;">图片格式转换（扫描件先转格式→还原）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="nfr-toast"></div>
+<script src="/tools/static/js/negative_film_restorer.js?v=1"></script>
+</body>
+</html>
+{{end}}

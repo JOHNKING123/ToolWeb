@@ -1258,6 +1258,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "negative_film_restorer",
+					Name:        "负片图像还原",
+					Description: "负片图像还原：上传胶片底片扫描件（JPG/PNG/WebP），三种还原模式——全色反转、彩色负片去橙色底（反转＋通道百分位拉伸）、黑白负片，原图/还原图对比预览，canvas 浏览器本地实时渲染，一键下载 PNG，纯前端零上传 · Negative film restorer: invert scanned film negatives locally, 3 modes (full invert / color with orange-mask removal via percentile stretch / B&W), 100% client-side",
+					Path:        "/tools/negative-film-restorer",
+					Icon:        "invert_colors",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "bulk_image_resizer",
 					Name:        "图片批量缩放器",
 					Description: "多张 PNG/JPG/WebP 图片批量调整尺寸：按宽度/按高度/百分比/最长边四种预设等比缩放，JPEG 质量可调，逐张下载或打包 ZIP，纯前端本地处理零上传 · Bulk image resizer: batch resize multiple images by width, height, percent or max side, download individually or as ZIP, 100% client-side",
