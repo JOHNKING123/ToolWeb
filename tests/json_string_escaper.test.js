@@ -107,7 +107,7 @@ has(GO, "JSON 字符串转义器", "注册：categories.go 含名称 JSON 字符
 var pathMatches = GO.match(/"\/tools\/[^"]+"/g) || [];
 var uniquePaths = {};
 pathMatches.forEach(function (p) { uniquePaths[p] = true; });
-eq(Object.keys(uniquePaths).length, 261, "注册：去重 Path 总数 260→261（实得 " + Object.keys(uniquePaths).length + "）");
+eq(Object.keys(uniquePaths).length, 262, "注册：去重 Path 总数 261→262（实得 " + Object.keys(uniquePaths).length + "）");
 
 /* ---------- 8. 零网络静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");

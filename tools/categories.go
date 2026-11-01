@@ -975,6 +975,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "fps_gpu_benchmark",
+					Name:        "浏览器 FPS/GPU 性能速测",
+					Description: "浏览器内 WebGL 图形性能速测：可调负载档位（低/中/高/自定义：三角形数量、渲染分辨率倍数、抗锯齿/特效开关）＋ requestAnimationFrame 帧时间统计，输出成绩单（平均 FPS、1% Low FPS、P95 帧时间、帧时间抖动、掉帧率）＋ WEBGL_debug_renderer_info GPU 型号/供应商检测，档位评级（流畅≥55/良好≥30/卡顿），实时 FPS 曲线，报告一键复制/下载，附本地 LLM 硬件检测器出链「硬件一条龙」，纯前端零上传 · FPS GPU benchmark: adjustable WebGL load, frame time stats, GPU renderer detection, grade rating, 100% client-side",
+					Path:        "/tools/fps-gpu-benchmark",
+					Icon:        "shutter_speed",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

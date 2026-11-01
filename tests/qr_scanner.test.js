@@ -7,7 +7,7 @@
  *     非法参数 err.field='text'）
  *  5. isOpenableUrl 契约（仅 http/https 白名单；javascript:→false；非法参数 err.field='text'）
  *  6. buildQrDownloadName 契约（确定性向量逐字；文件名正则；err.field='now'）
- *  7. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 260→261
+ *  7. categories.go 注册（ID/Path/Icon/Category/New）与 Path 总数 261→262
  *  8. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket/EventSource；模板无外部 script CDN；
  *     jsQR 为本地 vendored 单文件）
  *  9. 模板：SEO 面板、真限制四条、与 qrcode 双向互链「二维码一条龙」
@@ -166,7 +166,7 @@ function throwsField(fn, field, name) {
     ok(GO_SRC.toLowerCase().indexOf("qr") !== -1 && GO_SRC.toLowerCase().indexOf("scanner") !== -1, "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 261, "注册 Path 总数 260→261");
+    eq(pathCount, 262, "注册 Path 总数 261→262");
 })();
 
 /* ================= 8. 零网络静态检查 ================= */

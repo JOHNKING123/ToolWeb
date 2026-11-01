@@ -1,0 +1,219 @@
+{{define "fps_gpu_benchmark"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器 FPS/GPU 性能速测 - WebGL 跑分测显卡性能 | 程序员工具箱</title>
+    <meta name="description" content="浏览器 FPS/GPU 性能速测：WebGL 可调负载（低/中/高/自定义档：三角形数量、渲染分辨率倍数、抗锯齿/特效开关），requestAnimationFrame 帧时间统计输出成绩单——平均 FPS、1% Low FPS、P95 帧时间、帧时间抖动、掉帧率，并自动读取 GPU 型号，按档位评级（流畅/良好/卡顿），报告一键复制/下载。纯前端本地运行，零上传。FPS GPU benchmark: adjustable WebGL load, frame time stats, GPU renderer detection, 100% client-side.">
+    <meta name="keywords" content="FPS测试,GPU跑分,WebGL性能测试,浏览器跑分,显卡性能测试,帧率测试,1% Low FPS,帧时间抖动,掉帧率,fps benchmark,webgl benchmark,gpu benchmark online">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/fps-gpu-benchmark">
+    <meta property="og:title" content="浏览器 FPS/GPU 性能速测 - WebGL 跑分测显卡性能">
+    <meta property="og:description" content="WebGL 可调负载＋帧时间统计：平均 FPS、1% Low、P95 帧时间、抖动、掉帧率＋GPU 型号检测＋档位评级，报告一键复制/下载。纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/fps-gpu-benchmark">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"浏览器 FPS/GPU 性能速测","description":"WebGL 可调负载（低/中/高/自定义档：三角形数量、渲染分辨率倍数、抗锯齿/特效开关），requestAnimationFrame 帧时间统计输出成绩单（平均 FPS、1% Low FPS、P95 帧时间、帧时间抖动、掉帧率），自动读取 GPU 型号/供应商，档位评级（流畅/良好/卡顿），报告一键复制/下载；纯前端本地运行，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/fps-gpu-benchmark","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fgb-limits{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fbbf24;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.92rem;line-height:2;color:#92400e}
+        .fgb-limits .material-icons{color:#f59e0b;flex:none;font-size:1.6rem}
+        .fgb-limits ol{margin:.3rem 0 0;padding-left:1.2rem}
+        .fgb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .fgb-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .fgb-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .fgb-gpu{display:flex;gap:.7rem;align-items:flex-start;border-radius:.7rem;padding:.9rem 1rem;
+            font-size:.92rem;line-height:1.85;background:#f9fafb;border:1px solid #e5e7eb;color:#374151}
+        .fgb-gpu .material-icons{flex:none;font-size:1.5rem}
+        .fgb-gpu-ok{border-color:#6ee7b7;background:#ecfdf5;color:#065f46}
+        .fgb-gpu-ok .material-icons{color:#10b981}
+        .fgb-gpu-warn{border-color:#fcd34d;background:#fffbeb;color:#92400e}
+        .fgb-gpu-warn .material-icons{color:#f59e0b}
+        .fgb-gpu-bad{border-color:#fca5a5;background:#fef2f2;color:#991b1b}
+        .fgb-gpu-bad .material-icons{color:#ef4444}
+        .fgb-renderer-raw{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;word-break:break-all}
+        .fgb-redetect{margin-top:.8rem}
+        .fgb-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:.2rem 0 1rem}
+        .fgb-tab{display:inline-flex;align-items:center;gap:.35rem;font-size:.9rem;font-weight:600;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:999px;padding:.45rem 1rem;background:#f9fafb;color:#4b5563}
+        .fgb-tab:hover{border-color:#2563eb;color:#2563eb}
+        .fgb-tab.active{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+        .fgb-custom{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-top:.4rem}
+        .fgb-field label{display:block;font-size:.88rem;font-weight:700;color:#374151;margin-bottom:.35rem}
+        .fgb-field input[type=number]{width:100%;box-sizing:border-box;padding:.7rem .8rem;font-size:.95rem;
+            border:1px solid #d1d5db;border-radius:.6rem;background:#fff;outline:none;color:#111827}
+        .fgb-field input[type=range]{width:100%}
+        .fgb-res-val{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;color:#1d4ed8}
+        .fgb-check{display:flex;align-items:center;gap:.5rem;font-size:.92rem;color:#374151;margin-top:.35rem;cursor:pointer}
+        .fgb-check input{width:1.05rem;height:1.05rem;accent-color:#2563eb}
+        .fgb-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.75rem 1.4rem;border-radius:.6rem;
+            font-size:1rem;font-weight:700;cursor:pointer;border:none;background:#2563eb;color:#fff}
+        .fgb-btn:hover{background:#1d4ed8}
+        .fgb-btn:disabled{background:#9ca3af;cursor:not-allowed}
+        .fgb-btn-ghost{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .fgb-btn-ghost:hover{border-color:#2563eb;color:#2563eb}
+        .fgb-progress-wrap{margin-top:1rem;background:#f3f4f6;border-radius:999px;height:.7rem;overflow:hidden}
+        #fgb-progress{height:100%;width:0;background:linear-gradient(90deg,#2563eb,#22c55e);border-radius:999px;transition:width .2s}
+        .fgb-run-meta{display:flex;align-items:center;gap:1rem;margin-top:.7rem;font-size:.9rem;color:#6b7280;flex-wrap:wrap}
+        #fgb-live{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;color:#16a34a;font-size:1.05rem}
+        #fgb-gl{width:100%;max-width:640px;display:block;border-radius:.6rem;background:#0b1220;margin-top:1rem}
+        #fgb-hist{width:100%;max-width:640px;display:block;border-radius:.6rem;margin-top:.6rem;border:1px solid #1f2937}
+        .fgb-stop-note{font-size:.85rem;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;
+            border-radius:.6rem;padding:.6rem .9rem;margin-top:.8rem;line-height:1.8}
+        .fgb-score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem;margin-top:1rem}
+        .fgb-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem .95rem}
+        .fgb-stat .k{font-size:.82rem;color:#6b7280;margin-bottom:.25rem}
+        .fgb-stat .v{font-size:1.25rem;font-weight:800;color:#111827;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .fgb-grade{display:inline-block;font-size:1.6rem;font-weight:800;border-radius:.8rem;padding:.5rem 1.6rem;color:#fff}
+        .fgb-grade-good{background:#10b981}
+        .fgb-grade-mid{background:#f59e0b}
+        .fgb-grade-bad{background:#ef4444}
+        .fgb-gpu-line{margin-top:.9rem;font-size:.9rem;color:#374151;line-height:1.9}
+        .fgb-gpu-line .fgb-renderer-raw{color:#6b7280}
+        .fgb-report-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.8rem}
+        .fgb-toast{display:none;position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);background:#111827;
+            color:#fff;padding:.7rem 1.2rem;border-radius:.6rem;font-size:.92rem;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+        .fgb-toast-bad{background:#991b1b}
+        .fgb-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .fgb-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .fgb-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .fgb-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){.fgb-custom{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">shutter_speed</i> 浏览器 FPS/GPU 性能速测</h1>
+            <p>想快速知道这台电脑的浏览器图形性能到底行不行？选一个负载档位（或自定义三角形数量/渲染分辨率/抗锯齿/特效），点「一键跑分」：页面用 WebGL 渲染旋转三角形负载 6 秒，requestAnimationFrame 统计每一帧耗时，输出成绩单（平均 FPS、1% Low FPS、P95 帧时间、帧时间抖动、掉帧率），附 GPU 型号检测与档位评级，报告可一键复制或下载。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="fgb-limits">
+                <i class="material-icons">warning</i>
+                <div><b>跑分前请先了解（真限制）：</b>
+                    <ol>
+                        <li>仅测量<b>浏览器内 WebGL 渲染性能</b>，<b>不能替代 3DMark 等原生跑分</b>；不同浏览器、驱动、系统负载都会影响结果。</li>
+                        <li><b>无法获取温度/功耗/频率</b>等硬件传感器数据，成绩单只反映帧率与帧时间。</li>
+                        <li><b>隐私模式可能屏蔽渲染器字符串</b>，此时 GPU 型号显示为「未知」，跑分不受影响。</li>
+                        <li><b>WebGL 被禁用时页面会降级提示</b>，不会报错卡死，请换支持 WebGL 的浏览器再试。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="fgb-panel">
+                <h3><i class="material-icons">memory</i> 第一步：检测你的 GPU</h3>
+                <div class="fgb-gpu" id="fgb-gpu-status">
+                    <i class="material-icons">hourglass_empty</i>
+                    <div>正在检测…</div>
+                </div>
+                <button type="button" class="fgb-btn-ghost fgb-redetect" id="fgb-redetect">
+                    <i class="material-icons">refresh</i> 重新检测
+                </button>
+            </div>
+
+            <div class="fgb-panel">
+                <h3><i class="material-icons">tune</i> 第二步：选择负载档位</h3>
+                <div class="fgb-tabs" role="tablist" aria-label="负载档位">
+                    <button type="button" class="fgb-tab" data-preset="low" role="tab">🌱 低档 · 2万三角形</button>
+                    <button type="button" class="fgb-tab active" data-preset="mid" role="tab">⚖️ 中档 · 20万三角形</button>
+                    <button type="button" class="fgb-tab" data-preset="high" role="tab">🔥 高档 · 100万三角形</button>
+                    <button type="button" class="fgb-tab" data-preset="custom" role="tab">🛠️ 自定义</button>
+                </div>
+                <div class="fgb-custom" id="fgb-custom">
+                    <div class="fgb-field">
+                        <label for="fgb-tri">三角形数量（1000 – 2,000,000）</label>
+                        <input type="number" id="fgb-tri" min="1000" max="2000000" step="1000" value="200000">
+                    </div>
+                    <div class="fgb-field">
+                        <label for="fgb-res">渲染分辨率倍数（0.25 – 2）<span class="fgb-res-val" id="fgb-res-val">1.00×</span></label>
+                        <input type="range" id="fgb-res" min="0.25" max="2" step="0.05" value="1">
+                    </div>
+                    <div class="fgb-field">
+                        <label class="fgb-check"><input type="checkbox" id="fgb-aa"> 抗锯齿（MSAA，更吃显卡）</label>
+                    </div>
+                    <div class="fgb-field">
+                        <label class="fgb-check"><input type="checkbox" id="fgb-fx"> 特效（流光着色器，加重片元负载）</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fgb-panel">
+                <h3><i class="material-icons">play_circle</i> 第三步：一键跑分</h3>
+                <button type="button" class="fgb-btn" id="fgb-run">
+                    <i class="material-icons">bolt</i> 一键跑分（6 秒）
+                </button>
+                <div class="fgb-run-meta">
+                    <span>实时 FPS：<span id="fgb-live">—</span></span>
+                    <span style="flex:1;min-width:160px;"><span class="fgb-progress-wrap" style="margin:0;display:block;"><span id="fgb-progress"></span></span></span>
+                    <span id="fgb-progress-txt">0%</span>
+                </div>
+                <div class="fgb-stop-note" id="fgb-stop-note" style="display:none;">
+                    跑分进行中…请保持页面可见、不要切换标签页（后台标签页的 requestAnimationFrame 会被浏览器节流，导致成绩偏低）。
+                </div>
+                <canvas id="fgb-gl"></canvas>
+                <canvas id="fgb-hist" width="600" height="120"></canvas>
+            </div>
+
+            <div class="fgb-panel" id="fgb-score" style="display:none;">
+                <h3><i class="material-icons">assessment</i> 成绩单</h3>
+                <div><span class="fgb-grade" id="fgb-grade">—</span></div>
+                <div class="fgb-score-grid">
+                    <div class="fgb-stat"><div class="k">平均 FPS</div><div class="v" id="fgb-s-avg">—</div></div>
+                    <div class="fgb-stat"><div class="k">1% Low FPS</div><div class="v" id="fgb-s-p1">—</div></div>
+                    <div class="fgb-stat"><div class="k">P95 帧时间</div><div class="v" id="fgb-s-p95">—</div></div>
+                    <div class="fgb-stat"><div class="k">帧时间抖动（stddev）</div><div class="v" id="fgb-s-jitter">—</div></div>
+                    <div class="fgb-stat"><div class="k">掉帧率（&gt;33.3ms）</div><div class="v" id="fgb-s-drop">—</div></div>
+                </div>
+                <div class="fgb-gpu-line"><b>GPU：</b><span class="fgb-renderer-raw" id="fgb-s-gpu">—</span></div>
+            </div>
+
+            <div class="fgb-panel" id="fgb-report-panel" style="display:none;">
+                <h3><i class="material-icons">description</i> 报告</h3>
+                <div class="fgb-report-actions">
+                    <button type="button" class="fgb-btn-ghost" id="fgb-copy">
+                        <i class="material-icons">content_copy</i> 一键复制报告
+                    </button>
+                    <button type="button" class="fgb-btn-ghost" id="fgb-download">
+                        <i class="material-icons">download</i> 下载报告（txt）
+                    </button>
+                </div>
+            </div>
+
+            <div class="fgb-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="fgb-faq">
+                    <dt>这个跑分和 3DMark 之类的原生跑分能比吗？</dt>
+                    <dd>不能直接比。本页只测浏览器内 WebGL 的图形管线性能（顶点/片元着色器＋合成器开销），3DMark 测的是原生驱动下的完整 GPU 能力。同一台机器两种分数通常不在一个量级，本页成绩单只适合「同一浏览器横向对比」（比如换驱动/换浏览器前后）。</dd>
+                    <dt>为什么跑分时 FPS 忽高忽低？</dt>
+                    <dd>看成绩单里的「帧时间抖动」和「掉帧率」：系统后台进程、浏览器 GC、VSync 相位差都会让单帧耗时波动。1% Low FPS 就是用来看最卡的那 1% 帧的，抖动越大说明体验越不稳定。</dd>
+                    <dt>GPU 显示「未知」怎么办？</dt>
+                    <dd>隐私模式/企业策略可能屏蔽 <code>WEBGL_debug_renderer_info</code> 渲染器字符串，跑分功能不受影响。如果想确认型号，可以去「本地 LLM 硬件检测器」做一次完整检测。</dd>
+                    <dt>页面会上传我的硬件信息吗？</dt>
+                    <dd>不会。负载渲染、帧统计、报告生成全部在浏览器本地完成，零 fetch/XHR，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+
+            <div class="fgb-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="fgb-related">
+                    <a href="/tools/llm-hardware-checker" class="btn btn-secondary" style="font-size:.9rem;">
+                        本地 LLM 硬件检测器 <span style="color:#2563eb;font-weight:700;">· 硬件一条龙</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fgb-toast" id="fgb-toast"></div>
+    <script src="/tools/static/js/fps_gpu_benchmark.js?v=1"></script>
+</body>
+</html>
+{{end}}

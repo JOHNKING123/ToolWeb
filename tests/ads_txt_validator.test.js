@@ -136,7 +136,7 @@ var robotsValIdx = GO_SRC.indexOf('"robots_txt_validator"');
 ok(robotsValIdx >= 0 && adsIdx > robotsValIdx, "注册紧邻 robots_txt_validator 之后（家族相邻）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 261, "注册 Path 总数 260→261");
+eq(pathCount, 262, "注册 Path 总数 261→262");
 
 /* ---------- 10. 模板：真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/ads-txt-validator", "模板 canonical 含新 Path");
