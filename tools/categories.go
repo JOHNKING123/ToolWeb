@@ -218,6 +218,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "编码转换",
 				},
+				{
+					ID:          "qr_scanner",
+					Name:        "二维码扫描器",
+					Description: "免费在线二维码扫描器：上传、拖拽或粘贴二维码图片，浏览器本地 jsQR 解码（零上传、零外部请求），解码文本一键复制、http/https 链接一键打开、定位框可视化、解码文本下载，支持 WiFi 配置与电子名片识别 · QR code scanner online: decode QR from image locally in browser, copy text, open links, show locator box, download result, 100% client-side",
+					Path:        "/tools/qr-scanner",
+					Icon:        "center_focus_strong",
+					New:         true,
+					Category:    "编码转换",
+				},
 			},
 		},
 		{

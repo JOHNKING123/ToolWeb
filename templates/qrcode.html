@@ -12,9 +12,9 @@
     </div>
     <div>
         <div class="section-title">识别二维码</div>
-        <input type="file" id="qrFile" accept="image/*">
-        <button id="decodeBtn" class="btn btn-primary"><i class="material-icons">search</i> 识别</button>
-        <div id="decodeResult" class="result-box"></div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.8rem 1rem;font-size:.92rem;line-height:1.9;color:#1e40af;">
+            <b>📷 二维码一条龙：</b>识别二维码图片请前往 <a href="/tools/qr-scanner" style="color:#1d4ed8;font-weight:700;">二维码扫描器</a> —— 上传／拖拽／粘贴图片，浏览器本地 jsQR 解码（零上传、零外部请求），解码文本一键复制、http/https 链接一键打开、定位框可视化、结果可下载。原页面内「识别」按钮调用的后端解码接口尚未实现，已统一收敛到新工具。
+        </div>
     </div>
     <div style="background:#f0fdfa;border:1px solid #99f6e0;border-radius:.6rem;padding:.7rem 1rem;margin-top:1.2rem;font-size:.92rem;line-height:1.8;color:#0f766e;">
         <b>💬 沟通一条龙：</b>需要把手机号做成「点一下就开聊」的 WhatsApp 聊天链接，用 <a href="/tools/whatsapp-link-generator" style="color:#0d9488;font-weight:600;">WhatsApp 链接生成器</a>（wa.me 链接＋预填消息＋内嵌二维码）—— 生成聊天入口、分享二维码，一套流程。
@@ -57,24 +57,8 @@ genBtn.onclick = async function() {
         document.getElementById('qrResult').innerHTML = `<span style='color:red'>生成失败：${err.message}</span>`;
     }
 };
-// 识别二维码
-const decodeBtn = document.getElementById('decodeBtn');
-decodeBtn.onclick = async function() {
-    const file = document.getElementById('qrFile').files[0];
-    if (!file) return alert('请上传二维码图片');
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await fetch('/tools/api/qrcode/decode', {
-        method: 'POST',
-        body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-        document.getElementById('decodeResult').innerHTML = `<b>识别内容：</b><br>${data.content}`;
-    } else {
-        document.getElementById('decodeResult').innerHTML = `<span style='color:red'>${data.error}</span>`;
-    }
-};
+// 「识别二维码」已收敛到 /tools/qr-scanner（浏览器本地 jsQR 解码）：
+// 页面保留跳转入口，此处不再调用未实现的后端 /tools/api/qrcode/decode。
 </script>
 </div>
 </body>

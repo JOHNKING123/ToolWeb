@@ -1,0 +1,147 @@
+{{define "qr_scanner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二维码扫描器 - 本地解码/上传拖拽粘贴识别/复制文本/打开链接/下载 | 程序员工具箱</title>
+<meta name="description" content="免费在线二维码扫描器：上传、拖拽或粘贴二维码图片，浏览器本地 jsQR 解码（零上传、零外部请求），识别文本一键复制、http/https 链接一键打开、定位框可视化、解码文本下载。支持识别 WiFi 配置与电子名片。QR code scanner online: decode QR from image locally in browser, copy text, open links, download result, 100% client-side.">
+<meta name="keywords" content="二维码扫描器,二维码识别,在线扫码,二维码解码,图片识别二维码,qr scanner,qr code reader,decode qr from image,jsQR,二维码定位框,wifi二维码识别">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/qr-scanner">
+<meta property="og:title" content="二维码扫描器 - 图片本地解码/复制/打开链接/下载">
+<meta property="og:description" content="上传、拖拽或粘贴二维码图片，浏览器本地解码零上传：文本一键复制、链接一键打开、定位框可视化、结果下载。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/qr-scanner">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"二维码扫描器","alternateName":"qr scanner","description":"二维码扫描器：上传、拖拽或粘贴二维码图片，浏览器本地 jsQR 解码，图片零上传、零外部请求；解码文本一键复制、http/https 链接一键打开、定位框可视化、解码文本下载，支持 WiFi 配置与电子名片识别。","url":"https://www.johnkingzcq123.xyz/tools/qr-scanner","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.qrs-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.qrs-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.qrs-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.qrs-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.qrs-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+.qrs-drop{border:2px dashed #93c5fd;border-radius:.7rem;background:#eff6ff;padding:2.2rem 1rem;text-align:center;
+cursor:pointer;color:#1d4ed8;font-size:.95rem;line-height:2;transition:all .15s}
+.qrs-drop:hover{background:#dbeafe}
+.qrs-drop.drag{background:#dbeafe;border-color:#2563eb;transform:scale(1.01)}
+.qrs-drop .material-icons{font-size:2.6rem;display:block;margin-bottom:.3rem}
+.qrs-info{display:none;font-size:.9rem;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;
+border-radius:.45rem;padding:.55rem .9rem;margin-top:.8rem;line-height:1.7}
+.qrs-err{display:none;font-size:.9rem;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;
+border-radius:.45rem;padding:.6rem .9rem;margin-top:.8rem;line-height:1.7}
+.qrs-canvas-wrap{margin-top:1rem;text-align:center}
+#qrs-canvas{max-width:100%;height:auto;border:1px solid #e5e7eb;border-radius:.5rem;background:#f8fafc}
+.qrs-result{display:none;margin-top:1rem}
+.qrs-type{display:inline-block;font-size:.9rem;color:#065f46;background:#d1fae5;border:1px solid #6ee7b7;
+border-radius:2rem;padding:.25rem .9rem;margin-bottom:.7rem}
+.qrs-text{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;
+border-radius:.45rem;padding:.7rem .9rem;font-size:.9rem;line-height:1.7;color:#111827;width:100%;
+box-sizing:border-box;min-height:6rem;resize:vertical}
+.qrs-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem;align-items:center}
+.qrs-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none}
+.qrs-btn .material-icons{font-size:1.1rem}
+.qrs-btn-primary{background:#2563eb;color:#fff}
+.qrs-btn-primary:hover{background:#1d4ed8}
+.qrs-btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+.qrs-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.qrs-btn-secondary:hover{background:#e5e7eb}
+.qrs-btn-secondary:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+.qrs-note{font-size:.85rem;color:#6b7280;margin-top:.8rem;line-height:1.8}
+.qrs-combo{background:#f0fdfa;border:1px solid #99f6e0;border-radius:.6rem;padding:.7rem 1rem;margin-top:1.2rem;
+font-size:.92rem;line-height:1.8;color:#0f766e}
+.qrs-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.93rem}
+.qrs-faq dd{margin:0 0 .6rem;font-size:.9rem;color:#374151;line-height:1.8}
+.qrs-related{display:flex;flex-wrap:wrap;gap:.6rem}
+.qrs-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);opacity:0;pointer-events:none;
+transition:all .2s;padding:.6rem 1.2rem;border-radius:.5rem;font-size:.9rem;color:#fff;background:#374151;z-index:9999}
+.qrs-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.qrs-toast.ok{background:#16a34a}
+.qrs-toast.bad{background:#dc2626}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">center_focus_strong</i> 二维码扫描器</h1>
+<p>上传、拖拽或粘贴二维码图片 → 浏览器本地 jsQR 解码 → 文本展示＋一键复制＋链接一键打开＋定位框可视化＋解码文本下载。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="qrs-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① <b>仅识别标准 QR 码</b> —— 不支持条形码、DataMatrix 等其他码制；② <b>模糊、倾斜、反光或码图过小可能识别失败</b> —— 换一张更清晰、码图更大的图重试；③ <b>100% 浏览器本地解码不上传</b> —— 图片只进 canvas＋ImageData，解码库为本地 vendored 单文件，脚本零外部请求；④ <b>仅 http/https 链接提供「打开」按钮</b> —— javascript:、data: 等伪协议一律只当纯文本展示，绝不提供打开入口，防注入。</div>
+</div>
+
+<div class="qrs-panel">
+<h3><i class="material-icons">upload_file</i> 1. 放入二维码图片</h3>
+<div class="qrs-drop" id="qrs-drop" tabindex="0" role="button" aria-label="点击选择或拖拽二维码图片">
+<i class="material-icons">qr_code_scanner</i>
+<div><b>点击选择 / 拖拽图片到这里 / 直接 Ctrl+V 粘贴截图</b></div>
+<div style="font-size:.85rem;color:#6b7280;">支持 PNG、JPG、GIF、WebP 等常见图片格式，单张 ≤ 10MB</div>
+</div>
+<input type="file" id="qrs-file" accept="image/*" style="display:none;">
+<div class="qrs-info" id="qrs-info"></div>
+<div class="qrs-err" id="qrs-err"></div>
+<div class="qrs-canvas-wrap"><canvas id="qrs-canvas"></canvas></div>
+</div>
+
+<div class="qrs-panel qrs-result" id="qrs-result">
+<h3><i class="material-icons">text_snippet</i> 2. 解码结果</h3>
+<div><span class="qrs-type" id="qrs-type"></span></div>
+<textarea class="qrs-text" id="qrs-text" readonly spellcheck="false"></textarea>
+<div class="qrs-actions">
+<button type="button" class="qrs-btn qrs-btn-primary" id="qrs-copy" disabled><i class="material-icons">content_copy</i> 一键复制文本</button>
+<button type="button" class="qrs-btn qrs-btn-primary" id="qrs-open" style="display:none;"><i class="material-icons">open_in_new</i> 打开链接</button>
+<button type="button" class="qrs-btn qrs-btn-primary" id="qrs-download" disabled><i class="material-icons">download</i> 下载解码文本</button>
+<button type="button" class="qrs-btn qrs-btn-secondary" id="qrs-clear" disabled><i class="material-icons">clear</i> 清空</button>
+</div>
+<div class="qrs-note">复制走 Clipboard API，失败自动回落 <code>execCommand</code>；下载为 <code>.txt</code>（UTF-8 BOM，记事本中文不乱码），文件名 <code>qr_decode_YYYYMMDD_HHmmss.txt</code>；「打开链接」按钮仅在内容为 http/https 链接时出现。</div>
+</div>
+
+<div class="qrs-combo">
+<b>📷 二维码一条龙：</b>想自己<b>生成</b>二维码（自定义尺寸、前景／背景色），用 <a href="/tools/qrcode" style="color:#0d9488;font-weight:600;">二维码工具</a> —— 生成二维码、扫描识别，一套流程。
+</div>
+
+<div class="qrs-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="qrs-faq">
+<dt>图片里的二维码为什么识别不出来？</dt>
+<dd>先对照真限制前两条：本工具<b>只认标准 QR 码</b>（条形码、DataMatrix 等其他码制不支持）；二维码<b>模糊、倾斜、反光、码图太小</b>都会导致失败。请换一张更清晰、码图占比更大的图片重试；手机截图建议先裁掉多余背景。</dd>
+<dt>我的二维码图片会被上传到服务器吗？</dt>
+<dd>不会。图片只在你的浏览器里进入 <code>canvas</code> 转 <code>ImageData</code>，解码库 jsQR 是本站本地 vendored 的单文件（<code>static/vendor/jsQR.min.js</code>），整个过程<b>零外部请求</b>，可断网使用（首次加载页面除外）。</dd>
+<dt>识别出的链接可以直接打开吗？</dt>
+<dd>只有 <b>http/https 开头</b>的链接才会出现「打开链接」按钮，点击后新标签页打开（带 <code>noopener</code>）。<code>javascript:</code>、<code>data:</code> 等伪协议一律只当纯文本展示、不给打开入口，这是防注入的安全设计。</dd>
+<dt>能识别 WiFi 二维码和名片二维码吗？</dt>
+<dd>能。解码文本以 <code>WIFI:</code> 开头会自动标注「WiFi 配置」并解析出 SSID／加密方式；以 <code>BEGIN:VCARD</code> 开头会标注「电子名片」并提取姓名。注意：本工具只做<b>识别展示</b>，不会替你自动连接 WiFi 或写入通讯录。</dd>
+<dt>一次能识别图片里的多个二维码吗？</dt>
+<dd>不能。当前每次解码返回图片中找到的<b>第一个</b>二维码；一张图多个码时请裁剪成单码图片逐张识别。</dd>
+</dl>
+</div>
+
+<div class="qrs-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="qrs-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">二维码扫描器（当前）</span>
+<a href="/tools/qrcode" class="btn btn-secondary" style="font-size:.9rem;">二维码工具（生成/自定义颜色）</a>
+<a href="/tools/wifi-qr-generator" class="btn btn-secondary" style="font-size:.9rem;">WiFi 二维码生成器</a>
+<a href="/tools/barcode" class="btn btn-secondary" style="font-size:.9rem;">条形码生成器</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="qrs-toast" class="qrs-toast"></div>
+<script src="/tools/static/vendor/jsQR.min.js?v=1"></script>
+<script src="/tools/static/js/qr_scanner.js?v=1"></script>
+</body>
+</html>
+{{end}}
