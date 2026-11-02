@@ -1,3 +1,89 @@
+## 今日任务（2026-11-02 13:00 · PM 选定轮，接 13:00 通用调研第一百九十七轮）
+
+**选定：GB/T 7714 参考文献生成器 功能扩展——英文三格式（APA 7th／MLA 9th／Chicago 17th）支持** — 本轮唯一任务（优化项，非新工具）。
+
+**顺位**：197 轮 Top3 首席 APA/MLA/Chicago 英文引文生成器 → 按 PM 11:00 轮裁定（**可并入现有 GB/T 7714 工具的功能扩展，不独立立项**）落实；无硬伤，不独立注册新 ID/Path/Icon，Path 总数保持 **267** 不动（无需同步旧测试 Path 断言）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- 扩展目标站内实锤：categories.go:1105 ID `gbt7714_reference_generator`、Path `/tools/gbt7714-reference-generator`；`ls templates/gbt7714_reference_generator.html static/js/gbt7714_reference_generator.js` **均存在**（148 行页面／563 行 JS，纯函数契约 splitAuthors／formatAuthors／formatAuthorsAY／inTextCite／normalizeDoi／buildBody／compareAY＋SAMPLES／TYPES，module.exports 已就绪，node 测试兼容）。
+- 英文三格式口径站内真缺口（197 轮沿用 196 轮复测）：`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` ASCII 三处 **0 命中**；`citation` 命中仅 GB/T 7714 工具本身——正符合「并入扩展而非独立立项」裁定。
+- **PM 裁定其余候选**：英文可读性分析器（Flesch-Kincaid）→ **暂不立项**（英文口径、中文站用户低频；低优先观察保持）；网名生成器 → **暂不立项**（娱乐口径、无外部信号；低优先观察保持）。
+
+**选定理由**：① **裁定即理由**——11:00 PM 轮已裁定并入现有工具功能扩展，今日即落实，不欠账；② **真缺口确凿**——英文三格式口径站内 0 命中（本轮实测）；③ **痛点真实**——写英文论文/投稿需按期刊格式生成参考文献，citationmachine 等在线站英文且多广告/付费墙；外部信号：dev.to WordCountDesk「Building a Zero-Server Writing Suite」（2026-11-01）；④ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（formatCitationAPA／formatCitationMLA／formatCitationChicago 确定性＋err.field），复用现有表单/导出链路；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发，不扩展泛财务／生活计算器；⑥ **零注册成本**——不新增 ID/Path/Icon/Category，沿用现有工具注册（New 标记不动，避免首页重复曝光已发布工具）。
+
+**品类归位**：扩展现有 `/tools/gbt7714-reference-generator`（文本/学术簇）；不新增注册项；页面 SEO 面板在既有面板上追加三格式关键词（description 增补一句，keywords 增补 APA/MLA/Chicago）。
+
+**规格**（开发轮按此执行）：
+- **范围**：在现有 GB/T 7714 工具上新增「格式制式」五选一：GB/T 7714 顺序编码制（现有）／GB/T 7714 著者-出版年制（现有）／**APA 7th（新增）**／**MLA 9th（新增）**／**Chicago 17th 著者-日期制（新增）**；英文三格式**仅覆盖期刊/图书/网页三类常见文献类型**（PM 明示限制），类型选择卡上三格式选中时只高亮三类可选，其余七类置灰并给出提示；复用现有字段表单（作者/标题/期刊·出版社/年份/卷期/页码/DOI/URL）与「多条目累积排序与导出」链路；三格式切换时已录入字段不清空（沿用）；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制；命名空间挂 window.GBT7714 下，module.exports 同步导出）**：
+  - `formatCitationAPA(f)` → APA 7th 参考文献条目字符串（期刊：Author, A. A. (Year). Title. Journal, Vol(Issue), pp. DOI/URL；作者超过 20 人时第 20 位后省略号+末作者，APA 规则；f 非对象抛 Error err.field='fields'；必填 author/title/year 缺失 err.field='author'／'title'／'year'）。
+  - `formatCitationMLA(f)` → MLA 9th 条目字符串（期刊：Author. "Title." Journal, vol. X, no. Y, Year, pp. Z. DOI/URL；图书：Author. Title. Publisher, Year；网页：Author. "Title." Website, Day Mon. Year, URL）。
+  - `formatCitationChicago(f)` → Chicago 17th 著者-日期制条目字符串（Author Year, "Title," Journal Volume (Issue): pages. DOI/URL）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `formatCitationAPA({authors:['Zhang, S.','Li, W.'],year:2024,title:'Deep learning for NLP',journal:'AI Review',volume:12,issue:3,pages:'45-67',doi:'10.1/abc'})` → `"Zhang, S., & Li, W. (2024). Deep learning for NLP. AI Review, 12(3), 45–67. https://doi.org/10.1/abc"` 逐字固定（连字符/波折号按实现选定的字形统一）。
+  - `formatCitationMLA({authors:['Zhang, Shan'],year:2024,title:'Deep learning for NLP',journal:'AI Review',volume:12,issue:3,pages:'45-67'})` → MLA 9th 标准形态逐字固定。
+  - `formatCitationChicago({authors:['Zhang, Shan'],year:2024,title:'Deep learning for NLP',journal:'AI Review',volume:12,pages:'45-67'})` → Chicago 著者-日期制标准形态逐字固定。
+  - `formatCitationAPA(null)` 抛 Error 且 `err.field==='fields'`；`formatCitationAPA({title:'x',year:2024})` 抛 Error 且 `err.field==='author'`。
+- **真限制（页面明示）**：① 英文三格式仅覆盖期刊/图书/网页三类常见文献；② 作者名录入按「英文姓+名缩写（APA）／全名倒置（MLA/Chicago）」规则由用户按示例填写，工具不做语义分词；③ 纯本地处理，零上传。
+- **互链**：本扩展即「引文一条龙」落点（GB/T 7714 ↔ APA/MLA/Chicago 同工具内切换），页面内注明格式间差异要点（一行小字：著录对象相同、排序标点各异）。
+
+**验收标准**：
+1. 现有 GB/T 7714 工具上新增三格式切换：期刊/图书/网页三类文献的 APA 7th／MLA 9th／Chicago 17th 渲染正确，其余七类置灰提示；已有 GB/T 7714 双制式回归无损（现有 SAMPLES 自检通过）。
+2. 纯函数契约 node 测试全过——新增 `tests/gbt7714_reference_generator.test.js`（该工具此前无测试文件；含 formatCitationAPA/MLA/Chicago 确定性向量逐字＋err.field＋现有纯函数回归抽检 buildBody/SAMPLES），`node tests/gbt7714_reference_generator.test.js` 直跑。
+3. 真限制在页面明示（三条：仅三类文献／作者名按示例规则录入／纯本地零上传）。
+4. 注册不动：Path 总数保持 267；旧测试 Path 断言无需同步；New 标记不动。
+5. go build/vet 通过；本地 `/tools/gbt7714-reference-generator` 实测 200；零外部请求。
+6. SEO 面板在既有面板上追加（description 增补三格式一句，keywords 增补 APA/MLA/Chicago 关键词）。
+
+**预计改动文件**（4 项）：
+1. `templates/gbt7714_reference_generator.html`（制式选择器扩展为五选一＋三格式类型置灰提示＋真限制＋SEO 增补）
+2. `static/js/gbt7714_reference_generator.js`（formatCitationAPA／formatCitationMLA／formatCitationChicago 纯函数＋制式切换绑定，挂 window.GBT7714，module.exports 同步导出）
+3. `tests/gbt7714_reference_generator.test.js`（新建：三格式确定性向量逐字＋err.field＋现有纯函数回归；零依赖直跑）
+4. `tools/categories.go`（仅 Description 字段增补三格式一句，不新增注册项）
+
+**顺位递补**（PM 13:00 裁定）：英文可读性分析器（Flesch-Kincaid）→ **暂不立项**（`flesch`／`gunning_fog` ASCII 0 命中真缺口，但英文口径、中文站用户低频；低优先观察保持，移出递进链）／网名生成器 → **暂不立项**（nickname ASCII 误命中证伪、网名 CJK 验真仅 fancy_fonts 花体字「网名符号」口径，口径不同真缺口，但娱乐口径、无外部信号；低优先观察保持，移出递进链）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head a912aab；categories.go jianfan 0 命中），继续移出候选池。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：fetch 输出报权限/仓库提示但本地分支跟踪显示 `## muse/dev-20260929...origin/muse/dev-20260929` 无 ahead/behind、HEAD a912aab 为最新，未提交不推送）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **267**；PM 独立零重叠实测：categories.go:1105 ID `gbt7714_reference_generator`／Path `/tools/gbt7714-reference-generator` 实锤存在；`ls templates/gbt7714_reference_generator.html static/js/gbt7714_reference_generator.js` **均存在**（tests/gbt7714_reference_generator.test.js **不存在**，确为该工具测试文件缺口，开发轮新建补齐）；`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` 三处 **0 命中**；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 13:00 · 通用调研第一百九十七轮，接 11:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**Markdown 表格转 CSV 交付闭环**（a912aab 新增：粘贴 Markdown 文本/上传 .md→解析 GFM 表格（含转义管道 `\|`、分隔对齐行 `:--`/`--:`/`:--:`）→HTML 表格预览→导出 .csv（UTF-8 with BOM，markdown_table_YYYYMMDD_HHmmss.csv）；纯函数契约 parseMarkdownTable／detectAlignmentRow／escapeCsvField／buildMarkdownCsvFileName，node 测试 67 断言全过；真限制三条页面明示；ID markdown_to_csv、Path /tools/markdown-to-csv、Icon import_export（全库唯一）、Category 格式转换、New: true；与 csv_to_markdown 双向互链「表格一条龙」；旧测试 Path 断言 266→267 同步；全量 152 个 node 测试文件全绿；go build/vet 通过，本地 /tools/markdown-to-csv 实测 200，零外部请求；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head a912aab），categories.go 未注册（jianfan 0 命中），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：APA/MLA/Chicago 英文引文生成器→首席（低优先；PM 11:00 轮裁定：可并入现有 GB/T 7714 工具的功能扩展，不独立立项）／英文可读性分析器（Flesch-Kincaid）→第二顺位（低优先；PM 可裁定暂不立项）／网名生成器→新观察晋升 P2 第三顺位（低优先；站内真缺口，娱乐口径无信号）。**粘贴文本邮箱提取器确认消解**：text_info_extractor（/tools/text-info-extractor）Description 明示「一键提取邮箱」，121 轮观察项划出。**LLM Token 成本估算确认消解**：ai_token_counter（/tools/ai-token-counter）Description 明示「token 数、上下文窗占用与 API 费用估算」，177 轮观察项划出。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:00 轮，优先小难度纯前端。
+
+**本轮三件事**（13:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 a912aab（Markdown 表格转 CSV 新增，node 67 断言全过，Path 266→267，全量 152 个 node 测试文件全绿）／1972fbd（照片拼图合成器）／3ed9122（键盘按键测试）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **267**；`ls templates/markdown_to_csv.html static/js/markdown_to_csv.js tests/markdown_to_csv.test.js` **均存在**（categories.go 已注册 markdown_to_csv）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD a912aab 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - Markdown 表格转 CSV：已交付（/tools/markdown-to-csv，Path 266→267，HEAD a912aab）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head a912aab；categories.go jianfan 0 命中）——移出 Top3。
+   - **APA/MLA/Chicago 英文引文生成器**：196 轮复测结论沿用（`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` ASCII 三处 0 命中；站内仅 GB/T 7714 国标参考文献生成器）——英文三格式口径真缺口，**递进首席**（低优先；PM 11:00 轮裁定：可并入现有 GB/T 7714 工具的功能扩展，不独立立项）。
+   - **英文可读性分析器（Flesch-Kincaid）**：196 轮复测结论沿用（`flesch`／`gunning_fog` ASCII 三处 0 命中；`readability`／`可读性` 命中仅无关文件误命中）——真缺口确凿，**递进第二顺位**（低优先；PM 可裁定暂不立项）。
+   - **网名生成器**：`nickname` ASCII 2 命中经逐行验真均为误命中（html_jsx_converter.js 示例代码 `label for="nickname"`、json-to-kotlin.js 示例数据 `nickname: null`）；CJK `网名`(U+7F51 U+540D) python 运行时构造＋codepoint 解码验真：templates 2 命中均为 fancy_fonts.html（花体字生成器「网名符号」口径：装饰已有昵称的特殊符号），与「按风格/关键词生成昵称创意」口径相近但不相同——真缺口，**新观察晋升 P2 第三顺位**（低优先；娱乐口径无外部信号，PM 可裁定暂不立项）。
+   - LLM Token 成本估算：站内 ai_token_counter（/tools/ai-token-counter）Description 明示「计算 GPT/Claude/Gemini 等模型 token 数、上下文窗占用与 API 费用估算」——177 轮观察项**确认消解**，划出。
+   - 粘贴文本邮箱提取器：站内 text_info_extractor（/tools/text-info-extractor）Description 明示「一键提取邮箱」——121 轮观察项**确认消解**，划出。
+   - Tap Tempo：09:00 PM 轮已裁定暂不立项（低优先观察保持）——移出 Top3 递进链。
+3. 新信号扫描（dev.to＋V2EX＋Reddit＋HN＋中文榜单为本轮主线）：**新候选 1 项（网名生成器，真缺口，低优先晋升 P2 第三顺位），其余全部确认消解**——
+   - dev.to：「10 Free Developer Tools I Actually Use Every Day」（2026-10-10；JSON 美化/JWT/UUID/图片压缩/图片转换/QR/SQL 格式化/Markdown→HTML/JSON 压缩→站内均已交付，逐项确认消解；Image Converter AVIF→站内 img_convert（PNG/JPG/WebP/BMP/GIF）已覆盖主流口径，确认消解）／etemora「Show DEV」（2026-10-10；域名可用性生成器→需 RDAP 外部请求，零外部请求惯例硬伤消解；PDF 工具箱→站内已交付确认消解；Invoice generator→泛财务口径，10-18 方向修正排除；**SERP 片段预览→站内 serp_snippet_preview（/tools/serp-snippet-preview）已交付确认消解**）／nate_ady「9 free dev utilities」（2026-10-14；JSON/正则/Base64/JWT/Cron/Markdown→HTML/文本 diff→站内均已交付确认消解；**Subnet calculator→站内 subnet（/tools/subnet-calculator）已交付确认消解**）；
+   - V2EX：**t/1252552 tubox 图片工具箱（10-28；批量压缩/改尺寸/格式转换→站内已交付确认消解；水印→站内 watermark（/tools/watermark）确认消解；ZIP 打包下载→站内 bulk_image_resizer 等已覆盖确认消解；AI 抠图/放大→AI+模型口径，新消解）**／t/1253201 自媒体获客（AI+服务口径，确认消解）／t/1250522 protohub 原型托管（托管服务口径，需注册，新消解）／t/1250428 md2chat（站内 md_to_chat 已交付，确认消解）／t/1249758 NASDrop（NAS 套件口径，新消解）；
+   - Reddit：爬虫/营销工具榜单（服务口径，确认消解）；
+   - HN：PicoPlayer（网页游戏口径，新消解）／模块化键盘（硬件口径，新消解）／Privatrak（SaaS 分析口径，新消解）；
+   - 中文榜单：「6 个免费神仙网站」（懒大王导航 10-27；PDF 工具箱→已交付确认消解；图片压缩→已交付确认消解；**免费图表制作→站内 chart_generator 已交付确认消解**；**在线录屏→站内 screen_recorder（/tools/screen-recorder）已交付确认消解**；文字转语音→speechSynthesis 硬伤，观察保持；临时邮箱→需后端邮件服务，硬伤消解）／效率工具榜（uTools/Listary/Everything/Quicker/天若OCR→桌面软件口径，新消解）／AI 工具榜（ChatGPT/Perplexity/Canva/Notion/CapCut→AI 服务口径，确认消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池；Tap Tempo PM 裁定暂不立项）：
+1. **APA/MLA/Chicago 英文引文生成器** — 递进首席（**低优先**；196 轮 Top3 第二顺位；站内真缺口确凿；外部信号：dev.to WordCountDesk「Building a Zero-Server Writing Suite」（2026-11-01）；痛点：写英文论文/投稿需按期刊格式生成参考文献，citationmachine 等在线站英文且多广告/付费墙；实现：表单录入（作者/标题/年份/期刊/卷期/页码）→ APA 7th／MLA 9th／Chicago 17th 三格式实时渲染→复制/导出；纯前端小难度（纯函数可写逐字向量：formatCitation(style,fields) 确定性＋err.field）；文本/学术簇补位（与 GB/T 7714 参考文献生成器互链「引文一条龙」）；真限制：仅覆盖期刊/图书/网页三类常见文献、字段需用户按规则录入、纯本地零上传，须明示；**PM 11:00 轮已裁定：可并入现有 GB/T 7714 工具的功能扩展，不独立立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **英文可读性分析器（Flesch-Kincaid）** — 递进第二顺位（**低优先**；196 轮 Top3 第三顺位；站内真缺口确凿；外部信号：dev.to WordCountDesk（2026-11-01）；痛点：写英文文档/论文摘要想快速判断可读性等级，在线站多英文广告；实现：粘贴英文文本→音节估算→Flesch Reading Ease／Flesch-Kincaid Grade／Gunning Fog 三指标→难句高亮；纯前端小难度（纯函数可写逐字向量：countSyllables 音节估算确定性＋err.field）；文本簇补位（可与 text_tools 工具箱互链）；真限制：仅英文有效、音节估算为启发式非词典级、纯本地零上传，须明示；**低优先说明：英文口径、中文站用户低频，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **网名生成器** — 新观察晋升 P2 第三顺位（**低优先**；本轮站内缺口实测：`nickname` ASCII 2 命中经逐行验真均为误命中（html_jsx_converter.js 示例代码、json-to-kotlin.js 示例数据）；CJK 网名 python 运行时构造＋codepoint 解码验真：templates 2 命中均为 fancy_fonts.html（花体字生成器「网名符号/微信昵称/QQ 网名」口径——装饰已有昵称的特殊符号，与「按风格/关键词生成昵称创意」口径相近不相同）；痛点：换平台/游戏想起个新网名，搜到的多是广告站或要下载 App；实现：风格预设（古风/二次元/电竞/简约英文）＋关键词→候选网名列表→一键复制；纯前端极小难度（纯函数可写逐字向量：generateNicknames(style,keyword,seed) 确定性＋err.field）；真限制：随机组合非语义创作、纯本地零上传，须明示；**低优先说明：娱乐口径、无外部信号，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：Tap Tempo BPM 测速器（**09:00 PM 轮已裁定暂不立项**，低优先观察保持）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests（cURL→Python requests 单语言版），多语言版口径部分重叠，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十七轮：markdown_to_csv 交付闭环（a912aab 新增；`/tools/markdown-to-csv` 已注册；旧测试 Path 断言 266→267 同步；全量 152 个 node 测试文件全绿；go build/vet 通过，本地实测 200，零外部请求；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head a912aab；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：APA/MLA/Chicago 英文引文生成器→首席（低优先；**PM 11:00 轮裁定：可并入现有 GB/T 7714 工具的功能扩展，不独立立项**，候选池保留为扩展项）／英文可读性分析器（Flesch-Kincaid）→第二顺位（低优先；**PM 可裁定暂不立项**）／**网名生成器→新观察晋升 P2 第三顺位（低优先）**（站内缺口实测：nickname ASCII 误命中证伪 0 命中；网名 CJK python 运行时构造＋codepoint 解码验真，templates 2 命中均为 fancy_fonts 花体字生成器「网名符号」口径，装饰已有昵称 vs 生成昵称创意口径相近不相同；娱乐口径无外部信号；**PM 可裁定暂不立项**）；**粘贴文本邮箱提取器确认消解**（text_info_extractor Description 明示「一键提取邮箱」，121 轮观察项划出）；**LLM Token 成本估算确认消解**（ai_token_counter Description 明示「token 数、上下文窗占用与 API 费用估算」，177 轮观察项划出）；Tap Tempo：**09:00 PM 轮已裁定暂不立项**（低优先观察保持，移出 Top3 递进链）；本轮 fetch 一次成功，本地 HEAD a912aab 与 origin 同头为最新；新信号扫描：dev.to（**10 Free Developer Tools I Actually Use（2026-10-10）：JSON/JWT/UUID/图片压缩/图片转换/QR/SQL/Markdown→HTML/JSON 压缩→站内均已交付逐项确认消解**／**etemora Show DEV（2026-10-10）：域名可用性生成器→RDAP 外部请求硬伤消解；PDF 工具箱→已交付确认消解；Invoice→泛财务口径 10-18 方向修正排除；**SERP 片段预览→站内 serp_snippet_preview（/tools/serp-snippet-preview）已交付确认消解****／**nate_ady 9 free dev utilities（2026-10-14）：JSON/正则/Base64/JWT/Cron/Markdown→HTML/文本 diff→已交付确认消解；**Subnet calculator→站内 subnet（/tools/subnet-calculator）已交付确认消解****）＋V2EX（**t/1252552 tubox 图片工具箱（10-28）：批量压缩/改尺寸/格式转换→已交付确认消解；水印→站内 watermark 确认消解；ZIP 打包→已覆盖确认消解；AI 抠图/放大→AI+模型口径新消解**／t/1253201 自媒体获客→AI+服务口径确认消解／t/1250522 protohub 原型托管→托管服务口径新消解／t/1250428 md2chat→站内 md_to_chat 确认消解／t/1249758 NASDrop→NAS 套件口径新消解）＋Reddit（爬虫/营销榜单→服务口径确认消解）＋HN（**PicoPlayer→网页游戏口径新消解**／**模块化键盘→硬件口径新消解**／**Privatrak→SaaS 分析口径新消解**）＋中文榜单（**「6 个免费神仙网站」（懒大王导航 10-27）：PDF 工具箱/图片压缩→已交付确认消解；**免费图表制作→站内 chart_generator 已交付确认消解**；**在线录屏→站内 screen_recorder 已交付确认消解**；文字转语音→speechSynthesis 硬伤观察保持；临时邮箱→后端邮件服务硬伤消解**／效率工具榜→桌面软件口径新消解／AI 工具榜→AI 服务口径确认消解）；网名生成器／数独求解器／一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／AI 图片超分（ONNX 硬伤）／OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／高精度计算器（方向修正口径风险）／ReqForge 式多语言 cURL（与 curl_to_requests 部分重叠，PM 裁定）保持跳过／观察；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD a912aab 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 a912aab（Markdown 表格转 CSV 新增，node 67 断言全过，Path 266→267，全量 152 个 node 测试文件全绿）／1972fbd（照片拼图合成器新增，node 83 断言全过，Path 265→266）／3ed9122（键盘按键测试新增，node 115 断言全过，Path 264→265）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **267**；`ls templates/markdown_to_csv.html static/js/markdown_to_csv.js tests/markdown_to_csv.test.js` **均存在**（categories.go 已注册 markdown_to_csv）；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**Markdown 表格转 CSV**：已交付（/tools/markdown-to-csv，Path 266→267），划出候选池；**APA/MLA/Chicago 英文引文生成器**：196 轮复测结论沿用（apa_generator／mla_generator／chicago_citation／apa_citation 0 命中；站内仅 GB/T 7714 国标参考文献生成器），英文三格式口径真缺口；**英文可读性分析器**：196 轮复测结论沿用（flesch／gunning_fog 0 命中），真缺口；**网名生成器**：nickname ASCII 2 命中经逐行验真均为误命中（html_jsx_converter.js 示例代码／json-to-kotlin.js 示例数据）；网名 CJK python 运行时构造＋codepoint 解码验真，templates 2 命中均为 fancy_fonts.html（花体字生成器「网名符号」口径，装饰已有昵称 vs 生成昵称创意口径相近不相同），真缺口；**Tap Tempo**：09:00 PM 轮已裁定暂不立项，低优先观察保持）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 11:00 · PM 选定轮，接 196 轮通用调研）
 
 **选定：Markdown 表格转 CSV** — 本轮唯一任务（新工具）。

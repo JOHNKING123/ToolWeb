@@ -41,6 +41,7 @@
         pubdate:    { label: '公告日期',       placeholder: '如：2024-03-15' },
         doi:        { label: 'DOI',            placeholder: '如：10.1000/xyz123（自动补全 https://doi.org/）' },
         url:        { label: 'URL',            placeholder: '如：https://example.com/article' },
+        sitename:   { label: '网站名',         placeholder: '如：CNNIC（可选，仅 APA/MLA/Chicago 网页条目用）' },
         updateDate: { label: '更新日期',       placeholder: '如：2024-01-01（可选）' },
         accessDate: { label: '引用日期',       placeholder: '如：2026-10-17' },
         archiveloc: { label: '收藏地',         placeholder: '如：北京' },
@@ -57,7 +58,7 @@
         'S':      [['standardOrg', 0], ['title', 1], ['standardNo', 0], ['place', 0], ['publisher', 0], ['year', 1]],
         'R':      [['authors', 0], ['title', 1], ['place', 0], ['reportOrg', 1], ['year', 1]],
         'P':      [['authors', 0], ['title', 1], ['patno', 1], ['pubdate', 1]],
-        'EB/OL':  [['authors', 0], ['title', 1], ['url', 1], ['updateDate', 0], ['accessDate', 1]],
+        'EB/OL':  [['authors', 0], ['title', 1], ['sitename', 0], ['url', 1], ['updateDate', 0], ['accessDate', 1]],
         'A':      [['authors', 0], ['title', 1], ['archiveloc', 1], ['archiveNo', 1]]
     };
 
@@ -262,11 +263,190 @@
         }
     }
 
+    /* ================= 纯函数：APA 7th / MLA 9th / Chicago 17th 著者-日期制 =================
+       f 字段：{authors(数组/字符串), year, title, journal, volume, issue, pages,
+                doi, url, publisher, edition, place, sitename, accessDate, updateDate}
+       类型判定：有 journal → 期刊；否则有 publisher → 图书；否则 → 网页。
+       作者名按示例规则由用户录入（APA「姓, 名首字母」/ MLA·Chicago「姓, 名」），不做语义分词。 */
+
+    function enErr(field, msg) {
+        var e = new Error(msg || ('invalid ' + field));
+        e.field = field;
+        return e;
+    }
+
+    function enAuthors(f) {
+        var a = f ? f.authors : null;
+        if (typeof a === 'string') a = [a];
+        if (!Array.isArray(a)) a = [];
+        return a.map(function (s) { return String(s).trim(); }).filter(function (s) { return s.length > 0; });
+    }
+
+    function enCheck(f) {
+        if (!f || typeof f !== 'object' || Array.isArray(f)) throw enErr('fields', 'fields must be an object');
+        var authors = enAuthors(f);
+        if (!authors.length) throw enErr('author', 'author is required');
+        if (!String(f.title == null ? '' : f.title).trim()) throw enErr('title', 'title is required');
+        if (f.year === undefined || f.year === null || String(f.year).trim() === '') throw enErr('year', 'year is required');
+        return authors;
+    }
+
+    function enStr(v) { return String(v == null ? '' : v).trim(); }
+
+    // 页码连字符统一为 en dash（U+2013，APA 口径）
+    function enPagesDash(pages) {
+        var p = enStr(pages);
+        if (!p) return '';
+        return p.replace(/\s*-\s*/g, '–');
+    }
+
+    // APA 7th 作者串：≤20 人「A, B, & C」；>20 人前 19 + 省略号 + 末作者
+    function apaAuthors(authors) {
+        if (authors.length === 1) return authors[0];
+        if (authors.length <= 20) return authors.slice(0, -1).join(', ') + ', & ' + authors[authors.length - 1];
+        return authors.slice(0, 19).join(', ') + ', ... ' + authors[authors.length - 1];
+    }
+
+    function formatCitationAPA(f) {
+        var authors = enCheck(f);
+        var year = enStr(f.year);
+        var title = enStr(f.title);
+        var journal = enStr(f.journal);
+        var publisher = enStr(f.publisher);
+        var url = enStr(f.url);
+        var head = apaAuthors(authors) + ' (' + year + '). ';
+        if (journal) {
+            var vol = enStr(f.volume), iss = enStr(f.issue), pg = enPagesDash(f.pages);
+            var out = head + title + '. ' + journal;
+            if (vol) out += ', ' + vol + (iss ? '(' + iss + ')' : '');
+            if (pg) out += ', ' + pg;
+            out += '.';
+            var tail = f.doi ? normalizeDoi(f.doi) : url;
+            if (tail) out += ' ' + tail;
+            return out;
+        }
+        if (publisher) {
+            var ed = enStr(f.edition);
+            return head + title + (ed ? ' (' + ed + ')' : '') + '. ' + publisher + '.';
+        }
+        if (!url) throw enErr('url', 'url is required for web');
+        var site = enStr(f.sitename);
+        return head + title + '.' + (site ? ' ' + site + '.' : '') + ' ' + url;
+    }
+
+    // MLA 9th 作者串：1 人「A.」；2 人「A, and B.」；≥3 人「A, et al.」
+    function mlaAuthors(authors) {
+        if (authors.length === 1) return authors[0] + '.';
+        if (authors.length === 2) return authors[0] + ', and ' + authors[1] + '.';
+        return authors[0] + ', et al.';
+    }
+
+    var MLA_MONTHS = { 1: 'Jan.', 2: 'Feb.', 3: 'Mar.', 4: 'Apr.', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug.', 9: 'Sept.', 10: 'Oct.', 11: 'Nov.', 12: 'Dec.' };
+    function mlaDate(ds) {
+        var m = enStr(ds).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!m) return '';
+        var mo = MLA_MONTHS[parseInt(m[2], 10)];
+        if (!mo) return '';
+        return parseInt(m[3], 10) + ' ' + mo + ' ' + m[1];
+    }
+
+    function formatCitationMLA(f) {
+        var authors = enCheck(f);
+        var year = enStr(f.year);
+        var title = enStr(f.title);
+        var journal = enStr(f.journal);
+        var publisher = enStr(f.publisher);
+        var url = enStr(f.url);
+        var a = mlaAuthors(authors);
+        if (journal) {
+            var vol = enStr(f.volume), iss = enStr(f.issue), pg = enStr(f.pages);
+            var out = a + ' "' + title + '." ' + journal;
+            if (vol) out += ', vol. ' + vol;
+            if (iss) out += ', no. ' + iss;
+            out += ', ' + year;
+            if (pg) out += ', pp. ' + pg;
+            out += '.';
+            var tail = f.doi ? normalizeDoi(f.doi) : url;
+            if (tail) out += ' ' + tail;
+            return out;
+        }
+        if (publisher) {
+            return a + ' ' + title + '. ' + publisher + ', ' + year + '.';
+        }
+        if (!url) throw enErr('url', 'url is required for web');
+        var site = enStr(f.sitename);
+        var date = mlaDate(f.accessDate || f.updateDate);
+        var outw = a + ' "' + title + '."';
+        if (site) outw += ' ' + site;
+        if (date) outw += ', ' + date;
+        return outw + ', ' + url + '.';
+    }
+
+    // Chicago 17th 著者-日期制作者串：1 人「A.」；2 人「A, and B.」；≥3 人「A, et al.」
+    function chicagoAuthors(authors) {
+        if (authors.length === 1) return authors[0] + '.';
+        if (authors.length === 2) return authors[0] + ', and ' + authors[1] + '.';
+        return authors[0] + ', et al.';
+    }
+
+    var CHICAGO_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    function chicagoDate(ds) {
+        var m = enStr(ds).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!m) return '';
+        var mo = CHICAGO_MONTHS[parseInt(m[2], 10) - 1];
+        if (!mo) return '';
+        return mo + ' ' + parseInt(m[3], 10) + ', ' + m[1];
+    }
+
+    function formatCitationChicago(f) {
+        var authors = enCheck(f);
+        var year = enStr(f.year);
+        var title = enStr(f.title);
+        var journal = enStr(f.journal);
+        var publisher = enStr(f.publisher);
+        var url = enStr(f.url);
+        var a = chicagoAuthors(authors);
+        var head = a + ' ' + year + '.';
+        if (journal) {
+            var vol = enStr(f.volume), iss = enStr(f.issue), pg = enStr(f.pages);
+            var out = head + ' "' + title + '." ' + journal;
+            if (vol) out += ' ' + vol;
+            if (iss) out += ' (' + iss + ')';
+            if (pg) out += ': ' + pg;
+            out += '.';
+            var tail = f.doi ? normalizeDoi(f.doi) : url;
+            if (tail) out += ' ' + tail;
+            return out;
+        }
+        if (publisher) {
+            var place = enStr(f.place);
+            return head + ' ' + title + '. ' + (place ? place + ': ' : '') + publisher + '.';
+        }
+        if (!url) throw enErr('url', 'url is required for web');
+        var site = enStr(f.sitename);
+        var acc = chicagoDate(f.accessDate || f.updateDate);
+        var outw = head + ' "' + title + '."';
+        if (site) outw += ' ' + site + '.';
+        if (acc) outw += ' Accessed ' + acc + '.';
+        return outw + ' ' + url + '.';
+    }
+
     /* ================= UI 逻辑 ================= */
     var entries = [];
-    var mode = 'seq'; // 'seq' 顺序编码制 | 'ay' 著者-出版年制
+    var mode = 'seq'; // 'seq' 顺序编码制 | 'ay' 著者-出版年制 | 'apa' | 'mla' | 'chicago'
     var curType = 'J';
     var uid = 0;
+
+    // 英文三格式仅覆盖期刊 / 图书 / 网页三类
+    var EN_MODES = { apa: 1, mla: 1, chicago: 1 };
+    var EN_TYPES = { J: 1, M: 1, 'EB/OL': 1 };
+    var EN_MODE_NAMES = { apa: 'APA 7th', mla: 'MLA 9th', chicago: 'Chicago 17th' };
+    // 英文三格式必填（表单已有字段子集）
+    var EN_REQUIRED = {
+        'J':     [['authors', '作者'], ['title', '题名'], ['journal', '期刊名'], ['year', '出版年']],
+        'M':     [['authors', '作者'], ['title', '题名'], ['publisher', '出版社'], ['year', '出版年']],
+        'EB/OL': [['authors', '作者'], ['title', '题名'], ['url', 'URL']]
+    };
 
     function $(id) { return document.getElementById(id); }
 
@@ -296,19 +476,25 @@
     function renderTypeCards() {
         var grid = $('gbt-type-grid');
         grid.innerHTML = '';
+        var enMode = !!EN_MODES[mode];
         TYPES.forEach(function (t) {
+            var supported = !enMode || EN_TYPES[t.key];
             var lab = document.createElement('label');
-            lab.className = 'gbt-type-card' + (t.key === curType ? ' active' : '');
+            lab.className = 'gbt-type-card' + (t.key === curType ? ' active' : '') + (supported ? '' : ' disabled');
+            if (!supported) lab.title = '英文 ' + EN_MODE_NAMES[mode] + ' 格式仅支持期刊 / 图书 / 网页三类文献';
             lab.innerHTML = '<input type="radio" name="gbt-type" value="' + esc(t.key) + '"' +
-                (t.key === curType ? ' checked' : '') + '>' +
+                (t.key === curType ? ' checked' : '') + (supported ? '' : ' disabled') + '>' +
                 '<span class="gbt-type-mark">' + esc(t.mark) + '</span>' +
                 '<span class="gbt-type-name">' + esc(t.name) + '</span>' +
-                '<span class="gbt-type-desc">' + esc(t.desc) + '</span>';
-            lab.querySelector('input').addEventListener('change', function () {
-                curType = t.key;
-                renderTypeCards();
-                renderForm();
-            });
+                '<span class="gbt-type-desc">' + esc(t.desc) + '</span>' +
+                (supported ? '' : '<span class="gbt-type-desc">英文三格式暂不支持</span>');
+            if (supported) {
+                lab.querySelector('input').addEventListener('change', function () {
+                    curType = t.key;
+                    renderTypeCards();
+                    renderForm();
+                });
+            }
             grid.appendChild(lab);
         });
     }
@@ -359,10 +545,25 @@
 
     function addEntry() {
         var d = readForm();
-        var missing = validate(curType, d);
+        var missing;
+        if (EN_MODES[mode]) {
+            if (!EN_TYPES[curType]) {
+                showErr('英文 ' + EN_MODE_NAMES[mode] + ' 格式仅支持期刊 / 图书 / 网页三类，请先切换文献类型。');
+                return;
+            }
+            missing = [];
+            EN_REQUIRED[curType].forEach(function (fd) {
+                if (!d[fd[0]]) missing.push(fd[1]);
+            });
+        } else {
+            missing = validate(curType, d);
+        }
         if (missing.length) {
             showErr('还有必填项没填：' + missing.join('、') + '。补上后再添加到列表吧。');
-            var first = $('gbt-f-' + TYPE_FIELDS[curType].filter(function (fd) { return fd[1] && !d[fd[0]]; })[0][0]);
+            var firstKey = EN_MODES[mode]
+                ? EN_REQUIRED[curType].filter(function (fd) { return !d[fd[0]]; })[0][0]
+                : TYPE_FIELDS[curType].filter(function (fd) { return fd[1] && !d[fd[0]]; })[0][0];
+            var first = $('gbt-f-' + firstKey);
             if (first) first.focus();
             return;
         }
@@ -393,15 +594,71 @@
         showTip('已填入「' + typeDef(curType).name + '」示例，可直接点「添加到列表」试试。');
     }
 
+    // 表单数据 → 英文三格式纯函数入参 f（复用现有字段；网页年份取自引用/更新日期）
+    function enInput(type, d) {
+        var access = (d.accessDate || '').trim();
+        var update = (d.updateDate || '').trim();
+        var year = (d.year || '').trim() ||
+            (access ? access.slice(0, 4) : '') ||
+            (update ? update.slice(0, 4) : '');
+        return {
+            authors: splitAuthors(d.authors),
+            year: year,
+            title: (d.title || '').trim(),
+            journal: (d.journal || '').trim(),
+            volume: (d.volume || '').trim(),
+            issue: (d.issue || '').trim(),
+            pages: pagesOf(d),
+            doi: (d.doi || '').trim(),
+            url: (d.url || '').trim(),
+            publisher: (d.publisher || '').trim(),
+            edition: (d.edition || '').trim(),
+            place: (d.place || '').trim(),
+            sitename: (d.sitename || '').trim(),
+            accessDate: access,
+            updateDate: update
+        };
+    }
+
+    function enCitation(m, type, d) {
+        var f = enInput(type, d);
+        if (m === 'apa') return formatCitationAPA(f);
+        if (m === 'mla') return formatCitationMLA(f);
+        return formatCitationChicago(f);
+    }
+
+    // 英文三格式：按首作者字母排序（APA/MLA/Chicago 参考文献表惯例）
+    function compareEN(a, b) {
+        function first(e) {
+            var as = splitAuthors(e.data.authors);
+            return (as.length ? as[0] : (e.data.title || '').trim()).toLowerCase();
+        }
+        var ka = first(a), kb = first(b);
+        try {
+            return ka.localeCompare(kb, 'en');
+        } catch (e) {
+            return ka < kb ? -1 : ka > kb ? 1 : 0;
+        }
+    }
+
     function orderedEntries() {
         if (mode === 'ay') return entries.slice().sort(compareAY);
+        if (EN_MODES[mode]) return entries.slice().sort(compareEN);
         return entries;
     }
 
     function entryText(e, idx) {
-        var body = buildBody(e.type, e.data, mode);
-        if (mode === 'seq') return '[' + (idx + 1) + '] ' + body;
-        return body;
+        if (mode === 'seq') return '[' + (idx + 1) + '] ' + buildBody(e.type, e.data, 'seq');
+        if (mode === 'ay') return buildBody(e.type, e.data, 'ay');
+        if (!EN_TYPES[e.type]) {
+            return '【' + typeDef(e.type).name + '：英文 ' + EN_MODE_NAMES[mode] +
+                ' 格式仅支持期刊 / 图书 / 网页三类，该条目暂无法用此格式输出】';
+        }
+        try {
+            return enCitation(mode, e.type, e.data);
+        } catch (err) {
+            return '【条目缺字段，无法生成：' + (err && err.message ? err.message : err) + '】';
+        }
     }
 
     function renderList() {
@@ -421,8 +678,8 @@
                 div.innerHTML = '<div class="gbt-text">' + esc(entryText(e, i)) + '</div>' +
                     '<div class="gbt-item-btns">' +
                     '<button class="gbt-mini" data-act="copy">复制</button>' +
-                    '<button class="gbt-mini" data-act="up"' + (i === 0 || mode === 'ay' ? ' disabled' : '') + '>上移</button>' +
-                    '<button class="gbt-mini" data-act="down"' + (i === ordered.length - 1 || mode === 'ay' ? ' disabled' : '') + '>下移</button>' +
+                    '<button class="gbt-mini" data-act="up"' + (i === 0 || mode === 'ay' || EN_MODES[mode] ? ' disabled' : '') + '>上移</button>' +
+                    '<button class="gbt-mini" data-act="down"' + (i === ordered.length - 1 || mode === 'ay' || EN_MODES[mode] ? ' disabled' : '') + '>下移</button>' +
                     '<button class="gbt-mini gbt-danger" data-act="del">删除</button>' +
                     '</div>';
                 div.querySelectorAll('button').forEach(function (btn) {
@@ -514,16 +771,39 @@
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
     }
 
+    // 英文三格式作者录入规则提示条
+    function renderEnNote() {
+        var box = $('gbt-ennote');
+        if (EN_MODES[mode]) {
+            box.innerHTML = '<b>英文' + EN_MODE_NAMES[mode] + '作者录入规则：</b>APA 用「姓, 名首字母」（如 Zhang, S.）；' +
+                'MLA / Chicago 用「姓, 名」（如 Zhang, Shan）；多位作者用<b>分号</b>分隔（如 Zhang, S.; Li, W.）。' +
+                '工具不做语义分词，按录入原样输出。';
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    }
+
     function bind() {
         renderTypeCards();
         renderForm();
         renderList();
+        renderEnNote();
         $('gbt-sample').addEventListener('click', fillSample);
         $('gbt-add').addEventListener('click', addEntry);
         $('gbt-clearform').addEventListener('click', function () { renderForm(); showTip(''); });
         document.querySelectorAll('input[name="gbt-mode"]').forEach(function (r) {
             r.addEventListener('change', function () {
                 mode = document.querySelector('input[name="gbt-mode"]:checked').value;
+                if (EN_MODES[mode] && !EN_TYPES[curType]) {
+                    curType = 'J';
+                    renderTypeCards();
+                    renderForm();
+                    showTip('英文 ' + EN_MODE_NAMES[mode] + ' 格式仅支持期刊 / 图书 / 网页三类，已自动切换为「期刊文章」。');
+                } else {
+                    renderTypeCards();
+                }
+                renderEnNote();
                 renderList();
             });
         });
@@ -552,12 +832,16 @@
             splitAuthors: splitAuthors, hasCJK: hasCJK, formatAuthors: formatAuthors,
             formatAuthorsAY: formatAuthorsAY, inTextCite: inTextCite,
             normalizeDoi: normalizeDoi, buildBody: buildBody, compareAY: compareAY,
+            formatCitationAPA: formatCitationAPA, formatCitationMLA: formatCitationMLA,
+            formatCitationChicago: formatCitationChicago,
             SAMPLES: SAMPLES, TYPES: TYPES
         };
     } else {
         window.GBT7714 = {
             splitAuthors: splitAuthors, buildBody: buildBody, inTextCite: inTextCite,
-            normalizeDoi: normalizeDoi, compareAY: compareAY, SAMPLES: SAMPLES
+            normalizeDoi: normalizeDoi, compareAY: compareAY, SAMPLES: SAMPLES,
+            formatCitationAPA: formatCitationAPA, formatCitationMLA: formatCitationMLA,
+            formatCitationChicago: formatCitationChicago
         };
     }
 })();

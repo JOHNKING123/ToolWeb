@@ -4,21 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GB/T 7714 参考文献格式生成器 - 论文参考文献一键生成（本地运行）</title>
-    <meta name="description" content="免费在线 GB/T 7714 参考文献格式生成器：按 GB/T 7714-2015 国标，表单填写作者/题名/期刊/年/卷期页码/DOI，一键生成期刊[J]/专著[M]/学位论文[D]/论文集[C]/报纸[N]/标准[S]/报告[R]/专利[P]/电子文献[EB/OL]/档案[A]标准条目；支持顺序编码制与著者-出版年制双制式切换、中文「等」/英文「et al」自动处理、多条目累积排序与导出；纯浏览器本地运行，数据不出浏览器。GBT7714 reference generator, 100% client-side.">
-    <meta name="keywords" content="参考文献格式生成器,GB/T 7714,论文参考文献格式,参考文献著录,GB/T 7714-2015,顺序编码制,著者出版年制,et al,参考文献导出,学术写作">
+    <title>GB/T 7714 参考文献格式生成器｜APA / MLA / Chicago 英文引文 - 论文参考文献一键生成（本地运行）</title>
+    <meta name="description" content="免费在线 GB/T 7714 参考文献格式生成器：按 GB/T 7714-2015 国标，表单填写作者/题名/期刊/年/卷期页码/DOI，一键生成期刊[J]/专著[M]/学位论文[D]/论文集[C]/报纸[N]/标准[S]/报告[R]/专利[P]/电子文献[EB/OL]/档案[A]标准条目；支持顺序编码制与著者-出版年制双制式切换、中文「等」/英文「et al」自动处理、多条目累积排序与导出；另支持 APA 7th / MLA 9th / Chicago 17th 英文引文格式（期刊/图书/网页三类）一键切换；纯浏览器本地运行，数据不出浏览器。GBT7714 reference generator, APA citation generator, MLA citation, Chicago author-date, 100% client-side.">
+    <meta name="keywords" content="参考文献格式生成器,GB/T 7714,论文参考文献格式,参考文献著录,GB/T 7714-2015,顺序编码制,著者出版年制,et al,参考文献导出,学术写作,APA格式,MLA格式,Chicago引文,APA 7th,MLA 9th,Chicago 17th,英文参考文献格式,APA citation generator">
     <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/gbt7714-reference-generator">
     <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
     <link rel="stylesheet" href="/tools/static/css/style.css">
     <link rel="stylesheet" href="/tools/static/css/tools.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"GB/T 7714 参考文献格式生成器","description":"按 GB/T 7714-2015 国标生成参考文献条目：支持[J][M][D][C][N][S][R][P][EB/OL][A]十种文献类型、顺序编码制与著者-出版年制双制式、中文「等」/英文「et al」自动处理、多条目累积与导出，纯浏览器本地运行。","url":"https://www.johnkingzcq123.xyz/tools/gbt7714-reference-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"GB/T 7714 参考文献格式生成器","description":"按 GB/T 7714-2015 国标生成参考文献条目：支持[J][M][D][C][N][S][R][P][EB/OL][A]十种文献类型、顺序编码制与著者-出版年制双制式、中文「等」/英文「et al」自动处理、多条目累积与导出，另支持 APA 7th / MLA 9th / Chicago 17th 英文引文格式（期刊/图书/网页），纯浏览器本地运行。","url":"https://www.johnkingzcq123.xyz/tools/gbt7714-reference-generator","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
     </script>
     <style>
         .gbt-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
         .gbt-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
         .gbt-privacy b{color:#047857}
+        .gbt-ennote{display:none;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;font-size:.9rem;margin:0 0 .8rem;padding:.6rem .9rem;line-height:1.8}
         .gbt-err{display:none;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;font-size:.9rem;margin:.8rem 0;padding:.6rem .9rem;line-height:1.6}
         .gbt-ok{display:none;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:.6rem;font-size:.9rem;margin:.8rem 0;padding:.6rem .9rem;line-height:1.6}
         .gbt-tip{display:none;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;font-size:.9rem;margin:.8rem 0;padding:.6rem .9rem;line-height:1.6}
@@ -29,6 +30,8 @@
         .gbt-type-card{display:block;border:2px solid #e5e7eb;border-radius:.7rem;padding:.6rem .7rem;cursor:pointer;background:#fff;transition:border-color .15s,background .15s}
         .gbt-type-card:hover{border-color:#93c5fd}
         .gbt-type-card.active{border-color:var(--primary-color);background:#eff6ff}
+        .gbt-type-card.disabled{opacity:.45;cursor:not-allowed;background:#f9fafb}
+        .gbt-type-card.disabled:hover{border-color:#e5e7eb}
         .gbt-type-card input{display:none}
         .gbt-type-mark{display:inline-block;font-weight:800;color:var(--primary-color);font-size:.95rem;margin-right:.35rem}
         .gbt-type-name{display:block;font-weight:700;color:#111827;font-size:.95rem;margin-top:.15rem}
@@ -74,7 +77,7 @@
     <div class="container">
         <div class="tool-header">
             <h1><i class="material-icons">menu_book</i> GB/T 7714 参考文献格式生成器</h1>
-            <p>按 GB/T 7714-2015 国标，表单填写作者 / 题名 / 期刊 / 年 / 卷期页码 / DOI，一键生成期刊 [J]、专著 [M]、学位论文 [D] 等十种文献类型的标准条目：退修返工的格式问题，这里一次搞定</p>
+            <p>按 GB/T 7714-2015 国标，表单填写作者 / 题名 / 期刊 / 年 / 卷期页码 / DOI，一键生成期刊 [J]、专著 [M]、学位论文 [D] 等十种文献类型的标准条目；另支持 APA 7th / MLA 9th / Chicago 17th 英文引文（期刊/图书/网页）：退修返工的格式问题，这里一次搞定</p>
         </div>
         <div class="tool-content" style="max-width:860px;margin:auto;">
             <div class="gbt-privacy" role="note">
@@ -90,6 +93,7 @@
 
                 <div class="gbt-sec">
                     <h3>② 填写字段 <span style="font-size:.8rem;color:#6b7280;font-weight:400;">（<span class="gbt-req">*</span> 为必填）</span></h3>
+                    <div class="gbt-ennote" id="gbt-ennote" role="note"></div>
                     <div class="gbt-form" id="gbt-form"></div>
                     <div class="gbt-err" id="gbt-err" role="alert"></div>
                     <div class="gbt-ok" id="gbt-ok"></div>
@@ -108,6 +112,9 @@
                     <div class="gbt-mode-row">
                         <label><input type="radio" name="gbt-mode" value="seq" checked> 顺序编码制 <span class="sub">[1][2] 编号，文末按引用顺序排列</span></label>
                         <label><input type="radio" name="gbt-mode" value="ay"> 著者-出版年制 <span class="sub">按作者拼音 / 字母排序，不编号</span></label>
+                        <label><input type="radio" name="gbt-mode" value="apa"> APA 7th <span class="sub">英文著者-日期制，仅期刊 / 图书 / 网页</span></label>
+                        <label><input type="radio" name="gbt-mode" value="mla"> MLA 9th <span class="sub">英文著者-页码制，仅期刊 / 图书 / 网页</span></label>
+                        <label><input type="radio" name="gbt-mode" value="chicago"> Chicago 17th <span class="sub">英文著者-日期制，仅期刊 / 图书 / 网页</span></label>
                     </div>
                     <div class="gbt-empty" id="gbt-empty">列表还是空的。<br>选好文献类型、填完字段后点「生成并添加到列表」，可连续录入多条文献。</div>
                     <div id="gbt-list" style="display:none;"></div>
@@ -131,6 +138,10 @@
                         <li><b>DOI：</b>只填「10.1000/xyz123」即可，工具自动补全为 https://doi.org/ 链接。</li>
                         <li><b>电子文献 [EB/OL]：</b>引用日期为必填，格式如 [2026-10-17]，建议填写你最后一次访问该页面的日期。</li>
                         <li><b>著者-出版年制：</b>文末列表按作者拼音（中文）/ 字母（英文）排序、不编号；正文中对应标注如（张三, 2023）、(Smith et al., 2023)。</li>
+                        <li><b>英文三格式（APA 7th / MLA 9th / Chicago 17th）限制①：</b>仅覆盖期刊 / 图书 / 网页三类常见文献，其余七类（学位论文、论文集析出、报纸、标准、报告、专利、档案）暂不支持，类型卡会置灰提示。</li>
+                        <li><b>英文三格式限制②：</b>作者名请按示例规则录入——APA 用「姓, 名首字母」（如 Zhang, S.），MLA / Chicago 用「姓, 名」（如 Zhang, Shan），多位作者用分号分隔；工具不做语义分词，按录入原样输出。</li>
+                        <li><b>英文三格式限制③：</b>纯浏览器本地运行，数据不出浏览器、零上传。</li>
+                        <li><b>引文一条龙：</b>同一批文献可在 GB/T 7714 与 APA / MLA / Chicago 间一键切换——著录对象相同，排序与标点各异。</li>
                         <li><b>导出：</b>.txt 为 UTF-8（含 BOM）编码，内容与预览完全一致，可直接粘贴进 Word 论文文末。</li>
                     </ul>
                 </div>
@@ -142,7 +153,7 @@
             </div>
         </div>
     </div>
-    <script src="/tools/static/js/gbt7714_reference_generator.js?v=1"></script>
+    <script src="/tools/static/js/gbt7714_reference_generator.js?v=2"></script>
 </body>
 </html>
 {{end}}
