@@ -224,7 +224,7 @@ ok(GO_SRC.indexOf('"/tools/url-parser"') !== -1, "注册 Path /tools/url-parser"
 ok(GO_SRC.indexOf('Category:    "编码转换"') !== -1, "编码转换品类存在");
 var pathCount = {};
 (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).forEach(function (p) { pathCount[p] = true; });
-eq(Object.keys(pathCount).length, 266, "注册 Path 总数 265→266");
+eq(Object.keys(pathCount).length, 267, "注册 Path 总数 266→267");
 ok(TPL_SRC.indexOf("url_parser") !== -1, "模板 define 名 url_parser");
 ok(TPL_SRC.indexOf("请按需改写") !== -1, "模板含请按需改写");
 ok(TPL_SRC.indexOf("@ 之前不是真正主机") !== -1, "模板含 @ 前非真正主机");

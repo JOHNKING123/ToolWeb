@@ -1,3 +1,91 @@
+## 今日任务（2026-11-02 11:00 · PM 选定轮，接 196 轮通用调研）
+
+**选定：Markdown 表格转 CSV** — 本轮唯一任务（新工具）。
+
+**顺位**：196 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；196 轮已把「照片拼图合成器」交付闭环（1972fbd，Path 265→266，全量 151 个 node 测试文件全绿），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 1972fbd），继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- `markdown_csv`／`csv_markdown`／`md_to_csv` 在 templates＋static/js＋tools/categories.go 三处 **0 命中**；`markdown-to-csv`／`markdown_to_csv` Path/ID **0 命中**；`ls templates/markdown_to_csv.html static/js/markdown_to_csv.js tests/markdown_to_csv.test.js` **均不存在**——站内无「Markdown 表格→CSV」口径工具，**真缺口确凿**。
+- `table_to_csv` 命中仅 `paste_table_to_csv`（templates/paste_table_to_csv.html 定义名／categories.go:1219 ID 行子串误命中）——口径为「网页表格粘贴→CSV（TSV 口径）」，与本轮 Markdown 口径**不同**，不构成重叠。
+- `csv_to_markdown`（/tools/csv-to-markdown，格式转换）为**反向**口径，不构成重叠；本轮与之双向互链「表格一条龙」。
+- Icon：**`import_export` 全库 0 命中**（本轮 `grep -c '"import_export"' tools/categories.go`=0；`table_chart`／`table_view`／`table_rows`／`table` 均已被占用；开发轮精确值复测锁定全库唯一）。
+- 全量 Path **266**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **151 个**；本地分支 muse/dev-20260929；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 1972fbd 与 origin 同头为最新。**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例。
+
+**选定理由**：① **顺位即理由**——196 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实**——文档/知乎/Notion 里的 Markdown 表格想转 CSV 进 Excel/WPS，本机无离线工具，在线站多英文或要求上传；外部信号：dev.to「45 tiny tools」＋laofudev「12 I Actually Use」（2026-10-30）**两次明确点名** Markdown Table to CSV；④ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（parseMarkdownTable／escapeCsvField 确定性＋err.field）；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发，不扩展泛财务／生活计算器；⑥ **命名/图标全无占用**——ID `markdown_to_csv`、Path `/tools/markdown-to-csv`、Icon `import_export` 均 0 命中。
+
+**品类归位**：注册到「格式转换」类目（与 csv_to_markdown 同簇，紧邻）；New: true；ID `markdown_to_csv`、Path `/tools/markdown-to-csv`、Icon `import_export`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：粘贴 Markdown 文本／上传 .md → 解析 GFM 表格（含转义管道 `\|`、分隔对齐行识别 `:--`／`--:`／`:--:`）→ 预览表格（HTML 表格渲染）→ 导出 .csv（UTF-8 with BOM，文件名 markdown_table_YYYYMMDD_HHmmss.csv）；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `parseMarkdownTable(text)` → `{headers:[...], rows:[[...]], alignments:[...]}`（text 非字符串抛 Error err.field='text'；无表格抛 Error err.field='table'；转义管道 `\|` 还原、分隔对齐行识别 `:--`／`--:`／`:--:`）。
+  - `detectAlignmentRow(line)` → `['left'|'center'|'right'|null]`（line 非字符串 err.field='line'；非对齐行返回 null 数组）。
+  - `escapeCsvField(field)` → 转义后字段（字段含 `"`／`,`／`\n` 时外层加双引号、内部 `"` 双写；field 非字符串 err.field='field'）。
+  - `buildMarkdownCsvFileName()` → `markdown_table_YYYYMMDD_HHmmss.csv`（下载文件名）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `parseMarkdownTable('| a | b |\n|---|---:|\n| 1 | 2 |\n')` → headers `['a','b']`、rows `[['1','2']]`、alignments `['left','right']` 逐字固定。
+  - `parseMarkdownTable('| foo \\| bar |')` 转义管道：单列 header `'foo | bar'` 逐字固定。
+  - `escapeCsvField('a"b')` → `"a""b"`；`escapeCsvField('a,b')` → `"a,b"`；`escapeCsvField('plain')` → `plain` 逐字固定。
+  - `parseMarkdownTable('无表格文本')` 抛 Error 且 `err.field==='table'`；`escapeCsvField(123)` 抛 Error 且 `err.field==='field'`。
+  - `buildMarkdownCsvFileName()` 匹配 `/^markdown_table_\d{8}_\d{6}\.csv$/`。
+- **真限制（页面明示）**：① 仅解析标准 GFM 表格（合并单元格/多表头不支持）；② CSV 导出 UTF-8 with BOM（供 Excel 中文正常显示）；③ 纯本地处理，零上传。
+- **互链**：与 csv_to_markdown 双向互链「表格一条龙」（CSV→MD↔MD→CSV，由开发轮定出链锚点）。
+
+**验收标准**：
+1. 粘贴 Markdown/上传 .md → GFM 表格解析（转义管道/对齐行）→ 表格预览 → 导出 .csv。
+2. 纯函数契约 node 测试全过（parseMarkdownTable/detectAlignmentRow/escapeCsvField/buildMarkdownCsvFileName 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 266→267、ID/Path/Icon/Category）。
+3. 真限制在页面明示（三条：仅标准 GFM／UTF-8 with BOM／纯本地零上传）。
+4. `/tools/markdown-to-csv` 注册，「格式转换」类目，New: true；旧测试 Path 断言 266→267 同步。
+5. go build/vet 通过；本地 `/tools/markdown-to-csv` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与 csv_to_markdown 互链「表格一条龙」。
+
+**预计改动文件**（5 项）：
+1. `templates/markdown_to_csv.html`（页面＋粘贴区/上传区＋表格预览＋导出控件＋真限制＋SEO 面板）
+2. `static/js/markdown_to_csv.js`（parseMarkdownTable/detectAlignmentRow/escapeCsvField/buildMarkdownCsvFileName 纯函数＋文件读取＋表格渲染＋CSV 导出下载）
+3. `tests/markdown_to_csv.test.js`（node 纯逻辑测试，含确定性向量逐字＋err.field＋注册断言；零依赖，`node tests/markdown_to_csv.test.js` 直跑）
+4. `tools/categories.go`（注册：ID `markdown_to_csv`、Path `/tools/markdown-to-csv`、Icon `import_export`、Category 格式转换、New: true）
+5. 旧测试 Path 总数断言 266→267 同步
+
+**顺位递补**（无硬伤）：APA/MLA/Chicago 英文引文生成器 → P2 第二顺位（**低优先**；`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` ASCII 0 命中真缺口，但站内已有 GB/T 7714 国标参考文献生成器（categories.go:1104，十种文献类型/双制式），**PM 裁定：并入现有工具的功能扩展，不独立立项**，候选池保留为扩展项）／英文可读性分析器（Flesch-Kincaid）→ P2 第三顺位（**低优先**；`flesch`／`gunning_fog` ASCII 0 命中真缺口，但**英文口径、中文站用户低频，PM 裁定暂不立项**，低优先观察保持）；Tap Tempo：09:00 PM 轮已裁定暂不立项（低优先观察保持）；简繁互转仍开发中，继续移出 Top3。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 1972fbd 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 1972fbd（照片拼图合成器新增，node 83 断言全过，Path 265→266，全量 151 个 node 测试文件全绿）／3ed9122（键盘按键测试，Path 264→265）／29195c3（pindou 色数滑杆修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **266**；PM 独立零重叠实测：`markdown_csv`／`csv_markdown`／`md_to_csv` 三处 **0 命中**；`table_to_csv` 命中仅 paste_table_to_csv（网页表格粘贴→CSV，TSV 口径）误命中，口径不同；`csv_to_markdown` 反向口径不重叠；`markdown-to-csv`／`markdown_to_csv` **0 命中**；`import_export` Icon 全库 **0 命中**；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 11:00 · 通用调研第一百九十六轮，接 09:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**照片拼图合成器交付闭环**（1972fbd 新增：上传/拖拽多图→2/3/4/6/9 宫格布局模板→点击/拖拽换位→间距/圆角/背景色可调→canvas 实时预览合成→下载 PNG（photo_collage_YYYYMMDD_HHmmss.png）；纯函数契约 validateCollageConfig／computeCollageLayout／swapCollageSlots／buildCollageFileName，node 测试 83 断言全过；真限制四条页面明示；ID photo_collage、Path /tools/photo-collage、Icon apps（全库唯一）、Category 图片处理、New: true；与 img_stitch/nine_grid 双向互链「拼图一条龙」；旧测试 Path 断言 265→266 同步；全量 151 个 node 测试文件全绿；go build/vet 通过，本地 /tools/photo-collage 实测 200，零外部请求；顺手清理仓库根目录未跟踪 toolweb 遗留二进制；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head 1972fbd），categories.go 未注册，未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：Markdown 表格转 CSV→首席／APA/MLA/Chicago 英文引文生成器→新观察晋升 P2 第二顺位（低优先；可并入现有 GB/T 7714 参考文献工具的功能扩展，是否独立立项由 PM 裁定）／英文可读性分析器（Flesch-Kincaid）→新观察 P2 第三顺位（低优先；英文口径，PM 可裁定暂不立项）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 轮，优先小难度纯前端。
+
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 1972fbd（照片拼图合成器新增，node 83 断言全过，Path 265→266，全量 151 个 node 测试文件全绿）／3ed9122（键盘按键测试，Path 264→265）／29195c3（pindou 色数滑杆修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **266**；`ls templates/photo_collage.html static/js/photo_collage.js tests/photo_collage.test.js` **均存在**（categories.go 已注册 photo_collage）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go 未注册）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 1972fbd 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底，已记入 AGENTS.md）**：
+   - 照片拼图合成器（照片墙）：已交付（/tools/photo-collage，Path 265→266，HEAD 1972fbd）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head 1972fbd；categories.go 未注册）——移出 Top3。
+   - Markdown 表格转 CSV：`markdown_csv`／`csv_markdown`／`md_to_csv` 三处 **0 命中**；`table_to_csv` 2 命中均为已知 paste_table_to_csv（网页表格粘贴→CSV，TSV 口径），口径不同——**递进首席**。
+   - **APA/MLA/Chicago 英文引文生成器**：`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` ASCII 三处 **0 命中**；`citation` 命中仅 lorem_ipsum/pdf-compress 误命中与 categories.go:1106 的 GB/T 7714 国标参考文献生成器（[J][M][D][C][N][S][R][P][EB/OL][A] 十种类型，顺序编码制/著者-出版年制双制式）——英文三格式口径**真缺口确凿**，新观察晋升 P2 第二顺位（**低优先说明：可并入现有 GB/T 7714 工具的功能扩展，独立立项价值待 PM 裁定**；Icon 待开发轮精确值复测锁定）。
+   - **英文可读性分析器（Flesch-Kincaid）**：`flesch`／`gunning_fog` ASCII 三处 **0 命中**；`readability`／`可读性` 命中仅 color_converter/big_sign_display 等无关文件误命中——**真缺口确凿**，新观察 P2 第三顺位（**低优先说明：英文口径、中文站用户低频，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定）。
+   - Tap Tempo BPM 测速器：**09:00 PM 轮已裁定暂不立项**（低优先观察保持）——本轮移出 Top3 递进链。
+3. 新信号扫描（dev.to＋Medium＋V2EX＋Reddit 为本轮主线）：**新候选 2 项（APA/MLA/Chicago 英文引文生成器、Flesch-Kincaid 英文可读性分析器，均为 dev.to WordCountDesk 17 写作工具（2026-11-01）信号，均低优先），其余全部确认消解**——
+   - Medium（11-01 三篇）：**srkamduk「Why I Built Two Free, Ad-Free Web Utilities」（MyLogoQR 向量 QR→站内 qrcode.html 已交付确认消解；FB4KDownloader→视频下载版权/服务口径，新消解）**／**cnl「5 Underrated Chrome Extensions」（书签/VSC/RSVP 速读→扩展口径，新消解）**／**antig「Manifest V3 Without Bloat」（扩展开发口径，新消解）**；
+   - dev.to：**WordCountDesk「Building a Zero-Server Writing Suite」（11-01；17 项逐项复核：字数/字符/句子统计→站内 text_tools 工具箱已交付确认消解；大小写转换→已交付确认消解；slug 生成→已交付确认消解；去行断→文本簇已覆盖确认消解；**APA/MLA/Chicago 引用生成器→新候选信号（低优先）**；**Flesch-Kincaid 可读性评分→新候选信号（低优先）**；阅读/朗读时长估算→文本簇口径已覆盖，确认消解）**／mqurban「8 Free Browser Tools」（ToolsUp；截图美化器→站内 screenshot_beautifier/code_screenshot_beautifier 已交付确认消解；WebP 批量转换→站内 img_convert（PNG/JPG/WebP/BMP/GIF 互转）已交付确认消解；JSON/SQL/Base64/URL→已交付口径确认消解）／rossoxs「25 Free Browser-Based Tools」（XSular；JWT→站内已交付确认消解；哈希/UUID/正则/时间戳/百分比/颜色→已交付口径确认消解）／david_miller「50 Free Browser Tools」（FreeToolBoxes；cron_generator/dns_lookup→站内均已交付确认消解）／alydev「7 Free Browser Tools for Developers Who Make Content」（Excalidraw/Ray.so/Squoosh/Shots.so→外部服务口径确认消解；TikRapid MP3→服务口径确认消解）；
+   - V2EX：**t/1253518 搭手 1.0（11-01；Electron 桌面启动器口径，新消解）**／**t/1253201 自媒体获客四件套（AI 评论/多平台发布→AI+服务口径，新消解）**／**t/1252069 MyEnhancer（AI 积分/第三方图像服务口径，新消解）**／t/1252493 xGoose（确认消解）／**t/1250428 md2chat（Markdown→聊天图→站内 md_to_chat 已交付确认消解）**；
+   - Reddit：ones.com 任务管理/项目管理榜单（多为 SaaS/App 口径，与单页工具站口径不合，确认消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池；Tap Tempo PM 裁定暂不立项）：
+1. **Markdown 表格转 CSV** — 递进首席（195 轮第二顺位；`markdown_csv`／`csv_markdown`／`md_to_csv` 0 命中；`table_to_csv` 命中仅 paste_table_to_csv（网页表格粘贴口径）；真缺口确凿；外部信号：dev.to「45 tiny tools」＋laofudev「12 I Actually Use」（2026-10-30）两次明确点名 Markdown Table to CSV，信号加强；痛点：文档/知乎/Notion 里的 Markdown 表格想转 CSV 进 Excel/WPS，本机无离线工具，在线站多英文或要求上传；实现：粘贴/上传 .md→解析 GFM 表格（含转义管道、分隔对齐行识别）→预览表格→导出 .csv；纯前端小难度（纯函数可写逐字向量：parseMarkdownTable／detectAlignmentRow／escapeCsvField 确定性＋err.field）；文本处理簇补位（与 csv_to_markdown 双向互链「表格一条龙」：CSV→MD↔MD→CSV）；真限制：仅解析标准 GFM 表格（合并单元格不支持）、CSV 建议 UTF-8 with BOM 供 Excel 中文显示、纯本地零上传，须明示；Icon 候选 `table_chart`／`table_view`，开发轮精确值复测锁定全库唯一）。
+2. **APA/MLA/Chicago 英文引文生成器** — 新观察晋升 P2 第二顺位（**低优先**；站内缺口实测＋dev.to WordCountDesk（2026-11-01）信号；`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` ASCII 三处 0 命中；`citation` 命中仅 lorem_ipsum/pdf-compress 误命中与 categories.go:1106 的 GB/T 7714 国标参考文献生成器（十种文献类型、双制式）；英文三格式口径真缺口确凿；痛点：写英文论文/投稿需按期刊格式生成参考文献，citationmachine 等在线站英文且多广告/付费墙；实现：表单录入（作者/标题/年份/期刊/卷期/页码）→ APA 7th／MLA 9th／Chicago 17th 三格式实时渲染→复制/导出；纯前端小难度（纯函数可写逐字向量：formatCitation(style,fields) 确定性＋err.field）；文本/学术簇补位（与 GB/T 7714 参考文献生成器互链「引文一条龙」）；真限制：仅覆盖期刊/图书/网页三类常见文献、字段需用户按规则录入、纯本地零上传，须明示；**低优先说明：可并入现有 GB/T 7714 工具的功能扩展，独立立项价值待 PM 裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **英文可读性分析器（Flesch-Kincaid）** — 新观察 P2 第三顺位（**低优先**；站内缺口实测＋dev.to WordCountDesk（2026-11-01）信号；`flesch`／`gunning_fog` ASCII 三处 0 命中；`readability`／`可读性` 命中仅无关文件误命中；真缺口确凿；痛点：写英文文档/论文摘要想快速判断可读性等级，在线站多英文广告；实现：粘贴英文文本→音节估算→Flesch Reading Ease／Flesch-Kincaid Grade／Gunning Fog 三指标→难句高亮；纯前端小难度（纯函数可写逐字向量：countSyllables 音节估算确定性＋err.field）；文本簇补位（可与 text_tools 工具箱互链）；真限制：仅英文有效、音节估算为启发式非词典级、纯本地零上传，须明示；**低优先说明：英文口径、中文站用户低频，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：Tap Tempo BPM 测速器（**09:00 PM 轮已裁定暂不立项**，低优先观察保持）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／网名生成器（娱乐口径无信号，低优先）／ReqForge 式 HTTP 请求→代码片段生成器（185 轮弱观察，低优先）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／LLM Token 成本估算（177 轮观察；低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（`sudoku` ASCII 0 命中真缺口，游戏口径无信号，低优先保持）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十六轮：photo_collage 交付闭环（1972fbd 新增；`/tools/photo-collage` 已注册；旧测试 Path 断言 265→266 同步；全量 151 个 node 测试文件全绿；go build/vet 通过，本地实测 200，零外部请求；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 1972fbd；categories.go 未注册），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：Markdown 表格转 CSV→首席（`markdown_csv`／`csv_markdown`／`md_to_csv` 0 命中；`table_to_csv` 命中仅 paste_table_to_csv 网页表格口径；laofudev「12 I Actually Use」＋「45 tiny tools」两次点名信号加强）／**APA/MLA/Chicago 英文引文生成器→新观察晋升 P2 第二顺位（低优先）**（站内缺口实测＋dev.to WordCountDesk（2026-11-01）信号；`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` 三处 0 命中；站内仅 GB/T 7714 国标参考文献生成器，英文三格式口径真缺口；**可并入现有 GB/T 7714 工具功能扩展，独立立项价值待 PM 裁定**）／**英文可读性分析器（Flesch-Kincaid）→新观察 P2 第三顺位（低优先）**（站内缺口实测＋dev.to WordCountDesk 信号；`flesch`／`gunning_fog` 三处 0 命中；英文口径中文站低频，**PM 可裁定暂不立项**）；Tap Tempo：**09:00 PM 轮已裁定暂不立项**（低优先观察保持，移出 Top3 递进链）；本轮 fetch 一次成功，本地 HEAD 1972fbd 与 origin 同头为最新；新信号扫描：Medium（**srkamduk 向量 QR→站内 qrcode 已交付确认消解／FB4KDownloader→服务口径新消解**／**cnl Chrome 扩展榜→扩展口径新消解**／**antig MV3 扩展开发→扩展口径新消解**）＋dev.to（**WordCountDesk 11-01 十七项逐项复核：字数统计/大小写/slug/去行断→站内已交付确认消解；**APA/MLA/Chicago→新候选信号（低优先）**；**Flesch-Kincaid→新候选信号（低优先）**；阅读时长估算→文本簇已覆盖确认消解）／mqurban ToolsUp（截图美化器→站内 screenshot_beautifier/code_screenshot_beautifier 确认消解；WebP 批量转换→站内 img_convert 确认消解；JSON/SQL/Base64/URL→已交付口径确认消解）／rossoxs XSular（JWT→已交付确认消解）／david_miller FreeToolBoxes（cron_generator/dns_lookup→已交付确认消解）／alydev（Excalidraw/Ray.so/Squoosh/Shots.so→外部服务确认消解；TikRapid MP3→服务口径确认消解））＋V2EX（**t/1253518 搭手 1.0 桌面口径新消解**／**t/1253201 自媒体获客 AI+服务口径新消解**／**t/1252069 MyEnhancer AI 积分/第三方服务口径新消解**／t/1252493 xGoose 确认消解／**t/1250428 md2chat→站内 md_to_chat 已交付确认消解**）＋Reddit（ones.com 任务管理/项目管理榜单→SaaS/App 口径确认消解）；网名生成器／数独求解器／一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／AI 图片超分（ONNX 硬伤）／OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／高精度计算器（方向修正口径风险）保持跳过／观察；仓库根目录未跟踪 `toolweb` 遗留二进制上轮已清理（1972fbd 顺手清理）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 1972fbd 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 1972fbd（照片拼图合成器新增，node 83 断言全过，Path 265→266，全量 151 个 node 测试文件全绿）／3ed9122（键盘按键测试，Path 264→265）／29195c3（pindou 色数滑杆修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **266**；`ls templates/photo_collage.html static/js/photo_collage.js tests/photo_collage.test.js` **均存在**（categories.go 已注册 photo_collage）；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go 未注册）；Top3 候选重叠复核（**照片拼图合成器**：已交付（/tools/photo-collage，Path 265→266），划出候选池；**Markdown 表格转 CSV**：`markdown_csv`／`csv_markdown`／`md_to_csv` 0 命中；`table_to_csv` 命中仅 paste_table_to_csv（网页表格粘贴→CSV，TSV 口径），真缺口确凿；**APA/MLA/Chicago 英文引文生成器**：`apa_generator`／`mla_generator`／`chicago_citation`／`apa_citation` 0 命中；`citation` 命中仅 lorem_ipsum/pdf-compress 误命中与 categories.go:1106 的 GB/T 7714 国标参考文献生成器（[J][M][D][C][N][S][R][P][EB/OL][A] 十种类型、双制式）；英文三格式口径真缺口确凿；**英文可读性分析器**：`flesch`／`gunning_fog` 0 命中；`readability`／`可读性` 命中仅无关文件误命中；真缺口确凿；**Tap Tempo**：09:00 PM 轮已裁定暂不立项，低优先观察保持）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 09:00 · PM 选定轮，接 195 轮通用调研）
 
 **选定：照片拼图合成器（照片墙）** — 本轮唯一任务（新工具）。

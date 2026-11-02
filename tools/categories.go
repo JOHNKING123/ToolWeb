@@ -1216,6 +1216,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "markdown_to_csv",
+					Name:        "Markdown 表格转 CSV",
+					Description: "免费在线 Markdown 表格转 CSV：粘贴 Markdown 文本或本地读取 .md，解析标准 GFM 表格（含转义管道与分隔对齐行），HTML 表格实时预览，一键导出 UTF-8 with BOM 的 .csv，Excel 打开中文不乱码，纯前端零上传 · Markdown table to CSV: parse GFM tables locally, preview, export UTF-8 BOM CSV, 100% client-side",
+					Path:        "/tools/markdown-to-csv",
+					Icon:        "import_export",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "paste_table_to_csv",
 					Name:        "网页表格粘贴转 CSV",
 					Description: "免费在线网页表格粘贴转 CSV：粘贴网页/Excel/WPS 复制的制表符/逗号分隔原始文本，列数一致性校验（不一致拒绝转换、不静默截断），RFC4180 字段引号转义，表格实时预览，一键复制 CSV、下载 CSV（UTF-8 BOM，Excel 中文不乱码），纯前端零上传 · Paste table text to CSV: column consistency check, RFC4180 escaping, preview, copy/download, 100% client-side",

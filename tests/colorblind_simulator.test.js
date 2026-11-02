@@ -109,7 +109,7 @@ has(cats, '"colorblind_simulator"', "categories.go 注册 ID");
 has(cats, '"/tools/colorblind-simulator"', "categories.go 注册 Path");
 has(cats, 'Category:    "开发工具"', "注册 Category 开发工具");
 var pathCount = (cats.match(/Path:\s+"\/tools\/[^"]+"/g) || []).length;
-eq(pathCount, 266, "注册 Path 总数 265→266");
+eq(pathCount, 267, "注册 Path 总数 266→267");
 
 var html = fs.readFileSync("templates/colorblind_simulator.html", "utf8");
 has(html, "只做模拟示意、不做医学诊断", "页面可见：不做医学诊断");

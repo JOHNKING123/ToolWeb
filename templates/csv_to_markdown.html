@@ -137,7 +137,9 @@
                     <a href="/tools/csv-table-viewer">CSV 表格查看器（要先看表格去这里）</a>
                     <a href="/tools/csv-json">CSV⇄JSON 互转（要转成 JSON 去这里）</a>
                     <a href="/tools/markdown-preview">Markdown 预览（生成的表格要看渲染效果去这里）</a>
+                    <a href="/tools/markdown-to-csv">Markdown 表格转 CSV <span style="color:#2563eb;font-weight:700;">· 表格一条龙</span>（反向转换去这里）</a>
                 </div>
+                <p class="ctm-hint" style="margin-top:.6rem;">分工：CSV→Markdown 表格生成器把 CSV 生成 GFM 表格；Markdown 表格转 CSV 反向把 GFM 表格导出为 CSV——表格一条龙。</p>
             </div>
             <div class="ctm-panel">
                 <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>CSV 解析、GFM 生成、对齐、转义、展平均为手写纯函数（不引入表格库，浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>

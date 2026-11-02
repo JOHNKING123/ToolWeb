@@ -1,0 +1,132 @@
+{{define "markdown_to_csv"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 表格转 CSV - 粘贴 Markdown 表格导出 CSV，UTF-8 BOM Excel 不乱码</title>
+    <meta name="description" content="免费在线 Markdown 表格转 CSV：粘贴 Markdown 文本或本地读取 .md，解析标准 GFM 表格（含转义管道 \| 与分隔对齐行），HTML 表格实时预览，一键导出 UTF-8 with BOM 的 .csv，Excel 打开中文不乱码，纯本地运行不上传。Markdown table to CSV converter: parse GFM tables locally, preview, export UTF-8 BOM CSV, 100% client-side.">
+    <meta name="keywords" content="Markdown转CSV,Markdown表格转CSV,md转csv,markdown table to csv,markdown表格导出,md表格转csv,gfm table csv">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/markdown-to-csv">
+    <meta property="og:title" content="Markdown 表格转 CSV - 粘贴 Markdown 表格导出 CSV">
+    <meta property="og:description" content="粘贴 Markdown 文本或本地读取 .md，解析 GFM 表格（含转义管道与对齐行），表格实时预览，一键导出 UTF-8 with BOM 的 .csv，Excel 中文不乱码，数据不出浏览器。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/markdown-to-csv">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Markdown 表格转 CSV","description":"粘贴 Markdown 文本或本地读取 .md，解析标准 GFM 表格（含转义管道 \\| 与分隔对齐行），HTML 表格实时预览，一键导出 UTF-8 with BOM 的 .csv，Excel 打开中文不乱码，纯本地运行不上传。","url":"https://www.johnkingzcq123.xyz/tools/markdown-to-csv","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mtc-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .mtc-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none}
+        .mtc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .mtc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .mtc-input{width:100%;min-width:0;min-height:180px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;line-height:1.7;resize:vertical;box-sizing:border-box}
+        .mtc-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .mtc-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .mtc-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .mtc-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .mtc-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .mtc-btn:disabled{opacity:.45;cursor:default;color:#9ca3af}
+        .mtc-btn:disabled:hover{border-color:#d1d5db;color:#9ca3af}
+        .mtc-stats{font-size:.92rem;color:#374151;margin:.6rem 0 0}
+        .mtc-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        .mtc-table{width:100%;border-collapse:collapse;font-size:.92rem;line-height:1.7}
+        .mtc-table th,.mtc-table td{border:1px solid #d1d5db;padding:.45rem .7rem;word-break:break-all}
+        .mtc-table thead th{background:#f3f4f6;color:#111827}
+        .mtc-table tbody tr:nth-child(even){background:#f9fafb}
+        .mtc-preview{overflow-x:auto;margin-top:.6rem;max-height:420px;overflow-y:auto}
+        .mtc-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .mtc-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .mtc-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .mtc-links a{color:#2563eb}
+        @media (max-width:640px){.mtc-panel{padding:.9rem}.mtc-input{min-height:150px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Markdown 表格转 CSV</h1>
+            <p>粘贴 Markdown 即解析 GFM 表格：转义管道与对齐行正确处理，表格实时预览，一键导出 CSV，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="mtc-note">
+                <span>本工具只解析标准 GFM 表格：表头行＋分隔对齐行（:---／---:／:---:）缺一不可，合并单元格不支持，一次解析取输入中的首个表格；导出的 CSV 为 UTF-8 with BOM，Excel 打开中文不乱码；粘贴与本地文件读取均只在浏览器内处理，零上传、零网络请求。</span>
+            </div>
+            <div class="mtc-panel">
+                <h3>输入 Markdown</h3>
+                <textarea id="mtc-input" class="mtc-input" placeholder="粘贴 Markdown 表格，例如：&#10;| 姓名 | 部门 | 月薪 |&#10;| :--- | :--- | ---: |&#10;| 张伟 | 研发 | 18500 |&#10;| 李娜 | 产品 | 16200 |" spellcheck="false"></textarea>
+                <div class="mtc-row">
+                    <label for="mtc-file" style="font-size:.92rem;color:#374151;">或读取本地 .md 文件（只在本机读，不上传）：</label>
+                    <input id="mtc-file" type="file" accept=".md,.markdown,.txt">
+                </div>
+                <div class="mtc-row">
+                    <button class="mtc-btn mtc-btn-primary" type="button" id="mtc-sample-basic">示例：员工表</button>
+                    <button class="mtc-btn" type="button" id="mtc-sample-escape">示例：转义管道表</button>
+                    <button class="mtc-btn" type="button" id="mtc-clear">清空输入</button>
+                </div>
+                <p class="mtc-hint">输入变化时表格实时重解析、实时预览；未检测到标准 GFM 表格时给出中文提示，不输出误导性内容。</p>
+            </div>
+            <div class="mtc-warn" id="mtc-warn"></div>
+            <div class="mtc-panel">
+                <h3>表格预览</h3>
+                <div class="mtc-preview" id="mtc-preview-wrap">暂无表格：请先粘贴 Markdown 表格或载入示例。</div>
+                <p class="mtc-stats" id="mtc-stats">暂无表格：请先粘贴 Markdown 表格或载入示例。</p>
+                <div class="mtc-row">
+                    <button class="mtc-btn mtc-btn-primary" type="button" id="mtc-download">导出 .csv（UTF-8 with BOM）</button>
+                    <button class="mtc-btn" type="button" id="mtc-copy">一键复制 CSV</button>
+                    <span class="mtc-hint" id="mtc-copy-hint" style="margin:0;"></span>
+                </div>
+                <p class="mtc-hint">导出的 CSV 文件名为 markdown_table_YYYYMMDD_HHmmss.csv；复制与下载的内容与上方预览完全一致；复制失败时会提示改用下载的降级办法。</p>
+            </div>
+            <div class="mtc-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>先粘贴 Markdown：或点「读取本地 .md 文件」在本机读文件（FileReader，不上传）；输入为空或无表格时只提示，不输出误导内容。</li>
+                    <li>表格口径：必须是标准 GFM 表格——表头行、分隔对齐行、数据行；对齐行每格形如 :---（左）／---:（右）／:---:（居中）／---（默认左）。</li>
+                    <li>转义管道：单元格里的 \| 会还原为字面竖线，不会把一列劈成两列；首尾管道可写可不写。</li>
+                    <li>预览：按每列对齐渲染 HTML 表格，全部单元格用 textContent 渲染，输入里的 HTML 只显示为文本，不会执行。</li>
+                    <li>导出：一键导出保存为 markdown_table_YYYYMMDD_HHmmss.csv，UTF-8 with BOM，Excel 打开中文不乱码。</li>
+                    <li>CSV 转义：字段含逗号、双引号、换行时按 RFC4180 加引号并双写引号；列数不足的行自动补空。</li>
+                    <li>示例：点「员工表」看常规解析，点「转义管道表」看 \| 与引号字段的还原；载入后仍可再改再导出。</li>
+                    <li>互链：要反向把 CSV 生成 Markdown 表格去 CSV→Markdown 表格生成器——表格一条龙。</li>
+                </ol>
+            </div>
+            <div class="mtc-panel">
+                <h3>常见问题</h3>
+                <dl class="mtc-faq">
+                    <dt>为什么提示「未检测到 Markdown 表格」？</dt>
+                    <dd>本工具只认标准 GFM 表格：表头行之后必须紧跟分隔对齐行（如 | :--- | ---: |）；缺对齐行、或表格用了合并单元格写法，都解析不了，请先改成标准写法。</dd>
+                    <dt>单元格里的 \| 会怎样？</dt>
+                    <dd>还原为字面竖线 |，不切分列；预览与 CSV 里都显示为单个竖线。</dd>
+                    <dt>对齐行会影响导出的 CSV 吗？</dt>
+                    <dd>不会。CSV 本身没有对齐概念；对齐只决定预览表格里每列的左／居中／右显示。</dd>
+                    <dt>导出的 CSV 用 Excel 打开会乱码吗？</dt>
+                    <dd>不会。文件带 UTF-8 BOM，Excel 直接双击打开中文正常显示；其他编辑器忽略 BOM 也不影响内容。</dd>
+                    <dt>合并单元格的表格能转吗？</dt>
+                    <dd>不能。这是真限制：只解析标准 GFM 表格，合并单元格不支持；一次解析取输入中的首个表格。</dd>
+                    <dt>我的 Markdown 会被上传吗？</dt>
+                    <dd>不会。粘贴与本地文件读取均只在浏览器内处理，零网络请求，零 CDN，本页 JS 源码无任何 fetch／XHR 调用。</dd>
+                </dl>
+            </div>
+            <div class="mtc-panel">
+                <h3>相关工具</h3>
+                <div class="mtc-links">
+                    <a href="/tools/csv-to-markdown">CSV→Markdown 表格生成器 <span style="color:#2563eb;font-weight:700;">· 表格一条龙</span>（反向转换去这里）</a>
+                    <a href="/tools/markdown-preview">Markdown 预览（看表格渲染效果去这里）</a>
+                </div>
+                <p class="mtc-hint" style="margin-top:.6rem;">分工：Markdown 表格转 CSV 把 GFM 表格导出为 CSV；CSV→Markdown 表格生成器反向把 CSV 生成 GFM 表格——表格一条龙。</p>
+            </div>
+            <div class="mtc-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>GFM 解析、转义管道还原、对齐识别、CSV 转义均为手写纯函数（不引入表格库，浏览器与 node 测试共用同一文件）；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/markdown_to_csv.js?v=1"></script>
+</body>
+</html>
+{{end}}
