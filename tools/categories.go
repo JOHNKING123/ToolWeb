@@ -2149,6 +2149,15 @@ func GetCategories() []Category {
 					Category:    "AI 工具",
 				},
 				{
+					ID:          "rag_chunk_preview",
+					Name:        "RAG 文本分块预览器",
+					Description: "长文本 RAG 切块预览：按固定字符数/段落/句子三策略分块，块大小与重叠度可调，分块列表（序号/起止偏移/字符数/预估 token）＋原文块边界交替染色高亮＋汇总统计＋JSON 导出，token 沿用 AI Token 计数器 BPE 口径，纯前端零上传 · RAG text chunking preview: split long text by chars/paragraph/sentence with adjustable size & overlap, chunk list with offsets & estimated tokens, boundary highlighting, JSON export, 100% client-side",
+					Path:        "/tools/rag-chunk-preview",
+					Icon:        "splitscreen",
+					New:         true,
+					Category:    "AI 工具",
+				},
+				{
 					ID:          "ai_text_cleaner",
 					Name:        "AI 文本清洁器",
 					Description: "扫描清除文本中的零宽字符、BOM、非断空格等不可见隐藏字符，可视化标记一键清理",

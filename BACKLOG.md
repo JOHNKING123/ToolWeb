@@ -1,3 +1,106 @@
+## 今日任务（2026-11-02 23:39 · PM 选定轮，接 202 轮通用调研）
+
+**选定：RAG 文本分块预览器（rag_chunk_preview）** — 本轮唯一任务（新工具）。
+
+**顺位**：202 轮 Top3 **递进首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- `rag_chunk`／`chunk_preview`／`chunking` 在 templates＋static/js＋tools/categories.go＋tests 四处**全 0 命中**（`grep -rl` 全 0）；`templates/rag_chunk*`／`static/js/rag_chunk*`／`tests/rag_chunk*` 文件均不存在；categories.go `rag_chunk` 0 命中。
+- `chunk` 命中仅 vendor bundle（xlsx/docx/pptx/libheif）＋exif_strip／pdf_crypto 内部 chunked 读取，分块 CJK 唯一命中仍为 pdf_to_ppt（PPT 转换口径）——均口径不同，**真缺口确凿**。
+- 口径相邻不相同：`ai_token_counter`（整段文本 token 计数，无分块）／`project_to_txt`（打包喂 LLM，无分块策略预览）——不构成重叠。
+- 命名无占用：ID `rag_chunk_preview`、Path `/tools/rag-chunk-preview` 均 0 命中；Icon **`splitscreen` categories.go 0 命中**（`content_cut` 已占用 1 次已避开；`view_agenda`／`data_thresholding` 备选同样 0 命中，开发轮精确值复测锁定全库唯一）。
+- 全量 Path **271**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **157 个**；本地分支 muse/dev-20260929，HEAD d88e2c2；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地与 origin 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——202 轮 Top3 递进首席，无硬伤递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实且新鲜**——V2EX t/1253899 KitVerse.dev「RAG Chunking Playground（6 种分块策略预览，带真实 token 计数和偏移量）」**2026-11-02 新信号持续有效**；④ **簇内协同**——与 ai_token_counter／project_to_txt 互链「LLM 预处理一条龙」（先分块看切分、再计 token、再打包喂 LLM）；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（chunkByChars／chunkByParagraph／chunkBySentence 确定性＋err.field；token 沿用站内 ai_token_counter 的 countOpenAI BPE 口径），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「AI 工具」类目（紧邻 ai_token_counter）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：粘贴长文本／上传 .txt 文件／示例一键填充；② 分块策略三选：固定字符数（chunkByChars）／按段落（chunkByParagraph：先按 `\n\n` 语义切段、小段合并至 ≤chunkSize、超长段递归按 `\n`／句子降级切分）／按句子（chunkBySentence：中英句子边界 。！？.!?＋引号闭合启发式）；参数：块大小 chunkSize／重叠度 overlap 可调（重叠滚动）；③ 输出：分块结果列表（序号、起止字符偏移、字符数、预估 token）＋原文块边界高亮预览（交替染色）＋汇总（总块数、平均块 token、最大/最小块）＋导出 JSON（块数组）；④ token 估算沿用站内 ai_token_counter 的 countOpenAI 口径（BPE 风格分段计数：中文约 1 字≈1 token，英文约 4 字符/token），模型家族默认 GPT。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.RagChunkPreview 下，module.exports 同步导出）**：
+  - `chunkByChars(text, chunkSize, overlap)` → `Array<{index, start, end, text}>`（end 为开区间；下一块 start = end - overlap）；chunkSize≤0 抛 Error err.field='chunkSize'；overlap<0 或 overlap≥chunkSize 抛 Error err.field='overlap'；text 非字符串抛 Error err.field='text'。
+  - `chunkByParagraph(text, chunkSize, overlap)` → 同上（段合并/递归切分确定性）。
+  - `chunkBySentence(text, chunkSize, overlap)` → 同上（句子边界启发式确定性）。
+  - `estimateChunkTokens(text)` → 沿用 countOpenAI 口径的确定性计数（复用 ai-token-counter.js 同正则口径，chunker 内自包含实现）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `chunkByChars('abcdefghij', 4, 0)` → 3 块：`{index:0,start:0,end:4,text:'abcd'}`／`{index:1,start:4,end:8,text:'efgh'}`／`{index:2,start:8,end:10,text:'ij'}`。
+  - `chunkByChars('abcdefgh', 4, 2)` → 3 块：'abcd'／'cdef'／'efgh'（重叠滚动）。
+  - `chunkByChars('abc', 0, 0)` 抛 Error 且 `err.field==='chunkSize'`；`chunkByChars('abc', 4, 5)` 抛 Error 且 `err.field==='overlap'`；`chunkByChars(null, 4, 0)` 抛 Error 且 `err.field==='text'`。
+  - `chunkByParagraph('a\n\nb\n\nc', 1000, 0)` → 3 块，text 分别 'a'／'b'／'c'，start 0／3／6。
+  - `chunkBySentence('你好。世界！', 1000, 0)` → 2 块 '你好。'／'世界！'。
+  - `estimateChunkTokens('hello world')===4`（'hello'→2、'world'→2，空白不计）；`estimateChunkTokens('中文')===2`。
+- **真限制（页面明示）**：① token 为本地 BPE 风格估算，非各模型精确 tokenizer 结果，跨模型仅供参考；② 中文分句/分段为启发式（引号、省略号等边界可能误切），须明示；③ 纯本地处理，文本不出浏览器（可在 Network 面板自证）。
+- **互链**：与 ai_token_counter／project_to_txt 双向互链，「LLM 预处理一条龙」。
+- **SEO**：title/description/keywords 增补 RAG 文本分块／chunking preview／RAG 预处理／token 估算中英文关键词。
+
+**验收标准**：
+1. 粘贴长文本（或示例一键填充）→三策略分块→列表（序号/起止偏移/字符数/预估 token）＋原文块边界高亮预览＋汇总＋导出 JSON。
+2. 纯函数契约 node 测试全过——新建 `tests/rag_chunk_preview.test.js`（逐字向量＋err.field），`node tests/rag_chunk_preview.test.js` 直跑。
+3. 真限制三条在页面明示。
+4. 注册：Path 总数 271→**272**；旧测试 Path 断言同步（如有引用 271 的测试文件，开发轮 grep 确认）；Icon `splitscreen` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/rag-chunk-preview` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/rag_chunk_preview.html`（新建：文本输入/上传/示例＋策略与参数＋分块列表＋高亮预览＋汇总＋导出 JSON＋真限制＋SEO）
+2. `static/js/rag_chunk_preview.js`（新建：chunkByChars／chunkByParagraph／chunkBySentence／estimateChunkTokens 纯函数＋分块渲染 UI 绑定，挂 window.RagChunkPreview，module.exports 同步导出）
+3. `tests/rag_chunk_preview.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID rag_chunk_preview、Path /tools/rag-chunk-preview、Icon splitscreen、Category AI 工具（紧邻 ai_token_counter）、New: true、Description 含 RAG 文本分块／chunking preview／RAG 预处理／token 估算中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 271 的测试文件）
+
+**顺位递补**（PM 裁定）：社交链接/OG 预览检查器 → 留池 P2（202 轮第二顺位；本轮顺位未到，不提前）／屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定；本轮无新信号变化；低优先观察保持，PM 保留复活裁定权）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD d88e2c2 与 origin 同头为最新，远端无新提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **271**；tests/*.test.js **157 个**；PM 独立零重叠实测：`rag_chunk`／`chunk_preview`／`chunking` 四处（templates＋static/js＋tools/categories.go＋tests）全 **0 命中**；`chunk` 命中仅 vendor bundle（xlsx/docx/pptx/libheif）＋exif_strip／pdf_crypto 内部 chunked 读取（口径不同）；分块 CJK 唯一命中 pdf_to_ppt（PPT 转换口径不同）；ID `rag_chunk_preview`／Path `/tools/rag-chunk-preview`／Icon `splitscreen` 均 **0 命中**（`content_cut` 占用 1 次已避开）；简繁互转仍开发中（templates/jianfan_converter.html 不存在），移出候选池；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 23:00 · 通用调研第二百〇二轮，接 21:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第二百〇二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**SKILL 安全扫描器交付闭环**（d88e2c2 新增：skill_scanner，Path 270→271，node 121 断言全过，全量 157 测试文件全绿；go build/vet 通过，本地 /tools/skill-scanner 实测 200，零外部请求；「LLM 安全一条龙」互链闭环；候选池划出）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head d88e2c2；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链更新**：RAG 文本分块预览器→递进首席（201 轮第二顺位；首席 skill_scanner 已交付，按「无硬伤不跳过、Top3 顺位递进」惯例自然递进；本轮复核 `rag_chunk`／`chunk_preview`／`chunking` 全 0 命中，真缺口保持）／社交链接/OG 预览检查器→第二顺位（**本轮新候选**；dev.to 榜单 Link Preview Checker 信号；`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口确凿；纯前端小难度）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 三处 0 命中真缺口保持；PM 可裁定维持暂不立项或复活）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；23:00 轮，优先小难度纯前端。
+
+**本轮三件事**（23:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 d88e2c2（skill_scanner 新增，node 121 断言全过，全量 157 个 node 测试文件全绿）／9749bdd（json_to_excel 新增）／9b48c03（device_check 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **271**；`ls templates/skill_scanner.html static/js/skill_scanner.js tests/skill_scanner.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（注：首次 fetch 漏加环境变量报 host key verification failed，补加后一次成功，github.com ED25519 主机密钥已重新记录，属 VM 换机丢 known_hosts 老问题；远端无新提交），本地 HEAD d88e2c2 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - skill_scanner：已交付（d88e2c2，Path 270→271）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head d88e2c2；categories.go jianfan 0 命中）——移出 Top3。
+   - **RAG 文本分块预览器**：201 轮复测结论沿用并加固（`rag_chunk`／`chunk_preview`／`chunking` 本轮再复核全 0 命中；`chunk` 命中仅 vendor bundle（xlsx/docx/pptx/libheif）＋exif-strip/pdf-crypto 内部 chunked 读取，口径均不同；分块 CJK 唯一命中仍为 pdf_to_ppt 不同口径）——真缺口保持，**递进首席**。
+   - **社交链接/OG 预览检查器**：`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 在 templates＋static/js＋tools/categories.go 全 **0 命中**（站内 og: meta 标签仅为各页面自带 head 元素：index/jwt_signer_verifier/batch_rename_helper/markdown_publish_formatter，非工具口径）——**真缺口确凿**，本轮新候选。
+   - 屏幕尺子：199 轮复测结论沿用（`screen_ruler` ASCII 三处 0 命中真缺口）——17:00 PM 轮裁定暂不立项维持，第三顺位备选。
+   - **打印机测试页（PrintPageCheck，V2EX t/1251680，2026-10-25）**：初判新候选；复核发现站内已交付「打印机测试页生成器」（ID printer_test_page，categories.go:2304；Description 逐字含「A4/US Letter…CMYK 四通道…100mm 精确参考尺…window.print() 直接打印」，与 PrintPageCheck 的「CMYK 彩色测试／灰阶／文字细线／100mm 参考线／A4/US Letter／浏览器直接打印」**口径完全重合**）——**已交付，确认消解**，不立项（险些误判×4）。
+   - **代码截图美化器（ray.so 类，dev.to 榜单信号）**：templates/code_screenshot_beautifier.html＋static/js/code_screenshot_beautifier.js 均存在，categories.go:700 已注册——**已交付，确认消解**，不立项（险些误判×5）。
+   - **chmod 计算器（dev.to 榜单信号）**：templates/chmod_calculator.html 已交付——**已交付，确认消解**，不立项。
+   - 占位图生成器（dev.to 榜单信号）：templates/placeholder_image_generator.html 已交付——确认消解。
+   - DNS/IP Lookup（dev.to 榜单信号）：需外部网络请求，与站内零外部请求惯例冲突——确认消解。
+3. 新信号扫描（V2EX＋dev.to＋HN＋中文需求搜索为本轮主线）：**本轮新立项候选 1 项**（社交链接/OG 预览检查器），其余全部确认消解或口径不合——
+   - V2EX：**t/1253518 搭手 1.0**（11-01；Alt+Space 启动器＋可视化组合动作＋AI 工作台，Electron 桌面应用口径，确认消解）／**t/1253731 kevoryn 聚合中转**（11-02；API 网关＋80+ 模型聚合，需后端/AI 服务口径，确认消解）／**t/1251680 PrintPageCheck**（10-25；站内 printer_test_page 已交付确认消解，见上）／t/1253201 自媒体获客（199 轮已复核；服务/付费口径，确认消解）／t/1253899 KitVerse（21:00 轮已覆盖：Skill 安全扫描→已交付；RAG Chunking→候选递进；API 实验台→需发真实网络请求＋CORS 硬伤消解；PUA AI 生成器→娱乐口径消解；**Skill 全家桶（校验/打包/安装命令生成/Prompt 转 Skill）→弱观察**（skill_scanner 簇扩展口径，无独立新鲜信号，低优先））；
+   - dev.to：榜单（Q1 2026 browser-only、Tooliest、billion-hub 10 工具、XSular 25 工具、ToolCove/IT Tools、FreeToolBoxes 50 工具、Deoit 10 工具）→JSON/正则/JWT/Base64/二维码/UUID/时间戳/Cron/哈希/密码/图片压缩/占位图→站内均已交付确认消解；**Link Preview Checker（billion-hub 榜单，2026-03-27）→社交链接/OG 预览检查器新候选**；Code Screenshot→站内已交付确认消解；Chmod→已交付确认消解；Reaction Time/Daily Math Puzzle→游戏口径消解；DNS/IP Lookup→外部网络硬伤消解；
+   - HN：HackerTube/OpenTube（11-02；需 YouTube 数据＋WebGPU LLM 数据产品口径，确认消解）／Browser Automation MCP 20 榜（服务器/MCP/AI 口径，确认消解）／Dia 浏览器新闻（非工具口径）／Chrome Find-in-Page 大小写搜索（浏览器功能口径）；
+   - 中文需求搜索：「最实用的在线小工具 程序员 2026」→榜单聚合多为站内已交付口径（JSON/JWT/正则/Base64/PDF/图片压缩）；无独立新信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **RAG 文本分块预览器** — 递进首席（201 轮第二顺位；按「无硬伤不跳过、Top3 顺位递进」惯例，首席 skill_scanner 已于本轮交付闭环（d88e2c2），自然递进；本轮复核 `rag_chunk`／`chunk_preview`／`chunking` 全 0 命中真缺口保持；**V2EX t/1253899 KitVerse.dev「RAG Chunking Playground（6 种分块策略预览，带真实 token 计数和偏移量）」** 2026-11-02 新信号持续有效；痛点：做 RAG/喂 LLM 前不知道长文本会被切成几块、每块多少 token、会不会把句子拦腰截断；实现：粘贴长文本→分块策略可选（固定字符数／按段落／按句子／递归分隔符）＋块大小/重叠度可调→分块结果列表（每块字符数/预估 token/起止偏移）→块边界高亮预览→导出 JSON；纯前端小难度（纯函数可写逐字向量：chunkByChars／chunkByParagraph／chunkBySentence 确定性＋err.field；token 估算沿用站内 ai_token_counter 口径）；与 ai_token_counter／project_to_txt 互链「LLM 预处理一条龙」；真限制：token 为本地估算非各模型精确值、中文分句启发式须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **社交链接/OG 预览检查器** — 第二顺位（**本轮新候选**；dev.to「10 Free Browser Tools Every Developer Should Bookmark」（2026-03-27）Link Preview Checker 信号：「See how your Open Graph tags will render on Google, Twitter, Discord, WhatsApp, LinkedIn, Slack, and iMessage — all at once」；站内零重叠实测：`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口确凿（站内 og: meta 标签仅为各页面自带 head 元素，非工具口径）；痛点：发文章/做活动页前想预览链接在微信/微博/X/Discord/Telegram/Slack/LinkedIn 的渲染卡片，OG 标签写错了抓出来是乱图或空白；实现：填写标题/描述/链接/图片（本地选择或 URL）→各平台模拟卡片预览（微信样式/微博/X/Discord/Telegram/Slack/LinkedIn）→OG meta 标签代码一键生成复制→图片尺寸/比例合规检查（1200×630 等）→分享调试建议；纯前端小难度（纯函数可写逐字向量：buildOgMeta／checkImageRatio 确定性＋err.field）；与 qrcode_generator 互链「分享一条龙」；真限制：无法真实抓取远程 URL（站内零外部请求惯例＋CORS），模拟渲染须明示；各平台卡片样式为近似还原非像素级；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位备选（199 轮 Top3 第三顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` ASCII 三处 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／简繁互转（开发中，移出 Top3）／Skill 全家桶（KitVerse Skill 校验/打包/安装命令生成/Prompt 转 Skill；本轮新弱观察：skill_scanner 簇扩展口径，无独立新鲜信号，低优先）／Tokenizer 跨模型切分可视化（201 轮弱观察：站内 ai_token_counter 已交付计数口径，tiktoken WASM 体积硬伤，低优先）／一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／trace-context-validator（200 轮弱观察，低优先）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（199 轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（199 轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇二轮：SKILL 安全扫描器交付闭环（d88e2c2 新增：skill_scanner，Path 270→271，node 121 断言全过，全量 157 测试文件全绿；go build/vet 通过，本地 /tools/skill-scanner 实测 200，零外部请求；「LLM 安全一条龙」互链闭环；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head d88e2c2；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链更新**：**RAG 文本分块预览器→递进首席**（201 轮第二顺位；首席 skill_scanner 已交付闭环，按「无硬伤不跳过、Top3 顺位递进」惯例自然递进；`rag_chunk`／`chunk_preview`／`chunking` 全 0 命中真缺口保持；V2EX t/1253899 RAG Chunking Playground 2026-11-02 新信号持续有效；纯前端小难度；「LLM 预处理一条龙」互链）／**社交链接/OG 预览检查器→第二顺位**（本轮新候选；dev.to「10 Free Browser Tools」（2026-03-27）Link Preview Checker 信号；`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口确凿；纯前端小难度；与 qrcode_generator 互链「分享一条龙」）／**屏幕尺子→第三顺位备选**（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 三处 0 命中真缺口保持；低优先观察保持，PM 可裁定维持暂不立项或复活）；**本轮初判候选消解 5 项**：打印机测试页→站内 printer_test_page 已交付（口径完全重合，categories.go:2304）／代码截图美化器→站内 code_screenshot_beautifier 已交付（categories.go:700）／chmod 计算器→站内已交付／占位图生成器→站内已交付／DNS-IP Lookup→需外部网络请求硬伤；新信号扫描：V2EX（**t/1253518 搭手 1.0**→桌面应用口径消解／**t/1253731 kevoryn 聚合中转**→后端/AI 口径消解／**t/1251680 PrintPageCheck**→站内已交付消解／t/1253201 199 轮已复核／t/1253899→RAG Chunking 候选递进＋Skill 全家桶弱观察）＋dev.to（榜单全复核→**Link Preview Checker 1 新候选**，其余已交付/硬伤/游戏口径消解）＋HN（HackerTube/OpenTube 数据产品口径／Browser Automation MCP 服务器口径均消解）＋中文需求搜索（榜单多为已交付口径，无独立新信号）；本轮 fetch 一次成功（注：首次 fetch 漏加 GIT_SSH_COMMAND 被拒，补加后一次成功，github.com 主机密钥已重新记录；远端无新提交），本地 HEAD d88e2c2 与 origin 同头为最新；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| SKILL 安全扫描器 | 已交付划出（d88e2c2 新增：skill_scanner，Path 270→271，node 121 断言全过，全量 157 测试文件全绿；go build/vet 通过，本地 /tools/skill-scanner 实测 200，零外部请求；「LLM 安全一条龙」互链闭环；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head d88e2c2；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| RAG 文本分块预览器 | 递进首席（201 轮第二顺位；首席 skill_scanner 已交付闭环，按「无硬伤不跳过、Top3 顺位递进」惯例自然递进；`rag_chunk`／`chunk_preview`／`chunking` 全 0 命中真缺口保持；`chunk` 命中仅 vendor bundle＋内部 chunked 读取，口径不同；V2EX t/1253899 KitVerse.dev「RAG Chunking Playground（6 种分块策略预览，带真实 token 计数和偏移量）」2026-11-02 新信号持续有效；痛点：做 RAG/喂 LLM 前不知道长文本会被切成几块、每块多少 token、会不会把句子拦腰截断；实现：粘贴长文本→分块策略可选（固定字符数／按段落／按句子／递归分隔符）＋块大小/重叠度可调→分块结果列表（每块字符数/预估 token/起止偏移）→块边界高亮预览→导出 JSON；纯前端小难度（纯函数可写逐字向量：chunkByChars／chunkByParagraph／chunkBySentence 确定性＋err.field；token 估算沿用站内 ai_token_counter 口径）；与 ai_token_counter／project_to_txt 互链「LLM 预处理一条龙」；真限制：token 为本地估算非各模型精确值、中文分句启发式须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 社交链接/OG 预览检查器 | 第二顺位（本轮新候选；dev.to「10 Free Browser Tools Every Developer Should Bookmark」（2026-03-27）Link Preview Checker 信号：一次预览链接在 Google/Twitter/Discord/WhatsApp/LinkedIn/Slack/iMessage 的渲染效果；站内零重叠实测：`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口确凿（站内 og: meta 标签仅为各页面自带 head 元素，非工具口径）；痛点：发文章/做活动页前想预览链接在微信/微博/X/Discord/Telegram/Slack/LinkedIn 的渲染卡片，OG 标签写错了抓出来是乱图或空白；实现：填写标题/描述/链接/图片（本地选择或 URL）→各平台模拟卡片预览（微信样式/微博/X/Discord/Telegram/Slack/LinkedIn）→OG meta 标签代码一键生成复制→图片尺寸/比例合规检查（1200×630 等）→分享调试建议；纯前端小难度（纯函数可写逐字向量：buildOgMeta／checkImageRatio 确定性＋err.field）；与 qrcode_generator 互链「分享一条龙」；真限制：无法真实抓取远程 URL（站内零外部请求惯例＋CORS），模拟渲染须明示；各平台卡片样式为近似还原非像素级；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2 |
+| 屏幕尺子 | 第三顺位备选（199 轮 Top3 第三顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` ASCII 三处 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项或复活） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第二百〇二轮——SKILL 安全扫描器交付闭环（d88e2c2；`/tools/skill-scanner` 已注册；旧测试 Path 断言 270→271 同步；全量 157 个 node 测试文件全绿；候选池划出），全量 **271 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head d88e2c2），继续标记「开发中」移出 Top3；**Top3 递进链更新**：RAG 文本分块预览器→递进首席（201 轮第二顺位；`rag_chunk`／`chunk_preview`／`chunking` 全 0 命中真缺口保持；V2EX t/1253899 2026-11-02 新信号持续有效）／社交链接/OG 预览检查器→第二顺位（本轮新候选；dev.to Link Preview Checker 信号；`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口确凿）／屏幕尺子→第三顺位备选（`screen_ruler` 三处 0 命中真缺口保持；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）；本轮初判 5 项全部确认消解（printer_test_page／code_screenshot_beautifier／chmod_calculator／placeholder_image_generator 已交付；DNS-IP Lookup 外部网络硬伤）；本轮 fetch 一次成功（注：首次 fetch 漏加 GIT_SSH_COMMAND 被拒，补加后一次成功，github.com 主机密钥已重新记录；远端无新提交），本地 HEAD d88e2c2 与 origin 同头为最新；新信号扫描：V2EX＋dev.to＋HN＋中文需求搜索（详见上文）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD d88e2c2 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 d88e2c2（skill_scanner 新增，node 121 断言全过，全量 157 个 node 测试文件全绿）／9749bdd（json_to_excel 新增）／9b48c03（device_check 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **271**；`ls templates/skill_scanner.html static/js/skill_scanner.js tests/skill_scanner.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**SKILL 安全扫描器**：已交付（/tools/skill-scanner，Path 270→271），划出候选池；**简繁互转**：仍开发中，移出 Top3；**RAG 文本分块预览器**：`rag_chunk`／`chunk_preview`／`chunking` 全 0 命中；`chunk` 命中仅 vendor bundle＋内部 chunked 读取（口径不同）；分块 CJK 唯一命中仍为 pdf_to_ppt（PPT 转换口径不同）；真缺口保持；**社交链接/OG 预览检查器**：`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中；站内 og: meta 标签仅为各页面自带 head 元素，非工具口径；真缺口确凿；**屏幕尺子**：`screen_ruler` ASCII 三处 0 命中；真缺口保持（17:00 PM 轮裁定暂不立项维持）；**打印机测试页／代码截图美化器／chmod／占位图**：初判后复核均已交付确认消解；**DNS-IP Lookup**：外部网络硬伤确认消解）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 21:00 · PM 选定轮，接 201 轮通用调研）
 
 **选定：SKILL 安全扫描器（skill_scanner）** — 本轮唯一任务（新工具）。

@@ -143,7 +143,7 @@ has(catBlock, "Category:    \"文本工具\"", "注册：Category 不变");
 has(catBlock, "New:         true", "注册：New 标记不动");
 has(catBlock, "APA 7th / MLA 9th / Chicago 17th", "注册：Description 增补三格式一句");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 271, "注册：Path 总数 268→270");
+eq(pathCount, 272, "注册：Path 总数 268→270");
 
 /* ---------- 7. 零网络请求 ---------- */
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
