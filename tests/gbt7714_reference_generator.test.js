@@ -155,5 +155,22 @@ var tplHosts = {};
 (TPL_SRC.match(/https:\/\/[a-zA-Z0-9.-]+/g) || []).forEach(function (u) { tplHosts[u.replace(/^https:\/\//, "")] = 1; });
 eq(Object.keys(tplHosts).sort().join(","), "doi.org,fonts.googleapis.com,schema.org,www.johnkingzcq123.xyz", "零新增：模板外链主机集合与改动前一致");
 
+/* ---------- 8. enSplitAuthors 集成（页面录入规则：姓, 名首字母＋分号分隔） ---------- */
+// 直接把表单字符串喂给 enSplitAuthors（与 enInput/compareEN 相同链路），再喂给纯函数渲染
+eq(JSON.stringify(M.enSplitAuthors("Zhang, S.; Li, W.")), JSON.stringify(["Zhang, S.", "Li, W."]), "enSplitAuthors：双作者按分号切、逗号不切");
+eq(JSON.stringify(M.enSplitAuthors("Zhang, S.")), JSON.stringify(["Zhang, S."]), "enSplitAuthors：单作者「姓, 名首字母」保持整体");
+eq(JSON.stringify(M.enSplitAuthors("Zhang, Shan; Wei Li")), JSON.stringify(["Zhang, Shan", "Wei Li"]), "enSplitAuthors：MLA/Chicago 姓, 名亦按分号切");
+eq(JSON.stringify(M.enSplitAuthors("Zhang, S.\nLi, W.")), JSON.stringify(["Zhang, S.", "Li, W."]), "enSplitAuthors：换行也切分");
+eq(JSON.stringify(M.enSplitAuthors("Zhang, S.；Li, W.；")), JSON.stringify(["Zhang, S.", "Li, W."]), "enSplitAuthors：全角分号＋尾部分号容错");
+eq(JSON.stringify(M.enSplitAuthors("")), JSON.stringify([]), "enSplitAuthors：空串得空数组");
+eq(JSON.stringify(M.enSplitAuthors("  ;  ")), JSON.stringify([]), "enSplitAuthors：纯分隔符得空数组");
+// 集成：UI 链路（enInput 口径：表单字符串→enSplitAuthors）渲染 APA 逐字等于规格向量
+var viaUi = M.formatCitationAPA({ authors: M.enSplitAuthors("Zhang, S.; Li, W."), year: 2024, title: "Deep learning for NLP", journal: "AI Review", volume: 12, issue: 3, pages: "45-67", doi: "10.1/abc" });
+eq(viaUi, "Zhang, S., & Li, W. (2024). Deep learning for NLP. AI Review, 12(3), 45" + EN_DASH + "67. https://doi.org/10.1/abc", "集成：UI 切分→APA 期刊逐字＝规格向量");
+var viaUi1 = M.formatCitationAPA({ authors: M.enSplitAuthors("Zhang, S."), year: 2024, title: "Deep learning", publisher: "AI Press" });
+eq(viaUi1, "Zhang, S. (2024). Deep learning. AI Press.", "集成：UI 切分→APA 单作者图书逐字");
+var viaUiMla = M.formatCitationMLA({ authors: M.enSplitAuthors("Zhang, Shan; Wei Li"), year: 2024, title: "T", journal: "J", volume: 12, pages: "45-67" });
+eq(viaUiMla, "Zhang, Shan, and Wei Li. \"T.\" J, vol. 12, 2024, pp. 45-67.", "集成：UI 切分→MLA 双作者逐字（不误判 et al.）");
+
 console.log("gbt7714_reference_generator: pass=" + pass + " fail=" + fail);
 if (fail > 0) process.exit(1);

@@ -95,6 +95,14 @@
         return str.split(/[,，;；、]/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
     }
 
+    // 英文三格式作者切分：只按分号/换行切，不切逗号。
+    // 页面录入规则为「姓, 名首字母」（APA 如 Zhang, S.；MLA/Chicago 如 Zhang, Shan），
+    // 多位作者用分号分隔（如 Zhang, S.; Li, W.）；工具不做语义分词。
+    function enSplitAuthors(str) {
+        if (!str) return [];
+        return str.split(/[;；\n]/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+    }
+
     function hasCJK(s) { return /[\u4e00-\u9fff]/.test(s); }
 
     // 文末作者串（顺序编码制）：≤3 全列；>3 取前3 + 等/et al；末尾带句点
@@ -602,7 +610,7 @@
             (access ? access.slice(0, 4) : '') ||
             (update ? update.slice(0, 4) : '');
         return {
-            authors: splitAuthors(d.authors),
+            authors: enSplitAuthors(d.authors),
             year: year,
             title: (d.title || '').trim(),
             journal: (d.journal || '').trim(),
@@ -630,7 +638,7 @@
     // 英文三格式：按首作者字母排序（APA/MLA/Chicago 参考文献表惯例）
     function compareEN(a, b) {
         function first(e) {
-            var as = splitAuthors(e.data.authors);
+            var as = enSplitAuthors(e.data.authors);
             return (as.length ? as[0] : (e.data.title || '').trim()).toLowerCase();
         }
         var ka = first(a), kb = first(b);
@@ -833,7 +841,7 @@
             formatAuthorsAY: formatAuthorsAY, inTextCite: inTextCite,
             normalizeDoi: normalizeDoi, buildBody: buildBody, compareAY: compareAY,
             formatCitationAPA: formatCitationAPA, formatCitationMLA: formatCitationMLA,
-            formatCitationChicago: formatCitationChicago,
+            formatCitationChicago: formatCitationChicago, enSplitAuthors: enSplitAuthors,
             SAMPLES: SAMPLES, TYPES: TYPES
         };
     } else {
@@ -841,7 +849,7 @@
             splitAuthors: splitAuthors, buildBody: buildBody, inTextCite: inTextCite,
             normalizeDoi: normalizeDoi, compareAY: compareAY, SAMPLES: SAMPLES,
             formatCitationAPA: formatCitationAPA, formatCitationMLA: formatCitationMLA,
-            formatCitationChicago: formatCitationChicago
+            formatCitationChicago: formatCitationChicago, enSplitAuthors: enSplitAuthors
         };
     }
 })();
