@@ -1,3 +1,230 @@
+## 今日任务（2026-11-03 07:00 · PM 选定轮，接 206 轮通用调研）
+
+**选定：学习笔记整理器（study_notes）** — 本轮唯一任务（新工具）。
+
+**顺位**：206 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席递进、顺位即理由；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md；覆盖"猜测 ID 写法"＋"Description 中文口径"两条线）**：
+- `study_notes`／`notes_organiser`／`note_taker` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**；`reading_time`／`reading-time`／`read_time` 四处全 0 命中；`screen_ruler` 0 命中（真缺口保持，17:00 PM 轮裁定暂不立项维持）。
+- CJK「阅读时间」全站 **0 命中**（codepoint 实测）；CJK「笔记」命中 11 文件均为非工具口径（md_to_chat placeholder 文案、kanban_board 互链文本、landing_page_grader 「快记笔记 Pro」页面评分示例、quotation_generator 「笔记本」商品示例、rss_feed_generator/html_to_markdown/url_note_share 示例与测试文案），逐行 codepoint 验真确认无笔记整理器工具口径。
+- `tools/categories.go` 中「笔记」Description **0 命中**；口径相邻均不重叠：url_note_share（文本分享链接生成器，URL-based 分享口径）、unit_calc_notepad（算式口径）、focus_writer（专注写作口径）、text_tools（文本格式化口径）。
+- 命名无占用：ID `study_notes`、Path `/tools/study-notes` 均 0 命中；Icon **`note_add` 0 命中**（`sticky_note_2` 备选同样 0 命中，`edit_note`/`menu_book` 已被占用；开发轮精确值复测锁定全库唯一）。
+- 全量 Path **275**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **161 个**；本地分支 muse/dev-20260929，本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（此前默认 ssh 未带 -F/-i 曾 Permission denied，一律按铁律重跑），本地 HEAD b5f1121 与 origin/muse/dev-20260929 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——206 轮 Top3 首席（P2 递进）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中，逐行 codepoint 验真）；③ **痛点真实且新鲜**——dev.to StudyKit Hub 第三篇（2026-11-02）"Study Notes Organiser — notes with tags and search, saved only in your browser, export to JSON, Markdown or plain text"；学习/面试复习想在浏览器本地记带标签笔记、可全文/标签搜索、不上传云端（WPS 云文档等要登录）；④ **契合用户场景**——用户边工作边备战劳动仲裁面试复习，本地学习笔记是高频刚需；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（addNote／filterByTag／searchNotes／buildExport 确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「学习工具」类目（与 flashcard_maker/打字练习互链「学习辅助一条龙」；与 habit_tracker（习惯追踪）互链「自律学习一条龙」）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 笔记管理：创建/编辑/删除笔记（标题＋正文，Markdown 精简子集渲染预览）＋笔记列表；② 标签系统：笔记打标签、标签管理（重命名/删除）、按标签过滤；③ 搜索：全文搜索（标题＋正文＋标签，大小写不敏感）；④ localStorage 本地存笔记数据（无账号无登录，离线可用）；⑤ 导入/导出：导出单条 Markdown / 全部 JSON 备份 / 全部纯文本；导入 JSON（备份迁移），导入文件名兼容 `studynotes_YYYYMMDD_HHmmss.json`；⑥ 置顶笔记。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.StudyNotes 下，module.exports 同步导出；笔记结构 {id, title, body, tags:[], pinned, createdAt, updatedAt}；id 为非空字符串）**：
+  - `addNote(notes, note)` → 不可变新数组：note.id 已存在抛 Error err.field='id'；note.title 非字符串抛 Error err.field='title'；note.tags 非数组抛 Error err.field='tags'；归一化补 pinned:false、createdAt/updatedAt（缺时用 Date.now()）。
+  - `filterByTag(notes, tag)` → 命中 tag 的笔记数组（不改变顺序）；tag 非字符串或空字符串抛 Error err.field='tag'。
+  - `searchNotes(notes, query)` → 标题/正文/标签命中（大小写不敏感）的笔记数组；query 非字符串抛 Error err.field='query'；空 query 返回全部。
+  - `updateNote(notes, id, patch)` → 不可变新数组：patch.title 非法抛 Error err.field='title'；patch.tags 非数组抛 Error err.field='tags'；id 不存在抛 Error err.field='id'；updatedAt 刷新。
+  - `deleteNote(notes, id)` → 不可变新数组；id 不存在抛 Error err.field='id'。
+  - `parseImport(text)` → JSON.parse 后校验 `{notes:[{id,title,body,tags}]}`，归一化（缺 tags 补 []，缺 body 补 ''，缺 pinned 补 false）；JSON 非法抛 Error err.field='text'；结构不合法抛 Error err.field='data'。
+  - `buildExportFileName(date)` → `'studynotes_YYYYMMDD_HHmmss.json'`；date 非 Date 对象抛 Error err.field='now'。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `addNote([], {id:'n1',title:'劳动法',body:'## 仲裁时效',tags:['法律']})` → 数组长 1；`[0].title` 为 `'劳动法'`，`[0].pinned===false`。
+  - `addNote([{id:'n1',title:'a',body:'',tags:[]}], {id:'n1',title:'b',body:'',tags:[]})` 抛 Error 且 `err.field==='id'`。
+  - `filterByTag([{id:'n1',title:'a',body:'',tags:['法律','民法']},{id:'n2',title:'b',body:'',tags:['数学']}], '法律')` → `['n1']`（返回 id 数组或笔记数组其 id 序列，开发轮统一口径：返回笔记数组，断言其 ids 为 ['n1']）。
+  - `filterByTag([], '')` 抛 Error 且 `err.field==='tag'`。
+  - `searchNotes([{id:'n1',title:'仲裁',body:'时效一年',tags:[]}])` 按 `'ZHONGCAI'` 大小写不敏感命中 n1；按 `'不存在的词'` 返回 `[]`；`searchNotes([{id:'n1',title:'a',body:'b',tags:[]}], '')` 返回全部。
+  - `updateNote([{id:'n1',title:'a',body:'',tags:[],pinned:false,createdAt:1,updatedAt:1}], 'n1', {title:'b'})` → `[0].title==='b'` 且 `updatedAt>1`。
+  - `deleteNote([{id:'n1',title:'a',body:'',tags:[]}], 'n1')` → `[]`；`deleteNote([], 'x')` 抛 Error 且 `err.field==='id'`。
+  - `parseImport('{"notes":[{"id":"n1","title":"a"}]}')` → `{notes:[{id:'n1',title:'a',body:'',tags:[],pinned:false}]}`（归一化补默认值）。
+  - `parseImport('not json')` 抛 Error 且 `err.field==='text'`；`parseImport('{"notes":"x"}')` 抛 Error 且 `err.field==='data'`。
+  - `buildExportFileName(new Date(2026,10,3,7,0,0))` → `'studynotes_20261103_070000.json'`。
+- **真限制（页面明示）**：① 笔记数据只存本浏览器 localStorage——跨设备不同步，清除浏览器数据/换浏览器会丢失，重要记录请导出 JSON 备份；② 正文渲染为 Markdown 精简子集（标题/加粗/斜体/列表/引用/代码块），非完整 Markdown 解析器；③ 纯本地处理，笔记数据不出浏览器（可在 Network 面板自证）。
+- **互链**：与 flashcard_maker（抽认卡复习）双向互链「学习辅助一条龙」；与 habit_tracker（习惯追踪打卡）双向互链「自律学习一条龙」；打字练习尚未交付不链，避免死链。
+- **SEO**：title/description/keywords 增补 学习笔记/笔记整理/标签笔记/study notes organizer 中英文关键词。
+
+**验收标准**：
+1. 笔记创建/编辑/删除→标签管理＋按标签过滤→全文搜索→置顶→localStorage 本地持久化→导入/导出 JSON（备份迁移）＋单条 Markdown 导出。
+2. 纯函数契约 node 测试全过——新建 `tests/study_notes.test.js`（逐字向量＋err.field），`node tests/study_notes.test.js` 直跑。
+3. 真限制三条在页面明示。
+4. 注册：Path 总数 275→**276**；旧测试 Path 断言同步（开发轮 grep 确认引用 275 的测试文件）；Icon `note_add` 全库唯一（开发轮精确值复测锁定；`sticky_note_2` 备选）；New: true；Category「学习工具」。
+5. go build/vet 通过；本地 `/tools/study-notes` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/study_notes.html`（新建：笔记列表＋编辑器（Markdown 精简渲染预览）＋标签管理/过滤＋全文搜索＋置顶＋导入导出＋真限制＋SEO）
+2. `static/js/study_notes.js`（新建：addNote／filterByTag／searchNotes／updateNote／deleteNote／parseImport／buildExportFileName 纯函数＋笔记 UI 绑定，挂 window.StudyNotes，module.exports 同步导出）
+3. `tests/study_notes.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID study_notes、Path /tools/study-notes、Icon note_add、Category 学习工具、New: true、Description 含 学习笔记/笔记整理/标签笔记/study notes organizer 中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 275 的测试文件，仅断言行）
+
+**顺位递补**（PM 裁定）：阅读时间估算器 → 仍第二顺位留池（206 轮本轮新候选；dev.to StudyKit Hub 第三篇（2026-11-02）"Reading Time Calculator" 信号；PM 本轮独立 ASCII 四处全 0 命中＋CJK「阅读时间」全站 0 命中；text_tools（字数统计/格式化口径）不重叠；真缺口确凿维持，P2 顺位不动）／屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定沿用；本轮无新信号变化；`screen_ruler` 0 命中真缺口保持，低优先观察保持，PM 保留复活裁定权）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD b5f1121 与 origin/muse/dev-20260929 同头为最新，远端无新提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **275**；tests/*.test.js **161 个**；PM 独立零重叠实测：**学习笔记整理器**：`study_notes`／`notes_organiser`／`note_taker` 四处全 **0 命中**；CJK「笔记」11 命中文件逐行 codepoint 验真**均为非工具口径**（示例/测试/placeholder 文案）；categories.go「笔记」Description **0 命中**；url_note_share（URL 分享口径）/unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；ID `study_notes`／Path `/tools/study-notes`／Icon `note_add` 均 **0 命中**（`sticky_note_2` 备选 0 命中）；**阅读时间估算器**：`reading_time`／`reading-time`／`read_time` 四处全 **0 命中**；CJK「阅读时间」全站 **0 命中**；text_tools（字数统计/格式化口径）不重叠；真缺口确凿，第二顺位留池；**屏幕尺子**：`screen_ruler` 0 命中，真缺口保持（17:00 PM 轮裁定暂不立项维持）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 07:00 · 通用调研第二百〇六轮，接习惯追踪器交付轮）
+
+**交付状态**：11-03 通用调研第二百〇六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**习惯追踪器交付闭环**（b5f1121 新增：habit_tracker，Path 274→275，全量 node 测试全绿；go build/vet 通过，本地 /tools/habit-tracker 实测 200，零外部请求；「自律学习一条龙」互链闭环；候选池划出）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head b5f1121；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链更新**：学习笔记整理器→首席（P2 递进；StudyKit Hub 第三篇 2026-11-02 信号持续）／阅读时间估算器→第二顺位（**本轮新候选**；StudyKit Hub 第三篇 2026-11-02 "Reading Time Calculator" 信号）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:00 轮，优先小难度纯前端。
+
+**本轮三件事**（07:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 b5f1121（习惯追踪器新增）／da2c563（闪卡卡片生成器）／267a8e0（长图切片器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **275**；`ls templates/habit_tracker.html static/js/habit_tracker.js tests/habit_tracker.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD b5f1121 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md；本轮同时复核"猜测 ID 写法"和"Description 中文口径"两条线）**：
+   - 习惯追踪器：已交付（b5f1121，Path 274→275）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head b5f1121；categories.go jianfan 0 命中）——移出 Top3。
+   - 学习笔记整理器：`study_notes`／`notes_organiser`／`note_taker` 全 **0 命中**维持；笔记 CJK Description 0 命中；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠——**真缺口确凿维持，P2→首席递进**。
+   - **阅读时间估算器**（**本轮新候选**；dev.to StudyKit Hub 第三篇（2026-11-02）"Reading Time Calculator — silent reading or speaking time"）：`reading_time` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**；CJK「阅读时间」全站 **0 命中**（python codepoint 复核）；站内相邻：text_tools（文本工具集口径：字数统计/行去重/大小写转换/全半角/盘古空格/删空行）为格式化口径，**阅读时长估算口径不重叠**——真缺口确凿。
+   - StudyKit Hub 第三篇其余 13 工具逐项消解：字数统计器→text_tools 已交付（字数统计口径）**确认消解**；大小写转换/空白清理/去重行→text_tools 已交付（大小写/删空行/行去重口径）**确认消解**；番茄学习计时器→countdown_timer 番茄钟口径已交付**确认消解**；闪卡卡片生成器→flashcard_maker 已交付**确认消解**；学习笔记整理器→首席候选维持；GPA→P3 留池维持；文本转语音朗读→text_reader_aloud 已交付（speechSynthesis 口径）**确认消解**；期末成绩目标计算器→见下新增弱观察；UK 学位等级计算器→UK 学生小众**消解**；APA/MLA 引用生成器→gbt7714_reference_generator 已含 APA 7th/MLA 9th/Chicago 17th 英文引文**确认消解**；百分比/成绩计算器→见下新增弱观察。
+   - V2EX：t/1246493 图片转拼豆图纸（2026-10-05）→pindou_blueprint 已交付**确认消解**；t/1249807 dragon_card 记忆卡片（2026-10-18）→flashcard_maker 已交付**确认消解**；t/1252576 FrameLoom 文档变动画视频（2026-10-28）→Remotion＋Agent 本地渲染口径，非单页纯前端**确认消解**；t/1250158 玄印写作 AI 小说（2026-10-19）→需自备 LLM API Key＋桌面端**确认消解**；t/1253201 自媒体获客四工具→204/205 轮已消解（插件/付费/AI 口径）；t/1252552 tubox→204 轮已消解（证件照/标注/批量处理已交付，AI 抠图/放大 ONNX 硬伤保持）。
+   - HN：HackerTube（Karpathy，HN 评论视频策展）→产品口径**确认消解**；DevDesk 340 工具聚合→产品口径**确认消解**；「Best free browser-only tools Q1 2026」→Markmap（mind_map 已有）/tmp.tf（需服务器同步）/Excalideck（演示产品口径）**均确认消解**。
+   - dev.to「437 Reddit posts」→方法论文章，无独立新信号。
+   - 中文需求搜索：「希望有一个网站能」→SEO 垃圾站无可用信号。
+   - 屏幕尺子：204 轮复测结论沿用（`screen_ruler` 本轮再复核 0 命中真缺口）——17:00 PM 轮裁定暂不立项维持，第三顺位备选。
+3. 新信号扫描（V2EX（t/1246493 拼豆图纸／t/1249807 dragon_card／t/1252576 FrameLoom／t/1250158 玄印写作／t/1253201 自媒体获客／t/1252552 tubox）＋HN（HackerTube／DevDesk／browser-only 榜）＋dev.to（StudyKit Hub 第三篇 2026-11-02／437 Reddit posts）＋中文需求搜索；本轮 fetch 一次成功，本地 HEAD b5f1121 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **学习笔记整理器** — 首席（P2 递进；dev.to StudyKit Hub 第三篇 2026-11-02 信号持续："Study Notes Organiser — notes with tags and search, saved only in your browser, export to JSON, Markdown or plain text"；站内零重叠实测维持：`study_notes`／`notes_organiser`／`note_taker` 全 0 命中；笔记 CJK Description 0 命中；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿；痛点：学习/面试复习想本地记带标签笔记、可搜索、不上传云端（WPS 云文档等要登录）；实现：笔记创建（标题/正文 Markdown 精简渲染）→标签管理＋全文/标签搜索→localStorage 本地存→导出 JSON/Markdown/纯文本；纯前端小难度（addNote／filterByTag／searchNotes／buildExport 确定性＋err.field）；与 flashcard_maker（抽认卡）互链「学习辅助一条龙」；真限制：localStorage 跨设备不同步、Markdown 精简子集须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **阅读时间估算器** — 第二顺位（**本轮新候选**；dev.to StudyKit Hub 第三篇 2026-11-02 "Reading Time Calculator — silent reading or speaking time" 信号；站内零重叠实测：`reading_time` 四处全 0 命中；阅读时间 CJK 全站 0 命中；text_tools（字数统计/格式化口径）为不同口径不重叠；真缺口确凿；痛点：写文章/发公众号想预估读者阅读时长（默读/朗读两档），市面工具多内嵌重型编辑器或要登录；实现：粘贴文本→中英混排字数统计→按默读/朗读语速估算时长（分钟/字数区间）→复制结果；纯前端小难度（纯函数可写逐字向量：countWords／estimateReadingTime 确定性＋err.field）；可与 text_tools 互链「写作一条龙」；真限制：按固定语速估算、个体差异大须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位备选（205 轮 Top3 第三顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 本轮再复核 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：GPA 绩点计算器（P3 留池；StudyKit Hub 第三篇再确认；绩点/GPA 真缺口；学习小众口径（大学生），与用户劳动仲裁复习场景关联弱，低优先）／**期末成绩目标计算器**（**本轮新增弱观察 P3**：StudyKit Hub 第三篇 "Final Grade Calculator — what you need on the final for a target"；`final_grade` 全 0 命中真缺口；score_stats（班级成绩统计分析口径）为不同口径不重叠；纯前端小难度；大学生小众口径，与用户复习场景关联弱，低优先）／**年龄/日期差计算器**（**本轮新增弱观察 P3**：`age_calc`/`date_diff` 全 0 命中真缺口；calendar（日历查看口径）为不同口径不重叠；纯前端小难度；生活计算器口径与 10-18 方向修正边界相邻，PM 裁定前低优先）／**百分比/成绩计算器**（**本轮新增弱观察 P3**：StudyKit Hub 第三篇 "Percentage and Marks Calculator"；`percentage_calc` 全 0 命中真缺口；纯前端小难度；泛数学计算器口径与 10-18 方向修正边界相邻，低优先）／小红书封面生成器（弱观察 P3 留池；204 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先）／简繁互转（开发中，移出 Top3）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇六轮：习惯追踪器交付闭环（b5f1121 新增：habit_tracker，Path 274→275，全量 node 测试全绿；go build/vet 通过，本地 /tools/habit-tracker 实测 200，零外部请求；「自律学习一条龙」互链闭环；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head b5f1121；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链更新**：**学习笔记整理器→首席**（P2 递进；StudyKit Hub 第三篇 2026-11-02 信号持续；`study_notes`／`notes_organiser`／`note_taker` 全 0 命中维持；真缺口确凿）／**阅读时间估算器→第二顺位**（**本轮新候选**；StudyKit Hub 第三篇 2026-11-02 "Reading Time Calculator — silent reading or speaking time" 信号；`reading_time` 四处全 0 命中；阅读时间 CJK 全站 0 命中；text_tools（格式化口径）不重叠；真缺口确凿；纯前端小难度；可与 text_tools 互链「写作一条龙」；真限制：固定语速估算须明示）／**屏幕尺子→第三顺位备选**（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持）；**本轮新增弱观察 P3**：期末成绩目标计算器（`final_grade` 真缺口；score_stats 统计分析口径不重叠；大学生小众低优先）／年龄/日期差计算器（`age_calc`/`date_diff` 真缺口；calendar 日历查看口径不重叠；方向修正边界相邻低优先）／百分比/成绩计算器（`percentage_calc` 真缺口；泛数学计算器口径方向修正边界相邻低优先）；**本轮初判消解 13 项**：StudyKit 字数统计器→text_tools 已交付（字数统计口径）／大小写转换/空白清理/去重行→text_tools 已交付（大小写/删空行/行去重口径）／番茄学习计时器→countdown_timer 番茄钟已交付／文本转语音朗读→text_reader_aloud 已交付／APA/MLA 引用生成器→gbt7714_reference_generator 已含 APA 7th/MLA 9th/Chicago 17th 英文引文／UK 学位等级计算器→UK 学生小众消解／V2EX 拼豆图纸→pindou_blueprint 已交付／V2EX dragon_card 记忆卡片→flashcard_maker 已交付／V2EX FrameLoom 文档变动画视频→Remotion+Agent 口径消解／V2EX 玄印写作 AI 小说→自备 LLM API+桌面端消解／HN HackerTube→产品口径消解／DevDesk 340 工具聚合→产品口径消解／Q1 2026 browser-only 工具榜→Markmap（mind_map 已有）/tmp.tf（需服务器同步）/Excalideck（演示产品口径）均消解；新信号扫描：V2EX（t/1246493／t/1249807／t/1252576／t/1250158／t/1253201／t/1252552）＋HN（HackerTube／DevDesk／browser-only 榜）＋dev.to（StudyKit Hub 第三篇 2026-11-02／437 Reddit posts 方法论文章无新信号）＋中文需求搜索（SEO 垃圾站无可用信号）；本轮 fetch 一次成功，本地 HEAD b5f1121 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 习惯追踪器 | 已交付划出（b5f1121 新增：habit_tracker，Path 274→275，全量 node 测试全绿；go build/vet 通过，本地 /tools/habit-tracker 实测 200，零外部请求；「自律学习一条龙」互链闭环；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head b5f1121；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 学习笔记整理器 | 首席（P2 递进；dev.to StudyKit Hub 第三篇 2026-11-02 信号持续 "Study Notes Organiser — notes with tags and search, saved only in your browser, export to JSON, Markdown or plain text"；`study_notes`／`notes_organiser`／`note_taker` 全 0 命中维持；笔记 CJK Description 0 命中；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿；痛点：学习/面试复习想本地记带标签笔记、可搜索、不上传云端（WPS 云文档等要登录）；实现：笔记创建（标题/正文 Markdown 精简渲染）→标签管理＋全文/标签搜索→localStorage 本地存→导出 JSON/Markdown/纯文本；纯前端小难度（addNote／filterByTag／searchNotes／buildExport 确定性＋err.field）；与 flashcard_maker（抽认卡）互链「学习辅助一条龙」；真限制：localStorage 跨设备不同步、Markdown 精简子集须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 阅读时间估算器 | 第二顺位（**本轮新候选**；dev.to StudyKit Hub 第三篇 2026-11-02 "Reading Time Calculator — silent reading or speaking time" 信号；`reading_time` 四处全 0 命中；阅读时间 CJK 全站 0 命中；text_tools（字数统计/格式化口径）不重叠；真缺口确凿；痛点：写文章/发公众号想预估读者阅读时长（默读/朗读两档），市面工具多内嵌重型编辑器或要登录；实现：粘贴文本→中英混排字数统计→按默读/朗读语速估算时长（分钟/字数区间）→复制结果；纯前端小难度（countWords／estimateReadingTime 确定性＋err.field）；与 text_tools 互链「写作一条龙」；真限制：固定语速估算、个体差异大须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2 |
+| 屏幕尺子 | 第三顺位备选（205 轮 Top3 第三顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项或复活） | 小 | P3（留池） |
+| 期末成绩目标计算器 | 本轮新增弱观察 P3（StudyKit Hub 第三篇 "Final Grade Calculator — what you need on the final for a target"；`final_grade` 全 0 命中真缺口；score_stats（班级成绩统计分析口径）不重叠；纯前端小难度；大学生小众口径，与用户复习场景关联弱，低优先） | 小 | P3（留池） |
+| 年龄/日期差计算器 | 本轮新增弱观察 P3（`age_calc`/`date_diff` 全 0 命中真缺口；calendar（日历查看口径）不重叠；纯前端小难度；生活计算器口径与 10-18 方向修正边界相邻，PM 裁定前低优先） | 小 | P3（留池） |
+| 百分比/成绩计算器 | 本轮新增弱观察 P3（StudyKit Hub 第三篇 "Percentage and Marks Calculator"；`percentage_calc` 全 0 命中真缺口；纯前端小难度；泛数学计算器口径与 10-18 方向修正边界相邻，低优先） | 小 | P3（留池） |
+| 小红书封面生成器 | 弱观察 P3 留池（204 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先） | 小 | P3（留池） |
+| GPA 绩点计算器 | 弱观察 P3 留池（StudyKit Hub 第三篇再确认；绩点/GPA CJK 0 命中真缺口；学习小众口径（大学生），与用户劳动仲裁复习场景关联弱；纯前端小难度（加权平均纯函数）；低优先） | 小 | P3（留池） |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇六轮——习惯追踪器交付闭环（b5f1121；`/tools/habit-tracker` 已注册；全量 node 测试全绿；候选池划出），全量 **275 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head b5f1121），继续标记「开发中」移出 Top3；**Top3 递进链更新**：学习笔记整理器→首席（P2 递进；StudyKit Hub 第三篇 2026-11-02 信号持续；真缺口确凿维持）／阅读时间估算器→第二顺位（**本轮新候选**；StudyKit Hub 第三篇 "Reading Time Calculator" 信号；`reading_time` 四处全 0 命中；阅读时间 CJK 全站 0 命中；text_tools 不重叠；真缺口确凿）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持；`screen_ruler` 0 命中真缺口保持）；新增弱观察 P3：期末成绩目标计算器／年龄/日期差计算器／百分比/成绩计算器；本轮初判消解 13 项全部确认（详见上文；字数统计/大小写/去重→text_tools 已交付；番茄钟→countdown_timer 已交付；朗读→text_reader_aloud 已交付；APA/MLA→gbt7714 已含；拼豆图纸→pindou_blueprint 已交付；dragon_card→flashcard_maker 已交付；FrameLoom→Remotion+Agent 口径；玄印写作→自备 LLM API+桌面端；HackerTube→产品口径；DevDesk→产品口径；Q1 榜单→均已消解）；新信号扫描：V2EX（t/1246493／t/1249807／t/1252576／t/1250158／t/1253201／t/1252552）＋HN（HackerTube／DevDesk／browser-only 榜）＋dev.to（StudyKit Hub 第三篇 2026-11-02／437 Reddit posts）＋中文需求搜索（SEO 垃圾站无可用信号）；本轮 fetch 一次成功，本地 HEAD b5f1121 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD b5f1121 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 b5f1121（习惯追踪器新增）／da2c563（闪卡卡片生成器）／267a8e0（长图切片器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **275**；`ls templates/habit_tracker.html static/js/habit_tracker.js tests/habit_tracker.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**习惯追踪器**：已交付（/tools/habit-tracker，Path 274→275），划出候选池；**简繁互转**：仍开发中，移出 Top3；**学习笔记整理器**：`study_notes`／`notes_organiser`／`note_taker` 全 **0 命中**；笔记 CJK Description **0 命中**；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿；**阅读时间估算器**：`reading_time` 四处（templates＋static/js＋tools/categories.go＋tests）全 **0 命中**；阅读时间 CJK 全站 **0 命中**；text_tools（字数统计/格式化口径）不重叠；真缺口确凿；**屏幕尺子**：`screen_ruler` 0 命中；真缺口保持（17:00 PM 轮裁定暂不立项维持）；**期末成绩目标计算器**：`final_grade` 0 命中真缺口，score_stats（统计分析口径）不重叠，弱观察 P3 留池；**年龄/日期差计算器**：`age_calc`/`date_diff` 0 命中真缺口，弱观察 P3 留池；**百分比/成绩计算器**：`percentage_calc` 0 命中真缺口，弱观察 P3 留池）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 05:00 · PM 选定轮，接 205 轮通用调研）
+
+**选定：习惯追踪器（habit_tracker）** — 本轮唯一任务（新工具）。
+
+**顺位**：205 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席递进、顺位即理由；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md；覆盖"猜测 ID 写法"＋"Description 中文口径"两条线）**：
+- `habit_tracker`／`habit-tracker`／`habit`／`habits`／`streak`／`checkin`／`check-in` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**，唯 `habit`/`habits` 在 static/js/readability_analyzer.js:170 有英文示例文本 "best habits you can build"（可读性分析示例句，非工具口径，无重叠）。
+- CJK「习惯／打卡／自律／训练／练卡」经 python codepoint 构造复核，tools/categories.go **全 0 命中**。
+- 口径相邻均不重叠：countdown_timer（计时/番茄口径）／flashcard_maker（复习调度口径）——均为不同口径，习惯打卡口径独立。
+- 命名无占用：ID `habit_tracker`、Path `/tools/habit-tracker` 均 0 命中；Icon **`event_available` categories.go 0 命中**（`check_circle` 备选同样 0 命中；开发轮精确值复测锁定全库唯一）。
+- 全量 Path **274**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **160 个**；本地分支 muse/dev-20260929，HEAD da2c563；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地与 origin 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——205 轮 Top3 首席（本轮新候选）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中）；③ **痛点真实且新鲜**——HN Show HN: Caccepted（2026-10-20 左右）："Runs in your browser, no signup. Saves everything in local storage. Create habits, challenges, and daily todos. Tick them off and see streaks + simple progress stats"；想无登录在浏览器本地记习惯打卡（健身/阅读/戒烟等），市面 App 要注册或会员、广告多；④ **契合用户场景**——用户边工作边备战劳动仲裁面试复习，习惯打卡是天然自律工具；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（toggleCheckIn／computeStreak／buildWeekMatrix 确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「学习工具」类目（与 flashcard_maker/打字练习互链「学习辅助一条龙」；与 flashcard_maker/countdown_timer 互链「自律学习一条龙」）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 习惯管理：创建/编辑/删除习惯（名称＋周期目标，如"每天"/"每周≥5次"）＋习惯列表切换；② 打卡：日历热力图（月视图，点击格子勾选/取消打卡）；③ 连续 streak 统计＋完成率/周报（当前连续天数、最长连续、本周完成率、累计打卡天数）；④ localStorage 本地存习惯数据（无账号无登录，离线可用）；⑤ 导入/导出 JSON（备份迁移；导出文件名 `habits_YYYYMMDD_HHmmss.json`）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.HabitTracker 下，module.exports 同步导出；日期键格式 'YYYY-MM-DD'；checkins 结构 {dateKey: true}）**：
+  - `toggleCheckIn(checkins, dateKey)` → 不可变新对象：dateKey 不存在则打卡（true），存在则取消；checkins 非对象抛 Error err.field='checkins'；dateKey 非 YYYY-MM-DD 格式抛 Error err.field='dateKey'。
+  - `computeStreak(checkins, todayKey)` → 连续打卡天数：从 todayKey 往前数连续打卡日；todayKey 当天未打卡则从昨天起算；todayKey 非法抛 Error err.field='today'。
+  - `buildWeekMatrix(checkins, weekStartKey)` → 7 项数组 `[{key, checked}]`（weekStartKey 起连续 7 天，不强制周一）；weekStartKey 非法抛 Error err.field='weekStart'。
+  - `computeStats(checkins, startKey, endKey)` → `{total, days, rate}`（total=区间打卡次数，days=区间天数，rate=total/days 保留 3 位小数）；endKey<startKey 抛 Error err.field='range'；任一日期键非法抛 Error err.field='range'。
+  - `parseImport(text)` → JSON.parse 后校验 `{habits: [{name, target, checkins}]}`，归一化（缺 target 补 '每天'，缺 checkins 补 {}）；JSON 非法抛 Error err.field='text'；结构不合法抛 Error err.field='data'。
+  - `buildExportFileName(date)` → `'habits_YYYYMMDD_HHmmss.json'`；date 非 Date 对象抛 Error err.field='now'。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `toggleCheckIn({}, '2026-11-03')` → `{'2026-11-03': true}`。
+  - `toggleCheckIn({'2026-11-03': true}, '2026-11-03')` → `{}`。
+  - `toggleCheckIn('nope', '2026-11-03')` 抛 Error 且 `err.field==='checkins'`；`toggleCheckIn({}, '20261103')` 抛 Error 且 `err.field==='dateKey'`。
+  - `computeStreak({'2026-11-01':true,'2026-11-02':true,'2026-11-03':true}, '2026-11-03')` → `3`。
+  - `computeStreak({'2026-11-01':true,'2026-11-02':true}, '2026-11-03')` → `2`（今天未打卡，从昨天起算）。
+  - `computeStreak({'2026-11-01':true,'2026-11-03':true}, '2026-11-03')` → `1`（11-02 断档）。
+  - `computeStreak({}, '2026-11-03')` → `0`。
+  - `computeStreak({}, 'bad-date')` 抛 Error 且 `err.field==='today'`。
+  - `buildWeekMatrix({'2026-11-02':true}, '2026-11-02')` → 7 项；`[0]` 为 `{key:'2026-11-02',checked:true}`，`[6]` 为 `{key:'2026-11-08',checked:false}`。
+  - `computeStats({'2026-11-01':true,'2026-11-03':true}, '2026-11-01', '2026-11-07')` → `{total:2,days:7,rate:0.286}`。
+  - `computeStats({}, '2026-11-07', '2026-11-01')` 抛 Error 且 `err.field==='range'`。
+  - `parseImport('{"habits":[{"name":"跑步","checkins":{"2026-11-03":true}}]}')` → `{habits:[{name:'跑步',target:'每天',checkins:{'2026-11-03':true}}]}`（归一化补默认 target）。
+  - `parseImport('not json')` 抛 Error 且 `err.field==='text'`；`parseImport('{"habits":"x"}')` 抛 Error 且 `err.field==='data'`。
+  - `buildExportFileName(new Date(2026,10,3,5,0,0))` → `'habits_20261103_050000.json'`。
+- **真限制（页面明示）**：① 习惯数据只存本浏览器 localStorage——跨设备不同步，清除浏览器数据/换浏览器会丢失，重要记录请导出 JSON 备份；② 连续打卡按自然日口径计算，可点选任意日期补打卡但 streak 语义为「连续自然日」，断档即重置须明示；③ 纯本地处理，习惯数据不出浏览器（可在 Network 面板自证）。
+- **互链**：与 flashcard_maker（抽认卡复习）＋countdown_timer（番茄专注）双向互链「自律学习一条龙」；与打字练习互链「学习辅助一条龙」（三模板已加回链）。
+- **SEO**：title/description/keywords 增补 习惯打卡/习惯追踪/自律/habit tracker 中英文关键词。
+
+**验收标准**：
+1. 习惯创建/编辑/删除→日历热力打卡（点击勾选/取消）→连续 streak＋完成率统计→localStorage 本地持久化→导入/导出 JSON。
+2. 纯函数契约 node 测试全过——新建 `tests/habit_tracker.test.js`（逐字向量＋err.field），`node tests/habit_tracker.test.js` 直跑。
+3. 真限制三条在页面明示。
+4. 注册：Path 总数 274→**275**；旧测试 Path 断言同步（开发轮 grep 确认引用 274 的测试文件）；Icon `event_available` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/habit-tracker` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/habit_tracker.html`（新建：习惯管理＋日历热力打卡＋streak/完成率统计＋导入导出＋真限制＋SEO）
+2. `static/js/habit_tracker.js`（新建：toggleCheckIn／computeStreak／buildWeekMatrix／computeStats／parseImport／buildExportFileName 纯函数＋打卡 UI 绑定，挂 window.HabitTracker，module.exports 同步导出）
+3. `tests/habit_tracker.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID habit_tracker、Path /tools/habit-tracker、Icon event_available、Category 学习工具、New: true、Description 含 习惯打卡/习惯追踪/自律/Habit tracker 中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 274 的测试文件）
+
+**顺位递补**（PM 裁定）：学习笔记整理器 → 仍第二顺位留池（205 轮本轮新候选；dev.to StudyKit Hub 第二篇（2026-11-02）build-in-public 信号："Study Notes Organiser — notes with tags and search, saved only in your browser, export to JSON, Markdown or plain text"；PM 本轮 ASCII 再实测：`study_notes`／`notes_organiser`／`note_taker` 全 0 命中维持；笔记 CJK Description 0 命中；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿维持，P2 顺位不动）／屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定沿用；本轮无新信号变化；`screen_ruler` 0 命中真缺口保持，低优先观察保持，PM 保留复活裁定权）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD da2c563 与 origin 同头为最新，远端无新提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **274**；tests/*.test.js **160 个**；PM 独立零重叠实测：**习惯追踪器**：`habit_tracker`／`habit-tracker`／`habit`／`habits`／`streak`／`checkin`／`check-in` 四处全 **0 命中**（唯 readability_analyzer.js:170 英文示例文本 "best habits you can build" 非工具口径无重叠）；CJK「习惯/打卡/自律/训练/练卡」python codepoint 构造全站复核 **0 命中**；countdown_timer（计时口径）/flashcard_maker（复习调度口径）均不重叠；ID `habit_tracker`／Path `/tools/habit-tracker`／Icon `event_available` 均 **0 命中**（`check_circle` 备选同样 0 命中）；**学习笔记整理器**：`study_notes`／`notes_organiser`／`note_taker` 全 **0 命中**，真缺口维持；**屏幕尺子**：`screen_ruler` 0 命中，真缺口保持（17:00 PM 轮裁定暂不立项维持）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 05:00 · 通用调研第二百〇五轮，接 03:00 PM 选定轮）
+
+**交付状态**：11-03 通用调研第二百〇五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**闪卡卡片生成器交付闭环**（da2c563 新增：flashcard_maker，Path 273→274，node 83 断言全过，全量 160 测试文件全绿；go build/vet 通过，本地 /tools/flashcard-maker 与静态 JS 实测 200，模板零外部资源；「学习辅助一条龙」互链闭环；候选池划出）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head da2c563；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链更新**：习惯追踪器→首席（**本轮新候选**；HN Caccepted 信号）／学习笔记整理器→第二顺位（**本轮新候选**；dev.to StudyKit Hub 第二篇 2026-11-02 信号）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:00 轮，优先小难度纯前端。
+
+**本轮三件事**（05:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 da2c563（闪卡卡片生成器新增，node 83 断言全过，全量 160 个 node 测试文件全绿）／267a8e0（长图切片器）／b295e34（RAG 文本分块预览器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **274**；`ls templates/flashcard_maker.html static/js/flashcard_maker.js tests/flashcard_maker.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD da2c563 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md；同时覆盖"猜测 ID 写法"和"Description 中文口径"两条线）**：
+   - 闪卡卡片生成器：已交付（da2c563，Path 273→274）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head da2c563；categories.go jianfan 0 命中）——移出 Top3。
+   - **习惯追踪器**（**本轮新候选**；HN Show HN: Caccepted — lightweight browser-based habit and challenge tracker（2026-10-20 左右）："Runs in your browser, no signup. Saves everything in local storage. Create habits, challenges, and daily todos. Tick them off and see streaks + simple progress stats"）：`habit_tracker` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**；CJK「习惯／打卡」categories.go **0 命中**（templates 零星"习惯"均为"习惯性"等非工具口径；专注打卡语义无覆盖）；站内相邻：countdown_timer（计时口径）、flashcard_maker（复习调度口径），均为不同口径——**真缺口确凿**。
+   - **学习笔记整理器**（**本轮新候选**；dev.to 「I Built a Privacy-First Study Toolkit in Plain HTML — No Backend, No Sign-Up」（2026-11-02，StudyKit Hub 第二篇 build-in-public，作者继续发声）："Study Notes Organiser — notes with tags and search, saved only in your browser, with export to JSON, Markdown or plain text"）：`study_notes`／`notes_organiser`／`note_taker` ASCII 全 0 命中；CJK「笔记」Description **0 命中**；站内相邻：unit_calc_notepad（记事本式算式计算口径）、focus_writer（专注写作口径）、texttools（文本处理口径）——**均为不同口径，不重叠**——真缺口确凿。
+   - GPA 绩点计算器（StudyKit Hub 同篇「GPA and CGPA Calculator」信号）：绩点/GPA CJK **0 命中**真缺口；学习口径受众窄（大学生）、与用户劳动仲裁复习场景关联弱——**弱观察 P3 留池**。
+   - V2EX t/1253201（2026-10-30）「四款自媒体获客小工具」：Chrome 扩展＋后端同步/AI 意向评论＋付费墙（¥29.9/¥19.9 永久版），插件/服务口径，非单页纯前端——确认消解。
+   - V2EX t/1253842（2026-11-02）「一屏一物」极简小程序：时钟/倒计时/番茄钟/日历——站内 countdown_timer Description 已含「在线倒计时/番茄钟…番茄钟（专注/短休息/长休息可调、四轮后长休息、自动轮转）」口径——**已交付，确认消解**。
+   - V2EX t/1251721（2026-10-25）DealPage 商单/推荐码落地页：点击/复制数据统计＋链接后台可更新，后端数据口径——确认消解。
+   - V2EX t/1248951（2026-10-15）免费看榜蓝海小站点：tranco 数据拉取＋LLM 富化，后端数据服务口径——确认消解。
+   - dev.to hysenlabs「35 free developer tools」（2026-10-10）：JSON/JWT/cron/regex/SQL/UUID/base64/时间戳/URL 解析/user-agent/AES/HMAC→站内均已交付（user_agent_parser／hmac_generator／aes 均已注册）——确认消解。
+   - dev.to Tooltri 30+（2026-10-08）：ChatGPT Text Cleaner→站内 ai_text_cleaner（隐藏字符净化口径）已交付——确认消解；SQLite DB Viewer→sql.js WASM 体积硬伤，观察保持。
+   - dev.to Antigravity 59 工具（2026-10-19）：JWT/AI Token Counter/JSON Workbench 等→站内均已交付口径——确认消解。
+   - HN：Caccepted 习惯追踪器→**新候选**（见上）；ToolHop 200+ 工具箱聚合产品口径，确认消解；Mii Maker→站内 avatar_generator（ID avatar_generator，categories.go:1574）已交付，确认消解；WallHop 付费墙绕过灰色口径，确认消解；Interactive Chord Finder（2026-02）→音乐口径（网页钢琴已裁定非工具口径消解），不立项。
+   - 中文需求搜索：「希望有一个网站能」→SEO 垃圾站无可用信号；36氪编译 10 工具→PDF24/Excel Formula Bot 等产品/AI 口径，无独立新信号。
+   - 屏幕尺子：204 轮复测结论沿用（`screen_ruler` 0 命中真缺口）——17:00 PM 轮裁定暂不立项维持，第三顺位备选。
+3. 新信号扫描（V2EX（t/1253201 自媒体获客／t/1253842 一屏一物／t/1251721 DealPage／t/1248951 看榜）＋HN（Caccepted／ToolHop／Mii Maker／WallHop）＋dev.to（StudyKit Hub 第二篇／hysenlabs 35／Tooltri 30+／Antigravity 59）＋中文需求搜索；本轮 fetch 一次成功，本地 HEAD da2c563 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **习惯追踪器** — 本轮新候选首席（HN Show HN Caccepted（2026-10-20 左右）信号："no signup, local storage, habits + challenges + daily todos, streaks + simple progress stats"；站内零重叠实测：`habit_tracker` ASCII 四处全 0 命中；习惯/打卡 CJK categories.go 0 命中；真缺口确凿；痛点：想无登录本地记习惯打卡（健身/阅读/戒烟等），市面 App 要注册或会员、广告多；实现：习惯创建（名称/周期/目标）→日历热力打卡（点击勾选）→连续 streak 统计＋完成率/周报→localStorage 本地存（无账号无登录，离线可用）→导入/导出 JSON；纯前端小难度（纯函数可写逐字向量：computeStreak／toggleCheckIn／buildWeekMatrix 确定性＋err.field）；与 flashcard_maker（复习节奏）/countdown_timer（番茄专注）互链「自律学习一条龙」；真限制：localStorage 跨设备不同步、清缓存丢数据须明示（导出 JSON 备份）；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **学习笔记整理器** — 第二顺位（**本轮新候选**；dev.to StudyKit Hub 第二篇（2026-11-02）build-in-public 信号："Study Notes Organiser — notes with tags and search, saved only in your browser, export to JSON, Markdown or plain text"；站内零重叠实测：`study_notes`／`notes_organiser`／`note_taker` 全 0 命中；笔记 CJK Description 0 命中；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿；痛点：学习/面试复习想本地记带标签笔记、可搜索、不上传云端（WPS 云文档等要登录）；实现：笔记创建（标题/正文 Markdown 精简渲染）→标签管理＋全文/标签搜索→localStorage 本地存→导出 JSON/Markdown/纯文本；纯前端小难度（纯函数可写逐字向量：addNote／filterByTag／searchNotes／buildExport 确定性＋err.field）；与 flashcard_maker（抽认卡）互链「学习辅助一条龙」；真限制：localStorage 跨设备不同步、Markdown 为精简子集须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位备选（204 轮 Top3 第二顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 本轮再复核 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：GPA 绩点计算器（**本轮新增弱观察 P3**：绩点/GPA 真缺口但学习小众口径，与用户复习场景关联弱，低优先）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／简繁互转（开发中，移出 Top3）／小红书封面生成器（弱观察 P3 留池；204 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先）／Skill 全家桶（KitVerse Skill 校验/打包/安装命令生成/Prompt 转 Skill；202 轮弱观察：skill_scanner 簇扩展口径，无独立新鲜信号，低优先）／Tokenizer 跨模型切分可视化（201 轮弱观察：站内 ai_token_counter 已交付计数口径，tiktoken WASM 体积硬伤，低优先）／一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／trace-context-validator（200 轮弱观察，低优先）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（199 轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（199 轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇五轮：闪卡卡片生成器交付闭环（da2c563 新增：flashcard_maker，Path 273→274，node 83 断言全过，全量 160 测试文件全绿；go build/vet 通过，本地 /tools/flashcard-maker 实测 200，模板零外部资源；「学习辅助一条龙」互链闭环；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head da2c563；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链更新**：**习惯追踪器→首席**（**本轮新候选**；HN Caccepted 信号（2026-10-20 左右）；`habit_tracker` ASCII 四处全 0 命中；习惯/打卡 CJK categories.go 0 命中；countdown_timer（计时）/flashcard_maker（复习调度）均为不同口径；真缺口确凿；纯前端小难度；与番茄钟/闪卡互链「自律学习一条龙」；真限制：localStorage 跨设备不同步、清缓存丢数据须明示；Icon 待开发轮精确值复测锁定全库唯一）／**学习笔记整理器→第二顺位**（**本轮新候选**；dev.to StudyKit Hub 第二篇 2026-11-02 信号；`study_notes`／`notes_organiser`／`note_taker` 全 0 命中；笔记 CJK Description 0 命中；unit_calc_notepad（算式）/focus_writer（写作）均不重叠；真缺口确凿；纯前端小难度；与闪卡互链「学习辅助一条龙」）／**屏幕尺子→第三顺位备选**（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定维持暂不立项或复活）；**GPA 绩点计算器**（本轮新增弱观察 P3：绩点/GPA 真缺口，学习小众口径，与用户复习场景关联弱，低优先）；**本轮初判消解 10 项**：V2EX 自媒体获客四工具→Chrome 扩展＋后端/AI＋付费墙（插件/服务口径消解）／V2EX 一屏一物→番茄钟口径站内 countdown_timer 已交付（消解）／V2EX DealPage→后端链接数据口径消解／V2EX 看榜→后端数据服务口径消解／dev.to hysenlabs 35 工具→user-agent/HMAC/AES 等站内均已交付（消解）／dev.to Tooltri ChatGPT Text Cleaner→站内 ai_text_cleaner 已交付（消解）／SQLite DB Viewer→WASM 硬伤观察保持／dev.to Antigravity 59→均已交付口径消解／HN ToolHop→工具箱聚合产品口径消解／HN Mii Maker→站内 avatar_generator 已交付（消解）／HN WallHop→灰色口径消解／Interactive Chord Finder→音乐口径不立项；新信号扫描：V2EX（t/1253201／t/1253842／t/1251721／t/1248951）＋HN（Caccepted／ToolHop／Mii Maker／WallHop）＋dev.to（StudyKit Hub 第二篇／hysenlabs 35／Tooltri 30+／Antigravity 59）＋中文需求搜索（SEO 垃圾站无可用信号）；本轮 fetch 一次成功，本地 HEAD da2c563 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 闪卡卡片生成器 | 已交付划出（da2c563 新增：flashcard_maker，Path 273→274，node 83 断言全过，全量 160 测试文件全绿；go build/vet 通过，本地 /tools/flashcard-maker 实测 200，模板零外部资源；「学习辅助一条龙」互链闭环；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head da2c563；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 习惯追踪器 | 首席（**本轮新候选**；HN Caccepted（2026-10-20 左右）"no signup, local storage, habits + challenges + daily todos, streaks + simple progress stats"；`habit_tracker` ASCII 四处全 0 命中；习惯/打卡 CJK categories.go 0 命中；countdown_timer（计时口径）/flashcard_maker（复习调度口径）均不重叠；真缺口确凿；痛点：想无登录本地记习惯打卡（健身/阅读等），市面 App 要注册或会员、广告多；实现：习惯创建（名称/周期/目标）→日历热力打卡→连续 streak 统计＋完成率/周报→localStorage 本地存→导入/导出 JSON；纯前端小难度（computeStreak／toggleCheckIn／buildWeekMatrix 确定性＋err.field）；与番茄钟/闪卡互链「自律学习一条龙」；真限制：localStorage 跨设备不同步、清缓存丢数据须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 学习笔记整理器 | 第二顺位（**本轮新候选**；dev.to StudyKit Hub 第二篇 2026-11-02 "Study Notes Organiser — notes with tags and search, saved only in your browser, export to JSON, Markdown or plain text"；`study_notes`／`notes_organiser`／`note_taker` 全 0 命中；笔记 CJK Description 0 命中；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿；痛点：学习/面试复习想本地记带标签笔记、可搜索、不上传云端（WPS 云文档等要登录）；实现：笔记创建（标题/正文 Markdown 精简渲染）→标签管理＋全文/标签搜索→localStorage 本地存→导出 JSON/Markdown/纯文本；纯前端小难度（addNote／filterByTag／searchNotes／buildExport 确定性＋err.field）；与闪卡互链「学习辅助一条龙」；真限制：localStorage 跨设备不同步、Markdown 精简子集须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2 |
+| 屏幕尺子 | 第三顺位备选（204 轮 Top3 第二顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项或复活） | 小 | P3（留池） |
+| 小红书封面生成器 | 弱观察 P3 留池（204 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先） | 小 | P3（留池） |
+| GPA 绩点计算器 | 本轮新增弱观察 P3（绩点/GPA CJK 0 命中真缺口；学习小众口径（大学生），与用户劳动仲裁复习场景关联弱；纯前端小难度（加权平均纯函数）；低优先） | 小 | P3（留池） |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇五轮——闪卡卡片生成器交付闭环（da2c563；`/tools/flashcard-maker` 已注册；旧测试 Path 断言 273→274 同步；全量 160 个 node 测试文件全绿；候选池划出），全量 **274 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head da2c563），继续标记「开发中」移出 Top3；**Top3 递进链更新**：习惯追踪器→首席（本轮新候选；HN Caccepted 信号；`habit_tracker` ASCII 四处全 0 命中；习惯/打卡 CJK categories.go 0 命中；真缺口确凿）／学习笔记整理器→第二顺位（本轮新候选；dev.to StudyKit Hub 第二篇 2026-11-02 信号；`study_notes`／`notes_organiser`／`note_taker` 全 0 命中；笔记 CJK Description 0 命中；unit_calc_notepad/focus_writer 均不重叠；真缺口确凿）／屏幕尺子→第三顺位备选（`screen_ruler` 0 命中真缺口保持；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）；GPA 绩点计算器新增弱观察 P3；本轮初判消解 10 项全部确认（详见上文；Mii Maker→avatar_generator 已交付；一屏一物番茄钟→countdown_timer 已交付；ChatGPT Text Cleaner→ai_text_cleaner 已交付；hysenlabs user-agent/HMAC/AES→站内均已交付；自媒体获客/DealPage/看榜→插件/后端/付费口径消解）；本轮 fetch 一次成功，本地 HEAD da2c563 与 origin 同头为最新，远端无新提交；新信号扫描：V2EX（t/1253201／t/1253842／t/1251721／t/1248951）＋HN（Caccepted／ToolHop／Mii Maker／WallHop）＋dev.to（StudyKit Hub 第二篇／hysenlabs 35／Tooltri 30+／Antigravity 59）＋中文需求搜索（SEO 垃圾站无可用信号）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD da2c563 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 da2c563（闪卡卡片生成器新增，node 83 断言全过，全量 160 个 node 测试文件全绿）／267a8e0（长图切片器）／b295e34（RAG 文本分块预览器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **274**；`ls templates/flashcard_maker.html static/js/flashcard_maker.js tests/flashcard_maker.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**闪卡卡片生成器**：已交付（/tools/flashcard-maker，Path 273→274），划出候选池；**简繁互转**：仍开发中，移出 Top3；**习惯追踪器**：`habit_tracker` 四处（templates＋static/js＋tools/categories.go＋tests）全 **0 命中**；习惯/打卡 CJK categories.go **0 命中**；countdown_timer（计时口径）/flashcard_maker（复习调度口径）均不重叠；真缺口确凿；**学习笔记整理器**：`study_notes`／`notes_organiser`／`note_taker` 全 **0 命中**；笔记 CJK Description **0 命中**；unit_calc_notepad（算式口径）/focus_writer（写作口径）均不重叠；真缺口确凿；**屏幕尺子**：`screen_ruler` 0 命中；真缺口保持（17:00 PM 轮裁定暂不立项维持）；**GPA 绩点计算器**：绩点/GPA **0 命中**真缺口，弱观察 P3 留池）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 03:00 · PM 选定轮，接 204 轮通用调研）
 
 **选定：闪卡卡片生成器（flashcard_maker）** — 本轮唯一任务（新工具）。

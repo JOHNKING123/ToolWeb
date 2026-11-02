@@ -1,0 +1,177 @@
+{{define "study_notes"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习笔记整理器 - 笔记整理/标签管理/全文搜索/面试复习笔记在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线学习笔记整理器：浏览器本地学习笔记（标题＋正文，Markdown 精简子集渲染预览），标签系统（打标签/标签管理/按标签过滤）＋全文搜索（标题/正文/标签，大小写不敏感）＋置顶，localStorage 本地持久化无需登录，JSON 导入导出备份迁移＋单条 Markdown 导出，纯前端不上传。">
+    <meta name="keywords" content="学习笔记,笔记整理,标签笔记,study notes organizer,面试复习笔记,笔记搜索,置顶笔记,Markdown 笔记,本地笔记">
+    <meta property="og:title" content="学习笔记整理器 - 标签笔记/全文搜索/置顶">
+    <meta property="og:description" content="浏览器本地学习笔记：标签管理＋全文搜索＋置顶＋Markdown 精简子集预览，localStorage 持久化，JSON 导入导出备份，纯前端本地处理。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/study-notes">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/study-notes">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "学习笔记整理器",
+      "description": "免费在线学习笔记整理器：本地学习笔记（标题＋正文 Markdown 精简子集预览）、标签系统、全文搜索、置顶，localStorage 本地持久化，JSON 导入导出备份，纯前端本地处理不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/study-notes",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .sn-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .sn-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .sn-empty { color: #9ca3af; font-size: .92rem; padding: .8rem 0; }
+        .sn-toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .7rem; }
+        .sn-search { flex: 1 1 240px; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .92rem; }
+        .sn-search:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .sn-chip { border: 1px solid #d1d5db; background: #fff; border-radius: 999px; padding: .28rem .8rem; font-size: .85rem; cursor: pointer; color: #374151; }
+        .sn-chip:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .sn-chip.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+        .sn-count { color: #6b7280; font-size: .85rem; margin-top: .6rem; }
+        .sn-card { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .8rem; margin-top: .7rem; background: #fff; }
+        .sn-card.pinned { border-color: #f59e0b; background: #fffbeb; }
+        .sn-card-head { display: flex; gap: .5rem; align-items: center; }
+        .sn-card-title { font-weight: 600; color: #111827; font-size: .98rem; word-break: break-all; flex: 1; }
+        .sn-pin-badge { font-size: .72rem; background: #fef3c7; color: #b45309; border-radius: .35rem; padding: .1rem .45rem; white-space: nowrap; }
+        .sn-card-excerpt { color: #4b5563; font-size: .88rem; margin-top: .35rem; line-height: 1.6; word-break: break-all; }
+        .sn-card-tags { margin-top: .4rem; }
+        .sn-tag { display: inline-block; font-size: .78rem; background: #eef2ff; color: #4338ca; border-radius: .35rem; padding: .12rem .5rem; margin: 0 .3rem .3rem 0; }
+        .sn-card-meta { color: #9ca3af; font-size: .78rem; margin-top: .35rem; }
+        .sn-card-ops { margin-top: .55rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+        .sn-mini-btn { border: 1px solid #d1d5db; background: #fff; border-radius: .4rem; padding: .25rem .6rem; font-size: .82rem; cursor: pointer; color: #374151; }
+        .sn-mini-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .sn-mini-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+        .sn-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .sn-limit b { color: #374151; }
+        #sn-editor { display: none; }
+        .sn-input, .sn-textarea { width: 100%; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .92rem; box-sizing: border-box; }
+        .sn-input:focus, .sn-textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .sn-textarea { min-height: 180px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.7; resize: vertical; }
+        .sn-field { margin-top: .7rem; }
+        .sn-field label { display: block; font-size: .88rem; color: #374151; margin-bottom: .3rem; font-weight: 600; }
+        #sn-e-preview { display: none; border: 1px solid #e5e7eb; border-radius: .5rem; padding: .8rem 1rem; margin-top: .7rem; background: #fafafa; }
+        .sn-pv-title { font-size: 1.15rem; font-weight: 700; color: #111827; margin-bottom: .5rem; }
+        .sn-md-h { color: #111827; margin: .7rem 0 .4rem; }
+        .sn-md-p { color: #374151; line-height: 1.7; margin: .35rem 0; }
+        .sn-md-ul, .sn-md-ol { color: #374151; line-height: 1.7; margin: .35rem 0; padding-left: 1.4rem; }
+        .sn-md-quote { border-left: 3px solid #d1d5db; color: #6b7280; padding-left: .8rem; margin: .5rem 0; }
+        #sn-e-preview pre { background: #1f2937; color: #e5e7eb; padding: .7rem; border-radius: .4rem; overflow-x: auto; }
+        #sn-e-preview code { background: #e5e7eb; padding: .1rem .35rem; border-radius: .25rem; font-size: .85em; }
+        #sn-e-preview pre code { background: none; padding: 0; color: inherit; }
+        #sn-tagmgr-panel { display: none; }
+        .sn-tmrow { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; border: 1px solid #e5e7eb; border-radius: .5rem; padding: .55rem .7rem; margin-top: .5rem; }
+        .sn-tmcount { color: #9ca3af; font-size: .8rem; margin-right: auto; }
+        .sn-tm-input { padding: .35rem .5rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .85rem; }
+        #sn-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+        @media (max-width: 640px) {
+            .sn-toolbar .btn { flex: 1 1 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📝 学习笔记整理器</h1>
+            <p>本地学习/面试复习笔记：标签管理 → 全文搜索 → 置顶，Markdown 精简子集预览，纯本地不登录</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="sn-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 笔记列表</h3>
+                <div class="sn-toolbar">
+                    <input class="sn-search" id="sn-search" placeholder="全文搜索：标题 / 正文 / 标签（不区分大小写）">
+                    <button class="btn btn-primary" id="sn-new">新建笔记</button>
+                    <button class="btn btn-secondary" id="sn-sample">示例一键填充</button>
+                </div>
+                <div class="sn-toolbar" style="margin-top:.6rem;">
+                    <button class="btn btn-secondary" id="sn-export" style="font-size:.88rem;">导出 JSON（备份迁移）</button>
+                    <label class="btn btn-secondary" id="sn-import-label" style="font-size:.88rem;cursor:pointer;">导入 JSON 文件
+                        <input type="file" id="sn-import-file" accept=".json,application/json" style="display:none;">
+                    </label>
+                    <button class="btn btn-secondary" id="sn-tagmgr" style="font-size:.88rem;">标签管理</button>
+                </div>
+                <div class="sn-info">标签过滤：</div>
+                <div class="sn-actions" id="sn-tagbar"></div>
+                <div class="sn-count" id="sn-count"></div>
+                <div id="sn-list"></div>
+            </div>
+
+            <div class="tool-card" id="sn-tagmgr-panel" style="margin-bottom:1.2rem;">
+                <h3>② 标签管理</h3>
+                <div id="sn-tagmgr-list"></div>
+                <div class="sn-info">重命名会同步更新所有携带该标签的笔记；删除标签只移除标签，笔记本身保留。</div>
+                <div class="sn-actions"><button class="btn btn-secondary" id="sn-tagmgr-close">收起</button></div>
+            </div>
+
+            <div class="tool-card" id="sn-editor" style="margin-bottom:1.2rem;">
+                <h3 id="sn-e-title-text">新建笔记</h3>
+                <div class="sn-field">
+                    <label for="sn-e-title">标题</label>
+                    <input class="sn-input" id="sn-e-title" placeholder="如：Go 面试题：切片扩容">
+                </div>
+                <div class="sn-field">
+                    <label for="sn-e-body">正文（Markdown 精简子集）</label>
+                    <textarea class="sn-textarea" id="sn-e-body" placeholder="支持：# ## ### 标题、**加粗**、*斜体*、\`行内代码\`、```代码块、- 无序列表、1. 有序列表、> 引用、[文字](https://链接)"></textarea>
+                </div>
+                <div class="sn-field">
+                    <label for="sn-e-tags">标签（逗号/顿号/空格分隔）</label>
+                    <input class="sn-input" id="sn-e-tags" placeholder="如：Go，面试，中间件">
+                </div>
+                <div class="sn-actions">
+                    <button class="btn btn-secondary" id="sn-e-preview-btn">预览</button>
+                    <button class="btn btn-primary" id="sn-e-save">保存</button>
+                    <button class="btn btn-secondary" id="sn-e-cancel">取消</button>
+                </div>
+                <div id="sn-e-preview"></div>
+            </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="sn-limit">
+                    <li><b>① 只存本浏览器：</b>笔记存在 localStorage 里，<b>跨设备不同步</b>；清除浏览器数据/换浏览器/重装系统都会丢失——重要笔记请定期<b>导出 JSON 备份</b>，文件形如 <code>studynotes_20261103_030000.json</code>。</li>
+                    <li><b>② Markdown 为精简子集：</b>只渲染 <code># ## ###</code> 标题、<code>**加粗**</code>、<code>*斜体*</code>、行内代码与 <code>```</code> 代码块、<code>-</code> 无序列表、<code>1.</code> 有序列表、<code>&gt;</code> 引用和 <code>[文字](链接)</code>——表格、任务列表、数学公式等<strong>不支持</strong>，按原文显示。</li>
+                    <li><b>③ 纯本地处理：</b>笔记内容只在你的浏览器内流转，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="sn-actions">
+                    <a href="/tools/flashcard-maker" class="btn btn-secondary" style="font-size:.9rem;">闪卡卡片生成器 <span style="color:#2563eb;font-weight:700;">· 学习辅助一条龙</span></a>
+                    <a href="/tools/habit-tracker" class="btn btn-secondary" style="font-size:.9rem;">习惯追踪器 <span style="color:#2563eb;font-weight:700;">· 自律学习一条龙</span></a>
+                </div>
+                <div class="sn-info" style="margin-top:.6rem">分工：学习笔记整理器负责<b>整理知识</b>（标签＋全文搜索＋置顶）；闪卡卡片生成器负责<b>背诵</b>（翻转自测＋间隔重复）；习惯追踪器负责<b>坚持</b>（每日打卡＋连续 streak）——整理＋背诵＋坚持，学习辅助一条龙。</div>
+                <div class="sn-info" style="margin-top:.6rem">自律学习一条龙：学习笔记整理器负责<b>整理</b>（笔记＋标签）；在线倒计时/番茄钟负责<b>专注</b>（番茄钟）；习惯追踪器负责<b>坚持</b>（每日打卡＋连续 streak）——整理＋专注＋坚持。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="sn-info">
+                    <b>流程：</b>点「新建笔记」录入标题＋正文（可选「预览」查看渲染效果）＋打标签 → 笔记自动存本浏览器 → 顶部搜索框全文检索（标题/正文/标签，不区分大小写）→ 点标签胶囊按标签过滤 → 重要笔记点「置顶」置顶。<br>
+                    <b>标签管理：</b>点「标签管理」可重命名标签（同步更新所有笔记）或删除标签（笔记保留）。<br>
+                    <b>备份：</b>「导出 JSON（备份迁移）」导出全部笔记；「导入 JSON 文件」可把备份恢复到本浏览器（原有笔记不受影响，导入条目追加）；每条笔记还可单独「导出MD」为 Markdown 文件。
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="sn-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/study_notes.js?v=1"></script>
+</body>
+{{end}}

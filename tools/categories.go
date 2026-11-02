@@ -2566,6 +2566,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "study_notes",
+					Name:        "学习笔记整理器",
+					Description: "学习笔记/笔记整理/标签笔记：浏览器本地学习/面试复习笔记（标题＋正文，Markdown 精简子集渲染预览），标签系统（打标签/标签管理/按标签过滤）＋全文搜索（标题/正文/标签，大小写不敏感）＋置顶，localStorage 本地持久化无需登录，JSON 导入导出备份迁移＋单条 Markdown 导出，纯前端不上传；与闪卡卡片生成器双向互链（学习辅助一条龙）、与习惯追踪器双向互链（自律学习一条龙） · study notes organizer: local notes with tag system, case-insensitive full-text search, pin, Markdown-lite preview, localStorage only, JSON import/export, 100% client-side",
+					Path:        "/tools/study-notes",
+					Icon:        "note_add",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{
