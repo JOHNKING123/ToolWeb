@@ -1,0 +1,209 @@
+{{define "keyboard_tester"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>键盘按键测试 - 87/104/108 键可视化全键检测/连击检测（本地免费）</title>
+    <meta name="description" content="免费在线键盘按键测试：87/104/108 键可视化键盘布局手动切换，keydown/keyup 实时三态高亮（按下/已触发/未触发），连击检测＋全键触发统计，测试报告一键复制/下载，纯前端本地处理零上传 · Keyboard tester: visualize 87/104/108-key layouts, real-time key highlight, chatter detection, test report export, 100% client-side">
+    <meta name="keywords" content="键盘按键测试,键盘测试,keyboard tester,键盘连击检测,全键检测,键盘失灵检测,keycode 测试,在线键盘测试,keyboard chatter test">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/keyboard-tester">
+    <meta property="og:title" content="键盘按键测试 - 87/104/108 键可视化全键检测＋连击检测">
+    <meta property="og:description" content="新键盘到手先验全键：可视化键位图实时高亮三态，揪出失灵键和连击键，测试报告一键复制/下载，纯前端本地处理。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/keyboard-tester">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"键盘按键测试","description":"87/104/108 键可视化键盘布局手动切换，keydown/keyup 实时三态高亮（按下/已触发/未触发），连击检测＋全键触发统计，测试报告一键复制/下载；纯前端本地处理零上传。","url":"https://www.johnkingzcq123.xyz/tools/keyboard-tester","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .kt-wrap .container{max-width:1120px;margin:auto}
+        .kt-limits{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.93rem;line-height:1.9;color:#065f46}
+        .kt-limits ol{margin:.2rem 0;padding-left:1.2rem}
+        .kt-limits b{color:#047857}
+        .kt-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1rem}
+        .kt-panel h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .kt-layouts{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .kt-btn{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.5rem;padding:.55rem 1.1rem;font-size:.92rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .kt-btn:hover{background:#f3f4f6}
+        .kt-btn.active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:700}
+        .kt-btn.primary{background:var(--primary-color);border-color:var(--primary-color);color:#fff}
+        .kt-btn.primary:hover{filter:brightness(.95)}
+        .kt-btn.danger{border-color:#fca5a5;color:#b91c1c}
+        .kt-btn.danger:hover{background:#fef2f2}
+        .kt-layout-name{font-size:.9rem;color:#6b7280}
+        .kt-legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.85rem;color:#6b7280;margin:.7rem 0 0}
+        .kt-dot{display:inline-block;width:.9em;height:.9em;border-radius:.25em;border:1px solid #d1d5db;background:#fff;vertical-align:-.1em;margin-right:.3em}
+        .kt-dot.hit{background:#d1fae5;border-color:#34d399}
+        .kt-dot.down{background:#2563eb;border-color:#1d4ed8}
+        .kt-board-scroll{overflow-x:auto;overflow-y:hidden;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem;margin-bottom:1rem}
+        #kt-board{position:relative;margin:0 auto}
+        .kt-key{position:absolute;border:1px solid #d1d5db;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 #e5e7eb;user-select:none;-webkit-user-select:none}
+        .kt-key-label{font-size:12px;color:#374151;pointer-events:none;white-space:nowrap;overflow:hidden}
+        .kt-key.is-hit{background:#d1fae5;border-color:#34d399}
+        .kt-key.is-hit .kt-key-label{color:#065f46}
+        .kt-key.is-down{background:#2563eb;border-color:#1d4ed8;transform:translateY(2px);box-shadow:none}
+        .kt-key.is-down .kt-key-label{color:#fff;font-weight:700}
+        .kt-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem}
+        .kt-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .4rem;text-align:center}
+        .kt-stat b{display:block;font-size:1.5rem;color:#111827;line-height:1.2;font-variant-numeric:tabular-nums}
+        .kt-stat small{font-size:.78rem;color:#6b7280}
+        .kt-stat.ok b{color:#059669}
+        .kt-stat.todo b{color:#d97706}
+        .kt-stat.warn b{color:#dc2626}
+        .kt-threshold{display:flex;gap:.8rem;align-items:center;margin-top:.9rem;flex-wrap:wrap;font-size:.9rem;color:#374151}
+        .kt-threshold input[type=range]{flex:1;min-width:160px;accent-color:#2563eb}
+        .kt-threshold b{color:#111827;font-variant-numeric:tabular-nums}
+        .kt-recent{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.9rem}
+        .kt-recent-item b{color:#6b7280;font-weight:400;margin-right:.35rem}
+        .kt-recent-item span{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;color:#111827}
+        .kt-muted{color:#9ca3af;font-size:.9rem}
+        .kt-chips{line-height:2.1}
+        .kt-chip{display:inline-block;border:1px solid #e5e7eb;background:#f9fafb;border-radius:99px;padding:.05rem .6rem;margin:.12rem;font-size:.78rem;color:#6b7280;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .kt-chip-unknown{border-color:#fca5a5;background:#fef2f2;color:#b91c1c}
+        .kt-chatter-row{display:flex;gap:.6rem;align-items:baseline;padding:.4rem 0;border-bottom:1px dashed #f3f4f6;font-size:.92rem}
+        .kt-chatter-row:last-child{border-bottom:none}
+        .kt-chatter-row b{color:#b91c1c;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .kt-chatter-row span{color:#374151}
+        .kt-actions{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1rem}
+        .kt-status{font-size:.88rem;color:#059669}
+        #kt-report{width:100%;min-height:230px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.7;border:1px solid #d1d5db;border-radius:.6rem;padding:.8rem;box-sizing:border-box;background:#f9fafb;color:#111827;white-space:pre}
+        .kt-doc{color:#374151;line-height:1.95;font-size:.93rem}
+        .kt-doc b{color:#111827}
+        .kt-faq{line-height:2;font-size:.93rem;color:#4b5563}
+        .kt-faq b{color:#111827}
+        .kt-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .kt-note{font-size:.88rem;color:#6b7280;line-height:1.9}
+        @media (max-width:640px){
+            .kt-key-label{font-size:10px}
+        }
+    </style>
+</head>
+<body>
+    <div>{{template "nav" .}}</div>
+    <div class="container kt-wrap">
+        <div class="tool-header">
+            <h1>键盘按键测试</h1>
+            <p>新键盘到手先验全键：87/104/108 键可视化键位图，按下按键实时三态高亮，揪出失灵键和连击键，测试报告一键复制/下载，纯前端本地处理</p>
+        </div>
+        <div class="tool-content">
+            <div class="kt-limits">
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li><b>系统级组合键捕获不到：</b>浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键——它们会被操作系统直接拦截，不会到达页面；</li>
+                        <li><b>Fn/多媒体键因键盘而异：</b>Fn 键与多媒体键的行为因键盘型号/驱动而异，部分按键浏览器可能捕获不到（Fn 键通常不产生任何按键事件）；</li>
+                        <li><b>需手动切换布局：</b>请先手动选择你的键盘布局（87/104/108 键）；不同键盘的键位可能有差异，108 键多出的 4 颗媒体键位置因品牌而异；</li>
+                        <li><b>纯本地零上传：</b>全部按键捕获、统计与报告生成都在浏览器本地完成，不上传任何数据。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="kt-panel">
+                <h3>1. 选择键盘布局</h3>
+                <div class="kt-layouts" id="kt-layouts">
+                    <button class="kt-btn" type="button" data-layout="87">87 键</button>
+                    <button class="kt-btn" type="button" data-layout="104">104 键</button>
+                    <button class="kt-btn" type="button" data-layout="108">108 键</button>
+                    <span class="kt-layout-name" id="kt-layout-name"></span>
+                </div>
+                <div class="kt-legend">
+                    <span><span class="kt-dot"></span>未触发</span>
+                    <span><span class="kt-dot hit"></span>已触发（松开后保持）</span>
+                    <span><span class="kt-dot down"></span>正在按下</span>
+                </div>
+            </div>
+
+            <div class="kt-board-scroll">
+                <div id="kt-board" role="img" aria-label="可视化键盘布局"></div>
+            </div>
+
+            <div class="kt-panel">
+                <h3>2. 最近按键</h3>
+                <div class="kt-recent" id="kt-recent"><span class="kt-muted">按下任意按键开始测试…</span></div>
+            </div>
+
+            <div class="kt-panel">
+                <h3>3. 触发统计</h3>
+                <div class="kt-stats" id="kt-stats"></div>
+                <div class="kt-threshold">
+                    <label for="kt-threshold">连击检测阈值：</label>
+                    <input type="range" id="kt-threshold" min="1" max="2000" step="1" value="200">
+                    <b id="kt-threshold-val">200ms</b>
+                    <span class="kt-muted">同一按键两次按下间隔小于此值即记为连击嫌疑</span>
+                </div>
+            </div>
+
+            <div class="kt-panel">
+                <h3>4. 连击嫌疑</h3>
+                <div id="kt-chatter"><span class="kt-muted">暂无连击嫌疑</span></div>
+            </div>
+
+            <div class="kt-panel">
+                <h3>5. 未触发按键（<span id="kt-unhit-count">0</span>）</h3>
+                <div class="kt-chips" id="kt-unhit"></div>
+                <div id="kt-unknown-wrap" style="display:none;margin-top:.8rem">
+                    <b style="font-size:.9rem;color:#b91c1c">布局外捕获到的按键：</b>
+                    <div class="kt-chips" id="kt-unknown"></div>
+                    <p class="kt-note" style="margin:.4rem 0 0">这些按键不在当前布局里（比如在 87 键布局下按了数字区）。切换到对应布局可把它们纳入统计。</p>
+                </div>
+            </div>
+
+            <div class="kt-actions">
+                <button class="kt-btn primary" id="kt-copy" type="button">复制测试报告</button>
+                <button class="kt-btn" id="kt-download" type="button">下载测试报告</button>
+                <button class="kt-btn danger" id="kt-reset" type="button">重置（清空事件与统计）</button>
+                <span class="kt-status" id="kt-status"></span>
+            </div>
+
+            <div class="kt-panel">
+                <h3>测试报告预览</h3>
+                <textarea id="kt-report" readonly aria-label="测试报告预览"></textarea>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="kt-doc">
+                    <b>怎么用：</b>先选对键盘布局（87/104/108 键），然后把每个键都按一遍——键位图实时三态高亮：<b>蓝色</b>＝正在按下，<b>绿色</b>＝已经触发过（松开后保持），<b>白色</b>＝还没按过。全部变绿即全键通过。<br>
+                    <b>连击检测：</b>同一按键两次按下间隔小于阈值（默认 200ms，1–2000ms 可调）即记为连击嫌疑；怀疑某键连击就快速点按它十几次，看「连击嫌疑」面板。<br>
+                    <b>测试报告：</b>「复制测试报告」/「下载测试报告」得到文本报告（含触发按键序列、连击嫌疑、未触发按键），文件名形如 keyboard_test_report_20261102_070500.txt。<br>
+                    <b>切换布局会清空：</b>切换布局后当前按键事件与统计会被清空，请按新布局重新测试；布局与连击阈值保存在本浏览器 localStorage，刷新不丢。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>常见问题</h3>
+                <div class="kt-faq">
+                    <b>为什么按 Ctrl+Alt+Del 没反应？</b>系统级组合键会被操作系统直接拦截，根本到不了浏览器页面，这是真限制第 1 条，不是 bug。<br>
+                    <b>按住一个键不放，事件数一直在涨？</b>这是系统的按键自动重复，事件会标注「自动重复」记入序列；连击检测按按下间隔计算，自动重复也可能被记为连击嫌疑——测连击请快速点按，不要长按。<br>
+                    <b>Fn 键按了没反应？</b>正常。Fn 键不产生标准按键事件，浏览器捕获不到，见真限制第 2 条。<br>
+                    <b>「布局外捕获到的按键」是什么？</b>你按下的键不在当前布局里（比如 87 键布局下按了数字区），已单独列出；切换到对应布局即可纳入统计。<br>
+                    <b>我的数据会上传吗？</b>不会。按键捕获、统计、报告生成全部在浏览器本地完成，零网络请求，你可以在开发者工具 Network 面板验证。
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="kt-links">
+                    <a href="/tools/fps-gpu-benchmark" class="btn btn-secondary" style="font-size:.9rem;">浏览器 FPS/GPU 性能速测 <span style="color:#2563eb;font-weight:700;">· 硬件一条龙</span></a>
+                    <a href="/tools/llm-hardware-checker" class="btn btn-secondary" style="font-size:.9rem;">本地 LLM 硬件检测器 <span style="color:#2563eb;font-weight:700;">· 硬件一条龙</span></a>
+                </div>
+                <p class="kt-note" style="margin-top:.6rem">分工：键盘按键测试验外设（全键/连击），FPS/GPU 速测验图形性能，LLM 硬件检测器看显卡能不能跑大模型——硬件一条龙。</p>
+            </div>
+
+            <div class="tool-card">
+                <h3>真限制说明</h3>
+                <div class="kt-doc">
+                    <b>系统级组合键捕获不到：</b>浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键——它们会被操作系统直接拦截，不会到达页面。<br>
+                    <b>Fn/多媒体键因键盘而异：</b>Fn 键与多媒体键的行为因键盘型号/驱动而异，部分按键浏览器可能捕获不到（Fn 键通常不产生任何按键事件）。<br>
+                    <b>需手动切换布局：</b>请先手动选择你的键盘布局（87/104/108 键）；不同键盘的键位可能有差异，108 键多出的 4 颗媒体键位置因品牌而异。<br>
+                    <b>纯本地零上传：</b>全部按键捕获、统计与报告生成都在浏览器本地完成，不上传任何数据。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/keyboard_tester.js?v=1"></script>
+</body>
+</html>
+{{end}}

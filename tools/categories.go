@@ -984,6 +984,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "keyboard_tester",
+					Name:        "键盘按键测试",
+					Description: "新键盘到手验全键：87/104/108 键可视化布局手动切换，keydown/keyup 实时三态高亮（按下/已触发/未触发），连击检测（阈值 1–2000ms 可调）＋全键触发统计，最近按键 code/key/keyCode 回显，测试报告一键复制/下载，附 FPS/GPU 速测与 LLM 硬件检测器出链「硬件一条龙」，纯前端零上传 · Keyboard tester: visualize 87/104/108-key layouts, real-time 3-state key highlight, chatter detection, trigger stats, test report copy/download, 100% client-side",
+					Path:        "/tools/keyboard-tester",
+					Icon:        "keyboard",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{

@@ -1,3 +1,100 @@
+## 今日任务（2026-11-02 07:00 · PM 选定轮，接 194 轮通用调研）
+
+**选定：键盘按键测试** — 本轮唯一任务（新工具）。
+
+**顺位**：194 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；194 轮已把「图片转拼豆施工图生成器」交付闭环（139d7a3＋29195c3，Path 263→264），候选池划出；简繁互转仍开发中，继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测）**：
+- `keyboard_tester`／`keycode`／`key_code`／`keyboard-test` 在 templates＋static/js＋tools/categories.go 三处 **0 命中**；`ls templates/keyboard*` 不存在；`keydown` 命中全为各工具快捷键监听误命中（193 轮已抽查证伪，本轮不重复跑展示层易变换的 CJK grep）——站内无「键盘按键测试」工具，**真缺口确凿**。
+- **ID `keyboard_tester`、Path `/tools/keyboard-tester`、模板/js/测试文件名均无占用**（全库 0 命中）；Icon：**`keyboard` 全库 0 命中**（本轮实测；开发轮精确值复测锁定全库唯一）。
+- 全量 Path **264**；本地分支 muse/dev-20260929；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 29195c3 与 origin 同头为最新（与 194 轮同头，中间无他人提交）。**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例。
+
+**选定理由**：① **顺位即理由**——194 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——站内无 keyboard_tester/keycode 口径专用工具；③ **痛点真实**——新键盘到手验全键、个别按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；④ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量；⑤ **方向合规**——用户 10-18 方向修正：专注 ToolWeb 工具本身开发，不扩展泛财务／生活计算器。
+
+**品类归位**：注册到「开发工具」类目（站内英文 keyboardtester.com 同类多为开发者/硬件评测场景；开发轮可与 fps_gpu_benchmark 等同簇「硬件一条龙」联动，或独立成簇——由开发轮定）；New: true；ID `keyboard_tester`、Path `/tools/keyboard-tester`、Icon `keyboard`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：可视化键盘布局渲染（支持 87/104/108 键手动切换）→ keydown/keyup 实时高亮（按下/已触发/未触发三态）→ 连击检测（同一按键短时间内多次按下计数）→ 全键触发统计（已触发/未触发按键一览）→ 测试报告一键复制（含触发按键序列、连击嫌疑、缺失按键）；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制）**：
+  - `validateKeyboardConfig(config)` → `{ok:true}`（layout 非 87/104/108 抛 Error err.field='layout'）。
+  - `recordKeyEvent(events, event)` → 追加按键事件记录（event 非对象/缺 code 抛 Error err.field='event'；events 非数组抛 Error err.field='events'）。
+  - `detectChatter(events, thresholdMs)` → 连击嫌疑列表（thresholdMs 超出合理区间抛 Error err.field='thresholdMs'）。
+  - `buildKeyReport(events, layout)` → 文本测试报告（含触发按键序列、连击嫌疑、未触发按键）。
+  - `buildKeyboardFileName()` → `keyboard_test_report_YYYYMMDD_HHmmss.txt`（报告下载文件名）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `buildKeyboardFileName()` 匹配 `/^keyboard_test_report_\d{8}_\d{6}\.txt$/`。
+  - `validateKeyboardConfig({layout: 87})` 通过；`validateKeyboardConfig({layout: 100})` 抛 Error 且 `err.field==='layout'`。
+  - `recordKeyEvent` 确定性：已知事件序列追加→输出数组逐字固定（含 `event.code` 断言）；`recordKeyEvent([], {})` 抛 Error 且 `err.field==='event'`。
+  - `detectChatter` 确定性：固定时间戳序列＋固定阈值→连击嫌疑列表逐字固定。
+  - `buildKeyReport` 确定性：已知事件序列→报告文本含触发序列/未触发按键逐字断言（报告含完整布局预期按键集合 vs 实际触发集合）。
+  - 真实 keydown/keyup 捕获走浏览器集成验证（node 无键盘事件），评审轮在 `/tools/keyboard-tester` 实测按下/松开/连击端到端。
+- **真限制（页面明示）**：① 浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键；② Fn 键与多媒体键行为因键盘/驱动而异，部分可能捕获不到；③ 需手动选择键盘布局（87/104/108 键），不同键盘键位有差异；④ 纯本地处理，零上传。
+- **互链**：与 fps_gpu_benchmark 等「硬件/评测」簇互链「硬件一条龙」（评测→键盘测试，或由开发轮定）。
+
+**验收标准**：
+1. 布局切换（87/104/108）→ 键位图渲染 → keydown/keyup 实时高亮三态 → 连击检测 → 已触发/未触发统计 → 测试报告一键复制/下载。
+2. 纯函数契约 node 测试全过（validateKeyboardConfig/recordKeyEvent/detectChatter/buildKeyReport/buildKeyboardFileName 确定性向量逐字＋非法参数 err.field），测试文件含注册断言（Path 总数 264→265、ID/Path/Icon/Category）。
+3. 真限制在页面明示（四条：系统级组合键捕获不到／Fn/多媒体键因键盘而异／需手动切换布局／纯本地零上传）。
+4. `/tools/keyboard-tester` 注册，「开发工具」类目，New: true；旧测试 Path 断言 264→265 同步。
+5. go build/vet 通过；本地 `/tools/keyboard-tester` 实测 200；零外部请求。
+6. SEO 面板按家族标准配齐（Title/Description/Keywords/OG）；与硬件/评测簇互链「硬件一条龙」（由开发轮定出链锚点）。
+
+**预计改动文件**（5 项）：
+1. `templates/keyboard_tester.html`（页面＋布局切换＋可视化键盘＋统计/连击面板＋测试报告区＋真限制＋SEO 面板）
+2. `static/js/keyboard_tester.js`（validateKeyboardConfig/recordKeyEvent/detectChatter/buildKeyReport/buildKeyboardFileName 纯函数＋布局数据（87/104/108 键位）＋keydown/keyup 捕获＋高亮渲染＋报告复制/下载交互）
+3. `tests/keyboard_tester.test.js`（node 纯逻辑测试，含确定性向量逐字＋err.field＋注册断言）
+4. `tools/categories.go`（注册：ID `keyboard_tester`、Path `/tools/keyboard-tester`、Icon `keyboard`、Category 开发工具、New: true）
+5. 旧测试 Path 总数断言 264→265 同步
+
+**顺位递补**（无硬伤）：照片拼图合成器（照片墙） → 递补待命（194 轮晋升 P2 第二顺位；`collage`/`photo_wall` 0 命中复测；`拼图` 仅命中 nine_grid（切分口径）与 img_stitch（长条拼接口径）；Icon `apps` 0 占用）；Markdown 表格转 CSV → 第三顺位待命（194 轮新候选晋升 P2；`markdown_csv`/`csv_markdown`/`table_to_csv`/`md_to_csv` 0 命中；站内仅 csv_to_markdown（CSV→Markdown 反向）与 paste_table_to_csv（TSV 网页表格粘贴口径）；与 csv_to_markdown 双向互链「表格一条龙」）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究轮惯例；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb` 仍在（多轮已记录，请开发／评审轮顺手确认清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 07:00 · 通用调研第一百九十四轮，接 05:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**图片转拼豆施工图生成器交付闭环**（139d7a3 新增：上传/拖拽图片（png/jpg/webp）→canvas 像素化（格数可调，贴合 29×29 标准拼豆板）→就近匹配内置 60 色拼豆色板（色号＋中文名＋RGB＋符号）→带色号符号的网格施工图渲染→每色豆数统计＋购买清单→施工图 PNG 导出/打印；纯函数契约 validatePindouConfig（gridSize[8,64]／paletteSize[2,64]／beadSizeMm∈{2.6,5} err.field 命名）／quantizeToPalette（欧氏距离最近色）／countBeads／buildPindouFileName（pindou_blueprint_YYYYMMDD_HHmmss.png），node 确定性向量逐字＋err.field；修复 29195c3（downsample() 对 paletteSize 按内置 60 色钳制，色数滑杆 61~64 断裂修复；toolWeb.bak-prev（遗留构建二进制）加入 .gitignore）；真限制四条页面明示；ID pindou_blueprint、Path /tools/pindou-blueprint、Icon grain（全库唯一）、Category 图片处理、New: true；与 pixel_art_converter 双向互链「像素一条龙」；旧测试 Path 断言 263→264 同步；全量 149 个 node 测试文件全绿；go build/vet 通过，本地 /tools/pindou-blueprint 实测 200，零外部请求；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head 29195c3），categories.go 未注册，未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：键盘按键测试→首席／照片拼图合成器（照片墙）→第二／**Markdown 表格转 CSV→新候选晋升 P2 第三顺位**。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；07:00 轮，优先小难度纯前端。
+
+**本轮三件事**（07:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 29195c3（pindou 色数滑杆 61~64 修复＋toolWeb.bak-prev 加 .gitignore，node 149 文件全绿，本地 200 实测）／d5bf991（BACKLOG 更新：记录 pindou 本轮任务与顺位状态）／139d7a3（pindou_blueprint 新增，Path 263→264）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **264**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go 未注册）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 29195c3 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底，CJK 检索词用 python `chr(0x...)` 运行时构造，已记入 AGENTS.md）**：
+   - 图片转拼豆施工图生成器：已交付（/tools/pindou-blueprint，Path 263→264，HEAD 139d7a3/29195c3）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head 29195c3；categories.go 未注册）——移出 Top3。
+   - 键盘按键测试：`keyboard_tester`／`keycode` ASCII 三处 **0 命中**（本轮复测）——**递进首席**。
+   - 照片拼图合成器（照片墙）：`collage`／`photo_wall` ASCII 三处 **0 命中**（本轮复测；193 轮已证九宫格/切分/长拼口径不同）——**递进第二顺位**。
+   - **Markdown 表格转 CSV**：`markdown_csv`／`csv_markdown`／`table_to_csv`／`md_to_csv` 三处 **0 命中**；`markdown.*csv` 命中仅 folder_compare（MD/CSV 导出差异报告，口径不同）与 csv_to_markdown（**CSV→Markdown 反向口径**）＋paste_table_to_csv（**TSV 网页表格粘贴口径，Markdown 格式输入不同**）——站内无「Markdown 表格→CSV」工具，**真缺口确凿，新候选晋升 P2 第三顺位**（晋升理由：真缺口确凿；外部信号：dev.to「45 tiny tools」18 天前明确点名 Markdown Table to CSV（documentation tables 不需要文本编辑器宏）；痛点真实——文档/知乎/Notion 里的 Markdown 表格想转 CSV 进 Excel/WPS，本机无离线工具，在线站多英文或要求上传；纯前端小难度：粘贴/上传 .md→解析 GFM 表格→预览→导出 .csv，纯函数可写逐字向量 parseMarkdownTable/detectAlignmentRow/escapeCsvField＋err.field；与 csv_to_markdown 双向互链「表格一条龙」（CSV→MD↔MD→CSV）；真限制：仅解析标准 GFM 表格（合并单元格不支持）、CSV 建议 UTF-8 with BOM 供 Excel 中文显示、纯本地零上传，须明示；Icon 候选 `table_chart`／`table_view`，开发轮精确值复测锁定全库唯一）。
+   - TOTP 生成器：/tools/totp-generator 已交付（ID totp_generator）——dev.to laofudev 信号（TOTP Generator）**确认消解**。
+   - 十六进制查看器：/tools/hex-viewer 已交付（ID hex_viewer）——laofudev 信号（Hex Viewer）**确认消解**。
+   - JWT 签名验证器：/tools/jwt-signer-verifier 已交付（ID jwt_signer_verifier）——laofudev 信号（JWT Signature Verifier）**确认消解**。
+3. 新信号扫描（V2EX＋中文榜单＋HN＋dev.to 为本轮主线）：**新候选 1 项（Markdown 表格转 CSV，站内缺口实测＋dev.to 信号晋升），其余全部确认消解**——
+   - dev.to：**「45 tiny tools」（18 天前；Markdown Table to CSV 明确点名→新候选信号）**／laofudev「I Ship 10 Free Browser Tools a Day」（2 天前；TOTP/Hex Viewer/JWT Verifier 站内均已交付，**确认消解**；DCA 计算器→**金融口径，用户 10-18 方向修正排除，确认消解**）／「500+ Free Online Tools」（3-28；JSON/PDF 合并/压缩/正则/JWT/Base64/Hash/渐变站内已覆盖，**确认消解**）／ToolsUp.net 8 工具（图片转换/WebP/截图美化/SQL 格式化站内口径已覆盖或口径不符，**确认消解**）；
+   - V2EX：t/1250674 MockMock（10-21；设备 mockup/宣传物料制作，**移动应用口径，新消解**）／t/1246569 免费外链（10-11；**SEO 内容口径，确认消解**）／t/1249758 NASDrop（10-18；**确认消解**）／t/1253201 自媒体获客四工具（10-30；**确认消解**）／**t/1252493 xGoose（近期；AI Chrome 插件口径，AI 服务口径，新消解）**／t/1252552 tubox（10-28；**确认消解**）；
+   - HN Show HN：**RMBG（近期；浏览器内 ONNX BiRefNet-lite 去背景，ONNX 98MB 模型硬伤口径；但 remove.bg 关站→去背景需求信号增强，一键图片去背景观察保持）**／Axiom（no-code RPA SaaS，**需后端口径，新消解**）／WallHop（文章阅读访问绕行口径，**新消解**）／单页图片缩放裁剪（站内 img_resize 等已覆盖，**确认消解**）／monolith（**CLI 口径，确认消解**）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **键盘按键测试** — 递进首席（193 轮递进第二；192 轮晋升 P2 第三顺位；本轮 `keyboard_tester`／`keycode` 三处 0 命中复测；痛点：新键盘验全键、按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；实现：可视化键盘布局→keydown/keyup 实时高亮＋已触发/未触发统计→连击检测→测试报告一键复制；纯前端小难度；真限制：浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、需手动切换布局（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（开发轮精确值复测锁定））。
+2. **照片拼图合成器（照片墙）** — 递进第二顺位（193 轮新候选晋升 P2 第三顺位；本轮 `collage`／`photo_wall` ASCII 三处 0 命中复测；`拼图` 命中仅 nine_grid（单图切分口径）与 img_stitch（长条拼接口径），口径不同，真缺口确凿；外部信号：365lab 40+ 工具榜单「拼图 / 九宫格 / 照片墙」为其推荐工具；痛点：多张照片想拼成一张发朋友圈/做封面，手机 App 要下载/有水印，在线拼图站多为英文或要求上传；实现：上传/拖拽多图→布局模板选择（2/3/4/6 宫格等）→拖拽换位＋间距/圆角/背景色可调→canvas 合成→下载 PNG；纯前端小难度（纯函数可写逐字向量：computeCollageLayout 布局坐标计算确定性＋err.field）；图片处理簇补位（img_stitch／nine_grid 同簇联动「拼图一条龙」：合成↔切分↔长拼）；真限制：输出分辨率受浏览器内存限制、大图多图合成可能卡顿、纯本地零上传，须明示；Icon `apps` 全库 0 占用（开发轮精确值复测锁定））。
+3. **Markdown 表格转 CSV** — 新候选晋升 P2 第三顺位（本轮站内缺口实测＋dev.to「45 tiny tools」信号；`markdown_csv`／`csv_markdown`／`table_to_csv`／`md_to_csv` 三处 0 命中；站内仅 csv_to_markdown（CSV→Markdown 反向口径）与 paste_table_to_csv（TSV 网页表格粘贴口径），口径不同，真缺口确凿；痛点：文档/知乎/Notion 里的 Markdown 表格想转 CSV 进 Excel/WPS，本机无离线工具，在线站多英文或要求上传；实现：粘贴/上传 .md→解析 GFM 表格（含转义管道、分隔对齐行识别）→预览表格→导出 .csv；纯前端小难度（纯函数可写逐字向量：parseMarkdownTable／detectAlignmentRow／escapeCsvField 确定性＋err.field）；文本处理簇补位（与 csv_to_markdown 双向互链「表格一条龙」：CSV→MD↔MD→CSV）；真限制：仅解析标准 GFM 表格（合并单元格不支持）、CSV 建议 UTF-8 with BOM 供 Excel 中文显示、纯本地零上传，须明示；Icon 候选 `table_chart`／`table_view`，开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：网名生成器（193 轮新观察；`网名生成`/`随机名` 0 命中真缺口，但娱乐口径无外部信号，低优先）／ReqForge 式 HTTP 请求→代码片段生成器（185 轮弱观察；curl_to_requests 口径已覆盖，多语言输出价值被稀释，低优先）／OFD 转 PDF（186 轮弱观察，排版引擎硬伤，低优先）／TTS 文字转语音文件导出（185 轮弱观察；speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（177 轮弱观察，用户 10-18 方向修正口径风险，低优先保持）／字体搭配预览器（129 轮观察，外部 webfont 请求与家族零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（177 轮弱观察；ONNX 硬伤，低优先）／LLM Token 成本估算（177 轮观察；低优先）／一键图片去背景（165 轮；ONNX 硬伤，低优先；**HN RMBG/近期：remove.bg 关站→需求信号增强，但 98MB 模型硬伤未解，继续保持观察**）／社媒图片尺寸生成器（168 轮观察备选；169 轮 PM 裁定「暂不立项」；建议 PM 重新评估）／视频转码/压缩器（166 轮，ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（164 轮，WebRTC 信令硬伤）／语音听写（realtime_dictation 已交付口径相邻）／HEIC（硬伤未解）／数独求解器（观察备选；`sudoku` ASCII 三处 0 命中真缺口（192 轮 codepoint 实锤），游戏/娱乐口径且无外部需求信号，低优先保持）／粘贴文本邮箱提取器（121 轮；text_info_extractor 口径疑似覆盖，待 PM 裁定）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十四轮：pindou_blueprint 交付闭环（139d7a3 新增＋29195c3 修复；`/tools/pindou-blueprint` 已注册；旧测试 Path 断言 263→264 同步；全量 149 个 node 测试文件全绿；go build/vet 通过，本地实测 200，零外部请求；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 29195c3；categories.go 未注册），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：键盘按键测试→首席（`keyboard_tester`/`keycode` 0 命中复测）／照片拼图合成器（照片墙）→第二（`collage`/`photo_wall` ASCII 0 命中复测；`拼图` 仅命中 nine_grid（切分）与 img_stitch（长条拼接）口径不同）／**Markdown 表格转 CSV→新候选晋升 P2 第三顺位**（站内缺口实测＋dev.to「45 tiny tools」信号；`markdown_csv`/`csv_markdown`/`table_to_csv`/`md_to_csv` 0 命中；站内仅 csv_to_markdown（CSV→Markdown 反向）与 paste_table_to_csv（TSV 口径），口径不同；Icon 候选 `table_chart`/`table_view`）；本轮 fetch 一次成功，本地 HEAD 29195c3 与 origin 同头为最新；新信号扫描：dev.to（**45 tiny tools Markdown Table to CSV→新候选信号**／laofudev TOTP/HexViewer/JWTVerifier→站内 totp_generator/hex_viewer/jwt_signer_verifier 均已交付确认消解／DCA 金融口径方向修正排除／500+ 工具榜确认消解／ToolsUp.net 确认消解）＋V2EX（t/1250674 MockMock 移动应用口径新消解／t/1246569 免费外链确认消解／t/1249758 NASDrop 确认消解／t/1253201 自媒体获客确认消解／**t/1252493 xGoose AI Chrome 插件口径新消解**／t/1252552 tubox 确认消解）＋HN Show HN（**RMBG ONNX 硬伤口径但 remove.bg 关站→需求信号增强，观察保持**／Axiom 需后端新消解／WallHop 文章绕行口径新消解／单页缩放裁剪确认消解／monolith CLI 口径消解）；网名生成器维持观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／AI 图片超分（ONNX 硬伤）／OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／高精度计算器（方向修正口径风险）／数独求解器（真缺口但无信号）保持跳过／观察；全量 **264 Path**）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 图片转拼豆施工图生成器 | 已交付划出（139d7a3 新增＋29195c3 修复：上传/拖拽图片（png/jpg/webp）→canvas 像素化（格数可调，贴合 29×29 标准拼豆板）→就近匹配内置 60 色拼豆色板（色号＋中文名＋RGB＋符号）→带色号符号的网格施工图渲染→每色豆数统计＋购买清单→施工图 PNG 导出/打印；纯函数契约 validatePindouConfig（gridSize[8,64]／paletteSize[2,64]／beadSizeMm∈{2.6,5} err.field 命名）／quantizeToPalette（欧氏距离最近色）／countBeads／buildPindouFileName（pindou_blueprint_YYYYMMDD_HHmmss.png），node 确定性向量逐字＋err.field；修复：downsample() 对 paletteSize 按内置 60 色钳制，色数滑杆 61~64 断裂修复；toolWeb.bak-prev（遗留构建二进制）加入 .gitignore；真限制四条页面明示；ID pindou_blueprint、Path /tools/pindou-blueprint、Icon grain（全库唯一）、Category 图片处理、New: true；与 pixel_art_converter 双向互链「像素一条龙」；旧测试 Path 断言 263→264 同步；全量 149 个 node 测试文件全绿；go build/vet 通过，本地 /tools/pindou-blueprint 实测 200，零外部请求；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 29195c3；categories.go 未注册；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 键盘按键测试 | 递进首席（192 轮新候选晋升 P2 第三顺位；193 轮递进第二；本轮 `keyboard_tester`/`keycode` 模板＋static/js＋tools/categories.go 三处 0 命中复测；痛点：新键盘验全键、按键失灵/连击/无响应排查，在线 keyboardtester.com 类站多为英文；实现：可视化键盘布局→keydown/keyup 实时高亮＋已触发/未触发统计→连击检测→测试报告一键复制；纯前端小难度；真限制：浏览器捕获不到 Ctrl+Alt+Del 等系统级组合键、Fn/多媒体键行为因键盘而异、需手动切换布局（87/104/108 键），须明示；Icon `keyboard` 全库 0 占用（开发轮精确值复测锁定）） | 小 | P2（留池） |
+| 照片拼图合成器（照片墙） | 递进第二顺位（193 轮新候选晋升 P2 第三顺位；本轮 `collage`/`photo_wall` ASCII 三处 0 命中复测；`拼图` 命中仅 nine_grid（单图切分口径）与 img_stitch（长条拼接口径），口径不同，真缺口确凿；外部信号：365lab 40+ 工具榜单「拼图 / 九宫格 / 照片墙」为其推荐工具；痛点：多张照片想拼成一张发朋友圈/做封面，手机 App 要下载/有水印，在线拼图站多为英文或要求上传；实现：上传/拖拽多图→布局模板选择（2/3/4/6 宫格等）→拖拽换位＋间距/圆角/背景色可调→canvas 合成→下载 PNG；纯前端小难度（纯函数可写逐字向量：computeCollageLayout 布局坐标计算确定性＋err.field）；图片处理簇补位（img_stitch／nine_grid 同簇联动「拼图一条龙」：合成↔切分↔长拼）；真限制：输出分辨率受浏览器内存限制、大图多图合成可能卡顿、纯本地零上传，须明示；Icon `apps` 全库 0 占用（开发轮精确值复测锁定）） | 小 | P2（留池） |
+| Markdown 表格转 CSV | 194 轮新候选晋升 P2 第三顺位（站内缺口实测＋dev.to「45 tiny tools」信号；`markdown_csv`/`csv_markdown`/`table_to_csv`/`md_to_csv` 三处 0 命中；站内仅 csv_to_markdown（CSV→Markdown 反向口径）与 paste_table_to_csv（TSV 网页表格粘贴口径），口径不同，真缺口确凿；外部信号：dev.to「45 tiny tools」18 天前明确点名 Markdown Table to CSV（documentation tables 不需要文本编辑器宏）；痛点：文档/知乎/Notion 里的 Markdown 表格想转 CSV 进 Excel/WPS，本机无离线工具，在线站多英文或要求上传；实现：粘贴/上传 .md→解析 GFM 表格（含转义管道、分隔对齐行识别）→预览表格→导出 .csv；纯前端小难度（纯函数可写逐字向量：parseMarkdownTable／detectAlignmentRow／escapeCsvField 确定性＋err.field）；文本处理簇补位（与 csv_to_markdown 双向互链「表格一条龙」：CSV→MD↔MD→CSV）；真限制：仅解析标准 GFM 表格（合并单元格不支持）、CSV 建议 UTF-8 with BOM 供 Excel 中文显示、纯本地零上传，须明示；Icon 候选 `table_chart`／`table_view`，开发轮精确值复测锁定全库唯一） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第一百九十四轮——pindou_blueprint 交付闭环（139d7a3＋29195c3；`/tools/pindou-blueprint` 已注册；旧测试 Path 断言 263→264 同步；全量 149 个 node 测试文件全绿；候选池划出），全量 **264 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 29195c3），继续标记「开发中」移出 Top3；**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：键盘按键测试→首席（`keyboard_tester`/`keycode` 0 命中复测）／照片拼图合成器（照片墙）→第二（`collage`/`photo_wall` ASCII 0 命中复测；`拼图` 仅命中 nine_grid（切分）与 img_stitch（长条拼接）口径不同）／**Markdown 表格转 CSV→新候选晋升 P2 第三顺位**（站内缺口实测＋dev.to「45 tiny tools」信号；`markdown_csv`/`csv_markdown`/`table_to_csv`/`md_to_csv` 0 命中；站内仅 csv_to_markdown（CSV→Markdown 反向）与 paste_table_to_csv（TSV 口径），口径不同；Icon 候选 `table_chart`/`table_view`）；本轮 fetch 一次成功，本地 HEAD 29195c3 与 origin 同头为最新；新信号扫描：dev.to（**45 tiny tools Markdown Table to CSV→新候选信号**／laofudev TOTP/HexViewer/JWTVerifier→站内均已交付确认消解／DCA 金融口径方向修正排除／500+ 工具榜确认消解／ToolsUp.net 确认消解）＋V2EX（t/1250674 MockMock 移动应用口径新消解／t/1246569 免费外链确认消解／t/1249758 NASDrop 确认消解／t/1253201 自媒体获客确认消解／**t/1252493 xGoose AI Chrome 插件口径新消解**／t/1252552 tubox 确认消解）＋HN Show HN（**RMBG ONNX 硬伤口径但 remove.bg 关站→需求信号增强，观察保持**／Axiom 需后端新消解／WallHop 文章绕行口径新消解／单页缩放裁剪确认消解／monolith CLI 口径消解）；网名生成器维持观察；一键图片去背景（ONNX 硬伤）／视频转码（ffmpeg.wasm 硬伤）／AI 图片超分（ONNX 硬伤）／OFD 转 PDF（排版引擎硬伤）／TTS 导出（speechSynthesis 硬伤）／高精度计算器（方向修正口径风险）／数独求解器（真缺口但无信号）保持跳过／观察；仓库根目录未跟踪 `toolWeb.bak-prev` 与 `toolweb`（29195c3 已把 toolWeb.bak-prev 加入 .gitignore，请开发／评审轮顺手确认 `toolweb` 遗留二进制清理，勿入库）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 29195c3 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 29195c3（pindou 色数滑杆 61~64 修复＋toolWeb.bak-prev 加 .gitignore，node 149 文件全绿，本地 200 实测）／d5bf991（BACKLOG 更新）／139d7a3（pindou_blueprint 新增，Path 263→264）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **264**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go 未注册）；Top3 候选重叠复核（**图片转拼豆施工图生成器**：已交付（/tools/pindou-blueprint，Path 263→264），划出候选池；**键盘按键测试**：`keyboard_tester`／`keycode` ASCII 三处 0 命中，真缺口确凿；**照片拼图合成器（照片墙）**：`collage`／`photo_wall` ASCII 三处 0 命中；`拼图` 仅命中 nine_grid（切分）与 img_stitch（长条拼接）；真缺口确凿；**Markdown 表格转 CSV**：`markdown_csv`／`csv_markdown`／`table_to_csv`／`md_to_csv` 三处 0 命中；`markdown.*csv` 命中仅 folder_compare（MD/CSV 差异报告口径）与 csv_to_markdown（CSV→Markdown 反向口径）＋paste_table_to_csv（TSV 网页表格粘贴口径）；真缺口确凿；**TOTP 生成器／十六进制查看器／JWT 签名验证器**：站内均已交付（laofudev 信号确认消解）；**网名生成器**：`网名生成`/`随机名` 0 命中真缺口但娱乐口径无信号，低优先观察；**数独求解器**：`sudoku` ASCII 0 命中真缺口（192 轮 codepoint 实锤），游戏口径无外部信号，低优先保持）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 05:00 · PM 选定轮，接 193 轮通用调研）
 
 **选定：图片转拼豆施工图生成器** — 本轮唯一任务（新工具）。
