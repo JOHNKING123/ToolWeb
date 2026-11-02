@@ -3,7 +3,7 @@
 * 首尾管道可选、BOM 剥离、err.field=text/table）、detectAlignmentRow（三态逐字、
 * 非对齐行 null、err.field=line）、escapeCsvField（三种情况逐字、err.field=field）、
 * buildCsvText、buildMarkdownCsvFileName（固定日期逐字＋正则）、2 组示例、
-* 注册（267→268 Path、ID/Path/Icon import_export/Category 格式转换/New: true）
+* 注册（268→269 Path、ID/Path/Icon import_export/Category 格式转换/New: true）
 * 与零网络请求、模板真限制三条文案与表格一条龙互链。 */
 "use strict";
 var fs = require("fs");
@@ -102,7 +102,7 @@ var catBlock = GO_SRC.split("\"markdown_to_csv\"")[1].split("},")[0];
 has(catBlock, "Category:    \"格式转换\"", "注册：Category 格式转换");
 has(catBlock, "New:         true", "注册：New: true");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 268, "注册：Path 总数 267→268");
+eq(pathCount, 269, "注册：Path 总数 268→269");
 notHas(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), "/tools/markdown-to-csv\", \"/tools/markdown-to-csv", "注册：Path 无重复");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");

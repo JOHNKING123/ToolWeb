@@ -4,7 +4,7 @@
 * words:7,sentences:1,syllables:9,complexWords:1,
 * fleschReadingEase:91.0,fleschKincaidGrade:2.3,gunningFogIndex:8.5）、
 * err.field='text'、三公式确定性向量与 err.field、readabilityLevel
-* 分段逐字、analyzeSentences 难句判定、注册（267→268 Path、
+* 分段逐字、analyzeSentences 难句判定、注册（268→269 Path、
 * ID/Path/Icon insights 全库唯一/Category 文本工具/New: true）、
 * 模板真限制三条文案与零网络请求。 */
 "use strict";
@@ -112,7 +112,7 @@ var regBlock = GO_SRC.split("\"readability_analyzer\"")[1].split("},")[0];
 has(regBlock, "Category:    \"文本工具\"", "注册：Category 文本工具");
 has(regBlock, "New:         true", "注册：New: true");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 268, "注册：Path 总数 267→268");
+eq(pathCount, 269, "注册：Path 总数 268→269");
 notHas(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), "/tools/readability-analyzer\", \"/tools/readability-analyzer", "注册：Path 无重复");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");

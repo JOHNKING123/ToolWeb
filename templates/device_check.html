@@ -1,0 +1,171 @@
+{{define "device_check"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄像头麦克风扬声器检测 - 一键设备自检四步，纯本地零上传</title>
+    <meta name="description" content="免费在线摄像头麦克风扬声器检测：一键四步自检——摄像头实时预览（分辨率/帧率）→麦克风实时音量条/波形（dB读数）→扬声器左右声道测试音→设备下拉切换与一键释放，纯前端本地运行零上传。Device check: webcam preview, mic level meter, speaker L/R test tones, 100% client-side.">
+    <meta name="keywords" content="摄像头检测,麦克风检测,扬声器检测,设备自检,摄像头测试,麦克风测试,声道测试,getUserMedia,device check,webcam test,mic test">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/device-check">
+    <meta property="og:title" content="摄像头麦克风扬声器检测 - 一键设备自检四步">
+    <meta property="og:description" content="摄像头实时预览＋麦克风音量条/波形＋扬声器左右声道测试音＋设备切换一键释放，纯本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/device-check">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"摄像头麦克风扬声器检测","description":"一键四步设备自检：摄像头实时预览（分辨率/帧率）、麦克风实时音量条/波形（dB读数）、扬声器左右声道测试音、设备下拉切换与一键释放，纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/device-check","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .dc-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .dc-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .dc-error{border:2px solid #f87171;background:#fef2f2;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#991b1b;display:none}
+        .dc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .dc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .dc-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .dc-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.55rem 1rem;font-size:.9rem;cursor:pointer;font-family:inherit}
+        .dc-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .dc-btn-primary{border-color:var(--primary-color);color:#fff;background:var(--primary-color);font-weight:600}
+        .dc-btn-primary:hover{color:#fff;filter:brightness(1.08)}
+        .dc-btn-danger{border-color:#f87171;color:#b91c1c}
+        .dc-btn-danger:hover{border-color:#dc2626;color:#dc2626}
+        .dc-btn:disabled{opacity:.45;cursor:default}
+        .dc-btn:disabled:hover{border-color:#d1d5db;color:#1f2937}
+        .dc-btn-primary:disabled:hover{color:#fff;border-color:var(--primary-color)}
+        .dc-dots{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center}
+        .dc-dot-item{display:flex;gap:.45rem;align-items:center;font-size:.9rem;color:#374151}
+        .dc-dot{width:.9rem;height:.9rem;border-radius:50%;background:#d1d5db;display:inline-block;transition:background .2s}
+        .dc-dot.on{background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.7)}
+        .dc-step-note{font-size:.88rem;color:#6b7280;margin:.5rem 0 0}
+        .dc-step-note.ok{color:#059669;font-weight:600}
+        .dc-video-wrap{background:#111827;border-radius:.65rem;overflow:hidden;max-width:560px}
+        .dc-video-wrap video{width:100%;max-height:340px;display:block;background:#000}
+        .dc-info{font-size:.88rem;color:#374151;margin:.6rem 0 0;line-height:1.7;word-break:break-all}
+        .dc-level{height:1rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.5rem;overflow:hidden;max-width:560px}
+        .dc-level-fill{height:100%;width:0%;background:linear-gradient(90deg,#10b981,#f59e0b 70%,#ef4444);transition:width .08s linear}
+        .dc-meter-row{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:baseline;margin-top:.6rem}
+        .dc-meter b{font-size:1.5rem;color:#111827;font-variant-numeric:tabular-nums}
+        .dc-meter span{font-size:.82rem;color:#6b7280;margin-left:.3rem}
+        #dc-wave{width:100%;max-width:560px;height:110px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.55rem;margin-top:.7rem}
+        .dc-sel{border:1px solid #d1d5db;border-radius:.55rem;padding:.5rem .7rem;font-size:.88rem;font-family:inherit;max-width:100%;background:#fff;color:#1f2937}
+        .dc-sel-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.7rem}
+        .dc-sel-row label{font-size:.88rem;color:#374151;min-width:4.5rem}
+        .dc-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .dc-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .dc-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .dc-links a{color:#2563eb}
+        .dc-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        .dc-ol{margin:.4rem 0;padding-left:1.4rem;line-height:1.9}
+        @media (max-width:640px){.dc-panel{padding:.9rem}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>摄像头麦克风扬声器检测</h1>
+            <p>一键设备自检四步：摄像头实时预览（分辨率／帧率）→ 麦克风实时音量条／波形（dB 读数）→ 扬声器左右声道测试音（各 2 秒）→ 设备下拉切换＋一键释放，纯前端零上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="dc-warn">
+                <span><b>真限制（请先读）：</b><br>
+                ① 需浏览器授权——点击「开始检测」后浏览器会弹出权限请求，必须点「允许」，拒绝则无法检测；<br>
+                ② HTTPS 或 localhost 安全上下文——getUserMedia 只在安全上下文可用，HTTP 内网地址会直接失败；<br>
+                ③ 设备同一时间只能被一个应用占用——摄像头/麦克风正被 QQ、会议软件等占用时会报 NotReadableError；<br>
+                ④ Safari／iOS 部分限制——iOS Safari 的 enumerateDevices 可能拿不到设备标签，帧率信息也可能缺失；<br>
+                ⑤ 纯本地零上传——检测全在浏览器内完成，本页 JS 无任何 fetch／XHR，打开 DevTools 的 Network 面板自证：检测过程中零网络请求。</span>
+            </div>
+            <div class="dc-error" id="dc-error"></div>
+            <div class="dc-panel">
+                <h3>开始检测</h3>
+                <div class="dc-dots">
+                    <span class="dc-dot-item"><span class="dc-dot" id="dc-dot-cam"></span>摄像头</span>
+                    <span class="dc-dot-item"><span class="dc-dot" id="dc-dot-mic"></span>麦克风</span>
+                    <span class="dc-dot-item"><span class="dc-dot" id="dc-dot-spk"></span>扬声器</span>
+                </div>
+                <div class="dc-row">
+                    <button class="dc-btn dc-btn-primary" id="dc-start">开始检测</button>
+                    <button class="dc-btn dc-btn-danger" id="dc-release" disabled>一键释放</button>
+                </div>
+                <p class="dc-hint">点「开始检测」后浏览器会请求摄像头＋麦克风权限；检测结束点「一键释放」，指示灯熄灭、状态复位，设备交还给系统。</p>
+            </div>
+            <div class="dc-panel">
+                <h3>步骤一 · 摄像头</h3>
+                <div class="dc-video-wrap"><video id="dc-video" autoplay playsinline muted></video></div>
+                <p class="dc-info" id="dc-cam-info">未开始</p>
+                <p class="dc-step-note" id="dc-step-cam">等待开始</p>
+            </div>
+            <div class="dc-panel">
+                <h3>步骤二 · 麦克风</h3>
+                <div class="dc-level"><div class="dc-level-fill" id="dc-level-fill"></div></div>
+                <div class="dc-meter-row">
+                    <div class="dc-meter"><b id="dc-db">— dB</b><span>实时声压级（20·log₁₀ RMS）</span></div>
+                    <div class="dc-meter"><b id="dc-pct">—</b><span>音量百分比</span></div>
+                </div>
+                <canvas id="dc-wave" width="560" height="110"></canvas>
+                <p class="dc-step-note" id="dc-step-mic">等待开始</p>
+                <p class="dc-hint">对着麦克风说话：音量条与波形应随声音跳动，dB 读数实时变化；一直 -∞ dB 说明没收到声音（被静音或设备被占用）。</p>
+            </div>
+            <div class="dc-panel">
+                <h3>步骤三 · 扬声器（左右声道）</h3>
+                <div class="dc-row" style="margin-top:0;">
+                    <button class="dc-btn" id="dc-tone-l">播放左声道测试音（2 秒）</button>
+                    <button class="dc-btn" id="dc-confirm-l" disabled>左声道确认</button>
+                </div>
+                <div class="dc-row">
+                    <button class="dc-btn" id="dc-tone-r">播放右声道测试音（2 秒）</button>
+                    <button class="dc-btn" id="dc-confirm-r" disabled>右声道确认</button>
+                </div>
+                <p class="dc-step-note" id="dc-step-spk">等待开始</p>
+                <p class="dc-hint">测试音为 440Hz 正弦波，各 2 秒，用 StereoPanner 声像定位到左／右声道；听到对应侧声音后再点确认，两侧都确认才算通过。</p>
+            </div>
+            <div class="dc-panel">
+                <h3>步骤四 · 设备切换</h3>
+                <div class="dc-sel-row">
+                    <label for="dc-cam-sel">摄像头</label>
+                    <select class="dc-sel" id="dc-cam-sel"><option value="">检测后加载…</option></select>
+                </div>
+                <div class="dc-sel-row">
+                    <label for="dc-mic-sel">麦克风</label>
+                    <select class="dc-sel" id="dc-mic-sel"><option value="">检测后加载…</option></select>
+                </div>
+                <div class="dc-row" style="margin-top:0;">
+                    <button class="dc-btn" id="dc-switch" disabled>切换设备</button>
+                </div>
+                <p class="dc-hint">多设备时下拉选择后点「切换设备」即重连；设备名过长会自动截断（超长截断规则见实现说明）。</p>
+            </div>
+            <div class="dc-panel">
+                <h3>常见问题</h3>
+                <dl class="dc-faq">
+                    <dt>点了「开始检测」没反应？</dt>
+                    <dd>先看页面顶部的错误提示：拒绝权限（真限制①）、非 HTTPS（真限制②）、设备被其他应用占用（真限制③）是最常见的三种原因，按提示处理即可。</dd>
+                    <dt>麦克风一直 -∞ dB？</dt>
+                    <dd>说明 AnalyserNode 没收到有效采样：检查系统是否把麦克风静音了，或该麦克风正被 QQ／会议软件独占（真限制③），换设备或关闭占用程序后点「切换设备」重连。</dd>
+                    <dt>只听到一边有声音？</dt>
+                    <dd>那正是本工具要帮你发现的问题：先确认只在点「播放左声道」时左耳无声，再到系统声音设置里检查声道平衡；两侧确认按钮就是让你逐侧验收的。</dd>
+                    <dt>iPhone 上设备名显示不出来？</dt>
+                    <dd>iOS Safari 出于隐私限制，enumerateDevices 返回的设备标签可能为空，这是真限制④，不是 bug；摄像头／麦克风本身仍可检测。</dd>
+                    <dt>检测数据会被上传吗？</dt>
+                    <dd>不会。音视频流只在浏览器内存里处理，不经过任何服务器；本页 JS 源码无任何 fetch／XHR／WebSocket／Beacon 调用，打开 Network 面板可自证零请求。这是真限制⑤。</dd>
+                </dl>
+            </div>
+            <div class="dc-panel">
+                <h3>相关工具 · 设备一条龙</h3>
+                <div class="dc-links">
+                    <a href="/tools/screen-recorder">在线录屏工具（设备正常？直接录屏去这里）</a>
+                    <a href="/tools/realtime-dictation">浏览器实时听写（麦克风正常？语音转文字去这里）</a>
+                </div>
+                <p class="dc-hint" style="margin-top:.6rem;">分工：设备检测专管「硬件能不能用」；在线录屏工具管「录下来」（getDisplayMedia 录屏＋下载）；浏览器实时听写管「说成文字」（Web Speech 实时转写）。</p>
+            </div>
+            <div class="dc-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>音量 level＝RMS（时域采样均方根，钳制 0~1）；dB＝20·log₁₀(RMS) 保留 1 位小数，静音（RMS=0）记 -∞；设备名超长截断 shortenLabel(label,maxLen)＝label.slice(0,maxLen-3)+'…'；测试音 440Hz 正弦波各 2 秒、StereoPanner 声像定位；纯函数挂 window.DeviceCheck 并同步 module.exports，浏览器与 node 测试共用同一文件；渲染一律用 textContent，设备名里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/device_check.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -1,3 +1,103 @@
+## 今日任务（2026-11-02 17:00 · PM 选定轮，接 199 轮通用调研）
+
+**选定：摄像头/麦克风/扬声器检测（device_check）** — 本轮唯一任务（新工具）。
+
+**顺位**：199 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 567f6d2），继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- `device_check`／`device_test`／`mic_test`／`camera_test`／`speaker_test`／`media_check` 在 templates＋static/js＋tools/categories.go 三处**全 0 命中**——站内无「设备自检」口径工具，**真缺口确凿**。
+- 口径相邻不相同：`screen_recorder`（录屏，getDisplayMedia）／`realtime_dictation`（实时听写，用麦克风）／`signature_capture`（摄像头拍摄签名扫描）均为「使用设备」口径，与「检测设备是否正常」口径不同，不构成重叠。
+- 命名无占用：ID `device_check`、Path `/tools/device-check` 均 0 命中；Icon **`perm_camera_mic` 全库 0 命中**（本轮 `grep -c '"perm_camera_mic"' tools/categories.go`=0；已占用的 devices/mic/volume_up 已避开；`videocam`／`hearing`／`settings_voice` 备选同样 0 命中，开发轮精确值复测锁定全库唯一）。
+- 全量 Path **268**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **154 个**；本地分支 muse/dev-20260929，HEAD 567f6d2；本轮仅读操作，未重复 git fetch（199 轮 17:00 已按铁律一次成功、本地 HEAD 567f6d2 与 origin 同头为最新，沿用该结论）；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——199 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实高频**——远程开会/视频面试/网课/录制前想 60 秒确认摄像头麦克风扬声器都正常，现有中文一站式三合一站少（ercc.cc 中文站 2026-06）、英文站多带录制上传/账号引导；外部信号：screenapp.io／clipy.online／miccameratest.com／ercc.cc；④ **簇内协同**——站内已有 screen_recorder（getDisplayMedia 成熟 pattern 可复用）／realtime_dictation，与本工具互链「设备一条龙」（录屏前先自检设备、麦克风正常性自查）；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（calcVolumeLevel RMS→归一化确定性／rmsToDb dB 换算确定性／shortenLabel 截断确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发；⑦ **真限制已评估**——需浏览器授权/HTTPS 安全上下文/设备独占/Safari-iOS 部分限制均为「页面明示」级，不构成跳过硬伤，零上传可在 Network 面板自证。
+
+**品类归位**：注册到「实用工具」类目（设备自检口径；与 screen_recorder／realtime_dictation 同簇互链）；New: true；ID `device_check`、Path `/tools/device-check`、Icon `perm_camera_mic`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：一键设备自检四步：① 摄像头：getUserMedia 请求权限→实时预览（video 元素）→显示分辨率/帧率/设备名；② 麦克风：音频流→WebAudio AnalyserNode 实时音量条/波形＋dB/百分比读数；③ 扬声器：左右声道测试音（各 2 秒）＋左右确认按钮；④ 设备下拉切换（enumerateDevices）＋一键释放（停止全部 track，页面状态复位）；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制；命名空间挂 window.DeviceCheck 下，module.exports 同步导出）**：
+  - `calcVolumeLevel(timeDomainData)` → Float32Array 时域采样→RMS→归一化 0~1（确定性）；非数组/空数组/含非有限数元素抛 Error err.field='data'。
+  - `rmsToDb(rms)` → `20*log10(rms)` 保留 1 位小数；rms 非数字或 <0 抛 Error err.field='rms'（rms=0 → -Infinity）。
+  - `shortenLabel(label, maxLen)` → label 非字符串抛 Error err.field='label'；maxLen 非正整数抛 Error err.field='maxLen'；长度≤maxLen 原样返回，否则 `slice(0, maxLen-3)+'...'`。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `calcVolumeLevel(new Float32Array([1,-1,1,-1]))` → `1`；`calcVolumeLevel(new Float32Array([0.5,-0.5,0.5,-0.5]))` → `0.5`；`calcVolumeLevel(new Float32Array([0,0,0]))` → `0`；`calcVolumeLevel([])` 抛 Error 且 `err.field==='data'`。
+  - `rmsToDb(0.5)` → `-6.0`；`rmsToDb(1)` → `0.0`；`rmsToDb('x')` 抛 Error 且 `err.field==='rms'`。
+  - `shortenLabel('USB Camera', 20)` → `'USB Camera'`；`shortenLabel('USB2.0 HD UVC WebCam', 12)` → `'USB2.0 HD...'`；`shortenLabel(123, 10)` 抛 Error 且 `err.field==='label'`。
+- **真限制（页面明示）**：① 需浏览器授权摄像头/麦克风（点击「允许」后才可检测）；② 须在 HTTPS 或 localhost 安全上下文打开（http 内网地址可能被浏览器拒绝）；③ 摄像头/麦克风同一时间只能被一个应用占用（如被会议软件占用请先释放）；④ Safari/iOS 部分限制（设备枚举标签可能为空）；⑤ 纯本地处理，零上传（可在浏览器 Network 面板自证）。
+- **互链**：与 screen_recorder 互链（录屏前先自检设备）／与 realtime_dictation 互链（麦克风正常性自查），「设备一条龙」。
+- **SEO**：title/description/keywords 增补 摄像头测试/麦克风测试/扬声器测试/webcam test/mic test 英文关键词。
+
+**验收标准**：
+1. 点击「开始检测」→浏览器权限弹窗→摄像头实时预览渲染（显示分辨率/帧率）→麦克风音量条/波形随说话跳动（dB 读数）→左右声道测试音播放＋左右确认按钮→一键释放后指示灯熄灭、页面状态复位。
+2. 纯函数契约 node 测试全过——新建 `tests/device_check.test.js`（calcVolumeLevel／rmsToDb／shortenLabel 逐字向量＋err.field），`node tests/device_check.test.js` 直跑。
+3. 真限制五条在页面明示。
+4. 注册：Path 总数 268→**269**；旧测试 Path 断言同步（如有引用 268 的测试文件，开发轮 grep 确认）；Icon `perm_camera_mic` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/device-check` 实测 200；零外部请求（Network 面板自证）。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/device_check.html`（新建：四步检测 UI＋设备下拉＋真限制＋SEO）
+2. `static/js/device_check.js`（新建：calcVolumeLevel／rmsToDb／shortenLabel 纯函数＋getUserMedia/WebAudio UI 绑定，挂 window.DeviceCheck，module.exports 同步导出）
+3. `tests/device_check.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID device_check、Path /tools/device-check、Icon perm_camera_mic、Category 实用工具、New: true、Description 含中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 268 的测试文件）
+
+**顺位递补**（PM 17:00 裁定）：JSON 转 Excel → **继续留池 P2**（顺位未到，不提前；vendor xlsx-0.18.5.umd.js 就绪状态保持）／屏幕尺子 → **暂不立项**（设计/前端小众口径；199 轮已明示 PM 可裁定暂不立项；低优先观察保持）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（git head 567f6d2；199 轮 17:00 按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 567f6d2 与 origin 同头为最新，本轮沿用该结论未重复 fetch）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **268**；PM 独立零重叠实测：`device_check`／`device_test`／`mic_test`／`camera_test`／`speaker_test`／`media_check` 三处全 **0 命中**；Icon `perm_camera_mic` 全库 **0 命中**（`devices`／`mic`／`volume_up` 已占用避开；`videocam`／`hearing`／`settings_voice` 备选同样 0 命中）；口径相邻不相同确认：screen_recorder（录屏）／realtime_dictation（听写用麦）／signature_capture（摄像头扫描签名）均为「使用设备」口径，与「检测设备是否正常」口径不同；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 17:00 · 通用调研第一百九十九轮，接 15:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**英文可读性分析器交付闭环**（567f6d2 新增：readability_analyzer，Path 267→268，node 80 断言全过、全量 154 测试文件全绿；go build/vet 通过，本地 /tools/readability-analyzer 实测 200，零外部请求；候选池划出）。**网名生成器／打字练习工具** 15:00 PM 轮均已裁定**暂不立项**（低优先观察保持，移出 Top3 递进链）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head 567f6d2；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链已清空**（首席已交付、第二三顺位 PM 裁定暂不立项），本轮重建 Top3：摄像头/麦克风/扬声器检测→首席／JSON 转 Excel→第二顺位／屏幕尺子→第三顺位（均为本轮站内零重叠实测真缺口，纯前端小难度）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 轮，优先小难度纯前端。
+
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 567f6d2（英文可读性分析器新增，node 80 断言全过，全量 154 个 node 测试文件全绿）／efaa63a（GB/T 7714 英文三格式扩展修复）／691d230（英文三格式扩展新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **268**；`ls templates/readability_analyzer.html static/js/readability_analyzer.js tests/readability_analyzer.test.js` **均存在**（categories.go 已注册 readability_analyzer）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 567f6d2 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 英文可读性分析器：已交付（567f6d2，Path 267→268）——划出候选池。
+   - 网名生成器／打字练习工具：15:00 PM 轮裁定暂不立项——移出 Top3 递进链，低优先观察保持。
+   - 简繁互转：仍开发中——移出 Top3。
+   - **HTML 实体编解码器**（本轮初判候选，dev.to hysenlabs 35 工具榜单信号）：`html_entity`／`entity_encode` ASCII 三处 0 命中，但扩大 patterns 复核发现 categories.go:204 已有 ID **`htmlentities`**（Description「HTML 转义/反转义、Unicode \u 转义」）——**已交付，确认消解**，不立项（163 轮教训再验证：ASCII 打底后须扩大 patterns 复核，险些误判）。
+   - **打印机测试页**（V2EX t/1251680 PrintPageCheck 信号）：站内 templates/printer_test_page.html **已存在**——确认消解。
+   - **代码截图美化器**（dev.to Tooliest 信号）：站内 code_screenshot_beautifier 已交付——确认消解。
+   - **随机数生成器**（freetoolhub 榜单信号）：站内 batch_random_generator 已交付——确认消解。
+   - **摄像头/麦克风/扬声器检测**：`mic_test`／`camera_test` ASCII 三处 0 命中；ID 宽口径 `speaker`／`device_test`／`mic_`／`camera` categories.go 0 命中；CJK「麦克风」python 运行时构造＋codepoint 解码验真：命中仅 realtime_dictation（实时听写功能内）／screen_recorder（录屏功能内）／categories.go 1 处为 signature_capture 描述「摄像头拍摄」（手写签名扫描口径，不同）；CJK「扬声器」全站 **0 命中**——**真缺口确凿**。
+   - **JSON 转 Excel**：`json_to_excel` ASCII 三处 0 命中；站内 csvjson 仅「表格数据与 JSON 数组互转」（无 xlsx 导出）；image_to_excel（截图/扫描件表格→Excel）／markdown_to_excel（Markdown 表格→Excel）均为不同输入口径——真缺口确凿（vendor 已有 xlsx-0.18.5.umd.js 可复用）。
+   - **屏幕尺子**：`screen_ruler` ASCII 三处 0 命中——真缺口（设计/前端小众口径，低优先）。
+3. 新信号扫描（中文设备测试信号＋dev.to＋V2EX＋英文榜单＋中文榜单＋Reddit 为本轮主线）：**新候选 3 项**（摄像头/麦克风/扬声器检测、JSON 转 Excel、屏幕尺子，均为真缺口纯前端小难度），其余全部确认消解——
+   - 中文信号：**「在线麦克风测试 摄像头测试」搜索**——screenapp.io（Webcam and Mic Tester）／clipy.online（Webcam and Mic Test）／miccameratest.com（摄像头＋麦克风＋左右扬声器三合一，100% browser-based）／**ercc.cc 中文站「麦克风与摄像头测试」（2026-06 发布）**→ **摄像头/麦克风/扬声器检测新候选**（现有站多英文、有录制上传/账号引导；中文一站式三合一少）；
+   - V2EX：**t/1251680 PrintPageCheck 打印机测试页**（8 天前；站内 printer_test_page 已交付确认消解）／t/1252552 tubox（197 轮已复核确认消解）／t/1253201 自媒体获客（AI+服务口径，确认消解）／**t/1252493 xGoose AI Agent 插件**（浏览器插件口径，确认消解）；
+   - dev.to：**hysenlabs 35 工具榜**（10-10；JSON/正则/Base64/JWT/Cron/SQL/UUID/时间戳/URL 解析器/User-Agent 解析器/HMAC 生成器/颜色转换/CSV↔JSON→站内均已交付，逐项确认消解；**HTML 实体→站内 htmlentities 已交付确认消解**）／**ToolPry 15 工具**（10-13；JSON/密码→已交付确认消解；passphrase＋破解时间估算→密码工具扩展观察，不独立立项；Kanban→非单页工具口径消解；Pomodoro→站内倒计时/秒表/番茄钟/闹钟四模式工具已交付确认消解；CSS 渐变→已交付确认消解）／mou1z 5 工具（09-29；JSON/正则→已交付确认消解）／prestofiles（10-24；JSON↔CSV→已交付确认消解）；
+   - 英文榜单：livecodo 2026（PDF/货币/BMI→已交付或方向修正排除；CyberChef/Photopea→重型产品口径消解）／techtippr（Photopea/iLovePDF/TinyWow/WeTransfer→重型或服务口径消解）／**freetoolhub 10 工具**（字数/图片压缩/密码/二维码/随机数→站内均已交付确认消解；BMI/Tip→方向修正排除；YouTube Title/Instagram Bio→AI/娱乐口径弱观察不立项）；
+   - 中文榜单：懒大王导航 6 神仙网站（10-27；PDF/图片压缩/图表/录屏→已交付确认消解；文字转语音→speechSynthesis 硬伤观察保持；临时邮箱→需后端硬伤消解）／懒大王 250 工具（10-23；67tool.com 清单口径均已覆盖确认消解）／懒大王 5 工具（10-26；TinyPNG/iLovePDF/草料二维码→已交付确认消解；Remove.bg→ONNX 硬伤观察保持；123apps→站内 audio_trimmer 等确认消解）／91yun 国内 AI 工具大全（AI 服务口径，确认消解）／syour 免费设计站（Canva/Photopea/剪映→重型产品口径消解）；
+   - Reddit：书签管理器榜单（自托管/App 口径，非单页工具，确认消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；递进链已清空，本轮重建；简繁互转开发中移出候选池）：
+1. **摄像头/麦克风/扬声器检测** — 首席（**新候选**；站内真缺口确凿；外部信号：screenapp.io／clipy.online／miccameratest.com／ercc.cc 中文站（2026-06）「开会/面试前设备自检」；痛点：远程开会/视频面试/网课/录制前想 60 秒确认摄像头麦克风扬声器都正常，现有中文站少、英文站多带录制上传/账号引导；实现：getUserMedia 摄像头实时预览（分辨率/帧率显示）＋麦克风实时音量条/波形＋扬声器左右声道测试音＋设备下拉切换＋一键释放；纯前端小难度（纯函数可写逐字向量：calcVolumeLevel／parseDeviceLabel 确定性＋err.field，WebAudio AnalyserNode）；真限制：需浏览器授权摄像头/麦克风（HTTPS 或 localhost 安全上下文）、设备同一时间只能被一个应用占用、iOS Safari 部分限制，须明示；零上传（可在页面用 Network 面板自证）；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **JSON 转 Excel** — 第二顺位（**新候选**；站内真缺口确凿；痛点：接口/API 返回 JSON 数组想转成 Excel 发给同事或存档，在线转换站要上传文件；实现：粘贴 JSON／上传 .json→数组对象自动展平为表格→列选择/重命名→导出 .xlsx（vendor 已有 xlsx-0.18.5.umd.js，多 sheet 支持）；纯前端小难度（纯函数可写逐字向量：flattenJson／jsonToSheet 确定性＋err.field）；与 csvjson／markdown_to_excel／paste_table_to_csv 互链「表格一条龙」；真限制：仅支持数组/对象结构 JSON、嵌套对象展平为点路径列、超大 JSON 浏览器内存限制，须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位（**新候选**；站内真缺口确凿；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度（纯函数可写逐字向量：calcDistance／pxToUnit 确定性＋err.field）；真限制：量的是 CSS 像素非物理尺寸、高 DPR 屏幕需说明换算，须明示；**低优先说明：设计/前端小众口径，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／网名生成器（**15:00 PM 轮裁定暂不立项**，低优先观察保持）／打字练习工具（**15:00 PM 轮裁定暂不立项**，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（本轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（本轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十九轮：英文可读性分析器交付闭环（567f6d2 新增，node 80 断言全过，全量 154 测试文件全绿；go build/vet 通过，本地 /tools/readability-analyzer 实测 200，零外部请求；Path 267→268；候选池划出）；网名生成器／打字练习工具 15:00 PM 轮均裁定暂不立项（低优先观察保持，移出 Top3 递进链）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 567f6d2；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链清空后重建**：**摄像头/麦克风/扬声器检测→首席**（中文「在线麦克风测试 摄像头测试」信号：screenapp.io／clipy.online／miccameratest.com 三合一／ercc.cc 中文站；站内零重叠实测：mic_test/camera_test/speaker/device_test ASCII ID 0 命中，麦克风 CJK 仅实时听写/录屏/签名扫描口径提及，扬声器 CJK 全站 0 命中；纯前端小难度：getUserMedia＋WebAudio 音量条＋左右声道测试音，零上传；真限制：浏览器授权/安全上下文/设备独占/iOS 限制须明示）／**JSON 转 Excel→第二顺位**（站内零重叠实测：json_to_excel ASCII 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 为不同输入口径；vendor xlsx-0.18.5.umd.js 已就绪；纯前端小难度；与 csvjson／markdown_to_excel／paste_table_to_csv 互链「表格一条龙」）／**屏幕尺子→第三顺位**（screen_ruler ASCII 三处 0 命中真缺口；纯前端小难度；设计/前端小众口径低优先，PM 可裁定暂不立项）；**HTML 实体编解码器险些误判**（`html_entity`／`entity_encode` 0 命中后扩大 patterns 发现 categories.go:204 ID `htmlentities`「HTML 转义/反转义」已交付——163 轮教训再验证：ASCII 打底后须扩大 patterns 复核）；打印机测试页（V2EX t/1251680；站内 printer_test_page 已交付确认消解）／代码截图美化器（dev.to Tooliest；站内已交付确认消解）／随机数生成器（freetoolhub；站内 batch_random_generator 已交付确认消解）／URL 解析器／User-Agent 解析器／HMAC 生成器／番茄钟四模式工具（dev.to hysenlabs/ToolPry 榜单；站内均已交付确认消解）；新信号扫描：中文「麦克风测试」＋V2EX（t/1251680／t/1252552／t/1253201／t/1252493）＋dev.to（hysenlabs 35 工具／ToolPry 15 工具／mou1z 5 工具／prestofiles）＋英文榜单（livecodo／techtippr／freetoolhub）＋中文榜单（懒大王导航 6 神仙网站／250 工具／5 工具／91yun AI 大全／syour 设计站）＋Reddit（书签管理器榜单，非单页工具口径消解）；Markdown 幻灯片／密码 passphrase 扩展弱观察保持；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 英文可读性分析器 | 已交付划出（567f6d2 新增：readability_analyzer，Path 267→268，node 80 断言全过，全量 154 测试文件全绿；go build/vet 通过，本地 /tools/readability-analyzer 实测 200，零外部请求；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 567f6d2；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 摄像头/麦克风/扬声器检测 | 重建首席（新候选；中文「在线麦克风测试 摄像头测试」信号：screenapp.io／clipy.online／miccameratest.com 三合一／ercc.cc 中文站（2026-06）；站内零重叠实测：mic_test/camera_test/speaker/device_test ASCII ID 0 命中，麦克风 CJK 仅实时听写/录屏/签名扫描口径提及，扬声器 CJK 全站 0 命中，真缺口确凿；痛点：远程开会/视频面试/网课/录制前 60 秒确认设备正常，现有中文站少、英文站多带录制上传/账号引导；实现：getUserMedia 摄像头实时预览（分辨率/帧率）＋麦克风实时音量条/波形＋扬声器左右声道测试音＋设备下拉切换＋一键释放；纯前端小难度（纯函数可写逐字向量：calcVolumeLevel／parseDeviceLabel 确定性＋err.field）；真限制：浏览器授权/HTTPS 安全上下文/设备独占/iOS Safari 限制须明示，零上传；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| JSON 转 Excel | 重建第二顺位（新候选；站内零重叠实测：json_to_excel ASCII 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 为不同输入口径，真缺口确凿；痛点：接口/API 返回 JSON 数组想转 Excel 发给同事或存档，在线转换站要上传文件；实现：粘贴 JSON／上传 .json→数组对象自动展平为表格→列选择/重命名→导出 .xlsx（vendor xlsx-0.18.5.umd.js 已就绪，多 sheet）；纯前端小难度（纯函数可写逐字向量：flattenJson／jsonToSheet 确定性＋err.field）；与 csvjson／markdown_to_excel／paste_table_to_csv 互链「表格一条龙」；真限制：仅数组/对象结构 JSON、嵌套展平为点路径列、超大 JSON 内存限制须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2（留池） |
+| 屏幕尺子 | 重建第三顺位（新候选；screen_ruler ASCII 三处 0 命中真缺口；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度（纯函数可写逐字向量：calcDistance／pxToUnit 确定性＋err.field）；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先：设计/前端小众口径，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第一百九十九轮——readability_analyzer 交付闭环（567f6d2；`/tools/readability-analyzer` 已注册；旧测试 Path 断言 267→268 同步；全量 154 个 node 测试文件全绿；候选池划出），全量 **268 Path**；网名生成器／打字练习工具 15:00 PM 轮均裁定暂不立项（低优先观察保持，移出 Top3 递进链）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 567f6d2），继续标记「开发中」移出 Top3；**Top3 递进链清空后重建**：摄像头/麦克风/扬声器检测→首席（新候选；中文设备测试信号；`mic_test`/`camera_test`/`speaker`/`device_test` ASCII ID 0 命中；麦克风 CJK 仅他人口径提及；扬声器 CJK 全站 0 命中）／JSON 转 Excel→第二顺位（新候选；`json_to_excel` 三处 0 命中；csvjson 无 xlsx 导出；vendor xlsx 已就绪）／屏幕尺子→第三顺位（新候选；`screen_ruler` 三处 0 命中；低优先，PM 可裁定暂不立项）；HTML 实体编解码器险些误判（扩大 patterns 发现 categories.go:204 `htmlentities` 已交付）；本轮 fetch 一次成功，本地 HEAD 567f6d2 与 origin 同头为最新；新信号扫描：中文「麦克风测试」＋V2EX＋dev.to＋英文榜单＋中文榜单＋Reddit（详见上文）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 567f6d2 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 567f6d2（英文可读性分析器新增，node 80 断言全过，全量 154 个 node 测试文件全绿）／efaa63a（GB/T 7714 英文三格式扩展修复）／691d230（英文三格式扩展新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **268**；`ls templates/readability_analyzer.html static/js/readability_analyzer.js tests/readability_analyzer.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**英文可读性分析器**：已交付（/tools/readability-analyzer，Path 267→268），划出候选池；**网名生成器／打字练习工具**：15:00 PM 轮裁定暂不立项，低优先观察保持，移出 Top3 递进链；**简繁互转**：仍开发中，移出 Top3；**摄像头/麦克风/扬声器检测**：`mic_test`／`camera_test` ASCII 三处 0 命中；`speaker`／`device_test`／`mic_`／`camera` ID 宽口径 0 命中；麦克风 CJK python 运行时构造＋codepoint 解码验真仅 realtime_dictation／screen_recorder／signature_capture（签名扫描口径）提及；扬声器 CJK 全站 0 命中；真缺口确凿；**JSON 转 Excel**：`json_to_excel` ASCII 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 不同输入口径；真缺口确凿；**屏幕尺子**：`screen_ruler` ASCII 三处 0 命中；真缺口确凿）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 15:00 · PM 选定轮，接 198 轮通用调研）
 
 **选定：英文可读性分析器（Flesch-Kincaid）** — 本轮唯一任务（新工具）。

@@ -1866,6 +1866,15 @@ func GetCategories() []Category {
 					Category:    "实用工具",
 				},
 				{
+					ID:          "device_check",
+					Name:        "摄像头麦克风扬声器检测",
+					Description: "免费在线摄像头麦克风扬声器检测：一键四步自检——摄像头 getUserMedia 实时预览（分辨率/帧率）→麦克风 WebAudio 实时音量条/波形（dB 读数）→扬声器左右声道测试音各 2 秒＋左右确认→设备下拉切换（enumerateDevices）＋一键释放，纯前端零上传 · Device check: webcam preview, mic level meter, speaker L/R test tones, 100% client-side",
+					Path:        "/tools/device-check",
+					Icon:        "perm_camera_mic",
+					New:         true,
+					Category:    "实用工具",
+				},
+				{
 					ID:          "landing_page_grader",
 					Name:        "着陆页评分检查器",
 					Description: "免费在线着陆页评分检查器：粘贴网页 HTML 源码，26 条确定性规则在浏览器本地打分（SEO 基础/社交分享/内容结构/移动友好/链接/文案质量/技术性能七组），总分 0-100＋优秀/良好/待改进等级，通过/警告/失败三色清单＋中文修复建议，一键复制 Markdown 报告；DOMParser 本地解析，脚本零 fetch/XHR、源码不出浏览器 · Landing page grader: paste HTML source, 26 deterministic rules scored locally, 0-100 with fix suggestions and Markdown report, 100% client-side",
