@@ -168,7 +168,7 @@ function throwsField(fn, field, name) {
     contains(block.toLowerCase(), "env sanitizer", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
     while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-    eq(pathCount, 265, "注册 Path 总数 264→265");
+    eq(pathCount, 266, "注册 Path 总数 265→266");
 })();
 
 /* ================= 8. 零网络静态检查 ================= */

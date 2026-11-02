@@ -1,0 +1,174 @@
+{{define "photo_collage"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片拼图合成器 - 多图照片墙拼合/2/3/4/6/9宫格布局（本地免费）</title>
+    <meta name="description" content="免费在线照片拼图合成器：上传多张照片，一键拼成照片墙，2/3/4/6/9 宫格布局模板可选，点击/拖拽换位，间距/圆角/背景色可调，canvas 实时预览，PNG 一键下载，纯前端本地处理零上传 · Photo collage maker: multi-photo grid layouts, drag to reorder, real-time canvas preview, PNG export, 100% client-side">
+    <meta name="keywords" content="照片拼图合成器,照片墙拼图,多图拼图,在线拼图,宫格拼图,照片拼接,拼图模板,collage maker,photo collage">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/photo-collage">
+    <meta property="og:title" content="照片拼图合成器 - 多图照片墙拼合，2/3/4/6/9 宫格布局">
+    <meta property="og:description" content="上传多张照片一键拼成照片墙：布局模板任选，点击/拖拽换位，间距圆角背景可调，实时预览，PNG 下载，纯本地不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/photo-collage">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"照片拼图合成器","description":"多图照片墙拼合：2/3/4/6/9 宫格布局模板，点击/拖拽换位，间距/圆角/背景色可调，canvas 实时预览合成，PNG 下载；纯前端本地处理零上传。","url":"https://www.johnkingzcq123.xyz/tools/photo-collage","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .pc-limits{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.93rem;line-height:1.9;color:#065f46}
+        .pc-limits ol{margin:.2rem 0;padding-left:1.2rem}
+        .pc-limits b{color:#047857}
+        .pc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1rem}
+        .pc-panel h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .pc-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .pc-upload:hover,.pc-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .pc-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .pc-layouts{display:flex;gap:.6rem;flex-wrap:wrap}
+        .pc-layout-btn{border:1px solid #d1d5db;background:#fff;border-radius:.6rem;padding:.55rem 1rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.15rem;min-width:5.2rem}
+        .pc-layout-btn b{font-size:.92rem;color:#374151}
+        .pc-layout-btn small{font-size:.75rem;color:#9ca3af}
+        .pc-layout-btn:hover{background:#f3f4f6}
+        .pc-layout-btn.active{background:var(--primary-color);border-color:var(--primary-color)}
+        .pc-layout-btn.active b,.pc-layout-btn.active small{color:#fff}
+        .pc-slots{display:grid;gap:.6rem;margin-bottom:1rem}
+        .pc-slot{position:relative;aspect-ratio:1/1;border:2px dashed #d1d5db;border-radius:.6rem;overflow:hidden;background:#f9fafb;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .pc-slot img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+        .pc-slot.sel{border:2px solid var(--primary-color);box-shadow:0 0 0 3px rgba(37,99,235,.25)}
+        .pc-slot .pc-empty{font-size:1.8rem;color:#d1d5db}
+        .pc-slot .pc-num{position:absolute;left:.35rem;top:.35rem;background:rgba(17,24,39,.65);color:#fff;font-size:.72rem;border-radius:.35rem;padding:.05rem .4rem}
+        .pc-spares{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .pc-spare{width:4.2rem;height:4.2rem;border-radius:.5rem;overflow:hidden;border:2px solid #e5e7eb;cursor:grab;background:#f3f4f6}
+        .pc-spare img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+        .pc-spare.sel{border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(37,99,235,.25)}
+        .pc-spare-tip{font-size:.85rem;color:#9ca3af}
+        .pc-hint{font-size:.85rem;color:#6b7280;margin-top:.6rem;line-height:1.8}
+        .pc-row{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem;font-size:.92rem;color:#374151}
+        .pc-row:last-child{margin-bottom:0}
+        .pc-row input[type=range]{flex:1;min-width:160px;accent-color:#2563eb}
+        .pc-row b{color:#111827;font-variant-numeric:tabular-nums;min-width:3.2rem}
+        .pc-bg-btns{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+        .pc-bg-btn{width:2.2rem;height:2.2rem;border-radius:.5rem;border:2px solid #e5e7eb;cursor:pointer;padding:0}
+        .pc-bg-btn.active{border-color:var(--primary-color);box-shadow:0 0 0 2px rgba(37,99,235,.3)}
+        .pc-preview-wrap{text-align:center;overflow:auto}
+        .pc-preview-wrap canvas{max-width:100%;height:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff}
+        .pc-sizeinfo{font-size:.85rem;color:#6b7280;margin-top:.6rem;text-align:center}
+        .pc-actions{display:flex;gap:.7rem;flex-wrap:wrap}
+        .pc-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .pc-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .pc-note{font-size:.9rem;color:#6b7280;margin-top:.6rem;line-height:1.8}
+        .pc-doc{color:#374151;line-height:1.9;font-size:.95rem}
+        .pc-doc b{color:#111827}
+        @media (max-width:640px){
+            .pc-upload{padding:1.6rem .8rem}
+            .pc-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">apps</i> 照片拼图合成器</h1>
+            <p>上传多张照片，一键拼成照片墙：布局模板任选，点击/拖拽换位，间距圆角背景可调，实时预览，PNG 下载</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="pc-limits">
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li><b>输出分辨率受浏览器内存限制：</b>大图或一次拼很多张时合成可能卡顿，这是浏览器内存上限决定的，不是 bug；</li>
+                        <li><b>宫格填充为「覆盖裁剪」：</b>照片按 cover 等比填满格子、居中裁掉超出部分，不会拉伸变形；</li>
+                        <li><b>不同尺寸照片以布局格为准居中裁剪：</b>横竖构图混搭时，以格子形状为准居中取图，边缘内容可能被裁掉；</li>
+                        <li><b>纯本地零上传：</b>图片解码、布局合成、PNG 导出全部在浏览器本地完成，不上传任何服务器。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="pc-panel">
+                <h3>上传照片</h3>
+                <div class="pc-upload" id="pc-upload" role="button" tabindex="0" aria-label="点击选择或拖拽照片到此处上传">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择照片，或把照片拖拽到这里（可多选）</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持 JPG / PNG / WebP，图片仅在浏览器本地处理，不会上传</div>
+                </div>
+                <input type="file" id="pc-file" accept="image/jpeg,image/png,image/webp" multiple style="display:none;">
+            </div>
+
+            <div class="pc-panel" id="pc-layout-card" style="display:none;">
+                <h3>布局模板</h3>
+                <div class="pc-layouts" id="pc-layouts" role="group" aria-label="拼图布局模板"></div>
+            </div>
+
+            <div class="pc-panel" id="pc-slot-card" style="display:none;">
+                <h3>槽位排布 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（点选两个槽位互换，或直接拖拽换位；点备用图再点槽位可替换）</span></h3>
+                <div class="pc-slots" id="pc-slots"></div>
+                <h3 style="margin-top:1rem;">备用区 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（超出当前布局格数的照片）</span></h3>
+                <div class="pc-spares" id="pc-spares"></div>
+                <div class="pc-hint">换位＝槽位交换：先点一个槽位（蓝框选中），再点另一个槽位即互换；桌面端也可按住缩略图拖到目标槽位。</div>
+            </div>
+
+            <div class="pc-panel" id="pc-setting-card" style="display:none;">
+                <h3>拼图调整</h3>
+                <div class="pc-row">
+                    <label for="pc-gap">间距</label>
+                    <input type="range" id="pc-gap" min="0" max="64" step="1" value="8">
+                    <b id="pc-gap-val">8 px</b>
+                </div>
+                <div class="pc-row">
+                    <label for="pc-radius">圆角</label>
+                    <input type="range" id="pc-radius" min="0" max="200" step="1" value="0">
+                    <b id="pc-radius-val">0 px</b>
+                </div>
+                <div class="pc-row">
+                    <span>背景色</span>
+                    <div class="pc-bg-btns">
+                        <button type="button" class="pc-bg-btn active" data-bg="#ffffff" style="background:#ffffff;" aria-label="白色背景"></button>
+                        <button type="button" class="pc-bg-btn" data-bg="#000000" style="background:#000000;" aria-label="黑色背景"></button>
+                        <button type="button" class="pc-bg-btn" data-bg="#f3f4f6" style="background:#f3f4f6;" aria-label="浅灰背景"></button>
+                        <button type="button" class="pc-bg-btn" data-bg="transparent" style="background:repeating-conic-gradient(#d1d5db 0 25%, #fff 0 50%) 0 0 / 12px 12px;" aria-label="透明背景"></button>
+                        <input type="color" id="pc-bg-color" value="#ffffff" aria-label="自定义背景色" style="width:2.2rem;height:2.2rem;padding:0;border:2px solid #e5e7eb;border-radius:.5rem;cursor:pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pc-panel" id="pc-preview-card" style="display:none;">
+                <h3>实时预览 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（所见即所得，调整即时生效）</span></h3>
+                <div class="pc-preview-wrap"><canvas id="pc-preview" width="10" height="10"></canvas></div>
+                <div class="pc-sizeinfo" id="pc-sizeinfo"></div>
+            </div>
+
+            <div class="pc-panel" id="pc-action-card" style="display:none;">
+                <h3>导出</h3>
+                <div class="pc-actions">
+                    <button class="btn btn-primary" id="pc-download"><i class="material-icons">download</i> 下载拼图 PNG</button>
+                    <button class="btn btn-secondary" id="pc-reset"><i class="material-icons">refresh</i> 清空重来</button>
+                </div>
+            </div>
+
+            <div class="pc-panel">
+                <h3>相关工具</h3>
+                <div class="pc-links">
+                    <a href="/tools/img-stitch" class="btn btn-secondary" style="font-size:.9rem;">图片拼接 / 长图拼接 <span style="color:#2563eb;font-weight:700;">· 拼图一条龙</span></a>
+                    <a href="/tools/nine-grid" class="btn btn-secondary" style="font-size:.9rem;">九宫格切图 <span style="color:#2563eb;font-weight:700;">· 拼图一条龙</span></a>
+                </div>
+                <p class="pc-note">分工：照片拼图合成器把多图拼成一张照片墙；九宫格切图把一张图切成九宫格发朋友圈；图片拼接把多图拼成长条长图——拼图一条龙。</p>
+            </div>
+
+            <div class="pc-panel">
+                <h3>真限制说明</h3>
+                <div class="pc-doc">
+                    <b>输出分辨率受浏览器内存限制：</b>大图或一次拼很多张时合成可能卡顿，这是浏览器内存上限决定的，不是 bug。<br>
+                    <b>宫格填充为「覆盖裁剪」：</b>照片按 cover 等比填满格子、居中裁掉超出部分，不会拉伸变形。<br>
+                    <b>不同尺寸照片以布局格为准居中裁剪：</b>横竖构图混搭时，以格子形状为准居中取图，边缘内容可能被裁掉。<br>
+                    <b>纯本地零上传：</b>图片解码、布局合成、PNG 导出全部在浏览器本地完成，不上传任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/photo_collage.js?v=1"></script>
+</body>
+</html>
+{{end}}

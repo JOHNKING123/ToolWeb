@@ -1419,6 +1419,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "photo_collage",
+					Name:        "照片拼图合成器",
+					Description: "多图照片墙拼图合成器：2/3/4/6/9宫格布局模板，拖拽换位、间距圆角背景可调，canvas 实时预览、PNG 导出，本地处理不上传 · Photo collage maker: 2/3/4/6/9 grid layouts, drag to reorder, real-time canvas preview, PNG export, 100% client-side",
+					Path:        "/tools/photo-collage",
+					Icon:        "apps",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "exif_strip",
 					Name:        "EXIF 信息查看/清除",
 					Description: "查看照片 EXIF 元数据（GPS 定位/机型/拍摄时间），一键字节级无损清除，本地处理不上传",
