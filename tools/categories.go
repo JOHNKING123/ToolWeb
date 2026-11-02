@@ -1207,6 +1207,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "json_to_excel",
+					Name:        "JSON 转 Excel",
+					Description: "免费在线 JSON 转 Excel：粘贴 JSON 文本或本地读取 .json 文件，JSON 数组转表格——嵌套对象/数组自动展平为点路径列名（如 user.address.city、tags.0），HTML 表格预览（分页/行数统计），列多选/重命名/排序，一键 xlsx 导出（缺失单元格留空），纯浏览器本地处理零上传 · json to excel: flatten JSON arrays to xlsx tables locally, 100% client-side",
+					Path:        "/tools/json-to-excel",
+					Icon:        "data_array",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "csv_table_viewer",
 					Name:        "CSV 表格查看器",
 					Description: "免费在线 CSV 表格查看器：粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，表头点击排序、全局搜索与每列筛选叠加、分页渲染，纯前端零上传 · CSV table viewer: view, sort, filter and paginate CSV locally, 100% client-side",

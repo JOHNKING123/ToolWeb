@@ -115,7 +115,7 @@ has(GO_SRC, '"/tools/toml-formatter"', "注册：categories.go 含 Path /tools/t
 has(GO_SRC, "TOML 格式化器", "注册：categories.go 含名称 TOML 格式化器");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = paths.filter(function (p, i) { return paths.indexOf(p) === i; });
-eq(uniq.length, 269, "注册总数：268→269 Path");
+eq(uniq.length, 270, "注册总数：268→270 Path");
 has(TPL_SRC, "tf-input", "页面：含 TOML 输入框");
 has(TPL_SRC, "tf-output", "页面：含格式化输出区");
 has(TPL_SRC, "tf-copy", "页面：含复制按钮");

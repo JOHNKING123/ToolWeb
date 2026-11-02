@@ -1,3 +1,117 @@
+## 开发轮交付记录（2026-11-02 19:39 · 前端开发）
+
+**交付：JSON 转 Excel（json_to_excel）** — 本轮唯一任务，开发完成并推送到 muse/dev-20260929。
+
+- **新建文件**：`templates/json_to_excel.html`（真限制五条明示＋表格一条龙互链＋SEO 中英文关键词）、`static/js/json_to_excel.js`（纯函数＋DOM 胶水，引用本地 vendor xlsx-0.18.5.umd.js）、`tests/json_to_excel.test.js`（90 断言）。
+- **注册**：`tools/categories.go` 在「格式转换」类紧邻 csvjson 之后新增（ID json_to_excel、Path /tools/json-to-excel、Icon data_array 全库唯一复测锁定、New: true、Description 含 JSON 转 Excel／json to excel／JSON 数组转表格／xlsx 导出）。
+- **纯函数契约**（window.JsonToExcel＋module.exports 同步导出）：flattenValue／extractColumns／jsonToSheet／buildExcelFileName，确定性向量逐字锁定＋err.field（value/rows/rows[i]/data/now），外加 locateJsonError（JSON.parse 失败「第 X 行第 Y 列」定位）。
+- **旧测试同步**：106 个测试文件 Path 断言 269→270（仅断言行，未动历史注释）。
+- **验证**：node 新测试 90/90 全过；全量 156 个测试文件全绿；go build/vet 通过；本地 18199 实测 /tools/json-to-excel、JS、vendor xlsx 均 200；端到端实测（真实 vendor xlsx 生成→回读）：点路径列展开、缺失留空、列重命名/排序、单 sheet「Sheet1」行列对齐，xlsx 为合法 zip；页面无任何外部 src/href（零外部请求）。
+- **清理**：仓库根未跟踪构建残留二进制 `toolweb` 已删除，避免误入库（`toolWeb`/`toolWeb.bak-prev` 为 gitignore 项，未动）。
+- 未碰 master，未 force-push；部署留待开发轮后统一走 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 19:30 · PM 选定轮，接 200 轮通用调研）
+
+**选定：JSON 转 Excel（json_to_excel）** — 本轮唯一任务（新工具）。
+
+**顺位**：200 轮 Top3 **递进首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；199 轮第二顺位；17:00 PM 轮裁定留池 P2「顺位未到，不提前」——现首席 device_check 已于 19:00 轮交付闭环（9b48c03），按惯例自然递进；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9b48c03），继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- `json_to_excel`／`json-to-excel`／`json2excel` 在 templates＋static/js＋tools/categories.go 三处**全 0 命中**——站内无「JSON 转 Excel」口径工具，**真缺口确凿**。
+- 口径相邻不相同：`csvjson`（CSV↔JSON 互转，无 xlsx 导出）／`markdown_to_excel`（Markdown 表格→Excel，不同输入口径）／`image_to_excel`（截图/扫描件表格→Excel，不同输入口径）／`paste_table_to_csv`（导出 CSV 口径，非 Excel）均为不同输入/输出口径，不构成重叠。
+- vendor：`static/js/vendor/xlsx-0.18.5.umd.js` **已就绪**（markdown_to_excel 同款库，本地引用，零外部请求）。
+- 命名无占用：ID `json_to_excel`、Path `/tools/json-to-excel` 均 0 命中；Icon **`data_array` 全库 0 命中**（本轮 `grep -c '"data_array"' tools/categories.go`=0；`table_view` 已占用 2 次、`grid_on` 占用 4 次、`table_chart` 占用 1 次已避开；`dataset` 备选同样 0 命中，开发轮精确值复测锁定全库唯一）。
+- 全量 Path **269**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **155 个**；本地分支 muse/dev-20260929，HEAD 9b48c03；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（注：本轮首次 fetch 漏加环境变量被拒，补加后成功；远端无新提交），本地 HEAD 9b48c03 与 origin 同头为最新；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——200 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实高频**——调试接口/API 返回的 JSON 数组，想转 Excel 发给同事或存档，在线转换站要上传文件（涉密数据不敢传）；④ **簇内协同**——vendor xlsx 库就绪，零外部请求；与 csvjson／markdown_to_excel／paste_table_to_csv 互链「表格一条龙」（JSON→CSV→Excel 链路闭环）；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（flattenValue 点路径展平确定性／extractColumns 并集列序确定性／jsonToSheet 行列对齐确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发；⑦ **真限制已评估**——仅数组/对象结构、嵌套展平为点路径列、超大 JSON 内存限制均为「页面明示」级，不构成跳过硬伤，零上传可在 Network 面板自证。
+
+**品类归位**：注册到「格式转换」类目（紧邻 csvjson／markdown_to_excel）；New: true；ID `json_to_excel`、Path `/tools/json-to-excel`、Icon `data_array`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：粘贴 JSON 文本／上传 .json 文件／示例 JSON 一键填充；② 解析与预览：JSON.parse 失败时定位报错（行/列或路径），成功后自动展平为表格（嵌套→点路径列名，如 `user.address.city`、`tags.0`），HTML 表格预览（含分页/行数统计）；③ 列管理：列多选/全选、列重命名、列排序（拖拽或上移下移）；④ 导出：生成 .xlsx 下载（文件名 `json_to_excel_YYYYMMDD_HHmmss.xlsx`，单 sheet；列头为列名，缺失单元格留空）；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制；命名空间挂 window.JsonToExcel 下，module.exports 同步导出）**：
+  - `flattenValue(value, prefix='')` → 点路径扁平对象（如 `{a:1,b:{c:2}}` → `{'a':1,'b.c':2}`，数组按索引展开 `tags.0`；原始类型 value 直接返回 `{[prefix]: value}`）；value 为 undefined/函数 抛 Error err.field='value'。
+  - `extractColumns(rows)` → 列名并集（首次出现顺序，确定性）；rows 非数组抛 Error err.field='rows'；元素非对象时 err.field='rows[i]'。
+  - `jsonToSheet(data)` → `{columns, rows}`（rows 为二维数组，缺失单元格置 null）；data 为数组则逐元素展平，为对象则包成单行；data 非数组/对象（原始类型）抛 Error err.field='data'。
+  - `buildExcelFileName(now)` → `json_to_excel_YYYYMMDD_HHmmss.xlsx`；now 非 Date 抛 Error err.field='now'（沿用 markdown_to_csv 命名惯例）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `flattenValue({a:1, b:{c:2}, tags:['x','y']})` → `{'a':1,'b.c':2,'tags.0':'x','tags.1':'y'}`；`flattenValue(undefined)` 抛 Error 且 `err.field==='value'`。
+  - `jsonToSheet([{a:1},{a:2,b:3}])` → `columns=['a','b']`、`rows=[[1,null],[2,3]]`（逐字）；`jsonToSheet({name:'a'})` → `columns=['name']`、`rows=[['a']]`；`jsonToSheet('x')` 抛 Error 且 `err.field==='data'`。
+  - `extractColumns([{a:1},{b:2,a:3}])` → `['a','b']`（首次出现顺序逐字）；`extractColumns('x')` 抛 Error 且 `err.field==='rows'`。
+  - `buildExcelFileName(new Date(2026,10,2,19,30,0))` → `'json_to_excel_20261102_193000.xlsx'`；`buildExcelFileName('x')` 抛 Error 且 `err.field==='now'`。
+- **真限制（页面明示）**：① 仅支持数组/对象结构 JSON（纯字符串/数字等原始类型会明确报错）；② 嵌套对象/数组展平为点路径列名（如 `user.address.city`、`tags.0`），列名即路径不可改回嵌套；③ 各行列不一致时按全部列求并集，缺失单元格留空；④ 超大 JSON 内存限制（页面明示建议上限，如文本 ≤20MB／行数上限，超限提示拆分）；⑤ 纯本地解析＋本地 xlsx 库，零上传（可在浏览器 Network 面板自证）。
+- **互链**：与 csvjson 双向互链（CSV↔JSON 互转）／与 markdown_to_excel 双向互链（Markdown 表格→Excel）／与 paste_table_to_csv 互链，「表格一条龙」。
+- **SEO**：title/description/keywords 增补 JSON 转 Excel／json to excel／JSON 数组转表格／xlsx 导出中英文关键词。
+
+**验收标准**：
+1. 粘贴 JSON（或上传 .json）→点路径表格预览渲染→列多选/重命名→导出 .xlsx 下载成功，本地 Excel/WPS 打开可读、行列对齐；非法 JSON 给出行级报错定位。
+2. 纯函数契约 node 测试全过——新建 `tests/json_to_excel.test.js`（flattenValue／extractColumns／jsonToSheet／buildExcelFileName 逐字向量＋err.field），`node tests/json_to_excel.test.js` 直跑。
+3. 真限制五条在页面明示。
+4. 注册：Path 总数 269→**270**；旧测试 Path 断言同步（如有引用 269 的测试文件，开发轮 grep 确认）；Icon `data_array` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/json-to-excel` 实测 200；零外部请求（vendor xlsx-0.18.5.umd.js 本地已就绪）。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/json_to_excel.html`（新建：JSON 输入/上传/示例＋表格预览＋列管理＋真限制＋SEO）
+2. `static/js/json_to_excel.js`（新建：flattenValue／extractColumns／jsonToSheet／buildExcelFileName 纯函数＋XLSX 导出 UI 绑定，挂 window.JsonToExcel，module.exports 同步导出；引用 `static/js/vendor/xlsx-0.18.5.umd.js`）
+3. `tests/json_to_excel.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID json_to_excel、Path /tools/json-to-excel、Icon data_array、Category 格式转换（紧邻 csvjson／markdown_to_excel）、New: true、Description 含中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 269 的测试文件）
+
+**顺位递补**（PM 19:30 裁定）：打字练习工具 → **维持暂不立项**（36kr 榜单 TypeLit 单榜单一次提及，外部信号仍不足以推翻 15:00 PM 轮「练习/娱乐口径、信号弱」裁定；低优先观察保持，PM 保留复活裁定权）／屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定；本轮无新信号变化；低优先观察保持）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。**另**：仓库根目录当前有未跟踪的 `toolweb` 二进制（疑为构建残留；3ed9122 曾清理过同类遗留文件并为 toolWeb.bak-prev 加了 .gitignore），开发轮提交前请先清理，避免误入库。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9b48c03 与 origin 同头为最新；注：首次 fetch 漏加环境变量被拒，补加后一次成功，远端无新提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **269**；PM 独立零重叠实测：`json_to_excel`／`json-to-excel`／`json2excel` 三处全 **0 命中**；vendor `static/js/vendor/xlsx-0.18.5.umd.js` 已就绪；Icon `data_array` 全库 **0 命中**（`table_view` 占用 2 次、`grid_on` 占用 4 次、`table_chart` 占用 1 次已避开；`dataset` 备选同样 0 命中）；口径相邻不相同确认：csvjson（CSV↔JSON 无 xlsx 导出）／markdown_to_excel（Markdown 表格口径）／image_to_excel（截图/扫描件口径）／paste_table_to_csv（导出 CSV 口径）均为不同输入/输出口径；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9b48c03），移出候选池；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 19:00 · 通用调研第二百轮，接 17:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第二百轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**摄像头/麦克风/扬声器检测（device_check）交付闭环**（9b48c03：getUserMedia 摄像头实时预览（分辨率/帧率）→WebAudio AnalyserNode 麦克风实时音量条/波形（dB/百分比）→扬声器左右声道测试音各 2 秒（StereoPanner）＋左右确认→enumerateDevices 设备下拉切换＋一键释放；纯函数契约 calcVolumeLevel／rmsToDb／shortenLabel，window.DeviceCheck 与 module.exports 同步导出，确定性向量逐字锁定；真限制五条页面明示；互链 screen_recorder＋realtime_dictation「设备一条龙」；注册 ID device_check、Path /tools/device-check、Icon perm_camera_mic（全库唯一复测锁定）、Category 实用工具、New: true；旧测试 Path 断言 268→269 同步；node 63 断言全过、全量 155 测试文件全绿；go build/vet 通过，本地 /tools/device-check 实测 200，零外部请求；**候选池划出**）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head 9b48c03；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**网名生成器／打字练习工具／屏幕尺子** 15:00／17:00 PM 轮均裁定**暂不立项**（低优先观察保持，移出 Top3 递进链）。**Top3 递进链重建**：JSON 转 Excel→递进首席（199 轮第二顺位；17:00 PM 轮裁定留池 P2「顺位未到，不提前」——现首席已交付，按「无硬伤不跳过、Top3 顺位递进」惯例自然递进）／打字练习工具→第二顺位**复活建议**（本轮获 36kr 榜单 TypeLit 新信号，外部信号从「YouTube 榜单一笔带过」增强为双榜单提及；PM 可裁定复活或维持暂不立项）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持；本轮无新信号变化）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:00 轮，优先小难度纯前端。
+
+**本轮三件事**（19:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 9b48c03（device_check 新增，node 63 断言全过，全量 155 个 node 测试文件全绿）／567f6d2（英文可读性分析器新增）／efaa63a（GB/T 7714 英文三格式扩展修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **269**；`ls templates/device_check.html static/js/device_check.js tests/device_check.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9b48c03 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - device_check：已交付（9b48c03，Path 268→269）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head 9b48c03；categories.go jianfan 0 命中）——移出 Top3。
+   - **在线简历生成器**（V2EX t/1248172，2026-10-12）：初判新候选；`resume` ASCII 复核发现 templates/**resume_builder.html**＋**resume_checker.html**（简历生成器＋简历诊断）均已交付，categories.go 简历 CJK 7 命中——**已交付，确认消解**，不立项（险些误判×2）。
+   - **Markdown 富文本一键复制 / md2chat**（V2EX t/1250428，2026-10-20）：初判新候选（痛点：AI 回答复制到微信/飞书格式全丢）；复核发现 templates/**md_to_chat.html** 已交付——标题即「Markdown 聊天图文转换器 - AI 回答转微信/钉钉/飞书聊天排版（**md2chat**）」，description「文字版按微信/钉钉/飞书/企微四平台语法适配一键复制，复杂块用 canvas 本地渲染为图片卡片」——**口径完全重合，已交付，确认消解**，不立项（险些误判×3）。
+   - **白噪音发生器**（36kr 10 工具榜 myNoise 信号）：`noise` ASCII 复核发现 templates/**white_noise_generator.html**＋static/js/white_noise_generator.js 已交付（另有 slowed_reverb 白噪声口径）——**已交付，确认消解**，不立项。
+   - **JSON 转 Excel**：199 轮复测结论沿用（`json_to_excel` ASCII 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 不同输入口径；vendor xlsx-0.18.5.umd.js 已就绪）——真缺口确凿，**递进首席**。
+   - **打字练习工具**：199 轮复测结论沿用（`typing_test`／`type_test`／`WPM` 0 命中；打字 CJK 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同）——真缺口确凿；本轮外部信号增强（见下）→ 第二顺位复活建议。
+   - **屏幕尺子**：199 轮复测结论沿用（`screen_ruler` ASCII 三处 0 命中真缺口）——17:00 PM 轮裁定暂不立项维持，第三顺位备选。
+3. 新信号扫描（V2EX＋dev.to＋HN＋中文榜单＋英文榜单为本轮主线）：**本轮无新立项候选，全部确认消解或口径不合**——
+   - V2EX：**t/1250428 md2chat**（10-20；站内 md_to_chat 已交付确认消解）／**t/1253764 RapVideoGo AI 说唱视频**（11-02；积分付费＋AI 生成口径，确认消解）／**t/1252493 xGoose AI Agent 插件**（198 轮已复核；浏览器插件口径，确认消解）／**t/1250522 protohub 原型托管**（10-21；需后端托管＋账号体系，确认消解）／**t/1248172 在线简历生成器**（10-12；站内 resume_builder/resume_checker 已交付确认消解）／t/1253201 自媒体获客（199 轮已复核；AI+服务口径，确认消解）；
+   - dev.to：**Byte-Kit 24 工具**（10-10；JSON/JWT/UUID/正则/图片压缩转换/二维码/SQL/密码/Token 计数→站内均已交付确认消解；HEIC/AVIF→HEIC 硬伤观察保持；favicon→站内已交付确认消解）／**「8 free devtools」**（09-17；CLI UX linter→弱观察不立项；CSV-to-endpoint→需后端 mock 硬伤消解；**trace-context-validator**→弱观察（单篇榜单一行提及，无独立信号；W3C traceparent 格式校验纯前端可做但极小众，低优先）；csp-sri→站内 csp_builder 已交付确认消解；retry 契约→spec 文档口径弱观察不立项）／**「4 browser-only tools for moving and renting」**（10-30；**MoveRecord 搬家照片配对→已在观察池**（10-30 轮观察项，低优先保持）；TourLedger 看房评分卡→已在观察池；**StatementLens 银行账单 CSV 分析／RoomProrate 合租分摊→泛财务口径，10-18 方向修正排除**）／Tooliest/DevPlaybook/Dev Hackes/CalcProTool 榜单（JSON/二维码/密码/Base64/哈希/文本大小写→站内均已交付确认消解；CalcProTool 计算器矩阵→泛财务/生活计算器口径排除）；
+   - HN：**HackerTube**（11-01 Karpathy；HN 评论数据集＋AI 筛选的数据产品口径，需外部数据/AI，确认消解）／Nasscad 3D CAD（重型产品口径，确认消解）／TweetBlink（浏览器插件＋自带 API key 口径，确认消解）／单文件网页存档 CLI（CLI 非网页工具口径，确认消解）；
+   - 中文榜单：懒大王导航「6 个免费神仙网站」（10-27；PDF/图片压缩/图表/录屏→已交付确认消解；文字转语音→speechSynthesis 硬伤观察保持；临时邮箱→需后端硬伤消解）／**36kr「10个好用的免费工具型网站」**（11-02；**TypeLit→打字练习工具新信号+1**（复活建议依据）；**myNoise→站内 white_noise_generator 已交付确认消解**；PDF24→站内 PDF 工具簇已交付确认消解；Cleanup.pictures→ONNX 硬伤观察保持；Excel Formula Bot→AI 口径消解；Synthesia→付费视频口径消解；Calm Calendar→需账号/日历授权口径消解；companies.tools→外部服务口径消解）／91yun 国内 AI 工具大全（AI 服务口径，确认消解）；
+   - 英文榜单：doitfree 10 工具（PDF 压缩/合并/拆分/二维码/密码/Base64/哈希/文本大小写→站内均已交付确认消解；Word/Excel 转 PDF→站内 doc_to_pdf 已交付确认消解）／your-smart-life 10 网站（123Apps/Photopea/TinyWow/Convertio/VirusTotal/Gamma/Remove.bg/QuillBot/Excalidraw/Squoosh→重型产品或站内已交付/硬伤观察保持，确认消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **JSON 转 Excel** — 递进首席（199 轮 Top3 第二顺位；17:00 PM 轮裁定留池 P2「顺位未到，不提前」——现首席 device_check 已交付，按惯例自然递进；站内真缺口确凿：`json_to_excel` 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 为不同输入口径；痛点：接口/API 返回 JSON 数组想转 Excel 发给同事或存档，在线转换站要上传文件；实现：粘贴 JSON／上传 .json→数组对象自动展平为表格→列选择/重命名→导出 .xlsx（vendor xlsx-0.18.5.umd.js 已就绪，多 sheet）；纯前端小难度（纯函数可写逐字向量：flattenJson／jsonToSheet 确定性＋err.field）；与 csvjson／markdown_to_excel／paste_table_to_csv 互链「表格一条龙」；真限制：仅数组/对象结构 JSON、嵌套展平为点路径列、超大 JSON 内存限制须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **打字练习工具** — 第二顺位**复活建议**（15:00 PM 轮裁定暂不立项，理由：练习/娱乐口径、外部信号弱（YouTube 榜单 TypeLit.io 一笔带过）；**本轮信号变化：36kr「10个好用的免费工具型网站」（2026-11-02，11 小时前）再度提及 TypeLit.io——外部信号从单榜单一笔带过增强为双榜单提及**；站内真缺口确凿：`typing_test`／`type_test`／`WPM` 0 命中；打字 CJK 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同；痛点：换键盘/练盲打想测中文打字速度，monkeytype 英文为主、中文打字站广告多；实现：中/英文料库→跟打→WPM/准确率/错字统计→历史曲线（localStorage）；纯前端小难度（纯函数可写逐字向量：calcWPM／calcAccuracy 确定性＋err.field）；真限制：中文按「字」计速非词、浏览器按键事件口径、纯本地零上传，须明示；**低优先说明：练习/娱乐口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位备选（199 轮 Top3 第三顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；站内真缺口确凿：`screen_ruler` ASCII 三处 0 命中；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度（纯函数可写逐字向量：calcDistance／pxToUnit 确定性＋err.field）；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：网名生成器（15:00 PM 轮裁定暂不立项，低优先观察保持）／打字练习工具（见上复活建议；PM 未裁定前维持暂不立项）／简繁互转（开发中，移出 Top3）／一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／trace-context-validator（本轮新弱观察：单篇 dev.to 榜单一行提及，无独立信号；W3C traceparent/tracestate 格式校验纯前端可做但极小众，低优先）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（199 轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（199 轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第二百轮：device_check 交付闭环（9b48c03 新增，node 63 断言全过，全量 155 测试文件全绿；go build/vet 通过，本地 /tools/device-check 实测 200，零外部请求；Path 268→269；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9b48c03；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链重建**：**JSON 转 Excel→递进首席**（199 轮第二顺位；17:00 PM 轮裁定留池 P2「顺位未到」——现首席已交付按惯例自然递进；`json_to_excel` 三处 0 命中真缺口；csvjson 无 xlsx 导出；vendor xlsx-0.18.5.umd.js 已就绪；纯前端小难度；「表格一条龙」互链）／**打字练习工具→第二顺位复活建议**（15:00 PM 轮裁定暂不立项；本轮 36kr 榜单 TypeLit 新信号+1，外部信号增强为双榜单提及；真缺口确凿；纯前端小难度；PM 可裁定复活或维持）／**屏幕尺子→第三顺位备选**（17:00 PM 轮裁定暂不立项维持；`screen_ruler` 三处 0 命中真缺口；本轮无新信号变化）；**本轮三项初判候选全部确认消解**：在线简历生成器→站内 resume_builder/resume_checker 已交付（险些误判）／md2chat 富文本一键复制→站内 md_to_chat 已交付（标题即 md2chat 口径，险些误判）／白噪音发生器→站内 white_noise_generator 已交付（险些误判）；新信号扫描：V2EX（t/1250428 md2chat 消解／t/1253764 RapVideoGo AI 视频积分口径消解／t/1252493 xGoose 插件口径消解／t/1250522 protohub 需后端消解／t/1248172 简历生成器站内已交付消解／t/1253201 199 轮已复核）＋dev.to（Byte-Kit 24 工具均已交付确认消解／「8 free devtools」：csp-sri→站内 csp_builder 已交付，trace-context-validator 新弱观察低优先，CSV-to-endpoint 需后端硬伤消解／「4 browser-only tools」：MoveRecord/看房评分卡已在观察池，StatementLens/RoomProrate 泛财务口径 10-18 方向修正排除／Tooliest/DevPlaybook/Dev Hackes/CalcProTool 榜单均已交付/口径排除确认消解）＋HN（HackerTube 数据产品口径／Nasscad 重型 CAD／TweetBlink 插件＋API key／单文件存档 CLI 均消解）＋中文榜单（懒大王 6 神仙站→已交付/硬伤/需后端确认消解／**36kr 10 工具→TypeLit 打字练习新信号+1、myNoise 站内已交付消解**／91yun AI 大全→AI 服务口径消解）＋英文榜单（doitfree→均已交付确认消解／your-smart-life→重型产品/已交付/硬伤观察保持确认消解）；trace-context-validator 新弱观察低优先；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 摄像头/麦克风/扬声器检测 | 已交付划出（9b48c03 新增：device_check，Path 268→269，node 63 断言全过，全量 155 测试文件全绿；go build/vet 通过，本地 /tools/device-check 实测 200，零外部请求；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 9b48c03；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| JSON 转 Excel | 递进首席（199 轮第二顺位；17:00 PM 轮裁定留池 P2「顺位未到，不提前」——现首席 device_check 已交付，按「无硬伤不跳过、Top3 顺位递进」惯例自然递进；站内零重叠实测：json_to_excel ASCII 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 为不同输入口径，真缺口确凿；痛点：接口/API 返回 JSON 数组想转 Excel 发给同事或存档，在线转换站要上传文件；实现：粘贴 JSON／上传 .json→数组对象自动展平为表格→列选择/重命名→导出 .xlsx（vendor xlsx-0.18.5.umd.js 已就绪，多 sheet）；纯前端小难度（纯函数可写逐字向量：flattenJson／jsonToSheet 确定性＋err.field）；与 csvjson／markdown_to_excel／paste_table_to_csv 互链「表格一条龙」；真限制：仅数组/对象结构 JSON、嵌套展平为点路径列、超大 JSON 内存限制须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 打字练习工具 | 第二顺位复活建议（15:00 PM 轮裁定暂不立项，理由：练习/娱乐口径、外部信号弱；本轮信号变化：36kr「10个好用的免费工具型网站」（2026-11-02）再度提及 TypeLit.io，外部信号增强为双榜单提及；站内真缺口确凿：typing_test／type_test／WPM ASCII 0 命中；打字 CJK 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同；痛点：换键盘/练盲打想测中文打字速度，monkeytype 英文为主、中文打字站广告多；实现：中/英文料库→跟打→WPM/准确率/错字统计→历史曲线（localStorage）；纯前端小难度；真限制：中文按「字」计速、按键事件口径、零上传须明示；PM 可裁定复活或维持暂不立项） | 小 | P2（观察复活待定） |
+| 屏幕尺子 | 第三顺位备选（199 轮 Top3 第三顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；screen_ruler ASCII 三处 0 命中真缺口；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第二百轮——device_check 交付闭环（9b48c03；`/tools/device-check` 已注册；旧测试 Path 断言 268→269 同步；全量 155 个 node 测试文件全绿；候选池划出），全量 **269 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9b48c03），继续标记「开发中」移出 Top3；**Top3 递进链重建**：JSON 转 Excel→递进首席（199 轮第二顺位；17:00 PM 轮裁定留池 P2「顺位未到」——现首席已交付按惯例自然递进；`json_to_excel` 三处 0 命中；csvjson 无 xlsx 导出；vendor xlsx 已就绪）／打字练习工具→第二顺位复活建议（15:00 PM 轮裁定暂不立项；本轮 36kr 榜单 TypeLit 新信号+1，外部信号增强；真缺口确凿；PM 可裁定复活或维持）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持；`screen_ruler` 三处 0 命中；本轮无新信号变化）；本轮三项初判候选全部确认消解（在线简历生成器→resume_builder/resume_checker 已交付；md2chat 富文本→md_to_chat 已交付；白噪音→white_noise_generator 已交付；163 轮教训三连验证）；本轮 fetch 一次成功，本地 HEAD 9b48c03 与 origin 同头为最新；新信号扫描：V2EX＋dev.to＋HN＋中文榜单＋英文榜单（详见上文）；trace-context-validator 新弱观察低优先；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9b48c03 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 9b48c03（device_check 新增，node 63 断言全过，全量 155 个 node 测试文件全绿）／567f6d2（英文可读性分析器新增）／efaa63a（GB/T 7714 英文三格式扩展修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **269**；`ls templates/device_check.html static/js/device_check.js tests/device_check.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**device_check**：已交付（/tools/device-check，Path 268→269），划出候选池；**简繁互转**：仍开发中，移出 Top3；**JSON 转 Excel**：`json_to_excel` ASCII 三处 0 命中；csvjson 仅 CSV↔JSON 无 xlsx 导出；image_to_excel／markdown_to_excel 不同输入口径；真缺口确凿；**打字练习工具**：`typing_test`／`type_test`／`WPM` 0 命中；打字 CJK 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同；真缺口确凿；**屏幕尺子**：`screen_ruler` ASCII 三处 0 命中；真缺口确凿；**在线简历生成器／md2chat 富文本／白噪音**：初判后复核均已交付确认消解）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 17:00 · PM 选定轮，接 199 轮通用调研）
 
 **选定：摄像头/麦克风/扬声器检测（device_check）** — 本轮唯一任务（新工具）。

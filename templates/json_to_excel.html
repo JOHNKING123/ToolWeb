@@ -1,0 +1,134 @@
+{{define "json_to_excel"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 转 Excel - JSON 数组一键转 xlsx 表格（本地/免费/不限次）</title>
+    <meta name="description" content="免费在线 JSON 转 Excel（json to excel）：粘贴 JSON 文本或上传 .json 文件，JSON 数组转表格——嵌套对象/数组自动展平为点路径列名，表格预览＋列多选/重命名/排序，一键 xlsx 导出（缺失单元格留空），纯浏览器本地处理，数据零上传。">
+    <meta name="keywords" content="JSON 转 Excel,json to excel,JSON 数组转表格,xlsx 导出,json 转表格,JSON 导出 Excel,json to xlsx">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-to-excel">
+    <meta property="og:title" content="JSON 转 Excel - JSON 数组一键转 xlsx 表格">
+    <meta property="og:description" content="粘贴 JSON 或上传 .json，嵌套自动展平为点路径列，预览＋列管理，一键导出 xlsx，纯本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/json-to-excel">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON 转 Excel","alternateName":"json to excel","description":"粘贴 JSON 文本或上传 .json 文件，JSON 数组转表格：嵌套对象/数组自动展平为点路径列名（如 user.address.city、tags.0），HTML 表格预览（分页/行数统计），列多选/重命名/排序，一键 xlsx 导出（缺失单元格留空）；纯浏览器本地处理，数据零上传。","url":"https://www.johnkingzcq123.xyz/tools/json-to-excel","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .j2x-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .j2x-honest b{color:#047857}
+        .j2x-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:1.4rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280;margin-bottom:1rem}
+        .j2x-upload:hover,.j2x-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .j2x-textarea{width:100%;min-height:220px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical;box-sizing:border-box;background:#fff}
+        .j2x-countline{display:flex;justify-content:space-between;align-items:center;font-size:.88rem;color:#6b7280;margin:.4rem 0}
+        .j2x-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:center}
+        .j2x-toolbar .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .j2x-status{font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6;color:#059669}
+        .j2x-error{display:none;color:#b91c1c;font-size:.9rem;margin-top:.6rem;line-height:1.8;white-space:pre-wrap;background:#fef2f2;border:1px solid #fca5a5;border-radius:.5rem;padding:.7rem .9rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .j2x-result{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .j2x-summary{font-size:1rem;color:#111827;margin-bottom:.8rem}
+        .j2x-summary b{color:#059669;font-size:1.2rem}
+        .j2x-colbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem}
+        .j2x-mini{padding:.35rem .7rem;font-size:.82rem}
+        .j2x-colhint{font-size:.82rem;color:#6b7280}
+        .j2x-collist{max-height:220px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:.6rem;padding:.5rem;background:#f9fafb;margin-bottom:1rem}
+        .j2x-colitem{display:flex;gap:.5rem;align-items:center;padding:.35rem .3rem;border-bottom:1px dashed #e5e7eb}
+        .j2x-colitem:last-child{border-bottom:none}
+        .j2x-colcheck{display:flex;align-items:center;gap:.4rem;min-width:0;flex:1 1 40%;cursor:pointer}
+        .j2x-colkey{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .j2x-colrename{flex:1 1 30%;min-width:80px;font-size:.85rem;padding:.3rem .5rem;border:1px solid #d1d5db;border-radius:.4rem}
+        .j2x-table-wrap{overflow-x:auto;max-height:380px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff}
+        table.j2x-table{border-collapse:collapse;min-width:100%;font-size:.85rem}
+        table.j2x-table th,table.j2x-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;white-space:nowrap;text-align:left;color:#111827}
+        table.j2x-table th{background:#dce9fd;font-weight:700;position:sticky;top:0}
+        table.j2x-table tbody tr:nth-child(even) td{background:#f9fafb}
+        table.j2x-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+        .j2x-empty{padding:1.5rem;text-align:center;color:#9ca3af;font-size:.9rem}
+        .j2x-pager{display:flex;gap:.7rem;align-items:center;justify-content:center;margin-top:.8rem}
+        .j2x-pageinfo{font-size:.85rem;color:#6b7280}
+        .j2x-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .j2x-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+        .j2x-combo a{color:#1d4ed8;font-weight:600}
+        .j2x-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .j2x-tip b{color:#111827}
+        @media (max-width:640px){
+            .j2x-toolbar .btn{flex:1 1 42%;justify-content:center}
+            .j2x-actions .btn{flex:1 1 100%;justify-content:center}
+            table.j2x-table th,table.j2x-table td{padding:.35rem .5rem;font-size:.8rem}
+            .j2x-colrename{min-width:0}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>JSON 转 Excel</h1>
+            <p>粘贴 JSON 文本或上传 .json 文件，嵌套自动展平为点路径列，一键导出 .xlsx；纯浏览器本地处理，数据零上传</p>
+        </div>
+        <div class="tool-content" style="max-width:900px;margin:auto;">
+            <div class="j2x-honest">
+                <div><b>真限制（如实说明，请先看）：</b><br>
+                ① 仅支持<b>数组/对象结构</b> JSON——纯字符串、数字等原始类型会明确报错，无法转成表格；<br>
+                ② 嵌套对象/数组会<b>展平为点路径列名</b>（如 <code>user.address.city</code>、<code>tags.0</code>），列名即路径，不可改回嵌套结构；<br>
+                ③ 各行列不一致时按<b>全部列求并集</b>，缺失单元格留空；<br>
+                ④ 超大 JSON 有<b>内存上限</b>：输入文本 ≤20MB、数据行 ≤50000 行，超限请拆分后重试；<br>
+                ⑤ 纯本地解析＋本地 xlsx 库，<b>零上传</b>（可在浏览器 Network 面板自证：无任何外部请求）。</div>
+            </div>
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="j2x-upload" id="j2x-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 .json 文件到此处">
+                    <div>点击选择或拖拽 <b>.json</b> 文件到这里（FileReader 本地读取，不上传）</div>
+                    <div style="font-size:.82rem;margin-top:.3rem;">也可以直接把 JSON 文本粘贴到下方文本框</div>
+                </div>
+                <input type="file" id="j2x-file" accept=".json,application/json" style="display:none;">
+                <textarea id="j2x-input" class="j2x-textarea" placeholder="在此粘贴 JSON 文本，例如：[{&quot;name&quot;:&quot;张三&quot;,&quot;user&quot;:{&quot;address&quot;:{&quot;city&quot;:&quot;深圳&quot;}}}]……" spellcheck="false" aria-label="JSON 文本输入"></textarea>
+                <div class="j2x-countline"><span>粘贴后点「解析并预览」</span><span>字符数：<b id="j2x-count">0</b></span></div>
+                <div class="j2x-toolbar">
+                    <button class="btn btn-primary" id="j2x-parse">解析并预览</button>
+                    <button class="btn btn-secondary" id="j2x-sample">填充示例</button>
+                    <button class="btn btn-secondary" id="j2x-clear">清空</button>
+                </div>
+                <div class="j2x-status" id="j2x-status"></div>
+                <div class="j2x-error" id="j2x-error" role="alert"></div>
+
+                <div class="j2x-result" id="j2x-result">
+                    <h3 style="margin-top:0;">列管理（先选列、改名、排序，再预览/导出）</h3>
+                    <div id="j2x-cols"></div>
+                    <h3>表格预览（请先核对）</h3>
+                    <div class="j2x-summary" id="j2x-summary"></div>
+                    <div id="j2x-preview"></div>
+                    <div class="j2x-pager" id="j2x-pager"></div>
+                    <div class="j2x-actions">
+                        <button class="btn btn-primary" id="j2x-export" disabled>导出 .xlsx（已选列）</button>
+                    </div>
+                    <div style="color:#6b7280;font-size:.85rem;margin-top:.5rem;line-height:1.6;">
+                        导出文件：单 sheet「Sheet1」，列宽按内容<b>自动调整</b>；文件名 <code>json_to_excel_YYYYMMDD_HHmmss.xlsx</code>；数字存为真实数值、布尔存为布尔值、缺失单元格留空；列头为你在上方设定的列名。注：所用 SheetJS 社区版不支持写单元格样式，表头加粗/底色在导出的文件中不生效，但数值与文本类型正确。超长整数 ID（如 17 位订单号）在 JSON.parse 阶段即已丢失精度，导出无法挽回——如需保真请先把 ID 改成字符串。
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="j2x-tip">
+                    <b>怎么用：</b>把接口返回、日志里的 JSON 数组粘贴进来，或上传 .json 文件 → 点「解析并预览」→ 在列管理里勾选要导出的列、改列名、↑↓ 排序 → 核对分页预览 → 点「导出 .xlsx」下载。<br>
+                    <b>展平规则：</b>嵌套对象按 <code>父.子</code> 展开（如 <code>user.address.city</code>），数组按索引展开（如 <code>tags.0</code>、<code>tags.1</code>）；空对象/空数组不产生列；各行的列取并集，某行缺失的列留空。<br>
+                    <b>报错定位：</b>JSON 写错了会给出「第 X 行第 Y 列」定位，并贴出出错行前后文，方便对照修正。<br>
+                    <b>隐私：</b>解析、预览与导出全程在你的浏览器里完成，文本只在浏览器内存里流转，不经过任何服务器；xlsx 生成库为本站本地副本（<code>static/js/vendor/xlsx-0.18.5.umd.js</code>），无任何外部请求，Network 面板可自证。<br>
+                    <b>适用边界（如实说明）：</b>JSON 里的超大数字 ID 解析即丢精度（见上）；5 万行以上或 20MB 以上的 JSON 请拆分；列名里的点号即路径分隔符，无法区分「本来就叫 a.b 的键」。
+                </div>
+                <div class="j2x-combo">
+                    <b>📊 表格数据一条龙：</b>手里是 CSV 想先转 JSON，用 <a href="/tools/csv-json">CSV⇄JSON 互转</a>；转好的 JSON 回到本页一键进 Excel；AI 回答里的 Markdown 表格想进 Excel，用 <a href="/tools/markdown-to-excel">Markdown 表格转 Excel</a>；从网页／Excel 复制的表格文本想先转标准 CSV，用 <a href="/tools/paste-table-to-csv">网页表格粘贴转 CSV</a> —— 互转、预览、进表，一套流程。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/vendor/xlsx-0.18.5.umd.js"></script>
+    <script src="/tools/static/js/json_to_excel.js"></script>
+</body>
+</html>
+{{end}}
