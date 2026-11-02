@@ -1,3 +1,91 @@
+## 今日任务（2026-11-02 15:00 · PM 选定轮，接 198 轮通用调研）
+
+**选定：英文可读性分析器（Flesch-Kincaid）** — 本轮唯一任务（新工具）。
+
+**顺位**：198 轮 Top3 **顺位首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；GB/T 7714 英文三格式扩展已交付闭环（691d230＋efaa63a），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head efaa63a），继续移出候选池；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- `flesch`／`gunning_fog`／`readability`／`readability_analyzer` 在 templates＋static/js＋tools/categories.go 三处**全 0 命中**——站内无可读性分析口径工具，**真缺口确凿**。
+- 命名无占用：ID `readability_analyzer`、Path `/tools/readability-analyzer` 均 0 命中；Icon **`insights` 全库 0 命中**（本轮 `grep -c '"insights"' tools/categories.go`=0；`auto_stories`／`spellcheck`／`grade`／`text_increase` 备选同样 0 命中，开发轮精确值复测锁定全库唯一）。
+- 全量 Path **267**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **153 个**；本地分支 muse/dev-20260929；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**首次未带环境变量失败、按铁律重试一次成功**，本地 HEAD efaa63a 与 origin 同头为最新。**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究轮惯例。
+
+**选定理由**：① **顺位即理由**——198 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实**——写英文文档/论文摘要想快速判断可读性等级，在线 readability 站多英文广告/付费墙；外部信号：dev.to WordCountDesk「Building a Zero-Server Writing Suite」（**2026-11-01，昨日新信号**，三候选中唯一带新鲜外部信号）；④ **簇内协同**——今日刚交付 GB/T 7714 英文三格式扩展，站内已有英文写作用户；本工具与 text_tools 工具箱互链、与 GB/T 7714 工具互链「英文写作一条龙」（参考文献＋摘要可读性），补文本工具簇英文写作闭环；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（countSyllables／fleschReadingEase／fleschKincaidGrade／gunningFogIndex 确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发；⑦ **低优先 caveat 已评估**——英文口径、中文站用户低频属实，但痛点人群（英文写作/投稿用户）与站内现有学术工具用户高度重合，且真限制页面明示，仍值得一做。
+
+**品类归位**：注册到「文本工具」类目（与 text_info_extractor／gbt7714_reference_generator 同簇）；New: true；ID `readability_analyzer`、Path `/tools/readability-analyzer`、Icon `insights`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：粘贴英文文本／示例文本一键填入 → 词数/句数/音节数/难词数统计 → Flesch Reading Ease／Flesch-Kincaid Grade Level／Gunning Fog Index 三指标（保留 1 位小数）→ 等级解读（年龄/教育程度对照表）→ 难句高亮（长句/含难词句标示）；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制；命名空间挂 window.Readability 下，module.exports 同步导出）**：
+  - `countSyllables(word)` → 音节数估算（启发式：小写化后统计 aeiouy 元音字母连续段数量；词尾静默 e（-e 结尾且元音段>1）减 1；结果 <1 按 1；word 非字符串抛 Error err.field='word'）。
+  - `analyzeText(text)` → `{words, sentences, syllables, complexWords, fleschReadingEase, fleschKincaidGrade, gunningFogIndex}`（text 非字符串或空/空白抛 Error err.field='text'；句按 `[.!?]+` 切分，词按空白/标点切分；难词 complexWords=音节≥3 且非首字母大写（专有名词简化排除））。
+  - `fleschReadingEase({words,sentences,syllables})` → `206.835 − 1.015×(words/sentences) − 84.6×(syllables/words)`，保留 1 位小数，不钳制。
+  - `fleschKincaidGrade({words,sentences,syllables})` → `0.39×(words/sentences) + 11.8×(syllables/words) − 15.59`，保留 1 位小数。
+  - `gunningFogIndex({words,sentences,complexWords})` → `0.4×[(words/sentences) + 100×(complexWords/words)]`，保留 1 位小数。
+  - `readabilityLevel(score)` → 等级标签对照（90–100 非常容易／80–90 容易／70–80 较容易／60–70 标准／50–60 较难／30–50 难／0–30 非常难；score 非数字 err.field='score'）。
+- **确定性向量（开发轮必须逐字命中；按上式与 countSyllables 启发式精确算得）**：
+  - `countSyllables('readability')` → `5`；`countSyllables('hello')` → `2`；`countSyllables(123)` 抛 Error 且 `err.field==='word'`。
+  - `analyzeText('I like to read books every day.')` → `{words:7, sentences:1, syllables:9, complexWords:1, fleschReadingEase:91.0, fleschKincaidGrade:2.3, gunningFogIndex:8.5}` 逐字固定（音节：I1/like1/to1/read1/books1/every3/day1；难词：every）。
+  - `analyzeText(null)` 抛 Error 且 `err.field==='text'`；`analyzeText('   ')` 抛 Error 且 `err.field==='text'`。
+- **真限制（页面明示）**：① 仅英文有效（中文按字符计不适用，请勿粘贴中文文本）；② 音节估算为启发式（元音群计数），非词典级精确值，仅供写作参考；③ 纯本地处理，零上传。
+- **互链**：与 text_tools 工具箱互链；与 GB/T 7714 参考文献生成器互链「英文写作一条龙」（参考文献＋摘要可读性）。
+- **SEO**：title/description/keywords 增补 Flesch-Kincaid／readability 英文关键词。
+
+**验收标准**：
+1. 粘贴英文文本→三指标＋等级解读＋难句高亮渲染正确；示例文本按钮一键填入可用。
+2. 纯函数契约 node 测试全过——新建 `tests/readability_analyzer.test.js`（countSyllables 逐字＋analyzeText 确定性向量逐字＋err.field），`node tests/readability_analyzer.test.js` 直跑。
+3. 真限制三条在页面明示。
+4. 注册：Path 总数 267→**268**；旧测试 Path 断言同步（如有引用 267 的测试文件，开发轮 grep 确认）；Icon `insights` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/readability-analyzer` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/readability_analyzer.html`（新建：输入区＋三指标面板＋等级对照＋难句高亮＋真限制＋SEO）
+2. `static/js/readability_analyzer.js`（新建：countSyllables／analyzeText／fleschReadingEase／fleschKincaidGrade／gunningFogIndex／readabilityLevel 纯函数＋UI 绑定，挂 window.Readability，module.exports 同步导出）
+3. `tests/readability_analyzer.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID readability_analyzer、Path /tools/readability-analyzer、Icon insights、Category 文本工具、New: true、Description 含 Flesch-Kincaid 关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 267 的测试文件）
+
+**顺位递补**（PM 15:00 裁定）：网名生成器 → **暂不立项**（`nickname` ASCII 误命中证伪、网名 CJK 验真仅 fancy_fonts 花体字「网名符号」口径，真缺口属实，但娱乐口径、无外部信号；低优先观察保持）／打字练习工具 → **暂不立项**（`typing_test`／`type_test`／`WPM` 0 命中真缺口属实，但练习/娱乐口径、外部信号弱（YouTube 榜单 TypeLit.io 一笔带过）；低优先观察保持）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**首次未带环境变量报 Permission denied (publickey) 失败、按铁律重试一次成功**，本地 HEAD efaa63a 与 origin/muse/dev-20260929 同头为最新，未提交不推送）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **267**；PM 独立零重叠实测：`flesch`／`gunning_fog`／`readability`／`readability_analyzer` 三处全 **0 命中**；Icon `insights` 全库 **0 命中**（`auto_stories`／`spellcheck`／`grade`／`text_increase` 备选同样 0 命中）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 15:00 · 通用调研第一百九十八轮，接 13:00 PM 选定轮）
+
+**交付状态**：11-02 通用调研第一百九十八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**GB/T 7714 英文三格式扩展交付闭环**（691d230 新增＋efaa63a 修复：制式五选一（GB/T 7714 双制式＋APA 7th／MLA 9th／Chicago 17th），期刊/图书/网页三类支持；纯函数契约 formatCitationAPA／formatCitationMLA／formatCitationChicago＋enSplitAuthors 切分修复；90 断言全绿，全量 153 个 node 测试文件全绿；go build/vet 通过，本地 /tools/gbt7714-reference-generator 实测 200，零外部请求；不新增 ID/Path/Icon/Category，Path 总数保持 267；候选池划出）。**简繁互转仍开发中**：templates/jianfan_converter.html 不存在（git head efaa63a），categories.go 未注册（jianfan 0 命中），未确认交付前不划出候选池，继续标记「开发中」移出 Top3。**Top3 按「无硬伤不跳过、Top3 顺位递进」惯例递进**：英文可读性分析器（Flesch-Kincaid）→首席（低优先；PM 可裁定暂不立项）／网名生成器→第二顺位（低优先；PM 可裁定暂不立项）／打字练习工具→新观察晋升 P2 第三顺位（低优先；打字练习真缺口，纯前端小，练习/娱乐口径，PM 可裁定暂不立项）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小难度纯前端。
+
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 efaa63a（GB/T 7714 英文三格式扩展修复，90 断言全绿，全量 153 个 node 测试文件全绿）／691d230（英文三格式扩展新增）／a912aab（Markdown 表格转 CSV）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **267**（扩展不新增 Path）；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD efaa63a 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - GB/T 7714 英文三格式扩展：已交付（691d230＋efaa63a，不新增 Path，Path 总数保持 267）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head efaa63a；categories.go jianfan 0 命中）——移出 Top3。
+   - **英文可读性分析器（Flesch-Kincaid）**：197 轮复测结论沿用（`flesch`／`gunning_fog` ASCII 三处 0 命中）——真缺口确凿，**递进首席**（低优先；PM 可裁定暂不立项）。
+   - **网名生成器**：197 轮复测结论沿用（nickname ASCII 误命中证伪；网名 CJK 验真仅 fancy_fonts 花体字「网名符号」口径，口径相近不相同）——真缺口，**递进第二顺位**（低优先；娱乐口径无外部信号，PM 可裁定暂不立项）。
+   - **打字练习工具**：`typing_test`／`type_test` ASCII 0 命中；`typing` 宽口径命中仅 annual_lottery.js（打字机动画效果）无关；CJK 打字 python 运行时构造＋codepoint 解码验真：5 命中均为口径不同（teleprompter 提词器滚动／big_sign_display 大字展示／realtime_dictation 实时听写）；CJK 测速 3 命中均为 speed_test（网速测试）口径不同；`WPM` ASCII 0 命中——**真缺口确凿**，新观察晋升 P2 第三顺位（低优先；练习/娱乐口径，外部信号弱：YouTube「10 Web Tools」TypeLit.io 打字练书提及；PM 可裁定暂不立项）。
+   - **一键人脸模糊**（HN BlurFaces Show HN 信号）：`face_detect`／`face_blur`／`faceblur` ASCII 0 命中；categories.go `"face"` 实为头像生成器 Icon（face 图标）误命中，非人脸检测工具；`avatar_generator`（自研 SVG 图层头像引擎）为生成口径，与「检测照片人脸打码」口径不同——真缺口但**人脸检测模型硬伤**（需浏览器端人脸检测模型下载，对标一键图片去背景／AI 图片超分 ONNX 硬伤家族）→ 低优先观察保持，不立项。
+3. 新信号扫描（Medium＋YouTube＋dev.to＋HN＋V2EX＋中文榜单为本轮主线）：**新候选 1 项（打字练习工具，真缺口，低优先晋升 P2 第三顺位），其余全部确认消解**——
+   - Medium：**Pushpendra Singh「I Built 17 Free Online Tools That Never Upload Your Files」（10-28；证件照制作→站内 id_photo_maker 已交付确认消解；截图打码→站内 img_mosaic 确认消解；文档扫描效果→站内 scan_effect_generator 已交付确认消解；schema JSON-LD→站内 schema_org_generator 确认消解；SERP 预览→站内 serp_snippet_preview 确认消解；YouTube 缩略图→站内 youtube_thumbnail_downloader 确认消解；音频剪辑→站内 audio_trimmer 确认消解；Whisper 语音转文字→AI/模型口径新消解；Tesseract OCR→站内 ocr_image_text/ocr_batch 确认消解）**／Malik Anwaar「10 Best Free Online Tools」（10-16；字数/密码/二维码/单位换算→站内均已交付确认消解；BMI→泛生活计算器口径，10-18 方向修正排除）；
+   - YouTube：「10 Web Tools So Good They Feel Illegal To Know」（11-02 前后；Regex101→站内正则工具已交付确认消解；**TypeLit.io 打字练书→打字练习新观察弱信号**；Wormhole P2P→P2P 文件传输器观察保持（WebRTC 信令硬伤）；Invoice→泛财务口径排除；SMMRY→AI 摘要口径新消解；Coolors→站内颜色工具已交付确认消解；Fontjoy→字体搭配预览器观察保持；AudioMass→站内 audio_trimmer 确认消解；Excalidraw→外部服务口径确认消解；PhotoRoom→AI 抠图 ONNX 硬伤观察保持）；
+   - dev.to：WordCountDesk（11-01）17 写作工具 197 轮已复核（APA/MLA/Chicago 扩展已交付划出；Flesch-Kincaid 递进首席）；
+   - HN：**BlurFaces 一键人脸模糊（Show HN；face_detect/face_blur 0 命中真缺口，但人脸检测模型硬伤→低优先观察保持，不立项）**／SquareFaceIcon 头像协议→站内 avatar_generator 已交付确认消解／Stasher burn-after-read→需后端硬伤消解／Claude Gym→CLI 非网页工具消解；
+   - V2EX：**t/1252701 MiniCPM OCR（10-28；站内 ocr_image_text/ocr_batch 本地识别已交付确认消解；表格/公式 LaTeX→AI 口径新消解）**／**t/1248945 PixelToKB 按目标体积压缩（10-15；站内 img_target_kb「图片精确体积压缩器」已交付确认消解）**／t/1249410 Krea3 AI 改图→AI 服务口径确认消解／t/1252069 MyEnhancer AI 照片增强→AI 服务/积分口径确认消解／t/1252552 tubox→197 轮已复核确认消解；
+   - 中文榜单：懒大王导航「6 个免费神仙网站」（10-27；197 轮已复核确认消解）／freetoolhub「10 Best Free Online Tools in 2026」（BMI→方向修正排除；YouTube Title/Instagram Bio→AI/娱乐口径弱观察不立项）／365lab 40+ 工具榜单（竞品站清单，站内口径均已覆盖确认消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池；一键人脸模糊模型硬伤观察保持不递进）：
+1. **英文可读性分析器（Flesch-Kincaid）** — 递进首席（**低优先**；197 轮 Top3 第二顺位；站内真缺口确凿；外部信号：dev.to WordCountDesk「Building a Zero-Server Writing Suite」（2026-11-01）；痛点：写英文文档/论文摘要想快速判断可读性等级，在线站多英文广告；实现：粘贴英文文本→音节估算→Flesch Reading Ease／Flesch-Kincaid Grade／Gunning Fog 三指标→难句高亮；纯前端小难度（纯函数可写逐字向量：countSyllables 音节估算确定性＋err.field）；文本簇补位（可与 text_tools 工具箱互链）；真限制：仅英文有效、音节估算为启发式非词典级、纯本地零上传，须明示；**低优先说明：英文口径、中文站用户低频，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **网名生成器** — 递进第二顺位（**低优先**；197 轮 Top3 第三顺位；站内缺口实测；痛点：换平台/游戏想起个新网名，搜到的多是广告站或要下载 App；实现：风格预设（古风/二次元/电竞/简约英文）＋关键词→候选网名列表→一键复制；纯前端极小难度（纯函数可写逐字向量：generateNicknames(style,keyword,seed) 确定性＋err.field）；真限制：随机组合非语义创作、纯本地零上传，须明示；**低优先说明：娱乐口径、无外部信号，PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **打字练习工具** — 新观察晋升 P2 第三顺位（**低优先**；本轮站内缺口实测：`typing_test`／`type_test` ASCII 0 命中；`typing` 宽口径命中仅 annual_lottery.js 打字机动画无关；打字 CJK 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同；`WPM` ASCII 0 命中；痛点：换键盘/练盲打想测中文打字速度，monkeytype 英文为主、中文打字站广告多；实现：中/英文料库→跟打→WPM/准确率/错字统计→历史曲线（localStorage）；纯前端小难度（纯函数可写逐字向量：calcWPM／calcAccuracy 确定性＋err.field）；真限制：中文按「字」计速非词、浏览器按键事件口径、纯本地零上传，须明示；**低优先说明：练习/娱乐口径、外部信号弱（YouTube 榜单 TypeLit.io 一笔带过），PM 可裁定暂不立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：一键人脸模糊（**本轮 HN 信号；face_detect/face_blur 0 命中真缺口；人脸检测模型硬伤，低优先观察保持，不立项**）／Tap Tempo BPM 测速器（**09:00 PM 轮已裁定暂不立项**，低优先观察保持）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（本轮弱观察：PulseTools 榜单信号；站内无独立口径；开发者小众口径，低优先观察）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第一百九十八轮：GB/T 7714 英文三格式扩展交付闭环（691d230 新增＋efaa63a 修复，90 断言全绿，全量 153 个 node 测试文件全绿；go build/vet 通过，本地 /tools/gbt7714-reference-generator 实测 200，零外部请求；不新增 ID/Path/Icon/Category，Path 总数保持 267；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head efaa63a；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 按顺位递进**：英文可读性分析器（Flesch-Kincaid）→首席（低优先；**PM 可裁定暂不立项**）／网名生成器→第二顺位（低优先；**PM 可裁定暂不立项**）／**打字练习工具→新观察晋升 P2 第三顺位（低优先）**（站内缺口实测：typing_test/type_test 0 命中；typing 宽口径命中仅 annual_lottery.js 打字机动画无关；打字 CJK 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同；WPM 0 命中；练习/娱乐口径，外部信号弱：YouTube「10 Web Tools」TypeLit.io 一笔带过；**PM 可裁定暂不立项**）；**一键人脸模糊**（HN BlurFaces Show HN 信号；face_detect/face_blur/faceblur 0 命中真缺口，categories.go "face" 实为头像生成器 Icon 误命中；但**人脸检测模型硬伤**→低优先观察保持，不立项不递进）；**robots.txt 校验器**弱观察（PulseTools 榜单信号；站内无独立口径；开发者小众口径，低优先）；新信号扫描：Medium（**Pushpendra 17 工具（10-28）：证件照→id_photo_maker／截图打码→img_mosaic／文档扫描效果→scan_effect_generator／schema→schema_org_generator／SERP 预览→serp_snippet_preview／YouTube 缩略图→youtube_thumbnail_downloader／音频剪辑→audio_trimmer→站内均已交付确认消解；Whisper 语音转文字→AI/模型口径新消解；Tesseract OCR→站内 ocr_image_text/ocr_batch 确认消解**／Malik Anwaar 10 工具（10-16）：字数/密码/二维码/单位换算→已交付确认消解；BMI→方向修正排除）＋YouTube（**10 Web Tools：Regex101→已交付确认消解；TypeLit.io→打字练习弱信号；Wormhole→P2P 观察保持；Invoice→泛财务排除；SMMRY→AI 摘要新消解；Coolors→已交付确认消解；Fontjoy→字体搭配观察保持；AudioMass→audio_trimmer 确认消解；Excalidraw→外部服务确认消解；PhotoRoom→ONNX 硬伤观察保持**）＋dev.to（WordCountDesk 11-01 197 轮已复核）＋HN（**BlurFaces→模型硬伤观察保持**／**SquareFaceIcon→avatar_generator 确认消解**／**Stasher→需后端硬伤消解**／**Claude Gym→CLI 非网页工具消解**）＋V2EX（**t/1252701 MiniCPM OCR→站内 OCR 确认消解**／**t/1248945 PixelToKB→站内 img_target_kb 确认消解**／t/1249410 Krea3→AI 服务确认消解／t/1252069 MyEnhancer→AI 服务/积分确认消解／t/1252552 tubox→197 轮已复核确认消解）＋中文榜单（**懒大王导航 6 神仙网站（10-27）→197 轮已复核确认消解**／freetoolhub 10 工具→BMI/Tip 方向修正排除，YouTube Title/Instagram Bio AI/娱乐口径弱观察不立项／365lab 40+ 榜单→竞品站口径均已覆盖确认消解）；打字练习／一键人脸模糊（模型硬伤）／数独求解器／OFD 转 PDF／TTS 导出／高精度计算器／ReqForge 式多语言 cURL（与 curl_to_requests 部分重叠，PM 裁定）保持跳过／观察；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD efaa63a 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 efaa63a（GB/T 7714 英文三格式扩展修复，90 断言全绿，全量 153 个 node 测试文件全绿）／691d230（英文三格式扩展新增）／a912aab（Markdown 表格转 CSV 新增，Path 266→267）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **267**（扩展不新增 Path）；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**GB/T 7714 英文三格式扩展**：已交付（691d230＋efaa63a，Path 总数保持 267），划出候选池；**英文可读性分析器**：197 轮复测结论沿用（flesch／gunning_fog 0 命中），真缺口；**网名生成器**：197 轮复测结论沿用（nickname ASCII 误命中证伪；网名 CJK 验真仅 fancy_fonts 花体字「网名符号」口径，口径相近不相同），真缺口；**打字练习工具**：typing_test／type_test 0 命中；typing 宽口径命中仅 annual_lottery.js 打字机动画无关；打字 CJK python 运行时构造＋codepoint 解码验真 5 命中均为提词器/大字展示/实时听写口径不同；测速 3 命中均为 speed_test 网速测试口径不同；WPM 0 命中，真缺口；**一键人脸模糊**：face_detect／face_blur／faceblur 0 命中；categories.go "face" 实为头像生成器 Icon 误命中；avatar_generator 为生成口径与检测打码口径不同；真缺口但人脸检测模型硬伤→观察保持）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 13:00 · PM 选定轮，接 13:00 通用调研第一百九十七轮）
 
 **选定：GB/T 7714 参考文献生成器 功能扩展——英文三格式（APA 7th／MLA 9th／Chicago 17th）支持** — 本轮唯一任务（优化项，非新工具）。

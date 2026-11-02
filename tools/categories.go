@@ -1154,6 +1154,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "readability_analyzer",
+					Name:        "英文可读性分析器",
+					Description: "英文可读性分析器：粘贴英文文本→词/句/音节/难词统计，Flesch Reading Ease／Flesch-Kincaid Grade／Gunning Fog Index 三指标（保留1位小数），等级解读对照与难句高亮，纯前端零上传 · English readability analyzer: Flesch/Fog scores, syllable stats, hard-sentence highlighting, 100% client-side",
+					Path:        "/tools/readability-analyzer",
+					Icon:        "insights",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{

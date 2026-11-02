@@ -3,7 +3,7 @@
  * 覆盖：规格确定性向量逐字命中（buildCollageFileName 文件名正则＋固定日期逐字、
  * validateCollageConfig 合法通过＋四字段 err.field、computeCollageLayout 1200×1200/grid-4/gap8
  * 四格坐标逐字、swapCollageSlots 交换逐字＋越界 err.field、coverCrop/collageCanvasSize 辅助向量）、
- * categories.go 注册（Path 总数 266→267、ID/Path/Icon apps/Category 图片处理/New: true、
+ * categories.go 注册（Path 总数 267→268、ID/Path/Icon apps/Category 图片处理/New: true、
  * 紧邻 img_stitch 之后）与零网络请求静态检查、
  * 模板真限制四条、SEO 面板（Title/Description/Keywords/OG）、
  * 与 img_stitch/nine_grid 双向互链「拼图一条龙」（合成↔切分↔长拼）。
@@ -119,7 +119,7 @@ var iconAppsCount = (GO_SRC.match(/Icon:\s+"apps"/g) || []).length;
 eq(iconAppsCount, 1, "Icon apps 全库唯一（1 次命中）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 267, "注册 Path 总数 266→267");
+eq(pathCount, 268, "注册 Path 总数 267→268");
 
 /* ---------- 7. 模板：真限制/SEO/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/photo-collage", "模板 canonical 含新 Path");

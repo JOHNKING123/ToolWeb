@@ -140,7 +140,7 @@ ok(regBlock.indexOf("New:         true") !== -1, "categories.go 注册 New true"
 ok(regBlock.indexOf('Icon:        "gesture"') !== -1, "categories.go 注册 Icon gesture");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 267, "注册 Path 总数 266→267");
+eq(Object.keys(pathCount).length, 268, "注册 Path 总数 267→268");
 
 /* ---------- 8. 零网络请求静态检查 ---------- */
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,

@@ -3,7 +3,7 @@
  * validateKeyboardConfig 确定性向量＋err.field、recordKeyEvent 追加确定性＋纯性＋err.field、
  * detectChatter 确定性向量逐字＋阈值边界＋err.field、buildKeyReport 全文逐字断言＋空事件向量、
  * buildKeyboardFileName 正则＋固定日期逐字、categories.go 注册（ID/Path/Icon keyboard/Category 开发工具/New、
- *   紧邻 fps_gpu_benchmark 硬件簇相邻、Path 总数 266→267）与零网络请求静态检查、
+ *   紧邻 fps_gpu_benchmark 硬件簇相邻、Path 总数 267→268）与零网络请求静态检查、
  * 真限制四条明示、互链「硬件一条龙」单向出链（开发轮定锚点：键盘测试→fps-gpu-benchmark/llm-hardware-checker，
  *   沿用 fps→llm 单向出链家族先例）、SEO 面板（Title/Description/Keywords/OG/JSON-LD）。 */
 "use strict";
@@ -158,7 +158,7 @@ var fpsIdx = GO_SRC.indexOf('"fps_gpu_benchmark"');
 ok(fpsIdx >= 0 && kbIdx > fpsIdx, "注册紧邻 fps_gpu_benchmark 之后（硬件簇相邻）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 267, "注册 Path 总数 266→267");
+eq(pathCount, 268, "注册 Path 总数 267→268");
 
 /* ---------- 8. 模板：真限制/互链/SEO ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/keyboard-tester", "模板 canonical 含新 Path");

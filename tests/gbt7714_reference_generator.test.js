@@ -5,7 +5,7 @@
  * formatCitationChicago（期刊/含期号/图书出版地/网页 Accessed 日期逐字、err.field）、
  * 现有纯函数回归（buildBody 顺序编码/著者-出版年 SAMPLES 抽检、SAMPLES 十类、TYPES 十类）、
  * 模板（五选一制式、类型置灰提示、真限制三条文案、SEO 增补、脚本 v2）、
- * 注册不动（ID/Path/Icon/Category/New 不动、Path 总数 267）、零网络请求。 */
+ * 注册不动（ID/Path/Icon/Category/New 不动、Path 总数 268）、零网络请求。 */
 "use strict";
 var fs = require("fs");
 var path = require("path");
@@ -134,7 +134,7 @@ has(JS_SRC, "EN_REQUIRED[curType]", "渲染：英文制式必填校验");
 has(JS_SRC, "EN_MODES[mode]", "渲染：英文制式分支");
 has(JS_SRC, "renderEnNote", "渲染：英文提示条渲染函数");
 
-/* ---------- 6. 注册不动：Path 总数保持 267 ---------- */
+/* ---------- 6. 注册不动：Path 总数保持 268 ---------- */
 has(GO_SRC, "\"gbt7714_reference_generator\"", "注册：ID 不变");
 has(GO_SRC, "\"/tools/gbt7714-reference-generator\"", "注册：Path 不变");
 has(GO_SRC, "\"menu_book\"", "注册：Icon 不变");
@@ -143,7 +143,7 @@ has(catBlock, "Category:    \"文本工具\"", "注册：Category 不变");
 has(catBlock, "New:         true", "注册：New 标记不动");
 has(catBlock, "APA 7th / MLA 9th / Chicago 17th", "注册：Description 增补三格式一句");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 267, "注册：Path 总数保持 267");
+eq(pathCount, 268, "注册：Path 总数保持 268");
 
 /* ---------- 7. 零网络请求 ---------- */
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");

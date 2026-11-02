@@ -1,0 +1,138 @@
+{{define "readability_analyzer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文可读性分析器 - Flesch／Fog 三指标与难句高亮，纯本地零上传</title>
+    <meta name="description" content="免费在线英文可读性分析器：粘贴英文文本即统计词/句/音节/难词，计算 Flesch Reading Ease、Flesch-Kincaid Grade、Gunning Fog Index 三指标（保留1位小数），等级解读对照与难句高亮，纯前端本地运行零上传。English readability analyzer: Flesch/Fog scores, syllable stats, hard-sentence highlighting, 100% client-side.">
+    <meta name="keywords" content="可读性分析,英文可读性,Flesch Reading Ease,Flesch-Kincaid,Gunning Fog,阅读难度,英语文本分析,readability analyzer">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/readability-analyzer">
+    <meta property="og:title" content="英文可读性分析器 - Flesch／Fog 三指标与难句高亮">
+    <meta property="og:description" content="粘贴英文文本即得 Flesch Reading Ease、Flesch-Kincaid Grade、Gunning Fog Index 三指标，等级解读与难句高亮，纯本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/readability-analyzer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"英文可读性分析器","description":"粘贴英文文本即统计词/句/音节/难词，计算 Flesch Reading Ease、Flesch-Kincaid Grade、Gunning Fog Index 三指标（保留1位小数），等级解读对照与难句高亮，纯前端本地运行零上传。","url":"https://www.johnkingzcq123.xyz/tools/readability-analyzer","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ra-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .ra-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .ra-error{border:2px solid #f87171;background:#fef2f2;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#991b1b;display:none}
+        .ra-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ra-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .ra-input{width:100%;min-width:0;min-height:200px;padding:.8rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.95rem;line-height:1.8;resize:vertical;box-sizing:border-box;font-family:Georgia,"Times New Roman",serif}
+        .ra-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ra-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .ra-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.5rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .ra-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .ra-btn-primary{border-color:var(--primary-color);color:var(--primary-color);font-weight:600}
+        .ra-btn:disabled{opacity:.45;cursor:default;color:#9ca3af}
+        .ra-btn:disabled:hover{border-color:#d1d5db;color:#9ca3af}
+        .ra-stats{display:none;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin:0 0 1.2rem}
+        .ra-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.65rem;padding:.7rem;text-align:center}
+        .ra-stat b{display:block;font-size:1.4rem;color:#111827}
+        .ra-stat span{font-size:.82rem;color:#6b7280}
+        .ra-cards{display:none;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem;margin-bottom:1.2rem}
+        .ra-card{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem}
+        .ra-card h4{margin:0 0 .4rem;font-size:.92rem;color:#374151}
+        .ra-value{font-size:2rem;font-weight:700;color:#2563eb;line-height:1.2}
+        .ra-level{font-size:.88rem;font-weight:600;color:#059669;margin:.25rem 0}
+        .ra-desc{font-size:.82rem;color:#6b7280;line-height:1.7;margin:.3rem 0 0}
+        .ra-sen-note{display:none;font-size:.88rem;color:#374151;margin:.4rem 0 .8rem}
+        .ra-sen-list{display:none;margin-bottom:1.2rem}
+        .ra-sen{background:#fff;border:1px solid #e5e7eb;border-left:4px solid #d1d5db;border-radius:.55rem;padding:.7rem .9rem;margin-bottom:.6rem;font-size:.95rem;line-height:1.9;font-family:Georgia,"Times New Roman",serif}
+        .ra-hard{border-left-color:#f59e0b;background:#fffbeb}
+        .ra-tag{display:inline-block;background:#eef2ff;color:#4338ca;font-size:.75rem;border-radius:.4rem;padding:.1rem .5rem;margin-right:.6rem;vertical-align:middle}
+        .ra-level-table{width:100%;border-collapse:collapse;font-size:.88rem;line-height:1.7}
+        .ra-level-table th,.ra-level-table td{border:1px solid #d1d5db;padding:.45rem .7rem;text-align:left}
+        .ra-level-table thead th{background:#f3f4f6;color:#111827}
+        .ra-level-table tbody tr:nth-child(even){background:#f9fafb}
+        .ra-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .ra-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .ra-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .ra-links a{color:#2563eb}
+        .ra-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        @media (max-width:640px){.ra-panel{padding:.9rem}.ra-input{min-height:160px}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>英文可读性分析器</h1>
+            <p>粘贴英文文本：词／句／音节／难词统计 → Flesch Reading Ease／Flesch-Kincaid Grade／Gunning Fog Index 三指标 → 等级解读 → 难句高亮，纯前端零上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="ra-warn">
+                <span><b>真限制（请先读）：</b>① 仅英文文本有效——中文等多语言文本的统计与公式无意义，公式是为英语设计的；② 音节估算采用元音群启发式算法（词尾静默 e 减 1），是估算值而非词典级精确值；③ 纯本地零上传：粘贴的文本只在浏览器内处理，无任何网络请求。</span>
+            </div>
+            <div class="ra-error" id="ra-error"></div>
+            <div class="ra-panel">
+                <h3>输入英文文本</h3>
+                <textarea class="ra-input" id="ra-input" placeholder="粘贴英文文本到这里，例如一篇英文短文、邮件或论文段落…"></textarea>
+                <div class="ra-row">
+                    <button class="ra-btn ra-btn-primary" id="ra-analyze" disabled>分析可读性</button>
+                    <button class="ra-btn" id="ra-sample">载入示例文本</button>
+                    <button class="ra-btn" id="ra-clear">清空</button>
+                </div>
+            </div>
+            <div class="ra-stats" id="ra-stats"></div>
+            <div class="ra-cards" id="ra-result" style="display:none;"></div>
+            <div class="ra-panel">
+                <h3>难句高亮</h3>
+                <p class="ra-sen-note" id="ra-sen-note"></p>
+                <div class="ra-sen-list" id="ra-sentences"></div>
+            </div>
+            <div class="ra-panel">
+                <h3>等级解读对照</h3>
+                <table class="ra-level-table">
+                    <thead><tr><th>Flesch Reading Ease</th><th>解读</th><th>Flesch-Kincaid Grade</th><th>对应水平</th><th>Gunning Fog</th></tr></thead>
+                    <tbody>
+                        <tr><td>90–100</td><td>非常容易</td><td>&lt; 3</td><td>初级（小学 1–3 年级）</td><td>&lt; 8</td></tr>
+                        <tr><td>80–89</td><td>容易</td><td>3–6</td><td>中低级（小学 4–6 年级）</td><td>8–10</td></tr>
+                        <tr><td>70–79</td><td>较容易</td><td>6–9</td><td>中级（初中）</td><td>10–12</td></tr>
+                        <tr><td>60–69</td><td>标准难度</td><td>9–12</td><td>中高级（高中）</td><td>12–14</td></tr>
+                        <tr><td>50–59</td><td>有点难</td><td>12–16</td><td>大学级</td><td>14–17</td></tr>
+                        <tr><td>30–49</td><td>难</td><td>≥ 16</td><td>研究生级</td><td>≥ 17</td></tr>
+                        <tr><td>0–29</td><td>非常难</td><td></td><td></td><td></td></tr>
+                    </tbody>
+                </table>
+                <p class="ra-hint">对照表为常用经验分段；三指标基于同一文本的不同公式，结论大体一致、细节各有侧重，综合看更稳。</p>
+            </div>
+            <div class="ra-panel">
+                <h3>常见问题</h3>
+                <dl class="ra-faq">
+                    <dt>三个指标分别是什么意思？</dt>
+                    <dd>Flesch Reading Ease（0–100，越高越易读）、Flesch-Kincaid Grade（对应美国年级水平）、Gunning Fog Index（数值≈理解所需的受教育年数）。公式均为：平均句长＋平均音节数的加权组合。</dd>
+                    <dt>为什么音节数是“估算”？</dt>
+                    <dd>本工具用元音群启发式算法估算音节（词尾静默 e 减 1），不查词典；个别不规则单词（如 beautiful 会多算 1 个）会有偏差，但对全文指标的影响很小。这是真限制②。</dd>
+                    <dt>粘贴中文文本会怎样？</dt>
+                    <dd>中文字符不会被计为英文单词，句子切分也会失真，三个公式对中文无意义。请只粘贴英文文本。这是真限制①。</dd>
+                    <dt>难句是怎么判定的？</dt>
+                    <dd>按单句计算 Flesch-Kincaid Grade，≥ 12（大学级）或单句词数 ≥ 25 即标为难句并高亮，方便定位改写。</dd>
+                    <dt>我的文本会被上传吗？</dt>
+                    <dd>不会。分析全在浏览器本地完成，本页 JS 源码无任何 fetch／XHR 调用，零网络请求。这是真限制③。</dd>
+                </dl>
+            </div>
+            <div class="ra-panel">
+                <h3>相关工具</h3>
+                <div class="ra-links">
+                    <a href="/tools/lorem-ipsum-generator">Lorem Ipsum 生成器（英文占位文本生成去这里）</a>
+                    <a href="/tools/text-diff">文本比较（改写前后对比去这里）</a>
+                </div>
+                <p class="ra-hint" style="margin-top:.6rem;">分工：英文可读性分析器专攻英文阅读难度三指标；Lorem Ipsum 生成器提供英文占位文本做测试；文本比较做改写前后的逐行差异。</p>
+            </div>
+            <div class="ra-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>Flesch Reading Ease＝206.835−1.015×(词/句)−84.6×(音节/词)；Flesch-Kincaid Grade＝0.39×(词/句)+11.8×(音节/词)−15.59；Gunning Fog＝0.4×[(词/句)+100×(难词/词)]，均保留 1 位小数；纯函数挂 window.Readability 并同步 module.exports，浏览器与 node 测试共用同一文件；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/readability_analyzer.js?v=1"></script>
+</body>
+</html>
+{{end}}
