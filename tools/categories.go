@@ -2548,6 +2548,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "flashcard_maker",
+					Name:        "闪卡卡片生成器",
+					Description: "抽认卡/背单词卡片/记知识点：多卡组管理、正面反面录入、批量导入、示例一键填充，点击/空格键翻转练习，认识/不认识二元判定，简化 SM-2 间隔重复，掌握进度统计，localStorage 本地保存，JSON 导入导出备份，纯前端不上传 · Flashcards maker: flashcard decks with flip/know/unknown practice, simplified SM-2 spaced repetition, progress stats, localStorage only, JSON import/export, 100% client-side",
+					Path:        "/tools/flashcard-maker",
+					Icon:        "quiz",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

@@ -1,3 +1,111 @@
+## 今日任务（2026-11-03 03:00 · PM 选定轮，接 204 轮通用调研）
+
+**选定：闪卡卡片生成器（flashcard_maker）** — 本轮唯一任务（新工具）。
+
+**顺位**：204 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席递进、顺位即理由；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md；覆盖"猜测 ID 写法"＋"Description 中文口径"两条线）**：
+- `flashcard`／`flash_card`／`flash-card`／`flashcard_maker` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**（本轮再实测）。
+- CJK「闪卡／抽认卡／背单词／词汇卡／记忆卡」经 python codepoint 构造全站复核**全 0 命中**；Description 中文口径无覆盖。
+- 口径相邻均不重叠：文字转图片卡片（排版成图口径）／打字练习（键盘输入训练口径）——均为不同口径，候选抽认卡练习口径独立。
+- 命名无占用：ID `flashcard_maker`、Path `/tools/flashcard-maker` 均 0 命中；Icon **`quiz` categories.go 0 命中**（`school` 已占用避开、`flip_to_front` 备选同样 0 命中；开发轮精确值复测锁定全库唯一）。
+- 全量 Path **273**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **159 个**；本地分支 muse/dev-20260929，HEAD 267a8e0；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（首次漏带环境变量报 host key verification failed 为本轮首步自犯错误，补加后一次成功；github.com ED25519 主机密钥已重新记录，VM 换机丢 known_hosts 老问题），本地与 origin 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——204 轮 Top3 首席（本轮新候选）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中）；③ **痛点真实且新鲜**——dev.to StudyKit Hub build-in-public（2026-10-19）："Flashcards Maker — decks with flip / know / review practice, saved only on your device"；背单词/记知识点想用免费无登录抽认卡，市面多要注册或会员，Quizlet 等墙外难用；④ **契合用户场景**——用户边工作边备战劳动仲裁面试复习，抽认卡是天然记忆工具；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（shuffleDeck／gradeCard 确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「学习工具」类目（当前仅 2 工具：math_worksheet_generator／ratio_solver；与打字练习互链「学习辅助一条龙」）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 卡组管理：创建/重命名/删除卡组＋多卡组切换（正面/反面输入，支持长文本，支持批量逐行「正面\t反面」导入行＋示例卡组一键填充）；② 练习模式：翻转（点击翻转＋空格键）→认识/不认识二元判定（认识→下一张，认识/不认识均进入简化间隔重复调度）；③ 掌握进度统计：总卡数/新卡/学习中/已掌握＋今日待复习数；④ localStorage 本地存卡组（无账号无登录，离线可用）；⑤ 导入/导出 JSON（备份迁移；导出文件名 `flashcards_YYYYMMDD_HHmmss.json`）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.FlashcardMaker 下，module.exports 同步导出；卡片结构 {front, back, reviews, interval, ease, due}）**：
+  - `shuffleDeck(cards, rand)` → Fisher-Yates 洗牌后的新数组（不改原数组）；rand 为注入随机函数（默认 Math.random），j=floor(rand()*(i+1))；cards 非数组抛 Error err.field='cards'。
+  - `gradeCard(card, result, now)` → 简化 SM-2（ease 保留 2 位小数）：'know' 时 interval = (interval===0 ? 1 : Math.ceil(interval*ease))，ease += 0.1；'unknown' 时 interval = 1，ease = max(1.3, ease-0.2)；reviews + 1；due = now + interval*86400000；返回新卡片对象（不可变）；card 非对象抛 Error err.field='card'；result 非 'know'/'unknown' 抛 Error err.field='result'；now 非有限数抛 Error err.field='now'。
+  - `computeDeckStats(cards)` → {total, new, learning, mastered}（new: reviews===0；learning: reviews>0 且 interval<7；mastered: interval>=7）；cards 非数组抛 Error err.field='cards'。
+  - `nextDueCards(cards, now)` → due<=now 的卡片按 due 升序返回（复习队列）；cards 非数组抛 Error err.field='cards'；now 非有限数抛 Error err.field='now'。
+  - `parseImport(text)` → JSON.parse 后校验 {name: string, cards: [{front,back}]}，返回归一化卡组；JSON 非法抛 Error err.field='text'；结构不合法抛 Error err.field='deck'。
+  - `buildExportFileName(date)` → `'flashcards_YYYYMMDD_HHmmss.json'`；date 非 Date 对象抛 Error err.field='now'。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `shuffleDeck(['a','b','c'], () => 0)` → `['b','c','a']`（i=2 与 0 换→[c,b,a]；i=1 与 0 换→[b,c,a]）。
+  - `shuffleDeck(['a','b'], () => 0.999)` → `['a','b']`（i=1: j=floor(0.999*2)=1，不换位）。
+  - `shuffleDeck('nope')` 抛 Error 且 `err.field==='cards'`。
+  - `gradeCard({front:'f',back:'b',reviews:0,interval:0,ease:2.5,due:0}, 'know', 1000000)` → `{front:'f',back:'b',reviews:1,interval:1,ease:2.6,due:87400000}`。
+  - `gradeCard({front:'f',back:'b',reviews:2,interval:3,ease:2.6,due:0}, 'unknown', 0)` → `{reviews:3,interval:1,ease:2.4,due:86400000}`。
+  - `gradeCard({reviews:5,interval:10,ease:1.35}, 'unknown', 0)` → `ease:1.3`（max(1.3, 1.15) 钳制，interval:1，due:86400000）。
+  - `gradeCard(null, 'know', 0)` 抛 Error 且 `err.field==='card'`；`gradeCard({reviews:0,interval:0,ease:2.5}, 'maybe', 0)` 抛 Error 且 `err.field==='result'`；`gradeCard({reviews:0,interval:0,ease:2.5}, 'know', NaN)` 抛 Error 且 `err.field==='now'`。
+  - `computeDeckStats([{reviews:0,interval:0},{reviews:1,interval:2},{reviews:3,interval:8}])` → `{total:3,new:1,learning:1,mastered:1}`。
+  - `nextDueCards([{due:100},{due:300},{due:200}], 250)` → due 序列 `[100,200]`（[100,200] 升序，300 未到期）。
+  - `parseImport('{"name":"x","cards":[{"front":"a","back":"b"}]}')` → `{name:'x',cards:[{front:'a',back:'b',reviews:0,interval:0,ease:2.5,due:0}]}`（归一化默认调度字段）。
+  - `parseImport('not json')` 抛 Error 且 `err.field==='text'`；`parseImport('{"name":"x"}')` 抛 Error 且 `err.field==='deck'`。
+  - `buildExportFileName(new Date(2026,10,3,3,0,0))` → `'flashcards_20261103_030000.json'`。
+- **真限制（页面明示）**：① 卡组只存本浏览器 localStorage——跨设备不同步，清除浏览器数据/换浏览器会丢失，重要卡组请导出 JSON 备份；② 间隔重复为简化版 SM-2（认识/不认识二元调度），非完整 SuperMemo 算法，复习节奏仅供参考；③ 纯本地处理，卡组内容不出浏览器（可在 Network 面板自证）。
+- **互链**：与打字练习工具双向互链「学习辅助一条龙」（同「学习工具」品类；模板已加回链）。
+- **SEO**：title/description/keywords 增补 闪卡/抽认卡/背单词卡片/Flashcards maker 中英文关键词。
+
+**验收标准**：
+1. 卡组创建/编辑/删除＋多卡组切换→翻转练习（点击翻转＋空格键）＋认识/不认识判定→掌握进度统计→localStorage 本地持久化→导入/导出 JSON。
+2. 纯函数契约 node 测试全过——新建 `tests/flashcard_maker.test.js`（逐字向量＋err.field），`node tests/flashcard_maker.test.js` 直跑。
+3. 真限制三条在页面明示。
+4. 注册：Path 总数 273→**274**；旧测试 Path 断言同步（开发轮 grep 确认引用 273 的测试文件）；Icon `quiz` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/flashcard-maker` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/flashcard_maker.html`（新建：卡组管理＋卡片编辑/批量导入＋翻转练习＋进度统计＋导入导出＋真限制＋SEO）
+2. `static/js/flashcard_maker.js`（新建：shuffleDeck／gradeCard／computeDeckStats／nextDueCards／parseImport／buildExportFileName 纯函数＋练习 UI 绑定，挂 window.FlashcardMaker，module.exports 同步导出）
+3. `tests/flashcard_maker.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID flashcard_maker、Path /tools/flashcard-maker、Icon quiz、Category 学习工具、New: true、Description 含 闪卡/抽认卡/背单词卡片/Flashcards maker 中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 273 的测试文件）
+
+**顺位递补**（PM 裁定）：屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定沿用；本轮无新信号变化；`screen_ruler` 0 命中真缺口保持，低优先观察保持，PM 保留复活裁定权）／小红书封面生成器 → 弱观察 P3 留池（203 轮新增；真缺口但与文字转图片卡片口径相邻，独立立项价值待裁定）／简繁互转 → 仍开发中（templates/jianfan_converter.html 不存在，git head 267a8e0；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：一次成功，本地 HEAD 267a8e0 与 origin 同头为最新，远端无新提交；首步曾漏带环境变量报 host key verification failed，补加后成功，为 PM 轮自犯非惯例问题）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **273**；tests/*.test.js **159 个**；PM 独立零重叠实测：**闪卡卡片生成器**：`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` 四处（templates＋static/js＋tools/categories.go＋tests）全 **0 命中**；CJK「闪卡/抽认卡/背单词/词汇卡/记忆卡」python codepoint 构造全站复核 **0 命中**；Description 中文口径无覆盖；文字转图片卡片（排版成图口径）／打字练习（键盘训练口径）均不重叠；ID `flashcard_maker`／Path `/tools/flashcard-maker`／Icon `quiz` 均 **0 命中**（`school` 占用 1 次已避开；`flip_to_front` 备选同样 0 命中）；**屏幕尺子**：`screen_ruler` 0 命中，真缺口保持（17:00 PM 轮裁定暂不立项维持）；**小红书封面生成器**：`xhs_cover`／`redbook_cover`／`cover_maker` 全 0 命中真缺口，弱观察 P3 留池；简繁互转仍开发中（templates/jianfan_converter.html 不存在），移出 Top3；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 03:00 · 通用调研第二百〇四轮，接 01:41 PM 选定轮）
+
+**交付状态**：11-03 通用调研第二百〇四轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**长图切片器交付闭环**（267a8e0 新增：long_image_slice，Path 272→273，node 92 断言全过，全量 159 测试文件全绿；go build/vet 通过，本地 /tools/long-image-slice 实测 200，零外部请求；「长图双向一条龙」互链闭环；候选池划出）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head 267a8e0；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链更新**：闪卡卡片生成器→首席（**本轮新候选**；dev.to StudyKit Hub 信号持续有效）／屏幕尺子→第二顺位备选（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）／小红书封面生成器→弱观察 P3 留池。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 轮，优先小难度纯前端。
+
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 267a8e0（长图切片器新增，node 92 断言全过，全量 159 个 node 测试文件全绿）／b295e34（RAG 文本分块预览器新增）／d88e2c2（skill_scanner 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **273**；`ls templates/long_image_slicer.html static/js/long_image_slicer.js tests/long_image_slicer.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 267a8e0 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md；本轮同时复核"猜测 ID 写法"和"Description 中文口径"两条线）**：
+   - 长图切片器：已交付（267a8e0，Path 272→273）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head 267a8e0；categories.go jianfan 0 命中）——移出 Top3。
+   - **闪卡卡片生成器**（**本轮新候选**；dev.to StudyKit Hub（studykithub.online，2026-10-19，build-in-public）「Flashcards Maker — decks with flip / know / review practice, saved only on your device, export JSON/Markdown」）：`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**；CJK「闪卡／抽认卡／背单词／词汇卡」全站 0 命中（python codepoint 复核）；站内「文字转图片卡片」为排版成图口径，**抽认卡练习口径不重叠**；打字练习工具为键盘输入训练口径，不同——**真缺口确凿**。
+   - 屏幕尺子：199 轮复测结论沿用（`screen_ruler` 本轮再复核 0 命中真缺口）——17:00 PM 轮裁定暂不立项维持，第二顺位备选。
+   - **V2EX t/1252552 tubox 工具箱（jackple/tubox，2026-10-28）初判 4 项**：证件照（30+ 规格／AI 换底／冲印排版）→站内 id_photo_maker（证件照裁剪排版）已交付，**确认消解**；图片标注→站内 image_annotator（templates/image_annotator.html 已存在）**确认消解**；批量压缩/改尺寸/水印/GIF/EXIF→站内 img_compress/img_resize/watermark/gif/gif_maker/exif_strip 均已交付，**确认消解**；AI 抠图/放大→ONNX 硬伤低优先（观察保持），不立项。
+   - **V2EX t/1250428 md2chat「贴贴 Markdown」（2026-10-20）**：Markdown→聊天图文（文字块按微信/钉钉/飞书/企微语法适配＋表格/代码/公式/流程图 canvas 本地渲染图片卡片）——站内 Description 已含「md2chat」口径（categories.go:1142，Markdown 聊天图文转换器，已交付）——**已交付，确认消解**（险些误判×7：必须查 Description 中文口径）。
+   - **V2EX t/1248172 在线简历生成器（beyondlong/resume-builder，2026-10-12）**：站内 resume_checker（/tools/resume-checker）＋resume_builder（/tools/resume-builder）均已注册——**已交付，确认消解**。
+   - **V2EX t/1253899 KitVerse.dev（2026-11-02）**：SKILL 安全扫描→已交付（skill_scanner）；RAG Chunking→已交付（rag_chunk_preview）；Tokenizer Playground→tiktoken WASM 硬伤（201 轮弱观察）；API 实验台→服务口径硬伤；Prompt 工具链→站内已交付口径；新词速递→数据更新服务口径——无独立新信号。
+   - dev.to ToolPry 15 工具（2026-10-14）：JSON 格式化/Base64/URL/HTML 实体/密码生成/UUID/QR/Markdown 预览/正则/CSS 渐变→站内均已交付，**确认消解**。
+   - dev.to laofudev「10 tools a day」（546 工具，2026-10-31）：TOTP→已交付（totp_generator）；Hex Viewer→已交付（hex_viewer）；JSON→Kotlin→已交付（json_to_kotlin）；Markdown Table→CSV→站内 paste_table_to_csv 已交付，**确认消解**；DCA 计算器→10-18 方向修正泛财务不扩，**确认消解**。
+   - dev.to Small Home Tools（2026-10-31）：MoveRecord 照片配对 PDF 报告→10-30 轮观察项（搬家照片配对报告）低优先保持；StatementLens→财务口径，10-18 方向修正不扩。
+   - HN：Browser Use／JSX Tool／HackerTube／OpenClaw CLI／Wikihack→均确认消解（产品/CLI/数据口径）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **闪卡卡片生成器** — 本轮新候选首席（dev.to StudyKit Hub 信号（2026-10-19）："Flashcards Maker — decks with flip / know / review practice, saved only on your device"；站内零重叠实测：`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` 全 0 命中；闪卡/抽认卡/背单词 CJK 全站 0 命中；真缺口确凿；痛点：背单词/记知识点想用免费无登录抽认卡，市面多要注册或会员，Quizlet 等墙外难用；实现：卡组创建/编辑（正面/反面）→翻转练习＋认识/不认识判定→掌握进度统计（SM-2 式简化）→localStorage 本地存卡组（离线可用）→导入/导出 JSON（备份迁移）；纯前端小难度（纯函数可写逐字向量：shuffleDeck／gradeCard 确定性＋err.field）；**契合用户场景**：用户边工作边备战劳动仲裁面试复习，抽认卡是天然记忆工具；真限制：localStorage 跨设备不同步、换浏览器/清缓存丢数据须明示；进度算法为简化版非完整 SM-2 须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **屏幕尺子** — 第二顺位备选（199 轮 Top3 第三顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 本轮再复核 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **小红书封面生成器** — 弱观察 P3 留池（203 轮新增弱观察；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先）。
+
+其余观察项保持原状：网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／简繁互转（开发中，移出 Top3）／Skill 全家桶（KitVerse Skill 校验/打包/安装命令生成/Prompt 转 Skill；202 轮弱观察：skill_scanner 簇扩展口径，无独立新鲜信号，低优先）／Tokenizer 跨模型切分可视化（201 轮弱观察：站内 ai_token_counter 已交付计数口径，tiktoken WASM 体积硬伤，低优先）／一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／trace-context-validator（200 轮弱观察，低优先）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持；本轮 dev.to MoveRecord 信号持续，口径重合）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（199 轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（199 轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇四轮：长图切片器交付闭环（267a8e0 新增：long_image_slice，Path 272→273，node 92 断言全过，全量 159 测试文件全绿；go build/vet 通过，本地 /tools/long-image-slice 实测 200，零外部请求；「长图双向一条龙」互链闭环；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 267a8e0；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链更新**：**闪卡卡片生成器→首席**（**本轮新候选**；dev.to StudyKit Hub（studykithub.online，2026-10-19）信号："Flashcards Maker — decks with flip / know / review practice, saved only on your device"；`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` ASCII 全 0 命中；闪卡/抽认卡/背单词 CJK 全站 0 命中（python codepoint 复核）；站内文字转图片卡片为排版成图口径、打字练习为键盘训练口径，口径均不重叠；真缺口确凿；纯前端小难度；契合用户劳动仲裁面试复习场景）／**屏幕尺子→第二顺位备选**（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定维持暂不立项或复活）／**小红书封面生成器→弱观察 P3 留池**（203 轮新增；真缺口但与文字转图片卡片口径相邻，独立立项价值待 PM 裁定）；**本轮初判 8 项**：tubox 证件照→站内 id_photo_maker 已交付消解／tubox 图片标注→站内 image_annotator 已交付消解／tubox 批量压缩/改尺寸/水印/GIF/EXIF→站内均已交付消解／tubox AI 抠图/放大→ONNX 硬伤不立项／V2EX md2chat「贴贴 Markdown」→站内 Description 已含 md2chat 口径已交付，确认消解（险些误判×7）／V2EX 在线简历生成器→站内 resume_checker＋resume_builder 已交付确认消解／KitVerse 全家桶→已交付/硬伤口径无独立新信号／dev.to ToolPry 15 工具＋laofudev 546 工具精选→TOTP/Hex Viewer/JSON→Kotlin/Table→CSV 等站内均已交付确认消解；新信号扫描：V2EX（t/1252552 tubox／t/1250428 md2chat／t/1248172 简历生成器／t/1253899 KitVerse）＋dev.to（StudyKit Hub／ToolPry／laofudev／Small Home Tools）＋HN（Browser Use／JSX Tool／HackerTube／OpenClaw CLI／Wikihack）＋中文需求搜索（SEO 垃圾站无可用信号）；本轮 fetch **一次成功**，本地 HEAD 267a8e0 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 长图切片器 | 已交付划出（267a8e0 新增：long_image_slice，Path 272→273，node 92 断言全过，全量 159 测试文件全绿；go build/vet 通过，本地 /tools/long-image-slice 实测 200，零外部请求；「长图双向一条龙」互链闭环；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 267a8e0；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 闪卡卡片生成器 | 首席（**本轮新候选**；dev.to StudyKit Hub（2026-10-19）"Flashcards Maker — decks with flip / know / review practice, saved only on your device"；`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` ASCII 全 0 命中；闪卡/抽认卡/背单词 CJK 全站 0 命中；文字转图片卡片为排版成图口径、打字练习为键盘训练口径，口径均不重叠；真缺口确凿；痛点：背单词/记知识点想用免费无登录抽认卡，市面多要注册或会员、Quizlet 墙外难用；实现：卡组创建/编辑（正面/反面）→翻转练习＋认识/不认识判定→掌握进度统计（简化 SM-2）→localStorage 本地存卡组→导入/导出 JSON；纯前端小难度（shuffleDeck／gradeCard 确定性＋err.field）；契合用户劳动仲裁面试复习场景；真限制：localStorage 跨设备不同步、清缓存丢数据须明示，简化间隔重复非完整 SM-2 须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 屏幕尺子 | 第二顺位备选（199 轮 Top3 第三顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项或复活） | 小 | P2（留池） |
+| 小红书封面生成器 | 弱观察 P3 留池（203 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先） | 小 | P3（留池） |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇四轮——长图切片器交付闭环（267a8e0；`/tools/long-image-slice` 已注册；旧测试 Path 断言 272→273 同步；全量 159 个 node 测试文件全绿；候选池划出），全量 **273 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 267a8e0），继续标记「开发中」移出 Top3；**Top3 递进链更新**：闪卡卡片生成器→首席（本轮新候选；dev.to StudyKit Hub 信号；`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` 全 0 命中；闪卡/抽认卡/背单词 CJK 全站 0 命中；真缺口确凿）／屏幕尺子→第二顺位备选（`screen_ruler` 0 命中真缺口保持；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）／小红书封面生成器→弱观察 P3 留池（203 轮新增；真缺口但与文字转图片卡片口径相邻，独立立项价值待 PM 裁定）；本轮初判 8 项全部确认消解（详见上文；md2chat 险些误判×7，已按"Description 中文口径复核"两条线规则覆盖）；本轮 fetch 一次成功，本地 HEAD 267a8e0 与 origin 同头为最新，远端无新提交；新信号扫描：V2EX（tubox t/1252552／md2chat t/1250428／简历生成器 t/1248172／KitVerse t/1253899）＋dev.to（StudyKit Hub／ToolPry／laofudev／Small Home Tools）＋HN（Browser Use／JSX Tool／HackerTube／OpenClaw CLI／Wikihack 均消解）＋中文需求搜索（SEO 垃圾站无可用信号）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 267a8e0 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 267a8e0（长图切片器新增，node 92 断言全过，全量 159 个 node 测试文件全绿）／b295e34（RAG 文本分块预览器新增）／d88e2c2（skill_scanner 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **273**；`ls templates/long_image_slicer.html static/js/long_image_slicer.js tests/long_image_slicer.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**长图切片器**：已交付（/tools/long-image-slice，Path 272→273），划出候选池；**简繁互转**：仍开发中，移出 Top3；**闪卡卡片生成器**：`flashcard`／`flash_card`／`flash-card`／`flashcard_maker` 四处全 **0 命中**；闪卡/抽认卡/背单词 CJK 全站 0 命中（python codepoint 复核）；站内文字转图片卡片为排版成图口径、打字练习为键盘训练口径，口径均不重叠；真缺口确凿；**屏幕尺子**：`screen_ruler` 0 命中；真缺口保持（17:00 PM 轮裁定暂不立项维持）；**小红书封面生成器**：`xhs_cover`／`redbook_cover`／`cover_maker` 全 0 命中真缺口，但与文字转图片卡片口径相邻，弱观察 P3 留池；**V2EX md2chat**：站内 Description 已含「md2chat」口径（categories.go:1142），**已交付**确认消解（险些误判×7）；**V2EX tubox**：证件照→id_photo_maker／图片标注→image_annotator／批量压缩改尺寸水印GIF EXIF→站内均已交付，全部确认消解；**V2EX 简历生成器**：resume_checker＋resume_builder 已注册，确认消解；**dev.to ToolPry/laofudev**：TOTP/Hex Viewer/JSON→Kotlin/Table→CSV 等站内均已交付，确认消解；**KitVerse t/1253899**：已交付/硬伤口径，无独立新信号）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 01:41 · PM 选定轮，接 203 轮通用调研）
 
 **选定：长图切片器（long_image_slice）** — 本轮唯一任务（新工具）。

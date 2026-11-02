@@ -89,7 +89,7 @@ ok(regBlock.indexOf("New:         true") !== -1, "categories.go 注册 New true"
 ok(regBlock.indexOf('Icon:        "article_notes"') !== -1, "categories.go 注册 Icon article_notes");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 273, "注册 Path 总数 268→270");
+eq(Object.keys(pathCount).length, 274, "注册 Path 总数 268→270");
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,
   "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本引用");

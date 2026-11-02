@@ -1,0 +1,177 @@
+{{define "flashcard_maker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>闪卡卡片生成器 - 抽认卡背单词/记知识点/翻转练习/间隔重复在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线闪卡卡片生成器：创建多卡组、正面反面录入、批量导入、示例一键填充，点击/空格键翻转练习，认识/不认识二元判定，简化 SM-2 间隔重复调度，掌握进度统计，localStorage 本地保存，JSON 导入导出备份，纯前端不上传。">
+    <meta name="keywords" content="闪卡,抽认卡,背单词卡片,Flashcards maker,卡片记忆,间隔重复,单词卡,知识卡片,翻转练习">
+    <meta property="og:title" content="闪卡卡片生成器 - 抽认卡翻转练习">
+    <meta property="og:description" content="抽认卡背单词/记知识点：翻转练习＋认识/不认识判定＋简化 SM-2 间隔重复，纯前端本地处理。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/flashcard-maker">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/flashcard-maker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "闪卡卡片生成器",
+      "description": "免费在线闪卡卡片生成器：抽认卡卡组管理、翻转练习、认识/不认识判定、简化 SM-2 间隔重复与掌握进度统计，纯前端本地处理不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/flashcard-maker",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .fm-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .fm-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .fm-empty { color: #9ca3af; font-size: .92rem; padding: .8rem 0; }
+        .fm-deck-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: .7rem; }
+        .fm-deck { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .8rem; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; }
+        .fm-deck:hover { border-color: var(--primary-color); }
+        .fm-deck.active { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+        .fm-deck-name { font-weight: 600; color: #111827; font-size: .98rem; word-break: break-all; }
+        .fm-deck-meta { color: #6b7280; font-size: .85rem; margin-top: .3rem; }
+        .fm-deck-ops { margin-top: .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+        .fm-mini-btn { border: 1px solid #d1d5db; background: #fff; border-radius: .4rem; padding: .25rem .6rem; font-size: .82rem; cursor: pointer; color: #374151; }
+        .fm-mini-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .fm-mini-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+        .fm-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .7rem; }
+        .fm-input, .fm-textarea { width: 100%; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .92rem; box-sizing: border-box; }
+        .fm-input:focus, .fm-textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .fm-stats { display: flex; gap: .8rem; flex-wrap: wrap; margin-top: .7rem; }
+        .fm-stat { flex: 1 1 100px; min-width: 90px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .4rem; text-align: center; }
+        .fm-stat-num { font-size: 1.6rem; font-weight: 700; color: #111827; }
+        .fm-stat-label { font-size: .82rem; color: #6b7280; margin-top: .2rem; }
+        .fm-c-new { color: #2563eb; } .fm-c-learning { color: #d97706; } .fm-c-mastered { color: #059669; } .fm-c-due { color: #dc2626; }
+        .fm-flip-card {
+            border: 2px solid #e5e7eb; border-radius: .8rem; background: #fff;
+            min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 1.6rem 1.2rem; margin-top: .7rem; cursor: pointer; text-align: center;
+            transition: border-color .15s, background .15s; user-select: none;
+        }
+        .fm-flip-card:hover { border-color: var(--primary-color); }
+        .fm-flip-card.back { background: #eff6ff; border-color: var(--primary-color); }
+        .fm-flip-tag { font-size: .8rem; color: #6b7280; margin-bottom: .6rem; }
+        .fm-flip-text { font-size: 1.25rem; color: #111827; line-height: 1.8; white-space: pre-wrap; word-break: break-all; max-width: 100%; }
+        .fm-progress { color: #6b7280; font-size: .88rem; margin-top: .7rem; }
+        .fm-practice-idle { margin-top: .7rem; }
+        .fm-practice-hint { color: #6b7280; font-size: .9rem; margin-top: .6rem; }
+        .fm-card-row { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .8rem; margin-top: .6rem; display: flex; gap: .8rem; align-items: flex-start; background: #fff; }
+        .fm-card-text { flex: 1; min-width: 0; }
+        .fm-card-front { font-weight: 600; color: #111827; font-size: .95rem; word-break: break-all; }
+        .fm-card-back { color: #4b5563; font-size: .88rem; margin-top: .25rem; word-break: break-all; }
+        .fm-card-stat { color: #9ca3af; font-size: .78rem; margin-top: .3rem; }
+        .fm-card-ops { display: flex; gap: .4rem; flex-shrink: 0; }
+        .fm-tag { display: inline-block; font-size: .75rem; border-radius: .35rem; padding: .1rem .45rem; margin-right: .3rem; }
+        .fm-tag.new { background: #dbeafe; color: #1d4ed8; }
+        .fm-tag.learning { background: #fef3c7; color: #b45309; }
+        .fm-tag.mastered { background: #d1fae5; color: #047857; }
+        .fm-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .fm-limit b { color: #374151; }
+        #fm-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+        @media (max-width: 640px) {
+            .fm-row .btn { flex: 1 1 100%; justify-content: center; }
+            .fm-flip-text { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🃏 闪卡卡片生成器</h1>
+            <p>抽认卡背单词/记知识点：卡组管理 → 翻转练习 → 认识/不认识判定 → 间隔重复复习，纯本地不登录</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 卡组管理</h3>
+                <div class="fm-row">
+                    <input class="fm-input" id="fm-new-deck-name" placeholder="新卡组名称，如：英语六级高频词" style="flex:1 1 220px;">
+                    <button class="btn btn-primary" id="fm-create-deck">创建卡组</button>
+                    <button class="btn btn-secondary" id="fm-sample">示例一键填充</button>
+                </div>
+                <div class="fm-deck-list" id="fm-deck-list"></div>
+                <div class="fm-info">点击卡组切换当前练习卡组；每张卡组右下角可重命名、导出 JSON、删除。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 掌握进度</h3>
+                <div class="fm-stats" id="fm-stats"></div>
+                <div class="fm-info">新卡＝从未复习；学习中＝复习过但间隔 &lt;7 天；已掌握＝间隔 ≥7 天；今日待复习＝已到复习时间的卡片数。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ 翻转练习</h3>
+                <div id="fm-practice"></div>
+                <div class="fm-info">先自己回忆答案，再<b>点击卡片</b>或按<b>空格键</b>翻转核对；翻面后点「认识 ✓」/「不认识」，进入简化 SM-2 间隔重复调度。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>④ 卡片编辑 · <span id="fm-editor-title">卡片编辑</span></h3>
+                <div class="fm-row">
+                    <input class="fm-input" id="fm-front" placeholder="正面（问题/单词）" style="flex:1 1 200px;">
+                    <input class="fm-input" id="fm-back" placeholder="反面（答案/释义）" style="flex:1 1 200px;">
+                    <button class="btn btn-primary" id="fm-add-card">添加卡片</button>
+                </div>
+                <div class="fm-info">批量导入：每行一张卡，格式为「正面 + Tab + 反面」（也兼容用 | 分隔）。</div>
+                <textarea class="fm-textarea" id="fm-batch-text" rows="4" placeholder="apple&#9;苹果&#10;run&#9;跑，运行"></textarea>
+                <div class="fm-actions">
+                    <button class="btn btn-secondary" id="fm-batch-import">批量导入</button>
+                </div>
+                <div id="fm-card-list"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>⑤ 导入 / 导出 JSON</h3>
+                <div class="fm-actions">
+                    <button class="btn btn-primary" id="fm-export-current">导出当前卡组 JSON</button>
+                    <label class="btn btn-secondary" style="cursor:pointer;margin:0;">导入 JSON 文件
+                        <input type="file" id="fm-import-file" accept=".json,application/json" style="display:none;">
+                    </label>
+                </div>
+                <div class="fm-info">导出文件形如 <code>flashcards_20261103_030000.json</code>，格式为 <code>{"name":"卡组名","cards":[{"front":"正面","back":"反面"}]}</code>，换设备/换浏览器时靠它迁移；导入会新建一个卡组（原有卡组不受影响）。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="fm-limit">
+                    <li><b>① 只存本浏览器：</b>卡组存在 localStorage 里，<b>跨设备不同步</b>；清除浏览器数据/换浏览器/重装系统都会丢失——重要卡组请定期<b>导出 JSON 备份</b>。</li>
+                    <li><b>② 简化版 SM-2：</b>复习调度是「认识/不认识」二元判定的简化版 SM-2（间隔=ceil(间隔×ease)，认识 ease+0.1，不认识 ease-0.2 且下限 1.3），<b>不是完整的 SuperMemo 算法</b>，复习节奏仅供参考。</li>
+                    <li><b>③ 纯本地处理：</b>卡组内容只在你的浏览器内流转，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="fm-actions">
+                    <a href="/tools/math-worksheet-generator" class="btn btn-secondary" style="font-size:.9rem;">算术题生成器 <span style="color:#2563eb;font-weight:700;">· 学习辅助一条龙</span></a>
+                    <a href="/tools/ratio-solver" class="btn btn-secondary" style="font-size:.9rem;">比例求解器 <span style="color:#2563eb;font-weight:700;">· 学习辅助一条龙</span></a>
+                </div>
+                <div class="fm-info" style="margin-top:.6rem">分工：闪卡卡片生成器负责<b>背单词/记知识点</b>（翻转自测＋间隔重复）；算术题生成器负责<b>小学口算练手</b>；比例求解器负责<b>比例题练手</b>——记忆＋练习，学习辅助一条龙。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="fm-info">
+                    <b>流程：</b>创建卡组（或点「示例一键填充」试玩）→ 逐张录入正面/反面，或批量粘贴「正面<Tab>反面」多行 → 点「全部练习（乱序）」或「今日待复习」开始 → 点击卡片/空格键翻转 → 认识/不认识判定。<br>
+                    <b>调度规则：</b>认识 → 间隔延长（0 天→1 天→ceil(间隔×ease)，ease+0.1）；不认识 → 间隔重置为 1 天（ease-0.2，下限 1.3）；间隔 ≥7 天记为已掌握。<br>
+                    <b>备份：</b>卡组自动存本浏览器；换设备前先「导出当前卡组 JSON」，到新设备上「导入 JSON 文件」恢复。
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="fm-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/flashcard_maker.js?v=1"></script>
+</body>
+{{end}}
