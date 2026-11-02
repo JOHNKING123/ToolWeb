@@ -118,7 +118,7 @@ transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px soli
 </div>
 
 <div class="ep-combo">
-<b>解析校验 → 脱敏分享：</b>先去 <a href="/tools/env-parser">.env 解析与校验器</a> 把格式理顺、确认无非法行，再回来脱敏生成 <code>.env.example</code> 分享 —— 解析校验用那里，脱敏生成用这里。喂 LLM 前要把真实密钥替换掉，请去 <a href="/tools/prompt-sanitizer">AI 提示词脱敏器</a>。
+<b>解析校验 → 脱敏分享：</b>先去 <a href="/tools/env-parser">.env 解析与校验器</a> 把格式理顺、确认无非法行，再回来脱敏生成 <code>.env.example</code> 分享 —— 解析校验用那里，脱敏生成用这里。喂 LLM 前要把真实密钥替换掉，请去 <a href="/tools/prompt-sanitizer">AI 提示词脱敏器</a>；装来路不明的 SKILL 包前，先去 <a href="/tools/skill-scanner">SKILL 安全扫描器</a> 扫一遍恶意脚本与提示词注入。
 </div>
 
 <div class="ep-panel">
@@ -143,6 +143,7 @@ transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px soli
 <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">.env 脱敏生成器（当前）</span>
 <a href="/tools/env-parser" class="btn btn-secondary" style="font-size:.9rem;">.env 解析与校验器（先校验格式）</a>
 <a href="/tools/prompt-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">AI 提示词脱敏器（发问前脱敏密钥）</a>
+<a href="/tools/skill-scanner" class="btn btn-secondary" style="font-size:.9rem;">SKILL 安全扫描器（先扫 SKILL 包）</a>
 </div>
 </div>
 

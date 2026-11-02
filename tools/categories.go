@@ -373,6 +373,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "skill_scanner",
+					Name:        "SKILL 安全扫描器",
+					Description: "装来路不明的 SKILL 包前先扫一遍：粘贴 SKILL.md 文本或上传 .md 文件（FileReader 纯前端），frontmatter 必填字段校验（name/description、name 命名规范），静态正则做 skill 安全检测与恶意脚本扫描：curl/wget 外发执行、base64 解码执行、反向 shell、rm -rf 等破坏性命令、密钥硬编码、环境变量读取与 AI Agent 提示词注入检测，风险分级（高/中/低）逐条行号定位加修复建议，输出 0–100 安全评分；与 .env 脱敏生成器、代码打包给 LLM 互链成「LLM 安全一条龙」，纯前端零上传 · SKILL security scanner: static scan SKILL.md for malicious scripts, prompt injection and hardcoded secrets, risk report with line numbers and 0-100 score, 100% client-side",
+					Path:        "/tools/skill-scanner",
+					Icon:        "phishing",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "mermaid_diagram_renderer",
 					Name:        "Mermaid 图表渲染与导出器",
 					Description: "粘贴或手写 Mermaid 代码，实时渲染流程图/时序图/甘特图/类图/ER 图/状态图：6 套模板一键插入、四套主题切换、中文错误提示，SVG 下载、PNG 高清导出（2x/3x，透明/白色背景），纯前端本地渲染，代码不出浏览器 · Paste Mermaid code for live flowchart/sequence/gantt/class/ER/state diagrams with SVG & high-res PNG export, 100% client-side",

@@ -1,0 +1,166 @@
+{{define "skill_scanner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKILL 安全扫描器 - AI Agent SKILL 包恶意脚本与提示词注入检测 | 程序员工具箱</title>
+<meta name="description" content="免费在线 SKILL 安全扫描器：粘贴 SKILL.md 文本或上传 .md 文件，frontmatter 必填字段校验，静态正则扫描 curl/wget 外发执行、base64 解码执行、反向 shell、rm -rf 破坏性命令、密钥硬编码、环境变量读取与提示词注入话术，逐条行号定位＋修复建议＋0–100 安全评分。纯前端本地扫描，零上传。SKILL security scanner: static scan SKILL.md for malicious scripts and prompt injection, risk report with score, 100% client-side.">
+<meta name="keywords" content="SKILL 安全扫描,skill 安全检测,SKILL.md 扫描,AI Agent 提示词注入检测,恶意脚本扫描,SKILL 包安全,反向 shell 检测,硬编码密钥检测,skill security scanner,prompt injection detection,malicious script scan">
+<link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/skill-scanner">
+<meta property="og:title" content="SKILL 安全扫描器 - SKILL 包恶意脚本与提示词注入检测">
+<meta property="og:description" content="粘贴 SKILL.md 文本或上传 .md 文件，frontmatter 校验＋静态风险扫描，逐条行号定位＋修复建议＋安全评分。纯前端零上传。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/skill-scanner">
+<link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+<link rel="stylesheet" href="/tools/static/css/style.css">
+<link rel="stylesheet" href="/tools/static/css/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"SKILL 安全扫描器","alternateName":"skill security scanner","description":"粘贴 SKILL.md 文本或上传 .md 文件，浏览器本地做 frontmatter 必填字段校验与静态风险正则扫描：curl/wget 外发执行、base64 解码执行、反向 shell、rm -rf 破坏性命令、密钥硬编码、环境变量读取、提示词注入话术，逐条行号定位加修复建议，输出 0–100 安全评分，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/skill-scanner","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+</script>
+<style>
+.ep-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #f59e0b;background:#fffbeb;
+border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#92400e}
+.ep-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+.ep-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.ep-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+.ep-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+.ep-area{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:.45rem;padding:.6rem .7rem;
+font-size:.88rem;line-height:1.7;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;background:#fff;color:#1f2937}
+.ep-area:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.ep-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;align-items:center}
+.ep-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+.ep-btn .material-icons{font-size:1.1rem}
+.ep-btn-primary{background:#1d4ed8;color:#fff}
+.ep-btn-primary:hover{background:#1e40af}
+.ep-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+.ep-btn-secondary:hover{background:#e5e7eb}
+.ep-stats{font-size:.9rem;color:#374151;background:#eff6ff;border:1px dashed #93c5fd;border-radius:.5rem;
+padding:.55rem .8rem;margin:0 0 .7rem;line-height:1.9}
+.ep-stats b{color:#111827}
+.ep-note{font-size:.85rem;color:#6b7280;line-height:1.9;margin-top:.8rem}
+.ep-note b{color:#4b5563}
+.ep-copy-tip{display:none;margin-top:.5rem;font-size:.86rem}
+.ep-copy-ok{color:#047857}.ep-copy-fail{color:#b91c1c}
+.ep-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+.ep-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+.ep-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+.ep-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;
+font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+.ep-combo a{color:#1d4ed8;font-weight:600}
+#ss-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;
+color:#fff;padding:.7rem 1.4rem;border-radius:.6rem;font-size:.9rem;opacity:0;pointer-events:none;
+transition:all.25s;z-index:9999;max-width:90vw;text-align:center;border:2px solid #60a5fa}
+#ss-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ss-badge{display:inline-block;padding:.12rem .55rem;border-radius:999px;font-size:.78rem;font-weight:700;color:#fff;vertical-align:middle}
+.ss-high{background:#dc2626}.ss-medium{background:#d97706}.ss-low{background:#2563eb}
+.ss-error{background:#dc2626}.ss-warning{background:#d97706}.ss-ok{background:#059669}
+.ss-score-row{display:flex;align-items:center;gap:1rem;margin:.4rem 0 .8rem}
+.ss-score-num{font-size:2.6rem;font-weight:800;line-height:1;min-width:4.2rem;text-align:center}
+.ss-score-num.ss-safe{color:#059669}.ss-score-num.ss-warning{color:#d97706}.ss-score-num.ss-danger{color:#dc2626}
+.ss-grade{font-size:1.25rem;font-weight:800}
+.ss-grade.ss-safe{color:#059669}.ss-grade.ss-warning{color:#d97706}.ss-grade.ss-danger{color:#dc2626}
+.ss-dim{font-size:.85rem;color:#6b7280}
+.ss-fm{font-size:.88rem;color:#1f2937;line-height:2;margin-bottom:.6rem}
+.ss-fm code{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.3rem;padding:.1rem .4rem;
+font-size:.82rem;margin-right:.35rem;white-space:nowrap}
+.ss-issue{font-size:.88rem;line-height:1.9;margin:.35rem 0;color:#1f2937}
+.ss-finding{border:1px solid #e5e7eb;border-left-width:5px;border-radius:.5rem;padding:.7rem .9rem;margin:.6rem 0;background:#fff}
+.ss-finding.ss-high{border-left-color:#dc2626;background:#fef2f2}
+.ss-finding.ss-medium{border-left-color:#d97706;background:#fffbeb}
+.ss-finding.ss-low{border-left-color:#2563eb;background:#eff6ff}
+.ss-f-head{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.35rem}
+.ss-line{font-size:.85rem;color:#6b7280;font-weight:600}
+.ss-rule{font-size:.78rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.3rem;padding:.08rem .4rem;color:#4b5563}
+.ss-msg{font-size:.9rem;color:#111827;line-height:1.8;font-weight:600}
+.ss-sug{font-size:.86rem;color:#4b5563;line-height:1.8;margin-top:.25rem}
+.ss-sug b{color:#374151}
+.ss-c-high{color:#dc2626}.ss-c-medium{color:#d97706}
+.ss-err{color:#b91c1c;font-size:.9rem}
+@media (max-width:768px){.ep-panel{padding:1rem .8rem}.ep-btn{padding:.55rem .9rem}.ss-score-num{font-size:2rem;min-width:3.2rem}}
+</style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">phishing</i> SKILL 安全扫描器</h1>
+<p>装来路不明的 SKILL 包之前先扫一遍：frontmatter 校验＋恶意脚本/提示词注入静态扫描，逐条行号定位＋修复建议＋安全评分。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="ep-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>① 本工具是<b>静态规则扫描</b>，不是沙箱执行 —— 检出的是「风险特征」不是确诊，没检出也不代表绝对安全；② <b>加密/混淆脚本的检出率有限</b>，高度混淆的载荷可能漏报，可疑来源的 SKILL 建议直接弃用；③ <b>ZIP 包请逐个粘贴</b>：一个 SKILL 包多个 .md 文件时，请逐个粘贴（或逐个上传）扫描，本工具一次处理一份文本；④ 扫描<b>纯本地进行</b>，SKILL 文本不出浏览器（可在 Network 面板自证），建议用可疑文本直接粘贴扫描，不要先传网盘。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">input</i> 粘贴 SKILL.md 文本或上传 .md 文件（输入即实时扫描）</h3>
+<textarea class="ep-area" id="ss-input" rows="14" placeholder="在此粘贴 SKILL.md 全文，例如：&#10;---&#10;name: my-skill&#10;description: 做什么的&#10;---&#10;# 说明&#10;..."></textarea>
+<input type="file" id="ss-file" accept=".md,.markdown,.txt" style="display:none">
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-secondary" id="ss-upload"><i class="material-icons">upload_file</i> 上传 .md</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ss-sample-evil"><i class="material-icons">warning</i> 载入恶意示例</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ss-sample-clean"><i class="material-icons">verified</i> 载入干净示例</button>
+<button type="button" class="ep-btn ep-btn-secondary" id="ss-clear"><i class="material-icons">clear_all</i> 清空</button>
+<button type="button" class="ep-btn ep-btn-primary" id="ss-scan"><i class="material-icons">security</i> 立即扫描</button>
+</div>
+<div class="ep-note">文件通过浏览器 <code>FileReader</code> 在本地读取，<b>不上传到服务器</b>。frontmatter 指文首 <code>---</code> 包裹的「键: 值」声明块（name/description 必填）；正文逐行做静态正则扫描：curl/wget 外发执行、base64 解码执行、反向 shell、rm -rf 等破坏性命令、密钥硬编码、环境变量读取、提示词注入话术。</div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">fact_check</i> frontmatter 校验</h3>
+<div id="ss-front"><div class="ss-dim">等待输入…</div></div>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">assessment</i> 扫描报告</h3>
+<div class="ep-stats" id="ss-stats"></div>
+<div id="ss-score"></div>
+<div id="ss-findings"></div>
+<div class="ep-actions">
+<button type="button" class="ep-btn ep-btn-secondary" id="ss-copy"><i class="material-icons">content_copy</i> 复制报告（Markdown）</button>
+</div>
+<div class="ep-copy-tip" id="ss-copy-tip"></div>
+<div class="ep-note">安全评分口径：高危每条扣 25 分、中危每条扣 10 分、低危每条扣 3 分，下限 0 分；≥80 分为「安全」、≥50 分为「警告」、低于 50 分为「危险」。评分只反映静态规则覆盖范围内的风险密度，不是安全承诺。</div>
+</div>
+
+<div class="ep-combo">
+<b>LLM 安全一条龙：</b>① 先用本工具 <b>扫 SKILL 包</b>（防恶意脚本/提示词注入）；② 喂 LLM 前去 <a href="/tools/env-sanitizer">.env 脱敏生成器</a> 把自己的密钥脱敏；③ 再去 <a href="/tools/project-to-txt">代码打包给 LLM</a> 把项目打包成单个 TXT —— 扫描、脱敏、打包三步走，安全地喂 LLM。
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">help_outline</i> 常见问题</h3>
+<dl class="ep-faq">
+<dt>扫描没报风险，是不是就可以放心安装？</dt>
+<dd>不是。本工具是静态规则扫描，只能检出已知风险特征；加密/混淆过的脚本、规则库之外的手法都可能漏报。来源可疑的 SKILL 包，最稳妥的做法是直接弃用，而不是依赖扫描结论。</dd>
+<dt>报了高危就一定是恶意 SKILL 吗？</dt>
+<dd>不一定。检出的是「风险特征」：比如运维类 SKILL 可能正当使用 <code>curl</code> 下载官方脚本。请结合行号定位看上下文，按修复建议人工确认后再决定用不用。</dd>
+<dt>为什么一次只能扫一份文本？</dt>
+<dd>ZIP 包里多个 .md 文件请逐个粘贴或逐个上传扫描 —— 风险项带行号定位，混在一起反而对不上行。每个文件单独出一份报告最清楚。</dd>
+<dt>文本会上传到服务器吗？</dt>
+<dd>不会。本工具纯前端运行，解析、扫描、评分、复制全在浏览器本地 JavaScript 里完成（文件上传走 <code>FileReader</code> 本地读取），脚本中没有任何 fetch / XHR 上传逻辑。可断网使用（首次加载页面除外）。</dd>
+<dt>frontmatter 的 name 有什么讲究？</dt>
+<dd>name 是 SKILL 的唯一标识，Agent 靠它识别调用。规范是小写字母/数字开头，只含小写字母、数字、下划线、连字符；description 必填，写清这个 SKILL 是干什么的，Agent 靠它决定何时调用。</dd>
+</dl>
+</div>
+
+<div class="ep-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="ep-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">SKILL 安全扫描器（当前）</span>
+<a href="/tools/env-sanitizer" class="btn btn-secondary" style="font-size:.9rem;">.env 脱敏生成器（喂 LLM 前脱敏）</a>
+<a href="/tools/project-to-txt" class="btn btn-secondary" style="font-size:.9rem;">代码打包给 LLM（项目打包）</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="ss-toast"></div>
+<script src="/tools/static/js/skill_scanner.js?v=1"></script>
+</body>
+</html>
+{{end}}

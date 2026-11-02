@@ -133,7 +133,7 @@ var cdIdx = GO_SRC.indexOf('"countdown_timer"');
 ok(cdIdx >= 0 && ptpIdx > cdIdx, "品类归位：生活工具区 countdown-timer 之后");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 270, "注册 Path 总数 268→270");
+eq(pathCount, 271, "注册 Path 总数 268→270");
 
 /* ---------- 8. 模板：SEO／真限制／打印／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "printer_test_page.html"), "utf8");
