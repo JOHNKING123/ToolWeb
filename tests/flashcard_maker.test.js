@@ -3,7 +3,7 @@
  * 覆盖：规格确定性向量逐值命中（shuffleDeck 洗牌向量、gradeCard 简化 SM-2 向量、
  * computeDeckStats 统计向量、nextDueCards 复习队列向量、parseImport 归一化三向量、
  * buildExportFileName 文件名向量）、非法参数抛 Error 的 err.field 逐字向量、
- * categories.go 注册（ID/Path/Icon/Category/New/Description 关键词，Path 总数 273→274，
+ * categories.go 注册（ID/Path/Icon/Category/New/Description 关键词，Path 总数 274→275，
  * Icon quiz 全库唯一）、模板真限制三条/互链「学习辅助一条龙」/零网络请求静态检查、
  * SEO 关键词（闪卡/抽认卡/背单词卡片/Flashcards maker）。
  */
@@ -141,7 +141,7 @@ var quizMatches = GO_SRC.match(/Icon:\s+"quiz"/g) || [];
 eq(quizMatches.length, 1, "Icon quiz 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 274, "注册 Path 总数 273→274");
+eq(pathCount, 275, "注册 Path 总数 274→275");
 
 /* ---------- 8. 模板：真限制/互链/零网络/SEO ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/flashcard-maker", "模板 canonical 含新 Path");

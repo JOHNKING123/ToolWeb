@@ -109,7 +109,7 @@ ok(GO_SRC.indexOf('"/tools/focus-writer"') !== -1, "categories.go 含 Path /tool
 ok(GO_SRC.indexOf('"极简专注写作"') !== -1, "categories.go 含名称极简专注写作");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniquePaths = paths.filter(function (v, i, a) { return a.indexOf(v) === i; });
-eq(uniquePaths.length, 274, "注册总数 268→270 Path");
+eq(uniquePaths.length, 275, "注册总数 268→270 Path");
 var fwBlock = GO_SRC.slice(GO_SRC.indexOf('"focus_writer"'), GO_SRC.indexOf('"focus_writer"') + 900);
 ok(fwBlock.indexOf('Category:    "文本工具"') !== -1, "注册 Category 为文本工具");
 ok(fwBlock.indexOf("New:         true") !== -1, "注册 New 为 true");

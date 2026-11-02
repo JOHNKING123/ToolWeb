@@ -2557,6 +2557,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "habit_tracker",
+					Name:        "习惯追踪器",
+					Description: "习惯打卡/习惯追踪/自律养成：多习惯管理（名称+周期目标如每天/每周≥5次），月视图日历热力图点击打卡，连续打卡 streak 统计（当前连续天数/最长连续/本周完成率/累计打卡天数），localStorage 本地保存离线可用，JSON 导入导出备份迁移，纯前端不上传 · habit tracker: multi-habit management, calendar heatmap check-ins, consecutive-day streak stats, weekly completion rate, localStorage only, JSON import/export, 100% client-side",
+					Path:        "/tools/habit-tracker",
+					Icon:        "event_available",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

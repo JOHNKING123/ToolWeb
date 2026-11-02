@@ -1,0 +1,182 @@
+{{define "habit_tracker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>习惯追踪器 - 习惯打卡/日历热力图/连续打卡streak统计在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线习惯追踪器（习惯打卡）：多习惯管理（名称+周期目标如每天/每周≥5次），月视图日历热力图点击打卡，连续打卡 streak 统计（当前连续/最长连续/本周完成率/累计打卡天数），localStorage 本地保存，JSON 导入导出备份迁移，纯前端不上传，自律养成助手。">
+    <meta name="keywords" content="习惯打卡,习惯追踪,自律,habit tracker,连续打卡,streak,打卡日历,21天养成,习惯养成,打卡统计">
+    <meta property="og:title" content="习惯追踪器 - 习惯打卡/连续 streak 统计">
+    <meta property="og:description" content="习惯打卡＋日历热力图＋连续打卡 streak 统计：多习惯管理、本月点击打卡、本周完成率，纯前端本地处理。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/habit-tracker">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/habit-tracker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "习惯追踪器",
+      "description": "免费在线习惯追踪器：多习惯管理、日历热力图点击打卡、连续打卡 streak 统计与本周完成率，localStorage 本地保存，JSON 导入导出备份，纯前端本地处理不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/habit-tracker",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .ht-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .ht-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .ht-empty { color: #9ca3af; font-size: .92rem; padding: .8rem 0; }
+        .ht-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .7rem; }
+        .ht-input { width: 100%; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .92rem; box-sizing: border-box; }
+        .ht-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .ht-habit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .8rem; margin-top: .7rem; }
+        .ht-habit { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .8rem; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; display: flex; gap: .6rem; align-items: flex-start; }
+        .ht-habit:hover { border-color: var(--primary-color); }
+        .ht-habit.active { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+        .ht-habit-main { flex: 1; min-width: 0; }
+        .ht-habit-name { font-weight: 600; color: #111827; font-size: .98rem; word-break: break-all; }
+        .ht-habit-meta { color: #6b7280; font-size: .85rem; margin-top: .3rem; }
+        .ht-habit-ops { display: flex; gap: .35rem; flex-shrink: 0; }
+        .ht-mini-btn { border: 1px solid #d1d5db; background: #fff; border-radius: .4rem; padding: .25rem .6rem; font-size: .82rem; cursor: pointer; color: #374151; }
+        .ht-mini-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .ht-mini-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+        .ht-cal-nav { display: flex; align-items: center; gap: .6rem; margin-top: .7rem; }
+        .ht-cal-title { font-weight: 700; font-size: 1.05rem; color: #111827; min-width: 7rem; text-align: center; }
+        .ht-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; margin-top: .7rem; }
+        .ht-cal-wd { text-align: center; font-size: .8rem; color: #9ca3af; padding: .25rem 0; }
+        .ht-cal-blank { min-height: 2.6rem; }
+        .ht-cal-day { position: relative; border: 1px solid #e5e7eb; border-radius: .5rem; min-height: 2.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; transition: all .12s; }
+        .ht-cal-day:hover { border-color: var(--primary-color); }
+        .ht-cal-day.checked { background: #d1fae5; border-color: #34d399; }
+        .ht-cal-day.checked .ht-cal-num { color: #065f46; font-weight: 700; }
+        .ht-cal-day.today { box-shadow: 0 0 0 2px rgba(37,99,235,.35); }
+        .ht-cal-num { font-size: .92rem; color: #374151; }
+        .ht-cal-dot { position: absolute; right: .3rem; top: .15rem; font-size: .75rem; color: #059669; font-weight: 700; }
+        .ht-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .6rem; font-size: .85rem; color: #6b7280; }
+        .ht-legend i { display: inline-block; width: .85rem; height: .85rem; border-radius: .25rem; margin-right: .3rem; vertical-align: -1px; }
+        .ht-stats { display: flex; gap: .8rem; flex-wrap: wrap; margin-top: .7rem; }
+        .ht-stat { flex: 1 1 110px; min-width: 100px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .4rem; text-align: center; }
+        .ht-stat-num { font-size: 1.6rem; font-weight: 700; color: #111827; }
+        .ht-stat-sub { font-size: 1rem; font-weight: 600; color: #6b7280; }
+        .ht-stat-label { font-size: .82rem; color: #6b7280; margin-top: .2rem; }
+        .ht-c-streak { color: #059669; } .ht-c-rate { color: #2563eb; }
+        .ht-week-title { font-weight: 600; color: #111827; font-size: .92rem; margin-top: .9rem; }
+        .ht-week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; margin-top: .5rem; }
+        .ht-week-cell { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .45rem .2rem; text-align: center; background: #fff; }
+        .ht-week-cell.checked { background: #d1fae5; border-color: #34d399; }
+        .ht-week-cell.today { box-shadow: 0 0 0 2px rgba(37,99,235,.35); }
+        .ht-week-wd { font-size: .78rem; color: #9ca3af; }
+        .ht-week-d { font-size: 1rem; font-weight: 700; color: #111827; margin-top: .15rem; }
+        .ht-week-cell.checked .ht-week-d { color: #065f46; }
+        .ht-week-m { font-size: .85rem; color: #059669; font-weight: 700; margin-top: .1rem; min-height: 1.1rem; }
+        .ht-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .ht-limit b { color: #374151; }
+        #ht-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+        @media (max-width: 640px) {
+            .ht-row .btn { flex: 1 1 100%; justify-content: center; }
+            .ht-cal-day { min-height: 2.3rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📅 习惯追踪器</h1>
+            <p>习惯打卡/习惯追踪：多习惯管理 → 日历热力图点击打卡 → 连续打卡 streak 统计 → 本周完成率，纯本地不登录，自律养成助手</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 习惯管理</h3>
+                <div class="ht-row">
+                    <input class="ht-input" id="ht-new-name" placeholder="习惯名称，如：早起 / 跑步 / 阅读30分钟" style="flex:2 1 220px;">
+                    <input class="ht-input" id="ht-new-target" list="ht-target-presets" placeholder="周期目标，如：每天 / 每周≥5次" style="flex:1 1 160px;">
+                    <datalist id="ht-target-presets">
+                        <option value="每天"></option>
+                        <option value="每周≥5次"></option>
+                        <option value="每周≥3次"></option>
+                        <option value="每周1次"></option>
+                    </datalist>
+                    <button class="btn btn-primary" id="ht-add-habit">添加习惯</button>
+                    <button class="btn btn-secondary" id="ht-sample">示例一键填充</button>
+                </div>
+                <div class="ht-habit-list" id="ht-habit-list"></div>
+                <div class="ht-info">点击习惯卡片切换当前打卡习惯；每张卡片右上角可编辑（改名/改目标）或删除。数据实时存本浏览器 localStorage。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 日历热力图</h3>
+                <div class="ht-cal-nav">
+                    <button class="ht-mini-btn" id="ht-cal-prev">‹ 上月</button>
+                    <div class="ht-cal-title" id="ht-cal-title"></div>
+                    <button class="ht-mini-btn" id="ht-cal-next">下月 ›</button>
+                    <button class="ht-mini-btn" id="ht-cal-today">回本月</button>
+                </div>
+                <div class="ht-cal-grid" id="ht-cal-grid"></div>
+                <div class="ht-legend">
+                    <span><i style="background:#d1fae5;border:1px solid #34d399;"></i>已打卡</span>
+                    <span><i style="background:#fff;border:1px solid #e5e7eb;"></i>未打卡</span>
+                    <span><i style="background:#fff;border:1px solid #e5e7eb;box-shadow:0 0 0 2px rgba(37,99,235,.35);"></i>今天</span>
+                </div>
+                <div class="ht-info"><b>点击任意日期格子</b>即可勾选/取消当天打卡；打卡记录按「连续自然日」累计 streak。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ 连续打卡统计 · 周报</h3>
+                <div class="ht-stats" id="ht-stats"></div>
+                <div id="ht-week"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>④ 导入 / 导出 JSON</h3>
+                <div class="ht-actions">
+                    <button class="btn btn-primary" id="ht-export">导出全部习惯 JSON</button>
+                    <label class="btn btn-secondary" style="cursor:pointer;margin:0;">导入 JSON 文件
+                        <input type="file" id="ht-import-file" accept=".json,application/json" style="display:none;">
+                    </label>
+                </div>
+                <div class="ht-info">导出文件形如 <code>habits_20261103_050000.json</code>，格式为 <code>{"habits":[{"name":"早起","target":"每天","checkins":{"2026-11-03":true}}]}</code>；换设备/换浏览器时靠它迁移——导入会把文件里的习惯追加到现有列表（原有习惯不受影响）。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="ht-limit">
+                    <li><b>① 只存本浏览器：</b>打卡数据只在 localStorage 里，<b>跨设备不同步</b>；清除浏览器数据/换浏览器/重装系统都会丢失——重要习惯请定期<b>导出 JSON 备份</b>。</li>
+                    <li><b>② 连续自然日口径：</b>streak 按连续自然日计算，当天未打卡则从昨天起算；<b>断档一天即重置</b>，续上后重新计数。</li>
+                    <li><b>③ 纯本地处理：</b>习惯与打卡记录只在你的浏览器内流转，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="ht-actions">
+                    <a href="/tools/flashcard-maker" class="btn btn-secondary" style="font-size:.9rem;">闪卡卡片生成器 <span style="color:#2563eb;font-weight:700;">· 自律学习一条龙</span></a>
+                    <a href="/tools/countdown-timer" class="btn btn-secondary" style="font-size:.9rem;">在线倒计时/番茄钟 <span style="color:#2563eb;font-weight:700;">· 自律学习一条龙</span></a>
+                </div>
+                <div class="ht-info" style="margin-top:.6rem">分工：闪卡卡片生成器负责<b>记忆</b>（背单词/记知识点＋间隔重复）；在线倒计时/番茄钟负责<b>专注</b>（番茄钟＋倒计时）；习惯追踪器负责<b>坚持</b>（每日打卡＋连续 streak）——记忆＋专注＋坚持，自律学习一条龙。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ht-info">
+                    <b>流程：</b>添加习惯（名称＋周期目标，如「每天」/「每周≥5次」）→ 点击习惯卡片切换 → 在日历热力图上点今天的格子打卡（再点一次取消）→ 在「连续打卡统计」里看当前连续天数、最长连续、本周完成率。<br>
+                    <b>streak 规则：</b>连续自然日口径；当天还没打卡时，连续天数从昨天起算；断档一天归零。<br>
+                    <b>备份：</b>数据自动存本浏览器；换设备前先「导出全部习惯 JSON」，到新设备上「导入 JSON 文件」恢复。
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ht-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/habit_tracker.js?v=1"></script>
+</body>
+{{end}}
