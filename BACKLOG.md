@@ -1,3 +1,109 @@
+## 今日任务（2026-11-03 01:41 · PM 选定轮，接 203 轮通用调研）
+
+**选定：长图切片器（long_image_slice）** — 本轮唯一任务（新工具）。
+
+**顺位**：203 轮 Top3 **首席消解 → 第二顺位递补递进首席**（「无硬伤不跳过、Top3 顺位递进」惯例；本轮 PM 定序权）。
+
+**重大口径纠正（PM 本轮实测发现；险些误判×6）**：203 轮调研与 202 轮 PM 轮均把「社交链接/OG 预览检查器」列为递进首席、断言真缺口，依据是 `og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` ASCII 全 0 命中——但该工具**早已交付**：ID 为 `og_card_preview`、Path `/tools/og-card-preview`，中文名「OG 社交卡片预览」，**commit 3ad2c8a（21:00 轮）**：「四输入实时渲染 Twitter/FB/LinkedIn/微信四版式卡片，附各平台规则提示与 og:/twitter: meta 代码一键复制；营销工具品类注册 ID og_card_preview（New），与 SERP 预览双向互链；纯前端本地渲染」。Description 逐字覆盖本轮候选的全部功能点（标题/描述/链接/图片输入→多平台模拟卡片→meta 标签代码生成→尺寸合规检查），**口径完全重合，确认消解，划出候选池**。教训：零重叠复核不能只复核"候选口径猜测的 ID 写法"，必须同时对 Description 中文口径做一次 CJK 全站复核（已记入本轮备注）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- `long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` 在 templates＋static/js＋tools/categories.go＋tests 四处**全 0 命中**；文件均不存在。
+- 口径相邻但方向相反不构成重叠：`img_stitch`（图片拼接/长图拼接，categories.go:1450，ID img_stitch、Path /tools/img-stitch，CJK「长图拼接」全站唯一命中）：**多张图拼成一张长图**；本轮候选是**一张长图切成多片**，操作方向相反，不重叠，恰好可互链「长图双向一条龙」（拼↔切）。
+- 切片 CJK 全站命中仅语料切片（lorem_ipsum）／饼图切片（chart_generator）／代码切片（code_minifier），均非图片切片口径；口径相邻不相同：img_compress（压缩口径）／img_resize（尺寸口径）／img_convert（格式口径）——无切片逻辑，不构成重叠。
+- 命名无占用：ID `long_image_slice`、Path `/tools/long-image-slice` 均 0 命中；Icon **`view_agenda` categories.go 0 命中**（`content_cut` 已占用 1 次已避开；`vertical_split`／`insert_page_break` 备选同样 0 命中，开发轮精确值复测锁定全库唯一）。
+- 全量 Path **272**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **158 个**；本地分支 muse/dev-20260929，HEAD b295e34；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地与 origin 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——203 轮 Top3 第二顺位，首席消解后按惯例自然递补；② **真缺口确凿**——PM 独立实测（本轮）；③ **痛点真实且新鲜**——itzhouq 工具箱复盘（2026-10 上线）：「按 3:4 切片，智能寻找内容空白处下刀，避免切断内容」；④ **簇内协同**——与 img_stitch 双向互链「长图双向一条龙」（拼↔切）；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（computeSliceLines／findSafeCutLine 确定性＋err.field，Canvas 本地渲染），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+
+**品类归位**：注册到「图片处理」类目（紧邻 img_stitch）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：上传长图（JPG/PNG/WebP，FileReader 纯前端，拖拽/点击）＋示例一键填充；② 目标比例四选：3:4／1:1／16:9／自定（宽:高输入）；③ 切线：按比例自动计算切线（computeSliceLines）→智能微调：扫描切线上下 ±48px 行灰度差，找变化最小处下刀（findSafeCutLine）→逐片预览＋拖动微调切线（可回退到等高线）；④ 导出：逐片 PNG/JPG 下载＋一键打包 ZIP（JSZip 本地打包；无 ZIP 依赖时先提供逐片下载）；⑤ 图片尺寸/比例合规提示（每片 W×H 标注）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.LongImageSlicer 下，module.exports 同步导出）**：
+  - `computeSliceLines(imageWidth, imageHeight, aspectW, aspectH)` → `{pieceHeight, count, lines}`（pieceHeight = Math.round(imageWidth*aspectH/aspectW)；count = ceil(imageHeight/pieceHeight)；lines = pieceHeight 的倍数且严格 < imageHeight 的切线 y 坐标数组，升序）；imageWidth/imageHeight 非正数抛 Error err.field='imageSize'；aspectW/aspectH 非正数抛 Error err.field='aspect'。
+  - `findSafeCutLine(rows, y, window)` → 在 rows 的 [max(0,y-window), min(len-1,y+window)] 区间内，逐行能量 e[i]=|rows[i]-rows[i-1]|（i=0 处 e=0），选能量最小者为调整后切线（并列时选离 y 最近者，再并列取较小者），钳制到 [0, len-1]；rows 非数组抛 Error err.field='rows'；window<0 抛 Error err.field='window'；rows 为空数组抛 Error err.field='rows'。
+  - `buildSliceFileName(date, index)` → `'long_slice_YYYYMMDD_HHmmss_p<index+1>.png'`（date 为 Date 对象；非法抛 Error err.field='now'）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `computeSliceLines(900, 1200, 3, 4)` → `{pieceHeight:1200, count:1, lines:[]}`。
+  - `computeSliceLines(900, 3600, 3, 4)` → `{pieceHeight:1200, count:3, lines:[1200,2400]}`。
+  - `computeSliceLines(900, 2500, 3, 4)` → `{pieceHeight:1200, count:3, lines:[1200,2400]}`。
+  - `computeSliceLines(0, 100, 3, 4)` 抛 Error 且 `err.field==='imageSize'`；`computeSliceLines(900, 3600, 0, 4)` 抛 Error 且 `err.field==='aspect'`。
+  - `findSafeCutLine([10,10,10,10,10], 2, 1)` → `2`（全空白，留原位）。
+  - `findSafeCutLine([10,10,90,90,90], 2, 2)` → `1`（i=2 处能量 80，避开变化线）。
+  - `findSafeCutLine(null, 2, 1)` 抛 Error 且 `err.field==='rows'`；`findSafeCutLine([10], 0, -1)` 抛 Error 且 `err.field==='window'`；`findSafeCutLine([], 0, 1)` 抛 Error 且 `err.field==='rows'`。
+  - `buildSliceFileName(new Date(2026,10,3,1,41,0), 0)` → `'long_slice_20261103_014100_p1.png'`。
+- **真限制（页面明示）**：① 智能避字为启发式（行灰度差阈值），渐变/复杂背景可能误判，页面须明示"可拖动微调、须人工复核"；② 纯本地处理，图片不出浏览器（可在 Network 面板自证）；③ 大图内存上限明示（建议 ≤30MP，超大导出可能卡顿或自动降采样）。
+- **互链**：与 img_stitch（图片拼接/长图拼接）双向互链，「长图双向一条龙」（拼↔切）。
+- **SEO**：title/description/keywords 增补 长图切片／长截图分割／微信小红书发图切图／long image splitter 中英文关键词。
+
+**验收标准**：
+1. 上传长图（或示例一键填充）→目标比例四选（3:4/1:1/16:9/自定）→自动切线＋智能微调→逐片预览＋拖动微调切线→逐片 PNG/JPG 下载＋一键打包 ZIP。
+2. 纯函数契约 node 测试全过——新建 `tests/long_image_slicer.test.js`（逐字向量＋err.field），`node tests/long_image_slicer.test.js` 直跑。
+3. 真限制三条在页面明示。
+4. 注册：Path 总数 272→**273**；旧测试 Path 断言同步（开发轮 grep 确认引用 272 的测试文件）；Icon `view_agenda` 全库唯一（开发轮精确值复测锁定）；New: true。
+5. go build/vet 通过；本地 `/tools/long-image-slice` 实测 200；零外部请求。
+
+**预计改动文件**（4 项＋1 确认）：
+1. `templates/long_image_slicer.html`（新建：图片上传/示例＋比例选择＋切线预览微调＋逐片导出＋真限制＋SEO）
+2. `static/js/long_image_slicer.js`（新建：computeSliceLines／findSafeCutLine／buildSliceFileName 纯函数＋Canvas 切片渲染 UI 绑定，挂 window.LongImageSlicer，module.exports 同步导出）
+3. `tests/long_image_slicer.test.js`（新建：确定性向量逐字＋err.field；零依赖直跑）
+4. `tools/categories.go`（新增注册项：ID long_image_slice、Path /tools/long-image-slice、Icon view_agenda、Category 图片处理（紧邻 img_stitch）、New: true、Description 含 长图切片／长截图分割／微信小红书发图切图／long image splitter 中英文关键词）
+5. 旧测试 Path 断言同步（开发轮 grep 确认是否有引用 272 的测试文件）
+
+**顺位递补**（PM 裁定）：社交链接/OG 预览检查器 → **已交付（og_card_preview，3ad2c8a），划出候选池**（203 轮首席口径误判本轮纠正，见上）／屏幕尺子 → **维持暂不立项**（17:00 PM 轮裁定；本轮无新信号变化；低优先观察保持，PM 保留复活裁定权）／小红书封面生成器 → 弱观察 P3 留池（独立立项价值待裁定）／简繁互转 → 仍开发中（templates/jianfan_converter.html 不存在，git head b295e34；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。
+
+**PM 备注**：本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；教训入库建议（AGENTS.md 已有 ASCII 打底＋CJK codepoint 复核条目，建议追加：零重叠复核必须同时覆盖"猜测 ID 写法"和"Description 中文口径全站复核"两条线）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD b295e34 与 origin 同头为最新，远端无新提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **272**；tests/*.test.js **158 个**；PM 独立零重叠实测：**社交链接/OG 预览检查器**：已交付（ID og_card_preview、Path /tools/og-card-preview、commit 3ad2c8a 21:00 轮，「OG 社交卡片预览」，营销工具品类；Description 逐字覆盖候选全部功能点），**划出候选池**（203 轮 Top3 首席口径误判，本轮纠正）；**长图切片器**：`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` 四处（templates＋static/js＋tools/categories.go＋tests）全 **0 命中**；切片 CJK 全站仅语料/饼图/代码口径；`img_stitch`（图片拼接/长图拼接，categories.go:1450）为**多张拼成一张**的反向口径，操作方向相反，不重叠（互链目标）；ID `long_image_slice`／Path `/tools/long-image-slice`／Icon `view_agenda` 均 **0 命中**（`content_cut` 占用 1 次已避开）；**屏幕尺子**：`screen_ruler` 0 命中，真缺口保持（17:00 PM 轮裁定暂不立项维持）；简繁互转仍开发中（templates/jianfan_converter.html 不存在），移出候选池；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 01:00 · 通用调研第二百〇三轮，接 202 轮 PM 选定轮）
+
+**交付状态**：11-03 通用调研第二百〇三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务／生活计算器）。**RAG 文本分块预览器交付闭环**（b295e34 新增：rag_chunk_preview，Path 271→272，node 127 断言全过，全量 158 测试文件全绿；go build/vet 通过，本地 /tools/rag-chunk-preview 实测 200，零外部请求；「LLM 预处理一条龙」互链闭环；候选池划出）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head b295e34），继续标记「开发中」移出 Top3。**Top3 递进链更新**：社交链接/OG 预览检查器→递进首席／长图切片器→第二顺位（本轮新候选）／屏幕尺子→第三顺位备选（17:00 PM 轮裁定暂不立项维持）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小难度纯前端。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 b295e34（RAG 文本分块预览器新增，node 127 断言全过，全量 158 个 node 测试文件全绿）／d88e2c2（skill_scanner 新增）／9749bdd（json_to_excel 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **272**；`ls templates/rag_chunk_preview.html static/js/rag_chunk_preview.js tests/rag_chunk_preview.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**两次才成功**（注：首次 fetch 漏加环境变量报 host key verification failed，补加后一次成功，github.com ED25519 主机密钥已重新记录，属 VM 换机丢 known_hosts 老问题；远端无新提交），本地 HEAD b295e34 与 origin 同头为最新；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - RAG 文本分块预览器：已交付（b295e34，Path 271→272）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在，git head b295e34；categories.go jianfan 0 命中）——移出 Top3。
+   - **社交链接/OG 预览检查器**：202 轮复测结论沿用并加固（`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 本轮再复核全 0 命中；站内 og: meta 标签仅为各页面自带 head 元素，非工具口径）——真缺口保持，**递进首席**。
+   - **长图切片器**（本轮新候选；itzhouq 工具箱复盘信号）：`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` ASCII 全 0 命中；切片 CJK 全站命中仅语料切片（lorem_ipsum）／饼图切片（chart_generator）／代码切片（code_minifier），均非图片切片口径；站内图片拼接/长图拼接（categories.go:1450）为拼接反向口径（多张拼成一张），与切片（长图切多片）口径相反不重叠——**真缺口确凿**。
+   - 屏幕尺子：199 轮复测结论沿用（`screen_ruler` ASCII 本轮再复核 0 命中真缺口）——17:00 PM 轮裁定暂不立项维持，第三顺位备选。
+   - 人民币大写独立工具（itzhouq 信号初判）：站内 invoice_generator（人民币金额大写自动生成：壹贰叁肆伍陆柒捌玖拾佰仟万亿＋圆角分整，零的补位规则已按规范处理）与报价单均已内置金额大写功能——口径被现有工具内部功能覆盖；另 10-18 方向修正「不扩展泛财务／生活计算器」——**确认消解，不独立立项**。
+   - 文字转图片（itzhouq 信号初判）：站内「文字转图片卡片」已交付——**已交付，确认消解**，不立项。
+   - 小红书封面生成器（itzhouq 信号初判）：`xhs_cover`／`redbook_cover`／`cover_maker` ASCII 全 0 命中，小红书封面 CJK 全站 0 命中——真缺口；但与站内「文字转图片卡片」口径相邻（文字排版成图），独立立项价值待 PM 裁定——**弱观察 P3 留池**。
+3. 新信号扫描（V2EX＋dev.to＋HN＋中文需求搜索为本轮主线）：**本轮新立项候选 1 项**（长图切片器），其余全部确认消解——
+   - itzhouq 工具箱复盘（itzhouq.cn，2026-10 上线，14 工具全纯前端）：**长图切片**（按 3:4 切片、智能找空白处下刀→**新候选**）／小红书封面→弱观察 P3／文字转图片→站内已交付消解／人民币大写→消解（见上）／图片压缩/裁剪/水印/GIF 合成/简繁互转/二维码/JSON/JWT/时间戳→站内均已交付消解；
+   - V2EX：**t/1253899 KitVerse**（202 轮已覆盖：SKILL 扫描→已交付；RAG Chunking→已交付；API 实验台→硬伤消解）／**t/1250522 protohub**（原型托管＋注册登录，需后端口径，确认消解）／**t/1252934 AI 中转站福利**（API 服务口径，确认消解）／**t/1252493 xGoose**（Chrome 插件口径，201 轮已复核确认消解）；
+   - dev.to：榜单全复核→**Link Preview Checker（billion-hub 榜单）→社交链接/OG 预览检查器递进首席信号持续**；「7 Free Browser Tools for Developers Who Make Content」→Excalidraw（重型产品）/Ray.so（站内 code_screenshot_beautifier 已交付）/Squoosh（压缩口径站内已交付）/Shots.so（浏览器 mockup 产品口径消解）／「1000+ tools」chison_she→品类均为站内已交付口径（文本/图片/安全/URL/代码/数据/PDF），无独立新信号／其余榜单（ToolCove/XSular/ToolVerse/devplaybook/Extractly）→JSON/Base64/UUID/QR/哈希/JWT/时间戳/PDF 压缩合并→站内均已交付确认消解；
+   - HN：Browser Use（Agent 库/cloud 口径）／JSX Tool（React dev-panel 需 dev server）／HackerTube（YouTube 数据产品）／OpenClaw HN CLI（CLI 自动化口径）／Wikihack（爬取数据产品）／HackerHack→均确认消解；
+   - 中文需求搜索：「希望有一个网站能」→SEO 垃圾站无可用信号；FunZonCez Top 15→全站内已交付口径，无独立新信号。
+
+**推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **社交链接/OG 预览检查器** — 递进首席（202 轮第二顺位；首席 RAG 本轮交付闭环，按惯例自然递进；本轮复核 `og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口保持；dev.to「10 Free Browser Tools」（2026-03-27）Link Preview Checker 信号持续有效：「See how your Open Graph tags will render on Google, Twitter, Discord, WhatsApp, LinkedIn, Slack, and iMessage — all at once」；痛点：发文章/做活动页前想预览链接在微信/微博/X/Discord/Telegram/Slack/LinkedIn 的渲染卡片，OG 标签写错了抓出来是乱图或空白；实现：填写标题/描述/链接/图片（本地选择或 URL）→各平台模拟卡片预览（微信样式/微博/X/Discord/Telegram/Slack/LinkedIn）→OG meta 标签代码一键生成复制→图片尺寸/比例合规检查（1200×630 等）→分享调试建议；纯前端小难度（纯函数可写逐字向量：buildOgMeta／checkImageRatio 确定性＋err.field）；与 qrcode_generator 互链「分享一条龙」；真限制：无法真实抓取远程 URL（站内零外部请求惯例＋CORS），模拟渲染须明示；各平台卡片样式为近似还原非像素级；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **长图切片器** — 第二顺位（**本轮新候选**；itzhouq 工具箱复盘信号（2026-10 上线）：「按 3:4 切片，智能寻找内容空白处下刀，避免切断内容」；站内零重叠实测：`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` 全 0 命中；切片 CJK 全站命中仅语料/饼图/代码口径；站内图片拼接/长图拼接（categories.go:1450）为拼接反向口径，口径相反不重叠——真缺口确凿；痛点：微信公众号/小红书/朋友圈发长图被压缩或显示不全，想把长图按 3:4（或自定比例）切成多片顺序发，切线正好压在文字行上很难看；实现：上传长图→目标比例（3:4/1:1/16:9/自定）→智能切线微调（扫描切线上下像素行、找内容空白带避开文字）→逐片预览＋拖动微调切线→批量导出 PNG/JPG 打包 ZIP；纯前端小难度（纯函数可写逐字向量：computeSliceLines／findSafeCutLine 确定性＋err.field，Canvas 本地渲染）；与 image_joiner 互链「长图双向一条龙」（拼↔切）；真限制：智能找空白为启发式、渐变/复杂背景可能误判须明示；大图内存上限须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位备选（199 轮 Top3 第三顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 本轮再复核 ASCII 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；**低优先说明：设计/前端小众口径，PM 可裁定维持暂不立项或复活**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／简繁互转（开发中，移出 Top3）／**小红书封面生成器**（**本轮新增弱观察 P3**：`xhs_cover`／`redbook_cover`／`cover_maker` ASCII 全 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先）／Skill 全家桶（KitVerse Skill 校验/打包/安装命令生成/Prompt 转 Skill；202 轮弱观察：skill_scanner 簇扩展口径，无独立新鲜信号，低优先）／Tokenizer 跨模型切分可视化（201 轮弱观察：站内 ai_token_counter 已交付计数口径，tiktoken WASM 体积硬伤，低优先）／一键人脸模糊（HN BlurFaces 信号；人脸检测模型硬伤，低优先观察保持）／Tap Tempo BPM 测速器（09:00 PM 轮已裁定暂不立项，低优先观察保持）／trace-context-validator（200 轮弱观察，低优先）／跑步配速计算器（56 轮／160 轮按 10-18 方向修正裁定不立项，观察记账）／网页钢琴（56 轮／10-30 轮裁定非工具口径消解）／Wordle 求解器（游戏口径低优先观察）／看房评分卡（租房口径弱观察）／搬家照片配对报告（10-30 轮观察项，低优先保持）／ReqForge 式 HTTP 请求→多语言代码片段生成器（185 轮弱观察，低优先；站内已有 curl_to_requests 单语言版，独立立项价值待 PM 裁定）／OFD 转 PDF（排版引擎硬伤，低优先）／TTS 文字转语音文件导出（speechSynthesis 硬伤，低优先）／高精度计算器 BigNumber（方向修正口径风险，低优先保持）／字体搭配预览器（外部 webfont 请求与零外部请求惯例冲突，口径待 PM 裁定，观察保持）／AI 图片超分（ONNX 硬伤，低优先）／一键图片去背景（ONNX 硬伤，低优先）／社媒图片尺寸生成器（169 轮 PM 裁定「暂不立项」）／视频转码/压缩器（ffmpeg.wasm ~30MB 硬伤，低优先）／P2P 文件传输器（WebRTC 信令硬伤）／HEIC（硬伤未解）／数独求解器（游戏口径无信号，低优先保持）／新拟态生成器／CSS 脉冲动画生成器（143 轮）；在线电台收听器（88 轮；硬伤未解继续跳过）；robots.txt 校验器（198 轮弱观察，低优先）；密码工具 passphrase 模式＋破解时间估算扩展（199 轮 ToolPry 信号；站内密码生成器已交付，扩展口径观察，不独立立项）；Markdown 幻灯片（199 轮弱观察：真缺口但中难度、无新鲜外部信号，低优先）；其余 92 轮及之前留池项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇三轮：RAG 文本分块预览器交付闭环（b295e34 新增：rag_chunk_preview，Path 271→272，node 127 断言全过，全量 158 测试文件全绿；go build/vet 通过，本地 /tools/rag-chunk-preview 实测 200，零外部请求；「LLM 预处理一条龙」互链闭环；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head b295e34；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链更新**：**社交链接/OG 预览检查器→递进首席**（202 轮第二顺位；`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口保持；dev.to Link Preview Checker 信号持续有效；纯前端小难度；与 qrcode_generator 互链「分享一条龙」）／**长图切片器→第二顺位**（**本轮新候选**；itzhouq 工具箱复盘信号：按 3:4 切片＋智能找空白处下刀；`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` 全 0 命中；切片 CJK 全站仅语料/饼图/代码口径；图片拼接为反向口径；真缺口确凿；纯前端小难度；与 image_joiner 互链「长图双向一条龙」）／**屏幕尺子→第三顺位备选**（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定维持暂不立项或复活）；**本轮初判 3 项**：人民币大写→invoice_generator/报价单内部已有金额大写＋10-18 方向修正泛财务不扩，确认消解／文字转图片→站内「文字转图片卡片」已交付确认消解／小红书封面生成器→真缺口但与文字转图片卡片口径相邻，弱观察 P3 留池；新信号扫描：itzhouq 工具箱复盘＋V2EX（t/1250522 原型托管后端口径／t/1252934 AI 中转站服务口径／t/1252493 xGoose 插件口径／t/1253899 已覆盖）＋dev.to（榜单全复核，Link Preview Checker 首席信号持续；其余已交付/产品/游戏口径消解）＋HN（Browser Use／JSX Tool／HackerTube／OpenClaw HN CLI／Wikihack／HackerHack 均消解）＋中文需求搜索（SEO 垃圾站／FunZonCez 全已交付口径，无独立新信号）；本轮 fetch 两次才成功（注：首次 fetch 漏加 GIT_SSH_COMMAND 被拒，补加后一次成功，github.com 主机密钥已重新记录，VM 换机丢 known_hosts 老问题；远端无新提交），本地 HEAD b295e34 与 origin 同头为最新；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| RAG 文本分块预览器 | 已交付划出（b295e34 新增：rag_chunk_preview，Path 271→272，node 127 断言全过，全量 158 测试文件全绿；go build/vet 通过，本地 /tools/rag-chunk-preview 实测 200，零外部请求；「LLM 预处理一条龙」互链闭环；候选池划出） | — | 已实现 |
+| 社交链接/OG 预览检查器 | **已交付划出**（01:41 PM 轮口径纠正：ID og_card_preview、Path /tools/og-card-preview，中文名「OG 社交卡片预览」，commit 3ad2c8a（21:00 轮）；Description 逐字覆盖候选全部功能点：标题/描述/链接/图片输入→Twitter/FB/LinkedIn/微信四版式卡片→og:/twitter: meta 代码一键复制→各平台长度规则提示；纯前端本地渲染；营销工具品类 New: true；前三轮复核的 ASCII ID 口径（og_preview/link_preview/meta_preview/social_preview/meta_tag）与真实 ID og_card_preview 对不上，险些误判×6，教训：零重叠复核必须同时覆盖"猜测 ID 写法"和"Description 中文口径全站复核"两条线） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head b295e34；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 社交链接/OG 预览检查器 | 递进首席（202 轮第二顺位；首席 RAG 已交付闭环，按「无硬伤不跳过、Top3 顺位递进」惯例自然递进；`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口保持；站内 og: meta 标签仅为各页面自带 head 元素，非工具口径；dev.to「10 Free Browser Tools Every Developer Should Bookmark」（2026-03-27）Link Preview Checker 信号持续有效；痛点：发文章/做活动页前想预览链接在微信/微博/X/Discord/Telegram/Slack/LinkedIn 的渲染卡片，OG 标签写错了抓出来是乱图或空白；实现：填写标题/描述/链接/图片（本地选择或 URL）→各平台模拟卡片预览（微信样式/微博/X/Discord/Telegram/Slack/LinkedIn）→OG meta 标签代码一键生成复制→图片尺寸/比例合规检查（1200×630 等）→分享调试建议；纯前端小难度（纯函数可写逐字向量：buildOgMeta／checkImageRatio 确定性＋err.field）；与 qrcode_generator 互链「分享一条龙」；真限制：无法真实抓取远程 URL（站内零外部请求惯例＋CORS），模拟渲染须明示；各平台卡片样式为近似还原非像素级；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 长图切片器 | 第二顺位（**本轮新候选**；itzhouq 工具箱复盘信号（2026-10 上线，14 工具全纯前端）：「按 3:4 切片，智能寻找内容空白处下刀，避免切断内容」；`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` ASCII 全 0 命中；切片 CJK 全站命中仅语料切片（lorem_ipsum）／饼图切片（chart_generator）／代码切片（code_minifier），均非图片切片口径；站内图片拼接/长图拼接（categories.go:1450）为拼接反向口径（多张拼成一张），与切片（长图切多片）口径相反不重叠；真缺口确凿；痛点：微信公众号/小红书/朋友圈发长图被压缩或显示不全，想把长图按 3:4（或自定比例）切成多片顺序发，切线压在文字行上很难看；实现：上传长图→目标比例（3:4/1:1/16:9/自定）→智能切线微调（扫描切线上下像素行、找内容空白带避开文字）→逐片预览＋拖动微调切线→批量导出 PNG/JPG 打包 ZIP；纯前端小难度（纯函数可写逐字向量：computeSliceLines／findSafeCutLine 确定性＋err.field，Canvas 本地渲染）；与 image_joiner 互链「长图双向一条龙」（拼↔切）；真限制：智能找空白为启发式、渐变/复杂背景可能误判须明示；大图内存上限须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2 |
+| 屏幕尺子 | 第三顺位备选（199 轮 Top3 第三顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` ASCII 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定维持暂不立项或复活） | 小 | P2（留池） |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇三轮——RAG 文本分块预览器交付闭环（b295e34；`/tools/rag-chunk-preview` 已注册；旧测试 Path 断言 271→272 同步；全量 158 个 node 测试文件全绿；候选池划出），全量 **272 Path**；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head b295e34），继续标记「开发中」移出 Top3；**Top3 递进链更新**：社交链接/OG 预览检查器→递进首席（202 轮第二顺位；`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中真缺口保持；dev.to Link Preview Checker 信号持续有效）／长图切片器→第二顺位（本轮新候选；itzhouq 工具箱复盘信号；`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` 全 0 命中；切片 CJK 全站仅语料/饼图/代码口径；图片拼接为反向口径；真缺口确凿）／屏幕尺子→第三顺位备选（`screen_ruler` 0 命中真缺口保持；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）；本轮初判 3 项：人民币大写（invoice_generator/报价单内部已有金额大写＋10-18 方向修正泛财务不扩）／文字转图片（站内「文字转图片卡片」已交付）均确认消解；小红书封面生成器→真缺口但与文字转图片卡片口径相邻，弱观察 P3 留池；本轮 fetch 两次才成功（注：首次 fetch 漏加 GIT_SSH_COMMAND 被拒，补加后一次成功，github.com 主机密钥已重新记录；远端无新提交），本地 HEAD b295e34 与 origin 同头为最新；新信号扫描：itzhouq 工具箱复盘＋V2EX＋dev.to＋HN＋中文需求搜索（详见上文）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**两次才成功**（首次漏加环境变量报 host key verification failed，补加后一次成功，github.com ED25519 主机密钥已重新记录；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 b295e34（RAG 文本分块预览器新增，node 127 断言全过，全量 158 个 node 测试文件全绿）／d88e2c2（skill_scanner 新增）／9749bdd（json_to_excel 新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **272**；`ls templates/rag_chunk_preview.html static/js/rag_chunk_preview.js tests/rag_chunk_preview.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**RAG 文本分块预览器**：已交付（/tools/rag-chunk-preview，Path 271→272），划出候选池；**简繁互转**：仍开发中，移出 Top3；**社交链接/OG 预览检查器**：`og_preview`／`link_preview`／`meta_preview`／`social_preview`／`meta_tag` 全 0 命中；站内 og: meta 标签仅为各页面自带 head 元素，非工具口径；真缺口确凿；**长图切片器**：`long_image_slice`／`image_slice`／`image_slicer`／`long_slice`／`slice_image` 全 0 命中；切片 CJK 全站仅语料/饼图/代码口径；图片拼接/长图拼接为反向口径不重叠；真缺口确凿；**屏幕尺子**：`screen_ruler` 0 命中；真缺口保持（17:00 PM 轮裁定暂不立项维持）；**人民币大写**：invoice_generator 人民币金额大写自动生成＋报价单金额大写已内置，独立立项口径被覆盖＋10-18 方向修正泛财务不扩，确认消解；**文字转图片**：站内「文字转图片卡片」已交付确认消解；**小红书封面生成器**：`xhs_cover`／`redbook_cover`／`cover_maker` 全 0 命中真缺口，但与文字转图片卡片口径相邻，弱观察 P3 留池）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-02 23:39 · PM 选定轮，接 202 轮通用调研）
 
 **选定：RAG 文本分块预览器（rag_chunk_preview）** — 本轮唯一任务（新工具）。

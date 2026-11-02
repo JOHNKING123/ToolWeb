@@ -8,7 +8,7 @@
  *  6. summarizeChunks 汇总口径
  *  7. buildExport 导出结构
  *  8. window.RagChunkPreview 与 module.exports 同步导出
- *  9. categories.go 注册（ID/Path/Icon/Category/New，紧邻 ai_token_counter）与 Path 总数 272
+ *  9. categories.go 注册（ID/Path/Icon/Category/New，紧邻 ai_token_counter）与 Path 总数 273
  * 10. 零网络请求静态检查（JS 无 fetch/XHR/WebSocket；上传走 FileReader）
  * 11. 模板：SEO 面板、真限制三条、互链（ai_token_counter 双向、project_to_txt）与回链
  */
@@ -206,7 +206,7 @@ function throwsField(fn, field, name) {
     ok(GO_SRC.indexOf('"rag_chunk_preview"') < GO_SRC.indexOf('"ai_text_cleaner"'),
         "注册：位于 ai_text_cleaner 之前");
     var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-    eq(pathCount, 272, "注册：Path 总数 271→272");
+    eq(pathCount, 273, "注册：Path 总数 271→273");
     notContains(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), '"/tools/rag-chunk-preview", "/tools/rag-chunk-preview',
         "注册：Path 无重复");
 })();

@@ -1455,6 +1455,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "long_image_slice",
+					Name:        "长图切片器",
+					Description: "长截图按比例切分：上传长图按 3:4/1:1/16:9/自定义比例自动切线，行灰度差智能避字微调＋拖动微调切线，逐片预览（W×H 标注）PNG/JPG 下载＋一键 ZIP 打包，纯前端本地处理 · long image splitter: split long screenshots by aspect ratio with smart cut-line tuning, per-piece download & ZIP export, 100% client-side",
+					Path:        "/tools/long-image-slice",
+					Icon:        "view_agenda",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "photo_collage",
 					Name:        "照片拼图合成器",
 					Description: "多图照片墙拼图合成器：2/3/4/6/9宫格布局模板，拖拽换位、间距圆角背景可调，canvas 实时预览、PNG 导出，本地处理不上传 · Photo collage maker: 2/3/4/6/9 grid layouts, drag to reorder, real-time canvas preview, PNG export, 100% client-side",

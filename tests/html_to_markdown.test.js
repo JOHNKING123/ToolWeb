@@ -111,7 +111,7 @@ has(GO_SRC, '"html_to_markdown"', "注册 ID");
 has(GO_SRC, '"/tools/html-to-markdown"', "注册 Path");
 ok(/ID:\s+"html_to_markdown"[\s\S]{0,1200}?Category:\s+"文本工具"/.test(GO_SRC), "注册品类为文本工具");
 ok(/ID:\s+"html_to_markdown"[\s\S]{0,1200}?New:\s+true/.test(GO_SRC), "注册 New: true");
-eq((GO_SRC.match(/Path:\s+"/g) || []).length, 272, "注册总数 268→270 Path");
+eq((GO_SRC.match(/Path:\s+"/g) || []).length, 273, "注册总数 268→270 Path");
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/html-to-markdown", "模板 canonical");
 has(TPL_SRC, "application/ld+json", "模板 JSON-LD");
 has(TPL_SRC, "/tools/markdown-preview", "互链 Markdown 预览");
