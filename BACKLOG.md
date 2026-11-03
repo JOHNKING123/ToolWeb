@@ -1,3 +1,82 @@
+## 今日任务（2026-11-03 09:00 · PM 选定轮，接 207 轮通用调研）
+
+**选定：阅读时间估算器（reading_time）** — 本轮唯一任务（新工具）。
+
+**顺位**：207 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席递进、顺位即理由；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- `reading_time`／`reading-time`／`read_time`／`readtime` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**；CJK「阅读时间」全站 **0 命中**（codepoint 实测）。
+- 口径相邻均不重叠：texttools（字数统计/格式化口径，/tools/text-tools）不重叠——阅读时间估算器是**时长估算口径**（按中英混排字数→默读/朗读语速折时长），交付轮与 texttools 互链「写作一条龙」。
+- 命名无占用：ID `reading_time`、Path `/tools/reading-time` 均 0 命中；Icon **`hourglass_top` 0 命中**（开发轮精确值复测锁定全库唯一；timer/schedule/history 已被占用）。
+- 全量 Path **276**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **162 个**；本地分支 muse/dev-20260929，本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（先默认 ssh 报 Host key verification failed，按 TOOLS.md 经验带铁律环境变量重跑即通），本地 HEAD f7e4141 与 origin/muse/dev-20260929 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——207 轮 Top3 首席（P2 递进）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中，codepoint 验真）；③ **痛点真实且新鲜**——dev.to StudyKit Hub 第三篇（2026-11-02）"Reading Time Calculator — silent reading or speaking time"；写文章/发公众号想预估读者阅读时长（默读/朗读两档），市面工具多内嵌重型编辑器或要登录；④ **生态协同**——与 texttools（文本工具集）互链「写作一条龙」，写作前估字、写作后估时；⑤ **一天可高质量交付**——纯前端小难度，纯函数可写逐字向量（countWords／estimateReadingTime／formatDuration 确定性＋err.field），无模型/外部请求硬伤；⑥ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+- 不选屏幕尺子：17:00 PM 轮裁定暂不立项维持，207 轮无新信号变化，备选留池。
+- 不选期末成绩目标计算器：206 轮新增弱观察 P3，大学生小众口径，与用户劳动仲裁复习场景关联弱，第三顺位留池。
+
+**品类归位**：注册到「文本工具」类目（与 texttools 互链「写作一条龙」）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 文本输入：粘贴/键入文本（大文本友好，字符计数实时）；② 中英混排字数统计：中文（CJK）按字计、英文按单词计，分别展示；③ 默读/朗读两档语速估算：默读默认（中文 400 字/分、英文 200 词/分）、朗读默认（中文 220 字/分、英文 140 词/分），语速可调（滑块/输入）；④ 输出：中文数/英文词数/总字符数＋默读时长＋朗读时长（分/秒，<1 分钟按秒显示）；⑤ 一键复制结果（"约 X 字，默读约 N 分 M 秒，朗读约 N 分 M 秒"）；⑥ 与 texttools 互链「写作一条龙」；⑦ 真限制页面明示：固定语速估算、个体差异大仅供参考。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.ReadingTime 下，module.exports 同步导出）**：
+  - `countWords(text)` → `{chinese, english, total}`：text 非字符串抛 Error err.field='text'；chinese=CJK 字符数（`[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\uac00-\ud7af]`，标点不计入字数但计入 total），english=英文单词数（`[A-Za-z]+` 连续序列），total=chinese+english+标点符号数。
+  - `estimateReadingTime(text, mode, wpm)` → `{seconds, minutes, display}`：mode 仅 'silent'/'aloud'，其他抛 Error err.field='mode'；wpm 可选自定义 `{chinese, english}`（非正数抛 Error err.field='wpm'）；按 countWords 结果折算：seconds = ceil(chinese/wpm.chinese*60 + english/wpm.english*60)，最小 1 秒；minutes=floor(seconds/60)。
+  - `formatDuration(seconds)` → 秒数非整数/负数抛 Error err.field='seconds'；<60 秒返回 `'约 X 秒'`，≥60 秒返回 `'约 N 分 M 秒'`（M 为 0 时返回 `'约 N 分'`）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `countWords('你好 world test')` → `{chinese:2, english:2}`；`countWords('')` → `{chinese:0, english:0, total:0}`。
+  - `countWords(123)` 抛 Error 且 `err.field==='text'`。
+  - `estimateReadingTime('你好世界', 'silent', {chinese:400, english:200})` → `seconds===1`（4/400*60=0.6→ceil=1）；`estimateReadingTime('a '.repeat(200), 'aloud', {chinese:220, english:140})` → `seconds===86`（ceil(200/140*60)=ceil(85.71)=86）。
+  - `estimateReadingTime('x', 'fast')` 抛 Error 且 `err.field==='mode'`。
+  - `formatDuration(45)` → `'约 45 秒'`；`formatDuration(150)` → `'约 2 分 30 秒'`；`formatDuration(120)` → `'约 2 分'`。
+- **预计改动文件**：templates/reading_time.html（新）、static/js/reading_time.js（新）、tests/reading_time.test.js（新）、tools/categories.go（注册项 ID reading_time、Name 阅读时间估算器、Path /tools/reading-time、Icon hourglass_top（开发轮精确值复测锁定全库唯一）、Category 文本工具、New: true、Description 含 阅读时间/默读/朗读/reading time 中英文关键词）；旧测试 Path 断言 276→277 同步（eq/=== 写法仅断言行）。
+- **验收标准**：node 新测试断言全过、全量测试文件全绿；go build/vet 通过；本地 /tools/reading-time 与静态 JS 实测 200；模板零外部资源（仅 canonical 元链接）；真限制页面明示；全量 Path 276→277。
+
+---
+
+## 今日任务（2026-11-03 09:00 · 通用调研第二百〇七轮，接学习笔记整理器交付轮）
+
+**交付状态**：11-03 通用调研第二百〇七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**学习笔记整理器交付闭环**（f7e4141 新增：study_notes，Path 275→**276**，tests/study_notes.test.js 全绿；go build/vet 通过（上游轮）；候选池划出）。**简繁互转仍开发中**（templates/jianfan_converter.html 不存在，git head f7e4141；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3。**Top3 递进链更新**：阅读时间估算器→首席（P2 递进；206 轮本轮新候选；StudyKit Hub 第三篇 2026-11-02 "Reading Time Calculator" 信号持续；真缺口确凿维持）／屏幕尺子→备选（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化）／期末成绩目标计算器→第三顺位弱观察备选（206 轮新增 P3；StudyKit Hub 第三篇 "Final Grade Calculator" 信号；真缺口；大学生小众口径，PM 可裁定是否晋升）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；09:00 轮，优先小难度纯前端。
+
+**本轮三件事**（09:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 f7e4141（学习笔记整理器新增）／b5f1121（习惯追踪器）／da2c563（闪卡卡片生成器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **276**；`ls templates/study_notes.html static/js/study_notes.js tests/study_notes.test.js` **均存在**；`ls templates/jianfan_converter.html` 不存在（简繁互转开发中，categories.go jianfan 0 命中）；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD f7e4141 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 学习笔记整理器：已交付（f7e4141，Path 275→276）——划出候选池。
+   - 简繁互转：仍开发中（templates/jianfan_converter.html 不存在；categories.go jianfan 0 命中）——移出 Top3。
+   - V2EX t/1251680 PrintPageCheck（2026-10-26；在线打印机测试页：CMYK 测试、A4/US Letter、浏览器打印/PDF 下载）→**站内打印机测试页生成器（printer_test_page，categories.go:2322，A4/US Letter＋CMYK 四通道＋梯度条＋灰阶＋精细线＋100mm 参考尺，window.print()＋PNG 导出）已交付全覆盖，确认消解**。
+   - V2EX t/1250674 mockmock（2026-10-21；截图套设备 Mockup 样机）→screenshot_mockup_3d 已交付（手机机身框口径）确认消解。
+   - V2EX t/1249863 Paint Board（2026-10-19；网页创意画板）→149/188 轮已消解（整站形态网页画板非单页工具口径），确认消解；本轮 CJK 复核：画板 0 命中／涂鸦 0 命中／素描 0 命中；白板仅 pdf_sign.html UI 文案（"在上方白板上书写"）codepace 解码验真为非工具口径；手绘 4 命中均为非工具文案（svg_background_generator 真限制文案、signature_capture SEO、whatsapp_link_generator 注释）——复核维持消解结论。
+   - V2EX t/1253899 KitVerse（2026-11-02；AI 建设者工具箱：SKILL 安全扫描/PUA AI 生成器/API 实验台）→204 轮已消解（已交付/硬伤口径无独立新信号），确认消解。
+   - V2EX t/1252552 tubox（2026-10-28；图片工具箱）→多轮已消解，确认消解。
+   - V2EX t/1252493 xGoose（2026-10-28；Chrome 插件＋AI 额度）→178 轮已消解（插件＋需后端 AI 服务），确认消解。
+   - V2EX t/1253201 自媒体获客四工具（10-30）→204/205 轮已消解（插件/付费/AI 口径），确认消解。
+   - HN：HackerTube（Karpathy，2026-10-31；HN 评论视频策展）→206 轮已确认产品口径消解（需 20 年评论数据＋后端，非单页工具）。
+   - dev.to：Quick Toolbox part 2「14 Tools, Zero Servers」（图片压缩/转换、PDF 合并拆分、JSON/Base64/时间戳/密码/UUID/二维码）→口径站内全已交付覆盖；Nyx Dev Tools（JSON/Base64/UUID/Hash/Regex/JWT/HTML）→已交付口径；CodeToolkit 14 工具→已交付口径；StudyKit Hub build-in-public note（2026-11-02）→206 轮已逐项消解，无新信号；「Your files don't need to leave the device」→方法论文章，无独立新信号。
+   - 中文需求搜索：「希望有一个网站能」→SEO 垃圾站无可用信号；Reddit「I wish there was a website」→SEO 垃圾站无可用信号。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例；简繁互转开发中移出候选池）：
+1. **阅读时间估算器** — 首席（P2 递进；dev.to StudyKit Hub 第三篇（2026-11-02）"Reading Time Calculator — silent reading or speaking time" 信号持续；站内零重叠实测维持：`reading_time` 四处全 0 命中；阅读时间 CJK 全站 0 命中；text_tools（字数统计/格式化口径）不重叠；真缺口确凿；痛点：写文章/发公众号想预估读者阅读时长（默读/朗读两档），市面工具多内嵌重型编辑器或要登录；实现：粘贴文本→中英混排字数统计→按默读/朗读语速估算时长（分钟/字数区间）→复制结果；纯前端小难度（countWords／estimateReadingTime 确定性＋err.field）；与 text_tools 互链「写作一条龙」；真限制：固定语速估算、个体差异大须明示；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **屏幕尺子** — 备选（205 轮 Top3 顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定复活）。
+3. **期末成绩目标计算器** — 第三顺位弱观察备选（206 轮新增弱观察 P3；StudyKit Hub 第三篇 "Final Grade Calculator — what you need on the final for a target" 信号；`final_grade` 全 0 命中真缺口；score_stats（班级成绩统计分析口径）不重叠；纯前端小难度；大学生小众口径，与用户劳动仲裁复习场景关联弱；PM 可裁定是否晋升）。
+
+其余观察项保持原状：GPA 绩点计算器（P3 留池；绩点/GPA 真缺口；学习小众口径，与用户劳动仲裁复习场景关联弱，低优先）／年龄/日期差计算器（P3 留池；`age_calc`/`date_diff` 真缺口；calendar 日历查看口径不重叠；生活计算器口径与 10-18 方向修正边界相邻，PM 裁定前低优先）／百分比/成绩计算器（P3 留池；`percentage_calc` 真缺口；泛数学计算器口径与 10-18 方向修正边界相邻，低优先）／小红书封面生成器（弱观察 P3 留池；204 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先）／简繁互转（开发中，移出 Top3）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇七轮：学习笔记整理器交付闭环（f7e4141 新增：study_notes，Path 275→276，tests/study_notes.test.js 全绿；候选池划出）；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head f7e4141；categories.go jianfan 0 命中），继续标记「开发中」移出 Top3；**Top3 递进链更新**：**阅读时间估算器→首席**（P2 递进；206 轮新候选；StudyKit Hub 第三篇（2026-11-02）"Reading Time Calculator" 信号持续；`reading_time` 四处全 0 命中维持；阅读时间 CJK 全站 0 命中；text_tools（格式化口径）不重叠；真缺口确凿维持；纯前端小难度；与 text_tools 互链「写作一条龙」；真限制：固定语速估算须明示）／**屏幕尺子→备选**（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定复活）／**期末成绩目标计算器→第三顺位弱观察备选**（206 轮新增 P3；StudyKit Hub 第三篇信号；`final_grade` 真缺口；score_stats 统计分析口径不重叠；大学生小众低优先；PM 可裁定是否晋升）；**本轮初判消解 7 项全部确认**：V2EX PrintPageCheck（t/1251680）→站内打印机测试页生成器已交付（A4/US Letter＋CMYK 四通道＋梯度条＋灰阶＋细线组＋100mm 参考尺，window.print()＋PNG 导出，全覆盖）；V2EX mockmock（t/1250674）→screenshot_mockup_3d 已交付；V2EX Paint Board（t/1249863）→多轮已消解（整站形态非单页口径；本轮 CJK 复核维持消解结论）；V2EX KitVerse（t/1253899）→204 轮已消解；V2EX tubox（t/1252552）→多轮已消解；V2EX xGoose（t/1252493）→178 轮已消解（插件＋后端 AI）；V2EX 自媒体获客四工具（t/1253201）→204/205 轮已消解；HN HackerTube（2026-10-31）→206 轮已确认产品口径消解（需 20 年评论数据＋后端）；dev.to Quick Toolbox part 2／Nyx Dev Tools／CodeToolkit／StudyKit Hub build-in-public note／「Your files don't need to leave the device」方法论文章→口径已交付覆盖或无独立新信号；中文需求搜索＋Reddit 搜索→SEO 垃圾站无可用信号；本轮 fetch 一次成功，本地 HEAD f7e4141 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 学习笔记整理器 | 已交付划出（f7e4141 新增：study_notes，Path 275→276，tests/study_notes.test.js 全绿；候选池划出） | — | 已实现 |
+| 简繁互转 | 仍开发中（templates/jianfan_converter.html 不存在，git head f7e4141；categories.go jianfan 0 命中；未确认交付前不划出候选池，本轮标记「开发中」移出 Top3） | 小 | 开发中 |
+| 阅读时间估算器 | 首席（P2 递进；dev.to StudyKit Hub 第三篇（2026-11-02）"Reading Time Calculator — silent reading or speaking time" 信号持续；`reading_time` 四处全 0 命中；阅读时间 CJK 全站 0 命中；text_tools（字数统计/格式化口径）不重叠；真缺口确凿；痛点：写文章/发公众号想预估读者阅读时长（默读/朗读两档），市面工具多内嵌重型编辑器或要登录；实现：粘贴文本→中英混排字数统计→按默读/朗读语速估算时长（分钟/字数区间）→复制结果；纯前端小难度（countWords／estimateReadingTime 确定性＋err.field）；与 text_tools 互链「写作一条龙」；真限制：固定语速估算、个体差异大须明示；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1 |
+| 屏幕尺子 | 备选（205 轮 Top3 顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定复活） | 小 | P3（留池） |
+| 期末成绩目标计算器 | 第三顺位弱观察备选（206 轮新增弱观察 P3；StudyKit Hub 第三篇 "Final Grade Calculator — what you need on the final for a target" 信号；`final_grade` 全 0 命中真缺口；score_stats（班级成绩统计分析口径）不重叠；纯前端小难度；大学生小众口径，与用户劳动仲裁复习场景关联弱，低优先；PM 可裁定是否晋升） | 小 | P3（留池） |
+| 年龄/日期差计算器 | 弱观察 P3 留池（206 轮新增；`age_calc`/`date_diff` 全 0 命中真缺口；calendar 日历查看口径不重叠；纯前端小难度；生活计算器口径与 10-18 方向修正边界相邻，PM 裁定前低优先） | 小 | P3（留池） |
+| 百分比/成绩计算器 | 弱观察 P3 留池（206 轮新增；StudyKit Hub 第三篇 "Percentage and Marks Calculator"；`percentage_calc` 全 0 命中真缺口；纯前端小难度；泛数学计算器口径与 10-18 方向修正边界相邻，低优先） | 小 | P3（留池） |
+| 小红书封面生成器 | 弱观察 P3 留池（204 轮新增；`xhs_cover`／`redbook_cover`／`cover_maker` 0 命中真缺口；与站内「文字转图片卡片」口径相邻，独立立项价值待 PM 裁定，低优先） | 小 | P3（留池） |
+| GPA 绩点计算器 | 弱观察 P3 留池（StudyKit Hub 第三篇再确认；绩点/GPA CJK 0 命中真缺口；学习小众口径（大学生），与用户劳动仲裁复习场景关联弱；纯前端小难度（加权平均纯函数）；低优先） | 小 | P3（留池） |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇七轮——学习笔记整理器交付闭环（f7e4141；`/tools/study-notes` 已注册；全量 **276 Path**），候选池划出；简繁互转仍开发中（templates/jianfan_converter.html 不存在，git head f7e4141），继续标记「开发中」移出 Top3；**Top3 递进链更新**：阅读时间估算器→首席（P2 递进；StudyKit Hub 第三篇 2026-11-02 信号持续；真缺口确凿维持）／屏幕尺子→备选（17:00 PM 轮裁定暂不立项维持；`screen_ruler` 0 命中真缺口保持；本轮无新信号变化）／期末成绩目标计算器→第三顺位弱观察备选（206 轮新增 P3；`final_grade` 真缺口；score_stats 不重叠；大学生小众低优先；PM 可裁定是否晋升）；本轮初判消解 7 项全部确认（V2EX PrintPageCheck→站内打印机测试页生成器已交付全覆盖／mockmock→screenshot_mockup_3d 已交付／Paint Board→多轮已消解（CJK 复核维持）／KitVerse→204 轮已消解／tubox→多轮已消解／xGoose→178 轮已消解／自媒体获客四工具→204/205 轮已消解；HN HackerTube→产品口径消解；dev.to 工具箱榜单/方法论文章→已交付覆盖或无新信号；中文需求搜索＋Reddit 搜索→SEO 垃圾站无可用信号）；本轮 fetch 一次成功，本地 HEAD f7e4141 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD f7e4141 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 f7e4141（学习笔记整理器新增）／b5f1121（习惯追踪器新增）／da2c563（闪卡卡片生成器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **276**；`ls templates/study_notes.html static/js/study_notes.js tests/study_notes.test.js` **均存在**；`ls templates/jianfan_converter.html` **不存在**（简繁互转开发中，categories.go jianfan 0 命中）；Top3 候选重叠复核（**学习笔记整理器**：已交付（/tools/study-notes，Path 275→276），划出候选池；**简繁互转**：仍开发中，移出 Top3；**阅读时间估算器**：`reading_time` 四处（templates＋static/js＋tools/categories.go＋tests）全 **0 命中**；阅读时间 CJK 全站 **0 命中**；text_tools（字数统计/格式化口径）不重叠；真缺口确凿；**屏幕尺子**：`screen_ruler` 0 命中；真缺口保持（17:00 PM 轮裁定暂不立项维持）；**期末成绩目标计算器**：`final_grade` 0 命中真缺口，score_stats（统计分析口径）不重叠，弱观察 P3 留池）；V2EX PrintPageCheck（t/1251680）确认消解：站内 printer_test_page（templates/printer_test_page.html＋tests/printer_test_page.test.js，categories.go:2322-2324）已交付——A4/US Letter＋纵向/横向＋CMYK 四通道 100% 色块＋10 级梯度条＋20 级灰阶＋中英文 6~18pt 文字行＋细线组＋100mm 参考尺，window.print() 直接打印＋PNG 导出，PrintPageCheck 口径全覆盖；V2EX Paint Board（t/1249863）CJK 复核：画板/涂鸦/素描 0 命中，白板 1 命中（pdf_sign.html UI 文案 codepoint 验真为非工具口径），手绘 4 命中（svg_background_generator 真限制文案、signature_capture SEO、whatsapp_link_generator 注释）均为非工具口径——维持整站形态非单页工具口径消解；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 07:00 · PM 选定轮，接 206 轮通用调研）
 
 **选定：学习笔记整理器（study_notes）** — 本轮唯一任务（新工具）。

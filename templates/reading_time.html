@@ -1,0 +1,144 @@
+{{define "reading_time"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阅读时间估算器 - 中英混排字数统计/默读朗读时长估算在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线阅读时间估算器：粘贴文本，中英混排字数统计（中文按字、英文按单词分别计数），默读（默认中文400字/分、英文200词/分）与朗读（默认中文220字/分、英文140词/分）两档语速估算阅读时长，语速可调，一键复制结果，纯前端本地计算不上传。">
+    <meta name="keywords" content="阅读时间,阅读时长估算,默读,朗读,字数统计,reading time,reading time calculator,默读速度,朗读时长,文章时长预估">
+    <meta property="og:title" content="阅读时间估算器 - 中英混排字数统计/默读朗读时长估算">
+    <meta property="og:description" content="粘贴文本，中文按字、英文按单词统计，默读/朗读两档语速估算阅读时长（分/秒），语速可调，一键复制结果，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/reading-time">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/reading-time">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "阅读时间估算器",
+      "description": "免费在线阅读时间估算器：中英混排字数统计（中文按字、英文按单词），默读与朗读两档语速估算阅读时长，语速可调，一键复制结果，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/reading-time",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .rt-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .rt-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .rt-textarea { width: 100%; min-height: 200px; padding: .7rem .8rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .95rem; line-height: 1.7; box-sizing: border-box; resize: vertical; }
+        .rt-textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .rt-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .6rem; margin-top: .8rem; }
+        .rt-stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .5rem; padding: .6rem .4rem; text-align: center; }
+        .rt-stat .num { font-size: 1.35rem; font-weight: 700; color: #111827; }
+        .rt-stat .lbl { font-size: .8rem; color: #6b7280; margin-top: .2rem; }
+        .rt-wpm { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; margin-top: .6rem; }
+        .rt-wpm label { display: block; font-size: .82rem; color: #4b5563; margin-bottom: .25rem; }
+        .rt-wpm input { width: 100%; padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .9rem; box-sizing: border-box; }
+        .rt-wpm input:focus { outline: none; border-color: var(--primary-color); }
+        .rt-result { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .6rem; margin-top: .8rem; }
+        .rt-result-card { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .8rem; background: #fff; text-align: center; }
+        .rt-result-card .mode { font-size: .85rem; color: #4b5563; }
+        .rt-result-card .dur { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); margin-top: .3rem; }
+        .rt-result-card .wpm-note { font-size: .78rem; color: #9ca3af; margin-top: .3rem; }
+        .rt-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .rt-limit b { color: #374151; }
+        #rt-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>⏳ 阅读时间估算器</h1>
+            <p>粘贴文本 → 中英混排字数统计（中文按字/英文按单词）→ 默读/朗读两档语速估算时长，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="rt-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 输入文本</h3>
+                <textarea class="rt-textarea" id="rt-input" placeholder="粘贴或键入要估算的文本（支持大文本，输入即实时统计）…"></textarea>
+                <div class="rt-actions">
+                    <button class="btn btn-secondary" id="rt-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="rt-clear">清空</button>
+                </div>
+                <div class="rt-stats">
+                    <div class="rt-stat"><div class="num" id="rt-chinese">0</div><div class="lbl">中文（字）</div></div>
+                    <div class="rt-stat"><div class="num" id="rt-english">0</div><div class="lbl">英文（词）</div></div>
+                    <div class="rt-stat"><div class="num" id="rt-total">0</div><div class="lbl">总字符数</div></div>
+                </div>
+                <div class="rt-info">中文按字计（CJK 字符），英文按单词计（[A-Za-z]+ 连续序列）；标点符号不计入字数，但计入总字符数。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 语速设置（可调）</h3>
+                <div class="rt-info" style="margin-top:0;">默读默认：中文 400 字/分、英文 200 词/分；朗读默认：中文 220 字/分、英文 140 词/分。</div>
+                <div class="rt-wpm">
+                    <div><label for="rt-wpm-silent-zh">默读 · 中文（字/分）</label><input type="number" id="rt-wpm-silent-zh" min="1" step="1"></div>
+                    <div><label for="rt-wpm-silent-en">默读 · 英文（词/分）</label><input type="number" id="rt-wpm-silent-en" min="1" step="1"></div>
+                    <div><label for="rt-wpm-aloud-zh">朗读 · 中文（字/分）</label><input type="number" id="rt-wpm-aloud-zh" min="1" step="1"></div>
+                    <div><label for="rt-wpm-aloud-en">朗读 · 英文（词/分）</label><input type="number" id="rt-wpm-aloud-en" min="1" step="1"></div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ 估算结果</h3>
+                <div class="rt-result">
+                    <div class="rt-result-card">
+                        <div class="mode">默读时长</div>
+                        <div class="dur" id="rt-silent">约 1 秒</div>
+                        <div class="wpm-note">按上方默读语速折算</div>
+                    </div>
+                    <div class="rt-result-card">
+                        <div class="mode">朗读时长</div>
+                        <div class="dur" id="rt-aloud">约 1 秒</div>
+                        <div class="wpm-note">按上方朗读语速折算</div>
+                    </div>
+                </div>
+                <div class="rt-actions">
+                    <button class="btn btn-primary" id="rt-copy">一键复制结果</button>
+                </div>
+                <div class="rt-info">复制格式示例：约120字（中文100字、英文20词），默读约18秒，朗读约33秒。</div>
+            </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="rt-limit">
+                    <li><b>① 固定语速估算：</b>结果是按你设定的语速、只按字数折算出来的——<b>不考虑文本难度</b>（专业术语、长难句读得更慢）、阅读熟练度与注意力状态。</li>
+                    <li><b>② 个体差异大：</b>不同人的默读/朗读速度差异显著，同一段文字实际用时可能差出数倍——估算结果<b>仅供参考</b>，别拿它卡死发布时间或演讲时长。</li>
+                    <li><b>③ 纯本地处理：</b>文本只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="rt-actions">
+                    <a href="/tools/text-tools" class="btn btn-secondary" style="font-size:.9rem;">文本工具集 <span style="color:#2563eb;font-weight:700;">· 写作一条龙</span></a>
+                </div>
+                <div class="rt-info" style="margin-top:.6rem">写作一条龙：文本工具集负责<b>估字</b>（字数统计/去重/排序/盘古空格排版）；阅读时间估算器负责<b>估时</b>（默读/朗读时长）——写作前先估字，写作后估算读者阅读时长。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="rt-info">
+                    <b>流程：</b>把文章粘贴进输入框（大文本也支持，输入即实时统计）→ 查看中文/英文/总字符数 → 按需调整默读/朗读语速 → 直接看默读与朗读时长 → 点「一键复制结果」把结论贴到别处。<br>
+                    <b>语速怎么调：</b>觉得自己读得快就把数字调大，读得慢就调小；演讲/配音场景建议用「朗读」档并按实际试读校准一次。<br>
+                    <b>写作一条龙：</b>先去<a href="/tools/text-tools">文本工具集</a>做字数统计、去重与排版，再回来估算阅读时长。
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="rt-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/reading_time.js?v=1"></script>
+</body>
+{{end}}

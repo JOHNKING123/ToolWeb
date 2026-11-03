@@ -1092,6 +1092,15 @@ func GetCategories() []Category {
 					Category:    "文本工具",
 				},
 				{
+					ID:          "reading_time",
+					Name:        "阅读时间估算器",
+					Description: "阅读时间估算/默读时长/朗读时长：中英混排字数统计（中文按字、英文按单词分别计数），默读（默认中文400字/分、英文200词/分）与朗读（默认中文220字/分、英文140词/分）两档语速估算时长（分/秒），语速可调，一键复制结果；与文本工具集双向互链（写作一条龙），纯前端不上传 · reading time estimator: CJK/English mixed word count, silent & aloud reading time estimate with adjustable WPM, copy result, 100% client-side",
+					Path:        "/tools/reading-time",
+					Icon:        "hourglass_top",
+					New:         true,
+					Category:    "文本工具",
+				},
+				{
 					ID:          "wordcloud_generator",
 					Name:        "词云生成器",
 					Description: "粘贴任意文本，分词与词频统计后在 Canvas 上渲染词云图：英文按字母数字序列切分并小写归一、60+ 停用词过滤，中文按空格切分词组计、无空格长串按单字计，词频→字号 16–96px 线性映射，矩形螺旋占位布局可注种，PNG 下载与词频表复制，纯前端零上传 · Word cloud generator: visualize text word frequency locally, 100% client-side",
