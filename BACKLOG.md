@@ -1,3 +1,79 @@
+## 今日任务（2026-11-04 03:40 · PM 选定轮，接通用调研第二百一十六轮）
+
+**选定：三角形几何求解器（triangle_solver）** — 本轮唯一任务（新工具）。
+
+**顺位**：216 轮 Top3 第三顺位（「无硬伤不跳过、Top3 顺位递进」惯例下**裁定跳过首席、备选不晋升**，理由见下）。
+
+**PM 裁定跳过首席年假拼假优化器的硬依据**（19:37／21:38 PM 轮裁定逻辑沿用）：
+1. 硬伤**仍未消解**：需内置国务院法定节假日/调休数据表且每年更新（维护负担），216 研究轮明确「本轮无新信号消解硬伤」。
+2. **时间窗口仍打折**：今日 2026-11-04，2027 年放假安排尚未公布（通常 11 月下旬）；现在内置数据表只能填 2026（已过期）或让用户手动录入——工具核心价值（开箱即用拼假攻略）当下打折。
+3. 顺位可以让，但只让「当前时间窗口硬伤卡死的项」，PM 定序权行使有记录依据。
+
+**PM 裁定 CSV 编辑器不晋升首席的硬依据**（15:00 PM 轮裁定维持）：小-中难度，一天高质量交付风险高（单元格双击编辑/增删行列/分隔符三选/超大文件性能，一天内做到高质量风险未消解）；顺位备选留池维持。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`triangle_solver`／`triangle-solver`／`triangleSolver` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD 35dde69，285 Path，171 tests）。
+- CJK「三角形」（运行时构造）全站 18 命中，经 codepoint 验真均为 css_clip_path_generator.js／templates（形状预设「三角形/菱形/五边形」label）与 fps_gpu_benchmark.js／templates（WebGL 渲染三角形数量）子串——**口径皆非几何求解工具，不构成重叠**；真缺口确凿。
+- Icon 候选：**`change_history`（首选；Material Symbols 三角形图标，`grep -c '"change_history"' tools/categories.go = 0）**／`shapes`（备选，同 0 命中）；开发轮用精确值复测锁定全库唯一。
+
+**选定理由**：① **真缺口确凿**——`triangle_solver` 工具 ID 全 0 命中，站内 geometry/triangle 类目 Icon 亦无；② **零外部数据依赖**——正弦/余弦定理永久稳定，无年假工具的「每年更新数据表」维护负担；③ **一天可高质量交付**——纯前端小难度（SVG 示意图＋求解纯函数＋测试均为单文件工作量），符合「优先小难度纯前端」要求；④ **方向合规**——学习工具类目，无泛财务/生活计算器扩展禁区冲突（10-18 方向修正）；⑤ **真限制可明示**——SSA 歧义（两组解/无解）口径＋角度制/弧度制切换均可页面明示，无隐藏坑。
+
+**品类归位**：注册到「学习工具」类目（study：math_worksheet_generator／ratio_solver／flashcard_maker 同类目，数学口径自然延续；站内暂无几何专属类目）；New: true；本轮**无互链要求**（比例求解器为代数口径，非几何互链强相关；不做硬凑互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：任意三个已知量（至少含一条边），支持 SSS／SAS／ASA／AAS／SSA 五种组合输入（下拉选「已知条件类型」或三个独立输入框自动判别）② 求解：正弦定理＋余弦定理→全部边（a/b/c）、全部角（A/B/C）、面积（海伦公式/SAS 正弦公式）、周长 ③ SVG 示意图：按解出的真实比例绘制三角形＋标注边角值 ④ 角度制/弧度制切换 ⑤ SSA 歧义：两组解时输出两组完整结果（解 1/解 2 标签）；无解时明确报错口径 ⑥ 示例一键填充（3-4-5／30-60-90 典型）＋一键复制结果＋localStorage 本地保存（无需登录）⑦ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.TriangleSolver 下，module.exports 同步导出）**：
+  - `solveTriangle({a,b,c,A,B,C}, unit='deg')` → {sides:{a,b,c}, angles:{A,B,C}, area, perimeter, solutions:[...], ambiguous:boolean}（已知量缺边/无解/非法 err.field 给出字段名；SSA 两组解时 solutions.length=2）。
+  - `toRadians(deg)`／`toDegrees(rad)` 纯函数双向转换。
+  - `solveSSS(a,b,c)`、`solveSAS(a,C,b)`、`solveASA(A,c,B)`、`solveSSA(a,A,b)` 单模式纯函数（SSA 返回 0/1/2 组解数组）。
+- **真限制三条页面明示**：① SSA（边边角）可能出现两组解或无解，页面会并列输出/明确告知；② 角度制/弧度制切换，结果单位随切换重算；③ 纯前端本地计算、不上传任何输入。
+- **改动文件**：tools/categories.go（学习工具类目新增 triangle_solver 条目，Path 285→**286**，Icon `change_history` 首选/`shapes` 备选，开发轮精确值复测锁定全库唯一）／templates/triangle_solver.html（新）／static/js/triangle_solver.js（新）／tests/triangle_solver.test.js（新）／全量旧 tests Path 断言 285→286 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥60 断言全过（SSS 3-4-5 → 角 36.87°/53.13°/90°、面积 6、周长 12；SAS 精确值；ASA／AAS 精确值；SSA 两组解断言；无解抛错 err.field='a' 等；角度制/弧度制转换断言；模板零外部资源静态检查）② 全量 tests/*.test.js 171→**172** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/triangle-solver 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：年假拼假优化器→首席（顺位维持；本轮 PM 裁定跳过维持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布，时间窗口打折）／CSV 编辑器→备选（顺位维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）／**三角形几何求解器→本轮交付（第三顺位裁定上阵；216 研究轮 P3 留池晋升；零重叠复核确凿（`triangle_solver` 工具 ID 全 0 命中；CJK「三角形」18 命中经 codepoint 验真均为形状预设/渲染计数口径，非几何求解）；学习工具类目；Icon change_history 首选（全库 0 命中）；PM 可裁定已行使）**／两地距离计算器→P3 留池（`great_circle` 真缺口；dev.to 1024toolkit 信号；纯前端小难度）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮未做 git fetch，仅读操作验证：本地 HEAD 35dde69 与 216 研究轮 fetch 记录一致，无需重复；工作区未跟踪目录 `toolweb` 非本轮产物，研究轮惯例不碰）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **285**；`ls tests/*.test.js | wc -l` = **171**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随 PM／开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-04 03:00 · 通用调研第二百一十六轮，接 BMR/TDEE 交付轮）
+
+**交付状态**：11-04 通用调研第二百一十六轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**BMR/TDEE 能量消耗计算器交付闭环**（35dde69 新增：bmr_tdee_calc，Path 284→**285**，tests/bmr_tdee_calc.test.js 新增；templates/bmr_tdee_calc.html＋static/js/bmr_tdee_calc.js＋tests/bmr_tdee_calc.test.js 均存在；全量 tests/*.test.js **171 个**；生活工具类目，Icon local_fire_department；与 bmi_calc／heart_rate_zones 双向互链形成健康小闭环；候选池划出）。**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；硬伤未消解）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持）／**三角形几何求解器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit（2026-10-14）math cluster 同源；`triangle_solver` 全 0 命中；真缺口确凿；纯前端小难度；PM 可裁定）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；03:00 轮，优先小难度纯前端。
+
+**本轮三件事**（03:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 35dde69（BMR/TDEE 能量消耗计算器新增）／dd2b46d（BMI 体质指数计算器新增）／7696efd（心率区间计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **285**；`ls tests/*.test.js | wc -l` = **171**；bmr_tdee_calc 模板＋静态 JS＋测试文件**均存在**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：known_hosts **又被 VM 换机清空**（老问题第三次复现；本轮先做了一次失败 fetch 报 access rights），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD 35dde69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；注意工作区存在未跟踪目录 `toolweb`（非本轮产物，研究轮不碰）；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - BMR/TDEE 能量消耗计算器：已交付（35dde69，Path 284→285，tests 171 个；候选池划出）。
+   - 年假拼假优化器：首席顺位维持（19:37/21:38 PM 轮裁定跳过维持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布，时间窗口打折）。
+   - CSV 编辑器：备选顺位维持（15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）。
+   - **三角形几何求解器（P3 留池晋升）**：`triangle_solver` 全 **0 命中**——真缺口确凿。
+   - 两地距离计算器：`great_circle` 全 **0 命中**——P3 留池维持（本轮第三顺位让位于 math cluster 同源的三角形几何求解器）。
+   - **OFD 误报排除**：本轮 grep `ofd` 得 3 命中，经 codepoint 上下文查实均为 pdf-to-word.js 中 `firstOfDoc` 变量名子串（OfD），**非 OFD 版式口径**——OFD 转 PDF 仍真缺口，弱观察维持（纯前端 ofd.js 中难度；独立价值待 PM 裁定）。
+   - **本轮新信号初判**：
+     - 掘金「出海 Day 11」2026-10-20「图片提取 CSS 变量」（图片主色提取＋CSS 变量代码生成）→站内 image_color_picker **已交付**确认消解（取色＋主色＋色卡口径已覆盖）。
+     - V2EX 1ms.dog（2026-11-01；柴犬捡球可视化查网络延迟，打开即测 40+ 网站逐点延迟）→站内 speed_test **已交付**确认消解（测速/延迟口径已覆盖）。
+     - 掘金 2026-10-28 Linkit（桌面书签管理＋AI 摘要）→桌面客户端＋AI＋云同步口径**确认消解**。
+     - 掘金 2026-10-28 全聚合网址导航源码（轻量导航站源码）→ToolWeb 本身即工具站口径**确认消解**。
+     - 掘金 2026-10-28 私藏工具帖：Arthas Tunnel→需后端/线上确认消解（210 轮已消解维持）；regex101→站内正则工具已交付确认消解（同 210 轮）；dbdiagram→**弱观察维持**（mermaid-diagram-renderer 口径部分覆盖、ER 图差异化弱）；jsoncrack→P3 留池 JSON 节点图可视化同源印证维持。
+     - dev.to 2026-11-03 RozKaTool（40 纯前端工具：pdf-lib/PDF.js 工具＋巴基斯坦电费/税计算）→PDF 工具线站内均已交付确认消解；本地计费/税→泛财务方向修正**确认消解**。
+     - openpr 2026-11-03 Instant Web Scraping（Chrome 扩展网页抓取转 Excel/CSV）→Chrome 扩展口径**确认消解**。
+     - Show HN：Mnml.page（AI 建站＋付费）／HackerTube（AI 实验站）／The Tool Nerd 本周 AI 工具（Sentient OS／Paradev／Hue 均为 AI agent 本体）→AI＋付费/SaaS 口径**确认消解**；本轮无新单页纯前端信号。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **年假拼假优化器** — 首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；站内零重叠实测维持：`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；**硬伤维持未消解**：数据表年更新维护负担＋2027 年放假安排尚未公布（时间窗口打折）；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **CSV 编辑器** — 备选（顺位递进维持；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；站内零重叠实测：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **三角形几何求解器** — 第三顺位（**本轮从 P3 留池晋升**；dev.to 1024toolkit（2026-10-14）math cluster 同源信号；站内零重叠复测：`triangle_solver` 全 0 命中；真缺口确凿；痛点：学生/工程师手算三角形边角关系易错，「已知两边一角求第三边」是几何类高频查询；实现：输入任意三个已知量（至少含一条边）→正弦/余弦定理求解全部边角＋面积＋周长＋SVG 示意图；纯前端小难度；真限制：无解/多解（SSA 歧义）口径须明示、角度制/弧度制切换须明示；学习工具类目，方向合规；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：两地距离计算器（P3 留池；`great_circle` 真缺口；dev.to 1024toolkit 2026-10-14 信号；纯前端小难度）／OFD 转 PDF（弱观察；**本轮 OFD 误报排除复核**：`ofd` 3 命中实为 pdf-to-word.js `firstOfDoc` 变量子串，非版式口径，真缺口保持；纯前端 ofd.js 中难度；独立价值待 PM 裁定）／年龄/日期差计算器（StudyKit 信号印证维持；P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／dbdiagram 表结构 DSL 绘图（弱观察维持；掘金 2026-10-28 私藏工具帖同源印证；mermaid-diagram-renderer 口径部分覆盖、ER 图差异化弱）／JSON 节点图可视化（弱观察 P3 留池；jsoncrack 同源印证维持；json_parser 树形视图已部分覆盖）／Markdown 聊天富文本复制（弱观察；V2EX md2chat t/1250428 信号；markdown_publish_formatter 口径相邻；转图片版需 canvas 渲染中难度）／Markdown 表格生成器（弱观察；1vw.net 信号；markdown_to_csv 口径相邻；独立价值待验证）／切割清单优化（弱观察；一维装箱中难度；小众仅记录）／tubox AI 抠图/AI 放大（211 轮观察维持；需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（211 轮观察维持；国标口径已交付，差异化弱）／文字转语音（低优先；浏览器 SpeechSynthesis 纯前端可做但音质差，高质量需后端/AI 仅记录）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／八字排盘（观察；V2EX「小道」2026-11-01 信号；玄学小众仅记录）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／cURL→fetch 转换器（低优先；curl_to_requests 相邻、差异化弱仅记录）／邮箱批量格式校验（低优先；站内无但独立价值弱仅记录）／MIME 类型速查（低优先；独立价值弱仅记录）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十六轮：BMR/TDEE 能量消耗计算器交付闭环（35dde69 新增：bmr_tdee_calc，Path 284→**285**，tests/bmr_tdee_calc.test.js 新增；templates/bmr_tdee_calc.html＋static/js/bmr_tdee_calc.js＋tests/bmr_tdee_calc.test.js 均存在；全量 tests/*.test.js **171 个**；生活工具类目，Icon local_fire_department；与 bmi_calc／heart_rate_zones 双向互链形成健康小闭环；候选池划出）；**Top3 递进链更新**：**年假拼假优化器→首席**（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假全站 0 命中；真缺口保持；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布；纯前端小难度；PM 可裁定是否立项）／**CSV 编辑器→备选**（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**三角形几何求解器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit math cluster 同源信号；`triangle_solver` 全 0 命中；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号初判**：掘金图片取色器/CSS 变量（2026-10-20）→image_color_picker 已交付确认消解／V2EX 1ms.dog 网络延迟可视化（2026-11-01）→speed_test 已交付确认消解／掘金 Linkit 桌面书签（2026-10-28）→桌面客户端＋AI 口径确认消解／掘金全聚合网址导航源码（2026-10-28）→工具站口径确认消解／掘金私藏工具帖（2026-10-28）：Arthas Tunnel 需后端确认消解、regex101 站内已交付确认消解、dbdiagram 弱观察维持、jsoncrack 同源印证维持／dev.to RozKaTool（2026-11-03）：PDF 工具线站内已交付确认消解、本地税费→泛财务方向修正确认消解／openpr Instant Web Scraping（2026-11-03）→Chrome 扩展口径确认消解／Show HN→本轮无新单页纯前端信号（Mnml.page 付费建站／HackerTube 实验站／The Tool Nerd AI 工具均为 AI＋SaaS 口径）；**OFD 误报排除**：grep `ofd` 3 命中实为 pdf-to-word.js `firstOfDoc` 变量名子串（OfD），非 OFD 版式口径，真缺口保持、弱观察维持；本轮 fetch：known_hosts 又被 VM 换机清空（老问题第三次复现），按 TOOLS.md 修复后**一次成功**，本地 HEAD 35dde69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+**归档说明**：本轮为 11-04 通用调研第二百一十六轮——BMR/TDEE 能量消耗计算器交付闭环（35dde69；`/tools/bmr-tdee-calc` 已注册；全量 **285 Path**；tests/bmr_tdee_calc.test.js 新增；全量 tests/*.test.js **171 个**），候选池划出；**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；CJK 年假/拼假全站 0 命中；真缺口保持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；PM 可裁定是否晋升首席）／**三角形几何求解器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit math cluster 同源信号；`triangle_solver` 全 0 命中（codepoint 验真）；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号初判**（掘金图片取色器→image_color_picker 已交付确认消解／V2EX 1ms.dog→speed_test 已交付确认消解／掘金 Linkit→桌面客户端＋AI 口径确认消解／掘金导航源码→工具站口径确认消解／掘金私藏工具帖→Arthas/regex101 确认消解、dbdiagram 弱观察维持、jsoncrack 同源印证／dev.to RozKaTool→PDF 工具线已交付确认消解、税费→泛财务确认消解／openpr 爬虫扩展→扩展口径确认消解／Show HN→本轮无新单页纯前端信号）；**OFD 误报排除**（`ofd` 3 命中＝pdf-to-word.js `firstOfDoc` 变量子串，非 OFD 版式口径，真缺口保持）；本轮 fetch：known_hosts 又被 VM 换机清空（老问题第三次复现），按 TOOLS.md 修复后一次成功，本地 HEAD 35dde69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：known_hosts 又被 VM 换机清空（老问题第三次复现），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD 35dde69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；工作区未跟踪目录 `toolweb` 非本轮产物，研究轮不碰；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 35dde69（BMR/TDEE 能量消耗计算器新增）／dd2b46d（BMI 体质指数计算器新增）／7696efd（心率区间计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **285**；`ls tests/*.test.js | wc -l` = **171**；`ls templates/bmr_tdee_calc.html static/js/bmr_tdee_calc.js tests/bmr_tdee_calc.test.js` **均存在**；Top3 候选重叠复核（**BMR/TDEE 能量消耗计算器**：已交付（/tools/bmr-tdee-calc，Path 284→285），划出候选池；**年假拼假优化器**：首席顺位维持（19:37/21:38 PM 轮裁定跳过维持，硬伤：调休数据表年更新＋2027 安排未公布）；**CSV 编辑器**：备选顺位维持（15:00 PM 轮裁定留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）；**三角形几何求解器**：`triangle_solver` 全 **0 命中**，真缺口确凿，本轮从 P3 留池晋升第三顺位）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 01:39 · PM 选定轮，接通用调研第二百一十五轮）
 
 **选定：BMR/TDEE 能量消耗计算器（bmr_tdee_calc）** — 本轮唯一任务（新工具）。

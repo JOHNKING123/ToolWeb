@@ -2656,6 +2656,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "triangle_solver",
+					Name:        "三角形几何求解器",
+					Description: "三角形几何求解器：输入任意三个已知量（至少含一条边，自动识别 SSS/SAS/ASA/AAS/SSA 五种组合）→正弦/余弦定理求解全部边角＋面积（海伦公式）＋周长＋SVG 真实比例示意图；角度制/弧度制一键切换（切换自动换算）；SSA 歧义输出两组解（锐角/钝角可切换）、无解明确告知原因，示例一键填充＋结果一键复制，localStorage 本地保存，纯前端零上传 · triangle solver: all sides/angles/area/perimeter by law of sines/cosines with true-scale SVG diagram, ambiguous SSA two solutions, 100% client-side",
+					Path:        "/tools/triangle-solver",
+					Icon:        "change_history",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

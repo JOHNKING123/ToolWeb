@@ -1,0 +1,149 @@
+{{define "triangle_solver"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三角形几何求解器 - SSS/SAS/ASA/AAS/SSA 求边角面积+真实比例图 | 程序员工具箱</title>
+    <meta name="description" content="免费在线三角形几何求解器：输入任意三个已知量（至少含一条边，自动识别 SSS/SAS/ASA/AAS/SSA 五种组合），正弦/余弦定理求解全部边角＋面积＋周长＋SVG 真实比例示意图；角度制/弧度制一键切换；SSA 歧义输出两组解、无解明确告知，示例一键填充＋结果一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="三角形求解器,三角形计算器,正弦定理,余弦定理,SSS,SAS,ASA,AAS,SSA,三角形面积,海伦公式,triangle solver,law of sines,law of cosines">
+    <meta property="og:title" content="三角形几何求解器 - 五种组合求边角面积+真实比例图">
+    <meta property="og:description" content="任意三个已知量→全部边角＋面积＋周长＋SVG 真实比例示意图，SSA 歧义输出两组解，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/triangle-solver">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/triangle-solver">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "三角形几何求解器",
+      "description": "免费在线三角形几何求解器：输入任意三个已知量（至少含一条边，支持 SSS/SAS/ASA/AAS/SSA 五种组合），正弦/余弦定理求解全部边角＋面积＋周长＋SVG 真实比例示意图，角度制/弧度制切换，SSA 歧义输出两组解，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/triangle-solver",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .ts-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .ts-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .ts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: .6rem; }
+        @media (max-width: 640px) { .ts-grid { grid-template-columns: repeat(2, 1fr); } }
+        .ts-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+        .ts-field label { color: #374151; font-weight: 600; }
+        .ts-field label .ts-unit-label { color: #6b7280; font-weight: 400; }
+        .ts-field input[type="number"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; }
+        .ts-field input[type="number"]:focus { outline: none; border-color: var(--primary-color); }
+        .ts-unitrow { display: flex; align-items: center; gap: 1rem; margin-top: .6rem; font-size: .9rem; color: #374151; }
+        .ts-unitrow label { display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
+        .ts-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .ts-mode { display: inline-block; margin-left: .5rem; padding: .15rem .6rem; border-radius: .4rem; background: #dbeafe; color: #1d4ed8; font-size: .8rem; font-weight: 600; vertical-align: middle; }
+        .ts-table { width: 100%; border-collapse: collapse; margin-top: .6rem; font-size: .92rem; }
+        .ts-table td { border: 1px solid #e5e7eb; padding: .45rem .7rem; }
+        .ts-table .ts-k { background: #f9fafb; color: #374151; font-weight: 600; width: 4.2rem; }
+        .ts-svg { margin-top: .8rem; border: 1px solid #e5e7eb; border-radius: .5rem; background: #fff; padding: .4rem; }
+        .ts-svg svg { display: block; max-width: 520px; margin: auto; }
+        #ts-sol-tabs { display: none; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: .6rem; }
+        .ts-tab-on { background: #1d4ed8 !important; color: #fff !important; border-color: #1d4ed8 !important; }
+        .ts-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .ts-limit b { color: #374151; }
+        #ts-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📐 三角形几何求解器</h1>
+            <p>任意三个已知量 → 全部边角＋面积＋周长＋SVG 真实比例示意图，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="triangle-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>已知量输入</h3>
+                <div class="ts-grid">
+                    <div class="ts-field">
+                        <label for="ts-a">边 a（BC 对边）</label>
+                        <input id="ts-a" type="number" min="0" step="any" placeholder="如 3">
+                    </div>
+                    <div class="ts-field">
+                        <label for="ts-b">边 b（CA 对边）</label>
+                        <input id="ts-b" type="number" min="0" step="any" placeholder="如 4">
+                    </div>
+                    <div class="ts-field">
+                        <label for="ts-c">边 c（AB 对边）</label>
+                        <input id="ts-c" type="number" min="0" step="any" placeholder="如 5">
+                    </div>
+                    <div class="ts-field">
+                        <label for="ts-A">角 A <span class="ts-unit-label">°</span></label>
+                        <input id="ts-A" type="number" min="0" step="any" placeholder="如 36.87">
+                    </div>
+                    <div class="ts-field">
+                        <label for="ts-B">角 B <span class="ts-unit-label">°</span></label>
+                        <input id="ts-B" type="number" min="0" step="any" placeholder="如 53.13">
+                    </div>
+                    <div class="ts-field">
+                        <label for="ts-C">角 C <span class="ts-unit-label">°</span></label>
+                        <input id="ts-C" type="number" min="0" step="any" placeholder="如 90">
+                    </div>
+                </div>
+                <div class="ts-unitrow">
+                    <span>角度单位：</span>
+                    <label><input type="radio" name="ts-unit" value="deg" checked> 角度制（°）</label>
+                    <label><input type="radio" name="ts-unit" value="rad"> 弧度制（rad）</label>
+                </div>
+                <div class="ts-info">填写<b>任意 3 个</b>已知量（至少包含 <b>1 条边</b>），输入即自动求解。组合自动识别：<b>SSS</b> 三边 / <b>SAS</b> 两边夹角 / <b>ASA</b> 两角夹边 / <b>AAS</b> 两角及一角对边 / <b>SSA</b> 两边及其中一边对角。</div>
+                <div class="ts-error" id="ts-error" role="alert"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;display:none;" id="ts-result">
+                <h3>求解结果 <span class="ts-mode" id="ts-mode"></span></h3>
+                <div id="ts-sol-tabs"></div>
+                <div id="ts-table"></div>
+                <div class="ts-svg" id="ts-svg"></div>
+                <div class="ts-info">示意图按真实比例绘制：边长标签如 a=4，角弧标注角度值；SSA 歧义时「解 1（锐角）/解 2（钝角）」可切换查看。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="ts-actions" style="margin-top:0;">
+                    <button class="btn btn-secondary" id="ts-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="ts-copy">一键复制结果</button>
+                    <button class="btn btn-secondary" id="ts-clear">清空</button>
+                </div>
+                <div class="ts-info">输入自动保存到浏览器本地（localStorage），下次打开自动恢复；所有计算只在你的浏览器内完成，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="ts-limit">
+                    <li><b>① SSA 歧义与无解口径：</b>「两边及其中一边对角」（SSA）可能对应<b>两组解</b>（第三角一锐一钝），本工具会<b>同时输出两组解</b>供切换查看；若已知量根本构不成三角形（如对边太短够不到、两角之和 ≥180°、三边不满足三角形不等式），会明确提示<b>「无解」及具体原因</b>，不会硬凑一个答案。</li>
+                    <li><b>② 角度制/弧度制切换：</b>切换单位时，已填的角度值会<b>自动换算</b>到新单位（三角形本身不变）；求解结果中的角度始终以<b>当前选中单位</b>显示。角度输入范围恒为 (0, 180°)。</li>
+                    <li><b>③ 纯本地计算：</b>正弦/余弦定理求解、海伦公式求面积、SVG 绘图全部在你的浏览器内完成，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果保留 4 位小数显示，内部按双精度全精度计算。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ts-info">
+                    <b>第一步：</b>在 6 个输入框中填写任意 3 个已知量（至少 1 条边），输入即实时求解；也可先选角度制/弧度制再填。<br>
+                    <b>第二步：</b>看结果——组合判定徽章（SSS/SAS/ASA/AAS/SSA）＋全部边角＋面积＋周长＋真实比例 SVG 示意图。<br>
+                    <b>示例：</b>点「示例一键填充」填入 a=3、b=4、c=5（SSS），得到角 A≈36.87°、B≈53.13°、C=90°，面积=6，周长=12。<br>
+                    <b>SSA 试试：</b>填 a=5、A=30°、c=7，会得到两组解（C≈44.43° 或 C≈135.57°），用「解 1/解 2」按钮切换。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="ts-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/triangle_solver.js?v=1"></script>
+</body>
+{{end}}
