@@ -1,0 +1,154 @@
+{{define "time_decimal"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工时十进制转换 - 时分秒转十进制小时＋批量工时求和 | 程序员工具箱</title>
+    <meta name="description" content="免费在线工时十进制转换：时分秒↔十进制小时双向互转，灵活输入 2:45、1:30:30、2小时45分、2h45m、90分钟（四舍五入保留2位小数），批量行转换求和（timesheet 口径），一键复制结果，纯前端本地计算不上传。">
+    <meta name="keywords" content="工时十进制转换,十进制小时,工时单,工时换算,打卡时长,时分秒转小数,timesheet,decimal hours,time to decimal hours converter">
+    <meta property="og:title" content="工时十进制转换 - 时分秒转十进制小时">
+    <meta property="og:description" content="时分秒↔十进制小时双向互转，批量行转换求和（timesheet 口径），一键复制结果，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/time-decimal">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/time-decimal">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "工时十进制转换",
+      "description": "免费在线工时十进制转换：时分秒↔十进制小时双向互转，灵活输入 2:45、1:30:30、2小时45分、2h45m、90分钟（保留2位小数），批量行转换求和（timesheet 口径），一键复制结果，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/time-decimal",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .td-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .td-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .td-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .6rem; }
+        .td-row input { flex: 1 1 220px; padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; }
+        .td-row input:focus { outline: none; border-color: var(--primary-color); }
+        .td-chip { font-size: .82rem; padding: .3rem .7rem; }
+        .td-result { margin-top: .8rem; border: 1px solid #e5e7eb; border-radius: .6rem; padding: 1rem; background: #f9fafb; text-align: center; }
+        .td-big { font-size: 2.2rem; font-weight: 700; color: var(--primary-color); }
+        .td-unit { font-size: 1rem; font-weight: 400; color: #6b7280; }
+        .td-note { font-size: .88rem; color: #4b5563; margin-top: .4rem; }
+        .td-err { color: #dc2626; font-size: .9rem; font-weight: 600; }
+        .td-batch { width: 100%; min-height: 150px; padding: .6rem .7rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; font-family: inherit; box-sizing: border-box; line-height: 1.7; resize: vertical; margin-top: .6rem; }
+        .td-batch:focus { outline: none; border-color: var(--primary-color); }
+        .td-table { width: 100%; border-collapse: collapse; margin-top: .8rem; font-size: .9rem; }
+        .td-table th, .td-table td { border: 1px solid #e5e7eb; padding: .45rem .6rem; text-align: left; }
+        .td-table th { background: #f3f4f6; color: #374151; }
+        .td-table .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+        .td-table .td-ok { color: #16a34a; font-weight: 700; text-align: center; }
+        .td-table tr.td-bad { background: #fef2f2; }
+        .td-errcell { color: #dc2626; font-size: .85rem; text-align: center; }
+        .td-total { margin-top: .8rem; font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .td-total span { color: var(--primary-color); font-size: 1.6rem; }
+        .td-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .td-limit b { color: #374151; }
+        #td-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🕒 工时十进制转换</h1>
+            <p>时分秒 ↔ 十进制小时双向互转（保留 2 位小数）＋ 批量行转换求和（timesheet 口径），纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="td-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 时分秒 → 十进制小时</h3>
+                <div class="td-row">
+                    <input id="td-in" type="text" placeholder="如 2:45 / 1:30:30 / 2小时45分 / 2h45m / 90分钟">
+                    <button class="btn btn-primary" id="td-to-dec">转十进制小时</button>
+                </div>
+                <div class="td-actions" id="td-chips"></div>
+                <div class="td-result" id="td-dec-result" style="display:none;"></div>
+                <div class="td-actions">
+                    <button class="btn btn-secondary" id="td-copy-dec">一键复制结果</button>
+                </div>
+                <div class="td-info">支持三种写法：<b>H:MM / H:MM:SS</b>（2:45、1:30:30；分/秒须 00~59）、<b>中文</b>（2小时45分、90分钟、165分、30秒，各段可省）、<b>英文</b>（2h45m、90m、45s）。四舍五入保留 2 位小数，如 2:45 → 2.75。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 十进制小时 → X小时Y分</h3>
+                <div class="td-row">
+                    <input id="td-dec-in" type="number" min="0" step="0.01" placeholder="如 2.75">
+                    <button class="btn btn-primary" id="td-to-words">转时分文案</button>
+                </div>
+                <div class="td-actions" id="td-dec-chips"></div>
+                <div class="td-result" id="td-words-result" style="display:none;"></div>
+                <div class="td-actions">
+                    <button class="btn btn-secondary" id="td-copy-words">一键复制结果</button>
+                </div>
+                <div class="td-info">反向转换：十进制小时数 → 「X小时Y分」文案，如 2.75 → 2小时45分。适合把算好的工时转回中文文案填表。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ 批量行转换求和（timesheet 口径）</h3>
+                <textarea class="td-batch" id="td-batch" placeholder="每行一个时长，例如：&#10;2:45&#10;1:30:30&#10;2小时45分&#10;2h45m&#10;90分钟"></textarea>
+                <div class="td-actions">
+                    <button class="btn btn-primary" id="td-batch-run">批量转换并求和</button>
+                    <button class="btn btn-secondary" id="td-batch-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="td-batch-clear">清空</button>
+                </div>
+                <div class="td-result" id="td-batch-result" style="display:none;">
+                    <table class="td-table">
+                        <thead><tr><th style="width:3rem;">行</th><th>输入</th><th style="width:7rem;">小时数</th><th style="width:6rem;">状态</th></tr></thead>
+                        <tbody id="td-rows"></tbody>
+                    </table>
+                    <div class="td-total">合计：<span id="td-total">—</span></div>
+                    <div class="td-actions" style="justify-content:center;">
+                        <button class="btn btn-secondary" id="td-batch-copy">一键复制结果</button>
+                    </div>
+                </div>
+                <div class="td-info">从打卡记录/工时单复制多行粘贴进来即可：空行自动跳过，单行写错只标红该行、不中断整批，合计为成功行之和（保留 2 位）。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="td-limit">
+                    <li><b>① 标准 1 小时 = 60 分钟换算：</b>本工具只做「时长 → 十进制小时」的纯数学换算，<b>不含午休扣除、加班系数、调休折算</b>等任何公司口径调整。</li>
+                    <li><b>② 四舍五入保留 2 位小数：</b>如 1:30:30 → 1.51。你们公司工时单是截断还是四舍五入、保留几位，<b>请按公司口径核对</b>后再填。</li>
+                    <li><b>③ 跨天/班次口径不管：</b>只认输入的时长本身，不处理「22:00–次日 6:00」这类起止时间段的跨天计算；需要先自己算出每段时长再粘贴批量转换。</li>
+                    <li><b>④ 纯本地计算：</b>所有输入只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>，正式工时单以公司系统为准。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="td-actions">
+                    <a href="/tools/unit-converter" class="btn btn-secondary" style="font-size:.9rem;">单位换算器</a>
+                </div>
+                <div class="td-info" style="margin-top:.6rem">时长换算完，如果还要换长度/重量/温度/数据存储，去<a href="/tools/unit-converter">单位换算器</a>（同一「生活工具」类目）。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="td-info">
+                    <b>流程：</b>单个时长在 ①/② 里双向互转（点示例 chips 一键填入）→ 多行打卡记录粘贴到 ③ 的文本框点「批量转换并求和」→ 点「一键复制结果」把明细＋合计贴进工时单/报销单。<br>
+                    <b>输入写法：</b>2:45、1:30:30、2小时45分、2小时45分30秒、2h45m、90分钟、165分、30秒、45s 都认；纯数字（如 2.5）不认，请写成 2:30 或 2小时30分。<br>
+                    <b>批量口径：</b>timesheet 式逐行转换求和，空行跳过、错行标红不中断，合计只加成功行。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="td-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/time_decimal.js?v=1"></script>
+</body>
+{{end}}

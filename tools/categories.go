@@ -2336,6 +2336,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "time_decimal",
+					Name:        "工时十进制转换",
+					Description: "工时十进制转换/十进制小时/工时单换算/打卡时长：时分秒↔十进制小时双向互转，灵活输入 2:45、1:30:30、2小时45分、2h45m、90分钟（四舍五入保留2位小数），批量行转换求和（timesheet 口径：每行一个时长逐行转换＋总计），一键复制结果，纯前端本地计算 · Time decimal converter: flexible time to decimal hours bidirectionally (2:45, 1:30:30, 2h45m, 90 minutes), batch timesheet conversion with total, copy result, 100% client-side",
+					Path:        "/tools/time-decimal",
+					Icon:        "schedule",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

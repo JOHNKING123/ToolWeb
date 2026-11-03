@@ -1,4 +1,93 @@
+## 今日任务（2026-11-03 13:00 · PM 选定轮，接通用调研第二百〇九轮）
+
+**选定：工时十进制转换（time_decimal）** — 本轮唯一任务（新工具）。
+
+**顺位**：209 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席期末成绩目标计算器已交付划出、备选屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 工时十进制转换顺位递进为首席；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- `time_decimal`／`time-decimal`／`decimal_time`／`timesheet` 在 tools＋templates＋static＋tests 四处**全 0 命中**；`encoding_converter`／`charset_converter`／`text_encoding`／`native_ascii`／`gbk_converter` 全 0 命中（备选留池）；`screen_ruler` 全 0 命中（真缺口保持，17:00 PM 轮裁定暂不立项维持，第三顺位留池）。
+- CJK「工时」全站 17 命中**全部在 BACKLOG.md**（研究/PM 轮候选表文案），业务代码 **0 命中**；「十」为日历/农历/亲戚计算器常用字，无工具口径相关命中（逐行抽检均为「十月/初十/二十」等日期字）；「小尺」命中为 img_target_kb 等「小尺寸」口径，**不重叠**。
+- 命名无占用：ID `time_decimal`、Path `/tools/time-decimal` 均 0 命中；Icon **`schedule`／`timer`／`clock`／`alarm`／`hour`／`stopwatch` 全 0 占用**（开发轮用精确值复测锁定全库唯一；推荐首选 `schedule` 贴工时单口径，`timer` 备选）。
+- 全量 Path **278**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **164 个**；本地分支 muse/dev-20260929，本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 50fb096 与 origin/muse/dev-20260929 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——209 轮 Top3 首席（P1 顺位递进）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中，codepooint 验真）；③ **痛点真实**——填工时单/报销需把"2小时45分"转"2.75"，搜到的转换站全是广告垃圾站（dev.to 2025-04 信号）；④ **一天可高质量交付**——纯前端极小难度，时分秒↔十进制小时双向互转＋批量行求和，纯函数可写逐字向量（parseToHours／formatHours／batchConvert 确定性＋err.field），无模型/外部请求硬伤；⑤ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发（工时换算是效率工具，非泛财务计算器）。
+- 不选中文编码转换器：本轮新增 P2 备选（掘金 AppKit 2026-10-22 新信号），开发者小众口径，信号尚新待验证，备选留池。
+- 不选屏幕尺子：17:00 PM 轮裁定暂不立项维持，209 轮无新信号变化，第三顺位留池。
+
+**品类归位**：注册到「生活工具」类目（工时单/报销场景）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 双向互转：灵活输入（`2:45`／`1:30:30`／`2小时45分`／`2小时45分30秒`／`2h45m`／`90分钟`／`165分`）→ 十进制小时（保留 2 位小数，如 2.75）；② 反向：十进制小时 → `X小时Y分` 文案（0 秒省略）；③ 批量行转换：每行一个时长逐行转换＋总计求和；④ 一键复制结果；⑤ 真限制页面明示：标准 1小时=60分钟换算，不含午休扣除/加班系数，四舍五入保留 2 位，请按公司工时单口径核对。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.TimeDecimal 下，module.exports 同步导出）**：
+  - `parseToHours(text)` → number（十进制小时，Math.round(x*100)/100 保留 2 位）：接受 `H:MM`、`H:MM:SS`、`X小时Y分Z秒`（任一段可省）、`Xh Ym Zs`、`N分钟`/`N分`、`N秒`/`Ns`；空串/非有限/为负/格式非法抛 Error err.field='text'。
+  - `formatHours(decimal)` → string（`X小时Y分`，0 秒省略；如 2.5 → `"2小时30分"`）：decimal 非有限数或为负抛 Error err.field='decimal'。
+  - `batchConvert(text)` → `{rows:[{input, hours}｜{input, error}], total}`：按行 parseToHours，单行失败记 error 不中断；total 为成功行之和保留 2 位。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `parseToHours("2:45")` → `2.75`
+  - `parseToHours("2小时45分")` → `2.75`
+  - `parseToHours("1:30:30")` → `1.51`（1.5＋30/3600＝1.50833→1.51）
+  - `parseToHours("90分钟")` → `1.5`
+  - `parseToHours("165分")` → `2.75`
+  - `formatHours(2.75)` → `"2小时45分"`；`formatHours(2.5)` → `"2小时30分"`
+  - `batchConvert("2:45\n1:30").total` → `4.25`
+  - `parseToHours("")` 抛 Error（err.field='text'）；`formatHours(-1)` 抛 Error（err.field='decimal'）
+- **预计改动文件**：tools/categories.go（注册 ID `time_decimal`、Name「工时十进制转换」、Path `/tools/time-decimal`、Icon `schedule`（精确值开发轮复测锁定全库唯一）、Category「生活工具」、New: true、Description 含 时分秒/十进制小时/工时单/timesheet 中英文关键词；旧测试 Path 断言 278→279 同步）／templates/time_decimal.html（模板零外部资源，仅 canonical 元链接；真限制明示）／static/js/time_decimal.js（纯前端本地计算）／tests/time_decimal.test.js（纯函数逐字向量断言）。
+- **验收标准**：① 上述 8 条确定性向量 node 测试全绿；② 全量 tests/*.test.js 无回归；③ `go build`＋`go vet` 通过；④ 本地 `/tools/time-decimal` 页面与静态 JS 实测 200；⑤ 模板零外部资源。
+
+---
+
+## 今日任务（2026-11-03 13:00 · 通用调研第二百〇九轮，接期末成绩目标计算器交付轮）
+
+**交付状态**：11-03 通用调研第二百〇九轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**期末成绩目标计算器交付闭环**（50fb096 新增：final_grade，Path 277→**278**，tests/final_grade.test.js pass=71 fail=0；templates/final_grade.html＋static/js/final_grade.js＋tests/final_grade.test.js 均存在；候选池划出）。**Top3 递进链更新**：工时十进制转换→首席（顺位递进；208 轮第三顺位；备选屏幕尺子 17:00 PM 轮裁定暂不立项维持，依「无硬伤不跳过、Top3 顺位递进」惯例跳过；`time_decimal` 真缺口维持；unit_converter 通用单位换算口径不重叠；纯前端极小难度；单帖旧信号低优先；**PM 可裁定是否立项**）／中文编码转换器→备选（**本轮新增 P2**；掘金 AppKit（www.appkit.top）2026-10-22 新信号：「大部分在线工具只认 UTF-8，拿 GBK 内容进去就是一片乱码」「Ascii/Native 互转能在本地编码和 UTF-8 之间正确互转」；`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中；GBK 仅 url_codec/csv_json 附带支持（URL 编解码／文件上传解码口径，非文本编码转换口径）；json_string_escaper（JSON 字符串字面量口径）不重叠；真缺口确凿；痛点：Java properties 中文转 `\uXXXX`、收到乱码文本反查编码、GBK/Big5/Shift_JIS↔UTF-8 文本互转；实现：浏览器原生 TextDecoder(gbk/gb2312/big5/shift_jis/utf-8)＋native2ascii 纯函数双向；纯前端小难度；真限制：解码错误字符替换/原生字符集支持度须明示；PM 可裁定是否晋升首席）／屏幕尺子→第三顺位（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定复活）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；13:00 轮，优先小难度纯前端。
+
+**本轮三件事**（13:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 50fb096（期末成绩目标计算器新增）／77c7be3（阅读时间估算器）／f7e4141（学习笔记整理器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **278**；`ls templates/final_grade.html static/js/final_grade.js tests/final_grade.test.js` **均存在**；`node tests/final_grade.test.js` **pass=71 fail=0**；tests/*.test.js **164 个**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 50fb096 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 期末成绩目标计算器：已交付（50fb096，Path 277→278，测试 71 断言全绿）——划出候选池。
+   - 工时十进制转换：`time_decimal`/`decimal_time` 全 0 命中维持；unit_converter（通用单位换算口径）不重叠——真缺口保持，顺位递进为首席。
+   - 中文编码转换器（本轮新增）：`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中；GBK 附带支持（url_codec URL 编解码口径、csv_json 文件上传解码口径）不重叠；json_string_escaper（JSON 字符串字面量转义口径）不重叠；「编码转换」为类目名非工具——真缺口确凿。
+   - 屏幕尺子：`screen_ruler` 全 0 命中维持——真缺口保持（17:00 PM 轮裁定暂不立项维持）。
+   - V2EX t/1252576 FrameLoom（2026-10-28；文档→动画视频，Remotion 本机渲染，需 Agent/配音服务）→需 AI 服务＋本地运行环境**确认消解**。
+   - V2EX t/1251721 DealPage（2026-10-25；单条商单/推荐码落地页，点击/复制数据统计）→后端口径**确认消解**。
+   - V2EX t/1250158 玄印写作（2026-10-19；本地 AI 小说写作桌面工具，需自备文本模型接口＋API Key）→桌面 App＋自备模型口径**确认消解**。
+   - V2EX t/1246859 GitHub Atlas（2026-10-07；GitHub 语义地图产品）→产品口径**确认消解**。
+   - V2EX t/1253201／t/1252552／t/1250428→多轮已消解（自媒体获客四工具／iLovePDF/Remove.bg 需后端／md_to_chat 已交付），确认维持。
+   - dev.to Tooltri 30＋工具（2026-10-08；SQLite DB Viewer／Token Counter 等）→站内 sqlite_viewer＋ai_token_counter 已交付**确认消解**，其余口径均已覆盖。
+   - dev.to DevTools Hub 40 工具（2026-10-02；chmod 计算器／cron 解析器等）→站内 chmod_calculator＋cron_parser 已交付**确认消解**，其余口径均已覆盖。
+   - dev.to dauntexlabs 150 工具（2026-10；Krutidev→Unicode 印地语遗留字体转换／crosswind 航空计算器）→印度遗留字体／飞行员口径过小众，记观察项仅记录不立项。
+   - dev.to SalaryPayTools（2026-10-30；14 个美国工资计算器）→泛财务＋美国口径，方向修正边界外**确认消解**。
+   - dev.to Baznek（2026-10-08；跨境发票费用反算）→财务小众＋需税制模型**确认消解**。
+   - dev.to NutriCounter（2026-10-08；卡路里/BMR 计算器）→泛健康计算器口径，单帖信号低优先，记观察项（`calorie`/`bmr` 仅 schema_org_generator 示例文案 0 工具命中）。
+   - 掘金 AppKit 28 工具（2026-10-22；GBK/Big5/Shift_JIS 码表＋Ascii/Native 互转／HTTP 模拟导出 cURL／CSV 编辑器／JS 混淆）→**中文编码转换新信号（P2）**；Base64/时间戳/JWT/二维码已交付消解；WHOIS/ICP 备案需后端消解。
+   - 掘金 monkeydev 工具箱（2026-10-20；JSON/Base64/哈希/UUID/JWT/时间戳）→全已交付口径**确认消解**。
+   - itzhouq 14 工具（2026-10-09；违禁词检测／简繁互转／JWT 解析／图片压缩）→违禁词检测→站内 forbidden_word_detector 已交付**确认消解**，其余全已交付。
+   - HN Ask HN 工具讨论串（12957371／2348578／16322942）→旧帖无新工具信号；Reddit「I wish there was a website」→SEO 垃圾站无可用信号。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **工时十进制转换** — 首席（顺位递进；208 轮第三顺位；首席期末成绩目标计算器已交付划出、备选屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 递进为首席；站内零重叠实测维持：`time_decimal`/`decimal_time`/`timesheet` 全 0 命中；unit_converter（通用单位换算口径）不重叠；真缺口确凿；痛点：填工时单/报销需把"2小时45分"转"2.75"，搜到的转换站全是广告垃圾站（dev.to 2025-04 信号）；实现：时分秒↔十进制小时双向互转＋批量行转换；纯前端极小难度；真限制：工时单口径（是否含午休/加班系数）须明示；低优先：单帖旧信号，频次待验证；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **中文编码转换器** — 备选（**本轮新增 P2**；掘金 AppKit 2026-10-22 新信号：「大部分在线工具只认 UTF-8，拿 GBK 内容进去就是一片乱码」「Ascii/Native 互转能在本地编码和 UTF-8 之间正确互转」；站内零重叠实测：`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中；GBK 仅 url_codec（URL 编解码口径）/csv_json（文件上传解码口径）附带支持，不重叠；json_string_escaper（JSON 字符串字面量口径）不重叠；真缺口确凿；痛点：Java properties 中文转 `\uXXXX`、收到乱码文本反查编码、GBK/Big5/Shift_JIS↔UTF-8 文本互转；实现：粘贴文本→字符集选择（UTF-8/GBK/GB2312/Big5/Shift_JIS）→TextDecoder 本地解码→native2ascii `\uXXXX` 双向互转＋编码探测提示；纯前端小难度（TextDecoder 浏览器原生＋纯函数）；真限制：解码错误字符替换、浏览器原生字符集支持度须明示；低优先：开发者小众口径；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **屏幕尺子** — 第三顺位（207 轮 Top3 顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，**PM 可裁定复活**）。
+
+其余观察项保持原状：dauntexlabs 印地语遗留字体转换/Krutidev→Unicode（**本轮新增观察**；dev.to 2026-10 信号；纯前端可实现（字符映射表）；过小众：印度印地语打字员口径，与 ToolWeb 中文受众错位；仅记录不立项）／NutriCounter 卡路里计算器（**本轮新增观察**；dev.to 2026-10-08 单帖；`calorie`/`bmr` 0 工具命中；泛健康计算器口径，差异化弱，低优先）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／GPA 绩点计算器（P3 留池；绩点/GPA 真缺口；学习小众口径低优先）／年龄/日期差计算器（P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／百分比/成绩计算器（P3 留池；`percentage_calc` 真缺口；方向修正边界相邻低优先）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇九轮：期末成绩目标计算器交付闭环（50fb096 新增：final_grade，Path 277→**278**，tests/final_grade.test.js pass=71 fail=0；候选池划出）；**Top3 递进链更新**：**工时十进制转换→首席**（顺位递进；208 轮第三顺位；首席已交付划出、备选 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`time_decimal` 全 0 命中维持；unit_converter 不重叠；真缺口确凿；纯前端极小难度；单帖旧信号低优先；PM 可裁定是否立项）／**中文编码转换器→备选**（**本轮新增 P2**；掘金 AppKit 2026-10-22 新信号；`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中；GBK 附带支持（url_codec/csv_json）不重叠；json_string_escaper 不重叠；真缺口确凿；纯前端小难度；TextDecoder 原生＋native2ascii 纯函数；PM 可裁定是否晋升首席）／**屏幕尺子→第三顺位**（17:00 PM 轮裁定暂不立项维持；本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定复活）；**本轮新增观察**：dauntexlabs 印地语遗留字体转换（过小众，仅记录）／NutriCounter 卡路里计算器（单帖泛健康口径，低优先）；**本轮初判消解 15 项全部确认**：V2EX FrameLoom（t/1252576）→需 AI 服务＋本地运行环境／V2EX DealPage（t/1251721）→后端口径／V2EX 玄印写作（t/1250158）→桌面 App＋自备模型口径／V2EX GitHub Atlas（t/1246859）→产品口径／V2EX t/1253201/t/1252552/t/1250428→多轮已消解维持／dev.to Tooltri（sqlite_viewer＋ai_token_counter 已交付）／dev.to DevTools Hub（chmod_calculator＋cron_parser 已交付）／dev.to SalaryPayTools→泛财务＋美国口径方向外／dev.to Baznek→财务小众／掘金 AppKit（其余口径：Base64/时间戳/JWT/二维码已交付，WHOIS/ICP 需后端）／掘金 monkeydev→全已交付／itzhouq 14 工具（违禁词→forbidden_word_detector 已交付）／HN Ask HN 旧帖→无新信号／Reddit「I wish there was a website」→SEO 垃圾站无可用信号；本轮 fetch 一次成功，本地 HEAD 50fb096 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 期末成绩目标计算器 | 已交付划出（50fb096 新增：final_grade，Path 277→278，tests/final_grade.test.js pass=71 fail=0；templates/final_grade.html＋static/js/final_grade.js＋tests/final_grade.test.js 均存在；候选池划出） | — | 已实现 |
+| 工时十进制转换 | 首席（顺位递进；208 轮第三顺位；首席已交付划出、备选 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`time_decimal`/`decimal_time`/`timesheet` 全 0 命中维持；unit_converter（通用单位换算口径）不重叠；真缺口确凿；痛点：填工时单/报销需把"2小时45分"转"2.75"，搜到的转换站全是广告垃圾站；实现：时分秒↔十进制小时双向互转＋批量行转换；纯前端极小难度；真限制：工时单口径须明示；低优先：单帖旧信号（dev.to 2025-04），频次待验证；PM 可裁定是否立项；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1（顺位） |
+| 中文编码转换器 | 备选（本轮新增 P2；掘金 AppKit（www.appkit.top）2026-10-22 新信号：「大部分在线工具只认 UTF-8，拿 GBK 内容进去就是一片乱码」「Ascii/Native 互转能在本地编码和 UTF-8 之间正确互转」；`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中；GBK 仅 url_codec（URL 编解码口径）/csv_json（文件上传解码口径）附带支持，不重叠；json_string_escaper（JSON 字符串字面量口径）不重叠；真缺口确凿；痛点：Java properties 中文转 `\uXXXX`、收到乱码文本反查编码、GBK/Big5/Shift_JIS↔UTF-8 文本互转；实现：TextDecoder 浏览器原生解码＋native2ascii 纯函数双向；纯前端小难度；真限制：解码错误字符替换/浏览器字符集支持度须明示；低优先：开发者小众口径；PM 可裁定是否晋升首席；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2（新） |
+| 屏幕尺子 | 第三顺位（207 轮 Top3 顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径；PM 可裁定复活） | 小 | P3（留池） |
+| 印地语遗留字体转换 | 本轮新增观察（dev.to dauntexlabs 2026-10 信号：Krutidev→Unicode 等印度遗留字体转换；纯前端字符映射表可实现；过小众：印度印地语打字员口径，与 ToolWeb 中文受众错位；仅记录不立项） | 小 | 观察 |
+| 卡路里计算器 | 本轮新增观察（dev.to NutriCounter 2026-10-08 单帖信号；`calorie`/`bmr` 0 工具命中真缺口；泛健康计算器口径（BMR/TDEE），差异化弱；纯前端小难度；低优先） | 小 | 观察 |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇九轮——期末成绩目标计算器交付闭环（50fb096；`/tools/final-grade` 已注册；全量 **278 Path**；tests/final_grade.test.js pass=71 fail=0），候选池划出；**Top3 递进链更新**：工时十进制转换→首席（顺位递进；`time_decimal` 真缺口；unit_converter 不重叠；单帖旧信号低优先；PM 可裁定是否立项）／中文编码转换器→备选（本轮新增 P2；掘金 AppKit 2026-10-22 新信号；`encoding_converter` 等全 0 命中；GBK 附带支持/json_string_escaper 不重叠；真缺口确凿；纯前端小难度；PM 可裁定是否晋升首席）／屏幕尺子→第三顺位（17:00 PM 轮裁定暂不立项维持；`screen_ruler` 0 命中真缺口保持；本轮无新信号变化；PM 可裁定复活）；本轮新增观察：印地语遗留字体转换（过小众仅记录）／卡路里计算器（单帖泛健康口径低优先）；本轮初判消解 15 项全部确认（V2EX FrameLoom→AI 服务口径／DealPage→后端口径／玄印写作→桌面 App＋自备模型口径／GitHub Atlas→产品口径／t/1253201/t/1252552/t/1250428 维持消解／dev.to Tooltri→sqlite_viewer＋ai_token_counter 已交付／DevTools Hub→chmod_calculator＋cron_parser 已交付／SalaryPayTools→泛财务方向外／Baznek→财务小众／掘金 AppKit 其余口径（Base64/时间戳/JWT/二维码已交付；WHOIS/ICP 需后端）／掘金 monkeydev→全已交付／itzhouq 14 工具（违禁词→forbidden_word_detector 已交付）／HN Ask HN 旧帖无新信号／Reddit「I wish there was a website」→SEO 垃圾站）；本轮 fetch 一次成功，本地 HEAD 50fb096 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 50fb096 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 50fb096（期末成绩目标计算器新增）／77c7be3（阅读时间估算器新增）／f7e4141（学习笔记整理器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **278**；`ls templates/final_grade.html static/js/final_grade.js tests/final_grade.test.js` **均存在**；`node tests/final_grade.test.js` **pass=71 fail=0**；Top3 候选重叠复核（**期末成绩目标计算器**：已交付（/tools/final-grade，Path 277→278），划出候选池；**工时十进制转换**：`time_decimal`/`decimal_time`/`timesheet` 全 **0 命中**，unit_converter（通用单位换算口径）不重叠，真缺口保持，顺位递进为首席；**中文编码转换器**：`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 **0 命中**，GBK 附带支持（url_codec/csv_json）不重叠，json_string_escaper（JSON 字符串字面量口径）不重叠，「编码转换」为类目名非工具，真缺口确凿，本轮新增 P2 备选；**屏幕尺子**：`screen_ruler` 全 **0 命中**，真缺口保持（17:00 PM 轮裁定暂不立项维持，第三顺位））；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 11:00 · PM 选定轮，接 208 轮通用调研）
+
 
 **选定：期末成绩目标计算器（final_grade）** — 本轮唯一任务（新工具）。
 
