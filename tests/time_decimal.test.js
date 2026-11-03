@@ -113,7 +113,7 @@ var iconRe = /"schedule"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 2, "Icon schedule 精确值复测锁定：全库共 2 处（Cron 表达式解析＋工时十进制转换）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 283, "注册 Path 总数 278→279");
+eq(pathCount, 284, "注册 Path 总数 278→279");
 
 /* ---------- 7. 模板：SEO/真限制/互链/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/time-decimal", "模板 canonical 含新 Path");

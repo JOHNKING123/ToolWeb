@@ -156,7 +156,7 @@ ok(GO_SRC.slice(hgIdx, hgIdx + 1400).indexOf('Category:    "营销工具"') >= 0
 ok(GO_SRC.slice(hgIdx, hgIdx + 2200).toLowerCase().indexOf("hashtag generator") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 283, "注册 Path 总数 268→270");
+eq(pathCount, 284, "注册 Path 总数 268→270");
 
 /* ---------- 6. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "hashtag_generator.html"), "utf8");

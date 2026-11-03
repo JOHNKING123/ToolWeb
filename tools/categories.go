@@ -2363,6 +2363,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "bmi_calc",
+					Name:        "BMI 体质指数计算器",
+					Description: "BMI 体质指数计算器：身高（cm）＋体重（kg）→BMI（体重÷身高²，保留 1 位小数）＋WHO 四分级（偏瘦<18.5／正常18.5–24.9／超重25–29.9／肥胖≥30）＋分级色条可视化＋各分级健康提示文案，示例一键填充＋结果一键复制，localStorage 本地保存，纯前端零上传 · BMI calculator: height/weight to BMI (1 decimal) with WHO classification, zone color bar & health advice, 100% client-side",
+					Path:        "/tools/bmi-calc",
+					Icon:        "monitor_weight",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

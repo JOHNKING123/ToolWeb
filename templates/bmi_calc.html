@@ -1,0 +1,147 @@
+{{define "bmi_calc"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI 体质指数计算器 - WHO 分级/色条可视化/健康提示 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 BMI 体质指数计算器：输入身高（cm）＋体重（kg），按 WHO 标准计算 BMI（保留 1 位小数）并输出偏瘦/正常/超重/肥胖四分级＋分级色条可视化＋健康提示文案，示例一键填充＋结果一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="BMI计算器,体质指数计算器,BMI指数,体重指数,WHO标准,肥胖分级,bmi calculator,body mass index">
+    <meta property="og:title" content="BMI 体质指数计算器 - WHO 四分级/色条可视化">
+    <meta property="og:description" content="身高＋体重→BMI（1 位小数）＋WHO 四分级＋色条可视化＋健康提示，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bmi-calc">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bmi-calc">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "BMI 体质指数计算器",
+      "description": "免费在线 BMI 体质指数计算器：身高（cm）＋体重（kg）→BMI（保留 1 位小数）＋WHO 偏瘦/正常/超重/肥胖四分级＋分级色条可视化＋健康提示文案，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/bmi-calc",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .bmi-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .bmi-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .bmi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .6rem; }
+        @media (max-width: 640px) { .bmi-grid { grid-template-columns: 1fr; } }
+        .bmi-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+        .bmi-field label { color: #374151; font-weight: 600; }
+        .bmi-field input[type="number"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; }
+        .bmi-field input[type="number"]:focus { outline: none; border-color: var(--primary-color); }
+        .bmi-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .bmi-value { font-size: 2.6rem; font-weight: 700; color: var(--primary-color); text-align: center; margin-top: .4rem; }
+        .bmi-value small { font-size: .95rem; font-weight: 400; color: #6b7280; }
+        .bmi-class { display: flex; align-items: center; justify-content: center; gap: .6rem; margin-top: .5rem; flex-wrap: wrap; }
+        .bmi-badge { color: #fff; font-weight: 700; font-size: 1rem; border-radius: .4rem; padding: .25rem .8rem; }
+        .bmi-class-range { color: #6b7280; font-size: .85rem; }
+        .bmi-barwrap { margin-top: 1.4rem; }
+        .bmi-bar { position: relative; height: 1rem; border-radius: .5rem; overflow: visible; background: #f3f4f6; }
+        .bmi-seg { position: absolute; top: 0; height: 100%; }
+        .bmi-seg:first-child { border-radius: .5rem 0 0 .5rem; }
+        .bmi-marker { position: absolute; top: -.35rem; width: 3px; height: 1.7rem; background: #111827; border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 0 2px #fff; }
+        .bmi-tick { position: absolute; top: 1.25rem; transform: translateX(-50%); font-size: .75rem; color: #6b7280; white-space: nowrap; }
+        .bmi-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.2rem; font-size: .82rem; color: #4b5563; }
+        .bmi-legend span { display: inline-flex; align-items: center; gap: .3rem; }
+        .bmi-dot { display: inline-block; width: .7rem; height: .7rem; border-radius: .2rem; }
+        .bmi-advice { margin-top: .8rem; padding: .7rem .9rem; border-radius: .5rem; background: #f9fafb; border: 1px solid #e5e7eb; font-size: .9rem; color: #374151; line-height: 1.8; }
+        .bmi-advice b { color: #111827; }
+        .bmi-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .bmi-limit b { color: #374151; }
+        #bmi-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>⚖️ BMI 体质指数计算器</h1>
+            <p>身高＋体重 → BMI（1 位小数）＋WHO 四分级＋色条可视化＋健康提示，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="bmi-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>输入</h3>
+                <div class="bmi-grid">
+                    <div class="bmi-field">
+                        <label for="bmi-height">身高（cm，必填）</label>
+                        <input id="bmi-height" type="number" min="1" max="300" step="0.1" placeholder="如 170">
+                    </div>
+                    <div class="bmi-field">
+                        <label for="bmi-weight">体重（kg，必填）</label>
+                        <input id="bmi-weight" type="number" min="1" max="1000" step="0.1" placeholder="如 65">
+                    </div>
+                </div>
+                <div class="bmi-info">公式：BMI＝体重(kg) ÷ 身高(m)²，结果保留 <b>1 位小数</b>。输入即实时计算。</div>
+                <div class="bmi-error" id="bmi-err"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;display:none;" id="bmi-result">
+                <h3>计算结果（WHO 标准）</h3>
+                <div class="bmi-value" id="bmi-value"></div>
+                <div class="bmi-class" id="bmi-class"></div>
+                <div class="bmi-barwrap" id="bmi-barwrap"></div>
+                <div class="bmi-legend">
+                    <span><i class="bmi-dot" style="background:#3b82f6"></i>偏瘦 &lt;18.5</span>
+                    <span><i class="bmi-dot" style="background:#22c55e"></i>正常 18.5–24.9</span>
+                    <span><i class="bmi-dot" style="background:#f59e0b"></i>超重 25–29.9</span>
+                    <span><i class="bmi-dot" style="background:#ef4444"></i>肥胖 ≥30</span>
+                </div>
+                <div class="bmi-advice" id="bmi-advice"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="bmi-actions" style="margin-top:0;">
+                    <button class="btn btn-secondary" id="bmi-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="bmi-copy">一键复制结果</button>
+                    <button class="btn btn-secondary" id="bmi-clear">清空</button>
+                </div>
+                <div class="bmi-info">输入自动保存到浏览器本地（localStorage），下次打开自动恢复；所有计算只在你的浏览器内完成，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="bmi-limit">
+                    <li><b>① BMI 是筛查工具、不是诊断：</b>它只反映体重与身高的比例，区分不了脂肪和肌肉；<b>孕妇、运动员、肌肉量大者、老人</b>等人群<b>不适用</b>本工具，结果<b>仅供参考</b>。</li>
+                    <li><b>② WHO 通用标准（亚洲参考提示）：</b>本站采用 WHO 通用阈值（偏瘦&lt;18.5／正常18.5–24.9／超重25–29.9／肥胖≥30）；亚洲人群体脂率同等 BMI 下通常更高，亚洲常用更严格标准（正常上限约 23，肥胖线约 27.5~28），结果请结合体脂率、腰围等综合判断。</li>
+                    <li><b>③ 纯本地计算：</b>身高、体重等健康数据只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>，不构成医疗建议。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="bmi-actions" style="margin-top:0;">
+                    <a href="/tools/heart-rate-zones" class="btn btn-secondary" style="font-size:.9rem;">心率区间计算器 <span style="color:#2563eb;font-weight:700;">· 健康小闭环</span></a>
+                </div>
+                <div class="bmi-info" style="margin-top:.6rem">健康小闭环：BMI 体质指数计算器负责<b>看体重区间</b>（偏瘦/正常/超重/肥胖）；心率区间计算器负责<b>定运动强度</b>（Z1~Z5 心率区间）——先知道自己在哪一档，再按心率区间科学运动。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="bmi-info">
+                    <b>第一步：</b>输入身高（cm）与体重（kg），均为必填，输入即实时计算。<br>
+                    <b>第二步：</b>看结果——BMI 数值（保留 1 位小数）＋WHO 四分级徽章＋色条上你的位置标记＋该分级的健康提示文案。<br>
+                    <b>示例：</b>点「示例一键填充」填入身高 170cm / 体重 65kg，BMI＝22.5（正常）。<br>
+                    <b>下一步：</b>想制定运动计划，去<a href="/tools/heart-rate-zones">心率区间计算器</a>按年龄与静息心率算出 Z1~Z5 运动心率区间。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="bmi-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/bmi_calc.js?v=1"></script>
+</body>
+{{end}}
