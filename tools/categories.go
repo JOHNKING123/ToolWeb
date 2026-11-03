@@ -2665,6 +2665,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "distance_calc",
+					Name:        "两地距离计算器",
+					Description: "两地距离计算器：输入两组十进制经纬度（纬度±90/经度±180 范围校验），Haversine 公式（R=6371.0088 km）算大圆距离，保留2位小数，km/mi/nmi 三单位一键切换；内置40个城市坐标速查表点选回填，等效参照文案（标准跑道圈数/赤道占比），3组示例一键填充＋结果一键复制，localStorage 本地保存，纯前端零上传 · distance calculator: Haversine great-circle distance from two lat/lon pairs with 40-city coordinate quick-pick table, km/mi/nmi units, 100% client-side",
+					Path:        "/tools/distance-calc",
+					Icon:        "place",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

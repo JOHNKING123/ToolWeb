@@ -242,7 +242,7 @@ function throwsField(fn, field, name) {
     ok(GO_SRC.indexOf('"skill_scanner"') < GO_SRC.indexOf('"mermaid_diagram_renderer"'),
         "注册：位于 mermaid_diagram_renderer 之前");
     var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-    eq(pathCount, 286, "注册：Path 总数 270→271");
+    eq(pathCount, 287, "注册：Path 总数 270→271");
     notContains(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), '"/tools/skill-scanner", "/tools/skill-scanner',
         "注册：Path 无重复");
 })();
