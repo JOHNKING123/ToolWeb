@@ -2611,6 +2611,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "gpa_calculator",
+					Name:        "GPA 绩点计算器",
+					Description: "GPA 绩点计算器：课程名＋成绩＋学分录入（百分制分数或 A+/A/A-/B+…/F 等级），标准 4.0／北大 4.0／5.0／百分制加权四算法可选，学分加权 GPA 实时计算（保留 2 位小数）＋总学分/课程数统计，what-if 逐门试算「考到 X 分 GPA 变多少」一键应用，示例一键填充＋结果一键复制，localStorage 本地保存，纯前端不上传；与期末成绩目标计算器/成绩统计分析互链（学习一条龙） · GPA calculator: weighted GPA by 4.0/5.0/percentage scales with what-if simulation, 100% client-side",
+					Path:        "/tools/gpa-calculator",
+					Icon:        "scoreboard",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

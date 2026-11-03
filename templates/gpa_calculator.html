@@ -1,0 +1,156 @@
+{{define "gpa_calculator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPA 绩点计算器 - 多门课程按学分加权算绩点（4.0/5.0/百分制） | 程序员工具箱</title>
+    <meta name="description" content="免费在线 GPA 绩点计算器：课程名＋成绩＋学分录入（百分制或 A+/A/A-/B+…/F 等级），标准 4.0／北大 4.0／5.0／百分制加权四算法可选，学分加权 GPA 实时计算（2 位小数），what-if 逐门试算「考到 X 分 GPA 变多少」，示例一键填充＋结果一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="GPA,绩点计算器,绩点,加权平均分,4.0,5.0,北大绩点,学分绩点,what-if,保研绩点,出国绩点,gpa calculator,weighted gpa">
+    <meta property="og:title" content="GPA 绩点计算器 - 按学分加权算绩点">
+    <meta property="og:description" content="课程录入→四算法可选→学分加权 GPA 实时计算＋what-if 试算，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/gpa-calculator">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/gpa-calculator">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "GPA 绩点计算器",
+      "description": "免费在线 GPA 绩点计算器：课程名＋成绩＋学分录入，标准 4.0／北大 4.0／5.0／百分制加权四算法可选，学分加权 GPA 实时计算，what-if 逐门试算，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/gpa-calculator",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .gpa-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .gpa-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .gpa-algo { display: flex; align-items: flex-start; gap: .5rem; padding: .55rem .7rem; border: 1px solid #e5e7eb; border-radius: .5rem; margin-bottom: .5rem; cursor: pointer; font-size: .9rem; }
+        .gpa-algo:hover { border-color: var(--primary-color); }
+        .gpa-algo input { margin-top: .2rem; }
+        .gpa-algo small { display: block; color: #6b7280; font-size: .8rem; margin-top: .15rem; }
+        .gpa-table-wrap { overflow-x: auto; margin-top: .6rem; }
+        .gpa-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+        .gpa-table th, .gpa-table td { border: 1px solid #e5e7eb; padding: .35rem .4rem; text-align: center; }
+        .gpa-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+        .gpa-table input { width: 100%; padding: .35rem .4rem; border: 1px solid #d1d5db; border-radius: .35rem; font-size: .9rem; box-sizing: border-box; text-align: center; }
+        .gpa-table input:focus { outline: none; border-color: var(--primary-color); }
+        .gpa-point { font-weight: 700; color: var(--primary-color); min-width: 3rem; }
+        .gpa-result { margin-top: .8rem; border: 1px solid #e5e7eb; border-radius: .6rem; padding: 1rem; background: #f9fafb; text-align: center; }
+        .gpa-value { font-size: 2.6rem; font-weight: 700; color: var(--primary-color); }
+        .gpa-value small { font-size: 1rem; font-weight: 400; color: #6b7280; }
+        .gpa-kpis { display: flex; gap: 1.4rem; justify-content: center; flex-wrap: wrap; margin-top: .5rem; font-size: .95rem; color: #374151; }
+        .gpa-kpis b { color: #111827; }
+        .gpa-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .gpa-wif-row { display: flex; justify-content: space-between; align-items: center; gap: .6rem; padding: .45rem 0; border-bottom: 1px dashed #e5e7eb; font-size: .9rem; flex-wrap: wrap; }
+        .gpa-wif-row:last-child { border-bottom: none; }
+        .gpa-wif-name { font-weight: 600; color: #374151; }
+        .gpa-wif-hint { color: #9ca3af; font-size: .85rem; }
+        .gpa-delta-up { color: #166534; font-weight: 700; }
+        .gpa-delta-down { color: #991b1b; font-weight: 700; }
+        .gpa-wif-input { display: flex; align-items: center; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; font-size: .9rem; }
+        .gpa-wif-input input { width: 10rem; padding: .4rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .9rem; }
+        .gpa-wif-input input:focus { outline: none; border-color: var(--primary-color); }
+        .gpa-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .gpa-limit b { color: #374151; }
+        #gpa-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📊 GPA 绩点计算器</h1>
+            <p>课程＋成绩＋学分录入 → 四算法可选 → 学分加权 GPA 实时计算，what-if 逐门试算，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="gpa-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 选择绩点算法</h3>
+                <div id="gpa-algos"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 课程录入（增删行，实时计算）</h3>
+                <div class="gpa-table-wrap">
+                    <table class="gpa-table">
+                        <thead><tr><th>课程名</th><th>成绩（百分制或等级）</th><th>学分</th><th>单门绩点</th><th>操作</th></tr></thead>
+                        <tbody id="gpa-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="gpa-actions">
+                    <button class="btn btn-secondary" id="gpa-add">＋ 添加课程</button>
+                    <button class="btn btn-secondary" id="gpa-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="gpa-clear">清空</button>
+                </div>
+                <div class="gpa-info">成绩支持百分制数字（0~100）或等级（A+/A/A-/B+/B/B-/C+/C/C-/D/F，大小写不敏感）；录入自动保存到浏览器本地（localStorage），下次打开自动恢复。</div>
+                <div class="gpa-error" id="gpa-error"></div>
+
+                <div class="gpa-result" id="gpa-result" style="display:none;">
+                    <div class="gpa-value"><span id="gpa-value">0.00</span><small> GPA</small></div>
+                    <div class="gpa-kpis">
+                        <span>算法：<b id="gpa-algo-name"></b></span>
+                        <span>总学分：<b id="gpa-credits"></b></span>
+                        <span>课程数：<b id="gpa-count"></b></span>
+                    </div>
+                    <div class="gpa-actions" style="justify-content:center;">
+                        <button class="btn btn-secondary" id="gpa-copy">一键复制结果</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ what-if 模拟：这门考到 X 分，GPA 变多少？</h3>
+                <div class="gpa-wif-input">
+                    <label for="gpa-wif-score">假设考到（百分制或等级）：</label>
+                    <input id="gpa-wif-score" type="text" placeholder="如 90 或 A">
+                </div>
+                <div id="gpa-wif" style="margin-top:.4rem;"></div>
+                <div class="gpa-info">逐门试算：输入一个假设分数，每门课会显示「考到这个分数后 GPA 变成多少、涨/跌多少」，点「一键应用」可把该分数写回课程表。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="gpa-limit">
+                    <li><b>① 各校绩点算法差异大：</b>4.0 制就有十几种换算表（标准/北大/浙大/上交…），保研、评奖学金、出国申请<b>务必按目标学校官方算法核对</b>，本工具仅供参考。</li>
+                    <li><b>② 等级制输入按代表分折算：</b>等级（A+/A/A-…）先折算为百分制代表分（A+→97、A→93、…、D→65、F→30）再按所选算法换算，与你学校的等级→绩点直映表可能不一致。</li>
+                    <li><b>③ 结果保留 2 位小数：</b>GPA 按学分加权平均后四舍五入到 2 位小数；不同学校的修约规则（截断/四舍五入）可能导致末位 0.01 差异。</li>
+                    <li><b>④ 纯本地计算：</b>所有课程与成绩只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>，不构成学业承诺。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="gpa-actions">
+                    <a href="/tools/final-grade" class="btn btn-secondary" style="font-size:.9rem;">期末成绩目标计算器 <span style="color:#2563eb;font-weight:700;">· 学习一条龙</span></a>
+                    <a href="/tools/score-stats" class="btn btn-secondary" style="font-size:.9rem;">成绩统计分析 <span style="color:#2563eb;font-weight:700;">· 学习一条龙</span></a>
+                </div>
+                <div class="gpa-info" style="margin-top:.6rem">学习一条龙：GPA 绩点计算器负责<b>算绩点</b>（多门课按学分加权算出 GPA）；期末成绩目标计算器负责<b>定目标</b>（知道当前绩点后，反推期末要考多少分才能达标）；成绩统计分析负责<b>复盘</b>（考后统计分数分布）——算绩点、定目标、复盘一条龙。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="gpa-info">
+                    <b>流程：</b>选绩点算法（先按你们学校教务处的换算表选最接近的）→ 在课程表里逐行录入课程名、成绩（百分制数字或 A+~F 等级）、学分 → GPA 实时计算（保留 2 位小数）→ 用 what-if 试算「这门考到 90 分 GPA 能涨多少」→ 点「一键复制结果」把结论贴到备忘录。<br>
+                    <b>算法口径：</b>标准 4.0 制按十分档换算表；北大 4.0 制 60~100 分线性（绩点=(分数−50)/10，上限 4.0），60 分以下记 0；5.0 制按 90/80/70/60 分档；百分制加权平均分不换算绩点、直接按学分加权平均分数。<br>
+                    <b>学习一条龙：</b>算出 GPA 后去<a href="/tools/final-grade">期末成绩目标计算器</a>反推下学期要考多少分才能把绩点拉上去，考完用<a href="/tools/score-stats">成绩统计分析</a>复盘分数分布。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="gpa-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/gpa_calculator.js?v=1"></script>
+</body>
+{{end}}

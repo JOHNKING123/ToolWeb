@@ -1,3 +1,91 @@
+## 今日任务（2026-11-03 17:30 · PM 选定轮，接通用调研第二百一十一轮）
+
+**选定：GPA 绩点计算器（gpa_calculator）** — 本轮唯一任务（新工具）。
+
+**顺位**：211 轮 Top3 第三顺位（「无硬伤不跳过、Top3 顺位递进」惯例下**裁定跳过首席**，理由见下；备选 CSV 编辑器小-中难度一天高质量交付风险高，维持留池；GPA 从 P3 留池晋升、有 dev.to StudyKit Hub（2026-11-02）独立新信号印证）。
+
+**PM 裁定跳过首席年假拼假优化器的硬依据**（非随意跳过）：
+1. 15:00 PM 轮裁定的真实硬伤**仍未消解**：需内置国务院法定节假日/调休数据表且每年更新（维护负担），211 研究轮未给出新的数据表方案（「备选留池待数据表方案成熟」仍成立）。
+2. **时间窗口打折**：今日 2026-11-03，2027 年放假安排尚未公布（通常 11 月下旬才公布），现在内置数据表只能填 2026（已过期）或留空让用户手动录入——工具核心价值（开箱即用的拼假攻略）当下打折。
+3. 用户 10-18 方向修正踩边界：聚焦 ToolWeb 工具本身开发，不扩展泛生活计算器类；年假拼假优化器是生活工具类目，GPA 绩点计算器是学习工具类目（站内「学习一条龙」已交付：study_notes/flashcard_maker/final_grade/reading_time），方向更合规。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`gpa_calculator`／`gpa-calculator`／`cgpa` 全站 0 命中；`gpa` 命中仅 tools/categories.go:2608（final_grade 描述「目标总评/绩点」关键词）与 templates/final_grade.html（keywords＋真限制②「绩点换算各校不同：本工具按百分制总评反推」）——final_grade 是「输入目标绩点反推期末所需分数」口径，非 GPA 计算器口径，不重叠。
+- CJK「绩点」：3 文件命中（tools/categories.go、templates/final_grade.html、tests/final_grade.test.js）逐行 codepoint 验真，全部为 final_grade 描述/关键词/测试断言，非 GPA 计算器工具口径。
+- 命名无占用：ID `gpa_calculator`、Path `/tools/gpa-calculator` 均 0 命中；Icon 候选 **`scoreboard`（0 占用，首选）／`trending_up`（0 占用，备选）**（开发轮用精确值复测锁定全库唯一）。
+
+**选定理由**：① 零外部数据依赖——全部算法确定性可逐字锁定（4.0/5.0/百分制换算表写死），无年假工具的「每年更新数据表」维护负担；② 痛点真实＋独立新信号——保研/出国/奖学金算绩点，各校算法不一、手动加权易错（dev.to StudyKit Hub 2026-11-02："A GPA calculator that works offline in the browser beat a half-finished 'platform.'"）；③ 一天可高质量交付——纯前端小难度，确定性向量；④ 方向合规——学习工具类目，与「学习一条龙」互链（尤其 final_grade：算出绩点→反推目标所需分数，天然闭环）。
+
+**品类归位**：注册到「学习工具」类目（study_notes／flashcard_maker／final_grade／reading_time／score_stats 同类目）；New: true；与 final_grade／score_stats 双向互链（学习一条龙）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 课程录入表（课程名＋成绩＋学分，增删行；成绩支持百分制分数或等级 A+/A/A-/B+…/F 输入）② 算法四选：标准 4.0 制（90-100=4.0, 85-89=3.7, 82-84=3.3, 78-81=3.0, 75-77=2.7, 72-74=2.3, 68-71=2.0, 64-67=1.5, 60-63=1.0, <60=0）、北大 4.0 制（60-100 线性：绩点=(分数-50)/10，上限 4.0）、5.0 制（90-100=5.0, 80-89=4.0, 70-79=3.0, 60-69=2.0, <60=0）、百分制加权平均分 ③ GPA 加权实时计算（保留 2 位小数）＋总学分/总课程数统计 ④ what-if 模拟：「若某门课考到 X 分，GPA 变多少」（逐门试算列表，一键应用）⑤ 示例一键填充＋一键复制结果＋localStorage 本地保存（无需登录）⑥ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.GpaCalculator 下，module.exports 同步导出）**：
+  - `scoreToPoint(score, algorithm)` → number（algorithm ∈ 'std4'|'pku4'|'scale5'|'percent'；percent 算法下返回原百分制分数；非法抛 Error err.field='score'/'algorithm'）。
+  - `calcGPA(courses, algorithm)` → {gpa, totalCredits, totalCourses}（courses: [{name, score, credit}]；credit≤0 或 score 越界抛 Error err.field='courses'；空数组返回 {gpa:0,totalCredits:0,totalCourses:0}）。
+  - `whatIf(courses, algorithm, index, newScore)` → {gpa, delta}（单门假设成绩后的 GPA 与变化量；非法下标抛 Error err.field='index'）。
+  - 常量 `ALGORITHMS`（四算法元数据：id/名称/换算表描述，供页面下拉与说明区复用）。
+- **真限制页面明示**：各校绩点算法差异大（保研/出国务必按目标学校官方算法核对），本工具仅供参考；等级制输入按所选算法换算表折算；纯前端本地计算、不上传。
+- **验收标准**：① node 新测试 ≥60 断言全过（四算法边界值：0/59/60/各档临界分、代理对式边界、what-if 增量、非法参数抛 Error＋err.field）；② 全量 tests/*.test.js 全绿（旧测试 Path 断言 280→**281** 全量同步，仅断言数值）；③ `go build`/`go vet` 通过；④ 本地 `/tools/gpa-calculator` 与静态 JS 实测 200，首页索引已收录；⑤ 模板零外部资源（仅 canonical 元链接）；⑥ Icon 精确值复测锁定全库唯一；⑦ 与 final_grade/score_stats 互链链接实测可点。
+- **预计改动文件**：tools/categories.go（学习工具类目新增 gpa_calculator 条目，Path 280→281）／templates/gpa_calculator.html（新）／static/js/gpa_calculator.js（新）／tests/gpa_calculator.test.js（新）／全量旧 tests Path 断言数值同步／BACKLOG.md 本轮任务记录。
+
+**PM 交付核对**：本地当前分支 muse/dev-20260929（HEAD db0db1a，与 origin 同头为最新，远端无新提交；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例）；git log 头部 db0db1a（中文编码转换器新增）／d2e7e2b（工时十进制转换新增）／50fb096（期末成绩目标计算器新增）；全量 Path **280**（实测）；tests/*.test.js **166 个**（实测）；PM 独立零重叠实测：`gpa_calculator`／`gpa-calculator`／`cgpa` 全站 **0 命中**，`gpa` 命中仅 final_grade 描述/关键词/真限制文案（目标绩点为输入概念、按百分制总评反推），CJK「绩点」3 处命中均为 final_grade 相关（codepoint 验真），非 GPA 计算器工具口径——真缺口确凿；Icon 候选 `scoreboard`（0 占用首选）／`trending_up`（0 占用备选）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 17:00 · 通用调研第二百一十一轮，接中文编码转换器交付轮）
+
+**交付状态**：11-03 通用调研第二百一十一轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**中文编码转换器交付闭环**（db0db1a 新增：encoding_converter，Path 279→**280**，tests/encoding_converter.test.js 98 断言全过；templates/encoding_converter.html＋static/js/encoding_converter.js＋tests/encoding_converter.test.js 均存在；全量 tests/*.test.js **166 个**；候选池划出）。**Top3 递进链更新**：年假拼假优化器→首席（顺位递进；210 轮备选 P2；首席已交付划出、第三顺位屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假/假期优化/请假攻略全站 0 命中（python chr 运行时构造＋codepoint 验真）；真缺口保持；纯前端小难度；**PM 可裁定是否立项**）／CSV 编辑器→备选（顺位递进；210 轮第三顺位 P3；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）不重叠；真缺口保持；纯前端小-中难度；**PM 可裁定是否晋升首席**）／GPA 绩点计算器→第三顺位（**本轮从 P3 留池晋升**；dev.to StudyKit Hub（2026-11-02）独立新信号印证：GPA and CGPA Calculator 为其 15 工具之一，作者原话 "Students search for narrow jobs…A GPA calculator that works offline in the browser beat a half-finished 'platform.'"；站内零重叠实测：`gpa`/`cgpa` ASCII 命中仅 final_grade 描述/关键词/真限制文案（目标绩点为输入概念、按百分制总评反推），CJK「绩点」3 处命中均为 final_grade 相关（description/keywords/测试断言），codepoint 验真非 GPA 计算器工具口径；真缺口确凿；痛点：保研/出国/奖学金算绩点，各校 4.0/5.0 算法不一、手动加权易错；实现：课程＋成绩＋学分录入→GPA 实时计算（4.0/5.0/百分制算法可选）＋what-if 模拟；纯前端小难度；学习工具类目（study_notes/flashcard_maker/final_grade/reading_time 已交付同类目），方向合规；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。屏幕尺子维持 17:00 PM 轮裁定暂不立项（留池，PM 可裁定复活）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；17:00 轮，优先小难度纯前端。
+
+**本轮三件事**（17:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 db0db1a（中文编码转换器新增）／d2e7e2b（工时十进制转换）／50fb096（期末成绩目标计算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **280**；`ls templates/encoding_converter.html static/js/encoding_converter.js tests/encoding_converter.test.js` **均存在**；tests/*.test.js **166 个**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**首次报 Host key verification failed**（VM 换机清空 known_hosts，老问题），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD db0db1a 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 中文编码转换器：已交付（db0db1a，Path 279→280，98 断言全过）——划出候选池。
+   - 年假拼假优化器：`holiday`/`vacation`/`pto` 仅命中 static/js/calendar.js（日历工具的节假日展示口径：holidayCache/holidayName，逐行确认非拼假优化口径）；CJK 年假/拼假/假期优化/请假攻略全站 **0 命中**——真缺口保持，顺位递进为首席。
+   - CSV 编辑器：`csv_editor`/`csv-edit`/`csv editor` 全 **0 命中**；「CSV＋编辑」连写（CSV编辑/CSV编辑器）全站 **0 命中**——真缺口保持，顺位递进为备选。
+   - GPA 绩点计算器（P3 留池晋升）：`gpa`/`cgpa` ASCII 命中仅 tools/categories.go:2608（final_grade 描述「目标总评/绩点」关键词）与 templates/final_grade.html（keywords＋真限制②「绩点换算各校不同：本工具按百分制总评反推」），均为 final_grade 输入概念口径；CJK「绩点」3 文件命中（categories.go/final_grade.html/final_grade.test.js）逐行 codepoint 验真，全部为 final_grade 描述/关键词/测试断言，非 GPA 计算器工具口径——真缺口确凿，晋升第三顺位。
+   - 屏幕尺子：`screen_ruler` 0 命中维持——真缺口保持（17:00 PM 轮裁定暂不立项维持）。
+   - dev.to StudyKit Hub（2026-11-02，Ali Hamza；隐私优先学习工具站，纯前端/GitHub Pages，15 工具）：Study Notes Organiser→study_notes 已交付；Flashcards Maker→flashcard_maker 已交付；Pomodoro Study Timer→countdown_timer 已含番茄模式（模板+JS 共 44 处 pomodoro/番茄命中）；Text to Speech Reader→text_reader_aloud 已交付；Final Grade Calculator→final_grade 已交付；Reading Time Calculator→reading_time 已交付；Word/Character Counter＋Case Converter＋Duplicate Line Remover→文本工具集 text_tools 已覆盖（字数统计/行去重/大小写转换）；Citation Generator（APA/MLA）→gbt7714_reference_generator 已交付（GBT7714 国标口径，APA/MLA 英文论文口径差异化弱，记观察）；**GPA and CGPA Calculator／Percentage and Marks Calculator／Age and Date Difference Calculator→P3 留池三项获独立新信号印证**（作者："Students search for narrow jobs…A GPA calculator that works offline in the browser beat a half-finished 'platform.'"）；UK Degree Classification Calculator→英国学位等级口径过窄**确认消解**。
+   - V2EX t/1252552 tubox（2026-10-28；纯前端图片工具箱 13 工具）：批量压缩/改尺寸/格式转换/水印→img_compress/img_resize/img_convert/watermark 全已交付**确认消解**；AI 抠图/AI 放大→需本地模型加载，记观察（模型体积大、纯前端价值待验证）。
+   - V2EX t/1250428 md2chat（2026-10-20；Markdown→聊天图文）→md_to_chat 已交付**确认消解**。
+   - V2EX t/1247382 DayMug 在线智能体（2026-10-09；远程主机 LLM Agent）→需后端**确认消解**。
+   - V2EX t/1252312 AI Tiny Desk 视频复刻（2026-10-27；TikTok 视频换人）→需 AI**确认消解**。
+   - V2EX t/1253201 自媒体获客四工具（2026-10-30）→210 轮已消解（Chrome 插件/客户端/付费口径），确认维持。
+   - V2EX t/1248172 在线简历生成器（2026-10-12）→resume_builder 已交付**确认消解**。
+   - V2EX t/1253899 KitVerse（2026-11-02）→210 轮已消解，确认维持。
+   - V2EX t/1251721 DealPage（2026-10-25）→209 轮已消解，确认维持。
+   - 掘金 AppKit（2026-10-22）→209/210 轮已消解，确认维持。
+   - 掘金 随手百宝箱（2026-10-29；微信小程序）：今天吃什么→random_decision 已交付**确认消解**；小红书图片视频提取→需后端/网络解析**确认消解**。
+   - 掘金 monkeydev（2026-10-20；tools.monkeydev.cn）→209 轮已消解（JSON/Base64/哈希/UUID/JWT/正则/时间戳全已交付），确认维持。
+   - itzhouq 14 工具箱（2026-10-09；itzhouq.cn）：GIF 合成→gif_maker 已交付；长图切片→long_image_slice 已交付；图片压缩/裁剪/水印/文字转图片/违禁词检测/简繁互转/JSON/JWT/时间戳/二维码→全已交付口径**确认消解**；小红书封面→弱观察 P3 维持。
+   - openpr Instant Web Scraping（2026-11-03；Chrome 扩展）→Chrome 扩展口径**确认消解**。
+   - SitePoint klickpindown（2026-10-28；Pinterest 下载器）→需后端/网络**确认消解**。
+   - Launch HN Momentic（2026-11-03；AI QA agent）→需 AI**确认消解**。
+   - thetoolnerd 10 AI tools（Oct 28–Nov 1）→全部 AI/agent/Mac 产品口径**确认消解**。
+   - Show HN Self-host Reddit（redd-archiver）→数据归档产品口径**确认消解**。
+   - 掘金 WorkBuddy 收入变现（2026-10-25；Agent 技能付费）→生态新闻产品口径**确认消解**。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **年假拼假优化器** — 首席（顺位递进；210 轮备选 P2；首席中文编码转换器已交付划出、第三顺位屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 递进为首席；站内零重叠实测维持：`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假/假期优化/请假攻略全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略是中文互联网年年爆款话题，手动拼算组合易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **CSV 编辑器** — 备选（顺位递进；210 轮第三顺位 P3；站内零重叠实测：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（单元格双击修改、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **GPA 绩点计算器** — 第三顺位（**本轮从 P3 留池晋升**；dev.to StudyKit Hub（2026-11-02）独立新信号印证：GPA and CGPA Calculator 为其 15 工具之一，作者 "Students search for narrow jobs…A GPA calculator that works offline in the browser beat a half-finished 'platform.'"；站内零重叠实测：`gpa`/`cgpa` ASCII 命中仅 final_grade 描述/关键词/真限制文案，CJK「绩点」3 处命中均为 final_grade 相关（codepoint 验真），非 GPA 计算器工具口径；真缺口确凿；痛点：保研/出国/奖学金算绩点，各校 4.0/5.0/百分制算法不一、手动加权易错；实现：课程＋成绩＋学分录入→GPA 实时计算（4.0/5.0/百分制算法可选）＋what-if 模拟（"这门考 90 绩点变多少"）；纯前端小难度；真限制：各校绩点算法差异大、仅供参考须明示；学习工具类目（study_notes/flashcard_maker/final_grade/reading_time 已交付同类目，"学习一条龙"互链），方向合规；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：百分比/成绩计算器（**本轮获 StudyKit 独立信号印证**；P3 留池；`percentage_calc` 真缺口；方向修正边界相邻低优先）／年龄/日期差计算器（**本轮获 StudyKit 独立信号印证**；P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／tubox AI 抠图/AI 放大（**本轮新增观察**；V2EX 2026-10-28 信号；需浏览器内加载分割/超分模型，模型体积大、纯前端价值待验证；仅记录）／StudyKit APA/MLA 引文生成器（**本轮新增观察**；dev.to 2026-11-02 信号；gbt7714_reference_generator 已交付国标口径，APA/MLA 英文论文口径差异化弱；仅记录）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／八字排盘（观察；V2EX「小道」2026-11-01 信号；玄学小众仅记录）／JSON 节点图可视化（弱观察 P3 留池；json_parser 树形视图已部分覆盖）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十一轮：中文编码转换器交付闭环（db0db1a 新增：encoding_converter，Path 279→**280**，tests/encoding_converter.test.js 98 断言全过；templates/encoding_converter.html＋static/js/encoding_converter.js＋tests/encoding_converter.test.js 均存在；全量 tests/*.test.js **166 个**；候选池划出）；**Top3 递进链更新**：**年假拼假优化器→首席**（顺位递进；210 轮备选 P2；首席已交付划出、第三顺位 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假/假期优化/请假攻略全站 0 命中；真缺口保持；纯前端小难度；PM 可裁定是否立项）／**CSV 编辑器→备选**（顺位递进；210 轮第三顺位 P3；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**GPA 绩点计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to StudyKit Hub（2026-11-02）独立新信号印证（"A GPA calculator that works offline in the browser beat a half-finished 'platform.'"）；`gpa`/`cgpa` ASCII 命中仅 final_grade 描述/关键词/真限制文案，CJK「绩点」3 处命中均为 final_grade 相关（codepoint 验真），非 GPA 计算器口径；真缺口确凿；纯前端小难度；学习工具类目，方向合规；PM 可裁定）；屏幕尺子维持 17:00 PM 轮裁定暂不立项（留池）；**本轮新增观察**：tubox AI 抠图/AI 放大（需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（国标口径已交付，差异化弱）；百分比/年龄日期差 P3 留池获 StudyKit 独立信号印证；**本轮初判消解 19 项全部确认**：dev.to StudyKit（11 项已交付口径：study_notes/flashcard_maker/countdown_timer 番茄/text_reader_aloud/final_grade/reading_time/文本工具集字数去重大小写/gbt7714 引文；UK 学位等级→英国口径过窄）／V2EX tubox（图片四件套全已交付）／V2EX md2chat→md_to_chat 已交付／V2EX DayMug→需后端／V2EX AI Tiny Desk→需 AI／V2EX 自媒体获客→210 已消解维持／V2EX 简历生成器→resume_builder 已交付／V2EX KitVerse→210 已消解维持／V2EX DealPage→209 已消解维持／掘金 AppKit→209/210 已消解维持／掘金 随手百宝箱（今天吃什么→random_decision 已交付；图片视频提取→需后端）／掘金 monkeydev→209 已消解维持／itzhouq（GIF→gif_maker 已交付；长图切片→long_image_slice 已交付；其余全已交付）／openpr Instant Web Scraping→Chrome 扩展口径／SitePoint klickpindown→需后端／Launch HN Momentic→需 AI／thetoolnerd 10 AI tools→全部 AI/agent/Mac 口径／Show HN Self-host Reddit→数据归档产品口径／掘金 WorkBuddy 收入变现→生态新闻产品口径；本轮 fetch：首次 Host key verification failed（VM 换机 known_hosts 被清空），按 TOOLS.md 用 ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 修复后一次成功，本地 HEAD db0db1a 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 中文编码转换器 | 已交付划出（db0db1a 新增：encoding_converter，Path 279→280，tests/encoding_converter.test.js 98 断言全过；templates/encoding_converter.html＋static/js/encoding_converter.js＋tests/encoding_converter.test.js 均存在；全量 tests/*.test.js 166 个；候选池划出） | — | 已实现 |
+| 年假拼假优化器 | 首席（顺位递进；210 轮备选 P2；首席已交付划出、第三顺位 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假/假期优化/请假攻略全站 0 命中（codepoint 验真）；真缺口保持；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋法定节假日/调休数据表＋年假天数→组合优化输出最长连续假期方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；PM 可裁定是否立项；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1（顺位） |
+| CSV 编辑器 | 备选（顺位递进；210 轮第三顺位 P3；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选须明示；PM 可裁定是否晋升首席；Icon 待开发轮精确值复测锁定全库唯一） | 小-中 | P2（顺位） |
+| GPA 绩点计算器 | 第三顺位（本轮从 P3 留池晋升；dev.to StudyKit Hub（2026-11-02）独立新信号印证：GPA and CGPA Calculator 为其 15 工具之一，作者 "Students search for narrow jobs…A GPA calculator that works offline in the browser beat a half-finished 'platform.'"；站内零重叠实测：`gpa`/`cgpa` ASCII 命中仅 final_grade 描述/关键词/真限制文案（目标绩点为输入概念），CJK「绩点」3 处命中均为 final_grade 相关（codepoint 验真），非 GPA 计算器工具口径；真缺口确凿；痛点：保研/出国/奖学金算绩点，各校 4.0/5.0/百分制算法不一、手动加权易错；实现：课程＋成绩＋学分录入→GPA 实时计算（4.0/5.0/百分制算法可选）＋what-if 模拟；纯前端小难度；真限制：各校绩点算法差异大、仅供参考须明示；学习工具类目（study_notes/flashcard_maker/final_grade/reading_time 已交付同类目），方向合规；PM 可裁定；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P3（新晋升） |
+
+**归档说明**：本轮为 11-03 通用调研第二百一十一轮——中文编码转换器交付闭环（db0db1a；`/tools/encoding-converter` 已注册；全量 **280 Path**；tests/encoding_converter.test.js 98 断言全过；全量 tests/*.test.js **166 个**），候选池划出；**Top3 递进链更新**：年假拼假优化器→首席（顺位递进；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假/假期优化/请假攻略全站 0 命中；真缺口保持；纯前端小难度；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／GPA 绩点计算器→第三顺位（**本轮从 P3 留池晋升**；dev.to StudyKit Hub 2026-11-02 独立新信号印证；`gpa` ASCII 命中仅 final_grade 描述/文案，CJK「绩点」3 处命中均为 final_grade 相关（codepoint 验真）；真缺口确凿；纯前端小难度；学习工具类目方向合规；PM 可裁定）；屏幕尺子维持 17:00 PM 轮裁定暂不立项（留池）；百分比/成绩计算器、年龄/日期差计算器 P3 留池获 StudyKit 独立信号印证（维持留池）；本轮新增观察：tubox AI 抠图/AI 放大（需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（国标口径已交付，差异化弱）；本轮初判消解 19 项全部确认（dev.to StudyKit 11 项已交付口径＋UK 学位等级→英国口径／V2EX tubox→图片四件套已交付／V2EX md2chat→md_to_chat 已交付／V2EX DayMug→需后端／V2EX AI Tiny Desk→需 AI／V2EX 自媒体获客→210 已消解维持／V2EX 简历生成器→resume_builder 已交付／V2EX KitVerse→210 已消解维持／V2EX DealPage→209 已消解维持／掘金 AppKit→209/210 已消解维持／掘金 随手百宝箱→今天吃什么已交付＋图片视频提取需后端／掘金 monkeydev→209 已消解维持／itzhouq→GIF/长图切片已交付＋其余全已交付／openpr Chrome 扩展口径／SitePoint→需后端／Launch HN Momentic→需 AI／thetoolnerd 10 AI→全部 AI/agent/Mac 口径／Show HN Self-host Reddit→数据归档产品口径／掘金 WorkBuddy→生态新闻产品口径）；本轮 fetch：首次 Host key verification failed（VM 换机 known_hosts 被清空），按 TOOLS.md 用 ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 修复后一次成功，本地 HEAD db0db1a 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：首次报 Host key verification failed（VM 换机 known_hosts 被清空，老问题），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD db0db1a 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 db0db1a（中文编码转换器新增）／d2e7e2b（工时十进制转换新增）／50fb096（期末成绩目标计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **280**；`ls templates/encoding_converter.html static/js/encoding_converter.js tests/encoding_converter.test.js` **均存在**；tests/*.test.js **166 个**；Top3 候选重叠复核（**中文编码转换器**：已交付（/tools/encoding-converter，Path 279→280，98 断言全过），划出候选池；**年假拼假优化器**：`holiday`/`vacation`/`pto` 仅 static/js/calendar.js 日历节假日展示口径（holidayCache/holidayName，逐行确认），CJK 年假/拼假/假期优化/请假攻略全站 **0 命中**（python chr 运行时构造＋codepoint 验真），真缺口保持，顺位递进为首席；**CSV 编辑器**：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 **0 命中**，csv_table_viewer（:66 明确只查看不编辑）／csv_json／paste_table_to_csv 均不重叠，真缺口保持，顺位递进为备选；**GPA 绩点计算器**：`gpa`/`cgpa` ASCII 命中仅 final_grade 描述/关键词/真限制文案（目标绩点为输入概念、按百分制总评反推），CJK「绩点」3 文件命中逐行 codepoint 验真全部为 final_grade 相关（description/keywords/测试断言），非 GPA 计算器工具口径，真缺口确凿，本轮从 P3 留池晋升第三顺位；**屏幕尺子**：`screen_ruler` 全 **0 命中**，真缺口保持（17:00 PM 轮裁定暂不立项维持））；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 15:00 · PM 选定轮，接通用调研第二百一十轮）
 
 **选定：中文编码转换器（encoding_converter）** — 本轮唯一任务（新工具）。

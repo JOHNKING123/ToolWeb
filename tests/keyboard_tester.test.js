@@ -158,7 +158,7 @@ var fpsIdx = GO_SRC.indexOf('"fps_gpu_benchmark"');
 ok(fpsIdx >= 0 && kbIdx > fpsIdx, "注册紧邻 fps_gpu_benchmark 之后（硬件簇相邻）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 280, "注册 Path 总数 268→270");
+eq(pathCount, 281, "注册 Path 总数 268→270");
 
 /* ---------- 8. 模板：真限制/互链/SEO ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/keyboard-tester", "模板 canonical 含新 Path");
