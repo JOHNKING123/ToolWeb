@@ -144,7 +144,7 @@ var ipIdx = GO_SRC.indexOf('"ip-lookup"');
 ok(dcIdx >= 0 && dniIdx > dcIdx && dniIdx < ipIdx, "品类归位：紧邻域名查询之后、IP查询之前");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 281, "注册 Path 总数 268→270");
+eq(pathCount, 282, "注册 Path 总数 268→270");
 
 /* ---------- 7. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "domain_name_ideas.html"), "utf8");

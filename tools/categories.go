@@ -2620,6 +2620,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "percentage_calc",
+					Name:        "百分比/成绩计算器",
+					Description: "百分比/成绩计算器：百分比↔小数双向互转（含分数 a/b→百分比）＋涨跌幅（原值→现值求涨跌幅＋增减绝对值；原值＋百分比求目标值）＋成绩百分比（得分/总分→百分制＋A-F 等级映射、可调段位阈值），示例一键填充＋结果一键复制，localStorage 本地保存，纯前端不上传；与 GPA 绩点计算器/期末成绩目标计算器/成绩统计分析互链（学习一条龙） · percentage & marks calculator: percent-decimal-fraction conversion, change rate, grade mapping, 100% client-side",
+					Path:        "/tools/percentage-calc",
+					Icon:        "percent",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{

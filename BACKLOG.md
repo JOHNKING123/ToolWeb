@@ -1,3 +1,99 @@
+## 今日任务（2026-11-03 19:50 · 开发轮，接 19:37 PM 选定轮）
+
+**交付：百分比/成绩计算器（percentage_calc）** — 本轮唯一任务（新工具），已实现并提交。
+
+**实现**：纯前端三模式：① 百分比↔小数双向互转（75%⇄0.75）＋分数 a/b→百分比；② 涨跌幅（原值→现值求涨跌幅＋增减绝对值；原值＋百分比求目标值）；③ 成绩百分比（得分/总分→百分制＋A-F 等级映射，A≥90/B≥80/C≥70/D≥60 四阈值可调）＋「用这个百分比去算 GPA →」一键跳转；示例一键填充＋一键复制结果＋localStorage 本地保存，零上传。
+**纯函数契约**（挂 window.PercentageCalc，module.exports 同步导出；非法参数抛 Error＋err.field，不静默钳制）：percentToDecimal（err.field='pct'）／decimalToPercent（'dec'）／fractionToPercent（a 非法 'a'、b=0/非法 'b'）／changeRate→{rate,diff}（oldVal≤0 零基数/负基数抛错 'oldVal'、newVal 非法 'newVal'）／applyRate=base*(1+pct/100)（'base'/'pct'）／marksToPercent→{percent,grade}（score 越界/非法 'score'、total≤0/非法 'total'、bands 非法 'bands'，默认段位 [[90,'A'],[80,'B'],[70,'C'],[60,'D'],[0,'F']]）＋ gradeFor 辅助。
+**真限制四条页面明示**：涨跌幅/折扣口径因场景而异（通用数学定义、仅供参考）；等级段位各校不同须按官方核对；小数位数展示修约；纯前端本地计算、不上传。
+**改动文件**：tools/categories.go（学习工具类目新增 percentage_calc 条目，Path 281→282，Icon `percent` 0 占用→精确值复测锁定全库唯一）／templates/percentage_calc.html（新）／static/js/percentage_calc.js（新）／tests/percentage_calc.test.js（新）／全量旧 tests Path 断言 281→282 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）／三模板反向互链（gpa_calculator／final_grade 相关工具区＋score_stats 旅程线文案新增 /tools/percentage-calc 链接；新模板互链三者，「学习一条龙」）。
+**验收实测**：node 新测试 123 断言全过（≥60；互转边界 0/100/小数循环 1/3；涨跌幅负值/零基数抛错；等级临界 59/60/89/90、score>total 抛错；err.field 全覆盖；模板零外部资源静态检查）；全量 tests/*.test.js 168 文件全绿；go build/go vet 通过；本地 TOOLWEB_ADDR=127.0.0.1:18099 实测 /tools/percentage-calc 200、静态 JS 200、首页索引已收录（3 处）、gpa/final-grade/score-stats 互链页均 200 可点。
+**铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+---
+
+## 今日任务（2026-11-03 19:37 · PM 选定轮，接通用调研第二百一十二轮）
+
+**选定：百分比/成绩计算器（percentage_calc）** — 本轮唯一任务（新工具）。
+
+**顺位**：212 轮 Top3 第三顺位（「无硬伤不跳过、Top3 顺位递进」惯例下**裁定跳过首席**，理由见下；备选 CSV 编辑器小-中难度一天高质量交付风险高，维持留池）。
+
+**PM 裁定跳过首席年假拼假优化器的硬依据**（17:30 PM 轮裁定逻辑沿用）：
+1. 硬伤**仍未消解**：需内置国务院法定节假日/调休数据表且每年更新（维护负担），212 研究轮明确「本轮无新信号消解硬伤」。
+2. **时间窗口打折**：今日 2026-11-03，2027 年放假安排尚未公布（通常 11 月下旬），现在内置数据表只能填 2026（已过期）或留空让用户手动录入——工具核心价值（开箱即用的拼假攻略）当下打折。
+3. 与 17:30 PM 轮相同：顺位可以让，但不是随意让——让的是「当前时间窗口硬伤卡死的项」，CSV 编辑器留池原因同样是当轮实测（一天交付风险），PM 定序权行使有记录依据。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造，已记入 AGENTS.md）**：
+- ASCII：`percentage_calc`／`percent-calc`／`percentage-calc` 全站 **0 命中**。
+- CJK「百分比计算器」（chr(0x767E)+chr(0x5206)+chr(0x6BD4)+chr(0x8BA1)+chr(0x5668) 运行时构造）全站 **0 命中**。
+- CJK「百分比」：23 文件命中，抽查全部为通用描述词（百分比坐标/百分比换算/千分位百分比等），非工具口径——与 212 轮结论一致，真缺口确凿。
+- Icon 候选：**`percent`（0 占用，首选）**／`trending_up`（0 占用，备选，GPA 轮已占用备选名单须重新核验；开发轮用精确值复测锁定全库唯一）。
+
+**选定理由**：① 零外部数据依赖——全部算法确定性可逐字锁定，无年假工具的「每年更新数据表」维护负担；② 独立新信号印证——dev.to StudyKit Hub（2026-11-02）Percentage and Marks Calculator 为其 15 工具之一；③ 一天可高质量交付——纯前端小难度，确定性向量；④ 方向合规——归在**学习工具**类目，与 17:30 PM 轮刚交付的 GPA 绩点计算器形成「成绩百分比→GPA」互链闭环；涨跌幅/折扣模式保留通用口径（不深挖财务场景），避开用户 10-18 方向修正的「泛财务/生活计算器」扩展边界。
+
+**品类归位**：注册到「学习工具」类目（gpa_calculator／final_grade／score_stats／study_notes／flashcard_maker／reading_time 同类目）；New: true；与 gpa_calculator／score_stats／final_grade 双向互链（学习一条龙）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 百分比↔小数双向互转（50%↔0.5；支持分数 a/b→百分比输入）② 涨跌幅：原值→现值求涨跌幅＋增减绝对值；原值＋百分比求目标值（折后价/目标价口径，通用）③ 成绩百分比：得分/总分→百分制百分比＋等级映射（A:90+／B:80+／C:70+／D:60+／F:<60，可调段位阈值）④ 互链提示：算出百分比后一键跳转 GPA 计算器⑤ 示例一键填充＋一键复制结果＋localStorage 本地保存（无需登录）⑥ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.PercentageCalc 下，module.exports 同步导出）**：
+  - `percentToDecimal(pct)` → number（非法抛 Error err.field='pct'）。
+  - `decimalToPercent(dec)` → number（保留合理小数位，见真限制；非法抛 Error err.field='dec'）。
+  - `fractionToPercent(a, b)` → number（a/b→百分比；b=0 抛 Error err.field='b'）。
+  - `changeRate(oldVal, newVal)` → {rate, diff}（rate 为百分比数；oldVal=0 抛 Error err.field='oldVal'）。
+  - `applyRate(base, pct)` → number（base*(1+pct/100)；非法抛 Error err.field='base'/'pct'）。
+  - `marksToPercent(score, total, bands)` → {percent, grade}（bands 默认 [[90,'A'],[80,'B'],[70,'C'],[60,'D'],[0,'F']]；score 越界/非法抛 Error err.field='score'/'total'）。
+- **真限制页面明示**：折扣/涨跌幅口径因场景而异（是否含税、基数口径），本工具按通用数学定义计算、仅供参考；等级段位各校不同（保研/出国务必按官方核对）；小数位数为展示修约；纯前端本地计算、不上传。
+- **验收标准**：① node 新测试 ≥60 断言全过（互转边界：0/100/小数循环；涨跌幅：负值/零基数抛错；成绩：等级临界分 59/60/89/90、score>total 抛错；非法参数抛 Error＋err.field 全覆盖）；② 全量 tests/*.test.js 全绿（旧测试 Path 断言 281→**282** 全量同步，仅断言数值）；③ `go build`/`go vet` 通过；④ 本地 `/tools/percentage-calc` 与静态 JS 实测 200，首页索引已收录；⑤ 模板零外部资源（仅 canonical 元链接）；⑥ Icon 精确值复测锁定全库唯一；⑦ 与 gpa_calculator/score_stats/final_grade 互链链接实测可点。
+- **预计改动文件**：tools/categories.go（学习工具类目新增 percentage_calc 条目，Path 281→282）／templates/percentage_calc.html（新）／static/js/percentage_calc.js（新）／tests/percentage_calc.test.js（新）／全量旧 tests Path 断言数值同步／BACKLOG.md 本轮任务记录。
+
+**PM 交付核对**：本地当前分支 muse/dev-20260929（HEAD 7eb546e，与 origin 同头为最新，远端无新提交；`GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no" git fetch origin` 本轮一次成功，无需 known_hosts 修复）；全量 Path **281**（实测）；tests/*.test.js **167 个**（实测）；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-03 19:30 · 通用调研第二百一十二轮，接 GPA 绩点计算器交付轮）
+
+**交付状态**：11-03 通用调研第二百一十二轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**GPA 绩点计算器交付闭环**（7eb546e 新增：gpa_calculator，Path 280→**281**，tests/gpa_calculator.test.js 153 断言全过；templates/gpa_calculator.html＋static/js/gpa_calculator.js＋tests/gpa_calculator.test.js 均存在；全量 tests/*.test.js **167 个**；学习工具类目，与 final_grade/score_stats 双向互链；候选池划出）。**Top3 递进链更新**：年假拼假优化器→首席（顺位递进；17:30 PM 轮裁定跳过维持；硬伤未消解：需内置国务院法定节假日/调休数据表且每年更新的维护负担＋2027 年放假安排未公布（通常 11 月下旬）、时间窗口打折；本轮无新信号消解硬伤；**PM 可裁定是否立项**）／CSV 编辑器→备选（顺位递进；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；`csv_editor`/`csv-edit` 全 0 命中，真缺口保持；**PM 可裁定是否晋升首席**）／百分比/成绩计算器→第三顺位（**本轮从 P3 留池晋升**；dev.to StudyKit Hub（2026-11-02）独立新信号印证：Percentage and Marks Calculator 为其 15 工具之一；`percentage_calc`/`percent-calc` 全 0 命中；CJK「百分比计算器」全站 0 命中（python chr 运行时构造＋codepoint 验真），「百分比」49 命中全部为通用描述词（百分比坐标/百分比换算等），非工具口径；真缺口确凿；纯前端小难度；**方向修正边界相邻低优先**，PM 可裁定）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；19:30 轮，优先小难度纯前端。
+
+**本轮三件事**（19:30 全网调研，通用方向）：
+1. 交付确认：git log 头部 7eb546e（GPA 绩点计算器新增）／db0db1a（中文编码转换器新增）／d2e7e2b（工时十进制转换新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **281**；`ls templates/gpa_calculator.html static/js/gpa_calculator.js tests/gpa_calculator.test.js` **均存在**；tests/*.test.js **167 个**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**首次仍报 Host key verification failed**（VM 换机清空 known_hosts，老问题），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD 7eb546e 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - GPA 绩点计算器：已交付（7eb546e，Path 280→281，153 断言全过）——划出候选池。
+   - 年假拼假优化器：`holiday`/`vacation`/`pto` 命中仅 static/js/calendar.js（日历工具节假日展示口径，逐轮已确认不重叠）；CJK 年假/拼假（python chr(0x5E74)+chr(0x5047)／chr(0x62FC)+chr(0x5047) 运行时构造）全站 **0 命中**（codepoint 验真）——真缺口保持（17:30 PM 轮裁定跳过维持，硬伤仍存）。
+   - CSV 编辑器：`csv_editor`/`csv-edit` 全 **0 命中**；csv_table_viewer（明确只查看不编辑）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠——真缺口保持（15:00 PM 轮裁定备选留池维持）。
+   - 百分比/成绩计算器（P3 留池晋升）：`percentage_calc`/`percent-calc` 全 **0 命中**；CJK「百分比计算器」（chr(0x767E)+chr(0x5206)+chr(0x6BD4)+chr(0x8BA1)+chr(0x5668)）全站 **0 命中**；「百分比」49 命中逐行确认为通用描述词（百分比坐标/百分比换算/千分位百分比等），非工具口径——真缺口确凿。
+   - V2EX t/1251680 PrintPageCheck（2026-10-25；在线打印机测试页：CMYK 色块/条纹/边距测试，浏览器打印或下载 PDF）→**站内已交付确认消解**：`printer_test_page`／ID `printer_test_page`／Path `/tools/printer-test-page`／Icon `print` 全部命中（categories.go:2340、templates/printer_test_page.html、static/js/printer-test-page.js、tests/printer_test_page.test.js）——直接消解，不入池。
+   - V2EX t/1252166 Zipover（跨设备剪贴板，桌面 App 口径）→**确认消解**。
+   - V2EX t/1254059 dianzi-tushuo（2026-11-03；截图＋AI 语音转字幕→竖屏视频）→需 AI**确认消解**。
+   - V2EX t/1253906 Clearframe（2026-11-02；AI 去水印站，视频水印＋付费额度）→AI 口径**确认消解**。
+   - V2EX t/1253914 GlintWin（2026-11-03；Windows 打字即翻译，桌面 App）→桌面 App 口径**确认消解**。
+   - V2EX t/1253764 RapVideoGo（2026-11-02；AI 照片生成说唱视频）→需 AI**确认消解**。
+   - V2EX t/1250485 reqix（Chrome 插件 mock 数据）→插件口径**确认消解**。
+   - V2EX t/1250158 玄印写作（本地 AI 小说桌面工具）→桌面 App 口径**确认消解**。
+   - 掘金 juejin-daily 签到抽奖 AI Skill→agent 技能口径**确认消解**。
+   - 掘金 2026-10-26「5 个免费开发工具」帖（Arthas Tunnel／regex101／dbdiagram／jsoncrack）→210 轮已消解维持。
+   - Indie Radar 2026-11-02（LazyForm 浏览器插件／Galta 网页无限画布／歌语 UtaYomi AI 歌词学习／AI 说唱视频／Pier-Another Arc agent 接管）→插件/AI/画布产品口径，**全部确认消解**。
+   - Show HN: 本轮未检索到新的单页纯前端工具信号（维持观察）。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **年假拼假优化器** — 首席（顺位递进；17:30 PM 轮裁定跳过维持；站内零重叠实测维持：`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；**硬伤维持未消解**：数据表年更新维护负担＋2027 年放假安排尚未公布（时间窗口打折）；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **CSV 编辑器** — 备选（顺位递进；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；站内零重叠实测维持：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（单元格双击修改、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **百分比/成绩计算器** — 第三顺位（**本轮从 P3 留池晋升**；dev.to StudyKit Hub（2026-11-02）独立新信号印证：Percentage and Marks Calculator 为其 15 工具之一（"Students search for narrow jobs…" 同文）；站内零重叠实测：`percentage_calc`/`percent-calc` 全 0 命中，CJK「百分比计算器」全站 0 命中（codepoint 验真），「百分比」49 命中全部为通用描述词非工具口径；真缺口确凿；痛点：折扣/涨跌幅/成绩百分比换算手动算易错（网购比价、成绩换算高频场景）；实现：百分比↔小数互转＋涨跌幅计算＋成绩百分比（得分/总分→百分制）三模式；纯前端小难度；真限制：货币/税费口径因场景而异、仅供参考须明示；**方向修正边界相邻低优先**（用户 10-18 修正：不扩展泛财务/生活计算器类）；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：年龄/日期差计算器（获 StudyKit 独立信号印证；P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／tubox AI 抠图/AI 放大（211 轮观察维持；需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（211 轮观察维持；国标口径已交付，差异化弱）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／八字排盘（观察；V2EX「小道」2026-11-01 信号；玄学小众仅记录）／JSON 节点图可视化（弱观察 P3 留池；json_parser 树形视图已部分覆盖）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十二轮：GPA 绩点计算器交付闭环（7eb546e 新增：gpa_calculator，Path 280→**281**，tests/gpa_calculator.test.js 153 断言全过；templates/gpa_calculator.html＋static/js/gpa_calculator.js＋tests/gpa_calculator.test.js 均存在；全量 tests/*.test.js **167 个**；候选池划出）；**Top3 递进链更新**：**年假拼假优化器→首席**（顺位递进；17:30 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假全站 0 命中；真缺口保持；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布；纯前端小难度；PM 可裁定是否立项）／**CSV 编辑器→备选**（顺位递进；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**百分比/成绩计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to StudyKit Hub 2026-11-02 独立信号印证；`percentage_calc`／「百分比计算器」全 0 命中；真缺口确凿；纯前端小难度；**方向修正边界相邻低优先**；PM 可裁定）；**本轮新信号初判消解 12 项全部确认**：V2EX PrintPageCheck→站内已交付（printer_test_page, /tools/printer-test-page, 首次 grep 命中确认消解，省了候选重复）／V2EX Zipover→桌面 App／V2EX dianzi-tushuo→需 AI／V2EX Clearframe→AI＋付费／V2EX GlintWin→桌面 App／V2EX RapVideoGo→需 AI／V2EX reqix→Chrome 插件／V2EX 玄印写作→桌面 App／掘金签到 AI Skill→agent 技能口径／掘金工具推荐帖→210 已消解维持／Indie Radar 2026-11-02（LazyForm 插件/Galta 画布/歌语 AI/AI 说唱视频/Pier agent）→全部消解／Show HN→本轮无新单页纯前端信号；本轮 fetch：首次 Host key verification failed（VM 换机 known_hosts 被清空），按 TOOLS.md 用 ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 修复后**一次成功**，本地 HEAD 7eb546e 与 origin/muse/dev-20260929 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| GPA 绩点计算器 | 已交付划出（7eb546e 新增：gpa_calculator，Path 280→281，tests/gpa_calculator.test.js 153 断言全过；templates/gpa_calculator.html＋static/js/gpa_calculator.js＋tests/gpa_calculator.test.js 均存在；全量 tests/*.test.js 167 个；候选池划出） | — | 已实现 |
+| 年假拼假优化器 | 首席（顺位递进；17:30 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口保持；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋法定节假日/调休数据表＋年假天数→组合优化输出最长连续假期方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；**硬伤维持**：数据表年更新维护负担＋2027 年放假安排未公布（时间窗口打折）；生活工具类目，方向合规；PM 可裁定是否立项；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1（顺位；PM 裁定跳过维持） |
+| CSV 编辑器 | 备选（顺位递进；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选须明示；PM 可裁定是否晋升首席；Icon 待开发轮精确值复测锁定全库唯一） | 小-中 | P2（顺位；备选留池） |
+| 百分比/成绩计算器 | 第三顺位（本轮从 P3 留池晋升；dev.to StudyKit Hub（2026-11-02）独立新信号印证：Percentage and Marks Calculator 为其 15 工具之一；站内零重叠实测：`percentage_calc`/`percent-calc` 全 0 命中；CJK「百分比计算器」全站 0 命中（codepoint 验真），「百分比」49 命中全部为通用描述词（百分比坐标/百分比换算等）非工具口径；真缺口确凿；痛点：折扣/涨跌幅/成绩百分比换算手动算易错（网购比价、成绩换算高频场景）；实现：百分比↔小数互转＋涨跌幅计算＋成绩百分比（得分/总分→百分制）三模式；纯前端小难度；真限制：货币/税费口径因场景而异、仅供参考须明示；**方向修正边界相邻低优先**（用户 10-18 修正：不扩展泛财务/生活计算器类）；PM 可裁定；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P3（新晋升；PM 可裁定） |
+
+**归档说明**：本轮为 11-03 通用调研第二百一十二轮——GPA 绩点计算器交付闭环（7eb546e；`/tools/gpa-calculator` 已注册；全量 **281 Path**；tests/gpa_calculator.test.js 153 断言全过；全量 tests/*.test.js **167 个**），候选池划出；**Top3 递进链更新**：年假拼假优化器→首席（顺位递进；17:30 PM 轮裁定跳过维持；CJK 年假/拼假全站 0 命中；真缺口保持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；PM 可裁定是否晋升首席）／百分比/成绩计算器→第三顺位（**本轮从 P3 留池晋升**；dev.to StudyKit Hub 2026-11-02 独立信号印证；`percentage_calc`／「百分比计算器」全 0 命中（codepoint 验真）；真缺口确凿；纯前端小难度；方向修正边界相邻低优先；PM 可裁定）；**本轮新信号 12 项全部初判消解确认**（V2EX PrintPageCheck→**站内已交付**（printer_test_page, /tools/printer-test-page；本轮 grep 首检命中消解，候选不重复入池）／V2EX Zipover→桌面 App／V2EX dianzi-tushuo→需 AI／V2EX Clearframe→AI＋付费／V2EX GlintWin→桌面 App／V2EX RapVideoGo→需 AI／V2EX reqix→Chrome 插件／V2EX 玄印写作→桌面 App／掘金签到 AI Skill→agent 技能口径／掘金工具推荐帖→210 已消解维持／Indie Radar 2026-11-02→全部消解（LazyForm 插件/Galta 画布/歌语 AI/AI 说唱视频/Pier agent）／Show HN→本轮无新单页纯前端信号）；本轮 fetch：首次 Host key verification failed（VM 换机 known_hosts 被清空），按 TOOLS.md 用 ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 修复后一次成功，本地 HEAD 7eb546e 与 origin/muse/dev-20260929 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：首次报 Host key verification failed（VM 换机 known_hosts 被清空，老问题），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD 7eb546e 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 7eb546e（GPA 绩点计算器新增）／db0db1a（中文编码转换器新增）／d2e7e2b（工时十进制转换新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **281**；`ls templates/gpa_calculator.html static/js/gpa_calculator.js tests/gpa_calculator.test.js` **均存在**；tests/*.test.js **167 个**；Top3 候选重叠复核（**GPA 绩点计算器**：已交付（/tools/gpa-calculator，Path 280→281，153 断言全过），划出候选池；**年假拼假优化器**：`holiday`/`vacation`/`pto` 仅 static/js/calendar.js 日历节假日展示口径（逐轮已确认），CJK 年假/拼假全站 **0 命中**（python chr 运行时构造＋codepoint 验真），真缺口保持（17:30 PM 轮裁定跳过维持，硬伤：调休数据表年更新＋2027 安排未公布）；**CSV 编辑器**：`csv_editor`/`csv-edit` 全 **0 命中**，csv_table_viewer（:66 明确只查看不编辑）／csv_json／paste_table_to_csv 均不重叠，真缺口保持（15:00 PM 轮裁定备选留池维持）；**百分比/成绩计算器**：`percentage_calc`/`percent-calc` 全 **0 命中**，CJK「百分比计算器」全站 **0 命中**（codepoint 验真），「百分比」49 命中全部为通用描述词非工具口径，真缺口确凿，本轮从 P3 留池晋升第三顺位（方向修正边界相邻低优先）；**V2EX PrintPageCheck**：`printer_test_page`／Path `/tools/printer-test-page`／Icon `print` 全站命中——**站内已交付确认消解**（本轮首检，省重复入池））；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 17:30 · PM 选定轮，接通用调研第二百一十一轮）
 
 **选定：GPA 绩点计算器（gpa_calculator）** — 本轮唯一任务（新工具）。
