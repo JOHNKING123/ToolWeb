@@ -1,0 +1,140 @@
+{{define "final_grade"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期末成绩目标计算器 - 反推期末需要考多少分才能达标 | 程序员工具箱</title>
+    <meta name="description" content="免费在线期末成绩目标计算器：输入平时分/权重＋期中分数（可选）/权重＋期末权重＋目标总评/绩点，一键反推期末至少需要考多少分（保留1位小数），已达标/有可能/不可能三态判定，预设权重方案一键填入，一键复制结果，纯前端本地计算不上传。">
+    <meta name="keywords" content="期末成绩,目标总评,绩点,GPA,期末考多少分,平时分权重,期中期末权重,final grade,final grade calculator,required final exam score,成绩反推">
+    <meta property="og:title" content="期末成绩目标计算器 - 反推期末需要考多少分">
+    <meta property="og:description" content="输入平时分/权重＋期中（可选）/权重＋期末权重＋目标总评，一键反推期末至少需要考多少分，三态判定，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/final-grade">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/final-grade">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "期末成绩目标计算器",
+      "description": "免费在线期末成绩目标计算器：输入平时分/权重＋期中分数（可选）/权重＋期末权重＋目标总评/绩点，反推期末至少需要考多少分（保留1位小数），已达标/有可能/不可能三态判定，预设权重方案一键填入，一键复制结果，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/final-grade",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .fg-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .fg-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .fg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; margin-top: .6rem; }
+        .fg-grid label { display: block; font-size: .82rem; color: #4b5563; margin-bottom: .25rem; }
+        .fg-grid input { width: 100%; padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .9rem; box-sizing: border-box; }
+        .fg-grid input:focus { outline: none; border-color: var(--primary-color); }
+        .fg-grid input:disabled { background: #f3f4f6; color: #9ca3af; }
+        .fg-check { display: flex; align-items: center; gap: .4rem; font-size: .9rem; color: #4b5563; margin-top: .6rem; }
+        .fg-preset { font-size: .85rem; }
+        .fg-weightsum { font-size: .9rem; margin-top: .5rem; }
+        .fg-result { margin-top: .8rem; border: 1px solid #e5e7eb; border-radius: .6rem; padding: 1rem; background: #f9fafb; text-align: center; }
+        .fg-needed { font-size: 2.2rem; font-weight: 700; color: var(--primary-color); }
+        .fg-needed small { font-size: 1rem; font-weight: 400; color: #6b7280; }
+        .fg-badge { display: inline-block; margin-top: .5rem; padding: .25rem .9rem; border-radius: 999px; font-size: .9rem; font-weight: 700; }
+        .fg-badge-reached { background: #dcfce7; color: #166534; }
+        .fg-badge-possible { background: #fef3c7; color: #92400e; }
+        .fg-badge-impossible { background: #fee2e2; color: #991b1b; }
+        .fg-copy-text { font-size: 1rem; color: #111827; margin-top: .6rem; font-weight: 600; }
+        .fg-locked { font-size: .85rem; color: #6b7280; margin-top: .5rem; line-height: 1.7; }
+        .fg-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .fg-limit b { color: #374151; }
+        #fg-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎯 期末成绩目标计算器</h1>
+            <p>输入平时分/权重＋期中（可选）/权重＋期末权重＋目标总评 → 反推期末至少需要考多少分，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="fg-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 预设权重方案（一键填入）</h3>
+                <div class="fg-actions" id="fg-presets"></div>
+                <div class="fg-info">各校权重口径不同：先选一个接近的预设，再按你的课程大纲微调。无期中考试的课程勾选下方「无期中考试」。 </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 输入分数与权重</h3>
+                <div class="fg-grid">
+                    <div><label>平时分（0~100）</label><input id="fg-usual" type="number" min="0" max="100" step="0.1" placeholder="如 85"></div>
+                    <div><label>平时权重（%）</label><input id="fg-w-usual" type="number" min="0" max="100" step="1" placeholder="如 30"></div>
+                    <div><label>期中分数（0~100，可空）</label><input id="fg-mid" type="number" min="0" max="100" step="0.1" placeholder="如 70"></div>
+                    <div><label>期中权重（%）</label><input id="fg-w-mid" type="number" min="0" max="100" step="1" placeholder="如 30"></div>
+                    <div><label>期末权重（%）</label><input id="fg-w-final" type="number" min="0" max="100" step="1" placeholder="如 40"></div>
+                    <div><label>目标总评（0~100）</label><input id="fg-target" type="number" min="0" max="100" step="0.1" placeholder="如 80"></div>
+                </div>
+                <label class="fg-check"><input type="checkbox" id="fg-no-mid"> 无期中考试（期中分数留空，期中权重强制为 0）</label>
+                <div class="fg-weightsum" id="fg-weightsum">权重合计：0%（须为 100%）</div>
+                <div class="fg-actions">
+                    <button class="btn btn-primary" id="fg-calc">开始计算</button>
+                    <button class="btn btn-secondary" id="fg-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="fg-clear">清空</button>
+                </div>
+                <div class="fg-info">公式：总评 ＝ 平时分×平时权重 ＋ 期中分×期中权重 ＋ 期末分×期末权重；反推：期末所需 ＝（目标总评 − 已锁定分数）÷ 期末权重，结果保留 1 位小数。</div>
+
+                <div class="fg-result" id="fg-result" style="display:none;">
+                    <div class="fg-needed"><span id="fg-needed">0</span><small> 分</small></div>
+                    <div><span class="fg-badge" id="fg-status"></span></div>
+                    <div class="fg-copy-text" id="fg-copy-text"></div>
+                    <div class="fg-locked" id="fg-locked"></div>
+                    <div class="fg-actions" style="justify-content:center;">
+                        <button class="btn btn-secondary" id="fg-copy">一键复制结果</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="fg-limit">
+                    <li><b>① 各校权重口径不同：</b>平时分构成（考勤/作业/课堂表现/小测占比）、期中期末权重每门课都可能不一样，务必按课程大纲填写——<b>权重填错，结果全错</b>。</li>
+                    <li><b>② 目标总评与绩点/GPA 换算各校不同：</b>本工具按百分制总评反推；你们学校的目标绩点对应多少总评，请先按教务处换算表折算后再输入。</li>
+                    <li><b>③ 满分按 100 分计：</b>所需分数保留 1 位小数；反推结果超过 100 分即判「即使期末考满分 100 分也无法达到目标」，此时建议调低目标总评。</li>
+                    <li><b>④ 纯本地计算：</b>所有分数只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>，不构成学业承诺。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="fg-actions">
+                    <a href="/tools/flashcard-maker" class="btn btn-secondary" style="font-size:.9rem;">闪卡卡片生成器</a>
+                    <a href="/tools/study-notes" class="btn btn-secondary" style="font-size:.9rem;">学习笔记整理器</a>
+                    <a href="/tools/score-stats" class="btn btn-secondary" style="font-size:.9rem;">成绩统计分析 <span style="color:#2563eb;font-weight:700;">· 学习一条龙</span></a>
+                </div>
+                <div class="fg-info" style="margin-top:.6rem">学习一条龙：期末成绩目标计算器负责<b>定目标</b>（反推期末要考多少分）；闪卡卡片生成器＋学习笔记整理器负责<b>备考</b>（背知识点/整理复习笔记）；成绩统计分析负责<b>复盘</b>（考后统计分数分布）——目标、备考、复盘一条龙。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="fg-info">
+                    <b>流程：</b>选预设权重方案一键填入（或按课程大纲手动填）→ 填平时分、期中分（无期中就勾选）与目标总评 → 点「开始计算」看期末所需分数与三态判定 → 点「一键复制结果」把结论贴到备忘录。<br>
+                    <b>三态含义：</b>「目标已稳」＝ 期末只需考到 60 分及格线以下即可达标（含已提前达标）；「有可能达标」＝ 期末需考 60 分以上，还得认真备考；「即使期末考满分 100 分也无法达到目标」＝ 所需分数超过满分 100，建议调低目标总评。<br>
+                    <b>学习一条龙：</b>定完目标去<a href="/tools/flashcard-maker">闪卡卡片生成器</a>背知识点、用<a href="/tools/study-notes">学习笔记整理器</a>整理复习笔记，考完用<a href="/tools/score-stats">成绩统计分析</a>复盘分数。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="fg-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/final_grade.js?v=1"></script>
+</body>
+{{end}}

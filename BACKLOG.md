@@ -1,3 +1,83 @@
+## 今日任务（2026-11-03 11:00 · PM 选定轮，接 208 轮通用调研）
+
+**选定：期末成绩目标计算器（final_grade）** — 本轮唯一任务（新工具）。
+
+**顺位**：208 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席递进、顺位即理由；本轮 PM 定序权）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- `final_grade`／`final-grade` 在 templates＋static/js＋tests＋tools/categories.go 四处**全 0 命中**；`screen_ruler`／`screen-ruler` 全 0 命中（真缺口保持，17:00 PM 轮裁定暂不立项维持）；`time_decimal`／`time-decimal`／`decimal_time`／`timesheet` 全 0 命中（第三顺位留池）。
+- CJK「期末」全站 **0 命中**；「成绩」命中 7 文件逐行验真：score_stats.html（成绩统计分析：班级平均分/及格率/优秀率/分数段分布——统计分析口径，非目标反推）、fps_gpu_benchmark（输出成绩单 FPS 评级）、sheet_split/chart_generator 互链文案，均非目标反推工具口径，**不重叠**；「屏尺」0 命中；「工时」0 命中。
+- 命名无占用：ID `final_grade`、Path `/tools/final-grade` 均 0 命中；Icon **`grade` 0 命中**（`school` 已被占用；开发轮精确值复测锁定全库唯一；`scoreboard` 备选同样 0 命中）。
+- 全量 Path **277**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **163 个**；本地分支 muse/dev-20260929，本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（先默认 ssh 报 correct access rights，按 TOOLS.md 经验带铁律环境变量重跑即通），本地 HEAD 77c7be3 与 origin/muse/dev-20260929 同头为最新，远端无新提交；**本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交**，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——208 轮 Top3 首席（P1 顺位）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中，逐行 codepoint 验真）；③ **痛点真实**——大学生想算"期末考多少分才能拿到目标总评/绩点"，Excel 手算权重易错；④ **一天可高质量交付**——纯前端小难度，加权平均反推纯函数可写逐字向量（requiredOnFinal 确定性＋err.field），无模型/外部请求硬伤；⑤ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发。
+- 不选屏幕尺子：17:00 PM 轮裁定暂不立项维持，208 轮无新信号变化，备选留池。
+- 不选工时十进制转换：208 轮新增弱观察 P3，单帖旧信号（dev.to 2025-04）、频次待验证，第三顺位留池。
+
+**品类归位**：注册到「学习工具」类目（与 flashcard_maker／study_notes／score_stats 互链「学习辅助一条龙」；score_stats 统计分析→本工具目标反推单向引流旅程线）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 单科目输入：平时分（已得分/满分可选百分制）＋权重%、期中分数（可选，无期中时置空）＋权重%、期末权重%、目标总评分数；② 预设权重方案一键填入（30/30/40、40/60（无期中）、平时30+期末70 等）；③ 输出：期末还需考 X 分（保留 1 位小数）＋状态（已提前达标／可实现／即使满分也不可能达到）；④ 当前已锁定分数与满分上限投影；⑤ 一键复制结果（"目标总评 X 分，平时 A×权重…，期末至少需要考 N 分"）；⑥ 真限制页面明示：各校权重/计分口径（原始分 vs 折算分）不同，仅供参考，以教务系统为准。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.FinalGrade 下，module.exports 同步导出）**：
+  - `requiredOnFinal(usual, mid, weights, target)` → `{needed, locked, status}`：usual/mid 为 0~100 分数（mid 可为 null 表示无期中）；weights=`{usual, mid, final}` 各 0~1、和≈1（容差 1e-9），不合法抛 Error err.field='weights'；分数非法抛 Error err.field='usual'/'mid'；target 非 0~100 数抛 Error err.field='target'；mid 为 null 时要求 weights.mid===0（否则抛 Error err.field='weights'）。
+  - locked = usual*weights.usual + (mid??0)*weights.mid（已锁定分数）；needed = (target - locked)/weights.final；needed<=0 → status='reached'（提前达标）；0<needed<=100 → status='possible'；needed>100 → status='impossible'。needed 保留 1 位小数（Math.round(x*10)/10）。weights.final===0 抛 Error err.field='weights'。
+  - `formatNeeded(needed, status)` → 文案：'reached'→`'已提前达标，期末任意分数都达标'`；'possible'→`'期末至少需要考 ' + needed.toFixed(1) + ' 分'`；'impossible'→`'即使期末考满分 100 分也无法达到目标'`；status 非法抛 Error err.field='status'。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `requiredOnFinal(85, 70, {usual:0.3, mid:0.3, final:0.4}, 80)` → `{needed:83.8, status:'possible'}`（locked=46.5；(80-46.5)/0.4=83.75→83.8）。
+  - `requiredOnFinal(95, 95, {usual:0.3, mid:0.3, final:0.4}, 80)` → `{status:'reached'}`（needed=-17.5）。
+  - `requiredOnFinal(85, 70, {usual:0.3, mid:0.3, final:0.4}, 95)` → `{status:'impossible'}`（needed=121.3）。
+  - `requiredOnFinal(85, null, {usual:0.4, mid:0, final:0.6}, 85)` → `{needed:85, status:'possible'}`（locked=34；(85-34)/0.6=85）。
+  - `requiredOnFinal(85, 70, {usual:0.3, mid:0.2, final:0.4}, 80)` 抛 Error 且 `err.field==='weights'`（和为 0.9）。
+  - `requiredOnFinal(101, 70, {usual:0.3, mid:0.3, final:0.4}, 80)` 抛 Error 且 `err.field==='usual'`。
+  - `requiredOnFinal(85, 70, {usual:0.3, mid:0.3, final:0.4}, '80')` 抛 Error 且 `err.field==='target'`。
+  - `formatNeeded(83.8, 'possible')` → `'期末至少需要考 83.8 分'`；`formatNeeded(0, 'reached')` → `'已提前达标，期末任意分数都达标'`；`formatNeeded(0, 'x')` 抛 Error 且 `err.field==='status'`。
+- **预计改动文件**：templates/final_grade.html（新）、static/js/final_grade.js（新）、tests/final_grade.test.js（新）、tools/categories.go（注册项 ID final_grade、Name 期末成绩目标计算器、Path /tools/final-grade、Icon grade（开发轮精确值复测锁定全库唯一）、Category 学习工具、New: true、Description 含 期末/目标总评/绩点/final grade 中英文关键词）；旧测试 Path 断言 277→278 同步（eq/=== 写法仅断言行）。
+- **验收标准**：node 新测试断言全过、全量测试文件全绿；go build/vet 通过；本地 /tools/final-grade 与静态 JS 实测 200；模板零外部资源（仅 canonical 元链接）；真限制页面明示；全量 Path 277→278。
+
+---
+
+## 今日任务（2026-11-03 11:00 · 通用调研第二百〇八轮，接阅读时间估算器交付轮）
+
+**交付状态**：11-03 通用调研第二百〇八轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**阅读时间估算器交付闭环**（77c7be3 新增：reading_time，Path 276→**277**，tests/reading_time.test.js 74 断言全绿；templates/reading_time.html＋static/js/reading_time.js＋tests/reading_time.test.js 均存在；候选池划出）。**Top3 递进链更新**：期末成绩目标计算器→首席（顺位递进；首席已交付划出、备选屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 第三顺位递进为首席；`final_grade` 真缺口维持；score_stats 统计分析口径不重叠；纯前端小难度；大学生小众口径低优先；PM 可裁定是否立项或继续留池）／屏幕尺子→备选（17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定复活）／工时十进制转换→第三顺位弱观察备选（**本轮新增**；dev.to 2025-04 "I made a little website to convert time to decimal" 旧信号：填工时单/报销需把"2小时45分"转"2.75"，搜到的站全是广告垃圾站；`time_decimal`/`decimal_time`/`timesheet`/工时/时间十进制全 0 命中真缺口；unit_converter 通用单位换算口径不重叠；纯前端极小难度（时分↔十进制小时双向）；低优先：单帖旧信号，频次待验证）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；11:00 轮，优先小难度纯前端。
+
+**本轮三件事**（11:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 77c7be3（阅读时间估算器新增）／f7e4141（学习笔记整理器）／b5f1121（习惯追踪器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **277**；`ls templates/reading_time.html static/js/reading_time.js tests/reading_time.test.js` **均存在**；`node tests/reading_time.test.js` **pass=74 fail=0**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（known_hosts 补 github.com ED25519 后即通），本地 HEAD 77c7be3 与 origin 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 阅读时间估算器：已交付（77c7be3，Path 276→277）——划出候选池。
+   - 期末成绩目标计算器：`final_grade` 全 **0 命中**维持；score_stats（班级成绩统计分析口径）不重叠——真缺口保持，顺位递进为首席。
+   - 屏幕尺子：`screen_ruler` 全 **0 命中**维持——真缺口保持（17:00 PM 轮裁定暂不立项维持）。
+   - 工时十进制转换（本轮新增）：`time_decimal`/`decimal_time`/`timesheet` 全 0 命中；CJK 工时/时间十进制全站 0 命中；unit_converter（通用单位换算口径）不重叠——真缺口确凿，弱观察 P3。
+   - V2EX t/1250428 md2chat（2026-10-20；贴贴 Markdown：Markdown 转聊天框图文，表格/代码/公式转图片，微信/钉钉/飞书/企业微信/邮件）→站内 **md_to_chat 已交付**（templates/md_to_chat.html＋static/js/md_to_chat.js＋tests/md_to_chat.test.js，categories.go:1149）**确认消解**。
+   - V2EX t/1252684 aivault（2026-10-28；多 harness 共用规则/记忆，CLI 一行命令安装）→本地 CLI 工具口径，非 web 单页**确认消解**。
+   - V2EX t/1253111 果农（2026-10-30；App Store 收入 TestFlight，需 App Store Connect API Key＋推送中转服务器）→iOS App＋后端口径**确认消解**。
+   - V2EX t/1253431 Claude Code Config Helper（2026-10-31；VS Code 扩展，需自备模型服务）→IDE 扩展口径**确认消解**。
+   - PulseTools 2026 三工具（SERP & Meta Previewer / Robots & Ads.txt Validator / Schema.org JSON-LD Builder）→**站内全覆盖确认消解**：serp_snippet_preview（Google 桌面/移动＋百度规则）＋**og_card_preview**（Open Graph / Twitter Card / 微信分享卡片，categories.go:2401）＋schema_org_generator＋robots_txt_generator 均已交付。
+   - 知乎/懒大王导航 2026-10-26/27（TinyPNG／iLovePDF／Remove.bg／草料二维码／123apps／在线录屏／在线图表／文字转语音／临时邮箱）→二维码生成器/screen_recorder/chart_generator/text_reader_aloud 均已交付**确认消解**；iLovePDF／Remove.bg／123apps 需后端**确认消解**；临时邮箱→见下新增观察（需后端）。
+   - dev.to "Why Simple Conversion Tools Still Matter"（2026-01）／Medium WeightConvert（2026-10）→unit_converter 已交付口径**确认消解**；dev.to Calculora 200＋计算器→聚合站产品口径**确认消解**；dev.to Chrome 内置 AI APIs→桌面 Chrome 专属＋4GB 模型下载，仅渐进增强**确认消解**；dev.to Fileora 150 文件工具／developk 60＋工具／local-first 方法论文章→方法论无独立新信号**确认消解**。
+   - HN HackerTube→产品口径已消解维持；V2EX hot API（2026-11-03 实查）→职场/生活/OpenAI/推广帖，无新工具信号。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **期末成绩目标计算器** — 首席（顺位递进；206 轮新增 P3→207 轮第三顺位；首席阅读时间估算器已交付划出、备选屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 递进为首席；站内零重叠实测维持：`final_grade` 全 0 命中；score_stats（统计分析口径）不重叠；真缺口确凿；痛点：大学生想算"期末考多少分才能拿到目标总评/绩点"，Excel 手算易错；实现：平时分权重＋期中＋期末目标反推所需分数→纯前端小难度（加权平均反推纯函数）；真限制：各校权重口径不同、仅供参考须明示；低优先：大学生小众口径，与用户劳动仲裁复习场景关联弱；**PM 可裁定是否立项或继续留池**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **屏幕尺子** — 备选（207 轮 Top3 顺位；**17:00 PM 轮裁定暂不立项维持**，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，**PM 可裁定复活**）。
+3. **工时十进制转换** — 第三顺位弱观察备选（**本轮新增**；dev.to 2025-04 "I made a little website to convert time to decimal"：填工时单/报销要把"2小时45分"转"2.75"小时，搜到的转换站全是广告垃圾站；`time_decimal`/`decimal_time`/`timesheet` 全 0 命中；工时/时间十进制 CJK 全站 0 命中；unit_converter（通用单位换算口径）不重叠；真缺口确凿；实现：时分秒↔十进制小时双向互转＋批量行转换；纯前端极小难度；低优先：单帖旧信号，频次待验证，PM 可裁定是否晋升）。
+
+其余观察项保持原状：**临时邮箱**（**本轮新增观察，需后端**：懒大王导航 2026-10-27"临时邮箱"信号；`temp_mail`/`tempmail`/`disposable_mail` 全 0 命中；临时邮箱 CJK 全站 0 命中；真缺口；痛点：一次性注册不想暴露真实邮箱收垃圾邮件；**硬伤：需后端收信基础设施＋发信域名，纯前端单页无法实现**；低优先观察，仅记录不立项）／GPA 绩点计算器（P3 留池；绩点/GPA 真缺口；学习小众口径低优先）／年龄/日期差计算器（P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／百分比/成绩计算器（P3 留池；`percentage_calc` 真缺口；方向修正边界相邻低优先）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百〇八轮：阅读时间估算器交付闭环（77c7be3 新增：reading_time，Path 276→**277**，tests/reading_time.test.js 74 断言全绿；候选池划出）；**Top3 递进链更新**：**期末成绩目标计算器→首席**（顺位递进；首席已交付、备选暂不立项维持；`final_grade` 真缺口；score_stats 不重叠；纯前端小难度；大学生小众低优先；PM 可裁定是否立项）／**屏幕尺子→备选**（17:00 PM 轮裁定暂不立项维持；本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；PM 可裁定复活）／**工时十进制转换→第三顺位弱观察备选**（**本轮新增**；dev.to 2025-04 旧信号；`time_decimal`/`decimal_time`/`timesheet` 全 0 命中；工时/时间十进制 CJK 0 命中；unit_converter 不重叠；真缺口确凿；纯前端极小难度；单帖旧信号低优先）；**本轮新增观察（需后端）**：临时邮箱（`temp_mail`/`tempmail` 全 0 命中真缺口；需后端收信基础设施，纯前端无法实现；低优先仅记录）；**本轮初判消解 12 项**：V2EX md2chat→md_to_chat 已交付／V2EX aivault→CLI 本地工具口径／V2EX 果农→iOS App＋后端口径／V2EX Claude Code Config Helper→VS Code 扩展口径／PulseTools 三工具→serp_snippet_preview＋og_card_preview＋schema_org_generator＋robots_txt_generator 全覆盖／知乎懒大王导航→二维码/录屏/图表/文字转语音已交付，iLovePDF/Remove.bg/123apps 需后端／dev.to 单位换算榜文＋Medium WeightConvert→unit_converter 已交付／dev.to Calculora→聚合站口径／dev.to Chrome 内置 AI→桌面专属渐进增强／dev.to Fileora/developk/local-first→方法论无新信号／HN HackerTube→产品口径维持／V2EX hot API 实查→无新工具信号；本轮 fetch 一次成功，本地 HEAD 77c7be3 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 阅读时间估算器 | 已交付划出（77c7be3 新增：reading_time，Path 276→277，templates/reading_time.html＋static/js/reading_time.js＋tests/reading_time.test.js 均存在，node 测试 74 断言全绿；候选池划出） | — | 已实现 |
+| 期末成绩目标计算器 | 首席（顺位递进；206 轮新增 P3→207 轮第三顺位；首席已交付划出、备选 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`final_grade` 全 0 命中；score_stats（班级成绩统计分析口径）不重叠；真缺口确凿；痛点：大学生想算"期末考多少分才能拿到目标总评"，Excel 手算易错；实现：平时分权重＋期中＋期末目标反推所需分数；纯前端小难度；真限制：各校权重口径不同须明示；低优先：大学生小众口径，与用户劳动仲裁复习场景关联弱；PM 可裁定是否立项或继续留池） | 小 | P1（顺位） |
+| 屏幕尺子 | 备选（207 轮 Top3 顺位；17:00 PM 轮裁定暂不立项维持，本轮无新信号变化；`screen_ruler` 0 命中真缺口保持；痛点：前端还原设计稿/量网页元素间距想快速量像素距离，桌面量尺软件要安装；实现：全屏 overlay 十字尺＋拖拽量取两点像素距离＋放大镜局部放大＋快捷键；纯前端小难度；真限制：CSS 像素非物理尺寸、高 DPR 换算须明示；低优先：设计/前端小众口径，PM 可裁定复活） | 小 | P3（留池） |
+| 工时十进制转换 | 第三顺位弱观察备选（本轮新增；dev.to 2025-04 "I made a little website to convert time to decimal"：填工时单/报销需把"2小时45分"转"2.75"小时，搜到的站全是广告垃圾站；`time_decimal`/`decimal_time`/`timesheet` 全 0 命中；工时/时间十进制 CJK 全站 0 命中；unit_converter（通用单位换算口径）不重叠；真缺口确凿；实现：时分秒↔十进制小时双向互转＋批量行转换；纯前端极小难度；低优先：单帖旧信号，频次待验证，PM 可裁定是否晋升） | 小 | P3（留池） |
+| 临时邮箱 | 本轮新增观察（懒大王导航 2026-10-27"临时邮箱"信号；`temp_mail`/`tempmail`/`disposable_mail` 全 0 命中；临时邮箱 CJK 全站 0 命中；真缺口；痛点：一次性注册不想暴露真实邮箱收垃圾邮件；硬伤：需后端收信基础设施＋发信域名，纯前端单页无法实现；低优先观察，仅记录不立项） | 大 | 观察（需后端） |
+
+**归档说明**：本轮为 11-03 通用调研第二百〇八轮——阅读时间估算器交付闭环（77c7be3；`/tools/reading-time` 已注册；全量 **277 Path**；tests/reading_time.test.js 74 断言全绿），候选池划出；**Top3 递进链更新**：期末成绩目标计算器→首席（顺位递进；`final_grade` 真缺口；score_stats 不重叠；大学生小众低优先；PM 可裁定是否立项）／屏幕尺子→备选（17:00 PM 轮裁定暂不立项维持；`screen_ruler` 0 命中真缺口保持；本轮无新信号变化；PM 可裁定复活）／工时十进制转换→第三顺位弱观察备选（本轮新增；dev.to 2025-04 旧信号；`time_decimal`/`decimal_time`/`timesheet` 全 0 命中真缺口；unit_converter 不重叠；纯前端极小难度；单帖旧信号低优先）；本轮新增观察（需后端）：临时邮箱（真缺口；纯前端无法实现；低优先仅记录）；本轮初判消解 12 项全部确认（V2EX md2chat→md_to_chat 已交付／V2EX aivault→CLI 口径／V2EX 果农→iOS App＋后端口径／V2EX Claude Code Config Helper→VS Code 扩展口径／PulseTools 三工具→serp_snippet_preview＋og_card_preview＋schema_org_generator＋robots_txt_generator 全覆盖／知乎懒大王导航→二维码/录屏/图表/文字转语音已交付＋iLovePDF/Remove.bg/123apps 需后端／dev.to 单位换算榜文＋Medium WeightConvert→unit_converter 已交付／dev.to Calculora→聚合站口径／dev.to Chrome 内置 AI→桌面专属／dev.to Fileora/developk/local-first 方法论文章→无新信号／HN HackerTube→产品口径维持／V2EX hot API 实查→无新工具信号）；本轮 fetch 一次成功，本地 HEAD 77c7be3 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD 77c7be3 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 77c7be3（阅读时间估算器新增）／f7e4141（学习笔记整理器新增）／b5f1121（习惯追踪器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **277**；`ls templates/reading_time.html static/js/reading_time.js tests/reading_time.test.js` **均存在**；`node tests/reading_time.test.js` **pass=74 fail=0**；Top3 候选重叠复核（**阅读时间估算器**：已交付（/tools/reading-time，Path 276→277），划出候选池；**期末成绩目标计算器**：`final_grade` 全 **0 命中**，score_stats（统计分析口径）不重叠，真缺口保持，顺位递进为首席；**屏幕尺子**：`screen_ruler` 全 **0 命中**，真缺口保持（17:00 PM 轮裁定暂不立项维持）；**工时十进制转换**：`time_decimal`/`decimal_time`/`timesheet` 全 **0 命中**，工时/时间十进制 CJK 全站 **0 命中**，unit_converter（通用单位换算口径）不重叠，真缺口确凿，弱观察 P3）；V2EX md2chat（t/1250428）确认消解：站内 md_to_chat（templates/md_to_chat.html＋static/js/md_to_chat.js＋tests/md_to_chat.test.js，categories.go:1149）已交付——Markdown 转聊天框图文口径全覆盖；PulseTools 三工具确认消解：serp_snippet_preview（Google/百度）＋og_card_preview（Open Graph / Twitter Card / 微信分享卡片，categories.go:2401）＋schema_org_generator＋robots_txt_generator 均已交付；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 09:00 · PM 选定轮，接 207 轮通用调研）
 
 **选定：阅读时间估算器（reading_time）** — 本轮唯一任务（新工具）。

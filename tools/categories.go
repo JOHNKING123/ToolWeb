@@ -2584,6 +2584,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "final_grade",
+					Name:        "期末成绩目标计算器",
+					Description: "期末考多少分才能达标？输入平时分/权重＋期中分数（可选）/权重＋期末权重＋目标总评/绩点，一键反推期末至少需要考多少分（保留1位小数），已达标/有可能/不可能三态判定，预设权重方案一键填入，结果一键复制，纯前端本地计算不上传；与闪卡卡片生成器/学习笔记整理器/成绩统计分析互链（学习一条龙） · final grade calculator: required final exam score for your target grade/GPA, 100% client-side",
+					Path:        "/tools/final-grade",
+					Icon:        "grade",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{
