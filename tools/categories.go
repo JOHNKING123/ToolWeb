@@ -2066,6 +2066,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "网络工具",
 				},
+				{
+					ID:          "proxy_camouflage_check",
+					Name:        "代理伪装自查",
+					Description: "代理/VPN 伪装自查：出口 IP 国家/时区核验浏览器时区/语言一致性，WebRTC ICE 候选检真实 IP 泄露，navigator.webdriver 自动化信号，Canvas/WebGL 指纹同会话稳定性；逐项红绿灯＋穿帮原因中文说明＋综合评分，一键复制报告，零上传 · proxy/VPN camouflage check: egress IP country/timezone vs browser timezone/language consistency, WebRTC leak detection, automation signal, fingerprint stability, score report, 100% client-side",
+					Path:        "/tools/proxy-camouflage-check",
+					Icon:        "radar",
+					New:         true,
+					Category:    "网络工具",
+				},
 			},
 		},
 		{

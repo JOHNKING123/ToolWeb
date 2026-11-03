@@ -1,0 +1,127 @@
+{{define "proxy_camouflage_check"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代理伪装自查 - VPN 节点穿帮检测 | 程序员工具箱</title>
+    <meta name="description" content="免费在线代理/VPN 伪装自查：查出口 IP 国家/时区，核验浏览器时区/语言一致性，WebRTC ICE 候选检测真实 IP 泄露，navigator.webdriver 自动化信号，Canvas/WebGL 指纹同会话稳定性；逐项红绿灯＋穿帮原因中文说明＋综合评分，一键复制报告，零上传。">
+    <meta name="keywords" content="代理检测,VPN 伪装检测,代理穿帮检测,WebRTC 泄露检测,DNS 泄漏自查,IP 泄露检测,proxy camouflage check,WebRTC leak test">
+    <meta property="og:title" content="代理伪装自查 - VPN 节点穿帮检测">
+    <meta property="og:description" content="挂着节点仍被识破？一键自查时区/语言/WebRTC/自动化信号/指纹五项穿帮点，输出综合评分报告，纯前端零上传。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/proxy-camouflage-check">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/proxy-camouflage-check">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "代理伪装自查",
+      "description": "免费在线代理/VPN 伪装自查：出口 IP 国家/时区核验浏览器时区/语言一致性，WebRTC 真实 IP 泄露检测，自动化信号与指纹稳定性检查，逐项红绿灯＋综合评分，一键复制报告，纯前端零上传。",
+      "url": "https://www.johnkingzcq123.xyz/tools/proxy-camouflage-check",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .pcc-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .pcc-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .pcc-error { display: block; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .pcc-ipinfo { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .8rem 1rem; background: #fafafa; margin-top: .8rem; display: none; }
+        .pcc-kv { display: flex; gap: .8rem; font-size: .92rem; padding: .22rem 0; color: #374151; }
+        .pcc-kv span { color: #6b7280; min-width: 5.2em; }
+        .pcc-item { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .7rem .9rem; margin-top: .6rem; background: #fff; }
+        .pcc-item-head { display: flex; align-items: center; gap: .5rem; font-size: .95rem; }
+        .pcc-light { font-size: 1.05rem; }
+        .pcc-status { margin-left: auto; font-size: .8rem; color: #6b7280; }
+        .pcc-detail { margin-top: .35rem; font-size: .88rem; color: #4b5563; line-height: 1.7; }
+        .pcc-pass { border-left: 4px solid #10b981; }
+        .pcc-warn { border-left: 4px solid #f59e0b; }
+        .pcc-fail { border-left: 4px solid #ef4444; }
+        .pcc-unknown { border-left: 4px solid #9ca3af; }
+        .pcc-score { display: none; margin-top: .9rem; border-radius: .6rem; padding: 1rem 1.2rem; color: #fff; }
+        .pcc-level-A { background: linear-gradient(135deg, #059669, #10b981); }
+        .pcc-level-B { background: linear-gradient(135deg, #0284c7, #38bdf8); }
+        .pcc-level-C { background: linear-gradient(135deg, #d97706, #f59e0b); }
+        .pcc-level-D { background: linear-gradient(135deg, #dc2626, #f87171); }
+        .pcc-score-row { display: flex; align-items: baseline; gap: .8rem; }
+        #pcc-score-num { font-size: 2rem; font-weight: 700; }
+        #pcc-score-level { font-size: 1.1rem; font-weight: 600; }
+        #pcc-score-summary { margin-top: .3rem; font-size: .92rem; opacity: .95; line-height: 1.6; }
+        .pcc-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .pcc-limit b { color: #374151; }
+        #pcc-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+        #pcc-copy { display: none; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>📡 代理伪装自查</h1>
+            <p>挂着节点仍被网站识破？一键自查时区 / 语言 / WebRTC / 自动化信号 / 指纹五项穿帮点，纯前端零上传</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="pcc-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>开始检测</h3>
+                <div class="pcc-info">
+                    本工具先通过站内已有接口 <b>GET /tools/api/my-ip</b> 获取你的出口 IP、归属国家与 IP 时区，
+                    再在浏览器本地完成五项一致性/泄露检查：<b>① 时区一致性 ② 语言-国家一致性（启发式）③ WebRTC 真实 IP 泄露
+                    ④ 自动化信号 ⑤ Canvas/WebGL 指纹同会话稳定性</b>。全部检查只在你的浏览器内完成，不会上传到任何服务器。
+                </div>
+                <div class="pcc-actions">
+                    <button class="btn btn-primary" id="pcc-start" type="button">开始检测</button>
+                    <button class="btn btn-secondary" id="pcc-copy" type="button">一键复制报告</button>
+                </div>
+                <div class="pcc-ipinfo" id="pcc-ipinfo"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>检测结果</h3>
+                <div id="pcc-items"><div class="pcc-info">点击「开始检测」，约 6 秒出结果。</div></div>
+                <div class="pcc-score" id="pcc-score">
+                    <div class="pcc-score-row">
+                        <span id="pcc-score-num">0/100</span>
+                        <span id="pcc-score-level">— 级</span>
+                    </div>
+                    <div id="pcc-score-summary"></div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="pcc-limit">
+                    <li><b>① DNS 泄漏本页不含：</b>DNS 泄漏检测需要服务端配合构造检测域名，本页只做浏览器侧一致性检查，<b>不含 DNS 泄漏项</b>。</li>
+                    <li><b>② WebRTC 受 mDNS 保护影响：</b>现代浏览器默认用 mDNS（.local 主机名）隐藏内网 IP，本页仅能检出<b>仍暴露数字 IP</b> 的情况；检测过程会向公共 STUN 服务器发起请求以收集 ICE 候选（仅用于获取候选地址，不发送个人信息）。</li>
+                    <li><b>③ 语言-国家为启发式：</b>语言与国家的对应是启发式规则（如 en-US 用户身处国外属正常），该项只给<b>警告</b>不判死刑。</li>
+                    <li><b>④ 指纹仅演示稳定性：</b>指纹哈希仅用于演示<b>本会话内</b>的稳定性，不做跨站追踪判定；哈希值不出浏览器。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pcc-info">
+                    <b>第一步：</b>点击「开始检测」——先取出口 IP（国家/时区/运营商），再本地跑五项检查。<br>
+                    <b>第二步：</b>看逐项红绿灯：🟢通过 / 🟡警告 / 🔴未通过 / ⚪未知，每项附穿帮原因中文说明。<br>
+                    <b>第三步：</b>看综合评分（A 伪装良好 / B 基本过关 / C 有穿帮风险 / D 穿帮明显），「一键复制报告」可粘贴分享。<br>
+                    <b>常见穿帮：</b>浏览器时区与节点时区不一致、WebRTC 泄露真实 IP、navigator.webdriver=true 被自动化工具接管。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="pcc-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/proxy_camouflage_check.js?v=1"></script>
+</body>
+{{end}}

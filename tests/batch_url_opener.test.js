@@ -122,7 +122,7 @@ ok(GO_SRC.slice(buoIdx, buoIdx + 1200).indexOf('Category:    "开发工具"') >=
 ok(GO_SRC.slice(buoIdx, buoIdx + 2000).indexOf("Batch URL opener") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 287, "注册 Path 总数 268→270");
+eq(pathCount, 288, "注册 Path 总数 268→270");
 
 /* ---------- 10. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "batch_url_opener.html"), "utf8");

@@ -1,3 +1,138 @@
+## 今日任务（2026-11-04 07:39 · PM 选定轮，接通用调研第二百一十八轮）
+
+**选定：代理/VPN 伪装自查（proxy_camouflage_check）** — 本轮唯一任务（新工具）。
+
+**顺位**：218 轮 Top3 首席（P0）。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **需求验证为三轮最强**：V2EX 2026-11-02 热帖「开源工具检测代理伪装：71个嗅探器与9项泄露」（who.1ms.dog，回复 71 · 收藏 159）直接验证痛点——挂着节点仍被网站一眼识破，站内 my-ip/ip-lookup/dns-lookup/user-agent-parser 皆为单项数据、缺「一致性穿帮报告」。
+2. **无年假工具式硬伤**：公网 IP＋归属国家＋IP 时区复用已有后端接口 `GET /tools/api/my-ip`（tools/nettools.go HandleMyIPAPI：c.ClientIP() 取出口 IP ＋ ip-api.com 返回 countryCode/timezone；my-ip 生产可用已验证），**无外部数据表、无年更新维护负担**；2026-11-04 当下时间窗口无打折。
+3. **真限制可明示、无隐藏坑**：DNS 泄漏需服务端配合本页不含（页面明示）；WebRTC 检测受浏览器 mDNS 保护影响、仅检出仍暴露数字 IP 的情况（如实报告）；语言-国家一致性为启发式（页面明示）。
+4. **方向合规**：网络/开发者工具口径，非泛财务/生活计算器（10-18 方向修正合规）；与 my-ip 等同类目形成「网络自查」小闭环。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）**：
+- ASCII：`proxy_camouflage`／`proxy-camouflage`／`proxyCamouflage`／`camouflage` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD c588bf8，287 Path，173 tests）。
+- CJK「伪装」（运行时构造）全站仅 1 命中：tests/project_to_txt.test.js:106 注释「扩展名伪装」（文件魔数识别口径）——**口径完全不同，不构成重叠**；真缺口确凿。
+- Icon 候选：**`radar`（首选；「嗅探器」语义贴合 V2EX 热帖标题，`grep -c '"radar"' tools/categories.go = 0）**／`plumbing`（备选，同 0 命中）；开发轮用精确值复测锁定全库唯一。
+
+**未选说明**：跑步配速计算器（P1 备选留池；健康簇合规；`running_pace_calc` 真缺口；纯前端小难度）／蛋白质摄入量计算器（P1 留池维持；健康簇合规；`protein_intake_calc` 真缺口；纯前端小难度；医疗免责页面明示）——两者无硬伤，但 218 研究轮已定伪装自查为 P0 首席，PM 定序权按惯例不行使跳过。
+
+**品类归位**：注册到「网络工具」类目（与 my-ip／ip-lookup／dns-lookup／user-agent-parser 同类目，「网络自查」小闭环自然延续）；New: true；本轮**无互链要求**（my-ip 等为单项数据口径，本工具为一致性报告口径，页面内文字引导即可，不做硬编码互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 公网出口 IP＋归属国家＋IP 时区：前端直调已有 `GET /tools/api/my-ip`（返回 {ip, data{countryCode, timezone}}），**不新增后端接口** ② 一致性三检查：浏览器时区（Intl.DateTimeFormat().resolvedOptions().timeZone）vs IP 时区；浏览器语言（navigator.language(s)）vs IP 国家（启发式语言-国家映射表，页面明示为启发式）；三者一致性汇总 ③ WebRTC 泄露检测：RTCPeerConnection 收集 ICE host/srflx candidate，检出数字 IPv4/IPv6 记泄露（红灯）；仅 mDNS .local 时报告「未见真实 IP（现代浏览器 mDNS 保护）」（绿灯＋说明）④ 自动化信号：navigator.webdriver（红灯=检测到自动化特征）⑤ Canvas/WebGL 指纹：Canvas 2D 绘制＋WebGL renderer 字符串哈希（展示 SHA-256 前 16 位），同会话二次采样对比稳定性 ⑥ 输出：逐项红绿灯＋穿帮原因中文说明＋综合评分；一键复制报告；零上传（除复用 my-ip 接口外无数据外发）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.ProxyCamouflageCheck 下，module.exports 同步导出）**：
+  - `checkTimezone(ipTimezone, browserTimezone)` → {pass:boolean, detail:string}（字符串归一化比对；空值 err.field='ipTimezone'/'browserTimezone'）。
+  - `checkLanguage(languages[], countryCode)` → {pass, detail, heuristic:true}（启发式映射表；countryCode 非法 err.field='countryCode'）。
+  - `parseIceCandidates(candidates[])` → {leaked:boolean, ips:[]}（数字 IP 正则提取，过滤 .local）。
+  - `detectAutomation(webdriverFlag)` → {pass, detail}。
+  - `hashFingerprint(str)` → hex（确定性哈希；空串 err.field='input'）。
+  - `scoreReport(results)` → {score:number, level:string, summary:string}。
+- **真限制四条页面明示**：① DNS 泄漏检测需服务端配合，本页不含；② WebRTC 检测受浏览器 mDNS 保护影响，仅能检出仍暴露数字 IP 的情况；③ 语言-国家一致性为启发式规则（如 en-US 用户身处国外属正常）；④ 指纹哈希仅用于本会话稳定性演示，不做跨站追踪判定。
+- **改动文件**：tools/categories.go（网络工具类目新增 proxy_camouflage_check 条目，Path 287→**288**，Icon `radar` 首选/`plumbing` 备选，开发轮精确值复测锁定全库唯一）／templates/proxy_camouflage_check.html（新）／static/js/proxy_camouflage_check.js（新）／tests/proxy_camouflage_check.test.js（新）／全量旧 tests Path 断言 287→288 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（时区一致/不一致断言；语言启发式映射断言（zh-CN→CN 通过、en-US→CN 启发式警告）；ICE candidate 解析（数字 IP 检出泄露、.local 不记泄露）；webdriver 真/假；指纹哈希确定性；综合评分分级；模板零外部资源静态检查）② 全量 tests/*.test.js 173→**174** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/proxy-camouflage-check 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：代理/VPN 伪装自查→本轮交付（218 研究轮 P0 首席；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿；网络工具类目；Icon radar 首选）／跑步配速计算器→备选顺位（P1 留池；健康簇合规；`running_pace_calc` 真缺口；纯前端小难度；PM 可裁定晋升）／蛋白质摄入量计算器→P1 留池维持（健康簇合规；`protein_intake_calc` 真缺口；纯前端小难度；医疗免责页面明示）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：known_hosts 又被 VM 换机清空（老问题第五次复现），ssh 自动重建后**一次成功**；本地 HEAD c588bf8 与 origin/muse/dev-20260929 同头为最新，远端无新提交）；git log 头部 c588bf8（两地距离计算器新增）／3c9f61d（三角形几何求解器新增）／35dde69（BMR/TDEE 能量消耗计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **287**；`ls tests/*.test.js | wc -l` = **173**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-04 07:00 · 产品调研推荐，第二百一十八轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间，属站内合规簇）。
+>
+> **昨日交付核对**：两地距离计算器已交付闭环（commit c588bf8，`/tools/distance-calc`，Path 总数 286→287），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **代理/VPN 伪装自查** — V2EX 2026-11-02 热帖「开源工具检测代理伪装：71个嗅探器与9项泄露」（who.1ms.dog，回复 71 · 收藏 159）直接验证需求：出海/翻墙用户挂着节点却被网站一眼识破，痛点在「伪装是否穿帮」，站内 my-ip、ip-lookup、dns-lookup、user-agent-parser 皆为单项数据、缺「一致性穿帮报告」。实现：纯前端中难度——公网 IP+地理（复用 my-ip 同路线客户端直调 IP API）→ 比对浏览器时区（Intl）、语言（navigator.language）、国家三者一致性；RTCPeerConnection 收集 host candidate 检 WebRTC 真实 IP 泄露；navigator.webdriver 自动化信号；Canvas/WebGL 指纹稳定性哈希；逐项红绿灯＋穿帮原因中文说明，零上传。DNS 泄漏需服务端配合，本页不含（页面明示边界）。SEO：代理检测、VPN 伪装检测、WebRTC 泄露检测、DNS 泄漏自查。建议 ID proxy_camouflage_check、Path /tools/proxy-camouflage-check；零重叠：`伪装` 0 命中；自有「NAT 类型检测」为 P2P 打洞口径，非穿帮报告，不重叠。
+2. **跑步配速计算器** — 竞品形态验证充分（rungeni、marathonpace.app、pace-calculator.mzldp.com 均为免费免注册单页）；健康簇自然延续（BMI→BMR/TDEE→心率区间→本项），跑步/马拉松人群周级高频（目标配速、完赛时间、分段表）。实现：纯前端小难度——配速/距离/时间三互算、min/km 与 min/mi 互换、km/h 换算；Riegel 公式（T2=T1×(D2/D1)^1.06）做 5K/10K/半马/全马成绩预测；逐公里分段表＋完赛目标表，零上传。SEO：跑步配速计算器、马拉松配速表、配速换算、完赛时间预测。建议 ID running_pace_calc、Path /tools/running-pace-calc；零重叠：CJK「配速」0 命中；ASCII `pace` 命中全为 space 子串。
+3. **蛋白质摄入量计算器** — 竞品形态验证（2026 多个独立 protein calculator 站点：online-calculator.work、eatbygoals.com、calculators.im、truevaluecalc.com）；直接衔接 bmr-tdee-calc 交付项（BMR/TDEE 定了热量缺口，蛋白质摄入是增肌减脂的下一问），ISSN 证据链清晰（1.6–2.2 g/kg 增肌、2.0–2.4 g/kg 减脂护肌）。实现：纯前端小难度——体重＋活动量＋目标（维持/减脂/增肌）→ 每日克数区间 → 按 3–5 餐分配（25–40g/餐）→ 蛋白质热量（×4 kcal/g），肾病/医疗免责真限制页面明示，零上传。SEO：蛋白质计算器、每天需要多少蛋白质、增肌蛋白质摄入。建议 ID protein_intake_calc、Path /tools/protein-intake-calc；零重叠：`蛋白质`/`protein` 0 命中。
+
+**新信号扫描**：V2EX（11-02 代理伪装热帖 → 新晋 P0 伪装自查；11-02 tubox 纯前端图片工具箱 → 站内图片处理簇全自有覆盖实锤；11-02 KitVerse.dev → 开发者工具全自有覆盖实锤；11-01 removewatermarks.site → 去水印属 AI/后端，不立；10-30 易推多平台发布 → 需平台 API，不立）；知乎/少数派（本轮 SEO 垃圾内容，无需求帖）；英文渠道（dev.to/tasktoolsai/365lab 工具合集 → 文本去重/大小写转换/PDF/证件照等全自有覆盖实锤；Reddit r/webdev 渠道本轮无新形态）。
+
+**候选池变动**：distance_calc 交付划出（c588bf8，287 Path）；**新晋 3 个候选**（伪装自查 P0、跑步配速 P1、蛋白质摄入 P1）；其余 P1/P2 留池无变化（浏览器实时听写/着陆页评分检查器/Gzip Base64 解码器/Git 命令生成器/网站安全头检查器等 79 轮及以前留池项维持）。
+
+**归档说明**：本轮为 11-04 通用调研第二百一十八轮——两地距离计算器交付闭环（c588bf8，`/tools/distance-calc` 已注册，全量 287 Path），候选池划出；新信号（V2EX 代理伪装 11-02 热帖→**新晋 P0 代理/VPN 伪装自查**、跑步配速竞品形态验证→**新晋 P1 跑步配速计算器**、蛋白质计算器竞品形态验证→**新晋 P1 蛋白质摄入量计算器**、tubox/KitVerse→自有覆盖实锤、去除水印/多平台发布→形态不符不立、知乎/Reddit 本轮空）均已消化；WPS 候选表保持冻结归档；全库 287 Path 核对无重叠（Top3 建议 ID proxy_camouflage_check / running_pace_calc / protein_intake_calc；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 已重建）；`git log` 头部 c588bf8（distance_calc 交付）；`grep -oE '"/tools/[a-z0-9_-]+"' tools/categories.go` 全量 **287 Path**；本地当前分支 muse/dev-20260929；本轮仅读操作＋BACKLOG.md 追加（未提交，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web，经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-04 05:39 · PM 选定轮，接通用调研第二百一十七轮）
+
+**选定：两地距离计算器（distance_calc）** — 本轮唯一任务（新工具）。
+
+**顺位**：217 轮 Top3 第三顺位（「无硬伤不跳过、Top3 顺位递进」惯例下**裁定跳过首席、备选不晋升**，理由见下）。
+
+**PM 裁定跳过首席年假拼假优化器的硬依据**（19:37／21:38 PM 轮裁定逻辑沿用）：
+1. 硬伤**仍未消解**：需内置国务院法定节假日/调休数据表且每年更新（维护负担），217 研究轮明确「本轮无新信号消解硬伤」。
+2. **时间窗口仍打折**：今日 2026-11-04，2027 年放假安排尚未公布（通常 11 月下旬）；现在内置数据表只能填 2026（已过期）或让用户手动录入——工具核心价值（开箱即用拼假攻略）当下打折。
+3. 顺位可以让，但只让「当前时间窗口硬伤卡死的项」，PM 定序权行使有记录依据。
+
+**PM 裁定 CSV 编辑器不晋升首席的硬依据**（15:00 PM 轮裁定维持）：小-中难度，一天高质量交付风险高（单元格双击编辑/增删行列/分隔符三选/超大文件性能，一天内做到高质量风险未消解）；顺位备选留池维持。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`great_circle`／`great-circle`／`greatCircle`／`distance_calc`／`distance-calc` 除 BACKLOG.md 外全站 **0 命中**；`Haversine` 仅 vendor 混淆包子串（如有命中）或全 0 命中（沿用 217 研究轮 great_circle 复核；本轮复测值见下）。
+- CJK「两地距离」／「跨地距离」／「拼距离」（运行时构造）全站 **0 命中**——真缺口确凿。
+- Icon 候选：**`place`（首选；Material Symbols 图钉图标，`grep -c '"place"' tools/categories.go = 0）**／`explore_my_location`（备选，同 0 命中）／`flight`（备选，同 0 命中）；开发轮用精确值复测锁定全库唯一。
+
+**选定理由**：① **真缺口确凿**——工具 ID＋CJK 全 0 命中，engineering cluster（dev.to 1024toolkit 2026-10-14）同源延续三角形几何求解器交付轮的数学小闭环；② **零外部数据依赖**——Haversine 公式＋内置城市坐标表永久稳定，无年假工具的「每年更新数据表」维护负担；③ **一天可高质量交付**——纯前端小难度，符合「优先小难度纯前端」要求；④ **方向合规**——数学/实用工具口径，无泛财务/生活计算器扩展禁区冲突（10-18 方向修正）；⑤ **真限制可明示**——大圆直线距离非实际路线距离（飞行/陆路/海运均长于此），页面明示，无隐藏坑。
+
+**品类归位**：注册到「学习工具」类目（study：math 数学小闭环自然延续；triangle_solver 同类目）；New: true；本轮**无互链要求**（triangle_solver 为三角几何求解口径，distance_calc 为地理大圆口径，差异非互链强相关；不做硬凑互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：起点/终点两组经纬度（十进制小数必填，范围校验：纬度 ±90、经度 ±180；非法 err.field='lat1'/'lon1'/'lat2'/'lon2'）② 内置主要城市坐标速查表（≥30 个城市：北京/上海/广州/深圳/成都/武汉/杭州/西安/重庆/南京／东京/首尔/新加坡/曼谷/吉隆坡／纽约/洛杉矶/旧金山/伦敦/巴黎/柏林/莫斯科/悉尼/迪拜／洛杉矶等；点选后自动回填经纬度输入框）③ 计算：Haversine 公式（R=6371.0088 km）→大圆距离，km/mi/nmi 三单位切换（1 km=0.621371 mi=0.539957 nmi；单位切换重算无需重输）④ 输出：距离数值（保留 2 位小数）＋等效参照文案（≈绕标准跑道圈数≈n×赤道周长百分比；赤道周长 40075 km）⑤ 典型距离示例一键填充（北京→纽约、上海→伦敦等 3 组）＋一键复制结果＋localStorage 本地保存（无需登录）⑥ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.DistanceCalc 下，module.exports 同步导出）**：
+  - `haversine(lat1, lon1, lat2, lon2)` → number（km；纬度越界 err.field='lat1'/'lat2'；经度越界 err.field='lon1'/'lon2'；非数字 err.field 对应字段名）。
+  - `convertKm(km, unit)` → number（unit ∈ 'km'/'mi'/'nmi'，非法 err.field='unit'；保留 2 位小数修约）。
+  - `cityList()` → ≥30 条城市静态数组 [{name, country, lat, lon}]。
+  - `refText(km)` → string（参照文案：跑道圈数 n=km/0.4；赤道百分比 p=km/40075×100）。
+- **真限制三条页面明示**：① 结果为大圆直线距离，非实际飞行/陆路/海运路线距离（实际路线更长）；② 地球按完美球体（R=6371.0088 km）计算，与椭球体高精度测地线差约 ±0.5%；③ 纯前端本地计算、不上传任何输入。
+- **改动文件**：tools/categories.go（学习工具类目新增 distance_calc 条目，Path 286→**287**，Icon `place` 首选/`explore_my_location` 备选，开发轮精确值复测锁定全库唯一）／templates/distance_calc.html（新）／static/js/distance_calc.js（新）／tests/distance_calc.test.js（新）／全量旧 tests Path 断言 286→287 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（北京 39.9042/116.4074→纽约 40.7128/-74.0060 ≈ 10991 km（±30 km 容差）；伦敦→巴黎 ≈ 344 km；cityList 长度 ≥30 且含北京/纽约/伦敦；三单位换算精确值（1 km→0.621371 mi／0.539957 nmi）；经纬度越界抛错 err.field 全覆盖；refText 文案断言；模板零外部资源静态检查）② 全量 tests/*.test.js 172→**173** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/distance-calc 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：年假拼假优化器→首席（顺位维持；本轮 PM 裁定跳过维持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布，时间窗口打折）／CSV 编辑器→备选（顺位维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）／**两地距离计算器→本轮交付（第三顺位裁定上阵；217 研究轮 P3 留池晋升；零重叠复核确凿（工具 ID 全 0 命中；CJK「两地距离」等全 0 命中）；学习工具类目（数学小闭环）；Icon place 首选（全库 0 命中）；PM 可裁定已行使）**／三角形几何求解器→已交付（3c9f61d；候选池划出）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮 git fetch：known_hosts 又被 VM 换机清空（老问题第四次复现），按 TOOLS.md 用 `ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 修复后**一次成功**；本地 HEAD 3c9f61d 与 origin/muse/dev-20260929 同头为最新，远端无新提交；工作区未跟踪目录 `toolweb` 非本轮产物，研究轮/PM 轮惯例不碰）；git log 头部 3c9f61d（三角形几何求解器新增）／35dde69（BMR/TDEE 能量消耗计算器新增）／dd2b46d（BMI 体质指数计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **286**；`ls tests/*.test.js | wc -l` = **172**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-04 05:36 · 通用调研第二百一十七轮，接三角形几何求解器交付轮）
+
+**交付状态**：11-04 通用调研第二百一十七轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**三角形几何求解器交付闭环**（3c9f61d 新增：triangle_solver，Path 285→**286**，tests/triangle_solver.test.js 新增；templates/triangle_solver.html＋static/js/triangle_solver.js＋tests/triangle_solver.test.js 均存在；全量 tests/*.test.js **172 个**；学习工具类目；候选池划出）。**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；硬伤未消解）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持）／**两地距离计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit（2026-10-14）engineering cluster 同源延续（三角形几何求解器刚交付后自然延续的数学小闭环）；站内零重叠复测：`great_circle`／`great-circle` 除 BACKLOG.md 外全 **0 命中**；真缺口确凿；纯前端小难度；PM 可裁定）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；05:36 轮，优先小难度纯前端。
+
+**本轮三件事**（05:36 全网调研，通用方向）：
+1. 交付确认：git log 头部 3c9f61d（三角形几何求解器新增）／35dde69（BMR/TDEE 能量消耗计算器）／dd2b46d（BMI 体质指数计算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **286**；`ls tests/*.test.js | wc -l` = **172**；triangle_solver 模板＋静态 JS＋测试文件**均存在**；本地分支 muse/dev-20260929（本轮仅读操作＋BACKLOG.md 顶部追加，未做 git fetch——216 轮 03:00 已 fetch 确认远端无新提交，其后仅本管线按计划交付 triangle_solver（3c9f61d）；未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底，已记入 AGENTS.md）**：
+   - 三角形几何求解器：已交付（3c9f61d，Path 285→286，tests 172 个；候选池划出）。
+   - 年假拼假优化器：首席顺位维持（19:37/21:38 PM 轮裁定跳过维持；硬伤：调休数据表年更新维护负担＋2027 年放假安排尚未公布，时间窗口打折）。
+   - CSV 编辑器：备选顺位维持（15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）。
+   - **两地距离计算器（P3 留池晋升）**：`great_circle`／`great-circle` 除 BACKLOG.md 自身记录外全站 **0 命中**——真缺口确凿。
+   - **本轮新信号初判**：
+     - V2EX t/1253899 KitVerse.dev（2026-11-02；AI 工具箱＋传统工具线）→215 轮已判 AI 口径消解、传统工具线（JSON/YAML/编解码/哈希/UUID/Cron）站内已交付，**确认消解维持**。
+     - V2EX t/1253201 自媒体获客小工具（2026-10-30；多平台发布/小红书/快手/抖音获客四件套）→Chrome 扩展＋登录付费/账号风控口径**确认消解**。
+     - Indie Radar 出海日报 2026-11-01：1ms.dog→speed_test 已交付确认消解；Papilot（PDF 批注让 AI 改 LaTeX）→AI＋LaTeX 专业口径确认消解；SpriteCanvas（2D 游戏精灵动画导出）→游戏开发专用口径确认消解；Loris Tunnel 2.0（隧道桌面工具）→桌面口径确认消解；crDesk（WebRTC 远程桌面）→桌面应用确认消解；Ghostwire（Linux 伪造 Ping/TCP 响应）→CLI/Linux 口径确认消解；NexusDock（多设备 MCP 统一接入）→AI 基础设施确认消解；Stock Compass（炒股纪律 AI 工具）→泛财务方向修正确认消解；八字排盘「小道」→V2EX 信号已有观察维持。
+     - Show HN：Lasm（Lean 形式验证 webapp 框架）／hnz（Rust HN 离线搜索库）→框架/桌面 CLI 口径**确认消解**；comingup.io DevTools Hub（2026-11-02；JWT 解码等传统工具线＋白标代理 SaaS）→站内已交付确认消解、SaaS 口径确认消解。
+     - 掘金 2026-10-26 掘金签到抽奖 AI Skill→AI agent 技能口径**确认消解**。
+     - 360doc「7 个冷门效率工具」：洋芋田图像工具箱（离线桌面应用）／万能命令（AI 生成指令）／简道云（低代码 SaaS）／FDM（桌面下载器）／雨见浏览器（浏览器客户端）／帮小忙（微信小程序腾讯自有服务）／Unsplash（图库外部服务）→均非单页纯前端口径**确认消解**。
+     - **本轮结论**：无新单页纯前端可实施信号；第三顺位由 math/engineering cluster 同源的两地距离计算器晋升。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **年假拼假优化器** — 首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；站内零重叠实测维持：`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；**硬伤维持未消解**：数据表年更新维护负担＋2027 年放假安排尚未公布（时间窗口打折）；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **CSV 编辑器** — 备选（顺位递进维持；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；站内零重叠实测：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **两地距离计算器** — 第三顺位（**本轮从 P3 留池晋升**；dev.to 1024toolkit（2026-10-14）engineering cluster 同源延续（三角形几何求解器刚交付，数学小闭环自然延续）；站内零重叠复测：`great_circle`／`great-circle` 除 BACKLOG.md 自身外全站 **0 命中**；真缺口确凿；痛点：旅行/快递/海运查两地直线距离是高频需求（Indie Radar 出海信号同源），手动查地图慢；实现：两地经纬度输入（＋内置主要城市坐标速查表）→Haversine 公式算大圆距离（km/mi/nmi 三单位切换）＋可选地图示意链接；纯前端小难度；真限制：大圆直线距离非实际路线距离须明示；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：年龄/日期差计算器（StudyKit 信号印证维持；P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／OFD 转 PDF（弱观察；OFD 误报已排除（`ofd` 命中实为 pdf-to-word.js `firstOfDoc` 变量子串）；纯前端 ofd.js 中难度；独立价值待 PM 裁定）／dbdiagram 表结构 DSL 绘图（弱观察维持；掘金 2026-10-26 信号；mermaid-diagram-renderer 口径部分覆盖、ER 图差异化弱）／JSON 节点图可视化（弱观察 P3 留池；jsoncrack 2026-10-26 同源印证维持；json_parser 树形视图已部分覆盖）／Markdown 聊天富文本复制（弱观察；V2EX md2chat t/1250428 信号；markdown_publish_formatter 口径相邻；转图片版需 canvas 渲染中难度）／Markdown 表格生成器（弱观察；1vw.net 信号；markdown_to_csv 口径相邻；独立价值待验证）／切割清单优化（弱观察；一维装箱中难度；小众仅记录）／tubox AI 抠图/AI 放大（211 轮观察维持；需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（211 轮观察维持；国标口径已交付，差异化弱）／文字转语音（低优先；浏览器 SpeechSynthesis 纯前端可做但音质差，高质量需后端/AI 仅记录）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／八字排盘（观察；V2EX「小道」2026-11-01 信号；玄学小众仅记录）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／cURL→fetch 转换器（低优先；curl_to_requests 相邻、差异化弱仅记录）／邮箱批量格式校验（低优先；站内无但独立价值弱仅记录）／MIME 类型速查（低优先；独立价值弱仅记录）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十七轮：三角形几何求解器交付闭环（3c9f61d 新增：triangle_solver，Path 285→**286**，tests/triangle_solver.test.js 新增；templates/triangle_solver.html＋static/js/triangle_solver.js＋tests/triangle_solver.test.js 均存在；全量 tests/*.test.js **172 个**；学习工具类目；候选池划出）；**Top3 递进链更新**：**年假拼假优化器→首席**（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；CJK 年假/拼假全站 0 命中；真缺口保持；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排尚未公布；纯前端小难度；PM 可裁定是否立项）／**CSV 编辑器→备选**（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**两地距离计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit engineering cluster 同源延续；`great_circle`／`great-circle` 除 BACKLOG.md 自身外全站 **0 命中**（真缺口确凿）；纯前端小难度；PM 可裁定）；**本轮新信号初判**（V2EX t/1253201 自媒体获客→Chrome 扩展＋登录付费口径确认消解／Indie Radar 2026-11-01：Papilot→AI＋LaTeX 专业口径确认消解、SpriteCanvas→游戏专用口径确认消解、Loris Tunnel/crDesk→桌面应用确认消解、Ghostwire→CLI/Linux 确认消解、NexusDock→AI 基础设施确认消解、Stock Compass→泛财务确认消解、1ms.dog/八字排盘小道→已交付/观察维持／Show HN Lasm/hnz→框架/桌面 CLI 确认消解／DevTools Hub→站内已交付＋SaaS 口径确认消解／掘金签到 AI Skill→AI agent 口径确认消解／360doc 7 工具→均非单页纯前端口径确认消解；**本轮无新单页纯前端可实施信号**）；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+**归档说明**：本轮为 11-04 通用调研第二百一十七轮——三角形几何求解器交付闭环（3c9f61d；`/tools/triangle-solver` 已注册；全量 **286 Path**；tests/triangle_solver.test.js 新增；全量 tests/*.test.js **172 个**），候选池划出；**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；CJK 年假/拼假全站 0 命中；真缺口保持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；PM 可裁定是否晋升首席）／**两地距离计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit engineering cluster 同源延续（三角形几何求解器刚交付）；`great_circle`／`great-circle` 除 BACKLOG.md 自身外全站 **0 命中**；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号初判**（V2EX t/1253201 自媒体获客／Indie Radar 2026-11-01 日报（Papilot／SpriteCanvas／Loris Tunnel／crDesk／Ghostwire／NexusDock／Stock Compass／1ms.dog／八字排盘小道）／Show HN（Lasm／hnz）／DevTools Hub／掘金签到 AI Skill／360doc 7 工具帖→均确认消解或观察维持；**本轮无新单页纯前端可实施信号**）；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮仅读操作＋BACKLOG.md 顶部追加，未做 git fetch——216 轮 03:00 已 fetch 确认远端无新提交，其后本管线按计划交付 triangle_solver（3c9f61d）；未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 3c9f61d（三角形几何求解器新增）／35dde69（BMR/TDEE 能量消耗计算器新增）／dd2b46d（BMI 体质指数计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **286**；`ls tests/*.test.js | wc -l` = **172**；`ls templates/triangle_solver.html static/js/triangle_solver.js tests/triangle_solver.test.js` **均存在**；Top3 候选重叠复核（**三角形几何求解器**：已交付（/tools/triangle-solver，Path 285→286），划出候选池；**年假拼假优化器**：首席顺位维持（19:37/21:38 PM 轮裁定跳过维持，硬伤：调休数据表年更新＋2027 安排未公布）；**CSV 编辑器**：备选顺位维持（15:00 PM 轮裁定留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）；**两地距离计算器**：`great_circle`／`great-circle` 除 BACKLOG.md 自身外全站 **0 命中**，真缺口确凿，本轮从 P3 留池晋升第三顺位）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 03:40 · PM 选定轮，接通用调研第二百一十六轮）
 
 **选定：三角形几何求解器（triangle_solver）** — 本轮唯一任务（新工具）。
