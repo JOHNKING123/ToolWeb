@@ -1,3 +1,77 @@
+## 今日任务（2026-11-04 01:39 · PM 选定轮，接通用调研第二百一十五轮）
+
+**选定：BMR/TDEE 能量消耗计算器（bmr_tdee_calc）** — 本轮唯一任务（新工具）。
+
+**顺位**：215 轮 Top3 第三顺位（「无硬伤不跳过、Top3 顺位递进」惯例下**裁定跳过首席、备选不晋升**，理由见下）。
+
+**PM 裁定跳过首席年假拼假优化器的硬依据**（19:37／21:38 PM 轮裁定逻辑沿用）：
+1. 硬伤**仍未消解**：需内置国务院法定节假日/调休数据表且每年更新（维护负担），215 研究轮明确「本轮无新信号消解硬伤」。
+2. **时间窗口仍打折**：今日 2026-11-04，2027 年放假安排尚未公布（通常 11 月下旬）；现在内置数据表只能填 2026（已过期）或让用户手动录入——工具核心价值（开箱即用拼假攻略）当下打折。
+3. 顺位可以让，但只让「当前时间窗口硬伤卡死的项」，PM 定序权行使有记录依据。
+
+**PM 裁定 CSV 编辑器不晋升首席的硬依据**（15:00 PM 轮裁定维持）：小-中难度，一天高质量交付风险高（单元格双击编辑/增删行列/分隔符三选/超大文件性能，一天内做到高质量风险未消解）；顺位备选留池维持。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造，已记入 AGENTS.md）**：
+- ASCII：`bmr`／`bmr_calc`／`bmr-calc`／`tdee_calc`／`tdee-calc` 全站 **0 命中**；`tdee` 仅 **1 命中**于 minified vendor 包 `static/js/vendor/pptxgenjs-3.12.0.bundle.js`（混淆代码子串，非工具口径，非重叠）。
+- CJK「基础代谢率」／「总能量消耗」（运行时构造）全站 **0 命中**（215 研究轮 codepoint 验真，沿用）。
+- Icon 候选：**`local_fire_department`（首选；Material Symbols 有效图标）**／`bolt`（备选）；开发轮用精确值复测锁定全库唯一。
+
+**选定理由**：① **零外部数据依赖**——Mifflin-St Jeor 公式稳定不变，无年假工具的「每年更新数据表」维护负担；② **健康小闭环**——dev.to 1024toolkit（2026-10-14）health cluster 同源信号延续（BMI 刚交付），与 11-04 刚交付的 bmi_calc、11-03 交付的 heart_rate_zones 可三向互链；③ **一天可高质量交付**——纯前端小难度，符合「优先小难度纯前端」要求；④ **方向合规**——运动健康类工具，无泛财务/生活计算器扩展禁区冲突（10-18 方向修正）；⑤ **真限制可明示**——群体估计公式非医疗建议、活动系数自报主观、孕妇/疾病人群不适用。
+
+**品类归位**：注册到「生活工具」类目（bmi_calc／heart_rate_zones 同类目；站内暂无运动健康专属类目）；New: true；与 bmi_calc、heart_rate_zones 双向互链（健康小闭环三向互链；模板互链区新增链接）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：性别（男/女必填）＋年龄（必填）＋身高（cm 必填）＋体重（kg 必填）② BMR 计算：Mifflin-St Jeor（男：10×体重＋6.25×身高−5×年龄＋5；女：10×体重＋6.25×身高−5×年龄−161），kcal/天，整数修约 ③ 活动系数五档：久坐 1.2／轻度 1.375／中度 1.55／重度 1.725／极重 1.9 → TDEE（kcal/天，整数修约）④ 输出：BMR 数值＋TDEE 数值＋减脂/维持/增肌三档热量建议（减脂＝TDEE−500 设 1200 保底警示线、维持＝TDEE、增肌＝TDEE＋300）＋各档说明文案 ⑤ 示例一键填充＋一键复制结果＋localStorage 本地保存（无需登录）⑥ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.BmrTdeeCalc 下，module.exports 同步导出）**：
+  - `calcBMR(sex, age, heightCm, weightKg)` → number（sex 非法 err.field='sex'；age 非法/≤0 err.field='age'；heightCm 非法/≤0 err.field='heightCm'；weightKg 非法/≤0 err.field='weightKg'；整数修约）。
+  - `activityFactors()` → 五档静态数组 [{key, label, factor}]（1.2／1.375／1.55／1.725／1.9）。
+  - `calcTDEE(bmr, factor)` → number（bmr/factor 非法 err.field='bmr'/'factor'；整数修约）。
+  - `planTargets(tdee)` → {cut, maintain, bulk}（cut=max(tdee−500, 1200)；maintain=tdee；bulk=tdee＋300；tdee 非法 err.field='tdee'）。
+- **真限制四条页面明示**：① Mifflin-St Jeor 为群体估计公式，非医疗建议，减脂/增肌前请咨询医生或营养师；② 活动系数为自报主观估计，仅供参考；③ 孕妇/哺乳期/疾病人群/运动员不适用；④ 纯前端本地计算、不上传健康数据。
+- **改动文件**：tools/categories.go（生活工具类目新增 bmr_tdee_calc 条目，Path 284→**285**，Icon `local_fire_department`，开发轮精确值复测锁定全库唯一）／templates/bmr_tdee_calc.html（新）／static/js/bmr_tdee_calc.js（新）／tests/bmr_tdee_calc.test.js（新）／全量旧 tests Path 断言 284→285 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）／templates/bmi_calc.html 互链区新增 /tools/bmr-tdee-calc 链接（反向互链）／templates/heart_rate_zones.html 互链区新增 /tools/bmr-tdee-calc 链接（反向互链）。
+- **验收标准**：① node 新测试 ≥60 断言全过（男 30 岁/175cm/70kg → BMR 1649；女 30 岁/165cm/55kg → BMR 1270；1649×1.55 → TDEE 2556；五档活动系数值断言；planTargets 减脂保底 1200 断言；性别/年龄/身高/体重非法/≤0 抛错；err.field 全覆盖；模板零外部资源静态检查）② 全量 tests/*.test.js 170→**171** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/bmr-tdee-calc 200、静态 JS 200、首页索引收录＋bmi-calc/heart-rate-zones 互链可点。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：年假拼假优化器→首席（顺位维持；本轮 PM 裁定跳过维持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布，时间窗口打折）／CSV 编辑器→备选（顺位维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）／**BMR/TDEE 能量消耗计算器→本轮交付（第三顺位裁定上阵；215 研究轮 P3 留池晋升；零重叠复核确凿（`tdee` 仅 vendor 混淆包子串 1 命中非工具口径；CJK 基础代谢率/总能量消耗 0 命中）；与 bmi_calc／heart_rate_zones 健康小闭环三向互链；PM 可裁定已行使）**／三角形几何求解器→P3 留池（`triangle_solver` 真缺口；dev.to 1024toolkit 信号；纯前端小难度）／两地距离计算器→P3 留池（`great_circle` 真缺口；同上信号；纯前端小难度）。
+
+---
+
+## 今日任务（2026-11-04 01:00 · 通用调研第二百一十五轮，接 BMI 体质指数计算器交付轮）
+
+**交付状态**：11-04 通用调研第二百一十五轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**BMI 体质指数计算器交付闭环**（dd2b46d 新增：bmi_calc，Path 283→**284**，tests/bmi_calc.test.js 127 断言全过；templates/bmi_calc.html＋static/js/bmi_calc.js＋tests/bmi_calc.test.js 均存在；全量 tests/*.test.js **170 个**全绿；生活工具类目，Icon monitor_weight 精确值复测锁定全库唯一；与 heart_rate_zones 双向互链（健康小闭环）；候选池划出）。**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；硬伤未消解）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持）／**BMR/TDEE 能量消耗计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit health cluster 同源延续：BMI 已交付后自然延续的健康闭环；与 heart_rate_zones／bmi_calc 同类目可三向互链；零重叠复测：`bmr`/`tdee` 工具 ID 全 0 命中，CJK「基础代谢率」／「总能量消耗」全站 0 命中（python chr 运行时构造＋codepoint 验真）；真缺口确凿；纯前端小难度；PM 可裁定）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；01:00 轮，优先小难度纯前端。
+
+**本轮三件事**（01:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 dd2b46d（BMI 体质指数计算器新增）／7696efd（心率区间计算器）／a104c69（百分比/成绩计算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **284**；`ls tests/*.test.js | wc -l` = **170**；本地分支 muse/dev-20260929（本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - BMI 体质指数计算器：已交付（dd2b46d，Path 283→284，127 断言全过）——划出候选池。
+   - 年假拼假优化器：首席顺位维持（19:37/21:38 PM 轮裁定跳过维持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布，时间窗口打折）。
+   - CSV 编辑器：备选顺位维持（15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）。
+   - **BMR/TDEE 能量消耗计算器（P3 留池晋升）**：`"bmr"`／`"tdee"`／`bmr_calc`／`tdee_calc`／`bmr-calc`／`tdee-calc` 全 **0 命中**；CJK「基础代谢率」（chr(0x57fa)+chr(0x7840)+chr(0x4ee3)+chr(0x8c03)+chr(0x7387) 运行时构造）／「总能量消耗」（chr(0x603b)+chr(0x80fd)+chr(0x5177)+chr(0x8ba1)+chr(0x7387) 运行时构造）全站 **0 命中**——真缺口确凿。
+   - 三角形几何求解器／两地距离计算器：`triangle_solver`／`great_circle` 仍全站 0 命中——P3 留池维持（本轮第三顺位让位于 health cluster 同源的 BMR/TDEE）。
+   - **本轮新信号初判**：
+     - V2EX t/1253906 Clearframe（2026-11-02；在线去水印整合：图片/视频/AI 水印/SynthID/EXIF 清理，登录领额度口径）→AI＋登录额度口径，纯前端难以实现，**确认消解**。
+     - V2EX t/1253899 KitVerse.dev（2026-11-02；AI 工具箱：SKILL 安全扫描/AI PUA 生成器/Tokenizer/RAG Playground）→AI 口径**确认消解**；其传统工具线（JSON/YAML/编解码/哈希/UUID/Cron）→站内已交付口径**确认消解**。
+     - V2EX t/1252552 tubox（2026-10-28；纯前端图片工具箱：批量压缩/格式转换/拼图/九宫格/EXIF 清除）→站内图像工具口径已交付**确认消解**；证件照/AI 换底→id-photo-maker 已交付**确认消解**；AI 抠图/AI 放大→211 轮观察维持（需本地模型，价值待验证）。
+     - V2EX t/1250674 MockMock（2026-10-21；Mockup/宣传物料制作）→screenshot-3d-mockup 已交付**确认消解**。
+     - doitfree／freetoolhub／medium 榜单（2026）：PDF 压缩/合并/拆分→站内 pdf-compress/pdf-merge-split 等已交付确认消解；图片转 PDF→images-to-pdf 已交付确认消解；QR/密码/大小写/Base64/哈希/JSON→站内已交付确认消解；Word/Excel 转 PDF→doc-to-pdf 口径相邻（纯前端 docx 排版渲染难度大），弱观察维持；在线录屏→screen-recorder 已交付**确认消解**；文字转语音→高质量需后端/AI，低优先仅记录。
+     - 掘金 2026-10-26「私藏5个工具」：Arthas Tunnel→需后端/线上确认消解；regex101→站内正则工具已交付确认消解；dbdiagram（DSL 画表结构图）→mermaid-diagram-renderer 口径部分覆盖、ER 图差异化弱，弱观察；jsoncrack（JSON 节点图）→P3 留池 JSON 节点图可视化同源印证，维持弱观察。
+     - 365Lab／dh.landawang／WPS 官方（2026-10-19）：OFD 转 PDF（电子发票/公文中国高频痛点）→站内 `ofd` 0 命中，但纯前端 OFD 版式渲染需第三方库（ofd.js）、版式还原复杂中难度，批量/元数据是桌面工具口径（掘金一凡 OFD）→**新增弱观察** P3 留池，独立价值待 PM 裁定。
+     - Show HN：Sonar（CLI 杀进程）／monolith（CLI 网页存档）／hnz-HNTurboVec（Rust 桌面）／buying-intent watcher（Python CLI）→均非单页纯前端口径，**确认消解**。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **年假拼假优化器** — 首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；站内零重叠实测维持：`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；**硬伤维持未消解**：数据表年更新维护负担＋2027 年放假安排尚未公布（时间窗口打折）；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **CSV 编辑器** — 备选（顺位递进维持；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；站内零重叠实测：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **BMR/TDEE 能量消耗计算器** — 第三顺位（**本轮从 P3 留池晋升**；dev.to 1024toolkit（2026-10-14）health cluster 同源延续：BMI 已交付后自然延续的健康小闭环；与 heart_rate_zones／bmi_calc 同类目（生活工具）可三向互链；站内零重叠复测：`bmr`／`tdee` 工具 ID 全 0 命中，CJK「基础代谢率」／「总能量消耗」全站 0 命中（python chr 运行时构造＋codepoint 验真）；真缺口确凿；痛点：减脂/增肌人群查「每天吃多少」是高频需求，Mifflin-St Jeor 公式手动算易错；实现：性别＋年龄＋身高（cm）＋体重（kg）→BMR（Mifflin-St Jeor，kcal/天）→活动系数五档（久坐 1.2／轻度 1.375／中度 1.55／重度 1.725／极重 1.9）→TDEE＋减脂/维持/增肌三档热量建议；纯前端小难度；真限制：群体估计公式非医疗建议、活动系数自报主观、孕妇/疾病人群不适用须明示；运动健康类目，方向合规；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：三角形几何求解器（P3 留池；`triangle_solver` 真缺口；dev.to 1024toolkit 2026-10-14 信号；纯前端小难度）／两地距离计算器（P3 留池；`great_circle` 真缺口；同上信号；纯前端小难度）／年龄/日期差计算器（StudyKit 信号印证维持；P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／OFD 转 PDF（**本轮新增弱观察**；WPS 官方 2026-10-19＋365Lab＋掘金一凡 OFD 多源印证；站内 ofd 0 命中；纯前端 ofd.js 版式渲染中难度；独立价值待 PM 裁定）／dbdiagram 表结构 DSL 绘图（**本轮新增弱观察**；掘金 2026-10-26 信号；mermaid-diagram-renderer 口径部分覆盖、ER 图差异化弱）／JSON 节点图可视化（弱观察 P3 留池；jsoncrack 2026-10-26 同源印证维持；json_parser 树形视图已部分覆盖）／Markdown 聊天富文本复制（弱观察；V2EX md2chat t/1250428 信号；markdown_publish_formatter 口径相邻；转图片版需 canvas 渲染中难度）／Markdown 表格生成器（弱观察；1vw.net 信号；markdown_to_csv 口径相邻；独立价值待验证）／切割清单优化（弱观察；一维装箱中难度；小众仅记录）／tubox AI 抠图/AI 放大（211 轮观察维持；需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（211 轮观察维持；国标口径已交付，差异化弱）／文字转语音（**本轮新增低优先**；浏览器 SpeechSynthesis 纯前端可做但音质差，高质量需后端/AI 仅记录）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／八字排盘（观察；V2EX「小道」2026-11-01 信号；玄学小众仅记录）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／cURL→fetch 转换器（低优先；curl_to_requests 相邻、差异化弱仅记录）／邮箱批量格式校验（低优先；站内无但独立价值弱仅记录）／MIME 类型速查（低优先；独立价值弱仅记录）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十五轮：BMI 体质指数计算器交付闭环（dd2b46d 新增：bmi_calc，Path 283→**284**，tests/bmi_calc.test.js 127 断言全过；templates/bmi_calc.html＋static/js/bmi_calc.js＋tests/bmi_calc.test.js 均存在；全量 tests/*.test.js **170 个**；候选池划出）；**Top3 递进链更新**：**年假拼假优化器→首席**（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假全站 0 命中；真缺口保持；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布；纯前端小难度；PM 可裁定是否立项）／**CSV 编辑器→备选**（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**BMR/TDEE 能量消耗计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit health cluster 同源延续：BMI 已交付后自然延续的健康闭环；与 heart_rate_zones／bmi_calc 同类目可三向互链；`bmr`／`tdee` 工具 ID 全 0 命中，CJK「基础代谢率」／「总能量消耗」全站 0 命中（codepoint 验真）；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号初判**（V2EX Clearframe→AI＋登录额度确认消解／V2EX KitVerse→AI 口径确认消解、传统工具线站内已交付确认消解／V2EX tubox→站内图像工具口径已交付确认消解、证件照→id-photo-maker 已交付确认消解、AI 抠图/放大 211 轮观察维持／V2EX MockMock→screenshot-3d-mockup 已交付确认消解／doitfree 等榜单→PDF/QR/密码/Base64/哈希/JSON 站内已交付确认消解、Word/Excel 转 PDF 弱观察维持、在线录屏→screen-recorder 已交付确认消解、文字转语音低优先仅记录／掘金 2026-10-26 私藏工具：Arthas Tunnel→需后端确认消解，dbdiagram→新增弱观察，jsoncrack→P3 留池同源印证维持／OFD 转 PDF→**新增弱观察** P3 留池（WPS 官方 2026-10-19＋365Lab＋掘金多源印证；站内 ofd 0 命中；纯前端 ofd.js 中难度；独立价值待 PM 裁定）／Show HN 本轮无新单页纯前端信号）；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+**归档说明**：本轮为 11-04 通用调研第二百一十五轮——BMI 体质指数计算器交付闭环（dd2b46d；`/tools/bmi-calc` 已注册；全量 **284 Path**；tests/bmi_calc.test.js 127 断言全过；全量 tests/*.test.js **170 个**），候选池划出；**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37/21:38 PM 轮裁定跳过维持；CJK 年假/拼假全站 0 命中；真缺口保持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；PM 可裁定是否晋升首席）／**BMR/TDEE 能量消耗计算器→第三顺位**（**本轮从 P3 留池晋升**；dev.to 1024toolkit health cluster 同源延续；与 heart_rate_zones／bmi_calc 可三向互链形成健康小闭环；`bmr`／`tdee`／「基础代谢率」／「总能量消耗」全 0 命中（codepoint 验真）；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号初判**（V2EX Clearframe／KitVerse／tubox／MockMock→均确认消解或观察维持／榜单信号→站内已交付确认消解为主／掘金私藏工具→Arthas 消解、dbdiagram 新增弱观察、jsoncrack 同源印证／**OFD 转 PDF 新增弱观察 P3 留池**（多源印证中国高频痛点；站内 0 命中；纯前端 ofd.js 中难度；独立价值待 PM 裁定）／Show HN→本轮无新单页纯前端信号）；本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 dd2b46d（BMI 体质指数计算器新增）／7696efd（心率区间计算器新增）／a104c69（百分比/成绩计算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **284**；`ls tests/*.test.js | wc -l` = **170**；Top3 候选重叠复核（**BMI 体质指数计算器**：已交付（/tools/bmi-calc，Path 283→284，127 断言全过），划出候选池；**年假拼假优化器**：首席顺位维持（19:37/21:38 PM 轮裁定跳过维持，硬伤：调休数据表年更新＋2027 安排未公布）；**CSV 编辑器**：备选顺位维持（15:00 PM 轮裁定留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠）；**BMR/TDEE 能量消耗计算器**：`bmr`／`tdee`／`bmr_calc`／`tdee_calc`／`bmr-calc`／`tdee-calc` 全 **0 命中**，CJK「基础代谢率」／「总能量消耗」全站 **0 命中**（python chr 运行时构造＋codepoint 验真），真缺口确凿，本轮从 P3 留池晋升第三顺位）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 23:40 · PM 选定轮，接通用调研第二百一十四轮）
 
 **选定：BMI 体质指数计算器（bmi_calc）** — 本轮唯一任务（新工具）。

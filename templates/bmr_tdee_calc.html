@@ -1,0 +1,166 @@
+{{define "bmr_tdee_calc"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMR/TDEE 能量消耗计算器 - 基础代谢率/每日热量/减脂增肌目标 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 BMR/TDEE 能量消耗计算器：输入性别＋年龄＋身高（cm）＋体重（kg），按 Mifflin-St Jeor 公式计算基础代谢率 BMR（整数修约 kcal/天），五档活动系数（久坐1.2/轻度1.375/中度1.55/重度1.725/极重1.9）→每日总能量消耗 TDEE＋减脂（TDEE−500，1200保底）/维持/增肌（TDEE＋300）三档热量建议，示例一键填充＋结果一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="BMR计算器,基础代谢率计算器,TDEE计算器,每日能量消耗,减脂热量,增肌热量,热量缺口,BMR calculator,TDEE calculator,Mifflin-St Jeor">
+    <meta property="og:title" content="BMR/TDEE 能量消耗计算器 - 基础代谢率/减脂增肌热量目标">
+    <meta property="og:description" content="性别＋年龄＋身高＋体重→BMR（Mifflin-St Jeor）＋TDEE（五档活动系数）＋减脂/维持/增肌三档热量建议，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/bmr-tdee-calc">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/bmr-tdee-calc">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "BMR/TDEE 能量消耗计算器",
+      "description": "免费在线 BMR/TDEE 能量消耗计算器：性别＋年龄＋身高（cm）＋体重（kg）→Mifflin-St Jeor 基础代谢率 BMR＋五档活动系数→每日总能量消耗 TDEE＋减脂（TDEE−500，1200保底）/维持/增肌（TDEE＋300）三档热量建议，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/bmr-tdee-calc",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .bmr-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .bmr-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .bmr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .6rem; }
+        @media (max-width: 640px) { .bmr-grid { grid-template-columns: 1fr; } }
+        .bmr-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+        .bmr-field label { color: #374151; font-weight: 600; }
+        .bmr-field input[type="number"], .bmr-field select { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; background: #fff; }
+        .bmr-field input[type="number"]:focus, .bmr-field select:focus { outline: none; border-color: var(--primary-color); }
+        .bmr-sex { display: flex; gap: 1.2rem; align-items: center; margin-top: .6rem; font-size: .95rem; }
+        .bmr-sex label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; color: #374151; font-weight: 600; }
+        .bmr-sex input[type="radio"] { width: 1.1rem; height: 1.1rem; accent-color: var(--primary-color); }
+        .bmr-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .bmr-nums { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-top: .4rem; }
+        .bmr-num { text-align: center; min-width: 12rem; }
+        .bmr-num .bmr-num-title { color: #6b7280; font-size: .85rem; }
+        .bmr-num b { font-size: 2.6rem; font-weight: 700; color: var(--primary-color); }
+        .bmr-num small { font-size: .95rem; font-weight: 400; color: #6b7280; }
+        .bmr-factor-label { text-align: center; color: #6b7280; font-size: .85rem; margin-top: .2rem; }
+        .bmr-plans { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .7rem; margin-top: 1rem; }
+        @media (max-width: 640px) { .bmr-plans { grid-template-columns: 1fr; } }
+        .bmr-plan { border: 2px solid #e5e7eb; border-radius: .6rem; padding: .7rem .8rem; background: #fff; }
+        .bmr-plan-title { font-weight: 700; font-size: 1rem; margin-bottom: .2rem; }
+        .bmr-plan-num { font-size: 1.5rem; font-weight: 700; color: #111827; }
+        .bmr-plan-num small { font-size: .8rem; font-weight: 400; color: #6b7280; }
+        .bmr-plan-desc { font-size: .85rem; color: #4b5563; line-height: 1.7; margin-top: .4rem; }
+        .bmr-plan-warn { margin-top: .5rem; padding: .5rem .6rem; border-radius: .4rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: .82rem; line-height: 1.6; }
+        .bmr-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .bmr-limit b { color: #374151; }
+        #bmr-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔥 BMR/TDEE 能量消耗计算器</h1>
+            <p>性别＋年龄＋身高＋体重 → BMR（Mifflin-St Jeor）＋TDEE（五档活动系数）＋减脂/维持/增肌三档热量建议，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="bmr-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>输入</h3>
+                <div class="bmr-sex" role="radiogroup" aria-label="性别">
+                    <span style="color:#374151;font-weight:600;">性别（必填）：</span>
+                    <label><input type="radio" name="bmr-sex" id="bmr-sex-m" value="male"> 男</label>
+                    <label><input type="radio" name="bmr-sex" id="bmr-sex-f" value="female"> 女</label>
+                </div>
+                <div class="bmr-grid">
+                    <div class="bmr-field">
+                        <label for="bmr-age">年龄（岁，必填）</label>
+                        <input id="bmr-age" type="number" min="1" max="120" step="1" placeholder="如 30">
+                    </div>
+                    <div class="bmr-field">
+                        <label for="bmr-height">身高（cm，必填）</label>
+                        <input id="bmr-height" type="number" min="1" max="300" step="0.1" placeholder="如 175">
+                    </div>
+                    <div class="bmr-field">
+                        <label for="bmr-weight">体重（kg，必填）</label>
+                        <input id="bmr-weight" type="number" min="1" max="1000" step="0.1" placeholder="如 70">
+                    </div>
+                    <div class="bmr-field">
+                        <label for="bmr-activity">活动水平（必填）</label>
+                        <select id="bmr-activity"></select>
+                    </div>
+                </div>
+                <div class="bmr-info">公式：Mifflin-St Jeor —— 男：10×体重(kg)＋6.25×身高(cm)−5×年龄＋5；女：10×体重(kg)＋6.25×身高(cm)−5×年龄−161。BMR 取整数修约（kcal/天）；TDEE＝BMR × 活动系数，输入即实时计算。</div>
+                <div class="bmr-error" id="bmr-err"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;display:none;" id="bmr-result">
+                <h3>计算结果</h3>
+                <div class="bmr-nums">
+                    <div class="bmr-num">
+                        <div class="bmr-num-title">BMR 基础代谢率</div>
+                        <div id="bmr-value"></div>
+                    </div>
+                    <div class="bmr-num">
+                        <div class="bmr-num-title">TDEE 每日总能量消耗</div>
+                        <div id="bmr-tdee"></div>
+                    </div>
+                </div>
+                <div class="bmr-factor-label" id="bmr-factor-label"></div>
+                <div class="bmr-plans" id="bmr-plans"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="bmr-actions" style="margin-top:0;">
+                    <button class="btn btn-secondary" id="bmr-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="bmr-copy">一键复制结果</button>
+                    <button class="btn btn-secondary" id="bmr-clear">清空</button>
+                </div>
+                <div class="bmr-info">输入自动保存到浏览器本地（localStorage），下次打开自动恢复；所有计算只在你的浏览器内完成，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="bmr-limit">
+                    <li><b>① 群体估计公式、非医疗建议：</b>Mifflin-St Jeor 是基于人群数据的估计公式，个体实际代谢率会因基因、肌肉量、激素水平等因素上下浮动；减脂/增肌前<b>请咨询医生或营养师</b>，结果<b>仅供参考</b>。</li>
+                    <li><b>② 活动系数为自报主观估计、仅供参考：</b>五档活动系数按自报的运动频率划分，选档本身带主观性；TDEE 只是估算，真要精确请结合 2–4 周的体重变化趋势微调。</li>
+                    <li><b>③ 孕妇/哺乳期/疾病人群/运动员不适用：</b>怀孕、哺乳、甲状腺等代谢相关疾病、专业运动员的代谢特征与公式人群差异较大，<b>请勿使用本工具做热量决策</b>。</li>
+                    <li><b>④ 纯本地计算：</b>性别、年龄、身高、体重等健康数据只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>，不构成医疗建议。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="bmr-actions" style="margin-top:0;">
+                    <a href="/tools/bmi-calc" class="btn btn-secondary" style="font-size:.9rem;">BMI 体质指数计算器 <span style="color:#2563eb;font-weight:700;">· 健康小闭环</span></a>
+                    <a href="/tools/heart-rate-zones" class="btn btn-secondary" style="font-size:.9rem;">心率区间计算器 <span style="color:#2563eb;font-weight:700;">· 健康小闭环</span></a>
+                </div>
+                <div class="bmr-info" style="margin-top:.6rem">健康小闭环：BMI 体质指数计算器负责<b>看体重区间</b>（偏瘦/正常/超重/肥胖）；BMR/TDEE 能量消耗计算器负责<b>定每日热量</b>（吃多少、减多少）；心率区间计算器负责<b>定运动强度</b>（Z1~Z5 心率区间）——先知道自己在哪一档，再按热量目标吃、按心率区间练。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="bmr-info">
+                    <b>第一步：</b>选性别，填年龄、身高（cm）、体重（kg），均为必填；选活动水平（默认中度活动），输入即实时计算。<br>
+                    <b>第二步：</b>看结果——BMR 基础代谢率（kcal/天）＋TDEE 每日总能量消耗（kcal/天）＋减脂/维持/增肌三档热量目标。<br>
+                    <b>第三步：</b>减脂目标已设 1200 kcal 保底线，低于该线请咨询专业人士，切勿自行极端节食。<br>
+                    <b>示例：</b>点「示例一键填充」填入男 30 岁/175cm/70kg/中度活动：BMR＝1649 kcal/天，TDEE＝2556 kcal/天。<br>
+                    <b>下一步：</b>想制定运动计划，去<a href="/tools/heart-rate-zones">心率区间计算器</a>按年龄与静息心率算出 Z1~Z5 运动心率区间。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="bmr-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/bmr_tdee_calc.js?v=1"></script>
+</body>
+{{end}}

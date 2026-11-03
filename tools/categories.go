@@ -2372,6 +2372,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "bmr_tdee_calc",
+					Name:        "BMR/TDEE 能量消耗计算器",
+					Description: "BMR/TDEE 能量消耗计算器：性别＋年龄＋身高（cm）＋体重（kg）→Mifflin-St Jeor 公式算基础代谢率 BMR（整数修约 kcal/天）＋五档活动系数（久坐1.2／轻度1.375／中度1.55／重度1.725／极重1.9）→每日总能量消耗 TDEE＋减脂（TDEE−500、1200 保底）／维持／增肌（TDEE＋300）三档热量建议，示例一键填充＋结果一键复制，localStorage 本地保存，纯前端不上传 · BMR/TDEE calorie calculator: Mifflin-St Jeor BMR, 5 activity levels, cut/maintain/bulk targets, 100% client-side",
+					Path:        "/tools/bmr-tdee-calc",
+					Icon:        "local_fire_department",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
