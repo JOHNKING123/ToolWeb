@@ -1,3 +1,89 @@
+## 今日任务（2026-11-03 15:00 · PM 选定轮，接通用调研第二百一十轮）
+
+**选定：中文编码转换器（encoding_converter）** — 本轮唯一任务（新工具）。
+
+**顺位**：210 轮 Top3 **首席即选定**（「无硬伤不跳过、Top3 顺位递进」惯例；首席工时十进制转换已交付划出、备选屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 中文编码转换器顺位递进为首席；本轮 PM 定序权；209 轮备选 P2 身份不构成硬伤）。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`encoding_converter`／`charset_converter`／`text_encoding`／`native_ascii`／`gbk_converter`／`unicode_escape`／`encoding-convert` 在 tools＋templates＋static＋tests 四处**全 0 命中**；`codec` 13 命中全部不相关（url_codec 编解码口径、screen_recorder codecs、vendor 库、模板内零散词）——无工具口径重叠。
+- CJK（python chr 运行时构造，命中行 codepoint 逐行验真）：「编码」113 文件全为通用词（Base64 编码／URL 编码／随机数编码生成等），无文本编码转换工具口径；「转码」6 文件（mp3_tag_editor ID3 编码场景、mermaid／http_status 示例文案），无工具口径；「乱码」27 文件（密码生成器"随机乱码"描述、花式字体兼容说明、url_tracker_cleaner 示例），无工具口径；「字符集」12 文件（regex_explainer 字符类说明、meta description），无工具口径。
+- 命名无占用：ID `encoding_converter`、Path `/tools/encoding-converter` 均 0 命中；Icon 候选 **`translate`（0 占用，首选）／`abc`（0 占用，备选）**（开发轮用精确值复测锁定全库唯一）。
+- 全量 Path **279**（`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测）；tests/*.test.js **165 个**；本地分支 muse/dev-20260929，本轮仅读操作＋BACKLOG.md 顶部追加，未提交不推送，随开发轮次提交，沿用研究/PM 轮惯例。
+
+**选定理由**：① **顺位即理由**——210 轮 Top3 首席（P1 顺位递进）；② **真缺口确凿**——PM 独立实测（本轮 ASCII＋CJK 双线 0 命中，codepoint 验真）；③ **痛点真实**——Java properties 中文转 `\uXXXX`、收到乱码文本反查编码、GBK/Big5/Shift_JIS↔UTF-8 文本互转（掘金 AppKit 2026-10-22 信号：「大部分在线工具只认 UTF-8，拿 GBK 内容进去就是一片乱码」）；④ **一天可高质量交付**——纯前端小难度，浏览器原生 TextDecoder＋native2ascii 纯函数，确定性向量可逐字锁定；⑤ **方向合规**——用户 10-18 方向修正：聚焦 ToolWeb 工具本身开发（编码转换是开发者效率工具，非泛财务/生活计算器）。
+- 不选年假拼假优化器：本轮新增 P2 备选（Show HN holiday-optimizer.com 新信号）；需内置国务院法定节假日/调休数据表且每年更新（维护负担），备选留池待数据表方案成熟。
+- 不选 CSV 编辑器：小-中难度，一天高质量交付风险高；备选留池。
+- 不选屏幕尺子：17:00 PM 轮裁定暂不立项维持，210 轮无新信号变化；PM 可裁定复活。
+
+**品类归位**：注册到「编码转换」类目（url_codec／base64 等同类目）；New: true。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 中文 ↔ `\uXXXX` 转义双向互转（Java native2ascii 兼容：非 ASCII 码点转 `\u`＋4 位小写十六进制，增补平面用代理对，ASCII 不动）② 反向解析：`\uXXXX` 序列还原中文（代理对合并；`\u` 后非 4 位十六进制原样保留）③ 乱码恢复/反查：粘贴乱码文本 → 两种字节还原假设（UTF-8 字节／Latin-1 字节）× 候选编码标签批量试解，列表呈现候选结果供人工选择 ④ 文件按编码解码：上传文本文件，指定源编码（TextDecoder 标签）解码为 UTF-8 文本展示/复制 ⑤ 一键复制结果＋示例一键填充 ⑥ 真限制页面明示：乱码恢复为启发式试解须人工确认正确结果；浏览器 TextDecoder 字符集支持度因浏览器而异；转义格式为 Java native2ascii 兼容（小写十六进制）；纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.EncodingConverter 下，module.exports 同步导出）**：
+  - `escapeUnicode(text)` → string（非 ASCII→`\uXXXX` 小写，增补平面→代理对；ASCII 原样；空串返回空串；非字符串抛 Error err.field='text'）。
+  - `unescapeUnicode(text)` → string（解析 `\uXXXX`，代理对合并；`\u` 后非 4 位十六进制原样保留；非字符串抛 Error err.field='text'）。
+  - `decodeBytes(bytes, label)` → string（bytes: Uint8Array/Array<number>/ArrayBuffer；label: TextDecoder 标签；非法抛 Error err.field='bytes'/'label'）。
+  - `recoverMojibake(text)` → [{bytes:'utf8'|'latin1', label, text}]（两种字节假设 × 候选标签批量试解，解码失败组合跳过、重复文本去重；非字符串抛 Error err.field='text'）。
+  - 常量 `CANDIDATE_LABELS` 导出供页面下拉复用（顺序固定：utf-8, gbk, gb2312, gb18030, big5, shift_jis, euc-jp, euc-kr, windows-1252, iso-8859-1, windows-1251, koi8-r）。
+- **确定性向量（开发轮必须逐字命中）**：
+  - `escapeUnicode("中文")` → `"\\u4e2d\\u6587"`（字面反斜杠-u 序列，小写十六进制）
+  - `escapeUnicode("Hi中文!")` → `"Hi\\u4e2d\\u6587!"`
+  - `escapeUnicode("")` → `""`
+  - `escapeUnicode(123)` 抛 Error（err.field='text'）
+  - `unescapeUnicode("\\u4e2d\\u6587")` → `"中文"`（输入为字面反斜杠-u 转义序列）
+  - `unescapeUnicode("A\\u0041")` → `"AA"`
+  - `unescapeUnicode("abc")` → `"abc"`（无序列原样返回）
+  - roundtrip：`unescapeUnicode(escapeUnicode("你好，世界！"))` → `"你好，世界！"`
+  - `decodeBytes([0xCA,0xC7,0xB7,0xF1], 'gbk')` → `"是否"`
+  - `recoverMojibake("ÊÇ·ñ")` 包含 `{bytes:'latin1', label:'gbk', text:'是否'}`（some() 断言）
+  - `recoverMojibake("")` → `[]`（不抛）
+- **预计改动文件**：tools/categories.go（注册 ID `encoding_converter`、Name「中文编码转换器」、Path `/tools/encoding-converter`、Icon `translate`（首选；`abc` 备选；精确值开发轮复测锁定全库唯一）、Category「编码转换」、New: true、Description 含 中文编码/unicode转义/native2ascii/乱码恢复/GBK/Big5/Shift_JIS/字符集转换 中英文关键词；旧测试 Path 断言 279→280 同步）／templates/encoding_converter.html（模板零外部资源，仅 canonical 元链接；真限制明示）／static/js/encoding_converter.js（纯前端本地计算）／tests/encoding_converter.test.js（纯函数逐字向量断言）。
+- **验收标准**：① 上述 11 条确定性向量 node 测试全绿；② 全量 tests/*.test.js 无回归；③ `go build`＋`go vet` 通过；④ 本地 `/tools/encoding-converter` 页面与静态 JS 实测 200；⑤ 模板零外部资源。
+
+---
+
+## 今日任务（2026-11-03 15:00 · 通用调研第二百一十轮，接工时十进制转换交付轮）
+
+**交付状态**：11-03 通用调研第二百一十轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**工时十进制转换交付闭环**（d2e7e2b 新增：time_decimal，Path 278→**279**，tests/time_decimal.test.js 80 断言全过；templates/time_decimal.html＋static/js/time_decimal.js＋tests/time_decimal.test.js 均存在；全量 tests/*.test.js **165 个**；候选池划出）。**Top3 递进链更新**：中文编码转换器→首席（顺位递进；209 轮备选 P2；`encoding_converter` 等全 0 命中真缺口维持；纯前端小难度；开发者小众口径低优先；**PM 可裁定是否立项**）／年假拼假优化器→备选（**本轮新增**；Show HN 2026-10 holiday-optimizer.com 新信号：15 天年假＋节假日拼出 56 天假期，获 traction 后重构；`holiday`/`vacation`/`pto`/年假/拼假/假期优化/请假攻略全 0 命中真缺口（「调休」1 命中为 time_decimal 真限制免责文案「不含调休折算」，非工具口径，不重叠；codepoint 验真）；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错；实现：年份选择＋法定节假日/调休数据表＋年假天数输入→组合优化算出最长连续假期方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；**PM 可裁定是否晋升首席**）／CSV 编辑器→第三顺位（**本轮新增**；掘金 AppKit（www.appkit.top）2026-10-22「CSV 编辑器」信号；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明「只查看、排序、筛选：不编辑单元格」（templates/csv_table_viewer.html:66 真限制原文），真缺口确凿；痛点：快速改几格 CSV 不想开 Excel/WPS（WPS 部分编辑功能要会员）；实现：粘贴/导入 CSV→可编辑表格（单元格双击改、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选须明示；**PM 可裁定**）；屏幕尺子维持 17:00 PM 轮裁定暂不立项（留池，PM 可裁定复活）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；15:00 轮，优先小难度纯前端。
+
+**本轮三件事**（15:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 d2e7e2b（工时十进制转换新增）／50fb096（期末成绩目标计算器）／77c7be3（阅读时间估算器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **279**；`ls templates/time_decimal.html static/js/time_decimal.js tests/time_decimal.test.js` **均存在**；tests/*.test.js **165 个**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD d2e7e2b 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 工时十进制转换：已交付（d2e7e2b，Path 278→279，80 断言全过）——划出候选池。
+   - 中文编码转换器：`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 **0 命中**维持；GBK 附带支持（url_codec/csv_json）不重叠；json_string_escaper 不重叠——真缺口保持，顺位递进为首席。
+   - 年假拼假优化器（本轮新增）：`holiday`/`vacation`/`pto` 全 0 命中；CJK 年假/拼假/假期优化/请假攻略全站 **0 命中**（python chr 运行时构造，codepoint 验真）；「调休」1 命中为 time_decimal.html:124 真限制免责文案（「不含午休扣除、加班系数、调休折算」），非工具口径——真缺口确凿。
+   - CSV 编辑器（本轮新增）：`csv_editor`/`csv-edit` 全 0 命中；「CSV＋编辑」连写全站 0 命中；csv_table_viewer（查看/排序/筛选口径，:66 明确不编辑）／csv_json（互转口径）／paste_table_to_csv（粘贴转 CSV 口径）均不重叠——真缺口确凿。
+   - 屏幕尺子：`screen_ruler` 全 **0 命中**维持——真缺口保持（17:00 PM 轮裁定暂不立项维持）。
+   - V2EX t/1253899 KitVerse.dev（2026-11-02；Local-first 工具站 100+，SKILL 安全扫描／API 实验台／PUA AI 生成器）→**skill_scanner 已交付**（SKILL.md 静态正则扫描：curl/wget 外发、base64 解码执行、反向 shell、密钥硬编码、提示词注入检测，0–100 安全评分）**确认消解**；传统工具（JSON/YAML/TOML/正则/编解码/哈希/UUID/图片/时间戳/Cron）站内全已交付**确认消解**；Token 计数→ai_token_counter 已交付消解；API 实验台→真实请求 CORS 受限，记观察（硬伤）；PUA AI 生成器→meme 文案口径，记观察（低价值）；LLM 模型价格→需持续数据更新，记观察。
+   - Indie Radar 日报 2026-11-01/02：handy-transcribe（本地语音转写 CLI，需本地模型）→非 web 单页**确认消解**；搭手 1.0（跨平台桌面效率工具）→桌面 App 口径**确认消解**；1ms.dog（网络延迟诊断）→需后端探测**确认消解**；Papilot（PDF 批注＋AI 改 LaTeX）→需 AI**确认消解**；SpriteCanvas（AI 生成 2D 游戏动画）→需 AI**确认消解**；「小道」八字排盘站→**本轮新增观察**（见下）；Stock Compass（炒股纪律）→泛财务方向外**确认消解**；apptrace／Ghostwire／Loris Tunnel 等→本地/网络工具口径**确认消解**。
+   - V2EX t/1250831 pimg.ai（2026-10-23；AI 图片增强/放大/修复）→需 AI**确认消解**；V2EX t/1253201 自媒体获客四工具→多轮已消解维持（Chrome 插件/客户端＋付费口径）。
+   - HN：HackerTube（karpathy，HN 评论选视频）→产品＋数据口径**确认消解**；Lasm（Lean 形式化验证）→框架口径**确认消解**；Shpyrd（AI 时代云）→云产品口径**确认消解**；Carrier-Explode（运营商配置档案）→数据档案口径**确认消解**；Holiday Optimizer（Show HN 2026-10；PTO 拼假优化，15 天年假拼出 56 天）→**年假拼假优化器新信号**（真缺口，备选）。
+   - 掘金（2026-10-26~28）：5 小工具文（CloseAI/OfferFlow/MuchSnap/穷鬼地图/星问 GEO）→产品/App 口径**确认消解**；GitHub 周报 5 项目（aerial-tv/hatchzip/3d-model-anything/android-ad-cleaner/word-atlas）→TV/桌面/移动 App 口径**确认消解**；导航源码站→源码产品口径**确认消解**；jsoncrack（JSON→思维导图节点图）→json_parser 已有树形折叠视图，**节点图形态记弱观察 P3**（canvas 节点图＋缩放/平移差异化）；dbdiagram（DSL→表结构图）→mermaid_diagram_renderer 已支持 ER 图**确认消解**；regex101→regex_tester 等三件套已交付**确认消解**；Arthas Tunnel→服务端 Java 口径**确认消解**。
+   - dev.to：Tip calculator（2026-10-03；三国小费）→泛财务＋美国口径，方向修正边界外**确认消解**；HEIC 转 JPG→heic_convert 已交付**确认消解**；cURL to Fetch→curl_to_requests 已交付**确认消解**；CSS Specificity→css_specificity_calculator 已交付**确认消解**；Audio Cutter→audio_trimmer 已交付**确认消解**；Image Format Converter→img_convert 已交付**确认消解**；QR（WiFi/vCard/logo）→二维码已交付**确认消解**；SiteIndex（SEO 审计/网络诊断/PDF 合并拆分）→SEO 部分已覆盖、网络诊断＋PDF 需后端**确认消解**；AI text toolkit→需 AI 后端**确认消解**。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **中文编码转换器** — 首席（顺位递进；209 轮备选 P2；首席工时十进制转换已交付划出、第三顺位屏幕尺子 17:00 PM 轮裁定暂不立项维持 → 递进为首席；站内零重叠实测维持：`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中；GBK 附带支持（url_codec/csv_json）不重叠；json_string_escaper 不重叠；真缺口确凿；痛点：Java properties 中文转 `\uXXXX`、收到乱码文本反查编码、GBK/Big5/Shift_JIS↔UTF-8 文本互转（掘金 AppKit 2026-10-22：「大部分在线工具只认 UTF-8，拿 GBK 内容进去就是一片乱码」）；实现：TextDecoder 浏览器原生解码＋native2ascii 纯函数双向；纯前端小难度；真限制：解码错误字符替换/浏览器字符集支持度须明示；低优先：开发者小众口径；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **年假拼假优化器** — 备选（**本轮新增**；Show HN 2026-10 holiday-optimizer.com 新信号：作者 15 天 PTO＋节假日拼出 56 天假期，获 traction 后重构 v2；站内零重叠实测：`holiday`/`vacation`/`pto` 全 0 命中，CJK 年假/拼假/假期优化/请假攻略全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略是中文互联网年年爆款话题，手动拼算组合易错；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案（请哪几天、连休几天）；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目（时分秒↔十进制已交付同类目），方向合规；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **CSV 编辑器** — 第三顺位（**本轮新增**；掘金 AppKit（www.appkit.top）2026-10-22「CSV 编辑器」信号；站内零重叠实测：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员）；实现：粘贴/导入 CSV→可编辑表格（单元格双击修改、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：**八字排盘**（**本轮新增观察**；V2EX「小道」八字排盘站 2026-11-01 信号；八字/排盘 CJK 全站 0 命中；纯前端可实现（农历算法确定性排盘）；玄学口径小众，与 ToolWeb 工具定位关联弱；仅记录不立项）／**JSON 节点图可视化**（**本轮新增弱观察 P3**；掘金 2026-10-28 jsoncrack 信号：「把一坨 JSON 变成思维导图」；json_parser 已有树形折叠视图，canvas 节点图＋缩放/平移为差异化形态；纯前端中难度；开发者小众；低优先）／API 实验台（**本轮新增观察**；V2EX KitVerse 2026-11-02 信号；真实 API 请求受浏览器 CORS 限制，纯前端价值低；仅记录）／PUA AI 生成器（**本轮新增观察**；V2EX KitVerse 2026-11-02 信号；meme 文案生成器纯前端可实现；低价值；仅记录）／LLM 模型价格对比（**本轮新增观察**；V2EX KitVerse 2026-11-02 信号；需持续更新价格数据，纯前端难保新鲜度；仅记录）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／GPA 绩点计算器（P3 留池；绩点/GPA 真缺口；学习小众口径低优先）／年龄/日期差计算器（P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／百分比/成绩计算器（P3 留池；`percentage_calc` 真缺口；方向修正边界相邻低优先）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十轮：工时十进制转换交付闭环（d2e7e2b 新增：time_decimal，Path 278→**279**，tests/time_decimal.test.js 80 断言全过；templates/time_decimal.html＋static/js/time_decimal.js＋tests/time_decimal.test.js 均存在；全量 tests/*.test.js **165 个**；候选池划出）；**Top3 递进链更新**：**中文编码转换器→首席**（顺位递进；209 轮备选 P2；首席已交付划出、第三顺位 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`encoding_converter` 等全 0 命中真缺口维持；纯前端小难度；开发者小众低优先；PM 可裁定是否立项）／**年假拼假优化器→备选**（**本轮新增**；Show HN 2026-10 holiday-optimizer.com 新信号；`holiday`/`vacation`/`pto`/年假/拼假/假期优化/请假攻略全 0 命中；「调休」1 命中为 time_decimal 真限制免责文案不重叠；真缺口确凿；纯前端小难度；拼假攻略年年爆款；PM 可裁定是否晋升首席）／**CSV 编辑器→第三顺位**（**本轮新增**；掘金 AppKit 2026-10-22 信号；`csv_editor`/`csv-edit`/「CSV＋编辑」全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口确凿；纯前端小-中难度；PM 可裁定）；屏幕尺子维持 17:00 PM 轮裁定暂不立项（留池）；**本轮新增观察**：八字排盘（玄学小众仅记录）／JSON 节点图可视化（弱观察 P3，json_parser 树形视图已部分覆盖）／API 实验台（CORS 硬伤仅记录）／PUA AI 生成器（低价值仅记录）／LLM 模型价格对比（需数据更新仅记录）；**本轮初判消解 20 项全部确认**：V2EX KitVerse（skill_scanner 已交付／传统工具全已交付／Token 计数→ai_token_counter 已交付）／Indie 日报（handy-transcribe→CLI 口径／搭手→桌面 App／1ms.dog→需后端／Papilot→需 AI／SpriteCanvas→需 AI／Stock Compass→泛财务方向外）／V2EX pimg.ai→需 AI／V2EX 自媒体获客四工具→多轮消解维持／HN（HackerTube→产品数据口径／Lasm→框架／Shpyrd→云产品／Carrier-Explode→数据档案）／掘金（5 小工具→产品 App 口径／GitHub 周报 5 项目→TV/桌面/移动口径／导航源码→源码产品／dbdiagram→mermaid ER 已覆盖／regex101→正则三件套已交付／Arthas→服务端口径）／dev.to（Tip→泛财务美国口径方向外／HEIC→heic_convert 已交付／cURL→curl_to_requests 已交付／CSS 特异性→css_specificity_calculator 已交付／Audio Cutter→audio_trimmer 已交付／图片格式转换→img_convert 已交付／QR→二维码已交付／SiteIndex→SEO 已覆盖＋网络/PDF 需后端／AI 文本工具→需 AI 后端）；本轮 fetch 一次成功，本地 HEAD d2e7e2b 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 工时十进制转换 | 已交付划出（d2e7e2b 新增：time_decimal，Path 278→279，tests/time_decimal.test.js 80 断言全过；templates/time_decimal.html＋static/js/time_decimal.js＋tests/time_decimal.test.js 均存在；全量 tests/*.test.js 165 个；候选池划出） | — | 已实现 |
+| 中文编码转换器 | 首席（顺位递进；209 轮备选 P2；首席已交付划出、第三顺位 17:00 PM 轮裁定暂不立项维持 → 递进为首席；`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 0 命中维持；GBK 附带支持（url_codec/csv_json）不重叠；json_string_escaper 不重叠；真缺口确凿；痛点：Java properties 中文转 `\uXXXX`、收到乱码文本反查编码、GBK/Big5/Shift_JIS↔UTF-8 文本互转（掘金 AppKit 2026-10-22：「大部分在线工具只认 UTF-8，拿 GBK 内容进去就是一片乱码」）；实现：TextDecoder 浏览器原生解码＋native2ascii 纯函数双向；纯前端小难度；真限制：解码错误字符替换/浏览器字符集支持度须明示；低优先：开发者小众口径；PM 可裁定是否立项；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1（顺位） |
+| 年假拼假优化器 | 备选（本轮新增；Show HN 2026-10 holiday-optimizer.com 新信号：15 天 PTO＋节假日拼出 56 天假期，获 traction 后重构；`holiday`/`vacation`/`pto`/年假/拼假/假期优化/请假攻略全 0 命中（「调休」1 命中为 time_decimal 真限制免责文案不重叠；codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错；实现：年份选择＋法定节假日/调休数据表＋年假天数→组合优化输出最长连续假期方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；PM 可裁定是否晋升首席；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P2（新） |
+| CSV 编辑器 | 第三顺位（本轮新增；掘金 AppKit（www.appkit.top）2026-10-22「CSV 编辑器」信号；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 不想开 Excel/WPS（WPS 部分编辑功能要会员）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选须明示；PM 可裁定；Icon 待开发轮精确值复测锁定全库唯一） | 小-中 | P3（新） |
+| 八字排盘 | 本轮新增观察（V2EX「小道」八字排盘站 2026-11-01 信号；八字/排盘 CJK 全站 0 命中；纯前端可实现（农历算法确定性排盘）；玄学口径小众，与 ToolWeb 工具定位关联弱；仅记录不立项） | 中 | 观察 |
+| JSON 节点图可视化 | 本轮新增弱观察 P3（掘金 2026-10-28 jsoncrack 信号：「把一坨 JSON 变成思维导图」；json_parser 已有树形折叠视图，canvas 节点图＋缩放/平移为差异化形态；纯前端中难度；开发者小众；低优先） | 中 | 观察 |
+
+**归档说明**：本轮为 11-03 通用调研第二百一十轮——工时十进制转换交付闭环（d2e7e2b；`/tools/time-decimal` 已注册；全量 **279 Path**；tests/time_decimal.test.js 80 断言全过；全量 tests/*.test.js **165 个**），候选池划出；**Top3 递进链更新**：中文编码转换器→首席（顺位递进；`encoding_converter` 等全 0 命中真缺口维持；纯前端小难度；开发者小众低优先；PM 可裁定是否立项）／年假拼假优化器→备选（本轮新增；Show HN 2026-10 holiday-optimizer.com 新信号；`holiday`/`vacation`/`pto`/年假/拼假全 0 命中真缺口确凿；纯前端小难度；拼假攻略年年爆款；PM 可裁定是否晋升首席）／CSV 编辑器→第三顺位（本轮新增；掘金 AppKit 2026-10-22 信号；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口确凿；纯前端小-中难度；PM 可裁定）；屏幕尺子维持 17:00 PM 轮裁定暂不立项（留池，PM 可裁定复活）；本轮新增观察：八字排盘（玄学小众仅记录）／JSON 节点图可视化（弱观察 P3）／API 实验台（CORS 硬伤）／PUA AI 生成器（低价值）／LLM 模型价格对比（需数据更新）；本轮初判消解 20 项全部确认（V2EX KitVerse→skill_scanner 已交付＋传统工具全已交付＋ai_token_counter 已交付／Indie 日报 6 项→CLI/桌面 App/需后端/需 AI/泛财务方向外／V2EX pimg.ai→需 AI／自媒体获客→多轮消解维持／HN 4 项→产品数据/框架/云产品/数据档案口径／掘金 6 项→产品 App/TV 桌面移动/源码产品/mermaid ER 已覆盖/正则已交付/服务端口径／dev.to 9 项→泛财务方向外/8 项已交付口径/需 AI 后端）；本轮 fetch 一次成功，本地 HEAD d2e7e2b 与 origin 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**，本地 HEAD d2e7e2b 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 d2e7e2b（工时十进制转换新增）／50fb096（期末成绩目标计算器新增）／77c7be3（阅读时间估算器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **279**；`ls templates/time_decimal.html static/js/time_decimal.js tests/time_decimal.test.js` **均存在**；tests/*.test.js **165 个**；Top3 候选重叠复核（**工时十进制转换**：已交付（/tools/time-decimal，Path 278→279，80 断言全过），划出候选池；**中文编码转换器**：`encoding_converter`/`charset_converter`/`text_encoding`/`native_ascii`/`gbk_converter` 全 **0 命中**，GBK 附带支持（url_codec/csv_json）不重叠，json_string_escaper 不重叠，真缺口保持，顺位递进为首席；**年假拼假优化器**：`holiday`/`vacation`/`pto` 全 **0 命中**，CJK 年假/拼假/假期优化/请假攻略全站 **0 命中**（python chr 运行时构造＋codepoint 验真），「调休」1 命中为 time_decimal 真限制免责文案不重叠，真缺口确凿，本轮新增备选 P2；**CSV 编辑器**：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 **0 命中**，csv_table_viewer（:66 明确只查看不编辑）／csv_json／paste_table_to_csv 均不重叠，真缺口确凿，本轮新增第三顺位；**屏幕尺子**：`screen_ruler` 全 **0 命中**，真缺口保持（17:00 PM 轮裁定暂不立项维持））；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 13:00 · PM 选定轮，接通用调研第二百〇九轮）
 
 **选定：工时十进制转换（time_decimal）** — 本轮唯一任务（新工具）。

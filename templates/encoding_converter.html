@@ -1,0 +1,149 @@
+{{define "encoding_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文编码转换器 - 中文↔\uXXXX转义＋乱码恢复 | 程序员工具箱</title>
+    <meta name="description" content="免费在线中文编码转换器：中文↔\uXXXX 双向互转（Java native2ascii 兼容，增补平面代理对）、\uXXXX 反向解析、乱码恢复反查（utf8/latin1 两种字节假设 × 12 种候选编码批量试解）、文件按编码解码，一键复制＋示例填充，纯前端本地运行不上传。">
+    <meta name="keywords" content="中文编码转换器,unicode转义,native2ascii,中文转unicode,unicode转中文,\uXXXX,乱码恢复,乱码修复,字符编码转换,gbk解码,encoding converter,mojibake">
+    <meta property="og:title" content="中文编码转换器 - 中文↔\uXXXX转义＋乱码恢复">
+    <meta property="og:description" content="中文↔\uXXXX 双向互转（native2ascii 兼容）、乱码恢复反查（12 种编码批量试解）、文件按编码解码，纯前端本地运行。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/encoding-converter">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/encoding-converter">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "中文编码转换器",
+      "description": "免费在线中文编码转换器：中文↔\\uXXXX 双向互转（Java native2ascii 兼容，增补平面代理对）、\\uXXXX 反向解析（非法序列原样保留）、乱码恢复反查（两种字节假设 × 12 种候选编码批量试解）、文件按编码解码，一键复制＋示例填充，纯前端本地运行不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/encoding-converter",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .ec-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .ec-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; align-items: center; }
+        .ec-area { width: 100%; min-height: 110px; padding: .6rem .7rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; font-family: inherit; box-sizing: border-box; line-height: 1.7; resize: vertical; margin-top: .6rem; }
+        .ec-area:focus { outline: none; border-color: var(--primary-color); }
+        .ec-chip { font-size: .82rem; padding: .3rem .7rem; }
+        .ec-result { margin-top: .8rem; border: 1px solid #e5e7eb; border-radius: .6rem; padding: 1rem; background: #f9fafb; }
+        .ec-pre { white-space: pre-wrap; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92rem; color: #111827; margin: 0; max-height: 320px; overflow: auto; }
+        .ec-note { font-size: .88rem; color: #4b5563; margin-top: .5rem; }
+        .ec-filepre { max-height: 420px; }
+        .ec-cand { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .7rem .8rem; margin-top: .6rem; background: #fff; }
+        .ec-cand-meta { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; }
+        .ec-tag { font-size: .78rem; background: #eef2ff; color: #3730a3; padding: .15rem .55rem; border-radius: 999px; }
+        .ec-cand .ec-pre { background: #f9fafb; border-radius: .35rem; padding: .5rem .6rem; max-height: 160px; }
+        .ec-cand .btn { margin-top: .5rem; }
+        .ec-empty { color: #6b7280; font-size: .9rem; padding: .6rem 0; }
+        .ec-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .ec-limit b { color: #374151; }
+        .ec-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .6rem; }
+        .ec-row select { padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; }
+        .ec-row input[type=file] { font-size: .9rem; }
+        #ec-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔤 中文编码转换器</h1>
+            <p>中文 ↔ \uXXXX 双向互转（Java native2ascii 兼容）＋ 乱码恢复反查 ＋ 文件按编码解码，纯前端本地运行</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="ec-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 中文 ↔ \uXXXX 双向互转</h3>
+                <textarea class="ec-area" id="ec-in" placeholder="输入中文文本或 \uXXXX 转义序列，例如：&#10;你好，世界！Hello 123 😀"></textarea>
+                <div class="ec-actions">
+                    <button class="btn btn-primary" id="ec-to-esc">中文 → \uXXXX</button>
+                    <button class="btn btn-primary" id="ec-to-text">\uXXXX → 中文</button>
+                    <button class="btn btn-secondary" id="ec-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="ec-clear">清空</button>
+                </div>
+                <div class="ec-result" id="ec-out" style="display:none;"></div>
+                <div class="ec-actions">
+                    <button class="btn btn-secondary" id="ec-copy">一键复制结果</button>
+                </div>
+                <div class="ec-info">Java native2ascii 兼容口径：<b>非 ASCII 字符 → 小写 \uXXXX</b>，ASCII（英文字母/数字/半角符号）原样保留；增补平面字符（如 Emoji 😀）按 UTF-16 代理对输出两段（如 \ud83d\ude00）。反向解析时代理对自动合并，<b>非法序列（如 \u 后不足 4 个 hex）原样保留</b>。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 乱码恢复 / 反查</h3>
+                <textarea class="ec-area" id="ec-moji" placeholder="粘贴乱码文本，例如：ÊÇ·ñ"></textarea>
+                <div class="ec-actions">
+                    <button class="btn btn-primary" id="ec-recover">批量试解</button>
+                    <button class="btn btn-secondary" id="ec-moji-sample">示例：ÊÇ·ñ</button>
+                </div>
+                <div class="ec-result" id="ec-recover-box" style="display:none;">
+                    <div id="ec-recover-list"></div>
+                    <div class="ec-actions" style="justify-content:center;">
+                        <button class="btn btn-secondary" id="ec-recover-copy">一键复制全部候选</button>
+                    </div>
+                </div>
+                <div class="ec-info">原理：乱码多是「用 A 编码存、用 B 编码读」造成的。工具把乱码按<b>两种字节假设（utf-8 / latin1）</b>还原成字节，再用 <b>12 种候选编码</b>（utf-8、gbk、gb18030、big5、big5-hkscs、shift_jis、euc-jp、euc-kr、iso-8859-1、windows-1252、utf-16le、utf-16be）逐一试解，列出候选原文供你<b>人工选择</b>——工具不替你判定哪个一定对。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ 文件按编码解码</h3>
+                <div class="ec-row">
+                    <input type="file" id="ec-file" accept=".txt,.md,.json,.log,.csv,.xml,.html,.srt,.lrc,.ini,.cfg,.properties">
+                    <select id="ec-enc" aria-label="解码编码"></select>
+                    <button class="btn btn-primary" id="ec-decode-file">按所选编码解码</button>
+                </div>
+                <div class="ec-result" id="ec-file-out" style="display:none;"></div>
+                <div class="ec-actions">
+                    <button class="btn btn-secondary" id="ec-file-copy">一键复制解码文本</button>
+                </div>
+                <div class="ec-info">用 FileReader 在本地读文件 ArrayBuffer，再用 TextDecoder 按你选的编码解码预览（上限 2 MB）。不知道原编码时：先用 ③ 猜几次，或把乱码复制到 ② 里批量试解。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="ec-limit">
+                    <li><b>① 转义只动非 ASCII：</b>\uXXXX 转义<b>不是压缩也不是加密</b>，ASCII 部分原样保留；增补平面字符（Emoji 等）会变成两段 \uXXXX（代理对），这是 Java native2ascii 的兼容口径。</li>
+                    <li><b>② 乱码恢复只能「试解＋人工选」：</b>工具按两种字节假设 × 12 种编码穷举候选，<b>不能判定哪个一定对</b>；若原始字节已丢失（比如乱码被多次转存），可能<b>无法 100% 还原</b>，请结合上下文人工核对。</li>
+                    <li><b>③ 文件解码不自动检测编码：</b>③ 只做「按你选的编码读」，<b>不做编码自动检测</b>；选错编码读出来仍是乱码，换一种再试即可。</li>
+                    <li><b>④ 纯本地运行：</b>所有文本与文件只在你的浏览器内处理，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>，重要文档请保留原文件再操作。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="ec-actions">
+                    <a href="/tools/html-entities" class="btn btn-secondary" style="font-size:.9rem;">HTML 实体编解码</a>
+                    <a href="/tools/base64" class="btn btn-secondary" style="font-size:.9rem;">Base64 编码/解码</a>
+                    <a href="/tools/url-codec" class="btn btn-secondary" style="font-size:.9rem;">URL 编码/解码</a>
+                </div>
+                <div class="ec-info" style="margin-top:.6rem">\uXXXX 转义如果用在 HTML 里，去<a href="/tools/html-entities">HTML 实体编解码</a>（含 Unicode 转义）；二进制/文本互转去<a href="/tools/base64">Base64</a>，链接参数转义去<a href="/tools/url-codec">URL 编码</a>——都在「编码转换」类目。</div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="ec-info">
+                    <b>流程：</b>① 里中文与 \uXXXX 双向互转（点「示例一键填充」看效果）→ 拿到乱码去 ② 点「批量试解」，从候选里挑出原文 → 手头有乱码文件时用 ③ 选编码直接解码预览。<br>
+                    <b>转义示例：</b>「中文」→ \u4e2d\u6587（小写 hex）；「A\u0041」→ AA；「😀」→ \ud83d\ude00（代理对）。<br>
+                    <b>乱码示例：</b>「ÊÇ·ñ」是「是否」的 GBK 字节被按 latin1 误读的结果，② 里批量试解可找回「是否」。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="ec-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/encoding_converter.js?v=1"></script>
+</body>
+{{end}}

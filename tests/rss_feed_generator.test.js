@@ -176,7 +176,7 @@ has(GO_SRC, '"/tools/rss-feed-generator"', "注册：Path /tools/rss-feed-genera
 has(GO_SRC, "RSS／Atom 订阅源生成器", "注册：中文名");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = paths.filter(function (v, i) { return paths.indexOf(v) === i; });
-eq(uniq.length, 279, "注册：总数 268→270 Path");
+eq(uniq.length, 280, "注册：总数 268→270 Path");
 ok(/ID:\s+"rss_feed_generator"[\s\S]{0,600}?Category:\s+"开发工具"/.test(GO_SRC), "注册：品类为开发工具");
 ok(/ID:\s+"rss_feed_generator"[\s\S]{0,600}?New:\s+true/.test(GO_SRC), "注册：New 为 true");
 

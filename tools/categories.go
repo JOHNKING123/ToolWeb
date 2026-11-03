@@ -227,6 +227,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "编码转换",
 				},
+				{
+					ID:          "encoding_converter",
+					Name:        "中文编码转换器",
+					Description: "中文编码转换/中文转义/乱码恢复：中文↔\\uXXXX 双向互转（Java native2ascii 兼容，非 ASCII→小写\\uXXXX、增补平面用代理对）、\\uXXXX 反向解析（代理对合并、非法序列原样保留）、乱码恢复反查（utf8/latin1 两种字节假设 × 12 种候选编码批量试解、人工选择）、文件按编码解码（FileReader＋TextDecoder），一键复制＋示例填充，纯前端零上传 · Chinese encoding converter: text↔\\uXXXX escapes (native2ascii compatible, surrogate pairs), mojibake recovery with 12 candidate encodings, decode file by encoding, 100% client-side",
+					Path:        "/tools/encoding-converter",
+					Icon:        "translate",
+					New:         true,
+					Category:    "编码转换",
+				},
 			},
 		},
 		{
