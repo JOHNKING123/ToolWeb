@@ -2354,6 +2354,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "heart_rate_zones",
+					Name:        "心率区间计算器",
+					Description: "心率区间计算器：年龄＋静息心率（晨起静坐5分钟测量）＋可选实测最大心率，Tanaka（208−0.7×年龄）／Fox（220−年龄）／实测值三公式可选，Max% 与 Karvonen 心率储备法双口径，五区间 bpm 上下限（Z1 恢复 50–60%／Z2 有氧基础 60–70%／Z3 有氧耐力 70–80%／Z4 乳酸阈值 80–90%／Z5 最大摄氧 90–100%）＋各区间训练说明，示例一键填充＋结果一键复制，localStorage 本地保存，纯前端不上传 · heart rate zones calculator: max HR formulas (Tanaka/Fox/measured), Max% & Karvonen methods, five training zones, 100% client-side",
+					Path:        "/tools/heart-rate-zones",
+					Icon:        "monitor_heart",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

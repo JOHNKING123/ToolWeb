@@ -1,0 +1,152 @@
+{{define "heart_rate_zones"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心率区间计算器 - 最大心率公式/Karvonen五区间一键算 | 程序员工具箱</title>
+    <meta name="description" content="免费在线心率区间计算器：输入年龄＋静息心率（可选实测最大心率），Tanaka（208−0.7×年龄）／Fox（220−年龄）／实测值三公式可选，Max% 与 Karvonen 心率储备法双口径，输出 Z1 恢复～Z5 最大摄氧五区间 bpm 上下限＋各区间训练说明，示例一键填充＋结果一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="心率区间计算器,最大心率,静息心率,Karvonen,心率储备法,Tanaka公式,Fox公式,运动心率区间,跑步心率,heart rate zones,max heart rate,karvonen">
+    <meta property="og:title" content="心率区间计算器 - 最大心率公式/Karvonen五区间">
+    <meta property="og:description" content="年龄＋静息心率→五区间 bpm 上下限＋训练说明，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/heart-rate-zones">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/heart-rate-zones">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "心率区间计算器",
+      "description": "免费在线心率区间计算器：年龄＋静息心率（可选实测最大心率），Tanaka／Fox／实测值三公式，Max% 与 Karvonen 双口径，输出 Z1～Z5 五区间 bpm 上下限＋训练说明，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/heart-rate-zones",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .hrz-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .hrz-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .hrz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .6rem; }
+        @media (max-width: 640px) { .hrz-grid { grid-template-columns: 1fr; } }
+        .hrz-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+        .hrz-field label { color: #374151; font-weight: 600; }
+        .hrz-field input[type="number"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; }
+        .hrz-field input[type="number"]:focus { outline: none; border-color: var(--primary-color); }
+        .hrz-field input[type="number"]:disabled { background: #f3f4f6; color: #9ca3af; }
+        .hrz-radio-group { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .4rem; font-size: .92rem; color: #374151; }
+        .hrz-radio-group label { display: flex; align-items: center; gap: .35rem; cursor: pointer; }
+        .hrz-section-title { margin: 1rem 0 .2rem; font-size: .95rem; color: #374151; font-weight: 600; }
+        .hrz-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .hrz-maxhr { font-size: 2.2rem; font-weight: 700; color: var(--primary-color); text-align: center; margin-top: .4rem; }
+        .hrz-maxhr small { font-size: .95rem; font-weight: 400; color: #6b7280; }
+        .hrz-method-note { text-align: center; color: #6b7280; font-size: .85rem; margin-top: .3rem; }
+        .hrz-zone { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .7rem .9rem; margin-top: .6rem; background: #fff; }
+        .hrz-zone-head { display: flex; align-items: center; gap: .5rem; font-size: .95rem; }
+        .hrz-badge { color: #fff; font-weight: 700; font-size: .8rem; border-radius: .35rem; padding: .1rem .45rem; }
+        .hrz-range { margin-left: auto; color: #6b7280; font-size: .85rem; }
+        .hrz-bpm { font-size: 1.35rem; margin-top: .3rem; color: #111827; }
+        .hrz-bpm small { font-size: .85rem; color: #6b7280; font-weight: 400; }
+        .hrz-bar { height: .5rem; background: #f3f4f6; border-radius: .25rem; margin-top: .4rem; overflow: hidden; }
+        .hrz-bar i { display: block; height: 100%; border-radius: .25rem; }
+        .hrz-desc { margin-top: .45rem; font-size: .88rem; color: #4b5563; line-height: 1.7; }
+        .hrz-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .hrz-limit b { color: #374151; }
+        #hrz-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>❤️ 心率区间计算器</h1>
+            <p>年龄＋静息心率 → Z1～Z5 五区间 bpm 上下限＋训练说明，纯前端本地计算</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="hrz-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>输入</h3>
+                <div class="hrz-grid">
+                    <div class="hrz-field">
+                        <label for="hrz-age">年龄（岁，必填）</label>
+                        <input id="hrz-age" type="number" min="1" max="120" step="1" placeholder="如 30">
+                    </div>
+                    <div class="hrz-field">
+                        <label for="hrz-rest">静息心率（bpm，必填）</label>
+                        <input id="hrz-rest" type="number" min="25" max="120" step="1" placeholder="如 60">
+                    </div>
+                </div>
+                <div class="hrz-info">静息心率请以<b>晨起静坐 5 分钟</b>后测量的值为准（真限制③）。</div>
+
+                <div class="hrz-section-title">最大心率公式（三选一）</div>
+                <div class="hrz-radio-group">
+                    <label><input type="radio" name="hrz-formula" value="tanaka" checked> Tanaka（208−0.7×年龄）</label>
+                    <label><input type="radio" name="hrz-formula" value="fox"> Fox（220−年龄）</label>
+                    <label><input type="radio" name="hrz-formula" value="measured"> 实测值（自行填写）</label>
+                </div>
+                <div class="hrz-grid" style="margin-top:.5rem;">
+                    <div class="hrz-field">
+                        <label for="hrz-measured">实测最大心率（bpm，选「实测值」时必填）</label>
+                        <input id="hrz-measured" type="number" min="100" max="230" step="1" placeholder="如 188" disabled>
+                    </div>
+                </div>
+
+                <div class="hrz-section-title">计算口径（二选一）</div>
+                <div class="hrz-radio-group">
+                    <label><input type="radio" name="hrz-method" value="maxpct" checked> Max%（区间＝最大心率×强度%）</label>
+                    <label><input type="radio" name="hrz-method" value="karvonen"> Karvonen 心率储备法（考虑静息心率）</label>
+                </div>
+                <div class="hrz-error" id="hrz-err"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;display:none;" id="hrz-result">
+                <h3>五区间结果</h3>
+                <div class="hrz-maxhr" id="hrz-maxhr"></div>
+                <div class="hrz-method-note" id="hrz-method-note"></div>
+                <div id="hrz-zones"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="hrz-actions" style="margin-top:0;">
+                    <button class="btn btn-secondary" id="hrz-sample">示例一键填充</button>
+                    <button class="btn btn-secondary" id="hrz-copy">一键复制结果</button>
+                    <button class="btn btn-secondary" id="hrz-clear">清空</button>
+                </div>
+                <div class="hrz-info">输入自动保存到浏览器本地（localStorage），下次打开自动恢复；所有计算只在你的浏览器内完成，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="hrz-limit">
+                    <li><b>① 年龄公式是群体统计估计：</b>Tanaka／Fox 公式来自人群回归统计，个体实际最大心率可差 <b>±10~15 bpm</b>，有条件以实测值为准；结果<b>仅供参考</b>。</li>
+                    <li><b>② 非医疗建议：</b>本工具不是医疗器械、不构成医疗建议；运动中出现<b>胸痛、头晕、呼吸困难</b>等症状，须<b>立即停止运动并就医</b>。</li>
+                    <li><b>③ 静息心率测量口径：</b>请以<b>晨起静坐 5 分钟</b>后测量的静息心率为准；咖啡因、熬夜、生病、服药都会让静息心率偏高。</li>
+                    <li><b>④ 纯本地计算：</b>年龄、心率等健康数据只在你的浏览器内计算，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；结果<b>仅供参考</b>。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="hrz-info">
+                    <b>第一步：</b>填年龄与静息心率（晨起静坐 5 分钟测量值）。<br>
+                    <b>第二步：</b>选最大心率公式——Tanaka（208−0.7×年龄，推荐）／Fox（220−年龄）／实测值（运动手表/心率带测得，选此项后填写）。<br>
+                    <b>第三步：</b>选计算口径——Max% 直接按最大心率百分比划分；Karvonen 心率储备法把静息心率也算进去（目标＝(最大心率−静息心率)×强度%＋静息心率），对静息心率偏高/偏低的人更准。<br>
+                    <b>看结果：</b>Z1 恢复区～Z5 最大摄氧区五个区间的 bpm 上下限实时算出，每个区间附训练要点与体感描述；示例按钮一键填入 30 岁/静息 60 的 Karvonen 示例。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="hrz-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/heart_rate_zones.js?v=1"></script>
+</body>
+{{end}}

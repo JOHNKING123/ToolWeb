@@ -1,3 +1,82 @@
+## 今日任务（2026-11-03 21:38 · PM 选定轮，接通用调研第二百一十三轮）
+
+**选定：心率区间计算器（heart_rate_zones）** — 本轮唯一任务（新工具）。
+
+**顺位**：213 轮 Top3 第三顺位（「无硬伤不跳过、Top3 顺位递进」惯例下**裁定跳过首席、备选不晋升**，理由见下）。
+
+**PM 裁定跳过首席年假拼假优化器的硬依据**（19:37 PM 轮裁定逻辑沿用）：
+1. 硬伤**仍未消解**：需内置国务院法定节假日/调休数据表且每年更新（维护负担），213 研究轮明确「本轮无新信号消解硬伤」。
+2. **时间窗口仍打折**：今日 2026-11-03，2027 年放假安排尚未公布（通常 11 月下旬）；现在内置数据表只能填 2026（已过期）或让用户手动录入——工具核心价值（开箱即用拼假攻略）当下打折。
+3. 顺位可以让，但只让「当前时间窗口硬伤卡死的项」，PM 定序权行使有记录依据。
+
+**PM 裁定 CSV 编辑器不晋升首席的硬依据**（15:00 PM 轮裁定维持）：小-中难度，一天高质量交付风险高（可编辑表格的单元格编辑/增删行列/分隔符三选/超大文件性能，一天内做到高质量风险未消解）；顺位备选留池维持。
+
+**PM 独立零重叠实测（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造，已记入 AGENTS.md）**：
+- ASCII：`heart_rate`／`heartrate` 全站 **0 命中**。
+- CJK「心率」（chr(0x5FC3)+chr(0x7387) 运行时构造）全站 **0 命中**。
+- Icon 候选：**`monitor_heart`（0 占用，首选）**／`favorite`（0 占用，备选）；开发轮用精确值复测锁定全库唯一。
+
+**选定理由**：① 零外部数据依赖——Tanaka/Fox/Karvonen 全部算法确定性可逐字锁定，无年假工具的「每年更新数据表」维护负担；② 独立信号强——runninggearlab／runcalcs／runningversity／calcsuit／freecalculatortool 五个心率区间计算器站点（213 轮 2026-11-03 检索；Max HR／Karvonen 双口径＋五区间模型口径一致）；③ 一天可高质量交付——纯前端小难度，符合 21:00 轮「优先小难度纯前端」要求；④ 方向合规——运动健康类工具，无泛财务/生活计算器扩展禁区冲突（10-18 方向修正）；⑤ 真限制可明示——年龄公式群体估计 ±10~15 bpm、非医疗建议、胸痛头晕须就医。
+
+**品类归位**：注册到「生活工具」类目（time_decimal 同类目；站内暂无运动健康专属类目）；New: true；独立交付（站内无跑步/健康相关工具可互链，暂不强凑互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 输入：年龄（必填）、静息心率（必填，晨起静坐 5 分钟测量）、实测最大心率（可选；不填则按公式估算）② 最大心率公式三选一：Tanaka（208−0.7×年龄）／Fox（220−年龄）／实测值 ③ 计算口径二选一：Max%（区间＝最大心率×强度%）／Karvonen 心率储备法（目标＝(最大心率−静息心率)×强度%＋静息心率）④ 输出：五区间 bpm 上下限（Z1 恢复 50–60%／Z2 有氧基础 60–70%／Z3 有氧耐力 70–80%／Z4 乳酸阈值 80–90%／Z5 最大摄氧 90–100%）＋各区间训练说明（适用训练/体感描述）⑤ 示例一键填充＋一键复制结果＋localStorage 本地保存（无需登录）⑥ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.HeartRateZones 下，module.exports 同步导出）**：
+  - `maxHeartRate(age, method)` → number（method 'tanaka'/'fox'；age 非法 err.field='age'）。
+  - `karvonenZones(maxHR, restHR)` → 五区间数组（restHR 非法或 ≥maxHR 时 err.field='restHR'）。
+  - `maxPctZones(maxHR)` → 五区间数组（maxHR 非法 err.field='maxHR'）。
+  - `zoneDescriptions()` → 五区间训练说明（纯静态数据）。
+  - 区间边界连续性：zone[n].low === zone[n-1].high（整数修约后允许 ±1）。
+- **真限制四条页面明示**：① 年龄公式为群体统计估计，个体可差 ±10~15 bpm，仅供参考；② 本工具非医疗建议，出现胸痛/头晕/呼吸困难等症状须立即停止运动并就医；③ 静息心率以晨起静坐 5 分钟测量值为准；④ 纯前端本地计算、不上传健康数据。
+- **改动文件**：tools/categories.go（生活工具类目新增 heart_rate_zones 条目，Path 282→**283**，Icon `monitor_heart`，开发轮精确值复测锁定全库唯一）／templates/heart_rate_zones.html（新）／static/js/heart_rate_zones.js（新）／tests/heart_rate_zones.test.js（新）／全量旧 tests Path 断言 282→283 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥80 断言全过（Tanaka 208−0.7×30=187／Fox 220−30=190；Karvonen (190−60)×0.7＋60=151；五区间边界连续性；年龄/静息心率非法与 restHR≥maxHR 抛错；err.field 全覆盖；模板零外部资源静态检查）② 全量 tests/*.test.js 168→**169** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/heart-rate-zones 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+---
+
+## 今日任务（2026-11-03 21:00 · 通用调研第二百一十三轮，接百分比/成绩计算器交付轮）
+
+**交付状态**：11-03 通用调研第二百一十三轮（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身开发，不扩展泛财务/生活计算器）。**百分比/成绩计算器交付闭环**（a104c69 新增：percentage_calc，Path 281→**282**，tests/percentage_calc.test.js 123 断言全过；templates/percentage_calc.html＋static/js/percentage_calc.js＋tests/percentage_calc.test.js 均存在；全量 tests/*.test.js **168 个**；学习工具类目，与 gpa_calculator/final_grade/score_stats 双向互链；候选池划出）。**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口保持；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排未公布（时间窗口打折）；纯前端小难度；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor`/`csv-edit` 全 0 命中；csv_table_viewer 明确只查看不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**心率区间计算器→第三顺位（本轮从新信号晋升**；独立信号强：runninggearlab／runcalcs／runningversity／calcsuit／freecalculatortool 五个心率区间计算器站点（2026-11-03 检索，均为 Max HR／Karvonen 双口径＋五区间模型）；站内零重叠实测：`heart_rate`/`heartrate` 全 0 命中，CJK「心率」（chr(0x5FC3)+chr(0x7387) 运行时构造）全站 0 命中；真缺口确凿；痛点：跑步/骑行按心率区间训练是刚需，年龄公式（Tanaka 208−0.7×年龄／Fox 220−年龄）＋Karvonen 心率储备法手动算 5 区间易错；实现：年龄/静息心率/实测最大心率输入→三公式可选→五区间 bpm 输出＋区间说明；纯前端小难度；真限制：年龄公式为群体估计、非医疗建议、胸痛头晕等症状须就医须明示；运动健康类目，方向合规；PM 可裁定；Icon 待开发轮精确值复测锁定全库唯一）。本轮只做新信号挖掘与候选池维护，不动排期定序（定序权归 PM 决策轮）；21:00 轮，优先小难度纯前端。
+
+**本轮三件事**（21:00 全网调研，通用方向）：
+1. 交付确认：git log 头部 a104c69（百分比/成绩计算器新增）／7eb546e（GPA 绩点计算器新增）／db0db1a（中文编码转换器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **282**；`ls templates/percentage_calc.html static/js/percentage_calc.js tests/percentage_calc.test.js` **均存在**；tests/*.test.js **168 个**；本地分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**一次成功**（known_hosts 19:30 轮已修复）；本地 HEAD a104c69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）。
+2. **零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+   - 百分比/成绩计算器：已交付（a104c69，Path 281→282，123 断言全过）——划出候选池。
+   - 年假拼假优化器：`holiday`/`vacation`/`pto` 仅 calendar.js 口径（逐轮已确认）；CJK 年假/拼假全站 0 命中——真缺口保持（首席顺位维持；19:37 PM 轮裁定跳过维持；硬伤：调休数据表年更新＋2027 安排未公布）。
+   - CSV 编辑器：`csv_editor`/`csv-edit` 全 0 命中；csv_table_viewer（明确只查看不编辑）／csv_json／paste_table_to_csv 均不重叠——真缺口保持（备选顺位维持；15:00 PM 轮裁定留池维持）。
+   - **心率区间计算器（新信号晋升）**：`heart_rate`/`heartrate` 全 **0 命中**；CJK「心率」（chr(0x5FC3)+chr(0x7387) 运行时构造）全站 **0 命中**——真缺口确凿，晋升第三顺位。
+   - **三角形几何求解器（新信号，P3 留池）**：`triangle` 命中仅 css_clip_path_generator（三角形预设形状）／fps_gpu_benchmark（WebGL 三角形数量）／vendor，逐行 codepoint 验真确认为非求解器口径；`triangle_solver` 全 0 命中——真缺口确凿；痛点：学生/工程已知两边一角等条件求其余边角面积，手动算易错；实现：SSS/SAS/ASA/AAS 四种已知条件→正弦/余弦定理解剩余边角＋面积周长；纯前端小难度；P3 留池（信号源 dev.to 1024toolkit 2026-10-14「triangle geometry」）。
+   - **两地距离计算器（新信号，P3 留池）**：`great_circle`/`greatcircle` 全 0 命中；CJK「大圆距离」（chr(0x5927)+chr(0x5706)+chr(0x8DDD)+chr(0x79BB) 运行时构造）全站 0 命中——真缺口确凿；痛点：出差/旅行估算两地飞行距离；实现：两地经纬度输入→Haversine 大圆距离＋初始方位角；纯前端小难度；P3 留池（信号源同上「great-circle distance」）。
+   - **BMI 体质指数计算器（新信号，P3 留池）**：`"bmi"` 工具 ID 全站 0 命中（`bmi` 子串 25 命中全部为 "submit" 误报）；CJK「体质指数」（chr(0x4F53)+chr(0x8D28)+chr(0x6307)+chr(0x6570) 运行时构造）全站 0 命中——真缺口确凿；痛点：身高体重→BMI＋WHO 分级是健康类最高频查询之一；实现：身高体重输入→BMI＋分级＋健康提示；纯前端小难度；真限制：BMI 为筛查工具非诊断须明示；P3 留池（信号源同上 health cluster）。
+   - **切割清单优化（新信号，弱观察）**：`cut_list`/`cutlist` 全 0 命中——真缺口确凿；痛点：装修/木工按板材长度排切割方案减少废料（一维装箱）；实现：原料长度＋需求清单→贪心排样输出切割方案＋利用率；纯前端中难度；小众场景，仅记录（信号源同上「cut lists」）。
+   - V2EX t/1254227 快推 EasyPost（2026-11-03；Chrome 扩展＋Native Messaging 多平台分发）→Chrome 扩展口径**确认消解**。
+   - Indie Radar 2026-11-02 增量：handy-transcribe（本地语音转写 CLI，76 模型）→CLI＋本地模型口径**确认消解**；搭手 1.0（桌面效率工具）→桌面 App 口径**确认消解**；IPX（IP 质量检测站）→需后端 IP 库**确认消解**；self-hosted-action-runner／alfred-ghostty／apptrace／SweepSA（SDR 硬件）→全部**确认消解**；Galta／LazyForm／歌语／AI 说唱视频／Pier→212 轮已消解维持。
+   - dev.to 1024toolkit（2026-10-14；45 tiny tools，1024toolkit.com）：sql_formatter／mock_data_generator／subnet_calculator→站内已交付**确认消解**；cron／regex／timestamp／timezone→站内已有口径**确认消解**；compound interest／savings-rate／options payoff／position sizing→泛财务口径、方向修正低优先**确认消解**；BMI／BMR／TDEE／heart-rate zones／A1C→health cluster（本轮新候选信号）；triangle geometry／great-circle distance／cut lists／concrete volume→engineering cluster（本轮新候选信号；concrete volume 场景过窄仅记录）。
+   - Reddit／dev.to 财务计算器信号（compound interest／mortgage／retirement／ROI；2026-11-03 检索：wildandfreetools／PercentMaster／fi-calc.com）→泛财务口径、用户 10-18 方向修正低优先**确认消解**。
+   - Show HN：本轮未检索到新的单页纯前端工具信号（维持观察；11-02 HN 头版多为语言/AI/agent 口径）。
+3. **推荐 Top3**（排期建议；尊重 PM 定序；「无硬伤不跳过、Top3 顺位递进」惯例）：
+1. **年假拼假优化器** — 首席（顺位递进维持；19:37 PM 轮裁定跳过维持；站内零重叠实测维持：`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口确凿；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；生活工具类目，方向合规；**硬伤维持未消解**：数据表年更新维护负担＋2027 年放假安排尚未公布（时间窗口打折）；**PM 可裁定是否立项**；Icon 待开发轮精确值复测锁定全库唯一）。
+2. **CSV 编辑器** — 备选（顺位递进维持；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；站内零重叠实测：`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（单元格双击修改、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选（逗号/分号/制表符）须明示；**PM 可裁定是否晋升首席**；Icon 待开发轮精确值复测锁定全库唯一）。
+3. **心率区间计算器** — 第三顺位（**本轮从新信号晋升**；独立信号强：runninggearlab／runcalcs／runningversity／calcsuit／freecalculatortool 五个心率区间计算器站点（2026-11-03 检索；口径一致：Max HR（Tanaka 208−0.7×年龄／Fox 220−年龄）或 Karvonen 心率储备法→五区间 50/60/70/80/90/100%）；站内零重叠实测：`heart_rate`/`heartrate` 全 0 命中，CJK「心率」全站 0 命中（codepoint 验真）；真缺口确凿；痛点：跑步/骑行按心率区间训练是刚需，手动套公式算 5 区间易错；实现：年龄／静息心率／实测最大心率输入→三公式可选（Tanaka／Fox／实测值）＋Max%／Karvonen 双口径→五区间 bpm 输出＋各区间训练说明；纯前端小难度；真限制：年龄公式为群体估计（个体可差 ±10~15 bpm）、非医疗建议、胸痛头晕等症状须就医须明示；运动健康类目，方向合规；**PM 可裁定**；Icon 待开发轮精确值复测锁定全库唯一）。
+
+其余观察项保持原状：三角形几何求解器（**本轮新增 P3 留池**；`triangle_solver` 真缺口；dev.to 1024toolkit 2026-10-14 信号；纯前端小难度）／两地距离计算器（**本轮新增 P3 留池**；`great_circle` 真缺口；同上信号；纯前端小难度）／BMI 体质指数计算器（**本轮新增 P3 留池**；`"bmi"` 工具 ID 真缺口；同上 health cluster 信号；纯前端小难度；真限制：筛查工具非诊断须明示）／年龄/日期差计算器（StudyKit 信号印证维持；P3 留池；`age_calc`/`date_diff` 真缺口；方向修正边界相邻低优先）／切割清单优化（**本轮新增弱观察**；一维装箱中难度；小众仅记录）／tubox AI 抠图/AI 放大（211 轮观察维持；需本地模型，价值待验证）／StudyKit APA/MLA 引文生成器（211 轮观察维持；国标口径已交付，差异化弱）／临时邮箱（观察，需后端；纯前端无法实现；低优先仅记录）／八字排盘（观察；V2EX「小道」2026-11-01 信号；玄学小众仅记录）／JSON 节点图可视化（弱观察 P3 留池；json_parser 树形视图已部分覆盖）／小红书封面生成器（弱观察 P3 留池；独立立项价值待 PM 裁定）／网名生成器（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／打字练习工具（19:30 PM 轮裁定维持暂不立项，低优先观察保持）／屏幕尺子（17:00 PM 轮裁定维持暂不立项，低优先观察保持，PM 可裁定复活）／其余既有观察项均保持留池／观察原状。
+
+**通用候选表增量**（第二百一十三轮：百分比/成绩计算器交付闭环（a104c69 新增：percentage_calc，Path 281→**282**，tests/percentage_calc.test.js 123 断言全过；templates/percentage_calc.html＋static/js/percentage_calc.js＋tests/percentage_calc.test.js 均存在；全量 tests/*.test.js **168 个**；候选池划出）；**Top3 递进链更新**：**年假拼假优化器→首席**（顺位递进维持；19:37 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 口径不重叠；CJK 年假/拼假全站 0 命中；真缺口保持；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布；纯前端小难度；PM 可裁定是否立项）／**CSV 编辑器→备选**（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；纯前端小-中难度；PM 可裁定是否晋升首席）／**心率区间计算器→第三顺位**（**本轮从新信号晋升**；runninggearlab／runcalcs／runningversity／calcsuit／freecalculatortool 五个独立站点印证（2026-11-03 检索；Max HR／Karvonen 双口径＋五区间模型）；`heart_rate`／「心率」全 0 命中（codepoint 验真）；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号 9 项**：V2EX t/1254227 快推 EasyPost→Chrome 扩展口径确认消解／Indie Radar 2026-11-02 增量（handy-transcribe CLI／搭手 1.0 桌面 App／IPX 需后端／self-hosted-action-runner／alfred-ghostty／apptrace／SweepSA 硬件）→全部确认消解／dev.to 1024toolkit（2026-10-14；45 tiny tools）：sql_formatter／mock_data_generator／subnet_calculator→站内已交付确认消解，cron／regex／timestamp／timezone→站内已有口径确认消解，compound／savings／options→泛财务方向修正低优先确认消解，**health cluster（心率区间/BMI/BMR/TDEE/A1C）＋engineering cluster（三角形几何/大圆距离/切割清单）→本轮新候选信号（零重叠实测全部真缺口；心率区间晋升第三顺位，三角形几何求解器／两地距离计算器／BMI 体质指数计算器入 P3 留池，切割清单优化弱观察）**／Reddit＋dev.to 财务计算器信号（compound／mortgage／retirement／ROI）→泛财务方向修正低优先确认消解／Show HN→本轮无新单页纯前端信号；本轮 fetch：known_hosts 19:30 轮已修复，**一次成功**，本地 HEAD a104c69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 百分比/成绩计算器 | 已交付划出（a104c69 新增：percentage_calc，Path 281→282，tests/percentage_calc.test.js 123 断言全过；templates/percentage_calc.html＋static/js/percentage_calc.js＋tests/percentage_calc.test.js 均存在；全量 tests/*.test.js 168 个；候选池划出） | — | 已实现 |
+| 年假拼假优化器 | 首席（顺位递进维持；19:37 PM 轮裁定跳过维持；`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径不重叠；CJK 年假/拼假全站 0 命中（codepoint 验真）；真缺口保持；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错（Show HN 2026-10 holiday-optimizer.com：15 天 PTO＋节假日拼出 56 天）；实现：年份选择＋法定节假日/调休数据表＋年假天数→组合优化输出最长连续假期方案；纯前端小难度；真限制：调休数据每年随国务院安排更新、仅供参考须明示；**硬伤维持**：数据表年更新维护负担＋2027 年放假安排未公布（时间窗口打折）；生活工具类目，方向合规；PM 可裁定是否立项；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P1（顺位；PM 裁定跳过维持） |
+| CSV 编辑器 | 备选（顺位递进维持；15:00 PM 轮裁定：小-中难度、一天高质量交付风险高、备选留池维持；`csv_editor`/`csv-edit`/「CSV＋编辑」连写全 0 命中；csv_table_viewer 明确声明只查看不编辑（:66 真限制原文）、csv_json（互转口径）、paste_table_to_csv（粘贴转 CSV 口径）均不重叠；真缺口确凿；痛点：快速改几格 CSV 数据不想开 Excel/WPS（WPS 部分编辑功能要会员；掘金 AppKit 2026-10-22 信号）；实现：粘贴/导入 CSV→可编辑表格（双击改单元格、增删行列）→导出 CSV 下载；纯前端小-中难度；真限制：超大文件性能、分隔符三选须明示；PM 可裁定是否晋升首席；Icon 待开发轮精确值复测锁定全库唯一） | 小-中 | P2（顺位；备选留池） |
+| 心率区间计算器 | 第三顺位（**本轮从新信号晋升**；独立信号强：runninggearlab／runcalcs／runningversity／calcsuit／freecalculatortool 五个心率区间计算器站点（2026-11-03 检索；Max HR／Karvonen 双口径＋五区间模型）；站内零重叠实测：`heart_rate`/`heartrate` 全 0 命中，CJK「心率」全站 0 命中（codepoint 验真）；真缺口确凿；痛点：跑步/骑行按心率区间训练是刚需，年龄公式（Tanaka／Fox）＋Karvonen 心率储备法手动算 5 区间易错；实现：年龄／静息心率／实测最大心率→三公式可选＋Max%／Karvonen 双口径→五区间 bpm＋训练说明；纯前端小难度；真限制：年龄公式为群体估计（个体可差 ±10~15 bpm）、非医疗建议、胸痛头晕等症状须就医须明示；运动健康类目，方向合规；PM 可裁定；Icon 待开发轮精确值复测锁定全库唯一） | 小 | P3（新晋升；PM 可裁定） |
+
+**归档说明**：本轮为 11-03 通用调研第二百一十三轮——百分比/成绩计算器交付闭环（a104c69；`/tools/percentage-calc` 已注册；全量 **282 Path**；tests/percentage_calc.test.js 123 断言全过；全量 tests/*.test.js **168 个**），候选池划出；**Top3 递进链更新**：年假拼假优化器→首席（顺位递进维持；19:37 PM 轮裁定跳过维持；CJK 年假/拼假全站 0 命中；真缺口保持；硬伤：调休数据表年更新维护负担＋2027 年放假安排未公布；PM 可裁定是否立项）／CSV 编辑器→备选（顺位递进维持；15:00 PM 轮裁定备选留池维持；`csv_editor` 全 0 命中；csv_table_viewer 明确不编辑不重叠；真缺口保持；PM 可裁定是否晋升首席）／**心率区间计算器→第三顺位**（**本轮从新信号晋升**；runninggearlab／runcalcs／runningversity／calcsuit／freecalculatortool 五个独立站点印证；`heart_rate`／「心率」全 0 命中（codepoint 验真）；真缺口确凿；纯前端小难度；PM 可裁定）；**本轮新信号 9 项**（V2EX t/1254227 快推 EasyPost→Chrome 扩展口径确认消解／Indie Radar 2026-11-02 增量（handy-transcribe CLI／搭手 1.0 桌面 App／IPX 需后端／self-hosted-action-runner／alfred-ghostty／apptrace／SweepSA 硬件）→全部确认消解／dev.to 1024toolkit（2026-10-14；45 tiny tools）：sql_formatter／mock_data_generator／subnet_calculator→站内已交付确认消解，cron／regex／timestamp／timezone→站内已有口径确认消解，compound／savings／options→泛财务方向修正低优先确认消解，**health cluster＋engineering cluster→本轮新候选信号**（零重叠实测全部真缺口；心率区间晋升第三顺位，三角形几何求解器／两地距离计算器／BMI 体质指数计算器入 P3 留池，切割清单优化弱观察）／Reddit＋dev.to 财务计算器信号→泛财务方向修正低优先确认消解／Show HN→本轮无新单页纯前端信号）；本轮 fetch：known_hosts 19:30 轮已修复，一次成功，本地 HEAD a104c69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：known_hosts 19:30 轮已修复，**一次成功**；本地 HEAD a104c69 与 origin/muse/dev-20260929 同头为最新，远端无新提交；仅做读操作＋BACKLOG.md 顶部追加，未提交不推送，随 PM／开发轮次提交，沿用研究轮惯例）；git log 头部 a104c69（百分比/成绩计算器新增）／7eb546e（GPA 绩点计算器新增）／db0db1a（中文编码转换器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **282**；`ls templates/percentage_calc.html static/js/percentage_calc.js tests/percentage_calc.test.js` **均存在**；tests/*.test.js **168 个**；Top3 候选重叠复核（**百分比/成绩计算器**：已交付（/tools/percentage-calc，Path 281→282，123 断言全过），划出候选池；**年假拼假优化器**：`holiday`/`vacation`/`pto` 仅 static/js/calendar.js 日历节假日展示口径（逐轮已确认），CJK 年假/拼假全站 **0 命中**（python chr 运行时构造＋codepoint 验真），真缺口保持（19:37 PM 轮裁定跳过维持，硬伤：调休数据表年更新＋2027 安排未公布）；**CSV 编辑器**：`csv_editor`/`csv-edit` 全 **0 命中**，csv_table_viewer（:66 明确只查看不编辑）／csv_json／paste_table_to_csv 均不重叠，真缺口保持（15:00 PM 轮裁定备选留池维持）；**心率区间计算器**：`heart_rate`/`heartrate` 全 **0 命中**，CJK「心率」（chr(0x5FC3)+chr(0x7387) 运行时构造）全站 **0 命中**，真缺口确凿，本轮从新信号晋升第三顺位）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-03 19:50 · 开发轮，接 19:37 PM 选定轮）
 
 **交付：百分比/成绩计算器（percentage_calc）** — 本轮唯一任务（新工具），已实现并提交。
