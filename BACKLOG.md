@@ -1,3 +1,64 @@
+---
+
+## 今日任务（2026-11-04 15:38 · PM 选定轮，接通用调研第二百二十二轮）
+
+**选定：复古文字特效生成器（retro_text_fx）** — 本轮唯一任务（新工具）。
+
+**顺位**：222 轮 Top3 三席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **首席有名无实**：年假拼假优化器（221 轮第二顺位→首席递进）硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），PM 本轮**第六度裁定跳过**（19:37／21:38／217 轮／220 轮／221 轮／本轮）；顺位第二维持，PM 定序权行使有记录依据。
+2. **次席风险未消解**：CSV 编辑器小-中难度，一天高质量交付风险高（单元格双击编辑／增删行列／分隔符三选／超大文件性能），备选留池维持，不立项。
+3. **三席无硬伤**：纯前端小难度（canvas 2D 文字渲染＋预设特效库＋PNG 一键导出），一天可高质量交付；零外部依赖、无年假工具式年更新数据表负担。
+4. **需求形态印证**：Show HN TitleArt（2026-11-02）同形态（1997 复古风文字特效＋canvas 导出 PNG）印证需求真实存在。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造，已记入 AGENTS.md）**：
+- ASCII：`retro_text_fx`／`retro-text-fx`／`retroTextFx`／`RetroTextFx` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD 033e21d，291 Path，177 tests）。
+- CJK「复古」（`chr(0x590d)+chr(0x53e4)` 运行时构造）全站 43 命中：均为照片滤镜（css_filter_generator）／像素风转换（pixel_art_converter）／图片复古做旧／复古穿搭 hashtag 等**照片滤镜与穿搭口径**，无文字排印特效 PNG 口径——真缺口确凿。
+- 相邻口径辨析：站内已有 css_text_shadow_generator（CSS 文字阴影生成器）为**输出 CSS 代码的开发工具口径**（图层编辑器＋复制 text-shadow／下载 css），本工具为**输出 PNG 图片的创作工具口径**（社交头像／海报／封面），交付物与受众均不同，互补不重叠；ascii_art_generator（字符画）／fancy_fonts（Unicode 花体）口径不重叠维持。
+- Icon 候选：**`auto_fix`（首选；`"auto_fix"` 在 tools/categories.go 精确值 0 命中）**／`brush`（备选，0 命中）／`flare`（备选，0 命中）；开发轮用精确值复测锁定全库唯一。
+
+**品类归位**：注册到「图片处理」类目（与 ascii_art_generator 同类目，输出均为图片；fancy_fonts 在「生活工具」为纯文本口径，本工具输出 PNG 不归彼处）；New: true；本轮**无硬编码互链要求**（与 css_text_shadow_generator 页面内文字互引即可，不做硬编码互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 文字输入（多行支持）＋字号／字体（系统字体）／字间距 ② 预设特效库 ≥8 种：彩虹渐变／粗描边／长阴影／3D 立体／霓虹辉光／金属铬渐变／复古褪色／双色叠印（90s 复古排印风）③ 参数微调：渐变方向、阴影距离／模糊、描边宽度、辉光强度 ④ canvas 实时预览＋背景色／透明底切换 ⑤ PNG 一键导出（1x／2x 高清）＋复制 PNG 到剪贴板 ⑥ 示例一键填充＋一键复制预设参数＋纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.RetroTextFx 下，module.exports 同步导出；canvas 渲染只做浏览器端，测试只覆盖纯函数）**：
+  - `presetList()` → [{name, label}...]（长度 ≥8，含 rainbow／outline／long_shadow／neon）。
+  - `getPreset(name)` → {fill:{type:'gradient'|'solid',stops?|color}, stroke:{width,color}|null, shadows:[{offsetX,offsetY,blur,color}], glow?}（name 未知 err.field='name'）。
+  - `fitFontSize(text, maxWidth, baseSize)` → fontSize（text 为空 err.field='text'；maxWidth≤0 err.field='maxWidth'；长文本缩小、短文本不超 baseSize）。
+  - `sanitizeFileName(text)` → string（去非法字符；空文本回退 'retro-text'）。
+- **真限制三条页面明示**：① canvas 2D 渲染依赖浏览器实现，不同浏览器抗锯齿与渐变细节略有差异；② 中文／特殊字体渲染依赖系统已安装字体；③ PNG 在本地生成、不上传任何输入。
+- **改动文件**：tools/categories.go（图片处理类目新增 retro_text_fx 条目，Path 291→**292**，Icon `auto_fix` 首选／`brush`/`flare` 备选，开发轮精确值复测锁定全库唯一）／templates/retro_text_fx.html（新）／static/js/retro_text_fx.js（新）／tests/retro_text_fx.test.js（新）／全量旧 tests Path 断言 291→292 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（presetList 长度 ≥8 且含 rainbow/neon/outline；getPreset('rainbow') 渐变 stops 精确值；getPreset 未知名抛错 err.field='name'；fitFontSize 长文本缩小／短文本不超基线／空文本与 maxWidth≤0 抛错 err.field 全覆盖；sanitizeFileName 非法字符清理与空回退；模板零外部资源静态检查）② 全量 tests/*.test.js 177→**178** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/retro-text-fx 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：复古文字特效生成器→本轮交付（222 研究轮 P3 弱观察晋升三席；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（ASCII 四形全 0 命中；CJK「复古」43 命中均为照片滤镜/穿搭口径；与 css_text_shadow_generator 为 CSS 代码口径互补不重叠）；图片处理类目；Icon auto_fix 首选）／年假拼假优化器→第二顺位（PM 第六度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／CSV 编辑器→备选维持（一天高质量交付风险未消解；超大文件性能）／唱歌音准检测／网页涂鸦画板／决策转盘／社交卡片 OG 预览 P3 弱观察维持（PM 可裁定）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**远端无新提交**，本地 HEAD 033e21d 即最新；工作区未跟踪修改仅 BACKLOG.md 本轮研究轮＋PM 轮追加）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **291**；`ls tests/*.test.js | wc -l` = **177**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：在线可弹钢琴已交付闭环（commit 033e21d，`/tools/online-piano`，Path 总数 290→291，tests 177 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **年假拼假优化器** — 221 轮第二顺位名义维持→首席递进。站内零重叠维持（`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），时间窗口打折；**PM 可裁定是否跳过**（19:37／21:38／217 轮／220 轮／221 轮五度裁定跳过）。
+2. **CSV 编辑器** — 备选顺位递进→次席。15:00 PM 轮裁定逻辑沿用：小-中难度，一天高质量交付风险高（单元格双击编辑/增删行列/分隔符三选/超大文件性能），备选留池→次席推荐，PM 可裁定。
+3. **复古文字特效生成器** — P3 弱观察→三席晋升。Show HN TitleArt（2026-11-02）形态印证：1997 复古风文字特效（彩虹/描边/阴影/霓虹）＋canvas 导出 PNG；站内口径不重叠（ascii_art_generator 为字符画、fancy_fonts 为 Unicode 花体）；纯前端小难度（canvas 2D 文字渲染＋预设特效库＋PNG 导出），一天可高质量交付；SEO：复古文字、复古字体生成器、霓虹文字特效。建议 ID retro_text_fx、Path /tools/retro-text-fx；PM 可裁定。
+
+**新信号扫描**（2026-11-04 13:36~15:36 窗口）：
+- V2EX 创造节点（Indie Radar 11-01/11-02）：handy-transcribe 本地语音转写 CLI→CLI 口径消解；搭手（Win/Mac 效率桌面工具）→桌面口径消解；Galta 网页旁无限画布→笔记＋AI 口径消解；IPX IP 质量检测站→需服务端评分、SaaS 口径消解（proxy_camouflage_check 覆盖自查场景）；LazyForm 浏览器插件（43 种测试表单数据自动填充）→插件口径＋测试数据灵感 mock_data_generator 已交付，消解；歌语（UtaYomi）歌词学习小工具→AI 口径消解；1ms.dog／Papilot／Ghostman／SpriteCanvas／NexusDock／Loris Tunnel／中英八字／Ghostwire／Casnode／Stock Compass／crDesk→220/221 轮既判口径消解维持。
+- freetoolhub.info《10 Best Free Online Tools in 2026》（2026-04-25）：字数统计/图片压缩/密码生成器/二维码/随机数等 10 项→站内全自有覆盖，形态印证消解。
+- boimen.com《Web Tools That Don't Ask for Sign-Ups》：txti（需后端托管）／file.io（需后端）／PhotoMosh（glitch 特效→图片簇已覆盖消解）／Dictation.io 浏览器语音转文字→**realtime_dictation 已交付，形态印证消解**；ASCIIFlow（文本流图）→ascii_art_generator 字符画口径相邻、老牌小众不立项，消解。
+- 中文渠道：云测平台选型（xczcai 11-03）→后端 SaaS 消解；线上评选工具测评→需服务端＋账号，消解。
+- 英文渠道（Show HN 11 月初）：Latch WebMCP、Swurf 刷网站、Revise AI 编辑器→AI／账号／后端口径消解；本轮无新的单页纯前端工具信号。
+
+**候选池变动**：online_piano 交付划出（033e21d，291 Path）；**无新晋候选**（本轮信号全部消解或形态印证）；其余 P1/P2 留池无变化（年假拼假优化器首席递进；CSV 编辑器备选→次席递进；唱歌音准检测／网页涂鸦画板／决策转盘／社交卡片 OG 预览 P3 弱观察维持（复古文字特效已晋升三席）；WPS 候选表保持冻结归档）。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十二轮——在线可弹钢琴交付闭环（033e21d；`/tools/online-piano` 已注册；全量 **291 Path**；tests/online_piano.test.js 新增；全量 tests/*.test.js **177 个**），候选池划出；新信号（V2EX 创造节点 11-01/11-02 约 18 项→全部口径不符消解；freetoolhub 10 工具→自有覆盖消解；boimen 免注册工具单→Dictation.io 形态印证＋其余消解；云测/评选→后端 SaaS 消解；Show HN 本轮无新单页信号）均已消化；WPS 候选表保持冻结归档；全库 291 Path 核对无重叠（Top3 建议 ID：年假拼假优化器 ID 待定／CSV 编辑器 ID 待定／retro_text_fx；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 又被清空——老问题第八次复现，ssh 自动重建后一次成功）；`git log` 头部 033e21d（在线可弹钢琴交付）／11e0211（蛋白质摄入量计算器交付）／3fc0697（跑步配速计算器交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **291**；`ls tests/*.test.js | wc -l` = **177**；本地当前分支 muse/dev-20260929；远端无新提交；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
 ## 今日任务（2026-11-04 13:40 · PM 选定轮，接通用调研第二百二十一轮）
 
 **选定：在线可弹钢琴（online_piano）** — 本轮唯一任务（新工具）。

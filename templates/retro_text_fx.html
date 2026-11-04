@@ -1,0 +1,211 @@
+{{define "retro_text_fx"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>复古文字特效生成器 - 90s 彩虹渐变/霓虹辉光/3D立体/金属铬 canvas 实时渲染 PNG 导出 | 程序员工具箱</title>
+    <meta name="description" content="免费在线复古文字特效生成器：彩虹渐变、粗描边、长阴影、3D 立体、霓虹辉光、金属铬渐变、复古褪色、双色叠印 8 种 90s 预设，canvas 2D 实时渲染，背景色/透明底，渐变方向/阴影距离/模糊/描边宽度/辉光强度可调，PNG 1x/2x 一键导出、复制 PNG 到剪贴板。纯前端本地运行，零上传。">
+    <meta name="keywords" content="复古文字特效,复古字体生成器,霓虹文字,3D立体字,长阴影文字,彩虹渐变字,金属铬字,retro text generator,90s text effect,neon text">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/retro-text-fx">
+    <meta property="og:title" content="复古文字特效生成器 - 90s 八种预设 canvas 实时渲染">
+    <meta property="og:description" content="彩虹渐变/粗描边/长阴影/3D立体/霓虹辉光/金属铬/复古褪色/双色叠印 8 预设，参数可调，PNG 1x/2x 导出。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/retro-text-fx">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"复古文字特效生成器","description":"免费在线复古文字特效生成器：8 种 90s 预设，canvas 2D 实时渲染，背景色/透明底，五参数可调，PNG 1x/2x 导出与复制，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/retro-text-fx","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rt-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .rt-wrap .navbar .material-icons { display: none; }
+        .rt-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .rt-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .rt-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .rt-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .rt-row label { font-size:.92rem; color:#374151; min-width:5.5em; }
+        .rt-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .rt-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .rt-row input[type=text] { padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; min-width:9em; }
+        .rt-row input[type=color] { width:2.6em; height:2em; padding:0; border:1px solid #d1d5db; border-radius:.4rem; cursor:pointer; }
+        .rt-val { font-size:.9rem; color:#111827; min-width:3.5em; font-variant-numeric:tabular-nums; }
+        .rt-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .rt-btn:hover { background:#f3f4f6; }
+        .rt-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .rt-presets { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; }
+        .rt-preset { border:1px solid #e5e7eb; border-radius:.6rem; padding:.8rem .5rem; cursor:pointer; background:#fff; text-align:center; font-size:.9rem; color:#374151; }
+        .rt-preset:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .rt-preset.active { border-color:var(--primary-color); color:var(--primary-color); box-shadow:0 0 0 1px var(--primary-color); }
+        .rt-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .rt-stage { border:1px solid #e5e7eb; border-radius:.7rem; overflow:auto; padding:1.5rem 1rem; text-align:center; background:#f9fafb; }
+        .rt-stage canvas { max-width:100%; height:auto; border-radius:.4rem; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+        .rt-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .rt-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .rt-tip a { color:var(--primary-color); }
+        .rt-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .rt-links a { color:var(--primary-color); font-size:.93rem; }
+        .rt-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        .rt-check { display:flex; align-items:center; gap:.5rem; font-size:.92rem; color:#374151; }
+        @media (max-width:640px) {
+            .rt-row input[type=range] { min-width:100px; }
+            .rt-row label { min-width:4.5em; }
+            .rt-stage { padding:1rem .5rem; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="rt-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🕹️ 复古文字特效生成器</h1>
+            <p>8 种 90s 复古预设，canvas 2D 实时渲染，五参数微调，PNG 1x/2x 导出＋复制 PNG 到剪贴板</p>
+        </div>
+        <div class="tool-content" id="rt-form">
+            <div class="rt-card">
+                <h3>特效预设 <span class="rt-hint">（点击载入，载入后滑杆回到该预设默认值，仍可继续微调）</span></h3>
+                <div class="rt-presets">
+                    <button class="rt-preset" type="button" data-preset="rainbow">🌈 彩虹渐变</button>
+                    <button class="rt-preset" type="button" data-preset="outline">⭕ 粗描边</button>
+                    <button class="rt-preset" type="button" data-preset="longshadow">📐 长阴影</button>
+                    <button class="rt-preset" type="button" data-preset="3d">🧊 3D 立体</button>
+                    <button class="rt-preset" type="button" data-preset="neon">💡 霓虹辉光</button>
+                    <button class="rt-preset" type="button" data-preset="chrome">🪩 金属铬渐变</button>
+                    <button class="rt-preset" type="button" data-preset="vintage">📼 复古褪色</button>
+                    <button class="rt-preset" type="button" data-preset="misprint">🎨 双色叠印</button>
+                </div>
+            </div>
+
+            <div class="rt-card">
+                <h3>文字 <span class="rt-hint">（建议 1–20 字；超长文字会自动缩小字号以完整显示）</span></h3>
+                <div class="rt-row">
+                    <label for="rt-text">文字内容</label>
+                    <input type="text" id="rt-text" value="RETRO 90s" maxlength="60" style="flex:1;min-width:12em;">
+                </div>
+                <div class="rt-row">
+                    <label for="rt-font-size">字号</label>
+                    <input type="range" id="rt-font-size-range" min="16" max="400" step="1" value="120">
+                    <input type="number" id="rt-font-size" min="16" max="400" step="1" value="120">
+                    <span>px</span>
+                </div>
+                <div class="rt-actions">
+                    <button class="rt-btn" id="rt-example" type="button">↺ 载入示例（RETRO 90s 复古）</button>
+                </div>
+                <p class="rt-msg" id="rt-msg"></p>
+            </div>
+
+            <div class="rt-card">
+                <h3>参数微调 <span class="rt-hint">（拖动实时预览；切换预设后回到该预设默认值）</span></h3>
+                <div class="rt-row">
+                    <label for="rt-gradient-angle">渐变方向</label>
+                    <input type="range" id="rt-gradient-angle" min="0" max="360" step="1" value="0">
+                    <span class="rt-val"><span id="rt-gradient-angle-val">0</span>°</span>
+                    <span class="rt-hint">0°=左→右，90°=上→下（仅渐变类预设有效）</span>
+                </div>
+                <div class="rt-row">
+                    <label for="rt-shadow-distance">阴影距离</label>
+                    <input type="range" id="rt-shadow-distance" min="0" max="80" step="1" value="6">
+                    <span class="rt-val"><span id="rt-shadow-distance-val">6</span>px</span>
+                    <span class="rt-hint">长阴影/3D 预设下为层数</span>
+                </div>
+                <div class="rt-row">
+                    <label for="rt-blur">模糊</label>
+                    <input type="range" id="rt-blur" min="0" max="50" step="1" value="0">
+                    <span class="rt-val"><span id="rt-blur-val">0</span>px</span>
+                </div>
+                <div class="rt-row">
+                    <label for="rt-stroke-width">描边宽度</label>
+                    <input type="range" id="rt-stroke-width" min="0" max="50" step="1" value="4">
+                    <span class="rt-val"><span id="rt-stroke-width-val">4</span>px</span>
+                </div>
+                <div class="rt-row">
+                    <label for="rt-glow-strength">辉光强度</label>
+                    <input type="range" id="rt-glow-strength" min="0" max="100" step="1" value="0">
+                    <span class="rt-val"><span id="rt-glow-strength-val">0</span></span>
+                    <span class="rt-hint">霓虹预设下效果最明显</span>
+                </div>
+            </div>
+
+            <div class="rt-card">
+                <h3>背景 <span class="rt-hint">（只认 #RGB／#RRGGBB；非法输入红字提示）</span></h3>
+                <div class="rt-row">
+                    <label for="rt-bg">背景颜色</label>
+                    <input type="color" id="rt-bg" value="#ffffff">
+                    <input type="text" id="rt-bg-text" value="#ffffff" placeholder="#RGB 或 #RRGGBB">
+                </div>
+                <div class="rt-row">
+                    <label class="rt-check" style="min-width:0;"><input type="checkbox" id="rt-transparent"> 透明底（导出 PNG 保留透明通道）</label>
+                    <span class="rt-hint">双色叠印建议用白色背景，透明底下叠印层次会变弱</span>
+                </div>
+            </div>
+
+            <div class="rt-card">
+                <h3>实时预览 <span class="rt-hint">（canvas 2D 渲染，所见即导出效果）</span></h3>
+                <div class="rt-stage">
+                    <canvas id="rt-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="rt-card">
+                <h3>导出 <span class="rt-hint">（PNG 在本地浏览器生成，不上传）</span></h3>
+                <div class="rt-actions">
+                    <button class="btn btn-primary" id="rt-dl-1x" type="button">⬇ 下载 PNG（1x）</button>
+                    <button class="btn btn-primary" id="rt-dl-2x" type="button">⬇ 下载 PNG（2x 高清）</button>
+                    <button class="btn btn-secondary" id="rt-copy-png" type="button">📋 复制 PNG 到剪贴板</button>
+                </div>
+                <p class="rt-hint" style="margin-top:.6rem;">复制 PNG 需要 Chrome / Edge 等支持 Clipboard API 的浏览器，不支持时会提示改用下载；文件名自动取文字内容并清洗非法字符。</p>
+            </div>
+
+            <div class="rt-card">
+                <h3>使用说明</h3>
+                <ol class="rt-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>在「文字」区输入内容，或点「载入示例」一键填入示例文字。</li>
+                    <li>点 8 种预设一键切换风格：彩虹渐变、粗描边、长阴影、3D 立体、霓虹辉光、金属铬渐变、复古褪色、双色叠印。</li>
+                    <li>拖五个参数滑杆微调：渐变方向、阴影距离、模糊、描边宽度、辉光强度，预览实时同步。</li>
+                    <li>选背景色或勾选透明底；霓虹、金属铬建议用深色底，双色叠印建议用白色底。</li>
+                    <li>点「下载 PNG（1x/2x）」保存图片，或「复制 PNG 到剪贴板」直接粘贴到别处使用。</li>
+                    <li>要给文字加 CSS 阴影去 CSS 文字阴影生成器；要给文字做渐变填充代码去 CSS 渐变生成器。</li>
+                </ol>
+            </div>
+
+            <div class="rt-card">
+                <h3>常见问题</h3>
+                <dl class="rt-tip">
+                    <dt><b>预设可以微调吗？</b></dt>
+                    <dd>可以。五个滑杆（渐变方向／阴影距离／模糊／描边宽度／辉光强度）都是在该预设默认值基础上调；想回到起点就再点一次预设按钮。</dd>
+                    <dt><b>导出的 PNG 有多大？</b></dt>
+                    <dd>画布按文字实际尺寸自动生成，2x 为双倍分辨率，适合印刷与高清屏；透明底导出保留透明通道。</dd>
+                    <dt><b>为什么中文和英文看起来粗细不一样？</b></dt>
+                    <dd>中文渲染效果依赖操作系统自带的中文字体（见下方真限制说明），不同系统的默认中文字重不同，这是正常的。</dd>
+                    <dt><b>复制 PNG 没反应？</b></dt>
+                    <dd>复制 PNG 依赖浏览器的 Clipboard API，旧浏览器或非安全上下文不支持，此时页面会明确提示改用下载 PNG。</dd>
+                    <dt><b>我的文字会被上传吗？</b></dt>
+                    <dd>不会。渲染与导出全部在浏览器本地完成，本页面零网络请求，文字不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="rt-card">
+                <h3>相关工具</h3>
+                <div class="rt-links">
+                    <a href="/tools/css-text-shadow-generator">CSS 文字阴影生成器（CSS 代码口径 vs 本页 canvas 图片口径；要 text-shadow 代码去那边）</a>
+                    <a href="/tools/css-gradient-generator">CSS 渐变生成器（要渐变 CSS 代码去那边）</a>
+                    <a href="/tools/avatar-generator">头像生成器（同样 canvas 导出 PNG，确定性图层引擎）</a>
+                </div>
+            </div>
+
+            <div class="rt-card">
+                <h3>真限制说明</h3>
+                <div class="rt-tip">
+                    <b>真限制一：canvas渲染浏览器差异</b>——同一份参数在不同浏览器／系统下可能存在细微差异（字体度量、抗锯齿、渐变插值均为各浏览器自行实现），导出前请以本机预览为准；<b>真限制二：中文字体依赖系统</b>——中文显示效果依赖操作系统自带的中文字体，本页不内嵌、不加载任何外部字体文件，换台电脑可能看起来不一样；<b>真限制三：PNG本地生成不上传</b>——渲染与导出全在浏览器本地完成，零网络请求；复制 PNG 到剪贴板依赖浏览器 Clipboard API，不支持时会明确提示改用下载。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="rt-toast" id="rt-toast"></div>
+    <script src="/tools/static/js/retro_text_fx.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -182,7 +182,7 @@ ok(GO_SRC.slice(ktIdx, ktIdx + 1200).indexOf('Category:    "格式转换"') >= 0
 ok(GO_SRC.slice(ktIdx, ktIdx + 2000).indexOf("data class generator") >= 0, "Description 中英文双语（含英文）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 291, "注册 Path 总数 268→270");
+eq(pathCount, 292, "注册 Path 总数 268→270");
 
 /* ---------- 8. 模板：SEO／真限制／互链／零网络 ---------- */
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "json_to_kotlin.html"), "utf8");

@@ -1615,6 +1615,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "retro_text_fx",
+					Name:        "复古文字特效生成器",
+					Description: "90s 复古风文字特效：彩虹渐变/粗描边/长阴影/3D 立体/霓虹辉光/金属铬渐变/复古褪色/双色叠印 8 预设，canvas 2D 实时渲染，背景色/透明底，渐变方向/阴影距离/模糊/描边宽度/辉光强度五参数微调，PNG 1x/2x 导出＋复制 PNG 到剪贴板，示例一键填充，纯前端零上传 · Retro text effects: 8 presets, canvas 2D live render, PNG export & copy, 100% client-side",
+					Path:        "/tools/retro-text-fx",
+					Icon:        "auto_fix",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{
