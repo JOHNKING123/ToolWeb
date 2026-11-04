@@ -41,7 +41,7 @@
         .tp-ok { color: #16a34a; }
         .tp-bad { color: #fff; background: #ef4444; }
         .tp-current { background: #dbeafe; box-shadow: inset 0 -3px 0 #2563eb; }
-        #tp-input { width: 100%; padding: .6rem .8rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; box-sizing: border-box; margin-top: .7rem; }
+        #tp-input { width: 100%; padding: .6rem .8rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; box-sizing: border-box; margin-top: .7rem; resize: vertical; }
         #tp-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
         .tp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; margin-top: .7rem; }
         .tp-stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .6rem; padding: .6rem .8rem; text-align: center; }
@@ -102,8 +102,8 @@
                 <h3>② 练习区</h3>
                 <div class="tp-text" id="tp-text" aria-hidden="true"></div>
                 <label for="tp-input" class="tp-info" style="display:block;">打字输入区（键盘 Tab 可聚焦，中文请用输入法直接输入）</label>
-                <input id="tp-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                       aria-label="打字输入区：请照着上方文本逐字输入" placeholder="点这里，照着上方文本开始打字…">
+                <textarea id="tp-input" rows="3" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                       aria-label="打字输入区：请照着上方文本逐字输入" placeholder="点这里，照着上方文本开始打字…"></textarea>
                 <div class="tp-progress" role="progressbar" aria-label="练习进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="tp-progress">
                     <div id="tp-progress-bar"></div>
                 </div>
@@ -139,7 +139,7 @@
                 <h3>使用说明</h3>
                 <div class="tp-info">
                     <b>流程：</b>选文本类目（英文名言/代码片段/中文美文）→ 点输入框开始打字 → 字符实时着色（绿=对，红=错，蓝底=当前字符）→ 打完自动结算 WPM/准确率/用时 → 历史最佳自动记入本浏览器。<br>
-                    <b>退格：</b>输错可用退格键撤销重打；已计入的错误次数保留（错了就是错了）。<b>中文：</b>用输入法正常输入即可，逐字比对的是最终上屏字符。<br>
+                    <b>退格：</b>输错可用退格键撤销重打；已计入的错误次数保留（错了就是错了）。<b>中文：</b>用输入法正常输入即可，逐字比对的是最终上屏字符。<b>换行：</b>代码片段练习文本含换行，输入区按回车键即可输入换行（输入区为多行文本框，高度可拖）。<br>
                     <b>WPM 口径：</b>标准口径 5 个字符计 1 词，即（正确字符数÷5）÷（用时分钟数），保留 1 位小数。
                 </div>
             </div>
@@ -167,6 +167,6 @@
         </div>
     </div>
     <div id="tp-toast" role="status" aria-live="polite"></div>
-    <script src="/tools/static/js/typing_practice.js?v=1"></script>
+    <script src="/tools/static/js/typing_practice.js?v=2"></script>
 </body>
 {{end}}

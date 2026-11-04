@@ -2,7 +2,8 @@
  *
  * 功能：
  *   练习文本三类（英文名言 / 代码片段 / 中文美文，内置文本库）
- *   → 实时键盘监听（逐字符对错着色 + 当前字符高亮）
+ *   → 实时键盘监听（逐字符对错着色 + 当前字符高亮；IME 组合输入期间跳过逐键处理，
+ *      compositionend 一次性处理上屏字符；代码模式换行走多行 textarea，按回车输入 \n）
  *   → 实时统计（WPM 标准 5 字符=1 词 / 准确率 / 用时 / 进度）
  *   → 错键 Top 统计（每键错误次数降序排行）
  *   → localStorage 历史最佳（各文本类目最优 WPM/准确率）
@@ -264,6 +265,10 @@ var S = {
     finished: false
 };
 
+/* IME 组合输入状态（Bug2 防线）：拼音选字上屏前逐键不计错误，
+   compositionend 一次性处理已上屏字符（多字上屏走粘贴分支） */
+var composing = false;
+
 function typedString() {
     return S.session.typed.map(function (t) { return t.char; }).join('');
 }
@@ -315,6 +320,7 @@ function renderStats() {
     $('tp-time').textContent = fmtTime(st.elapsedMs);
     $('tp-prog').textContent = (st.progress * 100).toFixed(1) + '%';
     $('tp-progress-bar').style.width = (st.progress * 100).toFixed(1) + '%';
+    $('tp-progress').setAttribute('aria-valuenow', String(Math.round(st.progress * 100)));
     return st;
 }
 
@@ -331,7 +337,7 @@ function renderTopErrors() {
         row.className = 'tp-erow';
         var k = document.createElement('kbd');
         k.className = 'tp-ekey';
-        k.textContent = e.key === ' ' ? '空格' : e.key;
+        k.textContent = e.key === ' ' ? '空格' : (e.key === '\n' ? '回车' : e.key);
         var n = document.createElement('span');
         n.className = 'tp-ecount';
         n.textContent = '第 ' + (i + 1) + ' 名 · 错 ' + e.count + ' 次';
@@ -388,6 +394,7 @@ function finish() {
 }
 
 function onInput() {
+    if (composing) return; /* IME 组合输入期间跳过逐键处理 */
     var input = $('tp-input');
     var val = input.value;
     var cur = typedString();
@@ -479,6 +486,11 @@ function bindUI() {
     });
     $('tp-export').addEventListener('click', exportResult);
     $('tp-input').addEventListener('input', onInput);
+    $('tp-input').addEventListener('compositionstart', function () { composing = true; });
+    $('tp-input').addEventListener('compositionend', function () {
+        composing = false;
+        onInput();
+    });
     $('tp-text').addEventListener('click', function () { $('tp-input').focus(); });
 }
 

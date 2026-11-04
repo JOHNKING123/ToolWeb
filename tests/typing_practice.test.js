@@ -222,5 +222,13 @@ has(FC_TPL, "/tools/typing-practice", "双向互链：闪卡模板链向打字�
 has(SN_TPL, "/tools/typing-practice", "双向互链：学习笔记模板链向打字练习");
 has(HB_TPL, "/tools/typing-practice", "双向互链：习惯追踪器模板链向打字练习");
 
+/* ---------- 12. 回归防线：Bug1（单行 input 吞回车）/Bug2（IME 组合输入） ---------- */
+has(TPL_SRC, '<textarea id="tp-input"', "回归防线 Bug1：输入区须为 textarea（单行 input 按回车不触发 input）");
+has(TPL_SRC, 'resize: vertical', "回归防线 Bug1：textarea 可纵向拖动尺寸");
+has(JS_SRC, "compositionstart", "回归防线 Bug2：JS 监听 compositionstart");
+has(JS_SRC, "compositionend", "回归防线 Bug2：JS 监听 compositionend");
+ok(/if\s*\(\s*composing\s*\)\s*return/.test(JS_SRC), "回归防线 Bug2：onInput 组合输入期间跳过逐键处理");
+has(TPL_SRC, 'aria-valuenow="0"', "无障碍：进度条含 aria-valuenow（renderStats 随进度同步更新）");
+
 console.log("PASS " + pass + " / FAIL " + fail);
 if (fail > 0) process.exit(1);
