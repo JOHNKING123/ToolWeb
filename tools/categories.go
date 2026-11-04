@@ -2399,6 +2399,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "protein_intake_calc",
+					Name:        "蛋白质摄入量计算器",
+					Description: "蛋白质摄入量计算器：体重（kg）＋目标三档（维持／减脂护肌／增肌）→每日蛋白质克数区间（维持 1.2–1.6、增肌 1.6–2.2、减脂护肌 2.0–2.4 g/kg，整数修约）＋蛋白质热量（×4 kcal/g）＋3–5 餐分配＋常见食物蛋白质速查表（≥10 项），示例一键填充＋一键复制，localStorage 本地保存，纯前端零上传 · protein intake calculator: daily protein range by body weight and goal (g/kg), protein kcal, per-meal split, common food protein lookup table, 100% client-side",
+					Path:        "/tools/protein-intake-calc",
+					Icon:        "egg",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

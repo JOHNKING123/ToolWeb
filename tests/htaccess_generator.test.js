@@ -183,7 +183,7 @@ ok(GO_SRC.indexOf('"htaccess_generator"') !== -1, "注册：categories.go 含 ID
 ok(GO_SRC.indexOf('"/tools/htaccess-generator"') !== -1, "注册：categories.go 含 Path /tools/htaccess-generator");
 ok(GO_SRC.indexOf('"settings"') !== -1, "注册：Icon settings");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 289, "注册：Path 总数 268→270");
+eq(pathCount, 290, "注册：Path 总数 268→270");
 ok(TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/htaccess-generator") !== -1, "SEO：canonical 正确");
 ok(TPL_SRC.indexOf("仅 Apache 2.4") !== -1, "真限制：仅 Apache 2.4 可见");
 ok(TPL_SRC.indexOf("不适用 Nginx") !== -1, "真限制：不适用 Nginx 可见");

@@ -1,3 +1,128 @@
+## 今日任务（2026-11-04 11:55 · PM 选定轮，接通用调研第二百二十轮）
+
+**选定：蛋白质摄入量计算器（protein_intake_calc）** — 本轮唯一任务（新工具）。
+
+**顺位**：220 轮 Top3 首席（P1）。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **需求衔接为全池最强**：直接衔接 bmr-tdee-calc 交付项（BMR/TDEE 定了热量缺口，蛋白质摄入是增肌减脂的下一问）；健康簇自然延续 BMI→BMR/TDEE→心率区间→跑步配速→本项（10-18 方向修正合规）。
+2. **证据链清晰、无维护硬伤**：ISSN 蛋白质摄入区间证据链（维持 1.2–1.6／增肌 1.6–2.2／减脂护肌 2.0–2.4 g/kg 体重）；纯系数表、**零外部数据依赖、无年假工具式年更新数据表负担**。
+3. **一天可高质量交付**：纯前端小难度，符合「优先小难度纯前端」要求；真限制（肾病/慢性病患者须遵医嘱）可明示、无隐藏坑。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`protein_intake_calc`／`protein-intake-calc`／`proteinIntakeCalc` 除 BACKLOG.md 外全站 **0 命中**（git HEAD 3fc0697，289 Path，175 tests）；独立词 `\bprotein\b`（大小写不敏感）除 BACKLOG.md 外亦 **0 命中**。
+- CJK「蛋白质」（运行时构造＋codepoint 0x86cb/0x767d/0x8d28 验真）全站仅 1 命中：static/js/bmr_tdee_calc.js:53 文案「保证蛋白质摄入」——为减脂热量建议内饮食提示句，**口径非蛋白质计算工具，不构成重叠**；真缺口确凿。
+- Icon 候选：**`egg`（首选；蛋白语义贴合，`"egg"` 在 tools/categories.go 精确值 0 命中）**／`fitness_center`（备选，0 命中）／`scale`（备选，0 命中）；开发轮用精确值复测锁定全库唯一。
+
+**未选说明**：在线可弹钢琴（P1 备选留池维持；真缺口确凿（`online_piano`/`online-piano`／CJK「钢琴」全 0 命中）；纯前端小难度；Web Audio 合成免音色文件）／年假拼假优化器（PM 本轮**第四度裁定跳过**：硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第三维持，PM 定序权行使有记录依据）。
+
+**品类归位**：注册到「生活工具」类目（与 bmi-calculator／bmr-tdee-calc／heart-rate-zones／running-pace-calc 同类目，健康簇自然延续；注：220 轮跑步配速交付实测该簇均注册在「生活工具」）；New: true；本轮**无硬编码互链要求**（页面内文字引导至 bmr-tdee-calc 即可，不做硬编码互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 体重（kg，≤0 抛错）＋目标三档（维持／减脂护肌／增肌）→每日蛋白质克数区间（维持 1.2–1.6、减脂 2.0–2.4、增肌 1.6–2.2 g/kg，区间两端整数修约）② 按 3–5 餐分配（每餐 25–40g 参照提示；餐数越界抛错 err.field='meals'）→蛋白质热量（g×4 kcal/g 区间）③ 常见食物蛋白质速查表（≥10 项：鸡蛋/牛奶/鸡胸肉/牛肉/三文鱼/豆腐/希腊酸奶/蛋白粉等，每 100g 或每份克数，静态数组）④ 示例一键填充（75kg 增肌等 3 组）＋一键复制结果＋localStorage 本地保存（无需登录）⑤ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.ProteinIntakeCalc 下，module.exports 同步导出）**：
+  - `proteinRange(weightKg, goal)` → {minG, maxG, minKcal, maxKcal}（weightKg≤0 err.field='weightKg'；goal ∉ maintain/cut/bulk err.field='goal'）。
+  - `perMealRange(totalMin, totalMax, meals)` → {minG, maxG}（meals ∉ 3–5 err.field='meals'；按区间均分，保留 1 位小数）。
+  - `foodList()` → ≥10 条静态数组 [{name, unit, gramsPerUnit}]。
+- **真限制两条页面明示**：① 肾病/慢性病患者或有特殊医疗状况者，蛋白质摄入须遵医嘱，本工具仅为健康成人参考；② 区间为 ISSN 等研究综述的通用建议，个体消化吸收与训练状态有差异。
+- **改动文件**：tools/categories.go（生活工具类目新增 protein_intake_calc 条目，Path 289→**290**，Icon `egg` 首选／`fitness_center`/`scale` 备选，开发轮精确值复测锁定全库唯一）／templates/protein_intake_calc.html（新）／static/js/protein_intake_calc.js（新）／tests/protein_intake_calc.test.js（新）／全量旧 tests Path 断言 289→290 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（三档精确值：75kg 增肌→120–165g；70kg 减脂→140–168g；维持 70kg→84–112g；蛋白质热量=克数×4（75kg 增肌 480–660 kcal）；3/4/5 餐分配精确值与 1 位小数；餐数 2/6 抛错 err.field='meals'；体重 0/负抛错 err.field='weightKg'；goal 非法抛错 err.field='goal'；foodList 长度 ≥10 且含鸡蛋/鸡胸肉；模板零外部资源静态检查）② 全量 tests/*.test.js 175→**176** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/protein-intake-calc 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：蛋白质摄入量计算器→本轮交付（220 研究轮 P1 首席；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（工具 ID 全 0 命中；CJK「蛋白质」唯一命中为 BMR 工具饮食提示文案，口径不重叠）；生活工具类目（健康簇）；Icon egg 首选）／在线可弹钢琴→备选顺位（P1 留池维持；`online_piano` 真缺口；纯前端小难度；PM 可裁定晋升）／年假拼假优化器→第三顺位（PM 第四度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／CSV 编辑器→备选维持（15:00 PM 轮裁定留池维持）／唱歌音准检测／复古文字特效生成器→弱观察 P3 留池维持（PM 可裁定）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**远端无新提交**，本地 HEAD 3fc0697 即最新；工作区未跟踪修改仅 BACKLOG.md 本轮追加）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **289**；`ls tests/*.test.js | wc -l` = **175**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-04 11:36 · 产品调研推荐，第二百二十轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速，属站内合规簇）。
+>
+> **交付核对**：跑步配速计算器已交付闭环（commit 3fc0697，`/tools/running-pace-calc`，Path 总数 288→289，tests 175 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **蛋白质摄入量计算器** — 219 轮 P1 备选顺位递进→首席。直接衔接 bmr-tdee-calc 交付项（BMR/TDEE 定了热量缺口，蛋白质摄入是增肌减脂的下一问）；ISSN 证据链清晰（1.6–2.2 g/kg 增肌、2.0–2.4 g/kg 减脂护肌）；竞品形态验证（2026 多个独立 protein calculator 站点）。实现：纯前端小难度——体重＋活动量＋目标（维持/减脂/增肌）→每日克数区间→按 3–5 餐分配（25–40g/餐）→蛋白质热量（×4 kcal/g），肾病/医疗免责真限制页面明示，零上传。SEO：蛋白质计算器、每天需要多少蛋白质、增肌蛋白质摄入。建议 ID protein_intake_calc、Path /tools/protein-intake-calc；零重叠：`protein_intake_calc`／`protein-intake-calc`／`proteinIntakeCalc` 全 0 命中；CJK「蛋白质」全站唯一命中为 bmr_tdee_calc.js:53 减脂建议文案（"保证蛋白质摄入"），口径非蛋白质计算器，不构成重叠——真缺口维持。
+2. **在线可弹钢琴** — 219 轮新晋 P1 留池递进→次席。Medium《7 Free Browser Tools Worth Bookmarking This October》(2026-10-18) 收录形态印证（a playable piano with laptop keyboard，免安装免注册浏览器即弹）。实现：纯前端小难度——Web Audio API 合成琴音（Oscillator 基频＋泛音包络，免外部音色文件）→PC 键盘映射（A 行→白键、W/E/T/Y/U→黑键标准布局）→黑白键触摸/点击 UI＋八度切换（C3–C6）＋音量控制＋简易录音回放，零上传、离线可玩。SEO：在线钢琴、网页钢琴、键盘钢琴、免费钢琴。建议 ID online_piano、Path /tools/online-piano；零重叠：`online_piano`／`online-piano`／`onlinePiano` 全 0 命中；CJK「钢琴」全 0 命中——真缺口维持。Icon 候选 `piano`（待开发轮精确值复测锁定全库唯一）。
+3. **年假拼假优化器** — 首席顺位名义维持→第三顺位。站内零重叠维持（`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），时间窗口打折；**PM 可裁定是否跳过**（19:37／21:38／217 轮三度裁定跳过）。
+
+**新信号扫描**（2026-11-02~11-04）：
+- V2EX（11-02 Clearframe 去水印→217 轮已判 AI/后端口径消解维持；11-02 阿钉 ADing→219 轮已判桌面客户端口径消解维持；10-29 纯本地 PDF 工具站→站内 PDF 簇全自有覆盖实锤（pdf_merge_split／pdf_compress／pdf_to_image／pdf_watermark 均已交付），形态印证消解；10-28 FrameLoom 文档转视频→AI＋桌面渲染口径消解；10-19 玄印写作→桌面＋AI 口径消解；10-22 sshtun 隧道代理→CLI 口径消解；10-21 MockMock 设备 Mockup→screenshot_3d_mockup 已交付，形态印证消解；10-28 tubox→211 轮观察维持；10-26 PrintPageCheck 打印机测试页→printer_test_page 已交付，形态印证消解；10-24 20美元 AI 搭配策略→讨论帖无工具信号消解；11-03 zhuankuai 数字商品平台→SaaS 口径消解）
+- Indie Radar 2026-11-03：公众号排版工具（V2EX 创造节点 11-03 帖）→markdown_publish_formatter（Markdown 公众号一键排版）已交付，形态印证消解
+- 英文渠道（Medium DevDesk App 2026-11-02：340 工具合集→工具线已交付，形态印证消解；Medium ToolNexus 2026-11-04：100% client-side 形态印证，证件加水印场景→watermark.html 文字水印已支持，用法场景不立项消解；Show HN OnKey 2026-11-02 唱歌音准检测→**新晋弱观察 P3**「唱歌音准检测」；Show HN TitleArt 2026-11-02 复古文字特效→**新晋弱观察 P3**「复古文字特效生成器」；dev.to 1024toolkit→已消化维持；dailydev.in→开发者工具已交付消解）
+
+**候选池变动**：running_pace_calc 交付划出（3fc0697，289 Path）；**新晋 2 个弱观察**（唱歌音准检测 P3：ASCII `pitch` 命中全为 vendor/无关口径；CJK「音准」全 0 命中真缺口；Web Audio＋getUserMedia 麦克风＋自相关音高检测＋实时音高曲线可视化，纯前端中难度；KTV 练歌人群；PM 可裁定）／（复古文字特效生成器 P3：1997 复古风文字特效（彩虹/描边/阴影/霓虹）＋canvas 导出 PNG；ascii_art_generator（字符画）／fancy_fonts（Unicode 花体）口径不重叠；纯前端小难度；PM 可裁定）；其余 P1/P2 留池无变化（CSV 编辑器备选维持（15:00 PM 轮裁定留池维持；一天高质量交付风险未消解）；网页涂鸦画板／决策转盘／社交卡片 OG 预览 P3 弱观察维持）。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十轮——跑步配速计算器交付闭环（3fc0697；`/tools/running-pace-calc` 已注册；全量 **289 Path**；tests/running_pace_calc.test.js 新增 125 断言；全量 tests/*.test.js **175 个**），候选池划出；新信号（Clearframe／阿钉／PDF 本地站／FrameLoom／玄印／sshtun／MockMock／tubox／PrintPageCheck／20美元 AI／zhuankuai→均确认消解或观察维持；公众号排版→已交付形态印证；ToolNexus 证件水印→watermark 已支持消解；DevDesk／dailydev→已交付消解；**OnKey→新晋弱观察唱歌音准检测；TitleArt→新晋弱观察复古文字特效**）均已消化；WPS 候选表保持冻结归档；全库 289 Path 核对无重叠（Top3 建议 ID protein_intake_calc／online_piano；年假拼假优化器 ID 待定；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 又被清空——老问题第七次复现，ssh 自动重建后一次成功）；`git log` 头部 3fc0697（跑步配速计算器交付）／3b2bf2a（伪装自查交付）／c588bf8（两地距离计算器交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **289**；`ls tests/*.test.js | wc -l` = **175**；本地当前分支 muse/dev-20260929；远端无新提交；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日任务（2026-11-04 09:41 · PM 选定轮，接通用调研第二百一十九轮）
+
+**选定：跑步配速计算器（running_pace_calc）** — 本轮唯一任务（新工具）。
+
+**顺位**：219 轮 Top3 首席（P1）。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **需求验证充分**：跑步/马拉松人群周级高频（目标配速、完赛时间、分段表）；竞品形态统一（rungeni、marathonpace.app、pace-calculator.mzldp.com 均为免费免注册单页），形态即需求验证。
+2. **健康簇自然延续**：BMI→BMR/TDEE→心率区间→本项，站内合规簇延续（10-18 方向修正合规）。
+3. **零外部数据依赖、无年更新维护负担**：纯数学公式（配速互算＋Riegel 预测公式），无年假工具式数据表硬伤。
+4. **一天可高质量交付**：纯前端小难度，符合「优先小难度纯前端」要求。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`running_pace_calc`／`running-pace-calc`／`runningPaceCalc` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD 3b2bf2a，288 Path，174 tests）；`\bpace\b` 独立词 0 命中（仅 space 子串）。
+- CJK「配速」（运行时构造）全站仅 1 命中：static/js/heart_rate_zones.js:56 文案「马拉松配速跑」——为心率区间工具内训练描述文字，**口径非配速计算工具，不构成重叠**；真缺口确凿。
+- Icon 候选：**`directions_run`（首选；Material Symbols 跑步图标，`grep -c '"directions_run"' tools/categories.go = 0）**／`speed`（备选，需开发轮精确值复测，当前 1 命中）／`timer`（备选，当前 1 命中）；开发轮用精确值复测锁定全库唯一。
+
+**未选说明**：蛋白质摄入量计算器（P1 备选留池；健康簇合规；`protein_intake_calc`／CJK「蛋白质」全 0 命中；纯前端小难度；医疗免责页面明示）／在线可弹钢琴（新晋 P1；真缺口确凿（`piano`/`metronome`／CJK「钢琴」全 0 命中）；纯前端小难度；Web Audio 合成免音色文件）——两者无硬伤，顺位递进留池。
+
+**品类归位**：注册到「健康工具」类目（与 bmi-calculator／bmr-tdee-calc／heart-rate-zones 同类目，健康簇自然延续）；New: true；本轮**无互链要求**（心率区间为训练强度口径，配速为成绩换算口径；页面内文字引导即可，不做硬编码互链）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 配速/距离/时间三互算：输入任意两项求第三项（配速 min/km 与 min/mi 互换；km/h 速度换算联动显示）② 标准距离快捷键：5K／10K／半马（21.0975km）／全马（42.195km）一键填充 ③ Riegel 成绩预测：已知某距离成绩预测 5K／10K／半马／全马完赛时间（T2=T1×(D2/D1)^1.06，页面明示为经验公式、个体差异±5~10%）④ 逐公里分段表＋完赛目标表（按目标完赛时间输出每公里累计用时表）⑤ 示例一键填充（全马 3:30:00 等 3 组）＋一键复制结果＋localStorage 本地保存（无需登录）⑥ 纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.RunningPaceCalc 下，module.exports 同步导出）**：
+  - `paceFromTime(distanceKm, seconds)` → {secPerKm, formatted}（distanceKm≤0 err.field='distanceKm'；seconds≤0 err.field='seconds'）。
+  - `timeFromPace(distanceKm, secPerKm)` → seconds（非法参数同上）。
+  - `convertPace(secPerKm, unit)` → secPerUnit（unit ∈ 'km'/'mi'，1 mi=1.609344 km；非法 err.field='unit'）。
+  - `paceToKmh(secPerKm)` → km/h；`formatPace(seconds)` → "M:SS"（秒非法 err.field='seconds'）。
+  - `riegelPredict(t1, d1, d2)` → seconds（T2=T1×(d2/d1)^1.06；d1/d2≤0 err.field='distance'）。
+  - `splitTable(distanceKm, targetSeconds)` → [{km, cumulativeSeconds}...]（按公里逐段；distanceKm≤0 err.field='distanceKm'）。
+- **真限制三条页面明示**：① Riegel 公式为经验预测模型，实际成绩受地形/天气/训练状态影响，误差约 ±5~10%；② 配速换算为理想匀速，变速跑实际体感不同；③ 纯前端本地计算、不上传任何输入。
+- **改动文件**：tools/categories.go（健康工具类目新增 running_pace_calc 条目，Path 288→**289**，Icon `directions_run` 首选／`speed`/`timer` 备选，开发轮精确值复测锁定全库唯一）／templates/running_pace_calc.html（新）／static/js/running_pace_calc.js（新）／tests/running_pace_calc.test.js（新）／全量旧 tests Path 断言 288→289 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（三互算精确值：10km@50:00→配速 5:00/km；min/mi 换算（5:00/km→8:02.7/mi，容差±0.1s）；km/h 联动（5:00/km→12.00km/h）；Riegel 预测单调性与已知值回归（10K 50:00→全马 ≈ 3:42:54，容差±60s）；分段表长度断言（42.195km→43 行）；配速格式化 M:SS；越界/非数字抛错 err.field 全覆盖；模板零外部资源静态检查）② 全量 tests/*.test.js 174→**175** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/running-pace-calc 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：跑步配速计算器→本轮交付（219 研究轮 P1 首席；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（工具 ID 全 0 命中；CJK「配速」唯一命中为心率工具文案，口径不重叠）；健康工具类目；Icon directions_run 首选）／蛋白质摄入量计算器→备选顺位（P1 留池；健康簇合规；`protein_intake_calc` 真缺口；纯前端小难度；医疗免责页面明示）／在线可弹钢琴→P1 留池（新晋；真缺口确凿；纯前端小难度）／年假拼假优化器→首席顺位维持（硬伤未消解：调休数据表年更新＋2027 年放假安排未公布，时间窗口打折；PM 可裁定）／CSV 编辑器→备选维持（15:00 PM 轮裁定留池维持）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**远端无新提交**，本地 HEAD 3b2bf2a 即最新）；git log 头部 3b2bf2a（代理/VPN 伪装自查新增）／c588bf8（两地距离计算器新增）／3c9f61d（三角形几何求解器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **288**；`ls tests/*.test.js | wc -l` = **174**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-04 09:36 · 产品调研推荐，第二百一十九轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间，属站内合规簇）。
+>
+> **昨日交付核对**：代理/VPN 伪装自查已交付闭环（commit 3b2bf2a，`/tools/proxy-camouflage-check`，Path 总数 287→288，tests 174 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **跑步配速计算器** — 218 轮 P1 次席顺位递进。健康簇自然延续（BMI→BMR/TDEE→心率区间→本项）；竞品形态验证充分（rungeni、marathonpace.app、pace-calculator.mzldp.com 均为免费免注册单页）；跑步/马拉松人群周级高频（目标配速、完赛时间、分段表）。实现：纯前端小难度——配速/距离/时间三互算、min/km 与 min/mi 互换、km/h 换算；Riegel 公式（T2=T1×(D2/D1)^1.06）做 5K/10K/半马/全马成绩预测；逐公里分段表＋完赛目标表，零上传。SEO：跑步配速计算器、马拉松配速表、配速换算、完赛时间预测。建议 ID running_pace_calc、Path /tools/running-pace-calc；零重叠维持：CJK「配速」0 命中；ASCII `pace` 命中全为 space 子串（218 轮复测值维持）。
+2. **蛋白质摄入量计算器** — 218 轮 P1 备选顺位递进。直接衔接 bmr-tdee-calc 交付项（BMR/TDEE 定了热量缺口，蛋白质摄入是增肌减脂的下一问）；竞品形态验证（2026 多个独立 protein calculator 站点）；ISSN 证据链清晰（1.6–2.2 g/kg 增肌、2.0–2.4 g/kg 减脂护肌）。实现：纯前端小难度——体重＋活动量＋目标（维持/减脂/增肌）→每日克数区间→按 3–5 餐分配（25–40g/餐）→蛋白质热量（×4 kcal/g），肾病/医疗免责真限制页面明示，零上传。SEO：蛋白质计算器、每天需要多少蛋白质、增肌蛋白质摄入。建议 ID protein_intake_calc、Path /tools/protein-intake-calc；零重叠维持：`蛋白质`/`protein` 0 命中（218 轮复测值维持）。
+3. **在线可弹钢琴** — 本轮新晋。Medium《7 Free Browser Tools Worth Bookmarking This October》(2026-10-18) 收录形态印证（a playable piano with laptop keyboard，免安装免注册浏览器即弹）。实现：纯前端小难度——Web Audio API 合成琴音（Oscillator 基频＋泛音包络，免外部音色文件）→PC 键盘映射（A 行→白键、W/E/T/Y/U→黑键标准布局）→黑白键触摸/点击 UI＋八度切换（C3–C6）＋音量控制＋简易录音回放，零上传、离线可玩。SEO：在线钢琴、网页钢琴、键盘钢琴、免费钢琴。建议 ID online_piano、Path /tools/online-piano；零重叠：`piano`/`metronome`/`synthesizer`/`instrument` ASCII 全 0 命中；CJK「钢琴」/「乐器」/「节拍器」/「八音」全 0 命中（运行时构造＋验真）——真缺口确凿。Icon 候选 `piano`（待开发轮精确值复测锁定全库唯一）。
+
+**新信号扫描**（2026-11-02~11-04）：
+- V2EX（11-02 xGoose AI agent Chrome 插件→AI＋扩展口径消解；11-02 阿钉 ADing 多 Agent 群聊→桌面客户端消解；10-28 tubox 纯前端图片工具箱→站内图片处理簇全自有覆盖实锤维持；10-19 Paint Board 创意画板→涂鸦/画板全 0 命中，**弱观察 P3**「网页涂鸦画板」：Canvas 纯前端中难度，与钢琴同源趣味工具，PM 可裁定）
+- V2EX（10-20 Open Resume 自部署简历工具→需后端 SQLite＋登录；简历口径站内 resume_builder/resume_checker 已交付，消解；11-02 KitVerse.dev→开发者工具全自有覆盖实锤维持）
+- 掘金（10-28 公众号自动化 zzhub-pipeline→CLI＋微信 API 服务端中转，消解；10-26 私藏工具帖：Beeceptor 临时 Mock 需服务端接收 POST，纯前端无法实现，消解；jsoncrack→P3 JSON 节点图同源印证维持；10-29 随手百宝箱「今天吃什么」转盘→转盘/轮盘全 0 命中，**弱观察 P3**「决策转盘」：纯前端小难度，方向修正边界相邻，PM 可裁定；小红书提取→平台反爬不立；10-22 AppKit 编码工具站→编码工具线站内已交付消解；10-25 GoldDrill 黄金 K 线回放→泛财务消解）
+- 英文渠道（Medium 2026-10-18 七工具→**playable piano 新晋候选**（上文 Top3 第三）；SyncWhen 群组约时间→需后端分享链接消解；婚礼座位表→站内 wedding_seating_chart 已交付消解；retro photo effects→图片簇已覆盖消解；meeting poll→需后端消解。PulseTools 2026-09-20：robots.txt validator→已交付消解；JSON-LD builder→schema_org_generator 已交付消解；**SERP & Meta 预览器→meta_preview/serp/og/social_card 全 0 命中，弱观察 P3**「社交卡片/OG 预览」：纯前端中-小难度（填 OG 字段/粘 HTML→模拟 Google/X/LinkedIn 卡片渲染；真实 URL 抓取需后端，范围限定前端；开发者 SEO 口径，PM 可裁定）。dev.to 1024toolkit→已消化维持；Show HN 本轮无新单页纯前端信号）
+
+**候选池变动**：proxy_camouflage_check 交付划出（3b2bf2a，288 Path）；**新晋 4 个候选**（在线可弹钢琴 P1；网页涂鸦画板 P3 弱观察；决策转盘 P3 弱观察；社交卡片/OG 预览 P3 弱观察）；其余 P1/P2 留池无变化（年假拼假优化器首席顺位维持（19:37/21:38 PM 裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）；CSV 编辑器备选维持（15:00 PM 裁定留池维持））。
+
+**归档说明**：本轮为 11-04 通用调研第二百一十九轮——代理/VPN 伪装自查交付闭环（3b2bf2a；`/tools/proxy-camouflage-check` 已注册；全量 **288 Path**；tests 174 个），候选池划出；新信号（Medium playable piano→**新晋 P1 在线可弹钢琴**；Paint Board→弱观察网页涂鸦画板；随手百宝箱转盘→弱观察决策转盘；PulseTools SERP 预览→弱观察社交卡片/OG 预览；xGoose/阿钉/公众号自动化/Beeceptor/AppKit/GoldDrill→均确认消解）均已消化；WPS 候选表保持冻结归档；全库 288 Path 核对无重叠（Top3 建议 ID running_pace_calc / protein_intake_calc / online_piano；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 已重建——老问题第六次复现，修复后一次成功）；`git log` 头部 3b2bf2a（伪装自查交付）／c588bf8（两地距离计算器）／3c9f61d（三角形几何求解器）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **288**；`ls tests/*.test.js | wc -l` = **174**；本地当前分支 muse/dev-20260929；远端无新提交；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 07:39 · PM 选定轮，接通用调研第二百一十八轮）
 
 **选定：代理/VPN 伪装自查（proxy_camouflage_check）** — 本轮唯一任务（新工具）。

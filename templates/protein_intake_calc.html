@@ -1,0 +1,152 @@
+{{define "protein_intake_calc"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蛋白质摄入量计算器 - 每日蛋白质克数+热量+分餐分配 | 程序员工具箱</title>
+    <meta name="description" content="免费在线蛋白质摄入量计算器：体重（kg）＋目标三档（维持／减脂护肌／增肌）→每日蛋白质克数区间（维持 1.2–1.6、增肌 1.6–2.2、减脂护肌 2.0–2.4 g/kg）＋蛋白质热量（×4 kcal/g）＋3–5 餐分配＋常见食物蛋白质速查表，示例一键填充＋一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="蛋白质摄入量计算器,每日蛋白质,增肌蛋白质,减脂蛋白质,蛋白质热量,分餐蛋白质,protein intake calculator,protein per day,protein calculator,蛋白质 食物">
+    <meta property="og:title" content="蛋白质摄入量计算器 - 每日蛋白质克数+热量">
+    <meta property="og:description" content="按体重与目标算每日蛋白质克数区间、蛋白质热量与每餐分配，附常见食物蛋白质速查表，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/protein-intake-calc">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/protein-intake-calc">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "蛋白质摄入量计算器",
+      "description": "免费在线蛋白质摄入量计算器：体重（kg）＋目标三档（维持／减脂护肌／增肌）→每日蛋白质克数区间（维持 1.2–1.6、增肌 1.6–2.2、减脂护肌 2.0–2.4 g/kg）＋蛋白质热量（×4 kcal/g）＋3–5 餐分配＋常见食物蛋白质速查表，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/protein-intake-calc",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .pic-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .pic-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .pic-modrow { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .7rem; font-size: .95rem; }
+        .pic-modrow label { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; font-weight: 600; color: #374151; }
+        .pic-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .9rem; margin-top: .6rem; }
+        @media (max-width: 720px) { .pic-cols { grid-template-columns: 1fr; } }
+        .pic-group { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .8rem; background: #fafafa; }
+        .pic-group h4 { margin: 0 0 .5rem; color: #374151; font-size: 1rem; }
+        .pic-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; margin-top: .5rem; }
+        .pic-field label { color: #374151; font-weight: 600; }
+        .pic-field input[type="number"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; background: #fff; width: 10rem; }
+        .pic-field input:focus { outline: none; border-color: var(--primary-color); }
+        .pic-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .pic-result-num { font-size: 2.2rem; font-weight: 700; color: #1d4ed8; }
+        .pic-result-unit { font-size: 1rem; color: #6b7280; margin-left: .4rem; }
+        .pic-subline { color: #374151; font-size: .95rem; margin-top: .4rem; }
+        .pic-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .pic-limit b { color: #374151; }
+        .pic-table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: .6rem; }
+        .pic-table th, .pic-table td { border: 1px solid #e5e7eb; padding: .4rem .6rem; text-align: center; }
+        .pic-table th { background: #f3f4f6; color: #374151; }
+        .pic-table tr:nth-child(even) td { background: #fafafa; }
+        .pic-goal-out { display: none; margin-top: .6rem; padding: .7rem .9rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: .5rem; color: #065f46; font-size: .95rem; }
+        #pic-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🥚 蛋白质摄入量计算器</h1>
+            <p>体重＋目标 → 每日蛋白质克数区间 · 蛋白质热量 · 3–5 餐分配 · 食物蛋白质速查表</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="pic-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>输入体重与目标</h3>
+                <div class="pic-cols">
+                    <div class="pic-group">
+                        <h4>体重</h4>
+                        <div class="pic-field">
+                            <label for="pic-weight">体重（kg）</label>
+                            <input id="pic-weight" type="number" min="0" step="any" placeholder="如 75">
+                        </div>
+                    </div>
+                    <div class="pic-group">
+                        <h4>目标</h4>
+                        <div class="pic-modrow" role="radiogroup" aria-label="目标">
+                            <label><input type="radio" name="pic-goal" value="maintain" checked> 维持</label>
+                            <label><input type="radio" name="pic-goal" value="cut"> 减脂护肌</label>
+                            <label><input type="radio" name="pic-goal" value="bulk"> 增肌</label>
+                        </div>
+                    </div>
+                    <div class="pic-group">
+                        <h4>每日餐数</h4>
+                        <div class="pic-modrow" role="radiogroup" aria-label="每日餐数">
+                            <label><input type="radio" name="pic-meals" value="3"> 3 餐</label>
+                            <label><input type="radio" name="pic-meals" value="4" checked> 4 餐</label>
+                            <label><input type="radio" name="pic-meals" value="5"> 5 餐</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="pic-info">输入即实时计算：维持 1.2–1.6、增肌 1.6–2.2、减脂护肌 2.0–2.4 g/kg 体重，区间两端取整；蛋白质热量按 4 kcal/g 折算。</div>
+                <div class="pic-error" id="pic-error" role="alert"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>计算结果</h3>
+                <div class="pic-goal-out" id="pic-result">
+                    <div id="pic-result-line"></div>
+                </div>
+                <div class="pic-info">想知道你的每日总热量？可前往「BMR/TDEE 能量消耗计算器」先算出 TDEE，再按本页区间规划蛋白质。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>常见食物蛋白质速查表</h3>
+                <table class="pic-table">
+                    <thead><tr><th>食物</th><th>份量</th><th>蛋白质（约）</th></tr></thead>
+                    <tbody id="pic-foods-body"></tbody>
+                </table>
+                <div class="pic-info">数值为常见市售品的约数，不同品牌/做法略有差异，仅供搭配参考。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="pic-actions" id="pic-samples" style="margin-top:0;"></div>
+                <div class="pic-actions">
+                    <button class="btn btn-secondary" id="pic-copy" type="button">一键复制结果</button>
+                    <button class="btn btn-secondary" id="pic-clear" type="button">清空</button>
+                </div>
+                <div class="pic-info">输入自动保存到浏览器本地（localStorage），下次打开自动恢复；所有计算只在你的浏览器内完成，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="pic-limit">
+                    <li><b>① 肾病/慢性病患者须遵医嘱：</b>本工具的区间面向<b>健康成年人</b>；肾病、慢性病或有特殊医疗状况者，蛋白质摄入量须遵医嘱调整，不可直接套用本页结果。</li>
+                    <li><b>② 区间为通用建议：</b>1.2–1.6 / 1.6–2.2 / 2.0–2.4 g/kg 为研究综述给出的通用建议范围，个体消化吸收、训练强度、年龄与作息均有差异，仅供参考。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="pic-info">
+                    <b>第一步：</b>填体重（kg），选目标（维持／减脂护肌／增肌）与每日餐数（3–5 餐）。<br>
+                    <b>第二步：</b>输入即实时出结果——每日蛋白质克数区间＋蛋白质热量（×4 kcal/g）＋每餐分配（保留 1 位小数）。<br>
+                    <b>示例：</b>点「示例① 75kg 增肌」得每日 120–165 g（蛋白质热量 480–660 kcal）；「示例② 70kg 减脂护肌」得每日 140–168 g。<br>
+                    <b>公式：</b>每日蛋白质(g) = 体重(kg) × 系数；蛋白质热量(kcal) = 克数 × 4；每餐 = 区间 ÷ 餐数。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="pic-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/protein_intake_calc.js?v=1"></script>
+</body>
+{{end}}
