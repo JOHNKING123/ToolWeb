@@ -1633,6 +1633,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "doodle_board",
+					Name:        "网页涂鸦画板",
+					Description: "在线画板自由涂鸦：画笔（颜色/粗细/圆头）＋橡皮擦、直线/矩形/圆/箭头/文字形状工具（描边/填充）、深浅两底色切换、截图拖拽导入画标注、撤销/重做 20 步、清屏、PNG 1x/2x 导出＋复制 PNG 到剪贴板、本地暂存最近作品，触屏支持，纯前端零上传 · Doodle board: freehand drawing, shapes, arrows, text annotations on screenshots, undo/redo, PNG export, 100% client-side",
+					Path:        "/tools/doodle-board",
+					Icon:        "brush",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

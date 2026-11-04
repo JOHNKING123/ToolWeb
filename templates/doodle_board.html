@@ -1,0 +1,223 @@
+{{define "doodle_board"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页涂鸦画板 - 在线画板/白板涂鸦/截图画标注，PNG 导出 | 程序员工具箱</title>
+    <meta name="description" content="免费在线涂鸦画板：画笔（颜色/粗细/圆头）＋橡皮擦、直线/矩形/圆/箭头/文字形状工具（描边/填充）、深浅两底色切换、截图拖拽导入画标注、撤销/重做 20 步、清屏、PNG 1x/2x 导出＋复制 PNG 到剪贴板、本地暂存最近作品，触屏支持。纯前端本地运行，零上传。">
+    <meta name="keywords" content="在线画板,网页涂鸦,白板涂鸦,画图工具,截图画标注,在线白板,doodle board,在线涂鸦板">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/doodle-board">
+    <meta property="og:title" content="网页涂鸦画板 - 在线画板/截图画标注">
+    <meta property="og:description" content="画笔＋橡皮擦、直线/矩形/圆/箭头/文字形状、截图拖拽导入画标注、撤销 20 步、PNG 1x/2x 导出。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/doodle-board">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"网页涂鸦画板","description":"免费在线涂鸦画板：画笔/橡皮擦/形状/箭头/文字、截图导入画标注、撤销 20 步、PNG 1x/2x 导出与复制、本地暂存，纯前端运行。","url":"https://www.johnkingzcq123.xyz/tools/doodle-board","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .db-wrap .container { max-width: 1080px; margin: 0 auto; padding: 1.2rem; }
+        .db-wrap .navbar .material-icons { display: none; }
+        .db-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .db-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .db-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .db-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .db-row label { font-size:.92rem; color:#374151; min-width:5.5em; }
+        .db-row input[type=range] { flex:1; min-width:120px; max-width:320px; }
+        .db-row input[type=number] { width:5.5em; padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; }
+        .db-row input[type=text] { padding:.35rem .4rem; border:1px solid #d1d5db; border-radius:.4rem; font-size:.92rem; min-width:9em; }
+        .db-row input[type=color] { width:2.6em; height:2em; padding:0; border:1px solid #d1d5db; border-radius:.4rem; cursor:pointer; }
+        .db-val { font-size:.9rem; color:#111827; min-width:3.5em; font-variant-numeric:tabular-nums; }
+        .db-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .db-btn:hover { background:#f3f4f6; }
+        .db-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .db-tools { display:flex; gap:.5rem; flex-wrap:wrap; }
+        .db-tool { border:1px solid #e5e7eb; border-radius:.6rem; padding:.55rem .8rem; cursor:pointer; background:#fff; font-size:.92rem; color:#374151; }
+        .db-tool:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .db-tool.active { border-color:var(--primary-color); color:var(--primary-color); box-shadow:0 0 0 1px var(--primary-color); }
+        .db-msg { color:#dc2626; font-size:.9rem; min-height:1.4em; margin:.4rem 0 0; }
+        .db-stage { position:relative; border:1px solid #e5e7eb; border-radius:.7rem; overflow:hidden; background:#f9fafb; }
+        .db-stage canvas { display:block; width:100%; touch-action:none; cursor:crosshair; }
+        .db-stage.db-dragover { outline:2px dashed var(--primary-color); outline-offset:-2px; }
+        .db-drop-hint { position:absolute; top:.6rem; right:.8rem; font-size:.8rem; color:#9ca3af; background:rgba(255,255,255,.75); padding:.15rem .5rem; border-radius:.4rem; pointer-events:none; }
+        #db-textedit { position:absolute; z-index:10; }
+        #db-textedit input { border:1px dashed var(--primary-color); background:rgba(255,255,255,.9); padding:.15rem .4rem; border-radius:.3rem; outline:none; min-width:8em; }
+        .db-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; }
+        .db-radio { display:flex; align-items:center; gap:.4rem; font-size:.92rem; color:#374151; }
+        .db-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .db-tip a { color:var(--primary-color); }
+        .db-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .db-links a { color:var(--primary-color); font-size:.93rem; }
+        .db-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        .db-check { display:flex; align-items:center; gap:.5rem; font-size:.92rem; color:#374151; }
+        @media (max-width:640px) {
+            .db-row input[type=range] { min-width:100px; }
+            .db-row label { min-width:4.5em; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="db-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>🖌️ 网页涂鸦画板</h1>
+            <p>在线画板自由涂鸦：画笔＋橡皮擦、形状/箭头/文字工具，截图拖拽导入画标注，PNG 1x/2x 导出</p>
+        </div>
+        <div class="tool-content" id="db-form">
+            <div class="db-card">
+                <h3>工具 <span class="db-hint">（形状工具按住拖拽绘制；文字工具点击画布输入）</span></h3>
+                <div class="db-tools">
+                    <button class="db-tool" type="button" data-tool="brush">🖌️ 画笔</button>
+                    <button class="db-tool" type="button" data-tool="eraser">🧽 橡皮擦</button>
+                    <button class="db-tool" type="button" data-tool="line">📏 直线</button>
+                    <button class="db-tool" type="button" data-tool="rect">▭ 矩形</button>
+                    <button class="db-tool" type="button" data-tool="circle">○ 圆</button>
+                    <button class="db-tool" type="button" data-tool="arrow">➤ 箭头</button>
+                    <button class="db-tool" type="button" data-tool="text">🔤 文字</button>
+                </div>
+                <div class="db-row" id="db-fill-row" style="display:none;">
+                    <label>矩形/圆模式</label>
+                    <label class="db-radio"><input type="radio" name="db-fill" value="stroke" checked> 描边</label>
+                    <label class="db-radio"><input type="radio" name="db-fill" value="fill"> 填充</label>
+                </div>
+                <p class="db-msg" id="db-msg"></p>
+            </div>
+
+            <div class="db-card">
+                <h3>画笔设置 <span class="db-hint">（圆头笔触；橡皮擦擦除下方笔触）</span></h3>
+                <div class="db-row">
+                    <label for="db-color">画笔颜色</label>
+                    <input type="color" id="db-color" value="#111111">
+                </div>
+                <div class="db-row">
+                    <label for="db-size">画笔粗细</label>
+                    <input type="range" id="db-size" min="1" max="100" step="1" value="8">
+                    <span class="db-val"><span id="db-size-val">8</span>px</span>
+                </div>
+            </div>
+
+            <div class="db-card">
+                <h3>文字工具 <span class="db-hint">（选「文字」后点击画布，输入后回车确定）</span></h3>
+                <div class="db-row">
+                    <label for="db-text-color">文字颜色</label>
+                    <input type="color" id="db-text-color" value="#111111">
+                </div>
+                <div class="db-row">
+                    <label for="db-text-size">文字字号</label>
+                    <input type="number" id="db-text-size" min="8" max="120" step="1" value="28">
+                    <span>px（8–120）</span>
+                </div>
+            </div>
+
+            <div class="db-card">
+                <h3>画布 <span class="db-hint">（自适应宽度＋DPR 高清渲染；支持触屏手指绘制）</span></h3>
+                <div class="db-row">
+                    <label>底色</label>
+                    <button class="db-btn" id="db-bg-light" type="button">⬜ 浅色底</button>
+                    <button class="db-btn" id="db-bg-dark" type="button">⬛ 深色底</button>
+                    <span class="db-hint">切换底色不影响已画笔触</span>
+                </div>
+                <div class="db-stage" id="db-stage">
+                    <canvas id="db-canvas"></canvas>
+                    <div class="db-drop-hint">可把截图拖到画布上导入</div>
+                </div>
+            </div>
+
+            <div class="db-card">
+                <h3>底图导入 <span class="db-hint">（导入后缩放适配画布，直接在上面画标注；图片不出浏览器）</span></h3>
+                <div class="db-row">
+                    <label for="db-file">选择图片</label>
+                    <input type="file" id="db-file" accept="image/*">
+                    <button class="db-btn" id="db-clear-bg" type="button">移除底图</button>
+                </div>
+                <p class="db-hint">也支持把截图文件直接拖拽到画布上导入。</p>
+            </div>
+
+            <div class="db-card">
+                <h3>操作 <span class="db-hint">（撤销/重做各保留 20 步；清屏可撤销；支持 Ctrl+Z / Ctrl+Y）</span></h3>
+                <div class="db-actions">
+                    <button class="db-btn" id="db-undo" type="button">↩ 撤销(0)</button>
+                    <button class="db-btn" id="db-redo" type="button">↪ 重做(0)</button>
+                    <button class="db-btn" id="db-clear" type="button">🧹 清屏</button>
+                </div>
+            </div>
+
+            <div class="db-card">
+                <h3>本地暂存 <span class="db-hint">（最近一张作品存浏览器 localStorage，零上传；约 5MB 配额）</span></h3>
+                <div class="db-actions">
+                    <button class="db-btn" id="db-save-draft" type="button">💾 暂存作品</button>
+                    <button class="db-btn" id="db-restore-draft" type="button">📂 恢复暂存</button>
+                </div>
+                <p class="db-hint" style="margin-top:.6rem;">暂存包含全部笔触、底色与底图；清浏览器数据会丢失，大图可能因超出配额暂存失败。</p>
+            </div>
+
+            <div class="db-card">
+                <h3>导出 <span class="db-hint">（PNG 在本地浏览器生成，不上传）</span></h3>
+                <div class="db-row">
+                    <label for="db-title">作品标题</label>
+                    <input type="text" id="db-title" placeholder="用于导出文件名，可空" maxlength="60" style="flex:1;min-width:12em;">
+                </div>
+                <div class="db-actions">
+                    <button class="btn btn-primary" id="db-dl-1x" type="button">⬇ 下载 PNG（1x）</button>
+                    <button class="btn btn-primary" id="db-dl-2x" type="button">⬇ 下载 PNG（2x 高清）</button>
+                    <button class="btn btn-secondary" id="db-copy-png" type="button">📋 复制 PNG 到剪贴板</button>
+                </div>
+                <p class="db-hint" style="margin-top:.6rem;">复制 PNG 需要 Chrome / Edge 等支持 Clipboard API 的浏览器，不支持时会提示改用下载；文件名自动清洗非法字符，空标题用 doodle-board。</p>
+            </div>
+
+            <div class="db-card">
+                <h3>使用说明</h3>
+                <ol class="db-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>选「画笔」调颜色和粗细直接涂鸦；「橡皮擦」擦除下方的笔触。</li>
+                    <li>直线/矩形/圆/箭头按住拖拽绘制；矩形和圆可在描边/填充间切换。</li>
+                    <li>选「文字」后点击画布，输入文字回车确定（字号/颜色在文字工具区调）。</li>
+                    <li>给截图画标注：把截图拖到画布上（或点「选择图片」），导入后自动缩放适配，再画箭头/圈注/文字。</li>
+                    <li>画错了点「撤销」（保留 20 步），Ctrl+Z / Ctrl+Y 也可用；「清屏」同样可撤销。</li>
+                    <li>点「暂存作品」把当前画存浏览器本地，下次打开点「恢复暂存」继续画。</li>
+                    <li>点「下载 PNG（1x/2x）」保存图片，或「复制 PNG 到剪贴板」直接粘贴到聊天/文档里。</li>
+                </ol>
+            </div>
+
+            <div class="db-card">
+                <h3>常见问题</h3>
+                <dl class="db-tip">
+                    <dt><b>最多能撤销几步？</b></dt>
+                    <dd>20 步。每次落笔/放开形状/输入文字都记一步，按钮上会显示剩余可撤销步数。</dd>
+                    <dt><b>暂存的作品存在哪里？</b></dt>
+                    <dd>存在你浏览器的 localStorage 里，只有这台电脑的这个浏览器能恢复；清浏览器数据会丢失（见下方真限制）。</dd>
+                    <dt><b>手机/平板能画吗？</b></dt>
+                    <dd>能。画布支持触屏，用手指直接绘制；工具栏按钮在小屏幕下自动换行。</dd>
+                    <dt><b>复制 PNG 没反应？</b></dt>
+                    <dd>复制 PNG 依赖浏览器的 Clipboard API，旧浏览器或非安全上下文不支持，此时页面会明确提示改用下载 PNG。</dd>
+                    <dt><b>我的涂鸦会被上传吗？</b></dt>
+                    <dd>不会。绘制、导出、暂存全部在浏览器本地完成，本页面零网络请求，画布内容不出浏览器。</dd>
+                </dl>
+            </div>
+
+            <div class="db-card">
+                <h3>相关工具</h3>
+                <div class="db-links">
+                    <a href="/tools/screenshot-beautifier">截图美化器（标注完→一键加画框 presentation）</a>
+                    <a href="/tools/retro-text-fx">复古文字特效生成器（同样 canvas 导出 PNG）</a>
+                    <a href="/tools/avatar-generator">头像生成器（同样 canvas 导出 PNG）</a>
+                </div>
+            </div>
+
+            <div class="db-card">
+                <h3>真限制说明</h3>
+                <div class="db-tip">
+                    <b>真限制一：canvas 浏览器渲染差异</b>——同一份笔触在不同浏览器／系统下可能存在细微差异（抗锯齿、文字度量均为各浏览器自行实现），导出前请以本机预览为准；<b>真限制二：localStorage 约 5MB 配额</b>——暂存作品存在浏览器本地 localStorage，大图可能超出配额导致暂存失败（页面会明确提示），清浏览器数据会丢失暂存；<b>真限制三：导出 PNG 本地生成不上传</b>——绘制、导出、复制、暂存全在浏览器本地完成，零网络请求；复制 PNG 到剪贴板依赖浏览器 Clipboard API，不支持时会明确提示改用下载。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="db-toast" id="db-toast"></div>
+    <script src="/tools/static/js/doodle_board.js?v=1"></script>
+</body>
+</html>
+{{end}}

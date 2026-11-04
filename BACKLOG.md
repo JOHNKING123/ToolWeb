@@ -1,3 +1,72 @@
+## 今日任务（2026-11-04 19:00 · PM 选定轮，接通用调研第二百二十四轮）
+
+**选定：网页涂鸦画板（doodle_board）** — 本轮唯一任务（新工具）。
+
+**顺位**：224 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **需求双重验证**：V2EX「一款完全开源免费的网页端创意画板」（2026-10-19，MIT 开源 github.com/LHRUN/paint-board，在线体验 songlh.top/paint-board）——「随手涂鸦、自由创作，随意折腾的绘画板」，作者用一周下班时间靠 AI 修复旧 bug＋添新功能（形态与交付成本双重验证）。痛点：随手画示意图／给截图画标注／涂鸦，装桌面软件嫌重、在线站多要登录——免登录单页即用直接消解。
+2. **无硬伤**：纯前端小难度，零外部依赖、无年更新数据表维护负担、无隐私合规坑（纯本地绘制，不上传任何内容）；一天可高质量交付。
+3. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`doodle_board`／`doodle-board`／`doodleBoard`／`paint_board`／`whiteboard` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD bb2bdbb，293 Path，179 tests）。
+   - CJK「涂鸦」（`chr(0x6D82)+chr(0x9E26)` 运行时构造）／「画板」（`chr(0x753B)+chr(0x677F)` 运行时构造）命中**仅 BACKLOG.md 候选记录**——真缺口确凿。
+   - Icon 候选：**`brush`（首选；`"brush"` 在 tools/categories.go 精确值 0 命中，PM 独立复测）**；开发轮用精确值复测锁定全库唯一。
+
+**未选说明**：年假拼假优化器（PM 本轮**第八度裁定跳过**：硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／在线口算闯关（新晋 P2 顺位维持：V2EX 11-03 四则运算练习站信号真实；互动练习口径与 math_worksheet_generator 打印口径互补确凿；留池待涂鸦画板交付后递进）／CSV 编辑器（备选留池维持：小-中难度，一天高质量交付风险高未消解）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 画布（自适应＋DPR 高清、深浅两底色切换）② 画笔（颜色/粗细/圆头）＋橡皮擦 ③ 形状工具：直线／矩形（描边/填充）／圆（描边/填充）／箭头／文字（字号/颜色）④ 底图导入（拖拽/选择截图→标注画板，响应「给截图画标注」痛点；拖放时缩放适配画布）⑤ 撤销/重做（≥20 步）⑥ 清屏 ⑦ PNG 导出（1x/2x）＋一键复制 PNG 到剪贴板 ⑧ 本地作品暂存（localStorage 存最近一张，下次打开恢复；纯本地，零上传）⑨ 触屏支持。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.DoodleBoard 下，module.exports 同步导出；canvas 渲染只做浏览器端，测试只覆盖纯函数）**：
+  - `hexToRgb(hex)` → {r,g,b}（hex 非法 err.field='color'）。
+  - `rectFromPoints(x1,y1,x2,y2)` → {x,y,w,h}（w/h 非负）。
+  - `radiusFrom(x1,y1,x2,y2)` → number（非负；坐标非数字 err.field='point'）。
+  - `arrowGeometry(x1,y1,x2,y2,headLen,headAngle)` → {line:{x1,y1,x2,y2}, heads:[[x,y],[x,y]]}（headLen≤0 err.field='headLen'；headAngle∉(0,π/2) err.field='headAngle'）。
+  - `clampBrushSize(size)` → 整数（钳制 1–100；非数字 err.field='size'）。
+  - `pushHistory(stack, snapshot, maxLen)` → newStack（snapshot 非对象 err.field='snapshot'；maxLen 非正整数 err.field='maxLen'；超限截断头部保留 maxLen 个）。
+  - `serializeDoc(doc)`／`parseDoc(json)`（doc={strokes:[...], shapes:[...], bg}；json 非法或结构不合 err.field='doc'）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'doodle-board'）。
+- **真限制三条页面明示**：① canvas 2D 渲染依赖浏览器实现，不同浏览器抗锯齿细节略有差异；② 作品暂存走浏览器 localStorage（约 5MB 配额），大图＋多步历史可能超限，属浏览器正常限制；③ 导出 PNG 在本地生成、绘制内容不上传任何服务器。
+- **SEO**：在线画板、网页涂鸦、白板涂鸦、画图工具、截图画标注。
+- **改动文件**：tools/categories.go（图片处理类目新增 doodle_board 条目，Path 293→**294**，Icon `brush` 首选，开发轮精确值复测锁定全库唯一）／templates/doodle_board.html（新）／static/js/doodle_board.js（新）／tests/doodle_board.test.js（新）／全量旧 tests Path 断言 293→294 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（hexToRgb 精确值：#ff0000→{r:255,g:0,b:0}、3 位简写、非法值抛错 err.field='color'；rectFromPoints 任意拖拽方向归一化精确值；arrowGeometry 箭头双翼坐标精确值与非法 headLen/headAngle 抛错 err.field 全覆盖；clampBrushSize 钳制边界与非数字抛错；pushHistory 超限截断精确值与非法参数抛错；serializeDoc↔parseDoc 往返一致、非法 json 抛错 err.field='doc'；sanitizeFileName 非法字符清理与空回退；模板零外部资源静态检查）② 全量 tests/*.test.js 179→**180** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/doodle-board 200、静态 JS 200、首页索引收录。
+- **品类归位**：注册到「图片处理」类目（与 ascii_art_generator／retro_text_fx 同类目，输出均为图片）；New: true；本轮**无硬编码互链要求**。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：网页涂鸦画板→本轮交付（224 研究轮 P1 首席；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（ASCII 五形全 0 命中；CJK「涂鸦」/「画板」仅 BACKLOG 命中）；图片处理类目；Icon brush 首选）／年假拼假优化器→第二顺位（PM 第八度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／在线口算闯关→第三顺位维持（新晋 P2；与 math_worksheet_generator 打印口径互补确凿；留池递进）／CSV 编辑器→备选维持（一天高质量交付风险未消解）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：提示 access rights，但本地 HEAD bb2bdbb 已为开发分支最新；分支与远端关系为 ahead 1（BACKLOG.md 未提交追加）；工作区未跟踪修改仅 BACKLOG.md 本轮追加＋`?? toolweb` 未知目录（非本轮产物，未动））；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **293**；`ls tests/*.test.js | wc -l` = **179**；PM 独立零重叠复核（ASCII 五形 0 命中；CJK「涂鸦」/「画板」仅 BACKLOG 命中；`"brush"` 精确值 0 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+## 今日候选（2026-11-04 19:00 · 产品调研推荐，第二百二十四轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：浏览器环境信息一键复制已交付闭环（commit bb2bdbb，`/tools/browser-env-info`，Path 总数 292→293，tests 179 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **网页涂鸦画板** — 223 轮 P2 次席→首席递进。「无硬伤不跳过、Top3 顺位递进」惯例下预计 PM 直接立项：纯前端小难度（有界范围：画笔＋颜色/粗细、橡皮擦、矩形/圆/箭头/文字、撤销/重做、清屏、PNG 导出；触屏支持；零上传），一天可高质量交付；需求双重验证（V2EX Paint Board 2026-10-19 MIT 开源＋作者一周下班时间交付）。痛点：随手画示意图/给截图画标注/涂鸦，装桌面软件嫌重、在线站多要登录。SEO：在线画板、网页涂鸦、白板涂鸦、画图工具。建议 ID doodle_board、Path /tools/doodle-board；零重叠复测维持：ASCII `doodle_board`/`doodle-board`/`paint_board`/`whiteboard` 全站（除 BACKLOG.md 外）0 命中；CJK「涂鸦」「画板」仅 BACKLOG.md 候选记录命中，templates/static/tests/tools 无一命中——真缺口维持。Icon 候选 `brush`（待开发轮精确值复测锁定全库唯一）。
+2. **年假拼假优化器** — 顺位维持。站内零重叠维持（`holiday`/`vacation`/`pto`/`leave` 工具 ID 全站无命中——`crypto` 为 pto 子串误命中；CJK 年假/拼假全站 0 命中；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），时间窗口打折；**PM 可裁定第八度跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮／223 轮七度裁定跳过）。
+3. **在线口算闯关** — 本轮新晋 P2。V2EX 每日热点 2026-11-03 独立新信号：「Claude 十分钟做出四则运算练习站」——面向约 8 岁儿童的四则运算练习网页，纯前端、无后端、GitHub Pages 部署、适配平板横屏与手机，形态即验证（纯前端单页可实现、一天可交付）。痛点：小学生每日口算打卡是家长刚需；站内 math_worksheet_generator 为**打印练习纸口径**（A4 练习纸＋答案页、离线做题、需打印＋人工批改），在线互动版直接网页答题＋自动判分＋计时＋错题本，省掉打印与批改两步。实现：纯前端小难度——年级预设（1–6 年级）＋运算类型开关（加减/乘除/混合/括号/进退位）→随机出题→键盘输入答题→计时＋自动判分＋正确率统计→闯关模式（N 题一局、星级评价）→错题本（本局错题回顾重练）→localStorage 历史最佳成绩；零上传。学习辅助一条龙可互链（flashcard_maker/study_notes/habit-tracker 口径互补）。SEO：在线口算练习、小学生口算、口算打卡、数学口算题。建议 ID mental_math_quiz、Path /tools/mental-math-quiz；零重叠：ASCII `mental_math_quiz`/`mental-math-quiz`/`kousuan`/`kousuan_quiz`/`arithmetic_quiz`/`math_quiz` 全站（除 BACKLOG.md 外）0 命中；CJK「口算」（`chr(0x53E3)+chr(0x7B97)` 运行时构造＋codepoint 验真）命中仅 math_worksheet_generator 打印口径与 flashcard_maker 跨链提及——互动练习口径真缺口确凿。Icon 候选 `calculate`（待开发轮精确值复测锁定全库唯一）。
+
+**新信号扫描**（2026-11-04 17:36~19:00 窗口）：
+- V2EX 创造节点（11-03，me876）：用户自制公众号排版工具→**站内 markdown_publish_formatter 已交付（Markdown 转公众号富文本＋4 套主题＋一键复制），形态印证消解**。
+- V2EX 每日热点（11-03）：四则运算练习站（Claude 10 分钟做出、纯前端、面向 8 岁儿童）→**新晋 P2「在线口算闯关」**（打印口径 vs 互动练习口径辨析，互补不重叠）；同帖 Surge Tailscale 幽灵节点面板→网络运维＋API 口径消解；DayMug 在线智能体→订阅/后端口径消解。
+- V2EX 四款自媒体获客小工具（10-30）：Chrome 插件＋账号＋AI 评论口径→消解。
+- V2EX DealPage（10-25）：需后端＋数据统计口径→消解维持。
+- 中文渠道 xczcai（11-02/11-03）：线上评选工具→需后端＋账号消解；视频去水印（服务端解析）→消解；APP 云测平台→后端 SaaS 消解。
+- 英文渠道（11 月初）：Medium landing page builder／AI website builder→SaaS 口径消解；爬虫浏览器扩展（插件口径）、Lightpanda（桌面/Agent 基础设施口径）→消解；Reddit/makerlaunches→SaaS/AI 口径，本轮无单页纯前端新信号。
+
+**候选池变动**：browser_env_info 交付划出（bb2bdbb，293 Path，179 tests）；**新晋 1 个 P2**（在线口算闯关：V2EX 11-03 独立新信号；ASCII 六形＋CJK「口算」零重叠复核确凿；与 math_worksheet_generator 打印口径互补；纯前端小难度）；**社交卡片 OG 预览 P3→消解划出**（核实 `og-card-preview`／`/tools/og-card-preview` 已交付：categories.go:2501 Name「OG 社交卡片预览」＋568 行功能模板，223 轮「P3 弱观察维持」为记录滞后，本轮纠正）；其余 P1/P2 留池无变化（网页涂鸦画板首席递进；年假拼假优化器顺位维持（PM 可裁定）；CSV 编辑器备选维持（csv_table_viewer 为查看器口径，编辑器仍是缺口）；唱歌音准检测／决策转盘 P3 弱观察维持（random_decision 为匿名抽签 Secret Santa 口径，转盘 spinner 仍是缺口）；WPS 候选表保持冻结归档）。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十四轮——浏览器环境信息一键复制交付闭环（bb2bdbb；`/tools/browser-env-info` 已注册；全量 **293 Path**；全量 tests/*.test.js **179 个**），候选池划出；新信号（V2EX 创造节点 11-03：公众号排版→站内已交付消解；四则运算练习站→新晋 P2；自媒体获客/DealPage→口径消解；Surge 面板/DayMug→口径消解；xczcai 评选/去水印/云测→后端 SaaS 消解；英文渠道本轮无单页新信号）均已消化；涂鸦画板真缺口复测维持（ASCII 四形＋CJK 涂鸦/画板仅 BACKLOG 命中）；社交卡片 OG 预览纠正为已交付消解；WPS 候选表保持冻结归档；全库 293 Path 核对无重叠（Top3 建议 ID doodle_board／年假拼假优化器 ID 待定／mental_math_quiz；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 bb2bdbb（浏览器环境信息一键复制交付）／4c12c9e（复古文字特效生成器交付）／033e21d（在线可弹钢琴交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **293**；`ls tests/*.test.js | wc -l` = **179**；本地当前分支 muse/dev-20260929；远端无新提交；工作区未跟踪修改仅 BACKLOG.md 本轮追加＋`?? toolweb` 未知目录（非本轮产物，未动）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+---
+
 ## 今日任务（2026-11-04 17:40 · PM 选定轮，接通用调研第二百二十三轮）
 
 **选定：浏览器环境信息一键复制（browser_env_info）** — 本轮唯一任务（新工具）。
