@@ -1,3 +1,73 @@
+## 今日任务（2026-11-04 21:00 · PM 选定轮，接通用调研第二百二十五轮）
+
+**选定：在线口算闯关（mental_math_quiz）** — 本轮唯一任务（新工具）。
+
+**顺位**：225 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **需求双重验证**：V2EX 每日热点 2026-11-03「Claude 十分钟做出四则运算练习站」（145 回复/59 收藏）——面向约 8 岁儿童的四则运算练习网页，纯前端、无后端、GitHub Pages 部署、适配平板横屏与手机；形态与交付成本双重验证，一天可高质量交付。痛点：小学生每日口算打卡是家长刚需。
+2. **无硬伤**：纯前端小难度（有界范围：年级预设 1–6＋运算类型开关（加减/乘除/混合/括号/进退位）→随机出题→键盘输入答题→计时＋自动判分＋正确率统计→闯关模式（N 题一局、星级评价）→错题本（本局错题回顾重练）→localStorage 历史最佳；零上传），零外部依赖、无年更新数据表维护负担、无隐私合规坑。
+3. **口径互补确凿**：站内 math_worksheet_generator 为**打印练习纸口径**（A4 练习纸＋独立答案页、离线做题、需打印＋人工批改），本工具为**在线互动口径**（网页答题＋自动判分＋计时＋错题本），省掉打印与批改两步——非重叠；学习辅助一条龙可互链（flashcard_maker/study_notes/habit-tracker 口径互补）。
+4. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`mental_math_quiz`／`mental-math-quiz`／`kousuan`／`kousuan_quiz`／`arithmetic_quiz`／`math_quiz` 全站（git HEAD d964e32，294 Path，180 tests；除 BACKLOG.md 外，vendor 排除）**0 命中**。
+   - CJK「口算」（`chr(0x53E3)+chr(0x7B97)` 运行时构造）命中**仅**：math_worksheet_generator（`static/js`／`templates`／`tools/categories.go` 2653 行「小学口算/竖式练习题一键生成打印」——打印口径）＋ flashcard_maker.html 跨链提及「小学口算练手」＋ RATE_LIMIT.md「滑动窗口算法」子串误命中——互动练习口径真缺口确凿。
+   - Icon：调研推荐 `calculate` 被 PM 精确值复测否决（`Icon: "calculate"` 在 tools/categories.go 已有 **2 命中**：947 行／2655 行，非唯一）；改荐 **`bolt`**（速算/闪电，`Icon: "bolt"` 精确值 **0 命中**，全库唯一；备选 `star`／`emoji_events` 亦 0 命中），开发轮复测锁定。
+
+**未选说明**：年假拼假优化器（PM 本轮**第九度裁定跳过**：硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持）／CSV 编辑器（备选→第三顺位维持：小-中难度，一天高质量交付风险高未消解）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 年级预设 1–6（范围/运算类型预设表：1 年级 20 以内加减不进退位→6 年级分数小数混合四则，按家族惯例纯函数表驱动）② 运算类型开关：加减/乘除/混合/括号/进退位 ③ 随机出题（减法不负数、除法整除可整除开关）④ 键盘输入答题（数字输入＋回车确认，触屏数字键盘）⑤ 计时（单局总耗时＋平均每题秒数）＋自动判分＋正确率统计 ⑥ 闯关模式（N 题一局可配 10/20/30 题、星级评价 0–3 星：≥95%/≥85%/≥70%）⑦ 错题本（本局错题回顾重练＋清空）⑧ localStorage 历史最佳（各年级+题数档最佳正确率/最短平均用时；纯本地，零上传）⑨ 无障碍与真限制三条页面明示。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.MentalMathQuiz 下，module.exports 同步导出；DOM/计时渲染只做浏览器端，测试只覆盖纯函数）**：
+  - `rangeForGrade(grade)` → {min, max, ops}（年级预设表；grade∉1–6 整数 err.field='grade'）。
+  - `buildQuestion(a, b, op)` → {a, op, b, answer}（op 非 '+/-/*/()' 非法 err.field='op'；括号题挂 `buildParenQuestion(a,b,c,op1,op2)` → 带括号 answer 精确值）。
+  - `normalizeInput(text)` → number（空/非数字 err.field='answer'）。
+  - `evalAnswer(question, inputNum)` → {correct: boolean}（question 结构不合 err.field='question'）。
+  - `starFor(accuracy)` → 0–3（accuracy∉[0,1] err.field='accuracy'；阈值 ≥0.95/≥0.85/≥0.70）。
+  - `formatTime(ms)` → 'mm:ss'（ms<0 err.field='ms'）。
+  - `pushMistake(mistakes, q, maxLen)` → newMistakes（超限截断头部保留 maxLen 个；q 非对象 err.field='question'；maxLen 非正整数 err.field='maxLen'）。
+  - `updateBest(best, key, score)` → newBest（score={accuracy, avgSec}；accuracy∉[0,1] 或 avgSec<0 err.field='score'；仅当 accuracy 更高、或 accuracy 相等且 avgSec 更低时更新）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'mental-math-quiz'）。
+- **真限制三条页面明示**：① 题目由浏览器 Math.random 随机生成，不同设备/每次题目不同，不可复现同一套题；② 历史最佳与错题本走浏览器 localStorage（约 5MB 配额），清除浏览器数据后丢失；③ 计时与判分全在本地完成，答题数据不上传任何服务器。
+- **SEO**：在线口算练习、小学生口算、口算打卡、数学口算题、小学生数学练习。
+- **改动文件**：tools/categories.go（「学习工具」类目新增 mental_math_quiz 条目，与 math_worksheet_generator 同类目，Path 294→**295**，Icon `bolt` 首选，开发轮精确值复测锁定全库唯一）／templates/mental_math_quiz.html（新）／static/js/mental_math_quiz.js（新）／tests/mental_math_quiz.test.js（新）／全量旧 tests Path 断言 294→295 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（buildQuestion 四则＋括号 answer 精确值与非法 op 抛错 err.field='op'；normalizeInput 非数字抛错 err.field='answer'；evalAnswer 正确/错误精确值；starFor 阈值边界（0.95/0.85/0.70/0.69）精确值与非法 accuracy 抛错；rangeForGrade 1–6 年级预设精确值与非法 grade 抛错；formatTime 精确值（90000→'01:30'）与负值抛错；pushMistake 超限截断精确值；updateBest 更高正确率更新、相等正确率更短平均用时更新、都不优不更新三情形精确值；sanitizeFileName 空回退；模板零外部资源静态检查）② 全量 tests/*.test.js 180→**181** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/mental-math-quiz 200、静态 JS 200、首页索引收录。
+- **品类归位**：注册到「学习工具」类目（与 math_worksheet_generator/flashcard_maker/study_notes 同类目，学习辅助一条龙；互动口径互补，互链待开发轮执行）; New: true；本轮**无硬编码互链要求**（建议后向互链 math_worksheet_generator「在线互动版」→本工具、「打印版」←本工具，开发轮按模板惯例决定）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：在线口算闯关→本轮交付（225 研究轮 P2→首席晋升；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（ASCII 六形全 0 命中；CJK「口算」仅打印口径与跨链提及）；学习工具类目；Icon `calculate` 否决→改荐 `bolt`）／年假拼假优化器→第二顺位（PM 第九度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／CSV 编辑器→第三顺位维持（一天高质量交付风险未消解）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：提示 access rights（VM 换机后 known_hosts 清空老问题第 N 次复现，非致命——本地 HEAD d964e32 已为开发分支最新，分支与远端无落后）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **294**；`ls tests/*.test.js | wc -l` = **180**；PM 独立零重叠复核（ASCII 六形 0 命中；CJK「口算」仅打印口径/跨链/误命中；`"calculate"` 否决（2 命中）、`"bolt"` 首选（0 命中））；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：网页涂鸦画板已交付闭环（commit d964e32，`/tools/doodle-board`，Path 总数 293→294，tests 180 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **在线口算闯关** — P2→首席递进。「无硬伤不跳过、Top3 顺位递进」惯例下预计 PM 直接立项：纯前端小难度（有界范围：年级预设 1–6＋运算类型开关（加减/乘除/混合/括号/进退位）→随机出题→键盘输入答题→计时＋自动判分＋正确率统计→闯关模式（N 题一局、星级评价）→错题本（本局错题回顾重练）→localStorage 历史最佳；零上传），一天可高质量交付；需求独立验证（V2EX 每日热点 2026-11-03「Claude 十分钟做出四则运算练习站」，145 回复/59 收藏：面向约 8 岁儿童的四则运算练习网页，纯前端、无后端、GitHub Pages 部署、适配平板横屏与手机——形态与交付成本双重验证）。痛点：小学生每日口算打卡是家长刚需；站内 math_worksheet_generator 为**打印练习纸口径**（A4 练习纸＋独立答案页、离线做题、需打印＋人工批改），在线互动版直接网页答题＋自动判分＋计时＋错题本，省掉打印与批改两步。学习辅助一条龙可互链（flashcard_maker/study_notes/habit-tracker 口径互补）。SEO：在线口算练习、小学生口算、口算打卡、数学口算题。建议 ID mental_math_quiz、Path /tools/mental-math-quiz；零重叠：ASCII `mental_math_quiz`/`mental-math-quiz`/`kousuan`/`kousuan_quiz`/`arithmetic_quiz`/`math_quiz` 全站（git HEAD d964e32，294 Path，180 tests，除 BACKLOG.md 外）**0 命中**；CJK「口算」（`chr(0x53E3)+chr(0x7B97)` 运行时构造＋codepoint 验真）命中仅 math_worksheet_generator 打印口径（Description 2653 行「小学口算/竖式练习题一键生成打印」）＋ templates/math_worksheet_generator.html/js ＋ flashcard_maker.html 跨链提及——互动练习口径真缺口确凿。Icon 候选 `calculate`（待开发轮精确值复测锁定全库唯一）。
+2. **年假拼假优化器** — 顺位维持次席。站内零重叠维持（工具 ID 级 `holiday`/`vacation`/`pto`/`leave`/`annual_leave`/`time_off` 全站 **0 命中**——描述文本中 `crypto` 为 `pto` 子串误命中，已在 224 轮辨析；CJK「年假」（`chr(0x5E74)+chr(0x5047)`）／「拼假」（`chr(0x62FC)+chr(0x5047)`）全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），时间窗口打折；**PM 可裁定第九度跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮／223 轮／224 轮八度裁定跳过）。
+3. **CSV 编辑器** — 备选→三席递进。站内口径辨析：`csv_table_viewer`（已交付，1255 行）为**查看器口径**（CSV 上传→表格展示），本工具为**编辑器口径**（单元格双击编辑／增删行列／分隔符三选／导出 CSV）——编辑器仍是真缺口；ASCII `csv_editor`/`csv-editor`/`csvEditor`/`CsvEditor` 全站 **0 命中**；小-中难度，**一天高质量交付风险高未消解**（单元格双击编辑／增删行列／分隔符三选／超大文件性能）；PM 可裁定。
+
+**新信号扫描**（2026-11-04 19:00~21:00 窗口）：
+- Show HN Bigwords.page（2026-10-09，658 分/160+ 留言）：「URL 就是 App」全屏电子招牌（编辑器＋URL hash 全屏播放＋浏览器内生成 QR 码＋倒数计时＋动画）→**站内 big_sign_display（大字标牌展示器：全屏超大字体展示/会议室传话牌/店铺招牌展示）＋ teleprompter（在线提词器）已交付，形态印证消解**（URL-hash 分享角度为边际差异，不足新立项）。
+- HN Fleeting（2026-10-10，744 分）：播放约 12 分钟假会议录音「假装很忙」的玩笑网站→需真实录音素材、Web Audio 合成无法还原真实感，消解。
+- HN Carrier-Explode：电信商设置解码（APN/VoLTE/5G）→需每日服务端抓取固件数据，SaaS 口径消解。
+- HN big-arrow-on-the-screen：macOS 命令行＋Claude Code skill→桌面 CLI 口径消解。
+- HN 其余（Docker Agent／Whistle 本地语音／Muse Wonder／PS2→WASM）：AI 模型/桌面/模拟器口径，消解。
+- V2EX 11-04 新帖：Event Horizon（Agent 网页感知＋订阅码＋后端）→消解；全球 AI 额度分享平台（合租平台＋后端）→消解；Hipo Hipo（AI 时代 Dropbox，拿 VC 融资、后端）→消解；API 中转站双 11 低价（服务口径）→消解；四款自媒体获客小工具（Chrome 插件＋AI＋账号，10-30 既判）→消解维持；四则运算练习站（11-03 每日热点）→**已收录 P2「在线口算闯关」本轮晋升首席，消解**。
+- Indie Radar 11-02：handy-transcribe 本地语音转写 CLI→CLI 口径消解；搭手（Win/Mac 效率桌面工具）→桌面口径消解；LazyForm 浏览器插件（43 种表单数据自动填充）→插件口径消解；歌语 UtaYomi（AI 歌词学习）→AI 口径消解。
+
+**候选池变动**：doodle_board 交付划出（d964e32，294 Path）；**无新晋候选**（本轮信号全部消解或形态印证）；**P2→首席晋升 1 个**（在线口算闯关：V2EX 11-03 独立新信号；ASCII 全形＋CJK「口算」零重叠复核确凿；与 math_worksheet_generator 打印口径互补；纯前端小难度；PM 可按「无硬伤不跳过」惯例直接立项）；其余 P1/P2 留池无变化（年假拼假优化器顺位维持（PM 可裁定第九度跳过）；CSV 编辑器备选→三席递进（一天高质量交付风险未消解）；唱歌音准检测／决策转盘 P3 弱观察维持；WPS 候选表保持冻结归档）。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十五轮——网页涂鸦画板交付闭环（d964e32；`/tools/doodle-board` 已注册；全量 **294 Path**；全量 tests/*.test.js **180 个**），候选池划出；新信号（Show HN Bigwords.page→站内已交付形态印证；Fleeting／Carrier-Explode／big-arrow-on-the-screen→口径消解；V2EX 11-04 Event Horizon／AI 额度分享平台／Hipo Hipo／API 中转站→后端/平台/服务口径消解；四则运算练习站→已收录晋升；Indie Radar 11-02→CLI/桌面/插件/AI 口径消解）均已消化；WPS 候选表保持冻结归档；全库 294 Path 核对无重叠（Top3 建议 ID mental_math_quiz；年假拼假优化器 ID 待定；CSV 编辑器 ID 待定；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 又被清空——老问题第 N 次复现，ssh 自动重建后一次成功）；**远端无新提交**（origin/muse/dev-20260929 behind=0）；`git log` 头部 d964e32（网页涂鸦画板交付）／bb2bdbb（浏览器环境信息一键复制交付）／4c12c9e（复古文字特效生成器交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **294**；`ls tests/*.test.js | wc -l` = **180**；本地当前分支 muse/dev-20260929；工作区未跟踪修改仅 BACKLOG.md 本轮追加；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 19:00 · PM 选定轮，接通用调研第二百二十四轮）
 
 **选定：网页涂鸦画板（doodle_board）** — 本轮唯一任务（新工具）。

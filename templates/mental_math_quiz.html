@@ -1,0 +1,192 @@
+{{define "mental_math_quiz"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线口算闯关 - 小学生口算练习/口算打卡/数学口算题 | 程序员工具箱</title>
+    <meta name="description" content="免费在线口算练习：1–6 年级表驱动预设，加减/乘除/混合/括号/进退位开关，随机出题（减法不负数、除法必整除），键盘输入＋回车确认，计时＋自动判分＋正确率统计，10/20/30 题闯关＋0–3 星评价，错题本回顾重练，localStorage 历史最佳。纯前端本地运行，零上传。">
+    <meta name="keywords" content="在线口算练习,小学生口算,口算打卡,数学口算题,小学生数学练习,口算闯关,mental math quiz">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/mental-math-quiz">
+    <meta property="og:title" content="在线口算闯关 - 小学生口算练习/口算打卡">
+    <meta property="og:description" content="1–6 年级口算闯关：随机出题、计时、自动判分、星级评价、错题本重练、历史最佳。纯前端本地运行，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/mental-math-quiz">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线口算闯关","description":"小学生在线口算练习：年级预设1–6、随机出题、计时、自动判分、星级评价、错题本、历史最佳，纯前端本地运行。","url":"https://www.johnkingzcq123.xyz/tools/mental-math-quiz","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mmq-wrap .container { max-width: 760px; margin: 0 auto; padding: 1.2rem; }
+        .mmq-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .mmq-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .mmq-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .mmq-row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.55rem 0; }
+        .mmq-row label { font-size:.92rem; color:#374151; }
+        .mmq-chips { display:flex; gap:.5rem; flex-wrap:wrap; }
+        .mmq-chip { border:1px solid #e5e7eb; border-radius:2rem; padding:.45rem 1rem; cursor:pointer; background:#fff; font-size:.92rem; color:#374151; }
+        .mmq-chip:hover { border-color:var(--primary-color); color:var(--primary-color); }
+        .mmq-chip.active { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .mmq-check { display:flex; align-items:center; gap:.45rem; font-size:.92rem; color:#374151; cursor:pointer; }
+        .mmq-check input { width:1.05rem; height:1.05rem; accent-color:var(--primary-color); }
+        .mmq-desc { font-size:.9rem; color:#6b7280; margin:.4rem 0 0; }
+        .mmq-btn { padding:.55rem 1.3rem; border-radius:.55rem; border:1px solid var(--primary-color); background:var(--primary-color); color:#fff; cursor:pointer; font-size:.95rem; }
+        .mmq-btn:hover { filter:brightness(.94); }
+        .mmq-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .mmq-btn.ghost { background:#fff; color:var(--primary-color); }
+        .mmq-btn.ghost:hover { background:#f3f4f6; }
+        .mmq-quiz-head { display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.6rem; font-size:.92rem; color:#6b7280; }
+        .mmq-timer { font-variant-numeric:tabular-nums; font-weight:700; color:#111827; font-size:1.05rem; }
+        .mmq-qtext { font-size:2.4rem; font-weight:700; color:#111827; text-align:center; margin:1.4rem 0 1rem; font-variant-numeric:tabular-nums; letter-spacing:.05em; }
+        .mmq-answer-row { display:flex; gap:.6rem; justify-content:center; align-items:center; flex-wrap:wrap; }
+        .mmq-answer-row input { width:10rem; padding:.6rem .7rem; border:2px solid #d1d5db; border-radius:.55rem; font-size:1.4rem; text-align:center; font-variant-numeric:tabular-nums; }
+        .mmq-answer-row input:focus { outline:none; border-color:var(--primary-color); }
+        .mmq-feedback { min-height:1.8em; text-align:center; font-size:1.05rem; font-weight:600; margin:.6rem 0 0; }
+        .mmq-feedback.ok { color:#059669; }
+        .mmq-feedback.bad { color:#dc2626; }
+        .mmq-stars { font-size:2.6rem; color:#f59e0b; text-align:center; letter-spacing:.3em; margin:.4rem 0; }
+        .mmq-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; margin:.8rem 0; }
+        .mmq-stat { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.6rem; padding:.6rem; text-align:center; }
+        .mmq-stat .v { font-size:1.25rem; font-weight:700; color:#111827; font-variant-numeric:tabular-nums; }
+        .mmq-stat .k { font-size:.82rem; color:#6b7280; margin-top:.2rem; }
+        .mmq-best { font-size:.92rem; color:#374151; background:#fffbeb; border:1px solid #fde68a; border-radius:.6rem; padding:.6rem .8rem; margin:.6rem 0; line-height:1.7; }
+        .mmq-mitem { display:flex; justify-content:space-between; gap:.8rem; padding:.5rem .2rem; border-bottom:1px dashed #e5e7eb; font-size:.95rem; color:#111827; font-variant-numeric:tabular-nums; }
+        .mmq-mitem .mmq-your { color:#dc2626; white-space:nowrap; }
+        .mmq-empty { color:#9ca3af; font-size:.93rem; }
+        .mmq-actions { display:flex; gap:.7rem; flex-wrap:wrap; margin-top:.9rem; }
+        .mmq-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .mmq-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .mmq-links a { color:var(--primary-color); font-size:.93rem; }
+        .mmq-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        .mmq-kbd { display:inline-block; border:1px solid #d1d5db; border-bottom-width:2px; border-radius:.3rem; padding:0 .4rem; font-size:.85rem; background:#f9fafb; color:#374151; }
+        @media (max-width:640px) {
+            .mmq-qtext { font-size:1.9rem; }
+            .mmq-stats { grid-template-columns:repeat(3,1fr); }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="mmq-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>⚡ 在线口算闯关</h1>
+            <p>小学生口算练习/口算打卡：随机出题、计时、自动判分、星级评价、错题本重练，纯前端本地运行</p>
+        </div>
+        <div class="tool-content">
+
+            <!-- 设置 -->
+            <div class="mmq-card" id="mmq-setup">
+                <h3>闯关设置</h3>
+                <div class="mmq-row"><label>年级</label>
+                    <div class="mmq-chips" id="mmq-grades">
+                        <button class="mmq-chip" type="button" data-grade="1">一年级</button>
+                        <button class="mmq-chip active" type="button" data-grade="2">二年级</button>
+                        <button class="mmq-chip" type="button" data-grade="3">三年级</button>
+                        <button class="mmq-chip" type="button" data-grade="4">四年级</button>
+                        <button class="mmq-chip" type="button" data-grade="5">五年级</button>
+                        <button class="mmq-chip" type="button" data-grade="6">六年级</button>
+                    </div>
+                </div>
+                <p class="mmq-desc" id="mmq-grade-desc"></p>
+                <div class="mmq-row"><label>题数</label>
+                    <div class="mmq-chips" id="mmq-counts">
+                        <button class="mmq-chip" type="button" data-count="10">10 题</button>
+                        <button class="mmq-chip active" type="button" data-count="20">20 题</button>
+                        <button class="mmq-chip" type="button" data-count="30">30 题</button>
+                    </div>
+                </div>
+                <div class="mmq-row">
+                    <label class="mmq-check"><input type="checkbox" id="mmq-op-addsub" checked> 加减法</label>
+                    <label class="mmq-check"><input type="checkbox" id="mmq-op-muldiv" checked> 乘除法</label>
+                    <label class="mmq-check"><input type="checkbox" id="mmq-op-paren"> 括号题（5/6 年级）</label>
+                </div>
+                <div class="mmq-row">
+                    <label class="mmq-check"><input type="checkbox" id="mmq-carry" checked> 加法允许进位</label>
+                    <label class="mmq-check"><input type="checkbox" id="mmq-borrow" checked> 减法允许退位</label>
+                    <label class="mmq-check"><input type="checkbox" id="mmq-exactdiv" checked> 除法必整除</label>
+                </div>
+                <div class="mmq-row">
+                    <button class="mmq-btn" id="mmq-start" type="button">开始闯关</button>
+                    <span class="mmq-hint">电脑按 <span class="mmq-kbd">Enter</span> 确认答案；手机自动弹出数字键盘</span>
+                </div>
+            </div>
+
+            <!-- 答题 -->
+            <div class="mmq-card" id="mmq-quiz" style="display:none;">
+                <div class="mmq-quiz-head">
+                    <span id="mmq-progress"></span>
+                    <span class="mmq-timer">⏱ <span id="mmq-timer">00:00</span></span>
+                    <span id="mmq-score"></span>
+                </div>
+                <div class="mmq-qtext" id="mmq-qtext"></div>
+                <div class="mmq-answer-row">
+                    <input id="mmq-answer" type="number" inputmode="numeric" autocomplete="off" placeholder="输入答案">
+                    <button class="mmq-btn" id="mmq-submit" type="button">确认</button>
+                    <button class="mmq-btn ghost" id="mmq-next" type="button" style="display:none;">下一题</button>
+                </div>
+                <p class="mmq-feedback" id="mmq-feedback"></p>
+                <div class="mmq-row"><button class="mmq-btn ghost" id="mmq-quit" type="button">退出本局</button></div>
+            </div>
+
+            <!-- 成绩 -->
+            <div class="mmq-card" id="mmq-result" style="display:none;">
+                <h3>闯关成绩</h3>
+                <div class="mmq-stars" id="mmq-stars"></div>
+                <div class="mmq-stats">
+                    <div class="mmq-stat"><div class="v" id="mmq-stat-time">--</div><div class="k">总用时</div></div>
+                    <div class="mmq-stat"><div class="v" id="mmq-stat-avg">--</div><div class="k">平均每题</div></div>
+                    <div class="mmq-stat"><div class="v" id="mmq-stat-acc">--</div><div class="k">正确率</div></div>
+                </div>
+                <div class="mmq-best" id="mmq-best-line"></div>
+                <h3>本局错题 <span class="mmq-hint">（可重练）</span></h3>
+                <div id="mmq-round-mistakes"></div>
+                <div class="mmq-actions">
+                    <button class="mmq-btn" id="mmq-again" type="button">再来一局</button>
+                    <button class="mmq-btn ghost" id="mmq-retry-mistakes" type="button">错题重练</button>
+                    <button class="mmq-btn ghost" id="mmq-show-book" type="button">查看错题本</button>
+                </div>
+            </div>
+
+            <!-- 错题本 -->
+            <div class="mmq-card" id="mmq-mistakes" style="display:none;">
+                <h3>错题本 <span class="mmq-hint" id="mmq-book-count"></span></h3>
+                <div id="mmq-book-list"></div>
+                <div class="mmq-actions">
+                    <button class="mmq-btn ghost" id="mmq-back-setup" type="button">返回设置</button>
+                    <button class="mmq-btn ghost" id="mmq-clear-book" type="button">清空错题本</button>
+                </div>
+            </div>
+
+            <div class="mmq-card">
+                <h3>玩法说明</h3>
+                <div class="mmq-tip">
+                    ① 选年级＋题数＋运算类型，点「开始闯关」；② 每题输入答案后按 <span class="mmq-kbd">Enter</span>（或点确认）自动判分，答对自动进入下一题，答错会显示正确答案并记入错题本；③ 一局结束按正确率评星：≥95% 三星、≥85% 二星、≥70% 一星；④ 各「年级＋题数」档的历史最佳（最高正确率、正确率相同时取最短平均用时）存在浏览器本地；⑤ 错题本可回顾、可重练、可清空。<br>
+                    减法题目保证被减数 ≥ 减数（不出现负数答案）；「除法必整除」开启时除法题均为整除，关闭时答案保留两位小数。
+                </div>
+            </div>
+
+            <div class="mmq-card">
+                <h3>相关工具</h3>
+                <div class="mmq-links">
+                    <a href="/tools/math-worksheet-generator">算术题生成器（打印练习纸口径：A4 口算练习纸＋答案页）</a>
+                    <a href="/tools/flashcard-maker">闪卡卡片生成器（背诵知识点）</a>
+                </div>
+            </div>
+
+            <div class="mmq-card">
+                <h3>真限制说明</h3>
+                <div class="mmq-tip">
+                    <b>真限制一：题目随机、不可复现同一套</b>——题目由浏览器 Math.random 即时随机生成，每次闯关、不同设备题目都不同，无法复现或分享同一套题；<b>真限制二：localStorage 约 5MB 配额</b>——历史最佳与错题本存在浏览器本地 localStorage，清除浏览器数据后会丢失；<b>真限制三：答题数据不上传任何服务器</b>——计时、判分、统计全在浏览器本地完成，零网络请求。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="mmq-toast" id="mmq-toast"></div>
+    <script src="/tools/static/js/mental_math_quiz.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -2657,6 +2657,15 @@ func GetCategories() []Category {
 					Category:    "学习工具",
 				},
 				{
+					ID:          "mental_math_quiz",
+					Name:        "在线口算闯关",
+					Description: "小学生在线口算闯关：1–6 年级表驱动预设＋加减/乘除/混合/括号/进退位开关，随机出题（减法不负数、除法必整除），键盘输入＋回车确认（触屏数字键盘），计时（总耗时＋平均每题秒数）＋自动判分＋正确率统计，10/20/30 题一局闯关、0–3 星评价，错题本回顾重练，localStorage 历史最佳（各年级+题数档），纯前端零上传 · Mental math quiz: grade presets 1–6, timed quiz, auto grading, star rating, mistake review, localStorage best scores, 100% client-side",
+					Path:        "/tools/mental-math-quiz",
+					Icon:        "bolt",
+					New:         true,
+					Category:    "学习工具",
+				},
+				{
 					ID:          "ratio_solver",
 					Name:        "比例求解器",
 					Description: "a:b=c:d 已知三项求一项：交叉相乘 ad=bc 任意求解方向，小数+约分分数双显示，GCD 化简最简整数比，16:9/4:3/1:1/3:2/A4/黄金比例一键预设，即时计算+一键复制，全本地计算 · Proportion solver (a:b=c:d): cross-multiplication solve, decimal + reduced fraction display, simplest integer ratio via GCD, common-ratio presets, 100% client-side",
