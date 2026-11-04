@@ -18,7 +18,7 @@
 - **范围（有界）**：① OFD 文件拖拽/选择打开（FileReader＋本地 zip 解包，零上传；扩展名/文件头双重校验，非 OFD 友好报错）② 逐页渲染预览（canvas 渲染＋页码导航＋缩放；页数上限 **50 页**，超限截断＋提示）③ 一键组装 PDF 下载（复用站内 images-to-pdf PDF 生成链路；文件名回退 `ofd-converted`）④ 真限制页面明示 ⑤ 无障碍（tab 聚焦可操作、动画可减弱）⑥ 模板零外部资源惯例（ofd.js 单文件本地 vendor，许可证开发轮核验；备选 OFDGo WASM 本地 vendor）。
 - **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.OfdToPdf 下，module.exports 同步导出；DOM/渲染/zip 解包只做浏览器端，测试只覆盖纯函数）**：
   - `validateOfdFile(name, sizeBytes, maxSizeBytes)` → {ok:true}（name 非 OFD 扩展名/文件名空 err.field='name'；sizeBytes 非法或超限 err.field='size'）。
-  - `capPageCount(totalPages, maxPages)` → {pages, truncated}（totalPages 非正整数 err.field='totalPages'；maxPages 非正整数 err.field='maxPages'；truncated 精确布尔）。
+  - `capPageCount(totalPages, maxPages)` → {pages, truncated}（totalPages 非整数/为负 err.field='totalPages'；maxPages 非正整数 err.field='maxPages'；truncated 精确布尔）。
   - `formatPageLabel(index, total)` → string（如「第 3 / 12 页」；index 非整数/越界 err.field='index'；total 非正整数 err.field='total'）。
   - `buildExportName(fileName)` → string（原名换 `.pdf` 后缀；空文本回退 'ofd-converted.pdf'；非字符串 err.field='fileName'）。
   - `fontFallback(fontName)` → string（内嵌字体名→系统回退字体映射；非字符串 err.field='fontName'；未知字体回退默认）。

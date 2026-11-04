@@ -39,6 +39,7 @@ var ROOT = path.join(__dirname, "..");
 var JS_SRC = fs.readFileSync(path.join(ROOT, "static", "js", "ofd_to_pdf.js"), "utf8");
 var VENDOR_SRC = fs.readFileSync(path.join(ROOT, "static", "js", "vendor", "ofd.js"), "utf8");
 var TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "ofd_to_pdf.html"), "utf8");
+var INV_TPL_SRC = fs.readFileSync(path.join(ROOT, "templates", "invoice_generator.html"), "utf8");
 var GO_SRC = fs.readFileSync(path.join(ROOT, "tools", "categories.go"), "utf8");
 var MAXS = A.MAX_FILE_SIZE, MAXP = A.MAX_PAGES;
 
@@ -155,6 +156,7 @@ has(TPL_SRC, "零上传", "真限制③：零上传");
 has(TPL_SRC, "50 页上限", "真限制④：50 页上限");
 has(TPL_SRC, "/tools/invoice-generator", "互链：发票生成器（发票生成口径互补）");
 has(TPL_SRC, "发票生成口径互补", "互链文案：发票生成口径互补");
+has(INV_TPL_SRC, "/tools/ofd-to-pdf", "互链回链：发票生成器相关工具区回链 OFD 转 PDF");
 has(TPL_SRC, 'id="otp-upload"', "模板含上传区 otp-upload");
 has(TPL_SRC, 'id="otp-canvas-wrap"', "模板含预览画布容器 otp-canvas-wrap");
 has(TPL_SRC, 'id="otp-export"', "模板含导出按钮 otp-export");

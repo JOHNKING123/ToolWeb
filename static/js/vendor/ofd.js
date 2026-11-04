@@ -208,7 +208,9 @@ return doc;
 /* ---------------- 文档模型构建 ---------------- */
 
 function loadResFile(zip, absPath, fonts, media) {
-return zip.file(absPath).async('string').then(function (text) {
+var zf = zip.file(absPath);
+if (!zf) return null;  /* 资源文件缺失不致命：字体回退系统字体即可 */
+return zf.async('string').then(function (text) {
 var xml = parseXml(text, absPath);
 var root = xml.documentElement;
 var baseLoc = root.getAttribute('BaseLoc') || '';
