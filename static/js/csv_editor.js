@@ -527,13 +527,9 @@ delimRadios[i].addEventListener('change', function () {
 var v = this.value;
 var d = (v === 'tab') ? '\t' : v;
 if (d === state.delim) return;
-if (state.dirty && state.rawText !== '' &&
-!window.confirm('切换分隔符将从原文重新解析，未导出的编辑会丢失，继续吗？')) {
-syncDelimRadios();
-return;
-}
-state.delim = d;
-applyParse();
+if (state.rawText === '') { state.delim = d; syncDelimRadios(); updateStats(); return; }
+if (state.dirty && !window.confirm('切换分隔符将从原文重新解析，未导出的编辑会丢失，继续吗？')) { syncDelimRadios(); return; }
+state.delim = d; applyParse();
 });
 }
 var newBtn = $('ce-new');
