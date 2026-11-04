@@ -1,3 +1,71 @@
+## 今日任务（2026-11-05 03:57 · PM 选定轮，接通用调研第二百二十八轮）
+
+**选定：打字练习（typing_practice）** — 本轮唯一任务（新工具）。
+
+**顺位**：228 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **首席顺位**：研究轮 228 轮 Top3 首席，按惯例顺位即立项依据。
+2. **需求双重验证**：① 外部独立信号：36氪 11-03「10个好用的免费工具型网站」收录 TypeLit（选书本段落打字练习＋实时速度/准确率反馈）——打字练习赛道的产品形态独立验证；② **站内家族规划位**：study_notes／flashcard_maker／habit_tracker 三处 tests 预埋「自律学习一条龙」互链**负向断言**（`不链未交付工具：无打字练习（尚未交付）`）——本工具即该规划位，交付后可直接补齐家族互链，无需补测断言。
+3. **无硬伤**：纯前端小难度（有界范围：练习文本三类→实时键盘监听→WPM/准确率/用时/进度实时统计→错键 Top 统计→localStorage 历史最佳；零上传），零外部依赖、无年更新数据表维护负担、无隐私合规坑；一天可高质量交付。
+4. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`typing_test`／`typing-test`／`typingTest`／`typing-practice`／`typing_practice` 全站（git HEAD f6248cd，297 Path，183 tests；除 BACKLOG.md 外，vendor 排除）命中**仅** tests 三处家族规划位负向断言（flashcard_maker.test.js:159／habit_tracker.test.js:135／study_notes.test.js:213）——本体 0 交付，真缺口确凿。
+   - CJK「打字练习」（`chr(0x6253)+chr(0x5B57)+chr(0x7EC3)+chr(0x4E60)` 运行时构造＋验真）全站命中**仅**上述三处 tests 负向断言行——真缺口确凿。
+   - Icon：**`type`（首选；`Icon:\s*"type"` 精确值 **0 命中**，全库唯一；备选 `keyboard` 已被占用 1 命中，不可取）**，开发轮复测锁定。
+
+**未选说明**：年假拼假优化器（PM 本轮**第十二度裁定跳过**：硬伤维持未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／社媒/证件照尺寸速查表（三席维持：CropDen 11-03 独立新信号已收录；数据鲜度维护负担（平台规格偶发变更）压级；留池递进）／英文反向词典（新晋 P3 弱观察：需内置词库或外部 API，有外部依赖风险）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 练习文本三类：英文名言／代码片段／中文美文（内置文本库，纯前端）② 实时键盘监听（对错着色＋当前字符高亮）③ 实时统计：WPM（标准 5 字符=1 词）／准确率／用时／进度 ④ 错键 Top 统计（每键错误次数排行）⑤ localStorage 历史最佳（各文本类目＋最优 WPM/准确率；纯本地，零上传）⑥ 重新开始/换文一键操作 ⑦ 无障碍（tab 聚焦可操作、动画可减弱）与真限制页面明示。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.TypingPractice 下，module.exports 同步导出；DOM/键盘渲染只做浏览器端，测试只覆盖纯函数）**：
+  - `buildTargets(text)` → string[]（逐字符数组；text 非字符串 err.field='text'；空文本 err.field='text'）。
+  - `initSession(text, mode)` → {targets, typed: [], errors: 0, keyErrors: {}, startedAt: 0}（mode 非三类之一 err.field='mode'）。
+  - `applyKeystroke(session, key)` → session（key 非单字符 err.field='key'；命中对错着色逻辑：正确追加 correct 计数、错误记 errors+1 且 keyErrors[key]++；session 结构不合 err.field='session'；不静默钳制超长输入）。
+  - `calcStats(session, elapsedMs)` → {wpm, accuracy, elapsedMs, progress, charsTyped, charsCorrect}（wpm=(correct/5)/(elapsedMs/60000)，保留 1 位小数；accuracy=correct/typed；elapsedMs<0 err.field='elapsedMs'；session 非法 err.field='session'）。
+  - `topErrors(keyErrors, n)` → [{key, count}]（按 count 降序，n 缺省 5；n 非正整数 err.field='n'；keyErrors 非对象 err.field='keyErrors'）。
+  - `updateBest(best, mode, stats)` → newBest（best 非对象 err.field='best'；仅当 wpm 更高、或 wpm 相等且 accuracy 更高时更新；不优不更新）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'typing-practice'）。
+- **真限制三条页面明示**：① 计时基于浏览器本地时钟，不同设备/浏览器可能有细微差异；② 历史最佳走浏览器 localStorage（约 5MB 配额），清除浏览器数据后丢失；③ 所有练习数据不上传任何服务器，内置文本仅为示例片段。
+- **SEO**：在线打字练习、打字速度测试、键盘打字练习、中文打字练习、英文打字练习。
+- **改动文件**：tools/categories.go（「学习工具」类目新增 typing_practice 条目，Path 297→**298**，Icon `type` 首选，开发轮精确值复测锁定全库唯一）／templates/typing_practice.html（新）／static/js/typing_practice.js（新）／tests/typing_practice.test.js（新）／全量旧 tests Path 断言 297→298 数值同步（仅断言数值）／study_notes／flashcard_maker／habit_tracker 三处「自律学习一条龙」家族互链补齐（负向断言翻转为双向互链断言，开发轮按模板惯例执行）。
+- **验收标准**：① node 新测试 ≥50 断言全过（buildTargets 逐字符精确值与非字符串抛错 err.field='text'；applyKeystroke 对错着色精确值与 keyErrors 计数；calcStats WPM 精确值（60000ms/300 正确字符→60.0）与非法 elapsedMs 抛错；topErrors 降序精确值；updateBest 更高 WPM 更新、相等 WPM 更高 accuracy 更新、都不优不更新三情形精确值；模板零外部资源静态检查）② 全量 tests/*.test.js 183→**184** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/typing-practice 200、静态 JS 200、首页索引收录 ⑤ 家族三处互链断言翻转全绿。
+- **品类归位**：注册到「学习工具」类目（study_notes/flashcard_maker/habit_tracker/mental_math_quiz 同类目，学习辅助一条龙；交付后补齐家族互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：打字练习→本轮交付（228 研究轮新晋首席；PM 按「无硬伤不跳过」惯例直接立项；需求双重验证（36氪 TypeLit 独立信号＋站内家族规划位预埋）；零重叠复核确凿（ASCII 五形＋CJK「打字练习」全 0 交付）；学习工具类目；Icon `type` 首选（0 命中全库唯一；`keyboard` 被占用））／年假拼假优化器→第二顺位（PM 第十二度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／社媒/证件照尺寸速查表→第三顺位维持（P3；数据鲜度维护负担）／英文反向词典→新晋 P3 弱观察（外部依赖风险）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 f6248cd（幸运决策转盘交付）／bc031dd（CSV 编辑器 bug 修复）／ea4290e（CSV 编辑器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **297**；`ls tests/*.test.js | wc -l` = **183**；PM 独立零重叠复核（ASCII 五形仅 tests 家族规划位负向断言 3 处、本体 0 交付；CJK「打字练习」`chr(0x6253)+chr(0x5B57)+chr(0x7EC3)+chr(0x4E60)` 运行时构造仅上述 3 处断言行、本体 0 交付；`Icon:\s*"type"` 精确值 0 命中、`keyboard` 已被占用 1 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇；学习工具簇 study_notes／flashcard_maker／mental_math_quiz／habit-tracker 合规）。
+>
+> **交付核对**：幸运决策转盘已交付闭环（commit f6248cd，`/tools/decision-wheel`，Path 总数 296→**297**，tests **183 个**，Icon album 精确值复测锁定全库唯一，与 random_decision 双向互链），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **打字练习** — 新晋首席。双重验证：① 外部独立信号：36氪 11-03「10个好用的免费工具型网站」收录 TypeLit（选书本段落打字练习＋实时速度/准确率反馈）；② **站内家族规划位**：study_notes／flashcard_maker／habit_tracker 三处 tests 预埋「自律学习一条龙」互链负向断言（`notHas(TPL_SRC, "/tools/typing-practice", "不链未交付工具：无打字练习（尚未交付）")`）——本工具即该规划位，交付后可直接补齐家族互链。真缺口确凿：ASCII `typing_test`／`typing-test`／`typingTest` 全站（git HEAD f6248cd，297 Path，183 tests；除 BACKLOG.md 外）**0 命中**（现有 "typing-practice" 仅为上述三处 tests 负向断言）；CJK「打字练习」（`chr(0x6253)+chr(0x5B57)+chr(0x7EC3)+chr(0x4E60)` 运行时构造＋验真）templates／static/js／tools/categories.go **0 命中**。纯前端小难度（有界范围：练习文本三类（英文名言/代码片段/中文美文）→实时键盘监听（对错着色＋当前字符高亮）→WPM/准确率/用时/进度实时统计→错键 Top 统计→localStorage 历史最佳；零上传），一天可高质量交付。痛点：程序员/学生/办公族练打字速度，家长给孩子练打字。SEO：在线打字练习、打字速度测试、键盘打字练习、中文打字练习、英文打字练习。建议 ID typing_practice、Path /tools/typing-practice（tests 预埋位即此 Path）；Icon 候选 `type`（`Icon: "type"` 精确值 **0 命中**；`keyboard` 已被占用 1 命中，不可取；开发轮精确值复测锁定）。
+2. **年假拼假优化器** — 顺位维持次席。站内零重叠维持（工具 ID 级 `holiday`/`vacation`/`pto`/`leave` 全站无命中——`crypto` 为 pto 子串误命中；CJK「年假」／「拼假」全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排仍未公布（通常 11 月下旬），当下时间窗口价值打折；**PM 可裁定第十二度跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮／223 轮／224 轮／225 轮／226 轮／227 轮十一度裁定跳过）。
+3. **社媒/证件照尺寸速查表** — 三席维持。CropDen 11-03 独立新信号维持（14 平台 55 个尺寸＋App 遮挡区像素坐标＋6 种护照/签证照片规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更）压级。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+
+**新信号扫描**（2026-11-05 01:00~03:54 窗口；本轮**新晋 1 首席候选＋1 P3 弱观察**）：
+- 36氪 11-03（10个好用的免费工具型网站）：TypeLit（书本打字练习＋实时速度/准确率）→**新晋首席「打字练习」独立信号**；myNoise（白噪音）→**站内 white_noise_generator 已交付形态印证消解**；Cleanup.pictures（AI 去除照片物体）→AI/后端消解；Excel Formula Bot→AI 消解；PDF24→站内 PDF 工具簇形态印证消解；Calm Calendar（双日历同步）→SaaS/账号口径消解；OneLook（英文反向词典：同义词/反义词/概念联想词＋反向查词）→**新晋 P3 弱观察「英文反向词典」**（站内 CJK「词典」0 命中；纯前端需内置词库或外部 API，有外部依赖风险，压至 P3）。
+- V2EX 11-04（scan-to-vector-skill：Claude Code/Codex 技能，扫描件重建成矢量 PDF，Python+tesseract）→Agent/CLI 口径消解。
+- V2EX 11-04（Claude Code Config Helper 3.2.81，VS Code 扩展）→桌面/插件口径消解。
+- V2EX 11-04（daban，基于 DeepSeek Harness 自带本地虚拟机的 Bot Agent）→Agent/后端口径消解。
+- V2EX 11-04（AI 额度分享平台上线预告，合租）→后端/平台口径消解。
+- V2EX 10-20（Open Resume：156 款模板自部署简历工具，Node 服务端）→站内 resume_builder＋resume_checker 已交付，形态印证消解。
+- V2EX 11-04（Surge Tailscale 面板：清理 -1/-2 幽灵节点）→桌面/面板口径消解。
+- HN（phoria2 WebGL 2 小型 3D 库）→开发者库口径消解；Show HN Mnml.page（极简单页建站）→建站平台口径消解。
+
+**候选池变动**：decision_wheel 交付划出（f6248cd，297 Path，183 tests）；**新晋首席 1 个**（打字练习：36氪 TypeLit 独立信号＋站内家族规划位预埋＋ASCII/CJK 零重叠双确凿；纯前端小难度一天可交付；建议 Path /tools/typing-practice 与 tests 预埋位一致）；**年假拼假优化器顺位维持**（PM 可裁定第十二度跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）；**社媒/证件照尺寸速查表三席维持**（数据鲜度维护负担压级）；**新晋 P3 弱观察 1 个**（英文反向词典：OneLook 模式；需内置词库或外部 API）；唱歌音准检测 P3 弱观察维持（需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-05 通用调研第二百二十八轮——幸运决策转盘交付闭环（f6248cd；`/tools/decision-wheel` 已注册；全量 **297 Path**；全量 tests/*.test.js **183 个**），候选池划出；新信号（36氪 TypeLit→新晋首席；myNoise／PDF24／Open Resume→站内形态印证；OneLook→新晋 P3 弱观察；scan-to-vector-skill／Config Helper／daban／AI 额度平台／Surge 面板→Agent/CLI/插件/后端/桌面口径消解；phoria2／Mnml.page→库/平台口径消解）均已消化；打字练习真缺口双确凿（ASCII 三形 0 命中；CJK「打字练习」templates/JS/分类 0 命中；tests 三处「尚未交付」负向断言为家族规划位）；WPS 候选表保持冻结归档；全库 297 Path 核对无重叠（Top3 建议 ID typing_practice／年假拼假优化器 ID 待定／social_image_size_guide；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 又被清空——老问题第 N 次复现，ssh 自动重建后一次成功）；**远端无新提交**（本地 HEAD f6248cd＝origin/muse/dev-20260929）；`git log` 头部 f6248cd（幸运决策转盘交付）／bc031dd（CSV 编辑器 bug 修复）／ea4290e（CSV 编辑器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **297**；`ls tests/*.test.js | wc -l` = **183**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 01:42 · PM 选定轮，接通用调研第二百二十七轮）
 
 **选定：幸运决策转盘（decision_wheel）** — 本轮唯一任务（新工具）。

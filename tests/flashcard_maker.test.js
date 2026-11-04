@@ -141,7 +141,7 @@ var quizMatches = GO_SRC.match(/Icon:\s+"quiz"/g) || [];
 eq(quizMatches.length, 1, "Icon quiz 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 297, "注册 Path 总数 274→275");
+eq(pathCount, 298, "注册 Path 总数 274→275");
 
 /* ---------- 8. 模板：真限制/互链/零网络/SEO ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/flashcard-maker", "模板 canonical 含新 Path");
@@ -156,7 +156,7 @@ has(TPL_SRC, "闪卡", "模板含 SEO 关键词 闪卡");
 has(TPL_SRC, "抽认卡", "模板含 SEO 关键词 抽认卡");
 has(TPL_SRC, "背单词卡片", "模板含 SEO 关键词 背单词卡片");
 has(TPL_SRC, "Flashcards maker", "模板含 SEO 关键词 Flashcards maker");
-notHas(TPL_SRC, "/tools/typing-practice", "不链未交付工具：无打字练习（尚未交付）");
+has(TPL_SRC, "/tools/typing-practice", "互链：打字练习（自律学习一条龙）");
 has(TPL_SRC, "fm-practice", "模板含练习容器 fm-practice");
 has(JS_SRC, "fm-practice-card", "JS 渲染练习翻转卡 fm-practice-card");
 has(TPL_SRC, "fm-stats", "模板含统计区 fm-stats");

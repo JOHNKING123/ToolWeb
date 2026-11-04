@@ -1,0 +1,172 @@
+{{define "typing_practice"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打字练习 - 在线打字速度测试/键盘打字练习/中文英文打字练习 | 程序员工具箱</title>
+    <meta name="description" content="免费在线打字练习：英文名言/代码片段/中文美文三类内置练习文本，实时键盘监听（对错着色＋当前字符高亮），WPM 打字速度/准确率/用时/进度实时统计，错键 Top 排行，localStorage 历史最佳，纯前端不上传。">
+    <meta name="keywords" content="在线打字练习,打字速度测试,键盘打字练习,中文打字练习,英文打字练习,typing practice,WPM 测试,打字准确率">
+    <meta property="og:title" content="打字练习 - 在线打字速度测试">
+    <meta property="og:description" content="英文名言/代码片段/中文美文三类练习文本，实时 WPM/准确率统计，错键排行，localStorage 历史最佳，纯前端本地处理。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/typing-practice">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/typing-practice">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "打字练习",
+      "description": "免费在线打字练习：英文名言/代码片段/中文美文三类内置练习文本，实时键盘监听对错着色，WPM/准确率/用时/进度实时统计，错键 Top 排行，localStorage 历史最佳，纯前端本地处理不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/typing-practice",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .tp-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .tp-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .tp-empty { color: #9ca3af; font-size: .92rem; padding: .4rem 0; }
+        .tp-mode { border: 1px solid #d1d5db; background: #fff; border-radius: 999px; padding: .35rem 1rem; font-size: .9rem; cursor: pointer; color: #374151; }
+        .tp-mode:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .tp-mode.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+        .tp-mode:focus-visible, .tp-actions .btn:focus-visible, #tp-input:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+        .tp-text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 1.25rem; line-height: 2.1; white-space: pre-wrap; word-break: break-all; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .6rem; padding: 1rem 1.2rem; margin-top: .7rem; cursor: text; }
+        .tp-char { border-radius: .25rem; padding: 0 .08rem; }
+        .tp-pending { color: #9ca3af; }
+        .tp-ok { color: #16a34a; }
+        .tp-bad { color: #fff; background: #ef4444; }
+        .tp-current { background: #dbeafe; box-shadow: inset 0 -3px 0 #2563eb; }
+        #tp-input { width: 100%; padding: .6rem .8rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; box-sizing: border-box; margin-top: .7rem; }
+        #tp-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+        .tp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; margin-top: .7rem; }
+        .tp-stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .6rem; padding: .6rem .8rem; text-align: center; }
+        .tp-stat .v { font-size: 1.35rem; font-weight: 700; color: #111827; }
+        .tp-stat .k { font-size: .8rem; color: #6b7280; margin-top: .15rem; }
+        .tp-progress { height: .6rem; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: .7rem; }
+        #tp-progress-bar { height: 100%; width: 0; background: var(--primary-color); border-radius: 999px; transition: width .2s; }
+        .tp-chip { display: inline-block; font-size: .85rem; background: #eef2ff; color: #4338ca; border-radius: .4rem; padding: .25rem .7rem; margin: 0 .4rem .4rem 0; }
+        .tp-erow { display: flex; align-items: center; gap: .8rem; padding: .35rem 0; border-bottom: 1px dashed #e5e7eb; }
+        .tp-ekey { font-family: ui-monospace, Menlo, monospace; background: #1f2937; color: #fff; border-radius: .35rem; padding: .15rem .6rem; font-size: .9rem; min-width: 2rem; text-align: center; }
+        .tp-ecount { color: #6b7280; font-size: .88rem; }
+        #tp-result { display: none; border: 2px solid #16a34a; background: #f0fdf4; border-radius: .6rem; padding: .9rem 1.1rem; margin-top: .8rem; }
+        #tp-result h4 { margin: 0 0 .4rem; color: #15803d; }
+        .tp-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .tp-limit b { color: #374151; }
+        #tp-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+        .tp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        @media (prefers-reduced-motion: reduce) {
+            #tp-progress-bar { transition: none; }
+            * { animation: none !important; }
+        }
+        @media (max-width: 640px) {
+            .tp-text { font-size: 1.05rem; }
+            .tp-actions .btn { flex: 1 1 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>⌨️ 打字练习</h1>
+            <p>在线打字速度测试：三类练习文本 → 实时对错着色 → WPM/准确率/用时/进度统计，纯本地不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="tp-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>① 选择练习文本</h3>
+                <div class="tp-actions" role="group" aria-label="练习文本类目">
+                    <button class="tp-mode active" data-mode="en">英文名言</button>
+                    <button class="tp-mode" data-mode="code">代码片段</button>
+                    <button class="tp-mode" data-mode="zh">中文美文</button>
+                </div>
+                <div class="tp-actions">
+                    <button class="btn btn-secondary" id="tp-change" style="font-size:.9rem;">换一段</button>
+                    <button class="btn btn-secondary" id="tp-restart" style="font-size:.9rem;">重新开始</button>
+                    <button class="btn btn-secondary" id="tp-export" style="font-size:.9rem;">导出本次成绩 JSON</button>
+                </div>
+                <div class="tp-info">点类目按钮切换文本类型；「换一段」在同类目内轮换下一段；「重新开始」清空当前输入重练本段。计时从你敲下第一个字符开始。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>② 练习区</h3>
+                <div class="tp-text" id="tp-text" aria-hidden="true"></div>
+                <label for="tp-input" class="tp-info" style="display:block;">打字输入区（键盘 Tab 可聚焦，中文请用输入法直接输入）</label>
+                <input id="tp-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                       aria-label="打字输入区：请照着上方文本逐字输入" placeholder="点这里，照着上方文本开始打字…">
+                <div class="tp-progress" role="progressbar" aria-label="练习进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="tp-progress">
+                    <div id="tp-progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>③ 实时统计</h3>
+                <div class="tp-stats">
+                    <div class="tp-stat"><div class="v" id="tp-wpm">0.0</div><div class="k">WPM（5 字符=1 词）</div></div>
+                    <div class="tp-stat"><div class="v" id="tp-acc">0.0%</div><div class="k">准确率</div></div>
+                    <div class="tp-stat"><div class="v" id="tp-time">00:00</div><div class="k">用时</div></div>
+                    <div class="tp-stat"><div class="v" id="tp-prog">0.0%</div><div class="k">进度</div></div>
+                </div>
+                <div class="tp-info">历史最佳（各文本类目）：</div>
+                <div id="tp-best" style="margin-top:.4rem;"></div>
+                <div id="tp-result" role="status">
+                    <h4>🎉 本次练习完成</h4>
+                    <div class="tp-info" style="margin-top:0;">
+                        速度 <b id="tp-result-wpm"></b> WPM · 准确率 <b id="tp-result-acc"></b> ·
+                        用时 <b id="tp-result-time"></b><br><span id="tp-result-best"></span>
+                    </div>
+                </div>
+                <div id="tp-announce" class="tp-sr" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>④ 错键 Top 统计</h3>
+                <div id="tp-errors"></div>
+                <div class="tp-info">按每个按键的打错次数降序列出前 5 名，帮你找到最需要练的键。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>使用说明</h3>
+                <div class="tp-info">
+                    <b>流程：</b>选文本类目（英文名言/代码片段/中文美文）→ 点输入框开始打字 → 字符实时着色（绿=对，红=错，蓝底=当前字符）→ 打完自动结算 WPM/准确率/用时 → 历史最佳自动记入本浏览器。<br>
+                    <b>退格：</b>输错可用退格键撤销重打；已计入的错误次数保留（错了就是错了）。<b>中文：</b>用输入法正常输入即可，逐字比对的是最终上屏字符。<br>
+                    <b>WPM 口径：</b>标准口径 5 个字符计 1 词，即（正确字符数÷5）÷（用时分钟数），保留 1 位小数。
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="tp-limit">
+                    <li><b>① 本地时钟计时：</b>计时基于浏览器本地时钟，不同设备/浏览器可能有细微差异，成绩仅供自我纵向对比。</li>
+                    <li><b>② localStorage 配额：</b>历史最佳走浏览器 localStorage（约 5MB 配额），清除浏览器数据后丢失，请定期「导出本次成绩 JSON」备份。</li>
+                    <li><b>③ 纯本地处理：</b>所有练习数据不上传任何服务器，内置文本仅为示例片段（可在浏览器 Network 面板自证零请求）。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="tp-actions">
+                    <a href="/tools/study-notes" class="btn btn-secondary" style="font-size:.9rem;">学习笔记整理器 <span style="color:#2563eb;font-weight:700;">· 学习辅助一条龙</span></a>
+                    <a href="/tools/flashcard-maker" class="btn btn-secondary" style="font-size:.9rem;">闪卡卡片生成器 <span style="color:#2563eb;font-weight:700;">· 学习辅助一条龙</span></a>
+                    <a href="/tools/habit-tracker" class="btn btn-secondary" style="font-size:.9rem;">习惯追踪器 <span style="color:#2563eb;font-weight:700;">· 自律学习一条龙</span></a>
+                </div>
+                <div class="tp-info" style="margin-top:.6rem">自律学习一条龙：学习笔记整理器负责<b>整理</b>（笔记＋标签）；闪卡卡片生成器负责<b>记忆</b>（背诵＋间隔重复）；习惯追踪器负责<b>坚持</b>（每日打卡）；打字练习负责<b>练手速</b>（WPM＋准确率）——整理＋记忆＋坚持＋手速。</div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="tp-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/typing_practice.js?v=1"></script>
+</body>
+{{end}}

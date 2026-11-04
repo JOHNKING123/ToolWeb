@@ -119,7 +119,7 @@ var m;
 var re = /"\/tools\/[^"]+"/g;
 var seen = {};
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 297, "注册 Path 总数 268→270");
+eq(pathCount, 298, "注册 Path 总数 268→270");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(!/src="https?:\/\//.test(TPL_SRC), "模板无外部脚本/样式引用");
 ok(TPL_SRC.indexOf("只算校验值、不做文件修复") >= 0, "模板含真限制：只算校验值、不做文件修复");

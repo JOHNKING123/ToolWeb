@@ -194,7 +194,7 @@ var iconRe = /"note_add"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon note_add 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 297, "注册 Path 总数 275→276");
+eq(pathCount, 298, "注册 Path 总数 275→276");
 
 /* ---------- 12. 模板：SEO/真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/study-notes", "模板 canonical 含新 Path");
@@ -210,7 +210,7 @@ has(TPL_SRC, "/tools/flashcard-maker", "互链：闪卡卡片生成器（学习�
 has(TPL_SRC, "/tools/habit-tracker", "互链：习惯追踪器（自律学习一条龙）");
 has(TPL_SRC, "学习辅助一条龙", "互链文案：学习辅助一条龙");
 has(TPL_SRC, "自律学习一条龙", "互链文案：自律学习一条龙");
-notHas(TPL_SRC, "typing", "不链未交付工具：无打字练习");
+has(TPL_SRC, "/tools/typing-practice", "互链：打字练习（自律学习一条龙）");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch 调用");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");
 notHas(JS_SRC, "WebSocket", "零网络：JS 无 WebSocket");

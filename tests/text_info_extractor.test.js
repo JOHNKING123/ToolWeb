@@ -189,7 +189,7 @@ has(GO_SRC, '"/tools/text-info-extractor"', "注册：Path /tools/text-info-extr
 has(GO_SRC, "文本信息提取器", "注册：中文名");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniq = paths.filter(function (v, i) { return paths.indexOf(v) === i;});
-eq(uniq.length, 297, "注册：268→270 Path");
+eq(uniq.length, 298, "注册：268→270 Path");
 ok(/ID:\s+"text_info_extractor"[\s\S]{0,800}?Category:\s+"文本工具"/.test(GO_SRC), "注册：品类为文本工具");
 ok(/ID:\s+"text_info_extractor"[\s\S]{0,800}?New:\s+true/.test(GO_SRC), "注册：New 为 true");
 

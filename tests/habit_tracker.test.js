@@ -120,7 +120,7 @@ var evMatches = GO_SRC.match(/Icon:\s+"event_available"/g) || [];
 eq(evMatches.length, 1, "Icon event_available 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 297, "注册 Path 总数 274→275");
+eq(pathCount, 298, "注册 Path 总数 274→275");
 
 /* ---------- 8. 模板：真限制/互链/零网络/SEO ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/habit-tracker", "模板 canonical 含新 Path");
@@ -132,7 +132,7 @@ has(TPL_SRC, "Network 面板自证", "真限制③：纯本地零上传 Network 
 has(TPL_SRC, "/tools/flashcard-maker", "互链：闪卡卡片生成器（自律学习一条龙）");
 has(TPL_SRC, "/tools/countdown-timer", "互链：在线倒计时/番茄钟（自律学习一条龙）");
 has(TPL_SRC, "自律学习一条龙", "互链口号：自律学习一条龙");
-notHas(TPL_SRC, "/tools/typing-practice", "不链未交付工具：无打字练习（尚未交付）");
+has(TPL_SRC, "/tools/typing-practice", "互链：打字练习（自律学习一条龙）");
 has(TPL_SRC, "习惯打卡", "模板含 SEO 关键词 习惯打卡");
 has(TPL_SRC, "习惯追踪", "模板含 SEO 关键词 习惯追踪");
 has(TPL_SRC, "自律", "模板含 SEO 关键词 自律");

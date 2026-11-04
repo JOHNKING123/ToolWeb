@@ -2764,6 +2764,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "学习工具",
 				},
+				{
+					ID:          "typing_practice",
+					Name:        "打字练习",
+					Description: "在线打字练习/打字速度测试：英文名言/代码片段/中文美文三类内置练习文本，实时键盘监听（对错着色＋当前字符高亮），WPM（标准5字符=1词）/准确率/用时/进度实时统计，错键 Top 排行，localStorage 历史最佳（各文本类目最优 WPM/准确率），重新开始/换文一键操作，纯前端不上传；与学习笔记整理器/闪卡卡片生成器/习惯追踪器互链（自律学习一条龙） · typing practice: real-time WPM/accuracy stats, error-key ranking, localStorage best scores, 100% client-side",
+					Path:        "/tools/typing-practice",
+					Icon:        "type",
+					New:         true,
+					Category:    "学习工具",
+				},
 			},
 		},
 		{
