@@ -1261,6 +1261,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "csv_editor",
+					Name:        "CSV 编辑器",
+					Description: "免费在线 CSV 编辑器：拖拽或选择本地 .csv 文件，分隔符自动检测（逗号/分号/制表符），表格渲染后双击单元格原地编辑（Enter 确认/Esc 取消），增删行列，一键导出 CSV 下载，纯本地运行不上传 · CSV editor online: edit CSV cells in browser, add/delete rows and columns, export CSV, 100% client-side",
+					Path:        "/tools/csv-editor",
+					Icon:        "table_edit",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "csv_to_markdown",
 					Name:        "CSV→Markdown 表格生成器",
 					Description: "免费在线 CSV 转 Markdown 表格生成器：粘贴 CSV 或本地读取 .csv，首行作表头、引号字段与字段内换行正确解析，每列可选左／居中／右对齐，实时生成标准 GFM 表格，一键复制或下载 table.md，纯前端零上传 · CSV to markdown table generator: convert CSV to GitHub markdown table locally, 100% client-side",

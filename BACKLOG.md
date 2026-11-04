@@ -1,3 +1,68 @@
+## 今日任务（2026-11-04 23:40 · PM 选定轮，接通用调研第二百二十六轮）
+
+**选定：CSV 编辑器（csv_editor）** — 本轮唯一任务（新工具）。
+
+**顺位**：226 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **首席顺位**：研究轮 226 轮 Top3 首席（备选→首席递进），按惯例顺位即立项依据。
+2. **交付风险 PM 裁定可控**：研究轮标注的「一天高质量交付风险」经 PM 复核不是硬伤（零外部依赖、无年更新数据表维护负担、无隐私合规坑、纯前端零上传），而是范围控制问题——本轮以**严格有界范围**消解：表格渲染上限 2000 行（超限截断+提示，truncateGrid 纯函数约定）；增删行列限定为行尾/列尾追加＋选中行/列删除；分隔符三选（逗号/分号/制表符）＋自动检测；RFC4180 常用子集解析（双引号包裹/转义/字段内换行），极端不规范 CSV 偏差走页面真限制明示。
+3. **口径互补确凿**：站内 `csv_table_viewer`（已交付，1255 行）为**查看器口径**（CSV 上传→表格展示），本工具为**编辑器口径**（单元格双击编辑／增删行列／分隔符三选／导出 CSV）——编辑器仍是真缺口；与 csv_table_viewer／csvjson／csv_to_markdown 同属「格式转换」类目 CSV 家族，建议双向互链（开发轮按模板惯例决定）。
+4. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`csv_editor`／`csv-editor`／`csvEditor`／`CsvEditor` 全站（git HEAD 0c58706，295 Path，181 tests；除 BACKLOG.md 外，vendor 排除）**0 命中**。
+   - CJK「年假」／「拼假」（运行时构造）全站 **0 命中**；「转盘」（`chr(0x8F6C)+chr(0x76D8)` 运行时构造）全站 **0 命中**——三席候选亦为真缺口，留池递进。
+   - Icon：**`table_edit`（首选；`"Icon": "table_edit"` 在 tools/categories.go 精确值 0 命中，全库唯一；备选 `edit_note`／`grid_on` 亦 0 命中）**，开发轮精确值复测锁定。注意 `table_chart` 已被 csvjson 占用，不可取。
+
+**未选说明**：年假拼假优化器（PM 本轮**第十度裁定跳过**：硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／幸运决策转盘（P3→三席递进：CJK「转盘」0 命中、ASCII `spinner` 仅 loading 指示器口径、`random_decision` 为 Secret Santa 口径，互补确凿；纯前端小难度一天可交付；留池待 CSV 编辑器交付后递进）／社媒/证件照尺寸速查表（新晋 P3 弱观察维持：数据鲜度维护负担）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 文件拖拽/选择打开（本地 FileReader 解析，零上传）＋空表格新建（从零开始建表）② 分隔符自动检测＋三选手动切换（逗号/分号/制表符）③ 表格渲染（表头行可编辑；上限 2000 行，超限截断+提示）④ 单元格双击原地编辑（Enter 确认/Esc 取消）⑤ 增删行/列（行尾追加行、列尾追加列、删除选中行、删除选中列）⑥ 导出 CSV 下载（当前分隔符；文件名可自定义，默认原文件名+'-edited'）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.CSVEditor 下，module.exports 同步导出；DOM/渲染只做浏览器端，测试只覆盖纯函数）**：
+  - `detectDelimiter(text)` → ','|';'|'\t'（三候选中首行出现次数最多者；空文本回退 ','；text 非字符串 err.field='text'）。
+  - `parseCSV(text, delimiter)` → string[][]（RFC4180 常用子集：双引号包裹、双引号转义、字段内换行；delimiter 非三选之一 err.field='delimiter'；text 非字符串 err.field='text'）。
+  - `stringifyCSV(grid, delimiter)` → string（需包裹时加双引号：含分隔符/换行/双引号；grid 非二维数组 err.field='grid'；delimiter 非法 err.field='delimiter'）。
+  - `setCell(grid, r, c, value)` → 新 grid（不可变更新；越界/非整数下标 err.field='cell'；value 非字符串时 String(value) 归一化）。
+  - `insertRow(grid, index)` → 新 grid（index 缺省为末尾追加；index 非法 err.field='index'）。
+  - `deleteRow(grid, index)` → 新 grid（index 非法 err.field='index'；grid 为空 err.field='grid'）。
+  - `insertCol(grid, index)`／`deleteCol(grid, index)` → 新 grid（同行级约定；deleteCol 删至 0 列时保留 1 空列不抛错）。
+  - `truncateGrid(grid, maxRows)` → {grid, truncated}（超限截断头部保留 maxRows 行；maxRows 非正整数 err.field='maxRows'）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'csv-editor'）。
+- **真限制三条页面明示**：① 解析为 RFC4180 常用子集，极端不规范 CSV（如未闭合引号）可能解析偏差；② 表格上限 2000 行，超限自动截断并提示（浏览器单页渲染性能边界）；③ 所有编辑均在本地完成，文件内容不上传任何服务器。
+- **SEO**：CSV 在线编辑、CSV 编辑器、在线改表格、CSV 数据修改。
+- **改动文件**：tools/categories.go（「格式转换」类目新增 csv_editor 条目，与 csv_table_viewer 同类目，Path 295→**296**，Icon `table_edit` 首选，开发轮精确值复测锁定全库唯一）／templates/csv_editor.html（新）／static/js/csv_editor.js（新）／tests/csv_editor.test.js（新）／全量旧 tests Path 断言 295→296 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（detectDelimiter 三分隔符精确值与空文本回退 ','、非字符串抛错 err.field='text'；parseCSV 引号包裹/双引号转义/字段内换行精确值与非法 delimiter 抛错 err.field='delimiter'；stringifyCSV↔parseCSV 往返一致；setCell 不可变更新（原 grid 不变）与越界抛错 err.field='cell'；insertRow/deleteRow/insertCol/deleteCol 边界精确值与非法 index 抛错；truncateGrid 超限截断精确值与 truncated 标志；sanitizeFileName 非法字符清理与空回退；模板零外部资源静态检查）② 全量 tests/*.test.js 181→**182** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/csv-editor 200、静态 JS 200、首页索引收录。
+- **品类归位**：注册到「格式转换」类目（与 csv_table_viewer／csvjson／csv_to_markdown 同类目，CSV 家族；查看器口径互补，建议双向互链，开发轮按模板惯例决定）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：CSV 编辑器→本轮交付（226 研究轮备选→首席晋升；PM 按「无硬伤不跳过」惯例直接立项，一天交付风险以有界范围裁定可控；零重叠复核确凿（ASCII 四形全 0 命中）；格式转换类目；Icon table_edit 首选）／年假拼假优化器→第二顺位（PM 第十度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／幸运决策转盘→第三顺位维持（P3→三席递进；CJK「转盘」0 命中真缺口确凿；纯前端小难度；留池递进）／社媒/证件照尺寸速查表→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 0c58706（在线口算闯关交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **295**；`ls tests/*.test.js | wc -l` = **181**；PM 独立零重叠复核（ASCII csv_editor 四形 0 命中；CJK「年假」/「拼假」/「转盘」全 0 命中；`"Icon": "table_edit"` 精确值 0 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-04 23:36 · 产品调研推荐，第二百二十六轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：在线口算闯关已交付闭环（commit 0c58706，`/tools/mental-math-quiz`，Path 总数 294→295，tests 181 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **CSV 编辑器** — 备选→首席递进。站内口径辨析：`csv_table_viewer`（已交付，1255 行）为**查看器口径**（CSV 上传→表格展示），本工具为**编辑器口径**（单元格双击编辑／增删行列／分隔符三选／导出 CSV）——编辑器仍是真缺口；ASCII `csv_editor`／`csv-editor`／`csvEditor`／`CsvEditor` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD 0c58706，295 Path，181 tests）。实现范围有界：文件拖拽/选择打开（本地解析不上传）→表格渲染→单元格双击原地编辑→增删行/列→分隔符三选（逗号/分号/制表符）→导出 CSV 下载；零上传。小-中难度；**一天高质量交付风险仍未消解**（单元格双击编辑／增删行列／分隔符三选／超大文件性能）——**PM 可裁定**是否立项。SEO：CSV 在线编辑、CSV 编辑器、表格数据修改。建议 ID csv_editor、Path /tools/csv-editor。
+2. **年假拼假优化器** — 顺位维持次席。站内零重叠维持（`holiday`／`vacation`／`pto`／`leave` 工具 ID 全站无命中——`crypto` 为 pto 子串误命中；CJK「年假」／「拼假」全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折；**PM 可裁定第十度跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮／223 轮／224 轮／225 轮九度裁定跳过）。
+3. **幸运决策转盘** — P3 弱观察→三席递进。站内 `random_decision` 为**匿名抽签 Secret Santa 口径**（随机抽取），本工具为**转盘可视化口径**（输入候选项→canvas 转盘绘制→缓动旋转动画→结果高亮→可复抽／权重可选→结果记录）——spinner 仍是真缺口；ASCII `spinner` 全站命中仅 barcode_generator／cron_parser 的 CSS loading 指示器口径；`decision.?wheel`／`lucky.?wheel` **0 命中**；CJK「转盘」（`chr(0x8F6C)+chr(0x76D8)` 运行时构造＋验真）全站 **0 命中**——真缺口确凿。纯前端小难度（零上传），一天可高质量交付。痛点：「中午吃什么」／小组活动抽签／聚会惩罚游戏等日常随机决策，视觉仪式感足。SEO：在线转盘抽奖、决策转盘、随机选择器、幸运大转盘。建议 ID decision_wheel、Path /tools/decision-wheel。
+
+**新信号扫描**（2026-11-04 21:00~23:36 窗口）：
+- Indie Radar 11-03 每日要闻：who.1ms.dog（V2EX 创造节点一手，开源浏览器隐私检测页，汇总 71 个网页可调用的「嗅探器」接口生成浏览器画像＋9 项伪装检测指出代理哪里露馅）→**站内 proxy_camouflage_check 已交付（出口 IP/时区/语言一致性＋WebRTC 真实 IP 泄露＋自动化信号＋Canvas/WebGL 指纹，逐项红绿灯＋综合评分），形态印证消解**；CropDen（作者开源社媒图片尺寸数据集：14 平台 55 个尺寸＋头像遮挡/快拍回复栏等 App 遮挡区像素坐标＋6 种护照/签证照片规格）→**新晋 P3 弱观察「社媒/证件照尺寸速查表」**（静态数据表纯前端小难度：平台选择→尺寸列表＋遮挡区图示＋证件照规格；数据鲜度维护负担——平台规格偶发变更，压至 P3）；Warsaw Vibe Voxel（华沙市中心体素 3D 地图）→GIS 口径消解；syscall.sh（27 架构 Linux 系统调用表）→开发者参考＋数据表维护口径，消解；AudioScript（本地实时双语字幕）→AI/桌面口径消解；mailroom（多域名邮件中心）→SaaS 口径消解；Vonode（安卓 SIM 留在家远程收发短信）→硬件/桌面口径消解；Info.plist 检查器→App Store 上架口径消解。
+- V2EX 新帖（11-03）：「用 AI 做了一些小工具」（DisplayHarbor：macOS 菜单栏工具，保存/自动恢复多显示器环境 App 窗口布局）→桌面口径消解。
+- 英文渠道：Filee（Windows 桌面文件转换＋PDF 工具，2026-09-29 发布，MIT 开源，21k+ stars，11-03 新闻稿：255 格式 18 类、修饰键拖拽＋环形菜单、PDF 合并/拆分/压缩）→桌面口径消解（站内 PDF/图片转换簇形态印证）；Medium 11-04「5 Essential Tools Every Beginner Frontend Developer」（VS Code/Tailwind/Live Server/Netlify/DevTools）→通用开发环境，无单页新信号；HN 11-02 Front Page Roundup（Wikihack/HackerTube/OmniDiff）→数据/SaaS/桌面/AI 口径消解；dev.to「31 个开发者工具单文件 133KB（JSON/Base64/URL/Hash/UUID/时间戳/颜色/正则/字符数，Ctrl+K 命令面板）」→形态印证（站内开发者工具簇已覆盖，Ctrl+K 命令面板角度为边际差异，不足新立项）。
+
+**候选池变动**：mental_math_quiz 交付划出（0c58706，295 Path，181 tests）；**CSV 编辑器备选→首席递进**（真缺口复测维持：ASCII 四形 0 命中；PM 可裁定立项——一天高质量交付风险是否可控）；**年假拼假优化器顺位维持**（PM 可裁定第十度跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）；**决策转盘 P3→三席递进**（真缺口确凿：ASCII spinner 仅 loading 指示器口径；CJK「转盘」0 命中；random_decision 为 Secret Santa 口径；纯前端小难度一天可交付；PM 可裁定）；**新晋 1 个 P3 弱观察**（社媒/证件照尺寸速查表：CropDen 11-03 独立新信号；静态数据口径，数据鲜度维护负担压级）；唱歌音准检测 P3 弱观察维持（需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十六轮——在线口算闯关交付闭环（0c58706；`/tools/mental-math-quiz` 已注册；全量 **295 Path**；全量 tests/*.test.js **181 个**），候选池划出；新信号（who.1ms.dog→站内已交付形态印证；CropDen→新晋 P3 弱观察；V2EX DisplayHarbor→桌面口径消解；Filee→桌面口径消解＋形态印证；HN 11-02 roundup→口径消解；dev.to 单文件工具箱→形态印证）均已消化；CSV 编辑器真缺口复测维持（ASCII 四形 0 命中）；决策转盘真缺口确凿（CJK「转盘」0 命中；random_decision 为 Secret Santa 口径互补）；WPS 候选表保持冻结归档；全库 295 Path 核对无重叠（Top3 建议 ID csv_editor／年假拼假优化器 ID 待定／decision_wheel；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮提示 access rights（VM 换机后 known_hosts 清空老问题复现，非致命——本地 HEAD 0c58706 已为开发分支最新）；`git log` 头部 0c58706（在线口算闯关交付）／d964e32（网页涂鸦画板交付）／bb2bdbb（浏览器环境信息一键复制交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **295**；`ls tests/*.test.js | wc -l` = **181**；本地当前分支 muse/dev-20260929；工作区未跟踪修改仅 BACKLOG.md 本轮追加；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 21:00 · PM 选定轮，接通用调研第二百二十五轮）
 
 **选定：在线口算闯关（mental_math_quiz）** — 本轮唯一任务（新工具）。

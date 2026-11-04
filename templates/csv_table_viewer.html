@@ -63,7 +63,7 @@
         </div>
         <div class="tool-content" style="max-width:960px;margin:auto;">
             <div class="ctv-note">
-                <span>本工具只查看、排序、筛选：不编辑单元格，不转换格式，不保存、不导出文件。要改数据请用 Excel；要转成 JSON 请去 CSV⇄JSON 互转。分隔符仅支持逗号／分号／制表符三选；超大文件建议先在本地拆分再查看；日期、金额只按文本或数字排序，不验合法性、不算合计。</span>
+                <span>本工具只查看、排序、筛选：不编辑单元格，不转换格式，不保存、不导出文件。要改数据请用 CSV 编辑器或 Excel；要转成 JSON 请去 CSV⇄JSON 互转。分隔符仅支持逗号／分号／制表符三选；超大文件建议先在本地拆分再查看；日期、金额只按文本或数字排序，不验合法性、不算合计。</span>
             </div>
             <div class="ctv-panel">
                 <h3>输入 CSV</h3>
@@ -138,7 +138,7 @@
                     <dt>排序时空值为什么总在最后？</dt>
                     <dd>这是有意为之：空值恒置末尾，与升序、降序无关，避免缺失值混进数值或文本顺序里误导判断。</dd>
                     <dt>能直接改表格里的数据吗？</dt>
-                    <dd>不能。本工具只查看、排序、筛选，不编辑、不保存、不导出；要改数据请用 Excel 打开原文件修改。</dd>
+                    <dd>不能。本工具只查看、排序、筛选，不编辑、不保存、不导出；要在线改数据请用 <a href="/tools/csv-editor">CSV 编辑器</a>（双击单元格原地编辑、增删行列、导出 CSV），或用 Excel 打开原文件修改。</dd>
                     <dt>文件很大打开会卡吗？</dt>
                     <dd>分页只渲染当前页，但解析仍在浏览器内一次完成；行数极大时仍可能卡顿，超大文件建议先在本地拆分再查看。</dd>
                     <dt>我的 CSV 会被上传吗？</dt>
@@ -148,6 +148,7 @@
             <div class="ctv-panel">
                 <h3>相关工具</h3>
                 <div class="ctv-links">
+                    <a href="/tools/csv-editor">CSV 编辑器（要改表格数据去这里：双击编辑单元格、增删行列、导出 CSV）</a>
                     <a href="/tools/csv-json">CSV⇄JSON 互转（要转成 JSON 去这里）</a>
                     <a href="/tools/paste-table-to-csv">网页表格粘贴转 CSV（粘贴 TSV 文本→列数校验→RFC4180 转义→复制/下载 CSV）</a>
                     <a href="/tools/sqlite-viewer">SQLite 文件查看器（直接打开 .db 查表/跑 SQL/导出 CSV；本工具只看 CSV 文本）</a>
