@@ -102,7 +102,7 @@ var catBlock = GO_SRC.split("\"markdown_to_csv\"")[1].split("},")[0];
 has(catBlock, "Category:    \"格式转换\"", "注册：Category 格式转换");
 has(catBlock, "New:         true", "注册：New: true");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 290, "注册：Path 总数 268→270");
+eq(pathCount, 291, "注册：Path 总数 268→270");
 notHas(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), "/tools/markdown-to-csv\", \"/tools/markdown-to-csv", "注册：Path 无重复");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");

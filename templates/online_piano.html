@@ -1,0 +1,143 @@
+{{define "online_piano"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线可弹钢琴 - 网页钢琴免费弹奏 | 程序员工具箱</title>
+    <meta name="description" content="免费在线钢琴：浏览器里直接弹的 29 键小钢琴（C3–E5），Web Audio 算法合成琴音（钢琴/电钢琴/风琴 3 种音色），触摸/点击/PC 键盘（A 行白键、W/E/T/Y/U 黑键）发声，八度切换＋音量控制，简易录音回放（localStorage 本地保存），一键弹奏《小星星》《欢乐颂》，纯前端零上传。">
+    <meta name="keywords" content="在线钢琴,网页钢琴,键盘钢琴,免费钢琴,online piano,虚拟钢琴,web audio 钢琴,小星星钢琴谱,浏览器弹钢琴">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/online-piano">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线可弹钢琴","description":"浏览器里直接弹的 29 键小钢琴：Web Audio 算法合成琴音（钢琴/电钢琴/风琴），触摸/点击/PC 键盘发声，八度切换＋音量控制，简易录音回放，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/online-piano","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .op-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .op-wrap .navbar .material-icons { display: none; }
+        .op-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .op-privacy .op-lock { font-size: 1.6rem; flex: none; }
+        .op-privacy b { color: #047857; }
+        .op-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .op-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .op-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .op-row label { font-size: .92rem; color: #374151; }
+        .op-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .op-btn:hover { filter: brightness(.93); }
+        .op-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .op-btn-ghost { background: #fff; color: var(--primary-color); }
+        .op-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .op-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .op-recing { color: #ef4444; font-weight: bold; }
+        .op-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        select.op-sel, input.op-range { font-size: .93rem; padding: .4rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; background: #fff; }
+        /* 键盘舞台 */
+        .op-stage { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: .8rem; background: #111827; padding: 1.2rem 1rem 1rem; margin: .5rem 0; }
+        .op-keys { position: relative; height: 220px; margin: 0 auto; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        .op-wkey { position: absolute; top: 0; width: 44px; height: 220px; margin: 0 1px; background: linear-gradient(#ffffff, #f3f4f6);
+            border: 1px solid #9ca3af; border-radius: 0 0 .4rem .4rem; cursor: pointer; padding: 0; }
+        .op-wkey .op-nn { position: absolute; bottom: 34px; left: 0; right: 0; text-align: center; font-size: .68rem; color: #6b7280; }
+        .op-wkey .op-kb { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: .8rem; font-weight: bold; color: #374151;
+            background: #e5e7eb; border-radius: .3rem; margin: 0 .5rem; padding: .1rem 0; }
+        .op-bkey { position: absolute; top: 0; width: 30px; height: 135px; background: linear-gradient(#374151, #111827);
+            border: 1px solid #000; border-radius: 0 0 .3rem .3rem; cursor: pointer; z-index: 2; padding: 0; }
+        .op-wkey.op-active, .op-bkey.op-active { background: #fbbf24; border-color: #b45309; }
+        .op-wkey.op-active .op-kb { background: #f59e0b; color: #fff; }
+        .op-stage-hint { text-align: center; font-size: .82rem; color: #9ca3af; margin-top: .6rem; }
+        /* 真限制 */
+        .op-limit { border: 1px dashed #f59e0b; background: #fffbeb; border-radius: .8rem; padding: .9rem 1.1rem; margin: 0 0 1.2rem;
+            font-size: .9rem; line-height: 1.9; color: #92400e; }
+        .op-limit b { color: #b45309; }
+        .op-doc { font-size: .9rem; line-height: 1.9; color: #4b5563; }
+        .op-doc code { background: #f3f4f6; border-radius: .3rem; padding: .05rem .35rem; font-size: .85em; }
+    </style>
+</head>
+<body>
+    <div class="op-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎹 在线可弹钢琴</h1>
+            <p>浏览器里直接弹的 29 键小钢琴：触摸 / 点击 / PC 键盘发声，免安装免注册</p>
+        </div>
+
+        <div class="op-privacy">
+            <span class="op-lock">🔒</span>
+            <div><b>隐私承诺：琴音在你的浏览器里实时合成，不上传任何数据。</b><br>
+            本工具为纯前端单页应用：Web Audio API 算法合成琴音（免外部音色文件）、录音保存在浏览器 localStorage、回放/复制全在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 弹奏不会产生一次网络请求，断网也能用。</div>
+        </div>
+
+        <div class="op-panel" id="op-app">
+            <h3>🎹 键盘（默认 C3–E5，共 29 键）</h3>
+            <div class="op-stage">
+                <div class="op-keys" id="op-keys" aria-label="钢琴键盘，点击或触摸发声"></div>
+            </div>
+            <div class="op-stage-hint">👆 点击 / 触摸琴键发声；桌面浏览器也可用 PC 键盘（白键 A S D F G H J K L ;，黑键 W E T Y U O P），键帽上有标注</div>
+            <div class="op-row">
+                <button class="op-btn op-btn-ghost" id="op-oct-down">− 八度</button>
+                <span id="op-oct-label" style="font-size:.95rem;color:#111827;font-weight:bold;">C3–E5（29 键）</span>
+                <button class="op-btn op-btn-ghost" id="op-oct-up">＋ 八度</button>
+                <label style="margin-left:1rem;">音色
+                    <select class="op-sel" id="op-timbre">
+                        <option value="piano" selected>钢琴</option>
+                        <option value="electric">电钢琴</option>
+                        <option value="organ">风琴</option>
+                    </select>
+                </label>
+                <label>音量 <input type="range" class="op-range" id="op-volume" min="0" max="100" value="80" aria-label="音量"></label>
+            </div>
+        </div>
+
+        <div class="op-panel">
+            <h3>⏺ 简易录音</h3>
+            <div class="op-row">
+                <button class="op-btn" id="op-record">⏺ 开始录音</button>
+                <button class="op-btn op-btn-ghost" id="op-play" disabled>▶ 回放录音</button>
+                <button class="op-btn op-btn-ghost" id="op-clear" disabled>🗑 清空</button>
+                <button class="op-btn op-btn-ghost" id="op-copy" disabled>📋 复制录音数据</button>
+            </div>
+            <div class="op-rec-status op-status" id="op-rec-status"></div>
+            <div class="op-info">录音记录「音符＋时间戳」（JSON），停止录音后自动存到浏览器本地（localStorage），下次打开页面可直接回放；「复制录音数据」把 JSON 拷到剪贴板，可粘贴保存或分享给朋友导入回放。</div>
+        </div>
+
+        <div class="op-panel">
+            <h3>✨ 示范旋律一键弹奏</h3>
+            <div class="op-row">
+                <button class="op-btn" id="op-demo-twinkle">▶ 弹奏《小星星》</button>
+                <button class="op-btn op-btn-ghost" id="op-demo-ode">▶ 弹奏《欢乐颂》</button>
+            </div>
+            <div class="op-status" id="op-demo-status"></div>
+        </div>
+
+        <div class="op-limit" id="op-limit">
+            <b>⚠️ 真实限制（先说清楚）：</b><br>
+            ① 合成音色为算法模拟：琴音由 Oscillator 基频＋泛音＋包络实时合成，与真实钢琴 / 采样音色有差距，仅供娱乐练习。<br>
+            ② PC 键盘映射仅桌面浏览器可用：移动端没有物理键盘，请直接触摸琴键弹奏。<br>
+            ③ 录音仅保存在浏览器本地（localStorage）：换浏览器 / 清缓存会丢失，不上传任何数据。
+        </div>
+
+        <div class="op-panel">
+            <h3>使用说明</h3>
+            <div class="op-doc">
+                <b>发声原理：</b>首次点击琴键时创建 <code>AudioContext</code>（需用户手势，浏览器自动播放策略要求）；每个音符按 <code>noteToFreq</code>（A4=440 十二平均律）算出基频，再叠加 3–4 个泛音振荡器，经指数衰减包络（attack＋decay）输出到主音量 <code>GainNode</code> —— 全程算法合成，免外部音色文件。<br>
+                <b>PC 键盘映射：</b>标准布局 —— 白键 <code>A S D F G H J</code> 对应当前八度的 C D E F G A B，<code>K L ;</code> 为高八度 C D E；黑键 <code>W E</code> 对应 C# D#，<code>T Y U</code> 对应 F# G# A#，<code>O P</code> 为高八度 C# D#。<code>keydown</code> 触发发声（忽略输入框内按键与组合键），<code>keyup</code> 释放。<br>
+                <b>八度切换：</b>「− 八度 / ＋ 八度」整体移动 29 键窗口（C2–E4 ～ C5–E7），PC 键盘映射随窗口联动（A 键永远对应窗口最低音 C）。<br>
+                <b>录音：</b><code>serializeRecording</code> 把 [{note, timeMs}] 转 JSON，<code>parseRecording</code> 反向解析；非法输入抛错（err.field 命名：note / timeMs / recording），不静默吞错。<br>
+                <b>隐私：</b>全程零网络请求 —— 发声、录音、回放、复制都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+            <div class="op-status" id="op-status"></div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/online_piano.js?v=1"></script>
+</body>
+</html>
+{{end}}

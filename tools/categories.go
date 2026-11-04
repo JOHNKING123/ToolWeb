@@ -2408,6 +2408,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "online_piano",
+					Name:        "在线可弹钢琴",
+					Description: "在线可弹钢琴：浏览器里直接弹的 29 键小钢琴（默认 C3–E5，17 白键＋12 黑键），Web Audio 算法合成琴音（钢琴/电钢琴/风琴 3 种音色，Oscillator 基频＋泛音＋指数衰减包络，免外部音色文件），触摸/点击/PC 键盘发声（A 行白键、W/E/T/Y/U 黑键标准布局），八度切换（C2–E4 ～ C5–E7）＋音量控制，简易录音（音符＋时间戳，回放/清空，localStorage 存最近一次）＋一键弹奏《小星星》《欢乐颂》＋一键复制录音数据，纯前端零上传 · Playable piano online: 29-key touch piano with Web Audio synthesized tones, PC keyboard mapping, octave shift, recording & playback, 100% client-side",
+					Path:        "/tools/online-piano",
+					Icon:        "piano",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

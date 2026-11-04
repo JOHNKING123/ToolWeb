@@ -192,7 +192,7 @@ var iconHits = (GO_SRC.match(/"radar"/g) || []).length;
 eq(iconHits, 1, "Icon radar 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 290, "注册 Path 总数 287→288");
+eq(pathCount, 291, "注册 Path 总数 287→288");
 
 /* ---------- 9. 模板：SEO/真限制四条/零外部资源 ---------- */
 has(TPL_SRC, "{{define \"proxy_camouflage_check\"}}", "模板 define 名正确");

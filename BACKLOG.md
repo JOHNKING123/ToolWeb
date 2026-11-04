@@ -1,3 +1,66 @@
+## 今日任务（2026-11-04 13:40 · PM 选定轮，接通用调研第二百二十一轮）
+
+**选定：在线可弹钢琴（online_piano）** — 本轮唯一任务（新工具）。
+
+**顺位**：221 轮 Top3 首席（P1）。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **需求验证充分**：Medium《7 Free Browser Tools Worth Bookmarking This October》(2026-10-18) 收录形态印证（a playable piano with laptop keyboard，免安装免注册浏览器即弹）；英文/国内同类单页钢琴（virtualpiano.net 等）形态即需求验证。
+2. **零外部依赖、无数据表维护负担**：Web Audio 合成琴音（免外部音色文件），无年假工具式年更新数据表硬伤。
+3. **一天可高质量交付**：纯前端小难度，符合「优先小难度纯前端」要求。
+
+**PM 独立零重叠复核（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 解码验真，已记入 AGENTS.md）**：
+- ASCII：`online_piano`／`online-piano`／`onlinePiano` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD 11e0211，290 Path，176 tests）。
+- CJK「钢琴」（`chr(0x94a2)+chr(0x7434)` 运行时构造，0 命中故无需验真）全站 **0 命中**——真缺口确凿。
+- Icon 候选：**`piano`（首选；`"piano"` 在 tools/categories.go 精确值 0 命中）**；开发轮用精确值复测锁定全库唯一。
+
+**未选说明**：年假拼假优化器（PM 本轮**第五度裁定跳过**：硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／CSV 编辑器（备选留池维持：小-中难度，一天高质量交付风险高（超大文件性能）未消解）。
+
+**品类归位**：注册到「生活工具」类目（消费向演奏娱乐口径；「音频处理」类目四工具均为音频文件加工口径，不相容）；New: true；本轮**无硬编码互链要求**。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 黑白键 UI（C3–C6 两个八度共 29 键，触摸/点击发声）② Web Audio 合成琴音（Oscillator 基频＋泛音＋指数衰减包络，免外部音色文件；2–3 种合成音色：钢琴/电钢琴/风琴）③ PC 键盘映射（A 行白键、W/E/T/Y/U 黑键标准布局）④ 八度切换（C3–C6）＋音量控制 ⑤ 简易录音回放（记录音符＋时间戳，回放/清空；localStorage 保存最近一次录音）⑥ 示例一键填充（一键自动弹奏《小星星》等示范旋律）⑦ 一键复制录音数据＋纯本地计算零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.OnlinePiano 下，module.exports 同步导出；AudioContext 发声只做浏览器端，测试只覆盖纯函数）**：
+  - `noteToFreq(note)` → Hz（note 如 'C4'；非法格式 err.field='note'；A4=440 十二平均律）。
+  - `keyToNote(key, baseOctave)` → 'C4'|null（key 大写字母；映射外键返回 null 不抛错；baseOctave 非 0–8 整数 err.field='octave'）。
+  - `buildKeyRange(octaves)` → [{note, type:'white'|'black'}...]（octaves 非法 err.field='octaves'）。
+  - `serializeRecording(events)`／`parseRecording(json)`（events 为 [{note, timeMs}]；note 非法 err.field='note'；timeMs<0 err.field='timeMs'；JSON 非法 err.field='recording'）。
+- **真限制三条页面明示**：① 合成音色为算法模拟，与真实钢琴/采样音色有差距；② PC 键盘映射仅桌面浏览器可用，移动端以触摸为准；③ 录音保存在浏览器本地（localStorage），不上传任何数据。
+- **改动文件**：tools/categories.go（生活工具类目新增 online_piano 条目，Path 290→**291**，Icon `piano` 首选，开发轮精确值复测锁定全库唯一）／templates/online_piano.html（新）／static/js/online_piano.js（新）／tests/online_piano.test.js（新）／全量旧 tests Path 断言 290→291 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（音名→频率精确值：A4=440.00Hz、C4≈261.63Hz（容差±0.01）；键位映射精确值：A→C4、W→C#4、S→D4；八度切换边界；录音序列化/反序列化往返；非法音名/非法八度/非法时间戳/非法 JSON 抛错 err.field 全覆盖；模板零外部资源静态检查）② 全量 tests/*.test.js 176→**177** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/online-piano 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：在线可弹钢琴→本轮交付（221 研究轮 P1 首席；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（工具 ID 全 0 命中；CJK「钢琴」全 0 命中）；生活工具类目；Icon piano 首选）／年假拼假优化器→第二顺位（PM 第五度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／CSV 编辑器→备选维持（15:00 PM 轮裁定留池逻辑维持；一天高质量交付风险未消解）／唱歌音准检测／复古文字特效生成器／网页涂鸦画板／决策转盘／社交卡片 OG 预览 P3 弱观察维持（PM 可裁定）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：**远端无新提交**，本地 HEAD 11e0211 即最新；工作区未跟踪修改仅 BACKLOG.md 本轮追加）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **290**；`ls tests/*.test.js | wc -l` = **176**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-04 13:36 · 产品调研推荐，第二百二十一轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：蛋白质摄入量计算器已交付闭环（commit 11e0211，`/tools/protein-intake-calc`，Path 总数 289→290，tests 176 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **在线可弹钢琴** — 220 轮 P1 备选顺位递进→首席。Medium《7 Free Browser Tools Worth Bookmarking This October》(2026-10-18) 收录形态印证（a playable piano with laptop keyboard，免安装免注册浏览器即弹）；英文/国内同类单页钢琴（virtualpiano.net 等）形态即需求验证。实现：纯前端小难度——Web Audio API 合成琴音（Oscillator 基频＋泛音包络，免外部音色文件）→PC 键盘映射（A 行→白键、W/E/T/Y/U→黑键标准布局）→黑白键触摸/点击 UI＋八度切换（C3–C6）＋音量控制＋简易录音回放，零上传、离线可玩。SEO：在线钢琴、网页钢琴、键盘钢琴、免费钢琴。建议 ID online_piano、Path /tools/online-piano；零重叠维持：`online_piano`／`online-piano`／`onlinePiano` 全站 0 命中；CJK「钢琴」（运行时构造，codepoint 0x94a2/0x7434 验真）全站 **0 命中**——真缺口维持。Icon 候选 `piano`（待开发轮精确值复测锁定全库唯一）。
+2. **年假拼假优化器** — 首席顺位名义维持→第二顺位。站内零重叠维持（`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），时间窗口打折；**PM 可裁定是否跳过**（19:37／21:38／217 轮／220 轮四度裁定跳过）。
+3. **CSV 编辑器** — 备选顺位维持。15:00 PM 轮裁定逻辑沿用：小-中难度，一天高质量交付风险高（单元格双击编辑/增删行列/分隔符三选/超大文件性能），备选留池。
+
+**新信号扫描**（2026-11-04 11:55~13:36 窗口）：
+- V2EX 创造节点 11-01（Indie Radar 日报）：1ms.dog 柴犬捡球可视化网络延迟→站内网络工具簇已覆盖＋需探测后端，消解；Papilot PDF 批注 AI 改 LaTeX→AI 口径消解；Ghostman 终端 API 客户端→桌面 TUI 口径消解；SpriteCanvas 角色图生成游戏动画→桌面/游戏口径消解；NexusDock 设备+MCP 接入→Agent 口径消解；Loris Tunnel SSH 隧道→桌面工具口径消解；中英双语八字排盘「小道」→玄学口径＋方向修正不扩消解；Ghostwire Linux 底层网络模拟→系统级口径消解；Blob0 macOS S3 客户端→桌面口径消解；Casnode Discourse 风格论坛→需后端消解；Stock Compass 炒股纪律工具→泛财务消解；crDesk WebRTC 跨平台远程桌面→需对端消解。
+- dev.to 2026-11-02 StudyKit Hub（隐私优先学习工具包，15 个纯浏览器学习工具）：flashcards→flashcard_maker 已交付；word counter→站内文字统计/阅读时间估算已交付（字数统计、行去重、大小写转换；中英混排阅读时间估算）；笔记 organiser（localStorage）→站内同类已覆盖——**形态印证消解**，无新候选。
+- toolsofweb.com 2026-11-02 免费条形码生成器（JsBarcode 纯前端；Code 128/39、EAN-13/EAN-8、UPC-A、ITF＋批量模式＋SVG/PNG 下载）：**站内 barcode_generator 已交付（templates/barcode_generator.html）——形态印证消解**；反向验证该需求真实高频（小商家商品条码/快递单/价格标签），站内已有即好。
+- itzhouq 14 工具箱（约 10-09）：违禁词检测→forbidden_word_detector 已交付；图片压缩/二维码/JWT 解析/时间戳/简繁互转/人民币大写→站内全自有覆盖；公众号封面→markdown_publish_formatter 已交付——消解。
+- 英文渠道（Show HN／Product Hunt alternatives 2026-10-20）：本轮无新的单页纯前端工具信号；SyncWhen/婚礼座位表等旧信号已消化维持。
+
+**候选池变动**：protein_intake_calc 交付划出（11e0211，290 Path）；**无新晋候选**（本轮信号全部消解或形态印证）；其余 P1/P2 留池无变化（在线可弹钢琴 P1→首席递进；年假拼假优化器第二顺位（PM 可裁定跳过维持）；CSV 编辑器备选维持；唱歌音准检测／复古文字特效生成器／网页涂鸦画板／决策转盘／社交卡片 OG 预览 P3 弱观察维持；WPS 候选表保持冻结归档）。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十一轮——蛋白质摄入量计算器交付闭环（11e0211；`/tools/protein-intake-calc` 已注册；全量 **290 Path**；tests 176 个），候选池划出；新信号（V2EX 11-01 创造节点 12 项→全部口径不符消解；StudyKit Hub→形态印证消解；toolsofweb 条形码生成器→站内已交付形态印证消解；itzhouq 14 工具箱→自有覆盖消解；英文渠道本轮空）均已消化；钢琴真缺口复核维持（ASCII 三形＋CJK「钢琴」全 0 命中，codepoint 0x94a2/0x7434 验真）；全库 290 Path 核对无重叠（Top3 建议 ID online_piano；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；`git log` 头部 11e0211（蛋白质摄入量计算器交付）／3fc0697（跑步配速计算器交付）／3b2bf2a（伪装自查交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **290**；`ls tests/*.test.js | wc -l` = **176**；本地当前分支 muse/dev-20260929；远端无新提交；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 11:55 · PM 选定轮，接通用调研第二百二十轮）
 
 **选定：蛋白质摄入量计算器（protein_intake_calc）** — 本轮唯一任务（新工具）。
