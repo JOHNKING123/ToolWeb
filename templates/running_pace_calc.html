@@ -1,0 +1,209 @@
+{{define "running_pace_calc"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跑步配速计算器 - 配速/距离/时间互算+Riegel完赛预测 | 程序员工具箱</title>
+    <meta name="description" content="免费在线跑步配速计算器：配速/距离/时间三互算（min/km↔min/mi＋km/h 联动），5K/10K/半马/全马快捷填充，Riegel 公式 T2=T1×(D2/D1)^1.06 完赛时间预测，逐公里分段表＋完赛目标配速表，示例一键填充＋一键复制＋localStorage 本地保存，纯前端不上传。">
+    <meta name="keywords" content="跑步配速计算器,马拉松配速表,配速换算,完赛时间预测,配速计算,running pace calculator,marathon pace chart,配速 分配速,公里配速 英里配速">
+    <meta property="og:title" content="跑步配速计算器 - 配速/距离/时间互算">
+    <meta property="og:description" content="配速/距离/时间三互算，min/km↔min/mi＋km/h 联动，Riegel 公式完赛预测，逐公里分段表，纯前端本地计算。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/running-pace-calc">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/running-pace-calc">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "跑步配速计算器",
+      "description": "免费在线跑步配速计算器：配速/距离/时间三互算（min/km↔min/mi＋km/h 联动），5K/10K/半马/全马快捷填充，Riegel 公式完赛时间预测，逐公里分段表＋完赛目标配速表，纯前端本地计算不上传数据。",
+      "url": "https://www.johnkingzcq123.xyz/tools/running-pace-calc",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .rpc-info { color: #6b7280; font-size: .9rem; margin-top: .6rem; line-height: 1.7; }
+        .rpc-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
+        .rpc-modrow { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .7rem; font-size: .95rem; }
+        .rpc-modrow label { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; font-weight: 600; color: #374151; }
+        .rpc-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .9rem; margin-top: .6rem; }
+        @media (max-width: 720px) { .rpc-cols { grid-template-columns: 1fr; } }
+        .rpc-group { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .8rem; background: #fafafa; transition: border-color .2s, background .2s; }
+        .rpc-group.rpc-active { border-color: #3b82f6; background: #eff6ff; }
+        .rpc-group h4 { margin: 0 0 .5rem; color: #374151; font-size: 1rem; }
+        .rpc-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; margin-top: .5rem; }
+        .rpc-field label { color: #374151; font-weight: 600; }
+        .rpc-field input[type="number"], .rpc-field input[type="text"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; background: #fff; }
+        .rpc-field input:focus { outline: none; border-color: var(--primary-color); }
+        .rpc-hms { display: flex; gap: .4rem; align-items: center; }
+        .rpc-hms input { width: 4.2rem; }
+        .rpc-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
+        .rpc-result-num { font-size: 2.2rem; font-weight: 700; color: #1d4ed8; }
+        .rpc-result-unit { font-size: 1rem; color: #6b7280; margin-left: .4rem; }
+        .rpc-subline { color: #374151; font-size: .95rem; margin-top: .4rem; }
+        .rpc-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
+        .rpc-limit b { color: #374151; }
+        .rpc-table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: .6rem; }
+        .rpc-table th, .rpc-table td { border: 1px solid #e5e7eb; padding: .4rem .6rem; text-align: center; }
+        .rpc-table th { background: #f3f4f6; color: #374151; }
+        .rpc-table tr:nth-child(even) td { background: #fafafa; }
+        .rpc-goal-out { display: none; margin-top: .6rem; padding: .7rem .9rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: .5rem; color: #065f46; font-size: .95rem; }
+        #rpc-toast {
+            display: none; position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: .6rem 1.1rem; border-radius: .5rem;
+            font-size: .9rem; z-index: 9999; max-width: 90vw; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🏃 跑步配速计算器</h1>
+            <p>配速 / 距离 / 时间三互算 · min/km ↔ min/mi ＋ km/h 联动 · Riegel 完赛预测</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+
+            <div id="running-app">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>配速 / 距离 / 时间三互算</h3>
+                <div class="rpc-modrow" role="radiogroup" aria-label="计算模式">
+                    <label><input type="radio" name="rpc-mode" value="pace" checked> 算配速（距离＋时间）</label>
+                    <label><input type="radio" name="rpc-mode" value="time"> 算时间（配速＋距离）</label>
+                    <label><input type="radio" name="rpc-mode" value="dist"> 算距离（配速＋时间）</label>
+                </div>
+                <div class="rpc-cols">
+                    <div class="rpc-group rpc-active" id="rpc-g-dist">
+                        <h4>距离</h4>
+                        <div class="rpc-field">
+                            <label for="rpc-dist">距离（公里）</label>
+                            <input id="rpc-dist" type="number" min="0" step="any" placeholder="如 10">
+                        </div>
+                        <div class="rpc-actions" id="rpc-quicks" style="margin-top:.6rem;"></div>
+                    </div>
+                    <div class="rpc-group" id="rpc-g-time">
+                        <h4>时间</h4>
+                        <div class="rpc-field">
+                            <label>时 : 分 : 秒</label>
+                            <div class="rpc-hms">
+                                <input id="rpc-time-h" type="number" min="0" placeholder="时" aria-label="小时">
+                                <span>:</span>
+                                <input id="rpc-time-m" type="number" min="0" max="59" placeholder="分" aria-label="分钟">
+                                <span>:</span>
+                                <input id="rpc-time-s" type="number" min="0" max="59" step="any" placeholder="秒" aria-label="秒">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rpc-group" id="rpc-g-pace">
+                        <h4>配速</h4>
+                        <div class="rpc-field">
+                            <label for="rpc-pace">配速（如 5:30 或 5.5 分钟）</label>
+                            <input id="rpc-pace" type="text" inputmode="decimal" placeholder="如 5:30">
+                        </div>
+                        <div class="rpc-field">
+                            <label>配速单位</label>
+                            <div>
+                                <label style="font-weight:400;margin-right:1rem;"><input type="radio" name="rpc-punit" value="km" checked> 分/公里</label>
+                                <label style="font-weight:400;"><input type="radio" name="rpc-punit" value="mi"> 分/英里</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rpc-info">输入即实时计算：三种模式任选其一，已知两项求第三项；配速支持 M:SS 或小数分钟两种写法。</div>
+                <div class="rpc-error" id="rpc-error" role="alert"></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;display:none;" id="rpc-result">
+                <h3>计算结果</h3>
+                <div><span class="rpc-result-num" id="rpc-out-pace-km">--</span><span class="rpc-result-unit">分/公里</span></div>
+                <div class="rpc-subline">配速 <b id="rpc-out-pace-mi">--</b> 分/英里 · 速度 <b id="rpc-out-kmh">--</b> km/h</div>
+                <div class="rpc-subline">用时 <b id="rpc-out-time">--</b></div>
+                <div class="rpc-subline" id="rpc-row-dist" style="display:none;">折算距离 <b id="rpc-out-dist">--</b> km</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3 id="rpc-split-title">逐公里分段表</h3>
+                <div id="rpc-splits"><div class="rpc-info">在上方输入距离与配速（或时间），即自动生成每公里分段与累计用时。</div></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>完赛目标表（目标时间 → 所需配速）</h3>
+                <div class="rpc-field" style="max-width:26rem;">
+                    <label>目标完赛时间（时 : 分 : 秒）</label>
+                    <div class="rpc-hms">
+                        <input id="rpc-goal-h" type="number" min="0" placeholder="时" aria-label="目标小时">
+                        <span>:</span>
+                        <input id="rpc-goal-m" type="number" min="0" max="59" placeholder="分" aria-label="目标分钟">
+                        <span>:</span>
+                        <input id="rpc-goal-s" type="number" min="0" max="59" step="any" placeholder="秒" aria-label="目标秒">
+                    </div>
+                </div>
+                <div class="rpc-actions">
+                    <button class="btn btn-primary" id="rpc-goal-btn" type="button">计算所需配速</button>
+                </div>
+                <div class="rpc-goal-out" id="rpc-goal-out" role="status"></div>
+                <div class="rpc-info">距离取上方「距离」输入框的值（如全马填 42.195），一点即得达标所需的平均配速。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>Riegel 成绩预测</h3>
+                <div class="rpc-cols" style="grid-template-columns:1fr 1fr;">
+                    <div class="rpc-field">
+                        <label>近期成绩时间（时 : 分 : 秒）</label>
+                        <div class="rpc-hms">
+                            <input id="rpc-r1-h" type="number" min="0" placeholder="时" aria-label="近期成绩小时">
+                            <span>:</span>
+                            <input id="rpc-r1-m" type="number" min="0" max="59" placeholder="分" aria-label="近期成绩分钟">
+                            <span>:</span>
+                            <input id="rpc-r1-s" type="number" min="0" max="59" step="any" placeholder="秒" aria-label="近期成绩秒">
+                        </div>
+                    </div>
+                    <div class="rpc-field">
+                        <label for="rpc-rd1">近期成绩距离（公里）</label>
+                        <input id="rpc-rd1" type="number" min="0" step="any" placeholder="如 10">
+                    </div>
+                </div>
+                <div id="rpc-riegel"><div class="rpc-info">填写近期某距离的完赛成绩，即按 Riegel 公式预测 5K / 10K / 半马 / 全马成绩。</div></div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="rpc-actions" id="rpc-samples" style="margin-top:0;"></div>
+                <div class="rpc-actions">
+                    <button class="btn btn-secondary" id="rpc-copy" type="button">一键复制结果</button>
+                    <button class="btn btn-secondary" id="rpc-clear" type="button">清空</button>
+                </div>
+                <div class="rpc-info">输入自动保存到浏览器本地（localStorage），下次打开自动恢复；所有计算只在你的浏览器内完成，不会上传到任何服务器。</div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="rpc-limit">
+                    <li><b>① Riegel 是经验公式：</b>预测基于 T2 = T1 × (D2/D1)<sup>1.06</sup>，真实成绩受训练水平、赛道起伏、天气、补给策略影响，通常有 <b>±5~10%</b> 偏差，仅供参考，不能替代实测。</li>
+                    <li><b>② 匀速换算 ≠ 变速跑：</b>本工具按<b>全程匀速</b>换算配速/时间/分段，实际跑步有起跑、前后程掉速、补水点减速，比赛请按负分段（negative split）策略自行调整。</li>
+                    <li><b>③ 纯本地不上传：</b>距离、时间、配速输入与全部计算都在你的浏览器内完成，<b>不会上传到任何服务器</b>（可在浏览器 Network 面板自证）；半马 21.0975 km、全马 42.195 km 为国际标准距离。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="rpc-info">
+                    <b>第一步：</b>选一种计算模式（算配速 / 算时间 / 算距离），填入已知的两项；距离框支持 5K / 10K / 半马 / 全马一键快捷填充。<br>
+                    <b>第二步：</b>输入即实时出结果——配速（分/公里、分/英里、km/h 三联动）＋总用时，逐公里分段表同步生成。<br>
+                    <b>示例：</b>点「示例① 10K 50:00」得配速 5:00/公里（8:03/英里、12.00 km/h）；「示例② 全马 3:30 配速」得所需配速约 4:59/公里。<br>
+                    <b>公式：</b>配速 = 时间 ÷ 距离；1 英里 = 1.609344 公里；速度(km/h) = 60 ÷ 配速(分/公里)；Riegel：T2 = T1 × (D2/D1)<sup>1.06</sup>。
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="rpc-toast" role="status" aria-live="polite"></div>
+    <script src="/tools/static/js/running_pace_calc.js?v=1"></script>
+</body>
+{{end}}

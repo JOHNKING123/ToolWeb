@@ -2390,6 +2390,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "running_pace_calc",
+					Name:        "跑步配速计算器",
+					Description: "跑步配速计算器：配速/距离/时间三互算（min/km↔min/mi，1 mi=1.609344 km 精确值，km/h 联动），5K/10K/半马/全马快捷填充，Riegel 公式 T2=T1×(D2/D1)^1.06 成绩预测（页面明示 ±5~10% 误差），逐公里分段表＋完赛目标（目标时间→所需配速）表，示例一键填充＋一键复制，localStorage 本地保存，纯前端零上传 · running pace calculator: pace/distance/time conversion (min/km, min/mi, km/h), 5K/10K/half/full quick fill, Riegel race prediction, per-km splits & goal pace table, 100% client-side",
+					Path:        "/tools/running-pace-calc",
+					Icon:        "directions_run",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{
