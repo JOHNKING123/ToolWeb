@@ -1,3 +1,82 @@
+## 今日任务（2026-11-05 05:44 · PM 选定轮，接通用调研第二百二十九轮）
+
+**选定：OFD 转 PDF（ofd_to_pdf）** — 本轮唯一任务（新工具）。
+
+**顺位**：229 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **首席顺位**：研究轮 229 轮新晋 Top3 首席，按惯例顺位即立项依据。
+2. **需求双重验证**：① 外部独立信号：365lab 2026-10-08「40+ 免费在线工具推荐」收录发票助手——OFD 转 PDF 为发票打印/报销刚需场景；② 技术路线双重独立验证：奶昔论坛 10-17 OFDGo 开源帖（浏览器本地 OFD 阅读/编辑/转 PDF，WASM 本地处理、零上传）＋ deepwiki bestofdview（ofd_parser.js＋ofd_render.js：zip 解包→XML 解析→HTML div＋SVG＋canvas 渲染管线）——纯前端 OFD→PDF 路线可行确凿。
+3. **无硬伤**：纯前端中难度（有界范围见规格），零上传、零外部依赖、无年更新数据表维护负担、无隐私合规坑；一天可高质量交付（边界走真限制明示＋页数上限兜底）。
+4. **口径互补确凿**：站内 `invoice_generator`（已交付）为**发票生成口径**（开票），本工具为**格式转换口径**（已有 OFD→PDF）——互补不重叠。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`ofd` 全站（git HEAD a0321fe，298 Path，184 tests；除 BACKLOG.md 外，vendor 排除）命中**仅** pdf-to-word(.batch).js 的 `firstOfDoc` 变量名子串误命中（工具 ID/Path/描述 **0 命中**）——真缺口确凿。
+   - CJK「OFD」（`chr(0x004F)+chr(0x0046)+chr(0x0044)` 运行时构造＋验真）tools/categories.go **0 命中**，templates/static/js/tests **0 命中**（vendor fontkit 仅字体表标签口径无关）——真缺口确凿。
+   - Icon：**`file_upload`（首选；`Icon:\s*"file_upload"` 精确值 **0 命中**，全库唯一，贴合「上传 OFD→转出 PDF」场景；备选 `sync_alt` 亦 0 命中；`picture_as_pdf`/`description` 已被 PDF 簇占用 3 命中，`document_scanner` 被占用 1 命中，不可取）**，开发轮复测锁定。
+
+**未选说明**：年假拼假优化器（PM 本轮**第十三度裁定跳过**：硬伤维持未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／社媒/证件照尺寸速查表（三席维持：CropDen 11-03 独立新信号已收录；数据鲜度维护负担（平台规格偶发变更）压级；留池递进）／英文反向词典（P3 弱观察维持：需内置词库或外部 API，有外部依赖风险）／唱歌音准检测（P3 弱观察维持：需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① OFD 文件拖拽/选择打开（FileReader＋本地 zip 解包，零上传；扩展名/文件头双重校验，非 OFD 友好报错）② 逐页渲染预览（canvas 渲染＋页码导航＋缩放；页数上限 **50 页**，超限截断＋提示）③ 一键组装 PDF 下载（复用站内 images-to-pdf PDF 生成链路；文件名回退 `ofd-converted`）④ 真限制页面明示 ⑤ 无障碍（tab 聚焦可操作、动画可减弱）⑥ 模板零外部资源惯例（ofd.js 单文件本地 vendor，许可证开发轮核验；备选 OFDGo WASM 本地 vendor）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.OfdToPdf 下，module.exports 同步导出；DOM/渲染/zip 解包只做浏览器端，测试只覆盖纯函数）**：
+  - `validateOfdFile(name, sizeBytes, maxSizeBytes)` → {ok:true}（name 非 OFD 扩展名/文件名空 err.field='name'；sizeBytes 非法或超限 err.field='size'）。
+  - `capPageCount(totalPages, maxPages)` → {pages, truncated}（totalPages 非正整数 err.field='totalPages'；maxPages 非正整数 err.field='maxPages'；truncated 精确布尔）。
+  - `formatPageLabel(index, total)` → string（如「第 3 / 12 页」；index 非整数/越界 err.field='index'；total 非正整数 err.field='total'）。
+  - `buildExportName(fileName)` → string（原名换 `.pdf` 后缀；空文本回退 'ofd-converted.pdf'；非字符串 err.field='fileName'）。
+  - `fontFallback(fontName)` → string（内嵌字体名→系统回退字体映射；非字符串 err.field='fontName'；未知字体回退默认）。
+  - `pageRenderScale(pageW, pageH, viewportW)` → number（等比缩放系数，保留 3 位小数；非法参数 err.field='pageW'/'pageH'/'viewportW'）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'ofd-converted'）。
+- **真限制四条页面明示**：① 内嵌字体缺失时回退系统字体，极少数生僻字形可能显示差异；② OFD 复杂版式（多栏/表格嵌套）渲染可能与官方阅读器有细微偏差；③ 转换全程在浏览器本地完成，文件不上传任何服务器；④ 页数上限 50 页，超长文档仅转换前 50 页。
+- **SEO**：OFD 转 PDF、OFD 在线转换、电子发票 OFD 转 PDF、OFD 阅读器。
+- **改动文件**：tools/categories.go（「文档转换」类目新增 ofd_to_pdf 条目，Path 298→**299**，Icon `file_upload` 首选，开发轮精确值复测锁定全库唯一）／templates/ofd_to_pdf.html（新）／static/js/ofd_to_pdf.js（新）／static/js/vendor/ofd.js（新，许可证开发轮核验）／tests/ofd_to_pdf.test.js（新）／全量旧 tests Path 断言 298→299 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（validateOfdFile 非 OFD 扩展名抛错 err.field='name' 与超限抛错 err.field='size'；capPageCount 50 页上限截断精确值与 truncated 布尔；formatPageLabel 「第 3 / 12 页」精确值与越界抛错；buildExportName 换后缀精确值与空回退；fontFallback 未知字体默认回退精确值；pageRenderScale 3 位小数精确值；sanitizeFileName 空回退 'ofd-converted'；模板零外部资源静态检查）② 全量 tests/*.test.js 184→**185** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/ofd-to-pdf 200、静态 JS＋vendor ofd.js 200、首页索引收录 ⑤ 用真实 OFD 样例文件（如本地生成的 OFD 或公开样例）手工验证渲染＋PDF 导出可用（浏览器端实测，开发轮记录结果）。
+- **品类归位**：注册到「文档转换」类目（与 pdf_merge_split／images_to_pdf／invoice_generator 同类目；invoice_generator 为发票生成口径互补）；New: true；本轮**无硬编码互链要求**（与 PDF 工具簇的互链建议开发轮按模板惯例决定）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：OFD 转 PDF→本轮交付（229 研究轮新晋首席；PM 按「无硬伤不跳过」惯例直接立项；需求＋技术路线双重验证；零重叠复核确凿（ASCII 仅 firstOfDoc 变量误命中＋CJK「OFD」全 0 命中）；文档转换类目；Icon `file_upload` 首选 0 命中全库唯一）／年假拼假优化器→第二顺位（PM 第十三度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／社媒/证件照尺寸速查表→第三顺位维持（P3；数据鲜度维护负担）／英文反向词典→P3 弱观察维持（外部依赖风险）／唱歌音准检测→P3 弱观察维持（麦克风＋Web Audio 权限摩擦）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD a0321fe＝origin/muse/dev-20260929）；`git log` 头部 a0321fe（打字练习新增）／737d0ab（打字练习评审修复）／f6248cd（幸运决策转盘交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **298**；`ls tests/*.test.js | wc -l` = **184**；PM 独立零重叠复核（ASCII ofd 仅 pdf-to-word firstOfDoc 变量误命中、本体 0 交付；CJK「OFD」`chr(0x004F)+chr(0x0046)+chr(0x0044)` 运行时构造 categories.go 0 命中、templates/static/js/tests 0 命中；`Icon:\s*"file_upload"` 精确值 0 命中、`sync_alt` 0 命中、`picture_as_pdf`/`description` 已被占用 3 命中、`document_scanner` 被占用 1 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 05:36 · 产品调研推荐，第二百二十九轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：打字练习已交付闭环（a0321fe 新增＋737d0ab 评审阻塞 bug 修复，`/tools/typing-practice`，Path 总数 297→**298**，tests **184 个**，Icon `type` 精确值复测锁定全库唯一；与 study_notes／flashcard_maker／habit_tracker 双向互链「自律学习一条龙」，三处「尚未交付」负向断言已翻转），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **OFD 转 PDF** — 新晋首席。双重验证：① 外部独立信号：365lab 2026-10-08「40+ 免费在线工具推荐」收录发票助手（OFD 转 PDF 为发票打印报销刚需场景）；② 奶昔论坛 10-17 OFDGo 开源帖（浏览器本地 OFD 阅读/编辑/转 PDF，WASM 本地处理、零上传）＋ deepwiki bestofdview 文档（ofd_parser.js＋ofd_render.js：zip 解包→XML 解析→HTML div＋SVG＋canvas 渲染管线）——纯前端 OFD→PDF 技术路线双重独立验证。真缺口确凿：ASCII `ofd` 全站（git HEAD a0321fe，298 Path，184 tests；除 BACKLOG.md 外，vendor 排除）命中**仅** pdf-to-word(.batch).js 的 `firstOfDoc` 变量名子串误命中（工具 ID/Path/描述 **0 命中**）；CJK「OFD」（`chr(0x004F)+chr(0x0046)+chr(0x0044)` 运行时构造＋验真）tools/categories.go **0 命中**，templates/static/js/tests 仅 `static/js/vendor/fontkit-1.1.1.umd.min.js` 无关命中（字体表标签口径）；站内 `invoice_generator` 为**发票生成口径**（开票），本工具为**格式转换口径**——互补不重叠。实现纯前端中难度（有界范围：OFD 拖拽/选择打开（FileReader＋JSZip 本地解包，零上传）→逐页 canvas/SVG 预览＋页码导航→逐页渲染→组装 PDF 下载（复用站内 images-to-pdf 的 PDF 生成链路）；ofd.js 单文件本地 vendor 进 static/js（许可证开发轮核验），模板零外部资源惯例；内嵌字体回退系统字体、复杂版式偏差走真限制明示；页数上限 50 页性能兜底）。痛点：收到 OFD 电子发票/公文第一件事是找阅读器，现有阅读器多为安装包或收费；报销打印普遍要 PDF。SEO：OFD 转 PDF、OFD 在线转换、电子发票 OFD 转 PDF、OFD 阅读器。建议 ID ofd_to_pdf、Path /tools/ofd-to-pdf；Icon 候选待开发轮 `Icon:\s*"<icon>"` 精确值复测锁定全库唯一（pdf 簇已用图标避开）。
+2. **年假拼假优化器** — 顺位维持次席。站内零重叠维持（`holiday`/`vacation`/`pto`/`leave` 工具 ID 全站无命中；CJK「年假」/「拼假」全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排仍未公布（通常 11 月下旬），当下时间窗口价值打折；**PM 可裁定第十三度跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮／223 轮／224 轮／225 轮／226 轮／227 轮／228 轮十二度裁定跳过）。
+3. **社媒/证件照尺寸速查表** — 三席维持。CropDen 11-03 独立新信号维持（14 平台 55 个尺寸＋App 遮挡区像素坐标＋6 种护照/签证照片规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更）压级。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。本轮 365lab「做证件照/换底色」→站内 `/tools/id-photo-maker` 形态印证（非本候选）。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| OFD 转 PDF | 新晋首席：365lab 发票助手 OFD 转 PDF 场景＋OFDGo/bestofdview 纯前端技术路线双重验证；站内 ASCII ofd 仅 firstOfDoc 变量误命中、CJK「OFD」categories.go 0 命中（vendor fontkit 无关命中），真缺口确凿；与 invoice_generator（发票生成口径）互补；实现：ofd.js 本地 vendor→OFD 解包→逐页 canvas/SVG 渲染→组装 PDF 下载，零上传；内嵌字体回退＋50 页上限兜底，真限制页面明示；建议 ID ofd_to_pdf、Path /tools/ofd-to-pdf；Icon 开发轮精确值复测锁定 | 中 | P1（顺位；PM 可裁定） |
+| 年假拼假优化器 | 顺位维持次席；`holiday`/`vacation`/`pto`/`leave` ID 全站无命中，CJK「年假」/「拼假」0 命中；痛点：元旦/春节/五一/国庆拼假攻略年年爆款，手动拼算易错；实现：年份选择＋法定节假日/调休数据表＋年假天数→最长连续假期方案；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布（通常 11 月下旬） | 小 | P1（顺位；PM 可裁定第十三度跳过） |
+| 社媒/证件照尺寸速查表 | 三席维持；CropDen 11-03 独立新信号（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；痛点：发社媒图/办证件时尺寸规格难查；实现：平台选择→尺寸列表＋遮挡区图示＋证件照规格，静态数据表零上传；**弱点**：数据鲜度维护负担压级 | 小 | P3（顺位；压级） |
+| 英文反向词典 | P3 弱观察维持（OneLook 模式：同义词/反义词/概念联想＋反向查词）；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 打字练习 | 已交付划出（a0321fe 新增＋737d0ab 评审修复：`/tools/typing-practice`，Path 297→298，tests 184 个，Icon `type` 全库唯一；与 study_notes／flashcard_maker／habit_tracker 双向互链「自律学习一条龙」） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 03:57~05:36 窗口；本轮**新晋 1 首席候选**）：
+- 365lab 2026-10-08（40+ 免费在线工具推荐）：发票助手（OFD 转 PDF）→**新晋首席「OFD 转 PDF」**；证件照/换底色→站内 `/tools/id-photo-maker` 形态印证消解；PDF 工具箱（合并/拆分/压缩/转换/水印）→站内 PDF 工具簇（pdf-merge-split／pdf-compress／pdf-watermark 等 15 工具）形态印证消解；Markdown 编辑器→站内已交付形态印证消解。
+- 奶昔论坛 10-17（OFDGo 开源：浏览器本地 OFD 阅读/编辑/转 PDF，WASM，github.com/xiaoqidun/ofdgo）＋ deepwiki bestofdview（ofd_parser.js＋ofd_render.js：zip 解包→XML 解析→HTML div＋SVG＋canvas 渲染管线）→OFD 转 PDF 纯前端技术路线双重独立验证。
+- Indie Radar 11-04 日报：Demi（Rust＋Web 开源自部署 Agent 平台）→Agent/后端口径消解；HackerChurn（统计 HN 用户最想 cancel 的 SaaS）→数据/后端口径消解；Kairos（开源风控反欺诈决策平台）→后端口径消解；Glint（驻守菜单栏的 GitHub CI 监控）→桌面口径消解；壶中天（macOS 中文刘海工作台）→桌面口径消解；Vercel Security Review→平台口径消解；Postman 静默装 AI 插件事件→新闻消解；快推 EasyPost（Chrome 扩展多平台一键分发）→扩展口径消解。
+- V2EX 11-01~11-03：搭手 1.0（Alt+Space 搜索条＋可视化自动化，桌面效率工具）→桌面口径消解；阿钉（多 AI Agent 群聊协作）→Agent 口径消解；果农（App Store 收入小工具，TestFlight）→iOS App 口径消解；歌语 UtaYomi（粘贴歌词→AI 解析假名/罗马音/语法＋FSRS 复习）→AI 解析口径消解；handy-transcribe→CLI 口径消解（既判维持）；Tiny Desk AI 视频小站（$9.99/条）→AI 视频付费口径消解；自媒体获客 4 工具（多平台发布/小红书/快手/抖音获客）→插件/后端口径消解。
+- HN 11-03 front：HackerTube→平台口径消解（既判维持）；DiscImageStudio（光盘刻录可见图案）→桌面口径消解；NIST 独立创业者网络安全指南→指南文档消解；Ubuntu CVE-2026-98432／Postman→新闻消解。
+- 36氪「10个好用的免费工具型网站」→老编译文章（TypeLit 等 228 轮已消化），无新信号。
+
+**候选池变动**：typing_practice 交付划出（a0321fe＋737d0ab，298 Path，184 tests）；**新晋首席 1 个**（OFD 转 PDF：365lab 发票助手场景＋OFDGo/bestofdview 纯前端技术路线双重验证；ASCII ofd 仅 firstOfDoc 变量误命中、CJK「OFD」categories.go 0 命中真缺口确凿；与 invoice_generator 发票生成口径互补；纯前端中难度：ofd.js 本地 vendor→解包→逐页渲染→PDF 组装，零上传；页数上限 50 兜底）；**年假拼假优化器顺位维持**（PM 可裁定第十三度跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）；**社媒/证件照尺寸速查表三席维持**（数据鲜度维护负担压级）；P3 弱观察维持：英文反向词典（需内置词库或外部 API）／唱歌音准检测（需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-05 通用调研第二百二十九轮——打字练习交付闭环（a0321fe 新增＋737d0ab 评审修复；`/tools/typing-practice` 已注册，Icon `type` 全库唯一，与 study_notes／flashcard_maker／habit_tracker 双向互链「自律学习一条龙」；全量 **298 Path**；全量 tests/*.test.js **184 个**），候选池划出；新信号（365lab 发票助手 OFD 转 PDF→新晋首席；OFDGo／bestofdview→技术路线验证；Demi／HackerChurn／Kairos→Agent/数据/后端消解；Glint／壶中天→桌面消解；Vercel→平台消解；Postman→新闻消解；快推 EasyPost→扩展消解；搭手／阿钉／果农→桌面/Agent/iOS 消解；歌语 UtaYomi→AI 解析消解；handy-transcribe→CLI 消解；Tiny Desk→AI 视频付费消解；自媒体获客→插件/后端消解；HackerTube／DiscImageStudio→平台/桌面消解；NIST 指南→文档消解）均已消化；OFD 转 PDF 真缺口双确凿（ASCII ofd 仅变量误命中；CJK「OFD」分类 0 命中、vendor fontkit 无关）；WPS 候选表保持冻结归档；全库 298 Path 核对无重叠（Top3 建议 ID ofd_to_pdf／年假拼假优化器 ID 待定／social_image_size_guide；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 又被清空——老问题第 N 次复现，ssh 自动重建后一次成功）；**远端无新提交**（本地 HEAD a0321fe＝origin/muse/dev-20260929）；`git log` 头部 a0321fe（打字练习交付）／737d0ab（打字练习评审修复）／f6248cd（幸运决策转盘交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **298**；`ls tests/*.test.js | wc -l` = **184**；本地当前分支 muse/dev-20260929；工作区未跟踪仅空目录 `toolweb/`（非本轮产物，未动）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 03:57 · PM 选定轮，接通用调研第二百二十八轮）
 
 **选定：打字练习（typing_practice）** — 本轮唯一任务（新工具）。

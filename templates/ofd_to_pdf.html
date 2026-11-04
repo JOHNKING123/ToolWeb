@@ -1,0 +1,143 @@
+{{define "ofd_to_pdf"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFD 转 PDF - 免费在线 OFD 转 PDF（电子发票/公文/本地解析不上传）| 程序员工具箱</title>
+    <meta name="description" content="免费在线 OFD 转 PDF：电子发票、电子公文 OFD 文件拖拽打开，浏览器本地解析渲染、逐页预览，一键导出 PDF；文件不上传服务器，50 页以内免费、不限次、不用登录。">
+    <meta name="keywords" content="OFD转PDF,OFD转PDF免费,电子发票OFD转PDF,OFD在线转换,OFD转PDF不上传,版式文档转换">
+    <meta property="og:title" content="OFD 转 PDF - 免费在线转换">
+    <meta property="og:description" content="OFD 拖拽打开，本地解析渲染逐页预览，一键导出 PDF；纯浏览器处理，文件不上传。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/ofd-to-pdf">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/ofd-to-pdf">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "OFD 转 PDF",
+      "description": "免费在线 OFD 转 PDF：电子发票/公文 OFD 本地解析、逐页 canvas 渲染预览，一键导出 PDF；纯浏览器本地处理，文件不上传，50 页以内免费。",
+      "url": "https://www.johnkingzcq123.xyz/tools/ofd-to-pdf",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .otp-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2.2rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .otp-upload:hover,.otp-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .otp-upload .material-icons{font-size:2.6rem;display:block;margin-bottom:.5rem}
+        .otp-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .otp-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.7;display:none}
+        .otp-note{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .otp-fileinfo{display:none;align-items:center;gap:.6rem;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;margin-top:.8rem;background:#fff}
+        .otp-fileinfo .material-icons{color:#7c3aed;flex:none}
+        .otp-fileinfo .meta{flex:1;min-width:0}
+        .otp-fileinfo .nm{font-size:.9rem;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+        .otp-fileinfo .sub{font-size:.78rem;color:#9ca3af;margin-top:.15rem}
+        .otp-fileinfo .ops{flex:none}
+        .otp-fileinfo .ops button{width:30px;height:30px;border:1px solid #e5e7eb;background:#fff;border-radius:.4rem;color:#374151;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+        .otp-fileinfo .ops button:hover{border-color:#ef4444;color:#ef4444}
+        .otp-viewer{display:none;margin-top:1.1rem;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;background:#fff}
+        .otp-toolbar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
+        .otp-toolbar .btn{min-height:40px}
+        .otp-toolbar .pg{font-size:.9rem;color:#111827;font-weight:700;min-width:7.5em;text-align:center}
+        .otp-toolbar .zm{font-size:.85rem;color:#6b7280;min-width:3.2em;text-align:center}
+        .otp-canvas-wrap{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:.5rem;padding:1rem;display:flex;justify-content:center;min-height:12rem;overflow:auto}
+        .otp-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .otp-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .otp-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .otp-progress{display:none;margin-top:1rem}
+        .otp-progress .bar{height:.55rem;background:#e5e7eb;border-radius:.3rem;overflow:hidden}
+        .otp-progress .bar i{display:block;height:100%;width:0;background:var(--primary-color);border-radius:.3rem;transition:width .2s}
+        .otp-progress .txt{font-size:.85rem;color:#374151;margin-top:.35rem}
+        .otp-limit{color:#374151;line-height:1.9;font-size:.95rem}
+        .otp-limit b{color:#111827}
+        @media (max-width:640px){
+            .otp-upload{padding:1.6rem .8rem}
+            .otp-toolbar .btn{flex:1 1 auto}
+            .otp-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">file_upload</i> OFD 转 PDF</h1>
+            <p>OFD 版式文档本地解析、逐页渲染预览，一键导出 PDF；全程在浏览器内完成，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="otp-upload" id="otp-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 OFD 文件到此处">
+                    <i class="material-icons">cloud_upload</i>
+                    <div>点击选择一个 OFD 文件，或把 OFD 拖拽到这里</div>
+                    <div style="font-size:.82rem;margin-top:.4rem;">支持电子发票 / 电子公文等 OFD（GB/T 33190）；文件仅在浏览器本地处理，不上传服务器</div>
+                </div>
+                <input type="file" id="otp-file" accept=".ofd,application/octet-stream" style="display:none;">
+                <div class="otp-status" id="otp-status" aria-live="polite"></div>
+                <div class="otp-error" id="otp-error" role="alert"></div>
+                <div class="otp-note" id="otp-note"></div>
+                <div class="otp-fileinfo" id="otp-fileinfo">
+                    <i class="material-icons">description</i>
+                    <div class="meta">
+                        <div class="nm" id="otp-file-name"></div>
+                        <div class="sub" id="otp-file-sub"></div>
+                    </div>
+                    <div class="ops">
+                        <button type="button" id="otp-clear" title="清除文件"><span class="material-icons">close</span></button>
+                    </div>
+                </div>
+
+                <div class="otp-viewer" id="otp-viewer">
+                    <div class="otp-toolbar">
+                        <button type="button" class="btn btn-secondary" id="otp-prev">上一页</button>
+                        <span class="pg" id="otp-pagelabel" aria-live="polite">第 1 / 1 页</span>
+                        <button type="button" class="btn btn-secondary" id="otp-next">下一页</button>
+                        <button type="button" class="btn btn-secondary" id="otp-zoomout" title="缩小">－</button>
+                        <span class="zm" id="otp-zoomlabel">100%</span>
+                        <button type="button" class="btn btn-secondary" id="otp-zoomin" title="放大">＋</button>
+                        <span style="font-size:.8rem;color:#9ca3af;">← → 键可翻页</span>
+                    </div>
+                    <div class="otp-canvas-wrap" id="otp-canvas-wrap"></div>
+                    <div class="otp-actions">
+                        <button type="button" class="btn btn-primary" id="otp-export" disabled><i class="material-icons">file_download</i>导出 PDF</button>
+                    </div>
+                    <div class="otp-progress" id="otp-progress">
+                        <div class="bar"><i id="otp-progress-bar"></i></div>
+                        <div class="txt" id="otp-progress-txt"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="otp-limit">
+                    <li><b>① 字体回退：</b>OFD 内嵌字体缺失或无法加载时，用系统字体代替渲染，中西文混排字形可能与原文件有差异，导出前请以预览为准。</li>
+                    <li><b>② 版式偏差：</b>自研渲染内核聚焦文本/矢量/图片等常见图元；渐变底纹、复杂签章、特殊图片编码（TIFF/JB2）可能简化或跳过渲染，重要文档请与原文件核对。</li>
+                    <li><b>③ 零上传：</b>文件全程在浏览器本地解析与渲染，不上传任何服务器（可在浏览器 Network 面板自证零请求）；加密 OFD 暂不支持。</li>
+                    <li><b>④ 50 页上限：</b>单文件最多处理 50 页，超页部分自动截断并提示；单文件 50MB 以内。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="otp-actions" style="margin-top:0;">
+                    <a href="/tools/invoice-generator" class="btn btn-secondary" style="font-size:.9rem;">发票生成器 <span style="color:#2563eb;font-weight:700;">· 发票生成口径互补</span></a>
+                    <a href="/tools/pdf-to-word" class="btn btn-secondary" style="font-size:.9rem;">PDF 转 Word <span style="color:#2563eb;font-weight:700;">· 文档转换一条龙</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 本地 vendor：JSZip（解包）/ pdf-lib（PDF 组装，与 images-to-pdf 同链路）/ ofd.js（自研 OFD 渲染内核，MIT） -->
+    <script src="/tools/static/js/vendor/jszip.min.js?v=1"></script>
+    <script src="/tools/static/js/vendor/pdf-lib.min.js?v=1"></script>
+    <script src="/tools/static/js/vendor/ofd.js?v=1"></script>
+    <script src="/tools/static/js/ofd_to_pdf.js?v=1"></script>
+</body>
+</html>
+{{end}}

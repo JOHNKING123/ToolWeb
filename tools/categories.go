@@ -1867,6 +1867,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "ofd_to_pdf",
+					Name:        "OFD 转 PDF",
+					Description: "OFD 版式文档转 PDF：电子发票/电子公文 OFD 拖拽打开，浏览器本地解析、逐页 canvas 渲染预览，一键导出 PDF；自研渲染内核零上传、50 页以内免费 · OFD to PDF: parse & render OFD locally page by page, export PDF, 100% client-side",
+					Path:        "/tools/ofd-to-pdf",
+					Icon:        "file_upload",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "quotation_generator",
 					Name:        "报价单生成器",
 					Description: "在线报价单制作：报价方/客户信息（公司/联系人/电话/地址）、行项目（品名/规格/数量/单价/小计）增减行、整单折扣、0/1/3/6/9/13% 税率预设、未税合计/税额/价税合计自动计算、人民币金额大写自动生成，报价有效期、备注、签章区，多草稿 localStorage 保存，A4 报价单样式打印导出 PDF，纯前端零上传 · Quotation generator: line items, discount, tax rates, Chinese uppercase amounts, validity & signature blocks, print-ready A4, 100% client-side",
