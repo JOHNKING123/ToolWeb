@@ -136,7 +136,7 @@ function solidFrame(w, h, r, g, b, delayMs) {
     ok(GO_SRC.toLowerCase().indexOf("gif") !== -1 && GO_SRC.toLowerCase().indexOf("client-side") !== -1, "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 296, "注册 Path 总数 268→270");
+    eq(pathCount, 297, "注册 Path 总数 268→270");
 })();
 
 /* ================= 6. 零网络静态检查 ================= */

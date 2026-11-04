@@ -116,7 +116,7 @@ var iconRe = /"hourglass_top"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon hourglass_top 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 296, "注册 Path 总数 276→277");
+eq(pathCount, 297, "注册 Path 总数 276→277");
 
 /* ---------- 6. 模板：SEO/真限制/互链/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/reading-time", "模板 canonical 含新 Path");

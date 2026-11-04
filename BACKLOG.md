@@ -1,3 +1,76 @@
+## 今日任务（2026-11-05 01:42 · PM 选定轮，接通用调研第二百二十七轮）
+
+**选定：幸运决策转盘（decision_wheel）** — 本轮唯一任务（新工具）。
+
+**顺位**：227 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **首席顺位**：研究轮 227 轮 Top3 首席（226 轮三席→首席递进），按惯例顺位即立项依据。
+2. **无硬伤**：纯前端小难度（有界范围：候选项逐行输入→可选权重→canvas 转盘绘制→缓动旋转动画→结果高亮→可复抽→结果记录；零上传），零外部依赖、无年更新数据表维护负担、无隐私合规坑；一天可高质量交付。
+3. **口径互补确凿**：站内 `random_decision`（已交付）为**匿名抽签 Secret Santa 口径**（随机抽取：今天吃什么随机抽、抛硬币 3D 翻转、Yes-No 快问），本工具为**转盘可视化口径**（扇区彩绘＋缓动旋转＋指针命中仪式感）——非重叠，互补。
+4. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`decision_wheel`／`decision-wheel`／`decisionWheel`／`lucky[._-]?wheel`／`decision[._-]?wheel` 全站（git HEAD bc031dd，296 Path，182 tests；除 BACKLOG.md 外，vendor 排除）**0 命中**。
+   - CJK「转盘」（`chr(0x8F6C)+chr(0x76D8)` 运行时构造）全站 **0 命中**——真缺口确凿。
+   - Icon：**`album`（首选；圆盘片形，最贴近转盘观感；`Icon:\s*"album"` 精确值 **0 命中**，全库唯一；备选 `donut_large` 亦 0 命中）**，开发轮复测锁定。注意 `casino` 已被 random_decision 占用，不可取。复核方法修正说明：本轮首次发现此前 PM 轮次用的 `"Icon": "<icon>"` 模式因 categories.go 键名前无引号（`Icon:        "..."`）而恒返回 0；已改用正确模式 `Icon:\s*"<icon>"` 复测（`table_edit`/`bolt`/`brush` 均为真 0 命中，结论不变；`casino`/`rotate_right`/`autorenew` 为真占用），开发轮沿修正模式执行。
+
+**未选说明**：年假拼假优化器（PM 本轮**第十一度裁定跳过**：硬伤维持未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／社媒/证件照尺寸速查表（P3 弱观察→三席维持：CropDen 11-03 独立新信号已收录；数据鲜度维护负担（平台规格偶发变更）压级；留池递进）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 候选项输入（逐行文本框，支持 2–50 个候选项）② 权重可选（行末 `label | 权重` 或单独权重列；缺省均权）③ canvas 转盘绘制（彩色扇形扇区＋文字标签；DPR 高清）④ 旋转动画（缓动减速＋指针命中，动画时长可配 3/5/8 秒）⑤ 结果高亮（结果面板＋命中扇区高亮闪烁）⑥ 复抽（可移除已中项后继续抽）⑦ 结果记录（本轮中签历史列表＋清空；localStorage 持久化；纯本地，零上传）⑧ 无障碍（旋转中禁用输入、动画可减弱）与真限制页面明示。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.DecisionWheel 下，module.exports 同步导出；canvas 渲染/动画只做浏览器端，测试只覆盖纯函数）**：
+  - `parseItems(text)` → [{label, weight}]（逐行解析；`label | weight` 格式；空行跳过；weight 缺省 1；label 为空跳过该行；text 非字符串 err.field='text'；weight 非正数 err.field='weight'）。
+  - `normalizeWeights(items)` → {boundaries: number[], total: number}（累计角度边界（弧度，首项 0 起）；items 非数组 err.field='items'；label 非字符串 err.field='label'；weight 非正数 err.field='weight'）。
+  - `pickIndex(rand, boundaries)` → 下标（rand∈[0,1)；命中二分查找边界；rand 非法 err.field='rand'；boundaries 非法 err.field='boundaries'）。
+  - `sectorGeometry(index, n)` → {startAngle, endAngle, centerAngle}（n 非正整数 err.field='n'；index 越界 err.field='index'）。
+  - `easingOutCubic(t)` → number（t∈[0,1]；非法 err.field='t'）。
+  - `finalAngle(rand, spins)` → 总旋转弧度（spins 整数≥1 err.field='spins'；rand 非法 err.field='rand'）。
+  - `recordResult(history, label, maxLen)` → newHistory（超限截断头部保留 maxLen 个；label 非字符串 err.field='label'；maxLen 非正整数 err.field='maxLen'）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'decision-wheel'）。
+- **真限制三条页面明示**：① 结果由浏览器随机数生成（伪随机），每次不可复现；② 历史记录走浏览器 localStorage（约 5MB 配额），清除浏览器数据后丢失；③ 转盘动画由浏览器 canvas 实时渲染，不同浏览器/设备帧率可能有差异；所有数据不上传任何服务器。
+- **SEO**：在线转盘抽奖、决策转盘、随机选择器、幸运大转盘、转盘抽签。
+- **改动文件**：tools/categories.go（「生活工具」类目新增 decision_wheel 条目，与 random_decision 同类目，Path 296→**297**，Icon `album` 首选，开发轮精确值复测锁定全库唯一）／templates/decision_wheel.html（新）／static/js/decision_wheel.js（新）／tests/decision_wheel.test.js（新）／全量旧 tests Path 断言 296→297 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（parseItems 逐行/`label | 权重`/权重缺省/空行跳过精确值与非字符串抛错 err.field='text'；normalizeWeights 均权边界精确值（n=4 时每扇 90°）与非正权重抛错 err.field='weight'；pickIndex 边界精确值（rand=0→首扇、刚过边界→下一扇）与非法 rand 抛错；sectorGeometry 中心角精确值与越界抛错 err.field='index'；easingOutCubic(0)=0/(1)=1 与非法 t 抛错；finalAngle 整数圈精确值；recordResult 超限截断精确值；sanitizeFileName 非法字符清理与空回退；模板零外部资源静态检查）② 全量 tests/*.test.js 182→**183** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/decision-wheel 200、静态 JS 200、首页索引收录。
+- **品类归位**：注册到「生活工具」类目（与 random_decision 同类目；random_decision 为匿名抽签/Secret Santa 口径，本工具为转盘可视化口径，互补不重叠；建议「转盘模式」→本工具／「抽签模式」←本工具双向互链，开发轮按模板惯例决定）；New: true；本轮**无硬编码互链要求**之外的其它联动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：幸运决策转盘→本轮交付（226 轮三席→227 轮首席晋升；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（ASCII 五形＋CJK「转盘」全 0 命中；random_decision 为抽签口径互补）；生活工具类目；Icon `album` 首选（修正模式复测 0 命中））／年假拼假优化器→第二顺位（PM 第十一度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／社媒/证件照尺寸速查表→第三顺位维持（P3；数据鲜度维护负担）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git log` 头部 bc031dd（CSV 编辑器 bug 修复）／ea4290e（CSV 编辑器新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **296**；`ls tests/*.test.js | wc -l` = **182**；PM 独立零重叠复核（ASCII 五形 0 命中；CJK「转盘」`chr(0x8F6C)+chr(0x76D8)` 运行时构造 0 命中；`"Icon"` 模式修正：`Icon:\s*"album"` 精确值 0 命中、`donut_large` 0 命中、`casino` 已被 random_decision 占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+## 今日候选（2026-11-05 01:00 · 产品调研推荐，第二百二十七轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：CSV 编辑器已交付闭环（ea4290e＋bc031dd 修复分隔符切换清空新建表格 bug，`/tools/csv-editor`，Path 总数 295→**296**，tests **182 个**），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **幸运决策转盘** — 226 轮三席→首席递进。「无硬伤不跳过、Top3 顺位递进」惯例下预计 PM 直接立项：纯前端小难度（有界范围：输入候选项→canvas 转盘绘制→缓动旋转动画→结果高亮→可复抽／权重可选→结果记录；零上传），一天可高质量交付；真缺口确凿（ASCII `decision_wheel`／`decision-wheel`／`decisionWheel`／`lucky.?wheel`／`decision.?wheel` 全站（git HEAD bc031dd，296 Path，182 tests；除 BACKLOG.md 外）**0 命中**；CJK「转盘」（`chr(0x8F6C)+chr(0x76D8)` 运行时构造＋验真）全站 **0 命中**；站内 `random_decision` 为**匿名抽签 Secret Santa 口径**（随机抽取），本工具为**转盘可视化口径**——口径互补不重叠）。痛点：「中午吃什么」／小组活动抽签／聚会惩罚游戏等日常随机决策，视觉仪式感足。SEO：在线转盘抽奖、决策转盘、随机选择器、幸运大转盘。建议 ID decision_wheel、Path /tools/decision-wheel；Icon 待开发轮精确值复测锁定全库唯一。
+2. **年假拼假优化器** — 顺位维持次席。站内零重叠维持（`holiday`／`vacation`／`pto`／`leave` 工具 ID 全站无命中——`crypto` 为 pto 子串误命中；CJK「年假」／「拼假」（运行时构造）全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折；**PM 可裁定第十一度跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮／223 轮／224 轮／225 轮／226 轮十度裁定跳过）。
+3. **社媒/证件照尺寸速查表** — P3 弱观察→三席递进。CropDen 11-03 独立新信号（作者开源社媒图片尺寸数据集：14 平台 55 个尺寸＋头像遮挡/快拍回复栏等 App 遮挡区像素坐标＋6 种护照/签证照片规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更）。痛点：发社媒图/办证件时尺寸规格难查，东拼西凑易错。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+
+**新信号扫描**（2026-11-04 23:40~2026-11-05 01:00 窗口；本轮**无新晋候选**，信号全部消解或形态印证）：
+- V2EX 11-04（[agent 工具]Event Horizon 订阅版，20 个体验码）：网页感知＋订阅码＋云端引擎→**Agent/后端口径消解**（11-04 既判维持）。
+- V2EX 11-03（Dog Bartender AI 视频生成器）：上传宠物照片生成调酒视频→**AI 视频口径消解**。
+- V2EX 11-04（24K Magic 邮轮跳舞视频站）：两张照片生成跳舞视频、按次 $9.9→**AI 视频付费口径消解**。
+- V2EX 11-02（KitVerse.dev，AI 建设者免费工具箱 Local-first）：Tokenizer Playground→**站内 ai-token-counter 形态印证消解**；SKILL 安全扫描→**站内 skill-scanner 形态印证消解**；RAG Chunking Playground→**站内 rag_chunk_preview 形态印证消解**；其余（PUA AI 生成器／API 实验台／提示词工具链／模型价格对比）→AI/LLM 工作流口径消解。
+- V2EX 10-28（tubox 免登录图片不上传在线图片工具箱，13 工具，AGPL 开源）：纯前端图片处理→**站内图片压缩簇（img-compress／gif-compress／bulk-image-resizer）形态印证消解**。
+- V2EX 10-21（MockMock 免费免登录 Mockup/宣传物料）：→**站内 screenshot-3d-mockup 已交付形态印证消解**。
+- dev.to 11-02（StudyKit Hub，纯 HTML 隐私优先学习工具包，15 工具）：→**站内学习工具簇（study_notes／flashcard_maker／mental_math_quiz 等）形态印证消解**。
+- dev.to（Pomodoro 单文件 HTML 1.6KB）：→**站内 countdown_timer 番茄钟口径完整覆盖消解**（专注/短休息/长休息可调、四轮后长休息、自动轮转、轮次＋今日完成数持久化；CJK「番茄钟」命中仅 countdown_timer 本体）。
+- V2EX 11-03（handy-transcribe，Rust 本地音频转写 CLI，76 模型）：→**CLI 口径消解**（Indie Radar 11-02 既判维持）。
+- V2EX 11-03（砖块 zhuankuai.com，AI-Native 数字商品交易平台）：→**平台/后端口径消解**。
+- V2EX 10-20（md2chat，Markdown 转聊天图文）：→**站内 md_to_chat 已交付形态印证消解**（ID 即 md_to_chat）。
+- V2EX 10-31（股票公式决策系统 Web 服务）：→**后端＋金融口径消解**（方向修正边界）。
+- HN（p5.js Web Editor 切 OpenProcessing 后端）：→平台新闻消解。
+
+**候选池变动**：csv_editor 交付划出（ea4290e＋bc031dd，296 Path，182 tests）；**无新晋候选**（本轮 13 条信号全部消解或形态印证）；**决策转盘三席→首席递进**（真缺口复测维持：ASCII 五形＋CJK「转盘」全 0 命中；random_decision 为 Secret Santa 口径互补；纯前端小难度一天可交付；PM 可按「无硬伤不跳过」惯例直接立项）；**年假拼假优化器顺位维持**（PM 可裁定第十一度跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）；**社媒/证件照尺寸速查表 P3→三席递进**（CropDen 11-03 独立信号；静态数据纯前端小难度；数据鲜度维护负担压级）；唱歌音准检测 P3 弱观察维持（需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-05 通用调研第二百二十七轮——CSV 编辑器交付闭环（ea4290e 新增＋bc031dd 修 bug；`/tools/csv-editor` 已注册，与 csv_table_viewer 双向互链；全量 **296 Path**；全量 tests/*.test.js **182 个**），候选池划出；新信号（V2EX 11-04 Event Horizon→Agent/后端消解；11-03 Dog Bartender→AI 视频消解；11-04 24K Magic→AI 视频付费消解；11-02 KitVerse→三处站内形态印证＋AI 工作流消解；10-28 tubox→图片压缩簇形态印证；10-21 MockMock→screenshot-3d-mockup 形态印证；dev.to StudyKit Hub→学习簇形态印证；dev.to Pomodoro→countdown_timer 口径消解；11-03 handy-transcribe→CLI 消解；11-03 砖块→平台消解；10-20 md2chat→md_to_chat 形态印证；10-31 股票系统→后端金融消解；HN p5.js→平台新闻消解）均已消化；决策转盘真缺口复测维持（ASCII 五形＋CJK「转盘」全 0 命中）；WPS 候选表保持冻结归档；全库 296 Path 核对无重叠（Top3 建议 ID decision_wheel／年假拼假优化器 ID 待定／social_image_size_guide；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 又被清空——老问题第 N 次复现，ssh 自动重建后一次成功）；**远端无新提交**（本地 HEAD bc031dd＝origin/muse/dev-20260929）；`git log` 头部 bc031dd（CSV 编辑器 bug 修复）／ea4290e（CSV 编辑器新增）／0c58706（在线口算闯关交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **296**；`ls tests/*.test.js | wc -l` = **182**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-04 23:40 · PM 选定轮，接通用调研第二百二十六轮）
 
 **选定：CSV 编辑器（csv_editor）** — 本轮唯一任务（新工具）。

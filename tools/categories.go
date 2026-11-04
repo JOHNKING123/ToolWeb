@@ -2283,6 +2283,15 @@ func GetCategories() []Category {
 					Category:    "生活工具",
 				},
 				{
+					ID:          "decision_wheel",
+					Name:        "幸运决策转盘",
+					Description: "免费在线转盘抽奖：候选项逐行输入（2–50 个，可设权重），彩色转盘缓动旋转、指针命中开奖，结果高亮＋移除已中项复抽，抽奖记录存本机不上传 · 在线转盘抽奖/决策转盘/随机选择器/幸运大转盘/转盘抽签，100% client-side",
+					Path:        "/tools/decision-wheel",
+					Icon:        "album",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "fancy_fonts",
 					Name:        "花体字生成器",
 					Description: "特殊字体在线生成：粗体/斜体/哥特/手写花体/气泡/方框等18种风格，昵称符号装饰一键复制",

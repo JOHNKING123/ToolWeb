@@ -141,7 +141,7 @@ var quizMatches = GO_SRC.match(/Icon:\s+"quiz"/g) || [];
 eq(quizMatches.length, 1, "Icon quiz 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 296, "注册 Path 总数 274→275");
+eq(pathCount, 297, "注册 Path 总数 274→275");
 
 /* ---------- 8. 模板：真限制/互链/零网络/SEO ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/flashcard-maker", "模板 canonical 含新 Path");
