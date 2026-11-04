@@ -1,6 +1,68 @@
+## 今日任务（2026-11-04 17:40 · PM 选定轮，接通用调研第二百二十三轮）
+
+**选定：浏览器环境信息一键复制（browser_env_info）** — 本轮唯一任务（新工具）。
+
+**顺位**：223 轮 Top3 首席（P1）。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **信号新且独立**：ybug.io《Free tools for the questions every bug report raises》（2026-11-01）六工具之一「browser info」——打开即见浏览器/系统/屏幕/viewport/时区，一键复制为文本或 Markdown 或发链接；纯浏览器侧、免登录、零上传，形态即需求验证（技术支持场景来回三四轮沟通成本的痛点直接命中）。
+2. **无硬伤**：纯前端小难度，零外部依赖、无年更新数据表维护负担、无隐私合规坑（所有采集均为当前浏览器即时自查，不上传）。
+3. **零重叠复核确凿**（PM 独立复核，163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`browser_env_info`／`browser-env-info`／`browserEnvInfo`／`env_info`／`bug-report-env` 全站（除 BACKLOG.md 外）**0 命中**（git HEAD 4c12c9e，292 Path，178 tests）。
+   - CJK「环境信息」（`chr(0x73AF)+chr(0x5883)+chr(0x4FE1)+chr(0x606F)` 运行时构造）全站 **0 命中**——真缺口确凿。
+   - 口径辨析：user_agent_parser 为「粘贴 UA 解析」开发者口径（输入 UA 文本→解析输出）；bug_report_generator 为「手动填写缺陷报告模板」作者口径（表单逐项填→生成 Markdown）；本工具为「打开即采集＋一键复制」被支持者口径（三者输入/受众均不同，互补不重叠）；viewport 采集口径随本工具一并收编（ybug viewport size 工具消解）。
+4. **品类顺理成章**：注册到「开发工具」类目（与 user_agent_parser／bug_report_generator 同类目，三者为技术支持/debug 家族）；New: true；本轮**无硬编码互链要求**（页面内文字引导至 user_agent_parser／bug_report_generator 即可，不做硬编码互链）。
+- Icon 候选：**`info`（首选；`"info"` 在 tools/categories.go 精确值 0 命中，本轮复测）**；开发轮用精确值复测锁定全库唯一。
+
+**未选说明**：网页涂鸦画板（P2→次席维持：Paint Board 信号印证；CJK「涂鸦」0 命中／「画板」0 命中真缺口确凿；纯前端有界小难度；PM 可裁定晋升）／年假拼假优化器（PM 本轮**第七度裁定跳过**：硬伤仍未消解——调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位维持，PM 定序权行使有记录依据）。
+
+**规格**（开发轮按此执行）：
+- **范围**：① 打开即自动采集当前环境卡片：浏览器名/版本（navigator.userAgentData 首选、UA 回退）、OS、UA 原文、屏幕分辨率、viewport、DPR、时区、语言、触屏支持、cookies 开关、在线状态、色深、硬件并发数（可选）② 一键复制为 Markdown／纯文本 ③ 生成可分享链接（采集数据编码进 URL hash，打开即复原卡片，无需后端；含“复制链接”按钮）④ 重新采集按钮（窗口尺寸/网络状态变化时刷新）⑤ 纯本地采集零上传。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.BrowserEnvInfo 下，module.exports 同步导出；DOM/API 采集只做浏览器端，测试只覆盖纯函数）**：
+  - `buildEntries(raw)` → [{key,label,value}...]（key 集合固定顺序：browser／os／userAgent／screen／viewport／dpr／timezone／language／touch／cookies／online／colorDepth／cores；raw 缺字段回退 '未知' 不抛错；raw 非对象 err.field='raw'）。
+  - `formatAsMarkdown(entries)` → string（标题行＋键值列表；entries 为空 err.field='entries'）。
+  - `formatAsPlainText(entries)` → string（entries 为空 err.field='entries'）。
+  - `encodeShareFragment(entries)`／`decodeShareFragment(frag)`（entries→URL 安全字符串；frag 非法/解码失败 err.field='fragment'；往返一致）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'browser-env-info'）。
+- **真限制三条页面明示**：① navigator.userAgentData 仅 Chromium 系浏览器支持，其他浏览器回退 UA 解析，版本颗粒度可能降低；② cookies 开关/触屏等字段依赖浏览器 API 暴露，部分环境可能显示未知；③ 分享链接把数据编码进 URL，极端长 UA 下链接较长，浏览器地址栏有长度上限（实测范围内够用）。
+- **SEO**：浏览器环境检测、查看我的浏览器版本、屏幕信息查询、浏览器信息一键复制。
+- **改动文件**：tools/categories.go（开发工具类目新增 browser_env_info 条目，Path 292→**293**，Icon `info` 首选，开发轮精确值复测锁定全库唯一）／templates/browser_env_info.html（新）／static/js/browser_env_info.js（新）／tests/browser_env_info.test.js（新）／全量旧 tests Path 断言 292→293 数值同步（仅断言数值；text_info_extractor 手机号串与 ulid 时间戳常量未动）。
+- **验收标准**：① node 新测试 ≥50 断言全过（buildEntries 13 个 key 顺序精确值、缺字段回退'未知'、raw 非对象抛错 err.field='raw'；formatAsMarkdown/formatAsPlainText 空数组抛错 err.field='entries'；encodeShareFragment→decodeShareFragment 往返一致、非法 frag 抛错 err.field='fragment'；sanitizeFileName 非法字符清理与空回退；模板零外部资源静态检查）② 全量 tests/*.test.js 178→**179** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/browser-env-info 200、静态 JS 200、首页索引收录。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：浏览器环境信息一键复制→本轮交付（223 研究轮新晋 P1 首席；ybug.io 2026-11-01 独立信号；PM 按「无硬伤不跳过」惯例直接立项；零重叠复核确凿（ASCII 全形＋CJK「环境信息」全 0 命中；与 user_agent_parser／bug_report_generator 口径辨析互补）；开发工具类目；Icon info 首选）／网页涂鸦画板→次席（P3→P2 晋升；Paint Board 信号印证；纯前端有界小难度；PM 可裁定晋升）／年假拼假优化器→顺位维持（PM 第七度裁定跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）／CSV 编辑器→备选维持（一天高质量交付风险未消解）／唱歌音准检测／决策转盘／社交卡片 OG 预览 P3 弱观察维持（PM 可裁定）。
+
+**交付核对**：本地当前分支 muse/dev-20260929（本轮按铁律 `GIT_SSH_COMMAND="ssh -i /home/hatch/.ssh/id_ed25519 -o StrictHostKeyChecking=no"` 做 `git fetch origin`：known_hosts 第九次复现清空，ssh-keyscan 修复后 fetch 正常；**远端无新提交**，本地 HEAD 4c12c9e 即最新；工作区未跟踪修改仅 BACKLOG.md 本轮研究轮＋PM 轮追加＋`?? toolweb` 未知目录（非本轮产物，未动））；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **292**；`ls tests/*.test.js | wc -l` = **178**；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
 ---
 
-## 今日任务（2026-11-04 15:38 · PM 选定轮，接通用调研第二百二十二轮）
+
+## 今日候选（2026-11-04 17:36 · 产品调研推荐，第二百二十三轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
+>
+> **交付核对**：复古文字特效生成器已交付闭环（commit 4c12c9e，`/tools/retro-text-fx`，Path 总数 291→292，tests 178 个），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **浏览器环境信息一键复制** — 本轮新候选 P1。ybug.io《Free tools for the questions every bug report raises》（2026-11-01）新信号：「browser info tool shows the browser, OS, screen size, viewport and time zone on one page. The reporter can copy it as plain text or Markdown, or send it as a link.」痛点：技术支持让用户报环境时，普通用户说不清浏览器版本/屏幕/系统，来回三四轮沟通成本；形态即验证（ybug 六工具之一，纯浏览器侧、免登录、零上传）。实现：纯前端小难度——打开即自动采集当前环境卡片（浏览器名/版本、OS、UA、屏幕分辨率、viewport、DPR、时区、语言、触屏支持、cookies 开关、在线状态）→一键复制为 Markdown/纯文本→可选生成可分享卡片；navigator.userAgentData/UA 解析纯函数化。SEO：浏览器环境检测、查看我的浏览器版本、屏幕信息查询。建议 ID browser_env_info、Path /tools/browser-env-info；零重叠：ASCII `browser_env`／`env_info`／`bug-report-env` 全 0 命中；CJK「环境信息」全站 0 命中（运行时构造，codepoint 0x73AF/0x5883/0x4FE1/0x606F 验真）——真缺口确凿。口径辨析：user_agent_parser 为「粘贴 UA 解析」开发者口径（输入 UA 文本→解析输出）；bug_report_generator 为「手动填写缺陷报告模板」作者口径（表单逐项填→生成 Markdown）；本工具为「打开即采集＋一键复制」被支持者口径（三者输入/受众均不同，互补不重叠）。Icon 候选 `info`（待开发轮精确值复测锁定全库唯一）。
+2. **网页涂鸦画板** — P3 弱观察→次席晋升。V2EX「一款完全开源免费的网页端创意画板」（2026-10-19，16 天前，MIT 开源 github.com/LHRUN/paint-board，在线体验 songlh.top/paint-board）新信号印证：「随手涂鸦、自由创作，随意折腾的绘画板」，作者用一周下班时间靠 AI 修复旧 bug＋添新功能——形态与交付成本双重验证。痛点：想随手画个示意图/给截图画标注/涂鸦，装桌面软件嫌重、在线站多要登录。实现：纯前端小难度（范围须有界：画笔＋颜色/粗细、橡皮擦、矩形/圆/箭头/文字、撤销/重做、清屏、PNG 导出；触屏支持；零上传）——一天可高质量交付。SEO：在线画板、网页涂鸦、白板涂鸦、画图工具。建议 ID doodle_board、Path /tools/doodle-board；零重叠：CJK「涂鸦」120 命中、「画板」146 命中**全部在 BACKLOG.md 候选记录**，templates/static/tests/tools 无一命中；ASCII `doodle`/`paint_board`/`whiteboard` 工具口径 0 命中——真缺口维持。Icon 候选 `brush`（retro_text_fx 选了 auto_fix；brush 待开发轮精确值复测锁定全库唯一）。
+3. **年假拼假优化器** — P1 顺位维持（PM 可裁定是否第七度跳过）。站内零重叠维持（`holiday`/`vacation`/`pto` 仅 calendar.js 日历节假日展示口径，CJK 年假/拼假全站 0 命中；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→组合优化输出最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排尚未公布（通常 11 月下旬），时间窗口打折；**PM 可裁定是否跳过**（19:37／21:38／217 轮／220 轮／221 轮／222 轮六度裁定跳过）。
+
+**新信号扫描**（2026-11-04 15:38~17:36 窗口）：
+- V2EX 创造节点（10-19~11-01）：Open Resume（156 简历模板免费导出）→**站内 resume_builder 已交付，形态印证消解**；md2chat（Markdown 转聊天图文）→**站内 md_to_chat 已交付（templates/md_to_chat.html），口径重合消解**；PrintPageCheck 打印机测试页→**站内 printer_test_page 已交付，形态印证消解**；Paint Board 网页涂鸦画板→**本轮 P3→次席晋升「网页涂鸦画板」**；tubox 图片工具箱（13 工具）→211 轮观察维持，图片簇已覆盖；MockMock 设备 Mockup→screenshot_3d_mockup 已交付，形态印证维持。
+- ybug.io（2026-11-01）：6 个 bug 报告辅助工具（browser info／user agent／viewport size／HAR sanitizer／image diff／test cards）→**新晋 P1「浏览器环境信息一键复制」**；其余：user agent→user_agent_parser 已交付；viewport size→本工具一并采集消解；HAR sanitizer→含敏感 token 数据＋HAR 文件体积大，单页解析体验不佳，低优先不立项；image diff→站内 image_diff/image_comparator 口径已覆盖，消解；test cards→开发者小众，消解。
+- dev.to 渠道（OpenFile 360 工具／Tooltri 30 工具／ToolVerse 100+／SnappyTools 26 工具／goodyuanbo 单文件 30+）：纯前端免上传形态印证＋站内已交付工具反向验证需求（CSV/图片/PDF 口径均已覆盖）；无独立新候选。
+- 中文渠道：pifatool 在线工具分析长文→通用口径、无新工具信号；v2ex joLink（AI Java 开发工具）→桌面＋AI 口径消解；xGoose（网页 AI Agent 插件）→插件＋账号口径消解；DealPage（商单落地页）→需后端＋数据统计口径消解。
+
+**候选池变动**：retro_text_fx 交付划出（4c12c9e，292 Path）；**新晋 1 个 P1**（浏览器环境信息一键复制：ybug.io 2026-11-01 独立新信号；ASCII/CJK 零命中复测确凿；与 user_agent_parser／bug_report_generator 口径辨析互补；纯前端小难度）／**P3→P2 晋升 1 个**（网页涂鸦画板：Paint Board 新信号印证；CJK 涂鸦/画板仅 BACKLOG 命中，真缺口；纯前端小难度有界范围）；其余 P1/P2 留池无变化（年假拼假优化器顺位维持（PM 可裁定）；CSV 编辑器备选维持（15:00 PM 轮裁定留池维持；一天高质量交付风险未消解）；唱歌音准检测／决策转盘／社交卡片 OG 预览 P3 弱观察维持；WPS 候选表保持冻结归档）。
+
+**归档说明**：本轮为 11-04 通用调研第二百二十三轮——复古文字特效生成器交付闭环（4c12c9e；`/tools/retro-text-fx` 已注册；全量 **292 Path**；tests/retro_text_fx.test.js 新增 92 断言；全量 tests/*.test.js **178 个**），候选池划出；新信号（V2EX 创造节点：Open Resume/md2chat/PrintPageCheck→站内已交付消解；Paint Board→P3 晋升；tubox/MockMock→观察/形态印证维持；ybug.io 6 工具→1 个新晋 P1 其余消解；dev.to 五篇工具集合→形态印证；joLink/xGoose/DealPage→口径消解；pifatool→无新信号）均已消化；WPS 候选表保持冻结归档；全库 292 Path 核对无重叠（Top3 建议 ID browser_env_info／doodle_board；年假拼假优化器 ID 待定；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（VM 换机后 known_hosts 第八次复现清空，ssh 自动重建后一次成功——实际 fetch 提示 access rights，dev 分支本地 HEAD 4c12c9e 即远端最新，远端无新提交）；`git log` 头部 4c12c9e（复古文字特效生成器交付）／033e21d（在线可弹钢琴交付）／11e0211（蛋白质摄入量计算器交付）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **292**；`ls tests/*.test.js | wc -l` = **178**；本地当前分支 muse/dev-20260929；工作区未跟踪修改仅 BACKLOG.md 本轮追加＋`?? toolweb` 未知目录（非本轮产物，未动）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+---
+
 
 **选定：复古文字特效生成器（retro_text_fx）** — 本轮唯一任务（新工具）。
 

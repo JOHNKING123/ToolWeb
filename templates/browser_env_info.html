@@ -1,0 +1,135 @@
+{{define "browser_env_info"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器环境信息一键复制 - 13 项浏览器参数自动采集/复制 Markdown/生成分享链接 | 程序员工具箱</title>
+    <meta name="description" content="免费在线浏览器环境信息一键复制：打开即自动采集 13 项浏览器环境信息（浏览器名/版本、操作系统、UA 原文、屏幕分辨率、视口尺寸、设备像素比、时区、语言、触屏、Cookie 开关、在线状态、色深、硬件并发数），一键复制 Markdown/纯文本，数据编进 URL hash 生成可分享链接，无需后端，纯前端本地运行，零上传。">
+    <meta name="keywords" content="浏览器环境信息,浏览器信息查看,UA 查看,屏幕分辨率查看,设备像素比,时区查看,浏览器信息复制,browser info,my browser info,user agent">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/browser-env-info">
+    <meta property="og:title" content="浏览器环境信息一键复制 - 13 项参数自动采集">
+    <meta property="og:description" content="打开即采集 13 项浏览器环境信息，一键复制 Markdown/纯文本，URL hash 分享链接。纯前端本地运行。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/browser-env-info">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"浏览器环境信息一键复制","description":"免费在线浏览器环境信息一键复制：打开即自动采集 13 项浏览器环境信息，一键复制 Markdown/纯文本，数据编进 URL hash 生成可分享链接，纯前端本地运行。","url":"https://www.johnkingzcq123.xyz/tools/browser-env-info","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .bei-wrap .container { max-width: 860px; margin: 0 auto; padding: 1.2rem; }
+        .bei-wrap .navbar .material-icons { display: none; }
+        .bei-card { background:#fff; border:1px solid #e5e7eb; border-radius:.8rem; padding:1rem 1.2rem; margin-bottom:1.1rem; }
+        .bei-card h3 { margin:0 0 .8rem; font-size:1rem; color:#111827; }
+        .bei-hint { color:#9ca3af; font-size:.85rem; font-weight:400; }
+        .bei-list { border:1px solid #e5e7eb; border-radius:.6rem; overflow:hidden; }
+        .bei-row { display:flex; gap:.8rem; padding:.55rem .9rem; border-bottom:1px solid #f3f4f6; font-size:.93rem; }
+        .bei-row:last-child { border-bottom:none; }
+        .bei-row:nth-child(odd) { background:#f9fafb; }
+        .bei-label { min-width:6.5em; color:#6b7280; flex-shrink:0; }
+        .bei-value { color:#111827; word-break:break-all; font-variant-numeric:tabular-nums; }
+        .bei-actions { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-top:.9rem; }
+        .bei-btn { padding:.5rem 1.1rem; border-radius:.55rem; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; font-size:.92rem; }
+        .bei-btn:hover { background:#f3f4f6; }
+        .bei-btn.primary { background:var(--primary-color); border-color:var(--primary-color); color:#fff; }
+        .bei-btn.primary:hover { filter:brightness(.95); }
+        .bei-share-row { display:flex; gap:.6rem; margin-top:.7rem; }
+        .bei-share-row input { flex:1; padding:.5rem .6rem; border:1px solid #d1d5db; border-radius:.55rem; font-size:.88rem; color:#374151; min-width:0; }
+        .bei-note { display:none; background:#fffbeb; border:1px solid #fde68a; color:#92400e; border-radius:.55rem; padding:.6rem .9rem; font-size:.9rem; margin-bottom:.9rem; }
+        .bei-tip { color:#374151; line-height:1.9; font-size:.93rem; }
+        .bei-tip a { color:var(--primary-color); }
+        .bei-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .bei-links a { color:var(--primary-color); font-size:.93rem; }
+        .bei-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#111827; color:#fff; padding:.6rem 1.2rem; border-radius:.5rem; z-index:9999; font-size:.9rem; max-width:86vw; display:none; }
+        @media (max-width:640px) {
+            .bei-label { min-width:5em; }
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="bei-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>ℹ️ 浏览器环境信息一键复制</h1>
+            <p>打开即自动采集 13 项浏览器环境信息，一键复制 Markdown / 纯文本，还能生成 URL 分享链接</p>
+        </div>
+        <div class="tool-content">
+            <div class="bei-note" id="bei-note"></div>
+            <div class="bei-card">
+                <h3>环境信息 <span class="bei-hint">（打开页面时已自动采集；窗口大小变化后可点「重新采集」刷新）</span></h3>
+                <div class="bei-list" id="bei-list"></div>
+                <div class="bei-actions">
+                    <button class="bei-btn primary" id="bei-recollect" type="button">↻ 重新采集</button>
+                </div>
+            </div>
+
+            <div class="bei-card">
+                <h3>一键复制 <span class="bei-hint">（复制到剪贴板，可直接粘贴到工单 / Bug 报告 / 聊天记录）</span></h3>
+                <div class="bei-actions">
+                    <button class="bei-btn primary" id="bei-copy-md" type="button">⧉ 复制 Markdown</button>
+                    <button class="bei-btn" id="bei-copy-plain" type="button">⧉ 复制纯文本</button>
+                    <button class="bei-btn" id="bei-dl-md" type="button">⬇ 下载 .md</button>
+                    <button class="bei-btn" id="bei-dl-plain" type="button">⬇ 下载 .txt</button>
+                </div>
+            </div>
+
+            <div class="bei-card">
+                <h3>分享链接 <span class="bei-hint">（13 项数据直接编进网址 # 后面，无需后端，对方打开即看到这份快照）</span></h3>
+                <div class="bei-actions">
+                    <button class="bei-btn primary" id="bei-gen-share" type="button">🔗 生成分享链接</button>
+                    <button class="bei-btn" id="bei-copy-share" type="button">⧉ 复制链接</button>
+                </div>
+                <div class="bei-share-row">
+                    <input type="text" id="bei-share-url" readonly placeholder="点「生成分享链接」后这里会出现可分享的网址">
+                </div>
+            </div>
+
+            <div class="bei-card">
+                <h3>使用说明</h3>
+                <ol class="bei-tip" style="margin:0;padding-left:1.3rem;">
+                    <li>打开本页即自动采集 13 项浏览器环境信息，无需任何操作。</li>
+                    <li>点「复制 Markdown」得到带标题的 Markdown 列表，点「复制纯文本」得到纯文本版；也可以下载为 .md / .txt 文件。</li>
+                    <li>点「生成分享链接」把这 13 项数据编进网址 # 后面发给别人，对方打开即看到快照（对方点「重新采集」可换成自己的环境）。</li>
+                    <li>调整窗口大小或切换屏幕后，点「重新采集」刷新屏幕分辨率与视口尺寸。</li>
+                </ol>
+            </div>
+
+            <div class="bei-card">
+                <h3>常见问题</h3>
+                <dl class="bei-tip">
+                    <dt><b>为什么有的项显示「未知」？</b></dt>
+                    <dd>部分字段受浏览器与隐私设置限制取不到（如硬件并发数、userAgentData 在非 Chromium 浏览器不存在），取不到就显示「未知」，不代表本页功能异常。</dd>
+                    <dt><b>浏览器名是怎么识别的？</b></dt>
+                    <dd>优先用 navigator.userAgentData（Chromium 系浏览器提供，更准确）；不支持的浏览器回退到 UA 字符串解析，识别粒度较粗。</dd>
+                    <dt><b>我的信息会被上传吗？</b></dt>
+                    <dd>不会。采集、复制、生成分享链接全部在浏览器本地完成，本页面零网络请求，数据不出浏览器（见下方真限制说明）。</dd>
+                    <dt><b>分享链接里有什么？</b></dt>
+                    <dd>就是上面 13 项数据原样编码进网址 # 后面；发链接等于发这份数据，请勿在公开场合传播包含敏感 UA 的链接。</dd>
+                </dl>
+            </div>
+
+            <div class="bei-card">
+                <h3>相关工具</h3>
+                <div class="bei-links">
+                    <a href="/tools/user-agent-parser">User-Agent 解析器（粘贴任意 UA 文本、开发者口径，细拆浏览器/系统/设备版本；本页是自动采集当前浏览器）</a>
+                    <a href="/tools/bug-report-generator">Bug 报告生成器（手动填写 Bug 报告模板；可把本页复制的环境信息粘贴进「环境」栏）</a>
+                </div>
+            </div>
+
+            <div class="bei-card">
+                <h3>真限制说明</h3>
+                <div class="bei-tip">
+                    <b>真限制一：userAgentData 仅 Chromium 系支持</b>——navigator.userAgentData 只在 Chrome/Edge 等 Chromium 系浏览器可用，其它浏览器用 UA 字符串回退解析，浏览器名与版本号识别较粗；<b>真限制二：部分字段取不到属正常</b>——在线状态、触屏点数、硬件并发数等受浏览器版本与隐私设置限制，取不到时显示「未知」，换浏览器或放宽设置可能恢复；<b>真限制三：分享链接即数据本身</b>——分享链接把 13 项数据原样编进 URL hash 发给对方，等于把这份环境信息发出去，请勿在公开场合传播。
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="bei-toast" id="bei-toast"></div>
+    <script src="/tools/static/js/browser_env_info.js?v=1"></script>
+</body>
+</html>
+{{end}}

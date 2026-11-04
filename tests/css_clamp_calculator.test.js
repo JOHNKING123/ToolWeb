@@ -133,7 +133,7 @@ ok(GO_SRC.indexOf('"format_size"') >= 0, "注册：Icon format_size");
 var pathMatches = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
 var uniquePaths = {};
 pathMatches.forEach(function (p) { uniquePaths[p] = true; });
-eq(Object.keys(uniquePaths).length, 292, "注册总数 268→270 Path");
+eq(Object.keys(uniquePaths).length, 293, "注册总数 268→270 Path");
 ok(TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/css-clamp-calculator") >= 0, "SEO：canonical 正确");
 ok(TPL_SRC.indexOf("/tools/css-gradient-generator") >= 0, "互链：CSS 渐变生成器");
 ok(TPL_SRC.indexOf("/tools/css-to-tailwind") >= 0, "互链：CSS 转 Tailwind 转换器");

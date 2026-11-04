@@ -151,7 +151,7 @@ var iconRe = /"egg"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon egg 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 292, "注册 Path 总数 289→290");
+eq(pathCount, 293, "注册 Path 总数 289→290");
 
 /* ---------- 8. 模板：SEO/真限制两条/零外部资源 ---------- */
 has(TPL_SRC, '{{define "protein_intake_calc"}}', "模板定义 protein_intake_calc");

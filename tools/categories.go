@@ -1011,6 +1011,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "开发工具",
 				},
+				{
+					ID:          "browser_env_info",
+					Name:        "浏览器环境信息一键复制",
+					Description: "打开即自动采集 13 项浏览器环境信息：浏览器名/版本（navigator.userAgentData 优先、UA 回退）、操作系统、UA 原文、屏幕分辨率、视口尺寸、设备像素比、时区、语言、触屏、Cookie 开关、在线状态、色深、硬件并发数，一键复制 Markdown/纯文本，数据编进 URL hash 生成可分享链接（无需后端），重新采集按钮，纯前端零上传 · Browser environment info one-click copy: auto-collect 13 browser env fields, copy as Markdown/plain text, share via URL hash, 100% client-side",
+					Path:        "/tools/browser-env-info",
+					Icon:        "info",
+					New:         true,
+					Category:    "开发工具",
+				},
 			},
 		},
 		{
