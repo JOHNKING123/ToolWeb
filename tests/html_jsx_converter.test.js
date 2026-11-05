@@ -136,7 +136,7 @@ ok(E2.valid && E2.code.indexOf("htmlFor") !== -1 && E2.code.indexOf("checked") !
 ok(/ID:\s+"html_jsx_converter"[\s\S]{0,1200}?Path:\s+"\/tools\/html-jsx-converter"/.test(GO_SRC), "注册：ID 与 Path");
 ok(/ID:\s+"html_jsx_converter"[\s\S]{0,1200}?Category:\s+"开发工具"/.test(GO_SRC), "注册：Category 开发工具");
 ok(/ID:\s+"html_jsx_converter"[\s\S]{0,1200}?New:\s+true/.test(GO_SRC), "注册：New: true");
-eq((GO_SRC.match(/Path:\s+"/g) || []).length, 300, "注册总数 268→270 Path");
+eq((GO_SRC.match(/Path:\s+"/g) || []).length, 301, "注册总数 268→270 Path");
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/html-jsx-converter", "模板 canonical");
 has(TPL_SRC, "application/ld+json", "模板 JSON-LD");
 has(TPL_SRC, "/tools/svg-compressor", "互链 SVG 压缩器");

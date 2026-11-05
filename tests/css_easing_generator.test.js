@@ -109,7 +109,7 @@ var m;
 var re = /"\/tools\/[^"]+"/g;
 var seen = {};
 while ((m = re.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 300, "注册 Path 总数 268→270");
+eq(pathCount, 301, "注册 Path 总数 268→270");
 ok(TPL_SRC.indexOf("只做曲线预览与代码生成、不做整页动效编排") >= 0, "模板含真限制：不做整页动效编排");
 ok(TPL_SRC.indexOf("预览动画仅示意") >= 0, "模板含真限制：预览动画仅示意");
 ok(TPL_SRC.indexOf("y超出0–1为合法回弹区间") >= 0 || TPL_SRC.indexOf("y 超出 0–1 为合法回弹区间") >= 0, "模板含真限制：y 回弹区间");

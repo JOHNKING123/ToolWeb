@@ -1660,6 +1660,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "图片处理",
 				},
+				{
+					ID:          "doc_bg_cleaner",
+					Name:        "文档扫描去底纹",
+					Description: "手机拍文档/合同灰底重、打印费墨？JPG/PNG/WebP 拖拽打开（本地 FileReader 零上传、20MB 上限），灰度→Otsu 自动阈值（可手动微调）→背景漂白强度滑杆→中值滤波去噪，处理前后拖动滑杆对比＋墨覆盖率对比（打印费墨参考），PNG 一键导出（文件名回退 doc-cleaned）／pdf-lib 本地组装 PDF；与扫描件效果生成器反向口径互补，纯前端零上传 · Document background cleaner: whiten phone photos of documents, Otsu threshold, export PNG/PDF, 100% client-side",
+					Path:        "/tools/doc-bg-cleaner",
+					Icon:        "filter_b_and_w",
+					New:         true,
+					Category:    "图片处理",
+				},
 			},
 		},
 		{

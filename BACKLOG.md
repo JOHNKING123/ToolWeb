@@ -1,3 +1,88 @@
+## 今日任务（2026-11-05 09:52 · PM 选定轮，接通用调研第二百三十一轮）
+
+**选定：文档扫描去底纹（手机拍文档增白，doc_bg_cleaner）** — 本轮唯一任务（新工具）。
+
+**顺位**：231 轮 Top3 第三席递进。「无硬伤不跳过、Top3 顺位递进」惯例下立项，硬依据如下：
+1. 首席年假拼假优化器 → PM **第十五度裁定跳过**（硬伤维持未消解：2027 年放假安排仍未公布（通常 11 月下旬），2026 年仅剩约 2 个月、当下时间窗口价值打折维持；调休数据表年更新维护负担；PM 定序权行使有记录依据）。本轮新增明确触发器：**待 2027 年放假安排公布后、下一轮调研确认即立项**，顺位首席保留——无限跳过转为有条件触发。
+2. 次席社媒/证件照尺寸速查表 → 留池递进（P3）。CropDen 11-03 独立信号真实（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；但数据鲜度维护负担是与年假数据表同类的负债（平台规格偶发变更、错表误导用户），与 PM「数据表负债从严」裁定逻辑一致，暂不立项。
+3. 本项**无硬伤**：纯前端小难度，零上传、零外部依赖、零数据表、无年更新负债、无隐私合规坑；signature_capture 的 Otsu 自动阈值管线站内已验证、可复用；一天可高质量交付。
+4. 需求验证：① 外部独立信号：Pixsolo 11-05 新增「文档去底纹」独立工具项（Indie Radar 日报）；② 痛点具体可验证：手机拍文档/合同灰底重、打印费墨、字迹不清；③ 口径互补确凿：scan_effect_generator 为反向口径（加扫描效果），本工具为逆操作（去底增白），形成"扫描效果对子"，非重叠。
+5. PM 独立零重叠复核确凿（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行 codepoint 验真，已记入 AGENTS.md）：
+   - ASCII：`doc_bg_cleaner`／`doc-bg-cleaner`／`docBgCleaner`／`bg_cleaner`／`doc_clean`／`scan_clean`／`img_denoise`／`doc_enhance` 八形态全站（git HEAD d08b29a，300 Path，186 tests；除 BACKLOG.md 外，vendor 排除）**0 命中**——真缺口确凿。
+   - CJK「去底纹」（`chr(0x53BB)+chr(0x5E95)+chr(0x7EB9)` 运行时构造＋验真）全站 **0 命中**；「增白」「去灰底」0 命中；「底纹」4 命中经 codepoint 验真全为无关（css_gradient_generator 棋盘格透明预览／signature_capture 复杂底纹降质说明／ofd_to_pdf 渐变底纹渲染限制）——**文档去底纹本体 0 交付**，真缺口确凿。
+   - Icon：**`filter_b_and_w`（首选；`Icon:\s*"filter_b_and_w"` 精确值 **0 命中**，全库唯一，贴合黑白文档去底增白语义；备选 `auto_fix_high`／`photo_filter`／`brightness_6` 亦 0 命中；`contrast` 被占用 1 命中、`document_scanner` 被 scan_effect_generator 占用、`cleaning_services` 被占用 2 命中，不可取）**，开发轮复测锁定。
+
+**未选说明**：年假拼假优化器（PM 第十五度裁定跳过；触发器：2027 年放假安排公布后下一轮调研确认即立项）／社媒/证件照尺寸速查表（留池递进；数据鲜度维护负担）／3D 模型预览器（P3 观察维持：vendor 体积＋需求人群窄＋移动端性能）／字体搭配预览（P3 观察维持：需求频率中等）／视频转 SRT（新晋 P3 弱观察维持：Whisper 权重 39–244MB 与模板零外部资源惯例冲突）／短链逐跳跳转链追踪（新晋 P3 弱观察维持：需服务端抓取＋VM 出网拦截风险）／英文反向词典（P3 弱观察维持：需内置词库或外部 API）／唱歌音准检测（P3 弱观察维持：需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 图片拖拽/选择打开（JPG/PNG/WebP，FileReader 本地，零上传；类型/大小双重校验，20MB 上限友好报错）② 灰度→Otsu 自动阈值（可手动滑杆微调，复用 signature_capture 管线思路）→底色增白（背景漂白强度滑杆）→中值滤波去噪 ③ 处理前后对比预览（滑杆/分屏）＋墨覆盖率对比（打印费墨参考）④ 一键导出 PNG（文件名回退 `doc-cleaned`）＋组装 PDF（复用 images-to-pdf 的 pdf-lib 本地 vendor 链路）⑤ 真限制页面明示 ⑥ 无障碍（tab 聚焦可操作、动画可减弱）⑦ 模板零外部资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.DocBgCleaner 下，module.exports 同步导出；DOM/canvas 只做浏览器端，测试只覆盖纯函数）**：
+  - `rgbToGray(r, g, b)` → number（0–255 取整；非法参数 err.field='r'/'g'/'b'）。
+  - `buildGrayHistogram(grayData)` → number[256]（grayData 为类数组灰度值；非法 err.field='grayData'）。
+  - `otsuThreshold(hist)` → number（256 桶直方图→Otsu 最优阈值；hist 非法 err.field='hist'）。
+  - `whitenPixel(gray, threshold, strength)` → number（背景向白映射、文字保持；strength 非 [0,1] err.field='strength'；gray/threshold 非法 err.field='gray'/'threshold'）。
+  - `applyWhitening(grayData, width, height, options)` → Uint8ClampedArray（options {threshold|'auto', strength}；非法 err.field='options'/'width'/'height'）。
+  - `estimateInkCoverage(grayData, threshold)` → number（0–1 墨覆盖率；非法 err.field='grayData'/'threshold'）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'doc-cleaned'）。
+- **真限制四条页面明示**：① 亮度阈值方法：深色纸/彩色底纹/浅色手写笔迹去底效果有限；② 强阴影/纸面褶皱可能残留痕迹；③ 全程浏览器本地处理，图片不上传任何服务器；④ 输入上限 20MB，超大图片建议先压缩。
+- **SEO**：文档去底纹、扫描件增白、手机拍照文档处理、打印去灰底。
+- **改动文件**：tools/categories.go（「图片处理」类目新增 doc_bg_cleaner 条目，Path 300→**301**，Icon `filter_b_and_w` 首选，开发轮精确值复测锁定全库唯一）／templates/doc_bg_cleaner.html（新）／static/js/doc_bg_cleaner.js（新）／tests/doc_bg_cleaner.test.js（新）／全量旧 tests Path 断言 300→301 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（rgbToGray 精确值与非法抛错 err.field；buildGrayHistogram 256 桶计数精确值；otsuThreshold 经典双峰直方图阈值精确值；whitenPixel 背景提亮/文字保持精确值与 strength 越界抛错；applyWhitening auto 阈值路径与非法 options 抛错；estimateInkCoverage 0–1 范围与全白/全黑精确值；sanitizeFileName 空回退 'doc-cleaned'；模板零外部资源静态检查）② 全量 tests/*.test.js 186→**187** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/doc-bg-cleaner 200、静态 JS 200、首页索引收录 ⑤ 用手机拍文档样例图手工验证去底增白前后对比＋PNG/PDF 导出可用（浏览器端实测，开发轮记录结果）。
+- **品类归位**：注册到「图片处理」类目（图像增强口径；scan_effect_generator（文档转换）为反向口径互补——开发轮按模板惯例决定是否双向互链；signature_capture（实用工具）为管线复用来源）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：文档扫描去底纹→本轮交付（231 研究轮 Top3 第三席递进；首席年假 PM 第十五度跳过＋2027 放假安排公布触发器、次席社媒尺寸表数据鲜度负债留池；无硬伤、Otsu 管线站内可复用、scan_effect_generator 反向口径互补；零重叠复核确凿（ASCII 八形态 0 命中＋CJK「去底纹」0 命中／「底纹」4 命中验真全无关）；图片处理类目；Icon `filter_b_and_w` 首选 0 命中全库唯一）／年假拼假优化器→首席保留（触发器：2027 年放假安排公布后下一轮调研确认即立项）／社媒/证件照尺寸速查表→第三顺位维持（P3；数据鲜度维护负担）／3D 模型预览器／字体搭配预览→P3 观察维持／视频转 SRT／短链逐跳跳转链追踪／英文反向词典／唱歌音准检测→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD d08b29a＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **300**；`ls tests/*.test.js | wc -l` = **186**；PM 独立零重叠复核（ASCII doc_bg_cleaner/doc-bg-cleaner/docBgCleaner/bg_cleaner/doc_clean/scan_clean/img_denoise/doc_enhance 八形态全 0 命中；CJK「去底纹」`chr(0x53BB)+chr(0x5E95)+chr(0x7EB9)` 运行时构造全站 0 命中、「增白」「去灰底」0 命中、「底纹」4 命中 codepoint 验真全无关（棋盘格透明预览／复杂底纹降质说明／渐变底纹渲染限制）；`Icon:\s*"filter_b_and_w"` 精确值 0 命中、`auto_fix_high`/`photo_filter`/`brightness_6` 0 命中、`contrast` 占用 1 命中、`document_scanner` 被占用、`cleaning_services` 占用 2 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 09:36 · 产品调研推荐，第二百三十一轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：文本摘要/要点提取器已交付闭环（d08b29a 新增，`/tools/text-summarizer`，Path 总数 299→**300**，tests **186 个**，Icon `summarize` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **年假拼假优化器** — 顺位维持首席。站内零重叠维持（`holiday`/`vacation`/`pto`/`leave` 工具 ID 全站无命中；CJK「年假」/「拼假」全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋内置法定节假日/调休数据表＋年假天数输入→最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排仍未公布（通常 11 月下旬），当下时间窗口价值打折；**PM 可裁定第十五度跳过**。
+2. **社媒/证件照尺寸速查表** — 三席维持。CropDen 11-03 独立新信号维持（14 平台 55 个尺寸＋App 遮挡区像素坐标＋6 种护照/签证照片规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更）压级。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+3. **文档扫描去底纹（手机拍文档增白）** — 新晋 P3 观察。信号：Pixsolo 11-05 新增工具项「文档去底纹」（Indie Radar 11-05 日报）；站内零重叠（doc_clean／scan_clean／img_denoise／doc_enhance ID 全 **0 命中**；`scan_effect_generator` 为反向口径（加扫描效果），`signature_capture` 的 Otsu 自动阈值管线可复用）；实现纯前端小难度（灰度→自适应阈值/白平衡→灰底去除增白→PNG/PDF 导出，零上传）；痛点：手机拍的文档/合同打印前灰底太重费墨、字迹不清；**弱点**：独立信号弱（仅为某工具站新增功能项之一），压级 P3。SEO：文档去底纹、扫描件增白、手机拍照文档处理。建议 ID doc_bg_cleaner、Path /tools/doc-bg-cleaner；零重叠待 PM/开发轮复测。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 年假拼假优化器 | 顺位维持首席；`holiday`/`vacation`/`pto`/`leave` ID 全站无命中，CJK「年假」/「拼假」0 命中；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布（通常 11 月下旬） | 小 | P1（顺位；PM 可裁定第十五度跳过） |
+| 社媒/证件照尺寸速查表 | 三席维持；CropDen 11-03 独立新信号（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；**弱点**：数据鲜度维护负担压级 | 小 | P3（顺位；压级） |
+| 文档扫描去底纹（手机拍文档增白） | 新晋 P3 观察：Pixsolo 11-05 新增「文档去底纹」独立信号；站内 doc_clean/scan_clean/img_denoise 全 0 命中，scan_effect_generator 为反向口径、signature_capture Otsu 管线可复用；纯前端小难度零上传；**弱点**：独立信号弱压级 | 小 | P3（观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 字体搭配预览（Fontjoy 模式） | P3 观察维持；**弱点**：需求频率中等 | 小 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | 新晋 P3 弱观察：MyToolster 10-07 Video-to-SRT（Whisper WASM/WebGPU 浏览器本地转写）独立信号；subtitle_editor 为编辑口径已交付；**弱点**：Whisper 模型权重 39–244MB 无法本地 vendor，与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | 新晋 P3 弱观察：whispr.dev TRACE A LINK 模式；短链展开还原已由 url_tracker_cleaner 交付（客户端 fetch＋CORS 诚实降级）；逐跳可视化需服务端禁用重定向抓取，**弱点**：Muse VM 出网拦截风险（domain-check 同类前科） | 中 | P3（弱观察） |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个，Icon `summarize` 全库唯一） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 07:36~09:36 窗口；本轮**新晋 1 P3 观察＋2 P3 弱观察**）：
+- YouTube 1 天前（whispr.dev 11 tools：FASTPING／DAILYSTONKS／IPANSWERS／MDCONV／OPENGRAPH.HEALTH／TRACE A LINK）→MDCONV→Markdown 编辑器形态印证消解；OPENGRAPH.HEALTH→og-card-preview 形态印证消解；TRACE A LINK→url_tracker_cleaner（短链展开还原已交付）形态印证消解；FASTPING／IPANSWERS→ping 工具口径消解；DAILYSTONKS→数据后端消解。
+- Indie Radar 11-05 日报：Pixsolo 新增 8 工具（抠图／消除→AI 消解；**文档去底纹→新晋 P3 观察**；3D 样机→3D 模型预览器口径印证；视频转 GIF→video_frame_extractor＋gif_maker 两步可达消解）／twittergif.com（X 视频转 GIF，浏览器本地）→两步可达消解；证书熊（SSL 自动续签）→SaaS 消解；scan-to-vector-skill→agent 技能消解；204 条提示词→新闻消解；Me2Cloud（浏览器实测 17 家云厂商延迟）→ping 工具形态印证消解（预设端点列表可为 ping 工具富化方向）。
+- dev.to 10-07（MyToolster Video-to-SRT：Whisper WASM／WebGPU 浏览器本地转写）→**新晋 P3 弱观察「视频转 SRT」**（subtitle_editor 为编辑口径已交付；自动转写弱点：模型权重 39–244MB 与模板零外部资源惯例冲突）。
+- comingup.io 11-01（Website Blueprints 58 工具）：ADA 合规检查→wcag 形态印证；邮件签名→mail_signature_generator 形态印证；JWT 解码／QR／SSL·DNS·WHOIS→站内各工具形态印证；encrypted self-destructing links→后端存储消解。
+- thetoolnerd AI 周报（11 月第 1 周）／productdirs 万圣节 digest／Product Hunt 11-04／stillworks 11-04→AI／agent／平台／桌面／后端口径消解；PodcastsToText→AI 后端消解（既判维持）。
+- 懒大王 10-29（剪映网页版／AiPPT／爱设计）→平台／AI／模板设计口径消解。
+- knowledgemarkg「10 Free Online Tools」／thetechbasket「75 Most Useful Websites」→站内 PDF／图片／开发工具簇形态印证消解。
+
+**候选池变动**：text_summarizer 交付划出（d08b29a，300 Path，186 tests）；**年假拼假优化器顺位维持**（PM 可裁定第十五度跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）；**社媒/证件照尺寸速查表三席维持**（数据鲜度维护负担压级）；**新晋 P3 观察 1 个**（文档扫描去底纹：Pixsolo 独立信号，弱点信号弱）；**新晋 P3 弱观察 2 个**（视频转 SRT：Whisper 权重体积＋零外部资源惯例冲突；短链逐跳跳转链追踪：需服务端抓取＋VM 出网拦截风险）；3D 模型预览器／字体搭配预览 P3 观察维持；英文反向词典／唱歌音准检测 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-05 通用调研第二百三十一轮——文本摘要/要点提取器交付闭环（d08b29a 新增；`/tools/text-summarizer` 已注册，Icon `summarize` 全库唯一；全量 **300 Path**；全量 tests/*.test.js **186 个**），候选池划出；新信号（whispr.dev 11 tools→形态印证；Pixsolo 文档去底纹→新晋 P3；MyToolster Video-to-SRT→新晋 P3 弱观察；TRACE A LINK→url_tracker_cleaner 形态印证；comingup 58 工具→形态印证；AI 周报／PH 11-04→AI/agent/平台/桌面/后端消解；懒大王→平台/AI 消解）均已消化；WPS 候选表保持冻结归档；全库 300 Path 核对无重叠（Top3 建议 ID：年假拼假优化器 ID 待定／social_image_size_guide／doc_bg_cleaner；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=accept-new）本轮正常（known_hosts 又被 VM 换机清空——老问题，accept-new 自动重建一次成功）；**远端无新提交**（本地 HEAD d08b29a＝origin/muse/dev-20260929）；`git log` 头部 d08b29a（文本摘要新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **300**；`ls tests/*.test.js | wc -l` = **186**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 05:44 · PM 选定轮，接通用调研第二百二十九轮）
 
 **选定：OFD 转 PDF（ofd_to_pdf）** — 本轮唯一任务（新工具）。

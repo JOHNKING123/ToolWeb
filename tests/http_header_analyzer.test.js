@@ -130,7 +130,7 @@ has(GO, "HTTP 响应头分析器", "注册：categories.go 含名称 HTTP 响应
 var pathMatches = GO.match(/"\/tools\/[^"]+"/g) || [];
 var uniquePaths = {};
 pathMatches.forEach(function (p) { uniquePaths[p] = true; });
-eq(Object.keys(uniquePaths).length, 300, "注册：去重 Path 总数 268→270（实得 " + Object.keys(uniquePaths).length + "）");
+eq(Object.keys(uniquePaths).length, 301, "注册：去重 Path 总数 268→270（实得 " + Object.keys(uniquePaths).length + "）");
 
 /* ---------- 11. 零网络静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无 fetch 调用");

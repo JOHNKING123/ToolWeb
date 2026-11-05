@@ -1,0 +1,165 @@
+{{define "doc_bg_cleaner"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档扫描去底纹 - 手机拍文档/合同一键增白去灰底（打印省墨）| 程序员工具箱</title>
+    <meta name="description" content="免费在线文档去底纹：手机拍的文档/合同照片上传，灰度→Otsu 自动阈值（可手动微调）→背景漂白→中值滤波去噪，一键增白去灰底；处理前后拖动滑杆对比＋墨覆盖率对比（打印费墨参考），PNG/PDF 一键导出。全程浏览器本地处理，图片不上传。Document background cleaner: whiten phone photos of documents, Otsu threshold, export PNG/PDF, 100% client-side.">
+    <meta name="keywords" content="文档去底纹,扫描件增白,手机拍照文档处理,打印去灰底,合同照片增白,灰底去除,otsu 去底,文档扫描增白">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/doc-bg-cleaner">
+    <meta property="og:title" content="文档扫描去底纹 - 手机拍文档一键增白去灰底">
+    <meta property="og:description" content="手机拍文档灰底重、打印费墨？本地 Otsu 去底增白，拖动对比＋墨覆盖率参考，导出 PNG/PDF，零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/doc-bg-cleaner">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文档扫描去底纹","alternateName":"document background cleaner","description":"免费在线文档去底纹：手机拍文档/合同照片上传，灰度→Otsu 自动阈值→背景漂白→中值滤波去噪，一键增白去灰底；前后拖动对比＋墨覆盖率对比，PNG/PDF 导出，纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/doc-bg-cleaner","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .dbc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .dbc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .dbc-panel h3 .material-icons{font-size:1.15rem;color:#1d4ed8}
+        .dbc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fcd34d;background:#fffbeb;border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.92rem;line-height:1.9;color:#92400e}
+        .dbc-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+        .dbc-limit ol{margin:.2rem 0 0;padding-left:1.2rem}
+        .dbc-drop{border:2px dashed #93c5fd;border-radius:.8rem;background:#f8fafc;padding:2.2rem 1rem;text-align:center;cursor:pointer;transition:all .15s;color:#475569}
+        .dbc-drop:hover,.dbc-drop.drag{border-color:#1d4ed8;background:#eff6ff}
+        .dbc-drop .material-icons{font-size:2.6rem;color:#1d4ed8;display:block;margin-bottom:.5rem}
+        .dbc-drop:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+        .dbc-error{display:none;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;border-radius:.55rem;padding:.6rem .9rem;font-size:.88rem;line-height:1.8;margin-top:.7rem}
+        .dbc-scale-note{display:none;font-size:.85rem;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:.45rem;padding:.45rem .7rem;margin-top:.6rem;line-height:1.7}
+        .dbc-field{margin-bottom:1rem}
+        .dbc-field>label{display:flex;justify-content:space-between;font-size:.92rem;color:#1f2937;margin-bottom:.35rem;font-weight:600}
+        .dbc-field>label b{color:#1d4ed8}
+        .dbc-field input[type="range"]{width:100%;accent-color:#1d4ed8}
+        .dbc-field input[type="range"]:disabled{opacity:.4}
+        .dbc-field.disabled>label{color:#9ca3af}
+        .dbc-radio{display:flex;gap:1.2rem;font-size:.92rem;color:#374151;margin-bottom:.6rem;flex-wrap:wrap}
+        .dbc-radio label{display:inline-flex;gap:.4rem;align-items:center;cursor:pointer}
+        .dbc-radio input{accent-color:#1d4ed8;width:1rem;height:1rem}
+        .dbc-check{display:inline-flex;gap:.45rem;align-items:center;font-size:.92rem;color:#1f2937;cursor:pointer}
+        .dbc-check input{accent-color:#1d4ed8;width:1rem;height:1rem}
+        .dbc-compare-wrap{position:relative;max-width:860px;margin:0 auto;border-radius:.6rem;overflow:hidden;background:#e5e7eb;border:1px solid #e5e7eb}
+        .dbc-compare-wrap canvas{display:block;width:100%;height:auto}
+        .dbc-after-wrap{position:absolute;top:0;right:0;height:100%;overflow:hidden}
+        .dbc-after-wrap canvas{position:absolute;top:0;right:0;width:auto;max-width:none;height:100%}
+        .dbc-divider{position:absolute;top:0;bottom:0;width:3px;background:#1d4ed8;box-shadow:0 0 6px rgba(29,78,216,.5);pointer-events:none}
+        .dbc-tag{position:absolute;top:.6rem;font-size:.78rem;font-weight:700;color:#fff;background:rgba(17,24,39,.65);border-radius:.4rem;padding:.2rem .6rem;pointer-events:none}
+        .dbc-readout{font-size:.88rem;color:#4b5563;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.55rem;padding:.6rem .9rem;margin-top:.8rem;line-height:2}
+        .dbc-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+        .dbc-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+        .dbc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        .dbc-tip{font-size:.9rem;color:#374151;line-height:2}
+        .dbc-tip b{color:#111827}
+        #dbc-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:#111827;color:#fff;font-size:.9rem;border-radius:.6rem;padding:.6rem 1.2rem;opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:90vw}
+        #dbc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (prefers-reduced-motion:reduce){.dbc-drop,#dbc-toast{transition:none}}
+        @media (max-width:768px){.dbc-panel{padding:1rem .8rem}}
+    </style>
+</head>
+<body>
+{{template "nav" .}}
+<div class="container">
+<div class="tool-header">
+<h1><i class="material-icons">filter_b_and_w</i> 文档扫描去底纹</h1>
+<p>手机拍的文档/合同灰底太重、打印费墨？本地 Otsu 自动阈值去底＋背景漂白，字迹更清晰、打印更省墨。</p>
+</div>
+<div class="tool-content" style="max-width:1080px;margin:auto;">
+
+<div class="dbc-limit">
+<i class="material-icons">info</i>
+<div><b>真限制请先看清：</b>
+<ol>
+<li>亮度阈值方法：<b>深色纸张、彩色底纹、浅色手写笔迹</b>的去底效果有限，文字可能一并被漂白；</li>
+<li><b>强阴影、纸面褶皱</b>可能残留痕迹，拍摄时尽量在均匀光线下把纸放平；</li>
+<li>全程浏览器本地处理，<b>图片不上传任何服务器</b>；</li>
+<li>输入上限 <b>20MB</b>，超大图片建议先压缩（长边超 1920px 会自动按比例降采样以保证速度）。</li>
+</ol>
+</div>
+</div>
+
+<div class="dbc-panel">
+<h3><i class="material-icons">upload_file</i> 上传图片（点击或拖拽，JPG / PNG / WebP）</h3>
+<div class="dbc-drop" id="dbc-drop" role="button" tabindex="0" aria-label="选择图片文件">
+<i class="material-icons">cloud_upload</i>
+<div><b>点击选择图片</b>，或把图片拖到这里</div>
+<div style="font-size:.85rem;margin-top:.4rem;">文件通过浏览器 FileReader 在本地读取，<b>不上传到服务器</b>；单张上限 20MB</div>
+</div>
+<input type="file" id="dbc-file" accept="image/jpeg,image/png,image/webp" style="display:none" aria-hidden="true">
+<div class="dbc-error" id="dbc-error" role="alert"></div>
+<div class="dbc-scale-note" id="dbc-scale-note"></div>
+<div style="font-size:.88rem;color:#6b7280;margin-top:.6rem;" id="dbc-filename">尚未载入图片</div>
+</div>
+
+<div class="dbc-panel">
+<h3><i class="material-icons">tune</i> 去底参数</h3>
+<div class="dbc-radio" role="radiogroup" aria-label="阈值模式">
+<label><input type="radio" name="dbc-thrmode" id="dbc-auto" checked> 自动阈值（Otsu）</label>
+<label><input type="radio" name="dbc-thrmode" id="dbc-manual"> 手动阈值 <b id="dbc-thr-val" style="color:#1d4ed8;"></b></label>
+</div>
+<div class="dbc-field disabled" id="dbc-thr-row">
+<label><span>手动阈值（灰度 ≤ 阈值视为文字保留）</span></label>
+<input type="range" id="dbc-thr" min="0" max="255" value="128" disabled aria-label="手动阈值">
+</div>
+<div class="dbc-field">
+<label><span>背景漂白强度</span><b id="dbc-strength-val">70%</b></label>
+<input type="range" id="dbc-strength" min="0" max="100" value="70" aria-label="背景漂白强度">
+</div>
+<label class="dbc-check"><input type="checkbox" id="dbc-denoise" checked> 中值滤波去噪（去除孤立噪点，推荐开启）</label>
+</div>
+
+<div class="dbc-panel" id="dbc-compare" style="display:none;">
+<h3><i class="material-icons">compare</i> 处理前后对比（拖动下方滑杆）</h3>
+<div class="dbc-compare-wrap">
+<canvas id="dbc-before" aria-label="处理前原图"></canvas>
+<div class="dbc-after-wrap" id="dbc-after-wrap">
+<canvas id="dbc-after" aria-label="处理后效果"></canvas>
+</div>
+<div class="dbc-divider" id="dbc-divider"></div>
+<span class="dbc-tag" style="left:.6rem;">处理前</span>
+<span class="dbc-tag" style="right:.6rem;">处理后</span>
+</div>
+<div class="dbc-field" style="margin-top:.9rem;">
+<label><span>对比位置</span><b id="dbc-pos-label">50%</b></label>
+<input type="range" id="dbc-pos" min="0" max="100" value="50" aria-label="对比位置">
+</div>
+<div class="dbc-readout" id="dbc-readout" aria-live="polite"></div>
+<div class="dbc-actions" id="dbc-export-row" style="display:none;">
+<button type="button" class="btn btn-primary" id="dbc-export-png"><i class="material-icons" style="vertical-align:-4px;">image</i> 导出 PNG</button>
+<button type="button" class="btn btn-secondary" id="dbc-export-pdf"><i class="material-icons" style="vertical-align:-4px;">picture_as_pdf</i> 组装 PDF</button>
+</div>
+<div style="font-size:.85rem;color:#6b7280;margin-top:.7rem;">导出文件名默认取原图名清洗后＋后缀，无法识别时回退为 doc-cleaned。</div>
+</div>
+
+<div class="dbc-panel">
+<h3><i class="material-icons">help_outline</i> 使用说明</h3>
+<div class="dbc-tip">
+<b>怎么用：</b>上传手机拍的文档/合同照片 → 自动 Otsu 阈值＋漂白去底（可手动微调）→ 拖动滑杆看前后对比 → 导出 PNG 或组装 PDF。<br>
+<b>打印省墨：</b>墨覆盖率＝深色像素占比；处理后覆盖率越低，打印越省墨。<br>
+<b>配套使用：</b>想要反向效果（给干净文档加扫描质感），用 <a href="/tools/scan-effect-generator">扫描件效果生成器</a>（反向口径互补）；处理完想合成多页 PDF，用 <a href="/tools/images-to-pdf">图片批量转 PDF</a>；图片里的文字想转可编辑文本，用 <a href="/tools/ocr-image-text">OCR 图片文字识别</a>。<br>
+<b>隐私：</b>去底、对比、导出全部在你的浏览器里完成，图片不经过任何服务器。
+</div>
+</div>
+
+<div class="dbc-panel">
+<h3><i class="material-icons">link</i> 相关工具</h3>
+<div class="dbc-related">
+<span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">文档扫描去底纹（当前）</span>
+<a href="/tools/scan-effect-generator" class="btn btn-secondary" style="font-size:.9rem;">扫描件效果生成器 <span style="color:#2563eb;font-weight:700;">· 反向口径互补</span></a>
+<a href="/tools/images-to-pdf" class="btn btn-secondary" style="font-size:.9rem;">图片批量转 PDF</a>
+<a href="/tools/ocr-image-text" class="btn btn-secondary" style="font-size:.9rem;">OCR 图片文字识别</a>
+</div>
+</div>
+
+</div>
+</div>
+<div id="dbc-toast" role="status"></div>
+<!-- 本地 vendor：pdf-lib（PDF 组装，与 ofd_to_pdf / images-to-pdf 同链路，零外部资源） -->
+<script src="/tools/static/js/vendor/pdf-lib.min.js?v=1"></script>
+<script src="/tools/static/js/doc_bg_cleaner.js?v=1"></script>
+</body>
+</html>
+{{end}}

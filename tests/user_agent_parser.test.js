@@ -120,7 +120,7 @@ ok(GO_SRC.indexOf('"user_agent_parser"') >= 0, "注册：categories.go 含 ID us
 ok(GO_SRC.indexOf('"/tools/user-agent-parser"') >= 0, "注册：categories.go 含 Path /tools/user-agent-parser");
 ok(GO_SRC.indexOf('"devices"') >= 0, "注册：Icon devices");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 300, "注册：Path 总数 268→270");
+eq(pathCount, 301, "注册：Path 总数 268→270");
 ok(TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/user-agent-parser") >= 0, "SEO：canonical 正确");
 ok(TPL_SRC.indexOf("UA 可伪造") >= 0, "真限制：UA 可伪造可见");
 ok(TPL_SRC.indexOf("Win10 / 11 无法区分") >= 0, "真限制：Win10/11 无法区分可见");
