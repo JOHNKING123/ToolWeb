@@ -1,0 +1,142 @@
+{{define "text_summarizer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本摘要/要点提取器 - 免费在线文本摘要（长文提炼要点/文章摘要生成）| 程序员工具箱</title>
+    <meta name="description" content="免费在线文本摘要：粘贴长文、论文或会议纪要，浏览器本地 TextRank 算法按 10%–50% 压缩比抽取要点句（保持原文顺序）＋ TF 关键词 Top10，一键复制/导出 txt；文本不上传服务器，无限次、不用登录。">
+    <meta name="keywords" content="在线文本摘要,文章摘要生成,长文提炼要点,TextRank 在线摘要,文本要点提取,免费摘要工具">
+    <meta property="og:title" content="文本摘要/要点提取器 - 免费在线文本摘要">
+    <meta property="og:description" content="长文粘贴即提炼要点：TextRank 提取式摘要＋关键词 Top10，纯浏览器本地计算，文本不上传。">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/text-summarizer">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/text-summarizer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "文本摘要/要点提取器",
+      "description": "免费在线文本摘要：长文/论文/会议纪要粘贴或 txt 读取，TextRank 算法按压缩比抽取要点句（原文顺序）＋关键词 Top10；纯浏览器本地处理，文本不上传，无限次免费。",
+      "url": "https://www.johnkingzcq123.xyz/tools/text-summarizer",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}
+    }
+    </script>
+    <style>
+        .ts-input{width:100%;min-height:11rem;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .8rem;font-size:.95rem;line-height:1.7;resize:vertical;font-family:inherit}
+        .ts-input:focus{outline:none;border-color:var(--primary-color)}
+        .ts-drop{border:2px dashed #d1d5db;border-radius:.6rem;padding:.8rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;color:#6b7280;font-size:.88rem;margin-top:.6rem;transition:border-color .2s,background .2s}
+        .ts-drop:hover,.ts-drop.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .ts-controls{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:.9rem}
+        .ts-ratio-wrap{display:flex;align-items:center;gap:.6rem;font-size:.92rem;color:#374151;flex:1 1 16rem}
+        .ts-ratio-wrap input[type=range]{flex:1;min-width:8rem}
+        .ts-ratio-val{font-weight:700;color:var(--primary-color);min-width:3em;text-align:right}
+        .ts-btns{display:flex;gap:.6rem;flex-wrap:wrap}
+        .ts-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.6rem}
+        .ts-error{color:#b91c1c;font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.7;display:none}
+        .ts-note{color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:.5rem;padding:.55rem .8rem;font-size:.88rem;margin-top:.6rem;line-height:1.7;display:none}
+        .ts-result{display:none;margin-top:1.1rem;border:2px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;background:#fff}
+        .ts-stat{font-size:.9rem;color:#111827;font-weight:700;margin-bottom:.6rem}
+        .ts-sentences{margin:0;padding:0;list-style:none}
+        .ts-sentences li{display:flex;gap:.6rem;padding:.5rem 0;border-bottom:1px dashed #e5e7eb;font-size:.95rem;line-height:1.8;color:#111827}
+        .ts-sentences li:last-child{border-bottom:none}
+        .ts-num{flex:none;width:1.7em;height:1.7em;border-radius:50%;background:var(--primary-color);color:#fff;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;margin-top:.25em}
+        .ts-kw-title{font-size:.92rem;font-weight:700;color:#111827;margin:.9rem 0 .5rem}
+        .ts-keywords{display:flex;flex-wrap:wrap;gap:.45rem}
+        .ts-chip{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:1rem;padding:.28rem .75rem;font-size:.85rem}
+        .ts-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .ts-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .ts-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .ts-limit{color:#374151;line-height:1.9;font-size:.95rem}
+        .ts-limit b{color:#111827}
+        .ts-howto{color:#374151;line-height:1.9;font-size:.95rem}
+        @media (max-width:640px){
+            .ts-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+        @media (prefers-reduced-motion:reduce){
+            .ts-drop{transition:none}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">summarize</i> 文本摘要/要点提取器</h1>
+            <p>长文、论文、会议纪要粘贴或读取 txt，TextRank 本地算法按压缩比抽取要点句（保持原文顺序）＋关键词 Top10；全程浏览器内完成，不上传服务器</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <textarea class="ts-input" id="ts-input" placeholder="在此粘贴长文 / 论文 / 会议纪要……&#10;（支持中英文混排；5 万字以内）" aria-label="待摘要文本"></textarea>
+                <div class="ts-drop" id="ts-drop" role="button" tabindex="0" aria-label="点击选择或拖拽 txt 文件到此处">
+                    <i class="material-icons" style="vertical-align:-4px;">upload_file</i>
+                    点击选择或拖拽 .txt 文件到此处（本地读取，不上传）
+                </div>
+                <input type="file" id="ts-file" accept=".txt,text/plain" style="display:none;">
+                <div class="ts-controls">
+                    <label class="ts-ratio-wrap" for="ts-ratio">
+                        压缩比例
+                        <input type="range" id="ts-ratio" min="10" max="50" step="5" value="30" aria-label="摘要压缩比例">
+                        <span class="ts-ratio-val" id="ts-ratio-label">30%</span>
+                    </label>
+                    <div class="ts-btns">
+                        <button type="button" class="btn btn-primary" id="ts-run"><i class="material-icons">auto_awesome</i>生成摘要</button>
+                        <button type="button" class="btn btn-secondary" id="ts-clear">清空</button>
+                    </div>
+                </div>
+                <div class="ts-status" id="ts-status" aria-live="polite"></div>
+                <div class="ts-error" id="ts-error" role="alert"></div>
+                <div class="ts-note" id="ts-note"></div>
+
+                <div class="ts-result" id="ts-result">
+                    <div class="ts-stat" id="ts-stat"></div>
+                    <ol class="ts-sentences" id="ts-sentences"></ol>
+                    <div class="ts-kw-title">关键词 Top10（文档内词频归一化）</div>
+                    <div class="ts-keywords" id="ts-keywords"></div>
+                    <div class="ts-actions">
+                        <button type="button" class="btn btn-primary" id="ts-copy" disabled><i class="material-icons">content_copy</i>复制摘要</button>
+                        <button type="button" class="btn btn-secondary" id="ts-export" disabled><i class="material-icons">file_download</i>导出 txt</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>算法流程</h3>
+                <ol class="ts-howto">
+                    <li>中英文分句（中文 。！？／英文 . ! ?，换行总切分）</li>
+                    <li>分词＋停用词过滤（英文按词、中文按单字）</li>
+                    <li>句子间 TF 余弦相似度矩阵（对角线为 0）</li>
+                    <li>TextRank / PageRank 迭代（阻尼系数 0.85、最多 100 轮、收敛阈值 1e-4）</li>
+                    <li>按压缩比例取 Top 句，按<b>原文顺序</b>输出；另输出文档内词频归一化关键词 Top10</li>
+                </ol>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>真限制（先说清楚）</h3>
+                <ul class="ts-limit">
+                    <li><b>① 提取式、不改写：</b>本工具为提取式摘要，只从原文抽取完整句子，不改写、不创造新句子，无法像 AI 那样重新组织语言。</li>
+                    <li><b>② 中文单字级分词：</b>中文按单字切分（无内置词典），关键词与相似度计算质量和专业中文分词工具相当有差距，英文效果更好。</li>
+                    <li><b>③ 零上传：</b>全部计算在浏览器本地完成，文本不上传任何服务器（可在浏览器 Network 面板自证零请求）。</li>
+                    <li><b>④ 5 万字上限：</b>单次输入上限 5 万字，超长文本仅处理前 5 万字并提示。</li>
+                </ul>
+            </div>
+
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <h3>相关工具</h3>
+                <div class="ts-actions" style="margin-top:0;">
+                    <a href="/tools/text-info-extractor" class="btn btn-secondary" style="font-size:.9rem;">文本信息提取器 <span style="color:#2563eb;font-weight:700;">· 正则信息提取口径互补</span></a>
+                    <a href="/tools/wordcloud-generator" class="btn btn-secondary" style="font-size:.9rem;">词云生成器 <span style="color:#2563eb;font-weight:700;">· 词频可视化口径互补</span></a>
+                    <a href="/tools/ai-text-cleaner" class="btn btn-secondary" style="font-size:.9rem;">AI 文本清洗器 <span style="color:#2563eb;font-weight:700;">· 先清洗再摘要一条龙</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/text_summarizer.js?v=1"></script>
+</body>
+</html>
+{{end}}

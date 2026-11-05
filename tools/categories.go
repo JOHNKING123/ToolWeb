@@ -1199,6 +1199,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文本工具",
 				},
+				{
+					ID:          "text_summarizer",
+					Name:        "文本摘要/要点提取器",
+					Description: "长文/论文/会议纪要粘贴或 txt 本地读取→中英文分句→停用词过滤→TF 余弦句子相似度矩阵→TextRank/PageRank 迭代（阻尼 0.85、最多 100 轮、收敛阈值 1e-4）→按 10%–50% 压缩比（默认 30%）原序抽取摘要句＋文档内 TF 归一化关键词 Top10，一键复制/导出 txt；纯前端零上传、无限次 · TextRank text summarizer: extractive summary in original order + top keywords, 100% client-side",
+					Path:        "/tools/text-summarizer",
+					Icon:        "summarize",
+					New:         true,
+					Category:    "文本工具",
+				},
 			},
 		},
 		{

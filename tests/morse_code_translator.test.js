@@ -154,7 +154,7 @@ function notContains(s, sub, name) { ok(String(s).indexOf(sub) === -1, name + "�
     contains(block, "graphic_eq", "注册 Icon 为 graphic_eq");
     contains(block, "New:", "注册 New 标记");
     var paths = go.match(/"\/tools\/[^"]+"/g) || [];
-    eq(new Set(paths).size, 299, "注册总数 268→270 Path");
+    eq(new Set(paths).size, 300, "注册总数 268→270 Path");
 })();
 
 /* ================= 9. 零网络请求静态检查 ================= */

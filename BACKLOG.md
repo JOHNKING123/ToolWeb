@@ -37,6 +37,90 @@
 
 ---
 
+## 今日任务（2026-11-05 07:42 · PM 选定轮，接通用调研第二百三十轮）
+
+**选定：文本摘要/要点提取器（text_summarizer）** — 本轮唯一任务（新工具）。
+
+**顺位**：230 轮 Top3 首席。「无硬伤不跳过、Top3 顺位递进」惯例下**直接立项、不跳过**，硬依据如下：
+1. **首席顺位**：研究轮 230 轮新晋 Top3 首席，按惯例顺位即立项依据。
+2. **需求双重验证**：① 外部独立信号：YouTube 11-04「10 Web Tools So Good They Feel Illegal」收录 SMMRY——免费仅 10 次**总量**之后 $7/月付费墙；AI 摘要工具普遍限额/付费/需账号——「无限次本地免费摘要」痛点独立验证；② 技术路线确凿：TextRank 提取式摘要为纯前端经典算法（分句→停用词→句子相似度→PageRank 迭代），零 AI/后端依赖，一天可高质量交付。
+3. **无硬伤**：纯前端小-中难度（有界范围见规格），零上传、无限次、无年更新数据表维护负担、无隐私合规坑。
+4. **口径互补确凿**：相近文本工具 text_info_extractor（正则信息提取）／ai_text_cleaner（不可见字符清理）／wordcloud_generator（词云）均为**互补口径**；站内既有「摘要」全为哈希摘要（MD5/SHA1/SHA256）／llms.txt 一句话摘要／结果统计摘要——本工具为**长文要点提取口径**，非重叠。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`summar` 全站（git HEAD 47827a9，299 Path，185 tests；除 BACKLOG.md 外，vendor 排除）命中**仅** ai-token-counter（lastSummary）／pdf-merge-split（merge-summary）／pdf-to-word-batch（showSummary/renderSummary）／ocr-batch（ob-summary）的「结果摘要」UI 标签与变量名子串误命中（工具 ID/Path/描述 **0 命中**）；`text_summarizer`／`text-summarizer`／`textSummarizer` 三形态全站 **0 命中**——真缺口确凿。
+   - CJK「摘要」（`chr(0x6458)+chr(0x8981)` 运行时构造＋验真）：categories.go 命中仅 llms.txt 一句话摘要描述＋哈希类目名（MD5 加密/摘要、SHA1 摘要、SHA256 摘要）；templates/static/js/tests 命中全为哈希摘要（md5/sha1/sha256/file_checksum/hmac/crc 口径）／llms.txt 一句话摘要（AI 爬虫口径）／各工具「结果摘要」复制按钮文案（wcag/bcrypt/bookmark_cleaner/colorblind 口径；bookmark_cleaner 更明示「不做 AI 摘要」）——**文本要点提取本体 0 交付**，真缺口确凿。命名用「文本摘要/要点提取器」与哈希摘要口径区分。
+   - Icon：**`summarize`（首选；`Icon:\s*"summarize"` 精确值 **0 命中**，全库唯一，语义即「生成摘要」最贴切；备选 `subject`/`playlist_add_check`/`list_alt` 亦 0 命中；`notes`/`article`/`short_text`/`compress`/`text_snippet` 已被占用，不可取）**，开发轮复测锁定。
+
+**未选说明**：年假拼假优化器（PM 本轮**第十四度裁定跳过**：硬伤维持未消解——调休数据表年更新维护负担＋2027 年放假安排仍未公布（通常 11 月下旬），当下时间窗口价值打折维持；顺位第二维持，PM 定序权行使有记录依据）／社媒/证件照尺寸速查表（三席维持：CropDen 11-03 独立新信号已收录；数据鲜度维护负担（平台规格偶发变更）压级；留池递进）／3D 模型预览器（新晋 P3 观察：vendor 体积＋需求人群窄＋移动端性能）／字体搭配预览（新晋 P3 观察：需求频率中等）／英文反向词典（P3 弱观察维持：需内置词库或外部 API）／唱歌音准检测（P3 弱观察维持：需麦克风＋Web Audio 频谱，中等难度＋权限摩擦）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 文本输入：粘贴文本框＋txt 文件读取（FileReader 本地，零上传）② 中英文分句（中英文标点分句器）③ 停用词表（中英文各一，内置）④ 句子相似度矩阵（TF 余弦）⑤ TextRank/PageRank 迭代（阻尼 0.85、最多 100 轮、收敛阈值 1e-4）⑥ 压缩比例滑杆（10%–50%，默认 30%）→按比例抽取摘要句、按**原序**输出＋关键词 Top 10（文档内 TF 归一化）⑦ 一键复制摘要／导出 txt（Blob 下载，文件名回退 `text-summary`）⑧ 真限制页面明示 ⑨ 无障碍（tab 聚焦可操作、动画可减弱）⑩ 模板零外部资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.TextSummarizer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `splitSentences(text)` → string[]（中英文分句；text 非字符串 err.field='text'；空/空白文本 err.field='text'）。
+  - `tokenize(sentence, stopwords)` → string[]（英文按词、中文按单字分词并过滤停用词；sentence 非字符串 err.field='sentence'；stopwords 非数组 err.field='stopwords'）。
+  - `sentenceSimilarity(tokensA, tokensB)` → number（TF 余弦相似度，保留 4 位小数；非法参数 err.field='tokensA'/'tokensB'；空向量相似度 0）。
+  - `buildSimilarityMatrix(tokenized)` → number[][]（对角 0、对称；tokenized 非数组或空 err.field='tokenized'）。
+  - `textRank(matrix, options)` → number[]（PageRank 迭代；options 非对象 err.field='options'；damping 非 (0,1) err.field='options.damping'；maxIter 非正整数 err.field='options.maxIter'；epsilon 非正数 err.field='options.epsilon'；返回得分和≈1（容差 1e-6））。
+  - `extractSummary(text, ratio, options)` → {sentences, indices, total, kept}（ratio 非 (0,1] err.field='ratio'；text 非法 err.field='text'；sentences 按原序；kept≥1（至少 1 句，不静默空摘要））。
+  - `extractKeywords(text, topN, stopwords)` → [{word, score}]（按 score 降序；topN 非正整数 err.field='topN'；text 非法 err.field='text'）。
+  - `truncateText(text, maxChars)` → {text, truncated}（输入上限默认 50000 字兜底；maxChars 非正整数 err.field='maxChars'；truncated 精确布尔）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'text-summary'）。
+- **真限制四条页面明示**：① 本工具为**提取式**摘要（抽取原文句子），不改写、不创造新句子；② 中文分词为单字级（无内置词典），关键词质量与专业分词工具相当有差距；③ 全程浏览器本地计算，文本不上传任何服务器；④ 输入上限 5 万字，超长文本仅处理前 5 万字。
+- **SEO**：在线文本摘要、文章摘要生成、长文提炼要点、TextRank 在线摘要。
+- **改动文件**：tools/categories.go（「文本工具」类目新增 text_summarizer 条目，Path 299→**300**，Icon `summarize` 首选，开发轮精确值复测锁定全库唯一）／templates/text_summarizer.html（新）／static/js/text_summarizer.js（新）／tests/text_summarizer.test.js（新）／全量旧 tests Path 断言 299→300 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（splitSentences 中英文分句精确值与空文本抛错 err.field='text'；tokenize 停用词过滤精确值；sentenceSimilarity 余弦精确值（相同句→1.0000、无交集→0）；buildSimilarityMatrix 对角 0 且对称；textRank 收敛（得分和≈1）与非法 options 抛错；extractSummary 30% 取句数精确值＋原序＋ratio 越界抛错 err.field='ratio'＋单句文本 kept=1；extractKeywords 降序精确值与 topN 抛错；truncateText 上限截断精确值与 truncated 布尔；sanitizeFileName 空回退 'text-summary'；模板零外部资源静态检查）② 全量 tests/*.test.js 185→**186** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/text-summarizer 200、静态 JS 200、首页索引收录 ⑤ 用中英文长文样例手工验证摘要句原序＋关键词可用（开发轮记录）。
+- **品类归位**：注册到「文本工具」类目（与 text_info_extractor／ai_text_cleaner／wordcloud_generator 同类目，互补口径）；New: true；本轮**无硬编码互链要求**（开发轮按模板惯例决定是否与文本工具簇互链）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：文本摘要/要点提取器→本轮交付（230 研究轮新晋首席；PM 按「无硬伤不跳过」惯例直接立项；需求＋技术路线双重验证；零重叠复核确凿（ASCII summar 仅「结果摘要」变量/UI 子串误命中、本体 0 交付；CJK「摘要」全为哈希/llms.txt/结果统计口径互补；text_summarizer 三形态 0 命中）；文本工具类目；Icon `summarize` 首选 0 命中全库唯一）／年假拼假优化器→第二顺位（PM 第十四度裁定跳过维持；硬伤：调休数据表年更新＋2027 年放假安排未公布）／社媒/证件照尺寸速查表→第三顺位维持（P3；数据鲜度维护负担）／3D 模型预览器→新晋 P3 观察（vendor 体积＋人群窄）／字体搭配预览→新晋 P3 观察（需求频率中等）／英文反向词典→P3 弱观察维持（外部依赖风险）／唱歌音准检测→P3 弱观察维持（麦克风＋Web Audio 权限摩擦）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；远端无新提交（本地 HEAD 47827a9＝origin/muse/dev-20260929）；`git log` 头部 47827a9（OFD 转 PDF 评审修复）／7768419（OFD 转 PDF 新增）／a0321fe（打字练习评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **299**；`ls tests/*.test.js | wc -l` = **185**；PM 独立零重叠复核（ASCII summar 仅四工具「结果摘要」变量/UI 子串误命中、工具 ID/Path/描述 0 命中；text_summarizer 三形态 0 命中；CJK「摘要」`chr(0x6458)+chr(0x8981)` 运行时构造 categories.go 仅哈希/llms.txt 口径命中、templates/static/js/tests 全为哈希摘要/一句话摘要/结果统计摘要互补口径、文本要点提取本体 0 交付；`Icon:\s*"summarize"` 精确值 0 命中、`subject`/`playlist_add_check`/`list_alt` 备选亦 0 命中、`notes`/`article`/`short_text`/`compress`/`text_snippet` 真占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 07:36 · 产品调研推荐，第二百三十轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；学习工具簇合规）。
+>
+> **交付核对**：OFD 转 PDF 已交付闭环（47827a9 评审修复：补齐发票生成器回链形成真实双向互链；`/tools/ofd-to-pdf`，Path 总数 298→**299**，tests **185 个**，Icon `file_upload` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底＋CJK 运行时构造＋命中行验真惯例）：
+
+1. **文本摘要/要点提取器（TextRank 纯前端）** — 新晋首席。双重验证：① 外部独立信号：YouTube "10 Web Tools So Good They Feel Illegal"（约 11-04）收录 SMMRY——免费仅 10 次**总量**之后 $7/月付费墙；AI 摘要工具普遍限额/付费/需账号；② 技术路线确凿：TextRank 提取式摘要为纯前端经典算法（分句→停用词→句子相似度→PageRank 迭代），零 AI/后端依赖。真缺口确凿：ASCII `summar` 全站（git HEAD 47827a9，299 Path，185 tests；除 BACKLOG.md 外，vendor 排除）命中**仅** GCC linker map analyzer／notepad-calculator／social-card-preview 三处描述子串误命中（工具 ID/Path/描述 **0 交付**）；相近文本工具 text_info_extractor（正则信息提取）／ai_text_cleaner（不可见字符清理）／wordcloud_generator（词云）均为互补口径——真缺口确凿。实现纯前端小-中难度（有界范围：粘贴文本→中英文分句→停用词表→句子相似度矩阵→TextRank 迭代→按比例输出摘要句＋关键词 Top；零上传、无限次、无年更新负担、无隐私合规坑）。痛点：长文/论文/会议纪要快速抓重点，免费 AI 摘要全是限额墙。SEO：在线文本摘要、文章摘要生成、长文提炼要点。建议 ID text_summarizer、Path /tools/text-summarizer；Icon 待开发轮精确值复测锁定全库唯一。
+2. **年假拼假优化器** — 顺位维持次席。站内零重叠维持（工具 ID 级 `holiday`/`vacation`/`pto`/`leave` 全站无命中；CJK「年假」/「拼假」全站 **0 命中**；真缺口确凿）；实现纯前端小难度（年份选择＋法定节假日/调休数据表＋年假天数输入→最长连续假期请假方案）；**硬伤维持未消解**：调休数据表年更新维护负担＋2027 年放假安排仍未公布（通常 11 月下旬），当下时间窗口价值打折；**PM 可裁定第十四度跳过**。
+3. **社媒/证件照尺寸速查表** — 三席维持。CropDen 11-03 独立新信号维持（14 平台 55 个尺寸＋App 遮挡区像素坐标＋6 种护照/签证照片规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更）压级。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 文本摘要/要点提取器（TextRank 纯前端） | 新晋首席：SMMRY 免费仅 10 次总量付费墙＋AI 摘要普遍限额/需账号；站内 summar 仅三处描述误命中、相近文本工具均为互补口径，真缺口确凿；实现：分句→停用词→相似度→PageRank→按比例输出摘要句＋关键词 Top，零上传无限次；SEO 在线文本摘要/文章摘要生成；建议 ID text_summarizer、Path /tools/text-summarizer | 小-中 | P1（顺位；PM 可裁定） |
+| 年假拼假优化器 | 顺位维持次席；`holiday`/`vacation`/`pto`/`leave` ID 全站无命中，CJK「年假」/「拼假」0 命中；**硬伤维持**：调休数据表年更新维护负担＋2027 年放假安排未公布（通常 11 月下旬） | 小 | P1（顺位；PM 可裁定第十四度跳过） |
+| 社媒/证件照尺寸速查表 | 三席维持；CropDen 11-03 独立新信号（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；**弱点**：数据鲜度维护负担压级 | 小 | P3（顺位；压级） |
+| 3D 模型预览器（STL/OBJ/GLB） | 新晋 P3 观察：chiptron 11-05 Tiny Online Tools（570 工具／18 类目站）含 3D 模型查看器独立信号；站内 3d_model/stl_model/glb 全 0 命中真缺口；实现：three.js 本地 vendor→FileReader 本地加载→旋转/缩放/线框预览，零上传；**弱点**：vendor 体积＋需求人群窄（3D 打印/CAD）＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持（OneLook 模式：同义词/反义词/概念联想＋反向查词）；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 字体搭配预览（Fontjoy 模式） | 新晋 P3 观察：YouTube 11-04 工具推荐收录 Fontjoy（字体搭配）；站内 font_pair/「字体搭配」全 0 命中；实现：系统字体标题/正文组合预览＋一键复制 CSS，零上传；**弱点**：需求频率中等＋模板零外部资源惯例下 Web 字体受限 | 小 | P3（观察） |
+| OFD 转 PDF | 已交付划出（47827a9 评审修复＋发票生成器真实双向互链：`/tools/ofd-to-pdf`，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 05:44~07:36 窗口；本轮**新晋 1 首席候选＋2 P3 观察**）：
+- YouTube 11-04（"10 Web Tools So Good They Feel Illegal"：Regex101／TypeLit.io／Wormhole／Invoice-Generator／SMMRY／Coolors／Fontjoy／AudioMass／Excalidraw／PhotoRoom）→SMMRY（免费仅 10 次总量，$7/月付费墙）→**新晋首席「文本摘要」**；Fontjoy（字体搭配）→**新晋 P3 观察「字体搭配预览」**；Regex101→站内 regex_tester 形态印证消解；TypeLit→站内 typing_practice 形态印证消解；Invoice-Generator→站内 invoice_generator 形态印证消解；AudioMass→站内 audio_trimmer＋audio_merger 形态印证消解；Excalidraw→站内 doodle_board 口径消解；Coolors→站内色彩工具簇形态印证消解；Wormhole→P2P/后端消解；PhotoRoom→AI 后端口径消解。
+- chiptron 11-05（Tiny Online Tools：570 工具／18 类目，含 3D 模型查看器 STL/OBJ/GLB）→**新晋 P3 观察「3D 模型预览器」**。
+- 2suite.io（2redact：PDF/图片/CSV/DOCX 敏感信息自动打码）→站内 img_mosaic（图片打码）／screenshot-annotate（截图批注打码）／pdf_annotate（PDF 批注打码）形态印证消解。
+- V2EX 10-19（Paint Board 开源网页创意画板）→站内 doodle_board 口径消解。
+- V2EX 10-15（remox.ai 图片擦除/去背景，remove.bg API 替代）→AI 后端口径消解。
+- HN 11-01~11-03：HackerBooks／HackerTube→社区聚合口径消解；HackerFlow→HN 阅读器平台消解；HackerNewsWorthy→小众分析口径消解；election-vibe→终端口径消解；Ledge.sh→桌面笔记 App 消解；ToolHop（旧帖）→竞品工具箱参考。
+- 懒大王导航 10-21／10-23（67tool 250 工具站／uTools 等 5 效率工具）→桌面/效率软件口径消解；worktile（飞书/钉钉/协同/AI 选型长文）→SaaS 口径消解。
+
+**候选池变动**：ofd_to_pdf 交付划出（47827a9，299 Path，185 tests）；**新晋首席 1 个**（文本摘要/要点提取器：SMMRY 付费墙独立信号＋TextRank 纯前端技术路线确凿＋ASCII summar 仅三处描述误命中、相近文本工具互补口径、真缺口双确凿；纯前端小-中难度一天可交付；建议 ID text_summarizer、Path /tools/text-summarizer）；**年假拼假优化器顺位维持**（PM 可裁定第十四度跳过；硬伤：调休数据表年更新＋2027 年放假安排未公布）；**社媒/证件照尺寸速查表三席维持**（数据鲜度维护负担压级）；**新晋 P3 观察 2 个**（3D 模型预览器：tiny-online.tools 独立信号，弱点 vendor 体积＋人群窄；字体搭配预览：Fontjoy 独立信号，弱点需求频率中等）；英文反向词典／唱歌音准检测 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-05 通用调研第二百三十轮——OFD 转 PDF 交付闭环（47827a9 评审修复＋发票生成器真实双向互链；`/tools/ofd-to-pdf` 已注册，Icon `file_upload` 全库唯一；全量 **299 Path**；全量 tests/*.test.js **185 个**），候选池划出；新信号（YouTube SMMRY→新晋首席；Fontjoy→新晋 P3；tiny-online.tools 3D 查看器→新晋 P3；Regex101／TypeLit／Invoice-Generator／AudioMass／Excalidraw／Coolors→站内形态印证；Wormhole／PhotoRoom／remox→P2P/AI 后端消解；2redact→站内三打码工具形态印证；Paint Board→doodle_board 消解；HackerBooks／HackerTube／HackerFlow／HackerNewsWorthy／election-vibe／Ledge→社区/平台/终端/桌面消解；懒大王／worktile→桌面/SaaS 消解）均已消化；文本摘要真缺口双确凿（ASCII summar 仅三处描述误命中；相近文本工具互补口径）；WPS 候选表保持冻结归档；全库 299 Path 核对无重叠（Top3 建议 ID text_summarizer／年假拼假优化器 ID 待定／social_image_size_guide；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=accept-new）本轮正常（VM 换机后 known_hosts 又被清空——老问题，accept-new 自动重建一次成功）；**远端无新提交**（本地 HEAD 47827a9＝origin/muse/dev-20260929）；`git log` 头部 47827a9（OFD 转 PDF 评审修复）／a0321fe（打字练习新增）／737d0ab（打字练习评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **299**；`ls tests/*.test.js | wc -l` = **185**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日候选（2026-11-05 05:36 · 产品调研推荐，第二百二十九轮）
 
 > **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器；健康/运动类计算器已交付 BMI/BMR/TDEE/心率区间/跑步配速/蛋白质摄入量，属站内合规簇）。
