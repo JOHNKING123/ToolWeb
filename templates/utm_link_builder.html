@@ -1,0 +1,218 @@
+{{define "utm_link_builder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTM 生成器 - UTM 链接生成器：推广链接 utm 参数拼接与渠道归因 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 UTM 生成器：输入推广落地页链接，填写 utm_source / utm_medium / utm_campaign / utm_term / utm_content 五个参数，微信/微博/抖音/小红书/邮件/短信/百度/Google Ads 等 11 组常用渠道预设一键填表，一键生成带 utm 参数的 tagged 推广链接，支持已有查询串续接、#hash 保留、粘贴回填解析与一键复制，全程浏览器本地计算零上传。">
+    <meta name="keywords" content="UTM 生成器,UTM 链接,推广链接生成,utm 参数拼接,渠道归因链接,utm_source,utm_medium,utm_campaign,tagged URL,推广链接">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/utm-link-builder">
+    <meta property="og:title" content="UTM 生成器 - 推广链接 utm 参数一键拼接">
+    <meta property="og:description" content="填表即生成带 utm 参数的推广链接：11 组渠道预设一键填表，已有查询串自动续接、#hash 保留、粘贴回填解析、一键复制，全程本地计算零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/utm-link-builder">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"UTM 生成器","description":"在线 UTM 链接生成器：填写 utm_source/medium/campaign/term/content 五个参数，11 组常用渠道预设一键填表，一键生成带 utm 参数的 tagged 推广链接，支持已有查询串续接、#hash 保留、粘贴回填解析与一键复制；全程浏览器本地计算零上传。","url":"https://www.johnkingzcq123.xyz/tools/utm-link-builder","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .ulb-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .ulb-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ulb-privacy b{color:#047857}
+        .ulb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .ulb-panel h3{margin:0 0 .7rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .ulb-panel h3 .material-icons{font-size:1.15rem;color:#2563eb}
+        .ulb-field{margin-bottom:.8rem}
+        .ulb-field label{display:block;font-size:.88rem;color:#374151;margin-bottom:.3rem;font-weight:600}
+        .ulb-field label .req{color:#dc2626}
+        .ulb-field label .opt{color:#6b7280;font-weight:400}
+        .ulb-input{width:100%;box-sizing:border-box;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.5rem;
+            font-size:.92rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .ulb-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ulb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+        .ulb-grid .full{grid-column:1 / -1}
+        .ulb-hint{font-size:.82rem;color:#6b7280;line-height:1.7}
+        .ulb-chips{display:flex;flex-wrap:wrap;gap:.45rem}
+        .ulb-chip{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:.35rem .9rem;
+            font-size:.88rem;cursor:pointer;font-family:inherit}
+        .ulb-chip:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff}
+        .ulb-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem}
+        .ulb-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.15rem;border:none;border-radius:.5rem;
+            font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s}
+        .ulb-btn .material-icons{font-size:1.1rem}
+        .ulb-btn-primary{background:#2563eb;color:#fff}
+        .ulb-btn-primary:hover{background:#1d4ed8}
+        .ulb-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .ulb-btn-secondary:hover{background:#e5e7eb}
+        .ulb-error{display:none;margin-top:.7rem;font-size:.9rem;color:#b91c1c;background:#fef2f2;
+            border:1px solid #fecaca;border-radius:.6rem;padding:.6rem .8rem}
+        .ulb-output{width:100%;min-height:64px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;
+            font-size:.88rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;
+            resize:vertical;background:#f0fdf4}
+        .ulb-other{margin-top:.7rem;font-size:.88rem;line-height:1.9;color:#374151}
+        .ulb-other-title{font-weight:600;color:#111827}
+        .ulb-other ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .ulb-other code{background:#f3f4f6;padding:.05rem .35rem;border-radius:.25rem;color:#1e40af}
+        .ulb-paste{width:100%;min-height:64px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;
+            font-size:.88rem;line-height:1.7;padding:.8rem;border:1px solid #d1d5db;border-radius:.5rem;resize:vertical}
+        .ulb-tip{font-size:.9rem;line-height:1.9;color:#374151}
+        .ulb-tip b{color:#111827}
+        .ulb-tip code{background:#f3f4f6;padding:.1rem .4rem;border-radius:.3rem;font-size:.82rem;color:#b91c1c}
+        .ulb-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;
+            border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .ulb-limit .material-icons{color:#2563eb;flex:none;font-size:1.6rem}
+        .ulb-limit b{color:#1d4ed8}
+        .ulb-limit ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .ulb-limit li{margin:.15rem 0}
+        .ulb-combo{margin-top:.8rem;padding:.8rem 1rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:.6rem;
+            font-size:.9rem;line-height:1.9;color:#0c4a6e}
+        .ulb-combo a{color:#0284c7;font-weight:600}
+        #ulb-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(1rem);background:rgba(17,24,39,.92);
+            color:#fff;font-size:.88rem;padding:.6rem 1.2rem;border-radius:.5rem;opacity:0;pointer-events:none;
+            transition:all .25s;z-index:999}
+        #ulb-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media (max-width:768px){
+            .ulb-grid{grid-template-columns:1fr}
+        }
+        @media (prefers-reduced-motion: reduce){
+            .ulb-btn,#ulb-toast{transition:none}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">sell</i> UTM 生成器</h1>
+            <p>填表即生成带 utm 参数的推广链接：渠道预设一键填表，已有查询串自动续接、#hash 保留、粘贴回填解析</p>
+        </div>
+        <div class="tool-content">
+
+            <div class="ulb-privacy">
+                <i class="material-icons">lock</i>
+                <div><b>隐私承诺：</b>本工具纯浏览器本地运行、<b>零依赖、无后端上传</b>；你输入的链接与参数只在当前页面内存中拼接，不发送到任何服务器。</div>
+            </div>
+
+            <div class="ulb-limit">
+                <i class="material-icons">info</i>
+                <div><b>真限制（先说清楚）：</b>
+                    <ul>
+                        <li>UTM 参数仅用于流量归因统计，请勿在参数值中填入手机号、身份证号等敏感个人信息。</li>
+                        <li>生成的链接不经过服务器，全程浏览器本地拼接，零上传。</li>
+                        <li>各平台对链接长度与特殊字符限制不同，超长链接发出前请先在目标平台实测可打开。</li>
+                        <li>utm_source / medium / campaign 命名请与团队归因口径保持一致，否则统计会分叉。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="ulb-panel">
+                <h3><i class="material-icons">link</i> 基础链接</h3>
+                <div class="ulb-field">
+                    <label for="ulb-base">推广落地页链接 <span class="req">* 必填，须为 http(s) 链接</span></label>
+                    <input id="ulb-base" class="ulb-input" type="url" spellcheck="false" autocomplete="off"
+                        placeholder="https://example.com/page?id=123">
+                </div>
+                <div class="ulb-hint">已有查询串（如 ?id=123）会保留并用 &amp; 续接；#hash 会保留在末尾，参数插在 # 之前。</div>
+            </div>
+
+            <div class="ulb-panel">
+                <h3><i class="material-icons">tune</i> 常用渠道预设（一键填来源与媒介）</h3>
+                <div class="ulb-chips" id="ulb-presets"></div>
+                <div class="ulb-hint" style="margin-top:.6rem">点一个预设即填入 utm_source 与 utm_medium；campaign 请按本次活动名称填写。</div>
+            </div>
+
+            <div class="ulb-panel">
+                <h3><i class="material-icons">edit</i> UTM 参数</h3>
+                <div class="ulb-grid">
+                    <div class="ulb-field">
+                        <label for="ulb-source">utm_source 来源 <span class="req">* 必填</span></label>
+                        <input id="ulb-source" class="ulb-input" type="text" spellcheck="false" autocomplete="off" placeholder="wechat">
+                    </div>
+                    <div class="ulb-field">
+                        <label for="ulb-medium">utm_medium 媒介 <span class="req">* 必填</span></label>
+                        <input id="ulb-medium" class="ulb-input" type="text" spellcheck="false" autocomplete="off" placeholder="social">
+                    </div>
+                    <div class="ulb-field full">
+                        <label for="ulb-campaign">utm_campaign 活动名称 <span class="req">* 必填</span></label>
+                        <input id="ulb-campaign" class="ulb-input" type="text" spellcheck="false" autocomplete="off" placeholder="summer_sale">
+                    </div>
+                    <div class="ulb-field">
+                        <label for="ulb-term">utm_term 关键词 <span class="opt">选填，广告关键词</span></label>
+                        <input id="ulb-term" class="ulb-input" type="text" spellcheck="false" autocomplete="off" placeholder="summer sale">
+                    </div>
+                    <div class="ulb-field">
+                        <label for="ulb-content">utm_content 内容 <span class="opt">选填，区分同活动不同素材</span></label>
+                        <input id="ulb-content" class="ulb-input" type="text" spellcheck="false" autocomplete="off" placeholder="banner_a">
+                    </div>
+                </div>
+                <div class="ulb-hint">参数按 source → medium → campaign → term → content 固定顺序拼接；空的选填参数自动省略；中文与空格按百分号编码。</div>
+                <div class="ulb-actions">
+                    <button type="button" class="ulb-btn ulb-btn-primary" id="ulb-generate-btn">
+                        <i class="material-icons">sell</i> 生成 tagged 链接
+                    </button>
+                    <button type="button" class="ulb-btn ulb-btn-secondary" id="ulb-example-btn">
+                        <i class="material-icons">lightbulb</i> 载入示例
+                    </button>
+                    <button type="button" class="ulb-btn ulb-btn-secondary" id="ulb-clear-btn">
+                        <i class="material-icons">clear</i> 清空
+                    </button>
+                </div>
+                <div class="ulb-error" id="ulb-error"></div>
+            </div>
+
+            <div class="ulb-panel">
+                <h3><i class="material-icons">content_copy</i> 生成的 tagged 链接</h3>
+                <textarea id="ulb-output" class="ulb-output" readonly spellcheck="false" placeholder="点「生成 tagged 链接」后，带 utm 参数的推广链接会出现在这里"></textarea>
+                <div class="ulb-actions">
+                    <button type="button" class="ulb-btn ulb-btn-primary" id="ulb-copy-btn">
+                        <i class="material-icons">content_copy</i> 一键复制
+                    </button>
+                    <button type="button" class="ulb-btn ulb-btn-secondary" id="ulb-to-qrcode">
+                        <i class="material-icons">qr_code</i> 去二维码工具生成推广码
+                    </button>
+                    <button type="button" class="ulb-btn ulb-btn-secondary" id="ulb-to-cleaner">
+                        <i class="material-icons">cleaning_services</i> 去 URL 追踪参数清除器反向净化
+                    </button>
+                </div>
+                <div class="ulb-other" id="ulb-other"></div>
+            </div>
+
+            <div class="ulb-panel">
+                <h3><i class="material-icons">reply</i> 粘贴回填解析</h3>
+                <div class="ulb-field">
+                    <label for="ulb-paste">已带 utm 参数的链接</label>
+                    <textarea id="ulb-paste" class="ulb-paste" spellcheck="false"
+                        placeholder="粘贴一条已带 utm 参数的链接，例如：&#10;https://example.com/page?id=123&utm_source=wechat&utm_medium=social&utm_campaign=summer_sale"></textarea>
+                </div>
+                <div class="ulb-actions">
+                    <button type="button" class="ulb-btn ulb-btn-primary" id="ulb-parse-btn">
+                        <i class="material-icons">reply</i> 解析并回填表单
+                    </button>
+                </div>
+                <div class="ulb-hint" style="margin-top:.6rem">解析后 utm_* 回填上方表单；其余查询参数（如 id=123）会列在生成区下方，不丢失。</div>
+            </div>
+
+            <div class="ulb-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="ulb-tip">
+                    <b>怎么用：</b>粘贴推广落地页链接 → 点渠道预设或手动填 <code>utm_source</code> / <code>utm_medium</code> / <code>utm_campaign</code>（必填），<code>utm_term</code> / <code>utm_content</code> 选填 → 点「生成 tagged 链接」→ 「一键复制」发到对应渠道。<br>
+                    <b>五个参数各管什么：</b><code>utm_source</code> 是流量来源（如 wechat / baidu / google），<code>utm_medium</code> 是媒介类型（如 social / cpc / email），<code>utm_campaign</code> 是活动名称（如 summer_sale），<code>utm_term</code> 是广告关键词，<code>utm_content</code> 用于区分同一活动的 A/B 素材。<br>
+                    <b>拼接规则：</b>原有查询串保留、用 <code>&amp;</code> 续接；<code>#hash</code> 保留在末尾，参数插在 <code>#</code> 之前；参数值按百分号编码（空格 → <code>%20</code>，中文 → 百分号编码）；空的选填参数省略；顺序固定为 source → medium → campaign → term → content。<br>
+                    <b>复用旧链接：</b>把别人发来的 tagged 链接粘贴到「粘贴回填解析」，utm 参数会自动回填表单，改个 campaign 就能生成新活动的链接。
+                </div>
+                <div class="ulb-combo">
+                    <b>「URL 一条龙」：</b>生成推广码？用 <a href="/tools/qrcode">二维码工具</a> 把 tagged 链接做成推广码；想把别人分享链接里的追踪参数清掉再转发？用 <a href="/tools/url-tracker-cleaner">URL 追踪参数清除器</a> —— 拼参数推广、清参数净化，拼 ↔ 清双向打通。
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="ulb-toast"></div>
+    <script src="/tools/static/js/utm_link_builder.js?v=1"></script>
+</body>
+</html>
+{{end}}

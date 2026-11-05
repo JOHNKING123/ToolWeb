@@ -162,7 +162,7 @@ var iconRe = /"directions_run"/g, iconHits = (GO_SRC.match(iconRe) || []).length
 eq(iconHits, 1, "Icon directions_run 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 306, "注册 Path 总数 288→289");
+eq(pathCount, 307, "注册 Path 总数 288→289");
 
 /* ---------- 10. 模板：SEO/真限制三条/零外部资源 ---------- */
 has(TPL_SRC, '{{define "running_pace_calc"}}', "模板定义 running_pace_calc");

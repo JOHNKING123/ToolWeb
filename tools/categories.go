@@ -165,6 +165,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "utm_link_builder",
+					Name:        "UTM 生成器",
+					Description: "给推广链接拼 utm_source/medium/campaign/term/content：微信/微博/抖音/小红书/邮件/短信/百度/Google Ads 等 11 组渠道预设一键填表，一键生成 tagged 推广链接，保留原有查询串与 #hash、粘贴回填解析、一键复制，纯前端零上传 · UTM link builder: build tagged URLs with presets, round-trip parse, 100% client-side",
+					Path:        "/tools/utm-link-builder",
+					Icon:        "sell",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "url_parser",
 					Name:        "URL 解析器",
 					Description: "粘贴长链接按浏览器 URL 原语拆解协议/用户名/密码/主机/端口/路径/查询/片段八段，查询参数键值表可编辑/新增/删除并重组链接，结构化 JSON 一键复制，4 组示例一键载入，纯前端零上传 · URL parser: split URL into 8 parts, editable query table, rebuild link, copy JSON, 100% client-side",

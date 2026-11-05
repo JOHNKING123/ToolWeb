@@ -1,3 +1,94 @@
+## 今日任务（2026-11-05 21:37 · PM 选定轮，接通用调研第二百三十七轮）
+
+**选定：UTM 链接生成器（utm_link_builder）** — 本轮唯一任务（新工具）。
+
+**顺位**：237 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第七度裁定跳过**（沿用 231–236 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；六轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤的真工具，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），UTM 拼接生成口径站内 0 交付。
+2. **口径互补确凿**：站内已有 URL 追踪参数清除器（url_tracker_cleaner，「编码转换」类目：清参数口径——剔除 utm_*/fbclid/spm）；本工具为**拼参数口径**（填 utm_source/medium/campaign/term/content → 拼 tagged URL），只管「拼得对不对、能不能归因」，不管「清不干净」，同类目内形成「拼参数推广 → 清参数净化分享」的链接卫生一条龙，顺流互链。
+3. **需求验证**：运营/市场人员手动拼 UTM 参数易错（漏参数、编码错、& 与 # 位置错、已有查询串被冲掉），缺一键生成与校验；填表＋常用渠道预设＋一键复制＋粘贴回填解析，一页解决拼链接、验链接、复用链接三步。
+4. **无硬伤**：纯前端小难度（表单＋拼接算法＋预设表＋复制/回填，零上传、零外部接口）；无数据表负债（UTM 五参数为稳定标准，无年更新负担）；弱点可控：受众偏运营/市场人群、需求频率中等——工具属性纯正，非游戏/趣味测试，频率中等可接受。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外）：
+   - ASCII：`utm_builder`／`utm-builder`／`utmBuilder`／`campaign_url` 全站（tools/templates/static/js/tests）**0 命中**——UTM 拼接生成本体 0 交付，真缺口确凿。
+   - 「utm」全站命中验真全为他人口径：url_tracker_cleaner 清除追踪参数（反向口径）、url_parser「带 utm 的分享链接」示例按钮、url_codec 互链文案——**无一为拼接生成本体**。
+   - Icon：**`sell`（首选；`Icon:\s*"sell"` 精确值 **0 命中**，全库唯一，贴合「推广链接」语义；备选 `tracking` 亦 0 命中；`campaign` 占用 2、`link` 占用 3、`tag` 占用 2、`analytics` 占用 1，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第七度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 基础链接输入（http(s) URL，校验＋去首尾空白）② UTM 五参数表单：source／medium／campaign 必填，term／content 选填；字段级错误提示（缺失必填项、超长值）③ 常用渠道预设 ≥8 组（微信公众号文章／微信朋友圈／微博／抖音／小红书／邮件 newsletter／短信／百度搜索广告／Google Ads 等；每组填 source＋medium，campaign 由用户按活动填写，附一句话适用说明）④ 一键生成 tagged URL：保留原有查询串（& 续接）、保留 #hash（参数插在 # 之前）、encodeURIComponent 编码、空选填参数省略、参数固定顺序 source→medium→campaign→term→content ⑤ 一键复制生成链接＋复制成功反馈 ⑥ 粘贴回填解析：粘贴一条已带 utm 参数的链接，一键解析回填表单（并列出其余非 utm 查询参数，不丢信息）⑦ 互链：生成后可跳站内二维码工具生成推广码、跳 URL 追踪参数清除器反向净化（拼↔清双向互链）⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（tab 聚焦可操作、动画可减弱）⑩ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.UtmLinkBuilder 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `listPresets()` → [{id, name, source, medium, note}]（≥8 组；source/medium 非空字符串）。
+  - `getPresetById(id)` → preset 对象（id 非字符串或不存在 err.field='id'）。
+  - `normalizeBaseUrl(url)` → string（去首尾空白；须为 http(s) URL，否则 err.field='baseUrl'）。
+  - `normalizeParams(params)` → {source, medium, campaign, term, content}（source/medium/campaign 必填非空，缺失 err.field 为对应字段名；term/content 选填，缺省 ''；值须为字符串且长度 ≤200，否则 err.field 为对应字段名）。
+  - `buildTaggedUrl(baseUrl, params)` → string（参数顺序 source→medium→campaign→term→content；空选填省略；encodeURIComponent 编码值；原有查询串 & 续接；#hash 保留在末尾、参数插其前；baseUrl 非法 err.field='baseUrl'，params 非法 err.field 透传自 normalizeParams）。
+  - `parseTaggedUrl(url)` → {baseUrl, params:{source, medium, campaign, term, content}, otherParams:[{key, value}]}（utm_* 解析进 params（缺失为 ''）、其余查询参数原样进 otherParams；#hash 不计入；url 非法 err.field='url'）。
+- **拼接锚点（测试精确值）**：`https://example.com/page` ＋ source=wechat／medium=social／campaign=summer_sale → `https://example.com/page?utm_source=wechat&utm_medium=social&utm_campaign=summer_sale`；已有查询串 `https://example.com/p?id=123` → `https://example.com/p?id=123&utm_source=wechat…`（& 续接，不冲掉 id）；带 hash `https://example.com/p#sec` → 参数插在 `#sec` 之前；term 含空格 `summer sale` → `summer%20sale`；campaign 含中文 `夏季大促` → 百分号编码；parseTaggedUrl(buildTaggedUrl(…)) 往返一致（params 全等、otherParams 保留 id=123）。
+- **真限制四条页面明示**：① UTM 参数仅用于流量归因统计，请勿在参数值中填入手机号、身份证号等敏感个人信息；② 生成的链接不经过服务器，全程浏览器本地拼接，零上传；③ 各平台对链接长度与特殊字符限制不同，超长链接发出前请先在目标平台实测可打开；④ utm_source/medium/campaign 命名请与团队归因口径保持一致，否则统计会分叉。
+- **SEO**：UTM 生成器、UTM 链接、推广链接生成、utm 参数拼接、渠道归因链接。
+- **改动文件**：tools/categories.go（「编码转换」类目新增 utm_link_builder 条目，紧邻 url_tracker_cleaner，Path 306→**307**，Icon `sell` 首选，开发轮精确值复测锁定全库唯一）／templates/utm_link_builder.html（新）／static/js/utm_link_builder.js（新）／tests/utm_link_builder.test.js（新）／全量旧 tests Path 断言 306→307 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（listPresets 数量／结构精确值；getPresetById 命中／未命中抛错 err.field='id'；normalizeBaseUrl 校验与抛错 err.field='baseUrl'；normalizeParams 必填／选填／超长边界与抛错 err.field；buildTaggedUrl 锚点精确值：基础拼接／已有查询串续接／hash 位置／空格与中文编码／空选填省略；parseTaggedUrl 往返一致与 otherParams 保留；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 192→**193** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/utm-link-builder 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：预设一键填表生效、生成链接锚点正确、复制可用、粘贴回填解析正确、互链二维码工具与 URL 追踪参数清除器可用（开发轮记录）。
+- **品类归位**：注册到「编码转换」类目（与 url_tracker_cleaner／url_codec／url_parser 同类目，拼参数口径与清参数口径互补；模板内与 url_tracker_cleaner 双向互链，与二维码工具单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：UTM 链接生成器→本轮交付（237 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第七度跳过（数据表负债从严，231–236 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII utm_builder 四形态 0 命中，「utm」命中全为清除口径等他人口径）；编码转换类目，与 url_tracker_cleaner 互补；Icon `sell` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第七度跳过）／数独游戏→P3 观察维持／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD 48dd197＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **306**；`ls tests/*.test.js | wc -l` = **192**；PM 独立零重叠复核（ASCII `utm_builder`／`utm-builder`／`utmBuilder`／`campaign_url` 全 0 命中（vendor 排除，BACKLOG.md 除外）；「utm」命中验真全为 url_tracker_cleaner 清除口径／url_parser 示例／url_codec 互链等他人口径；`sudoku` ASCII 0 命中、`social_image_size`／`social-image-size` 0 命中沿用 237 轮；`Icon:\s*"sell"`／`tracking` 精确值 0 命中，`campaign` 占用 2、`link` 占用 3、`tag` 占用 2、`analytics` 占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 21:36 · 产品调研推荐，第二百三十七轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：年假拼假优化器已交付闭环（48dd197 新增：`/tools/annual-leave-optimizer`，Path 总数 305→**306**，tests **192 个**；新测试 215 断言全过），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 236 轮（`social_image_size`／`social-image-size` 全 0 命中，CJK「社媒」验真全为社媒标签／标题生成器等他人口径——**尺寸速查表本体 0 交付**）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已第六度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠复核确凿（ASCII `sudoku` 全站 **0 命中**，CJK「数独」验真全为 css_background_pattern_generator 图案预设名，游戏本体 0 交付）；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **UTM 链接生成器** — **新晋第三席**。QRGlo 11-05 免费工具清单信号（UTM 生成器列为免费工具）；站内零重叠本轮复核确凿：`utm_builder`／`utm-builder`／`utmBuilder`／`campaign_url` 全站 **0 命中**，「utm」全站命中仅为 url_tracker_cleaner 清除追踪参数、url_codec 等他人口径——**UTM 拼接生成本体 0 交付**；与 url_tracker_cleaner 互补（清参数 vs 拼参数，链接卫生一条龙）；实现纯前端小难度（填 utm_source/medium/campaign/term/content → 拼 tagged URL ＋常用预设＋一键复制＋二维码工具互链，零上传）。**弱点**：受众偏运营/市场人群，需求频率中等。SEO：UTM 生成器、UTM 链接、推广链接生成。建议 ID utm_link_builder、Path /tools/utm-link-builder；Icon `sell` 首选（精确值 **0 命中**，备选 `tracking` 亦 0 命中；`campaign` 占用 2、`link` 占用 3、`tag` 占用 2、`analytics` 占用 1，不可取），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已第六度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII/CJK 验真真缺口；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| UTM 链接生成器 | **新晋第三席**：QRGlo 11-05 信号；站内 utm_builder 四形态 0 命中；与 url_tracker_cleaner 互补；纯前端小难度；**弱点**：受众偏运营人群，频率中等 | 小 | P3（新晋） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 信号；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过；Icon `beach_access` 全库唯一） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 19:38~21:36 窗口；本轮**新晋 1 个**）：
+- **QRGlo 11-05（V2EX 动态二维码帖）**：免费工具清单含图片扫码／二维码尺寸计算／UTM 生成器 → 图片扫码站内 qr scanner 已交付消解；二维码尺寸计算为打印尺寸换算 niche，弱口径不入池；**UTM 生成器新晋第三席**（见 Top3）。
+- twelve.tools 11-04~11-05 新品：Single Ladies AI／AI Rap Video／HipGen／Bicep Heart Trend Maker（AI 视频口径消解）；Extractune 人声分离（AI 模型口径消解）；Posteady／twl（社交自动化／GTM 平台口径消解）；Mass Rename（batch_rename_helper 已交付，236 轮已消解）；Excerpt（扩展口径消解）；Bookeen（AI 写书口径消解）；TextBake（批量文本管道，需求窄，弱口径不入池）。
+- V2EX 11-03~11-05：Deskflow DDC（桌面应用口径消解）；Event Horizon（Agent MCP 口径消解）；ClipRedo（AI 视频模板口径消解）；EasyPost（扩展＋CLI 口径消解）；scan-to-vector skill（AI/OCR 技能口径消解）；水杉输入法（桌面应用口径消解）；旁白翻译插件（需 API key 的扩展口径消解）。
+- Stiltcode 10-16「5 Tiny Free Web Tools」：Squoosh（图片压缩站内形态印证）；Diffchecker（text_diff 站内形态印证）；CleanURL（url_tracker_cleaner 已交付消解）；iLovePDF（PDF 全家桶站内形态印证）；Hemingway Editor（readability_analyzer 已交付消解）。
+- Medium 10-29 自由职业工具：PDF Merger／Background Remover／Image Compressor／Invoice Generator（站内形态印证）；Photopea／Canva／diagrams.net／Excalidraw／Jitsi（平台口径消解）。
+- whispr.dev 11 工具：FASTPING／IP Answers（speedtest／nettools 形态印证）；MDConv（markdown＋text_diff 印证）；What does my screen fit（浏览器环境信息印证）；Is it me or not（网站宕机检测：需服务端抓取＋VM 出网拦截风险，弱口径不入池）；Diallcode（电话号码解析，需外部归属地数据，弱口径不入池）；Coordinates（经纬度→时区/地名，需外部地名数据，弱口径不入池）；OpenGraph.health（og-card-preview 印证）；Trace a link（短链追踪同口径，P3 弱观察维持）。
+- Ignlab 11-05：Passumi（ChatGPT 转 PDF，站内 PDF 形态印证）；RizCraft（PDF 编辑器＋阿拉伯语文本转 PDF，站内形态印证）；Blank Page Writer（免打扰记事本，站内 notepad 形态印证）；ToolNestCalc（薪资税／小费计算器，财务口径＋方向修正不扩，消解）；Scientific Calculator（站内计算器形态印证）。
+- ToolMintX 11-04（157+ 工具）：无新工具形态，站内形态印证。
+
+**候选池变动**：annual_leave_optimizer 交付划出（48dd197，306 Path，192 tests）；**社媒/证件照尺寸速查表顺位首席留池**（P3；数据鲜度维护负担压级；PM 已第六度跳过）；数独游戏 P3 观察维持第二席；**新晋第三席 1 个**（UTM 链接生成器：QRGlo 11-05 信号，站内 utm_builder 四形态 0 命中，与 url_tracker_cleaner 互补，纯前端小难度；Icon `sell` 首选 0 命中）；**本轮新信号扫描其余零新晋**（AI 视频／人声分离／社交自动化／GTM 平台／桌面应用／扩展口径全消解；宕机检测／电话解析／经纬度查时区为弱口径不入池）；反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，`ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 重建后一次成功）；**远端无新提交**（本地 HEAD 48dd197＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **306**；`ls tests/*.test.js | wc -l` = **192**；本地当前分支 muse/dev-20260929；工作区干净（BACKLOG 追加前）；站内零重叠复核（`utm_builder`／`utm-builder`／`utmBuilder`／`campaign_url` 全 0 命中，「utm」全站命中仅为 url_tracker_cleaner 清除追踪参数等他人口径；`social_image_size`／`social-image-size` 全 0 命中沿用 236 轮；`sudoku` ASCII 0 命中沿用 234 轮；Icon `sell`／`tracking` 精确值 0 命中，`campaign` 占用 2、`link` 占用 3、`tag` 占用 2、`analytics` 占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 19:38 · PM 选定轮，接通用调研第二百三十六轮）
 
 **选定：年假拼假优化器（annual_leave_optimizer）** — 本轮唯一任务（新工具）。
