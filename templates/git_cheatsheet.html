@@ -1,0 +1,213 @@
+{{define "git_cheatsheet"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git 命令速查＋灾难救援卡 - 70+ 常用命令与 10 张救援卡 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Git 命令速查表：70+ 常用命令十类分类（配置/基础/分支/暂存/撤销/远程/日志/标签/工作区/高级），每条含语法、中文说明与使用示例；10 张灾难救援卡：误删分支、push 错分支、撤销已 push commit、误删 stash、rebase 翻车、merge 冲突、丢弃本地修改救回、远程分支被删、detached HEAD，症状→诊断→分步救援→预防，危险操作标红警示；关键词实时搜索、一键复制，纯前端本地运行零上传。Git cheatsheet in Chinese: 70+ commands in 10 categories, 10 rescue scenarios, search & one-click copy, 100% client-side.">
+    <meta name="keywords" content="git 命令大全,git 速查表,git 撤销 commit,git 误删分支恢复,git 灾难救援,git 常用命令,git rebase 翻车,git stash 恢复,git reflog,git detached HEAD,git cheatsheet">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/git-cheatsheet">
+    <meta property="og:title" content="Git 命令速查＋灾难救援卡 - 70+ 常用命令与 10 张救援卡">
+    <meta property="og:description" content="70+ Git 常用命令十类速查：语法、中文说明、使用示例一次讲清；10 张灾难救援卡：误删分支、push 错分支、撤销已 push commit、rebase 翻车等，症状→诊断→分步救援→预防，危险操作标红。一键复制，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/git-cheatsheet">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Git 命令速查＋灾难救援卡","description":"在线 Git 命令速查表：70+ 常用命令十类分类速查，每条含语法、中文说明与使用示例；10 张灾难救援卡（误删分支、push 错分支、撤销已 push commit、误删 stash、rebase 翻车、merge 冲突、丢弃本地修改救回、远程分支被删、detached HEAD），症状→诊断→分步救援→预防，危险操作标红；关键词实时搜索、一键复制，纯前端本地运行，不上传任何数据。","url":"https://www.johnkingzcq123.xyz/tools/git-cheatsheet","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .gc-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .gc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .gc-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #fcd34d;background:#fffbeb;
+            border-radius:.8rem;padding:.9rem 1rem;margin:0 0 1.2rem;font-size:.92rem;line-height:1.9;color:#92400e}
+        .gc-limit .material-icons{color:#d97706;flex:none;font-size:1.6rem}
+        .gc-limit ol{margin:.2rem 0 0;padding-left:1.2rem}
+        .gc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .gc-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827;display:flex;align-items:center;gap:.4rem}
+        .gc-panel h3 .material-icons{font-size:1.15rem;color:#dc2626}
+        .gc-search-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+        .gc-search-wrap{flex:1;min-width:220px;position:relative}
+        .gc-search-wrap .material-icons{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);
+            color:#9ca3af;font-size:1.25rem;pointer-events:none}
+        #gc-search{width:100%;box-sizing:border-box;padding:.7rem .9rem .7rem 2.6rem;font-size:1rem;
+            border:1px solid #d1d5db;border-radius:.6rem;outline:none}
+        #gc-search:focus{border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+        .gc-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.1rem;border:1px solid #d1d5db;
+            border-radius:.6rem;font-size:.92rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .gc-btn:hover{border-color:#dc2626;color:#dc2626}
+        .gc-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem}
+        .gc-tab{display:inline-flex;align-items:center;gap:.35rem;font-size:.92rem;font-weight:600;cursor:pointer;
+            border:1px solid #d1d5db;border-radius:999px;padding:.45rem 1rem;background:#f9fafb;color:#4b5563}
+        .gc-tab:hover{border-color:#dc2626;color:#dc2626}
+        .gc-tab.active{border-color:#dc2626;background:#fef2f2;color:#b91c1c}
+        .gc-count{font-size:.88rem;color:#6b7280;margin-top:.7rem}
+        #gc-grid{margin-top:1rem}
+        .gc-group-title{font-size:1rem;color:#111827;margin:1.4rem 0 .7rem;padding-bottom:.4rem;
+            border-bottom:2px solid #fecaca}
+        .gc-group-title:first-child{margin-top:.2rem}
+        .gc-card{background:#fff;border:1px solid #e5e7eb;border-radius:.7rem;padding:.9rem 1rem;margin-bottom:.8rem}
+        .gc-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);border-color:#fca5a5}
+        .gc-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem}
+        .gc-syntax{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95rem;
+            font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.4rem;
+            padding:.25rem .55rem;word-break:break-all}
+        .gc-copy{flex:none;display:inline-flex;align-items:center;padding:.35rem .8rem;border:1px solid #d1d5db;
+            border-radius:.5rem;font-size:.85rem;font-weight:600;cursor:pointer;background:#f9fafb;color:#374151}
+        .gc-copy:hover{border-color:#dc2626;color:#dc2626}
+        .gc-name{font-size:.9rem;font-weight:700;color:#1f2937;margin-top:.55rem}
+        .gc-desc{font-size:.9rem;color:#4b5563;line-height:1.85;margin-top:.2rem}
+        .gc-example{font-size:.88rem;color:#4b5563;margin-top:.45rem;line-height:1.8}
+        .gc-example span{color:#9ca3af}
+        .gc-example code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem;color:#111827}
+        .gc-empty{text-align:center;color:#6b7280;padding:2.5rem 1rem;font-size:.95rem;
+            border:1px dashed #d1d5db;border-radius:.7rem;background:#f9fafb}
+        #gc-rescue{margin-top:.4rem}
+        .gc-rescue-card{background:#fff;border:1px solid #e5e7eb;border-left:4px solid #dc2626;border-radius:.7rem;
+            padding:.9rem 1rem;margin-bottom:.8rem;cursor:pointer}
+        .gc-rescue-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}
+        .gc-rescue-card:focus{outline:2px solid #dc2626;outline-offset:2px}
+        .gc-rescue-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem}
+        .gc-rescue-title{font-size:1rem;font-weight:700;color:#111827;display:flex;align-items:center;gap:.45rem}
+        .gc-rescue-title .material-icons{color:#dc2626;font-size:1.3rem}
+        .gc-rescue-actions{display:flex;align-items:center;gap:.6rem;flex:none}
+        .gc-toggle{font-size:.85rem;color:#9ca3af}
+        .gc-rescue-body{display:none;margin-top:.8rem;border-top:1px dashed #e5e7eb;padding-top:.8rem}
+        .gc-rescue-card.gc-open .gc-rescue-body{display:block}
+        .gc-rescue-body dl{margin:0}
+        .gc-rescue-body dt{font-weight:700;color:#b91c1c;font-size:.88rem;margin:.55rem 0 .2rem}
+        .gc-rescue-body dt:first-child{margin-top:0}
+        .gc-rescue-body dd{margin:0;color:#4b5563;line-height:1.85;font-size:.9rem}
+        .gc-steps{margin:.3rem 0 0;padding-left:1.4rem}
+        .gc-steps li{margin:.45rem 0;line-height:1.85}
+        .gc-steps li code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem;color:#111827}
+        .gc-step-note{margin-left:.4rem}
+        .gc-step-danger{border:1px solid #fecaca;background:#fef2f2;border-radius:.5rem;padding:.35rem .6rem}
+        .gc-step-danger code{background:#fff;border-color:#fecaca}
+        .gc-danger-badge{display:inline-block;font-size:.75rem;font-weight:700;color:#fff;background:#dc2626;
+            border-radius:999px;padding:.1rem .55rem;margin-right:.45rem;vertical-align:middle}
+        .gc-tip{font-size:.9rem;color:#4b5563;line-height:1.9}
+        .gc-tip code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .gc-faq dt{font-weight:700;color:#111827;margin:.9rem 0 .3rem;font-size:.95rem}
+        .gc-faq dd{margin:0;color:#4b5563;line-height:1.9;font-size:.92rem}
+        .gc-faq dd code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;border:1px solid #e5e7eb;
+            border-radius:.3rem;padding:.05rem .35rem;font-size:.85rem}
+        .gc-related{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;align-items:center}
+        @media (max-width:640px){
+            .gc-search-row .gc-btn{flex:1;justify-content:center}
+            .gc-card-head{flex-direction:column}
+            .gc-rescue-head{flex-direction:column;align-items:flex-start}
+        }
+        @media (prefers-reduced-motion:reduce){
+            .gc-card,.gc-rescue-card{transition:none}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">sos</i> Git 命令速查＋灾难救援卡</h1>
+            <p>Git 命令记不住、灾难场景不会救？这里有 70+ 常用命令十类速查（配置／基础／分支／暂存／撤销／远程／日志／标签／工作区／高级），每条含语法、中文说明与使用示例；还有 10 张灾难救援卡：误删分支、push 错分支、撤销已 push commit、误删 stash、rebase 翻车、merge 冲突、丢弃本地修改救回、远程分支被删、detached HEAD，症状→诊断→分步救援→预防一次讲清，危险操作标红警示。关键词实时搜索，一键复制命令与救援步骤。</p>
+        </div>
+        <div class="tool-content" style="max-width:1024px;margin:auto;">
+            <div class="gc-limit">
+                <i class="material-icons">warning</i>
+                <div><b>真限制（先说清楚）：</b>
+                    <ol>
+                        <li>本页收录主流常用命令而非 Git 全集，冷门子命令以官方文档为准。</li>
+                        <li>救援步骤基于常见 Git 版本行为，仓库损坏（.git 元数据破坏）等极端情况可能需专业恢复。</li>
+                        <li>全程浏览器本地运行，不上传任何数据。</li>
+                        <li>重写历史的操作（rebase／reset --hard／push -f）执行前务必确认备份，危险步骤已标红。</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="gc-privacy">
+                <i class="material-icons">verified_user</i>
+                <div><b>纯前端运行，零上传：</b>全部命令与救援卡数据内置在页面脚本里，不发起任何网络请求，你可以在开发者工具 Network 面板验证。</div>
+            </div>
+
+            <div class="gc-panel">
+                <h3><i class="material-icons">search</i> 命令速查：搜索与分类筛选</h3>
+                <div class="gc-search-row">
+                    <div class="gc-search-wrap">
+                        <i class="material-icons">search</i>
+                        <input type="search" id="gc-search" placeholder="搜命令名 / 中文说明 / 示例，如 rebase、暂存、stash@{0}" autocomplete="off">
+                    </div>
+                    <button type="button" class="gc-btn" id="gc-clear">
+                        <i class="material-icons">backspace</i> 清空
+                    </button>
+                </div>
+                <div class="gc-tabs" role="tablist" aria-label="Git 命令分类筛选">
+                    <button type="button" class="gc-tab active" data-cat="all" role="tab">全部</button>
+                    <button type="button" class="gc-tab" data-cat="config" role="tab">配置</button>
+                    <button type="button" class="gc-tab" data-cat="basic" role="tab">基础</button>
+                    <button type="button" class="gc-tab" data-cat="branch" role="tab">分支</button>
+                    <button type="button" class="gc-tab" data-cat="stash" role="tab">暂存</button>
+                    <button type="button" class="gc-tab" data-cat="undo" role="tab">撤销</button>
+                    <button type="button" class="gc-tab" data-cat="remote" role="tab">远程</button>
+                    <button type="button" class="gc-tab" data-cat="log" role="tab">日志</button>
+                    <button type="button" class="gc-tab" data-cat="tag" role="tab">标签</button>
+                    <button type="button" class="gc-tab" data-cat="workspace" role="tab">工作区</button>
+                    <button type="button" class="gc-tab" data-cat="advanced" role="tab">高级</button>
+                </div>
+                <div class="gc-count" id="gc-count"></div>
+                <div id="gc-grid"></div>
+            </div>
+
+            <div class="gc-panel">
+                <h3><i class="material-icons">sos</i> 灾难救援卡：先别慌，按步骤来</h3>
+                <div class="gc-tip">下面 10 张卡覆盖最常见的 Git 灾难：误删分支、push 错分支、撤销已 push commit、误删未 push 分支、误删 stash、rebase 翻车、merge 冲突救场、丢弃本地修改救回、远程分支被删、detached HEAD。点击任意卡片展开：症状→诊断→分步救援命令→预防提示；<b style="color:#dc2626;">标红的步骤是危险操作</b>（rebase／reset --hard／push -f 系），执行前务必确认备份。救援第一原则：<b>先 git status、再 git reflog，别急着再敲破坏性命令</b>。</div>
+                <div id="gc-rescue"></div>
+            </div>
+
+            <div class="gc-panel">
+                <h3><i class="material-icons">help_outline</i> 使用说明</h3>
+                <div class="gc-tip">
+                    <b>怎么查：</b>在搜索框输入命令名（如 <code>rebase</code>）、中文关键词（如 <code>暂存</code>）或示例片段（如 <code>stash@{0}</code>），结果实时过滤；也可以点上方分类 tab 按十类筛选。<br>
+                    <b>怎么复制：</b>每条命令卡片右上角「复制」会复制命令名注释＋可直接运行的示例；救援卡的「复制步骤」会复制标题＋分步命令清单，粘贴到终端前请把占位符（如 &lt;分支名&gt;、a1b2c3d）换成实际值。<br>
+                    <b>救援第一原则：</b>出事先 <code>git status</code> 看清现状，再 <code>git reflog</code> 找历史位置；删分支、清暂存、丢修改这类操作在 gc 回收前大多能找回，越少后续写入、找回概率越高。<br>
+                    <b>已推送历史别乱改：</b>公开分支（已 push 且他人在用）不要 rebase 或强推；真要撤销已 push 的提交，优先 <code>git revert</code>，历史保持完整。<br>
+                    <b>隐私：</b>全部数据内置在页面脚本中，不发起任何网络请求，不上传任何数据。
+                </div>
+            </div>
+
+            <div class="gc-panel">
+                <h3><i class="material-icons">quiz</i> 常见问题</h3>
+                <dl class="gc-faq">
+                    <dt>误删分支后还能找回吗？</dt>
+                    <dd>大多能。删分支只删指针，不删提交对象；先 <code>git reflog</code> 找到被删分支最后一次提交的哈希，再 <code>git branch &lt;原分支名&gt; &lt;哈希&gt;</code> 重建。reflog 里翻不到时用 <code>git fsck --lost-found</code> 找悬空提交，详见「误删分支」与「误删未 push 分支」两张救援卡。</dd>
+                    <dt>已经 push 的 commit 怎么撤销？</dt>
+                    <dd>优先 <code>git revert &lt;提交哈希&gt;</code>：生成一次反向提交撤销，历史不改写，可正常 push。只有分支尚未被他人拉取时，才可考虑 <code>git reset --hard</code>＋<code>git push --force-with-lease</code> 改写历史，且必须先确认备份。详见「撤销已 push 的 commit」救援卡。</dd>
+                    <dt>rebase 到一半冲突满天飞怎么办？</dt>
+                    <dd>变基还没结束时，<code>git rebase --abort</code> 可全身而退，回到变基前状态；变基已完成但结果不对，用 <code>git reflog</code> 找到变基前位置再 <code>git reset --hard ORIG_HEAD</code> 回去（危险操作，先确认备份）。详见「rebase 翻车」救援卡。</dd>
+                    <dt>git stash 误删了还能恢复吗？</dt>
+                    <dd>能。stash 本质也是一次提交，删记录不立即删除提交对象；<code>git fsck --lost-found</code> 找到 dangling commit，<code>git show</code> 确认内容后 <code>git stash apply &lt;哈希&gt;</code> 恢复。详见「误删 stash」救援卡。</dd>
+                    <dt>detached HEAD 是什么？会丢代码吗？</dt>
+                    <dd>HEAD 悬空在某个提交上而非分支指针时就是 detached HEAD，本身不会丢代码；危险的是在此状态下做了新提交又切走分支——新提交不属于任何分支，找起来麻烦。正确做法是立刻 <code>git branch rescue-temp</code> 给它一个分支名拴住，再切回主分支合并。详见「detached HEAD」救援卡。</dd>
+                    <dt>这个页面会联网或上传数据吗？</dt>
+                    <dd>不会。全部命令与救援卡数据内置在页面脚本里，搜索、筛选、展开、复制都在浏览器本地完成，零 fetch/XHR，你可以在开发者工具 Network 面板验证。</dd>
+                </dl>
+            </div>
+
+            <div class="gc-panel">
+                <h3><i class="material-icons">link</i> 相关工具</h3>
+                <div class="gc-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#fef2f2;font-weight:600;cursor:default;">Git 命令速查＋灾难救援卡（当前）</span>
+                    <a href="/tools/gitignore-generator" class="btn btn-secondary" style="font-size:.9rem;">.gitignore 生成器</a>
+                    <a href="/tools/conventional-commit-generator" class="btn btn-secondary" style="font-size:.9rem;">Conventional Commit 提交信息生成器</a>
+                    <a href="/tools/http-status-reference" class="btn btn-secondary" style="font-size:.9rem;">HTTP 状态码速查</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/git_cheatsheet.js?v=1"></script>
+</body>
+</html>
+{{end}}

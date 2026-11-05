@@ -1,3 +1,92 @@
+## 今日任务（2026-11-05 11:50 · PM 选定轮，接通用调研第二百三十二轮）
+
+**选定：Git 命令速查＋灾难救援卡（git_cheatsheet）** — 本轮唯一任务（新工具）。
+
+**顺位**：232 轮 Top3 次席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二度裁定跳过**（沿用 231 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户，与年假数据表同类负债；首席顺位留池，不冻结）。本项无硬伤、零数据负债、一天可高质量交付，硬依据如下：
+1. **独立信号**：Show HN DevKit（11 月，80 个纯浏览器端免注册开发者工具；Docs 类目含 "Git (70+ cmds + 10 rescue scenarios)"）＋ toolradar 11 月「Best Free Developer Tools」Git 项强化；痛点独立验证：不想把 JWT/API key 粘贴到随机在线工具（Local-first 隐私主题与站内一致）。
+2. **需求验证**：git 命令记不住、灾难场景（误删分支/push 错分支/撤销 commit）不会救——开发者高频刚需；救援步骤本地可执行、零账号零付费。
+3. **无硬伤**：纯前端小难度（命令分类检索＋一键复制＋灾难救援卡；静态数据，零上传）；Git 命令语义数十年稳定，**无数据表维护负担**（与首席弱点形成对照）；无隐私合规坑。
+4. **口径互补确凿**：站内唯一 git 相关工具 gitignore_generator 为 .gitignore 模板拼接口径；conventional_commit_generator 为提交信息格式口径；本工具为**命令速查＋灾难救援口径**，互补不重叠；站内「HTTP 状态码速查」为同形态先例。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`git_cheat`／`git-cheat`／`gitCheat`／`git_cheatsheet`／`git-cheatsheet`／`gitCheatsheet`／`git_rescue`／`git-rescue` 八形态全站（git HEAD 5a6d12b，301 Path，187 tests；除 BACKLOG.md 外，vendor/mock 排除）**0 命中**（仅 github.com/gin-gonic 依赖 URL 无关子串）——真缺口确凿。
+   - CJK「救援」（`chr(0x6551)+chr(0x63F4)` 运行时构造）tools/templates/static/js/tests **0 命中**；CJK「Git命令」（`chr(0x47)+chr(0x69)+chr(0x74)+chr(0x547D)+chr(0x4EE4)` 运行时构造）**0 命中**；「速查」命中全为他人口径互补（HTTP 状态码速查／城市坐标速查表／食物蛋白质速查表）——**Git 命令速查＋灾难救援本体 0 交付**，真缺口确凿。
+   - Icon：**`sos`（首选；`Icon:\s*"sos"` 精确值 **0 命中**，全库唯一，贴合「灾难救援」SOS 语义；备选 `support`／`integration_instructions`／`history` 亦 0 命中；`terminal` 被占用 3 命中、`menu_book`/`keyboard`/`rule` 各被占用 1 命中，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM 第二度裁定跳过：数据鲜度维护负担；首席顺位留池递进）／年假拼假优化器（PM 第十七度裁定跳过条件维持：2027 年放假安排仍未公布；触发器：官方通知发布后下一轮调研确认即立项）／字体搭配预览（P3 观察维持：需求频率中等＋Web 字体受限）／密码强度检测（P3 观察维持：信号时效弱）／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 70+ 常用命令分类速查（配置/基础/分支/暂存/撤销/远程/日志/标签/工作区/高级十类），每条含语法、中文说明、使用示例 ② 10 张灾难救援卡（误删分支/push 错分支/撤销已 push commit/误删未 push 分支/误删 stash/rebase 翻车/merge 冲突救场/丢弃本地修改救回/远程分支被删/detached HEAD），每卡：症状→诊断→分步救援命令→预防提示，危险操作（rebase/reset --hard/push -f）标红警示 ③ 关键词实时搜索（命令名/中文/示例三字段）④ 一键复制命令与救援步骤 ⑤ 真限制页面明示 ⑥ 无障碍（tab 聚焦可操作、动画可减弱）⑦ 模板零外部资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.GitCheatsheet 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `searchCommands(commands, keyword)` → array（大小写不敏感、三字段匹配；commands 非数组 err.field='commands'；keyword 非字符串 err.field='keyword'；空关键词返回全量）。
+  - `getCommand(commands, id)` → object（找不到 err.field='id'）。
+  - `getRescue(scenarios, id)` → object（找不到 err.field='id'）。
+  - `groupByCategory(commands)` → {分类: [...]}（保序分组；commands 非数组 err.field='commands'）。
+  - `buildCopyText(cmd)` → string（命令＋示例拼接；cmd 非法 err.field='cmd'）。
+  - `buildRescueCopy(scenario)` → string（标题＋分步命令拼接；scenario 非法 err.field='scenario'）。
+  - `validateCommand(cmd)` → {ok:true}（缺 id/name/syntax/category 时 err.field 给出缺失字段名）。
+  - `sanitizeFileName(text)` 沿用家族惯例（空文本回退 'git-cheatsheet'）。
+- **真限制四条页面明示**：① 收录主流常用命令而非 Git 全集，冷门子命令以官方文档为准；② 救援步骤基于常见 Git 版本行为，仓库损坏（.git 元数据破坏）等极端情况可能需专业恢复；③ 全程浏览器本地运行，不上传任何数据；④ 重写历史的操作（rebase/reset --hard/push -f）执行前务必确认备份，危险步骤已标红。
+- **SEO**：git 命令大全、git 速查表、git 撤销 commit、git 误删分支恢复、git 灾难救援。
+- **改动文件**：tools/categories.go（「开发工具」类目新增 git_cheatsheet 条目，Path 301→**302**，Icon `sos` 首选，开发轮精确值复测锁定全库唯一）／templates/git_cheatsheet.html（新）／static/js/git_cheatsheet.js（新）／tests/git_cheatsheet.test.js（新）／全量旧 tests Path 断言 301→302 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（searchCommands 大小写/中文/空关键词精确值；getCommand/getRescue 未知 id 抛错 err.field='id'；groupByCategory 保序分组精确值；buildCopyText/buildRescueCopy 拼接精确值；validateCommand 缺字段抛错 err.field；sanitizeFileName 空回退 'git-cheatsheet'；模板零外部资源静态检查）② 全量 tests/*.test.js 187→**188** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/git-cheatsheet 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证搜索＋复制＋救援卡展开可用（开发轮记录）。
+- **品类归位**：注册到「开发工具」类目（与 gitignore_generator／conventional_commit_generator／http_status_reference 同类目，互补口径）；New: true；开发轮按模板惯例决定是否与 gitignore_generator 互链。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Git 命令速查＋灾难救援卡→本轮交付（232 研究轮新晋次席递进；PM 定序权裁定首席社媒表第二度跳过（数据表负债从严，231 轮逻辑沿用）；独立信号 Show HN DevKit 11 月 Docs 类目 "Git (70+ cmds + 10 rescue scenarios)"＋toolradar Git 项强化；零重叠复核确凿（ASCII 八形态 0 命中＋CJK「救援」「Git命令」0 命中／「速查」全为他人口径互补）；开发工具类目；Icon `sos` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担）／年假拼假优化器→触发器待命维持（PM 第十七度跳过条件：2027 放假安排未公布）／字体搭配预览／密码强度检测→P3 观察维持／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD 5a6d12b＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **301**；`ls tests/*.test.js | wc -l` = **187**；PM 独立零重叠复核（ASCII git_cheat/git-cheat/gitCheat/git_cheatsheet/git-cheatsheet/gitCheatsheet/git_rescue/git-rescue 八形态全 0 命中（仅 gin-gonic 依赖 URL 无关子串）；CJK「救援」`chr(0x6551)+chr(0x63F4)` 运行时构造 tools/templates/static/js/tests 0 命中、「Git命令」`chr(0x47)+chr(0x69)+chr(0x74)+chr(0x547D)+chr(0x4EE4)` 运行时构造 0 命中、「速查」命中全为他人口径互补（HTTP 状态码/城市坐标/食物蛋白质）；`Icon:\s*"sos"` 精确值 0 命中、`support`/`integration_instructions`/`history` 备选亦 0 命中、`terminal` 占用 3 命中、`menu_book`/`keyboard`/`rule` 各占用 1 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 11:36 · 产品调研推荐，第二百三十二轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：文档扫描去底纹已交付闭环（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 总数 300→**301**，tests **187 个**，Icon `filter_b_and_w` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位递进首席。年假拼假优化器触发器未满足（2027 年放假安排官方通知仍未发布，见新信号扫描），PM 按惯例可裁定第十六度跳过；文档扫描去底纹已交付划出；本项为池中最强顺位。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更）压级。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **Git 命令速查＋灾难救援卡** — 新晋次席。独立信号：Show HN DevKit（11 月，80 个纯浏览器端免注册开发者工具；其 Docs 类目含 "Git (70+ cmds + 10 rescue scenarios)"；痛点：不想把 JWT/API key 粘贴到随机在线工具——Local-first 隐私主题与站内一致）＋ toolradar 11 月「Best Free Developer Tools」Git 项强化。真缺口确凿：`git_cheat`／`git-cheat`／`gitCheat` 全站 **0 命中**（gitignore_generator 为唯一 git 相关工具，口径互补）；站内「HTTP 状态码速查」为同形态先例。实现纯前端小难度（命令分类检索＋一键复制＋灾难场景救援卡：误删分支/push 错分支/撤销 commit；静态数据，零上传）。痛点：git 命令记不住、灾难场景不会救。SEO：git 命令大全、git 撤销 commit、git 误删分支恢复。建议 ID git_cheatsheet、Path /tools/git-cheatsheet；**弱点**：信号为工具套件内类目（非独立爆款），压级 P2/P3。零重叠待 PM/开发轮复测。
+3. **字体搭配预览（Fontjoy 模式）** — P3 观察递进。YouTube 11-04 "10 Web Tools So Good They Feel Illegal" 收录 Fontjoy 独立信号维持；站内 font_pair/「字体搭配」全 0 命中真缺口维持；实现纯前端小难度（系统字体标题/正文组合预览＋一键复制 CSS，零上传）；**弱点**：需求频率中等＋模板零外部资源惯例下 Web 字体受限。SEO：字体搭配、font pairing。建议 ID font_pairing_preview、Path /tools/font-pairing-preview；零重叠待 PM/开发轮复测。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位递进首席；CropDen 11-03 独立信号（14 平台 55 尺寸＋遮挡区坐标＋6 种护照/签证规格）；**弱点**：数据鲜度维护负担压级 | 小 | P3（顺位；压级） |
+| Git 命令速查＋灾难救援卡 | 新晋：Show HN DevKit（11 月）Docs 类目 "Git (70+ cmds + 10 rescue scenarios)" 独立信号＋toolradar Git 项强化；站内 git_cheat/git-cheat/gitCheat 全 0 命中真缺口，gitignore_generator 口径互补；HTTP 状态码速查同形态先例；纯前端小难度零上传；**弱点**：信号为套件内类目非独立爆款 | 小 | P2/P3（新晋） |
+| 字体搭配预览（Fontjoy 模式） | P3 观察递进；YouTube 11-04 Fontjoy 独立信号；站内 font_pair/「字体搭配」全 0 命中；系统字体组合预览＋复制 CSS 零上传；**弱点**：需求频率中等＋Web 字体受限 | 小 | P3（观察） |
+| 年假拼假优化器 | **触发器未满足**：2027 年放假安排官方通知仍未发布（ltl-school：通常 11 月上旬发布，2026 年版为 2025-11-04；calendar.webtech360：未检索到最终版调休方案）；硬伤维持（调休数据表年更新负担）；PM 按惯例可裁定第十六度跳过；触发器：官方通知发布后下一轮调研确认即立项 | 小 | P1（冻结；触发器待命中） |
+| 密码强度检测 | 新晋 P3 观察：dev.to OmniTools（9 月）Password Entropy Calculator 为关键工具独立信号（时效弱）；站内 password_strength/password-strength/passwordStrength 全 0 命中（pdf-encrypt.js 内 passwordStrength 仅为 PDF 用户密码内部函数，本体 0 交付）；与 password 生成器互补（检测 vs 生成）；纯前端小难度零上传 | 小 | P3（观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个，Icon `filter_b_and_w` 全库唯一） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个，Icon `summarize` 全库唯一） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 09:36~11:36 窗口；本轮**新晋 1 次席候选＋1 P3 观察**）：
+- Show HN DevKit（news.ycombinator.com/item?id=47297835，约 11 月）：80 个纯浏览器端免注册开发者工具；痛点：不想把 JWT/API key/钱包地址粘贴到随机在线工具（Local-first 隐私主题）；Docs 类目含 "Git (70+ cmds + 10 rescue scenarios)" → **新晋次席「Git 命令速查＋灾难救援卡」**；其余 JWT/哈希/编码类 → 站内 jwt/jwt_signer_verifier/bcrypt_generator 等形态印证消解。
+- toolradar 11 月「Best Free Developer Tools (2026): 11 Picks」→ Git/GitHub/VS Code/Postman/Docker 等平台/桌面口径消解；Git 项强化 Git 主题高频。
+- dev.to 10-17 Secret Santa Generator（tap-to-reveal＋CSV 导出）→ 站内 secret_santa_generator 已交付，形态印证消解。
+- dev.to 11-04 MyPDFLabs Rotate PDF（页面缩略图旋转）→ 站内 pdf_manage 已有 rotate，形态印证消解。
+- YouTube 1 天前 whispr.dev 11 tools（FASTPING/DAILYSTONKS/IPANSWERS/MDCONV/OPENGRAPH.HEALTH/TRACE A LINK 等）→ 既判形态印证消解维持。
+- V2EX 11 月：KitVerse.dev（Local-first 100+ 工具＋SKILL 安全扫描）→ 站内 skill_scanner 形态印证；拾页/旅行小程序/背单词卡/一人 MCN → 扩展/小程序/AI 平台口径消解；Paint Board → doodle_board 口径消解；原型托管站 → 平台口径消解。
+- thetoolnerd 11 月第 1 周 AI 工具／Product Hunt 11-04（fileForensics/BlankOut/PasteGuard/Sendu）→ AI/桌面/后端/P2P 口径消解；BlankOut（分享给 AI 前的本地打码）→ 站内 img_mosaic/pdf_annotate/text_privacy_masker 形态印证。
+- 2027 年放假安排：国务院官方通知**仍未发布**（ltl-school：通常 11 月上旬，2026 年版发布于 2025-11-04；calendar.webtech360：未检索到最终版调休方案）→ 年假拼假优化器触发器未满足，PM 第十六度跳过条件维持。
+
+**候选池变动**：doc_bg_cleaner 交付划出（5a6d12b，301 Path，187 tests）；**年假拼假优化器触发器未满足**（2027 官方通知未发布；PM 第十六度跳过条件维持；触发器：官方通知发布后下一轮调研确认即立项）；**社媒/证件照尺寸速查表顺位递进首席**（P3；数据鲜度维护负担压级）；**新晋次席 1 个**（Git 命令速查＋灾难救援卡：Show HN DevKit 独立信号＋站内 git_cheat 三形态 0 命中真缺口＋HTTP 状态码速查同形态先例；纯前端小难度；建议 ID git_cheatsheet、Path /tools/git-cheatsheet）；**字体搭配预览 P3 观察递进**（Fontjoy 11-04 信号）；**新晋 P3 观察 1 个**（密码强度检测：OmniTools Password Entropy Calculator 信号时效弱＋站内本体 0 交付＋与 password 生成器互补）；3D 模型预览器 P3 观察维持；英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**归档说明**：本轮为 11-05 通用调研第二百三十二轮——文档扫描去底纹交付闭环（5a6d12b 新增；`/tools/doc-bg-cleaner` 已注册，Icon `filter_b_and_w` 全库唯一；全量 **301 Path**；全量 tests/*.test.js **187 个**），候选池划出；新信号（Show HN DevKit→新晋次席 Git 速查；Secret Santa→secret_santa_generator 形态印证；Rotate PDF→pdf_manage 形态印证；whispr 11 tools→既判消解；V2EX KitVerse→skill_scanner 形态印证；toolradar→平台消解＋Git 主题强化；PH 11-04→AI/桌面/后端/P2P 消解；2027 放假安排官方通知仍未发布→年假触发器未满足）均已消化；WPS 候选表保持冻结归档；全库 301 Path 核对无重叠（Top3 建议 ID：social_image_size_guide／git_cheatsheet／font_pairing_preview；零命中逐项可复现）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，ssh-keyscan 重建一次成功）；**远端无新提交**（本地 HEAD 5a6d12b＝origin/muse/dev-20260929）；`git log` 头部 5a6d12b（文档扫描去底纹新增）／d08b29a（文本摘要新增）／47827a9（OFD 转 PDF 评审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **301**；`ls tests/*.test.js | wc -l` = **187**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改）；本轮仅读操作＋BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 09:52 · PM 选定轮，接通用调研第二百三十一轮）
 
 **选定：文档扫描去底纹（手机拍文档增白，doc_bg_cleaner）** — 本轮唯一任务（新工具）。

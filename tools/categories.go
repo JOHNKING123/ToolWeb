@@ -769,6 +769,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "git_cheatsheet",
+					Name:        "Git 命令速查＋灾难救援卡",
+					Description: "Git 命令速查＋灾难救援卡：70+ 常用命令十类分类速查（配置/基础/分支/暂存/撤销/远程/日志/标签/工作区/高级），每条含语法、中文说明与使用示例；10 张灾难救援卡（误删分支/push 错分支/撤销已 push commit/误删 stash/rebase 翻车等，症状→诊断→分步救援→预防），危险操作标红警示；关键词实时搜索、一键复制命令与救援步骤，纯前端零上传 · Git cheatsheet: 70+ commands in 10 categories with Chinese explanations, 10 rescue scenarios for deleted branches, wrong pushes and failed rebases, search & one-click copy, 100% client-side",
+					Path:        "/tools/git-cheatsheet",
+					Icon:        "sos",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "search_router",
 					Name:        "社区搜索聚合器",
 					Description: "去 AI 垃圾搜索路由：关键词一键直达 Reddit/Hacker News/Stack Exchange/Quora/V2EX/知乎真实技术讨论，Google site: 过滤+官方站内搜索双路由，时间范围过滤、一键全开、OpenSearch 地址栏自定义搜索，纯前端零上传 · community search router: route keywords to real discussions on Reddit/HN/StackExchange/Quora/V2EX/Zhihu, Google site: filters + in-site search, time ranges, open-all, OpenSearch, 100% client-side",
