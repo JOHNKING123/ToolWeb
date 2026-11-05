@@ -1234,6 +1234,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "文字工具",
 				},
+				{
+					ID:          "font_pairing_preview",
+					Name:        "字体搭配预览",
+					Description: "标题正文字体搭配参考：10 组预设搭配（经典/现代/优雅/活泼/极简），一键随机搭配、手动选字体，实时预览中英文混排，字号与行距滑杆即时生效，一键复制 CSS；全部基于系统字体栈不加载网络字体，全程浏览器本地计算零上传 · Font pairing preview: title & body font combinations, live preview and copy-ready CSS, 100% client-side",
+					Path:        "/tools/font-pairing-preview",
+					Icon:        "text_format",
+					New:         true,
+					Category:    "文字工具",
+				},
 			},
 		},
 		{

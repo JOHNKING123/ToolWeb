@@ -1,3 +1,92 @@
+## 今日任务（2026-11-05 17:38 · PM 选定轮，接通用调研第二百三十五轮）
+
+**选定：字体搭配预览（Fontjoy 模式）（font_pairing_preview）** — 本轮唯一任务（新工具）。
+
+**顺位**：235 轮 Top3 第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第五度裁定跳过**（沿用 231/232/233/234 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户，与年假数据表同类负债；首席顺位留池，不冻结）。次席年假拼假优化器 → PM **第二十一度裁定跳过**（触发器仍未满足：2027 年放假安排国务院官方通知截至 2026-11-02 仍未发布）。本项无数据表负债、无年更新负担、无外部接口依赖，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），字体搭配口径站内 0 交付。
+2. **口径互补确凿**：文字工具类目现有字体版权查询（font_license_check，版权口径：查已装字体能否商用）与 svg_to_font（格式转换口径）、fancy_fonts（花体转换口径）；本工具为**搭配预览口径**（标题＋正文字体怎么搭好看），只管「搭得好不好看」，不管「能不能商用」，与版权查询互补不重叠，同一类目内形成「搭配合适→查版权再商用」的顺流。
+3. **需求验证**：写文章、做 PPT、海报、个人博客时标题与正文字体搭配难选，缺实时预览；随机搭配＋手动选＋字号行距调节＋复制 CSS，一页解决选搭配、看效果、拿代码三步。
+4. **无硬伤**：纯前端小难度（预设搭配表＋随机/手动选择＋实时预览＋CSS 生成，零上传、零外部接口）；弱点可控：模板零外部静态资源惯例下只能用系统字体栈，搭配多样性受限——页面明示此限制（见真限制四条），预设全部基于系统字体栈＋回退栈，不加载任何网络字体。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`font_pair`／`font-pair`／`fontPair` 全站（tools/templates/static/js/tests，vendor 排除，BACKLOG.md 除外）**0 命中**——搭配预览本体 0 交付，真缺口确凿。
+   - CJK「字体搭配」（`chr(0x5b57)+chr(0x4f53)+chr(0x642d)+chr(0x914d)` 运行时构造，codepoint 验真）全站 **0 命中**——中文口径亦 0 交付。
+   - Icon：**`text_format`（首选；`Icon:\s*"text_format"` 精确值 **0 命中**，全库唯一，贴合「字体排版」语义；备选 `type_specimen` 亦 0 命中；`font_download` 占用 2（类目图标＋svg_to_font），不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM 第五度裁定跳过：数据鲜度维护负担；首席顺位留池递进）／年假拼假优化器（PM 第二十一度裁定跳过条件维持：2027 年放假安排仍未公布；触发器：官方通知发布后下一轮调研确认即立项）／数独游戏（P3 观察维持；游戏非工具）／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 预设搭配表 ≥8 组，每组含 id／名称／风格标签（classic/modern/elegant/playful/minimal 五类全覆盖）／标题字体栈／正文字体栈／一句话点评；全部基于系统字体栈＋回退栈，不加载任何网络字体 ② 随机搭配按钮（一键换一组）＋手动选择（标题字体下拉、正文字体下拉，均取自预设所用系统字体栈）③ 实时预览区：标题＋副标题＋正文段落＋引用示例，中英文混排示例文本，字号（标题 16–72px、正文 12–24px）与行距（1.2–2.0）滑杆调节即时生效 ④ 一键复制 CSS（标题与正文 font-family／font-size／line-height 片段）⑤ 互链站内字体版权查询（商用前核对授权）⑥ 全程浏览器本地计算，零上传、零外部接口 ⑦ 无障碍（tab 聚焦可操作、动画可减弱）⑧ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.FontPairingPreview 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `listPairings()` → [{id, name, style, titleStack, bodyStack, note}]（≥8 组；style 取值 classic/modern/elegant/playful/minimal；titleStack/bodyStack 为非空字体名数组）。
+  - `getPairingById(id)` → pairing 对象（id 非字符串或不存在 err.field='id'）。
+  - `getPairingsByStyle(style)` → pairing[]（style 非法 err.field='style'；无命中返回 []）。
+  - `pickPairingByIndex(index)` → pairing 对象（index 非 0–N-1 整数 err.field='index'；UI 随机搭配用 Math.random 取下标后调本函数，随机本身只做浏览器端）。
+  - `buildFontStack(families)` → string（families 非非空数组 err.field='families'；含空格或中文的字体名加双引号，`Georgia, "Times New Roman", serif` 形；非法元素 err.field='families'）。
+  - `normalizeOptions(options)` → {titleSizePx, bodySizePx, lineHeight}（titleSizePx 16–72、bodySizePx 12–24、lineHeight 1.2–2.0，越界或非数 err.field 给出字段名；缺省给默认值 {32, 16, 1.6}）。
+  - `formatPairingCSS(pairing, options)` → string（可复制的 CSS 文本，含 `.font-title` 与 `.font-body` 两段 font-family/font-size/line-height；pairing 非法 err.field='pairing'，options 非法 err.field 透传自 normalizeOptions）。
+- **真限制四条页面明示**：① 仅用系统字体栈，不加载任何网络字体——本机未安装的字体按回退栈渲染，不同电脑／系统预览效果可能不同；② 搭配为审美建议，不保证所有场景适用；③ 本工具不管字体版权，商用前请去字体版权查询核对授权；④ 全程浏览器本地计算，零上传。
+- **SEO**：字体搭配、标题正文字体搭配、font pairing、字体组合。
+- **改动文件**：tools/categories.go（「文字工具」类目新增 font_pairing_preview 条目，Path 304→**305**，Icon `text_format` 首选，开发轮精确值复测锁定全库唯一）／templates/font_pairing_preview.html（新）／static/js/font_pairing_preview.js（新）／tests/font_pairing_preview.test.js（新）／全量旧 tests Path 断言 304→305 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（listPairings 数量／结构精确值；getPairingById 命中／未命中抛错 err.field='id'；getPairingsByStyle 分组精确值；pickPairingByIndex 边界精确值；buildFontStack 引号规则精确值；normalizeOptions 范围边界与抛错 err.field；formatPairingCSS 关键片段；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 190→**191** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/font-pairing-preview 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：随机搭配切换正常、手动选字体实时预览生效、字号／行距调节生效、复制 CSS 可用、互链字体版权查询可用、系统字体栈零外部资源（开发轮记录）。
+- **品类归位**：注册到「文字工具」类目（与 font_license_check／svg_to_font／fancy_fonts 同类目，搭配预览口径互补）；New: true；开发轮按模板惯例与字体版权查询互链（搭好→查版权再商用）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：字体搭配预览→本轮交付（235 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第五度跳过（数据表负债从严，231/232/233/234 轮逻辑沿用）、次席年假第二十一度跳过（触发器未满足）；站内零重叠复核确凿（ASCII font_pair 三形态 0 命中＋CJK「字体搭配」0 命中）；文字工具类目，与字体版权查询互补；Icon `text_format` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担）／年假拼假优化器→触发器待命维持（PM 第二十一度跳过条件：2027 放假安排未公布）／数独游戏→P3 观察维持／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD 938523f＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **304**；`ls tests/*.test.js | wc -l` = **190**；PM 独立零重叠复核（ASCII `font_pair`／`font-pair`／`fontPair` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「字体搭配」`chr(0x5b57)+chr(0x4f53)+chr(0x642d)+chr(0x914d)` 运行时构造 0 命中；`Icon:\s*"text_format"`／`type_specimen` 精确值 0 命中，`font_download` 占用 2）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改与既有未跟踪 `toolweb`，均不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 17:00 · 产品调研推荐，第二百三十五轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：密码强度检测已交付闭环（938523f 新增：`/tools/password-strength-checker`，Path 总数 303→**304**，tests **190 个**），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位递进首席。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已第四度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **年假拼假优化器** — 顺位次席，**触发器仍未满足**：2027 年放假安排国务院官方通知截至 2026-11-02 仍未发布（11-03/11-04 多篇凤凰网／腾讯新闻仍以“截至 11 月 2 日”为口径，未见 11-03~11-05 发布的新证据；中国政府网检索“2027年部分节假日安排”0 条；2024 年官方解读举例的“2027 春节连休 9 天”仅为调休规则举例 ≠ 正式通知；近三年通知发布日分别为 2023-10-25、2024-11-12、2025-11-04）。另：300038.cn 10-13 文称“国务院办公厅已发布 2027 通知、春节 2 月 15 日—21 日”，与官方解读举例“2 月 5 日—13 日 9 天”直接矛盾，且多家 11-03/11-04 信源一致确认通知未发布——该文为 SEO 农场编造，不可信。硬伤维持（调休数据表年更新负担）；PM 按惯例可裁定第二十度跳过；触发器：官方通知发布后下一轮调研确认即立项。
+3. **字体搭配预览（Fontjoy 模式）** — P3 观察递进第三席。站内零重叠本轮复核确凿：ASCII `font_pair`／`font-pair`／`fontPair` 全站 **0 命中**，CJK「字体搭配」**0 命中**；与字体版权查询（版权口径）互补不重叠。实现纯前端小难度（标题＋正文字体随机搭配／手动选、实时预览、字号行距调节、复制 CSS；系统字体栈，零上传）。**弱点**：需求频率中等＋模板零外部静态资源惯例下 Web 字体受限（只能用系统字体栈，搭配多样性受限）。SEO：字体搭配、标题正文字体搭配、font pairing。建议 ID font_pairing_preview、Path /tools/font-pairing-preview；Icon `text_format` 首选（精确值 **0 命中**，备选 `type_specimen` 亦 0 命中；`font_download` 占用 2、`text_fields` 占用 8、`palette`／`format_paint`／`style`／`brush` 各占用 1，不可取），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位递进首席；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已第四度跳过 | 小 | P3（顺位；压级） |
+| 年假拼假优化器 | **触发器未满足**：2027 年放假安排官方通知截至 11-02 仍未发布；硬伤维持（调休数据表年更新负担）；PM 可裁定第二十度跳过 | 小 | P1（冻结；触发器待命中） |
+| 字体搭配预览（Fontjoy 模式） | P3 观察递进第三席：站内 font_pair 三形态＋CJK「字体搭配」全 0 命中；与字体版权查询互补；纯前端小难度；**弱点**：需求频率中等＋Web 字体受限（系统字体栈） | 小 | P3（新晋第三席） |
+| 数独游戏 | P3 观察维持；Tooleek 信号；ASCII `sudoku` 全 0 命中，CJK「数独」验真全为 css_background_pattern_generator 图案预设名；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 信号；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个，Icon `gauge` 全库唯一） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 15:37~17:00 窗口；本轮**零新晋**）：
+- Medium 10-29「9 Free Browser Tools for Freelance Work」→ Invoice Generator → 站内 invoice_generator 已交付消解；Background Remover／Image Compressor → 站内形态印证消解；diagrams.net／Excalidraw／Photopea／Canva → 平台口径消解。
+- dev.to 10-30 minitool.io（546 工具，日更 10 个）→ TOTP Generator／Hex Viewer／JWT Verifier／JSON to Kotlin／CSS Grid Generator → 站内 totp_generator／hex_viewer／jwt_parser／json_to_kotlin／css_grid_generator 全已交付消解；Enigma Simulator → 趣味模拟器口径窄，不入池。
+- whispr.dev 11 工具（YouTube 11-05）→ FASTPING／IP Answers → 站内 speedtest／nettools 形态印证；MDConv → markdown＋text_diff 印证；“What does my screen fit?”（视口/屏幕/DPR 信息）→ 站内浏览器环境信息（13 项含屏幕分辨率／视口尺寸／设备像素比）印证消解；OpenGraph.health → 站内 og-card-preview 印证消解；Trace a link → 与 P3 弱观察短链追踪同口径；Diallcode 电话号码解析 → 需外部归属地数据，纯前端仅能做国家码／格式校验，弱口径不入池。
+- twelve.tools 11-04~11-05 新品 → Mass Rename（CSV/Excel 批量改名，浏览器本地）→ 站内 batch_rename_helper 已交付（规则引擎＋.bat/.ps1/.sh 脚本生成口径；ZIP 打包下载仅为交付形态差，不构成新工具）；Extractune 人声分离 → AI 模型口径消解；Excerpt → 浏览器扩展口径消解；其余 AI 视频／社交自动化 → AI／平台口径消解。
+- Product Hunt 11-05 当日榜（StillWorks 汇总：EzyRing／PlaceReveal／SupaYatta／Sanductor／Spelbox 等）→ AI 客服／数据平台／硬件／游戏口径消解，零新晋。
+- V2EX 11-04~11-05 → Tubox 纯前端图片工具箱（AI 抠图／放大为 AI 模型口径；证件照／拼图／EXIF／GIF 转制站内形态印证）；KitVerse 100+ Local-first 工具箱（未点名具体新工具，SKILL 安全扫描为 AI 开发 niche）；Zipover 跨平台剪贴板 → 桌面应用口径消解；Event Horizon 网页感知 MCP → Agent 平台口径消解。
+- 2027 年放假安排：国务院官方通知**截至 2026-11-02 仍未发布**（11-03/11-04 文章仍以 11-02 为口径；300038.cn 假日程与官方解读举例矛盾，不可信）→ 年假拼假优化器触发器未满足，PM 第二十度跳过条件维持。
+
+**候选池变动**：password_strength_checker 交付划出（938523f，304 Path，190 tests）；**年假拼假优化器触发器未满足**（2027 官方通知截至 11-02 未发布；PM 第二十度跳过条件维持；触发器：官方通知发布后下一轮调研确认即立项）；**社媒/证件照尺寸速查表顺位递进首席**（P3；数据鲜度维护负担压级；PM 已第四度跳过）；**新晋第三席 1 个**（字体搭配预览：P3 观察递进，站内 font_pair 三形态＋CJK「字体搭配」全 0 命中，字体版权查询互补，纯前端小难度；Icon `text_format` 首选 0 命中）；**本轮新信号扫描零新晋**（Mass Rename／屏幕视口信息／发票生成器／十六进制查看器／CSS Grid／JSON 转 Kotlin 全为站内已交付形态印证；Extractune／Tubox AI 抠图为 AI 模型口径）；数独游戏／3D 模型预览器 P3 观察维持；反应速度测试／X 视频转 GIF／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，`ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 重建后一次成功）；**远端无新提交**（本地 HEAD 938523f＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **304**；`ls tests/*.test.js | wc -l` = **190**；本地当前分支 muse/dev-20260929；工作区除未跟踪 `toolweb` 外干净（BACKLOG 追加前）；站内零重叠复核（`font_pair`／`font-pair`／`fontPair` 全 0 命中，CJK「字体搭配」0 命中；Icon `text_format`／`type_specimen` 精确值 0 命中，`font_download` 占用 2、`text_fields` 占用 8、`palette`／`format_paint`／`style`／`brush` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 15:37 · PM 选定轮，接通用调研第二百三十四轮）
 
 **选定：密码强度检测（password_strength_checker）** — 本轮唯一任务（新工具）。

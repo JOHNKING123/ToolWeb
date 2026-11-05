@@ -1,0 +1,197 @@
+{{define "font_pairing_preview"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字体搭配预览 - 标题正文字体搭配参考（Fontjoy 模式）| 程序员工具箱</title>
+    <meta name="description" content="免费在线字体搭配预览：10 组预设标题正文字体搭配（经典/现代/优雅/活泼/极简），一键随机搭配、手动选字体，实时预览中英文混排效果，字号与行距滑杆即时生效，一键复制 CSS；全部基于系统字体栈，不加载网络字体，全程浏览器本地计算零上传。字体搭配、标题正文字体搭配、font pairing、字体组合。">
+    <meta name="keywords" content="字体搭配,标题正文字体搭配,font pairing,字体组合,字体搭配预览,标题字体,正文字体,中文字体搭配,英文字体搭配,字体配对,排版字体">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/font-pairing-preview">
+    <meta property="og:title" content="字体搭配预览 - 标题正文字体搭配参考（Fontjoy 模式）">
+    <meta property="og:description" content="10 组预设标题正文字体搭配，随机搭配、手动选字体，实时预览中英文混排，字号行距即时调节，一键复制 CSS；系统字体栈零网络字体，全程本地计算。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/font-pairing-preview">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"字体搭配预览","description":"10 组预设标题正文字体搭配（经典/现代/优雅/活泼/极简），随机搭配、手动选字体，实时预览中英文混排，字号与行距滑杆即时生效，一键复制 CSS；全部基于系统字体栈，全程浏览器本地计算零上传。","url":"https://www.johnkingzcq123.xyz/tools/font-pairing-preview","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .fpp-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .fpp-privacy b{color:#047857}
+        .fpp-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .fpp-limit b{color:#1d4ed8}
+        .fpp-limit ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .fpp-limit li{margin:.15rem 0}
+        .fpp-sec{margin:1.3rem 0 .6rem}
+        .fpp-sec h3{margin:0 0 .3rem;font-size:1.02rem;color:#111827}
+        .fpp-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.4rem 0}
+        .fpp-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.8rem;align-items:center}
+        .fpp-actions .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .fpp-filters{display:flex;gap:.45rem;flex-wrap:wrap;margin:.6rem 0}
+        .fpp-chip{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:.28rem .85rem;font-size:.85rem;cursor:pointer}
+        .fpp-chip.on{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color);font-weight:700}
+        .fpp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.7rem;margin-top:.6rem}
+        .fpp-card{border:1px solid #e5e7eb;border-radius:.7rem;padding:.8rem .9rem;background:#fff;cursor:pointer}
+        .fpp-card:hover{border-color:var(--primary-color)}
+        .fpp-card.fpp-active{border:2px solid var(--primary-color);background:#eff6ff}
+        .fpp-card:focus{outline:2px solid var(--primary-color);outline-offset:2px}
+        .fpp-card-title{font-weight:700;font-size:1.05rem;color:#111827;margin-bottom:.3rem}
+        .fpp-card-sample{font-size:1.05rem;color:#111827;line-height:1.5}
+        .fpp-card-body{font-size:.88rem;color:#4b5563;margin-top:.2rem}
+        .fpp-card-meta{display:flex;gap:.5rem;align-items:flex-start;margin-top:.55rem}
+        .fpp-tag{font-size:.76rem;font-weight:700;border-radius:999px;padding:.12rem .6rem;background:#e0e7ff;color:#3730a3;white-space:nowrap;flex:none}
+        .fpp-note{font-size:.83rem;color:#6b7280;line-height:1.6}
+        .fpp-empty{border:1px dashed #d1d5db;border-radius:.6rem;padding:1.1rem;text-align:center;color:#6b7280;font-size:.9rem;background:#f9fafb}
+        .fpp-current{font-size:.92rem;color:#374151;font-weight:600}
+        .fpp-selects{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.6rem}
+        .fpp-selects label{display:block;font-size:.88rem;color:#374151;margin-bottom:.3rem;font-weight:600}
+        .fpp-select{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;font-size:.9rem;color:#111827;background:#fff;font-family:inherit}
+        .fpp-select:focus{outline:none;border-color:var(--primary-color)}
+        .fpp-slider-row{display:grid;grid-template-columns:110px 1fr 64px;gap:.7rem;align-items:center;margin:.6rem 0}
+        .fpp-slider-row label{font-size:.9rem;color:#374151;font-weight:600}
+        .fpp-slider-row output{font-size:.9rem;color:#111827;text-align:right;font-variant-numeric:tabular-nums}
+        .fpp-slider{width:100%;accent-color:var(--primary-color)}
+        .fpp-preview{border:1px solid #e5e7eb;border-radius:.7rem;background:#fff;padding:1.4rem 1.5rem;margin-top:.6rem}
+        .fpp-preview h2{margin:0 0 .35rem;color:#111827;font-weight:700}
+        .fpp-preview h3{margin:0 0 .9rem;color:#4b5563;font-weight:600}
+        .fpp-preview p{margin:.7rem 0;color:#374151}
+        .fpp-preview blockquote{margin:1rem 0 0;padding:.6rem 1rem;border-left:4px solid var(--primary-color);background:#f9fafb;color:#4b5563}
+        .fpp-css{background:#111827;color:#e5e7eb;border-radius:.6rem;padding:.9rem 1rem;font-size:.86rem;line-height:1.7;overflow-x:auto;white-space:pre;margin:.6rem 0 0;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .fpp-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .fpp-links{line-height:2;font-size:.93rem;color:#374151}
+        .fpp-links b{color:#111827}
+        .fpp-links a{color:var(--primary-color)}
+        @media (max-width:640px){
+            .fpp-selects{grid-template-columns:1fr}
+            .fpp-actions .btn{flex:1 1 100%;justify-content:center}
+            .fpp-slider-row{grid-template-columns:90px 1fr 56px}
+        }
+        @media (prefers-reduced-motion:reduce){
+            *{transition:none !important;animation:none !important}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>字体搭配预览</h1>
+            <p>标题与正文字体怎么配才好看？10 组预设搭配一键切换，也可手动选字体、调字号行距，实时预览中英文混排效果，满意后一键复制 CSS 直接用。</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="fpp-privacy" role="note">
+                <div><b>隐私声明：全程浏览器本地计算，零上传、零外部接口。</b>搭配选择、预览渲染与 CSS 生成全部在当前浏览器内完成，不会上传任何内容，也不会请求任何外部接口。打开 DevTools 的 Network 面板可验证：本页无任何网络请求。</div>
+            </div>
+            <div class="fpp-limit" role="note">
+                <div><b>真限制（请先了解再使用）：</b>
+                    <ul>
+                        <li><b>仅系统字体栈：</b>本页搭配全部基于系统自带字体栈，不加载任何网络字体；不同操作系统 / 浏览器上同一字体的渲染效果可能不同。</li>
+                        <li><b>搭配为审美建议：</b>预设搭配是排版审美建议，不保证适用于所有场景与品牌调性，请结合实际内容判断。</li>
+                        <li><b>商用前查版权：</b>系统自带字体不等于免费商用，商用前请先核对字体授权（见下方互链：字体版权查询）。</li>
+                        <li><b>本页零上传：</b>不上传、不保存、不记录任何内容，关闭页面即无痕迹。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="fpp-sec">
+                    <h3>① 预设搭配</h3>
+                    <div class="fpp-hint">10 组预设搭配，覆盖经典 / 现代 / 优雅 / 活泼 / 极简五种风格，点击卡片即选用。</div>
+                </div>
+                <div class="fpp-filters" id="fpp-filters" role="group" aria-label="按风格筛选搭配">
+                    <button type="button" class="fpp-chip on" data-f="all">全部</button>
+                    <button type="button" class="fpp-chip" data-f="classic">经典</button>
+                    <button type="button" class="fpp-chip" data-f="modern">现代</button>
+                    <button type="button" class="fpp-chip" data-f="elegant">优雅</button>
+                    <button type="button" class="fpp-chip" data-f="playful">活泼</button>
+                    <button type="button" class="fpp-chip" data-f="minimal">极简</button>
+                </div>
+                <div class="fpp-grid" id="fpp-list"></div>
+                <div class="fpp-actions">
+                    <button class="btn btn-primary" id="fpp-random" aria-label="随机换一组字体搭配">🎲 随机搭配</button>
+                    <span class="fpp-current" id="fpp-current" aria-live="polite"></span>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="fpp-sec">
+                    <h3>② 手动选择字体</h3>
+                    <div class="fpp-hint">不满意预设？直接给标题和正文各挑一个字体栈，实时生效；选回「跟随预设搭配」即恢复当前预设。</div>
+                </div>
+                <div class="fpp-selects">
+                    <div>
+                        <label for="fpp-title-select">标题字体</label>
+                        <select class="fpp-select" id="fpp-title-select" aria-label="标题字体"></select>
+                    </div>
+                    <div>
+                        <label for="fpp-body-select">正文字体</label>
+                        <select class="fpp-select" id="fpp-body-select" aria-label="正文字体"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="fpp-sec">
+                    <h3>③ 字号与行距</h3>
+                    <div class="fpp-hint">拖动滑杆即时生效：标题 16–72px，正文 12–24px，行距 1.2–2.0。</div>
+                </div>
+                <div class="fpp-slider-row">
+                    <label for="fpp-title-size">标题字号</label>
+                    <input type="range" class="fpp-slider" id="fpp-title-size" min="16" max="72" step="1" value="32" aria-label="标题字号">
+                    <output id="fpp-title-size-val" for="fpp-title-size">32px</output>
+                </div>
+                <div class="fpp-slider-row">
+                    <label for="fpp-body-size">正文字号</label>
+                    <input type="range" class="fpp-slider" id="fpp-body-size" min="12" max="24" step="1" value="16" aria-label="正文字号">
+                    <output id="fpp-body-size-val" for="fpp-body-size">16px</output>
+                </div>
+                <div class="fpp-slider-row">
+                    <label for="fpp-line-height">行距</label>
+                    <input type="range" class="fpp-slider" id="fpp-line-height" min="1.2" max="2.0" step="0.1" value="1.6" aria-label="行距">
+                    <output id="fpp-line-height-val" for="fpp-line-height">1.6</output>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="fpp-sec">
+                    <h3>④ 实时预览</h3>
+                    <div class="fpp-hint">标题、副标题、正文与引用，中英文混排，所见即所得。</div>
+                </div>
+                <div class="fpp-preview" id="fpp-preview">
+                    <h2 id="fpp-preview-title">山川湖海，皆是文章</h2>
+                    <h3 id="fpp-preview-subtitle">Typography is the craft of arranging type — 字体搭配的艺术</h3>
+                    <p class="fpp-body-text">清晨的雾从江面上升起，渡口的老船夫点起一盏灯。The quick brown fox jumps over the lazy dog. 好的字体搭配不需要解释，读起来顺眼，就是对的。</p>
+                    <p class="fpp-body-text">排版是文字的呼吸：标题负责第一眼的印象，正文负责长时间的陪伴。A well-paired font combination guides the reader without drawing attention to itself — 1234567890。</p>
+                    <blockquote id="fpp-preview-quote">“字体是会说话的衣服，搭配得当，文字自己会发光。”</blockquote>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="fpp-sec">
+                    <h3>⑤ 复制 CSS</h3>
+                    <div class="fpp-hint">直接可用的两段 CSS：.font-title 用于标题，.font-body 用于正文，粘贴进样式表即可。</div>
+                </div>
+                <pre class="fpp-css" id="fpp-css"></pre>
+                <div class="fpp-actions">
+                    <button class="btn btn-primary" id="fpp-copy" aria-label="复制 CSS">复制 CSS</button>
+                    <span class="fpp-copy-tip" id="fpp-copy-tip"></span>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>商用前，先查版权</h3>
+                <div class="fpp-links">
+                    搭配挑好了、准备商用？<b>系统自带字体不等于免费商用</b>：<a href="/tools/font-license-check">去字体版权查询核对授权 →</a> 一键检测本机字体是否可免费商用，含免费商用替代推荐。<br>
+                    <b>怎么选搭配：</b>长文选衬线正文更耐读；界面与产品页选无衬线更利落；标题与正文反差一大一小，层次自然出来。<br>
+                    <b>为什么没有网络字体？</b>本页刻意只用系统字体栈：零加载、零等待、离线也能看效果；需要网络字体时，请从官方渠道获取授权后再引入。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/font_pairing_preview.js?v=1"></script>
+</body>
+</html>
+{{end}}
