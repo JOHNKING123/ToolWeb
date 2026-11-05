@@ -3,7 +3,8 @@
  * 流程：上传音频（FileReader → ArrayBuffer，全本地，不上传）→ AudioContext.decodeAudioData 本地解码
  * → 须立体声（单声道明确报错）→ 中心声道消除法：mid=(L+R)/2，伴奏 out = L/R − s·mid（s=强度 0..1）；
  *   保低频开启时先对 mid 做一阶低通（200Hz），只消除 mid 的高通部分，低频居中成分保留
- * → 干声模式直接取 mid（中央声道）→ 双波形 canvas 对比（原音频 / 结果）→ A/B 对比试听
+ * → 干声模式直接取 mid（中央声道）再乘以强度 s（干声音量缩放，s=0 时静音）
+ * → 双波形 canvas 对比（原音频 / 结果）→ A/B 对比试听
  * → WAV 手工编码（16-bit PCM）本地下载；MP3 经本地 vendor lamejs 编码（重采样 44100Hz，
  *   比特率 128/192/320kbps 可选），文件名自动后缀。
  *
@@ -125,15 +126,17 @@ function checkChannel(ch, field) {
 
 /* ---------- 中央声道提取 ---------- */
 
-// 干声 = 中央声道 mid = (L+R)/2（逐采样平均）
-// 全居中信号原样返回；全反相信号返回全零
-// 返回 Float32Array；非法参数抛 Error（err.field：left/right/length）
-function extractCenter(left, right) {
+// 干声 = 中央声道 mid = (L+R)/2 再乘以强度 s（逐采样相乘）
+// s 缺省 1；s=0 时输出全零（静音）；全居中信号 s=1 时原样返回；全反相信号返回全零
+// 返回新的 Float32Array，不改原数组；非法参数抛 Error（err.field：left/right/length/strength）
+function extractCenter(left, right, strength) {
     var nL = checkChannel(left, 'left');
     var nR = checkChannel(right, 'right');
     if (nL !== nR) throw err('length', '左右声道长度不一致');
+    if (strength === undefined || strength === null) strength = 1;
+    if (typeof strength !== 'number' || isNaN(strength) || strength < 0 || strength > 1) throw err('strength', '强度须为 0..1');
     var out = new Float32Array(nL);
-    for (var i = 0; i < nL; i++) out[i] = (left[i] + right[i]) / 2;
+    for (var i = 0; i < nL; i++) out[i] = (left[i] + right[i]) / 2 * strength;
     return out;
 }
 
@@ -394,11 +397,13 @@ function resetAll() {
 /* ================= 参数面板 ================= */
 
 function bindParams() {
+    // 保低频只在伴奏模式生效：干声模式下禁用该复选框，避免误导
+    function syncKeepBass() { el.keep_bass.disabled = (state.mode === 'vocal'); }
     el.mode_karaoke.addEventListener('change', function () {
-        if (el.mode_karaoke.checked) { state.mode = 'karaoke'; updateEstimate(); }
+        if (el.mode_karaoke.checked) { state.mode = 'karaoke'; syncKeepBass(); updateEstimate(); }
     });
     el.mode_vocal.addEventListener('change', function () {
-        if (el.mode_vocal.checked) { state.mode = 'vocal'; updateEstimate(); }
+        if (el.mode_vocal.checked) { state.mode = 'vocal'; syncKeepBass(); updateEstimate(); }
     });
     el.strength.addEventListener('input', function () {
         state.strength = clampStrength(parseFloat(el.strength.value));
@@ -422,8 +427,9 @@ function updateEstimate() {
     var sp = Math.round(state.strength * 100);
     el.export_filename.textContent = '导出文件名：' + makeExportName(state.fileBase, state.mode, sp, 'wav') +
         ' / ' + makeExportName(state.fileBase, state.mode, sp, 'mp3');
-    setProcessStatus('当前：' + modeName + ' ｜ 强度 ' + sp + '% ｜ 保低频 ' +
-        (state.keepBass ? '开（200Hz 以下居中成分保留）' : '关') +
+    var bassText = state.mode === 'vocal' ? '保低频不适用（仅伴奏模式生效）'
+        : '保低频 ' + (state.keepBass ? '开（200Hz 以下居中成分保留）' : '关');
+    setProcessStatus('当前：' + modeName + ' ｜ 强度 ' + sp + '% ｜ ' + bassText +
         ' ｜ 时长 ' + fmtTime(dur * 1000) + ' ｜ WAV 约 ' + fmtSize(wavBytes) +
         ' ｜ MP3(128k) 约 ' + fmtSize(estimateMp3Bytes(dur, 128)));
 }
@@ -484,7 +490,7 @@ function processAudio() {
             var mode = state.mode, s = state.strength;
             var outL, outR;
             if (mode === 'vocal') {
-                var mid = extractCenter(L, R);
+                var mid = extractCenter(L, R, s);
                 outL = mid; outR = mid;
             } else {
                 var res = centerEliminate(L, R, s, {
