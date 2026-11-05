@@ -1,3 +1,102 @@
+## 今日任务（2026-11-06 01:40 · PM 选定轮，接通用调研第二百三十九轮）
+
+**选定：人声消除/伴奏提取（vocal_remover）** — 本轮唯一任务（新工具）。
+
+**顺位**：239 轮 Top3 新晋首席递进，PM 行使定序权。次席社媒/证件照尺寸速查表 → PM **第九度裁定跳过**（沿用 231–238 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；八轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。第三席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤的真工具，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），人声消除/伴奏提取口径站内 0 交付。
+2. **口径互补确凿**：站内音频工具仅 audio_trimmer／audio_merger（剪辑口径）＋slowed_reverb（变速混响口径）＋mp3_tag_editor（标签口径）＋lossless_audio_checker（检测口径，238 轮刚交付）；本工具为**分离口径**（中心声道消除法：伴奏提取＋干声提取），与检测口径形成「验完真伪、顺手提伴奏」的顺流互链，音频家族五口径齐全。
+3. **需求验证**：想唱 K／练歌／做翻唱 remix，要一首歌的伴奏或干声，现有免费站要上传、限次、留邮箱；浏览器本地做、零上传、无次数。五源印证：Extractune 11-04＋ToolBuddy 11-04（中心声道消除法，即时、无下载）＋OBRA（浏览器内 Demucs）＋CandidTools 10-23（Spleeter／HT-Demucs 浏览器端）＋Medium 十月八工具横评。
+4. **技术路线站内已有先例**：audio_trimmer.js:188／lossless_audio_checker.js 已跑通 FileReader → ArrayBuffer → AudioContext.decodeAudioData 全本地解码；本工具只在解码后多一步逐采样中心声道消除（L−R）＋一阶低通保低频，无新外部依赖、无服务端、无模型权重（Demucs 85–158MB／BS-RoFormer 353MB／Spleeter 38MB 与模板零外部资源惯例冲突，本工具不碰模型权重，取 ToolBuddy 同款轻量路线）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`vocal_remover`／`vocal-remover`／`vocal`／`karaoke`／`stem_split`／`stem-split`／`acapella` 全站（tools/templates/static/js/tests）**0 命中**——人声消除本体 0 交付，真缺口确凿。
+   - CJK「人声」（`chr(0x4eba)+chr(0x58f0)`）／「伴奏」／「消音」全站 **0 命中**。
+   - CJK「干声」6 命中验真全为他人口径：slowed_reverb.html:133／206 干湿混响说明、slowed_reverb.js:157 干湿增益注释、slowed_reverb.test.js:203／206 干声增益断言——**无一为人声分离本体**。
+   - Icon：**`mic_off`（首选；`Icon:\s*"mic_off"` 精确值 **0 命中**，全库唯一，贴合「消除人声」语义；备选 `music_off`／`voice_over_off` 亦 0 命中；`music_note` 占用 1、`graphic_eq` 占用 1，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第九度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／在线节拍器／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 单文件上传／拖拽（.flac／.wav／.mp3／.ogg／.m4a，≤200MB，沿用 lossless_audio_checker 文件口径）② FileReader → ArrayBuffer → AudioContext.decodeAudioData 本地解码（沿用 audio_trimmer.js:188 既有模式），须为立体声（单声道文件明确报错"单声道文件无法做中心声道消除"，不静默处理）③ 模式切换：伴奏提取（卡拉 OK）／干声提取（中央声道）④ 消除强度滑杆 0–100%（默认 100%；0% = 原声直通）⑤ 保低频开关（默认开，截止频率固定 200Hz：一阶低通保住居中底鼓/贝斯）⑥ 原声／处理后 A/B 对比试听（BufferSource 播放＋进度同步）⑦ 双波形 canvas 对比渲染（原声峰值 vs 处理后峰值）⑧ 导出：WAV 手工 PCM16 编码／MP3（lamejs 128–320kbps，沿用 audio_trimmer／audio_merger 既有模式）⑨ 互链：audio_trimmer 双向互链（"伴奏导出后顺手裁剪"）、slowed_reverb 单向互链（"伴奏再变速混响"）⑩ 全程浏览器本地计算，零上传、零外部接口 ⑪ 无障碍（tab 聚焦可操作、动画可减弱）⑫ 模板零外部静态资源惯例。
+- **算法（中心声道消除法，逐采样，测试精确值）**：记 mid=(L+R)/2（中央信号），side=(L−R)/2（差信号）；强度 s∈[0,1]：伴奏 outL=side+(1−s)·mid、outR=−side+(1−s)·mid（s=1 为经典卡拉 OK：左右反相差信号；s=0 为原声直通）；干声 outL=outR=s·mid（s=1 为纯中央声道）；保低频：bass=一阶低通（α=1−exp(−2π·200/fs)）取原声低频分量，out= bass(原声)＋(处理结果−bass(处理结果))，即 200Hz 以下以原声为准、以上用消除结果。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.VocalRemover 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `validateAudioFile({name, size})` → {ext}（扩展名须为 flac/wav/mp3/ogg/m4a 之一，否则 err.field='fileName'；size 须 ≤200MB，否则 err.field='fileSize'）。
+  - `requireStereo(channelCount)` → true（channelCount 须为 2，否则 err.field='channels'；单声道＝1 明确抛错）。
+  - `centerEliminate(left, right, strength)` → {left, right}（left/right 为等长 Float32Array/Array；长度不等或非数组 err.field='samples'；strength 须在 [0,1] 内，否则 err.field='strength'；按上条算法逐采样计算，返回新数组不改原数组）。
+  - `extractCenter(left, right, strength)` → Float32Array（中央声道 mid×strength；strength 缺省 1；非法参数 err.field 同上）。
+  - `preserveBass(origL, origR, procL, procR, cutoffHz, sampleRate)` → {left, right}（一阶低通保低频；cutoffHz 须 >0 且 <sampleRate/2，否则 err.field='cutoffHz'；sampleRate 须为正数，否则 err.field='sampleRate'；四路等长，否则 err.field='samples'）。
+  - `encodeWavPcm16(left, right, sampleRate)` → Uint8Array（44 字节 RIFF 头＋16-bit PCM 交错采样；sampleRate 须为正数，否则 err.field='sampleRate'；左右等长非空，否则 err.field='samples'）。
+- **数值锚点（测试精确值）**：centerEliminate：全居中信号 L=R=[1, 0.5]、s=1 → out 全 0（人声被消尽）；全反相信号 L=[1, 0]、R=[0, 1]、s=1 → outL=[0.5, −0.5]、outR=[−0.5, 0.5]；s=0 → 原样返回（与输入逐采样相等）；s=0.5、全居中 L=R=[1] → out=[0.5, 0.5]（半强度半残留）。extractCenter：L=[0.8, 0.2]、R=[0.4, 0.2]、s=1 → [0.6, 0.2]。preserveBass：直流常数信号 L=R=0.5（全频皆低于截止）→ 输出＝原声 0.5（保低频全保留）；高频交替信号 ±1（远高于 200Hz）→ 输出 ≈ karaoke 结果（误差 ≤0.05，44.1kHz、α≈0.0281）。encodeWavPcm16：头 4 字节 "RIFF"、8 字节后 "WAVE"、声道数 2、采样率字段值精确、数据块长度＝采样数×4 字节。validateAudioFile：扩展名与体积边界同 lossless_audio_checker（200MB 边界值精确）。requireStereo：2 → true；1 → 抛错 err.field='channels'。
+- **真限制四条页面明示**：① 卡拉 OK 级非 AI 分离：本工具是中心声道消除法，不是 Demucs／Spleeter 等 AI 模型分离，效果远不及 AI 干声分离工具；② 仅立体声＋居中人声有效：单声道文件无法处理，人声偏左/偏右或声场很宽时分离不干净；③ 混响／和声／居中乐器（底鼓、贝斯、军鼓）会一并被削弱或残留，干声模式只是"中央声道提取"，不是干净人声；④ 全程浏览器本地解码处理，零上传。
+- **SEO**：人声消除、伴奏提取、卡拉OK伴奏、去人声、vocal remover、伴奏制作。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 vocal_remover 条目，紧邻 lossless_audio_checker，Path 308→**309**，Icon `mic_off` 首选，开发轮精确值复测锁定全库唯一）／templates/vocal_remover.html（新）／static/js/vocal_remover.js（新）／tests/vocal_remover.test.js（新）／全量旧 tests Path 断言 308→309 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥60 断言全过（centerEliminate 三档锚点精确值：全居中消尽／全反相保留／s=0 直通／s=0.5 半残留；extractCenter 锚点精确值；preserveBass 直流全保留／高频近 karaoke 误差界；encodeWavPcm16 头字段与数据长度精确值；validateAudioFile 扩展名与体积边界 err.field；requireStereo 单声道抛错 err.field='channels'；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 194→**195** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/vocal-remover 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：上传立体声解码成功、强度滑杆 0%/100% 听感差异明显、原声／处理后 A/B 试听可用、保低频开关可听辨、WAV/MP3 导出可播放、单声道文件明确报错、互链 audio_trimmer／slowed_reverb 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 audio_trimmer／audio_merger／lossless_audio_checker／slowed_reverb／mp3_tag_editor 同类目，分离口径与检测口径互补；模板内与 audio_trimmer 双向互链，与 slowed_reverb 单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：人声消除/伴奏提取→本轮交付（239 研究轮新晋首席递进；PM 定序权裁定次席社媒表第九度跳过（数据表负债从严，231–238 轮逻辑沿用）、第三席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII vocal／karaoke／stem_split／acapella 全 0 命中，CJK 人声／伴奏／消音全 0 命中，「干声」6 命中全为 slowed_reverb 干湿增益他人口径）；音频处理类目，分离口径与检测口径互补；Icon `mic_off` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第九度跳过）／数独游戏→P3 观察维持／在线节拍器／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；本地 HEAD 2d1d61d（无损音频真伪检测已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **308**；`ls tests/*.test.js | wc -l` = **194**；PM 独立零重叠复核（ASCII `vocal_remover`／`vocal-remover`／`vocal`／`karaoke`／`stem_split`／`stem-split`／`acapella` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「人声」／「伴奏」／「消音」`chr(0x...)` 运行时构造 0 命中；「干声」6 命中验真全为 slowed_reverb 干湿增益他人口径；`Icon:\s*"mic_off"`／`music_off`／`voice_over_off` 精确值 0 命中，`music_note`／`graphic_eq` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动；未跟踪的 `toolweb` 二进制不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 01:36 · 产品调研推荐，第二百三十九轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：无损音频真伪检测已交付闭环（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 总数 307→**308**，tests **194 个**；新测试 186 断言全过），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **人声消除/伴奏提取** — **新晋首席**。Extractune 11-04（twelve.tools：浏览器免费人声分离／去人声）＋ToolBuddy 11-04（中心声道消除法，即时、无下载）＋OBRA（浏览器内 Demucs）＋CandidTools 10-23（Spleeter 38MB／HT-Demucs 158MB 浏览器端）＋Medium 10 月八工具横评（Beatloo 最佳免费浏览器端、VocalRemover.org 最简）五源印证；痛点：想唱 K／练歌／做翻唱 remix，要一首歌的伴奏或干声，现有免费站要上传、限次、留邮箱；浏览器本地做、零上传、无次数；实现纯前端中难度（上传音频→decodeAudioData 解码→中心声道消除 L−R＋频段限制保低频＋消除强度 0–100%＋原声／伴奏试听对比→WAV 导出；沿用 audio_trimmer／lossless_checker 解码模式，零外部模型）；站内零重叠本轮复核确凿：`vocal`／`karaoke`／`stem_split`／`acapella`／`vocal_remov` 全站 **0 命中**，CJK「人声」（`chr(0x4eba)+chr(0x58f0)` 运行时构造）／「伴奏」／「消音」全站 **0 命中**——**人声消除本体 0 交付**；音频家族口径互补：lossless_checker（检测口径）＋audio_trimmer／merger（剪辑口径）＋slowed_reverb（变速口径），本工具为**分离口径**。**弱点**：卡拉 OK 级非 AI 分离——仅立体声＋居中人声有效，混响／和声会残留，单声道文件无法处理，须页面明示"非 AI 干声分离"（与 238 轮 lossless_checker「疑似」诚实口径同例）。SEO：人声消除、伴奏提取、卡拉OK伴奏、去人声、vocal remover。建议 ID vocal_remover、Path /tools/vocal-remover；Icon `mic_off` 首选（精确值 **0 命中**，全库唯一，贴合「消除人声」语义；备选 `music_off`／`voice_over_off` 亦 0 命中；`music_note` 占用 1、`graphic_eq` 占用 1，不可取），开发轮复测锁定。
+2. **社媒/证件照尺寸速查表** — 顺位留池。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 238 轮（`social_image_size`／`social-image-size` 全 0 命中，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已八度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+3. **数独游戏** — P3 观察维持第三席。Tooleek 信号；站内零重叠沿用 238 轮（ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付）；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 人声消除/伴奏提取 | **新晋首席**：Extractune／ToolBuddy 11-04＋OBRA＋CandidTools 10-23＋Medium 八工具横评五源印证；站内本体 0 交付（`vocal`／`karaoke`／人声／伴奏／消音全 0 命中）；音频家族分离口径互补；纯前端中难度（中心声道消除法，零外部模型）；**弱点**：卡拉 OK 级非 AI 分离，仅立体声＋居中人声有效，须页面明示 | 中 | P3（新晋） |
+| 社媒/证件照尺寸速查表 | 顺位留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已八度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第三席；Tooleek 信号；ASCII `sudoku` 全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 在线节拍器 | **新晋 P3 弱观察**：`metronome`／`tuner`／CJK「节拍器」／「调音」全站 0 命中；纯前端小难度（Web Audio 节拍音＋BPM＋拍号）；**弱点**：受众偏乐器练习人群，工具站定位边缘 | 小 | P3（弱观察） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 信号；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | P3 弱观察维持；`video_to_audio`／`extract_audio`／CJK「视频转音频」全站 0 命中；**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差 | 中 | P3（弱观察） |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 23:39~2026-11-06 01:36 窗口；本轮**新晋 2 个**）：
+- **Extractune 11-04（twelve.tools）＋ToolBuddy 11-04＋OBRA＋CandidTools 10-23＋Medium 八工具横评**：浏览器端人声消除／伴奏提取多源印证 → **人声消除/伴奏提取新晋首席**（见 Top3）。注：AI 模型路线（Demucs 85–158MB／BS-RoFormer 353MB／Spleeter 38MB）与模板零外部资源惯例冲突，本工具取中心声道消除轻量路线（ToolBuddy／paddystudio 同款方法），不碰模型权重。
+- **在线节拍器新晋 P3 弱观察**：`metronome`／`tuner`／CJK「节拍器」／「调音」全站 0 命中；纯前端小难度；受众偏乐器练习人群，定位边缘。
+- Invoiceize（Product Hunt 11-01，浏览器发票生成器）＋Medium 10-29 九工具清单 → 发票生成器站内 invoice_generator 已交付消解。
+- Paint Board（V2EX 10-19，网页创意画板）→ doodle_board 已交付消解。
+- CrispToolHub 60 工具清单：ATS 简历匹配检测 → resume_checker（JD 关键词＋ATS 检测）已交付消解；图片取色器 → image_color_picker 已交付消解；其余 PDF／图片／计算器口径站内形态印证（计算器口径＋方向修正不扩，消解）。
+- Product Hunt 11-05 当日榜：Bridge／Rerun／Living Brain／Pushary／Vibeconferencing（AI agent 会议／记忆口径消解）；SafetyClip（Mac 剪贴板桌面应用口径消解）；SnapTiles（3D 磁贴游戏口径消解）；Seamcult（图案设计 niche，弱口径不入池）；TextKit（SMS API 开发者口径消解）；Nock（Windows notch 桌面口径消解）；Deployed Yet?（部署状态查询需服务端抓取，弱口径不入池）；Nemotron Transcribe（语音转写 AI 口径消解；站内视频转 SRT 弱观察维持）；Screen Studio 4.0／Clayzo／beacon.sh／Xmind 2027／magpie（238 轮已消解）。
+- twelve.tools 11-04~11-05 新品：AI Rap Video／Single Ladies AI／Dime Dime Baby／Bicep Heart／AI Rap Forge（AI 视频口径消解）；Posteady（社媒自动化平台口径消解）；Mass Rename（batch_rename_helper 已交付，236 轮已消解）；HumanizePhoto（AI 图片口径消解）；Ember Journal（日记应用口径消解；站内 notepad 形态印证）；TokLab（AI API 聚合口径消解）；Two Mountains（AI 哲学信件口径消解）。
+- V2EX 11-04~11-05：旁白翻译插件（需 API key 的扩展口径消解）；imagegoai（AI 生图口径消解）；ProtoHub（原型托管平台口径消解）。
+- Hacker News 月度复盘（Selextract 11-05：10-05~11-04 共 4,247 个 Show HN，30% 提 AI，仅小而可试的出圈——HackerBooks 书单／许可城建游戏／静音对话电脑）→ 无新单品形态；HackerBooks 需 HN 全量 dump，弱口径不入池。
+- Stiltcode 10-16「5 Tiny Free Web Tools」／Techtippr 2026 清单／Medium 九工具：Squoosh 图片压缩／Diffchecker 文本对比／CleanURL 追踪清除／iLovePDF／Hemingway 可读性／背景移除／图片压缩到指定体积，站内形态印证（img_compress／text_diff／url_tracker_cleaner／readability_analyzer 等已交付）。
+
+**候选池变动**：lossless_audio_checker 交付划出（2d1d61d，308 Path，194 tests）；**人声消除/伴奏提取新晋首席**（五源印证，站内 `vocal`／`karaoke`／人声／伴奏／消音全 0 命中，音频家族分离口径互补，纯前端中难度中心声道消除法；Icon `mic_off` 首选 0 命中）；**在线节拍器新晋 P3 弱观察**（`metronome`／`tuner`／节拍器／调音全 0 命中，纯前端小难度，受众偏乐器练习）；社媒/证件照尺寸速查表顺位留池（P3；数据鲜度维护负担压级；PM 已八度跳过）；数独游戏 P3 观察维持第三席；视频提取音频 P3 弱观察维持（实时重录体验差）；反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，StrictHostKeyChecking=no 自动重建后一次成功）；本地 HEAD 2d1d61d（无损音频真伪检测已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **308**；`ls tests/*.test.js | wc -l` = **194**；本地当前分支 muse/dev-20260929；工作区除新增 `toolweb` 未跟踪二进制外干净（BACKLOG 追加前）；站内零重叠复核（`vocal`／`karaoke`／`stem_split`／`acapella`／`vocal_remov` 全 0 命中；CJK「人声」／「伴奏」／「消音」`chr(0x...)` 运行时构造 0 命中；「画板」／「涂鸦」命中验真全为 doodle_board 已交付口径；`metronome`／`tuner`／「节拍器」／「调音」全 0 命中；`video_to_audio`／`extract_audio`／「视频转音频」全 0 命中；「降噪」仅 schema_org_generator.js:211 示例文案一处；Icon `mic_off`／`music_off`／`voice_over_off` 精确值 0 命中，`music_note`／`graphic_eq` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 23:39 · PM 选定轮，接通用调研第二百三十八轮）
 
 **选定：无损音频真伪检测（lossless_audio_checker）** — 本轮唯一任务（新工具）。

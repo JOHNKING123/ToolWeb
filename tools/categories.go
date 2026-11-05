@@ -2907,6 +2907,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "vocal_remover",
+					Name:        "人声消除/伴奏提取",
+					Description: "上传/拖拽 FLAC/WAV/MP3/OGG/M4A（≤200MB）本地解码，须立体声，中心声道消除法（L-R＋一阶低通保低频 200Hz＋强度 0–100% 可调）提取伴奏或干声，双波形对比＋A/B 试听，WAV 手工编码/MP3(lamejs)本地导出，卡拉OK级非 AI 分离，纯前端零上传 · Vocal remover: center-channel elimination karaoke maker, extract instrumental or acapella locally",
+					Path:        "/tools/vocal-remover",
+					Icon:        "mic_off",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "slowed_reverb",
 					Name:        "音频变速混响生成器",
 					Description: "上传 MP3/WAV/OGG/M4A/AAC 本地解码，变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调随速度自然变化），ConvolverNode 卷积混响（程序化合成脉冲响应：怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），OfflineAudioContext 离线渲染＋进度条，A/B 对比试听，WAV 手工编码/MP3(lamejs 128–320kbps)本地导出，纯前端零上传 · Slowed+reverb generator: change speed 0.5x-1.5x, convolution reverb, offline render, A/B preview, export WAV/MP3 locally",

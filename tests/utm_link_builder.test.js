@@ -6,7 +6,7 @@
 * 空选填省略/固定顺序）、parseTaggedUrl 往返一致与 otherParams 保留、
 * mergeOtherParams（粘贴回填→改 campaign→再生成不丢其余参数）、
 * 非法参数抛错 err.field、双模式导出与零外部接口、categories.go 注册
-* （Path 总数 307→308、Icon sell 全库唯一、New/编码转换类目）、
+* （Path 总数 308→309、Icon sell 全库唯一、New/编码转换类目）、
 * 模板（SEO 五关键词、真限制四条、控件、互链、零外部资源静态检查）。
 */
 "use strict";
@@ -191,7 +191,7 @@ notHas(JS_SRC, "localStorage", "JS 零存储：不写 localStorage");
 
 /* ---------- 8. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 308, "注册 Path 总数 307→308");
+eq(pathCount, 309, "注册 Path 总数 308→309");
 has(GO_SRC, '"utm_link_builder"', "注册：ID utm_link_builder");
 has(GO_SRC, '"/tools/utm-link-builder"', "注册：Path /tools/utm-link-builder");
 has(GO_SRC, '"sell"', "注册：Icon sell");

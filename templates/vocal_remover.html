@@ -1,0 +1,237 @@
+{{define "vocal_remover"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人声消除/伴奏提取 - 在线提取伴奏/干声，免费卡拉OK伴奏制作 | 程序员工具箱</title>
+    <meta name="description" content="免费在线人声消除/伴奏提取：上传 FLAC/WAV/MP3/OGG/M4A（≤200MB），浏览器本地解码不上传；中心声道消除法（L-R＋一阶低通保低频 200Hz＋强度 0–100% 可调），伴奏/干声双模式，双波形对比＋A/B 试听，WAV 手工编码 / MP3(128-320kbps) 本地导出。纯前端、零 CDN、零后端。">
+    <meta name="keywords" content="人声消除,伴奏提取,卡拉OK伴奏,消除人声,提取伴奏,人声分离,干声提取,伴奏制作,在线去人声,中央声道消除">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/vocal-remover">
+    <meta property="og:title" content="人声消除/伴奏提取 - 在线提取伴奏/干声，免费卡拉OK伴奏制作">
+    <meta property="og:description" content="中心声道消除法提取伴奏或干声：强度 0–100% 可调，保低频 200Hz，A/B 试听，双波形对比，WAV/MP3 本地导出，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/vocal-remover">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"人声消除/伴奏提取","description":"人声消除/伴奏提取工具：本地解码 FLAC/WAV/MP3/OGG/M4A，中心声道消除法（L-R＋一阶低通保低频 200Hz＋强度 0–100% 可调），伴奏/干声双模式，双波形对比，A/B 试听，WAV/MP3 本地导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/vocal-remover","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .vr-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .vr-wrap .navbar .material-icons { display: none; }
+        .vr-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .vr-privacy .vr-lock { font-size: 1.6rem; flex: none; }
+        .vr-privacy b { color: #047857; }
+        .vr-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .vr-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .vr-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .vr-upload:hover, .vr-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .vr-upload .vr-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .vr-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .vr-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .vr-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .vr-row label { font-size: .92rem; color: #374151; }
+        .vr-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .vr-btn:hover { filter: brightness(.93); }
+        .vr-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .vr-btn-ghost { background: #fff; color: var(--primary-color); }
+        .vr-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .vr-mode { display: flex; gap: .6rem; flex-wrap: wrap; }
+        .vr-mode label { display: inline-flex; gap: .4rem; align-items: center; border: 1px solid #d1d5db;
+            border-radius: .6rem; padding: .55rem .9rem; cursor: pointer; background: #fff; font-size: .92rem; }
+        .vr-mode input:checked + span { font-weight: 700; color: var(--primary-color); }
+        .vr-mode label:has(input:checked) { border-color: var(--primary-color); background: #eff6ff; }
+        .vr-val { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--primary-color);
+            font-size: 1.05rem; min-width: 3.5em; display: inline-block; }
+        input[type=range].vr-slider { flex: 1; min-width: 180px; accent-color: var(--primary-color); }
+        .vr-wave { width: 100%; height: 90px; border: 1px solid #e5e7eb; border-radius: .5rem; display: block; }
+        .vr-wave-label { font-size: .85rem; color: #6b7280; margin: .5rem 0 .2rem; }
+        .vr-export-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
+        .vr-export-row select { padding: .5rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .9rem; }
+        .vr-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .vr-doc b { color: #111827; }
+        .vr-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .vr-limits { font-size: .9rem; color: #7c2d12; line-height: 2; background: #fff7ed; border: 1px solid #fed7aa;
+            border-radius: .8rem; padding: .9rem 1.1rem; }
+        .vr-limits b { color: #9a3412; }
+        .vr-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .vr-combo b { color: #111827; }
+        .vr-combo a { color: var(--primary-color); }
+        .vr-faq dt { font-weight: 700; color: #111827; margin: .9rem 0 .3rem; font-size: .95rem; }
+        .vr-faq dd { margin: 0; color: #4b5563; line-height: 1.9; font-size: .92rem; }
+        .vr-faq dd code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .vr-related { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .4rem; align-items: center; }
+        @media (max-width: 640px) {
+            .vr-wrap .container { padding: 1rem .7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="vr-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎤 人声消除 / 伴奏提取</h1>
+            <p>中心声道消除法：把立体声歌曲里居中的人声消掉做伴奏，或反过来只留中央声道听干声</p>
+        </div>
+
+        <div class="vr-privacy">
+            <span class="vr-lock">🔒</span>
+            <div><b>隐私承诺：音频只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、<code>decodeAudioData</code> 本地解码、中心声道消除/提取、双波形对比、A/B 试听、WAV/MP3 编码导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 MP3 编码器 lamejs 也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 上传的音频不会产生一次网络请求。刷新页面后音频不恢复（不做任何本地存储）。</div>
+        </div>
+
+        <div class="vr-panel">
+            <h3>1️⃣ 上传音频（须立体声）</h3>
+            <div class="vr-upload" id="vr-upload" role="button" tabindex="0" aria-label="点击选择或拖拽音频文件到此处上传">
+                <span class="vr-big">🎵</span>
+                <div>点击选择音频，或把音频文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 FLAC / WAV / MP3 / OGG / M4A（≤200MB）｜ 必须是立体声文件，单声道无法处理</div>
+            </div>
+            <input type="file" id="vr-file" accept="audio/flac,audio/wav,audio/x-wav,audio/mpeg,audio/ogg,audio/mp4,audio/x-m4a,.flac,.wav,.mp3,.ogg,.oga,.m4a" style="display:none;">
+            <div class="vr-info" id="vr-srcinfo" style="display:none;"></div>
+            <div class="vr-status" id="vr-status"></div>
+        </div>
+
+        <div class="vr-panel" id="vr-panel-params" style="display:none;">
+            <h3>2️⃣ 选择模式与强度</h3>
+            <div class="vr-row">
+                <label><b>🎛️ 模式</b></label>
+                <div class="vr-mode">
+                    <label><input type="radio" name="vr-mode" id="vr-mode-karaoke" checked><span>🎤 伴奏模式：消除居中人声，留伴奏</span></label>
+                    <label><input type="radio" name="vr-mode" id="vr-mode-vocal"><span>🗣️ 干声模式：只留中央声道（人声干声）</span></label>
+                </div>
+            </div>
+            <div class="vr-row">
+                <label><b>🎚️ 消除强度</b></label>
+                <input type="range" class="vr-slider" id="vr-strength" min="0" max="100" step="1" value="100" aria-label="消除强度">
+                <span class="vr-val" id="vr-strength-val">100%</span>
+            </div>
+            <div class="vr-info">强度 0% = 原样直通；100% = 居中成分全消。强度越低人声残留越多、伴奏损失越小；居中乐器也会随强度一起被削弱。</div>
+            <div class="vr-row">
+                <label><input type="checkbox" id="vr-keep-bass" checked> <b>🎵 保低频（推荐开）</b></label>
+                <span class="vr-info" style="margin-top:0;">一阶低通 200Hz：200Hz 以下的居中成分（底鼓、贝斯根音）保留在伴奏里，伴奏不发空。</span>
+            </div>
+            <div class="vr-info" id="vr-export-filename" style="margin-top:.6rem;"></div>
+        </div>
+
+        <div class="vr-panel" id="vr-panel-process" style="display:none;">
+            <h3>3️⃣ 生成伴奏 / 干声</h3>
+            <div class="vr-row">
+                <button class="vr-btn" id="vr-process">⚙️ 生成伴奏 / 干声</button>
+                <span class="vr-info">纯采样运算在浏览器内完成，长音频也只需数秒</span>
+            </div>
+            <div class="vr-status" id="vr-process-status"></div>
+        </div>
+
+        <div class="vr-panel" id="vr-panel-wave" style="display:none;">
+            <h3>4️⃣ 双波形对比</h3>
+            <div class="vr-wave-label">原音频（灰）</div>
+            <canvas class="vr-wave" id="vr-wave-orig" width="1000" height="90"></canvas>
+            <div class="vr-wave-label">处理结果（蓝）</div>
+            <canvas class="vr-wave" id="vr-wave-result" width="1000" height="90"></canvas>
+            <div class="vr-info" id="vr-wave-note"></div>
+        </div>
+
+        <div class="vr-panel" id="vr-panel-preview" style="display:none;">
+            <h3>5️⃣ A/B 对比试听</h3>
+            <div class="vr-row">
+                <button class="vr-btn vr-btn-ghost" id="vr-play-orig">▶ 播放原音频</button>
+                <button class="vr-btn" id="vr-play-result">▶ 播放处理结果</button>
+                <button class="vr-btn vr-btn-stop" id="vr-stop-play" disabled>⏹ 停止</button>
+            </div>
+            <div class="vr-status" id="vr-play-status"></div>
+        </div>
+
+        <div class="vr-panel" id="vr-panel-export" style="display:none;">
+            <h3>6️⃣ 导出</h3>
+            <div class="vr-export-row">
+                <button class="vr-btn" id="vr-export-wav">⬇️ 导出 WAV</button>
+                <button class="vr-btn" id="vr-export-mp3">⬇️ 导出 MP3</button>
+                <label>MP3 比特率：
+                    <select id="vr-bitrate">
+                        <option value="128" selected>128 kbps（推荐）</option>
+                        <option value="192">192 kbps（高音质）</option>
+                        <option value="320">320 kbps（最高）</option>
+                    </select>
+                </label>
+            </div>
+            <div class="vr-info">WAV 为手工编码的 16-bit PCM 无损导出；MP3 由本地 vendor 的 lamejs 编码（离线可用）。文件名自动后缀，无需手动命名。</div>
+            <div class="vr-status" id="vr-export-status"></div>
+            <div class="vr-row" style="margin-top:1rem;">
+                <button class="vr-btn vr-btn-ghost" id="vr-reupload">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <div class="vr-panel">
+            <h3>⚠️ 真限制：先看再用，别对效果抱错期待</h3>
+            <div class="vr-limits">
+                <b>① 卡拉OK级消除，非 AI 分离：</b>本工具是中心声道消除法（L−R），只能削弱混音正中央的人声，效果远不及 AI 音轨分离模型；追求干净人声/伴奏请用专业 AI 分离工具。<br>
+                <b>② 仅立体声＋居中人声有效：</b>单声道文件无法处理（左右声道相同则无差值可算）；偏左/偏右的人声、带宽混响的人声消不干净。<br>
+                <b>③ 混响/和声/居中乐器残留：</b>人声混响尾音、和声、以及底鼓/贝斯/军鼓等居中乐器会残留；保低频开启时 200Hz 以下居中成分是刻意保留的。<br>
+                <b>④ 全程本地零上传：</b>文件只在你的浏览器里处理，不上传服务器；刷新页面后音频不恢复。
+            </div>
+        </div>
+
+        <div class="vr-combo">
+            <b>🎧 「音频旅程线」组合：</b>伴奏做好了想剪掉前后多余部分？去 <a href="/tools/audio-trimmer">在线音频裁剪器</a> 框选裁剪；想给伴奏加 Slowed 变速＋混响氛围？去 <a href="/tools/slowed-reverb">音频变速混响生成器</a> 一键生成 —— 消除人声 → 裁剪 → 混响，一套流程走完。
+        </div>
+
+        <div class="vr-panel">
+            <h3>使用说明</h3>
+            <div class="vr-doc">
+                <b>解码：</b>文件经 <code>FileReader</code> 读入 ArrayBuffer 后，用 Web Audio API 的 <code>decodeAudioData</code> 在浏览器本地解码为 AudioBuffer（FLAC/WAV/MP3/OGG/M4A 是否支持取决于浏览器解码器）。<br>
+                <b>立体声校验：</b>解码后先校验声道数：单声道文件会明确报错并拒绝处理，因为中心声道消除依赖左右声道的差值。<br>
+                <b>伴奏模式：</b>逐采样算中央声道 <code>mid=(L+R)/2</code>，输出 <code>out=L/R − s·mid</code>（s 为强度 0–100%）。强度 100% 时完全居中的成分被全消；强度 50% 时居中成分剩一半。<br>
+                <b>干声模式：</b>直接输出中央声道 <code>mid=(L+R)/2</code>（双声道同值），即混音正中央的声音 —— 主唱干声加居中乐器。<br>
+                <b>保低频：</b>开启时先对 <code>mid</code> 做一阶低通（截止 200Hz），只消除 <code>mid</code> 的高通部分；200Hz 以下的居中成分保留在伴奏里，伴奏不发空。关闭则全频段消除。<br>
+                <b>波形：</b>上下两条 canvas 分别画原音频与处理结果的峰值波形，居中人声被消除后波形峰值应明显变矮。<br>
+                <b>试听：</b>A/B 对比 —— 「播放原音频」与「播放处理结果」一键切换，确认满意再导出。<br>
+                <b>导出：</b>WAV 为手工编码的 16-bit PCM（44 字节标准头）；MP3 经本地 lamejs 编码（重采样到 44100Hz，128/192/320kbps 可选，长音频分块编码不卡死页面）。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、消除/提取、试听、编码、下载都在你的浏览器里完成，可在 DevTools Network 面板验证；刷新页面后音频不恢复。
+            </div>
+        </div>
+
+        <div class="vr-panel">
+            <h3>❓ 常见问题</h3>
+            <dl class="vr-faq">
+                <dt>为什么是“卡拉OK级”而不是完全干净的伴奏？</dt>
+                <dd>中心声道消除法只利用“人声在混音正中央、左右声道相同”这一条规律：<code>out = L − mid</code> 能把完全居中的成分消掉，但人声的混响、和声、立体声展宽部分不在正中央，消不掉；底鼓、贝斯等居中乐器也会一起被削弱。想要接近原版伴奏的干净程度，需要 AI 音轨分离模型。</dd>
+                <dt>单声道音频为什么不能处理？</dt>
+                <dd>单声道左右声道完全相同，<code>L−R</code> 处处为零，中心声道消除法没有差值可用。本工具解码后会明确报错，请换一首立体声歌曲。</dd>
+                <dt>保低频开关有什么用？</dt>
+                <dd>人声主要能量在 300Hz 以上，底鼓和贝斯根音在 200Hz 以下。开启保低频后，200Hz 以下的居中成分不参与消除，伴奏的低频骨架得以保留，听感不发空；代价是这段频带里的人声低频成分也会残留一点。</dd>
+                <dt>强度调到多少合适？</dt>
+                <dd>先试 100%：居中人声消得最干净，但居中乐器损失也最大。如果伴奏听起来太“空”或乐器发虚，把强度降到 70–85%，在人声残留和伴奏完整度之间取舍。强度 0% 等于原样直通。</dd>
+                <dt>干声模式得到的是纯人声吗？</dt>
+                <dd>不是。干声模式输出的是混音正中央的全部声音：主唱人声 plus 底鼓、贝斯、军鼓等居中乐器。它适合用来听人声细节、练唱或做采样素材，不等于 AI 分离出的纯净人声音轨。</dd>
+                <dt>导出的文件叫什么名字？</dt>
+                <dd>自动命名为「原文件名_vocal-{karaoke|vocal}_{强度}%.扩展名」，例如 <code>夜曲_vocal-karaoke_100.mp3</code>。如需其他名字，下载后重命名即可。</dd>
+            </dl>
+        </div>
+
+        <div class="vr-panel">
+            <h3>🔗 相关工具</h3>
+            <div class="vr-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">人声消除/伴奏提取（当前）</span>
+                <a href="/tools/audio-trimmer" class="btn btn-secondary" style="font-size:.9rem;">在线音频裁剪器</a>
+                <a href="/tools/slowed-reverb" class="btn btn-secondary" style="font-size:.9rem;">音频变速混响生成器</a>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/lamejs.min.js?v=1"></script>
+    <script src="/tools/static/js/vocal_remover.js?v=1"></script>
+</body>
+</html>
+{{end}}

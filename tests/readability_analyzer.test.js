@@ -112,7 +112,7 @@ var regBlock = GO_SRC.split("\"readability_analyzer\"")[1].split("},")[0];
 has(regBlock, "Category:    \"文本工具\"", "注册：Category 文本工具");
 has(regBlock, "New:         true", "注册：New: true");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 308, "注册：Path 总数 307→308");
+eq(pathCount, 309, "注册：Path 总数 308→309");
 notHas(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), "/tools/readability-analyzer\", \"/tools/readability-analyzer", "注册：Path 无重复");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");

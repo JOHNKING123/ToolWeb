@@ -144,7 +144,7 @@ eq(M.sanitizeFileName('..data..'), 'data', "文件名：首尾点清理");
 has(GO_SRC, '"csv_editor"', "注册：ID csv_editor");
 has(GO_SRC, '"/tools/csv-editor"', "注册：Path /tools/csv-editor");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 308, "注册：Path 总数 295→296");
+eq(pathCount, 309, "注册：Path 总数 295→296");
 has(GO_SRC, '"table_edit"', "注册：Icon table_edit");
 eq((GO_SRC.match(/Icon:\s*"table_edit"/g) || []).length, 1, "注册：Icon table_edit 全库唯一");
 has(GO_SRC, '"格式转换"', "注册：类目 格式转换");
