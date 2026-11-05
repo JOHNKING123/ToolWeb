@@ -1,3 +1,96 @@
+## 今日任务（2026-11-05 15:37 · PM 选定轮，接通用调研第二百三十四轮）
+
+**选定：密码强度检测（password_strength_checker）** — 本轮唯一任务（新工具）。
+
+**顺位**：234 轮 Top3 第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第四度裁定跳过**（沿用 231/232/233 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户，与年假数据表同类负债；首席顺位留池，不冻结）。次席年假拼假优化器 → PM **第十九度裁定跳过**（触发器仍未满足：2027 年放假安排国务院官方通知截至 2026-11-03 仍未发布）。本项无数据表负债、无年更新负担、无外部接口依赖，一天可高质量交付，硬依据如下：
+1. **密码安全簇闭环**：密码泄露查询本轮已交付（806cbff）＋密码生成器在站；强度检测补齐「生成／强度／泄露」三件套，站内形成「测强度→去生成→查泄露」闭环。
+2. **需求验证**：用户输入任意密码即可自查强度，是密码生成器与泄露查询之间的缺失一环；弱密码给出逐项改进建议，直接导向生成器换新密码。
+3. **无硬伤**：纯前端小难度（字符集检测＋熵值＋弱模式识别＋破解时间估算，零上传、零外部接口）；无数据表维护负担。
+4. **口径互补确凿**：站内密码相关工具为 password 生成器（生成口径，内联强度条仅为生成密码的附属展示）与 password_breach_checker（泄露查询口径）、totp_generator（动态码口径）；本工具为**独立检测口径**，互补不重叠。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`password_strength`／`password-strength` 全站（tools/templates/static/js/tests，vendor 排除，BACKLOG.md 除外）**0 命中**；`passwordStrength` 仅 static/js/pdf-encrypt.js 内 PDF 用户密码内部函数（196/467 行）；`strength_checker`／`strength-checker`／`strengthChecker` 三形态 **0 命中**——独立检测工具本体 0 交付，真缺口确凿。
+   - CJK「密码强度」（`chr(0x5bc6)+chr(0x7801)+chr(0x5f3a)+chr(0x5ea6)` 运行时构造，codepoint 验真）7 命中全为 password_generator 内联强度条文案（categories.go 描述、模板 meta/强度条、熵值显示）与 pdf_encrypt 提示语——**独立检测工具本体 0 交付**，真缺口确凿。
+   - 与生成器内联强度条的口径差异已划清：生成器条只对**刚生成的密码**按长度×log2(字符集大小)给 3 级标签；本工具分析**用户任意输入密码**，字符集按实际出现字符检测＋弱模式扣分（常见密码／连续／重复／键盘序列）＋破解时间估算＋逐项检查清单与改进建议，5 级评分制——算法与输出均不同，不构成重复。
+   - Icon：**`gauge`（首选；`Icon:\s*"gauge"` 精确值 **0 命中**，全库唯一，贴合「仪表盘测强度」语义；备选 `signal_cellular_alt`／`fitness_center` 亦 0 命中；`speed` 占用 1、`shield`／`security` 已被占用，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM 第四度裁定跳过：数据鲜度维护负担；首席顺位留池递进）／年假拼假优化器（PM 第十九度裁定跳过条件维持：2027 年放假安排仍未公布；触发器：官方通知发布后下一轮调研确认即立项）／字体搭配预览（P3 观察维持）／数独游戏（P3 观察维持；游戏非工具）／反应速度测试／X 视频转 GIF（P3 弱观察维持）／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 密码输入框（type=password，autocomplete=off；不保存、不进 URL、不写 localStorage；查完一键清除；不提供复制密码按钮；显示/隐藏切换）② 实时检测：长度、字符集（小写/大写/数字/符号按实际出现字符检测）、熵值 bits、0–100 评分＋5 级（极弱/弱/一般/强/极强）、破解时间估算（离线 10^10 次/秒假设，页面明示假设）③ 弱模式识别：常见密码内置小表（password/123456/qwerty 等，命中即警告）、连续字符（abc/123）、重复字符（aaa/111）、键盘序列（qwerty/asdf）、纯数字/纯字母等 ④ 逐项检查清单（每项通过/未通过）＋逐项改进建议 ⑤ 弱密码时互链站内密码生成器（去生成新密码）与密码泄露查询（查一下是否已泄露）⑥ 全程浏览器本地计算，零上传、零外部接口 ⑦ 无障碍（tab 聚焦可操作、动画可减弱）⑧ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.PasswordStrengthChecker 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `detectCharset(password)` → {size, classes:{lower,upper,digit,symbol}}（password 非字符串或空 err.field='password'；size 为实际出现字符类对应的字符集大小，如小写 26/大写 26/数字 10/符号 33）。
+  - `calcEntropyBits(password)` → number（长度 × log2(检测到的字符集大小)；password 非法 err.field='password'）。
+  - `isCommonPassword(password)` → boolean（内置常见密码表，大小写不敏感；password 非字符串 err.field='password'）。
+  - `detectWeakPatterns(password)` → string[]（命中模式码集合，如 'repeat'/'sequence'/'keyboard'/'only-digits'/'only-letters'；无命中返回 []；password 非法 err.field='password'）。
+  - `estimateCrackSeconds(bits)` → number（猜测次数 2^bits ÷ 1e10 次/秒；bits 非非负有限数 err.field='bits'）。
+  - `formatDuration(seconds)` → string（秒→分钟/小时/天/年/世纪等人话时长；seconds 非法 err.field='seconds'）。
+  - `classifyStrength(score)` → 'very-weak'|'weak'|'medium'|'strong'|'very-strong'（score 非 0–100 数 err.field='score'；边界 0–19/20–39/40–59/60–79/80–100）。
+  - `scorePassword(password)` → {score, level, bits, crackSeconds, checks:[{id,label,passed}], suggestions:[string]}（组合上述函数：基础分按熵值，常见密码直接封顶极弱，弱模式逐项扣分；password 非法 err.field='password'）。
+  - `buildSuggestions(checks, patterns, isCommon)` → string[]（按未通过项与命中模式逐条给建议；参数非法 err.field 给出字段名）。
+- **真限制四条页面明示**：① 熵值与破解时间是基于字符集与离线猜测速率假设的估算，真实破解速度因攻击手段而异；② 本工具只评估密码本身的强度，不验证该密码是否已被泄露（去泄露查询查）；③ 强度高不等于绝对安全：同一密码多处复用、钓鱼、社工仍可导致被盗；④ 本页不记录、不上传、不保存任何密码，关闭即清除。
+- **SEO**：密码强度检测、密码强度测试、密码安全吗、密码熵值计算。
+- **改动文件**：tools/categories.go（「加密解密」类目新增 password_strength_checker 条目，Path 303→**304**，Icon `gauge` 首选，开发轮精确值复测锁定全库唯一）／templates/password_strength_checker.html（新）／static/js/password_strength_checker.js（新）／tests/password_strength_checker.test.js（新）／全量旧 tests Path 断言 303→304 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（detectCharset 各字符类组合精确值；calcEntropyBits 精确值；isCommonPassword 命中/未命中精确值；detectWeakPatterns 各模式精确值；estimateCrackSeconds/formatDuration 精确值；classifyStrength 五级边界精确值；scorePassword 组合分/等级精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 189→**190** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/password-strength-checker 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：`password` 判极弱＋常见密码警告、`123456` 判极弱、16 位混合随机密码判强/极强并给出熵值与破解时长、检查清单与改进建议渲染正常、弱密码互链生成器与泄露查询可用（开发轮记录；手工验证不得用真实个人密码）。
+- **品类归位**：注册到「加密解密」类目（与 password 生成器／password_breach_checker／totp_generator 同类目，互补口径）；New: true；开发轮按模板惯例与 password 生成器、密码泄露查询双向互链（测出弱 → 去生成；想查泄露 → 去泄露查询）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：密码强度检测→本轮交付（234 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第四度跳过（数据表负债从严，231/232/233 轮逻辑沿用）、次席年假第十九度跳过（触发器未满足）；密码安全簇闭环论据；零重叠复核确凿（ASCII password_strength/password-strength/strength_checker 三形态 0 命中＋CJK「密码强度」7 命中验真全为生成器内联强度条文案）；加密解密类目；Icon `gauge` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担）／年假拼假优化器→触发器待命维持（PM 第十九度跳过条件：2027 放假安排未公布）／字体搭配预览／数独游戏→P3 观察维持／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD 806cbff＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **303**；`ls tests/*.test.js | wc -l` = **189**；PM 独立零重叠复核（ASCII password_strength/password-strength 全 0 命中，passwordStrength 仅 pdf-encrypt.js 内部函数，strength_checker 三形态 0 命中；CJK「密码强度」`chr(0x5bc6)+chr(0x7801)+chr(0x5f3a)+chr(0x5ea6)` 运行时构造 7 命中验真全为 password_generator 内联强度条文案与 pdf_encrypt 提示语；`Icon:\s*"gauge"` 精确值 0 命中、`speed` 占用 1、`shield`/`security` 已被占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 15:00 · 产品调研推荐，第二百三十四轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：密码泄露查询（k-匿名版）已交付闭环（806cbff 新增：`/tools/password-breach-checker`，Path 总数 302→**303**，tests **189 个**），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位递进首席。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已第三度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **年假拼假优化器** — 顺位次席，**触发器仍未满足**：2027 年放假安排国务院官方通知截至 2026-11-03 仍未发布（凤凰网／腾讯新闻／fubaba.org 多源一致确认“翻遍国务院办公厅官网仍未挂出”；中国政府网检索“2027年部分节假日安排”0 条；2024 年官方解读举例的“2027 春节连休 9 天”仅为调休规则举例 ≠ 正式通知；近三年通知发布日分别为 2023-10-25、2024-11-12、2025-11-04）。硬伤维持（调休数据表年更新负担）；PM 按惯例可裁定第十九度跳过；触发器：官方通知发布后下一轮调研确认即立项。
+3. **密码强度检测** — P3 观察递进第三席。**新论据：密码安全簇闭环**——password_breach_checker 本轮已交付（806cbff），password 生成器在站；强度检测补齐「生成／强度／泄露」三件套，站内可形成「测强度→去生成→查泄露」闭环。零重叠本轮复核确凿：ASCII `password_strength`／`password-strength` 全站 **0 命中**，`passwordStrength` 仅 static/js/pdf-encrypt.js 内 PDF 用户密码内部函数；CJK「密码强度」（`chr(0x5bc6)+chr(0x7801)+chr(0x5f3a)+chr(0x5ea6)` 运行时构造＋codepoint 验真）7 命中全为 password_generator 内联强度条文案与 pdf_encrypt 提示语——**独立检测工具本体 0 交付**，真缺口确凿。实现纯前端小难度（熵值 bits＋破解时间估算＋常见弱密码提示＋逐项改进建议，零上传；与生成器内联强度条的差异化：独立页给熵值/破解时长/逐项扣分建议）。**弱点**：信号时效弱（dev.to OmniTools 9 月 Password Entropy Calculator）＋需与生成器内联强度条做出口径差异。SEO：密码强度检测、密码强度测试、密码安全吗。建议 ID password_strength_checker、Path /tools/password-strength-checker；Icon `gauge` 首选（精确值 **0 命中**，备选 `signal_cellular_alt`／`fitness_center` 亦 0 命中；`speed` 占用 1、`shield`／`security` 已被占用，不可取），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位递进首席；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已第三度跳过 | 小 | P3（顺位；压级） |
+| 年假拼假优化器 | **触发器未满足**：2027 年放假安排官方通知截至 11-03 仍未发布；硬伤维持（调休数据表年更新负担）；PM 可裁定第十九度跳过 | 小 | P1（冻结；触发器待命中） |
+| 密码强度检测 | P3 观察递进第三席：密码安全簇闭环（泄露查询本轮已交付＋生成器在站）；站内本体 0 交付（ASCII 三形态 0 命中／CJK 7 命中验真全为内联强度条文案）；纯前端小难度零上传；**弱点**：信号时效弱＋需与生成器内联强度条做出口径差异 | 小 | P3（新晋第三席） |
+| 字体搭配预览（Fontjoy 模式） | P3 观察维持；YouTube 11-04 Fontjoy 独立信号；站内 font_pair/「字体搭配」全 0 命中；**弱点**：需求频率中等＋Web 字体受限；Top3 顺位被密码强度检测（簇闭环）取代 | 小 | P3（观察） |
+| 数独游戏 | 新晋 P3 观察：Tooleek（Product Hunt 10-08）收录；ASCII `sudoku` 全站 **0 命中**，CJK「数独」2 命中经 codepoint 验真全为 css_background_pattern_generator 的图案预设名，游戏本体 0 交付；纯前端小难度（出题／验算／提示／计时）；**弱点**：游戏非工具，定位偏离工具站 | 小 | P3（观察；新晋） |
+| 反应速度测试 | 新晋 P3 弱观察：Tooleek 信号；ASCII `reaction`／CJK「反应速度」全站 **0 命中**；纯前端极小难度（点击计时＋多次平均＋排行榜本地存）；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察；新晋） |
+| X 视频转 GIF | 新晋 P3 弱观察：V2EX 11-04 twittergif.com（浏览器内 ffmpeg.wasm，粘贴 X 帖子链接转 GIF）；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险），与短链追踪同类弱点；站内 gif_maker 为本地视频转 GIF 口径 | 中 | P3（弱观察；新晋） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个，Icon `gpp_bad` 全库唯一） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 13:38~15:00 窗口；本轮**新晋 1 第三席＋1 P3 观察＋2 P3 弱观察**）：
+- Medium 10-18「7 Free Browser Tools Worth Bookmarking This October」→ SyncWhen（组队约时间投票，需服务端链接分享，消解）／SortaSeat（站内 wedding_seating_chart 形态印证）／OldRoll（站内 img-retro-filter 形态印证）／StitchCraft（站内 cross-stitch-pattern 形态印证）／urPiano（站内 online-piano 形态印证）／Calcy（站内 unit-calc-notepad 形态印证）／llmspeed（硬件/AI 口径消解）——全数消解，零新晋。
+- Tooleek（Product Hunt 10-08，免注册本地工具＋小游戏）→ PDF 合并/拆分/压缩、图片转换压缩（HEIC）、二维码、计时器、单位换算、字符计数、打字测试全为站内形态印证；**数独＋反应速度测试为真缺口**（ASCII/CJK 双 0 命中验真）→ 新晋 P3 观察／P3 弱观察。
+- V2EX 11-04：X 视频转 GIF（twittergif.com，浏览器内 ffmpeg.wasm）→ 需服务端查视频地址，P3 弱观察新晋；xGoose AI Agent 插件／Event Horizon 网页感知 MCP／VVAE → 插件/AI 平台口径消解；waifu2x → AI 模型口径消解。
+- twelve.tools 11-01~11-04 新品（Extractune 人声分离／Spectro for Mac／ESDecode／Day One Dev／LaunchShelf 等）→ AI 模型/桌面应用/目录/市场口径消解（Extractune 人声分离需 AI 模型，与视频转 SRT 同类 vendor 冲突）。
+- LocalFirstTools／ToolKnit（58 工具零后端）／Zovixia（100+ 工具）dev.to 10 月 → JSON/YAML/CSV 转换、JWT、cron、text-diff、密码生成、PDF 合并拆分、图片压缩等全为站内形态印证，零新晋。
+- techtippr 11 月「Best Free Online Tools」→ Photopea/Remove.bg/iLovePDF/Canva/WeTransfer 平台口径消解。
+- Product Hunt 11-04 当日榜（PasteGuard／Sendu／Videco 等）→ 桌面/AI/P2P 口径消解。
+- 2027 年放假安排：国务院官方通知**截至 2026-11-03 仍未发布**（凤凰网／腾讯新闻／fubaba.org 多源一致；中国政府网检索“2027年部分节假日安排”0 条；2024 年解读“2027 春节 9 天”仅为举例）→ 年假拼假优化器触发器未满足，PM 第十九度跳过条件维持。
+
+**候选池变动**：password_breach_checker 交付划出（806cbff，303 Path，189 tests）；**年假拼假优化器触发器未满足**（2027 官方通知截至 11-03 未发布；PM 第十九度跳过条件维持；触发器：官方通知发布后下一轮调研确认即立项）；**社媒/证件照尺寸速查表顺位递进首席**（P3；数据鲜度维护负担压级；PM 已第三度跳过）；**新晋第三席 1 个**（密码强度检测：密码安全簇闭环＋站内本体 0 交付＋纯前端小难度；Icon `gauge` 首选 0 命中）；**新晋 P3 观察 1 个**（数独游戏：Tooleek 信号＋ASCII/CJK 验真真缺口；弱点为游戏非工具）；**新晋 P3 弱观察 2 个**（反应速度测试：Tooleek 信号＋双 0 命中；X 视频转 GIF：V2EX 11-04 信号＋需服务端查视频地址）；字体搭配预览 P3 观察维持（Top3 顺位被密码强度检测取代）；3D 模型预览器 P3 观察维持；英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；**远端无新提交**（本地 HEAD 806cbff＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **303**；`ls tests/*.test.js | wc -l` = **189**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改，BACKLOG 追加前）；站内零重叠复核（`sudoku` ASCII 全 0 命中，CJK「数独」2 命中 codepoint 验真全为 css_background_pattern_generator 图案预设名；`reaction` ASCII／「反应速度」CJK 全 0 命中；`password_strength`／`password-strength` 全 0 命中，`passwordStrength` 仅 pdf-encrypt.js 内部函数，CJK「密码强度」7 命中验真全为 password_generator 内联强度条文案与 pdf_encrypt 提示语；Icon `gauge`／`signal_cellular_alt`／`fitness_center` 精确值 0 命中，`speed` 占用 1、`timer` 占用 1、`shield`／`security` 已被占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 13:38 · PM 选定轮，接通用调研第二百三十三轮）
 
 **选定：密码泄露查询（k-匿名版）（password_breach_checker）** — 本轮唯一任务（新工具）。

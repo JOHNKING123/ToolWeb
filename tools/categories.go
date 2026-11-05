@@ -2222,6 +2222,15 @@ func GetCategories() []Category {
 					Category:    "加密解密",
 				},
 				{
+					ID:          "password_strength_checker",
+					Name:        "密码强度检测",
+					Description: "测任意密码强度：按实际出现字符算字符集与熵值，0–100 评分＋五级强度，估算离线破解时间，识别常见密码、连续/重复/键盘序列等弱模式，逐项检查清单与改进建议，全程浏览器本地计算零上传 · Password strength checker: entropy from detected charset, 0–100 score, crack-time estimate and weak-pattern detection, 100% client-side",
+					Path:        "/tools/password-strength-checker",
+					Icon:        "gauge",
+					New:         true,
+					Category:    "加密解密",
+				},
+				{
 					ID:          "totp_generator",
 					Name:        "TOTP 一次性密码生成器",
 					Description: "粘贴 Base32 密钥，按 RFC 6238（HMAC-SHA1、30 秒周期）在浏览器本地算出当前 6/8 位动态码，附剩余有效秒倒计时与一键复制，纯前端零上传、不保存密钥 · TOTP generator: compute current time-based one-time password from a Base32 secret in your browser, RFC 6238 HMAC-SHA1 30s period, 100% client-side",
