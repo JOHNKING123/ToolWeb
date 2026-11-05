@@ -189,7 +189,7 @@ function formatDuration(seconds) {
 function recordingFilename(base) {
     var name = String(base || '').trim();
     var dot = name.lastIndexOf('.');
-    if (dot > 0) name = name.slice(0, dot);
+    if (dot >= 0) name = name.slice(0, dot);
     name = name.replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || 'audio';
     return name + '-visualizer.webm';
 }
@@ -450,7 +450,11 @@ function toggleMic() {
     if (state.micStream) {
         stopMic();
         setMicStatus('⏹ 麦克风已停止');
-        if (!state.buffer) {
+        if (state.buffer) {
+            // 回归①：startMic 曾隐藏播放面板；停止麦克风后若已加载文件须恢复，
+            // 否则播放/进度/音量面板永久消失，只能重新上传
+            el.panel_player.style.display = 'block';
+        } else {
             el.panel_controls.style.display = 'none';
             el.panel_record.style.display = 'none';
         }
@@ -658,8 +662,16 @@ function startRecording() {
 }
 
 function stopRecording(silent) {
-    if (state.recorder && state.recording) {
-        try { state.recorder.stop(); } catch (e) {}
+    if (state.recorder) {
+        if (silent) {
+            // 回归②：丢弃录制（重新上传）时先置空回调再 stop，否则异步 onstop
+            // 仍会无条件 downloadBlob，误下一段不完整的 WebM
+            state.recorder.ondataavailable = null;
+            state.recorder.onstop = null;
+        }
+        if (state.recording) {
+            try { state.recorder.stop(); } catch (e) {}
+        }
     }
     state.recorder = null;
     state.recording = false;
@@ -668,7 +680,9 @@ function stopRecording(silent) {
 }
 
 function takeScreenshot() {
-    if (!state.actx) { setShotStatus('❌ 请先上传音频或接入麦克风'); return; }
+    // 须有真实音源（已加载文件或麦克风接入中）才允许截图；resetAll 后 actx
+    // 仍存在，只判 actx 会误下一张空白待机帧 PNG
+    if (!state.actx || (!state.buffer && !state.micStream)) { setShotStatus('❌ 请先上传音频或接入麦克风'); return; }
     el.canvas.toBlob(function (blob) {
         if (!blob) { setShotStatus('❌ 截图失败'); return; }
         var base = (state.fileBase || 'mic').replace(/[\\/:*?"<>|]/g, '_');
@@ -727,6 +741,15 @@ function init() {
     el.seek.addEventListener('click', function (ev) {
         var rect = el.seek.getBoundingClientRect();
         seekTo((ev.clientX - rect.left) / rect.width);
+    });
+    // 进度条 role="slider" 须支持键盘：←/→ ±5 秒，Home/End 跳到首尾
+    el.seek.addEventListener('keydown', function (ev) {
+        if (!state.buffer) return;
+        var pos = currentPosition();
+        if (ev.key === 'ArrowLeft') { ev.preventDefault(); seekTo((pos - 5) / state.buffer.duration); }
+        else if (ev.key === 'ArrowRight') { ev.preventDefault(); seekTo((pos + 5) / state.buffer.duration); }
+        else if (ev.key === 'Home') { ev.preventDefault(); seekTo(0); }
+        else if (ev.key === 'End') { ev.preventDefault(); seekTo(1); }
     });
     el.volume.addEventListener('input', function () {
         state.volume = parseInt(el.volume.value, 10) / 100;

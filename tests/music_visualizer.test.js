@@ -6,7 +6,9 @@
 * 全 128→y=height/2、顶底锚点、x 均匀分布）、formatDuration（三档：0→0:00、65→1:05、
 * 3599→59:59）、recordingFilename（去扩展名＋-visualizer.webm）、非法参数 err.field、
 * categories.go 注册（Path 总数 309→310、Icon equalizer 全库唯一、紧邻 vocal_remover）、
-* 模板（SEO 五关键词、真限制三条、控件、互链、零外部资源静态检查）。
+* 模板（SEO 五关键词、真限制三条、控件、互链、零外部资源静态检查）、评审重审回归
+* （停止麦克风后恢复播放面板、静默丢弃录制不下载、截图须有真实音源、进度条键盘操作、
+* recordingFilename 文件名恰为 .mp3 的边界）。
 */
 "use strict";
 var fs = require("fs");
@@ -164,6 +166,7 @@ eq(M.recordingFilename("song"), "song-visualizer.webm", "recordingFilename：无
 eq(M.recordingFilename(""), "audio-visualizer.webm", "recordingFilename：空名回退 audio");
 eq(M.recordingFilename("a/b:c.mp3"), "a_b_c-visualizer.webm", "recordingFilename：非法字符替换");
 eq(M.recordingFilename("SONG.WAV"), "SONG-visualizer.webm", "recordingFilename：大写扩展名也去掉");
+eq(M.recordingFilename(".mp3"), "audio-visualizer.webm", "recordingFilename：文件名恰为 .mp3（dot=0）去扩展名后空串回退 audio");
 
 /* ---------- 8. 常量与同步导出 ---------- */
 eq(M.MAX_FILE_SIZE, 209715200, "常量：体积上限 200MB");
@@ -250,6 +253,31 @@ ok((TPL_SRC.match(/<script[^>]*src="http/g) || []).length === 0, "模板零外�
 var httpLinks = TPL_SRC.match(/<link[^>]*href="http[^"]*"/g) || [];
 eq(httpLinks.length, 1, "模板 http link 仅 canonical 一条");
 ok(httpLinks.length === 1 && httpLinks[0].indexOf("https://www.johnkingzcq123.xyz/tools/music-visualizer") !== -1, "模板 http link：仅自家 canonical");
+
+/* ---------- 11. 评审重审回归：麦克风/录制模式切换链路 ---------- */
+/* 浏览器侧函数在 node 下不执行（module.exports 提前 return），回归断言按本仓库既有
+* 模式做源码级检查：截取目标函数体，断言修复逻辑确实存在于正确分支内。 */
+var toggleMicSrc = JS_SRC.slice(JS_SRC.indexOf("function toggleMic()"),
+JS_SRC.indexOf("/* ================= 渲染循环"));
+has(toggleMicSrc, "if (state.buffer)", "回归①：停止麦克风分支以 state.buffer 为条件");
+has(toggleMicSrc, "el.panel_player.style.display = 'block'", "回归①：已加载文件时停止麦克风恢复播放面板可见");
+ok(toggleMicSrc.indexOf("el.panel_player.style.display = 'block'") >
+toggleMicSrc.indexOf("if (state.buffer)"), "回归①：恢复面板在 state.buffer 分支内（非无条件）");
+var stopRecSrc = JS_SRC.slice(JS_SRC.indexOf("function stopRecording"),
+JS_SRC.indexOf("function takeScreenshot"));
+has(stopRecSrc, "if (silent)", "回归②：stopRecording 区分静默丢弃与正常停止");
+has(stopRecSrc, "state.recorder.onstop = null", "回归②：静默丢弃时先置空 onstop，录制中重传不触发下载");
+has(stopRecSrc, "state.recorder.ondataavailable = null", "回归②：静默丢弃时先置空 ondataavailable");
+ok(stopRecSrc.indexOf("state.recorder.onstop = null") <
+stopRecSrc.indexOf("state.recorder.stop()"), "回归②：置空回调在 stop() 之前");
+var shotSrc = JS_SRC.slice(JS_SRC.indexOf("function takeScreenshot"),
+JS_SRC.indexOf("/* ================= 初始化"));
+has(shotSrc, "!state.buffer && !state.micStream", "回归③：截图要求真实音源（已加载文件或麦克风接入中）");
+has(JS_SRC, "ArrowLeft", "回归④：进度条键盘支持 ArrowLeft");
+has(JS_SRC, "seekTo((pos - 5) / state.buffer.duration)", "回归④：ArrowLeft 后退 5 秒");
+has(JS_SRC, "seekTo((pos + 5) / state.buffer.duration)", "回归④：ArrowRight 前进 5 秒");
+has(JS_SRC, "ev.key === 'Home'", "回归④：进度条键盘支持 Home");
+has(JS_SRC, "ev.key === 'End'", "回归④：进度条键盘支持 End");
 
 console.log("music_visualizer: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");
 if (fail > 0) process.exit(1);
