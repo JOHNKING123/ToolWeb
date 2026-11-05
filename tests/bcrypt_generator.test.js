@@ -122,7 +122,7 @@ ok(GO_SRC.indexOf('"bcrypt_generator"') !== -1, "注册 ID bcrypt_generator");
 ok(GO_SRC.indexOf('"/tools/bcrypt-generator"') !== -1, "注册 Path /tools/bcrypt-generator");
 ok(GO_SRC.indexOf('"lock"') !== -1, "注册 Icon lock");
 var pathCount = (GO_SRC.match(/Path:\s*"/g) || []).length;
-eq(pathCount, 307, "注册总数 305→306 Path");
+eq(pathCount, 307, "注册总数 306→307 Path");
 ok(TPL_SRC.indexOf('{{define "bcrypt_generator"}}') !== -1, "模板 define 名与路由转换一致");
 
 /* ---------- 10. 真限制与零网络请求静态检查 ---------- */

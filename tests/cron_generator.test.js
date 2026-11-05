@@ -119,7 +119,7 @@ ok(GO_SRC.indexOf('"cron_generator"') !== -1, "注册：categories.go 含 ID cro
 ok(GO_SRC.indexOf('"/tools/cron-generator"') !== -1, "注册：categories.go 含 Path /tools/cron-generator");
 ok(GO_SRC.indexOf('"alarm"') !== -1, "注册：Icon alarm");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 307, "注册：Path 总数 305→306");
+eq(pathCount, 307, "注册：Path 总数 306→307");
 ok(TPL_SRC.indexOf("https://www.johnkingzcq123.xyz/tools/cron-generator") !== -1, "SEO：canonical 正确");
 ok(TPL_SRC.indexOf("/tools/cron-parser") !== -1, "互链：含 Cron 表达式解析");
 ok(TPL_SRC.indexOf("不支持") !== -1 && TPL_SRC.indexOf("L") !== -1, "真限制：不支持 Quartz L/W/# 可见");

@@ -4,6 +4,7 @@
 * 抛错 err.field='baseUrl'、normalizeParams 必填/选填/超长边界与抛错 err.field、
 * buildTaggedUrl 锚点精确值（基础拼接/已有查询串续接/hash 位置/空格与中文编码/
 * 空选填省略/固定顺序）、parseTaggedUrl 往返一致与 otherParams 保留、
+* mergeOtherParams（粘贴回填→改 campaign→再生成不丢其余参数）、
 * 非法参数抛错 err.field、双模式导出与零外部接口、categories.go 注册
 * （Path 总数 306→307、Icon sell 全库唯一、New/编码转换类目）、
 * 模板（SEO 五关键词、真限制四条、控件、互链、零外部资源静态检查）。
@@ -127,7 +128,13 @@ eq(M.buildTaggedUrl("https://example.com/page", { source: "s", medium: "m", camp
 eq(M.buildTaggedUrl("https://example.com/page?", BASE),
 "https://example.com/page?utm_source=wechat&utm_medium=social&utm_campaign=summer_sale", "末尾空 ? 不产生双问号");
 eq(M.buildTaggedUrl("https://example.com/p?utm_source=old", BASE),
-"https://example.com/p?utm_source=old&utm_source=wechat&utm_medium=social&utm_campaign=summer_sale", "已有 utm_source 保留原值、新参数追加");
+"https://example.com/p?utm_source=wechat&utm_medium=social&utm_campaign=summer_sale", "已有 utm_source 被新值替换、不重复出现");
+eq(M.buildTaggedUrl("https://example.com/p?id=123&utm_medium=old&utm_term=old_t&utm_content=old_c", BASE),
+"https://example.com/p?id=123&utm_source=wechat&utm_medium=social&utm_campaign=summer_sale", "已有 utm_medium/term/content 被替换、非 utm 参数 id=123 保留");
+eq(M.buildTaggedUrl("https://example.com/p?UTM_SOURCE=old&utm_campaign=old_c", BASE),
+"https://example.com/p?utm_source=wechat&utm_medium=social&utm_campaign=summer_sale", "已有 utm 参数大小写不敏感、同样被替换");
+eq(M.buildTaggedUrl("https://example.com/p?utm_source=old&", BASE),
+"https://example.com/p?utm_source=wechat&utm_medium=social&utm_campaign=summer_sale", "末尾空段丢弃、不产生 &&");
 throws(function () { M.buildTaggedUrl("example.com/page", BASE); }, "baseUrl", "非法 baseUrl：err.field='baseUrl'");
 throws(function () { M.buildTaggedUrl("https://example.com/page", { source: "wechat", campaign: "x" }); }, "medium", "非法 params：err.field 透传 medium");
 
@@ -157,11 +164,25 @@ throws(function () { M.parseTaggedUrl("example.com/page?utm_source=x"); }, "url"
 throws(function () { M.parseTaggedUrl(""); }, "url", "空串：err.field='url'");
 throws(function () { M.parseTaggedUrl(null); }, "url", "null：err.field='url'");
 
+/* ---------- 6b. mergeOtherParams：粘贴回填→改 campaign→再生成不丢其余参数 ---------- */
+var parsedBack = M.parseTaggedUrl("https://example.com/p?id=123&utm_source=wechat&utm_medium=social&utm_campaign=summer_sale");
+eq(M.mergeOtherParams(parsedBack.baseUrl, parsedBack.otherParams), "https://example.com/p?id=123", "mergeOtherParams：其余参数拼回基础链接");
+var rebuilt = M.buildTaggedUrl(M.mergeOtherParams(parsedBack.baseUrl, parsedBack.otherParams), { source: "wechat", medium: "social", campaign: "new_sale" });
+eq(rebuilt, "https://example.com/p?id=123&utm_source=wechat&utm_medium=social&utm_campaign=new_sale", "粘贴回填→改 campaign→再生成：id=123 仍在");
+var rt2 = M.parseTaggedUrl(rebuilt);
+eqj(rt2.otherParams, [{ key: "id", value: "123" }], "重建后再解析：otherParams 仍保留 id=123");
+eq(rt2.params.campaign, "new_sale", "重建后再解析：campaign 已是新值 new_sale");
+eq(M.mergeOtherParams("https://example.com/p?id=123", [{ key: "id", value: "999" }]), "https://example.com/p?id=123", "mergeOtherParams：基础链接已有同名键不重复");
+eq(M.mergeOtherParams("https://example.com/p#sec", [{ key: "id", value: "123" }]), "https://example.com/p?id=123#sec", "mergeOtherParams：参数插 #hash 之前");
+eq(M.mergeOtherParams("https://example.com/p", []), "https://example.com/p", "mergeOtherParams：空列表原样返回");
+eq(M.mergeOtherParams("https://example.com/p", [{ key: "q", value: "a b" }]), "https://example.com/p?q=a%20b", "mergeOtherParams：值百分号编码");
+
 /* ---------- 7. 双模式导出与零外部接口 ---------- */
 ok(typeof M.listPresets === "function" && typeof M.getPresetById === "function" &&
 typeof M.normalizeBaseUrl === "function" && typeof M.normalizeParams === "function" &&
-typeof M.buildTaggedUrl === "function" && typeof M.parseTaggedUrl === "function",
-"同步导出：6 个纯函数齐全");
+typeof M.buildTaggedUrl === "function" && typeof M.parseTaggedUrl === "function" &&
+typeof M.mergeOtherParams === "function",
+"同步导出：7 个纯函数齐全");
 has(JS_SRC, "window.UtmLinkBuilder", "浏览器导出：window.UtmLinkBuilder");
 has(JS_SRC, "module.exports = api", "node 导出：module.exports 同步导出");
 notHas(JS_SRC, "fetch(", "JS 零外部接口：无 fetch");

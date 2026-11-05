@@ -84,7 +84,9 @@ return { head: s.slice(0, i), hash: s.slice(i) };
 }
 
 /* 拼接：保留原有查询串（& 续接）、参数插 #hash 前、值 encodeURIComponent 编码、
-* 空选填省略、固定顺序 source→medium→campaign→term→content。 */
+* 空选填省略、固定顺序 source→medium→campaign→term→content。
+* 已带 utm_* 的旧链接：旧 utm 参数一律被新值替换（不重复出现、不静默丢弃
+* 新归因），只保留非 utm 的其余查询参数；空段丢弃，避免产生 '&&'。 */
 function buildTaggedUrl(baseUrl, params) {
 var base = normalizeBaseUrl(baseUrl);
 var p = normalizeParams(params);
@@ -101,8 +103,20 @@ var utm = [];
 UTM_FIELDS.forEach(function (f) {
 if (p[f]) utm.push('utm_' + f + '=' + encodeURIComponent(p[f]));
 });
+var kept = [];
+if (q) {
+q.split('&').forEach(function (seg) {
+if (!seg) return;
+var eq = seg.indexOf('=');
+var rawKey = eq === -1 ? seg : seg.slice(0, eq);
+var key = decodePart(rawKey).toLowerCase();
+if (key === 'utm_source' || key === 'utm_medium' || key === 'utm_campaign' ||
+key === 'utm_term' || key === 'utm_content') return;
+kept.push(seg);
+});
+}
 var query = utm.join('&');
-if (q) query = q + '&' + query;
+if (kept.length) query = kept.join('&') + '&' + query;
 return baseHead + '?' + query + parts.hash;
 }
 
@@ -145,13 +159,48 @@ otherParams.push({ key: key, value: value });
 return { baseUrl: baseUrl, params: params, otherParams: otherParams };
 }
 
+/* 把 parseTaggedUrl 解析出的其余查询参数合并回基础链接：插 #hash 之前、
+* 值 encodeURIComponent 编码、基础链接里已有同名键不重复、空列表原样返回。
+* 供粘贴回填后“改 campaign 再生成”时不丢失 id=123 这类参数；本身不做
+* URL 合法性校验，校验由 buildTaggedUrl 的 normalizeBaseUrl 负责。 */
+function mergeOtherParams(baseUrl, otherParams) {
+var s = String(baseUrl);
+if (!otherParams || !otherParams.length) return s;
+var parts = splitHash(s);
+var head = parts.head;
+var qi = head.indexOf('?');
+var baseHead = qi === -1 ? head : head.slice(0, qi);
+var q = qi === -1 ? '' : head.slice(qi + 1);
+var seen = {};
+if (q) {
+q.split('&').forEach(function (seg) {
+if (!seg) return;
+var eq = seg.indexOf('=');
+var k = eq === -1 ? seg : seg.slice(0, eq);
+seen[decodePart(k).toLowerCase()] = true;
+});
+}
+var add = [];
+otherParams.forEach(function (o) {
+if (!o || typeof o.key !== 'string' || !o.key) return;
+var lk = o.key.toLowerCase();
+if (seen[lk]) return;
+seen[lk] = true;
+add.push(encodeURIComponent(o.key) + '=' + encodeURIComponent(o.value == null ? '' : String(o.value)));
+});
+if (!add.length) return s;
+var query = q ? q + '&' + add.join('&') : add.join('&');
+return baseHead + '?' + query + parts.hash;
+}
+
 var api = {
 listPresets: listPresets,
 getPresetById: getPresetById,
 normalizeBaseUrl: normalizeBaseUrl,
 normalizeParams: normalizeParams,
 buildTaggedUrl: buildTaggedUrl,
-parseTaggedUrl: parseTaggedUrl
+parseTaggedUrl: parseTaggedUrl,
+mergeOtherParams: mergeOtherParams
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
@@ -215,20 +264,38 @@ $('ulb-content').value = p.content || '';
 function renderOtherParams(list) {
 var box = $('ulb-other');
 if (!list || !list.length) { box.innerHTML = ''; return; }
-var html = '<div class="ulb-other-title">其余查询参数（已保留，未丢失）：</div><ul>';
+var html = '<div class="ulb-other-title">其余查询参数（已保留，改 campaign 再生成时自动带上）：</div><ul>';
 list.forEach(function (o) {
 html += '<li><code>' + escHtml(o.key) + '</code> = ' + escHtml(o.value) + '</li>';
 });
 box.innerHTML = html + '</ul>';
 }
 
+/* 粘贴回填后保留的其余查询参数及其来源基础链接：doGenerate 在生成时把
+* 它们合并回查询串；用户改了基础链接（换了落地页）则不再合并，避免
+* 把旧链接的参数错带到新链接上；清空按钮清除。 */
+var retainedOtherParams = [];
+var retainedBase = '';
+
+function baseHeadOf(raw) {
+var h = splitHash(String(raw)).head;
+var qi = h.indexOf('?');
+if (qi !== -1) h = h.slice(0, qi);
+try { return normalizeBaseUrl(h); } catch (e) { return null; }
+}
+
+function mergeRetainedOtherParams(base) {
+if (!retainedOtherParams.length || !retainedBase) return base;
+if (baseHeadOf(base) !== retainedBase) return base;
+return mergeOtherParams(base, retainedOtherParams);
+}
+
 function doGenerate() {
 showError('');
 var base = $('ulb-base').value;
 try {
-var out = buildTaggedUrl(base, readParams());
+var out = buildTaggedUrl(mergeRetainedOtherParams(base), readParams());
 $('ulb-output').value = out;
-renderOtherParams([]);
 toast('已生成 tagged 链接');
 } catch (e) {
 $('ulb-output').value = '';
@@ -245,6 +312,8 @@ try {
 var r = parseTaggedUrl(raw);
 var hashIdx = raw.indexOf('#');
 $('ulb-base').value = r.baseUrl + (hashIdx === -1 ? '' : raw.slice(hashIdx));
+retainedOtherParams = r.otherParams;
+retainedBase = r.baseUrl;
 fillParams(r.params);
 renderOtherParams(r.otherParams);
 $('ulb-output').value = '';
@@ -284,6 +353,7 @@ copyText(v, function (ok) { toast(ok ? '已复制 tagged 链接' : '复制失败
 $('ulb-clear-btn').addEventListener('click', function () {
 $('ulb-base').value = ''; fillParams({ source: '', medium: '', campaign: '', term: '', content: '' });
 $('ulb-output').value = ''; $('ulb-paste').value = '';
+retainedOtherParams = []; retainedBase = '';
 renderOtherParams([]); showError(''); $('ulb-base').focus();
 });
 
