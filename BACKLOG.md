@@ -1,3 +1,86 @@
+## 今日任务（2026-11-05 13:38 · PM 选定轮，接通用调研第二百三十三轮）
+
+**选定：密码泄露查询（k-匿名版）（password_breach_checker）** — 本轮唯一任务（新工具）。
+
+**顺位**：233 轮 Top3 第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第三度裁定跳过**（沿用 231/232 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户，与年假数据表同类负债；首席顺位留池，不冻结）。次席年假拼假优化器 → PM **第十八度裁定跳过**（触发器仍未满足：2027 年放假安排国务院官方通知截至 2026-11-02 仍未发布）。本项无数据表负债、无年更新负担，一天可高质量交付，硬依据如下：
+1. **独立信号**：GrabCast 2026-11-01 更新版「Best Free Online Tools in 2026」收录 Password Breach Checker ＋ thetechbasket 10 月实测版 Have I Been Pwned 口径强化；痛点独立验证：「查密码是否泄露」为高频安全刚需，用户最怕的是不知道自己的密码早已在泄露库里。
+2. **需求验证**：密码泄露查询与站内密码生成器构成完整闭环（生成 vs 查泄露）；与 P3 观察项密码强度检测亦互补（强度 vs 是否已泄露），查出泄露后可直接去生成新密码。
+3. **无硬伤**：纯前端小难度（浏览器内 SHA-1 → 仅发前 5 位前缀查 HIBP range 接口 → 后缀本地比对计数）；密码本身不出浏览器，k-匿名设计即隐私卖点；弱点（依赖外部 HIBP 接口）可控：沿用 url_tracker_cleaner 的客户端 fetch＋诚实降级先例，接口不可达时明示「未完成查询」，绝不静默报安全。
+4. **口径互补确凿**：站内唯一密码相关工具为 password 生成器（ID `password`，/tools/password-generator）与 totp_generator（动态码口径）；本工具为**泄露查询口径**，互补不重叠。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`breach`／`pwned`／`hibp` 全站（tools/templates/static/js/tests，vendor 排除，BACKLOG.md 除外）**0 命中**；`password_breach`／`password-breach`／`passwordBreach` 三形态 **0 命中**——真缺口确凿。
+   - CJK「泄露」（`chr(0x6cc4)+chr(0x9732)` 运行时构造）命中全为他人口径无关（代理 IP 泄露、PDF 元数据泄露、提示词脱敏、Wi-Fi 密码写进二维码等）——**密码泄露查询本体 0 交付**，真缺口确凿。
+   - Icon：**`gpp_bad`（首选；全站精确值 **0 命中**，全库唯一，贴合「泄露警告」语义；备选 `report_problem` 亦 0 命中；`shield`／`security` 已被占用，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM 第三度裁定跳过：数据鲜度维护负担；首席顺位留池递进）／年假拼假优化器（PM 第十八度裁定跳过条件维持：2027 年放假安排仍未公布；触发器：官方通知发布后下一轮调研确认即立项）／字体搭配预览／密码强度检测（P3 观察维持）／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 密码输入框（type=password，autocomplete=off；不保存、不进 URL、不写 localStorage；查完一键清除；不提供复制密码按钮）② 浏览器内 SHA-1（WebCrypto `crypto.subtle.digest('SHA-1')`，大写 hex；密码本身不出浏览器）③ 仅发前 5 位前缀到 `https://api.pwnedpasswords.com/range/{prefix}`，后缀本地比对并展示泄露次数 ④ 分级提示＋换密码建议（0 次＝未在已知泄露库中出现；1–100 次＝低频出现，建议更换；>100 次＝高频出现，立即更换并检查他处复用、开启双因素认证；查出泄露时互链站内密码生成器）⑤ 接口不可达/CORS 被拒/超时时诚实降级（文案明示「未能连接到查询服务，本次未完成查询，结果不是安全的证明」，提供重试）⑥ k-匿名原理一句话页面说明 ⑦ 无障碍（tab 聚焦可操作、动画可减弱）⑧ 模板零外部静态资源惯例（HIBP 调用为用户主动触发的数据查询，非静态资源引入）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.PasswordBreachChecker 下，module.exports 同步导出；哈希为浏览器异步函数，测试只覆盖同步纯函数，DOM 与网络只做浏览器端）**：
+  - `splitHash(sha1Hex)` → {prefix, suffix}（sha1Hex 非 40 位十六进制 err.field='sha1Hex'；prefix 为前 5 位大写，suffix 为后 35 位大写）。
+  - `parseRangeResponse(text)` → [{suffix, count}]（text 非字符串 err.field='text'；格式非法行抛错 err.field='text'，不静默跳过；后缀统一大写）。
+  - `findBreachCount(entries, suffix)` → number（entries 非数组 err.field='entries'；suffix 非字符串 err.field='suffix'；未命中返回 0）。
+  - `classifyCount(count)` → 'safe'|'low'|'high'（count 非非负整数 err.field='count'；0→safe，1–100→low，>100→high）。
+  - `buildAdvice(classification)` → string（非法分类 err.field='classification'；high 档含「立即更换＋检查复用＋开双因素」三点）。
+  - `hashPassword(password)` → Promise<string>（浏览器 WebCrypto SHA-1 大写 hex；空密码 err.field='password'）。
+- **真限制四条页面明示**：① 泄露次数 ≠ 账号已被盗，只说明该密码出现在已知泄露数据中；② 只覆盖 HIBP 收录的泄露库，未出现不等于绝对安全；③ 密码本身不出浏览器，仅 SHA-1 前 5 位发往查询服务（k-匿名）；④ 本页不记录、不上传、不保存任何密码，关闭即清除。
+- **SEO**：密码泄露查询、密码是否被泄露、密码被泄露了吗、Have I Been Pwned。
+- **改动文件**：tools/categories.go（「加密解密」类目新增 password_breach_checker 条目，Path 302→**303**，Icon `gpp_bad` 首选，开发轮精确值复测锁定全库唯一）／templates/password_breach_checker.html（新）／static/js/password_breach_checker.js（新）／tests/password_breach_checker.test.js（新）／全量旧 tests Path 断言 302→303 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥40 断言全过（splitHash 前缀 5 位／后缀 35 位精确值；parseRangeResponse 解析／大小写归一／非法行抛错 err.field='text'；findBreachCount 命中／未命中精确值；classifyCount 分级边界精确值；buildAdvice 各档关键文案；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 188→**189** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/password-breach-checker 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：已知弱密码（如 `password`）返回次数 >0、强随机密码返回 0、接口不可达时诚实降级文案（开发轮记录；手工验证不得用真实个人密码）。
+- **品类归位**：注册到「加密解密」类目（与 password 生成器／totp_generator 同类目，互补口径）；New: true；开发轮按模板惯例与 password 生成器互链（查出泄露 → 去生成新密码）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：密码泄露查询（k-匿名版）→本轮交付（233 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第三度跳过（数据表负债从严，231/232 轮逻辑沿用）、次席年假第十八度跳过（触发器未满足）；独立信号 GrabCast 11-01＋HIBP 口径；零重叠复核确凿（ASCII breach/pwned/hibp 全 0 命中＋CJK「泄露」全为他人口径无关）；加密解密类目；Icon `gpp_bad` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担）／年假拼假优化器→触发器待命维持（PM 第十八度跳过条件：2027 放假安排未公布）／字体搭配预览／密码强度检测→P3 观察维持／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD ee6702a＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **302**；`ls tests/*.test.js | wc -l` = **188**；PM 独立零重叠复核（ASCII breach/pwned/hibp 全 0 命中（vendor 排除）；password_breach 三形态 0 命中；CJK「泄露」`chr(0x6cc4)+chr(0x9732)` 运行时构造命中全为他人口径无关；`gpp_bad` 全站 0 命中、`report_problem` 备选亦 0 命中、`shield`/`security` 已被占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送），随开发轮次提交，沿用研究轮惯例；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 13:36 · 产品调研推荐，第二百三十三轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：Git 命令速查＋灾难救援卡已交付闭环（ee6702a 新增：`/tools/git-cheatsheet`，Path 总数 301→**302**，tests **188 个**），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位递进首席。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已第二度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **年假拼假优化器** — 顺位次席，**触发器仍未满足**：2027 年放假安排国务院官方通知截至 2026-11-02 仍未发布（多家 11-02 文章一致确认“翻遍国务院办公厅官网仍未挂出”；中国政府网检索“2027年部分节假日安排”0 条；2024 年官方解读举例的“2027 春节连休 9 天”仅为调休规则举例 ≠ 正式通知；近三年通知发布日分别为 2023-10-25、2024-11-12、2025-11-04）。硬伤维持（调休数据表年更新负担）；PM 按惯例可裁定第十八度跳过；触发器：官方通知发布后下一轮调研确认即立项。
+3. **密码泄露查询（k-匿名版）** — 新晋第三席。独立信号：GrabCast 2026-11-01 更新版“Best Free Online Tools”收录 Password Breach Checker＋thetechbasket 10 月实测版 Have I Been Pwned 口径（“查密码是否泄露”为高频安全刚需）；站内零重叠确凿：`breach`／`pwned`／`hibp` 全站 **0 命中**（vendor 排除），CJK“泄露”命中经 codepoint 验真全为无关口径（代理 IP 泄露等）；与 password 生成器互补（生成 vs 查泄露），与密码强度检测互补（强度 vs 是否已泄露）。实现纯前端小难度（浏览器内 SHA-1→仅发前 5 位前缀查 HIBP range 接口，后缀本地比对计数，密码本身不出浏览器；无命中/命中次数分级提示＋换密码建议；接口不可达时诚实降级，沿用 url_tracker_cleaner 的客户端 fetch＋CORS 诚实降级先例）。**弱点**：依赖外部 HIBP 接口（可用性/CORS 风险）＋需页面明示“泄露次数 ≠ 账号已被盗”。SEO：密码泄露查询、密码是否被泄露、Have I Been Pwned。建议 ID password_breach_checker、Path /tools/password-breach-checker；Icon `gpp_bad` 首选（精确值 0 命中，备选 `report_problem` 亦 0 命中；`shield`／`security`／`verified_user` 已被占用，不可取），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位递进首席；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已第二度跳过 | 小 | P3（顺位；压级） |
+| 年假拼假优化器 | **触发器未满足**：2027 年放假安排官方通知截至 11-02 仍未发布；硬伤维持（调休数据表年更新负担）；PM 可裁定第十八度跳过 | 小 | P1（冻结；触发器待命中） |
+| 密码泄露查询（k-匿名版） | 新晋：GrabCast 11-01 Password Breach Checker＋HIBP 口径；站内 breach/pwned/hibp 全 0 命中，password 生成器互补；纯前端小难度，k-匿名密码不出浏览器；**弱点**：依赖外部接口 | 小 | P3（新晋） |
+| 字体搭配预览（Fontjoy 模式） | P3 观察维持；YouTube 11-04 Fontjoy 独立信号；站内 font_pair/“字体搭配”全 0 命中；**弱点**：需求频率中等＋Web 字体受限 | 小 | P3（观察） |
+| 密码强度检测 | P3 观察维持：dev.to OmniTools Password Entropy Calculator 信号时效弱；站内本体 0 交付；与 password 生成器互补（检测 vs 生成） | 小 | P3（观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 11:50~13:36 窗口；本轮**新晋 1 第三席候选**）：
+- GrabCast 11-01 更新版「Best Free Online Tools in 2026」→ Password Breach Checker → **新晋「密码泄露查询（k-匿名版）」**；其余 PDF/图片/音频/文本/密码生成类 → 站内各工具形态印证消解。
+- thetechbasket 10 月实测版「75 Most Useful Websites」→ Have I Been Pwned 口径强化泄露查询主题；Photopea/Remove.bg/Canva/CloudConvert 等 → 平台/桌面/AI 口径消解；站内 heic_convert／image_color_picker／resume_checker（JD 关键词＋ATS）已交付，形态印证消解（本轮复核：resume ATS 候选已由 resume_checker 覆盖，不再入池）。
+- Medium 11 月「7 Free Online Tools That Save You Hours」→ SERP 预览 → 站内 serp_snippet_preview 已交付（29ccefb），形态印证消解；文本清理类 → ai_text_cleaner 形态印证消解；其余计算器类 → 方向修正（不扩泛财务/生活计算器）消解。
+- twelve.tools 11-02~11-04 新品（Excerpt 网页剪藏扩展／Extractune 人声分离／VideoTools FFmpeg WASM 视频套件／MortalSpan／Fix42）→ 扩展/AI 模型/WASM 重量级口径消解（Extractune 人声分离需 AI 模型，与视频转 SRT 同类 vendor 冲突；VideoTools 与站内 video_frame_extractor＋gif_maker 两步可达部分重叠，余者重量级）。
+- 2027 年放假安排：国务院官方通知**仍未发布**（截至 11-02 多源一致确认；2024 年解读“2027 春节 9 天”仅为举例）→ 年假拼假优化器触发器未满足，PM 第十八度跳过条件维持。
+
+**候选池变动**：git_cheatsheet 交付划出（ee6702a，302 Path，188 tests）；**年假拼假优化器触发器未满足**（2027 官方通知截至 11-02 未发布；PM 第十八度跳过条件维持；触发器：官方通知发布后下一轮调研确认即立项）；**社媒/证件照尺寸速查表顺位递进首席**（P3；数据鲜度维护负担压级；PM 已第二度跳过）；**新晋第三席 1 个**（密码泄露查询 k-匿名版：GrabCast＋HIBP 口径，站内 breach/pwned/hibp 全 0 命中，password 生成器互补，纯前端小难度；弱点为外部接口依赖）；字体搭配预览／密码强度检测 P3 观察维持；3D 模型预览器 P3 观察维持；英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，no 模式自动重建一次成功）；**远端无新提交**（本地 HEAD ee6702a＝origin/muse/dev-20260929）；`git log` 头部 ee6702a（Git 速查新增）／5a6d12b（文档去底纹新增）／d08b29a（文本摘要新增）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **302**；`ls tests/*.test.js | wc -l` = **188**；本地当前分支 muse/dev-20260929；工作区干净（git status 无修改，BACKLOG 追加前）；站内零重叠复核（breach/pwned/hibp 全 0 命中；CJK“泄露”命中经 codepoint 验真全无关；Icon `gpp_bad`／`report_problem` 精确值 0 命中，`shield`／`security`／`verified_user` 已被占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 11:50 · PM 选定轮，接通用调研第二百三十二轮）
 
 **选定：Git 命令速查＋灾难救援卡（git_cheatsheet）** — 本轮唯一任务（新工具）。

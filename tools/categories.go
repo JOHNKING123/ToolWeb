@@ -2213,6 +2213,15 @@ func GetCategories() []Category {
 					Category:    "加密解密",
 				},
 				{
+					ID:          "password_breach_checker",
+					Name:        "密码泄露查询",
+					Description: "查密码是否被泄露：浏览器内 SHA-1 后仅发哈希前 5 位查 Have I Been Pwned，密码不出浏览器，后缀本地比对泄露次数，0 次未出现、1–100 低频建议更换、>100 高频立即更换＋查复用＋开双因素，查出泄露互链密码生成器，接口不可达时诚实降级 · Password breach checker: k-anonymity SHA-1 prefix lookup against Have I Been Pwned, password never leaves your browser",
+					Path:        "/tools/password-breach-checker",
+					Icon:        "gpp_bad",
+					New:         true,
+					Category:    "加密解密",
+				},
+				{
 					ID:          "totp_generator",
 					Name:        "TOTP 一次性密码生成器",
 					Description: "粘贴 Base32 密钥，按 RFC 6238（HMAC-SHA1、30 秒周期）在浏览器本地算出当前 6/8 位动态码，附剩余有效秒倒计时与一键复制，纯前端零上传、不保存密钥 · TOTP generator: compute current time-based one-time password from a Base32 secret in your browser, RFC 6238 HMAC-SHA1 30s period, 100% client-side",

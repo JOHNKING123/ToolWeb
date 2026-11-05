@@ -125,7 +125,7 @@ ok(GO_SRC.indexOf('"boolean_search_builder"') >= 0, "categories.go 注册 ID");
 ok(GO_SRC.indexOf('"/tools/boolean-search-builder"') >= 0, "categories.go 注册 Path");
 ok(GO_SRC.indexOf('布尔搜索语句生成器') >= 0, "categories.go 注册名称");
 var paths = GO_SRC.match(/"\/tools\/[^"]+"/g) || [];
-eq(paths.length, 302, "注册总数 268→270 Path");
+eq(paths.length, 303, "注册总数 268→270 Path");
 
 console.log("boolean_search_builder: " + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);
