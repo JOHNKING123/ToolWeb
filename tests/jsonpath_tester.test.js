@@ -132,7 +132,7 @@ var seen = {}, pathCount = 0, mm;
 while ((mm = pathRe.exec(GO_SRC)) !== null) {
   if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; }
 }
-eq(pathCount, 309, "注册总数 308→309 Path");
+eq(pathCount, 310, "注册总数 309→310 Path");
 ok(JS_SRC.indexOf("fetch(") < 0 && JS_SRC.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
 ok(TPL_SRC.indexOf("http://") < 0 || TPL_SRC.indexOf("http://") === TPL_SRC.indexOf("https://www.johnkingzcq123.xyz"), "模板无外部 http 链接（除 canonical 外）");
 ok(TPL_SRC.indexOf("cdnjs") < 0 && TPL_SRC.indexOf("jsdelivr") < 0 && TPL_SRC.indexOf("googleapis") < 0, "模板零 CDN");

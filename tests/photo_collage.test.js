@@ -119,7 +119,7 @@ var iconAppsCount = (GO_SRC.match(/Icon:\s+"apps"/g) || []).length;
 eq(iconAppsCount, 1, "Icon apps 全库唯一（1 次命中）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 309, "注册 Path 总数 308→309");
+eq(pathCount, 310, "注册 Path 总数 309→310");
 
 /* ---------- 7. 模板：真限制/SEO/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/photo-collage", "模板 canonical 含新 Path");

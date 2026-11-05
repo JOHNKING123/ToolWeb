@@ -1,0 +1,219 @@
+{{define "music_visualizer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐可视化器 - 在线音乐频谱视频生成，音频可视化免费工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线音乐可视化器：上传 FLAC/WAV/MP3/OGG/M4A（≤200MB），浏览器本地解码不上传；AnalyserNode 实时分析频谱，5 种频谱样式（频谱条/环形频谱/波形/圆形波形/镜像频谱）＋ 3 组颜色主题，支持麦克风实时输入，录制导出 WebM 频谱视频与 PNG 静态帧。纯前端、零 CDN、零后端。">
+    <meta name="keywords" content="音乐可视化,音频可视化,频谱视频,music visualizer,音乐频谱,频谱生成器,音频频谱,可视化音乐播放器,麦克风可视化,频谱录制">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/music-visualizer">
+    <meta property="og:title" content="音乐可视化器 - 在线音乐频谱视频生成，音频可视化免费工具">
+    <meta property="og:description" content="上传音乐生成实时频谱画面：5 种样式＋3 组主题，麦克风实时输入，导出 WebM 频谱视频与 PNG 截图，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/music-visualizer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"音乐可视化器","description":"音乐可视化器：本地解码 FLAC/WAV/MP3/OGG/M4A，AnalyserNode 实时频谱分析，5 种频谱样式＋3 组颜色主题，麦克风实时输入，MediaRecorder 导出 WebM 频谱视频与 PNG 截图；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/music-visualizer","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mv-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .mv-wrap .navbar .material-icons { display: none; }
+        .mv-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .mv-privacy .mv-lock { font-size: 1.6rem; flex: none; }
+        .mv-privacy b { color: #047857; }
+        .mv-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .mv-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .mv-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .mv-upload:hover, .mv-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .mv-upload .mv-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .mv-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .mv-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .mv-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .mv-row label { font-size: .92rem; color: #374151; }
+        .mv-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .mv-btn:hover { filter: brightness(.93); }
+        .mv-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .mv-btn-ghost { background: #fff; color: var(--primary-color); }
+        .mv-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .mv-style { display: flex; gap: .6rem; flex-wrap: wrap; }
+        .mv-style .mv-btn-ghost.mv-active { background: var(--primary-color); color: #fff; }
+        .mv-val { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--primary-color);
+            font-size: 1.05rem; min-width: 3.5em; display: inline-block; }
+        input[type=range].mv-slider { flex: 1; min-width: 180px; accent-color: var(--primary-color); }
+        .mv-canvas { width: 100%; height: 320px; border: 1px solid #e5e7eb; border-radius: .5rem; display: block; background: #0f172a; }
+        .mv-seek { flex: 1; min-width: 200px; height: 10px; background: #e5e7eb; border-radius: 5px; cursor: pointer; overflow: hidden; }
+        .mv-seek-fill { height: 100%; width: 0%; background: var(--primary-color); border-radius: 5px; }
+        .mv-time { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; color: #374151; white-space: nowrap; }
+        .mv-select { padding: .5rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .9rem; }
+        .mv-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .mv-doc b { color: #111827; }
+        .mv-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .mv-limits { font-size: .9rem; color: #7c2d12; line-height: 2; background: #fff7ed; border: 1px solid #fed7aa;
+            border-radius: .8rem; padding: .9rem 1.1rem; }
+        .mv-limits b { color: #9a3412; }
+        .mv-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .mv-combo b { color: #111827; }
+        .mv-combo a { color: var(--primary-color); }
+        .mv-faq dt { font-weight: 700; color: #111827; margin: .9rem 0 .3rem; font-size: .95rem; }
+        .mv-faq dd { margin: 0; color: #4b5563; line-height: 1.9; font-size: .92rem; }
+        .mv-faq dd code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .mv-related { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .4rem; align-items: center; }
+        @media (max-width: 640px) {
+            .mv-wrap .container { padding: 1rem .7rem; }
+            .mv-canvas { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mv-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎵 音乐可视化器</h1>
+            <p>上传一首歌，实时生成随音乐跳动的频谱画面 —— 5 种样式、3 组主题，还能录成 WebM 频谱视频</p>
+        </div>
+
+        <div class="mv-privacy">
+            <span class="mv-lock">🔒</span>
+            <div><b>隐私承诺：音频只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、<code>decodeAudioData</code> 本地解码、<code>AnalyserNode</code> 频谱分析、canvas 渲染、<code>MediaRecorder</code> 录制导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源。麦克风模式同样只在本地取流，不录音上传。你可以在 DevTools 的 Network 面板验证 —— 上传的音频不会产生一次网络请求。刷新页面后音频不恢复（不做任何本地存储）。</div>
+        </div>
+
+        <div class="mv-panel">
+            <h3>1️⃣ 上传音频，或用麦克风实时输入</h3>
+            <div class="mv-upload" id="mv-upload" role="button" tabindex="0" aria-label="点击选择或拖拽音频文件到此处上传">
+                <span class="mv-big">🎵</span>
+                <div>点击选择音频，或把音频文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 FLAC / WAV / MP3 / OGG / M4A（≤200MB）｜ 浏览器本地解码，不上传</div>
+            </div>
+            <input type="file" id="mv-file" accept="audio/flac,audio/wav,audio/x-wav,audio/mpeg,audio/ogg,audio/mp4,audio/x-m4a,.flac,.wav,.mp3,.ogg,.oga,.m4a" style="display:none;">
+            <div class="mv-info" id="mv-srcinfo" style="display:none;"></div>
+            <div class="mv-status" id="mv-status"></div>
+            <div class="mv-row">
+                <button class="mv-btn mv-btn-ghost" id="mv-mic" aria-label="使用麦克风实时输入">🎙️ 麦克风输入</button>
+                <span class="mv-info" style="margin-top:0;">不想传文件？点麦克风模式：对着麦克风说话或在旁边放音乐，画面实时跟随。需要浏览器授权麦克风。</span>
+            </div>
+            <div class="mv-status" id="mv-mic-status"></div>
+        </div>
+
+        <div class="mv-panel" id="mv-panel-player" style="display:none;">
+            <h3>2️⃣ 播放控制</h3>
+            <div class="mv-row">
+                <button class="mv-btn" id="mv-play" aria-label="播放或暂停">▶ 播放</button>
+                <div class="mv-seek" id="mv-seek" role="slider" tabindex="0" aria-label="播放进度，点击跳转"><div class="mv-seek-fill" id="mv-seek-fill"></div></div>
+                <span class="mv-time"><span id="mv-cur-time">0:00</span> / <span id="mv-total-time">0:00</span></span>
+            </div>
+            <div class="mv-row">
+                <label for="mv-volume"><b>🔊 音量</b></label>
+                <input type="range" class="mv-slider" id="mv-volume" min="0" max="100" step="1" value="80" aria-label="音量">
+                <span class="mv-val" id="mv-volume-val">80%</span>
+            </div>
+        </div>
+
+        <div class="mv-panel" id="mv-panel-controls" style="display:none;">
+            <h3>3️⃣ 样式与主题</h3>
+            <div class="mv-row">
+                <label><b>🎨 频谱样式</b></label>
+                <div class="mv-style">
+                    <button class="mv-btn mv-btn-ghost mv-active" id="mv-style-bars">频谱条</button>
+                    <button class="mv-btn mv-btn-ghost" id="mv-style-ring">环形频谱</button>
+                    <button class="mv-btn mv-btn-ghost" id="mv-style-waveform">波形</button>
+                    <button class="mv-btn mv-btn-ghost" id="mv-style-circular">圆形波形</button>
+                    <button class="mv-btn mv-btn-ghost" id="mv-style-mirror">镜像频谱</button>
+                </div>
+            </div>
+            <div class="mv-row">
+                <label for="mv-theme"><b>🌈 颜色主题</b></label>
+                <select class="mv-select" id="mv-theme" aria-label="颜色主题">
+                    <option value="neon" selected>霓虹（青→蓝→紫→粉）</option>
+                    <option value="sunset">落日（黄→橙→红→紫）</option>
+                    <option value="ocean">海洋（绿→青→蓝→靛）</option>
+                </select>
+                <label for="mv-smoothing"><b>平滑度</b></label>
+                <input type="range" class="mv-slider" id="mv-smoothing" min="0" max="95" step="5" value="60" aria-label="频谱平滑度">
+                <span class="mv-val" id="mv-smoothing-val">60%</span>
+            </div>
+            <canvas class="mv-canvas" id="mv-canvas" width="1000" height="320" role="img" aria-label="音乐频谱可视化画布，随音频实时变化"></canvas>
+            <div class="mv-info">画面由 <code>AnalyserNode</code>（fftSize=2048）实时取频域/时域数据驱动：声音越大、频谱越满，柱子跳得越高；静音时画面也会静下来 —— 这不是循环动画，是你的音频本身。</div>
+        </div>
+
+        <div class="mv-panel" id="mv-panel-record" style="display:none;">
+            <h3>4️⃣ 导出：录制频谱视频 / 截取静态帧</h3>
+            <div class="mv-row">
+                <button class="mv-btn" id="mv-record" aria-label="开始或停止录制频谱视频">🔴 开始录制</button>
+                <button class="mv-btn mv-btn-ghost" id="mv-shot" aria-label="截取当前帧为 PNG 图片">📷 截取当前帧 PNG</button>
+                <button class="mv-btn mv-btn-ghost" id="mv-reupload">🔄 重新上传</button>
+            </div>
+            <div class="mv-status" id="mv-rec-status"></div>
+            <div class="mv-status" id="mv-shot-status"></div>
+            <div class="mv-info">录制导出 WebM 视频（画面＋音频，文件名如 <code>夜曲-visualizer.webm</code>）；截图导出当前帧 PNG。录制期间请保持页面在前台、不要切换标签页，否则浏览器会暂停画面渲染。</div>
+        </div>
+
+        <div class="mv-panel">
+            <h3>⚠️ 真限制：先看再用，别对效果抱错期待</h3>
+            <div class="mv-limits">
+                <b>① 导出为实时录制：</b>WebM 导出是边播边录的实时录制，不是离线渲染 —— 3 分钟的音频要等 3 分钟才能录完，不能加速；想录完整首歌就从头播到尾。<br>
+                <b>② 画面随音频频谱内容变化：</b>画面完全由音频的频谱数据驱动：音量小、频谱窄的音频画面就弱，静音段画面就静止；没有内置的固定动画兜底，换首歌画面就换个样子。<br>
+                <b>③ 零上传＋麦克风需授权：</b>文件只在你的浏览器里处理，不上传服务器；麦克风模式必须由你在浏览器里授权才能用，拒绝授权就无法使用麦克风输入，文件模式不受影响。
+            </div>
+        </div>
+
+        <div class="mv-combo">
+            <b>🎧 「音频旅程线」组合：</b>想先把歌曲里的人声消掉、只留伴奏再做可视化？去 <a href="/tools/vocal-remover">人声消除/伴奏提取</a> 生成伴奏；想给音频加 Slowed 变速＋混响氛围后再可视化？去 <a href="/tools/slowed-reverb">音频变速混响生成器</a> 一键生成 —— 消除人声 → 变速混响 → 频谱可视化，一套流程走完。
+        </div>
+
+        <div class="mv-panel">
+            <h3>使用说明</h3>
+            <div class="mv-doc">
+                <b>解码：</b>文件经 <code>FileReader</code> 读入 ArrayBuffer 后，用 Web Audio API 的 <code>decodeAudioData</code> 在浏览器本地解码为 AudioBuffer（FLAC/WAV/MP3/OGG/M4A 是否支持取决于浏览器解码器）。<br>
+                <b>分析：</b>播放链路为 <code>AudioBufferSourceNode → GainNode（音量）→ AnalyserNode（fftSize=2048）→ 扬声器</code>，每帧同时取 1024 点频域数据与 2048 点时域数据；频域值 0–255 归一化为 0..1 的柱高，再做指数平滑（默认 60%）防抖动。<br>
+                <b>样式：</b>频谱条 —— 96 根柱子从低频到高频排布，颜色按对数频率映射到主题色带；环形频谱 —— 柱子绕圆心放射；波形 —— 时域数据连成的波形线（128 为中线）；圆形波形 —— 时域数据绕成一圈；镜像频谱 —— 柱子上下对称。切换样式即时生效。<br>
+                <b>主题：</b>霓虹 / 落日 / 海洋三组色带，频率越低取色带越靠前（低频偏冷色）、越高越靠后；波形类样式取主题的首色/第三色描线。<br>
+                <b>麦克风：</b><code>getUserMedia({audio:true})</code> 取流后经 <code>MediaStreamAudioSourceNode</code> 接入同一条分析链，画面随现场声音实时变化；拒绝授权会明确提示原因，文件模式不受影响。<br>
+                <b>录制：</b><code>canvas.captureStream(30)</code> 取画面流、<code>MediaStreamDestination</code> 取音频流，两路合成为 <code>MediaRecorder</code> 录制 WebM（优先 vp9/opus，不支持则回落 vp8/opus 或浏览器默认），点「停止并导出」即下载 <code>原文件名-visualizer.webm</code>。<br>
+                <b>截图：</b>随时点「截取当前帧 PNG」把 canvas 当前画面存为 PNG（<code>原文件名-visualizer.png</code>）。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、分析、渲染、录制、下载都在你的浏览器里完成，可在 DevTools Network 面板验证；刷新页面后音频不恢复。
+            </div>
+        </div>
+
+        <div class="mv-panel">
+            <h3>❓ 常见问题</h3>
+            <dl class="mv-faq">
+                <dt>为什么导出视频要等整首歌播完？</dt>
+                <dd>因为导出是实时录制：<code>MediaRecorder</code> 录的是正在播放的画面和声音，录多久就产出多久的视频，3 分钟的歌就要录 3 分钟。浏览器没有提供“离线加速渲染频谱视频”的接口，所以无法像音频处理那样几秒算完。</dd>
+                <dt>画面不动 / 柱子很矮，是坏了吗？</dt>
+                <dd>先看是不是音频本身的问题：静音段、音量很小的段落、频谱很窄的音频（比如纯人声清唱），画面本来就弱。换一首编曲丰富的歌、把音量调大再试；也可以把平滑度调低，画面会更灵敏。</dd>
+                <dt>麦克风模式点了没反应？</dt>
+                <dd>先看提示文案：拒绝授权会明确告诉你“拒绝了麦克风授权”，需要在浏览器地址栏的权限设置里允许本站使用麦克风后重试；没找到设备会提示“未找到可用的麦克风设备”。麦克风模式与文件模式互不影响。</dd>
+                <dt>录出来的 WebM 没有声音？</dt>
+                <dd>录制时音频取自播放链路的 <code>MediaStreamDestination</code>：文件模式下必须在播放中录制（暂停时录到的就是静音）；麦克风模式下麦克风须保持接入。导出后用 Chrome / VLC 打开验证，旧版播放器可能不支持 WebM 的 opus 音轨。</dd>
+                <dt>导出的文件叫什么名字？</dt>
+                <dd>视频自动命名为「原文件名-visualizer.webm」，例如 <code>夜曲-visualizer.webm</code>；截图为「原文件名-visualizer.png」。麦克风模式下以 <code>mic-visualizer.webm</code> 命名。如需其他名字，下载后重命名即可。</dd>
+            </dl>
+        </div>
+
+        <div class="mv-panel">
+            <h3>🔗 相关工具</h3>
+            <div class="mv-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">音乐可视化器（当前）</span>
+                <a href="/tools/vocal-remover" class="btn btn-secondary" style="font-size:.9rem;">人声消除/伴奏提取</a>
+                <a href="/tools/slowed-reverb" class="btn btn-secondary" style="font-size:.9rem;">音频变速混响生成器</a>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/music_visualizer.js?v=1"></script>
+</body>
+</html>
+{{end}}

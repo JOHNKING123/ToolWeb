@@ -115,7 +115,7 @@ async function main() {
   var encodeSection = cats.slice(cats.indexOf('ID:          "encode"'), cats.indexOf('ID:          "dev"'));
   ok(encodeSection.indexOf("gzip_base64_decoder") >= 0, "注册落在编码转换品类段内");
   var allPaths = cats.match(/"\/tools\/[^"]+"/g) || [];
-  eq(new Set(allPaths).size, 309, "注册总数 308→309 Path");
+  eq(new Set(allPaths).size, 310, "注册总数 309→310 Path");
   var js = fs.readFileSync(path.join(__dirname, "../static/js/gzip_base64_decoder.js"), "utf8");
   ok(js.indexOf("fetch(") < 0 && js.indexOf("XMLHttpRequest") < 0, "JS 零 fetch/XHR");
   ok(js.indexOf("DecompressionStream('gzip')") >= 0 && js.indexOf("CompressionStream('gzip')") >= 0, "JS 用原生 gzip 流");

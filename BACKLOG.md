@@ -1,3 +1,101 @@
+## 今日任务（2026-11-06 03:00 · PM 选定轮，接通用调研第二百四十轮）
+
+**选定：音乐可视化器（music_visualizer）** — 本轮唯一任务（新工具）。
+
+**顺位**：240 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十度裁定跳过**（沿用 231–239 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；九轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤的真工具，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），音乐可视化口径站内 0 交付。
+2. **口径互补确凿**：站内音频工具已有剪辑（audio_trimmer／audio_merger）／变速混响（slowed_reverb）／标签（mp3_tag_editor）／检测（lossless_audio_checker）／分离（vocal_remover）五口径；本工具为**可视化口径**（解码→AnalyserNode 频域数据→canvas 渲染→MediaRecorder 导出），音频家族六口径齐全，与分离口径形成「伴奏做好了顺手做成可视化视频」的顺流互链。
+3. **需求验证**：做短视频／播客封面／直播背景要一段"会动的音乐画面"，现有免费站要上传、限次、带水印；浏览器本地做、零上传、无次数。AudioVisualize 11-03 信号印证（32 种样式，WebM/MP4 导出，文件不上传）。
+4. **技术路线站内已有先例**：vocal_remover／lossless_audio_checker 已跑通 FileReader → ArrayBuffer → AudioContext.decodeAudioData 全本地解码；本工具只在解码后多一步 AnalyserNode 取频域/时域数据＋canvas 渲染＋MediaRecorder 录制导出，无新外部依赖、无服务端、无模型权重。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`music_visualizer`／`audio_visualizer`／`visualizer` 全站（tools/templates/static/js/tests）**0 命中**——音乐可视化本体 0 交付，真缺口确凿。
+   - CJK「音乐可视化」／「音频可视化」`chr(0x...)` 运行时构造全站 **0 命中**。
+   - CJK「可视化」143 命中验真全为他人口径：Enigma 转子步进、二维码扫描定位框、CSP 响应头、Prettier 选项、正则结构树、crontab、CSS 渐变、键盘测试布局等——**无一为音乐可视化本体**。
+   - Icon：**`equalizer`（首选；`Icon:\s*"equalizer"` 精确值 **0 命中**，全库唯一，贴合「频谱均衡器」语义；备选 `waveform` 亦 0 命中；`graphic_eq` 占用 1、`music_note` 占用 1，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／在线节拍器／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频（P3 弱观察维持）／图片智能抠图（新晋 P3 弱观察；98MB 模型权重与模板零外部资源惯例冲突）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 单文件上传／拖拽（.flac／.wav／.mp3／.ogg／.m4a，≤200MB，沿用 vocal_remover／lossless_audio_checker 文件口径）② FileReader → ArrayBuffer → AudioContext.decodeAudioData 本地解码（沿用 audio_trimmer.js:188 既有模式），BufferSource → AnalyserNode（fftSize=2048）取频域/时域数据 ③ canvas 渲染样式 ≥5 种：频谱条／环形频谱／波形／圆形波形／镜像频谱（样式切换即时生效）④ 颜色主题 ≥3 组（霓虹／火焰／海洋／单色）＋背景色可选 ⑤ 播放控制：播放／暂停／进度条／音量 ⑥ 麦克风输入模式（getUserMedia，拒绝授权时明确提示、仅文件模式可用）⑦ 导出：MediaRecorder 录制 canvas.captureStream＋音频 → WebM 下载；另附 PNG 静态帧截图 ⑧ 互链：vocal_remover 单向互链（"伴奏做好了顺手做成可视化视频"）、slowed_reverb 单向互链（"变速混响后再可视化"）⑨ 全程浏览器本地计算，零上传、零外部接口 ⑩ 无障碍（tab 聚焦可操作、动画可减弱）⑪ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.MusicVisualizer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `validateAudioFile({name, size})` → {ext}（扩展名须为 flac/wav/mp3/ogg/m4a 之一，否则 err.field='fileName'；size 须 ≤200MB，否则 err.field='fileSize'）。
+  - `computeBarHeights(freqData, barCount)` → number[]（频域字节数据 0–255 → 归一化柱高 0..1；barCount 须为正整数，否则 err.field='barCount'；freqData 须为非空数组，否则 err.field='freqData'；barCount 大于数据长度时均匀采样不越界）。
+  - `smoothHeights(prev, next, factor)` → number[]（指数平滑 prev＋(next−prev)·factor；factor 须在 (0,1] 内，否则 err.field='factor'；prev/next 等长非空，否则 err.field='heights'）。
+  - `freqToColor(freq, minFreq, maxFreq, palette)` → {r, g, b}（对数映射频率到色带插值；palette 须为 ≥2 色数组，否则 err.field='palette'；freq 须在 [minFreq, maxFreq] 内，否则 err.field='freq'；minFreq 须 >0 且 <maxFreq，否则 err.field='freqRange'）。
+  - `buildWaveformPoints(timeData, width, height)` → [{x, y}]（时域字节数据 0–255 → 波形采样点，128 为中线 y=height/2；width/height 须为正数，否则 err.field='canvas'；timeData 须为非空数组，否则 err.field='timeData'）。
+  - `formatDuration(seconds)` → "m:ss"（seconds 须为 ≥0 有限数，否则 err.field='seconds'）。
+  - `recordingFilename(baseName)` → string（去扩展名＋"-visualizer.webm"；baseName 须为非空字符串，否则 err.field='fileName'）。
+- **数值锚点（测试精确值）**：computeBarHeights：全 255 → 全 1；全 0 → 全 0；[0, 128, 255]、barCount=3 → [0, 128/255≈0.502, 1]（误差 ≤0.01）；barCount=2、freqData=[0, 255] → [0, 1]。smoothHeights：factor=1 → 等于 next；factor=0.5、prev=[0]、next=[1] → [0.5]；factor=0.25、prev=[0.8]、next=[0] → [0.6]。freqToColor：freq=minFreq → palette 首色精确值；freq=maxFreq → palette 末色精确值。buildWaveformPoints：timeData 全 128 → y 全为 height/2；点数＝width 步数（每像素一采样点）；timeData=[0] → y=height（顶），[255] → y=0（底）。formatDuration：0 → "0:00"；65 → "1:05"；3599 → "59:59"。recordingFilename："song.mp3" → "song-visualizer.webm"；"my.track.v2.flac" → "my.track.v2-visualizer.webm"。validateAudioFile：扩展名与体积边界同 lossless_audio_checker（200MB 边界值精确）。
+- **真限制三条页面明示**：① 导出为实时录制：MediaRecorder 录制时长＝播放时长，3 分钟音频需完整播放 3 分钟才能导出 WebM（非离线加速渲染）；② 画面随音频频谱内容变化：纯人声／低频少的音频画面变化小，效果因曲目而异；③ 全程浏览器本地解码渲染，零上传；麦克风模式需浏览器授权，拒绝后仅文件模式可用。
+- **SEO**：音乐可视化、音频可视化、频谱视频、music visualizer、音乐频谱。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 music_visualizer 条目，紧邻 vocal_remover，Path 309→**310**，Icon `equalizer` 首选，开发轮精确值复测锁定全库唯一）／templates/music_visualizer.html（新）／static/js/music_visualizer.js（新）／tests/music_visualizer.test.js（新）／全量旧 tests Path 断言 309→310 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥60 断言全过（computeBarHeights 归一化锚点精确值；smoothHeights 三档锚点精确值；freqToColor 首末色精确值；buildWaveformPoints 中线／顶底锚点精确值；formatDuration 三档精确值；recordingFilename 命名精确值；validateAudioFile 扩展名与体积边界 err.field；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 195→**196** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/music-visualizer 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：上传音频解码成功、5 种样式切换渲染正常、播放／暂停／进度／音量可用、麦克风模式（授权时）有画面、WebM 导出可播放、PNG 截图可用、互链 vocal_remover／slowed_reverb 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 audio_trimmer／audio_merger／lossless_audio_checker／vocal_remover／slowed_reverb／mp3_tag_editor 同类目，可视化口径与分离口径互补；模板内与 vocal_remover／slowed_reverb 单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：音乐可视化器→本轮交付（240 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十度跳过（数据表负债从严，231–239 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII music_visualizer／audio_visualizer／visualizer 全 0 命中，CJK 音乐可视化／音频可视化全 0 命中，「可视化」143 命中全为 Enigma／二维码／CSP／Prettier／正则／crontab／CSS 渐变等他人口径）；音频处理类目，可视化口径与分离口径互补；Icon `equalizer` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十度跳过）／数独游戏→P3 观察维持／在线节拍器／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频→P3 弱观察维持／图片智能抠图→新晋 P3 弱观察（98MB 模型权重压级）。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常——首轮未带密钥环境变量报 SSH 权限错，补带后一次成功，本地已最新；本地 HEAD 3b05160（人声消除已提交，含评审重审修复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **309**；`ls tests/*.test.js | wc -l` = **195**；PM 独立零重叠复核（ASCII `music_visualizer`／`audio_visualizer`／`visualizer` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「音乐可视化」／「音频可视化」`chr(0x...)` 运行时构造 0 命中；「可视化」143 命中验真全为 Enigma／二维码／CSP／Prettier／正则／crontab／CSS 渐变／键盘测试等他人口径；`Icon:\s*"equalizer"`／`waveform` 精确值 0 命中，`graphic_eq`／`music_note` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 03:00 · 产品调研推荐，第二百四十轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：人声消除/伴奏提取已交付闭环（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 总数 308→**309**，tests **195 个**；新测试 176→190 断言全过），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 239 轮（`social_image_size`／`social-image-size` 全 0 命中，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已九度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠沿用 239 轮（ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付）；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **音乐可视化器** — **新晋第三席**。AudioVisualize 11-03 信号（twelve.tools：免费浏览器音乐可视化器，32 种样式，麦克风输入，WebM/MP4 导出，文件不上传）；痛点：做短视频／播客封面／直播背景要一段"会动的音乐画面"，现有免费站要上传、限次、带水印；浏览器本地做、零上传、无次数；实现纯前端小-中难度（上传音频→decodeAudioData／AnalyserNode 取频域数据→canvas 频谱条／环形／波形多样式渲染→MediaRecorder 录制导出 WebM，沿用 vocal_remover／lossless_checker 解码模式，零外部模型）；站内口径互补：音频工具已有剪辑／变速／标签／检测／分离五口径，本工具为**可视化口径**。零重叠本轮复核确凿：`music_visualizer`／`audio_visualizer`／`visualizer` 全站 **0 命中**；CJK「音乐可视化」／「音频可视化」`chr(0x...)` 运行时构造 **0 命中**；「可视化」143 命中验真全为 Enigma／二维码扫描／CSP／Prettier／正则／crontab／CSS 渐变等他人口径——**音乐可视化本体 0 交付**。**弱点**：娱乐属性偏强（近 slowed_reverb 音乐玩具口径）；导出须 MediaRecorder 实时录制（3 分钟音频等 3 分钟），体验有上限。SEO：音乐可视化、音频可视化、频谱视频、music visualizer。建议 ID music_visualizer、Path /tools/music-visualizer；Icon `equalizer` 首选（精确值 **0 命中**，全库唯一；备选 `waveform` 亦 0 命中；`graphic_eq` 占用 1、`music_note` 占用 1，不可取），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已九度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 音乐可视化器 | **新晋第三席**：AudioVisualize 11-03 信号；站内本体 0 交付（`music_visualizer`／`visualizer`／音乐可视化／音频可视化全 0 命中）；音频家族可视化口径互补；纯前端小-中难度；**弱点**：娱乐属性偏强，导出须实时录制 | 小-中 | P3（新晋） |
+| 在线节拍器 | P3 弱观察维持；`metronome`／`tuner`／CJK「节拍器」／「调音」全站 0 命中；纯前端小难度（Web Audio 节拍音＋BPM＋拍号）；**弱点**：受众偏乐器练习人群，工具站定位边缘 | 小 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | **新晋 P3 弱观察**：RMBG Show HN 信号（BiRefNet-lite 浏览器端抠图，remove.bg 停站并入 Canva 后的替代需求）；站内本体 0 交付（`remove_bg`／`bg_remover`／「背景移除」全 0 命中；id_photo_maker 仅纯色换底、明确不做智能抠图）；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突（同视频转 SRT 一档） | 中 | P3（弱观察） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 信号；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | P3 弱观察维持；`video_to_audio`／`extract_audio`／CJK「视频转音频」全站 0 命中；**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差 | 中 | P3（弱观察） |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 01:36~03:00 窗口；本轮**新晋 2 个**）：
+- **AudioVisualize 11-03（twelve.tools）**：免费浏览器音乐可视化器，32 种样式，麦克风输入，WebM/MP4 导出，文件不上传 → **音乐可视化器新晋第三席**（见 Top3）。
+- **RMBG（Show HN）**：浏览器端 AI 抠图（BiRefNet-lite＋Transformers.js，约 98MB 模型权重），remove.bg 宣布停站并入 Canva 后的替代需求 → **图片智能抠图新晋 P3 弱观察**（模型权重与模板零外部资源惯例冲突）。
+- Product Hunt 11-05 当日榜：Bridge／Rerun／Living Brain／Pushary／ChatGPT Images 2.6／Glasshand／SafetyClip（Mac 剪贴板桌面应用）／Stitch.ai／Vibeconferencing／Nemotron Transcribe／Seamcult／TextKit／Nock／SnapTiles（3D 磁贴游戏）／Tao Browser／Deployed Yet?（需服务端抓取）／OpenScreen（开源录屏桌面应用；站内 screen-recorder 已交付）／EzyRing（浏览器打电话，需电信后端）／Lets1UP（电视派对游戏）／PlaceReveal（AI 房间布置）→ AI agent／桌面应用／游戏／需服务端口径全消解；Spectro（238 轮已用）／Screen Studio 4.0／Clayzo／beacon.sh／Xmind 2027／magpie（239 轮已消解）。
+- twelve.tools 11-03~11-05 新品：FPSDEN（随机抽取器／转盘／JSON-CSV 转换 → decision_wheel／annual_lottery／random_decision 已交付消解）；Excerpt（ChatGPT 剪藏 Chrome 扩展口径消解）；GoodExts（X 视频下载等扩展口径消解）；HomepageTab（新标签页扩展口径消解）；TapirUpscale（AI 视频超分，需模型＋服务端，弱口径不入池）；Shadow Snap（电影字幕图生成，niche 弱口径不入池）；AI Rap Video／Nano AI（AI 视频／图片口径消解）；Mass Rename（batch_rename_helper 已交付，239 轮已消解）。
+- V2EX 11-04~11-05：旁白翻译插件（需 API key 的扩展口径消解）；V2EX 评论上下文插件（扩展口径消解）；ProtoHub（原型托管平台口径消解）；Paint Board（doodle_board 已交付消解）；Blob0（macOS S3 客户端口径消解）；token 羊毛党（聚合站口径消解）。
+- Hacker News：USB Device Identifier（WebUSB VID/PID 查询，需 usb.ids 全量库＋受众极窄，弱口径不入池）；Web Audio Studio（Web Audio 图调试器，开发者 niche，弱口径不入池）；HackerTube／HackerFlow（HN 视频／阅读器平台口径消解）；Swurf（网页滑动发现，需服务端推荐池，弱口径不入池）。
+- 懒大王 10-26/10-27／小刀网 10-29／Stiltcode 10-16／bewebstuff 清单：Squoosh／Diffchecker／CleanURL／iLovePDF／Hemingway／TinyPNG／草料二维码／123apps／Cleanup.pictures／Temp-Mail（需服务端收件箱）／TinyWow → 站内形态印证（img_compress／text_diff／url_tracker_cleaner／readability_analyzer／PDF 工具箱／qr_code／视频工具等已交付）。
+
+**候选池变动**：vocal_remover 交付划出（3b05160，309 Path，195 tests）；**音乐可视化器新晋第三席**（AudioVisualize 11-03 信号，站内本体 0 交付＋纯前端小-中难度；Icon `equalizer` 首选 0 命中）；**图片智能抠图新晋 P3 弱观察**（RMBG Show HN 信号，站内智能抠图本体 0 交付，98MB 模型权重压级）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已九度跳过）；数独游戏 P3 观察维持第二席；在线节拍器／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪／视频提取音频 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，StrictHostKeyChecking=no 自动重建后一次成功）；本地 HEAD 3b05160（人声消除已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **309**；`ls tests/*.test.js | wc -l` = **195**；本地当前分支 muse/dev-20260929；工作区除未跟踪的 `toolweb` 二进制外干净（BACKLOG 追加前）；站内零重叠复核（`music_visualizer`／`audio_visualizer`／`visualizer` 全 0 命中；CJK「音乐可视化」／「音频可视化」`chr(0x...)` 运行时构造 0 命中；「可视化」143 命中验真全为 Enigma／二维码／CSP／Prettier／正则／crontab／CSS 渐变等他人口径；`remove_bg`／`bg_remover`／「背景移除」全 0 命中，「抠图」3 命中验真全为 id_photo_maker 纯色换底说明与 signature_capture 签名抠图他人口径；`metronome`／`tuner` 沿用 239 轮 0 命中；Icon `equalizer`／`waveform` 精确值 0 命中，`graphic_eq`／`music_note` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 01:40 · PM 选定轮，接通用调研第二百三十九轮）
 
 **选定：人声消除/伴奏提取（vocal_remover）** — 本轮唯一任务（新工具）。

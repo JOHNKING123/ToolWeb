@@ -2916,6 +2916,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "music_visualizer",
+					Name:        "音乐可视化器",
+					Description: "上传 FLAC/WAV/MP3/OGG/M4A（≤200MB）本地解码，AnalyserNode 实时取频域/时域数据，canvas 渲染 5 种频谱样式（频谱条/环形频谱/波形/圆形波形/镜像频谱）＋ 3 组颜色主题，播放/暂停/进度/音量控制，支持麦克风实时输入，MediaRecorder 录制频谱视频导出 WebM、PNG 静态帧截图，全程浏览器本地计算零上传 · Music visualizer: upload audio, 5 spectrum styles, mic input, record WebM video locally",
+					Path:        "/tools/music-visualizer",
+					Icon:        "equalizer",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "slowed_reverb",
 					Name:        "音频变速混响生成器",
 					Description: "上传 MP3/WAV/OGG/M4A/AAC 本地解码，变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调随速度自然变化），ConvolverNode 卷积混响（程序化合成脉冲响应：怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），OfflineAudioContext 离线渲染＋进度条，A/B 对比试听，WAV 手工编码/MP3(lamejs 128–320kbps)本地导出，纯前端零上传 · Slowed+reverb generator: change speed 0.5x-1.5x, convolution reverb, offline render, A/B preview, export WAV/MP3 locally",

@@ -4,7 +4,7 @@
 * 保低频直流保留/高频近 karaoke、非法参数 err.field）、extractCenter（中央声道锚点）、
 * preserveBass（一阶低通：直流全保留/高频近 karaoke 误差 ≤0.05）、encodeWavPcm16（RIFF 头字段与
 * 数据长度精确值）、waveformPeaks / floatTo16BitPCM / interleaveChannels / resampleLinear /
-* clampStrength / 导出命名与体积预估、categories.go 注册（Path 总数 309→309、Icon mic_off 全库唯一、
+* clampStrength / 导出命名与体积预估、categories.go 注册（Path 总数 309→310、Icon mic_off 全库唯一、
 * 紧邻 lossless_audio_checker）、模板（SEO 关键词、真限制四条、控件、互链、零外部资源静态检查）。
 */
 "use strict";
@@ -235,7 +235,7 @@ notHas(JS_SRC, "XMLHttpRequest", "JS 零外部接口：无 XMLHttpRequest");
 
 /* ---------- 9. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 309, "注册 Path 总数 309→309");
+eq(pathCount, 310, "注册 Path 总数 309→310");
 has(GO_SRC, '"vocal_remover"', "注册：ID vocal_remover");
 has(GO_SRC, '"/tools/vocal-remover"', "注册：Path /tools/vocal-remover");
 has(GO_SRC, '"mic_off"', "注册：Icon mic_off");

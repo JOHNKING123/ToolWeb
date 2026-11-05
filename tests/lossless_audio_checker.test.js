@@ -6,7 +6,7 @@
 * （扩展名与体积边界）、analyzeBands（组合入口、静音 inconclusive）、
 * analyzeBuffer（端到端管线：1kHz+21kHz/18kHz/12kHz 三档锚点、全零静音、
 * 短音频零填充）、mixToMono/peakDbfs、双模式导出与零外部接口、
-* categories.go 注册（Path 总数 308→309、Icon audio_file 全库唯一、New/音频处理类目、
+* categories.go 注册（Path 总数 309→310、Icon audio_file 全库唯一、New/音频处理类目、
 * 紧邻 audio_merger）、模板（SEO 五关键词、真限制四条、控件、互链、零外部资源静态检查）。
 */
 "use strict";
@@ -265,7 +265,7 @@ notHas(JS_SRC, "XMLHttpRequest", "JS 零外部接口：无 XMLHttpRequest");
 
 /* ---------- 11. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 309, "注册 Path 总数 308→309");
+eq(pathCount, 310, "注册 Path 总数 309→310");
 has(GO_SRC, '"lossless_audio_checker"', "注册：ID lossless_audio_checker");
 has(GO_SRC, '"/tools/lossless-audio-checker"', "注册：Path /tools/lossless-audio-checker");
 has(GO_SRC, '"audio_file"', "注册：Icon audio_file");
