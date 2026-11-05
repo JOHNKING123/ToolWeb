@@ -105,7 +105,7 @@ function throwsField(fn, field, name) {
     contains(GO_SRC.toLowerCase(), "text to image card", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 305, "注册 Path 总数 268→270");
+    eq(pathCount, 305, "注册 Path 总数 304→305");
 })();
 
 /* ================= 6. 零网络静态检查 ================= */

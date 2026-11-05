@@ -4,6 +4,8 @@
  * buildFontStack 引号规则（空格/中文名加双引号、通用族名与纯 ASCII 单词不加引号）、
  * normalizeOptions 缺省 {32,16,1.6}、范围边界与抛错 err.field、formatPairingCSS 关键片段与
  * 精确全文、listFontStacks 选项结构、非法参数抛错 err.field、双模式导出与零外部接口、
+ * buildPairingCardHTML 卡片 HTML 回归（上一轮评审致命 bug：renderList 误用 p.title/p.body
+ * 致 10 张卡片全不渲染；现卡片 HTML 由纯函数生成，逐组断言可渲染且字体栈正确）、
  * categories.go 注册（Path 总数 304→305、Icon text_format 全库唯一、New/类目）、
  * 模板（SEO 四关键词、真限制四条、随机/手动选择/滑杆/预览/复制 CSS 控件、互链字体版权查询、
  * 零外部资源静态检查）。
@@ -215,6 +217,45 @@ ok(httpLinks.every(function (u) { return u.indexOf("johnkingzcq123.xyz") !== -1;
   "模板零外部样式：http link 仅 canonical 自家域名");
 has(TPL_SRC, "aria-label", "模板：含 aria 无障碍标签");
 has(TPL_SRC, "prefers-reduced-motion", "模板：动画可减弱媒体查询");
+
+/* ---------- 12. buildPairingCardHTML：卡片 HTML 回归（上一轮评审致命 bug） ----------
+ * renderList 曾误用 p.title / p.body（搭配对象只有 titleStack / bodyStack），
+ * buildFontStack(undefined) 抛错致 10 张卡片全不渲染、预览区也不初始化。
+ * 现卡片 HTML 由纯函数 buildPairingCardHTML 生成并导出，本节逐组断言全部搭配
+ * 可渲染且含正确字体栈。注：卡片内 font-family 经 HTML 转义，双引号写作 &quot;。 */
+function escH(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c];
+  });
+}
+var card0 = M.buildPairingCardHTML(M.getPairingById("classic-ink"), false);
+has(card0, 'data-id="classic-ink"', "卡片 HTML：含 data-id");
+has(card0, "墨韵经典", "卡片 HTML：含搭配名称");
+has(card0, "经典", "卡片 HTML：含风格标签");
+has(card0, "font-family:", "卡片 HTML：含 font-family");
+has(card0, "&quot;Songti SC&quot;", "卡片 HTML：标题字体栈含引用的 Songti SC");
+has(card0, "&quot;Kaiti SC&quot;", "卡片 HTML：正文字体栈含引用的 Kaiti SC");
+has(card0, "标题 Title 123", "卡片 HTML：含标题示例");
+has(card0, "The quick brown fox", "卡片 HTML：含正文示例");
+ok(card0.indexOf("fpp-active") === -1, "卡片 HTML：非激活不含 fpp-active");
+has(M.buildPairingCardHTML(M.getPairingById("classic-ink"), true), "fpp-active", "卡片 HTML：激活含 fpp-active");
+all.forEach(function (p) {
+  var html = M.buildPairingCardHTML(p, p.id === "classic-ink");
+  has(html, "font-family:" + escH(M.buildFontStack(p.titleStack)), "卡片可渲染 " + p.id + "：标题 font-family 与 buildFontStack 一致");
+  has(html, "font-family:" + escH(M.buildFontStack(p.bodyStack)), "卡片可渲染 " + p.id + "：正文 font-family 与 buildFontStack 一致");
+  has(html, 'data-id="' + p.id + '"', "卡片可渲染 " + p.id + "：data-id");
+  has(html, p.name, "卡片可渲染 " + p.id + "：名称");
+  has(html, p.note, "卡片可渲染 " + p.id + "：点评");
+});
+var evilCard = M.buildPairingCardHTML({ id: "x", name: "<b>&\"'", style: "modern", note: "n<m", titleStack: ["Arial"], bodyStack: ["Arial"] }, false);
+notHas(evilCard, "<b>", "卡片 HTML：名称转义，不含裸 <b>");
+has(evilCard, "&lt;b&gt;", "卡片 HTML：名称转义为实体");
+throws(function () { M.buildPairingCardHTML({ id: "x", name: "x", style: "classic", note: "x" }, false); }, "pairing", "缺字体栈的搭配抛错 field=pairing");
+throws(function () { M.buildPairingCardHTML({ id: "x", name: "x", style: "classic", note: "x", titleStack: ["Arial"] }, false); }, "pairing", "缺正文字体栈抛错 field=pairing");
+throws(function () { M.buildPairingCardHTML(null, false); }, "pairing", "null 搭配抛错 field=pairing");
+notHas(JS_SRC, "buildFontStack(p.title)", "源码防回归：不再用 p.title 拼卡片");
+notHas(JS_SRC, "buildFontStack(p.body)", "源码防回归：不再用 p.body 拼卡片");
+has(JS_SRC, "buildPairingCardHTML(p, active)", "源码：renderList 改调 buildPairingCardHTML");
 
 console.log("font_pairing_preview: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");
 if (fail > 0) process.exit(1);

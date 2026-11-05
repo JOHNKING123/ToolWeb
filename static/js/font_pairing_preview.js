@@ -184,6 +184,31 @@
       '}';
   }
 
+  /* buildPairingCardHTML(pairing, isActive) -> 预设搭配卡片的 HTML 字符串（纯函数）。
+   * 供 renderList() 调用；回归覆盖：此前 renderList 直接拼 HTML 时误用
+   * p.title / p.body（搭配对象只有 titleStack / bodyStack），buildFontStack(undefined)
+   * 抛错导致 10 张卡片全不渲染、预览区也不初始化。pairing 缺字体栈抛错，
+   * err.field='pairing'；字段值统一做 HTML 转义。 */
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function buildPairingCardHTML(pairing, isActive) {
+    if (!pairing || typeof pairing !== 'object' ||
+        !Array.isArray(pairing.titleStack) || !pairing.titleStack.length ||
+        !Array.isArray(pairing.bodyStack) || !pairing.bodyStack.length) {
+      throw fail('pairing', '搭配必须包含非空的标题与正文字体栈');
+    }
+    return '<div class="fpp-card' + (isActive ? ' fpp-active' : '') + '" data-id="' + escHtml(pairing.id) + '" role="button" tabindex="0" aria-label="选用搭配 ' + escHtml(pairing.name) + '">' +
+      '<div class="fpp-card-title" style="font-family:' + escHtml(buildFontStack(pairing.titleStack)) + '">' + escHtml(pairing.name) + '</div>' +
+      '<div class="fpp-card-sample" style="font-family:' + escHtml(buildFontStack(pairing.titleStack)) + '">标题 Title 123</div>' +
+      '<div class="fpp-card-sample fpp-card-body" style="font-family:' + escHtml(buildFontStack(pairing.bodyStack)) + '">正文 Body 示例文字，The quick brown fox jumps over the lazy dog.</div>' +
+      '<div class="fpp-card-meta"><span class="fpp-tag">' + escHtml(STYLE_LABELS[pairing.style] || pairing.style) + '</span><span class="fpp-note">' + escHtml(pairing.note) + '</span></div>' +
+      '</div>';
+  }
+
   var api = {
     listPairings: listPairings,
     listFontStacks: listFontStacks,
@@ -193,6 +218,7 @@
     buildFontStack: buildFontStack,
     normalizeOptions: normalizeOptions,
     formatPairingCSS: formatPairingCSS,
+    buildPairingCardHTML: buildPairingCardHTML,
     styles: clone(STYLES),
     styleLabels: clone(STYLE_LABELS)
   };
@@ -281,12 +307,7 @@
         var shown = styleFilter === 'all' ? all : all.filter(function (p) { return p.style === styleFilter; });
         listEl.innerHTML = shown.map(function (p) {
           var active = p.id === state.pairing.id && !state.titleStackId && !state.bodyStackId;
-          return '<div class="fpp-card' + (active ? ' fpp-active' : '') + '" data-id="' + esc(p.id) + '" role="button" tabindex="0" aria-label="选用搭配 ' + esc(p.name) + '">' +
-            '<div class="fpp-card-title" style="font-family:' + esc(buildFontStack(p.title)) + '">' + esc(p.name) + '</div>' +
-            '<div class="fpp-card-sample" style="font-family:' + esc(buildFontStack(p.title)) + '">标题 Title 123</div>' +
-            '<div class="fpp-card-sample fpp-card-body" style="font-family:' + esc(buildFontStack(p.body)) + '">正文 Body 示例文字，The quick brown fox jumps over the lazy dog.</div>' +
-            '<div class="fpp-card-meta"><span class="fpp-tag">' + esc(STYLE_LABELS[p.style]) + '</span><span class="fpp-note">' + esc(p.note) + '</span></div>' +
-            '</div>';
+          return buildPairingCardHTML(p, active);
         }).join('') || '<div class="fpp-empty">没有该风格的搭配。</div>';
         var cards = listEl.querySelectorAll('.fpp-card');
         for (var i = 0; i < cards.length; i++) {
@@ -320,8 +341,6 @@
         if (!input) return;
         input.addEventListener('input', function () {
           var v = parseFloat(input.value);
-          var patch = {};
-          patch[key] = v;
           try {
             state.options = normalizeOptions({
               titleSizePx: key === 'titleSizePx' ? v : state.options.titleSizePx,
