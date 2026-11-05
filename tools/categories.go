@@ -2898,6 +2898,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "lossless_audio_checker",
+					Name:        "无损音频真伪检测",
+					Description: "上传/拖拽 FLAC/WAV/MP3/OGG/M4A（≤200MB）本地解码，全文件均匀取≤8段、每段4096点加Hann窗FFT，1kHz分频带能量取各段最大值，频谱图+频谱曲线+截止频率竖线可视化，按44.1kHz基准三档“疑似”判定（真无损/疑似转码/无法判定），识别MP3转FLAC假无损，纯前端零上传 · Lossless audio checker: detect fake FLAC from MP3 transcode via spectrum cutoff, local FFT analysis in browser",
+					Path:        "/tools/lossless-audio-checker",
+					Icon:        "audio_file",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "slowed_reverb",
 					Name:        "音频变速混响生成器",
 					Description: "上传 MP3/WAV/OGG/M4A/AAC 本地解码，变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调随速度自然变化），ConvolverNode 卷积混响（程序化合成脉冲响应：怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），OfflineAudioContext 离线渲染＋进度条，A/B 对比试听，WAV 手工编码/MP3(lamejs 128–320kbps)本地导出，纯前端零上传 · Slowed+reverb generator: change speed 0.5x-1.5x, convolution reverb, offline render, A/B preview, export WAV/MP3 locally",

@@ -141,7 +141,7 @@ has(GO, "\"skeleton_screen_generator\"", "注册：ID skeleton_screen_generator"
 has(GO, "\"/tools/skeleton-screen-generator\"", "注册：Path /tools/skeleton-screen-generator");
 has(GO, "骨架屏加载占位生成器", "注册：Name 骨架屏加载占位生成器");
 var pathCount = (GO.match(/"\/tools\/[^"]+"/g) || []).filter(function (p, i, arr) { return arr.indexOf(p) === i; }).length;
-eq(pathCount, 307, "注册：总数 306→307 Path");
+eq(pathCount, 308, "注册：总数 307→308 Path");
 
 /* ---------- 8. 零网络请求静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无网络请求调用");

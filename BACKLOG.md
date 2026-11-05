@@ -1,3 +1,102 @@
+## 今日任务（2026-11-05 23:39 · PM 选定轮，接通用调研第二百三十八轮）
+
+**选定：无损音频真伪检测（lossless_audio_checker）** — 本轮唯一任务（新工具）。
+
+**顺位**：238 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第八度裁定跳过**（沿用 231–237 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；七轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤的真工具，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），音频真伪检测口径站内 0 交付。
+2. **口径互补确凿**：站内音频工具仅 audio-trimmer／audio-merger（剪辑口径）＋slowed_reverb（变速混响口径）＋mp3_tag_editor（标签口径）；本工具为**检测口径**（上传→解码→FFT 频谱→高频截止判定→"疑似转码/疑似真无损"），与剪辑工具形成「剪完顺手验真伪」的顺流互链。
+3. **需求验证**：买到的"无损"FLAC 常是 MP3 转码，频谱在 16–20kHz 被一刀切，耳朵难辨、频谱一眼见分晓；Spectro 11-05 当日榜信号印证此需求正在被产品化。
+4. **技术路线站内已有先例**：audio_trimmer.js／audio_merger.js 已跑通 FileReader → ArrayBuffer → AudioContext.decodeAudioData 全本地解码；本工具只在解码后多一步 PCM 取段＋加窗 FFT＋1kHz 分频带能量分析，无新外部依赖、无服务端。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`lossless_audio`／`audio_authentic`／`audio-authentic` 全站（tools/templates/static/js/tests）**0 命中**——音频真伪检测本体 0 交付，真缺口确凿。
+   - `spectr` 仅 static/js/html_jsx_converter.js:53 一处 `preserveaspectratio` 子串（SVG 属性，无关）；`flac` 命中验真全为他人口径：audio_trimmer.js:173／audio_merger.js:292 文件接受列表、project_to_txt.js:36 扩展名映射、white_noise_generator.test.js:248 反向断言——**无一为检测本体**。
+   - `lossless` 命中验真全为他人口径：svg_compressor 三档预设（无损压缩口径）、img_target_kb.js PNG 判定——**无一为音频口径**。
+   - CJK「频谱」（`chr(0x9891)+chr(0x8c31)` 运行时构造）全站 **0 命中**——站内无任何频谱工具。
+   - Icon：**`audio_file`（首选；`Icon:\s*"audio_file"` 精确值 **0 命中**，全库唯一，贴合「音频文件检测」语义；备选 `waveform`／`equalizer` 亦 0 命中；`graphic_eq` 占用 1、`music_note` 占用 1、`verified` 占用 1、`fact_check` 占用 2，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第八度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 单文件上传／拖拽（.flac／.wav／.mp3／.ogg／.m4a，≤200MB；MP3 等有损格式可作对照上传，结论照常按频谱给）② FileReader → ArrayBuffer → AudioContext.decodeAudioData 本地解码（沿用 audio_trimmer.js:188 既有模式），取声道混单声道 PCM ③ 全文件均匀取 ≤8 段、每段 fftSize=4096 加 Hann 窗 FFT，1kHz 分频带能量取各段最大值（任一段有真实高频能量即证明未被一刀切）④ 频谱图 canvas 渲染（频率-时间热力图，对数频率轴）＋频谱曲线（dBFS-频率）＋截止频率竖线标记 ⑤ 结论卡：疑似真无损／疑似转码／无法判定三档，措辞一律"疑似"，附截止频率数值与判定理由 ⑥ 文件信息栏：文件名／格式／采样率／声道／时长／体积 ⑦ 分频带能量表（每 1kHz 一行，能量 dB 相对峰值）⑧ 互链：audio_trimmer／audio_merger 双向互链（"剪完顺手验真伪"）⑨ 全程浏览器本地计算，零上传、零外部接口 ⑩ 无障碍（tab 聚焦可操作、动画可减弱）⑪ 模板零外部静态资源惯例。
+- **判定分档（测试精确值，以 44.1kHz 为基准）**：截止频率 ≥20000Hz → `likely_lossless`（疑似真无损）；16000–19999Hz → `likely_transcoded`（疑似转码，高码率 MP3 特征，320k 约 20kHz 一刀切）；<16000Hz → `likely_transcoded`（疑似转码，低码率 MP3 特征，128k 约 16kHz 一刀切；理由文案区分档位）；采样率 <44100Hz（奈奎斯特频率不足 22050Hz）→ `inconclusive`（采样率不足无法判定）；全静音／近静音（峰值能量低于 -60dBFS）→ `inconclusive`（静音无法判定）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.LosslessAudioChecker 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `fftMagnitudes(samples)` → number[]（基 2 FFT 幅度谱；samples 为 Float32Array/Array，长度须为 2 的幂且 ≥256，否则 err.field='samples'）。
+  - `bandEnergies(magnitudes, sampleRate)` → [{freqStart, freqEnd, energyDb}]（每 1kHz 一档，0Hz 至奈奎斯特频率；energyDb 为该档最大 bin 幅度相对全局峰值的 dB 值，峰值档为 0dB；sampleRate 须为正数，否则 err.field='sampleRate'）。
+  - `findCutoff(bands, thresholdDb)` → number（截止频率 Hz：energyDb ≥ thresholdDb 的最高档 freqStart；thresholdDb 缺省 -50，须为负数，否则 err.field='thresholdDb'；无档达标返回 0）。
+  - `classifyCutoff(cutoffHz, sampleRate)` → {verdict, label, reason}（verdict 取值 likely_lossless／likely_transcoded／inconclusive；分档按上条；sampleRate <44100 直接 inconclusive；cutoffHz 非法 err.field='cutoffHz'）。
+  - `validateAudioFile({name, size})` → {ext}（扩展名须为 flac/wav/mp3/ogg/m4a 之一，否则 err.field='fileName'；size 须 ≤200MB，否则 err.field='fileSize'）。
+  - `analyzeBands(bands, sampleRate, thresholdDb)` → {cutoffHz, verdict, label, reason}（bandEnergies→findCutoff→classifyCutoff 的组合入口；静音判定：bands 全档 energyDb ≤-60 时 verdict='inconclusive'；bands 非法 err.field='bands'）。
+- **频谱锚点（测试精确值；合成信号：44.1kHz、fftSize=4096、Hann 窗）**：1kHz＋21kHz 等幅正弦 → cutoff ≥20000 → likely_lossless；1kHz＋18kHz 等幅正弦 → cutoff ∈ [16000, 20000) → likely_transcoded（高码率特征）；1kHz＋12kHz 等幅正弦 → cutoff <16000 → likely_transcoded（低码率特征）；纯 1kHz 正弦 → cutoff 约 1000 → likely_transcoded；全零 samples → inconclusive；sampleRate=22050 → classifyCutoff 直接 inconclusive（与 cutoff 无关）。
+- **真限制四条页面明示**：① 频谱截止≠定罪：结论为概率性"疑似"，不能作为维权、索赔或交易的鉴定依据；② 部分真无损录音本身高频内容少（老录音、原声乐器高频弱），可能被误判为转码，结论须结合录音年代与曲风理解；③ 全程浏览器本地解码分析，零上传；④ 浏览器解码器对个别 FLAC 编码支持有限，解码失败不代表文件损坏。
+- **SEO**：无损检测、FLAC真伪、假无损、音频频谱检测、MP3转FLAC识别。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 lossless_audio_checker 条目，紧邻 audio_merger，Path 307→**308**，Icon `audio_file` 首选，开发轮精确值复测锁定全库唯一）／templates/lossless_audio_checker.html（新）／static/js/lossless_audio_checker.js（新）／tests/lossless_audio_checker.test.js（新）／全量旧 tests Path 断言 307→308 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥60 断言全过（fftMagnitudes 正弦幅度锚点：1kHz bin 峰值位置精确值；bandEnergies 分档与 dB 相对值；findCutoff 三档锚点精确值；classifyCutoff 分档／采样率不足／非法参数 err.field；validateAudioFile 扩展名与体积边界 err.field；analyzeBands 组合入口与静音 inconclusive；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 193→**194** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/lossless-audio-checker 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：上传 FLAC 解码成功、频谱图与频谱曲线渲染、截止竖线位置与结论卡一致、拖拽上传可用、互链 audio_trimmer／audio_merger 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 audio_trimmer／audio_merger／slowed_reverb／mp3_tag_editor 同类目，检测口径与剪辑口径互补；模板内与 audio_trimmer／audio_merger 双向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：无损音频真伪检测→本轮交付（238 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第八度跳过（数据表负债从严，231–237 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII lossless_audio／audio_authentic 三形态 0 命中，`flac`／`lossless` 命中全为他人口径，CJK「频谱」0 命中）；音频处理类目，与 audio-trimmer/merger 检测口径互补；Icon `audio_file` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第八度跳过）／数独游戏→P3 观察维持／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD 537658d＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **307**；`ls tests/*.test.js | wc -l` = **193**；PM 独立零重叠复核（ASCII `lossless_audio`／`audio_authentic`／`audio-authentic` 全 0 命中（vendor 排除，BACKLOG.md 除外）；`spectr` 仅 html_jsx_converter.js:53 `preserveaspectratio` 子串；`flac` 命中验真全为 audio_trimmer／audio_merger 接受列表等他人口径；`lossless` 命中验真全为 svg_compressor／img_target_kb 图片口径；CJK「频谱」`chr(0x...)` 运行时构造 0 命中；`Icon:\s*"audio_file"`／`waveform`／`equalizer` 精确值 0 命中，`graphic_eq`／`music_note`／`verified` 各占用 1、`fact_check` 占用 2）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-05 23:36 · 产品调研推荐，第二百三十八轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：UTM 链接生成器已交付闭环（536182a 新增＋537658d 修复两处静默丢参：`/tools/utm-link-builder`，Path 总数 306→**307**，tests **193 个**；新测试 136 断言全过），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复核：`social_image_size`／`social-image-size` 全 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已七度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复核：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **无损音频真伪检测** — **新晋第三席**。Spectro 11-05 信号（Product Hunt／StillWorks 当日榜：扫描音乐库，标记 MP3 冒充无损 FLAC/WAV 的假无损）；痛点：买到的"无损"FLAC 常是 MP3 转码，频谱在 16–20kHz 被一刀切，耳朵难辨、频谱一眼见分晓；实现纯前端中难度（上传音频→Web Audio 解码→FFT 频谱图＋高频截止判定＋"疑似转码/疑似真无损"概率性结论，零上传）；站内口径互补：音频工具仅 audio-merger／audio-trimmer（剪辑口径），本工具为**检测口径**。零重叠本轮复核确凿：`lossless_audio`／`audio_authentic`／`audio-authentic` 全站 **0 命中**；`flac`／`lossless` 命中验真全为 audio_trimmer／audio_merger 文件接受列表与 svg_compressor 预设等他人口径；`spectr`／`频谱` 全站无音频频谱工具；CJK「无损」72 命中分布验真（33 个文件，全为图片／PDF／SVG／进制转换压缩口径，唯一音频语境为 slowed_reverb.html 一句 WAV/MP3 编码说明）——**音频真伪检测本体 0 交付**。**弱点**：受众偏发烧友小众；结论须为概率性（频谱截止≠定罪，须页面明示"疑似"），非 100% 鉴定。SEO：无损检测、FLAC真伪、假无损、音频频谱检测。建议 ID lossless_audio_checker、Path /tools/lossless-audio-checker；Icon `audio_file` 首选（精确值 **0 命中**，备选 `waveform`／`equalizer` 亦 0 命中；`graphic_eq` 占用 1、`music_note` 占用 1、`verified` 占用 1、`fact_check` 占用 2，不可取），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已七度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 无损音频真伪检测 | **新晋第三席**：Spectro 11-05 信号；站内本体 0 交付（`lossless_audio`／`audio_authentic` 0 命中，CJK「无损」72 命中全为他人口径）；与 audio-trimmer/merger 检测口径互补；纯前端中难度；**弱点**：受众偏发烧友小众，结论须为概率性 | 中 | P3（新晋） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 信号；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 21:37~23:36 窗口；本轮**新晋 1 个**）：
+- **Spectro 11-05（Product Hunt／StillWorks 当日榜）**：扫描音乐库、标记 MP3 冒充无损 FLAC/WAV → **无损音频真伪检测新晋第三席**（见 Top3）。
+- reach-check（V2EX 11-04，yt1988）：全球 18 地区连通性探测（DNS/TCP/TLS/首字节分段耗时）→ 需分布式探测节点＋服务端，非单页纯前端，弱口径不入池。
+- KKCE 400+节点网站测速（V2EX 10-29）：需分布式节点＋服务端，弱口径不入池；站内 speedtest 单点形态印证。
+- 小宇宙网页版（V2EX 11-02）：播客平台客户端＋扫码登录态，平台口径消解。
+- REBANG 热榜聚合（V2EX 11-03）：需服务端聚合多平台热榜＋反爬风险，弱口径不入池（236 轮已判）。
+- twelve.tools 11-05 新品：AI Rap Video／Tiny Desk AI／Dime Dime Baby（AI 视频口径消解）；TokScript（视频转字幕，视频转 SRT 同口径，P3 弱观察维持）；AI Kitchen Design／Pavo AI／ImageTextTools／PaperFig（AI 图片口径消解）；Wealthi AI（金融平台口径消解）；MW4 TacMap／KindClue（游戏口径消解）；AI Video Studio（AI 视频平台口径消解）。
+- Product Hunt 11-05 当日榜：Screen Studio 4.0（桌面录屏应用口径消解；站内 screen-recorder 已交付）；beacon.sh（AI agent 记忆口径消解）；Clayzo（AI 动画口径消解）；Xmind 2027（思维导图 AI 平台口径消解；WPS 候选冻结）；magpie（扩展口径消解）；Testhooks（Webhook 测试需服务端收包，弱口径不入池）；Fluff 在线视频编辑器（FFmpeg WASM 重量级，弱口径不入池）；Ninada TTS（text_reader_aloud 已交付消解）；FPV Builder（无人机 niche 口径消解）；Time-Line Pomodoro（countdown-timer 形态印证）。
+- VideoTools 11-02（Awesome Indie）：13 个浏览器视频工具（FFmpeg WASM：MOV→MP4／压缩／裁剪／旋转／拆分／合并）→ 视频压缩/转码弱口径不入池（ffmpeg.wasm 约 30MB 与模板轻量惯例冲突；站内 video-frame-extractor／gif_maker／gif_compress 形态印证）。
+- MortalSpan Tools 11-02（19 工具）：PDF 合并/拆分/压缩、JPG→PDF、PDF→图片、图片压缩/尺寸、HEIC→JPG、OCR、二维码、JSON 格式化、Base64、时间戳、大小写转换、字数统计 → 站内形态印证（heic-convert／ocr-image-text／images-to-pdf 等已交付）。
+- ToolVasta 580+ 计算器（11-01）：计算器口径＋方向修正不扩，消解。
+- 懒大王 10-26/10-27 免费工具清单：在线录屏（screen-recorder 已交付）、文字转语音（text_reader_aloud 已交付）、临时邮箱（需服务端收件箱，弱口径不入池）、图表制作（chart-generator 已交付）、PDF 工具箱／图片压缩（站内形态印证）。
+- V2Stack 619 工具／Anwaar 63 工具／Fix42／FreeTool 236 工具：工具箱合集，无新单品形态，站内形态印证。
+
+**候选池变动**：utm_link_builder 交付划出（536182a＋537658d，307 Path，193 tests）；**社媒/证件照尺寸速查表顺位首席留池**（P3；数据鲜度维护负担压级；PM 已七度跳过）；数独游戏 P3 观察维持第二席；**新晋第三席 1 个**（无损音频真伪检测：Spectro 11-05 信号，站内本体 0 交付＋纯前端中难度；Icon `audio_file` 首选 0 命中）；**本轮新信号扫描其余零新晋**（reach-check／KKCE 测速／热榜聚合／Webhook 测试／视频转码为需服务端或重量级弱口径；AI 视频／AI 图片／游戏／金融／扩展／桌面应用口径全消解；录屏／TTS／图表／HEIC／OCR 全为站内已交付形态印证）；反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，`ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 重建后一次成功）；**远端无新提交**（本地 HEAD 537658d＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **307**；`ls tests/*.test.js | wc -l` = **193**；本地当前分支 muse/dev-20260929；工作区干净（BACKLOG 追加前）；站内零重叠复核（`social_image_size`／`social-image-size` 全 0 命中；`sudoku` ASCII 全 0 命中；`lossless_audio`／`audio_authentic` 全 0 命中，`flac`／`lossless` 命中验真全为他人口径，`spectr`／`频谱` 无音频频谱工具，CJK「无损」72 命中分布验真（33 文件全为图片／PDF／SVG／进制转换口径，唯一音频语境为 slowed_reverb.html 编码说明）；Icon `audio_file`／`waveform`／`equalizer` 精确值 0 命中，`graphic_eq`／`music_note`／`verified` 各占用 1、`fact_check` 占用 2）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 21:37 · PM 选定轮，接通用调研第二百三十七轮）
 
 **选定：UTM 链接生成器（utm_link_builder）** — 本轮唯一任务（新工具）。

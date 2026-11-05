@@ -1,0 +1,150 @@
+{{define "lossless_audio_checker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无损音频真伪检测 - FLAC真伪/假无损识别/音频频谱检测免费在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线无损音频真伪检测：上传 FLAC/WAV/MP3/OGG/M4A，浏览器本地解码不上传；全文件均匀取 8 段、每段 4096 点 Hann 窗 FFT，1kHz 分频带能量分析，频谱图+频谱曲线+截止频率竖线可视化，按 44.1kHz 基准三档“疑似”判定，识别 MP3 转 FLAC 假无损。纯前端、零 CDN、零后端。">
+    <meta name="keywords" content="无损检测,FLAC真伪,假无损,音频频谱检测,MP3转FLAC识别,无损音频检测,FLAC检测,频谱分析,lossless audio checker,音频真伪">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/lossless-audio-checker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"无损音频真伪检测","description":"无损音频真伪检测工具：本地解码 FLAC/WAV/MP3/OGG/M4A，Hann 窗 FFT 频谱分析，1kHz 分频带能量与截止频率可视化，三档“疑似”判定识别 MP3 转 FLAC 假无损；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/lossless-audio-checker","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .lac-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .lac-wrap .navbar .material-icons { display: none; }
+        .lac-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .lac-privacy .lac-lock { font-size: 1.6rem; flex: none; }
+        .lac-privacy b { color: #047857; }
+        .lac-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .lac-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .lac-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .lac-upload:hover, .lac-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .lac-upload .lac-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .lac-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .lac-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .lac-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .lac-btn:hover { filter: brightness(.93); }
+        .lac-btn-ghost { background: #fff; color: var(--primary-color); }
+        /* 结论卡 */
+        .lac-verdict { border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; border: 2px solid #e5e7eb; }
+        .lac-verdict.lac-v-ok { border-color: #34d399; background: #ecfdf5; }
+        .lac-verdict.lac-v-warn { border-color: #f59e0b; background: #fffbeb; }
+        .lac-verdict.lac-v-gray { border-color: #9ca3af; background: #f9fafb; }
+        .lac-v-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: .4rem; }
+        .lac-v-reason { font-size: .95rem; line-height: 1.8; color: #374151; }
+        .lac-v-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .6rem; margin: .8rem 0; }
+        .lac-v-grid div { background: rgba(255,255,255,.75); border: 1px solid #e5e7eb; border-radius: .5rem; padding: .5rem .7rem; }
+        .lac-v-grid span { display: block; font-size: .78rem; color: #6b7280; }
+        .lac-v-grid b { font-size: 1.02rem; color: #111827; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .lac-v-caveat { font-size: .86rem; line-height: 1.8; color: #6b7280; border-top: 1px dashed #d1d5db; padding-top: .6rem; }
+        .lac-cutoff-line { font-size: .9rem; color: #dc2626; font-weight: 600; margin-top: .5rem; }
+        /* 频谱画布 */
+        .lac-canvas { width: 100%; display: block; border: 1px solid #e5e7eb; border-radius: .6rem; margin: .5rem 0; }
+        .lac-canvas-note { text-align: center; font-size: .82rem; color: #9ca3af; margin-top: .2rem; }
+        .lac-limits { font-size: .9rem; color: #4b5563; line-height: 2; }
+        .lac-limits b { color: #111827; }
+        .lac-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .lac-doc b { color: #111827; }
+        .lac-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .lac-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .lac-combo b { color: #111827; }
+        .lac-combo a { color: var(--primary-color); }
+        @media (max-width: 640px) {
+            .lac-wrap .container { padding: 1rem .7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="lac-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🔍 无损音频真伪检测</h1>
+            <p>频谱截止分析识破 MP3 转 FLAC 假无损：上传 FLAC / WAV / MP3 / OGG / M4A，本地 FFT 看高频断在哪里</p>
+        </div>
+
+        <div class="lac-privacy">
+            <span class="lac-lock">🔒</span>
+            <div><b>隐私承诺：音频只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、<code>decodeAudioData</code> 本地解码、Hann 窗 FFT 频谱分析、频谱图与曲线渲染、结论判定全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 上传的音频不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="lac-panel">
+            <h3>1️⃣ 上传音频（单文件）</h3>
+            <div class="lac-upload" id="lac-upload" role="button" tabindex="0" aria-label="点击选择或拖拽音频文件到此处上传">
+                <span class="lac-big">🎵</span>
+                <div>点击选择音频，或把音频文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 .flac / .wav / .mp3 / .ogg / .m4a，单个文件 ≤200MB；实际解码能力取决于浏览器（Safari 对 OGG 支持有限）</div>
+            </div>
+            <input type="file" id="lac-file" accept=".flac,.wav,.mp3,.ogg,.m4a,audio/flac,audio/wav,audio/x-wav,audio/mpeg,audio/ogg,audio/mp4,audio/x-m4a" style="display:none;">
+            <div class="lac-info" id="lac-srcinfo" style="display:none;"></div>
+            <div class="lac-status" id="lac-status"></div>
+        </div>
+
+        <div id="lac-result" style="display:none;">
+            <div class="lac-panel">
+                <h3>2️⃣ 检测结论</h3>
+                <div class="lac-verdict lac-v-gray" id="lac-verdict"></div>
+                <div class="lac-cutoff-line" id="lac-cutoff-line"></div>
+                <div style="margin-top:.8rem;">
+                    <button class="lac-btn lac-btn-ghost" id="lac-reupload">🔄 重新上传检测另一首</button>
+                </div>
+            </div>
+
+            <div class="lac-panel">
+                <h3>3️⃣ 频谱图（全文件均匀取段 × 1kHz 频带）</h3>
+                <canvas class="lac-canvas" id="lac-spectrogram" height="180" aria-label="频谱图：每行一段音频，每列 1kHz 频带，颜色越亮能量越高，红线为截止频率"></canvas>
+                <div class="lac-canvas-note">每行是一段音频（全文件均匀取 ≤8 段），每列是一个 1kHz 频带；颜色越亮表示该频带能量越高；红线为截止频率</div>
+            </div>
+
+            <div class="lac-panel">
+                <h3>4️⃣ 频谱曲线（各段频带能量最大值）</h3>
+                <canvas class="lac-canvas" id="lac-curve" height="220" aria-label="频谱曲线：横轴频率，纵轴相对峰值能量，红线为截止频率"></canvas>
+                <div class="lac-canvas-note">横轴频率（0–22kHz），纵轴相对峰值能量（dB）；橙色虚线为 -50dB 判定阈值，红线为截止频率 —— 曲线跌破阈值的位置就是高频断掉的地方</div>
+            </div>
+        </div>
+
+        <div class="lac-panel">
+            <h3>真限制</h3>
+            <div class="lac-limits">
+                <b>① 频谱截止 ≠ 定罪：</b>本工具只给出概率性“疑似”结论，不是鉴定依据；频谱截止频率只是线索之一，不能据此断定文件一定转码或一定真无损。<br>
+                <b>② 真无损的老录音高频少可被误判：</b>年代久远的录音、原声乐器独奏等真无损音频本身高频成分就少，频谱可能在 16kHz 以下就断掉，会被误判为转码。<br>
+                <b>③ 全程本地零上传：</b>上传、解码、FFT 分析、渲染、判定全部在你的浏览器里完成，文件不上传服务器、不留存。<br>
+                <b>④ 个别 FLAC 解码失败 ≠ 文件损坏：</b>个别 FLAC 文件解码失败不等于文件损坏，可能是浏览器解码器不支持该编码变体，可换 Chrome/Edge 再试。
+            </div>
+        </div>
+
+        <div class="lac-combo">
+            <b>🎧 「音频旅程线」组合：</b>检测出假无损想换一首真无损？先去 <a href="/tools/audio-trimmer">在线音频裁剪器</a> 把多余部分裁掉；有多段音频要拼成一条？去 <a href="/tools/audio-merger">音频合并器</a> 上传多个文件排序合并 —— 检测 → 裁剪 → 合并闭环。
+        </div>
+
+        <div class="lac-panel">
+            <h3>使用说明</h3>
+            <div class="lac-doc">
+                <b>解码：</b>文件经 <code>FileReader</code> 读入 ArrayBuffer 后，用 Web Audio API 的 <code>decodeAudioData</code> 在浏览器本地解码为 AudioBuffer（FLAC/WAV/MP3/OGG/M4A 是否支持取决于浏览器解码器）。<br>
+                <b>取段：</b>全文件均匀取 ≤8 段，每段 4096 个采样点（短于 4096 点的音频只取 1 段并零填充），每段加 Hann 窗后做基 2 FFT。<br>
+                <b>分频带：</b>把幅度谱按每 1kHz 划为一档，档内能量为幅度平方和；能量以 dB 表示（相对峰值频带，峰值档为 0dB）；各频带取 8 段中的最大值。<br>
+                <b>截止频率：</b>高于 -50dB 阈值的最高频带的上限频率。真无损音频的高频能量通常能延伸到 20kHz 以上；MP3 等有损编码会在编码时砍掉高频，留下特征性截断。<br>
+                <b>判定分档（44.1kHz 基准）：</b>截止 ≥20000Hz → 疑似真无损；16000–19999Hz → 疑似转码（高码率 MP3 特征）；&lt;16000Hz → 疑似转码（低码率特征）；采样率 &lt;44100Hz 或接近静音（峰值 &lt;-60dBFS）→ 无法判定。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解码、分析、渲染、判定都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/lossless_audio_checker.js?v=1"></script>
+</body>
+</html>
+{{end}}

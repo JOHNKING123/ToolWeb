@@ -131,7 +131,7 @@ ok(isNaN(M.normalizeForm({ printWidth: "", tabWidth: "2" }).printWidth), "归一
 
 /* ---------- 7. 注册：183→184 Path ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 307, "注册总数 306→307 Path");
+eq(pathCount, 308, "注册总数 307→308 Path");
 has(GO_SRC, '"prettier_config_generator"', "注册：ID prettier_config_generator");
 has(GO_SRC, '"/tools/prettier-config-generator"', "注册：Path /tools/prettier-config-generator");
 has(GO_SRC, 'Name:        "Prettier 配置生成器"', "注册：中文名");

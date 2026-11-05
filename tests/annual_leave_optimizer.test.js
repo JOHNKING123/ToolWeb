@@ -276,7 +276,7 @@ notHas(JS_SRC, "localStorage", "JS 零存储：不写 localStorage");
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^\"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i;}).length;
-eq(pathCount, 307, "注册 Path 总数 306→307");
+eq(pathCount, 308, "注册 Path 总数 307→308");
 has(GO_SRC, '"annual_leave_optimizer"', "注册：ID annual_leave_optimizer");
 has(GO_SRC, '"/tools/annual-leave-optimizer"', "注册：Path /tools/annual-leave-optimizer");
 has(GO_SRC, '"beach_access"', "注册：Icon beach_access");

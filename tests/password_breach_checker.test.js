@@ -105,7 +105,7 @@ notHas(JS_SRC, "sessionStorage", "JS 不写浏览器存储：无 sessionStorage"
 
 /* ---------- 7. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 307, "注册 Path 总数 302→303");
+eq(pathCount, 308, "注册 Path 总数 302→303");
 has(GO_SRC, 'ID:          "password_breach_checker"', "注册：ID password_breach_checker");
 has(GO_SRC, 'Path:        "/tools/password-breach-checker"', "注册：Path /tools/password-breach-checker");
 has(GO_SRC, 'Icon:        "gpp_bad"', "注册：Icon gpp_bad");
