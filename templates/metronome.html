@@ -1,0 +1,243 @@
+{{define "metronome"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线节拍器 - 免费节拍器在线，BPM 40-208 拍号 Tap 测速 | 程序员工具箱</title>
+    <meta name="description" content="免费在线节拍器：Web Audio 前瞻调度节拍，BPM 40–208（滑杆＋数字输入＋±1/±5 步进、键盘 ↑/↓、空格启停），拍号 2/4、3/4、4/4、6/8，首拍 2000Hz 重音可听辨，节拍音色 click/木鱼/鼓/正弦四档，视觉闪烁与音频时钟同步，Tap 测速，BPM 预设一键切换。纯前端、零 CDN、零上传。">
+    <meta name="keywords" content="在线节拍器,节拍器,metronome,BPM,节拍器在线">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/metronome">
+    <meta property="og:title" content="在线节拍器 - 免费节拍器在线，BPM 40-208 拍号 Tap 测速">
+    <meta property="og:description" content="Web Audio 前瞻调度节拍：BPM 40–208、拍号 2/4·3/4·4/4·6/8、首拍重音可听辨、Tap 测速，纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/metronome">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线节拍器","description":"在线节拍器：Web Audio 前瞻调度节拍，BPM 40–208，拍号 2/4、3/4、4/4、6/8，首拍 2000Hz 重音可听辨，节拍音色四档，视觉闪烁与音频时钟同步，Tap 测速；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/metronome","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mt-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .mt-wrap .navbar .material-icons { display: none; }
+        .mt-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .mt-privacy .mt-lock { font-size: 1.6rem; flex: none; }
+        .mt-privacy b { color: #047857; }
+        .mt-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .mt-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .mt-stage { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; }
+        .mt-flash { width: 120px; height: 120px; border-radius: 50%; flex: none; background: #e5e7eb;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #9ca3af; }
+        .mt-flash.mt-pulse { animation: mt-pulse .18s ease-out; background: #3b82f6; color: #fff; }
+        .mt-flash.mt-pulse-accent { animation: mt-pulse-accent .18s ease-out; background: #ef4444; color: #fff; }
+        @keyframes mt-pulse { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+        @keyframes mt-pulse-accent { 0% { transform: scale(1.28); } 100% { transform: scale(1); } }
+        .mt-bpm-big { font-size: 3rem; font-weight: 800; line-height: 1; color: #111827;
+            font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .mt-bpm-big small { font-size: 1rem; font-weight: 400; color: #6b7280; }
+        .mt-dots { display: flex; gap: .5rem; margin: .6rem 0 .2rem; }
+        .mt-dot { width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 2px solid #d1d5db;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: .9rem; color: #6b7280; background: #f9fafb; transition: background .08s, transform .08s; }
+        .mt-dot.mt-dot-first { border-color: #fca5a5; }
+        .mt-dot.mt-on { background: #3b82f6; border-color: #3b82f6; color: #fff; transform: scale(1.15); }
+        .mt-dot.mt-on-accent { background: #ef4444; border-color: #ef4444; }
+        .mt-beat-label { font-size: .9rem; color: #6b7280; min-height: 1.4em; }
+        .mt-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .mt-row label { font-size: .92rem; color: #374151; }
+        .mt-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .mt-btn:hover { filter: brightness(.93); }
+        .mt-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .mt-btn-ghost { background: #fff; color: var(--primary-color); }
+        .mt-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .mt-btn-step { padding: .55rem .8rem; min-width: 3rem; }
+        .mt-group { display: flex; gap: .6rem; flex-wrap: wrap; }
+        .mt-group .mt-btn-ghost.mt-active { background: var(--primary-color); color: #fff; }
+        .mt-val { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--primary-color);
+            font-size: 1.05rem; min-width: 3.5em; display: inline-block; }
+        input[type=range].mt-slider { flex: 1; min-width: 180px; accent-color: var(--primary-color); }
+        .mt-num { width: 5.5rem; padding: .5rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: 1rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; text-align: center; }
+        .mt-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .mt-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .mt-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .mt-doc b { color: #111827; }
+        .mt-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .mt-limits { font-size: .9rem; color: #7c2d12; line-height: 2; background: #fff7ed; border: 1px solid #fed7aa;
+            border-radius: .8rem; padding: .9rem 1.1rem; }
+        .mt-limits b { color: #9a3412; }
+        .mt-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .mt-combo b { color: #111827; }
+        .mt-combo a { color: var(--primary-color); }
+        .mt-faq dt { font-weight: 700; color: #111827; margin: .9rem 0 .3rem; font-size: .95rem; }
+        .mt-faq dd { margin: 0; color: #4b5563; line-height: 1.9; font-size: .92rem; }
+        .mt-faq dd code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .mt-related { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .4rem; align-items: center; }
+        @media (max-width: 640px) {
+            .mt-wrap .container { padding: 1rem .7rem; }
+            .mt-flash { width: 88px; height: 88px; font-size: 1.5rem; }
+            .mt-bpm-big { font-size: 2.4rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .mt-flash.mt-pulse, .mt-flash.mt-pulse-accent { animation: none; }
+            .mt-dot { transition: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mt-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>⏱ 在线节拍器</h1>
+            <p>浏览器本地 Web Audio 前瞻调度节拍 —— BPM 40–208、拍号 2/4·3/4·4/4·6/8、首拍重音可听辨、Tap 测速，练琴打拍子不用再装 App</p>
+        </div>
+
+        <div class="mt-privacy">
+            <span class="mt-lock">🔒</span>
+            <div><b>隐私承诺：全程本地，零上传。</b><br>
+            本工具为纯前端单页应用：节拍调度、声音合成、Tap 测速全部在你的浏览器里用 Web Audio API 完成，不调用任何后端接口、不加载任何第三方资源、不上传任何数据。你可以在 DevTools 的 Network 面板验证 —— 点「开始」后不会产生一次网络请求。</div>
+        </div>
+
+        <div class="mt-panel">
+            <h3>🎵 节拍控制</h3>
+            <div class="mt-stage">
+                <div class="mt-flash" id="mt-flash" role="img" aria-label="节拍闪烁指示，随节拍脉动">♪</div>
+                <div>
+                    <div class="mt-bpm-big"><span id="mt-bpm-display">120</span> <small>BPM</small></div>
+                    <div class="mt-dots" id="mt-beat-dots" aria-label="小节内拍位指示"></div>
+                    <div class="mt-beat-label" id="mt-beat-label">第 – 拍 / 共 4 拍</div>
+                </div>
+            </div>
+            <div class="mt-row">
+                <button class="mt-btn" id="mt-start" aria-label="开始或停止节拍">▶ 开始</button>
+                <span class="mt-info" style="margin-top:0;">键盘：<code>空格</code> 启停，<code>↑</code>/<code>↓</code> 调 BPM（±1，<code>Shift</code> 加 ±5）</span>
+            </div>
+            <div class="mt-status" id="mt-status"></div>
+
+            <div class="mt-row">
+                <label for="mt-bpm-slider"><b>🎚 BPM</b>（40–208）</label>
+                <input type="range" class="mt-slider" id="mt-bpm-slider" min="40" max="208" step="1" value="120" aria-label="BPM 滑杆">
+                <input type="number" class="mt-num" id="mt-bpm-input" min="40" max="208" step="1" value="120" aria-label="BPM 数字输入">
+                <button class="mt-btn mt-btn-ghost mt-btn-step" id="mt-step-m5" aria-label="BPM 减 5">−5</button>
+                <button class="mt-btn mt-btn-ghost mt-btn-step" id="mt-step-m1" aria-label="BPM 减 1">−1</button>
+                <button class="mt-btn mt-btn-ghost mt-btn-step" id="mt-step-p1" aria-label="BPM 加 1">+1</button>
+                <button class="mt-btn mt-btn-ghost mt-btn-step" id="mt-step-p5" aria-label="BPM 加 5">+5</button>
+            </div>
+
+            <div class="mt-row">
+                <label><b>⚡ BPM 预设</b></label>
+                <div class="mt-group" id="mt-presets">
+                    <button class="mt-btn mt-btn-ghost" data-bpm="60">慢练 60</button>
+                    <button class="mt-btn mt-btn-ghost" data-bpm="80">慢练 80</button>
+                    <button class="mt-btn mt-btn-ghost" data-bpm="100">常规 100</button>
+                    <button class="mt-btn mt-btn-ghost mt-active" data-bpm="120">常规 120</button>
+                    <button class="mt-btn mt-btn-ghost" data-bpm="140">快练 140</button>
+                    <button class="mt-btn mt-btn-ghost" data-bpm="160">快练 160</button>
+                </div>
+            </div>
+
+            <div class="mt-row">
+                <label><b>🥁 拍号</b></label>
+                <div class="mt-group" id="mt-sig">
+                    <button class="mt-btn mt-btn-ghost" data-beats="2">2/4</button>
+                    <button class="mt-btn mt-btn-ghost" data-beats="3">3/4</button>
+                    <button class="mt-btn mt-btn-ghost mt-active" data-beats="4">4/4</button>
+                    <button class="mt-btn mt-btn-ghost" data-beats="6">6/8</button>
+                </div>
+                <span class="mt-info" style="margin-top:0;">每小节首拍为重音（2000Hz），其余拍 1000Hz，听得出小节起点；切换拍号后从新小节首拍开始。</span>
+            </div>
+
+            <div class="mt-row">
+                <label><b>🔔 节拍音色</b></label>
+                <div class="mt-group" id="mt-timbre">
+                    <button class="mt-btn mt-btn-ghost mt-active" data-timbre="click">Click</button>
+                    <button class="mt-btn mt-btn-ghost" data-timbre="woodblock">木鱼</button>
+                    <button class="mt-btn mt-btn-ghost" data-timbre="drum">鼓</button>
+                    <button class="mt-btn mt-btn-ghost" data-timbre="sine">正弦</button>
+                </div>
+            </div>
+
+            <div class="mt-row">
+                <label for="mt-volume"><b>🔊 音量</b></label>
+                <input type="range" class="mt-slider" id="mt-volume" min="0" max="100" step="1" value="80" aria-label="音量">
+                <span class="mt-val" id="mt-volume-val">80%</span>
+                <button class="mt-btn mt-btn-ghost" id="mt-mute" aria-label="静音开关">🔊 静音</button>
+            </div>
+        </div>
+
+        <div class="mt-panel">
+            <h3>👆 Tap 测速：不知道曲子多快？跟着点几下</h3>
+            <div class="mt-row">
+                <button class="mt-btn" id="mt-tap" aria-label="跟随音乐点按测速">👆 跟着音乐点我</button>
+                <span class="mt-info" style="margin-top:0;">连续稳定点按 ≥4 次，取平均间隔换算 BPM；两次点按间隔超过 2 秒会重新开始计时。</span>
+            </div>
+            <div class="mt-status" id="mt-tap-status"></div>
+            <div class="mt-info">Tap 测速是估算值：取点按平均间隔，偶发点按误差会拉偏 BPM，仅作参考；测得的 BPM 超出 40–208 可用范围时会明确提示，不会自动钳制到边界值。</div>
+        </div>
+
+        <div class="mt-panel">
+            <h3>⚠️ 真限制：先看再用，别对效果抱错期待</h3>
+            <div class="mt-limits">
+                <b>① 浏览器节流：</b>后台标签页 setInterval 可能被节流导致节拍漂移，建议保持页面前台使用；切到别的标签页再回来，节拍可能已经不准了。<br>
+                <b>② 手机静音模式／系统媒体音量会影响节拍音：</b>手机开了静音模式或媒体音量为 0 时听不到节拍音，请先关掉静音、调大媒体音量；这不是工具故障。<br>
+                <b>③ Tap 测速是估算值：</b>取点按平均间隔换算 BPM，偶发点按误差会拉偏结果，仅作参考；想精确测速请多点几次、点得稳一点。<br>
+                <b>④ 全程浏览器本地计算，零上传：</b>节拍调度、声音合成、Tap 测速都在你的浏览器里完成，不上传任何数据，也不需要注册登录。
+            </div>
+        </div>
+
+        <div class="mt-combo">
+            <b>🎧 「音频旅程线」组合：</b>练完想把成果做成可视化视频？去 <a href="/tools/music-visualizer">音乐可视化器</a> 生成随音乐跳动的频谱画面；想先把歌变慢、加混响再跟着练？去 <a href="/tools/slowed-reverb">音频变速混响生成器</a> 一键生成 —— 变速混响 → 节拍器跟练 → 频谱可视化，一套流程走完。
+        </div>
+
+        <div class="mt-panel">
+            <h3>使用说明</h3>
+            <div class="mt-doc">
+                <b>前瞻调度：</b>节拍不用 <code>setInterval</code> 直接敲（浏览器定时器会漂移），而是用 lookahead scheduler：每 25ms 检查一次，把未来 0.1 秒内的拍提前排进 Web Audio 的音频时钟（<code>OscillatorNode.start(精确时间)</code>），节拍间隔由音频硬件时钟保证，漂移远小于直接敲定时器。<br>
+                <b>首拍重音：</b>每小节第一拍是重音：正弦 click 2000Hz、增益 1.0；其余拍 1000Hz、增益 0.6。4/4 拍就是「咚-哒-哒-哒」循环，听得出小节起点；6/8 同理是六拍一小节、首拍重音。<br>
+                <b>BPM：</b>40–208（每分钟拍数），滑杆、数字输入、±1/±5 步进按钮、预设六档（慢练 60/80、常规 100/120、快练 140/160）都能改；进行中改 BPM 下一拍起生效，不用停。键盘 <code>↑</code>/<code>↓</code> ±1（按住 <code>Shift</code> ±5），<code>空格</code> 启停。<br>
+                <b>音色：</b>Click（标准正弦短促 click）、木鱼（方波短促敲击，首拍 1800Hz、其余 900Hz）、鼓（正弦 160Hz→55Hz 滑音，0.12 秒包络）、正弦（0.09 秒稍长稍柔的正弦音）。切换后下一拍起生效。<br>
+                <b>视觉闪烁：</b>当前拍圆点高亮（首拍红色、其余蓝色），左侧圆圈随节拍脉动，闪烁时刻按音频时钟对齐 —— 看到的和听到的在同一拍上。<br>
+                <b>Tap 测速：</b>跟着音乐稳定点按 ≥4 次，取点按间隔的平均值换算 BPM（<code>60000 / 平均间隔毫秒</code>）；测得的 BPM 超出 40–208 时明确提示、不自动钳制，当前 BPM 保持不变。<br>
+                <b>隐私：</b>全程无网络请求 —— 节拍调度、声音合成、Tap 测速都在你的浏览器里完成，可在 DevTools Network 面板验证；刷新页面后恢复默认 120 BPM，不做任何本地存储。
+            </div>
+        </div>
+
+        <div class="mt-panel">
+            <h3>❓ 常见问题</h3>
+            <dl class="mt-faq">
+                <dt>切到别的标签页回来，节拍变慢了 / 不准了？</dt>
+                <dd>这是浏览器的后台节流：切到后台标签页后 <code>setInterval</code> 会被节流到 1 秒一次，前瞻调度排不进新拍子，节拍就漂移了。练的时候请保持本页面在前台；切回来后点「停止」再「开始」，从首拍重新对齐。</dd>
+                <dt>手机上点了「开始」却听不到声音？</dt>
+                <dd>先看两处：① 手机是否开了静音模式（iPhone 左侧静音键、安卓勿扰/静音），② 系统媒体音量是否为 0。节拍音走的是媒体音频通道，静音模式或媒体音量 0 都会让它没声；这不是工具故障。另外部分浏览器要求先点一下页面（已有手势）才允许发声，点「开始」本身就是手势，一般没问题。</dd>
+                <dt>Tap 测速准吗？为什么每次点的结果不一样？</dt>
+                <dd>Tap 测速是估算值：它取你几次点按间隔的平均值换算 BPM，手指点按本身就有几十毫秒的抖动，偶发一次点偏就会拉偏结果。建议跟随音乐稳定点按 8 次以上、点得稳一点；想精确就以滑杆/数字输入为准，Tap 只作参考。</dd>
+                <dt>Tap 测出来 240 BPM，为什么不直接设成 208？</dt>
+                <dd>因为不自动钳制：测得的 BPM 超出 40–208 可用范围时，工具会明确告诉你「测得约 240 BPM，超出范围」，当前 BPM 保持不变 —— 静默钳制到 208 会让你误以为曲子就是 208 BPM，误导练习。</dd>
+                <dt>进行中切换拍号会怎样？</dt>
+                <dd>切换后从新小节的首拍开始（拍计数归零），下一拍就是新拍号的第一拍（重音）；BPM 与音色不变，不用停。</dd>
+            </dl>
+        </div>
+
+        <div class="mt-panel">
+            <h3>🔗 相关工具</h3>
+            <div class="mt-related">
+                <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">在线节拍器（当前）</span>
+                <a href="/tools/music-visualizer" class="btn btn-secondary" style="font-size:.9rem;">音乐可视化器</a>
+                <a href="/tools/slowed-reverb" class="btn btn-secondary" style="font-size:.9rem;">音频变速混响生成器</a>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/metronome.js?v=1"></script>
+</body>
+</html>
+{{end}}

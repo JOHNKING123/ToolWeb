@@ -161,7 +161,7 @@ function pxGrid(list, w, h) {
     contains(GO_SRC, 'Name:        "图片转拼豆施工图生成器"', "注册 Name");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 310, "注册 Path 总数 309→310");
+    eq(pathCount, 311, "注册 Path 总数 309→310");
 })();
 
 /* ================= 7. 零网络请求静态检查 ================= */

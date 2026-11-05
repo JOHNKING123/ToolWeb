@@ -1,3 +1,100 @@
+## 今日任务（2026-11-06 05:41 · PM 选定轮，接通用调研第二百四十一轮）
+
+**选定：在线节拍器（metronome）** — 本轮唯一任务（新工具）。
+
+**顺位**：241 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十一度裁定跳过**（沿用 231–240 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤的真工具，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），节拍器口径站内 0 交付。
+2. **口径互补确凿**：站内音频工具已有剪辑（audio_trimmer／audio_merger）／变速混响（slowed_reverb）／标签（mp3_tag_editor）／检测（lossless_audio_checker）／分离（vocal_remover）／可视化（music_visualizer）六口径；本工具为**练习口径**（Web Audio 精确节拍＋Tap 测速），与可视化／分离口径形成「练琴打拍子→顺手做成可视化视频」的顺流互链，音频家族七口径齐全。
+3. **需求验证**：乐器练习（钢琴／吉他／鼓）要稳定节拍与 BPM 参考，现有免费站多为 App 内购或带广告网页版；浏览器本地做、零上传、无次数。239 轮信号印证（站内 `metronome`／`tuner` 0 命中时已入池）。
+4. **技术路线站内已有先例**：music_visualizer／vocal_remover 已跑通 AudioContext 本地解码与 AnalyserNode；本工具只在 Web Audio 上多一步前瞻调度（lookahead scheduler：25ms 定时器＋0.1s 预调度，防 setInterval 漂移），无新外部依赖、无服务端、无模型权重。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`metronome`／`tuner` 全站（tools/templates/static/js/tests）**0 命中**——节拍器本体 0 交付，真缺口确凿；`tap tempo`／`tap.*tempo` 亦 0 命中。
+   - CJK「节拍器」／「调音」／「节拍」`chr(0x...)` 运行时构造全站 **0 命中**。
+   - `bpm` 5 文件命中验真全为他人口径：heart_rate_zones 心率区间 bpm、css_to_tailwind.js breakpoint 映射（`bpMap` 误含子串）——**无一为节拍器本体**。
+   - Icon：**`metronome` 精确值 0 命中但 glyph 实锤不存在**——本站加载经典 Material Icons（`family=Material+Icons`），PM 拉取官方 codepoints（`google/material-design-icons`，MaterialIcons-Regular.codepoints，2235 条）全文检索：`metronome` **无此 glyph**；Material Symbols 侧仅有 `metro`（f474，地铁图标，非节拍器）。故 `Icon:"metronome"` 会渲染空白，**不可用**。替代方案 PM 已验真：**`av_timer` 首选**（经典字体 e01b 确有此 glyph；`Icon:\s*"av_timer"` 精确值 **0 命中**，全库唯一，贴合「音频＋计时」语义；备选 `hourglass_empty` e88b 亦 0 命中）；`timer`／`music_note`／`speed`／`piano`／`schedule`／`alarm` 各占用 1–2，不可取；`tune` 被 slowed_reverb 占用，不可取。开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十一度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片智能抠图／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① Web Audio 前瞻调度节拍（lookahead scheduler：25ms 定时器＋0.1s 预调度，OscillatorNode 短促正弦 click，首拍重音）② BPM 40–208（滑杆＋数字输入＋±1／±5 步进，键盘 ↑/↓ 调 BPM、空格启停）③ 拍号 2/4、3/4、4/4、6/8（首拍重音可听辨：首拍 2000Hz／其余 1000Hz，音量首拍 1.0／其余 0.6）④ 节拍音色可选（click／木鱼／鼓／正弦四档）⑤ 视觉闪烁（当前拍圆点高亮＋拍数指示，与音频时钟同步）⑥ Tap 测速（连续点按≥4 次取平均间隔→BPM，超出 40–208 时明确提示不自动钳制）⑦ BPM 预设（慢练 60／80、常规 100／120、快练 140／160 一键）⑧ 音量滑杆＋静音 ⑨ 互链：music_visualizer 单向互链（"练完顺手做成可视化视频"）、slowed_reverb 单向互链（"变速混响后再跟着练"）⑩ 全程浏览器本地计算，零上传、零外部接口 ⑪ 无障碍（tab 聚焦可操作、动画可减弱）⑫ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.Metronome 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `validateBpm(bpm)` → bpm（须为 40–208 整数，否则 err.field='bpm'）。
+  - `bpmToIntervalMs(bpm)` → 60000/bpm（bpm 须为 40–208 有限数，否则 err.field='bpm'）。
+  - `intervalMsToBpm(ms)` → 60000/ms（ms 须为正有限数，否则 err.field='intervalMs'；返回值不钳制，由调用方按 validateBpm 处理）。
+  - `tapToBpm(intervals)` → number（intervals 须为 ≥2 个正有限数数组，否则 err.field='intervals'；取平均间隔换算 BPM）。
+  - `beatInBar(beatIndex, beatsPerBar)` → {beat, isAccent}（beatIndex 须为 ≥0 整数，否则 err.field='beatIndex'；beatsPerBar 须为 2/3/4/6 之一，否则 err.field='beatsPerBar'；beat 为 1 起的当拍序号，首拍 isAccent=true）。
+  - `nextBeatTime(currentTime, intervalMs)` → currentTime＋intervalMs/1000（currentTime 须为 ≥0 有限数，否则 err.field='currentTime'；intervalMs 须为正有限数，否则 err.field='intervalMs'）。
+  - `clickParams(isAccent)` → {frequency, durationMs, gain}（isAccent 须为布尔值，否则 err.field='isAccent'；首拍 {2000, 50, 1.0}，其余 {1000, 50, 0.6}）。
+- **数值锚点（测试精确值）**：bpmToIntervalMs：60 → 1000；120 → 500；40 → 1500；208 → 60000/208≈288.46（误差 ≤0.01）。intervalMsToBpm：500 → 120；1000 → 60。tapToBpm：[500, 500, 500] → 120；[250, 250] → 240（不钳制，调用方提示超限）。beatInBar：(0, 4) → {beat:1, isAccent:true}；(3, 4) → {beat:4, isAccent:false}；(4, 4) → {beat:1, isAccent:true}；(5, 6) → {beat:6, isAccent:false}。validateBpm：40 → 40；208 → 208；39／209／120.5 抛错 err.field='bpm'。nextBeatTime：(1.0, 500) → 1.5。clickParams：true → {frequency:2000, durationMs:50, gain:1}；false → {frequency:1000, durationMs:50, gain:0.6}。
+- **真限制四条页面明示**：① 浏览器节流：后台标签页 setInterval 可能被节流导致节拍漂移，建议保持页面前台使用；② 手机静音模式／系统媒体音量会影响节拍音，须开启媒体音量；③ Tap 测速是估算值：取点按平均间隔，偶发点按误差会拉偏 BPM，仅作参考；④ 全程浏览器本地计算，零上传。
+- **SEO**：在线节拍器、节拍器、metronome、BPM、节拍器在线。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 metronome 条目，紧邻 music_visualizer，Path 310→**311**，Icon `av_timer` 首选，开发轮精确值复测锁定全库唯一）／templates/metronome.html（新）／static/js/metronome.js（新）／tests/metronome.test.js（新）／全量旧 tests Path 断言 310→311 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（bpmToIntervalMs／intervalMsToBpm／tapToBpm／beatInBar／validateBpm／nextBeatTime／clickParams 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 196→**197** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/metronome 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：启停／BPM 滑杆＋输入＋步进／拍号切换首拍重音可听辨／音色四档／视觉闪烁与节拍同步／Tap 测速≥4 次出 BPM／超限提示／互链 music_visualizer／slowed_reverb 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 audio_trimmer／audio_merger／lossless_audio_checker／vocal_remover／music_visualizer／slowed_reverb／mp3_tag_editor 同类目，练习口径与可视化口径互补；模板内与 music_visualizer／slowed_reverb 单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：在线节拍器→本轮交付（241 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十一度跳过（数据表负债从严，231–240 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII metronome／tuner 全 0 命中，CJK 节拍器／调音／节拍全 0 命中，bpm 命中全为心率区间他人口径）；音频处理类目，练习口径与可视化口径互补；Icon `metronome` glyph 实锤不存在，改用已验真的 `av_timer` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十一度跳过）／数独游戏→P3 观察维持／图片智能抠图／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；本地 HEAD bb5e316（音乐可视化器评审重审修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **310**；`ls tests/*.test.js | wc -l` = **196**；PM 独立零重叠复核（ASCII `metronome`／`tuner`／`tap tempo` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「节拍器」／「调音」／「节拍」`chr(0x...)` 运行时构造 0 命中；`bpm` 5 文件命中验真全为 heart_rate_zones 心率区间与 css_to_tailwind breakpoint 映射他人口径；Icon `metronome` 官方 codepoints 全文检索无此 glyph（经典字体 2235 条；Symbols 侧仅 `metro` f474 地铁图标），`av_timer`（e01b）／`hourglass_empty`（e88b）经典字体确有且精确值 0 命中，`timer`／`music_note`／`speed`／`piano` 各占用 1、`schedule` 占用 2、`tune` 被 slowed_reverb 占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动；未跟踪的 `toolweb` 二进制不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 05:36 · 产品调研推荐，第二百四十一轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：音乐可视化器已交付闭环（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 总数 309→**310**，tests **196 个**；新测试 187 断言全过；Icon `equalizer` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 240 轮（`social_image_size`／`social-image-size` 全 0 命中，本轮复测仍 0 命中，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **在线节拍器** — **新晋第三席**（音乐可视化器交付后顺位递进）。239 轮新晋 P3 弱观察；站内零重叠本轮复测：`metronome`／`tuner` 全站 **0 命中**；实现纯前端小难度（Web Audio 节拍音＋BPM 40–208＋拍号 2/4、3/4、4/4、6/8＋首拍重音＋视觉闪烁＋Tap 测速，零上传）；与刚交付的音乐可视化器／人声消除／变速混响同属音乐练习链路，可互链。**弱点**：受众偏乐器练习人群，工具站定位边缘。SEO：在线节拍器、节拍器、metronome、BPM。建议 ID metronome、Path /tools/metronome；Icon 待开发轮复测锁定（`metronome` 精确值 **0 命中**但须先验图标库有无该 glyph——Google Material Icons 经典集未确认有此图标；`timer`／`music_note`／`speed`／`piano` 各占用 1，不可取）。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 在线节拍器 | **新晋第三席**：音乐可视化器交付后顺位递进；`metronome`／`tuner` 本轮复测全 0 命中；纯前端小难度（Web Audio 节拍音＋BPM＋拍号）；**弱点**：受众偏乐器练习人群，Icon 须先验图标库 | 小 | P3（新晋） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | P3 弱观察维持；`video_to_audio`／`extract_audio`／CJK「视频转音频」全站 0 命中；**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差 | 中 | P3（弱观察） |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 03:00~05:36 窗口；本轮**新晋 0 个**，以消解为主）：
+- **在线节拍器递进第三席**（音乐可视化器交付后顺位递进；`metronome`／`tuner` 本轮复测 0 命中；Icon `metronome` 精确值 0 命中但须先验图标库有无该 glyph）。
+- twelve.tools 11-04~11-05 新品：NamesWheel（随机抽名转盘 → decision_wheel／random_decision 已交付消解）；Play1Minute（53 脑力小游戏 → 游戏口径消解）；InstagramFetch（公开 IG Reels／图片／快拍下载 → 需服务端抓取＋平台 ToS 风险，与池内 X 视频转 GIF 同类弱口径，不单独入池）；Shadow Snap（电影剧照＋台词拼字幕图，niche 弱口径不入池）；MortalSpan Tools 11-02（19 合集工具：PDF 合并/拆分/压缩、JPG→PDF、PDF→图片、图片压缩/尺寸、HEIC→JPG、OCR、QR、JSON／Base64／时间戳／中英文转换／字数统计 → 站内形态印证，HEIC→JPG heic_convert 已交付消解）；TCG Hacker（One Piece 卡牌 eBay 比价扩展口径消解）；TapirUpscale（AI 视频超分，需模型＋服务端，弱口径不入池）。
+- Product Hunt 11-05~11-06：Fluff（免费在线视频编辑器免注册）＋Video Editor for Large Files（浏览器视频编辑器）→ 完整时间线编辑器体量超纲（站内视频口径仅 video_frame_extractor），不入池；Time-Line Pomodoro & Study Planner（番茄钟 → countdown_timer 已含完整番茄钟模式：专注/短休息/长休息可调、四轮后长休息、自动轮转，消解）；Ninada（印度语 TTS，niche 消解）；Wanaka Studio（AI 3D 游戏引擎口径消解）；Testifly（AI 端到端测试，开发者口径消解）；Testhooks（webhook 测试，开发者 niche 弱口径不入池）；Screen Studio 4.0／Clayzo／beacon.sh／Xmind 2027／magpie（240 轮已消解）。
+- V2EX 11-04~11-05：X 视频转 GIF 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址，免费版限次＋水印 → 池内 P3 弱观察维持）；旁白翻译插件（需 API key 的扩展口径消解）；xGoose（页内 AI Agent 插件口径消解）；V2EX 评论上下文插件（扩展口径消解）；TweeTok（X 媒体浏览器 App 口径消解）。
+- Hacker News：NICH（浏览器端匿名化 AI 对话扩展 → 核心口径站内已交付：text_privacy_masker 通用 PII 脱敏＋prompt_sanitizer LLM 提示词脱敏，消解）；Hyperparam（LLM 聊天日志 AI 工具，需 AI agent，消解）；Holiday Optimizer（年假拼假 → annual_leave_optimizer 已交付消解）；RMBG（池内图片智能抠图 P3 弱观察维持）；HackerSwipe／HN Explorer（HN 阅读器口径消解）。
+- 中文搜索「希望有一个网站能…」：SEO 软文为主，无新信号；TinyWow 11-04 200 工具实测（PDF／视频／图片／文件四范畴站内形态印证；图片去水印弱口径不入池——需 inpainting 且去他人水印版权灰色）。
+
+**候选池变动**：music_visualizer 交付划出（a63d5f7＋bb5e316，310 Path，196 tests）；**在线节拍器新晋第三席**（顺位递进；`metronome`／`tuner` 本轮复测 0 命中，纯前端小难度；Icon 待开发轮复测锁定）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪／视频提取音频 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，StrictHostKeyChecking=no 自动重建后一次成功）；本地 HEAD bb5e316（音乐可视化器评审重审修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **310**；`ls tests/*.test.js | wc -l` = **196**；本地当前分支 muse/dev-20260929；工作区除未跟踪的 `toolweb` 二进制外干净（BACKLOG 追加前）；站内零重叠复核（`sudoku`／`metronome`／`tuner` 全 0 命中；`social_image_size`／`social-image-size` 复测 0 命中；Icon `metronome` 精确值 0 命中但须先验图标库 glyph，`timer`／`music_note`／`speed`／`piano` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 03:00 · PM 选定轮，接通用调研第二百四十轮）
 
 **选定：音乐可视化器（music_visualizer）** — 本轮唯一任务（新工具）。

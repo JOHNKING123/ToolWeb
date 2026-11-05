@@ -2925,6 +2925,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "metronome",
+					Name:        "在线节拍器",
+					Description: "在线节拍器 metronome：Web Audio 前瞻调度节拍（25ms 定时器＋0.1s 预调度，OscillatorNode 正弦 click），BPM 40–208（滑杆＋数字输入＋±1/±5 步进、键盘 ↑/↓、空格启停），拍号 2/4、3/4、4/4、6/8（首拍 2000Hz 重音可听辨），节拍音色四档（click/木鱼/鼓/正弦），视觉闪烁与音频时钟同步，Tap 测速（≥4 次点按取平均间隔→BPM），BPM 预设 60/80/100/120/140/160，音量＋静音，全程浏览器本地计算零上传 · Online metronome: Web Audio lookahead scheduling, BPM 40-208, time signatures 2/4 3/4 4/4 6/8, accent on first beat, tap tempo, 100% client-side",
+					Path:        "/tools/metronome",
+					Icon:        "av_timer",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "slowed_reverb",
 					Name:        "音频变速混响生成器",
 					Description: "上传 MP3/WAV/OGG/M4A/AAC 本地解码，变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调随速度自然变化），ConvolverNode 卷积混响（程序化合成脉冲响应：怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），OfflineAudioContext 离线渲染＋进度条，A/B 对比试听，WAV 手工编码/MP3(lamejs 128–320kbps)本地导出，纯前端零上传 · Slowed+reverb generator: change speed 0.5x-1.5x, convolution reverb, offline render, A/B preview, export WAV/MP3 locally",
