@@ -2525,6 +2525,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "生活工具",
 				},
+				{
+					ID:          "annual_leave_optimizer",
+					Name:        "年假拼假优化器",
+					Description: "年假拼假优化器/请假攻略：输入 2027 年剩余年假天数（0–30，法定 5/10/15 快捷按钮），一键算出 7 个法定假期的最优拼假方案榜（请 N 休 M，按连休天数降序、请假天数升序），方案详情迷你日历四色区分法定假/周末/请假日/调休上班日，一键复制方案文本；2027 年假期数据以国办发明电〔2026〕10号为准，全程浏览器本地计算零上传 · Annual leave optimizer: best 2027 holiday leave plans, 100% client-side",
+					Path:        "/tools/annual-leave-optimizer",
+					Icon:        "beach_access",
+					New:         true,
+					Category:    "生活工具",
+				},
 			},
 		},
 		{

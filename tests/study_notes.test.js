@@ -194,7 +194,7 @@ var iconRe = /"note_add"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon note_add 全库唯一（精确值复测锁定）");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 305, "注册 Path 总数 275→276");
+eq(pathCount, 306, "注册 Path 总数 275→276");
 
 /* ---------- 12. 模板：SEO/真限制/互链/零网络 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/study-notes", "模板 canonical 含新 Path");

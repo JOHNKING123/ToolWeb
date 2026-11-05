@@ -1,0 +1,180 @@
+{{define "annual_leave_optimizer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年假拼假优化器 - 2027 年法定假期请假攻略：请几天休几天最划算 | 程序员工具箱</title>
+    <meta name="description" content="免费在线年假拼假优化器：输入 2027 年剩余年假天数，一键算出 7 个法定假期的最优拼假方案（请 N 天休 M 天，按连休天数排序），方案详情迷你日历四色区分法定假、周末、请假日与调休上班日，一键复制方案文本；2027 年假期数据以国办发明电〔2026〕10号为准，全程浏览器本地计算零上传。年假拼假、请假攻略、调休日历、2027放假安排。">
+    <meta name="keywords" content="年假拼假,拼假优化器,请假攻略,年假怎么请最划算,2027放假安排,调休日历,请N休M,年假计算器,拼假日历,国庆拼假,春节拼假">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/annual-leave-optimizer">
+    <meta property="og:title" content="年假拼假优化器 - 2027 年法定假期请假攻略">
+    <meta property="og:description" content="输入年假天数，一键算出 2027 年 7 个假期的最优拼假方案：请几天休几天、迷你日历四色区分、一键复制方案文本；数据以国办发明电〔2026〕10号为准，全程本地计算零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/annual-leave-optimizer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"年假拼假优化器","description":"输入 2027 年剩余年假天数，一键算出 7 个法定假期的最优拼假方案（请 N 天休 M 天，按连休天数排序），迷你日历四色区分法定假、周末、请假日与调休上班日，一键复制方案文本；2027 年假期数据以国办发明电〔2026〕10号为准，全程浏览器本地计算零上传。","url":"https://www.johnkingzcq123.xyz/tools/annual-leave-optimizer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .alo-privacy{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .alo-privacy b{color:#047857}
+        .alo-limit{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#1e40af}
+        .alo-limit b{color:#1d4ed8}
+        .alo-limit ul{margin:.3rem 0 0;padding-left:1.2rem}
+        .alo-limit li{margin:.15rem 0}
+        .alo-sec{margin:1.3rem 0 .6rem}
+        .alo-sec h3{margin:0 0 .3rem;font-size:1.02rem;color:#111827}
+        .alo-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.4rem 0}
+        .alo-input-row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end}
+        .alo-field label{display:block;font-size:.88rem;color:#374151;margin-bottom:.3rem;font-weight:600}
+        .alo-input{width:120px;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.55rem .7rem;font-size:1rem;color:#111827;background:#fff;font-family:inherit}
+        .alo-input:focus{outline:none;border-color:var(--primary-color)}
+        .alo-quick{display:flex;gap:.45rem;flex-wrap:wrap}
+        .alo-chip{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:999px;padding:.35rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .alo-chip:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .alo-error{display:none;margin-top:.7rem;font-size:.9rem;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;padding:.6rem .8rem}
+        .alo-rank-item{display:flex;gap:.7rem;align-items:center;border:1px solid #e5e7eb;border-radius:.7rem;padding:.75rem .9rem;background:#fff;cursor:pointer;margin-bottom:.55rem}
+        .alo-rank-item:hover{border-color:var(--primary-color)}
+        .alo-rank-item.alo-active{border:2px solid var(--primary-color);background:#eff6ff}
+        .alo-rank-item:focus{outline:2px solid var(--primary-color);outline-offset:2px}
+        .alo-rank-no{flex:none;width:1.7rem;height:1.7rem;border-radius:999px;background:#e5e7eb;color:#374151;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+        .alo-rank-item.alo-active .alo-rank-no{background:var(--primary-color);color:#fff}
+        .alo-rank-main{flex:1;min-width:0}
+        .alo-rank-main b{display:block;font-size:1rem;color:#111827}
+        .alo-rank-sub{display:block;font-size:.83rem;color:#6b7280;margin-top:.1rem}
+        .alo-rank-best{flex:none;font-weight:700;color:#047857;font-size:1rem;white-space:nowrap}
+        .alo-rank-dates{flex:none;font-size:.85rem;color:#6b7280;white-space:nowrap}
+        .alo-plan-range{font-size:1rem;color:#111827;font-weight:600}
+        .alo-plan-meta{font-size:.93rem;color:#374151;line-height:1.8}
+        .alo-note{font-size:.9rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:.6rem;padding:.6rem .8rem;line-height:1.7}
+        .alo-legend{display:flex;gap:.45rem;flex-wrap:wrap;margin:.7rem 0}
+        .alo-lg{font-size:.8rem;font-weight:700;border-radius:999px;padding:.15rem .65rem}
+        .alo-k-holiday{background:#fee2e2;color:#991b1b}
+        .alo-k-weekend{background:#dbeafe;color:#1e40af}
+        .alo-k-leave{background:#fef3c7;color:#92400e}
+        .alo-k-work{background:#e9d5ff;color:#6b21a8}
+        .alo-k-plain{background:#f3f4f6;color:#6b7280}
+        .alo-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;margin-top:.5rem}
+        .alo-cal-head{font-size:.78rem;color:#6b7280;text-align:center;font-weight:700;padding:.2rem 0}
+        .alo-cal-pad{visibility:hidden}
+        .alo-cal-cell{border-radius:.5rem;padding:.35rem .1rem;text-align:center;font-size:.78rem;line-height:1.4;border:1px solid transparent}
+        .alo-cal-cell b{display:block;font-weight:700}
+        .alo-cal-cell i{display:block;font-style:normal;font-size:.72rem}
+        .alo-cal-cell.alo-out{opacity:.55}
+        .alo-cal-cell.alo-k-holiday{background:#fee2e2;color:#991b1b}
+        .alo-cal-cell.alo-k-weekend{background:#dbeafe;color:#1e40af}
+        .alo-cal-cell.alo-k-leave{background:#fef3c7;color:#92400e}
+        .alo-cal-cell.alo-k-work{background:#e9d5ff;color:#6b21a8}
+        .alo-cal-cell.alo-k-plain{background:#f3f4f6;color:#9ca3af}
+        .alo-text{background:#111827;color:#e5e7eb;border-radius:.6rem;padding:.9rem 1rem;font-size:.88rem;line-height:1.8;overflow-x:auto;white-space:pre-wrap;margin:.8rem 0 0;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .alo-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.8rem;align-items:center}
+        .alo-copy-tip{display:none;font-size:.86rem;color:#047857}
+        .alo-table{width:100%;border-collapse:collapse;font-size:.9rem;line-height:1.7}
+        .alo-table th,.alo-table td{border:1px solid #e5e7eb;padding:.45rem .6rem;text-align:left;vertical-align:top}
+        .alo-table th{background:#f9fafb;color:#374151;white-space:nowrap}
+        .alo-links{line-height:2;font-size:.93rem;color:#374151}
+        .alo-links b{color:#111827}
+        .alo-links a{color:var(--primary-color)}
+        @media (max-width:640px){
+            .alo-rank-dates{display:none}
+            .alo-input-row{flex-direction:column;align-items:stretch}
+            .alo-input{width:100%}
+            .alo-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+        @media (prefers-reduced-motion:reduce){
+            *{transition:none !important;animation:none !important}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>年假拼假优化器</h1>
+            <p>2027 年 7 个法定假期怎么请最划算？输入剩余年假天数，一键算出每个假期的最优拼假方案（请几天、休几天），按连休天数排序，迷你日历一眼看清法定假、周末、请假日与调休上班日。</p>
+        </div>
+        <div class="tool-content" style="max-width:860px;margin:auto;">
+            <div class="alo-privacy" role="note">
+                <div><b>隐私声明：全程浏览器本地计算，零上传、零外部接口。</b>年假天数只在当前浏览器内参与计算，不会上传任何内容，也不会请求任何外部接口。打开 DevTools 的 Network 面板可验证：本页无任何网络请求。</div>
+            </div>
+            <div class="alo-limit" role="note">
+                <div><b>真限制（请先了解再使用）：</b>
+                    <ul>
+                        <li><b>仅适用 2027 年：</b>本页假期数据以国办发明电〔2026〕10号公布的 2027 年放假安排为准，不适用于其他年份；2027 年之后的假期安排请以当年国务院办公厅通知为准。</li>
+                        <li><b>调休上班日不计入连休：</b>调休上班日是正常工作日，不请假就会打断连休；想把它连进来，须另请 1 天假（方案详情会明确标注）。</li>
+                        <li><b>须以单位制度与审批为准：</b>年假天数、请假规则与审批结果以所在单位制度为准，本页方案仅为参考，不构成请假承诺。</li>
+                        <li><b>本页零上传：</b>不上传、不保存、不记录任何内容，关闭页面即无痕迹。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="alo-sec">
+                    <h3>① 输入年假天数</h3>
+                    <div class="alo-hint">剩余年假 0–30 天，默认 5 天；法定年假一般为 5 / 10 / 15 天，可点快捷按钮一键填入。</div>
+                </div>
+                <div class="alo-input-row">
+                    <div class="alo-field">
+                        <label for="alo-leave-input">剩余年假天数（0–30）</label>
+                        <input class="alo-input" type="number" id="alo-leave-input" min="0" max="30" step="1" value="5" aria-label="剩余年假天数">
+                    </div>
+                    <div class="alo-quick" role="group" aria-label="法定年假快捷天数">
+                        <button type="button" class="alo-chip" data-alo-days="5">法定 5 天</button>
+                        <button type="button" class="alo-chip" data-alo-days="10">法定 10 天</button>
+                        <button type="button" class="alo-chip" data-alo-days="15">法定 15 天</button>
+                    </div>
+                </div>
+                <div class="alo-error" id="alo-error" role="alert"></div>
+            </div>
+
+            <div class="tool-card">
+                <div class="alo-sec">
+                    <h3>② 2027 年拼假方案榜</h3>
+                    <div class="alo-hint">7 个假期各取最优方案，按连休天数从长到短排序；请假天数相同时，用假更少的排前面。点击任意方案查看详情。</div>
+                </div>
+                <div id="alo-list"></div>
+            </div>
+
+            <div class="tool-card">
+                <div class="alo-sec">
+                    <h3>③ 方案详情</h3>
+                    <div class="alo-hint">迷你日历四色区分：红色法定假、蓝色周末、黄色请假日、紫色调休上班日；窗口前后各留 2 天，紧邻的调休上班日也能看到。</div>
+                </div>
+                <div id="alo-detail"></div>
+            </div>
+
+            <div class="tool-card">
+                <h3>2027 年法定假期一览（国办发明电〔2026〕10号）</h3>
+                <table class="alo-table">
+                    <thead><tr><th>假期</th><th>放假日期</th><th>天数</th><th>调休上班日</th></tr></thead>
+                    <tbody>
+                        <tr><td>元旦</td><td>1月1日–1月3日</td><td>3天</td><td>无</td></tr>
+                        <tr><td>春节</td><td>2月5日–2月13日</td><td>9天</td><td>1月31日（周日）、2月14日（周日）</td></tr>
+                        <tr><td>清明节</td><td>4月3日–4月5日</td><td>3天</td><td>无</td></tr>
+                        <tr><td>劳动节</td><td>5月1日–5月5日</td><td>5天</td><td>5月8日（周六）</td></tr>
+                        <tr><td>端午节</td><td>6月9日</td><td>1天</td><td>无</td></tr>
+                        <tr><td>中秋节</td><td>9月15日</td><td>1天</td><td>无</td></tr>
+                        <tr><td>国庆节</td><td>10月1日–10月7日</td><td>7天</td><td>9月26日（周日）、10月9日（周六）</td></tr>
+                    </tbody>
+                </table>
+                <p class="alo-hint" style="margin-top:.6rem">经典拼法参考：端午请 2 休 5、中秋请 2 休 5、春节节前请 4 休 13、国庆请 1 休 8 或请 2 休 10、元旦请 4 休 9——在上方输入对应天数即可复现。</p>
+            </div>
+
+            <div class="tool-card">
+                <h3>拼假小贴士</h3>
+                <div class="alo-links">
+                    <b>先拼长假：</b>年假有限时优先拼春节、国庆、劳动节这类长假，同样 5 天假春节能拼出 15 天连休，端午、中秋只能拼出 10 天左右。<br>
+                    <b>调休日是关键：</b>春节前后、国庆前后的调休上班日（1月31日、2月14日、9月26日、10月9日）是连休的断点，算方案时别把它们当周末。<br>
+                    <b>请假要趁早：</b>热门拼假时段（春节前、国庆前）请假人多，方案定下来就尽早向单位提交申请。<br>
+                    <b>算工时也别忘：</b>拼假涉及调休与工时换算，<a href="/tools/time-decimal">工时十进制转换</a> 可以把时分秒换算成十进制小时，方便核对打卡时长。
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/annual_leave_optimizer.js?v=1"></script>
+</body>
+</html>
+{{end}}

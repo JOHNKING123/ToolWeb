@@ -1,3 +1,95 @@
+## 今日任务（2026-11-05 19:38 · PM 选定轮，接通用调研第二百三十六轮）
+
+**选定：年假拼假优化器（annual_leave_optimizer）** — 本轮唯一任务（新工具）。
+
+**顺位**：236 轮 Top3 首席，**触发器今日满足即立项**。国务院办公厅关于 2027 年部分节假日安排的通知（国办发明电〔2026〕10号，2026-11-05 发布）全文已验，PM 二十一度跳过条件解除；时效窗口正在打开——通知发布当晚正是用户查「2027 年假怎么拼」的高峰起点，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），年假拼假口径站内 0 交付。
+2. **需求验证**：通知原文明确鼓励「结合带薪年休假形成较长假期」——手头年假几天、配哪个法定假拼出最长连休最划算，正是本工具的痛点；输入年假天数→各假期拼假方案（请 N 休 M 最优组合＋日历可视化＋调休上班日标注），一页解决「拼哪次、请几天、连休几天」。
+3. **数据已锁定**：2027 年 7 个假期＋调休上班日全文逐条验真（见规格数据表），一年内零维护；年更新负担是唯一弱点，但 2027 数据已锁定、本轮交付后一年内无需改动。
+4. **无硬伤**：纯前端小难度（静态数据表＋拼假算法＋日历可视化，零上传、零外部接口）；与站内在线日历（calendar，仅查日历/农历/节假日信息）口径互补不重叠——日历只管「哪天放假」，本工具管「年假怎么拼最划算」。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真，已记入 AGENTS.md）：
+   - ASCII：`annual_leave`／`annual-leave`／`leave_optimizer`／`leaveOptimizer` 全站（tools/templates/static/js/tests，vendor 排除，BACKLOG.md 除外）**0 命中**——拼假优化器本体 0 交付，真缺口确凿。
+   - CJK「年假」（`chr(0x5e74)+chr(0x5047)` 运行时构造）全站 **0 命中**、「拼假」（`chr(0x62fc)+chr(0x5047)` 运行时构造）全站 **0 命中**——中文口径亦 0 交付；「调休」（`chr(0x8c03)+chr(0x4f11)`）仅 templates/time_decimal.html:124 一句「不含调休折算」免责提及（无关）。
+   - Icon：**`beach_access`（首选；`Icon:\s*"beach_access"` 精确值 **0 命中**，全库唯一，贴合「休假」语义；备选 `date_range`／`event_note` 亦 0 命中；`calendar_today`／`event`／`event_available` 各占用 1、`schedule` 占用 2，不可取）**，开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第六度裁定跳过**：沿用 231/232/233/234/235 轮「数据表负债从严」逻辑——平台规格偶发变更、错表误导用户；首席顺位留池，不冻结）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **2027 假期数据表（锁定，以国办发明电〔2026〕10号全文为准；开发轮逐条复核，错一处即返工）**：① 元旦 1/1（周五）–1/3（周日），3 天，无调休 ② 春节 2/5（周五）–2/13（周六），9 天，1/31（周日）、2/14（周日）上班 ③ 清明 4/3（周六）–4/5（周一），3 天，无调休 ④ 劳动节 5/1（周六）–5/5（周三），5 天，5/8（周六）上班 ⑤ 端午 6/9（周三），1 天，无调休 ⑥ 中秋 9/15（周三），1 天，无调休 ⑦ 国庆 10/1（周五）–10/7（周四），7 天，9/26（周日）、10/9（周六）上班。星期已用 `date -d` 逐日验真。
+- **范围（有界）**：① 输入年假天数（0–30 天，默认 5 天；法定 5/10/15 天快捷按钮）② 7 个假期拼假方案榜：每个假期给出最优方案（请 N 天年假→连休 M 天，含前后桥接周末的最优摆放；调休上班日打断连休，必须计入算法，不得把上班日算进连休）＋性价比排序（连休天数降序、请假天数升序）③ 方案详情：迷你日历可视化（法定假／周末／请假日／调休上班日四色区分，调休上班日醒目标注）④ 一键复制方案文本（「端午请 2 休 5：6/7–6/8 请假，6/5–6/9 连休」形）⑤ 年假天数不足时诚实提示（该假期拼不出更长连休，不硬凑方案）⑥ 全程浏览器本地计算，零上传、零外部接口 ⑦ 无障碍（tab 聚焦可操作、动画可减弱）⑧ 模板零外部静态资源惯例。
+- **拼假算法锚点（测试精确值）**：端午 6/9（周三）请 2 天（6/7–6/8）→ 6/5–6/9 连休 5 天（请 2 休 5）；中秋 9/15（周三）请 2 天（9/13–9/14）→ 9/11–9/15 连休 5 天（请 2 休 5）；春节节前请 4 天（2/1–2/4）→ 2/1–2/13 连休 13 天（请 4 休 13，1/31 调休上班日隔断 1/30–31 周末不计入）；国庆请 1 天（10/8）→ 10/1–10/8 连休 8 天（10/9 调休上班日打断），请 2 天（10/8–10/9）→ 10/1–10/10 连休 10 天（请 2 休 10）；元旦请 0 天即 3 天连休（1/1–1/3），请 4 天（1/4–1/7）可延至 1/9（请 4 休 9，含 1/8–1/9 周末）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.AnnualLeaveOptimizer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `listHolidays()` → [{id, name, start, end, days, workdays}]（7 条；start/end 为 `YYYY-MM-DD` 字符串；workdays 为调休上班日数组，无调休为空数组）。
+  - `getHolidayById(id)` → holiday 对象（id 非字符串或不存在 err.field='id'）。
+  - `normalizeLeaveDays(n)` → 整数（0–30；越界或非数 err.field='leaveDays'；缺省 5）。
+  - `computePlan(holiday, leaveDays)` → {holidayId, leaveUsed, totalDays, segments:[{date, kind}]}（kind 取值 holiday/weekend/leave/workday；leaveUsed ≤ leaveDays；totalDays 为最优摆放下的最长连休天数；调休上班日 kind='workday' 打断连休；leaveDays 为 0 时 totalDays=holiday.days；holiday 非法 err.field='holiday'，leaveDays 非法 err.field 透传自 normalizeLeaveDays）。
+  - `rankPlans(leaveDays, limit)` → plan[]（7 个假期各取最优方案，按 totalDays 降序、leaveUsed 升序；limit 非正整数 err.field='limit'，缺省 7）。
+  - `bestPlanForLeave(leaveDays)` → rankPlans(leaveDays, 1)[0]（leaveDays 非法 err.field 透传）。
+  - `formatPlanText(plan)` → string（可复制的方案文本，含假期名、请假日期段、连休日期段与「请 N 休 M」；plan 非法 err.field='plan'）。
+- **真限制四条页面明示**：① 数据为 2027 年国务院办公厅通知（国办发明电〔2026〕10号），仅适用于 2027 年，2028 年安排以届时官方通知为准；② 调休上班日已按通知计入算法，连休天数不含调休上班日；③ 拼假方案为基于法定假期的通用建议，实际请假须以所在单位年假制度与审批为准；④ 全程浏览器本地计算，零上传。
+- **SEO**：2027年放假安排、年假拼假、拼假攻略、请假攻略、2027拼假日历。
+- **改动文件**：tools/categories.go（「生活工具」类目新增 annual_leave_optimizer 条目，Path 305→**306**，Icon `beach_access` 首选，开发轮精确值复测锁定全库唯一）／templates/annual_leave_optimizer.html（新）／static/js/annual_leave_optimizer.js（新）／tests/annual_leave_optimizer.test.js（新）／全量旧 tests Path 断言 305→306 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥50 断言全过（listHolidays 7 条日期精确值；getHolidayById 命中／未命中抛错 err.field='id'；normalizeLeaveDays 边界与抛错 err.field='leaveDays'；computePlan 锚点精确值：端午请 2 休 5／中秋请 2 休 5／春节请 4 休 13／国庆请 1 休 8 与请 2 休 10／调休上班日打断验证；rankPlans 排序精确值；formatPlanText 关键片段；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 191→**192** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/annual-leave-optimizer 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：年假天数输入与快捷按钮生效、7 假期方案榜排序正确、方案详情日历四色区分与调休上班日标注正确、复制方案文本可用（开发轮记录）。
+- **品类归位**：注册到「生活工具」类目（日常生活实用小工具，与单位换算器／亲戚关系计算器同类目；与「开发工具」类目下的在线日历仅为「查假期」口径互补，不重叠）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：年假拼假优化器→本轮交付（236 研究轮首席；触发器今日满足：国办发明电〔2026〕10号 2026-11-05 发布，7 假期＋调休日全文已验；PM 二十一度跳过条件解除；站内零重叠复核确凿（ASCII 四形态 0 命中＋CJK「年假」「拼假」0 命中）；生活工具类目；Icon `beach_access` 首选 0 命中全库唯一）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第六度跳过）／数独游戏→P3 观察维持／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）正常；远端无新提交（本地 HEAD 7a98354＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **305**；`ls tests/*.test.js | wc -l` = **191**；2027 假期星期 `date -d` 逐日验真（元旦 1/1 周五、春节 2/5 周五、端午 6/9 周三、中秋 9/15 周三、国庆 10/1 周五）；PM 独立零重叠复核（ASCII `annual_leave`／`annual-leave`／`leave_optimizer`／`leaveOptimizer` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「年假」「拼假」`chr(0x...)` 运行时构造 0 命中，「调休」仅 time_decimal.html:124 免责提及；`Icon:\s*"beach_access"`／`date_range`／`event_note` 精确值 0 命中，`calendar_today`／`event`／`event_available` 各占用 1、`schedule` 占用 2）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：字体搭配预览已交付闭环（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 总数 304→**305**，tests **191 个**；7a98354 跟进修复预设卡片渲染致命 bug，回归测试 366 断言全过），候选池划出。
+>
+> **🚨 触发器满足：2027 年放假安排官方通知今日发布**——国务院办公厅关于2027年部分节假日安排的通知（国办发明电〔2026〕10号，2026-11-05），中国青年网 17:18 转载全文＋澎湃新闻确认；年假拼假优化器等了 21 轮的触发条件达成，冻结解除，本轮顺位递进首席。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **年假拼假优化器** — **触发器今日满足，顺位递进首席**。官方通知全文已验（见下）：元旦 1/1–1/3（3天）、春节 2/5–2/13（9天，1/31、2/14 上班）、清明 4/3–4/5（3天）、劳动节 5/1–5/5（5天，5/8 上班）、端午 6/9（1天）、中秋 9/15（1天）、国庆 10/1–10/7（7天，9/26、10/9 上班）；通知并鼓励结合带薪年休假形成较长假期——正是本工具的痛点（手头年假几天、配哪个法定假拼出最长连休最划算）。实现纯前端小难度（输入年假天数→各假期拼假方案：请N休M最优组合＋日历可视化＋调休上班日标注；静态数据表，零上传）。零重叠本轮复核确凿：ASCII `annual_leave`／`annual-leave`／`leave_optimizer` 全站 **0 命中**，CJK「年假」**0 命中**、「拼假」**0 命中**、「调休」仅 time_decimal.html 一句「不含调休折算」免责提及（无关）。**弱点**：调休数据表年更新负担（2028 年需更新），但 2027 年数据已锁定、一年内零维护。SEO：2027年放假安排、年假拼假、拼假攻略、请假攻略。建议 ID annual_leave_optimizer、Path /tools/annual-leave-optimizer；Icon `beach_access` 首选（精确值 **0 命中**，备选 `date_range`／`event_note` 亦 0 命中；`calendar_today`／`event` 各占用 1、`schedule` 占用 2、`event_available`／`event_seat` 各占用 1，不可取），开发轮复测锁定。
+2. **社媒/证件照尺寸速查表** — 顺位次席。CropDen 11-03 独立信号维持（14 平台 55 尺寸＋App 遮挡区像素坐标＋6 种护照/签证规格）；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠：`social_image_size`／`social-image-size` 全 0 命中，CJK「社媒」46 命中验真全为社媒标签生成器／社媒标题生成器等他人口径——**尺寸速查表本体 0 交付**。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已第五度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+3. **数独游戏** — P3 观察递进第三席。Tooleek 信号；站内零重叠复核确凿：ASCII `sudoku` 全站 **0 命中**，CJK「数独」验真全为 css_background_pattern_generator 图案预设名，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 年假拼假优化器 | **触发器今日满足**：国办发明电〔2026〕10号 2026-11-05 发布，7 假期＋调休日全文已验；站内本体 0 交付（ASCII 三形态＋CJK「年假」「拼假」全 0 命中）；纯前端小难度；**弱点**：数据表年更新负担（2027 数据已锁定） | 小 | P1（触发器满足；顺位首席） |
+| 社媒/证件照尺寸速查表 | 顺位次席；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已第五度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察递进第三席；Tooleek 信号；ASCII/CJK 验真真缺口；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（新晋第三席） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 信号；**弱点**：需服务端按帖子 ID 查视频地址（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug；Icon `text_format` 全库唯一） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-05 17:38~19:36 窗口；本轮**触发器满足＋零新晋**）：
+- **2027 年放假安排官方发布（触发器满足）**：国务院办公厅通知（国办发明电〔2026〕10号，2026-11-05；中国青年网 17:18 全文转载，澎湃新闻 09:01Z 确认「今天下午正式出炉」）→ 年假拼假优化器冻结解除，顺位递进首席。全文 7 假期＋调休上班日已逐条验真（见 Top1）；此前 300038.cn「已发布、春节 2/15—21」与官方「2/5—13」矛盾，确认为 SEO 农场编造。
+- ToolMintX 11-04（157+ 工具）：Signature Extractor（签名抠图转透明 PNG）→ 站内 signature_capture（手写签名数字化仪：上传白纸签名照→Otsu 去底→透明 PNG）已交付消解；AI VRAM Calculator → AI 硬件口径，弱口径不入池；其余 PDF/图片/文本工具站内形态印证。
+- Ignlab 11-04：Video Frame Extractor → 站内 video_frame_extractor 已交付；Subtitle tools（字幕转换/平移/合并）→ 站内 subtitle_editor 已交付（SRT/VTT 互转＋整体平移）；Invoiceize 发票生成器 → 站内 invoice_generator 已交付；其余随机电影生成器（娱乐口径）／游戏灵敏度转换器（游戏 niche 口径）消解。
+- twelve.tools 11-04~11-05 新品：Mass Rename → batch_rename_helper 已交付（235 轮已消解）；FPSDEN 随机抽取/转盘 → 站内年会大屏抽奖＋幸运决策转盘＋选择困难症救星已交付消解（本轮复核）；VisualFormat GIF 套件 → gif_maker/gif_compress 形态印证；Shadow Snap Subtitles（电影截图＋台词拼字幕图）→ 趣味图片生成 niche，弱口径不入池；TextBake 批量文本管道 → 需求窄，弱口径不入池；Excerpt／HomepageTab／GoodExts → 浏览器扩展口径消解；AI Rap Video／RMBG PRO → AI 模型口径消解；MortalSpan／PDF Studio → PDF/图片/开发工具站内形态印证。
+- V2EX 11-03~11-05：KitVerse 100+ Local-first 工具箱（未点名具体新工具）；Event Horizon 网页感知 MCP → Agent 平台口径消解；VVAE 客户端／EasyPost 多平台分发（扩展＋CLI 口径）消解；REBANG 极简热榜聚合 → 需服务端聚合多平台热榜＋反爬风险，非单页纯前端，弱口径不入池；xGoose AI Agent 插件口径消解。
+- Product Hunt 11-05 当日榜（thistools 11-01 digest 已覆盖 Invoiceize 等）→ 零新晋。
+
+**候选池变动**：font_pairing_preview 交付划出（b5b1f4a＋7a98354，305 Path，191 tests）；**年假拼假优化器触发器今日满足**（国办发明电〔2026〕10号 2026-11-05 发布；PM 此前第二十一度跳过条件解除；触发器：官方通知发布后下一轮调研确认即立项——本轮即确认）；**社媒/证件照尺寸速查表顺位次席**（P3；数据鲜度维护负担压级；PM 已第五度跳过）；**新晋第三席 1 个**（数独游戏：P3 观察递进，站内本体 0 交付＋纯前端小难度；弱点为游戏非工具）；**本轮新信号扫描零新晋**（签名提取／视频帧提取／字幕工具／发票生成器／随机抽奖转盘全为站内已交付形态印证；热榜聚合／字幕拼图／VRAM 计算器为弱口径不入池）；反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪 P3 观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，`ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts` 重建后一次成功）；**远端无新提交**（本地 HEAD 7a98354＝origin/muse/dev-20260929）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **305**；`ls tests/*.test.js | wc -l` = **191**；本地当前分支 muse/dev-20260929；工作区干净（BACKLOG 追加前）；站内零重叠复核（`annual_leave`／`annual-leave`／`leave_optimizer` 全 0 命中，CJK「年假」「拼假」全 0 命中、「调休」仅 time_decimal.html 一句免责提及；`social_image_size`／`social-image-size` 全 0 命中，CJK「社媒」46 命中验真全为社媒标签／标题生成器等他人口径；`sudoku` ASCII 0 命中复核沿用 234 轮结论；Icon `beach_access`／`date_range`／`event_note`／`flight_takeoff` 精确值 0 命中，`calendar_today`／`event` 各占用 1、`schedule` 占用 2）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-05 17:38 · PM 选定轮，接通用调研第二百三十五轮）
 
 **选定：字体搭配预览（Fontjoy 模式）（font_pairing_preview）** — 本轮唯一任务（新工具）。

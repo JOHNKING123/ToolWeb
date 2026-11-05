@@ -6,7 +6,7 @@
  * 精确全文、listFontStacks 选项结构、非法参数抛错 err.field、双模式导出与零外部接口、
  * buildPairingCardHTML 卡片 HTML 回归（上一轮评审致命 bug：renderList 误用 p.title/p.body
  * 致 10 张卡片全不渲染；现卡片 HTML 由纯函数生成，逐组断言可渲染且字体栈正确）、
- * categories.go 注册（Path 总数 304→305、Icon text_format 全库唯一、New/类目）、
+ * categories.go 注册（Path 总数 305→306、Icon text_format 全库唯一、New/类目）、
  * 模板（SEO 四关键词、真限制四条、随机/手动选择/滑杆/预览/复制 CSS 控件、互链字体版权查询、
  * 零外部资源静态检查）。
  */
@@ -175,7 +175,7 @@ has(JS_SRC, "系统字体栈", "JS 明示系统字体栈口径");
 
 /* ---------- 10. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 305, "注册 Path 总数 304→305");
+eq(pathCount, 306, "注册 Path 总数 305→306");
 has(GO_SRC, 'ID:          "font_pairing_preview"', "注册：ID font_pairing_preview");
 has(GO_SRC, 'Path:        "/tools/font-pairing-preview"', "注册：Path /tools/font-pairing-preview");
 has(GO_SRC, 'Icon:        "text_format"', "注册：Icon text_format");
