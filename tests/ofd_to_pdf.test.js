@@ -130,7 +130,7 @@ eq(A.EXPORT_DPI, 150, "EXPORT_DPI=150 精确");
 /* ---------- 10. categories.go 注册 ---------- */
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 313, "注册 Path 总数 298→299");
+eq(pathCount, 314, "注册 Path 总数 298→299");
 var iconHits = (GO_SRC.match(/Icon:\s*"file_upload"/g) || []).length;
 eq(iconHits, 1, "Icon file_upload 全库唯一（精确值复测锁定）");
 has(GO_SRC, 'ID:          "ofd_to_pdf"', "注册：ID ofd_to_pdf");

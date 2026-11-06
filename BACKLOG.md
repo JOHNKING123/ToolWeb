@@ -1,3 +1,105 @@
+## 今日任务（2026-11-06 11:45 · PM 选定轮，接通用调研第二百四十四轮）
+
+**选定：唱歌音准检测（singing_pitch_checker）** — 本轮唯一任务（新工具）。
+
+**顺位**：244 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十四度裁定跳过**（沿用 231–243 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十三轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），唱歌音准检测口径站内 0 交付。
+2. **口径互补确凿**：音频处理类目已有 vocal_remover（卡拉 OK 伴奏提取）／music_visualizer（麦克风实时频谱）／metronome（练乐器节奏）；本工具为**练唱音准口径**（麦克风实时基频检测→音名＋偏差音分＋偏高/偏低→目标音打分），与 vocal_remover 形成「伴奏提取→开口练唱」顺流、与 metronome 形成「音准＋节奏」音乐练习双口径；与 text_reader_aloud 的音调滑杆仅「音调」二字表层相同，本质不同（朗读是 speechSynthesis 发声音调参数，本工具是麦克风采音的基频测量＋评分）。
+3. **需求验证**：练唱／KTV 爱好者想知道自己唱歌跑不跑调、偏高还是偏低，现有免费工具多为 App 内购或要注册；浏览器本地做、零上传、无次数。Tooleek 信号印证。
+4. **技术路线站内已有先例**：music_visualizer 已跑通麦克风实时输入（getUserMedia＋AnalyserNode）与 MediaRecorder；vocal_remover 已跑通 AudioContext 本地采集；本工具只在既有模式上多一步时域自相关基频检测（无模型权重、无服务端、无外部依赖）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`singing`／`pitch_detect`／`sudoku`／`social_image_size`／`social-image-size` 全站（tools/templates/static/js/tests）**0 命中**——音准检测本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「音准」`chr(0x...)` 运行时构造（codepoints 验真 0x97f3／0x51c6）全站 **0 命中**。
+   - CJK「唱歌」1 命中验真为 heart_rate_zones 文案「可以完整交谈、唱歌」他人口径。
+   - `pitch` 命中验真全为 text_reader_aloud 音调滑杆（speechSynthesis 发声音调参数）他人口径；`tuner` 全站 **0 命中**。
+   - Icon：**`record_voice_over` 首选**（Material Icons 官方 codepoints 验真确有此 glyph：**e91f**；`Icon:\s*"record_voice_over"` 精确值 **0 命中**，全库唯一，贴合「唱歌发声」语义；`mic`／`music_note`／`graphic_eq` 各占用 1，不可取），开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十四度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／视频转 SRT／短链逐跳跳转链追踪／视频提取音频（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 自由练唱模式：麦克风实时音名＋偏差音分＋偏高／偏低／准指示 ② 目标音练习模式：目标音 C3–C6 可选（默认 A4），单音唱稳 0.5s 计一次成绩，累计平均偏差、准音率（±25 音分内占比）、S/A/B/C/D 分档 ③ 实时音高检测：getUserMedia＋AnalyserNode 时域数据＋自相关基频检测，有效范围 50–1000 Hz，置信度阈值过滤静音／噪声 ④ 实时仪表：音名大字＋音分偏差条（−100…+100 音分）＋实时波形小图 ⑤ 音名–频率对照表（C3–C6 含频率值，无需麦克风可查）⑥ 成绩历史：最近 10 次练习 localStorage 本地保存，可一键清除 ⑦ 互链：metronome 单向互链（"音准练完，用节拍器练节奏"）⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（tab 聚焦可操作、空格启停、动画可减弱、偏高／偏低同时有文字提示，不只依赖颜色）⑩ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.SingingPitchChecker 下，module.exports 同步导出；DOM 与 AudioContext 只做浏览器端，测试只覆盖纯函数）**：
+  - `freqToMidi(freq)` → number（freq 须为 >0 有限数，否则 err.field='freq'；返回 69＋12·log2(freq/440)，保留 2 位小数）。
+  - `midiToFreq(midi)` → number（midi 须为 0–127 整数，否则 err.field='midi'；返回 440·2^((midi−69)/12)，保留 2 位小数）。
+  - `freqToNoteName(freq)` → {name, octave, midi, cents}（name 为 C/C#/D/D#/E/F/F#/G/G#/A/A#/B；cents 为与最近音的偏差，四舍五入整数，−50…+50；freq 须为 >0 有限数，否则 err.field='freq'）。
+  - `centsBetween(freq, targetFreq)` → number（1200·log2(freq/targetFreq)，四舍五入整数音分；两者须为 >0 有限数，否则 err.field='frequency'）。
+  - `gradePitch(centsAbs)` → {grade, label}（centsAbs 须为 ≥0 有限数，否则 err.field='cents'；≤10 → {grade:'S', label:'完美'}；≤25 → {grade:'A', label:'优秀'}；≤50 → {grade:'B', label:'良好'}；≤100 → {grade:'C', label:'一般'}；>100 → {grade:'D', label:'跑调'}）。
+  - `scorePitchSession(centsList)` → {avgAbsCents, inTunePct, grade}（centsList 须为 ≥1 个有限数数组，否则 err.field='samples'；avgAbsCents 为平均绝对偏差四舍五入整数；inTunePct 为 |cents|≤25 占比四舍五入整数百分比；grade 取 gradePitch(avgAbsCents)）。
+  - `parseNoteName(noteStr)` → {name, octave, midi}（接受 "A4"／"C#5"／"Gb3"，大小写不敏感，b 为降号；非法抛错 err.field='note'）。
+  - `validatePitchConfig(config)` → config（mode 须为 free/target 之一，否则 err.field='mode'；target 模式须有合法 targetNote，否则 err.field='targetNote'；tolerance 须为 5–100 有限数，否则 err.field='tolerance'）。
+  - `validatePitchState(state)` → state（state.samples 须为数组，否则 err.field='samples'；每项须为有限数，否则 err.field='samples'；长度 ≤600，否则 err.field='samples'）。
+  - `formatCents(cents)` → string（cents 须为有限数，否则 err.field='cents'；0 → "0 音分"；>0 → "+N 音分"；<0 → "-N 音分"，N 四舍五入整数）。
+- **数值锚点（测试精确值）**：freqToMidi：440 → 69；880 → 81；261.63 → 60。midiToFreq：69 → 440；60 → 261.63；57 → 220。freqToNoteName：440 → {name:'A', octave:4, midi:69, cents:0}；445 → A4 cents +20；415.3 → {name:'G#', octave:4, midi:68, cents:0}；466.16 → {name:'A#', octave:4, midi:70, cents:0}。centsBetween：(440, 440) → 0；(880, 440) → 1200；(415.3, 440) → −100；(220, 440) → −1200。parseNoteName："A4" → {name:'A', octave:4, midi:69}；"C#5" → midi 73；"Gb3" → midi 54；"H4"／"A9" 抛错 err.field='note'。gradePitch：0 → S；10 → S；11 → A；25 → A；26 → B；50 → B；51 → C；100 → C；101 → D。scorePitchSession：[0, 10, 20, 50] → {avgAbsCents:20, inTunePct:75, grade:{grade:'A', label:'优秀'}}；[0] → {avgAbsCents:0, inTunePct:100, grade S}；[] 抛错 err.field='samples'。formatCents：0 → "0 音分"；12 → "+12 音分"；−8 → "-8 音分"；12.6 → "+13 音分"。validatePitchConfig：{mode:'free', tolerance:25} 通过；{mode:'target', targetNote:'C4', tolerance:25} 通过；mode:'x' 抛错 err.field='mode'；target 模式缺 targetNote 抛错 err.field='targetNote'；tolerance:200 抛错 err.field='tolerance'。validatePitchState：601 项 samples 抛错 err.field='samples'。
+- **真限制四条页面明示**：① 自相关基频检测精度受环境噪声、麦克风质量、混响影响，低频／高频边缘与快速滑音误差大，结果仅供练唱参考，不可作专业声乐鉴定；② 需麦克风权限，拒绝授权则无法实时检测，但音名–频率对照表仍可查；③ 有效检测范围约 50–1000 Hz（约 G1–B5），超出范围不显示音高；④ 全程浏览器本地计算，零上传；成绩只存本机 localStorage，换浏览器／清缓存后丢失。
+- **SEO**：唱歌音准测试、音准检测、唱歌跑调测试。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 singing_pitch_checker 条目，紧邻 metronome，Path 313→**314**，Icon `record_voice_over` 首选（e91f 验真存在），开发轮精确值复测锁定全库唯一）／templates/singing_pitch_checker.html（新）／static/js/singing_pitch_checker.js（新）／tests/singing_pitch_checker.test.js（新）／全量旧 tests Path 断言 313→314 数值同步（仅断言数值，149 个测试文件涉 153 处 313 断言）。
+- **验收标准**：① node 新测试 ≥60 断言全过（freqToMidi／midiToFreq／freqToNoteName／centsBetween／gradePitch／scorePitchSession／parseNoteName／validatePitchConfig／validatePitchState／formatCents 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 199→**200** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/singing-pitch-checker 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：麦克风授权→实时音名／音分／偏高偏低指示、目标音打分与准音率、成绩历史刷新后保留、权限被拒提示、互链 metronome 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 metronome／vocal_remover／music_visualizer 同类目，练唱音准口径与练乐器节奏口径互补；模板内与 metronome 单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：唱歌音准检测→本轮交付（244 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十四度跳过（数据表负债从严，231–243 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII singing／pitch_detect 全 0 命中，CJK 音准全 0 命中，pitch 命中全为 text_reader_aloud 音调滑杆他人口径；Icon `record_voice_over` e91f 验真存在且精确值 0 命中全库唯一）；音频处理类目，练唱音准口径与 metronome 节奏口径互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十四度跳过）／数独游戏→P3 观察维持／图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／视频转 SRT／短链逐跳跳转链追踪／视频提取音频→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；本地 HEAD 2626976（反应速度测试已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **313**；`ls tests/*.test.js | wc -l` = **199**；149 个测试文件涉 153 处 313 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `singing`／`pitch_detect`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「音准」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x97f3／0x51c6）；「唱歌」1 命中验真为 heart_rate_zones 文案他人口径；`pitch` 命中验真全为 text_reader_aloud 音调滑杆他人口径，`tuner` 0 命中；Icon `record_voice_over`（e91f）官方 codepoints 验真 glyph 存在且精确值 0 命中，`mic`／`music_note`／`graphic_eq` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 11:36 · 产品调研推荐，第二百四十四轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：反应速度测试已交付闭环（2626976 新增：`/tools/reaction-test`，Path 总数 312→**313**，tests **199 个**；新测试 133 断言全过；Icon `flash_on` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 243 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十三度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **唱歌音准检测** — **新晋第三席**（池内递进；反应速度测试交付后顺位递进）。痛点：练唱／KTV 爱好者想知道自己唱歌跑不跑调、偏高还是偏低，现有免费工具多为 App 内购或要注册；浏览器本地做、零上传、无次数；实现纯前端中难度（麦克风＋Web Audio 自相关 pitch 检测，实时音高显示＋目标音对比＋评分，无模型权重、无服务端，站内 music_visualizer／vocal_remover 已跑通 AudioContext 本地采集先例）。站内零重叠本轮复核确凿：ASCII `singing`／`pitch_detect` 全站 **0 命中**；CJK「音准」`chr(0x...)` 运行时构造（codepoints 验真 0x97f3／0x51c6）**0 命中**；「唱歌」1 命中验真为 heart_rate_zones 文案「可以完整交谈、唱歌」他人口径；`pitch`／`tuner` 命中验真全为 text_reader_aloud 音调滑杆与 vocal_remover 卡拉 OK 描述他人口径——音准检测本体 0 交付。**弱点**：需麦克风权限（权限摩擦）＋受众偏唱歌人群。SEO：唱歌音准测试、音准检测、唱歌跑调测试。建议 ID singing_pitch_checker、Path /tools/singing-pitch-checker；Icon `record_voice_over` 精确值 **0 命中**（`mic`／`music_note`／`graphic_eq` 各占用 1，不可取），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十三度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 唱歌音准检测 | **新晋第三席**：池内递进；`singing`／`pitch_detect`／CJK「音准」本轮复测全 0 命中；纯前端中难度（Web Audio 自相关音高检测，无模型无服务端）；**弱点**：麦克风权限摩擦＋受众偏唱歌人群 | 中 | P3（新晋） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」本轮复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | P3 弱观察维持；`video_to_audio`／`extract_audio`／CJK「视频转音频」全站 0 命中；**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差 | 中 | P3（弱观察） |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 09:40~11:36 窗口；本轮**新晋 1 个**，池内递进为主）：
+- **唱歌音准检测递进第三席**（反应速度测试交付后池内递进；`singing`／`pitch_detect`／CJK「音准」本轮复测 0 命中；Icon `record_voice_over` 精确值 0 命中，开发轮须先验 glyph）。
+- Shadow Snap（twelve.tools 11-04：电影剧照＋台词生成字幕图）→ 不入池：niche＋与站内 subtitle_editor／photo_collage 图片合成口径重叠（CJK「电影字幕图」0 命中但口径重叠，弱口径不入池）。
+- twelve.tools 其余 11-04~11-06  listings（Anwaar／Bingo Caller／FPSDEN／Free Online Convert／I Love Web Games／Extractune／Coddy／Shotink／Moodboard／Play1Minute／MorseSnap）→ 242–243 轮已扫描消解，本窗口无新上架。
+- Product Hunt 11-06：Stitch.ai（AI 办公 workspace）／Tao Browser（隐私浏览器）／Bridge（AI 时代视频会议）／Maritime（AI agent 云电脑）／Living Brain（agent 记忆层）／FounderMail／TextKit（短信 API）／Tencent Hy4／HiveMind（$499 Notion 模板）／Electros LaunchPad（自托管 AI 云）／CyberShade（桌面安全软件）→ AI agent／浏览器／开发者基建／模板／桌面软件口径全消解。
+- V2EX 11-02~11-05：Deskflow DDC（桌面 KVM 键鼠＋显示器切换，桌面软件口径消解）；ClipRedo（AI 短视频模板重做，需 AI 模型＋付费 credits，消解）；旅行小程序路书＋AA 记账（小程序口径消解）；EasyPost 多平台分发（Chrome 扩展口径消解）；「旁白」翻译插件（扩展＋需自备 API key，消解）；水杉输入法（桌面输入法，消解）；小宇宙网页版（需扫码登录＋平台接口，消解）；QRGlo 动态二维码（站内 qrcode＋shorturl 已交付，消解）；「一屏一物」小程序（时钟／倒计时／番茄钟／日历合集，小程序口径，站内同类计时工具已覆盖，消解）。
+- Hacker News：HackerBooks／HackerTube（HN 内容聚合站口径消解）；Decipher（Claude Code 插件口径消解）；Recto（AI 设计桌面 App 口径消解）。
+
+**候选池变动**：reaction_test 交付划出（2626976，313 Path，199 tests）；**唱歌音准检测新晋第三席**（池内递进；`singing`／「音准」本轮复测全 0 命中，纯前端中难度无模型无服务端；Icon `record_voice_over` 精确值 0 命中，开发轮须先验 glyph）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十三度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／视频转 SRT／短链逐跳追踪／视频提取音频 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（首轮无 env 的 fetch 报 access rights，补 env 后一次成功；known_hosts 又被 VM 换机清空——老问题）；本地 HEAD 2626976（反应速度测试已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **313**；`ls tests/*.test.js | wc -l` = **199**；本地当前分支 muse/dev-20260929；站内零重叠复核（`sudoku`／`social_image_size`／`social-image-size`／`singing`／`pitch_detect`／`reverse_dictionar` 全 0 命中；CJK「音准」／「反向词典」`chr(0x...)` 运行时构造 0 命中（codepoints 验真）；「唱歌」1 命中验真为 heart_rate_zones 文案他人口径；`pitch`／`tuner` 命中验真全为 text_reader_aloud 音调滑杆与 vocal_remover 卡拉 OK 描述他人口径；Icon `record_voice_over` 精确值 0 命中，`mic`／`music_note`／`graphic_eq` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 09:40 · PM 选定轮，接通用调研第二百四十三轮）
 
 **选定：反应速度测试（reaction_test）** — 本轮唯一任务（新工具）。

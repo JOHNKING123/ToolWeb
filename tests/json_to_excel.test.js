@@ -108,7 +108,7 @@ has(regBlock, "json to excel", "注册：Description 含英文关键词 json to 
 has(regBlock, "JSON 数组转表格", "注册：Description 含 JSON 数组转表格");
 has(regBlock, "xlsx 导出", "注册：Description 含 xlsx 导出");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 313, "注册：Path 总数 270→270");
+eq(pathCount, 314, "注册：Path 总数 270→270");
 notHas(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), "/tools/json-to-excel\", \"/tools/json-to-excel", "注册：Path 无重复");
 
 /* ---------- 8. 模板：真限制五条 ---------- */

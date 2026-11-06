@@ -2952,6 +2952,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "singing_pitch_checker",
+					Name:        "唱歌音准检测",
+					Description: "唱歌音准检测：麦克风实时音名＋偏差音分＋偏高/偏低/准指示，目标音 C3–C6 可选（默认 A4），单音唱稳 0.5 秒计一次成绩，累计平均偏差＋准音率（±25 音分内占比）＋S/A/B/C/D 分档，最近 10 次成绩只存本机；getUserMedia＋AnalyserNode 时域自相关基频检测（50–1000 Hz，置信度阈值过滤静音/噪声），音名–频率对照表 C3–C6，纯浏览器本地计算零上传 · Singing pitch checker: real-time pitch detection, cents deviation, target-note practice scoring, 100% client-side",
+					Path:        "/tools/singing-pitch-checker",
+					Icon:        "record_voice_over",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "slowed_reverb",
 					Name:        "音频变速混响生成器",
 					Description: "上传 MP3/WAV/OGG/M4A/AAC 本地解码，变速 0.5x–1.5x（0.8x Slowed / 1.25x Nightcore 一键预设，音调随速度自然变化），ConvolverNode 卷积混响（程序化合成脉冲响应：怀旧磁带/空灵氛围/深邃房间/柔和回声 4 预设＋混响量 0–100%），OfflineAudioContext 离线渲染＋进度条，A/B 对比试听，WAV 手工编码/MP3(lamejs 128–320kbps)本地导出，纯前端零上传 · Slowed+reverb generator: change speed 0.5x-1.5x, convolution reverb, offline render, A/B preview, export WAV/MP3 locally",

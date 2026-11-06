@@ -1,0 +1,196 @@
+{{define "singing_pitch_checker"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>唱歌音准检测 - 在线测唱歌跑不跑调，麦克风实时音准，纯前端</title>
+    <meta name="description" content="免费在线唱歌音准检测：麦克风实时识别音高，显示音名与偏差音分，偏高/偏低/准一目了然；目标音 C3–C6 练习，唱稳 0.5 秒自动打分，平均偏差＋准音率＋S/A/B/C/D 分档，成绩只存本机不上传。唱歌音准测试/音准检测/唱歌跑调测试，100% client-side。">
+    <meta name="keywords" content="唱歌音准测试,音准检测,唱歌跑调测试,唱歌音准,测音准,唱歌跑调,singing pitch test,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/singing-pitch-checker">
+    <meta property="og:title" content="唱歌音准检测 - 在线测唱歌跑不跑调，麦克风实时音准">
+    <meta property="og:description" content="麦克风实时音名＋偏差音分，偏高/偏低/准一目了然；目标音 C3–C6 练习，唱稳 0.5 秒自动打分，成绩只存本机。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/singing-pitch-checker">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"唱歌音准检测","description":"免费在线唱歌音准检测：麦克风实时识别音高，显示音名与偏差音分，偏高/偏低/准一目了然；目标音 C3–C6 练习，唱稳 0.5 秒自动打分，平均偏差＋准音率＋S/A/B/C/D 分档，成绩只存本机不上传。","url":"https://www.johnkingzcq123.xyz/tools/singing-pitch-checker","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .sp-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .sp-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none}
+        .sp-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .sp-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .sp-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .sp-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.55rem 1rem;font-size:.92rem;cursor:pointer;font-family:inherit}
+        .sp-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .sp-btn:disabled{opacity:.45;cursor:default}
+        .sp-btn-primary{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:700;font-size:1.05rem;padding:.7rem 1.6rem}
+        .sp-btn-primary:hover{filter:brightness(1.08);color:#fff}
+        .sp-mode{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.55rem 1rem;font-size:.92rem;cursor:pointer;font-family:inherit}
+        .sp-mode.sp-active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:700}
+        .sp-select{border:1px solid #d1d5db;border-radius:.55rem;padding:.55rem .6rem;font-size:.92rem;font-family:inherit;background:#fff;color:#1f2937}
+        .sp-reading{text-align:center;padding:1rem 0 .4rem}
+        .sp-note-big{font-size:4.2rem;font-weight:800;line-height:1.1;color:#111827}
+        .sp-freq{font-size:1.05rem;color:#6b7280;margin-top:.3rem}
+        .sp-cents{font-size:1.5rem;font-weight:800;color:#111827;margin-top:.5rem}
+        .sp-indicator{display:inline-block;margin-top:.6rem;font-size:1.05rem;font-weight:700;border-radius:.55rem;padding:.35rem 1rem;background:#f3f4f6;color:#374151}
+        .sp-indicator.sp-good{background:#dcfce7;color:#166534}
+        .sp-indicator.sp-high{background:#fee2e2;color:#991b1b}
+        .sp-indicator.sp-low{background:#dbeafe;color:#1e40af}
+        .sp-bar{position:relative;height:1.1rem;background:linear-gradient(90deg,#dbeafe 0%,#dcfce7 42%,#dcfce7 58%,#fee2e2 100%);border:1px solid #e5e7eb;border-radius:.55rem;margin:1.1rem 0 .3rem}
+        .sp-bar::after{content:"";position:absolute;left:50%;top:-.2rem;bottom:-.2rem;width:2px;background:#111827}
+        .sp-needle{position:absolute;top:-.35rem;width:4px;height:1.8rem;background:#111827;border-radius:2px;display:none}
+        .sp-bar-labels{display:flex;justify-content:space-between;font-size:.8rem;color:#9ca3af}
+        .sp-wave{width:100%;height:90px;border:1px solid #e5e7eb;border-radius:.6rem;background:#f9fafb}
+        .sp-status{color:#6b7280;font-size:.9rem;line-height:1.7;margin:.6rem 0 0}
+        .sp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.7rem}
+        .sp-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem .9rem;text-align:center}
+        .sp-stat .k{font-size:.82rem;color:#6b7280}
+        .sp-stat .v{font-size:1.35rem;font-weight:800;color:#111827;margin-top:.25rem}
+        .sp-stat .g{font-size:.82rem;color:#2563eb;font-weight:700;margin-top:.15rem}
+        .sp-grades{width:100%;border-collapse:collapse;font-size:.92rem;color:#374151}
+        .sp-grades td{padding:.45rem .3rem;border-bottom:1px solid #f3f4f6}
+        .sp-grades td:first-child{font-weight:800;color:#111827;width:3.2rem}
+        .sp-table{width:100%;border-collapse:collapse;font-size:.92rem;color:#374151}
+        .sp-table th{text-align:left;padding:.45rem .3rem;border-bottom:2px solid #e5e7eb;color:#111827}
+        .sp-table td{padding:.4rem .3rem;border-bottom:1px solid #f3f4f6}
+        .sp-btn-small{padding:.3rem .7rem;font-size:.85rem}
+        .sp-hist{max-height:14rem;overflow-y:auto}
+        .sp-hist-row{display:flex;justify-content:space-between;gap:.6rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.55rem .9rem;margin:.4rem 0;font-size:.92rem}
+        .sp-hist-row .t{color:#9ca3af;font-size:.8rem;white-space:nowrap}
+        .sp-hist-row .r{color:#b45309;font-weight:700;word-break:break-all;text-align:right}
+        .sp-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .sp-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .sp-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .sp-links a{color:#2563eb}
+        @media (max-width:640px){.sp-panel{padding:.9rem}.sp-note-big{font-size:3.2rem}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎤 唱歌音准检测</h1>
+            <p>麦克风实时音名＋偏差音分，偏高/偏低/准一目了然；目标音练习唱稳 0.5 秒自动打分，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="sp-note">
+                <span>真限制先说清：① 自相关基频检测精度受环境噪声、麦克风质量、混响影响，低频／高频边缘与快速滑音误差大，结果仅供练唱参考，不可作专业声乐鉴定；② 需麦克风权限，拒绝授权则无法实时检测，但音名–频率对照表仍可查；③ 有效检测范围约 50–1000 Hz（约 G1–B5），超出范围不显示音高；④ 全程浏览器本地计算，零上传；成绩只存本机 localStorage，换浏览器／清缓存后丢失。</span>
+            </div>
+            <div class="sp-warn" id="sp-error" role="alert" aria-live="polite"></div>
+            <div class="sp-panel">
+                <h3>练唱模式</h3>
+                <div class="sp-row" style="margin-top:0;">
+                    <button type="button" class="sp-mode sp-active" id="sp-mode-free" aria-pressed="true">自由练唱</button>
+                    <button type="button" class="sp-mode" id="sp-mode-target" aria-pressed="false">目标音练习</button>
+                    <button type="button" class="sp-btn sp-btn-primary" id="sp-start">开始检测</button>
+                </div>
+                <p class="sp-status" id="sp-status" aria-live="polite">未开始检测。点「开始检测」授权麦克风。</p>
+                <div class="sp-reading" aria-live="polite">
+                    <div class="sp-note-big" id="sp-note">—</div>
+                    <div class="sp-freq" id="sp-freq">—</div>
+                    <div class="sp-cents" id="sp-cents">—</div>
+                    <div><span class="sp-indicator" id="sp-indicator">未检测到音高</span></div>
+                    <div style="font-size:.9rem;color:#6b7280;margin-top:.6rem;">实时分档：<span id="sp-live-grade" style="font-weight:700;color:#2563eb;">—</span></div>
+                </div>
+                <div class="sp-bar" role="img" aria-label="音分偏差条，-100 到 +100 音分，中间为 0">
+                    <div class="sp-needle" id="sp-cents-needle"></div>
+                </div>
+                <div class="sp-bar-labels"><span>−100 音分（偏低）</span><span>0（准）</span><span>+100 音分（偏高）</span></div>
+                <h3 style="margin-top:1.2rem;">实时波形</h3>
+                <canvas class="sp-wave" id="sp-wave" width="860" height="90" aria-label="麦克风实时波形"></canvas>
+                <p class="sp-status">提示：安静环境、对准麦克风、稳定地唱一个音；偏高偏低同时有文字与箭头提示，不只靠颜色区分；空格键可启停检测。</p>
+            </div>
+            <div class="sp-panel" id="sp-target-panel" style="display:none;">
+                <h3>目标音练习</h3>
+                <div class="sp-row" style="margin-top:0;">
+                    <label for="sp-target-note" style="font-size:.92rem;color:#374151;">目标音</label>
+                    <select class="sp-select" id="sp-target-note"></select>
+                    <span style="font-size:.92rem;color:#374151;">标准频率 <b id="sp-target-freq">440 Hz</b></span>
+                    <button type="button" class="sp-btn" id="sp-play-ref">▶ 播放目标音</button>
+                    <label for="sp-tolerance" style="font-size:.92rem;color:#374151;">计分容差</label>
+                    <select class="sp-select" id="sp-tolerance">
+                        <option value="10">±10 音分（严）</option>
+                        <option value="25" selected>±25 音分（默认）</option>
+                        <option value="50">±50 音分（宽）</option>
+                    </select>
+                </div>
+                <p class="sp-status">计分规则：唱目标音，在容差内连续稳定 0.5 秒即自动计一次成绩（取稳定段平均偏差）；计分后 1.5 秒内不再重复计分，先换口气再唱下一轮。</p>
+                <p class="sp-status" id="sp-last-score" aria-live="polite"></p>
+                <div class="sp-stats" id="sp-session">
+                    <div class="sp-stat"><div class="k">已计成绩</div><div class="v" id="sp-session-count">0</div><div class="g">最近 10 次</div></div>
+                    <div class="sp-stat"><div class="k">平均偏差</div><div class="v" id="sp-session-avg">—</div><div class="g">平均绝对偏差</div></div>
+                    <div class="sp-stat"><div class="k">准音率</div><div class="v" id="sp-session-intune">—</div><div class="g">±25 音分内占比</div></div>
+                    <div class="sp-stat"><div class="k">综合分档</div><div class="v" id="sp-session-grade">—</div><div class="g">按平均偏差分档</div></div>
+                </div>
+            </div>
+            <div class="sp-panel">
+                <h3>分档标准</h3>
+                <table class="sp-grades">
+                    <tr><td>S</td><td>完美</td><td>平均偏差 ≤10 音分</td></tr>
+                    <tr><td>A</td><td>优秀</td><td>平均偏差 ≤25 音分</td></tr>
+                    <tr><td>B</td><td>良好</td><td>平均偏差 ≤50 音分</td></tr>
+                    <tr><td>C</td><td>一般</td><td>平均偏差 ≤100 音分</td></tr>
+                    <tr><td>D</td><td>跑调</td><td>平均偏差 &gt;100 音分</td></tr>
+                </table>
+            </div>
+            <div class="sp-panel">
+                <h3>音名–频率对照表 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（C3–C6，无需麦克风可查，点「设为目标音」可直接练）</span></h3>
+                <table class="sp-table">
+                    <thead><tr><th>音名</th><th>频率</th><th>操作</th></tr></thead>
+                    <tbody id="sp-note-table"></tbody>
+                </table>
+            </div>
+            <div class="sp-panel">
+                <h3>成绩历史 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（最近 10 次，只存本机）</span></h3>
+                <div class="sp-hist" id="sp-history">暂无成绩：目标音模式下单音唱稳 0.5 秒自动计分</div>
+                <div class="sp-row">
+                    <button class="sp-btn" id="sp-clear-history">清空历史成绩</button>
+                </div>
+            </div>
+            <div class="sp-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>点「开始检测」，在浏览器弹窗里允许麦克风权限；安静环境下对准麦克风唱一个音，大字显示实时音名与频率。</li>
+                    <li>音分偏差条显示你与最近音的偏差：中间 0 为准，左偏低、右偏高；指示同时有「准 ✓／偏高 ↑／偏低 ↓」文字，不只靠颜色。</li>
+                    <li>目标音练习：切到「目标音练习」，选目标音（C3–C6，默认 A4），可先点「播放目标音」听准再唱；在容差内连续稳定 0.5 秒自动计一次成绩。</li>
+                    <li>成绩自动记入「成绩历史」（本机 localStorage，最近 10 次），刷新页面仍保留；可一键清空。</li>
+                    <li>互链：音准练完，用节拍器练节奏，去 <a href="/tools/metronome" style="color:#2563eb;">在线节拍器</a>（BPM 40–208，拍号可调）。</li>
+                </ol>
+            </div>
+            <div class="sp-panel">
+                <h3>常见问题</h3>
+                <dl class="sp-faq">
+                    <dt>为什么有时显示「未检测到音高」？</dt>
+                    <dd>声音太小、环境太吵或音高超出 50–1000 Hz 有效范围时，置信度不足会被过滤。靠近麦克风、安静环境、稳定地唱一个音；滑音、气声、和声都可能暂时检测不到。</dd>
+                    <dt>麦克风权限被拒绝怎么办？</dt>
+                    <dd>点浏览器地址栏的麦克风图标重新允许后刷新页面。权限被拒不影响使用：音名–频率对照表、分档标准照常可查。</dd>
+                    <dt>显示偏高／偏低几音分，准吗？</dt>
+                    <dd>是参考值。自相关检测精度受噪声、麦克风质量、混响影响，低频／高频边缘与快速滑音误差更大；练唱看趋势（越接近 0 越准）比抠个位数更有意义，不可作专业声乐鉴定。</dd>
+                    <dt>目标音练习怎么计分？</dt>
+                    <dd>在所选容差内连续稳定 0.5 秒即计一次成绩，取稳定段的平均偏差；计分后 1.5 秒内不再重复计分。平均偏差越小分档越高：≤10 音分 S 完美、≤25 A 优秀、≤50 B 良好、≤100 C 一般、&gt;100 D 跑调。</dd>
+                    <dt>成绩存在哪里？会上传吗？</dt>
+                    <dd>只存在你本机浏览器的 localStorage（最近 10 次），清除浏览器数据或换浏览器会丢失。全程零网络请求，不上传任何服务器。</dd>
+                    <dt>和在线节拍器有什么关系？</dt>
+                    <dd>都是「音频处理」类目的音乐练习工具：本工具练音准（唱得准不准），节拍器练节奏（唱得稳不稳）。两者数据不互通，按场景选用。</dd>
+                </dl>
+            </div>
+            <div class="sp-panel">
+                <h3>相关工具</h3>
+                <div class="sp-links">
+                    <a href="/tools/metronome">在线节拍器（BPM 40–208，拍号可调，练节奏）</a>
+                </div>
+            </div>
+            <div class="sp-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>频率–MIDI 换算、音名判定、音分偏差、分档、成绩汇总、音名解析、配置与状态校验、音分格式化、时域自相关基频检测均为手写纯函数（挂 window.SingingPitchChecker，浏览器与 node 测试共用同一文件）；检测用 getUserMedia＋AnalyserNode 时域数据，有效范围 50–1000 Hz，置信度阈值 0.8 过滤静音／噪声；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/singing_pitch_checker.js?v=1"></script>
+</body>
+</html>
+{{end}}

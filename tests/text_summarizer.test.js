@@ -219,7 +219,7 @@ eq(A.DEFAULT_STOPWORDS.length, A.EN_STOPWORDS.length + A.ZH_STOPWORDS.length, "D
 /* ---------- 11. categories.go 注册 ---------- */
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 313, "注册 Path 总数 299→300");
+eq(pathCount, 314, "注册 Path 总数 299→300");
 var iconHits = (GO_SRC.match(/Icon:\s*"summarize"/g) || []).length;
 eq(iconHits, 1, "Icon summarize 全库唯一（精确值复测锁定）");
 has(GO_SRC, 'ID:          "text_summarizer"', "注册：ID text_summarizer");
