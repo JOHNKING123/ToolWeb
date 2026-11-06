@@ -386,6 +386,81 @@ var SAMPLES = [
     }
 ];
 
+/* ================= svgForLayout（纯函数，可单测） ================= */
+
+/* 文本截断（纯函数，供节点标签用）。 */
+function shortText(s, n) {
+    s = String(s);
+    return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+function nodeSubLabel(n) {
+    if (n.type === 'object') return '对象 · ' + Object.keys(n.value).length + ' 个子节点';
+    if (n.type === 'array') return '数组 · ' + n.value.length + ' 项';
+    if (n.type === 'string') return '字符串 · "' + shortText(n.value, 18) + '"';
+    if (n.type === 'number') return '数字 · ' + String(n.value);
+    if (n.type === 'boolean') return '布尔 · ' + String(n.value);
+    return 'null';
+}
+
+function nodeLabel(n, byId) {
+    if (n.id === '$') return '$ 根节点';
+    var parent = (byId && n.parentId !== null && n.parentId !== undefined) ? byId[n.parentId] : null;
+    if (parent && parent.type === 'array') return '[' + n.key + ']';
+    return n.key;
+}
+
+/* 布局 → SVG 字符串（纯函数）。
+ * forExport=true 时 viewBox 固定为完整布局 "0 0 <width> <height>"（导出全图，
+ * 不受当前缩放／平移影响）；展示时传 forExport=false 与当前 view（viewBox 跟随可视区）。
+ * xmlns 只在此处输出一次，导出路径不再拼接补写，避免重复属性导致非法 XML。 */
+function svgForLayout(layout, selectedId, matchSet, forExport, view) {
+    if (!layout || typeof layout !== 'object' || !Array.isArray(layout.nodes)) {
+        throw fail('graph', 'layout 须为 layoutGraph 返回的结构（含 nodes 数组）');
+    }
+    var parts = [];
+    var W = Math.max(layout.width, 1), H = Math.max(layout.height, 1);
+    var byId = {};
+    layout.nodes.forEach(function (n) { byId[n.id] = n; });
+    /* 连线：贝塞尔曲线，父右缘 → 子左缘 */
+    layout.nodes.forEach(function (n) {
+        if (n.parentId === null || n.parentId === undefined) return;
+        var p = byId[n.parentId];
+        if (!p) return;
+        var x1 = p.x + NODE_WIDTH, y1 = p.y + NODE_HEIGHT / 2;
+        var x2 = n.x, y2 = n.y + NODE_HEIGHT / 2;
+        var mx = (x1 + x2) / 2;
+        parts.push('<path d="M ' + x1 + ' ' + y1 + ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2 +
+            '" fill="none" stroke="#94a3b8" stroke-width="1.5"/>');
+    });
+    /* 节点 */
+    layout.nodes.forEach(function (n) {
+        var color = TYPE_COLORS[n.type] || '#6b7280';
+        var selected = n.id === selectedId;
+        var matched = matchSet && matchSet[n.id];
+        var stroke = matched ? '#dc2626' : (selected ? '#111827' : color);
+        var sw = (matched || selected) ? 3 : 2;
+        var hasKids = (n.children || []).length > 0;
+        var badge = '';
+        if (hasKids) {
+            var sign = n.collapsed ? '+' : '−';
+            badge = '<g data-collapse="' + escapeHtml(n.id) + '" style="cursor:pointer">' +
+                '<circle cx="' + NODE_WIDTH + '" cy="0" r="11" fill="#2563eb" stroke="#fff" stroke-width="2"/>' +
+                '<text x="' + NODE_WIDTH + '" y="4.5" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">' + sign + '</text></g>';
+        }
+        var trunc = n.truncated ? ' · 以下已截断' : '';
+        parts.push('<g class="jg-node" data-id="' + escapeHtml(n.id) + '" transform="translate(' + n.x + ',' + n.y + ')" style="cursor:pointer">' +
+            '<rect x="0" y="0" width="' + NODE_WIDTH + '" height="' + NODE_HEIGHT + '" rx="8" fill="#fff" stroke="' + stroke + '" stroke-width="' + sw + '"/>' +
+            '<text x="10" y="18" font-size="13" font-weight="700" fill="#111827" font-family="sans-serif">' + escapeHtml(shortText(nodeLabel(n, byId), 20)) + '</text>' +
+            '<text x="10" y="36" font-size="11.5" fill="#6b7280" font-family="sans-serif">' + escapeHtml(shortText(nodeSubLabel(n) + trunc, 26)) + '</text>' +
+            badge + '</g>');
+    });
+    var vb = forExport ? ('0 0 ' + W + ' ' + H)
+        : (view ? (view.x + ' ' + view.y + ' ' + view.w + ' ' + view.h) : ('0 0 ' + W + ' ' + H));
+    return '<svg id="jg-svg" xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H +
+        '" viewBox="' + vb + '" font-family="sans-serif">' + parts.join('') + '</svg>';
+}
+
 var API = {
     MAX_INPUT: MAX_INPUT,
     MAX_NODES: MAX_NODES,
@@ -403,6 +478,7 @@ var API = {
     formatJsonPath: formatJsonPath,
     searchNodes: searchNodes,
     countStats: countStats,
+    svgForLayout: svgForLayout,
     samples: SAMPLES,
     SAMPLES: SAMPLES
 };
@@ -444,75 +520,6 @@ if (typeof document !== 'undefined') {
         try { document.execCommand('copy'); } catch (e) { /* 忽略 */ }
         document.body.removeChild(ta);
         done();
-    }
-
-    function shortText(s, n) {
-        s = String(s);
-        return s.length > n ? s.slice(0, n - 1) + '…' : s;
-    }
-
-    function nodeSubLabel(n) {
-        if (n.type === 'object') return '对象 · ' + Object.keys(n.value).length + ' 个子节点';
-        if (n.type === 'array') return '数组 · ' + n.value.length + ' 项';
-        if (n.type === 'string') return '字符串 · "' + shortText(n.value, 18) + '"';
-        if (n.type === 'number') return '数字 · ' + String(n.value);
-        if (n.type === 'boolean') return '布尔 · ' + String(n.value);
-        return 'null';
-    }
-
-    function nodeLabel(n) {
-        if (n.id === '$') return '$ 根节点';
-        var parent = null;
-        if (state.graph) {
-            for (var i = 0; i < state.graph.nodes.length; i++) {
-                if (state.graph.nodes[i].id === n.parentId) { parent = state.graph.nodes[i]; break; }
-            }
-        }
-        if (parent && parent.type === 'array') return '[' + n.key + ']';
-        return n.key;
-    }
-
-    function svgForLayout(layout, selectedId, matchSet) {
-        var parts = [];
-        var W = Math.max(layout.width, 1), H = Math.max(layout.height, 1);
-        var byId = {};
-        layout.nodes.forEach(function (n) { byId[n.id] = n; });
-        /* 连线：贝塞尔曲线，父右缘 → 子左缘 */
-        layout.nodes.forEach(function (n) {
-            if (n.parentId === null || n.parentId === undefined) return;
-            var p = byId[n.parentId];
-            if (!p) return;
-            var x1 = p.x + NODE_WIDTH, y1 = p.y + NODE_HEIGHT / 2;
-            var x2 = n.x, y2 = n.y + NODE_HEIGHT / 2;
-            var mx = (x1 + x2) / 2;
-            parts.push('<path d="M ' + x1 + ' ' + y1 + ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2 +
-                '" fill="none" stroke="#94a3b8" stroke-width="1.5"/>');
-        });
-        /* 节点 */
-        layout.nodes.forEach(function (n) {
-            var color = TYPE_COLORS[n.type] || '#6b7280';
-            var selected = n.id === selectedId;
-            var matched = matchSet && matchSet[n.id];
-            var stroke = matched ? '#dc2626' : (selected ? '#111827' : color);
-            var sw = (matched || selected) ? 3 : 2;
-            var hasKids = (n.children || []).length > 0;
-            var badge = '';
-            if (hasKids) {
-                var sign = n.collapsed ? '+' : '−';
-                badge = '<g data-collapse="' + escapeHtml(n.id) + '" style="cursor:pointer">' +
-                    '<circle cx="' + NODE_WIDTH + '" cy="0" r="11" fill="#2563eb" stroke="#fff" stroke-width="2"/>' +
-                    '<text x="' + NODE_WIDTH + '" y="4.5" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">' + sign + '</text></g>';
-            }
-            var trunc = n.truncated ? ' · 以下已截断' : '';
-            parts.push('<g class="jg-node" data-id="' + escapeHtml(n.id) + '" transform="translate(' + n.x + ',' + n.y + ')" style="cursor:pointer">' +
-                '<rect x="0" y="0" width="' + NODE_WIDTH + '" height="' + NODE_HEIGHT + '" rx="8" fill="#fff" stroke="' + stroke + '" stroke-width="' + sw + '"/>' +
-                '<text x="10" y="18" font-size="13" font-weight="700" fill="#111827" font-family="sans-serif">' + escapeHtml(shortText(nodeLabel(n), 20)) + '</text>' +
-                '<text x="10" y="36" font-size="11.5" fill="#6b7280" font-family="sans-serif">' + escapeHtml(shortText(nodeSubLabel(n) + trunc, 26)) + '</text>' +
-                badge + '</g>');
-        });
-        return '<svg id="jg-svg" xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H +
-            '" viewBox="' + state.view.x + ' ' + state.view.y + ' ' + state.view.w + ' ' + state.view.h +
-            '" font-family="sans-serif">' + parts.join('') + '</svg>';
     }
 
     function applyView() {
@@ -564,7 +571,7 @@ if (typeof document !== 'undefined') {
         if (!wrap || !state.layout) return;
         var matchSet = {};
         state.matches.forEach(function (id) { matchSet[id] = true; });
-        wrap.innerHTML = svgForLayout(state.layout, state.selectedId, matchSet);
+        wrap.innerHTML = svgForLayout(state.layout, state.selectedId, matchSet, false, state.view);
         bindSvgEvents();
         applyView();
     }
@@ -654,6 +661,27 @@ if (typeof document !== 'undefined') {
             if (svgdl2) svgdl2.disabled = true;
             if (png2) png2.disabled = true;
         }
+    }
+
+    /* 清空：直接复位画布／统计／搜索，不走 renderAll（空输入会抛错弹提示）。 */
+    function resetView() {
+        state.value = null; state.graph = null; state.layout = null;
+        state.selectedId = null; state.matches = []; state.matchIdx = -1;
+        state.view = { x: 0, y: 0, w: 0, h: 0 };
+        var wrap = $('jg-graph-wrap');
+        if (wrap) wrap.innerHTML = '<div class="jg-empty">生成结构图后，这里会显示节点连线图<br>拖拽空白处平移画布 · 滚轮缩放（0.2–3x）· 点击节点查看路径与值 · 点节点右上角 ＋／－ 折叠展开</div>';
+        var box = $('jg-stats');
+        if (box) box.innerHTML = '<div class="jg-muted">生成结构图后，这里显示节点总数、最大深度与各类节点数。</div>';
+        var errEl = $('jg-err');
+        if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+        var q = $('jg-search');
+        if (q) q.value = '';
+        var si = $('jg-search-info');
+        if (si) si.textContent = '';
+        showSelected();
+        var svgdl = $('jg-svgdl'), png = $('jg-png');
+        if (svgdl) svgdl.disabled = true;
+        if (png) png.disabled = true;
     }
 
     function bindSvgEvents() {
@@ -751,9 +779,7 @@ if (typeof document !== 'undefined') {
 
     function exportSVG() {
         if (!state.layout) { toast('暂无可导出的结构图'); return; }
-        var matchSet = {};
-        var svgHtml = svgForLayout(state.layout, null, matchSet)
-            .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+        var svgHtml = svgForLayout(state.layout, null, {}, true);
         var blob = new Blob([svgHtml], { type: 'image/svg+xml;charset=utf-8' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -767,8 +793,7 @@ if (typeof document !== 'undefined') {
 
     function exportPNG() {
         if (!state.layout) { toast('暂无可导出的结构图'); return; }
-        var svgHtml = svgForLayout(state.layout, null, {})
-            .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+        var svgHtml = svgForLayout(state.layout, null, {}, true);
         var blob = new Blob([svgHtml], { type: 'image/svg+xml;charset=utf-8' });
         var url = URL.createObjectURL(blob);
         var img = new Image();
@@ -812,7 +837,7 @@ if (typeof document !== 'undefined') {
             inputEl.value = '';
             var c = $('jg-count');
             if (c) c.textContent = '0 / ' + MAX_INPUT + ' 字符';
-            renderAll();
+            resetView();
         });
         var presetBox = $('jg-presets');
         if (presetBox) {

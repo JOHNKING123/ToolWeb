@@ -9,7 +9,9 @@
  * 5 组预设示例（每组精确统计值）、categories.go 注册（Path 总数 320→321、
  * Icon bubble_chart 全库唯一、紧邻 json_parser）、模板（SEO 关键词、真限制五条、
  * 控件、互链、零外部资源静态检查）、浏览器绑定源码级检查
- * （window.JsonGraphViewer、折叠／平移／缩放／搜索定位／复制路径／SVG/PNG 导出）。
+ * （window.JsonGraphViewer、折叠／平移／缩放／搜索定位／复制路径／SVG/PNG 导出）、
+ * 导出 SVG 组装回归（blocker 1 单 xmlns、无重复属性；blocker 2 导出 viewBox
+ * 为完整布局、无视缩放／平移；清空复位 resetView）。
  */
 "use strict";
 var fs = require("fs");
@@ -376,6 +378,53 @@ notHas(JS_SRC, "cdnjs", "绑定：无 CDN 引用");
 notHas(JS_SRC, "fetch(", "绑定：不发起后端请求");
 notHas(JS_SRC, "XMLHttpRequest", "绑定：不使用 XHR");
 notHas(JS_SRC, "d3.", "绑定：不引入 d3");
+
+/* ---------- 13. 导出 SVG 组装（blocker 1/2 回归） ---------- */
+(function () {
+    ok(typeof M.svgForLayout === 'function', "导出：svgForLayout 已导出为可测纯函数");
+    var layout = M.layoutGraph(M.buildGraph(ANCHOR));
+    eq(layout.width, 1040, "导出：锚点布局宽 1040");
+    eq(layout.height, 192, "导出：锚点布局高 192");
+    var svg = M.svgForLayout(layout, null, {}, true);
+    ok(svg.indexOf('<svg ') === 0, "导出：以 <svg 开头");
+    ok(svg.slice(-6) === '</svg>', "导出：以 </svg> 结尾");
+    eq((svg.match(/xmlns=/g) || []).length, 1, "导出 blocker 1：仅 1 个 xmlns 属性");
+    eq((svg.match(/<svg /g) || []).length, 1, "导出：仅 1 个 <svg 开始标签");
+    has(svg, 'viewBox="0 0 1040 192"', "导出 blocker 2：导出 viewBox 为完整布局");
+    has(svg, 'width="1040"', "导出：width=布局宽");
+    has(svg, 'height="192"', "导出：height=布局高");
+    /* 开始标签内属性名无重复（重复属性即非法 XML，浏览器 <img> 加载失败） */
+    var openTag = svg.slice(0, svg.indexOf('>') + 1);
+    var attrNames = openTag.match(/[A-Za-z_:][\w:.-]*=/g) || [];
+    var seen = {};
+    var dup = false;
+    attrNames.forEach(function (a) { var k = a.slice(0, -1); if (seen[k]) dup = true; seen[k] = true; });
+    ok(!dup, "导出 blocker 1：开始标签属性名无重复");
+    ok(attrNames.length >= 5, "导出：开始标签属性齐全");
+    /* 展示模式仍跟随当前缩放／平移 viewBox，导出模式无视传入的 view */
+    var zoomed = { x: 120, y: 60, w: 300, h: 200 };
+    var disp = M.svgForLayout(layout, null, {}, false, zoomed);
+    has(disp, 'viewBox="120 60 300 200"', "导出 blocker 2：展示模式 viewBox 跟随当前视图");
+    eq((disp.match(/xmlns=/g) || []).length, 1, "导出：展示模式同样仅 1 个 xmlns");
+    var exp2 = M.svgForLayout(layout, null, {}, true, zoomed);
+    has(exp2, 'viewBox="0 0 1040 192"', "导出 blocker 2：导出模式无视缩放／平移，仍为全图");
+    /* 选中／命中高亮在导出串里仍生效（标签与连线未因抽取纯函数而丢失） */
+    var hl = M.svgForLayout(layout, '$.a', { '$.c': true }, true);
+    has(hl, '#dc2626', "导出：命中节点描边红色保留");
+    has(hl, '#111827', "导出：选中节点描边保留");
+    has(hl, '$ 根节点', "导出：根节点标签保留");
+    has(hl, '[0]', "导出：数组子节点标签 [0] 保留（nodeLabel 改 byId 后未丢）");
+    has(hl, 'M 200 ', "导出：贝塞尔连线保留");
+    throws(function () { M.svgForLayout(null, null, {}, true); }, 'graph', "抛错：svgForLayout(null) field=graph");
+    throws(function () { M.svgForLayout({ nodes: 'x' }, null, {}, true); }, 'graph', "抛错：svgForLayout 非法 layout field=graph");
+    /* 源码级：导出路径不再用 replace 补 xmlns，统一走 forExport 参数 */
+    notHas(JS_SRC, "replace('<svg '", "导出：不再用 replace 补 xmlns");
+    has(JS_SRC, "forExport", "导出：svgForLayout 有 forExport 参数");
+    has(JS_SRC, "svgForLayout(state.layout, null, {}, true)", "导出：SVG/PNG 均调导出模式");
+    eq((JS_SRC.match(/svgForLayout\(state\.layout, null, \{\}, true\)/g) || []).length, 2, "导出：两处导出调用均为导出模式");
+    /* 清空：复位函数定义＋清空按钮调用，共 2 处 resetView( */
+    eq(JS_SRC.split('resetView(').length - 1, 2, "清空：resetView 定义＋调用共 2 处");
+})();
 
 console.log("json_graph_viewer: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");
 if (fail > 0) process.exit(1);
