@@ -133,7 +133,7 @@ function seq(arr) { var i = 0; return function () { var v = arr[i % arr.length];
     contains(GO_SRC.toLowerCase(), "batch random number generator", "Description 中英文双语（含英文）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
     while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-    eq(pathCount, 320, "注册 Path 总数 309→310");
+    eq(pathCount, 321, "注册 Path 总数 309→310");
 })();
 
 /* ================= 5. 零网络静态检查 ================= */

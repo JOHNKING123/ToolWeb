@@ -1,3 +1,111 @@
+## 今日任务（2026-11-07 01:40 · PM 选定轮，接通用调研第二百五十一轮）
+
+**选定：JSON 结构图/节点图可视化（JSON Crack 模式）（json_graph_viewer）** — 本轮唯一任务（新工具）。
+
+**顺位**：251 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十一度裁定跳过**（沿用 231–250 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），JSON 节点连线图本体站内 0 交付。
+2. **口径互补确凿**：站内已有 JSON 族工具，但无一做「粘贴 JSON 即出节点连线图」——json_parser 是格式化／校验口径（仅有缩进树形视图，模板 L499「树形视图」），jsonpath_tester 是查询口径，json_semantic_diff 是比对口径；本工具为**结构图可视化口径**（粘贴 JSON → 自研 SVG 节点连线布局：节点折叠／展开、平移缩放、搜索定位高亮、点击节点显示路径与值、一键复制 JSON Path），与三者形成「格式化↔查询↔比对↔结构图」分工互补（页面与互链须明示分工：本工具只做结构图可视化，不做格式化／校验／JSONPath 查询）。
+3. **需求验证**：API 返回的大 JSON 嵌套深，缩进树形视图看不清结构关系，JSON Crack 类站要上传数据或挂广告；浏览器本地粘贴 JSON 即出节点连线图、零上传。池内递进信号印证（dev.to「5 Zero-BS 工具 2026」JSON Crack 信号；ER 图生成器交付后顺位递进）。
+4. **技术路线站内已有先例与待纠偏**：er_diagram_generator 已跑通「粘贴结构化文本→自研解析→关系图渲染＋SVG／PNG 导出」页面模式（本地 vendor mermaid、无模型权重、无服务端）；本工具只在既有模式上换一步「JSON.parse＋自研树→图分层布局＋SVG 节点连线」，不引 d3 等重型依赖，不新增任何外部依赖。**json_parser 模板走 cdnjs jsoneditor CDN 懒加载（9.10.2）的老路线不沿用**——本工具模板零外部静态资源。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`json_crack`／`json_graph`／`json_visual`／`json_tree` 全站（tools／templates／static／js／tests）**0 命中**；`sudoku`／`social_image_size`／`social-image-size` 全站 **0 命中**——JSON 节点图本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「JSON结构图」`chr(0x...)` 运行时构造（codepoints 验真 0x4a／0x53／0x4f／0x4e＋0x7ed3／0x6784／0x56fe）全站 **0 命中**；CJK「JSON可视化」（0x4a／0x53／0x4f／0x4e＋0x53ef／0x89c6／0x5316）全站 **0 命中**；CJK「JSON树」（0x4a／0x53／0x4f／0x4e＋0x6811）全站 **0 命中**；CJK「节点图」（0x8282／0x70b9／0x56fe）全站 **0 命中**。
+   - CJK「数独」两处命中经 codepoint 解码验真均为「参数独立」子串假阳性（css_background_pattern_generator 模板 L125／JS L28，0x53c2／0x6570／0x72ec／0x7acb，163 轮误判教训再验证），ASCII `sudoku` 0 命中为真凭据。
+   - Icon：**`bubble_chart` 首选**（`Icon:\s*"bubble_chart"` 精确值 **0 命中**，全库唯一；`account_tree` 已占用 2、`hub` 已占用 2、`schema` 已占用 1、`share` 已占用 1，不可取；备选 `mediation`／`fork_right`／`device_hub`／`lan`／`polyline`／`scatter_plot` 精确值均为 **0 命中**），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 document_diff `difference` eb7d 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十一度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／G-code 预览器／Wordle 求解器／国际电话区号查询／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 粘贴 JSON（≤100000 字符）→ JSON.parse 校验（非法 JSON 显示解析错误信息，不渲染半截图）→ 自研树→图分层布局（按深度分列、同列节点按子树高度排布、父子连线用贝塞尔曲线）生成 SVG 节点连线图 ② 交互：节点折叠／展开、画布拖拽平移、滚轮＋按钮缩放（0.2–3x）、搜索定位高亮（按 key／值搜索，命中节点高亮并居中定位）、点击节点显示 JSON Path 与值、一键复制 JSON Path、一键复制节点值 ③ 节点类型有文字图例与文字标注（对象／数组／字符串／数字／布尔／null，不只依赖颜色）④ 统计面板（节点总数／最大深度／对象数／数组数／叶子数）⑤ 导出：SVG 下载、PNG 导出（canvas 绘制 SVG，2x）⑥ 3–5 组预设示例 JSON（一键填入：API 响应深嵌套、配置对象、数组列表、深嵌套长链、空对象／空数组边界）⑦ 性能护栏：节点总数 >3000 时只渲染前 N 层并明确提示，不静默截断 ⑧ 互链：json_parser（"格式化与校验 JSON"）／jsonpath_tester（"JSONPath 查询"）双向或单向互链（页面须明示分工：本工具只做结构图可视化，不做格式化／校验／JSONPath 查询）⑨ 全程浏览器本地计算，零上传、零外部接口 ⑩ 无障碍（输入框、搜索框与按钮均可 tab 聚焦，节点类型与路径有文字呈现不只依赖颜色）⑪ 模板零外部静态资源惯例（不引 d3 等重型依赖，不走 CDN；json_parser 的 cdnjs jsoneditor 路线不沿用）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.JsonGraphViewer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `parseJsonInput(input)` → any（input 须为非空字符串，否则 err.field='input'；长度 >100000 抛错 err.field='input'；JSON.parse 失败抛错 err.field='input'，错误信息保留原生 message）。
+  - `buildGraph(value)` → {nodes:[{id, path, key, type, value, depth, parentId, children:[ids]}], edges:[{from, to}]}（type 取值 object／array／string／number／boolean／null；根节点 id '$'、path []；叶子节点保留原始 value；edges 长度 = nodes 长度 − 1；value 须为 JSON.parse 的合法返回值，undefined／函数／循环引用抛错 err.field='value'）。
+  - `layoutGraph(graph)` → {nodes:[{...node, x, y}], width, height}（graph 须为 buildGraph 返回结构，否则 err.field='graph'；同深度节点 x 相同、按深度分列；父节点 y 为其子节点 y 的均值；同列节点 y 间距 ≥ 节点高＋间隙、无重叠；空图返回 width／height 为 0 不抛错）。
+  - `formatJsonPath(segments)` → string（segments 须为数组，否则 err.field='segments'；[] → '$'；['store','book',0,'title'] → '$.store.book[0].title'；含特殊字符的 key 用括号引号形式，如 ['my-key'] → `$['my-key']`）。
+  - `searchNodes(graph, query)` → string[]（graph 须为对象否则 err.field='graph'；query 须为非空字符串否则 err.field='query'；按 key 或叶子值子串匹配，返回命中节点 id 数组；无命中返回 []）。
+  - `countStats(graph)` → {totalNodes, maxDepth, objects, arrays, leaves}（graph 须为对象，否则 err.field='graph'；空图返回全 0）。
+- **数值锚点（测试精确值）**：parseJsonInput：('{"a":1}') → {a:1}；('') 抛错 err.field='input'；('not json') 抛错 err.field='input'；(123) 抛错 err.field='input'；('x'.repeat(100001)) 抛错 err.field='input'。buildGraph：({a:{b:[1,2]}}) → nodes 长度 5（$、a、b、b[0]、b[1]），edges 长度 4，b.type 'array'，b[0].value 1；({c:null}) → c.type 'null'。layoutGraph：buildGraph({a:{b:[1,2]}}) 的布局 → 深度 0／1／2／3 的节点 x 各不相同且随深度递增，b.y 为 b[0].y 与 b[1].y 的均值，同列节点 y 无重叠；buildGraph({}) → width／height 为 0。formatJsonPath：(['store','book',0,'title']) → '$.store.book[0].title'；([]) → '$'；(['my-key']) → `$['my-key']`；('x') 抛错 err.field='segments'。searchNodes：buildGraph({title:'hi',n:42}) 上 query 'title' 命中 1 个节点、query '42' 命中值节点、query 'zzz' 返回 []；('') 抛错 err.field='query'。countStats：buildGraph({"a":{"b":[1,2]},"c":null}) → {totalNodes:6, maxDepth:3, objects:2, arrays:1, leaves:3}；buildGraph({}) → {totalNodes:1, maxDepth:0, objects:1, arrays:0, leaves:0}。
+- **真限制五条页面明示**：① 只做结构图可视化：格式化／校验去 json_parser，JSONPath 查询去 jsonpath_tester；② 超大 JSON（节点 >3000）只渲染前 N 层并提示，不静默截断；③ 循环引用对象无法粘贴解析（JSON 本身不支持，粘贴前需先去环）；④ 布局为分层树形，非力导向物理模拟，深嵌套长链会横向拉长；⑤ 全程浏览器本地计算，零上传。
+- **SEO**：JSON 可视化、JSON 结构图、JSON 转关系图、JSON 节点图。
+- **改动文件**：tools/categories.go（「格式化工具」类目新增 json_graph_viewer 条目，紧邻 json_parser，Path 320→**321**，Icon `bubble_chart` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph，备选 `mediation`／`fork_right`／`device_hub`／`lan`／`polyline`／`scatter_plot` 精确值均为 0 命中）／templates/json_graph_viewer.html（新，define "json_graph_viewer"）／static/js/json_graph_viewer.js（新，window.JsonGraphViewer）／tests/json_graph_viewer.test.js（新）／全量旧 tests Path 断言 320→321 数值同步（开发轮实测基数：`grep -c '320'` 159 个测试文件、182 处含 320 字面量的行，开发轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥90 断言全过（parseJsonInput／buildGraph／layoutGraph／formatJsonPath／searchNodes／countStats 锚点精确值；非法参数抛错 err.field；非法 JSON 报错不渲染半截图；模板零外部静态资源检查——页面无 CDN 链接）② 全量 tests/*.test.js 206→**207** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/json-graph-viewer 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：粘贴预设深嵌套 API JSON → 节点连线图正确渲染 → 折叠／缩放／搜索定位／点击路径复制均可用 → SVG/PNG 导出可用 → 非法 JSON 报错不渲染半截图 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「格式化工具」类目（与 json_parser／jsonpath_tester 同为 JSON 家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：JSON 结构图/节点图可视化→本轮交付（251 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第二十一度跳过（数据表负债从严，231–250 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII json_crack／json_graph／json_visual／json_tree 全 0 命中，CJK「JSON结构图」「JSON可视化」「JSON树」「节点图」全 0 命中，CJK「数独」两处命中验真为「参数独立」子串假阳性；Icon `bubble_chart` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；json_parser 的 cdnjs CDN 路线不沿用，模板零外部静态资源）；格式化工具类目，节点连线图口径与缩进树形视图／JSONPath 查询／语义比对分工互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十一度跳过）／数独游戏→P3 观察维持／G-code 预览器／Wordle 求解器／国际电话区号查询／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮初次失败（Permission denied (publickey)，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD dd70eac（ER 图生成器三段限定名修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **320**；`ls tests/*.test.js | wc -l` = **206**；PM 独立零重叠复核（ASCII `json_crack`／`json_graph`／`json_visual`／`json_tree`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「JSON结构图」「JSON可视化」「JSON树」「节点图」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x4a／0x53／0x4f／0x4e＋0x7ed3／0x6784／0x56fe、0x53ef／0x89c6／0x5316、0x6811、0x8282／0x70b9／0x56fe）；CJK「数独」两处命中验真均为「参数独立」子串假阳性（0x53c2／0x6570／0x72ec／0x7acb）；json_parser 仅有缩进树形视图（模板 L499「树形视图」），无节点连线图；Icon `bubble_chart`／`mediation`／`fork_right`／`device_hub`／`lan`／`polyline`／`scatter_plot` 精确值 0 命中，`account_tree` 占用 2、`hub` 占用 2、`schema` 占用 1、`share` 占用 1；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 01:00 · 产品调研推荐，第二百五十一轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：数据库 ER 图生成器已交付闭环（5b196ef 新增＋dd70eac 三段限定名解析修复：`/tools/er-diagram-generator`，Path 总数 319→**320**，tests **206 个**；新测试 203 断言全过；Icon `dataset` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 250 轮（`social_image_size`／`social-image-size` 复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠沿用 250 轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **JSON 结构图/节点图可视化（JSON Crack 模式）** — **新晋第三席**（新信号；ER 图生成器交付后顺位递进）。痛点：API 返回的大 JSON 嵌套深，缩进树形视图看不清结构关系，JSON Crack 类站要上传数据或挂广告；浏览器本地粘贴 JSON 即出节点连线图、零上传。实现纯前端小-中难度（自研 JSON 解析→SVG 节点连线布局：节点折叠/展开、平移缩放、搜索定位高亮、点击节点显示路径与值、一键复制 JSON Path；零上传，不引 d3 等重型依赖）。站内零重叠本轮复核确凿：ASCII `json_crack`／`json_graph`／`json_visual`／`json_tree` 全站 **0 命中**；CJK「JSON结构图」「JSON可视化」「JSON树」「节点图」`chr(0x...)` 运行时构造（codepoints 验真 0x4a／0x53／0x4f／0x4e＋0x7ed3／0x6784／0x56fe、0x53ef／0x89c6／0x5316、0x6811、0x8282／0x70b9／0x56fe）**0 命中**。**弱点**：与 json_parser 口径邻近（该工具已有缩进树形视图；本工具为节点连线图＋缩放平移＋搜索定位，页面须明示分工：只做结构图可视化，不做格式化/校验/JSONPath 查询）。SEO：JSON 可视化、JSON 结构图、JSON 转关系图。建议 ID json_graph_viewer、Path /tools/json-graph-viewer；Icon `bubble_chart` 精确值 **0 命中**（`account_tree` 已占用 2、`hub` 已占用 2、`schema` 已占用 1、`share` 已占用 1，不可取；备选 `mediation`／`fork_right`／`device_hub`／`lan`／`polyline`／`scatter_plot` 精确值均为 0 命中），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮沿用 250 轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| JSON 结构图/节点图可视化（JSON Crack 模式） | **新晋第三席**：dev.to「5 Zero-BS 工具 2026」JSON Crack 信号；`json_crack`／`json_graph`／`json_visual`／`json_tree`／CJK「JSON结构图」「JSON可视化」「节点图」本轮复测全 0 命中；纯前端小-中难度（自研 SVG 节点连线布局＋折叠/缩放/搜索定位）；**弱点**：与 json_parser 树形视图口径邻近（本工具为节点连线图，页面须明示分工） | 小-中 | P3（新晋） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 本轮复测 0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 本轮复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 国际电话区号查询 | **新入池弱观察**：whispr.dev 11-06 11 工具清单信号（DIALLCODE）；`dial_code`／`phone_code`／`calling_code`／CJK「区号查询」「国际区号」「电话区号」本轮复测全 0 命中；纯前端小难度（国家→国际区号静态表＋反查，零上传）；**弱点**：静态数据表（但区号极少变更，鲜度负担低于社媒尺寸表）、人群窄（跨境联系场景） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord`／CJK「和弦」「音阶」沿用 250 轮复测全 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 数据库 ER 图生成器（文本建表 → 关系图） | 已交付划出（5b196ef 新增＋dd70eac 修复：`/tools/er-diagram-generator`，Path 319→320，tests 206 个；新测试 203 断言全过；Icon `dataset` 全库唯一） | — | 已实现 |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 23:00~2026-11-07 01:00 窗口；本轮**新晋 1 个、新入池 1 个**，余为消解）：
+- **JSON 结构图/节点图可视化新晋第三席**（dev.to「5 Zero-BS, Account-Free Developer Tools 2026」JSON Crack 信号；`json_crack`／`json_graph`／`json_visual`／`json_tree`／CJK「JSON结构图」「JSON可视化」「JSON树」「节点图」本轮复测全 0 命中；Icon `bubble_chart` 精确值 0 命中，`account_tree`／`hub` 已占用 2、`schema` 已占用 1、`share` 已占用 1，不可取，开发轮须先验 glyph）。
+- **国际电话区号查询新入池弱观察**（whispr.dev 11-06 11 工具清单 DIALLCODE 信号；`dial_code`／`phone_code`／`calling_code`／CJK「区号查询」「国际区号」「电话区号」本轮复测全 0 命中；纯前端小难度）。
+- whispr.dev 其余 10 项 → 消解：FASTPING（IP/ping 检测）→ **ping／my-ip 已交付**；MDCONV（Markdown 预览＋diff）→ **markdown-preview＋document_diff 已交付**；屏幕尺寸检测 → **browser-env-info 已覆盖屏幕分辨率／视口尺寸／DPR**（js L30-31、L341-345 实测字段）；Is it me or not（网站宕机检测）→ 需服务端拨测；OpenGraph 健康检查 → **og-card-preview 已交付**；Trace a link（链接溯源）→ 短链逐跳追踪已在池（P3 弱观察）；坐标/地址工具 → 需地图 API 与境外地址数据；DAILYSTONKS → 财务类，方向修正不扩。
+- dev.to「20 Websites That Solve Problems」→ 消解：Squoosh → **img-compress 已交付**；Diffchecker → **text-diff＋document_diff 已交付**；CleanURL → **url-tracker-cleaner 已交付**；ILovePDF → PDF 工具族已交付；Hemingway → **readability-analyzer 已交付**；bundlephobia（npm 包体积）→ 需 npm registry 外部 API；transform.tools → 转换类多已交付（json-to-types／csv-json／html-to-markdown 等）；caniuse → 浏览器兼容数据表体量过大；tiny-helpers → 目录非工具。
+- EazyStudio「10 Best Free Online Developer Tools 2026」→ 消解：代码压缩 → **code-minifier 已交付**；Meta 标签生成器 → **og-card-preview 已含 og:/twitter: meta 标签代码一键复制**（模板 L101 实测），口径邻近消解；URL 解析器 → **url-parser 已交付**；CSS Grid 生成器 → **css-grid-generator 已交付**；API 测试器 → **postman 已交付**；JSON 查看器／JWT 解码／Base64 → 已交付。
+- V2EX 11-06~11-07 → 消解：xGoose（AI Agent 插件）→ 插件／AI 口径（250 轮已消解）；Paint Board 网页画板 → **doodle-board 已交付**；KKCE 400+ 节点测速 → 多节点需服务端（250 轮已消解）；翻译插件「旁白」→ 需自填 API key；出海外链平台贴 → 非工具。
+- simpletool.io（76 工具）／ConverterMint（145 工具）→ 消解：清单内文本／图片／CSS／编码／颜色／SEO 类多已交付（word counter、case converter、QR、PDF 族、meta tag checker 等均有站内对应工具），无新口径。
+
+**候选池变动**：数据库 ER 图生成器交付划出（5b196ef＋dd70eac，320 Path，206 tests）；**JSON 结构图/节点图可视化新晋第三席**（新信号；`json_crack`／CJK「JSON结构图」本轮复测全 0 命中，Icon `bubble_chart` 精确值 0 命中，开发轮须先验 glyph）；国际电话区号查询新入池弱观察；G-code 预览器弱观察维持（`gcode_viewer` 仍 0 命中）；Wordle 求解器弱观察维持（`wordle` 仍 0 命中）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十度跳过）；数独游戏 P3 观察维持第二席；和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮初次失败（Host key verification failed，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD dd70eac（ER 图生成器三段限定名修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **320**；`ls tests/*.test.js | wc -l` = **206**；站内零重叠复核（ASCII `json_crack`／`json_graph`／`json_visual`／`json_tree`／`dial_code`／`phone_code`／`calling_code`／`gcode_viewer`／`wordle`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`json_parser` 仅有缩进树形视图（模板 L499「树形视图」），无节点连线图；`browser-env-info` 已覆盖屏幕分辨率／视口／DPR；`og-card-preview` 已含 meta 标签代码生成；CJK「JSON结构图」「JSON可视化」「JSON树」「节点图」「区号查询」「国际区号」「电话区号」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x7ed3／0x6784／0x56fe、0x53ef／0x89c6／0x5316、0x6811、0x8282／0x70b9／0x56fe、0x533a／0x53f7／0x67e5／0x8be2、0x56fd／0x9645、0x7535／0x8bdd）；Icon `bubble_chart`／`mediation`／`fork_right`／`device_hub`／`lan`／`polyline`／`scatter_plot` 精确值 0 命中，`account_tree` 占用 2、`hub` 占用 2、`schema` 占用 1、`share` 占用 1；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 23:00 · PM 选定轮，接通用调研第二百五十轮）
 
 **选定：数据库 ER 图生成器（文本建表 → 关系图）（er_diagram_generator）** — 本轮唯一任务（新工具）。

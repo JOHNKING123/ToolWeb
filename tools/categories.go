@@ -40,6 +40,15 @@ func GetCategories() []Category {
 					Category:    "格式化工具",
 				},
 				{
+					ID:          "json_graph_viewer",
+					Name:        "JSON 结构图可视化",
+					Description: "粘贴 JSON 一键生成节点连线结构图（JSON Crack 模式）：自研树→图分层布局、贝塞尔连线，节点折叠／拖拽平移／滚轮缩放、按 key／值搜索定位、一键复制 JSON Path 与节点值，统计面板＋SVG/PNG 导出，全程浏览器本地解析零上传 · JSON visualizer: paste JSON to interactive node graph, fold/zoom/search, export SVG/PNG, 100% client-side",
+					Path:        "/tools/json-graph-viewer",
+					Icon:        "bubble_chart",
+					New:         true,
+					Category:    "格式化工具",
+				},
+				{
 					ID:          "json_string_escaper",
 					Name:        "JSON 字符串转义器",
 					Description: "输入任意普通文本，双向转义／反转义 JSON 字符串：默认与 JSON.stringify 一致（中文与斜杠默认不转义），非 ASCII 转 \\uXXXX 与斜杠转 \\/ 两个开关仅转义方向生效，反转义非法序列中文报错不输出半截结果，纯前端本地处理零上传 · JSON string escaper: escape/unescape JSON string literals locally, JSON.stringify-compatible, 100% client-side",

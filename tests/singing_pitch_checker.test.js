@@ -224,7 +224,7 @@ throws(function () { M.detectPitch(badBuf, 44100); }, "buffer", "detectPitch：�
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 320, "注册 Path 总数 314→315");
+eq(pathCount, 321, "注册 Path 总数 314→315");
 has(GO_SRC, '"singing_pitch_checker"', "注册：ID singing_pitch_checker");
 has(GO_SRC, '"/tools/singing-pitch-checker"', "注册：Path /tools/singing-pitch-checker");
 has(GO_SRC, '"record_voice_over"', "注册：Icon record_voice_over");

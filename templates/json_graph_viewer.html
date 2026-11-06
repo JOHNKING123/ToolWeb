@@ -1,0 +1,221 @@
+{{define "json_graph_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 结构图可视化 - 粘贴 JSON 一键生成节点连线图（JSON Crack 模式） | 程序员工具箱</title>
+    <meta name="description" content="免费在线 JSON 结构图可视化工具（JSON Crack 模式）：粘贴 JSON，一键生成 SVG 节点连线结构图；自研树→图分层布局、贝塞尔连线，节点折叠／展开、拖拽平移、滚轮缩放、按 key／值搜索定位高亮、一键复制 JSON Path 与节点值，统计面板＋SVG/PNG 导出，全程浏览器本地解析零上传。Free online JSON visualizer: paste JSON to interactive node graph, 100% client-side.">
+    <meta name="keywords" content="JSON 可视化,JSON 结构图,JSON 转关系图,JSON 节点图,JSON Crack,JSON 树形图,JSON 结构可视化,JSON 节点连线图,JSON Path 复制,json visualizer,json graph viewer,json tree diagram,json crack">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/json-graph-viewer">
+    <meta property="og:title" content="JSON 结构图可视化 - 粘贴 JSON 一键生成节点连线图">
+    <meta property="og:description" content="粘贴 JSON 即出节点连线结构图：折叠／缩放／搜索定位／复制 JSON Path，SVG/PNG 导出，全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/json-graph-viewer">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"JSON 结构图可视化","description":"粘贴 JSON，一键生成 SVG 节点连线结构图（JSON Crack 模式）：自研树→图分层布局、贝塞尔连线，节点折叠／展开、拖拽平移、滚轮缩放、按 key／值搜索定位高亮、一键复制 JSON Path 与节点值，统计面板＋SVG/PNG 导出，全程浏览器本地解析零上传。","url":"https://www.johnkingzcq123.xyz/tools/json-graph-viewer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .jg-wrap .navbar .material-icons { display: none; }
+        .jg-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .jg-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .jg-privacy b{color:#047857}
+        .jg-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .jg-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .jg-input{width:100%;box-sizing:border-box;min-height:12rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:.88rem;font-family:Consolas,Menlo,"Courier New",monospace;resize:vertical;line-height:1.7}
+        .jg-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .jg-meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .jg-count{font-size:.85rem;color:#6b7280}
+        .jg-statline{color:#2563eb;font-size:.85rem;min-height:1.3em}
+        .jg-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+        .jg-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .jg-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .jg-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .jg-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .jg-btn .material-icons{font-size:1.1rem}
+        .jg-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .jg-error{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+        .jg-presets{display:flex;gap:.5rem;flex-wrap:wrap}
+        .jg-preset-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer}
+        .jg-preset-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .jg-stats{display:flex;gap:.6rem;flex-wrap:wrap}
+        .jg-stat{flex:1 1 6.5rem;min-width:6.5rem;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .7rem;
+            background:#f9fafb;text-align:center}
+        .jg-stat b{display:block;font-size:1.25rem;color:#111827}
+        .jg-stat span{font-size:.82rem;color:#6b7280}
+        .jg-trunc{flex:1 1 100%;border:2px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:.6rem;
+            padding:.6rem .9rem;font-size:.9rem;line-height:1.7}
+        .jg-muted{color:#9ca3af;font-size:.9rem}
+        .jg-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.7rem}
+        .jg-toolbar .jg-search{flex:1 1 12rem;min-width:10rem;padding:.45rem .7rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:.88rem}
+        .jg-toolbar .jg-search:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .jg-search-info{font-size:.85rem;color:#2563eb;min-height:1.3em}
+        .jg-graph-wrap{border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;min-height:20rem;
+            max-height:38rem;overflow:auto;padding:.5rem}
+        .jg-graph-wrap svg{display:block;max-width:none}
+        .jg-graph-wrap .jg-node text{user-select:none}
+        .jg-empty{color:#9ca3af;font-size:.9rem;text-align:center;line-height:2;padding:6rem 1rem}
+        .jg-legend{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.88rem;color:#374151;margin-top:.7rem;line-height:1.9}
+        .jg-legend .jg-dot{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;margin-right:.3rem;vertical-align:-.05rem}
+        .jg-selected{border:2px solid #e5e7eb;border-radius:.6rem;background:#f9fafb;padding:.7rem .9rem;
+            font-size:.9rem;line-height:1.9;color:#111827;word-break:break-all}
+        .jg-selected code{font-family:Consolas,monospace;font-size:.85rem;background:#e5e7eb;border-radius:.3rem;padding:0 .3rem}
+        .jg-export{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-top:.8rem}
+        .jg-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .jg-limits div{line-height:1.9;font-size:.95rem;color:#374151}
+        .jg-limits b{color:#111827}
+        .jg-limits code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .jg-faq dt{font-weight:600;color:#111827;margin:.7rem 0 .2rem}
+        .jg-faq dd{margin:0;color:#374151;line-height:1.9;font-size:.95rem}
+        .jg-faq code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .jg-division{line-height:1.9;font-size:.95rem;color:#374151}
+        .jg-division b{color:#111827}
+        .jg-related{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+        @media (max-width:860px){
+            .jg-input{min-height:9rem}
+            .jg-graph-wrap{min-height:15rem}
+            .jg-export .jg-btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+    <div class="jg-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">bubble_chart</i> JSON 结构图可视化</h1>
+            <p>粘贴 JSON，一键生成节点连线结构图（JSON Crack 模式）：按深度分列、父节点居于子节点之间，贝塞尔连线看清嵌套关系；折叠／平移／缩放／搜索定位／复制路径一次到位。全程浏览器本地解析，JSON 不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="jg-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：JSON 不出浏览器。</b>粘贴的 JSON 只在当前浏览器本地解析、本地布局、本地渲染与导出，不会上传到任何服务器；不引入任何第三方库与 CDN，页面除加载本站资源外无其他网络请求。</div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>1. 粘贴 JSON（最多 100000 字符）</h3>
+                <textarea class="jg-input" id="jg-input" spellcheck="false" placeholder="在这里粘贴 JSON，例如：&#10;&#10;{&#10;  &quot;store&quot;: {&#10;    &quot;book&quot;: [{&quot;title&quot;: &quot;Sayings of the Century&quot;, &quot;price&quot;: 8.95}],&#10;    &quot;bicycle&quot;: {&quot;color&quot;: &quot;red&quot;, &quot;price&quot;: 19.95}&#10;  }&#10;}&#10;&#10;或点下方预设示例一键载入。"></textarea>
+                <div class="jg-meta">
+                    <span class="jg-count" id="jg-count">0 / 100000 字符</span>
+                    <span class="jg-statline" id="jg-statline"></span>
+                    <div class="jg-actions">
+                        <button type="button" class="jg-btn jg-btn-primary" id="jg-render-btn"><i class="material-icons">bubble_chart</i>生成结构图</button>
+                        <button type="button" class="jg-btn" id="jg-clear"><i class="material-icons">delete_sweep</i>清空</button>
+                    </div>
+                </div>
+                <div class="jg-error" id="jg-err" role="alert"></div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>预设示例（一键载入）</h3>
+                <div class="jg-presets" id="jg-presets"></div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>2. 统计面板</h3>
+                <div class="jg-stats" id="jg-stats"><div class="jg-muted">生成结构图后，这里显示节点总数、最大深度与各类节点数。</div></div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>3. 节点连线结构图</h3>
+                <div class="jg-toolbar">
+                    <input class="jg-search" id="jg-search" type="search" placeholder="按 key 或值搜索节点（例：title、19.95）" aria-label="按 key 或值搜索节点">
+                    <button type="button" class="jg-btn" id="jg-search-btn"><i class="material-icons">search</i>搜索定位</button>
+                    <button type="button" class="jg-btn" id="jg-locate-next"><i class="material-icons">my_location</i>下一个命中</button>
+                    <button type="button" class="jg-btn" id="jg-zoom-out" aria-label="缩小"><i class="material-icons">zoom_out</i></button>
+                    <span id="jg-zoom-label" aria-label="当前缩放比例">100%</span>
+                    <button type="button" class="jg-btn" id="jg-zoom-in" aria-label="放大"><i class="material-icons">zoom_in</i></button>
+                    <button type="button" class="jg-btn" id="jg-zoom-reset"><i class="material-icons">fullscreen</i>重置视图</button>
+                </div>
+                <div class="jg-search-info" id="jg-search-info"></div>
+                <div class="jg-graph-wrap" id="jg-graph-wrap">
+                    <div class="jg-empty">生成结构图后，这里会显示节点连线图<br>拖拽空白处平移画布 · 滚轮缩放（0.2–3x）· 点击节点查看路径与值 · 点节点右上角 ＋／－ 折叠展开</div>
+                </div>
+                <div class="jg-legend" id="jg-legend">
+                    <span><i class="jg-dot" style="background:#2563eb"></i>对象 object</span>
+                    <span><i class="jg-dot" style="background:#7c3aed"></i>数组 array</span>
+                    <span><i class="jg-dot" style="background:#047857"></i>字符串 string</span>
+                    <span><i class="jg-dot" style="background:#b45309"></i>数字 number</span>
+                    <span><i class="jg-dot" style="background:#be185d"></i>布尔 boolean</span>
+                    <span><i class="jg-dot" style="background:#6b7280"></i>null</span>
+                    <span>节点类型同时以文字标注在节点内，不只依赖颜色</span>
+                </div>
+                <div class="jg-export">
+                    <button class="jg-btn jg-btn-primary" id="jg-png" disabled><i class="material-icons">download</i>导出 PNG（2x）</button>
+                    <button class="jg-btn" id="jg-svgdl" disabled><i class="material-icons">file_download</i>下载 SVG</button>
+                </div>
+                <div class="jg-copy-tip" id="jg-tip"></div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>4. 选中节点</h3>
+                <div class="jg-selected" id="jg-selected"><span class="jg-muted">点击任意节点，这里显示它的 JSON Path 与值。</span></div>
+                <div class="jg-meta">
+                    <span></span>
+                    <div class="jg-actions">
+                        <button type="button" class="jg-btn" id="jg-copy-path" disabled><i class="material-icons">content_copy</i>复制 JSON Path</button>
+                        <button type="button" class="jg-btn" id="jg-copy-value" disabled><i class="material-icons">content_copy</i>复制节点值</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>五条真限制</h3>
+                <div class="jg-limits">
+                    <div><b>1. 只做结构图可视化：</b>本工具只把合法 JSON 画成节点连线结构图，<b>不做 JSON 格式化／校验、不做 JSONPath 查询</b>；要排版美化与校验请用 <a href="/tools/json-parser">JSON 解析器</a>，要按表达式查节点请用 <a href="/tools/jsonpath-tester">JSONPath 测试器</a>。</div>
+                    <div><b>2. 超大 JSON 会截断：</b>输入上限 <code>100000</code> 字符；节点总数超过 <code>3000</code> 时只渲染前若干层并在统计面板明确提示截断层数与个数，不静默丢节点。</div>
+                    <div><b>3. 循环引用不支持：</b><code>JSON.parse</code> 本身无法产生循环引用；若以编程方式传入含循环引用的对象，建图会直接报错，不画半张图。</div>
+                    <div><b>4. 分层树形布局，非力导向图：</b>节点按深度分列、父节点 y 取子节点 y 均值、连线为贝塞尔曲线，不做物理模拟与力导向排布；节点很多时图会很宽很高，请配合折叠与缩放使用。</div>
+                    <div><b>5. 本地零上传：</b>粘贴的 JSON 只在当前浏览器本地解析、布局与渲染，不上传服务器、不调用任何外部接口；页面不引入 d3 等第三方库、不走 CDN。</div>
+                </div>
+            </div>
+
+            <div class="jg-panel">
+                <h3>常见问题</h3>
+                <dl class="jg-faq">
+                    <dt>粘贴的 JSON 报错了怎么办？</dt>
+                    <dd>页面只显示解析错误信息，不渲染半张图；先用 <a href="/tools/json-parser">JSON 解析器</a>定位语法错误（缺逗号、多余尾逗号、单引号等最常见），修正后再生成结构图。</dd>
+                    <dt>节点太多看不清怎么办？</dt>
+                    <dd>点节点右上角的 ＋／－ 折叠不需要的分支；滚轮或右上角按钮缩放（0.2–3x）；在搜索框输入 key 或值可高亮并定位到命中节点。</dd>
+                    <dt>怎么复制某个节点的路径？</dt>
+                    <dd>点击该节点，下方「选中节点」面板会显示它的 JSON Path（如 <code>$.store.book[0].title</code>），点「复制 JSON Path」即可；含连字符等特殊字符的键会用 <code>$['my-key']</code> 形式。</dd>
+                    <dt>我的 JSON 会被上传吗？</dt>
+                    <dd>不会。解析、布局、渲染与导出全部在本地完成，不发起后端请求；本工具不引入任何第三方库与 CDN，你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="jg-panel">
+                <h3>相关工具</h3>
+                <p class="jg-division">分工说明：本工具<b>只做结构图可视化</b>，<b>不做格式化／校验、不做 JSONPath 查询</b>；<a href="/tools/json-parser">JSON 解析器</a>是格式化与校验 JSON 的入口（缩进树形视图）；<a href="/tools/jsonpath-tester">JSONPath 测试器</a>是按表达式查询 JSON 节点的入口；<a href="/tools/json-schema-validator">JSON Schema 验证器</a>按 Schema 校验实例是否合规。</p>
+                <div class="jg-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">JSON 结构图可视化（当前）</span>
+                    <a href="/tools/json-parser" class="btn btn-secondary" style="font-size:.9rem;">JSON 解析器</a>
+                    <a href="/tools/jsonpath-tester" class="btn btn-secondary" style="font-size:.9rem;">JSONPath 测试器</a>
+                    <a href="/tools/json-schema-validator" class="btn btn-secondary" style="font-size:.9rem;">JSON Schema 验证器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/json_graph_viewer.js?v=1"></script>
+</body>
+</html>
+{{end}}

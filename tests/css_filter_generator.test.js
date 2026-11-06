@@ -134,7 +134,7 @@ ok(GO_SRC.indexOf('"css_filter_generator"') !== -1, "categories.go 注册 ID");
 ok(GO_SRC.indexOf('"/tools/css-filter-generator"') !== -1, "categories.go 注册 Path");
 ok(GO_SRC.indexOf('Category:    "开发工具"') !== -1, "categories.go 含开发工具品类");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 320, "注册总数 309→310 Path");
+eq(pathCount, 321, "注册总数 309→310 Path");
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1, "JS 零 fetch/XHR");
 ok(TPL_SRC.indexOf("fetch(") === -1 && TPL_SRC.indexOf("XMLHttpRequest") === -1, "模板零 fetch/XHR");
 ok(!/https?:\/\/(cdn|unpkg|cdnjs)/.test(JS_SRC + TPL_SRC), "JS 与模板零 CDN");
