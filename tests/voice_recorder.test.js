@@ -202,7 +202,7 @@ eq(dv.getInt16(48, true), 100, "encodeWavDataView：第三个采样 100");
 
 /* ---------- 13. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 317, "注册 Path 总数 316→317");
+eq(pathCount, 318, "注册 Path 总数 316→317");
 has(GO_SRC, '"voice_recorder"', "注册：ID voice_recorder");
 has(GO_SRC, '"/tools/voice-recorder"', "注册：Path /tools/voice-recorder");
 has(GO_SRC, '"mic_none"', "注册：Icon mic_none");

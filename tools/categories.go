@@ -1750,6 +1750,15 @@ func GetCategories() []Category {
 					Category:    "文档转换",
 				},
 				{
+					ID:          "document_diff",
+					Name:        "文档对比",
+					Description: "上传两份 PDF/DOCX/TXT 文件，浏览器本地提取文本并行级比对差异：并排/统一视图、行内字符标示、统计与相似度、差异报告导出，零上传 · Document diff: compare two PDF/DOCX/TXT files locally in the browser, line-level diff with side-by-side/unified views, stats and report export, 100% client-side",
+					Path:        "/tools/document-diff",
+					Icon:        "difference",
+					New:         true,
+					Category:    "文档转换",
+				},
+				{
 					ID:          "pdf_to_image",
 					Name:        "PDF 转图片/长图",
 					Description: "PDF 逐页导出 PNG/JPG 图片，或多页拼接成长图，本地处理不上传",

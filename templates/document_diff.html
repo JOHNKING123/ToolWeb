@@ -1,0 +1,178 @@
+{{define "document_diff"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档对比 - PDF/DOCX/TXT 两份文档行级比对工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线文档对比：上传两份 PDF、DOCX 或 TXT 文件，浏览器本地提取文本、行级比对差异，并排/统一视图、行内字符标示、统计与相似度、差异报告导出。合同版本对比、论文改稿比对，纯前端零上传。">
+    <meta name="keywords" content="文档对比,PDF对比,合同版本对比,DOCX对比,文件比对,文档差异比较,PDF文件对比,document diff">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/document-diff">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"文档对比","description":"上传两份 PDF/DOCX/TXT 文件，浏览器本地提取文本并行级比对差异：并排/统一视图、行内字符标示、统计与相似度、差异报告导出，纯前端零上传。","url":"https://www.johnkingzcq123.xyz/tools/document-diff","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .dd-wrap .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .dd-wrap .navbar .material-icons { display: none; }
+        .dd-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .dd-privacy b { color: #047857; }
+        .dd-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .dd-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .dd-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 720px) { .dd-zones { grid-template-columns: 1fr; } }
+        .dd-zone { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 1.6rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; color: #6b7280; transition: border-color .2s, background .2s; }
+        .dd-zone:hover, .dd-zone.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .dd-zone .dd-zone-title { font-size: 1rem; font-weight: 600; margin-bottom: .4rem; }
+        .dd-zone .dd-zone-sub { font-size: .85rem; }
+        .dd-info { color: #374151; font-size: .9rem; margin-top: .6rem; line-height: 1.6; word-break: break-all; min-height: 1.4em; }
+        .dd-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .dd-row-btns { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .dd-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .dd-btn:hover { filter: brightness(.93); }
+        .dd-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .dd-btn-ghost { background: #fff; color: var(--primary-color); }
+        .dd-btn.active { background: #1d4ed8; border-color: #1d4ed8; }
+        .dd-opt { display: flex; align-items: center; gap: .4rem; font-size: .93rem; color: #374151; cursor: pointer; }
+        .dd-stats { display: flex; gap: 1.6rem; flex-wrap: wrap; padding: .9rem 1rem; background: #f8fafc;
+            border: 1px solid #e5e7eb; border-radius: .6rem; margin-bottom: 1rem; align-items: center; }
+        .dd-stat { display: flex; align-items: center; gap: .4rem; font-size: .95rem; }
+        .dd-stat b { font-size: 1.15rem; }
+        .dd-stat-added { color: #059669; }
+        .dd-stat-removed { color: #dc2626; }
+        .dd-stat-sim { color: var(--primary-color); }
+        .dd-view { border: 1px solid #e5e7eb; border-radius: .6rem; overflow: hidden; font-family: Consolas, Monaco, monospace; font-size: 13px; line-height: 1.6; }
+        .dd-view-head { display: grid; grid-template-columns: 1fr 1fr; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151; }
+        .dd-view-head div { padding: .5rem .8rem; }
+        .dd-view-head div + div { border-left: 1px solid #e5e7eb; }
+        .dd-row { display: grid; grid-template-columns: 1fr 1fr; }
+        .dd-view-uni .dd-row { grid-template-columns: 1fr; }
+        .dd-cell { padding: .15rem .8rem; white-space: pre-wrap; word-break: break-all; border-bottom: 1px solid #f3f4f6; }
+        .dd-cell + .dd-cell { border-left: 1px solid #e5e7eb; }
+        .dd-view-uni .dd-cell + .dd-cell { border-left: none; }
+        .dd-row.dd-add .dd-cell { background: #dcfce7; }
+        .dd-row.dd-del .dd-cell { background: #fee2e2; }
+        .dd-row.dd-changed .dd-cell:first-child { background: #fee2e2; }
+        .dd-row.dd-changed .dd-cell:last-child { background: #dcfce7; }
+        .dd-cell.dd-empty { background: #f9fafb; }
+        .dd-char-del { background: #fca5a5; text-decoration: underline; border-radius: 2px; padding: 0 1px; }
+        .dd-char-add { background: #86efac; text-decoration: underline; border-radius: 2px; padding: 0 1px; }
+        .dd-sign { display: inline-block; width: 1.2em; color: #6b7280; user-select: none; }
+        .dd-empty-note { padding: 1.2rem; text-align: center; color: #9ca3af; }
+        .dd-limits { color: #374151; line-height: 1.9; font-size: .95rem; }
+        .dd-limits b { color: #111827; }
+        .dd-combo { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .6rem; padding: .7rem 1rem;
+            font-size: .92rem; line-height: 1.8; color: #1e40af; margin-top: 1rem; }
+        .dd-combo a { color: #1d4ed8; font-weight: 600; }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="dd-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>文档对比</h1>
+            <p>上传两份 PDF / DOCX / TXT，浏览器本地提取文本、逐行比对差异；合同改了两版，一眼看出改了哪里</p>
+        </div>
+
+        <div class="tool-content">
+            <div class="dd-privacy">
+                <span aria-hidden="true">🔒</span>
+                <div><b>全程浏览器本地计算，零上传。</b>文件只在你的浏览器里读取与比对，不经过任何服务器、不调用任何外部接口；PDF 解析（pdf.js 3.11.174）与 DOCX 解析（mammoth.js 1.13.0）均为本站本地副本，断网也能用。只比粘贴文本？用 <a href="/tools/text-diff">文本比较</a> —— 粘贴文本比对；本工具是上传文件比对。</div>
+            </div>
+
+            <div class="dd-panel">
+                <h3>1. 选择两份文件（PDF / DOCX / TXT，单文件 ≤20MB）</h3>
+                <div class="dd-zones">
+                    <div>
+                        <div class="dd-zone" id="dd-zone-a" role="button" tabindex="0" aria-label="点击选择或拖拽旧版文件到此处">
+                            <div class="dd-zone-title">旧版文件（A）</div>
+                            <div class="dd-zone-sub">点击选择，或把文件拖拽到这里</div>
+                        </div>
+                        <input type="file" id="dd-file-a" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:none;">
+                        <div class="dd-info" id="dd-info-a">尚未选择文件</div>
+                    </div>
+                    <div>
+                        <div class="dd-zone" id="dd-zone-b" role="button" tabindex="0" aria-label="点击选择或拖拽新版文件到此处">
+                            <div class="dd-zone-title">新版文件（B）</div>
+                            <div class="dd-zone-sub">点击选择，或把文件拖拽到这里</div>
+                        </div>
+                        <input type="file" id="dd-file-b" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:none;">
+                        <div class="dd-info" id="dd-info-b">尚未选择文件</div>
+                    </div>
+                </div>
+                <div class="dd-status" id="dd-status" aria-live="polite"></div>
+                <div class="dd-row-btns">
+                    <button class="dd-btn dd-btn-ghost" id="dd-sample" type="button">加载示例合同两版</button>
+                    <button class="dd-btn dd-btn-ghost" id="dd-swap" type="button">交换旧版 / 新版</button>
+                    <button class="dd-btn dd-btn-ghost" id="dd-clear" type="button">清空</button>
+                </div>
+            </div>
+
+            <div class="dd-panel">
+                <h3>2. 比对选项与视图</h3>
+                <div class="dd-row-btns">
+                    <label class="dd-opt"><input type="checkbox" id="dd-ignore-ws"> 忽略空白（首尾空白与连续空白折叠）</label>
+                    <label class="dd-opt"><input type="checkbox" id="dd-ignore-case"> 忽略大小写</label>
+                </div>
+                <div class="dd-row-btns" role="group" aria-label="视图切换">
+                    <button class="dd-btn active" id="dd-view-btn-side" type="button">并排视图</button>
+                    <button class="dd-btn dd-btn-ghost" id="dd-view-btn-uni" type="button">统一视图</button>
+                </div>
+                <div class="dd-stats" aria-live="polite">
+                    <span class="dd-stat dd-stat-added">新增行：<b id="dd-stat-added">0</b></span>
+                    <span class="dd-stat dd-stat-removed">删除行：<b id="dd-stat-removed">0</b></span>
+                    <span class="dd-stat">未变行：<b id="dd-stat-same">0</b></span>
+                    <span class="dd-stat">总行数：<b id="dd-stat-total">0</b></span>
+                    <span class="dd-stat dd-stat-sim">相似度：<b id="dd-stat-sim">—</b></span>
+                </div>
+                <div class="dd-view">
+                    <div class="dd-view-head"><div>旧版</div><div>新版</div></div>
+                    <div id="dd-view-side"></div>
+                    <div id="dd-view-uni" class="dd-view-uni" style="display:none;"></div>
+                </div>
+                <p style="color:#6b7280;font-size:.88rem;margin-top:.6rem;">绿色为新增行，红色为删除行；同行改动时，行内有差异的字符带下划线标示。统计口径：新增／删除／未变行数以比对结果计，相似度 = 未变行 ÷ 总行数。</p>
+            </div>
+
+            <div class="dd-panel">
+                <h3>3. 导出差异报告</h3>
+                <div class="dd-row-btns">
+                    <button class="dd-btn" id="dd-export-txt" type="button" disabled>导出差异报告 .txt</button>
+                    <button class="dd-btn" id="dd-export-html" type="button" disabled>导出高亮报告 .html</button>
+                </div>
+                <p style="color:#6b7280;font-size:.88rem;">.txt 报告：每行以 <code>+</code>（新增）／<code>-</code>（删除）／两个空格（未变）为前缀；.html 报告：独立可打开的单文件，增删行高亮显示。</p>
+            </div>
+
+            <div class="dd-panel">
+                <h3>真限制</h3>
+                <div class="dd-limits">
+                    <b>① 扫描版 PDF 需先 OCR：</b>图片型、无文本层的 PDF 提不出文字，请先用站内 <a href="/tools/ocr-image-text">OCR 图片文字识别</a> 转成文字再比对。<br>
+                    <b>② 只比纯文本：</b>复杂排版、表格、批注、修订标记可能丢失顺序或格式，本工具只比较提取出的纯文本行。<br>
+                    <b>③ DOCX 只提正文段落：</b>DOCX 只提取正文段落文本，不含页眉页脚、批注、脚注。<br>
+                    <b>④ 单文件 ≤20MB：</b>超大文件、超长行受浏览器内存限制，过大文档可能变慢或失败。<br>
+                    <b>⑤ 全程浏览器本地计算，零上传：</b>文件不经过服务器；换台电脑、清掉页面后需重新上传比对。
+                </div>
+            </div>
+
+            <div class="dd-combo">
+                <b>配套使用：</b>只比粘贴文本，用 <a href="/tools/text-diff">文本比较</a>（粘贴文本比对）；要比对上传的文件，用本工具（PDF／DOCX／TXT 文件比对）。扫描版 PDF 先 <a href="/tools/ocr-image-text">OCR 图片文字识别</a> 转文字；比对完想把其中一版转成 PDF 存档，用 <a href="/tools/doc-to-pdf">DOC 转 PDF</a>。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- 本地 vendor：pdf.js 3.11.174（PDF 文本提取）＋ mammoth.js 1.13.0（DOCX 文本提取），零外部资源 -->
+    <script src="/tools/static/js/vendor/pdf.min.js?v=1"></script>
+    <script src="/tools/static/js/vendor/mammoth.browser.min.js?v=1"></script>
+    <script src="/tools/static/js/document_diff.js?v=1"></script>
+</body>
+</html>
+{{end}}

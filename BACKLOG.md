@@ -1,3 +1,112 @@
+## 今日任务（2026-11-06 19:00 · PM 选定轮，接通用调研第二百四十八轮）
+
+**选定：文档对比（PDF/DOCX/TXT 文件比对）（document_diff）** — 本轮唯一任务（新工具）。
+
+**顺位**：248 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十八度裁定跳过**（沿用 231–247 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十七轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），文件比对本体站内 0 交付。
+2. **口径互补确凿**：文本工具已有文本比较（ID `diff`，Path /tools/text-diff，Icon `compare`），但仅粘贴文本口径——模板 0 个 file input（本轮复测），文件比对是未覆盖的新口径；本工具为**上传文件比对口径**（PDF／DOCX／TXT 本地提取文本＋行级 diff），与 text_diff 形成「粘贴文本比对↔上传文件比对」分工互补（页面与互链须明示分工）；与 json_semantic_diff（JSON 语义比对）仅「比对」二字表层相同，本质不同（彼为 JSON 结构语义比对，此为文档全文行级比对）。
+3. **需求验证**：合同／论文／报告改了两版想一眼看出改了哪里，现有免费站要么只支持粘贴文本、要么上传文件限次数；浏览器本地做、零上传、无次数。池内递进信号印证（Diffnote Show HN：浏览器本地解析 PDF／DOCX 比对、零上传）。
+4. **技术路线站内已有先例与待纠偏**：pdf.js 站内已有使用先例（pdf-to-image.js 经 CDN 懒加载 cdnjs 3.11.174）——但本工具须改走**本地 vendor**（pinned 3.11.174 的 pdf.min.js＋pdf.worker.min.js 下载进 static/js/vendor/），以合模板零外部静态资源惯例，不沿用 CDN 路线；mammoth.js 站内 0 引用，须新下载 pinned 版 mammoth.browser.min.js 进本地 vendor；行级 diff 自研 LCS（不引入 diff-match-patch 外部依赖）；pdf-lib／docx／jszip／three.js 等本地 vendor 先例俱在，无模型权重、无服务端。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`doc_diff`／`document_diff` 全站（tools/templates/static/js/tests）**0 命中**；`sudoku`／`social_image_size`／`social-image-size` 全站 **0 命中**——文件比对本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「文档对比」`chr(0x...)` 运行时构造（codepoints 验真 0x6587／0x6863／0x5bf9／0x6bd4）全站 **0 命中**。
+   - text_diff 模板 `type="file"` **0 处**（textarea 粘贴口径，10 处 textarea、7 处 input 均为非 file 类型）——站内仅有粘贴文本比对口径，文件比对本体 0 交付。
+   - Icon：**`difference` 首选**（`Icon:\s*"difference"` 精确值 **0 命中**，全库唯一；`find_difference` 精确值亦 0 命中作备选；`compare` 已占用 1（text_diff）、`compare_arrows` 已占用 3，不可取），开发轮须先验 Material Icons 官方 codepoints 有无该 glyph 再锁定（沿用 3D 模型预览器 `3d_rotation` e84d 与录音机 `mic_none` e02a 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十八度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／Shell 命令解释器／数据库 ER 图生成器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 上传／拖拽两份文件（PDF／DOCX／TXT，单文件 ≤20MB，沿用 doc_bg_cleaner 20MB 上限先例）本地提取文本，零上传 ② 本地 vendor：pdf.js pinned 3.11.174（pdf.min.js＋pdf.worker.min.js）＋ mammoth.js pinned（mammoth.browser.min.js），全部下载进 static/js/vendor/，不走 CDN（纠偏 pdf-to-image 的 CDN 懒加载路线）；TXT 用 FileReader 直接读；行级 LCS diff 自研，不引入 diff-match-patch ③ 并排／统一两种视图切换，行级增／删／未变高亮，行内字符级差异下划线标示（同行改动时） ④ 忽略空白／忽略大小写两个开关（比对前归一化） ⑤ 统计面板：新增／删除／未变行数＋相似度百分比 ⑥ 导出差异报告：纯文本（`+`／`-`／` ` 行前缀）`.txt` 与高亮 `.html` 两种 ⑦ 互链：text_diff 双向互链（"只比粘贴文本，用文本比较"／"要比对文件，用文档对比"） ⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（文件选择器与按钮均可 tab 聚焦、视图切换与统计有文字提示，不只依赖颜色）⑩ 模板零外部静态资源惯例（pdf.js＋mammoth.js 全部本地 vendor，不走 CDN）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.DocumentDiff 下，module.exports 同步导出；DOM 与文件读取／pdf.js／mammoth 只做浏览器端，测试只覆盖纯函数）**：
+  - `detectDocFormat(fileName)` → 'pdf'|'docx'|'txt'（扩展名大小写不敏感；fileName 须为非空字符串，否则 err.field='fileName'；未知扩展名抛错 err.field='format'）。
+  - `splitLines(text)` → string[]（text 须为字符串，否则 err.field='text'；统一 \r\n／\r 为 \n 后按 \n 切分；空串返回 [""]）。
+  - `normalizeLine(line, options)` → string（line 须为字符串，否则 err.field='line'；options.ignoreWhitespace 为 true 时去首尾空白并折叠连续空白为单空格；options.ignoreCase 为 true 时转小写；options 如出现须为对象，否则 err.field='options'）。
+  - `computeLineDiff(oldLines, newLines)` → [{type:'same'|'add'|'del', text}]（oldLines／newLines 须为字符串数组，否则 err.field 对应字段；LCS 行级比对；同一改动处先 del 后 add 的顺序约定）。
+  - `summarizeDiff(ops)` → {added, removed, same, total}（ops 须为数组，否则 err.field='ops'；total = added＋removed＋same）。
+  - `diffSimilarity(ops)` → number（ops 须为数组，否则 err.field='ops'；total 为 0 时返回 100；否则 Math.round(100*same/total)，0–100）。
+  - `buildPlainTextReport(ops, nameA, nameB)` → string（ops 须为数组，否则 err.field='ops'；nameA／nameB 须为非空字符串，否则 err.field 对应字段；首行 `--- nameA`、次行 `+++ nameB`，same 行前缀两个空格、del 行前缀 `- `、add 行前缀 `+ `）。
+  - `validateDiffInput(input)` → input（input.oldName／input.newName 须为非空字符串，否则 err.field 对应字段；两者扩展名须为 pdf／docx／txt 之一，否则 err.field='format'；input.ignoreWhitespace／input.ignoreCase 如出现须为 boolean，否则 err.field 对应字段）。
+- **数值锚点（测试精确值）**：detectDocFormat：("合同V2.PDF") → "pdf"；("报告.docx") → "docx"；("a.txt") → "txt"；("a.jpg") 抛错 err.field='format'；("") 抛错 err.field='fileName'。splitLines：("a\r\nb\nc") → ["a","b","c"]；("") → [""]；(123) 抛错 err.field='text'。normalizeLine：("  Hello   World  ", {ignoreWhitespace:true}) → "Hello World"；("AbC", {ignoreCase:true}) → "abc"；("  AbC  ", {ignoreWhitespace:true, ignoreCase:true}) → "abc"；(123, {}) 抛错 err.field='line'。computeLineDiff：(["a","b","c"], ["a","x","c"]) → 长度 4，依次 {same,"a"}、{del,"b"}、{add,"x"}、{same,"c"}；([], []) → []；("a") 抛错 err.field='oldLines'。summarizeDiff：上例 ops → {added:1, removed:1, same:2, total:4}；([]) → {added:0, removed:0, same:0, total:0}。diffSimilarity：上例 ops → 50；([]) → 100；全 same 三行 → 100。buildPlainTextReport：(上例 ops, "旧版.txt", "新版.txt") 首行 "--- 旧版.txt"、次行 "+++ 新版.txt"，报告含 "- b" 与 "+ x" 行；("x","") 抛错 err.field='newName'。validateDiffInput：{oldName:'a.pdf', newName:'b.docx', ignoreWhitespace:true, ignoreCase:false} 通过；newName:'b.jpg' 抛错 err.field='format'；ignoreWhitespace:'yes' 抛错 err.field='ignoreWhitespace'；oldName:'' 抛错 err.field='oldName'。
+- **真限制五条页面明示**：① 扫描版 PDF（图片型、无文本层）提不出文字，需先 OCR（站内 ocr_image_text）；② 只比纯文本：复杂排版／表格／批注／修订标记可能丢失顺序或格式；③ DOCX 只提正文段落文本，不含页眉页脚／批注；④ 单文件 ≤20MB，超大文件／超长行受浏览器内存限制；⑤ 全程浏览器本地计算，零上传。
+- **SEO**：文档对比、PDF对比、合同版本对比、DOCX对比。
+- **改动文件**：tools/categories.go（「文档转换」类目新增 document_diff 条目，紧邻 pdf_merge_split（同为多文件文档操作），Path 317→**318**，Icon `difference` 首选（精确值 0 命中，开发轮先验官方 codepoints 有无该 glyph 再锁定，备选 `find_difference`）／templates/document_diff.html（新，define "document_diff"）／static/js/document_diff.js（新，window.DocumentDiff）／static/js/vendor/pdf.min.js＋pdf.worker.min.js（新，pinned 3.11.174，本地 vendor）／static/js/vendor/mammoth.browser.min.js（新，pinned，本地 vendor）／tests/document_diff.test.js（新）／全量旧 tests Path 断言 317→318 数值同步（仅断言数值，153 个测试文件涉 155 处 317 断言）。
+- **验收标准**：① node 新测试 ≥70 断言全过（detectDocFormat／splitLines／normalizeLine／computeLineDiff／summarizeDiff／diffSimilarity／buildPlainTextReport／validateDiffInput 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 203→**204** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/document-diff 200、静态 JS 与两 vendor 200、首页索引收录 ⑤ 浏览器手工验证：上传两份 TXT／PDF／DOCX → 文本提取成功 → 行级增删高亮正确 → 并排／统一视图切换与忽略开关生效 → 统计与相似度正确 → .txt／.html 报告可下载、互链 text_diff 可用（开发轮记录）。
+- **品类归位**：注册到「文档转换」类目（与 doc2pdf／pdf_merge_split／pdf_to_image 同为文档文件口径；文件比对是文档操作的自然延伸）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：文档对比→本轮交付（248 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十八度跳过（数据表负债从严，231–247 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII doc_diff／document_diff 全 0 命中，CJK「文档对比」全 0 命中，text_diff 模板 0 个 file input；Icon `difference` 精确值 0 命中全库唯一，开发轮先验 glyph）；文档转换类目，文件比对口径与粘贴文本比对口径分工互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十八度跳过）／数独游戏→P3 观察维持／Shell 命令解释器／数据库 ER 图生成器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮失败（`Host key verification failed`——VM 换机 known_hosts 被清空的老问题复发，fetch 未成功；但本地分支与 HEAD 均为实测值，不影响本轮排期结论，开发轮重跑 fetch 时若仍失败需重建 known_hosts）；本地 HEAD 063d89f（在线录音机已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **317**；`ls tests/*.test.js | wc -l` = **203**；153 个测试文件涉 155 处 317 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `doc_diff`／`document_diff`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「文档对比」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6587／0x6863／0x5bf9／0x6bd4）；text_diff 模板 `type="file"` 0 处、粘贴文本口径；Icon `difference`／`find_difference` 精确值 0 命中，`compare` 占用 1、`compare_arrows` 占用 3、`rule` 占用 1；pdf.js 站内仅 CDN 懒加载先例（pdf-to-image.js，cdnjs 3.11.174），mammoth 站内 0 引用，本工具须改走本地 vendor；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 19:00 · 产品调研推荐，第二百四十八轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：在线录音机已交付闭环（063d89f 新增：`/tools/voice-recorder`，Path 总数 316→**317**，tests **203 个**；新测试 223 断言全过；Icon `mic_none` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 247 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十七度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **文档对比（PDF/DOCX/TXT 文件比对）** — **新晋第三席**（池内递进；在线录音机交付后顺位递进）。痛点：合同／论文／报告改了两版，想一眼看出改了哪里，现有免费站要么只支持粘贴文本、要么上传文件限次数；浏览器本地做、零上传、无次数；实现纯前端中难度（本地 vendor pdf.js＋mammoth.js 提取文本＋diff-match-patch 比对，站内 pdf-lib vendor 先例，无服务端、无外部依赖）。站内零重叠本轮复核确凿：ASCII `doc_diff`／`document_diff` 全站 **0 命中**；CJK「文档对比」`chr(0x...)` 运行时构造（codepoints 验真 0x6587／0x6863／0x5bf9／0x6bd4）**0 命中**；text_diff 模板 `type="file"` **0 处**——站内仅有粘贴文本比对口径，文件比对本体 0 交付。**弱点**：新增 vendor 体积（pdf.js＋mammoth.js）＋提取保真度（复杂排版／扫描件）＋与 text_diff 口径邻近，需在页面明示分工（text_diff 粘贴文本比对，本工具上传文件比对）。SEO：文档对比、PDF对比、合同版本对比。建议 ID document_diff、Path /tools/document-diff；Icon `difference` 精确值 **0 命中**（`compare_arrows` 已占用 3，不可取），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十七度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 文档对比（PDF/DOCX/TXT 文件比对） | **新晋第三席**：池内递进；Diffnote Show HN 信号；`doc_diff`／`document_diff`／CJK「文档对比」本轮复测全 0 命中；text_diff 仅粘贴文本（模板 0 个 file input），文件口径 0 交付；纯前端中难度（本地 vendor pdf.js＋mammoth.js 提取＋diff 比对）；**弱点**：新增 vendor 体积＋提取保真度＋与 text_diff 口径邻近 | 中 | P3（新晋） |
+| Shell 命令解释器（explainshell 模式） | P3 弱观察维持；giftedegware 11-06 清单信号；`explainshell`／CJK「命令解释」复测全 0 命中；纯前端小-中难度；**弱点**：词典覆盖有限、与 git-cheatsheet 口径邻近 | 小-中 | P3（弱观察） |
+| 数据库 ER 图生成器（文本建表 → 关系图） | P3 弱观察维持；giftedegware dbdiagram.io 信号；`er_diagram`／`db_diagram`／CJK「实体关系图」「数据库结构图」复测全 0 命中；纯前端小-中难度；**弱点**：人群窄（开发者）、与 mind_map 口径邻近 | 小-中 | P3（弱观察） |
+| 和弦/音阶查询器 | **新入池弱观察**：Interactive Chord Finder Show HN 信号；`chord`／CJK「和弦」「音阶」本轮复测全 0 命中；纯前端小难度（根音＋调式→顺阶和弦＋钢琴键盘图示，零上传）；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | **新入池弱观察**：Voice and Vid／通用需求信号；`video_compress`／`compress_video` 本轮复测全 0 命中；纯前端中难度（MediaRecorder 重编码降码率／分辨率，零上传）；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 17:00~19:00 窗口；本轮**新晋 1 个、新入池 2 个**，余为消解）：
+- **文档对比递进第三席**（Diffnote Show HN：浏览器本地解析 PDF／DOCX 比对、零上传；`doc_diff`／`document_diff`／CJK「文档对比」本轮复测 0 命中；text_diff 模板 0 个 file input，文件口径 0 交付；Icon `difference` 精确值 0 命中，开发轮须先验 glyph）。
+- **和弦/音阶查询器新入池弱观察**（Interactive Chord Finder Show HN：选根音＋调式看顺阶和弦、70+ 调式；`chord`／CJK「和弦」「音阶」0 命中；Icon `queue_music` 精确值 0 命中作首选，`music_note` 已占用 1、`piano` 已占用 1，不可取）。
+- **视频压缩器新入池弱观察**（Voice and Vid Medium 11-05：免费浏览器媒体套件含视频压缩；`video_compress`／`compress_video` 0 命中；Icon `video_settings` 精确值 0 命中，`compress` 已占用 4，不可取）。
+- TweenFrame GIF 工具（11-05 上线 GIF 编辑／压缩／裁剪／图片转 GIF）→ 消解：站内 gif_maker／gif_compress 已交付；裁剪／修剪属其增量，非新工具口径。
+- Ignlab 11-06：Video Frame Extractor → 站内 video_frame_extractor 已交付；Subtitle tools → subtitle_editor 已交付；Beat Blocks（块式音乐序列器）→ 消解：音乐玩具口径，近游戏／演奏，与 online_piano／metronome 邻近；RizCraft 等余项 → SaaS／PDF 站口径消解。
+- RozKaTool（dev.to 11-03，40+ 纯前端工具）→ 消解：PDF 合并／拆分／压缩／旋转／JPG↔PDF／加水印站内 pdf_manage／pdf_merge_split／pdf_compress／images_to_pdf／pdf_watermark 已交付；计算器类方向修正不扩。
+- Voice and Vid（Medium 11-05）：AI 文字转语音 → 需 AI／服务端消解；在线录屏 → screen_recorder 已交付；视频压缩 → 新入池弱观察（见上）。
+- V2EX 11-02~11-06：Paint Board 网页画板 → 站内 doodle_board 已交付；Clearframe 去水印 → AI 口径消解；xGoose／vPaste／DealPage → 247 轮已消解（AI Agent 插件／桌面剪贴板／SaaS）。
+- Show HN 11-06：WebsiteScreenshot.online（输入 URL 出整页截图）→ 消解：需服务端无头浏览器渲染，非纯前端；CountdownShare（可分享倒计时）→ 需服务端短链消解；PrivyDrop P2P 文件传输 → 需信令服务端消解；Mii Maker 头像生成器 → avatar_generator 已交付；DevKit 80 开发者工具站 → 工具站口径非单工具消解；the-invoice.app 发票生成器 → invoice_generator 已交付；curlconverter → curl_to_requests 已交付。
+- onerank／10100／ghorab 清单：ChatGPT／Claude／Perplexity／NotebookLM／Grammarly → AI／SaaS 口径消解；Word2Art 文字艺术字 → 站内 fancy_fonts／retro_text_fx／text_to_card 已覆盖口径消解（CJK「艺术字」命中验真仅为文案提及）；BookFinder／CorelDRAW 转换 → 需外部 API／服务端消解；IP138 便民工具箱 → 生活查询类、方向修正不扩消解。
+
+**候选池变动**：在线录音机交付划出（063d89f，317 Path，203 tests）；**文档对比新晋第三席**（池内递进；Diffnote Show HN 信号；`doc_diff`／CJK「文档对比」本轮复测全 0 命中，text_diff 仅粘贴文本、文件口径 0 交付；Icon `difference` 精确值 0 命中，开发轮须先验 glyph）；和弦/音阶查询器／视频压缩器新入池弱观察；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十七度跳过）；数独游戏 P3 观察维持第二席；Shell 命令解释器／数据库 ER 图生成器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮失败（`Please make sure you have the correct access rights and the repository exists`——VM 换机 known_hosts 被清空的老问题复发，fetch 未成功；但本地分支与 HEAD 均为实测值，不影响本轮调研结论，PM/开发轮重跑 fetch 时若仍失败需重建 known_hosts）；本地 HEAD 063d89f（在线录音机已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **317**；`ls tests/*.test.js | wc -l` = **203**；本地当前分支 muse/dev-20260929；站内零重叠复核（ASCII `doc_diff`／`document_diff`／`chord`／`sequencer`／`website_screenshot`／`url_screenshot`／`file_transfer`／`video_compress`／`compress_video`／`word_art`／`text_art`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「文档对比」「和弦」「音阶」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6587／0x6863／0x5bf9／0x6bd4、0x548c／0x5f26、0x97f3／0x9636）；CJK「艺术字」命中验真仅为 fancy_fonts 等工具文案提及、艺术字本体 0 交付；`curl` 命中验真为 curl_to_requests 已交付；text_diff 模板 `type="file"` 0 处、粘贴文本口径；Icon `difference`／`queue_music`／`video_settings` 精确值 0 命中，`compare_arrows` 占用 3、`music_note` 占用 1、`piano` 占用 1、`compress` 占用 4）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 17:00 · PM 选定轮，接通用调研第二百四十七轮）
 
 **选定：在线录音机（语音备忘录）（voice_recorder）** — 本轮唯一任务（新工具）。
