@@ -2373,6 +2373,15 @@ func GetCategories() []Category {
 					Category:    "生活工具",
 				},
 				{
+					ID:          "reaction_test",
+					Name:        "反应速度测试",
+					Description: "在线反应速度测试：点开始后随机等待 2–5 秒，红变绿瞬间点按或按空格，performance.now() 毫秒计时；3/5/10 轮可选（默认 5 轮），抢跑判犯规本轮作废重测，多轮平均＋最佳＋S/A/B/C/D 分档，最佳成绩与最近 10 次历史只存本机不上传 · 反应速度测试/反应时间测试/测反应速度/reaction time test，100% client-side",
+					Path:        "/tools/reaction-test",
+					Icon:        "flash_on",
+					New:         true,
+					Category:    "生活工具",
+				},
+				{
 					ID:          "fancy_fonts",
 					Name:        "花体字生成器",
 					Description: "特殊字体在线生成：粗体/斜体/哥特/手写花体/气泡/方框等18种风格，昵称符号装饰一键复制",

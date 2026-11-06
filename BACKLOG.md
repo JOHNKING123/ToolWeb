@@ -1,3 +1,104 @@
+## 今日任务（2026-11-06 09:40 · PM 选定轮，接通用调研第二百四十三轮）
+
+**选定：反应速度测试（reaction_test）** — 本轮唯一任务（新工具）。
+
+**顺位**：243 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十三度裁定跳过**（沿用 231–242 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十二轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），反应速度测试口径站内 0 交付。
+2. **口径互补确凿**：生活工具类目已有随机决策器（random_decision）／幸运决策转盘（decision_wheel）两趣味口径；本工具为**反应测试口径**（随机等待→变色点按→毫秒计时→多轮平均＋最佳成绩＋成绩分档），与「随机做决定」口径形成「测反应→顺手随机决定」的顺流互链，趣味测试家族三口径齐全；与 metronome 的 Tap 测速仅「点按计时」表层相似，本质不同（节拍器是固定间隔跟拍练习，本工具是随机信号反应测量，变色刺激＋抢跑判定＋分档评价为 metronome 完全没有的口径）。
+3. **需求验证**：测反应是驾驶自测／运动训练／聚会比拼的高频小需求，现有免费站多带广告或要注册；浏览器本地做、零上传、无次数。Tooleek 信号印证。
+4. **技术路线站内已有先例**：metronome 已跑通 performance.now() 毫秒计时＋Tap 点按计时；random_decision 已有 localStorage 本地保存先例；本工具只在既有模式上多一步随机等待调度（setTimeout 2–5s 随机变色）与抢跑判定，无新外部依赖、无服务端、无模型权重。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`reaction` 全站（tools/templates/static/js/tests）**0 命中**——反应测试本体 0 交付，真缺口确凿。
+   - CJK「反应速度」`chr(0x...)` 运行时构造（codepoints 验真 0x53cd／0x5e94／0x901f／0x5ea6）全站 **0 命中**。
+   - Icon：**`flash_on` 首选**（经典 Material Icons 官方 codepoints 全文检索确有此 glyph：e3e7；`Icon:\s*"flash_on"` 精确值 **0 命中**，全库唯一，贴合「反应／闪电」语义；注：templates/white_noise_generator.html 与 robots_txt_generator.html 内各有一处页面内容 `<i class="material-icons">flash_on</i>` 行内图标，不占 categories.go 的 Icon 槽位，不冲突；**`stopwatch` 备选作废**——官方 codepoints（2235 条）全文检索**无此 glyph**，`Icon:"stopwatch"` 会渲染空白（与 metronome 轮 `metronome` 同款实锤），不可用；`bolt`／`speed`／`timer` 各占用 1，不可取），开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十三度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 核心流程：点「开始」→随机等待 2–5s→区域由红变绿→点按（或按空格）→毫秒计时显示（performance.now()，整数毫秒）② 轮次可选 3／5／10，默认 5 轮；每轮结束显示本轮成绩，全部轮次结束显示平均成绩＋最佳成绩＋成绩分档 ③ 抢跑判定：变色前点按判犯规，本轮作废并提示重测（不计入成绩）④ 成绩分档：<200ms S 职业级／200–249ms A 优秀／250–299ms B 良好／300–399ms C 一般／≥400ms D 多练练 ⑤ 最佳成绩 localStorage 本地保存（random_decision 先例），刷新后保留，可一键清除 ⑥ 成绩历史：最近 10 次测试的平均成绩列表（本机保存）⑦ 互链：decision_wheel 单向互链（"测完反应，顺手转盘做个决定"）⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（tab 聚焦可操作、空格键操作、动画可减弱、变色同时有文字提示"点！"，不只依赖颜色）⑩ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.ReactionTest 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `computeReactionMs(startTs, clickTs)` → number（clickTs−startTs 整数毫秒；startTs/clickTs 须为 ≥0 有限数，否则 err.field='timestamp'；clickTs < startTs 抛错 err.field='timestamp'）。
+  - `isFalseStart(clickTs, signalTs)` → boolean（clickTs < signalTs 为抢跑；两者须为 ≥0 有限数，否则 err.field='timestamp'）。
+  - `averageReactions(times)` → number（times 须为 ≥1 个正有限数数组，否则 err.field='times'；返回四舍五入整数平均）。
+  - `bestReaction(times)` → number（times 校验同上，否则 err.field='times'；返回最小值）。
+  - `gradeReaction(avgMs)` → {grade, label}（avgMs 须为 ≥0 有限数，否则 err.field='reactionMs'；<200 → {grade:'S', label:'职业级'}；200–249 → {grade:'A', label:'优秀'}；250–299 → {grade:'B', label:'良好'}；300–399 → {grade:'C', label:'一般'}；≥400 → {grade:'D', label:'多练练'}）。
+  - `validateReactionConfig(config)` → config（rounds 须为 3/5/10 之一，否则 err.field='rounds'；waitMin/waitMax 须为 1000–8000 有限数且 waitMin < waitMax，否则 err.field='waitRange'）。
+  - `validateReactionState(state)` → state（state.times 须为数组，否则 err.field='times'；每项须为正有限数，否则 err.field='times'；长度 ≤10，否则 err.field='times'）。
+  - `formatReactionMs(ms)` → string（ms 须为 ≥0 有限数，否则 err.field='reactionMs'；<1000 → "248 ms"；≥1000 → 秒数两位小数＋" s"，如 "1.25 s"）。
+- **数值锚点（测试精确值）**：computeReactionMs：(1000, 1248) → 248；(5000, 5000) → 0；(2000, 1500) 抛错 err.field='timestamp'。isFalseStart：(900, 1000) → true；(1000, 1000) → false；(1200, 1000) → false。averageReactions：[200, 250, 300] → 250；[248] → 248；[180, 220] → 200；[] 抛错 err.field='times'。bestReaction：[250, 200, 300] → 200。gradeReaction：150 → {grade:'S', label:'职业级'}；199 → S；200 → {grade:'A', label:'优秀'}；249 → A；250 → {grade:'B', label:'良好'}；299 → B；300 → {grade:'C', label:'一般'}；399 → C；400 → {grade:'D', label:'多练练'}。validateReactionConfig：{rounds:5, waitMin:2000, waitMax:5000} 通过；rounds:4 抛错 err.field='rounds'；waitMin ≥ waitMax 抛错 err.field='waitRange'。validateReactionState：11 项 times 抛错 err.field='times'。formatReactionMs：248 → "248 ms"；0 → "0 ms"；1250 → "1.25 s"。
+- **真限制四条页面明示**：① 毫秒计时受浏览器定时器精度与显示器刷新率（60Hz 约 16.7ms/帧）限制，数值为近似值，跨设备不宜直接比较；② 抢跑（变色前点按）判犯规，本轮作废重测；③ 触屏与鼠标延迟不同，成绩仅供娱乐参考；④ 全程浏览器本地计算，零上传；最佳成绩只存本机 localStorage，换浏览器/清缓存后丢失。
+- **SEO**：反应速度测试、反应力测试、反应时间测试。
+- **改动文件**：tools/categories.go（「生活工具」类目新增 reaction_test 条目，紧邻 decision_wheel，Path 312→**313**，Icon `flash_on` 首选，开发轮精确值复测锁定全库唯一）／templates/reaction_test.html（新）／static/js/reaction_test.js（新）／tests/reaction_test.test.js（新）／全量旧 tests Path 断言 312→313 数值同步（仅断言数值，149 个测试文件涉 312 断言）。
+- **验收标准**：① node 新测试 ≥50 断言全过（computeReactionMs／isFalseStart／averageReactions／bestReaction／gradeReaction／validateReactionConfig／validateReactionState／formatReactionMs 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 198→**199** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/reaction-test 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：等待→变色→点按→毫秒显示、抢跑判犯规重测、轮次 3/5/10 切换、平均＋最佳＋分档、最佳成绩刷新后保留、空格键操作、互链 decision_wheel 可用（开发轮记录）。
+- **品类归位**：注册到「生活工具」类目（与 random_decision／decision_wheel 趣味测试口径互补；模板内与 decision_wheel 单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：反应速度测试→本轮交付（243 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十三度跳过（数据表负债从严，231–242 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII reaction 全 0 命中，CJK 反应速度全 0 命中；Icon `flash_on` e3e7 验真存在且精确值 0 命中全库唯一，`stopwatch` glyph 实锤不存在已作废）；生活工具类目，反应测试口径与随机决策口径互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十三度跳过）／数独游戏→P3 观察维持／图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（首轮无 env 的 fetch 报 access rights，补 env 后一次成功；与研究轮同款老问题）；本地 HEAD 228ac39（移除误提交 toolweb 二进制；moodboard 0649ed4 已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **312**；`ls tests/*.test.js | wc -l` = **198**；149 个测试文件含 312 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `reaction` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「反应速度」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x53cd／0x5e94／0x901f／0x5ea6）；Icon `flash_on`（e3e7）／`stopwatch` 官方 codepoints（2235 条）验真：`flash_on` e3e7 确有且精确值 0 命中，`stopwatch` 无此 glyph 作废，`bolt`（ea0b）／`speed`（e9e4）／`timer`（e425）各占用 1；templates 内两处 `flash_on` 行内图标不占 Icon 槽位）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 09:36 · 产品调研推荐，第二百四十三轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：灵感板/拼贴板已交付闭环（0649ed4 新增：`/tools/moodboard`，Path 总数 311→**312**，tests **198 个**；另 228ac39 移除误提交的本地编译产物 toolweb 二进制），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 242 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十二度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **反应速度测试** — **新晋第三席**（池内递进；灵感板交付后顺位递进）。Tooleek 信号；站内零重叠本轮复测：ASCII `reaction` 全站 **0 命中**，CJK「反应速度」`chr(0x...)` 运行时构造（codepoints 验真 0x53cd／0x5e94／0x901f／0x5ea6）**0 命中**，反应测试本体 0 交付；实现纯前端小难度（随机等待→变色点按→毫秒计时→多次平均＋最佳成绩＋成绩分档，零上传）。**弱点**：纯趣味测试，工具价值低。SEO：反应速度测试、反应力测试、反应时间测试。建议 ID reaction_test、Path /tools/reaction-test；Icon `flash_on` 精确值 **0 命中**（备选 `stopwatch` 亦 0 命中；`bolt`／`speed`／`timer` 各占用 1，不可取），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十二度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 反应速度测试 | **新晋第三席**：池内递进；`reaction`／CJK「反应速度」本轮复测全 0 命中；纯前端小难度；**弱点**：纯趣味测试，工具价值低 | 小 | P3（新晋） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | P3 弱观察维持；`video_to_audio`／`extract_audio`／CJK「视频转音频」全站 0 命中；**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差 | 中 | P3（弱观察） |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 07:36~09:36 窗口；本轮**新晋 0 个**，以消解为主）：
+- **反应速度测试递进第三席**（灵感板交付后池内递进；`reaction`／CJK「反应速度」本轮复测 0 命中；Icon `flash_on`／`stopwatch` 精确值 0 命中，开发轮须先验 glyph）。
+- MorseSnap（twelve.tools 11-04：免费在线摩斯码翻译器，音频播放＋解码）→ 消解：站内 `morse_code_translator` 已交付（`/tools/morse-code-translator`，文本↔标准国际摩斯码双向转换＋对照表＋非法字符定位；`morse` ASCII 93 命中验真全为已交付本体及 enigma 互链；CJK「摩斯」43 命中验真全为已交付本体）。
+- Extractune（twelve.tools 11-04：浏览器端人声分离／分轨）→ 消解：站内 vocal_remover 已交付。
+- FPSDEN（twelve.tools 11-01：随机抽取／转盘／JSON-CSV 转换合集）→ 消解：random_decision／decision_wheel 已交付，JSON／CSV 转换站内已有。
+- Online Bingo Caller（twelve.tools 11-03：宾果叫号游戏）→ 游戏口径消解。
+- Product Hunt 11-05~11-06：Bridge／Rerun／Living Brain（AI Agent 计费基建）／HiveMind（$499 Notion 模板）／ChatGPT Images 2.6／Glasshand／Nemotron 3.5 Transcribe／Keel（macOS Redis 客户端）→ AI agent／开发者基建／模板口径全消解。
+- V2EX 11-04~11-06：X 视频转 GIF 11-04 帖印证（池内 P3 弱观察维持）；旁白翻译插件／xGoose（扩展口径消解）；VVAE（V2EX 客户端 App 口径消解）；waifu2x 免费额度（AI 图片放大：`upscale`／`waifu` ASCII 0 命中，但 AI 超分需模型权重、canvas 插值放大画质差，弱口径不入池）。
+- Hacker News：HackerTube／HackerBooks（HN 内容聚合站口径消解）；BreatheWidget（呼吸提醒小部件，niche 弱口径不入池）；WonderPic（AI 照片转卡通，需 AI 模型，弱口径不入池）；Screen Recorder – Local（Chrome 扩展口径消解，站内在线录屏工具已交付）；其余 Show HN 均为 AI agent／开发者基建／游戏口径消解。
+- 中文搜索「最实用的在线小工具」：CleanURL／URL 去追踪参数 → 消解：站内 `url_tracker_cleaner` 已交付（`/tools/url-tracker-cleaner`）；Diffchecker → 站内 text_diff 已交付；在线图表 → chart_generator 已交付；在线录屏 → 站内在线录屏工具已交付；文字转语音 → text_reader_aloud 已交付；图片压缩 → img-compress 已交付；临时邮箱（需服务端邮箱收发，纯前端不可做，消解）。
+
+**候选池变动**：moodboard 交付划出（0649ed4，312 Path，198 tests）；**反应速度测试新晋第三席**（池内递进；`reaction`／「反应速度」本轮复测全 0 命中，纯前端小难度；Icon `flash_on`／`stopwatch` 精确值 0 命中，开发轮须先验 glyph）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十二度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪／视频提取音频 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（首轮无 env 的 fetch 报 access rights，补 env 后一次成功；known_hosts 又被 VM 换机清空——老问题）；本地 HEAD 228ac39（移除误提交 toolweb 二进制；moodboard 0649ed4 已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **312**；`ls tests/*.test.js | wc -l` = **198**；本地当前分支 muse/dev-20260929；工作区干净（BACKLOG 追加前）；站内零重叠复核（`sudoku`／`social_image_size`／`social-image-size`／`reaction`／`clean_url` 全 0 命中；`morse` 93 命中验真全为已交付本体及 enigma 互链；`upscale`／`waifu` 0 命中；CJK「反应速度」／「去追踪」0 命中，「摩斯」43 命中验真全为已交付本体，「录屏」35 命中验真为在线录屏工具已交付本体；Icon `flash_on`／`stopwatch` 精确值 0 命中，`bolt`／`speed`／`timer` 各占用 1；注：中途一轮 grep 误用 `-E` 配 `\|` 致 0 命中假阴性，已用正确 ERE 复测纠正——text_diff／chart_generator／text_reader_aloud／img-compress 均已交付，属消解非缺口）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 07:41 · PM 选定轮，接通用调研第二百四十二轮）
 
 **选定：灵感板/拼贴板（Moodboard）** — 本轮唯一任务（新工具）。

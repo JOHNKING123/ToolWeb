@@ -1,0 +1,156 @@
+{{define "reaction_test"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反应速度测试 - 在线测反应时间，毫秒计时，纯前端</title>
+    <meta name="description" content="免费在线反应速度测试：点开始后随机等待 2–5 秒，红灯变绿瞬间点按或按空格，performance.now() 毫秒计时；3/5/10 轮可选（默认 5 轮），抢跑判犯规重测，多轮平均＋最佳＋S/A/B/C/D 分档，最佳成绩只存本机不上传。反应速度测试/反应时间测试/测反应速度/reaction time test，100% client-side。">
+    <meta name="keywords" content="反应速度测试,反应时间测试,测反应速度,反应力测试,反应速度,在线测反应,reaction time test,reaction speed test,在线工具">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/reaction-test">
+    <meta property="og:title" content="反应速度测试 - 在线测反应时间，毫秒计时，纯前端">
+    <meta property="og:description" content="红变绿瞬间点按或按空格，毫秒计时；3/5/10 轮可选，抢跑判犯规重测，平均＋最佳＋分档，最佳成绩只存本机。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/reaction-test">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"反应速度测试","description":"免费在线反应速度测试：点开始后随机等待 2–5 秒，红灯变绿瞬间点按或按空格，毫秒计时；3/5/10 轮可选，抢跑判犯规重测，多轮平均＋最佳＋S/A/B/C/D 分档，最佳成绩只存本机不上传。","url":"https://www.johnkingzcq123.xyz/tools/reaction-test","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .rt-note{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#065f46}
+        .rt-warn{border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e;display:none}
+        .rt-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.2rem;margin-bottom:1.2rem}
+        .rt-panel h3{margin:0 0 .9rem;font-size:1rem;color:#111827}
+        .rt-area{width:100%;min-height:16rem;border:none;border-radius:.8rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;padding:2rem 1rem;font-family:inherit;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+        .rt-area:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
+        .rt-idle{background:#dc2626;color:#fff}
+        .rt-waiting{background:#dc2626;color:#fff}
+        .rt-ready{background:#16a34a;color:#fff}
+        .rt-done{background:#2563eb;color:#fff}
+        .rt-area-text{font-size:2.6rem;font-weight:800;line-height:1.2;text-align:center}
+        .rt-area-sub{font-size:1rem;line-height:1.6;text-align:center;opacity:.92;max-width:32rem}
+        .rt-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.9rem}
+        .rt-btn{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.55rem 1rem;font-size:.92rem;cursor:pointer;font-family:inherit}
+        .rt-btn:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .rt-btn:disabled{opacity:.45;cursor:default}
+        .rt-btn-primary{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:700;font-size:1.05rem;padding:.7rem 1.6rem}
+        .rt-btn-primary:hover{filter:brightness(1.08);color:#fff}
+        .rt-rounds{border:1px solid #d1d5db;background:#fff;color:#1f2937;border-radius:.55rem;padding:.55rem 1rem;font-size:.92rem;cursor:pointer;font-family:inherit}
+        .rt-rounds.rt-active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:700}
+        .rt-hint{color:#6b7280;font-size:.85rem;line-height:1.7;margin:.6rem 0 0}
+        .rt-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.7rem}
+        .rt-stat{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.8rem .9rem;text-align:center}
+        .rt-stat .k{font-size:.82rem;color:#6b7280}
+        .rt-stat .v{font-size:1.35rem;font-weight:800;color:#111827;margin-top:.25rem}
+        .rt-stat .g{font-size:.82rem;color:#2563eb;font-weight:700;margin-top:.15rem}
+        .rt-grades{width:100%;border-collapse:collapse;font-size:.92rem;color:#374151}
+        .rt-grades td{padding:.45rem .3rem;border-bottom:1px solid #f3f4f6}
+        .rt-grades td:first-child{font-weight:800;color:#111827;width:3.2rem}
+        .rt-hist{max-height:14rem;overflow-y:auto}
+        .rt-hist-row{display:flex;justify-content:space-between;gap:.6rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.55rem .9rem;margin:.4rem 0;font-size:.92rem}
+        .rt-hist-row .t{color:#9ca3af;font-size:.8rem;white-space:nowrap}
+        .rt-hist-row .r{color:#b45309;font-weight:700;word-break:break-all;text-align:right}
+        .rt-faq dt{font-weight:600;color:#111827;margin-top:.7rem}
+        .rt-faq dd{margin:.3rem 0 0;color:#374151;line-height:1.8}
+        .rt-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .rt-links a{color:#2563eb}
+        @media (max-width:640px){.rt-panel{padding:.9rem}.rt-area{min-height:13rem}.rt-area-text{font-size:2rem}}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>⚡ 反应速度测试</h1>
+            <p>红变绿瞬间点按或按空格，毫秒计时；3/5/10 轮可选，抢跑判犯规重测，纯前端不上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="rt-note">
+                <span>真限制先说清：① 毫秒数是近似值：performance.now() 计时受浏览器定时器精度与显示器刷新率（一般 60Hz 约 16.7ms 一帧）影响，同一成绩换设备测会有数毫秒波动；② 抢跑作废：绿灯亮起前点按判犯规，本轮成绩作废、需重测该轮；③ 触屏、鼠标、键盘的输入延迟不同，跨设备成绩不可直接比较；④ 最佳成绩与历史只存本机 localStorage，清除浏览器数据会丢失，换设备不同步。</span>
+            </div>
+            <div class="rt-warn" id="rt-msg" role="status" aria-live="polite"></div>
+            <div class="rt-panel">
+                <h3>测试区 <span id="rt-round-label" style="font-weight:400;font-size:.85rem;color:#9ca3af;">第 1 / 5 轮</span></h3>
+                <button type="button" class="rt-area rt-idle" id="rt-area" aria-label="点我开始">
+                    <span class="rt-area-text" id="rt-area-text">点我开始</span>
+                    <span class="rt-area-sub" id="rt-area-sub">点开始后等红灯变绿，变绿立刻点按（或按空格）</span>
+                </button>
+                <div class="rt-row">
+                    <span style="font-size:.92rem;color:#374151;">轮次</span>
+                    <button type="button" class="rt-rounds" data-rounds="3" aria-pressed="false">3 轮</button>
+                    <button type="button" class="rt-rounds rt-active" data-rounds="5" aria-pressed="true">5 轮（默认）</button>
+                    <button type="button" class="rt-rounds" data-rounds="10" aria-pressed="false">10 轮</button>
+                    <button type="button" class="rt-btn rt-btn-primary" id="rt-start">开始测试</button>
+                </div>
+                <p class="rt-hint">流程：点「开始测试」→ 红灯亮起，随机等待 2–5 秒 → 变绿并显示「点！」→ 立刻点按测试区或按空格。绿灯前点按算抢跑，本轮作废重测。空格键与点按等效；变色同时有文字提示「点！」，不只靠颜色区分。</p>
+            </div>
+            <div class="rt-panel">
+                <h3>本轮成绩</h3>
+                <div class="rt-stats">
+                    <div class="rt-stat"><div class="k">上轮成绩</div><div class="v" id="rt-last">—</div><div class="g" id="rt-last-grade">—</div></div>
+                    <div class="rt-stat"><div class="k">多轮平均</div><div class="v" id="rt-avg">—</div><div class="g">全部已测轮次</div></div>
+                    <div class="rt-stat"><div class="k">最佳成绩（本机）</div><div class="v" id="rt-best">—</div><div class="g" id="rt-best-grade">—</div></div>
+                </div>
+            </div>
+            <div class="rt-panel">
+                <h3>分档标准</h3>
+                <table class="rt-grades">
+                    <tr><td>S</td><td>职业级</td><td>小于 200 ms</td></tr>
+                    <tr><td>A</td><td>优秀</td><td>200–249 ms</td></tr>
+                    <tr><td>B</td><td>良好</td><td>250–299 ms</td></tr>
+                    <tr><td>C</td><td>一般</td><td>300–399 ms</td></tr>
+                    <tr><td>D</td><td>多练练</td><td>400 ms 及以上</td></tr>
+                </table>
+            </div>
+            <div class="rt-panel">
+                <h3>历史成绩 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（最近 10 次，只存本机）</span></h3>
+                <div class="rt-hist" id="rt-history">暂无历史成绩</div>
+                <div class="rt-row">
+                    <button class="rt-btn" id="rt-clear-history">清空历史与最佳成绩</button>
+                </div>
+            </div>
+            <div class="rt-panel">
+                <h3>使用说明</h3>
+                <ol style="color:#374151;line-height:1.9;font-size:.93rem;margin:0;padding-left:1.3rem;">
+                    <li>选轮次（3／5／10，默认 5 轮），点「开始测试」或点红色测试区，红灯亮起后耐心等 2–5 秒。</li>
+                    <li>测试区变绿并显示「点！」的瞬间，立刻点按测试区或按空格键，毫秒成绩马上显示。</li>
+                    <li>绿灯前点按算抢跑：本轮成绩作废，点「开始」重测本轮，轮次不推进。</li>
+                    <li>全部轮次测完显示多轮平均与最佳成绩，并按 S／A／B／C／D 分档；每轮成绩自动记入「历史成绩」（本机 localStorage，最近 10 次）。</li>
+                    <li>互链：测完想换个玩法做决定，去 <a href="/tools/decision-wheel" style="color:#2563eb;">幸运决策转盘</a>（转盘抽奖口径）。</li>
+                </ol>
+            </div>
+            <div class="rt-panel">
+                <h3>常见问题</h3>
+                <dl class="rt-faq">
+                    <dt>毫秒数准吗？为什么同一人两次成绩差几毫秒？</dt>
+                    <dd>是近似值。计时用 performance.now()，但浏览器定时器精度与显示器刷新率（一般 60Hz 约 16.7ms 一帧）会带来数毫秒波动；同一成绩换设备测也可能差几毫秒。看分档比抠个位数更有意义。</dd>
+                    <dt>抢跑怎么判？误触了怎么办？</dt>
+                    <dd>绿灯亮起前任何点按或空格都算抢跑：本轮成绩作废、轮次不推进，点「开始」重测本轮。红灯期间手别放在测试区上，等绿再点。</dd>
+                    <dt>触屏、鼠标、键盘测出来的成绩能比吗？</dt>
+                    <dd>不能直接比。触屏、鼠标、键盘的输入延迟不同，同一人在不同设备上成绩会有系统性差异；横向比较请固定用同一种输入方式。</dd>
+                    <dt>最佳成绩存在哪里？会上传吗？</dt>
+                    <dd>只存在你本机浏览器的 localStorage（最佳成绩一条＋最近 10 次历史），清除浏览器数据会丢失，换设备不同步。全程零网络请求，不上传任何服务器。</dd>
+                    <dt>色弱用户怎么分辨红绿？</dt>
+                    <dd>不只靠颜色：等待时显示「等绿灯…」，变绿时显示大字「点！」，同时有文字提示；空格键与点按等效，键盘也能完成测试。</dd>
+                    <dt>和幸运决策转盘有什么关系？</dt>
+                    <dd>都是「生活工具」类目的轻量互动小工具：本工具测反应速度，转盘帮你做决定。两者数据不互通，按场景选用。</dd>
+                </dl>
+            </div>
+            <div class="rt-panel">
+                <h3>相关工具</h3>
+                <div class="rt-links">
+                    <a href="/tools/decision-wheel">幸运决策转盘（转盘抽奖口径：候选项可设权重）</a>
+                </div>
+            </div>
+            <div class="rt-panel">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>反应耗时、抢跑判定、多轮平均、最佳成绩、分档、配置校验、状态机校验、毫秒格式化均为手写纯函数（挂 window.ReactionTest，浏览器与 node 测试共用同一文件）；计时用 performance.now()，等待 2–5 秒随机；渲染一律用 textContent，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/reaction_test.js?v=1"></script>
+</body>
+</html>
+{{end}}

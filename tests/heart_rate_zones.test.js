@@ -166,7 +166,7 @@ var iconRe = /"monitor_heart"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon monitor_heart 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 312, "注册 Path 总数 282→283");
+eq(pathCount, 313, "注册 Path 总数 282→283");
 
 /* ---------- 7. 模板：SEO/真限制/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/heart-rate-zones", "模板 canonical 含新 Path");
