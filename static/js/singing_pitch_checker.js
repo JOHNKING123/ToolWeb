@@ -76,6 +76,16 @@ if (!isFiniteNum(freq) || freq <= 0 || !isFiniteNum(targetFreq) || targetFreq <=
 return Math.round(1200 * log2(freq / targetFreq)) + 0;
 }
 
+/* 频率与目标音的音分偏差（四舍五入整数）：以目标音频率为基准，而非最近音。
+* 目标模式计分必须用它——唱偏超过半音时最近音会变，用最近音偏差计分会误判高分
+* （如目标 A4 唱 470Hz：与最近音 A#4 仅 +14 音分，与目标音实为 +114 音分）。
+* 锚点 (470,'A4')→114、(415,'A4')→−101、(440,'A4')→0；非法 targetNote 抛错 err.field='note'。 */
+function targetCents(freq, targetNote) {
+if (!isFiniteNum(freq) || freq <= 0) throw spErr('freq 须为 >0 的有限数字', 'freq');
+var parsed = parseNoteName(targetNote);
+return centsBetween(freq, midiToFreq(parsed.midi));
+}
+
 /* 音准分档（入参为绝对偏差音分）：≤10 S 完美／≤25 A 优秀／≤50 B 良好／
 * ≤100 C 一般／>100 D 跑调。边界 10→S、11→A、25→A、26→B、50→B、51→C、100→C、101→D。 */
 function gradePitch(centsAbs) {
@@ -236,6 +246,7 @@ freqToMidi: freqToMidi,
 midiToFreq: midiToFreq,
 freqToNoteName: freqToNoteName,
 centsBetween: centsBetween,
+targetCents: targetCents,
 gradePitch: gradePitch,
 scorePitchSession: scorePitchSession,
 parseNoteName: parseNoteName,
@@ -481,13 +492,22 @@ state.stableSamples = [];
 return;
 }
 var note = api.freqToNoteName(res.freq);
+if (state.config.mode !== 'target') {
 renderReading(note, res.freq);
-if (state.config.mode !== 'target') { state.stableStart = 0; state.stableSamples = []; return; }
+state.stableStart = 0; state.stableSamples = []; return;
+}
+/* 目标模式：偏差一律以目标音为准（不是最近音）。唱偏超过半音时最近音会变，
+* 用最近音偏差计分会误判高分（如目标 A4 唱 470Hz：最近音 A#4 仅 +14 音分，
+* 与目标音实为 +114 音分，应判 D 跑调而非 A 优秀）。显示也以目标音名＋
+* 与目标音的偏差为准，音分条／偏高偏低指示／实时分档同步跟目标音走。 */
+var targetParsed = api.parseNoteName(state.config.targetNote);
+var centsVsTarget = api.targetCents(res.freq, state.config.targetNote);
+renderReading({ name: targetParsed.name, octave: targetParsed.octave, midi: targetParsed.midi, cents: centsVsTarget }, res.freq);
 var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 if (now - state.lastScoreAt < SP_COOLDOWN_MS) { state.stableStart = 0; state.stableSamples = []; return; }
-if (Math.abs(note.cents) <= state.config.tolerance) {
-if (state.stableStart === 0) { state.stableStart = now; state.stableSamples = [note.cents]; }
-else state.stableSamples.push(note.cents);
+if (Math.abs(centsVsTarget) <= state.config.tolerance) {
+if (state.stableStart === 0) { state.stableStart = now; state.stableSamples = [centsVsTarget]; }
+else state.stableSamples.push(centsVsTarget);
 if (now - state.stableStart >= SP_HOLD_MS) {
 var sum = 0;
 for (var i = 0; i < state.stableSamples.length; i++) sum += state.stableSamples[i];

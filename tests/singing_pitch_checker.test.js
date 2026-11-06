@@ -2,7 +2,7 @@
 * 覆盖：freqToMidi（锚点 440→69、880→81、261.63→60）、midiToFreq（锚点
 * 69→440、60→261.63、57→220）、freqToNoteName（锚点 440→A4/69/0 音分、
 * 445→A4/+20、415.3→G#4、466.16→A#4）、centsBetween（锚点 (880,440)→1200、
-* (415.3,440)→−100）、gradePitch（边界 10/11/25/26/50/51/100/101）、
+* (415.3,440)→−100）、targetCents（锚点 (470,'A4')→114、(415,'A4')→−101、(440,'A4')→0；
 * scorePitchSession（锚点 [0,10,20,50]→{avgAbsCents:20, inTunePct:75, grade A}）、
 * parseNoteName（锚点 A4/C#5/Gb3）、validatePitchConfig（mode/targetNote/tolerance）、
 * validatePitchState（samples 数组、≤600）、formatCents（锚点 12→"+12 音分"）、
@@ -10,7 +10,7 @@
 * 非契约十函数）、非法参数 err.field、categories.go 注册（Path
 * 总数 313→314、Icon record_voice_over 全库唯一、紧邻 metronome）、模板（SEO
 * 关键词、真限制四条、控件、互链单向、零外部资源静态检查）、浏览器绑定源码级
-* 检查（getUserMedia＋AnalyserNode 时域自相关、0.5s 唱稳计分、localStorage
+* 检查（getUserMedia＋AnalyserNode 时域自相关、0.5s 唱稳计分、目标模式以 targetCents 与目标音的偏差计分、localStorage
 * 最近 10 次成绩）。
 */
 "use strict";
@@ -88,6 +88,24 @@ throws(function () { M.centsBetween(440, 0); }, "frequency", "centsBetween：tar
 throws(function () { M.centsBetween(NaN, 440); }, "frequency", "centsBetween：NaN freq 抛错");
 throws(function () { M.centsBetween(440, NaN); }, "frequency", "centsBetween：NaN targetFreq 抛错");
 throws(function () { M.centsBetween("440", 440); }, "frequency", "centsBetween：字符串 freq 抛错");
+
+/* ---------- 4b. targetCents：与目标音的偏差（目标模式计分基准） ---------- */
+eq(M.targetCents(470, "A4"), 114, "targetCents：(470,'A4')→114（反例：最近音 A#4 仅 +14，目标音实为 +114 应判 D）");
+eq(M.targetCents(415, "A4"), -101, "targetCents：(415,'A4')→-101（反例：最近音 G#4 仅 -1，目标音实为 -101 应判 D）");
+eq(M.targetCents(440, "A4"), 0, "targetCents：(440,'A4')→0");
+eq(M.targetCents(880, "A4"), 1200, "targetCents：(880,'A4')→1200（高八度）");
+eq(M.targetCents(220, "A4"), -1200, "targetCents：(220,'A4')→-1200（低八度）");
+eq(M.targetCents(261.63, "C4"), 0, "targetCents：(261.63,'C4')→0");
+eq(M.targetCents(523.25, "C5"), 0, "targetCents：(523.25,'C5')→0");
+eq(M.targetCents(445, "A4"), 20, "targetCents：(445,'A4')→20（半音内与最近音口径一致）");
+eq(M.gradePitch(Math.abs(M.targetCents(470, "A4"))).grade, "D", "targetCents 反例复核：470Hz 对目标 A4 判 D 跑调（非 A）");
+eq(M.gradePitch(Math.abs(M.targetCents(415, "A4"))).grade, "D", "targetCents 反例复核：415Hz 对目标 A4 判 D 跑调（非 S）");
+throws(function () { M.targetCents(0, "A4"); }, "freq", "targetCents：freq=0 抛错 err.field='freq'");
+throws(function () { M.targetCents(-440, "A4"); }, "freq", "targetCents：负数 freq 抛错");
+throws(function () { M.targetCents(NaN, "A4"); }, "freq", "targetCents：NaN freq 抛错");
+throws(function () { M.targetCents(440, "H4"); }, "note", "targetCents：非法 targetNote 抛错 err.field='note'");
+throws(function () { M.targetCents(440, ""); }, "note", "targetCents：空 targetNote 抛错");
+throws(function () { M.targetCents(440, 69); }, "note", "targetCents：数字 targetNote 抛错");
 
 /* ---------- 5. gradePitch：边界 ---------- */
 eqj(M.gradePitch(0), { grade: "S", label: "完美" }, "gradePitch：0→S 完美");
@@ -277,6 +295,13 @@ has(JS_SRC, "SP_FREQ_MAX = 1000", "检测：有效范围上限 1000Hz");
 has(JS_SRC, "SP_CONF_MIN = 0.8", "检测：置信度阈值 0.8");
 has(JS_SRC, "SP_HOLD_MS = 500", "计分：唱稳 0.5 秒 SP_HOLD_MS=500");
 has(JS_SRC, "SP_COOLDOWN_MS = 1500", "计分：计分后 1.5 秒冷却防重复");
+has(JS_SRC, "targetCents(", "计分基准：导出 targetCents（与目标音的偏差）");
+has(JS_SRC, "centsVsTarget", "计分基准：tick 目标模式用 centsVsTarget 稳定判定与计分");
+var tickSrc = JS_SRC.slice(JS_SRC.indexOf("function tick()"), JS_SRC.indexOf("function stopMic()"));
+has(tickSrc, "targetCents(", "计分基准：tick 目标模式稳定判定引用 targetCents");
+has(tickSrc, "centsVsTarget", "计分基准：tick 目标模式稳定判定与 stableSamples 用 centsVsTarget");
+notHas(tickSrc, "note.cents", "计分基准：tick 内不再以最近音 note.cents 计分（反例 470Hz/+14 与 415Hz/-1 误判已修）");
+has(tickSrc, "midi: targetParsed.midi", "计分基准：目标模式显示以目标音名＋centsVsTarget 为准");
 has(JS_SRC, "requestAnimationFrame", "循环：requestAnimationFrame 实时检测");
 has(JS_SRC, "singing_pitch_checker_history_v1", "历史：localStorage 键 singing_pitch_checker_history_v1");
 has(JS_SRC, "SP_HIST_MAX = 10", "历史：最近 10 次");
