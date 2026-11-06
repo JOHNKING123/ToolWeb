@@ -1,6 +1,7 @@
 /* 数据库 ER 图生成器纯函数单元测试（零依赖）：node tests/er_diagram_generator.test.js
  * 覆盖：parseDDL（锚点：博客三表→3 表/14 字段/3 关系/0 未解析；字段级与表级主键/外键、
  * CONSTRAINT FOREIGN KEY、ON DELETE/ON UPDATE、反引号/双引号/方括号标识符、模式限定、
+ * 三段限定名（db.schema.table / [mydb].[dbo].[t1]）、缺表名不重复诊断、
  * 注释剥离、复合主键/外键、自引用外键、无外键、无建表语句、未解析行进诊断、重复表名、
  * AS SELECT、SET/USE 跳过）、ddlToMermaid（锚点：小两表 DDL 精确代码；中文转写＋去重；
  * 无建表返回 erDiagram）、validateDDLInput（上限 20000）、extractTableNames
@@ -115,6 +116,12 @@ var SMALL_MERMAID = "erDiagram\n    users {\n        int id PK\n        varchar 
     eq(d.tables[0].columns[1].type, "TIMESTAMP WITH TIME ZONE", "parseDDL：TIMESTAMP WITH TIME ZONE");
     var b = E.parseDDL("CREATE TABLE [dbo].[users] ([id] INT PRIMARY KEY);");
     eq(b.tables[0].name, "users", "parseDDL：方括号模式限定取表名");
+    var t3 = E.parseDDL("CREATE TABLE db.public.orders (id INT PRIMARY KEY, user_id INT, FOREIGN KEY (user_id) REFERENCES db.public.users (id)); CREATE TABLE db.public.users (id INT PRIMARY KEY);");
+    eqj(t3.tables.map(function (t) { return t.name; }), ["orders", "users"], "parseDDL：三段限定名取末段表名");
+    eq(t3.summary.relationshipCount, 1, "parseDDL：三段限定名关系数 1");
+    eqj([t3.relationships[0].fromTable, t3.relationships[0].toTable], ["orders", "users"], "parseDDL：三段限定名关系 orders→users");
+    var t3b = E.parseDDL("CREATE TABLE [mydb].[dbo].[t1] (id INT PRIMARY KEY);");
+    eq(t3b.tables[0].name, "t1", "parseDDL：方括号三段限定名取表名 t1");
     var c = E.parseDDL("CREATE TABLE a (id INT PRIMARY KEY, b TEXT DEFAULT 'x;y', c VARCHAR(20) COMMENT '备注');");
     eq(c.tables[0].columns[1].defaultValue, "'x;y'", "parseDDL：默认值含分号不切分");
     eq(c.tables[0].columns[2].comment, "备注", "parseDDL：COMMENT 提取");
@@ -139,6 +146,9 @@ var SMALL_MERMAID = "erDiagram\n    users {\n        int id PK\n        varchar 
     eq(noTable.summary.tableCount, 0, "parseDDL：无建表语句返回空表");
     eq(noTable.summary.unparsedCount, 1, "parseDDL：无建表语句进诊断 1 条");
     eq(noTable.unparsed[0].reason, "非 CREATE TABLE 语句，未解析", "parseDDL：无建表语句诊断原因");
+    var noName = E.parseDDL("CREATE TABLE (id INT);");
+    eq(noName.summary.unparsedCount, 1, "parseDDL：缺表名建表语句仅 1 条诊断不重复");
+    eq(noName.unparsed[0].reason, "建表语句缺少表名", "parseDDL：缺表名诊断原因");
     var empty = E.parseDDL("");
     eq(empty.summary.tableCount, 0, "parseDDL：空串 0 表");
     eq(empty.summary.unparsedCount, 0, "parseDDL：空串 0 未解析");

@@ -80,7 +80,7 @@ function readQualifiedIdent(s, i) {
             i++;
             var next = readQualifiedIdent(s, i);
             if (!next) { i = save; break; }
-            segments.push(next.segments[0]);
+            segments.push.apply(segments, next.segments);
             i = next.end;
             /* 模式限定只取最后一段作表名；继续吃掉可能的多余段 */
             while (true) {
@@ -449,6 +449,9 @@ function parseDDL(input) {
                 text: sql.slice(startIdx, Math.min(sql.length, startIdx + 120)).replace(/\s+/g, ' ').trim(),
                 reason: '建表语句缺少表名'
             });
+            /* 余下部分划入本语句跨度，避免同一语句重复进诊断 */
+            var semi2 = sql.indexOf(';', startIdx);
+            spans.push([startIdx, semi2 === -1 ? sql.length : semi2 + 1]);
             continue;
         }
         var segments = nameRead.segments;
