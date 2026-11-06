@@ -8,7 +8,7 @@
 * validatePitchState（samples 数组、≤600）、formatCents（锚点 12→"+12 音分"）、
 * detectPitch（合成正弦 440/220/880 Hz、静音/噪声/超范围返回 null；额外导出，
 * 非契约十函数）、非法参数 err.field、categories.go 注册（Path
-* 总数 313→314、Icon record_voice_over 全库唯一、紧邻 metronome）、模板（SEO
+* 总数 314→315、Icon record_voice_over 全库唯一、紧邻 metronome）、模板（SEO
 * 关键词、真限制四条、控件、互链单向、零外部资源静态检查）、浏览器绑定源码级
 * 检查（getUserMedia＋AnalyserNode 时域自相关、0.5s 唱稳计分、目标模式以 targetCents 与目标音的偏差计分、localStorage
 * 最近 10 次成绩）。
@@ -224,7 +224,7 @@ throws(function () { M.detectPitch(badBuf, 44100); }, "buffer", "detectPitch：�
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 314, "注册 Path 总数 313→314");
+eq(pathCount, 315, "注册 Path 总数 314→315");
 has(GO_SRC, '"singing_pitch_checker"', "注册：ID singing_pitch_checker");
 has(GO_SRC, '"/tools/singing-pitch-checker"', "注册：Path /tools/singing-pitch-checker");
 has(GO_SRC, '"record_voice_over"', "注册：Icon record_voice_over");

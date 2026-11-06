@@ -1,3 +1,112 @@
+## 今日任务（2026-11-06 13:40 · PM 选定轮，接通用调研第二百四十五轮）
+
+**选定：视频提取音频（video_to_audio）** — 本轮唯一任务（新工具）。
+
+**顺位**：245 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十五度裁定跳过**（沿用 231–244 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十四轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），视频提取音频口径站内 0 交付。
+2. **口径互补确凿**：音频处理类目已有 audio_trimmer（裁剪）／vocal_remover（伴奏提取）／singing_pitch_checker（练唱音准）／music_visualizer（频谱）；本工具为**视频取音口径**（视频文件→单独存成音频），与 audio_trimmer 形成「提取→裁剪」顺流、与 vocal_remover 形成「取音→去人声」顺流、与 singing_pitch_checker 形成「取伴奏→开口练唱」顺流；与 lossless_audio_checker 的频谱分析仅「音频」二字表层相同，本质不同（真伪检测是 FFT 频谱判定，本工具是音轨剥离＋导出）。
+3. **需求验证**：想把视频里的音乐／讲座／播客声音单独存成音频（做铃声、离线听、剪辑配乐），现有免费站多要上传文件或限时长；浏览器本地做、零上传、无次数。池内递进信号印证。
+4. **技术路线站内已有先例**：audio_trimmer 已跑通 decodeAudioData 本地解码＋WAV 手工编码／MP3（lamejs）本地导出；music_visualizer 已跑通 MediaRecorder 导出；本工具只在既有模式上多一步「视频文件 decodeAudioData 取音轨」快速路径＋MediaRecorder 实时重录兜底，无模型权重、无服务端、无外部依赖。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`video_to_audio`／`extract_audio`／`video_audio_extractor`／`sudoku`／`social_image_size`／`social-image-size` 全站（tools/templates/static/js/tests）**0 命中**——视频提取音频本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「视频转音频」`chr(0x...)` 运行时构造（codepoints 验真 0x89c6／0x9891／0x8f6c／0x97f3／0x9891）全站 **0 命中**。
+   - CJK「数独」命中验真为 css_background_pattern_generator 文案「参数独立」子串他人口径（AGENTS.md 已载明的展示层 CJK 误判教训；ASCII `sudoku` 0 命中才是真凭据）。
+   - Icon：**`music_video` 首选**（Material Icons 官方 codepoints 验真确有此 glyph：**e063**；`Icon:\s*"music_video"` 精确值 **0 命中**，全库唯一，贴合「视频＋音乐」语义；`videocam` 精确值亦 0 命中作备选；`movie`／`music_note`／`audio_file`／`graphic_eq` 各占用 1，不可取），开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十五度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 上传／拖拽视频文件（MP4／WebM／MOV，≤500MB）本地处理，视频预览＋总时长显示 ② 快速路径：decodeAudioData 直接解出音轨（不实时播放，秒级完成），失败时自动降级 MediaRecorder 实时重录（耗时与视频等长，进度条明示） ③ 片段截取：起止时间可选（默认全片），毫秒微调，试听提取结果 ④ 导出：WAV（手工编码，16-bit PCM）／MP3（lamejs 64–320kbps 可选，默认 192kbps），文件名 `原名-audio.扩展名` ⑤ 提取信息面板：原视频时长／采样率／声道／导出体积预估 ⑥ 互链：audio_trimmer 双向互链（"提取完，去裁剪一段做铃声"） ⑦ 全程浏览器本地计算，零上传、零外部接口 ⑧ 无障碍（tab 聚焦可操作、空格启停播放、进度有文字百分比，不只依赖颜色）⑨ 模板零外部静态资源惯例（lamejs 沿用站内已引用的 vendor 路径，不新增外部依赖）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.VideoToAudio 下，module.exports 同步导出；DOM 与 AudioContext 只做浏览器端，测试只覆盖纯函数）**：
+  - `formatDuration(sec)` → string（sec 须为 ≥0 有限数，否则 err.field='seconds'；<1h → "m:ss"，如 65 → "1:05"；≥1h → "h:mm:ss"，如 3661 → "1:01:01"；向下取整秒）。
+  - `formatFileSize(bytes)` → string（bytes 须为 ≥0 有限数，否则 err.field='bytes'；<1024 → "N B"；<1MB → "N.N KB"；否则 "N.N MB"，一位小数）。
+  - `secondsToSamples(sec, sampleRate)` → number（sec 须为 >0 有限数，否则 err.field='seconds'；sampleRate 须为 8000–192000 整数，否则 err.field='sampleRate'；返回 Math.round(sec*sampleRate)）。
+  - `clampExtractRange(startSec, endSec, durationSec)` → {start, end}（三者须为 ≥0 有限数，durationSec 须 >0，否则 err.field='range'；start 钳制到 [0, duration]，end 钳制到 [start, duration]；start ≥ end 抛错 err.field='range'）。
+  - `estimateWavBytes(durationSec, sampleRate, channels)` → number（durationSec 须为 >0 有限数，sampleRate 8000–192000，channels 1 或 2，否则 err.field 对应字段；返回 44 + Math.round(durationSec*sampleRate*channels*2)）。
+  - `estimateMp3Bytes(durationSec, bitrateKbps)` → number（durationSec 须为 >0 有限数，bitrateKbps 须为 32–320，否则 err.field='bitrate'；返回 Math.round(durationSec*bitrateKbps*1000/8)）。
+  - `buildExportFilename(baseName, ext)` → string（baseName 须为非空字符串，否则 err.field='fileName'；ext 须为 wav/mp3 之一，否则 err.field='format'；去掉原扩展名，返回 "原名-audio.wav"／".mp3"）。
+  - `validateExtractConfig(config)` → config（format 须为 wav/mp3 之一，否则 err.field='format'；mp3 时 bitrate 须为 64/96/128/160/192/256/320 之一，否则 err.field='bitrate'；trim 须为 {start,end} 且 start<end，否则 err.field='trim'）。
+  - `validateExtractState(state)` → state（state.progress 须为 0–100 有限数，否则 err.field='progress'；state.mode 须为 fast/realtime 之一，否则 err.field='mode'）。
+  - `formatProgress(pct)` → string（pct 须为 0–100 有限数，否则 err.field='progress'；返回 "N%"，四舍五入整数）。
+- **数值锚点（测试精确值）**：formatDuration：0 → "0:00"；65 → "1:05"；59.9 → "0:59"；3599 → "59:59"；3600 → "1:00:00"；3661 → "1:01:01"。formatFileSize：0 → "0 B"；512 → "512 B"；1536 → "1.5 KB"；1048576 → "1.0 MB"。secondsToSamples：(1.5, 44100) → 66150；(0, 44100) 抛错 err.field='seconds'。clampExtractRange：(10, 50, 120) → {start:10, end:50}；(-5, 200, 120) → {start:0, end:120}；(50, 50, 120) 抛错 err.field='range'。estimateWavBytes：(60, 44100, 2) → 10584044；(1, 8000, 1) → 16044。estimateMp3Bytes：(60, 128) → 960000；(30, 192) → 720000。buildExportFilename：("my-video.mp4", "mp3") → "my-video-audio.mp3"；("讲座.MOV", "wav") → "讲座-audio.wav"；("", "mp3") 抛错 err.field='fileName'；("a.mp4", "ogg") 抛错 err.field='format'。validateExtractConfig：{format:'mp3', bitrate:192, trim:{start:0, end:60}} 通过；{format:'wav'} 通过（bitrate 可省）；format:'ogg' 抛错 err.field='format'；mp3 bitrate:100 抛错 err.field='bitrate'；trim:{start:60, end:60} 抛错 err.field='trim'。validateExtractState：{progress:50, mode:'fast'} 通过；progress:101 抛错 err.field='progress'；mode:'x' 抛错 err.field='mode'。formatProgress：0 → "0%"；33.6 → "34%"；100 → "100%"。
+- **真限制四条页面明示**：① 快速路径依赖浏览器对视频容器音频编码的解码支持（MP4/WebM 主流编码一般可解）；不支持的格式自动降级实时重录，耗时与视频等长，属实告知不遮掩；② 只提取音轨，不提升音质；MP3 导出按所选码率重编码，有损；③ DRM 保护／加密视频无法本地处理；④ 全程浏览器本地计算，零上传；大文件（≤500MB）解码占用内存，低配设备可能卡顿。
+- **SEO**：视频转音频、视频提取音频、视频提取 MP3。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 video_to_audio 条目，紧邻 audio_trimmer（提取→裁剪顺流），Path 314→**315**，Icon `music_video` 首选（e063 验真存在），开发轮精确值复测锁定全库唯一）／templates/video_to_audio.html（新）／static/js/video_to_audio.js（新）／tests/video_to_audio.test.js（新）／全量旧 tests Path 断言 314→315 数值同步（仅断言数值，152 个测试文件涉 154 处 314 断言）。
+- **验收标准**：① node 新测试 ≥60 断言全过（formatDuration／formatFileSize／secondsToSamples／clampExtractRange／estimateWavBytes／estimateMp3Bytes／buildExportFilename／validateExtractConfig／validateExtractState／formatProgress 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 200→**201** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/video-to-audio 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：MP4 上传→快速路径秒级提取→试听→WAV/MP3 导出可下载播放、片段截取起止生效、降级实时重录进度显示、互链 audio_trimmer 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 audio_trimmer／vocal_remover／singing_pitch_checker 同类目，视频取音口径与裁剪／去人声／练唱口径互补；模板内与 audio_trimmer 双向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：视频提取音频→本轮交付（245 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十五度跳过（数据表负债从严，231–244 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII video_to_audio／extract_audio／video_audio_extractor 全 0 命中，CJK 视频转音频全 0 命中；Icon `music_video` e063 验真存在且精确值 0 命中全库唯一）；音频处理类目，视频取音口径与裁剪／去人声／练唱口径互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十五度跳过）／数独游戏→P3 观察维持／图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空，fetch 时重新记录——老问题）；本地 HEAD 0a4d32a（唱歌音准检测修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **314**；`ls tests/*.test.js | wc -l` = **200**；152 个测试文件涉 154 处 314 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `video_to_audio`／`extract_audio`／`video_audio_extractor`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「视频转音频」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x89c6／0x9891／0x8f6c／0x97f3／0x9891）；CJK「数独」命中验真为 css_background_pattern_generator 文案「参数独立」子串他人口径，ASCII `sudoku` 0 命中为真凭据；Icon `music_video`（e063）官方 codepoints 验真 glyph 存在且精确值 0 命中，`videocam` 精确值亦 0 命中作备选，`movie`／`music_note`／`audio_file`／`graphic_eq` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+附注：244 轮研究轮留下的核对项——`mind_map` 已在站内交付而 WPS 候选表仍注「冻结归档」，注记与现状有出入，PM 已记录，待后续轮次核对修正（不属本轮任务范围）。
+
+---
+
+## 今日候选（2026-11-06 13:00 · 产品调研推荐，第二百四十五轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：唱歌音准检测已交付闭环（806a043 新增＋0a4d32a 目标音计分基准修复：`/tools/singing-pitch-checker`，Path 总数 313→**314**，tests **200 个**；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 244 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十四度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **视频提取音频** — **新晋第三席**（池内递进；唱歌音准检测交付后顺位递进）。痛点：想把视频里的音乐／讲座／播客声音单独存成音频（做铃声、离线听、剪辑配乐），现有免费站多要上传文件或限时长；浏览器本地做、零上传、无次数；实现纯前端中难度（video 元素＋AudioContext／MediaRecorder 本地重录导出 WAV／WebM，无模型权重、无服务端、无外部依赖；站内 audio_trimmer 已跑通音频解码＋MediaRecorder 导出先例）。站内零重叠本轮复核确凿：ASCII `video_to_audio`／`extract_audio`／`video_audio_extractor` 全站 **0 命中**；CJK「视频转音频」`chr(0x...)` 运行时构造（codepoints 验真 0x89c6／0x9891／0x8f6c／0x97f3／0x9891）**0 命中**——视频提取音频本体 0 交付。**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差；WebCodecs 快速路径仅 Chrome／Edge 可用。SEO：视频转音频、视频提取 MP3、在线提取音频。建议 ID video_to_audio、Path /tools/video-to-audio；Icon `music_video` 精确值 **0 命中**（`videocam` 亦 0 命中；`movie`／`music_note`／`audio_file`／`graphic_eq` 各占用 1，不可取），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十四度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 视频提取音频 | **新晋第三席**：池内递进；`video_to_audio`／`extract_audio`／CJK「视频转音频」本轮复测全 0 命中；纯前端中难度（MediaRecorder 本地重录，无模型无服务端）；**弱点**：实时重录耗时与视频等长，体验差 | 中 | P3（新晋） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 11:45~13:00 窗口；本轮**新晋 1 个**，余为消解）：
+- **视频提取音频递进第三席**（唱歌音准检测交付后池内递进；`video_to_audio`／`extract_audio`／CJK「视频转音频」本轮复测 0 命中；Icon `music_video` 精确值 0 命中，开发轮须先验 glyph）。
+- led.run（DEV 2026-11-06 文：免登录 LED 滚动字幕屏）→ 消解：站内 `scrolling_subtitle_generator`（滚动字幕生成器，LED 滚动字幕关键词）与 `big_sign_display`（大字标牌展示器，LED 字幕牌关键词）已交付，「全屏 LED 点阵风」差异过弱不入池。
+- AudioMass（YouTube 2026-10-26 盘点：浏览器免费音频编辑器）→ 消解：站内 `audio_trimmer` 已交付（音频裁剪本体）；完整多轨／淡入淡出编辑器属其增量，非新工具口径。
+- Markmap（DEV 2026-11-06 文：Markdown 大纲转思维导图）→ 消解：站内 `mind_map` 已交付（WPS 思维导图候选后已落地，冻结归档注记待 PM 核对）。
+- 打字练习 TypeLit（同上盘点：名著打字练习）→ 消解：站内 `typing_practice` 已交付（英文名言／代码片段／中文美文＋WPM／准确率统计）。
+- Regex101／Diffchecker／Squoosh／CleanURL／ILovePDF → 消解：站内 regex_tester／text_diff／img-compress／url_tracker_cleaner 已交付；ILovePDF 口径站内 PDF 合并／拆分工具已覆盖。
+- 发票生成器／Coolors 配色／Fontjoy 字体搭配 → 消解：站内 invoice_generator／color_palette_generator／font-pairing-preview 均已交付。
+- tmp.tf（跨设备剪贴板）／til.re（可分享倒计时）→ 消解：需服务端中转（tmp.tf）或站内倒计时／计时工具已覆盖（til.re）。
+- twelve.tools 11-04~11-06：无新上架（Fix42／Free Online Convert／SSL Toolkit／Extractune／Shotink／Moodboard／Coddy 均为 11-02~11-04 已扫描消解；SSL Toolkit 证书工具偏开发者 niche＋CT／CAA 需服务端查询，不入池）。
+- Product Hunt 11-06（StillWorks 当日榜）：Firenook（Firebase 模拟器 Rust 版）／TwinDesk（跨设备键鼠共享）／Nico（Mac 端个人 agent）／Rumoro（品牌舆情）／OpenInk Studio（纹身预约）／西语歌曲学习 App／dormscape（宿舍布局）／Prizvox（站点审计）→ 桌面软件／AI agent／SaaS／niche 口径全消解。
+- V2EX 11-04~11-06：「旁白」翻译插件（扩展＋需自备 API key，消解）；xGoose（扩展口径，消解）；EasyPost 多平台分发（扩展口径，消解）；V2EX 评论上下文插件（扩展口径，消解）；Paint Board 网页画板（站内 moodboard／photo_collage 画布口径已覆盖，消解）；ProtoHub 原型托管（需服务端注册，消解）。
+- Hacker News：Decipher（Claude Code 插件口径消解）；UCP checker（需服务端抓取＋agentic 商务 niche，消解）；HackerBooks／HackerTube／Wikihack（HN 内容聚合站口径消解）；Selextract（爬虫 SaaS 口径消解）。
+
+**候选池变动**：singing_pitch_checker 交付划出（806a043＋0a4d32a，314 Path，200 tests）；**视频提取音频新晋第三席**（池内递进；`video_to_audio`／「视频转音频」本轮复测全 0 命中，纯前端中难度无模型无服务端；Icon `music_video` 精确值 0 命中，开发轮须先验 glyph）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十四度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／X 视频转 GIF／3D 模型预览器／英文反向词典／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档（注：`mind_map` 已在站内交付，冻结注记与现状有出入，待 PM 核对）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；本地 HEAD 0a4d32a（唱歌音准检测修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **314**；`ls tests/*.test.js | wc -l` = **200**；本地当前分支 muse/dev-20260929；站内零重叠复核（`social_image_size`／`social-image-size`／`sudoku`／`video_to_audio`／`extract_audio`／`video_audio_extractor` 全 0 命中；CJK「视频转音频」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x89c6／0x9891／0x8f6c／0x97f3／0x9891）；`led_board`／`scrolling_text`／`ticker_display` 0 命中但 CJK「滚动字幕」14 命中验真为 scrolling_subtitle_generator 已交付本体，「LED」11 命中验真为 big_sign_display／scrolling_subtitle_generator 关键词他人口径——led.run 口径消解；`audio_trim`／`mind_map`／`regex_tester`／`color_palette`／`invoice_generator` 命中验真全为已交付本体，AudioMass／Markmap／Regex101 等信号消解；「打字」38 命中验真为 typing_practice 已交付本体；Icon `music_video`／`videocam` 精确值 0 命中，`movie`／`music_note`／`audio_file`／`graphic_eq` 各占用 1）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 11:45 · PM 选定轮，接通用调研第二百四十四轮）
 
 **选定：唱歌音准检测（singing_pitch_checker）** — 本轮唯一任务（新工具）。

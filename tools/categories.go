@@ -2907,6 +2907,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "video_to_audio",
+					Name:        "视频提取音频",
+					Description: "上传/拖拽 MP4/WebM/MOV（≤500MB）本地处理，decodeAudioData 快速路径秒级解出音轨，失败自动降级 MediaRecorder 实时重录，片段截取（起止可选，默认全片）+试听，WAV 手工编码/MP3(lamejs 64–320kbps，默认 192kbps)本地导出，文件名「原名-audio.扩展名」，时长/采样率/声道/体积预估面板，纯前端零上传 · Video to audio: extract audio track from video locally, fast decode with realtime re-record fallback, export WAV/MP3",
+					Path:        "/tools/video-to-audio",
+					Icon:        "music_video",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "audio_merger",
 					Name:        "音频合并器",
 					Description: "多文件上传/拖拽 MP3/WAV/OGG/M4A 本地解码，列表上移/下移/删除自由排序，采样率/声道自动归一化（44100Hz），淡入淡出与静音间隔可选，合并试听+总时长/体积预估，WAV 手工编码/MP3(lamejs 64–320kbps)本地导出，纯前端零上传 · Audio merger: upload multiple audios, reorder, normalize, merge, preview, export WAV/MP3 locally",

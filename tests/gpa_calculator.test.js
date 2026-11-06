@@ -207,7 +207,7 @@ var iconRe = /"scoreboard"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon scoreboard 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 314, "注册 Path 总数 280→281");
+eq(pathCount, 315, "注册 Path 总数 280→281");
 
 /* ---------- 14. 模板：SEO/真限制/互链/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/gpa-calculator", "模板 canonical 含新 Path");
