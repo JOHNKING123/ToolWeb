@@ -235,7 +235,7 @@ notHas(JS_SRC, "XMLHttpRequest", "JS 零外部接口：无 XMLHttpRequest");
 
 /* ---------- 9. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 319, "注册 Path 总数 309→310");
+eq(pathCount, 320, "注册 Path 总数 309→310");
 has(GO_SRC, '"vocal_remover"', "注册：ID vocal_remover");
 has(GO_SRC, '"/tools/vocal-remover"', "注册：Path /tools/vocal-remover");
 has(GO_SRC, '"mic_off"', "注册：Icon mic_off");

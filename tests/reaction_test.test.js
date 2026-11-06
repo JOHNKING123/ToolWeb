@@ -131,7 +131,7 @@ throws(function () { M.formatReactionMs("248"); }, "ms", "formatReactionMs：字
 
 /* ---------- 9. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 319, "注册 Path 总数 312→313");
+eq(pathCount, 320, "注册 Path 总数 312→313");
 has(GO_SRC, '"reaction_test"', "注册：ID reaction_test");
 has(GO_SRC, '"/tools/reaction-test"', "注册：Path /tools/reaction-test");
 has(GO_SRC, '"flash_on"', "注册：Icon flash_on");

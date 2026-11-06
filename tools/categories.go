@@ -409,6 +409,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "er_diagram_generator",
+					Name:        "数据库 ER 图生成器",
+					Description: "粘贴 SQL DDL 建表语句（MySQL/PostgreSQL/SQLite 宽容解析：注释剥离、反引号/双引号/方括号标识符、字段级与表级主键/外键、ON DELETE/ON UPDATE）→生成 Mermaid erDiagram 关系图：表清单＋字段表＋关系清单＋Mermaid 代码视图，本地 vendor mermaid 10.9.3 渲染，SVG 下载、PNG 高清导出（2x/3x），5 组预设示例，未解析行进诊断列表不编造；与 Mermaid 渲染器/SQL 格式化互链分工（只解析 DDL 生成关系图，不做通用 Mermaid 渲染、不做 SQL 格式化），全程本地零上传 · SQL DDL to ER diagram: parse CREATE TABLE to Mermaid erDiagram locally, 100% client-side",
+					Path:        "/tools/er-diagram-generator",
+					Icon:        "dataset",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "regex",
 					Name:        "正则表达式测试",
 					Description: "测试和验证正则表达式，实时显示匹配结果",

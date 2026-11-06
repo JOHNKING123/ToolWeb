@@ -171,7 +171,7 @@ var iconRe = /"percent"/g, iconHits = (GO_SRC.match(iconRe) || []).length;
 eq(iconHits, 1, "Icon percent 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
 while ((m = pathRe.exec(GO_SRC)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-eq(pathCount, 319, "注册 Path 总数 281→282");
+eq(pathCount, 320, "注册 Path 总数 281→282");
 
 /* ---------- 10. 模板：SEO/真限制/互链/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/percentage-calc", "模板 canonical 含新 Path");

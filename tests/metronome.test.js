@@ -171,7 +171,7 @@ has(tapSrc, "未自动钳制", "Tap：超限明确提示不自动钳制");
 
 /* ---------- 10. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 319, "注册 Path 总数 310→311");
+eq(pathCount, 320, "注册 Path 总数 310→311");
 has(GO_SRC, '"metronome"', "注册：ID metronome");
 has(GO_SRC, '"/tools/metronome"', "注册：Path /tools/metronome");
 has(GO_SRC, '"av_timer"', "注册：Icon av_timer");

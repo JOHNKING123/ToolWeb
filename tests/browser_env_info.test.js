@@ -207,7 +207,7 @@ var iconHits = (GO_SRC.match(/Icon:\s+"info"/g) || []).length;
 eq(iconHits, 1, "Icon info 精确值复测锁定：全库唯一 1 处");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 319, "注册总数 292→295 Path");
+eq(Object.keys(pathCount).length, 320, "注册总数 292→295 Path");
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,
   "JS 零 fetch/XHR");
 ok(TPL_SRC.indexOf('src="http') === -1 && TPL_SRC.indexOf("cdn.") === -1,

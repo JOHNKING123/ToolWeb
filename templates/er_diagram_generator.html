@@ -1,0 +1,230 @@
+{{define "er_diagram_generator"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库 ER 图生成器 - 粘贴 SQL 建表语句一键生成实体关系图 | 程序员工具箱</title>
+    <meta name="description" content="免费在线数据库 ER 图生成器：粘贴 SQL DDL 建表语句（MySQL/PostgreSQL/SQLite），自动解析表结构、主键与外键关系，生成 Mermaid erDiagram 关系图；表清单、字段表、关系清单一目了然，SVG 下载、PNG 高清导出，全程浏览器本地解析零上传。Free online ER diagram generator: SQL DDL to entity-relationship diagram, 100% client-side.">
+    <meta name="keywords" content="ER图生成器,数据库关系图,SQL转ER图,DDL转ER图,erDiagram 生成,数据库结构图,外键关系图,表结构可视化,MySQL ER图,PostgreSQL ER图,SQLite ER图,er diagram generator,sql to er diagram">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/er-diagram-generator">
+    <meta property="og:title" content="数据库 ER 图生成器 - 粘贴 SQL 建表语句一键生成实体关系图">
+    <meta property="og:description" content="粘贴 SQL DDL，自动解析表、字段、主键与外键，生成 Mermaid 关系图；表清单、字段表、关系清单齐全，SVG/PNG 导出，全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/er-diagram-generator">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"数据库 ER 图生成器","description":"粘贴 SQL DDL 建表语句（MySQL/PostgreSQL/SQLite），自动解析表结构、主键与外键关系，生成 Mermaid erDiagram 关系图；表清单、字段表、关系清单齐全，SVG 下载、PNG 高清导出，全程浏览器本地解析零上传。","url":"https://www.johnkingzcq123.xyz/tools/er-diagram-generator","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .ed-wrap .navbar .material-icons { display: none; }
+        .ed-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .ed-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .ed-privacy b{color:#047857}
+        .ed-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .ed-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .ed-input{width:100%;box-sizing:border-box;min-height:16rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:.88rem;font-family:Consolas,Menlo,"Courier New",monospace;resize:vertical;line-height:1.7}
+        .ed-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .ed-meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .ed-count{font-size:.85rem;color:#6b7280}
+        .ed-statline{color:#2563eb;font-size:.85rem;min-height:1.3em}
+        .ed-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+        .ed-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .ed-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .ed-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .ed-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .ed-btn .material-icons{font-size:1.1rem}
+        .ed-error{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+        .ed-vendor-tip{display:none;border:2px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7}
+        .ed-presets{display:flex;gap:.5rem;flex-wrap:wrap}
+        .ed-preset-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer}
+        .ed-preset-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .ed-preview{border:2px solid #e5e7eb;border-radius:.6rem;background:#fff;min-height:18rem;max-height:36rem;
+            overflow:auto;padding:1rem;display:flex;align-items:center;justify-content:center}
+        .ed-preview.ed-dark{background:#1f2937;border-color:#374151}
+        .ed-preview svg{max-width:100%;height:auto}
+        .ed-empty{color:#9ca3af;font-size:.9rem;text-align:center;line-height:2}
+        .ed-export{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-top:.8rem}
+        .ed-export select{border:2px solid #e5e7eb;border-radius:.6rem;padding:.5rem .7rem;font-size:.9rem;color:#111827;background:#fff}
+        .ed-export .ed-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .ed-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .ed-table-block{margin-bottom:1.2rem}
+        .ed-table-block h4{margin:0 0 .5rem;font-size:.95rem;color:#111827;display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+        .ed-table-block h4 .material-icons{font-size:1.1rem;color:#2563eb}
+        .ed-schema{font-size:.82rem;color:#6b7280;font-weight:400}
+        .ed-colcount{font-size:.82rem;color:#2563eb;font-weight:400}
+        .ed-coltable{width:100%;border-collapse:collapse;font-size:.88rem}
+        .ed-coltable th,.ed-coltable td{border:1px solid #e5e7eb;padding:.45rem .6rem;text-align:left;vertical-align:top;line-height:1.6}
+        .ed-coltable th{background:#f9fafb;color:#374151;font-weight:600}
+        .ed-coltable code{font-family:Consolas,Menlo,monospace;font-size:.85rem;word-break:break-all}
+        .ed-comment{font-size:.8rem;color:#6b7280;margin-top:.15rem}
+        .ed-pkline{font-size:.85rem;color:#374151;margin-top:.4rem}
+        .ed-ok{color:#047857;font-size:.9rem}
+        .ed-diag-note{font-size:.9rem;color:#92400e;margin-bottom:.5rem}
+        .ed-mermaid-code{width:100%;box-sizing:border-box;border:2px solid #e5e7eb;border-radius:.6rem;padding:.7rem .9rem;
+            font-size:.88rem;font-family:Consolas,Menlo,"Courier New",monospace;white-space:pre;overflow:auto;
+            max-height:22rem;line-height:1.7;background:#f9fafb;color:#111827;margin:0}
+        .ed-limits div{line-height:1.9;font-size:.95rem;color:#374151}
+        .ed-limits b{color:#111827}
+        .ed-limits code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .ed-faq dt{font-weight:600;color:#111827;margin:.7rem 0 .2rem}
+        .ed-faq dd{margin:0;color:#374151;line-height:1.9;font-size:.95rem}
+        .ed-faq code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .ed-division{line-height:1.9;font-size:.95rem;color:#374151}
+        .ed-division b{color:#111827}
+        .ed-related{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+        @media (max-width:860px){
+            .ed-input{min-height:12rem}
+            .ed-preview{min-height:14rem}
+            .ed-export .ed-btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+    <div class="ed-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">dataset</i> 数据库 ER 图生成器</h1>
+            <p>粘贴 SQL 建表语句（DDL），自动解析表、字段、主键与外键，生成实体关系图；表清单、字段表、关系清单与 Mermaid 代码一次看清。全程浏览器本地解析，DDL 不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="ed-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：DDL 不出浏览器。</b>粘贴的建表语句只在当前浏览器本地解析、本地渲染、本地导出，不会上传到任何服务器。渲染引擎 Mermaid.js 10.9.3 已随页面静态资源本地加载，除此之外无任何网络请求。</div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>1. 粘贴 SQL DDL（CREATE TABLE 语句，最多 20000 字符）</h3>
+                <textarea class="ed-input" id="ed-input" spellcheck="false" placeholder="在这里粘贴 SQL 建表语句，例如：&#10;&#10;CREATE TABLE users (&#10;  id INT PRIMARY KEY AUTO_INCREMENT,&#10;  username VARCHAR(50) NOT NULL UNIQUE,&#10;  email VARCHAR(100) NOT NULL&#10;);&#10;&#10;CREATE TABLE posts (&#10;  id BIGINT PRIMARY KEY AUTO_INCREMENT,&#10;  user_id INT NOT NULL,&#10;  title VARCHAR(200) NOT NULL,&#10;  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE&#10;);&#10;&#10;或点下方预设示例一键载入。"></textarea>
+                <div class="ed-meta">
+                    <span class="ed-count" id="ed-count">0 / 20000 字符</span>
+                    <span class="ed-statline" id="ed-statline"></span>
+                    <div class="ed-actions">
+                        <button type="button" class="ed-btn ed-btn-primary" id="ed-parse-btn"><i class="material-icons">account_tree</i>生成关系图</button>
+                        <button type="button" class="ed-btn" id="ed-copy-summary"><i class="material-icons">content_copy</i>复制解析摘要</button>
+                        <button type="button" class="ed-btn" id="ed-clear"><i class="material-icons">delete_sweep</i>清空</button>
+                    </div>
+                </div>
+                <div class="ed-error" id="ed-err" role="alert"></div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>预设示例（一键载入）</h3>
+                <div class="ed-presets" id="ed-presets"></div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>2. 实体关系图</h3>
+                <div class="ed-preview" id="ed-preview">
+                    <div class="ed-empty">解析出表之后，这里会显示关系图</div>
+                </div>
+                <div class="ed-vendor-tip" id="ed-vendor-tip"></div>
+                <div class="ed-export">
+                    <select id="ed-theme" aria-label="渲染主题">
+                        <option value="default">主题：默认（default）</option>
+                        <option value="neutral">主题：中性（neutral）</option>
+                        <option value="dark">主题：深色（dark）</option>
+                        <option value="forest">主题：森林（forest）</option>
+                    </select>
+                    <select id="ed-scale" aria-label="PNG 导出清晰度">
+                        <option value="2" selected>清晰度：2x（高清）</option>
+                        <option value="3">清晰度：3x（超清）</option>
+                        <option value="1">清晰度：1x（标准）</option>
+                    </select>
+                    <select id="ed-bg" aria-label="PNG 背景">
+                        <option value="white">背景：白色</option>
+                        <option value="transparent">背景：透明</option>
+                    </select>
+                    <button class="ed-btn ed-btn-primary" id="ed-png" disabled><i class="material-icons">download</i>导出 PNG</button>
+                    <button class="ed-btn" id="ed-svgdl" disabled><i class="material-icons">file_download</i>下载 SVG</button>
+                </div>
+                <div class="ed-copy-tip" id="ed-copytip"></div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>3. 表清单与字段表</h3>
+                <div id="ed-tables"><div class="ed-empty">尚未解析出任何表。</div></div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>4. 关系清单（按外键推断，一对多）</h3>
+                <div id="ed-relations"><div class="ed-empty">未发现外键关系。</div></div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>5. Mermaid erDiagram 代码</h3>
+                <pre class="ed-mermaid-code" id="ed-mermaid-code"></pre>
+                <div class="ed-meta">
+                    <span></span>
+                    <div class="ed-actions">
+                        <button type="button" class="ed-btn" id="ed-copy-mermaid"><i class="material-icons">content_copy</i>复制 Mermaid 代码</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>6. 未解析诊断（未能识别的行，原样列出、不编造）</h3>
+                <div id="ed-diag"><div class="ed-ok">全部行均已解析，无未解析内容。</div></div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>五条真限制</h3>
+                <div class="ed-limits">
+                    <div><b>1. 只解析 CREATE TABLE：</b><code>CREATE INDEX</code>、<code>ALTER TABLE</code>、<code>INSERT</code> 等语句不解析，会进入「未解析诊断」列表；<code>SET</code> / <code>USE</code> 这类转储样板语句直接跳过、不计入诊断。</div>
+                    <div><b>2. 复杂 DDL 可能解析失败：</b>存储过程、触发器、视图、分区表、<code>CHECK</code> 表达式、<code>GENERATED</code> 计算列等只做宽容跳过或进诊断，不展开语义；<code>CREATE TABLE ... AS SELECT</code> / <code>LIKE</code> 口径暂不支持。</div>
+                    <div><b>3. 关系只按外键推断：</b>外键所在表画为多端、被引用表画为一端；无外键的表之间不猜关系，命名相似（如 <code>user_id</code>）但没有外键声明的字段不会自动连线。</div>
+                    <div><b>4. Mermaid 标识符限制：</b>erDiagram 的实体名与属性名须为英文标识符，中文或特殊字符会被转写为下划线形式（如 <code>用户</code> → <code>__</code>），原始名称保留在字段表里；转写后重名的属性会自动加 <code>_2</code> 后缀区分。</div>
+                    <div><b>5. 输入上限 20000 字符：</b>超大 DDL 请先按库拆分再粘贴；渲染依赖本地 Mermaid 10.9.3，表特别多时关系图可能渲染缓慢，建议一次不超过 30 张表。</div>
+                </div>
+            </div>
+
+            <div class="ed-panel">
+                <h3>常见问题</h3>
+                <dl class="ed-faq">
+                    <dt>支持哪些数据库的 DDL？</dt>
+                    <dd>MySQL、PostgreSQL、SQLite 三种方言宽容解析：反引号、双引号、方括号三种标识符，字段级与表级主键／外键、<code>REFERENCES</code>、<code>CONSTRAINT FOREIGN KEY</code>、<code>ON DELETE</code> / <code>ON UPDATE</code> 均支持；<code>--</code>、<code>#</code>、<code>/* */</code> 三种注释会先剥离。</dd>
+                    <dt>没有外键的 DDL 能画图吗？</dt>
+                    <dd>能。没有外键时每张表单独成块、关系清单为空；关系只按外键推断，不会按字段名相似度猜测连线。</dd>
+                    <dt>「未解析诊断」里出现内容怎么办？</dt>
+                    <dd>那是解析器明确识别不了的行（例如 <code>CREATE INDEX</code> 或写法特殊的字段定义），已原样列出、未做任何推测；不影响已解析部分的出图，可把该行删掉或改写成标准 <code>CREATE TABLE</code> 写法后重新解析。</dd>
+                    <dt>我的 DDL 会被上传吗？</dt>
+                    <dd>不会。解析、生成 Mermaid 代码、渲染与导出全部在本地完成，不发起后端请求；渲染引擎 Mermaid.js 10.9.3 是随页面加载的本地静态文件，你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="ed-panel">
+                <h3>相关工具</h3>
+                <p class="ed-division">分工说明：本工具<b>只解析 DDL 生成关系图</b>，<b>不做通用 Mermaid 渲染、不做 SQL 格式化</b>；<a href="/tools/mermaid-diagram-renderer">Mermaid 图表渲染与导出器</a>是手写任意 Mermaid 代码的通用渲染器（流程图／时序图／甘特图／类图／ER 图／状态图）；<a href="/tools/sql-formatter">SQL 格式化</a>只做 SQL 语句的排版美化、不解析表结构；<a href="/tools/sqlite-viewer">SQLite 文件查看器</a>直接打开本地 .db 文件看表结构与数据。</p>
+                <div class="ed-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">数据库 ER 图生成器（当前）</span>
+                    <a href="/tools/mermaid-diagram-renderer" class="btn btn-secondary" style="font-size:.9rem;">Mermaid 图表渲染与导出器</a>
+                    <a href="/tools/sql-formatter" class="btn btn-secondary" style="font-size:.9rem;">SQL 格式化</a>
+                    <a href="/tools/sqlite-viewer" class="btn btn-secondary" style="font-size:.9rem;">SQLite 文件查看器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/vendor/mermaid.min.js"></script>
+    <script src="/tools/static/js/er_diagram_generator.js?v=1"></script>
+</body>
+</html>
+{{end}}

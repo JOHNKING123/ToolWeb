@@ -141,7 +141,7 @@ function throwsField(fn, field, name) {
     eq(iconCount, 1, "Icon view_agenda 全库唯一（1 次命中）");
     var pathRe = /"\/tools\/[^"]+"/g, seen = {}, m, pathCount = 0;
     while ((m = pathRe.exec(goSrc)) !== null) { if (!seen[m[0]]) { seen[m[0]] = true; pathCount++; } }
-    eq(pathCount, 319, "注册 Path 总数 273→273");
+    eq(pathCount, 320, "注册 Path 总数 273→273");
 })();
 
 /* ================= 7. 零网络请求静态检查 ================= */

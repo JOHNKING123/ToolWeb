@@ -1,3 +1,112 @@
+## 今日任务（2026-11-06 23:00 · PM 选定轮，接通用调研第二百五十轮）
+
+**选定：数据库 ER 图生成器（文本建表 → 关系图）（er_diagram_generator）** — 本轮唯一任务（新工具）。
+
+**顺位**：250 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十度裁定跳过**（沿用 231–249 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十九轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），SQL→ER 图本体站内 0 交付。
+2. **口径互补确凿**：站内已有两类邻近工具，但无一做「粘贴 DDL 即出关系图」——mermaid_diagram_renderer 是手写 Mermaid 语法渲染口径（含 erDiagram 模板与 ER 图支持，/tools/mermaid-diagram-renderer），sql_formatter 是 SQL 格式化口径（本轮复核：`erDiagram`／`CREATE TABLE`／`FOREIGN KEY`／「外键」在其 Go／模板／JS 中 0 命中，无关系解析）；本工具为**SQL DDL 粘贴解析口径**（粘贴 CREATE TABLE → 解析表／字段／外键 → 生成 erDiagram → 渲染关系图），与二者形成「手写 Mermaid 渲染↔SQL 格式化↔DDL 粘贴出图」分工互补（页面与互链须明示分工：本工具只解析 DDL 生成关系图，不做通用 Mermaid 渲染、不做 SQL 格式化）。
+3. **需求验证**：已有建表 SQL 想快速看清表间关系，dbdiagram.io 类站要注册／上传；浏览器本地粘贴 DDL 即出图、零上传。池内递进信号印证（dbdiagram.io 信号；Shell 命令解释器交付后顺位递进）。
+4. **技术路线站内已有先例与待纠偏**：mermaid_diagram_renderer 已跑通 erDiagram 渲染＋SVG 下载＋PNG 高清导出（2x／3x）页面模式；但其 mermaid.js 走 **cdnjs CDN 懒加载（10.9.3 锁定）**，与模板零外部静态资源惯例冲突——本工具须改走**本地 vendor**（下载 pinned 10.9.3 的 mermaid.min.js 进 static/js/vendor/，不走 CDN；沿用 document_diff 的 pdf.js／mammoth.js 本地 vendor 先例）；DDL 解析自研（CREATE TABLE／字段／主键／外键 REFERENCES／表级 CONSTRAINT FOREIGN KEY），不引入外部解析依赖；无模型权重、无服务端。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`er_diagram`／`db_diagram`／`sql_to_er` 全站（tools/templates/static/js/tests）**0 命中**；`sudoku`／`social_image_size`／`social-image-size` 全站 **0 命中**——SQL→ER 本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「实体关系图」`chr(0x...)` 运行时构造（codepoints 验真 0x5b9e／0x4f53／0x5173／0x7cfb／0x56fe）全站 **0 命中**；CJK「数据库结构图」（0x6570／0x636e／0x5e93／0x7ed3／0x6784／0x56fe）全站 **0 命中**。
+   - CJK「数独」两处命中经 codepoint 解码验真均为「参数独立」子串假阳性（css_background_pattern_generator 模板 L125／JS L28，0x53c2／0x6570／0x72ec／0x7acb，163 轮误判教训再验证），ASCII `sudoku` 0 命中为真凭据。
+   - Icon：**`dataset` 首选**（`Icon:\s*"dataset"` 精确值 **0 命中**，全库唯一；`table_chart` 已占用 1、`storage` 已占用 1、`schema` 已占用 1、`account_tree` 已占用 2、`hub` 已占用 2，不可取；备选 `lan`／`device_hub`／`foreign_key` 精确值均为 **0 命中**），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 document_diff `difference` eb7d 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 粘贴 SQL DDL（单表或多表 CREATE TABLE，≤20000 字符）→ 自研解析：剥离行注释 `--`／`#` 与块注释 `/* */`、识别表名（反引号／双引号／方括号标识符均容）、逐字段解析（字段名／类型／长度／NOT NULL／DEFAULT／PRIMARY KEY／UNIQUE／AUTO_INCREMENT／COMMENT）、主键（字段级与表级 `PRIMARY KEY (...)`）、外键（字段级 `REFERENCES other_table(col)` 与表级 `CONSTRAINT ... FOREIGN KEY (col) REFERENCES other_table(col)`，含 ON DELETE／ON UPDATE 动作）→ 生成 erDiagram 代码 → 本地 vendor mermaid 渲染关系图 ② 结构化展示：表清单（表名／字段数／主键／外键数）＋字段表（字段／类型／可空／主键／外键标记）＋关系清单（A.字段 → B.字段，一对多标注）＋可切换「生成的 Mermaid 代码」视图 ③ 导出：SVG 下载、PNG 高清导出（2x／3x，沿用 mermaid 渲染器模式）、一键复制 Mermaid 代码与一键复制解析摘要 ④ 3–5 组预设示例 DDL（一键填入：电商订单 users／orders／order_items 三表外键、博客 posts／comments／tags 多对多中间表、单表无外键） ⑤ 未解析行进「未解析」诊断列表（不静默丢弃、不编造关系；如 CREATE INDEX／INSERT／ALTER 等非建表语句明确提示不在解析范围） ⑥ 互链：mermaid_diagram_renderer（"手写 Mermaid 画 ER 图"）／sql_formatter（"SQL 格式化"）双向或单向互链（页面须明示分工：本工具只解析 DDL 生成关系图，不做通用 Mermaid 渲染、不做 SQL 格式化） ⑦ 全程浏览器本地计算，零上传、零外部接口 ⑧ 无障碍（输入框与按钮均可 tab 聚焦，关系与外键标记有文字标注不只依赖颜色）⑨ 模板零外部静态资源惯例（mermaid 走本地 vendor，不新增任何 CDN 依赖）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.ErDiagramGenerator 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `parseDDL(input)` → {tables:[{name, columns:[{name, type, nullable, primaryKey, unique, autoIncrement, defaultValue, comment}], primaryKeys:[], foreignKeys:[{column, refTable, refColumn, onDelete, onUpdate}]}], relationships:[{fromTable, fromColumn, toTable, toColumn}], unparsed:[]}（input 须为非空字符串，否则 err.field='input'；长度 >20000 抛错 err.field='input'；无任何 CREATE TABLE 时返回 tables [] 且 unparsed 列出全部非空行，不抛错；注释剥离、标识符去引号；字段级与表级主键／外键均解析；未识别的行进 unparsed）。
+  - `ddlToMermaid(parsed)` → string（parsed 须为 parseDDL 返回结构，否则 err.field='parsed'；输出以 `erDiagram` 开头的 Mermaid 代码，每表一段 `TABLE { type name PK/FK ... }`，每关系一行 `A ||--o{ B : "fk_col"`；无表时返回 `erDiagram` 仅含空注释行，不抛错）。
+  - `validateDDLInput(input)` → input（input 须为非空字符串，否则 err.field='input'；长度 >20000 抛错 err.field='input'）。
+  - `extractTableNames(parsed)` → string[]（parsed 须为对象，否则 err.field='parsed'；返回表名数组）。
+  - `countRelationships(parsed)` → number（parsed 须为对象，否则 err.field='parsed'；返回外键关系总数）。
+- **数值锚点（测试精确值）**：parseDDL：(`CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(50) NOT NULL);`) → tables 长度 1，表名 "users"，columns 长度 2，id.primaryKey true，name.nullable false；(`CREATE TABLE orders (id INT PRIMARY KEY, user_id INT REFERENCES users(id));`) → relationships 长度 1，fromTable "orders"、fromColumn "user_id"、toTable "users"、toColumn "id"；(`CREATE TABLE a (id INT, b_id INT, PRIMARY KEY (id), FOREIGN KEY (b_id) REFERENCES b(id));`) → 表级主键与外键均解析，relationships 长度 1；(`CREATE TABLE \`my-table\` (\`id\` INT);`) → 表名 "my-table"（去引号）；(`-- 注释\nCREATE TABLE t (id INT); /* 块注释 */`) → tables 长度 1，unparsed []；(`INSERT INTO t VALUES (1);`) → tables []，unparsed 长度 1；("") 抛错 err.field='input'；(123) 抛错 err.field='input'。ddlToMermaid：单表 users 解析结果 → 含 "erDiagram" 与 "users"；双表外键解析结果 → 含 `||--o{` 与 `"user_id"`；({tables:[]}) → 以 "erDiagram" 开头；(null) 抛错 err.field='parsed'。validateDDLInput：("CREATE TABLE t (id INT);") 通过原样返回；("") 抛错 err.field='input'；("x".repeat(20001)) 抛错 err.field='input'。extractTableNames：双表解析结果 → ["users","orders"]（按出现顺序）；countRelationships：双表外键解析结果 → 1，无外键单表 → 0。
+- **方言锚点（开发轮按此表建解析，MySQL／PostgreSQL／SQLite 宽容解析）**：`INT`／`INTEGER`／`BIGINT`／`VARCHAR(n)`／`TEXT`／`TIMESTAMP`／`BOOLEAN` 类型原样保留；`AUTO_INCREMENT`（MySQL）与 `AUTOINCREMENT`（SQLite）均识别为 autoIncrement；`SERIAL`（PostgreSQL）识别为整数自增；`ON DELETE CASCADE`／`SET NULL`／`RESTRICT` 动作原样记录；方言特有子句（如 MySQL `ENGINE=InnoDB`／`CHARSET=utf8mb4`、PostgreSQL `CREATE TABLE IF NOT EXISTS`）解析时跳过不进 unparsed。
+- **真限制五条页面明示**：① 只解析 CREATE TABLE 建表语句：CREATE INDEX／INSERT／ALTER／视图／触发器等不在解析范围，进「未解析」列表；② 复杂 DDL（CHECK 约束表达式、分区定义、存储过程、嵌套括号默认值）可能解析不完全；③ 关系只按显式外键生成：无外键约束的隐式关联（如命名约定的 user_id）不自动推断；④ 不同方言同一类型含义可能有差异，解析结果为结构速览、不替代数据库实际结构；⑤ 全程浏览器本地计算，零上传。
+- **SEO**：ER 图生成器、数据库关系图、SQL 转 ER 图、DDL 转关系图。
+- **改动文件**：tools/categories.go（「开发工具」类目新增 er_diagram_generator 条目，紧邻 mermaid_diagram_renderer／sql_formatter，Path 319→**320**，Icon `dataset` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph，备选 `lan`／`device_hub`／`foreign_key` 精确值均为 0 命中）／templates/er_diagram_generator.html（新，define "er_diagram_generator"）／static/js/er_diagram_generator.js（新，window.ErDiagramGenerator）／static/js/vendor/mermaid.min.js（新，pinned 10.9.3 本地 vendor，不走 CDN；mermaid_diagram_renderer 的 CDN 懒加载路线不沿用）／tests/er_diagram_generator.test.js（新）／全量旧 tests Path 断言 319→320 数值同步（仅断言数值，155 个测试文件涉 156 处 319 断言）。
+- **验收标准**：① node 新测试 ≥90 断言全过（parseDDL／ddlToMermaid／validateDDLInput／extractTableNames／countRelationships 锚点精确值；非法参数抛错 err.field；无外键／无建表语句／未解析行进诊断列表不编造；模板零外部静态资源检查——mermaid 本地 vendor 引用、页面无 CDN 链接）② 全量 tests/*.test.js 205→**206** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/er-diagram-generator 200、静态 JS 与 vendor mermaid.min.js 均为 200、首页索引收录 ⑤ 浏览器手工验证：粘贴预设三表外键 DDL → 关系图正确渲染 → 字段表／关系清单正确 → SVG/PNG 导出可用 → 未解析行进诊断列表 → 复制 Mermaid 代码可用、互链可用（开发轮记录）。
+- **品类归位**：注册到「开发工具」类目（与 mermaid_diagram_renderer／sql_formatter 同为 SQL 与图表家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：数据库 ER 图生成器→本轮交付（250 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第二十度跳过（数据表负债从严，231–249 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII er_diagram／db_diagram／sql_to_er 全 0 命中，CJK「实体关系图」「数据库结构图」全 0 命中，CJK「数独」两处命中验真为「参数独立」子串假阳性；Icon `dataset` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；mermaid_diagram_renderer 的 CDN 路线不沿用，改本地 vendor pinned 10.9.3）；开发工具类目，DDL 粘贴解析口径与手写 Mermaid 渲染／SQL 格式化分工互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十度跳过）／数独游戏→P3 观察维持／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮初次失败（Permission denied，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD b2dd38b（Shell 命令解释器已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **319**；`ls tests/*.test.js | wc -l` = **205**；155 个测试文件涉 156 处 319 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `er_diagram`／`db_diagram`／`sql_to_er`／`sudoku`／`social_image_size`／`social-image-size`／`wordle` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「实体关系图」「数据库结构图」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x5b9e／0x4f53／0x5173／0x7cfb／0x56fe、0x6570／0x636e／0x5e93／0x7ed3／0x6784／0x56fe）；CJK「数独」两处命中验真均为「参数独立」子串假阳性（0x53c2／0x6570／0x72ec／0x7acb）；sql_formatter 无 ER／关系解析（`erDiagram`／`CREATE TABLE`／`FOREIGN KEY`／「外键」0 命中）；mermaid_diagram_renderer 含 erDiagram 模板与 ER 图支持但为手写 Mermaid 口径、且走 cdnjs CDN 懒加载（开发轮改本地 vendor）；Icon `dataset`／`lan`／`device_hub`／`foreign_key` 精确值 0 命中，`table_chart` 占用 1、`storage` 占用 1、`schema` 占用 1、`account_tree` 占用 2、`hub` 占用 2；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 23:00 · 产品调研推荐，第二百五十轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：Shell 命令解释器已交付闭环（b2dd38b 新增：`/tools/shell-explainer`，Path 总数 318→**319**，tests **205 个**；新测试 192 断言全过；Icon `integration_instructions` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 249 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十九度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **数据库 ER 图生成器（文本建表 → 关系图）** — **新晋第三席**（池内递进；Shell 命令解释器交付后顺位递进）。痛点：已有建表 SQL 想快速看清表间关系，dbdiagram.io 类站要注册/上传，本地粘贴 DDL 即出图；实现纯前端小-中难度（解析 CREATE TABLE→表/字段/外键→SVG 关系图渲染，可复用 mermaid_diagram_renderer 渲染管线，零上传）。站内零重叠本轮复核确凿：ASCII `er_diagram`／`db_diagram`／`sql_to_er` 全站 **0 命中**；CJK「实体关系图」「数据库结构图」`chr(0x...)` 运行时构造（codepoints 验真 0x5b9e／0x4f53／0x5173／0x7cfb／0x56fe、0x6570／0x636e／0x5e93／0x7ed3／0x6784／0x56fe）**0 命中**。**弱点**：人群窄（开发者）、与 mermaid_diagram_renderer 口径邻近（该工具已支持 ER 图渲染；本工具以 SQL DDL 粘贴解析为输入口径，与手写 mermaid 语法分工不同，页面须明示分工）。SEO：ER 图、数据库关系图、SQL 转 ER 图。建议 ID er_diagram_generator、Path /tools/er-diagram-generator；Icon `dataset` 精确值 **0 命中**（`table_chart` 已占用 1、`storage` 已占用 1、`schema` 已占用 1、`account_tree` 已占用 2、`hub` 已占用 2，不可取；备选 `lan`／`device_hub`／`foreign_key` 精确值均为 0 命中），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十九度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 数据库 ER 图生成器（文本建表 → 关系图） | **新晋第三席**：池内递进；dbdiagram.io 信号；`er_diagram`／`db_diagram`／`sql_to_er`／CJK「实体关系图」「数据库结构图」本轮复测全 0 命中；纯前端小-中难度（SQL DDL 解析＋关系图渲染，可复用 mermaid 渲染管线）；**弱点**：人群窄、与 mermaid_diagram_renderer 口径邻近（输入口径不同：SQL 粘贴解析 vs 手写 mermaid） | 小-中 | P3（新晋） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 本轮复测 0 命中（`gcode` 9 处命中验真均为 OCR 工具 `langCode()` 大小写不敏感假阳性）；CJK「刀路」0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | **新入池弱观察**：dev.to minitool.io 11-06 信号（546 工具站实测常用 12 项之一）；`wordle` 本轮复测 **0 命中**；纯前端小难度（内置约 6000 词表＋绿/黄/灰反馈筛选，正确处理重复字母，零上传）；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord`／CJK「和弦」「音阶」本轮复测全 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 21:00~23:00 窗口；本轮**新晋 1 个、新入池 1 个**，余为消解）：
+- **数据库 ER 图生成器递进第三席**（池内递进；Shell 命令解释器交付后顺位递进；`er_diagram`／`db_diagram`／`sql_to_er`／CJK「实体关系图」「数据库结构图」本轮复测 0 命中；Icon `dataset` 精确值 0 命中，`table_chart`／`storage`／`schema` 已占用，不可取，开发轮须先验 glyph）。
+- **Wordle 求解器新入池弱观察**（dev.to minitool.io 11-06：546 工具站实测常用 12 项之一；`wordle` 本轮复测 0 命中；纯前端小难度）。
+- TOTP 生成器／JWT 解析验签／十六进制查看器／CSS Grid 生成器／JSON 转 Kotlin／语音听写／跑步配速计算器／DNS 查询／可读性分析／图片压缩／URL 追踪参数清理／恩尼格玛模拟器 → 消解：**均已交付**（totp-generator／jwt-parser＋jwt-signer-verifier／hex-viewer／css-grid-generator／json-to-kotlin／realtime-dictation／running-pace-calc／dns-lookup／readability-analyzer／img-compress／url-tracker-cleaner／enigma_simulator）。
+- Tap 测速 → 消解：**metronome 已内置 Tap 测速**。
+- 截图打码（Redacted 模式）→ 消解：**img-mosaic＋image-annotator 已交付**（`redact` 命中验真均为 pdf_annotate 的 PDF 涂抹打码功能）。
+- xGoose（AI Agent 插件）／V2EX 评论上下文插件／自媒体获客工具（多平台发布＋AI 评论）／「一屏一物」小程序（时钟/倒计时/番茄钟）→ 消解：插件／AI／SaaS／小程序口径。
+- DCA 定投计算器 → 消解：财务类，方向修正不扩。
+- Squoosh／Diffchecker／Hemingway／CleanURL／OnlineOCR／Photopea／draw.io／TinyWow／FilePizza／Temp-Mail → 消解：站内对应工具已交付（img-compress／diff＋document_diff／readability-analyzer／url-tracker-cleaner／ocr_image_text）或体量／服务端口径不符。
+- FineReport 在线图表 → 消解：**chart_generator 已交付**（249 轮已消解）。
+- KKCE 网站测速/DNS 查询 → 消解：多节点测速需服务端，dns-lookup 已交付浏览器端口径。
+
+**候选池变动**：Shell 命令解释器交付划出（b2dd38b，319 Path，205 tests）；**数据库 ER 图生成器新晋第三席**（池内递进；`er_diagram`／CJK「实体关系图」本轮复测全 0 命中，Icon `dataset` 精确值 0 命中，开发轮须先验 glyph）；Wordle 求解器新入池弱观察；G-code 预览器弱观察维持（`gcode` 9 处命中验真均为 OCR 工具 `langCode()` 大小写不敏感假阳性，`gcode_viewer` 仍 0 命中）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十九度跳过）；数独游戏 P3 观察维持第二席；和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）**本轮成功**——先以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份，VM 换机清空的老问题本轮复发再建，PM/开发轮若再遇同错可复用此命令）；fetch 后确认 origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD b2dd38b（Shell 命令解释器已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **319**；`ls tests/*.test.js | wc -l` = **205**；站内零重叠复核（ASCII `er_diagram`／`db_diagram`／`sql_to_er`／`wordle`／`chord`／`social_image_size`／`social-image-size`／`sudoku`／`gcode_viewer` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`gcode` 9 处命中验真均为 OCR 工具 `langCode()` 大小写不敏感假阳性；CJK「实体关系图」「数据库结构图」「刀路」「和弦」「音阶」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x5b9e／0x4f53／0x5173／0x7cfb／0x56fe、0x6570／0x636e／0x5e93／0x7ed3／0x6784／0x56fe、0x5200／0x8def、0x548c／0x5f26、0x97f3／0x9636）；Icon `dataset`／`lan`／`device_hub`／`foreign_key` 精确值 0 命中，`table_chart` 占用 1、`storage` 占用 1、`schema` 占用 1、`account_tree` 占用 2、`hub` 占用 2、`merge_type` 占用 1、`call_split` 占用 1；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 21:00 · PM 选定轮，接通用调研第二百四十九轮）
 
 **选定：Shell 命令解释器（explainshell 模式）（shell_explainer）** — 本轮唯一任务（新工具）。
