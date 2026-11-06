@@ -200,7 +200,7 @@ notHas(JS_SRC, "localStorage", "JS 零存储：不写 localStorage");
 
 /* ---------- 9. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 311, "注册 Path 总数 309→310");
+eq(pathCount, 312, "注册 Path 总数 309→310");
 has(GO_SRC, '"music_visualizer"', "注册：ID music_visualizer");
 has(GO_SRC, '"/tools/music-visualizer"', "注册：Path /tools/music-visualizer");
 has(GO_SRC, '"equalizer"', "注册：Icon equalizer");

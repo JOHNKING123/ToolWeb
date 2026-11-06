@@ -1,3 +1,103 @@
+## 今日任务（2026-11-06 07:41 · PM 选定轮，接通用调研第二百四十二轮）
+
+**选定：灵感板/拼贴板（Moodboard）** — 本轮唯一任务（新工具）。
+
+**顺位**：242 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十二度裁定跳过**（沿用 231–241 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十一轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤的真工具，一天可高质量交付，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），灵感板口径站内 0 交付。
+2. **口径差异化确凿**：与 photo_collage 九宫格拼图仅「图片排布＋PNG 导出」表层重叠，本质不同：photo_collage 是固定宫格合成一张图（布局模板＋拖拽换位＋间距圆角），本工具是**自由画布灵感收集**（任意位置/尺寸卡片＋便签＋色板＋链接＋模板＋本地保存），便签/色板/链接/模板四要素为 photo_collage 完全没有的口径；模板内与 photo_collage 单向互链（"拼好九宫格再来灵感板自由排布"），形成「拼图合成→灵感收集」顺流。
+3. **需求验证**：做设计／装修／穿搭／婚礼策划要把参考图、配色、文字灵感拼在一处，现有免费板要注册登录、文件上传云端；浏览器本地做、零上传、无次数。Moodboard 11-04 信号印证（twelve.tools：免费在线灵感板，图片＋便签＋链接＋色板，12 套可编辑模板，分享／演示／导出）。
+4. **技术路线站内已有先例**：photo_collage 已跑通 canvas 合成＋PNG 导出（static/js/photo_collage.js：validateCollageConfig／computeCollageLayout／buildCollageFileName）；mind_map.js／random_decision.js 已有 localStorage 本地保存先例；本工具只在既有模式上多一步自由画布（绝对定位卡片＋拖拽缩放）与四类卡片，无新外部依赖、无服务端、无模型权重。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`moodboard` 全站（tools/templates/static/js/tests）**0 命中**——灵感板本体 0 交付，真缺口确凿。
+   - CJK「灵感板」／「拼贴」`chr(0x...)` 运行时构造全站 **0 命中**。
+   - `collage` 命中验真全为 photo_collage 九宫格拼图口径（categories.go 条目＋templates/photo_collage.html＋static/js/photo_collage.js＋九宫格/图片拼接互链），与灵感板自由画布口径仅表层重叠（见第 2 条差异化）。
+   - Icon：**`collections` 首选**（经典 Material Icons 官方 codepoints 全文检索确有此 glyph：e3b6；`Icon:\s*"collections"` 精确值 **0 命中**，全库唯一，贴合「灵感收集」语义；备选 `auto_awesome_mosaic` 亦确有 glyph（e660）且精确值 0 命中；`dashboard`／`grid_view`／`wallpaper`／`style`／`palette`／`photo_library`／`color_lens`／`format_paint` 各占用 1，不可取；`image` 占用 4，不可取；`layers`／`view_quilt`／`note`／`sticky_note_2`／`push_pin` 亦 0 命中但语义不及 collections），开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十二度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片智能抠图／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 自由画布（800×600 逻辑画布，卡片绝对定位，拖拽移动＋右下角缩放手柄＋删除/复制/置顶/置底，画布缩放 50%–150%，网格背景开关）② 四类卡片：图片（本地上传 FileReader→dataURL，单张 ≤2MB、总计 ≤20 张，零上传）、便签（文本＋背景色 6 档）、链接卡片（URL＋标题，字母占位图标，不抓取网页内容/缩略图，零外部请求）、色板（HEX 色块＋色值一键复制）③ 模板 ≥4 套一键套用：空白自由／设计参考／装修配色／婚礼策划／穿搭灵感（预置卡片布局，套用前清空画布需二次确认）④ PNG 导出：canvas 合成当前画布（沿用 photo_collage 导出模式），图片卡片 drawImage 绘制 ⑤ 本地保存：localStorage 自动保存（mind_map.js 先例）＋导出/导入 JSON 备份 ⑥ 撤销栈 20 步（增删改移位均可撤销）⑦ 互链：photo_collage 单向互链（"拼好九宫格再来灵感板自由排布"）⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（tab 聚焦可操作、动画可减弱）⑩ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.Moodboard 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `validateBoardCard(card)` → card（type 须为 image/note/link/swatch 之一，否则 err.field='type'；x/y 须为 ≥0 有限数，否则 err.field='position'；w/h 须为正有限数，否则 err.field='size'；image 卡片须有非空 dataUrl，否则 err.field='dataUrl'；link 卡片须有非空 url，否则 err.field='url'；swatch 卡片须有合法 hex，否则 err.field='color'）。
+  - `clampCardPosition(x, y, boardW, boardH, cardW, cardH)` → {x, y}（卡片钳制在画布内：x∈[0, boardW−cardW]，y∈[0, boardH−cardH]；boardW/boardH/cardW/cardH 须为正有限数，否则 err.field='board'）。
+  - `normalizeHex(hex)` → "#rrggbb"（接受 "#FFF"／"FFF"／"#ff0000"／"ff0000"，统一小写 6 位；非法抛错 err.field='hex'）。
+  - `clampZoom(zoom)` → number（zoom 钳制到 [0.5, 1.5]；须为有限数，否则 err.field='zoom'）。
+  - `applyTemplate(templateId)` → card[]（templateId 须为 blank/design/decor/wedding/fashion 之一，否则 err.field='templateId'；blank → []；其余返回预置卡片数组，每张均通过 validateBoardCard）。
+  - `moveCardToFront(cards, cardId)`／`moveCardToBack(cards, cardId)` → card[]（原数组不动，返回新数组；cardId 不存在抛错 err.field='cardId'；cards 须为非空数组，否则 err.field='cards'）。
+  - `buildExportFileName(baseName)` → string（去扩展名＋"-moodboard.png"；baseName 为空/空白时回退 "moodboard.png"；baseName 须为字符串，否则 err.field='fileName'）。
+  - `validateBoardState(state)` → state（state.cards 须为数组，否则 err.field='cards'；每张卡片过 validateBoardCard；卡片数 ≤20，否则 err.field='cards'）。
+- **数值锚点（测试精确值）**：normalizeHex："#FFF" → "#ffffff"；"ff0000" → "#ff0000"；"#1a2B3c" → "#1a2b3c"；"gggggg"／"#12" 抛错 err.field='hex'。clampCardPosition：(900, 700, 800, 600, 100, 100) → {x:700, y:500}；(−20, −10, 800, 600, 100, 100) → {x:0, y:0}；(100, 100, 800, 600, 100, 100) → {x:100, y:100}。clampZoom：0.2 → 0.5；2 → 1.5；1 → 1；0.75 → 0.75。applyTemplate：'blank' → []；'design' 长度 ≥4 且首张 type 为 image 或 note；'unknown' 抛错 err.field='templateId'。moveCardToFront：[a,b,c]、id b → [a,c,b]，原数组不变；未知 id 抛错 err.field='cardId'。moveCardToBack：[a,b,c]、id b → [b,a,c]。buildExportFileName："婚礼灵感" → "婚礼灵感-moodboard.png"；"board.json" → "board-moodboard.png"；"" → "moodboard.png"。validateBoardCard：type 非法抛错 err.field='type'；w=0 抛错 err.field='size'；image 卡片无 dataUrl 抛错 err.field='dataUrl'；swatch 卡片 hex 非法抛错 err.field='color'。validateBoardState：21 张卡片抛错 err.field='cards'。
+- **真限制四条页面明示**：① 图片以 dataURL 存 localStorage，浏览器存储约 5MB 上限，图片过多/过大时保存会失败并明确提示（建议导出 JSON 备份）；② PNG 导出只合成画布内卡片，超出画布边界的部分不导出；③ 链接卡片只保存标题与 URL，不抓取网页内容/缩略图（零外部请求）；④ 全程浏览器本地计算，零上传；换浏览器/清缓存后本地看板丢失，务必导出 JSON 备份。
+- **SEO**：灵感板、moodboard、拼贴板、设计灵感收集、灵感收集板。
+- **改动文件**：tools/categories.go（「图片处理」类目新增 moodboard 条目，紧邻 photo_collage，Path 311→**312**，Icon `collections` 首选，开发轮精确值复测锁定全库唯一）／templates/moodboard.html（新）／static/js/moodboard.js（新）／tests/moodboard.test.js（新）／全量旧 tests Path 断言 311→312 数值同步（仅断言数值）。
+- **验收标准**：① node 新测试 ≥60 断言全过（normalizeHex／clampCardPosition／clampZoom／applyTemplate／moveCardToFront／moveCardToBack／buildExportFileName／validateBoardCard／validateBoardState 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 197→**198** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/moodboard 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：四类卡片增删改拖拽缩放、模板套用（≥4 套）、PNG 导出可打开、刷新后 localStorage 恢复、JSON 导出导入、撤销 20 步、互链 photo_collage 可用（开发轮记录）。
+- **品类归位**：注册到「图片处理」类目（与 photo_collage／long_image_slice／exif_strip／base64toimg 同类目，自由画布灵感收集口径与九宫格拼图口径互补；模板内与 photo_collage 单向互链）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：灵感板/拼贴板→本轮交付（242 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十二度跳过（数据表负债从严，231–241 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII moodboard 全 0 命中，CJK 灵感板／拼贴全 0 命中，collage 命中全为 photo_collage 九宫格他人口径）；图片处理类目，自由画布口径与九宫格拼图口径互补；Icon `collections` 首选 0 命中全库唯一，官方 codepoints 验真 glyph e3b6 存在）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十二度跳过）／数独游戏→P3 观察维持／图片智能抠图／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳跳转链追踪／视频提取音频→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常；本地 HEAD 2ab743f（在线节拍器已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` = **311**；`ls tests/*.test.js | wc -l` = **197**；PM 独立零重叠复核（ASCII `moodboard` 全 0 命中（vendor 排除，BACKLOG.md 除外）；CJK「灵感板」／「拼贴」`chr(0x...)` 运行时构造 0 命中；`collage` 命中验真全为 photo_collage 九宫格拼图口径；Icon `collections`（e3b6）／`auto_awesome_mosaic`（e660）官方 codepoints（2235 条）验真 glyph 存在且精确值 0 命中，`dashboard`／`grid_view`／`wallpaper`／`style`／`palette`／`photo_library`／`color_lens`／`format_paint` 各占用 1，`image` 占用 4）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例；工作区另有研究轮未提交的 BACKLOG 修改，属同一文件、不动；未跟踪的 `toolweb` 二进制不动）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 07:36 · 产品调研推荐，第二百四十二轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：在线节拍器已交付闭环（2ab743f 新增：`/tools/metronome`，Path 总数 310→**311**，tests **197 个**；新测试 157 断言全过；Icon `av_timer` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 全 0 命中；CJK「社媒」命中验真全为社媒标题／标签／卡片等他人口径，「证件照」命中验真全为 id_photo_maker 证件照制作（制作为主，非规格速查表）——尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十一度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，CJK「数独」`chr(0x...)` 运行时构造（codepoints 验真 0x6570／0x72d7）**0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **灵感板/拼贴板（Moodboard）** — **新晋第三席**。Moodboard 11-04 信号（twelve.tools：免费在线灵感板，图片＋便签＋链接＋色板，12 套可编辑模板，分享／演示／导出）；痛点：做设计／装修／穿搭／婚礼策划要把参考图、配色、文字灵感拼在一处，现有免费板要注册登录、文件上传云端；浏览器本地做、零上传、无次数；实现纯前端小-中难度（自由画布拖拽排布＋图片／便签／链接／色板四类卡片＋模板＋PNG 导出，沿用 photo_collage canvas 导出模式，零外部模型）。站内零重叠本轮复核确凿：`moodboard` ASCII 全站 **0 命中**；CJK「灵感板」／「拼贴」`chr(0x...)` 运行时构造（codepoints 验真）**0 命中**。**弱点**：与站内 photo_collage 九宫格拼图口径部分重叠（图片排布＋PNG 导出），须以便签＋色板＋链接＋模板差异化；受众偏设计人群。SEO：灵感板、moodboard、拼贴板、设计灵感收集。建议 ID moodboard、Path /tools/moodboard；Icon 待开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十一度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku`／CJK「数独」本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 灵感板/拼贴板（Moodboard） | **新晋第三席**：Moodboard 11-04 信号；站内本体 0 交付（`moodboard`／灵感板／拼贴全 0 命中）；纯前端小-中难度；**弱点**：与 photo_collage 部分重叠须差异化，受众偏设计人群 | 小-中 | P3（新晋） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 反应速度测试 | P3 弱观察维持；Tooleek 信号；ASCII `reaction`／CJK「反应速度」全 0 命中；**弱点**：纯趣味测试，工具价值低 | 小 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | P3 观察维持；**弱点**：vendor 体积＋需求人群窄＋移动端性能 | 中 | P3（观察） |
+| 英文反向词典 | P3 弱观察维持；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 唱歌音准检测 | P3 弱观察维持；需麦克风＋Web Audio 频谱，中等难度＋权限摩擦 | 中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | P3 弱观察维持；`video_to_audio`／`extract_audio`／CJK「视频转音频」全站 0 命中；**弱点**：无 ffmpeg.wasm 时只能 MediaRecorder 实时重录（3 分钟视频等 3 分钟），体验差 | 中 | P3（弱观察） |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 05:41~07:36 窗口；本轮**新晋 1 个**）：
+- **Moodboard 11-04（twelve.tools）**：免费在线灵感板，图片＋便签＋链接＋色板，12 套可编辑模板，分享／演示／导出 → **灵感板/拼贴板新晋第三席**（见 Top3）。
+- Invoiceize（Product Hunt 11-01 浏览器发票生成器）→ 消解：站内 `invoice_generator` 已交付（`/tools/invoice-generator`，税率／折扣／人民币大写／A4 打印导出 PDF；`invoice` 命中验真为已交付本体）。
+- Product Hunt 11-05~11-06：Bridge／Rerun／Living Brain／Clocknext（AI Agent 计费基建）／Okapi／Cosyra／Keel（macOS Redis 客户端）／Stitch.ai／HiveMind（$499 Notion 模板）→ AI agent／开发者基建／模板口径全消解；Screen Studio 4.0／Clayzo／beacon.sh／Xmind 2027／magpie（240 轮已消解）。
+- twelve.tools 11-04~11-06 新品：Anwaar Free Tools（63 工具聚合站口径消解）；Online Bingo Caller（游戏口径消解）；Free Online Convert（393 转换器聚合站口径消解）；I Love Web Games（7300 游戏门户口径消解）；Coddy（学编程平台口径消解）；Shotink（AI 漫画转视频，需 AI 模型，弱口径不入池）；TCG Hacker（241 轮已消解）；Shadow Snap／Play1Minute（241 轮已消解）。
+- V2EX 11-04~11-06：小宇宙网页版（播客客户端，需扫码登录＋平台接口，口径消解）；1ms.dog 工具站复盘（延迟／出口／IP 质量／DNS／网速检测口径：站内 speedtest／nettools 已覆盖，DNS／IP 质量检测需服务端＋出网，弱口径不入池）；V2EX 评论上下文插件／旁白翻译插件／xGoose（扩展口径消解）。
+- Hacker News：USB Device Identifier（240 轮已消解）；HN Companion 扩展（AI 摘要扩展口径消解）；Hyperparam／RMBG（240 轮已消解）；Remove Background Noise（Chrome 扩展＋WASM 模型，扩展口径消解）。
+- 中文搜索：Tiny Online Tools（570 工具站；3D 模型查看器印证池内 3D 模型预览器 P3 观察；STL 切片转 G-code niche 不入池）；OpenAA 美国华人工具站（工资／税／房贷计算器为主，10-18 方向修正：不扩泛财务／生活计算器，消解）；OpenTool／AIHH.ai／simpletool.io（聚合站形态印证，站内形态已有）。
+
+**候选池变动**：metronome 交付划出（2ab743f，311 Path，197 tests）；**灵感板/拼贴板新晋第三席**（Moodboard 11-04 信号，站内本体 0 交付＋纯前端小-中难度；与 photo_collage 部分重叠须差异化）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十一度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／反应速度测试／X 视频转 GIF／3D 模型预览器／英文反向词典／唱歌音准检测／视频转 SRT／短链逐跳追踪／视频提取音频 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮正常（known_hosts 又被 VM 换机清空——老问题，StrictHostKeyChecking=no 自动重建后一次成功）；本地 HEAD 2ab743f（在线节拍器已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **311**；`ls tests/*.test.js | wc -l` = **197**；本地当前分支 muse/dev-20260929；工作区除未跟踪的 `toolweb` 二进制外干净（BACKLOG 追加前）；站内零重叠复核（`sudoku`／`moodboard`／`social_image_size`／`social-image-size` 全 0 命中；CJK「数独」／「灵感板」／「拼贴」`chr(0x...)` 运行时构造 0 命中（codepoints 验真）；「社媒」命中验真全为社媒标题／标签／卡片他人口径，「证件照」命中验真全为 id_photo_maker 证件照制作他人口径；`invoice` 命中验真为 invoice_generator 已交付本体，Invoiceize 信号消解；`collage` 命中验真为 photo_collage 九宫格拼图口径，与灵感板部分重叠）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 05:41 · PM 选定轮，接通用调研第二百四十一轮）
 
 **选定：在线节拍器（metronome）** — 本轮唯一任务（新工具）。

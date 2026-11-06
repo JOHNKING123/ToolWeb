@@ -1545,6 +1545,15 @@ func GetCategories() []Category {
 					Category:    "图片处理",
 				},
 				{
+					ID:          "moodboard",
+					Name:        "灵感板 / 拼贴板",
+					Description: "自由画布灵感收集板：图片/便签/链接/色板四类卡片任意排布，拖拽移动缩放，5 套模板一键套用，PNG 导出＋JSON 备份，本地保存零上传 · Moodboard: free canvas with image/note/link/swatch cards, drag & resize, templates, PNG export, local-only",
+					Path:        "/tools/moodboard",
+					Icon:        "collections",
+					New:         true,
+					Category:    "图片处理",
+				},
+				{
 					ID:          "exif_strip",
 					Name:        "EXIF 信息查看/清除",
 					Description: "查看照片 EXIF 元数据（GPS 定位/机型/拍摄时间），一键字节级无损清除，本地处理不上传",

@@ -134,7 +134,7 @@ notHas(JS_SRC, "WebSocket", "零网络：doc_bg_cleaner.js 无 WebSocket");
 
 /* ---------- 9. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/Path:\s*"/g) || []).length;
-eq(pathCount, 311, "注册 Path 总数 300→301");
+eq(pathCount, 312, "注册 Path 总数 300→301");
 has(GO_SRC, 'ID:          "doc_bg_cleaner"', "注册：ID doc_bg_cleaner");
 has(GO_SRC, 'Path:        "/tools/doc-bg-cleaner"', "注册：Path /tools/doc-bg-cleaner");
 has(GO_SRC, 'Icon:        "filter_b_and_w"', "注册：Icon filter_b_and_w");

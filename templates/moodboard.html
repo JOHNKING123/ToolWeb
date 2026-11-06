@@ -1,0 +1,196 @@
+{{define "moodboard"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵感板 / 拼贴板 - 自由画布收集设计灵感（本地免费）</title>
+    <meta name="description" content="免费在线灵感板/拼贴板：800×600 自由画布，图片/便签/链接/色板四类卡片任意排布，拖拽移动缩放，设计参考/装修配色/婚礼策划/穿搭灵感 5 套模板一键套用，canvas 合成 PNG 导出，localStorage 自动保存＋JSON 备份，纯前端本地处理零上传 · Moodboard: free-form canvas, image/note/link/swatch cards, templates, PNG export, 100% client-side">
+    <meta name="keywords" content="灵感板,moodboard,拼贴板,设计灵感收集,灵感收集板,灵感拼贴,配色板,设计参考板">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/moodboard">
+    <meta property="og:title" content="灵感板 / 拼贴板 - 自由画布收集设计灵感">
+    <meta property="og:description" content="自由画布灵感收集板：图片/便签/链接/色板任意排布，5 套模板一键套用，PNG 导出＋JSON 备份，纯本地不上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/moodboard">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"灵感板 / 拼贴板","description":"自由画布灵感收集板：图片/便签/链接/色板四类卡片任意排布，拖拽移动缩放，5 套模板一键套用，canvas 合成 PNG 导出，localStorage 自动保存＋JSON 备份；纯前端本地处理零上传。","url":"https://www.johnkingzcq123.xyz/tools/moodboard","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .mb-limits{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.93rem;line-height:1.9;color:#065f46}
+        .mb-limits ol{margin:.2rem 0;padding-left:1.2rem}
+        .mb-limits b{color:#047857}
+        .mb-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1rem 1.2rem;margin-bottom:1rem}
+        .mb-panel h3{margin:0 0 .8rem;font-size:1rem;color:#111827}
+        .mb-row{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem;font-size:.92rem;color:#374151}
+        .mb-row:last-child{margin-bottom:0}
+        .mb-row input[type=text]{flex:1;min-width:160px;border:1px solid #d1d5db;border-radius:.5rem;padding:.45rem .6rem;font-size:.92rem}
+        .mb-row input[type=range]{flex:1;min-width:140px;accent-color:#2563eb}
+        .mb-row b{color:#111827;font-variant-numeric:tabular-nums;min-width:3rem}
+        .mb-tpl-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+        .mb-tpl-btn{border:1px solid #d1d5db;background:#fff;border-radius:.6rem;padding:.55rem .95rem;cursor:pointer;font-size:.92rem;color:#374151}
+        .mb-tpl-btn:hover{background:#f3f4f6}
+        .mb-tpl-btn.active{background:var(--primary-color);border-color:var(--primary-color);color:#fff}
+        .mb-add-btns{display:flex;gap:.6rem;flex-wrap:wrap}
+        .mb-add-btns .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .mb-board-scroll{overflow:auto;border:1px solid #e5e7eb;border-radius:.8rem;background:#f9fafb;padding:1rem}
+        .mb-canvas-wrap{position:relative;margin:0 auto}
+        .mb-canvas{position:relative;width:800px;height:600px;background:#fff;border:1px solid #d1d5db;border-radius:.4rem;transform-origin:top left;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+        .mb-canvas.mb-grid{background-image:linear-gradient(#e5e7eb 1px,transparent 1px),linear-gradient(90deg,#e5e7eb 1px,transparent 1px);background-size:20px 20px}
+        .mb-card{position:absolute;border:1px solid #d1d5db;border-radius:.5rem;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:move;overflow:hidden;user-select:none}
+        .mb-card.sel{border:2px solid var(--primary-color);box-shadow:0 0 0 3px rgba(37,99,235,.25)}
+        .mb-card .mb-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+        .mb-card-bar{position:absolute;top:.25rem;right:.25rem;display:none;gap:.25rem;z-index:5}
+        .mb-card.sel .mb-card-bar{display:flex}
+        .mb-card-bar button{border:1px solid #d1d5db;background:rgba(255,255,255,.95);border-radius:.35rem;padding:.15rem .4rem;font-size:.72rem;cursor:pointer;color:#374151}
+        .mb-card-bar button:hover{background:#eff6ff}
+        .mb-resize{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;z-index:6;display:none;
+            background:linear-gradient(135deg,transparent 50%,var(--primary-color) 50%)}
+        .mb-card.sel .mb-resize{display:block}
+        .mb-note-text{width:100%;height:calc(100% - 34px);border:none;resize:none;padding:.7rem .8rem;font-size:.95rem;line-height:1.6;background:transparent;outline:none;cursor:text;font-family:inherit}
+        .mb-note-colors{display:flex;gap:.35rem;padding:.3rem .6rem;border-top:1px solid rgba(0,0,0,.06)}
+        .mb-note-color{width:1.3rem;height:1.3rem;border-radius:50%;border:2px solid rgba(0,0,0,.12);cursor:pointer;padding:0}
+        .mb-note-color.active{border-color:#111827;box-shadow:0 0 0 2px rgba(37,99,235,.35)}
+        .mb-card-note{background:#fef9c3}
+        .mb-link-body{display:flex;flex-direction:column;gap:.4rem;padding:.7rem .8rem;height:100%;box-sizing:border-box}
+        .mb-link-letter{width:2.2rem;height:2.2rem;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex:none}
+        .mb-link-title,.mb-link-url{border:1px solid transparent;border-radius:.4rem;padding:.3rem .45rem;font-size:.9rem;width:100%;box-sizing:border-box;background:transparent;outline:none}
+        .mb-link-title{font-weight:700;color:#111827}
+        .mb-link-url{color:#6b7280;font-size:.82rem}
+        .mb-link-title:focus,.mb-link-url:focus{border-color:#93c5fd;background:#fff}
+        .mb-swatch-fill{width:100%;height:calc(100% - 34px)}
+        .mb-swatch-foot{display:flex;gap:.45rem;align-items:center;padding:.3rem .6rem;height:34px;box-sizing:border-box}
+        .mb-swatch-hex{font-family:monospace;font-weight:700;font-size:.85rem;color:#111827}
+        .mb-swatch-foot button{border:1px solid #d1d5db;background:#fff;border-radius:.35rem;padding:.15rem .45rem;font-size:.75rem;cursor:pointer}
+        .mb-swatch-input{width:1.6rem;height:1.6rem;padding:0;border:1px solid #d1d5db;border-radius:.35rem;cursor:pointer;margin-left:auto}
+        .mb-actions{display:flex;gap:.7rem;flex-wrap:wrap}
+        .mb-actions .btn .material-icons{font-size:1.1rem;vertical-align:-2px;margin-right:.25rem}
+        .mb-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+        .mb-hint{font-size:.85rem;color:#6b7280;margin-top:.6rem;line-height:1.8}
+        .mb-status{font-size:.85rem;color:#6b7280}
+        .mb-save-warn{display:none;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:.6rem;padding:.6rem .8rem;font-size:.88rem;line-height:1.7;margin-top:.6rem}
+        .mb-toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);background:#111827;color:#fff;border-radius:.6rem;padding:.6rem 1.1rem;font-size:.92rem;display:none;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+        .mb-links{display:flex;gap:.6rem;flex-wrap:wrap}
+        .mb-note{font-size:.9rem;color:#6b7280;margin-top:.6rem;line-height:1.8}
+        .mb-doc{color:#374151;line-height:1.9;font-size:.95rem}
+        .mb-doc b{color:#111827}
+        @media (max-width:640px){
+            .mb-actions .btn{flex:1 1 100%;justify-content:center}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">collections</i> 灵感板 / 拼贴板</h1>
+            <p>自由画布收集设计灵感：图片、便签、链接、色板任意排布，模板一键套用，PNG 导出，本地保存零上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="mb-limits">
+                <div><b>真限制说明：</b>
+                    <ol>
+                        <li><b>localStorage 约 5MB 上限：</b>图片以 dataURL 存在浏览器本地存储，图片过多/过大时自动保存会失败并明确提示，请及时导出 JSON 备份；</li>
+                        <li><b>PNG 只导出画布内卡片：</b>超出 800×600 画布边界的部分不导出，导出前请确认卡片都在画布内；</li>
+                        <li><b>链接卡片不抓取内容：</b>只保存标题与 URL，不抓取网页内容/缩略图，零外部请求；</li>
+                        <li><b>换浏览器/清缓存看板丢失：</b>看板只保存在当前浏览器本地，换浏览器或清除缓存后丢失，务必导出 JSON 备份。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="mb-panel">
+                <h3>看板名称</h3>
+                <div class="mb-row">
+                    <input type="text" id="mb-board-name" value="我的灵感板" maxlength="40" aria-label="看板名称">
+                    <span class="mb-status" id="mb-status"></span>
+                </div>
+                <div class="mb-row">
+                    <span id="mb-save-status" class="mb-status">尚未保存</span>
+                </div>
+                <div class="mb-save-warn" id="mb-save-warn">本地保存失败：浏览器存储约 5MB 上限，图片过多/过大时存不下。请立即导出 JSON 备份，以免丢失。</div>
+            </div>
+
+            <div class="mb-panel">
+                <h3>模板一键套用 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（已有卡片时套用非空白模板会先二次确认）</span></h3>
+                <div class="mb-tpl-btns" role="group" aria-label="灵感板模板">
+                    <button type="button" class="mb-tpl-btn" data-template="blank">空白自由</button>
+                    <button type="button" class="mb-tpl-btn" data-template="design">设计参考</button>
+                    <button type="button" class="mb-tpl-btn" data-template="decor">装修配色</button>
+                    <button type="button" class="mb-tpl-btn" data-template="wedding">婚礼策划</button>
+                    <button type="button" class="mb-tpl-btn" data-template="fashion">穿搭灵感</button>
+                </div>
+            </div>
+
+            <div class="mb-panel">
+                <h3>添加卡片</h3>
+                <div class="mb-add-btns">
+                    <button class="btn btn-primary" id="mb-add-image"><i class="material-icons">add_photo_alternate</i> 添加图片</button>
+                    <button class="btn btn-secondary" id="mb-add-note"><i class="material-icons">note_add</i> 添加便签</button>
+                    <button class="btn btn-secondary" id="mb-add-link"><i class="material-icons">link</i> 添加链接</button>
+                    <button class="btn btn-secondary" id="mb-add-swatch"><i class="material-icons">palette</i> 添加色板</button>
+                </div>
+                <input type="file" id="mb-file" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none;">
+                <p class="mb-hint">图片本地上传（FileReader 转 dataURL，单张 ≤2MB、总计 ≤20 张），零上传；便签 6 档背景色；链接卡片只存标题与地址，不抓取网页；色板点色值一键复制。</p>
+            </div>
+
+            <div class="mb-panel">
+                <h3>画布 <span style="font-weight:400;font-size:.85rem;color:#9ca3af;">（拖动卡片移动，选中后右下角拖动缩放；点空白处取消选中；Ctrl+Z 撤销，Delete 删除选中卡片）</span></h3>
+                <div class="mb-row">
+                    <button class="btn btn-secondary" id="mb-zoom-out" aria-label="缩小画布">−</button>
+                    <input type="range" id="mb-zoom" min="50" max="150" step="5" value="100" aria-label="画布缩放">
+                    <b id="mb-zoom-val">100%</b>
+                    <button class="btn btn-secondary" id="mb-zoom-in" aria-label="放大画布">＋</button>
+                    <label style="display:flex;gap:.35rem;align-items:center;cursor:pointer;">
+                        <input type="checkbox" id="mb-grid-toggle" checked> 网格背景
+                    </label>
+                    <button class="btn btn-secondary" id="mb-undo" disabled>撤销</button>
+                    <button class="btn btn-secondary" id="mb-clear">清空看板</button>
+                </div>
+                <div class="mb-board-scroll">
+                    <div class="mb-canvas-wrap" id="mb-canvas-wrap">
+                        <div class="mb-canvas mb-grid" id="mb-canvas"></div>
+                    </div>
+                </div>
+                <div class="mb-card-tools mb-row" id="mb-card-tools" style="display:none;margin-top:.8rem;">
+                    <span>选中卡片操作：点卡片右上角的「复制 / 置顶 / 置底 / 删除」即可；色板点「复制色值」复制 HEX。</span>
+                </div>
+            </div>
+
+            <div class="mb-panel">
+                <h3>导出与备份</h3>
+                <div class="mb-actions">
+                    <button class="btn btn-primary" id="mb-export-png"><i class="material-icons">download</i> 导出 PNG</button>
+                    <button class="btn btn-secondary" id="mb-export-json"><i class="material-icons">save_alt</i> 导出 JSON 备份</button>
+                    <button class="btn btn-secondary" id="mb-import-json"><i class="material-icons">upload_file</i> 导入 JSON 备份</button>
+                </div>
+                <input type="file" id="mb-json-file" accept="application/json,.json" style="display:none;">
+                <p class="mb-hint">PNG 导出为 800×600 画布合成图（仅画布内卡片）；JSON 备份包含全部卡片与看板名，换浏览器/清缓存后可导入恢复。</p>
+            </div>
+
+            <div class="mb-panel">
+                <h3>相关工具</h3>
+                <div class="mb-links">
+                    <a href="/tools/photo-collage" class="btn btn-secondary" style="font-size:.9rem;">照片拼图合成器 <span style="color:#2563eb;font-weight:700;">· 拼好九宫格再来灵感板自由排布</span></a>
+                </div>
+                <p class="mb-note">分工：照片拼图合成器把多图拼成一张固定宫格照片墙；灵感板是自由画布，把参考图、便签、链接、配色钉在一起慢慢攒灵感——拼好九宫格再来灵感板自由排布。</p>
+            </div>
+
+            <div class="mb-panel">
+                <h3>真限制说明</h3>
+                <div class="mb-doc">
+                    <b>localStorage 约 5MB 上限：</b>图片以 dataURL 存在浏览器本地存储，图片过多/过大时自动保存会失败并明确提示，请及时导出 JSON 备份。<br>
+                    <b>PNG 只导出画布内卡片：</b>超出 800×600 画布边界的部分不导出，导出前请确认卡片都在画布内。<br>
+                    <b>链接卡片不抓取内容：</b>只保存标题与 URL，不抓取网页内容/缩略图，零外部请求。<br>
+                    <b>换浏览器/清缓存看板丢失：</b>看板只保存在当前浏览器本地，换浏览器或清除缓存后丢失，务必导出 JSON 备份。<br>
+                    <b>纯本地零上传：</b>图片上传、排布、PNG 导出、JSON 备份全部在浏览器本地完成，不上传任何服务器。
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-toast" id="mb-toast" role="status"></div>
+    <script src="/tools/static/js/moodboard.js?v=1"></script>
+</body>
+</html>
+{{end}}
