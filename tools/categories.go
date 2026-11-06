@@ -254,6 +254,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "编码转换",
 				},
+				{
+					ID:          "traditional_simplified_converter",
+					Name:        "简繁转换",
+					Description: "简繁转换/繁简转换：简体↔繁体双向互转（短语表最长匹配优先、单字表逐字，常用字对照 3880 字），歧义字组标注候选并提示人工校对（发/干/后/里/余/面等一字多繁），统计面板（输入字数/转换字数/短语命中数），一键复制/下载 .txt/清空，古籍/歌词/港台新闻/字幕/日常用语 5 组预设示例，只做字形简繁互转、不做字符编码转换，全程浏览器本地转换零上传 · Traditional/Simplified Chinese converter: convert between Simplified and Traditional Chinese locally, phrase-first longest match, ambiguous characters flagged for manual review, 100% client-side",
+					Path:        "/tools/traditional-simplified-converter",
+					Icon:        "g_translate",
+					New:         true,
+					Category:    "编码转换",
+				},
 			},
 		},
 		{

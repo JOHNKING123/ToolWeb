@@ -1,3 +1,119 @@
+## 今日任务（2026-11-07 03:45 · PM 选定轮，接通用调研第二百五十二轮）
+
+**选定：简繁转换（繁简互转）（traditional_simplified_converter）** — 本轮唯一任务（新工具）。
+
+**顺位**：252 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十二度裁定跳过**（沿用 231–251 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十一轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），简繁互转本体站内 0 交付。
+2. **口径互补确凿**：站内已有中文字符类工具，但无一做「字形简繁互转」——encoding_converter 是字符编码口径（GBK／UTF-8／\uXXXX 转义与乱码恢复，简繁 0 命中），slug_generator 内置拼音表只服务 slug 生成；本工具为**字形简繁互转口径**（粘贴文本→简→繁／繁→简双向转换，短语表优先消歧），与 encoding_converter 形成「编码↔字形」分工互补（页面与互链须明示分工：本工具只做字形简繁互转，不做字符编码转换）。
+3. **需求验证**：两岸三地文本往来、古籍／歌词／字幕／港台资料阅读时，简繁互转要装软件或忍受广告站；浏览器本地粘贴即转、零上传。新信号印证（95dir「最指南」11-06 测评点名简繁转换；JSON 结构图交付后顺位递进）。
+4. **技术路线站内已有先例**：纯前端小难度——静态常用字对照表（并行字符串对位内嵌，零新增依赖）＋高频歧义词组表（短语最长匹配优先于单字映射），复用 text-tools／encoding-converter 的粘贴→转换→复制页面模式；模板零外部静态资源惯例。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`traditional_chinese`／`simplified_chinese`／`jianfan`／`sudoku`／`social_image_size`／`social-image-size` 全站（tools／templates／static／tests）**0 命中**——简繁互转本体与数独／尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「简繁转换」`chr(0x...)` 运行时构造（codepoints 验真 0x7b80／0x7e41／0x8f6c／0x6362）全站 **0 命中**；CJK「繁简转换」（0x7e41／0x7b80／0x8f6c／0x6362）全站 **0 命中**。
+   - CJK「数独」两处命中经 codepoint 解码验真均为「参数独立」子串假阳性（css_background_pattern_generator 模板 L125／JS L28，0x53c2／0x6570／0x72ec／0x7acb，163 轮误判教训再验证），ASCII `sudoku` 0 命中为真凭据。
+   - encoding-converter 口径核查：`jianfan`／`traditional`／`simplified` 在 encoding_converter 工具／模板／JS 中 **0 命中**，无口径重叠。
+   - Icon：**`g_translate` 首选**（`Icon:\s*"g_translate"` 精确值 **0 命中**，全库唯一；`translate` 已占用 1（encoding_converter）、`language` 已占用 1，不可取；备选 `sync_alt`／`spellcheck` 精确值均为 **0 命中**），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 json_graph_viewer `bubble_chart` e6dd 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十二度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／汉字转拼音（新入池；同 95dir 信号，多音字无语境消歧弱点与本工具同类，留池待后续）／Excel 查看器（新入池）／二维码传文件／LaTeX 公式预览（新入池弱观察）／G-code 预览器／Wordle 求解器／国际电话区号查询／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 粘贴文本（≤100000 字符）→ 简→繁／繁→简双向转换，一键互换方向与内容 ② 转换规则：短语表最长匹配优先，再单字表逐字；不在表中的字符原样保留 ③ 统计面板（输入字数／转换字数／短语命中数）④ 歧义字提示：命中短语表歧义的词组标注＋显示候选（如 发→發／髮），页面明示人工校对 ⑤ 一键复制结果、下载 .txt、清空 ⑥ 3–5 组预设示例（一键填入：古籍片段、歌词、港台新闻、字幕台词、日常用语）⑦ 互链：encoding_converter（"中文编码转换"）单向或双向互链（页面须明示分工：本工具只做字形简繁互转，不做字符编码转换）⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（输入框与按钮均可 tab 聚焦，结果有文字呈现）⑩ 模板零外部静态资源惯例（不引任何外部依赖，不走 CDN）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.TraditionalSimplifiedConverter 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `convertText(input, direction)` → {text, convertedCount, phraseHits, totalChars}（input 须为非空字符串，否则 err.field='input'；长度 >100000 抛错 err.field='input'；direction 取值 's2t'／'t2s'，否则 err.field='direction'；短语表最长匹配优先于单字映射；convertedCount 为转换前后不同的字符数；phraseHits 为短语表命中次数）。
+  - `simplifiedToTraditional(input)` → string（input 校验同 convertText，err.field='input'；内部调 convertText 's2t'，返回 text）。
+  - `traditionalToSimplified(input)` → string（同上，'t2s'）。
+  - `convertChar(ch, direction)` → string（ch 须为单个字符字符串，否则 err.field='ch'；direction 非法 err.field='direction'；单字默认映射（如 发→發），不在表返回原字符；短语优先只在 convertText 层）。
+  - 对照表以 module.exports 同步导出：`S2T_MAP`（简→繁单字映射对象，键数 ≥2000，以并行字符串对位方式内嵌公开标准常用字对照表，不得现编生造）／`T2S_MAP`（繁→简单字映射对象，多繁归一）／`PHRASE_TABLE`（歧义词组表，条数 ≥50，须覆盖发／干／后／里／余／面等高频歧义字）。
+- **数值锚点（测试精确值）**：simplifiedToTraditional：('头发') → '頭髮'；('发展') → '發展'；('干活') → '幹活'；('干净') → '乾淨'；('中国') → '中國'；('学习') → '學習'；('后面') → '後面'；('里面') → '裏面'。traditionalToSimplified：('頭髮') → '头发'；('發展') → '发展'；('中國') → '中国'；('後面') → '后面'。convertText：('中国', 's2t') → {text:'中國', convertedCount:2, totalChars:2}；('ABC123，。', 's2t').text === 'ABC123，。' 且 convertedCount 0；('头发发展', 's2t').phraseHits ≥ 2；('', 's2t') 抛错 err.field='input'；(123, 's2t') 抛错 err.field='input'；('x'.repeat(100001), 's2t') 抛错 err.field='input'；('中国', 'x') 抛错 err.field='direction'。convertChar：('发', 's2t') → '發'；('A', 's2t') → 'A'；('ab', 's2t') 抛错 err.field='ch'；('发', 'x') 抛错 err.field='direction'。往返：traditionalToSimplified(simplifiedToTraditional('中国学习')) === '中国学习'。表规模：Object.keys(S2T_MAP).length ≥ 2000；PHRASE_TABLE.length ≥ 50。
+- **真限制五条页面明示**：① 一字多繁歧义（如 发→發／髮、干→乾／幹／干）短语表未覆盖时可能错选，须人工校对，不替代专业校对；② 罕用字／异体字不在常用字表时原样保留；③ 繁→简无歧义（多繁归一），简→繁有歧义，方向不同准确率不同；④ 只做字形转换，不做地区词汇本地化（如 软件／軟體、视频／影片等地区用词差异不在转换范围）；⑤ 全程浏览器本地计算，零上传。
+- **SEO**：简繁转换、繁简转换、简体转繁体、繁体转简体。
+- **改动文件**：tools/categories.go（「编码转换」类目新增 traditional_simplified_converter 条目，紧邻 encoding_converter，Path 321→**322**，Icon `g_translate` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph，备选 `sync_alt`／`spellcheck` 精确值均为 0 命中）／templates/traditional_simplified_converter.html（新，define "traditional_simplified_converter"）／static/js/traditional_simplified_converter.js（新，window.TraditionalSimplifiedConverter）／tests/traditional_simplified_converter.test.js（新）／全量旧 tests Path 断言 321→322 数值同步（开发轮实测基数：161 个测试文件含 321 字面量，开发轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥150 断言全过（convertText／simplifiedToTraditional／traditionalToSimplified／convertChar 锚点精确值；非法参数抛错 err.field；S2T_MAP ≥2000 键、PHRASE_TABLE ≥50 条；模板零外部静态资源检查——页面无 CDN 链接）② 全量 tests/*.test.js 207→**208** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/traditional-simplified-converter 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：粘贴预设古籍／歌词 → 转换正确 → 方向切换／互换可用 → 复制／下载可用 → 歧义标注与人工校对提示可见 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「编码转换」类目（与 encoding_converter 同类目，中文字符形态／编码转换家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：简繁转换→本轮交付（252 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第二十二度跳过（数据表负债从严，231–251 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII traditional_chinese／simplified_chinese／jianfan 全 0 命中，CJK「简繁转换」「繁简转换」全 0 命中，CJK「数独」两处命中验真为「参数独立」子串假阳性；Icon `g_translate` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；encoding-converter 只做字符编码，简繁 0 命中，无口径重叠）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十二度跳过）／数独游戏→P3 观察维持／汉字转拼音→新入池／Excel 查看器→新入池／二维码传文件／LaTeX 公式预览→新入池弱观察／G-code 预览器／Wordle 求解器／国际电话区号查询／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）初次未带 env var 致 Permission denied（publickey），补带后 fetch 成功，origin/muse/dev-20260929 存在，本地 HEAD 399c1cb 与远端一致；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **321**；`ls tests/*.test.js | wc -l` = **207**；PM 独立零重叠复核（ASCII `traditional_chinese`／`simplified_chinese`／`jianfan`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「简繁转换」「繁简转换」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x7b80／0x7e41／0x8f6c／0x6362、0x7e41／0x7b80／0x8f6c／0x6362）；CJK「数独」两处命中验真均为「参数独立」子串假阳性（0x53c2／0x6570／0x72ec／0x7acb）；encoding_converter 工具／模板／JS 中 `jianfan`／`traditional`／`simplified` 0 命中；Icon `g_translate`／`sync_alt`／`spellcheck` 精确值 0 命中，`translate` 占用 1、`language` 占用 1；161 个测试文件含 321 字面量）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 03:00 · 产品调研推荐，第二百五十二轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：JSON 结构图可视化已交付闭环（5c0e61c 新增＋399c1cb 导出双致命 bug 修复：`/tools/json-graph-viewer`，Path 总数 320→**321**，tests **207 个**；新测试 303→330 断言全过；Icon `bubble_chart` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 251 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十一度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **简繁转换（繁简互转）** — **新晋第三席**（新信号；95dir「最指南」11-06 测评点名简繁转换；JSON 结构图交付后顺位递进）。痛点：两岸三地文本往来、古籍／歌词／字幕／港台资料阅读时，简繁互转要装软件或忍受广告站；浏览器本地粘贴即转、零上传。实现纯前端小难度（静态常用字对照表＋高频歧义词组表，零上传，零新增外部依赖）。站内零重叠本轮复核确凿：ASCII `traditional_chinese`／`simplified_chinese`／`jianfan` 全站 **0 命中**；CJK「简繁转换」「繁简转换」`chr(0x...)` 运行时构造（codepoints 验真 0x7b80／0x7e41／0x8f6c／0x6362、0x7e41／0x7b80／0x8f6c／0x6362）**0 命中**；encoding-converter 只做字符编码（GBK／UTF-8），简繁 0 命中，无口径重叠。**弱点**：一字多繁歧义（如 发→發／髮、干→乾／幹／干），纯字表会错，需短语表兜底＋页面明示「歧义字需人工校对、不替代专业校对」。SEO：简繁转换、繁简转换、简体转繁体。建议 ID traditional_simplified_converter、Path /tools/traditional-simplified-converter；Icon `g_translate` 精确值 **0 命中**（`translate` 已占用 1、`language` 已占用 1，不可取；备选 `sync_alt`／`spellcheck` 精确值均为 0 命中），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十一度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 简繁转换（繁简互转） | **新晋第三席**：95dir「最指南」11-06 信号；`traditional_chinese`／`simplified_chinese`／`jianfan`／CJK「简繁转换」「繁简转换」本轮复测全 0 命中；纯前端小难度（静态对照表＋歧义词组表，零新增依赖）；**弱点**：一字多繁歧义需短语表兜底＋页面明示人工校对 | 小 | P3（新晋） |
+| Excel 查看器（XLSX 在线预览） | **新入池**：WebUtils Medium 10-27「五件套」点名 Excel 查看器；`xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／CJK「Excel查看器」本轮复测全 0 命中；纯前端小-中难度（复用站内已 vendor 的 xlsx-0.18.5，json_to_excel／sheet_merge 等 5 处已在用，零新增依赖）；**弱点**：只做查看（公式／透视／宏不支持，页面明示），与 csv-table-viewer／sqlite-viewer 口径邻近但格式不同（XLSX 二进制未覆盖） | 小-中 | P3（新入池） |
+| 汉字转拼音 | **新入池**：95dir「最指南」11-06 信号；ASCII `pinyin` 命中均为 slug_generator 内置拼音表（仅服务 slug 生成，首屏延迟加载）及零散提及，CJK「汉字转拼音」本轮复测 **0 命中**，独立工具本体 0 交付；纯前端小难度（可复用 slug_generator 拼音表思路，声调／多音字标注）；**弱点**：多音字（如 行 xíng／háng）无语境消歧会错，需页面明示 | 小 | P3（新入池） |
+| 国际电话区号查询 | P3 弱观察维持；whispr.dev 11-06 信号；`dial_code`／`phone_code`／`calling_code`／CJK「区号查询」「国际区号」「电话区号」本轮复测全 0 命中；纯前端小难度；**弱点**：静态数据表、人群窄 | 小 | P3（弱观察） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 本轮复测 0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 本轮复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord_finder` 本轮复测 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 二维码传文件（扫码跨设备传文件） | **新入池弱观察**：Show HN ShadowCat 信号（手机→电脑无网传文件，动画二维码分帧）；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send`／CJK「二维码传文件」「扫码传文件」本轮复测全 0 命中；纯前端中难度（发送端文件分块→动画二维码帧，接收端摄像头连续扫码重组，可复用 qr-scanner 扫码思路）；**弱点**：双设备流程、扫码可靠性与速率（约 100kB/s 级）、人群窄 | 中 | P3（新入池弱观察） |
+| LaTeX 公式编辑器/预览 | **新入池弱观察**：WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 本轮复测 **0 命中**（CJK「公式」52 处为通用词命中，无 LaTeX 渲染口径）；纯前端小-中难度（KaTeX 本地 vendor 渲染＋实时预览＋PNG/SVG 导出）；**弱点**：KaTeX 字体文件 vendor 体量与模板零外部资源惯例的权衡、人群窄（学生／科研／教师） | 小-中 | P3（新入池弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| JSON 结构图可视化（JSON Crack 模式） | 已交付划出（5c0e61c 新增＋399c1cb 导出双致命 bug 修复：`/tools/json-graph-viewer`，Path 320→321，tests 207 个；新测试 303→330 断言全过；Icon `bubble_chart` 全库唯一） | — | 已实现 |
+| 数据库 ER 图生成器（文本建表 → 关系图） | 已交付划出（5b196ef 新增＋dd70eac 修复：`/tools/er-diagram-generator`，Path 319→320，tests 206 个；新测试 203 断言全过；Icon `dataset` 全库唯一） | — | 已实现 |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-07 01:00~03:00 窗口；本轮**新晋 1 个、新入池 4 个**，余为消解）：
+- **简繁转换新晋第三席**（95dir「最指南」11-06 测评点名简繁转换；`traditional_chinese`／`simplified_chinese`／`jianfan`／CJK「简繁转换」「繁简转换」本轮复测全 0 命中；Icon `g_translate` 精确值 0 命中，`translate`／`language` 已占用 1，不可取，开发轮须先验 glyph）。
+- **Excel 查看器（XLSX 在线预览）新入池**（WebUtils Medium 10-27「五件套」点名 Excel 查看器；`xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／CJK「Excel查看器」本轮复测全 0 命中；xlsx-0.18.5 已 vendor 且 5 处在用，零新增依赖；Icon `view_module` 精确值 0 命中，`table_view` 已占用 2、`grid_view` 已占用 1）。
+- **汉字转拼音新入池**（95dir「最指南」11-06 信号；CJK「汉字转拼音」本轮复测 0 命中；Icon `abc` 精确值 0 命中，`text_fields` 已占用 8）。
+- **二维码传文件新入池弱观察**（Show HN ShadowCat 信号；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send`／CJK「二维码传文件」「扫码传文件」本轮复测全 0 命中；Icon `qr_code_2` 精确值 0 命中，`qr_code_scanner` 已占用 1）。
+- **LaTeX 公式编辑器/预览新入池弱观察**（WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 本轮复测 0 命中；Icon `sigma` 精确值 0 命中，`functions` 已占用 1）。
+- 95dir「最指南」其余项 → 消解：亲戚计算器 → **relationship-calculator 已交付**；摩斯电码 → **morse-code-translator 已交付**；违禁词检测 → **forbidden-word-detector 已交付**；在线提词器 → **teleprompter 已交付**；屏幕测试 → **device-check 已覆盖**；色盲测试 → **colorblind-simulator 已交付**；字数统计／大小写转换／图片格式转换／日期计算 → **text-tools／img-convert 等已交付**；数字转大写 → 财务口径方向修正不扩，且 invoice_generator／quotation_generator 已含金额大写字段，消解；汉字转拼音五笔／中文拆字 → 人群过窄，消解。
+- dev.to「Best Free Developer Tools 2026」／「Top 10」／「Ultimate Curated List」→ 消解：JSON Formatter／JWT／Regex／API Tester／SQL Formatter／Base64／Cron Generator → **均已交付**（json_parser、jwt_parser、regex_tester、postman、sql_formatter、base64、cron_generator）；Bruno／DBeaver／VS Code 等桌面／SaaS 口径非单页工具，消解。
+- WebUtils 其余 → 消解：图片压缩／裁剪／格式转换 → **img-compress／img-resize／img-convert 已交付**；PDF 合并／拆分／压缩 → **pdf-merge-split／pdf-compress 已交付**；截图美化 → **screenshot-beautifier 已交付**；CSV／JSON 互转 → **csv-json 已交付**；图表生成 → **chart-generator 已交付**；文字提取 → **text-info-extractor 已交付**；行排序去重／大小写转换 → **text-tools 已交付**；时间戳／哈希／UUID → **timestamp／file-checksum／uuid-generator 已交付**。
+- Show HN → 消解：Screentell 浏览器录屏剪辑 → **screen-recorder 已交付**，剪辑时间线过重；HackerSwipe／Enriched HN／HackerFlow → HN 客户端口径非工具；ShadowCat 见上新入池。
+- KKCE 测速／DNS → 消解：**ping／dns-lookup 已交付**（多节点测速需服务端，250 轮已消解）。
+
+**候选池变动**：JSON 结构图可视化交付划出（5c0e61c＋399c1cb，321 Path，207 tests）；**简繁转换新晋第三席**（新信号；`traditional_chinese`／CJK「简繁转换」本轮复测全 0 命中，Icon `g_translate` 精确值 0 命中，开发轮须先验 glyph）；Excel 查看器／汉字转拼音新入池；二维码传文件／LaTeX 公式预览新入池弱观察；G-code 预览器弱观察维持（`gcode_viewer` 仍 0 命中）；Wordle 求解器弱观察维持（`wordle` 仍 0 命中）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十一度跳过）；数独游戏 P3 观察维持第二席；和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮初次失败（Permission denied (publickey)，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD 399c1cb（JSON 结构图导出双致命 bug 修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **321**；`ls tests/*.test.js | wc -l` = **207**；站内零重叠复核（ASCII `traditional_chinese`／`simplified_chinese`／`jianfan`／`latex`／`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send`／`xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／`chinese_numeral`／`rmb_uppercase`／`sudoku`／`social_image_size`／`social-image-size`／`dial_code`／`gcode_viewer`／`wordle`／`chord_finder` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外；`pinyin` 命中均为 slug_generator 内置拼音表及零散提及，无独立工具本体）；CJK「简繁转换」「繁简转换」「汉字转拼音」「二维码传文件」「扫码传文件」「Excel查看器」「数字转大写」「电话区号」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x7b80／0x7e41／0x8f6c／0x6362、0x7e41／0x7b80／0x8f6c／0x6362、0x6c49／0x5b57／0x8f6c／0x62fc／0x97f3、0x4e8c／0x7ef4／0x7801／0x4f20／0x6587／0x4ef6、0x626b／0x7801／0x4f20／0x6587／0x4ef6、0x45／0x78／0x63／0x65／0x6c／0x67e5／0x770b／0x5668、0x6570／0x5b57／0x8f6c／0x5927／0x5199、0x7535／0x8bdd／0x533a／0x53f7）；CJK「拼音」16 处命中均为 slug_generator 拼音表（仅服务 slug 生成）及零散提及；CJK「公式」52 处为通用词命中，无 LaTeX 渲染口径；CJK「金额大写」9 处命中均为 invoice／quotation 生成器内字段，非独立工具；CJK「数独」两处命中验真均为「参数独立」子串假阳性（0x53c2／0x6570／0x72ec／0x7acb）；xlsx-0.18.5 已 vendor（json_to_excel／sheet_merge 等 5 处在用）；encoding-converter 简繁 0 命中；Icon `g_translate`／`view_module`／`abc`／`qr_code_2`／`sigma`／`sync_alt`／`spellcheck` 精确值 0 命中，`translate` 占用 1、`language` 占用 1、`swap_horiz` 占用 2、`text_fields` 占用 8、`table_view` 占用 2、`grid_view` 占用 1、`functions` 占用 1、`qr_code_scanner` 占用 1、`table_rows` 占用 1；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-07 01:40 · PM 选定轮，接通用调研第二百五十一轮）
 
 **选定：JSON 结构图/节点图可视化（JSON Crack 模式）（json_graph_viewer）** — 本轮唯一任务（新工具）。

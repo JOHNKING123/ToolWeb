@@ -159,7 +159,7 @@ var iconHits = (GO_SRC.match(/"piano"/g) || []).length;
 eq(iconHits, 1, "Icon piano 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 321, "注册 Path 总数 290→291");
+eq(pathCount, 322, "注册 Path 总数 290→291");
 ok(GO_SRC.indexOf('ID:          "online_piano"') === GO_SRC.lastIndexOf('ID:          "online_piano"'), "注册：ID online_piano 无重复");
 
 /* ---------- 7. 模板：SEO/真限制/控件/零外部资源 ---------- */
