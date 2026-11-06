@@ -118,7 +118,7 @@ has(GO_SRC, '"conventional_commit_generator"', "注册：ID conventional_commit_
 has(GO_SRC, '"/tools/conventional-commit-generator"', "注册：Path /tools/conventional-commit-generator");
 has(GO_SRC, "Conventional Commit 提交信息生成器", "注册：中文名");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 315, "注册：Path 总数 309→310");
+eq(pathCount, 316, "注册：Path 总数 309→310");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");
 notHas(TPL_SRC, "fetch(", "零网络：模板无 fetch");

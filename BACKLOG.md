@@ -1,3 +1,109 @@
+## 今日任务（2026-11-06 15:40 · PM 选定轮，接通用调研第二百四十六轮）
+
+**选定：3D 模型预览器（STL/OBJ/GLB）（model_3d_viewer）** — 本轮唯一任务（新工具）。
+
+**顺位**：246 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十六度裁定跳过**（沿用 231–245 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十五轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），3D 模型预览口径站内 0 交付。
+2. **口径互补确凿**：格式转换类目已有 csv_table_viewer（CSV 表格查看器，同为「文件查看器」口径先例）；本工具为**3D 文件查看器口径**（STL／OBJ／GLB 本地解析渲染），与 csv_table_viewer 形成「二维表格查看→三维模型查看」查看器家族；与 screenshot_mockup_3d 的 CSS 3D 样机仅「3D」二字表层相同，本质不同（样机渲染是给 2D 截图套 CSS 3D 透视框，本工具是解析真实 3D 模型文件做 WebGL 渲染）。
+3. **需求验证**：3D 打印／建模用户想快速看一眼 STL／OBJ／GLB 文件，不想开切片软件或重型建模软件；现有免费预览站多要上传文件或限大小；浏览器本地做、零上传、无次数。池内递进信号印证。
+4. **技术路线站内已有先例**：static/js/vendor/ 已有 lamejs／jsQR／opentype 等本地 vendor 库先例，模板零外部静态资源惯例相容；本工具只在既有模式上多一步「本地 vendor three.js＋STL／OBJ／GLTFLoader 解析＋OrbitControls 轨道控制」，无模型权重、无服务端、无外部依赖。注意 mock_file/china-relief 自带 three.module.js 属该演示应用私有资产，不跨应用复用；开发轮另行下载 pinned 版本作本站 vendor。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`model_viewer`／`stl_viewer`／`3d_viewer`／`3d_model`／`obj_viewer`／`glb_viewer`／`model_3d_viewer`／`sudoku`／`social_image_size`／`social-image-size` 全站（tools/templates/static/js/tests）**0 命中**——3D 模型预览本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「模型预览」`chr(0x...)` 运行时构造（codepoints 验真 0x6a21／0x578b／0x9884／0x89c8）全站 **0 命中**。
+   - `STL` 命中验真仅为 font_license_check.js 字体名「STLiti」他人口径（246 轮研究轮已验真），3D 模型预览本体 0 交付。
+   - Icon：**`3d_rotation` 首选**（Material Icons 官方 codepoints 验真确有此 glyph：**e84d**，Google 官方 codepoints 源与 GitLab 镜像双源一致；`Icon:\s*"3d_rotation"` 精确值 **0 命中**，全库唯一，贴合「3D 旋转预览」语义；`view_in_ar` 已占用 1（screenshot_mockup_3d，categories.go:1677），不可取），开发轮复测锁定。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十六度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 上传／拖拽 STL／OBJ／GLB 文件（≤100MB）本地解析渲染，零上传 ② three.js 本地 vendor（UMD build，pinned r128：three.min.js＋STLLoader／OBJLoader／GLTFLoader／OrbitControls 四个 examples/js 加载器，全放 static/js/vendor/，离线可用，模板零外部静态资源）③ 轨道控制：旋转／缩放／平移，自动旋转开关，线框／实体切换，重置视角 ④ 模型信息面板：格式／三角面数／顶点数／包围盒尺寸／文件大小；加载后自适应缩放居中（fitScale 归一化） ⑤ 导出当前视角 PNG 截图（canvas 下载） ⑥ 内置示例模型一键加载（程序化生成低多面体，无需外部文件，演示渲染管线） ⑦ 互链：screenshot_mockup_3d 单向互链（"渲染截图去做 3D 样机效果"） ⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（canvas 有文字替代说明、按钮均可 tab 聚焦、状态变化有文字提示，不只依赖颜色）⑩ 模板零外部静态资源惯例（three.js 及加载器全部本地 vendor，不走 CDN）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.Model3DViewer 下，module.exports 同步导出；DOM 与 WebGL 只做浏览器端，测试只覆盖纯函数）**：
+  - `detectModelFormat(fileName)` → 'stl'|'obj'|'glb'（扩展名大小写不敏感；fileName 须为非空字符串，否则 err.field='fileName'；未知扩展名／.gltf 抛错 err.field='format'）。
+  - `detectSTLFormat(bytes)` → 'ascii'|'binary'（bytes 须为 Uint8Array 且长度 >0，否则 err.field='stl'；以 'solid' 开头且含 'endsolid' → 'ascii'，其余 → 'binary'）。
+  - `parseSTLAscii(text)` → {triangleCount, vertexCount, min:{x,y,z}, max:{x,y,z}}（text 须为字符串，否则 err.field='stl'；无 'facet' 抛错 err.field='stl'；解析全部 `vertex x y z` 行，包围盒取顶点极值）。
+  - `parseSTLBinaryHeader(bytes)` → {triangleCount, expectedBytes}（bytes 须为 Uint8Array 且长度 ≥84，否则 err.field='stl'；三角面数取偏移 80 处 uint32LE；expectedBytes = 84＋50×triangleCount；实长不足抛错 err.field='stl'）。
+  - `parseOBJCounts(text)` → {vertexCount, faceCount}（text 须为字符串，否则 err.field='obj'；只计 `v ` 顶点行与 `f ` 面行，`vn `／`vt ` 不计；空文本返回 {0,0} 不抛错）。
+  - `computeBounds(positions)` → {min:{x,y,z}, max:{x,y,z}, center:{x,y,z}, size:{x,y,z}}（positions 须为长度 ≥3 且为 3 倍数的有限数数组，否则 err.field='positions'；center 为 min/max 中点，size 为 max−min）。
+  - `fitScale(maxDimension, targetSize)` → number（maxDimension 须为 >0 有限数，否则 err.field='size'；targetSize 须为 >0 有限数，否则 err.field='target'；返回 targetSize/maxDimension）。
+  - `formatFileSize(bytes)` → string（沿用 video_to_audio 契约：bytes 须为 ≥0 有限数，否则 err.field='bytes'；<1024 → "N B"；<1MB → "N.N KB"；否则 "N.N MB"，一位小数）。
+  - `formatCount(n)` → string（n 须为 ≥0 整数，否则 err.field='count'；千分位逗号，如 1234 → "1,234"）。
+  - `validateViewerConfig(config)` → config（wireframe／autoRotate 如出现须为 boolean，否则 err.field 对应字段；background 如出现须为 #rrggbb 六位十六进制，否则 err.field='background'）。
+  - `validateViewerState(state)` → state（state.progress 须为 0–100 有限数，否则 err.field='progress'；state.status 须为 idle/loading/ready/error 之一，否则 err.field='status'）。
+- **数值锚点（测试精确值）**：detectModelFormat：("model.STL") → 'stl'；("a.OBJ") → 'obj'；("x.glb") → 'glb'；("a.gltf") 抛错 err.field='format'；("a.txt") 抛错 err.field='format'；("") 抛错 err.field='fileName'。detectSTLFormat：ASCII 样例字节（"solid t" 开头含 "endsolid"）→ 'ascii'；二进制样例字节（80 字节头不以 'solid' 开头）→ 'binary'；空 Uint8Array 抛错 err.field='stl'。parseSTLAscii：单三角样例（顶点 (0,0,0)/(1,0,0)/(0,1,0)）→ {triangleCount:1, vertexCount:3, min:{x:0,y:0,z:0}, max:{x:1,y:1,z:0}}；("hello") 抛错 err.field='stl'。parseSTLBinaryHeader：面数 2、实长 184 字节 → {triangleCount:2, expectedBytes:184}；面数 2、实长 100 字节抛错 err.field='stl'；长度 10 字节抛错 err.field='stl'。parseOBJCounts：("v 0 0 0\nv 1 0 0\nv 0 1 0\nvn 0 0 1\nf 1 2 3\n") → {vertexCount:3, faceCount:1}；("") → {vertexCount:0, faceCount:0}。computeBounds：([0,0,0, 2,0,0, 0,4,0]) → min {0,0,0}、max {2,4,0}、center {1,2,0}、size {2,4,0}；([0,0]) 抛错 err.field='positions'。fitScale：(10, 2) → 0.2；(0.5, 2) → 4；(0, 2) 抛错 err.field='size'；(10, 0) 抛错 err.field='target'。formatFileSize：0 → "0 B"；512 → "512 B"；1536 → "1.5 KB"；1048576 → "1.0 MB"。formatCount：0 → "0"；1234 → "1,234"；1234567 → "1,234,567"；-1 抛错 err.field='count'。validateViewerConfig：{wireframe:false, autoRotate:true, background:'#1a1a1a'} 通过；background:'red' 抛错 err.field='background'；wireframe:'yes' 抛错 err.field='wireframe'。validateViewerState：{progress:50, status:'ready'} 通过；progress:101 抛错 err.field='progress'；status:'x' 抛错 err.field='status'。
+- **真限制四条页面明示**：① 只做预览，不做编辑／切片／格式转换；② GLB 若含外部纹理引用或 DRACO 压缩可能无法加载（DRACO 需额外解码器，本轮暂不支持）；③ 大模型（>50MB 或 >100 万面）在移动端／低配设备上可能卡顿；④ 全程浏览器本地计算，零上传。
+- **SEO**：3D模型预览、STL预览、OBJ在线查看、GLB预览。
+- **改动文件**：tools/categories.go（「格式转换」类目新增 model_3d_viewer 条目，紧邻 csv_table_viewer（同为文件查看器口径），Path 315→**316**，Icon `3d_rotation` 首选（e84d 验真存在），开发轮精确值复测锁定全库唯一）／templates/model_3d_viewer.html（新）／static/js/model_3d_viewer.js（新）／static/js/vendor/three.min.js＋STLLoader.js＋OBJLoader.js＋GLTFLoader.js＋OrbitControls.js（新，pinned r128 UMD，本地 vendor，离线可用）／tests/model_3d_viewer.test.js（新）／全量旧 tests Path 断言 315→316 数值同步（仅断言数值，151 个测试文件涉 163 处 315 断言）。
+- **验收标准**：① node 新测试 ≥60 断言全过（detectModelFormat／detectSTLFormat／parseSTLAscii／parseSTLBinaryHeader／parseOBJCounts／computeBounds／fitScale／formatFileSize／formatCount／validateViewerConfig／validateViewerState 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 201→**202** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/3d-model-viewer 200、静态 JS 与 vendor 文件 200、首页索引收录 ⑤ 浏览器手工验证：STL／OBJ／GLB 各一例上传→渲染成功→轨道旋转／缩放／线框切换／自动旋转／重置视角生效、信息面板面数与包围盒正确、PNG 截图可下载、内置示例模型一键加载、互链 screenshot_mockup_3d 可用（开发轮记录）。
+- **品类归位**：注册到「格式转换」类目（与 csv_table_viewer 同为文件查看器口径；STL／OBJ／GLB 为 3D 文件格式）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：3D 模型预览器→本轮交付（246 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十六度跳过（数据表负债从严，231–245 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII model_viewer／stl_viewer／3d_viewer／3d_model／obj_viewer／glb_viewer 全 0 命中，CJK 模型预览全 0 命中；Icon `3d_rotation` e84d 验真存在且精确值 0 命中全库唯一）；格式转换类目，3D 文件查看器口径与 CSV 表格查看器口径互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十六度跳过）／数独游戏→P3 观察维持／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮失败（`Host key verification failed`——VM 换机 known_hosts 被清空的老问题复发，fetch 未成功；但本地分支与 HEAD 均为实测值，不影响本轮排期结论，开发轮重跑 fetch 时若仍失败需重建 known_hosts）；本地 HEAD e9ced61（视频提取音频修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **315**；`ls tests/*.test.js | wc -l` = **201**；151 个测试文件涉 163 处 315 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `model_viewer`／`stl_viewer`／`3d_viewer`／`3d_model`／`obj_viewer`／`glb_viewer`／`model_3d_viewer`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「模型预览」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6a21／0x578b／0x9884／0x89c8）；`STL` 命中验真仅 font_license_check.js 字体名「STLiti」他人口径；Icon `3d_rotation`（e84d）官方 codepoints 双源验真 glyph 存在且精确值 0 命中，`view_in_ar` 已占用 1（categories.go:1677）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+附注：244 轮研究轮留下的核对项——`mind_map` 已在站内交付而 WPS 候选表仍注「冻结归档」，注记与现状有出入，PM 已记录，待后续轮次核对修正（不属本轮任务范围）。
+
+---
+
+## 今日候选（2026-11-06 15:00 · 产品调研推荐，第二百四十六轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：视频提取音频已交付闭环（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 总数 314→**315**，tests **201 个**；新测试 166→173 断言全过；Icon `music_video` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 仍 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十五度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **3D 模型预览器（STL/OBJ/GLB）** — **新晋第三席**（池内递进；视频提取音频交付后顺位递进）。痛点：3D 打印／建模用户想快速看一眼 STL／OBJ／GLB 文件，不想开切片软件或重型建模软件；现有免费预览站多要上传文件或限大小；浏览器本地做、零上传、无次数；实现纯前端中难度（vendor 本地 three.js＋STL／OBJ 解析＋GLTFLoader 读 GLB，轨道旋转／缩放／线框切换，无模型权重、无服务端、无外部依赖；站内已有 vendor 本地库先例 jsQR／opentype／lamejs，vendor 惯例相容）。站内零重叠本轮复核确凿：ASCII `model_viewer`／`stl_viewer`／`3d_viewer`／`3d_model`／`obj_viewer`／`glb_viewer` 全站 **0 命中**；CJK「模型预览」`chr(0x...)` 运行时构造（codepoints 验真 0x6a21／0x578b／0x9884／0x89c8）**0 命中**；`STL` 命中验真仅为 font_license_check.js 字体名「STLiti」他人口径——3D 模型预览本体 0 交付。**弱点**：需新增 three.js vendor（约 700KB）＋需求人群窄（3D 打印／建模爱好者）＋移动端性能。SEO：3D模型预览、STL预览、OBJ在线查看、GLB预览。建议 ID model_3d_viewer、Path /tools/3d-model-viewer；Icon `3d_rotation` 精确值 **0 命中**（`view_in_ar` 已占用 1，不可取），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十五度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | **新晋第三席**：池内递进；`model_viewer`／`stl_viewer`／`3d_model`／CJK「模型预览」本轮复测全 0 命中；纯前端中难度（vendor three.js 本地解析，无模型无服务端）；**弱点**：新增 vendor 约 700KB＋人群窄＋移动端性能 | 中 | P3（新晋） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 13:00~15:00 窗口；本轮**新晋 1 个**，余为消解）：
+- **3D 模型预览器递进第三席**（视频提取音频交付后池内递进；`model_viewer`／`stl_viewer`／`3d_model`／CJK「模型预览」本轮复测 0 命中；Icon `3d_rotation` 精确值 0 命中，开发轮须先验 glyph）。
+- Medium「7 Free Browser Tools Worth Bookmarking This October」（2026-10-18）：SyncWhen（免注册会议时间投票，需服务端发链接，消解）；SortaSeat 座位表 → 站内 `wedding_seating_chart` 已交付；OldRoll 复古滤镜 → 站内 `img_retro_filter` 已交付；StitchCraft 照片转十字绣 → 站内 `cross_stitch_pattern` 已交付；urPiano 在线钢琴 → 站内 `online_piano` 已交付；Calcy 带单位记事本计算器 → 站内 `unit_calc_notepad` 已交付；llmspeed（本地 AI 模型跑分，开发者 niche，消解）。
+- TheTechBasket「75 Most Useful Websites」（2026-10 更新）／Techtippr／dreamboat.kr 韩文工具合集：PDF24／Squoosh／CloudConvert／FilePizza／WeTransfer／EZPZ File／Filee——PDF／图片／文件转换口径站内已覆盖；Wormhole P2P 文件分享需信令服务端，消解；PhotoRoom 背景移除即图片智能抠图弱观察，不新晋。
+- V2EX 11-02~11-06：KitVerse.dev（Local-first 工具箱 100+ 个，工具站口径非单工具，不入池）；token 自由讨论／免费虚拟主机分享——无单工具信号。
+- Product Hunt 11-06（StillWorks／trendoday／crosswalk）：Firenook（Firebase 模拟器 Rust 版）／TwinDesk（跨设备键鼠共享）／Nico（Mac 端个人 agent）／Rumoro（品牌舆情）／OpenInk Studio（纹身预约）／西语歌曲学习 App／dormscape（宿舍布局）／Prizvox（站点审计）／Rerun（AI 订阅变同事）／ChatNest（AI 对话文件夹）／Maritime（agent 云电脑）／Stitch.ai（AI 办公 workspace）／Bridge（agent 时代视频会议）／TextKit（短信 API）／HiveMind（$499 Notion 模板）／Seamcult（LLM 时代图案设计）／Trace AI Face Scan（人脸反搜，需服务端＋隐私风险）／XSDHub（电子发票校验，niche）→ AI agent／桌面软件／SaaS／API／模板／niche 口径全消解；SnapTiles（浏览器 3D 磁贴搭建，游戏化搭建口径，消解）。
+- Hacker News 11-01~11-06：HackerBooks／HackerTube（HN 内容聚合站口径消解）；OmniDiff（桌面 Git difftool，消解）；outcrop.rocks（相机识地质，AI＋niche，消解）；Nibnib（图片压缩库，站内 img_compress 已覆盖）；phoria2（WebGL 库口径，消解）；Prospero（桌面 AI 编程 harness，消解）；DiscImageStudio／Subvocal（桌面软件，消解）；Hacker Times（HN 皮肤站，消解）。
+- txtpipe／aitool.red 工具站清单：Background Remover（即图片智能抠图弱观察）；PDF Signer → 站内 `pdf_sign` 已交付；Screenshot Mockup → 站内 `screenshot_3d_mockup` 已交付；Case Converter → 站内 `text_tools` 已含大小写转换；Diff Checker → 站内 `text_diff` 已交付；JWT／Hash／Cron → 站内已交付。
+- 其余消解：Redacted 截图打码 → 站内 `img_mosaic`／`pdf_annotate` 已交付；Quick Reviews／TweetPics 社媒配图框 → photo_collage／screenshot_3d_mockup 口径覆盖；Hemingway 可读性 → 站内 `readability_analyzer` 已交付；SMMRY 文本摘要 → 站内 `text_summarizer` 已交付。
+
+**候选池变动**：video_to_audio 交付划出（1a5ceb9＋e9ced61，315 Path，201 tests）；**3D 模型预览器新晋第三席**（池内递进；`model_viewer`／`stl_viewer`／CJK「模型预览」本轮复测全 0 命中，纯前端中难度 vendor three.js 本地解析无模型无服务端；Icon `3d_rotation` 精确值 0 命中，开发轮须先验 glyph）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十五度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳追踪 P3 弱观察维持；WPS 候选表保持冻结归档（注：`mind_map` 已在站内交付，冻结注记与现状有出入，待 PM 核对）。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮失败（`Please make sure you have the correct access rights and the repository exists`——VM 换机 known_hosts 被清空的老问题复发，fetch 未成功；但本地分支与 HEAD 均为实测值，不影响本轮调研结论，PM/开发轮重跑 fetch 时加 `-o StrictHostKeyChecking=no` 已在命令中，仍失败则需重建 known_hosts）；本地 HEAD e9ced61（视频提取音频修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **315**；`ls tests/*.test.js | wc -l` = **201**；本地当前分支 muse/dev-20260929；站内零重叠复核（`social_image_size`／`social-image-size`／`sudoku`／`model_viewer`／`stl_viewer`／`3d_viewer`／`3d_model`／`obj_viewer`／`glb_viewer`／`reverse_dictionar` 全 0 命中；CJK「模型预览」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6a21／0x578b／0x9884／0x89c8）；`STL` 命中验真仅 font_license_check.js 字体名「STLiti」他人口径；Icon `3d_rotation` 精确值 0 命中，`view_in_ar` 已占用 1（categories.go:1677）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 13:40 · PM 选定轮，接通用调研第二百四十五轮）
 
 **选定：视频提取音频（video_to_audio）** — 本轮唯一任务（新工具）。

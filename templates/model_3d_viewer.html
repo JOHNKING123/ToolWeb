@@ -1,0 +1,175 @@
+{{define "3d_model_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 模型预览器 - STL/OBJ/GLB 在线预览免费工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 3D 模型预览：上传/拖拽 STL、OBJ、GLB 文件，浏览器本地解析渲染零上传；轨道旋转/缩放/平移、自动旋转、线框切换、重置视角，信息面板与当前视角 PNG 导出。纯前端、零上传、零 CDN。">
+    <meta name="keywords" content="3D模型预览,STL预览,OBJ在线查看,GLB预览,3D模型在线查看,STL在线查看,OBJ预览,GLB在线查看,3D model viewer,STL viewer,OBJ viewer">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/3d-model-viewer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"3D 模型预览器","description":"3D 模型预览工具：STL/OBJ/GLB 本地解析渲染，轨道控制、线框切换、信息面板、PNG 导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/3d-model-viewer","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .m3d-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .m3d-wrap .navbar .material-icons { display: none; }
+        .m3d-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .m3d-privacy .m3d-lock { font-size: 1.6rem; flex: none; }
+        .m3d-privacy b { color: #047857; }
+        .m3d-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .m3d-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .m3d-upload { border: 2px dashed #d1d5db; border-radius: .8rem; padding: 2rem 1rem; text-align: center;
+            cursor: pointer; background: #f9fafb; transition: border-color .2s, background .2s; color: #6b7280; }
+        .m3d-upload:hover, .m3d-upload.dragover { border-color: var(--primary-color); background: #eff6ff; color: var(--primary-color); }
+        .m3d-upload .m3d-big { font-size: 2.4rem; display: block; margin-bottom: .5rem; }
+        .m3d-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .m3d-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .m3d-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .m3d-row label { font-size: .92rem; color: #374151; }
+        .m3d-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .m3d-btn:hover { filter: brightness(.93); }
+        .m3d-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .m3d-btn-ghost { background: #fff; color: var(--primary-color); }
+        .m3d-viewport { width: 100%; height: 480px; background: #1a1a1a; border-radius: .6rem; overflow: hidden; }
+        .m3d-viewport canvas { display: block; width: 100%; height: 100%; }
+        .m3d-viewport:focus { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+        .m3d-alt { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .m3d-infgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; margin-top: .5rem; }
+        .m3d-icard { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .6rem .8rem; background: #f9fafb; }
+        .m3d-icard .m3d-it { font-size: .82rem; color: #6b7280; }
+        .m3d-icard .m3d-iv { font-size: 1rem; font-weight: 700; color: #111827; margin-top: .2rem;
+            font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all; }
+        .m3d-progress { height: 1.4rem; background: #e5e7eb; border-radius: .7rem; overflow: hidden; margin: .6rem 0 .3rem; }
+        .m3d-progress-bar { height: 100%; width: 0%; background: var(--primary-color); color: #fff;
+            font-size: .8rem; line-height: 1.4rem; text-align: center; transition: width .2s; white-space: nowrap; }
+        .m3d-progress-text { font-size: .88rem; color: #4b5563; }
+        .m3d-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .m3d-doc b { color: #111827; }
+        .m3d-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .m3d-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .m3d-combo b { color: #111827; }
+        .m3d-combo a { color: var(--primary-color); }
+        .m3d-bginput { width: 3rem; height: 2rem; padding: 0; border: 1px solid #d1d5db; border-radius: .4rem;
+            background: #fff; cursor: pointer; vertical-align: middle; }
+        @media (max-width: 640px) {
+            .m3d-wrap .container { padding: 1rem .7rem; }
+            .m3d-viewport { height: 340px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="m3d-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🧊 3D 模型预览器</h1>
+            <p>STL / OBJ / GLB 模型不用开重型软件：拖进来就能转着看，本地渲染不上传</p>
+        </div>
+
+        <div class="m3d-privacy">
+            <span class="m3d-lock">🔒</span>
+            <div><b>隐私承诺：模型只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、STL/OBJ/GLB 解析、WebGL 渲染、视角导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 three.js 及四个加载器也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 上传的模型不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="m3d-panel">
+            <h3>1️⃣ 上传模型</h3>
+            <div class="m3d-upload" id="m3d-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 3D 模型文件到此处上传">
+                <span class="m3d-big">🧊</span>
+                <div>点击选择模型，或把模型文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 STL / OBJ / GLB（≤100MB）；浏览器本地解析渲染，全程零上传</div>
+            </div>
+            <input type="file" id="m3d-file" accept=".stl,.obj,.glb" style="display:none;">
+            <div class="m3d-info" id="m3d-srcinfo" style="display:none;"></div>
+            <div class="m3d-status" id="m3d-status" aria-live="polite"></div>
+            <div class="m3d-progress" id="m3d-progress-wrap" style="display:none;">
+                <div class="m3d-progress-bar" id="m3d-progress-bar">0%</div>
+            </div>
+            <div class="m3d-progress-text" id="m3d-progress-text"></div>
+            <div class="m3d-row">
+                <button class="m3d-btn m3d-btn-ghost" id="m3d-sample">✨ 加载内置示例模型</button>
+                <span class="m3d-info">没有模型文件？一键加载程序化生成的示例模型，先看渲染效果。</span>
+            </div>
+        </div>
+
+        <div class="m3d-panel" id="m3d-viewport-wrap">
+            <h3>2️⃣ 3D 预览</h3>
+            <div class="m3d-viewport" id="m3d-viewport" tabindex="0" role="img" aria-label="3D 模型预览区。尚未加载模型。"></div>
+            <p class="m3d-alt" id="m3d-alt">尚未加载模型。上传 STL、OBJ 或 GLB 文件，或点击「加载内置示例模型」查看演示。</p>
+            <div class="m3d-info">操作：左键拖拽旋转 · 滚轮缩放 · 右键拖拽平移 · 预览区获得焦点后方向键平移、按 R 重置视角。触屏：单指旋转、双指缩放/平移。</div>
+        </div>
+
+        <div class="m3d-panel" id="m3d-info" style="display:none;">
+            <h3>模型信息</h3>
+            <div class="m3d-infgrid">
+                <div class="m3d-icard"><div class="m3d-it">格式</div><div class="m3d-iv" id="m3d-info-format">–</div></div>
+                <div class="m3d-icard"><div class="m3d-it">三角面数</div><div class="m3d-iv" id="m3d-info-triangles">–</div></div>
+                <div class="m3d-icard"><div class="m3d-it">顶点数</div><div class="m3d-iv" id="m3d-info-vertices">–</div></div>
+                <div class="m3d-icard"><div class="m3d-it">包围盒尺寸</div><div class="m3d-iv" id="m3d-info-bounds">–</div></div>
+                <div class="m3d-icard"><div class="m3d-it">文件大小</div><div class="m3d-iv" id="m3d-info-size">–</div></div>
+            </div>
+            <div class="m3d-info">加载后模型已按最长边归一化并居中显示；包围盒尺寸为模型原始尺寸。</div>
+        </div>
+
+        <div class="m3d-panel" id="m3d-controls" style="display:none;">
+            <h3>3️⃣ 视图控制</h3>
+            <div class="m3d-row">
+                <label><input type="checkbox" id="m3d-wireframe"> 线框模式</label>
+                <label><input type="checkbox" id="m3d-autorotate"> 🔄 自动旋转</label>
+                <label>背景色：<input type="color" class="m3d-bginput" id="m3d-bg" value="#1a1a1a" aria-label="预览背景色"></label>
+            </div>
+            <div class="m3d-row">
+                <button class="m3d-btn" id="m3d-reset">🎯 重置视角</button>
+                <button class="m3d-btn" id="m3d-export-png">⬇️ 导出当前视角 PNG</button>
+                <button class="m3d-btn m3d-btn-ghost" id="m3d-reupload">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <div class="m3d-combo">
+            <b>🧊 「3D 效果线」组合：</b>模型截图想套个漂亮的 3D 样机框？先导出当前视角 PNG，再去 <a href="/tools/screenshot-3d-mockup">截图 3D 样机渲染器</a> 一键套浏览器窗口框 / 手机机身框 / 悬浮 3D 卡片 —— 预览 → 截图 → 套样机顺流。
+        </div>
+
+        <div class="m3d-panel">
+            <h3>使用说明</h3>
+            <div class="m3d-doc">
+                <b>上传：</b>点击上传区选择文件，或把 STL / OBJ / GLB 文件（≤100MB）直接拖进来；文件经 <code>FileReader</code> 读入 ArrayBuffer 后在浏览器本地解析，不产生网络请求。<br>
+                <b>解析：</b>STL 按文件头自动判定 ASCII/二进制（<code>STLLoader</code>），OBJ 解析文本顶点与面（<code>OBJLoader</code>），GLB 解析二进制 glTF 容器（<code>GLTFLoader</code>）；解析失败时状态区明示原因。<br>
+                <b>查看：</b>左键拖拽旋转、滚轮缩放、右键拖拽平移；勾选「自动旋转」让模型匀速自转；勾选「线框模式」看三角网格结构；背景色可调；「重置视角」恢复居中归一化视角（预览区聚焦后按 R 同样重置）。<br>
+                <b>信息：</b>加载后信息面板显示格式（STL 区分 ASCII/二进制）、三角面数、顶点数、包围盒尺寸（模型原始尺寸）、文件大小；模型按最长边归一化居中，再大再小的模型都一眼看全。<br>
+                <b>导出：</b>「导出当前视角 PNG」把当前画面存为 <code>原名-view.png</code>，可直接发给别人或拿去套样机。<br>
+                <b>示例：</b>没有模型文件时点「加载内置示例模型」，程序化生成一个低多面体纽结，演示完整渲染管线。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解析、渲染、导出都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+
+        <div class="m3d-panel">
+            <h3>真限制</h3>
+            <div class="m3d-doc">
+                ① <b>只做预览，不做编辑／切片／格式转换</b>；想改模型请用切片软件或建模软件。<br>
+                ② <b>GLB 若含外部纹理引用或 DRACO 压缩可能无法加载</b>（DRACO 需额外解码器，本轮暂不支持）；含外部纹理的 GLB 请先把纹理内嵌为 GLB 再上传。<br>
+                ③ <b>大模型（&gt;50MB 或 &gt;100 万面）在移动端／低配设备上可能卡顿</b>，属实告知不遮掩。<br>
+                ④ <b>全程浏览器本地计算，零上传</b>；大文件解析占用内存，低配设备请耐心等待。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/three.min.js?v=1"></script>
+    <script src="/tools/static/js/vendor/STLLoader.js?v=1"></script>
+    <script src="/tools/static/js/vendor/OBJLoader.js?v=1"></script>
+    <script src="/tools/static/js/vendor/GLTFLoader.js?v=1"></script>
+    <script src="/tools/static/js/vendor/OrbitControls.js?v=1"></script>
+    <script src="/tools/static/js/model_3d_viewer.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -191,7 +191,7 @@ notHas(JS_SRC, "localStorage", "JS 零存储：不写 localStorage");
 
 /* ---------- 8. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 315, "注册 Path 总数 309→310");
+eq(pathCount, 316, "注册 Path 总数 309→310");
 has(GO_SRC, '"utm_link_builder"', "注册：ID utm_link_builder");
 has(GO_SRC, '"/tools/utm-link-builder"', "注册：Path /tools/utm-link-builder");
 has(GO_SRC, '"sell"', "注册：Icon sell");

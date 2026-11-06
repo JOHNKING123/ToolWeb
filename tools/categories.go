@@ -1297,6 +1297,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "model_3d_viewer",
+					Name:        "3D 模型预览器",
+					Description: "免费在线 3D 模型预览：上传/拖拽 STL、OBJ、GLB（≤100MB），浏览器本地解析渲染零上传，轨道旋转/缩放/平移、自动旋转、线框/实体切换、重置视角，格式/三角面数/顶点数/包围盒尺寸/文件大小信息面板，自适应缩放居中，当前视角导出 PNG，内置示例模型一键加载 · 3D model viewer: preview STL/OBJ/GLB locally in your browser, orbit controls, wireframe toggle, export PNG, 100% client-side",
+					Path:        "/tools/3d-model-viewer",
+					Icon:        "3d_rotation",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "csv_editor",
 					Name:        "CSV 编辑器",
 					Description: "免费在线 CSV 编辑器：拖拽或选择本地 .csv 文件，分隔符自动检测（逗号/分号/制表符），表格渲染后双击单元格原地编辑（Enter 确认/Esc 取消），增删行列，一键导出 CSV 下载，纯本地运行不上传 · CSV editor online: edit CSV cells in browser, add/delete rows and columns, export CSV, 100% client-side",
