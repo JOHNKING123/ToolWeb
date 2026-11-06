@@ -1,3 +1,113 @@
+## 今日任务（2026-11-06 17:00 · PM 选定轮，接通用调研第二百四十七轮）
+
+**选定：在线录音机（语音备忘录）（voice_recorder）** — 本轮唯一任务（新工具）。
+
+**顺位**：247 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十七度裁定跳过**（沿用 231–246 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十六轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），语音录音本体站内 0 交付。
+2. **口径互补确凿**：音频处理类目已有 audio_trimmer（裁剪）／audio_merger（合并）／video_to_audio（视频取音）／singing_pitch_checker（练唱音准）／music_visualizer（频谱）；本工具为**录音口径**（麦克风→录音→导出），与 audio_trimmer 形成「录音→裁剪」顺流、与 audio_merger 形成「多段录音→拼接」顺流；与 screen_recorder 仅「录制」二字表层相同，本质不同（录屏是 getDisplayMedia 录画面＋可选麦克风，本工具是 getUserMedia 只录麦克风音频，不录屏；页面须明示分工）。
+3. **需求验证**：临时录一段语音（会议记录、灵感备忘、语言跟读、采访录音）要么装 App、要么在线站上传录音或限时长加水印；浏览器本地录、零上传、不设人工时长上限。池内递进信号印证（Weeve Tools Audio Recorder：浏览器本地录音、最长 3 小时、免注册）。
+4. **技术路线站内已有先例**：screen_recorder 已跑通 getUserMedia 麦克风采集＋MediaRecorder 录制；singing_pitch_checker 已跑通 getUserMedia＋AnalyserNode 实时分析；music_visualizer 已跑通 MediaRecorder 导出；audio_trimmer／video_to_audio／audio_merger 已跑通 decodeAudioData 本地解码＋WAV 手工编码／MP3（lamejs，static/js/vendor/lamejs.min.js 已在站内）本地导出；本工具只在既有模式上多一步「麦克风 MediaRecorder 录制＋录音列表本地管理」，无模型权重、无服务端、无新增外部依赖。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`voice_recorder`／`audio_recorder`／`mic_recorder`／`sudoku`／`social_image_size`／`social-image-size` 全站（tools/templates/static/js/tests）**0 命中**——语音录音本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「录音机」`chr(0x...)` 运行时构造（codepoints 验真 0x5f55／0x97f3／0x673a）全站 **0 命中**。
+   - CJK「录音」命中 45 处验真均为他人口径：online_piano「简易录音（音符＋时间戳）」音符序列非音频录制、audio_merger 模板文案「会议录音拼接／语音备忘录」提及、text_reader_aloud「不提供录音导出」否定表述——语音录音本体 0 交付。
+   - Icon：**`mic_none` 首选**（`Icon:\s*"mic_none"` 精确值 **0 命中**，全库唯一，贴合「麦克风录音」语义；`mic` 已占用 1（vocal_remover 邻近口径）、`mic_off` 已占用 1、`perm_camera_mic` 已占用 1，不可取；`keyboard_voice` 精确值亦 0 命中作备选），开发轮须先验 Material Icons 官方 codepoints 有无该 glyph 再锁定（沿用 3D 模型预览器 `3d_rotation` e84d 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十七度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／Shell 命令解释器／数据库 ER 图生成器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 麦克风录制：getUserMedia 采集＋MediaRecorder 本地录制，开始／暂停／继续／停止，实时计时 hh:mm:ss，AnalyserNode 实时波形＋音量表 ② 麦克风选择（多设备时 enumerateDevices 下拉）＋回声消除／噪声抑制开关（默认开启） ③ 录音列表：多次录音会话内管理（重命名／试听回放／删除），仅保留在当前会话 ④ 导出：原始 WebM 直存／WAV（手工编码 16-bit PCM，经 decodeAudioData 解码）／MP3（lamejs 64–320kbps 可选，默认 192kbps），文件名「录音名.扩展名」，解码失败时仅可下载原始 WebM（页面明示） ⑤ 录音信息面板：时长／采样率／声道／体积预估 ⑥ 互链：audio_trimmer 双向互链（"录完，去裁剪一段"） ⑦ 页面明示分工：本工具只录音、不录屏（录屏请用 screen_recorder） ⑧ 全程浏览器本地计算，零上传、零外部接口 ⑨ 无障碍（按钮均可 tab 聚焦、空格启停、计时与状态有文字提示，不只依赖颜色）⑩ 模板零外部静态资源惯例（lamejs 沿用站内已引用的 vendor 路径，不新增外部依赖）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.VoiceRecorder 下，module.exports 同步导出；DOM 与 AudioContext／MediaRecorder 只做浏览器端，测试只覆盖纯函数）**：
+  - `formatDuration(sec)` → string（沿用 video_to_audio 契约：sec 须为 ≥0 有限数，否则 err.field='seconds'；<1h → "m:ss"，如 65 → "1:05"；≥1h → "h:mm:ss"，如 3661 → "1:01:01"；向下取整秒）。
+  - `formatFileSize(bytes)` → string（沿用 video_to_audio 契约：bytes 须为 ≥0 有限数，否则 err.field='bytes'；<1024 → "N B"；<1MB → "N.N KB"；否则 "N.N MB"，一位小数）。
+  - `pickMimeType(supported)` → string（supported 须为数组，否则 err.field='candidates'；按 ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'] 优先序返回首个在 supported 中的值；无匹配返回 ''）。
+  - `buildRecordingName(index)` → string（index 须为 ≥1 整数，否则 err.field='index'；返回 "录音 N"，如 1 → "录音 1"）。
+  - `buildExportFilename(name, ext)` → string（name 须为非空字符串，否则 err.field='fileName'；ext 须为 wav/mp3/webm 之一，否则 err.field='format'；去掉原扩展名，返回 "名.wav"／".mp3"／".webm"）。
+  - `estimateWavBytes(durationSec, sampleRate, channels)` → number（沿用 video_to_audio 契约：durationSec 须为 >0 有限数，sampleRate 8000–192000，channels 1 或 2，否则 err.field 对应字段；返回 44 + Math.round(durationSec*sampleRate*channels*2)）。
+  - `estimateMp3Bytes(durationSec, bitrateKbps)` → number（沿用 video_to_audio 契约：durationSec 须为 >0 有限数，bitrateKbps 须为 32–320，否则 err.field='bitrate'；返回 Math.round(durationSec*bitrateKbps*1000/8)）。
+  - `computePeakLevel(samples)` → number（samples 须为非空 Uint8Array，否则 err.field='samples'；返回 max|v−128|/128，0–1）。
+  - `buildWavHeader(dataBytes, sampleRate, channels)` → Uint8Array（dataBytes 须为 ≥0 整数，sampleRate 8000–192000，channels 1 或 2，否则 err.field 对应字段；返回 44 字节 RIFF/WAVE 头：0–3 "RIFF"、8–11 "WAVE"、22–23 声道数 LE、24–27 采样率 LE、40–43 数据字节数 LE）。
+  - `validateRecordConfig(config)` → config（format 须为 wav/mp3/webm 之一，否则 err.field='format'；mp3 时 bitrate 须为 64/96/128/160/192/256/320 之一，否则 err.field='bitrate'；echoCancellation／noiseSuppression 如出现须为 boolean，否则 err.field 对应字段）。
+  - `validateRecordState(state)` → state（state.status 须为 idle/recording/paused/stopped/error 之一，否则 err.field='status'；state.elapsedSec 须为 ≥0 有限数，否则 err.field='elapsedSec'）。
+- **数值锚点（测试精确值）**：formatDuration：65 → "1:05"；3661 → "1:01:01"；0 → "0:00"；-1 抛错 err.field='seconds'。formatFileSize：0 → "0 B"；1536 → "1.5 KB"；1048576 → "1.0 MB"。pickMimeType：(['audio/webm','audio/mp4'], 优先表) → 'audio/webm;codecs=opus'（首选项在 supported 中时取首选）；([], 优先表) → ''；('x') 抛错 err.field='candidates'。buildRecordingName：1 → "录音 1"；0 抛错 err.field='index'；1.5 抛错 err.field='index'。buildExportFilename：("录音 1","wav") → "录音 1.wav"；("a.mp3","mp3") → "a.mp3"；("x","ogg") 抛错 err.field='format'；("","wav") 抛错 err.field='fileName'。estimateWavBytes：(60,44100,2) → 10584044；(10,44100,1) → 882044。estimateMp3Bytes：(60,128) → 960000；(30,192) → 720000。computePeakLevel：Uint8Array([128,128,128]) → 0；Uint8Array([255]) → 0.9921875；空 Uint8Array 抛错 err.field='samples'；非 Uint8Array 抛错 err.field='samples'。buildWavHeader：(100,44100,2) → 长度 44，字节 0–3 "RIFF"，8–11 "WAVE"，偏移 22 处 LE 读得 2，偏移 24 处 LE 读得 44100，偏移 40 处 LE 读得 100；sampleRate 100 抛错 err.field='sampleRate'。validateRecordConfig：{format:'mp3', bitrate:192, echoCancellation:true, noiseSuppression:true} 通过；format:'ogg' 抛错 err.field='format'；mp3 时 bitrate:100 抛错 err.field='bitrate'；echoCancellation:'yes' 抛错 err.field='echoCancellation'。validateRecordState：{status:'recording', elapsedSec:65} 通过；status:'x' 抛错 err.field='status'；elapsedSec:-1 抛错 err.field='elapsedSec'。
+- **真限制五条页面明示**：① 只录音、不录屏（录屏请用 screen_recorder）；② 录音列表仅保留在当前会话，刷新／关闭后消失，请及时下载导出；③ 不设人工时长上限，但超长录音受浏览器内存限制；移动端浏览器切后台可能中断录音；④ WAV／MP3 导出需浏览器解码录音，解码失败时仅可下载原始 WebM；⑤ 全程浏览器本地计算，零上传。
+- **SEO**：在线录音、语音备忘录、浏览器录音、免费录音机。
+- **改动文件**：tools/categories.go（「音频处理」类目新增 voice_recorder 条目，紧邻 audio_trimmer（录音→裁剪顺流），Path 316→**317**，Icon `mic_none` 首选（精确值 0 命中，开发轮先验官方 codepoints 有无该 glyph 再锁定，备选 `keyboard_voice`）／templates/voice_recorder.html（新，define "voice_recorder"）／static/js/voice_recorder.js（新，window.VoiceRecorder）／tests/voice_recorder.test.js（新）／全量旧 tests Path 断言 316→317 数值同步（仅断言数值，152 个测试文件涉 154 处 316 断言）。
+- **验收标准**：① node 新测试 ≥70 断言全过（formatDuration／formatFileSize／pickMimeType／buildRecordingName／buildExportFilename／estimateWavBytes／estimateMp3Bytes／computePeakLevel／buildWavHeader／validateRecordConfig／validateRecordState 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查）② 全量 tests/*.test.js 202→**203** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/voice-recorder 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：麦克风授权→录制→暂停／继续→停止→波形与计时实时→列表试听／重命名／删除→WAV／MP3／WebM 三种导出可下载、互链 audio_trimmer 可用（开发轮记录）。
+- **品类归位**：注册到「音频处理」类目（与 audio_trimmer／audio_merger／video_to_audio 同为音频口径；录音为音频处理上游）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：在线录音机→本轮交付（247 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十七度跳过（数据表负债从严，231–246 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII voice_recorder／audio_recorder／mic_recorder 全 0 命中，CJK「录音机」全 0 命中，「录音」命中验真均为他人口径；Icon `mic_none` 精确值 0 命中全库唯一，开发轮先验 glyph）；音频处理类目，录音口径与裁剪／合并／取音口径顺流互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十七度跳过）／数独游戏→P3 观察维持／Shell 命令解释器／数据库 ER 图生成器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮失败（`Host key verification failed`——VM 换机 known_hosts 被清空的老问题复发，fetch 未成功；但本地分支与 HEAD 均为实测值，不影响本轮排期结论，开发轮重跑 fetch 时若仍失败需重建 known_hosts）；本地 HEAD 7258bad（3D 模型预览器已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **316**；`ls tests/*.test.js | wc -l` = **202**；152 个测试文件涉 154 处 316 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `voice_recorder`／`audio_recorder`／`mic_recorder`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「录音机」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x5f55／0x97f3／0x673a）；CJK「录音」45 处命中验真均为他人口径（online_piano 音符录音、audio_merger 文案提及、text_reader_aloud 否定表述）；Icon `mic_none`／`keyboard_voice` 精确值 0 命中，`mic` 占用 1、`mic_off` 占用 1、`perm_camera_mic` 占用 1；lamejs vendor 已在站内（static/js/vendor/lamejs.min.js），无新增外部依赖；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 17:00 · 产品调研推荐，第二百四十七轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：3D 模型预览器已交付闭环（7258bad 新增：`/tools/3d-model-viewer`，Path 总数 315→**316**，tests **202 个**；新测试 189 断言全过；Icon `3d_rotation` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 246 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十六度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **在线录音机（语音备忘录）** — **新晋第三席**（池内递进；3D 模型预览器交付后顺位递进）。痛点：临时录一段语音（会议记录、灵感备忘、语言跟读、采访录音）要么装 App、要么在线站上传录音或限时长加水印；浏览器本地录、零上传、无时长上限；实现纯前端小难度（getUserMedia＋MediaRecorder 本地录制，站内 screen_recorder／music_visualizer／video_to_audio 已跑通 MediaRecorder＋导出先例；WAV 手工编码／MP3 lamejs 本地导出，audio_trimmer 已跑通；波形实时显示＋录音列表本地管理）。站内零重叠本轮复核确凿：ASCII `voice_recorder`／`audio_recorder`／`mic_recorder` 全站 **0 命中**；CJK「录音机」`chr(0x...)` 运行时构造（codepoints 验真 0x5f55／0x97f3／0x673a）**0 命中**；CJK「录音」命中验真仅为 online_piano「简易录音（音符＋时间戳）」他人口径（音符序列非音频录制）、其余为 audio_merger 等工具文案提及——语音录音本体 0 交付。**弱点**：与 screen_recorder（可录麦克风）口径邻近，需在页面明示分工（本工具只录音、不录屏）；移动端浏览器后台录音受限。SEO：在线录音、语音备忘录、浏览器录音、免费录音机。建议 ID voice_recorder、Path /tools/voice-recorder；Icon `mic_none` 精确值 **0 命中**（`mic` 已占用 1，`keyboard_voice` 亦 0 命中作备选），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十六度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 在线录音机（语音备忘录） | **新晋第三席**：池内递进；`voice_recorder`／`audio_recorder`／CJK「录音机」本轮复测全 0 命中；纯前端小难度（MediaRecorder 本地录制＋lamejs 导出，站内三处先例）；**弱点**：与 screen_recorder 口径邻近＋移动端后台录音受限 | 小 | P3（新晋） |
+| Shell 命令解释器（explainshell 模式） | **新入池弱观察**：giftedegware 11-06 清单信号；`explainshell`／CJK「命令解释」本轮复测全 0 命中；纯前端小-中难度（内置常用命令旗标词典＋分词高亮）；**弱点**：词典覆盖有限（完整 man 页覆盖做不到）、与 git-cheatsheet 口径邻近 | 小-中 | P3（弱观察） |
+| 数据库 ER 图生成器（文本建表 → 关系图） | **新入池弱观察**：giftedegware dbdiagram.io 信号；`er_diagram`／`db_diagram`／CJK「实体关系图」「数据库结构图」本轮复测全 0 命中；纯前端小-中难度（SQL CREATE TABLE 解析＋SVG 连线渲染）；**弱点**：人群窄（开发者）、与 mind_map 口径邻近 | 小-中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证（twittergif.com：ffmpeg.wasm＋服务端按帖子 ID 查视频地址）；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 15:40~17:00 窗口；本轮**新晋 1 个、新入池 2 个**，余为消解）：
+- **在线录音机递进第三席**（Weeve Tools Audio Recorder 信号：浏览器本地录音、最长 3 小时、免注册；`voice_recorder`／`audio_recorder`／CJK「录音机」本轮复测 0 命中；Icon `mic_none` 精确值 0 命中，开发轮须先验 glyph）。
+- **Shell 命令解释器新入池弱观察**（giftedegware「50 Free Websites」2026-09-25 清单：explainshell 粘贴命令逐 flag 解释；`explainshell`／CJK「命令解释」0 命中；Icon 待开发轮复测，`terminal` 已占用 3、`code` 已占用 9，不可取）。
+- **数据库 ER 图生成器新入池弱观察**（同清单：dbdiagram.io 纯文本写 schema 出 ER 图；`er_diagram`／`db_diagram`／CJK「实体关系图」「数据库结构图」0 命中；Icon `device_hub` 精确值 0 命中作首选，`account_tree` 已占用 2、`schema` 已占用 1，不可取）。
+- Screentell（Show HN 11-04：浏览器录屏＋剪辑、手绘贴纸）→ 消解：站内 `screen_recorder` 已交付（录屏本体）；剪辑贴纸属其增量，非新工具口径。
+- Holiday Optimizer（Show HN：PTO 拼假工具）→ 消解：站内 `annual_leave_optimizer` 已交付。
+- Site Spy（Show HN：网页变化监控＋RSS）→ 消解：需服务端＋浏览器扩展口径。
+- Product Hunt 11-06（Rerun／ChatNest／Pinku／Cosyra／Maritime／TextKit／HiveMind／Stitch.ai／Tencent Hy4）→ AI agent／SaaS／模板／模型口径全消解。
+- V2EX 11-02~11-06：KitVerse.dev（246 轮已消解，工具站口径非单工具）；xGoose（AI Agent 插件，需模型 API，消解）；V2EX 评论上下文插件（浏览器扩展口径，消解）。
+- giftedegware 清单余项：regex101／haveibeenpwned／fast.com → 站内 regex_tester／password_breach_checker／speedtest 已交付；unpaywall／openlibrary／DOAJ／Gutenberg／OpenStax／WolframAlpha／Elicit／Consensus／Semantic Scholar／Phind → 学术／AI 搜索／计算引擎口径，需服务端或外部 API，消解；virustotal → 需外部 API，消解；raindrop.io → 书签 SaaS，消解。
+- 免费在线录屏站 GetPlugzz／FSR Studio／ZenCapture（11-06 搜索）→ 录屏口径站内 screen_recorder 已交付，消解（印证录屏需求真实，但本体已覆盖；其「免安装、无水印、零上传」卖点正是本站 screen_recorder 已有定位）。
+- TheTechBasket／onerank／techatlast 工具清单：PDF24／Squoosh／CloudConvert／FilePizza／WeTransfer／Photopea／Canva／DeepL／Tally／Cal.com → 站内已覆盖或 SaaS／外部服务口径，消解。
+
+**候选池变动**：3D 模型预览器交付划出（7258bad，316 Path，202 tests）；**在线录音机新晋第三席**（池内递进；`voice_recorder`／CJK「录音机」本轮复测全 0 命中，纯前端小难度 MediaRecorder＋lamejs 导出站内三处先例；Icon `mic_none` 精确值 0 命中，开发轮须先验 glyph）；Shell 命令解释器／数据库 ER 图生成器新入池弱观察；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十六度跳过）；数独游戏 P3 观察维持第二席；图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮失败（`Please make sure you have the correct access rights and the repository exists`——VM 换机 known_hosts 被清空的老问题复发，fetch 未成功；但本地分支与 HEAD 均为实测值，不影响本轮调研结论，PM/开发轮重跑 fetch 时若仍失败需重建 known_hosts）；本地 HEAD 7258bad（3D 模型预览器已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **316**；`ls tests/*.test.js | wc -l` = **202**；本地当前分支 muse/dev-20260929；站内零重叠复核（ASCII `voice_recorder`／`audio_recorder`／`mic_recorder`／`explainshell`／`explain_shell`／`shell_explain`／`er_diagram`／`db_diagram`／`schema_diagram`／`dbdiagram` 全 0 命中；CJK「录音机」「命令解释」「数据库结构图」「实体关系图」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x5f55／0x97f3／0x673a、0x547d／0x4ee4／0x89e3／0x91ca、0x6570／0x636e／0x5e93／0x7ed3／0x6784／0x56fe、0x5b9e／0x4f53／0x5173／0x7cfb／0x56fe）；CJK「录音」命中验真仅 online_piano 音符录音他人口径；Icon `mic_none`／`keyboard_voice`／`device_hub` 精确值 0 命中，`mic` 占用 1、`terminal` 占用 3、`account_tree` 占用 2、`schema` 占用 1、`table_chart` 占用 1、`code` 占用 9）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 15:40 · PM 选定轮，接通用调研第二百四十六轮）
 
 **选定：3D 模型预览器（STL/OBJ/GLB）（model_3d_viewer）** — 本轮唯一任务（新工具）。

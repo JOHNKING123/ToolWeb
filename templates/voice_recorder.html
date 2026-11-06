@@ -1,0 +1,202 @@
+{{define "voice_recorder"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线录音机 - 浏览器本地录音免费语音备忘录工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线录音机：浏览器本地录音（语音备忘录），麦克风选择＋回声消除／噪声抑制，开始／暂停／继续／停止，实时计时与波形＋音量表，录音列表会话内管理，原始 WebM 直存／WAV／MP3 本地导出。纯前端、零上传、零 CDN。">
+    <meta name="keywords" content="在线录音,语音备忘录,浏览器录音,免费录音机,录音机,在线录音机,voice recorder,麦克风录音,录音转MP3,录音转WAV,本地录音">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/voice-recorder">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"在线录音机","description":"浏览器本地录音工具：麦克风采集录制，实时计时与波形，录音列表会话内管理，WebM/WAV/MP3 本地导出；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/voice-recorder","applicationCategory":"MultimediaApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .vr-wrap .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        /* 本页零 CDN：未加载 Material Icons 字体时隐藏导航图标文字 */
+        .vr-wrap .navbar .material-icons { display: none; }
+        .vr-privacy { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid #34d399;
+            background: #ecfdf5; border-radius: .8rem; padding: .9rem 1rem; margin: 0 0 1.2rem;
+            font-size: .95rem; line-height: 1.8; color: #065f46; }
+        .vr-privacy .vr-lock { font-size: 1.6rem; flex: none; }
+        .vr-privacy b { color: #047857; }
+        .vr-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: .8rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+        .vr-panel h3 { margin: 0 0 .7rem; font-size: 1rem; color: #111827; }
+        .vr-info { color: #6b7280; font-size: .88rem; margin-top: .6rem; line-height: 1.7; }
+        .vr-status { color: var(--primary-color); font-size: .9rem; min-height: 1.4em; margin-top: .4rem; }
+        .vr-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin: .7rem 0; }
+        .vr-row label { font-size: .92rem; color: #374151; }
+        .vr-row select { padding: .5rem .6rem; border: 1px solid #d1d5db; border-radius: .5rem; font-size: .9rem; max-width: 100%; }
+        .vr-btn { display: inline-block; padding: .55rem 1.3rem; border-radius: .55rem; border: 1px solid var(--primary-color);
+            background: var(--primary-color); color: #fff; font-size: .93rem; cursor: pointer; transition: filter .15s; }
+        .vr-btn:hover { filter: brightness(.93); }
+        .vr-btn[disabled] { opacity: .55; cursor: not-allowed; }
+        .vr-btn-ghost { background: #fff; color: var(--primary-color); }
+        .vr-btn-stop { background: #ef4444; border-color: #ef4444; }
+        .vr-btn-record { background: #dc2626; border-color: #dc2626; font-size: 1.05rem; padding: .7rem 1.8rem; }
+        /* 计时与波形 */
+        .vr-timer { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 2.4rem; font-weight: 700;
+            color: #111827; text-align: center; letter-spacing: .05em; margin: .2rem 0 .6rem; }
+        .vr-timer.rec { color: #dc2626; }
+        .vr-stage { width: 100%; height: 120px; border: 1px solid #e5e7eb; border-radius: .6rem;
+            background: #0f172a; overflow: hidden; margin: .5rem 0; }
+        .vr-stage canvas { width: 100%; height: 100%; display: block; }
+        .vr-meter { height: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #f3f4f6; overflow: hidden; }
+        .vr-meter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #34d399, #f59e0b, #ef4444); transition: width .08s linear; }
+        .vr-meter-label { font-size: .82rem; color: #6b7280; margin-top: .3rem; }
+        /* 录音列表 */
+        .vr-list { list-style: none; margin: .5rem 0 0; padding: 0; }
+        .vr-item { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; border: 1px solid #e5e7eb;
+            border-radius: .6rem; padding: .6rem .8rem; margin-bottom: .5rem; background: #f9fafb; cursor: pointer; }
+        .vr-item.vr-sel { border-color: var(--primary-color); background: #eff6ff; }
+        .vr-item-name { font-weight: 600; color: #111827; font-size: .95rem; }
+        .vr-item-meta { font-size: .85rem; color: #6b7280; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .vr-mini { padding: .3rem .6rem; border-radius: .4rem; border: 1px solid #d1d5db; background: #fff;
+            font-size: .82rem; cursor: pointer; color: #374151; }
+        .vr-mini:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .vr-mini[disabled] { opacity: .45; cursor: not-allowed; }
+        .vr-empty { color: #9ca3af; font-size: .9rem; text-align: center; padding: 1rem 0; }
+        /* 信息面板 */
+        .vr-infgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .6rem; }
+        .vr-icard { border: 1px solid #e5e7eb; border-radius: .6rem; padding: .6rem .8rem; background: #f9fafb; }
+        .vr-icard .vr-it { font-size: .82rem; color: #6b7280; }
+        .vr-icard .vr-iv { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1rem; font-weight: 700; color: var(--primary-color); margin-top: .2rem; }
+        .vr-doc { font-size: .88rem; color: #4b5563; line-height: 2; }
+        .vr-doc b { color: #111827; }
+        .vr-doc code { background: #f3f4f6; padding: .05rem .35rem; border-radius: .3rem; font-size: .84rem; }
+        .vr-combo { font-size: .86rem; color: #4b5563; line-height: 1.9; border-top: 1px dashed #e5e7eb;
+            margin-top: 1rem; padding-top: .8rem; }
+        .vr-combo b { color: #111827; }
+        .vr-combo a { color: var(--primary-color); }
+        @media (max-width: 640px) {
+            .vr-wrap .container { padding: 1rem .7rem; }
+            .vr-timer { font-size: 1.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="vr-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🎙️ 在线录音机</h1>
+            <p>浏览器本地录音（语音备忘录）：麦克风直录，实时计时与波形，录完即导出 —— 不装 App、不上传</p>
+        </div>
+
+        <div class="vr-privacy">
+            <span class="vr-lock">🔒</span>
+            <div><b>隐私承诺：录音只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：麦克风采集、录制、波形分析、试听、WAV/MP3 编码导出全部在本地完成，不调用任何后端接口、不加载任何第三方资源（含 MP3 编码器 lamejs 也是本地 vendor 文件）。你可以在 DevTools 的 Network 面板验证 —— 录音不会产生一次网络请求。断网也能用（MP3 导出同样离线可用）。<b>本工具只录音、不录屏</b>：要录屏幕画面请用 <a href="/tools/screen-recorder">屏幕录制工具</a>。</div>
+        </div>
+
+        <div class="vr-panel">
+            <h3>1️⃣ 麦克风设置</h3>
+            <div class="vr-row">
+                <label>麦克风：
+                    <select id="vr-mic" aria-label="选择麦克风设备">
+                        <option value="">默认麦克风</option>
+                    </select>
+                </label>
+                <button class="vr-btn vr-btn-ghost" id="vr-mic-refresh" type="button">🔄 刷新设备列表</button>
+            </div>
+            <div class="vr-row">
+                <label><input type="checkbox" id="vr-echo" checked> 🔊 回声消除（echoCancellation，默认开）</label>
+                <label><input type="checkbox" id="vr-noise" checked> 🔇 噪声抑制（noiseSuppression，默认开）</label>
+            </div>
+            <div class="vr-row">
+                <button class="vr-btn vr-btn-record" id="vr-start" type="button">● 开始录音</button>
+                <span class="vr-info">首次点击会弹出浏览器麦克风授权（请点「允许」）；授权后设备名才会出现在下拉里。多麦克风时可先选设备再录。</span>
+            </div>
+            <div class="vr-info">快捷键：空格键开始／停止录音（焦点不在输入框或按钮上时）。录音中请保持本页面在前台。</div>
+        </div>
+
+        <div class="vr-panel" id="vr-rec-panel" style="display:none;">
+            <h3>2️⃣ 正在录制</h3>
+            <div class="vr-timer" id="vr-timer" aria-live="off">00:00:00</div>
+            <div class="vr-stage" aria-label="实时录音波形">
+                <canvas id="vr-wave" width="1000" height="120"></canvas>
+            </div>
+            <div class="vr-meter" aria-label="实时音量表"><div class="vr-meter-fill" id="vr-meter-fill"></div></div>
+            <div class="vr-meter-label">音量表：绿色安静 → 黄色正常 → 红色过大（太红请离麦克风远一点）</div>
+            <div class="vr-row">
+                <button class="vr-btn" id="vr-pause" type="button" disabled>⏸ 暂停</button>
+                <button class="vr-btn" id="vr-resume" type="button" disabled>▶ 继续录制</button>
+                <button class="vr-btn vr-btn-stop" id="vr-stop" type="button" disabled>⏹ 停止并保存</button>
+            </div>
+            <div class="vr-status" id="vr-status" aria-live="polite"></div>
+        </div>
+
+        <div class="vr-panel">
+            <h3>3️⃣ 录音列表（仅当前会话）</h3>
+            <div class="vr-empty" id="vr-list-empty">还没有录音。点「开始录音」，停止后录音会出现在下面，可试听、重命名、删除、导出。</div>
+            <ul class="vr-list" id="vr-list"></ul>
+            <div class="vr-row">
+                <button class="vr-btn vr-btn-ghost" id="vr-clear" type="button">🗑 清空列表</button>
+                <span class="vr-info">列表仅保留在当前会话：刷新或关闭页面后消失，请及时下载导出。</span>
+            </div>
+            <div class="vr-status" id="vr-export-status" aria-live="polite"></div>
+        </div>
+
+        <div class="vr-panel" id="vr-info" style="display:none;">
+            <h3>4️⃣ 录音信息（点列表选中一条查看）</h3>
+            <div class="vr-infgrid">
+                <div class="vr-icard"><div class="vr-it">⏱️ 时长</div><div class="vr-iv" id="vr-info-duration">—</div></div>
+                <div class="vr-icard"><div class="vr-it">🎛️ 采样率</div><div class="vr-iv" id="vr-info-rate">—</div></div>
+                <div class="vr-icard"><div class="vr-it">🔊 声道</div><div class="vr-iv" id="vr-info-channels">—</div></div>
+                <div class="vr-icard"><div class="vr-it">💾 原始体积</div><div class="vr-iv" id="vr-info-size">—</div></div>
+                <div class="vr-icard"><div class="vr-it">📦 WAV 预估</div><div class="vr-iv" id="vr-info-wav">—</div></div>
+                <div class="vr-icard"><div class="vr-it">📦 MP3 预估</div><div class="vr-iv" id="vr-info-mp3">—</div></div>
+            </div>
+            <div class="vr-row" style="margin-top:.8rem;">
+                <label>MP3 比特率：
+                    <select id="vr-bitrate" aria-label="MP3 导出比特率">
+                        <option value="64">64 kbps（小体积）</option>
+                        <option value="96">96 kbps</option>
+                        <option value="128">128 kbps</option>
+                        <option value="160">160 kbps</option>
+                        <option value="192" selected>192 kbps（默认）</option>
+                        <option value="256">256 kbps</option>
+                        <option value="320">320 kbps（最高）</option>
+                    </select>
+                </label>
+                <span class="vr-info">每条录音自带 WebM / WAV / MP3 三个导出按钮（在列表里点）。文件名自动为「录音名.扩展名」。WAV 为手工编码的 16-bit PCM 无损导出；MP3 由本地 vendor 的 lamejs 编码（离线可用）。</span>
+            </div>
+        </div>
+
+        <div class="vr-combo">
+            <b>🎧 「音频旅程线」组合：</b>录完，去 <a href="/tools/audio-trimmer">在线音频裁剪器</a> 裁剪一段做铃声 —— 录音 → 裁剪顺流；多段录音想拼成一条？去 <a href="/tools/audio-merger">音频合并器</a> 上传多个文件排序合并 —— 录音 → 合并顺流；想给录音加 Slowed 变速＋混响效果？去 <a href="/tools/slowed-reverb">音频变速混响生成器</a> 一键生成。
+        </div>
+
+        <div class="vr-panel">
+            <h3>使用说明</h3>
+            <div class="vr-doc">
+                <b>录音：</b>点「开始录音」并允许麦克风权限，计时以 hh:mm:ss 实时走字，波形与音量表同步跳动；中途可「暂停」再「继续录制」，点「停止并保存」落盘进录音列表。空格键也可开始／停止录音。<br>
+                <b>列表管理：</b>每条录音可试听回放、重命名、删除；点一条可选中查看信息面板（时长／采样率／声道／体积预估）。列表仅保留在当前会话，刷新或关闭页面后消失，请及时下载导出。<br>
+                <b>导出：</b>每条录音可直接下载原始 WebM（浏览器录制的原始格式，不经转码）；也可导出 WAV（手工编码 16-bit PCM 无损）或 MP3（本地 lamejs 编码，64–320kbps 可选，默认 192kbps）。文件名自动为「录音名.扩展名」。<br>
+                <b>分工：</b>本工具只录音、不录屏 —— 录屏幕画面（含系统声音）请用 <a href="/tools/screen-recorder">屏幕录制工具</a>。<br>
+                <b>隐私：</b>全程无网络请求 —— 采集、录制、波形分析、试听、编码、下载都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+
+        <div class="vr-panel">
+            <h3>真限制</h3>
+            <div class="vr-doc">
+                ① <b>只录音、不录屏</b>（录屏请用 <a href="/tools/screen-recorder">屏幕录制工具</a>，本工具不采集屏幕画面与系统声音）。<br>
+                ② <b>录音列表仅保留在当前会话</b>：刷新／关闭页面后消失，请及时下载导出。<br>
+                ③ <b>不设人工时长上限</b>，但超长录音受浏览器内存限制；移动端浏览器切后台可能中断录音，重要录音请分段保存。<br>
+                ④ <b>WAV／MP3 导出需浏览器解码录音</b>，解码失败时仅可下载原始 WebM（属实告知，不遮掩）。<br>
+                ⑤ <b>全程浏览器本地计算，零上传</b>；麦克风权限由浏览器管理，本站不保存任何录音。
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/vendor/lamejs.min.js?v=1"></script>
+    <script src="/tools/static/js/voice_recorder.js?v=1"></script>
+</body>
+</html>
+{{end}}

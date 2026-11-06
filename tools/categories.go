@@ -2916,6 +2916,15 @@ func GetCategories() []Category {
 					Category:    "音频处理",
 				},
 				{
+					ID:          "voice_recorder",
+					Name:        "在线录音机",
+					Description: "浏览器本地录音（语音备忘录）：getUserMedia 麦克风采集＋设备选择＋回声消除／噪声抑制开关，开始／暂停／继续／停止，实时计时 hh:mm:ss 与波形＋音量表，录音列表会话内管理（重命名／试听／删除），原始 WebM 直存／WAV 手工编码／MP3(lamejs 64–320kbps，默认 192kbps)本地导出，时长／采样率／声道／体积预估，只录音不录屏，纯前端零上传 · Voice recorder: record from microphone locally, live waveform, session list, export WebM/WAV/MP3",
+					Path:        "/tools/voice-recorder",
+					Icon:        "mic_none",
+					New:         true,
+					Category:    "音频处理",
+				},
+				{
 					ID:          "video_to_audio",
 					Name:        "视频提取音频",
 					Description: "上传/拖拽 MP4/WebM/MOV（≤500MB）本地处理，decodeAudioData 快速路径秒级解出音轨，失败自动降级 MediaRecorder 实时重录，片段截取（起止可选，默认全片）+试听，WAV 手工编码/MP3(lamejs 64–320kbps，默认 192kbps)本地导出，文件名「原名-audio.扩展名」，时长/采样率/声道/体积预估面板，纯前端零上传 · Video to audio: extract audio track from video locally, fast decode with realtime re-record fallback, export WAV/MP3",
