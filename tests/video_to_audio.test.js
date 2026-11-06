@@ -225,6 +225,13 @@ has(JS_SRC, "fallbackRealtime", "降级：快速路径失败自动降级 fallbac
 has(JS_SRC, "MediaRecorder", "降级：MediaRecorder 实时重录");
 has(JS_SRC, "createMediaElementSource", "降级：createMediaElementSource 接视频元素");
 has(JS_SRC, "createMediaStreamDestination", "降级：MediaStreamDestination 录制");
+has(JS_SRC, "if (!state.recSrc)", "降级复用：MediaElementSource 只建一次、跨次重录复用 state.recSrc");
+has(JS_SRC, "state.recDest.stream", "降级复用：重复重录只换 MediaRecorder、复用 recDest.stream");
+has(JS_SRC, "video.readyState >= 1", "降级防卡住：元数据已就绪时直接建源、不等 loadedmetadata");
+has(JS_SRC, "function startRecording()", "降级防卡住：建源逻辑抽成具名 startRecording 两路共用");
+has(JS_SRC, "runId", "防串状态：提取轮次 token runId");
+has(JS_SRC, "runToken !== state.runId", "防串状态：旧轮次回调凭 token 丢弃");
+has(JS_SRC, "state.recRecorder.stop()", "防串状态：重新上传/重置先停旧录制");
 has(JS_SRC, "VTA_MAX_BYTES = 524288000", "上限：500MB VTA_MAX_BYTES=524288000");
 has(JS_SRC, "VTA_ACCEPT_RE", "校验：MP4/WebM/MOV 扩展名校验");
 has(JS_SRC, "setExtractProgress", "进度：提取进度 setExtractProgress");

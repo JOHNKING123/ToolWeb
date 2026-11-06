@@ -231,6 +231,9 @@ var state = {
     recVideo: null,      // 实时重录用的 video 元素
     recRecorder: null,   // MediaRecorder
     recChunks: [],       // 录制数据块
+    recSrc: null,        // MediaElementSource（一个 media 元素一生只能建一个，跨次重录复用）
+    recDest: null,       // MediaStreamDestination（与 recSrc 配对复用）
+    runId: 0,            // 提取轮次 token：重新上传/重置时递增，旧轮次的解码与重录回调凭此丢弃
     previewUrl: '',      // 视频预览用的 object URL（快速路径与实时重录共用）
 };
 
@@ -272,6 +275,20 @@ function handleFile(file) {
         return;
     }
     stopPlayback();
+    // 新一轮提取：递增轮次 token，旧轮次未完成的解码/重录回调凭此丢弃，不再覆盖新状态
+    state.runId = (state.runId || 0) + 1;
+    var runToken = state.runId;
+    // 停止进行中的实时重录（其 onstop 稍后异步触发，凭 token 丢弃，不写回状态）
+    if (state.recRecorder && state.recRecorder.state !== 'inactive') {
+        try { state.recRecorder.stop(); } catch (e) { /* 已停 */ }
+        state.recRecorder = null;
+    }
+    // 停掉旧视频播放并清除旧轮次挂在 video 元素上的回调，避免旧进度/失败回写新一轮
+    try { el.video.pause(); } catch (e) { /* 已停 */ }
+    el.video.onloadedmetadata = null;
+    el.video.onended = null;
+    el.video.ontimeupdate = null;
+    el.video.onerror = null;
     state.fileName = file.name.replace(/\.[^.]+$/, '') || 'video';
     state.fileSize = file.size;
     state.extracting = true;
@@ -293,18 +310,21 @@ function handleFile(file) {
         try { actx = ensureCtx(); } catch (e) { state.extracting = false; setStatus('❌ ' + e.message); return; }
         var t0 = performance.now();
         actx.decodeAudioData(ab).then(function (buffer) {
-            onDecoded(buffer, file, 'fast', Math.round(performance.now() - t0));
+            if (runToken !== state.runId) return;   // 已被新一轮上传取代，丢弃旧结果
+            onDecoded(buffer, file, 'fast', Math.round(performance.now() - t0), runToken);
         }).catch(function () {
+            if (runToken !== state.runId) return;   // 已被新一轮上传取代，不再降级
             // 快速路径失败：自动降级 MediaRecorder 实时重录
             setStatus('⚠️ 快速路径无法解码该视频的音频编码，自动降级为实时重录（耗时与视频等长）…');
-            fallbackRealtime(file);
+            fallbackRealtime(file, runToken);
         });
     };
     reader.readAsArrayBuffer(file);
 }
 
 // 降级：MediaRecorder 实时重录（video 元素播放 + MediaElementSource → MediaStreamDestination）
-function fallbackRealtime(file) {
+// runToken：所属提取轮次，与 state.runId 不符时整轮静默丢弃（重录中途重新上传不串状态）。
+function fallbackRealtime(file, runToken) {
     var actx;
     try { actx = ensureCtx(); } catch (e) { state.extracting = false; setStatus('❌ ' + e.message); return; }
     if (typeof MediaRecorder === 'undefined') {
@@ -312,6 +332,7 @@ function fallbackRealtime(file) {
         setStatus('❌ 快速路径与实时重录均不可用：当前浏览器不支持 MediaRecorder，请换 Chrome/Edge/Firefox 再试');
         return;
     }
+    if (runToken !== undefined && runToken !== state.runId) return;   // 已被新一轮取代
     var video = el.video;
     var url = state.previewUrl || URL.createObjectURL(file);
     if (!state.previewUrl) state.previewUrl = url;
@@ -320,33 +341,43 @@ function fallbackRealtime(file) {
     video.muted = false;
     el.video_wrap.style.display = 'block';
     var started = false;
-    var src = null, dest = null, rec = null;
+    var setupDone = false;   // 建源/录制只执行一次（直接调用与 loadedmetadata 两路共用）
     // 预览 URL 生命周期由 handleFile/resetAll 管理：提取成功后视频预览仍要保留，不在此处释放。
     function onFail(msg) {
+        if (runToken !== undefined && runToken !== state.runId) return;   // 旧轮次静默丢弃
         state.extracting = false;
         try { video.pause(); } catch (e) { /* 已停 */ }
         setStatus('❌ 实时重录失败：' + msg);
         setExtractProgress(0, '');
     }
-    video.onloadedmetadata = function () {
+    // 建源 + 开录（具名函数：元数据已就绪时直接调用，未就绪时由 onloadedmetadata 调用）
+    function startRecording() {
+        if (setupDone) return;
+        setupDone = true;
         var dur = video.duration;
         if (!isFinite(dur) || dur <= 0) { onFail('无法读取视频时长'); return; }
+        var rec;
         try {
-            src = actx.createMediaElementSource(video);
-            dest = actx.createMediaStreamDestination();
-            src.connect(dest);
-            src.connect(actx.destination);
-            rec = new MediaRecorder(dest.stream);
+            // 一个 media 元素一生只能创建一个 MediaElementAudioSourceNode：首次创建后
+            // 存到 state 上跨次复用（只换 MediaRecorder），否则第二次重录必抛 InvalidStateError。
+            if (!state.recSrc) {
+                state.recSrc = actx.createMediaElementSource(video);
+                state.recDest = actx.createMediaStreamDestination();
+                state.recSrc.connect(state.recDest);
+                state.recSrc.connect(actx.destination);
+            }
+            rec = new MediaRecorder(state.recDest.stream);
         } catch (e) { onFail(e.message); return; }
         state.recRecorder = rec;
         rec.ondataavailable = function (ev) { if (ev.data && ev.data.size > 0) state.recChunks.push(ev.data); };
         rec.onerror = function () { onFail('录制出错'); };
         rec.onstop = function () {
+            if (runToken !== undefined && runToken !== state.runId) return;   // 旧轮次丢弃
             var blob = new Blob(state.recChunks, { type: rec.mimeType || 'audio/webm' });
             setExtractProgress(100, '重录完成，正在解码…');
             blob.arrayBuffer().then(function (ab) {
                 actx.decodeAudioData(ab).then(function (buffer) {
-                    onDecoded(buffer, file, 'realtime', 0);
+                    onDecoded(buffer, file, 'realtime', 0, runToken);
                 }).catch(function () {
                     onFail('重录的音频无法解码，该视频可能受 DRM 保护或编码不受支持');
                 });
@@ -367,8 +398,14 @@ function fallbackRealtime(file) {
             var p = video.play();
             if (p && p.catch) p.catch(function (e) { onFail('视频播放被浏览器拦截：' + e.message); });
         } catch (e) { onFail(e.message); }
-    };
+    }
+    video.onloadedmetadata = function () { startRecording(); };
     video.onerror = function () { if (!started) onFail('视频无法加载，该文件可能损坏或受 DRM 保护'); };
+    // handleFile 已先给 video 赋了同一 URL：若元数据已加载完，浏览器不再触发
+    // loadedmetadata，须直接走建源/录制逻辑，否则进度条静默卡在 0%。
+    if (video.readyState >= 1 && isFinite(video.duration) && video.duration > 0) {
+        startRecording();
+    }
 }
 
 function setExtractProgress(pct, text) {
@@ -379,7 +416,8 @@ function setExtractProgress(pct, text) {
     el.progress_text.textContent = text || '';
 }
 
-function onDecoded(buffer, file, mode, ms) {
+function onDecoded(buffer, file, mode, ms, runToken) {
+    if (runToken !== undefined && runToken !== state.runId) return;   // 旧轮次结果丢弃
     stopPlayback();
     state.buffer = buffer;
     state.mode = mode;
@@ -629,10 +667,13 @@ async function exportMp3() {
 /* ================= 重置 ================= */
 
 function resetAll() {
+    // 作废进行中的解码/重录回调（其 onstop 稍后触发时凭 token 丢弃，不写回已重置的界面）
+    state.runId = (state.runId || 0) + 1;
     stopPlayback();
     if (state.recRecorder && state.recRecorder.state !== 'inactive') {
         try { state.recRecorder.stop(); } catch (e) { /* 已停 */ }
     }
+    state.recRecorder = null;
     if (el.video) { try { el.video.pause(); } catch (e) { /* 已停 */ } el.video.removeAttribute('src'); el.video.load(); }
     if (state.previewUrl) { URL.revokeObjectURL(state.previewUrl); state.previewUrl = ''; }
     state.buffer = null;
