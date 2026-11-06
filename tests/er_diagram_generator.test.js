@@ -231,7 +231,7 @@ throws(function () { E.buildSummary(null); }, "parsed", "抛错：buildSummary(n
 
 /* ---------- 10. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 322, "注册 Path 总数 319→320");
+eq(pathCount, 323, "注册 Path 总数 319→320");
 has(GO_SRC, "\"er_diagram_generator\"", "注册：ID er_diagram_generator");
 has(GO_SRC, "\"/tools/er-diagram-generator\"", "注册：Path /tools/er-diagram-generator");
 has(GO_SRC, "\"dataset\"", "注册：Icon dataset");

@@ -159,7 +159,7 @@ eq(dv.getUint16(34, true), 16, "encodeWavDataView：16-bit PCM");
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 322, "注册 Path 总数 314→315");
+eq(pathCount, 323, "注册 Path 总数 314→315");
 has(GO_SRC, '"video_to_audio"', "注册：ID video_to_audio");
 has(GO_SRC, '"/tools/video-to-audio"', "注册：Path /tools/video-to-audio");
 has(GO_SRC, '"music_video"', "注册：Icon music_video");

@@ -1,0 +1,167 @@
+{{define "xlsx_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 查看器 - XLSX 在线预览，本地打开 Excel 即看（免费/零上传）</title>
+    <meta name="description" content="免费在线 Excel 查看器（Excel 在线查看／XLSX 预览／在线打开 Excel）：本地打开 .xlsx/.xls/.csv（≤20MB）即看零上传，多工作表切换＋首行表头开关，日期按 Excel 序列值显示、公式只显缓存值，表头排序＋全局搜索＋每页 100 行分页，导出当前表 CSV／一键复制 TSV，纯浏览器本地解析。">
+    <meta name="keywords" content="Excel 在线查看,XLSX 预览,在线打开 Excel,Excel 查看器,xlsx viewer,excel online viewer,Excel 在线预览,xlsx 在线打开">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/xlsx-viewer">
+    <meta property="og:title" content="Excel 查看器 - XLSX 在线预览，本地打开 Excel 即看">
+    <meta property="og:description" content="本地打开 .xlsx/.xls/.csv 即看：多表切换、表头排序、全局搜索、每页 100 行分页，导出 CSV／复制 TSV，纯本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/xlsx-viewer">
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Excel 查看器","alternateName":"xlsx viewer","description":"本地打开 .xlsx/.xls/.csv（≤20MB）即看零上传，多工作表切换＋首行表头开关，日期按 Excel 序列值显示、公式只显缓存值不重算，表头排序＋全局搜索＋每页 100 行分页，统计面板＋导出当前表 CSV／一键复制 TSV；纯浏览器本地解析。","url":"https://www.johnkingzcq123.xyz/tools/xlsx-viewer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+    <style>
+        .xv-honest{display:flex;gap:.7rem;align-items:flex-start;border:2px solid #34d399;background:#ecfdf5;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.8;color:#065f46}
+        .xv-honest b{color:#047857}
+        .xv-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:1.4rem 1rem;text-align:center;cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280;margin-bottom:1rem}
+        .xv-upload:hover,.xv-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .xv-fileinfo{display:none;align-items:center;gap:.6rem;margin-bottom:1rem;font-size:.92rem;color:#374151}
+        .xv-fileinfo .nm{font-weight:600;color:#111827}
+        .xv-fileinfo .sub{color:#6b7280;font-size:.85rem}
+        .xv-toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0;align-items:center}
+        .xv-toolbar .btn[disabled]{opacity:.55;cursor:not-allowed}
+        .xv-status{font-size:.9rem;min-height:1.4em;margin-top:.6rem;line-height:1.6;color:#059669}
+        .xv-error{display:none;color:#b91c1c;font-size:.9rem;margin-top:.6rem;line-height:1.8;white-space:pre-wrap;background:#fef2f2;border:1px solid #fca5a5;border-radius:.5rem;padding:.7rem .9rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+        .xv-warn{display:none;border:2px solid #f59e0b;background:#fffbeb;border-radius:.8rem;padding:.85rem 1rem;margin:0 0 1.2rem;font-size:.95rem;line-height:1.7;color:#92400e}
+        .xv-viewer{display:none;margin-top:1.2rem;border-top:1px solid #e5e7eb;padding-top:1.1rem}
+        .xv-stats{font-size:.95rem;color:#374151;margin-bottom:.8rem;line-height:1.8}
+        .xv-stats b{color:#059669}
+        .xv-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
+        .xv-tab{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:.55rem;padding:.45rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit}
+        .xv-tab:hover{border-color:var(--primary-color);color:var(--primary-color)}
+        .xv-tab.active{background:var(--primary-color);border-color:var(--primary-color);color:#fff;font-weight:600}
+        .xv-controls{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem;font-size:.92rem;color:#374151}
+        .xv-search{flex:1;min-width:200px;padding:.55rem .7rem;border:1px solid #d1d5db;border-radius:.55rem;font-size:.92rem;font-family:inherit;box-sizing:border-box}
+        .xv-search:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .xv-check{display:inline-flex;gap:.35rem;align-items:center;cursor:pointer;white-space:nowrap}
+        .xv-table-wrap{overflow-x:auto;max-height:480px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:.6rem;background:#fff}
+        table.xv-table{border-collapse:collapse;min-width:100%;font-size:.85rem}
+        table.xv-table th,table.xv-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;white-space:nowrap;text-align:left;color:#111827}
+        table.xv-table th{background:#dce9fd;font-weight:700;position:sticky;top:0}
+        table.xv-table th.xv-th{cursor:pointer;user-select:none}
+        table.xv-table th.xv-th:hover{background:#bfdbfe}
+        table.xv-table tbody tr:nth-child(even) td{background:#f9fafb}
+        table.xv-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+        .xv-empty{padding:1.5rem;text-align:center;color:#9ca3af;font-size:.9rem}
+        .xv-stats-line{font-size:.92rem;color:#374151;margin:.6rem 0 0}
+        .xv-pager{display:flex;gap:.7rem;align-items:center;justify-content:center;margin-top:.8rem;flex-wrap:wrap}
+        .xv-pageinfo{font-size:.85rem;color:#6b7280}
+        .xv-jump{width:4.5em;padding:.35rem .5rem;border:1px solid #d1d5db;border-radius:.4rem;font-size:.9rem;text-align:center}
+        .xv-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+        .xv-combo{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;padding:.7rem 1rem;font-size:.92rem;line-height:1.8;color:#1e40af;margin-top:1.2rem}
+        .xv-combo a{color:#1d4ed8;font-weight:600}
+        .xv-tip{color:#374151;line-height:1.9;font-size:.95rem}
+        .xv-tip b{color:#111827}
+        .xv-links{display:flex;gap:1rem;flex-wrap:wrap}
+        .xv-links a{color:#2563eb}
+        @media (max-width:640px){
+            .xv-toolbar .btn{flex:1 1 42%;justify-content:center}
+            .xv-actions .btn{flex:1 1 100%;justify-content:center}
+            table.xv-table th,table.xv-table td{padding:.35rem .5rem;font-size:.8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>Excel 查看器</h1>
+            <p>本地打开 .xlsx/.xls/.csv 即看：多表切换、表头排序、全局搜索、每页 100 行分页，纯浏览器本地解析，零上传</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="xv-honest">
+                <div><b>真限制（如实说明，请先看）：</b><br>
+                ① 本工具只查看、不编辑，公式不重算——只显示 Excel 文件里保存的缓存值；<br>
+                ② 透视表、图表、宏、条件格式不渲染，只显示单元格的原始值；<br>
+                ③ 合并单元格展开显示：合并区域内每个格子都显示左上角的值；<br>
+                ④ 文件 ≤20MB；单表超过 5000 行时分页提示，每页 100 行；<br>
+                ⑤ 全程本地解析、零上传（可在浏览器 Network 面板自证：无任何外部请求）；.xls 旧格式解析或有缺失。</div>
+            </div>
+            <div class="tool-card" style="margin-bottom:1.2rem;">
+                <div class="xv-upload" id="xv-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 .xlsx/.xls/.csv 文件到此处">
+                    <div>点击选择或拖拽 <b>.xlsx / .xls / .csv</b> 文件到这里（本地读取，不上传）</div>
+                    <div style="font-size:.82rem;margin-top:.3rem;">文件 ≤20MB；也可以先点下方预设示例看看效果</div>
+                </div>
+                <input type="file" id="xv-file" accept=".xlsx,.xls,.csv" style="display:none;">
+                <div class="xv-fileinfo" id="xv-fileinfo">
+                    <span class="nm" id="xv-file-name"></span>
+                    <span class="sub" id="xv-file-sub"></span>
+                </div>
+                <div class="xv-toolbar">
+                    <button class="btn btn-secondary" id="xv-sample-sales">示例：销售表</button>
+                    <button class="btn btn-secondary" id="xv-sample-schedule">示例：课程表</button>
+                    <button class="btn btn-secondary" id="xv-sample-contacts">示例：通讯录</button>
+                    <button class="btn btn-secondary" id="xv-clear">清空</button>
+                </div>
+                <div class="xv-status" id="xv-status"></div>
+                <div class="xv-error" id="xv-error" role="alert"></div>
+
+                <div class="xv-warn" id="xv-warn"></div>
+                <div class="xv-viewer" id="xv-viewer">
+                    <div class="xv-stats" id="xv-stats"></div>
+                    <div class="xv-tabs" id="xv-tabs"></div>
+                    <div class="xv-controls">
+                        <input id="xv-search" class="xv-search" type="text" placeholder="全局搜索（命中任意列即保留该行，大小写不敏感）" aria-label="全局搜索">
+                        <label class="xv-check"><input type="checkbox" id="xv-header-toggle" checked> 首行作表头</label>
+                    </div>
+                    <div class="xv-table-wrap" id="xv-table-wrap"></div>
+                    <p class="xv-stats-line" id="xv-stats-line"></p>
+                    <div class="xv-pager">
+                        <button class="btn btn-secondary" type="button" id="xv-prev">上一页</button>
+                        <span class="xv-pageinfo" id="xv-page-info">第 1 / 1 页</span>
+                        <button class="btn btn-secondary" type="button" id="xv-next">下一页</button>
+                        <label style="font-size:.92rem;color:#374151;">跳到第
+                            <input id="xv-page-jump" class="xv-jump" type="number" min="1" value="1"> 页
+                        </label>
+                        <button class="btn btn-secondary" type="button" id="xv-page-go">跳转</button>
+                    </div>
+                    <div class="xv-actions">
+                        <button class="btn btn-primary" id="xv-export" disabled>导出当前表 CSV</button>
+                        <button class="btn btn-secondary" id="xv-copy" disabled>一键复制 TSV</button>
+                    </div>
+                    <div style="color:#6b7280;font-size:.85rem;margin-top:.5rem;line-height:1.6;">
+                        导出 CSV：当前工作表、当前筛选与排序结果，UTF-8 with BOM，Excel 打开中文不乱码；复制 TSV：同上内容，制表符分隔，可直接粘贴进 Excel。日期显示为 Excel 序列值（如 45658 即 2025-01-01），公式只显示文件里保存的缓存值，不重新计算。
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <h3>使用说明</h3>
+                <div class="xv-tip">
+                    <b>怎么用：</b>点上方区域选择或拖入 .xlsx/.xls/.csv 文件（≤20MB），或点「示例」一键载入预设表 → 多个工作表时点表名切换 → 点表头在升序、降序、取消三态排序 → 全局搜索框输入关键词筛选 → 每页 100 行翻页查看 → 点「导出当前表 CSV」或「一键复制 TSV」带走数据。<br>
+                    <b>显示规则：</b>日期按 Excel 序列值显示（数字即自 1899-12-30 起的天数）；公式单元格只显示文件里保存的缓存值，不重新计算；空行整行剔除，短行自动补空；合并单元格展开显示，区域内每个格子都显示左上角的值。<br>
+                    <b>表头开关：</b>默认首行作表头；取消勾选后自动生成「列1、列2…」，原首行也计入数据行。<br>
+                    <b>隐私：</b>解析、查看与导出全程在你的浏览器里完成，文件只在浏览器内存里流转，不经过任何服务器；解析库为本站本地副本（<code>static/js/vendor/xlsx-0.18.5.umd.js</code>），无任何外部请求，Network 面板可自证。
+                </div>
+                <div class="xv-combo">
+                    <b>📊 表格数据一条龙（只做查看，分工明示）：</b>本工具只做查看，不拆分、不合并、不转换；CSV 文本想粘贴即看，用 <a href="/tools/csv-table-viewer">CSV 表格查看器</a>；想把一张大表按列／行数／工作表拆成多个文件，用 <a href="/tools/sheet-split">表格拆分</a>；想把多个表格文件合并成一张表，用 <a href="/tools/sheet-merge">表格合并</a>；手里是 JSON 想转成 Excel，用 <a href="/tools/json-to-excel">JSON 转 Excel</a> —— 查看、拆分、合并、进表，一套流程。
+                </div>
+            </div>
+            <div class="tool-card">
+                <h3>相关工具</h3>
+                <div class="xv-links">
+                    <a href="/tools/csv-table-viewer">CSV 表格查看器（CSV 文本粘贴查看、排序筛选；本工具只看 Excel 文件）</a>
+                    <a href="/tools/sheet-split">表格拆分（按列／行数／工作表拆成多个 .xlsx）</a>
+                    <a href="/tools/sheet-merge">表格合并（多个表格文件合并成一张表）</a>
+                    <a href="/tools/json-to-excel">JSON 转 Excel（JSON 数组转 xlsx 表格）</a>
+                </div>
+            </div>
+            <div class="tool-card">
+                <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0;"><b>实现说明：</b>解析、排序、搜索、分页、CSV/TSV 导出均为纯函数（浏览器与 node 测试共用同一文件）；渲染一律转义 HTML，输入里的 HTML 只显示为文本；本页无外部请求、无 fetch／XHR、无 CDN。</p>
+            </div>
+        </div>
+    </div>
+    <script src="/tools/static/js/vendor/xlsx-0.18.5.umd.js"></script>
+    <script src="/tools/static/js/xlsx_viewer.js"></script>
+</body>
+</html>
+{{end}}

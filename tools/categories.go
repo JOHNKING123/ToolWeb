@@ -1333,6 +1333,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "xlsx_viewer",
+					Name:        "Excel 查看器",
+					Description: "免费在线 Excel 查看器（Excel 在线查看／XLSX 预览／在线打开 Excel）：本地打开 .xlsx/.xls/.csv（≤20MB）即看零上传，多工作表切换＋首行表头开关，日期按 Excel 序列值显示、公式只显缓存值不重算，表头排序＋全局搜索＋每页 100 行分页，统计面板＋导出当前表 CSV／一键复制 TSV，3 组预设示例，纯浏览器本地解析 · Excel viewer: open xlsx/xls/csv locally, switch sheets, sort, search, paginate, export CSV, 100% client-side",
+					Path:        "/tools/xlsx-viewer",
+					Icon:        "view_module",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "model_3d_viewer",
 					Name:        "3D 模型预览器",
 					Description: "免费在线 3D 模型预览：上传/拖拽 STL、OBJ、GLB（≤100MB），浏览器本地解析渲染零上传，轨道旋转/缩放/平移、自动旋转、线框/实体切换、重置视角，格式/三角面数/顶点数/包围盒尺寸/文件大小信息面板，自适应缩放居中，当前视角导出 PNG，内置示例模型一键加载 · 3D model viewer: preview STL/OBJ/GLB locally in your browser, orbit controls, wireframe toggle, export PNG, 100% client-side",

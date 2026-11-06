@@ -1,3 +1,117 @@
+## 今日任务（2026-11-07 05:41 · PM 选定轮，接通用调研第二百五十三轮）
+
+**选定：Excel 查看器（XLSX 在线预览）（xlsx_viewer）** — 本轮唯一任务（新工具）。
+
+**顺位**：253 轮 Top3 顺位递进第三席，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十三度裁定跳过**（沿用 231–252 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十二轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），XLSX 查看本体站内 0 交付；XLSX 二进制格式未覆盖。
+2. **口径互补确凿**：站内已有同类查看器，但格式口径互不重叠——csv-table-viewer 只做 CSV 文本口径（粘贴 CSV 解析），sqlite-viewer 只做 SQLite 数据库口径（sql.js 读 .db），sheet_split／sheet_merge 只做 XLSX 拆分／合并（读写口径，无查看口径）；本工具为**XLSX 在线预览口径**（本地打开 .xlsx/.xls 即看、多表切换、搜索排序分页），与三者形成「CSV／SQLite／XLSX 拆合／XLSX 查看」分工互补（页面与互链须明示分工：本工具只做查看，不做编辑／公式重算／透视）。
+3. **需求验证**：收到 XLSX 附件、无 Office 或手机上想快速查看内容，只能下载装软件；浏览器本地打开即看、零上传。顺位递进印证（简繁转换交付后池内递进，252 轮新入池→253 轮第三席）。
+4. **技术路线站内已有先例**：纯前端小-中难度——复用站内已 vendor 的 xlsx-0.18.5（static/js/vendor/xlsx-0.18.5.umd.js，881KB，json_to_excel／sheet_split／sheet_merge／markdown_to_excel／image-to-excel 5 处在用），零新增依赖；解析函数复用 sheet_split／sheet_merge 的 `parseWorkbook(XLSX, buf, fileName)` 签名与返回形状（XLSX 以参数传入，纯函数无全局依赖，Node 下 require 本地 vendor 即可真 xlsx round-trip 测试）；页面模式复用 csv-table-viewer（首行表头＋排序＋搜索＋分页）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／`sudoku`／`social_image_size`／`social-image-size` 全站（tools／templates／static／tests）**0 命中**——XLSX 查看本体与数独／尺寸速查表本体 0 交付，真缺口确凿。
+   - `spreadsheet` 命中 2 处均为 sheet_split／sheet_merge 的 JS 内 MIME 类型字符串（`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`），无查看口径。
+   - CJK「Excel查看器」`chr(0x...)` 运行时构造（codepoints 验真 0x45／0x78／0x63／0x65／0x6c／0x67e5／0x770b／0x5668）全站 **0 命中**。
+   - Icon：**`view_module` 首选**（`Icon:\s*"view_module"` 精确值 **0 命中**，全库唯一；`table_view` 已占用 2（csv-table-viewer 等）、`grid_view` 已占用 1，不可取），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 json_graph_viewer `bubble_chart` e6dd 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十三度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／汉字转拼音（留池；多音字无语境消歧弱点，待后续）／罗马数字转换（新入池；人群偏窄、功能极简，留池）／国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）／二维码传文件／LaTeX 公式编辑器（新入池弱观察）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 拖拽／选择本地 .xlsx／.xls／.csv 文件（≤20MB），浏览器本地解析，零上传 ② 多工作表切换（标签／下拉，表名原样呈现）＋首行作表头开关 ③ 格式化值显示：数字／布尔／文本原值呈现，日期单元格按 Excel 序列值显示为日期，公式单元格只显示上次计算缓存值、不重算 ④ 表头点击排序（数字按数值、文本按字典序、空值置末，三态升／降／还原）＋全局搜索（当前表，不区分大小写子串匹配）＋分页渲染（每页 100 行）⑤ 统计面板（文件大小／工作表数／当前表行数／列数／单元格数）⑥ 导出当前表为 CSV 下载、一键复制当前表 TSV ⑦ 3 组预设示例（一键加载：销售表／课程表／通讯录；JS 内用 XLSX.utils 生成示例工作簿，不依赖外部文件）⑧ 互链：csv-table-viewer（"CSV 表格查看器"）、sheet_split／sheet_merge（拆分／合并）、json-to-excel（"JSON 转 Excel"），页面须明示分工（本工具只做查看，不做编辑／公式重算／透视／格式转换）⑨ 全程浏览器本地计算，零上传、零外部接口 ⑩ 无障碍（文件 input、表切换与按钮均可 tab 聚焦，表格有文字呈现）⑪ 模板零外部静态资源惯例（只引本地 vendor xlsx-0.18.5.umd.js，不走 CDN）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.XlsxViewer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数；解析复用 sheet_split／sheet_merge 的 parseWorkbook 签名与返回形状）**：
+  - `parseWorkbook(XLSX, buf, fileName)` → {sheets: [{name, header, rows, ncols}]}（XLSX 为空 err.field='XLSX'；buf 为空或非 ArrayBuffer／Buffer／Uint8Array／字符串 err.field='buf'；fileName 非字符串或空 err.field='fileName'；XLSX.read 抛错（损坏文件）或工作簿无工作表，包装为 Error 且 err.field='buf'；.csv 文本分支同 sheet_split；尾部全空行剔除，短行补空至 ncols；header 为首行，rows 为数据行）。
+  - `formatCellValue(value)` → string（null／undefined → ''；true → 'TRUE'，false → 'FALSE'；数字按 String(value)；字符串原样返回）。
+  - `sortRows(rows, colIndex, dir)` → 新数组（不改原数组；rows 非数组 err.field='rows'；colIndex 越界 err.field='colIndex'；dir 取值 'asc'／'desc'，否则 err.field='dir'；数字按数值、其余按字符串比较，空值置末）。
+  - `searchRows(rows, query)` → {rows, matched}（query 非字符串 err.field='query'；空 query 返回全部行 matched=rows.length；不区分大小写子串匹配，任一单元格命中即保留整行）。
+  - `paginateRows(rows, page, pageSize)` → {pageRows, totalPages, total}（rows 非数组 err.field='rows'；page <1 err.field='page'；pageSize <1 err.field='pageSize'；totalPages = max(1, ceil(total/pageSize))；超页返回空 pageRows）。
+  - `rowsToCSV(rows)` → string（rows 非数组 err.field='rows'；RFC4180：含逗号／引号／换行字段双引号包裹、引号双写；行尾 \r\n）。
+  - `buildSampleWorkbook(XLSX, kind)` → Uint8Array（kind 取值 'sales'／'schedule'／'contacts'，否则 err.field='kind'；XLSX 为空 err.field='XLSX'；sales：单表「销售表」，header ['日期','商品','销量','单价']，2 行示例；schedule：单表「课程表」，header ['星期','第一节','第二节']，2 行示例；contacts：单表「通讯录」，header ['姓名','电话','邮箱']，2 行示例；返回 XLSX.write({bookType:'xlsx', type:'array'}) 结果）。
+- **数值锚点（测试精确值）**：测试内用 XLSX.utils.book_new／aoa_to_sheet／XLSX.write({type:'array'}) 现造真 .xlsx 再喂 parseWorkbook。parseWorkbook：单表 header ['姓名','年龄']、rows[0] ['张三', 28]、ncols 2；双表 sheets.length 2 且 sheets[1].name 为第二表名；尾部全空行剔除；短行补空 ''；损坏字节（[0x00,0x01,0x02]）fileName 'bad.xlsx' 抛错 err.field='buf'；parseWorkbook(null, buf, 'a.xlsx') 抛错 err.field='XLSX'；parseWorkbook(XLSX, null, 'a.xlsx') 抛错 err.field='buf'；parseWorkbook(XLSX, buf, '') 抛错 err.field='fileName'。formatCellValue：(null) → ''；(undefined) → ''；(true) → 'TRUE'；(false) → 'FALSE'；(0) → '0'；(1.5) → '1.5'；('abc') → 'abc'。sortRows：([['b',2],['a',10],['',1]], 1, 'asc') 首行 [ 'a', 10 ] 次行 ['b', 2]（数字按数值）；([['b'],['a'],['']], 0, 'asc') 末行 ['']（空值置末）；原数组不被修改；colIndex 越界抛错 err.field='colIndex'；dir 'x' 抛错 err.field='dir'。searchRows：query '张' 命中含「张三」行，matched 精确值；query '' 返回全部；query 大小写不敏感（'ABC' 命中 'abc'）；query 123 抛错 err.field='query'。paginateRows：10 行 pageSize 3 → totalPages 4；page 2 pageRows.length 3；page 5 pageRows.length 0；page 0 抛错 err.field='page'；pageSize 0 抛错 err.field='pageSize'。rowsToCSV：([['a','b'],['说"好"','c,d']]) → 'a,b\r\n"说""好""","c,d"\r\n'。buildSampleWorkbook：('sales') round-trip 经 parseWorkbook 得 header[0] '日期'、rows.length 2；('schedule') header[0] '星期'；('contacts') header[0] '姓名'；kind 'x' 抛错 err.field='kind'。
+- **真限制五条页面明示**：① 只做查看，不可编辑单元格；公式只显示上次计算缓存值，不重算（改公式需用 Excel／WPS 重算保存后重新打开）；② 数据透视表／图表／宏／条件格式不渲染，只显示单元格值；③ 合并单元格展开显示（首格有值、其余留空），不保留合并视觉；④ 文件 >20MB 或单表 >5000 行时分页渲染并提示，大文件浏览器内存占用高；⑤ 全程浏览器本地解析，文件不上传（.xls 旧格式部分特性解析可能不完整）。
+- **SEO**：Excel 在线查看、XLSX 预览、在线打开 Excel、Excel 查看器。
+- **改动文件**：tools/categories.go（「格式转换」类目新增 xlsx_viewer 条目，紧邻 csv_table_viewer，Path 322→**323**，Icon `view_module` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph）／templates/xlsx_viewer.html（新，define "xlsx_viewer"）／static/js/xlsx_viewer.js（新，window.XlsxViewer；引用本地 vendor xlsx-0.18.5.umd.js，零新增依赖）／tests/xlsx_viewer.test.js（新）／全量旧 tests Path 断言 322→323 数值同步（开发轮实测基数：158 个测试文件含 322 字面量，开发轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥150 断言全过（parseWorkbook 真实 xlsx round-trip 单表／双表／空行剔除／短行补空／损坏文件；sortRows／searchRows／paginateRows／rowsToCSV／formatCellValue／buildSampleWorkbook 锚点精确值；非法参数抛错 err.field；模板零外部静态资源检查——页面无 CDN 链接，只引本地 vendor）② 全量 tests/*.test.js 208→**209** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/xlsx-viewer 200、静态 JS 200、vendor xlsx-0.18.5.umd.js 200、首页索引收录 ⑤ 浏览器手工验证：拖入真实 .xlsx → 多表切换／搜索／排序／分页可用 → CSV 导出与 TSV 复制可用 → 公式缓存值提示与五条真限制可见 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「格式转换」类目（与 csv-table-viewer 同类目，文件格式查看家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Excel 查看器→本轮交付（253 研究轮第三席递进；PM 定序权裁定首席社媒表第二十三度跳过（数据表负债从严，231–252 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII xlsx_viewer／excel_viewer／spreadsheet_viewer／sudoku／social_image_size 全 0 命中，CJK「Excel查看器」全 0 命中，`spreadsheet` 仅 sheet_split／sheet_merge MIME 字符串；Icon `view_module` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；复用已 vendor xlsx-0.18.5 零新增依赖，parseWorkbook 复用 sheet_split／sheet_merge 签名与返回形状）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十三度跳过）／数独游戏→P3 观察维持／汉字转拼音→留池／罗马数字转换→新入池留池／国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→新入池弱观察。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）初次失败（Permission denied (publickey)，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地 HEAD c352255（简繁转换已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **322**；`ls tests/*.test.js | wc -l` = **208**；PM 独立零重叠复核（ASCII `xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「Excel查看器」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x45／0x78／0x63／0x65／0x6c／0x67e5／0x770b／0x5668）；`spreadsheet` 命中 2 处均为 sheet_split／sheet_merge 的 JS 内 MIME 类型字符串，无查看口径；Icon `view_module` 精确值 0 命中，`table_view` 占用 2、`grid_view` 占用 1；xlsx-0.18.5 已 vendor（static/js/vendor/xlsx-0.18.5.umd.js，881KB，5 处在用，Node require 实测 version 0.18.5）；158 个测试文件含 322 字面量）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 05:00 · 产品调研推荐，第二百五十三轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：简繁转换（繁简互转）已交付闭环（c352255 新增：`/tools/traditional-simplified-converter`，Path 总数 321→**322**，tests **208 个**；新测试 399 断言全过；Icon `g_translate` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 仍 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十二度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **Excel 查看器（XLSX 在线预览）** — **顺位递进第三席**（简繁转换交付后池内递进）。痛点：收到 XLSX 附件、无 Office 或手机上想快速查看内容，只能下载装软件；浏览器本地打开即看、零上传。实现纯前端小-中难度（复用站内已 vendor 的 xlsx-0.18.5，sheet_split／sheet_merge／json_to_excel 等在用，零新增依赖；多工作表切换＋搜索＋冻结首行）。站内零重叠本轮复测：`xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／CJK「Excel查看器」全 **0 命中**；`spreadsheet` 命中 2 处均为 sheet_split／sheet_merge 的 JS（表格拆分／合并口径，无查看口径）。**弱点**：只做查看（公式／透视／宏不支持，页面明示），与 csv-table-viewer／sqlite-viewer 口径邻近但格式不同（XLSX 二进制未覆盖）。SEO：Excel 在线查看、XLSX 预览、在线打开 Excel。建议 ID xlsx_viewer、Path /tools/xlsx-viewer；Icon `view_module` 精确值 **0 命中**（沿用 252 轮；`table_view` 已占用 2、`grid_view` 已占用 1），开发轮复测锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十二度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| Excel 查看器（XLSX 在线预览） | **顺位递进第三席**：简繁转换交付后池内递进；`xlsx_viewer`／`excel_viewer`／CJK「Excel查看器」本轮复测全 0 命中；复用已 vendor xlsx-0.18.5，零新增依赖；**弱点**：只做查看，与 csv-table-viewer／sqlite-viewer 口径邻近但格式不同 | 小-中 | P3（顺位递进） |
+| 汉字转拼音 | 留池；95dir「最指南」11-06 信号；CJK「汉字转拼音」本轮复测 **0 命中**，独立工具本体 0 交付；纯前端小难度；**弱点**：多音字无语境消歧会错，需页面明示 | 小 | P3（留池） |
+| 罗马数字转换（阿拉伯数字↔罗马数字） | **新入池**：95dir「最指南」11-06 工具清单余项；toolcenterlab／toolgrid／miniwebtool／calculator.io 等多家竞品站印证（双向 1–3999、逐步符号拆解、非标准写法警告）；`roman_numeral`／CJK「罗马数字」本轮复测全 **0 命中**；纯前端极小难度（贪心查表 13 组值-符号对，零上传，零新增依赖）；**弱点**：人群偏窄（学生／历史／大纲编号场景）、功能极简 | 小 | P3（新入池） |
+| 国际电话区号查询 | P3 弱观察维持；whispr.dev 11-06 信号；`dial_code`／`phone_code`／`calling_code` 本轮复测全 0 命中；纯前端小难度；**弱点**：静态数据表、人群窄 | 小 | P3（弱观察） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 本轮复测 0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 本轮复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord_finder` 本轮复测 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 二维码传文件（扫码跨设备传文件） | 新入池弱观察；Show HN ShadowCat 信号；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send` 本轮复测全 0 命中；纯前端中难度；**弱点**：双设备流程、扫码可靠性与速率（约 100kB/s 级）、人群窄 | 中 | P3（新入池弱观察） |
+| LaTeX 公式编辑器/预览 | 新入池弱观察；WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 本轮复测 **0 命中**；纯前端小-中难度；**弱点**：KaTeX 字体文件 vendor 体量与模板零外部资源惯例的权衡、人群窄（学生／科研／教师） | 小-中 | P3（新入池弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 简繁转换（繁简互转） | 已交付划出（c352255 新增：`/tools/traditional-simplified-converter`，Path 321→322，tests 208 个；新测试 399 断言全过；Icon `g_translate` 全库唯一） | — | 已实现 |
+| JSON 结构图可视化（JSON Crack 模式） | 已交付划出（5c0e61c 新增＋399c1cb 导出双致命 bug 修复：`/tools/json-graph-viewer`，Path 320→321，tests 207 个；新测试 303→330 断言全过；Icon `bubble_chart` 全库唯一） | — | 已实现 |
+| 数据库 ER 图生成器（文本建表 → 关系图） | 已交付划出（5b196ef 新增＋dd70eac 修复：`/tools/er-diagram-generator`，Path 319→320，tests 206 个；新测试 203 断言全过；Icon `dataset` 全库唯一） | — | 已实现 |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（5a6d12b 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-07 03:00~05:00 窗口；本轮**新入池 1 个**，余为消解）：
+- **罗马数字转换新入池**（95dir「最指南」11-06 工具清单余项；toolcenterlab／toolgrid／miniwebtool／calculator.io 等多家竞品站印证（双向 1–3999、逐步符号拆解、非标准写法警告）；`roman_numeral`／CJK「罗马数字」本轮复测全 0 命中；Icon `history_edu`／`format_list_numbered`／`looks_one` 精确值 0 命中）。
+- Medium「7 Free Browser Tools Worth Bookmarking This October」（10-18）→ **七项全消解**：SortaSeat 婚宴座位表 → **wedding-seating-chart 已交付**；OldRoll 复古滤镜 → **img-retro-filter 已交付**；StitchCraft 十字绣图案 → **cross-stitch-pattern 已交付**；urPiano 在线钢琴 → **online-piano 已交付**；Calcy 记事本单位计算器 → **unit-calc-notepad 已交付**；llmspeed 本地 LLM 速度模拟 → **llm-hardware-checker 已交付**；SyncWhen 无注册会议投票 → 需服务端共享链接／投票状态，非纯单页，消解。
+- stiltcode「5 Tiny, Free Web Tools」→ 消解：Squoosh 图片压缩 → **img-compress 已交付**；Diffchecker 文本比对 → **text_diff 已交付**；CleanURL 链接去追踪参数 → **url-tracker-cleaner 已交付**；ILovePDF → **pdf-merge-split 已交付**。
+- 掘金 LeoBin／ToolDeck／Polotno「浏览器本地 PDF 编辑」→ 消解：**pdf-annotate／pdf-sign 已交付**（叠加文字／高亮／签名口径已覆盖；改原文级编辑不在站内口径）。
+- 95dir「最指南」余项 → 消解：在线画板 → **doodle-board 已交付**；文字加密解密 → **aes／des／rsa 已交付**；其余（摩斯／违禁词／提词器／屏幕测试／色盲测试／亲戚计算器等）252 轮已消解。
+- thetechbasket「75 Most Useful Websites」／dev.to 250+ 工具站 → 消解：PDF／图片／JSON／密码／二维码等均为已交付口径；WeTransfer／FilePizza 大文件发送需服务端，消解。
+
+**候选池变动**：简繁转换交付划出（c352255，322 Path，208 tests）；**罗马数字转换新入池**；Excel 查看器顺位递进第三席；汉字转拼音留池；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十二度跳过）；数独游戏 P3 观察维持第二席；和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）初次失败（Host key verification failed，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在；本地 HEAD c352255（简繁转换已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **322**；`ls tests/*.test.js | wc -l` = **208**；站内零重叠复核（ASCII `social_image_size`／`social-image-size`／`sudoku`／`xlsx_viewer`／`excel_viewer`／`spreadsheet_viewer`／`roman_numeral`／`dial_code`／`gcode_viewer`／`wordle`／`chord_finder`／`latex`／`qr_transfer`／`file_transfer` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外；`pinyin` 命中 6 处均为 slug_generator 内置拼音表及零散提及，无独立工具本体；`spreadsheet` 命中 2 处均为 sheet_split／sheet_merge 的 JS，无查看口径）；CJK「汉字转拼音」「Excel查看器」「罗马数字」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6c49／0x5b57／0x8f6c／0x62fc／0x97f3、0x45／0x78／0x63／0x65／0x6c＋0x67e5／0x770b／0x5668、0x7f57／0x9a6c／0x6570／0x5b57）；CJK「简繁转换」命中 4 处均为交付本体文件（categories.go／模板／JS／测试）；wedding-seating-chart／cross-stitch-pattern／img-retro-filter／unit-calc-notepad／llm-hardware-checker／url-tracker-cleaner／pdf-annotate／pdf-sign／online-piano／doodle-board 均为已交付本体；xlsx-0.18.5 已 vendor（sheet_split／sheet_merge 等在用）；Icon `history_edu`／`format_list_numbered`／`looks_one`／`view_module` 精确值 0 命中；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-07 03:45 · PM 选定轮，接通用调研第二百五十二轮）
 
 **选定：简繁转换（繁简互转）（traditional_simplified_converter）** — 本轮唯一任务（新工具）。
