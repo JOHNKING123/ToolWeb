@@ -1,0 +1,197 @@
+{{define "shell_explainer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell 命令解释器 - 粘贴命令逐段中文讲解 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 Shell 命令解释器（explainshell 模式）：粘贴任意 shell 命令，逐段中文讲解命令本体、每个旗标、位置参数、管道与重定向的含义；内置 25 个常用命令旗标词典，危险命令标红警示。纯前端本地解析，内容零上传。Shell command explainer: Chinese token-by-token explanation of any shell command, 100% client-side.">
+    <meta name="keywords" content="Shell 命令解释,shell 解释器,explainshell,命令解析,Linux 命令讲解,旗标含义,shell 命令中文解释,rm -rf 警示,管道重定向解释">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/shell-explainer">
+    <meta property="og:title" content="Shell 命令解释器 - 粘贴命令逐段中文讲解">
+    <meta property="og:description" content="看不懂的 shell 命令，粘进来逐段讲明白：命令本体、每个旗标、位置参数、管道与重定向全部中文讲解，危险命令标红警示；纯前端零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/shell-explainer">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Shell 命令解释器","description":"在线 Shell 命令解释器（explainshell 模式）：粘贴任意 shell 命令，逐段中文讲解命令本体、每个旗标、位置参数、管道与重定向的含义；内置 25 个常用命令旗标词典，危险命令标红警示；纯前端本地解析，内容零上传。","url":"https://www.johnkingzcq123.xyz/tools/shell-explainer","applicationCategory":"DeveloperApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .se-wrap .navbar .material-icons { display: none; }
+        .se-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#1e40af;margin-bottom:1rem}
+        .se-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .se-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .se-input{width:100%;box-sizing:border-box;min-height:110px;padding:.7rem .9rem;border:1px solid #d1d5db;
+            border-radius:.5rem;font-size:.95rem;font-family:ui-monospace,Consolas,monospace;resize:vertical}
+        .se-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .se-meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .se-count{font-size:.85rem;color:#6b7280}
+        .se-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+        .se-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.2rem;border:none;border-radius:.5rem;
+            font-size:.92rem;font-weight:600;cursor:pointer}
+        .se-btn-primary{background:#2563eb;color:#fff}
+        .se-btn-primary:hover{background:#1d4ed8}
+        .se-btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+        .se-btn-secondary:hover{background:#e5e7eb}
+        .se-error{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;padding:.8rem 1rem;
+            margin-top:.8rem;color:#b91c1c;font-size:.92rem}
+        .se-danger{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:.7rem;padding:.9rem 1rem;margin-bottom:1.2rem}
+        .se-danger-item{display:flex;gap:.6rem;margin-bottom:.55rem;color:#991b1b;font-size:.92rem;line-height:1.6}
+        .se-danger-item:last-child{margin-bottom:0}
+        .se-danger-item.se-warning{color:#92400e}
+        .se-strip{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:.8rem}
+        .se-chip{font-family:ui-monospace,Consolas,monospace;font-size:.88rem;border-radius:.45rem;padding:.3rem .65rem;
+            border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;cursor:help}
+        .se-chip.se-cmd{background:#dbeafe;border-color:#93c5fd;color:#1e40af;font-weight:700}
+        .se-chip.se-sub{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+        .se-chip.se-flag{background:#f5f3ff;border-color:#ddd6fe;color:#6b21a8}
+        .se-chip.se-arg{background:#f3f4f6;border-color:#e5e7eb;color:#374151}
+        .se-chip.se-op{background:#ffedd5;border-color:#fdba74;color:#9a3412;font-weight:700}
+        .se-chip.se-redir{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+        .se-chip.se-unknown-chip{background:#fef2f2;border-color:#fca5a5;color:#b91c1c;border-style:dashed}
+        .se-seg{border:1px solid #eef2f7;border-radius:.55rem;padding:.7rem .9rem;margin-bottom:.6rem;background:#fcfdff}
+        .se-seg-head{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:.45rem}
+        .se-seg-no{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;background:#2563eb;color:#fff;
+            font-size:.78rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+        .se-seg-head code{font-family:ui-monospace,Consolas,monospace;font-size:.92rem;color:#1e293b;word-break:break-all}
+        .se-line{display:flex;gap:.6rem;align-items:flex-start;font-size:.9rem;color:#374151;line-height:1.6;margin:.3rem 0}
+        .se-tag{flex:none;font-size:.72rem;color:#1d4ed8;background:#dbeafe;border-radius:.35rem;padding:.12rem .5rem;font-weight:600;margin-top:.15rem}
+        .se-line b{font-family:ui-monospace,Consolas,monospace;color:#111827}
+        .se-unknown-line{background:#fef2f2;border-radius:.4rem;padding:.3rem .5rem}
+        .se-unknown-line .se-tag{background:#fee2e2;color:#b91c1c}
+        .se-warn{margin-top:.6rem;background:#fffbeb;border:1px solid #fcd34d;border-radius:.55rem;padding:.7rem .9rem;color:#92400e;font-size:.9rem}
+        .se-empty{color:#94a3b8;text-align:center;padding:1.6rem 1rem;font-size:.92rem}
+        .se-table{width:100%;border-collapse:collapse;font-size:.88rem}
+        .se-table th,.se-table td{border:1px solid #e5e7eb;padding:.45rem .6rem;text-align:left;vertical-align:top}
+        .se-table th{background:#f9fafb;color:#374151;white-space:nowrap}
+        .se-table code{font-family:ui-monospace,Consolas,monospace;font-size:.85rem;color:#7c3aed;word-break:break-all}
+        .se-table-wrap{overflow-x:auto}
+        .se-unknown-box{background:#fef2f2;border:1px solid #fecaca;border-radius:.6rem;padding:.8rem 1rem;color:#991b1b;font-size:.92rem;line-height:1.7}
+        .se-unknown-box code{font-family:ui-monospace,Consolas,monospace;background:#fff;border-radius:.3rem;padding:.08rem .4rem}
+        .se-ok{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.6rem;padding:.8rem 1rem;color:#166534;font-size:.92rem}
+        .se-presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem}
+        .se-preset{text-align:left;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.55rem;padding:.6rem .8rem;
+            cursor:pointer;font-size:.88rem;color:#1f2937}
+        .se-preset:hover{border-color:#2563eb;background:#eff6ff}
+        .se-preset code{display:block;margin-top:.3rem;font-family:ui-monospace,Consolas,monospace;font-size:.8rem;
+            color:#7c3aed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .se-limits{color:#374151;line-height:1.9;font-size:.95rem}
+        .se-limits b{color:#111827}
+        .se-faq dt{font-weight:700;color:#111827;margin:.7rem 0 .25rem;font-size:.93rem}
+        .se-faq dd{margin:0 0 .4rem;color:#4b5563;font-size:.9rem;line-height:1.65}
+        .se-faq code{font-family:ui-monospace,Consolas,monospace;background:#f3f4f6;border-radius:.3rem;padding:.08rem .4rem;font-size:.85rem}
+        .se-related{display:flex;gap:.6rem;flex-wrap:wrap}
+        .se-division{font-size:.9rem;color:#4b5563;line-height:1.8;margin:0 0 .8rem}
+        .se-division code{font-family:ui-monospace,Consolas,monospace;background:#f3f4f6;border-radius:.3rem;padding:.08rem .4rem;font-size:.85rem}
+        @media (max-width:768px){
+            .se-line{flex-wrap:wrap}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="se-wrap">
+    <div class="container">
+        <div class="tool-header">
+            <h1>Shell 命令解释器</h1>
+            <p>看不懂的 shell 命令，粘进来逐段讲明白：命令本体、每个旗标、位置参数、管道与重定向全部中文讲解，危险命令标红警示。</p>
+        </div>
+        <div class="tool-content" style="max-width:960px;margin:auto;">
+            <div class="se-privacy">
+                <span aria-hidden="true">🔒</span>
+                <div><b>纯前端运行，零上传：</b>命令解析与释义全部在你的浏览器本地完成，不发起任何后端请求、不上传任何内容，可在开发者工具 Network 面板验证。本工具只解释、不执行你的命令。</div>
+            </div>
+
+            <div class="se-panel">
+                <h3>1. 粘贴 shell 命令（≤4000 字符）</h3>
+                <textarea class="se-input" id="se-input" spellcheck="false" placeholder="例如：tar -czvf backup.tar.gz --exclude=&quot;*.log&quot; /var/www/html"></textarea>
+                <div class="se-meta">
+                    <span class="se-count" id="se-count">0 / 4000 字符</span>
+                    <div class="se-actions">
+                        <button type="button" class="se-btn se-btn-primary" id="se-explain-btn">解释这条命令</button>
+                        <button type="button" class="se-btn se-btn-secondary" id="se-copy">复制释义</button>
+                        <button type="button" class="se-btn se-btn-secondary" id="se-clear">清空</button>
+                    </div>
+                </div>
+                <div class="se-error" id="se-error"></div>
+            </div>
+
+            <div class="se-danger" id="se-danger"></div>
+
+            <div class="se-panel">
+                <h3>2. 分段高亮</h3>
+                <div class="se-strip" id="se-strip"></div>
+                <h3>3. 逐段中文释义</h3>
+                <div id="se-explain"><div class="se-empty">粘贴一条 shell 命令后，这里会逐段讲解它的含义。</div></div>
+            </div>
+
+            <div class="se-panel">
+                <h3>4. 结构分解表</h3>
+                <div class="se-table-wrap" id="se-table-wrap"></div>
+            </div>
+
+            <div class="se-panel">
+                <h3>5. 未收录诊断</h3>
+                <div id="se-unknown"></div>
+            </div>
+
+            <div class="se-panel">
+                <h3>一键示例</h3>
+                <div class="se-presets" id="se-presets"></div>
+            </div>
+
+            <div class="se-panel">
+                <h3>五条真限制</h3>
+                <div class="se-limits">
+                    <div><b>1. 只解释、不执行：</b>本工具不会运行你的命令，也无法告诉你实际运行结果；执行前请自行在安全的环境核对。</div>
+                    <div><b>2. 词典有限：</b>只内置 25 个常用命令的常用旗标（每命令 6–15 个），未收录的命令与旗标会明确标注「未收录」，绝不编造含义。</div>
+                    <div><b>3. 不展开变量与命令替换：</b><code>$VAR</code>、<code>$(...)</code>、反引号、通配符 <code>*</code> <code>?</code> 只按字面解释，不做实际展开。</div>
+                    <div><b>4. 不解析脚本结构：</b><code>if</code> / <code>for</code> / <code>while</code>、函数定义、here-doc 等只做词法切分，不做语义分析。</div>
+                    <div><b>5. 危险检测只是启发式提醒：</b>能识别 <code>rm -rf</code>、<code>--no-preserve-root</code>、<code>chmod 777</code>、<code>curl|sh</code>、<code>dd of=/dev/</code> 等常见危险模式，但不能保证发现所有危险操作。</div>
+                </div>
+            </div>
+
+            <div class="se-panel">
+                <h3>常见问题</h3>
+                <dl class="se-faq">
+                    <dt>组合短旗标是怎么拆开的？</dt>
+                    <dd>像 <code>tar -czvf</code> 这样的组合会被自动拆成 <code>-c</code> <code>-z</code> <code>-v</code> <code>-f</code> 逐个解释；带值的旗标（如 <code>-f</code> 后面跟文件名）会把下一个词当作它的值。</dd>
+                    <dt>「未收录」是什么意思？</dt>
+                    <dd>词典只覆盖 25 个常用命令的常用旗标。遇到未收录的命令或旗标，本工具会明确列出来、而不是猜一个含义给你；请自行查阅 <code>man</code> 页核实。</dd>
+                    <dt>危险警示会拦截命令吗？</dt>
+                    <dd>不会。本工具根本不执行命令，警示只是提醒你复核：例如 <code>rm -rf /</code> 会删整个系统、<code>curl … | sh</code> 会直接执行远程脚本。</dd>
+                    <dt>我的命令会被上传吗？</dt>
+                    <dd>不会。解析、释义与危险检测全部在本地完成，不发起后端请求；你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="se-panel">
+                <h3>相关工具</h3>
+                <p class="se-division">分工说明：本工具<b>只解释</b>任意 shell 命令的含义、<b>不执行、不转换</b>；<a href="/tools/git-cheatsheet">Git 命令速查＋灾难救援卡</a>是静态速查手册（查得到、背得住），<a href="/tools/curl-to-requests">cURL → Python Requests 转换器</a>与<a href="/tools/docker-run-to-compose">Docker run→Compose 转换器</a>是定向转换（把一种写法改写成另一种），<a href="/tools/regex-explainer">正则表达式解释器</a>只解释正则表达式本身。</p>
+                <div class="se-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">Shell 命令解释器（当前）</span>
+                    <a href="/tools/git-cheatsheet" class="btn btn-secondary" style="font-size:.9rem;">Git 命令速查＋灾难救援卡</a>
+                    <a href="/tools/curl-to-requests" class="btn btn-secondary" style="font-size:.9rem;">cURL → Python Requests 转换器</a>
+                    <a href="/tools/docker-run-to-compose" class="btn btn-secondary" style="font-size:.9rem;">Docker run→Compose 转换器</a>
+                    <a href="/tools/regex-explainer" class="btn btn-secondary" style="font-size:.9rem;">正则表达式解释器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/shell_explainer.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -265,7 +265,7 @@ notHas(JS_SRC, "XMLHttpRequest", "JS 零外部接口：无 XMLHttpRequest");
 
 /* ---------- 11. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 318, "注册 Path 总数 309→310");
+eq(pathCount, 319, "注册 Path 总数 309→310");
 has(GO_SRC, '"lossless_audio_checker"', "注册：ID lossless_audio_checker");
 has(GO_SRC, '"/tools/lossless-audio-checker"', "注册：Path /tools/lossless-audio-checker");
 has(GO_SRC, '"audio_file"', "注册：Icon audio_file");

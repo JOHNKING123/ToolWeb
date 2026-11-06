@@ -168,7 +168,7 @@ ok(regBlock.indexOf('Category:    "开发工具"') !== -1, "categories.go 注册
 ok(regBlock.indexOf("New:         true") !== -1, "categories.go 注册 New true");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 318, "注册总数 309→310 Path");
+eq(Object.keys(pathCount).length, 319, "注册总数 309→310 Path");
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,
   "JS 零 fetch/XHR");
 ok(TPL_SRC.indexOf('src="http') === -1 && TPL_SRC.indexOf("cdn.") === -1,

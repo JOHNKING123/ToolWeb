@@ -787,6 +787,15 @@ func GetCategories() []Category {
 					Category:    "开发工具",
 				},
 				{
+					ID:          "shell_explainer",
+					Name:        "Shell 命令解释器",
+					Description: "粘贴任意 shell 命令逐段讲明白：自研词法切分（引号/转义/续行/管道/重定向/&&/||/;），命令本体＋逐旗标中文释义＋位置参数/管道/重定向说明；内置 25 个常用命令旗标词典（ls/cd/cp/mv/rm/mkdir/cat/grep/find/sed/awk/tar/curl/wget/ssh/scp/rsync/chmod/chown/ps/kill/systemctl/journalctl/git/docker，每命令 6–15 个旗标），组合短旗标自动拆分，未知命令/旗标进「未收录」诊断列表不编造；分段高亮＋结构分解表＋一键复制释义；危险旗标警示（rm -rf、--no-preserve-root、chmod 777、curl|sh、dd of=/dev/）；只解释、不执行、不转换；全程本地零上传 · Shell command explainer: explainshell-style Chinese explanation of any shell command, 100% client-side",
+					Path:        "/tools/shell-explainer",
+					Icon:        "integration_instructions",
+					New:         true,
+					Category:    "开发工具",
+				},
+				{
 					ID:          "search_router",
 					Name:        "社区搜索聚合器",
 					Description: "去 AI 垃圾搜索路由：关键词一键直达 Reddit/Hacker News/Stack Exchange/Quora/V2EX/知乎真实技术讨论，Google site: 过滤+官方站内搜索双路由，时间范围过滤、一键全开、OpenSearch 地址栏自定义搜索，纯前端零上传 · community search router: route keywords to real discussions on Reddit/HN/StackExchange/Quora/V2EX/Zhihu, Google site: filters + in-site search, time ranges, open-all, OpenSearch, 100% client-side",

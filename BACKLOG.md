@@ -1,3 +1,119 @@
+## 今日任务（2026-11-06 21:00 · PM 选定轮，接通用调研第二百四十九轮）
+
+**选定：Shell 命令解释器（explainshell 模式）（shell_explainer）** — 本轮唯一任务（新工具）。
+
+**顺位**：249 轮 Top3 新晋第三席递进，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第十九度裁定跳过**（沿用 231–248 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；十八轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），Shell 命令解释本体站内 0 交付。
+2. **口径互补确凿**：站内已有三类命令相关工具，但无一做「任意命令逐段释义」——git_cheatsheet 是静态速查（70+ 命令条目＋救援卡，查「git 命令怎么用」）、curl_to_requests 与 docker_run_to_compose 是单命令定向转换（curl→Python、docker run→compose，自研 shell 词法切分已跑通）、regex_explainer 是解释器家族先例（正则逐段释义）；本工具为**通用命令解释口径**（粘贴任意 shell 命令→词法切分→命令本体＋逐旗标中文释义＋管道/重定向说明），与三者形成「静态速查↔定向转换↔通用解释」分工互补（页面与互链须明示分工）。
+3. **需求验证**：复制到一条复杂 shell 命令看不懂各旗标含义，man 页太长、在线 explainshell 要上传命令且常不稳定；浏览器本地解析、零上传、即贴即解。池内递进信号印证（giftedegware 11-06 清单信号）。
+4. **技术路线站内已有先例**：curl_to_requests 与 docker_run_to_compose 已跑通自研 shell 词法切分（单双引号／转义／续行／组合短旗标）与「未知参数进诊断列表、不静默丢弃」模式；regex_explainer 已跑通「解释器」页面模式（逐段释义＋结构展示＋预设示例）；本工具只在既有模式上多一步「常用命令旗标词典＋分段高亮＋危险旗标警示」，无模型权重、无服务端、无新增外部依赖。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`explainshell`／`shell_explainer`／`shell_command`／`shell-command` 全站（tools/templates/static/js/tests）**0 命中**；`sudoku`／`social_image_size`／`social-image-size` 全站 **0 命中**——命令解释本体与尺寸速查表本体 0 交付，真缺口确凿。
+   - CJK「命令解释」`chr(0x...)` 运行时构造（codepoints 验真 0x547d／0x4ee4／0x89e3／0x91ca）全站 **0 命中**。
+   - CJK「命令」171 处命中验真均为他人口径：postman.go 的 curl 命令解析（curl_to_requests 后端）、nettools.go 的 whois／ping 命令提及、skill 安全扫描文案的「破坏性命令」提及——Shell 命令解释本体 0 交付。
+   - Icon：**`integration_instructions` 首选**（`Icon:\s*"integration_instructions"` 精确值 **0 命中**，全库唯一；`terminal` 已占用 3、`code` 已占用 9，不可取；备选 `manage_search`／`help_outline`／`live_help` 精确值均为 **0 命中**）。**注意**：PM 核查旧版 Material Icons 2.2.0 codepoints 文件未含 `integration_instructions`（该 glyph 为较新版本新增）；站内图标走 Google Fonts CDN 当前版（document_diff 的 `difference` eb7d 即按当前版验真通过），开发轮须按同一验真先例、对照当前官方 codepoints 并在站内实际渲染确认有该 glyph 后再锁定，验真失败则按备选顺序改用 `manage_search`／`help_outline`。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第十九度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／数据库 ER 图生成器／G-code 预览器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 粘贴任意 shell 命令（单行或多行续行，≤4000 字符）→ 自研词法切分（单双引号／转义／续行 `\`／管道 `|`／重定向 `>` `>>` `<`／`&&` `||` `;` 分隔，沿用 curl_to_requests／docker_run_to_compose 已跑通模式）→ 逐段释义：命令本体中文说明＋每个旗标中文解释＋位置参数／管道／重定向说明 ② 内置常用命令旗标词典：首批 25 个常用命令（ls、cd、cp、mv、rm、mkdir、cat、grep、find、sed、awk、tar、curl、wget、ssh、scp、rsync、chmod、chown、ps、kill、systemctl、journalctl、git、docker），每命令收录 6–15 个最常用旗标并附中文释义；组合短旗标自动拆分（`-rf` → `-r`、`-f`）；未知命令／未知旗标一律进「未收录」诊断列表，不静默丢弃、不编造释义 ③ 结构化展示：分段高亮（命令／旗标／值／管道／重定向着色区分，另有文字标注不只依赖颜色）＋命令结构分解表＋一键复制释义文本 ④ 8–10 组预设示例复杂命令（一键填入，如 `tar -czf 备份.tgz --exclude=*.log /data`、`find . -type f -name "*.js" -exec grep -l "TODO" {} \;`、`rsync -avz --delete src/ user@host:/dst/`） ⑤ 危险旗标警示：`rm -rf`、 `--no-preserve-root`、`chmod 777`、`curl … | sh`／`| bash`、`dd of=` 指向设备等标红警示并附一句话风险说明（只警示，不阻止查看） ⑥ 互链：git_cheatsheet（"git 命令查速查表"）／curl_to_requests（"curl 命令转 Python"）／docker_run_to_compose（"docker run 转 compose"）／regex_explainer（"解释器家族：正则解释器"）双向或单向互链（页面须明示分工：本工具只解释、不执行、不转换） ⑦ 全程浏览器本地计算，零上传、零外部接口 ⑧ 无障碍（输入框与按钮均可 tab 聚焦、释义与警示有文字提示，不只依赖颜色）⑨ 模板零外部静态资源惯例（不新增任何外部依赖）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.ShellExplainer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `tokenizeShell(input)` → [{type, text}]（input 须为非空字符串，否则 err.field='input'；长度 >4000 抛错 err.field='input'；type 取值 'command'|'flag'|'word'|'operator'；引号剥离、引号内空格不切分；续行 `\`＋换行合并；管道／重定向／`&&`／`||`／`;` 单独成 operator token）。
+  - `splitFlags(token)` → string[]（token 须为字符串，否则 err.field='token'；组合短旗标拆分：`-rf` → ['-r','-f']，`-la` → ['-l','-a']；长旗标 `--recursive` 与单独 `-` 原样返回；非 `-` 开头原样返回）。
+  - `parseCommand(input)` → {command, flags:[{flag, value}], positionals:[], operators:[]}（input 须为非空字符串，否则 err.field='input'；首个 word 为 command；`-f value` 的值型旗标取下一 token 为 value（仅词典中标注值型的旗标，如 tar `-f`、grep `-e`、find `-name`）；其余 word 进 positionals；operator token 进 operators）。
+  - `explainFlag(command, flag)` → {flag, description} | null（command／flag 须为非空字符串，否则 err.field 对应字段；词典命中返回释义，未收录返回 null，不抛错、不编造）。
+  - `explainCommand(input)` → {command, commandDesc, segments:[{text, kind, explanation}], unknown:[], warnings:[]}（input 须为非空字符串，否则 err.field='input'；commandDesc 为命令本体中文说明，未收录命令时 commandDesc 为 '' 且 command 进 unknown；每个旗标一段 explanation（未收录旗标 explanation 为 '' 且进 unknown）；warnings 来自 detectDanger）。
+  - `detectDanger(input)` → string[]（input 须为字符串，否则 err.field='input'；命中 `rm -rf`／`--no-preserve-root`／`chmod 777`／`curl … | sh|bash`／`dd … of=/dev/` 等危险模式时返回对应中文警示句，无命中返回 []）。
+  - `validateShellInput(input)` → input（input 须为非空字符串，否则 err.field='input'；长度 >4000 抛错 err.field='input'）。
+- **数值锚点（测试精确值）**：tokenizeShell：("ls -la /tmp") → 长度 3，依次 {command,"ls"}、{flag,"-la"}、{word,"/tmp"}；('echo "hello world"') → 长度 2，第二 token text "hello world"；("grep -r 'foo bar' .") → 长度 4；("ls | grep x") → 含 {operator,"|"}；("a && b") → 含 {operator,"&&"}；("") 抛错 err.field='input'；(123) 抛错 err.field='input'。splitFlags：("-rf") → ["-r","-f"]；("-la") → ["-l","-a"]；("--recursive") → ["--recursive"]；("-") → ["-"]；(123) 抛错 err.field='token'。parseCommand：("tar -czf a.tgz dir") → command "tar"，flags 含 {flag:"-f", value:"a.tgz"}（组合旗标拆分后 -f 取值），positionals ["dir"]；("ls -la") → command "ls"，flags 长度 2（-l、-a）；("") 抛错 err.field='input'。explainFlag：("ls","-l") → description "以长格式列出详细信息"；("grep","-r") → description "递归搜索子目录"；("ls","--nope") → null；("","-l") 抛错 err.field='command'。explainCommand：("ls -la") → commandDesc 非空、unknown []；("foobar --xyz") → unknown 含 "foobar" 与 "--xyz"；("") 抛错 err.field='input'。detectDanger：("rm -rf /") → 警示句含 "rm -rf"；("chmod 777 file") → 警示句含 "777"；("ls -la") → []；(123) 抛错 err.field='input'。validateShellInput：("ls") 通过原样返回；("") 抛错 err.field='input'；("x".repeat(4001)) 抛错 err.field='input'。
+- **词典锚点（开发轮按此表建词典，释义措辞以测试锚点为准）**：ls -l "以长格式列出详细信息"、-a "显示隐藏文件"、-h "以易读单位显示大小"；grep -r "递归搜索子目录"、-i "忽略大小写"、-n "显示行号"；tar -c "创建归档"、-x "解开归档"、-z "使用 gzip 压缩/解压"、-f "指定归档文件名"；rm -r "递归删除目录"、-f "强制删除不提示"；find -name "按文件名匹配"、-type "按类型匹配"；chmod 数值模式另行说明；curl -o "输出保存到文件"、-L "跟随重定向"。每命令 ≥5 个旗标，释义一句话中文。
+- **真限制五条页面明示**：① 词典覆盖有限：仅收录 25 个常用命令与最常用旗标，未收录的进「未收录」列表、不编造释义；② 只解释、不执行：本工具不运行命令，复制前请自行确认；③ 复杂嵌套（命令替换 `$()`、进程替换 `<()`、复杂引号嵌套）可能解析不完全；④ 不同 shell（bash／zsh）与发行版之间同一旗标含义可能有差异，释义为通用说明、不替代 man 页；⑤ 全程浏览器本地计算，零上传。
+- **SEO**：Shell 命令解释、Linux 命令解析、explainshell 替代、shell 旗标含义。
+- **改动文件**：tools/categories.go（「开发工具」类目新增 shell_explainer 条目，紧邻 curl_to_requests／docker_run_to_compose／git_cheatsheet 命令解析家族，Path 318→**319**，Icon `integration_instructions` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph，备选 `manage_search`／`help_outline`／`live_help` 精确值均为 0 命中）／templates/shell_explainer.html（新，define "shell_explainer"）／static/js/shell_explainer.js（新，window.ShellExplainer）／tests/shell_explainer.test.js（新）／全量旧 tests Path 断言 318→319 数值同步（仅断言数值，155 个测试文件涉 157 处 318 断言）。
+- **验收标准**：① node 新测试 ≥80 断言全过（tokenizeShell／splitFlags／parseCommand／explainFlag／explainCommand／detectDanger／validateShellInput 锚点精确值；非法参数抛错 err.field；未知命令／旗标进 unknown 列表不编造；模板零外部静态资源检查）② 全量 tests/*.test.js 204→**205** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/shell-explainer 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：粘贴预设复杂命令 → 分段高亮与逐段释义正确 → 未知旗标进「未收录」列表 → 危险命令标红警示 → 复制释义可用、互链可用（开发轮记录）。
+- **品类归位**：注册到「开发工具」类目（与 curl_to_requests／docker_run_to_compose／git_cheatsheet／regex_explainer 同为命令解析与解释家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Shell 命令解释器→本轮交付（249 研究轮新晋第三席递进；PM 定序权裁定首席社媒表第十九度跳过（数据表负债从严，231–248 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII explainshell／shell_explainer／shell_command 全 0 命中，CJK「命令解释」全 0 命中，CJK「命令」171 处命中验真均为他人口径；Icon `integration_instructions` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph——旧版 2.2.0 codepoints 未含该较新 glyph）；开发工具类目，通用命令解释口径与静态速查／定向转换／正则解释器分工互补）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第十九度跳过）／数独游戏→P3 观察维持／数据库 ER 图生成器／G-code 预览器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）本轮成功，origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD a225f79（文档对比已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **318**；`ls tests/*.test.js | wc -l` = **204**；155 个测试文件涉 157 处 318 断言（开发轮同步基数）；PM 独立零重叠复核（ASCII `explainshell`／`shell_explainer`／`shell_command`／`shell-command`／`sudoku`／`social_image_size`／`social-image-size` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「命令解释」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x547d／0x4ee4／0x89e3／0x91ca）；CJK「命令」171 处命中验真均为他人口径（postman.go curl 解析、nettools.go whois／ping 提及、skill 扫描文案）；Icon `integration_instructions`／`manage_search`／`help_outline`／`live_help` 精确值 0 命中，`terminal` 占用 3、`code` 占用 9、`quiz` 占用 1、`fact_check` 占用 2；旧版 2.2.0 codepoints 未含 `integration_instructions`，开发轮须按当前官方 codepoints＋站内实际渲染验真；站内图标走 Google Fonts CDN 当前版 Material Icons；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-06 21:00 · 产品调研推荐，第二百四十九轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：文档对比已交付闭环（a225f79 新增：`/tools/document-diff`，Path 总数 317→**318**，tests **204 个**；新测试 164 断言全过；Icon `difference` 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠沿用 248 轮（`social_image_size`／`social-image-size` 本轮复测仍 **0 命中**，尺寸速查表本体 0 交付；CJK「尺寸速查」0 命中）。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已十八度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**（CJK「数独」两处命中经 codepoint 解码验真均为「参数独立」子串假阳性——css_background_pattern_generator 模板 L125／JS L28，0x53c2／0x6570／0x72ec／0x7acb，163 轮误判教训再验证），游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **Shell 命令解释器（explainshell 模式）** — **新晋第三席**（池内递进；文档对比交付后顺位递进）。痛点：复制到一条复杂 shell 命令看不懂各旗标含义，man 页太长、在线 explainshell 要上传命令且常不稳定；浏览器本地解析、零上传；实现纯前端小-中难度（内置常用命令旗标词典＋分词高亮＋逐段释义）。站内零重叠本轮复核确凿：ASCII `explainshell`／`shell_explainer` 全站 **0 命中**；CJK「命令解释」`chr(0x...)` 运行时构造（codepoints 验真 0x547d／0x4ee4／0x89e3／0x91ca）**0 命中**。**弱点**：词典覆盖有限（完整 man 页覆盖做不到）、与 git-cheatsheet 口径邻近。SEO：Shell 命令解释、Linux 命令解析、explainshell 替代。建议 ID shell_explainer、Path /tools/shell-explainer；Icon `integration_instructions` 精确值 **0 命中**（`terminal` 已占用 3、`code` 已占用 9，不可取），开发轮须先验官方 codepoints 有无该 glyph 再锁定。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已十八度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中（CJK「数独」命中验真为「参数独立」子串假阳性）；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| Shell 命令解释器（explainshell 模式） | **新晋第三席**：池内递进；giftedegware 11-06 清单信号；`explainshell`／CJK「命令解释」本轮复测全 0 命中；纯前端小-中难度；**弱点**：词典覆盖有限、与 git-cheatsheet 口径邻近 | 小-中 | P3（新晋） |
+| 数据库 ER 图生成器（文本建表 → 关系图） | P3 弱观察维持；giftedegware dbdiagram.io 信号；`er_diagram`／`db_diagram`／CJK「实体关系图」「数据库结构图」本轮复测全 0 命中；纯前端小-中难度；**弱点**：人群窄（开发者）、与 mind_map 口径邻近，**本轮新增**：mermaid_diagram_renderer 已支持 ER 图渲染（/tools/mermaid-diagram-renderer），SQL→ER 口径邻近性加重 | 小-中 | P3（弱观察） |
+| G-code 预览器（3D 打印刀路可视化） | **新入池弱观察**：Tiny Online Tools 11-06 信号（570 工具本地优先站含 STL→G-code）；`gcode`／`gcode_viewer`／CJK「刀路」本轮复测全 0 命中；纯前端小-中难度（解析 G-code→2D/3D 刀路渲染＋分层滑块，零上传）；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近（模型→打印顺流） | 小-中 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord`／CJK「和弦」「音阶」复测全 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（2ab743f 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-06 19:00~21:00 窗口；本轮**新晋 1 个、新入池 1 个**，余为消解）：
+- **Shell 命令解释器递进第三席**（池内递进；giftedegware 11-06 清单信号；`explainshell`／`shell_explainer`／CJK「命令解释」本轮复测 0 命中；Icon `integration_instructions` 精确值 0 命中，`terminal` 占用 3、`code` 占用 9，不可取，开发轮须先验 glyph）。
+- **G-code 预览器新入池弱观察**（Tiny Online Tools 11-06：570 工具本地优先站，STL→G-code 转换在列；`gcode`／`gcode_viewer`／CJK「刀路」0 命中；Icon `precision_manufacturing` 精确值 0 命中）。
+- 打字速度测试 → 消解：**typing_practice 已交付**（templates/typing_practice.html＋tests/typing_practice.test.js＋categories.go；CJK「打字速度」命中即该工具，36kr TypeLit 信号不构成新口径）。
+- 在线图表生成器 → 消解：**chart_generator 已交付**（ID chart_generator，/tools/chart-generator，柱状／折线／饼／环形＋SVG 自绘＋PNG 导出；FineReport 图表信号不构成新口径）。
+- Holiday Optimizer（Show HN：PTO 拉伸）→ 消解：**年假拼假优化器 annual-leave-optimizer 已交付**，同一口径。
+- Phoria2（WebGL 2 三维库）→ 消解：开发库非单页工具；3D 模型预览器已交付。
+- HackerBooks（HN 书单聚合）→ 消解：需 HN 全量评论数据挖掘，非纯前端单页工具。
+- Clawdline／AutoCua（AI 会话／电脑操控 Agent）→ 消解：桌面／SaaS＋AI 口径。
+- Gemini Canvas（手绘草图转 Web 应用）→ 消解：AI 口径。
+- ToolHop／FreeToolr／Tiny Online Tools（200+／1000+／570 工具站）→ 消解：工具站口径非单工具；仅 G-code 一项入池弱观察。
+- Excalidraw（协同白板）→ 消解：协同 SaaS 口径；doodle_board 已交付。
+- Photopea（浏览器版 Photoshop）→ 消解：体量远超单页工具惯例。
+- JustTheRecipe／SuperCook／FutureMe → 消解：需服务端抓取／食谱库／定时邮件，非纯前端。
+- GummySearch 替代品（Reddit 受众研究 SaaS 群）→ 消解：SaaS＋Reddit API 口径。
+- V2EX 11-06：xGoose（AI Agent 插件，247 轮已消解）／V2EX 评论上下文插件／v2explore（浏览器扩展口径）／Clearframe 去水印（AI 口径，248 轮已消解）→ 均消解。
+- 10100／36kr 清单余项：Word2Art 文字艺术字（248 轮已消解，fancy_fonts 等已覆盖）／IP138 便民工具箱（生活查询类、方向修正不扩）／Cleanup.pictures（AI 抠图口径）／PDF24（PDF 工具站内多已交付）→ 均消解。
+
+**候选池变动**：文档对比交付划出（a225f79，318 Path，204 tests）；**Shell 命令解释器新晋第三席**（池内递进；`explainshell`／CJK「命令解释」本轮复测全 0 命中，Icon `integration_instructions` 精确值 0 命中，开发轮须先验 glyph）；G-code 预览器新入池弱观察；数据库 ER 图生成器弱点加重（mermaid_diagram_renderer 已支持 ER 图渲染，SQL→ER 口径邻近性加重）；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已十八度跳过）；数独游戏 P3 观察维持第二席；和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档。
+
+**交付核对**：`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）**本轮成功**——先以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份，VM 换机清空的老问题根治于本次操作，PM/开发轮若再遇同错可复用此命令）；fetch 后确认 origin/muse/dev-20260929 存在，本地分支跟踪该远端；本地 HEAD a225f79（文档对比已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **318**；`ls tests/*.test.js | wc -l` = **204**；站内零重叠复核（ASCII `explainshell`／`shell_explainer`／`er_diagram`／`db_diagram`／`gcode`／`gcode_viewer`／`social_image_size`／`social-image-size`／`sudoku` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`document_diff` 16 处命中即本轮刚交付的工具本体；CJK「命令解释」「实体关系图」「数据库结构图」「刀路」「尺寸速查」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x547d／0x4ee4／0x89e3／0x91ca、0x5b9e／0x4f53／0x5173／0x7cfb／0x56fe、0x6570／0x636e／0x5e93／0x7ed3／0x6784／0x56fe、0x5200／0x8def、0x5c3a／0x5bf8／0x901f／0x67e5）；CJK「数独」两处命中经 codepoint 解码验真均为「参数独立」子串假阳性（0x53c2／0x6570／0x72ec／0x7acb），ASCII `sudoku` 0 命中为真凭据；Icon `integration_instructions`／`precision_manufacturing`／`queue_music`／`video_settings` 精确值 0 命中，`terminal` 占用 3、`code` 占用 9、`account_tree` 占用 2、`schema` 占用 1、`hub` 占用 2、`difference` 占用 1（document_diff 已交付）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-06 19:00 · PM 选定轮，接通用调研第二百四十八轮）
 
 **选定：文档对比（PDF/DOCX/TXT 文件比对）（document_diff）** — 本轮唯一任务（新工具）。

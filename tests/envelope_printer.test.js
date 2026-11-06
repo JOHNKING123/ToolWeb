@@ -173,7 +173,7 @@ has(GO_SRC, '"envelope_printer"', "注册 ID");
 has(GO_SRC, '"/tools/envelope-printer"', "注册 Path");
 ok(/ID:\s+"envelope_printer"[\s\S]{0,1500}?Category:\s+"生活工具"/.test(GO_SRC), "注册品类为生活工具");
 ok(/ID:\s+"envelope_printer"[\s\S]{0,1500}?New:\s+true/.test(GO_SRC), "注册 New: true");
-eq((GO_SRC.match(/Path:\s+"/g) || []).length, 318, "注册总数 309→310 Path");
+eq((GO_SRC.match(/Path:\s+"/g) || []).length, 319, "注册总数 309→310 Path");
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/envelope-printer", "模板 canonical");
 has(TPL_SRC, "application/ld+json", "模板 JSON-LD");
 has(TPL_SRC, "请按需改写", "模板含请按需改写提示");
