@@ -249,7 +249,7 @@ ok(M.quickYears.indexOf(2026) !== -1, "速查年份含 2026");
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 327, "注册 Path 总数 324→327");
+eq(pathCount, 328, "注册 Path 总数 324→327");
 has(GO_SRC, "\"roman_numeral_converter\"", "注册：ID roman_numeral_converter");
 has(GO_SRC, "\"/tools/roman-numeral-converter\"", "注册：Path /tools/roman-numeral-converter");
 has(GO_SRC, "\"history_edu\"", "注册：Icon history_edu");

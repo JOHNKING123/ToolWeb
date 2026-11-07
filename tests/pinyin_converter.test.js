@@ -204,7 +204,7 @@ eq(M.renderPinyinLine(M.convertText(M.samples[1].text, { toneStyle: "mark" })),
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 327, "注册 Path 总数 324→327");
+eq(pathCount, 328, "注册 Path 总数 324→327");
 has(GO_SRC, "\"pinyin_converter\"", "注册：ID pinyin_converter");
 has(GO_SRC, "\"/tools/pinyin-converter\"", "注册：Path /tools/pinyin-converter");
 has(GO_SRC, "\"spellcheck\"", "注册：Icon spellcheck");

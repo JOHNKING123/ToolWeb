@@ -1,0 +1,198 @@
+{{define "gcode_viewer"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-code 预览器 - 3D 打印刀路在线预览免费工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线 G-code 预览器（G-code 查看器／3D 打印刀路预览）：拖入本地 .gcode/.gco/.nc（≤20MB）即看零上传，解析 G0/G1 直线移动按 Z 分层，Canvas 2D 逐层渲染刀路俯视图（挤出实色、空走虚线），层滑杆＋播放变速，层信息与统计面板（预估时长／耗材克＋米），3 组预设示例，复制统计摘要／清空，纯前端本地解析。">
+    <meta name="keywords" content="G-code 预览,3D 打印刀路,G-code 查看器,G-code 在线预览,G-code viewer,3D 打印 G-code,刀路预览,切片刀路查看">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/gcode-viewer">
+    <meta property="og:title" content="G-code 预览器 - 3D 打印刀路在线预览">
+    <meta property="og:description" content="拖入本地 .gcode 文件即看 3D 打印刀路：按 Z 分层逐层渲染，挤出实色、空走虚线，层滑杆＋播放，预估时长与耗材统计；全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/gcode-viewer">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"G-code 预览器","description":"免费在线 G-code 预览器：本地解析 .gcode/.gco/.nc，按 Z 分层逐层渲染 3D 打印刀路俯视图，层滑杆＋播放变速，层信息与统计面板（预估时长／耗材）；纯浏览器本地处理不上传。","url":"https://www.johnkingzcq123.xyz/tools/gcode-viewer","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .gc-wrap .navbar .material-icons { display: none; }
+        .gc-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .gc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .gc-privacy b{color:#047857}
+        .gc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .gc-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .gc-upload{border:2px dashed #d1d5db;border-radius:.8rem;padding:2rem 1rem;text-align:center;
+            cursor:pointer;background:#f9fafb;transition:border-color .2s,background .2s;color:#6b7280}
+        .gc-upload:hover,.gc-upload.dragover{border-color:var(--primary-color);background:#eff6ff;color:var(--primary-color)}
+        .gc-upload .gc-big{font-size:2.4rem;display:block;margin-bottom:.5rem}
+        .gc-info{color:#6b7280;font-size:.88rem;margin-top:.6rem;line-height:1.7}
+        .gc-status{color:var(--primary-color);font-size:.9rem;min-height:1.4em;margin-top:.4rem}
+        .gc-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin:.7rem 0}
+        .gc-row label{font-size:.92rem;color:#374151}
+        .gc-btn{display:inline-block;padding:.55rem 1.3rem;border-radius:.55rem;border:1px solid var(--primary-color);
+            background:var(--primary-color);color:#fff;font-size:.93rem;cursor:pointer;transition:filter .15s}
+        .gc-btn:hover{filter:brightness(.93)}
+        .gc-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .gc-btn-ghost{background:#fff;color:var(--primary-color)}
+        .gc-canvas{width:100%;height:420px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;display:block}
+        .gc-legend{display:flex;gap:1.4rem;flex-wrap:wrap;font-size:.88rem;color:#4b5563;margin-top:.6rem;line-height:1.8}
+        .gc-legend .gc-sw-extrude{display:inline-block;width:1.6rem;border-top:3px solid #2563eb;vertical-align:middle;margin-right:.35rem}
+        .gc-legend .gc-sw-travel{display:inline-block;width:1.6rem;border-top:2px dashed #9ca3af;vertical-align:middle;margin-right:.35rem}
+        .gc-legend .gc-sw-start{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;background:#16a34a;vertical-align:middle;margin-right:.35rem}
+        .gc-slider{flex:1;min-width:12rem}
+        .gc-chip{display:inline-block;padding:.45rem .9rem;border-radius:2rem;border:1px solid #d1d5db;background:#f9fafb;
+            color:#374151;font-size:.9rem;cursor:pointer;margin:.2rem .3rem .2rem 0}
+        .gc-chip:hover{border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff}
+        .gc-infgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-top:.5rem}
+        .gc-icard{border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .8rem;background:#f9fafb}
+        .gc-icard .gc-it{font-size:.82rem;color:#6b7280}
+        .gc-icard .gc-iv{font-size:1rem;font-weight:700;color:#111827;margin-top:.2rem;
+            font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+        .gc-doc{font-size:.88rem;color:#4b5563;line-height:2}
+        .gc-doc b{color:#111827}
+        .gc-doc code{background:#f3f4f6;padding:.05rem .35rem;border-radius:.3rem;font-size:.84rem}
+        .gc-limits div{margin-bottom:.5rem}
+        .gc-limits b{color:#111827}
+        .gc-combo{font-size:.86rem;color:#4b5563;line-height:1.9;border-top:1px dashed #e5e7eb;
+            margin-top:1rem;padding-top:.8rem}
+        .gc-combo b{color:#111827}
+        .gc-combo a{color:var(--primary-color)}
+        .gc-muted{color:#9ca3af;font-size:.9rem}
+        .gc-tip{display:none;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:.5rem;
+            padding:.5rem .8rem;font-size:.88rem;margin-top:.6rem}
+        .gc-select{padding:.45rem .6rem;border:1px solid #d1d5db;border-radius:.5rem;font-size:.92rem;background:#fff}
+        @media (max-width: 640px) {
+            .gc-canvas{height:320px}
+        }
+    </style>
+</head>
+<body>
+    <div class="gc-wrap">
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1>🖨️ G-code 预览器</h1>
+            <p>切片后的 G-code 不用开打印机也能看刀路：拖进来，逐层检查每一刀怎么走</p>
+        </div>
+
+        <div class="gc-privacy">
+            <span class="material-icons">lock</span>
+            <div><b>隐私承诺：G-code 只在你的浏览器里处理，不上传服务器。</b><br>
+            本工具为纯前端单页应用：文件读取、G-code 解析、Canvas 渲染、统计计算全部在本地完成，不调用任何后端接口、不加载任何第三方资源。你可以在 DevTools 的 Network 面板验证 —— 上传的 G-code 不会产生一次网络请求。断网也能用。</div>
+        </div>
+
+        <div class="gc-panel">
+            <h3>1️⃣ 上传 G-code 文件</h3>
+            <div class="gc-upload" id="gc-upload" role="button" tabindex="0" aria-label="点击选择或拖拽 G-code 文件到此处上传">
+                <span class="gc-big">🖨️</span>
+                <div>点击选择 G-code 文件，或把文件拖拽到这里</div>
+                <div style="font-size:.82rem;margin-top:.4rem;">支持 .gcode / .gco / .nc（≤20MB）；浏览器本地解析，全程零上传</div>
+            </div>
+            <input type="file" id="gc-file" accept=".gcode,.gco,.nc" style="display:none;">
+            <div class="gc-info" id="gc-srcinfo" style="display:none;"></div>
+            <div class="gc-status" id="gc-status" aria-live="polite"></div>
+            <div class="gc-row">
+                <span style="font-size:.92rem;color:#374151;">没有 G-code 文件？试试预设示例：</span>
+            </div>
+            <div id="gc-presets"></div>
+        </div>
+
+        <div class="gc-panel" id="gc-viewport-wrap" style="display:none;">
+            <h3>2️⃣ 刀路俯视图（当前层）</h3>
+            <canvas class="gc-canvas" id="gc-canvas" role="img" aria-label="当前层刀路俯视图：蓝色实线为挤出，灰色虚线为空走，绿点为该层起点"></canvas>
+            <div class="gc-legend">
+                <span><span class="gc-sw-extrude"></span>挤出（打印路径）</span>
+                <span><span class="gc-sw-travel"></span>空走（移动路径）</span>
+                <span><span class="gc-sw-start"></span>该层起点</span>
+            </div>
+            <div class="gc-row">
+                <button class="gc-btn gc-btn-ghost" id="gc-prev">⬆ 上一层</button>
+                <input type="range" class="gc-slider" id="gc-layer-slider" min="0" max="0" value="0" step="1" aria-label="层滑杆">
+                <button class="gc-btn gc-btn-ghost" id="gc-next">⬇ 下一层</button>
+                <span id="gc-layer-label" style="font-size:.92rem;color:#374151;">未加载</span>
+            </div>
+            <div class="gc-row">
+                <button class="gc-btn" id="gc-play">▶ 播放</button>
+                <label>播放速度：
+                    <select class="gc-select" id="gc-speed">
+                        <option value="0.5">0.5×</option>
+                        <option value="1" selected>1×</option>
+                        <option value="2">2×</option>
+                    </select>
+                </label>
+                <label>缩放：
+                    <input type="range" id="gc-zoom" min="0.5" max="3" step="0.1" value="1" style="width:10rem;vertical-align:middle;" aria-label="缩放滑杆">
+                    <span id="gc-zoom-label" style="font-size:.92rem;color:#374151;">100%</span>
+                </label>
+            </div>
+            <div class="gc-info">俯视图已按整件模型包围盒自适应居中；缩放只放大当前视图，不改变模型尺寸。绿色圆点为该层第一段移动的起点。</div>
+        </div>
+
+        <div class="gc-panel" id="gc-layer-wrap" style="display:none;">
+            <h3>3️⃣ 层信息</h3>
+            <div class="gc-infgrid" id="gc-layer-info"><span class="gc-muted">未加载文件。</span></div>
+        </div>
+
+        <div class="gc-panel" id="gc-stats-wrap" style="display:none;">
+            <h3>4️⃣ 统计面板</h3>
+            <div class="gc-infgrid" id="gc-stats"><span class="gc-muted">未加载文件。</span></div>
+            <div class="gc-info">预估时长按进给速度累加直线距离，未计加减速／回抽／加热等待，实际打印通常更长；耗材按 1.75mm 丝径、PLA 1.24 g/cm³ 估算。</div>
+        </div>
+
+        <div class="gc-panel" id="gc-actions-wrap" style="display:none;">
+            <h3>5️⃣ 复制 / 清空</h3>
+            <div class="gc-row">
+                <button class="gc-btn" id="gc-copy-btn">📋 复制统计摘要</button>
+                <button class="gc-btn gc-btn-ghost" id="gc-clear">🗑️ 清空</button>
+            </div>
+            <div class="gc-tip" id="gc-tip"></div>
+        </div>
+
+        <div class="gc-combo">
+            <b>🧊 「3D 打印线」组合：</b>本工具<b>只做切片后刀路预览，不做模型预览、不做切片</b>。已有 STL / OBJ / GLB 模型想先看长什么样？去 <a href="/tools/3d-model-viewer">3D 模型预览器</a> 看模型；切片软件出 G-code 之后，再回到这里逐层检查刀路 —— 看模型 → 切片 → 看刀路顺流。
+        </div>
+
+        <div class="gc-panel">
+            <h3>使用说明</h3>
+            <div class="gc-doc">
+                <b>上传：</b>点击上传区选择文件，或把 <code>.gcode</code>／<code>.gco</code>／<code>.nc</code> 文件（≤20MB）直接拖进来；文件经 <code>FileReader</code> 读入文本后在浏览器本地解析，不产生网络请求。<br>
+                <b>解析：</b>只解析 <code>G0</code>／<code>G1</code> 直线移动（<code>X/Y/Z/E/F</code>），<code>E</code> 增加为挤出否则为空走，<code>Z</code> 变化即分层；<code>G2/G3</code> 圆弧与温度／风扇等指令忽略处理。无 <code>F</code> 时沿用上一次进给，初始默认 <code>1500 mm/min</code>。<br>
+                <b>查看：</b>Canvas 2D 渲染当前层刀路俯视图，蓝色实线为挤出、灰色虚线为空走、绿点为该层起点；层滑杆／上一层／下一层切换层，播放按 0.5×／1×／2× 自动逐层播放，缩放滑杆放大视图（视图已按整件包围盒自适应居中）。<br>
+                <b>层信息：</b>当前层号／总层数、Z 高度、该层挤出／空走长度与段数、该层预估时长。<br>
+                <b>统计：</b>文件大小、总行数、总层数、层高中位数、总挤出／总空走、预估时长、预估耗材（克＋米，按 1.75mm 丝径、PLA 1.24 g/cm³ 估算）；「复制统计摘要」一键复制文本。<br>
+                <b>示例：</b>没有 G-code 文件时点预设示例（双层校准方块／20mm 方框 4 层／圆环 3 层），先看渲染与统计效果。<br>
+                <b>隐私：</b>全程无网络请求 —— 上传、解析、渲染、统计都在你的浏览器里完成，可在 DevTools Network 面板验证。
+            </div>
+        </div>
+
+        <div class="gc-panel">
+            <h3>五条真限制</h3>
+            <div class="gc-doc gc-limits">
+                <div><b>1. 预估时长未计加减速／回抽／加热等待：</b>预估时长只按进给速度累加直线距离，未计打印机的加减速、回抽、换层与加热等待时间，实际打印通常更长，仅供参考。</div>
+                <div><b>2. 耗材为 PLA 估算：</b>耗材重量与米数按 1.75mm 丝径、PLA 密度 1.24 g/cm³ 估算；用其他材料（如 ABS／PETG）或 2.85mm 丝径时结果不同，请以切片软件为准。</div>
+                <div><b>3. 仅解析 Marlin／RepRap 风格 G0／G1：</b><code>G2／G3</code> 圆弧与温度／风扇等 M 指令忽略处理，相对坐标（<code>G91</code>）／相对挤出（<code>M83</code>）未支持；非 Marlin 风格的 G-code 可能解析不准。</div>
+                <div><b>4. Z 回退／多挤出头可能分层不准：</b>分层按 Z 高度变化切分，Z 高度回落（如回抽抬升后落回）或多挤出头切换时，层划分可能与实际层不一致。</div>
+                <div><b>5. 只做切片后刀路预览，不做模型预览／切片／替代切片软件：</b>本工具不生成 G-code、不做模型预览、不替代切片软件；看模型请用<a href="/tools/3d-model-viewer">3D 模型预览器</a>，切片请用 Cura／PrusaSlicer 等切片软件。</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/tools/static/js/gcode_viewer.js?v=1"></script>
+</body>
+</html>
+{{end}}

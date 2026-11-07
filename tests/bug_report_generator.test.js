@@ -111,7 +111,7 @@ has(GO, '"/tools/bug-report-generator"', "注册：Path /tools/bug-report-genera
 has(GO, 'Category:    "开发工具"', "注册：Category 开发工具（至少一处）");
 has(GO, '"bug_report"', "注册：Icon bug_report");
 var pathCount = (GO.match(/"\/tools\/[^"]+"/g) || []).filter(function (p, i, arr) { return arr.indexOf(p) === i; }).length;
-eq(pathCount, 327, "注册：总数 309→310 Path");
+eq(pathCount, 328, "注册：总数 309→310 Path");
 
 /* ---------- 8. 零网络请求静态检查 ---------- */
 notHas(SRC, "fetch(", "零网络：JS 无网络请求调用");

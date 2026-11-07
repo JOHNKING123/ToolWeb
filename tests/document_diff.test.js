@@ -157,7 +157,7 @@ throws(function () { M.formatFileSize(-1); }, "bytes", "formatFileSize：-1 抛�
 
 /* ---------- 11. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 327, "注册 Path 总数 317→318");
+eq(pathCount, 328, "注册 Path 总数 317→318");
 has(GO_SRC, '"document_diff"', "注册：ID document_diff");
 has(GO_SRC, '"/tools/document-diff"', "注册：Path /tools/document-diff");
 has(GO_SRC, '"difference"', "注册：Icon difference");

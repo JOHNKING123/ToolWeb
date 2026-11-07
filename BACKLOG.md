@@ -1,3 +1,100 @@
+## 今日任务（2026-11-07 15:40 · PM 选定轮，接通用调研第二百五十八轮）
+
+**选定：G-code 预览器（gcode_viewer）** — 本轮唯一任务（新工具）。
+
+**顺位**：258 轮 Top3 顺位递进第三席，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十八度裁定跳过**（沿用 231–257 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十七轮跳过后无新证据改变裁定，首席顺位留池，不冻结；另补一记：证件照半边口径站内已有「证件照裁剪排版」（id_photo_maker，/tools/id-photo-maker，1寸/2寸/小2寸/美签/护照尺寸预设已交付），速查表的证件照增量只剩规格文字表，社媒半边仍是鲜度负债）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），G-code 预览器独立工具本体站内 0 交付。
+2. **口径互补确凿**：站内已有 3D 模型预览器（model_3d_viewer，/tools/3d-model-viewer，只做 STL/OBJ/GLB 模型几何预览），但无一做「切片后 G-code 刀路预览」——本工具为**刀路口径**（拖入 .gcode 即逐层渲染挤出/空走刀路＋层高＋预估时长），与模型预览器形成「模型预览→切片→刀路预览」3D 打印工作流上下游分工互补（页面与互链须明示分工：本工具只做切片后 G-code 刀路预览，不做模型预览、不做切片、不替代切片软件）。
+3. **需求验证**：3D 打印前想确认切片刀路有无异常、层高与预估时长是否合理，只能装切片软件；浏览器拖入 .gcode 即逐层看刀路、零上传。
+4. **技术路线有界**：纯前端小-中难度——G-code 文本解析（G0/G1 直线移动＋Z 分层）＋Canvas 2D 逐层绘制＋层滑杆＋行程统计，零新增依赖、零外部请求；不引 Three.js、不做 G2/G3 圆弧拟合（圆弧指令仅忽略处理，见真限制第 ③ 条）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外）：
+   - ASCII：`gcode_viewer`／`gcode-viewer`／`social_image_size`／`social-image-size`／`sudoku` 全站（tools／templates／static／tests）**0 命中**——G-code 预览器独立工具本体 0 交付，真缺口确凿。
+   - `g-code` 通用命中均为 `cg-code`／`fg-codeblock` 等 `*-code` CSS 类／ID 后缀假阳性；大小写不敏感 `gcode` 命中均为 `langCode`（ocr-image-text／image-to-excel／ocr-batch 的语言函数名）子串假阳性，均与 G-code 口径无关。
+   - Icon：**`precision` 首选**（`Icon:\s*"precision"` 精确值 **0 命中**，全库唯一；备选 `manufacturing`／`layers` 精确值亦 0 命中；`print`／`3d_rotation` 已占用，不可用），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 json_graph_viewer `bubble_chart` e6dd 双源验真先例；若首选不在经典 Material Icons v145，改用已验真备选）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十八度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）／二维码传文件／LaTeX 公式编辑器（弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 拖入／选择 .gcode／.gco／.nc 文件（≤20MB，超限明示拒绝不解析），本地读文本解析，零上传 ② 解析 G0/G1 直线移动指令：X/Y/Z/E/F；E 增加者为挤出移动，否则为空走；Z 变化即分层（首层 Z 为首个含 Z 的移动高度）③ Canvas 2D 逐层渲染：当前层刀路俯视图（XY），挤出线实色、空走淡色虚线，图例常驻；适配居中＋缩放滑杆 ④ 层控制：层滑杆＋上一层／下一层／播放（逐层自动播放，速度档 0.5×／1×／2×）＋层号显示 ⑤ 层信息面板：当前层号／总层数、该层 Z 高度、该层挤出长度、该层行程 ⑥ 统计面板：文件大小／总行数／总层数／层高（相邻层 Z 差中位数）／总挤出长度／总空走长度／预估打印时长／预估耗材（克＋米，按 1.75mm 丝径、PLA 密度 1.24 g/cm³ 估算，页面明示为估算）⑦ 3 组预设示例：JS 内嵌短 G-code（校准方块／双层圆环／层高测试条）一键加载 ⑧ 复制统计摘要文本／清空 ⑨ 互链：model_3d_viewer（"3D 模型预览器"），页面须明示分工（本工具只做切片后 G-code 刀路预览，不做模型预览、不做切片）⑩ 全程浏览器本地计算，零上传、零外部接口 ⑪ 模板零外部静态资源惯例；Canvas 2D 绘制，不引 Three.js 等外部库 ⑫ 预估时长按进给速度累加：每段移动耗时＝距离／进给速度，无 F 指令时沿用上一次 F，初始默认 1500 mm/min。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.GcodeViewer 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `parseGcode(text)` → {layers, stats}（text 非字符串 err.field='text'；空串／纯空白返回 {layers: [], stats 零值}，不抛错；layers 为 [{z, moves: [{x0, y0, x1, y1, extrude, feed}]}]，z 为该层高度（mm，首个含 Z 的移动高度），moves 按原文顺序；stats 为 {totalLines, totalLayers, totalExtrudeMm, totalTravelMm, estimatedSeconds, filamentGrams}；注释行（`;` 开头）与空行计入 totalLines 但不产生移动；G28 等非移动指令忽略；G0 一律为空走（extrude false）；G1 有 E 增加为挤出，否则为空走；进给速度缺失时沿用上一次 F，初始默认 1500）。
+  - `getLayer(parsed, index)` → {z, moves}（parsed 非 parseGcode 返回体或 index 非整数 err.field 分别为 'parsed'／'index'；index 越界抛错 err.field='index'）。
+  - `layerStats(layer)` → {moveCount, extrudeMm, travelMm, z}（layer 非法 err.field='layer'；extrudeMm／travelMm 为该层挤出／空走长度之和，mm）。
+  - `estimateTime(parsed)` → number（parsed 非法 err.field='parsed'；返回预估打印秒数，按进给速度累加，与 parseGcode 的 stats.estimatedSeconds 一致）。
+  - `formatDuration(seconds)` → string（seconds 非有限非负数 err.field='seconds'；≥1 小时返回如 "1小时1分1秒"，≥1 分钟返回如 "1分30秒"，不足 1 分钟返回如 "45秒"；0 返回 "0秒"）。
+  - `filamentWeight(extrudeMm, diameterMm, density)` → number（克数；任一参数非有限正数 err.field 为对应参数名；diameterMm／density 省略时默认 1.75／1.24；按圆柱体积×密度换算）。
+  - `clampLayer(index, total)` → number（index／total 非整数 err.field='index'／'total'；total≤0 返回 -1；index 越界钳制到 [0, total-1]，不抛错；供上一层／下一层／播放步进复用）。
+- **数值锚点（测试精确值；规范样例，下同）**：
+  ```
+  ;FLAVOR:Marlin
+  G28
+  G1 Z0.2 F3000
+  G1 X10 Y10 E0.5 F1500
+  G1 X20 Y10 E1.0
+  G1 X20 Y20 E1.5
+  G1 Z0.4
+  G1 X10 Y20 E2.0
+  ```
+  parseGcode：totalLines→8；totalLayers→2；layers[0].z→0.2；layers[1].z→0.4；layers[0].moves 长度→3；stats.totalExtrudeMm≈44.14（误差 ±0.01：14.1421＋10＋10＋10）；stats.totalTravelMm→0；stats.estimatedSeconds 介于 1.7 与 1.8 之间（按 F1500 累加：0.5657＋0.4＋0.4＋0.4）。parseGcode(123) 抛错 err.field='text'。getLayer(parsed, 0).z→0.2；getLayer(parsed, 5) 抛错 err.field='index'。layerStats(layers[0]).extrudeMm≈34.14（误差 ±0.01）；layerStats(layers[0]).moveCount→3。空走锚点：样例追加 `G0 X70 Y20` 后该移动 extrude 为 false 且计入 travelMm 不计入 extrudeMm。formatDuration：(3661)→"1小时1分1秒"；(90)→"1分30秒"；(45)→"45秒"；(0)→"0秒"；(-1)／(NaN) 抛错 err.field='seconds'。filamentWeight：(1000, 1.75, 1.24)≈2.98（误差 ±0.01）；(1000) 默认参数同；(0, 1.75, 1.24)／(-5) 抛错 err.field 为对应参数名。clampLayer：(99, 3)→2；(-1, 3)→0；(0, 0)→-1。estimateTime(parsed) 与 stats.estimatedSeconds 相等。
+- **真限制五条页面明示**：① 预估时长按进给速度累加估算，未计加减速、回抽、加热等待，实际打印时间以打印机为准；② 耗材重量按 1.75mm 丝径、PLA 密度 1.24 g/cm³ 估算，不同材料／丝径结果不同；③ 仅解析标准 Marlin/RepRap 风格 G0/G1 直线移动，圆弧（G2/G3）、温度指令（M104/M109/M140/M190）等仅作忽略处理，不影响刀路显示；非标准方言可能解析不完整；④ 层高按 Z 变化划分，Z 回退／多挤出头文件可能分层不准；⑤ 本工具只做切片后 G-code 刀路预览，不做模型预览、不做切片、不替代切片软件。
+- **SEO**：G-code 预览、3D 打印刀路、G-code 查看器、G-code 在线预览。
+- **改动文件**：tools/categories.go（「格式转换」类目新增 gcode_viewer 条目，紧邻 model_3d_viewer（ID model_3d_viewer），Path 327→**328**，Icon `precision` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph；备选 `manufacturing`／`layers` 亦 0 命中）／templates/gcode_viewer.html（新，define "gcode_viewer"）／static/js/gcode_viewer.js（新，window.GcodeViewer；Canvas 2D 逐层渲染，零新增依赖，零外部请求）／tests/gcode_viewer.test.js（新）／全量旧 tests Path 断言 327→328 数值同步（开发轮实测基数：上轮 160 个测试文件含 326 字面量，本轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥120 断言全过（解析锚点精确值、层划分、挤出/空走区分、预估时长、耗材重量、非法参数 err.field、模板零外部静态资源检查——页面无 CDN 链接）② 全量 tests/*.test.js 213→**214** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/gcode-viewer 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：拖入 .gcode 可用 → 层滑杆／播放可用 → 挤出／空走区分可见 → 统计面板可用 → 预设示例可用 → 复制／清空可用 → 五条真限制可见 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「格式转换」类目（与 model_3d_viewer 同类目，3D 打印工作流上下游）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：G-code 预览器→本轮交付（258 研究轮第三席递进；PM 定序权裁定首席社媒表第二十八度跳过（数据表负债从严，231–257 轮逻辑沿用；另补证件照口径已有 id_photo_maker 尺寸预设）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII gcode_viewer／gcode-viewer 全 0 命中，`g-code` 通用命中均为 `*-code` 类名假阳性，`langCode` 子串假阳性；Icon `precision` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；纯前端小-中难度，Canvas 2D 逐层渲染，零新增依赖；与 3d_model_viewer 口径互补非重叠）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十八度跳过）／数独游戏→P3 观察维持／国际电话区号查询→已交付划出（481b376，327 Path，213 tests；Icon `call` e0b0）／汉字笔顺查询→已交付划出（4607b5d，326 Path，212 tests；规格锚点「日→2」已修正为 4）／罗马数字转换→已交付划出（bc4f932＋df68d9e，325 Path，211 tests）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，本地 HEAD 与 origin/muse/dev-20260929 一致（481b376，国际电话区号查询已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **327**；`ls tests/*.test.js | wc -l` = **213**；PM 独立零重叠复核（ASCII `gcode_viewer`／`gcode-viewer`／`social_image_size`／`social-image-size`／`sudoku` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`g-code` 通用命中均为 `cg-code`／`fg-codeblock` 类名假阳性；大小写不敏感 `gcode` 命中均为 `langCode` 子串假阳性；Icon `precision`／`manufacturing`／`layers` 精确值 0 命中，`print`／`3d_rotation` 已占用；model_3d_viewer 条目实测在 tools/categories.go:1375，ID `model_3d_viewer`、Path /tools/3d-model-viewer、Category「格式转换」，仅做 STL/OBJ/GLB 模型预览）；package.json 不存在（Go 工程，无 package.json，以 tools/categories.go＋tests 为准）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 15:36 · 产品调研推荐，第二百五十八轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：国际电话区号查询已交付闭环（481b376 新增：`/tools/dial-code-lookup`，Path 总数 326→**327**，tests **213 个**；新测试 170 断言全过；收录 246 个国家／地区，ITU E.164 为准，核对日期 2026-11-07；Icon `call` 官方 codepoints e0b0 双源验真全库唯一；另：汉字笔顺规格锚点「日→2」按 PM 闭环修正为「日→4」，同步更新测试注释），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 仍 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十七度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **G-code 预览器（3D 打印刀路可视化）** — **顺位递进第三席**（国际电话区号查询交付后池内递进）。痛点：3D 打印前无法在浏览器里预览切片刀路／层高／预估时长，只能装切片软件；浏览器拖入 .gcode 即逐层渲染刀路、零上传。实现纯前端小-中难度（G-code 文本解析＋Canvas 逐层绘制＋层滑杆＋行程统计，零上传）。站内零重叠本轮复测：ASCII `gcode_viewer` 全站 **0 命中**；通用 `g-code` 51 命中均为 `cg-code`／`fg-codeblock`／`ssg-code` 等 `*-code` CSS 类／ID 后缀假阳性（163 轮教训：以 ID 级 `gcode_viewer` 0 命中为准），G-code 预览器本体 0 交付。**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近（后者只做模型预览、不做刀路）。SEO：G-code 预览、3D 打印刀路、G-code 查看器。建议 ID gcode_viewer、Path /tools/gcode-viewer；Icon `precision`／`manufacturing` 精确值 **0 命中**（`print`／`3d_rotation` 已占用，不可用；开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定）。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十七度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| G-code 预览器（3D 打印刀路可视化） | **顺位递进第三席**：国际电话区号查询交付后池内递进；Tiny Online Tools 11-06 信号；`gcode_viewer` 本轮复测 **0 命中**（`g-code` 通用命中均为 `*-code` 类名假阳性）；纯前端小-中难度；**弱点**：人群窄、与 3d_model_viewer 口径邻近 | 小-中 | P3（顺位递进） |
+| 图片物体消除（Cleanup.pictures 模式） | **本轮新入池**；Wired Wisely「12 Free Websites」（10 月实测）信号：Cleanup.pictures 涂抹消除路人／水印／杂物；`object_remover`／`remove_object`／`inpaint` 本轮复测全 **0 命中**，站内本体 0 交付；**弱点**：纯前端需 inpainting 模型权重，与模板零外部资源惯例冲突；人群窄于抠图 | 中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 沿用复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord_finder` 沿用复测 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 二维码传文件（扫码跨设备传文件） | 弱观察维持；Show HN ShadowCat 信号；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send` 沿用复测全 0 命中；纯前端中难度；**弱点**：双设备流程、扫码可靠性与速率（约 100kB/s 级）、人群窄 | 中 | P3（弱观察） |
+| LaTeX 公式编辑器/预览 | 弱观察维持；WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 沿用复测 **0 命中**；纯前端小-中难度；**弱点**：KaTeX 字体文件 vendor 体量与模板零外部资源惯例的权衡、人群窄（学生／科研／教师） | 小-中 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 国际电话区号查询 | 已交付划出（481b376 新增：`/tools/dial-code-lookup`，Path 326→327，tests 213 个；新测试 170 断言全过；收录 246 个国家／地区，ITU E.164 为准；Icon `call` e0b0 双源验真全库唯一） | — | 已实现 |
+| 汉字笔顺查询 | 已交付划出（4607b5d 新增：`/tools/hanzi-stroke-order`，Path 325→326，tests 212 个；新测试 250 断言全过；首批收录 957 字，数据文件 1468903 字节；Icon `edit` 官方 codepoints e3c9 全库唯一；规格锚点「日→2」本轮 PM 修正为 4） | — | 已实现 |
+| 罗马数字转换（阿拉伯数字↔罗马数字） | 已交付划出（bc4f932 新增＋df68d9e 契约对齐：`/tools/roman-numeral-converter`，Path 324→325，tests 211 个；新测试 279→281 断言全过；Icon `history_edu` 官方 codepoints ea3e 全库唯一） | — | 已实现 |
+
+**新信号扫描**（2026-11-07 15:00~15:36 窗口；本轮**新入池 1 个**（图片物体消除，弱观察），其余全部消解——站内覆盖度已极高）：
+- Medium Priyanka Gupta「Great Online Tools That Make Work and Life Easier」（Nov 2026）→ 消解：Google Docs／Todoist／Zapier／Bitwarden／Coursera／Wise 均为 SaaS／账号制；Photopea 为完整图片编辑器（体量超单页工具）；Smallpdf／iLovePDF／TinyPNG → PDF／图片家族已交付口径；WolframAlpha／Wayback／翻译 → 需服务端／AI。
+- Wired Wisely「12 Free Websites That Feel Like Cheat Codes (Tested, 2026)」（10 月实测）→ 消解：SimplePDF（PDF 填写／签名）→ **pdf_sign＋pdf_form_maker＋pdf_annotate 已交付**；iFixit 维修指南 → 内容站非工具；VirusTotal → 需后端 API；Have I Been Pwned → **password-breach-checker 已交付**；Flightradar24 → 实时数据；Ninite → 软件安装器非工具；Cleanup.pictures → **新入池**（图片物体消除，见上，弱观察）。
+- Techtippr「101 Most Useful Websites」（更新 2026-10-28）／knowledgemarkg「10 Free Online Tools That Replace Paid Software」（更新 2026-10-31）／giftedegware「50 Free Websites」（2026-09-25）／GrabCast「Best Free Online Tools in 2026」→ 消解：PDF to Word → **pdf_to_word＋pdf_to_word_batch 已交付**；Excalidraw → **doodle-board 已交付**；regex101 → **regex-tester 已交付**；explainshell → **shell-explainer 已交付**；临时邮箱 → 需服务端；在线记事本 → focus_writer／url_note_share／study_notes 已覆盖记事口径；其余均为 SaaS／AI 服务／内容站。
+- Hacker News Daily（2026-10-15）→ 消解：Tiny Little Office（链接即文档的迷你办公套件）→ 多工具套件、体量超单页工具；HackerFlow（HN 可视化阅读器）→ 需 HN API＋非工具；HackerSwipe／macOS HN 客户端 → 需 AI／原生应用。
+
+**候选池变动**：国际电话区号查询交付划出（481b376，327 Path，213 tests；Icon `call` e0b0）；**G-code 预览器顺位递进第三席**；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十七度跳过）；数独游戏 P3 观察维持第二席；**图片物体消除本轮新入池**（P3 弱观察：Cleanup.pictures 模式，inpainting 模型权重与零外部资源惯例冲突）；Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；二维码传文件／LaTeX 公式编辑器弱观察维持；WPS 候选表保持冻结归档；**本轮新入池 1 个**。
+
+**交付核对**：本地当前分支 muse/dev-20260929，本地 HEAD 与 origin/muse/dev-20260929 一致（481b376，国际电话区号查询已提交）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **327**；`ls tests/*.test.js | wc -l` = **213**；站内零重叠复核（ASCII `social_image_size`／`social-image-size`／`sudoku`／`gcode_viewer`／`object_remover`／`remove_object`／`inpaint` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`g-code` 通用 51 命中均为 `cg-code`／`fg-codeblock`／`ssg-code` 等 `*-code` CSS 类／ID 后缀假阳性，以 ID 级 `gcode_viewer` 0 命中为准；`pdf_fill`／`pdf_to_word`／`pdf_sign` 命中均为对应已交付工具本体；Icon `precision`／`manufacturing`／`layers` 精确值 0 命中（`print` 1 命中、`3d_rotation` 1 命中已占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-07 13:39 · PM 选定轮，接通用调研第二百五十七轮）
 
 **选定：国际电话区号查询（dial_code_lookup）** — 本轮唯一任务（新工具）。

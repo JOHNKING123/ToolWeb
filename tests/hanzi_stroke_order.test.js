@@ -248,7 +248,7 @@ notHas(DATA_SRC, "medians", "数据文件已剔除 medians 冗余字段");
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 327, "注册 Path 总数 325→327");
+eq(pathCount, 328, "注册 Path 总数 325→327");
 has(GO_SRC, "\"hanzi_stroke_order\"", "注册：ID hanzi_stroke_order");
 has(GO_SRC, "\"/tools/hanzi-stroke-order\"", "注册：Path /tools/hanzi-stroke-order");
 has(GO_SRC, "\"edit\"", "注册：Icon edit");

@@ -179,7 +179,7 @@ eq(M.getAllCountries()[0].name === "篡改", false, "getAllCountries 返回副�
 
 /* ---------- 7. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 327, "注册 Path 总数 326→327");
+eq(pathCount, 328, "注册 Path 总数 326→327");
 has(GO_SRC, "\"dial_code_lookup\"", "注册：ID dial_code_lookup");
 has(GO_SRC, "\"/tools/dial-code-lookup\"", "注册：Path /tools/dial-code-lookup");
 has(GO_SRC, "\"call\"", "注册：Icon call");

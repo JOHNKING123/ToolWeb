@@ -1378,6 +1378,15 @@ func GetCategories() []Category {
 					Category:    "格式转换",
 				},
 				{
+					ID:          "gcode_viewer",
+					Name:        "G-code 预览器",
+					Description: "免费在线 G-code 预览器（G-code 查看器／3D 打印刀路预览）：拖入本地 .gcode/.gco/.nc（≤20MB）即看零上传，解析 G0/G1 直线移动按 Z 分层，Canvas 2D 逐层渲染刀路俯视图（挤出实色、空走虚线），层滑杆＋播放变速，层信息与统计面板（预估时长／耗材克＋米），3 组预设示例，复制统计摘要／清空，纯前端本地解析 · G-code viewer: preview 3D printing toolpaths layer by layer in your browser, 100% client-side",
+					Path:        "/tools/gcode-viewer",
+					Icon:        "layers",
+					New:         true,
+					Category:    "格式转换",
+				},
+				{
 					ID:          "csv_editor",
 					Name:        "CSV 编辑器",
 					Description: "免费在线 CSV 编辑器：拖拽或选择本地 .csv 文件，分隔符自动检测（逗号/分号/制表符），表格渲染后双击单元格原地编辑（Enter 确认/Esc 取消），增删行列，一键导出 CSV 下载，纯本地运行不上传 · CSV editor online: edit CSV cells in browser, add/delete rows and columns, export CSV, 100% client-side",
