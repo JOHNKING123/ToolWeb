@@ -1,0 +1,297 @@
+{{define "hanzi_stroke_order"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字笔顺查询 - 汉字笔画顺序逐画描红动画 | 程序员工具箱</title>
+    <meta name="description" content="免费在线汉字笔顺查询工具：输入单个汉字即查笔顺，SVG 逐画描红动画（播放/暂停/上一步/下一步/重播、0.5×/1×/2×变速），笔画分解列表点击定位，笔画数显示，常用字速查一键填入，按笔画数浏览收录字，批量查询逐字出结果；首批收录 957 个最常用汉字，笔顺以《现代汉语通用字笔顺规范》为准，未收录字明示「暂未收录」，全程本地零上传。Free online Chinese stroke order lookup: animated stroke-by-stroke tracing, stroke count, browse by stroke count, batch lookup, 100% client-side.">
+    <meta name="keywords" content="汉字笔顺,笔顺查询,汉字笔画顺序,汉字笔顺动画,汉字笔顺查询,笔画数查询,汉字描红,永字笔顺,汉字 stroke order,Chinese stroke order,hanzi stroke order animation">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/hanzi-stroke-order">
+    <meta property="og:title" content="汉字笔顺查询 - 汉字笔画顺序逐画描红动画">
+    <meta property="og:description" content="输入单个汉字即查笔顺：逐画描红动画＋笔画分解定位＋笔画数显示，首批收录 957 个最常用汉字，笔顺以《现代汉语通用字笔顺规范》为准，全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/hanzi-stroke-order">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"汉字笔顺查询","description":"免费在线汉字笔顺查询工具：输入单个汉字即查笔顺，SVG 逐画描红动画（播放/暂停/上一步/下一步/重播、0.5×/1×/2×变速），笔画分解列表点击定位，笔画数显示，常用字速查一键填入，按笔画数浏览收录字，批量查询逐字出结果；首批收录 957 个最常用汉字，笔顺以《现代汉语通用字笔顺规范》为准，未收录字明示「暂未收录」，全程浏览器本地查询零上传。","url":"https://www.johnkingzcq123.xyz/tools/hanzi-stroke-order","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .hs-wrap .navbar .material-icons { display: none; }
+        .hs-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .hs-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .hs-privacy b{color:#047857}
+        .hs-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .hs-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .hs-two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .hs-field label{display:block;font-size:.92rem;color:#374151;margin-bottom:.35rem;font-weight:600}
+        .hs-input{width:100%;box-sizing:border-box;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1.6rem;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif;text-align:center}
+        .hs-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .hs-status{display:none;border:2px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;word-break:break-word}
+        .hs-status-err{border-color:#fca5a5;background:#fef2f2;color:#b91c1c}
+        .hs-hint{font-size:.85rem;color:#6b7280;margin-top:.4rem;line-height:1.7}
+        .hs-charbox{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+        .hs-bigchar{width:5.2rem;height:5.2rem;flex:none;border:2px solid #e5e7eb;border-radius:.7rem;
+            display:flex;align-items:center;justify-content:center;font-size:3rem;color:#111827;background:#f9fafb;
+            font-family:"Noto Sans SC","Microsoft YaHei",serif}
+        .hs-countbox{font-size:1rem;color:#374151;line-height:1.9}
+        .hs-countbox b{font-size:1.4rem;color:#111827}
+        .hs-stage{border:2px solid #e5e7eb;border-radius:.8rem;background:#fff;
+            min-height:16rem;display:flex;align-items:center;justify-content:center;padding:.5rem}
+        .hs-svg{width:100%;max-width:26rem;height:auto;display:block}
+        .hs-controls{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.8rem}
+        .hs-progress{font-size:.92rem;color:#374151}
+        .hs-speed-group{display:flex;gap:.3rem;margin-left:auto}
+        .hs-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .hs-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .hs-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .hs-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .hs-btn .material-icons{font-size:1.1rem}
+        .hs-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .hs-speed-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.4rem .7rem;
+            font-size:.88rem;cursor:pointer}
+        .hs-speed-btn:hover{border-color:#2563eb;color:#2563eb}
+        .hs-speed-on{background:#2563eb;border-color:#2563eb;color:#fff}
+        .hs-stroke-list{display:flex;gap:.5rem;flex-wrap:wrap}
+        .hs-stroke-item{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.4rem .8rem;
+            font-size:.9rem;cursor:pointer}
+        .hs-stroke-item:hover{border-color:#2563eb;color:#2563eb}
+        .hs-stroke-done{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .hs-stroke-current{border-color:#2563eb;background:#2563eb;color:#fff;font-weight:700}
+        .hs-chips{display:flex;gap:.5rem;flex-wrap:wrap}
+        .hs-chip{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:1rem;cursor:pointer;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif}
+        .hs-chip:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .hs-browse-select{padding:.5rem .7rem;border:2px solid #e5e7eb;border-radius:.6rem;font-size:1rem;background:#fff}
+        .hs-browse-select:focus{outline:none;border-color:#2563eb}
+        .hs-browse-grid{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem;max-height:16rem;overflow:auto}
+        .hs-browse-char{width:2.6rem;height:2.6rem;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;
+            border-radius:.5rem;font-size:1.25rem;cursor:pointer;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif}
+        .hs-browse-char:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .hs-browse-on{border-color:#2563eb;background:#2563eb;color:#fff}
+        .hs-batch-input{width:100%;box-sizing:border-box;min-height:6rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1.1rem;resize:vertical;line-height:1.8}
+        .hs-batch-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .hs-batch-row{display:flex;gap:.8rem;align-items:baseline;padding:.45rem 0;border-bottom:1px dashed #e5e7eb;
+            line-height:1.8;font-size:.95rem;color:#111827;flex-wrap:wrap}
+        .hs-batch-row:last-child{border-bottom:none}
+        .hs-batch-char{font-size:1.3rem;font-weight:700}
+        .hs-batch-err{color:#b91c1c}
+        .hs-batch-open{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.5rem;padding:.2rem .7rem;
+            font-size:.85rem;cursor:pointer}
+        .hs-batch-open:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .hs-stats{display:flex;gap:.6rem;flex-wrap:wrap}
+        .hs-stat{flex:1 1 6.5rem;min-width:6.5rem;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .7rem;
+            background:#f9fafb;text-align:center}
+        .hs-stat b{display:block;font-size:1.25rem;color:#111827}
+        .hs-stat span{font-size:.82rem;color:#6b7280}
+        .hs-output{width:100%;box-sizing:border-box;min-height:6rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1rem;resize:vertical;line-height:1.8;background:#f9fafb}
+        .hs-meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .hs-count{font-size:.85rem;color:#6b7280}
+        .hs-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+        .hs-muted{color:#9ca3af;font-size:.9rem}
+        .hs-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .hs-limits div{line-height:1.9;font-size:.95rem;color:#374151}
+        .hs-limits b{color:#111827}
+        .hs-limits code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .hs-faq dt{font-weight:600;color:#111827;margin:.7rem 0 .2rem}
+        .hs-faq dd{margin:0;color:#374151;line-height:1.9;font-size:.95rem}
+        .hs-faq code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .hs-division{line-height:1.9;font-size:.95rem;color:#374151}
+        .hs-division b{color:#111827}
+        .hs-related{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+        @media (max-width:860px){
+            .hs-two{grid-template-columns:1fr}
+            .hs-speed-group{margin-left:0}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+    <div class="hs-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">edit</i> 汉字笔顺查询</h1>
+            <p>输入单个汉字即查笔顺：SVG 逐画描红动画（播放／暂停／上一步／下一步／重播、0.5×／1×／2×变速），笔画分解列表点击定位，笔画数显示，常用字速查一键填入，按笔画数浏览收录字，批量查询逐字出结果。首批收录 957 个最常用汉字，笔顺以《现代汉语通用字笔顺规范》为准。全程浏览器本地查询，汉字不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="hs-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：汉字不出浏览器。</b>查询与描红动画只在当前浏览器本地完成，不会上传到任何服务器；不引入任何第三方库与 CDN，页面除加载本站资源外无其他网络请求。</div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>1. 单字查询（输入即查）</h3>
+                <div class="hs-two">
+                    <div class="hs-field">
+                        <label for="hs-input">输入一个汉字</label>
+                        <input class="hs-input" id="hs-input" type="text" spellcheck="false" placeholder="例如 永" autocomplete="off" maxlength="2">
+                        <p class="hs-hint">一次只查一个字；输入即查，多字输入只取第一个字。已收录字立即显示描红动画，未收录字会明示「暂未收录」。</p>
+                        <div class="hs-status" id="hs-status" role="alert"></div>
+                    </div>
+                    <div class="hs-field">
+                        <label>当前汉字</label>
+                        <div class="hs-charbox">
+                            <div class="hs-bigchar" id="hs-char">永</div>
+                            <div class="hs-countbox">笔画数：<b id="hs-count">5 画</b><br><span class="hs-hint">笔顺以《现代汉语通用字笔顺规范》为准</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hs-meta">
+                    <span class="hs-count">首批收录 957 个最常用汉字（小学低年级生字＋高频常用字）。</span>
+                    <div class="hs-actions">
+                        <button type="button" class="hs-btn" id="hs-clear"><i class="material-icons">delete_sweep</i>清空</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>2. 逐画描红动画</h3>
+                <div class="hs-stage" id="hs-stage"></div>
+                <div class="hs-controls">
+                    <button type="button" class="hs-btn hs-btn-primary" id="hs-play"><i class="material-icons">play_arrow</i>播放</button>
+                    <button type="button" class="hs-btn" id="hs-pause"><i class="material-icons">pause</i>暂停</button>
+                    <button type="button" class="hs-btn" id="hs-prev"><i class="material-icons">skip_previous</i>上一步</button>
+                    <button type="button" class="hs-btn" id="hs-next"><i class="material-icons">skip_next</i>下一步</button>
+                    <button type="button" class="hs-btn" id="hs-replay"><i class="material-icons">replay</i>重播</button>
+                    <span class="hs-progress" id="hs-progress">未选择汉字</span>
+                    <span class="hs-speed-group" role="group" aria-label="播放速度">
+                        <button type="button" class="hs-speed-btn" data-speed="0.5">0.5×</button>
+                        <button type="button" class="hs-speed-btn" data-speed="1">1×</button>
+                        <button type="button" class="hs-speed-btn" data-speed="2">2×</button>
+                    </span>
+                </div>
+                <p class="hs-hint">描红说明：淡灰色为全字底字（全部笔画），深蓝色为已描出的笔画，浅蓝色高亮为当前待描／正在描的一画；每画约 0.6 秒（1× 速度），可在笔画分解列表里点任意一画直接定位。</p>
+            </div>
+
+            <div class="hs-panel">
+                <h3>3. 笔画分解（点击定位高亮）</h3>
+                <div class="hs-stroke-list" id="hs-stroke-list"><span class="hs-muted">查询汉字后，这里按笔顺列出每一画，点击可定位高亮到该画。</span></div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>4. 常用字速查（一键填入）</h3>
+                <div class="hs-chips" id="hs-quick"></div>
+                <p class="hs-hint">点一个字即填入并显示它的笔顺动画：永（5 画）、学（8 画）、书（4 画）、爱（10 画）、国（8 画）、汉（5 画）、字（6 画）、文（4 画）。</p>
+            </div>
+
+            <div class="hs-panel">
+                <h3>5. 按笔画数浏览收录字</h3>
+                <label for="hs-browse-select" class="hs-hint">选择笔画数：</label>
+                <select class="hs-browse-select" id="hs-browse-select">
+                    <option value="1">1 画</option>
+                    <option value="2">2 画</option>
+                    <option value="3">3 画</option>
+                    <option value="4">4 画</option>
+                    <option value="5" selected>5 画</option>
+                    <option value="6">6 画</option>
+                    <option value="7">7 画</option>
+                    <option value="8">8 画</option>
+                    <option value="9">9 画</option>
+                    <option value="10">10 画</option>
+                    <option value="11">11 画</option>
+                    <option value="12">12 画</option>
+                    <option value="13">13 画</option>
+                    <option value="14">14 画</option>
+                    <option value="15">15 画</option>
+                    <option value="16">16 画</option>
+                    <option value="17">17 画</option>
+                    <option value="18">18 画</option>
+                    <option value="19">19 画</option>
+                    <option value="20">20 画</option>
+                    <option value="21">21 画</option>
+                </select>
+                <span class="hs-count" id="hs-browse-count"></span>
+                <div class="hs-browse-grid" id="hs-browse-grid"></div>
+                <p class="hs-hint">点任意字即填入并显示它的笔顺动画；当前查询的字会以深蓝色标出。</p>
+            </div>
+
+            <div class="hs-panel">
+                <h3>6. 批量查询（逐字出结果）</h3>
+                <textarea class="hs-batch-input" id="hs-batch-input" spellcheck="false" placeholder="输入一串汉字，例如：&#10;永学汉字&#10;每字一行或连写均可，空格会被忽略"></textarea>
+                <div class="hs-meta">
+                    <span class="hs-count" id="hs-batch-stats"></span>
+                    <div class="hs-actions">
+                        <button type="button" class="hs-btn hs-btn-primary" id="hs-batch-btn"><i class="material-icons">format_list_numbered</i>批量查询</button>
+                    </div>
+                </div>
+                <div id="hs-batch-results" style="margin-top:.8rem"><span class="hs-muted">批量查询后，每字结果会出现在这里（已收录字显示笔画数、可点开看动画；未收录字明示「暂未收录」）。</span></div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>7. 统计面板</h3>
+                <div class="hs-stats" id="hs-stats"><div class="hs-muted">查询后，这里显示收录字数、当前汉字与笔画数、已描画数与批量查询统计。</div></div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>8. 笔顺说明文本</h3>
+                <textarea class="hs-output" id="hs-desc" spellcheck="false" readonly placeholder="查询汉字后，这里的笔顺说明文本可一键复制"></textarea>
+                <div class="hs-meta">
+                    <span></span>
+                    <div class="hs-actions">
+                        <button type="button" class="hs-btn hs-btn-primary" id="hs-copy-btn"><i class="material-icons">content_copy</i>复制笔顺说明文本</button>
+                    </div>
+                </div>
+                <div class="hs-copy-tip" id="hs-tip"></div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>五条真限制</h3>
+                <div class="hs-limits">
+                    <div><b>1. 仅收录约 1000 常用字（实际 957 字）：</b>首批收录按现代汉语语料字频排序的最常用汉字 <code>957</code> 个（小学低年级生字＋高频常用字）；<code>龘</code>等未收录字会明示「暂未收录」，<b>不猜测笔顺</b>。</div>
+                    <div><b>2. 笔顺以《现代汉语通用字笔顺规范》为准：</b>描红顺序按国家语委笔顺规范编排；个别字存在历史异体写法时以现行规范为准，不做书法体笔顺。</div>
+                    <div><b>3. 标准印刷体，非书法行草：</b>描红轨迹为标准楷体印刷字形的笔画顺序，只演示「先写哪一画、后写哪一画」，不涉及书法笔法、行草连笔与个人手写风格。</div>
+                    <div><b>4. 只做笔顺，不做注音、不做简繁互转：</b>本工具<b>只做汉字笔顺查询</b>，<b>不做注音</b>（读音请用<a href="/tools/pinyin-converter">汉字转拼音</a>）、<b>不做简繁互转</b>（字形转换请用<a href="/tools/traditional-simplified-converter">简繁转换</a>）。</div>
+                    <div><b>5. 轨迹为内置描红路径：</b>笔画轨迹来自内置描红数据（hanzi-writer-data，经坐标取整与路径压缩后离线加载），不是实时手写识别，也不是逐笔名师示范；数据随页面加载，不上传任何内容。</div>
+                </div>
+            </div>
+
+            <div class="hs-panel">
+                <h3>常见问题</h3>
+                <dl class="hs-faq">
+                    <dt>为什么「日」是 4 画？</dt>
+                    <dd>按《现代汉语通用字笔顺规范》，「日」共 <code>4</code> 画：竖、横折、横、横。不要与「目」（5 画）混淆，也不要误记为 2 画；本工具的笔画数以规范为准。</dd>
+                    <dt>为什么有的字显示「暂未收录」？</dt>
+                    <dd>首批只收录 <code>957</code> 个最常用汉字（按现代汉语语料字频排序），生僻字、异体字与不在高频范围内的字暂未收录；未收录字不猜测笔顺，会明确提示「暂未收录」。</dd>
+                    <dt>描红动画可以调速度吗？</dt>
+                    <dd>可以。动画区有 <code>0.5×／1×／2×</code> 三档速度（每画约 <code>1.2 秒／0.6 秒／0.3 秒</code>），另有播放、暂停、上一步、下一步、重播五个控制；笔画分解列表里点任意一画可直接定位到该画。</dd>
+                    <dt>这个工具能查拼音或简繁吗？</dt>
+                    <dd>不能。本工具只做笔顺：查读音请用<a href="/tools/pinyin-converter">汉字转拼音</a>，简繁互转请用<a href="/tools/traditional-simplified-converter">简繁转换</a>，三者分工不同。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。查询、描红动画、统计与复制全部在本地完成，不发起后端请求；本工具不引入任何第三方库与 CDN，你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="hs-panel">
+                <h3>相关工具</h3>
+                <p class="hs-division">分工说明：本工具<b>只做汉字笔顺查询</b>，<b>不做注音</b>、<b>不做简繁互转</b>；<a href="/tools/pinyin-converter">汉字转拼音</a>是汉字注音的入口（带声调／数字声调／无声调三种样式＋首字母模式，多音字可点切换），<a href="/tools/traditional-simplified-converter">简繁转换</a>是简体↔繁体字形互转的入口（短语最长匹配优先、歧义字组标注候选），三者互不重叠。</p>
+                <div class="hs-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">汉字笔顺查询（当前）</span>
+                    <a href="/tools/pinyin-converter" class="btn btn-secondary" style="font-size:.9rem;">汉字转拼音</a>
+                    <a href="/tools/traditional-simplified-converter" class="btn btn-secondary" style="font-size:.9rem;">简繁转换</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/hanzi_stroke_data.js?v=1"></script>
+    <script src="/tools/static/js/hanzi_stroke_order.js?v=1"></script>
+</body>
+</html>
+{{end}}

@@ -228,7 +228,7 @@ throws(function () { S.validateShellInput(null); }, "input", "抛错：validateS
 
 /* ---------- 10. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 325, "注册 Path 总数 318→319");
+eq(pathCount, 326, "注册 Path 总数 318→319");
 has(GO_SRC, "\"shell_explainer\"", "注册：ID shell_explainer");
 has(GO_SRC, "\"/tools/shell-explainer\"", "注册：Path /tools/shell-explainer");
 has(GO_SRC, "\"integration_instructions\"", "注册：Icon integration_instructions");

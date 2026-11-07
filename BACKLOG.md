@@ -1,3 +1,124 @@
+## 今日任务（2026-11-07 11:43 · PM 选定轮，接通用调研第二百五十六轮）
+
+**选定：汉字笔顺查询（hanzi_stroke_order）** — 本轮唯一任务（新工具）。
+
+**顺位**：256 轮 Top3 顺位递进第三席，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十六度裁定跳过**（沿用 231–255 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十五轮跳过后无新证据改变裁定，首席顺位留池，不冻结；另补一记：证件照半边口径站内已有「证件照裁剪排版」（id_photo_maker，/tools/id-photo-maker，1寸/2寸/小2寸/美签/护照尺寸预设已交付），速查表的证件照增量只剩规格文字表，社媒半边仍是鲜度负债）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），汉字笔顺查询独立工具本体站内 0 交付；全站 `stroke` 通用命中均为 canvas strokeStyle／SVG stroke-width 属性，与笔顺口径无关。
+2. **口径互补确凿**：站内已有汉字类工具，但无一做「汉字→笔画顺序演示」——pinyin_converter 只做汉字注音，traditional_simplified_converter 只做字形简繁互转，encoding_converter 只做字符编码口径；本工具为**汉字笔顺口径**（查字即看 SVG 逐画描红动画＋笔画分解），与三者形成「字形↔注音↔笔顺」汉字学习家族分工互补（页面与互链须明示分工：本工具只做笔顺查询与演示，不做注音、不做简繁互转）。
+3. **需求验证**：写生僻字／教孩子写字／书法入门时不知道笔画顺序，只能装 App 或看视频；浏览器查字即看笔顺动画、零上传。
+4. **技术路线有界**：纯前端小-中难度——静态笔顺数据本地查＋SVG 逐画演示，零新增依赖、零外部请求；数据体量弱点以有界收录化解（见规格第 ⑩ 条：首批约 1000 常用字，数据文件硬上限 2MB，未收录字明示不猜测），沿用 pinyin_converter「公开许可数据集离线 vendor＋代码注释注明来源与许可」先例（pinyin 字表 8109 条、JS 127KB 已交付）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`stroke_order`／`hanzi_stroke`／`hanzi-stroke-order` 全站（tools／templates／static／tests）**0 命中**——汉字笔顺查询独立工具本体 0 交付，真缺口确凿。
+   - `stroke` 通用命中均为 canvas strokeStyle（image_annotator 模板）与 html_to_jsx 描述中的 SVG stroke-width 属性映射，无笔顺口径本体。
+   - CJK「汉字笔顺」`chr(0x...)` 运行时构造（codepoints 验真 0x6c49／0x5b57／0x7b14／0x987a）全站 **0 命中**。
+   - CJK「数独」命中 2 处均为 css_background_pattern_generator 的「斜线」子串（163 轮教训的展示层假阳性实例，ASCII `sudoku` 全站 0 命中才是真凭据），与数独游戏本体无关；CJK「社媒」命中均为社媒标签／标题生成器等邻近工具，CJK「证件照」命中含 id_photo_maker 已交付本体，均无尺寸速查表本体。
+   - Icon：**`stylus` 首选**（`Icon:\s*"stylus"` 精确值 **0 命中**，全库唯一；备选 `auto_stories`／`edit` 亦 0 命中），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 json_graph_viewer `bubble_chart` e6dd 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十六度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）／二维码传文件／LaTeX 公式编辑器（弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 单字查询（输入即查，限单个汉字）② SVG 逐画描红动画：全画淡色底字为描红底，当前画高亮描画；播放／暂停／上一步／下一步／重播，速度档 0.5×／1×／2× ③ 笔画分解列表：第 N 画逐项列出，点击定位高亮对应笔画 ④ 笔画数显示 ⑤ 常用字速查一键填入（永／学／书／爱／国／汉／字／文）⑥ 按笔画数浏览收录字（选笔画数即列出该笔画数的收录字，点击查笔顺）⑦ 批量查询：粘贴一段文字，逐字出支持状态（已收录／暂未收录／非汉字），已收录字可点开看动画 ⑧ 统计面板（本次查询字数／已收录数／未收录数）⑨ 复制笔顺说明文本（字＋笔画数＋逐画序号；笔画名称仅当数据集提供时附加，不承诺）／清空 ⑩ 收录有界：首批覆盖约 1000 个最常用汉字（小学 1–3 年级生字＋高频常用字），数据文件体量目标 ≤1.5MB、硬上限 2MB，超标则缩减收录数至 800／500 字并在页面明示实际收录数；未收录字明确提示「暂未收录」，不猜测笔顺 ⑪ 互链：pinyin_converter（"汉字转拼音"）、traditional_simplified_converter（"简繁转换"），页面须明示分工（本工具只做笔顺查询与演示，不做注音、不做简繁互转）⑫ 全程浏览器本地计算，零上传、零外部接口 ⑬ 模板零外部静态资源惯例；数据文件可延迟加载（首次查询时加载），首屏不阻塞。
+- **数据来源**：开发轮选定公开许可的笔顺数据集（如 hanzi-writer-data MIT／MakeMeAHanzi MIT，二选一，须在代码注释注明来源、版本与许可），离线 vendor 进 static/js（数据文件与逻辑文件可拆分，开发轮定），不走 CDN；坐标取整＋路径抽稀压缩；笔顺以国家语委《现代汉语通用字笔顺规范》为准，数据集笔顺与规范冲突时以规范为准（开发轮抽查锚点字核对）。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.HanziStrokeOrder 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `isSupported(char)` → boolean（char 非字符串返回 false，不抛错；空串／多字／非汉字／未收录字均 false；内部复用收录集判定）。
+  - `getStrokeCount(char)` → number（char 非单个汉字字符串 err.field='char'；未收录字抛错 err.field='char'，message 含「暂未收录」）。
+  - `getStrokes(char)` → [{index, d}]（char 非单个汉字字符串或未收录字抛错 err.field='char'；index 从 0 起连续；d 为非空 SVG path 字符串；数组长度等于该字笔画数）。
+  - `getSupportedChars()` → string[]（全部收录字，按 Unicode 码点排序，去重；长度等于实际收录数）。
+  - `searchByStrokeCount(count)` → string[]（count 非正整数 err.field='count'；返回该笔画数的收录字数组，可为空数组；按码点排序）。
+  - `lookupText(text)` → [{char, supported, strokeCount, error}]（text 非字符串 err.field='text'；逐字：已收录字 supported true、strokeCount 为笔画数、error 为 ''；未收录汉字 supported false、strokeCount 为 null、error 含「暂未收录」；非汉字字符 supported false、strokeCount 为 null、error 说明非汉字）。
+  - `clampStep(step, total)` → number（step／total 非整数 err.field='step'／'total'；total≤0 返回 -1；step 越界钳制到 [0, total-1]，不抛错；供上一步／下一步动画步进复用）。
+- **数值锚点（测试精确值；锚点字须在开发轮选定的收录集内，选集时保证）**：笔画数标准值：一→1；二→2；三→3；十→2；人→2；大→3；天→4；木→4；山→3；水→4；火→4；日→2；月→4；王→4；永→5；汉→5；字→6；学→8；国→8；书→4；爱→10。getStrokes('永') 长度 5，index 0–4 连续，每项 d 为非空字符串。isSupported：'永'→true；'龘'→false（生僻字不在首批收录）；'A'→false；''→false；123→false。getStrokeCount('')／('汉字')／('A')／('龘') 抛错 err.field='char'（'龘' 的 message 含「暂未收录」）。searchByStrokeCount：(1) 含 '一'；(5) 含 '永'；(0)／('5')／2.5 抛错 err.field='count'。lookupText：('永学')→2 项均 supported、strokeCount 5／8；('永A')→第 2 项 supported false；123 抛错 err.field='text'。getSupportedChars() 长度等于实际收录数且 ≥500。clampStep：(0,5)→0；(7,5)→4；(-1,5)→0；(2,5)→2；(0,0)→-1。
+- **真限制五条页面明示**：① 首批仅收录约 1000 个常用字（实际收录数页面明示），未收录字不演示、不猜测笔顺；② 笔顺以《现代汉语通用字笔顺规范》为准，个别字存在异体笔顺争议时以规范为准；③ 演示为标准印刷体笔顺，不代表书法行草写法；④ 本工具只做笔顺查询与演示，不做注音（请用站内汉字转拼音）、不做简繁互转；⑤ 动画轨迹为数据文件内置描红路径，缩放显示不失真但非矢量书法字帖。
+- **SEO**：汉字笔顺、笔顺查询、汉字笔画顺序、汉字笔顺动画。
+- **改动文件**：tools/categories.go（「编码转换」类目新增 hanzi_stroke_order 条目，紧邻 pinyin_converter，Path 325→**326**，Icon `stylus` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph）／templates/hanzi_stroke_order.html（新，define "hanzi_stroke_order"）／static/js/hanzi_stroke_order.js（新，window.HanziStrokeOrder；零新增依赖，零外部请求）／static/js/hanzi_stroke_data.js（新，笔顺数据；与逻辑文件拆分与否开发轮定，须在文件头注释注明数据集来源、版本与许可）／tests/hanzi_stroke_order.test.js（新）／全量旧 tests Path 断言 325→326 数值同步（开发轮实测基数：上轮 160 个测试文件含 324 字面量，本轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥120 断言全过（笔画数锚点精确值、getStrokes 结构、isSupported／未收录抛错 err.field、searchByStrokeCount、lookupText、clampStep、收录数下限、模板零外部静态资源检查——页面无 CDN 链接）② 全量 tests/*.test.js 211→**212** 个全绿 ③ 数据文件 ≤2MB 硬上限（实测值记入开发报告）④ go build/go vet 通过 ⑤ 本地实测 /tools/hanzi-stroke-order 200、静态 JS 200、首页索引收录 ⑥ 浏览器手工验证：单字查询输入即查可用 → 逐画动画播放／暂停／步进／重播／变速可用 → 笔画分解点击定位可用 → 按笔画数浏览可用 → 批量查询可用 → 未收录字提示可见 → 五条真限制可见 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「编码转换」类目（与 pinyin_converter／roman_numeral_converter 同类目，汉字表示／学习家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：汉字笔顺查询→本轮交付（256 研究轮第三席递进；PM 定序权裁定首席社媒表第二十六度跳过（数据表负债从严，231–255 轮逻辑沿用；另补证件照口径已有 id_photo_maker 尺寸预设）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII stroke_order／hanzi_stroke 全 0 命中，CJK「汉字笔顺」全 0 命中；Icon `stylus` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；纯前端小-中难度，静态数据＋SVG 动画，零新增依赖；数据体量弱点以约 1000 字有界收录＋2MB 硬上限化解）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十六度跳过）／数独游戏→P3 观察维持／罗马数字转换→已交付划出（bc4f932＋df68d9e，325 Path，211 tests）／汉字转拼音→已交付划出（f4c9b3a＋285501a，324 Path，210 tests）／国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）初次失败（Permission denied (publickey)，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地 HEAD 与 origin 一致（df68d9e，罗马数字转换契约对齐已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **325**；`ls tests/*.test.js | wc -l` = **211**；PM 独立零重叠复核（ASCII `social_image_size`／`social-image-size`／`sudoku`／`stroke_order`／`hanzi_stroke`／`hanzi-stroke-order` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`stroke` 通用命中均为 canvas strokeStyle（image_annotator）与 html_to_jsx 描述中的 SVG stroke-width 属性映射，无笔顺口径本体；CJK「汉字笔顺」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6c49／0x5b57／0x7b14／0x987a）；CJK「数独」2 命中均为 css_background_pattern_generator 的「斜线」子串（展示层假阳性，ASCII `sudoku` 0 命中为准）；CJK「社媒」46 命中均为社媒标签／标题生成器等邻近工具，CJK「证件照」26 命中含 id_photo_maker 已交付本体，均无尺寸速查表本体；Icon `stylus`／`auto_stories`／`edit`／`create` 精确值 0 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 11:36 · 产品调研推荐，第二百五十六轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：罗马数字转换已交付闭环（bc4f932 新增＋df68d9e 契约对齐：`/tools/roman-numeral-converter`，Path 总数 324→**325**，tests **211 个**；新测试 279→281 断言全过；Icon `history_edu` 官方 codepoints ea3e 全库唯一），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 仍 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十五度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **汉字笔顺查询** — **顺位递进第三席**（罗马数字转换交付后池内递进）。痛点：写生僻字／教孩子写字／书法入门时不知道笔画顺序，只能装 App 或看视频；浏览器查字即看笔顺动画、零上传。实现纯前端小-中难度（静态笔顺数据本地查＋SVG/Canvas 逐画演示，零上传）。站内零重叠本轮复测：ASCII `stroke_order`／`hanzi_stroke` 全站 **0 命中**，CJK「汉字笔顺」`chr(0x...)` 运行时构造（codepoints 验真 0x6c49／0x5b57／0x7b14／0x987a）**0 命中**，独立工具本体 0 交付。**弱点**：笔顺数据集体量大（常用字数千条轨迹数据，与模板零外部资源惯例的权衡）、人群窄（小学生／书法／对外汉语）。SEO：汉字笔顺、笔顺查询、汉字笔画顺序。建议 ID hanzi_stroke_order、Path /tools/hanzi-stroke-order；Icon `stylus` 精确值 **0 命中**（备选 `auto_stories`／`edit` 亦 0 命中；开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定）。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十五度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 汉字笔顺查询 | **顺位递进第三席**：罗马数字转换交付后池内递进；小马在线工具箱 11-07 信号；`stroke_order`／`hanzi_stroke`／CJK「汉字笔顺」本轮复测全 **0 命中**；纯前端小-中难度；**弱点**：笔顺数据集体量大、人群窄 | 小-中 | P3（顺位递进） |
+| 国际电话区号查询 | P3 弱观察维持；whispr.dev 11-06 信号；`dial_code`／`phone_code`／`calling_code` 沿用复测全 0 命中；纯前端小难度；**弱点**：静态数据表、人群窄 | 小 | P3（弱观察） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 沿用复测 0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 沿用复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord_finder` 沿用复测 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 二维码传文件（扫码跨设备传文件） | 弱观察维持；Show HN ShadowCat 信号；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send` 沿用复测全 0 命中；纯前端中难度；**弱点**：双设备流程、扫码可靠性与速率（约 100kB/s 级）、人群窄 | 中 | P3（弱观察） |
+| LaTeX 公式编辑器/预览 | 弱观察维持；WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 沿用复测 **0 命中**；纯前端小-中难度；**弱点**：KaTeX 字体文件 vendor 体量与模板零外部资源惯例的权衡、人群窄（学生／科研／教师） | 小-中 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 罗马数字转换（阿拉伯数字↔罗马数字） | 已交付划出（bc4f932 新增＋df68d9e 契约对齐：`/tools/roman-numeral-converter`，Path 324→325，tests 211 个；新测试 279→281 断言全过；Icon `history_edu` 官方 codepoints ea3e 全库唯一） | — | 已实现 |
+| 汉字转拼音 | 已交付划出（f4c9b3a 新增＋285501a 评审修复：`/tools/pinyin-converter`，Path 323→324，tests 210 个；新测试 194 断言全过；Icon `spellcheck` 官方 codepoints e8ce 全库唯一；字表 8109 条覆盖《通用规范汉字表》全部 8105 字） | — | 已实现 |
+| Excel 查看器（XLSX 在线预览） | 已交付划出（a36583f 新增：`/tools/xlsx-viewer`，Path 322→323，tests 209 个；新测试 195 断言全过；Icon `view_module` 全库唯一） | — | 已实现 |
+| 简繁转换（繁简互转） | 已交付划出（c352255 新增：`/tools/traditional-simplified-converter`，Path 321→322，tests 208 个；新测试 399 断言全过；Icon `g_translate` 全库唯一） | — | 已实现 |
+| JSON 结构图可视化（JSON Crack 模式） | 已交付划出（5c0e61c 新增＋399c1cb 导出双致命 bug 修复：`/tools/json-graph-viewer`，Path 320→321，tests 207 个；新测试 303→330 断言全过；Icon `bubble_chart` 全库唯一） | — | 已实现 |
+| 数据库 ER 图生成器（文本建表 → 关系图） | 已交付划出（5b196ef 新增＋dd70eac 修复：`/tools/er-diagram-generator`，Path 319→320，tests 206 个；新测试 203 断言全过；Icon `dataset` 全库唯一） | — | 已实现 |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（5a6d12b 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-07 09:36~11:36 窗口；本轮**新入池 0 个**，全部消解）：
+- Medium「7 Free Online Tools That Save You Hours Every Week」（11-04）→ 消解：贷款／定投／百分比折扣计算器三项为财务计算器，2026-10-18 方向修正排除；SERP 摘要预览 → **serp-snippet-preview 已交付**；文本清理类 → 站内文本工具家族已交付口径。
+- Medium「Great Online Tools That Make Work and Life Easier」（11-06）→ 消解：TinyPNG → **img-compress 已交付**；Smallpdf／iLovePDF → PDF 合并／拆分／压缩家族已交付；其余 Photopea／Bitwarden／WolframAlpha 等均为大型 SaaS，非单页口径。
+- Medium「Simple Tools You Didn't Know You Needed」（11-04）→ 消解：iLovePDF → PDF 家族已交付；Overleaf（LaTeX）→ LaTeX 公式编辑器候选已在池（弱观察）；Draw.io 在线白板 → **doodle-board 已交付**（标题即「在线画板/白板涂鸦」）；Clear Scanner 文档扫描 → **doc-bg-cleaner 已交付**；其余 Rayyan／NotebookLM／Canva／Zotero／Grammarly／Notion 均为 SaaS／账号制。
+- whispr.dev 11 工具视频（11-04）→ 消解：FASTPING／IPANSWERS → **ping／ip-lookup／my-ip 已交付**；MDCONV → Markdown 转换家族已交付口径；OPENGRAPH.HEALTH 链接预览 → 需服务端抓取（VM 出网拦截＋浏览器 CORS），消解；IS IT ME OR NOT 网站存活检测 → 需服务端抓取，消解；COORDINATES 坐标＋当地时间 → 需地理编码／时区 API，纯 DD↔DMS 换算过窄，消解；ADDRESSWISE 美国地址 → 美国专属＋静态数据表，消解；TRACE A LINK → 短链逐跳跳转链追踪候选已在池（弱观察）；国际电话区号 → 候选已在池（弱观察）。
+- The Register／Product Hunt「TinyLittleOffice」（10-15／10-19，文档即链接）→ 消解：**url_note_share 已交付**（「文本分享链接生成器 - URL 即文档」）。
+- techtippr「101 Most Useful Websites」（10-28 更新）→ 消解：Excalidraw → **doodle-board 已交付**；其余 Toggl／Wayback Machine 等需账号／外部 API，非单页口径。
+- thetechbasket「75 Most Useful Websites」（10 月实测）→ 消解：WeTransfer／FilePizza 大文件发送 → 需信令服务端，与二维码传文件候选同类弱点，消解；Fast.com 测速 → **speed-test 已交付**；CloudConvert → 服务端转码，消解。
+- dreamboat.kr 韩文免费工具合集（11-06 更新）→ 消解：EZPZ File／Filee 本地文件转换 → PDF／图片／格式转换家族已交付口径；HEIC 转 JPG → 需 heic 解码 wasm，体量与惯例冲突，消解；quickquote 报价单生成 → 业务单据类，方向修正边界外，消解；GPS 位置清除 → **exif-strip 已交付**（查看＋清除一体）。
+- dev.to RozKaTool 40 工具（11-03）／V2Stack 619 工具／67tool.com 250 工具 → 目录站泛信号：PDF／图片／JSON／计算器类均为已交付口径，无独立新信号。
+- V2EX 11-04~11-07 窗口 → 无独立新工具信号（原型托管／AI 额度分享／浏览器 AI Agent 插件均为平台／插件类，非单页工具口径）。
+
+**候选池变动**：罗马数字转换交付划出（bc4f932＋df68d9e，325 Path，211 tests）；**汉字笔顺查询顺位递进第三席**；汉字转拼音／Excel 查看器等已交付行维持；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十五度跳过）；数独游戏 P3 观察维持第二席；国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；二维码传文件／LaTeX 公式编辑器弱观察维持；WPS 候选表保持冻结归档；**本轮新入池 0 个**。
+
+**交付核对**：本地当前分支 muse/dev-20260929，本地 HEAD 与 origin/muse/dev-20260929 一致（df68d9e，罗马数字转换契约对齐已提交）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）初次失败（Permission denied (publickey)，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **325**；`ls tests/*.test.js | wc -l` = **211**；站内零重叠复核（ASCII `social_image_size`／`social-image-size`／`sudoku`／`stroke_order`／`hanzi_stroke` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「汉字笔顺」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x6c49／0x5b57／0x7b14／0x987a）；`exif` 命中为 exif_strip 已交付本体（查看＋清除）；`serp` 命中为 serp-snippet-preview 已交付本体；`whiteboard` ASCII 0 命中但 CJK「在线白板」命中 doodle-board 已交付本体（标题即「在线画板/白板涂鸦」）；`opengraph`／`og_preview`／`is_it_up`／`website_status` 全 0 命中但均需服务端抓取，消解；Icon `stylus`／`auto_stories`／`edit`／`create` 精确值 0 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-07 09:39 · PM 选定轮，接通用调研第二百五十五轮）
 
 **选定：罗马数字转换（阿拉伯数字↔罗马数字）（roman_numeral_converter）** — 本轮唯一任务（新工具）。

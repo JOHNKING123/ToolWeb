@@ -241,7 +241,7 @@ eq(M.convertText(M.samples[4].text, "s2t").ambiguous.length, 4, "预设日常用
 
 /* ---------- 11. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 325, "注册 Path 总数 321→322");
+eq(pathCount, 326, "注册 Path 总数 321→322");
 has(GO_SRC, "\"traditional_simplified_converter\"", "注册：ID traditional_simplified_converter");
 has(GO_SRC, "\"/tools/traditional-simplified-converter\"", "注册：Path /tools/traditional-simplified-converter");
 has(GO_SRC, "\"g_translate\"", "注册：Icon g_translate");

@@ -267,7 +267,7 @@ has(regBlock, "XLSX 预览", "注册：Description 含 XLSX 预览");
 has(regBlock, "在线打开 Excel", "注册：Description 含在线打开 Excel");
 has(regBlock, "xlsx", "注册：Description 含 xlsx");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 325, "注册：Path 总数 322→323");
+eq(pathCount, 326, "注册：Path 总数 322→323");
 notHas(GO_SRC.match(/"\/tools\/[^"]+"/g).join(" "), "/tools/xlsx-viewer\", \"/tools/xlsx-viewer", "注册：Path 无重复");
 
 /* ---------- 19. 模板：真限制五条 ---------- */

@@ -7,7 +7,7 @@
  * MMMM／IIX／LL／DD／ABC／空串）、isValidRoman、1–3999 全量往返一致＋去重、
  * decompose／decomposeRoman 锚点精确值（2026／1994／3999）、convertLine／
  * convertBatch／batchStats、13 组符号值对照表＋六组减法组合、5 组预设示例、
- * 常用速查、categories.go 注册（Path 总数 324→325、Icon history_edu 全库唯一、
+ * 常用速查、categories.go 注册（Path 总数 324→326、Icon history_edu 全库唯一、
  * 紧邻 pinyin_converter）、模板（SEO 关键词、真限制五条、控件、互链、
  * 零外部资源静态检查）、浏览器绑定源码级检查（window.RomanNumeralConverter、
  * 双向输入即转／批量／拆解／预设／复制／下载／清空）。
@@ -249,7 +249,7 @@ ok(M.quickYears.indexOf(2026) !== -1, "速查年份含 2026");
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 325, "注册 Path 总数 324→325");
+eq(pathCount, 326, "注册 Path 总数 324→326");
 has(GO_SRC, "\"roman_numeral_converter\"", "注册：ID roman_numeral_converter");
 has(GO_SRC, "\"/tools/roman-numeral-converter\"", "注册：Path /tools/roman-numeral-converter");
 has(GO_SRC, "\"history_edu\"", "注册：Icon history_edu");

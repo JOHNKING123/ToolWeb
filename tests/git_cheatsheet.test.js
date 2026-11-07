@@ -165,7 +165,7 @@ has(GO_SRC, "Git 命令速查＋灾难救援卡", "注册：中文名");
 var sosCount = (GO_SRC.match(/Icon:\s*"sos"/g) || []).length;
 eq(sosCount, 1, "Icon sos 全库唯一（精确值 1 处）");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 325, "注册：Path 总数 301→302");
+eq(pathCount, 326, "注册：Path 总数 301→302");
 notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");
 notHas(TPL_SRC, "fetch(", "零网络：模板无 fetch");

@@ -273,6 +273,15 @@ func GetCategories() []Category {
 					Category:    "编码转换",
 				},
 				{
+					ID:          "hanzi_stroke_order",
+					Name:        "汉字笔顺查询",
+					Description: "汉字笔顺查询/汉字笔画顺序/笔顺动画：输入单个汉字即查笔顺，SVG 逐画描红动画（播放/暂停/上一步/下一步/重播、0.5×/1×/2×变速），笔画分解列表点击定位，笔画数显示，常用字速查一键填入，按笔画数浏览收录字，批量查询逐字出结果；首批收录 957 个最常用汉字（小学低年级生字＋高频常用字），笔顺以《现代汉语通用字笔顺规范》为准，未收录字明示「暂未收录」不猜测笔顺，只做笔顺、不做注音、不做简繁互转，全程浏览器本地查询零上传 · Chinese stroke order lookup: animated stroke-by-stroke tracing, stroke count, browse by stroke count, batch lookup, 100% client-side",
+					Path:        "/tools/hanzi-stroke-order",
+					Icon:        "edit",
+					New:         true,
+					Category:    "编码转换",
+				},
+				{
 					ID:          "roman_numeral_converter",
 					Name:        "罗马数字转换",
 					Description: "罗马数字转换/阿拉伯数字转罗马数字：1–3999 双向换算，输入即转；标准 13 组符号值对照＋逐位拆解展示，非法输入逐条报错（0／负数／小数／超范围／非法罗马字符／非法减法组合 IIII、VV、IL、VX），批量换算每行一个逐行出结果，常用速查 1–20、50／100／500／1000 与常见年份一键填入，5 组预设示例（年份／章节／钟表／版权页／边界），只做阿拉伯数字↔罗马数字换算，全程浏览器本地转换零上传 · Roman numeral converter: convert between Arabic and Roman numerals 1–3999 locally, with symbol table, decomposition, batch conversion and presets, 100% client-side",
