@@ -61,13 +61,13 @@ function trim(s) { return s.replace(/^\s+|\s+$/g, ''); }
 /* ---------- 阿拉伯数字 → 罗马数字 ---------- */
 function toRoman(num) {
     if (typeof num !== 'number' || !isFinite(num) || Math.floor(num) !== num) {
-        throw makeError('arabic', '阿拉伯数字须为整数：请输入 1–3999 的整数');
+        throw makeError('num', '阿拉伯数字须为整数：请输入 1–3999 的整数');
     }
     if (num < MIN) {
-        throw makeError('arabic', '罗马数字没有 0 与负数：请输入 1–3999 的整数');
+        throw makeError('num', '罗马数字没有 0 与负数：请输入 1–3999 的整数');
     }
     if (num > MAX) {
-        throw makeError('arabic', '超出范围：标准罗马数字只支持 1–3999，3999 以上需上划线记法，本工具不支持');
+        throw makeError('num', '超出范围：标准罗马数字只支持 1–3999，3999 以上需上划线记法，本工具不支持');
     }
     var out = '';
     var rest = num;
@@ -122,10 +122,10 @@ function isValidRoman(str) {
 /* decompose(2026) = [{M,1000,2},{X,10,2},{V,5,1},{I,1,1}] */
 function decompose(num) {
     if (typeof num !== 'number' || !isFinite(num) || Math.floor(num) !== num) {
-        throw makeError('arabic', '阿拉伯数字须为整数：请输入 1–3999 的整数');
+        throw makeError('num', '阿拉伯数字须为整数：请输入 1–3999 的整数');
     }
     if (num < MIN || num > MAX) {
-        throw makeError('arabic', '请输入 1–3999 的整数');
+        throw makeError('num', '请输入 1–3999 的整数');
     }
     var out = [];
     var rest = num;
@@ -147,8 +147,8 @@ function decomposeRoman(str) {
 }
 
 /* ---------- 单行换算（批量复用） ---------- */
-/* 成功：{input, ok:true, kind:'arabic'|'roman', arabic, roman}
- * 失败：{input, ok:false, kind, error}；空行返回 null（批量时跳过） */
+/* 成功：{input, output, ok:true, kind:'arabic'|'roman', arabic, roman}（output 为换算结果：数字行给罗马字符串，罗马行给阿拉伯数字）
+ * 失败：{input, output:'', ok:false, kind, error}；空行返回 null（批量时跳过） */
 function convertLine(line) {
     if (typeof line !== 'string') {
         throw makeError('line', '请输入文本行');
@@ -158,30 +158,31 @@ function convertLine(line) {
     if (/^[+-]?\d+(\.\d+)?$/.test(s)) {
         var n = parseFloat(s);
         try {
-            return { input: line, ok: true, kind: 'arabic', arabic: n, roman: toRoman(n) };
+            var r1 = toRoman(n);
+            return { input: line, output: r1, ok: true, kind: 'arabic', arabic: n, roman: r1 };
         } catch (e) {
-            return { input: line, ok: false, kind: 'arabic', error: e.message };
+            return { input: line, output: '', ok: false, kind: 'arabic', error: e.message };
         }
     }
     if (/^[A-Za-z]+$/.test(s)) {
         try {
             var v = fromRoman(s);
-            return { input: line, ok: true, kind: 'roman', arabic: v, roman: toRoman(v) };
+            return { input: line, output: v, ok: true, kind: 'roman', arabic: v, roman: toRoman(v) };
         } catch (e) {
-            return { input: line, ok: false, kind: 'roman', error: e.message };
+            return { input: line, output: '', ok: false, kind: 'roman', error: e.message };
         }
     }
-    return { input: line, ok: false, kind: 'unknown', error: '无法识别：每行请输入 1–3999 的阿拉伯数字或罗马数字（如 2026 或 MMXXVI）' };
+    return { input: line, output: '', ok: false, kind: 'unknown', error: '无法识别：每行请输入 1–3999 的阿拉伯数字或罗马数字（如 2026 或 MMXXVI）' };
 }
 
 /* ---------- 批量换算：每行一个，逐行出结果（跳过空行） ---------- */
 function convertBatch(text) {
     if (typeof text !== 'string') {
-        throw makeError('batch', '请输入要批量换算的文本');
+        throw makeError('text', '请输入要批量换算的文本');
     }
     var lines = text.split(/\r\n|\r|\n/);
     if (lines.length > MAX_BATCH_LINES) {
-        throw makeError('batch', '批量最多 ' + MAX_BATCH_LINES + ' 行：当前 ' + lines.length + ' 行，请分批换算');
+        throw makeError('text', '批量最多 ' + MAX_BATCH_LINES + ' 行：当前 ' + lines.length + ' 行，请分批换算');
     }
     var out = [];
     for (var i = 0; i < lines.length; i++) {
@@ -328,7 +329,7 @@ if (typeof document !== 'undefined') {
             }
             try {
                 var n = Number(trim(raw));
-                if (trim(raw) === '' || isNaN(n)) { throw makeError('arabic', '请输入 1–3999 的整数'); }
+                if (trim(raw) === '' || isNaN(n)) { throw makeError('num', '请输入 1–3999 的整数'); }
                 var r = toRoman(n);
                 showErr(errArabicEl, '');
                 romanEl.value = r;

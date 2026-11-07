@@ -1,7 +1,7 @@
 /* 罗马数字转换纯函数单元测试（零依赖）：node tests/roman_numeral_converter.test.js
  * 覆盖：toRoman 锚点精确值（1994→MCMXCIV、2026→MMXXVI、3999→MMMCMXCIX、
  * 1／4／9／40／90／400／900 减法锚点、3888→MMMDCCCLXXXVIII）、toRoman 非法
- * 输入逐条抛错 err.field='arabic'（0／负数／小数／＞3999／非数字）、fromRoman
+ * 输入逐条抛错 err.field='num'（0／负数／小数／＞3999／非数字）、fromRoman
  * 锚点精确值（含小写宽容与前后空格）、fromRoman 非法写法逐条抛错
  * err.field='roman'（IIII／VV／IL／VX／IC／XM／IXI／MCMCM／IM／XD／VL／LC／DM／
  * MMMM／IIX／LL／DD／ABC／空串）、isValidRoman、1–3999 全量往返一致＋去重、
@@ -72,18 +72,18 @@ eq(M.MIN, 1, "MIN=1");
 eq(M.MAX, 3999, "MAX=3999");
 
 /* ---------- 2. toRoman 非法输入逐条抛错 ---------- */
-throws(function () { M.toRoman(0); }, "arabic", "toRoman 0 抛错（罗马数字没有 0）");
-throws(function () { M.toRoman(-1); }, "arabic", "toRoman -1 抛错（负数）");
-throws(function () { M.toRoman(-3999); }, "arabic", "toRoman -3999 抛错（负数）");
-throws(function () { M.toRoman(3.5); }, "arabic", "toRoman 3.5 抛错（小数）");
-throws(function () { M.toRoman(2026.1); }, "arabic", "toRoman 2026.1 抛错（小数）");
-throws(function () { M.toRoman(4000); }, "arabic", "toRoman 4000 抛错（超范围）");
-throws(function () { M.toRoman(10000); }, "arabic", "toRoman 10000 抛错（超范围）");
-throws(function () { M.toRoman(NaN); }, "arabic", "toRoman NaN 抛错");
-throws(function () { M.toRoman(Infinity); }, "arabic", "toRoman Infinity 抛错");
-throws(function () { M.toRoman("2026"); }, "arabic", "toRoman 字符串 '2026' 抛错（须为数字）");
-throws(function () { M.toRoman(null); }, "arabic", "toRoman null 抛错");
-throws(function () { M.toRoman(undefined); }, "arabic", "toRoman undefined 抛错");
+throws(function () { M.toRoman(0); }, "num", "toRoman 0 抛错（罗马数字没有 0）");
+throws(function () { M.toRoman(-1); }, "num", "toRoman -1 抛错（负数）");
+throws(function () { M.toRoman(-3999); }, "num", "toRoman -3999 抛错（负数）");
+throws(function () { M.toRoman(3.5); }, "num", "toRoman 3.5 抛错（小数）");
+throws(function () { M.toRoman(2026.1); }, "num", "toRoman 2026.1 抛错（小数）");
+throws(function () { M.toRoman(4000); }, "num", "toRoman 4000 抛错（超范围）");
+throws(function () { M.toRoman(10000); }, "num", "toRoman 10000 抛错（超范围）");
+throws(function () { M.toRoman(NaN); }, "num", "toRoman NaN 抛错");
+throws(function () { M.toRoman(Infinity); }, "num", "toRoman Infinity 抛错");
+throws(function () { M.toRoman("2026"); }, "num", "toRoman 字符串 '2026' 抛错（须为数字）");
+throws(function () { M.toRoman(null); }, "num", "toRoman null 抛错");
+throws(function () { M.toRoman(undefined); }, "num", "toRoman undefined 抛错");
 
 /* ---------- 3. fromRoman 锚点精确值 ---------- */
 eq(M.fromRoman("I"), 1, "fromRoman I→1");
@@ -173,21 +173,23 @@ eqj(M.decompose(4), [{ symbol: "IV", value: 4, count: 1 }], "decompose(4)");
 eqj(M.decompose(58), [{ symbol: "L", value: 50, count: 1 }, { symbol: "V", value: 5, count: 1 }, { symbol: "I", value: 1, count: 3 }], "decompose(58)");
 eqj(M.decomposeRoman("MMXXVI"), M.decompose(2026), "decomposeRoman(MMXXVI)=decompose(2026)");
 eqj(M.decomposeRoman("MCMXCIV"), M.decompose(1994), "decomposeRoman(MCMXCIV)=decompose(1994)");
-throws(function () { M.decompose(0); }, "arabic", "decompose 0 抛错");
-throws(function () { M.decompose(4000); }, "arabic", "decompose 4000 抛错");
-throws(function () { M.decompose(3.5); }, "arabic", "decompose 3.5 抛错");
+throws(function () { M.decompose(0); }, "num", "decompose 0 抛错");
+throws(function () { M.decompose(4000); }, "num", "decompose 4000 抛错");
+throws(function () { M.decompose(3.5); }, "num", "decompose 3.5 抛错");
 throws(function () { M.decomposeRoman("IIII"); }, "roman", "decomposeRoman IIII 抛错");
 throws(function () { M.decomposeRoman("IL"); }, "roman", "decomposeRoman IL 抛错");
 
 /* ---------- 8. convertLine ---------- */
-eqj(M.convertLine("2026"), { input: "2026", ok: true, kind: "arabic", arabic: 2026, roman: "MMXXVI" }, "convertLine 阿拉伯数字行");
-eqj(M.convertLine("MMXXVI"), { input: "MMXXVI", ok: true, kind: "roman", arabic: 2026, roman: "MMXXVI" }, "convertLine 罗马数字行");
-eqj(M.convertLine("xii"), { input: "xii", ok: true, kind: "roman", arabic: 12, roman: "XII" }, "convertLine 小写罗马行");
-eqj(M.convertLine(" 1984 "), { input: " 1984 ", ok: true, kind: "arabic", arabic: 1984, roman: "MCMLXXXIV" }, "convertLine 前后空格宽容");
+eqj(M.convertLine("2026"), { input: "2026", output: "MMXXVI", ok: true, kind: "arabic", arabic: 2026, roman: "MMXXVI" }, "convertLine 阿拉伯数字行");
+eqj(M.convertLine("MMXXVI"), { input: "MMXXVI", output: 2026, ok: true, kind: "roman", arabic: 2026, roman: "MMXXVI" }, "convertLine 罗马数字行");
+eqj(M.convertLine("xii"), { input: "xii", output: 12, ok: true, kind: "roman", arabic: 12, roman: "XII" }, "convertLine 小写罗马行");
+eqj(M.convertLine(" 1984 "), { input: " 1984 ", output: "MCMLXXXIV", ok: true, kind: "arabic", arabic: 1984, roman: "MCMLXXXIV" }, "convertLine 前后空格宽容");
 eq(M.convertLine(""), null, "convertLine 空行返回 null");
 eq(M.convertLine("   "), null, "convertLine 全空格行返回 null");
 eq(M.convertLine("0").ok, false, "convertLine 0 行失败");
 eq(M.convertLine("0").kind, "arabic", "convertLine 0 行 kind=arabic");
+eq(M.convertLine("0").output, "", "convertLine 失败行 output 为空串");
+eq(M.convertLine("MMXXVI").output, 2026, "convertLine 罗马行 output 为阿拉伯数字");
 eq(M.convertLine("4000").ok, false, "convertLine 4000 行失败");
 eq(M.convertLine("3.5").ok, false, "convertLine 3.5 行失败");
 eq(M.convertLine("-5").ok, false, "convertLine -5 行失败");
@@ -215,11 +217,11 @@ eqj(M.convertBatch("\n\n"), [], "convertBatch 全空行得空数组");
 eqj(M.batchStats(batch), { total: 8, ok: 5, fail: 3, arabicToRoman: 3, romanToArabic: 2 }, "batchStats 混合批量统计精确值");
 eqj(M.batchStats([]), { total: 0, ok: 0, fail: 0, arabicToRoman: 0, romanToArabic: 0 }, "batchStats 空数组");
 throws(function () { M.batchStats(null); }, "batch", "batchStats 非数组抛错");
-throws(function () { M.convertBatch(123); }, "batch", "convertBatch 非字符串抛错");
+throws(function () { M.convertBatch(123); }, "text", "convertBatch 非字符串抛错");
 (function () {
     var many = [];
     for (var i = 0; i < 1001; i++) { many.push("I"); }
-    throws(function () { M.convertBatch(many.join("\n")); }, "batch", "convertBatch 超 1000 行抛错");
+    throws(function () { M.convertBatch(many.join("\n")); }, "text", "convertBatch 超 1000 行抛错");
 })();
 eq(M.MAX_BATCH_LINES, 1000, "MAX_BATCH_LINES=1000");
 
