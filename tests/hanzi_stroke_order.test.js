@@ -1,12 +1,13 @@
 /* 汉字笔顺查询纯函数单元测试（零依赖）：node tests/hanzi_stroke_order.test.js
- * 覆盖：笔画数锚点精确值（21 字，见下注：规格锚点「日→2」与《现代汉语通用字
+ * 覆盖：笔画数锚点精确值（21 字，见下注：原规格锚点「日→2」与《现代汉语通用字
  * 笔顺规范》及 hanzi-writer-data 均冲突——「日」按规范为 4 画：竖、横折、横、
- * 横，数据亦为 4 画，开发轮以规范与数据为准取 4，规格锚点待 PM 修正为 4）、
+ * 横，数据亦为 4 画，开发轮以规范与数据为准取 4；PM 已于 2026-11-07 在 BACKLOG
+ * 顶部「今日任务」小节闭环修正锚点为「日→4」，以后引用以 4 为准）、
  * getStrokes 结构（index 0–4 连续、d 非空且为合法 SVG 路径）、isSupported／
  * 未收录抛错 err.field='char'（message 含「暂未收录」）、searchByStrokeCount、
  * lookupText（含未收录逐字状态）、clampStep、batchStats、strokeDescription、
  * 收录数下限（实际 957 字 ≥500）、数据文件 ≤1.5MB 目标与 ≤2MB 硬上限、
- * categories.go 注册（Path 总数 325→326、Icon edit 全库唯一、紧邻
+ * categories.go 注册（Path 总数 325→327、Icon edit 全库唯一、紧邻
  * pinyin_converter）、模板（SEO 关键词、真限制五条、控件、互链、零外部资源
  * 静态检查）、浏览器绑定源码级检查（window.HanziStrokeOrder、描红动画控制、
  * 变速、笔画分解点击定位、批量查询、复制／清空）。
@@ -62,7 +63,7 @@ eq(M.getStrokeCount("木"), 4, "笔画数 木→4");
 eq(M.getStrokeCount("山"), 3, "笔画数 山→3");
 eq(M.getStrokeCount("水"), 4, "笔画数 水→4");
 eq(M.getStrokeCount("火"), 4, "笔画数 火→4");
-eq(M.getStrokeCount("日"), 4, "笔画数 日→4（规格锚点「日→2」与笔顺规范及数据冲突：日按规范 4 画，开发轮以规范为准，规格待修正）");
+eq(M.getStrokeCount("日"), 4, "笔画数 日→4（原规格锚点「日→2」有误，PM 已于 2026-11-07 修正为 4：日按规范 4 画）");
 eq(M.getStrokeCount("月"), 4, "笔画数 月→4");
 eq(M.getStrokeCount("王"), 4, "笔画数 王→4");
 eq(M.getStrokeCount("永"), 5, "笔画数 永→5");
@@ -247,7 +248,7 @@ notHas(DATA_SRC, "medians", "数据文件已剔除 medians 冗余字段");
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 326, "注册 Path 总数 325→326");
+eq(pathCount, 327, "注册 Path 总数 325→327");
 has(GO_SRC, "\"hanzi_stroke_order\"", "注册：ID hanzi_stroke_order");
 has(GO_SRC, "\"/tools/hanzi-stroke-order\"", "注册：Path /tools/hanzi-stroke-order");
 has(GO_SRC, "\"edit\"", "注册：Icon edit");

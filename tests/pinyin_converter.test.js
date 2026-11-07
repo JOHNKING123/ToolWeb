@@ -7,7 +7,7 @@
  * liu2→liú、hui4→huì、lv3→lǚ、nv3→nǚ、hao3→hǎo、gei3→gěi）、convertText／
  * renderPinyinLine／renderAnnotated／initialsOf／countStats 锚点精确值（你好→nǐ hǎo、
  * 中国→zhōng guó、你好世界首字母 nhsj）、非法参数抛错 err.field、
- * 5 组预设示例（每组精确统计值）、categories.go 注册（Path 总数 324→326、
+ * 5 组预设示例（每组精确统计值）、categories.go 注册（Path 总数 324→327、
  * Icon spellcheck 全库唯一、紧邻 traditional_simplified_converter）、模板（SEO 关键词、
  * 真限制五条、控件、互链、零外部资源静态检查）、浏览器绑定源码级检查
  * （window.PinyinConverter、三种声调样式／首字母模式／多音字点选／复制／下载／清空）、
@@ -204,7 +204,7 @@ eq(M.renderPinyinLine(M.convertText(M.samples[1].text, { toneStyle: "mark" })),
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 326, "注册 Path 总数 324→326");
+eq(pathCount, 327, "注册 Path 总数 324→327");
 has(GO_SRC, "\"pinyin_converter\"", "注册：ID pinyin_converter");
 has(GO_SRC, "\"/tools/pinyin-converter\"", "注册：Path /tools/pinyin-converter");
 has(GO_SRC, "\"spellcheck\"", "注册：Icon spellcheck");

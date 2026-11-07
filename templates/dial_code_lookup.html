@@ -1,0 +1,193 @@
+{{define "dial_code_lookup"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国际电话区号查询 - 国家区号速查与拨号格式示例 | 程序员工具箱</title>
+    <meta name="description" content="免费在线国际电话区号查询工具：输入中文名、英文名、ISO 二字码或区号即筛国家，选国家即查区号与拨号格式示例（+区号／00 区号两种写法），反向查区号（+86／86／0086 三种写法，+1／+7 等共享区号列出全部国家），粘贴国际号码按最长区号匹配解析；收录 246 个国家／地区，区号以 ITU E.164 为准，全程本地零上传。Free online international dialing code lookup: country calling codes, reverse lookup, phone number parsing, 100% client-side.">
+    <meta name="keywords" content="国际电话区号,国家区号查询,拨打国际电话,国际区号表,电话区号查询,国家代码查询,international dialing code,country calling code,dial code lookup,ITU E.164">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/dial-code-lookup">
+    <meta property="og:title" content="国际电话区号查询 - 国家区号速查与拨号格式示例">
+    <meta property="og:description" content="选国家即查区号与拨号格式示例，反向查区号，粘贴国际号码按最长区号匹配解析；收录 246 个国家／地区，区号以 ITU E.164 为准，全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/dial-code-lookup">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"国际电话区号查询","description":"免费在线国际电话区号查询工具：国家搜索即筛，选国家即查区号与拨号格式示例，反向查区号，粘贴国际号码按最长区号匹配解析；收录 246 个国家／地区，区号以 ITU E.164 为准，全程浏览器本地查询零上传。","url":"https://www.johnkingzcq123.xyz/tools/dial-code-lookup","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .dc-wrap .navbar .material-icons { display: none; }
+        .dc-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .dc-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .dc-privacy b{color:#047857}
+        .dc-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .dc-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .dc-field label{display:block;font-size:.92rem;color:#374151;margin-bottom:.35rem;font-weight:600}
+        .dc-input{width:100%;box-sizing:border-box;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1rem;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif}
+        .dc-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .dc-hint{font-size:.85rem;color:#6b7280;margin-top:.4rem;line-height:1.7}
+        .dc-err{color:#b91c1c;font-size:.92rem;line-height:1.7}
+        .dc-muted{color:#6b7280;font-size:.92rem;line-height:1.7}
+        .dc-list{display:flex;flex-direction:column;gap:.45rem;max-height:22rem;overflow-y:auto;margin-top:.8rem}
+        .dc-item{display:flex;justify-content:space-between;align-items:center;gap:.6rem;text-align:left;
+            border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.5rem .8rem;
+            font-size:.95rem;cursor:pointer;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif}
+        .dc-item:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .dc-item-en{color:#6b7280;font-size:.85rem}
+        .dc-item-code{flex:none;font-weight:700;color:#111827}
+        .dc-detail{margin-top:1rem;border:2px solid #bfdbfe;background:#eff6ff;border-radius:.7rem;padding:1rem 1.1rem;line-height:1.8}
+        .dc-big{font-size:2rem;font-weight:800;color:#1e40af;line-height:1.2}
+        .dc-meta{font-size:.98rem;color:#374151;margin-top:.3rem}
+        .dc-example{margin-top:.6rem;font-size:.92rem;color:#374151}
+        .dc-example code{display:block;background:#fff;border:1px solid #bfdbfe;border-radius:.5rem;
+            padding:.5rem .7rem;margin-top:.35rem;font-size:.95rem;color:#111827;word-break:break-word}
+        .dc-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+        .dc-btn{border:2px solid #e5e7eb;background:#fff;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .dc-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .dc-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .dc-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .dc-btn .material-icons{font-size:1.1rem}
+        .dc-chips{display:flex;gap:.5rem;flex-wrap:wrap}
+        .dc-chip{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.95rem;cursor:pointer;font-family:"Noto Sans SC","Microsoft YaHei",sans-serif}
+        .dc-chip:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .dc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.7rem}
+        .dc-stats div{background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.7rem .9rem;
+            font-size:.92rem;color:#374151;line-height:1.7}
+        .dc-stats b{font-size:1.15rem;color:#111827}
+        .dc-rev-item{padding:.35rem 0;border-bottom:1px dashed #e5e7eb;font-size:.95rem;color:#374151}
+        .dc-copy-tip{display:none;border:2px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem}
+        .dc-limits div{margin-bottom:.6rem;line-height:1.8;font-size:.92rem;color:#374151}
+        .dc-limits b{color:#111827}
+        .dc-faq dt{font-weight:700;color:#111827;margin:.8rem 0 .3rem;font-size:.95rem}
+        .dc-faq dd{margin:0;color:#374151;font-size:.92rem;line-height:1.8}
+        .dc-division{font-size:.92rem;color:#374151;line-height:1.8}
+        .dc-division b{color:#111827}
+        .dc-related{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+    <div class="dc-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">call</i> 国际电话区号查询</h1>
+            <p>输入中文名、英文名、ISO 二字码或区号即筛国家，选国家即查区号与拨号格式示例；反向查区号（+86／86／0086 三种写法）；粘贴国际号码按最长区号匹配解析。收录 246 个国家／地区，区号以 ITU E.164 为准，全程浏览器本地查询，号码不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="dc-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：号码不出浏览器。</b>国家搜索、区号查询、号码解析全部在当前浏览器本地完成，不会上传到任何服务器；不引入任何第三方库与 CDN，页面除加载本站资源外无其他网络请求。</div>
+            </div>
+
+            <div class="dc-panel">
+                <h3>1. 国家搜索（输入即筛）</h3>
+                <div class="dc-field">
+                    <label for="dc-search">搜索国家／地区</label>
+                    <input class="dc-input" id="dc-search" type="text" spellcheck="false" placeholder="输入中文名、英文名、ISO 二字码或区号，例如：中国、Japan、GB、86" autocomplete="off">
+                </div>
+                <div class="dc-list" id="dc-list"><span class="dc-muted">正在加载国家列表……</span></div>
+                <div class="dc-detail" id="dc-detail"><span class="dc-muted">点上方列表中的国家，这里显示它的区号与拨号格式示例。</span></div>
+                <p class="dc-hint">支持中文名（如「中国」）、英文名（如「Japan」、大小写不敏感）、ISO 二字码（如「GB」）与区号数字（如「86」）四种筛法；留空显示全部收录国家。</p>
+            </div>
+
+            <div class="dc-panel">
+                <h3>2. 反向查区号</h3>
+                <div class="dc-field">
+                    <label for="dc-reverse">输入区号</label>
+                    <input class="dc-input" id="dc-reverse" type="text" spellcheck="false" placeholder="例如：+86、86 或 0086（三种写法均可）" autocomplete="off">
+                </div>
+                <div style="margin-top:.8rem" id="dc-reverse-result"><span class="dc-muted">输入区号（如 +86、86 或 0086）即可反查国家。</span></div>
+                <p class="dc-hint">+1（北美）、+7（俄罗斯／哈萨克斯坦）等区号由多国共享，反向查询会列出全部国家，拨打前请结合国家名确认。</p>
+            </div>
+
+            <div class="dc-panel">
+                <h3>3. 号码解析（最长区号匹配）</h3>
+                <div class="dc-field">
+                    <label for="dc-parse">粘贴国际号码</label>
+                    <input class="dc-input" id="dc-parse" type="text" spellcheck="false" placeholder="例如：+8613800000000 或 00814400000000" autocomplete="off">
+                </div>
+                <div style="margin-top:.8rem" id="dc-parse-result"><span class="dc-muted">粘贴一串以 + 或 00 开头的国际号码即可解析。</span></div>
+                <p class="dc-hint">按最长区号匹配拆出区号与本地号码；号码须以 + 或 00 开头，无法识别时明示「无法识别」，不猜测。</p>
+            </div>
+
+            <div class="dc-panel">
+                <h3>4. 常用国家速查（一键填入）</h3>
+                <div class="dc-chips" id="dc-quick"></div>
+                <p class="dc-hint">点一个国家即选中并显示它的区号与拨号格式示例：中国、美国、英国、日本、韩国、新加坡、中国香港、中国台湾、澳大利亚、德国。</p>
+            </div>
+
+            <div class="dc-panel">
+                <h3>5. 统计面板</h3>
+                <div class="dc-stats" id="dc-stats"><div class="dc-muted">正在统计收录数据……</div></div>
+            </div>
+
+            <div class="dc-panel">
+                <h3>6. 复制查询结果／清空</h3>
+                <div class="dc-actions">
+                    <button type="button" class="dc-btn dc-btn-primary" id="dc-copy-btn"><i class="material-icons">content_copy</i>复制查询结果</button>
+                    <button type="button" class="dc-btn" id="dc-clear"><i class="material-icons">clear</i>清空</button>
+                </div>
+                <div class="dc-copy-tip" id="dc-tip"></div>
+                <p class="dc-hint">「复制查询结果」复制当前选中国家与筛选列表的文本；「清空」还原全部输入与结果。</p>
+            </div>
+
+            <div class="dc-panel">
+                <h3>五条真限制</h3>
+                <div class="dc-limits">
+                    <div><b>1. 区号以 ITU E.164 国家区号为准：</b>本表区号以 ITU E.164 国家区号为准，开发轮逐条核对，核对日期 <code>2026-11-07</code>；个别国家／地区区号变更时以运营商／ITU 公布为准。</div>
+                    <div><b>2. +1、+7 等区号由多国共享：</b>+1（北美编号计划：美国、加拿大及加勒比等地）、+7（俄罗斯／哈萨克斯坦）等区号由多国共享，反向查询会列出全部国家，须结合国家名确认；北美编号计划成员在本表以「1＋地区码」形式收录（如巴哈马 +1242）。</div>
+                    <div><b>3. 拨号示例为格式演示：</b>拨号格式示例所用号码为占位号段（如 <code>138 0000 0000</code>），仅演示「+区号 本地号」与「00 区号 本地号」两种写法，非真实号码。</div>
+                    <div><b>4. 只做国家区号查询：</b>本工具<b>只做国家／地区国际电话区号查询</b>，<b>不做号码归属地查询</b>、<b>不做运营商查询</b>；查 IP 归属请用<a href="/tools/ip-lookup">IP 查询</a>，查时区请用<a href="/tools/timezone-converter">时区转换器</a>。</div>
+                    <div><b>5. 未收录不代表不存在：</b>部分国家／地区（如南极洲等）无公众电话区号，未收录不代表不存在，请以 ITU 公布为准；多米尼加另有 1829／1849、波多黎各另有 1939 备用区号，本表只收主区号。</div>
+                </div>
+            </div>
+
+            <div class="dc-panel">
+                <h3>常见问题</h3>
+                <dl class="dc-faq">
+                    <dt>从中国打国际电话，号码前面加什么？</dt>
+                    <dd>两种写法等价：<code>+区号 本地号</code>（如 <code>+86 138 0000 0000</code>）或 <code>00 区号 本地号</code>（如 <code>0086 138 0000 0000</code>）；手机上直接用 <code>+</code> 写法最方便，座机一般拨 <code>00</code> 开头。</dd>
+                    <dt>为什么查 +1 会列出好几个国家？</dt>
+                    <dd>+1 是北美编号计划（NANP）共享区号，美国、加拿大及巴哈马、牙买加等二十多个国家／地区共用 +1，再以地区码区分（如巴哈马 +1242、牙买加 +1876）；本表把美国与加拿大收录为 1，其余 NANP 成员以「1＋地区码」形式收录，反向查 +1 只返回美国与加拿大，查完整区号（如 +1242）可定位到具体国家／地区。</dd>
+                    <dt>号码解析为什么说「无法识别」？</dt>
+                    <dd>只有以 <code>+</code> 或 <code>00</code> 开头、且开头为已收录国家区号的号码才能解析；本地号码（如直接以 138 开头）没有国际前缀，本工具不猜测国家，会明示「无法识别」。</dd>
+                    <dt>这个工具能查手机号归属地或运营商吗？</dt>
+                    <dd>不能。本工具只做国家区号查询：查 IP 归属请用<a href="/tools/ip-lookup">IP 查询</a>，查时区请用<a href="/tools/timezone-converter">时区转换器</a>，三者分工不同。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。搜索、查询、解析、统计与复制全部在本地完成，不发起后端请求；本工具不引入任何第三方库与 CDN，你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="dc-panel">
+                <h3>相关工具</h3>
+                <p class="dc-division">分工说明：本工具<b>只做国家／地区国际电话区号查询</b>（选国家即查区号＋拨号格式示例、反向查区号、号码解析），<b>不做号码归属地</b>、<b>不做运营商查询</b>、<b>不做 IP／时区查询</b>；<a href="/tools/ip-lookup">IP 查询</a>是 IP 归属地的入口，<a href="/tools/timezone-converter">时区转换器</a>是多城市时区换算的入口，三者互不重叠。</p>
+                <div class="dc-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">国际电话区号查询（当前）</span>
+                    <a href="/tools/ip-lookup" class="btn btn-secondary" style="font-size:.9rem;">IP 查询</a>
+                    <a href="/tools/timezone-converter" class="btn btn-secondary" style="font-size:.9rem;">时区转换器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/dial_code_lookup.js?v=1"></script>
+</body>
+</html>
+{{end}}

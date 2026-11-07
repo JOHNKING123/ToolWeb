@@ -186,7 +186,7 @@ throws(function () { M.validateViewerState(null); }, "progress", "validateViewer
 
 /* ---------- 12. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 326, "注册 Path 总数 315→316");
+eq(pathCount, 327, "注册 Path 总数 315→316");
 has(GO_SRC, '"model_3d_viewer"', "注册：ID model_3d_viewer");
 has(GO_SRC, '"/tools/3d-model-viewer"', "注册：Path /tools/3d-model-viewer");
 has(GO_SRC, '"3d_rotation"', "注册：Icon 3d_rotation");

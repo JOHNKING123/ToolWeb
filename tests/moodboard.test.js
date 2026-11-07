@@ -178,7 +178,7 @@ has(JS_SRC, "validateBoardState", "JS：导入/恢复经 validateBoardState 校�
 
 /* ---------- 10. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 326, "注册 Path 总数 311→312");
+eq(pathCount, 327, "注册 Path 总数 311→312");
 has(GO_SRC, '"moodboard"', "注册：ID moodboard");
 has(GO_SRC, '"/tools/moodboard"', "注册：Path /tools/moodboard");
 has(GO_SRC, '"collections"', "注册：Icon collections");

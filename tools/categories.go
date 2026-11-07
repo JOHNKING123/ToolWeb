@@ -2194,6 +2194,15 @@ func GetCategories() []Category {
 					Icon:        "location_on",
 				},
 				{
+					ID:          "dial_code_lookup",
+					Name:        "国际电话区号查询",
+					Description: "国家搜索即筛，选国家即查区号与拨号格式示例（+区号／00 区号两种写法），反向查区号（+86／86／0086 三种写法，+1／+7 等共享区号列出全部国家），粘贴国际号码按最长区号匹配解析；收录 246 个国家／地区，区号以 ITU E.164 为准，全程本地零上传 · International dialing code lookup: country calling codes, reverse lookup, phone number parsing, 100% client-side",
+					Path:        "/tools/dial-code-lookup",
+					Icon:        "call",
+					New:         true,
+					Category:    "网络工具",
+				},
+				{
 					ID:          "my-ip",
 					Name:        "我的IP",
 					Description: "显示你的公网IP及归属地",

@@ -1,3 +1,116 @@
+## 今日任务（2026-11-07 13:39 · PM 选定轮，接通用调研第二百五十七轮）
+
+**选定：国际电话区号查询（dial_code_lookup）** — 本轮唯一任务（新工具）。
+
+**顺位**：257 轮 Top3 顺位递进第三席，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十七度裁定跳过**（沿用 231–256 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十六轮跳过后无新证据改变裁定，首席顺位留池，不冻结；另补一记：证件照半边口径站内已有「证件照裁剪排版」（id_photo_maker，/tools/id-photo-maker，1寸/2寸/小2寸/美签/护照尺寸预设已交付），速查表的证件照增量只剩规格文字表，社媒半边仍是鲜度负债）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），国际电话区号查询独立工具本体站内 0 交付。
+2. **口径互补确凿**：站内已有网络查询类工具，但无一做「国家→国际电话区号」——ip_lookup／my_ip 只做 IP 口径，timezone_converter 只做时区口径，domain-check 只做域名口径；本工具为**国家区号口径**（选国家即查区号＋拨号格式示例＋反向查区号＋号码解析），与三者形成「IP↔时区↔域名↔区号」出海查询家族分工互补（页面与互链须明示分工：本工具只做国家区号查询，不做号码归属地、不做运营商查询）。
+3. **需求验证**：打国际电话／填海外表单时不知道国家区号，只能现搜；浏览器选国家即查区号＋拨号格式示例、零上传。
+4. **技术路线有界**：纯前端小难度——静态国家-区号表本地查（约 240 个国家／地区，数据内嵌 JS，无独立数据文件），零新增依赖、零外部请求；静态数据弱点以来源锚定化解（见规格第 ⑨ 条：以 ITU E.164 国家区号为准，开发轮逐条核对，页面明示数据基准与共享区号情形）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外）：
+   - ASCII：`dial_code`／`phone_code`／`calling_code`／`country_code`／`social_image_size`／`social-image-size`／`sudoku` 全站（tools／templates／static／tests）**0 命中**——国际电话区号查询独立工具本体 0 交付，真缺口确凿。
+   - Icon：**`call` 首选**（`Icon:\s*"call"` 精确值 **0 命中**，全库唯一；备选 `contact_phone`／`phone_in_talk`／`flag` 精确值亦 0 命中；`dialpad`／`language`／`public` 已占用，不可用），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 json_graph_viewer `bubble_chart` e6dd 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十七度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）／二维码传文件／LaTeX 公式编辑器（弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 国家搜索：输入中文名／英文名／ISO 二字码／区号数字即筛，输入即筛 ② 选国家即查：区号（+86 形式）＋国家英文名＋ISO 码＋拨号格式示例（通用 `+区号 本地号` 与从中国拨打 `00 区号 本地号` 两种写法）③ 反向查区号：输入 `+86`／`86`／`0086` 任一写法查国家，多国共享区号（如 +1、+7）列出全部国家 ④ 号码解析：粘贴一串国际号码（`+` 或 `00` 开头），按最长区号匹配识别国家，拆出区号与本地号，无法识别明示「无法识别」不猜测 ⑤ 一键复制区号／完整拨号示例 ⑥ 常用国家速查一键填入（中国／美国／英国／日本／韩国／新加坡／香港／台湾／澳大利亚／德国）⑦ 统计面板（收录国家／地区数／共享区号组数／当前筛选结果数）⑧ 复制查询结果文本／清空 ⑨ 数据来源：静态国家-区号表内嵌 JS（约 240 个国家／地区，含港澳台；以 ITU E.164 国家区号为准，开发轮逐条核对，文件头注释注明数据基准与核对日期；区号变更时以运营商／ITU 公布为准）⑩ 互链：ip_lookup（"IP 查询"）、timezone_converter（"时区转换器"），页面须明示分工（本工具只做国家区号查询，不做号码归属地、不做运营商查询、不做 IP／时区查询）⑪ 全程浏览器本地计算，零上传、零外部接口 ⑫ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.DialCodeLookup 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `getAllCountries()` → [{name, nameEn, iso, dialCode}]（全部收录国家／地区；按区号数字升序、同一区号按中文名排序；每项 name／nameEn 非空字符串、iso 为 2 位大写字母、dialCode 为纯数字字符串不含 `+`；iso 全库唯一）。
+  - `searchCountries(query)` → [{name, nameEn, iso, dialCode}]（query 非字符串 err.field='query'；空串／纯空白返回全部；匹配中文名／英文名（含大小写不敏感子串）／ISO（大小写不敏感）／区号数字子串；返回顺序同 getAllCountries）。
+  - `getByIso(iso)` → {name, nameEn, iso, dialCode}（iso 非字符串或非 2 位字母 err.field='iso'；大小写不敏感；未知 ISO 抛错 err.field='iso'，message 含「未收录」）。
+  - `getByDialCode(code)` → [{name, nameEn, iso, dialCode}]（code 非字符串 err.field='code'；接受 `+86`／`86`／`0086` 三种写法，非法写法（如空串／含字母／`+` 后非数字）抛错 err.field='code'；无匹配返回空数组，不抛错；共享区号返回全部国家）。
+  - `formatExample(iso)` → string（iso 非法 err.field='iso'，同 getByIso；返回拨号格式示例，如中国返回含 `+86` 的示例串；示例号码为格式演示，须用明显占位号段如 138 0000 0000，不得使用疑似真实号码）。
+  - `parseNumber(input)` → {dialCode, nationalNumber, countries} | null（input 非字符串 err.field='input'；接受 `+` 或 `00` 开头，剥离空格与连字符后按最长区号匹配；无法识别（无 `+`／`00` 前缀、或前缀后无匹配区号）返回 null，不抛错；countries 为共享该区号的国家数组）。
+- **数值锚点（测试精确值）**：getByIso：('CN').dialCode→'86'；('US')→'1'；('GB')→'44'；('JP')→'81'；('KR')→'82'；('HK')→'852'；('MO')→'853'；('TW')→'886'；('cn') 大小写不敏感→'86'。getByIso('XX')／('')／(123) 抛错 err.field='iso'（'XX' 的 message 含「未收录」）。getByDialCode：('86') 长度 1 且含 CN；('+86') 同；('0086') 同；('1') 长度 ≥2（含 US 与 CA）；('7') 长度 ≥2（含 RU 与 KZ）；('999')→空数组；('')／('abc')／('+') 抛错 err.field='code'。searchCountries：('中国') 含 CN；('86') 含 CN；('united') 含 US 与 GB（大小写不敏感）；('') 长度等于 getAllCountries() 长度；(123) 抛错 err.field='query'。parseNumber：('+8613800000000')→dialCode '86'、countries 含 CN；('00814400000000')→'81'；('12345')→null；(123) 抛错 err.field='input'。formatExample('CN') 含 '+86'。getAllCountries() 长度 ≥200，每项 iso 唯一，dialCode 全为纯数字字符串。
+- **真限制五条页面明示**：① 区号以 ITU E.164 国家区号为准，个别国家／地区区号变更时以运营商／ITU 公布为准，页面注明数据核对日期；② +1（北美）、+7（俄罗斯／哈萨克斯坦）等区号由多国共享，反向查询会列出全部国家，须结合国家名确认；③ 拨号示例为格式演示，所用号码为占位号段，非真实号码；④ 本工具只做国家区号查询，不做号码归属地、不做运营商查询；⑤ 部分国家／地区（如南极洲等）无公众电话区号，未收录不代表不存在，请以 ITU 公布为准。
+- **SEO**：国际电话区号、国家区号查询、拨打国际电话、国际区号表。
+- **改动文件**：tools/categories.go（「网络工具」类目新增 dial_code_lookup 条目，紧邻 ip_lookup，Path 326→**327**，Icon `call` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph）／templates/dial_code_lookup.html（新，define "dial_code_lookup"）／static/js/dial_code_lookup.js（新，window.DialCodeLookup；静态国家-区号表内嵌，零新增依赖，零外部请求）／tests/dial_code_lookup.test.js（新）／全量旧 tests Path 断言 326→327 数值同步（开发轮实测基数：上轮 160 个测试文件含 325 字面量，本轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥120 断言全过（区号锚点精确值、getByDialCode 共享区号、searchCountries 大小写不敏感、parseNumber 最长匹配、非法参数 err.field、收录数下限、模板零外部静态资源检查——页面无 CDN 链接）② 全量 tests/*.test.js 212→**213** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/dial-code-lookup 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：国家搜索输入即筛可用 → 选国家即查区号＋拨号示例可用 → 反向查区号（含 +1／+7 共享列出全部）可用 → 号码解析可用 → 复制／清空可用 → 五条真限制可见 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「网络工具」类目（与 ip_lookup／my_ip／domain-check 同类目，出海查询家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**规格修正（上一轮遗留，PM 本轮闭环）**：汉字笔顺查询规格数值锚点「日→2」**修正为「日→4」**（《现代汉语通用字笔顺规范》：日 4 画；数据集与开发轮实测亦为 4，开发轮已按规范取 4；原规格锚点有误，特此修正，后续轮次引用以 4 为准）。
+
+**顺位递进链更新**：国际电话区号查询→本轮交付（257 研究轮第三席递进；PM 定序权裁定首席社媒表第二十七度跳过（数据表负债从严，231–256 轮逻辑沿用；另补证件照口径已有 id_photo_maker 尺寸预设）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII dial_code／phone_code／calling_code／country_code 全 0 命中；Icon `call` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；纯前端小难度，静态国家-区号表内嵌，零新增依赖；静态数据弱点以 ITU E.164 锚定＋核对日期化解）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十七度跳过）／数独游戏→P3 观察维持／汉字笔顺查询→已交付划出（4607b5d，326 Path，212 tests；规格锚点「日→2」本轮 PM 修正为 4）／罗马数字转换→已交付划出（bc4f932＋df68d9e，325 Path，211 tests）／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，本地 HEAD 与 origin/muse/dev-20260929 一致（4607b5d，汉字笔顺查询已提交；注：不带该环境变量的 fetch 仍报 Permission denied (publickey)，系 VM 换机清空 known_hosts 老问题，StrictHostKeyChecking=no 自动补记后恢复）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **326**；`ls tests/*.test.js | wc -l` = **212**；PM 独立零重叠复核（ASCII `dial_code`／`phone_code`／`calling_code`／`country_code`／`social_image_size`／`social-image-size`／`sudoku` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；Icon `call`／`contact_phone`／`phone_in_talk`／`flag` 精确值 0 命中，`dialpad`／`language`／`public` 已占用）；package.json 不存在（Go 工程，无 package.json，以 tools/categories.go＋tests 为准）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 13:38 · 产品调研推荐，第二百五十七轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：汉字笔顺查询已交付闭环（4607b5d 新增：`/tools/hanzi-stroke-order`，Path 总数 325→**326**，tests **212 个**；新测试 250 断言全过；首批收录 957 个最常用汉字，数据文件 1468903 字节；Icon `edit` 官方 codepoints e3c9 全库唯一——规格首选 `stylus` 不在经典 Material Icons v145，开发轮改用已验真 edit；另：规格锚点「日→2」与《现代汉语通用字笔顺规范》（日 4 画）及数据冲突，开发轮以规范为准取 4，规格待 PM 修正），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 仍 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十六度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **国际电话区号查询** — **顺位递进第三席**（汉字笔顺查询交付后池内递进）。痛点：打国际电话／填海外表单时不知道国家区号，只能现搜；浏览器选国家即查区号＋拨号格式示例、零上传。实现纯前端小难度（静态国家-区号表＋搜索＋复制，零上传）。站内零重叠本轮复测：ASCII `dial_code`／`phone_code`／`calling_code`／`country_code` 全站 **0 命中**，独立工具本体 0 交付。**弱点**：静态数据表、人群窄（偶发查询）。SEO：国际电话区号、国家区号查询、拨打国际电话。建议 ID dial_code_lookup、Path /tools/dial-code-lookup；Icon `call` 精确值 **0 命中**（备选 `contact_phone`／`phone_in_talk`／`flag` 亦 0 命中；开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定）。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十六度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 国际电话区号查询 | **顺位递进第三席**：汉字笔顺查询交付后池内递进；whispr.dev 11-06 信号；`dial_code`／`phone_code`／`calling_code`／`country_code` 本轮复测全 **0 命中**；纯前端小难度；**弱点**：静态数据表、人群窄 | 小 | P3（顺位递进） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 沿用复测 0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 沿用复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord_finder` 沿用复测 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 二维码传文件（扫码跨设备传文件） | 弱观察维持；Show HN ShadowCat 信号；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send` 沿用复测全 0 命中；纯前端中难度；**弱点**：双设备流程、扫码可靠性与速率（约 100kB/s 级）、人群窄 | 中 | P3（弱观察） |
+| LaTeX 公式编辑器/预览 | 弱观察维持；WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 沿用复测 **0 命中**；纯前端小-中难度；**弱点**：KaTeX 字体文件 vendor 体量与模板零外部资源惯例的权衡、人群窄（学生／科研／教师） | 小-中 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 汉字笔顺查询 | 已交付划出（4607b5d 新增：`/tools/hanzi-stroke-order`，Path 325→326，tests 212 个；新测试 250 断言全过；首批收录 957 字，数据文件 1468903 字节；Icon `edit` 官方 codepoints e3c9 全库唯一；规格锚点「日→2」与笔顺规范（日 4 画）冲突待 PM 修正） | — | 已实现 |
+| 罗马数字转换（阿拉伯数字↔罗马数字） | 已交付划出（bc4f932 新增＋df68d9e 契约对齐：`/tools/roman-numeral-converter`，Path 324→325，tests 211 个；新测试 279→281 断言全过；Icon `history_edu` 官方 codepoints ea3e 全库唯一） | — | 已实现 |
+| 汉字转拼音 | 已交付划出（f4c9b3a 新增＋285501a 评审修复：`/tools/pinyin-converter`，Path 323→324，tests 210 个；新测试 194 断言全过；Icon `spellcheck` 官方 codepoints e8ce 全库唯一；字表 8109 条覆盖《通用规范汉字表》全部 8105 字） | — | 已实现 |
+| Excel 查看器（XLSX 在线预览） | 已交付划出（a36583f 新增：`/tools/xlsx-viewer`，Path 322→323，tests 209 个；新测试 195 断言全过；Icon `view_module` 全库唯一） | — | 已实现 |
+| 简繁转换（繁简互转） | 已交付划出（c352255 新增：`/tools/traditional-simplified-converter`，Path 321→322，tests 208 个；新测试 399 断言全过；Icon `g_translate` 全库唯一） | — | 已实现 |
+| JSON 结构图可视化（JSON Crack 模式） | 已交付划出（5c0e61c 新增＋399c1cb 导出双致命 bug 修复：`/tools/json-graph-viewer`，Path 320→321，tests 207 个；新测试 303→330 断言全过；Icon `bubble_chart` 全库唯一） | — | 已实现 |
+| 数据库 ER 图生成器（文本建表 → 关系图） | 已交付划出（5b196ef 新增＋dd70eac 修复：`/tools/er-diagram-generator`，Path 319→320，tests 206 个；新测试 203 断言全过；Icon `dataset` 全库唯一） | — | 已实现 |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（5a6d12b 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-07 11:36~13:38 窗口；本轮**新入池 0 个**，全部消解——站内覆盖度已极高，今日多份榜单的“新工具”站内均已交付）：
+- Medium「7 Free Browser Tools Worth Bookmarking This October」（10-18）→ 消解：SyncWhen 免注册会议投票 → 需多用户投票＋分享链接后端，消解；SortaSeat 婚礼座位表 → **wedding_seating_chart 已交付**；OldRoll 复古滤镜 → **img-retro-filter 已交付**；StitchCraft 照片转十字绣 → **cross_stitch_pattern 已交付**（ID 实测存在）；urPiano 浏览器钢琴 → **online-piano 已交付**；Calcy 记事本计算器 → **unit_calc_notepad 已交付**（模板 keywords 含 Calcy）；llmspeed 本地 AI 模型测速 → 硬件基准数据＋人群极窄，消解。
+- stiltcode「5 Tiny, Free Web Tools」（10-16）→ 消解：Squoosh → **img-compress 已交付**；Diffchecker → **document-diff 已交付**；CleanURL → **url-tracker-cleaner 已交付**；ILovePDF → PDF 合并／拆分／压缩家族已交付；Hemingway → **readability_analyzer 已交付**。
+- YouTube「10 Web Tools So Good They Feel Illegal」（10-26）→ 消解：Regex101 → **regex-tester 已交付**（另有 regex-explainer／regex-generator）；TypeLit 打字练经典书 → **typing-practice 已交付**；Wormhole P2P 传文件 → 需信令服务端，消解；Invoice-Generator → 业务单据类，方向修正边界外，消解；SMMRY → **text-summarizer 已交付**；Coolors → **color-palette-generator 已交付**；Fontjoy → **font-pairing-preview 已交付**；AudioMass 在线音频编辑 → **audio-merger／audio-trimmer 已交付**；Excalidraw → **doodle-board 已交付**；PhotoRoom 抠图 → 图片智能抠图候选已在池（弱观察）。
+- thetechbasket「75 Most Useful Websites」（10 月实测）／techtippr 榜单／dreamboat.kr（11-06 更新）→ 目录站泛信号：PDF／图片／格式转换类均为已交付口径；WeTransfer／FilePizza 大文件发送 → 需服务端，与二维码传文件候选同类弱点，消解；其余均为 SaaS／账号制。
+- Medium Dwayne Johnson「7 Free Online Tools」（11-04）→ 消解：贷款／定投计算器为财务计算器，方向修正排除；SERP 摘要预览 → **serp-snippet-preview 已交付**；文本清理类 → 站内文本工具家族已交付口径。
+
+**候选池变动**：汉字笔顺查询交付划出（4607b5d，326 Path，212 tests；Icon `edit` e3c9——规格首选 `stylus` 不在经典 Material Icons v145；规格锚点「日→2」与笔顺规范（日 4 画）冲突待 PM 修正）；**国际电话区号查询顺位递进第三席**；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十六度跳过）；数独游戏 P3 观察维持第二席；G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；二维码传文件／LaTeX 公式编辑器弱观察维持；WPS 候选表保持冻结归档；**本轮新入池 0 个**。
+
+**交付核对**：本地当前分支 muse/dev-20260929，本地 HEAD 与 origin/muse/dev-20260929 一致（4607b5d，汉字笔顺查询已提交）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功（known_hosts 由 StrictHostKeyChecking=no 自动补记）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **326**；`ls tests/*.test.js | wc -l` = **212**；站内零重叠复核（ASCII `social_image_size`／`social-image-size`／`sudoku`／`dial_code`／`phone_code`／`calling_code`／`country_code` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`cross_stitch` 命中即 cross_stitch_pattern 已交付本体（tools/categories.go:1691 ID＋模板＋JS）；`seating_chart` 命中即 wedding_seating_chart 已交付本体；`calcy` 命中即 unit_calc_notepad 已交付本体（模板 keywords 含 Calcy）；`palette_generator`／`regex_tester`／`typing_test`／`retro_filter`／`audio_editor` 命中均为对应已交付工具本体；Icon `call`／`contact_phone`／`phone_in_talk`／`flag` 精确值 0 命中（`dialpad` 1 命中、`language` 1 命中、`public` 2 命中已占用）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-07 11:43 · PM 选定轮，接通用调研第二百五十六轮）
 
 **选定：汉字笔顺查询（hanzi_stroke_order）** — 本轮唯一任务（新工具）。

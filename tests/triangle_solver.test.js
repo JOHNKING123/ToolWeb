@@ -245,7 +245,7 @@ var iconRe = /"change_history"/g, iconHits = (GO_SRC.match(iconRe) || []).length
 eq(iconHits, 1, "Icon change_history 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 326, "注册 Path 总数 285→286");
+eq(pathCount, 327, "注册 Path 总数 285→286");
 
 /* ---------- 12. 模板：SEO/真限制/零外部资源 ---------- */
 has(TPL_SRC, "{{define \"triangle_solver\"}}", "模板定义 triangle_solver");

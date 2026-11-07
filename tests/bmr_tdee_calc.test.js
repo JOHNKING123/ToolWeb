@@ -156,7 +156,7 @@ var iconRe = /"local_fire_department"/g, iconHits = (GO_SRC.match(iconRe) || [])
 eq(iconHits, 1, "Icon local_fire_department 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 326, "注册 Path 总数 284→285");
+eq(pathCount, 327, "注册 Path 总数 284→285");
 
 /* ---------- 7. 模板：SEO/真限制/三向互链/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/bmr-tdee-calc", "模板 canonical 含新 Path");

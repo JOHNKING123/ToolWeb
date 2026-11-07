@@ -157,7 +157,7 @@ var iconHits = (GO_SRC.match(/Icon:\s+"brush"/g) || []).length;
 eq(iconHits, 1, "Icon brush 精确值复测锁定：全库唯一 1 处");
 var pathCount = {};
 GO_SRC.replace(/"(\/tools\/[^"]+)"/g, function (_, p) { pathCount[p] = 1; return p; });
-eq(Object.keys(pathCount).length, 326, "注册总数 295→295 Path");
+eq(Object.keys(pathCount).length, 327, "注册总数 295→295 Path");
 ok(JS_SRC.indexOf("fetch(") === -1 && JS_SRC.indexOf("XMLHttpRequest") === -1,
   "JS 零 fetch/XHR");
 ok(TPL_SRC.indexOf('src="http') === -1 && TPL_SRC.indexOf("cdn.") === -1,
