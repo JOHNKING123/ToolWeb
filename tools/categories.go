@@ -263,6 +263,15 @@ func GetCategories() []Category {
 					New:         true,
 					Category:    "编码转换",
 				},
+				{
+					ID:          "pinyin_converter",
+					Name:        "汉字转拼音",
+					Description: "汉字转拼音/拼音查询/中文拼音转换：粘贴中文文本即转拼音（带声调符号／数字声调／无声调三种样式＋首字母模式），逐字对照表与纯拼音输出，多音字标注全部候选读音可点切换（默认最常用读音），未收录字原样保留并列清单，5 组预设示例（日常问候／古诗／生僻字／姓名／绕口令），字表覆盖《通用规范汉字表》全部 8105 字，只做汉字注音，全程浏览器本地转换零上传 · Chinese pinyin converter: convert Chinese characters to pinyin locally, tone marks, tone numbers, no tones or initials, polyphone candidates switchable, 100% client-side",
+					Path:        "/tools/pinyin-converter",
+					Icon:        "spellcheck",
+					New:         true,
+					Category:    "编码转换",
+				},
 			},
 		},
 		{

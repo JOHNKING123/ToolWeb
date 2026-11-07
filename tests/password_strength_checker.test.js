@@ -269,7 +269,7 @@ has(JS_SRC, "10^10", "JS 明示离线破解假设 10^10 次/秒");
 
 /* ---------- 11. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 323, "注册 Path 总数 303→304");
+eq(pathCount, 324, "注册 Path 总数 303→304");
 has(GO_SRC, 'ID:          "password_strength_checker"', "注册：ID password_strength_checker");
 has(GO_SRC, 'Path:        "/tools/password-strength-checker"', "注册：Path /tools/password-strength-checker");
 has(GO_SRC, 'Icon:        "gauge"', "注册：Icon gauge");

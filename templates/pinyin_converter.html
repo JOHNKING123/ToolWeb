@@ -1,0 +1,223 @@
+{{define "pinyin_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字转拼音 - 中文拼音转换/汉字注音在线工具 | 程序员工具箱</title>
+    <meta name="description" content="免费在线汉字转拼音工具：粘贴中文文本即转拼音，浏览器本地转换零上传；带声调符号／数字声调／无声调三种样式＋首字母模式，逐字对照表与纯拼音输出，多音字标注全部候选读音可点切换，未收录字清单，5 组预设示例，全程本地零上传。Free online Chinese pinyin converter: convert Chinese characters to pinyin locally, tone marks, tone numbers, no tones or initials, polyphone candidates switchable, 100% client-side.">
+    <meta name="keywords" content="汉字转拼音,拼音查询,中文拼音转换,汉字注音,中文转拼音,拼音转换器,汉字拼音,汉语拼音,拼音注音,多音字查询,chinese pinyin converter,pinyin converter,hanzi to pinyin">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/pinyin-converter">
+    <meta property="og:title" content="汉字转拼音 - 中文拼音转换/汉字注音在线工具">
+    <meta property="og:description" content="粘贴中文文本即转拼音：三种声调样式＋首字母模式，多音字标注候选可点切换，未收录字清单，全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/pinyin-converter">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"汉字转拼音","description":"免费在线汉字转拼音工具：粘贴中文文本即转拼音，三种声调样式＋首字母模式，多音字标注候选可点切换，未收录字清单，5 组预设示例，全程浏览器本地转换零上传。","url":"https://www.johnkingzcq123.xyz/tools/pinyin-converter","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .py-wrap .navbar .material-icons { display: none; }
+        .py-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .py-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .py-privacy b{color:#047857}
+        .py-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .py-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .py-opts{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center;margin-bottom:.9rem;font-size:.95rem;color:#111827}
+        .py-opts label{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+        .py-opts input{accent-color:#2563eb}
+        .py-opts .py-opt-group{display:inline-flex;gap:.9rem;flex-wrap:wrap;align-items:center}
+        .py-opts .py-opt-sep{color:#d1d5db}
+        .py-input{width:100%;box-sizing:border-box;min-height:11rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1rem;font-family:"PingFang SC","Microsoft YaHei",sans-serif;resize:vertical;line-height:1.9}
+        .py-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .py-output{background:#f9fafb}
+        .py-meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .py-count{font-size:.85rem;color:#6b7280}
+        .py-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+        .py-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .py-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .py-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .py-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .py-btn .material-icons{font-size:1.1rem}
+        .py-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .py-error{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+        .py-presets{display:flex;gap:.5rem;flex-wrap:wrap}
+        .py-preset-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer}
+        .py-preset-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .py-stats{display:flex;gap:.6rem;flex-wrap:wrap}
+        .py-stat{flex:1 1 6.5rem;min-width:6.5rem;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .7rem;
+            background:#f9fafb;text-align:center}
+        .py-stat b{display:block;font-size:1.25rem;color:#111827}
+        .py-stat span{font-size:.82rem;color:#6b7280}
+        .py-muted{color:#9ca3af;font-size:.9rem}
+        .py-annotated{line-height:2.1;font-size:.95rem;color:#111827}
+        .py-cell{display:inline-block;text-align:center;min-width:2.2em;padding:.15rem .2rem;margin:.1rem .05rem;
+            border:1px solid transparent;border-radius:.4rem;vertical-align:top}
+        .py-cell b{display:block;font-size:1.05rem;font-weight:600}
+        .py-cell span{display:block;font-size:.85rem;color:#2563eb}
+        .py-poly{border-color:#fde68a;background:#fffbeb;cursor:pointer}
+        .py-poly:hover{border-color:#2563eb;background:#eff6ff}
+        .py-unknown-cell span{color:#9ca3af}
+        .py-poly-note{border:2px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:.6rem;
+            padding:.6rem .9rem;margin-bottom:.6rem;line-height:1.7}
+        .py-poly-item{padding:.35rem 0;border-bottom:1px dashed #e5e7eb;line-height:1.9;font-size:.95rem;color:#111827}
+        .py-poly-item:last-child{border-bottom:none}
+        .py-cand{display:inline-block;border:1px solid #d1d5db;border-radius:.35rem;padding:0 .45rem;margin:0 .15rem;
+            background:#f9fafb;color:#374151;cursor:pointer;font-size:.9rem}
+        .py-cand:hover{border-color:#2563eb;color:#2563eb}
+        .py-cand-chosen{border-color:#2563eb;background:#eff6ff;color:#2563eb;font-weight:600}
+        .py-unknown-note{border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;
+            padding:.6rem .9rem;margin-bottom:.6rem;line-height:1.7}
+        .py-unknown-list{display:flex;gap:.4rem;flex-wrap:wrap}
+        .py-unknown-char{display:inline-block;border:1px solid #fca5a5;background:#fef2f2;color:#b91c1c;
+            border-radius:.35rem;padding:.15rem .5rem;font-size:1rem}
+        .py-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .py-limits div{line-height:1.9;font-size:.95rem;color:#374151}
+        .py-limits b{color:#111827}
+        .py-limits code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .py-faq dt{font-weight:600;color:#111827;margin:.7rem 0 .2rem}
+        .py-faq dd{margin:0;color:#374151;line-height:1.9;font-size:.95rem}
+        .py-faq code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .py-division{line-height:1.9;font-size:.95rem;color:#374151}
+        .py-division b{color:#111827}
+        .py-related{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+        @media (max-width:860px){
+            .py-input{min-height:8rem}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+    <div class="py-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">spellcheck</i> 汉字转拼音</h1>
+            <p>粘贴中文文本即转拼音：三种声调样式＋首字母模式，逐字对照表与纯拼音输出，多音字标注全部候选读音可点切换，未收录字原样保留并列清单。全程浏览器本地转换，文本不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="py-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：文本不出浏览器。</b>粘贴的文本只在当前浏览器本地转换，不会上传到任何服务器；不引入任何第三方库与 CDN，页面除加载本站资源外无其他网络请求。</div>
+            </div>
+
+            <div class="py-panel">
+                <h3>1. 粘贴文本（最多 20000 字）</h3>
+                <div class="py-opts">
+                    <span class="py-opt-group" role="radiogroup" aria-label="声调样式">
+                        <label><input type="radio" name="py-tone" value="mark" checked> 带声调符号（nǐ hǎo）</label>
+                        <label><input type="radio" name="py-tone" value="number"> 数字声调（ni3 hao3）</label>
+                        <label><input type="radio" name="py-tone" value="none"> 无声调（ni hao）</label>
+                    </span>
+                    <span class="py-opt-sep">|</span>
+                    <label><input type="checkbox" id="py-initials"> 首字母模式（nh）</label>
+                </div>
+                <textarea class="py-input" id="py-input" spellcheck="false" placeholder="在这里粘贴要注音的中文文本，例如：&#10;&#10;你好，很高兴认识你。&#10;&#10;或点下方预设示例一键载入。"></textarea>
+                <div class="py-meta">
+                    <span class="py-count" id="py-count">0 / 20000 字</span>
+                    <div class="py-actions">
+                        <button type="button" class="py-btn py-btn-primary" id="py-convert-btn"><i class="material-icons">spellcheck</i>转换</button>
+                        <button type="button" class="py-btn" id="py-clear"><i class="material-icons">delete_sweep</i>清空</button>
+                    </div>
+                </div>
+                <div class="py-error" id="py-err" role="alert"></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>预设示例（一键载入）</h3>
+                <div class="py-presets" id="py-presets"></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>2. 统计面板</h3>
+                <div class="py-stats" id="py-stats"><div class="py-muted">转换后，这里显示输入字数、汉字数、已转换数、多音字数与未收录数。</div></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>3. 纯拼音文本</h3>
+                <textarea class="py-input py-output" id="py-output" spellcheck="false" readonly placeholder="纯拼音文本会出现在这里"></textarea>
+                <div class="py-meta">
+                    <span></span>
+                    <div class="py-actions">
+                        <button type="button" class="py-btn py-btn-primary" id="py-copy-btn"><i class="material-icons">content_copy</i>一键复制拼音</button>
+                        <button type="button" class="py-btn" id="py-copy-annotated-btn"><i class="material-icons">content_copy</i>复制对照文本</button>
+                        <button type="button" class="py-btn" id="py-download-btn"><i class="material-icons">file_download</i>下载 .txt</button>
+                    </div>
+                </div>
+                <div class="py-copy-tip" id="py-tip"></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>4. 逐字对照表（汉字／拼音两行对齐）</h3>
+                <div class="py-annotated" id="py-annotated"><span class="py-muted">转换后，这里逐字对照显示汉字与拼音；多音字点一下拼音即可切换读音。</span></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>5. 多音字标注（请点选核对）</h3>
+                <div class="py-annotated" id="py-poly"><span class="py-muted">转换后，多音字会在这里逐字列出全部候选读音，点一下即可切换。</span></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>6. 未收录字清单（待人工核对）</h3>
+                <div class="py-annotated" id="py-unknown"><span class="py-muted">转换后，不在字表内的汉字会在这里列出，原文中原样保留。</span></div>
+            </div>
+
+            <div class="py-panel">
+                <h3>五条真限制</h3>
+                <div class="py-limits">
+                    <div><b>1. 多音字无语境消歧，须人工核对：</b>多音字默认最常用读音（如「行」<code>xíng／háng</code>、「长」<code>cháng／zhǎng</code>），工具不做语境消歧，务必点选核对；正式场合（姓名／公文）请人工复核。</div>
+                    <div><b>2. 表外字原样保留：</b>字表覆盖《通用规范汉字表》全部 <code>8105</code> 字（一级 <code>3500</code> 字全覆盖）＋生僻字增补，表外字一律原样保留并列入「未收录字清单」，需人工注音，不猜测读音。</div>
+                    <div><b>3. 轻声／儿化按单字注音，不做连读变调：</b>「不」<code>bù→bú</code>、「一」<code>yī→yí／yì</code>、三声连读变调均不处理；轻声字按单字读音标注，不做连读处理。</div>
+                    <div><b>4. 姓名读音以本人／户籍为准：</b>姓氏多音请点选切换（如「单」<code>shàn／dān</code>、「曾」<code>zēng／céng</code>、「解」<code>xiè／jiě</code>），工具默认读音不能替代本人确认。</div>
+                    <div><b>5. 繁体字仅表内收录者可转：</b>繁体字仅字表收录者可注音，其余请先用<a href="/tools/traditional-simplified-converter">简繁转换</a>转简体再注音；本工具不做简繁互转。</div>
+                </div>
+            </div>
+
+            <div class="py-panel">
+                <h3>常见问题</h3>
+                <dl class="py-faq">
+                    <dt>多音字「行」为什么默认读 xíng？</dt>
+                    <dd>因为「行」最常用的读音是 <code>xíng</code>（行走／行动），<code>háng</code>（银行／行家）次之。工具默认最常用读音、不做语境消歧；点一下对照表里的多音字拼音，或在「多音字标注」一栏点选候选，即可切换。</dd>
+                    <dt>「一」和「不」变调后读什么？</dt>
+                    <dd>本工具按单字注音，不做连读变调：「一」始终标 <code>yī</code>，「不」始终标 <code>bù</code>；实际口语中的变调（<code>yí／yì</code>、<code>bú</code>）请按语境自行处理。</dd>
+                    <dt>有些字没有拼音，是漏转了吗？</dt>
+                    <dd>不是漏转。标点、英文、数字本来就没有拼音，原样保留；不在字表内的罕见汉字也会原样保留，并列入「未收录字清单」待人工注音。</dd>
+                    <dt>首字母模式有什么用？</dt>
+                    <dd>勾选「首字母模式」后，每个汉字只输出主读音的首字母（如「你好世界」→ <code>nhsj</code>），方便做输入法检索、首字母缩写与快速索引。</dd>
+                    <dt>我的文本会被上传吗？</dt>
+                    <dd>不会。转换、统计、标注与导出全部在本地完成，不发起后端请求；本工具不引入任何第三方库与 CDN，你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="py-panel">
+                <h3>相关工具</h3>
+                <p class="py-division">分工说明：本工具<b>只做汉字注音</b>，<b>不做简繁互转</b>、<b>不做字符编码转换</b>、<b>不做 URL 别名生成</b>；<a href="/tools/traditional-simplified-converter">简繁转换</a>是字形简繁互转的入口，<a href="/tools/encoding-converter">中文编码转换器</a>是中文与 <code>\uXXXX</code> 转义、乱码恢复的入口，<a href="/tools/slug-generator">Slug 生成器</a>是标题转 URL 别名的入口（它只借拼音做别名），四者互不重叠。</p>
+                <div class="py-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">汉字转拼音（当前）</span>
+                    <a href="/tools/slug-generator" class="btn btn-secondary" style="font-size:.9rem;">Slug 生成器</a>
+                    <a href="/tools/traditional-simplified-converter" class="btn btn-secondary" style="font-size:.9rem;">简繁转换</a>
+                    <a href="/tools/encoding-converter" class="btn btn-secondary" style="font-size:.9rem;">中文编码转换器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/pinyin_converter.js?v=1"></script>
+</body>
+</html>
+{{end}}

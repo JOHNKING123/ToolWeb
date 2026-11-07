@@ -175,7 +175,7 @@ has(JS_SRC, "系统字体栈", "JS 明示系统字体栈口径");
 
 /* ---------- 10. categories.go 注册 ---------- */
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 323, "注册 Path 总数 309→310");
+eq(pathCount, 324, "注册 Path 总数 309→310");
 has(GO_SRC, 'ID:          "font_pairing_preview"', "注册：ID font_pairing_preview");
 has(GO_SRC, 'Path:        "/tools/font-pairing-preview"', "注册：Path /tools/font-pairing-preview");
 has(GO_SRC, 'Icon:        "text_format"', "注册：Icon text_format");

@@ -160,7 +160,7 @@ eq(M.sanitizeFileName('..data..'), 'data', "文件名：首尾点清理");
 has(GO_SRC, '"decision_wheel"', "注册：ID decision_wheel");
 has(GO_SRC, '"/tools/decision-wheel"', "注册：Path /tools/decision-wheel");
 var pathCount = (GO_SRC.match(/"\/tools\/[^"]+"/g) || []).filter(function (v, i, a) { return a.indexOf(v) === i; }).length;
-eq(pathCount, 323, "注册：Path 总数 296→297");
+eq(pathCount, 324, "注册：Path 总数 296→297");
 has(GO_SRC, '"album"', "注册：Icon album");
 eq((GO_SRC.match(/Icon:\s*"album"/g) || []).length, 1, "注册：Icon album 全库唯一");
 has(GO_SRC, '"生活工具"', "注册：类目 生活工具");
