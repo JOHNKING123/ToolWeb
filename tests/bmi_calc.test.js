@@ -152,7 +152,7 @@ var iconRe = /"monitor_weight"/g, iconHits = (GO_SRC.match(iconRe) || []).length
 eq(iconHits, 1, "Icon monitor_weight 精确值复测锁定：全库唯一 1 处");
 var pathRe = /"\/tools\/[^"]+"/g, seen = {}, mm, pathCount = 0;
 while ((mm = pathRe.exec(GO_SRC)) !== null) { if (!seen[mm[0]]) { seen[mm[0]] = true; pathCount++; } }
-eq(pathCount, 324, "注册 Path 总数 283→284");
+eq(pathCount, 325, "注册 Path 总数 283→284");
 
 /* ---------- 7. 模板：SEO/真限制/双向互链/零外部资源 ---------- */
 has(TPL_SRC, "https://www.johnkingzcq123.xyz/tools/bmi-calc", "模板 canonical 含新 Path");

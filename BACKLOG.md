@@ -1,3 +1,118 @@
+## 今日任务（2026-11-07 09:39 · PM 选定轮，接通用调研第二百五十五轮）
+
+**选定：罗马数字转换（阿拉伯数字↔罗马数字）（roman_numeral_converter）** — 本轮唯一任务（新工具）。
+
+**顺位**：255 轮 Top3 顺位递进第三席，PM 行使定序权。首席社媒/证件照尺寸速查表 → PM **第二十五度裁定跳过**（沿用 231–254 轮「数据表负债从严」逻辑：平台规格偶发变更、错表误导用户；二十四轮跳过后无新证据改变裁定，首席顺位留池，不冻结）。次席数独游戏 → P3 观察维持（游戏非工具，定位偏离工具站）。本项为三候选中唯一无硬伤、一日可高质量交付的选项，硬依据如下：
+1. **站内真缺口**：PM 独立零重叠复核确凿（见下第 5 条），罗马数字转换独立工具本体站内 0 交付；全站 `roman` 仅 Times New Roman 字体名与 markdown_to_word 的 lowerRoman 列表格式，无转换口径。
+2. **口径互补确凿**：站内已有进制／编码类转换器，但无一做罗马数字记数法——hex_c_array 只做 HEX↔C 数组、bitwise_calculator 只做位运算、base64 只做 Base64 编解码、encoding_converter 只做中文字符编码、pinyin_converter 只做汉字注音；本工具为**阿拉伯数字↔罗马数字口径**（双向换算＋规范校验＋逐位拆解），与之互补（页面与互链须明示分工：本工具只做 1–3999 阿拉伯数字与罗马数字双向换算，不做进制换算、不做字符编码转换）。
+3. **需求验证**：看钟表／书章节／版权页年份遇到罗马数字不会读、不会写，只能现搜现算；浏览器粘贴即转、零上传。
+4. **技术路线站内最轻**：纯前端极小难度——标准 13 组符号值表＋贪心算法（toRoman 查表贪心、fromRoman 解析后重编码比对校验规范形式），零新增依赖、零外部请求；无数据表，零维护负担（与首席社媒表的弱点形成对照）。
+5. **PM 独立零重叠复核确凿**（163 轮误判教训；ASCII 模式打底，vendor／mock_file 排除，BACKLOG.md 除外；CJK 检索词 python `chr(0x...)` 运行时构造＋命中行验真）：
+   - ASCII：`roman_numeral`／`roman-numeral` 全站（tools／templates／static／tests）**0 命中**——罗马数字转换独立工具本体 0 交付，真缺口确凿。
+   - `roman` 不区分大小写命中 7 处，均为 Times New Roman 字体名（math_worksheet_generator／readability_analyzer／font_pairing_preview）与 markdown_to_word 的 lowerRoman 列表格式，无转换口径本体。
+   - CJK「罗马数字」`chr(0x...)` 运行时构造（codepoints 验真 0x7f57／0x9a6c／0x6570／0x5b57）全站 **0 命中**。
+   - Icon：**`history_edu` 首选**（`Icon:\s*"history_edu"` 精确值 **0 命中**，全库唯一；备选 `looks_one`／`format_list_numbered` 亦 0 命中），开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定（沿用 shell_explainer `integration_instructions` ef54 与 json_graph_viewer `bubble_chart` e6dd 双源验真先例）。
+
+**未选说明**：社媒/证件照尺寸速查表（PM **第二十五度裁定跳过**：数据鲜度维护负担；首席顺位留池）／数独游戏（P3 观察维持；游戏非工具，定位偏离工具站）／汉字笔顺查询（弱观察维持；笔顺数据集体量大、人群窄）／国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪（P3 弱观察维持）／二维码传文件／LaTeX 公式编辑器（弱观察维持）。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 阿拉伯数字→罗马数字（1–3999）与罗马数字→阿拉伯数字双向换算，输入即转 ② 非法输入按位置／按条报错（0／负数／小数／＞3999／非法罗马字符／非法减法组合如 IL、VX、IIII 逐条提示，不静默钳制）③ 换算表：标准 13 组符号值对照（M 1000、CM 900、D 500、CD 400、C 100、XC 90、L 50、XL 40、X 10、IX 9、V 5、IV 4、I 1）＋逐位拆解展示 ④ 批量换算（每行一个数字或罗马数字，逐行出结果，错误行标注原因）⑤ 常用速查：1–20、50／100／500／1000、常见年份（2026＝MMXXVI 等）一键填入 ⑥ 5 组预设示例（一键加载：年份 MMXXVI／章节 XII／钟表 III／版权页 MCMLXXXIV／边界 3999＝MMMCMXCIX）⑦ 统计面板（本次换算数／成功数／失败数）⑧ 一键复制结果／下载 .txt／清空 ⑨ 互链：encoding_converter（"中文编码转换器"）、base64（"Base64 编码/解码"）、hex_c_array（"HEX ↔ C 数组互转器"），页面须明示分工（本工具只做阿拉伯数字↔罗马数字换算，不做进制换算、不做字符编码转换）⑩ 全程浏览器本地计算，零上传、零外部接口 ⑪ 模板零外部静态资源惯例。
+- **纯函数契约（失败约定沿用家族惯例：非法参数抛 Error，err.field 给出字段名，不静默钳制；挂 window.RomanNumeralConverter 下，module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）**：
+  - `toRoman(num)` → string（num 非整数或超出 1–3999 err.field='num'；标准 13 组符号值表贪心查表）。
+  - `fromRoman(str)` → number（str 非字符串 err.field='roman'；空串／含非法字符／非法减法组合／重复超限（如 IIII、VV、LL、DD）抛错 err.field='roman'；校验算法：先按符号值解析求和，再用 toRoman 重编码比对输入大写形式，不一致即非法，保证 fromRoman(toRoman(n))===n 往返一致）。
+  - `isValidRoman(str)` → boolean（str 非字符串返回 false，不抛错；空串 false；内部复用 fromRoman 的校验逻辑）。
+  - `convertLine(line)` → {input, output, ok, error}（line 非字符串 err.field='line'；纯数字（可选空白）走 toRoman，罗马字母走 fromRoman，其余 ok 为 false 且 error 给出原因；output 成功时为换算结果字符串或数字，失败时为 ''）。
+  - `convertBatch(text)` → [{input, output, ok, error}]（text 非字符串 err.field='text'；按行切分，空行跳过）。
+  - `decompose(num)` → [{symbol, value, count}]（num 非整数或超出 1–3999 err.field='num'；贪心 13 符号表逐组拆解，如 2026 → [{M,1000,2},{X,10,2},{V,5,1},{I,1,1}]，1994 → [{M,1000,1},{CM,900,1},{XC,90,1},{IV,4,1}]；count 为该符号连续出现次数）。
+  - `decomposeRoman(str)` → [{symbol, value}]（str 非法罗马数字抛错 err.field='roman'；按规范符号切分，如 MMXXVI → [{M,1000},{M,1000},{X,10},{X,10},{V,5},{I,1}]）。
+- **数值锚点（测试精确值）**：toRoman：1→'I'；4→'IV'；9→'IX'；14→'XIV'；40→'XL'；90→'XC'；400→'CD'；900→'CM'；1994→'MCMXCIV'；2026→'MMXXVI'；3999→'MMMCMXCIX'；0／4000／3.5／'12'／NaN 抛错 err.field='num'。fromRoman：'I'→1；'IV'→4；'IX'→9；'MCMXCIV'→1994；'MMXXVI'→2026；'MMMCMXCIX'→3999；小写 'mmxxvi' 宽容接受→2026；'IIII'／'VV'／'LL'／'DD'／'IL'／'VX'／'IC'／'XM'／'ABC'／'' 抛错 err.field='roman'；1–3999 往返抽查（fromRoman(toRoman(n))===n，测试内枚举至少 20 个边界值：1、4、5、9、10、40、50、90、100、400、500、900、1000、1994、2026、3999 等）。isValidRoman：'XIV'→true；'IIII'→false；''→false；123→false。convertBatch：('2026\nMMXXVI\nabc') → 第 1 行 ok、output 'MMXXVI'，第 2 行 ok、output 2026，第 3 行 ok 为 false。decompose：2026 精确值见上；decomposeRoman('MMXXVI') → 值序列 [1000,1000,10,10,5,1]。
+- **真限制五条页面明示**：① 标准罗马数字只覆盖 1–3999（无 0、无负数、无小数；4000 以上无标准写法，上划线记法不予支持）；② 严格按规范形式校验（IIII、VV、IL、VX 等非规范写法拒绝，不做宽容猜测）；③ 大写为规范输出，小写输入仅作宽容接受；④ 减法组合仅限 IV／IX／XL／XC／CD／CM 六组，其余减法写法均非法；⑤ 本工具只做记数法换算，不做进制换算（二／八／十六进制请用站内进制工具）与日期／章节语义解读。
+- **SEO**：罗马数字转换、罗马数字查询、阿拉伯数字转罗马数字、罗马数字对照表。
+- **改动文件**：tools/categories.go（「编码转换」类目新增 roman_numeral_converter 条目，紧邻 pinyin_converter，Path 324→**325**，Icon `history_edu` 首选（精确值 0 命中，开发轮先按当前官方 codepoints＋站内实际渲染验真 glyph）／templates/roman_numeral_converter.html（新，define "roman_numeral_converter"）／static/js/roman_numeral_converter.js（新，window.RomanNumeralConverter；零新增依赖，零外部请求）／tests/roman_numeral_converter.test.js（新）／全量旧 tests Path 断言 324→325 数值同步（开发轮实测基数：161 个测试文件含 324 字面量，开发轮按 Path 断言逐一核对同步）。
+- **验收标准**：① node 新测试 ≥120 断言全过（toRoman／fromRoman 锚点精确值、非法输入逐条抛错 err.field、往返一致抽查、isValidRoman、convertBatch、decompose／decomposeRoman、模板零外部静态资源检查——页面无 CDN 链接）② 全量 tests/*.test.js 210→**211** 个全绿 ③ go build/go vet 通过 ④ 本地实测 /tools/roman-numeral-converter 200、静态 JS 200、首页索引收录 ⑤ 浏览器手工验证：双向换算输入即转可用 → 非法输入逐条报错 → 批量换算可用 → 换算表拆解可见 → 预设示例可用 → 复制／下载 .txt 可用 → 五条真限制可见 → 互链可用（开发轮记录）。
+- **品类归位**：注册到「编码转换」类目（与 encoding_converter／pinyin_converter 同类目，记数法表示转换家族）；New: true。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：罗马数字转换→本轮交付（255 研究轮第三席递进；PM 定序权裁定首席社媒表第二十五度跳过（数据表负债从严，231–254 轮逻辑沿用）、次席数独游戏观察维持（游戏非工具）；站内零重叠复核确凿（ASCII roman_numeral／roman-numeral 全 0 命中，CJK「罗马数字」全 0 命中，`roman` 仅 Times New Roman 字体名与 lowerRoman 列表格式；Icon `history_edu` 精确值 0 命中全库唯一，开发轮须按当前官方 codepoints 验真 glyph；纯前端极小难度，查表＋贪心算法，零新增依赖、零维护负担）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已第二十五度跳过）／数独游戏→P3 观察维持／汉字转拼音→已交付划出（f4c9b3a＋285501a，324 Path，210 tests）／汉字笔顺查询→弱观察维持／国际电话区号查询／G-code 预览器／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）初次失败（Permission denied (publickey)，VM 换机清空 known_hosts 老问题复发），以 `ssh-keyscan -t ed25519 github.com` 重建 known_hosts（/root/.ssh 与 /home/hatch/.ssh 双份）后 fetch 成功，origin/muse/dev-20260929 存在，本地 HEAD 与 origin 一致（285501a，汉字转拼音评审修复已提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **324**；`ls tests/*.test.js | wc -l` = **210**；PM 独立零重叠复核（ASCII `roman_numeral`／`roman-numeral` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；`roman` 不区分大小写命中 7 处均为 Times New Roman 字体名（math_worksheet_generator／readability_analyzer／font_pairing_preview）与 markdown_to_word 的 lowerRoman 列表格式，无转换口径本体；CJK「罗马数字」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x7f57／0x9a6c／0x6570／0x5b57）；Icon `history_edu`／`looks_one`／`format_list_numbered` 精确值 0 命中；161 个测试文件含 324 字面量）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 今日候选（2026-11-07 09:36 · 产品调研推荐，第二百五十五轮）
+
+> **通用调研持续**（WPS 特别方向 10-09~10-15 已结束；用户方向修正 2026-10-18 持续有效：聚焦 ToolWeb 工具本身，不扩泛财务/生活计算器）。
+>
+> **交付核对**：汉字转拼音已交付闭环（f4c9b3a 新增＋285501a 评审修复：`/tools/pinyin-converter`，Path 总数 323→**324**，tests **210 个**；新测试 194 断言全过；Icon `spellcheck` 官方 codepoints e8ce 全库唯一；字表 8109 条覆盖《通用规范汉字表》全部 8105 字），候选池划出。
+
+**推荐 Top3**（优先高频、单页可实现、契合现有架构；零重叠复核沿用 ASCII 打底惯例）：
+
+1. **社媒/证件照尺寸速查表** — 顺位首席留池。CropDen 11-03 独立信号维持；实现纯前端小难度（平台选择→尺寸列表＋遮挡区图示＋证件照规格；静态数据表，零上传）；零重叠本轮复测：`social_image_size`／`social-image-size` 仍 **0 命中**，尺寸速查表本体 0 交付。**弱点**：数据鲜度维护负担（平台规格偶发变更、错表误导用户）压级，PM 已二十四度裁定跳过，首席顺位留池。痛点：发社媒图/办证件时尺寸规格难查。SEO：社媒图片尺寸、证件照尺寸、护照照片规格。建议 ID social_image_size_guide、Path /tools/social-image-size-guide；零重叠待 PM/开发轮复测。
+2. **数独游戏** — P3 观察维持第二席。Tooleek 信号；站内零重叠本轮复测：ASCII `sudoku` 全站 **0 命中**，游戏本体 0 交付；实现纯前端小难度（出题／验算／提示／计时，零上传）。**弱点**：游戏非工具，定位偏离工具站。SEO：数独、在线数独、数独游戏。建议 ID sudoku_game、Path /tools/sudoku；开发轮复测锁定。
+3. **罗马数字转换（阿拉伯数字↔罗马数字）** — **顺位递进第三席**（汉字转拼音交付后池内递进）。痛点：看钟表／书章节／版权页年份遇到罗马数字不会读、不会写，只能现搜现算；浏览器粘贴即转、零上传。实现纯前端极小难度（双向换算＋校验＋1–3999 范围规则，零上传，零新增依赖）。站内零重叠本轮复测：ASCII `roman_numeral` 全站 **0 命中**，CJK「罗马数字」`chr(0x...)` 运行时构造（codepoints 验真 0x7f57／0x9a6c／0x6570／0x5b57）**0 命中**，独立工具本体 0 交付。**弱点**：人群偏窄、功能极简。SEO：罗马数字转换、罗马数字查询、阿拉伯数字转罗马数字。建议 ID roman_numeral_converter、Path /tools/roman-numeral-converter；Icon `history_edu` 精确值 **0 命中**（备选 `looks_one`／`format_list_numbered` 亦 0 命中；开发轮须先验 Material Icons 当前官方 codepoints 有无该 glyph 并在站内实际渲染确认后再锁定）。
+
+**候选池表**（本轮快照；「标题 | 痛点 | 难度 | 优先级」）：
+
+| 标题 | 痛点 | 难度 | 优先级 |
+|---|---|---|---|
+| 社媒/证件照尺寸速查表 | 顺位首席留池；CropDen 11-03 独立信号；**弱点**：数据鲜度维护负担压级，PM 已二十四度跳过 | 小 | P3（顺位；压级） |
+| 数独游戏 | P3 观察维持第二席；Tooleek 信号；ASCII `sudoku` 本轮复测全 0 命中；纯前端小难度；**弱点**：游戏非工具 | 小 | P3（观察） |
+| 罗马数字转换（阿拉伯数字↔罗马数字） | **顺位递进第三席**：汉字转拼音交付后池内递进；95dir「最指南」11-06 信号；`roman_numeral`／CJK「罗马数字」本轮复测全 **0 命中**；纯前端极小难度；**弱点**：人群偏窄、功能极简 | 小 | P3（顺位递进） |
+| 汉字笔顺查询 | 弱观察维持；小马在线工具箱 11-07 信号；`stroke_order`／`hanzi_stroke`／CJK「汉字笔顺」本轮复测全 0 命中；纯前端小-中难度；**弱点**：笔顺数据集体量大、人群窄 | 小-中 | P3（弱观察） |
+| 国际电话区号查询 | P3 弱观察维持；whispr.dev 11-06 信号；`dial_code`／`phone_code`／`calling_code` 沿用复测全 0 命中；纯前端小难度；**弱点**：静态数据表、人群窄 | 小 | P3（弱观察） |
+| G-code 预览器（3D 打印刀路可视化） | P3 弱观察维持；Tiny Online Tools 11-06 信号；`gcode_viewer` 沿用复测 0 命中；纯前端小-中难度；**弱点**：人群窄（3D 打印玩家）、与 3d_model_viewer 口径邻近 | 小-中 | P3（弱观察） |
+| Wordle 求解器 | P3 弱观察维持；dev.to minitool.io 11-06 信号；`wordle` 沿用复测 **0 命中**；纯前端小难度；**弱点**：游戏非工具，定位偏离工具站（与数独同类弱点） | 小 | P3（弱观察） |
+| 和弦/音阶查询器 | P3 弱观察维持；Interactive Chord Finder Show HN 信号；`chord_finder` 沿用复测 0 命中；纯前端小难度；**弱点**：人群窄（音乐学习者）、与 online_piano 口径邻近 | 小 | P3（弱观察） |
+| 二维码传文件（扫码跨设备传文件） | 弱观察维持；Show HN ShadowCat 信号；`qr_transfer`／`file_transfer`／`shadowcat`／`qr_send` 沿用复测全 0 命中；纯前端中难度；**弱点**：双设备流程、扫码可靠性与速率（约 100kB/s 级）、人群窄 | 中 | P3（弱观察） |
+| LaTeX 公式编辑器/预览 | 弱观察维持；WebUtils「LaTeX 公式编辑器」信号；ASCII `latex` 沿用复测 **0 命中**；纯前端小-中难度；**弱点**：KaTeX 字体文件 vendor 体量与模板零外部资源惯例的权衡、人群窄（学生／科研／教师） | 小-中 | P3（弱观察） |
+| 视频压缩器（浏览器本地重编码） | P3 弱观察维持；Voice and Vid 信号；`video_compress`／`compress_video` 沿用复测全 0 命中；纯前端中难度；**弱点**：重编码画质损耗、编解码器受限，ffmpeg.wasm 路线与 vendor 体积惯例冲突 | 中 | P3（弱观察） |
+| 图片智能抠图（AI 背景移除） | P3 弱观察维持；RMBG Show HN 信号；站内智能抠图本体 0 交付；**弱点**：模型权重约 98MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| X 视频转 GIF | P3 弱观察维持；V2EX 11-04 帖印证；**弱点**：需服务端（VM 出网拦截风险） | 中 | P3（弱观察） |
+| 英文反向词典 | P3 弱观察维持；`reverse_dictionar`／CJK「反向词典」沿用复测全 0 命中；需内置词库或外部 API，有外部依赖风险 | 小-中 | P3（弱观察） |
+| 视频转 SRT（浏览器本地 Whisper） | P3 弱观察维持；**弱点**：Whisper 模型权重 39–244MB 与模板零外部资源惯例冲突 | 中 | P3（弱观察） |
+| 短链逐跳跳转链追踪 | P3 弱观察维持；**弱点**：需服务端抓取＋VM 出网拦截风险 | 中 | P3（弱观察） |
+| 汉字转拼音 | 已交付划出（f4c9b3a 新增＋285501a 评审修复：`/tools/pinyin-converter`，Path 323→324，tests 210 个；新测试 194 断言全过；Icon `spellcheck` 官方 codepoints e8ce 全库唯一；字表 8109 条覆盖《通用规范汉字表》全部 8105 字） | — | 已实现 |
+| Excel 查看器（XLSX 在线预览） | 已交付划出（a36583f 新增：`/tools/xlsx-viewer`，Path 322→323，tests 209 个；新测试 195 断言全过；Icon `view_module` 全库唯一） | — | 已实现 |
+| 简繁转换（繁简互转） | 已交付划出（c352255 新增：`/tools/traditional-simplified-converter`，Path 321→322，tests 208 个；新测试 399 断言全过；Icon `g_translate` 全库唯一） | — | 已实现 |
+| JSON 结构图可视化（JSON Crack 模式） | 已交付划出（5c0e61c 新增＋399c1cb 导出双致命 bug 修复：`/tools/json-graph-viewer`，Path 320→321，tests 207 个；新测试 303→330 断言全过；Icon `bubble_chart` 全库唯一） | — | 已实现 |
+| 数据库 ER 图生成器（文本建表 → 关系图） | 已交付划出（5b196ef 新增＋dd70eac 修复：`/tools/er-diagram-generator`，Path 319→320，tests 206 个；新测试 203 断言全过；Icon `dataset` 全库唯一） | — | 已实现 |
+| Shell 命令解释器（explainshell 模式） | 已交付划出（b2dd38b 新增：`/tools/shell-explainer`，Path 318→319，tests 205 个；新测试 192 断言全过；Icon `integration_instructions` 全库唯一） | — | 已实现 |
+| 文档对比（PDF/DOCX/TXT 文件比对） | 已交付划出（a225f79 新增：`/tools/document-diff`，Path 317→318，tests 204 个；新测试 164 断言全过；Icon `difference` 全库唯一） | — | 已实现 |
+| 在线录音机（语音备忘录） | 已交付划出（063d89f 新增：`/tools/voice-recorder`，Path 316→317，tests 203 个；新测试 223 断言全过；Icon `mic_none` 全库唯一） | — | 已实现 |
+| 3D 模型预览器（STL/OBJ/GLB） | 已交付划出（7258bad 新增：`/tools/3d-model-viewer`，Path 315→316，tests 202 个；新测试 189 断言全过；Icon `3d_rotation` 全库唯一） | — | 已实现 |
+| 视频提取音频 | 已交付划出（1a5ceb9 新增＋e9ced61 降级重录三处缺陷修复：`/tools/video-to-audio`，Path 314→315，tests 201 个；新测试 166→173 断言全过；Icon `music_video` 全库唯一） | — | 已实现 |
+| 唱歌音准检测 | 已交付划出（806a043 新增＋0a4d32a 修复：`/tools/singing-pitch-checker`，Path 313→314，tests 200 个；新测试 206→228 断言全过；Icon `record_voice_over` 全库唯一） | — | 已实现 |
+| 反应速度测试 | 已交付划出（2626976 新增：`/tools/reaction-test`，Path 312→313，tests 199 个；新测试 133 断言全过；Icon `flash_on` 全库唯一） | — | 已实现 |
+| 灵感板/拼贴板（Moodboard） | 已交付划出（0649ed4 新增：`/tools/moodboard`，Path 311→312，tests 198 个；自由画布四类卡片＋5 套模板＋PNG/JSON 导出，Icon `collections`） | — | 已实现 |
+| 在线节拍器 | 已交付划出（5a6d12b 新增：`/tools/metronome`，Path 310→311，tests 197 个；新测试 157 断言全过；Icon `av_timer` 全库唯一） | — | 已实现 |
+| 音乐可视化器 | 已交付划出（a63d5f7 新增＋bb5e316 评审重审修复：`/tools/music-visualizer`，Path 309→310，tests 196 个；新测试 187 断言全过；Icon `equalizer` 全库唯一） | — | 已实现 |
+| 人声消除/伴奏提取 | 已交付划出（3b05160 新增＋评审重审修复：`/tools/vocal-remover`，Path 308→309，tests 195 个；新测试 176→190 断言全过；Icon `mic_off` 全库唯一） | — | 已实现 |
+| 无损音频真伪检测 | 已交付划出（2d1d61d 新增：`/tools/lossless-audio-checker`，Path 307→308，tests 194 个；新测试 186 断言全过；Icon `audio_file` 全库唯一） | — | 已实现 |
+| UTM 链接生成器 | 已交付划出（536182a 新增＋537658d 修复静默丢参：`/tools/utm-link-builder`，Path 306→307，tests 193 个；新测试 136 断言全过；Icon `sell` 全库唯一） | — | 已实现 |
+| 年假拼假优化器 | 已交付划出（48dd197 新增：`/tools/annual-leave-optimizer`，Path 305→306，tests 192 个；新测试 215 断言全过） | — | 已实现 |
+| 字体搭配预览（Fontjoy 模式） | 已交付划出（b5b1f4a 新增：`/tools/font-pairing-preview`，Path 304→305，tests 191 个；7a98354 修复预设卡片渲染致命 bug） | — | 已实现 |
+| 密码强度检测 | 已交付划出（938523f 新增：`/tools/password-strength-checker`，Path 303→304，tests 190 个） | — | 已实现 |
+| 密码泄露查询（k-匿名版） | 已交付划出（806cbff 新增：`/tools/password-breach-checker`，Path 302→303，tests 189 个） | — | 已实现 |
+| Git 命令速查＋灾难救援卡 | 已交付划出（ee6702a 新增：`/tools/git-cheatsheet`，Path 301→302，tests 188 个） | — | 已实现 |
+| 文档扫描去底纹（手机拍文档增白） | 已交付划出（5a6d12b 新增：`/tools/doc-bg-cleaner`，Path 300→301，tests 187 个） | — | 已实现 |
+| 文本摘要/要点提取器 | 已交付划出（d08b29a 新增：`/tools/text-summarizer`，Path 299→300，tests 186 个） | — | 已实现 |
+| OFD 转 PDF | 已交付划出（47827a9，Path 298→299，tests 185 个） | — | 已实现 |
+| WPS 候选（思维导图／表格拆分／表格合并等，标题后标 [WPS]） | 特别方向周（10-09~10-15）候选；方向已结束 | — | 冻结归档 |
+
+**新信号扫描**（2026-11-07 07:42~09:36 窗口；本轮**新入池 0 个**，全部消解）：
+- Medium「7 Free Browser Tools Worth Bookmarking This October」（10-18）七项**全消解**：SyncWhen 无注册会议投票 → 需多人投票／服务端，单页口径不合（站内 meeting-invite-generator 为会议邀请邻近口径），消解；SortaSeat 婚礼座位表 → **wedding-seating-chart 已交付**；OldRoll 复古胶片滤镜 → **img-retro-filter 已交付**；StitchCraft 照片转十字绣图 → **cross-stitch-pattern 已交付**；urPiano 88 键钢琴 → **online-piano 已交付**；Calcy 带单位记事本计算器 → **unit-calc-notepad 已交付**；llmspeed 本地 AI 模型跑分 → 小众硬件数据表、需服务端数据，消解。
+- stiltcode「5 Tiny, Free Web Tools」（10-16）→ **五项全消解**：Squoosh 图片压缩 → **img-compress 已交付**；Diffchecker → **text-diff／document-diff 已交付**；CleanURL → **url-tracker-cleaner 已交付**；ILovePDF → PDF 合并／拆分／压缩家族已交付；Hemingway → **readability-analyzer 已交付**。
+- dev.to「8 Free Web Tools」（03-27）→ 消解：Word Counter／JSON Formatter／Base64／QR／Reaction Time Test 均为已交付口径；Color Personality Quiz 为性格测试类（游戏／测试非工具），消解。
+- dev.to「45 tiny tools」（1024toolkit，10-14）→ 消解：cron 表达式 → **cron-parser／cron-generator 已交付**；三角形几何 → **triangle-solver 已交付**；大圆距离 → **distance-calc 已交付**；心率区间／BMI／BMR／TDEE → **heart-rate-zones 等已交付**；复利／期权收益／仓位 sizing 等财务计算器 → 2026-10-18 方向修正排除；混凝土体积／切割清单 → 小众工程口径，消解。
+- Typefully「Top Little Tools」（11-06 更新）→ 消解：Redacted 截图打码 → **img-mosaic 已交付**（pdf_annotate 亦含涂抹）；OnlineOCR → **ocr-image-text 已交付**；APA／MLA／IEEE 引文生成 → **gbt7714_reference_generator 已交付**（同族口径）；Tally／Replier／The.Rip／Forward Email 需服务端／外部账号，消解。
+- Show HN EveryToolkit 500+／ToolHop 200+、HNGTools、Amza 学生工具箱 → 目录站泛信号：词频／JSON／二维码／UUID／时间卡等均为已交付口径，无独立新信号。
+
+**候选池变动**：汉字转拼音交付划出（f4c9b3a＋285501a，324 Path，210 tests）；**罗马数字转换顺位递进第三席**；汉字笔顺查询弱观察维持；社媒/证件照尺寸速查表顺位首席留池（P3；数据鲜度维护负担压级；PM 已二十四度跳过）；数独游戏 P3 观察维持第二席；和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪 P3 弱观察维持；WPS 候选表保持冻结归档；**本轮新入池 0 个**。
+
+**交付核对**：本地当前分支 muse/dev-20260929，本地 HEAD 与 origin/muse/dev-20260929 一致（285501a，汉字转拼音评审修复已提交）；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **324**；`ls tests/*.test.js | wc -l` = **210**；站内零重叠复核（ASCII `roman_numeral`／`sudoku`／`social_image_size`／`social-image-size`／`stroke_order`／`hanzi_stroke` 全 0 命中（vendor／mock_file 排除，BACKLOG.md 除外）；CJK「罗马数字」「汉字笔顺」`chr(0x...)` 运行时构造 0 命中（codepoints 验真 0x7f57／0x9a6c／0x6570／0x5b57、0x6c49／0x5b57／0x7b14／0x987a）；`citation` 命中 6 处为 gbt7714_reference_generator 已交付本体及提及；`redact` 命中 2 处为 pdf_annotate 涂抹口径；`calcy` 仅 BACKLOG 提及，unit-calc-notepad 为已交付本体；Icon `history_edu`／`looks_one`／`format_list_numbered` 精确值 0 命中）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随 PM/开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-07 07:42 · PM 选定轮，接通用调研第二百五十四轮）
 
 **选定：汉字转拼音（pinyin_converter）** — 本轮唯一任务（新工具）。

@@ -1,0 +1,238 @@
+{{define "roman_numeral_converter"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>罗马数字转换 - 阿拉伯数字↔罗马数字在线换算 | 程序员工具箱</title>
+    <meta name="description" content="免费在线罗马数字转换工具：阿拉伯数字↔罗马数字双向换算（1–3999），输入即转；标准 13 组符号值对照＋逐位拆解展示，非法输入逐条报错，批量换算每行一个，常用速查与 5 组预设示例，全程本地零上传。Free online Roman numeral converter: convert between Arabic and Roman numerals 1–3999 locally, with symbol table, decomposition, batch conversion and presets, 100% client-side.">
+    <meta name="keywords" content="罗马数字转换,阿拉伯数字转罗马数字,罗马数字换算,罗马数字对照表,罗马数字查询,MMXXVI,罗马数字 2026,roman numeral converter,arabic to roman numerals,roman numerals chart">
+    <link rel="canonical" href="https://www.johnkingzcq123.xyz/tools/roman-numeral-converter">
+    <meta property="og:title" content="罗马数字转换 - 阿拉伯数字↔罗马数字在线换算">
+    <meta property="og:description" content="1–3999 双向换算输入即转：13 组符号值对照＋逐位拆解，非法输入逐条报错，批量换算与常用速查，全程本地零上传。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.johnkingzcq123.xyz/tools/roman-numeral-converter">
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"罗马数字转换","description":"免费在线罗马数字转换工具：阿拉伯数字↔罗马数字双向换算（1–3999），输入即转；标准 13 组符号值对照＋逐位拆解展示，非法输入逐条报错，批量换算每行一个，常用速查与 5 组预设示例，全程浏览器本地转换零上传。","url":"https://www.johnkingzcq123.xyz/tools/roman-numeral-converter","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
+    </script>
+
+    <style>
+        .rn-wrap .navbar .material-icons { display: none; }
+        .rn-privacy{display:flex;gap:.7rem;align-items:flex-start;background:#ecfdf5;border:2px solid #34d399;
+            border-radius:.7rem;padding:.85rem 1rem;font-size:.9rem;color:#065f46;margin-bottom:1rem;line-height:1.7}
+        .rn-privacy .material-icons{color:#10b981;flex:none;font-size:1.6rem}
+        .rn-privacy b{color:#047857}
+        .rn-panel{background:#fff;border:1px solid #e5e7eb;border-radius:.8rem;padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+        .rn-panel h3{font-size:1.02rem;color:#111827;margin:0 0 .9rem}
+        .rn-two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .rn-field label{display:block;font-size:.92rem;color:#374151;margin-bottom:.35rem;font-weight:600}
+        .rn-input{width:100%;box-sizing:border-box;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1.15rem;font-family:"Times New Roman",Georgia,serif;letter-spacing:.05em}
+        .rn-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .rn-arrow{display:flex;align-items:center;justify-content:center;color:#2563eb;font-size:1.4rem}
+        .rn-error{display:none;border:2px solid #fca5a5;background:#fef2f2;color:#b91c1c;border-radius:.6rem;
+            padding:.6rem .9rem;margin-top:.7rem;font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+        .rn-hint{font-size:.85rem;color:#6b7280;margin-top:.4rem;line-height:1.7}
+        .rn-batch-input{width:100%;box-sizing:border-box;min-height:9rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1rem;font-family:Consolas,monospace;resize:vertical;line-height:1.8}
+        .rn-batch-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+        .rn-output{width:100%;box-sizing:border-box;min-height:6rem;padding:.7rem .9rem;border:2px solid #e5e7eb;
+            border-radius:.6rem;font-size:1rem;font-family:Consolas,monospace;resize:vertical;line-height:1.8;background:#f9fafb}
+        .rn-meta{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+        .rn-count{font-size:.85rem;color:#6b7280}
+        .rn-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+        .rn-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+        .rn-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .rn-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+        .rn-btn-primary:hover{background:#1d4ed8;color:#fff}
+        .rn-btn .material-icons{font-size:1.1rem}
+        .rn-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .rn-decomp-table{width:100%;border-collapse:collapse;font-size:.95rem}
+        .rn-decomp-table th,.rn-decomp-table td{border:1px solid #e5e7eb;padding:.45rem .7rem;text-align:left}
+        .rn-decomp-table th{background:#f9fafb;color:#374151}
+        .rn-decomp-table td b{font-family:"Times New Roman",Georgia,serif;font-size:1.05rem}
+        .rn-decomp-sum{margin:.7rem 0 0;color:#111827;font-size:.95rem;line-height:1.8}
+        .rn-chip{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.4rem .8rem;
+            font-size:.88rem;cursor:pointer;font-family:"Times New Roman",Georgia,serif}
+        .rn-chip:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .rn-chips{display:flex;gap:.5rem;flex-wrap:wrap}
+        .rn-chips-label{font-size:.9rem;color:#374151;font-weight:600;margin:.7rem 0 .4rem}
+        .rn-presets{display:flex;gap:.5rem;flex-wrap:wrap}
+        .rn-preset-btn{border:2px solid #e5e7eb;background:#f9fafb;color:#374151;border-radius:.6rem;padding:.45rem .9rem;
+            font-size:.88rem;cursor:pointer}
+        .rn-preset-btn:hover{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+        .rn-stats{display:flex;gap:.6rem;flex-wrap:wrap}
+        .rn-stat{flex:1 1 6.5rem;min-width:6.5rem;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .7rem;
+            background:#f9fafb;text-align:center}
+        .rn-stat b{display:block;font-size:1.25rem;color:#111827}
+        .rn-stat span{font-size:.82rem;color:#6b7280}
+        .rn-muted{color:#9ca3af;font-size:.9rem}
+        .rn-batch-row{display:flex;gap:.6rem;align-items:baseline;padding:.4rem 0;border-bottom:1px dashed #e5e7eb;
+            line-height:1.8;font-size:.95rem;color:#111827;flex-wrap:wrap}
+        .rn-batch-row:last-child{border-bottom:none}
+        .rn-batch-in{font-family:Consolas,monospace}
+        .rn-batch-arrow{color:#2563eb}
+        .rn-batch-err{color:#b91c1c}
+        .rn-copy-tip{display:none;margin-top:.6rem;font-size:.86rem;color:#047857}
+        .rn-limits div{line-height:1.9;font-size:.95rem;color:#374151}
+        .rn-limits b{color:#111827}
+        .rn-limits code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .rn-faq dt{font-weight:600;color:#111827;margin:.7rem 0 .2rem}
+        .rn-faq dd{margin:0;color:#374151;line-height:1.9;font-size:.95rem}
+        .rn-faq code{font-family:Consolas,monospace;font-size:.85rem;background:#f3f4f6;border-radius:.3rem;padding:0 .3rem}
+        .rn-division{line-height:1.9;font-size:.95rem;color:#374151}
+        .rn-division b{color:#111827}
+        .rn-related{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+        @media (max-width:860px){
+            .rn-two{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+    <div class="rn-wrap">
+        <div class="tool-header">
+            <h1><i class="material-icons">history_edu</i> 罗马数字转换</h1>
+            <p>阿拉伯数字↔罗马数字双向换算（1–3999），输入即转：标准 13 组符号值对照＋逐位拆解展示，非法输入逐条报错，批量换算每行一个，常用速查与预设示例一键填入。全程浏览器本地转换，数字不出浏览器</p>
+        </div>
+        <div class="tool-content" style="max-width:1100px;margin:auto;">
+            <div class="rn-privacy" role="note">
+                <i class="material-icons">lock</i>
+                <div><b>隐私声明：数字不出浏览器。</b>换算只在当前浏览器本地完成，不会上传到任何服务器；不引入任何第三方库与 CDN，页面除加载本站资源外无其他网络请求。</div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>1. 双向换算（1–3999，输入即转）</h3>
+                <div class="rn-two">
+                    <div class="rn-field">
+                        <label for="rn-arabic">阿拉伯数字</label>
+                        <input class="rn-input" id="rn-arabic" type="text" inputmode="numeric" spellcheck="false" placeholder="例如 2026" autocomplete="off">
+                        <p class="rn-hint">请输入 1–3999 的整数；0、负数、小数与大于 3999 的数都会逐条报错。</p>
+                        <div class="rn-error" id="rn-err-arabic" role="alert"></div>
+                    </div>
+                    <div class="rn-field">
+                        <label for="rn-roman">罗马数字</label>
+                        <input class="rn-input" id="rn-roman" type="text" spellcheck="false" placeholder="例如 MMXXVI" autocomplete="off">
+                        <p class="rn-hint">只允许 I、V、X、L、C、D、M 七个字母，小写也可（如 mmxxvi）；IIII、VV、IL、VX 等非规范写法会报错。</p>
+                        <div class="rn-error" id="rn-err-roman" role="alert"></div>
+                    </div>
+                </div>
+                <div class="rn-meta">
+                    <span class="rn-count">两边任一输入即转，另一边自动填入对应结果。</span>
+                    <div class="rn-actions">
+                        <button type="button" class="rn-btn" id="rn-clear"><i class="material-icons">delete_sweep</i>清空</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>2. 逐位拆解展示</h3>
+                <div id="rn-decompose"><span class="rn-muted">换算成功后，这里按位拆解显示每一组符号的数值与个数。</span></div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>3. 标准 13 组符号值对照表</h3>
+                <div id="rn-symbol-table"><span class="rn-muted">对照表加载中……</span></div>
+                <p class="rn-hint">减法组合仅 IV（4）、IX（9）、XL（40）、XC（90）、CD（400）、CM（900）六组：小数写在大数前表示相减，且只能写一次、只能隔一位相减（如 49 = XLIX，不能写成 IL）。</p>
+            </div>
+
+            <div class="rn-panel">
+                <h3>4. 批量换算（每行一个，逐行出结果）</h3>
+                <textarea class="rn-batch-input" id="rn-batch-input" spellcheck="false" placeholder="每行一个数字或罗马数字，例如：&#10;2026&#10;MMXXVI&#10;1984&#10;XII&#10;3999"></textarea>
+                <div class="rn-meta">
+                    <span class="rn-count" id="rn-batch-stats"></span>
+                    <div class="rn-actions">
+                        <button type="button" class="rn-btn rn-btn-primary" id="rn-batch-btn"><i class="material-icons">format_list_numbered</i>批量换算</button>
+                    </div>
+                </div>
+                <div id="rn-batch-results" style="margin-top:.8rem"><span class="rn-muted">批量换算后，每行结果会出现在这里（成功行显示双向对照，失败行逐条显示错误原因）。</span></div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>5. 常用速查（一键填入）</h3>
+                <div class="rn-chips-label">1–20、50／100／500／1000</div>
+                <div class="rn-chips" id="rn-quick"></div>
+                <div class="rn-chips-label">常见年份</div>
+                <div class="rn-chips" id="rn-quick-years"></div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>6. 预设示例（一键填入）</h3>
+                <div class="rn-presets" id="rn-presets"></div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>7. 统计面板</h3>
+                <div class="rn-stats" id="rn-stats"><div class="rn-muted">换算后，这里显示当前换算值与批量换算的成功／失败统计。</div></div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>8. 换算结果文本</h3>
+                <textarea class="rn-output" id="rn-output" spellcheck="false" readonly placeholder="换算结果文本会出现在这里"></textarea>
+                <div class="rn-meta">
+                    <span></span>
+                    <div class="rn-actions">
+                        <button type="button" class="rn-btn rn-btn-primary" id="rn-copy-btn"><i class="material-icons">content_copy</i>一键复制结果</button>
+                        <button type="button" class="rn-btn" id="rn-download-btn"><i class="material-icons">file_download</i>下载 .txt</button>
+                    </div>
+                </div>
+                <div class="rn-copy-tip" id="rn-tip"></div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>五条真限制</h3>
+                <div class="rn-limits">
+                    <div><b>1. 仅支持 1–3999：</b>标准罗马数字没有 <code>0</code>、没有负数、没有小数，<code>3999（MMMCMXCIX）</code> 是上限；<code>4000</code> 以上需在符号上加横线（上划线记法），本工具不支持，请改用其他记法。</div>
+                    <div><b>2. 严格规范形式校验：</b>只接受标准写法，<code>IIII</code>（应为 <code>IV</code>）、<code>VV</code>（应为 <code>X</code>）、<code>IXI</code>、<code>MCMCM</code> 等重复或错位写法一律报错，不做猜测修正。</div>
+                    <div><b>3. 减法组合仅六组：</b><code>IV（4）／IX（9）／XL（40）／XC（90）／CD（400）／CM（900）</code>；<code>IL（49）</code>、<code>VX（5）</code>、<code>IC（99）</code>、<code>XM（990）</code> 等组合非法——<code>49</code> 应写作 <code>XLIX</code>，<code>99</code> 应写作 <code>XCIX</code>。</div>
+                    <div><b>4. 小写宽容接受、输出统一大写：</b>输入 <code>mmxxvi</code> 与 <code>MMXXVI</code> 等价，前后空格自动忽略；但 <code>A／B／E／F</code> 等七个字母之外的字符（如 <code>ABC</code> 中的 <code>A／B</code>）一律报错。</div>
+                    <div><b>5. 只做数字换算：</b>本工具只做阿拉伯数字↔罗马数字换算，<b>不做进制换算</b>（二进制／十六进制请用<a href="/tools/base-converter">进制换算</a>）、<b>不做字符编码转换</b>（中文与 <code>\uXXXX</code> 转义请用<a href="/tools/encoding-converter">中文编码转换器</a>）。</div>
+                </div>
+            </div>
+
+            <div class="rn-panel">
+                <h3>常见问题</h3>
+                <dl class="rn-faq">
+                    <dt>为什么 4 是 IV 而不是 IIII？</dt>
+                    <dd>标准罗马数字用减法记法表示 4、9、40、90、400、900：<code>IV = 5 − 1</code>、<code>IX = 10 − 1</code>、<code>XL = 50 − 10</code>、<code>XC = 100 − 10</code>、<code>CD = 500 − 100</code>、<code>CM = 1000 − 100</code>。同一个符号最多连续出现三次，所以 <code>IIII</code> 是非法写法；钟表上常见的 <code>IIII</code> 是传统特例，本工具按标准记法校验，会判为非法。</dd>
+                    <dt>1994 为什么是 MCMXCIV？</dt>
+                    <dd>按位拆解：<code>1000（M）＋ 900（CM）＋ 90（XC）＋ 4（IV）</code>，即 <code>MCMXCIV</code>。逐位拆解栏会把每一步展开给你看。</dd>
+                    <dt>为什么没有 0？</dt>
+                    <dd>罗马数字体系诞生时没有零的概念，也没有表示 0 的符号；负数与小数同样不存在。需要表示 0 请直接用阿拉伯数字 <code>0</code>。</dd>
+                    <dt>小写罗马数字能换算吗？</dt>
+                    <dd>能。<code>mmxxvi</code>、<code>Xii</code> 等大小写混写都会被接受并按大写换算，输出统一为大写 <code>MMXXVI</code>、<code>XII</code>。</dd>
+                    <dt>我的输入会被上传吗？</dt>
+                    <dd>不会。换算、拆解、统计与导出全部在本地完成，不发起后端请求；本工具不引入任何第三方库与 CDN，你可以在 DevTools 的 Network 面板验证（除加载本页面资源外无其他请求）。</dd>
+                </dl>
+            </div>
+
+            <div class="rn-panel">
+                <h3>相关工具</h3>
+                <p class="rn-division">分工说明：本工具<b>只做阿拉伯数字↔罗马数字换算</b>，<b>不做进制换算</b>、<b>不做字符编码转换</b>、<b>不做 Base64 编解码</b>、<b>不做 HEX 与 C 数组互转</b>；<a href="/tools/encoding-converter">中文编码转换器</a>是中文与 <code>\uXXXX</code> 转义、乱码恢复的入口，<a href="/tools/base64">Base64 编码/解码</a>是文本与 Base64 互转的入口，<a href="/tools/hex-c-array">HEX ↔ C 数组互转器</a>是 HEX 文本与 C 数组互转的入口，四者互不重叠。</p>
+                <div class="rn-related">
+                    <span class="btn btn-secondary" style="font-size:.9rem;border-color:var(--primary-color);color:var(--primary-color);background:#eff6ff;font-weight:600;cursor:default;">罗马数字转换（当前）</span>
+                    <a href="/tools/encoding-converter" class="btn btn-secondary" style="font-size:.9rem;">中文编码转换器</a>
+                    <a href="/tools/base64" class="btn btn-secondary" style="font-size:.9rem;">Base64 编码/解码</a>
+                    <a href="/tools/hex-c-array" class="btn btn-secondary" style="font-size:.9rem;">HEX ↔ C 数组互转器</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="/tools/static/js/roman_numeral_converter.js?v=1"></script>
+</body>
+</html>
+{{end}}
