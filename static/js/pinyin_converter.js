@@ -1093,11 +1093,16 @@ if (typeof document !== 'undefined') {
                 '<div class="py-stat"><b>' + s.unknown.length + '</b><span>未收录数</span></div>';
         }
 
-        /* 纯拼音文本：标点前不留空格（如「nǐ hǎo，shì jiè」而非「nǐ hǎo ， shì jiè」）。 */
+        /* 纯拼音文本：标点两侧不留空格（如「nǐ hǎo，shì jiè」「nǐ hǎo,shì jiè」而非「nǐ hǎo ， shì jiè」），
+         * 覆盖中文与 ASCII 标点；开括号后亦不留空格；连续空格并为一个；首尾去空格。
+         * 注意：renderPinyinLine 是空格 join 的原始行（测试锚点以其为准），此处只做输出层统一处理。 */
         function plainPinyinText(items) {
             var line = renderPinyinLine(items, ' ');
-            return line.replace(/ ([，。、；：？！％…—·）】」』》])/g, '$1')
-                .replace(/([（【「『《]) /g, '$1');
+            return line.replace(/ ([，。、；：？！％…—·）】」』》,.;:?!%\)\]}»])/g, '$1')
+                .replace(/([，。、；：？！％…—·）】」』》,.;:?!%\)\]}»]) +/g, '$1')
+                .replace(/([（【「『《(\[{«]) /g, '$1')
+                .replace(/ {2,}/g, ' ')
+                .replace(/^ | $/g, '');
         }
 
         function renderOutput() {
@@ -1117,11 +1122,10 @@ if (typeof document !== 'undefined') {
                 var cls = 'py-cell';
                 if (it.known && it.poly) cls += ' py-poly';
                 if (!it.known && it.char.trim() !== '') cls += ' py-unknown-cell';
-                var py = r.pinyin || '&nbsp;';
                 var attr = (it.known && it.poly)
                     ? ' data-idx="' + i + '" data-char="' + escapeHtml(it.char) + '" title="多音字，点一下切换读音"'
                     : '';
-                return '<span class="' + cls + '"' + attr + '><b>' + escapeHtml(r.char) + '</b><span>' + escapeHtml(py) + '</span></span>';
+                return '<span class="' + cls + '"' + attr + '><b>' + escapeHtml(r.char) + '</b><span>' + (r.pinyin ? escapeHtml(r.pinyin) : '&nbsp;') + '</span></span>';
             }).join('');
             annotatedEl.innerHTML = cells;
         }
@@ -1264,9 +1268,9 @@ if (typeof document !== 'undefined') {
             if (!inputEl) return;
             renderPresets();
             var tones = document.querySelectorAll('input[name="py-tone"]');
-            for (var i = 0; i < tones.length; i++) tones[i].addEventListener('change', function () { overrides = {}; doConvert(); });
+            for (var i = 0; i < tones.length; i++) tones[i].addEventListener('change', function () { doConvert(); });
             var initials = $('py-initials');
-            if (initials) initials.addEventListener('change', function () { overrides = {}; doConvert(); });
+            if (initials) initials.addEventListener('change', function () { doConvert(); });
             inputEl.addEventListener('input', function () { overrides = {}; doConvert(); });
             var convertBtn = $('py-convert-btn');
             if (convertBtn) convertBtn.addEventListener('click', function () { overrides = {}; doConvert(); });

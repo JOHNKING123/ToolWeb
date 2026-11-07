@@ -10,7 +10,9 @@
  * 5 组预设示例（每组精确统计值）、categories.go 注册（Path 总数 323→324、
  * Icon spellcheck 全库唯一、紧邻 traditional_simplified_converter）、模板（SEO 关键词、
  * 真限制五条、控件、互链、零外部资源静态检查）、浏览器绑定源码级检查
- * （window.PinyinConverter、三种声调样式／首字母模式／多音字点选／复制／下载／清空）。
+ * （window.PinyinConverter、三种声调样式／首字母模式／多音字点选／复制／下载／清空）、
+ * 评审复核回归（对照表 &nbsp; 不经 escapeHtml 转义、声调／首字母切换不清空多音字点选、
+ * 纯拼音文本 ASCII 标点前不留空格）。
  * 注意：countStats('你好，行') 的 poly 为 2 而非 1——「好」亦为多音字
  * （hǎo／hào，如 好学 hào xué），BACKLOG 锚点只计了「行」，此处以数据为准。
  */
@@ -286,6 +288,20 @@ notHas(JS_SRC, "cdnjs", "绑定：无 CDN 引用");
 notHas(JS_SRC, "fonts.googleapis", "绑定：无外部字体引用");
 notHas(JS_SRC, "XMLHttpRequest", "绑定：无后端请求");
 notHas(JS_SRC, "fetch(", "绑定：无 fetch 请求");
+
+/* ---------- 15. 评审复核回归（2026-11-07 第 2 轮） ---------- */
+/* 修复 1：对照表 &nbsp; 不可再经 escapeHtml 转义（否则渲染出字面 "&nbsp;"）。 */
+notHas(JS_SRC, "var py = r.pinyin || '&nbsp;';", "回归修复1：删除 py 中间变量，不再把 &nbsp; 当拼音转义");
+notHas(JS_SRC, "escapeHtml(py)", "回归修复1：无 escapeHtml(py)，&nbsp; 不会被转义成 &amp;nbsp;");
+has(JS_SRC, "(r.pinyin ? escapeHtml(r.pinyin) : '&nbsp;')", "回归修复1：空拼音直接写 &nbsp; 实体，真实拼音才转义");
+/* 修复 2：切换声调样式／首字母模式不得清空多音字点选（overrides 只随文本变化清）。 */
+has(JS_SRC, "tones[i].addEventListener('change', function () { doConvert(); });", "回归修复2：声调切换只重渲染，不清空 overrides");
+has(JS_SRC, "initials.addEventListener('change', function () { doConvert(); });", "回归修复2：首字母模式切换只重渲染，不清空 overrides");
+has(JS_SRC, "inputEl.addEventListener('input', function () { overrides = {}; doConvert(); });", "回归修复2：文本输入仍清空 overrides（下标随文本失效，清掉正确）");
+/* 修复 3：纯拼音文本标点两侧不留空格（ASCII 与中文标点统一处理），连续空格并为一个。 */
+has(JS_SRC, ",.;:?!%", "回归修复3：plainPinyinText 正则覆盖 ASCII 标点 , . ; : ? ! %");
+has(JS_SRC, "]) +/g, '$1')", "回归修复3：标点后的空格一并去掉（不止标点前）");
+has(JS_SRC, "/ {2,}/g, ' '", "回归修复3：连续空格并为一个（原样空格字符不再留多空格）");
 
 console.log("PASS " + pass + " / FAIL " + fail + "（共 " + (pass + fail) + " 断言）");
 process.exit(fail === 0 ? 0 : 1);
