@@ -25,6 +25,12 @@ const (
 	toolWebInternalPrefix = "/tools"
 )
 
+// toolWebMountPrefixHeader 由挂载层在把 /tool-web/<x> 改写为 /tools/<x>
+// 时注入，标明请求实际来自 /tool-web 挂载，供 SEO handler（main.go 的
+// seoBaseURL）按请求派生站点公开根地址（host＋挂载前缀），替代写死域名。
+// 直通请求（非 /tool-web 路径）会先清除该头，客户端伪造的值到不了 handler。
+const toolWebMountPrefixHeader = "X-ToolWeb-Mount-Prefix"
+
 // withToolWebMount 把 /tool-web 挂载映射包在原 handler 外层。
 func withToolWebMount(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +40,8 @@ func withToolWebMount(next http.Handler) http.Handler {
 			return
 		}
 		if !strings.HasPrefix(p, toolWebMountPrefix+"/") {
+			// 直通：清除可能由客户端伪造的挂载前缀头。
+			r.Header.Del(toolWebMountPrefixHeader)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -41,6 +49,8 @@ func withToolWebMount(next http.Handler) http.Handler {
 		// 入站改写：/tool-web/<x> -> /tools/<x>
 		r2 := new(http.Request)
 		*r2 = *r
+		r2.Header = r.Header.Clone()
+		r2.Header.Set(toolWebMountPrefixHeader, toolWebMountPrefix)
 		urlCopy := *r.URL
 		urlCopy.Path = toolWebInternalPrefix + strings.TrimPrefix(p, toolWebMountPrefix)
 		if urlCopy.RawPath != "" {

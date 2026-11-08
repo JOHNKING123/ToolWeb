@@ -104,6 +104,64 @@ func toolAccessMiddleware() gin.HandlerFunc {
 	}
 }
 
+// seoBaseURL 根据当前请求派生 SEO（sitemap/robots）使用的站点公开根地址，
+// 以及工具页相对该根地址的路径前缀。
+//
+// scheme：优先取 X-Forwarded-Proto（Caddy 反代到本服务时为 https），
+// 其次按 TLS 判断，本地直连为 http；host：取请求 Host；
+// 挂载前缀：取挂载层注入的 X-ToolWeb-Mount-Prefix（/tool-web），
+// 无注入时为空（直接访问）。
+//
+// 返回值：
+//   - base：scheme://host + 挂载前缀，如 https://www.it-tool.eu.cc/tool-web；
+//   - toolURLPrefix：挂载部署下工具页位于 base/<slug>，传 ""；
+//     直接访问时工具页位于 base/tools/<slug>，传 "/tools"。
+// 两种形态的 <loc> 均为当前访问路径下逐条可达的真实地址。
+func seoBaseURL(c *gin.Context) (base, toolURLPrefix string) {
+	scheme := "http"
+	if proto := c.GetHeader("X-Forwarded-Proto"); proto != "" {
+		if p := strings.ToLower(strings.TrimSpace(strings.Split(proto, ",")[0])); p == "https" || p == "http" {
+			scheme = p
+		}
+	} else if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	host := c.Request.Host
+	if host == "" {
+		host = "localhost"
+	}
+	prefix := c.GetHeader(toolWebMountPrefixHeader)
+	toolURLPrefix = "/tools"
+	if prefix == toolWebMountPrefix {
+		toolURLPrefix = ""
+	} else {
+		prefix = ""
+	}
+	return scheme + "://" + host + prefix, toolURLPrefix
+}
+
+// handleSitemap 生成并返回站点地图：200、application/xml、非空，
+// <loc> 共 330 条（首页＋工具索引＋328 个工具）。
+func handleSitemap(c *gin.Context) {
+	base, toolURLPrefix := seoBaseURL(c)
+	sitemap, err := tools.GenerateSitemap(base, toolURLPrefix)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "生成sitemap失败")
+		return
+	}
+	c.Header("Content-Type", "application/xml")
+	c.Data(http.StatusOK, "application/xml", sitemap)
+}
+
+// handleRobotsTxt 生成并返回 robots.txt：200、text/plain、非空，
+// 含 1 条 Sitemap 行，指向与当前访问路径同一地址的 sitemap。
+func handleRobotsTxt(c *gin.Context) {
+	base, _ := seoBaseURL(c)
+	robots := tools.GenerateRobotsTxt(base)
+	c.Header("Content-Type", "text/plain")
+	c.String(http.StatusOK, robots)
+}
+
 func main() {
 	// 初始化日志
 	if err := initLoggers(); err != nil {
@@ -408,23 +466,15 @@ func main() {
 	router.GET("/share/personal-files/:token", tools.HandlePersonalFileSharedContent)
 
 	// SEO相关路由
-	router.GET("/sitemap.xml", func(c *gin.Context) {
-		domain := "https://www.johnkingzcq123.xyz" // 替换为你的实际域名
-		sitemap, err := tools.GenerateSitemap(domain)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "生成sitemap失败")
-			return
-		}
-		c.Header("Content-Type", "application/xml")
-		c.Data(http.StatusOK, "application/xml", sitemap)
-	})
-
-	router.GET("/robots.txt", func(c *gin.Context) {
-		domain := "https://www.johnkingzcq123.xyz" // 替换为你的实际域名
-		robots := tools.GenerateRobotsTxt(domain)
-		c.Header("Content-Type", "text/plain")
-		c.String(http.StatusOK, robots)
-	})
+	//
+	// sitemap/robots 的 base 按当前请求派生（见 seoBaseURL），不再写死域名。
+	// 除根路径外另注册 /tools/sitemap.xml 与 /tools/robots.txt：gin 的静态
+	// 路由优先于 /tools/:tool 参数路由，二者不再落入工具页 handler；同时
+	// /tool-web/sitemap.xml 经挂载层改写为 /tools/sitemap.xml 后亦由此 serve。
+	router.GET("/sitemap.xml", handleSitemap)
+	router.GET("/robots.txt", handleRobotsTxt)
+	router.GET("/tools/sitemap.xml", handleSitemap)
+	router.GET("/tools/robots.txt", handleRobotsTxt)
 
 	// 工具统计管理页面
 	router.GET("/tools/tool-stats", func(c *gin.Context) {
@@ -498,8 +548,12 @@ func main() {
 		// 将连字符转换为下划线
 		templateName := strings.ReplaceAll(tool, "-", "_")
 
-		// 检查模板是否存在
-		if tmpl := router.HTMLRender.Instance(templateName, nil); tmpl == nil {
+		// 检查工具是否存在：以 categories 注册为准。
+		// 注意：禁止用 router.HTMLRender.Instance(templateName, nil) == nil
+		// 判断——multitemplate 对缺失模板返回非 nil 实例，该检查永不成立，
+		// 曾导致未知 slug 走 c.HTML(200, ...) 渲染出 200 空 body，
+		// c.String(404, "工具不存在") 的分支从未走到。
+		if tools.GetToolNameByPath("/tools/"+tool) == "" {
 			c.String(http.StatusNotFound, "工具不存在")
 			return
 		}
