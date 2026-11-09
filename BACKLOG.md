@@ -1,3 +1,30 @@
+## 今日任务（2026-11-09 09:00 · PM 选定轮，接巡检候选）
+
+**选定：音乐可视化器：换文件时旧播放与旧录制不停** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有工具的核心播放链路状态机，不新增工具、不改 Path 总数。硬依据如下：
+1. **三项中唯一产生错误产出的缺陷**：色盲 undefined 与百分比首屏红错只是可见文本缺陷，不产生错误结果；本项换文件后旧音频继续响、旧录制继续捕获旧混音——录出来的 WebM 混进旧文件声音，是**错误的导出产物**，且用户在换文件瞬间必听见旧音未停，感知最强。
+2. **已知最久的在网缺陷**：本 bug 是 2026-11-05 05:00 轮的评审拦截项（换文件不停止旧播放／旧录制），11-06 07:00 轮复核仍在 live 代码中，11-08 轮因站级 sitemap 项优先而让位；自发现至今已挂网 4 天，顺位上应在本轮收掉，不再后延。
+3. **PM 独立复核确凿（代码级验真）**：static/js/music_visualizer.js：`handleFile()`（行 274）只调 `stopMic()`（行 282），未调 `stopPlayback()`／`stopRecording()`；同文件 `resetAll()`（行 315–318，「重新上传」按钮）三者全停——换文件路径确属遗漏；文件 input change（行 728）与拖放 drop（行 735–737）均直接进 `handleFile`，两入口同病；`stopPlayback()`（行 374，内部 `stopSource()` 空安全，行 366）与 `stopRecording(true)`（行 664，silent 分支先置空回调再 stop，防异步 onstop 误下载）均为现成可复用函数，无需新造停机逻辑。
+4. **一日可高质量完成**：改动集中在 `handleFile()` 入口三停＋陈旧解码防护，单 JS 文件＋测试扩断言；不碰播放／录制／麦克风核心逻辑，不新增依赖。
+
+**未选说明**：色盲模拟检查器配色区三行模拟标题显示 undefined（PM 已验真：TYPES（行 16–20）只有 key/name/en 无 label，renderPalette 行 323 把 TYPES[i] 原样推入行，行 330／343 用 esc(row.label)，三行模拟标题与混淆警告文案必现 undefined；改动极小，列为**下轮优先候选第一位**）／百分比计算器初始加载即显示红色校验错误（PM 已验真：static/js/percentage_calc.js，parseInput 空串→NaN（行 201），percentToDecimal(NaN) 抛错，renderMode1 catch 无条件 showErr（行 233），init 调 renderAll('pct')（行 322）致首屏即红错，clearAll（行 331）清空后调 renderAll('pct') 同样复现；renderMode2/3 已有「全空不报错」模式（行 258／266 的 `if (!empty)` 守卫）可照搬；改动极小，列为**下轮优先候选第二位**）。两项均为真 bug、影响面限于单个工具页面且不产生错误产物，本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① `handleFile(f)` 内：先 `validateAudioFile(f)`（校验失败直接 return、**不停止旧播放**——用户选了非法文件时旧文件应继续播，保留现有行为）；校验通过后、FileReader 读取前，依次调 `stopPlayback()`＋`stopMic()`＋`stopRecording(true)`（与 `resetAll()` 的三停顺序一致；录制用 silent=true 静默丢弃，不得触发旧混音 WebM 下载）② **陈旧解码防护（本项必做）**：新文件异步解码期间旧源已停，但须防慢解码竞态——先选 A、后选 B，若 A 的 `decodeAudioData().then` 后于 B 的 resolve 回来，不得用 A 的 buffer／fileBase／面板信息覆盖 B 的状态；实现方式开发轮定（世代计数 token 为自然做法），验收以时序断言为准 ③ 两入口同修：文件 input change 与拖放 drop 均走 `handleFile`，一次修复覆盖两路，不得只修一路 ④ `resetAll()`（「重新上传」按钮）行为不回归：仍三者全停＋清空面板 ⑤ 不碰 `startSource`／`togglePlay`／`startMic`／录制编码等核心逻辑，不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补状态文案，且只动文案）。
+- **纯函数／状态机契约**：本次为浏览器端状态机修复，无新增纯函数；测试只覆盖可断言部分，沿用 tests/music_visualizer.test.js 现有源码级断言惯例（该文件已有 `stopRecording` silent 分支的源码切片断言，见行 266–268「回归②」）——新增断言：handleFile 内 validate 通过后、FileReader 前含 `stopPlayback()` 与 `stopRecording(true)` 调用；另按开发轮定的人手 harness 做行为级验证（见验收第 ⑤ 条）。
+- **数值锚点（测试精确值／时序断言）**：播放中换文件→旧 `state.source` 已停（`state.playing` 为 false，`state.source` 为 null）；录制中换文件→`state.recording` 为 false、`state.recorder` 为 null，且无 WebM 下载触发（ondataavailable／onstop 已置空）；解码竞态→先选 A（人为延迟解码）、后选 B 并先完成，最终 `state.fileBase` 为 B 的文件名、面板 srcinfo／时长为 B 的信息；非法文件（＞200MB 或不支持格式）换文件→校验失败，旧播放不受影响（`state.playing` 保持原值）。
+- **改动文件**：static/js/music_visualizer.js（handleFile 三停＋陈旧解码防护）／tests/music_visualizer.test.js（扩断言；不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（handleFile 三停源码断言＋陈旧解码防护断言）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/music-visualizer 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：播放中换文件→旧音立即停、新文件解码后播放正常；录制中换文件→录制静默丢弃、无旧混音 WebM 下载、新文件可重新录制；拖放换文件同效；非法文件换文件→旧播放不受影响；「重新上传」按钮行为不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID music_visualizer（Path /tools/music-visualizer，「音频处理」类目）保持不动；New: false。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：音乐可视化器换文件旧播放／旧录制不停→本轮交付（巡检新项＋11-05 评审拦截遗留，PM 定序权；三项中唯一产生错误导出产物＋挂网 4 天最久；代码验真：handleFile 行 274 只 stopMic 行 282、resetAll 行 315–318 三者全停、两入口均走 handleFile；stopPlayback／stopRecording(true) 现成可复用）／色盲模拟检查器 undefined→下轮优先候选第一位（已验真，TYPES 无 label＋renderPalette 用 esc(row.label)，改动极小）／百分比计算器首屏红错→下轮优先候选第二位（已验真，renderMode1 无条件 showErr，模式 2/3 全空守卫可照搬，改动极小）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已二十八度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，与 origin/muse/dev-20260929 一致，本地 HEAD acac1c8（sitemap/robots 200 空 body 修复已提交；注：`git status` 见未跟踪 `toolweb` 二进制，为此前轮次构建产物，本轮未动）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（音乐可视化器 handleFile 只 stopMic、resetAll 三者全停、两入口均走 handleFile、stopPlayback／stopRecording(true) 现成可复用，行号见上；色盲 TYPES 无 label＋renderPalette 行 323／330／343 代码验真；百分比 parseInput 空串→NaN＋renderMode1 无条件 showErr＋init／clearAll 调 renderAll('pct') 代码验真；music_visualizer Path /tools/music-visualizer，tools/categories.go:3063，ID music_visualizer，「音频处理」类目）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-08 09:00 · PM 选定轮，接巡检候选）
 
 **选定：sitemap.xml / robots.txt 返回 200 空 body（未知 slug 亦 200 空 body）** — 本轮唯一任务（站点级打磨，非新工具）。

@@ -8,7 +8,8 @@
 * categories.go 注册（Path 总数 309→310、Icon equalizer 全库唯一、紧邻 vocal_remover）、
 * 模板（SEO 五关键词、真限制三条、控件、互链、零外部资源静态检查）、评审重审回归
 * （停止麦克风后恢复播放面板、静默丢弃录制不下载、截图须有真实音源、进度条键盘操作、
-* recordingFilename 文件名恰为 .mp3 的边界）。
+* recordingFilename 文件名恰为 .mp3 的边界）、换文件修复（校验失败不停止旧播放、
+* 三停＋静默丢弃、世代计数陈旧解码防护、两入口同走 handleFile、resetAll 不回归）。
 */
 "use strict";
 var fs = require("fs");
@@ -278,6 +279,58 @@ has(JS_SRC, "seekTo((pos - 5) / state.buffer.duration)", "回归④：ArrowLeft 
 has(JS_SRC, "seekTo((pos + 5) / state.buffer.duration)", "回归④：ArrowRight 前进 5 秒");
 has(JS_SRC, "ev.key === 'Home'", "回归④：进度条键盘支持 Home");
 has(JS_SRC, "ev.key === 'End'", "回归④：进度条键盘支持 End");
+
+/* ---------- 12. 换文件：先停旧播放/旧录制＋陈旧解码防护 ---------- */
+/* 浏览器侧 handleFile 在 node 下不执行（module.exports 提前 return），按本仓库既有
+* 模式做源码级检查：截取目标函数体，断言修复逻辑确实存在于正确位置与顺序。 */
+var handleFileSrc = JS_SRC.slice(JS_SRC.indexOf("function handleFile(f)"),
+JS_SRC.indexOf("function resetAll()"));
+var resetAllSrc = JS_SRC.slice(JS_SRC.indexOf("function resetAll()"),
+JS_SRC.indexOf("/* ================= 文件播放"));
+var initSrc = JS_SRC.slice(JS_SRC.indexOf("function init()"),
+JS_SRC.indexOf("if (document.readyState"));
+
+/* ① 校验失败直接 return，不停止旧播放（保留现有行为） */
+var tryBlock = handleFileSrc.slice(handleFileSrc.indexOf("try {"),
+handleFileSrc.indexOf("stopPlayback()"));
+has(tryBlock, "validateAudioFile(f)", "换文件：先校验文件");
+has(tryBlock, "return;", "换文件：校验失败直接 return，未走到三停");
+ok(handleFileSrc.indexOf("stopPlayback()") > handleFileSrc.indexOf("} catch (e) {"), "换文件：三停在校验 catch 块之后（校验通过才停）");
+/* ② 校验通过后、FileReader 读取前三停（与 resetAll 顺序一致） */
+has(handleFileSrc, "stopPlayback()", "换文件：先停旧播放 stopPlayback()");
+has(handleFileSrc, "stopMic()", "换文件：停麦克风 stopMic()");
+has(handleFileSrc, "stopRecording(true)", "换文件：静默丢弃旧录制 stopRecording(true)");
+notHas(handleFileSrc, "stopRecording(false)", "换文件：不以非静默方式停录制（防旧混音 WebM 下载）");
+ok(handleFileSrc.indexOf("stopPlayback()") < handleFileSrc.indexOf("stopMic()"), "换文件：三停顺序 stopPlayback→stopMic");
+ok(handleFileSrc.indexOf("stopMic()") < handleFileSrc.indexOf("stopRecording(true)"), "换文件：三停顺序 stopMic→stopRecording");
+ok(handleFileSrc.indexOf("stopRecording(true)") < handleFileSrc.indexOf("readAsArrayBuffer"), "换文件：三停在 FileReader 读取前");
+/* ③ 陈旧解码防护：世代计数 token */
+has(JS_SRC, "var loadSeq = 0;", "陈旧解码防护：世代计数 loadSeq 声明");
+has(handleFileSrc, "var mySeq = ++loadSeq;", "陈旧解码防护：每次 handleFile 递增世代并快照");
+var thenGuard = handleFileSrc.slice(handleFileSrc.indexOf(".then(function (buf) {"),
+handleFileSrc.indexOf("state.buffer = buf"));
+has(thenGuard, "mySeq !== loadSeq", "陈旧解码防护：解码成功回调先比对世代");
+has(thenGuard, "return;", "陈旧解码防护：世代过期丢弃旧 buffer，不覆盖新文件");
+var catchGuard = handleFileSrc.slice(handleFileSrc.indexOf("}).catch(function () {"),
+handleFileSrc.indexOf("setStatus('❌ 解码失败"));
+has(catchGuard, "mySeq !== loadSeq", "陈旧解码防护：解码失败回调也先比对世代，不覆盖新文件状态文案");
+var errGuard = handleFileSrc.slice(handleFileSrc.indexOf("rd.onerror"),
+handleFileSrc.indexOf("readAsArrayBuffer"));
+has(errGuard, "mySeq !== loadSeq", "陈旧解码防护：读取失败回调也先比对世代");
+ok(handleFileSrc.indexOf("mySeq !== loadSeq") < handleFileSrc.indexOf("state.fileBase ="), "陈旧解码防护：世代守卫在 fileBase 赋值之前");
+ok(handleFileSrc.indexOf("mySeq !== loadSeq") < handleFileSrc.indexOf("state.buffer = buf"), "陈旧解码防护：世代守卫在 buffer 赋值之前");
+/* ④ 两入口同走 handleFile，一次修复覆盖两路 */
+has(initSrc, "handleFile(el.file.files[0])", "换文件：文件 input change 走 handleFile");
+has(initSrc, "handleFile(f)", "换文件：拖放 drop 走 handleFile");
+/* ⑤ resetAll 行为不回归：仍三者全停＋清空面板，另作废进行中的解码 */
+has(resetAllSrc, "stopPlayback()", "回归⑤：resetAll 仍先停播放");
+has(resetAllSrc, "stopMic()", "回归⑤：resetAll 仍停麦克风");
+has(resetAllSrc, "stopRecording(true)", "回归⑤：resetAll 仍静默丢弃录制");
+ok(resetAllSrc.indexOf("stopPlayback()") < resetAllSrc.indexOf("stopMic()") &&
+resetAllSrc.indexOf("stopMic()") < resetAllSrc.indexOf("stopRecording(true)"), "回归⑤：resetAll 三停顺序不变");
+has(resetAllSrc, "loadSeq++", "回归⑤：resetAll 作废进行中的解码（回调回来丢弃，不复活已清空状态）");
+has(resetAllSrc, "state.buffer = null", "回归⑤：resetAll 仍清空 buffer");
+has(resetAllSrc, "el.panel_player.style.display = 'none'", "回归⑤：resetAll 仍隐藏播放面板");
 
 console.log("music_visualizer: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");
 if (fail > 0) process.exit(1);

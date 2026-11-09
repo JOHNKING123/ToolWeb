@@ -5,6 +5,8 @@
  * （频谱条 / 环形频谱 / 波形 / 圆形波形 / 镜像频谱）＋ 3 组颜色主题（霓虹 / 落日 / 海洋）
  * → 播放控制（播放/暂停/进度/音量）＋ 麦克风输入模式（getUserMedia，拒绝授权明确提示）
  * → MediaRecorder 录制 canvas.captureStream＋音频导出 WebM，另附 PNG 静态帧截图。
+ * 换文件时先停旧播放／旧录制（静默丢弃，不触发旧混音 WebM 下载），解码回调按世代计数
+ * 丢弃陈旧结果（先选 A、后选 B，A 解码晚回时不覆盖 B 的状态）。
  *
  * 真限制（页面明示）：① 导出为实时录制（3 分钟音频等 3 分钟，不能加速离线渲染）；
  * ② 画面随音频频谱内容变化（静音/弱信号时画面也弱，无固定动画兜底）；
@@ -235,6 +237,9 @@ var state = {
     recStartAt: 0        // 录制开始时间戳（用于显示录制时长）
 };
 
+var loadSeq = 0;   // 文件加载世代计数：每次 handleFile 递增；解码回调先比对世代，
+                   // 旧文件解码晚于新文件返回时丢弃结果，不覆盖新文件状态
+
 var el = {};
 ['upload','file','srcinfo','status',
  'style-bars','style-ring','style-waveform','style-circular','style-mirror',
@@ -279,12 +284,18 @@ function handleFile(f) {
         setStatus('❌ ' + e.message + '（支持 FLAC/WAV/MP3/OGG/M4A，≤200MB）');
         return;
     }
+    // 换文件先停旧状态（与 resetAll() 三停顺序一致）：停旧播放、停麦克风、
+    // 静默丢弃旧录制（silent=true，不触发旧混音 WebM 下载）
+    stopPlayback();
     stopMic();
+    stopRecording(true);
+    var mySeq = ++loadSeq;   // 本次加载世代；解码回调先验世代
     setStatus('⏳ 正在读取并解码音频…');
     var rd = new FileReader();
     rd.onload = function () {
         var actx = ensureActx();
         actx.decodeAudioData(rd.result).then(function (buf) {
+            if (mySeq !== loadSeq) return;   // 陈旧解码：后选文件已接管，丢弃旧结果
             state.buffer = buf;
             state.mode = 'file';
             state.offset = 0;
@@ -305,14 +316,19 @@ function handleFile(f) {
             setStatus('✅ 解码成功，点「播放」开始可视化');
             startLoop();
         }).catch(function () {
+            if (mySeq !== loadSeq) return;   // 陈旧解码失败也不覆盖后选文件的状态文案
             setStatus('❌ 解码失败：该格式可能不受当前浏览器支持（试试 MP3 / WAV）');
         });
     };
-    rd.onerror = function () { setStatus('❌ 文件读取失败'); };
+    rd.onerror = function () {
+        if (mySeq !== loadSeq) return;   // 陈旧读取失败也不覆盖后选文件的状态文案
+        setStatus('❌ 文件读取失败');
+    };
     rd.readAsArrayBuffer(f);
 }
 
 function resetAll() {
+    loadSeq++;   // 作废进行中的解码：回调回来时丢弃，不复活已清空的状态
     stopPlayback();
     stopMic();
     stopRecording(true);
