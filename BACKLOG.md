@@ -1,3 +1,40 @@
+## 今日任务（2026-11-10 09:00 · PM 选定轮，接巡检候选）
+
+**选定：Shell 命令解释器：grep --include/--exclude 无释义，且 --flag=value 写法误解析** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有工具的核心解释链路，不新增工具、不改 Path 总数。硬依据如下：
+1. **三项中唯一产生错误解释输出的缺陷**：色盲 undefined 与百分比首屏红错只是可见文本缺陷，不产生错误结果；本项把搜索模式、旗标值、路径三者全标错——工具核心功能（粘贴命令逐段讲明白）本身讲错，且 `grep --include=...` 是日志排查高频写法，用户粘贴真实命令必触发。
+2. **通用 bug，非 grep 一家**：所有带值长旗标的 `=value` 写法全中招——`ls --color=always /tmp` 把路径吞成颜色值、`tar --exclude=...` 吞掉下一个 token、grep `--exclude=*.tmp` 吞掉 `-r`；影响面＝全工具 25 个命令的带值长旗标。
+3. **工具自带预设示例本身即被错解**：grep「日志查错＋取前 50 行」（行 685）与 tar「打包网站目录（排除日志）」（行 687）两条预设点开即错，用户第一眼就看到错误解释。
+4. **一日可高质量完成**：改动集中在 parseCommand 的 `=value` 处理＋带引号旗标判定＋grep 词典补 5 条释义，单 JS 文件＋测试扩断言；不碰分词器引号语义、不碰危险检测、不新增依赖。
+
+**未选说明**：色盲模拟检查器配色区三行模拟标题显示 undefined（PM 已验真：TYPES（行 16–20）只有 key/name/en 无 label，renderPalette 行 323 把 TYPES[i] 原样推入行，行 330／343 用 esc(row.label)，三行模拟标题与混淆警告文案必现 undefined；改动极小，列为**下轮优先候选第一位**）／百分比计算器初始加载即显示红色校验错误（PM 已验真：static/js/percentage_calc.js，parseInput 空串→NaN（行 201），percentToDecimal(NaN) 抛错，renderMode1 catch 无条件 showErr（行 233），init 调 renderAll('pct')（行 322）致首屏即红错，clearAll（行 331）清空后调 renderAll('pct') 同样复现；renderMode2/3 已有「全空不报错」模式（行 258／266 的 `if (!empty)` 守卫）可照搬；改动极小，列为**下轮优先候选第二位**）。两项均为真 bug、影响面限于单个工具页面且不产生错误产物，本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① `--flag=value` 内联值保留：parseCommand 在 splitFlags 丢弃 `=value` 之前先取出内联值，带值长旗标不再吞下一个 token（splitFlags 现注释行 211–212 称「含 '=' 的长旗标返回 ['--color']」——开发轮定一种实现：只改 parseCommand 保留内联值则 splitFlags 语义与测试行 71 不动；若改 splitFlags 语义，须同步更新其契约注释与行 71 断言，并在交付中写明）② **带引号的旗标仍认作旗标**：`--include="*.log"` 这类「旗标部分在引号外、值部分在引号内」的 token 必须按旗标解析（值取 `*.log`）；全程被引号包裹的 token（如 `"--include"`，引号在首字符）仍不得认作旗标。分词器当前只记整 token 的 quoted 种类（tokenizeShell 行 148／185 的 `curQuoted = curQuoted || ...`）、不记引号起始位置，开发轮按需扩展 token 信息，但不得改变引号内空格不切分、转义、续行、操作符等既有分词语义 ③ **grep 词典补全**：flags 补齐其 values 已列但无释义的 5 条：`-e`、`-m`、`--color`、`--include`、`--exclude`（释义须与 grep 手册一致：-e 指定搜索模式（可多次使用）、-m 每个文件最多输出若干个匹配行、--color 是否用颜色高亮匹配结果、--include 只搜索匹配的文件、--exclude 排除匹配的文件；开发轮逐条核对措辞）④ **两条自带预设回归**：grep「日志查错＋取前 50 行」（行 685）与 tar「打包网站目录（排除日志）」（行 687）解析正确（见数值锚点）⑤ 不碰 tokenizeShell 的引号／转义／操作符语义，不碰 detectDanger，不碰 DICT 其余命令的 flags（另有两条相邻缺失见文末附记，本轮不顺带），不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补文案，且只动文案）。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）；splitFlags 若改语义须同步更新其契约注释。
+- **数值锚点（测试精确值）**：
+  - `grep -rn --include=*.log ERROR /var/log` → flags：-r（value null）、-n（value null）、--include（value "*.log"，known true）；positionals：ERROR→「搜索/处理的模式或程序」，/var/log→「要搜索的文件或目录」；unknown 为空。
+  - `grep -rn --include="*.log" "ERROR" /var/log`（预设原样）→ 同上（--include value "*.log"，known true；ERROR 为模式，/var/log 为目录）。
+  - `grep --exclude=*.tmp -r foo .` → --exclude value "*.tmp" known true；-r 仍在 flags 中（不被吞）；foo 为模式，`.` 为目录。
+  - `ls --color=always /tmp` → --color value "always" known true；positionals 含 /tmp（不被吞）。
+  - `tar -czvf backup.tar.gz --exclude="*.log" /var/www/html`（预设原样）→ --exclude value "*.log" known true；/var/www/html 为「要打包/解出的文件或目录」；-f value 仍为 backup.tar.gz。
+  - `grep -e ERROR file.txt` → -e value "ERROR" known true；`grep -m 3 foo bar` → -m value "3" known true。
+  - 反向守卫：`"--include"`（全程引号包裹）仍为位置参数，不得认作旗标；`--color`（无值、后无 token）value 保持 null 且不抛错；`grep --include`（末尾、无值）不吞越界、不抛错。
+  - explainFlag('grep','--include')／('--exclude')／('-e')／('-m')／('--color') 均非 null。
+- **改动文件**：static/js/shell_explainer.js（parseCommand 的 `=value` 处理＋带引号旗标判定＋grep 词典补 5 条释义；按需扩展 tokenizeShell 的 token 信息）／tests/shell_explainer.test.js（扩断言；192 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数；注意行 71 splitFlags("--color=always") 现有断言与实现方式的联动）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列 8 组锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/shell-explainer 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：粘贴两条预设示例逐段解释正确；`--flag=value` 各形态（引号／无引号／空格分隔值）解释正确；全程引号包裹的旗标仍按位置参数处理；危险检测（rm -rf 等）不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID shell_explainer（Path /tools/shell-explainer，「开发工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→本轮交付（巡检新项，PM 定序权；三项中唯一产生错误解释输出＋通用 bug 影响全部带值长旗标＋自带两条预设示例本身被错解；代码验真：splitFlags 行 213–216 丢弃 =value、parseCommand 行 400–412 值旗标吞下一个 token、tokenizeShell quoted 整 token 标记＋parseCommand 行 386 `!tok.quoted` 守卫致带引号旗标变位置参数、grep values 含 5 条但 flags 缺释义；对照：tar／rsync 的 --exclude 有释义）／色盲模拟检查器 undefined→下轮优先候选第一位（已验真，TYPES 无 label＋renderPalette 用 esc(row.label)，改动极小）／百分比计算器首屏红错→下轮优先候选第二位（已验真，renderMode1 无条件 showErr，模式 2/3 全空守卫可照搬，改动极小）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已二十八度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，本地 HEAD 574d513（音乐可视化器换文件修复已提交；注：`git status` 见未跟踪 `toolweb` 二进制，为此前轮次构建产物，本轮未动）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（node 实测：未加引号 `--include=*.log` → --include 值变为 "ERROR"、/var/log 误标为搜索模式；加引号预设原样 `--include="*.log"` → 整 token 变位置参数「搜索/处理的模式或程序」；`--exclude=*.tmp` 吞掉 -r；`ls --color=always /tmp` 吞掉 /tmp、positionals 为空；explainFlag 探针：grep -e/-m/--color/--include/--exclude 五条均 null，对照 tar／rsync 的 --exclude 有释义；色盲 TYPES 行 16–20 无 label＋renderPalette 行 323／330／343 代码验真；百分比 parseInput 空串→NaN＋renderMode1 无条件 showErr＋init／clearAll 调 renderAll('pct') 代码验真；shell_explainer Path /tools/shell-explainer，tools/categories.go:844，ID shell_explainer，「开发工具」类目；tests/shell_explainer.test.js 现 192 断言全过，行 71 splitFlags("--color=always") 断言与实现方式联动）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**附：本轮发现的相邻缺口（不在本轮范围，留待后续轮次）**：explainFlag 抽查发现另有两条 values 已列但无释义——`ls --time-style`、`curl --max-time`（与 grep 五条同类缺陷，不同命令）；开发轮如顺带补须先报 PM 改规格，本轮不顺带。
+
+---
+
 ## 今日任务（2026-11-09 09:00 · PM 选定轮，接巡检候选）
 
 **选定：音乐可视化器：换文件时旧播放与旧录制不停** — 本轮唯一任务（体验打磨，非新工具）。

@@ -36,7 +36,7 @@ var DICT = {
         flags: { '-n': '给所有行编号（含空行）', '-b': '只给非空行编号', '-s': '把连续多个空行压缩成一个', '-E': '在每行末尾显示 $ 符号', '-T': '把 Tab 显示为 ^I', '-v': '显示不可见字符（控制字符）', '-A': '相当于 -vET（显示所有不可见字符）', '-e': '相当于 -vE（显示行尾 $ 与不可见字符）', '-t': '相当于 -vT（显示 Tab 与不可见字符）', '--number': '与 -n 相同，给所有行编号', '--squeeze-blank': '与 -s 相同，压缩连续空行' },
         values: [] },
     grep: { desc: '搜索文本内容',
-        flags: { '-r': '递归搜索子目录', '-R': '与 -r 相同，递归搜索（跟随符号链接）', '-i': '忽略大小写', '-n': '显示匹配行的行号', '-v': '反选：显示不匹配的行', '-w': '只匹配整个单词', '-E': '使用扩展正则表达式', '-F': '把模式当作固定字符串（不解析正则）', '-l': '只列出包含匹配的文件名', '-c': '只输出每个文件的匹配行数', '-o': '只输出匹配到的部分，不输出整行', '-A': '显示匹配行之后的若干行', '-B': '显示匹配行之前的若干行', '-C': '显示匹配行前后各若干行', '-q': '静默模式：找到匹配即退出，不输出内容' },
+        flags: { '-r': '递归搜索子目录', '-R': '与 -r 相同，递归搜索（跟随符号链接）', '-i': '忽略大小写', '-n': '显示匹配行的行号', '-v': '反选：显示不匹配的行', '-w': '只匹配整个单词', '-E': '使用扩展正则表达式', '-F': '把模式当作固定字符串（不解析正则）', '-l': '只列出包含匹配的文件名', '-c': '只输出每个文件的匹配行数', '-o': '只输出匹配到的部分，不输出整行', '-A': '显示匹配行之后的若干行', '-B': '显示匹配行之前的若干行', '-C': '显示匹配行前后各若干行', '-q': '静默模式：找到匹配即退出，不输出内容', '-e': '指定搜索模式（可多次使用）', '-m': '每个文件最多输出若干个匹配行', '--color': '是否用颜色高亮匹配结果', '--include': '只搜索与指定模式匹配的文件', '--exclude': '排除与指定模式匹配的文件' },
         values: ['-e', '-A', '-B', '-C', '-m', '--color', '--exclude', '--include'] },
     find: { desc: '在目录树中查找文件',
         flags: { '-name': '按文件名匹配（支持通配符）', '-iname': '按文件名匹配（忽略大小写）', '-type': '按文件类型匹配（f 文件、d 目录、l 链接）', '-size': '按文件大小匹配（如 +1M、-100k）', '-mtime': '按修改时间匹配（单位：天，如 -7 表示 7 天内）', '-exec': '对每个匹配结果执行指定命令', '-delete': '删除匹配到的文件', '-maxdepth': '限制向下搜索的最大目录深度', '-mindepth': '限制向下搜索的最小目录深度', '-perm': '按权限匹配（如 644）', '-user': '按属主用户名匹配', '-group': '按属组名匹配', '-print': '打印匹配结果（默认行为）', '-print0': '以 NUL 分隔输出（配合 xargs -0 安全处理含空格的文件名）', '-empty': '只匹配空文件或空目录' },
@@ -126,8 +126,10 @@ function isSpace(ch) { return ch === ' ' || ch === '\t' || ch === '\n' || ch ===
 var MULTI_OPS = ['||', '&&', '2>>', '2>', '&>>', '&>', '>>', '<<', '>&', '<&', '>|'];
 var SINGLE_OPS = ['|', ';', '&', '>', '<'];
 
-/* tokenizeShell(input) → { tokens: [{text, kind, quoted}], errors: [{message, pos}] }
- * kind: 'word' | 'op'；quoted: null | 'single' | 'double'
+/* tokenizeShell(input) → { tokens: [{text, kind, quoted, quoteStart}], errors: [{message, pos}] }
+ * kind: 'word' | 'op'；quoted: null | 'single' | 'double'（整 token 只要有一段被引号包裹即记）；
+ * quoteStart: token 首字符是否为引号（--include="*.log" 为 false，"--include" 为 true），
+ * 供 parseCommand 判定带引号的旗标是否仍认作旗标。
  * 处理：单引号（字面）、双引号（反斜杠转义 $ ` " \ 与换行）、反斜杠转义、
  * 反斜杠换行（续行）、操作符 | || && ; & > >> < << 2> 2>> &> >& 等。
  * 引号未闭合记入 errors（不抛错）；非法参数抛 Error，err.field='input'。 */
@@ -136,16 +138,16 @@ function tokenizeShell(input) {
     var tokens = [];
     var errors = [];
     var i = 0, n = input.length;
-    var cur = '', curQuoted = null, hasCur = false;
+    var cur = '', curQuoted = null, hasCur = false, curQuoteStart = false;
     function flush() {
         if (hasCur) {
-            tokens.push({ text: cur, kind: 'word', quoted: curQuoted });
-            cur = ''; curQuoted = null; hasCur = false;
+            tokens.push({ text: cur, kind: 'word', quoted: curQuoted, quoteStart: curQuoteStart });
+            cur = ''; curQuoted = null; hasCur = false; curQuoteStart = false;
         }
     }
     function pushOp(op) {
         flush();
-        tokens.push({ text: op, kind: 'op', quoted: null });
+        tokens.push({ text: op, kind: 'op', quoted: null, quoteStart: false });
     }
     while (i < n) {
         var ch = input[i];
@@ -158,6 +160,7 @@ function tokenizeShell(input) {
         }
         if (ch === '\\' && i + 1 < n) { cur += input[i + 1]; hasCur = true; i += 2; continue; }
         if (ch === "'") {
+            if (!hasCur) curQuoteStart = true;
             var end = input.indexOf("'", i + 1);
             if (end === -1) {
                 errors.push({ message: '单引号未闭合', pos: i });
@@ -170,6 +173,7 @@ function tokenizeShell(input) {
             continue;
         }
         if (ch === '"') {
+            if (!hasCur) curQuoteStart = true;
             var j = i + 1, buf = '', closed = false;
             while (j < n) {
                 var c = input[j];
@@ -364,15 +368,24 @@ continue;
 }
 /* 选项结束符 */
 if (word === '--' &&!afterDashDash) { afterDashDash = true; continue;}
-/* 旗标 */
-if (!afterDashDash && word[0] === '-' && word.length > 1 &&!tok.quoted) {
+/* 旗标：全程被引号包裹的 token（引号在首字符，如 "--include"）不是旗标；
+ * 旗标中段才出现引号（如 --include="*.log"）仍按旗标解析 */
+if (!afterDashDash && word[0] === '-' && word.length > 1 && !tok.quoteStart) {
 var flagParts, attachedVal = null;
+/* --flag=value：splitFlags 会丢弃 =value（其契约注释行称含 '=' 的长旗标只返回旗标名），
+ * 故先在此取出内联值；带值长旗标有了内联值就不再吞下一个 token */
+var wordInlineVal = null;
+if (word.slice(0, 2) === '--') {
+var wEq = word.indexOf('=');
+if (wEq !== -1) wordInlineVal = word.slice(wEq + 1);
+}
 if (DICT[cur.command] && DICT[cur.command].flags[word]) { flagParts = [word]; }
 else if (word.length > 2 && word[0] === '-' && word[1] !== '-' && isValueFlag(cur.command, '-' + word[1])) { flagParts = ['-' + word[1]]; attachedVal = word.slice(2); }
 else { flagParts = splitFlags(word); }
 for (var f = 0; f < flagParts.length; f++) {
 var fl = flagParts[f];
 var base = fl, inlineVal = (attachedVal !== null && f === 0) ? attachedVal : null;
+if (wordInlineVal !== null && f === 0) inlineVal = wordInlineVal;
 var eqIdx = fl.indexOf('=');
 if (eqIdx!== -1) { base = fl.slice(0, eqIdx); inlineVal = fl.slice(eqIdx + 1);}
 var desc = explainFlag(cur.command, base);
@@ -428,7 +441,9 @@ return '要搜索的文件或目录';
 }
 if (seg.command === 'find') return '开始搜索的目录';
 if (seg.command === 'tar') {
-if (seg.positionals.length === 0) return '归档文件名';
+/* 归档名已被 -f 吞作旗标值时，首个位置参数即为打包/解出目标，不再是归档名 */
+var hasArchive = seg.flags.some(function (f) { return f.flag === '-f' && f.value !== null && f.value !== undefined; });
+if (!hasArchive && seg.positionals.length === 0) return '归档文件名';
 return '要打包/解出的文件或目录';
 }
 if (seg.command === 'curl' || seg.command === 'wget') {
@@ -555,13 +570,20 @@ cur.command = word;
 continue;
 }
 if (word === '--' &&!afterDashDash) { afterDashDash = true; continue;}
-if (!afterDashDash && word[0] === '-' && word.length > 1 &&!tok.quoted) {
+if (!afterDashDash && word[0] === '-' && word.length > 1 && !tok.quoteStart) {
+/* --flag=value：与 parseCommand 同款，先取出内联值再拆旗标 */
+var wordInlineVal = null;
+if (word.slice(0, 2) === '--') {
+var wEq = word.indexOf('=');
+if (wEq !== -1) wordInlineVal = word.slice(wEq + 1);
+}
 var parts = splitFlags(word);
 for (var f = 0; f < parts.length; f++) {
 var fl = parts[f];
 var eqIdx = fl.indexOf('=');
 var base = eqIdx!== -1? fl.slice(0, eqIdx): fl;
 var inlineVal = eqIdx!== -1? fl.slice(eqIdx + 1): null;
+if (wordInlineVal !== null && f === 0) inlineVal = wordInlineVal;
 var val = inlineVal;
 if (val === null && isValueFlag(cur.command, base) && f === parts.length - 1) {
 if (i + 1 < tk.tokens.length && tk.tokens[i + 1].kind === 'word') { val = tk.tokens[i + 1].text; i++;}

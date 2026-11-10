@@ -4,7 +4,7 @@
  * ("grep","-r")→"递归搜索子目录"）、parseCommand（分段/子命令/带值旗标/重定向/sudo）、
  * explainCommand（逐段释义＋plainText＋未收录）、detectDanger（锚点 ("rm -rf /") 含警示；
  * chmod 777、curl|sh、dd of=/dev/）、validateShellInput（上限 4000）、非法参数 err.field、
- * 25 命令词典（每命令 6–15 个旗标）、categories.go 注册（Path 总数 318→319、Icon
+ * 25 命令词典（每命令 6–20 个旗标）、categories.go 注册（Path 总数 318→319、Icon
  * integration_instructions 全库唯一、紧邻 git_cheatsheet）、模板（SEO 关键词、真限制五条、
  * 控件、互链、零外部资源静态检查）、浏览器绑定源码级检查（window.ShellExplainer、
  * 分段高亮/复制释义/预设示例）。
@@ -210,7 +210,7 @@ throws(function () { S.explainCommand(undefined); }, "input", "抛错：explainC
 throws(function () { S.detectDanger(42); }, "input", "抛错：detectDanger(42) field=input");
 throws(function () { S.validateShellInput(null); }, "input", "抛错：validateShellInput(null) field=input");
 
-/* ---------- 9. 词典覆盖：25 命令，每命令 6–15 个旗标 ---------- */
+/* ---------- 9. 词典覆盖：25 命令，每命令 6–20 个旗标 ---------- */
 (function () {
     var cmds = S.listCommands();
     eq(cmds.length, 25, "词典：25 个常用命令");
@@ -220,10 +220,10 @@ throws(function () { S.validateShellInput(null); }, "input", "抛错：validateS
     });
     var counts = cmds.map(function (c) { return c.flagCount; });
     ok(Math.min.apply(null, counts) >= 6, "词典：每命令至少 6 个旗标（最小 " + Math.min.apply(null, counts) + "）");
-    ok(Math.max.apply(null, counts) <= 15, "词典：每命令至多 15 个旗标（最大 " + Math.max.apply(null, counts) + "）");
+    ok(Math.max.apply(null, counts) <= 20, "词典：每命令至多 20 个旗标（最大 " + Math.max.apply(null, counts) + "）");
     eq(cmds.filter(function (c) { return c.name === "ls"; })[0].flagCount, 14, "词典：ls 14 个旗标");
     eq(cmds.filter(function (c) { return c.name === "cd"; })[0].flagCount, 6, "词典：cd 6 个旗标");
-    eq(cmds.filter(function (c) { return c.name === "grep"; })[0].flagCount, 15, "词典：grep 15 个旗标");
+    eq(cmds.filter(function (c) { return c.name === "grep"; })[0].flagCount, 20, "词典：grep 20 个旗标（含补齐的 -e/-m/--color/--include/--exclude）");
 })();
 
 /* ---------- 10. categories.go 注册 ---------- */
@@ -287,6 +287,87 @@ has(JS_SRC, "se-table-wrap", "绑定：结构分解表容器 id");
 notHas(JS_SRC, "cdnjs", "绑定：无 CDN 引用");
 notHas(JS_SRC, "fetch(", "绑定：不发起后端请求");
 notHas(JS_SRC, "XMLHttpRequest", "绑定：不使用 XHR");
+
+/* ---------- 13. --flag=value 内联值、带引号旗标与 grep 词典补全（2026-11-10） ----------
+ * 实现方式：只改 parseCommand／parseCommandShallow（在 splitFlags 丢弃 =value 之前先取出
+ * 内联值），splitFlags 语义与 §2 行 71 断言不动；tokenizeShell 新增 quoteStart（引号是否
+ * 在 token 首字符），分词语义不动。 */
+(function () {
+    function flagOf(seg, name) {
+        return seg.flags.filter(function (x) { return x.flag === name; })[0];
+    }
+    /* 锚点 1：未加引号 --include=*.log */
+    var g1 = S.parseCommand("grep -rn --include=*.log ERROR /var/log");
+    eq(flagOf(g1.segments[0], "--include").value, "*.log", "--flag=value：--include 值 *.log");
+    eq(flagOf(g1.segments[0], "--include").known, true, "--flag=value：--include known=true");
+    eq(flagOf(g1.segments[0], "-r").value, null, "--flag=value：-r 无值");
+    eq(flagOf(g1.segments[0], "-n").value, null, "--flag=value：-n 无值");
+    eq(g1.segments[0].positionals[0].text, "ERROR", "--flag=value：ERROR 为位置参数");
+    eq(g1.segments[0].positionals[0].desc, "搜索/处理的模式或程序", "--flag=value：ERROR 释为模式");
+    eq(g1.segments[0].positionals[1].text, "/var/log", "--flag=value：/var/log 为位置参数");
+    eq(g1.segments[0].positionals[1].desc, "要搜索的文件或目录", "--flag=value：/var/log 释为目录");
+    eq(g1.unknown.length, 0, "--flag=value：无未收录");
+    /* 锚点 2：grep 预设原样 --include="*.log" */
+    var g2 = S.parseCommand('grep -rn --include="*.log" "ERROR" /var/log | head -n 50');
+    eq(flagOf(g2.segments[0], "--include").value, "*.log", "预设 grep：--include 值 *.log");
+    eq(flagOf(g2.segments[0], "--include").known, true, "预设 grep：--include known=true");
+    eq(g2.segments[0].positionals[0].text, "ERROR", "预设 grep：ERROR 为模式");
+    eq(g2.segments[0].positionals[1].text, "/var/log", "预设 grep：/var/log 为目录");
+    /* 锚点 3：--exclude=*.tmp 不吞 -r */
+    var g3 = S.parseCommand("grep --exclude=*.tmp -r foo .");
+    eq(flagOf(g3.segments[0], "--exclude").value, "*.tmp", "--flag=value：--exclude 值 *.tmp");
+    eq(flagOf(g3.segments[0], "--exclude").known, true, "--flag=value：--exclude known=true");
+    ok(flagOf(g3.segments[0], "-r"), "--flag=value：-r 未被 --exclude 吞掉");
+    eq(g3.segments[0].positionals[0].text, "foo", "--flag=value：foo 为模式");
+    eq(g3.segments[0].positionals[1].text, ".", "--flag=value：. 为目录");
+    /* 锚点 4：ls --color=always 不吞 /tmp */
+    var l1 = S.parseCommand("ls --color=always /tmp");
+    eq(flagOf(l1.segments[0], "--color").value, "always", "--flag=value：--color 值 always");
+    eq(flagOf(l1.segments[0], "--color").known, true, "--flag=value：--color known=true");
+    eq(l1.segments[0].positionals.length, 1, "--flag=value：ls 仍有 1 个位置参数");
+    eq(l1.segments[0].positionals[0].text, "/tmp", "--flag=value：/tmp 未被吞");
+    /* 锚点 5：tar 预设原样 */
+    var t1 = S.parseCommand('tar -czvf backup.tar.gz --exclude="*.log" /var/www/html');
+    eq(flagOf(t1.segments[0], "--exclude").value, "*.log", "预设 tar：--exclude 值 *.log");
+    eq(flagOf(t1.segments[0], "--exclude").known, true, "预设 tar：--exclude known=true");
+    eq(flagOf(t1.segments[0], "-f").value, "backup.tar.gz", "预设 tar：-f 值仍为 backup.tar.gz");
+    eq(t1.segments[0].positionals[0].text, "/var/www/html", "预设 tar：/var/www/html 为位置参数");
+    eq(t1.segments[0].positionals[0].desc, "要打包/解出的文件或目录", "预设 tar：/var/www/html 释为打包目标");
+    /* 锚点 6：短旗标带值 -e / -m */
+    var g6 = S.parseCommand("grep -e ERROR file.txt");
+    eq(flagOf(g6.segments[0], "-e").value, "ERROR", "带值短旗标：-e 值 ERROR");
+    eq(flagOf(g6.segments[0], "-e").known, true, "带值短旗标：-e known=true");
+    var g7 = S.parseCommand("grep -m 3 foo bar");
+    eq(flagOf(g7.segments[0], "-m").value, "3", "带值短旗标：-m 值 3");
+    eq(flagOf(g7.segments[0], "-m").known, true, "带值短旗标：-m known=true");
+    /* 锚点 7：反向守卫 */
+    var q1 = S.parseCommand('grep "--include" foo');
+    eq(q1.segments[0].flags.length, 0, "反向守卫：全程引号包裹的 --include 不是旗标");
+    eq(q1.segments[0].positionals[0].text, "--include", "反向守卫：全程引号包裹的 --include 是位置参数");
+    var q2 = S.parseCommand("ls --color");
+    eq(flagOf(q2.segments[0], "--color").value, null, "反向守卫：--color 无值时 value 为 null");
+    var q3 = S.parseCommand("grep --include");
+    eq(flagOf(q3.segments[0], "--include").value, null, "反向守卫：末尾 --include 不吞越界、不抛错");
+    /* 锚点 8：explainFlag 五条均非 null */
+    ok(S.explainFlag("grep", "--include") !== null, "explainFlag：grep --include 非 null");
+    ok(S.explainFlag("grep", "--exclude") !== null, "explainFlag：grep --exclude 非 null");
+    ok(S.explainFlag("grep", "-e") !== null, "explainFlag：grep -e 非 null");
+    ok(S.explainFlag("grep", "-m") !== null, "explainFlag：grep -m 非 null");
+    ok(S.explainFlag("grep", "--color") !== null, "explainFlag：grep --color 非 null");
+    has(S.explainFlag("grep", "-e"), "搜索模式", "explainFlag：grep -e 释义含搜索模式");
+    has(S.explainFlag("grep", "-m"), "匹配行", "explainFlag：grep -m 释义含匹配行");
+    has(S.explainFlag("grep", "--color"), "颜色", "explainFlag：grep --color 释义含颜色");
+    has(S.explainFlag("grep", "--include"), "只搜索", "explainFlag：grep --include 释义含只搜索");
+    has(S.explainFlag("grep", "--exclude"), "排除", "explainFlag：grep --exclude 释义含排除");
+    /* tokenizeShell：引号起始位置 */
+    var qt = S.tokenizeShell('--include="*.log" "--include"');
+    eq(qt.tokens[0].quoteStart, false, "tokenizeShell：--include=\"*.log\" 引号不在首字符");
+    eq(qt.tokens[1].quoteStart, true, "tokenizeShell：\"--include\" 引号在首字符");
+    var qt2 = S.tokenizeShell("ls -la /tmp");
+    eq(qt2.tokens[0].quoteStart, false, "tokenizeShell：无引号 token quoteStart=false");
+    /* splitFlags 语义不动（§2 断言仍有效） */
+    eqj(S.splitFlags("--color=always"), ["--color"], "splitFlags 语义不动：--color=always 仍只返旗标名");
+})();
 
 console.log("shell_explainer: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");
 if (fail > 0) process.exit(1);
