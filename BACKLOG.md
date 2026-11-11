@@ -1,3 +1,34 @@
+## 今日任务（2026-11-11 09:00 · PM 选定轮，接巡检候选）
+
+**选定：色盲模拟检查器：配色区三行模拟标题显示 undefined** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有工具配色区的渲染文案，不新增工具、不改 Path 总数。硬依据如下：
+1. **三轮连任的下轮优先候选第一位，本轮再无推迟理由**：11-08、11-09、11-10 三轮 PM 均已验真并列为下轮优先候选第一位，三轮均因站级项／错误解释输出／错误导出产物让位；三项中本项挂网最久，且无新证据改变顺位。
+2. **每次用配色功能必现**：粘贴任意有效配色即触发，三行模拟标题与混淆警告文案共 4 处以上同屏出现 `undefined`——配色区是本工具两大功能之一（单色模拟之外），不是边角路径。
+3. **PM 独立复核确凿（代码级验真＋node 实测）**：static/js/colorblind_simulator.js：TYPES（行 16–20）只有 key/name/en 三字段、无 label；renderPalette 行 323 把 TYPES[i] 原样推入 rows，行 330 `esc(row.label)` 与行 343 警告文案 `esc(row.label)` 读到 undefined；esc（行 259–261）为 `String(s)` 直转，故页面实显字符串 "undefined"；node 实测 `require` 导出 TYPES 三项 `label` 字段均不存在。单色模拟区（行 281 用 TYPES[i].name）与对比度区（行 408–410 用 name＋en）不受影响，病灶只在配色区。
+4. **一日可高质量完成**：改动集中在 TYPES 补 label 字段（或 renderPalette 行 323 推入 {key, label} 二选一）＋测试扩断言；不碰模拟矩阵、配色解析、混淆判定、对比度逻辑，不新增依赖。
+
+**未选说明**：GB/T 7714 参考文献：MLA/Chicago 作者尾带句点时出双句点（PM 已验真＋node 实测复现：static/js/gbt7714_reference_generator.js，mlaAuthors 行 346–349 与 chicagoAuthors 行 394–397 无条件追加句点，enAuthors 行 284–288 只 trim 不去尾句点；作者栏填 APA 写法 `Zhang, S.` 切到 MLA/Chicago 后三类全中招——期刊 `Zhang, S.. "Test Title." Nature, vol. 10, no. 2, 2023, pp. 1-9.`、图书 `Zhang, S.. Test Title. MIT Press, 2023.`、网页 `Zhang, S.. "Test Title.", 5 Jan. 2024, https://example.com/.`，Chicago 三类同病；APA 本身不受影响（apaAuthors 行 311–315 不追加句点）；引文文本本身就是交付物，错标点会带进论文——列为**下轮优先候选第一位**；注意 ≥3 人时 `Zhang, S., et al.` 首作者尾句点后接逗号属正常标点，不算双句点，开发轮只修单人／双人尾部追加逻辑，或统一在英文作者格式化入口去尾句点）／百分比计算器初始加载即显示红色校验错误（PM 已验真：static/js/percentage_calc.js，parseInput 空串→NaN（行 201），percentToDecimal(NaN) 抛「pct（百分比）必须为有限数字」（node 实测），renderMode1 catch 无条件 showErr（行 233），init 行 426 调 renderAll('pct') 致首屏即红错，clearAll（行 332）清空后调 renderAll('pct') 同样复现；renderMode2/3 已有「全空不报错」模式（行 258／266 的 `if (!empty)` 守卫）可照搬；纯视觉误报、不产生错误产物，列为**下轮优先候选第二位**）。两项均为真 bug，本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① TYPES 补 label 字段（开发轮定一种实现：TYPES 每项加 `label: "红色盲（Protanopia）"` 等中文名＋英文名；或 renderPalette 行 323 改为推入 `{key: TYPES[i].key, label: TYPES[i].name + "（" + TYPES[i].en + "）"}`；二选一，交付中写明）② 三行模拟标题与混淆警告文案均显示中文名＋英文名，与单色模拟区（行 281）与对比度区（行 408–410）的 `name＋en` 口径一致 ③ 不碰 Machado 模拟矩阵、parseHex／parsePalette、findConfusablePairs、对比度计算与 AA 判定，不碰复制该行 HEX 列表逻辑（data-row 索引与 paletteOut._rows 映射不动），不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补文案，且只动文案）。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数＋源码级断言）；renderPalette 本身为 DOM 绑定函数，标题文案以 TYPES 导出字段断言＋源码切片断言覆盖（沿用 music_visualizer.test.js 源码级断言惯例）。
+- **数值锚点（测试精确值）**：
+  - `M.TYPES` 三项均有非空字符串 `label`，且 label 含对应 `name` 与 `en`（如 "红色盲（Protanopia）"／"绿色盲（Deuteranopia）"／"蓝色盲（Tritanopia）"；开发轮若定 renderPalette 构造 label 的实现，则断言改为源码切片：行 323 推入对象含 label 且 label 由 name＋en 拼成）。
+  - 粘贴 `#FF0000, #00FF00` 后四行标题：原色行 "原色"＋三行模拟标题均不含 "undefined"，三行模拟标题互不相同（浏览器手工验证；源码级断言覆盖 `esc(row.label)` 处的 label 来源）。
+  - 混淆警告锚点：粘贴 `#C80002, #C80003` 后 protanopia 行警告文案为 `⚠ 红色盲（Protanopia）下完全相同：#C80002 与 #C80003 在该类型下均为 #717002`（node 实测两色 protanopia 模拟值均为 #717002，测试行 92 已有该对判定断言）；deuteranopia／tritanopia 行无警告（测试行 95–96 已有不误报断言，不回归）。
+  - 反向守卫：`simulateColor`／`parsePalette`／`findConfusablePairs`／对比度向量现有 76 断言全过，不回归。
+- **改动文件**：static/js/colorblind_simulator.js（TYPES 补 label 或 renderPalette 行 323 构造 label，二选一）／tests/colorblind_simulator.test.js（扩断言；76 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/colorblind-simulator 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：粘贴配色后三行模拟标题正常显示（中文名＋英文名，无 undefined）、混淆警告文案正常、复制该行 HEX 列表不回归、单色模拟区与对比度区不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID colorblind_simulator（Path /tools/colorblind-simulator，「开发工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：色盲模拟检查器配色区三行模拟标题显示 undefined→本轮交付（巡检项；三轮连任下轮优先候选第一位，11-08／11-09／11-10 三轮均因站级项／错误解释输出／错误导出产物让位；PM 定序权；每次粘贴配色必现、三行标题＋警告文案同屏 undefined；代码验真：TYPES 行 16–20 无 label＋renderPalette 行 323／330／343，esc 为 String 直转；改动极小）／GB/T 7714 参考文献 MLA/Chicago 作者尾带句点时出双句点→下轮优先候选第一位（巡检新项；PM 已验真＋node 实测三类全中招：mlaAuthors／chicagoAuthors 无条件追加句点，期刊／图书／网页 MLA/Chicago 六条输出均含 `Zhang, S..`；引文文本即交付物；APA 不受影响）／百分比计算器首屏红错→下轮优先候选第二位（已验真，renderMode1 无条件 showErr＋init 行 426／clearAll 行 332 调 renderAll('pct')，模式 2/3 全空守卫可照搬，改动极小）／Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已二十八度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，本地 HEAD a4bcd23（Shell 命令解释器 --flag=value 误解析修复已提交；`git status` 干净，无未跟踪构建产物）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（node 实测：colorblind TYPES 三项无 label 字段、esc 为 String 直转、#C80002／#C80003 protanopia 模拟值均为 #717002；百分比 percentToDecimal(NaN) 抛「pct（百分比）必须为有限数字」；GBT MLA/Chicago 期刊／图书／网页六条输出均含 `Zhang, S..`，APA 不受影响；色盲 76 断言、百分比 123 断言、GBT 90 断言三文件现全绿；colorblind_simulator Path /tools/colorblind-simulator，tools/categories.go:1051，ID colorblind_simulator，「开发工具」类目，New: true；gbt7714_reference_generator Path /tools/gbt7714-reference-generator，tools/categories.go:1221，「文本工具」类目；percentage_calc Path /tools/percentage-calc，tools/categories.go:2948，「学习工具」类目）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-10 09:00 · PM 选定轮，接巡检候选）
 
 **选定：Shell 命令解释器：grep --include/--exclude 无释义，且 --flag=value 写法误解析** — 本轮唯一任务（体验打磨，非新工具）。

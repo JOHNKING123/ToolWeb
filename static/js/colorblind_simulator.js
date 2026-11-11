@@ -14,9 +14,9 @@
 "use strict";
 
 var TYPES = [
-  { key: "protanopia", name: "红色盲", en: "Protanopia" },
-  { key: "deuteranopia", name: "绿色盲", en: "Deuteranopia" },
-  { key: "tritanopia", name: "蓝色盲", en: "Tritanopia" }
+  { key: "protanopia", name: "红色盲", en: "Protanopia", label: "红色盲（Protanopia）" },
+  { key: "deuteranopia", name: "绿色盲", en: "Deuteranopia", label: "绿色盲（Deuteranopia）" },
+  { key: "tritanopia", name: "蓝色盲", en: "Tritanopia", label: "蓝色盲（Tritanopia）" }
 ];
 
 /* Machado 等 2009 年模拟矩阵：行对应输出 R / G / B，列对应输入 R / G / B。 */

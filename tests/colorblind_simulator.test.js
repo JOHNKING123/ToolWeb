@@ -7,6 +7,7 @@
 * 5. AA 判定（正常字 4.5 / 大号字 3.0）与跌落判定（原色通过、模拟不通过才标红）
 * 6. 混淆对判定（模拟 HEX 完全相等才警告、其余类型不误报）
 * 7. 对比度摘要文本与注册、零网络请求静态检查
+* 8. 配色区行标题与混淆警告文案（TYPES.label 中文名＋英文名，不含 undefined）
 */
 "use strict";
 var fs = require("fs");
@@ -126,6 +127,47 @@ notHas(js, "fetch(", "JS 零 fetch");
 notHas(js, "XMLHttpRequest", "JS 零 XHR");
 notHas(html, "http://", "HTML 无 http 外链");
 notHas(html, "https://cdn", "HTML 零 CDN");
+
+/* ---------- 8. 配色区行标题与混淆警告文案 ---------- */
+/* renderPalette 原样推入 TYPES[i] 作行对象，行标题与警告文案均取 row.label；
+* label 须为中文名＋英文名，与对比度区 name＋en 口径一致，杜绝 undefined。 */
+eq(M.TYPES.length, 3, "TYPES 共三项");
+for (var ti = 0; ti < M.TYPES.length; ti++) {
+  var t = M.TYPES[ti];
+  ok(typeof t.label === "string" && t.label.length > 0, "TYPES[" + t.key + "] label 为非空字符串");
+  has(t.label, t.name, "TYPES[" + t.key + "] label 含中文名");
+  has(t.label, t.en, "TYPES[" + t.key + "] label 含英文名");
+}
+eq(M.TYPES[0].label, "红色盲（Protanopia）", "红色盲 label 全值");
+eq(M.TYPES[1].label, "绿色盲（Deuteranopia）", "绿色盲 label 全值");
+eq(M.TYPES[2].label, "蓝色盲（Tritanopia）", "蓝色盲 label 全值");
+/* 按 renderPalette 的行组装方式复核：原色行 + 三类型行共四行标题。 */
+var paletteRows = [{ key: "original", label: "原色" }].concat(M.TYPES);
+eq(paletteRows.length, 4, "粘贴配色后共四行（原色 + 三类型模拟）");
+var rowLabels = paletteRows.map(function (r) { return String(r.label); });
+notHas(rowLabels.join("|"), "undefined", "四行标题均不含 undefined");
+eq(paletteRows[0].label, "原色", "首行标题为原色");
+ok(rowLabels[1] !== rowLabels[2] && rowLabels[2] !== rowLabels[3] && rowLabels[1] !== rowLabels[3],
+  "三行模拟标题互不相同");
+/* 按 renderPalette 的警告拼装方式复核文案（#C80002/#C80003 红色盲下均为 #717002）。 */
+function paletteWarn(colors, typeObj) {
+  var pairs = M.findConfusablePairs(colors, typeObj.key);
+  if (pairs.length === 0) return "";
+  var warns = pairs.map(function (p) {
+    return p.a + " 与 " + p.b + " 在该类型下均为 " + p.simulated;
+  });
+  return "⚠ " + typeObj.label + "下完全相同：" + warns.join("；");
+}
+var warnColors = ["#C80002", "#C80003"];
+eq(paletteWarn(warnColors, M.TYPES[0]),
+  "⚠ 红色盲（Protanopia）下完全相同：#C80002 与 #C80003 在该类型下均为 #717002",
+  "红色盲行混淆警告文案全值");
+eq(paletteWarn(warnColors, M.TYPES[1]), "", "绿色盲行无混淆警告");
+eq(paletteWarn(warnColors, M.TYPES[2]), "", "蓝色盲行无混淆警告");
+var js2 = fs.readFileSync("static/js/colorblind_simulator.js", "utf8");
+has(js2, 'label: "红色盲（Protanopia）"', "JS 源码含红色盲 label");
+has(js2, 'label: "绿色盲（Deuteranopia）"', "JS 源码含绿色盲 label");
+has(js2, 'label: "蓝色盲（Tritanopia）"', "JS 源码含蓝色盲 label");
 
 console.log("PASS: " + pass + ", FAIL: " + fail);
 process.exit(fail === 0 ? 0 : 1);
