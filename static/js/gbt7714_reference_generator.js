@@ -105,6 +105,11 @@
 
     function hasCJK(s) { return /[\u4e00-\u9fff]/.test(s); }
 
+    // 作者名尾句点归一：GB/T 顺序编码制与 MLA/Chicago 都在作者串末尾补一个句点，
+    // 作者名自带缩写点（如 Zhang, S.）时须先去掉尾部句点（一个或多个），否则出 "Zhang, S.." 双句点。
+    // 注意：enAuthors 不用它——APA 单作者原样返回，依赖该句点。
+    function stripTrailingDots(s) { return String(s).replace(/\.+$/, ''); }
+
     // 文末作者串（顺序编码制）：≤3 全列；>3 取前3 + 等/et al；末尾带句点
     function formatAuthors(authors) {
         if (!authors || authors.length === 0) return '';
@@ -112,7 +117,7 @@
         var head = authors.length <= 3 ? authors : authors.slice(0, 3);
         var s = head.join(', ');
         if (authors.length > 3) s += chinese ? ', 等' : ', et al';
-        return s + '. ';
+        return stripTrailingDots(s) + '. ';
     }
 
     // 著者-出版年制文末作者串：无末尾句点（后面跟 ", 年."）
@@ -343,9 +348,11 @@
     }
 
     // MLA 9th 作者串：1 人「A.」；2 人「A, and B.」；≥3 人「A, et al.」
+    // 追加末尾句点前先去作者名尾句点（单人去 authors[0]、双人只去末作者），防 "Zhang, S.."；
+    // 双人首作者尾句点后接 ", and" 属正常标点，不得动；≥3 人分支首作者后接逗号，不动。
     function mlaAuthors(authors) {
-        if (authors.length === 1) return authors[0] + '.';
-        if (authors.length === 2) return authors[0] + ', and ' + authors[1] + '.';
+        if (authors.length === 1) return stripTrailingDots(authors[0]) + '.';
+        if (authors.length === 2) return authors[0] + ', and ' + stripTrailingDots(authors[1]) + '.';
         return authors[0] + ', et al.';
     }
 
@@ -391,9 +398,10 @@
     }
 
     // Chicago 17th 著者-日期制作者串：1 人「A.」；2 人「A, and B.」；≥3 人「A, et al.」
+    // 追加末尾句点前先去作者名尾句点（规则同 mlaAuthors），防 "Zhang, S.."。
     function chicagoAuthors(authors) {
-        if (authors.length === 1) return authors[0] + '.';
-        if (authors.length === 2) return authors[0] + ', and ' + authors[1] + '.';
+        if (authors.length === 1) return stripTrailingDots(authors[0]) + '.';
+        if (authors.length === 2) return authors[0] + ', and ' + stripTrailingDots(authors[1]) + '.';
         return authors[0] + ', et al.';
     }
 

@@ -1,3 +1,41 @@
+## 今日任务（2026-11-12 09:00 · PM 选定轮，接巡检候选）
+
+**选定：GB/T 7714 参考文献：MLA/Chicago 作者尾带句点时出双句点** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有工具的英文引文格式化链路，不新增工具、不改 Path 总数。硬依据如下：
+1. **三项中唯一产生错误交付物的缺陷**：百分比首屏红错只是可见文本误报、Shell 两条缺失只是无释义，均不产生错误结果；本项引文文本本身就是交付物——错标点（`Zhang, S..`）会直接带进论文，且模板承诺 APA/MLA/Chicago 三格式一键切换，用户按提示换格式即中招。
+2. **触发路径极短、命中率高**：作者栏按 APA 习惯填 `Zhang, S.`（带名首字母缩写点，页面示例与 enSplitAuthors 测试本身即用此写法）后切到 MLA/Chicago，期刊／图书／网页三类全中招，无需特殊输入。
+3. **PM 独立复核确凿（node 实测六条输出全含双句点）**：static/js/gbt7714_reference_generator.js：enAuthors（行 286–291）只 trim 不去尾句点；mlaAuthors（行 346–349）与 chicagoAuthors（行 394–397）无条件追加句点；APA 不受影响（apaAuthors 行 312–315 不追加句点，单作者原样返回）。
+4. **一日可高质量完成**：改动集中在 mlaAuthors／chicagoAuthors 两处去尾句点＋测试扩断言；不碰 GB/T 7714 中文双制式、enSplitAuthors、DOI 归一化，不新增依赖。
+
+**未选说明**：百分比计算器初始加载即显示红色校验错误（PM 已验真：static/js/percentage_calc.js，parseInput 空串→NaN（行 201），percentToDecimal(NaN) 抛「pct（百分比）必须为有限数字」（node 实测），renderMode1 catch 无条件 showErr（行 233），init 行 426 调 renderAll('pct') 致首屏即红错，clearAll（行 332）清空后调 renderAll('pct') 同样复现；renderMode2/3 已有「全空不报错」模式（行 258／266 的 `if (!empty)` 守卫）可照搬；纯视觉误报、不产生错误产物，列为**下轮优先候选第一位**）／Shell 命令解释器：ls --time-style 与 curl --max-time 无释义（PM 已验真：explainFlag('ls','--time-style') 与 explainFlag('curl','--max-time') 均返回 null，用户粘贴 `ls --time-style=...`／`curl --max-time ...` 即看到无释义；对照 grep --include 与 tar --exclude 均已有释义；修复路径与 11-10 轮完全相同——词典补两条释义＋测试断言，列为**下轮优先候选第二位**）。两项均为真 bug，本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① mlaAuthors（行 346–349）与 chicagoAuthors（行 394–397）在追加末尾句点前，先去掉被追加作者名尾部的句点（一个或多个，防已带双句点的输入）；单人去 authors[0] 尾句点，双人只去末作者（authors[1]）尾句点——首作者尾句点后接 `, and` 属正常标点，不得动；≥3 人分支（`authors[0] + ', et al.'`）首作者尾句点后接逗号属正常标点，不动 ② **禁止在 enAuthors（行 286–291）去尾句点**：APA 依赖该句点（apaAuthors 单作者原样返回，APA 向量 `Zhang, S. (2024).` 必须保持），去尾句点只发生在 MLA／Chicago 两条追加路径内（实现方式开发轮定：两函数内联 `replace(/\.+$/, '')` 或抽公共小 helper，二选一，交付中写明）③ 不碰 formatCitationAPA／formatCitationMLA／formatCitationChicago 的其余拼接逻辑，不碰 enSplitAuthors／splitAuthors／normalizeDoi／buildBody，不碰模板 HTML（除非开发轮证实须补文案，且只动文案），不新增依赖，不改 tools/categories.go，不改 Path 总数。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数＋源码级断言）；本文件测试为自定义 ok／eq／has／notHas harness（无 assert 模块），新断言沿用该 harness，写进 tests/gbt7714_reference_generator.test.js 的 MLA／Chicago 小节。
+- **数值锚点（测试精确值；作者均为 `['Zhang, S.']`，除注明外）**：
+  - MLA 期刊：`Zhang, S. "Test Title." Nature, vol. 10, no. 2, 2023, pp. 1-9.`（入参 title 'Test Title'、journal 'Nature'、year '2023'、volume '10'、issue '2'、pages '1-9'）
+  - MLA 图书：`Zhang, S. Test Title. MIT Press, 2023.`（publisher 'MIT Press'）
+  - MLA 网页：`Zhang, S. "Test Title.", 5 Jan. 2024, https://example.com/.`（url 'https://example.com/'、accessDate '2024-01-05'）
+  - Chicago 期刊：`Zhang, S. 2023. "Test Title." Nature 10 (2): 1-9.`
+  - Chicago 图书：`Zhang, S. 2023. Test Title. MIT Press.`
+  - Chicago 网页：`Zhang, S. 2024. "Test Title." Accessed January 5, 2024. https://example.com/.`
+  - 双人 MLA：`['Zhang, S.','Li, W.']` 期刊 → `Zhang, S., and Li, W. "T." Nature, 2023.`（首作者句点保留，末作者只留一个句点）；双人 Chicago 同理 `Zhang, S., and Li, W. 2023. "T." Nature, 2023.`（开发轮按 Chicago 期刊拼接逐字核对）
+  - 反向守卫：≥3 人 `['Zhang, S.','Li, W.','Wang, Q.']` → MLA `Zhang, S., et al. "T." Nature, 2023.` 不变；无尾句点作者 `['Zhang, S']` → MLA `Zhang, S. "T." Nature, 2023.` 不变（仍恰一个句点）；APA 期刊向量 `Zhang, S. (2023). Test Title. Nature, 10(2), 1–9.`（en dash U+2013）不回归；已带双句点输入 `['Zhang, S..']` → MLA 仍只出一个句点。
+  - UI 链路集成：`enSplitAuthors("Zhang, S.")` → `["Zhang, S."]` 保持不变（切分层不去句点），再喂 formatCitationMLA 得上列 MLA 期刊向量。
+- **改动文件**：static/js/gbt7714_reference_generator.js（mlaAuthors／chicagoAuthors 去尾句点）／tests/gbt7714_reference_generator.test.js（扩断言；90 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/gbt7714-reference-generator 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：作者栏填 `Zhang, S.` 后 APA／MLA／Chicago 三格式切换，引文均无双句点；双人／≥3 人／无尾句点作者显示正常；GB/T 7714 双制式不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID gbt7714_reference_generator（Path /tools/gbt7714-reference-generator，「文本工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：GB/T 7714 参考文献 MLA/Chicago 作者尾带句点时出双句点→本轮交付（巡检项；PM 定序权；三项中唯一产生错误交付物＋模板承诺三格式一键切换、用户按提示换格式即中招；node 实测 MLA/Chicago 期刊／图书／网页六条输出均含 `Zhang, S..`，APA 不受影响；改动集中在 mlaAuthors／chicagoAuthors 两处）／百分比计算器首屏红错→下轮优先候选第一位（已验真，renderMode1 无条件 showErr＋init 行 426／clearAll 行 332 调 renderAll('pct')，模式 2/3 全空守卫可照搬，改动极小）／Shell 命令解释器 ls --time-style 与 curl --max-time 无释义→下轮优先候选第二位（已验真，explainFlag 两条均 null，修复路径与 11-10 轮相同：词典补两条释义＋测试断言）／色盲模拟检查器配色区三行模拟标题显示 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已二十八度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，本地 HEAD 3ad1c95（色盲模拟检查器配色区 undefined 修复已提交；`git status` 干净）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（node 实测：MLA 期刊／图书／网页与 Chicago 期刊／图书／网页六条输出均含 `Zhang, S..`；双人 MLA 亦含 `Li, W..`；≥3 人 `Zhang, S., et al.` 正常；无尾句点作者输出正常；APA 期刊 `Zhang, S. (2023). Test Title. Nature, 10(2), 1–9.` 不受影响；enSplitAuthors("Zhang, S.") 保持 `["Zhang, S."]`；病灶行号：enAuthors 286–291 只 trim 不去尾句点、mlaAuthors 346–349、chicagoAuthors 394–397 无条件追加句点、apaAuthors 312–315 不追加；gbt7714_reference_generator Path /tools/gbt7714-reference-generator，tools/categories.go:1221，ID gbt7714_reference_generator，「文本工具」类目，New: true；tests/gbt7714_reference_generator.test.js 现 90 断言全绿，自定义 ok／eq harness；百分比 parseInput 空串→NaN＋renderMode1 无条件 showErr＋init／clearAll 调 renderAll('pct') 代码验真；Shell explainFlag('ls','--time-style') 与 explainFlag('curl','--max-time') 均 null）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**附：开发轮顺带核查（不在本轮硬性范围）**：formatAuthors（行 109–116，GB/T 7714 双制式作者串，`s + '. '`）对英文尾句点作者（如 `Zhang, S.`）是否同病——若同病且同为「去尾句点」一处修复，可顺带修掉并在交付中写明；若涉及不同拼接语义则另记下轮候选，本轮不扩大范围。
+
+---
+
 ## 今日任务（2026-11-11 09:00 · PM 选定轮，接巡检候选）
 
 **选定：色盲模拟检查器：配色区三行模拟标题显示 undefined** — 本轮唯一任务（体验打磨，非新工具）。

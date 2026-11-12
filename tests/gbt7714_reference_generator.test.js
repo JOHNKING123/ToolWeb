@@ -5,7 +5,9 @@
  * formatCitationChicago（期刊/含期号/图书出版地/网页 Accessed 日期逐字、err.field）、
  * 现有纯函数回归（buildBody 顺序编码/著者-出版年 SAMPLES 抽检、SAMPLES 十类、TYPES 十类）、
  * 模板（五选一制式、类型置灰提示、真限制三条文案、SEO 增补、脚本 v2）、
- * 注册不动（ID/Path/Icon/Category/New 不动、Path 总数 268）、零网络请求。 */
+ * 注册不动（ID/Path/Icon/Category/New 不动、Path 总数 268）、零网络请求。
+ * 2026-11-12 第 9 节：MLA/Chicago 尾句点作者不双句点（六条锚点逐字＋双人/≥3 人/无尾句点/
+ * APA 反向守卫＋双句点输入＋UI 链路集成＋formatAuthors 顺带修复）。 */
 "use strict";
 var fs = require("fs");
 var path = require("path");
@@ -171,6 +173,45 @@ var viaUi1 = M.formatCitationAPA({ authors: M.enSplitAuthors("Zhang, S."), year:
 eq(viaUi1, "Zhang, S. (2024). Deep learning. AI Press.", "集成：UI 切分→APA 单作者图书逐字");
 var viaUiMla = M.formatCitationMLA({ authors: M.enSplitAuthors("Zhang, Shan; Wei Li"), year: 2024, title: "T", journal: "J", volume: 12, pages: "45-67" });
 eq(viaUiMla, "Zhang, Shan, and Wei Li. \"T.\" J, vol. 12, 2024, pp. 45-67.", "集成：UI 切分→MLA 双作者逐字（不误判 et al.）");
+
+/* ---------- 9. MLA/Chicago 尾句点作者不双句点（2026-11-12 体验打磨第 5 轮） ---------- */
+// 病灶：mlaAuthors/chicagoAuthors 无条件追加句点，作者自带缩写点（Zhang, S.）时出 "Zhang, S.."。
+// 修复：追加前去作者名尾句点（单人去 authors[0]、双人只去末作者）；enAuthors 不动，APA 守卫见下。
+var mlaJ1 = M.formatCitationMLA({ authors: ["Zhang, S."], year: 2023, title: "Test Title", journal: "Nature", volume: 10, issue: 2, pages: "1-9" });
+eq(mlaJ1, "Zhang, S. \"Test Title.\" Nature, vol. 10, no. 2, 2023, pp. 1-9.", "MLA：尾句点作者期刊只留一个句点");
+var mlaB1 = M.formatCitationMLA({ authors: ["Zhang, S."], year: 2023, title: "Test Title", publisher: "MIT Press" });
+eq(mlaB1, "Zhang, S. Test Title. MIT Press, 2023.", "MLA：尾句点作者图书只留一个句点");
+var mlaW1 = M.formatCitationMLA({ authors: ["Zhang, S."], year: 2024, title: "Test Title", accessDate: "2024-01-05", url: "https://example.com/" });
+eq(mlaW1, "Zhang, S. \"Test Title.\", 5 Jan. 2024, https://example.com/.", "MLA：尾句点作者网页只留一个句点");
+var chiJ1 = M.formatCitationChicago({ authors: ["Zhang, S."], year: 2023, title: "Test Title", journal: "Nature", volume: 10, issue: 2, pages: "1-9" });
+eq(chiJ1, "Zhang, S. 2023. \"Test Title.\" Nature 10 (2): 1-9.", "Chicago：尾句点作者期刊只留一个句点");
+var chiB1 = M.formatCitationChicago({ authors: ["Zhang, S."], year: 2023, title: "Test Title", publisher: "MIT Press" });
+eq(chiB1, "Zhang, S. 2023. Test Title. MIT Press.", "Chicago：尾句点作者图书只留一个句点");
+var chiW1 = M.formatCitationChicago({ authors: ["Zhang, S."], year: 2024, title: "Test Title", accessDate: "2024-01-05", url: "https://example.com/" });
+eq(chiW1, "Zhang, S. 2024. \"Test Title.\" Accessed January 5, 2024. https://example.com/.", "Chicago：尾句点作者网页只留一个句点");
+var mla2d = M.formatCitationMLA({ authors: ["Zhang, S.", "Li, W."], year: 2023, title: "T", journal: "Nature" });
+eq(mla2d, "Zhang, S., and Li, W. \"T.\" Nature, 2023.", "MLA：双人首作者句点保留、末作者只留一个句点");
+var chi2d = M.formatCitationChicago({ authors: ["Zhang, S.", "Li, W."], year: 2023, title: "T", journal: "Nature" });
+eq(chi2d, "Zhang, S., and Li, W. 2023. \"T.\" Nature.", "Chicago：双人首作者句点保留、末作者只留一个句点");
+var mla3d = M.formatCitationMLA({ authors: ["Zhang, S.", "Li, W.", "Wang, Q."], year: 2023, title: "T", journal: "Nature" });
+eq(mla3d, "Zhang, S., et al. \"T.\" Nature, 2023.", "MLA：≥3 人 et al. 分支不动");
+var chi3d = M.formatCitationChicago({ authors: ["Zhang, S.", "Li, W.", "Wang, Q."], year: 2023, title: "T", journal: "Nature" });
+eq(chi3d, "Zhang, S., et al. 2023. \"T.\" Nature.", "Chicago：≥3 人 et al. 分支不动");
+var mlaNoDot = M.formatCitationMLA({ authors: ["Zhang, S"], year: 2023, title: "T", journal: "Nature" });
+eq(mlaNoDot, "Zhang, S. \"T.\" Nature, 2023.", "MLA：无尾句点作者仍恰一个句点");
+var apaGuard = M.formatCitationAPA({ authors: ["Zhang, S."], year: 2023, title: "Test Title", journal: "Nature", volume: 10, issue: 2, pages: "1-9" });
+eq(apaGuard, "Zhang, S. (2023). Test Title. Nature, 10(2), 1" + EN_DASH + "9.", "APA：期刊向量不回归（enAuthors 不去尾句点）");
+var mlaDD = M.formatCitationMLA({ authors: ["Zhang, S.."], year: 2023, title: "Test Title", journal: "Nature", volume: 10, issue: 2, pages: "1-9" });
+eq(mlaDD, "Zhang, S. \"Test Title.\" Nature, vol. 10, no. 2, 2023, pp. 1-9.", "MLA：已带双句点输入仍只出一个句点");
+var chiDD = M.formatCitationChicago({ authors: ["Zhang, S.."], year: 2023, title: "Test Title", journal: "Nature", volume: 10, issue: 2, pages: "1-9" });
+has(chiDD, "Zhang, S. 2023.", "Chicago：已带双句点输入作者串只留一个句点");
+notHas(chiDD, "..", "Chicago：已带双句点输入全文无双句点");
+var viaUiMlaDot = M.formatCitationMLA({ authors: M.enSplitAuthors("Zhang, S."), year: 2023, title: "Test Title", journal: "Nature", volume: 10, issue: 2, pages: "1-9" });
+eq(viaUiMlaDot, "Zhang, S. \"Test Title.\" Nature, vol. 10, no. 2, 2023, pp. 1-9.", "集成：UI 切分→MLA 尾句点作者期刊逐字＝锚点");
+// 附带核查：formatAuthors（GB/T 顺序编码制）对英文尾句点作者同病（"Zhang, S.. "），同为去尾句点一处修复，顺带修掉
+eq(M.formatAuthors(["Zhang, S."]), "Zhang, S. ", "formatAuthors：英文尾句点作者只留一个句点");
+eq(M.formatAuthors(["张三"]), "张三. ", "formatAuthors：中文作者形态不变");
+eq(M.formatAuthors(["Zhang, S.", "Li, W.", "Wang, F.", "Zhao, L."]), "Zhang, S., Li, W., Wang, F., et al. ", "formatAuthors：>3 人 et al. 分支不变");
 
 console.log("gbt7714_reference_generator: pass=" + pass + " fail=" + fail);
 if (fail > 0) process.exit(1);
