@@ -221,11 +221,15 @@ function renderMode1(from) {
 var pctEl = $('pc-pct'), decEl = $('pc-dec');
 var fa = $('pc-frac-a'), fb = $('pc-frac-b');
 showErr('pc-err1', '');
+/* 源输入为空时跳过该方向换算、不报错（首屏全空／清空后不再出红错）；
+ * 源非空但非法时仍走 catch＋showErr；与 renderMode2/3 的 if (!empty) 同口径 */
+var pctEmpty = pctEl.value.trim() === '';
+var decEmpty = decEl.value.trim() === '';
 try {
-if (from === 'pct') {
+if (from === 'pct' && !pctEmpty) {
 var d = PercentageCalc.percentToDecimal(parseInput(pctEl));
 if (document.activeElement !== decEl) { decEl.value = d; }
-} else if (from === 'dec') {
+} else if (from === 'dec' && !decEmpty) {
 var p = PercentageCalc.decimalToPercent(parseInput(decEl));
 if (document.activeElement !== pctEl) { pctEl.value = p; }
 }

@@ -8,7 +8,8 @@
  * 自定义段位、gradeFor）、DEFAULT_BANDS 常量、module.exports 与 window.PercentageCalc
  * 挂载、categories.go 注册（Path 总数 281→282、Icon percent 全库唯一、New/Category/
  * 中英文关键词）与模板（真限制四条、与 gpa_calculator/final_grade/score_stats
- * 双向互链「学习一条龙」、零网络请求静态检查）。
+ * 双向互链「学习一条龙」、零网络请求静态检查）、模式一源空守卫（renderMode1 切片断言：
+ * from='pct'/'dec' 且源空时跳过换算不报错、非法仍进 catch 红错、分数块与 init/clearAll 不动）。
  */
 "use strict";
 var fs = require("fs");
@@ -207,6 +208,26 @@ var GPA_TPL = fs.readFileSync(path.join(ROOT, "templates", "gpa_calculator.html"
 has(FG_TPL, "/tools/percentage-calc", "反向互链：final_grade 模板链回 percentage-calc");
 has(SS_TPL, "/tools/percentage-calc", "反向互链：score_stats 模板链回 percentage-calc");
 has(GPA_TPL, "/tools/percentage-calc", "反向互链：gpa_calculator 模板链回 percentage-calc");
+
+/* ---------- 12. 模式一源空守卫：首屏/清空全空不红错，非法仍红错 ---------- */
+var M1_SRC = JS_SRC.slice(JS_SRC.indexOf("function renderMode1"),
+  JS_SRC.indexOf("/* ---------- 模式二"));
+has(M1_SRC, "pctEl.value.trim() === ''", "renderMode1：pct 空守卫取 pct 框 trim 后空串");
+has(M1_SRC, "decEl.value.trim() === ''", "renderMode1：dec 空守卫取 dec 框 trim 后空串");
+has(M1_SRC, "from === 'pct' && !pctEmpty", "renderMode1：from='pct' 且 pct 空时跳过换算、不报错");
+has(M1_SRC, "from === 'dec' && !decEmpty", "renderMode1：from='dec' 且 dec 空时跳过换算、不报错");
+has(M1_SRC, "percentToDecimal(parseInput(pctEl))", "反向守卫：pct 非空仍调 percentToDecimal（'abc' 进 catch 红错）");
+has(M1_SRC, "decimalToPercent(parseInput(decEl))", "反向守卫：dec 非空仍调 decimalToPercent（'xyz' 进 catch 红错）");
+has(M1_SRC, "showErr('pc-err1', e.message)", "renderMode1：catch 仍无条件 showErr（非法输入红错不弱化）");
+has(M1_SRC, "isNaN(parseInput(fa)) && isNaN(parseInput(fb)) ? '—'", "分数块不动：a/b 全空仍显示 '—'");
+has(M1_SRC, "if (from === 'frac') { showErr('pc-err1', e.message); }", "分数块不动：仅 from='frac' 时 showErr");
+throwsField(function () { A.percentToDecimal(NaN); }, "pct", "纯函数不回归：percentToDecimal(NaN) 仍抛错 err.field='pct'");
+throwsField(function () { A.decimalToPercent(NaN); }, "dec", "纯函数不回归：decimalToPercent(NaN) 仍抛错 err.field='dec'");
+var CA_SRC = JS_SRC.slice(JS_SRC.indexOf("function clearAll()"),
+  JS_SRC.indexOf("function buildCopyText()"));
+has(CA_SRC, "renderAll('pct')", "clearAll：清空后仍调 renderAll('pct')（守卫修好后自然无红错）");
+var INIT_SRC = JS_SRC.slice(JS_SRC.indexOf("function init()"));
+has(INIT_SRC, "renderAll('pct')", "init：首屏仍调 renderAll('pct')（守卫修好后自然无红错）");
 
 console.log("percentage_calc: pass=" + pass + " fail=" + fail);
 if (fail > 0) { process.exit(1); }

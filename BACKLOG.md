@@ -1,3 +1,36 @@
+## 今日任务（2026-11-13 09:00 · PM 选定轮，接巡检候选）
+
+**选定：百分比计算器：初始加载即显示红色校验错误** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有工具模式一的渲染守卫，不新增工具、不改 Path 总数。硬依据如下：
+1. **四轮连任的下轮优先候选第一位，本轮再无推迟理由**：11-09、11-10、11-11、11-12 四轮 PM 均已验真并列为下轮优先候选第一位，四轮均因「产生错误产物／错误解释输出」的缺陷让位（音乐可视化器错误导出、Shell 错误解释、色盲 undefined、GB/T 7714 错误引文）；GB/T 7714 项已于 11-12 轮交付（41022b9），今日三项中已无产生错误产物者，挂网最久的首屏缺陷应在本轮收掉，不再后延。
+2. **所有打开该页的用户第一眼必见**：首屏即红错是全量命中、零操作触发的第一印象缺陷；点「清空」后同样复现，用户每次清空都再看一次红错。学习工具类目（与 GPA 绩点计算器互链的「学习一条龙」入口之一），首屏第一印象受损面最大。
+3. **PM 独立复核确凿（代码级验真＋node 实测）**：static/js/percentage_calc.js：parseInput 空串→NaN（行 201）；percentToDecimal(NaN) 抛「pct（百分比）必须为有限数字」（node 实测，err.field='pct'）；renderMode1（行 220）catch 无条件 showErr（行 233）；init 行 426 调 renderAll('pct') 致首屏即红；clearAll（行 332）清空后调 renderAll('pct') 同样复现；renderMode2（行 247）与 renderMode3（行 280）已有「全空不报错」守卫（行 258／266 的 `if (!empty)`）可照搬。纯函数抛错本身是正确契约（非法参数抛 Error），病灶只在 DOM 层把空输入喂给纯函数又无条件展示错误。
+4. **一日可高质量完成**：改动集中在 renderMode1 一处守卫＋测试扩断言；不碰 PercentageCalc 纯函数、不碰模式二／三、不碰 localStorage／示例／复制逻辑，不新增依赖。
+
+**未选说明**：Shell 命令解释器：ls --time-style 与 curl --max-time 无释义（PM 已验真：explainFlag('ls','--time-style') 与 explainFlag('curl','--max-time') 均返回 null，用户粘贴真实命令即看到无释义；对照 grep --include、tar --exclude 均已有释义；另抽查同类缺口 6 条亦为 null——cp -S、find -path、curl -w、journalctl -g（node 实测），巡检称其余共 11 条；只缺释义、不产生错误解释输出，列为**下轮优先候选第一位**；**范围裁定**：下轮只补本项 2 条（修复路径与 11-10 轮完全相同：词典补两条释义＋测试断言），其余 11 条不并入——另立一轮「Shell 词典扫尾」候选，逐条核对措辞）／sitemap 缺 1 条：在线 Postman 模板与后端俱全却被注释屏蔽（PM 已验真：tools/categories.go:303-306 postman 注册被注释，仅注「暂时屏蔽了」未写原因；templates/postman.html 2138 行、后端 /tools/api/postman/* 接口（main.go:1248 起）俱在；**本轮不选**：恢复注册前须先查明屏蔽原因——该工具走服务端代发请求，有滥用／安全审查面，不可无脑取消注释；查因本身不是一日打磨任务，列为**待查因候选**，留待后续轮次先查 git 历史／相关记录确认原因再定是否恢复；另注意恢复即等于重新上架一个工具，与「不新增工具」方向亦须 PM 到时再裁定）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① renderMode1（行 220）百分比↔小数换算的 try/catch 加「源输入为空则跳过该方向换算、不报错」守卫：from==='pct' 且 pct 框空时不调 percentToDecimal、不 showErr；from==='dec' 且 dec 框空时不调 decimalToPercent、不 showErr；与 renderMode2/3 的 `if (!empty)` 全空守卫同口径 ② 源输入非空但非法（如 'abc'）时仍走现有 catch＋showErr('pc-err1', e.message)，不弱化校验 ③ 分数 a/b 块不动：全空已显示 '—'、仅 from==='frac' 时 showErr 的现有逻辑正确，不回归 ④ init（行 426）与 clearAll（行 332）的 renderAll('pct') 调用不动——守卫修好后两者自然不再出红错 ⑤ **禁止改动 PercentageCalc 纯函数**：percentToDecimal(NaN) 抛错是正确契约（非法参数抛 Error，err.field='pct'），病灶在 DOM 层，不在纯函数 ⑥ 不碰 renderMode2／renderMode3、fillSample、copyResult、saveLocal、localStorage 键，不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补文案，且只动文案）。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数＋源码级断言）；renderMode1 为 DOM 绑定函数，守卫以源码切片断言覆盖（沿用 music_visualizer.test.js 源码级断言惯例）。
+- **数值锚点（测试精确值）**：
+  - 源码切片断言：renderMode1 的 pct↔dec try/catch 内含全空／源空守卫——pct 与 dec 两框均空时不调 showErr（断言形态开发轮定：`if (!empty)` 守卫或源空跳过，交付中写明所选实现）。
+  - 反向守卫：pct 填 'abc'（dec 空）时仍 showErr('pc-err1', …)；dec 填 'xyz'（pct 空）时仍 showErr；源码切片须覆盖两条分支。
+  - 纯函数不回归：percentToDecimal(NaN) 仍抛 Error，err.field='pct'（现有断言已覆盖）；decimalToPercent／fractionToPercent／changeRate／marksToPercent 现有向量全过。
+  - 浏览器手工验证（开发轮记录）：首屏全空无红错、结果区无「输入有误」；点「清空」后无红错；pct 填 75 → dec 显示 0.75；dec 填 0.5 → pct 显示 50；pct 填 'abc' 仍红错；分数 a/b 全空显示 '—'；模式二／三（涨跌幅、成绩百分比）不回归；示例一键填充与复制不回归。
+- **改动文件**：static/js/percentage_calc.js（renderMode1 加源空守卫）／tests/percentage_calc.test.js（扩断言；123 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/percentage-calc 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：首屏与清空后均无红错、双向换算正确、非法输入仍红错、模式二／三不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID percentage_calc（Path /tools/percentage-calc，「学习工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：百分比计算器初始加载即显示红色校验错误→本轮交付（巡检项；PM 定序权；四轮连任下轮优先候选第一位，11-09／11-10／11-11／11-12 四轮均因错误产物／错误解释项让位；首屏即红、清空复现、全量命中；代码验真：parseInput 空串→NaN（行 201）＋percentToDecimal(NaN) 抛错（node 实测）＋renderMode1 catch 无条件 showErr（行 233）＋init 行 426／clearAll 行 332 调 renderAll('pct')；模式 2/3 全空守卫可照搬）／Shell 命令解释器 ls --time-style 与 curl --max-time 无释义→下轮优先候选第一位（已验真，两条均 null；范围裁定：下轮只补 2 条，其余 11 条另立「Shell 词典扫尾」候选）／Shell 词典扫尾（cp -S/--backup、find -path/-newer、sed -l、curl -w/--data-raw/--data-urlencode/-e/--connect-timeout、journalctl -g 共 11 条，均 node 实测 null）→待排候选／在线 Postman 恢复注册→待查因候选（须先查明 tools/categories.go:303-306 注释屏蔽原因，服务端代发请求有滥用／安全审查面，不可无脑取消注释；恢复上架与「不新增工具」方向亦须到时裁定）／GB/T 7714 参考文献 MLA/Chicago 作者尾带句点时出双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲模拟检查器配色区三行模拟标题显示 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已二十九度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功，本地 HEAD 41022b9（GB/T 7714 参考文献 MLA/Chicago 双句点修复已提交；`git status` 干净）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（node 实测：percentToDecimal(NaN) 抛「pct（百分比）必须为有限数字」，err.field='pct'；tests/percentage_calc.test.js 现 123 断言全绿；explainFlag('ls','--time-style')、explainFlag('curl','--max-time')、explainFlag('cp','-S')、explainFlag('find','-path')、explainFlag('curl','-w')、explainFlag('journalctl','-g') 均 null，对照 explainFlag('grep','--include') 有释义「只搜索与指定模式匹配的文件」；tests/shell_explainer.test.js 现 241 断言全绿；postman 注册被注释 tools/categories.go:303-306、模板 templates/postman.html 2138 行、后端 /tools/api/postman/* 接口 main.go:1248 起；percentage_calc Path /tools/percentage-calc，tools/categories.go:2948，「学习工具」类目，New: true；病灶行号：parseInput 行 201、renderMode1 行 220／catch 行 233、renderMode2 行 247／守卫行 258、renderMode3 行 280／守卫行 266、renderAll 行 306、init 行 426、clearAll 行 332）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**开发交付（2026-11-13 · 体验打磨第 6 轮）**：实现为源空跳过守卫（非 `if (!empty)` 整块守卫）：renderMode1 顶部取 `pctEmpty`／`decEmpty`（trim 后空串），`from === 'pct' && !pctEmpty` 才调 percentToDecimal、`from === 'dec' && !decEmpty` 才调 decimalToPercent，源空时跳过该方向换算且不 showErr；源非空非法仍走现有 catch＋showErr('pc-err1', e.message)。未动：PercentageCalc 纯函数、分数 a/b 块、renderMode2/3、init/clearAll 的 renderAll('pct') 调用、categories.go（Path 总数仍 328）、模板 HTML。测试：tests/percentage_calc.test.js 新增第 12 节源码切片断言 13 条（123→**136** 断言全绿），覆盖双向源空守卫、双向反向守卫（仍调换算函数＋catch 仍 showErr）、分数块 '—'／仅 frac 时 showErr、纯函数 NaN 仍抛错 err.field='pct'/'dec'、init/clearAll 仍调 renderAll('pct')。另以 DOM-stub 沙箱真实执行整份 JS（vm 加载＋模拟 input/click 事件）22 项全过：首屏全空无红错、pct=75→dec=0.75、dec=0.5→pct=50、'abc'/'xyz' 仍红错、清空非法值后红错消失、点「清空」后无红错且分数 '—'、分数 2/3→66.67%、模式二 120→150 涨 25% 且全空 '—'、模式三 86/100→86 分且全空无红错、示例填充不回归。验收：全量 tests/*.test.js **215** 个文件全绿；go build／go vet 通过；本地实测 /tools/percentage-calc 200、静态 JS 200（含 pctEmpty 守卫）、首页含 percentage-calc 3 处不回归。浏览器手工验证（首屏／清空／双向换算／非法红错／模式二三）留待测试轮在真实浏览器复核——开发轮已用 DOM-stub 真实执行覆盖同等行为。
+
+---
+
 ## 今日任务（2026-11-12 09:00 · PM 选定轮，接巡检候选）
 
 **选定：GB/T 7714 参考文献：MLA/Chicago 作者尾带句点时出双句点** — 本轮唯一任务（体验打磨，非新工具）。
