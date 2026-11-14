@@ -1,3 +1,47 @@
+## 今日任务（2026-11-14 09:00 · PM 选定轮，接巡检候选）
+
+**选定：Shell 命令解释器：ls --time-style 与 curl --max-time 无释义** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：补的是既有工具词典的两个缺失释义，不新增工具、不改 Path 总数。硬依据如下：
+1. **11-13 轮 PM 指定的下轮优先候选第一位，本轮巡检再列 Top1，无推迟理由**：11-10 轮附记已发现这两条缺口，11-13 轮 PM 定为下轮优先第一位并裁定范围（只补 2 条，其余 11 条另立扫尾候选）；11-14 巡检复测仍为 null、再列 Top1。
+2. **用户粘贴真实命令即看到无释义**：`ls --time-style=...`（按自定义时间格式列目录，脚本与日志排查常用）与 `curl --max-time ...`（限时请求，超时控制常用）均为真实高频写法；两条均进 unknown 列表、释义栏为空，对照 grep --include、tar --exclude 均已有释义。
+3. **PM 独立复核确凿（node 实测＋代码级验真）**：explainFlag 两条均 null；parseCommand 实测：`ls -l --time-style=full-iso /tmp` → flag {value:'full-iso', desc:null, known:false}，unknown 含 {type:'flag', flag:'--time-style'}；`curl --max-time 30 …` 与 `--max-time=10` 两种写法均 value 正确捕获、known:false；`ls --time-style long-iso /tmp` 空格写法 value 亦正确。**值解析链路本身无病**（11-10 轮 --flag=value 修复已覆盖两种写法），病灶只在 DICT 的 flags 缺两条释义：ls 行 19 values 已列 '--time-style'、curl 行 55 values 已列 '--max-time'，flags 均无对应条目——与 11-10 轮 grep 五条同病同修复路径。
+4. **一日可高质量完成**：改动集中在 DICT 补 2 条释义＋测试扩断言；不碰分词器、parseCommand、危险检测，不新增依赖。
+
+**未选说明**：Shell 词典扫尾 11 条（cp -S／--backup、find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、journalctl -g；本轮 PM 抽查 cp -S、find -path、journalctl -g 仍为 null，巡检称 11 条逐条实测均为 null；与本项同类缺陷、同一修复路径，逐条核对措辞＋断言，一轮可彻底收尾，列为**下轮优先候选第一位**；本轮不并入——一日一任务铁律，且两条与十一 条的措辞核对量不同，拆轮更稳）／在线 Postman 恢复注册（PM 已验真：tools/categories.go:303-306 postman 注册被注释，仅注「暂时屏蔽了」未写原因；templates/postman.html 2138 行、后端 /tools/api/postman/* 接口（main.go:1248 起）俱在；sitemap 仍缺这 1 条（`<loc>` 329 非 330）；**本轮不选**：恢复前须先查明屏蔽原因——该工具走服务端代发请求，有滥用／安全审查面，不可无脑取消注释；查因本身不是一日打磨任务，列为**待查因候选**；另注意恢复即等于重新上架一个工具，与「不新增工具」方向亦须 PM 到时再裁定）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① DICT.ls.flags 补 `'--time-style'`：指定长格式中时间戳的显示样式（如 full-iso、long-iso，或 +FORMAT 自定义）——开发轮按 ls 手册逐字核对措辞，须与现有词典口径一致（短句、无句号结尾，参照 '--color': '是否用颜色区分文件类型'）② DICT.curl.flags 补 `'--max-time'`：整个传输的最长耗时（秒），超时则中断请求——开发轮按 curl 手册逐字核对措辞（注意与 --connect-timeout 的区分：后者只限连接阶段，本条限整个传输；--connect-timeout 本轮不补）③ 不碰 values 列表（两条已在 values 中）、不碰 tokenizeShell／parseCommand／splitFlags／detectDanger，不碰 DICT 其余命令的 flags（其余 11 条本轮不动，见反向守卫），不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补文案，且只动文案）。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）；新断言写进 tests/shell_explainer.test.js 的既有小节（grep 词典小节旁或新建「词典补全」小节，开发轮定）。
+- **数值锚点（测试精确值）**：
+  - explainFlag('ls','--time-style') 非 null，含「时间戳」与「样式」（开发轮按定稿措辞写精确值断言，如 `eq(M.explainFlag('ls','--time-style'), '指定长格式中时间戳的显示样式（如 full-iso、long-iso，或 +FORMAT 自定义）')`，措辞以开发轮核对手册后的定稿为准，本锚点只锁含义）。
+  - explainFlag('curl','--max-time') 非 null，含「最长耗时」与「超时」（同上，精确值以定稿措辞为准）。
+  - `ls -l --time-style=full-iso /tmp` → segments[0].flags 中 --time-style {value:'full-iso', known:true, desc 非 null}；unknown 为空；positionals 含 /tmp。
+  - `ls --time-style long-iso /tmp`（空格写法）→ --time-style value 'long-iso'，known:true。
+  - `curl --max-time 30 https://example.com` → --max-time {value:'30', known:true}；`curl --max-time=10 https://example.com` → value '10'，known:true；两条 unknown 均为空；https://example.com 为位置参数。
+  - 反向守卫：其余 11 条本轮不动——explainFlag('cp','-S')、explainFlag('cp','--backup')、explainFlag('find','-path')、explainFlag('find','-newer')、explainFlag('sed','-l')、explainFlag('curl','-w')、explainFlag('curl','--data-raw')、explainFlag('curl','--data-urlencode')、explainFlag('curl','-e')、explainFlag('curl','--connect-timeout')、explainFlag('journalctl','-g') 仍为 null（锁住范围，扫尾轮再改，改时同步更新本断言）；grep --include／tar --exclude 现有释义不回归。
+- **改动文件**：static/js/shell_explainer.js（DICT.ls／DICT.curl 各补 1 条 flags 释义；ls 行 19 附近、curl 行 55 附近）／tests/shell_explainer.test.js（扩断言；241 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/shell-explainer 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：粘贴 `ls -l --time-style=full-iso /tmp` 与 `curl --max-time 30 https://example.com` 逐段解释正确、无 unknown 提示；其余 11 条缺口在页面上仍显示无释义（与本轮范围一致，不视为回归）；危险检测（rm -rf 等）不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID shell_explainer（Path /tools/shell-explainer，「开发工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Shell 命令解释器 ls --time-style 与 curl --max-time 无释义→本轮交付（巡检 Top1；PM 定序权；11-13 轮指定的下轮优先候选第一位；用户粘贴真实命令即见无释义；node 实测两条均 null、值解析链路本身无病，病灶只在 DICT flags 缺两条释义，修复路径与 11-10 轮相同）／Shell 词典扫尾 11 条（cp -S/--backup、find -path/-newer、sed -l、curl -w/--data-raw/--data-urlencode/-e/--connect-timeout、journalctl -g）→下轮优先候选第一位（已验真，11 条逐条 node 实测均为 null；与本项同类缺陷、同一修复路径，逐条核对措辞＋断言，一轮可收尾）／在线 Postman 恢复注册→待查因候选（须先查明 tools/categories.go:303-306 注释屏蔽原因，服务端代发请求有滥用／安全审查面，不可无脑取消注释；恢复上架与「不新增工具」方向亦须到时裁定）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 参考文献 MLA/Chicago 作者尾带句点时出双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲模拟检查器配色区三行模拟标题显示 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功（本轮先以 ssh-keyscan -t ed25519 github.com 修复 VM 换机清空 known_hosts 的老问题，见 TOOLS.md；远端分支 muse/dev-20260929 存在）；本地 HEAD e39de8f（百分比首屏红错修复已提交；`git status` 仅 BACKLOG.md 被巡检轮修改，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（node 实测：explainFlag('ls','--time-style') 与 explainFlag('curl','--max-time') 均 null，对照 explainFlag('grep','--include') 有释义「只搜索与指定模式匹配的文件」、explainFlag('tar','--exclude') 有释义「排除匹配的文件或目录」；parseCommand 实测：`ls -l --time-style=full-iso /tmp` → --time-style {value:'full-iso', desc:null, known:false}、unknown 含 {type:'flag', flag:'--time-style'}；`curl --max-time 30 …`／`--max-time=10` 两种写法 value 均正确捕获、known:false；`ls --time-style long-iso /tmp` 空格写法 value 'long-iso'、known:false；抽查其余 11 条之三 cp -S、find -path、journalctl -g 仍为 null；病灶行号：ls DICT 行 19 values 已列 '--time-style'、curl 行 55 values 已列 '--max-time'，flags 均缺对应条目；shell_explainer Path /tools/shell-explainer，tools/categories.go:844，ID shell_explainer，「开发工具」类目，New: true；tests/shell_explainer.test.js 现 241 断言全绿）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+## 体验巡检（2026-11-14 09:00 · 巡检轮）
+
+**已知缺陷清单复核（BACKLOG 顶部＋近期轮次）**：百分比计算器首屏红错→已交付（e39de8f，11-13 第 6 轮）；GB/T 7714 双句点→已交付（41022b9）；色盲 undefined→已交付（3ad1c95）；Shell --flag=value 误解析→已交付（a4bcd23）；音乐可视化器换文件旧播放／旧录制不停→已交付（574d513）；sitemap 空 body→已交付（acac1c8，`<loc>` 329 条非 330，差 1 条为 postman 注册被注释）。**今日 Top3 候选（见下，全部 node／线上实测验真，不提议新工具）**：
+1. **Shell 命令解释器：ls --time-style 与 curl --max-time 无释义**（下轮优先候选第一位，PM 11-13 轮已验真；本轮复测：`explainFlag('ls','--time-style')` 与 `explainFlag('curl','--max-time')` 均 `null`；对照 grep --include／tar --exclude 均有释义；修复路径与 11-10 轮相同：词典补 2 条释义＋测试断言；范围裁定：只补这 2 条，其余 11 条另立「Shell 词典扫尾」候选；难度小）。
+2. **Shell 词典扫尾 11 条**（cp -S／--backup、find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、journalctl -g；本轮逐条 node 实测全部 `null`；与第 1 项同类缺陷、同一修复路径，逐条核对措辞＋断言，一轮可收尾；难度中）。
+3. **在线 Postman 恢复注册→待查因候选**（tools/categories.go:303-306 注册被注释，仅注「暂时屏蔽了」未写原因；templates/postman.html 2138 行、后端 /tools/api/postman/* 接口（main.go:1248 起）俱在；sitemap 实测仍缺这 1 条（`<loc>` 329 非 330）；恢复前须先查 git 历史／相关记录确认屏蔽原因——该工具走服务端代发请求，有滥用／安全审查面，不可无脑取消注释；恢复上架与「不新增工具」方向亦须 PM 到时裁定；难度中，查因本身不是一日打磨任务）。
+
+**本轮线上走查（文本抓取＋代码级验真；子代理无真实浏览器，390px 视口排布与控制台报错未做真机复核，留待测试轮在真实浏览器补验）**：公网首页 https://www.it-tool.eu.cc/tool-web/ 200、工具卡片正常渲染；sitemap.xml 非空、日期 2026-11-14；11-13 轮百分比修复已上线（线上 static/js/percentage_calc.js 含 pctEmpty／decEmpty 源空跳过守卫，行 367–389）；GPA「F→3」说法**未验真、不成立**：gpa_calculator.js 行 11／51／464 与模板行 126 四处一致写 F→30，未见 F→3，不列入候选。**附记**：本轮 `git fetch` 报 Host key verification failed（VM 换机清空 known_hosts，老问题；按 TOOLS.md 以 ssh-keyscan 修复，本轮为只读巡检未动远端）；本地 HEAD e39de8f，分支 muse/dev-20260929，`git status` 未动（本追加未提交不推送，随 PM／开发轮次提交）。详见巡检笔记 workspace/.jarvis/workflow-runs/workflow-run-53a75ef99dfd40b29b4ffea6457a2c5a/work/audit-2026-11-14.md。
+
+---
+
 ## 今日任务（2026-11-13 09:00 · PM 选定轮，接巡检候选）
 
 **选定：百分比计算器：初始加载即显示红色校验错误** — 本轮唯一任务（体验打磨，非新工具）。

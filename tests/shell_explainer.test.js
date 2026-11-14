@@ -7,7 +7,8 @@
  * 25 命令词典（每命令 6–20 个旗标）、categories.go 注册（Path 总数 318→319、Icon
  * integration_instructions 全库唯一、紧邻 git_cheatsheet）、模板（SEO 关键词、真限制五条、
  * 控件、互链、零外部资源静态检查）、浏览器绑定源码级检查（window.ShellExplainer、
- * 分段高亮/复制释义/预设示例）。
+ * 分段高亮/复制释义/预设示例）、词典补全（2026-11-14）：ls --time-style、curl --max-time
+ * 释义＋parseCommand 三种写法值解析＋其余 11 条扫尾项反向守卫（仍为 null，下轮扫尾时再改）。
  */
 "use strict";
 var fs = require("fs");
@@ -221,7 +222,7 @@ throws(function () { S.validateShellInput(null); }, "input", "抛错：validateS
     var counts = cmds.map(function (c) { return c.flagCount; });
     ok(Math.min.apply(null, counts) >= 6, "词典：每命令至少 6 个旗标（最小 " + Math.min.apply(null, counts) + "）");
     ok(Math.max.apply(null, counts) <= 20, "词典：每命令至多 20 个旗标（最大 " + Math.max.apply(null, counts) + "）");
-    eq(cmds.filter(function (c) { return c.name === "ls"; })[0].flagCount, 14, "词典：ls 14 个旗标");
+    eq(cmds.filter(function (c) { return c.name === "ls"; })[0].flagCount, 15, "词典：ls 15 个旗标（含 2026-11-14 补齐的 --time-style）");
     eq(cmds.filter(function (c) { return c.name === "cd"; })[0].flagCount, 6, "词典：cd 6 个旗标");
     eq(cmds.filter(function (c) { return c.name === "grep"; })[0].flagCount, 20, "词典：grep 20 个旗标（含补齐的 -e/-m/--color/--include/--exclude）");
 })();
@@ -367,6 +368,72 @@ notHas(JS_SRC, "XMLHttpRequest", "绑定：不使用 XHR");
     eq(qt2.tokens[0].quoteStart, false, "tokenizeShell：无引号 token quoteStart=false");
     /* splitFlags 语义不动（§2 断言仍有效） */
     eqj(S.splitFlags("--color=always"), ["--color"], "splitFlags 语义不动：--color=always 仍只返旗标名");
+})();
+
+/* ---------- 14. 词典补全：ls --time-style 与 curl --max-time（2026-11-14） ----------
+ * 只补 DICT.ls.flags / DICT.curl.flags 各 1 条释义；values 列表、tokenizeShell、
+ * parseCommand、splitFlags、detectDanger 均不动。措辞按手册核对：
+ * ls 手册：with -l, show times using style STYLE: full-iso, long-iso, iso, locale, +FORMAT；
+ * curl 手册：Maximum time in seconds that you allow the transfer operation to take
+ * （与 --connect-timeout 只限连接阶段区分，后者本轮不补）。
+ * 反向守卫：其余 11 条扫尾项仍为 null，下轮扫尾时同步更新本断言。 */
+(function () {
+    function flagOf(seg, name) {
+        return seg.flags.filter(function (x) { return x.flag === name; })[0];
+    }
+    /* 锚点 1：explainFlag 两条均非 null，定稿措辞精确值 */
+    eq(S.explainFlag("ls", "--time-style"), "指定长格式中时间戳的显示样式（如 full-iso、long-iso，或 +FORMAT 自定义）", "词典补全：ls --time-style 定稿措辞");
+    has(S.explainFlag("ls", "--time-style"), "时间戳", "词典补全：ls --time-style 含时间戳");
+    has(S.explainFlag("ls", "--time-style"), "样式", "词典补全：ls --time-style 含样式");
+    eq(S.explainFlag("curl", "--max-time"), "整个传输的最长耗时（秒），超时则中断请求", "词典补全：curl --max-time 定稿措辞");
+    has(S.explainFlag("curl", "--max-time"), "最长耗时", "词典补全：curl --max-time 含最长耗时");
+    has(S.explainFlag("curl", "--max-time"), "超时", "词典补全：curl --max-time 含超时");
+    /* 锚点 2：ls -l --time-style=full-iso /tmp（= 写法） */
+    var l1 = S.parseCommand("ls -l --time-style=full-iso /tmp");
+    eq(flagOf(l1.segments[0], "--time-style").value, "full-iso", "词典补全：ls --time-style=full-iso 值 full-iso");
+    eq(flagOf(l1.segments[0], "--time-style").known, true, "词典补全：ls --time-style known=true");
+    ok(flagOf(l1.segments[0], "--time-style").desc !== null, "词典补全：ls --time-style desc 非 null");
+    eq(l1.unknown.length, 0, "词典补全：ls -l --time-style=full-iso /tmp 无未收录");
+    ok(l1.segments[0].positionals.some(function (x) { return x.text === "/tmp"; }), "词典补全：ls 位置参数含 /tmp");
+    /* 锚点 3：ls --time-style long-iso /tmp（空格写法） */
+    var l2 = S.parseCommand("ls --time-style long-iso /tmp");
+    eq(flagOf(l2.segments[0], "--time-style").value, "long-iso", "词典补全：ls --time-style 空格写法值 long-iso");
+    eq(flagOf(l2.segments[0], "--time-style").known, true, "词典补全：ls --time-style 空格写法 known=true");
+    eq(l2.unknown.length, 0, "词典补全：ls --time-style long-iso /tmp 无未收录");
+    /* 锚点 4：curl --max-time 30（空格写法）与 --max-time=10（= 写法） */
+    var c1 = S.parseCommand("curl --max-time 30 https://example.com");
+    eq(flagOf(c1.segments[0], "--max-time").value, "30", "词典补全：curl --max-time 30 值 30");
+    eq(flagOf(c1.segments[0], "--max-time").known, true, "词典补全：curl --max-time 30 known=true");
+    eq(c1.unknown.length, 0, "词典补全：curl --max-time 30 无未收录");
+    ok(c1.segments[0].positionals.some(function (x) { return x.text === "https://example.com"; }), "词典补全：curl 位置参数含 https://example.com");
+    var c2 = S.parseCommand("curl --max-time=10 https://example.com");
+    eq(flagOf(c2.segments[0], "--max-time").value, "10", "词典补全：curl --max-time=10 值 10");
+    eq(flagOf(c2.segments[0], "--max-time").known, true, "词典补全：curl --max-time=10 known=true");
+    eq(c2.unknown.length, 0, "词典补全：curl --max-time=10 无未收录");
+    /* 锚点 5：explainCommand 端到端无 unknown */
+    var e1 = S.explainCommand("ls -l --time-style=full-iso /tmp");
+    eq(e1.unknown.length, 0, "词典补全：explainCommand ls --time-style 无未收录");
+    has(e1.plainText, "时间戳", "词典补全：explainCommand plainText 含时间戳释义");
+    var e2 = S.explainCommand("curl --max-time 30 https://example.com");
+    eq(e2.unknown.length, 0, "词典补全：explainCommand curl --max-time 无未收录");
+    has(e2.plainText, "最长耗时", "词典补全：explainCommand plainText 含最长耗时释义");
+    /* 锚点 6：反向守卫——其余 11 条扫尾项本轮不动，仍为 null */
+    eq(S.explainFlag("cp", "-S"), null, "反向守卫：cp -S 仍为 null");
+    eq(S.explainFlag("cp", "--backup"), null, "反向守卫：cp --backup 仍为 null");
+    eq(S.explainFlag("find", "-path"), null, "反向守卫：find -path 仍为 null");
+    eq(S.explainFlag("find", "-newer"), null, "反向守卫：find -newer 仍为 null");
+    eq(S.explainFlag("sed", "-l"), null, "反向守卫：sed -l 仍为 null");
+    eq(S.explainFlag("curl", "-w"), null, "反向守卫：curl -w 仍为 null");
+    eq(S.explainFlag("curl", "--data-raw"), null, "反向守卫：curl --data-raw 仍为 null");
+    eq(S.explainFlag("curl", "--data-urlencode"), null, "反向守卫：curl --data-urlencode 仍为 null");
+    eq(S.explainFlag("curl", "-e"), null, "反向守卫：curl -e 仍为 null");
+    eq(S.explainFlag("curl", "--connect-timeout"), null, "反向守卫：curl --connect-timeout 仍为 null");
+    eq(S.explainFlag("journalctl", "-g"), null, "反向守卫：journalctl -g 仍为 null");
+    /* 锚点 7：对照项不回归 */
+    ok(S.explainFlag("grep", "--include") !== null, "词典补全：grep --include 释义不回归");
+    ok(S.explainFlag("tar", "--exclude") !== null, "词典补全：tar --exclude 释义不回归");
+    /* 锚点 8：危险检测不回归 */
+    ok(S.detectDanger("rm -rf /").length >= 1, "词典补全：rm -rf / 危险检测不回归");
 })();
 
 console.log("shell_explainer: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");
