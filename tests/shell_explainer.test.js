@@ -4,11 +4,14 @@
  * ("grep","-r")→"递归搜索子目录"）、parseCommand（分段/子命令/带值旗标/重定向/sudo）、
  * explainCommand（逐段释义＋plainText＋未收录）、detectDanger（锚点 ("rm -rf /") 含警示；
  * chmod 777、curl|sh、dd of=/dev/）、validateShellInput（上限 4000）、非法参数 err.field、
- * 25 命令词典（每命令 6–20 个旗标）、categories.go 注册（Path 总数 318→319、Icon
+ * 25 命令词典（每命令 6–21 个旗标）、categories.go 注册（Path 总数 318→319、Icon
  * integration_instructions 全库唯一、紧邻 git_cheatsheet）、模板（SEO 关键词、真限制五条、
  * 控件、互链、零外部资源静态检查）、浏览器绑定源码级检查（window.ShellExplainer、
  * 分段高亮/复制释义/预设示例）、词典补全（2026-11-14）：ls --time-style、curl --max-time
- * 释义＋parseCommand 三种写法值解析＋其余 11 条扫尾项反向守卫（仍为 null，下轮扫尾时再改）。
+ * 释义＋parseCommand 三种写法值解析；词典扫尾（2026-11-15）：其余 11 条 cp -S／--backup、
+ * find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、
+ * journalctl -g 释义补齐＋parseCommand 向量＋values 全库零缺口收官断言；附带补 docker
+ * --tail 1 条（开发轮实测发现的第 12 处 values 有列、flags 无释义的缺口，PM 扫描遗漏）。
  */
 "use strict";
 var fs = require("fs");
@@ -211,7 +214,9 @@ throws(function () { S.explainCommand(undefined); }, "input", "抛错：explainC
 throws(function () { S.detectDanger(42); }, "input", "抛错：detectDanger(42) field=input");
 throws(function () { S.validateShellInput(null); }, "input", "抛错：validateShellInput(null) field=input");
 
-/* ---------- 9. 词典覆盖：25 命令，每命令 6–20 个旗标 ---------- */
+/* ---------- 9. 词典覆盖：25 命令，每命令 6–21 个旗标 ----------
+ * 上限 2026-11-15 由 20 放宽至 21：curl 按规格补 5 条（-w／--data-raw／--data-urlencode／
+ * -e／--connect-timeout）后达 21 条，属词典正常扩容，非失控膨胀。 */
 (function () {
     var cmds = S.listCommands();
     eq(cmds.length, 25, "词典：25 个常用命令");
@@ -221,10 +226,16 @@ throws(function () { S.validateShellInput(null); }, "input", "抛错：validateS
     });
     var counts = cmds.map(function (c) { return c.flagCount; });
     ok(Math.min.apply(null, counts) >= 6, "词典：每命令至少 6 个旗标（最小 " + Math.min.apply(null, counts) + "）");
-    ok(Math.max.apply(null, counts) <= 20, "词典：每命令至多 20 个旗标（最大 " + Math.max.apply(null, counts) + "）");
+    ok(Math.max.apply(null, counts) <= 21, "词典：每命令至多 21 个旗标（最大 " + Math.max.apply(null, counts) + "）");
     eq(cmds.filter(function (c) { return c.name === "ls"; })[0].flagCount, 15, "词典：ls 15 个旗标（含 2026-11-14 补齐的 --time-style）");
     eq(cmds.filter(function (c) { return c.name === "cd"; })[0].flagCount, 6, "词典：cd 6 个旗标");
     eq(cmds.filter(function (c) { return c.name === "grep"; })[0].flagCount, 20, "词典：grep 20 个旗标（含补齐的 -e/-m/--color/--include/--exclude）");
+    eq(cmds.filter(function (c) { return c.name === "curl"; })[0].flagCount, 21, "词典：curl 21 个旗标（含 2026-11-15 扫尾补齐的 5 条）");
+    eq(cmds.filter(function (c) { return c.name === "cp"; })[0].flagCount, 15, "词典：cp 15 个旗标（含 2026-11-15 扫尾补齐的 -S／--backup）");
+    eq(cmds.filter(function (c) { return c.name === "find"; })[0].flagCount, 17, "词典：find 17 个旗标（含 2026-11-15 扫尾补齐的 -path／-newer）");
+    eq(cmds.filter(function (c) { return c.name === "sed"; })[0].flagCount, 11, "词典：sed 11 个旗标（含 2026-11-15 扫尾补齐的 -l）");
+    eq(cmds.filter(function (c) { return c.name === "journalctl"; })[0].flagCount, 15, "词典：journalctl 15 个旗标（含 2026-11-15 扫尾补齐的 -g）");
+    eq(cmds.filter(function (c) { return c.name === "docker"; })[0].flagCount, 16, "词典：docker 16 个旗标（含 2026-11-15 附带补齐的 --tail）");
 })();
 
 /* ---------- 10. categories.go 注册 ---------- */
@@ -375,8 +386,8 @@ notHas(JS_SRC, "XMLHttpRequest", "绑定：不使用 XHR");
  * parseCommand、splitFlags、detectDanger 均不动。措辞按手册核对：
  * ls 手册：with -l, show times using style STYLE: full-iso, long-iso, iso, locale, +FORMAT；
  * curl 手册：Maximum time in seconds that you allow the transfer operation to take
- * （与 --connect-timeout 只限连接阶段区分，后者本轮不补）。
- * 反向守卫：其余 11 条扫尾项仍为 null，下轮扫尾时同步更新本断言。 */
+ * （与 --connect-timeout 只限连接阶段区分，后者 2026-11-15 扫尾轮补齐，见 §15）。
+ * 锚点 6 原为反向守卫（其余 11 条扫尾项仍为 null），2026-11-15 扫尾轮改为正向断言。 */
 (function () {
     function flagOf(seg, name) {
         return seg.flags.filter(function (x) { return x.flag === name; })[0];
@@ -417,23 +428,144 @@ notHas(JS_SRC, "XMLHttpRequest", "绑定：不使用 XHR");
     var e2 = S.explainCommand("curl --max-time 30 https://example.com");
     eq(e2.unknown.length, 0, "词典补全：explainCommand curl --max-time 无未收录");
     has(e2.plainText, "最长耗时", "词典补全：explainCommand plainText 含最长耗时释义");
-    /* 锚点 6：反向守卫——其余 11 条扫尾项本轮不动，仍为 null */
-    eq(S.explainFlag("cp", "-S"), null, "反向守卫：cp -S 仍为 null");
-    eq(S.explainFlag("cp", "--backup"), null, "反向守卫：cp --backup 仍为 null");
-    eq(S.explainFlag("find", "-path"), null, "反向守卫：find -path 仍为 null");
-    eq(S.explainFlag("find", "-newer"), null, "反向守卫：find -newer 仍为 null");
-    eq(S.explainFlag("sed", "-l"), null, "反向守卫：sed -l 仍为 null");
-    eq(S.explainFlag("curl", "-w"), null, "反向守卫：curl -w 仍为 null");
-    eq(S.explainFlag("curl", "--data-raw"), null, "反向守卫：curl --data-raw 仍为 null");
-    eq(S.explainFlag("curl", "--data-urlencode"), null, "反向守卫：curl --data-urlencode 仍为 null");
-    eq(S.explainFlag("curl", "-e"), null, "反向守卫：curl -e 仍为 null");
-    eq(S.explainFlag("curl", "--connect-timeout"), null, "反向守卫：curl --connect-timeout 仍为 null");
-    eq(S.explainFlag("journalctl", "-g"), null, "反向守卫：journalctl -g 仍为 null");
+    /* 锚点 6：2026-11-15 扫尾——11 条释义均非 null，定稿措辞精确值（原反向守卫已转正） */
+    eq(S.explainFlag("cp", "-S"), "指定备份文件的后缀", "扫尾：cp -S 定稿措辞");
+    eq(S.explainFlag("cp", "--backup"), "覆盖前备份（与 -b 相同）", "扫尾：cp --backup 定稿措辞");
+    eq(S.explainFlag("find", "-path"), "按路径匹配，支持通配符", "扫尾：find -path 定稿措辞");
+    eq(S.explainFlag("find", "-newer"), "只匹配比指定文件更新的文件", "扫尾：find -newer 定稿措辞");
+    eq(S.explainFlag("sed", "-l"), "指定 l 命令换行的行长", "扫尾：sed -l 定稿措辞");
+    eq(S.explainFlag("curl", "-w"), "自定义请求完成后的输出格式（配合 %{变量} 使用）", "扫尾：curl -w 定稿措辞");
+    eq(S.explainFlag("curl", "--data-raw"), "发送原始请求体数据", "扫尾：curl --data-raw 定稿措辞");
+    eq(S.explainFlag("curl", "--data-urlencode"), "发送经 URL 编码的请求体数据", "扫尾：curl --data-urlencode 定稿措辞");
+    eq(S.explainFlag("curl", "-e"), "指定 Referer 请求头（与 --referer 相同）", "扫尾：curl -e 定稿措辞");
+    eq(S.explainFlag("curl", "--connect-timeout"), "连接阶段的最长等待时间（秒），只限连接建立", "扫尾：curl --connect-timeout 定稿措辞");
+    eq(S.explainFlag("journalctl", "-g"), "按正则表达式过滤日志内容（与 --grep 相同）", "扫尾：journalctl -g 定稿措辞");
+    /* 关键词验收（与 PM 验收标准 ① 对齐） */
+    has(S.explainFlag("cp", "-S"), "备份", "扫尾：cp -S 含备份");
+    has(S.explainFlag("cp", "-S"), "后缀", "扫尾：cp -S 含后缀");
+    has(S.explainFlag("find", "-path"), "路径", "扫尾：find -path 含路径");
+    has(S.explainFlag("find", "-newer"), "更新", "扫尾：find -newer 含更新");
+    has(S.explainFlag("sed", "-l"), "行长", "扫尾：sed -l 含行长");
+    has(S.explainFlag("curl", "-w"), "输出", "扫尾：curl -w 含输出");
+    has(S.explainFlag("curl", "-w"), "格式", "扫尾：curl -w 含格式");
+    has(S.explainFlag("curl", "--data-raw"), "原始", "扫尾：curl --data-raw 含原始");
+    has(S.explainFlag("curl", "--data-raw"), "请求体", "扫尾：curl --data-raw 含请求体");
+    has(S.explainFlag("curl", "--data-urlencode"), "URL 编码", "扫尾：curl --data-urlencode 含 URL 编码");
+    has(S.explainFlag("curl", "-e"), "Referer", "扫尾：curl -e 含 Referer");
+    has(S.explainFlag("curl", "--connect-timeout"), "连接", "扫尾：curl --connect-timeout 含连接");
+    ok(S.explainFlag("curl", "--connect-timeout") !== S.explainFlag("curl", "--max-time"), "扫尾：curl --connect-timeout 与 --max-time 释义文本不同");
+    has(S.explainFlag("journalctl", "-g"), "正则", "扫尾：journalctl -g 含正则");
     /* 锚点 7：对照项不回归 */
     ok(S.explainFlag("grep", "--include") !== null, "词典补全：grep --include 释义不回归");
     ok(S.explainFlag("tar", "--exclude") !== null, "词典补全：tar --exclude 释义不回归");
     /* 锚点 8：危险检测不回归 */
     ok(S.detectDanger("rm -rf /").length >= 1, "词典补全：rm -rf / 危险检测不回归");
+})();
+
+/* ---------- 15. 词典扫尾：11 条 parseCommand 向量＋values 全库零缺口（2026-11-15） ----------
+ * 只补 DICT 五处 flags 释义（cp 2、find 2、sed 1、curl 5、journalctl 1），另附带补
+ * docker --tail 1 条（开发轮源码扫描发现的第 12 处缺口：values 已列、flags 无释义，
+ * PM 扫描遗漏；docker logs --tail N 只显示最后若干行日志）；values 列表、tokenizeShell、
+ * parseCommand、splitFlags、detectDanger 均不动。措辞按各命令手册核对：
+ * cp 手册：-S 与 --backup 同 mv（指定备份文件后缀／覆盖前备份）；find 手册：-path 按路径
+ * 匹配（通配符）、-newer 只匹配比指定文件新的文件；GNU sed 手册：-l N 指定 l 命令的
+ * 默认换行长度；curl 手册：-w 自定义输出格式（%{变量}）、--data-raw 发送原始数据、
+ * --data-urlencode 发送 URL 编码数据、-e 即 --referer、--connect-timeout 只限连接阶段
+ * （Maximum time in seconds that you allow curl's connection to take，与 --max-time
+ * 整个传输区分）；journalctl 手册：-g 即 --grep，按正则过滤。
+ * 附记：curl -w "%{http_code}" 仍触发 detectDanger fork-bomb 告警 1 条，系 :531 正则
+ * 命中任意含 { 的输入的既有误报，非本轮范围，本节不断言 dangers（见 BACKLOG 附记）。 */
+(function () {
+    function flagOf(seg, name) {
+        return seg.flags.filter(function (x) { return x.flag === name; })[0];
+    }
+    /* 锚点 1：cp -S .bak（空格写法）与 cp --backup=numbered（= 写法） */
+    var p1 = S.parseCommand("cp -S .bak a b");
+    eq(flagOf(p1.segments[0], "-S").value, ".bak", "扫尾：cp -S .bak 值 .bak");
+    eq(flagOf(p1.segments[0], "-S").known, true, "扫尾：cp -S known=true");
+    eq(p1.unknown.length, 0, "扫尾：cp -S .bak a b 无未收录");
+    var p2 = S.parseCommand("cp --backup=numbered a b");
+    eq(flagOf(p2.segments[0], "--backup").value, "numbered", "扫尾：cp --backup=numbered 值 numbered");
+    eq(flagOf(p2.segments[0], "--backup").known, true, "扫尾：cp --backup known=true");
+    eq(p2.unknown.length, 0, "扫尾：cp --backup=numbered a b 无未收录");
+    /* 锚点 2：find -path 与 -newer */
+    var p3 = S.parseCommand("find -path './cache/*' /tmp");
+    eq(flagOf(p3.segments[0], "-path").value, "./cache/*", "扫尾：find -path 值 ./cache/*");
+    eq(flagOf(p3.segments[0], "-path").known, true, "扫尾：find -path known=true");
+    eq(p3.unknown.length, 0, "扫尾：find -path './cache/*' /tmp 无未收录");
+    var p4 = S.parseCommand("find -newer /etc/hosts /tmp");
+    eq(flagOf(p4.segments[0], "-newer").value, "/etc/hosts", "扫尾：find -newer 值 /etc/hosts");
+    eq(flagOf(p4.segments[0], "-newer").known, true, "扫尾：find -newer known=true");
+    eq(p4.unknown.length, 0, "扫尾：find -newer /etc/hosts /tmp 无未收录");
+    /* 锚点 3：sed -l 80 */
+    var p5 = S.parseCommand("sed -l 80 -n p file.txt");
+    eq(flagOf(p5.segments[0], "-l").value, "80", "扫尾：sed -l 80 值 80");
+    eq(flagOf(p5.segments[0], "-l").known, true, "扫尾：sed -l known=true");
+    eq(p5.unknown.length, 0, "扫尾：sed -l 80 -n p file.txt 无未收录");
+    /* 锚点 4：curl -w／--data-raw／--data-urlencode／-e／--connect-timeout */
+    var p6 = S.parseCommand("curl -w \"%{http_code}\" https://example.com");
+    eq(flagOf(p6.segments[0], "-w").value, "%{http_code}", "扫尾：curl -w 值 %{http_code}");
+    eq(flagOf(p6.segments[0], "-w").known, true, "扫尾：curl -w known=true");
+    eq(p6.unknown.length, 0, "扫尾：curl -w \"%{http_code}\" 无未收录");
+    var p7 = S.parseCommand("curl --data-raw \"a=1\" https://example.com");
+    eq(flagOf(p7.segments[0], "--data-raw").value, "a=1", "扫尾：curl --data-raw 值 a=1");
+    eq(flagOf(p7.segments[0], "--data-raw").known, true, "扫尾：curl --data-raw known=true");
+    eq(p7.unknown.length, 0, "扫尾：curl --data-raw \"a=1\" 无未收录");
+    var p8 = S.parseCommand("curl --data-urlencode \"q=a b\" https://example.com");
+    eq(flagOf(p8.segments[0], "--data-urlencode").value, "q=a b", "扫尾：curl --data-urlencode 值 q=a b");
+    eq(flagOf(p8.segments[0], "--data-urlencode").known, true, "扫尾：curl --data-urlencode known=true");
+    eq(p8.unknown.length, 0, "扫尾：curl --data-urlencode \"q=a b\" 无未收录");
+    var p9 = S.parseCommand("curl -e https://example.com");
+    eq(flagOf(p9.segments[0], "-e").value, "https://example.com", "扫尾：curl -e 值 https://example.com");
+    eq(flagOf(p9.segments[0], "-e").known, true, "扫尾：curl -e known=true");
+    eq(p9.unknown.length, 0, "扫尾：curl -e https://example.com 无未收录");
+    var p10 = S.parseCommand("curl --connect-timeout 5 https://example.com");
+    eq(flagOf(p10.segments[0], "--connect-timeout").value, "5", "扫尾：curl --connect-timeout 值 5");
+    eq(flagOf(p10.segments[0], "--connect-timeout").known, true, "扫尾：curl --connect-timeout known=true");
+    eq(p10.unknown.length, 0, "扫尾：curl --connect-timeout 5 无未收录");
+    /* 锚点 5：journalctl -g error --since today */
+    var p11 = S.parseCommand("journalctl -g error --since today");
+    eq(flagOf(p11.segments[0], "-g").value, "error", "扫尾：journalctl -g 值 error");
+    eq(flagOf(p11.segments[0], "-g").known, true, "扫尾：journalctl -g known=true");
+    eq(flagOf(p11.segments[0], "--since").value, "today", "扫尾：journalctl --since 值 today");
+    eq(p11.unknown.length, 0, "扫尾：journalctl -g error --since today 无未收录");
+    /* 锚点 6：explainCommand 端到端无 unknown（11 条各抽一条） */
+    eq(S.explainCommand("cp -S .bak a b").unknown.length, 0, "扫尾：explainCommand cp -S 无未收录");
+    eq(S.explainCommand("find -newer /etc/hosts /tmp").unknown.length, 0, "扫尾：explainCommand find -newer 无未收录");
+    has(S.explainCommand("find -newer /etc/hosts /tmp").plainText, "更新", "扫尾：explainCommand find -newer plainText 含更新释义");
+    eq(S.explainCommand("curl -w \"%{http_code}\" https://example.com").unknown.length, 0, "扫尾：explainCommand curl -w 无未收录");
+    eq(S.explainCommand("journalctl -g error --since today").unknown.length, 0, "扫尾：explainCommand journalctl -g 无未收录");
+    has(S.explainCommand("journalctl -g error --since today").plainText, "正则", "扫尾：explainCommand journalctl -g plainText 含正则释义");
+    /* 锚点 7：收官——25 命令 values 列出但 flags 无释义的为 0 条（源码级扫描 JS_SRC 的
+     * 全部 values 列表，逐条 explainFlag 验真；total 断言防扫描落空） */
+    eq(S.listCommands().length, 25, "扫尾：词典命令总数仍为 25");
+    var vRe = /values: \[([^\]]*)\]/g, vM, vTotal = 0, vMissing = [];
+    while ((vM = vRe.exec(JS_SRC)) !== null) {
+        var head = JS_SRC.slice(0, vM.index), cRe = /(\w+): \{ desc: '[^']*',\s*flags: \{/g, cLast = null, c2;
+        while ((c2 = cRe.exec(head)) !== null) cLast = c2;
+        var cmd = cLast ? cLast[1] : null;
+        var toks = vM[1].match(/'[^']+'/g) || [];
+        toks.forEach(function (t) {
+            var fl = t.slice(1, -1);
+            vTotal++;
+            if (S.explainFlag(cmd, fl) === null) vMissing.push(cmd + " " + fl);
+        });
+    }
+    eq(vTotal, 110, "扫尾：values 列表共 110 条（扫描基数）");
+    eq(vMissing.length, 0, "扫尾：values 列出但 flags 无释义的为 0 条（缺：" + vMissing.join("、") + "）");
+    /* 锚点 8：docker --tail 附带补齐（第 12 处缺口） */
+    eq(S.explainFlag("docker", "--tail"), "只显示最后若干行日志（logs 用）", "扫尾：docker --tail 定稿措辞");
+    var p12 = S.parseCommand("docker logs --tail 50 web");
+    eq(flagOf(p12.segments[0], "--tail").value, "50", "扫尾：docker logs --tail 50 值 50");
+    eq(flagOf(p12.segments[0], "--tail").known, true, "扫尾：docker --tail known=true");
+    eq(p12.unknown.length, 0, "扫尾：docker logs --tail 50 web 无未收录");
+    /* 锚点 9：对照项不回归 */
+    ok(S.explainFlag("ls", "--time-style") !== null, "扫尾：ls --time-style 释义不回归");
+    ok(S.explainFlag("curl", "--max-time") !== null, "扫尾：curl --max-time 释义不回归");
+    ok(S.explainFlag("grep", "--include") !== null, "扫尾：grep --include 释义不回归");
+    ok(S.explainFlag("tar", "--exclude") !== null, "扫尾：tar --exclude 释义不回归");
+    /* 锚点 10：危险检测不回归 */
+    ok(S.detectDanger("rm -rf /").length >= 1, "扫尾：rm -rf / 危险检测不回归");
 })();
 
 console.log("shell_explainer: pass=" + pass + " fail=" + fail + "，共 " + (pass + fail) + " 断言");

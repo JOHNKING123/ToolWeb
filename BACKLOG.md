@@ -1,3 +1,52 @@
+## 今日任务（2026-11-15 09:00 · PM 选定轮，接巡检候选）
+
+**选定：Shell 词典扫尾 11 条：cp -S／--backup、find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、journalctl -g 无释义** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：补的是既有工具词典的缺失释义，不新增工具、不改 Path 总数。硬依据如下：
+1. **11-14 轮 PM 指定的下轮优先候选第一位，本轮巡检再列 Top1，无推迟理由**：11-14 轮刚交付 ls --time-style 与 curl --max-time（b310df9，体验打磨第 7 轮）；本轮补完即收官——全量扫描证实全库 25 个命令中 values 列出但 flags 无释义的恰为这 11 条，无更多隐藏缺口，补完后 Shell 词典零缺口。
+2. **用户粘贴真实命令即看到无释义**：`curl -w "%{http_code}"`／`curl --data-raw "a=1"`／`curl --connect-timeout 5` 均为高频写法，`cp --backup`、`find -path`、`journalctl -g` 亦为日常排查写法；11 条均进 unknown 列表、释义栏为空。对照 mv -S／--backup 已有释义（「指定备份文件的后缀」「覆盖前备份（与 -b 相同）」），cp 两条缺失属同词典内不一致。
+3. **PM 独立复核确凿（node 实测＋代码级验真）**：explainFlag 11 条逐条均 null（cp -S／--backup、find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、journalctl -g）；parseCommand 实测**值解析链路本身无病**：`curl -w "%{http_code}" …` → -w {value:'%{http_code}', desc:null, known:false}、unknown 含 {type:'flag', flag:'-w'}；`curl --data-raw "a=1" …` → value 'a=1'、known:false；`journalctl -g error --since today` → -g {value:'error', known:false}（对照 --since 有释义「只显示指定时间之后的日志」）；`cp -S .bak a b` → -S {value:'.bak', known:false}；`cp --backup=numbered a b` → --backup known:false；`sed -l 80 -n p file.txt` → -l known:false；病灶只在 DICT 的 flags 缺 11 条释义：cp 行 23、find 行 27、sed 行 28、curl 行 31、journalctl 行 38 附近，values 均已列出对应旗标，flags 均无对应条目——与 11-14 轮同病同修复路径。
+4. **一日可高质量完成**：改动集中在 DICT 补 11 条释义＋测试扩断言；不碰分词器、parseCommand、危险检测，不新增依赖。
+
+**未选说明**：在线 Postman 恢复注册（PM 已验真：tools/categories.go:303-306 注册仍被注释，仅注「暂时屏蔽了」；模板 2138 行、后端 /tools/api/postman/* 接口俱在；sitemap 仍缺这 1 条（`<loc>` 329 非 330）；**本轮不选**：恢复前须先查明屏蔽原因——该工具走服务端代发请求，有滥用／安全审查面，不可无脑取消注释；查因本身不是一日打磨任务，列为**待查因候选**；另注意恢复即等于重新上架一个工具，与「不新增工具」方向亦须 PM 到时再裁定）／HEAD 请求 /tool-web/index 返回 404（GET 200 正常；**本轮不选**：浏览器走 GET、用户无感，仅 HEAD 探活／链接检查器会误判，脚注级候选，PM 跳过，留待后续轮次视情况处理）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① DICT.cp.flags 补 `'-S'` 与 `'--backup'`：与 mv 同义，mv 已有释义「指定备份文件的后缀」「覆盖前备份（与 -b 相同）」，开发轮按 cp 手册逐字核对后可沿用同口径 ② DICT.find.flags 补 `'-path'`：按路径匹配（支持通配符）③ DICT.find.flags 补 `'-newer'`：只匹配比指定文件更新的文件 ④ DICT.sed.flags 补 `'-l'`：指定行长（'l' 命令输出的换行长度，开发轮按 GNU sed 手册核对默认 70 之说）⑤ DICT.curl.flags 补 `'-w'`：自定义请求完成后输出的格式（配合 %{变量}，如 %{http_code}）⑥ DICT.curl.flags 补 `'--data-raw'`：发送原始请求体数据（不解析 @ 前缀，开发轮按 curl 手册核对与 -d／--data 的区分）⑦ DICT.curl.flags 补 `'--data-urlencode'`：发送经 URL 编码的请求体数据 ⑧ DICT.curl.flags 补 `'-e'`：指定 Referer 请求头（与 --referer 相同）⑨ DICT.curl.flags 补 `'--connect-timeout'`：连接阶段的最长等待时间（秒），**只限连接建立，须与 --max-time（整个传输的最长耗时）区分**——开发轮按 curl 手册逐字核对措辞，两条释义文本须明显不同 ⑩ DICT.journalctl.flags 补 `'-g'`：按正则表达式过滤日志内容（与 --grep 相同）⑪ 措辞口径：短句、无句号结尾，与现有词典一致（如 '--color': '是否用颜色区分文件类型'）；开发轮按各命令手册逐字核对，**本规格只锁含义，精确措辞以开发轮核对手册后的定稿为准** ⑫ 不碰 values 列表（11 条均已在 values 中）、不碰 tokenizeShell／parseCommand／splitFlags／detectDanger，不碰 DICT 其余命令的 flags，不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补文案，且只动文案）。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）；新断言写进 tests/shell_explainer.test.js 的既有「词典补全」小节（11-14 轮新建，开发轮定）。
+- **数值锚点（测试精确值）**：
+  - explainFlag 11 条均非 null，含关键词断言（开发轮按定稿措辞写精确值断言，如 `eq(M.explainFlag('cp','-S'), '指定备份文件的后缀')`，措辞以定稿为准，本锚点只锁含义）：cp -S 含「备份」与「后缀」；cp --backup 含「备份」；find -path 含「路径」；find -newer 含「更新」；sed -l 含「行长」；curl -w 含「输出」与「格式」；curl --data-raw 含「原始」与「请求体」；curl --data-urlencode 含「URL 编码」；curl -e 含「Referer」；curl --connect-timeout 含「连接」且与 --max-time 释义文本不同；journalctl -g 含「正则」。
+  - `cp -S .bak a b` → -S {value:'.bak', known:true, desc 非 null}；unknown 为空；positionals 含 a、b。
+  - `cp --backup=numbered a b` → --backup {value:'numbered', known:true}；unknown 为空。
+  - `find /tmp -path './cache/*'` → -path {value:'./cache/*', known:true}；`find /tmp -newer /etc/hosts` → -newer {value:'/etc/hosts', known:true}；两条 unknown 均为空。
+  - `sed -l 80 -n p file.txt` → -l {value:'80', known:true}；unknown 为空。
+  - `curl -w "%{http_code}" https://example.com` → -w {value:'%{http_code}', known:true}；unknown 为空（注：该命令当前另触发 detectDanger fork-bomb 误报，见本轮附记，非本轮范围）。
+  - `curl --data-raw "a=1" https://example.com` → --data-raw {value:'a=1', known:true}；`curl --data-urlencode "q=a b" https://example.com` → --data-urlencode known:true；`curl -e https://example.com https://target.example` → -e {value:'https://example.com', known:true}；`curl --connect-timeout 5 https://example.com` → --connect-timeout {value:'5', known:true}；四条 unknown 均为空；https://example.com／https://target.example 为位置参数。
+  - `journalctl -g error --since today` → -g {value:'error', known:true}；unknown 为空。
+  - 反向守卫／收官断言：全量扫描——25 个命令中 values 列出但 flags 无释义的为 **0 条**（扫尾收官，开发轮按巡检既有扫描方式实现）；ls --time-style／curl --max-time 现有释义不回归；grep --include／tar --exclude 现有释义不回归。
+- **改动文件**：static/js/shell_explainer.js（DICT 五处：cp 行 23、find 行 27、sed 行 28、curl 行 31、journalctl 行 38 附近，各补 flags 释义）／tests/shell_explainer.test.js（扩断言；280 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/shell-explainer 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：粘贴上列 11 条对应真实命令逐段解释正确、无 unknown 提示；危险检测（rm -rf 等）不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID shell_explainer（Path /tools/shell-explainer，「开发工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Shell 词典扫尾 11 条（cp -S/--backup、find -path/-newer、sed -l、curl -w/--data-raw/--data-urlencode/-e/--connect-timeout、journalctl -g）→本轮交付（巡检 Top1；PM 定序权；11-14 轮指定的下轮优先候选第一位；11 条逐条 node 实测均为 null、值解析链路无病，病灶只在 DICT flags 缺释义，修复路径与 11-14 轮相同；补完后 25 命令 values／flags 零缺口）／在线 Postman 恢复注册→待查因候选（须先查明 tools/categories.go:303-306 注释屏蔽原因，服务端代发请求有滥用／安全审查面，不可无脑取消注释；恢复上架与「不新增工具」方向亦须到时裁定）／HEAD 请求 /tool-web/index 返回 404（GET 200 正常）→脚注级候选（浏览器走 GET、用户无感，仅 HEAD 探活／链接检查器误判；PM 本轮跳过，留待后续轮次视情况处理）／Shell 命令解释器 ls --time-style 与 curl --max-time 无释义→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 参考文献 MLA/Chicago 作者尾带句点时出双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲模拟检查器配色区三行模拟标题显示 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十一度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功（本轮先以 ssh-keyscan -t ed25519 github.com 修复 VM 换机清空 known_hosts 的老问题，见 TOOLS.md；远端分支 muse/dev-20260929 存在）；本地 HEAD b310df9（Shell ls --time-style 与 curl --max-time 释义补齐已提交；`git status` 仅 BACKLOG.md 被巡检轮＋本轮修改，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；tests/shell_explainer.test.js 现 **280** 断言全绿；PM 独立复核（node 实测：explainFlag 11 条逐条均 null，对照 explainFlag('mv','-S') 有释义「指定备份文件的后缀」、explainFlag('mv','--backup') 有释义「覆盖前备份（与 -b 相同）」；parseCommand 实测：`curl -w "%{http_code}" …` → -w value '%{http_code}'、known:false；`curl --data-raw "a=1" …` → value 'a=1'、known:false；`journalctl -g error --since today` → -g value 'error'、known:false（对照 --since 有释义）；`cp -S .bak a b` → -S value '.bak'、known:false；`cp --backup=numbered a b` → known:false；`sed -l 80 -n p file.txt` → -l known:false；DICT 命令总数 node 实测 25；病灶行号：cp 行 23、find 行 27、sed 行 28、curl 行 31、journalctl 行 38 附近，values 均已列、flags 均缺；shell_explainer Path /tools/shell-explainer，tools/categories.go:844，ID shell_explainer，「开发工具」类目，New: true）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**附记（PM 复核中新发现，既有误报，非本轮范围，留作后续候选）**：`curl -w "%{http_code}" https://example.com` 在 parseCommand 中除 -w 进 unknown 外，另触发 detectDanger 的 fork-bomb critical 告警——static/js/shell_explainer.js:531 正则 `/:?\(?\)?\{/` 命中任意含 `{` 的输入，与 fork 炸弹（`:(){:|:&};:`）无关；`%{http_code}` 是 curl -w 的合法格式变量，属误报。本轮不动 detectDanger，开发轮验证 -w 释义时勿被该告警误导、验收时如实记录；该误报的收紧（锚定完整 fork 炸弹模式）列为后续候选。
+
+---
+
+## 体验巡检（2026-11-15 09:00 · 巡检轮）
+
+**已知缺陷清单复核（BACKLOG 顶部＋近期轮次）**：11-14 轮已交付（b310df9）：Shell ls --time-style 与 curl --max-time 释义已补齐——本轮 node 复测两条均非 null，线上 static/js/shell_explainer.js 亦含新释义，已上线；其余历史缺陷均已交付划出（百分比首屏红错 e39de8f、GB/T 7714 双句点 41022b9、色盲 undefined 3ad1c95、Shell --flag=value 误解析 a4bcd23、音乐可视化器换文件旧播放／旧录制不停 574d513、sitemap 空 body acac1c8）；GPA「F→3」说法此前轮次已证伪，不再列入。**今日 Top3 候选（见下，全部 node／线上实测验真，不提议新工具）**：
+1. **Shell 词典扫尾 11 条**（下轮优先候选第一位，11-14 轮 PM 已指定；本轮逐条 node 实测全部 `null`：cp -S／--backup、find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、journalctl -g；全量扫描佐证：全库 25 命令中 values 列出但 flags 无释义的恰为这 11 条，无更多隐藏缺口；对照 mv -S／--backup 已有释义，cp 两条缺失属同词典内不一致；与 11-14 轮同类缺陷、同一修复路径，逐条核对措辞＋断言，一轮可收尾；难度中）。
+2. **在线 Postman 恢复注册→待查因候选**（tools/categories.go:303-306 注册仍被注释，仅注「暂时屏蔽了」；模板 2138 行、后端 /tools/api/postman/* 接口俱在；sitemap 实测仍缺这 1 条（`<loc>` 329 非 330）；查因新进展：`git log -S postman` 找到 a0799eb，提交信息全文仅 "add postman 工具，不放开"——证实有意暂不上架但未记录原因；恢复前须先裁定服务端代发请求的滥用／安全审查面，且恢复上架与「不新增工具」方向亦须 PM 到时裁定；难度中，查因本身不是一日打磨任务）。
+3. **HEAD 请求 /tool-web/index 返回 404（GET 200 正常）**（脚注级候选：GET 链 200、894KB，HEAD 同一 URL 两次复现 404；浏览器走 GET、用户无感，仅 HEAD 探活／链接检查器会误判；疑为路由未处理 HEAD，难度小；PM 可跳过）。
+
+**本轮线上走查（文本抓取＋代码级验真；子代理无真实浏览器，390px 视口排布与控制台报错未做真机复核，留待测试轮在真实浏览器补验）**：公网首页 GET 链 200（302 → /tool-web/index，894,286 字节），文本抓取 5675 行、298 个工具卡片正常渲染；sitemap.xml 200、60,180 字节、`<loc>` 329 条；工具页抽查（正确路径 /tool-web/<slug>，勿拼 /tool-web/tools/<slug>，后者 404 是巡检 URL 拼错、非站点缺陷）shell-explainer／percentage-calc／colorblind-simulator／gbt7714-reference-generator／music-visualizer 均 200；11-13／11-14 两轮修复已上线。**附记**：本地 HEAD b310df9，分支 muse/dev-20260929，`git status` 干净（本追加未提交不推送，随开发轮次提交）；Path 总数 328；tests 215 个文件；本轮未做 `git fetch`（只读巡检）。详见巡检笔记 workspace/.jarvis/workflow-runs/workflow-run-25201d82aacf4db88acd41b06a44359a/work/audit-2026-11-15.md。
+
+---
+
 ## 今日任务（2026-11-14 09:00 · PM 选定轮，接巡检候选）
 
 **选定：Shell 命令解释器：ls --time-style 与 curl --max-time 无释义** — 本轮唯一任务（体验打磨，非新工具）。
