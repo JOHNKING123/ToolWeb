@@ -1,3 +1,35 @@
+## 今日任务（2026-11-16 09:00 · PM 选定轮，接巡检候选）
+
+**选定：Shell 危险检测 fork-bomb 正则误报：任意含 { 的命令都报 critical 红色警告** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有工具危险检测的一处误报正则，不新增工具、不改 Path 总数。硬依据如下：
+1. **三项中唯一产生错误输出的缺陷**：critical 红色⛔「严重危险」横幅本身就是错误告警——良性命令被判为「会无限创建进程耗尽系统资源」的 fork 炸弹；且**直接打脸昨日刚交付的 curl -w 修复**：11-15 轮验收示例命令 `curl -w "%{http_code}" https://example.com` 本身即触发误报，释义修好了、横幅还在报错。
+2. **狼来了效应会让整个危险检测失效**：用户粘贴 `echo {a,b}`、`mkdir -p /tmp/{a,b}` 这类日常命令都见红横幅，几次之后就会学会无视红色告警，届时真正的 `rm -rf /`、`curl|sh` critical 告警也会被一并无视。
+3. **PM 独立复核确凿（node 实测）**：detectDanger 对 5 条良性命令全报 `fork-bomb:critical`——`curl -w "%{http_code}" https://example.com`、`echo {a,b}`、`mkdir -p /tmp/{a,b}`、`tar -czf a.tgz {x,y}`、`for i in {1..5}; do echo $i; done`；对照真炸弹 `:(){:|:&};:` 与空白变体 `:(){ :|:& };:` 同样报 `fork-bomb:critical`；`rm -rf /` 只报 `rm-rf-root:critical`（未被误伤）；`ls -la /tmp` 零告警。病灶只在 static/js/shell_explainer.js:530 正则 `/:?\(?\)?\{/`：`{` 前的各段全为可选，实质等价于「输入含 `{` 即触发」，与 fork 炸弹形态无关。
+4. **一日可高质量完成**：改动集中在 detectDanger 内 fork-bomb 一处分支＋测试扩断言；不碰 DICT、分词器、parseCommand、其余危险规则，不新增依赖。
+
+**未选说明**：在线 Postman 恢复注册（PM 已验真：tools/categories.go:303-306 注册仍被注释，仅注「暂时屏蔽了」；模板 2138 行、后端 /tools/api/postman/* 接口俱在；sitemap 仍缺这 1 条（`<loc>` 329 非 330）；git log 找到 a0799eb「add postman 工具，不放开」，证实有意暂不上架但未记录原因；**本轮不选**：恢复前须先查明屏蔽原因——该工具走服务端代发请求，有滥用／安全审查面，不可无脑取消注释；查因本身不是一日打磨任务，列为**待查因候选**；另注意恢复即等于重新上架一个工具，与「不新增工具」方向亦须 PM 到时再裁定）／HEAD 请求 /tool-web/index 返回 404（GET 200 正常；**本轮不选**：浏览器走 GET、用户无感，仅 HEAD 探活／链接检查器会误判，脚注级候选，PM 跳过，留待后续轮次视情况处理）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① 只收紧 detectDanger 内 fork-bomb 分支（static/js/shell_explainer.js:530–531）：现正则 `/:?\(?\)?\{/` 改为锚定完整 fork 炸弹形态——函数定义（函数名为 `:` 或合法 shell 函数名）＋函数体内含自身管道后台自调用（`名|名&`）＋定义后调用该函数；空白容忍：定义与体内的空白可变（`:(){ :|:& };:` 须触发）② 触发语义锁死：仅当输入同时满足「函数定义」「体内自管道」「调用」三要素才报 fork-bomb，缺任一要素不报；裸 `{a,b}`、brace 展开、`%{…}` 格式变量、`for … in {1..5}` 均不得触发 ③ 告警文案、level、rule 保持不变：rule 仍为 `'fork-bomb'`、level 仍为 `'critical'`、message 仍含「fork 炸弹」与危害说明（开发轮如微调措辞须仍含这两点）④ 不碰 detectDanger 其余规则（rm-rf-root、pipe-to-shell、chmod-777、dd-of-device、no-preserve-root、mkfs-device 等）、不碰 parseCommand／tokenizeShell／splitFlags／DICT，不新增依赖，不改 tools/categories.go，不改 Path 总数，不动模板 HTML（除非开发轮证实须补文案，且只动文案）。
+- **纯函数契约**：沿用 SE-CORE 既有约定（非法参数抛 Error，err.field；module.exports 同步导出；DOM 只做浏览器端，测试只覆盖纯函数）；新断言写进 tests/shell_explainer.test.js 的 detectDanger 小节（第 6 节附近，开发轮定；注意第 15 节「词典扫尾」曾注明本节不断言 dangers，本轮新断言不写进第 15 节）。
+- **数值锚点（测试精确值；detectDanger 返回数组，断言以 rule 字段过滤）**：
+  - 良性 5 条均**不含** rule `'fork-bomb'`：`curl -w "%{http_code}" https://example.com`（且 dangers 为空数组——该命令本身无其他危险；11-15 轮 -w 释义已补，unknown 亦为空）、`echo {a,b}`、`mkdir -p /tmp/{a,b}`、`tar -czf a.tgz {x,y}`、`for i in {1..5}; do echo $i; done`。
+  - 引号内花括号守卫：`echo "{a,b}"` 不含 fork-bomb。
+  - 真炸弹 3 条仍触发 fork-bomb 且 level `'critical'`：`:(){:|:&};:`、`:(){ :|:& };:`（空白变体）、`x(){x|x&};x`（具名函数变体）。
+  - 对照守卫：`rm -rf /` 含 `rm-rf-root` critical、不含 fork-bomb；`curl -sSL https://example.com/install.sh | sh` 含 `pipe-to-shell` critical、不含 fork-bomb；`ls -la /tmp` dangers 为空。
+  - 词典不回归：explainFlag('curl','-w') 非 null；parseCommand(`curl -w "%{http_code}" https://example.com`) 的 -w known:true、unknown 为空（11-15 轮交付不回归）。
+- **改动文件**：static/js/shell_explainer.js（detectDanger fork-bomb 分支，530–531 行附近）／tests/shell_explainer.test.js（扩断言；352 断言基数，不新增测试文件，如开发轮判定须新增则按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① node 新断言全过（上列锚点全覆盖）② 全量 tests/*.test.js **215** 个全绿 ③ go build/go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测 /tools/shell-explainer 200、静态 JS 200、首页索引收录不回归 ⑤ 浏览器手工验证：粘贴上列 5 条良性命令不再出现红色「严重危险」横幅；粘贴 `:(){:|:&};:` 仍出现 critical 横幅；`rm -rf /` 与 `curl|sh` 的危险告警不回归（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID shell_explainer（Path /tools/shell-explainer，「开发工具」类目）保持不动；New: true（既有值，不动）。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：Shell 危险检测 fork-bomb 正则误报（任意含 { 的命令都报 critical）→本轮交付（巡检 Top1；PM 定序权；三项中唯一产生错误输出的缺陷，且直接打脸昨日刚交付的 curl -w 修复——验收示例命令本身即触发误报；node 实测 5 条良性命令全报 fork-bomb:critical、真炸弹两形态亦触发，病灶只在 :530 正则各段全可选、实质等价于含 `{` 即触发；收紧为锚定完整 fork 炸弹形态，一轮可收尾）／Shell 词典扫尾 11 条（cp -S/--backup、find -path/-newer、sed -l、curl -w/--data-raw/--data-urlencode/-e/--connect-timeout、journalctl -g，另附带 docker --tail）→已交付划出（a906236，体验打磨第 8 轮）／在线 Postman 恢复注册→待查因候选（须先查明 tools/categories.go:303-306 注释屏蔽原因，服务端代发请求有滥用／安全审查面，不可无脑取消注释；恢复上架与「不新增工具」方向亦须到时裁定）／HEAD 请求 /tool-web/index 返回 404（GET 200 正常）→脚注级候选（浏览器走 GET、用户无感，仅 HEAD 探活／链接检查器误判；PM 本轮跳过，留待后续轮次视情况处理）／Shell 命令解释器 ls --time-style 与 curl --max-time 无释义→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 参考文献 MLA/Chicago 作者尾带句点时出双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲模拟检查器配色区三行模拟标题显示 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell 命令解释器 grep --include/--exclude 无释义＋--flag=value 误解析→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十二度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功（本轮先以 ssh-keyscan -t ed25519 github.com 修复 VM 换机清空 known_hosts 的老问题，见 TOOLS.md；远端分支 muse/dev-20260929 存在）；本地 HEAD a906236（Shell 词典扫尾 11 条已提交，体验打磨第 8 轮；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；tests/shell_explainer.test.js 现 **352** 断言全绿；PM 独立复核（node 实测：detectDanger(`curl -w "%{http_code}" https://example.com`)、detectDanger(`echo {a,b}`)、detectDanger(`mkdir -p /tmp/{a,b}`)、detectDanger(`tar -czf a.tgz {x,y}`)、detectDanger(`for i in {1..5}; do echo $i; done`) 均仅含 `fork-bomb:critical` 一条；detectDanger(`:(){:|:&};:`) 与 detectDanger(`:(){ :|:& };:`) 均含 `fork-bomb:critical`；detectDanger(`rm -rf /`) 仅含 `rm-rf-root:critical`；detectDanger(`ls -la /tmp`) 为空数组；病灶行号：正则 static/js/shell_explainer.js:530、add 调用 :531；tests/shell_explainer.test.js:476 附记已载明该误报为既有问题、非 11-15 轮范围；shell_explainer Path /tools/shell-explainer，tools/categories.go:844，ID shell_explainer，「开发工具」类目，New: true）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-15 09:00 · PM 选定轮，接巡检候选）
 
 **选定：Shell 词典扫尾 11 条：cp -S／--backup、find -path／-newer、sed -l、curl -w／--data-raw／--data-urlencode／-e／--connect-timeout、journalctl -g 无释义** — 本轮唯一任务（体验打磨，非新工具）。

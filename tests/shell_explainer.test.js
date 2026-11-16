@@ -190,6 +190,30 @@ eq(S.explainFlag("rm", "-rz"), null, "explainFlag：组合含未知旗标返回 
     eq(S.detectDanger("ls -la /tmp").length, 0, "detectDanger：安全命令无警示");
     eq(S.detectDanger("grep -rn ERROR /var/log").length, 0, "detectDanger：普通管道无警示");
     eq(S.detectDanger("rm -i file.txt").length, 0, "detectDanger：rm -i 无警示");
+    /* fork-bomb 正则收紧（2026-11-16）：仅完整三要素形态才报——函数定义＋体内
+    * 自身管道后台自调用（名|名&）＋定义后调用该函数；缺任一要素不报 */
+    ["curl -w \"%{http_code}\" https://example.com", "echo {a,b}", "mkdir -p /tmp/{a,b}", "tar -czf a.tgz {x,y}", "for i in {1..5}; do echo $i; done", "echo \"{a,b}\""].forEach(function (cmd) {
+        ok(!S.detectDanger(cmd).some(function (x) { return x.rule === "fork-bomb"; }), "fork-bomb 修复：良性命令不报 fork-bomb：" + cmd);
+    });
+    eq(S.detectDanger("curl -w \"%{http_code}\" https://example.com").length, 0, "fork-bomb 修复：curl -w dangers 为空");
+    [":(){:|:&};:", ":(){ :|:& };:", "x(){x|x&};x"].forEach(function (cmd) {
+        ok(S.detectDanger(cmd).some(function (x) { return x.rule === "fork-bomb" && x.level === "critical"; }), "fork-bomb 修复：真炸弹仍报 fork-bomb critical：" + cmd);
+    });
+    has(S.detectDanger(":(){:|:&};:").filter(function (x) { return x.rule === "fork-bomb"; })[0].message, "fork 炸弹", "fork-bomb 修复：告警含 fork 炸弹");
+    [":(){:|:&}", ":(){ echo hi; };:", ":(){ :|x& };:"].forEach(function (cmd) {
+        ok(!S.detectDanger(cmd).some(function (x) { return x.rule === "fork-bomb"; }), "fork-bomb 修复：缺任一要素不报 fork-bomb：" + cmd);
+    });
+    var rmRoot = S.detectDanger("rm -rf /");
+    ok(rmRoot.some(function (x) { return x.rule === "rm-rf-root" && x.level === "critical"; }), "fork-bomb 修复：rm -rf / 仍报 rm-rf-root critical");
+    ok(!rmRoot.some(function (x) { return x.rule === "fork-bomb"; }), "fork-bomb 修复：rm -rf / 不含 fork-bomb");
+    var psh = S.detectDanger("curl -sSL https://example.com/install.sh | sh");
+    ok(psh.some(function (x) { return x.rule === "pipe-to-shell" && x.level === "critical"; }), "fork-bomb 修复：curl|sh 仍报 pipe-to-shell critical");
+    ok(!psh.some(function (x) { return x.rule === "fork-bomb"; }), "fork-bomb 修复：curl|sh 不含 fork-bomb");
+    /* 词典不回归：curl -w 释义与 parseCommand 解析（2026-11-15 扫尾轮补齐） */
+    ok(S.explainFlag("curl", "-w") !== null, "fork-bomb 修复：curl -w 释义不回归");
+    var cw = S.parseCommand("curl -w \"%{http_code}\" https://example.com");
+    eq(cw.segments[0].flags.filter(function (x) { return x.flag === "-w"; })[0].known, true, "fork-bomb 修复：curl -w known=true 不回归");
+    eq(cw.unknown.length, 0, "fork-bomb 修复：curl -w 无未收录不回归");
 })();
 
 /* ---------- 7. validateShellInput ---------- */
@@ -473,8 +497,8 @@ notHas(JS_SRC, "XMLHttpRequest", "绑定：不使用 XHR");
  * --data-urlencode 发送 URL 编码数据、-e 即 --referer、--connect-timeout 只限连接阶段
  * （Maximum time in seconds that you allow curl's connection to take，与 --max-time
  * 整个传输区分）；journalctl 手册：-g 即 --grep，按正则过滤。
- * 附记：curl -w "%{http_code}" 仍触发 detectDanger fork-bomb 告警 1 条，系 :531 正则
- * 命中任意含 { 的输入的既有误报，非本轮范围，本节不断言 dangers（见 BACKLOG 附记）。 */
+ * 附记（2026-11-16 已修复）：curl -w "%{http_code}" 曾触发 detectDanger fork-bomb 告警，
+ * 系 :531 正则命中任意含 { 的输入；本轮已收紧为完整三要素形态，断言见 §6，本节不断言 dangers。 */
 (function () {
     function flagOf(seg, name) {
         return seg.flags.filter(function (x) { return x.flag === name; })[0];
