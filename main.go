@@ -82,8 +82,8 @@ func customRecovery() gin.HandlerFunc {
 // 工具访问记录中间件
 func toolAccessMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 只对工具页面进行统计
-		if strings.HasPrefix(c.Request.URL.Path, "/tools/") &&
+		// 只对工具页面进行统计；HEAD 只探元数据，不计入工具访问
+		if c.Request.Method == http.MethodGet && strings.HasPrefix(c.Request.URL.Path, "/tools/") &&
 			!strings.HasPrefix(c.Request.URL.Path, "/tools/api/") &&
 			!strings.HasPrefix(c.Request.URL.Path, "/tools/static/") &&
 			c.Request.URL.Path != "/tools/index" &&
@@ -162,6 +162,77 @@ func handleRobotsTxt(c *gin.Context) {
 	c.String(http.StatusOK, robots)
 }
 
+// headWriter 供 HEAD 请求复用 GET handler 时使用：丢弃响应 body 并
+// 计数真实字节数，状态行与响应头延后到 handler 结束后再写出，以便
+// 按计数值补 Content-Length（等于对应 GET 的 body 字节数）。
+// 只有 handler 显式写过 Content-Length（如 ServeContent）时才保留原值。
+type headWriter struct {
+	gin.ResponseWriter
+	status  int
+	written int64
+}
+
+func (w *headWriter) Write(b []byte) (int, error) {
+	w.written += int64(len(b))
+	return len(b), nil
+}
+
+func (w *headWriter) WriteString(s string) (int, error) {
+	w.written += int64(len(s))
+	return len(s), nil
+}
+
+// WriteHeader 只记录状态，不真正写出；由 headNoBody 在收尾时统一写出。
+// 与 gin 原生 responseWriter 一致：非正状态码（如 c.Redirect 内部先调
+// c.Status(-1)）直接忽略，否则 -1 会被当成最终状态写出。
+func (w *headWriter) WriteHeader(statusCode int) {
+	if statusCode > 0 && w.status == 0 {
+		w.status = statusCode
+	}
+}
+
+// WriteHeaderNow / Flush 均延后：HEAD 无 body，不提前刷头，
+// 避免 Content-Length 未补齐就发出。
+func (w *headWriter) WriteHeaderNow() {}
+
+func (w *headWriter) Flush() {}
+
+func (w *headWriter) Status() int {
+	if w.status == 0 {
+		return http.StatusOK
+	}
+	return w.status
+}
+
+func (w *headWriter) Size() int { return int(w.written) }
+
+func (w *headWriter) Written() bool { return w.status != 0 || w.written > 0 }
+
+// headNoBody 把一个 GET handler 复用于 HEAD：同状态、同响应头、空 body。
+// 业务 handler 本身不感知 HEAD、不做任何改动；未知 slug 等仍按原逻辑返回 404。
+func headNoBody(h gin.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orig := c.Writer
+		hw := &headWriter{ResponseWriter: orig}
+		c.Writer = hw
+		completed := false
+		defer func() {
+			// 正常返回：刷出记录的状态与补齐的 Content-Length。
+			// handler 中途 panic 且尚未写头时不刷头、把 c.Writer 还原后
+			// 交由上层 recovery 中间件按原样写 500。
+			if completed || hw.status != 0 {
+				if hw.Header().Get("Content-Length") == "" {
+					hw.Header().Set("Content-Length", strconv.FormatInt(hw.written, 10))
+				}
+				orig.WriteHeader(hw.Status())
+			}
+			c.Writer = orig
+		}()
+		h(c)
+		completed = true
+	}
+}
+
 func main() {
 	// 初始化日志
 	if err := initLoggers(); err != nil {
@@ -238,10 +309,10 @@ func main() {
 	// 模拟展示文件服务
 	router.Static("/tools/mock", "./mock_file")
 
-	// 添加访客统计中间件（只对首页进行统计）
+	// 添加访客统计中间件（只对首页进行统计；HEAD 只探元数据，不计入访客）
 	router.Use(func(c *gin.Context) {
 		// 只对首页路由进行统计
-		if c.Request.URL.Path == "/" || c.Request.URL.Path == "/tools/index" {
+		if c.Request.Method == http.MethodGet && (c.Request.URL.Path == "/" || c.Request.URL.Path == "/tools/index") {
 			middleware.VisitorStats(tools.GetVisitorStats())(c)
 		} else {
 			c.Next()
@@ -253,12 +324,16 @@ func main() {
 
 	// 测试应用下载页面路由
 	router.GET("/tools/my-test-app", tools.HandleMyTestApp)
+	router.HEAD("/tools/my-test-app", headNoBody(tools.HandleMyTestApp))
 	router.GET("/tools/my-test-app/download/:id", tools.HandleTestAppDownload)
+	router.HEAD("/tools/my-test-app/download/:id", headNoBody(tools.HandleTestAppDownload))
 	router.GET("/tools/my-test-app/detail/:id", tools.HandleTestAppDetail)
+	router.HEAD("/tools/my-test-app/detail/:id", headNoBody(tools.HandleTestAppDetail))
 	router.GET("/tools/my-test-app/screenshots/*filepath", tools.HandleTestAppScreenshots)
+	router.HEAD("/tools/my-test-app/screenshots/*filepath", headNoBody(tools.HandleTestAppScreenshots))
 
 	// 页面路由
-	router.GET("/", func(c *gin.Context) {
+	handleHome := func(c *gin.Context) {
 		categories := tools.GetCategories()
 
 		// 获取基于统计的热门工具，如果没有统计数据则使用默认热门工具
@@ -278,7 +353,9 @@ func main() {
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})
-	})
+	}
+	router.GET("/", handleHome)
+	router.HEAD("/", headNoBody(handleHome))
 	// 电子书路由组
 	ebookGroup := router.Group("/ebook")
 	{
@@ -419,7 +496,7 @@ func main() {
 	}
 
 	// 工具首页路由
-	router.GET("/tools/index", func(c *gin.Context) {
+	handleToolsIndex := func(c *gin.Context) {
 		categories := tools.GetCategories()
 
 		// 获取基于统计的热门工具，如果没有统计数据则使用默认热门工具
@@ -439,7 +516,9 @@ func main() {
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})
-	})
+	}
+	router.GET("/tools/index", handleToolsIndex)
+	router.HEAD("/tools/index", headNoBody(handleToolsIndex))
 
 	// 个人工具中心及文件管理
 	personal := router.Group("/tools/personal", middleware.AuthRequired())
@@ -464,6 +543,7 @@ func main() {
 
 	// 分享链接通过随机令牌访问，无需登录。
 	router.GET("/share/personal-files/:token", tools.HandlePersonalFileSharedContent)
+	router.HEAD("/share/personal-files/:token", headNoBody(tools.HandlePersonalFileSharedContent))
 
 	// SEO相关路由
 	//
@@ -472,12 +552,16 @@ func main() {
 	// 路由优先于 /tools/:tool 参数路由，二者不再落入工具页 handler；同时
 	// /tool-web/sitemap.xml 经挂载层改写为 /tools/sitemap.xml 后亦由此 serve。
 	router.GET("/sitemap.xml", handleSitemap)
+	router.HEAD("/sitemap.xml", headNoBody(handleSitemap))
 	router.GET("/robots.txt", handleRobotsTxt)
+	router.HEAD("/robots.txt", headNoBody(handleRobotsTxt))
 	router.GET("/tools/sitemap.xml", handleSitemap)
+	router.HEAD("/tools/sitemap.xml", headNoBody(handleSitemap))
 	router.GET("/tools/robots.txt", handleRobotsTxt)
+	router.HEAD("/tools/robots.txt", headNoBody(handleRobotsTxt))
 
 	// 工具统计管理页面
-	router.GET("/tools/tool-stats", func(c *gin.Context) {
+	handleToolStats := func(c *gin.Context) {
 		toolStats := tools.GetToolStats()
 		stats := toolStats.GetStats()
 
@@ -489,10 +573,12 @@ func main() {
 			"PopularTools": popularTools,
 			"ToolCounts":   toolStats.ToolCounts, // 直接使用，避免手动锁操作
 		})
-	})
+	}
+	router.GET("/tools/tool-stats", handleToolStats)
+	router.HEAD("/tools/tool-stats", headNoBody(handleToolStats))
 
 	// 限流统计管理页面
-	router.GET("/tools/rate-limit-stats", func(c *gin.Context) {
+	handleRateLimitStats := func(c *gin.Context) {
 		// 获取限流统计信息
 		limiterStats := smartRateLimiter.GetLimiterStats()
 
@@ -505,10 +591,12 @@ func main() {
 			"visitor_stats": visitorStats,
 			"timestamp":     time.Now().Unix(),
 		})
-	})
+	}
+	router.GET("/tools/rate-limit-stats", handleRateLimitStats)
+	router.HEAD("/tools/rate-limit-stats", headNoBody(handleRateLimitStats))
 
 	// 搜索功能路由
-	router.GET("/search", func(c *gin.Context) {
+	handleSearch := func(c *gin.Context) {
 		query := c.Query("q")
 		if query == "" {
 			c.Redirect(http.StatusFound, "/")
@@ -540,10 +628,12 @@ func main() {
 			"TotalVisitors": stats["total_visitors"],
 			"TodayVisitors": stats["today_visitors"],
 		})
-	})
+	}
+	router.GET("/search", handleSearch)
+	router.HEAD("/search", headNoBody(handleSearch))
 
 	// 工具页面路由
-	router.GET("/tools/:tool", func(c *gin.Context) {
+	handleToolPage := func(c *gin.Context) {
 		tool := c.Param("tool")
 		// 将连字符转换为下划线
 		templateName := strings.ReplaceAll(tool, "-", "_")
@@ -564,7 +654,9 @@ func main() {
 		c.HTML(http.StatusOK, templateName, gin.H{
 			"Categories": cats,
 		})
-	})
+	}
+	router.GET("/tools/:tool", handleToolPage)
+	router.HEAD("/tools/:tool", headNoBody(handleToolPage))
 
 	// API 路由 - 修改为 /tools/api/
 	api := router.Group("/tools/api")
