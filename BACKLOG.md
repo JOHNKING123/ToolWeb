@@ -1,3 +1,57 @@
+## 今日任务（2026-11-18 09:00 · PM 选定轮，接巡检候选）
+
+**选定：首页搜索一打字就藏起全部分类：filterTools 用 .tool-card[style=""] 计数恒为 0** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是首页既有搜索过滤逻辑，不新增工具、不改 Path 总数。硬依据如下：
+1. **三项中用户影响面最大**：首页搜索是全站主入口与发现路径。输入任意关键词后 19 个分类全部 `display:none`；57 张匹配卡中仅热门区 28 张可见、其余 29 张被困在隐藏分类内，用户实际只看到约一半结果且无从展开其余分类；改词仍 0/19，等于搜索后分类导航完全失效。
+2. **根因已定位到一行选择器，PM 代码级验真**：static/js/search.js:30 `category.querySelectorAll('.tool-card[style=""]')`；filterTools 对匹配卡片执行 `card.style.display=''`（:24–26），按 DOM 语义该操作移除该内联属性、不会产生 `style=""` 属性，故计数恒为 0。首页加载 search.js（templates/index.html:329），含 #toolSearch／#toolSearchLarge 双搜索框。巡检 jsdom 用真实首页 HTML＋真实 search.js 复现：搜 "json" 应命中 57 张卡，实测可见分类 0/19。
+3. **一日可高质量完成**：改动集中在计数逻辑一行＋测试；不碰模板 HTML、不碰后端路由、不新增依赖。
+
+**未选说明**：二维码工具页缺文档壳（**本轮不选，列为下轮优先候选第一位**：PM 已验真——templates/qrcode.html 是全站 350 个模板中唯一缺 `<!DOCTYPE>` 的工具模板，首行 `{{define "qrcode"}}` 后直接 `<div>`，线上 /tool-web/qrcode 仅 3,768 字节、无 `<head>/<title>`、零 CSS 引用、无站内导航；但影响面只限单个工具页，用户仍可经首页进入其余 327 个工具，紧迫性不及全站主入口）／script.js 在 cron-parser／regex-tester 抛控制台 TypeError（**本轮不选，列为下轮优先候选第二位**：PM 已验真——static/js/script.js:228 `toolSearch.addEventListener` 空指针，两模板内 0 处 `toolSearch`；但 live 影响仅 2 页控制台报错＋'/' 快捷键失效，页面主体功能可用；其中 script.js:250 的同款 `[style=""]` 计数 bug 为潜伏状态——本轮修 search.js 时顺带修该行，:228 空指针守卫留待下轮做）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① static/js/search.js:30 计数改为按实际可见性统计：对分类内全部 `.tool-card` 逐张判断 `card.style.display !== 'none'`（或等价的可见性判断），visibleTools>0 的分类保持可见、为 0 的隐藏；不再使用 `[style=""]` 属性选择器 ② 同款一行亦在 static/js/script.js:250，同一改法同步修复（潜伏 bug；:228 空指针守卫不在本轮范围，不动）③ 零结果提示：search.js:36–52 已有 #noResults 创建逻辑（「未找到匹配的工具」），开发轮以 jsdom／真浏览器验证零匹配时该提示实际可见——若因挂载点 `#all` 被隐藏等原因不可见，只做最小挂载修正，不重做提示样式 ④ 不碰 templates/index.html（除非开发轮证实须补挂载点，且只动该处）、不碰 main.go／tools/categories.go，不改 Path 总数（328），不改 sitemap 条数（329），不新增依赖。
+- **数值锚点（jsdom 用真实首页 HTML＋真实 search.js；开发轮逐项记录实测值）**：
+  - 搜 "json" → 可见卡片 57 张；可见分类 ＝ 含 ≥1 张匹配卡的分类数（开发轮记录精确值，须 >0；每个可见分类内 ≥1 张可见卡，每个隐藏分类内 0 张可见卡）；热门区 28 张＋各分类内 29 张全部可见。
+  - 改词 "jso" → 可见卡片与可见分类均与匹配集合一致（开发轮记录精确值），不再 0/19。
+  - 清空搜索框 → 19/19 分类可见，全部卡片可见。
+  - 搜无匹配词（如 "zzzzqqq"）→ 可见卡片 0 张、可见分类 0 个，页面显示「未找到匹配的工具」。
+  - 反向守卫：匹配逻辑不变——卡片可见性仍只由名称／描述是否含关键词决定（search.js:24–26 不动）；'/' 聚焦与 ESC 清空快捷键不回归；双搜索框同步不回归。
+- **改动文件**：static/js/search.js（:30 计数一行）／static/js/script.js（:250 同款一行）／tests/homepage_search.test.js（新增；jsdom 加载真实首页 HTML＋真实 search.js，沿用巡检复现方式，jsdom 在 tests/csv_table_viewer 等测试文件中有引用先例；若开发环境无 jsdom，改用最小 DOM 桩覆盖计数逻辑并在验收中如实记录）／BACKLOG.md（本轮记录）。
+- **验收标准**：① 上列 jsdom 锚点全过 ② 全量 tests/*.test.js **215** 个文件全绿（新文件计入后按实测更新总数）③ go build／go vet 通过（JS-only 改动，按惯例仍跑）④ 本地实测首页 200、静态 search.js／script.js 200 ⑤ 浏览器手工验证：首页输入 "json" 后各分类正常展开、29 张被困卡片可见；清空恢复 19/19；零匹配显示「未找到匹配的工具」；控制台无新增报错（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；Path 总数 328、sitemap `<loc>` 329 保持不动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：首页搜索一打字就藏起全部分类→本轮交付（巡检 Top1；PM 定序权；全站主入口、发现路径基本不可用：搜 "json" 57 张匹配卡中 29 张被困隐藏分类、可见分类 0/19；根因一行选择器 search.js:30，`[style=""]` 恒为 0；一日可收尾）／二维码工具页缺文档壳→下轮优先候选第一位（350 模板中唯一缺 doctype 的工具模板，线上仅 3,768 字节、无 head/title/CSS/导航；影响面只限单页，本轮让位于全站主入口）／script.js 在 cron-parser／regex-tester 抛 TypeError→下轮优先候选第二位（:228 空指针、'/' 快捷键失效，live 仅 2 页；:250 同款计数 bug 本轮顺带修，:228 守卫下轮做）／HEAD 请求全站返回 404→已交付划出（6518055，体验打磨第 10 轮）／Shell 危险检测 fork-bomb 正则误报→已交付划出（5417fbd，体验打磨第 9 轮）／Shell 词典扫尾 11 条→已交付划出（a906236，体验打磨第 8 轮）／Shell ls --time-style 与 curl --max-time→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell grep --include/--exclude＋--flag=value→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／在线 Postman 恢复注册→书面留档不恢复（查因到头：a0799eb 全文仅「add postman 工具，不放开」，原因未记录；安全裁定：tools/postman.go:110–166 SendRequest 服务端代发任意 URL、无 SSRF 防护且 InsecureSkipVerify: true，恢复须先补防护、非一日打磨任务；方向：恢复即 Path 328→329，须用户明确表态再立项；本轮起不再每轮重复查因）／批量版与单文件版纯逻辑复制分叉→整理候选（四函数逐字节相同、尚未分叉；零用户可见变化且无 pdf／ocr 测试文件兜底，留待有测试覆盖后再抽共享模块）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十四度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功——本轮初次 fetch 曾报 Permission denied (publickey)，按 TOOLS.md 以 ssh-keyscan -t ed25519 github.com 补 /root/.ssh/known_hosts 后恢复（VM 换机清空 known_hosts 的老问题）；远端分支 muse/dev-20260929 存在；本地 HEAD 6518055（HEAD 全站 404 已提交，体验打磨第 10 轮；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **215**；PM 独立复核（代码级验真：search.js:30 `[style=""]`、filterTools :24–26 匹配后 `display=''`、首页 templates/index.html:329 加载 search.js、双框 #toolSearch／#toolSearchLarge 俱在；script.js:250 同款、:228 空指针且 cron_parser／regex_tester 模板内 0 处 toolSearch；qrcode.html 首行 `{{define "qrcode"}}` 后直接 `<div>`、全文件无 DOCTYPE；计数锚点 57 张／0/19／热门 28 张沿用巡检 jsdom 复现值，开发轮逐项重测记录）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+# 体验巡检（2026-11-18 09:00 · 巡检轮）
+
+## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
+- 11-17 轮 HEAD 全站 404 已交付（6518055，体验打磨第 10 轮）且已上线：线上复测 HEAD /tool-web/index 返回 200（GET 200，894,285 字节）；sitemap 200、60,180 字节、`<loc>` 329 条；robots 200。
+- 其余历史缺陷均已交付划出（fork-bomb 误报 5417fbd、Shell 词典扫尾 a906236、ls/curl 释义 b310df9、百分比首屏红错 e39de8f、GB/T 7714 双句点 41022b9、色盲 undefined 3ad1c95、Shell --flag=value a4bcd23、音乐可视化器 574d513、sitemap 空 body acac1c8）。
+- 在线 Postman 恢复注册：11-17 轮已书面留档不恢复（查因到头＋无 SSRF 防护＋须用户表态），本轮起不再重复列入候选。
+- pdf-to-word／ocr-batch 纯逻辑复制分叉：零用户可见变化、无测试兜底，仍为整理候选，不入 Top3。
+
+## 今日 Top3 候选（全部线上／jsdom 实测验真，不提议新工具）
+1. **首页搜索一打字就藏起全部分类**（static/js/search.js filterTools，`category.querySelectorAll('.tool-card[style=""]')` 计数错误）：匹配卡片初始无 style 属性，`card.style.display=''` 不会产生 `style=""` 属性，计数恒为 0 → 19 个分类全 `display:none`。jsdom 用真实首页 HTML＋真实 search.js 复现：搜 "json" 应命中 57 张卡，实测可见卡 57 张但可见分类 0/19，仅热门区 28 张卡可见，其余 29 张被困在隐藏分类内；无"未找到"提示；改词 "jso" 仍 0/19；清空才恢复（19/19）。同款代码亦在 static/js/script.js（首页未加载它）。难度小。
+2. **二维码工具页缺文档壳、无样式无导航**（templates/qrcode.html）：全站 350 个模板中唯一缺失 `<!DOCTYPE>` 的工具模板（其余 4 个无 doctype 的是 home/nav/seo_base/image_preview_modal 等布局／局部模板）；线上 /tool-web/qrcode 200 但仅 3,768 字节，响应体以 `<div class="tool-container">` 开头、无 `<html>/<head>/<title>`、零 CSS 引用、无站内导航／搜索，页内仅 2 个站内链。难度小。
+3. **script.js 在 cron-parser／regex-tester 抛控制台 TypeError**（static/js/script.js:228）：两页加载 script.js，但 nav 无 `#toolSearch`，`toolSearch.addEventListener` 空指针 `Cannot read properties of null`；jsdom 用真实 regex-tester HTML 复现（dropdown 按钮存在、先注册的下拉处理器不受影响，'/' 快捷键注册被跳过）。另 4 处引用 script.js 的模板（json_yaml／markdown／url_encode／xml_parser）均已证实为孤儿模板（对应 slug 线上 404，live 路径另有模板且不加载 script.js）， live 受影响仅此 2 页。难度小。
+
+## 本轮线上走查（文本抓取＋代码级验真＋jsdom 复现；子代理无真实浏览器，390px 视口排布未做真机复核，留待测试轮在真实浏览器补验）
+- 首页 GET 200（894,285 字节），960 个锚点、0 空文本锚点、0 空 href；交叉核对：首页去重 337 个 /tool-web/ 链接＝328 工具＋index／mock／personal／静态资源，sitemap 329＝328＋根路径，categories 328；唯一缺口仍是 postman（已知封闭项）。
+- 工具页抽查 shell-explainer／percentage-calc／colorblind-simulator／music-visualizer／gbt7714-reference-generator／json-parser／cron-generator／bmi-calc／base64／regex-tester／password-generator 均 200、约 324–355KB、0 行含 undefined；markdown-preview 200、34KB、文档头完整；qr-code-generator／markdown-editor 404 是巡检 slug 猜错（实为 qrcode／markdown-preview），非站点缺陷。
+- 全量 static/js/*.js `node --check` 通过；templates 内 undefined 命中均为守卫代码。
+- 附记（未入 Top3）：① 首页页脚「意见反馈」「联系我们」均为 `href="#"` 死链（仅 templates/index.html:309 附近，工具页无此页脚）；② /tool-web/search 返回 404（main.go:632 的 /search 路由在挂载层映射不到 /tool-web 前缀下；首页搜索是纯前端过滤，站内无链接指向它；JSON-LD SearchAction 指向 johnkingzcq123.xyz/search，VM 侧 curl 该域返回 000 无法核实，留待真浏览器核查）；③ script.js 与 search.js 搜索逻辑完全重复，两文件各一处 `[style=""]` 计数 bug；④ canonical／OG／JSON-LD 仍指向 johnkingzcq123.xyz（生产域口径，开发版沿用）。
+
+## 本轮状态
+本地分支 muse/dev-20260929，HEAD 6518055；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交；Path 总数 328；tests 215 个文件；复现脚本与 jsdom 依赖在 workflow workdir（repro-search.js）。
+
+---
+
 ## 今日任务（2026-11-17 09:00 · PM 选定轮，接巡检候选）
 
 **选定：HEAD 请求全站返回 404（GET 200 正常）：首页、全部工具页、静态资源与 sitemap 均中招** — 本轮唯一任务（体验打磨，非新工具）。

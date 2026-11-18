@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 隐藏空分类
         categories.forEach(category => {
-            const visibleTools = category.querySelectorAll('.tool-card[style=""]').length;
+            const visibleTools = Array.from(category.querySelectorAll('.tool-card')).filter(card => card.style.display !== 'none').length;
             category.style.display = visibleTools > 0 ? '' : 'none';
         });
 
