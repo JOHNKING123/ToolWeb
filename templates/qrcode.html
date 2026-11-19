@@ -1,6 +1,55 @@
 {{define "qrcode"}}
-<div class="tool-container">
-    <h1><i class="material-icons">qr_code</i> 二维码工具</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码工具 - 程序员工具箱</title>
+    <link rel="stylesheet" href="/tools/static/css/style.css">
+    <link rel="stylesheet" href="/tools/static/css/tools.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/tools/static/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/tools/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/tools/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/tools/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tools/static/apple-touch-icon.png">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        .tool-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 1.5rem 0 1rem;
+        }
+        .row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .qrcode-img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    {{template "nav" .}}
+    <div class="container">
+        <div class="tool-header">
+            <h1><i class="material-icons">grid_on</i> 二维码工具</h1>
+            <p>输入文本或链接，生成二维码图片</p>
+        </div>
+        <div class="tool-container">
     <div>
         <div class="section-title">生成二维码</div>
         <div class="row"><label>内容</label><input type="text" id="qrText" placeholder="输入文本或链接..." style="width:70%;padding:0.5rem;"></div>

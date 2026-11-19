@@ -1,3 +1,57 @@
+## 今日任务（2026-11-19 09:00 · PM 选定轮，接巡检候选）
+
+**选定：二维码工具页缺文档壳、无样式无导航** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：补的是既有工具页缺失的文档壳与样式，不新增工具、不改 Path 总数。硬依据如下：
+1. **11-18 轮 PM 指定的下轮优先候选第一位，本轮巡检再列 Top1，无推迟理由**：11-18 轮刚交付首页搜索藏分类（15a691e，体验打磨第 11 轮）；本轮按顺位递进链轮到本项。
+2. **全站唯一缺文档壳的工具页，PM 代码级验真**：350 个模板中仅 templates/qrcode.html 缺 `<!DOCTYPE>`（其余 4 个无 doctype 的是 home／nav／seo_base／image_preview_modal 等布局／局部片段）；首行 `{{define "qrcode"}}` 后直接 `<div class="tool-container">`，无 `<html>/<head>/<title>`、零 CSS 引用、无站内导航；线上 /tool-web/qrcode 200 但仅 3,768 字节（巡检实测），material-icons 显示为字面文本。兄弟模板 cron_parser／regex_tester 均有标准壳（DOCTYPE＋html lang="zh-CN"＋head 含 charset／viewport／title／style.css＋tools.css／Material Icons／favicon 组／theme-color，body 首行 `{{template "nav" .}}`）。
+3. **用户可见的裸奔页面**：从首页点进即脱离全站视觉与导航，无法经页内导航返回其他工具；核心生成功能本身可用（POST /tool-web/api/qrcode 200，返回有效 256×256 PNG），修的是壳不是功能，风险低。
+4. **PM 新发现（巡检未提及）**：页面所用 `.tool-container`／`.section-title`／`.qrcode-img` 三类名全站无处定义（static/css/*.css 与全部模板均无命中），只加标准 head 仍无体样式——开发轮须顺带补最小内联样式，否则壳补了、体仍裸。改动仍集中在一个模板文件，一日可高质量完成。
+
+**未选说明**：script.js 在 cron-parser／regex-tester 抛控制台 TypeError（**本轮不选，列为下轮优先候选第一位**：PM 已验真——static/js/script.js:228 `toolSearch.addEventListener` 空指针，两模板均加载 script.js 且页内 0 处 `toolSearch`，巡检 node 桩复现确认 DOMContentLoaded 回调抛错且其后 '/' 快捷键注册被跳过；但 live 影响仅 2 页控制台报错＋'/' 快捷键失效，页面主体功能可用；其中 script.js:250 的同款 `[style=""]` 计数 bug 已于 11-18 轮顺带修好，:228 空指针守卫留待下轮做）／首页页脚「意见反馈」「联系我们」为 href="#" 死链（**本轮不选，列为下轮优先候选第二位**：PM 已验真——templates/index.html:309–310，线上首页亦有 2 处，点击无任何反应；但不影响任何功能路径，纯页脚链接，紧迫性最低）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① templates/qrcode.html 按兄弟模板（cron_parser／regex_tester）补标准文档壳：`{{define "qrcode"}}` 后加 `<!DOCTYPE html><html lang="zh-CN"><head>`…，含 meta charset／viewport、`<title>二维码工具 - 程序员工具箱</title>`、/tools/static/css/style.css＋tools.css、Material Icons 字体、favicon 组、theme-color；body 内首行加 `{{template "nav" .}}` 与 tool-header（与兄弟模板同口径）；已有 `</body></html>{{end}}` 保留 ② 补最小内联 `<style>`：`.tool-container`／`.section-title`／`.row`／`.qrcode-img` 在全站无定义，开发轮按兄弟模板同类样式口径补最小样式（容器居中限宽、标题字号、结果图边距），只求与全站视觉一致，不重做页面设计；不改现有 body 标记结构、不改行内 style 属性值 ③ JS 与后端不动：内联生成逻辑（fetch POST /tools/api/qrcode，JSON 入参、返回 PNG blob）已验证可用，一字不动；main.go:1188／1216 的 /qrcode 与 /qrcode/decode 接口不动；不碰 tools/categories.go，不改 Path 总数（328），不改 sitemap 条数（329），不新增依赖 ④ 移动端：补壳后以真浏览器／390px 视口核查无横向溢出（输入框 width:70% 行内样式保留的前提下）。
+- **数值锚点（开发轮逐项记录实测值）**：
+  - 本地／线上 /tool-web/qrcode 返回 200，响应体以 `<!DOCTYPE html>` 开头，含 `<title>二维码工具`，含 style.css 与 tools.css 引用，含 nav 标记，页面不再出现字面文本 "qr_code"（material-icons 正常渲染为图标）。
+  - 响应体字节数显著大于改前 3,768（开发轮记录精确值；以补壳＋样式后的实测为准，不设硬上限）。
+  - 生成功能不回归：输入文本生成二维码，POST /tools/api/qrcode 200，返回有效 PNG（开发轮记录尺寸，如 256×256）；错误输入（如空内容）仍显示「生成失败…」红字提示。
+  - 反向守卫：全站其余 349 个模板零改动；grep 全站缺 DOCTYPE 的工具模板仍为 0（其余 4 个布局／局部片段不动）；首页与 3 个兄弟工具页 GET 200 不回归。
+- **改动文件**：templates/qrcode.html（唯一业务文件）／tests/qr_scanner.test.js（扩断言；该文件 :233 已有读 templates/qrcode.html 做回链断言的先例，文档壳断言写进此处，或开发轮判定新建 tests/qrcode.test.js，按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① 上列锚点全过 ② 全量 tests/*.test.js **216** 个文件全绿（新文件计入后按实测更新总数）③ go build／go vet 通过 ④ 本地实测 /tool-web/qrcode 200、静态 CSS 200 ⑤ 浏览器手工验证：页面有站内导航、标题、图标正常显示；输入文本生成二维码可见；390px 视口无横向溢出；控制台无新增报错（开发轮记录）。
+- **品类归位**：非新工具，无类目注册；ID qrcode（Path /tools/qrcode，「编码转换」类目，New: false）保持不动；Path 总数 328、sitemap `<loc>` 329 保持不动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：二维码工具页缺文档壳→本轮交付（巡检 Top1；11-18 轮 PM 指定的下轮优先候选第一位；350 模板中唯一缺 doctype 的工具模板，线上仅 3,768 字节、无 head/title/CSS/导航，material-icons 显示为字面文本；PM 新发现页面三类名全站无定义，须顺带补最小内联样式；核心生成功能可用，修壳不修功能）／script.js 在 cron-parser／regex-tester 抛 TypeError→下轮优先候选第一位（:228 空指针、'/' 快捷键失效，live 仅 2 页控制台报错；:250 同款计数 bug 11-18 轮已顺带修好，:228 守卫下轮做）／首页页脚「意见反馈」「联系我们」href="#" 死链→下轮优先候选第二位（templates/index.html:309–310，线上亦有 2 处；点击无反应，不影响功能路径）／首页搜索一打字就藏起全部分类→已交付划出（15a691e，体验打磨第 11 轮）／HEAD 请求全站返回 404→已交付划出（6518055，体验打磨第 10 轮）／Shell 危险检测 fork-bomb 正则误报→已交付划出（5417fbd，体验打磨第 9 轮）／Shell 词典扫尾 11 条→已交付划出（a906236，体验打磨第 8 轮）／Shell ls --time-style 与 curl --max-time→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell grep --include/--exclude＋--flag=value→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／在线 Postman 恢复注册→书面留档不恢复（查因到头：a0799eb 全文仅「add postman 工具，不放开」，原因未记录；安全裁定：tools/postman.go:110–166 SendRequest 服务端代发任意 URL、无 SSRF 防护且 InsecureSkipVerify: true，恢复须先补防护、非一日打磨任务；方向：恢复即 Path 328→329，须用户明确表态再立项；本轮起不再每轮重复查因）／批量版与单文件版纯逻辑复制分叉→整理候选（四函数逐字节相同、尚未分叉；零用户可见变化且无 pdf／ocr 测试文件兜底，留待有测试覆盖后再抽共享模块）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十五度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功——本轮初次 fetch 未带该变量曾报 Permission denied (publickey)，按铁律补环境变量后恢复（远端分支 muse/dev-20260929 存在，本地与远端同步）；本地 HEAD 15a691e（首页搜索藏分类已提交，体验打磨第 11 轮；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **216**（11-18 轮新增 homepage_search.test.js 后）；PM 独立复核（代码级验真：templates/qrcode.html 65 行、首行 `{{define "qrcode"}}` 后直接 `<div>`、全文件无 DOCTYPE／head／title／CSS／nav、尾部已有 `</body></html>{{end}}`；`grep -rL '<!DOCTYPE' templates/*.html` 仅 5 个文件，其余 4 个为 home（`{{define "content"}}` 片段）、nav（`{{define "nav"}}`）、seo_base（空白）、image_preview_modal（模态 div），qrcode 为唯一缺壳的工具页；`.tool-container`／`.section-title`／`.qrcode-img` 在 static/css/*.css 与全部模板中均 0 命中；兄弟模板 cron_parser／regex_tester 均有标准壳与 `{{template "nav" .}}`；qrcode 内联 JS fetch POST /tools/api/qrcode（main.go:1188）与巡检「API 返回有效 256×256 PNG」一致；script.js:228 空指针与 index.html:309–310 死链逐项核对属实；qrcode 类目「编码转换」、Path /tools/qrcode、New: false，tools/categories.go:195）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**开发轮交付（2026-11-19，体验打磨第 12 轮，待测试轮验收）**：templates/qrcode.html 按兄弟模板（cron_parser／regex_tester）补标准文档壳（`{{define "qrcode"}}` 后 `<!DOCTYPE html><html lang="zh-CN"><head>`，含 meta charset／viewport、`<title>二维码工具 - 程序员工具箱</title>`、style.css＋tools.css、Material Icons、favicon 组、theme-color；body 首行 `{{template "nav" .}}`＋`<div class="container">`＋tool-header，h1 移入 tool-header 并配一句说明；尾部 `</body></html>{{end}}` 保留），补最小内联 `<style>`（`.tool-container` 居中限宽 800px／`.section-title` 字号字重／`.row` flex＋wrap 防溢出／`.qrcode-img` max-width:100% 防大图溢出）。改动仅模板＋53／−2 行：JS 块经 diff 核对逐字节不动（fetch POST /tools/api/qrcode、JSON 入参、PNG blob、失败红字「生成失败」均原样），行内 style 属性值未动，main.go／tools/categories.go 未动，无新依赖。两处有意决策：① 标题图标由 `qr_code` 改为 `grid_on`（见下条锚点说明）；② **未加载 static/js/script.js**——该脚本 :228 在无 `toolSearch` 的页面抛空指针（下轮优先候选第一位），加载即给本页新增控制台报错，违背验收「控制台无新增报错」，故按规格只补壳不引脚本。附带收敛：原文件尾部多余的 `</div>`（改前 div 开 13／闭 14）现正好闭合新增的 `.container`，改后 div 开闭 14／14 配平。实测（本地 127.0.0.1:18099 新构建）：GET /tools/qrcode **200，响应 317,775 字节**（改前线上 3,768；暴涨主因是 nav 渲染 328 个工具，与兄弟页同量级——线上 cron-parser 324,556、regex-tester 354,533）；响应体以 `\n<!DOCTYPE html>` 开头，与兄弟页线上实测完全一致（`{{define}}` 行后换行所致，非缺陷）；含 title／style.css／tools.css／nav 标记／tool-header；模板文件 4,287→6,008 字节。关于锚点「不再出现字面文本 qr_code」须向测试轮说明口径：**模板内已 0 处**（node 断言锁定）；但渲染后响应仍含 2 处，均来自共享 nav 模板——categories.go 注册的 qrcode 自身 Icon `qr_code`（:199）与 barcode-generator 的 `qr_code_scanner`（:208，子串命中），categories.go 按规格不碰，故整响应子串为零在不破范围的前提下不可达；锚点应按 PM 原意验收——本页 h1 不再裸露字面文本，Material Icons 字体加载后渲染为图标（与全站其他工具页的图标字面量同理）。生成功能不回归：POST /tools/api/qrcode 200，返回有效 PNG **256×256**（433 字节）；空内容 POST → 400 `{"error":"创建二维码失败: no data to encode"}`，前端 `!res.ok` 分支原样渲染红字「生成失败：…」（空输入另有既有 alert 拦截，JS 未动）。反向守卫：其余 349 个模板零改动（git status 仅 BACKLOG.md／templates/qrcode.html／tests/qr_scanner.test.js）；`grep -rL '<!DOCTYPE' templates/*.html` 仍仅 4 个布局／局部片段（home／nav／seo_base／image_preview_modal）；Path 总数 **328**、sitemap `<loc>` **329** 不变；首页与 cron-parser／regex-tester GET 200 不回归，静态 style.css／tools.css 200。测试：tests/qr_scanner.test.js 扩 27 条文档壳断言，单文件 **153 断言全过**（原 126＋27）；全量 tests/*.test.js **216 个文件全绿**；`go build`／`go vet` 通过。未做：真浏览器手工验证（开发子代理无 live browser：390px 视口无横向溢出、导航／标题／图标显示、输入生成二维码可见、控制台无新增报错，留待测试轮在真浏览器核查；移动端仅代码级论证：`.row` flex-wrap、`.qrcode-img` max-width:100%、容器 padding 均已就位）；部署留待测试轮后统一执行（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+---
+
+# 体验巡检（2026-11-19 09:00 · 巡检轮）
+
+## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
+- 11-18 轮首页搜索藏分类已交付（15a691e，体验打磨第 11 轮）且已上线：线上 search.js 已含修复后的可见性计数，HEAD /tool-web/index 200，sitemap 200。
+- 其余历史缺陷均已交付划出（HEAD 全站 404、fork-bomb 误报、Shell 词典扫尾、ls/curl 释义、百分比首屏红错、GB/T 7714 双句点、色盲 undefined、Shell --flag=value、音乐可视化器、sitemap 空 body）。
+- 在线 Postman 恢复注册：已书面留档不恢复，本轮起不再重复列入候选。pdf-to-word／ocr-batch 纯逻辑复制分叉：零用户可见变化、无测试兜底，仍为整理候选，不入 Top3。
+
+## 今日 Top3 候选（全部线上／代码级／桩复现实测验真，不提议新工具）
+1. **二维码工具页缺文档壳、无样式无导航**（templates/qrcode.html）：全站 350 个模板中唯一缺失 `<!DOCTYPE>` 的工具模板；线上 /tool-web/qrcode 200 但仅 3,768 字节，无 `<html>/<head>/<title>`、零 CSS 引用、无站内导航，material-icons 显示为字面文本；核心功能本身可用（POST /tool-web/api/qrcode 200，返回有效 256×256 PNG）。难度小。
+2. **script.js 在 cron-parser／regex-tester 抛控制台 TypeError**（static/js/script.js:228）：两页均加载 script.js 且页内 0 处 `toolSearch`；node 最小 DOM 桩复现：DOMContentLoaded 回调抛 `TypeError: Cannot read properties of null (reading 'addEventListener')`，其后 '/' 快捷键注册被跳过；:250 同款计数 bug 已于 11-18 轮顺带修好。难度小。
+3. **首页页脚「意见反馈」「联系我们」为 href="#" 死链**（templates/index.html:309–310）：线上首页亦有 2 处，点击无任何反应；工具页无此页脚。难度小。
+
+## 本轮线上走查（文本抓取＋代码级验真＋桩复现；子代理无真实浏览器，390px 视口未做真机复核，留待测试轮在真实浏览器补验）
+- 首页经 302 到 /tool-web/index 200（893,823 字节），双搜索框俱在，线上 search.js 已含 11-18 轮修复；qrcode／cron-parser／regex-tester 均 200。
+- 移动端代码层面：2 处 @media (max-width: 768px)，≤768px 工具网格切单列，minmax(300px,1fr) 在 390px 视口内无明显溢出风险。
+- 附记（未入 Top3）：① 线上 static/js/search.js 间歇性 502（本轮样本约 5/24 次，同批 style.css／script.js 10/10、index 5/5 均 200，随后 12 连试全 200；toolweb-muse active／running、NRestarts=0）——基础设施侧抖动，非仓库代码缺陷，开发轮修不了，建议看门狗／运维侧跟进；② /tool-web/search 404（站内无链接指向，影响极小）；③ script.js 与 search.js 搜索逻辑重复，整理项无用户可见变化。
+
+## 本轮状态
+本地分支 muse/dev-20260929，HEAD 15a691e；`git fetch` 成功；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交；Path 总数 328；tests 215 个文件；复现脚本与完整巡检报告在 workflow workdir（repro-scriptjs.js、audit-2026-11-19.md）。
+
+---
+
 ## 今日任务（2026-11-18 09:00 · PM 选定轮，接巡检候选）
 
 **选定：首页搜索一打字就藏起全部分类：filterTools 用 .tool-card[style=""] 计数恒为 0** — 本轮唯一任务（体验打磨，非新工具）。

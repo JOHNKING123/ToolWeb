@@ -233,6 +233,36 @@ function throwsField(fn, field, name) {
     var qrcodeTpl = fs.readFileSync(path.join(ROOT, "templates", "qrcode.html"), "utf8");
     contains(qrcodeTpl, "/tools/qr-scanner", "qrcode 模板含回链（双向互链）");
     contains(qrcodeTpl, "二维码一条龙", "qrcode 模板互链文案一致");
+    /* qrcode 文档壳（2026-11-19 体验打磨第 12 轮：补标准壳＋最小内联样式） */
+    contains(qrcodeTpl, "<!DOCTYPE html>", "qrcode 文档壳：DOCTYPE");
+    ok(qrcodeTpl.indexOf("<!DOCTYPE html>") > qrcodeTpl.indexOf('{{define "qrcode"}}'),
+        "qrcode 文档壳：DOCTYPE 在 define 之后");
+    contains(qrcodeTpl, '<html lang="zh-CN">', "qrcode 文档壳：html lang");
+    contains(qrcodeTpl, '<meta charset="UTF-8">', "qrcode 文档壳：charset");
+    contains(qrcodeTpl, 'name="viewport"', "qrcode 文档壳：viewport");
+    contains(qrcodeTpl, "<title>二维码工具 - 程序员工具箱</title>", "qrcode 文档壳：title");
+    contains(qrcodeTpl, "/tools/static/css/style.css", "qrcode 文档壳：style.css");
+    contains(qrcodeTpl, "/tools/static/css/tools.css", "qrcode 文档壳：tools.css");
+    contains(qrcodeTpl, "fonts.googleapis.com/icon?family=Material+Icons", "qrcode 文档壳：Material Icons");
+    contains(qrcodeTpl, "/tools/static/favicon.ico", "qrcode 文档壳：favicon");
+    contains(qrcodeTpl, 'name="theme-color"', "qrcode 文档壳：theme-color");
+    contains(qrcodeTpl, '{{template "nav" .}}', "qrcode 文档壳：站内导航");
+    contains(qrcodeTpl, 'class="tool-header"', "qrcode 文档壳：tool-header");
+    contains(qrcodeTpl, ".tool-container {", "qrcode 最小样式：.tool-container");
+    contains(qrcodeTpl, ".section-title {", "qrcode 最小样式：.section-title");
+    contains(qrcodeTpl, ".row {", "qrcode 最小样式：.row");
+    contains(qrcodeTpl, ".qrcode-img {", "qrcode 最小样式：.qrcode-img");
+    contains(qrcodeTpl, "max-width: 100%", "qrcode 最小样式：结果图不溢出（max-width: 100%）");
+    contains(qrcodeTpl, "</body>", "qrcode 文档壳：保留 </body>");
+    contains(qrcodeTpl, "</html>", "qrcode 文档壳：保留 </html>");
+    notContains(qrcodeTpl, "qr_code", "qrcode 图标不再是字面文本 qr_code（改用 grid_on，字体加载后渲染为图标）");
+    contains(qrcodeTpl, ">grid_on<", "qrcode 标题图标 grid_on");
+    /* JS 生成逻辑不动（fetch POST /tools/api/qrcode，JSON 入参，PNG blob） */
+    contains(qrcodeTpl, "fetch('/tools/api/qrcode'", "qrcode JS 不动：POST /tools/api/qrcode");
+    contains(qrcodeTpl, "application/json", "qrcode JS 不动：JSON 入参");
+    contains(qrcodeTpl, "res.blob()", "qrcode JS 不动：PNG blob");
+    contains(qrcodeTpl, 'class="qrcode-img"', "qrcode JS 不动：结果图挂 .qrcode-img");
+    contains(qrcodeTpl, "生成失败", "qrcode JS 不动：失败红字提示");
 })();
 
 console.log("\n断言通过: " + pass + ", 失败: " + fail + ", 共 " + (pass + fail));
