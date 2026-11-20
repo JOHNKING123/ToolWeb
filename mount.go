@@ -58,6 +58,20 @@ func withToolWebMount(next http.Handler) http.Handler {
 		}
 		r2.URL = &urlCopy
 
+		// 静态资源缓存新鲜度（2026-11-20，体验打磨第 13 轮补验发现）：
+		// /tool-web/static/ 下的 JS/CSS 强制每次回源校验。源站本身不设
+		// Cache-Control，Cloudflare 边缘曾按默认 7 天强缓存（max-age=604800）
+		// 旧文件，导致已部署的 script.js 修复对真实访客迟迟不生效（无参数
+		// 地址 cf-cache-status HIT、Age 约 25 小时仍返回旧版，带 ?v= 参数
+		// 才是 MISS 新版）。仅作用于 /tool-web 开发版挂载，/tools 生产路径
+		// 直通、不受影响。保留 Last-Modified，条件请求可拿 304。
+		// 注意：本头只影响此后新填入边缘缓存的副本；已被缓存的旧副本须靠
+		// URL 加版本参数（如 script.js?v=<commit>）换缓存键才能立即 bust。
+		if strings.HasPrefix(urlCopy.Path, toolWebInternalPrefix+"/static/") &&
+			(strings.HasSuffix(urlCopy.Path, ".js") || strings.HasSuffix(urlCopy.Path, ".css")) {
+			w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
+		}
+
 		rw := &toolWebRewriteWriter{ResponseWriter: w}
 		next.ServeHTTP(rw, r2)
 		rw.flush()

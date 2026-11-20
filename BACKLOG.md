@@ -1,3 +1,14 @@
+## 缓存补验与修复（2026-11-20 09:38–10:00，体验打磨第 13 轮续）
+
+**问题**：9b5cb12 已部署、qa.sh 全过，但父代理真浏览器补验发现修复对常规访客未生效——无参数 `https://www.it-tool.eu.cc/tool-web/static/js/script.js` 仍返回旧版（`cf-cache-status: HIT`、`Age: 89389`、`Cache-Control: public, max-age=604800`、`Last-Modified: 11-18`，无守卫，:228 仍 `toolSearch.addEventListener`）；带任意 `?v=` 参数才返回新版（MISS）。两页控制台仍抛 `Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')`，'/' 快捷键监听器仍被中断。源站（127.0.0.1:18082）实测已是新版、且不设 Cache-Control——7 天强缓存来自 Cloudflare 边缘默认值。这是 2026-10-10 PDF 水印轮同款假故障的重演（当时靠 `?v=2` 止血，`CACHE-FRESHNESS-PLAN-2026-10-10.md` 准备稿一直未落地）。
+
+**修复（与 9b5cb12 同一轮次，不另立任务）**：
+1. `mount.go` 落地准备稿第一步：`/tool-web/static/` 下 `.js`/`.css` 响应统一加 `Cache-Control: no-cache, max-age=0, must-revalidate`（仅 /tool-web 开发版挂载，`/tools` 生产路径直通、不设该头；保留 Last-Modified 可 304）。此头只影响此后新填入边缘缓存的副本，治未病。
+2. 6 个加载 script.js 的模板（cron_parser／json_yaml／markdown／regex_tester／url_encode／xml_parser）引用改为 `script.js?v=9b5cb12`，换缓存键立即 bust 已被缓存的旧副本，治已病。`?v=` 为一次性 bust：有 no-cache 头兜底后，今后改 script.js 无需再 bump 版本号；准备稿「不要逐个模板手加 ?v=」的告诫仍有效，本次是旧副本已中毒的例外。
+3. 本地冒烟（127.0.0.1:18099 新构建）：`/tool-web/static/js/script.js?v=9b5cb12` 与 `/tool-web/static/css/style.css` 均带 no-cache 头且守卫在位；`/tools/static/js/script.js` 无该头；cron-parser 页引用已为版本化地址；两页＋首页＋/tools/index 均 200；`go build`／`go vet` 通过；全量 tests/*.test.js 217/217 全绿。部署走 deploy.sh，公网复验待部署后执行（页面引用版本化地址、版本化地址返回新版且带 no-cache 头、真浏览器两页控制台无 TypeError）。
+
+**遗留**：无参数旧版地址的边缘缓存最长还剩约 6 天自然过期，期间直接访问该地址仍见旧版——但页面已不再引用它，无实际影响；`qa.sh` 增加静态资源缓存头检查（准备稿验收第 5 项）留待旧缓存过期后再做，否则 bare URL 检查会持续 FAIL。
+
 ## 今日任务（2026-11-20 09:00 · PM 选定轮，接巡检候选）
 
 **选定：script.js 在 cron-parser／regex-tester 抛控制台 TypeError（:228 空指针）** — 本轮唯一任务（体验打磨，非新工具）。
