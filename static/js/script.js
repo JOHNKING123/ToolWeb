@@ -224,16 +224,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const toolCards = document.querySelectorAll('.tool-card');
     const categories = document.querySelectorAll('.category');
 
-    // 同步两个搜索框
-    toolSearch.addEventListener('input', function(e) {
-        toolSearchLarge.value = e.target.value;
-        filterTools(e.target.value);
-    });
+    // 同步两个搜索框（仅首页有双搜索框；工具页无搜索框时跳过接线，不抛错）
+    if (toolSearch && toolSearchLarge) {
+        toolSearch.addEventListener('input', function(e) {
+            toolSearchLarge.value = e.target.value;
+            filterTools(e.target.value);
+        });
 
-    toolSearchLarge.addEventListener('input', function(e) {
-        toolSearch.value = e.target.value;
-        filterTools(e.target.value);
-    });
+        toolSearchLarge.addEventListener('input', function(e) {
+            toolSearch.value = e.target.value;
+            filterTools(e.target.value);
+        });
+    }
 
     function filterTools(searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -277,7 +279,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 按下 '/' 键时聚焦搜索框
         if (e.key === '/' && !['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) {
             e.preventDefault();
-            toolSearchLarge.focus();
+            if (toolSearchLarge) {
+                toolSearchLarge.focus();
+            }
         }
     });
 }); 

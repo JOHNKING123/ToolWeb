@@ -1,3 +1,56 @@
+## 今日任务（2026-11-20 09:00 · PM 选定轮，接巡检候选）
+
+**选定：script.js 在 cron-parser／regex-tester 抛控制台 TypeError（:228 空指针）** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是既有共享脚本在无搜索框页面的空指针，不新增工具、不改 Path 总数。硬依据如下：
+1. **11-19 轮 PM 指定的下轮优先候选第一位，本轮巡检再列 Top1，无推迟理由**：11-19 轮刚交付二维码工具页文档壳（3f0d92b，体验打磨第 12 轮）；本轮按顺位递进链轮到本项。
+2. **根因已定位到一行，PM 代码级验真**：static/js/script.js:222–223 `getElementById('toolSearch'／'toolSearchLarge')`，:228 `toolSearch.addEventListener` 空指针；`toolSearch`／`toolSearchLarge` 全站仅 templates/index.html:161／:181 有，nav 模板与 cron_parser／regex_tester 模板内均为 0 处；两模板均加载 script.js（grep 命中 6 个模板，其余 4 个经巡检核实为孤儿模板，对应 slug 线上 404，live 影响面仅此 2 页）；首页不加载 script.js（index.html:329 只引 search.js），守卫修不了首页搜索。巡检 node 最小 DOM 桩复现：DOMContentLoaded 回调抛 `TypeError: Cannot read properties of null (reading 'addEventListener')`。
+3. **报错不止控制台一条**：抛错点 :228 在 DOMContentLoaded 回调中段，回调其后全部跳过——:276–282 '/' 快捷键注册被跳过（且即使走到 :280，`toolSearchLarge.focus()` 在 null 上同样会抛）；两页每次打开都在控制台留一条未捕获 TypeError，页面主体功能可用但快捷键路径已死。修一处守卫同时恢复两项。
+4. **一日可高质量完成**：改动集中在 script.js 两处守卫＋一个 node 桩测试；不碰模板、不碰后端、不新增依赖；守卫是通用写法，万一 live 另有第 3 页缺搜索框也一并覆盖。
+
+**未选说明**：首页 1919px 桌面宽下出现横向滚动条（**本轮不选，列为下轮优先候选第一位，附条件**：11-19 轮父代理 live browser 实测，滑块约占轨道 94%，轻微溢出，每位桌面端首页访问者都看得到，影响面其实大于页脚死链；但本轮静态排查未定位根因——全站无 `100vw`、首页无固定宽行内样式、容器／网格／页脚均已限宽，须真浏览器逐元素量 scrollWidth 才能定位；开发子代理无 live browser，立项即等于让开发轮盲修，违背「根因定位再开发」；下轮巡检须先在真浏览器定位溢出元素，定位到则下轮 PM 按定位结果立项，仍未定位则顺延、改选页脚死链）／首页页脚「意见反馈」「联系我们」为 href="#" 死链（**本轮不选，列为下轮优先候选第二位**：PM 已验真——templates/index.html:309–310，线上首页亦有 2 处，点击无任何反应；但不影响任何功能路径，纯页脚链接，紧迫性最低；**去向 PM 本轮已裁定**，下轮开发直接执行不重议：①「意见反馈」改为 GitHub Issues `https://github.com/JOHNKING123/ToolWeb/issues`，新窗口打开；②「联系我们」删除该链接——无公开联系渠道，绝不把用户私人 QQ 邮箱贴到公网站点页脚）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① static/js/script.js:221–236 搜索框接线加空值守卫：仅当 `toolSearch` 与 `toolSearchLarge` 均存在时注册 input 同步监听；任一缺失时跳过接线、不抛错、不中断 DOMContentLoaded 回调其余部分；`filterTools` 函数定义保留（函数声明，无副作用），:250 实际可见性计数（11-18 轮已修）一字不动 ② :275–282 '/' 快捷键：仅当 `toolSearchLarge` 存在时注册，或在处理函数内守卫 `toolSearchLarge.focus()`，二选一、改动最小为准；须保证在 cron-parser／regex-tester 按 '/' 不抛错（无搜索框可聚焦是预期行为）③ 不动：下拉菜单接线（:180–219）与回调其余逻辑；不给两模板补 `toolSearch` 搜索框、不给两页加载 search.js（那是范围蔓延，工具页不需要首页搜索框）；不碰 main.go／tools/categories.go，不改 Path 总数（328），不改 sitemap 条数（329），不新增依赖 ④ 影响面复核：grep 全站加载 script.js 的模板共 6 个（cron_parser／json_yaml／markdown／regex_tester／url_encode／xml_parser），后 4 个巡检已核实为孤儿模板（对应 slug 线上 404）；开发轮复核 live 影响面仍为仅 2 页，若发现第 3 页 live 加载且缺搜索框，通用守卫已覆盖、无需另改。
+- **数值锚点（开发轮逐项记录实测值）**：
+  - node 最小 DOM 桩复现（沿用巡检 repro 方式）：无 `toolSearch`／`toolSearchLarge` 的 DOM 下加载真实 script.js，DOMContentLoaded 回调**不抛** `TypeError`；'/' 按键处理不抛错（handler 已注册且安全跳过，或未注册但回调完整执行——开发轮记录实际口径）。
+  - 有搜索框的 DOM（首页同款桩）：双框 input 同步仍工作；filterTools 计数仍按实际可见性（11-18 轮锚点：搜 "json" 可见卡 57 张、分类正常展开，清空恢复 19/19，不回归）。
+  - 本地实测：GET /tools/cron-parser 与 /tools/regex-tester 200；静态 script.js 200。
+  - 反向守卫：首页 GET 200、搜索锚点不回归；下拉菜单开合／ESC 关闭不回归；其余 4 个孤儿模板零改动；Path 总数 328、sitemap `<loc>` 329 不变。
+- **改动文件**：static/js/script.js（守卫两处）／tests/scriptjs_null_guard.test.js（新增；node 最小 DOM 桩，覆盖无搜索框页不抛错＋有搜索框页接线正常；或开发轮判定扩写 tests/homepage_search.test.js——该文件已有读 script.js 源码做断言的先例，按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① 上列锚点全过 ② 全量 tests/*.test.js **216** 个文件全绿（新文件计入后按实测更新总数）③ go build／go vet 通过 ④ 本地实测两页 200、静态 script.js 200 ⑤ 浏览器手工验证：两页控制台无 TypeError、按 '/' 无报错、页面原有功能正常；首页搜索不回归（测试轮在真浏览器核查，开发轮记录 node 桩结果）。
+- **品类归位**：非新工具，无类目注册；Path 总数 328、sitemap `<loc>` 329 保持不动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：script.js 在 cron-parser／regex-tester 抛 TypeError→本轮交付（巡检 Top1；11-19 轮 PM 指定的下轮优先候选第一位；:228 空指针、'/' 快捷键失效，live 仅 2 页控制台报错；:250 同款计数 bug 11-18 轮已顺带修好）／首页 1919px 横向滚动条→下轮优先候选第一位（附条件：11-19 轮 live browser 新发现，滑块约占轨道 94%；静态排查未定位根因，下轮巡检须先在真浏览器逐元素量 scrollWidth 定位，定位到则立项、未定位则顺延）／首页页脚「意见反馈」「联系我们」href="#" 死链→下轮优先候选第二位（templates/index.html:309–310，线上亦有 2 处；去向 PM 已裁定：意见反馈→GitHub Issues 新窗口，联系我们→删链，不贴私人邮箱）／二维码工具页缺文档壳→已交付划出（3f0d92b，体验打磨第 12 轮）／首页搜索一打字就藏起全部分类→已交付划出（15a691e，体验打磨第 11 轮）／HEAD 请求全站返回 404→已交付划出（6518055，体验打磨第 10 轮）／Shell 危险检测 fork-bomb 正则误报→已交付划出（5417fbd，体验打磨第 9 轮）／Shell 词典扫尾 11 条→已交付划出（a906236，体验打磨第 8 轮）／Shell ls --time-style 与 curl --max-time→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell grep --include/--exclude＋--flag=value→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／在线 Postman 恢复注册→书面留档不恢复（查因到头：a0799eb 全文仅「add postman 工具，不放开」，原因未记录；安全裁定：tools/postman.go:110–166 SendRequest 服务端代发任意 URL、无 SSRF 防护且 InsecureSkipVerify: true，恢复须先补防护、非一日打磨任务；方向：恢复即 Path 328→329，须用户明确表态再立项；本轮起不再每轮重复查因）／批量版与单文件版纯逻辑复制分叉→整理候选（四函数逐字节相同、尚未分叉；零用户可见变化且无 pdf／ocr 测试文件兜底，留待有测试覆盖后再抽共享模块）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十六度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功——本轮初次 fetch 未带该变量曾报 Permission denied (publickey)，按铁律补环境变量后恢复（沿用研究轮惯例）；本地 HEAD 9d9d148（11-19 轮补记已提交，体验打磨第 12 轮；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **216**；PM 独立复核（代码级验真：script.js:222–223 取元素、:228 空指针、:276–282 '/' 快捷键、:280 `toolSearchLarge.focus()` 同样空指针风险；`toolSearch`／`toolSearchLarge` 全站仅 index.html:161／:181 有，nav／cron_parser／regex_tester 均为 0 处；index.html:329 只引 search.js、不加载 script.js；grep -l 'script.js' templates/*.html 共 6 个文件，live 影响面仅 2 页沿用巡检逐页核查结论；index.html:309–310 死链逐项核对属实；1919px 溢出根因未定位沿用巡检结论，本轮不立项盲修）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+**开发轮交付（2026-11-20，体验打磨第 13 轮，待测试轮验收）**：static/js/script.js 仅两处守卫（＋14/−10），其余一字未动。① :227–236 搜索框接线加 `if (toolSearch && toolSearchLarge)`：双框俱在时注册 input 同步监听，任一缺失时跳过接线、不抛错、不中断 DOMContentLoaded 回调其余部分；filterTools 定义保留。② :275–282 '/' 快捷键取处理函数内守卫（改动最小口径）：监听器照常注册，`if (toolSearchLarge) toolSearchLarge.focus()`，无框时按 '/' 安全跳过。行号说明：:250 实际可见性计数行（11-18 轮已修）内容一字未动，仅因上方守卫 ＋2 行顺延为 :252，测试文件静态断言锁定的是该行内容而非行号；下拉菜单接线（:180–219）与回调其余逻辑未动；未给两模板补搜索框、未给两页加载 search.js；未碰 main.go／tools/categories.go，无新依赖。新增 tests/scriptjs_null_guard.test.js（416 行，node 最小 DOM 桩，零依赖）：场景 A 无搜索框（cron-parser 同款：nav 下拉在、cronForm 在、双框缺失）加载真实 script.js＋DOMContentLoaded 不抛错，document 上 keydown 监听器 2 个（ESC＋'/'，'/' 为回调末尾注册，证明回调完整执行），下拉点击展开／空白处关闭／ESC 关闭均工作，按 '/' 不抛错且焦点仍在 body；A2 仅大框（按 '/' 聚焦大框）与 A3 仅小框（按 '/' 安全跳过）同样不抛错；场景 B 有搜索框（首页同款桩，19 分类）双框同步、filterTools 按实际可见性计数（可见卡＝匹配集合、可见分类＝含匹配卡的分类数）、清空恢复 19/19、零匹配提示挂在 #all 内、'/' 聚焦大框、ESC 只关下拉不清空搜索（script.js 的 ESC 行为，与 search.js 的 ESC 清空不同）；另有源码静态断言（守卫写法、:250 计数行内容、两模板 0 处 toolSearch 且不加载 search.js、首页不加载 script.js）。新文件 **56 断言全过**；反向验证：同一测试对 HEAD 版旧 script.js 为 48 过／8 败，复现巡检原报错 `TypeError: Cannot read properties of null (reading 'addEventListener')` 且 keydown 监听器仅 1 个（回调在 :228 中断、'/' 注册被跳过），证明测试能抓住本缺陷、非自证。本地实测（127.0.0.1:18099 新构建，服务已停、无残留进程）：GET /tools/cron-parser **200（323,539 字节）**、/tools/regex-tester **200（353,516 字节）**、首页 **200（891,142 字节，热门随机抽取致字节数逐请求浮动、非回归）**、静态 script.js **200（10,381 字节）**， served script.js 与仓库文件逐字节一致且含守卫；served 两页各引 script.js 1 处、toolSearch 0 处。反向守卫：其余 4 个孤儿模板零改动（git status 仅 BACKLOG.md／static/js/script.js／tests/scriptjs_null_guard.test.js）；Path 总数 **328**、sitemap `<loc>` **329** 不变；全量 tests/*.test.js **217 个文件全绿**（新文件计入）；`go build`／`go vet` 通过。附记：search.js 仍保留同款无守卫写法，未动——它只在首页加载、首页双框俱在，修它不在本轮范围。未做：真浏览器手工验证（开发子代理无 live browser：两页控制台无 TypeError、按 '/' 无报错、页面原有功能正常、首页搜索不回归，留待测试轮在真浏览器核查；真实首页 57 张锚点由 tests/homepage_search.test.js 的 jsdom 模式覆盖）；部署留待测试轮后统一执行（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）。
+
+---
+
+# 体验巡检（2026-11-20 09:00 · 巡检轮）
+
+## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
+- 11-19 轮二维码工具页缺文档壳已交付（3f0d92b，体验打磨第 12 轮）且已上线：线上 /tool-web/qrcode 实测 200、318,795 字节，以 `<!DOCTYPE html>` 开头、含 `<title>二维码工具 - 程序员工具箱</title>`、style.css＋tools.css 引用与 nav 标记；POST /tools/api/qrcode 生成功能未回归（11-19 开发轮实测 256×256 PNG）。
+- 其余历史缺陷均已交付划出（首页搜索藏分类 15a691e、HEAD 全站 404、fork-bomb 误报、Shell 词典扫尾、ls/curl 释义、百分比首屏红错、GB/T 7714 双句点、色盲 undefined、Shell --flag=value、音乐可视化器、sitemap 空 body）。
+- 在线 Postman 恢复注册：已书面留档不恢复，不再重复列入候选。pdf-to-word／ocr-batch 纯逻辑复制分叉：零用户可见变化、无测试兜底，仍为整理候选，不入 Top3。
+
+## 今日 Top3 候选（全部线上／代码级／桩复现实测验真，不提议新工具）
+1. **script.js 在 cron-parser／regex-tester 抛控制台 TypeError**（static/js/script.js:228，下轮优先候选第一位，11-19 轮 PM 已指定）：两页线上均 200 且加载 script.js、页内 0 处 `toolSearch`；本轮 node 最小 DOM 桩复现：DOMContentLoaded 回调抛 `TypeError: Cannot read properties of null (reading 'addEventListener')`，其后 '/' 快捷键注册（:276–282）被跳过。影响面修正：模板级 grep 命中 6 个文件，但线上逐页核查后仅 cron-parser／regex-tester 两页真实加载 script.js（json-to-types 命中为 meta keywords 子串误报；json-yaml-converter／xml-formatter 线上 200 但 0 处 script.js 引用；markdown-preview 200、34KB 亦不加载；其余 slug 404 为巡检猜错路径）。难度小。
+2. **首页页脚「意见反馈」「联系我们」为 href="#" 死链**（templates/index.html:309–310，下轮优先候选第二位，11-19 轮 PM 已指定）：线上首页亦有 2 处，点击无任何反应；工具页无此页脚。修复须先定去向（删链／mailto／GitHub issues 三选一，PM 裁定）。难度小。
+3. **首页 1919px 桌面宽下出现横向滚动条**（11-19 轮父代理 live browser 新发现，滑块约占轨道 94%，轻微溢出；二维码页同宽无此问题）：本轮静态排查未定位根因——全站无 `100vw`（仅 img_resize／image-preview 的 `max-width: calc(100vw - 2rem)`）、首页无固定宽行内样式、`.container` 限宽 1200px、`.tools-grid` minmax(300px,1fr)、页脚 flex-wrap 已就位、绝对定位下拉菜单默认 `display:none`；须真浏览器逐元素量 scrollWidth 定位。难度中。
+
+## 本轮线上走查（文本抓取＋代码级验真＋桩复现；子代理无真实浏览器，390px 视口与控制台报错未做真机复核，留待测试轮在真实浏览器补验）
+- 首页 200（895,184 字节），双搜索框俱在，线上 search.js 已含 11-18 轮修复；qrcode／cron-parser／regex-tester／sitemap.xml 均 200；sitemap 60,180 字节。
+- 附记（未入 Top3）：① 线上 static/js/search.js 间歇性 502 复现：本轮 10 次抽查 3 次 502（11-19 轮约 5/24），同批 index／style.css／script.js 均 200；基础设施侧抖动，非仓库代码缺陷，开发轮修不了，建议看门狗／运维侧跟进；② /tool-web/search 404（站内无链接指向，影响极小）；③ script.js 与 search.js 搜索逻辑重复，整理项无用户可见变化。
+
+## 本轮状态
+本地分支 muse/dev-20260929，HEAD 9d9d148，与远端同步；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功；`git status` 干净（本追加未提交不推送，随开发轮次提交）；Path 总数 328；tests 216 个文件；复现与完整巡检报告在 workflow workdir（audit-2026-11-20.md）。
+
+---
+
 ## 今日任务（2026-11-19 09:00 · PM 选定轮，接巡检候选）
 
 **选定：二维码工具页缺文档壳、无样式无导航** — 本轮唯一任务（体验打磨，非新工具）。
