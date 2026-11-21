@@ -1,3 +1,77 @@
+# 体验巡检（2026-11-21 09:00 · 巡检轮）
+
+## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
+- 11-20 轮 script.js 空指针守卫已交付（9b5cb12，体验打磨第 13 轮）且缓存修复已交付（7291a05，第 13 轮续），本地 HEAD 即 7291a05。
+  线上验真：源站 127.0.0.1:18082 的 `/tool-web/static/js/script.js?v=9b5cb12` 返回 `Cache-Control: no-cache, max-age=0, must-revalidate`，
+  且含守卫 `toolSearch && toolSearchLarge`；公网同地址亦含守卫（cf-cache MISS）。无参数旧地址仍命中边缘旧缓存（Last-Modified 11-18、Age 172676、
+  cf-cache HIT），属 BACKLOG 已记录的遗留（页面已不再引用该地址，无实际影响）。
+- 其余历史缺陷均已交付划出（首页搜索藏分类、二维码缺文档壳、HEAD 全站 404、fork-bomb 误报、Shell 词典扫尾、ls/curl 释义、
+  百分比首屏红错、GB/T 7714 双句点、色盲 undefined、Shell --flag=value、音乐可视化器、sitemap 空 body）。
+- 在线 Postman 恢复注册：已书面留档不恢复，不再重复列入候选。pdf-to-word／ocr-batch 纯逻辑复制分叉：零用户可见变化、无测试兜底，
+  仍为整理候选，不入 Top3。
+
+## 今日 Top3 候选（全部线上／代码级实测验真，不提议新工具）
+1. **首页页脚「意见反馈」「联系我们」为 href="#" 死链**（templates/index.html:309–310，下轮优先候选第二位，11-19/11-20 轮 PM 已指定；
+   本轮再验真）：线上首页 200（894,286 字节），`href="#"` 恰 2 处，「意见反馈」「联系我们」各 1 处，点击无任何反应。PM 去向已裁定：
+   ①「意见反馈」改为 GitHub Issues `https://github.com/JOHNKING123/ToolWeb/issues`，新窗口打开；②「联系我们」删除该链接（无公开联系渠道，
+   绝不把用户私人 QQ 邮箱贴到公网站点页脚）。范围收敛：templates/app_detail.html:557–558 与 my_test_app.html:393–394 有同款死链，
+   但二者在 tools/categories.go 中 0 注册、非线上页面，本轮只改 index.html。难度小。
+2. **首页 1919px 桌面宽下出现横向滚动条**（11-19 轮父代理 live browser 新发现，滑块约占轨道 94%，轻微溢出；二维码页同宽无此问题）：
+   本轮加深静态排查仍未定位根因——已逐项排除：全站无 `100vw`（仅 image-preview 的 `max-width: calc(100vw - 2rem)` 与 transfer-preview 的
+   `width:min(960px,94vw)`，均带 max 限宽）；全局 `* { box-sizing: border-box }`；`.container` max-width 1200px；`.tools-grid`
+   minmax(300px,1fr) 在 1200px 容器内；页脚 flex-wrap 已就位；`.tools-dropdown-content` 默认 `display:none`（仅展开时才渲染）；
+   首页无 table/pre/宽图/固定宽行内样式、无负边距、无 nowrap；SEO 三栏 `minmax(300px,1fr)` 在容器内。按 11-20 轮 PM 附条件：
+   须真浏览器逐元素量 scrollWidth 定位后才能立项，仍未定位则顺延、改选页脚死链。难度中。
+3. **/tool-web/search 返回 404**：线上实测 `GET /tool-web/search` 404、仅 15 字节「工具不存在」。站内无链接指向，影响仅限直接访问或外链访客；
+   修法为补路由（重定向到首页搜索或返回搜索页），不碰工具总数。难度小。
+
+## 本轮线上走查（文本抓取＋代码级验真；子代理无真实浏览器，390px 视口与控制台报错未做真机复核，留待测试轮在真实浏览器补验）
+- 首页 200（894,286 字节），双搜索框俱在；json-parser／percentage-calc／music-visualizer／cron-parser／regex-tester 均 200 且以
+  `<!DOCTYPE html>` 开头、0 处 `href="#"`；sitemap.xml 200（60,180 字节，`<loc>` 329 条）；robots.txt 200。
+- 首页脚本：search.js＋tools-dropdown.js 正常引用；另有 gtag 占位 `GA_MEASUREMENT_ID`（未配置，现状非本轮议题）。
+- 附记（未入 Top3）：① 线上 static/js/search.js 间歇性 502 再现：本轮 5 次抽查 1 次 502（历史约 3/10、5/24），同批其余资源均 200；
+  命中时首页搜索失效，属基础设施侧抖动、非仓库代码缺陷，开发轮修不了，建议看门狗／运维侧跟进（仓库侧缓解思路如内联 search.js 供 PM 裁定，
+  不属本轮候选）；② 导航「所有工具」下拉把 328 个工具全量直出到每个页面（首页 894KB、工具页约 330KB），属全站加载负重，懒加载改造
+  超出一日打磨口径、留待 PM 另议；③ 11-20 轮遗留：qa.sh 增加静态资源缓存头检查，待无参数旧版边缘缓存自然过期后再做。
+
+## 本轮状态
+本地分支 muse/dev-20260929，HEAD 7291a05，与远端同步；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功；
+`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交；Path 总数 328（沿用 11-20 轮实测，未变）；tests 217 个文件；
+完整巡检报告在 workflow workdir（audit-2026-11-21.md）。
+
+---
+
+## 今日任务（2026-11-21 09:00 · PM 选定轮，接巡检候选）
+
+**选定：首页页脚「意见反馈」「联系我们」为 href="#" 死链** — 本轮唯一任务（体验打磨，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是首页既有页脚链接，不新增工具、不改 Path 总数。硬依据如下：
+1. **11-20 轮 PM 指定的下轮优先候选第二位，本轮按顺位递进链轮到本项**：11-20 轮刚交付 script.js 空指针守卫（9b5cb12，体验打磨第 13 轮）及缓存修复（7291a05，第 13 轮续）；第一位候选（1919px 横向滚动条）按附条件顺延（见未选说明），故轮到本项，无推迟理由。
+2. **根因已定位到两行，PM 代码级验真**：templates/index.html:309–310，`href="#"` 恰 2 处，「意见反馈」「联系我们」各 1 处；线上首页 200（894,286 字节）亦有 2 处，点击无任何反应。去向 11-20 轮 PM 已裁定，开发轮直接执行不重议（见规格）。
+3. **每位滑到页脚的访客都看得到**：首页是全站主入口，页脚死链是全站可见的未完成感；修法只动一个模板两行，风险最低。
+4. **一日可高质量完成**：改动集中在 index.html 两行＋测试断言；不碰后端路由、不碰其余模板、不新增依赖。
+
+**未选说明**：首页 1919px 桌面宽下出现横向滚动条（**本轮不选，继续列为下轮优先候选第一位，附条件不变**：11-19 轮父代理 live browser 实测，滑块约占轨道 94%，每位桌面端首页访客可见，影响面大于页脚死链；但本轮加深静态排查仍未定位根因——已排除 100vw、固定宽元素、负边距、nowrap、table/pre、宽图、下拉菜单 display:none、容器／网格／页脚均限宽、全局 border-box；按 11-20 轮 PM 附条件，须真浏览器逐元素量 scrollWidth 定位后才能立项，开发子代理无 live browser，立项即等于让开发轮盲修，违背「根因定位再开发」；下轮巡检须先在真浏览器定位溢出元素，定位到则立项、仍未定位则继续顺延）／/tool-web/search 返回 404（**本轮不选，列为下轮优先候选第二位**：线上实测 GET /tool-web/search 404、仅 15 字节「工具不存在」；PM 已核实机制——main.go:632 的 /search 注册在根路由，/tool-web/search 经 mount.go 改写为 /tools/search 后落到工具页 handler 兜底 404；站内无链接指向，影响仅限直接访问或外链访客，紧迫性低于全站可见的页脚死链；修法为 tools 路由组补 /search 或重定向到首页搜索，不碰工具总数）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：① templates/index.html:309「意见反馈」改为 `<a href="https://github.com/JOHNKING123/ToolWeb/issues" target="_blank" rel="noopener noreferrer" style="color:#666;text-decoration:none;">意见反馈</a>`，新窗口打开，原行内 style 一字不动 ② :310「联系我们」删除该 `<a>` 整行——无公开联系渠道，绝不把用户私人 QQ 邮箱贴到公网站点页脚，不改 mailto、不留空链、不留占位文案 ③ 不动：页脚「网站地图」「Robots」两链、页脚其余结构、visitor-stats；不动 templates/app_detail.html:557–558 与 my_test_app.html:393–394 的同款死链——二者在 tools/categories.go 中 0 注册、非线上页面，本轮只改 index.html；不碰 main.go／mount.go／tools/categories.go，不改 Path 总数（328），不改 sitemap 条数（329），不新增依赖。
+- **数值锚点（开发轮逐项记录实测值）**：
+  - 本地／线上首页 GET 200；`grep -n 'href="#"' templates/index.html` 为 **0 处**（改前恰 2 处，:309–310）。
+  - 「意见反馈」链 href 为 `https://github.com/JOHNKING123/ToolWeb/issues`，含 `target="_blank"` 与 `rel="noopener noreferrer"`；点击新窗口打开 GitHub Issues（测试轮真浏览器核查）。
+  - 页脚不再出现「联系我们」文案（grep 0 处）；页脚其余链接（网站地图／Robots）点击正常。
+  - 反向守卫：首页双搜索框、导航下拉、sitemap.xml（`<loc>` 329）不回归；其余模板零改动（git status 仅 BACKLOG.md／templates/index.html／测试文件）；Path 总数 328 不变。
+  - 附记（开发轮核查、不改）：全站其余 `href="#"` 共 8 处（base642img:36、ebook_index:299/315、img_target_kb:133、negative_film_restorer:122、screen_recorder:115、youtube_thumbnail_downloader:106）均为 JS 驱动的下载／动态链接（带 `download` 属性或由 JS 赋值 href），非裸死链，不属本轮范围，开发轮逐处确认后在交付中一句话记录；app_detail／my_test_app 各 2 处裸死链按规格不动，记为已知遗留。
+- **改动文件**：templates/index.html（两行）／tests/homepage_search.test.js（扩断言；该文件 :31 已有读 templates/index.html 做断言的先例，页脚断言写进此处，或开发轮判定新建 tests/homepage_footer.test.js，按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① 上列锚点全过 ② 全量 tests/*.test.js **217** 个文件全绿（新文件计入后按实测更新总数）③ go build／go vet 通过 ④ 本地实测首页 200 ⑤ 浏览器手工验证：页脚「意见反馈」新窗口打开 GitHub Issues、「联系我们」已消失、其余页脚链接正常；控制台无新增报错（测试轮在真浏览器核查，开发轮记录本地实测）。
+- **品类归位**：非新工具，无类目注册；Path 总数 328、sitemap `<loc>` 329 保持不动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：首页页脚「意见反馈」「联系我们」href="#" 死链→本轮交付（巡检 Top1；11-20 轮 PM 指定的下轮优先候选第二位，第一位横向滚动条按附条件顺延；templates/index.html:309–310，线上亦有 2 处，点击无反应；去向 PM 已裁定：意见反馈→GitHub Issues 新窗口，联系我们→删链，不贴私人邮箱；app_detail／my_test_app 同款死链未注册、非线上页面，只改 index.html）／首页 1919px 横向滚动条→下轮优先候选第一位（附条件不变：11-19 轮 live browser 新发现，滑块约占轨道 94%；两轮静态排查未定位根因，下轮巡检须先在真浏览器逐元素量 scrollWidth 定位，定位到则立项、未定位则继续顺延）／/tool-web/search 返回 404→下轮优先候选第二位（线上实测 404、15 字节「工具不存在」；机制已核实：根路由有 /search，mount 改写后落到工具页 handler 兜底；修法为 tools 路由组补 /search 或重定向到首页搜索，不碰工具总数）／script.js 在 cron-parser／regex-tester 抛 TypeError→已交付划出（9b5cb12，体验打磨第 13 轮；缓存修复 7291a05，第 13 轮续）／二维码工具页缺文档壳→已交付划出（3f0d92b，体验打磨第 12 轮）／首页搜索一打字就藏起全部分类→已交付划出（15a691e，体验打磨第 11 轮）／HEAD 请求全站返回 404→已交付划出（6518055，体验打磨第 10 轮）／Shell 危险检测 fork-bomb 正则误报→已交付划出（5417fbd，体验打磨第 9 轮）／Shell 词典扫尾 11 条→已交付划出（a906236，体验打磨第 8 轮）／Shell ls --time-style 与 curl --max-time→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell grep --include/--exclude＋--flag=value→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／在线 Postman 恢复注册→书面留档不恢复（查因到头：a0799eb 全文仅「add postman 工具，不放开」，原因未记录；安全裁定：tools/postman.go:110–166 SendRequest 服务端代发任意 URL、无 SSRF 防护且 InsecureSkipVerify: true，恢复须先补防护、非一日打磨任务；方向：恢复即 Path 328→329，须用户明确表态再立项；本轮起不再每轮重复查因）／批量版与单文件版纯逻辑复制分叉→整理候选（四函数逐字节相同、尚未分叉；零用户可见变化且无 pdf／ocr 测试文件兜底，留待有测试覆盖后再抽共享模块）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十七度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功——本轮初次 fetch 未带该变量曾报 Permission denied (publickey)，按铁律补环境变量后恢复（沿用 11-20 轮惯例）；本地 HEAD 7291a05 与远端同步（体验打磨第 13 轮续；`git status` 仅 BACKLOG.md 被本轮修改，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **217**；PM 独立复核（代码级验真：templates/index.html:309–310 死链逐项核对属实，行内 style 为 `color:#666;text-decoration:none`；app_detail.html:557–558 与 my_test_app.html:393–394 同款死链属实、二者在 tools/categories.go 中 0 注册；全站其余 8 处 `href="#"` 逐处核对均为 JS 驱动下载／动态链接，非裸死链；/search 404 机制核实：main.go:632 `/search` 在根路由，toolsGroup 在 :1603，mount.go:49 入站改写 /tool-web/search→/tools/search 后落到工具页 handler 兜底；1919px 溢出根因未定位沿用巡检结论，本轮不立项盲修）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 缓存补验与修复（2026-11-20 09:38–10:00，体验打磨第 13 轮续）
 
 **问题**：9b5cb12 已部署、qa.sh 全过，但父代理真浏览器补验发现修复对常规访客未生效——无参数 `https://www.it-tool.eu.cc/tool-web/static/js/script.js` 仍返回旧版（`cf-cache-status: HIT`、`Age: 89389`、`Cache-Control: public, max-age=604800`、`Last-Modified: 11-18`，无守卫，:228 仍 `toolSearch.addEventListener`）；带任意 `?v=` 参数才返回新版（MISS）。两页控制台仍抛 `Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')`，'/' 快捷键监听器仍被中断。源站（127.0.0.1:18082）实测已是新版、且不设 Cache-Control——7 天强缓存来自 Cloudflare 边缘默认值。这是 2026-10-10 PDF 水印轮同款假故障的重演（当时靠 `?v=2` 止血，`CACHE-FRESHNESS-PLAN-2026-10-10.md` 准备稿一直未落地）。
