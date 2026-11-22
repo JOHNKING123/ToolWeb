@@ -599,7 +599,11 @@ func main() {
 	handleSearch := func(c *gin.Context) {
 		query := c.Query("q")
 		if query == "" {
-			c.Redirect(http.StatusFound, "/")
+			// 空 q 回首页：落点用 /tools/index 而不用 "/"——挂载层只改写
+			// /tools/ 前缀的 Location，"/" 在 /tool-web 下会落到域名根
+			// （挂载外）；/tools/index 会被改写回 /tool-web/index。
+			// 根路由 /search 与 /tools/search 共用本 handler，落点一致。
+			c.Redirect(http.StatusFound, "/tools/index")
 			return
 		}
 
@@ -1602,6 +1606,14 @@ func main() {
 	// 工具路由
 	toolsGroup := router.Group("/tools")
 	{
+		// 搜索页（与根路由 /search 同 handler，不复制搜索逻辑）：
+		// 挂载层把 /tool-web/search 改写为 /tools/search；此前组内无
+		// 此路由，请求落到 /tools/:tool，handleToolPage 以未知 slug
+		// 返回 404「工具不存在」。gin 路由树按静态段优先于参数段
+		// 匹配，故本注册优先于 /tools/:tool，与两处注册的文本顺序无关。
+		toolsGroup.GET("/search", handleSearch)
+		toolsGroup.HEAD("/search", headNoBody(handleSearch))
+
 		docToPDFConverter := &tools.DocToPDFConverter{}
 		toolsGroup.POST("/doc-to-pdf", docToPDFConverter.HandleDocToPDF)
 
