@@ -1,3 +1,89 @@
+# 体验巡检（2026-11-23 09:00 · 巡检轮）
+
+## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
+- 11-22 轮 /tool-web/search 返回 404 已交付（e34309f，体验打磨第 15 轮），本地 HEAD 即 e34309f，与远端同步。
+  线上验真：`GET /tool-web/search?q=json` **200（696,092B）**，无 q 302 → `/tool-web/index`，路由修复已部署生效。
+- 其余历史缺陷均已交付划出（页脚死链、script.js 空指针守卫＋缓存修复、二维码文档壳、首页搜索藏分类、HEAD 404、
+  fork-bomb 误报、Shell 词典扫尾、ls/curl 释义、百分比首屏红错、GB/T 7714 双句点、色盲 undefined、Shell --flag=value、
+  音乐可视化器、sitemap 空 body）。
+- 在线 Postman 恢复注册：已书面留档不恢复，不再重复列入候选。pdf-to-word／ocr-batch 纯逻辑复制分叉：零用户可见变化、
+  无测试兜底，仍为整理候选，不入 Top3。
+
+## 今日 Top3 候选（全部线上／代码级实测验真，不提议新工具）
+1. **搜索结果页不显示查询词与结果数，标题仍写「热门工具」，零结果无任何提示**（今日推荐首选，可直接立项）：
+   线上实测 `GET /tool-web/search?q=json` 200，结果 29 张（327 分类卡＋29 结果卡＝356）；但两个搜索框均为空
+   （全页 `value="` 0 处）、没有任何「为 json 找到 29 个结果」、`<title>` 与首页逐字相同、「热门工具」标题
+   （templates/index.html:209）下方放的却是搜索结果；`q=zzzzqqq123` 零结果时 200（645,990B），结果区 0 张卡，
+   且全页无一句「未找到」／「没有找到」，访客只看到空白区加 19 个分类。中文查询正常（`q=日历` 200，331 张＝327＋4）。
+   根因已定位：handleSearch 已把 `SearchQuery`／`SearchResults` 传给模板（main.go:630–631），但 templates/index.html
+   全文 0 处引用这两个字段，属 15 轮新上线路由的半成品收尾。修法只动 index.html 模板：条件标题＋输入框预填 value
+   （Go 模板自动转义）＋「为 q 找到 N 个结果」＋零结果提示；不碰后端、不改 Path 总数（328）、不改 sitemap。难度小。
+2. **首页 1919px 桌面宽下出现横向滚动条**（顺位链第一位，附条件不变）：11-19 轮父代理 live browser 新发现，
+   滑块约占轨道 94%，轻微溢出；本轮仍未定位根因——子代理无真实浏览器，无法逐元素量 scrollWidth；四轮静态排查
+   已排除 100vw、固定宽元素、负边距、nowrap、table/pre、宽图、下拉菜单 display:none、容器／网格／页脚限宽、
+   全局 border-box。按 11-20 轮 PM 附条件：须真浏览器定位后才能立项，仍未定位则顺延。难度中。
+3. **首页 search.js 间歇性 502，首页搜索随之失效**（仓库侧可缓解，需 PM 裁定口径）：本轮 5 次抽查 **0 次 502**
+   （11-22 轮 2/5、11-21 轮 1/5、11-20 轮 3/10，抖动率不稳定）；同批首页与各工具页均 200，源站直查 3/3 均为 200，
+   证实是 Cloudflare↔源站路径抖动、非仓库代码缺陷。仓库侧缓解思路：将仅 2,715 字节的 search.js 内联进首页模板。
+   注意：11-22 轮 PM 已裁定内联为绕过非根治、不立项内联，记为观察项、改走看门狗／运维侧跟进；本轮 0/5 未恶化，
+   仍建议维持观察口径、是否重议由 PM 定。难度小。
+
+## 本轮线上走查（curl＋代码级验真；子代理无真实浏览器，390px 视口与控制台报错未做真机复核，留待测试轮在真实浏览器补验）
+- 首页：跟随跳转后 200（894,278B），双搜索框俱在，19 个分类组，`href="#"` 0 处，`undefined` 0 处；viewport meta 正常。
+- 搜索路由：`/tool-web/search?q=json` 200（696,092B）、无 q 302→/tool-web/index、中文 q 200、零结果 q 200；
+  搜索页与首页 `<title>` 逐字相同（见候选 1）。
+- 工具页：qrcode／cron-parser／regex-tester／percentage-calc／json-parser／music-visualizer／gpa-calculator／
+  colorblind-simulator／shell-explainer／gbt7714-reference-generator 均 200，10 页 `href="#"` 均为 0 处。
+- sitemap.xml 200（60,180B，`<loc>` 329 条）；robots.txt 200（255B）；search.js 本轮 5/5 均为 200；
+  版本化 script.js?v=9b5cb12 200（10,393B）。
+- 附记（未入 Top3）：① gtag 占位 `GA_MEASUREMENT_ID` 仍在首页（2 处，仅首页模板），但实测请求返回 200、无用户可见影响，
+  属未配置的死代码，不立项。② 导航「所有工具」下拉全量直出 328 个工具（首页约 894KB），懒加载改造超出一日打磨口径、
+  留待 PM 另议。③ `qa.sh` 增加静态资源缓存头检查仍待无参数旧版边缘缓存自然过期后再做（11-21 轮遗留）。
+
+## 本轮状态
+本地分支 muse/dev-20260929，HEAD e34309f，与远端同步；`git status` 仅 BACKLOG.md 被本轮修改（未提交不推送，
+随开发轮次提交）与一个未跟踪的 `toolweb` 二进制（构建产物，非本轮产生，不动）；Path 总数 328；tests 219 个文件；
+完整巡检报告在 workflow workdir（audit-2026-11-23.md）。
+
+**本轮交付（2026-11-23 开发轮，体验打磨第 16 轮）**：只改 templates/index.html（条件渲染，以 `.SearchQuery` 是否非空区分搜索态与首页态）＋新建 tests/search_results_page.test.js（静态 16 断言／真实页面 51 断言）。文案定版：title 搜索态「搜索 "xxx" - 程序员工具箱」；计数行「为 "xxx" 找到 N 个结果」；零结果「未找到与 "xxx" 相关的工具」＋「请尝试换个关键词搜索，或浏览下方分类寻找需要的工具」。本地实测（127.0.0.1:18099）：q=json 200、value="json"×2、计数 29、title 含 json 且与首页不同、热门 h2 0 处、「搜索结果」1 处、结果卡 29、分类卡 327、19 分类、新工具区已隐藏；q=zzzzqqq123 200、结果区 0 卡、「未找到」1 处、value×2、19 分类；q=日历 200、结果卡 4、value 与 title 均含「日历」；q="><script>alert(1)</script> 200、无未转义输出（value 内转义为 &#34;&gt;&lt;script&gt;）、script 标签 6 个与首页相同；首页 200、无 value 属性、title 与改前逐字相同、热门 6 张、「新工具」正常，且除访客统计驱动的热门区／JSON-LD 外与改前逐字节相同；/tool-web/search?q=json 200、归一化后与直通一致，无 q 302 到 /tool-web/index；反向守卫：首页搜索锚点 jsdom 实测搜 json 57 张、清空恢复 19/19，sitemap <loc> 329、Path 328 不变；全量 tests 220 个文件全绿（新增 1 个），go build／go vet ./... 通过。核查结论：search.js 加载时不按输入框值过滤（filterTools 全文 4 处＝1 定义＋两 input 事件＋ESC 清空，无 filterTools(输入框.value) 调用），预填后分类区完整展示，jsdom 分支实测搜索页加载后 356 张卡／19 分类全可见；部署留待测试轮后统一执行。
+
+---
+
+## 今日任务（2026-11-23 09:00 · PM 选定轮，接巡检候选）
+
+**选定：搜索结果页不显示查询词与结果数，标题仍写「热门工具」，零结果无任何提示** — 本轮唯一任务（体验打磨第 16 轮，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：收尾的是既有搜索路由的结果页呈现，不新增工具、不改 Path 总数。硬依据如下：
+1. **顺位递进链轮到本项**：11-22 轮刚交付 /tool-web/search 返回 404（e34309f，体验打磨第 15 轮）；第一位候选（1919px 横向滚动条）按附条件顺延（见未选说明），故轮到本项，无推迟理由。
+2. **根因已定位到模板，PM 代码级验真**：handleSearch 已把 `SearchQuery`／`SearchResults` 传给模板（main.go:630–631，分别为查询词与 `len(results)` 计数）；但 templates/index.html 全文 0 处引用这两个字段（`grep -c` 两项均为 0）；结果区 `{{range .PopularTools}}`（:212）复用首页热门区，标题仍是 :209「热门工具」；两输入框 :161／:181 均无 value 属性；`<title>` :9 为首页固定文案。线上实测一致：`q=json` 200、29 张结果卡，但全页 `value="` 0 处、无结果计数、title 与首页逐字相同；`q=zzzzqqq123` 200、结果区 0 张卡、全页无一句「未找到」。
+3. **第 15 轮新上线路由的半成品收尾**：路由通了、结果有了，页面却不认自己是搜索结果页；直接访问／外链访客第一眼看到的是空白区加 19 个分类，不知道自己搜了什么、搜到了几个、没搜到时更不知道发生了什么。本项是 Top3 中唯一根因已定位、无需真浏览器、当天可高质量交付的一项。
+4. **一日可高质量完成**：改动只动一个模板的条件渲染＋测试断言；不碰后端、不碰搜索匹配逻辑、不新增依赖。
+
+**未选说明**：首页 1919px 桌面宽下出现横向滚动条（**本轮不选，继续列为下轮优先候选第一位，附条件不变**：11-19 轮父代理 live browser 实测，滑块约占轨道 94%，每位桌面端首页访客可见，影响面大于本项；但四轮静态排查仍未定位根因——已排除 100vw、固定宽元素、负边距、nowrap、table/pre、宽图、下拉 display:none、容器／网格／页脚限宽、全局 border-box；按 11-20 轮 PM 附条件，须真浏览器逐元素量 scrollWidth 定位后才能立项，开发子代理无 live browser，立项即等于让开发轮盲修，违背「根因定位再开发」；下轮巡检须先在真浏览器定位溢出元素，定位到则立项、仍未定位则继续顺延）／首页 search.js 间歇性 502（**本轮不选，维持观察口径、不入顺位链**：本轮 5 次抽查 0 次 502（11-22 轮 2/5、11-21 轮 1/5、11-20 轮 3/10，抖动率不稳定）；同批首页与各工具页均 200，源站直查 3/3 均为 200，证实是 Cloudflare↔源站路径抖动、非仓库代码缺陷；11-22 轮 PM 已裁定内联 search.js 为绕过非根治、不立项，改走看门狗／运维侧跟进，本轮 0/5 未恶化，口径不变；若后续抽查抖动率持续恶化再由 PM 重议）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：只动 templates/index.html，全部改动均为条件渲染（以 `.SearchQuery` 是否非空区分搜索态与首页态）：
+  ① `<title>`（:9）搜索态改为含查询词的标题，如「搜索 "json" - 程序员工具箱」或「"json" 的搜索结果 - 程序员工具箱」（开发轮定一版、全文案记录在交付中）；首页态一字不动 ② 两输入框 :161／:181 加 `value="{{.SearchQuery}}"`——Go html/template 自动转义，查询词含引号／尖括号时不 breakout；首页 handler（main.go:349／:512）不传该键，模板缺键渲染为空，首页输入框行为不变 ③ :209「热门工具」h2 搜索态改为「搜索结果」，其下加计数行「为 "json" 找到 29 个结果」（`.SearchResults` 为 int 计数，开发轮记录确切文案）④ 零结果：搜索态且 `.SearchResults == 0` 时在结果区显示「未找到与 "xxx" 相关的工具」＋一句建议（换个关键词试试／浏览下方分类）；分类区仍正常展示，不隐藏 ⑤ 搜索态隐藏「新工具」区——搜索 handler 传 `NewTools` 为空数组（main.go:633），该区标题下 0 张卡，同样是半成品残留，同一条件判断一并收尾；若开发轮核查实现成本超出预期，可只做标题条件化、不扩大 ⑥ 不动：main.go／mount.go／tools/categories.go、其余全部模板、static/js/search.js、搜索匹配逻辑（name／desc 包含匹配，沿用 handleSearch）、hero H1「程序员工具箱」；不改 Path 总数（328），不改 sitemap 条数（329），不新增依赖。
+  - 开发轮核查项（不改、只核查后记录）：static/js/search.js 是否在页面加载时按输入框值做过滤——若会，预填 value 后须保证分类区仍正常展示（只预填、不主动触发 input 事件，或确认加载时不按值过滤）；首页搜索锚点（搜 "json" 可见卡 57 张、清空恢复 19/19）不回归。
+- **数值锚点（开发轮逐项记录实测值）**：
+  - 本地构建 `GET /tools/search?q=json` 200；两输入框 `value="json"` 各 1 处；正文含结果计数文案（开发轮记录确切文案，计数为 29）；`<title>` 含 json 且与首页 title 不同；「热门工具」h2 在搜索页 0 处、「搜索结果」1 处；结果卡 29 张、分类卡 327 张。
+  - 本地构建 `GET /tools/search?q=zzzzqqq123` 200；结果区 0 张卡；正文含「未找到」提示 1 处；两输入框 value 预填该查询词；19 个分类仍展示。
+  - 中文查询 `GET /tools/search?q=日历` 200；结果卡 4 张；value 预填「日历」；`<title>` 含「日历」。
+  - 转义守卫：`q` 含引号／尖括号（如 `q="><script>`）时响应中无未转义的原始 q、无新增 script 标签（Go 模板自动转义，开发轮实测记录）。
+  - 首页 `GET /tools/index` 200：两输入框无 value 属性（或 value 为空）；`<title>` 与改前逐字相同；「热门工具」h2 仍在；热门区卡数与改前一致（开发轮记录实测值）；「新工具」区正常展示。
+  - 挂载路径 `GET /tool-web/search?q=json` 200，与直通正文归一化后一致（沿用第 15 轮口径）；无 q 仍 302 到 /tool-web/index。
+  - 反向守卫：首页搜索锚点不回归；sitemap.xml（`<loc>` 329）不回归；Path 总数 328 不变；其余模板零改动（git status 仅 BACKLOG.md／templates/index.html／测试文件）。
+- **改动文件**：templates/index.html（条件标题＋预填 value＋结果计数＋零结果提示＋搜索态隐藏新工具区）／tests/homepage_search.test.js（扩断言；该文件已有读 templates/index.html 做断言的先例，搜索页断言写进此处，或开发轮判定新建 tests/search_results_page.test.js，按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① 上列锚点全过 ② 全量 tests/*.test.js **219** 个文件全绿（新文件计入后按实测更新总数）③ go build／go vet 通过 ④ 本地实测 /tool-web/search?q=json 200 且结果页可区分于首页 ⑤ 浏览器手工验证：搜索页显示查询词与结果数、零结果有提示、首页一字未变、控制台无新增报错（测试轮在真浏览器核查，开发轮记录本地实测）。
+- **品类归位**：非新工具，无类目注册；Path 总数 328、sitemap `<loc>` 329 保持不动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：搜索结果页不显示查询词与结果数、标题仍写「热门工具」、零结果无提示→本轮交付（巡检 Top1；第 15 轮新上线路由的半成品收尾，handleSearch 已传 SearchQuery／SearchResults 但模板 0 处引用；修法只动 index.html 模板条件渲染，不碰后端、不改 Path 总数）／首页 1919px 横向滚动条→下轮优先候选第一位（附条件不变：11-19 轮 live browser 新发现，滑块约占轨道 94%；四轮静态排查未定位根因，下轮巡检须先在真浏览器逐元素量 scrollWidth 定位，定位到则立项、未定位则继续顺延）／首页 search.js 间歇性 502→观察项（基础设施侧抖动，源站直查 3/3 均为 200，本轮抽查 0/5；内联为绕过非根治，PM 裁定不立项，看门狗／运维侧跟进；抖动率持续恶化再重议）／/tool-web/search 返回 404→已交付划出（e34309f，体验打磨第 15 轮；tools 路由组补 /search 复用 handleSearch，空 q 落点 /tools/index）／首页页脚「意见反馈」「联系我们」href="#" 死链→已交付划出（e1ef1dc，体验打磨第 14 轮；意见反馈→GitHub Issues 新窗口，联系我们→删链，不贴私人邮箱）／script.js 在 cron-parser／regex-tester 抛 TypeError→已交付划出（9b5cb12，体验打磨第 13 轮；缓存修复 7291a05，第 13 轮续）／二维码工具页缺文档壳→已交付划出（3f0d92b，体验打磨第 12 轮）／首页搜索一打字就藏起全部分类→已交付划出（15a691e，体验打磨第 11 轮）／HEAD 请求全站返回 404→已交付划出（6518055，体验打磨第 10 轮）／Shell 危险检测 fork-bomb 正则误报→已交付划出（5417fbd，体验打磨第 9 轮）／Shell 词典扫尾 11 条→已交付划出（a906236，体验打磨第 8 轮）／Shell ls --time-style 与 curl --max-time→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell grep --include/--exclude＋--flag=value→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／在线 Postman 恢复注册→书面留档不恢复（查因到头：a0799eb 全文仅「add postman 工具，不放开」，原因未记录；安全裁定：tools/postman.go:110–166 SendRequest 服务端代发任意 URL、无 SSRF 防护且 InsecureSkipVerify: true，恢复须先补防护、非一日打磨任务；方向：恢复即 Path 328→329，须用户明确表态再立项；本轮起不再每轮重复查因）／批量版与单文件版纯逻辑复制分叉→整理候选（四函数逐字节相同、尚未分叉；零用户可见变化且无 pdf／ocr 测试文件兜底，留待有测试覆盖后再抽共享模块）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已三十九度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功——本轮初次 fetch 未带该变量曾报 Permission denied (publickey)，按铁律补环境变量后恢复（沿用 11-20／11-21 轮惯例）；本地 HEAD e34309f 与远端同步（体验打磨第 15 轮；`git status` 仅 BACKLOG.md 被本轮修改与一个未跟踪的 `toolweb` 二进制构建产物，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **219**；PM 独立复核（代码级验真：handleSearch 传 SearchQuery／SearchResults 于 main.go:630–631，SearchResults 为 `len(results)` 计数；templates/index.html 中两字段 `grep -c` 均为 0；`<title>` :9 为首页固定文案；两输入框 :161／:181 均无 value 属性；「热门工具」h2 :209，结果区 `{{range .PopularTools}}` :212；首页 handler main.go:349／:512 不传 SearchQuery／SearchResults，模板缺键渲染为空、首页态条件为假；搜索 handler 传 NewTools 为空数组，搜索态「新工具」区 0 张卡；1919px 溢出根因未定位沿用巡检结论，本轮不立项盲修；search.js 502 源站直查 3/3 均为 200、本轮抽查 0/5，维持观察口径）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
 ## 今日任务（2026-11-22 09:00 · PM 选定轮，接巡检候选）
 
 **选定：/tool-web/search 返回 404** — 本轮唯一任务（体验打磨第 15 轮，非新工具）。

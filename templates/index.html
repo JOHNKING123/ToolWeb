@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- 基础SEO -->
-    <title>程序员工具箱 - 免费在线开发工具集合 | JSON格式化、Base64编码、正则测试</title>
+    <title>{{if .SearchQuery}}搜索 "{{.SearchQuery}}" - 程序员工具箱{{else}}程序员工具箱 - 免费在线开发工具集合 | JSON格式化、Base64编码、正则测试{{end}}</title>
     <meta name="description" content="程序员工具箱提供JSON格式化、Base64编码解码、正则表达式测试、URL编码、二维码生成等免费在线开发工具，提升编程效率，简化开发流程。">
     <meta name="keywords" content="程序员工具,在线工具,JSON格式化,Base64编码,正则表达式,URL编码,二维码生成,开发工具,编程工具,前端工具,后端工具">
     <meta name="author" content="程序员工具箱">
@@ -158,7 +158,7 @@
 
             <div class="search-box">
                 <i class="material-icons">search</i>
-                <input type="text" id="toolSearch" placeholder="搜索工具...">
+                <input type="text" id="toolSearch" placeholder="搜索工具..."{{if .SearchQuery}} value="{{.SearchQuery}}"{{end}}>
             </div>
             
            
@@ -178,7 +178,7 @@
             <p itemprop="description">不断更新，添加新工具，改进已有工具，让开发更高效。服务各位宝宝们，欢迎大家使用。有啥建议可以联系我（jonkingzcq@gmail.com）。</p>
             <div class="search-box-large" itemprop="potentialAction" itemscope itemtype="https://schema.org/SearchAction">
                 <i class="material-icons">search</i>
-                <input type="text" id="toolSearchLarge" placeholder="搜索工具，例如：JSON 解析、Base64 编码..." itemprop="query-input">
+                <input type="text" id="toolSearchLarge" placeholder="搜索工具，例如：JSON 解析、Base64 编码..." itemprop="query-input"{{if .SearchQuery}} value="{{.SearchQuery}}"{{end}}>
                 <meta itemprop="target" content="https://yourwebsite.com/search?q={query-input}">
             </div>
         </div>
@@ -206,7 +206,7 @@
         <!-- 热门工具 -->
         <section id="popular" class="tool-section">
             <div class="section-header">
-                <h2><i class="material-icons">star</i> 热门工具</h2>
+                <h2><i class="material-icons">star</i> {{if .SearchQuery}}搜索结果{{else}}热门工具{{end}}</h2>{{if .SearchQuery}}<p class="search-result-count">为 "{{.SearchQuery}}" 找到 {{.SearchResults}} 个结果</p>{{end}}
             </div>
             <div class="tools-grid">
                 {{range .PopularTools}}
@@ -219,11 +219,16 @@
                     <a href="{{.Path}}" class="btn btn-primary">使用工具</a>
                 </div>
                 {{end}}
-            </div>
+            </div>{{if and .SearchQuery (eq .SearchResults 0)}}
+            <div class="no-results">
+                <i class="material-icons">search_off</i>
+                <p>未找到与 "{{.SearchQuery}}" 相关的工具</p>
+                <p class="sub">请尝试换个关键词搜索，或浏览下方分类寻找需要的工具</p>
+            </div>{{end}}
         </section>
 
         <!-- 新工具 -->
-        <section id="new-tools" class="tool-section">
+        {{if not .SearchQuery}}<section id="new-tools" class="tool-section">
             <div class="section-header">
                 <h2><i class="material-icons">fiber_new</i> 新工具</h2>
             </div>
@@ -239,7 +244,7 @@
                 </div>
                 {{end}}
             </div>
-        </section>
+        </section>{{end}}
 
         <!-- 所有工具分类 -->
         <section id="all" class="tool-section">
