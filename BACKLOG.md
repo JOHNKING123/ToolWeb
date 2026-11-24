@@ -1,3 +1,92 @@
+## 今日任务（2026-11-24 09:00 · PM 选定轮，接巡检候选）
+
+**选定：首页横向溢出：1919px 桌面 +163px 滚动条、390px 移动端整页 952px 宽，根因已定位且修复已验证** — 本轮唯一任务（体验打磨第 17 轮，非新工具）。
+
+**顺位**：巡检 Top3 中 PM 行使定序权，选定本项。方向（2026-11-07 用户决定：停新工具、只做页面编排与体验完善）下本项合规：修的是首页卡片布局的 CSS 溢出，不新增工具、不改 Path 总数。硬依据如下：
+1. **顺位递进链轮到本项**：11-23 轮刚交付搜索结果页（c289e1e，体验打磨第 16 轮）；第一位候选（首页横向溢出）自 11-19 轮起连续四轮按附条件顺延，11-20 轮 PM 附条件「须真浏览器逐元素量 scrollWidth 定位后才能立项」本轮已满足，无推迟理由。
+2. **根因已定位到元素级，PM 代码级验真**：`.tool-card` 默认 `min-width:auto`＋`overflow:visible`（static/css/style.css:183–189），`.tool-card p` 无 `overflow-wrap`（:213–216），`.tool-icon` 无 `overflow` 限制（:195–200）；溢出源是 tools/categories.go:846 Shell 命令解释器描述里一段约 110 字符无空格的斜杠拼接清单（`ls/cd/cp/…/git/docker`），巡检逐字符 Range 测量第 5 行行盒宽 888px、卡片 `<p>` 宽仅 325px，888px 内容溢出卡片→「开发工具」分类 grid 1707→`main` 1723→文档 2082；390px 下同一 min-content 把 `1fr` 单列撑到 936px。另有 4 张卡片描述同样溢出卡片（代码截图美化器 465、CSS 单位换算器 382、robots.txt 校验器 364、JSON Schema 验证器 360），同属一个 class 级根因、同一修复覆盖。
+3. **修复已在真浏览器内验证通过**：巡检注入 `.tool-card{min-width:0} .tool-card p{overflow-wrap:break-word}` 后 1919px 2082→1919、390px 952→442；再加 `.tool-icon{overflow:hidden}` 后 **1919px 与 390px 的 documentElement.scrollWidth 均等于视口宽，溢出归零**。开发轮只需把已验证的三行落到 style.css 并双视口复测，不再是盲修。
+4. **影响面最大**：全站首页每一位桌面端与移动端访客；移动端首页基本不可用（整页 952px 宽），是 Top3 中唯一全站级缺陷。
+5. **一日可高质量完成**：改动只动一个 CSS 文件的三处规则＋测试断言；不碰模板、后端、工具描述文案，不新增依赖。
+
+**未选说明**：json-parser 页引用两个不存在的本地 Bootstrap 文件（**本轮不选，列为下轮优先候选第一位**：PM 代码级验真——引用在 templates/json_parser.html:50 与 :397，static/ 下根本无这两个文件，线上 curl 复核同为 404，全站仅此一页引用本地版（calendar.html 用 jsdelivr CDN，不受影响）；影响面限于单个工具页、每次打开控制台 2 条 404，修法为删两处死引用或 vendor 文件，难度小；影响面小于本项的全站首页，按一日一任务铁律顺延）／首页 search.js 间歇性 502（**本轮不选，维持观察口径、不入顺位链**：本轮 curl 抽查 5/5 均为 200（11-23 轮 0/5、11-22 轮 2/5、11-21 轮 1/5、11-20 轮 3/10，抖动率持续走低）；同批首页与各工具页均 200，证实为 Cloudflare↔源站路径抖动、非仓库代码缺陷；11-22 轮 PM 已裁定内联 search.js 为绕过非根治、不立项，改走看门狗／运维侧跟进，本轮未恶化，口径不变；若后续抽查抖动率持续恶化再由 PM 重议）。两项本轮不并行——一日一任务铁律。
+
+**规格**（开发轮按此执行）：
+- **范围（有界）**：只动 static/css/style.css，三处规则（以巡检已验证的注入值为准，开发轮落盘后复测）：
+  ① `.tool-card`（:183–189）加 `min-width: 0`——grid 子项不再以 min-content 撑大网格轨道 ② `.tool-card p`（:213–216）加 `overflow-wrap: break-word`——无空格长串在卡片内断行 ③ `.tool-icon`（:195–200）加 `overflow: hidden`——图标字体未加载时字面文本不撑宽卡片。
+  - 不动：tools/categories.go:846 描述文案（内容一字不动，溢出由 CSS 断行解决，不改文案、不截断）；全部模板、main.go／mount.go、其余 CSS 规则、static/js；不改 Path 总数（328），不改 sitemap 条数（329），不新增依赖。
+  - 开发轮核查项（不改、只核查后记录）：其余工具页／搜索结果页共用 `.tool-card`，改动后卡片在正常宽度下布局不变（hover 上浮、圆角、阴影、字号均不变）；长串断行后 Shell 卡片高度变化在合理范围，不遮挡相邻卡片。
+- **数值锚点（开发轮逐项记录实测值）**：
+  - 本地构建＋真浏览器（复用巡检轮装好的 Playwright 1.65.2＋chromium-1248）：1919×1080 下 `document.documentElement.scrollWidth = 1919`（改前 2082），无横向滚动条；390×844 下 `scrollWidth = 390`（改前 952），卡片宽 ≤ 视口宽。
+  - 5 张已知溢出卡片（Shell 命令解释器、代码截图美化器、CSS 单位换算器、robots.txt 校验器、JSON Schema 验证器）在 1919px 与 390px 下均不再溢出卡片（开发轮记录每张卡片的实测 scrollWidth／clientWidth 或行盒宽）。
+  - 搜索页 `GET /tools/search?q=json` 200 且结果卡正常渲染（共用 `.tool-card`，不回归）；首页 `GET /tools/index` 200，19 个分类、卡片总数与改前一致（开发轮记录实测值）。
+  - 反向守卫：sitemap.xml（`<loc>` 329）不回归；Path 总数 328 不变；其余文件零改动（git status 仅 BACKLOG.md／static/css/style.css／测试文件）。
+- **改动文件**：static/css/style.css（三处规则）／tests/homepage_overflow.test.js（新增；静态断言：三条规则均在 style.css 中；真实页面断言：双视口 scrollWidth 等于视口宽；或开发轮判定扩写现有测试，按实测更新总数）／BACKLOG.md（本轮记录）。
+- **验收标准**：① 上列锚点全过 ② 全量 tests/*.test.js **220** 个文件全绿（新文件计入后按实测更新总数）③ go build／go vet 通过 ④ 本地实测 /tool-web/index 200 且双视口无横向滚动条 ⑤ 浏览器手工验证：长串描述在卡片内正常断行、移动端首页可正常浏览、控制台无新增报错（测试轮在真浏览器核查，开发轮记录本地实测）。
+- **品类归位**：非新工具，无类目注册；Path 总数 328、sitemap `<loc>` 329 保持不动。
+- **铁律**：只在 muse/dev-20260929 工作、提交、推送；未碰 master；未 force-push。部署授权（/tool-web 经 ~/workspace/deploy/toolweb/deploy.sh）留待测试轮后统一执行。
+
+**顺位递进链更新**：首页横向溢出（1919px＋163px／390px 整页 952px）→本轮交付（巡检 Top1；11-20 轮 PM 附条件本轮已满足——真浏览器逐元素定位根因为 `.tool-card` min-width:auto＋无空格长串溢出，修复三行 CSS 已在浏览器内验证双视口溢出归零；只动 static/css/style.css）／json-parser 页两个本地 Bootstrap 404→下轮优先候选第一位（引用 templates/json_parser.html:50／:397，static/ 下无文件，线上同为 404，全站仅此一页引用本地版；修法删死引用或 vendor 文件；影响面单个工具页）／首页 search.js 间歇性 502→观察项（基础设施侧抖动，本轮抽查 5/5 均为 200，抖动率持续走低；内联为绕过非根治，PM 裁定不立项，看门狗／运维侧跟进；抖动率持续恶化再重议）／搜索结果页不显示查询词与结果数→已交付划出（c289e1e，体验打磨第 16 轮；templates/index.html 条件渲染＋tests/search_results_page.test.js）／/tool-web/search 返回 404→已交付划出（e34309f，体验打磨第 15 轮；tools 路由组补 /search 复用 handleSearch，空 q 落点 /tools/index）／首页页脚「意见反馈」「联系我们」href="#" 死链→已交付划出（e1ef1dc，体验打磨第 14 轮；意见反馈→GitHub Issues 新窗口，联系我们→删链，不贴私人邮箱）／script.js 在 cron-parser／regex-tester 抛 TypeError→已交付划出（9b5cb12，体验打磨第 13 轮；缓存修复 7291a05，第 13 轮续）／二维码工具页缺文档壳→已交付划出（3f0d92b，体验打磨第 12 轮）／首页搜索一打字就藏起全部分类→已交付划出（15a691e，体验打磨第 11 轮）／HEAD 请求全站返回 404→已交付划出（6518055，体验打磨第 10 轮）／Shell 危险检测 fork-bomb 正则误报→已交付划出（5417fbd，体验打磨第 9 轮）／Shell 词典扫尾 11 条→已交付划出（a906236，体验打磨第 8 轮）／Shell ls --time-style 与 curl --max-time→已交付划出（b310df9，体验打磨第 7 轮）／百分比计算器首屏红错→已交付划出（e39de8f，体验打磨第 6 轮）／GB/T 7714 双句点→已交付划出（41022b9，体验打磨第 5 轮）／色盲 undefined→已交付划出（3ad1c95，体验打磨第 4 轮）／Shell grep --include/--exclude＋--flag=value→已交付划出（a4bcd23，体验打磨第 3 轮）／音乐可视化器换文件旧播放／旧录制不停→已交付划出（574d513，体验打磨第 2 轮）／sitemap.xml／robots.txt 200 空 body→已交付划出（acac1c8，体验打磨第 1 轮；`<loc>` 实测 329 条非 330，postman 注册被注释致 GetCategories() 只返 327）／在线 Postman 恢复注册→书面留档不恢复（查因到头：a0799eb 全文仅「add postman 工具，不放开」，原因未记录；安全裁定：tools/postman.go:110–166 SendRequest 服务端代发任意 URL、无 SSRF 防护且 InsecureSkipVerify: true，恢复须先补防护、非一日打磨任务；方向：恢复即 Path 328→329，须用户明确表态再立项；本轮起不再每轮重复查因）／批量版与单文件版纯逻辑复制分叉→整理候选（四函数逐字节相同、尚未分叉；零用户可见变化且无 pdf／ocr 测试文件兜底，留待有测试覆盖后再抽共享模块）／社媒/证件照尺寸速查表→首席顺位留池（P3；数据鲜度维护负担；PM 已四十度跳过）／数独游戏→P3 观察维持／G-code 预览器→已交付划出（5003edb，328 Path，215 tests；Icon layers e53b）／图片物体消除／Wordle 求解器／和弦/音阶查询器／视频压缩器／图片智能抠图／X 视频转 GIF／英文反向词典／视频转 SRT／短链逐跳跳转链追踪→P3 弱观察维持／二维码传文件／LaTeX 公式编辑器→弱观察维持。
+
+**交付核对**：本地当前分支 muse/dev-20260929；`git fetch`（GIT_SSH_COMMAND 指定密钥＋StrictHostKeyChecking=no）成功——本轮初次 fetch 未带该变量曾报 Permission denied (publickey)，按铁律补环境变量后恢复（沿用 11-20／11-21／11-23 轮惯例）；本地 HEAD c289e1e 与远端同步（体验打磨第 16 轮；`git status` 仅 BACKLOG.md 被本轮修改与一个未跟踪的 `toolweb` 二进制构建产物，未提交不推送，随开发轮次提交，沿用研究轮惯例）；`grep -oE '"/tools/[^"]+"' tools/categories.go | sort -u | wc -l` 实测 **328**；`ls tests/*.test.js | wc -l` = **220**；PM 独立复核（代码级验真：static/css/style.css `.tool-card` :183–189 无 min-width、`overflow:visible` 默认、`.tool-card p` :213–216 无 overflow-wrap、`.tool-icon` :195–200 无 overflow；溢出源 tools/categories.go:846 Shell 描述长串；json-parser 引用 templates/json_parser.html:50／:397、static/ 下两文件均不存在、calendar.html 用 jsdelivr CDN 不受影响；search.js 502 本轮抽查 5/5 均为 200，维持观察口径）；本轮仅 BACKLOG.md 顶部追加（未提交不推送，随开发轮次提交，沿用研究轮惯例）；铁律重申：只在 muse/dev-20260929 工作、提交、推送，不碰 master，不 force-push；部署授权仅限 /tool-web 经 ~/workspace/deploy/toolweb/deploy.sh。
+
+---
+
+# 体验巡检（2026-11-24 09:00 · 巡检轮）
+
+## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
+- 11-23 轮搜索结果页（体验打磨第 16 轮，c289e1e）**已部署生效**：线上 `GET /tool-web/search?q=json` 200，
+  `<title>` 已为「搜索 "json" - 程序员工具箱」；`q=zzzzqqq123` 零结果页含「未找到与 "zzzzqqq123" 相关的工具」。
+  本轮本地 HEAD 即 c289e1e，与远端同步。16 轮候选至此全部划出。
+- 其余历史缺陷均已交付划出（/search 404、页脚死链、script.js 空指针守卫＋缓存修复、二维码文档壳、首页搜索藏分类、
+  HEAD 404、fork-bomb 误报、Shell 词典扫尾、ls/curl 释义、百分比首屏红错、GB/T 7714 双句点、色盲 undefined、
+  Shell --flag=value、音乐可视化器、sitemap 空 body）。
+- 在线 Postman 恢复注册：已书面留档不恢复，不再重复列入候选。pdf-to-word／ocr-batch 纯逻辑复制分叉：零用户可见变化、
+  无测试兜底，仍为整理候选，不入 Top3。
+
+## 今日 Top3 候选（全部真浏览器／线上实测验真，不提议新工具）
+1. **首页横向溢出：根因已定位，修复已在浏览器内验证通过**（今日推荐首选，可直接立项）：
+   本轮首次用真浏览器实测（VM 上装 Playwright 1.65.2＋已有的 chromium-1248，本地构建 HEAD 跑 127.0.0.1:18099，
+   测量脚本在 workflow workdir）。1919×1080：`document.documentElement.scrollWidth = 2082`（+163px 横向滚动条，
+   与 11-19 轮父代理 live browser「滑块约占轨道 94%」一致）；390×844：`scrollWidth = 952`，卡片宽 936px，
+   移动端首页基本不可用。根因已逐元素定位：Shell 命令解释器卡片描述 `<p>` 里一段约 110 字符、无空格的斜杠拼接清单
+   `（ls/cd/cp/mv/rm/mkdir/cat/grep/find/sed/awk/tar/curl/wget/ssh/scp/rsync/chmod/chown/ps/kill/systemctl/journalctl/git/docker，`
+   （逐字符 Range 测量：第 5 行行盒宽 888px，卡片 `<p>` 宽仅 325px）；`.tool-card` 默认 `min-width:auto`＋`overflow:visible`
+   （style.css:183–189），888px 内容溢出卡片→「开发工具」分类 grid `scrollWidth` 1707→`main` 1723→文档 2082；
+   390px 下同一 min-content 把 `1fr` 单列撑到 936.281px。另有 4 张卡片描述同样溢出卡片（代码截图美化器 465、
+   CSS 单位换算器 382、robots.txt 校验器 364、JSON Schema 验证器 360）。修复验证：注入
+   `.tool-card{min-width:0} .tool-card p{overflow-wrap:break-word}` 后 1919px 2082→1919、390px 952→442；
+   再加 `.tool-icon{overflow:hidden}`（防图标字体未加载时字面文本撑宽）后 **1919px 与 390px docSW 均等于视口宽，溢出归零**。
+   11-20 轮 PM 附条件「须真浏览器逐元素量 scrollWidth 定位后才能立项」本轮已满足，可直接立项、不再顺延。
+   影响面：全站首页、每一位桌面端与移动端访客；难度小（只动 static/css/style.css，须补 tests 断言与双视口回归）。
+2. **json-parser 页引用两个不存在的本地 Bootstrap 文件，每次打开控制台 2 条 404**（可直接立项）：
+   真浏览器打开 `/tools/json-parser`，`/tools/static/css/bootstrap.min.css` 与 `/tools/static/js/bootstrap.bundle.min.js`
+   均 HTTP 404；线上 curl 复核同为 404；仓库 static/ 下根本无这两个文件；引用在 templates/json_parser.html:50 与 :397；
+   全站仅此一页引用本地版（calendar.html 用 jsdelivr CDN，不受影响）。影响面：单个工具页；修法：删两处死引用或 vendor 文件；
+   难度小。注意：该页 JSONEditor 来自 cdnjs CDN，VM 代理下加载失败致 `JSONEditor is not defined` 属 VM 环境 artifact，
+   真实浏览器可加载，不计入本缺陷。
+3. **首页 search.js 间歇性 502**（观察项，维持原口径、不立项）：本轮 curl 抽查 5/5 均为 200（11-23 轮 0/5、
+   11-22 轮 2/5、11-21 轮 1/5、11-20 轮 3/10，抖动率持续走低）；11-22 轮 PM 已裁定内联为绕过非根治、不立项，
+   改走看门狗／运维侧跟进；本轮未恶化，是否重议由 PM 定。
+
+## 本轮线上走查（curl＋真浏览器；本地构建 HEAD c289e1e）
+- 首页线上 200（895,177B）；搜索路由 200（695,848B，标题与计数已生效）；sitemap.xml 200（60,180B）、robots.txt 200（255B）。
+- 首页交互（真浏览器）：大搜索框输 `json` → 可见卡片 57 张、可见分类 9 个；按 ESC → 恢复 630 张；导航「所有工具」下拉点击展开，
+  327 个链接；全程 0 pageerror。
+- 工具页控制台抽查（真浏览器，排除 VM 代理致死的 Google Fonts／gtag 占位／百度统计 3 个外部请求）：cron-parser、
+  regex-tester、percentage-calc、music-visualizer、shell-explainer、colorblind-simulator、gbt7714-reference-generator、
+  gpa-calculator、base64、password-generator、markdown-preview、qrcode、calendar 共 13 页 0 真实报错；
+  percentage-calc 首屏无红色校验错误（旧缺陷未回归）。唯一异常：json-parser 两个本地 Bootstrap 404（见候选 2）。
+- 附记（未入 Top3）：① gtag 占位 `GA_MEASUREMENT_ID` 与百度统计占位仍在首页（此前轮次已记为未配置死代码，不立项）。
+  ② 导航「所有工具」下拉全量直出 328 个工具（首页约 895KB），懒加载改造超出一日打磨口径、留待 PM 另议。
+  ③ 本轮装好的 Playwright（pip 包＋`~/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome`）可供后续轮次复用，
+  以后巡检可直接用真浏览器量 scrollWidth、跑交互、读控制台。
+
+## 本轮状态
+本地分支 muse/dev-20260929，HEAD c289e1e，与远端同步；`git status` 仅 BACKLOG.md 被本轮修改（未提交不推送，
+随开发轮次提交）与一个未跟踪的 `toolweb` 二进制（构建产物，非本轮产生，不动）；Path 总数 328；
+本地巡检服务（127.0.0.1:18099）已停，无残留进程；完整巡检报告在 workflow workdir（audit-2026-11-24.md）。
+
 # 体验巡检（2026-11-23 09:00 · 巡检轮）
 
 ## 已知缺陷清单复核（BACKLOG 顶部＋近期轮次）
