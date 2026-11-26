@@ -79,6 +79,7 @@
             border: none;
             height: 100%;
             position: relative;
+            min-width: 0;
         }
 
         .markdown-panel + .markdown-panel {
@@ -89,6 +90,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
             padding: 0.75rem 1.5rem;
             background: var(--bg-color);
             border-bottom: 1px solid var(--border-color);
@@ -102,6 +105,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            min-width: 0;
         }
 
         .markdown-header h3 i {
@@ -112,6 +116,8 @@
         .markdown-header-buttons {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
+            min-width: 0;
         }
 
         .markdown-content {

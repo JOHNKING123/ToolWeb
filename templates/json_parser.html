@@ -61,12 +61,15 @@
             border: 1px solid var(--border-color);
             border-radius: 0.75rem;
             padding: 1.5rem;
+            min-width: 0;
         }
 
         .json-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
             margin-bottom: 1rem;
         }
 
@@ -78,6 +81,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            min-width: 0;
         }
 
         .json-header h3 i {
@@ -326,7 +330,7 @@
                 <div class="json-panel">
                     <div class="json-header">
                         <h3><i class="material-icons">code</i> 输入JSON</h3>
-                        <div style="display: flex; gap: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; min-width: 0;">
                             <button type="button" class="btn btn-secondary" id="demoBtn">
                                 <i class="material-icons">play_arrow</i> Demo
                             </button>
@@ -343,7 +347,7 @@
                 <div class="json-panel">
                     <div class="json-header">
                         <h3><i class="material-icons">format_align_left</i> 格式化结果</h3>
-                        <div style="display: flex; gap: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; min-width: 0;">
                             <button type="button" class="btn btn-secondary" id="toggleViewBtn">
                                 <i class="material-icons">switch_left</i> 切换视图
                             </button>

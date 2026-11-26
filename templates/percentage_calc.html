@@ -32,6 +32,7 @@
         .pc-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
         .pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .6rem; }
         @media (max-width: 640px) { .pc-grid { grid-template-columns: 1fr; } }
+        @media (min-width: 641px) { .pc-grid-3 { grid-template-columns: 1fr auto 1fr; } }
         .pc-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
         .pc-field label { color: #374151; font-weight: 600; }
         .pc-field input { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; }
@@ -49,6 +50,8 @@
         .pc-error { display: none; margin-top: .6rem; padding: .6rem .8rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .5rem; font-size: .9rem; }
         .pc-band-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin-top: .6rem; }
         @media (max-width: 640px) { .pc-band-row { grid-template-columns: repeat(2, 1fr); } }
+        .pc-band-row .pc-field { min-width: 0; }
+        .pc-band-row .pc-field input { min-width: 0; width: 100%; }
         .pc-band-row .pc-field input { text-align: center; }
         .pc-limit { margin: .4rem 0 0; padding-left: 1.2rem; color: #6b7280; font-size: .9rem; line-height: 1.8; }
         .pc-limit b { color: #374151; }
@@ -71,7 +74,7 @@
             <div id="pc-app">
             <div class="tool-card" style="margin-bottom:1.2rem;">
                 <h3>① 百分比 ↔ 小数 双向互转</h3>
-                <div class="pc-grid" style="grid-template-columns:1fr auto 1fr;">
+                <div class="pc-grid pc-grid-3">
                     <div class="pc-field">
                         <label for="pc-pct">百分比（%）</label>
                         <input id="pc-pct" type="number" step="any" placeholder="如 75">
@@ -84,7 +87,7 @@
                 </div>
                 <div class="pc-info">任一侧输入，另一侧实时换算（75% ⇄ 0.75）。</div>
                 <h3 style="margin-top:1rem;">分数 a/b → 百分比</h3>
-                <div class="pc-grid" style="grid-template-columns:1fr auto 1fr;">
+                <div class="pc-grid pc-grid-3">
                     <div class="pc-field">
                         <label for="pc-frac-a">分子 a</label>
                         <input id="pc-frac-a" type="number" step="any" placeholder="如 2">
