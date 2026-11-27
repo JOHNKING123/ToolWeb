@@ -32,9 +32,9 @@
         .bmr-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
         .bmr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .6rem; }
         @media (max-width: 640px) { .bmr-grid { grid-template-columns: 1fr; } }
-        .bmr-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+        .bmr-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; min-width: 0; }
         .bmr-field label { color: #374151; font-weight: 600; }
-        .bmr-field input[type="number"], .bmr-field select { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; background: #fff; }
+        .bmr-field input[type="number"], .bmr-field select { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; background: #fff; min-width: 0; width: 100%; }
         .bmr-field input[type="number"]:focus, .bmr-field select:focus { outline: none; border-color: var(--primary-color); }
         .bmr-sex { display: flex; gap: 1.2rem; align-items: center; margin-top: .6rem; font-size: .95rem; }
         .bmr-sex label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; color: #374151; font-weight: 600; }

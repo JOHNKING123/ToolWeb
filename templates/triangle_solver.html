@@ -32,10 +32,10 @@
         .ts-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .7rem; }
         .ts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: .6rem; }
         @media (max-width: 640px) { .ts-grid { grid-template-columns: repeat(2, 1fr); } }
-        .ts-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+        .ts-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; min-width: 0; }
         .ts-field label { color: #374151; font-weight: 600; }
         .ts-field label .ts-unit-label { color: #6b7280; font-weight: 400; }
-        .ts-field input[type="number"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; }
+        .ts-field input[type="number"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; min-width: 0; width: 100%; }
         .ts-field input[type="number"]:focus { outline: none; border-color: var(--primary-color); }
         .ts-unitrow { display: flex; align-items: center; gap: 1rem; margin-top: .6rem; font-size: .9rem; color: #374151; }
         .ts-unitrow label { display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }

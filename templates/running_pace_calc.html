@@ -34,12 +34,14 @@
         .rpc-modrow label { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; font-weight: 600; color: #374151; }
         .rpc-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .9rem; margin-top: .6rem; }
         @media (max-width: 720px) { .rpc-cols { grid-template-columns: 1fr; } }
+        @media (min-width: 721px) { .rpc-cols-2 { grid-template-columns: 1fr 1fr; } }
         .rpc-group { border: 1px solid #e5e7eb; border-radius: .5rem; padding: .8rem; background: #fafafa; transition: border-color .2s, background .2s; }
         .rpc-group.rpc-active { border-color: #3b82f6; background: #eff6ff; }
         .rpc-group h4 { margin: 0 0 .5rem; color: #374151; font-size: 1rem; }
-        .rpc-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; margin-top: .5rem; }
+        .rpc-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; margin-top: .5rem; min-width: 0; }
         .rpc-field label { color: #374151; font-weight: 600; }
         .rpc-field input[type="number"], .rpc-field input[type="text"] { padding: .45rem .6rem; border: 1px solid #d1d5db; border-radius: .4rem; font-size: .95rem; box-sizing: border-box; background: #fff; }
+        .rpc-field>input[type="number"], .rpc-field>input[type="text"] { min-width: 0; width: 100%; }
         .rpc-field input:focus { outline: none; border-color: var(--primary-color); }
         .rpc-hms { display: flex; gap: .4rem; align-items: center; }
         .rpc-hms input { width: 4.2rem; }
@@ -153,7 +155,7 @@
 
             <div class="tool-card" style="margin-bottom:1.2rem;">
                 <h3>Riegel 成绩预测</h3>
-                <div class="rpc-cols" style="grid-template-columns:1fr 1fr;">
+                <div class="rpc-cols rpc-cols-2">
                     <div class="rpc-field">
                         <label>近期成绩时间（时 : 分 : 秒）</label>
                         <div class="rpc-hms">

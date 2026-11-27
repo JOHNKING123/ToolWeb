@@ -239,6 +239,7 @@
             background: var(--bg-secondary);
             border-radius: 0.75rem;
             border: 1px solid var(--border-color);
+            min-width: 0;
         }
 
         .example-section h3 {
@@ -265,6 +266,9 @@
             transition: all 0.2s;
             font-size: 0.9rem;
             color: var(--text-color);
+            min-width: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
         }
 
         .example-btn:hover {
@@ -277,6 +281,7 @@
             margin-top: 0.5rem;
             color: var(--text-secondary);
             font-size: 0.8rem;
+            overflow-wrap: anywhere;
         }
 
         @media (max-width: 768px) {

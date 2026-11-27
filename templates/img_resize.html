@@ -135,6 +135,14 @@
         #imagePreviewImg.no-transition {
             transition: none;
         }
+        /* 390px 横向溢出修复（第 20 轮）：两列 .form-row 行内的 .form-group（flex:1）
+           被 number 输入框 min-content（约 170px）撑宽；组加 min-width:0、框加
+           min-width:0，width:100% 只在 640px 以下生效，桌面端输入框保持原宽。 */
+        .form-group { min-width: 0; }
+        .form-row .form-group input { min-width: 0; }
+        @media (max-width: 640px) {
+            .form-row .form-group input { width: 100%; box-sizing: border-box; }
+        }
     </style>
 </head>
 <body>
