@@ -243,7 +243,7 @@ function throwsField(fn, field, name) {
     contains(qrcodeTpl, "<title>二维码工具 - 程序员工具箱</title>", "qrcode 文档壳：title");
     contains(qrcodeTpl, "/tools/static/css/style.css", "qrcode 文档壳：style.css");
     contains(qrcodeTpl, "/tools/static/css/tools.css", "qrcode 文档壳：tools.css");
-    contains(qrcodeTpl, "fonts.googleapis.com/icon?family=Material+Icons", "qrcode 文档壳：Material Icons");
+    contains(qrcodeTpl, "/tools/static/css/material-icons.css", "qrcode 文档壳：Material Icons（21 轮本地自托管）");
     contains(qrcodeTpl, "/tools/static/favicon.ico", "qrcode 文档壳：favicon");
     contains(qrcodeTpl, 'name="theme-color"', "qrcode 文档壳：theme-color");
     contains(qrcodeTpl, '{{template "nav" .}}', "qrcode 文档壳：站内导航");

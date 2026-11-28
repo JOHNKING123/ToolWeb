@@ -152,10 +152,11 @@ notHas(JS_SRC, "fetch(", "零网络：JS 无 fetch");
 notHas(JS_SRC, "XMLHttpRequest", "零网络：JS 无 XHR");
 notHas(TPL_SRC, "fetch(", "零网络：模板无 fetch");
 notHas(TPL_SRC, "http://", "零 CDN：模板无 http 外链");
-// 模板内 https:// 仅限改动前已存在的三处（字体 CDN / JSON-LD 上下文 / 本站 canonical），本轮未新增外部请求
+// 模板内 https:// 仅限改动前已存在的三处（21 轮字体本地化后字体 CDN 已移除，
+// 剩余：DOI 链接／JSON-LD 上下文／本站 canonical），本轮未新增外部请求
 var tplHosts = {};
 (TPL_SRC.match(/https:\/\/[a-zA-Z0-9.-]+/g) || []).forEach(function (u) { tplHosts[u.replace(/^https:\/\//, "")] = 1; });
-eq(Object.keys(tplHosts).sort().join(","), "doi.org,fonts.googleapis.com,schema.org,www.johnkingzcq123.xyz", "零新增：模板外链主机集合与改动前一致");
+eq(Object.keys(tplHosts).sort().join(","), "doi.org,schema.org,www.johnkingzcq123.xyz", "零新增：模板外链主机集合与改动前一致（21 轮移除 fonts.googleapis.com）");
 
 /* ---------- 8. enSplitAuthors 集成（页面录入规则：姓, 名首字母＋分号分隔） ---------- */
 // 直接把表单字符串喂给 enSplitAuthors（与 enInput/compareEN 相同链路），再喂给纯函数渲染

@@ -1,0 +1,33 @@
+/* Material Icons - 本地自托管（体验打磨第 21 轮）。
+ * 替代原 Google Fonts CDN 引用：全站模板不再请求 Google Fonts，
+ * 改为引用本站 /tools/static/css/material-icons.css（本文件）。
+ * 字体文件：static/fonts/material-icons.woff2（400 字重 ligature 版，
+ * 与 Google Fonts css2 API 当日下发的 v145 文件字节一致，见
+ * static/fonts/LICENSE-material-icons.txt，Apache License 2.0）。
+ * 全站唯一的 Material Icons 字体声明与 .material-icons 类规则，
+ * 其余文件不得另行定义。
+ */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/tools/static/fonts/material-icons.woff2) format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
